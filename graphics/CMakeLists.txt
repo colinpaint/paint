@@ -1,6 +1,11 @@
 project (graphics)
 
 file (GLOB HEADER_FILES *.h)
-file (GLOB SRCFILES *OpenGL.cpp)
+
+if (GRAPHICS STREQUAL "DIRECTX11")
+  file (GLOB SRCFILES *DirectX11.cpp)
+else()
+  file (GLOB SRCFILES *OpenGL.cpp)
+endif()
 
 add_library (graphics ${SRCFILES} ${HEADER_FILES})
