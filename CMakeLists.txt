@@ -22,29 +22,35 @@ else()
   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -no-pie")
 endif()
 
-# glad version
-if (GRAPHICS STREQUAL "OPENGL_21")
-  include_directories (
-    ${CMAKE_SOURCE_DIR}/glad-2.1-fbo-vao/include
-    ${CMAKE_SOURCE_DIR}/glfw/include
-    ${CMAKE_SOURCE_DIR}/imgui
-    ${CMAKE_SOURCE_DIR}/glm
-    ${CMAKE_SOURCE_DIR}/stb
-    )
-  add_subdirectory (glad-2.1-fbo-vao/)
+# graphics versions
+if (GRAPHICS STREQUAL "DIRECTX11")
+  include_directories (${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
 else()
-  include_directories (
-    ${CMAKE_SOURCE_DIR}/glad-4.5/include
-    ${CMAKE_SOURCE_DIR}/glfw/include
-    ${CMAKE_SOURCE_DIR}/imgui
-    ${CMAKE_SOURCE_DIR}/glm
-    ${CMAKE_SOURCE_DIR}/stb
-    )
-  add_subdirectory (glad-4.5/)
+  # openGL
+  if (GRAPHICS STREQUAL "OPENGL_21")
+    # openGL 2.1 with fbo vbo extensions
+    include_directories (${CMAKE_SOURCE_DIR}/glad-2.1-fbo-vao/include 
+                         ${CMAKE_SOURCE_DIR}/glfw/include
+                         ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
+    add_subdirectory (glad-2.1-fbo-vao/)
+  else()
+    # openGL >= 3.0
+    include_directories (${CMAKE_SOURCE_DIR}/glad-4.5/include 
+                         ${CMAKE_SOURCE_DIR}/glfw/include
+                         ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
+    add_subdirectory (glad-4.5/)
+  endif()
+
+  find_package (OpenGL REQUIRED)
+  set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+  set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
+  add_subdirectory (glfw/)
 endif()
 
 # subdirectories
-find_package (OpenGL REQUIRED)
 add_subdirectory (brushes/)
 add_subdirectory (ui/)
 add_subdirectory (canvas/)
@@ -53,12 +59,6 @@ add_subdirectory (platform/)
 add_subdirectory (graphics/)
 add_subdirectory (imgui/)
 add_subdirectory (log/)
-set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
-add_subdirectory (glfw/)
 
 # main source files, add brushes,ui asstatic class register fails
 file (GLOB SRCFILES
@@ -81,7 +81,11 @@ add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
 # link, watch out for order dependent static link in linux
 if (WIN32)
-  target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw opengl32)
+  if (GRAPHICS STREQUAL "DIRECTX11")
+    target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log)
+  else()
+    target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw opengl32)
+  endif()
 else()
   target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw GL)
 endif()

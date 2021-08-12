@@ -1,6 +1,4 @@
 // main.cpp - paintbox main - use glm, imGui, stb
-// - with platform (glfw)
-// - with graphics (openGL3.3)
 // - brushes,UI's use static var init idiom to register to their man(agers)
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
