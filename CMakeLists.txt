@@ -11,7 +11,7 @@ set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED True)
 
 set (PLATFORM "PLATFORM_GLFW")
-set (GRAPHICS "OPENGL_21")
+set (GRAPHICS "OPENGL_40")
 
 # compiler,linker flags
 if (WIN32)

@@ -564,7 +564,7 @@ void cShader::setMat4 (const string &name, glm::mat4 value) {
 // cQuadShader
 cQuadShader::cQuadShader (const string& fragShaderString) : cShader (kQuadVertShader, fragShaderString) {}
 //{{{
-void cQuadShader::setModelProject (glm::mat4 model, glm::mat4 project) {
+void cQuadShader::setModelProject (const glm::mat4& model, const glm::mat4& project) {
   setMat4 ("uModel", model);
   setMat4 ("uProject", project);
   }
@@ -587,7 +587,8 @@ void cLayerShader::setHueSatVal (float hue, float sat, float val) {
 // cPaintShader
 cPaintShader::cPaintShader() : cQuadShader (kPaintFragShader) {}
 //{{{
-void cPaintShader::setStroke (glm::vec2 pos, glm::vec2 prevPos, float radius, glm::vec4 color) {
+void cPaintShader::setStroke (const glm::vec2& pos, const glm::vec2& prevPos, 
+                              float radius, const glm::vec4& color) {
 
   setVec2 ("uPos", pos);
   setVec2 ("uPrevPos", prevPos);

@@ -44,7 +44,7 @@ public:
   cQuadShader (const std::string& fragShaderString);
   virtual ~cQuadShader() = default;
 
-  void setModelProject (glm::mat4 model, glm::mat4 project);
+  void setModelProject (const glm::mat4& model, const glm::mat4& project);
   };
 //}}}
 
@@ -71,7 +71,7 @@ public:
   cPaintShader();
   virtual ~cPaintShader() = default;
 
-  void setStroke (glm::vec2 pos, glm::vec2 prevPos, float radius, glm::vec4 color);
+  void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color);
   };
 //}}}
 
