@@ -11,7 +11,7 @@ set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED True)
 
 set (PLATFORM "PLATFORM_GLFW")
-set (GRAPHICS "OPENGL_40")
+set (GRAPHICS "OPENGL_21")
 
 # compiler,linker flags
 if (WIN32)
@@ -29,13 +29,13 @@ else()
   # openGL
   if (GRAPHICS STREQUAL "OPENGL_21")
     # openGL 2.1 with fbo vbo extensions
-    include_directories (${CMAKE_SOURCE_DIR}/glad-2.1-fbo-vao/include 
+    include_directories (${CMAKE_SOURCE_DIR}/glad-2.1-fbo-vao/include
                          ${CMAKE_SOURCE_DIR}/glfw/include
                          ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
     add_subdirectory (glad-2.1-fbo-vao/)
   else()
     # openGL >= 3.0
-    include_directories (${CMAKE_SOURCE_DIR}/glad-4.5/include 
+    include_directories (${CMAKE_SOURCE_DIR}/glad-4.5/include
                          ${CMAKE_SOURCE_DIR}/glfw/include
                          ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
     add_subdirectory (glad-4.5/)

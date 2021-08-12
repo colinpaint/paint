@@ -68,15 +68,19 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCa
   #if defined(OPENGL_21)
     glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
+    cLog::log (LOGINFO, "- version hint 2.1");
   #elif defined(OPENGL_40)
     glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
+    cLog::log (LOGINFO, "- version hint 4.0");
   #elif defined(OPENGL_45)
     glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 5);
+    cLog::log (LOGINFO, "- version hint 4.5");
   #else
     glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
+    cLog::log (LOGINFO, "- version hint 3.3");
   #endif
   //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
