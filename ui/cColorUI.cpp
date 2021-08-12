@@ -1,0 +1,85 @@
+// cColorUI.cpp
+//{{{  includes
+#include "cColorUI.h"
+
+#include <cstdint>
+#include <vector>
+#include <string>
+
+#include <GLFW/glfw3.h>
+
+// glm
+#include <vec4.hpp>
+
+//imgui
+#include <imgui.h>
+
+#include "../brushes/cBrushMan.h"
+#include "../brushes/cBrush.h"
+#include "../log/cLog.h"
+
+using namespace std;
+using namespace fmt;
+//}}}
+
+constexpr ImGuiColorEditFlags kColorSelectorFlags = ImGuiColorEditFlags_HDR |
+                                                    ImGuiColorEditFlags_Float |
+                                                    ImGuiColorEditFlags_NoInputs |
+                                                    ImGuiColorEditFlags_PickerHueWheel;
+
+//{{{
+cColorUI::cColorUI (const std::string& name) : cUI(name) {
+
+  for (int i =0 ; i < 16; i++)
+    mSwatches.push_back (glm::vec4 (0.f,0.f,0.f,0.f));
+  }
+//}}}
+
+void cColorUI::addToDrawList (cCanvas& canvas) {
+
+  ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
+
+  // colorPicker
+  cBrush* brush = cBrushMan::getCurBrush();
+  ImVec4 imBrushColor = ImVec4 (brush->getColor().x, brush->getColor().y, brush->getColor().z, brush->getColor().w);
+  ImGui::ColorPicker4 ("colour", (float*)&imBrushColor, kColorSelectorFlags, nullptr);
+  float opacity = brush->getColor().w;
+  ImGui::SliderFloat ("opacity", &opacity, 0.f, 1.f);
+  brush->setColor (glm::vec4 (imBrushColor.x, imBrushColor.y, imBrushColor.z, opacity));
+
+  // iterate swatches
+  unsigned swatchIndex = 0;
+  for (auto& swatch : mSwatches) {
+    bool disabled = swatch.w == 0.f;
+    int alphaPrev = disabled ? ImGuiColorEditFlags_AlphaPreview : 0;
+
+    if (ImGui::ColorButton (format ("swatch##{}", swatchIndex).c_str(),
+                            ImVec4 (swatch.x, swatch.y, swatch.z, swatch.w),
+                            ImGuiColorEditFlags_NoTooltip | alphaPrev,
+                            ImVec2 (20, 20)) && !disabled)
+      brush->setColor (swatch);
+
+    // swatch popup
+    if (ImGui::BeginPopupContextItem()) {
+      if (ImGui::MenuItem ("set", "S") || ImGui::IsKeyPressed (GLFW_KEY_S, false)) {
+        swatch = brush->getColor();
+        swatch.w = 1.f;
+        }
+
+      if (ImGui::MenuItem ("unset", "X", nullptr, swatch.w != 0.f) || ImGui::IsKeyPressed (GLFW_KEY_X, false))
+        swatch = glm::vec4 (0.f, 0.f, 0.f, 0.f);
+
+      ImGui::Separator();
+      if (ImGui::MenuItem ("cancel", "C") || ImGui::IsKeyPressed (GLFW_KEY_C, false))
+        ImGui::CloseCurrentPopup();
+
+      ImGui::EndPopup();
+      }
+
+    // swatch line wrap
+    if (++swatchIndex % 8)
+      ImGui::SameLine();
+    }
+
+  ImGui::End();
+  }

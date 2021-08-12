@@ -1,0 +1,28 @@
+# Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dll
+
+# Compiled Static libraries
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.un~
+
+build/*
+linuxBuild/*
+
+# Other
+.vscode/
+.DS_Store
+
+*.~*
+*.*~
