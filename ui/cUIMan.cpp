@@ -20,7 +20,7 @@
 using namespace std;
 using namespace fmt;
 //}}}
-#define CANVAS
+#define DRAW_CANVAS // useful to disable when bringing up backends
 
 //{{{
 bool cUIMan::registerClass (const std::string& name, const createFuncType createFunc) {
@@ -77,7 +77,7 @@ void cUIMan::draw (cCanvas& canvas) {
   // fullWindow invisibleButton grabbing mouse,leftButton events
   ImGui::InvisibleButton ("bgnd", ImGui::GetWindowSize(), ImGuiButtonFlags_MouseButtonLeft);
 
-  #ifdef CANVAS
+  #ifdef DRAW_CANVAS
     // route mouse,leftButton events to canvas, with centred pos coords
     if (ImGui::IsItemHovered() || ImGui::IsItemActive()) {
       canvas.mouse (ImGui::IsItemActive(),

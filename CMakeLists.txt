@@ -35,10 +35,10 @@ else()
     add_subdirectory (glad-2.1-fbo-vao/)
   else()
     # openGL >= 3.0
-    include_directories (${CMAKE_SOURCE_DIR}/glad-4.5/include
+    include_directories (${CMAKE_SOURCE_DIR}/glad-4.5-core/include
                          ${CMAKE_SOURCE_DIR}/glfw/include
                          ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
-    add_subdirectory (glad-4.5/)
+    add_subdirectory (glad-4.5-core/)
   endif()
 
   find_package (OpenGL REQUIRED)

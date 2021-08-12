@@ -1,5 +1,5 @@
 // main.cpp - paintbox main - use glm, imGui, stb
-// - brushes,UI's use static var init idiom to register to their man(agers)
+// - brushes,ui use static var init idiom to register to their man(agers)
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -28,7 +28,7 @@ namespace {
   cCanvas* canvas;
 
   void drawWindow() {
-  // used as platform sizeWindowsCallback, glfw blocks main loop while sizing window
+  // can be used as platform sizeWindowsCallback, glfw blocks mainLoop while sizing window
     cPlatform::getInstance().newFrame();
     cUIMan::draw (*canvas);
     cPlatform::getInstance().present();
