@@ -18,9 +18,6 @@ using namespace fmt;
 //}}}
 
 namespace {
-  ID3D11Device* gDevice = NULL;
-  ID3D11DeviceContext* gDeviceContext =NULL;
-
   //{{{
   struct sBackendData {
     ID3D11Device*               pd3dDevice;
@@ -750,7 +747,7 @@ namespace {
   }
 
 //{{{
-bool cGraphics::init() {
+bool cGraphics::init (ID3D11Device* device, ID3D11DeviceContext* deviceContext) {
 
   ImGuiIO& io = ImGui::GetIO();
   IM_ASSERT(io.BackendRendererUserData == NULL && "Already initialized a renderer backend!");
@@ -767,11 +764,11 @@ bool cGraphics::init() {
   IDXGIAdapter* pDXGIAdapter = NULL;
   IDXGIFactory* pFactory = NULL;
 
-  if (gDevice->QueryInterface (IID_PPV_ARGS (&pDXGIDevice)) == S_OK)
+  if (device->QueryInterface (IID_PPV_ARGS (&pDXGIDevice)) == S_OK)
     if (pDXGIDevice->GetParent (IID_PPV_ARGS (&pDXGIAdapter)) == S_OK)
       if (pDXGIAdapter->GetParent (IID_PPV_ARGS (&pFactory)) == S_OK) {
-        backendData->pd3dDevice = gDevice;
-        backendData->pd3dDeviceContext = gDeviceContext;
+        backendData->pd3dDevice = device;
+        backendData->pd3dDeviceContext = deviceContext;
         backendData->pFactory = pFactory;
         }
 

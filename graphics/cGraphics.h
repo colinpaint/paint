@@ -1,5 +1,9 @@
 // cGraphics.h - graphics singleton
 #pragma once
+struct ID3D11Device;
+struct ID3D11DeviceContext;
+  ID3D11Device* getDevice();
+  ID3D11DeviceContext* getDeviceContext();
 
 class cGraphics {
 public:
@@ -14,7 +18,7 @@ public:
     }
   //}}}
 
-  bool init();
+  bool init (ID3D11Device* device, ID3D11DeviceContext* deviceContext);
   void shutdown();
 
   void draw();

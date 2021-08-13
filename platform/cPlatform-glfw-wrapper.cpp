@@ -144,6 +144,19 @@ cPoint cPlatform::getWindowSize() {
   return cPoint (width, height);
   }
 //}}}
+//{{{
+ID3D11Device* cPlatform::getDevice() {
+
+  return nullptr;
+  }
+//}}}
+//{{{
+ID3D11DeviceContext* cPlatform::getDeviceContext() {
+
+  return nullptr;
+  }
+//}}}
+
 
 // actions
 //{{{

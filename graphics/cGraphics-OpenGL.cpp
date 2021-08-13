@@ -252,7 +252,7 @@ namespace {
   }
 
 //{{{
-bool cGraphics::init() {
+bool cGraphics::init (ID3D11Device* device, ID3D11DeviceContext* deviceContext) {
 
   // get OpenGL version
   string glVersionString = (const char*)glGetString (GL_VERSION);
