@@ -53,6 +53,7 @@ public:
 
   void mouse (bool active, bool clicked, bool dragging, bool released, glm::vec2 pos, glm::vec2 drag);
   void draw (cPoint windowSize);
+  void drawNothing (cPoint windowSize);
 
 private:
   void createResources();

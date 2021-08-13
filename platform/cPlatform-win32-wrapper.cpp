@@ -37,60 +37,49 @@ namespace {
 
   IDXGISwapChain* gSwapChain = NULL;
   ID3D11RenderTargetView* gMainRenderTargetView = NULL;
+  cPoint gWindowSize;
 
   //{{{
-  void createRenderTarget() {
+  void createMainRenderTarget() {
 
-    ID3D11Texture2D* pBackBuffer;
-    gSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-    gD3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &gMainRenderTargetView);
-    pBackBuffer->Release();
-    }
-  //}}}
-  //{{{
-  void cleanupRenderTarget() {
-
-    if (gMainRenderTargetView) {
-      gMainRenderTargetView->Release();
-      gMainRenderTargetView = NULL;
-      }
+    ID3D11Texture2D* backBuffer;
+    gSwapChain->GetBuffer (0, IID_PPV_ARGS (&backBuffer));
+    gD3dDevice->CreateRenderTargetView (backBuffer, NULL, &gMainRenderTargetView);
+    backBuffer->Release();
     }
   //}}}
   //{{{
   void cleanupDeviceD3D() {
 
-    cleanupRenderTarget();
+    if (gMainRenderTargetView)
+      gMainRenderTargetView->Release();
 
-    if (gSwapChain) {
+    if (gSwapChain)
       gSwapChain->Release();
-      gSwapChain = NULL;
-      }
 
-    if (gD3dDeviceContext) {
+    if (gD3dDeviceContext)
       gD3dDeviceContext->Release();
-      gD3dDeviceContext = NULL;
-      }
 
-    if (gD3dDevice) {
+    if (gD3dDevice)
       gD3dDevice->Release();
-      gD3dDevice = NULL;
-      }
     }
   //}}}
 
   //{{{
   LRESULT WINAPI WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-  // Win32 message handler
+  // win32 message handler
 
+    // does imGui want it
     if (ImGui_ImplWin32_WndProcHandler (hWnd, msg, wParam, lParam))
       return true;
 
     switch (msg) {
       case WM_SIZE:
         if (gD3dDevice != NULL && wParam != SIZE_MINIMIZED) {
-          cleanupRenderTarget();
-          gSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
-          createRenderTarget();
+          if (gMainRenderTargetView)
+            gMainRenderTargetView->Release();
+          gSwapChain->ResizeBuffers (0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
+          createMainRenderTarget();
           }
         return 0;
 
@@ -130,13 +119,14 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCa
   gWndClass = { sizeof(WNDCLASSEX),
                 CS_CLASSDC, WndProc, 0L, 0L,
                 GetModuleHandle (NULL), NULL, NULL, NULL, NULL,
-               _T("ImGui Example"), NULL };
+               _T("paintbox"), NULL };
   ::RegisterClassEx (&gWndClass);
 
   // Create application window
+  gWindowSize = windowSize;
   gHWnd = ::CreateWindow (gWndClass.lpszClassName,
-                          _T("Dear ImGui DirectX11 Example"), WS_OVERLAPPEDWINDOW,
-                          100, 100, 1280, 800, NULL, NULL,
+                          _T("paintbox"), WS_OVERLAPPEDWINDOW,
+                          100, 100, windowSize.x, windowSize.y, NULL, NULL,
                           gWndClass.hInstance, NULL);
 
   // Initialize Direct3D
@@ -157,20 +147,23 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCa
   swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
   const UINT createDeviceFlags = 0; // D3D11_CREATE_DEVICE_DEBUG;
-  const D3D_FEATURE_LEVEL kFeatureLevels[2] = {
-    D3D_FEATURE_LEVEL_11_0,
-    D3D_FEATURE_LEVEL_10_0, };
+  const D3D_FEATURE_LEVEL kFeatureLevels[2] = { D3D_FEATURE_LEVEL_11_0,
+                                                D3D_FEATURE_LEVEL_10_0, };
   D3D_FEATURE_LEVEL featureLevel;
   if (D3D11CreateDeviceAndSwapChain (NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
                                      createDeviceFlags, kFeatureLevels, 2,
                                      D3D11_SDK_VERSION, &swapChainDesc, &gSwapChain,
                                      &gD3dDevice, &featureLevel, &gD3dDeviceContext) != S_OK) {
+    //{{{  error, return
+    cLog::log (LOGINFO, "DirectX device created failed");
     cleanupDeviceD3D();
     ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
     return false;
     }
+    //}}}
+  cLog::log (LOGINFO, format ("platform DirectX11 device created - featureLevel:{:x}", featureLevel));
 
-  createRenderTarget();
+  createMainRenderTarget();
 
   // Show the window
   ::ShowWindow (gHWnd, SW_SHOWDEFAULT);
@@ -182,8 +175,8 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCa
   ImGuiIO& io = ImGui::GetIO(); (void)io;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-  io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+  //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+  //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
   //io.ConfigViewportsNoAutoMerge = true;
   //io.ConfigViewportsNoTaskBarIcon = true;
   //io.ConfigViewportsNoDefaultParent = true;
@@ -203,7 +196,6 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCa
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 
-
   ImGui_ImplWin32_Init (gHWnd);
 
   return true;
@@ -212,12 +204,9 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCa
 //{{{
 void cPlatform::shutdown() {
 
-  // Cleanup
   ImGui_ImplWin32_Shutdown();
   ImGui::DestroyContext();
-
   cleanupDeviceD3D();
-
   ::DestroyWindow (gHWnd);
   ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
   }
@@ -226,7 +215,7 @@ void cPlatform::shutdown() {
 // gets
 void* cPlatform::getDevice() { return (void*)gD3dDevice; }
 void* cPlatform::getDeviceContext() { return (void*)gD3dDeviceContext; }
-cPoint cPlatform::getWindowSize() { return cPoint (1280, 800); }
+cPoint cPlatform::getWindowSize() { return gWindowSize; }
 
 // actions
 //{{{
@@ -238,9 +227,9 @@ bool cPlatform::pollEvents() {
 // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
 
   MSG msg;
-  while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE)) {
-    ::TranslateMessage(&msg);
-    ::DispatchMessage(&msg);
+  while (::PeekMessage (&msg, NULL, 0U, 0U, PM_REMOVE)) {
+    ::TranslateMessage (&msg);
+    ::DispatchMessage (&msg);
     if (msg.message == WM_QUIT)
       return false;
     }
@@ -255,17 +244,18 @@ void cPlatform::newFrame() {
 //}}}
 //{{{
 void cPlatform::selectMainScreen() {
-  const float kClearColorWithAlpha[4] = { 0.f,0.f,0.f, 1.f };
+
   gD3dDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
+
+  const float kClearColorWithAlpha[4] = { 0.25f,0.25f,0.25f, 1.f };
   gD3dDeviceContext->ClearRenderTargetView (gMainRenderTargetView, kClearColorWithAlpha);
   }
 //}}}
 //{{{
 void cPlatform::present() {
 
-  // update and uender additional platform windows
-  ImGuiIO& io = ImGui::GetIO();
-  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+  // update and render additional platform windows
+  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
     ImGui::UpdatePlatformWindows();
     ImGui::RenderPlatformWindowsDefault();
     }

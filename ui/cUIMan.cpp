@@ -20,7 +20,7 @@
 using namespace std;
 using namespace fmt;
 //}}}
-#define DRAW_CANVAS // useful to disable when bringing up backends
+//#define DRAW_CANVAS // useful to disable when bringing up backends
 
 //{{{
 bool cUIMan::registerClass (const std::string& name, const createFuncType createFunc) {
@@ -106,8 +106,10 @@ void cUIMan::draw (cCanvas& canvas) {
       // possible swipe detection here
       }
 
-  // draw canvas to screen window frameBuffer
-  canvas.draw (cPoint ((int)ImGui::GetWindowSize().x, (int)ImGui::GetWindowSize().y));
+    // draw canvas to screen window frameBuffer
+    canvas.draw (cPoint ((int)ImGui::GetWindowSize().x, (int)ImGui::GetWindowSize().y));
+  #else
+    canvas.drawNothing (cPoint ((int)ImGui::GetWindowSize().x, (int)ImGui::GetWindowSize().y));
   #endif
 
   ImGui::End();

@@ -26,15 +26,13 @@ void cBrushUI::addToDrawList (cCanvas& canvas) {
 
   cBrush* brush = cBrushMan::getCurBrush();
   for (auto& item : cBrushMan::getClassRegister()) {
-    if (ImGui::Selectable (format ("##{}", item.first).c_str(), cBrushMan::isCurBrushByName (item.first), 0,
+    if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(), cBrushMan::isCurBrushByName (item.first), 0,
                            ImVec2 (ImGui::GetWindowSize().x, 30)))
       cBrushMan::setCurBrushByName (item.first, brush->getRadius());
 
-    ImGui::SameLine (0.001f);
-    ImGui::Image ((void*)(intptr_t)1, ImVec2 (40, 30));
-
-    ImGui::SameLine();
-    ImGui::Text ("%s", item.first.c_str());
+    // when we make brush thumbnails
+    //ImGui::SameLine (0.001f);
+    //ImGui::Image ((void*)(intptr_t)1, ImVec2 (40, 30));
     }
 
   float radius = brush->getRadius();

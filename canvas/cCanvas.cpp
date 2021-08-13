@@ -178,6 +178,16 @@ void cCanvas::draw (cPoint windowSize) {
   mQuad->draw();
   }
 //}}}
+//{{{
+void cCanvas::drawNothing (cPoint windowSize) {
+// temporary bodeg to ensure screen frameBuffer is selected for subsequent imGui draw
+
+  mWindowFrameBuffer->setSize (windowSize);
+  mWindowFrameBuffer->setTarget();
+  mWindowFrameBuffer->setBlend();
+  mWindowFrameBuffer->clear (glm::vec4(0.25f,0.25f,0.25f,1.0f));
+  }
+//}}}
 
 // private:
 //{{{
