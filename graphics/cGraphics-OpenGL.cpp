@@ -1,4 +1,4 @@
-// cGraphics-OpenGL.cpp - singleton - ImGui, openGL3.3 backend
+// cGraphics-OpenGL.cpp - singleton - ImGui, openGL >= v2.1 with fbo vao backend
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #include "cGraphics.h"
