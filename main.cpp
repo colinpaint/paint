@@ -30,6 +30,7 @@ namespace {
   void drawWindow() {
   // can be used as platform sizeWindowsCallback, glfw blocks mainLoop while sizing window
     cPlatform::getInstance().newFrame();
+    cPlatform::getInstance().selectMainScreen();
     cUIMan::draw (*canvas);
     cPlatform::getInstance().present();
     }

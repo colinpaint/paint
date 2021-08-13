@@ -10,9 +10,6 @@ class cGraphics;
 class cCanvas;
 //}}}
 
-struct ID3D11Device;
-struct ID3D11DeviceContext;
-
 class cPlatform {
 public:
   using sizeCallbackFunc = void(*)();
@@ -31,13 +28,14 @@ public:
   void shutdown();
 
   // gets
+  void* getDevice();
+  void* getDeviceContext();
   cPoint getWindowSize();
-  ID3D11Device* getDevice();
-  ID3D11DeviceContext* getDeviceContext();
 
   // actions
   bool pollEvents();
   void newFrame();
+  void selectMainScreen();
   void present();
 
 private:

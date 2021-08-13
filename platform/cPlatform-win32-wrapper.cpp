@@ -15,80 +15,45 @@
 // imGui
 #include <imgui.h>
 #include <backends/imgui_impl_win32.h>
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #include "../graphics/cPointRect.h"
 #include "../log/cLog.h"
 
+#ifndef WM_DPICHANGED
+  #define WM_DPICHANGED 0x02E0 // From Windows SDK 8.1+ headers
+#endif
+
 using namespace std;
 using namespace fmt;
 //}}}
-
 namespace {
   // vars
-  cPlatform::sizeCallbackFunc gSizeCallback;
+  WNDCLASSEX gWndClass;
+  HWND gHWnd;
 
-  ID3D11Device*            g_pd3dDevice = NULL;
-  ID3D11DeviceContext*     g_pd3dDeviceContext = NULL;
-  IDXGISwapChain*          g_pSwapChain = NULL;
-  ID3D11RenderTargetView*  g_mainRenderTargetView = NULL;
+  ID3D11Device* gD3dDevice = NULL;
+  ID3D11DeviceContext*  gD3dDeviceContext = NULL;
 
-  WNDCLASSEX wc;
-  HWND hwnd;
+  IDXGISwapChain* gSwapChain = NULL;
+  ID3D11RenderTargetView* gMainRenderTargetView = NULL;
 
-  #ifndef WM_DPICHANGED
-    #define WM_DPICHANGED 0x02E0 // From Windows SDK 8.1+ headers
-  #endif
   //{{{
   void createRenderTarget() {
 
     ID3D11Texture2D* pBackBuffer;
-    g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-    g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_mainRenderTargetView);
+    gSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
+    gD3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &gMainRenderTargetView);
     pBackBuffer->Release();
     }
   //}}}
   //{{{
   void cleanupRenderTarget() {
 
-    if (g_mainRenderTargetView) {
-      g_mainRenderTargetView->Release();
-      g_mainRenderTargetView = NULL;
+    if (gMainRenderTargetView) {
+      gMainRenderTargetView->Release();
+      gMainRenderTargetView = NULL;
       }
-    }
-  //}}}
-  //{{{
-  bool createDeviceD3D(HWND hWnd) {
-
-    // Setup swap chain
-    DXGI_SWAP_CHAIN_DESC sd;
-    ZeroMemory(&sd, sizeof(sd));
-    sd.BufferCount = 2;
-    sd.BufferDesc.Width = 0;
-    sd.BufferDesc.Height = 0;
-    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    sd.BufferDesc.RefreshRate.Numerator = 60;
-    sd.BufferDesc.RefreshRate.Denominator = 1;
-    sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.OutputWindow = hWnd;
-    sd.SampleDesc.Count = 1;
-    sd.SampleDesc.Quality = 0;
-    sd.Windowed = TRUE;
-    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-
-    UINT createDeviceFlags = 0;
-    //createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
-    D3D_FEATURE_LEVEL featureLevel;
-    const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
-    if (D3D11CreateDeviceAndSwapChain (NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
-                                       createDeviceFlags, featureLevelArray, 2,
-                                       D3D11_SDK_VERSION, &sd, &g_pSwapChain,
-                                       &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
-      return false;
-
-    createRenderTarget();
-    return true;
     }
   //}}}
   //{{{
@@ -96,19 +61,19 @@ namespace {
 
     cleanupRenderTarget();
 
-    if (g_pSwapChain) {
-      g_pSwapChain->Release();
-      g_pSwapChain = NULL;
+    if (gSwapChain) {
+      gSwapChain->Release();
+      gSwapChain = NULL;
       }
 
-    if (g_pd3dDeviceContext) {
-      g_pd3dDeviceContext->Release();
-      g_pd3dDeviceContext = NULL;
+    if (gD3dDeviceContext) {
+      gD3dDeviceContext->Release();
+      gD3dDeviceContext = NULL;
       }
 
-    if (g_pd3dDevice) {
-      g_pd3dDevice->Release();
-      g_pd3dDevice = NULL;
+    if (gD3dDevice) {
+      gD3dDevice->Release();
+      gD3dDevice = NULL;
       }
     }
   //}}}
@@ -122,9 +87,9 @@ namespace {
 
     switch (msg) {
       case WM_SIZE:
-        if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED) {
+        if (gD3dDevice != NULL && wParam != SIZE_MINIMIZED) {
           cleanupRenderTarget();
-          g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
+          gSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
           createRenderTarget();
           }
         return 0;
@@ -157,34 +122,59 @@ namespace {
   //}}}
   }
 
+// cPlatform
 //{{{
 bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCallbackFunc sizeCallback) {
 
-  gSizeCallback = sizeCallback;
-
   //ImGui_ImplWin32_EnableDpiAwareness();
-  wc = { sizeof(WNDCLASSEX),
-         CS_CLASSDC, WndProc, 0L, 0L,
-         GetModuleHandle (NULL), NULL, NULL, NULL, NULL,
-         _T("ImGui Example"), NULL };
-  ::RegisterClassEx(&wc);
+  gWndClass = { sizeof(WNDCLASSEX),
+                CS_CLASSDC, WndProc, 0L, 0L,
+                GetModuleHandle (NULL), NULL, NULL, NULL, NULL,
+               _T("ImGui Example"), NULL };
+  ::RegisterClassEx (&gWndClass);
 
   // Create application window
-  hwnd = ::CreateWindow (wc.lpszClassName,
-                         _T("Dear ImGui DirectX11 Example"), WS_OVERLAPPEDWINDOW,
-                         100, 100, 1280, 800, NULL, NULL,
-                         wc.hInstance, NULL);
+  gHWnd = ::CreateWindow (gWndClass.lpszClassName,
+                          _T("Dear ImGui DirectX11 Example"), WS_OVERLAPPEDWINDOW,
+                          100, 100, 1280, 800, NULL, NULL,
+                          gWndClass.hInstance, NULL);
 
   // Initialize Direct3D
-  if (!createDeviceD3D(hwnd)) {
+  DXGI_SWAP_CHAIN_DESC swapChainDesc;
+  ZeroMemory (&swapChainDesc, sizeof(swapChainDesc));
+  swapChainDesc.BufferCount = 2;
+  swapChainDesc.BufferDesc.Width = 0;
+  swapChainDesc.BufferDesc.Height = 0;
+  swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+  swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
+  swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
+  swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+  swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+  swapChainDesc.OutputWindow = gHWnd;
+  swapChainDesc.SampleDesc.Count = 1;
+  swapChainDesc.SampleDesc.Quality = 0;
+  swapChainDesc.Windowed = TRUE;
+  swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+
+  const UINT createDeviceFlags = 0; // D3D11_CREATE_DEVICE_DEBUG;
+  const D3D_FEATURE_LEVEL kFeatureLevels[2] = {
+    D3D_FEATURE_LEVEL_11_0,
+    D3D_FEATURE_LEVEL_10_0, };
+  D3D_FEATURE_LEVEL featureLevel;
+  if (D3D11CreateDeviceAndSwapChain (NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
+                                     createDeviceFlags, kFeatureLevels, 2,
+                                     D3D11_SDK_VERSION, &swapChainDesc, &gSwapChain,
+                                     &gD3dDevice, &featureLevel, &gD3dDeviceContext) != S_OK) {
     cleanupDeviceD3D();
-    ::UnregisterClass (wc.lpszClassName, wc.hInstance);
+    ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
     return false;
     }
 
+  createRenderTarget();
+
   // Show the window
-  ::ShowWindow (hwnd, SW_SHOWDEFAULT);
-  ::UpdateWindow (hwnd);
+  ::ShowWindow (gHWnd, SW_SHOWDEFAULT);
+  ::UpdateWindow (gHWnd);
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -213,6 +203,9 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCa
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 
+
+  ImGui_ImplWin32_Init (gHWnd);
+
   return true;
   }
 //}}}
@@ -224,30 +217,16 @@ void cPlatform::shutdown() {
   ImGui::DestroyContext();
 
   cleanupDeviceD3D();
-  ::DestroyWindow (hwnd);
-  ::UnregisterClass (wc.lpszClassName, wc.hInstance);
+
+  ::DestroyWindow (gHWnd);
+  ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
   }
 //}}}
 
 // gets
-//{{{
-cPoint cPlatform::getWindowSize() {
-
-  return cPoint (1280, 800);
-  }
-//}}}
-//{{{
-ID3D11Device* cPlatform::getDevice() {
-
-  return g_pd3dDevice;
-  }
-//}}}
-//{{{
-ID3D11DeviceContext* cPlatform::getDeviceContext() {
-
-  return g_pd3dDeviceContext;
-  }
-//}}}
+void* cPlatform::getDevice() { return (void*)gD3dDevice; }
+void* cPlatform::getDeviceContext() { return (void*)gD3dDeviceContext; }
+cPoint cPlatform::getWindowSize() { return cPoint (1280, 800); }
 
 // actions
 //{{{
@@ -275,9 +254,23 @@ void cPlatform::newFrame() {
   }
 //}}}
 //{{{
+void cPlatform::selectMainScreen() {
+  const float kClearColorWithAlpha[4] = { 0.f,0.f,0.f, 1.f };
+  gD3dDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
+  gD3dDeviceContext->ClearRenderTargetView (gMainRenderTargetView, kClearColorWithAlpha);
+  }
+//}}}
+//{{{
 void cPlatform::present() {
 
-  g_pSwapChain->Present(1, 0); // Present with vsync
-  //g_pSwapChain->Present(0, 0); // Present without vsync
+  // update and uender additional platform windows
+  ImGuiIO& io = ImGui::GetIO();
+  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
+    }
+
+  gSwapChain->Present(1, 0); // Present with vsync
+  //gSwapChain->Present(0, 0); // Present without vsync
   }
 //}}}

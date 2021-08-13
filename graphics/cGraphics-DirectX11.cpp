@@ -37,7 +37,11 @@ namespace {
     int                         VertexBufferSize;
     int                         IndexBufferSize;
 
-    sBackendData()       { memset(this, 0, sizeof(*this)); VertexBufferSize = 5000; IndexBufferSize = 10000; }
+    sBackendData() {
+      memset(this, 0, sizeof(*this));
+      VertexBufferSize = 5000;
+      IndexBufferSize = 10000;
+      }
     };
   //}}}
   //{{{
@@ -747,7 +751,9 @@ namespace {
   }
 
 //{{{
-bool cGraphics::init (ID3D11Device* device, ID3D11DeviceContext* deviceContext) {
+bool cGraphics::init (void* device, void* deviceContext) {
+
+  bool ok = false;
 
   ImGuiIO& io = ImGui::GetIO();
   IM_ASSERT(io.BackendRendererUserData == NULL && "Already initialized a renderer backend!");
@@ -756,36 +762,39 @@ bool cGraphics::init (ID3D11Device* device, ID3D11DeviceContext* deviceContext) 
   sBackendData* backendData = IM_NEW (sBackendData)();
   io.BackendRendererUserData = (void*)backendData;
   io.BackendRendererName = "imgui_impl_dx11";
-  io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
-  io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;  // We can create multi-viewports on the Renderer side (optional)
+  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
+  io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+  // We can create multi-viewports on the Renderer side (optional)
+  io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 
-  // Get factory from device
-  IDXGIDevice* pDXGIDevice = NULL;
-  IDXGIAdapter* pDXGIAdapter = NULL;
-  IDXGIFactory* pFactory = NULL;
+  // typed device, deviceContext
+  ID3D11Device* d3dDevice = (ID3D11Device*)device;
+  ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)deviceContext;
 
-  if (device->QueryInterface (IID_PPV_ARGS (&pDXGIDevice)) == S_OK)
-    if (pDXGIDevice->GetParent (IID_PPV_ARGS (&pDXGIAdapter)) == S_OK)
-      if (pDXGIAdapter->GetParent (IID_PPV_ARGS (&pFactory)) == S_OK) {
-        backendData->pd3dDevice = device;
-        backendData->pd3dDeviceContext = deviceContext;
-        backendData->pFactory = pFactory;
+  // Get factory from device adpater
+  IDXGIDevice* dxgiDevice = NULL;
+  if (d3dDevice->QueryInterface (IID_PPV_ARGS (&dxgiDevice)) == S_OK) {
+    IDXGIAdapter* dxgiAdapter = NULL;
+    if (dxgiDevice->GetParent (IID_PPV_ARGS (&dxgiAdapter)) == S_OK) {
+      IDXGIFactory* dxgiFactory = NULL;
+      if (dxgiAdapter->GetParent (IID_PPV_ARGS (&dxgiFactory)) == S_OK) {
+        backendData->pd3dDevice = d3dDevice;
+        backendData->pd3dDeviceContext = d3dDeviceContext;
+        backendData->pFactory = dxgiFactory;
+        backendData->pd3dDevice->AddRef();
+        backendData->pd3dDeviceContext->AddRef();
+
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+          initPlatformInterface();
+
+        ok = createDeviceObjects();
         }
+      dxgiAdapter->Release();
+      }
+    dxgiDevice->Release();
+    }
 
-  if (pDXGIDevice)
-    pDXGIDevice->Release();
-  if (pDXGIAdapter)
-    pDXGIAdapter->Release();
-
-  backendData->pd3dDevice->AddRef();
-  backendData->pd3dDeviceContext->AddRef();
-
-  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    initPlatformInterface();
-
-  createDeviceObjects();
-
-  return true;
+  return ok;
   }
 //}}}
 //{{{
