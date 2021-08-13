@@ -35,11 +35,6 @@ namespace {
     };
   //}}}
   //{{{
-  struct sVertexConstantBuffer {
-    float mvp[4][4];
-    };
-  //}}}
-  //{{{
   struct sBackendData {
     ID3D11Device*             pd3dDevice;
     ID3D11DeviceContext*      pd3dDeviceContext;
@@ -75,85 +70,74 @@ namespace {
 
   //{{{
   void createFontsTexture() {
+  // build texture atlas
 
-    // Build texture atlas
-    ImGuiIO& io = ImGui::GetIO();
     sBackendData* backendData = getBackendData();
+
     unsigned char* pixels;
-    int width, height;
-    io.Fonts->GetTexDataAsRGBA32 (&pixels, &width, &height);
+    int width;
+    int height;
+    ImGui::GetIO().Fonts->GetTexDataAsRGBA32 (&pixels, &width, &height);
 
-    //{{{  Upload texture to graphics system
-    {
-    D3D11_TEXTURE2D_DESC desc;
-    ZeroMemory (&desc, sizeof(desc));
-    desc.Width = width;
-    desc.Height = height;
-    desc.MipLevels = 1;
-    desc.ArraySize = 1;
-    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    desc.SampleDesc.Count = 1;
-    desc.Usage = D3D11_USAGE_DEFAULT;
-    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    desc.CPUAccessFlags = 0;
+    // upload texture to graphics system
+    D3D11_TEXTURE2D_DESC texture2dDesc;
+    ZeroMemory (&texture2dDesc, sizeof(texture2dDesc));
+    texture2dDesc.Width = width;
+    texture2dDesc.Height = height;
+    texture2dDesc.MipLevels = 1;
+    texture2dDesc.ArraySize = 1;
+    texture2dDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    texture2dDesc.SampleDesc.Count = 1;
+    texture2dDesc.Usage = D3D11_USAGE_DEFAULT;
+    texture2dDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    texture2dDesc.CPUAccessFlags = 0;
 
-    ID3D11Texture2D* pTexture = NULL;
+    ID3D11Texture2D* texture2d = NULL;
     D3D11_SUBRESOURCE_DATA subResource;
     subResource.pSysMem = pixels;
-    subResource.SysMemPitch = desc.Width * 4;
+    subResource.SysMemPitch = texture2dDesc.Width * 4;
     subResource.SysMemSlicePitch = 0;
-    backendData->pd3dDevice->CreateTexture2D (&desc, &subResource, &pTexture);
-    IM_ASSERT(pTexture != NULL);
 
-    // Create texture view
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-    ZeroMemory (&srvDesc, sizeof(srvDesc));
-    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = desc.MipLevels;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    backendData->pd3dDevice->CreateShaderResourceView (pTexture, &srvDesc, &backendData->pFontTextureView);
-    pTexture->Release();
-    }
-    //}}}
+    backendData->pd3dDevice->CreateTexture2D (&texture2dDesc, &subResource, &texture2d);
+    IM_ASSERT (texture2d != NULL);
 
-    // Store our identifier
-    io.Fonts->SetTexID ((ImTextureID)backendData->pFontTextureView);
+    // create texture view
+    D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+    ZeroMemory (&shaderResourceViewDesc, sizeof(shaderResourceViewDesc));
+    shaderResourceViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    shaderResourceViewDesc.Texture2D.MipLevels = texture2dDesc.MipLevels;
+    shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+    backendData->pd3dDevice->CreateShaderResourceView (texture2d, &shaderResourceViewDesc, &backendData->pFontTextureView);
+    texture2d->Release();
 
-    //{{{  Create texture sampler
-    {
-    D3D11_SAMPLER_DESC desc;
-    ZeroMemory(&desc, sizeof(desc));
-    desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    desc.MipLODBias = 0.f;
-    desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-    desc.MinLOD = 0.f;
-    desc.MaxLOD = 0.f;
+    // store our fonts texture view
+    ImGui::GetIO().Fonts->SetTexID ((ImTextureID)backendData->pFontTextureView);
 
-    backendData->pd3dDevice->CreateSamplerState(&desc, &backendData->pFontSampler);
-    }
-    //}}}
+    // create texture sampler
+    D3D11_SAMPLER_DESC samplerDesc;
+    ZeroMemory (&samplerDesc, sizeof(samplerDesc));
+    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.MipLODBias = 0.f;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+    samplerDesc.MinLOD = 0.f;
+    samplerDesc.MaxLOD = 0.f;
+    backendData->pd3dDevice->CreateSamplerState (&samplerDesc, &backendData->pFontSampler);
     }
   //}}}
   //{{{
   bool createDeviceObjects() {
-  // By using D3DCompile() from <d3dcompiler.h> / d3dcompiler.lib, we introduce a dependency to a given version of d3dcompiler_XX.dll (see D3DCOMPILER_DLL_A)
-  // If you would like to use this DX11 sample code but remove this dependency you can:
-  //  1) compile once, save the compiled shader blobs into a file or source code and pass them to CreateVertexShader()/CreatePixelShader() [preferred solution]
-  //  2) use code to detect any version of the DLL and grab a pointer to D3DCompile from the DLL.
-  // See https://github.com/ocornut/imgui/pull/638 for sources and details.
 
     sBackendData* backendData = getBackendData();
     if (!backendData->pd3dDevice)
       return false;
 
-    {
-    //  Create the vertex shader
+    //  create vertexShader
     //{{{
-    static const char* vertexShader =
+    static const char* kVertexShaderStr =
         "cbuffer vertexBuffer : register(b0) \
         {\
           float4x4 ProjectionMatrix; \
@@ -181,48 +165,49 @@ namespace {
           return output;\
         }";
     //}}}
-
-    // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in
-    // (const char*)pErrorBlob->GetBufferPointer(). Make sure to Release() the blob!
     ID3DBlob* vertexShaderBlob;
-    if (FAILED(D3DCompile(vertexShader, strlen(vertexShader), NULL, NULL, NULL, "main", "vs_4_0", 0, 0, &vertexShaderBlob, NULL)))
-        return false;
-
-    if (backendData->pd3dDevice->CreateVertexShader (
-        vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(),
-        NULL, &backendData->pVertexShader) != S_OK) {
+    if (FAILED (D3DCompile (kVertexShaderStr, strlen(kVertexShaderStr),
+                            NULL, NULL, NULL, "main", "vs_4_0", 0, 0, &vertexShaderBlob, NULL)))
+      return false;
+    if (backendData->pd3dDevice->CreateVertexShader (vertexShaderBlob->GetBufferPointer(),
+                                                     vertexShaderBlob->GetBufferSize(),
+                                                     NULL, &backendData->pVertexShader) != S_OK) {
+      //{{{  release, return false
       vertexShaderBlob->Release();
       return false;
       }
-
-    // Create the input layout
+      //}}}
+    //{{{  create the input layout
     D3D11_INPUT_ELEMENT_DESC local_layout[] = {
       { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0, (UINT)IM_OFFSETOF(ImDrawVert, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
       { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,   0, (UINT)IM_OFFSETOF(ImDrawVert, uv),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
       { "COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, (UINT)IM_OFFSETOF(ImDrawVert, col), D3D11_INPUT_PER_VERTEX_DATA, 0 },
       };
 
-    if (backendData->pd3dDevice->CreateInputLayout(local_layout, 3, vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), &backendData->pInputLayout) != S_OK) {
+    if (backendData->pd3dDevice->CreateInputLayout (local_layout, 3,
+                                                    vertexShaderBlob->GetBufferPointer(),
+                                                    vertexShaderBlob->GetBufferSize(),
+                                                    &backendData->pInputLayout) != S_OK) {
+      //{{{  release, return false
       vertexShaderBlob->Release();
       return false;
       }
+      //}}}
+    //}}}
     vertexShaderBlob->Release();
+    //{{{  create the constant buffer
+    D3D11_BUFFER_DESC bufferDesc;
+    bufferDesc.ByteWidth = sizeof(sViewportData);
+    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    bufferDesc.MiscFlags = 0;
+    backendData->pd3dDevice->CreateBuffer (&bufferDesc, NULL, &backendData->pVertexConstantBuffer);
+    //}}}
 
-      {
-      // Create the constant buffer
-      D3D11_BUFFER_DESC desc;
-      desc.ByteWidth = sizeof(sViewportData);
-      desc.Usage = D3D11_USAGE_DYNAMIC;
-      desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-      desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-      desc.MiscFlags = 0;
-      backendData->pd3dDevice->CreateBuffer(&desc, NULL, &backendData->pVertexConstantBuffer);
-      }
-
-    }
-    //{{{  Create the pixel shader
-    {
-    static const char* pixelShader =
+    // create pixelShader
+    //{{{
+    static const char* kPixelShaderStr =
         "struct PS_INPUT\
         {\
         float4 pos : SV_POSITION;\
@@ -237,61 +222,57 @@ namespace {
         float4 out_col = input.col * texture0.Sample(sampler0, input.uv); \
         return out_col; \
         }";
-
+    //}}}
     ID3DBlob* pixelShaderBlob;
-    if (FAILED(D3DCompile(pixelShader, strlen(pixelShader), NULL, NULL, NULL, "main", "ps_4_0", 0, 0, &pixelShaderBlob, NULL)))
-      return false; // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in (const char*)pErrorBlob->GetBufferPointer(). Make sure to Release() the blob!
-
-    if (backendData->pd3dDevice->CreatePixelShader (pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize(),
-                                           NULL, &backendData->pPixelShader) != S_OK) {
+    if (FAILED (D3DCompile (kPixelShaderStr, strlen(kPixelShaderStr),
+                            NULL, NULL, NULL, "main", "ps_4_0", 0, 0, &pixelShaderBlob, NULL)))
+      return false;
+    if (backendData->pd3dDevice->CreatePixelShader (pixelShaderBlob->GetBufferPointer(),
+                                                    pixelShaderBlob->GetBufferSize(),
+                                                    NULL, &backendData->pPixelShader) != S_OK) {
+      //{{{  release, return false
       pixelShaderBlob->Release();
       return false;
       }
-
+      //}}}
     pixelShaderBlob->Release();
-    }
-    //}}}
-    //{{{  Create the blending setup
-    {
-    D3D11_BLEND_DESC desc;
-    ZeroMemory(&desc, sizeof(desc));
-    desc.AlphaToCoverageEnable = false;
-    desc.RenderTarget[0].BlendEnable = true;
-    desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-    desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-    desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-    desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-    desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
-    desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-    backendData->pd3dDevice->CreateBlendState(&desc, &backendData->pBlendState);
-    }
-    //}}}
-    //{{{  Create the rasterizer state
-    {
-    D3D11_RASTERIZER_DESC desc;
-    ZeroMemory(&desc, sizeof(desc));
-    desc.FillMode = D3D11_FILL_SOLID;
-    desc.CullMode = D3D11_CULL_NONE;
-    desc.ScissorEnable = true;
-    desc.DepthClipEnable = true;
-    backendData->pd3dDevice->CreateRasterizerState(&desc, &backendData->pRasterizerState);
-    }
-    //}}}
-    //{{{  Create depth-stencil State
-    {
-    D3D11_DEPTH_STENCIL_DESC desc;
-    ZeroMemory(&desc, sizeof(desc));
-    desc.DepthEnable = false;
-    desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    desc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-    desc.StencilEnable = false;
-    desc.FrontFace.StencilFailOp = desc.FrontFace.StencilDepthFailOp = desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-    desc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-    desc.BackFace = desc.FrontFace;
-    backendData->pd3dDevice->CreateDepthStencilState(&desc, &backendData->pDepthStencilState);
-    }
-    //}}}
+
+    // create the blendDesc
+    D3D11_BLEND_DESC blendDesc;
+    ZeroMemory (&blendDesc, sizeof(blendDesc));
+    blendDesc.AlphaToCoverageEnable = false;
+    blendDesc.RenderTarget[0].BlendEnable = true;
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    backendData->pd3dDevice->CreateBlendState (&blendDesc, &backendData->pBlendState);
+
+    // create the rasterizerDesc
+    D3D11_RASTERIZER_DESC rasterizerDesc;
+    ZeroMemory (&rasterizerDesc, sizeof(rasterizerDesc));
+    rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+    rasterizerDesc.CullMode = D3D11_CULL_NONE;
+    rasterizerDesc.ScissorEnable = true;
+    rasterizerDesc.DepthClipEnable = true;
+    backendData->pd3dDevice->CreateRasterizerState (&rasterizerDesc, &backendData->pRasterizerState);
+
+    // create depthStencilDesc
+    D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+    ZeroMemory (&depthStencilDesc, sizeof(depthStencilDesc));
+    depthStencilDesc.DepthEnable = false;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+    depthStencilDesc.StencilEnable = false;
+    depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+    depthStencilDesc.BackFace = depthStencilDesc.FrontFace;
+    backendData->pd3dDevice->CreateDepthStencilState (&depthStencilDesc, &backendData->pDepthStencilState);
 
     createFontsTexture();
 
@@ -410,7 +391,8 @@ namespace {
     sBackendData* backendData = getBackendData();
     ID3D11DeviceContext* deviceContext = backendData->pd3dDeviceContext;
 
-    // create and grow vertex/index buffers if needed
+    // copy drawList vertex,index to GPU
+    //{{{  manage gpu vertex buffer
     if (!backendData->pVB || backendData->VertexBufferSize < drawData->TotalVtxCount) {
       if (backendData->pVB) {
         backendData->pVB->Release();
@@ -425,10 +407,16 @@ namespace {
       desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
       desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
       desc.MiscFlags = 0;
-      if (backendData->pd3dDevice->CreateBuffer(&desc, NULL, &backendData->pVB) < 0)
+      if (backendData->pd3dDevice->CreateBuffer (&desc, NULL, &backendData->pVB) < 0)
         return;
       }
 
+    D3D11_MAPPED_SUBRESOURCE vtx_resource;
+    if (deviceContext->Map (backendData->pVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &vtx_resource) != S_OK)
+      return;
+    ImDrawVert* vtx_dst = (ImDrawVert*)vtx_resource.pData;
+    //}}}
+    //{{{  manage gpu index buffer
     if (!backendData->pIB || backendData->IndexBufferSize < drawData->TotalIdxCount) {
       if (backendData->pIB) {
         backendData->pIB->Release();
@@ -442,19 +430,15 @@ namespace {
       desc.ByteWidth = backendData->IndexBufferSize * sizeof(ImDrawIdx);
       desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
       desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-      if (backendData->pd3dDevice->CreateBuffer(&desc, NULL, &backendData->pIB) < 0)
+      if (backendData->pd3dDevice->CreateBuffer (&desc, NULL, &backendData->pIB) < 0)
         return;
       }
 
-    // upload vertex/index data into a single contiguous GPU buffer
-    D3D11_MAPPED_SUBRESOURCE vtx_resource, idx_resource;
-    if (deviceContext->Map (backendData->pVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &vtx_resource) != S_OK)
-      return;
+    D3D11_MAPPED_SUBRESOURCE idx_resource;
     if (deviceContext->Map (backendData->pIB, 0, D3D11_MAP_WRITE_DISCARD, 0, &idx_resource) != S_OK)
       return;
-
-    ImDrawVert* vtx_dst = (ImDrawVert*)vtx_resource.pData;
     ImDrawIdx* idx_dst = (ImDrawIdx*)idx_resource.pData;
+    //}}}
     for (int n = 0; n < drawData->CmdListsCount; n++) {
       const ImDrawList* cmdList = drawData->CmdLists[n];
       memcpy (vtx_dst, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
@@ -462,30 +446,37 @@ namespace {
       vtx_dst += cmdList->VtxBuffer.Size;
       idx_dst += cmdList->IdxBuffer.Size;
       }
-
     deviceContext->Unmap (backendData->pVB, 0);
     deviceContext->Unmap (backendData->pIB, 0);
 
     //{{{  Setup orthographic projection matrix into our constant buffer
-    // Our visible imgui space lies from draw_data->DisplayPos (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayPos is (0,0) for single viewport apps.
+    //{{{
+    struct sMatrix {
+      float matrix[4][4];
+      };
+    //}}}
     {
-    D3D11_MAPPED_SUBRESOURCE mapped_resource;
-    if (deviceContext->Map(backendData->pVertexConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_resource) != S_OK)
-      return;
-    sVertexConstantBuffer* constant_buffer = (sVertexConstantBuffer*)mapped_resource.pData;
-
-    float L = drawData->DisplayPos.x;
-    float R = drawData->DisplayPos.x + drawData->DisplaySize.x;
-    float T = drawData->DisplayPos.y;
-    float B = drawData->DisplayPos.y + drawData->DisplaySize.y;
-    float mvp[4][4] = {
+    // visible imgui space lies
+    // - from draw_data->DisplayPos (top left)
+    // - to draw_data->DisplayPos+data_data->DisplaySize (bottom right)
+    // - DisplayPos is (0,0) for single viewport apps.
+    const float L = drawData->DisplayPos.x;
+    const float R = drawData->DisplayPos.x + drawData->DisplaySize.x;
+    const float T = drawData->DisplayPos.y;
+    const float B = drawData->DisplayPos.y + drawData->DisplaySize.y;
+    const float kMatrix[4][4] = {
       { 2.0f/(R-L),   0.0f,           0.0f,       0.0f },
       { 0.0f,         2.0f/(T-B),     0.0f,       0.0f },
       { 0.0f,         0.0f,           0.5f,       0.0f },
       { (R+L)/(L-R),  (T+B)/(B-T),    0.5f,       1.0f },
       };
 
-    memcpy (&constant_buffer->mvp, mvp, sizeof (mvp));
+    D3D11_MAPPED_SUBRESOURCE mappedSubResource;
+    if (deviceContext->Map (backendData->pVertexConstantBuffer,
+                            0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource) != S_OK)
+      return;
+    sMatrix* matrix = (sMatrix*)mappedSubResource.pData;
+    memcpy (&matrix->matrix, kMatrix, sizeof(sMatrix));
     deviceContext->Unmap (backendData->pVertexConstantBuffer, 0);
     }
     //}}}
@@ -540,68 +531,67 @@ namespace {
 
     // Render command lists
     // (Because we merged all buffers into a single one, we maintain our own offset into them)
-    int global_idx_offset = 0;
-    int global_vtx_offset = 0;
-    ImVec2 clip_off = drawData->DisplayPos;
-    for (int n = 0; n < drawData->CmdListsCount; n++) {
-      const ImDrawList* cmd_list = drawData->CmdLists[n];
-      for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++) {
-        const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
-        if (pcmd->UserCallback != NULL) {
+    int globalIndexOffset = 0;
+    int globalVertexOffset = 0;
+    ImVec2 clipOffset = drawData->DisplayPos;
+    for (int cmdListIndex = 0; cmdListIndex < drawData->CmdListsCount; cmdListIndex++) {
+      const ImDrawList* cmdList = drawData->CmdLists[cmdListIndex];
+      for (int cmdIndex = 0; cmdIndex < cmdList->CmdBuffer.Size; cmdIndex++) {
+        const ImDrawCmd* drawCmd = &cmdList->CmdBuffer[cmdIndex];
+        if (drawCmd->UserCallback != NULL) {
           // User callback, registered via ImDrawList::AddCallback()
           // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
-          if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
+          if (drawCmd->UserCallback == ImDrawCallback_ResetRenderState)
             setupRenderState (drawData, deviceContext);
           else
-            pcmd->UserCallback (cmd_list, pcmd);
+            drawCmd->UserCallback (cmdList, drawCmd);
           }
         else {
           // Apply scissor/clipping rectangle
-          const D3D11_RECT r = { (LONG)(pcmd->ClipRect.x - clip_off.x), (LONG)(pcmd->ClipRect.y - clip_off.y),
-                                 (LONG)(pcmd->ClipRect.z - clip_off.x), (LONG)(pcmd->ClipRect.w - clip_off.y) };
+          const D3D11_RECT r = { (LONG)(drawCmd->ClipRect.x - clipOffset.x), (LONG)(drawCmd->ClipRect.y - clipOffset.y),
+                                 (LONG)(drawCmd->ClipRect.z - clipOffset.x), (LONG)(drawCmd->ClipRect.w - clipOffset.y) };
           deviceContext->RSSetScissorRects (1, &r);
 
-          // Bind texture, Draw
-          ID3D11ShaderResourceView* texture_srv = (ID3D11ShaderResourceView*)pcmd->GetTexID();
-          deviceContext->PSSetShaderResources (0, 1, &texture_srv);
-          deviceContext->DrawIndexed (pcmd->ElemCount,
-                                      pcmd->IdxOffset + global_idx_offset,
-                                      pcmd->VtxOffset + global_vtx_offset);
+          // bind texture and draw
+          ID3D11ShaderResourceView* shaderResourceView = (ID3D11ShaderResourceView*)drawCmd->GetTexID();
+          deviceContext->PSSetShaderResources (0, 1, &shaderResourceView);
+          deviceContext->DrawIndexed (
+            drawCmd->ElemCount, drawCmd->IdxOffset + globalIndexOffset, drawCmd->VtxOffset + globalVertexOffset);
           }
         }
-      global_idx_offset += cmd_list->IdxBuffer.Size;
-      global_vtx_offset += cmd_list->VtxBuffer.Size;
+      globalIndexOffset += cmdList->IdxBuffer.Size;
+      globalVertexOffset += cmdList->VtxBuffer.Size;
       }
 
     //{{{  restore modified DX state
-    deviceContext->RSSetScissorRects(old.ScissorRectsCount, old.ScissorRects);
-    deviceContext->RSSetViewports(old.ViewportsCount, old.Viewports);
-    deviceContext->RSSetState(old.RS); if (old.RS) old.RS->Release();
+    deviceContext->RSSetScissorRects (old.ScissorRectsCount, old.ScissorRects);
+    deviceContext->RSSetViewports (old.ViewportsCount, old.Viewports);
+    deviceContext->RSSetState (old.RS); if (old.RS) old.RS->Release();
 
-    deviceContext->OMSetBlendState(old.BlendState, old.BlendFactor, old.SampleMask);
+    deviceContext->OMSetBlendState (old.BlendState, old.BlendFactor, old.SampleMask);
     if (old.BlendState)
       old.BlendState->Release();
 
-    deviceContext->OMSetDepthStencilState(old.DepthStencilState, old.StencilRef);
+    deviceContext->OMSetDepthStencilState (old.DepthStencilState, old.StencilRef);
     if (old.DepthStencilState)
       old.DepthStencilState->Release();
 
-    deviceContext->PSSetShaderResources(0, 1, &old.PSShaderResource);
+    deviceContext->PSSetShaderResources (0, 1, &old.PSShaderResource);
     if (old.PSShaderResource)
       old.PSShaderResource->Release();
-    deviceContext->PSSetSamplers(0, 1, &old.PSSampler);
+    deviceContext->PSSetSamplers (0, 1, &old.PSSampler);
     if (old.PSSampler)
       old.PSSampler->Release();
-    deviceContext->PSSetShader(old.PS, old.PSInstances, old.PSInstancesCount);
+    deviceContext->PSSetShader (old.PS, old.PSInstances, old.PSInstancesCount);
     if (old.PS)
       old.PS->Release();
     for (UINT i = 0; i < old.PSInstancesCount; i++)
       if (old.PSInstances[i])
         old.PSInstances[i]->Release();
 
-    deviceContext->VSSetShader(old.VS, old.VSInstances, old.VSInstancesCount);
+    deviceContext->VSSetShader (old.VS, old.VSInstances, old.VSInstancesCount);
     if (old.VS) old.VS->Release();
-      deviceContext->VSSetConstantBuffers(0, 1, &old.VSConstantBuffer);
+      deviceContext->VSSetConstantBuffers (0, 1, &old.VSConstantBuffer);
     if (old.VSConstantBuffer) old.VSConstantBuffer->Release();
       deviceContext->GSSetShader(old.GS, old.GSInstances, old.GSInstancesCount);
     if (old.GS)
@@ -610,17 +600,17 @@ namespace {
       if (old.VSInstances[i])
         old.VSInstances[i]->Release();
 
-    deviceContext->IASetPrimitiveTopology(old.PrimitiveTopology);
-    deviceContext->IASetIndexBuffer(old.IndexBuffer, old.IndexBufferFormat, old.IndexBufferOffset);
+    deviceContext->IASetPrimitiveTopology (old.PrimitiveTopology);
+    deviceContext->IASetIndexBuffer (old.IndexBuffer, old.IndexBufferFormat, old.IndexBufferOffset);
 
     if (old.IndexBuffer)
       old.IndexBuffer->Release();
 
-    deviceContext->IASetVertexBuffers(0, 1, &old.VertexBuffer, &old.VertexBufferStride, &old.VertexBufferOffset);
+    deviceContext->IASetVertexBuffers (0, 1, &old.VertexBuffer, &old.VertexBufferStride, &old.VertexBufferOffset);
     if (old.VertexBuffer)
       old.VertexBuffer->Release();
 
-    deviceContext->IASetInputLayout(old.InputLayout);
+    deviceContext->IASetInputLayout (old.InputLayout);
     if (old.InputLayout)
       old.InputLayout->Release();
     //}}}
@@ -632,7 +622,7 @@ namespace {
   void createWindow (ImGuiViewport* viewport) {
 
     sBackendData* backendData = getBackendData();
-    sViewportData* viewportData = IM_NEW(sViewportData)();
+    sViewportData* viewportData = IM_NEW (sViewportData)();
     viewport->RendererUserData = viewportData;
 
     // platformHandleRaw should always be a HWND, whereas PlatformHandle might be a higher-level handle (e.g. GLFWWindow*, SDL_Window*).
@@ -641,22 +631,22 @@ namespace {
     IM_ASSERT(hWnd != 0);
 
     // create swap chain
-    DXGI_SWAP_CHAIN_DESC sd;
-    ZeroMemory (&sd, sizeof(sd));
-    sd.BufferDesc.Width = (UINT)viewport->Size.x;
-    sd.BufferDesc.Height = (UINT)viewport->Size.y;
-    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    sd.SampleDesc.Count = 1;
-    sd.SampleDesc.Quality = 0;
-    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.BufferCount = 1;
-    sd.OutputWindow = hWnd;
-    sd.Windowed = TRUE;
-    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-    sd.Flags = 0;
+    DXGI_SWAP_CHAIN_DESC swapChainDesc;
+    ZeroMemory (&swapChainDesc, sizeof(swapChainDesc));
+    swapChainDesc.BufferDesc.Width = (UINT)viewport->Size.x;
+    swapChainDesc.BufferDesc.Height = (UINT)viewport->Size.y;
+    swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.SampleDesc.Count = 1;
+    swapChainDesc.SampleDesc.Quality = 0;
+    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapChainDesc.BufferCount = 1;
+    swapChainDesc.OutputWindow = hWnd;
+    swapChainDesc.Windowed = TRUE;
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    swapChainDesc.Flags = 0;
 
     IM_ASSERT (viewportData->SwapChain == NULL && viewportData->RTView == NULL);
-    backendData->pFactory->CreateSwapChain (backendData->pd3dDevice, &sd, &viewportData->SwapChain);
+    backendData->pFactory->CreateSwapChain (backendData->pd3dDevice, &swapChainDesc, &viewportData->SwapChain);
 
     // create the render target
     if (viewportData->SwapChain) {
@@ -808,6 +798,7 @@ void cGraphics::shutdown() {
 
   io.BackendRendererName = NULL;
   io.BackendRendererUserData = NULL;
+
   IM_DELETE(backendData);
   }
 //}}}
