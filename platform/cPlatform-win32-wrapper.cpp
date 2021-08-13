@@ -28,16 +28,13 @@ using namespace std;
 using namespace fmt;
 //}}}
 namespace {
-  // vars
+  cPoint gWindowSize;
   WNDCLASSEX gWndClass;
   HWND gHWnd;
-
   ID3D11Device* gD3dDevice = NULL;
   ID3D11DeviceContext*  gD3dDeviceContext = NULL;
-
   IDXGISwapChain* gSwapChain = NULL;
   ID3D11RenderTargetView* gMainRenderTargetView = NULL;
-  cPoint gWindowSize;
 
   //{{{
   void createMainRenderTarget() {
@@ -111,7 +108,6 @@ namespace {
   //}}}
   }
 
-// cPlatform
 //{{{
 bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCallbackFunc sizeCallback) {
 
@@ -171,26 +167,24 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCa
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGuiIO& io = ImGui::GetIO(); (void)io;
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-  //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-  //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-  //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-  //io.ConfigViewportsNoAutoMerge = true;
-  //io.ConfigViewportsNoTaskBarIcon = true;
-  //io.ConfigViewportsNoDefaultParent = true;
-  //io.ConfigDockingAlwaysTabBar = true;
-  //io.ConfigDockingTransparentPayload = true;
-  //io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;     // FIXME-DPI: Experimental. THIS CURRENTLY DOESN'T WORK AS EXPECTED. DON'T USE IN USER APP!
-  //io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports; // FIXME-DPI: Experimental.
-
-  // Setup Dear ImGui style
   ImGui::StyleColorsDark();
-  //ImGui::StyleColorsClassic();
 
-  // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+  ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+  //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+  //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+
+  //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+  //ImGui::GetIO().ConfigViewportsNoAutoMerge = true;
+  //ImGui::GetIO().ConfigViewportsNoTaskBarIcon = true;
+  //ImGui::GetIO().ConfigViewportsNoDefaultParent = true;
+  //ImGui::GetIO().ConfigDockingAlwaysTabBar = true;
+  //ImGui::GetIO().ConfigDockingTransparentPayload = true;
+  //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;     // FIXME-DPI: Experimental. THIS CURRENTLY DOESN'T WORK AS EXPECTED. DON'T USE IN USER APP!
+  //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports; // FIXME-DPI: Experimental.
+
+  // if viewports enabled, tweak WindowRounding/WindowBg so platform windows look identical
   ImGuiStyle& style = ImGui::GetStyle();
-  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
     style.WindowRounding = 0.0f;
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }

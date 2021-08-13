@@ -73,48 +73,7 @@ namespace {
   //}}}
 
   //{{{
-  void invalidateDeviceObjects() {
-
-    sBackendData* backendData = getBackendData();
-
-    if (backendData->mFontSampler)
-      backendData->mFontSampler->Release();
-
-    if (backendData->mFontTextureView)
-      backendData->mFontTextureView->Release();
-
-    if (backendData->mIB)
-      backendData->mIB->Release();
-
-    if (backendData->mVB)
-      backendData->mVB->Release();
-
-    if (backendData->mBlendState)
-      backendData->mBlendState->Release();
-
-    if (backendData->mDepthStencilState)
-      backendData->mDepthStencilState->Release();
-
-    if (backendData->mRasterizerState)
-      backendData->mRasterizerState->Release();
-
-    if (backendData->mPixelShader)
-      backendData->mPixelShader->Release();
-
-    if (backendData->mVertexConstantBuffer)
-      backendData->mVertexConstantBuffer->Release();
-
-    if (backendData->mInputLayout)
-      backendData->mInputLayout->Release();
-
-    if (backendData->mVertexShader)
-      backendData->mVertexShader->Release();
-    }
-  //}}}
-  //{{{
   void createFontTexture() {
-
-    sBackendData* backendData = getBackendData();
 
     unsigned char* pixels;
     int width;
@@ -140,6 +99,7 @@ namespace {
     subResource.SysMemPitch = texture2dDesc.Width * 4;
     subResource.SysMemSlicePitch = 0;
 
+    sBackendData* backendData = getBackendData();
     backendData->mD3dDevice->CreateTexture2D (&texture2dDesc, &subResource, &texture2d);
     IM_ASSERT (texture2d != NULL);
 
@@ -174,8 +134,6 @@ namespace {
   bool createDeviceObjects() {
 
     sBackendData* backendData = getBackendData();
-    if (backendData->mFontSampler)
-      invalidateDeviceObjects();
 
     //{{{  create vertex shader
     static const char* kVertexShaderStr =
@@ -647,7 +605,7 @@ bool cGraphics::init (void* device, void* deviceContext) {
   ImGui::GetIO().BackendRendererName = "imgui_impl_dx11";
   ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
   // We can create multi-viewports on the Renderer side (optional)
-  //ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+  ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 
   // Get factory from device adpater
   ID3D11Device* d3dDevice = (ID3D11Device*)device;
@@ -690,13 +648,48 @@ bool cGraphics::init (void* device, void* deviceContext) {
 void cGraphics::shutdown() {
 
   ImGui::DestroyPlatformWindows();
-  invalidateDeviceObjects();
 
   sBackendData* backendData = getBackendData();
+
+  if (backendData->mFontSampler)
+    backendData->mFontSampler->Release();
+
+  if (backendData->mFontTextureView)
+    backendData->mFontTextureView->Release();
+
+  if (backendData->mIB)
+    backendData->mIB->Release();
+
+  if (backendData->mVB)
+    backendData->mVB->Release();
+
+  if (backendData->mBlendState)
+    backendData->mBlendState->Release();
+
+  if (backendData->mDepthStencilState)
+    backendData->mDepthStencilState->Release();
+
+  if (backendData->mRasterizerState)
+    backendData->mRasterizerState->Release();
+
+  if (backendData->mPixelShader)
+    backendData->mPixelShader->Release();
+
+  if (backendData->mVertexConstantBuffer)
+    backendData->mVertexConstantBuffer->Release();
+
+  if (backendData->mInputLayout)
+    backendData->mInputLayout->Release();
+
+  if (backendData->mVertexShader)
+    backendData->mVertexShader->Release();
+
   if (backendData->mFactory)
     backendData->mFactory->Release();
+
   if (backendData->mD3dDevice)
     backendData->mD3dDevice->Release();
+
   if (backendData->mD3dDeviceContext)
     backendData->mD3dDeviceContext->Release();
 
