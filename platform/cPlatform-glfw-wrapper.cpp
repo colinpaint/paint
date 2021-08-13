@@ -1,4 +1,4 @@
-// cPlatform.cpp - glfw
+// cPlatform-Glfw-wrapper.cpp - imGui backend glfwImpl wrapper - abstracted from imGui glfwOpenGL3 example main.cpp
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
