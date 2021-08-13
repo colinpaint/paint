@@ -10,8 +10,10 @@ set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FO
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED True)
 
-set (PLATFORM "PLATFORM_GLFW")
-set (GRAPHICS "OPENGL_40")
+#set (PLATFORM "PLATFORM_GLFW")
+#set (GRAPHICS "OPENGL_45")
+set (PLATFORM "PLATFORM_WIN32")
+set (GRAPHICS "DIRECTX11")
 
 # compiler,linker flags
 if (WIN32)
@@ -82,7 +84,7 @@ add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 # link, watch out for order dependent static link in linux
 if (WIN32)
   if (GRAPHICS STREQUAL "DIRECTX11")
-    target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log)
+    target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log d3d11 d3dcompiler)
   else()
     target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw opengl32)
   endif()

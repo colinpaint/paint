@@ -6,8 +6,6 @@
 #include <vector>
 #include <string>
 
-#include <GLFW/glfw3.h>
-
 // glm
 #include <vec2.hpp>
 

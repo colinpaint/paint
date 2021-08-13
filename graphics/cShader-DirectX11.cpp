@@ -7,9 +7,6 @@
 #include <string>
 #include <algorithm>
 
-// glad
-#include <glad/glad.h>
-
 // glm
 #include <vec2.hpp>
 #include <vec3.hpp>
@@ -460,104 +457,46 @@ namespace {
 //{{{
 void cShader::use() {
 
-  glUseProgram (mId);
+  //glUseProgram (mId);
   }
 //}}}
 
 //{{{
 cShader::cShader (const string& vertShaderString, const string& fragShaderString) {
 
-  // compile vertShader
-  const GLuint vertShader = glCreateShader (GL_VERTEX_SHADER);
-  const GLchar* vertShaderStr = vertShaderString.c_str();
-  glShaderSource (vertShader, 1, &vertShaderStr, 0);
-  glCompileShader (vertShader);
-  GLint success;
-  glGetShaderiv (vertShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    //{{{  error, exit
-    char errMessage[512];
-    glGetProgramInfoLog (vertShader, 512, NULL, errMessage);
-    cLog::log (LOGERROR, format ("vertShader failed {}", errMessage));
-
-    exit (EXIT_FAILURE);
-    }
-    //}}}
-
-  // compile fragShader
-  const GLuint fragShader = glCreateShader (GL_FRAGMENT_SHADER);
-  const GLchar* fragShaderStr = fragShaderString.c_str();
-  glShaderSource (fragShader, 1, &fragShaderStr, 0);
-  glCompileShader (fragShader);
-  glGetShaderiv (fragShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    //{{{  error, exit
-    char errMessage[512];
-    glGetProgramInfoLog (fragShader, 512, NULL, errMessage);
-    cLog::log (LOGERROR, format ("fragShader failed {}", errMessage));
-    exit (EXIT_FAILURE);
-    }
-    //}}}
-
-  // create shader program
-  mId = glCreateProgram();
-  glAttachShader (mId, vertShader);
-  glAttachShader (mId, fragShader);
-  glLinkProgram (mId);
-  glGetProgramiv (mId, GL_LINK_STATUS, &success);
-  if (!success) {
-    //{{{  error, exit
-    char errMessage[512];
-    glGetProgramInfoLog (mId, 512, NULL, errMessage);
-    cLog::log (LOGERROR, format ("shaderProgram failed {} ",  errMessage));
-
-    exit (EXIT_FAILURE);
-    }
-    //}}}
-
-  glDeleteShader (vertShader);
-  glDeleteShader (fragShader);
   }
 //}}}
 //{{{
 cShader::~cShader() {
-  glDeleteProgram (mId);
   }
 //}}}
 
 //{{{
 void cShader::setBool (const string &name, bool value) {
-  glUniform1i (glGetUniformLocation(mId, name.c_str()), value);
   }
 //}}}
 //{{{
 void cShader::setInt (const string &name, int value) {
-  glUniform1i (glGetUniformLocation (mId, name.c_str()), value);
   }
 //}}}
 //{{{
 void cShader::setFloat (const string &name, float value) {
-  glUniform1f (glGetUniformLocation (mId, name.c_str()), value);
   }
 //}}}
 //{{{
 void cShader::setVec2 (const string &name, glm::vec2 value) {
-  glUniform2fv (glGetUniformLocation (mId, name.c_str()), 1, glm::value_ptr (value));
   }
 //}}}
 //{{{
 void cShader::setVec3 (const string &name, glm::vec3 value) {
-  glUniform3fv (glGetUniformLocation (mId, name.c_str()), 1, glm::value_ptr (value));
   }
 //}}}
 //{{{
 void cShader::setVec4 (const string &name, glm::vec4 value) {
-  glUniform4fv (glGetUniformLocation (mId, name.c_str()), 1, glm::value_ptr (value));
   }
 //}}}
 //{{{
 void cShader::setMat4 (const string &name, glm::mat4 value) {
-  glUniformMatrix4fv (glGetUniformLocation (mId, name.c_str()), 1, GL_FALSE, glm::value_ptr (value));
   }
 //}}}
 
@@ -587,7 +526,7 @@ void cLayerShader::setHueSatVal (float hue, float sat, float val) {
 // cPaintShader
 cPaintShader::cPaintShader() : cQuadShader (kPaintFragShader) {}
 //{{{
-void cPaintShader::setStroke (const glm::vec2& pos, const glm::vec2& prevPos, 
+void cPaintShader::setStroke (const glm::vec2& pos, const glm::vec2& prevPos,
                               float radius, const glm::vec4& color) {
 
   setVec2 ("uPos", pos);
@@ -621,16 +560,15 @@ cDrawListShader::cDrawListShader (uint32_t glslVersion)
     : cShader (kDrawListVertShader130, kDrawListFragShader130) {
 
   // store uniform locations
-  mAttribLocationTexture = glGetUniformLocation (getId(), "Texture");
-  mAttribLocationProjMtx = glGetUniformLocation (getId(), "ProjMtx");
+  //mAttribLocationTexture = glGetUniformLocation (getId(), "Texture");
+  //mAttribLocationProjMtx = glGetUniformLocation (getId(), "ProjMtx");
 
-  mAttribLocationVtxPos = glGetAttribLocation (getId(), "Position");
-  mAttribLocationVtxUV = glGetAttribLocation (getId(), "UV");
-  mAttribLocationVtxColor = glGetAttribLocation (getId(), "Color");
+  //mAttribLocationVtxPos = glGetAttribLocation (getId(), "Position");
+  //mAttribLocationVtxUV = glGetAttribLocation (getId(), "UV");
+  //mAttribLocationVtxColor = glGetAttribLocation (getId(), "Color");
   }
 //}}}
 //{{{
 void cDrawListShader::setMatrix (float* matrix) {
-  glUniformMatrix4fv (mAttribLocationProjMtx, 1, GL_FALSE, matrix);
   };
 //}}}

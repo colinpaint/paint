@@ -6,8 +6,6 @@
 #include <vector>
 #include <string>
 
-#include <GLFW/glfw3.h>
-
 // glm
 #include <vec4.hpp>
 
@@ -61,16 +59,16 @@ void cColorUI::addToDrawList (cCanvas& canvas) {
 
     // swatch popup
     if (ImGui::BeginPopupContextItem()) {
-      if (ImGui::MenuItem ("set", "S") || ImGui::IsKeyPressed (GLFW_KEY_S, false)) {
+      if (ImGui::MenuItem ("set", "S")) {
         swatch = brush->getColor();
         swatch.w = 1.f;
         }
 
-      if (ImGui::MenuItem ("unset", "X", nullptr, swatch.w != 0.f) || ImGui::IsKeyPressed (GLFW_KEY_X, false))
+      if (ImGui::MenuItem ("unset", "X", nullptr, swatch.w != 0.f) )
         swatch = glm::vec4 (0.f, 0.f, 0.f, 0.f);
 
       ImGui::Separator();
-      if (ImGui::MenuItem ("cancel", "C") || ImGui::IsKeyPressed (GLFW_KEY_C, false))
+      if (ImGui::MenuItem ("cancel", "C") )
         ImGui::CloseCurrentPopup();
 
       ImGui::EndPopup();
