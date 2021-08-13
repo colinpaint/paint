@@ -74,6 +74,45 @@ namespace {
   //}}}
 
   //{{{
+  void invalidateDeviceObjects() {
+
+    sBackendData* backendData = getBackendData();
+
+    if (backendData->pFontSampler)
+      backendData->pFontSampler->Release();
+
+    if (backendData->pFontTextureView)
+      backendData->pFontTextureView->Release();
+
+    if (backendData->pIB)
+      backendData->pIB->Release();
+
+    if (backendData->pVB)
+      backendData->pVB->Release();
+
+    if (backendData->pBlendState)
+      backendData->pBlendState->Release();
+
+    if (backendData->pDepthStencilState)
+      backendData->pDepthStencilState->Release();
+
+    if (backendData->pRasterizerState)
+      backendData->pRasterizerState->Release();
+
+    if (backendData->pPixelShader)
+      backendData->pPixelShader->Release();
+
+    if (backendData->pVertexConstantBuffer)
+      backendData->pVertexConstantBuffer->Release();
+
+    if (backendData->pInputLayout)
+      backendData->pInputLayout->Release();
+
+    if (backendData->pVertexShader)
+      backendData->pVertexShader->Release();
+    }
+  //}}}
+  //{{{
   void createFontsTexture() {
   // build texture atlas
 
@@ -134,155 +173,125 @@ namespace {
     }
   //}}}
   //{{{
-  void invalidateDeviceObjects() {
-
-    sBackendData* backendData = getBackendData();
-
-    if (backendData->pFontSampler)
-      backendData->pFontSampler->Release();
-
-    if (backendData->pFontTextureView)
-      backendData->pFontTextureView->Release();
-
-    if (backendData->pIB)
-      backendData->pIB->Release();
-
-    if (backendData->pVB)
-      backendData->pVB->Release();
-
-    if (backendData->pBlendState)
-      backendData->pBlendState->Release();
-
-    if (backendData->pDepthStencilState)
-      backendData->pDepthStencilState->Release();
-
-    if (backendData->pRasterizerState)
-      backendData->pRasterizerState->Release();
-
-    if (backendData->pPixelShader)
-      backendData->pPixelShader->Release();
-
-    if (backendData->pVertexConstantBuffer)
-      backendData->pVertexConstantBuffer->Release();
-
-    if (backendData->pInputLayout)
-      backendData->pInputLayout->Release();
-
-    if (backendData->pVertexShader)
-      backendData->pVertexShader->Release();
-    }
-  //}}}
-  //{{{
   bool createDeviceObjects() {
 
     sBackendData* backendData = getBackendData();
-    if (!backendData->pd3dDevice)
-        return false;
     if (backendData->pFontSampler)
-        invalidateDeviceObjects();
+      invalidateDeviceObjects();
 
-    // By using D3DCompile() from <d3dcompiler.h> / d3dcompiler.lib, we introduce a dependency to a given version of d3dcompiler_XX.dll (see D3DCOMPILER_DLL_A)
-    // If you would like to use this DX11 sample code but remove this dependency you can:
-    //  1) compile once, save the compiled shader blobs into a file or source code and pass them to CreateVertexShader()/CreatePixelShader() [preferred solution]
-    //  2) use code to detect any version of the DLL and grab a pointer to D3DCompile from the DLL.
-    // See https://github.com/ocornut/imgui/pull/638 for sources and details.
-
-    //{{{
+    //{{{  create vertex shader
     static const char* kVertexShaderStr =
-        "cbuffer vertexBuffer : register(b0) \
-        {\
-          float4x4 ProjectionMatrix; \
-        };\
-        struct VS_INPUT\
-        {\
-          float2 pos : POSITION;\
-          float4 col : COLOR0;\
-          float2 uv  : TEXCOORD0;\
-        };\
-        \
-        struct PS_INPUT\
-        {\
-          float4 pos : SV_POSITION;\
-          float4 col : COLOR0;\
-          float2 uv  : TEXCOORD0;\
-        };\
-        \
-        PS_INPUT main(VS_INPUT input)\
-        {\
-          PS_INPUT output;\
-          output.pos = mul( ProjectionMatrix, float4(input.pos.xy, 0.f, 1.f));\
-          output.col = input.col;\
-          output.uv  = input.uv;\
-          return output;\
-        }";
-    //}}}
-    //{{{
-    static const char* kPixelShaderStr =
-        "struct PS_INPUT\
-        {\
-        float4 pos : SV_POSITION;\
-        float4 col : COLOR0;\
-        float2 uv  : TEXCOORD0;\
-        };\
-        sampler sampler0;\
-        Texture2D texture0;\
-        \
-        float4 main(PS_INPUT input) : SV_Target\
-        {\
-        float4 out_col = input.col * texture0.Sample(sampler0, input.uv); \
-        return out_col; \
-        }";
-    //}}}
-    // Create the vertex shader
-    {
+      "cbuffer vertexBuffer : register(b0) {"
+      "  float4x4 ProjectionMatrix;"
+      "  };"
+
+      "struct VS_INPUT {"
+      "  float2 pos : POSITION;"
+      "  float4 col : COLOR0;"
+      "  float2 uv  : TEXCOORD0;"
+      "  };"
+
+      "struct PS_INPUT {"
+      "  float4 pos : SV_POSITION;"
+      "  float4 col : COLOR0;"
+      "  float2 uv  : TEXCOORD0;"
+      "  };"
+
+      "PS_INPUT main (VS_INPUT input) {"
+      "  PS_INPUT output;"
+      "  output.pos = mul (ProjectionMatrix, float4(input.pos.xy, 0.f, 1.f));"
+      "  output.col = input.col;"
+      "  output.uv  = input.uv;"
+      "  return output;"
+      "  }";
+
     ID3DBlob* vertexShaderBlob;
-    if (FAILED(D3DCompile(kVertexShaderStr, strlen(kVertexShaderStr), NULL, NULL, NULL, "main", "vs_4_0", 0, 0, &vertexShaderBlob, NULL)))
-        return false; // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in (const char*)pErrorBlob->GetBufferPointer(). Make sure to Release() the blob!
-    if (backendData->pd3dDevice->CreateVertexShader(vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), NULL, &backendData->pVertexShader) != S_OK)
-    {
+    if (FAILED (D3DCompile (kVertexShaderStr, strlen(kVertexShaderStr),
+                NULL, NULL, NULL, "main", "vs_4_0", 0, 0, &vertexShaderBlob, NULL))) {
+      //{{{  error, return false
+      cLog::log (LOGERROR, "vertex shader compile failed");
+      return false;
+      }
+      //}}}
+
+    if (backendData->pd3dDevice->CreateVertexShader (vertexShaderBlob->GetBufferPointer(),
+                                                     vertexShaderBlob->GetBufferSize(),
+                                                     NULL, &backendData->pVertexShader) != S_OK) {
+      //{{{  error, return false
+      cLog::log (LOGERROR, "vertext shader create failed");
       vertexShaderBlob->Release();
       return false;
       }
+      //}}}
 
-    // Create the input layout
-    D3D11_INPUT_ELEMENT_DESC local_layout[] = {
+    // create input layout
+    D3D11_INPUT_ELEMENT_DESC kInputLayout[] = {
       { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0, (UINT)IM_OFFSETOF(ImDrawVert, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
       { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,   0, (UINT)IM_OFFSETOF(ImDrawVert, uv),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
       { "COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, (UINT)IM_OFFSETOF(ImDrawVert, col), D3D11_INPUT_PER_VERTEX_DATA, 0 },
       };
-    if (backendData->pd3dDevice->CreateInputLayout (local_layout, 3, vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), &backendData->pInputLayout) != S_OK)
-    {
+
+    if (backendData->pd3dDevice->CreateInputLayout (kInputLayout, 3,
+                                                    vertexShaderBlob->GetBufferPointer(),
+                                                    vertexShaderBlob->GetBufferSize(),
+                                                    &backendData->pInputLayout) != S_OK) {
+      //{{{  error, return false
+      cLog::log (LOGERROR, "inputLayout create failed");
       vertexShaderBlob->Release();
       return false;
       }
+      //}}}
+
     vertexShaderBlob->Release();
+    //}}}
+    //{{{  create vertexConstant buffer
+    D3D11_BUFFER_DESC bufferDesc;
+    bufferDesc.ByteWidth = sizeof(VERTEX_CONSTANT_BUFFER);
+    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    bufferDesc.MiscFlags = 0;
 
-    // Create the constant buffer
-    {
-    D3D11_BUFFER_DESC desc;
-    desc.ByteWidth = sizeof(VERTEX_CONSTANT_BUFFER);
-    desc.Usage = D3D11_USAGE_DYNAMIC;
-    desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    desc.MiscFlags = 0;
-    backendData->pd3dDevice->CreateBuffer (&desc, NULL, &backendData->pVertexConstantBuffer);
-    }
-    }
+    backendData->pd3dDevice->CreateBuffer (&bufferDesc, NULL, &backendData->pVertexConstantBuffer);
+    //}}}
+    //{{{  create pixel shader
+    static const char* kPixelShaderStr =
+      "struct PS_INPUT {"
+      "  float4 pos : SV_POSITION;"
+      "  float4 col : COLOR0;"
+      "  float2 uv  : TEXCOORD0;"
+      "  };"
 
-    // Create the pixel shader
-    {
+      "sampler sampler0;"
+      "texture2D texture0;"
+
+      "float4 main (PS_INPUT input) : SV_Target {"
+      "  float4 out_col = input.col * texture0.Sample(sampler0, input.uv);"
+      "  return out_col;"
+      "  }";
+
     ID3DBlob* pixelShaderBlob;
-    if (FAILED(D3DCompile(kPixelShaderStr, strlen(kPixelShaderStr), NULL, NULL, NULL, "main", "ps_4_0", 0, 0, &pixelShaderBlob, NULL)))
-        return false; // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in (const char*)pErrorBlob->GetBufferPointer(). Make sure to Release() the blob!
-    if (backendData->pd3dDevice->CreatePixelShader(pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize(), NULL, &backendData->pPixelShader) != S_OK)
-    {
-        pixelShaderBlob->Release();
-        return false;
-    }
-    pixelShaderBlob->Release();
-    }
+    if (FAILED (D3DCompile (kPixelShaderStr, strlen(kPixelShaderStr),
+                            NULL, NULL, NULL, "main", "ps_4_0", 0, 0, &pixelShaderBlob, NULL))) {
+      //{{{  error, return false
+      cLog::log (LOGERROR, "pixel shader compile failed");
+      return false;
+      }
+      //}}}
+    if (backendData->pd3dDevice->CreatePixelShader (pixelShaderBlob->GetBufferPointer(),
+                                                    pixelShaderBlob->GetBufferSize(),
+                                                    NULL, &backendData->pPixelShader) != S_OK) {
+      //{{{  error, return false
+      cLog::log (LOGERROR, "pixel shader create failed");
+      pixelShaderBlob->Release();
+      return false;
+      }
+      //}}}
 
-    // create the blendDesc
+    pixelShaderBlob->Release();
+    //}}}
+
+    // create blendDesc
     D3D11_BLEND_DESC blendDesc;
     ZeroMemory (&blendDesc, sizeof(blendDesc));
     blendDesc.AlphaToCoverageEnable = false;
@@ -296,7 +305,7 @@ namespace {
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     backendData->pd3dDevice->CreateBlendState (&blendDesc, &backendData->pBlendState);
 
-    // create the rasterizerDesc
+    // create rasterizerDesc
     D3D11_RASTERIZER_DESC rasterizerDesc;
     ZeroMemory (&rasterizerDesc, sizeof(rasterizerDesc));
     rasterizerDesc.FillMode = D3D11_FILL_SOLID;
