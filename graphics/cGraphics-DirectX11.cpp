@@ -19,49 +19,49 @@ using namespace fmt;
 
 namespace {
   //{{{
-  struct VERTEX_CONSTANT_BUFFER {
-    float   mvp[4][4];
+  struct sVertexConstantBuffer {
+    float mMatrix[4][4];
     };
   //}}}
   //{{{
   // Helper structure we store in the void* RenderUserData field of each ImGuiViewport to easily retrieve our backend data.
   struct sViewportData {
-    IDXGISwapChain* SwapChain;
-    ID3D11RenderTargetView* RTView;
+    IDXGISwapChain* mSwapChain;
+    ID3D11RenderTargetView* mRTView;
 
     sViewportData() {
-      SwapChain = NULL;
-      RTView = NULL;
+      mSwapChain = NULL;
+      mRTView = NULL;
       }
 
     ~sViewportData() {
-      IM_ASSERT(SwapChain == NULL && RTView == NULL);
+      IM_ASSERT(mSwapChain == NULL && mRTView == NULL);
       }
     };
   //}}}
   //{{{
   struct sBackendData {
-    ID3D11Device*             pd3dDevice;
-    ID3D11DeviceContext*      pd3dDeviceContext;
-    IDXGIFactory*             pFactory;
-    ID3D11Buffer*             pVB;
-    ID3D11Buffer*             pIB;
-    ID3D11VertexShader*       pVertexShader;
-    ID3D11InputLayout*        pInputLayout;
-    ID3D11Buffer*             pVertexConstantBuffer;
-    ID3D11PixelShader*        pPixelShader;
-    ID3D11SamplerState*       pFontSampler;
-    ID3D11ShaderResourceView* pFontTextureView;
-    ID3D11RasterizerState*    pRasterizerState;
-    ID3D11BlendState*         pBlendState;
-    ID3D11DepthStencilState*  pDepthStencilState;
-    int                       VertexBufferSize;
-    int                       IndexBufferSize;
+    ID3D11Device*             mD3dDevice;
+    ID3D11DeviceContext*      mD3dDeviceContext;
+    IDXGIFactory*             mFactory;
+    ID3D11Buffer*             mVB;
+    ID3D11Buffer*             mIB;
+    ID3D11VertexShader*       mVertexShader;
+    ID3D11InputLayout*        mInputLayout;
+    ID3D11Buffer*             mVertexConstantBuffer;
+    ID3D11PixelShader*        mPixelShader;
+    ID3D11SamplerState*       mFontSampler;
+    ID3D11ShaderResourceView* mFontTextureView;
+    ID3D11RasterizerState*    mRasterizerState;
+    ID3D11BlendState*         mBlendState;
+    ID3D11DepthStencilState*  mDepthStencilState;
+    int                       mVertexBufferSize;
+    int                       mIndexBufferSize;
 
     sBackendData() {
       memset (this, 0, sizeof(*this));
-      VertexBufferSize = 5000;
-      IndexBufferSize = 10000;
+      mVertexBufferSize = 5000;
+      mIndexBufferSize = 10000;
       }
     };
   //}}}
@@ -78,43 +78,43 @@ namespace {
 
     sBackendData* backendData = getBackendData();
 
-    if (backendData->pFontSampler)
-      backendData->pFontSampler->Release();
+    if (backendData->mFontSampler)
+      backendData->mFontSampler->Release();
 
-    if (backendData->pFontTextureView)
-      backendData->pFontTextureView->Release();
+    if (backendData->mFontTextureView)
+      backendData->mFontTextureView->Release();
 
-    if (backendData->pIB)
-      backendData->pIB->Release();
+    if (backendData->mIB)
+      backendData->mIB->Release();
 
-    if (backendData->pVB)
-      backendData->pVB->Release();
+    if (backendData->mVB)
+      backendData->mVB->Release();
 
-    if (backendData->pBlendState)
-      backendData->pBlendState->Release();
+    if (backendData->mBlendState)
+      backendData->mBlendState->Release();
 
-    if (backendData->pDepthStencilState)
-      backendData->pDepthStencilState->Release();
+    if (backendData->mDepthStencilState)
+      backendData->mDepthStencilState->Release();
 
-    if (backendData->pRasterizerState)
-      backendData->pRasterizerState->Release();
+    if (backendData->mRasterizerState)
+      backendData->mRasterizerState->Release();
 
-    if (backendData->pPixelShader)
-      backendData->pPixelShader->Release();
+    if (backendData->mPixelShader)
+      backendData->mPixelShader->Release();
 
-    if (backendData->pVertexConstantBuffer)
-      backendData->pVertexConstantBuffer->Release();
+    if (backendData->mVertexConstantBuffer)
+      backendData->mVertexConstantBuffer->Release();
 
-    if (backendData->pInputLayout)
-      backendData->pInputLayout->Release();
+    if (backendData->mInputLayout)
+      backendData->mInputLayout->Release();
 
-    if (backendData->pVertexShader)
-      backendData->pVertexShader->Release();
+    if (backendData->mVertexShader)
+      backendData->mVertexShader->Release();
     }
   //}}}
   //{{{
   void createFontsTexture() {
-  // build texture atlas
+  // create font texture
 
     sBackendData* backendData = getBackendData();
 
@@ -142,7 +142,7 @@ namespace {
     subResource.SysMemPitch = texture2dDesc.Width * 4;
     subResource.SysMemSlicePitch = 0;
 
-    backendData->pd3dDevice->CreateTexture2D (&texture2dDesc, &subResource, &texture2d);
+    backendData->mD3dDevice->CreateTexture2D (&texture2dDesc, &subResource, &texture2d);
     IM_ASSERT (texture2d != NULL);
 
     // create texture view
@@ -152,11 +152,11 @@ namespace {
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MipLevels = texture2dDesc.MipLevels;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-    backendData->pd3dDevice->CreateShaderResourceView (texture2d, &shaderResourceViewDesc, &backendData->pFontTextureView);
+    backendData->mD3dDevice->CreateShaderResourceView (texture2d, &shaderResourceViewDesc, &backendData->mFontTextureView);
     texture2d->Release();
 
     // store our fonts texture view
-    ImGui::GetIO().Fonts->SetTexID ((ImTextureID)backendData->pFontTextureView);
+    ImGui::GetIO().Fonts->SetTexID ((ImTextureID)backendData->mFontTextureView);
 
     // create texture sampler
     D3D11_SAMPLER_DESC samplerDesc;
@@ -169,14 +169,14 @@ namespace {
     samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
     samplerDesc.MinLOD = 0.f;
     samplerDesc.MaxLOD = 0.f;
-    backendData->pd3dDevice->CreateSamplerState (&samplerDesc, &backendData->pFontSampler);
+    backendData->mD3dDevice->CreateSamplerState (&samplerDesc, &backendData->mFontSampler);
     }
   //}}}
   //{{{
   bool createDeviceObjects() {
 
     sBackendData* backendData = getBackendData();
-    if (backendData->pFontSampler)
+    if (backendData->mFontSampler)
       invalidateDeviceObjects();
 
     //{{{  create vertex shader
@@ -214,9 +214,9 @@ namespace {
       }
       //}}}
 
-    if (backendData->pd3dDevice->CreateVertexShader (vertexShaderBlob->GetBufferPointer(),
+    if (backendData->mD3dDevice->CreateVertexShader (vertexShaderBlob->GetBufferPointer(),
                                                      vertexShaderBlob->GetBufferSize(),
-                                                     NULL, &backendData->pVertexShader) != S_OK) {
+                                                     NULL, &backendData->mVertexShader) != S_OK) {
       //{{{  error, return false
       cLog::log (LOGERROR, "vertext shader create failed");
       vertexShaderBlob->Release();
@@ -231,10 +231,10 @@ namespace {
       { "COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, (UINT)IM_OFFSETOF(ImDrawVert, col), D3D11_INPUT_PER_VERTEX_DATA, 0 },
       };
 
-    if (backendData->pd3dDevice->CreateInputLayout (kInputLayout, 3,
+    if (backendData->mD3dDevice->CreateInputLayout (kInputLayout, 3,
                                                     vertexShaderBlob->GetBufferPointer(),
                                                     vertexShaderBlob->GetBufferSize(),
-                                                    &backendData->pInputLayout) != S_OK) {
+                                                    &backendData->mInputLayout) != S_OK) {
       //{{{  error, return false
       cLog::log (LOGERROR, "inputLayout create failed");
       vertexShaderBlob->Release();
@@ -244,16 +244,16 @@ namespace {
 
     vertexShaderBlob->Release();
     //}}}
-    //{{{  create vertexConstant buffer
+
+    // create vertexConstant buffer
     D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.ByteWidth = sizeof(VERTEX_CONSTANT_BUFFER);
+    bufferDesc.ByteWidth = sizeof(sVertexConstantBuffer);
     bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
     bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     bufferDesc.MiscFlags = 0;
+    backendData->mD3dDevice->CreateBuffer (&bufferDesc, NULL, &backendData->mVertexConstantBuffer);
 
-    backendData->pd3dDevice->CreateBuffer (&bufferDesc, NULL, &backendData->pVertexConstantBuffer);
-    //}}}
     //{{{  create pixel shader
     static const char* kPixelShaderStr =
       "struct PS_INPUT {"
@@ -266,7 +266,7 @@ namespace {
       "texture2D texture0;"
 
       "float4 main (PS_INPUT input) : SV_Target {"
-      "  float4 out_col = input.col * texture0.Sample(sampler0, input.uv);"
+      "  float4 out_col = input.col * texture0.Sample (sampler0, input.uv);"
       "  return out_col;"
       "  }";
 
@@ -278,9 +278,10 @@ namespace {
       return false;
       }
       //}}}
-    if (backendData->pd3dDevice->CreatePixelShader (pixelShaderBlob->GetBufferPointer(),
+
+    if (backendData->mD3dDevice->CreatePixelShader (pixelShaderBlob->GetBufferPointer(),
                                                     pixelShaderBlob->GetBufferSize(),
-                                                    NULL, &backendData->pPixelShader) != S_OK) {
+                                                    NULL, &backendData->mPixelShader) != S_OK) {
       //{{{  error, return false
       cLog::log (LOGERROR, "pixel shader create failed");
       pixelShaderBlob->Release();
@@ -303,7 +304,7 @@ namespace {
     blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
     blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-    backendData->pd3dDevice->CreateBlendState (&blendDesc, &backendData->pBlendState);
+    backendData->mD3dDevice->CreateBlendState (&blendDesc, &backendData->mBlendState);
 
     // create rasterizerDesc
     D3D11_RASTERIZER_DESC rasterizerDesc;
@@ -312,7 +313,7 @@ namespace {
     rasterizerDesc.CullMode = D3D11_CULL_NONE;
     rasterizerDesc.ScissorEnable = true;
     rasterizerDesc.DepthClipEnable = true;
-    backendData->pd3dDevice->CreateRasterizerState (&rasterizerDesc, &backendData->pRasterizerState);
+    backendData->mD3dDevice->CreateRasterizerState (&rasterizerDesc, &backendData->mRasterizerState);
 
     // create depthStencilDesc
     D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
@@ -326,7 +327,7 @@ namespace {
     depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
     depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
     depthStencilDesc.BackFace = depthStencilDesc.FrontFace;
-    backendData->pd3dDevice->CreateDepthStencilState (&depthStencilDesc, &backendData->pDepthStencilState);
+    backendData->mD3dDevice->CreateDepthStencilState (&depthStencilDesc, &backendData->mDepthStencilState);
 
     createFontsTexture();
 
@@ -351,14 +352,14 @@ namespace {
     sBackendData* backendData = getBackendData();
     unsigned int stride = sizeof(ImDrawVert);
     unsigned int offset = 0;
-    deviceContext->IASetInputLayout (backendData->pInputLayout);
-    deviceContext->IASetVertexBuffers (0, 1, &backendData->pVB, &stride, &offset);
-    deviceContext->IASetIndexBuffer (backendData->pIB, sizeof(ImDrawIdx) == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT, 0);
+    deviceContext->IASetInputLayout (backendData->mInputLayout);
+    deviceContext->IASetVertexBuffers (0, 1, &backendData->mVB, &stride, &offset);
+    deviceContext->IASetIndexBuffer (backendData->mIB, sizeof(ImDrawIdx) == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT, 0);
     deviceContext->IASetPrimitiveTopology (D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    deviceContext->VSSetShader (backendData->pVertexShader, NULL, 0);
-    deviceContext->VSSetConstantBuffers (0, 1, &backendData->pVertexConstantBuffer);
-    deviceContext->PSSetShader (backendData->pPixelShader, NULL, 0);
-    deviceContext->PSSetSamplers (0, 1, &backendData->pFontSampler);
+    deviceContext->VSSetShader (backendData->mVertexShader, NULL, 0);
+    deviceContext->VSSetConstantBuffers (0, 1, &backendData->mVertexConstantBuffer);
+    deviceContext->PSSetShader (backendData->mPixelShader, NULL, 0);
+    deviceContext->PSSetSamplers (0, 1, &backendData->mFontSampler);
     deviceContext->GSSetShader (NULL, NULL, 0);
     deviceContext->HSSetShader (NULL, NULL, 0);
     deviceContext->DSSetShader (NULL, NULL, 0);
@@ -366,9 +367,9 @@ namespace {
 
     // set blend state
     const float blend_factor[4] = { 0.f, 0.f, 0.f, 0.f };
-    deviceContext->OMSetBlendState (backendData->pBlendState, blend_factor, 0xffffffff);
-    deviceContext->OMSetDepthStencilState (backendData->pDepthStencilState, 0);
-    deviceContext->RSSetState (backendData->pRasterizerState);
+    deviceContext->OMSetBlendState (backendData->mBlendState, blend_factor, 0xffffffff);
+    deviceContext->OMSetDepthStencilState (backendData->mDepthStencilState, 0);
+    deviceContext->RSSetState (backendData->mRasterizerState);
     }
   //}}}
   //{{{
@@ -379,30 +380,30 @@ namespace {
       return;
 
     sBackendData* backendData = getBackendData();
-    ID3D11DeviceContext* deviceContext = backendData->pd3dDeviceContext;
+    ID3D11DeviceContext* deviceContext = backendData->mD3dDeviceContext;
 
     // copy drawList vertices,indices to continuous GPU buffers
     int numVertices = 0;
     int numIndices = 0;
     //{{{  manage vertex GPU buffer
-    if (!backendData->pVB || (backendData->VertexBufferSize < drawData->TotalVtxCount)) {
+    if (!backendData->mVB || (backendData->mVertexBufferSize < drawData->TotalVtxCount)) {
       // need new vertexBuffer
-      if (backendData->pVB) {
+      if (backendData->mVB) {
         // release old vertexBuffer
-        backendData->pVB->Release();
-        backendData->pVB = NULL;
+        backendData->mVB->Release();
+        backendData->mVB = NULL;
         }
-      backendData->VertexBufferSize = drawData->TotalVtxCount + 5000;
+      backendData->mVertexBufferSize = drawData->TotalVtxCount + 5000;
 
       // get new vertexBuffer
       D3D11_BUFFER_DESC desc;
       memset (&desc, 0, sizeof(D3D11_BUFFER_DESC));
       desc.Usage = D3D11_USAGE_DYNAMIC;
-      desc.ByteWidth = backendData->VertexBufferSize * sizeof(ImDrawVert);
+      desc.ByteWidth = backendData->mVertexBufferSize * sizeof(ImDrawVert);
       desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
       desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
       desc.MiscFlags = 0;
-      if (backendData->pd3dDevice->CreateBuffer (&desc, NULL, &backendData->pVB) < 0) {
+      if (backendData->mD3dDevice->CreateBuffer (&desc, NULL, &backendData->mVB) < 0) {
         cLog::log (LOGERROR, "vertex CreateBuffer failed");
         return;
         }
@@ -410,7 +411,7 @@ namespace {
 
     // map gpu vertexBuffer
     D3D11_MAPPED_SUBRESOURCE vertexSubResource;
-    if (deviceContext->Map (backendData->pVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &vertexSubResource) != S_OK) {
+    if (deviceContext->Map (backendData->mVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &vertexSubResource) != S_OK) {
       cLog::log (LOGERROR, "vertex Map failed");
       return;
       }
@@ -418,23 +419,23 @@ namespace {
     ImDrawVert* vertexDest = (ImDrawVert*)vertexSubResource.pData;
     //}}}
     //{{{  manage index GPU buffer
-    if (!backendData->pIB || (backendData->IndexBufferSize < drawData->TotalIdxCount)) {
+    if (!backendData->mIB || (backendData->mIndexBufferSize < drawData->TotalIdxCount)) {
       // need new indexBuffer
-      if (backendData->pIB) {
+      if (backendData->mIB) {
         // release old indexBuffer
-        backendData->pIB->Release();
-        backendData->pIB = NULL;
+        backendData->mIB->Release();
+        backendData->mIB = NULL;
         }
-      backendData->IndexBufferSize = drawData->TotalIdxCount + 10000;
+      backendData->mIndexBufferSize = drawData->TotalIdxCount + 10000;
 
       // get new indexBuffer
       D3D11_BUFFER_DESC desc;
       memset (&desc, 0, sizeof(D3D11_BUFFER_DESC));
       desc.Usage = D3D11_USAGE_DYNAMIC;
-      desc.ByteWidth = backendData->IndexBufferSize * sizeof(ImDrawIdx);
+      desc.ByteWidth = backendData->mIndexBufferSize * sizeof(ImDrawIdx);
       desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
       desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-      if (backendData->pd3dDevice->CreateBuffer (&desc, NULL, &backendData->pIB) < 0) {
+      if (backendData->mD3dDevice->CreateBuffer (&desc, NULL, &backendData->mIB) < 0) {
         cLog::log (LOGERROR, "index CreateBuffer failed");
         return;
         }
@@ -442,7 +443,7 @@ namespace {
 
     // map gpu indexBuffer
     D3D11_MAPPED_SUBRESOURCE indexSubResource;
-    if (deviceContext->Map (backendData->pIB, 0, D3D11_MAP_WRITE_DISCARD, 0, &indexSubResource) != S_OK) {
+    if (deviceContext->Map (backendData->mIB, 0, D3D11_MAP_WRITE_DISCARD, 0, &indexSubResource) != S_OK) {
       cLog::log (LOGERROR, "index Map failed");
       return;
       }
@@ -457,11 +458,12 @@ namespace {
       numVertices += cmdList->VtxBuffer.Size;
       numIndices += cmdList->IdxBuffer.Size;
       }
-    deviceContext->Unmap (backendData->pVB, 0);
-    deviceContext->Unmap (backendData->pIB, 0);
+    deviceContext->Unmap (backendData->mVB, 0);
+    deviceContext->Unmap (backendData->mIB, 0);
     //cLog::log (LOGINFO, format ("added {} {}", numVertices, numIndices));
 
-    //{{{  set orthographic projection matrix in GPU constant
+    setupRenderState (drawData, deviceContext);
+    //{{{  set ortho projection matrix as GPU vertexConstantBuffer
     //{{{
     struct sMatrix {
       float matrix[4][4];
@@ -486,7 +488,7 @@ namespace {
 
     // map and copy vertex matrix
     D3D11_MAPPED_SUBRESOURCE mappedSubResource;
-    if (deviceContext->Map (backendData->pVertexConstantBuffer,
+    if (deviceContext->Map (backendData->mVertexConstantBuffer,
                             0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource) != S_OK) {
       cLog::log (LOGERROR, "vertex constant Map failed");
       return;
@@ -494,10 +496,8 @@ namespace {
 
     sMatrix* matrix = (sMatrix*)mappedSubResource.pData;
     memcpy (&matrix->matrix, kMatrix, sizeof(kMatrix));
-    deviceContext->Unmap (backendData->pVertexConstantBuffer, 0);
+    deviceContext->Unmap (backendData->mVertexConstantBuffer, 0);
     //}}}
-
-    setupRenderState (drawData, deviceContext);
 
     // render command lists
     int indexOffset = 0;
@@ -507,26 +507,17 @@ namespace {
       const ImDrawList* cmdList = drawData->CmdLists[cmdListIndex];
       for (int cmdIndex = 0; cmdIndex < cmdList->CmdBuffer.Size; cmdIndex++) {
         const ImDrawCmd* drawCmd = &cmdList->CmdBuffer[cmdIndex];
-        if (drawCmd->UserCallback != NULL) {
-          // User callback, registered via ImDrawList::AddCallback()
-          // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
-          if (drawCmd->UserCallback == ImDrawCallback_ResetRenderState)
-            setupRenderState (drawData, deviceContext);
-          else
-            drawCmd->UserCallback (cmdList, drawCmd);
-          }
-        else {
-          // Apply scissor/clipping rectangle
-          const D3D11_RECT r = {
-            (LONG)(drawCmd->ClipRect.x - clipOffset.x), (LONG)(drawCmd->ClipRect.y - clipOffset.y),
-            (LONG)(drawCmd->ClipRect.z - clipOffset.x), (LONG)(drawCmd->ClipRect.w - clipOffset.y) };
-          deviceContext->RSSetScissorRects (1, &r);
 
-          // bind texture and draw
-          ID3D11ShaderResourceView* shaderResourceView = (ID3D11ShaderResourceView*)drawCmd->GetTexID();
-          deviceContext->PSSetShaderResources (0, 1, &shaderResourceView);
-          deviceContext->DrawIndexed (drawCmd->ElemCount, drawCmd->IdxOffset + indexOffset, drawCmd->VtxOffset + vertexOffset);
-          }
+        // Apply scissor/clipping rectangle
+        const D3D11_RECT r = {
+          (LONG)(drawCmd->ClipRect.x - clipOffset.x), (LONG)(drawCmd->ClipRect.y - clipOffset.y),
+          (LONG)(drawCmd->ClipRect.z - clipOffset.x), (LONG)(drawCmd->ClipRect.w - clipOffset.y) };
+        deviceContext->RSSetScissorRects (1, &r);
+
+        // bind texture and draw
+        ID3D11ShaderResourceView* shaderResourceView = (ID3D11ShaderResourceView*)drawCmd->GetTexID();
+        deviceContext->PSSetShaderResources (0, 1, &shaderResourceView);
+        deviceContext->DrawIndexed (drawCmd->ElemCount, drawCmd->IdxOffset + indexOffset, drawCmd->VtxOffset + vertexOffset);
         }
 
       indexOffset += cmdList->IdxBuffer.Size;
@@ -566,13 +557,13 @@ namespace {
     swapChainDesc.Flags = 0;
 
     IM_ASSERT (viewportData->SwapChain == NULL && viewportData->RTView == NULL);
-    backendData->pFactory->CreateSwapChain (backendData->pd3dDevice, &swapChainDesc, &viewportData->SwapChain);
+    backendData->mFactory->CreateSwapChain (backendData->mD3dDevice, &swapChainDesc, &viewportData->mSwapChain);
 
     // create the render target
-    if (viewportData->SwapChain) {
+    if (viewportData->mSwapChain) {
       ID3D11Texture2D* backBuffer;
-      viewportData->SwapChain->GetBuffer (0, IID_PPV_ARGS (&backBuffer));
-      backendData->pd3dDevice->CreateRenderTargetView (backBuffer, NULL, &viewportData->RTView);
+      viewportData->mSwapChain->GetBuffer (0, IID_PPV_ARGS (&backBuffer));
+      backendData->mD3dDevice->CreateRenderTargetView (backBuffer, NULL, &viewportData->mRTView);
       backBuffer->Release();
       }
     }
@@ -584,13 +575,13 @@ namespace {
     cLog::log (LOGINFO, "destroyWindow");
 
     if (sViewportData* viewportData = (sViewportData*)viewport->RendererUserData) {
-      if (viewportData->SwapChain)
-        viewportData->SwapChain->Release();
-      viewportData->SwapChain = NULL;
+      if (viewportData->mSwapChain)
+        viewportData->mSwapChain->Release();
+      viewportData->mSwapChain = NULL;
 
-      if (viewportData->RTView)
-        viewportData->RTView->Release();
-      viewportData->RTView = NULL;
+      if (viewportData->mRTView)
+        viewportData->mRTView->Release();
+      viewportData->mRTView = NULL;
 
       IM_DELETE(viewportData);
       }
@@ -605,22 +596,22 @@ namespace {
 
     sViewportData* viewportData = (sViewportData*)viewport->RendererUserData;
 
-    if (viewportData->RTView) {
-      viewportData->RTView->Release();
-      viewportData->RTView = NULL;
+    if (viewportData->mRTView) {
+      viewportData->mRTView->Release();
+      viewportData->mRTView = NULL;
       }
 
-    if (viewportData->SwapChain) {
+    if (viewportData->mSwapChain) {
       ID3D11Texture2D* backBuffer = NULL;
-      viewportData->SwapChain->ResizeBuffers (0, (UINT)size.x, (UINT)size.y, DXGI_FORMAT_UNKNOWN, 0);
-      viewportData->SwapChain->GetBuffer (0, IID_PPV_ARGS(&backBuffer));
+      viewportData->mSwapChain->ResizeBuffers (0, (UINT)size.x, (UINT)size.y, DXGI_FORMAT_UNKNOWN, 0);
+      viewportData->mSwapChain->GetBuffer (0, IID_PPV_ARGS(&backBuffer));
       if (backBuffer == NULL) {
         fprintf (stderr, "SetWindowSize() failed creating buffers.\n");
         return;
         }
 
       sBackendData* backendData = getBackendData();
-      backendData->pd3dDevice->CreateRenderTargetView (backBuffer, NULL, &viewportData->RTView);
+      backendData->mD3dDevice->CreateRenderTargetView (backBuffer, NULL, &viewportData->mRTView);
       backBuffer->Release();
       }
     }
@@ -634,9 +625,9 @@ namespace {
     sViewportData* viewportData = (sViewportData*)viewport->RendererUserData;
 
     ImVec4 clearColor = ImVec4 (0.0f, 0.0f, 0.0f, 1.0f);
-    backendData->pd3dDeviceContext->OMSetRenderTargets (1, &viewportData->RTView, NULL);
+    backendData->mD3dDeviceContext->OMSetRenderTargets (1, &viewportData->mRTView, NULL);
     if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
-      backendData->pd3dDeviceContext->ClearRenderTargetView (viewportData->RTView, (float*)&clearColor);
+      backendData->mD3dDeviceContext->ClearRenderTargetView (viewportData->mRTView, (float*)&clearColor);
 
     renderDrawData (viewport->DrawData);
     }
@@ -646,7 +637,7 @@ namespace {
 
     cLog::log (LOGINFO, "swapBuffers");
     sViewportData* viewportData = (sViewportData*)viewport->RendererUserData;
-    viewportData->SwapChain->Present (0,0); // Present without vsync
+    viewportData->mSwapChain->Present (0,0); // Present without vsync
     }
   //}}}
   }
@@ -674,11 +665,11 @@ bool cGraphics::init (void* device, void* deviceContext) {
     if (dxgiDevice->GetParent (IID_PPV_ARGS (&dxgiAdapter)) == S_OK) {
       IDXGIFactory* dxgiFactory = NULL;
       if (dxgiAdapter->GetParent (IID_PPV_ARGS (&dxgiFactory)) == S_OK) {
-        backendData->pd3dDevice = d3dDevice;
-        backendData->pd3dDeviceContext = d3dDeviceContext;
-        backendData->pFactory = dxgiFactory;
-        backendData->pd3dDevice->AddRef();
-        backendData->pd3dDeviceContext->AddRef();
+        backendData->mD3dDevice = d3dDevice;
+        backendData->mD3dDeviceContext = d3dDeviceContext;
+        backendData->mFactory = dxgiFactory;
+        backendData->mD3dDevice->AddRef();
+        backendData->mD3dDeviceContext->AddRef();
 
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
           // init platFormInterface
@@ -708,12 +699,12 @@ void cGraphics::shutdown() {
   invalidateDeviceObjects();
 
   sBackendData* backendData = getBackendData();
-  if (backendData->pFactory)
-    backendData->pFactory->Release();
-  if (backendData->pd3dDevice)
-    backendData->pd3dDevice->Release();
-  if (backendData->pd3dDeviceContext)
-    backendData->pd3dDeviceContext->Release();
+  if (backendData->mFactory)
+    backendData->mFactory->Release();
+  if (backendData->mD3dDevice)
+    backendData->mD3dDevice->Release();
+  if (backendData->mD3dDeviceContext)
+    backendData->mD3dDeviceContext->Release();
 
   ImGui::GetIO().BackendRendererName = NULL;
   ImGui::GetIO().BackendRendererUserData = NULL;
