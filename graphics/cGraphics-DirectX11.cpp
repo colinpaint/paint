@@ -24,7 +24,6 @@ namespace {
     };
   //}}}
   //{{{
-  // Helper structure we store in the void* RenderUserData field of each ImGuiViewport to easily retrieve our backend data.
   struct sViewportData {
     IDXGISwapChain* mSwapChain;
     ID3D11RenderTargetView* mRTView;
@@ -113,8 +112,7 @@ namespace {
     }
   //}}}
   //{{{
-  void createFontsTexture() {
-  // create font texture
+  void createFontTexture() {
 
     sBackendData* backendData = getBackendData();
 
@@ -329,27 +327,19 @@ namespace {
     depthStencilDesc.BackFace = depthStencilDesc.FrontFace;
     backendData->mD3dDevice->CreateDepthStencilState (&depthStencilDesc, &backendData->mDepthStencilState);
 
-    createFontsTexture();
+    createFontTexture();
 
     return true;
     }
   //}}}
 
   //{{{
-  void setupRenderState (ImDrawData* drawData, ID3D11DeviceContext* deviceContext) {
-
-    // set viewport
-    D3D11_VIEWPORT viewport;
-    memset (&viewport, 0, sizeof(D3D11_VIEWPORT));
-    viewport.Width = drawData->DisplaySize.x;
-    viewport.Height = drawData->DisplaySize.y;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-    viewport.TopLeftX = viewport.TopLeftY = 0;
-    deviceContext->RSSetViewports (1, &viewport);
+  void setupRenderState (ImDrawData* drawData) {
 
     // set shader, vertex buffers
     sBackendData* backendData = getBackendData();
+    ID3D11DeviceContext* deviceContext = backendData->mD3dDeviceContext;
+
     unsigned int stride = sizeof(ImDrawVert);
     unsigned int offset = 0;
     deviceContext->IASetInputLayout (backendData->mInputLayout);
@@ -370,21 +360,29 @@ namespace {
     deviceContext->OMSetBlendState (backendData->mBlendState, blend_factor, 0xffffffff);
     deviceContext->OMSetDepthStencilState (backendData->mDepthStencilState, 0);
     deviceContext->RSSetState (backendData->mRasterizerState);
+
+    // set viewport
+    D3D11_VIEWPORT viewport;
+    memset (&viewport, 0, sizeof(D3D11_VIEWPORT));
+    viewport.Width = drawData->DisplaySize.x;
+    viewport.Height = drawData->DisplaySize.y;
+    viewport.MinDepth = 0.f;
+    viewport.MaxDepth = 1.f;
+    viewport.TopLeftX = viewport.TopLeftY = 0;
+    deviceContext->RSSetViewports (1, &viewport);
     }
   //}}}
   //{{{
   void renderDrawData (ImDrawData* drawData) {
 
     // avoid rendering when minimized
-    if (drawData->DisplaySize.x <= 0.0f || drawData->DisplaySize.y <= 0.0f)
+    if ((drawData->DisplaySize.x <= 0.f) || (drawData->DisplaySize.y <= 0.f))
       return;
 
     sBackendData* backendData = getBackendData();
     ID3D11DeviceContext* deviceContext = backendData->mD3dDeviceContext;
 
     // copy drawList vertices,indices to continuous GPU buffers
-    int numVertices = 0;
-    int numIndices = 0;
     //{{{  manage vertex GPU buffer
     if (!backendData->mVB || (backendData->mVertexBufferSize < drawData->TotalVtxCount)) {
       // need new vertexBuffer
@@ -455,14 +453,11 @@ namespace {
       memcpy (indexDest, cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx));
       vertexDest += cmdList->VtxBuffer.Size;
       indexDest += cmdList->IdxBuffer.Size;
-      numVertices += cmdList->VtxBuffer.Size;
-      numIndices += cmdList->IdxBuffer.Size;
       }
     deviceContext->Unmap (backendData->mVB, 0);
     deviceContext->Unmap (backendData->mIB, 0);
-    //cLog::log (LOGINFO, format ("added {} {}", numVertices, numIndices));
 
-    setupRenderState (drawData, deviceContext);
+    setupRenderState (drawData);
     //{{{  set ortho projection matrix as GPU vertexConstantBuffer
     //{{{
     struct sMatrix {
@@ -555,8 +550,7 @@ namespace {
     swapChainDesc.Windowed = TRUE;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
     swapChainDesc.Flags = 0;
-
-    IM_ASSERT (viewportData->SwapChain == NULL && viewportData->RTView == NULL);
+    IM_ASSERT ((viewportData->SwapChain == NULL) && (viewportData->RTView == NULL));
     backendData->mFactory->CreateSwapChain (backendData->mD3dDevice, &swapChainDesc, &viewportData->mSwapChain);
 
     // create the render target
