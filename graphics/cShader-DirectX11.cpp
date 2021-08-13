@@ -454,51 +454,18 @@ namespace {
   }
 
 // cShader
-//{{{
-void cShader::use() {
+void cShader::use() { }
 
-  //glUseProgram (mId);
-  }
-//}}}
+cShader::cShader (const string& vertShaderString, const string& fragShaderString) { }
+cShader::~cShader() { }
 
-//{{{
-cShader::cShader (const string& vertShaderString, const string& fragShaderString) {
-
-  }
-//}}}
-//{{{
-cShader::~cShader() {
-  }
-//}}}
-
-//{{{
-void cShader::setBool (const string &name, bool value) {
-  }
-//}}}
-//{{{
-void cShader::setInt (const string &name, int value) {
-  }
-//}}}
-//{{{
-void cShader::setFloat (const string &name, float value) {
-  }
-//}}}
-//{{{
-void cShader::setVec2 (const string &name, glm::vec2 value) {
-  }
-//}}}
-//{{{
-void cShader::setVec3 (const string &name, glm::vec3 value) {
-  }
-//}}}
-//{{{
-void cShader::setVec4 (const string &name, glm::vec4 value) {
-  }
-//}}}
-//{{{
-void cShader::setMat4 (const string &name, glm::mat4 value) {
-  }
-//}}}
+void cShader::setBool (const string &name, bool value) { }
+void cShader::setInt (const string &name, int value) { }
+void cShader::setFloat (const string &name, float value) { }
+void cShader::setVec2 (const string &name, glm::vec2 value) { }
+void cShader::setVec3 (const string &name, glm::vec3 value) { }
+void cShader::setVec4 (const string &name, glm::vec4 value) { }
+void cShader::setMat4 (const string &name, glm::mat4 value) { }
 
 // cQuadShader
 cQuadShader::cQuadShader (const string& fragShaderString) : cShader (kQuadVertShader, fragShaderString) {}
@@ -516,7 +483,6 @@ cCanvasShader::cCanvasShader() : cQuadShader (kCanvasFragShader) {}
 cLayerShader::cLayerShader() : cQuadShader (kLayerFragShader) {}
 //{{{
 void cLayerShader::setHueSatVal (float hue, float sat, float val) {
-
   setFloat ("uHue", 0.f);
   setFloat ("uSat", 0.f);
   setFloat ("uVal", 0.f);
@@ -528,7 +494,6 @@ cPaintShader::cPaintShader() : cQuadShader (kPaintFragShader) {}
 //{{{
 void cPaintShader::setStroke (const glm::vec2& pos, const glm::vec2& prevPos,
                               float radius, const glm::vec4& color) {
-
   setVec2 ("uPos", pos);
   setVec2 ("uPrevPos", prevPos);
   setFloat ("uRadius", radius);
@@ -568,7 +533,4 @@ cDrawListShader::cDrawListShader (uint32_t glslVersion)
   //mAttribLocationVtxColor = glGetAttribLocation (getId(), "Color");
   }
 //}}}
-//{{{
-void cDrawListShader::setMatrix (float* matrix) {
-  };
-//}}}
+void cDrawListShader::setMatrix (float* matrix) { };

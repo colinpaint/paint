@@ -44,7 +44,7 @@ public:
   bool checkStatus();
   void reportInfo();
 
-protected:
+private:
   cPoint mSize = { 0,0 };
   const int mImageFormat;
   const int mInternalFormat;
@@ -53,9 +53,4 @@ protected:
   uint32_t mColorTextureId = 0;
   uint8_t* mPixels = nullptr;
   cRect mDirtyPixelsRect = cRect(0,0,0,0);
-
-private:
-  std::string getInternalFormat (uint32_t formatNum);
-  std::string getTextureParameters (uint32_t id);
-  std::string getRenderbufferParameters (uint32_t id);
   };

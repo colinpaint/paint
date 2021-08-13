@@ -16,6 +16,146 @@ using namespace std;
 using namespace fmt;
 //}}}
 constexpr bool kDebug = false;
+namespace {
+  //{{{
+  string getInternalFormat (uint32_t formatNum) {
+
+    string formatName;
+
+    switch (formatNum) {
+      case GL_STENCIL_INDEX:      // 0x1901
+        formatName = "GL_STENCIL_INDEX";
+        break;
+      case GL_DEPTH_COMPONENT:    // 0x1902
+        formatName = "GL_DEPTH_COMPONENT";
+        break;
+      case GL_ALPHA:              // 0x1906
+        formatName = "GL_ALPHA";
+        break;
+      case GL_RGB:                // 0x1907
+        formatName = "GL_RGB";
+        break;
+      case GL_RGBA:               // 0x1908
+        formatName = "GL_RGBA";
+        break;
+      //case GL_LUMINANCE:          // 0x1909
+      //  formatName = "GL_LUMINANCE";
+      //  break;
+      //case GL_LUMINANCE_ALPHA:    // 0x190A
+      //  formatName = "GL_LUMINANCE_ALPHA";
+      //  break;
+      case GL_R3_G3_B2:           // 0x2A10
+        formatName = "GL_R3_G3_B2";
+        break;
+      case GL_RGB4:               // 0x804F
+          formatName = "GL_RGB4";
+          break;
+      case GL_RGB5:               // 0x8050
+          formatName = "GL_RGB5";
+          break;
+      case GL_RGB8:               // 0x8051
+          formatName = "GL_RGB8";
+          break;
+      case GL_RGB10:              // 0x8052
+          formatName = "GL_RGB10";
+          break;
+      case GL_RGB12:              // 0x8053
+          formatName = "GL_RGB12";
+          break;
+      case GL_RGB16:              // 0x8054
+          formatName = "GL_RGB16";
+          break;
+      case GL_RGBA2:              // 0x8055
+          formatName = "GL_RGBA2";
+          break;
+      case GL_RGBA4:              // 0x8056
+          formatName = "GL_RGBA4";
+          break;
+      case GL_RGB5_A1:            // 0x8057
+          formatName = "GL_RGB5_A1";
+          break;
+      case GL_RGBA8:              // 0x8058
+          formatName = "GL_RGBA8";
+          break;
+      case GL_RGB10_A2:           // 0x8059
+          formatName = "GL_RGB10_A2";
+          break;
+      case GL_RGBA12:             // 0x805A
+          formatName = "GL_RGBA12";
+          break;
+      case GL_RGBA16:             // 0x805B
+          formatName = "GL_RGBA16";
+          break;
+      case GL_DEPTH_COMPONENT16:  // 0x81A5
+          formatName = "GL_DEPTH_COMPONENT16";
+          break;
+      case GL_DEPTH_COMPONENT24:  // 0x81A6
+          formatName = "GL_DEPTH_COMPONENT24";
+          break;
+      case GL_DEPTH_COMPONENT32:  // 0x81A7
+          formatName = "GL_DEPTH_COMPONENT32";
+          break;
+      case GL_DEPTH_STENCIL:      // 0x84F9
+          formatName = "GL_DEPTH_STENCIL";
+          break;
+      case GL_DEPTH24_STENCIL8:   // 0x88F0
+          formatName = "GL_DEPTH24_STENCIL8";
+          break;
+      // openGL v4? onwards
+      #ifdef OPENGL_RGBF
+      case GL_RGBA32F:            // 0x8814
+        formatName = "GL_RGBA32F";
+        break;
+      case GL_RGB32F:             // 0x8815
+        formatName = "GL_RGB32F";
+        break;
+      case GL_RGBA16F:            // 0x881A
+        formatName = "GL_RGBA16F";
+        break;
+      case GL_RGB16F:             // 0x881B
+        formatName = "GL_RGB16F";
+        break;
+      #endif
+      default:
+          formatName = format ("Unknown Format {}", formatNum);
+          break;
+      }
+
+    return formatName;
+    }
+  //}}}
+  //{{{
+  string getTextureParameters (uint32_t id) {
+
+    if (glIsTexture(id) == GL_FALSE)
+      return "Not texture object";
+
+    int width, height, formatNum;
+    glBindTexture (GL_TEXTURE_2D, id);
+    glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);            // get texture width
+    glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);          // get texture height
+    glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &formatNum); // get texture internal format
+
+    return format (" {} {} {}", width, height, getInternalFormat (formatNum));
+    }
+  //}}}
+  //{{{
+  string getRenderbufferParameters (uint32_t id) {
+
+    if (glIsRenderbuffer(id) == GL_FALSE)
+      return "Not Renderbuffer object";
+
+    int width, height, formatNum, samples;
+    glBindRenderbuffer (GL_RENDERBUFFER, id);
+    glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &width);    // get renderbuffer width
+    glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &height);  // get renderbuffer height
+    glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &formatNum); // get renderbuffer internal format
+    glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_SAMPLES, &samples);   // get multisample count
+
+    return format (" {} {} {} {}", width, height, samples, getInternalFormat (formatNum));
+    }
+  //}}}
+  }
 
 //{{{
 cFrameBuffer::cFrameBuffer()
@@ -318,145 +458,5 @@ void cFrameBuffer::reportInfo() {
         break;
       }
     }
-  }
-//}}}
-
-// private
-//{{{
-string cFrameBuffer::getInternalFormat (uint32_t formatNum) {
-
-  string formatName;
-
-  switch (formatNum) {
-    case GL_STENCIL_INDEX:      // 0x1901
-      formatName = "GL_STENCIL_INDEX";
-      break;
-    case GL_DEPTH_COMPONENT:    // 0x1902
-      formatName = "GL_DEPTH_COMPONENT";
-      break;
-    case GL_ALPHA:              // 0x1906
-      formatName = "GL_ALPHA";
-      break;
-    case GL_RGB:                // 0x1907
-      formatName = "GL_RGB";
-      break;
-    case GL_RGBA:               // 0x1908
-      formatName = "GL_RGBA";
-      break;
-    //case GL_LUMINANCE:          // 0x1909
-    //  formatName = "GL_LUMINANCE";
-    //  break;
-    //case GL_LUMINANCE_ALPHA:    // 0x190A
-    //  formatName = "GL_LUMINANCE_ALPHA";
-    //  break;
-    case GL_R3_G3_B2:           // 0x2A10
-      formatName = "GL_R3_G3_B2";
-      break;
-    case GL_RGB4:               // 0x804F
-        formatName = "GL_RGB4";
-        break;
-    case GL_RGB5:               // 0x8050
-        formatName = "GL_RGB5";
-        break;
-    case GL_RGB8:               // 0x8051
-        formatName = "GL_RGB8";
-        break;
-    case GL_RGB10:              // 0x8052
-        formatName = "GL_RGB10";
-        break;
-    case GL_RGB12:              // 0x8053
-        formatName = "GL_RGB12";
-        break;
-    case GL_RGB16:              // 0x8054
-        formatName = "GL_RGB16";
-        break;
-    case GL_RGBA2:              // 0x8055
-        formatName = "GL_RGBA2";
-        break;
-    case GL_RGBA4:              // 0x8056
-        formatName = "GL_RGBA4";
-        break;
-    case GL_RGB5_A1:            // 0x8057
-        formatName = "GL_RGB5_A1";
-        break;
-    case GL_RGBA8:              // 0x8058
-        formatName = "GL_RGBA8";
-        break;
-    case GL_RGB10_A2:           // 0x8059
-        formatName = "GL_RGB10_A2";
-        break;
-    case GL_RGBA12:             // 0x805A
-        formatName = "GL_RGBA12";
-        break;
-    case GL_RGBA16:             // 0x805B
-        formatName = "GL_RGBA16";
-        break;
-    case GL_DEPTH_COMPONENT16:  // 0x81A5
-        formatName = "GL_DEPTH_COMPONENT16";
-        break;
-    case GL_DEPTH_COMPONENT24:  // 0x81A6
-        formatName = "GL_DEPTH_COMPONENT24";
-        break;
-    case GL_DEPTH_COMPONENT32:  // 0x81A7
-        formatName = "GL_DEPTH_COMPONENT32";
-        break;
-    case GL_DEPTH_STENCIL:      // 0x84F9
-        formatName = "GL_DEPTH_STENCIL";
-        break;
-    case GL_DEPTH24_STENCIL8:   // 0x88F0
-        formatName = "GL_DEPTH24_STENCIL8";
-        break;
-    // openGL v4? onwards
-    #ifdef OPENGL_RGBF
-    case GL_RGBA32F:            // 0x8814
-      formatName = "GL_RGBA32F";
-      break;
-    case GL_RGB32F:             // 0x8815
-      formatName = "GL_RGB32F";
-      break;
-    case GL_RGBA16F:            // 0x881A
-      formatName = "GL_RGBA16F";
-      break;
-    case GL_RGB16F:             // 0x881B
-      formatName = "GL_RGB16F";
-      break;
-    #endif
-    default:
-        formatName = format ("Unknown Format {}", formatNum);
-        break;
-    }
-
-  return formatName;
-  }
-//}}}
-//{{{
-string cFrameBuffer::getTextureParameters (uint32_t id) {
-
-  if (glIsTexture(id) == GL_FALSE)
-    return "Not texture object";
-
-  int width, height, formatNum;
-  glBindTexture (GL_TEXTURE_2D, id);
-  glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);            // get texture width
-  glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);          // get texture height
-  glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &formatNum); // get texture internal format
-
-  return format (" {} {} {}", width, height, getInternalFormat (formatNum));
-  }
-//}}}
-//{{{
-string cFrameBuffer::getRenderbufferParameters (uint32_t id) {
-
-  if (glIsRenderbuffer(id) == GL_FALSE)
-    return "Not Renderbuffer object";
-
-  int width, height, formatNum, samples;
-  glBindRenderbuffer (GL_RENDERBUFFER, id);
-  glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &width);    // get renderbuffer width
-  glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &height);  // get renderbuffer height
-  glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &formatNum); // get renderbuffer internal format
-  glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_SAMPLES, &samples);   // get multisample count
-
-  return format (" {} {} {} {}", width, height, samples, getInternalFormat (formatNum));
   }
 //}}}
