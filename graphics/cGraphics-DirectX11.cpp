@@ -199,6 +199,7 @@ namespace {
       }
     //}}}
     vertexShaderBlob->Release();
+
     //{{{  create the constant buffer
     D3D11_BUFFER_DESC bufferDesc;
     bufferDesc.ByteWidth = sizeof(sViewportData);
@@ -293,61 +294,39 @@ namespace {
   void invalidateDeviceObjects() {
 
     sBackendData* backendData = getBackendData();
-    if (!backendData->pd3dDevice)
-        return;
 
-    if (backendData->pFontSampler) {
+    if (backendData->pFontSampler)
       backendData->pFontSampler->Release();
-      backendData->pFontSampler = NULL;
-      }
-    if (backendData->pFontTextureView) {
+
+    if (backendData->pFontTextureView)
       backendData->pFontTextureView->Release();
-      backendData->pFontTextureView = NULL; ImGui::GetIO().Fonts->SetTexID(NULL);
-      } // We copied data->pFontTextureView to io.Fonts->TexID so let's clear that as well.
 
-    if (backendData->pIB) {
+    if (backendData->pIB) 
       backendData->pIB->Release();
-      backendData->pIB = NULL;
-      }
-    if (backendData->pVB) {
+
+    if (backendData->pVB) 
       backendData->pVB->Release();
-      backendData->pVB = NULL;
-      }
 
-    if (backendData->pBlendState) {
+    if (backendData->pBlendState)
       backendData->pBlendState->Release();
-      backendData->pBlendState = NULL;
-      }
 
-    if (backendData->pDepthStencilState) {
+    if (backendData->pDepthStencilState)
       backendData->pDepthStencilState->Release();
-      backendData->pDepthStencilState = NULL;
-      }
 
-    if (backendData->pRasterizerState) {
+    if (backendData->pRasterizerState)
       backendData->pRasterizerState->Release();
-      backendData->pRasterizerState = NULL;
-      }
 
-    if (backendData->pPixelShader) {
+    if (backendData->pPixelShader)
       backendData->pPixelShader->Release();
-      backendData->pPixelShader = NULL;
-      }
 
-    if (backendData->pVertexConstantBuffer) {
+    if (backendData->pVertexConstantBuffer)
       backendData->pVertexConstantBuffer->Release();
-      backendData->pVertexConstantBuffer = NULL;
-      }
 
-    if (backendData->pInputLayout) {
+    if (backendData->pInputLayout)
       backendData->pInputLayout->Release();
-      backendData->pInputLayout = NULL;
-      }
 
-    if (backendData->pVertexShader) {
+    if (backendData->pVertexShader)
       backendData->pVertexShader->Release();
-      backendData->pVertexShader = NULL;
-      }
     }
   //}}}
 
@@ -534,7 +513,7 @@ namespace {
           }
         else {
           // Apply scissor/clipping rectangle
-          const D3D11_RECT r = { 
+          const D3D11_RECT r = {
             (LONG)(drawCmd->ClipRect.x - clipOffset.x), (LONG)(drawCmd->ClipRect.y - clipOffset.y),
             (LONG)(drawCmd->ClipRect.z - clipOffset.x), (LONG)(drawCmd->ClipRect.w - clipOffset.y) };
           deviceContext->RSSetScissorRects (1, &r);

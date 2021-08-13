@@ -161,9 +161,8 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCa
     return false;
     }
     //}}}
-  cLog::log (LOGINFO, format ("platform DirectX11 device created - featureLevel:{:x}", featureLevel));
-
   createMainRenderTarget();
+  cLog::log (LOGINFO, format ("platform DirectX11 device created - featureLevel:{:x}", featureLevel));
 
   // Show the window
   ::ShowWindow (gHWnd, SW_SHOWDEFAULT);
