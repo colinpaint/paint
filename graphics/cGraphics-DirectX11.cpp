@@ -746,16 +746,15 @@ void cGraphics::draw() {
   }
 //}}}
 //{{{
-void cGraphics::windowResized (bool post) {
+void cGraphics::windowResized (int width, int height) {
 // called pre and post window resize
 
-  //cLog::log (LOGINFO, format ("cGraphics::windowResized {}", post));
+  //cLog::log (LOGINFO, format ("cGraphics::windowResized {}", width, height));
   sBackendData* backendData = getBackendData();
   if (backendData) {
-    if (post)
-      createMainRenderTarget();
-    else if (backendData->mMainRenderTargetView)
-      backendData->mMainRenderTargetView->Release();
+    backendData->mMainRenderTargetView->Release();
+    backendData->mDxgiSwapChain->ResizeBuffers (0, width, height, DXGI_FORMAT_UNKNOWN, 0);
+    createMainRenderTarget();
     }
   }
 //}}}

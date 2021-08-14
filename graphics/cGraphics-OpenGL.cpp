@@ -311,7 +311,7 @@ void cGraphics::draw() {
   }
 //}}}
 //{{{
-void cGraphics::windowResized (bool post) {
-  cLog::log (LOGINFO, " windowResized");
+void cGraphics::windowResized (int width, int height) {
+  cLog::log (LOGINFO, format ("windowResized {} {}", width, height));
   }
 //}}}

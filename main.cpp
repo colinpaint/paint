@@ -27,11 +27,11 @@ using namespace fmt;
 namespace {
   cCanvas* canvas;
 
-  void windowResized (bool post) {
+  void windowResized (int width, int height) {
     //cPlatform::getInstance().newFrame();
     //cUIMan::draw (*canvas);
     //cPlatform::getInstance().present();
-    cGraphics::getInstance().windowResized (post);
+    cGraphics::getInstance().windowResized (width, height);
     }
   }
 

@@ -18,7 +18,7 @@ public:
   void shutdown();
 
   void draw();
-  void windowResized (bool post);
+  void windowResized (int width, int height);
 
 private:
   // singleton pattern fluff

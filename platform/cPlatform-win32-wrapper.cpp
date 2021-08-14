@@ -60,11 +60,8 @@ namespace {
 
     switch (msg) {
       case WM_SIZE:
-        if (gD3dDevice && (wParam != SIZE_MINIMIZED)) {
-          gSizeCallback (false);
-          gSwapChain->ResizeBuffers (0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
-          gSizeCallback (true);
-          }
+        if (gD3dDevice && (wParam != SIZE_MINIMIZED))
+          gSizeCallback ((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
         return 0;
 
       case WM_SYSCOMMAND:

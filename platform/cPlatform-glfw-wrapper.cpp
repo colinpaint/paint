@@ -46,7 +46,7 @@ namespace {
   //}}}
   //{{{
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
-    gSizeCallback (true);
+    gSizeCallback (width, height);
     }
   //}}}
   }
