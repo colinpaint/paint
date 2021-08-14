@@ -12,8 +12,6 @@
 // imGui
 #include <imgui.h>
 
-#include "../graphics/cPointRect.h"
-#include "../graphics/cShader.h"
 #include "../log/cLog.h"
 
 // OpenGL >= 3.1 has GL_PRIMITIVE_RESTART state
@@ -28,6 +26,1219 @@
 using namespace std;
 using namespace fmt;
 //}}}
+
+//{{{  includes
+#include "cQuad.h"
+
+#include <cstdint>
+#include <cmath>
+
+// glad
+#include <glad/glad.h>
+
+// glm
+#include <gtc/matrix_transform.hpp>
+#include <gtx/string_cast.hpp>
+//}}}
+namespace {
+  //{{{
+  const uint8_t kIndices[] = {
+    0, 1, 2, // 0   0-3
+    0, 3, 1  // |\   \|
+    };       // 2-1   1
+  //}}}
+  }
+//{{{
+cQuad::cQuad (cPoint size) : mSize(size) {
+
+  // vertexArray
+  glGenVertexArrays (1, &mVertexArrayObject);
+  glBindVertexArray (mVertexArrayObject);
+
+  // vertices
+  glGenBuffers (1, &mVertexBufferObject);
+  glBindBuffer (GL_ARRAY_BUFFER, mVertexBufferObject);
+
+  glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+  glEnableVertexAttribArray (0);
+
+  glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+  glEnableVertexAttribArray (1);
+
+  const float widthF = static_cast<float>(size.x);
+  const float heightF = static_cast<float>(size.y);
+  const float kVertices[] = {
+    0.f,   heightF,  0.f,1.f, // tl vertex
+    widthF,0.f,      1.f,0.f, // br vertex
+    0.f,   0.f,      0.f,0.f, // bl vertex
+    widthF,heightF,  1.f,1.f, // tr vertex
+    };
+
+  glBufferData (GL_ARRAY_BUFFER, sizeof(kVertices), kVertices, GL_STATIC_DRAW);
+
+  // indices
+  mNumIndices = sizeof(kIndices);
+
+  glGenBuffers (1, &mElementArrayBufferObject);
+  glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, mElementArrayBufferObject);
+
+  glBufferData (GL_ELEMENT_ARRAY_BUFFER, mNumIndices, kIndices, GL_STATIC_DRAW);
+  }
+//}}}
+//{{{
+cQuad::cQuad (cPoint size, const cRect& rect) : mSize(size) {
+
+  // vertexArray
+  glGenVertexArrays (1, &mVertexArrayObject);
+  glBindVertexArray (mVertexArrayObject);
+
+  // vertices
+  glGenBuffers (1, &mVertexBufferObject);
+  glBindBuffer (GL_ARRAY_BUFFER, mVertexBufferObject);
+
+  glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+  glEnableVertexAttribArray (0);
+
+  glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+  glEnableVertexAttribArray (1);
+
+  const float subLeftF = static_cast<float>(rect.left);
+  const float subRightF = static_cast<float>(rect.right);
+  const float subBottomF = static_cast<float>(rect.bottom);
+  const float subTopF = static_cast<float>(rect.top);
+
+  const float subLeftTexF = subLeftF / size.x;
+  const float subRightTexF = subRightF / size.x;
+  const float subBottomTexF = subBottomF / size.y;
+  const float subTopTexF = subTopF / size.y;
+
+  const float kVertices[] = {
+    subLeftF, subTopF,     subLeftTexF, subTopTexF,    // tl
+    subRightF,subBottomF,  subRightTexF,subBottomTexF, // br
+    subLeftF, subBottomF,  subLeftTexF, subBottomTexF, // bl
+    subRightF,subTopF,     subRightTexF,subTopTexF     // tr
+    };
+
+  glBufferData (GL_ARRAY_BUFFER, sizeof(kVertices), kVertices, GL_STATIC_DRAW);
+
+  // indices
+  mNumIndices = sizeof(kIndices);
+
+  glGenBuffers (1, &mElementArrayBufferObject);
+  glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, mElementArrayBufferObject);
+  glBufferData (GL_ELEMENT_ARRAY_BUFFER, mNumIndices, kIndices, GL_STATIC_DRAW);
+  }
+//}}}
+//{{{
+cQuad::~cQuad() {
+
+  glDeleteBuffers (1, &mElementArrayBufferObject);
+  glDeleteBuffers (1, &mVertexBufferObject);
+  glDeleteVertexArrays (1, &mVertexArrayObject);
+  }
+//}}}
+//{{{
+void cQuad::draw() {
+  glBindVertexArray (mVertexArrayObject);
+  glDrawElements (GL_TRIANGLES, mNumIndices, GL_UNSIGNED_BYTE, 0);
+  }
+//}}}
+
+//{{{  includes
+#include <cstdint>
+#include <cmath>
+#include <string>
+
+// glad
+#include <glad/glad.h>
+
+#include "../log/cLog.h"
+
+using namespace std;
+using namespace fmt;
+//}}}
+constexpr bool kDebug = false;
+namespace {
+  //{{{
+  string getInternalFormat (uint32_t formatNum) {
+
+    string formatName;
+
+    switch (formatNum) {
+      case GL_STENCIL_INDEX:      // 0x1901
+        formatName = "GL_STENCIL_INDEX";
+        break;
+      case GL_DEPTH_COMPONENT:    // 0x1902
+        formatName = "GL_DEPTH_COMPONENT";
+        break;
+      case GL_ALPHA:              // 0x1906
+        formatName = "GL_ALPHA";
+        break;
+      case GL_RGB:                // 0x1907
+        formatName = "GL_RGB";
+        break;
+      case GL_RGBA:               // 0x1908
+        formatName = "GL_RGBA";
+        break;
+      //case GL_LUMINANCE:          // 0x1909
+      //  formatName = "GL_LUMINANCE";
+      //  break;
+      //case GL_LUMINANCE_ALPHA:    // 0x190A
+      //  formatName = "GL_LUMINANCE_ALPHA";
+      //  break;
+      case GL_R3_G3_B2:           // 0x2A10
+        formatName = "GL_R3_G3_B2";
+        break;
+      case GL_RGB4:               // 0x804F
+          formatName = "GL_RGB4";
+          break;
+      case GL_RGB5:               // 0x8050
+          formatName = "GL_RGB5";
+          break;
+      case GL_RGB8:               // 0x8051
+          formatName = "GL_RGB8";
+          break;
+      case GL_RGB10:              // 0x8052
+          formatName = "GL_RGB10";
+          break;
+      case GL_RGB12:              // 0x8053
+          formatName = "GL_RGB12";
+          break;
+      case GL_RGB16:              // 0x8054
+          formatName = "GL_RGB16";
+          break;
+      case GL_RGBA2:              // 0x8055
+          formatName = "GL_RGBA2";
+          break;
+      case GL_RGBA4:              // 0x8056
+          formatName = "GL_RGBA4";
+          break;
+      case GL_RGB5_A1:            // 0x8057
+          formatName = "GL_RGB5_A1";
+          break;
+      case GL_RGBA8:              // 0x8058
+          formatName = "GL_RGBA8";
+          break;
+      case GL_RGB10_A2:           // 0x8059
+          formatName = "GL_RGB10_A2";
+          break;
+      case GL_RGBA12:             // 0x805A
+          formatName = "GL_RGBA12";
+          break;
+      case GL_RGBA16:             // 0x805B
+          formatName = "GL_RGBA16";
+          break;
+      case GL_DEPTH_COMPONENT16:  // 0x81A5
+          formatName = "GL_DEPTH_COMPONENT16";
+          break;
+      case GL_DEPTH_COMPONENT24:  // 0x81A6
+          formatName = "GL_DEPTH_COMPONENT24";
+          break;
+      case GL_DEPTH_COMPONENT32:  // 0x81A7
+          formatName = "GL_DEPTH_COMPONENT32";
+          break;
+      case GL_DEPTH_STENCIL:      // 0x84F9
+          formatName = "GL_DEPTH_STENCIL";
+          break;
+      case GL_DEPTH24_STENCIL8:   // 0x88F0
+          formatName = "GL_DEPTH24_STENCIL8";
+          break;
+      // openGL v4? onwards
+      #ifdef OPENGL_RGBF
+      case GL_RGBA32F:            // 0x8814
+        formatName = "GL_RGBA32F";
+        break;
+      case GL_RGB32F:             // 0x8815
+        formatName = "GL_RGB32F";
+        break;
+      case GL_RGBA16F:            // 0x881A
+        formatName = "GL_RGBA16F";
+        break;
+      case GL_RGB16F:             // 0x881B
+        formatName = "GL_RGB16F";
+        break;
+      #endif
+      default:
+          formatName = format ("Unknown Format {}", formatNum);
+          break;
+      }
+
+    return formatName;
+    }
+  //}}}
+  //{{{
+  string getTextureParameters (uint32_t id) {
+
+    if (glIsTexture(id) == GL_FALSE)
+      return "Not texture object";
+
+    int width, height, formatNum;
+    glBindTexture (GL_TEXTURE_2D, id);
+    glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);            // get texture width
+    glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);          // get texture height
+    glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &formatNum); // get texture internal format
+
+    return format (" {} {} {}", width, height, getInternalFormat (formatNum));
+    }
+  //}}}
+  //{{{
+  string getRenderbufferParameters (uint32_t id) {
+
+    if (glIsRenderbuffer(id) == GL_FALSE)
+      return "Not Renderbuffer object";
+
+    int width, height, formatNum, samples;
+    glBindRenderbuffer (GL_RENDERBUFFER, id);
+    glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &width);    // get renderbuffer width
+    glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &height);  // get renderbuffer height
+    glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &formatNum); // get renderbuffer internal format
+    glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_SAMPLES, &samples);   // get multisample count
+
+    return format (" {} {} {} {}", width, height, samples, getInternalFormat (formatNum));
+    }
+  //}}}
+  }
+
+//{{{
+cFrameBuffer::cFrameBuffer()
+    : mImageFormat(GL_RGBA), mInternalFormat(GL_RGBA) {
+// window frameBuffer
+  }
+//}}}
+//{{{
+cFrameBuffer::cFrameBuffer (cPoint size, eFormat format)
+    : mSize(size),
+      mImageFormat(format == eRGBA ? GL_RGBA : GL_RGB),
+      mInternalFormat(format == eRGBA ? GL_RGBA : GL_RGB) {
+
+  // create empty frameBuffer object
+  glGenFramebuffers (1, &mFrameBufferObject);
+  glBindFramebuffer (GL_FRAMEBUFFER, mFrameBufferObject);
+
+  // create and add texture to frameBuffer object
+  glGenTextures (1, &mColorTextureId);
+
+  glBindTexture (GL_TEXTURE_2D, mColorTextureId);
+  glTexImage2D (GL_TEXTURE_2D, 0, mInternalFormat, size.x, size.y, 0, mImageFormat, GL_UNSIGNED_BYTE, 0);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glGenerateMipmap (GL_TEXTURE_2D);
+
+  glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mColorTextureId, 0);
+  }
+//}}}
+//{{{
+cFrameBuffer::cFrameBuffer (uint8_t* pixels, cPoint size, eFormat format)
+    : mSize(size),
+      mImageFormat(format == eRGBA ? GL_RGBA : GL_RGB),
+      mInternalFormat(format == eRGBA ? GL_RGBA : GL_RGB) {
+
+  // create frameBuffer object from pixels
+  glGenFramebuffers (1, &mFrameBufferObject);
+  glBindFramebuffer (GL_FRAMEBUFFER, mFrameBufferObject);
+
+  // create and add texture to frameBuffer object
+  glGenTextures (1, &mColorTextureId);
+
+  glBindTexture (GL_TEXTURE_2D, mColorTextureId);
+  glTexImage2D (GL_TEXTURE_2D, 0, mInternalFormat, size.x, size.y, 0, mImageFormat, GL_UNSIGNED_BYTE, pixels);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glGenerateMipmap (GL_TEXTURE_2D);
+
+  glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mColorTextureId, 0);
+  }
+//}}}
+//{{{
+cFrameBuffer::~cFrameBuffer() {
+
+  glDeleteTextures (1, &mColorTextureId);
+  glDeleteFramebuffers (1, &mFrameBufferObject);
+  free (mPixels);
+  }
+//}}}
+
+//{{{
+uint8_t* cFrameBuffer::getPixels() {
+
+  if (!mPixels) {
+    // create mPixels, texture pixels shadow buffer
+    if (kDebug)
+      cLog::log (LOGINFO, format ("getPixels malloc {}", getNumPixelBytes()));
+    mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
+    glBindTexture (GL_TEXTURE_2D, mColorTextureId);
+    glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
+    }
+
+  else if (!mDirtyPixelsRect.isEmpty()) {
+    if (kDebug)
+      cLog::log (LOGINFO, format ("getPixels get {},{} {},{}",
+                                  mDirtyPixelsRect.left, mDirtyPixelsRect.top,
+                                  mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
+
+    // no openGL glGetTexSubImage, so dirtyPixelsRect not really used, is this correct ???
+    glBindTexture (GL_TEXTURE_2D, mColorTextureId);
+    glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
+    mDirtyPixelsRect = cRect(0,0,0,0);
+    }
+
+  return mPixels;
+  }
+//}}}
+
+//{{{
+void cFrameBuffer::setSize (cPoint size) {
+
+  if (mFrameBufferObject == 0)
+    mSize = size;
+  else
+    cLog::log (LOGERROR, "unimplmented setSize of non screen framebuffer");
+  };
+//}}}
+//{{{
+void cFrameBuffer::setTarget (const cRect& rect) {
+// set us as target, set viewport to our size, invalidate contents (probably a clear)
+
+  glBindFramebuffer (GL_FRAMEBUFFER, mFrameBufferObject);
+  glViewport (0, 0, mSize.x, mSize.y);
+
+  glDisable (GL_SCISSOR_TEST);
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_DEPTH_TEST);
+
+  // texture could be changed, add to dirtyPixelsRect
+  mDirtyPixelsRect += rect;
+  }
+//}}}
+//{{{
+void cFrameBuffer::setBlend() {
+
+  uint32_t modeRGB = GL_FUNC_ADD;
+  uint32_t modeAlpha = GL_FUNC_ADD;
+
+  uint32_t srcRgb = GL_SRC_ALPHA;
+  uint32_t dstRGB = GL_ONE_MINUS_SRC_ALPHA;
+  uint32_t srcAlpha = GL_ONE;
+  uint32_t dstAlpha = GL_ONE_MINUS_SRC_ALPHA;
+
+  glBlendEquationSeparate (modeRGB, modeAlpha);
+  glBlendFuncSeparate (srcRgb, dstRGB, srcAlpha, dstAlpha);
+  glEnable (GL_BLEND);
+  }
+//}}}
+//{{{
+void cFrameBuffer::setSource() {
+
+  if (mFrameBufferObject) {
+    glActiveTexture (GL_TEXTURE0);
+    glBindTexture (GL_TEXTURE_2D, mColorTextureId);
+    }
+  else
+    cLog::log (LOGERROR, "windowFrameBuffer cannot be src");
+  }
+//}}}
+
+//{{{
+void cFrameBuffer::invalidate() {
+
+  //glInvalidateFramebuffer (mFrameBufferObject, 1, GL_COLOR_ATTACHMENT0);
+  clear (glm::vec4 (0.f,0.f,0.f, 0.f));
+  }
+//}}}
+//{{{
+void cFrameBuffer::pixelsChanged (const cRect& rect) {
+// pixels in rect changed, write back to texture
+
+  if (mPixels) {
+    // update y band, quicker x cropped line by line ???
+    glBindTexture (GL_TEXTURE_2D, mColorTextureId);
+    glTexSubImage2D (GL_TEXTURE_2D, 0, 0, rect.top, mSize.x, rect.getHeight(),
+                     mImageFormat, GL_UNSIGNED_BYTE, mPixels + (rect.top * mSize.x * 4));
+    // simpler whole screen
+    //glTexImage2D (GL_TEXTURE_2D, 0, mInternalFormat, mSize.x, mSize.y, 0, mImageFormat, GL_UNSIGNED_BYTE, mPixels);
+
+    if (kDebug)
+      cLog::log (LOGINFO, format ("pixelsChanged {},{} {},{} - dirty {},{} {},{}",
+                                  rect.left, rect.top, rect.getWidth(), rect.getHeight()));
+    }
+  }
+//}}}
+
+//{{{
+void cFrameBuffer::clear (const glm::vec4& color) {
+
+  glClearColor (color.x, color.y, color.z, color.w);
+  glClear (GL_COLOR_BUFFER_BIT);
+  }
+//}}}
+//{{{
+void cFrameBuffer::blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect) {
+
+  glBindFramebuffer (GL_READ_FRAMEBUFFER, src->getId());
+  glBindFramebuffer (GL_DRAW_FRAMEBUFFER, mFrameBufferObject);
+  glBlitFramebuffer (srcPoint.x, srcPoint.y, srcPoint.x + dstRect.getWidth(), srcPoint.y + dstRect.getHeight(),
+                     dstRect.left, dstRect.top, dstRect.right, dstRect.bottom,
+                     GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+  // texture changed, add to dirtyPixelsRect
+  mDirtyPixelsRect += dstRect;
+
+  if (kDebug)
+    cLog::log (LOGINFO, format ("blit src:{},{} dst:{},{} {},{} dirty:{},{} {},{}",
+                                srcPoint.x, srcPoint.y,
+                                dstRect.left, dstRect.top, dstRect.getWidth(), dstRect.getHeight(),
+                                mDirtyPixelsRect.left, mDirtyPixelsRect.top,
+                                mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
+  }
+//}}}
+
+//{{{
+bool cFrameBuffer::checkStatus() {
+
+  GLenum status = glCheckFramebufferStatus (GL_FRAMEBUFFER);
+
+  switch (status) {
+    case GL_FRAMEBUFFER_COMPLETE:
+      //cLog::log (LOGINFO, "frameBUffer ok");
+      return true;
+
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+      cLog::log (LOGERROR, "framebuffer incomplete: Attachment is NOT complete");
+      return false;
+
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+      cLog::log (LOGERROR, "framebuffer incomplete: No image is attached to FBO");
+      return false;
+
+    //case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+    //  cLog::log (LOGERROR, "framebuffer incomplete: Attached images have different dimensions");
+    //  return false;
+
+    case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+      cLog::log (LOGERROR, "framebuffer incomplete: Draw buffer");
+      return false;
+
+    case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+      cLog::log (LOGERROR, "framebuffer incomplete: Read buffer");
+      return false;
+
+    case GL_FRAMEBUFFER_UNSUPPORTED:
+      cLog::log (LOGERROR, "framebuffer incomplete: Unsupported by FBO implementation");
+      return false;
+
+    default:
+      cLog::log (LOGERROR, "framebuffer incomplete: Unknown error");
+      return false;
+    }
+  }
+//}}}
+//{{{
+void cFrameBuffer::reportInfo() {
+
+  glBindFramebuffer (GL_FRAMEBUFFER, mFrameBufferObject);
+
+  GLint colorBufferCount = 0;
+  glGetIntegerv (GL_MAX_COLOR_ATTACHMENTS, &colorBufferCount);
+
+  GLint multiSampleCount = 0;
+  glGetIntegerv (GL_MAX_SAMPLES, &multiSampleCount);
+
+  cLog::log (LOGINFO, format ("frameBuffer maxColorAttach {} masSamples {}", colorBufferCount, multiSampleCount));
+
+  //  print info of the colorbuffer attachable image
+  GLint objectType;
+  GLint objectId;
+  for (int i = 0; i < colorBufferCount; ++i) {
+    glGetFramebufferAttachmentParameteriv (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i,
+                                           GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &objectType);
+    if (objectType != GL_NONE) {
+      glGetFramebufferAttachmentParameteriv (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i,
+                                             GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &objectId);
+      string formatName;
+      cLog::log (LOGINFO, format ("- color{}", i));
+      if (objectType == GL_TEXTURE)
+        cLog::log (LOGINFO, format ("  - GL_TEXTURE {}", getTextureParameters (objectId)));
+      else if(objectType == GL_RENDERBUFFER)
+        cLog::log (LOGINFO, format ("  - GL_RENDERBUFFER {}", getRenderbufferParameters (objectId)));
+      }
+    }
+
+  //  print info of the depthbuffer attachable image
+  glGetFramebufferAttachmentParameteriv (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                         GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &objectType);
+  if (objectType != GL_NONE) {
+    glGetFramebufferAttachmentParameteriv (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                           GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &objectId);
+    cLog::log (LOGINFO, format ("depth"));
+    switch (objectType) {
+      case GL_TEXTURE:
+        cLog::log (LOGINFO, format ("- GL_TEXTURE {}", getTextureParameters(objectId)));
+        break;
+      case GL_RENDERBUFFER:
+        cLog::log (LOGINFO, format ("- GL_RENDERBUFFER {}", getRenderbufferParameters(objectId)));
+        break;
+      }
+    }
+
+  // print info of the stencilbuffer attachable image
+  glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
+                                        &objectType);
+  if (objectType != GL_NONE) {
+    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+                                          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &objectId);
+    cLog::log (LOGINFO, format ("stencil"));
+    switch (objectType) {
+      case GL_TEXTURE:
+        cLog::log (LOGINFO, format ("- GL_TEXTURE {}", getTextureParameters(objectId)));
+        break;
+      case GL_RENDERBUFFER:
+        cLog::log (LOGINFO, format ("- GL_RENDERBUFFER {}", getRenderbufferParameters(objectId)));
+        break;
+      }
+    }
+  }
+//}}}
+
+
+//{{{  includes
+#include <cstdint>
+#include <cmath>
+#include <string>
+#include <algorithm>
+
+// glad
+#include <glad/glad.h>
+
+// glm
+#include <vec2.hpp>
+#include <vec3.hpp>
+#include <vec4.hpp>
+#include <mat4x4.hpp>
+#include <gtc/type_ptr.hpp>
+
+#include "../log/cLog.h"
+
+using namespace std;
+using namespace fmt;
+//}}}
+
+namespace {
+  #ifdef OPENGL_2
+    //{{{
+    const string kQuadVertShader =
+      "#version 120\n"
+
+      "layout (location = 0) in vec2 inPos;"
+      "layout (location = 1) in vec2 inTextureCoord;"
+      "out vec2 textureCoord;"
+
+      "uniform mat4 uModel;"
+      "uniform mat4 uProject;"
+
+      "void main() {"
+      "  textureCoord = inTextureCoord;"
+      "  gl_Position = uProject * uModel * vec4 (inPos, 0.0, 1.0);"
+      "  }";
+    //}}}
+    //{{{
+    const string kCanvasFragShader =
+      "#version 120\n"
+
+      "uniform sampler2D uSampler;"
+
+      "in vec2 textureCoord;"
+      "out vec4 outColor;"
+
+      "void main() {"
+      "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+      //"  outColor /= outColor.w;"
+      "  }";
+    //}}}
+    //{{{
+    const string kLayerFragShader =
+      "#version 120\n"
+
+      "uniform sampler2D uSampler;"
+      "uniform float uHue;"
+      "uniform float uVal;"
+      "uniform float uSat;"
+
+      "in vec2 textureCoord;"
+      "out vec4 outColor;"
+
+      //{{{
+      "vec3 rgbToHsv (float r, float g, float b) {"
+      "  float max_val = max(r, max(g, b));"
+      "  float min_val = min(r, min(g, b));"
+      "  float h;" // hue in degrees
+
+      "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
+      "    h = 0.0; }"
+      "  else if (max_val == r) {"
+      "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
+      "  else if (max_val == g) {"
+      "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
+      "  else if (max_val == b) {"
+      "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
+      "  if (h < 0.0) {"
+      "    h += 360.0; }"
+
+      "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
+      "  float v = max_val;"
+      "  return vec3 (h, s, v);"
+      "  }"
+      //}}}
+      //{{{
+      "vec3 hsvToRgb (float h, float s, float v) {"
+      "  float r, g, b;"
+      "  float c = v * s;"
+      "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
+      "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
+      "  float r_, g_, b_;"
+
+      "  if (0.0 <= h_ && h_ < 1.0) {"
+      "    r_ = c, g_ = x, b_ = 0.0; }"
+      "  else if (1.0 <= h_ && h_ < 2.0) {"
+      "    r_ = x, g_ = c, b_ = 0.0; }"
+      "  else if (2.0 <= h_ && h_ < 3.0) {"
+      "    r_ = 0.0, g_ = c, b_ = x; }"
+      "  else if (3.0 <= h_ && h_ < 4.0) {"
+      "    r_ = 0.0, g_ = x, b_ = c; }"
+      "  else if (4.0 <= h_ && h_ < 5.0) {"
+      "    r_ = x, g_ = 0.0, b_ = c; }"
+      "  else if (5.0 <= h_ && h_ < 6.0) {"
+      "    r_ = c, g_ = 0.0, b_ = x; }"
+      "  else {"
+      "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
+
+      "  float m = v - c;"
+      "  r = r_ + m;"
+      "  g = g_ + m;"
+      "  b = b_ + m;"
+
+      "  return vec3 (r, g, b);"
+      "  }"
+      //}}}
+
+      "void main() {"
+      "  outColor = texture (uSampler, textureCoord);"
+
+      "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
+      "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
+      "    hsv.x += uHue;"
+      "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
+             // not grayscale
+      "      hsv.y = uSat <= 0.0 ? "
+      "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
+      "      }"
+      "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
+      "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
+      "    outColor.xyz = rgb;"
+      "    }"
+
+      //"  if (uPreMultiply)"
+      //"    outColor.xyz *= outColor.w;"
+      "  }";
+    //}}}
+    //{{{
+    const string kPaintFragShader =
+      "#version 120\n"
+
+      "uniform sampler2D uSampler;"
+      "uniform vec2 uPos;"
+      "uniform vec2 uPrevPos;"
+      "uniform float uRadius;"
+      "uniform vec4 uColor;"
+
+      "in vec2 textureCoord;"
+      "out vec4 outColor;"
+
+      "float distToLine (vec2 v, vec2 w, vec2 p) {"
+      "  float l2 = pow (distance(w, v), 2.);"
+      "  if (l2 == 0.0)"
+      "    return distance (p, v);"
+      "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
+      "  vec2 j = v + t * (w - v);"
+      "  return distance (p, j);"
+      "  }"
+
+      "void main() {"
+      "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
+      "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
+      "  }";
+    //}}}
+  #else
+    //{{{
+    const string kQuadVertShader =
+      "#version 330 core\n"
+      "layout (location = 0) in vec2 inPos;"
+      "layout (location = 1) in vec2 inTextureCoord;"
+      "out vec2 textureCoord;"
+
+      "uniform mat4 uModel;"
+      "uniform mat4 uProject;"
+
+      "void main() {"
+      "  textureCoord = inTextureCoord;"
+      "  gl_Position = uProject * uModel * vec4 (inPos, 0.0, 1.0);"
+      "  }";
+    //}}}
+    //{{{
+    const string kCanvasFragShader =
+      "#version 330 core\n"
+      "uniform sampler2D uSampler;"
+
+      "in vec2 textureCoord;"
+      "out vec4 outColor;"
+
+      "void main() {"
+      "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+      //"  outColor /= outColor.w;"
+      "  }";
+    //}}}
+    //{{{
+    const string kLayerFragShader =
+      "#version 330 core\n"
+      "uniform sampler2D uSampler;"
+      "uniform float uHue;"
+      "uniform float uVal;"
+      "uniform float uSat;"
+
+      "in vec2 textureCoord;"
+      "out vec4 outColor;"
+
+      //{{{
+      "vec3 rgbToHsv (float r, float g, float b) {"
+      "  float max_val = max(r, max(g, b));"
+      "  float min_val = min(r, min(g, b));"
+      "  float h;" // hue in degrees
+
+      "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
+      "    h = 0.0; }"
+      "  else if (max_val == r) {"
+      "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
+      "  else if (max_val == g) {"
+      "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
+      "  else if (max_val == b) {"
+      "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
+      "  if (h < 0.0) {"
+      "    h += 360.0; }"
+
+      "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
+      "  float v = max_val;"
+      "  return vec3 (h, s, v);"
+      "  }"
+      //}}}
+      //{{{
+      "vec3 hsvToRgb (float h, float s, float v) {"
+      "  float r, g, b;"
+      "  float c = v * s;"
+      "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
+      "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
+      "  float r_, g_, b_;"
+
+      "  if (0.0 <= h_ && h_ < 1.0) {"
+      "    r_ = c, g_ = x, b_ = 0.0; }"
+      "  else if (1.0 <= h_ && h_ < 2.0) {"
+      "    r_ = x, g_ = c, b_ = 0.0; }"
+      "  else if (2.0 <= h_ && h_ < 3.0) {"
+      "    r_ = 0.0, g_ = c, b_ = x; }"
+      "  else if (3.0 <= h_ && h_ < 4.0) {"
+      "    r_ = 0.0, g_ = x, b_ = c; }"
+      "  else if (4.0 <= h_ && h_ < 5.0) {"
+      "    r_ = x, g_ = 0.0, b_ = c; }"
+      "  else if (5.0 <= h_ && h_ < 6.0) {"
+      "    r_ = c, g_ = 0.0, b_ = x; }"
+      "  else {"
+      "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
+
+      "  float m = v - c;"
+      "  r = r_ + m;"
+      "  g = g_ + m;"
+      "  b = b_ + m;"
+
+      "  return vec3 (r, g, b);"
+      "  }"
+      //}}}
+
+      "void main() {"
+      "  outColor = texture (uSampler, textureCoord);"
+
+      "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
+      "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
+      "    hsv.x += uHue;"
+      "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
+             // not grayscale
+      "      hsv.y = uSat <= 0.0 ? "
+      "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
+      "      }"
+      "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
+      "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
+      "    outColor.xyz = rgb;"
+      "    }"
+
+      //"  if (uPreMultiply)"
+      //"    outColor.xyz *= outColor.w;"
+      "  }";
+    //}}}
+    //{{{
+    const string kPaintFragShader =
+      "#version 330 core\n"
+
+      "uniform sampler2D uSampler;"
+      "uniform vec2 uPos;"
+      "uniform vec2 uPrevPos;"
+      "uniform float uRadius;"
+      "uniform vec4 uColor;"
+
+      "in vec2 textureCoord;"
+      "out vec4 outColor;"
+
+      "float distToLine (vec2 v, vec2 w, vec2 p) {"
+      "  float l2 = pow (distance(w, v), 2.);"
+      "  if (l2 == 0.0)"
+      "    return distance (p, v);"
+      "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
+      "  vec2 j = v + t * (w - v);"
+      "  return distance (p, j);"
+      "  }"
+
+      "void main() {"
+      "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
+      "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
+      "  }";
+    //}}}
+  #endif
+
+  //{{{
+  const string kDrawListVertShader120 =
+    "#version 100\n"
+
+    "uniform mat4 ProjMtx;"
+
+    "attribute vec2 Position;"
+    "attribute vec2 UV;"
+    "attribute vec4 Color;"
+
+    "varying vec2 Frag_UV;"
+    "varying vec4 Frag_Color;"
+
+    "void main() {"
+    "  Frag_UV = UV;"
+    "  Frag_Color = Color;"
+    "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+    "  }";
+  //}}}
+  //{{{
+  const string kDrawListVertShader130 =
+    "#version 130\n"
+
+    "uniform mat4 ProjMtx;"
+
+    "in vec2 Position;"
+    "in vec2 UV;"
+    "in vec4 Color;"
+
+    "out vec2 Frag_UV;"
+    "out vec4 Frag_Color;"
+
+    "void main() {"
+    "  Frag_UV = UV;"
+    "  Frag_Color = Color;"
+    "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+    "  }";
+  //}}}
+  //{{{
+  const string kDrawListVertShader300es =
+    "#version 300 es\n"
+
+    "precision mediump float;"
+
+    "layout (location = 0) in vec2 Position;"
+    "layout (location = 1) in vec2 UV;"
+    "layout (location = 2) in vec4 Color;"
+
+    "uniform mat4 ProjMtx;"
+
+    "out vec2 Frag_UV;"
+    "out vec4 Frag_Color;"
+
+    "void main() {"
+    "  Frag_UV = UV;"
+    "  Frag_Color = Color;"
+    "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+    "  }";
+  //}}}
+  //{{{
+  const string kDrawListVertShader410core =
+    "#version 410 core\n"
+
+    "layout (location = 0) in vec2 Position;"
+    "layout (location = 1) in vec2 UV;"
+    "layout (location = 2) in vec4 Color;"
+
+    "uniform mat4 ProjMtx;"
+
+    "out vec2 Frag_UV;"
+    "out vec4 Frag_Color;"
+
+    "void main() {"
+    "  Frag_UV = UV;"
+    "  Frag_Color = Color;"
+    "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+    "  }";
+  //}}}
+
+  //{{{
+  const string kDrawListFragShader120 =
+    "#version 100\n"
+
+    "#ifdef GL_ES\n"
+    "  precision mediump float;"
+    "#endif\n"
+
+    "uniform sampler2D Texture;"
+
+    "varying vec2 Frag_UV;"
+    "varying vec4 Frag_Color;"
+
+    "void main() {"
+    "  gl_FragColor = Frag_Color * texture2D(Texture, Frag_UV.st);"
+    "  }";
+  //}}}
+  //{{{
+  const string kDrawListFragShader130 =
+    "#version 130\n"
+
+    "uniform sampler2D Texture;"
+
+    "in vec2 Frag_UV;"
+    "in vec4 Frag_Color;"
+
+    "out vec4 Out_Color;"
+
+    "void main() {"
+    "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
+    "  }";
+  //}}}
+  //{{{
+  const string kDrawListFragShader300es =
+    "#version 300 es\n"
+
+    "precision mediump float;"
+
+    "uniform sampler2D Texture;"
+
+    "in vec2 Frag_UV;"
+    "in vec4 Frag_Color;"
+
+    "layout (location = 0) out vec4 Out_Color;"
+
+    "void main() {"
+    "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
+    "  }";
+  //}}}
+  //{{{
+  const string kDrawListFragShader410core =
+    "#version 410 core\n"
+
+    "in vec2 Frag_UV;"
+    "in vec4 Frag_Color;"
+
+    "uniform sampler2D Texture;"
+
+    "layout (location = 0) out vec4 Out_Color;"
+
+    "void main() {"
+    "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
+    "  }";
+  //}}}
+  }
+
+// cShader
+//{{{
+void cShader::use() {
+
+  glUseProgram (mId);
+  }
+//}}}
+
+//{{{
+cShader::cShader (const string& vertShaderString, const string& fragShaderString) {
+
+  // compile vertShader
+  const GLuint vertShader = glCreateShader (GL_VERTEX_SHADER);
+  const GLchar* vertShaderStr = vertShaderString.c_str();
+  glShaderSource (vertShader, 1, &vertShaderStr, 0);
+  glCompileShader (vertShader);
+  GLint success;
+  glGetShaderiv (vertShader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    //{{{  error, exit
+    char errMessage[512];
+    glGetProgramInfoLog (vertShader, 512, NULL, errMessage);
+    cLog::log (LOGERROR, format ("vertShader failed {}", errMessage));
+
+    exit (EXIT_FAILURE);
+    }
+    //}}}
+
+  // compile fragShader
+  const GLuint fragShader = glCreateShader (GL_FRAGMENT_SHADER);
+  const GLchar* fragShaderStr = fragShaderString.c_str();
+  glShaderSource (fragShader, 1, &fragShaderStr, 0);
+  glCompileShader (fragShader);
+  glGetShaderiv (fragShader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    //{{{  error, exit
+    char errMessage[512];
+    glGetProgramInfoLog (fragShader, 512, NULL, errMessage);
+    cLog::log (LOGERROR, format ("fragShader failed {}", errMessage));
+    exit (EXIT_FAILURE);
+    }
+    //}}}
+
+  // create shader program
+  mId = glCreateProgram();
+  glAttachShader (mId, vertShader);
+  glAttachShader (mId, fragShader);
+  glLinkProgram (mId);
+  glGetProgramiv (mId, GL_LINK_STATUS, &success);
+  if (!success) {
+    //{{{  error, exit
+    char errMessage[512];
+    glGetProgramInfoLog (mId, 512, NULL, errMessage);
+    cLog::log (LOGERROR, format ("shaderProgram failed {} ",  errMessage));
+
+    exit (EXIT_FAILURE);
+    }
+    //}}}
+
+  glDeleteShader (vertShader);
+  glDeleteShader (fragShader);
+  }
+//}}}
+//{{{
+cShader::~cShader() {
+  glDeleteProgram (mId);
+  }
+//}}}
+
+//{{{
+void cShader::setBool (const string &name, bool value) {
+  glUniform1i (glGetUniformLocation(mId, name.c_str()), value);
+  }
+//}}}
+//{{{
+void cShader::setInt (const string &name, int value) {
+  glUniform1i (glGetUniformLocation (mId, name.c_str()), value);
+  }
+//}}}
+//{{{
+void cShader::setFloat (const string &name, float value) {
+  glUniform1f (glGetUniformLocation (mId, name.c_str()), value);
+  }
+//}}}
+//{{{
+void cShader::setVec2 (const string &name, glm::vec2 value) {
+  glUniform2fv (glGetUniformLocation (mId, name.c_str()), 1, glm::value_ptr (value));
+  }
+//}}}
+//{{{
+void cShader::setVec3 (const string &name, glm::vec3 value) {
+  glUniform3fv (glGetUniformLocation (mId, name.c_str()), 1, glm::value_ptr (value));
+  }
+//}}}
+//{{{
+void cShader::setVec4 (const string &name, glm::vec4 value) {
+  glUniform4fv (glGetUniformLocation (mId, name.c_str()), 1, glm::value_ptr (value));
+  }
+//}}}
+//{{{
+void cShader::setMat4 (const string &name, glm::mat4 value) {
+  glUniformMatrix4fv (glGetUniformLocation (mId, name.c_str()), 1, GL_FALSE, glm::value_ptr (value));
+  }
+//}}}
+
+// cQuadShader
+cQuadShader::cQuadShader (const string& fragShaderString) : cShader (kQuadVertShader, fragShaderString) {}
+//{{{
+void cQuadShader::setModelProject (const glm::mat4& model, const glm::mat4& project) {
+  setMat4 ("uModel", model);
+  setMat4 ("uProject", project);
+  }
+//}}}
+
+// cCanvasShader
+cCanvasShader::cCanvasShader() : cQuadShader (kCanvasFragShader) {}
+
+// cLayerShader
+cLayerShader::cLayerShader() : cQuadShader (kLayerFragShader) {}
+//{{{
+void cLayerShader::setHueSatVal (float hue, float sat, float val) {
+
+  setFloat ("uHue", 0.f);
+  setFloat ("uSat", 0.f);
+  setFloat ("uVal", 0.f);
+  }
+//}}}
+
+// cPaintShader
+cPaintShader::cPaintShader() : cQuadShader (kPaintFragShader) {}
+//{{{
+void cPaintShader::setStroke (const glm::vec2& pos, const glm::vec2& prevPos,
+                              float radius, const glm::vec4& color) {
+
+  setVec2 ("uPos", pos);
+  setVec2 ("uPrevPos", prevPos);
+  setFloat ("uRadius", radius);
+  setVec4 ("uColor", color);
+  }
+//}}}
+
+// cDrawListShader
+//{{{  version
+//if (gGlslVersion == 120) {
+  //vertex_shader = vertexShader120;
+  //fragment_shader = fragmentShader120;
+  //}
+//else if (gGlslVersion == 300) {
+  //vertex_shader = vertexShader300es;
+  //fragment_shader = fragmentShader300es;
+  //}
+//else if (gGlslVersion >= 410) {
+  //vertex_shader = vertexShader410core;
+  //fragment_shader = fragmentShader410core;
+  //}
+//else {
+  //vertex_shader = vertexShader130;
+  //fragment_shader = fragmentShader130;
+  //}
+//}}}
+//{{{
+cDrawListShader::cDrawListShader (uint32_t glslVersion)
+    : cShader (kDrawListVertShader130, kDrawListFragShader130) {
+
+  // store uniform locations
+  mAttribLocationTexture = glGetUniformLocation (getId(), "Texture");
+  mAttribLocationProjMtx = glGetUniformLocation (getId(), "ProjMtx");
+
+  mAttribLocationVtxPos = glGetAttribLocation (getId(), "Position");
+  mAttribLocationVtxUV = glGetAttribLocation (getId(), "UV");
+  mAttribLocationVtxColor = glGetAttribLocation (getId(), "Color");
+  }
+//}}}
+//{{{
+void cDrawListShader::setMatrix (float* matrix) {
+  glUniformMatrix4fv (mAttribLocationProjMtx, 1, GL_FALSE, matrix);
+  };
+//}}}
+
+
 
 namespace {
   // versions
