@@ -73,14 +73,16 @@ namespace {
   //}}}
 
   //{{{
-  void createFontTexture() {
+  bool createFontTexture() {
 
     unsigned char* pixels;
     int width;
     int height;
     ImGui::GetIO().Fonts->GetTexDataAsRGBA32 (&pixels, &width, &height);
 
-    // upload texture to graphics system
+    sBackendData* backendData = getBackendData();
+
+    // create and upload texture to gpu
     D3D11_TEXTURE2D_DESC texture2dDesc;
     ZeroMemory (&texture2dDesc, sizeof(texture2dDesc));
     texture2dDesc.Width = width;
@@ -93,24 +95,33 @@ namespace {
     texture2dDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     texture2dDesc.CPUAccessFlags = 0;
 
-    ID3D11Texture2D* texture2d = NULL;
     D3D11_SUBRESOURCE_DATA subResource;
     subResource.pSysMem = pixels;
     subResource.SysMemPitch = texture2dDesc.Width * 4;
     subResource.SysMemSlicePitch = 0;
 
-    sBackendData* backendData = getBackendData();
-    backendData->mD3dDevice->CreateTexture2D (&texture2dDesc, &subResource, &texture2d);
-    IM_ASSERT (texture2d != NULL);
+    ID3D11Texture2D* texture2d = NULL;
+    if (backendData->mD3dDevice->CreateTexture2D (&texture2dDesc, &subResource, &texture2d) != S_OK) {
+      //{{{  error, returm false
+      cLog::log (LOGERROR, "createFontTexture CreateTexture2D failed");
+      return false;
+      }
+      //}}}
 
-    // create texture view
+    // create textureView
     D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
     ZeroMemory (&shaderResourceViewDesc, sizeof(shaderResourceViewDesc));
     shaderResourceViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MipLevels = texture2dDesc.MipLevels;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-    backendData->mD3dDevice->CreateShaderResourceView (texture2d, &shaderResourceViewDesc, &backendData->mFontTextureView);
+    if (backendData->mD3dDevice->CreateShaderResourceView (texture2d, &shaderResourceViewDesc, 
+                                                           &backendData->mFontTextureView) != S_OK) {
+      //{{{  error, return false
+      cLog::log (LOGERROR, "createFontTexture CreateShaderResourceView failed");
+      return false;
+      }
+      //}}}
     texture2d->Release();
 
     // store our fonts texture view
@@ -127,11 +138,18 @@ namespace {
     samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
     samplerDesc.MinLOD = 0.f;
     samplerDesc.MaxLOD = 0.f;
-    backendData->mD3dDevice->CreateSamplerState (&samplerDesc, &backendData->mFontSampler);
+    if (backendData->mD3dDevice->CreateSamplerState (&samplerDesc, &backendData->mFontSampler) != S_OK) {
+      //{{{  error, return false
+      cLog::log (LOGERROR, "createFontTexture CreateSamplerState failed");
+      return false;
+      }
+      //}}}
+
+    return true;
     }
   //}}}
   //{{{
-  bool createDeviceObjects() {
+  bool createResources() {
 
     sBackendData* backendData = getBackendData();
 
@@ -284,8 +302,6 @@ namespace {
     depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
     depthStencilDesc.BackFace = depthStencilDesc.FrontFace;
     backendData->mD3dDevice->CreateDepthStencilState (&depthStencilDesc, &backendData->mDepthStencilState);
-
-    createFontTexture();
 
     return true;
     }
@@ -635,7 +651,8 @@ bool cGraphics::init (void* device, void* deviceContext) {
           platform_io.Renderer_SwapBuffers = swapBuffers;
           }
 
-        ok = createDeviceObjects();
+        createFontTexture();
+        ok = createResources();
         cLog::log (LOGINFO, format ("graphics DirectX11 init ok {}", ok));
         }
       dxgiAdapter->Release();
