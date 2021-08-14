@@ -22,7 +22,6 @@
 #include <stb_image_write.h>
 
 #include "../brushes/cBrushMan.h"
-#include "../graphics/cGraphics.h"
 #include "../graphics/cQuad.h"
 #include "../graphics/cShader.h"
 #include "../graphics/cFrameBuffer.h"
