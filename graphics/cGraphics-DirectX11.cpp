@@ -436,26 +436,20 @@ namespace {
       const float B = drawData->DisplayPos.y + drawData->DisplaySize.y;
 
       const float kMatrix[4][4] = {
-        { 2.0f/(R-L),  0.0f,        0.0f, 0.0f },
-        { 0.0f,        2.0f/(T-B),  0.0f, 0.0f },
-        { 0.0f,        0.0f,        0.5f, 0.0f },
-        { (R+L)/(L-R), (T+B)/(B-T), 0.5f, 1.0f },
+         2.0f/(R-L),  0.0f,        0.0f, 0.0f ,
+         0.0f,        2.0f/(T-B),  0.0f, 0.0f ,
+         0.0f,        0.0f,        0.5f, 0.0f ,
+         (R+L)/(L-R), (T+B)/(B-T), 0.5f, 1.0f ,
         };
 
-      // map and copy vertex matrix constant
+      // copy kMatrix to mapped matrix vertexConstantBuffer
       D3D11_MAPPED_SUBRESOURCE mappedSubResource;
       if (deviceContext->Map (backendData->mVertexConstantBuffer,
                               0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource) != S_OK) {
         cLog::log (LOGERROR, "vertex constant Map failed");
         return;
         }
-
-      struct sMatrix {
-        float matrix[4][4];
-        };
-
-      sMatrix* matrix = (sMatrix*)mappedSubResource.pData;
-      memcpy (&matrix->matrix, kMatrix, sizeof(kMatrix));
+      memcpy ((float*)mappedSubResource.pData, kMatrix, sizeof(kMatrix));
       deviceContext->Unmap (backendData->mVertexConstantBuffer, 0);
       //}}}
 
