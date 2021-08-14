@@ -12,7 +12,7 @@
 #include <vec4.hpp>
 #include <gtx/norm.hpp>
 
-#include "../graphics/cFrameBuffer.h"
+#include "../graphics/cGraphics.h"
 #include "../log/cLog.h"
 
 using namespace std;

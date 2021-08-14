@@ -2,22 +2,10 @@
 //{{{  includes
 #include "cPaintGpuBrush.h"
 
-#include <cstdint>
-#include <cmath>
-#include <string>
-#include <algorithm>
-
 // glm
-#include <vec2.hpp>
-#include <vec4.hpp>
-#include <mat4x4.hpp>
 #include <gtc/matrix_transform.hpp>
 
-#include "../graphics/cPointRect.h"
-#include "../graphics/cQuad.h"
-#include "../graphics/cShader.h"
-#include "../graphics/cFrameBuffer.h"
-
+#include "../graphics/cGraphics.h"
 #include "../log/cLog.h"
 
 using namespace std;
@@ -26,7 +14,7 @@ using namespace fmt;
 
 //{{{
 cPaintGpuBrush::cPaintGpuBrush (const string& className, float radius) : cBrush(className, radius) {
-  mShader = new cPaintShader();
+  mShader = cGraphics::getInstance().createPaintShader();
   setRadius (radius);
   }
 //}}}
@@ -62,8 +50,9 @@ void cPaintGpuBrush::paint (glm::vec2 pos, bool first, cFrameBuffer* frameBuffer
     //frameBuffer->reportInfo();
 
     // draw boundRect to frameBuffer1 target
-    cQuad quad (frameBuffer->getSize(), boundRect);
-    quad.draw();
+    cQuad* quad = cGraphics::getInstance().createQuad (frameBuffer->getSize(), boundRect);
+    quad->draw();
+    delete quad;
 
     // blit boundRect frameBuffer1 back to frameBuffer
     frameBuffer->blit (frameBuffer1, boundRect.getTL(), boundRect);

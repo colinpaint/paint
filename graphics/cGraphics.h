@@ -13,6 +13,7 @@
 #include "cPointRect.h"
 //}}}
 
+// graphics resources
 //{{{
 class cQuad {
 public:
@@ -77,7 +78,6 @@ private:
   cRect mDirtyPixelsRect = cRect(0,0,0,0);
   };
 //}}}
-
 //{{{
 class cShader {
 public:
@@ -138,27 +138,6 @@ public:
   void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color);
   };
 //}}}
-//{{{
-class cDrawListShader : public cShader {
-public:
-  cDrawListShader (uint32_t glslVersion);
-  virtual ~cDrawListShader() = default;
-
-  int32_t getAttribLocationVtxPos() { return mAttribLocationVtxPos; }
-  int32_t getAttribLocationVtxUV() { return mAttribLocationVtxUV; }
-  int32_t getAttribLocationVtxColor() { return mAttribLocationVtxColor; }
-
-  void setMatrix (float* matrix);
-
-private:
-  int32_t mAttribLocationTexture = 0;
-  int32_t mAttribLocationProjMtx = 0;
-
-  int32_t mAttribLocationVtxPos = 0;
-  int32_t mAttribLocationVtxUV = 0;
-  int32_t mAttribLocationVtxColor = 0;
-  };
-//}}}
 
 class cGraphics {
 public:
@@ -176,6 +155,19 @@ public:
   bool init (void* device, void* deviceContext, void* swapChain);
   void shutdown();
 
+  // create graphics resources
+  cQuad* createQuad (cPoint size);
+  cQuad* createQuad (cPoint size, const cRect& rect);
+
+  cFrameBuffer* createFrameBuffer();
+  cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format);
+  cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format);
+
+  cCanvasShader* createCanvasShader();
+  cLayerShader* createLayerShader();
+  cPaintShader* createPaintShader();
+
+  // actions
   void draw();
   void windowResized (int width, int height);
 

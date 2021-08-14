@@ -14,9 +14,7 @@
 #include <mat4x4.hpp>
 #include <gtc/matrix_transform.hpp>
 
-#include "../graphics/cQuad.h"
-#include "../graphics/cShader.h"
-#include "../graphics/cFrameBuffer.h"
+#include "../graphics/cGraphics.h"
 #include "../brushes/cBrush.h"
 #include "../log/cLog.h"
 
@@ -30,24 +28,28 @@ namespace {
 
 //{{{
 cLayer::cLayer (cPoint size, cFrameBuffer::eFormat format)
-    : mSize(size), mFormat(format), mQuad(size) {
+    : mSize(size), mFormat(format) {
 
   // allocate and clear mPixels
   int numBytes = size.x * size.y * 4;
   auto data = static_cast<uint8_t*>(malloc (numBytes));
   memset (data, 0, numBytes);
-  mFrameBuffer = new cFrameBuffer (data, size, format);
+  mFrameBuffer = cGraphics::getInstance().createFrameBuffer (data, size, format);
   free (data);
 
-  mFrameBuffer1 = new cFrameBuffer (size, format);
+  mFrameBuffer1 = cGraphics::getInstance().createFrameBuffer (size, format);
+
+  mQuad = cGraphics::getInstance().createQuad (size);
   }
 //}}}
 //{{{
 cLayer::cLayer (uint8_t* data, cPoint size, cFrameBuffer::eFormat format)
-    : mSize(size), mFormat(format), mQuad(size) {
+    : mSize(size), mFormat(format) {
 
-  mFrameBuffer = new cFrameBuffer (data, size, format);
-  mFrameBuffer1 = new cFrameBuffer (size, format);
+  mFrameBuffer = cGraphics::getInstance().createFrameBuffer (data, size, format);
+  mFrameBuffer1 = cGraphics::getInstance().createFrameBuffer (size, format);
+
+  mQuad = cGraphics::getInstance().createQuad (size);
   }
 //}}}
 //{{{
@@ -98,7 +100,7 @@ void cLayer::draw (const cPoint& size) {
     mFrameBuffer->checkStatus();
 
     if (!shader)
-      shader = new cLayerShader();
+      shader = cGraphics::getInstance().createLayerShader();
 
     shader->use();
     shader->setModelProject (
@@ -106,7 +108,7 @@ void cLayer::draw (const cPoint& size) {
       glm::ortho (0.f,static_cast<float>(size.x), 0.f,static_cast<float>(size.y), -1.f,1.f));
     shader->setHueSatVal (0.f, 0.f, 0.f);
 
-    mQuad.draw();
+    mQuad->draw();
     }
   }
 //}}}

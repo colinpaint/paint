@@ -8,8 +8,7 @@
 #include <vec2.hpp>
 #include <mat4x4.hpp>
 
-#include "../graphics/cQuad.h"
-#include "../graphics/cFrameBuffer.h"
+#include "../graphics/cGraphics.h"
 
 class cBrush;
 //}}}
@@ -52,7 +51,7 @@ private:
   const cFrameBuffer::eFormat mFormat;
   std::string mName;
 
-  cQuad mQuad;
+  cQuad* mQuad = nullptr;
 
   bool mVisible = true;
   float mHue = 0.f;

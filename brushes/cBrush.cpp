@@ -11,8 +11,7 @@
 #include <vec2.hpp>
 #include <vec4.hpp>
 
-#include "../graphics/cPointRect.h"
-#include "../graphics/cFrameBuffer.h"
+#include "../graphics/cGraphics.h"
 #include "../log/cLog.h"
 
 using namespace std;

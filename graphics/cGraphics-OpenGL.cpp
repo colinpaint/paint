@@ -4,10 +4,21 @@
 #include "cGraphics.h"
 
 #include <cstdint>
+#include <cmath>
 #include <string>
+#include <algorithm>
 
 // glad
 #include <glad/glad.h>
+
+// glm
+#include <vec2.hpp>
+#include <vec3.hpp>
+#include <vec4.hpp>
+#include <mat4x4.hpp>
+#include <gtc/type_ptr.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtx/string_cast.hpp>
 
 // imGui
 #include <imgui.h>
@@ -27,19 +38,7 @@ using namespace std;
 using namespace fmt;
 //}}}
 
-//{{{  includes
-#include "cQuad.h"
-
-#include <cstdint>
-#include <cmath>
-
-// glad
-#include <glad/glad.h>
-
-// glm
-#include <gtc/matrix_transform.hpp>
-#include <gtx/string_cast.hpp>
-//}}}
+//{{{  cQuad
 namespace {
   //{{{
   const uint8_t kIndices[] = {
@@ -48,6 +47,7 @@ namespace {
     };       // 2-1   1
   //}}}
   }
+
 //{{{
 cQuad::cQuad (cPoint size) : mSize(size) {
 
@@ -137,26 +137,15 @@ cQuad::~cQuad() {
   glDeleteVertexArrays (1, &mVertexArrayObject);
   }
 //}}}
+
 //{{{
 void cQuad::draw() {
   glBindVertexArray (mVertexArrayObject);
   glDrawElements (GL_TRIANGLES, mNumIndices, GL_UNSIGNED_BYTE, 0);
   }
 //}}}
-
-//{{{  includes
-#include <cstdint>
-#include <cmath>
-#include <string>
-
-// glad
-#include <glad/glad.h>
-
-#include "../log/cLog.h"
-
-using namespace std;
-using namespace fmt;
 //}}}
+//{{{  cFrameBuffer
 constexpr bool kDebug = false;
 namespace {
   //{{{
@@ -602,30 +591,8 @@ void cFrameBuffer::reportInfo() {
     }
   }
 //}}}
-
-
-//{{{  includes
-#include <cstdint>
-#include <cmath>
-#include <string>
-#include <algorithm>
-
-// glad
-#include <glad/glad.h>
-
-// glm
-#include <vec2.hpp>
-#include <vec3.hpp>
-#include <vec4.hpp>
-#include <mat4x4.hpp>
-#include <gtc/type_ptr.hpp>
-
-#include "../log/cLog.h"
-
-using namespace std;
-using namespace fmt;
 //}}}
-
+//{{{  cShader
 namespace {
   #ifdef OPENGL_2
     //{{{
@@ -1199,47 +1166,9 @@ void cPaintShader::setStroke (const glm::vec2& pos, const glm::vec2& prevPos,
   setVec4 ("uColor", color);
   }
 //}}}
-
-// cDrawListShader
-//{{{  version
-//if (gGlslVersion == 120) {
-  //vertex_shader = vertexShader120;
-  //fragment_shader = fragmentShader120;
-  //}
-//else if (gGlslVersion == 300) {
-  //vertex_shader = vertexShader300es;
-  //fragment_shader = fragmentShader300es;
-  //}
-//else if (gGlslVersion >= 410) {
-  //vertex_shader = vertexShader410core;
-  //fragment_shader = fragmentShader410core;
-  //}
-//else {
-  //vertex_shader = vertexShader130;
-  //fragment_shader = fragmentShader130;
-  //}
-//}}}
-//{{{
-cDrawListShader::cDrawListShader (uint32_t glslVersion)
-    : cShader (kDrawListVertShader130, kDrawListFragShader130) {
-
-  // store uniform locations
-  mAttribLocationTexture = glGetUniformLocation (getId(), "Texture");
-  mAttribLocationProjMtx = glGetUniformLocation (getId(), "ProjMtx");
-
-  mAttribLocationVtxPos = glGetAttribLocation (getId(), "Position");
-  mAttribLocationVtxUV = glGetAttribLocation (getId(), "UV");
-  mAttribLocationVtxColor = glGetAttribLocation (getId(), "Color");
-  }
-//}}}
-//{{{
-void cDrawListShader::setMatrix (float* matrix) {
-  glUniformMatrix4fv (mAttribLocationProjMtx, 1, GL_FALSE, matrix);
-  };
 //}}}
 
-
-
+// cGraphics
 namespace {
   // versions
   int gGlVersion = 0;    // major.minor * 100
@@ -1253,6 +1182,64 @@ namespace {
   GLuint gVboHandle = 0;
   GLuint gElementsHandle = 0;
   GLuint gFontTexture = 0;
+
+  //{{{
+  class cDrawListShader : public cShader {
+  //{{{  version
+  //if (gGlslVersion == 120) {
+    //vertex_shader = vertexShader120;
+    //fragment_shader = fragmentShader120;
+    //}
+  //else if (gGlslVersion == 300) {
+    //vertex_shader = vertexShader300es;
+    //fragment_shader = fragmentShader300es;
+    //}
+  //else if (gGlslVersion >= 410) {
+    //vertex_shader = vertexShader410core;
+    //fragment_shader = fragmentShader410core;
+    //}
+  //else {
+    //vertex_shader = vertexShader130;
+    //fragment_shader = fragmentShader130;
+    //}
+  //}}}
+  public:
+    //{{{
+    cDrawListShader (uint32_t glslVersion)
+        : cShader (kDrawListVertShader130, kDrawListFragShader130) {
+
+      // store uniform locations
+      mAttribLocationTexture = glGetUniformLocation (getId(), "Texture");
+      mAttribLocationProjMtx = glGetUniformLocation (getId(), "ProjMtx");
+
+      mAttribLocationVtxPos = glGetAttribLocation (getId(), "Position");
+      mAttribLocationVtxUV = glGetAttribLocation (getId(), "UV");
+      mAttribLocationVtxColor = glGetAttribLocation (getId(), "Color");
+      }
+    //}}}
+    virtual ~cDrawListShader() = default;
+
+    // gets
+    int32_t getAttribLocationVtxPos() { return mAttribLocationVtxPos; }
+    int32_t getAttribLocationVtxUV() { return mAttribLocationVtxUV; }
+    int32_t getAttribLocationVtxColor() { return mAttribLocationVtxColor; }
+
+    // sets
+    //{{{
+    void setMatrix (float* matrix) {
+      glUniformMatrix4fv (mAttribLocationProjMtx, 1, GL_FALSE, matrix);
+      }
+    //}}}
+
+  private:
+    int32_t mAttribLocationTexture = 0;
+    int32_t mAttribLocationProjMtx = 0;
+
+    int32_t mAttribLocationVtxPos = 0;
+    int32_t mAttribLocationVtxUV = 0;
+    int32_t mAttribLocationVtxColor = 0;
+    };
+  //}}}
   cDrawListShader* gShader;
 
   //{{{
@@ -1505,6 +1492,50 @@ void cGraphics::shutdown() {
     glDeleteTextures (1, &gFontTexture);
     ImGui::GetIO().Fonts->TexID = 0;
     }
+  }
+//}}}
+
+// resource creates
+//{{{
+cQuad* cGraphics::createQuad (cPoint size) {
+  return new cQuad (size);
+  }
+//}}}
+//{{{
+cQuad* cGraphics::createQuad (cPoint size, const cRect& rect) {
+  return new cQuad (size, rect);
+  }
+//}}}
+
+//{{{
+cFrameBuffer* cGraphics::createFrameBuffer() {
+  return new cFrameBuffer();
+  }
+//}}}
+//{{{
+cFrameBuffer* cGraphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
+  return new cFrameBuffer (size, format);
+  }
+//}}}
+//{{{
+cFrameBuffer* cGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
+  return new cFrameBuffer (pixels, size, format);
+  }
+//}}}
+
+//{{{
+cCanvasShader* cGraphics::createCanvasShader() {
+  return new cCanvasShader();
+  }
+//}}}
+//{{{
+cLayerShader* cGraphics::createLayerShader() {
+  return new cLayerShader();
+  }
+//}}}
+//{{{
+cPaintShader* cGraphics::createPaintShader() {
+  return new cPaintShader();
   }
 //}}}
 

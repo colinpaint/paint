@@ -22,9 +22,7 @@
 #include <stb_image_write.h>
 
 #include "../brushes/cBrushMan.h"
-#include "../graphics/cQuad.h"
-#include "../graphics/cShader.h"
-#include "../graphics/cFrameBuffer.h"
+#include "../graphics/cGraphics.h"
 #include "../log/cLog.h"
 
 #include "cLayer.h"
@@ -183,16 +181,16 @@ void cCanvas::draw (cPoint windowSize) {
 void cCanvas::createResources() {
 
   // create quad
-  mQuad = new cQuad (mSize);
+  mQuad = cGraphics::getInstance().createQuad (mSize);
 
   // create canvasShader
-  mShader = new cCanvasShader();
+  mShader = cGraphics::getInstance().createCanvasShader();
 
   // create target
-  mFrameBuffer = new cFrameBuffer (nullptr, mSize, cFrameBuffer::eRGBA);
+  mFrameBuffer = cGraphics::getInstance().createFrameBuffer (nullptr, mSize, cFrameBuffer::eRGBA);
 
   // create window
-  mWindowFrameBuffer = new cFrameBuffer();
+  mWindowFrameBuffer = cGraphics::getInstance().createFrameBuffer();
 
   // select brush
   cBrushMan::setCurBrushByName ("paintGpu", 20.f);
