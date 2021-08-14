@@ -17,13 +17,13 @@
 //{{{
 class cQuad {
 public:
-  cQuad (cPoint size);
-  cQuad (cPoint size, const cRect& rect);
-  ~cQuad();
+  cQuad (cPoint size) : mSize(size) {}
+  cQuad (cPoint size, const cRect& rect) : mSize(size) {}
+  virtual ~cQuad() = default;
 
-  void draw();
+  virtual void draw() = 0;
 
-private:
+protected:
   const cPoint mSize;
 
   uint32_t mVertexArrayObject = 0;
@@ -37,40 +37,40 @@ class cFrameBuffer {
 public:
   enum eFormat { eRGB, eRGBA };
 
-  cFrameBuffer();
-  cFrameBuffer (cPoint size, eFormat format);
-  cFrameBuffer (uint8_t* pixels, cPoint size, eFormat format);
-  ~cFrameBuffer();
+  cFrameBuffer (cPoint size) : mSize(size) {}
+  virtual ~cFrameBuffer() = default;
 
   /// gets
   cPoint getSize() { return mSize; }
   unsigned getId() { return mFrameBufferObject; }
   unsigned getTextureId() { return mColorTextureId; }
-  uint8_t* getPixels();
   unsigned getNumPixels() { return mSize.x * mSize.y; }
   unsigned getNumPixelBytes() { return  mSize.x * mSize.y * 4; }
 
+  virtual uint8_t* getPixels() = 0;
+
   //sets
-  void setSize (cPoint size);
-  void setTarget (const cRect& rect);
+  virtual void setSize (cPoint size) = 0;
+  virtual void setTarget (const cRect& rect) = 0;
+  virtual void setBlend() = 0;
+  virtual void setSource() = 0;
+
   void setTarget() { setTarget (cRect (mSize)); }
-  void setBlend();
-  void setSource();
 
   // actions
-  void invalidate();
-  void pixelsChanged (const cRect& rect);
+  virtual void invalidate() = 0;
+  virtual void pixelsChanged (const cRect& rect) = 0;
 
-  void clear (const glm::vec4& color);
-  void blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect);
+  virtual void clear (const glm::vec4& color) = 0;
+  virtual void blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect) = 0;
 
-  bool checkStatus();
-  void reportInfo();
+  virtual bool checkStatus() = 0;
+  virtual void reportInfo() = 0;
 
-private:
-  cPoint mSize = { 0,0 };
-  const int mImageFormat;
-  const int mInternalFormat;
+protected:
+  cPoint mSize;
+  int mImageFormat = eRGBA;
+  int mInternalFormat = eRGBA;
 
   uint32_t mFrameBufferObject = 0;
   uint32_t mColorTextureId = 0;
