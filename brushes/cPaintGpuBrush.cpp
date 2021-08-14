@@ -24,7 +24,7 @@ cPaintGpuBrush::~cPaintGpuBrush() {
   }
 //}}}
 
-void cPaintGpuBrush::paint (glm::vec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) {
+void cPaintGpuBrush::paint (glm::vec2 pos, bool first, cGraphics::cFrameBuffer* frameBuffer, cGraphics::cFrameBuffer* frameBuffer1) {
 
   if (first)
     mPrevPos = pos;
@@ -50,7 +50,7 @@ void cPaintGpuBrush::paint (glm::vec2 pos, bool first, cFrameBuffer* frameBuffer
     //frameBuffer->reportInfo();
 
     // draw boundRect to frameBuffer1 target
-    cQuad* quad = cGraphics::getInstance().createQuad (frameBuffer->getSize(), boundRect);
+    cGraphics::cQuad* quad = cGraphics::getInstance().createQuad (frameBuffer->getSize(), boundRect);
     quad->draw();
     delete quad;
 

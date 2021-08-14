@@ -35,7 +35,7 @@ using namespace fmt;
 cCanvas::cCanvas (cPoint size) : mSize(size), mNumChannels(4) {
 
   // create empty layer
-  mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA));
+  mLayers.push_back (new cLayer (mSize, cGraphics::cFrameBuffer::eRGBA));
   createResources();
   }
 //}}}
@@ -44,7 +44,7 @@ cCanvas::cCanvas (const string& fileName) : mName(fileName) {
 
   // load file image
   uint8_t* pixels = stbi_load (fileName.c_str(), &mSize.x, &mSize.y, &mNumChannels, 4);
-  cLayer* layer = new cLayer (pixels, mSize, cFrameBuffer::eRGBA);
+  cLayer* layer = new cLayer (pixels, mSize, cGraphics::cFrameBuffer::eRGBA);
   free (pixels);
 
   layer->setName (fileName);
@@ -81,7 +81,7 @@ uint8_t* cCanvas::getPixels (cPoint& size) {
 // layers
 //{{{
 unsigned cCanvas::newLayer() {
-  mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA));
+  mLayers.push_back (new cLayer (mSize, cGraphics::cFrameBuffer::eRGBA));
   return static_cast<unsigned>(mLayers.size() - 1);
   }
 //}}}
@@ -95,7 +95,7 @@ unsigned cCanvas::newLayer (const string& fileName) {
   cLog::log (LOGINFO, format ("new layer {} {},{} {}", fileName, size.x, size.y, numChannels));
 
   // new layer, transfer ownership of pixels to texture
-  mLayers.push_back (new cLayer (pixels, size, cFrameBuffer::eRGBA));
+  mLayers.push_back (new cLayer (pixels, size, cGraphics::cFrameBuffer::eRGBA));
   return static_cast<unsigned>(mLayers.size() - 1);
 }
 //}}}
@@ -187,7 +187,7 @@ void cCanvas::createResources() {
   mShader = cGraphics::getInstance().createCanvasShader();
 
   // create target
-  mFrameBuffer = cGraphics::getInstance().createFrameBuffer (nullptr, mSize, cFrameBuffer::eRGBA);
+  mFrameBuffer = cGraphics::getInstance().createFrameBuffer (nullptr, mSize, cGraphics::cFrameBuffer::eRGBA);
 
   // create window
   mWindowFrameBuffer = cGraphics::getInstance().createFrameBuffer();

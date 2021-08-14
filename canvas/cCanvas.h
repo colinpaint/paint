@@ -9,11 +9,11 @@
 #include <vec2.hpp>
 #include <mat4x4.hpp>
 
-#include "../graphics/cPointRect.h"
+#include "../graphics/cGraphics.h"
 
-class cQuad;
-class cCanvasShader;
-class cFrameBuffer;
+class cGraphics::cQuad;
+class cGraphics::cCanvasShader;
+class cGraphics::cFrameBuffer;
 class cLayer;
 class cBrush;
 //}}}
@@ -71,8 +71,8 @@ private:
   float mSat = 0.f;
   float mVal = 0.f;
 
-  cQuad* mQuad = nullptr;
-  cCanvasShader* mShader = nullptr;
-  cFrameBuffer* mFrameBuffer = nullptr;
-  cFrameBuffer* mWindowFrameBuffer = nullptr;
+  cGraphics::cQuad* mQuad = nullptr;
+  cGraphics::cCanvasShader* mShader = nullptr;
+  cGraphics::cFrameBuffer* mFrameBuffer = nullptr;
+  cGraphics::cFrameBuffer* mWindowFrameBuffer = nullptr;
   };

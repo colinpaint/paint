@@ -41,10 +41,10 @@ constexpr bool kDebug = false;
 
 namespace {
   //{{{
-  class cOpenGlQuad : public cQuad {
+  class cOpenGlQuad : public cGraphics::cQuad {
   public:
     //{{{
-    cOpenGlQuad (cPoint size):  cQuad(size) {
+    cOpenGlQuad (cPoint size): cGraphics::cQuad(size) {
 
       // vertexArray
       glGenVertexArrays (1, &mVertexArrayObject);
@@ -148,10 +148,15 @@ namespace {
       0, 3, 1  // |\   \|
       };       // 2-1   1
     //}}}
+
+    uint32_t mVertexArrayObject = 0;
+    uint32_t mVertexBufferObject = 0;
+    uint32_t mElementArrayBufferObject = 0;
+    uint32_t mNumIndices = 0;
     };
   //}}}
   //{{{
-  class cOpenGlFrameBuffer : public cFrameBuffer {
+  class cOpenGlFrameBuffer : public cGraphics::cFrameBuffer {
   public:
     //{{{
     cOpenGlFrameBuffer() : cFrameBuffer ({0,0}) {
@@ -695,7 +700,7 @@ namespace {
   //}}}
   //}}}
   //{{{
-  class cOpenGlCanvasShader : public cCanvasShader {
+  class cDrawListShader : public cGraphics::cShader {
   //{{{  version
   //if (gGlslVersion == 120) {
     //vertex_shader = vertexShader120;
@@ -716,12 +721,203 @@ namespace {
   //}}}
   public:
     //{{{
-    cOpenGlCanvasShader() : cCanvasShader() {
-      mId = compileShader (kQuadVertShader, kCanvasFragShader);
+    cDrawListShader (uint32_t glslVersion) : cShader() {
+
+      mId = compileShader (kDrawListVertShader130, kDrawListFragShader130);
+
+      // store uniform locations
+      mAttribLocationTexture = glGetUniformLocation (getId(), "Texture");
+      mAttribLocationProjMtx = glGetUniformLocation (getId(), "ProjMtx");
+
+      mAttribLocationVtxPos = glGetAttribLocation (getId(), "Position");
+      mAttribLocationVtxUV = glGetAttribLocation (getId(), "UV");
+      mAttribLocationVtxColor = glGetAttribLocation (getId(), "Color");
+      }
+    //}}}
+    virtual ~cDrawListShader() = default;
+
+    // gets
+    int32_t getAttribLocationVtxPos() { return mAttribLocationVtxPos; }
+    int32_t getAttribLocationVtxUV() { return mAttribLocationVtxUV; }
+    int32_t getAttribLocationVtxColor() { return mAttribLocationVtxColor; }
+
+    // sets
+    //{{{
+    void setMatrix (float* matrix) {
+      glUniformMatrix4fv (mAttribLocationProjMtx, 1, GL_FALSE, matrix);
+      }
+    //}}}
+
+    //{{{
+    void use() final {
+
+      glUseProgram (mId);
+      }
+    //}}}
+
+  private:
+    int32_t mAttribLocationTexture = 0;
+    int32_t mAttribLocationProjMtx = 0;
+
+    int32_t mAttribLocationVtxPos = 0;
+    int32_t mAttribLocationVtxUV = 0;
+    int32_t mAttribLocationVtxColor = 0;
+
+    //{{{
+    inline static const string kDrawListVertShader120 =
+      "#version 100\n"
+
+      "uniform mat4 ProjMtx;"
+
+      "attribute vec2 Position;"
+      "attribute vec2 UV;"
+      "attribute vec4 Color;"
+
+      "varying vec2 Frag_UV;"
+      "varying vec4 Frag_Color;"
+
+      "void main() {"
+      "  Frag_UV = UV;"
+      "  Frag_Color = Color;"
+      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+      "  }";
+    //}}}
+    //{{{
+    inline static const string kDrawListVertShader130 =
+      "#version 130\n"
+
+      "uniform mat4 ProjMtx;"
+
+      "in vec2 Position;"
+      "in vec2 UV;"
+      "in vec4 Color;"
+
+      "out vec2 Frag_UV;"
+      "out vec4 Frag_Color;"
+
+      "void main() {"
+      "  Frag_UV = UV;"
+      "  Frag_Color = Color;"
+      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+      "  }";
+    //}}}
+    //{{{
+    inline static const string kDrawListVertShader300es =
+      "#version 300 es\n"
+
+      "precision mediump float;"
+
+      "layout (location = 0) in vec2 Position;"
+      "layout (location = 1) in vec2 UV;"
+      "layout (location = 2) in vec4 Color;"
+
+      "uniform mat4 ProjMtx;"
+
+      "out vec2 Frag_UV;"
+      "out vec4 Frag_Color;"
+
+      "void main() {"
+      "  Frag_UV = UV;"
+      "  Frag_Color = Color;"
+      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+      "  }";
+    //}}}
+    //{{{
+    inline static const string kDrawListVertShader410core =
+      "#version 410 core\n"
+
+      "layout (location = 0) in vec2 Position;"
+      "layout (location = 1) in vec2 UV;"
+      "layout (location = 2) in vec4 Color;"
+
+      "uniform mat4 ProjMtx;"
+
+      "out vec2 Frag_UV;"
+      "out vec4 Frag_Color;"
+
+      "void main() {"
+      "  Frag_UV = UV;"
+      "  Frag_Color = Color;"
+      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+      "  }";
+    //}}}
+
+    //{{{
+    inline static const string kDrawListFragShader120 =
+      "#version 100\n"
+
+      "#ifdef GL_ES\n"
+      "  precision mediump float;"
+      "#endif\n"
+
+      "uniform sampler2D Texture;"
+
+      "varying vec2 Frag_UV;"
+      "varying vec4 Frag_Color;"
+
+      "void main() {"
+      "  gl_FragColor = Frag_Color * texture2D(Texture, Frag_UV.st);"
+      "  }";
+    //}}}
+    //{{{
+    inline static const string kDrawListFragShader130 =
+      "#version 130\n"
+
+      "uniform sampler2D Texture;"
+
+      "in vec2 Frag_UV;"
+      "in vec4 Frag_Color;"
+
+      "out vec4 Out_Color;"
+
+      "void main() {"
+      "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
+      "  }";
+    //}}}
+    //{{{
+    inline static const string kDrawListFragShader300es =
+      "#version 300 es\n"
+
+      "precision mediump float;"
+
+      "uniform sampler2D Texture;"
+
+      "in vec2 Frag_UV;"
+      "in vec4 Frag_Color;"
+
+      "layout (location = 0) out vec4 Out_Color;"
+
+      "void main() {"
+      "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
+      "  }";
+    //}}}
+    //{{{
+    inline static const string kDrawListFragShader410core =
+      "#version 410 core\n"
+
+      "in vec2 Frag_UV;"
+      "in vec4 Frag_Color;"
+
+      "uniform sampler2D Texture;"
+
+      "layout (location = 0) out vec4 Out_Color;"
+
+      "void main() {"
+      "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
+      "  }";
+    //}}}
+    };
+  //}}}
+  //{{{
+  class cOpenGlPaintShader : public cGraphics::cPaintShader {
+  public:
+    //{{{
+    cOpenGlPaintShader() : cPaintShader() {
+      mId = compileShader (kQuadVertShader, kPaintFragShader);
       }
     //}}}
     //{{{
-    virtual ~cOpenGlCanvasShader() {
+    virtual ~cOpenGlPaintShader() {
       glDeleteProgram (mId);
       }
     //}}}
@@ -733,6 +929,15 @@ namespace {
       glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, glm::value_ptr (project));
       }
     //}}}
+    //{{{
+    void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color) final {
+
+      glUniform2fv (glGetUniformLocation (mId, "uPos"), 1, glm::value_ptr (pos));
+      glUniform2fv (glGetUniformLocation (mId, "uPrevPos"), 1, glm::value_ptr (prevPos));
+      glUniform1f (glGetUniformLocation (mId, "uRadius"), radius);
+      glUniform4fv (glGetUniformLocation (mId, "uColor"), 1, glm::value_ptr (color));
+      }
+    //}}}
 
     //{{{
     void use() final {
@@ -741,40 +946,68 @@ namespace {
       }
     //}}}
 
+  private:
     #ifdef OPENGL_2
       //{{{
-      inline static const string kCanvasFragShader =
+      inline static const string kPaintFragShader =
         "#version 120\n"
 
         "uniform sampler2D uSampler;"
+        "uniform vec2 uPos;"
+        "uniform vec2 uPrevPos;"
+        "uniform float uRadius;"
+        "uniform vec4 uColor;"
 
         "in vec2 textureCoord;"
         "out vec4 outColor;"
 
+        "float distToLine (vec2 v, vec2 w, vec2 p) {"
+        "  float l2 = pow (distance(w, v), 2.);"
+        "  if (l2 == 0.0)"
+        "    return distance (p, v);"
+        "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
+        "  vec2 j = v + t * (w - v);"
+        "  return distance (p, j);"
+        "  }"
+
         "void main() {"
-        "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-        //"  outColor /= outColor.w;"
+        "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
+        "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
         "  }";
       //}}}
     #else
       //{{{
-      inline static const string kCanvasFragShader =
+      inline static const string kPaintFragShader =
         "#version 330 core\n"
+
         "uniform sampler2D uSampler;"
+        "uniform vec2 uPos;"
+        "uniform vec2 uPrevPos;"
+        "uniform float uRadius;"
+        "uniform vec4 uColor;"
 
         "in vec2 textureCoord;"
         "out vec4 outColor;"
 
+        "float distToLine (vec2 v, vec2 w, vec2 p) {"
+        "  float l2 = pow (distance(w, v), 2.);"
+        "  if (l2 == 0.0)"
+        "    return distance (p, v);"
+        "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
+        "  vec2 j = v + t * (w - v);"
+        "  return distance (p, j);"
+        "  }"
+
         "void main() {"
-        "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-        //"  outColor /= outColor.w;"
+        "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
+        "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
         "  }";
       //}}}
     #endif
     };
   //}}}
   //{{{
-  class cOpenGlLayerShader : public cLayerShader {
+  class cOpenGlLayerShader : public cGraphics::cLayerShader {
   public:
     //{{{
     cOpenGlLayerShader() : cLayerShader() {
@@ -987,105 +1220,7 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlPaintShader : public cPaintShader {
-  public:
-    //{{{
-    cOpenGlPaintShader() : cPaintShader() {
-      mId = compileShader (kQuadVertShader, kPaintFragShader);
-      }
-    //}}}
-    //{{{
-    virtual ~cOpenGlPaintShader() {
-      glDeleteProgram (mId);
-      }
-    //}}}
-
-    // sets
-    //{{{
-    void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, glm::value_ptr (model));
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, glm::value_ptr (project));
-      }
-    //}}}
-    //{{{
-    void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color) final {
-
-      glUniform2fv (glGetUniformLocation (mId, "uPos"), 1, glm::value_ptr (pos));
-      glUniform2fv (glGetUniformLocation (mId, "uPrevPos"), 1, glm::value_ptr (prevPos));
-      glUniform1f (glGetUniformLocation (mId, "uRadius"), radius);
-      glUniform4fv (glGetUniformLocation (mId, "uColor"), 1, glm::value_ptr (color));
-      }
-    //}}}
-
-    //{{{
-    void use() final {
-
-      glUseProgram (mId);
-      }
-    //}}}
-
-  private:
-    #ifdef OPENGL_2
-      //{{{
-      inline static const string kPaintFragShader =
-        "#version 120\n"
-
-        "uniform sampler2D uSampler;"
-        "uniform vec2 uPos;"
-        "uniform vec2 uPrevPos;"
-        "uniform float uRadius;"
-        "uniform vec4 uColor;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        "float distToLine (vec2 v, vec2 w, vec2 p) {"
-        "  float l2 = pow (distance(w, v), 2.);"
-        "  if (l2 == 0.0)"
-        "    return distance (p, v);"
-        "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
-        "  vec2 j = v + t * (w - v);"
-        "  return distance (p, j);"
-        "  }"
-
-        "void main() {"
-        "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
-        "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
-        "  }";
-      //}}}
-    #else
-      //{{{
-      inline static const string kPaintFragShader =
-        "#version 330 core\n"
-
-        "uniform sampler2D uSampler;"
-        "uniform vec2 uPos;"
-        "uniform vec2 uPrevPos;"
-        "uniform float uRadius;"
-        "uniform vec4 uColor;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        "float distToLine (vec2 v, vec2 w, vec2 p) {"
-        "  float l2 = pow (distance(w, v), 2.);"
-        "  if (l2 == 0.0)"
-        "    return distance (p, v);"
-        "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
-        "  vec2 j = v + t * (w - v);"
-        "  return distance (p, j);"
-        "  }"
-
-        "void main() {"
-        "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
-        "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
-        "  }";
-      //}}}
-    #endif
-    };
-  //}}}
-  //{{{
-  class cDrawListShader : public cShader {
+  class cOpenGlCanvasShader : public cGraphics::cCanvasShader {
   //{{{  version
   //if (gGlslVersion == 120) {
     //vertex_shader = vertexShader120;
@@ -1106,30 +1241,21 @@ namespace {
   //}}}
   public:
     //{{{
-    cDrawListShader (uint32_t glslVersion) : cShader() {
-
-      mId = compileShader (kDrawListVertShader130, kDrawListFragShader130);
-
-      // store uniform locations
-      mAttribLocationTexture = glGetUniformLocation (getId(), "Texture");
-      mAttribLocationProjMtx = glGetUniformLocation (getId(), "ProjMtx");
-
-      mAttribLocationVtxPos = glGetAttribLocation (getId(), "Position");
-      mAttribLocationVtxUV = glGetAttribLocation (getId(), "UV");
-      mAttribLocationVtxColor = glGetAttribLocation (getId(), "Color");
+    cOpenGlCanvasShader() : cCanvasShader() {
+      mId = compileShader (kQuadVertShader, kCanvasFragShader);
       }
     //}}}
-    virtual ~cDrawListShader() = default;
-
-    // gets
-    int32_t getAttribLocationVtxPos() { return mAttribLocationVtxPos; }
-    int32_t getAttribLocationVtxUV() { return mAttribLocationVtxUV; }
-    int32_t getAttribLocationVtxColor() { return mAttribLocationVtxColor; }
+    //{{{
+    virtual ~cOpenGlCanvasShader() {
+      glDeleteProgram (mId);
+      }
+    //}}}
 
     // sets
     //{{{
-    void setMatrix (float* matrix) {
-      glUniformMatrix4fv (mAttribLocationProjMtx, 1, GL_FALSE, matrix);
+    void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, glm::value_ptr (model));
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, glm::value_ptr (project));
       }
     //}}}
 
@@ -1140,157 +1266,36 @@ namespace {
       }
     //}}}
 
-  private:
-    int32_t mAttribLocationTexture = 0;
-    int32_t mAttribLocationProjMtx = 0;
+    #ifdef OPENGL_2
+      //{{{
+      inline static const string kCanvasFragShader =
+        "#version 120\n"
 
-    int32_t mAttribLocationVtxPos = 0;
-    int32_t mAttribLocationVtxUV = 0;
-    int32_t mAttribLocationVtxColor = 0;
+        "uniform sampler2D uSampler;"
 
-    //{{{
-    inline static const string kDrawListVertShader120 =
-      "#version 100\n"
+        "in vec2 textureCoord;"
+        "out vec4 outColor;"
 
-      "uniform mat4 ProjMtx;"
+        "void main() {"
+        "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+        //"  outColor /= outColor.w;"
+        "  }";
+      //}}}
+    #else
+      //{{{
+      inline static const string kCanvasFragShader =
+        "#version 330 core\n"
+        "uniform sampler2D uSampler;"
 
-      "attribute vec2 Position;"
-      "attribute vec2 UV;"
-      "attribute vec4 Color;"
+        "in vec2 textureCoord;"
+        "out vec4 outColor;"
 
-      "varying vec2 Frag_UV;"
-      "varying vec4 Frag_Color;"
-
-      "void main() {"
-      "  Frag_UV = UV;"
-      "  Frag_Color = Color;"
-      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListVertShader130 =
-      "#version 130\n"
-
-      "uniform mat4 ProjMtx;"
-
-      "in vec2 Position;"
-      "in vec2 UV;"
-      "in vec4 Color;"
-
-      "out vec2 Frag_UV;"
-      "out vec4 Frag_Color;"
-
-      "void main() {"
-      "  Frag_UV = UV;"
-      "  Frag_Color = Color;"
-      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListVertShader300es =
-      "#version 300 es\n"
-
-      "precision mediump float;"
-
-      "layout (location = 0) in vec2 Position;"
-      "layout (location = 1) in vec2 UV;"
-      "layout (location = 2) in vec4 Color;"
-
-      "uniform mat4 ProjMtx;"
-
-      "out vec2 Frag_UV;"
-      "out vec4 Frag_Color;"
-
-      "void main() {"
-      "  Frag_UV = UV;"
-      "  Frag_Color = Color;"
-      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListVertShader410core =
-      "#version 410 core\n"
-
-      "layout (location = 0) in vec2 Position;"
-      "layout (location = 1) in vec2 UV;"
-      "layout (location = 2) in vec4 Color;"
-
-      "uniform mat4 ProjMtx;"
-
-      "out vec2 Frag_UV;"
-      "out vec4 Frag_Color;"
-
-      "void main() {"
-      "  Frag_UV = UV;"
-      "  Frag_Color = Color;"
-      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-      "  }";
-    //}}}
-
-    //{{{
-    inline static const string kDrawListFragShader120 =
-      "#version 100\n"
-
-      "#ifdef GL_ES\n"
-      "  precision mediump float;"
-      "#endif\n"
-
-      "uniform sampler2D Texture;"
-
-      "varying vec2 Frag_UV;"
-      "varying vec4 Frag_Color;"
-
-      "void main() {"
-      "  gl_FragColor = Frag_Color * texture2D(Texture, Frag_UV.st);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListFragShader130 =
-      "#version 130\n"
-
-      "uniform sampler2D Texture;"
-
-      "in vec2 Frag_UV;"
-      "in vec4 Frag_Color;"
-
-      "out vec4 Out_Color;"
-
-      "void main() {"
-      "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListFragShader300es =
-      "#version 300 es\n"
-
-      "precision mediump float;"
-
-      "uniform sampler2D Texture;"
-
-      "in vec2 Frag_UV;"
-      "in vec4 Frag_Color;"
-
-      "layout (location = 0) out vec4 Out_Color;"
-
-      "void main() {"
-      "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListFragShader410core =
-      "#version 410 core\n"
-
-      "in vec2 Frag_UV;"
-      "in vec4 Frag_Color;"
-
-      "uniform sampler2D Texture;"
-
-      "layout (location = 0) out vec4 Out_Color;"
-
-      "void main() {"
-      "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-      "  }";
-    //}}}
+        "void main() {"
+        "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+        //"  outColor /= outColor.w;"
+        "  }";
+      //}}}
+    #endif
     };
   //}}}
 
@@ -1563,44 +1568,44 @@ void cGraphics::shutdown() {
 
 // resource creates
 //{{{
-cQuad* cGraphics::createQuad (cPoint size) {
+cGraphics::cQuad* cGraphics::createQuad (cPoint size) {
   return new cOpenGlQuad (size);
   }
 //}}}
 //{{{
-cQuad* cGraphics::createQuad (cPoint size, const cRect& rect) {
+cGraphics::cQuad* cGraphics::createQuad (cPoint size, const cRect& rect) {
   return new cOpenGlQuad (size, rect);
   }
 //}}}
 
 //{{{
-cFrameBuffer* cGraphics::createFrameBuffer() {
+cGraphics::cFrameBuffer* cGraphics::createFrameBuffer() {
   return new cOpenGlFrameBuffer();
   }
 //}}}
 //{{{
-cFrameBuffer* cGraphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
+cGraphics::cFrameBuffer* cGraphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
   return new cOpenGlFrameBuffer (size, format);
   }
 //}}}
 //{{{
-cFrameBuffer* cGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
+cGraphics::cFrameBuffer* cGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
   return new cOpenGlFrameBuffer (pixels, size, format);
   }
 //}}}
 
 //{{{
-cCanvasShader* cGraphics::createCanvasShader() {
+cGraphics::cCanvasShader* cGraphics::createCanvasShader() {
   return new cOpenGlCanvasShader();
   }
 //}}}
 //{{{
-cLayerShader* cGraphics::createLayerShader() {
+cGraphics::cLayerShader* cGraphics::createLayerShader() {
   return new cOpenGlLayerShader();
   }
 //}}}
 //{{{
-cPaintShader* cGraphics::createPaintShader() {
+cGraphics::cPaintShader* cGraphics::createPaintShader() {
   return new cOpenGlPaintShader();
   }
 //}}}

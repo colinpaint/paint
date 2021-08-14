@@ -67,7 +67,7 @@ void cPaintCpuShapeBrush::reportShape() {
 //}}}
 
 //{{{
-void cPaintCpuShapeBrush::stamp (glm::vec2 pos, cFrameBuffer* frameBuffer) {
+void cPaintCpuShapeBrush::stamp (glm::vec2 pos, cGraphics::cFrameBuffer* frameBuffer) {
 // stamp brushShape into image, clipped by width,height to pos, update mPrevPos
 
   int32_t width = frameBuffer->getSize().x;

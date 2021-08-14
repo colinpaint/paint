@@ -35,7 +35,7 @@ void cPaintCpuBrush::setRadius (float radius) {
   }
 //}}}
 //{{{
-void cPaintCpuBrush:: paint (glm::vec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) {
+void cPaintCpuBrush:: paint (glm::vec2 pos, bool first, cGraphics::cFrameBuffer* frameBuffer, cGraphics::cFrameBuffer* frameBuffer1) {
 
   if (first) {
     stamp (pos, frameBuffer);
@@ -72,7 +72,7 @@ uint8_t cPaintCpuBrush::getPaintShape (float i, float j, float radius) {
 
 // - private
 //{{{
-void cPaintCpuBrush::stamp (glm::vec2 pos, cFrameBuffer* frameBuffer) {
+void cPaintCpuBrush::stamp (glm::vec2 pos, cGraphics::cFrameBuffer* frameBuffer) {
 // stamp brushShape into image, clipped by width,height to pos, update mPrevPos
 
   int32_t width = frameBuffer->getSize().x;

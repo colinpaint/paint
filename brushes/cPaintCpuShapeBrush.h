@@ -19,7 +19,7 @@ private:
 
   void reportShape();
 
-  void stamp (glm::vec2 pos, cFrameBuffer* frameBuffer) final;
+  void stamp (glm::vec2 pos, cGraphics::cFrameBuffer* frameBuffer) final;
 
   // vars
   int32_t mSubPixels = 4;

@@ -32,7 +32,7 @@ glm::vec4 cBrush::getColor() {
   }
 //}}}
 //{{{
-cRect cBrush::getBoundRect (glm::vec2 pos, cFrameBuffer* frameBuffer) {
+cRect cBrush::getBoundRect (glm::vec2 pos, cGraphics::cFrameBuffer* frameBuffer) {
 // return boundRect of line from mPrevPos to pos of brush mRadius, cliiped to frameBuffer
 
   const float boundRadius = getBoundRadius();
