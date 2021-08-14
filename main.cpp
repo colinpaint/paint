@@ -26,6 +26,9 @@ using namespace fmt;
 
 namespace {
   void windowResized (int width, int height) {
+    // platform to graphics windowResized callback
+    // - awkward to use graphics pointer through callback because of init order
+    // - !!! implement as a later setCallback with anonymous pointer !!!
     cGraphics::getInstance().windowResized (width, height);
     }
   }
@@ -49,12 +52,12 @@ int main (int numArgs, char* args[]) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, "paintbox");
 
-  // start platform singleton
+  // start platform singleton, !!! does anybody else need a platform pointer !!!
   cPlatform& platform = cPlatform::getInstance();
   if (!platform.init (cPoint(1200, 800), false, windowResized))
     exit (EXIT_FAILURE);
 
-  // start graphics singleton
+  // start graphics singleton, !!! maybe possible to send graphics pointer through cUIMan::draw !!!
   cGraphics& graphics = cGraphics::getInstance();
   if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
