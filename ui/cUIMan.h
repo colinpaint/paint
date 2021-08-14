@@ -9,6 +9,7 @@
 #include "../graphics/cPointRect.h"
 class cCanvas;
 class cUI;
+class cGraphics;
 //}}}
 
 // cUIMan
@@ -24,7 +25,7 @@ public:
   static bool registerClass (const std::string& name, const createFuncType createFunc);
   static cUI* createByName (const std::string& name);
 
-  static void draw (cCanvas& canvas);
+  static void draw (cCanvas& canvas, cGraphics& graphics);
 
 private:
   static std::map<const std::string, createFuncType>& getClassRegister() {

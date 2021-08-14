@@ -58,7 +58,8 @@ cUI* cUIMan::createByName (const std::string& name) {
   }
 //}}}
 
-void cUIMan::draw (cCanvas& canvas) {
+void cUIMan::draw (cCanvas& canvas, cGraphics& graphics) {
+// draw canvas + imGui using graphics
 
   ImGui::NewFrame();
 
@@ -119,5 +120,5 @@ void cUIMan::draw (cCanvas& canvas) {
   ImGui::Render();
 
   // draw imGui::drawList to screen window frameBuffer
-  cGraphics::getInstance().draw();
+  graphics.draw();
   }

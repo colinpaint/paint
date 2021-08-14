@@ -25,12 +25,7 @@ using namespace fmt;
 //}}}
 
 namespace {
-  cCanvas* canvas;
-
   void windowResized (int width, int height) {
-    //cPlatform::getInstance().newFrame();
-    //cUIMan::draw (*canvas);
-    //cPlatform::getInstance().present();
     cGraphics::getInstance().windowResized (width, height);
     }
   }
@@ -72,7 +67,7 @@ int main (int numArgs, char* args[]) {
   // main UI loop
   while (platform.pollEvents()) {
     platform.newFrame();
-    cUIMan::draw (canvas);
+    cUIMan::draw (canvas, graphics);
     platform.present();
     }
 
