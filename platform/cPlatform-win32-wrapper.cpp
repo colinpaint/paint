@@ -38,21 +38,7 @@ namespace {
 
   cGraphics* gGraphics = nullptr;
   cPlatform::sizeCallbackFunc gSizeCallback;
-  }
 
-  //{{{
-  void cleanupDeviceD3D() {
-
-    if (gSwapChain)
-      gSwapChain->Release();
-
-    if (gD3dDeviceContext)
-      gD3dDeviceContext->Release();
-
-    if (gD3dDevice)
-      gD3dDevice->Release();
-    }
-  //}}}
   //{{{
   LRESULT WINAPI WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   // win32 message handler
@@ -141,7 +127,6 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports) {
                                      &gD3dDevice, &featureLevel, &gD3dDeviceContext) != S_OK) {
     //{{{  error, return
     cLog::log (LOGINFO, "DirectX device created failed");
-    cleanupDeviceD3D();
     ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
     return false;
     }
@@ -188,7 +173,9 @@ void cPlatform::shutdown() {
   ImGui_ImplWin32_Shutdown();
   ImGui::DestroyContext();
 
-  cleanupDeviceD3D();
+  gSwapChain->Release();
+  gD3dDeviceContext->Release();
+  gD3dDevice->Release();
 
   ::DestroyWindow (gHWnd);
   ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);

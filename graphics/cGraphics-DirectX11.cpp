@@ -1,4 +1,4 @@
-// cGraphics-DirectX11.cpp
+// cGraphics-DirectX11.cpp - directX11 backend for imGui
 //{{{  includes
 #include "cGraphics.h"
 
@@ -74,82 +74,6 @@ namespace {
   //}}}
 
   //{{{
-  bool createFontTexture() {
-
-    unsigned char* pixels;
-    int width;
-    int height;
-    ImGui::GetIO().Fonts->GetTexDataAsRGBA32 (&pixels, &width, &height);
-
-    sBackendData* backendData = getBackendData();
-
-    // create and upload texture to gpu
-    D3D11_TEXTURE2D_DESC texture2dDesc;
-    ZeroMemory (&texture2dDesc, sizeof(texture2dDesc));
-    texture2dDesc.Width = width;
-    texture2dDesc.Height = height;
-    texture2dDesc.MipLevels = 1;
-    texture2dDesc.ArraySize = 1;
-    texture2dDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    texture2dDesc.SampleDesc.Count = 1;
-    texture2dDesc.Usage = D3D11_USAGE_DEFAULT;
-    texture2dDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    texture2dDesc.CPUAccessFlags = 0;
-
-    D3D11_SUBRESOURCE_DATA subResource;
-    subResource.pSysMem = pixels;
-    subResource.SysMemPitch = texture2dDesc.Width * 4;
-    subResource.SysMemSlicePitch = 0;
-
-    ID3D11Texture2D* texture2d = NULL;
-    if (backendData->mD3dDevice->CreateTexture2D (&texture2dDesc, &subResource, &texture2d) != S_OK) {
-      //{{{  error, returm false
-      cLog::log (LOGERROR, "createFontTexture CreateTexture2D failed");
-      return false;
-      }
-      //}}}
-
-    // create textureView
-    D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
-    ZeroMemory (&shaderResourceViewDesc, sizeof(shaderResourceViewDesc));
-    shaderResourceViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    shaderResourceViewDesc.Texture2D.MipLevels = texture2dDesc.MipLevels;
-    shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-    if (backendData->mD3dDevice->CreateShaderResourceView (texture2d, &shaderResourceViewDesc,
-                                                           &backendData->mFontTextureView) != S_OK) {
-      //{{{  error, return false
-      cLog::log (LOGERROR, "createFontTexture CreateShaderResourceView failed");
-      return false;
-      }
-      //}}}
-    texture2d->Release();
-
-    // store our fonts texture view
-    ImGui::GetIO().Fonts->SetTexID ((ImTextureID)backendData->mFontTextureView);
-
-    // create texture sampler
-    D3D11_SAMPLER_DESC samplerDesc;
-    ZeroMemory (&samplerDesc, sizeof(samplerDesc));
-    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.MipLODBias = 0.f;
-    samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-    samplerDesc.MinLOD = 0.f;
-    samplerDesc.MaxLOD = 0.f;
-    if (backendData->mD3dDevice->CreateSamplerState (&samplerDesc, &backendData->mFontSampler) != S_OK) {
-      //{{{  error, return false
-      cLog::log (LOGERROR, "createFontTexture CreateSamplerState failed");
-      return false;
-      }
-      //}}}
-
-    return true;
-    }
-  //}}}
-  //{{{
   bool createResources() {
 
     sBackendData* backendData = getBackendData();
@@ -182,7 +106,7 @@ namespace {
 
     ID3DBlob* vertexShaderBlob;
     if (FAILED (D3DCompile (kVertexShaderStr, strlen(kVertexShaderStr),
-                NULL, NULL, NULL, "main", "vs_4_0", 0, 0, &vertexShaderBlob, NULL))) {
+                            NULL, NULL, NULL, "main", "vs_4_0", 0, 0, &vertexShaderBlob, NULL))) {
       //{{{  error, return false
       cLog::log (LOGERROR, "vertex shader compile failed");
       return false;
@@ -303,6 +227,82 @@ namespace {
     depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
     depthStencilDesc.BackFace = depthStencilDesc.FrontFace;
     backendData->mD3dDevice->CreateDepthStencilState (&depthStencilDesc, &backendData->mDepthStencilState);
+
+    return true;
+    }
+  //}}}
+  //{{{
+  bool createFontTexture() {
+
+    unsigned char* pixels;
+    int width;
+    int height;
+    ImGui::GetIO().Fonts->GetTexDataAsRGBA32 (&pixels, &width, &height);
+
+    sBackendData* backendData = getBackendData();
+
+    // create and upload texture to gpu
+    D3D11_TEXTURE2D_DESC texture2dDesc;
+    ZeroMemory (&texture2dDesc, sizeof(texture2dDesc));
+    texture2dDesc.Width = width;
+    texture2dDesc.Height = height;
+    texture2dDesc.MipLevels = 1;
+    texture2dDesc.ArraySize = 1;
+    texture2dDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    texture2dDesc.SampleDesc.Count = 1;
+    texture2dDesc.Usage = D3D11_USAGE_DEFAULT;
+    texture2dDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    texture2dDesc.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA subResource;
+    subResource.pSysMem = pixels;
+    subResource.SysMemPitch = texture2dDesc.Width * 4;
+    subResource.SysMemSlicePitch = 0;
+
+    ID3D11Texture2D* texture2d = NULL;
+    if (backendData->mD3dDevice->CreateTexture2D (&texture2dDesc, &subResource, &texture2d) != S_OK) {
+      //{{{  error, returm false
+      cLog::log (LOGERROR, "createFontTexture CreateTexture2D failed");
+      return false;
+      }
+      //}}}
+
+    // create textureView
+    D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+    ZeroMemory (&shaderResourceViewDesc, sizeof(shaderResourceViewDesc));
+    shaderResourceViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    shaderResourceViewDesc.Texture2D.MipLevels = texture2dDesc.MipLevels;
+    shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+    if (backendData->mD3dDevice->CreateShaderResourceView (texture2d, &shaderResourceViewDesc,
+                                                           &backendData->mFontTextureView) != S_OK) {
+      //{{{  error, return false
+      cLog::log (LOGERROR, "createFontTexture CreateShaderResourceView failed");
+      return false;
+      }
+      //}}}
+    texture2d->Release();
+
+    // store our fonts texture view
+    ImGui::GetIO().Fonts->SetTexID ((ImTextureID)backendData->mFontTextureView);
+
+    // create texture sampler
+    D3D11_SAMPLER_DESC samplerDesc;
+    ZeroMemory (&samplerDesc, sizeof(samplerDesc));
+    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.MipLODBias = 0.f;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+    samplerDesc.MinLOD = 0.f;
+    samplerDesc.MaxLOD = 0.f;
+    if (backendData->mD3dDevice->CreateSamplerState (&samplerDesc, &backendData->mFontSampler) != S_OK) {
+      //{{{  error, return false
+      cLog::log (LOGERROR, "createFontTexture CreateSamplerState failed");
+      return false;
+      }
+      //}}}
 
     return true;
     }

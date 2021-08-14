@@ -74,7 +74,6 @@ public:
   void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color);
   };
 //}}}
-
 //{{{
 class cDrawListShader : public cShader {
 public:

@@ -26,7 +26,7 @@ using namespace fmt;
 
 namespace {
   void windowResized (cGraphics* graphics, int width, int height) {
-  // platform windowResized callback
+  // platform windowResized callback, !!! should be lambda !!!
     graphics->windowResized (width, height);
     }
   }
