@@ -381,7 +381,7 @@ namespace {
       // map gpu vertexBuffer
       D3D11_MAPPED_SUBRESOURCE vertexSubResource;
       if (deviceContext->Map (backendData->mVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &vertexSubResource) != S_OK) {
-        cLog::log (LOGERROR, "vertex Map failed");
+        cLog::log (LOGERROR, "vertexBuffer Map failed");
         return;
         }
 
@@ -413,7 +413,7 @@ namespace {
       // map gpu indexBuffer
       D3D11_MAPPED_SUBRESOURCE indexSubResource;
       if (deviceContext->Map (backendData->mIB, 0, D3D11_MAP_WRITE_DISCARD, 0, &indexSubResource) != S_OK) {
-        cLog::log (LOGERROR, "index Map failed");
+        cLog::log (LOGERROR, "indexBuffer Map failed");
         return;
         }
       ImDrawIdx* indexDest = (ImDrawIdx*)indexSubResource.pData;
@@ -429,7 +429,7 @@ namespace {
       deviceContext->Unmap (backendData->mIB, 0);
 
       setupRenderState (drawData);
-      //{{{  set orthoProject matrix to GPU vertexConstantBuffer
+      //{{{  set orthoProject matrix in GPU vertexConstantBuffer
       const float L = drawData->DisplayPos.x;
       const float R = drawData->DisplayPos.x + drawData->DisplaySize.x;
       const float T = drawData->DisplayPos.y;
@@ -446,7 +446,7 @@ namespace {
       D3D11_MAPPED_SUBRESOURCE mappedSubResource;
       if (deviceContext->Map (backendData->mVertexConstantBuffer,
                               0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource) != S_OK) {
-        cLog::log (LOGERROR, "vertex constant Map failed");
+        cLog::log (LOGERROR, "vertexConstant Map failed");
         return;
         }
       memcpy ((float*)mappedSubResource.pData, kMatrix, sizeof(kMatrix));
