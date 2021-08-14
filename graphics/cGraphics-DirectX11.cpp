@@ -115,7 +115,7 @@ namespace {
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MipLevels = texture2dDesc.MipLevels;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-    if (backendData->mD3dDevice->CreateShaderResourceView (texture2d, &shaderResourceViewDesc, 
+    if (backendData->mD3dDevice->CreateShaderResourceView (texture2d, &shaderResourceViewDesc,
                                                            &backendData->mFontTextureView) != S_OK) {
       //{{{  error, return false
       cLog::log (LOGERROR, "createFontTexture CreateShaderResourceView failed");
@@ -310,10 +310,10 @@ namespace {
   //{{{
   void setupRenderState (ImDrawData* drawData) {
 
-    // set shader, vertex buffers
     sBackendData* backendData = getBackendData();
     ID3D11DeviceContext* deviceContext = backendData->mD3dDeviceContext;
 
+    // set shader, vertex buffers
     unsigned int stride = sizeof(ImDrawVert);
     unsigned int offset = 0;
     deviceContext->IASetInputLayout (backendData->mInputLayout);
@@ -330,7 +330,7 @@ namespace {
     deviceContext->CSSetShader (NULL, NULL, 0);
 
     // set blend state
-    const float blend_factor[4] = { 0.f, 0.f, 0.f, 0.f };
+    const float blend_factor[4] = { 0.f,0.f, 0.f,0.f };
     deviceContext->OMSetBlendState (backendData->mBlendState, blend_factor, 0xffffffff);
     deviceContext->OMSetDepthStencilState (backendData->mDepthStencilState, 0);
     deviceContext->RSSetState (backendData->mRasterizerState);
@@ -349,8 +349,7 @@ namespace {
   //{{{
   void renderDrawData (ImDrawData* drawData) {
 
-    // avoid rendering when minimized
-    if ((drawData->DisplaySize.x > 0.f) && (drawData->DisplaySize.y <= 0.f)) {
+    if ((drawData->DisplaySize.x > 0.f) && (drawData->DisplaySize.y > 0.f)) {
       sBackendData* backendData = getBackendData();
       ID3D11DeviceContext* deviceContext = backendData->mD3dDeviceContext;
 
@@ -430,17 +429,7 @@ namespace {
       deviceContext->Unmap (backendData->mIB, 0);
 
       setupRenderState (drawData);
-      //{{{  set ortho projection matrix as GPU vertexConstantBuffer
-      //{{{
-      struct sMatrix {
-        float matrix[4][4];
-        };
-      //}}}
-      // visible imgui space lies
-      // - from draw_data->DisplayPos (top left)
-      // - to draw_data->DisplayPos+data_data->DisplaySize (bottom right)
-      // - DisplayPos is (0,0) for single viewport apps.
-
+      //{{{  set orthoProject matrix to GPU vertexConstantBuffer
       const float L = drawData->DisplayPos.x;
       const float R = drawData->DisplayPos.x + drawData->DisplaySize.x;
       const float T = drawData->DisplayPos.y;
@@ -453,13 +442,17 @@ namespace {
         { (R+L)/(L-R), (T+B)/(B-T), 0.5f, 1.0f },
         };
 
-      // map and copy vertex matrix
+      // map and copy vertex matrix constant
       D3D11_MAPPED_SUBRESOURCE mappedSubResource;
       if (deviceContext->Map (backendData->mVertexConstantBuffer,
                               0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource) != S_OK) {
         cLog::log (LOGERROR, "vertex constant Map failed");
         return;
         }
+
+      struct sMatrix {
+        float matrix[4][4];
+        };
 
       sMatrix* matrix = (sMatrix*)mappedSubResource.pData;
       memcpy (&matrix->matrix, kMatrix, sizeof(kMatrix));
@@ -651,8 +644,8 @@ bool cGraphics::init (void* device, void* deviceContext) {
           platform_io.Renderer_SwapBuffers = swapBuffers;
           }
 
-        createFontTexture();
         ok = createResources();
+        ok &= createFontTexture();
         cLog::log (LOGINFO, format ("graphics DirectX11 init ok {}", ok));
         }
       dxgiAdapter->Release();
