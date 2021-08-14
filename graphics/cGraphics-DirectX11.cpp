@@ -547,7 +547,6 @@ namespace {
     cLog::log (LOGINFO, "setWindowSize");
 
     sViewportData* viewportData = (sViewportData*)viewport->RendererUserData;
-
     if (viewportData->mRTView) {
       viewportData->mRTView->Release();
       viewportData->mRTView = NULL;
@@ -588,6 +587,7 @@ namespace {
   void swapBuffers (ImGuiViewport* viewport, void*) {
 
     cLog::log (LOGINFO, "swapBuffers");
+
     sViewportData* viewportData = (sViewportData*)viewport->RendererUserData;
     viewportData->mSwapChain->Present (0,0); // Present without vsync
     }

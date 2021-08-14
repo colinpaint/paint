@@ -27,6 +27,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT ms
 using namespace std;
 using namespace fmt;
 //}}}
+
 namespace {
   cPoint gWindowSize;
   WNDCLASSEX gWndClass;
@@ -72,7 +73,7 @@ namespace {
 
     switch (msg) {
       case WM_SIZE:
-        if (gD3dDevice != NULL && wParam != SIZE_MINIMIZED) {
+        if (gD3dDevice && (wParam != SIZE_MINIMIZED)) {
           if (gMainRenderTargetView)
             gMainRenderTargetView->Release();
           gSwapChain->ResizeBuffers (0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
@@ -112,20 +113,21 @@ namespace {
 bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCallbackFunc sizeCallback) {
 
   //ImGui_ImplWin32_EnableDpiAwareness();
+  // register app class
   gWndClass = { sizeof(WNDCLASSEX),
                 CS_CLASSDC, WndProc, 0L, 0L,
                 GetModuleHandle (NULL), NULL, NULL, NULL, NULL,
                _T("paintbox"), NULL };
   ::RegisterClassEx (&gWndClass);
 
-  // Create application window
+  // create application window
   gWindowSize = windowSize;
   gHWnd = ::CreateWindow (gWndClass.lpszClassName,
                           _T("paintbox"), WS_OVERLAPPEDWINDOW,
                           100, 100, windowSize.x, windowSize.y, NULL, NULL,
                           gWndClass.hInstance, NULL);
 
-  // Initialize Direct3D
+  // init direct3D
   DXGI_SWAP_CHAIN_DESC swapChainDesc;
   ZeroMemory (&swapChainDesc, sizeof(swapChainDesc));
   swapChainDesc.BufferCount = 2;
@@ -199,7 +201,9 @@ void cPlatform::shutdown() {
 
   ImGui_ImplWin32_Shutdown();
   ImGui::DestroyContext();
+
   cleanupDeviceD3D();
+
   ::DestroyWindow (gHWnd);
   ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
   }
