@@ -334,147 +334,149 @@ namespace {
   void renderDrawData (ImDrawData* drawData) {
 
     // avoid rendering when minimized
-    if ((drawData->DisplaySize.x <= 0.f) || (drawData->DisplaySize.y <= 0.f))
-      return;
+    if ((drawData->DisplaySize.x > 0.f) && (drawData->DisplaySize.y <= 0.f)) {
+      sBackendData* backendData = getBackendData();
+      ID3D11DeviceContext* deviceContext = backendData->mD3dDeviceContext;
 
-    sBackendData* backendData = getBackendData();
-    ID3D11DeviceContext* deviceContext = backendData->mD3dDeviceContext;
+      // copy drawList vertices,indices to continuous GPU buffers
+      //{{{  manage vertex GPU buffer
+      if (!backendData->mVB || (backendData->mVertexBufferSize < drawData->TotalVtxCount)) {
+        // need new vertexBuffer
+        if (backendData->mVB) {
+          // release old vertexBuffer
+          backendData->mVB->Release();
+          backendData->mVB = NULL;
+          }
+        backendData->mVertexBufferSize = drawData->TotalVtxCount + 5000;
 
-    // copy drawList vertices,indices to continuous GPU buffers
-    //{{{  manage vertex GPU buffer
-    if (!backendData->mVB || (backendData->mVertexBufferSize < drawData->TotalVtxCount)) {
-      // need new vertexBuffer
-      if (backendData->mVB) {
-        // release old vertexBuffer
-        backendData->mVB->Release();
-        backendData->mVB = NULL;
+        // get new vertexBuffer
+        D3D11_BUFFER_DESC desc;
+        memset (&desc, 0, sizeof(D3D11_BUFFER_DESC));
+        desc.Usage = D3D11_USAGE_DYNAMIC;
+        desc.ByteWidth = backendData->mVertexBufferSize * sizeof(ImDrawVert);
+        desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        desc.MiscFlags = 0;
+        if (backendData->mD3dDevice->CreateBuffer (&desc, NULL, &backendData->mVB) < 0) {
+          cLog::log (LOGERROR, "vertex CreateBuffer failed");
+          return;
+          }
         }
-      backendData->mVertexBufferSize = drawData->TotalVtxCount + 5000;
 
-      // get new vertexBuffer
-      D3D11_BUFFER_DESC desc;
-      memset (&desc, 0, sizeof(D3D11_BUFFER_DESC));
-      desc.Usage = D3D11_USAGE_DYNAMIC;
-      desc.ByteWidth = backendData->mVertexBufferSize * sizeof(ImDrawVert);
-      desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-      desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-      desc.MiscFlags = 0;
-      if (backendData->mD3dDevice->CreateBuffer (&desc, NULL, &backendData->mVB) < 0) {
-        cLog::log (LOGERROR, "vertex CreateBuffer failed");
+      // map gpu vertexBuffer
+      D3D11_MAPPED_SUBRESOURCE vertexSubResource;
+      if (deviceContext->Map (backendData->mVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &vertexSubResource) != S_OK) {
+        cLog::log (LOGERROR, "vertex Map failed");
         return;
         }
-      }
 
-    // map gpu vertexBuffer
-    D3D11_MAPPED_SUBRESOURCE vertexSubResource;
-    if (deviceContext->Map (backendData->mVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &vertexSubResource) != S_OK) {
-      cLog::log (LOGERROR, "vertex Map failed");
-      return;
-      }
+      ImDrawVert* vertexDest = (ImDrawVert*)vertexSubResource.pData;
+      //}}}
+      //{{{  manage index GPU buffer
+      if (!backendData->mIB || (backendData->mIndexBufferSize < drawData->TotalIdxCount)) {
+        // need new indexBuffer
+        if (backendData->mIB) {
+          // release old indexBuffer
+          backendData->mIB->Release();
+          backendData->mIB = NULL;
+          }
+        backendData->mIndexBufferSize = drawData->TotalIdxCount + 10000;
 
-    ImDrawVert* vertexDest = (ImDrawVert*)vertexSubResource.pData;
-    //}}}
-    //{{{  manage index GPU buffer
-    if (!backendData->mIB || (backendData->mIndexBufferSize < drawData->TotalIdxCount)) {
-      // need new indexBuffer
-      if (backendData->mIB) {
-        // release old indexBuffer
-        backendData->mIB->Release();
-        backendData->mIB = NULL;
+        // get new indexBuffer
+        D3D11_BUFFER_DESC desc;
+        memset (&desc, 0, sizeof(D3D11_BUFFER_DESC));
+        desc.Usage = D3D11_USAGE_DYNAMIC;
+        desc.ByteWidth = backendData->mIndexBufferSize * sizeof(ImDrawIdx);
+        desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+        desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        if (backendData->mD3dDevice->CreateBuffer (&desc, NULL, &backendData->mIB) < 0) {
+          cLog::log (LOGERROR, "index CreateBuffer failed");
+          return;
+          }
         }
-      backendData->mIndexBufferSize = drawData->TotalIdxCount + 10000;
 
-      // get new indexBuffer
-      D3D11_BUFFER_DESC desc;
-      memset (&desc, 0, sizeof(D3D11_BUFFER_DESC));
-      desc.Usage = D3D11_USAGE_DYNAMIC;
-      desc.ByteWidth = backendData->mIndexBufferSize * sizeof(ImDrawIdx);
-      desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-      desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-      if (backendData->mD3dDevice->CreateBuffer (&desc, NULL, &backendData->mIB) < 0) {
-        cLog::log (LOGERROR, "index CreateBuffer failed");
+      // map gpu indexBuffer
+      D3D11_MAPPED_SUBRESOURCE indexSubResource;
+      if (deviceContext->Map (backendData->mIB, 0, D3D11_MAP_WRITE_DISCARD, 0, &indexSubResource) != S_OK) {
+        cLog::log (LOGERROR, "index Map failed");
         return;
         }
-      }
+      ImDrawIdx* indexDest = (ImDrawIdx*)indexSubResource.pData;
+      //}}}
+      for (int n = 0; n < drawData->CmdListsCount; n++) {
+        const ImDrawList* cmdList = drawData->CmdLists[n];
+        memcpy (vertexDest, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
+        memcpy (indexDest, cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx));
+        vertexDest += cmdList->VtxBuffer.Size;
+        indexDest += cmdList->IdxBuffer.Size;
+        }
+      deviceContext->Unmap (backendData->mVB, 0);
+      deviceContext->Unmap (backendData->mIB, 0);
 
-    // map gpu indexBuffer
-    D3D11_MAPPED_SUBRESOURCE indexSubResource;
-    if (deviceContext->Map (backendData->mIB, 0, D3D11_MAP_WRITE_DISCARD, 0, &indexSubResource) != S_OK) {
-      cLog::log (LOGERROR, "index Map failed");
-      return;
-      }
-    ImDrawIdx* indexDest = (ImDrawIdx*)indexSubResource.pData;
-    //}}}
-    for (int n = 0; n < drawData->CmdListsCount; n++) {
-      const ImDrawList* cmdList = drawData->CmdLists[n];
-      memcpy (vertexDest, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
-      memcpy (indexDest, cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx));
-      vertexDest += cmdList->VtxBuffer.Size;
-      indexDest += cmdList->IdxBuffer.Size;
-      }
-    deviceContext->Unmap (backendData->mVB, 0);
-    deviceContext->Unmap (backendData->mIB, 0);
+      setupRenderState (drawData);
+      //{{{  set ortho projection matrix as GPU vertexConstantBuffer
+      //{{{
+      struct sMatrix {
+        float matrix[4][4];
+        };
+      //}}}
+      // visible imgui space lies
+      // - from draw_data->DisplayPos (top left)
+      // - to draw_data->DisplayPos+data_data->DisplaySize (bottom right)
+      // - DisplayPos is (0,0) for single viewport apps.
 
-    setupRenderState (drawData);
-    //{{{  set ortho projection matrix as GPU vertexConstantBuffer
-    //{{{
-    struct sMatrix {
-      float matrix[4][4];
-      };
-    //}}}
-    // visible imgui space lies
-    // - from draw_data->DisplayPos (top left)
-    // - to draw_data->DisplayPos+data_data->DisplaySize (bottom right)
-    // - DisplayPos is (0,0) for single viewport apps.
+      const float L = drawData->DisplayPos.x;
+      const float R = drawData->DisplayPos.x + drawData->DisplaySize.x;
+      const float T = drawData->DisplayPos.y;
+      const float B = drawData->DisplayPos.y + drawData->DisplaySize.y;
 
-    const float L = drawData->DisplayPos.x;
-    const float R = drawData->DisplayPos.x + drawData->DisplaySize.x;
-    const float T = drawData->DisplayPos.y;
-    const float B = drawData->DisplayPos.y + drawData->DisplaySize.y;
+      const float kMatrix[4][4] = {
+        { 2.0f/(R-L),  0.0f,        0.0f, 0.0f },
+        { 0.0f,        2.0f/(T-B),  0.0f, 0.0f },
+        { 0.0f,        0.0f,        0.5f, 0.0f },
+        { (R+L)/(L-R), (T+B)/(B-T), 0.5f, 1.0f },
+        };
 
-    const float kMatrix[4][4] = {
-      { 2.0f/(R-L),  0.0f,        0.0f, 0.0f },
-      { 0.0f,        2.0f/(T-B),  0.0f, 0.0f },
-      { 0.0f,        0.0f,        0.5f, 0.0f },
-      { (R+L)/(L-R), (T+B)/(B-T), 0.5f, 1.0f },
-      };
-
-    // map and copy vertex matrix
-    D3D11_MAPPED_SUBRESOURCE mappedSubResource;
-    if (deviceContext->Map (backendData->mVertexConstantBuffer,
-                            0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource) != S_OK) {
-      cLog::log (LOGERROR, "vertex constant Map failed");
-      return;
-      }
-
-    sMatrix* matrix = (sMatrix*)mappedSubResource.pData;
-    memcpy (&matrix->matrix, kMatrix, sizeof(kMatrix));
-    deviceContext->Unmap (backendData->mVertexConstantBuffer, 0);
-    //}}}
-
-    // render command lists
-    int indexOffset = 0;
-    int vertexOffset = 0;
-    ImVec2 clipOffset = drawData->DisplayPos;
-    for (int cmdListIndex = 0; cmdListIndex < drawData->CmdListsCount; cmdListIndex++) {
-      const ImDrawList* cmdList = drawData->CmdLists[cmdListIndex];
-      for (int cmdIndex = 0; cmdIndex < cmdList->CmdBuffer.Size; cmdIndex++) {
-        const ImDrawCmd* drawCmd = &cmdList->CmdBuffer[cmdIndex];
-
-        // Apply scissor/clipping rectangle
-        const D3D11_RECT r = {
-          (LONG)(drawCmd->ClipRect.x - clipOffset.x), (LONG)(drawCmd->ClipRect.y - clipOffset.y),
-          (LONG)(drawCmd->ClipRect.z - clipOffset.x), (LONG)(drawCmd->ClipRect.w - clipOffset.y) };
-        deviceContext->RSSetScissorRects (1, &r);
-
-        // bind texture and draw
-        ID3D11ShaderResourceView* shaderResourceView = (ID3D11ShaderResourceView*)drawCmd->GetTexID();
-        deviceContext->PSSetShaderResources (0, 1, &shaderResourceView);
-        deviceContext->DrawIndexed (drawCmd->ElemCount, drawCmd->IdxOffset + indexOffset, drawCmd->VtxOffset + vertexOffset);
+      // map and copy vertex matrix
+      D3D11_MAPPED_SUBRESOURCE mappedSubResource;
+      if (deviceContext->Map (backendData->mVertexConstantBuffer,
+                              0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource) != S_OK) {
+        cLog::log (LOGERROR, "vertex constant Map failed");
+        return;
         }
 
-      indexOffset += cmdList->IdxBuffer.Size;
-      vertexOffset += cmdList->VtxBuffer.Size;
+      sMatrix* matrix = (sMatrix*)mappedSubResource.pData;
+      memcpy (&matrix->matrix, kMatrix, sizeof(kMatrix));
+      deviceContext->Unmap (backendData->mVertexConstantBuffer, 0);
+      //}}}
+
+      // render command lists
+      int indexOffset = 0;
+      int vertexOffset = 0;
+      ImVec2 clipOffset = drawData->DisplayPos;
+
+      for (int cmdListIndex = 0; cmdListIndex < drawData->CmdListsCount; cmdListIndex++) {
+        const ImDrawList* cmdList = drawData->CmdLists[cmdListIndex];
+        for (int cmdIndex = 0; cmdIndex < cmdList->CmdBuffer.Size; cmdIndex++) {
+          const ImDrawCmd* drawCmd = &cmdList->CmdBuffer[cmdIndex];
+
+          // set scissor clip rect
+          const D3D11_RECT r = {
+            (LONG)(drawCmd->ClipRect.x - clipOffset.x), (LONG)(drawCmd->ClipRect.y - clipOffset.y),
+            (LONG)(drawCmd->ClipRect.z - clipOffset.x), (LONG)(drawCmd->ClipRect.w - clipOffset.y) };
+          deviceContext->RSSetScissorRects (1, &r);
+
+          // bind texture
+          ID3D11ShaderResourceView* shaderResourceView = (ID3D11ShaderResourceView*)drawCmd->GetTexID();
+          deviceContext->PSSetShaderResources (0, 1, &shaderResourceView);
+
+          // draw
+          deviceContext->DrawIndexed (drawCmd->ElemCount, drawCmd->IdxOffset + indexOffset, drawCmd->VtxOffset + vertexOffset);
+          }
+
+        indexOffset += cmdList->IdxBuffer.Size;
+        vertexOffset += cmdList->VtxBuffer.Size;
+        }
       }
     }
   //}}}
