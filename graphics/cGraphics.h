@@ -81,61 +81,44 @@ protected:
 //{{{
 class cShader {
 public:
-  cShader (const std::string& vertShaderString, const std::string& fragShaderString);
-  virtual ~cShader();
+  cShader() = default;
+  virtual ~cShader() = default;
 
   uint32_t getId() { return mId; }
 
-  void use();
+  virtual void use() = 0;
 
 protected:
-  void setBool (const std::string &name, bool value);
-
-  void setInt (const std::string &name, int value);
-  void setFloat (const std::string &name, float value);
-
-  void setVec2 (const std::string &name, glm::vec2 value);
-  void setVec3 (const std::string &name, glm::vec3 value);
-  void setVec4 (const std::string &name, glm::vec4 value);
-
-  void setMat4 (const std::string &name, glm::mat4 value);
-
-private:
   uint32_t mId = 0;
   };
 //}}}
 //{{{
-class cQuadShader : public cShader {
+class cCanvasShader : public cShader {
 public:
-  cQuadShader (const std::string& fragShaderString);
-  virtual ~cQuadShader() = default;
-
-  void setModelProject (const glm::mat4& model, const glm::mat4& project);
-  };
-//}}}
-//{{{
-class cCanvasShader : public cQuadShader {
-public:
-  cCanvasShader();
+  cCanvasShader() = default;
   virtual ~cCanvasShader() = default;
+
+  virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
   };
 //}}}
 //{{{
-class cLayerShader : public cQuadShader {
+class cLayerShader : public cShader {
 public:
-  cLayerShader();
+  cLayerShader() = default;
   virtual ~cLayerShader() = default;
 
-  void setHueSatVal (float hue, float sat, float val);
+  virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
+  virtual void setHueSatVal (float hue, float sat, float val) = 0;
   };
 //}}}
 //{{{
-class cPaintShader : public cQuadShader {
+class cPaintShader : public cShader {
 public:
-  cPaintShader();
+  cPaintShader() = default;
   virtual ~cPaintShader() = default;
 
-  void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color);
+  virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
+  virtual void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color) = 0;
   };
 //}}}
 
