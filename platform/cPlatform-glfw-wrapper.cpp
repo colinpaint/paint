@@ -135,18 +135,9 @@ void cPlatform::shutdown() {
 //}}}
 
 // gets
-//{{{
-void* cPlatform::getDevice() {
-
-  return nullptr;
-  }
-//}}}
-//{{{
-void* cPlatform::getDeviceContext() {
-
-  return nullptr;
-  }
-//}}}
+void* cPlatform::getDevice() { return nullptr; }
+void* cPlatform::getDeviceContext() { return nullptr; }
+void* cPlatform::getSwapChain() { return nullptr; }
 //{{{
 cPoint cPlatform::getWindowSize() {
 
@@ -156,7 +147,6 @@ cPoint cPlatform::getWindowSize() {
   return cPoint (width, height);
   }
 //}}}
-
 
 // actions
 //{{{

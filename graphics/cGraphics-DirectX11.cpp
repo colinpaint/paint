@@ -312,18 +312,20 @@ namespace {
   //{{{
   bool createMainRenderTarget() {
 
-    sBackendData* backendData = getBackendData();
+    bool ok = true;
 
+    sBackendData* backendData = getBackendData();
     ID3D11Texture2D* backBuffer;
     backendData->mDxgiSwapChain->GetBuffer (0, IID_PPV_ARGS (&backBuffer));
+
     if (backendData->mD3dDevice->CreateRenderTargetView (backBuffer, NULL, &backendData->mMainRenderTargetView) != S_OK) {
-      backBuffer->Release();
       cLog::log (LOGERROR, "createMainRenderTarget failed");
-      return false;
+      ok = false;
       }
 
     backBuffer->Release();
-    return true;
+
+    return ok;
     }
   //}}}
 
@@ -624,8 +626,10 @@ bool cGraphics::init (void* device, void* deviceContext, void* swapChain) {
 
   bool ok = false;
 
-  // allocate backendData and set backend capabilities
+  // allocate backendData 
   sBackendData* backendData = IM_NEW (sBackendData)();
+
+  // set backend capabilities
   ImGui::GetIO().BackendRendererUserData = (void*)backendData;
   ImGui::GetIO().BackendRendererName = "imgui_impl_dx11";
   ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
@@ -660,6 +664,7 @@ bool cGraphics::init (void* device, void* deviceContext, void* swapChain) {
           platform_io.Renderer_SwapBuffers = swapBuffers;
           }
 
+        // create resources
         ok = createResources();
         ok &= createFontTexture();
         ok &= createMainRenderTarget();
@@ -679,51 +684,23 @@ void cGraphics::shutdown() {
   ImGui::DestroyPlatformWindows();
 
   sBackendData* backendData = getBackendData();
-
-  if (backendData->mFontSampler)
+  if (backendData) {
     backendData->mFontSampler->Release();
-
-  if (backendData->mFontTextureView)
     backendData->mFontTextureView->Release();
-
-  if (backendData->mIB)
     backendData->mIB->Release();
-
-  if (backendData->mVB)
     backendData->mVB->Release();
-
-  if (backendData->mBlendState)
     backendData->mBlendState->Release();
-
-  if (backendData->mDepthStencilState)
     backendData->mDepthStencilState->Release();
-
-  if (backendData->mRasterizerState)
     backendData->mRasterizerState->Release();
-
-  if (backendData->mPixelShader)
     backendData->mPixelShader->Release();
-
-  if (backendData->mVertexConstantBuffer)
     backendData->mVertexConstantBuffer->Release();
-
-  if (backendData->mInputLayout)
     backendData->mInputLayout->Release();
-
-  if (backendData->mVertexShader)
     backendData->mVertexShader->Release();
-
-  if (backendData->mDxgiFactory)
     backendData->mDxgiFactory->Release();
-
-  if (backendData->mD3dDevice)
     backendData->mD3dDevice->Release();
-
-  if (backendData->mD3dDeviceContext)
-    backendData->mD3dDeviceContext->Release();
-
-  if (backendData->mMainRenderTargetView)
+    backendData->mDxgiSwapChain->Release();
     backendData->mMainRenderTargetView->Release();
+    }
 
   ImGui::GetIO().BackendRendererName = NULL;
   ImGui::GetIO().BackendRendererUserData = NULL;
@@ -737,17 +714,19 @@ void cGraphics::draw() {
 
   sBackendData* backendData = getBackendData();
 
+  // set mainRenderTarget
   backendData->mD3dDeviceContext->OMSetRenderTargets (1, &backendData->mMainRenderTargetView, NULL);
 
+  // clear mainRenderTarget
   const float kClearColorWithAlpha[4] = { 0.25f,0.25f,0.25f, 1.f };
   backendData->mD3dDeviceContext->ClearRenderTargetView (backendData->mMainRenderTargetView, kClearColorWithAlpha);
 
+  // really draw imGui drawList
   renderDrawData (ImGui::GetDrawData());
   }
 //}}}
 //{{{
 void cGraphics::windowResized (int width, int height) {
-// called pre and post window resize
 
   //cLog::log (LOGINFO, format ("cGraphics::windowResized {}", width, height));
   sBackendData* backendData = getBackendData();
