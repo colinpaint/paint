@@ -14,7 +14,7 @@ public:
     }
   //}}}
 
-  bool init (void* device, void* deviceContext);
+  bool init (void* device, void* deviceContext, void* swapChain);
   void shutdown();
 
   void draw();

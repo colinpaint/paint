@@ -212,6 +212,7 @@ void cPlatform::shutdown() {
 // gets
 void* cPlatform::getDevice() { return (void*)gD3dDevice; }
 void* cPlatform::getDeviceContext() { return (void*)gD3dDeviceContext; }
+void* cPlatform::getSwapChain() { return (void*)gSwapChain; }
 cPoint cPlatform::getWindowSize() { return gWindowSize; }
 
 // actions

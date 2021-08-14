@@ -42,7 +42,8 @@ namespace {
   struct sBackendData {
     ID3D11Device*             mD3dDevice;
     ID3D11DeviceContext*      mD3dDeviceContext;
-    IDXGIFactory*             mFactory;
+    IDXGISwapChain*           mDxgiSwapChain;
+    IDXGIFactory*             mDxgiFactory;
     ID3D11Buffer*             mVB;
     ID3D11Buffer*             mIB;
     ID3D11VertexShader*       mVertexShader;
@@ -514,7 +515,7 @@ namespace {
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
     swapChainDesc.Flags = 0;
     IM_ASSERT ((viewportData->SwapChain == NULL) && (viewportData->RTView == NULL));
-    backendData->mFactory->CreateSwapChain (backendData->mD3dDevice, &swapChainDesc, &viewportData->mSwapChain);
+    backendData->mDxgiFactory->CreateSwapChain (backendData->mD3dDevice, &swapChainDesc, &viewportData->mSwapChain);
 
     // create the render target
     if (viewportData->mSwapChain) {
@@ -600,7 +601,7 @@ namespace {
   }
 
 //{{{
-bool cGraphics::init (void* device, void* deviceContext) {
+bool cGraphics::init (void* device, void* deviceContext, void* swapChain) {
 
   bool ok = false;
 
@@ -615,6 +616,7 @@ bool cGraphics::init (void* device, void* deviceContext) {
   // Get factory from device adpater
   ID3D11Device* d3dDevice = (ID3D11Device*)device;
   ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)deviceContext;
+  IDXGISwapChain* dxgiSwapChain = (IDXGISwapChain*)swapChain;
 
   IDXGIDevice* dxgiDevice = NULL;
   if (d3dDevice->QueryInterface (IID_PPV_ARGS (&dxgiDevice)) == S_OK) {
@@ -624,7 +626,8 @@ bool cGraphics::init (void* device, void* deviceContext) {
       if (dxgiAdapter->GetParent (IID_PPV_ARGS (&dxgiFactory)) == S_OK) {
         backendData->mD3dDevice = d3dDevice;
         backendData->mD3dDeviceContext = d3dDeviceContext;
-        backendData->mFactory = dxgiFactory;
+        backendData->mDxgiSwapChain = dxgiSwapChain;
+        backendData->mDxgiFactory = dxgiFactory;
         backendData->mD3dDevice->AddRef();
         backendData->mD3dDeviceContext->AddRef();
 
@@ -690,8 +693,8 @@ void cGraphics::shutdown() {
   if (backendData->mVertexShader)
     backendData->mVertexShader->Release();
 
-  if (backendData->mFactory)
-    backendData->mFactory->Release();
+  if (backendData->mDxgiFactory)
+    backendData->mDxgiFactory->Release();
 
   if (backendData->mD3dDevice)
     backendData->mD3dDevice->Release();

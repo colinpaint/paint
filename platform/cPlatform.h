@@ -30,6 +30,7 @@ public:
   // gets
   void* getDevice();
   void* getDeviceContext();
+  void* getSwapChain();
   cPoint getWindowSize();
 
   // actions

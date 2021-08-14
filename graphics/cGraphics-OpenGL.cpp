@@ -212,7 +212,7 @@ namespace {
   }
 
 //{{{
-bool cGraphics::init (void* device, void* deviceContext) {
+bool cGraphics::init (void* device, void* deviceContext, void* swapChain) {
 
   // get OpenGL version
   string glVersionString = (const char*)glGetString (GL_VERSION);

@@ -62,7 +62,7 @@ int main (int numArgs, char* args[]) {
 
   // start graphics singleton
   cGraphics& graphics = cGraphics::getInstance();
-  if (!graphics.init (platform.getDevice(), platform.getDeviceContext()))
+  if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
 
   // start canvas
