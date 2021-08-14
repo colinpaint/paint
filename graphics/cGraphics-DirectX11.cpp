@@ -11,8 +11,6 @@
 
 #include "../log/cLog.h"
 
-#pragma comment(lib, "d3dcompiler")
-
 using namespace std;
 using namespace fmt;
 //}}}
@@ -626,7 +624,7 @@ bool cGraphics::init (void* device, void* deviceContext, void* swapChain) {
 
   bool ok = false;
 
-  // allocate backendData 
+  // allocate backendData
   sBackendData* backendData = IM_NEW (sBackendData)();
 
   // set backend capabilities

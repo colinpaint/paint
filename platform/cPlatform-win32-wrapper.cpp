@@ -35,7 +35,10 @@ namespace {
   ID3D11Device* gD3dDevice = NULL;
   ID3D11DeviceContext*  gD3dDeviceContext = NULL;
   IDXGISwapChain* gSwapChain = NULL;
+
+  cGraphics* gGraphics = nullptr;
   cPlatform::sizeCallbackFunc gSizeCallback;
+  }
 
   //{{{
   void cleanupDeviceD3D() {
@@ -61,7 +64,8 @@ namespace {
     switch (msg) {
       case WM_SIZE:
         if (gD3dDevice && (wParam != SIZE_MINIMIZED))
-          gSizeCallback ((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
+          if (gGraphics)
+            gSizeCallback (gGraphics, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
         return 0;
 
       case WM_SYSCOMMAND:
@@ -93,9 +97,7 @@ namespace {
   }
 
 //{{{
-bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCallbackFunc sizeCallback) {
-
-  gSizeCallback = sizeCallback;
+bool cPlatform::init (const cPoint& windowSize, bool showViewports) {
 
   //ImGui_ImplWin32_EnableDpiAwareness();
   // register app class
@@ -198,6 +200,14 @@ void* cPlatform::getDevice() { return (void*)gD3dDevice; }
 void* cPlatform::getDeviceContext() { return (void*)gD3dDeviceContext; }
 void* cPlatform::getSwapChain() { return (void*)gSwapChain; }
 cPoint cPlatform::getWindowSize() { return gWindowSize; }
+
+//{{{
+void cPlatform::setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) {
+  gGraphics = graphics;
+  gSizeCallback = sizeCallback;
+  }
+
+//}}}
 
 // actions
 //{{{

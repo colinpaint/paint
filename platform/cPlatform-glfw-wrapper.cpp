@@ -30,6 +30,7 @@ using namespace fmt;
 namespace {
   // vars
   GLFWwindow* gWindow = nullptr;
+  cGraphics* gGraphics = nullptr;
   cPlatform::sizeCallbackFunc gSizeCallback;
 
   // glfw callbacks
@@ -46,15 +47,14 @@ namespace {
   //}}}
   //{{{
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
-    gSizeCallback (width, height);
+    if (gGraphics)
+      gSizeCallback (gGraphics, width, height);
     }
   //}}}
   }
 
 //{{{
-bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCallbackFunc sizeCallback) {
-
-  gSizeCallback = sizeCallback;
+bool cPlatform::init (const cPoint& windowSize, bool showViewports) {
 
   cLog::log (LOGINFO, format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
 
@@ -145,6 +145,14 @@ cPoint cPlatform::getWindowSize() {
   int height;
   glfwGetWindowSize (gWindow, &width, &height);
   return cPoint (width, height);
+  }
+//}}}
+
+// sets
+//{{{
+void cPlatform::setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) {
+  gGraphics = graphics;
+  gSizeCallback = sizeCallback;
   }
 //}}}
 

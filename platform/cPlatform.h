@@ -7,12 +7,11 @@
 #include "../graphics/cPointRect.h"
 
 class cGraphics;
-class cCanvas;
 //}}}
 
 class cPlatform {
 public:
-  using sizeCallbackFunc = void(*)(int width, int height);
+  using sizeCallbackFunc = void(*)(cGraphics* graphics, int width, int height);
   //{{{
   static cPlatform& getInstance() {
   // singleton pattern create
@@ -24,7 +23,7 @@ public:
     }
   //}}}
 
-  bool init (const cPoint& windowSize, bool showViewports, const sizeCallbackFunc sizeCallback);
+  bool init (const cPoint& windowSize, bool showViewports);
   void shutdown();
 
   // gets
@@ -32,6 +31,8 @@ public:
   void* getDeviceContext();
   void* getSwapChain();
   cPoint getWindowSize();
+
+  void setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback);
 
   // actions
   bool pollEvents();

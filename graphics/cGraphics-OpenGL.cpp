@@ -16,25 +16,17 @@
 #include "../graphics/cShader.h"
 #include "../log/cLog.h"
 
-using namespace std;
-using namespace fmt;
-
+// OpenGL >= 3.1 has GL_PRIMITIVE_RESTART state
+// OpenGL >= 3.3 has glBindSampler()
 #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3)
-  #if defined(GL_VERSION_3_1)
-    // OpenGL >= 3.1 has GL_PRIMITIVE_RESTART state
-    #define IMGUI_IMPL_OPENGL_MAY_HAVE_PRIMITIVE_RESTART
-  #endif
-
   #if defined(GL_VERSION_3_2)
     // OpenGL >= 3.2 has glDrawElementsBaseVertex() which GL ES and WebGL don't have.
     #define IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET
   #endif
-
-  #if defined(GL_VERSION_3_3)
-    // OpenGL >= 3.3 has glBindSampler()
-    #define IMGUI_IMPL_OPENGL_MAY_HAVE_BIND_SAMPLER
-  #endif
 #endif
+
+using namespace std;
+using namespace fmt;
 //}}}
 
 namespace {
