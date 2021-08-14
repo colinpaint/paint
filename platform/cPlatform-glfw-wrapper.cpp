@@ -46,7 +46,7 @@ namespace {
   //}}}
   //{{{
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
-    gSizeCallback();
+    gSizeCallback (true);
     }
   //}}}
   }
@@ -173,10 +173,6 @@ bool cPlatform::pollEvents() {
 //{{{
 void cPlatform::newFrame() {
   ImGui_ImplGlfw_NewFrame();
-  }
-//}}}
-//{{{
-void cPlatform::selectMainScreen() {
   }
 //}}}
 //{{{

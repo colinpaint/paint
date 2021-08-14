@@ -35,22 +35,10 @@ namespace {
   ID3D11Device* gD3dDevice = NULL;
   ID3D11DeviceContext*  gD3dDeviceContext = NULL;
   IDXGISwapChain* gSwapChain = NULL;
-  ID3D11RenderTargetView* gMainRenderTargetView = NULL;
+  cPlatform::sizeCallbackFunc gSizeCallback;
 
-  //{{{
-  void createMainRenderTarget() {
-
-    ID3D11Texture2D* backBuffer;
-    gSwapChain->GetBuffer (0, IID_PPV_ARGS (&backBuffer));
-    gD3dDevice->CreateRenderTargetView (backBuffer, NULL, &gMainRenderTargetView);
-    backBuffer->Release();
-    }
-  //}}}
   //{{{
   void cleanupDeviceD3D() {
-
-    if (gMainRenderTargetView)
-      gMainRenderTargetView->Release();
 
     if (gSwapChain)
       gSwapChain->Release();
@@ -62,7 +50,6 @@ namespace {
       gD3dDevice->Release();
     }
   //}}}
-
   //{{{
   LRESULT WINAPI WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   // win32 message handler
@@ -74,10 +61,9 @@ namespace {
     switch (msg) {
       case WM_SIZE:
         if (gD3dDevice && (wParam != SIZE_MINIMIZED)) {
-          if (gMainRenderTargetView)
-            gMainRenderTargetView->Release();
+          gSizeCallback (false);
           gSwapChain->ResizeBuffers (0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
-          createMainRenderTarget();
+          gSizeCallback (true);
           }
         return 0;
 
@@ -111,6 +97,8 @@ namespace {
 
 //{{{
 bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCallbackFunc sizeCallback) {
+
+  gSizeCallback = sizeCallback;
 
   //ImGui_ImplWin32_EnableDpiAwareness();
   // register app class
@@ -159,7 +147,6 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports, const sizeCa
     return false;
     }
     //}}}
-  createMainRenderTarget();
   cLog::log (LOGINFO, format ("platform DirectX11 device created - featureLevel:{:x}", featureLevel));
 
   // Show the window
@@ -238,15 +225,6 @@ bool cPlatform::pollEvents() {
 //{{{
 void cPlatform::newFrame() {
   ImGui_ImplWin32_NewFrame();
-  }
-//}}}
-//{{{
-void cPlatform::selectMainScreen() {
-
-  gD3dDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
-
-  const float kClearColorWithAlpha[4] = { 0.25f,0.25f,0.25f, 1.f };
-  gD3dDeviceContext->ClearRenderTargetView (gMainRenderTargetView, kClearColorWithAlpha);
   }
 //}}}
 //{{{

@@ -42,7 +42,6 @@ namespace {
   struct sBackendData {
     ID3D11Device*             mD3dDevice;
     ID3D11DeviceContext*      mD3dDeviceContext;
-    IDXGISwapChain*           mDxgiSwapChain;
     IDXGIFactory*             mDxgiFactory;
     ID3D11Buffer*             mVB;
     ID3D11Buffer*             mIB;
@@ -57,6 +56,9 @@ namespace {
     ID3D11DepthStencilState*  mDepthStencilState;
     int                       mVertexBufferSize;
     int                       mIndexBufferSize;
+
+    IDXGISwapChain*           mDxgiSwapChain;
+    ID3D11RenderTargetView*   mMainRenderTargetView;
 
     sBackendData() {
       memset (this, 0, sizeof(*this));
@@ -307,6 +309,23 @@ namespace {
     return true;
     }
   //}}}
+  //{{{
+  bool createMainRenderTarget() {
+
+    sBackendData* backendData = getBackendData();
+
+    ID3D11Texture2D* backBuffer;
+    backendData->mDxgiSwapChain->GetBuffer (0, IID_PPV_ARGS (&backBuffer));
+    if (backendData->mD3dDevice->CreateRenderTargetView (backBuffer, NULL, &backendData->mMainRenderTargetView) != S_OK) {
+      backBuffer->Release();
+      cLog::log (LOGERROR, "createMainRenderTarget failed");
+      return false;
+      }
+
+    backBuffer->Release();
+    return true;
+    }
+  //}}}
 
   //{{{
   void setupRenderState (ImDrawData* drawData) {
@@ -514,7 +533,7 @@ namespace {
     swapChainDesc.Windowed = TRUE;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
     swapChainDesc.Flags = 0;
-    IM_ASSERT ((viewportData->SwapChain == NULL) && (viewportData->RTView == NULL));
+    IM_ASSERT ((viewportData->mSwapChain == NULL) && (viewportData->mRTView == NULL));
     backendData->mDxgiFactory->CreateSwapChain (backendData->mD3dDevice, &swapChainDesc, &viewportData->mSwapChain);
 
     // create the render target
@@ -643,6 +662,7 @@ bool cGraphics::init (void* device, void* deviceContext, void* swapChain) {
 
         ok = createResources();
         ok &= createFontTexture();
+        ok &= createMainRenderTarget();
         cLog::log (LOGINFO, format ("graphics DirectX11 init ok {}", ok));
         }
       dxgiAdapter->Release();
@@ -702,6 +722,9 @@ void cGraphics::shutdown() {
   if (backendData->mD3dDeviceContext)
     backendData->mD3dDeviceContext->Release();
 
+  if (backendData->mMainRenderTargetView)
+    backendData->mMainRenderTargetView->Release();
+
   ImGui::GetIO().BackendRendererName = NULL;
   ImGui::GetIO().BackendRendererUserData = NULL;
 
@@ -711,6 +734,28 @@ void cGraphics::shutdown() {
 
 //{{{
 void cGraphics::draw() {
+
+  sBackendData* backendData = getBackendData();
+
+  backendData->mD3dDeviceContext->OMSetRenderTargets (1, &backendData->mMainRenderTargetView, NULL);
+
+  const float kClearColorWithAlpha[4] = { 0.25f,0.25f,0.25f, 1.f };
+  backendData->mD3dDeviceContext->ClearRenderTargetView (backendData->mMainRenderTargetView, kClearColorWithAlpha);
+
   renderDrawData (ImGui::GetDrawData());
+  }
+//}}}
+//{{{
+void cGraphics::windowResized (bool post) {
+// called pre and post window resize
+
+  //cLog::log (LOGINFO, format ("cGraphics::windowResized {}", post));
+  sBackendData* backendData = getBackendData();
+  if (backendData) {
+    if (post)
+      createMainRenderTarget();
+    else if (backendData->mMainRenderTargetView)
+      backendData->mMainRenderTargetView->Release();
+    }
   }
 //}}}

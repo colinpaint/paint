@@ -310,3 +310,8 @@ void cGraphics::draw() {
   renderDrawData (ImGui::GetDrawData());
   }
 //}}}
+//{{{
+void cGraphics::windowResized (bool post) {
+  cLog::log (LOGINFO, " windowResized");
+  }
+//}}}

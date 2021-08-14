@@ -12,7 +12,7 @@ class cCanvas;
 
 class cPlatform {
 public:
-  using sizeCallbackFunc = void(*)();
+  using sizeCallbackFunc = void(*)(bool post);
   //{{{
   static cPlatform& getInstance() {
   // singleton pattern create
@@ -24,7 +24,8 @@ public:
     }
   //}}}
 
-  bool init (const cPoint& windowSize, bool showViewports, const sizeCallbackFunc sizeCallback);
+  bool init (const cPoint& windowSize, bool showViewports,
+             const sizeCallbackFunc sizeCallback);
   void shutdown();
 
   // gets
@@ -36,7 +37,6 @@ public:
   // actions
   bool pollEvents();
   void newFrame();
-  void selectMainScreen();
   void present();
 
 private:

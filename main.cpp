@@ -27,12 +27,11 @@ using namespace fmt;
 namespace {
   cCanvas* canvas;
 
-  void drawWindow() {
-  // can be used as platform sizeWindowsCallback, glfw blocks mainLoop while sizing window
-    cPlatform::getInstance().newFrame();
-    cPlatform::getInstance().selectMainScreen();
-    cUIMan::draw (*canvas);
-    cPlatform::getInstance().present();
+  void windowResized (bool post) {
+    //cPlatform::getInstance().newFrame();
+    //cUIMan::draw (*canvas);
+    //cPlatform::getInstance().present();
+    cGraphics::getInstance().windowResized (post);
     }
   }
 
@@ -57,7 +56,7 @@ int main (int numArgs, char* args[]) {
 
   // start platform singleton
   cPlatform& platform = cPlatform::getInstance();
-  if (!platform.init (cPoint(1200, 800), false, drawWindow))
+  if (!platform.init (cPoint(1200, 800), false, windowResized))
     exit (EXIT_FAILURE);
 
   // start graphics singleton
@@ -66,17 +65,19 @@ int main (int numArgs, char* args[]) {
     exit (EXIT_FAILURE);
 
   // start canvas
-  canvas = new cCanvas (params.empty() ? "../piccies/tv.jpg" : params[0]);
+  cCanvas canvas (params.empty() ? "../piccies/tv.jpg" : params[0]);
   if (params.size() > 1)
-    canvas->newLayer (params[1]);
+    canvas.newLayer (params[1]);
 
   // main UI loop
-  while (platform.pollEvents())
-    drawWindow();
+  while (platform.pollEvents()) {
+    platform.newFrame();
+    cUIMan::draw (canvas);
+    platform.present();
+    }
 
   graphics.shutdown();
   platform.shutdown();
-  delete canvas;
 
   return EXIT_SUCCESS;
   }
