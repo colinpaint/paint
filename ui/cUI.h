@@ -10,15 +10,44 @@ class cGraphics;
 class cCanvas;
 //}}}
 
-// cUI
 class cUI {
 private:
   using createFuncType = cUI*(*)(const std::string& name);
 
 public:
   // static manager, static init registration, main UI draw
-  static bool registerClass (const std::string& name, const createFuncType createFunc);
-  static cUI* createByName (const std::string& name);
+  //static bool registerClass (const std::string& name, const createFuncType createFunc);
+  //{{{
+  static bool registerClass (const std::string& name, const createFuncType createFunc) {
+  // register class createFunc by name to classRegister, add instance to instances
+
+    if (getClassRegister().find (name) == getClassRegister().end()) {
+      // class name not found - add to classRegister map
+      getClassRegister().insert (std::make_pair (name, createFunc));
+
+      // create instance of class and add to instances map
+      getInstances().insert (std::make_pair (name, createFunc (name)));
+      return true;
+      }
+    else
+      return false;
+    }
+  //}}}
+  //static cUI* createByName (const std::string& name);
+  //{{{
+  static cUI* createByName (const std::string& name) {
+  // create class by name from classRegister, add instance to instances
+
+    auto uiIt = getInstances().find (name);
+    if (uiIt == getInstances().end()) {
+      auto ui = getClassRegister()[name](name);
+      getInstances().insert (std::make_pair (name, ui));
+      return ui;
+      }
+    else
+      return uiIt->second;
+    }
+  //}}}
   static void draw (cCanvas& canvas, cGraphics& graphics);
 
   //

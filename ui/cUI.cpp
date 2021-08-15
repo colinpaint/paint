@@ -20,44 +20,6 @@ using namespace fmt;
 //}}}
 #define DRAW_CANVAS // useful to disable when bringing up backends
 
-// static manager
-//{{{
-bool cUI::registerClass (const std::string& name, const createFuncType createFunc) {
-// register class createFunc by name to classRegister, add instance to instances
-
-  if (getClassRegister().find (name) == getClassRegister().end()) {
-    // class name not found - add to classRegister map
-    getClassRegister().insert (std::make_pair (name, createFunc));
-
-    // create instance of class and add to instances map
-    getInstances().insert (std::make_pair (name, createFunc (name)));
-    return true;
-    }
-  else {
-    // className found - error
-    cLog::log (LOGERROR, fmt::format ("cUI::registerClass {} already registered", name));
-    return false;
-    }
-  }
-//}}}
-//{{{
-cUI* cUI::createByName (const std::string& name) {
-// create class by name from classRegister, add instance to instances
-
-  auto uiIt = getInstances().find (name);
-  if (uiIt == getInstances().end()) {
-    auto ui = getClassRegister()[name](name);
-    getInstances().insert (std::make_pair (name, ui));
-    return ui;
-    }
-  else {
-    cLog::log (LOGERROR, fmt::format ("cUI::createByName {} instance already created", name));
-    return uiIt->second;
-    }
-  }
-//}}}
-
-// main ui draw
 void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
 // draw canvas + imGui using graphics
 

@@ -1,13 +1,22 @@
 // cPlatform.h - platform abstract interface
 #pragma once
+//{{{  includes
 #include <string>
+#include <map>
+
 #include "../graphics/cPointRect.h"
 class cGraphics;
+//}}}
 
 class cPlatform {
 public:
-  // static factory create
-  static cPlatform& create (const std::string& selectString);
+  using createFunc = cPlatform*(*)(const std::string& name);
+
+  //{{{
+  static cPlatform& cPlatform::createByName (const std::string& name) {
+    return *getClassRegister()[name](name);
+    }
+  //}}}
 
   // abstract interface
   virtual bool init (const cPoint& windowSize, bool showViewports) = 0;
@@ -27,4 +36,28 @@ public:
   virtual bool pollEvents() = 0;
   virtual void newFrame() = 0;
   virtual void present() = 0;
+
+protected:
+  //{{{
+  static bool registerClass (const std::string& name, const createFunc factoryMethod) {
+  // trickery - function needs to be called by a derived class inside a static context
+
+    if (getClassRegister().find (name) == getClassRegister().end()) {
+      // className not found - add to classRegister map
+      getClassRegister().insert (std::make_pair (name, factoryMethod));
+      return true;
+      }
+    else
+      return false;
+    }
+  //}}}
+
+private:
+  //{{{
+  static std::map<const std::string, createFunc>& getClassRegister() {
+  // trickery - static map inside static method ensures map is created before any use
+    static std::map<const std::string, createFunc> mClassRegistry;
+    return mClassRegistry;
+    }
+  //}}}
   };

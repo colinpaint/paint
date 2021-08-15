@@ -14,15 +14,17 @@ class cGraphics;
 class cFrameBuffer;
 //}}}
 
-// cBrush
 class cBrush {
 private:
   using createFunc = cBrush*(*)(const std::string& name, float radius, cGraphics& graphics);
 
 public:
   // static manager, inline registration of brushes, select curBrush by name
-  static cBrush* createByName (const std::string& name, float radius, cGraphics& graphics);
-  static bool registerClass (const std::string& name, const createFunc factoryMethod);
+  //{{{
+  static cBrush* createByName (const std::string& name, float radius, cGraphics& graphics) {
+    return getClassRegister()[name](name, radius, graphics);
+    }
+  //}}}
   //{{{
   static std::map<const std::string, createFunc>& getClassRegister() {
   // trickery - static map inside static method ensures map is created before any use
@@ -30,12 +32,18 @@ public:
     return mClassRegistry;
     }
   //}}}
+
+  // static curBrush
   static cBrush* getCurBrush() { return mCurBrush; }
-  static bool isCurBrushByName (const std::string& name);
+  //{{{
+  static bool isCurBrushByName (const std::string& name) {
+    return mCurBrush ? name == mCurBrush->getName() : false;
+    }
+  //}}}
   static cBrush* setCurBrushByName (const std::string& name, float radius, cGraphics& graphics);
 
   // base class
-  cBrush (const std::string& name, float radius) : mName(name){}
+  cBrush (const std::string& name, float radius) : mName(name) {}
   virtual ~cBrush() = default;
 
   std::string getName() const { return mName; }
@@ -70,8 +78,24 @@ protected:
 
   glm::vec2 mPrevPos = glm::vec2(0.f,0.f);
 
-private:
-  inline static cBrush* mCurBrush = nullptr;
+protected:
+  //{{{
+  static bool registerClass (const std::string& name, const createFunc factoryMethod) {
+  // trickery - function needs to be called by a derived class inside a static context
 
+    if (getClassRegister().find (name) == getClassRegister().end()) {
+      // className not found - add to classRegister map
+      getClassRegister().insert (std::make_pair (name, factoryMethod));
+      return true;
+      }
+    else
+      return false;
+    }
+  //}}}
+
+private:
   const std::string mName;
+
+  // static curBrush
+  inline static cBrush* mCurBrush = nullptr;
   };

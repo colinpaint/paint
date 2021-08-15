@@ -2,8 +2,6 @@
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
-#include "cGlfwPlatform.h"
-
 #include <cstdint>
 #include <string>
 
@@ -20,6 +18,7 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 
+#include "cPlatform.h"
 #include "../graphics/cPointRect.h"
 #include "../log/cLog.h"
 
@@ -53,6 +52,37 @@ namespace {
   //}}}
   }
 
+//{{{
+class cGlfwPlatform : public cPlatform {
+public:
+  // abstract interface
+  bool init (const cPoint& windowSize, bool showViewports) final;
+  void shutdown() final;
+
+  // gets
+  void* getDevice() final;
+  void* getDeviceContext() final;
+  void* getSwapChain() final;
+  cPoint getWindowSize() final;
+
+  virtual void setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) final;
+
+  // actions
+  bool pollEvents() final;
+  void newFrame() final;
+  void present() final;
+
+private:
+  static cPlatform* createPlatform (const std::string& className) {
+    return new cGlfwPlatform();
+    }
+
+  // register platfrom with its static manager
+  inline static const bool mRegistered = registerClass ("opengl", &createPlatform);
+  };
+//}}}
+
+// cGlfwPlatform
 //{{{
 bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports) {
 

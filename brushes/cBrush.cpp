@@ -18,35 +18,10 @@ using namespace std;
 using namespace fmt;
 //}}}
 
-// static manager
-//{{{
-cBrush* cBrush::createByName (const std::string& name, float radius, cGraphics& graphics) {
-  return getClassRegister()[name](name, radius, graphics);
-  }
-//}}}
-//{{{
-bool cBrush::registerClass (const std::string& name, const createFunc factoryMethod) {
-// trickery - function needs to be called by a derived class inside a static context
-
-  if (getClassRegister().find (name) == getClassRegister().end()) {
-    // className not found - add to classRegister map
-    getClassRegister().insert (std::make_pair (name, factoryMethod));
-    return true;
-    }
-  else {
-    // className found - error
-    cLog::log (LOGERROR, fmt::format ("cBrushMan - {} - already registered", name));
-    return false;
-    }
-  }
-//}}}
-//{{{
-bool cBrush::isCurBrushByName (const std::string& name) {
-  return mCurBrush ? name == mCurBrush->getName() : false;
-  }
-//}}}
+// static curBrush
 //{{{
 cBrush* cBrush::setCurBrushByName (const std::string& name, float radius, cGraphics& graphics) {
+
   if (!isCurBrushByName (name)) {
     // default color if no curBrush
     glm::vec4 color (0.7f,0.7f,0.f, 1.f);

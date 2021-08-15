@@ -1,28 +1,25 @@
 // cWin32Platform.cpp - imGui backend win32Impl wrapper
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
-
-#include "cWin32Platform.h"
+#define NOMINMAX
 
 #include <cstdint>
 #include <string>
+
+// d3d
 #include <d3d11.h>
 #include <tchar.h>
 
-// glm
-#include <vec2.hpp>
-
-// imGui
 #include <imgui.h>
 #include <backends/imgui_impl_win32.h>
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-#include "../graphics/cPointRect.h"
-#include "../log/cLog.h"
-
 #ifndef WM_DPICHANGED
   #define WM_DPICHANGED 0x02E0 // From Windows SDK 8.1+ headers
 #endif
+
+#include "cPlatform.h"
+#include "../log/cLog.h"
 
 using namespace std;
 using namespace fmt;
@@ -85,6 +82,36 @@ namespace {
   //}}}
   }
 
+//{{{
+class cWin32Platform : public cPlatform {
+public:
+  bool init (const cPoint& windowSize, bool showViewports) final;
+  void shutdown() final;
+
+  // gets
+  void* getDevice() final;
+  void* getDeviceContext() final;
+  void* getSwapChain() final;
+  cPoint getWindowSize() final;
+
+  virtual void setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) final;
+
+  // actions
+  bool pollEvents() final;
+  void newFrame() final;
+  void present() final;
+
+private:
+  static cPlatform* createPlatform (const std::string& className) {
+    return new cWin32Platform();
+    }
+
+  // register platfrom with its static manager
+  inline static const bool mRegistered = registerClass ("directx", &createPlatform);
+  };
+//}}}
+
+// cWin32Platform
 //{{{
 bool cWin32Platform::init (const cPoint& windowSize, bool showViewports) {
 

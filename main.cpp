@@ -54,7 +54,7 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, "paintbox");
 
   // create and start platform
-  cPlatform& platform = cPlatform::create (selectString);
+  cPlatform& platform = cPlatform::createByName (selectString);
   if (!platform.init (cPoint(1200, 800), false))
     exit (EXIT_FAILURE);
 
