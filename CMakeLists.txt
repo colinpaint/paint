@@ -19,7 +19,7 @@ else()
   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -no-pie")
 endif()
 
-# graphics versions
+# openGL versions
 if (OPENGL_VERSION STREQUAL "OPENGL_21")
   # openGL 2.1 with fbo vbo extensions
   include_directories (${CMAKE_SOURCE_DIR}/glad-2.1-fbo-vao/include
@@ -34,6 +34,7 @@ else()
   add_subdirectory (glad-4.5-core/)
 endif()
 
+# subdirectories
 find_package (OpenGL REQUIRED)
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -41,8 +42,6 @@ set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory (glfw/)
-
-# subdirectories
 add_subdirectory (brushes/)
 add_subdirectory (ui/)
 add_subdirectory (canvas/)
@@ -52,12 +51,6 @@ add_subdirectory (graphics/)
 add_subdirectory (imgui/)
 add_subdirectory (log/)
 
-# main source files, add brushes,ui as static class register fails
-file (GLOB SRCFILES
-  ${CMAKE_SOURCE_DIR}/main.cpp
-  ${CMAKE_SOURCE_DIR}/brushes/*.cpp
-  ${CMAKE_SOURCE_DIR}/ui/*.cpp
-  )
 file (GLOB HEADER_FILES
   ${CMAKE_SOURCE_DIR}/canvas/*.h
   ${CMAKE_SOURCE_DIR}/tinyfiledialog/*.h
@@ -69,11 +62,11 @@ file (GLOB HEADER_FILES
   )
 
 # main executable
-add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
+add_executable (paintbox ${CMAKE_SOURCE_DIR}/main.cpp ${HEADER_FILES})
 
 # link, watch out for order dependent static link in linux
 if (WIN32)
-  target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw opengl32 d3d11 d3dcompiler)
+  target_link_libraries (paintbox canvas tinyfiledialog platform graphics brushes ui imgui log glad glfw opengl32 d3d11 d3dcompiler)
 else()
-  target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw GL)
+  target_link_libraries (paintbox canvas tinyfiledialog platform graphics brushes ui imgui log glad glfw GL)
 endif()
