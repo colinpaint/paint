@@ -15,7 +15,7 @@
 
 class cOpenGlGraphics : public cGraphics {
 public:
-  cOpenGlGraphics() = default;
+  cOpenGlGraphics() : cGraphics() {}
   virtual ~cOpenGlGraphics() = default;
 
   bool init (void* device, void* deviceContext, void* swapChain) final;

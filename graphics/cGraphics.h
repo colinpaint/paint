@@ -89,7 +89,7 @@ protected:
 //{{{
 class cPaintShader : public cShader {
 public:
-  cPaintShader() = default;
+  cPaintShader() : cShader() {}
   virtual ~cPaintShader() = default;
 
   virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
@@ -99,7 +99,7 @@ public:
 //{{{
 class cLayerShader : public cShader {
 public:
-  cLayerShader() = default;
+  cLayerShader() : cShader() {}
   virtual ~cLayerShader() = default;
 
   virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
@@ -109,7 +109,7 @@ public:
 //{{{
 class cCanvasShader : public cShader {
 public:
-  cCanvasShader() = default;
+  cCanvasShader() : cShader() {}
   virtual ~cCanvasShader() = default;
 
   virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
