@@ -68,8 +68,8 @@ private:
   float mSat = 0.f;
   float mVal = 0.f;
 
-  cGraphics::cQuad* mQuad = nullptr;
-  cGraphics::cCanvasShader* mShader = nullptr;
-  cGraphics::cFrameBuffer* mFrameBuffer = nullptr;
-  cGraphics::cFrameBuffer* mWindowFrameBuffer = nullptr;
+  cQuad* mQuad = nullptr;
+  cCanvasShader* mShader = nullptr;
+  cFrameBuffer* mFrameBuffer = nullptr;
+  cFrameBuffer* mWindowFrameBuffer = nullptr;
   };

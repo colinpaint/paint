@@ -35,7 +35,7 @@ using namespace fmt;
 cCanvas::cCanvas (cPoint size, cGraphics& graphics) : mSize(size), mNumChannels(4), mGraphics(graphics) {
 
   // create empty layer
-  mLayers.push_back (new cLayer (mSize, cGraphics::cFrameBuffer::eRGBA, graphics));
+  mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, graphics));
   createResources();
   }
 //}}}
@@ -44,7 +44,7 @@ cCanvas::cCanvas (const string& fileName, cGraphics& graphics) : mName(fileName)
 
   // load file image
   uint8_t* pixels = stbi_load (fileName.c_str(), &mSize.x, &mSize.y, &mNumChannels, 4);
-  cLayer* layer = new cLayer (pixels, mSize, cGraphics::cFrameBuffer::eRGBA, graphics);
+  cLayer* layer = new cLayer (pixels, mSize, cFrameBuffer::eRGBA, graphics);
   free (pixels);
 
   layer->setName (fileName);
@@ -81,7 +81,7 @@ uint8_t* cCanvas::getPixels (cPoint& size) {
 // layers
 //{{{
 unsigned cCanvas::newLayer() {
-  mLayers.push_back (new cLayer (mSize, cGraphics::cFrameBuffer::eRGBA, mGraphics));
+  mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, mGraphics));
   return static_cast<unsigned>(mLayers.size() - 1);
   }
 //}}}
@@ -95,7 +95,7 @@ unsigned cCanvas::newLayer (const string& fileName) {
   cLog::log (LOGINFO, format ("new layer {} {},{} {}", fileName, size.x, size.y, numChannels));
 
   // new layer, transfer ownership of pixels to texture
-  mLayers.push_back (new cLayer (pixels, size, cGraphics::cFrameBuffer::eRGBA, mGraphics));
+  mLayers.push_back (new cLayer (pixels, size, cFrameBuffer::eRGBA, mGraphics));
   return static_cast<unsigned>(mLayers.size() - 1);
 }
 //}}}
@@ -187,7 +187,7 @@ void cCanvas::createResources() {
   mShader = mGraphics.createCanvasShader();
 
   // create target
-  mFrameBuffer = mGraphics.createFrameBuffer (nullptr, mSize, cGraphics::cFrameBuffer::eRGBA);
+  mFrameBuffer = mGraphics.createFrameBuffer (nullptr, mSize, cFrameBuffer::eRGBA);
 
   // create window
   mWindowFrameBuffer = mGraphics.createFrameBuffer();

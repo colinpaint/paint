@@ -13,111 +13,111 @@
 #include "cPointRect.h"
 //}}}
 
+//{{{
+class cQuad {
+public:
+  cQuad (cPoint size) : mSize(size) {}
+  virtual ~cQuad() = default;
+
+  cPoint getSize()  { return mSize; }
+  virtual void draw() = 0;
+
+protected:
+  const cPoint mSize;
+  };
+//}}}
+//{{{
+class cFrameBuffer {
+public:
+  enum eFormat { eRGB, eRGBA };
+
+  cFrameBuffer (cPoint size) : mSize(size) {}
+  virtual ~cFrameBuffer() = default;
+
+  /// gets
+  cPoint getSize() { return mSize; }
+  unsigned getId() { return mFrameBufferObject; }
+  unsigned getTextureId() { return mColorTextureId; }
+  unsigned getNumPixels() { return mSize.x * mSize.y; }
+  unsigned getNumPixelBytes() { return  mSize.x * mSize.y * 4; }
+
+  virtual uint8_t* getPixels() = 0;
+
+  //sets
+  virtual void setSize (cPoint size) = 0;
+  virtual void setTarget (const cRect& rect) = 0;
+  virtual void setBlend() = 0;
+  virtual void setSource() = 0;
+
+  void setTarget() { setTarget (cRect (mSize)); }
+
+  // actions
+  virtual void invalidate() = 0;
+  virtual void pixelsChanged (const cRect& rect) = 0;
+
+  virtual void clear (const glm::vec4& color) = 0;
+  virtual void blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect) = 0;
+
+  virtual bool checkStatus() = 0;
+  virtual void reportInfo() = 0;
+
+protected:
+  cPoint mSize;
+  int mImageFormat = eRGBA;
+  int mInternalFormat = eRGBA;
+
+  uint32_t mFrameBufferObject = 0;
+  uint32_t mColorTextureId = 0;
+  uint8_t* mPixels = nullptr;
+  cRect mDirtyPixelsRect = cRect(0,0,0,0);
+  };
+//}}}
+//{{{
+class cShader {
+public:
+  cShader() = default;
+  virtual ~cShader() = default;
+
+  uint32_t getId() { return mId; }
+
+  virtual void use() = 0;
+
+protected:
+  uint32_t mId = 0;
+  };
+//}}}
+//{{{
+class cPaintShader : public cShader {
+public:
+  cPaintShader() = default;
+  virtual ~cPaintShader() = default;
+
+  virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
+  virtual void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color) = 0;
+  };
+//}}}
+//{{{
+class cLayerShader : public cShader {
+public:
+  cLayerShader() = default;
+  virtual ~cLayerShader() = default;
+
+  virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
+  virtual void setHueSatVal (float hue, float sat, float val) = 0;
+  };
+//}}}
+//{{{
+class cCanvasShader : public cShader {
+public:
+  cCanvasShader() = default;
+  virtual ~cCanvasShader() = default;
+
+  virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
+  };
+//}}}
+
 class cGraphics {
 public:
-  //{{{
-  class cQuad {
-  public:
-    cQuad (cPoint size) : mSize(size) {}
-    virtual ~cQuad() = default;
-
-    cPoint getSize()  { return mSize; }
-    virtual void draw() = 0;
-
-  protected:
-    const cPoint mSize;
-    };
-  //}}}
-  //{{{
-  class cFrameBuffer {
-  public:
-    enum eFormat { eRGB, eRGBA };
-
-    cFrameBuffer (cPoint size) : mSize(size) {}
-    virtual ~cFrameBuffer() = default;
-
-    /// gets
-    cPoint getSize() { return mSize; }
-    unsigned getId() { return mFrameBufferObject; }
-    unsigned getTextureId() { return mColorTextureId; }
-    unsigned getNumPixels() { return mSize.x * mSize.y; }
-    unsigned getNumPixelBytes() { return  mSize.x * mSize.y * 4; }
-
-    virtual uint8_t* getPixels() = 0;
-
-    //sets
-    virtual void setSize (cPoint size) = 0;
-    virtual void setTarget (const cRect& rect) = 0;
-    virtual void setBlend() = 0;
-    virtual void setSource() = 0;
-
-    void setTarget() { setTarget (cRect (mSize)); }
-
-    // actions
-    virtual void invalidate() = 0;
-    virtual void pixelsChanged (const cRect& rect) = 0;
-
-    virtual void clear (const glm::vec4& color) = 0;
-    virtual void blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect) = 0;
-
-    virtual bool checkStatus() = 0;
-    virtual void reportInfo() = 0;
-
-  protected:
-    cPoint mSize;
-    int mImageFormat = eRGBA;
-    int mInternalFormat = eRGBA;
-
-    uint32_t mFrameBufferObject = 0;
-    uint32_t mColorTextureId = 0;
-    uint8_t* mPixels = nullptr;
-    cRect mDirtyPixelsRect = cRect(0,0,0,0);
-    };
-  //}}}
-  //{{{
-  class cShader {
-  public:
-    cShader() = default;
-    virtual ~cShader() = default;
-
-    uint32_t getId() { return mId; }
-
-    virtual void use() = 0;
-
-  protected:
-    uint32_t mId = 0;
-    };
-  //}}}
-  //{{{
-  class cPaintShader : public cShader {
-  public:
-    cPaintShader() = default;
-    virtual ~cPaintShader() = default;
-
-    virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
-    virtual void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color) = 0;
-    };
-  //}}}
-  //{{{
-  class cLayerShader : public cShader {
-  public:
-    cLayerShader() = default;
-    virtual ~cLayerShader() = default;
-
-    virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
-    virtual void setHueSatVal (float hue, float sat, float val) = 0;
-    };
-  //}}}
-  //{{{
-  class cCanvasShader : public cShader {
-  public:
-    cCanvasShader() = default;
-    virtual ~cCanvasShader() = default;
-
-    virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
-    };
-  //}}}
-
   // factory create
   static cGraphics& create (const std::string& select);
 

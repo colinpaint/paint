@@ -41,10 +41,10 @@ constexpr bool kDebug = false;
 
 namespace {
   //{{{
-  class cOpenGlQuad : public cGraphics::cQuad {
+  class cOpenGlQuad : public cQuad {
   public:
     //{{{
-    cOpenGlQuad (cPoint size): cGraphics::cQuad(size) {
+    cOpenGlQuad (cPoint size) : cQuad(size) {
 
       // vertexArray
       glGenVertexArrays (1, &mVertexArrayObject);
@@ -151,7 +151,7 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlFrameBuffer : public cGraphics::cFrameBuffer {
+  class cOpenGlFrameBuffer : public cFrameBuffer {
   public:
     //{{{
     cOpenGlFrameBuffer() : cFrameBuffer ({0,0}) {
@@ -694,7 +694,7 @@ namespace {
     }
   //}}}
   //{{{
-  class cDrawListShader : public cGraphics::cShader {
+  class cDrawListShader : public cShader {
   //{{{  version
   //if (gGlslVersion == 120) {
     //vertex_shader = vertexShader120;
@@ -903,7 +903,7 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlPaintShader : public cGraphics::cPaintShader {
+  class cOpenGlPaintShader : public cPaintShader {
   public:
     //{{{
     cOpenGlPaintShader() : cPaintShader() {
@@ -1001,7 +1001,7 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlLayerShader : public cGraphics::cLayerShader {
+  class cOpenGlLayerShader : public cLayerShader {
   public:
     //{{{
     cOpenGlLayerShader() : cLayerShader() {
@@ -1214,7 +1214,7 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlCanvasShader : public cGraphics::cCanvasShader {
+  class cOpenGlCanvasShader : public cCanvasShader {
   //{{{  version
   //if (gGlslVersion == 120) {
     //vertex_shader = vertexShader120;
@@ -1563,44 +1563,44 @@ void cOpenGlGraphics::shutdown() {
 
 // resource creates
 //{{{
-cGraphics::cQuad* cOpenGlGraphics::createQuad (cPoint size) {
+cQuad* cOpenGlGraphics::createQuad (cPoint size) {
   return new cOpenGlQuad (size);
   }
 //}}}
 //{{{
-cGraphics::cQuad* cOpenGlGraphics::createQuad (cPoint size, const cRect& rect) {
+cQuad* cOpenGlGraphics::createQuad (cPoint size, const cRect& rect) {
   return new cOpenGlQuad (size, rect);
   }
 //}}}
 
 //{{{
-cGraphics::cFrameBuffer* cOpenGlGraphics::createFrameBuffer() {
+cFrameBuffer* cOpenGlGraphics::createFrameBuffer() {
   return new cOpenGlFrameBuffer();
   }
 //}}}
 //{{{
-cGraphics::cFrameBuffer* cOpenGlGraphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
+cFrameBuffer* cOpenGlGraphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
   return new cOpenGlFrameBuffer (size, format);
   }
 //}}}
 //{{{
-cGraphics::cFrameBuffer* cOpenGlGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
+cFrameBuffer* cOpenGlGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
   return new cOpenGlFrameBuffer (pixels, size, format);
   }
 //}}}
 
 //{{{
-cGraphics::cCanvasShader* cOpenGlGraphics::createCanvasShader() {
+cCanvasShader* cOpenGlGraphics::createCanvasShader() {
   return new cOpenGlCanvasShader();
   }
 //}}}
 //{{{
-cGraphics::cLayerShader* cOpenGlGraphics::createLayerShader() {
+cLayerShader* cOpenGlGraphics::createLayerShader() {
   return new cOpenGlLayerShader();
   }
 //}}}
 //{{{
-cGraphics::cPaintShader* cOpenGlGraphics::createPaintShader() {
+cPaintShader* cOpenGlGraphics::createPaintShader() {
   return new cOpenGlPaintShader();
   }
 //}}}

@@ -48,7 +48,7 @@ public:
 
   float getRadius() { return mRadius; }
   float getBoundRadius() { return mRadius + 1.f; }
-  cRect getBoundRect (glm::vec2 pos, cGraphics::cFrameBuffer* frameBuffer);
+  cRect getBoundRect (glm::vec2 pos, cFrameBuffer* frameBuffer);
 
   void setColor (glm::vec4 color);
   void setColor (float r, float g, float b, float a);
@@ -57,7 +57,7 @@ public:
   // virtuals
   virtual void setRadius (float radius) { mRadius = radius; }
   virtual void paint (glm::vec2 pos, bool first, 
-                      cGraphics::cFrameBuffer* frameBuffer, cGraphics::cFrameBuffer* frameBuffer1) = 0;
+                      cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) = 0;
 
 protected:
   float mRadius = 0.f;

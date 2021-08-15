@@ -23,11 +23,11 @@ using namespace fmt;
 //}}}
 
 namespace {
-  cGraphics::cLayerShader* shader = nullptr;
+  cLayerShader* shader = nullptr;
   }
 
 //{{{
-cLayer::cLayer (cPoint size, cGraphics::cFrameBuffer::eFormat format, cGraphics& graphics)
+cLayer::cLayer (cPoint size, cFrameBuffer::eFormat format, cGraphics& graphics)
     : mSize(size), mFormat(format), mGraphics(graphics) {
 
   // allocate and clear mPixels
@@ -43,7 +43,7 @@ cLayer::cLayer (cPoint size, cGraphics::cFrameBuffer::eFormat format, cGraphics&
   }
 //}}}
 //{{{
-cLayer::cLayer (uint8_t* data, cPoint size, cGraphics::cFrameBuffer::eFormat format, cGraphics& graphics)
+cLayer::cLayer (uint8_t* data, cPoint size, cFrameBuffer::eFormat format, cGraphics& graphics)
     : mSize(size), mFormat(format), mGraphics(graphics) {
 
   mFrameBuffer = graphics.createFrameBuffer (data, size, format);

@@ -33,7 +33,7 @@ constexpr bool kDebug = false;
 
 namespace {
   //{{{
-  class cDirectX11Quad : public cGraphics::cQuad {
+  class cDirectX11Quad : public cQuad {
   public:
     //{{{
     cDirectX11Quad (cPoint size) : cQuad(mSize) {
@@ -91,14 +91,14 @@ namespace {
     };
   //}}}
   //{{{
-  class cDirectX11FrameBuffer : public cGraphics::cFrameBuffer {
+  class cDirectX11FrameBuffer : public cFrameBuffer {
   public:
     cDirectX11FrameBuffer() : cFrameBuffer({0,0}) {
       mImageFormat = 0;
       mInternalFormat = 0;
       }
 
-    cDirectX11FrameBuffer (cPoint size, eFormat format) :cFrameBuffer(size) {
+    cDirectX11FrameBuffer (cPoint size, eFormat format) : cFrameBuffer(size) {
       mImageFormat = 0;
       mInternalFormat = 0;
       }
@@ -214,7 +214,7 @@ namespace {
     }
   //}}}
   //{{{
-  class cDrawListShader : public cGraphics::cShader {
+  class cDrawListShader : public cShader {
   public:
     cDrawListShader() : cShader() {
       }
@@ -228,7 +228,7 @@ namespace {
     };
   //}}}
   //{{{
-  class cDirectX11PaintShader : public cGraphics::cPaintShader {
+  class cDirectX11PaintShader : public cPaintShader {
   public:
     cDirectX11PaintShader() : cPaintShader() {
       }
@@ -246,7 +246,7 @@ namespace {
     };
   //}}}
   //{{{
-  class cDirectX11LayerShader : public cGraphics::cLayerShader {
+  class cDirectX11LayerShader : public cLayerShader {
   public:
     cDirectX11LayerShader() : cLayerShader() {
       }
@@ -264,7 +264,7 @@ namespace {
     };
   //}}}
   //{{{
-  class cDirectX11CanvasShader : public cGraphics::cCanvasShader {
+  class cDirectX11CanvasShader : public cCanvasShader {
   public:
     cDirectX11CanvasShader() : cCanvasShader() {
       }
@@ -973,44 +973,44 @@ void cDirectX11Graphics::shutdown() {
 
 // resource creates
 //{{{
-cGraphics::cQuad* cDirectX11Graphics::createQuad (cPoint size) {
+cQuad* cDirectX11Graphics::createQuad (cPoint size) {
   return new cDirectX11Quad (size);
   }
 //}}}
 //{{{
-cGraphics::cQuad* cDirectX11Graphics::createQuad (cPoint size, const cRect& rect) {
+cQuad* cDirectX11Graphics::createQuad (cPoint size, const cRect& rect) {
   return new cDirectX11Quad (size, rect);
   }
 //}}}
 
 //{{{
-cGraphics::cFrameBuffer* cDirectX11Graphics::createFrameBuffer() {
+cFrameBuffer* cDirectX11Graphics::createFrameBuffer() {
   return new cDirectX11FrameBuffer();
   }
 //}}}
 //{{{
-cGraphics::cFrameBuffer* cDirectX11Graphics::createFrameBuffer (cPoint size, cGraphics::cFrameBuffer::eFormat format) {
+cFrameBuffer* cDirectX11Graphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
   return new cDirectX11FrameBuffer (size, format);
   }
 //}}}
 //{{{
-cGraphics::cFrameBuffer* cDirectX11Graphics::createFrameBuffer (uint8_t* pixels, cPoint size, cGraphics::cFrameBuffer::eFormat format) {
+cFrameBuffer* cDirectX11Graphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
   return new cDirectX11FrameBuffer (pixels, size, format);
   }
 //}}}
 
 //{{{
-cGraphics::cCanvasShader* cDirectX11Graphics::createCanvasShader() {
+cCanvasShader* cDirectX11Graphics::createCanvasShader() {
   return new cDirectX11CanvasShader();
   }
 //}}}
 //{{{
-cGraphics::cLayerShader* cDirectX11Graphics::createLayerShader() {
+cLayerShader* cDirectX11Graphics::createLayerShader() {
   return new cDirectX11LayerShader();
   }
 //}}}
 //{{{
-cGraphics::cPaintShader* cDirectX11Graphics::createPaintShader() {
+cPaintShader* cDirectX11Graphics::createPaintShader() {
   return new cDirectX11PaintShader();
   }
 //}}}
