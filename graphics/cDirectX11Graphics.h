@@ -15,6 +15,9 @@
 
 class cDirectX11Graphics : public cGraphics {
 public:
+  cDirectX11Graphics() = default;
+  virtual ~cDirectX11Graphics() = default;
+
   bool init (void* device, void* deviceContext, void* swapChain) final;
   void shutdown() final;
 

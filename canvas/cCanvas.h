@@ -10,10 +10,6 @@
 #include <mat4x4.hpp>
 
 #include "../graphics/cGraphics.h"
-
-class cGraphics::cQuad;
-class cGraphics::cCanvasShader;
-class cGraphics::cFrameBuffer;
 class cLayer;
 class cBrush;
 //}}}

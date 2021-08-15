@@ -1,6 +1,6 @@
 project (platform)
 
-if (OS STREQUAL "WIN32")
+if (WIN32)
   file (GLOB HEADER_FILES cPlatform.h
                           cWin32Platform.h ../imgui/backends/imgui_impl_win32.h
                           cGlfwPlatform.h ../imgui/backends/imgui_impl_glfw.h)

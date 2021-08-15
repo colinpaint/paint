@@ -1,6 +1,6 @@
 project (graphics)
 
-if (OS STREQUAL "WIN32")
+if (WIN32)
   file (GLOB HEADER_FILES cPointRect.h cGraphics.h cOpenGLGraphics.h cDirectX11Graphics.h)
   file (GLOB SRCFILES cGraphics.cpp cOpenGLGraphics.cpp cDirectX11Graphics.cpp)
 else()

@@ -10,7 +10,6 @@ set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FO
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED True)
 
-set (OS "WIN32")
 set (OPENGL_VERSION "OPENGL_40")
 
 # compiler,linker flags
@@ -73,7 +72,7 @@ file (GLOB HEADER_FILES
 add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
 # link, watch out for order dependent static link in linux
-if (OS STREQUAL "WIN32")
+if (WIN32)
   target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw opengl32 d3d11 d3dcompiler)
 else()
   target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw GL)

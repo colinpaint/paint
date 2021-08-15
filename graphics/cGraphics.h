@@ -1,4 +1,4 @@
-// cGraphics.h - graphics abstract base class
+// cGraphics.h - graphics static create and abstract base class
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -120,6 +120,10 @@ public:
 
   // factory create
   static cGraphics& create (const std::string& select);
+
+  // base class
+  cGraphics() = default;
+  virtual ~cGraphics() = default;
 
   virtual bool init (void* device, void* deviceContext, void* swapChain) = 0;
   virtual void shutdown() = 0;

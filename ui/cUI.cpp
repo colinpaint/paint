@@ -1,4 +1,4 @@
-// cUI.cpp
+// cUI.cpp - static manager and maybe
 //{{{  includes
 #include "cUI.h"
 
