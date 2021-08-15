@@ -1,7 +1,6 @@
 // cOpenGlGraphics.cpp - concrete OpenGl graphics class
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
-#include "cOpenGlGraphics.h"
 
 #include <cstdint>
 #include <cmath>
@@ -23,6 +22,7 @@
 // imGui
 #include <imgui.h>
 
+#include "cGraphics.h"
 #include "../log/cLog.h"
 
 // OpenGL >= 3.1 has GL_PRIMITIVE_RESTART state
@@ -601,7 +601,7 @@ namespace {
     };
   //}}}
 
-//  shader common
+  // shader
   #ifdef OPENGL_2
     //{{{
     const string kQuadVertShader =
@@ -1471,6 +1471,37 @@ void cGraphics::listClasses() {
   for (auto& ui : getClassRegister())
     cLog::log (LOGINFO, format ("graphics - {}", ui.first));
   }
+//}}}
+//{{{
+class cOpenGlGraphics : public cGraphics {
+public:
+  bool init (void* device, void* deviceContext, void* swapChain) final;
+  void shutdown() final;
+
+  // create resources
+  cQuad* createQuad (cPoint size) final;
+  cQuad* createQuad (cPoint size, const cRect& rect) final;
+
+  cFrameBuffer* createFrameBuffer() final;
+  cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
+  cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
+
+  cCanvasShader* createCanvasShader() final;
+  cLayerShader* createLayerShader() final;
+  cPaintShader* createPaintShader() final;
+
+  // actions
+  void draw() final;
+  void windowResized (int width, int height) final;
+
+private:
+  //{{{
+  static cGraphics* createGraphics (const std::string& className) {
+    return new cOpenGlGraphics();
+    }
+  //}}}
+  inline static bool mRegistered = registerClass ("opengl", &createGraphics);
+  };
 //}}}
 
 //{{{

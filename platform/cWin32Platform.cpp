@@ -83,6 +83,12 @@ namespace {
   }
 
 //{{{
+void cPlatform::listClasses1() {
+  for (auto& ui : getClassRegister())
+    cLog::log (LOGINFO, format ("platform - {}", ui.first));
+  }
+//}}}
+//{{{
 class cWin32Platform : public cPlatform {
 public:
   bool init (const cPoint& windowSize, bool showViewports) final;
@@ -102,8 +108,12 @@ public:
   void present() final;
 
 private:
-  static cPlatform* createPlatform (const std::string& className);
-  static bool mRegistered;
+  //{{{
+  static cPlatform* cWin32Platform::createPlatform (const std::string& className) {
+    return new cWin32Platform();
+    }
+  //}}}
+  inline static bool cWin32Platform::mRegistered = registerClass ("win32", &createPlatform);
   };
 //}}}
 
@@ -260,10 +270,3 @@ void cWin32Platform::present() {
   //gSwapChain->Present(0, 0); // Present without vsync
   }
 //}}}
-
-//{{{
-cPlatform* cWin32Platform::createPlatform (const std::string& className) {
-  return new cWin32Platform();
-  }
-//}}}
-bool cWin32Platform::mRegistered = registerClass ("win32", &createPlatform);

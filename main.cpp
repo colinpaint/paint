@@ -35,7 +35,8 @@ namespace {
 int main (int numArgs, char* args[]) {
 
   eLogLevel logLevel = LOGINFO;
-  string selectString = "opengl";
+  string platformString = "glfw";
+  string graphicsString = "opengl";
   //{{{  args to params
   vector <string> params;
   for (int i = 1; i < numArgs; i++)
@@ -46,7 +47,8 @@ int main (int numArgs, char* args[]) {
     if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
-    else if (*it == "directx") { selectString = *it; params.erase (it); }
+    else if (*it == "win32") { platformString = *it; params.erase (it); }
+    else if (*it == "directx") { graphicsString = *it; params.erase (it); }
     }
   //}}}
 
@@ -60,12 +62,12 @@ int main (int numArgs, char* args[]) {
   cGraphics::listClasses();
 
   // create and start platform
-  cPlatform& platform = cPlatform::createByName (selectString);
+  cPlatform& platform = cPlatform::createByName (platformString);
   if (!platform.init (cPoint(1200, 800), false))
     exit (EXIT_FAILURE);
 
   // create and start graphics
-  cGraphics& graphics = cGraphics::createByName ("opengl");
+  cGraphics& graphics = cGraphics::createByName (graphicsString);
   if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
   platform.setSizeCallback (&graphics, windowResized);

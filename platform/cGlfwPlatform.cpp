@@ -53,6 +53,12 @@ namespace {
   }
 
 //{{{
+void cPlatform::listClasses() {
+  for (auto& ui : getClassRegister())
+    cLog::log (LOGINFO, format ("platform - {}", ui.first));
+  }
+//}}}
+//{{{
 class cGlfwPlatform : public cPlatform {
 public:
   bool init (const cPoint& windowSize, bool showViewports) final;
@@ -72,15 +78,13 @@ public:
   void present() final;
 
 private:
-  static cPlatform* createPlatform (const std::string& className);
-  static bool mRegistered;
+  //{{{
+  static cPlatform* cGlfwPlatform::createPlatform (const std::string& className) {
+    return new cGlfwPlatform();
+    }
+  //}}}
+  inline static bool cGlfwPlatform::mRegistered = registerClass ("glfw", &createPlatform);
   };
-//}}}
-//{{{
-void cPlatform::listClasses() {
-  for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("platform - {}", ui.first));
-  }
 //}}}
 
 // cGlfwPlatform
@@ -217,10 +221,3 @@ void cGlfwPlatform::present() {
   glfwSwapBuffers (gWindow);
   }
 //}}}
-
-//{{{
-cPlatform* cGlfwPlatform::createPlatform (const std::string& className) {
-  return new cGlfwPlatform();
-  }
-//}}}
-bool cGlfwPlatform::mRegistered = registerClass ("opengl", &createPlatform);

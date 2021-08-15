@@ -1,7 +1,5 @@
 // cDirectX11Graphics.cpp - concrete DirectX11 graphics class
 //{{{  includes
-#include "cDirectX11Graphics.h"
-
 #include <cstdint>
 #include <cmath>
 #include <string>
@@ -24,6 +22,7 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtx/string_cast.hpp>
 
+#include "cGraphics.h"
 #include "../log/cLog.h"
 
 using namespace std;
@@ -882,6 +881,44 @@ namespace {
     }
   //}}}
   }
+
+//{{{
+void cGraphics::listClasses1() {
+  for (auto& ui : getClassRegister())
+    cLog::log (LOGINFO, format ("graphics - {}", ui.first));
+  }
+//}}}
+//{{{
+class cDirectX11Graphics : public cGraphics {
+public:
+  bool init (void* device, void* deviceContext, void* swapChain) final;
+  void shutdown() final;
+
+  // create resources
+  cQuad* createQuad (cPoint size) final;
+  cQuad* createQuad (cPoint size, const cRect& rect) final;
+
+  cFrameBuffer* createFrameBuffer() final;
+  cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
+  cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
+
+  cCanvasShader* createCanvasShader() final;
+  cLayerShader* createLayerShader() final;
+  cPaintShader* createPaintShader() final;
+
+  // actions
+  void draw() final;
+  void windowResized (int width, int height) final;
+
+private:
+  //{{{
+  static cGraphics* createGraphics (const std::string& className) {
+    return new cDirectX11Graphics();
+    }
+  //}}}
+  inline static bool mRegistered = registerClass ("directx", &createGraphics);
+  };
+//}}}
 
 //{{{
 bool cDirectX11Graphics::init (void* device, void* deviceContext, void* swapChain) {
