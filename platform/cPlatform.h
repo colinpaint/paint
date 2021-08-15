@@ -10,12 +10,8 @@ class cGraphics;
 
 class cPlatform {
 public:
-  using createFunc = cPlatform*(*)(const std::string& name);
-  //{{{
-  static cPlatform& createByName (const std::string& name) {
-    return *getClassRegister()[name](name);
-    }
-  //}}}
+  // statics
+  static cPlatform& createByName (const std::string& name);
   static void listClasses();
 
   // abstract interface
@@ -38,24 +34,7 @@ public:
   virtual void present() = 0;
 
 protected:
-  //{{{
-  static bool registerClass (const std::string& name, const createFunc factoryMethod) {
-  // trickery - function needs to be called by a derived class inside a static context
-
-    if (getClassRegister().find (name) == getClassRegister().end()) {
-      // className not found - add to classRegister map
-      getClassRegister().insert (std::make_pair (name, factoryMethod));
-      return true;
-      }
-    else
-      return false;
-    }
-  //}}}
-  //{{{
-  static std::map<const std::string, createFunc>& getClassRegister() {
-  // trickery - static map inside static method ensures map is created before any use
-    static std::map<const std::string, createFunc> mClassRegistry;
-    return mClassRegistry;
-    }
-  //}}}
+  using createFunc = cPlatform*(*)(const std::string& name);
+  static bool registerClass (const std::string& name, const createFunc factoryMethod);
+  static std::map<const std::string, createFunc>& getClassRegister();
   };
