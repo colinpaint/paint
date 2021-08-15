@@ -121,7 +121,6 @@ public:
 class cGraphics {
 public:
   // static
-  static cGraphics& create (const std::string& selectString);
   //{{{
   static cGraphics& createByName (const std::string& name) {
     return *getClassRegister()[name](name);

@@ -1491,11 +1491,11 @@ public:
 
 private:
   //{{{
-  static cGraphics* createGraphics (const std::string& className) {
+  static cGraphics* create (const std::string& className) {
     return new cOpenGlGraphics();
     }
   //}}}
-  inline static bool mRegistered = registerClass ("opengl", &createGraphics);
+  inline static bool mRegistered = registerClass ("opengl", &create);
   };
 //}}}
 

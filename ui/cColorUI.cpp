@@ -11,7 +11,7 @@
 #include <imgui.h>
 
 #include "cUI.h"
-#include "../brushes/cBrush.h"
+#include "../brush/cBrush.h"
 #include "../log/cLog.h"
 
 using namespace std;

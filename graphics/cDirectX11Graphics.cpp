@@ -907,11 +907,11 @@ public:
 
 private:
   //{{{
-  static cGraphics* createGraphics (const std::string& className) {
+  static cGraphics* create (const std::string& className) {
     return new cDirectX11Graphics();
     }
   //}}}
-  inline static bool mRegistered = registerClass ("directx", &createGraphics);
+  inline static bool mRegistered = registerClass ("directx", &create);
   };
 //}}}
 

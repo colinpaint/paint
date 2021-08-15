@@ -42,7 +42,7 @@ set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory (glfw/)
-add_subdirectory (brushes/)
+add_subdirectory (brush/)
 add_subdirectory (ui/)
 add_subdirectory (canvas/)
 add_subdirectory (tinyfiledialog/)
@@ -57,7 +57,7 @@ file (GLOB SRCFILES
   ${CMAKE_SOURCE_DIR}/imgui/backends/imgui_impl_glfw.cpp
   ${CMAKE_SOURCE_DIR}/imgui/backends/imgui_impl_win32.cpp
   ${CMAKE_SOURCE_DIR}/graphics/*.cpp
-  ${CMAKE_SOURCE_DIR}/brushes/*.cpp
+  ${CMAKE_SOURCE_DIR}/brush/*.cpp
   ${CMAKE_SOURCE_DIR}/ui/*.cpp
   )
 file (GLOB HEADER_FILES
@@ -66,7 +66,7 @@ file (GLOB HEADER_FILES
   ${CMAKE_SOURCE_DIR}/platform/*.h
   ${CMAKE_SOURCE_DIR}/graphics/*.h
   ${CMAKE_SOURCE_DIR}/log/*.h
-  ${CMAKE_SOURCE_DIR}/brushes/*.h
+  ${CMAKE_SOURCE_DIR}/brush/*.h
   ${CMAKE_SOURCE_DIR}/ui/*.h
   )
 
@@ -75,7 +75,7 @@ add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
 # link, watch out for order dependent static link in linux
 if (WIN32)
-  target_link_libraries (paintbox canvas tinyfiledialog  imgui log glad glfw opengl32 d3d11 d3dcompiler)
+  target_link_libraries (paintbox canvas tinyfiledialog imgui log glad glfw opengl32 d3d11 d3dcompiler)
 else()
-  target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw GL)
+  target_link_libraries (paintbox canvas tinyfiledialog imgui log glad glfw GL)
 endif()

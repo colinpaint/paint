@@ -104,11 +104,11 @@ public:
 
 private:
   //{{{
-  static cPlatform* cWin32Platform::createPlatform (const std::string& className) {
+  static cPlatform* cWin32Platform::create (const std::string& className) {
     return new cWin32Platform();
     }
   //}}}
-  inline static bool cWin32Platform::mRegistered = registerClass ("win32", &createPlatform);
+  inline static bool cWin32Platform::mRegistered = registerClass ("win32", &create);
   };
 //}}}
 

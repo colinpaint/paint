@@ -11,7 +11,7 @@
 #include <imgui.h>
 
 #include "../graphics/cGraphics.h"
-#include "../brushes/cBrush.h"
+#include "../brush/cBrush.h"
 #include "../canvas/cCanvas.h"
 #include "../log/cLog.h"
 

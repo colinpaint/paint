@@ -21,7 +21,7 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 
-#include "../brushes/cBrush.h"
+#include "../brush/cBrush.h"
 #include "../graphics/cGraphics.h"
 #include "../log/cLog.h"
 

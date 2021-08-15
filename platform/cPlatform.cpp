@@ -1,10 +1,9 @@
-// cGlfwPlatform.cpp
+// cPlatform.cpp
 //{{{  includes
 #include <cstdint>
 #include <string>
 
 #include "cPlatform.h"
-#include "../graphics/cPointRect.h"
 #include "../log/cLog.h"
 
 using namespace std;

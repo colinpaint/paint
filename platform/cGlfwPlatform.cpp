@@ -74,11 +74,11 @@ public:
 
 private:
   //{{{
-  static cPlatform* cGlfwPlatform::createPlatform (const std::string& className) {
+  static cPlatform* cGlfwPlatform::create (const std::string& className) {
     return new cGlfwPlatform();
     }
   //}}}
-  inline static bool cGlfwPlatform::mRegistered = registerClass ("glfw", &createPlatform);
+  inline static bool cGlfwPlatform::mRegistered = registerClass ("glfw", &create);
   };
 //}}}
 

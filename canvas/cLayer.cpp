@@ -15,7 +15,7 @@
 #include <gtc/matrix_transform.hpp>
 
 #include "../graphics/cGraphics.h"
-#include "../brushes/cBrush.h"
+#include "../brush/cBrush.h"
 #include "../log/cLog.h"
 
 using namespace std;

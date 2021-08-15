@@ -15,7 +15,7 @@
 
 #include "platform/cPlatform.h"
 #include "graphics/cGraphics.h"
-#include "brushes/cBrush.h"
+#include "brush/cBrush.h"
 #include "canvas/cLayer.h"
 #include "canvas/cCanvas.h"
 #include "ui/cUI.h"
