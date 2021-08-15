@@ -6,7 +6,8 @@
 // factory create
 cGraphics& cGraphics::create (const std::string& select) {
   #ifdef WIN32
-    if (select == "directx") 
+    // windows offers openGl or directX11
+    if (select == "directx")
       return *new cDirectX11Graphics();
     else
       return *new cOpenGlGraphics();

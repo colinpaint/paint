@@ -11,9 +11,7 @@ set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED True)
 
 set (OS "WIN32")
-#set (PLATFORM "PLATFORM_GLFW")
-set (PLATFORM "PLATFORM_WIN32")
-set (GRAPHICS "OPENGL_40")
+set (OPENGL_VERSION "OPENGL_40")
 
 # compiler,linker flags
 if (WIN32)
@@ -23,7 +21,7 @@ else()
 endif()
 
 # graphics versions
-if (GRAPHICS STREQUAL "OPENGL_21")
+if (OPENGL_VERSION STREQUAL "OPENGL_21")
   # openGL 2.1 with fbo vbo extensions
   include_directories (${CMAKE_SOURCE_DIR}/glad-2.1-fbo-vao/include
                        ${CMAKE_SOURCE_DIR}/glfw/include
