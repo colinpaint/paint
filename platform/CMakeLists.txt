@@ -1,17 +1,17 @@
 project (platform)
 
-if (PLATFORM STREQUAL "PLATFORM_WIN32")
-  add_library (platform
-               cPlatform.h
-               cPlatform-win32-wrapper.cpp
-               ../imgui/backends/imgui_impl_win32.cpp
-               ../imgui/backends/imgui_impl_win32.h
-               )
-elseif (PLATFORM STREQUAL "PLATFORM_GLFW")
-  add_library (platform
-               cPlatform.h
-               cPlatform-glfw-wrapper.cpp
-               ../imgui/backends/imgui_impl_glfw.cpp
-               ../imgui/backends/imgui_impl_glfw.h
-               )
+if (OS STREQUAL "WIN32")
+  file (GLOB HEADER_FILES cPlatform.h
+                          cWin32Platform.h ../imgui/backends/imgui_impl_win32.h
+                          cGlfwPlatform.h ../imgui/backends/imgui_impl_glfw.h)
+  file (GLOB SRCFILES cPlatform.cpp
+                      cWin32Platform.cpp ../imgui/backends/imgui_impl_win32.cpp
+                      cGlfwPlatform.cpp ../imgui/backends/imgui_impl_glfw.cpp)
+else()
+  file (GLOB HEADER_FILES cPlatform.h
+                          cGlfwPlatform.h ../imgui/backends/imgui_impl_glfw.h)
+  file (GLOB SRCFILES cPlatform.cpp
+                      cGlfwPlatform.cpp ../imgui/backends/imgui_impl_glfw.cpp)
 endif()
+
+add_library (platform ${SRCFILES} ${HEADER_FILES})

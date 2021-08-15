@@ -51,7 +51,7 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, "paintbox");
 
   // start platform singleton, !!! does anybody else need a platform pointer, keystrokes use imGui !!!
-  cPlatform& platform = cPlatform::getInstance();
+  cPlatform& platform = cPlatform::create();
   if (!platform.init (cPoint(1200, 800), false))
     exit (EXIT_FAILURE);
 

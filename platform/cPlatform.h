@@ -1,51 +1,29 @@
-// cPlatform.h - platform singleton
+// cPlatform.h - platform abstract interface
 #pragma once
-//{{{  includes
-// glm
-#include <vec2.hpp>
-
 #include "../graphics/cPointRect.h"
-
 class cGraphics;
-//}}}
 
 class cPlatform {
 public:
-  using sizeCallbackFunc = void(*)(cGraphics* graphics, int width, int height);
-  //{{{
-  static cPlatform& getInstance() {
-  // singleton pattern create
-  // - thread safe
-  // - allocate with `new` in case singleton is not trivially destructible.
+  // static factory create
+  static cPlatform& create();
 
-    static cPlatform* platform = new cPlatform();
-    return *platform;
-    }
-  //}}}
-
-  bool init (const cPoint& windowSize, bool showViewports);
-  void shutdown();
+  // abstract interface
+  virtual bool init (const cPoint& windowSize, bool showViewports) = 0;
+  virtual void shutdown();
 
   // gets
-  void* getDevice();
-  void* getDeviceContext();
-  void* getSwapChain();
-  cPoint getWindowSize();
+  virtual void* getDevice() = 0;
+  virtual void* getDeviceContext() = 0;
+  virtual void* getSwapChain() = 0;
+  virtual cPoint getWindowSize() = 0;
 
-  void setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback);
+  // sets
+  using sizeCallbackFunc = void(*)(cGraphics* graphics, int width, int height);
+  virtual void setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) = 0;
 
   // actions
-  bool pollEvents();
-  void newFrame();
-  void present();
-
-private:
-  // singleton pattern fluff
-  cPlatform() = default;
-
-  // delete copy/move so extra instances can't be created/moved
-  cPlatform (const cPlatform&) = delete;
-  cPlatform& operator = (const cPlatform&) = delete;
-  cPlatform (cPlatform&&) = delete;
-  cPlatform& operator = (cPlatform&&) = delete;
+  virtual bool pollEvents() = 0;
+  virtual void newFrame() = 0;
+  virtual void present() = 0;
   };

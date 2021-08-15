@@ -1,8 +1,8 @@
-// cPlatform-Glfw-wrapper.cpp - imGui backend glfwImpl wrapper - abstracted from imGui glfwOpenGL3 example main.cpp
+// cGlfwPlatform.cpp 
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
-#include "cPlatform.h"
+#include "cGlfwPlatform.h"
 
 #include <cstdint>
 #include <string>
@@ -135,11 +135,11 @@ void cPlatform::shutdown() {
 //}}}
 
 // gets
-void* cPlatform::getDevice() { return nullptr; }
-void* cPlatform::getDeviceContext() { return nullptr; }
-void* cPlatform::getSwapChain() { return nullptr; }
+void* cGlfwPlatform::getDevice() { return nullptr; }
+void* cGlfwPlatform::getDeviceContext() { return nullptr; }
+void* cGlfwPlatform::getSwapChain() { return nullptr; }
 //{{{
-cPoint cPlatform::getWindowSize() {
+cPoint cGlfwPlatform::getWindowSize() {
 
   int width;
   int height;
@@ -150,7 +150,7 @@ cPoint cPlatform::getWindowSize() {
 
 // sets
 //{{{
-void cPlatform::setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) {
+void cGlfwPlatform::setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) {
   gGraphics = graphics;
   gSizeCallback = sizeCallback;
   }
@@ -158,7 +158,7 @@ void cPlatform::setSizeCallback (cGraphics* graphics, const sizeCallbackFunc siz
 
 // actions
 //{{{
-bool cPlatform::pollEvents() {
+bool cGlfwPlatform::pollEvents() {
 
   if (glfwWindowShouldClose (gWindow))
     return false;
@@ -169,12 +169,12 @@ bool cPlatform::pollEvents() {
   }
 //}}}
 //{{{
-void cPlatform::newFrame() {
+void cGlfwPlatform::newFrame() {
   ImGui_ImplGlfw_NewFrame();
   }
 //}}}
 //{{{
-void cPlatform::present() {
+void cGlfwPlatform::present() {
 
   if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
     GLFWwindow* backupCurrentContext = glfwGetCurrentContext();

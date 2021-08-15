@@ -2,7 +2,7 @@
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
-#include "cPlatform.h"
+#include "cWin32Platform.h"
 
 #include <cstdint>
 #include <string>
@@ -83,7 +83,7 @@ namespace {
   }
 
 //{{{
-bool cPlatform::init (const cPoint& windowSize, bool showViewports) {
+bool cWin32Platform::init (const cPoint& windowSize, bool showViewports) {
 
   //ImGui_ImplWin32_EnableDpiAwareness();
   // register app class
@@ -168,7 +168,7 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports) {
   }
 //}}}
 //{{{
-void cPlatform::shutdown() {
+void cWin32Platform::shutdown() {
 
   ImGui_ImplWin32_Shutdown();
   ImGui::DestroyContext();
@@ -183,13 +183,13 @@ void cPlatform::shutdown() {
 //}}}
 
 // gets
-void* cPlatform::getDevice() { return (void*)gD3dDevice; }
-void* cPlatform::getDeviceContext() { return (void*)gD3dDeviceContext; }
-void* cPlatform::getSwapChain() { return (void*)gSwapChain; }
-cPoint cPlatform::getWindowSize() { return gWindowSize; }
+void* cWin32Platform::getDevice() { return (void*)gD3dDevice; }
+void* cWin32Platform::getDeviceContext() { return (void*)gD3dDeviceContext; }
+void* cWin32Platform::getSwapChain() { return (void*)gSwapChain; }
+cPoint cWin32Platform::getWindowSize() { return gWindowSize; }
 
 //{{{
-void cPlatform::setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) {
+void cWin32Platform::setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) {
   gGraphics = graphics;
   gSizeCallback = sizeCallback;
   }
@@ -198,7 +198,7 @@ void cPlatform::setSizeCallback (cGraphics* graphics, const sizeCallbackFunc siz
 
 // actions
 //{{{
-bool cPlatform::pollEvents() {
+bool cWin32Platform::pollEvents() {
 // Poll and handle messages (inputs, window resize, etc.)
 // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
 // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
@@ -217,12 +217,12 @@ bool cPlatform::pollEvents() {
   }
 //}}}
 //{{{
-void cPlatform::newFrame() {
+void cWin32Platform::newFrame() {
   ImGui_ImplWin32_NewFrame();
   }
 //}}}
 //{{{
-void cPlatform::present() {
+void cWin32Platform::present() {
 
   // update and render additional platform windows
   if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
