@@ -2,7 +2,9 @@
 #pragma once
 //{{{  includes
 #include "cUI.h"
-#include "cUIMan.h"
+
+#include <cstdint>
+#include <string>
 //}}}
 
 class cCanvasUI : public cUI {
@@ -20,5 +22,5 @@ private:
   bool mShow = true;
 
   // static to register class
-  inline static const bool mRegistered = cUIMan::registerClass ("layers", &createUI);
+  inline static const bool mRegistered = registerClass ("layers", &createUI);
   };

@@ -12,7 +12,6 @@
 // imgui
 #include <imgui.h>
 
-#include "../brushes/cBrushMan.h"
 #include "../brushes/cBrush.h"
 #include "../log/cLog.h"
 

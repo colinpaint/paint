@@ -2,7 +2,9 @@
 #pragma once
 //{{{  includes
 #include "cUI.h"
-#include "cUIMan.h"
+
+#include <cstdint>
+#include <string>
 //}}}
 
 class cBrushUI : public cUI {
@@ -18,5 +20,5 @@ private:
     }
 
   // static to register class
-  inline static const bool mRegistered = cUIMan::registerClass ("brush", &createUI);
+  inline static const bool mRegistered = registerClass ("brush", &createUI);
   };

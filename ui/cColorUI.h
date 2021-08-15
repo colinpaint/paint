@@ -2,8 +2,9 @@
 #pragma once
 //{{{  includes
 #include "cUI.h"
-#include "cUIMan.h"
 
+#include <cstdint>
+#include <string>
 #include <vector>
 
 // glm
@@ -26,5 +27,5 @@ private:
   std::vector<glm::vec4> mSwatches;
 
   // static to register class
-  inline static const bool mRegistered = cUIMan::registerClass ("colour", &createUI);
+  inline static const bool mRegistered = registerClass ("colour", &createUI);
   };

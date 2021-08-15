@@ -17,7 +17,7 @@
 #include "graphics/cGraphics.h"
 #include "canvas/cLayer.h"
 #include "canvas/cCanvas.h"
-#include "ui/cUIMan.h"
+#include "ui/cUI.h"
 #include "log/cLog.h"
 
 using namespace std;
@@ -69,7 +69,7 @@ int main (int numArgs, char* args[]) {
   // main UI loop
   while (platform.pollEvents()) {
     platform.newFrame();
-    cUIMan::draw (canvas, graphics);
+    cUI::draw (canvas, graphics);
     platform.present();
     }
 
