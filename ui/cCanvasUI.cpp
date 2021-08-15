@@ -25,7 +25,7 @@ using namespace std;
 using namespace fmt;
 //}}}
 
-void cCanvasUI::addToDrawList (cCanvas& canvas) {
+void cCanvasUI::addToDrawList (cCanvas& canvas, cGraphics& graphics) {
 
   if (mShow) {
     // dangerous UI kill

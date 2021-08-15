@@ -5,7 +5,7 @@
 // cPaintCpuBrush
 class cPaintCpuBrush : public cBrush {
 public:
-  cPaintCpuBrush (const std::string& className, float radius);
+  cPaintCpuBrush (const std::string& className, float radius, cGraphics& graphics);
   virtual ~cPaintCpuBrush() = default;
 
   virtual void setRadius (float radius) override;
@@ -18,8 +18,8 @@ protected:
   int32_t mShapeSize = 0;
 
 private:
-  static cBrush* createBrush (const std::string& className, float radius) {
-    return new cPaintCpuBrush (className, radius);
+  static cBrush* createBrush (const std::string& className, float radius, cGraphics& graphics) {
+    return new cPaintCpuBrush (className, radius, graphics);
     }
 
   virtual void stamp (glm::vec2 pos, cGraphics::cFrameBuffer* frameBuffer);

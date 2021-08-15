@@ -28,7 +28,7 @@ public:
 
   std::string getName() const { return mName; }
 
-  virtual void addToDrawList (cCanvas& canvas) = 0;
+  virtual void addToDrawList (cCanvas& canvas, cGraphics& graphics) = 0;
 
 private:
   //{{{

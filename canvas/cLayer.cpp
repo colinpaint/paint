@@ -27,29 +27,29 @@ namespace {
   }
 
 //{{{
-cLayer::cLayer (cPoint size, cGraphics::cFrameBuffer::eFormat format)
-    : mSize(size), mFormat(format) {
+cLayer::cLayer (cPoint size, cGraphics::cFrameBuffer::eFormat format, cGraphics& graphics)
+    : mSize(size), mFormat(format), mGraphics(graphics) {
 
   // allocate and clear mPixels
   int numBytes = size.x * size.y * 4;
   auto data = static_cast<uint8_t*>(malloc (numBytes));
   memset (data, 0, numBytes);
-  mFrameBuffer = cGraphics::getInstance().createFrameBuffer (data, size, format);
+  mFrameBuffer = graphics.createFrameBuffer (data, size, format);
   free (data);
 
-  mFrameBuffer1 = cGraphics::getInstance().createFrameBuffer (size, format);
+  mFrameBuffer1 = graphics.createFrameBuffer (size, format);
 
-  mQuad = cGraphics::getInstance().createQuad (size);
+  mQuad = graphics.createQuad (size);
   }
 //}}}
 //{{{
-cLayer::cLayer (uint8_t* data, cPoint size, cGraphics::cFrameBuffer::eFormat format)
-    : mSize(size), mFormat(format) {
+cLayer::cLayer (uint8_t* data, cPoint size, cGraphics::cFrameBuffer::eFormat format, cGraphics& graphics)
+    : mSize(size), mFormat(format), mGraphics(graphics) {
 
-  mFrameBuffer = cGraphics::getInstance().createFrameBuffer (data, size, format);
-  mFrameBuffer1 = cGraphics::getInstance().createFrameBuffer (size, format);
+  mFrameBuffer = graphics.createFrameBuffer (data, size, format);
+  mFrameBuffer1 = graphics.createFrameBuffer (size, format);
 
-  mQuad = cGraphics::getInstance().createQuad (size);
+  mQuad = graphics.createQuad (size);
   }
 //}}}
 //{{{
@@ -100,7 +100,7 @@ void cLayer::draw (const cPoint& size) {
     mFrameBuffer->checkStatus();
 
     if (!shader)
-      shader = cGraphics::getInstance().createLayerShader();
+      shader = mGraphics.createLayerShader();
 
     shader->use();
     shader->setModelProject (

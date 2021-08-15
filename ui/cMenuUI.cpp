@@ -25,7 +25,7 @@ using namespace std;
 using namespace fmt;
 //}}}
 
-void cMenuUI::addToDrawList (cCanvas& canvas) {
+void cMenuUI::addToDrawList (cCanvas& canvas, cGraphics& graphics) {
 
   ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
 

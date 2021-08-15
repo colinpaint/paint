@@ -1,7 +1,7 @@
-// cGraphics-OpenGL.cpp - singleton - ImGui + openGL >= v2.1 + fbo vao extensions
+// cOpenGlGraphics.cpp
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
-#include "cGraphics.h"
+#include "cOpenGlGraphics.h"
 
 #include <cstdint>
 #include <cmath>
@@ -1473,7 +1473,7 @@ namespace {
   }
 
 //{{{
-bool cGraphics::init (void* device, void* deviceContext, void* swapChain) {
+bool cOpenGlGraphics::init (void* device, void* deviceContext, void* swapChain) {
 
   // get OpenGL version
   string glVersionString = (const char*)glGetString (GL_VERSION);
@@ -1545,7 +1545,7 @@ bool cGraphics::init (void* device, void* deviceContext, void* swapChain) {
   }
 //}}}
 //{{{
-void cGraphics::shutdown() {
+void cOpenGlGraphics::shutdown() {
 
   ImGui::DestroyPlatformWindows();
 
@@ -1568,55 +1568,55 @@ void cGraphics::shutdown() {
 
 // resource creates
 //{{{
-cGraphics::cQuad* cGraphics::createQuad (cPoint size) {
+cGraphics::cQuad* cOpenGlGraphics::createQuad (cPoint size) {
   return new cOpenGlQuad (size);
   }
 //}}}
 //{{{
-cGraphics::cQuad* cGraphics::createQuad (cPoint size, const cRect& rect) {
+cGraphics::cQuad* cOpenGlGraphics::createQuad (cPoint size, const cRect& rect) {
   return new cOpenGlQuad (size, rect);
   }
 //}}}
 
 //{{{
-cGraphics::cFrameBuffer* cGraphics::createFrameBuffer() {
+cGraphics::cFrameBuffer* cOpenGlGraphics::createFrameBuffer() {
   return new cOpenGlFrameBuffer();
   }
 //}}}
 //{{{
-cGraphics::cFrameBuffer* cGraphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
+cGraphics::cFrameBuffer* cOpenGlGraphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
   return new cOpenGlFrameBuffer (size, format);
   }
 //}}}
 //{{{
-cGraphics::cFrameBuffer* cGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
+cGraphics::cFrameBuffer* cOpenGlGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
   return new cOpenGlFrameBuffer (pixels, size, format);
   }
 //}}}
 
 //{{{
-cGraphics::cCanvasShader* cGraphics::createCanvasShader() {
+cGraphics::cCanvasShader* cOpenGlGraphics::createCanvasShader() {
   return new cOpenGlCanvasShader();
   }
 //}}}
 //{{{
-cGraphics::cLayerShader* cGraphics::createLayerShader() {
+cGraphics::cLayerShader* cOpenGlGraphics::createLayerShader() {
   return new cOpenGlLayerShader();
   }
 //}}}
 //{{{
-cGraphics::cPaintShader* cGraphics::createPaintShader() {
+cGraphics::cPaintShader* cOpenGlGraphics::createPaintShader() {
   return new cOpenGlPaintShader();
   }
 //}}}
 
 //{{{
-void cGraphics::draw() {
+void cOpenGlGraphics::draw() {
   renderDrawData (ImGui::GetDrawData());
   }
 //}}}
 //{{{
-void cGraphics::windowResized (int width, int height) {
+void cOpenGlGraphics::windowResized (int width, int height) {
   cLog::log (LOGINFO, format ("windowResized {} {}", width, height));
   }
 //}}}

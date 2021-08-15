@@ -118,43 +118,28 @@ public:
     };
   //}}}
 
-  //{{{
-  static cGraphics& getInstance() {
-  // singleton pattern create
-  // - thread safe
-  // - allocate with `new` in case singleton is not trivially destructible.
+  // factory create
+  static cGraphics& create();
 
-    static cGraphics* graphics = new cGraphics();
-    return *graphics;
-    }
-  //}}}
+  cGraphics() = default;
+  virtual ~cGraphics() = default;
 
-  bool init (void* device, void* deviceContext, void* swapChain);
-  void shutdown();
+  virtual bool init (void* device, void* deviceContext, void* swapChain) = 0;
+  virtual void shutdown() = 0;
 
   // create graphics resources
-  cQuad* createQuad (cPoint size);
-  cQuad* createQuad (cPoint size, const cRect& rect);
+  virtual cQuad* createQuad (cPoint size) = 0;
+  virtual cQuad* createQuad (cPoint size, const cRect& rect) = 0;
 
-  cFrameBuffer* createFrameBuffer();
-  cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format);
-  cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format);
+  virtual cFrameBuffer* createFrameBuffer() = 0;
+  virtual cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) = 0;
+  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) = 0;
 
-  cCanvasShader* createCanvasShader();
-  cLayerShader* createLayerShader();
-  cPaintShader* createPaintShader();
+  virtual cCanvasShader* createCanvasShader() = 0;
+  virtual cLayerShader* createLayerShader() = 0;
+  virtual cPaintShader* createPaintShader() = 0;
 
   // actions
-  void draw();
-  void windowResized (int width, int height);
-
-private:
-  // singleton pattern fluff
-  cGraphics() = default;
-
-  // delete copy/move so extra instances can't be created/moved
-  cGraphics (const cGraphics&) = delete;
-  cGraphics& operator = (const cGraphics&) = delete;
-  cGraphics (cGraphics&&) = delete;
-  cGraphics& operator = (cGraphics&&) = delete;
+  virtual void draw() = 0;
+  virtual void windowResized (int width, int height) = 0;
   };

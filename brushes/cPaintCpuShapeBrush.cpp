@@ -20,8 +20,8 @@ using namespace fmt;
 
 // cPaintCpuShapeBrush
 //{{{
-cPaintCpuShapeBrush::cPaintCpuShapeBrush (const string& className, float radius)
-    : cPaintCpuBrush(className, radius) {
+cPaintCpuShapeBrush::cPaintCpuShapeBrush (const string& className, float radius, cGraphics& graphics)
+    : cPaintCpuBrush(className, radius, graphics) {
 
   setRadius (radius);
   }

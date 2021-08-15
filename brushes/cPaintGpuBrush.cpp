@@ -13,8 +13,10 @@ using namespace fmt;
 //}}}
 
 //{{{
-cPaintGpuBrush::cPaintGpuBrush (const string& className, float radius) : cBrush(className, radius) {
-  mShader = cGraphics::getInstance().createPaintShader();
+cPaintGpuBrush::cPaintGpuBrush (const string& className, float radius, cGraphics& graphics)
+    : cBrush(className, radius), mGraphics(graphics) {
+
+  mShader = graphics.createPaintShader();
   setRadius (radius);
   }
 //}}}
@@ -24,7 +26,8 @@ cPaintGpuBrush::~cPaintGpuBrush() {
   }
 //}}}
 
-void cPaintGpuBrush::paint (glm::vec2 pos, bool first, cGraphics::cFrameBuffer* frameBuffer, cGraphics::cFrameBuffer* frameBuffer1) {
+void cPaintGpuBrush::paint (glm::vec2 pos, bool first, 
+                            cGraphics::cFrameBuffer* frameBuffer, cGraphics::cFrameBuffer* frameBuffer1) {
 
   if (first)
     mPrevPos = pos;
@@ -50,7 +53,7 @@ void cPaintGpuBrush::paint (glm::vec2 pos, bool first, cGraphics::cFrameBuffer* 
     //frameBuffer->reportInfo();
 
     // draw boundRect to frameBuffer1 target
-    cGraphics::cQuad* quad = cGraphics::getInstance().createQuad (frameBuffer->getSize(), boundRect);
+    cGraphics::cQuad* quad = mGraphics.createQuad (frameBuffer->getSize(), boundRect);
     quad->draw();
     delete quad;
 

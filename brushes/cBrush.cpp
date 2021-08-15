@@ -20,8 +20,8 @@ using namespace fmt;
 
 // static manager
 //{{{
-cBrush* cBrush::createByName (const std::string& name, float radius) {
-  return getClassRegister()[name](name, radius);
+cBrush* cBrush::createByName (const std::string& name, float radius, cGraphics& graphics) {
+  return getClassRegister()[name](name, radius, graphics);
   }
 //}}}
 //{{{
@@ -46,7 +46,7 @@ bool cBrush::isCurBrushByName (const std::string& name) {
   }
 //}}}
 //{{{
-cBrush* cBrush::setCurBrushByName (const std::string& name, float radius) {
+cBrush* cBrush::setCurBrushByName (const std::string& name, float radius, cGraphics& graphics) {
   if (!isCurBrushByName (name)) {
     // default color if no curBrush
     glm::vec4 color (0.7f,0.7f,0.f, 1.f);
@@ -55,7 +55,7 @@ cBrush* cBrush::setCurBrushByName (const std::string& name, float radius) {
       color = mCurBrush->getColor();
     delete mCurBrush;
 
-    mCurBrush = createByName (name, radius);
+    mCurBrush = createByName (name, radius, graphics);
     mCurBrush->setColor (color);
     cLog::log (LOGINFO, "setCurBrushByName " + name);
     }

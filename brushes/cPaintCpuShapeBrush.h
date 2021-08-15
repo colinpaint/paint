@@ -5,14 +5,14 @@
 // cPaintCpuShapeBrush
 class cPaintCpuShapeBrush : public cPaintCpuBrush {
 public:
-  cPaintCpuShapeBrush (const std::string& className, float radius);
+  cPaintCpuShapeBrush (const std::string& className, float radius, cGraphics& graphics);
   virtual ~cPaintCpuShapeBrush();
 
   void setRadius (float radius) final;
 
 private:
-  static cBrush* createBrush (const std::string& className, float radius) {
-   return new cPaintCpuShapeBrush (className, radius);
+  static cBrush* createBrush (const std::string& className, float radius, cGraphics& graphics) {
+   return new cPaintCpuShapeBrush (className, radius, graphics);
     }
 
   void reportShape();

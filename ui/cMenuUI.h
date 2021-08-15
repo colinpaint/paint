@@ -12,7 +12,7 @@ public:
   cMenuUI (const std::string& name) : cUI(name) {}
   virtual ~cMenuUI() = default;
 
-  void addToDrawList (cCanvas& canvas)  override;
+  void addToDrawList (cCanvas& canvas, cGraphics& graphics) final;
 
 private:
   static cUI* createUI (const std::string& className) {

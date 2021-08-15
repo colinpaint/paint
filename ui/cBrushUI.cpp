@@ -19,7 +19,7 @@ using namespace std;
 using namespace fmt;
 //}}}
 
-void cBrushUI::addToDrawList (cCanvas& canvas) {
+void cBrushUI::addToDrawList (cCanvas& canvas, cGraphics& graphics) {
 
   ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
 
@@ -27,7 +27,7 @@ void cBrushUI::addToDrawList (cCanvas& canvas) {
   for (auto& item : cBrush::getClassRegister()) {
     if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(), cBrush::isCurBrushByName (item.first), 0,
                            ImVec2 (ImGui::GetWindowSize().x, 30)))
-      cBrush::setCurBrushByName (item.first, brush->getRadius());
+      cBrush::setCurBrushByName (item.first, brush->getRadius(), graphics);
 
     // when we make brush thumbnails
     //ImGui::SameLine (0.001f);

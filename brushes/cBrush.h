@@ -15,11 +15,11 @@
 // cBrush
 class cBrush {
 private:
-  using createFunc = cBrush*(*)(const std::string& name, float radius);
+  using createFunc = cBrush*(*)(const std::string& name, float radius, cGraphics& graphics);
 
 public:
   // static manager
-  static cBrush* createByName (const std::string& name, float radius);
+  static cBrush* createByName (const std::string& name, float radius, cGraphics& graphics);
   static bool registerClass (const std::string& name, const createFunc factoryMethod);
   //{{{
   static std::map<const std::string, createFunc>& getClassRegister() {
@@ -30,7 +30,7 @@ public:
   //}}}
   static cBrush* getCurBrush() { return mCurBrush; }
   static bool isCurBrushByName (const std::string& name);
-  static cBrush* setCurBrushByName (const std::string& name, float radius);
+  static cBrush* setCurBrushByName (const std::string& name, float radius, cGraphics& graphics);
 
   //
   cBrush (const std::string& name, float radius);

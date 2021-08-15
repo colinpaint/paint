@@ -1,6 +1,5 @@
 // cUI.cpp
 //{{{  includes
-#include "cUIMan.h"
 #include "cUI.h"
 
 #include <cstdint>
@@ -116,7 +115,7 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
 
   // draw UI instances to imGui drawList
   for (auto& ui : getInstances())
-    ui.second->addToDrawList (canvas);
+    ui.second->addToDrawList (canvas, graphics);
 
   ImGui::Render();
 

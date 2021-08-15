@@ -56,13 +56,13 @@ int main (int numArgs, char* args[]) {
     exit (EXIT_FAILURE);
 
   // start graphics singleton, !!! maybe possible to send graphics pointer through cUIMan::draw !!!
-  cGraphics& graphics = cGraphics::getInstance();
+  cGraphics& graphics = cGraphics::create();
   if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
   platform.setSizeCallback (&graphics, windowResized);
 
   // start canvas
-  cCanvas canvas (params.empty() ? "../piccies/tv.jpg" : params[0]);
+  cCanvas canvas (params.empty() ? "../piccies/tv.jpg" : params[0], graphics);
   if (params.size() > 1)
     canvas.newLayer (params[1]);
 

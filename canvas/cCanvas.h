@@ -20,8 +20,8 @@ class cBrush;
 
 class cCanvas {
 public:
-  cCanvas (cPoint size);
-  cCanvas (const std::string& fileName);
+  cCanvas (cPoint size, cGraphics& graphics);
+  cCanvas (const std::string& fileName, cGraphics& graphics);
   ~cCanvas();
 
   // gets
@@ -63,6 +63,7 @@ private:
 
   cPoint mSize;
   int mNumChannels = 0;
+  cGraphics& mGraphics;
 
   unsigned mCurLayerIndex = 0;
   std::vector<cLayer*> mLayers;

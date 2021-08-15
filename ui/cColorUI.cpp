@@ -32,7 +32,7 @@ cColorUI::cColorUI (const std::string& name) : cUI(name) {
   }
 //}}}
 
-void cColorUI::addToDrawList (cCanvas& canvas) {
+void cColorUI::addToDrawList (cCanvas& canvas, cGraphics& graphics) {
 
   ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
 

@@ -21,7 +21,8 @@ using namespace fmt;
 
 // cPaintCpuBrush
 //{{{
-cPaintCpuBrush::cPaintCpuBrush (const string& className, float radius) : cBrush(className, radius) {
+cPaintCpuBrush::cPaintCpuBrush (const string& className, float radius, cGraphics& graphics)
+    : cBrush(className, radius) {
   setRadius (radius);
   }
 //}}}
