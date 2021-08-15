@@ -1,6 +1,6 @@
-// cGraphics-DirectX11.cpp - directX11 backend for imGui
+// cDirectX11Graphics.cpp - concrete DirectX11 graphics class
 //{{{  includes
-#include "cGraphics.h"
+#include "cDirectX11Graphics.h"
 
 #include <cstdint>
 #include <cmath>
@@ -29,723 +29,257 @@
 using namespace std;
 using namespace fmt;
 //}}}
-
-//{{{  cQuad
-namespace {
-  //{{{
-  const uint8_t kIndices[] = {
-    0, 1, 2, // 0   0-3
-    0, 3, 1  // |\   \|
-    };       // 2-1   1
-  //}}}
-  }
-
-//{{{
-cQuad::cQuad (cPoint size) : mSize(size) {
-
-  // vertices
-  //glGenBuffers (1, &mVertexBufferObject);
-  //glBindBuffer (GL_ARRAY_BUFFER, mVertexBufferObject);
-
-  const float widthF = static_cast<float>(size.x);
-  const float heightF = static_cast<float>(size.y);
-  const float kVertices[] = {
-    0.f,   heightF,  0.f,1.f, // tl vertex
-    widthF,0.f,      1.f,0.f, // br vertex
-    0.f,   0.f,      0.f,0.f, // bl vertex
-    widthF,heightF,  1.f,1.f, // tr vertex
-    };
-
-  // indices
-  mNumIndices = sizeof(kIndices);
-  }
-//}}}
-//{{{
-cQuad::cQuad (cPoint size, const cRect& rect) : mSize(size) {
-
-  // vertexArray
-
-  const float subLeftF = static_cast<float>(rect.left);
-  const float subRightF = static_cast<float>(rect.right);
-  const float subBottomF = static_cast<float>(rect.bottom);
-  const float subTopF = static_cast<float>(rect.top);
-
-  const float subLeftTexF = subLeftF / size.x;
-  const float subRightTexF = subRightF / size.x;
-  const float subBottomTexF = subBottomF / size.y;
-  const float subTopTexF = subTopF / size.y;
-
-  const float kVertices[] = {
-    subLeftF, subTopF,     subLeftTexF, subTopTexF,    // tl
-    subRightF,subBottomF,  subRightTexF,subBottomTexF, // br
-    subLeftF, subBottomF,  subLeftTexF, subBottomTexF, // bl
-    subRightF,subTopF,     subRightTexF,subTopTexF     // tr
-    };
-
-
-  // indices
-  mNumIndices = sizeof(kIndices);
-  }
-//}}}
-//{{{
-cQuad::~cQuad() {
-  }
-//}}}
-
-//{{{
-void cQuad::draw() {
-  }
-
-//}}}
-//}}}
-//{{{  cFrameBuffer
 constexpr bool kDebug = false;
 
-//{{{
-cFrameBuffer::cFrameBuffer()
-    : mImageFormat(0), mInternalFormat(0) {
-// window frameBuffer
-  }
-//}}}
-//{{{
-cFrameBuffer::cFrameBuffer (cPoint size, eFormat format)
-    : mSize(size),
-      mImageFormat(format == eRGBA ? 0 : 1),
-      mInternalFormat(format == eRGBA ? 0 : 1) {
-
-  // create empty frameBuffer
-  }
-//}}}
-//{{{
-cFrameBuffer::cFrameBuffer (uint8_t* pixels, cPoint size, eFormat format)
-    : mSize(size),
-      mImageFormat(format == eRGBA ? 0 : 1),
-      mInternalFormat(format == eRGBA ? 0 : 1) {
-
-  // create frameBuffer from pixels
-  }
-//}}}
-//{{{
-cFrameBuffer::~cFrameBuffer() {
-
-  free (mPixels);
-  }
-//}}}
-
-//{{{
-uint8_t* cFrameBuffer::getPixels() {
-
-  if (!mPixels) {
-    // create mPixels, texture pixels shadow buffer
-    if (kDebug)
-      cLog::log (LOGINFO, format ("getPixels malloc {}", getNumPixelBytes()));
-    mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
-    }
-
-  else if (!mDirtyPixelsRect.isEmpty()) {
-    if (kDebug)
-      cLog::log (LOGINFO, format ("getPixels get {},{} {},{}",
-                                  mDirtyPixelsRect.left, mDirtyPixelsRect.top,
-                                  mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
-
-    mDirtyPixelsRect = cRect(0,0,0,0);
-    }
-
-  return mPixels;
-  }
-//}}}
-
-//{{{
-void cFrameBuffer::setSize (cPoint size) {
-
-  if (mFrameBufferObject == 0)
-    mSize = size;
-  else
-    cLog::log (LOGERROR, "unimplmented setSize of non screen framebuffer");
-  };
-//}}}
-//{{{
-void cFrameBuffer::setTarget (const cRect& rect) {
-// set us as target, set viewport to our size, invalidate contents (probably a clear)
-
-  // texture could be changed, add to dirtyPixelsRect
-  mDirtyPixelsRect += rect;
-  }
-//}}}
-//{{{
-void cFrameBuffer::setBlend() {
-  }
-//}}}
-//{{{
-void cFrameBuffer::setSource() {
-
-  if (mFrameBufferObject) {
-    }
-  else
-    cLog::log (LOGERROR, "windowFrameBuffer cannot be src");
-  }
-//}}}
-
-//{{{
-void cFrameBuffer::invalidate() {
-
-  clear (glm::vec4 (0.f,0.f,0.f, 0.f));
-  }
-//}}}
-//{{{
-void cFrameBuffer::pixelsChanged (const cRect& rect) {
-// pixels in rect changed, write back to texture
-
-  if (mPixels) {
-    if (kDebug)
-      cLog::log (LOGINFO, format ("pixelsChanged {},{} {},{} - dirty {},{} {},{}",
-                                  rect.left, rect.top, rect.getWidth(), rect.getHeight()));
-    }
-  }
-//}}}
-
-void cFrameBuffer::clear (const glm::vec4& color) {}
-//{{{
-void cFrameBuffer::blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect) {
-
-  mDirtyPixelsRect += dstRect;
-
-  if (kDebug)
-    cLog::log (LOGINFO, format ("blit src:{},{} dst:{},{} {},{} dirty:{},{} {},{}",
-                                srcPoint.x, srcPoint.y,
-                                dstRect.left, dstRect.top, dstRect.getWidth(), dstRect.getHeight(),
-                                mDirtyPixelsRect.left, mDirtyPixelsRect.top,
-                                mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
-  }
-//}}}
-
-bool cFrameBuffer::checkStatus() { return true; }
-//{{{
-void cFrameBuffer::reportInfo() {
-  cLog::log (LOGINFO, format ("frameBuffer reportInfo {},{}", mSize.x, mSize.y));
-  }
-//}}}
-//}}}
-//{{{  cShader
 namespace {
-  #ifdef OPENGL_2
-    //{{{
-    const string kQuadVertShader =
-      "#version 120\n"
-
-      "layout (location = 0) in vec2 inPos;"
-      "layout (location = 1) in vec2 inTextureCoord;"
-      "out vec2 textureCoord;"
-
-      "uniform mat4 uModel;"
-      "uniform mat4 uProject;"
-
-      "void main() {"
-      "  textureCoord = inTextureCoord;"
-      "  gl_Position = uProject * uModel * vec4 (inPos, 0.0, 1.0);"
-      "  }";
-    //}}}
-    //{{{
-    const string kCanvasFragShader =
-      "#version 120\n"
-
-      "uniform sampler2D uSampler;"
-
-      "in vec2 textureCoord;"
-      "out vec4 outColor;"
-
-      "void main() {"
-      "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-      //"  outColor /= outColor.w;"
-      "  }";
-    //}}}
-    //{{{
-    const string kLayerFragShader =
-      "#version 120\n"
-
-      "uniform sampler2D uSampler;"
-      "uniform float uHue;"
-      "uniform float uVal;"
-      "uniform float uSat;"
-
-      "in vec2 textureCoord;"
-      "out vec4 outColor;"
-
-      //{{{
-      "vec3 rgbToHsv (float r, float g, float b) {"
-      "  float max_val = max(r, max(g, b));"
-      "  float min_val = min(r, min(g, b));"
-      "  float h;" // hue in degrees
-
-      "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
-      "    h = 0.0; }"
-      "  else if (max_val == r) {"
-      "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
-      "  else if (max_val == g) {"
-      "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
-      "  else if (max_val == b) {"
-      "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
-      "  if (h < 0.0) {"
-      "    h += 360.0; }"
-
-      "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
-      "  float v = max_val;"
-      "  return vec3 (h, s, v);"
-      "  }"
-      //}}}
-      //{{{
-      "vec3 hsvToRgb (float h, float s, float v) {"
-      "  float r, g, b;"
-      "  float c = v * s;"
-      "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
-      "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
-      "  float r_, g_, b_;"
-
-      "  if (0.0 <= h_ && h_ < 1.0) {"
-      "    r_ = c, g_ = x, b_ = 0.0; }"
-      "  else if (1.0 <= h_ && h_ < 2.0) {"
-      "    r_ = x, g_ = c, b_ = 0.0; }"
-      "  else if (2.0 <= h_ && h_ < 3.0) {"
-      "    r_ = 0.0, g_ = c, b_ = x; }"
-      "  else if (3.0 <= h_ && h_ < 4.0) {"
-      "    r_ = 0.0, g_ = x, b_ = c; }"
-      "  else if (4.0 <= h_ && h_ < 5.0) {"
-      "    r_ = x, g_ = 0.0, b_ = c; }"
-      "  else if (5.0 <= h_ && h_ < 6.0) {"
-      "    r_ = c, g_ = 0.0, b_ = x; }"
-      "  else {"
-      "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
-
-      "  float m = v - c;"
-      "  r = r_ + m;"
-      "  g = g_ + m;"
-      "  b = b_ + m;"
-
-      "  return vec3 (r, g, b);"
-      "  }"
-      //}}}
-
-      "void main() {"
-      "  outColor = texture (uSampler, textureCoord);"
-
-      "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
-      "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
-      "    hsv.x += uHue;"
-      "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
-             // not grayscale
-      "      hsv.y = uSat <= 0.0 ? "
-      "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
-      "      }"
-      "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
-      "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
-      "    outColor.xyz = rgb;"
-      "    }"
-
-      //"  if (uPreMultiply)"
-      //"    outColor.xyz *= outColor.w;"
-      "  }";
-    //}}}
-    //{{{
-    const string kPaintFragShader =
-      "#version 120\n"
-
-      "uniform sampler2D uSampler;"
-      "uniform vec2 uPos;"
-      "uniform vec2 uPrevPos;"
-      "uniform float uRadius;"
-      "uniform vec4 uColor;"
-
-      "in vec2 textureCoord;"
-      "out vec4 outColor;"
-
-      "float distToLine (vec2 v, vec2 w, vec2 p) {"
-      "  float l2 = pow (distance(w, v), 2.);"
-      "  if (l2 == 0.0)"
-      "    return distance (p, v);"
-      "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
-      "  vec2 j = v + t * (w - v);"
-      "  return distance (p, j);"
-      "  }"
-
-      "void main() {"
-      "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
-      "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
-      "  }";
-    //}}}
-  #else
-    //{{{
-    const string kQuadVertShader =
-      "#version 330 core\n"
-      "layout (location = 0) in vec2 inPos;"
-      "layout (location = 1) in vec2 inTextureCoord;"
-      "out vec2 textureCoord;"
-
-      "uniform mat4 uModel;"
-      "uniform mat4 uProject;"
-
-      "void main() {"
-      "  textureCoord = inTextureCoord;"
-      "  gl_Position = uProject * uModel * vec4 (inPos, 0.0, 1.0);"
-      "  }";
-    //}}}
-    //{{{
-    const string kCanvasFragShader =
-      "#version 330 core\n"
-      "uniform sampler2D uSampler;"
-
-      "in vec2 textureCoord;"
-      "out vec4 outColor;"
-
-      "void main() {"
-      "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-      //"  outColor /= outColor.w;"
-      "  }";
-    //}}}
-    //{{{
-    const string kLayerFragShader =
-      "#version 330 core\n"
-      "uniform sampler2D uSampler;"
-      "uniform float uHue;"
-      "uniform float uVal;"
-      "uniform float uSat;"
-
-      "in vec2 textureCoord;"
-      "out vec4 outColor;"
-
-      //{{{
-      "vec3 rgbToHsv (float r, float g, float b) {"
-      "  float max_val = max(r, max(g, b));"
-      "  float min_val = min(r, min(g, b));"
-      "  float h;" // hue in degrees
-
-      "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
-      "    h = 0.0; }"
-      "  else if (max_val == r) {"
-      "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
-      "  else if (max_val == g) {"
-      "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
-      "  else if (max_val == b) {"
-      "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
-      "  if (h < 0.0) {"
-      "    h += 360.0; }"
-
-      "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
-      "  float v = max_val;"
-      "  return vec3 (h, s, v);"
-      "  }"
-      //}}}
-      //{{{
-      "vec3 hsvToRgb (float h, float s, float v) {"
-      "  float r, g, b;"
-      "  float c = v * s;"
-      "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
-      "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
-      "  float r_, g_, b_;"
-
-      "  if (0.0 <= h_ && h_ < 1.0) {"
-      "    r_ = c, g_ = x, b_ = 0.0; }"
-      "  else if (1.0 <= h_ && h_ < 2.0) {"
-      "    r_ = x, g_ = c, b_ = 0.0; }"
-      "  else if (2.0 <= h_ && h_ < 3.0) {"
-      "    r_ = 0.0, g_ = c, b_ = x; }"
-      "  else if (3.0 <= h_ && h_ < 4.0) {"
-      "    r_ = 0.0, g_ = x, b_ = c; }"
-      "  else if (4.0 <= h_ && h_ < 5.0) {"
-      "    r_ = x, g_ = 0.0, b_ = c; }"
-      "  else if (5.0 <= h_ && h_ < 6.0) {"
-      "    r_ = c, g_ = 0.0, b_ = x; }"
-      "  else {"
-      "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
-
-      "  float m = v - c;"
-      "  r = r_ + m;"
-      "  g = g_ + m;"
-      "  b = b_ + m;"
-
-      "  return vec3 (r, g, b);"
-      "  }"
-      //}}}
-
-      "void main() {"
-      "  outColor = texture (uSampler, textureCoord);"
-
-      "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
-      "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
-      "    hsv.x += uHue;"
-      "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
-             // not grayscale
-      "      hsv.y = uSat <= 0.0 ? "
-      "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
-      "      }"
-      "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
-      "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
-      "    outColor.xyz = rgb;"
-      "    }"
-
-      //"  if (uPreMultiply)"
-      //"    outColor.xyz *= outColor.w;"
-      "  }";
-    //}}}
-    //{{{
-    const string kPaintFragShader =
-      "#version 330 core\n"
-
-      "uniform sampler2D uSampler;"
-      "uniform vec2 uPos;"
-      "uniform vec2 uPrevPos;"
-      "uniform float uRadius;"
-      "uniform vec4 uColor;"
-
-      "in vec2 textureCoord;"
-      "out vec4 outColor;"
-
-      "float distToLine (vec2 v, vec2 w, vec2 p) {"
-      "  float l2 = pow (distance(w, v), 2.);"
-      "  if (l2 == 0.0)"
-      "    return distance (p, v);"
-      "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
-      "  vec2 j = v + t * (w - v);"
-      "  return distance (p, j);"
-      "  }"
-
-      "void main() {"
-      "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
-      "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
-      "  }";
-    //}}}
-  #endif
-
   //{{{
-  const string kDrawListVertShader120 =
-    "#version 100\n"
+  class cDirectX11Quad : public cGraphics::cQuad {
+  public:
+    //{{{
+    cDirectX11Quad (cPoint size) : cQuad(mSize) {
 
-    "uniform mat4 ProjMtx;"
+      // vertices
+      //glGenBuffers (1, &mVertexBufferObject);
+      //glBindBuffer (GL_ARRAY_BUFFER, mVertexBufferObject);
 
-    "attribute vec2 Position;"
-    "attribute vec2 UV;"
-    "attribute vec4 Color;"
+      const float widthF = static_cast<float>(size.x);
+      const float heightF = static_cast<float>(size.y);
+      const float kVertices[] = {
+        0.f,   heightF,  0.f,1.f, // tl vertex
+        widthF,0.f,      1.f,0.f, // br vertex
+        0.f,   0.f,      0.f,0.f, // bl vertex
+        widthF,heightF,  1.f,1.f, // tr vertex
+        };
 
-    "varying vec2 Frag_UV;"
-    "varying vec4 Frag_Color;"
+      // indices
+      //mNumIndices = sizeof(kIndices);
+      }
+    //}}}
+    //{{{
+    cDirectX11Quad (cPoint size, const cRect& rect) : cQuad(size) {
 
-    "void main() {"
-    "  Frag_UV = UV;"
-    "  Frag_Color = Color;"
-    "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-    "  }";
+      // vertexArray
+
+      const float subLeftF = static_cast<float>(rect.left);
+      const float subRightF = static_cast<float>(rect.right);
+      const float subBottomF = static_cast<float>(rect.bottom);
+      const float subTopF = static_cast<float>(rect.top);
+
+      const float subLeftTexF = subLeftF / size.x;
+      const float subRightTexF = subRightF / size.x;
+      const float subBottomTexF = subBottomF / size.y;
+      const float subTopTexF = subTopF / size.y;
+
+      const float kVertices[] = {
+        subLeftF, subTopF,     subLeftTexF, subTopTexF,    // tl
+        subRightF,subBottomF,  subRightTexF,subBottomTexF, // br
+        subLeftF, subBottomF,  subLeftTexF, subBottomTexF, // bl
+        subRightF,subTopF,     subRightTexF,subTopTexF     // tr
+        };
+
+
+      // indices
+      //mNumIndices = sizeof(kIndices);
+      }
+    //}}}
+    virtual ~cDirectX11Quad() = default;
+
+    //{{{
+    void draw() {
+      }
+    //}}}
+    };
   //}}}
   //{{{
-  const string kDrawListVertShader130 =
-    "#version 130\n"
+  class cDirectX11FrameBuffer : public cGraphics::cFrameBuffer {
+  public:
+    cDirectX11FrameBuffer() : cFrameBuffer({0,0}) {
+      mImageFormat = 0;
+      mInternalFormat = 0;
+      }
 
-    "uniform mat4 ProjMtx;"
+    cDirectX11FrameBuffer (cPoint size, eFormat format) :cFrameBuffer(size) {
+      mImageFormat = 0;
+      mInternalFormat = 0;
+      }
 
-    "in vec2 Position;"
-    "in vec2 UV;"
-    "in vec4 Color;"
+    cDirectX11FrameBuffer (uint8_t* pixels, cPoint size, eFormat format) : cFrameBuffer(size) {
+      mImageFormat = 0;
+      mInternalFormat = 0;
+      }
 
-    "out vec2 Frag_UV;"
-    "out vec4 Frag_Color;"
+    virtual ~cDirectX11FrameBuffer() {
+      free (mPixels);
+      }
 
-    "void main() {"
-    "  Frag_UV = UV;"
-    "  Frag_Color = Color;"
-    "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-    "  }";
-  //}}}
-  //{{{
-  const string kDrawListVertShader300es =
-    "#version 300 es\n"
+    //{{{
+    uint8_t* getPixels() {
 
-    "precision mediump float;"
+      if (!mPixels) {
+        // create mPixels, texture pixels shadow buffer
+        if (kDebug)
+          cLog::log (LOGINFO, format ("getPixels malloc {}", getNumPixelBytes()));
+        mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
+        }
 
-    "layout (location = 0) in vec2 Position;"
-    "layout (location = 1) in vec2 UV;"
-    "layout (location = 2) in vec4 Color;"
+      else if (!mDirtyPixelsRect.isEmpty()) {
+        if (kDebug)
+          cLog::log (LOGINFO, format ("getPixels get {},{} {},{}",
+                                      mDirtyPixelsRect.left, mDirtyPixelsRect.top,
+                                      mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
 
-    "uniform mat4 ProjMtx;"
+        mDirtyPixelsRect = cRect(0,0,0,0);
+        }
 
-    "out vec2 Frag_UV;"
-    "out vec4 Frag_Color;"
+      return mPixels;
+      }
+    //}}}
+    //{{{
+    void setSize (cPoint size) {
 
-    "void main() {"
-    "  Frag_UV = UV;"
-    "  Frag_Color = Color;"
-    "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-    "  }";
-  //}}}
-  //{{{
-  const string kDrawListVertShader410core =
-    "#version 410 core\n"
+      if (mFrameBufferObject == 0)
+        mSize = size;
+      else
+        cLog::log (LOGERROR, "unimplmented setSize of non screen framebuffer");
+      };
+    //}}}
+    //{{{
+    void setTarget (const cRect& rect) {
+    // set us as target, set viewport to our size, invalidate contents (probably a clear)
 
-    "layout (location = 0) in vec2 Position;"
-    "layout (location = 1) in vec2 UV;"
-    "layout (location = 2) in vec4 Color;"
+      // texture could be changed, add to dirtyPixelsRect
+      mDirtyPixelsRect += rect;
+      }
+    //}}}
+    //{{{
+    void setBlend() {
+      }
+    //}}}
+    //{{{
+    void setSource() {
 
-    "uniform mat4 ProjMtx;"
+      if (mFrameBufferObject) {
+        }
+      else
+        cLog::log (LOGERROR, "windowFrameBuffer cannot be src");
+      }
+    //}}}
 
-    "out vec2 Frag_UV;"
-    "out vec4 Frag_Color;"
+    //{{{
+    void invalidate() {
 
-    "void main() {"
-    "  Frag_UV = UV;"
-    "  Frag_Color = Color;"
-    "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-    "  }";
+      clear (glm::vec4 (0.f,0.f,0.f, 0.f));
+      }
+    //}}}
+    //{{{
+    void pixelsChanged (const cRect& rect) {
+    // pixels in rect changed, write back to texture
+
+      if (mPixels) {
+        if (kDebug)
+          cLog::log (LOGINFO, format ("pixelsChanged {},{} {},{} - dirty {},{} {},{}",
+                                      rect.left, rect.top, rect.getWidth(), rect.getHeight()));
+        }
+      }
+    //}}}
+
+    void clear (const glm::vec4& color) {}
+    //{{{
+    void blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect) {
+
+      mDirtyPixelsRect += dstRect;
+
+      if (kDebug)
+        cLog::log (LOGINFO, format ("blit src:{},{} dst:{},{} {},{} dirty:{},{} {},{}",
+                                    srcPoint.x, srcPoint.y,
+                                    dstRect.left, dstRect.top, dstRect.getWidth(), dstRect.getHeight(),
+                                    mDirtyPixelsRect.left, mDirtyPixelsRect.top,
+                                    mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
+      }
+    //}}}
+
+    bool cFrameBuffer::checkStatus() { return true; }
+    //{{{
+    void reportInfo() {
+      cLog::log (LOGINFO, format ("frameBuffer reportInfo {},{}", mSize.x, mSize.y));
+      }
+    //}}}
+    };
   //}}}
 
   //{{{
-  const string kDrawListFragShader120 =
-    "#version 100\n"
+  uint32_t compileShader (const string& vertShaderString, const string& fragShaderString) {
 
-    "#ifdef GL_ES\n"
-    "  precision mediump float;"
-    "#endif\n"
-
-    "uniform sampler2D Texture;"
-
-    "varying vec2 Frag_UV;"
-    "varying vec4 Frag_Color;"
-
-    "void main() {"
-    "  gl_FragColor = Frag_Color * texture2D(Texture, Frag_UV.st);"
-    "  }";
+    return 0;
+    }
   //}}}
   //{{{
-  const string kDrawListFragShader130 =
-    "#version 130\n"
+  class cDrawListShader : public cGraphics::cShader {
+  public:
+    cDrawListShader() : cShader() {
+      }
+    virtual ~cDrawListShader() = default;
 
-    "uniform sampler2D Texture;"
+    void setMatrix (float* matrix) {
+      }
 
-    "in vec2 Frag_UV;"
-    "in vec4 Frag_Color;"
-
-    "out vec4 Out_Color;"
-
-    "void main() {"
-    "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-    "  }";
+    void use() final {
+      }
+    };
   //}}}
   //{{{
-  const string kDrawListFragShader300es =
-    "#version 300 es\n"
+  class cDirectX11PaintShader : public cGraphics::cPaintShader {
+  public:
+    cDirectX11PaintShader() : cPaintShader() {
+      }
+    virtual ~cDirectX11PaintShader() {
+      }
 
-    "precision mediump float;"
+    // sets
+    void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
+      }
+    void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color) final {
+      }
 
-    "uniform sampler2D Texture;"
-
-    "in vec2 Frag_UV;"
-    "in vec4 Frag_Color;"
-
-    "layout (location = 0) out vec4 Out_Color;"
-
-    "void main() {"
-    "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-    "  }";
+    void use() final {
+      }
+    };
   //}}}
   //{{{
-  const string kDrawListFragShader410core =
-    "#version 410 core\n"
+  class cDirectX11LayerShader : public cGraphics::cLayerShader {
+  public:
+    cDirectX11LayerShader() : cLayerShader() {
+      }
+    virtual ~cDirectX11LayerShader() {
+      }
 
-    "in vec2 Frag_UV;"
-    "in vec4 Frag_Color;"
+    // sets
+    void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
+      }
+    void setHueSatVal (float hue, float sat, float val) final {
+      }
 
-    "uniform sampler2D Texture;"
-
-    "layout (location = 0) out vec4 Out_Color;"
-
-    "void main() {"
-    "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-    "  }";
+    void use() final {
+      }
+    };
   //}}}
-  }
+  //{{{
+  class cDirectX11CanvasShader : public cGraphics::cCanvasShader {
+  public:
+    cDirectX11CanvasShader() : cCanvasShader() {
+      }
+    virtual ~cDirectX11CanvasShader() {
+      }
 
-//{{{  cShader
-void cShader::use() { }
+    // sets
+    void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
+      }
 
-cShader::cShader (const string& vertShaderString, const string& fragShaderString) { }
-cShader::~cShader() { }
+    void use() final {
+      }
+    };
+  //}}}
 
-void cShader::setBool (const string &name, bool value) { }
-void cShader::setInt (const string &name, int value) { }
-void cShader::setFloat (const string &name, float value) { }
-void cShader::setVec2 (const string &name, glm::vec2 value) { }
-void cShader::setVec3 (const string &name, glm::vec3 value) { }
-void cShader::setVec4 (const string &name, glm::vec4 value) { }
-void cShader::setMat4 (const string &name, glm::mat4 value) { }
-//}}}
-//{{{  cQuadShader
-cQuadShader::cQuadShader (const string& fragShaderString) : cShader (kQuadVertShader, fragShaderString) {}
-//{{{
-void cQuadShader::setModelProject (const glm::mat4& model, const glm::mat4& project) {
-  setMat4 ("uModel", model);
-  setMat4 ("uProject", project);
-  }
-//}}}
-//}}}
-//{{{  cCanvasShader
-cCanvasShader::cCanvasShader() : cQuadShader (kCanvasFragShader) {}
-//}}}
-//{{{  cLayerShader
-cLayerShader::cLayerShader() : cQuadShader (kLayerFragShader) {}
-//{{{
-void cLayerShader::setHueSatVal (float hue, float sat, float val) {
-  setFloat ("uHue", 0.f);
-  setFloat ("uSat", 0.f);
-  setFloat ("uVal", 0.f);
-  }
-//}}}
-//}}}
-//{{{  cPaintShader
-cPaintShader::cPaintShader() : cQuadShader (kPaintFragShader) {}
-//{{{
-void cPaintShader::setStroke (const glm::vec2& pos, const glm::vec2& prevPos,
-                              float radius, const glm::vec4& color) {
-  setVec2 ("uPos", pos);
-  setVec2 ("uPrevPos", prevPos);
-  setFloat ("uRadius", radius);
-  setVec4 ("uColor", color);
-  }
-//}}}
-//}}}
-//{{{  cDrawListShader
-//{{{  version
-//if (gGlslVersion == 120) {
-  //vertex_shader = vertexShader120;
-  //fragment_shader = fragmentShader120;
-  //}
-//else if (gGlslVersion == 300) {
-  //vertex_shader = vertexShader300es;
-  //fragment_shader = fragmentShader300es;
-  //}
-//else if (gGlslVersion >= 410) {
-  //vertex_shader = vertexShader410core;
-  //fragment_shader = fragmentShader410core;
-  //}
-//else {
-  //vertex_shader = vertexShader130;
-  //fragment_shader = fragmentShader130;
-  //}
-//}}}
-//{{{
-cDrawListShader::cDrawListShader (uint32_t glslVersion)
-    : cShader (kDrawListVertShader130, kDrawListFragShader130) {
-
-  // store uniform locations
-  //mAttribLocationTexture = glGetUniformLocation (getId(), "Texture");
-  //mAttribLocationProjMtx = glGetUniformLocation (getId(), "ProjMtx");
-
-  //mAttribLocationVtxPos = glGetAttribLocation (getId(), "Position");
-  //mAttribLocationVtxUV = glGetAttribLocation (getId(), "UV");
-  //mAttribLocationVtxColor = glGetAttribLocation (getId(), "Color");
-  }
-//}}}
-void cDrawListShader::setMatrix (float* matrix) { };
-//}}}
-//}}}
-
-// cGraphics
-namespace {
   //{{{
   struct sVertexConstantBuffer {
     float mMatrix[4][4];
@@ -1350,7 +884,7 @@ namespace {
   }
 
 //{{{
-bool cGraphics::init (void* device, void* deviceContext, void* swapChain) {
+bool cDirectX11Graphics::init (void* device, void* deviceContext, void* swapChain) {
 
   bool ok = false;
 
@@ -1407,7 +941,7 @@ bool cGraphics::init (void* device, void* deviceContext, void* swapChain) {
   }
 //}}}
 //{{{
-void cGraphics::shutdown() {
+void cDirectX11Graphics::shutdown() {
 
   ImGui::DestroyPlatformWindows();
 
@@ -1440,49 +974,44 @@ void cGraphics::shutdown() {
 // resource creates
 //{{{
 cGraphics::cQuad* cDirectX11Graphics::createQuad (cPoint size) {
-  return new cQuad (size);
+  return new cDirectX11Quad (size);
   }
 //}}}
 //{{{
 cGraphics::cQuad* cDirectX11Graphics::createQuad (cPoint size, const cRect& rect) {
-  return new cQuad (size, rect);
+  return new cDirectX11Quad (size, rect);
   }
 //}}}
 
 //{{{
 cGraphics::cFrameBuffer* cDirectX11Graphics::createFrameBuffer() {
-  return new cFrameBuffer();
+  return new cDirectX11FrameBuffer();
   }
 //}}}
 //{{{
 cGraphics::cFrameBuffer* cDirectX11Graphics::createFrameBuffer (cPoint size, cGraphics::cFrameBuffer::eFormat format) {
-  return new cFrameBuffer (size, format);
+  return new cDirectX11FrameBuffer (size, format);
   }
 //}}}
 //{{{
 cGraphics::cFrameBuffer* cDirectX11Graphics::createFrameBuffer (uint8_t* pixels, cPoint size, cGraphics::cFrameBuffer::eFormat format) {
-  return new cFrameBuffer (pixels, size, format);
+  return new cDirectX11FrameBuffer (pixels, size, format);
   }
 //}}}
 
 //{{{
 cGraphics::cCanvasShader* cDirectX11Graphics::createCanvasShader() {
-  return new cCanvasShader();
+  return new cDirectX11CanvasShader();
   }
 //}}}
 //{{{
 cGraphics::cLayerShader* cDirectX11Graphics::createLayerShader() {
-  return new cLayerShader();
+  return new cDirectX11LayerShader();
   }
 //}}}
 //{{{
 cGraphics::cPaintShader* cDirectX11Graphics::createPaintShader() {
-  return new cPaintShader();
-  }
-//}}}
-//{{{
-cGraphics::cDrawListShader* cDirectX11Graphics::createDrawListShader (uint32_t glslVersion) {
-  return new cDrawListShader (glslVersion);
+  return new cDirectX11PaintShader();
   }
 //}}}
 

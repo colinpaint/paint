@@ -10,47 +10,40 @@ set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FO
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED True)
 
-set (PLATFORM "PLATFORM_GLFW")
+set (OS "WIN32")
+#set (PLATFORM "PLATFORM_GLFW")
+set (PLATFORM "PLATFORM_WIN32")
 set (GRAPHICS "OPENGL_40")
-#set (PLATFORM "PLATFORM_WIN32")
-#set (GRAPHICS "DIRECTX11")
 
 # compiler,linker flags
 if (WIN32)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D ${PLATFORM} /D ${GRAPHICS}")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:fast /arch:AVX")
 else()
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D ${PLATFORM} -D ${GRAPHICS}")
   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -no-pie")
 endif()
 
 # graphics versions
-if (GRAPHICS STREQUAL "DIRECTX11")
-  include_directories (${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
+if (GRAPHICS STREQUAL "OPENGL_21")
+  # openGL 2.1 with fbo vbo extensions
+  include_directories (${CMAKE_SOURCE_DIR}/glad-2.1-fbo-vao/include
+                       ${CMAKE_SOURCE_DIR}/glfw/include
+                       ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
+  add_subdirectory (glad-2.1-fbo-vao/)
 else()
-  # openGL
-  if (GRAPHICS STREQUAL "OPENGL_21")
-    # openGL 2.1 with fbo vbo extensions
-    include_directories (${CMAKE_SOURCE_DIR}/glad-2.1-fbo-vao/include
-                         ${CMAKE_SOURCE_DIR}/glfw/include
-                         ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
-    add_subdirectory (glad-2.1-fbo-vao/)
-  else()
-    # openGL >= 3.0
-    include_directories (${CMAKE_SOURCE_DIR}/glad-4.5-core/include
-                         ${CMAKE_SOURCE_DIR}/glfw/include
-                         ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
-    add_subdirectory (glad-4.5-core/)
-  endif()
-
-  find_package (OpenGL REQUIRED)
-  set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-  set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-  set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-  set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-  set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
-  add_subdirectory (glfw/)
+  # openGL >= 3.0
+  include_directories (${CMAKE_SOURCE_DIR}/glad-4.5-core/include
+                       ${CMAKE_SOURCE_DIR}/glfw/include
+                       ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
+  add_subdirectory (glad-4.5-core/)
 endif()
+
+find_package (OpenGL REQUIRED)
+set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory (glfw/)
 
 # subdirectories
 add_subdirectory (brushes/)
@@ -62,7 +55,7 @@ add_subdirectory (graphics/)
 add_subdirectory (imgui/)
 add_subdirectory (log/)
 
-# main source files, add brushes,ui asstatic class register fails
+# main source files, add brushes,ui as static class register fails
 file (GLOB SRCFILES
   ${CMAKE_SOURCE_DIR}/main.cpp
   ${CMAKE_SOURCE_DIR}/brushes/*.cpp
@@ -82,12 +75,8 @@ file (GLOB HEADER_FILES
 add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
 # link, watch out for order dependent static link in linux
-if (WIN32)
-  if (GRAPHICS STREQUAL "DIRECTX11")
-    target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log d3d11 d3dcompiler)
-  else()
-    target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw opengl32)
-  endif()
+if (OS STREQUAL "WIN32")
+  target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw opengl32 d3d11 d3dcompiler)
 else()
   target_link_libraries (paintbox canvas tinyfiledialog platform graphics imgui log glad glfw GL)
 endif()

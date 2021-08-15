@@ -601,7 +601,7 @@ namespace {
     };
   //}}}
 
-  //{{{  shader common
+//  shader common
   #ifdef OPENGL_2
     //{{{
     const string kQuadVertShader =
@@ -692,7 +692,6 @@ namespace {
 
     return id;
     }
-  //}}}
   //}}}
   //{{{
   class cDrawListShader : public cGraphics::cShader {
