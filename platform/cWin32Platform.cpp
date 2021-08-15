@@ -29,14 +29,15 @@ using namespace fmt;
 //}}}
 
 namespace {
-  cPoint gWindowSize;
   WNDCLASSEX gWndClass;
   HWND gHWnd;
+
+  cPoint gWindowSize;
   ID3D11Device* gD3dDevice = NULL;
   ID3D11DeviceContext*  gD3dDeviceContext = NULL;
   IDXGISwapChain* gSwapChain = NULL;
 
-  cGraphics* gGraphics = nullptr;
+  cGraphics* gGraphics = nullptr; // only for callback
   cPlatform::sizeCallbackFunc gSizeCallback;
 
   //{{{

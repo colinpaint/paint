@@ -32,14 +32,15 @@ namespace {
   }
 
 int main (int numArgs, char* args[]) {
+
+  eLogLevel logLevel = LOGINFO;
+  string selectString = "opengl";
   //{{{  args to params
   vector <string> params;
   for (int i = 1; i < numArgs; i++)
     params.push_back (args[i]);
   //}}}
-  eLogLevel logLevel = LOGINFO;
-  string selectString = "opengl";
-  //{{{  parse params
+  //{{{  parse params, removing recognised options
   for (auto it = params.begin(); it < params.end(); ++it) {
     if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
@@ -52,12 +53,12 @@ int main (int numArgs, char* args[]) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, "paintbox");
 
-  // start platform
+  // create and start platform
   cPlatform& platform = cPlatform::create (selectString);
   if (!platform.init (cPoint(1200, 800), false))
     exit (EXIT_FAILURE);
 
-  // start graphics
+  // create and start graphics
   cGraphics& graphics = cGraphics::create (selectString);
   if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
