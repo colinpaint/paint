@@ -1,4 +1,4 @@
-// cGlfwPlatform.cpp 
+// cGlfwPlatform.cpp
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -54,7 +54,7 @@ namespace {
   }
 
 //{{{
-bool cPlatform::init (const cPoint& windowSize, bool showViewports) {
+bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports) {
 
   cLog::log (LOGINFO, format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
 
@@ -85,7 +85,7 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports) {
   //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   // GLFW create window
-  gWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Paintbox", NULL, NULL);
+  gWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Paintbox - openGL", NULL, NULL);
   if (!gWindow) {
     cLog::log (LOGERROR, "cPlatform - glfwCreateWindow failed");
     return false;
@@ -123,7 +123,7 @@ bool cPlatform::init (const cPoint& windowSize, bool showViewports) {
   }
 //}}}
 //{{{
-void cPlatform::shutdown() {
+void cGlfwPlatform::shutdown() {
 
   ImGui_ImplGlfw_Shutdown();
 

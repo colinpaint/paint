@@ -119,7 +119,7 @@ public:
   //}}}
 
   // factory create
-  static cGraphics& create();
+  static cGraphics& create (const std::string& select);
 
   virtual bool init (void* device, void* deviceContext, void* swapChain) = 0;
   virtual void shutdown() = 0;

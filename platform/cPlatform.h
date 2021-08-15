@@ -1,16 +1,17 @@
 // cPlatform.h - platform abstract interface
 #pragma once
+#include <string>
 #include "../graphics/cPointRect.h"
 class cGraphics;
 
 class cPlatform {
 public:
   // static factory create
-  static cPlatform& create();
+  static cPlatform& create (const std::string& select);
 
   // abstract interface
   virtual bool init (const cPoint& windowSize, bool showViewports) = 0;
-  virtual void shutdown();
+  virtual void shutdown() = 0;
 
   // gets
   virtual void* getDevice() = 0;

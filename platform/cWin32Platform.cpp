@@ -96,7 +96,7 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports) {
   // create application window
   gWindowSize = windowSize;
   gHWnd = ::CreateWindow (gWndClass.lpszClassName,
-                          _T("paintbox"), WS_OVERLAPPEDWINDOW,
+                          _T("paintbox - directX11"), WS_OVERLAPPEDWINDOW,
                           100, 100, windowSize.x, windowSize.y, NULL, NULL,
                           gWndClass.hInstance, NULL);
 

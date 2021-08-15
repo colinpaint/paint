@@ -38,25 +38,27 @@ int main (int numArgs, char* args[]) {
     params.push_back (args[i]);
   //}}}
   eLogLevel logLevel = LOGINFO;
-    //{{{  parse params
-    for (auto it = params.begin(); it < params.end(); ++it) {
-      if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
-      else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
-      else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
-      }
-    //}}}
+  string selectString = "opengl";
+  //{{{  parse params
+  for (auto it = params.begin(); it < params.end(); ++it) {
+    if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
+    else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
+    else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
+    else if (*it == "directx") { selectString = *it; params.erase (it); }
+    }
+  //}}}
 
   // start log
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, "paintbox");
 
-  // start platform singleton, !!! does anybody else need a platform pointer, keystrokes use imGui !!!
-  cPlatform& platform = cPlatform::create();
+  // start platform
+  cPlatform& platform = cPlatform::create (selectString);
   if (!platform.init (cPoint(1200, 800), false))
     exit (EXIT_FAILURE);
 
-  // start graphics singleton, !!! maybe possible to send graphics pointer through cUIMan::draw !!!
-  cGraphics& graphics = cGraphics::create();
+  // start graphics
+  cGraphics& graphics = cGraphics::create (selectString);
   if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
   platform.setSizeCallback (&graphics, windowResized);
