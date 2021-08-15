@@ -1467,6 +1467,13 @@ namespace {
   }
 
 //{{{
+void cGraphics::listClasses() {
+  for (auto& ui : getClassRegister())
+    cLog::log (LOGINFO, format ("graphics - {}", ui.first));
+  }
+//}}}
+
+//{{{
 bool cOpenGlGraphics::init (void* device, void* deviceContext, void* swapChain) {
 // anonymous device pointers unused
 

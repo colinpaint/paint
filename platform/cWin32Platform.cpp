@@ -102,12 +102,8 @@ public:
   void present() final;
 
 private:
-  static cPlatform* createPlatform (const std::string& className) {
-    return new cWin32Platform();
-    }
-
-  // register platfrom with its static manager
-  inline static const bool mRegistered = registerClass ("directx", &createPlatform);
+  static cPlatform* createPlatform (const std::string& className);
+  static bool mRegistered;
   };
 //}}}
 
@@ -264,3 +260,10 @@ void cWin32Platform::present() {
   //gSwapChain->Present(0, 0); // Present without vsync
   }
 //}}}
+
+//{{{
+cPlatform* cWin32Platform::createPlatform (const std::string& className) {
+  return new cWin32Platform();
+  }
+//}}}
+bool cWin32Platform::mRegistered = registerClass ("win32", &createPlatform);

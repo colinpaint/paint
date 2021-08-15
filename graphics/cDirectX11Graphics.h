@@ -33,4 +33,12 @@ public:
   // actions
   void draw() final;
   void windowResized (int width, int height) final;
+
+private:
+  //{{{
+  static cGraphics* createGraphics (const std::string& className) {
+    return new cDirectX11Graphics();
+    }
+  //}}}
+  inline static bool mRegistered = registerClass ("directx", &createGraphics);
   };

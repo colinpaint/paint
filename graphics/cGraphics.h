@@ -3,6 +3,7 @@
 //{{{  includes
 #include <cstdint>
 #include <string>
+#include <map>
 
 // glm
 #include <vec2.hpp>
@@ -119,8 +120,14 @@ public:
 
 class cGraphics {
 public:
-  // factory create
+  // static
   static cGraphics& create (const std::string& selectString);
+  //{{{
+  static cGraphics& createByName (const std::string& name) {
+    return *getClassRegister()[name](name);
+    }
+  //}}}
+  static void listClasses();
 
   // base class
   virtual bool init (void* device, void* deviceContext, void* swapChain) = 0;
@@ -141,4 +148,29 @@ public:
   // actions
   virtual void draw() = 0;
   virtual void windowResized (int width, int height) = 0;
+
+protected:
+  using createFunc = cGraphics*(*)(const std::string& name);
+  //{{{
+  static bool registerClass (const std::string& name, const createFunc factoryMethod) {
+  // trickery - function needs to be called by a derived class inside a static context
+
+    if (getClassRegister().find (name) == getClassRegister().end()) {
+      // className not found - add to classRegister map
+      getClassRegister().insert (std::make_pair (name, factoryMethod));
+      return true;
+      }
+    else
+      return false;
+    }
+  //}}}
+
+private:
+  //{{{
+  static std::map<const std::string, createFunc>& getClassRegister() {
+  // trickery - static map inside static method ensures map is created before any use
+    static std::map<const std::string, createFunc> mClassRegistry;
+    return mClassRegistry;
+    }
+  //}}}
   };

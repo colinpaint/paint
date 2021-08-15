@@ -11,9 +11,8 @@ class cGraphics;
 class cPlatform {
 public:
   using createFunc = cPlatform*(*)(const std::string& name);
-
   //{{{
-  static cPlatform& cPlatform::createByName (const std::string& name) {
+  static cPlatform& createByName (const std::string& name) {
     return *getClassRegister()[name](name);
     }
   //}}}
@@ -52,8 +51,6 @@ protected:
       return false;
     }
   //}}}
-
-private:
   //{{{
   static std::map<const std::string, createFunc>& getClassRegister() {
   // trickery - static map inside static method ensures map is created before any use

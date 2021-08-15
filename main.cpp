@@ -57,6 +57,7 @@ int main (int numArgs, char* args[]) {
   cUI::listClasses();
   cBrush::listClasses();
   cPlatform::listClasses();
+  cGraphics::listClasses();
 
   // create and start platform
   cPlatform& platform = cPlatform::createByName (selectString);
@@ -64,7 +65,7 @@ int main (int numArgs, char* args[]) {
     exit (EXIT_FAILURE);
 
   // create and start graphics
-  cGraphics& graphics = cGraphics::create (selectString);
+  cGraphics& graphics = cGraphics::createByName ("opengl");
   if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
   platform.setSizeCallback (&graphics, windowResized);
