@@ -17,6 +17,7 @@ public:
     return *getClassRegister()[name](name);
     }
   //}}}
+  static void listClasses();
 
   // abstract interface
   virtual bool init (const cPoint& windowSize, bool showViewports) = 0;

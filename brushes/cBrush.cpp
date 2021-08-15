@@ -38,6 +38,12 @@ cBrush* cBrush::setCurBrushByName (const std::string& name, float radius, cGraph
   return mCurBrush;
   }
 //}}}
+//{{{
+void cBrush::listClasses() {
+  for (auto& ui : getClassRegister())
+    cLog::log (LOGINFO, format ("brush - {}", ui.first));
+  }
+//}}}
 
 // gets
 //{{{

@@ -15,6 +15,7 @@
 
 #include "platform/cPlatform.h"
 #include "graphics/cGraphics.h"
+#include "brushes/cBrush.h"
 #include "canvas/cLayer.h"
 #include "canvas/cCanvas.h"
 #include "ui/cUI.h"
@@ -52,6 +53,10 @@ int main (int numArgs, char* args[]) {
   // start log
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, "paintbox");
+
+  cUI::listClasses();
+  cBrush::listClasses();
+  cPlatform::listClasses();
 
   // create and start platform
   cPlatform& platform = cPlatform::createByName (selectString);

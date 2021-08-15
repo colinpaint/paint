@@ -27,6 +27,8 @@ public:
       return uiIt->second;
     }
   //}}}
+  static void listClasses();
+
   static void draw (cCanvas& canvas, cGraphics& graphics);
 
   // base class

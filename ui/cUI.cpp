@@ -20,6 +20,13 @@ using namespace fmt;
 //}}}
 #define DRAW_CANVAS // useful to disable when bringing up backends
 
+//{{{
+void cUI::listClasses() {
+  for (auto& ui : getClassRegister())
+    cLog::log (LOGINFO, format ("ui - {}", ui.first));
+  }
+//}}}
+
 void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
 // draw canvas + imGui using graphics
 

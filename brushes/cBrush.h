@@ -32,6 +32,7 @@ public:
     return mClassRegistry;
     }
   //}}}
+  static void listClasses();
 
   // static curBrush
   static cBrush* getCurBrush() { return mCurBrush; }
