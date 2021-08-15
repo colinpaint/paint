@@ -1,4 +1,4 @@
-// cPlatform-win32-wrapper.cpp - imGui backend win32Impl wrapper - abstracted from imGui win32DirectX11 example main.cpp
+// cWin32Platform.cpp - imGui backend win32Impl wrapper
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -48,6 +48,7 @@ namespace {
     if (ImGui_ImplWin32_WndProcHandler (hWnd, msg, wParam, lParam))
       return true;
 
+    // no
     switch (msg) {
       case WM_SIZE:
         if (gD3dDevice && (wParam != SIZE_MINIMIZED))
@@ -78,6 +79,7 @@ namespace {
         break;
       }
 
+    // send back to windows default
     return ::DefWindowProc (hWnd, msg, wParam, lParam);
     }
   //}}}
