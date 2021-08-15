@@ -122,7 +122,7 @@ public:
   static cGraphics& create (const std::string& select);
 
   // base class
-  cGraphics() = default;
+  cGraphics() {}
   virtual ~cGraphics() = default;
 
   virtual bool init (void* device, void* deviceContext, void* swapChain) = 0;

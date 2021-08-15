@@ -19,7 +19,7 @@ public:
   virtual ~cOpenGlGraphics() = default;
 
   bool init (void* device, void* deviceContext, void* swapChain) final;
-  void shutdown() final;
+  void shutdown() ;
 
   // create resources
   cQuad* createQuad (cPoint size) final;

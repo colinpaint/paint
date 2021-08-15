@@ -9,6 +9,9 @@ public:
   // static factory create
   static cPlatform& create (const std::string& select);
 
+  cPlatform() = default;
+  virtual ~cPlatform() = default;
+
   // abstract interface
   virtual bool init (const cPoint& windowSize, bool showViewports) = 0;
   virtual void shutdown() = 0;
