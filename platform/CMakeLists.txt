@@ -2,17 +2,14 @@ project (platform)
 
 file (GLOB HEADER_FILES *.h)
 
-if (WIN32)
-  file (GLOB SRCFILES
-    cPlatform.cpp
-    ../imgui/backends/imgui_impl_glfw.cpp
-    ../imgui/backends/imgui_impl_win32.cpp
-                      )
-else()
-  file (GLOB SRCFILES
-    cPlatform.cpp
-    ../imgui/backends/imgui_impl_glfw.cpp
-                      )
-endif()
+file (GLOB SRCFILES
+  cPlatform.cpp
+  ../imgui/backends/imgui_impl_glfw.cpp
+  )
 
-add_library (platform ${SRCFILES} ${HEADER_FILES})
+if (WIN32)
+  add_library (platform ${SRCFILES} ../imgui/backends/imgui_impl_win32.cpp ${HEADER_FILES})
+else()
+  add_library (platform ${SRCFILES} ${HEADER_FILES})
+
+endif()
