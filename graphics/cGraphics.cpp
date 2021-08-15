@@ -1,13 +1,13 @@
 // cGraphics.cpp - graphics factory create
 #include <string>
-#include "cOpenGlGraphics.h"
 #include "cDirectX11Graphics.h"
+#include "cOpenGlGraphics.h"
 
-// factory create
-cGraphics& cGraphics::create (const std::string& select) {
+// static factory create
+cGraphics& cGraphics::create (const std::string& selectString) {
   #ifdef WIN32
     // windows offers openGl or directX11
-    if (select == "directx")
+    if (selectString == "directx")
       return *new cDirectX11Graphics();
     else
       return *new cOpenGlGraphics();

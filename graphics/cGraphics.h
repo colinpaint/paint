@@ -20,6 +20,7 @@ public:
   virtual ~cQuad() = default;
 
   cPoint getSize()  { return mSize; }
+
   virtual void draw() = 0;
 
 protected:
@@ -43,7 +44,7 @@ public:
 
   virtual uint8_t* getPixels() = 0;
 
-  //sets
+  // sets
   virtual void setSize (cPoint size) = 0;
   virtual void setTarget (const cRect& rect) = 0;
   virtual void setBlend() = 0;
@@ -119,12 +120,9 @@ public:
 class cGraphics {
 public:
   // factory create
-  static cGraphics& create (const std::string& select);
+  static cGraphics& create (const std::string& selectString);
 
   // base class
-  cGraphics() {}
-  virtual ~cGraphics() = default;
-
   virtual bool init (void* device, void* deviceContext, void* swapChain) = 0;
   virtual void shutdown() = 0;
 

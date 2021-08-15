@@ -1,4 +1,4 @@
-// cOpenGlGraphics.h - concrete openGl graphic class
+// cOpenGlGraphics.h - concrete openGl graphics class
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -15,11 +15,8 @@
 
 class cOpenGlGraphics : public cGraphics {
 public:
-  cOpenGlGraphics() : cGraphics() {}
-  virtual ~cOpenGlGraphics() = default;
-
   bool init (void* device, void* deviceContext, void* swapChain) final;
-  void shutdown() ;
+  void shutdown() final;
 
   // create resources
   cQuad* createQuad (cPoint size) final;

@@ -3,11 +3,11 @@
 #include "cWin32Platform.h"
 #include "cGlfwPlatform.h"
 
-// factory create
-cPlatform& cPlatform::create (const std::string& select) {
+// static factory create
+cPlatform& cPlatform::create (const std::string& selectString) {
   #ifdef WIN32
     // windows offers glfw or win32
-    if (select == "directx")
+    if (selectString == "directx")
       return *new cWin32Platform();
     else
       return *new cGlfwPlatform();

@@ -4,9 +4,6 @@
 
 class cGlfwPlatform : public cPlatform {
 public:
-  cGlfwPlatform() : cPlatform() {}
-  virtual ~cGlfwPlatform() = default;
-
   // abstract interface
   bool init (const cPoint& windowSize, bool showViewports) final;
   void shutdown() final;

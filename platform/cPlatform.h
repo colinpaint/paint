@@ -7,10 +7,7 @@ class cGraphics;
 class cPlatform {
 public:
   // static factory create
-  static cPlatform& create (const std::string& select);
-
-  cPlatform() = default;
-  virtual ~cPlatform() = default;
+  static cPlatform& create (const std::string& selectString);
 
   // abstract interface
   virtual bool init (const cPoint& windowSize, bool showViewports) = 0;

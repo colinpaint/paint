@@ -5,9 +5,6 @@ class cGraphics;
 
 class cWin32Platform : public cPlatform {
 public:
-  cWin32Platform() : cPlatform() {}
-  virtual ~cWin32Platform() = default;
-
   // abstract interface
   bool init (const cPoint& windowSize, bool showViewports) final;
   void shutdown() final;
