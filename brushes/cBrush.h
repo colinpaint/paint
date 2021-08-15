@@ -9,7 +9,9 @@
 #include <vec2.hpp>
 #include <vec4.hpp>
 
-#include "../graphics/cGraphics.h"
+#include "../graphics/cPointRect.h"
+class cGraphics;
+class cFrameBuffer;
 //}}}
 
 // cBrush
@@ -56,8 +58,7 @@ public:
 
   // virtuals
   virtual void setRadius (float radius) { mRadius = radius; }
-  virtual void paint (glm::vec2 pos, bool first, 
-                      cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) = 0;
+  virtual void paint (glm::vec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) = 0;
 
 protected:
   float mRadius = 0.f;
