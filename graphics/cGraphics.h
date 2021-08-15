@@ -1,4 +1,4 @@
-// cGraphics.h - graphics singleton
+// cGraphics.h - graphics abstract base class
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -120,9 +120,6 @@ public:
 
   // factory create
   static cGraphics& create();
-
-  cGraphics() = default;
-  virtual ~cGraphics() = default;
 
   virtual bool init (void* device, void* deviceContext, void* swapChain) = 0;
   virtual void shutdown() = 0;

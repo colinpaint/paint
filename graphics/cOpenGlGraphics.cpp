@@ -1,4 +1,4 @@
-// cOpenGlGraphics.cpp
+// cOpenGlGraphics.cpp - concrete OpenGl graphics class
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #include "cOpenGlGraphics.h"

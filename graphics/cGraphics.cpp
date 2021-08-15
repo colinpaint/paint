@@ -12,6 +12,8 @@ using namespace std;
 using namespace fmt;
 //}}}
 
+// factory create
 cGraphics& cGraphics::create() {
-  return *(new cOpenGlGraphics());
+  static cGraphics* graphics = new cOpenGlGraphics();
+  return *graphics;
   }

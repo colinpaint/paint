@@ -1,4 +1,4 @@
-// cOpenGlGraphics.h
+// cOpenGlGraphics.h - concrete openGl graphic class
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -15,25 +15,22 @@
 
 class cOpenGlGraphics : public cGraphics {
 public:
-  cOpenGlGraphics() = default;
-  virtual ~cOpenGlGraphics() = default;
+  bool init (void* device, void* deviceContext, void* swapChain) final;
+  void shutdown() final;
 
-  bool init (void* device, void* deviceContext, void* swapChain);
-  void shutdown();
+  // create resources
+  cQuad* createQuad (cPoint size) final;
+  cQuad* createQuad (cPoint size, const cRect& rect) final;
 
-  // create graphics resources
-  cQuad* createQuad (cPoint size);
-  cQuad* createQuad (cPoint size, const cRect& rect);
+  cFrameBuffer* createFrameBuffer() final;
+  cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
+  cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
 
-  cFrameBuffer* createFrameBuffer();
-  cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format);
-  cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format);
-
-  cCanvasShader* createCanvasShader();
-  cLayerShader* createLayerShader();
-  cPaintShader* createPaintShader();
+  cCanvasShader* createCanvasShader() final;
+  cLayerShader* createLayerShader() final;
+  cPaintShader* createPaintShader() final;
 
   // actions
-  void draw();
-  void windowResized (int width, int height);
+  void draw() final;
+  void windowResized (int width, int height) final;
   };
