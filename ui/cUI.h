@@ -15,8 +15,7 @@ private:
   using createFuncType = cUI*(*)(const std::string& name);
 
 public:
-  // static manager, static init registration, main UI draw
-  //static bool registerClass (const std::string& name, const createFuncType createFunc);
+  // static manager, static init register
   //{{{
   static bool registerClass (const std::string& name, const createFuncType createFunc) {
   // register class createFunc by name to classRegister, add instance to instances
@@ -33,7 +32,6 @@ public:
       return false;
     }
   //}}}
-  //static cUI* createByName (const std::string& name);
   //{{{
   static cUI* createByName (const std::string& name) {
   // create class by name from classRegister, add instance to instances
@@ -50,7 +48,7 @@ public:
   //}}}
   static void draw (cCanvas& canvas, cGraphics& graphics);
 
-  //
+  // base class
   cUI (const std::string& name) : mName(name) {}
   virtual ~cUI() = default;
 
