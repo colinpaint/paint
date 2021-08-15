@@ -53,12 +53,12 @@ add_subdirectory (log/)
 
 file (GLOB SRCFILES
   ${CMAKE_SOURCE_DIR}/main.cpp
-  ${CMAKE_SOURCE_DIR}/platform/*.cpp
-  ${CMAKE_SOURCE_DIR}/imgui/backends/imgui_impl_glfw.cpp
-  ${CMAKE_SOURCE_DIR}/imgui/backends/imgui_impl_win32.cpp
-  ${CMAKE_SOURCE_DIR}/graphics/*.cpp
-  ${CMAKE_SOURCE_DIR}/brush/*.cpp
-  ${CMAKE_SOURCE_DIR}/ui/*.cpp
+  ${CMAKE_SOURCE_DIR}/platform/cGlfwPlatform.cpp
+  ${CMAKE_SOURCE_DIR}/platform/cWin32Platform.cpp
+  ${CMAKE_SOURCE_DIR}/graphics/cOpenGlGraphics.cpp
+  ${CMAKE_SOURCE_DIR}/graphics/cDirectX11Graphics.cpp
+  ${CMAKE_SOURCE_DIR}/brush/c*Brush.cpp
+  ${CMAKE_SOURCE_DIR}/ui/c*UI.cpp
   )
 file (GLOB HEADER_FILES
   ${CMAKE_SOURCE_DIR}/canvas/*.h
@@ -75,7 +75,7 @@ add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
 # link, watch out for order dependent static link in linux
 if (WIN32)
-  target_link_libraries (paintbox canvas tinyfiledialog imgui log glad glfw opengl32 d3d11 d3dcompiler)
+  target_link_libraries (paintbox canvas tinyfiledialog imgui log platform graphics ui brush glad glfw opengl32 d3d11 d3dcompiler)
 else()
-  target_link_libraries (paintbox canvas tinyfiledialog imgui log glad glfw GL)
+  target_link_libraries (paintbox canvas tinyfiledialog imgui log platform graphics ui brush glad glfw GL)
 endif()
