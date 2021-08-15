@@ -1,11 +1,6 @@
 // cMenuUI.h
 #pragma once
-//{{{  includes
 #include "cUI.h"
-
-#include <cstdint>
-#include <string>
-//}}}
 
 class cMenuUI : public cUI {
 public:

@@ -1,11 +1,7 @@
 // cCanvasUI.h
 #pragma once
-//{{{  includes
+//includes
 #include "cUI.h"
-
-#include <cstdint>
-#include <string>
-//}}}
 
 class cCanvasUI : public cUI {
 public:

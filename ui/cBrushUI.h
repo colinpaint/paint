@@ -1,11 +1,6 @@
 // cBrushUI.h
 #pragma once
-//{{{  includes
 #include "cUI.h"
-
-#include <cstdint>
-#include <string>
-//}}}
 
 class cBrushUI : public cUI {
 public:

@@ -6,7 +6,6 @@
 #include <map>
 
 #include "../graphics/cPointRect.h"
-
 class cGraphics;
 class cCanvas;
 //}}}
