@@ -20,7 +20,7 @@ using namespace fmt;
 
 // static curBrush
 //{{{
-cBrush* cBrush::setCurBrushByName (const std::string& name, float radius, cGraphics& graphics) {
+cBrush* cBrush::setCurBrushByName (const string& name, float radius, cGraphics& graphics) {
 
   if (!isCurBrushByName (name)) {
     // default color if no curBrush
@@ -39,11 +39,30 @@ cBrush* cBrush::setCurBrushByName (const std::string& name, float radius, cGraph
   }
 //}}}
 //{{{
+map<const string, cBrush::createFunc>& cBrush::getClassRegister() {
+// trickery - static map inside static method ensures map is created before any use
+  static map<const string, createFunc> mClassRegistry;
+  return mClassRegistry;
+  }
+//}}}
+//{{{
 void cBrush::listClasses() {
   for (auto& ui : getClassRegister())
     cLog::log (LOGINFO, format ("brush - {}", ui.first));
   }
 //}}}
+
+//{{{
+cBrush* cBrush::createByName (const string& name, float radius, cGraphics& graphics) {
+  return getClassRegister()[name](name, radius, graphics);
+  }
+//}}}
+//{{{
+bool cBrush::isCurBrushByName (const string& name) {
+  return mCurBrush ? name == mCurBrush->getName() : false;
+  }
+//}}}
+
 
 // gets
 //{{{
@@ -92,5 +111,20 @@ void cBrush::setColor (uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
   mG = g;
   mB = b;
   mA = a;
+  }
+//}}}
+
+// protected:
+//{{{
+bool cBrush::registerClass (const string& name, const createFunc factoryMethod) {
+// trickery - function needs to be called by a derived class inside a static context
+
+  if (getClassRegister().find (name) == getClassRegister().end()) {
+    // className not found - add to classRegister map
+    getClassRegister().insert (make_pair (name, factoryMethod));
+    return true;
+    }
+  else
+    return false;
   }
 //}}}

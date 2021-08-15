@@ -47,9 +47,9 @@ public:
 
 private:
   //{{{
-  static cUI* createUI (const std::string& className) {
+  static cUI* create (const std::string& className) {
     return new cBrushUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("brush", &createUI);
+  inline static const bool mRegistered = registerClass ("brush", &create);
   };

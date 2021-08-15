@@ -87,9 +87,9 @@ private:
   std::vector<glm::vec4> mSwatches;
 
   //{{{
-  static cUI* createUI (const std::string& className) {
+  static cUI* create (const std::string& className) {
     return new cColorUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("colour", &createUI);
+  inline static const bool mRegistered = registerClass ("colour", &create);
   };

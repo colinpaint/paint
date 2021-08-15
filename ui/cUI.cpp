@@ -26,7 +26,22 @@ void cUI::listClasses() {
     cLog::log (LOGINFO, format ("ui - {}", ui.first));
   }
 //}}}
+//{{{
+cUI* cUI::createByName (const string& name) {
+// create class by name from classRegister, add instance to instances
 
+  auto uiIt = getInstances().find (name);
+  if (uiIt == getInstances().end()) {
+    auto ui = getClassRegister()[name](name);
+    getInstances().insert (make_pair (name, ui));
+    return ui;
+    }
+  else
+    return uiIt->second;
+  }
+//}}}
+
+//{{{
 void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
 // draw canvas + imGui using graphics
 
@@ -91,4 +106,40 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
   // draw imGui::drawList to screen window frameBuffer
   graphics.draw();
   }
+//}}}
 
+// protected
+  //{{{
+  bool cUI::registerClass (const string& name, const cUI::createFuncType createFunc) {
+  // register class createFunc by name to classRegister, add instance to instances
+
+    if (getClassRegister().find (name) == getClassRegister().end()) {
+      // class name not found - add to classRegister map
+      getClassRegister().insert (make_pair (name, createFunc));
+
+      // create instance of class and add to instances map
+      getInstances().insert (make_pair (name, createFunc (name)));
+      return true;
+      }
+    else
+      return false;
+    }
+  //}}}
+
+// private
+  //{{{
+  map<const string, cUI::createFuncType>& cUI::getClassRegister() {
+  // static map inside static method ensures map is created before use
+
+    static map<const string, createFuncType> mClassRegister;
+    return mClassRegister;
+    }
+  //}}}
+  //{{{
+  map<const string, cUI*>& cUI::getInstances() {
+  // static map inside static method ensures map is created before use
+
+    static map<const string, cUI*> mInstances;
+    return mInstances;
+    }
+  //}}}

@@ -77,11 +77,6 @@ protected:
 
 private:
   //{{{
-  static cBrush* createBrush (const std::string& className, float radius, cGraphics& graphics) {
-    return new cPaintCpuBrush (className, radius, graphics);
-    }
-  //}}}
-  //{{{
   virtual void stamp (glm::vec2 pos, cFrameBuffer* frameBuffer) {
   // stamp brushShape into image, clipped by width,height to pos, update mPrevPos
 
@@ -145,8 +140,12 @@ private:
     }
   //}}}
 
-  // register paintCpu brush with the static manager
-  inline static const bool mRegistered = registerClass ("paintCpu", &createBrush);
+  //{{{
+  static cBrush* create (const std::string& className, float radius, cGraphics& graphics) {
+    return new cPaintCpuBrush (className, radius, graphics);
+    }
+  //}}}
+  inline static bool mRegistered = registerClass ("paintCpu", &create);
   };
 
 
@@ -186,11 +185,6 @@ public:
   //}}}
 
 private:
-  //{{{
-  static cBrush* createBrush (const std::string& className, float radius, cGraphics& graphics) {
-    return new cPaintCpuShapeBrush (className, radius, graphics);
-    }
-  //}}}
   //{{{
   void reportShape() {
 
@@ -284,6 +278,10 @@ private:
   uint8_t* mShape = nullptr;
   float mCreatedShapeRadius = 0.f;
 
-  // register paintCpuShape brush with the static manager
-  inline static const bool mRegistered = registerClass ("paintCpuShape", &createBrush);
+  //{{{
+  static cBrush* create (const std::string& className, float radius, cGraphics& graphics) {
+    return new cPaintCpuShapeBrush (className, radius, graphics);
+    }
+  //}}}
+  inline static bool mRegistered = registerClass ("paintCpuShape", &create);
   };

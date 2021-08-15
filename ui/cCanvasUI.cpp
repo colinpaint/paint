@@ -81,9 +81,9 @@ private:
   bool mShow = true;
 
   //{{{
-  static cUI* createUI (const std::string& className) {
+  static cUI* create (const std::string& className) {
     return new cCanvasUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("layers", &createUI);
+  inline static const bool mRegistered = registerClass ("layers", &create);
   };

@@ -67,15 +67,13 @@ public:
   //}}}
 
 private:
+  cPaintShader* mShader = nullptr;
+  cGraphics& mGraphics;
+
   //{{{
-  static cBrush* createBrush (const std::string& className, float radius, cGraphics& graphics) {
+  static cBrush* create (const std::string& className, float radius, cGraphics& graphics) {
     return new cPaintGpuBrush (className, radius, graphics);
     }
   //}}}
-
-  // register brush with its static manager
-  inline static const bool mRegistered = registerClass ("paintGpu", &createBrush);
-
-  cPaintShader* mShader = nullptr;
-  cGraphics& mGraphics;
+  inline static bool mRegistered = registerClass ("paintGpu", &create);
   };
