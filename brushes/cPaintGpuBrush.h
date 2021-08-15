@@ -1,10 +1,7 @@
 // cPaintGpuBrush.h
 #pragma once
-//{{{  includes
-#include "cBrushMan.h"
 #include "cBrush.h"
 class cPaintShader;
-//}}}
 
 // cPaintGpuBrush
 class cPaintGpuBrush : public cBrush {
@@ -19,7 +16,7 @@ private:
     return new cPaintGpuBrush (className, radius);
     }
 
-  inline static const bool mRegistered = cBrushMan::registerClass ("paintGpu", &createBrush);
+  inline static const bool mRegistered = registerClass ("paintGpu", &createBrush);
 
   cGraphics::cPaintShader* mShader = nullptr;
   };

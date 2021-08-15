@@ -24,11 +24,11 @@ void cBrushUI::addToDrawList (cCanvas& canvas) {
 
   ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
 
-  cBrush* brush = cBrushMan::getCurBrush();
-  for (auto& item : cBrushMan::getClassRegister()) {
-    if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(), cBrushMan::isCurBrushByName (item.first), 0,
+  cBrush* brush = cBrush::getCurBrush();
+  for (auto& item : cBrush::getClassRegister()) {
+    if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(), cBrush::isCurBrushByName (item.first), 0,
                            ImVec2 (ImGui::GetWindowSize().x, 30)))
-      cBrushMan::setCurBrushByName (item.first, brush->getRadius());
+      cBrush::setCurBrushByName (item.first, brush->getRadius());
 
     // when we make brush thumbnails
     //ImGui::SameLine (0.001f);

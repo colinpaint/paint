@@ -14,7 +14,6 @@
 #include "../graphics/cGraphics.h"
 #include "../canvas/cCanvas.h"
 #include "../brushes/cBrush.h"
-#include "../brushes/cBrushMan.h"
 #include "../log/cLog.h"
 
 using namespace std;
@@ -93,7 +92,7 @@ void cUIMan::draw (cCanvas& canvas, cGraphics& graphics) {
       if (!ImGui::IsItemActive()) {
         // draw outline circle cursor
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        cBrush* brush = cBrushMan::getCurBrush();
+        cBrush* brush = cBrush::getCurBrush();
         draw_list->AddCircle (ImGui::GetMousePos(), brush->getRadius() + 1.f,
                               ImGui::GetColorU32(IM_COL32(0,0,0,255)));
         //{{{  possible filledCircle

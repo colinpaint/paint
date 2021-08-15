@@ -3,6 +3,7 @@
 //{{{  includes
 #include <cstdint>
 #include <string>
+#include <map>
 
 // glm
 #include <vec2.hpp>
@@ -13,7 +14,25 @@
 
 // cBrush
 class cBrush {
+private:
+  using createFunc = cBrush*(*)(const std::string& name, float radius);
+
 public:
+  // static manager
+  static cBrush* createByName (const std::string& name, float radius);
+  static bool registerClass (const std::string& name, const createFunc factoryMethod);
+  //{{{
+  static std::map<const std::string, createFunc>& getClassRegister() {
+  // trickery - static map inside static method ensures map is created before any use
+    static std::map<const std::string, createFunc> mClassRegistry;
+    return mClassRegistry;
+    }
+  //}}}
+  static cBrush* getCurBrush() { return mCurBrush; }
+  static bool isCurBrushByName (const std::string& name);
+  static cBrush* setCurBrushByName (const std::string& name, float radius);
+
+  //
   cBrush (const std::string& name, float radius);
   virtual ~cBrush() = default;
 
@@ -43,5 +62,7 @@ protected:
   glm::vec2 mPrevPos = glm::vec2(0.f,0.f);
 
 private:
+  inline static cBrush* mCurBrush = nullptr;
+
   const std::string mName;
   };

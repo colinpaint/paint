@@ -1,8 +1,6 @@
 // cPaintCpuShapeBrush.h
 #pragma once
-//{{{  includes
 #include "cPaintCpuBrush.h"
-//}}}
 
 // cPaintCpuShapeBrush
 class cPaintCpuShapeBrush : public cPaintCpuBrush {
@@ -28,5 +26,5 @@ private:
   uint8_t* mShape = nullptr;
   float mCreatedShapeRadius = 0.f;
 
-  inline static const bool mRegistered = cBrushMan::registerClass ("paintCpuShape", &createBrush);
+  inline static const bool mRegistered = registerClass ("paintCpuShape", &createBrush);
   };

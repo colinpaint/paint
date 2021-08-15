@@ -21,7 +21,7 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 
-#include "../brushes/cBrushMan.h"
+#include "../brushes/cBrush.h"
 #include "../graphics/cGraphics.h"
 #include "../log/cLog.h"
 
@@ -142,7 +142,7 @@ void cCanvas::mouse (bool active, bool clicked, bool dragging, bool released, gl
 
   // just paint for now, will expand to other actions, graphics,cut,paste,effects
   if (active)
-    getCurLayer()->paint (cBrushMan::getCurBrush(), getLayerPos (pos), clicked);
+    getCurLayer()->paint (cBrush::getCurBrush(), getLayerPos (pos), clicked);
   }
 //}}}
 //{{{
@@ -193,7 +193,7 @@ void cCanvas::createResources() {
   mWindowFrameBuffer = cGraphics::getInstance().createFrameBuffer();
 
   // select brush
-  cBrushMan::setCurBrushByName ("paintGpu", 20.f);
+  cBrush::setCurBrushByName ("paintGpu", 20.f);
   }
 //}}}
 //{{{

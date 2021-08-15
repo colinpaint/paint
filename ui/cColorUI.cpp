@@ -38,7 +38,7 @@ void cColorUI::addToDrawList (cCanvas& canvas) {
   ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
 
   // colorPicker
-  cBrush* brush = cBrushMan::getCurBrush();
+  cBrush* brush = cBrush::getCurBrush();
   ImVec4 imBrushColor = ImVec4 (brush->getColor().x, brush->getColor().y, brush->getColor().z, brush->getColor().w);
   ImGui::ColorPicker4 ("colour", (float*)&imBrushColor, kColorSelectorFlags, nullptr);
   float opacity = brush->getColor().w;

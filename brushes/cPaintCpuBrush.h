@@ -1,9 +1,6 @@
 // cPaintCpuBrush.h
 #pragma once
-//{{{  includes
-#include "cBrushMan.h"
 #include "cBrush.h"
-//}}}
 
 // cPaintCpuBrush
 class cPaintCpuBrush : public cBrush {
@@ -27,5 +24,5 @@ private:
 
   virtual void stamp (glm::vec2 pos, cGraphics::cFrameBuffer* frameBuffer);
 
-  inline static const bool mRegistered = cBrushMan::registerClass ("paintCpu", &createBrush);
+  inline static const bool mRegistered = registerClass ("paintCpu", &createBrush);
   };
