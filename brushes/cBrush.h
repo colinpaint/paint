@@ -1,4 +1,4 @@
-// cBrush.h
+// cBrush.h - static manager and base class
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -18,7 +18,7 @@ private:
   using createFunc = cBrush*(*)(const std::string& name, float radius, cGraphics& graphics);
 
 public:
-  // static manager
+  // static manager, inline registration of brushes, select curBrush by name
   static cBrush* createByName (const std::string& name, float radius, cGraphics& graphics);
   static bool registerClass (const std::string& name, const createFunc factoryMethod);
   //{{{
@@ -32,12 +32,19 @@ public:
   static bool isCurBrushByName (const std::string& name);
   static cBrush* setCurBrushByName (const std::string& name, float radius, cGraphics& graphics);
 
-  //
-  cBrush (const std::string& name, float radius);
+  // base class
+  cBrush (const std::string& name, float radius) : mName(name){}
   virtual ~cBrush() = default;
 
   std::string getName() const { return mName; }
-  glm::vec4 getColor();
+  //{{{
+  glm::vec4 getColor() {
+    return glm::vec4(static_cast<float>(mR) / 255.f,
+                     static_cast<float>(mG) / 255.f,
+                     static_cast<float>(mB) / 255.f,
+                     static_cast<float>(mA) / 255.f);
+    }
+  //}}}
 
   float getRadius() { return mRadius; }
   float getBoundRadius() { return mRadius + 1.f; }
@@ -49,7 +56,8 @@ public:
 
   // virtuals
   virtual void setRadius (float radius) { mRadius = radius; }
-  virtual void paint (glm::vec2 pos, bool first, cGraphics::cFrameBuffer* frameBuffer, cGraphics::cFrameBuffer* frameBuffer1) = 0;
+  virtual void paint (glm::vec2 pos, bool first, 
+                      cGraphics::cFrameBuffer* frameBuffer, cGraphics::cFrameBuffer* frameBuffer1) = 0;
 
 protected:
   float mRadius = 0.f;

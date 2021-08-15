@@ -64,19 +64,7 @@ cBrush* cBrush::setCurBrushByName (const std::string& name, float radius, cGraph
   }
 //}}}
 
-// cBrush
-cBrush::cBrush (const string& name, float radius) : mName(name){}
-
 // gets
-//{{{
-glm::vec4 cBrush::getColor() {
-
-  return glm::vec4(static_cast<float>(mR) / 255.f,
-                   static_cast<float>(mG) / 255.f,
-                   static_cast<float>(mB) / 255.f,
-                   static_cast<float>(mA) / 255.f);
-  }
-//}}}
 //{{{
 cRect cBrush::getBoundRect (glm::vec2 pos, cGraphics::cFrameBuffer* frameBuffer) {
 // return boundRect of line from mPrevPos to pos of brush mRadius, cliiped to frameBuffer

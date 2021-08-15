@@ -9,7 +9,8 @@ public:
   cPaintGpuBrush (const std::string& className, float radius, cGraphics& graphics);
   virtual ~cPaintGpuBrush();
 
-  void paint (glm::vec2 pos, bool first, cGraphics::cFrameBuffer* frameBuffer, cGraphics::cFrameBuffer* frameBuffer1) final;
+  void paint (glm::vec2 pos, bool first, 
+              cGraphics::cFrameBuffer* frameBuffer, cGraphics::cFrameBuffer* frameBuffer1) final;
 
 private:
   static cBrush* createBrush (const std::string& className, float radius, cGraphics& graphics) {

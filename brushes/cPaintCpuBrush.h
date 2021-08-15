@@ -9,7 +9,8 @@ public:
   virtual ~cPaintCpuBrush() = default;
 
   virtual void setRadius (float radius) override;
-  void paint (glm::vec2 pos, bool first, cGraphics::cFrameBuffer* frameBuffer, cGraphics::cFrameBuffer* frameBuffer1) final;
+  void paint (glm::vec2 pos, bool first, 
+              cGraphics::cFrameBuffer* frameBuffer, cGraphics::cFrameBuffer* frameBuffer1) final;
 
 protected:
   uint8_t getPaintShape (float i, float j, float radius);

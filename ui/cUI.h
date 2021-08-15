@@ -1,4 +1,4 @@
-// cUI.h - UI base class
+// cUI.h - UI static manager and base class
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -17,7 +17,7 @@ private:
   using createFuncType = cUI*(*)(const std::string& name);
 
 public:
-  // styatic manager
+  // static manager, static init registration, main UI draw
   static bool registerClass (const std::string& name, const createFuncType createFunc);
   static cUI* createByName (const std::string& name);
   static void draw (cCanvas& canvas, cGraphics& graphics);
@@ -46,5 +46,6 @@ private:
     }
   //}}}
 
+  // registered name
   std::string mName;
   };

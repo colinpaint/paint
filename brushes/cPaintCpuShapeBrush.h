@@ -12,7 +12,7 @@ public:
 
 private:
   static cBrush* createBrush (const std::string& className, float radius, cGraphics& graphics) {
-   return new cPaintCpuShapeBrush (className, radius, graphics);
+    return new cPaintCpuShapeBrush (className, radius, graphics);
     }
 
   void reportShape();
