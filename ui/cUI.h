@@ -11,27 +11,8 @@ class cCanvas;
 //}}}
 
 class cUI {
-private:
-  using createFuncType = cUI*(*)(const std::string& name);
-
 public:
   // static manager, static init register
-  //{{{
-  static bool registerClass (const std::string& name, const createFuncType createFunc) {
-  // register class createFunc by name to classRegister, add instance to instances
-
-    if (getClassRegister().find (name) == getClassRegister().end()) {
-      // class name not found - add to classRegister map
-      getClassRegister().insert (std::make_pair (name, createFunc));
-
-      // create instance of class and add to instances map
-      getInstances().insert (std::make_pair (name, createFunc (name)));
-      return true;
-      }
-    else
-      return false;
-    }
-  //}}}
   //{{{
   static cUI* createByName (const std::string& name) {
   // create class by name from classRegister, add instance to instances
@@ -55,6 +36,25 @@ public:
   std::string getName() const { return mName; }
 
   virtual void addToDrawList (cCanvas& canvas, cGraphics& graphics) = 0;
+
+protected:
+  using createFuncType = cUI*(*)(const std::string& name);
+  //{{{
+  static bool registerClass (const std::string& name, const createFuncType createFunc) {
+  // register class createFunc by name to classRegister, add instance to instances
+
+    if (getClassRegister().find (name) == getClassRegister().end()) {
+      // class name not found - add to classRegister map
+      getClassRegister().insert (std::make_pair (name, createFunc));
+
+      // create instance of class and add to instances map
+      getInstances().insert (std::make_pair (name, createFunc (name)));
+      return true;
+      }
+    else
+      return false;
+    }
+  //}}}
 
 private:
   //{{{
