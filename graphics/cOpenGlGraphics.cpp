@@ -71,9 +71,6 @@ namespace {
 
       glBufferData (GL_ARRAY_BUFFER, sizeof(kVertices), kVertices, GL_STATIC_DRAW);
 
-      // indices
-      mNumIndices = sizeof(kIndices);
-
       glGenBuffers (1, &mElementArrayBufferObject);
       glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, mElementArrayBufferObject);
 
@@ -117,8 +114,6 @@ namespace {
       glBufferData (GL_ARRAY_BUFFER, sizeof(kVertices), kVertices, GL_STATIC_DRAW);
 
       // indices
-      mNumIndices = sizeof(kIndices);
-
       glGenBuffers (1, &mElementArrayBufferObject);
       glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, mElementArrayBufferObject);
       glBufferData (GL_ELEMENT_ARRAY_BUFFER, mNumIndices, kIndices, GL_STATIC_DRAW);
@@ -142,8 +137,9 @@ namespace {
     //}}}
 
   private:
+    inline static const uint32_t mNumIndices = 6;
     //{{{
-    inline static const uint8_t kIndices[6] = {
+    inline static const uint8_t kIndices[mNumIndices] = {
       0, 1, 2, // 0   0-3
       0, 3, 1  // |\   \|
       };       // 2-1   1
@@ -152,7 +148,6 @@ namespace {
     uint32_t mVertexArrayObject = 0;
     uint32_t mVertexBufferObject = 0;
     uint32_t mElementArrayBufferObject = 0;
-    uint32_t mNumIndices = 0;
     };
   //}}}
   //{{{
@@ -1300,8 +1295,8 @@ namespace {
   //}}}
 
   // versions
-  int gGlVersion = 0;    // major.minor * 100
-  int gGlslVersion = 0;  // major.minor * 100
+  int gGlVersion = 0;   // major.minor * 100
+  int gGlslVersion = 0; // major.minor * 100
 
   // options
   bool gDrawBase = false;
@@ -1474,8 +1469,9 @@ namespace {
 
 //{{{
 bool cOpenGlGraphics::init (void* device, void* deviceContext, void* swapChain) {
+// anonymous device pointers unused
 
-  // get OpenGL version
+  // get openGL version
   string glVersionString = (const char*)glGetString (GL_VERSION);
   #if defined(IMGUI_IMPL_OPENGL_ES2)
     gGlVersion = 200; // GLES 2
@@ -1491,7 +1487,7 @@ bool cOpenGlGraphics::init (void* device, void* deviceContext, void* swapChain) 
   #endif
   cLog::log (LOGINFO, format ("OpenGL {} - {}", glVersionString, gGlVersion));
 
-  // set ImGui backend capabilities flags
+  // set imGui backend capabilities flags
   ImGui::GetIO().BackendRendererName = "openGL3";
   //{{{  vertexOffset
   #ifdef IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET

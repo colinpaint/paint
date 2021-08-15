@@ -1439,55 +1439,55 @@ void cGraphics::shutdown() {
 
 // resource creates
 //{{{
-cQuad* cGraphics::createQuad (cPoint size) {
+cGraphics::cQuad* cDirectX11Graphics::createQuad (cPoint size) {
   return new cQuad (size);
   }
 //}}}
 //{{{
-cQuad* cGraphics::createQuad (cPoint size, const cRect& rect) {
+cGraphics::cQuad* cDirectX11Graphics::createQuad (cPoint size, const cRect& rect) {
   return new cQuad (size, rect);
   }
 //}}}
 
 //{{{
-cFrameBuffer* cGraphics::createFrameBuffer() {
+cGraphics::cFrameBuffer* cDirectX11Graphics::createFrameBuffer() {
   return new cFrameBuffer();
   }
 //}}}
 //{{{
-cFrameBuffer* cGraphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
+cGraphics::cFrameBuffer* cDirectX11Graphics::createFrameBuffer (cPoint size, cGraphics::cFrameBuffer::eFormat format) {
   return new cFrameBuffer (size, format);
   }
 //}}}
 //{{{
-cFrameBuffer* cGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
+cGraphics::cFrameBuffer* cDirectX11Graphics::createFrameBuffer (uint8_t* pixels, cPoint size, cGraphics::cFrameBuffer::eFormat format) {
   return new cFrameBuffer (pixels, size, format);
   }
 //}}}
 
 //{{{
-cCanvasShader* cGraphics::createCanvasShader() {
+cGraphics::cCanvasShader* cDirectX11Graphics::createCanvasShader() {
   return new cCanvasShader();
   }
 //}}}
 //{{{
-cLayerShader* cGraphics::createLayerShader() {
+cGraphics::cLayerShader* cDirectX11Graphics::createLayerShader() {
   return new cLayerShader();
   }
 //}}}
 //{{{
-cPaintShader* cGraphics::createPaintShader() {
+cGraphics::cPaintShader* cDirectX11Graphics::createPaintShader() {
   return new cPaintShader();
   }
 //}}}
 //{{{
-cDrawListShader* cGraphics::createDrawListShader (uint32_t glslVersion) {
+cGraphics::cDrawListShader* cDirectX11Graphics::createDrawListShader (uint32_t glslVersion) {
   return new cDrawListShader (glslVersion);
   }
 //}}}
 
 //{{{
-void cGraphics::draw() {
+void cDirectX11Graphics::draw() {
 
   sBackendData* backendData = getBackendData();
 
@@ -1503,7 +1503,7 @@ void cGraphics::draw() {
   }
 //}}}
 //{{{
-void cGraphics::windowResized (int width, int height) {
+void cDirectX11Graphics::windowResized (int width, int height) {
 
   //cLog::log (LOGINFO, format ("cGraphics::windowResized {}", width, height));
   sBackendData* backendData = getBackendData();

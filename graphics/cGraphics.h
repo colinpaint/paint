@@ -19,9 +19,9 @@ public:
   class cQuad {
   public:
     cQuad (cPoint size) : mSize(size) {}
-    cQuad (cPoint size, const cRect& rect) : mSize(size) {}
     virtual ~cQuad() = default;
 
+    cPoint getSize()  { return mSize; }
     virtual void draw() = 0;
 
   protected:
