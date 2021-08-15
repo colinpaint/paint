@@ -128,7 +128,6 @@ public:
     }
   //}}}
   static void listClasses();
-  static void listClasses1();
 
   // base class
   virtual bool init (void* device, void* deviceContext, void* swapChain) = 0;

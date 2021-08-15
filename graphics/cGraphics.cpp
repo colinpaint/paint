@@ -11,3 +11,9 @@
 using namespace std;
 using namespace fmt;
 
+//{{{
+void cGraphics::listClasses() {
+  for (auto& ui : getClassRegister())
+    cLog::log (LOGINFO, format ("graphics - {}", ui.first));
+  }
+//}}}

@@ -82,12 +82,7 @@ namespace {
   //}}}
   }
 
-//{{{
-void cPlatform::listClasses1() {
-  for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("platform - {}", ui.first));
-  }
-//}}}
+// do not need .h file, not sure
 //{{{
 class cWin32Platform : public cPlatform {
 public:

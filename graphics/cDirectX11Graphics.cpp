@@ -882,12 +882,7 @@ namespace {
   //}}}
   }
 
-//{{{
-void cGraphics::listClasses1() {
-  for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("graphics - {}", ui.first));
-  }
-//}}}
+// do not need .h file, not sure
 //{{{
 class cDirectX11Graphics : public cGraphics {
 public:

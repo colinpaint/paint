@@ -43,18 +43,19 @@ int main (int numArgs, char* args[]) {
     params.push_back (args[i]);
   //}}}
   //{{{  parse params, removing recognised options
-  for (auto it = params.begin(); it < params.end(); ++it) {
+  for (auto it = params.begin(); it < params.end();) {
     if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
     else if (*it == "win32") { platformString = *it; params.erase (it); }
     else if (*it == "directx") { graphicsString = *it; params.erase (it); }
-    }
+    else ++it;
+    };
   //}}}
 
   // start log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, "paintbox");
+  cLog::log (LOGNOTICE, format ("paintbox {} {}", platformString, graphicsString));
 
   cUI::listClasses();
   cBrush::listClasses();

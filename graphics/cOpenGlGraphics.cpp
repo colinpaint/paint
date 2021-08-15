@@ -1466,12 +1466,7 @@ namespace {
   //}}}
   }
 
-//{{{
-void cGraphics::listClasses() {
-  for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("graphics - {}", ui.first));
-  }
-//}}}
+// do not need .h file, not sure
 //{{{
 class cOpenGlGraphics : public cGraphics {
 public:

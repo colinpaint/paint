@@ -52,12 +52,7 @@ namespace {
   //}}}
   }
 
-//{{{
-void cPlatform::listClasses() {
-  for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("platform - {}", ui.first));
-  }
-//}}}
+// do not need .h file, not sure
 //{{{
 class cGlfwPlatform : public cPlatform {
 public:

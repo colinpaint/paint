@@ -17,7 +17,6 @@ public:
     }
   //}}}
   static void listClasses();
-  static void listClasses1();
 
   // abstract interface
   virtual bool init (const cPoint& windowSize, bool showViewports) = 0;
