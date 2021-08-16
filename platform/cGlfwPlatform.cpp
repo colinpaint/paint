@@ -68,7 +68,7 @@ public:
 
 private:
   static cPlatform* create (const std::string& className);
-  inline static bool mRegistered = registerClass ("glfw", &create);
+  inline static const bool mRegistered = registerClass ("glfw", &create);
   };
 //}}}
 

@@ -912,7 +912,7 @@ private:
     return new cDirectX11Graphics();
     }
   //}}}
-  inline static bool mRegistered = registerClass ("directx", &create);
+  inline static const bool mRegistered = registerClass ("directx", &create);
   };
 //}}}
 

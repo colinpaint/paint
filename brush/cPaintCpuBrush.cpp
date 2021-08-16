@@ -278,5 +278,5 @@ private:
     return new cPaintCpuShapeBrush (className, radius, graphics);
     }
   //}}}
-  inline static bool mRegistered = registerClass ("paintCpuShape", &create);
+  inline static const bool mRegistered = registerClass ("paintCpuShape", &create);
   };

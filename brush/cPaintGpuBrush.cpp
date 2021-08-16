@@ -75,5 +75,5 @@ private:
     return new cPaintGpuBrush (className, radius, graphics);
     }
   //}}}
-  inline static bool mRegistered = registerClass ("paintGpu", &create);
+  inline static const bool mRegistered = registerClass ("paintGpu", &create);
   };

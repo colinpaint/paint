@@ -104,7 +104,7 @@ private:
     return new cWin32Platform();
     }
   //}}}
-  inline static bool mRegistered = registerClass ("win32", &create);
+  inline static const bool mRegistered = registerClass ("win32", &create);
   };
 //}}}
 

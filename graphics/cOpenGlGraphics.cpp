@@ -1454,7 +1454,7 @@ private:
     return new cOpenGlGraphics();
     }
   //}}}
-  inline static bool mRegistered = registerClass ("opengl", &create);
+  inline static const bool mRegistered = registerClass ("opengl", &create);
   };
 //}}}
 

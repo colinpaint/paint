@@ -15,10 +15,11 @@ using namespace std;
 using namespace fmt;
 //}}}
 //{{{
-constexpr ImGuiColorEditFlags kColorSelectorFlags = ImGuiColorEditFlags_HDR |
-                                                    ImGuiColorEditFlags_Float |
-                                                    ImGuiColorEditFlags_NoInputs |
-                                                    ImGuiColorEditFlags_PickerHueWheel;
+constexpr ImGuiColorEditFlags kColorSelectorFlags = 
+  ImGuiColorEditFlags_HDR |
+  ImGuiColorEditFlags_Float |
+  ImGuiColorEditFlags_NoInputs |
+  ImGuiColorEditFlags_PickerHueWheel;
 //}}}
 
 class cColorUI  : public cUI {
@@ -84,7 +85,7 @@ private:
   std::vector<cColor> mSwatches;
 
   //{{{
-  static cUI* create (const std::string& className) {
+  static cUI* create (const string& className) {
     return new cColorUI (className);
     }
   //}}}

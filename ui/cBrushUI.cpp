@@ -44,7 +44,7 @@ public:
 
 private:
   //{{{
-  static cUI* create (const std::string& className) {
+  static cUI* create (const string& className) {
     return new cBrushUI (className);
     }
   //}}}

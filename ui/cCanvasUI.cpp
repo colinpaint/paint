@@ -78,7 +78,7 @@ private:
   bool mShow = true;
 
   //{{{
-  static cUI* create (const std::string& className) {
+  static cUI* create (const string& className) {
     return new cCanvasUI (className);
     }
   //}}}
