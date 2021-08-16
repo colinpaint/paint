@@ -1,4 +1,5 @@
 // cDirectX11Graphics.cpp - concrete DirectX11 graphics class
+#ifdef WIN32
 //{{{  includes
 #include <cstdint>
 #include <cmath>
@@ -28,8 +29,8 @@
 using namespace std;
 using namespace fmt;
 //}}}
-constexpr bool kDebug = false;
 
+constexpr bool kDebug = false;
 namespace {
   //{{{
   class cDirectX11Quad : public cQuad {
@@ -882,7 +883,6 @@ namespace {
   //}}}
   }
 
-// do not need .h file, not sure
 //{{{
 class cDirectX11Graphics : public cGraphics {
 public:
@@ -1075,3 +1075,4 @@ void cDirectX11Graphics::windowResized (int width, int height) {
     }
   }
 //}}}
+#endif

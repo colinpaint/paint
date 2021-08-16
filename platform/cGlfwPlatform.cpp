@@ -52,7 +52,6 @@ namespace {
   //}}}
   }
 
-// do not need .h file, not sure
 //{{{
 class cGlfwPlatform : public cPlatform {
 public:

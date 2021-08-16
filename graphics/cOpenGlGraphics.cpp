@@ -695,29 +695,164 @@ namespace {
   //}}}
   //{{{
   class cDrawListShader : public cShader {
-  //{{{  version
-  //if (gGlslVersion == 120) {
-    //vertex_shader = vertexShader120;
-    //fragment_shader = fragmentShader120;
-    //}
-  //else if (gGlslVersion == 300) {
-    //vertex_shader = vertexShader300es;
-    //fragment_shader = fragmentShader300es;
-    //}
-  //else if (gGlslVersion >= 410) {
-    //vertex_shader = vertexShader410core;
-    //fragment_shader = fragmentShader410core;
-    //}
-  //else {
-    //vertex_shader = vertexShader130;
-    //fragment_shader = fragmentShader130;
-    //}
-  //}}}
   public:
     //{{{
     cDrawListShader (uint32_t glslVersion) : cShader() {
 
-      mId = compileShader (kDrawListVertShader130, kDrawListFragShader130);
+      if (glslVersion == 120) {
+        //{{{
+        const string kVertShader120 =
+          "#version 100\n"
+
+          "uniform mat4 ProjMtx;"
+
+          "attribute vec2 Position;"
+          "attribute vec2 UV;"
+          "attribute vec4 Color;"
+
+          "varying vec2 Frag_UV;"
+          "varying vec4 Frag_Color;"
+
+          "void main() {"
+          "  Frag_UV = UV;"
+          "  Frag_Color = Color;"
+          "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+          "  }";
+        //}}}
+        //{{{
+        const string kFragShader120 =
+          "#version 100\n"
+
+          "#ifdef GL_ES\n"
+          "  precision mediump float;"
+          "#endif\n"
+
+          "uniform sampler2D Texture;"
+
+          "varying vec2 Frag_UV;"
+          "varying vec4 Frag_Color;"
+
+          "void main() {"
+          "  gl_FragColor = Frag_Color * texture2D(Texture, Frag_UV.st);"
+          "  }";
+        //}}}
+        mId = compileShader (kVertShader120, kFragShader120);
+        }
+      else if (glslVersion == 300) {
+        //{{{
+        const string kVertShader300es =
+          "#version 300 es\n"
+
+          "precision mediump float;"
+
+          "layout (location = 0) in vec2 Position;"
+          "layout (location = 1) in vec2 UV;"
+          "layout (location = 2) in vec4 Color;"
+
+          "uniform mat4 ProjMtx;"
+
+          "out vec2 Frag_UV;"
+          "out vec4 Frag_Color;"
+
+          "void main() {"
+          "  Frag_UV = UV;"
+          "  Frag_Color = Color;"
+          "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+          "  }";
+        //}}}
+        //{{{
+        const string kFragShader300es =
+          "#version 300 es\n"
+
+          "precision mediump float;"
+
+          "uniform sampler2D Texture;"
+
+          "in vec2 Frag_UV;"
+          "in vec4 Frag_Color;"
+
+          "layout (location = 0) out vec4 Out_Color;"
+
+          "void main() {"
+          "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
+          "  }";
+        //}}}
+        mId = compileShader (kVertShader300es, kFragShader300es);
+        }
+      else if (glslVersion >= 410) {
+        //{{{
+        const string kVertShader410core =
+          "#version 410 core\n"
+
+          "layout (location = 0) in vec2 Position;"
+          "layout (location = 1) in vec2 UV;"
+          "layout (location = 2) in vec4 Color;"
+
+          "uniform mat4 ProjMtx;"
+
+          "out vec2 Frag_UV;"
+          "out vec4 Frag_Color;"
+
+          "void main() {"
+          "  Frag_UV = UV;"
+          "  Frag_Color = Color;"
+          "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+          "  }";
+        //}}}
+        //{{{
+        const string kFragShader410core =
+          "#version 410 core\n"
+
+          "in vec2 Frag_UV;"
+          "in vec4 Frag_Color;"
+
+          "uniform sampler2D Texture;"
+
+          "layout (location = 0) out vec4 Out_Color;"
+
+          "void main() {"
+          "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
+          "  }";
+        //}}}
+        mId = compileShader (kVertShader410core, kFragShader410core);
+        }
+      else {
+        //{{{
+        const string kVertShader130 =
+          "#version 130\n"
+
+          "uniform mat4 ProjMtx;"
+
+          "in vec2 Position;"
+          "in vec2 UV;"
+          "in vec4 Color;"
+
+          "out vec2 Frag_UV;"
+          "out vec4 Frag_Color;"
+
+          "void main() {"
+          "  Frag_UV = UV;"
+          "  Frag_Color = Color;"
+          "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+          "  }";
+        //}}}
+        //{{{
+        const string kFragShader130 =
+          "#version 130\n"
+
+          "uniform sampler2D Texture;"
+
+          "in vec2 Frag_UV;"
+          "in vec4 Frag_Color;"
+
+          "out vec4 Out_Color;"
+
+          "void main() {"
+          "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
+          "  }";
+        //}}}
+        mId = compileShader (kVertShader130, kFragShader130);
+        }
 
       // store uniform locations
       mAttribLocationTexture = glGetUniformLocation (getId(), "Texture");
@@ -756,150 +891,6 @@ namespace {
     int32_t mAttribLocationVtxPos = 0;
     int32_t mAttribLocationVtxUV = 0;
     int32_t mAttribLocationVtxColor = 0;
-
-    //{{{
-    inline static const string kDrawListVertShader120 =
-      "#version 100\n"
-
-      "uniform mat4 ProjMtx;"
-
-      "attribute vec2 Position;"
-      "attribute vec2 UV;"
-      "attribute vec4 Color;"
-
-      "varying vec2 Frag_UV;"
-      "varying vec4 Frag_Color;"
-
-      "void main() {"
-      "  Frag_UV = UV;"
-      "  Frag_Color = Color;"
-      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListVertShader130 =
-      "#version 130\n"
-
-      "uniform mat4 ProjMtx;"
-
-      "in vec2 Position;"
-      "in vec2 UV;"
-      "in vec4 Color;"
-
-      "out vec2 Frag_UV;"
-      "out vec4 Frag_Color;"
-
-      "void main() {"
-      "  Frag_UV = UV;"
-      "  Frag_Color = Color;"
-      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListVertShader300es =
-      "#version 300 es\n"
-
-      "precision mediump float;"
-
-      "layout (location = 0) in vec2 Position;"
-      "layout (location = 1) in vec2 UV;"
-      "layout (location = 2) in vec4 Color;"
-
-      "uniform mat4 ProjMtx;"
-
-      "out vec2 Frag_UV;"
-      "out vec4 Frag_Color;"
-
-      "void main() {"
-      "  Frag_UV = UV;"
-      "  Frag_Color = Color;"
-      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListVertShader410core =
-      "#version 410 core\n"
-
-      "layout (location = 0) in vec2 Position;"
-      "layout (location = 1) in vec2 UV;"
-      "layout (location = 2) in vec4 Color;"
-
-      "uniform mat4 ProjMtx;"
-
-      "out vec2 Frag_UV;"
-      "out vec4 Frag_Color;"
-
-      "void main() {"
-      "  Frag_UV = UV;"
-      "  Frag_Color = Color;"
-      "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-      "  }";
-    //}}}
-
-    //{{{
-    inline static const string kDrawListFragShader120 =
-      "#version 100\n"
-
-      "#ifdef GL_ES\n"
-      "  precision mediump float;"
-      "#endif\n"
-
-      "uniform sampler2D Texture;"
-
-      "varying vec2 Frag_UV;"
-      "varying vec4 Frag_Color;"
-
-      "void main() {"
-      "  gl_FragColor = Frag_Color * texture2D(Texture, Frag_UV.st);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListFragShader130 =
-      "#version 130\n"
-
-      "uniform sampler2D Texture;"
-
-      "in vec2 Frag_UV;"
-      "in vec4 Frag_Color;"
-
-      "out vec4 Out_Color;"
-
-      "void main() {"
-      "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListFragShader300es =
-      "#version 300 es\n"
-
-      "precision mediump float;"
-
-      "uniform sampler2D Texture;"
-
-      "in vec2 Frag_UV;"
-      "in vec4 Frag_Color;"
-
-      "layout (location = 0) out vec4 Out_Color;"
-
-      "void main() {"
-      "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-      "  }";
-    //}}}
-    //{{{
-    inline static const string kDrawListFragShader410core =
-      "#version 410 core\n"
-
-      "in vec2 Frag_UV;"
-      "in vec4 Frag_Color;"
-
-      "uniform sampler2D Texture;"
-
-      "layout (location = 0) out vec4 Out_Color;"
-
-      "void main() {"
-      "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-      "  }";
-    //}}}
     };
   //}}}
   //{{{
@@ -907,7 +898,62 @@ namespace {
   public:
     //{{{
     cOpenGlPaintShader() : cPaintShader() {
-      mId = compileShader (kQuadVertShader, kPaintFragShader);
+
+      #ifdef OPENGL_2
+        const string kFragShader =
+          "#version 120\n"
+
+          "uniform sampler2D uSampler;"
+          "uniform vec2 uPos;"
+          "uniform vec2 uPrevPos;"
+          "uniform float uRadius;"
+          "uniform vec4 uColor;"
+
+          "in vec2 textureCoord;"
+          "out vec4 outColor;"
+
+          "float distToLine (vec2 v, vec2 w, vec2 p) {"
+          "  float l2 = pow (distance(w, v), 2.);"
+          "  if (l2 == 0.0)"
+          "    return distance (p, v);"
+          "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
+          "  vec2 j = v + t * (w - v);"
+          "  return distance (p, j);"
+          "  }"
+
+          "void main() {"
+          "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
+          "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
+          "  }";
+      #else
+        const string kFragShader =
+          "#version 330 core\n"
+
+          "uniform sampler2D uSampler;"
+          "uniform vec2 uPos;"
+          "uniform vec2 uPrevPos;"
+          "uniform float uRadius;"
+          "uniform vec4 uColor;"
+
+          "in vec2 textureCoord;"
+          "out vec4 outColor;"
+
+          "float distToLine (vec2 v, vec2 w, vec2 p) {"
+          "  float l2 = pow (distance(w, v), 2.);"
+          "  if (l2 == 0.0)"
+          "    return distance (p, v);"
+          "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
+          "  vec2 j = v + t * (w - v);"
+          "  return distance (p, j);"
+          "  }"
+
+          "void main() {"
+          "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
+          "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
+          "  }";
+      #endif
+
+      mId = compileShader (kQuadVertShader, kFragShader);
       }
     //}}}
     //{{{
@@ -939,65 +985,6 @@ namespace {
       glUseProgram (mId);
       }
     //}}}
-
-  private:
-    #ifdef OPENGL_2
-      //{{{
-      inline static const string kPaintFragShader =
-        "#version 120\n"
-
-        "uniform sampler2D uSampler;"
-        "uniform vec2 uPos;"
-        "uniform vec2 uPrevPos;"
-        "uniform float uRadius;"
-        "uniform vec4 uColor;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        "float distToLine (vec2 v, vec2 w, vec2 p) {"
-        "  float l2 = pow (distance(w, v), 2.);"
-        "  if (l2 == 0.0)"
-        "    return distance (p, v);"
-        "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
-        "  vec2 j = v + t * (w - v);"
-        "  return distance (p, j);"
-        "  }"
-
-        "void main() {"
-        "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
-        "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
-        "  }";
-      //}}}
-    #else
-      //{{{
-      inline static const string kPaintFragShader =
-        "#version 330 core\n"
-
-        "uniform sampler2D uSampler;"
-        "uniform vec2 uPos;"
-        "uniform vec2 uPrevPos;"
-        "uniform float uRadius;"
-        "uniform vec4 uColor;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        "float distToLine (vec2 v, vec2 w, vec2 p) {"
-        "  float l2 = pow (distance(w, v), 2.);"
-        "  if (l2 == 0.0)"
-        "    return distance (p, v);"
-        "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
-        "  vec2 j = v + t * (w - v);"
-        "  return distance (p, j);"
-        "  }"
-
-        "void main() {"
-        "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
-        "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
-        "  }";
-      //}}}
-    #endif
     };
   //}}}
   //{{{
@@ -1005,7 +992,181 @@ namespace {
   public:
     //{{{
     cOpenGlLayerShader() : cLayerShader() {
-      mId = compileShader (kQuadVertShader, kLayerFragShader);
+
+      #ifdef OPENGL_2
+        //{{{
+        const string kFragShader =
+          "#version 120\n"
+
+          "uniform sampler2D uSampler;"
+          "uniform float uHue;"
+          "uniform float uVal;"
+          "uniform float uSat;"
+
+          "in vec2 textureCoord;"
+          "out vec4 outColor;"
+
+          //{{{
+          "vec3 rgbToHsv (float r, float g, float b) {"
+          "  float max_val = max(r, max(g, b));"
+          "  float min_val = min(r, min(g, b));"
+          "  float h;" // hue in degrees
+
+          "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
+          "    h = 0.0; }"
+          "  else if (max_val == r) {"
+          "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
+          "  else if (max_val == g) {"
+          "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
+          "  else if (max_val == b) {"
+          "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
+          "  if (h < 0.0) {"
+          "    h += 360.0; }"
+
+          "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
+          "  float v = max_val;"
+          "  return vec3 (h, s, v);"
+          "  }"
+          //}}}
+          //{{{
+          "vec3 hsvToRgb (float h, float s, float v) {"
+          "  float r, g, b;"
+          "  float c = v * s;"
+          "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
+          "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
+          "  float r_, g_, b_;"
+
+          "  if (0.0 <= h_ && h_ < 1.0) {"
+          "    r_ = c, g_ = x, b_ = 0.0; }"
+          "  else if (1.0 <= h_ && h_ < 2.0) {"
+          "    r_ = x, g_ = c, b_ = 0.0; }"
+          "  else if (2.0 <= h_ && h_ < 3.0) {"
+          "    r_ = 0.0, g_ = c, b_ = x; }"
+          "  else if (3.0 <= h_ && h_ < 4.0) {"
+          "    r_ = 0.0, g_ = x, b_ = c; }"
+          "  else if (4.0 <= h_ && h_ < 5.0) {"
+          "    r_ = x, g_ = 0.0, b_ = c; }"
+          "  else if (5.0 <= h_ && h_ < 6.0) {"
+          "    r_ = c, g_ = 0.0, b_ = x; }"
+          "  else {"
+          "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
+
+          "  float m = v - c;"
+          "  r = r_ + m;"
+          "  g = g_ + m;"
+          "  b = b_ + m;"
+
+          "  return vec3 (r, g, b);"
+          "  }"
+          //}}}
+
+          "void main() {"
+          "  outColor = texture (uSampler, textureCoord);"
+
+          "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
+          "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
+          "    hsv.x += uHue;"
+          "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
+                 // not grayscale
+          "      hsv.y = uSat <= 0.0 ? "
+          "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
+          "      }"
+          "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
+          "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
+          "    outColor.xyz = rgb;"
+          "    }"
+
+          //"  if (uPreMultiply)"
+          //"    outColor.xyz *= outColor.w;"
+          "  }";
+        //}}}
+      #else
+        const string kFragShader =
+          "#version 330 core\n"
+          "uniform sampler2D uSampler;"
+          "uniform float uHue;"
+          "uniform float uVal;"
+          "uniform float uSat;"
+
+          "in vec2 textureCoord;"
+          "out vec4 outColor;"
+
+          //{{{
+          "vec3 rgbToHsv (float r, float g, float b) {"
+          "  float max_val = max(r, max(g, b));"
+          "  float min_val = min(r, min(g, b));"
+          "  float h;" // hue in degrees
+
+          "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
+          "    h = 0.0; }"
+          "  else if (max_val == r) {"
+          "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
+          "  else if (max_val == g) {"
+          "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
+          "  else if (max_val == b) {"
+          "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
+          "  if (h < 0.0) {"
+          "    h += 360.0; }"
+
+          "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
+          "  float v = max_val;"
+          "  return vec3 (h, s, v);"
+          "  }"
+          //}}}
+          //{{{
+          "vec3 hsvToRgb (float h, float s, float v) {"
+          "  float r, g, b;"
+          "  float c = v * s;"
+          "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
+          "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
+          "  float r_, g_, b_;"
+
+          "  if (0.0 <= h_ && h_ < 1.0) {"
+          "    r_ = c, g_ = x, b_ = 0.0; }"
+          "  else if (1.0 <= h_ && h_ < 2.0) {"
+          "    r_ = x, g_ = c, b_ = 0.0; }"
+          "  else if (2.0 <= h_ && h_ < 3.0) {"
+          "    r_ = 0.0, g_ = c, b_ = x; }"
+          "  else if (3.0 <= h_ && h_ < 4.0) {"
+          "    r_ = 0.0, g_ = x, b_ = c; }"
+          "  else if (4.0 <= h_ && h_ < 5.0) {"
+          "    r_ = x, g_ = 0.0, b_ = c; }"
+          "  else if (5.0 <= h_ && h_ < 6.0) {"
+          "    r_ = c, g_ = 0.0, b_ = x; }"
+          "  else {"
+          "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
+
+          "  float m = v - c;"
+          "  r = r_ + m;"
+          "  g = g_ + m;"
+          "  b = b_ + m;"
+
+          "  return vec3 (r, g, b);"
+          "  }"
+          //}}}
+
+          "void main() {"
+          "  outColor = texture (uSampler, textureCoord);"
+
+          "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
+          "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
+          "    hsv.x += uHue;"
+          "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
+                 // not grayscale
+          "      hsv.y = uSat <= 0.0 ? "
+          "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
+          "      }"
+          "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
+          "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
+          "    outColor.xyz = rgb;"
+          "    }"
+
+          //"  if (uPreMultiply)"
+          //"    outColor.xyz *= outColor.w;"
+          "  }";
+      #endif
+
+      mId = compileShader (kQuadVertShader, kFragShader);
       }
     //}}}
     //{{{
@@ -1035,208 +1196,42 @@ namespace {
       glUseProgram (mId);
       }
     //}}}
-
-  private:
-    #ifdef OPENGL_2
-      //{{{
-      inline static const string kLayerFragShader =
-        "#version 120\n"
-
-        "uniform sampler2D uSampler;"
-        "uniform float uHue;"
-        "uniform float uVal;"
-        "uniform float uSat;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        //{{{
-        "vec3 rgbToHsv (float r, float g, float b) {"
-        "  float max_val = max(r, max(g, b));"
-        "  float min_val = min(r, min(g, b));"
-        "  float h;" // hue in degrees
-
-        "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
-        "    h = 0.0; }"
-        "  else if (max_val == r) {"
-        "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
-        "  else if (max_val == g) {"
-        "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
-        "  else if (max_val == b) {"
-        "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
-        "  if (h < 0.0) {"
-        "    h += 360.0; }"
-
-        "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
-        "  float v = max_val;"
-        "  return vec3 (h, s, v);"
-        "  }"
-        //}}}
-        //{{{
-        "vec3 hsvToRgb (float h, float s, float v) {"
-        "  float r, g, b;"
-        "  float c = v * s;"
-        "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
-        "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
-        "  float r_, g_, b_;"
-
-        "  if (0.0 <= h_ && h_ < 1.0) {"
-        "    r_ = c, g_ = x, b_ = 0.0; }"
-        "  else if (1.0 <= h_ && h_ < 2.0) {"
-        "    r_ = x, g_ = c, b_ = 0.0; }"
-        "  else if (2.0 <= h_ && h_ < 3.0) {"
-        "    r_ = 0.0, g_ = c, b_ = x; }"
-        "  else if (3.0 <= h_ && h_ < 4.0) {"
-        "    r_ = 0.0, g_ = x, b_ = c; }"
-        "  else if (4.0 <= h_ && h_ < 5.0) {"
-        "    r_ = x, g_ = 0.0, b_ = c; }"
-        "  else if (5.0 <= h_ && h_ < 6.0) {"
-        "    r_ = c, g_ = 0.0, b_ = x; }"
-        "  else {"
-        "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
-
-        "  float m = v - c;"
-        "  r = r_ + m;"
-        "  g = g_ + m;"
-        "  b = b_ + m;"
-
-        "  return vec3 (r, g, b);"
-        "  }"
-        //}}}
-
-        "void main() {"
-        "  outColor = texture (uSampler, textureCoord);"
-
-        "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
-        "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
-        "    hsv.x += uHue;"
-        "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
-               // not grayscale
-        "      hsv.y = uSat <= 0.0 ? "
-        "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
-        "      }"
-        "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
-        "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
-        "    outColor.xyz = rgb;"
-        "    }"
-
-        //"  if (uPreMultiply)"
-        //"    outColor.xyz *= outColor.w;"
-        "  }";
-      //}}}
-    #else
-      //{{{
-      inline static const string kLayerFragShader =
-        "#version 330 core\n"
-        "uniform sampler2D uSampler;"
-        "uniform float uHue;"
-        "uniform float uVal;"
-        "uniform float uSat;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        //{{{
-        "vec3 rgbToHsv (float r, float g, float b) {"
-        "  float max_val = max(r, max(g, b));"
-        "  float min_val = min(r, min(g, b));"
-        "  float h;" // hue in degrees
-
-        "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
-        "    h = 0.0; }"
-        "  else if (max_val == r) {"
-        "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
-        "  else if (max_val == g) {"
-        "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
-        "  else if (max_val == b) {"
-        "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
-        "  if (h < 0.0) {"
-        "    h += 360.0; }"
-
-        "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
-        "  float v = max_val;"
-        "  return vec3 (h, s, v);"
-        "  }"
-        //}}}
-        //{{{
-        "vec3 hsvToRgb (float h, float s, float v) {"
-        "  float r, g, b;"
-        "  float c = v * s;"
-        "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
-        "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
-        "  float r_, g_, b_;"
-
-        "  if (0.0 <= h_ && h_ < 1.0) {"
-        "    r_ = c, g_ = x, b_ = 0.0; }"
-        "  else if (1.0 <= h_ && h_ < 2.0) {"
-        "    r_ = x, g_ = c, b_ = 0.0; }"
-        "  else if (2.0 <= h_ && h_ < 3.0) {"
-        "    r_ = 0.0, g_ = c, b_ = x; }"
-        "  else if (3.0 <= h_ && h_ < 4.0) {"
-        "    r_ = 0.0, g_ = x, b_ = c; }"
-        "  else if (4.0 <= h_ && h_ < 5.0) {"
-        "    r_ = x, g_ = 0.0, b_ = c; }"
-        "  else if (5.0 <= h_ && h_ < 6.0) {"
-        "    r_ = c, g_ = 0.0, b_ = x; }"
-        "  else {"
-        "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
-
-        "  float m = v - c;"
-        "  r = r_ + m;"
-        "  g = g_ + m;"
-        "  b = b_ + m;"
-
-        "  return vec3 (r, g, b);"
-        "  }"
-        //}}}
-
-        "void main() {"
-        "  outColor = texture (uSampler, textureCoord);"
-
-        "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
-        "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
-        "    hsv.x += uHue;"
-        "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
-               // not grayscale
-        "      hsv.y = uSat <= 0.0 ? "
-        "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
-        "      }"
-        "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
-        "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
-        "    outColor.xyz = rgb;"
-        "    }"
-
-        //"  if (uPreMultiply)"
-        //"    outColor.xyz *= outColor.w;"
-        "  }";
-      //}}}
-    #endif
     };
   //}}}
   //{{{
   class cOpenGlCanvasShader : public cCanvasShader {
-  //{{{  version
-  //if (gGlslVersion == 120) {
-    //vertex_shader = vertexShader120;
-    //fragment_shader = fragmentShader120;
-    //}
-  //else if (gGlslVersion == 300) {
-    //vertex_shader = vertexShader300es;
-    //fragment_shader = fragmentShader300es;
-    //}
-  //else if (gGlslVersion >= 410) {
-    //vertex_shader = vertexShader410core;
-    //fragment_shader = fragmentShader410core;
-    //}
-  //else {
-    //vertex_shader = vertexShader130;
-    //fragment_shader = fragmentShader130;
-    //}
-  //}}}
   public:
     //{{{
     cOpenGlCanvasShader() : cCanvasShader() {
-      mId = compileShader (kQuadVertShader, kCanvasFragShader);
+
+      #ifdef OPENGL_2
+        const string kFragShader =
+          "#version 120\n"
+
+          "uniform sampler2D uSampler;"
+
+          "in vec2 textureCoord;"
+          "out vec4 outColor;"
+
+          "void main() {"
+          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+          //"  outColor /= outColor.w;"
+          "  }";
+      #else
+        const string kFragShader =
+          "#version 330 core\n"
+          "uniform sampler2D uSampler;"
+
+          "in vec2 textureCoord;"
+          "out vec4 outColor;"
+
+          "void main() {"
+          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+          //"  outColor /= outColor.w;"
+          "  }";
+      #endif
+
+      mId = compileShader (kQuadVertShader, kFragShader);
       }
     //}}}
     //{{{
@@ -1259,37 +1254,6 @@ namespace {
       glUseProgram (mId);
       }
     //}}}
-
-    #ifdef OPENGL_2
-      //{{{
-      inline static const string kCanvasFragShader =
-        "#version 120\n"
-
-        "uniform sampler2D uSampler;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        "void main() {"
-        "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-        //"  outColor /= outColor.w;"
-        "  }";
-      //}}}
-    #else
-      //{{{
-      inline static const string kCanvasFragShader =
-        "#version 330 core\n"
-        "uniform sampler2D uSampler;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        "void main() {"
-        "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-        //"  outColor /= outColor.w;"
-        "  }";
-      //}}}
-    #endif
     };
   //}}}
 
@@ -1466,7 +1430,6 @@ namespace {
   //}}}
   }
 
-// do not need .h file, not sure
 //{{{
 class cOpenGlGraphics : public cGraphics {
 public:

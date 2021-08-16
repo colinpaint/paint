@@ -81,7 +81,6 @@ public:
   virtual ~cShader() = default;
 
   uint32_t getId() { return mId; }
-
   virtual void use() = 0;
 
 protected:
@@ -89,32 +88,38 @@ protected:
   };
 //}}}
 //{{{
-class cPaintShader : public cShader {
+class cQuadShader : public cShader {
 public:
-  cPaintShader() : cShader() {}
+  cQuadShader() : cShader() {}
+  virtual ~cQuadShader() = default;
+
+  // sets
+  virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
+  };
+//}}}
+//{{{
+class cPaintShader : public cQuadShader {
+public:
+  cPaintShader() : cQuadShader() {}
   virtual ~cPaintShader() = default;
 
-  virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
   virtual void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color) = 0;
   };
 //}}}
 //{{{
-class cLayerShader : public cShader {
+class cLayerShader : public cQuadShader {
 public:
-  cLayerShader() : cShader() {}
+  cLayerShader() : cQuadShader() {}
   virtual ~cLayerShader() = default;
 
-  virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
   virtual void setHueSatVal (float hue, float sat, float val) = 0;
   };
 //}}}
 //{{{
-class cCanvasShader : public cShader {
+class cCanvasShader : public cQuadShader {
 public:
-  cCanvasShader() : cShader() {}
+  cCanvasShader() : cQuadShader() {}
   virtual ~cCanvasShader() = default;
-
-  virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
   };
 //}}}
 

@@ -1,4 +1,5 @@
 // cWin32Platform.cpp - imGui backend win32Impl wrapper
+#ifdef WIN32
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
@@ -82,7 +83,6 @@ namespace {
   //}}}
   }
 
-// do not need .h file, not sure
 //{{{
 class cWin32Platform : public cPlatform {
 public:
@@ -265,3 +265,4 @@ void cWin32Platform::present() {
   //gSwapChain->Present(0, 0); // Present without vsync
   }
 //}}}
+#endif
