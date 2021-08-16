@@ -1,4 +1,4 @@
-// cDirectX11Graphics.cpp - concrete DirectX11 graphics class
+// cDirectX11Graphics.cpp - !!!need to finsh quad, frameBuffer and shader !!!
 #ifdef WIN32
 //{{{  includes
 #include <cstdint>
@@ -232,8 +232,7 @@ namespace {
   public:
     cDirectX11PaintShader() : cPaintShader() {
       }
-    virtual ~cDirectX11PaintShader() {
-      }
+    virtual ~cDirectX11PaintShader() = default;
 
     // sets
     void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
@@ -250,8 +249,7 @@ namespace {
   public:
     cDirectX11LayerShader() : cLayerShader() {
       }
-    virtual ~cDirectX11LayerShader() {
-      }
+    virtual ~cDirectX11LayerShader() = default;
 
     // sets
     void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
@@ -268,8 +266,7 @@ namespace {
   public:
     cDirectX11CanvasShader() : cCanvasShader() {
       }
-    virtual ~cDirectX11CanvasShader() {
-      }
+    virtual ~cDirectX11CanvasShader()  = default;
 
     // sets
     void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
@@ -305,22 +302,26 @@ namespace {
     ID3D11Device*             mD3dDevice;
     ID3D11DeviceContext*      mD3dDeviceContext;
     IDXGIFactory*             mDxgiFactory;
+
+    IDXGISwapChain*           mDxgiSwapChain;
+    ID3D11RenderTargetView*   mMainRenderTargetView;
+
     ID3D11Buffer*             mVB;
     ID3D11Buffer*             mIB;
+    int                       mVertexBufferSize;
+    int                       mIndexBufferSize;
+
     ID3D11VertexShader*       mVertexShader;
     ID3D11InputLayout*        mInputLayout;
     ID3D11Buffer*             mVertexConstantBuffer;
     ID3D11PixelShader*        mPixelShader;
+
     ID3D11SamplerState*       mFontSampler;
     ID3D11ShaderResourceView* mFontTextureView;
+
     ID3D11RasterizerState*    mRasterizerState;
     ID3D11BlendState*         mBlendState;
     ID3D11DepthStencilState*  mDepthStencilState;
-    int                       mVertexBufferSize;
-    int                       mIndexBufferSize;
-
-    IDXGISwapChain*           mDxgiSwapChain;
-    ID3D11RenderTargetView*   mMainRenderTargetView;
 
     sBackendData() {
       memset (this, 0, sizeof(*this));
@@ -538,8 +539,8 @@ namespace {
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MipLevels = texture2dDesc.MipLevels;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-    if (backendData->mD3dDevice->CreateShaderResourceView (texture2d, &shaderResourceViewDesc,
-                                                           &backendData->mFontTextureView) != S_OK) {
+    if (backendData->mD3dDevice->CreateShaderResourceView (
+      texture2d, &shaderResourceViewDesc, &backendData->mFontTextureView) != S_OK) {
       //{{{  error, return false
       cLog::log (LOGERROR, "createFontTexture CreateShaderResourceView failed");
       return false;
@@ -577,6 +578,7 @@ namespace {
     bool ok = true;
 
     sBackendData* backendData = getBackendData();
+
     ID3D11Texture2D* backBuffer;
     backendData->mDxgiSwapChain->GetBuffer (0, IID_PPV_ARGS (&backBuffer));
 
@@ -713,35 +715,37 @@ namespace {
       deviceContext->Unmap (backendData->mIB, 0);
 
       setupRenderState (drawData);
-      //{{{  set orthoProject matrix in GPU vertexConstantBuffer
+      //{{{  calc orthoProject matrix
       const float L = drawData->DisplayPos.x;
       const float R = drawData->DisplayPos.x + drawData->DisplaySize.x;
       const float T = drawData->DisplayPos.y;
       const float B = drawData->DisplayPos.y + drawData->DisplaySize.y;
 
-      const float kMatrix[4][4] = {
+      const float kOrthoMatrix[4][4] = {
          2.0f/(R-L),  0.0f,        0.0f, 0.0f ,
          0.0f,        2.0f/(T-B),  0.0f, 0.0f ,
          0.0f,        0.0f,        0.5f, 0.0f ,
          (R+L)/(L-R), (T+B)/(B-T), 0.5f, 1.0f ,
         };
-
-      // copy kMatrix to mapped matrix vertexConstantBuffer
+      //}}}
+      //{{{  copy kOrthoMatrix to mapped GPU vertexConstantBuffer
       D3D11_MAPPED_SUBRESOURCE mappedSubResource;
+
       if (deviceContext->Map (backendData->mVertexConstantBuffer,
                               0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource) != S_OK) {
         cLog::log (LOGERROR, "vertexConstant Map failed");
         return;
         }
-      memcpy ((float*)mappedSubResource.pData, kMatrix, sizeof(kMatrix));
+
+      memcpy (mappedSubResource.pData, kOrthoMatrix, sizeof(kOrthoMatrix));
       deviceContext->Unmap (backendData->mVertexConstantBuffer, 0);
       //}}}
 
       // render command lists
-      int indexOffset = 0;
-      int vertexOffset = 0;
       ImVec2 clipOffset = drawData->DisplayPos;
 
+      int indexOffset = 0;
+      int vertexOffset = 0;
       for (int cmdListIndex = 0; cmdListIndex < drawData->CmdListsCount; cmdListIndex++) {
         const ImDrawList* cmdList = drawData->CmdLists[cmdListIndex];
         for (int cmdIndex = 0; cmdIndex < cmdList->CmdBuffer.Size; cmdIndex++) {
@@ -758,7 +762,9 @@ namespace {
           deviceContext->PSSetShaderResources (0, 1, &shaderResourceView);
 
           // draw
-          deviceContext->DrawIndexed (drawCmd->ElemCount, drawCmd->IdxOffset + indexOffset, drawCmd->VtxOffset + vertexOffset);
+          deviceContext->DrawIndexed (drawCmd->ElemCount, 
+                                      drawCmd->IdxOffset + indexOffset, 
+                                      drawCmd->VtxOffset + vertexOffset);
           }
 
         indexOffset += cmdList->IdxBuffer.Size;
