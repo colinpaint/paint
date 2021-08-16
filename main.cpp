@@ -34,6 +34,7 @@ namespace {
 
 int main (int numArgs, char* args[]) {
 
+  // default params
   eLogLevel logLevel = LOGINFO;
   string platformString = "glfw";
   string graphicsString = "opengl";
