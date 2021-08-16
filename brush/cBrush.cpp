@@ -36,7 +36,8 @@ cBrush* cBrush::setCurBrushByName (const string& name, float radius, cGraphics& 
 //}}}
 //{{{
 map<const string, cBrush::createFunc>& cBrush::getClassRegister() {
-// trickery - static map inside static method ensures map is created before any use
+// static map inside static method ensures map is created before any use
+
   static map<const string, createFunc> mClassRegistry;
   return mClassRegistry;
   }
@@ -60,7 +61,6 @@ bool cBrush::isCurBrushByName (const string& name) {
   return mCurBrush ? name == mCurBrush->getName() : false;
   }
 //}}}
-
 
 // gets
 //{{{
@@ -115,7 +115,6 @@ void cBrush::setColor (uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 // protected:
 //{{{
 bool cBrush::registerClass (const string& name, const createFunc factoryMethod) {
-// trickery - function needs to be called by a derived class inside a static context
 
   if (getClassRegister().find (name) == getClassRegister().end()) {
     // className not found - add to classRegister map

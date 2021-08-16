@@ -10,6 +10,12 @@ using namespace std;
 using namespace fmt;
 //}}}
 
+// static - public
+//{{{
+cPlatform& cPlatform::createByName (const string& name) {
+  return *getClassRegister()[name](name);
+  }
+//}}}
 //{{{
 void cPlatform::listClasses() {
   cLog::log (LOGINFO, "platform register");
@@ -17,15 +23,10 @@ void cPlatform::listClasses() {
     cLog::log (LOGINFO, format ("- {}", ui.first));
   }
 //}}}
-//{{{
-cPlatform& cPlatform::createByName (const string& name) {
-  return *getClassRegister()[name](name);
-  }
-//}}}
 
+// static - protected
 //{{{
 bool cPlatform::registerClass (const string& name, const createFunc factoryMethod) {
-// trickery - function needs to be called by a derived class inside a static context
 
   if (getClassRegister().find (name) == getClassRegister().end()) {
     // className not found - add to classRegister map
@@ -38,7 +39,8 @@ bool cPlatform::registerClass (const string& name, const createFunc factoryMetho
 //}}}
 //{{{
 map<const string, cPlatform::createFunc>& cPlatform::getClassRegister() {
-// trickery - static map inside static method ensures map is created before any use
+// static map inside static method ensures map is created before any use
+
   static map<const string, createFunc> mClassRegistry;
   return mClassRegistry;
   }

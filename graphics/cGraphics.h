@@ -1,4 +1,4 @@
-// cGraphics.h - graphics static create and abstract base class
+// cGraphics.h - static register and base class
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -123,7 +123,7 @@ public:
 
 class cGraphics {
 public:
-  // static
+  // static register
   static cGraphics& createByName (const std::string& name);
   static void listClasses();
 
@@ -148,9 +148,11 @@ public:
   virtual void windowResize (int width, int height) = 0;
 
 protected:
+  // static register
   using createFunc = cGraphics*(*)(const std::string& name);
   static bool registerClass (const std::string& name, const createFunc factoryMethod);
 
 private:
+  // static register
   static std::map<const std::string, createFunc>& getClassRegister();
   };

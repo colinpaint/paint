@@ -31,7 +31,6 @@ void cGraphics::listClasses() {
 // protected
 //{{{
 bool cGraphics::registerClass (const string& name, const createFunc factoryMethod) {
-// trickery - function needs to be called by a derived class inside a static context
 
   if (getClassRegister().find (name) == getClassRegister().end()) {
     // className not found - add to classRegister map
@@ -43,10 +42,10 @@ bool cGraphics::registerClass (const string& name, const createFunc factoryMetho
   }
 //}}}
 
-// private
+// staic private
 //{{{
 map<const string, cGraphics::createFunc>& cGraphics::getClassRegister() {
-// trickery - static map inside static method ensures map is created before any use
+// static map inside static method ensures map is created before any use
 
   static map<const string, createFunc> mClassRegistry;
   return mClassRegistry;

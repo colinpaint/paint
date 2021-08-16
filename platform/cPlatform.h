@@ -1,4 +1,4 @@
-// cPlatform.h - platform abstract interface
+// cPlatform.h - static register and base class
 #pragma once
 //{{{  includes
 #include <string>
@@ -11,11 +11,11 @@ class cGraphics;
 
 class cPlatform {
 public:
-  // statics
+  // static register
   static cPlatform& createByName (const std::string& name);
   static void listClasses();
 
-  // abstract interface
+  // base class
   virtual bool init (const cPoint& windowSize, bool showViewports) = 0;
   virtual void shutdown() = 0;
 
@@ -35,6 +35,7 @@ public:
   std::function <void (int programPid, int programSid)> mResizeCallback;
 
 protected:
+  // static register
   using createFunc = cPlatform*(*)(const std::string& name);
   static bool registerClass (const std::string& name, const createFunc factoryMethod);
   static std::map<const std::string, createFunc>& getClassRegister();

@@ -150,6 +150,32 @@ struct cRect {
 //}}}
 
 //{{{
+struct cColor {
+  float r;
+  float g;
+  float b;
+  float a;
+
+  //{{{
+  cColor()  {
+    r = 0.f;
+    g = 0.f;
+    b = 0.f;
+    a = 1.f;
+    }
+  //}}}
+  //{{{
+  cColor (float r, float g, float b, float a) {
+    this->r = r;
+    this->g = g;
+    this->b = b;
+    this->a = a;
+    }
+  //}}}
+  };
+//}}}
+
+//{{{
 struct cVec2 {
   float x;
   float y;
@@ -288,32 +314,6 @@ struct cMat44 {
   //{{{
   cMat44 (const cMat44& mat) {
     memcpy (this, &mat, sizeof (cMat44));
-    }
-  //}}}
-  };
-//}}}
-
-//{{{
-struct cColor {
-  float r;
-  float g;
-  float b;
-  float a;
-
-  //{{{
-  cColor()  {
-    r = 0.f;
-    g = 0.f;
-    b = 0.f;
-    a = 1.f;
-    }
-  //}}}
-  //{{{
-  cColor (float r, float g, float b, float a) {
-    this->r = r;
-    this->g = g;
-    this->b = b;
-    this->a = a;
     }
   //}}}
   };
