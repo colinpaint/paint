@@ -147,7 +147,7 @@ public:
 
   // actions
   virtual void draw() = 0;
-  virtual void windowResized (int width, int height) = 0;
+  virtual void windowResize (int width, int height) = 0;
 
 protected:
   using createFunc = cGraphics*(*)(const std::string& name);

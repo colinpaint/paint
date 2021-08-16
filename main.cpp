@@ -67,7 +67,7 @@ int main (int numArgs, char* args[]) {
   if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
 
-  // start canvas
+  // create canvas
   cCanvas canvas (params.empty() ? "../piccies/tv.jpg" : params[0], graphics);
   if (params.size() > 1)
     canvas.newLayer (params[1]);
@@ -75,7 +75,7 @@ int main (int numArgs, char* args[]) {
   // set resizeCallback lambda
   platform.setResizeCallback (
     [&](int width, int height) noexcept {
-      graphics.windowResized (width, height);
+      graphics.windowResize (width, height);
       platform.newFrame();
       cUI::draw (canvas, graphics);
       platform.present();

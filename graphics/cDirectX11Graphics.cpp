@@ -762,8 +762,8 @@ namespace {
           deviceContext->PSSetShaderResources (0, 1, &shaderResourceView);
 
           // draw
-          deviceContext->DrawIndexed (drawCmd->ElemCount, 
-                                      drawCmd->IdxOffset + indexOffset, 
+          deviceContext->DrawIndexed (drawCmd->ElemCount,
+                                      drawCmd->IdxOffset + indexOffset,
                                       drawCmd->VtxOffset + vertexOffset);
           }
 
@@ -909,7 +909,7 @@ public:
 
   // actions
   void draw() final;
-  void windowResized (int width, int height) final;
+  void windowResize (int width, int height) final;
 
 private:
   //{{{
@@ -1070,7 +1070,7 @@ void cDirectX11Graphics::draw() {
   }
 //}}}
 //{{{
-void cDirectX11Graphics::windowResized (int width, int height) {
+void cDirectX11Graphics::windowResize (int width, int height) {
 
   //cLog::log (LOGINFO, format ("cGraphics::windowResized {}", width, height));
   sBackendData* backendData = getBackendData();

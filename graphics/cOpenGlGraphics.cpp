@@ -1450,7 +1450,7 @@ public:
 
   // actions
   void draw() final;
-  void windowResized (int width, int height) final;
+  void windowResize (int width, int height) final;
 
 private:
   //{{{
@@ -1607,7 +1607,7 @@ void cOpenGlGraphics::draw() {
   }
 //}}}
 //{{{
-void cOpenGlGraphics::windowResized (int width, int height) {
-  cLog::log (LOGINFO, format ("windowResized {} {}", width, height));
+void cOpenGlGraphics::windowResize (int width, int height) {
+  cLog::log (LOGINFO, format ("cOpenGlGraphics windowResize {} {}", width, height));
   }
 //}}}
