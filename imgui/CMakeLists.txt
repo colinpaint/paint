@@ -1,7 +1,21 @@
 project (imgui)
 
-file (GLOB SRCFILES *.cpp)
 file (GLOB HEADER_FILES *.h)
+file (GLOB SRCFILES *.cpp)
 
-# imGui backends added by graphics or platform
-add_library (imgui ${SRCFILES} ${HEADER_FILES})
+if (WIN32)
+  add_library (imgui  
+    ${HEADER_FILES}
+    ${SRCFILES}
+    backends/imgui_impl_glfw.cpp
+    backends/imgui_impl_win32.cpp
+    )
+
+else()
+  add_library (imgui  
+    ${HEADER_FILES} 
+    ${SRCFILES}
+    backends/imgui_impl_glfw.cpp
+    )
+
+endif()
