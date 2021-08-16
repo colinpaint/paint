@@ -52,10 +52,10 @@ int main (int numArgs, char* args[]) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, format ("paintbox {} {}", platformString, graphicsString));
 
-  cUI::listClasses();
-  cBrush::listClasses();
   cPlatform::listClasses();
   cGraphics::listClasses();
+  cUI::listClasses();
+  cBrush::listClasses();
 
   // create and start platform
   cPlatform& platform = cPlatform::createByName (platformString);

@@ -5,10 +5,6 @@
 #include <string>
 #include <map>
 
-// glm
-#include <vec2.hpp>
-#include <vec4.hpp>
-
 #include "../graphics/cPointRect.h"
 class cGraphics;
 class cFrameBuffer;
@@ -35,25 +31,25 @@ public:
 
   std::string getName() const { return mName; }
   //{{{
-  glm::vec4 getColor() {
-    return glm::vec4(static_cast<float>(mR) / 255.f,
-                     static_cast<float>(mG) / 255.f,
-                     static_cast<float>(mB) / 255.f,
-                     static_cast<float>(mA) / 255.f);
+  cColor getColor() {
+    return cColor(static_cast<float>(mR) / 255.f,
+                  static_cast<float>(mG) / 255.f,
+                  static_cast<float>(mB) / 255.f,
+                  static_cast<float>(mA) / 255.f);
     }
   //}}}
 
   float getRadius() { return mRadius; }
   float getBoundRadius() { return mRadius + 1.f; }
-  cRect getBoundRect (glm::vec2 pos, cFrameBuffer* frameBuffer);
+  cRect getBoundRect (cVec2 pos, cFrameBuffer* frameBuffer);
 
-  void setColor (glm::vec4 color);
+  void setColor (const cColor& color);
   void setColor (float r, float g, float b, float a);
   void setColor (uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
   // virtuals
   virtual void setRadius (float radius) { mRadius = radius; }
-  virtual void paint (glm::vec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) = 0;
+  virtual void paint (cVec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) = 0;
 
 protected:
   float mRadius = 0.f;
@@ -63,7 +59,7 @@ protected:
   uint8_t mB = 0;
   uint8_t mA = 255;
 
-  glm::vec2 mPrevPos = glm::vec2(0.f,0.f);
+  cVec2 mPrevPos = cVec2(0.f,0.f);
 
 protected:
   static bool registerClass (const std::string& name, const createFunc factoryMethod);

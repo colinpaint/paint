@@ -6,9 +6,7 @@
 #include <map>
 
 // glm
-#include <vec2.hpp>
 #include <vec3.hpp>
-#include <vec4.hpp>
 #include <mat4x4.hpp>
 
 #include "cPointRect.h"
@@ -57,7 +55,7 @@ public:
   virtual void invalidate() = 0;
   virtual void pixelsChanged (const cRect& rect) = 0;
 
-  virtual void clear (const glm::vec4& color) = 0;
+  virtual void clear (const cColor& color) = 0;
   virtual void blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect) = 0;
 
   virtual bool checkStatus() = 0;
@@ -103,7 +101,7 @@ public:
   cPaintShader() : cQuadShader() {}
   virtual ~cPaintShader() = default;
 
-  virtual void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color) = 0;
+  virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) = 0;
   };
 //}}}
 //{{{

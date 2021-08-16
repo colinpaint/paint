@@ -28,7 +28,7 @@ public:
   //}}}
 
   //{{{
-  void paint (glm::vec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) {
+  void paint (cVec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) {
 
     if (first)
       mPrevPos = pos;

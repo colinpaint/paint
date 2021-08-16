@@ -8,9 +8,7 @@
 #include <algorithm>
 
 // glm
-#include <vec2.hpp>
 #include <vec3.hpp>
-#include <vec4.hpp>
 #include <mat4x4.hpp>
 #include <gtc/matrix_transform.hpp>
 
@@ -85,7 +83,7 @@ uint8_t* cLayer::getRenderedPixels() {
 //}}}
 
 //{{{
-void cLayer::paint (cBrush* brush, glm::vec2 pos, bool first) {
+void cLayer::paint (cBrush* brush, cVec2 pos, bool first) {
 // paint using brush onto layer's frameBuffers
 
   brush->paint (pos, first, mFrameBuffer, mFrameBuffer1);

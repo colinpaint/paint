@@ -22,8 +22,10 @@ using namespace fmt;
 
 //{{{
 void cUI::listClasses() {
+
+  cLog::log (LOGINFO, "ui register");
   for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("ui - {}", ui.first));
+    cLog::log (LOGINFO, format ("- {}", ui.first));
   }
 //}}}
 //{{{
@@ -69,10 +71,10 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
                     ImGui::IsMouseClicked (ImGuiMouseButton_Left),
                     ImGui::IsMouseDragging (ImGuiMouseButton_Left, 0.f),
                     ImGui::IsMouseReleased (ImGuiMouseButton_Left),
-                    glm::vec2 (ImGui::GetMousePos().x - (ImGui::GetIO().DisplaySize.x / 2.f),
-                               ImGui::GetMousePos().y - (ImGui::GetIO().DisplaySize.y / 2.f)),
-                    glm::vec2 (ImGui::GetMouseDragDelta (ImGuiMouseButton_Left).x,
-                               ImGui::GetMouseDragDelta (ImGuiMouseButton_Left).y));
+                    cVec2 (ImGui::GetMousePos().x - (ImGui::GetIO().DisplaySize.x / 2.f),
+                           ImGui::GetMousePos().y - (ImGui::GetIO().DisplaySize.y / 2.f)),
+                    cVec2 (ImGui::GetMouseDragDelta (ImGuiMouseButton_Left).x,
+                           ImGui::GetMouseDragDelta (ImGuiMouseButton_Left).y));
 
       if (!ImGui::IsItemActive()) {
         // draw outline circle cursor

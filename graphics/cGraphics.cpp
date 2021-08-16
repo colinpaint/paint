@@ -22,8 +22,9 @@ cGraphics& cGraphics::createByName (const string& name) {
 //{{{
 void cGraphics::listClasses() {
 
+  cLog::log (LOGINFO, "graphics register");
   for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("graphics - {}", ui.first));
+    cLog::log (LOGINFO, format ("- {}", ui.first));
   }
 //}}}
 

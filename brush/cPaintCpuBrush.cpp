@@ -5,11 +5,6 @@
 #include <string>
 #include <algorithm>
 
-// glm
-#include <vec2.hpp>
-#include <vec4.hpp>
-#include <gtx/norm.hpp>
-
 #include "cBrush.h"
 #include "../graphics/cGraphics.h"
 #include "../log/cLog.h"
@@ -37,7 +32,7 @@ public:
     }
   //}}}
   //{{{
-  void paint (glm::vec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) {
+  void paint (cVec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) {
 
     if (first) {
       stamp (pos, frameBuffer);
@@ -48,12 +43,12 @@ public:
       cRect boundRect = getBoundRect (pos, frameBuffer);
 
       // draw stamps from mPrevPos to pos
-      glm::vec2 diff = pos - mPrevPos;
-      float length = sqrtf (glm::length2 (diff));
+      cVec2 diff = pos - mPrevPos;
+      float length = diff.magnitude();
       float overlap = mRadius / 2.f;
 
       if (length >= overlap) {
-        glm::vec2 inc = diff * (overlap / length);
+        cVec2 inc = diff * (overlap / length);
 
         unsigned numStamps = static_cast<unsigned>(length / overlap);
         for (unsigned i = 0; i < numStamps; i++)
@@ -77,7 +72,7 @@ protected:
 
 private:
   //{{{
-  virtual void stamp (glm::vec2 pos, cFrameBuffer* frameBuffer) {
+  virtual void stamp (cVec2 pos, cFrameBuffer* frameBuffer) {
   // stamp brushShape into image, clipped by width,height to pos, update mPrevPos
 
     int32_t width = frameBuffer->getSize().x;
@@ -198,7 +193,7 @@ private:
     }
   //}}}
   //{{{
-  void stamp (glm::vec2 pos, cFrameBuffer* frameBuffer) final {
+  void stamp (cVec2 pos, cFrameBuffer* frameBuffer) final {
   // stamp brushShape into image, clipped by width,height to pos, update mPrevPos
 
     int32_t width = frameBuffer->getSize().x;

@@ -12,8 +12,9 @@ using namespace fmt;
 
 //{{{
 void cPlatform::listClasses() {
+  cLog::log (LOGINFO, "platform register");
   for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("platform - {}", ui.first));
+    cLog::log (LOGINFO, format ("- {}", ui.first));
   }
 //}}}
 //{{{

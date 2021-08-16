@@ -8,9 +8,6 @@
 #include <algorithm>
 
 // glm
-#include <vec2.hpp>
-#include <vec3.hpp>
-#include <vec4.hpp>
 #include <mat4x4.hpp>
 #include <gtc/type_ptr.hpp>
 #include <gtx/string_cast.hpp>
@@ -138,7 +135,7 @@ void cCanvas::renderCurLayer() {
 //}}}
 
 //{{{
-void cCanvas::mouse (bool active, bool clicked, bool dragging, bool released, glm::vec2 pos, glm::vec2 drag) {
+void cCanvas::mouse (bool active, bool clicked, bool dragging, bool released, cVec2 pos, cVec2 drag) {
 
   // just paint for now, will expand to other actions, graphics,cut,paste,effects
   if (active)
@@ -160,7 +157,7 @@ void cCanvas::draw (cPoint windowSize) {
   mWindowFrameBuffer->setSize (windowSize);
   mWindowFrameBuffer->setTarget();
   mWindowFrameBuffer->setBlend();
-  mWindowFrameBuffer->clear (glm::vec4(0.25f,0.25f,0.25f,1.0f));
+  mWindowFrameBuffer->clear (cColor(0.25f,0.25f,0.25f,1.0f));
 
   // - canvas frameBuffer texture source
   mFrameBuffer->setSource();
@@ -197,7 +194,7 @@ void cCanvas::createResources() {
   }
 //}}}
 //{{{
-glm::vec2 cCanvas::getLayerPos (glm::vec2 pos) {
+cVec2 cCanvas::getLayerPos (cVec2 pos) {
 
   // need a better calc, not sure mModel and mProject help
   //cLog::log (LOGINFO, "mod " + glm::to_string (mModel));

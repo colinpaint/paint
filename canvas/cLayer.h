@@ -5,7 +5,6 @@
 #include <string>
 
 // glm
-#include <vec2.hpp>
 #include <mat4x4.hpp>
 
 #include "../graphics/cGraphics.h"
@@ -39,7 +38,7 @@ public:
   void setHueSatVal (float hue, float sat, float val) { mHue = hue; mSat = sat; mVal = val; }
 
   // actions
-  void paint (cBrush* brush, glm::vec2 pos, bool first);
+  void paint (cBrush* brush, cVec2 pos, bool first);
   void draw (const cPoint& size);
 
   void replace (uint8_t* pixels);

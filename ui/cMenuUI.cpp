@@ -4,9 +4,6 @@
 #include <vector>
 #include <string>
 
-// glm
-#include <vec2.hpp>
-
 // imGui
 #include <imgui.h>
 

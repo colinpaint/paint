@@ -4,10 +4,7 @@
 #include <vector>
 #include <string>
 
-// glm
-#include <vec4.hpp>
-
-//imgui
+// imgui
 #include <imgui.h>
 
 #include "cUI.h"
@@ -29,7 +26,7 @@ public:
   //{{{
   cColorUI (const std::string& name) : cUI(name) {
     for (int i =0 ; i < 16; i++)
-      mSwatches.push_back (glm::vec4 (0.f,0.f,0.f,0.f));
+      mSwatches.push_back (cColor(0.f,0.f,0.f, 0.f));
     }
   //}}}
   virtual ~cColorUI() = default;
@@ -40,20 +37,20 @@ public:
 
     // colorPicker
     cBrush* brush = cBrush::getCurBrush();
-    ImVec4 imBrushColor = ImVec4 (brush->getColor().x, brush->getColor().y, brush->getColor().z, brush->getColor().w);
+    ImVec4 imBrushColor = ImVec4 (brush->getColor().r,brush->getColor().g,brush->getColor().b, brush->getColor().a);
     ImGui::ColorPicker4 ("colour", (float*)&imBrushColor, kColorSelectorFlags, nullptr);
-    float opacity = brush->getColor().w;
+    float opacity = brush->getColor().a;
     ImGui::SliderFloat ("opacity", &opacity, 0.f, 1.f);
-    brush->setColor (glm::vec4 (imBrushColor.x, imBrushColor.y, imBrushColor.z, opacity));
+    brush->setColor (cColor (imBrushColor.x, imBrushColor.y, imBrushColor.z, opacity));
 
     // iterate swatches
     unsigned swatchIndex = 0;
     for (auto& swatch : mSwatches) {
-      bool disabled = swatch.w == 0.f;
+      bool disabled = swatch.a == 0.f;
       int alphaPrev = disabled ? ImGuiColorEditFlags_AlphaPreview : 0;
 
       if (ImGui::ColorButton (format ("swatch##{}", swatchIndex).c_str(),
-                              ImVec4 (swatch.x, swatch.y, swatch.z, swatch.w),
+                              ImVec4 (swatch.r,swatch.g,swatch.b, swatch.a),
                               ImGuiColorEditFlags_NoTooltip | alphaPrev,
                               ImVec2 (20, 20)) && !disabled)
         brush->setColor (swatch);
@@ -62,11 +59,11 @@ public:
       if (ImGui::BeginPopupContextItem()) {
         if (ImGui::MenuItem ("set", "S")) {
           swatch = brush->getColor();
-          swatch.w = 1.f;
+          swatch.a = 1.f;
           }
 
-        if (ImGui::MenuItem ("unset", "X", nullptr, swatch.w != 0.f) )
-          swatch = glm::vec4 (0.f, 0.f, 0.f, 0.f);
+        if (ImGui::MenuItem ("unset", "X", nullptr, swatch.a != 0.f) )
+          swatch = cColor (0.f,0.f,0.f, 0.f);
 
         ImGui::Separator();
         if (ImGui::MenuItem ("cancel", "C") )
@@ -84,7 +81,7 @@ public:
     }
 
 private:
-  std::vector<glm::vec4> mSwatches;
+  std::vector<cColor> mSwatches;
 
   //{{{
   static cUI* create (const std::string& className) {

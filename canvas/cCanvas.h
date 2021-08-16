@@ -6,7 +6,6 @@
 #include <vector>
 
 // glm
-#include <vec2.hpp>
 #include <mat4x4.hpp>
 
 #include "../graphics/cGraphics.h"
@@ -47,12 +46,12 @@ public:
 
   void renderCurLayer();
 
-  void mouse (bool active, bool clicked, bool dragging, bool released, glm::vec2 pos, glm::vec2 drag);
+  void mouse (bool active, bool clicked, bool dragging, bool released, cVec2 pos, cVec2 drag);
   void draw (cPoint windowSize);
 
 private:
   void createResources();
-  glm::vec2 getLayerPos (glm::vec2 pos);
+  cVec2 getLayerPos (cVec2 pos);
 
   // vars
   std::string mName;

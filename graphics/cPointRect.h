@@ -145,3 +145,137 @@ struct cRect {
     }
   //}}}
   };
+
+//{{{
+struct cVec2 {
+  float x;
+  float y;
+
+  //{{{
+  cVec2()  {
+    x = 0;
+    y = 0;
+    }
+  //}}}
+  //{{{
+  cVec2 (float x, float y) {
+    this->x = x;
+    this->y = y;
+    }
+  //}}}
+
+  //{{{
+  cVec2 operator - (const cVec2& vec2) const {
+    return cVec2(x - vec2.x, y - vec2.y);
+    }
+  //}}}
+  //{{{
+  cVec2 operator + (const cVec2& vec2) const {
+    return cVec2(x + vec2.x, y + vec2.y);
+    }
+  //}}}
+  //{{{
+  cVec2 operator * (const cVec2& vec2) const {
+    return cVec2(x * vec2.x, y * vec2.y);
+    }
+  //}}}
+  //{{{
+  cVec2 operator * (float scale) const {
+    return cVec2(x * scale, y * scale);
+    }
+  //}}}
+
+  //{{{
+  const cVec2& operator += (const cVec2& vec2)  {
+    x += vec2.x;
+    y += vec2.y;
+    return *this;
+    }
+  //}}}
+  //{{{
+  const cVec2& operator -= (const cVec2& vec2)  {
+    x -= vec2.x;
+    y -= vec2.y;
+    return *this;
+    }
+  //}}}
+  //{{{
+  float magnitude() const {
+  // return magnitude of point as vector
+    return float(sqrt ((x*x) + (y*y)));
+    }
+  //}}}
+  };
+//}}}
+//{{{
+struct cVec3 {
+  float x;
+  float y;
+  float z;
+
+  //{{{
+  cVec3()  {
+    x = 0;
+    y = 0;
+    z = 0;
+    }
+  //}}}
+  //{{{
+  cVec3 (float x, float y, float z) {
+    this->x = x;
+    this->y = y;
+    this->z = z;
+    }
+  //}}}
+  };
+//}}}
+//{{{
+struct cVec4 {
+  float x;
+  float y;
+  float z;
+  float w;
+
+  //{{{
+  cVec4()  {
+    x = 0;
+    y = 0;
+    z = 0;
+    w = 0;
+    }
+  //}}}
+  //{{{
+  cVec4 (float x, float y, float z, float w ) {
+    this->x = x;
+    this->y = y;
+    this->z = z;
+    this->w = w;
+    }
+  //}}}
+  };
+//}}}
+//{{{
+struct cColor {
+  float r;
+  float g;
+  float b;
+  float a;
+
+  //{{{
+  cColor()  {
+    r = 0.f;
+    g = 0.f;
+    b = 0.f;
+    a = 1.f;
+    }
+  //}}}
+  //{{{
+  cColor (float r, float g, float b, float a) {
+    this->r = r;
+    this->g = g;
+    this->b = b;
+    this->a = a;
+    }
+  //}}}
+  };
+//}}}

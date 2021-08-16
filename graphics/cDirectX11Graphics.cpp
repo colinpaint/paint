@@ -15,9 +15,7 @@
 #include <imgui.h>
 
 // glm
-#include <vec2.hpp>
 #include <vec3.hpp>
-#include <vec4.hpp>
 #include <mat4x4.hpp>
 #include <gtc/type_ptr.hpp>
 #include <gtc/matrix_transform.hpp>
@@ -167,8 +165,7 @@ namespace {
 
     //{{{
     void invalidate() {
-
-      clear (glm::vec4 (0.f,0.f,0.f, 0.f));
+      clear (cColor (0.f,0.f,0.f, 0.f));
       }
     //}}}
     //{{{
@@ -183,7 +180,7 @@ namespace {
       }
     //}}}
 
-    void clear (const glm::vec4& color) {}
+    void clear (const cColor& color) {}
     //{{{
     void blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect) {
 
@@ -237,7 +234,7 @@ namespace {
     // sets
     void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
       }
-    void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color) final {
+    void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
       }
 
     void use() final {

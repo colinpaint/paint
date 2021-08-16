@@ -7,10 +7,6 @@
 #include <string>
 #include <algorithm>
 
-// glm
-#include <vec2.hpp>
-#include <vec4.hpp>
-
 #include "../graphics/cGraphics.h"
 #include "../log/cLog.h"
 
@@ -24,7 +20,7 @@ cBrush* cBrush::setCurBrushByName (const string& name, float radius, cGraphics& 
 
   if (!isCurBrushByName (name)) {
     // default color if no curBrush
-    glm::vec4 color (0.7f,0.7f,0.f, 1.f);
+    cColor color (0.7f,0.7f,0.f, 1.f);
 
     if (mCurBrush)
       color = mCurBrush->getColor();
@@ -47,8 +43,10 @@ map<const string, cBrush::createFunc>& cBrush::getClassRegister() {
 //}}}
 //{{{
 void cBrush::listClasses() {
+
+  cLog::log (LOGINFO, "brush register");
   for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("brush - {}", ui.first));
+    cLog::log (LOGINFO, format ("- {}", ui.first));
   }
 //}}}
 
@@ -66,7 +64,7 @@ bool cBrush::isCurBrushByName (const string& name) {
 
 // gets
 //{{{
-cRect cBrush::getBoundRect (glm::vec2 pos, cFrameBuffer* frameBuffer) {
+cRect cBrush::getBoundRect (cVec2 pos, cFrameBuffer* frameBuffer) {
 // return boundRect of line from mPrevPos to pos of brush mRadius, cliiped to frameBuffer
 
   const float boundRadius = getBoundRadius();
@@ -87,12 +85,12 @@ cRect cBrush::getBoundRect (glm::vec2 pos, cFrameBuffer* frameBuffer) {
 
 // sets
 //{{{
-void cBrush::setColor (glm::vec4 color) {
+void cBrush::setColor (const cColor& color) {
 
-  mR = static_cast<uint8_t>(color.x * 255.f);
-  mG = static_cast<uint8_t>(color.y * 255.f);
-  mB = static_cast<uint8_t>(color.z * 255.f);
-  mA = static_cast<uint8_t>(color.w * 255.f);
+  mR = static_cast<uint8_t>(color.r * 255.f);
+  mG = static_cast<uint8_t>(color.g * 255.f);
+  mB = static_cast<uint8_t>(color.b * 255.f);
+  mA = static_cast<uint8_t>(color.a * 255.f);
   }
 //}}}
 //{{{

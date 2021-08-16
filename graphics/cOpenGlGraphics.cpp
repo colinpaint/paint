@@ -11,13 +11,9 @@
 #include <glad/glad.h>
 
 // glm
-#include <vec2.hpp>
-#include <vec3.hpp>
-#include <vec4.hpp>
 #include <mat4x4.hpp>
 #include <gtc/type_ptr.hpp>
 #include <gtc/matrix_transform.hpp>
-#include <gtx/string_cast.hpp>
 
 // imGui
 #include <imgui.h>
@@ -304,7 +300,7 @@ namespace {
     void invalidate() final {
 
       //glInvalidateFramebuffer (mFrameBufferObject, 1, GL_COLOR_ATTACHMENT0);
-      clear (glm::vec4 (0.f,0.f,0.f, 0.f));
+      clear (cColor(0.f,0.f,0.f, 0.f));
       }
     //}}}
     //{{{
@@ -327,8 +323,8 @@ namespace {
     //}}}
 
     //{{{
-    void clear (const glm::vec4& color) final {
-      glClearColor (color.x, color.y, color.z, color.w);
+    void clear (const cColor& color) final {
+      glClearColor (color.r,color.g,color.b, color.a);
       glClear (GL_COLOR_BUFFER_BIT);
       }
     //}}}
@@ -970,12 +966,12 @@ namespace {
       }
     //}}}
     //{{{
-    void setStroke (const glm::vec2& pos, const glm::vec2& prevPos, float radius, const glm::vec4& color) final {
+    void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
 
-      glUniform2fv (glGetUniformLocation (mId, "uPos"), 1, glm::value_ptr (pos));
-      glUniform2fv (glGetUniformLocation (mId, "uPrevPos"), 1, glm::value_ptr (prevPos));
+      glUniform2fv (glGetUniformLocation (mId, "uPos"), 1, (float*)&pos);
+      glUniform2fv (glGetUniformLocation (mId, "uPrevPos"), 1, (float*)&prevPos);
       glUniform1f (glGetUniformLocation (mId, "uRadius"), radius);
-      glUniform4fv (glGetUniformLocation (mId, "uColor"), 1, glm::value_ptr (color));
+      glUniform4fv (glGetUniformLocation (mId, "uColor"), 1, (float*)&color);
       }
     //}}}
 
