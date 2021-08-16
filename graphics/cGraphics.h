@@ -6,7 +6,7 @@
 #include <map>
 
 // glm
-#include <vec3.hpp>
+//#include <vec3.hpp>
 #include <mat4x4.hpp>
 
 #include "cPointRect.h"

@@ -8,8 +8,6 @@
 #include <algorithm>
 
 // glm
-#include <vec3.hpp>
-#include <mat4x4.hpp>
 #include <gtc/matrix_transform.hpp>
 
 #include "../graphics/cGraphics.h"

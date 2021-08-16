@@ -15,11 +15,9 @@
 #include <imgui.h>
 
 // glm
-#include <vec3.hpp>
 #include <mat4x4.hpp>
 #include <gtc/type_ptr.hpp>
 #include <gtc/matrix_transform.hpp>
-#include <gtx/string_cast.hpp>
 
 #include "cGraphics.h"
 #include "../log/cLog.h"

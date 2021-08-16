@@ -4,9 +4,6 @@
 #include <cstdint>
 #include <string>
 
-// glm
-#include <mat4x4.hpp>
-
 #include "../graphics/cGraphics.h"
 
 class cBrush;

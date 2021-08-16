@@ -8,10 +8,7 @@
 #include <algorithm>
 
 // glm
-#include <mat4x4.hpp>
 #include <gtc/type_ptr.hpp>
-#include <gtx/string_cast.hpp>
-#include <gtc/matrix_inverse.hpp>
 #include <gtc/matrix_transform.hpp>
 
 // stb

@@ -5,9 +5,6 @@
 #include <string>
 #include <vector>
 
-// glm
-#include <mat4x4.hpp>
-
 #include "../graphics/cGraphics.h"
 class cLayer;
 class cBrush;
