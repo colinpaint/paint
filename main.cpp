@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <functional>
 
 // stb - invoke header only library implementation here
 #define STB_IMAGE_IMPLEMENTATION
@@ -24,13 +25,6 @@
 using namespace std;
 using namespace fmt;
 //}}}
-
-namespace {
-  void windowResized (cGraphics* graphics, int width, int height) {
-  // platform windowResized callback, !!! should be lambda !!!
-    graphics->windowResized (width, height);
-    }
-  }
 
 int main (int numArgs, char* args[]) {
 
@@ -72,7 +66,9 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::createByName (graphicsString);
   if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
-  platform.setSizeCallback (&graphics, windowResized);
+
+  // set sizeCallback lambda
+  platform.setSizeCallback ([&](int width, int height) noexcept { graphics.windowResized (width, height); });
 
   // start canvas
   cCanvas canvas (params.empty() ? "../piccies/tv.jpg" : params[0], graphics);

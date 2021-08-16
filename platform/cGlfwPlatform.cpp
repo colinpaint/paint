@@ -27,12 +27,9 @@ using namespace fmt;
 //}}}
 
 namespace {
-  // vars
+  cPlatform* gPlatform = nullptr;
   GLFWwindow* gWindow = nullptr;
-  cGraphics* gGraphics = nullptr;
-  cPlatform::sizeCallbackFunc gSizeCallback;
 
-  // glfw callbacks
   //{{{
   void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
 
@@ -46,8 +43,7 @@ namespace {
   //}}}
   //{{{
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
-    if (gGraphics)
-      gSizeCallback (gGraphics, width, height);
+    gPlatform->mSizeCallback (width, height);
     }
   //}}}
   }
@@ -63,8 +59,6 @@ public:
   void* getDeviceContext() final;
   void* getSwapChain() final;
   cPoint getWindowSize() final;
-
-  virtual void setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) final;
 
   // actions
   bool pollEvents() final;
@@ -85,6 +79,7 @@ private:
 //{{{
 bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports) {
 
+  gPlatform = this;
   cLog::log (LOGINFO, format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
 
   // GLFW init
@@ -174,14 +169,6 @@ cPoint cGlfwPlatform::getWindowSize() {
   int height;
   glfwGetWindowSize (gWindow, &width, &height);
   return cPoint (width, height);
-  }
-//}}}
-
-// sets
-//{{{
-void cGlfwPlatform::setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) {
-  gGraphics = graphics;
-  gSizeCallback = sizeCallback;
   }
 //}}}
 

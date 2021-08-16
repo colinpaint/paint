@@ -3,6 +3,7 @@
 //{{{  includes
 #include <string>
 #include <map>
+#include <functional>
 
 #include "../graphics/cPointRect.h"
 class cGraphics;
@@ -14,6 +15,13 @@ public:
   static cPlatform& createByName (const std::string& name);
   static void listClasses();
 
+  // callback
+  //{{{
+  void setSizeCallback (std::function<void (int width, int height)> callback) {
+    mSizeCallback = callback;
+    }
+  //}}}
+
   // abstract interface
   virtual bool init (const cPoint& windowSize, bool showViewports) = 0;
   virtual void shutdown() = 0;
@@ -24,14 +32,12 @@ public:
   virtual void* getSwapChain() = 0;
   virtual cPoint getWindowSize() = 0;
 
-  // sets
-  using sizeCallbackFunc = void(*)(cGraphics* graphics, int width, int height);
-  virtual void setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) = 0;
-
   // actions
   virtual bool pollEvents() = 0;
   virtual void newFrame() = 0;
   virtual void present() = 0;
+
+  std::function <void (int programPid, int programSid)> mSizeCallback;
 
 protected:
   using createFunc = cPlatform*(*)(const std::string& name);

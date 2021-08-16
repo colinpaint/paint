@@ -27,6 +27,7 @@ using namespace fmt;
 //}}}
 
 namespace {
+  cPlatform* gPlatform = nullptr;
   WNDCLASSEX gWndClass;
   HWND gHWnd;
 
@@ -34,9 +35,6 @@ namespace {
   ID3D11Device* gD3dDevice = NULL;
   ID3D11DeviceContext*  gD3dDeviceContext = NULL;
   IDXGISwapChain* gSwapChain = NULL;
-
-  cGraphics* gGraphics = nullptr; // only for callback
-  cPlatform::sizeCallbackFunc gSizeCallback;
 
   //{{{
   LRESULT WINAPI WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -49,9 +47,9 @@ namespace {
     // no
     switch (msg) {
       case WM_SIZE:
-        if (gD3dDevice && (wParam != SIZE_MINIMIZED))
-          if (gGraphics)
-            gSizeCallback (gGraphics, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
+        if (wParam != SIZE_MINIMIZED)
+          if (gPlatform)
+            gPlatform->mSizeCallback ((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
         return 0;
 
       case WM_SYSCOMMAND:
@@ -95,8 +93,6 @@ public:
   void* getSwapChain() final;
   cPoint getWindowSize() final;
 
-  virtual void setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) final;
-
   // actions
   bool pollEvents() final;
   void newFrame() final;
@@ -116,7 +112,6 @@ private:
 //{{{
 bool cWin32Platform::init (const cPoint& windowSize, bool showViewports) {
 
-  //ImGui_ImplWin32_EnableDpiAwareness();
   // register app class
   gWndClass = { sizeof(WNDCLASSEX),
                 CS_CLASSDC, WndProc, 0L, 0L,
@@ -195,6 +190,8 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports) {
 
   ImGui_ImplWin32_Init (gHWnd);
 
+  gPlatform = this;
+
   return true;
   }
 //}}}
@@ -218,14 +215,6 @@ void* cWin32Platform::getDevice() { return (void*)gD3dDevice; }
 void* cWin32Platform::getDeviceContext() { return (void*)gD3dDeviceContext; }
 void* cWin32Platform::getSwapChain() { return (void*)gSwapChain; }
 cPoint cWin32Platform::getWindowSize() { return gWindowSize; }
-
-//{{{
-void cWin32Platform::setSizeCallback (cGraphics* graphics, const sizeCallbackFunc sizeCallback) {
-  gGraphics = graphics;
-  gSizeCallback = sizeCallback;
-  }
-
-//}}}
 
 // actions
 //{{{
