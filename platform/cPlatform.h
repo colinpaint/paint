@@ -15,13 +15,6 @@ public:
   static cPlatform& createByName (const std::string& name);
   static void listClasses();
 
-  // callback
-  //{{{
-  void setResizeCallback (std::function<void (int width, int height)> callback) {
-    mResizeCallback = callback;
-    }
-  //}}}
-
   // abstract interface
   virtual bool init (const cPoint& windowSize, bool showViewports) = 0;
   virtual void shutdown() = 0;
@@ -37,6 +30,8 @@ public:
   virtual void newFrame() = 0;
   virtual void present() = 0;
 
+  // callback
+  void setResizeCallback (std::function<void (int width, int height)> callback) { mResizeCallback = callback; }
   std::function <void (int programPid, int programSid)> mResizeCallback;
 
 protected:

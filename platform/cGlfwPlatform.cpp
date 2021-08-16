@@ -67,12 +67,8 @@ public:
   void present() final;
 
 private:
-  //{{{
-  static cPlatform* cGlfwPlatform::create (const std::string& className) {
-    return new cGlfwPlatform();
-    }
-  //}}}
-  inline static bool cGlfwPlatform::mRegistered = registerClass ("glfw", &create);
+  static cPlatform* create (const std::string& className);
+  inline static bool mRegistered = registerClass ("glfw", &create);
   };
 //}}}
 
@@ -202,5 +198,11 @@ void cGlfwPlatform::present() {
     }
 
   glfwSwapBuffers (gWindow);
+  }
+//}}}
+
+//{{{
+cPlatform* cGlfwPlatform::create (const string& className) {
+  return new cGlfwPlatform();
   }
 //}}}

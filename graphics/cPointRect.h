@@ -2,6 +2,7 @@
 #pragma once
 //{{{  includes
 #include <cstdint>
+#include <cstring>
 #include <cmath>
 #include <algorithm>
 //}}}

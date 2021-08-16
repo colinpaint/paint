@@ -1,5 +1,5 @@
-// cDirectX11Graphics.cpp - !!!need to finsh quad, frameBuffer and shader !!!
-#ifdef WIN32
+// cDirectX11Graphics.cpp - !!! need to finsh quad, frameBuffer and shader !!!
+#ifdef WIN32 // stop linux trying to compile
 //{{{  includes
 #include <cstdint>
 #include <cmath>
@@ -301,8 +301,8 @@ namespace {
     IDXGISwapChain*           mDxgiSwapChain;
     ID3D11RenderTargetView*   mMainRenderTargetView;
 
-    ID3D11Buffer*             mVB;
-    ID3D11Buffer*             mIB;
+    ID3D11Buffer*             mVertexBuffer;
+    ID3D11Buffer*             mIndexBuffer;
     int                       mVertexBufferSize;
     int                       mIndexBufferSize;
 
@@ -598,8 +598,8 @@ namespace {
     unsigned int stride = sizeof(ImDrawVert);
     unsigned int offset = 0;
     deviceContext->IASetInputLayout (backendData->mInputLayout);
-    deviceContext->IASetVertexBuffers (0, 1, &backendData->mVB, &stride, &offset);
-    deviceContext->IASetIndexBuffer (backendData->mIB, sizeof(ImDrawIdx) == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT, 0);
+    deviceContext->IASetVertexBuffers (0, 1, &backendData->mVertexBuffer, &stride, &offset);
+    deviceContext->IASetIndexBuffer (backendData->mIndexBuffer, sizeof(ImDrawIdx) == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT, 0);
     deviceContext->IASetPrimitiveTopology (D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     deviceContext->VSSetShader (backendData->mVertexShader, NULL, 0);
     deviceContext->VSSetConstantBuffers (0, 1, &backendData->mVertexConstantBuffer);
@@ -635,13 +635,13 @@ namespace {
       ID3D11DeviceContext* deviceContext = backendData->mD3dDeviceContext;
 
       // copy drawList vertices,indices to continuous GPU buffers
-      //{{{  manage vertex GPU buffer
-      if (!backendData->mVB || (backendData->mVertexBufferSize < drawData->TotalVtxCount)) {
+      //{{{  manage,map vertex GPU buffer
+      if (!backendData->mVertexBuffer || (backendData->mVertexBufferSize < drawData->TotalVtxCount)) {
         // need new vertexBuffer
-        if (backendData->mVB) {
+        if (backendData->mVertexBuffer) {
           // release old vertexBuffer
-          backendData->mVB->Release();
-          backendData->mVB = NULL;
+          backendData->mVertexBuffer->Release();
+          backendData->mVertexBuffer = NULL;
           }
         backendData->mVertexBufferSize = drawData->TotalVtxCount + 5000;
 
@@ -653,7 +653,7 @@ namespace {
         desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
         desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         desc.MiscFlags = 0;
-        if (backendData->mD3dDevice->CreateBuffer (&desc, NULL, &backendData->mVB) < 0) {
+        if (backendData->mD3dDevice->CreateBuffer (&desc, NULL, &backendData->mVertexBuffer) < 0) {
           cLog::log (LOGERROR, "vertex CreateBuffer failed");
           return;
           }
@@ -661,20 +661,20 @@ namespace {
 
       // map gpu vertexBuffer
       D3D11_MAPPED_SUBRESOURCE vertexSubResource;
-      if (deviceContext->Map (backendData->mVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &vertexSubResource) != S_OK) {
+      if (deviceContext->Map (backendData->mVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &vertexSubResource) != S_OK) {
         cLog::log (LOGERROR, "vertexBuffer Map failed");
         return;
         }
 
       ImDrawVert* vertexDest = (ImDrawVert*)vertexSubResource.pData;
       //}}}
-      //{{{  manage index GPU buffer
-      if (!backendData->mIB || (backendData->mIndexBufferSize < drawData->TotalIdxCount)) {
+      //{{{  manage,map index GPU buffer
+      if (!backendData->mIndexBuffer || (backendData->mIndexBufferSize < drawData->TotalIdxCount)) {
         // need new indexBuffer
-        if (backendData->mIB) {
+        if (backendData->mIndexBuffer) {
           // release old indexBuffer
-          backendData->mIB->Release();
-          backendData->mIB = NULL;
+          backendData->mIndexBuffer->Release();
+          backendData->mIndexBuffer = NULL;
           }
         backendData->mIndexBufferSize = drawData->TotalIdxCount + 10000;
 
@@ -685,7 +685,7 @@ namespace {
         desc.ByteWidth = backendData->mIndexBufferSize * sizeof(ImDrawIdx);
         desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
         desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        if (backendData->mD3dDevice->CreateBuffer (&desc, NULL, &backendData->mIB) < 0) {
+        if (backendData->mD3dDevice->CreateBuffer (&desc, NULL, &backendData->mIndexBuffer) < 0) {
           cLog::log (LOGERROR, "index CreateBuffer failed");
           return;
           }
@@ -693,7 +693,7 @@ namespace {
 
       // map gpu indexBuffer
       D3D11_MAPPED_SUBRESOURCE indexSubResource;
-      if (deviceContext->Map (backendData->mIB, 0, D3D11_MAP_WRITE_DISCARD, 0, &indexSubResource) != S_OK) {
+      if (deviceContext->Map (backendData->mIndexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &indexSubResource) != S_OK) {
         cLog::log (LOGERROR, "indexBuffer Map failed");
         return;
         }
@@ -706,8 +706,8 @@ namespace {
         vertexDest += cmdList->VtxBuffer.Size;
         indexDest += cmdList->IdxBuffer.Size;
         }
-      deviceContext->Unmap (backendData->mVB, 0);
-      deviceContext->Unmap (backendData->mIB, 0);
+      deviceContext->Unmap (backendData->mVertexBuffer, 0);
+      deviceContext->Unmap (backendData->mIndexBuffer, 0);
 
       setupRenderState (drawData);
       //{{{  calc orthoProject matrix
@@ -982,8 +982,8 @@ void cDirectX11Graphics::shutdown() {
   if (backendData) {
     backendData->mFontSampler->Release();
     backendData->mFontTextureView->Release();
-    backendData->mIB->Release();
-    backendData->mVB->Release();
+    backendData->mIndexBuffer->Release();
+    backendData->mVertexBuffer->Release();
     backendData->mBlendState->Release();
     backendData->mDepthStencilState->Release();
     backendData->mRasterizerState->Release();

@@ -1,5 +1,5 @@
 // cWin32Platform.cpp - imGui backend win32Impl wrapper
-#ifdef WIN32
+#ifdef WIN32 // stop linux trying to compile
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
@@ -100,11 +100,11 @@ public:
 
 private:
   //{{{
-  static cPlatform* cWin32Platform::create (const std::string& className) {
+  static cPlatform* create (const std::string& className) {
     return new cWin32Platform();
     }
   //}}}
-  inline static bool cWin32Platform::mRegistered = registerClass ("win32", &create);
+  inline static bool mRegistered = registerClass ("win32", &create);
   };
 //}}}
 
