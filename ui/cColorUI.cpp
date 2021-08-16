@@ -15,7 +15,7 @@ using namespace std;
 using namespace fmt;
 //}}}
 //{{{
-constexpr ImGuiColorEditFlags kColorSelectorFlags = 
+constexpr ImGuiColorEditFlags kColorSelectorFlags =
   ImGuiColorEditFlags_HDR |
   ImGuiColorEditFlags_Float |
   ImGuiColorEditFlags_NoInputs |
@@ -49,7 +49,6 @@ public:
     for (auto& swatch : mSwatches) {
       bool disabled = swatch.a == 0.f;
       int alphaPrev = disabled ? ImGuiColorEditFlags_AlphaPreview : 0;
-
       if (ImGui::ColorButton (format ("swatch##{}", swatchIndex).c_str(),
                               ImVec4 (swatch.r,swatch.g,swatch.b, swatch.a),
                               ImGuiColorEditFlags_NoTooltip | alphaPrev,
@@ -62,14 +61,11 @@ public:
           swatch = brush->getColor();
           swatch.a = 1.f;
           }
-
         if (ImGui::MenuItem ("unset", "X", nullptr, swatch.a != 0.f) )
           swatch = cColor (0.f,0.f,0.f, 0.f);
-
         ImGui::Separator();
         if (ImGui::MenuItem ("cancel", "C") )
           ImGui::CloseCurrentPopup();
-
         ImGui::EndPopup();
         }
 
