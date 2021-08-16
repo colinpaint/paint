@@ -43,7 +43,8 @@ namespace {
   //}}}
   //{{{
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
-    gPlatform->mSizeCallback (width, height);
+    if (gPlatform)
+      gPlatform->mResizeCallback (width, height);
     }
   //}}}
   }
@@ -79,7 +80,6 @@ private:
 //{{{
 bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports) {
 
-  gPlatform = this;
   cLog::log (LOGINFO, format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
 
   // GLFW init
@@ -142,6 +142,8 @@ bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports) {
 
   //glfwSwapInterval (0);
   glfwSwapInterval (1);
+
+  gPlatform = this;
 
   return true;
   }

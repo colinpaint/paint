@@ -49,7 +49,7 @@ namespace {
       case WM_SIZE:
         if (wParam != SIZE_MINIMIZED)
           if (gPlatform)
-            gPlatform->mSizeCallback ((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
+            gPlatform->mResizeCallback ((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
         return 0;
 
       case WM_SYSCOMMAND:

@@ -17,8 +17,8 @@ public:
 
   // callback
   //{{{
-  void setSizeCallback (std::function<void (int width, int height)> callback) {
-    mSizeCallback = callback;
+  void setResizeCallback (std::function<void (int width, int height)> callback) {
+    mResizeCallback = callback;
     }
   //}}}
 
@@ -37,7 +37,7 @@ public:
   virtual void newFrame() = 0;
   virtual void present() = 0;
 
-  std::function <void (int programPid, int programSid)> mSizeCallback;
+  std::function <void (int programPid, int programSid)> mResizeCallback;
 
 protected:
   using createFunc = cPlatform*(*)(const std::string& name);
