@@ -37,7 +37,7 @@ int main (int numArgs, char* args[]) {
   for (int i = 1; i < numArgs; i++)
     params.push_back (args[i]);
   //}}}
-  //{{{  parse params, removing recognised options
+  //{{{  parse params, use,remove recognised params
   for (auto it = params.begin(); it < params.end();) {
     if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
