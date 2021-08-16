@@ -1,4 +1,4 @@
-// cBrush.h - static manager and base class
+// cBrush.h - brush static manager and base class
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -15,7 +15,7 @@ private:
   using createFunc = cBrush*(*)(const std::string& name, float radius, cGraphics& graphics);
 
 public:
-  // static inline registration
+  // static register manager
   static cBrush* createByName (const std::string& name, float radius, cGraphics& graphics);
   static std::map<const std::string, createFunc>& getClassRegister();
   static void listClasses();
@@ -65,8 +65,9 @@ protected:
   static bool registerClass (const std::string& name, const createFunc factoryMethod);
 
 private:
-  const std::string mName;
-
   // static curBrush
   inline static cBrush* mCurBrush = nullptr;
+
+  // base class registered name
+  const std::string mName;
   };

@@ -1,5 +1,4 @@
 // main.cpp - paintbox main - use glm, imGui, stb
-// - brushes,ui use static var init idiom to register to their man(agers)
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -14,12 +13,17 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
+// self registered using static var init idiom
 #include "platform/cPlatform.h"
 #include "graphics/cGraphics.h"
+#include "ui/cUI.h"
 #include "brush/cBrush.h"
+
+// canvas
 #include "canvas/cLayer.h"
 #include "canvas/cCanvas.h"
-#include "ui/cUI.h"
+
+// log
 #include "log/cLog.h"
 
 using namespace std;

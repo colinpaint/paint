@@ -20,29 +20,21 @@ using namespace fmt;
 //}}}
 #define DRAW_CANVAS // useful to disable when bringing up backends
 
-//{{{
-void cUI::listClasses() {
-
-  cLog::log (LOGINFO, "ui register");
-  for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("- {}", ui.first));
-  }
-//}}}
+// static
 //{{{
 cUI* cUI::createByName (const string& name) {
 // create class by name from classRegister, add instance to instances
 
-  auto uiIt = getInstances().find (name);
-  if (uiIt == getInstances().end()) {
+  auto uiIt = getInstanceRegister().find (name);
+  if (uiIt == getInstanceRegister().end()) {
     auto ui = getClassRegister()[name](name);
-    getInstances().insert (make_pair (name, ui));
+    getInstanceRegister().insert (make_pair (name, ui));
     return ui;
     }
   else
     return uiIt->second;
   }
 //}}}
-
 //{{{
 void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
 // draw canvas + imGui using graphics
@@ -100,7 +92,7 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
   ImGui::End();
 
   // draw UI instances to imGui drawList
-  for (auto& ui : getInstances())
+  for (auto& ui : getInstanceRegister())
     ui.second->addToDrawList (canvas, graphics);
 
   ImGui::Render();
@@ -109,39 +101,55 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
   graphics.draw();
   }
 //}}}
+//{{{
+void cUI::listClasses() {
+
+  cLog::log (LOGINFO, "ui register");
+  for (auto& ui : getClassRegister())
+    cLog::log (LOGINFO, format ("- {}", ui.first));
+  }
+//}}}
+//{{{
+void cUI::listInstances() {
+
+  cLog::log (LOGINFO, "ui instance register");
+  for (auto& ui : getInstanceRegister())
+    cLog::log (LOGINFO, format ("- {}", ui.first));
+  }
+//}}}
 
 // protected
-  //{{{
-  bool cUI::registerClass (const string& name, const cUI::createFuncType createFunc) {
-  // register class createFunc by name to classRegister, add instance to instances
+//{{{
+bool cUI::registerClass (const string& name, const cUI::createFuncType createFunc) {
+// register class createFunc by name to classRegister, add instance to instances
 
-    if (getClassRegister().find (name) == getClassRegister().end()) {
-      // class name not found - add to classRegister map
-      getClassRegister().insert (make_pair (name, createFunc));
+  if (getClassRegister().find (name) == getClassRegister().end()) {
+    // class name not found - add to classRegister map
+    getClassRegister().insert (make_pair (name, createFunc));
 
-      // create instance of class and add to instances map
-      getInstances().insert (make_pair (name, createFunc (name)));
-      return true;
-      }
-    else
-      return false;
+    // create instance of class and add to instances map
+    getInstanceRegister().insert (make_pair (name, createFunc (name)));
+    return true;
     }
-  //}}}
+  else
+    return false;
+  }
+//}}}
 
-// private
-  //{{{
-  map<const string, cUI::createFuncType>& cUI::getClassRegister() {
-  // static map inside static method ensures map is created before use
+// static private
+//{{{
+map<const string, cUI::createFuncType>& cUI::getClassRegister() {
+// static map inside static method ensures map is created before use
 
-    static map<const string, createFuncType> mClassRegister;
-    return mClassRegister;
-    }
-  //}}}
-  //{{{
-  map<const string, cUI*>& cUI::getInstances() {
-  // static map inside static method ensures map is created before use
+  static map<const string, createFuncType> mClassRegister;
+  return mClassRegister;
+  }
+//}}}
+//{{{
+map<const string, cUI*>& cUI::getInstanceRegister() {
+// static map inside static method ensures map is created before use
 
-    static map<const string, cUI*> mInstances;
-    return mInstances;
-    }
-  //}}}
+  static map<const string, cUI*> mInstances;
+  return mInstances;
+  }
+//}}}

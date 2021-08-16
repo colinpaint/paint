@@ -12,10 +12,12 @@ class cCanvas;
 
 class cUI {
 public:
-  // static manager, static init register
+  // static register manager
   static cUI* createByName (const std::string& name);
   static void listClasses();
+  static void listInstances();
 
+  // static draw
   static void draw (cCanvas& canvas, cGraphics& graphics);
 
   // base class
@@ -31,9 +33,10 @@ protected:
   static bool registerClass (const std::string& name, const createFuncType createFunc);
 
 private:
+  // static registers
   static std::map<const std::string, createFuncType>& getClassRegister();
-  static std::map<const std::string, cUI*>& getInstances();
+  static std::map<const std::string, cUI*>& getInstanceRegister();
 
-  // registered name
+  // base class registered name
   std::string mName;
   };
