@@ -26,8 +26,9 @@ public:
 
     cBrush* brush = cBrush::getCurBrush();
     for (auto& item : cBrush::getClassRegister()) {
-      if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(), cBrush::isCurBrushByName (item.first), 0,
-                             ImVec2 (ImGui::GetWindowSize().x, 30)))
+      if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(), 
+                             cBrush::isCurBrushByName (item.first), 0,
+                             ImVec2 (ImGui::GetWindowSize().x, 20)))
         cBrush::setCurBrushByName (item.first, brush->getRadius(), graphics);
 
       // when we make brush thumbnails
