@@ -1,5 +1,3 @@
-// File: 'ItcSymbolBold.ttf' (30172 bytes)
-// Exported using binary_to_compressed_c.cpp
 static const unsigned int itcSymbolBoldSize = 19523;
 static const unsigned int itcSymbolBold[19524/4] = {
     0x0000bc57, 0x00000000, 0xdc750000, 0x00000400, 0x544f3708, 0x0a004f54, 0x03008000, 0x46432000, 0x01c62046, 0x00006d47, 0x0000ac00, 0x50471763,

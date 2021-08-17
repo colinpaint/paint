@@ -16,6 +16,8 @@
 // imGui
 #include <imgui.h>
 
+#include "font/itcSymbolBold.h"
+
 // self registered using static var init idiom
 #include "platform/cPlatform.h"
 #include "graphics/cGraphics.h"
@@ -74,7 +76,7 @@ int main (int numArgs, char* args[]) {
   if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
 
-  ImFont* font = ImGui::GetIO().Fonts->AddFontFromFileTTF ("../font/ItcSymbolBold.ttf", 16.0f);
+  ImFont* font = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f);
 
   // create canvas
   cCanvas canvas (params.empty() ? "../piccies/tv.jpg" : params[0], graphics);
