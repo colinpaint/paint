@@ -144,6 +144,7 @@ public:
   virtual cPaintShader* createPaintShader() = 0;
 
   // actions
+  virtual void newFrame() = 0;
   virtual void draw() = 0;
   virtual void windowResize (int width, int height) = 0;
 

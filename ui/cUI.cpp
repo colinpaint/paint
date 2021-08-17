@@ -39,8 +39,6 @@ cUI* cUI::createByName (const string& name) {
 void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
 // draw canvas + imGui using graphics
 
-  ImGui::NewFrame();
-
   // canvas background UI
   // - dummy fullscreen window, no draw,move,scroll,focus
   //   - dummy invisibleButton captures mouse events

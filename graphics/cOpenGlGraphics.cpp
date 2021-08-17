@@ -1265,6 +1265,7 @@ namespace {
   GLuint gVboHandle = 0;
   GLuint gElementsHandle = 0;
   GLuint gFontTexture = 0;
+  bool gFontLoaded = false;
   cDrawListShader* gShader;
 
   //{{{
@@ -1445,6 +1446,7 @@ public:
   cPaintShader* createPaintShader() final;
 
   // actions
+  void newFrame() final;
   void draw() final;
   void windowResize (int width, int height) final;
 
@@ -1523,8 +1525,6 @@ bool cOpenGlGraphics::init (void* device, void* deviceContext, void* swapChain) 
   glGenBuffers (1, &gVboHandle);
   glGenBuffers (1, &gElementsHandle);
 
-  createFontTexture();
-
   // create shader
   gShader = new cDrawListShader (gGlslVersion);
 
@@ -1597,6 +1597,17 @@ cPaintShader* cOpenGlGraphics::createPaintShader() {
   }
 //}}}
 
+//{{{
+void cOpenGlGraphics::newFrame() {
+
+  if (!gFontLoaded) {
+    createFontTexture();
+    gFontLoaded = true;
+    }
+
+  ImGui::NewFrame();
+  }
+//}}}
 //{{{
 void cOpenGlGraphics::draw() {
   renderDrawData (ImGui::GetDrawData());

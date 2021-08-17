@@ -311,6 +311,7 @@ namespace {
     ID3D11Buffer*             mVertexConstantBuffer;
     ID3D11PixelShader*        mPixelShader;
 
+    bool                      mFontLoaded;
     ID3D11SamplerState*       mFontSampler;
     ID3D11ShaderResourceView* mFontTextureView;
 
@@ -322,6 +323,7 @@ namespace {
       memset (this, 0, sizeof(*this));
       mVertexBufferSize = 5000;
       mIndexBufferSize = 10000;
+      mFontLoaded = false;
       }
     };
   //}}}
@@ -492,6 +494,26 @@ namespace {
     }
   //}}}
   //{{{
+  bool createMainRenderTarget() {
+
+    bool ok = true;
+
+    sBackendData* backendData = getBackendData();
+
+    ID3D11Texture2D* backBuffer;
+    backendData->mDxgiSwapChain->GetBuffer (0, IID_PPV_ARGS (&backBuffer));
+
+    if (backendData->mD3dDevice->CreateRenderTargetView (backBuffer, NULL, &backendData->mMainRenderTargetView) != S_OK) {
+      cLog::log (LOGERROR, "createMainRenderTarget failed");
+      ok = false;
+      }
+
+    backBuffer->Release();
+
+    return ok;
+    }
+  //}}}
+  //{{{
   bool createFontTexture() {
 
     unsigned char* pixels;
@@ -565,26 +587,6 @@ namespace {
       //}}}
 
     return true;
-    }
-  //}}}
-  //{{{
-  bool createMainRenderTarget() {
-
-    bool ok = true;
-
-    sBackendData* backendData = getBackendData();
-
-    ID3D11Texture2D* backBuffer;
-    backendData->mDxgiSwapChain->GetBuffer (0, IID_PPV_ARGS (&backBuffer));
-
-    if (backendData->mD3dDevice->CreateRenderTargetView (backBuffer, NULL, &backendData->mMainRenderTargetView) != S_OK) {
-      cLog::log (LOGERROR, "createMainRenderTarget failed");
-      ok = false;
-      }
-
-    backBuffer->Release();
-
-    return ok;
     }
   //}}}
 
@@ -903,6 +905,7 @@ public:
   cPaintShader* createPaintShader() final;
 
   // actions
+  void newFrame() final;
   void draw() final;
   void windowResize (int width, int height) final;
 
@@ -961,7 +964,6 @@ bool cDirectX11Graphics::init (void* device, void* deviceContext, void* swapChai
 
         // create resources
         ok = createResources();
-        ok &= createFontTexture();
         ok &= createMainRenderTarget();
         cLog::log (LOGINFO, format ("graphics DirectX11 init ok {}", ok));
         }
@@ -1048,6 +1050,18 @@ cPaintShader* cDirectX11Graphics::createPaintShader() {
   }
 //}}}
 
+//{{{
+void cDirectX11Graphics::newFrame() {
+
+  sBackendData* backendData = getBackendData();
+  if (!backendData->mFontLoaded) {
+    createFontTexture();
+    backendData->mFontLoaded = true;
+    }
+
+  ImGui::NewFrame();
+  }
+//}}}
 //{{{
 void cDirectX11Graphics::draw() {
 

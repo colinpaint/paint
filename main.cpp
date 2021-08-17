@@ -13,6 +13,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
+// imGui
+#include <imgui.h>
+
 // self registered using static var init idiom
 #include "platform/cPlatform.h"
 #include "graphics/cGraphics.h"
@@ -71,24 +74,29 @@ int main (int numArgs, char* args[]) {
   if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
 
+  ImFont* font = ImGui::GetIO().Fonts->AddFontFromFileTTF ("../font/ItcSymbolBold.ttf", 16.0f);
+
   // create canvas
   cCanvas canvas (params.empty() ? "../piccies/tv.jpg" : params[0], graphics);
   if (params.size() > 1)
     canvas.newLayer (params[1]);
 
-  // set resizeCallback lambda
   platform.setResizeCallback (
+    //{{{  resizeCallback lambda
     [&](int width, int height) noexcept {
-      graphics.windowResize (width, height);
       platform.newFrame();
+      graphics.windowResize (width, height);
+      graphics.newFrame();
       cUI::draw (canvas, graphics);
       platform.present();
       }
     );
+    //}}}
 
   // main UI loop
   while (platform.pollEvents()) {
     platform.newFrame();
+    graphics.newFrame();
     cUI::draw (canvas, graphics);
     platform.present();
     }
