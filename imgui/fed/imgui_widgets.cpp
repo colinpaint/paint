@@ -5619,7 +5619,7 @@ void ImGui::ColorPickerOptionsPopup(const float* ref_col, ImGuiColorEditFlags fl
 //}}}
 
 //{{{
-bool ImGui::TreeNode(const char* str_id, const char* fmt, ...)
+bool ImGui::TreeNode (const char* str_id, const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -5629,7 +5629,7 @@ bool ImGui::TreeNode(const char* str_id, const char* fmt, ...)
 }
 //}}}
 //{{{
-bool ImGui::TreeNode(const void* ptr_id, const char* fmt, ...)
+bool ImGui::TreeNode (const void* ptr_id, const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -5639,7 +5639,7 @@ bool ImGui::TreeNode(const void* ptr_id, const char* fmt, ...)
 }
 //}}}
 //{{{
-bool ImGui::TreeNode(const char* label)
+bool ImGui::TreeNode( const char* label)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -5648,19 +5648,19 @@ bool ImGui::TreeNode(const char* label)
 }
 //}}}
 //{{{
-bool ImGui::TreeNodeV(const char* str_id, const char* fmt, va_list args)
+bool ImGui::TreeNodeV (const char* str_id, const char* fmt, va_list args)
 {
     return TreeNodeExV(str_id, 0, fmt, args);
 }
 //}}}
 //{{{
-bool ImGui::TreeNodeV(const void* ptr_id, const char* fmt, va_list args)
+bool ImGui::TreeNodeV (const void* ptr_id, const char* fmt, va_list args)
 {
     return TreeNodeExV(ptr_id, 0, fmt, args);
 }
 //}}}
 //{{{
-bool ImGui::TreeNodeEx(const char* label, ImGuiTreeNodeFlags flags)
+bool ImGui::TreeNodeEx (const char* label, ImGuiTreeNodeFlags flags)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -5670,7 +5670,7 @@ bool ImGui::TreeNodeEx(const char* label, ImGuiTreeNodeFlags flags)
 }
 //}}}
 //{{{
-bool ImGui::TreeNodeEx(const char* str_id, ImGuiTreeNodeFlags flags, const char* fmt, ...)
+bool ImGui::TreeNodeEx (const char* str_id, ImGuiTreeNodeFlags flags, const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -5680,7 +5680,7 @@ bool ImGui::TreeNodeEx(const char* str_id, ImGuiTreeNodeFlags flags, const char*
 }
 //}}}
 //{{{
-bool ImGui::TreeNodeExV(const char* str_id, ImGuiTreeNodeFlags flags, const char* fmt, va_list args)
+bool ImGui::TreeNodeExV (const char* str_id, ImGuiTreeNodeFlags flags, const char* fmt, va_list args)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -5692,7 +5692,7 @@ bool ImGui::TreeNodeExV(const char* str_id, ImGuiTreeNodeFlags flags, const char
 }
 //}}}
 //{{{
-bool ImGui::TreeNodeExV(const void* ptr_id, ImGuiTreeNodeFlags flags, const char* fmt, va_list args)
+bool ImGui::TreeNodeExV (const void* ptr_id, ImGuiTreeNodeFlags flags, const char* fmt, va_list args)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -5704,7 +5704,7 @@ bool ImGui::TreeNodeExV(const void* ptr_id, ImGuiTreeNodeFlags flags, const char
 }
 //}}}
 //{{{
-bool ImGui::TreeNodeBehaviorIsOpen(ImGuiID id, ImGuiTreeNodeFlags flags)
+bool ImGui::TreeNodeBehaviorIsOpen (ImGuiID id, ImGuiTreeNodeFlags flags)
 {
     if (flags & ImGuiTreeNodeFlags_Leaf)
         return true;
@@ -5751,7 +5751,7 @@ bool ImGui::TreeNodeBehaviorIsOpen(ImGuiID id, ImGuiTreeNodeFlags flags)
 }
 //}}}
 //{{{
-bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* label, const char* label_end)
+bool ImGui::TreeNodeBehavior (ImGuiID id, ImGuiTreeNodeFlags flags, const char* label, const char* label_end)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -5939,7 +5939,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
 }
 //}}}
 //{{{
-void ImGui::TreePush(const char* str_id)
+void ImGui::TreePush (const char* str_id)
 {
     ImGuiWindow* window = GetCurrentWindow();
     Indent();
@@ -5948,7 +5948,7 @@ void ImGui::TreePush(const char* str_id)
 }
 //}}}
 //{{{
-void ImGui::TreePush(const void* ptr_id)
+void ImGui::TreePush (const void* ptr_id)
 {
     ImGuiWindow* window = GetCurrentWindow();
     Indent();
@@ -5957,7 +5957,7 @@ void ImGui::TreePush(const void* ptr_id)
 }
 //}}}
 //{{{
-void ImGui::TreePushOverrideID(ImGuiID id)
+void ImGui::TreePushOverrideID (ImGuiID id)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -5999,7 +5999,7 @@ float ImGui::GetTreeNodeToLabelSpacing()
 //}}}
 //{{{
 // Set next TreeNode/CollapsingHeader open state.
-void ImGui::SetNextItemOpen(bool is_open, ImGuiCond cond)
+void ImGui::SetNextItemOpen (bool is_open, ImGuiCond cond)
 {
     ImGuiContext& g = *GImGui;
     if (g.CurrentWindow->SkipItems)
@@ -6012,7 +6012,7 @@ void ImGui::SetNextItemOpen(bool is_open, ImGuiCond cond)
 //{{{
 // CollapsingHeader returns true when opened but do not indent nor push into the ID stack (because of the ImGuiTreeNodeFlags_NoTreePushOnOpen flag).
 // This is basically the same as calling TreeNodeEx(label, ImGuiTreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
-bool ImGui::CollapsingHeader(const char* label, ImGuiTreeNodeFlags flags)
+bool ImGui::CollapsingHeader (const char* label, ImGuiTreeNodeFlags flags)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -6026,7 +6026,7 @@ bool ImGui::CollapsingHeader(const char* label, ImGuiTreeNodeFlags flags)
 // p_visible != NULL && *p_visible == true  : show a small close button on the corner of the header, clicking the button will set *p_visible = false
 // p_visible != NULL && *p_visible == false : do not show the header at all
 // Do not mistake this with the Open state of the header itself, which you can adjust with SetNextItemOpen() or ImGuiTreeNodeFlags_DefaultOpen.
-bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFlags flags)
+bool ImGui::CollapsingHeader (const char* label, bool* p_visible, ImGuiTreeNodeFlags flags)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -6061,7 +6061,7 @@ bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFl
 //}}}
 
 //{{{
-bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
+bool ImGui::Selectable (const char* label, bool selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -6219,7 +6219,7 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
 }
 //}}}
 //{{{
-bool ImGui::Selectable(const char* label, bool* p_selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
+bool ImGui::Selectable (const char* label, bool* p_selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
 {
     if (Selectable(label, *p_selected, flags, size_arg))
     {
@@ -6231,7 +6231,7 @@ bool ImGui::Selectable(const char* label, bool* p_selected, ImGuiSelectableFlags
 //}}}
 
 //{{{
-bool ImGui::BeginListBox(const char* label, const ImVec2& size_arg)
+bool ImGui::BeginListBox (const char* label, const ImVec2& size_arg)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = GetCurrentWindow();
@@ -6273,7 +6273,7 @@ bool ImGui::BeginListBox(const char* label, const ImVec2& size_arg)
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 //{{{
 // OBSOLETED in 1.81 (from February 2021)
-bool ImGui::ListBoxHeader(const char* label, int items_count, int height_in_items)
+bool ImGui::ListBoxHeader (const char* label, int items_count, int height_in_items)
 {
     // If height_in_items == -1, default height is maximum 7.
     ImGuiContext& g = *GImGui;
@@ -6298,7 +6298,7 @@ void ImGui::EndListBox()
 }
 //}}}
 //{{{
-bool ImGui::ListBox(const char* label, int* current_item, const char* const items[], int items_count, int height_items)
+bool ImGui::ListBox (const char* label, int* current_item, const char* const items[], int items_count, int height_items)
 {
     const bool value_changed = ListBox(label, current_item, Items_ArrayGetter, (void*)items, items_count, height_items);
     return value_changed;
@@ -6307,7 +6307,7 @@ bool ImGui::ListBox(const char* label, int* current_item, const char* const item
 //{{{
 // This is merely a helper around BeginListBox(), EndListBox().
 // Considering using those directly to submit custom data or store selection differently.
-bool ImGui::ListBox(const char* label, int* current_item, bool (*items_getter)(void*, int, const char**), void* data, int items_count, int height_in_items)
+bool ImGui::ListBox (const char* label, int* current_item, bool (*items_getter)(void*, int, const char**), void* data, int items_count, int height_in_items)
 {
     ImGuiContext& g = *GImGui;
 
@@ -6353,7 +6353,7 @@ bool ImGui::ListBox(const char* label, int* current_item, bool (*items_getter)(v
 //}}}
 
 //{{{
-int ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 frame_size)
+int ImGui::PlotEx (ImGuiPlotType plot_type, const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 frame_size)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = GetCurrentWindow();
@@ -6481,7 +6481,7 @@ struct ImGuiPlotArrayGetterData
 };
 //}}}
 //{{{
-static float Plot_ArrayGetter(void* data, int idx)
+static float Plot_ArrayGetter (void* data, int idx)
 {
     ImGuiPlotArrayGetterData* plot_data = (ImGuiPlotArrayGetterData*)data;
     const float v = *(const float*)(const void*)((const unsigned char*)plot_data->Values + (size_t)idx * plot_data->Stride);
@@ -6489,52 +6489,52 @@ static float Plot_ArrayGetter(void* data, int idx)
 }
 //}}}
 //{{{
-void ImGui::PlotLines(const char* label, const float* values, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size, int stride)
+void ImGui::PlotLines (const char* label, const float* values, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size, int stride)
 {
     ImGuiPlotArrayGetterData data(values, stride);
     PlotEx(ImGuiPlotType_Lines, label, &Plot_ArrayGetter, (void*)&data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 //}}}
 //{{{
-void ImGui::PlotLines(const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size)
+void ImGui::PlotLines (const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size)
 {
     PlotEx(ImGuiPlotType_Lines, label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 //}}}
 //{{{
-void ImGui::PlotHistogram(const char* label, const float* values, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size, int stride)
+void ImGui::PlotHistogram (const char* label, const float* values, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size, int stride)
 {
     ImGuiPlotArrayGetterData data(values, stride);
     PlotEx(ImGuiPlotType_Histogram, label, &Plot_ArrayGetter, (void*)&data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 //}}}
 //{{{
-void ImGui::PlotHistogram(const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size)
+void ImGui::PlotHistogram (const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size)
 {
     PlotEx(ImGuiPlotType_Histogram, label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 //}}}
 
 //{{{
-void ImGui::Value(const char* prefix, bool b)
+void ImGui::Value (const char* prefix, bool b)
 {
     Text("%s: %s", prefix, (b ? "true" : "false"));
 }
 //}}}
 //{{{
-void ImGui::Value(const char* prefix, int v)
+void ImGui::Value (const char* prefix, int v)
 {
     Text("%s: %d", prefix, v);
 }
 //}}}
 //{{{
-void ImGui::Value(const char* prefix, unsigned int v)
+void ImGui::Value (const char* prefix, unsigned int v)
 {
     Text("%s: %d", prefix, v);
 }
 //}}}
 //{{{
-void ImGui::Value(const char* prefix, float v, const char* float_format)
+void ImGui::Value (const char* prefix, float v, const char* float_format)
 {
     if (float_format)
     {
@@ -6551,7 +6551,7 @@ void ImGui::Value(const char* prefix, float v, const char* float_format)
 
 //{{{
 // Helpers for internal use
-void ImGuiMenuColumns::Update(float spacing, bool window_reappearing)
+void ImGuiMenuColumns::Update (float spacing, bool window_reappearing)
 {
     if (window_reappearing)
         memset(Widths, 0, sizeof(Widths));
@@ -6563,7 +6563,7 @@ void ImGuiMenuColumns::Update(float spacing, bool window_reappearing)
 }
 //}}}
 //{{{
-void ImGuiMenuColumns::CalcNextTotalWidth(bool update_offsets)
+void ImGuiMenuColumns::CalcNextTotalWidth (bool update_offsets)
 {
     ImU16 offset = 0;
     bool want_spacing = false;
@@ -6585,7 +6585,7 @@ void ImGuiMenuColumns::CalcNextTotalWidth(bool update_offsets)
 }
 //}}}
 //{{{
-float ImGuiMenuColumns::DeclColumns(float w_icon, float w_label, float w_shortcut, float w_mark)
+float ImGuiMenuColumns::DeclColumns (float w_icon, float w_label, float w_shortcut, float w_mark)
 {
     Widths[0] = ImMax(Widths[0], (ImU16)w_icon);
     Widths[1] = ImMax(Widths[1], (ImU16)w_label);
@@ -6675,7 +6675,7 @@ void ImGui::EndMenuBar()
 // Important: calling order matters!
 // FIXME: Somehow overlapping with docking tech.
 // FIXME: The "rect-cut" aspect of this could be formalized into a lower-level helper (rect-cut: https://halt.software/dead-simple-layouts)
-bool ImGui::BeginViewportSideBar(const char* name, ImGuiViewport* viewport_p, ImGuiDir dir, float axis_size, ImGuiWindowFlags window_flags)
+bool ImGui::BeginViewportSideBar (const char* name, ImGuiViewport* viewport_p, ImGuiDir dir, float axis_size, ImGuiWindowFlags window_flags)
 {
     IM_ASSERT(dir != ImGuiDir_None);
 
@@ -6751,7 +6751,7 @@ void ImGui::EndMainMenuBar()
 }
 //}}}
 //{{{
-bool ImGui::BeginMenu(const char* label, bool enabled)
+bool ImGui::BeginMenu (const char* label, bool enabled)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -6947,7 +6947,7 @@ void ImGui::EndMenu()
 }
 //}}}
 //{{{
-bool ImGui::MenuItemEx(const char* label, const char* icon, const char* shortcut, bool selected, bool enabled)
+bool ImGui::MenuItemEx (const char* label, const char* icon, const char* shortcut, bool selected, bool enabled)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -7010,13 +7010,13 @@ bool ImGui::MenuItemEx(const char* label, const char* icon, const char* shortcut
 }
 //}}}
 //{{{
-bool ImGui::MenuItem(const char* label, const char* shortcut, bool selected, bool enabled)
+bool ImGui::MenuItem (const char* label, const char* shortcut, bool selected, bool enabled)
 {
     return MenuItemEx(label, NULL, shortcut, selected, enabled);
 }
 //}}}
 //{{{
-bool ImGui::MenuItem(const char* label, const char* shortcut, bool* p_selected, bool enabled)
+bool ImGui::MenuItem (const char* label, const char* shortcut, bool* p_selected, bool enabled)
 {
     if (MenuItemEx(label, NULL, shortcut, p_selected ? *p_selected : false, enabled))
     {
@@ -7060,13 +7060,13 @@ ImGuiTabBar::ImGuiTabBar()
 //}}}
 
 //{{{
-static inline int TabItemGetSectionIdx(const ImGuiTabItem* tab)
+static inline int TabItemGetSectionIdx (const ImGuiTabItem* tab)
 {
     return (tab->Flags & ImGuiTabItemFlags_Leading) ? 0 : (tab->Flags & ImGuiTabItemFlags_Trailing) ? 2 : 1;
 }
 //}}}
 //{{{
-static int IMGUI_CDECL TabItemComparerBySection(const void* lhs, const void* rhs)
+static int IMGUI_CDECL TabItemComparerBySection (const void* lhs, const void* rhs)
 {
     const ImGuiTabItem* a = (const ImGuiTabItem*)lhs;
     const ImGuiTabItem* b = (const ImGuiTabItem*)rhs;
@@ -7078,7 +7078,7 @@ static int IMGUI_CDECL TabItemComparerBySection(const void* lhs, const void* rhs
 }
 //}}}
 //{{{
-static int IMGUI_CDECL TabItemComparerByBeginOrder(const void* lhs, const void* rhs)
+static int IMGUI_CDECL TabItemComparerByBeginOrder (const void* lhs, const void* rhs)
 {
     const ImGuiTabItem* a = (const ImGuiTabItem*)lhs;
     const ImGuiTabItem* b = (const ImGuiTabItem*)rhs;
@@ -7086,14 +7086,14 @@ static int IMGUI_CDECL TabItemComparerByBeginOrder(const void* lhs, const void* 
 }
 //}}}
 //{{{
-static ImGuiTabBar* GetTabBarFromTabBarRef(const ImGuiPtrOrIndex& ref)
+static ImGuiTabBar* GetTabBarFromTabBarRef (const ImGuiPtrOrIndex& ref)
 {
     ImGuiContext& g = *GImGui;
     return ref.Ptr ? (ImGuiTabBar*)ref.Ptr : g.TabBars.GetByIndex(ref.Index);
 }
 //}}}
 //{{{
-static ImGuiPtrOrIndex GetTabBarRefFromTabBar(ImGuiTabBar* tab_bar)
+static ImGuiPtrOrIndex GetTabBarRefFromTabBar (ImGuiTabBar* tab_bar)
 {
     ImGuiContext& g = *GImGui;
     if (g.TabBars.Contains(tab_bar))
@@ -7102,7 +7102,7 @@ static ImGuiPtrOrIndex GetTabBarRefFromTabBar(ImGuiTabBar* tab_bar)
 }
 //}}}
 //{{{
-bool    ImGui::BeginTabBar(const char* str_id, ImGuiTabBarFlags flags)
+bool ImGui::BeginTabBar (const char* str_id, ImGuiTabBarFlags flags)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -7117,7 +7117,7 @@ bool    ImGui::BeginTabBar(const char* str_id, ImGuiTabBarFlags flags)
 }
 //}}}
 //{{{
-bool    ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImGuiTabBarFlags flags, ImGuiDockNode* dock_node)
+bool ImGui::BeginTabBarEx (ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImGuiTabBarFlags flags, ImGuiDockNode* dock_node)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -7184,7 +7184,7 @@ bool    ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImG
 }
 //}}}
 //{{{
-void    ImGui::EndTabBar()
+void ImGui::EndTabBar()
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -7226,7 +7226,7 @@ void    ImGui::EndTabBar()
 //{{{
 // This is called only once a frame before by the first call to ItemTab()
 // The reason we're not calling it in BeginTabBar() is to leave a chance to the user to call the SetTabItemClosed() functions.
-static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
+static void ImGui::TabBarLayout (ImGuiTabBar* tab_bar)
 {
     ImGuiContext& g = *GImGui;
     tab_bar->WantLayout = false;
@@ -7461,7 +7461,7 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
 //}}}
 //{{{
 // Dockable uses Name/ID in the global namespace. Non-dockable items use the ID stack.
-static ImU32   ImGui::TabBarCalcTabID(ImGuiTabBar* tab_bar, const char* label, ImGuiWindow* docked_window)
+static ImU32 ImGui::TabBarCalcTabID (ImGuiTabBar* tab_bar, const char* label, ImGuiWindow* docked_window)
 {
     if (docked_window != NULL)
     {
@@ -7486,7 +7486,7 @@ static float ImGui::TabBarCalcMaxTabWidth()
 }
 //}}}
 //{{{
-ImGuiTabItem* ImGui::TabBarFindTabByID(ImGuiTabBar* tab_bar, ImGuiID tab_id)
+ImGuiTabItem* ImGui::TabBarFindTabByID (ImGuiTabBar* tab_bar, ImGuiID tab_id)
 {
     if (tab_id != 0)
         for (int n = 0; n < tab_bar->Tabs.Size; n++)
@@ -7497,7 +7497,7 @@ ImGuiTabItem* ImGui::TabBarFindTabByID(ImGuiTabBar* tab_bar, ImGuiID tab_id)
 //}}}
 //{{{
 // FIXME: See references to #2304 in TODO.txt
-ImGuiTabItem* ImGui::TabBarFindMostRecentlySelectedTabForActiveWindow(ImGuiTabBar* tab_bar)
+ImGuiTabItem* ImGui::TabBarFindMostRecentlySelectedTabForActiveWindow (ImGuiTabBar* tab_bar)
 {
     ImGuiTabItem* most_recently_selected_tab = NULL;
     for (int tab_n = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
@@ -7513,7 +7513,7 @@ ImGuiTabItem* ImGui::TabBarFindMostRecentlySelectedTabForActiveWindow(ImGuiTabBa
 //{{{
 // The purpose of this call is to register tab in advance so we can control their order at the time they appear.
 // Otherwise calling this is unnecessary as tabs are appending as needed by the BeginTabItem() function.
-void ImGui::TabBarAddTab(ImGuiTabBar* tab_bar, ImGuiTabItemFlags tab_flags, ImGuiWindow* window)
+void ImGui::TabBarAddTab (ImGuiTabBar* tab_bar, ImGuiTabItemFlags tab_flags, ImGuiWindow* window)
 {
     ImGuiContext& g = *GImGui;
     IM_ASSERT(TabBarFindTabByID(tab_bar, window->ID) == NULL);
@@ -7534,7 +7534,7 @@ void ImGui::TabBarAddTab(ImGuiTabBar* tab_bar, ImGuiTabItemFlags tab_flags, ImGu
 //}}}
 //{{{
 // The *TabId fields be already set by the docking system _before_ the actual TabItem was created, so we clear them regardless.
-void ImGui::TabBarRemoveTab(ImGuiTabBar* tab_bar, ImGuiID tab_id)
+void ImGui::TabBarRemoveTab (ImGuiTabBar* tab_bar, ImGuiID tab_id)
 {
     if (ImGuiTabItem* tab = TabBarFindTabByID(tab_bar, tab_id))
         tab_bar->Tabs.erase(tab);
@@ -7545,7 +7545,7 @@ void ImGui::TabBarRemoveTab(ImGuiTabBar* tab_bar, ImGuiID tab_id)
 //}}}
 //{{{
 // Called on manual closure attempt
-void ImGui::TabBarCloseTab(ImGuiTabBar* tab_bar, ImGuiTabItem* tab)
+void ImGui::TabBarCloseTab (ImGuiTabBar* tab_bar, ImGuiTabItem* tab)
 {
     IM_ASSERT(!(tab->Flags & ImGuiTabItemFlags_Button));
     if (!(tab->Flags & ImGuiTabItemFlags_UnsavedDocument))
@@ -7568,7 +7568,7 @@ void ImGui::TabBarCloseTab(ImGuiTabBar* tab_bar, ImGuiTabItem* tab)
 }
 //}}}
 //{{{
-static float ImGui::TabBarScrollClamp(ImGuiTabBar* tab_bar, float scrolling)
+static float ImGui::TabBarScrollClamp (ImGuiTabBar* tab_bar, float scrolling)
 {
     scrolling = ImMin(scrolling, tab_bar->WidthAllTabs - tab_bar->BarRect.GetWidth());
     return ImMax(scrolling, 0.0f);
@@ -7576,7 +7576,7 @@ static float ImGui::TabBarScrollClamp(ImGuiTabBar* tab_bar, float scrolling)
 //}}}
 //{{{
 // Note: we may scroll to tab that are not selected! e.g. using keyboard arrow keys
-static void ImGui::TabBarScrollToTab(ImGuiTabBar* tab_bar, ImGuiID tab_id, ImGuiTabBarSection* sections)
+static void ImGui::TabBarScrollToTab (ImGuiTabBar* tab_bar, ImGuiID tab_id, ImGuiTabBarSection* sections)
 {
     ImGuiTabItem* tab = TabBarFindTabByID(tab_bar, tab_id);
     if (tab == NULL)
@@ -7611,7 +7611,7 @@ static void ImGui::TabBarScrollToTab(ImGuiTabBar* tab_bar, ImGuiID tab_id, ImGui
 }
 //}}}
 //{{{
-void ImGui::TabBarQueueReorder(ImGuiTabBar* tab_bar, const ImGuiTabItem* tab, int offset)
+void ImGui::TabBarQueueReorder (ImGuiTabBar* tab_bar, const ImGuiTabItem* tab, int offset)
 {
     IM_ASSERT(offset != 0);
     IM_ASSERT(tab_bar->ReorderRequestTabId == 0);
@@ -7620,7 +7620,7 @@ void ImGui::TabBarQueueReorder(ImGuiTabBar* tab_bar, const ImGuiTabItem* tab, in
 }
 //}}}
 //{{{
-void ImGui::TabBarQueueReorderFromMousePos(ImGuiTabBar* tab_bar, const ImGuiTabItem* src_tab, ImVec2 mouse_pos)
+void ImGui::TabBarQueueReorderFromMousePos (ImGuiTabBar* tab_bar, const ImGuiTabItem* src_tab, ImVec2 mouse_pos)
 {
     ImGuiContext& g = *GImGui;
     IM_ASSERT(tab_bar->ReorderRequestTabId == 0);
@@ -7657,7 +7657,7 @@ void ImGui::TabBarQueueReorderFromMousePos(ImGuiTabBar* tab_bar, const ImGuiTabI
 }
 //}}}
 //{{{
-bool ImGui::TabBarProcessReorder(ImGuiTabBar* tab_bar)
+bool ImGui::TabBarProcessReorder (ImGuiTabBar* tab_bar)
 {
     ImGuiTabItem* tab1 = TabBarFindTabByID(tab_bar, tab_bar->ReorderRequestTabId);
     if (tab1 == NULL || (tab1->Flags & ImGuiTabItemFlags_NoReorder))
@@ -7689,7 +7689,7 @@ bool ImGui::TabBarProcessReorder(ImGuiTabBar* tab_bar)
 }
 //}}}
 //{{{
-static ImGuiTabItem* ImGui::TabBarScrollingButtons(ImGuiTabBar* tab_bar)
+static ImGuiTabItem* ImGui::TabBarScrollingButtons (ImGuiTabBar* tab_bar)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -7751,7 +7751,7 @@ static ImGuiTabItem* ImGui::TabBarScrollingButtons(ImGuiTabBar* tab_bar)
 }
 //}}}
 //{{{
-static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
+static ImGuiTabItem* ImGui::TabBarTabListPopupButton (ImGuiTabBar* tab_bar)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -7792,7 +7792,7 @@ static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
 //}}}
 
 //{{{
-bool    ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags flags)
+bool ImGui::BeginTabItem (const char* label, bool* p_open, ImGuiTabItemFlags flags)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -7817,7 +7817,7 @@ bool    ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags f
 }
 //}}}
 //{{{
-void    ImGui::EndTabItem()
+void ImGui::EndTabItem()
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -7837,7 +7837,7 @@ void    ImGui::EndTabItem()
 }
 //}}}
 //{{{
-bool    ImGui::TabItemButton(const char* label, ImGuiTabItemFlags flags)
+bool ImGui::TabItemButton (const char* label, ImGuiTabItemFlags flags)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -7854,7 +7854,7 @@ bool    ImGui::TabItemButton(const char* label, ImGuiTabItemFlags flags)
 }
 //}}}
 //{{{
-bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImGuiTabItemFlags flags, ImGuiWindow* docked_window)
+bool ImGui::TabItemEx (ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImGuiTabItemFlags flags, ImGuiWindow* docked_window)
 {
     // Layout whole tab bar if not already done
     if (tab_bar->WantLayout)
@@ -8136,7 +8136,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
 // [Public] This is call is 100% optional but it allows to remove some one-frame glitches when a tab has been unexpectedly removed.
 // To use it to need to call the function SetTabItemClosed() between BeginTabBar() and EndTabBar().
 // Tabs closed by the close button will automatically be flagged to avoid this issue.
-void    ImGui::SetTabItemClosed(const char* label)
+void ImGui::SetTabItemClosed (const char* label)
 {
     ImGuiContext& g = *GImGui;
     bool is_within_manual_tab_bar = g.CurrentTabBar && !(g.CurrentTabBar->Flags & ImGuiTabBarFlags_DockNode);
@@ -8160,7 +8160,7 @@ void    ImGui::SetTabItemClosed(const char* label)
 }
 //}}}
 //{{{
-ImVec2 ImGui::TabItemCalcSize(const char* label, bool has_close_button)
+ImVec2 ImGui::TabItemCalcSize (const char* label, bool has_close_button)
 {
     ImGuiContext& g = *GImGui;
     ImVec2 label_size = CalcTextSize(label, NULL, true);
@@ -8173,7 +8173,7 @@ ImVec2 ImGui::TabItemCalcSize(const char* label, bool has_close_button)
 }
 //}}}
 //{{{
-void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImU32 col)
+void ImGui::TabItemBackground (ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImU32 col)
 {
     // While rendering tabs, we trim 1 pixel off the top of our bounding box so they can fit within a regular frame height while looking "detached" from it.
     ImGuiContext& g = *GImGui;
@@ -8201,7 +8201,7 @@ void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabI
 //{{{
 // Render text label (with custom clipping) + Unsaved Document marker + Close Button logic
 // We tend to lock style.FramePadding for a given tab-bar, hence the 'frame_padding' parameter.
-void ImGui::TabItemLabelAndCloseButton(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImVec2 frame_padding, const char* label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible, bool* out_just_closed, bool* out_text_clipped)
+void ImGui::TabItemLabelAndCloseButton (ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImVec2 frame_padding, const char* label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible, bool* out_just_closed, bool* out_text_clipped)
 {
     ImGuiContext& g = *GImGui;
     ImVec2 label_size = CalcTextSize(label, NULL, true);

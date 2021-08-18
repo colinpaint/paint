@@ -18,9 +18,9 @@
 using namespace std;
 using namespace fmt;
 //}}}
-#define DRAW_CANVAS // useful to disable when bringing up backends
+#define DRAW_CANVAS // useful to disable canvas when bringing up backends
 
-// static
+// static register manager
 //{{{
 cUI* cUI::createByName (const string& name) {
 // create class by name from classRegister, add instance to instances
@@ -36,14 +36,32 @@ cUI* cUI::createByName (const string& name) {
   }
 //}}}
 //{{{
-void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
-// draw canvas + imGui using graphics
+void cUI::listClasses() {
 
-  // canvas background UI
-  // - dummy fullscreen window, no draw,move,scroll,focus
-  //   - dummy invisibleButton captures mouse events
-  // may draw to canvas layer frameBuffer for paint,wipe,etc
-  // draw canvas to screen window frameBuffer
+  cLog::log (LOGINFO, "ui register");
+  for (auto& ui : getClassRegister())
+    cLog::log (LOGINFO, format ("- {}", ui.first));
+  }
+//}}}
+//{{{
+void cUI::listInstances() {
+
+  cLog::log (LOGINFO, "ui instance register");
+  for (auto& ui : getInstanceRegister())
+    cLog::log (LOGINFO, format ("- {}", ui.first));
+  }
+//}}}
+
+// static draw
+//{{{
+void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
+// draw with imGui, using graphics
+// - canvas background
+//   - dummy fullscreen window, no draw,move,scroll,focus
+//     - dummy invisibleButton captures mouse events
+// - registered UI instances
+
+  // set dummy background window to full display size
   ImGui::SetNextWindowPos (ImVec2(0,0));
   ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
   ImGui::Begin ("bgnd", NULL,
@@ -61,8 +79,8 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
                     ImGui::IsMouseClicked (ImGuiMouseButton_Left),
                     ImGui::IsMouseDragging (ImGuiMouseButton_Left, 0.f),
                     ImGui::IsMouseReleased (ImGuiMouseButton_Left),
-                    cVec2 (ImGui::GetMousePos().x - (ImGui::GetIO().DisplaySize.x / 2.f),
-                           ImGui::GetMousePos().y - (ImGui::GetIO().DisplaySize.y / 2.f)),
+                    cVec2 (ImGui::GetMousePos().x - (ImGui::GetWindowWidth() / 2.f),
+                           ImGui::GetMousePos().y - (ImGui::GetWindowHeight() / 2.f)),
                     cVec2 (ImGui::GetMouseDragDelta (ImGuiMouseButton_Left).x,
                            ImGui::GetMouseDragDelta (ImGuiMouseButton_Left).y));
 
@@ -89,7 +107,7 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
 
   ImGui::End();
 
-  // draw UI instances to imGui drawList
+  // add registered UI instances to imGui drawList
   for (auto& ui : getInstanceRegister())
     ui.second->addToDrawList (canvas, graphics);
 
@@ -97,22 +115,6 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
 
   // draw imGui::drawList to screen window frameBuffer
   graphics.draw();
-  }
-//}}}
-//{{{
-void cUI::listClasses() {
-
-  cLog::log (LOGINFO, "ui register");
-  for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("- {}", ui.first));
-  }
-//}}}
-//{{{
-void cUI::listInstances() {
-
-  cLog::log (LOGINFO, "ui instance register");
-  for (auto& ui : getInstanceRegister())
-    cLog::log (LOGINFO, format ("- {}", ui.first));
   }
 //}}}
 

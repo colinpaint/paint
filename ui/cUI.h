@@ -12,7 +12,7 @@ class cCanvas;
 
 class cUI {
 public:
-  // static register manager
+  // static register
   static cUI* createByName (const std::string& name);
   static void listClasses();
   static void listInstances();
@@ -33,7 +33,7 @@ protected:
   static bool registerClass (const std::string& name, const createFuncType createFunc);
 
 private:
-  // static registers
+  // static register
   static std::map<const std::string, createFuncType>& getClassRegister();
   static std::map<const std::string, cUI*>& getInstanceRegister();
 
