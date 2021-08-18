@@ -94,25 +94,25 @@
 #pragma GCC diagnostic ignored "-Wclass-memaccess"          // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx' with no trivial copy-assignment; use assignment or value-initialization instead
 #endif
 //}}}
-//{{{  Debug options
+//{{{  static const
 #define IMGUI_DEBUG_NAV_SCORING     0   // Display navigation scoring preview when hovering items. Display last moving direction matches when holding CTRL
 #define IMGUI_DEBUG_NAV_RECTS       0   // Display the reference navigation rectangle for each window
 #define IMGUI_DEBUG_INI_SETTINGS    0   // Save additional comments in .ini file (particularly helps for Docking, but makes saving slower)
-//}}}
-//{{{  When using CTRL+TAB (or Gamepad Square+L/R) we delay the visual a little in order to reduce visual noise doing a fast switch.
+
+// When using CTRL+TAB (or Gamepad Square+L/R) we delay the visual a little in order to reduce visual noise doing a fast switch.
 static const float NAV_WINDOWING_HIGHLIGHT_DELAY            = 0.20f;    // Time before the highlight and screen dimming starts fading in
 static const float NAV_WINDOWING_LIST_APPEAR_DELAY          = 0.15f;    // Time before the window list starts to appear
-//}}}
-//{{{  Window resizing from edges (when io.ConfigWindowsResizeFromEdges = true and ImGuiBackendFlags_HasMouseCursors is set in io.BackendFlags by backend)
+
+// Window resizing from edges (when io.ConfigWindowsResizeFromEdges = true and ImGuiBackendFlags_HasMouseCursors is set in io.BackendFlags by backend)
 static const float WINDOWS_HOVER_PADDING                    = 4.0f;     // Extend outside window for hovering/resizing (maxxed with TouchPadding) and inside windows for borders. Affect FindHoveredWindow().
 static const float WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER = 0.04f;    // Reduce visual noise by only highlighting the border after a certain time.
 static const float WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER    = 2.00f;    // Lock scrolled window (so it doesn't pick child windows that are scrolling through) for a certain time, unless mouse moved.
-//}}}
-//{{{  Docking
+
+// Docking
 static const float DOCKING_TRANSPARENT_PAYLOAD_ALPHA        = 0.50f;    // For use with io.ConfigDockingTransparentPayload. Apply to Viewport _or_ WindowBg in host viewport.
 static const float DOCKING_SPLITTER_SIZE                    = 2.0f;
 //}}}
-//{{{  forward
+//{{{  forward declarations
 static void             SetCurrentWindow(ImGuiWindow* window);
 static void             FindHoveredWindow();
 static ImGuiWindow*     CreateNewWindow(const char* name, ImGuiWindowFlags flags);
@@ -132,61 +132,57 @@ static void             WindowSettingsHandler_WriteAll(ImGuiContext*, ImGuiSetti
 static const char*      GetClipboardTextFn_DefaultImpl(void* user_data);
 static void             SetClipboardTextFn_DefaultImpl(void* user_data, const char* text);
 
-namespace ImGui
-{
-// Navigation
-static void             NavUpdate();
-static void             NavUpdateWindowing();
-static void             NavUpdateWindowingOverlay();
-static void             NavUpdateMoveResult();
-static void             NavUpdateInitResult();
-static float            NavUpdatePageUpPageDown();
-static inline void      NavUpdateAnyRequestFlag();
-static void             NavEndFrame();
-static bool             NavScoreItem(ImGuiNavItemData* result, ImRect cand);
-static void             NavApplyItemToResult(ImGuiNavItemData* result, ImGuiWindow* window, ImGuiID id, const ImRect& nav_bb_rel);
-static void             NavProcessItem(ImGuiWindow* window, const ImRect& nav_bb, ImGuiID id);
-static ImVec2           NavCalcPreferredRefPos();
-static void             NavSaveLastChildNavWindowIntoParent(ImGuiWindow* nav_window);
-static ImGuiWindow*     NavRestoreLastChildNavWindow(ImGuiWindow* window);
-static void             NavRestoreLayer(ImGuiNavLayer layer);
-static int              FindWindowFocusIndex(ImGuiWindow* window);
+namespace ImGui {
+  // Navigation
+  static void             NavUpdate();
+  static void             NavUpdateWindowing();
+  static void             NavUpdateWindowingOverlay();
+  static void             NavUpdateMoveResult();
+  static void             NavUpdateInitResult();
+  static float            NavUpdatePageUpPageDown();
+  static inline void      NavUpdateAnyRequestFlag();
+  static void             NavEndFrame();
+  static bool             NavScoreItem(ImGuiNavItemData* result, ImRect cand);
+  static void             NavApplyItemToResult(ImGuiNavItemData* result, ImGuiWindow* window, ImGuiID id, const ImRect& nav_bb_rel);
+  static void             NavProcessItem(ImGuiWindow* window, const ImRect& nav_bb, ImGuiID id);
+  static ImVec2           NavCalcPreferredRefPos();
+  static void             NavSaveLastChildNavWindowIntoParent(ImGuiWindow* nav_window);
+  static ImGuiWindow*     NavRestoreLastChildNavWindow(ImGuiWindow* window);
+  static void             NavRestoreLayer(ImGuiNavLayer layer);
+  static int              FindWindowFocusIndex(ImGuiWindow* window);
 
-// Error Checking
-static void             ErrorCheckNewFrameSanityChecks();
-static void             ErrorCheckEndFrameSanityChecks();
+  // Error Checking
+  static void             ErrorCheckNewFrameSanityChecks();
+  static void             ErrorCheckEndFrameSanityChecks();
 
-// Misc
-static void             UpdateSettings();
-static void             UpdateMouseInputs();
-static void             UpdateMouseWheel();
-static void             UpdateTabFocus();
-static void             UpdateDebugToolItemPicker();
-static bool             UpdateWindowManualResize(ImGuiWindow* window, const ImVec2& size_auto_fit, int* border_held, int resize_grip_count, ImU32 resize_grip_col[4], const ImRect& visibility_rect);
-static void             RenderWindowOuterBorders(ImGuiWindow* window);
-static void             RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar_rect, bool title_bar_is_highlight, bool handle_borders_and_resize_grips, int resize_grip_count, const ImU32 resize_grip_col[4], float resize_grip_draw_size);
-static void             RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& title_bar_rect, const char* name, bool* p_open);
-static void             EndFrameDrawDimmedBackgrounds();
+  // Misc
+  static void             UpdateSettings();
+  static void             UpdateMouseInputs();
+  static void             UpdateMouseWheel();
+  static void             UpdateTabFocus();
+  static void             UpdateDebugToolItemPicker();
+  static bool             UpdateWindowManualResize(ImGuiWindow* window, const ImVec2& size_auto_fit, int* border_held, int resize_grip_count, ImU32 resize_grip_col[4], const ImRect& visibility_rect);
+  static void             RenderWindowOuterBorders(ImGuiWindow* window);
+  static void             RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar_rect, bool title_bar_is_highlight, bool handle_borders_and_resize_grips, int resize_grip_count, const ImU32 resize_grip_col[4], float resize_grip_draw_size);
+  static void             RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& title_bar_rect, const char* name, bool* p_open);
+  static void             EndFrameDrawDimmedBackgrounds();
 
-// Viewports
-const ImGuiID           IMGUI_VIEWPORT_DEFAULT_ID = 0x11111111; // Using an arbitrary constant instead of e.g. ImHashStr("ViewportDefault", 0); so it's easier to spot in the debugger. The exact value doesn't matter.
-static ImGuiViewportP*  AddUpdateViewport(ImGuiWindow* window, ImGuiID id, const ImVec2& platform_pos, const ImVec2& size, ImGuiViewportFlags flags);
-static void             UpdateViewportsNewFrame();
-static void             UpdateViewportsEndFrame();
-static void             WindowSelectViewport(ImGuiWindow* window);
-static void             WindowSyncOwnedViewport(ImGuiWindow* window, ImGuiWindow* parent_window_in_stack);
-static bool             UpdateTryMergeWindowIntoHostViewport(ImGuiWindow* window, ImGuiViewportP* host_viewport);
-static bool             UpdateTryMergeWindowIntoHostViewports(ImGuiWindow* window);
-static bool             GetWindowAlwaysWantOwnViewport(ImGuiWindow* window);
-static int              FindPlatformMonitorForPos(const ImVec2& pos);
-static int              FindPlatformMonitorForRect(const ImRect& r);
-static void             UpdateViewportPlatformMonitor(ImGuiViewportP* viewport);
-
-}
+  // Viewports
+  const ImGuiID           IMGUI_VIEWPORT_DEFAULT_ID = 0x11111111; // Using an arbitrary constant instead of e.g. ImHashStr("ViewportDefault", 0); so it's easier to spot in the debugger. The exact value doesn't matter.
+  static ImGuiViewportP*  AddUpdateViewport(ImGuiWindow* window, ImGuiID id, const ImVec2& platform_pos, const ImVec2& size, ImGuiViewportFlags flags);
+  static void             UpdateViewportsNewFrame();
+  static void             UpdateViewportsEndFrame();
+  static void             WindowSelectViewport(ImGuiWindow* window);
+  static void             WindowSyncOwnedViewport(ImGuiWindow* window, ImGuiWindow* parent_window_in_stack);
+  static bool             UpdateTryMergeWindowIntoHostViewport(ImGuiWindow* window, ImGuiViewportP* host_viewport);
+  static bool             UpdateTryMergeWindowIntoHostViewports(ImGuiWindow* window);
+  static bool             GetWindowAlwaysWantOwnViewport(ImGuiWindow* window);
+  static int              FindPlatformMonitorForPos(const ImVec2& pos);
+  static int              FindPlatformMonitorForRect(const ImRect& r);
+  static void             UpdateViewportPlatformMonitor(ImGuiViewportP* viewport);
+  }
 //}}}
-
-//{{{
-// DLL users:
+//{{{  DLL users:
 // - Heaps and globals are not shared across DLL boundaries!
 // - You will need to call SetCurrentContext() + SetAllocatorFunctions() for each static/DLL boundary you are calling from.
 // - Same applies for hot-reloading mechanisms that are reliant on reloading DLL (note that many hot-reloading mechanisms work without DLL).
@@ -206,10 +202,10 @@ static void             UpdateViewportPlatformMonitor(ImGuiViewportP* viewport);
 //   - Future development aims to make this context pointer explicit to all calls. Also read https://github.com/ocornut/imgui/issues/586
 //   - If you need a finite number of contexts, you may compile and use multiple instances of the ImGui code from a different namespace.
 // - DLL users: read comments above.
-//}}}
 #ifndef GImGui
   ImGuiContext* GImGui = NULL;
 #endif
+//}}}
 
 //{{{  Memory Allocator functions. Use SetAllocatorFunctions() to change them.
 // - You probably don't want to modify that mid-program, and if you use global/static e.g. ImVector<> instances you may need to keep them accessible during program destruction.
@@ -228,149 +224,148 @@ static void*                GImAllocatorUserData = NULL;
 //}}}
 
 //{{{
-ImGuiStyle::ImGuiStyle()
-{
-    Alpha                   = 1.0f;             // Global alpha applies to everything in ImGui
-    WindowPadding           = ImVec2(8,8);      // Padding within a window
-    WindowRounding          = 0.0f;             // Radius of window corners rounding. Set to 0.0f to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
-    WindowBorderSize        = 1.0f;             // Thickness of border around windows. Generally set to 0.0f or 1.0f. Other values not well tested.
-    WindowMinSize           = ImVec2(32,32);    // Minimum window size
-    WindowTitleAlign        = ImVec2(0.0f,0.5f);// Alignment for title bar text
-    WindowMenuButtonPosition= ImGuiDir_Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
-    ChildRounding           = 0.0f;             // Radius of child window corners rounding. Set to 0.0f to have rectangular child windows
-    ChildBorderSize         = 1.0f;             // Thickness of border around child windows. Generally set to 0.0f or 1.0f. Other values not well tested.
-    PopupRounding           = 0.0f;             // Radius of popup window corners rounding. Set to 0.0f to have rectangular child windows
-    PopupBorderSize         = 1.0f;             // Thickness of border around popup or tooltip windows. Generally set to 0.0f or 1.0f. Other values not well tested.
-    FramePadding            = ImVec2(4,3);      // Padding within a framed rectangle (used by most widgets)
-    FrameRounding           = 0.0f;             // Radius of frame corners rounding. Set to 0.0f to have rectangular frames (used by most widgets).
-    FrameBorderSize         = 0.0f;             // Thickness of border around frames. Generally set to 0.0f or 1.0f. Other values not well tested.
-    ItemSpacing             = ImVec2(8,4);      // Horizontal and vertical spacing between widgets/lines
-    ItemInnerSpacing        = ImVec2(4,4);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
-    CellPadding             = ImVec2(4,2);      // Padding within a table cell
-    TouchExtraPadding       = ImVec2(0,0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
-    IndentSpacing           = 21.0f;            // Horizontal spacing when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2).
-    ColumnsMinSpacing       = 6.0f;             // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
-    ScrollbarSize           = 14.0f;            // Width of the vertical scrollbar, Height of the horizontal scrollbar
-    ScrollbarRounding       = 9.0f;             // Radius of grab corners rounding for scrollbar
-    GrabMinSize             = 10.0f;            // Minimum width/height of a grab box for slider/scrollbar
-    GrabRounding            = 0.0f;             // Radius of grabs corners rounding. Set to 0.0f to have rectangular slider grabs.
-    LogSliderDeadzone       = 4.0f;             // The size in pixels of the dead-zone around zero on logarithmic sliders that cross zero.
-    TabRounding             = 4.0f;             // Radius of upper corners of a tab. Set to 0.0f to have rectangular tabs.
-    TabBorderSize           = 0.0f;             // Thickness of border around tabs.
-    TabMinWidthForCloseButton = 0.0f;           // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0f to always show when hovering, set to FLT_MAX to never show close button unless selected.
-    ColorButtonPosition     = ImGuiDir_Right;   // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
-    ButtonTextAlign         = ImVec2(0.5f,0.5f);// Alignment of button text when button is larger than text.
-    SelectableTextAlign     = ImVec2(0.0f,0.0f);// Alignment of selectable text. Defaults to (0.0f, 0.0f) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
-    DisplayWindowPadding    = ImVec2(19,19);    // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
-    DisplaySafeAreaPadding  = ImVec2(3,3);      // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
-    MouseCursorScale        = 1.0f;             // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). May be removed later.
-    AntiAliasedLines        = true;             // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU.
-    AntiAliasedLinesUseTex  = true;             // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering.
-    AntiAliasedFill         = true;             // Enable anti-aliased filled shapes (rounded rectangles, circles, etc.).
-    CurveTessellationTol    = 1.25f;            // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
-    CircleTessellationMaxError = 0.30f;         // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
+ImGuiStyle::ImGuiStyle() {
+  Alpha                   = 1.0f;             // Global alpha applies to everything in ImGui
+  WindowPadding           = ImVec2(8,8);      // Padding within a window
+  WindowRounding          = 0.0f;             // Radius of window corners rounding. Set to 0.0f to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
+  WindowBorderSize        = 1.0f;             // Thickness of border around windows. Generally set to 0.0f or 1.0f. Other values not well tested.
+  WindowMinSize           = ImVec2(32,32);    // Minimum window size
+  WindowTitleAlign        = ImVec2(0.0f,0.5f);// Alignment for title bar text
+  WindowMenuButtonPosition= ImGuiDir_Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
+  ChildRounding           = 0.0f;             // Radius of child window corners rounding. Set to 0.0f to have rectangular child windows
+  ChildBorderSize         = 1.0f;             // Thickness of border around child windows. Generally set to 0.0f or 1.0f. Other values not well tested.
+  PopupRounding           = 0.0f;             // Radius of popup window corners rounding. Set to 0.0f to have rectangular child windows
+  PopupBorderSize         = 1.0f;             // Thickness of border around popup or tooltip windows. Generally set to 0.0f or 1.0f. Other values not well tested.
+  FramePadding            = ImVec2(4,3);      // Padding within a framed rectangle (used by most widgets)
+  FrameRounding           = 0.0f;             // Radius of frame corners rounding. Set to 0.0f to have rectangular frames (used by most widgets).
+  FrameBorderSize         = 0.0f;             // Thickness of border around frames. Generally set to 0.0f or 1.0f. Other values not well tested.
+  ItemSpacing             = ImVec2(8,4);      // Horizontal and vertical spacing between widgets/lines
+  ItemInnerSpacing        = ImVec2(4,4);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
+  CellPadding             = ImVec2(4,2);      // Padding within a table cell
+  TouchExtraPadding       = ImVec2(0,0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
+  IndentSpacing           = 21.0f;            // Horizontal spacing when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2).
+  ColumnsMinSpacing       = 6.0f;             // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
+  ScrollbarSize           = 14.0f;            // Width of the vertical scrollbar, Height of the horizontal scrollbar
+  ScrollbarRounding       = 9.0f;             // Radius of grab corners rounding for scrollbar
+  GrabMinSize             = 10.0f;            // Minimum width/height of a grab box for slider/scrollbar
+  GrabRounding            = 0.0f;             // Radius of grabs corners rounding. Set to 0.0f to have rectangular slider grabs.
+  LogSliderDeadzone       = 4.0f;             // The size in pixels of the dead-zone around zero on logarithmic sliders that cross zero.
+  TabRounding             = 4.0f;             // Radius of upper corners of a tab. Set to 0.0f to have rectangular tabs.
+  TabBorderSize           = 0.0f;             // Thickness of border around tabs.
+  TabMinWidthForCloseButton = 0.0f;           // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0f to always show when hovering, set to FLT_MAX to never show close button unless selected.
+  ColorButtonPosition     = ImGuiDir_Right;   // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
+  ButtonTextAlign         = ImVec2(0.5f,0.5f);// Alignment of button text when button is larger than text.
+  SelectableTextAlign     = ImVec2(0.0f,0.0f);// Alignment of selectable text. Defaults to (0.0f, 0.0f) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
+  DisplayWindowPadding    = ImVec2(19,19);    // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
+  DisplaySafeAreaPadding  = ImVec2(3,3);      // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
+  MouseCursorScale        = 1.0f;             // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). May be removed later.
+  AntiAliasedLines        = true;             // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU.
+  AntiAliasedLinesUseTex  = true;             // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering.
+  AntiAliasedFill         = true;             // Enable anti-aliased filled shapes (rounded rectangles, circles, etc.).
+  CurveTessellationTol    = 1.25f;            // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
+  CircleTessellationMaxError = 0.30f;         // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
 
-    // Default theme
-    ImGui::StyleColorsDark(this);
-}
+  // Default theme
+  ImGui::StyleColorsDark(this);
+  }
 //}}}
 //{{{
 // To scale your entire UI (e.g. if you want your app to use High DPI or generally be DPI aware) you may use this helper function. Scaling the fonts is done separately and is up to you.
 // Important: This operation is lossy because we round all sizes to integer. If you need to change your scale multiples, call this over a freshly initialized ImGuiStyle structure rather than scaling multiple times.
-void ImGuiStyle::ScaleAllSizes(float scale_factor)
-{
-    WindowPadding = ImFloor(WindowPadding * scale_factor);
-    WindowRounding = ImFloor(WindowRounding * scale_factor);
-    WindowMinSize = ImFloor(WindowMinSize * scale_factor);
-    ChildRounding = ImFloor(ChildRounding * scale_factor);
-    PopupRounding = ImFloor(PopupRounding * scale_factor);
-    FramePadding = ImFloor(FramePadding * scale_factor);
-    FrameRounding = ImFloor(FrameRounding * scale_factor);
-    ItemSpacing = ImFloor(ItemSpacing * scale_factor);
-    ItemInnerSpacing = ImFloor(ItemInnerSpacing * scale_factor);
-    CellPadding = ImFloor(CellPadding * scale_factor);
-    TouchExtraPadding = ImFloor(TouchExtraPadding * scale_factor);
-    IndentSpacing = ImFloor(IndentSpacing * scale_factor);
-    ColumnsMinSpacing = ImFloor(ColumnsMinSpacing * scale_factor);
-    ScrollbarSize = ImFloor(ScrollbarSize * scale_factor);
-    ScrollbarRounding = ImFloor(ScrollbarRounding * scale_factor);
-    GrabMinSize = ImFloor(GrabMinSize * scale_factor);
-    GrabRounding = ImFloor(GrabRounding * scale_factor);
-    LogSliderDeadzone = ImFloor(LogSliderDeadzone * scale_factor);
-    TabRounding = ImFloor(TabRounding * scale_factor);
-    TabMinWidthForCloseButton = (TabMinWidthForCloseButton != FLT_MAX) ? ImFloor(TabMinWidthForCloseButton * scale_factor) : FLT_MAX;
-    DisplayWindowPadding = ImFloor(DisplayWindowPadding * scale_factor);
-    DisplaySafeAreaPadding = ImFloor(DisplaySafeAreaPadding * scale_factor);
-    MouseCursorScale = ImFloor(MouseCursorScale * scale_factor);
-}
+void ImGuiStyle::ScaleAllSizes(float scale_factor) {
+  WindowPadding = ImFloor(WindowPadding * scale_factor);
+  WindowRounding = ImFloor(WindowRounding * scale_factor);
+  WindowMinSize = ImFloor(WindowMinSize * scale_factor);
+  ChildRounding = ImFloor(ChildRounding * scale_factor);
+  PopupRounding = ImFloor(PopupRounding * scale_factor);
+  FramePadding = ImFloor(FramePadding * scale_factor);
+  FrameRounding = ImFloor(FrameRounding * scale_factor);
+  ItemSpacing = ImFloor(ItemSpacing * scale_factor);
+  ItemInnerSpacing = ImFloor(ItemInnerSpacing * scale_factor);
+  CellPadding = ImFloor(CellPadding * scale_factor);
+  TouchExtraPadding = ImFloor(TouchExtraPadding * scale_factor);
+  IndentSpacing = ImFloor(IndentSpacing * scale_factor);
+  ColumnsMinSpacing = ImFloor(ColumnsMinSpacing * scale_factor);
+  ScrollbarSize = ImFloor(ScrollbarSize * scale_factor);
+  ScrollbarRounding = ImFloor(ScrollbarRounding * scale_factor);
+  GrabMinSize = ImFloor(GrabMinSize * scale_factor);
+  GrabRounding = ImFloor(GrabRounding * scale_factor);
+  LogSliderDeadzone = ImFloor(LogSliderDeadzone * scale_factor);
+  TabRounding = ImFloor(TabRounding * scale_factor);
+  TabMinWidthForCloseButton = (TabMinWidthForCloseButton != FLT_MAX) ? ImFloor(TabMinWidthForCloseButton * scale_factor) : FLT_MAX;
+  DisplayWindowPadding = ImFloor(DisplayWindowPadding * scale_factor);
+  DisplaySafeAreaPadding = ImFloor(DisplaySafeAreaPadding * scale_factor);
+  MouseCursorScale = ImFloor(MouseCursorScale * scale_factor);
+  }
 //}}}
 
 //{{{
-ImGuiIO::ImGuiIO()
-{
-    // Most fields are initialized with zero
-    memset(this, 0, sizeof(*this));
-    IM_ASSERT(IM_ARRAYSIZE(ImGuiIO::MouseDown) == ImGuiMouseButton_COUNT && IM_ARRAYSIZE(ImGuiIO::MouseClicked) == ImGuiMouseButton_COUNT); // Our pre-C++11 IM_STATIC_ASSERT() macros triggers warning on modern compilers so we don't use it here.
+ImGuiIO::ImGuiIO() {
 
-    // Settings
-    ConfigFlags = ImGuiConfigFlags_None;
-    BackendFlags = ImGuiBackendFlags_None;
-    DisplaySize = ImVec2(-1.0f, -1.0f);
-    DeltaTime = 1.0f / 60.0f;
-    IniSavingRate = 5.0f;
-    IniFilename = "imgui.ini"; // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
-    LogFilename = "imgui_log.txt";
-    MouseDoubleClickTime = 0.30f;
-    MouseDoubleClickMaxDist = 6.0f;
-    for (int i = 0; i < ImGuiKey_COUNT; i++)
-        KeyMap[i] = -1;
-    KeyRepeatDelay = 0.275f;
-    KeyRepeatRate = 0.050f;
-    UserData = NULL;
+  // Most fields are initialized with zero
+  memset(this, 0, sizeof(*this));
+  IM_ASSERT(IM_ARRAYSIZE(ImGuiIO::MouseDown) == ImGuiMouseButton_COUNT && IM_ARRAYSIZE(ImGuiIO::MouseClicked) == ImGuiMouseButton_COUNT); // Our pre-C++11 IM_STATIC_ASSERT() macros triggers warning on modern compilers so we don't use it here.
 
-    Fonts = NULL;
-    FontGlobalScale = 1.0f;
-    FontDefault = NULL;
-    FontAllowUserScaling = false;
-    DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+  // Settings
+  ConfigFlags = ImGuiConfigFlags_None;
+  BackendFlags = ImGuiBackendFlags_None;
+  DisplaySize = ImVec2(-1.0f, -1.0f);
+  DeltaTime = 1.0f / 60.0f;
+  IniSavingRate = 5.0f;
+  IniFilename = "imgui.ini"; // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
+  LogFilename = "imgui_log.txt";
+  MouseDoubleClickTime = 0.30f;
+  MouseDoubleClickMaxDist = 6.0f;
+  for (int i = 0; i < ImGuiKey_COUNT; i++)
+      KeyMap[i] = -1;
+  KeyRepeatDelay = 0.275f;
+  KeyRepeatRate = 0.050f;
+  UserData = NULL;
 
-    // Docking options (when ImGuiConfigFlags_DockingEnable is set)
-    ConfigDockingNoSplit = false;
-    ConfigDockingAlwaysTabBar = false;
-    ConfigDockingTransparentPayload = false;
+  Fonts = NULL;
+  FontGlobalScale = 1.0f;
+  FontDefault = NULL;
+  FontAllowUserScaling = false;
+  DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
-    // Viewport options (when ImGuiConfigFlags_ViewportsEnable is set)
-    ConfigViewportsNoAutoMerge = false;
-    ConfigViewportsNoTaskBarIcon = false;
-    ConfigViewportsNoDecoration = true;
-    ConfigViewportsNoDefaultParent = false;
+  // Docking options (when ImGuiConfigFlags_DockingEnable is set)
+  ConfigDockingNoSplit = false;
+  ConfigDockingAlwaysTabBar = false;
+  ConfigDockingTransparentPayload = false;
 
-    // Miscellaneous options
-    MouseDrawCursor = false;
-#ifdef __APPLE__
+  // Viewport options (when ImGuiConfigFlags_ViewportsEnable is set)
+  ConfigViewportsNoAutoMerge = false;
+  ConfigViewportsNoTaskBarIcon = false;
+  ConfigViewportsNoDecoration = true;
+  ConfigViewportsNoDefaultParent = false;
+
+  // Miscellaneous options
+  MouseDrawCursor = false;
+  #ifdef __APPLE__
     ConfigMacOSXBehaviors = true;  // Set Mac OS X style defaults based on __APPLE__ compile time flag
-#else
+  #else
     ConfigMacOSXBehaviors = false;
-#endif
-    ConfigInputTextCursorBlink = true;
-    ConfigWindowsResizeFromEdges = true;
-    ConfigWindowsMoveFromTitleBarOnly = false;
-    ConfigMemoryCompactTimer = 60.0f;
+  #endif
 
-    // Platform Functions
-    BackendPlatformName = BackendRendererName = NULL;
-    BackendPlatformUserData = BackendRendererUserData = BackendLanguageUserData = NULL;
-    GetClipboardTextFn = GetClipboardTextFn_DefaultImpl;   // Platform dependent default implementations
-    SetClipboardTextFn = SetClipboardTextFn_DefaultImpl;
-    ClipboardUserData = NULL;
+  ConfigInputTextCursorBlink = true;
+  ConfigWindowsResizeFromEdges = true;
+  ConfigWindowsMoveFromTitleBarOnly = false;
+  ConfigMemoryCompactTimer = 60.0f;
 
-    // Input (NB: we already have memset zero the entire structure!)
-    MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
-    MousePosPrev = ImVec2(-FLT_MAX, -FLT_MAX);
-    MouseDragThreshold = 6.0f;
-    for (int i = 0; i < IM_ARRAYSIZE(MouseDownDuration); i++) MouseDownDuration[i] = MouseDownDurationPrev[i] = -1.0f;
-    for (int i = 0; i < IM_ARRAYSIZE(KeysDownDuration); i++) KeysDownDuration[i]  = KeysDownDurationPrev[i] = -1.0f;
-    for (int i = 0; i < IM_ARRAYSIZE(NavInputsDownDuration); i++) NavInputsDownDuration[i] = -1.0f;
+  // Platform Functions
+  BackendPlatformName = BackendRendererName = NULL;
+  BackendPlatformUserData = BackendRendererUserData = BackendLanguageUserData = NULL;
+  GetClipboardTextFn = GetClipboardTextFn_DefaultImpl;   // Platform dependent default implementations
+  SetClipboardTextFn = SetClipboardTextFn_DefaultImpl;
+  ClipboardUserData = NULL;
+
+  // Input (NB: we already have memset zero the entire structure!)
+  MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+  MousePosPrev = ImVec2(-FLT_MAX, -FLT_MAX);
+  MouseDragThreshold = 6.0f;
+  for (int i = 0; i < IM_ARRAYSIZE(MouseDownDuration); i++) MouseDownDuration[i] = MouseDownDurationPrev[i] = -1.0f;
+  for (int i = 0; i < IM_ARRAYSIZE(KeysDownDuration); i++) KeysDownDuration[i]  = KeysDownDurationPrev[i] = -1.0f;
+  for (int i = 0; i < IM_ARRAYSIZE(NavInputsDownDuration); i++) NavInputsDownDuration[i] = -1.0f;
 }
 //}}}
 //{{{
@@ -826,6 +821,7 @@ ImGuiID ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
 
 //{{{  Default file functions
 #ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
+
   //{{{
   ImFileHandle ImFileOpen(const char* filename, const char* mode)
   {
@@ -849,6 +845,7 @@ ImGuiID ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
   ImU64   ImFileGetSize(ImFileHandle f)   { long off = 0, sz = 0; return ((off = ftell(f)) != -1 && !fseek(f, 0, SEEK_END) && (sz = ftell(f)) != -1 && !fseek(f, off, SEEK_SET)) ? (ImU64)sz : (ImU64)-1; }
   ImU64   ImFileRead(void* data, ImU64 sz, ImU64 count, ImFileHandle f)           { return fread(data, (size_t)sz, (size_t)count, f); }
   ImU64   ImFileWrite(const void* data, ImU64 sz, ImU64 count, ImFileHandle f)    { return fwrite(data, (size_t)sz, (size_t)count, f); }
+
 #endif // #ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 //}}}
 //{{{
@@ -3685,88 +3682,88 @@ void ImGui::Initialize(ImGuiContext* context)
 //}}}
 //{{{
 // This function is merely here to free heap allocations.
-void ImGui::Shutdown(ImGuiContext* context)
-{
-    // The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)
-    ImGuiContext& g = *context;
-    if (g.IO.Fonts && g.FontAtlasOwnedByContext)
-    {
-        g.IO.Fonts->Locked = false;
-        IM_DELETE(g.IO.Fonts);
-    }
-    g.IO.Fonts = NULL;
+void ImGui::Shutdown(ImGuiContext* context) {
 
-    // Cleanup of other data are conditional on actually having initialized Dear ImGui.
-    if (!g.Initialized)
-        return;
+  // The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)
+  ImGuiContext& g = *context;
+  if (g.IO.Fonts && g.FontAtlasOwnedByContext)
+  {
+      g.IO.Fonts->Locked = false;
+      IM_DELETE(g.IO.Fonts);
+  }
+  g.IO.Fonts = NULL;
 
-    // Save settings (unless we haven't attempted to load them: CreateContext/DestroyContext without a call to NewFrame shouldn't save an empty file)
-    if (g.SettingsLoaded && g.IO.IniFilename != NULL)
-    {
-        ImGuiContext* backup_context = GImGui;
-        SetCurrentContext(&g);
-        SaveIniSettingsToDisk(g.IO.IniFilename);
-        SetCurrentContext(backup_context);
-    }
+  // Cleanup of other data are conditional on actually having initialized Dear ImGui.
+  if (!g.Initialized)
+      return;
 
-    // Destroy platform windows
-    ImGuiContext* backup_context = ImGui::GetCurrentContext();
-    SetCurrentContext(context);
-    DestroyPlatformWindows();
-    SetCurrentContext(backup_context);
+  // Save settings (unless we haven't attempted to load them: CreateContext/DestroyContext without a call to NewFrame shouldn't save an empty file)
+  if (g.SettingsLoaded && g.IO.IniFilename != NULL)
+  {
+      ImGuiContext* backup_context = GImGui;
+      SetCurrentContext(&g);
+      SaveIniSettingsToDisk(g.IO.IniFilename);
+      SetCurrentContext(backup_context);
+  }
 
-    // Shutdown extensions
-    DockContextShutdown(&g);
+  // Destroy platform windows
+  ImGuiContext* backup_context = ImGui::GetCurrentContext();
+  SetCurrentContext(context);
+  DestroyPlatformWindows();
+  SetCurrentContext(backup_context);
 
-    CallContextHooks(&g, ImGuiContextHookType_Shutdown);
+  // Shutdown extensions
+  DockContextShutdown(&g);
 
-    // Clear everything else
-    g.Windows.clear_delete();
-    g.WindowsFocusOrder.clear();
-    g.WindowsTempSortBuffer.clear();
-    g.CurrentWindow = NULL;
-    g.CurrentWindowStack.clear();
-    g.WindowsById.Clear();
-    g.NavWindow = NULL;
-    g.HoveredWindow = g.HoveredWindowUnderMovingWindow = NULL;
-    g.ActiveIdWindow = g.ActiveIdPreviousFrameWindow = NULL;
-    g.MovingWindow = NULL;
-    g.ColorStack.clear();
-    g.StyleVarStack.clear();
-    g.FontStack.clear();
-    g.OpenPopupStack.clear();
-    g.BeginPopupStack.clear();
+  CallContextHooks(&g, ImGuiContextHookType_Shutdown);
 
-    g.CurrentViewport = g.MouseViewport = g.MouseLastHoveredViewport = NULL;
-    g.Viewports.clear_delete();
+  // Clear everything else
+  g.Windows.clear_delete();
+  g.WindowsFocusOrder.clear();
+  g.WindowsTempSortBuffer.clear();
+  g.CurrentWindow = NULL;
+  g.CurrentWindowStack.clear();
+  g.WindowsById.Clear();
+  g.NavWindow = NULL;
+  g.HoveredWindow = g.HoveredWindowUnderMovingWindow = NULL;
+  g.ActiveIdWindow = g.ActiveIdPreviousFrameWindow = NULL;
+  g.MovingWindow = NULL;
+  g.ColorStack.clear();
+  g.StyleVarStack.clear();
+  g.FontStack.clear();
+  g.OpenPopupStack.clear();
+  g.BeginPopupStack.clear();
 
-    g.TabBars.Clear();
-    g.CurrentTabBarStack.clear();
-    g.ShrinkWidthBuffer.clear();
+  g.CurrentViewport = g.MouseViewport = g.MouseLastHoveredViewport = NULL;
+  g.Viewports.clear_delete();
 
-    g.Tables.Clear();
-    g.TablesTempDataStack.clear_destruct();
-    g.DrawChannelsTempMergeBuffer.clear();
+  g.TabBars.Clear();
+  g.CurrentTabBarStack.clear();
+  g.ShrinkWidthBuffer.clear();
 
-    g.ClipboardHandlerData.clear();
-    g.MenusIdSubmittedThisFrame.clear();
-    g.InputTextState.ClearFreeMemory();
+  g.Tables.Clear();
+  g.TablesTempDataStack.clear_destruct();
+  g.DrawChannelsTempMergeBuffer.clear();
 
-    g.SettingsWindows.clear();
-    g.SettingsHandlers.clear();
+  g.ClipboardHandlerData.clear();
+  g.MenusIdSubmittedThisFrame.clear();
+  g.InputTextState.ClearFreeMemory();
 
-    if (g.LogFile)
-    {
-#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
-        if (g.LogFile != stdout)
-#endif
-            ImFileClose(g.LogFile);
-        g.LogFile = NULL;
-    }
-    g.LogBuffer.clear();
+  g.SettingsWindows.clear();
+  g.SettingsHandlers.clear();
 
-    g.Initialized = false;
-}
+  if (g.LogFile)
+  {
+  #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
+      if (g.LogFile != stdout)
+  #endif
+          ImFileClose(g.LogFile);
+      g.LogFile = NULL;
+  }
+  g.LogBuffer.clear();
+
+  g.Initialized = false;
+  }
 //}}}
 //{{{
 // FIXME: Add a more explicit sort order in the window structure.
