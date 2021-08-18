@@ -26,7 +26,7 @@ public:
 
     cBrush* brush = cBrush::getCurBrush();
     for (auto& item : cBrush::getClassRegister()) {
-      if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(), 
+      if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(),
                              cBrush::isCurBrushByName (item.first), 0,
                              ImVec2 (ImGui::GetWindowSize().x, 20)))
         cBrush::setCurBrushByName (item.first, brush->getRadius(), graphics);
@@ -49,5 +49,5 @@ private:
     return new cBrushUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("brush", &create);
+  //inline static const bool mRegistered = registerClass ("brush", &create);
   };

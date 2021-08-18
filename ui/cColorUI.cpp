@@ -85,5 +85,5 @@ private:
     return new cColorUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("colour", &create);
+  //inline static const bool mRegistered = registerClass ("colour", &create);
   };

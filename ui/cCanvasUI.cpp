@@ -27,56 +27,57 @@ public:
   virtual ~cCanvasUI() = default;
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
-    if (mShow) {
-      // dangerous UI kill
-      ImGui::Begin (getName().c_str(), &mShow, ImGuiWindowFlags_NoDocking);
 
-      unsigned layerIndex = 0;
-      for (auto layer : canvas.getLayers()) {
-        if (ImGui::Selectable (format ("##{}", layerIndex).c_str(), canvas.isCurLayer (layerIndex), 0,
-                               ImVec2 (ImGui::GetWindowSize().x, 30)))
-          canvas.switchCurLayer (layerIndex);
+    float width = ImGui::GetIO().DisplaySize.x;
+    float height = ImGui::GetIO().DisplaySize.y;
+    ImGui::SetNextWindowSize(ImVec2(256.f, 256.f));
+    ImGui::SetNextWindowPos (ImVec2(width - 256.f, 0.f));
 
-        if (ImGui::BeginPopupContextItem()) {
-          bool visible = layer->isVisible();
-          if (ImGui::MenuItem ("visible", "", &visible))
-            layer->setVisible (visible);
+    ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
 
-          if (ImGui::MenuItem ("delete", "", false, canvas.getNumLayers() != 1))
-            canvas.deleteLayer (layerIndex);
+    unsigned layerIndex = 0;
+    for (auto layer : canvas.getLayers()) {
+      if (ImGui::Selectable (format ("##{}", layerIndex).c_str(), canvas.isCurLayer (layerIndex), 0,
+                             ImVec2 (ImGui::GetWindowSize().x, 30)))
+        canvas.switchCurLayer (layerIndex);
 
-          ImGui::Separator();
-          if (ImGui::MenuItem ("cancel"))
-            ImGui::CloseCurrentPopup();
+      if (ImGui::BeginPopupContextItem()) {
+        bool visible = layer->isVisible();
+        if (ImGui::MenuItem ("visible", "", &visible))
+          layer->setVisible (visible);
 
-          ImGui::EndPopup();
-          }
+        if (ImGui::MenuItem ("delete", "", false, canvas.getNumLayers() != 1))
+          canvas.deleteLayer (layerIndex);
 
-        ImGui::SameLine (0.001f);
-        ImGui::Image ((void*)(intptr_t)layer->getTextureId(), ImVec2 (40, 30));
+        ImGui::Separator();
+        if (ImGui::MenuItem ("cancel"))
+          ImGui::CloseCurrentPopup();
 
-        ImGui::SameLine();
-        if (layer->getName() != "")
-          ImGui::Text ("%s", layer->getName().c_str());
-        else if (layerIndex == 0)
-          ImGui::Text ("background");
-        else
-          ImGui::Text ("layer %d", layerIndex);
-        layerIndex++;
+        ImGui::EndPopup();
         }
 
-      if (ImGui::Button ("new layer")) {
-        unsigned newLayerIndex = canvas.newLayer();
-        canvas.switchCurLayer (newLayerIndex);
-        }
+      ImGui::SameLine (0.001f);
+      ImGui::Image ((void*)(intptr_t)layer->getTextureId(), ImVec2 (40, 30));
 
-      ImGui::End();
+      ImGui::SameLine();
+      if (layer->getName() != "")
+        ImGui::Text ("%s", layer->getName().c_str());
+      else if (layerIndex == 0)
+        ImGui::Text ("background");
+      else
+        ImGui::Text ("layer %d", layerIndex);
+      layerIndex++;
       }
+
+    if (ImGui::Button ("new layer")) {
+      unsigned newLayerIndex = canvas.newLayer();
+      canvas.switchCurLayer (newLayerIndex);
+      }
+
+    ImGui::End();
     }
 
 private:
-  bool mShow = true;
-
   //{{{
   static cUI* create (const string& className) {
     return new cCanvasUI (className);

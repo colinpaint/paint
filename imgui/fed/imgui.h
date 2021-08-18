@@ -432,36 +432,36 @@ namespace ImGui {
   //    Window-local coordinates:   SameLine(), GetCursorPos(), SetCursorPos(), GetCursorStartPos(), GetContentRegionMax(), GetWindowContentRegion*(), PushTextWrapPos()
   //    Absolute coordinate:        GetCursorScreenPos(), SetCursorScreenPos(), all ImDrawList:: functions.
 
-  IMGUI_API void   Separator();                                                    // separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.
-  IMGUI_API void   SameLine (float offset_from_start_x=0.0f, float spacing=-1.0f);  // call between widgets or groups to layout them horizontally. X position given in window coordinates.
-  IMGUI_API void   NewLine();                             // undo a SameLine() or force a new line when in an horizontal-layout context.
-  IMGUI_API void   Spacing();                             // add vertical spacing.
+  IMGUI_API void Separator();                                                    // separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.
+  IMGUI_API void SameLine (float offset_from_start_x=0.0f, float spacing=-1.0f);  // call between widgets or groups to layout them horizontally. X position given in window coordinates.
+  IMGUI_API void NewLine();                        // undo a SameLine() or force a new line when in an horizontal-layout context.
+  IMGUI_API void Spacing();                        // add vertical spacing.
 
-  IMGUI_API void   Dummy (const ImVec2& size);             // add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
-  IMGUI_API void   Indent (float indent_w = 0.0f);         // move content position toward the right, by indent_w, or style.IndentSpacing if indent_w <= 0
-  IMGUI_API void   Unindent (float indent_w = 0.0f);       // move content position back to the left, by indent_w, or style.IndentSpacing if indent_w <= 0
+  IMGUI_API void Dummy (const ImVec2& size);       // add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
+  IMGUI_API void Indent (float indent_w = 0.0f);   // move content position toward the right, by indent_w, or style.IndentSpacing if indent_w <= 0
+  IMGUI_API void Unindent (float indent_w = 0.0f); // move content position back to the left, by indent_w, or style.IndentSpacing if indent_w <= 0
 
-  IMGUI_API void   BeginGroup();                          // lock horizontal starting position
-  IMGUI_API void   EndGroup();                            // unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
+  IMGUI_API void BeginGroup(); // lock horizontal starting position
+  IMGUI_API void EndGroup();   // unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 
-  IMGUI_API ImVec2 GetCursorPos();                        // cursor position in window coordinates (relative to window position)
-  IMGUI_API float  GetCursorPosX();                       //   (some functions are using window-relative coordinates, such as: GetCursorPos, GetCursorStartPos, GetContentRegionMax, GetWindowContentRegion* etc.
-  IMGUI_API float  GetCursorPosY();                       //    other functions such as GetCursorScreenPos or everything in ImDrawList::
+  IMGUI_API ImVec2 GetCursorPos(); // cursor position in window coordinates (relative to window position)
+  IMGUI_API float GetCursorPosX(); //   (some functions are using window-relative coordinates, such as: GetCursorPos, GetCursorStartPos, GetContentRegionMax, GetWindowContentRegion* etc.
+  IMGUI_API float GetCursorPosY(); //    other functions such as GetCursorScreenPos or everything in ImDrawList::
 
-  IMGUI_API void   SetCursorPos (const ImVec2& local_pos); //    are using the main, absolute coordinate system.
-  IMGUI_API void   SetCursorPosX (float local_x);          //    GetWindowPos() + GetCursorPos() == GetCursorScreenPos() etc.)
-  IMGUI_API void   SetCursorPosY (float local_y);          //
+  IMGUI_API void SetCursorPos (const ImVec2& local_pos); //    are using the main, absolute coordinate system.
+  IMGUI_API void SetCursorPosX (float local_x); //    GetWindowPos() + GetCursorPos() == GetCursorScreenPos() etc.)
+  IMGUI_API void SetCursorPosY (float local_y); //
 
-  IMGUI_API ImVec2 GetCursorStartPos();                   // initial cursor position in window coordinates
-  IMGUI_API ImVec2 GetCursorScreenPos();                  // cursor position in absolute coordinates (useful to work with ImDrawList API). generally top-left == GetMainViewport()->Pos == (0,0) in single viewport mode, and bottom-right == GetMainViewport()->Pos+Size == io.DisplaySize in single-viewport mode.
-  IMGUI_API void   SetCursorScreenPos (const ImVec2& pos); // cursor position in absolute coordinates
+  IMGUI_API ImVec2 GetCursorStartPos();  // initial cursor position in window coordinates
+  IMGUI_API ImVec2 GetCursorScreenPos(); // cursor position in absolute coordinates (useful to work with ImDrawList API). generally top-left == GetMainViewport()->Pos == (0,0) in single viewport mode, and bottom-right == GetMainViewport()->Pos+Size == io.DisplaySize in single-viewport mode.
+  IMGUI_API void SetCursorScreenPos (const ImVec2& pos); // cursor position in absolute coordinates
 
-  IMGUI_API void   AlignTextToFramePadding();             // vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)
+  IMGUI_API void AlignTextToFramePadding();      // vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)
 
-  IMGUI_API float  GetTextLineHeight();                   // ~ FontSize
-  IMGUI_API float  GetTextLineHeightWithSpacing();        // ~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)
-  IMGUI_API float  GetFrameHeight();                      // ~ FontSize + style.FramePadding.y * 2
-  IMGUI_API float  GetFrameHeightWithSpacing();           // ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)
+  IMGUI_API float GetTextLineHeight();            // ~ FontSize
+  IMGUI_API float GetTextLineHeightWithSpacing(); // ~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)
+  IMGUI_API float GetFrameHeight();               // ~ FontSize + style.FramePadding.y * 2
+  IMGUI_API float GetFrameHeightWithSpacing();    // ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)
   //}}}
   //{{{  ID stack/scopes
   // Read the FAQ (docs/FAQ.md or http://dearimgui.org/faq) for more details about how ID are handled in dear imgui.
