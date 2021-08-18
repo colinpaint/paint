@@ -29,15 +29,16 @@ public:
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
 
-    // coerce next window to bottom full width, 256 high
-    ImGui::SetNextWindowSize (ImVec2(ImGui::GetIO().DisplaySize.x, 220.f));
-    ImGui::SetNextWindowPos (ImVec2(0.f, ImGui::GetIO().DisplaySize.y - 220.f));
+    // coerce next window to bottom full width, height
+    ImGui::SetNextWindowSize (ImVec2(ImGui::GetIO().DisplaySize.x, 200.f));
+    ImGui::SetNextWindowPos (ImVec2(0.f, ImGui::GetIO().DisplaySize.y - 200.f));
 
     ImGui::Begin (getName().c_str(), NULL,
                   ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration |
                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse);
 
     ImGui::BeginGroup();
+    ImGui::SetNextItemWidth (120);
     ImGui::Button ("Paint");
     ImGui::Button ("Graphics");
     if (ImGui::Button ("Effect")) {
@@ -87,41 +88,41 @@ public:
       //}}}
     ImGui::EndGroup();
 
-    //{{{  brush
+    //{{{  brush selection
     ImGui::SameLine();
     ImGui::BeginGroup();
+
     cBrush* brush = cBrush::getCurBrush();
-    for (auto& item : cBrush::getClassRegister()) {
+    for (auto& item : cBrush::getClassRegister())
       if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(),
                              cBrush::isCurBrushByName (item.first), 0, ImVec2 (150, 20)))
         cBrush::setCurBrushByName (item.first, brush->getRadius(), graphics);
-      // when we make brush thumbnails
-      //ImGui::SameLine (0.001f);
-      //ImGui::Image ((void*)(intptr_t)1, ImVec2 (40, 30));
-      }
 
     float radius = brush->getRadius();
     ImGui::SetNextItemWidth (150);
     if (ImGui::SliderFloat ("radius", &radius, 1.f, 100.f))
       brush->setRadius (radius);
+
+    ImGui::SetNextItemWidth (150);
+    cColor color = brush->getColor();
+    ImGui::SliderFloat ("opacity", &color.a, 0.f, 1.f);
+    brush->setColor (color);
+
     ImGui::EndGroup();
     //}}}
-    //{{{  colour
+    //{{{  colour selection
     ImGui::SameLine();
     ImGui::BeginGroup();
 
     // colorPicker
     ImGui::SetNextItemWidth (200);
+
     ImVec4 imBrushColor = ImVec4 (brush->getColor().r,brush->getColor().g,brush->getColor().b, brush->getColor().a);
     ImGui::ColorPicker4 (
       "colour", (float*)&imBrushColor,
       ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel,
       nullptr);
-
-    ImGui::SetNextItemWidth (200);
-    float opacity = brush->getColor().a;
-    ImGui::SliderFloat ("opacity", &opacity, 0.f, 1.f);
-    brush->setColor (cColor (imBrushColor.x, imBrushColor.y, imBrushColor.z, opacity));
+    brush->setColor (cColor (imBrushColor.x, imBrushColor.y, imBrushColor.z, imBrushColor.w));
 
     // iterate swatches
     unsigned swatchIndex = 0;
