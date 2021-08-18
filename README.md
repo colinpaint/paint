@@ -8,14 +8,14 @@ Simple paint testbed, just for fun
 build
 
 git clone http://github/colinpaint/paint
-  $cd paint
-  $mkdir build
-  $cd build
-  $make ..
+- cd paint
+- mkdir build
+- cd build
+- cmake ..
 
 Linux
-  $make -j 4
-  $./paintbox
+- make -j 4
+- ./paintbox
 
 Windows
-  paintbox.sln in build directory
+- paintbox.sln in build directory
