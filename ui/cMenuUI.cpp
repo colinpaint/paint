@@ -30,18 +30,18 @@ public:
   void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
 
     // coerce next window to bottom full width, height
-    ImGui::SetNextWindowSize (ImVec2(ImGui::GetIO().DisplaySize.x, 200.f));
-    ImGui::SetNextWindowPos (ImVec2(0.f, ImGui::GetIO().DisplaySize.y - 200.f));
+    ImGui::SetNextWindowPos ({0.f, ImGui::GetIO().DisplaySize.y - 200.f});
+    ImGui::SetNextWindowSize ({ImGui::GetIO().DisplaySize.x, 200.f});
 
     ImGui::Begin (getName().c_str(), NULL,
                   ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration |
+                  ImGuiWindowFlags_NoSavedSettings |
                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse);
 
     ImGui::BeginGroup();
-    ImGui::SetNextItemWidth (120);
-    ImGui::Button ("Paint");
-    ImGui::Button ("Graphics");
-    if (ImGui::Button ("Effect")) {
+    ImGui::Button ("Paint", { 100, 0 });
+    ImGui::Button ("Graphics", { 100, 0 });
+    if (ImGui::Button ("Effect", { 100, 0 })) {
       ImGui::OpenPopup ("hsv");
       if (ImGui::BeginPopupModal ("hsv")) {
         //{{{  hsv popup
@@ -72,9 +72,9 @@ public:
         }
         //}}}
       }
-    ImGui::Button ("Pasteup");
+    ImGui::Button ("Pasteup", { 100, 0 });
 
-    if (ImGui::Button ("Library")) {
+    if (ImGui::Button ("Library", { 100, 0 })) {
       //{{{  save dialog
       char const* filters[] = { "*.png" };
       char const* fileName = tinyfd_saveFileDialog ("save file", "", 1, filters, "image files");
