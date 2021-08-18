@@ -125,7 +125,6 @@ struct ImGuiTextFilter;             // Helper to parse and apply text filters (e
 struct ImGuiViewport;               // A Platform Window (always 1 unless multi-viewport are enabled. One per platform window to output to). In the future may represent Platform Monitor
 struct ImGuiWindowClass;            // Window class (rare/advanced uses: provide hints to the platform backend via altered viewport flags and parent/child info)
 //}}}
-
 //{{{  Enums/Flags (declared as int for compatibility with old C++, to allow using as flags and to not pollute the top of this file)
 // - Tip: Use your programming IDE navigation facilities on the names in the _central column_ below to find the actual flags/enum lists!
 //   In Visual Studio IDE: CTRL+comma ("Edit.NavigateTo") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
@@ -174,18 +173,19 @@ typedef int ImGuiViewportFlags;     // -> enum ImGuiViewportFlags_   // Flags: f
 
 typedef int ImGuiWindowFlags;       // -> enum ImGuiWindowFlags_     // Flags: for Begin(), BeginChild()
 //}}}
-//{{{  Other types
-#ifndef ImTextureID                 // ImTextureID [configurable type: override in imconfig.h with '#define ImTextureID xxx']
-  typedef void* ImTextureID;          // User data for rendering backend to identify a texture. This is whatever to you want it to be! read the FAQ about ImTextureID for details.
+//{{{  types
+#ifndef ImTextureID           // ImTextureID [configurable type: override in imconfig.h with '#define ImTextureID xxx']
+  typedef void* ImTextureID;  // User data for rendering backend to identify a texture. This is whatever to you want it to be! read the FAQ about ImTextureID for details.
 #endif
 
 typedef unsigned int ImGuiID;       // A unique ID used by widgets, typically hashed from a stack of string.
-typedef int (*ImGuiInputTextCallback)(ImGuiInputTextCallbackData* data);    // Callback function for ImGui::InputText()
-typedef void (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data);             // Callback function for ImGui::SetNextWindowSizeConstraints()
-typedef void* (*ImGuiMemAllocFunc)(size_t sz, void* user_data);             // Function signature for ImGui::SetAllocatorFunctions()
-typedef void (*ImGuiMemFreeFunc)(void* ptr, void* user_data);               // Function signature for ImGui::SetAllocatorFunctions()
-//}}}
-//{{{  Character types
+
+typedef int (*ImGuiInputTextCallback)(ImGuiInputTextCallbackData* data);  // Callback function for ImGui::InputText()
+typedef void (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data);  // Callback function for ImGui::SetNextWindowSizeConstraints()
+typedef void* (*ImGuiMemAllocFunc)(size_t sz, void* user_data);  // Function signature for ImGui::SetAllocatorFunctions()
+typedef void (*ImGuiMemFreeFunc)(void* ptr, void* user_data);    // Function signature for ImGui::SetAllocatorFunctions()
+
+// Character types
 // (we generally use UTF-8 encoded string in the API. This is storage specifically for a decoded character used for keyboard input and display)
 typedef unsigned short ImWchar16;   // A single decoded U16 character/code point. We encode them as multi bytes UTF-8 when used in strings.
 typedef unsigned int ImWchar32;     // A single decoded U32 character/code point. We encode them as multi bytes UTF-8 when used in strings.
@@ -195,8 +195,8 @@ typedef unsigned int ImWchar32;     // A single decoded U32 character/code point
 #else
   typedef ImWchar16 ImWchar;
 #endif
-//}}}
-//{{{  Basic scalar data types
+
+// Basic scalar data types
 typedef signed char         ImS8;   // 8-bit signed integer
 typedef unsigned char       ImU8;   // 8-bit unsigned integer
 typedef signed short        ImS16;  // 16-bit signed integer
@@ -215,9 +215,9 @@ typedef unsigned int        ImU32;  // 32-bit unsigned integer (often used to st
   typedef signed   long long  ImS64;  // 64-bit signed integer (post C++11)
   typedef unsigned long long  ImU64;  // 64-bit unsigned integer (post C++11)
 #endif
-//}}}
 
 IM_MSVC_RUNTIME_CHECKS_OFF
+
 //{{{
 // 2D vector (often used to store positions or sizes)
 struct ImVec2 {
@@ -248,6 +248,8 @@ struct ImVec4 {
 //}}}
 IM_MSVC_RUNTIME_CHECKS_RESTORE
 
+//}}}
+
 namespace ImGui {
   //{{{  Context creation and access
   // - Each context create its own ImFontAtlas by default. You may instance one yourself and pass it to CreateContext() to share a font atlas between contexts.
@@ -267,16 +269,17 @@ namespace ImGui {
   IMGUI_API void EndFrame(); // ends the Dear ImGui frame. automatically called by Render(). If you don't need to render data (skipping rendering) you may call EndFrame() without Render()... but you'll have wasted CPU already! If you don't need to render, better to not create any windows and not call NewFrame() at all!
 
   IMGUI_API void Render(); // ends the Dear ImGui frame, finalize the draw data. You can then get call GetDrawData().
-
   IMGUI_API ImDrawData* GetDrawData();  // valid after Render() and until the next call to NewFrame(). this is what you have to render.
   //}}}
   //{{{  Demo, Debug, Information
   IMGUI_API void ShowDemoWindow (bool* p_open = NULL);     // create Demo window. demonstrate most ImGui features. call this to learn about the library! try to make it always available in your application!
   IMGUI_API void ShowMetricsWindow (bool* p_open = NULL);  // create Metrics/Debugger window. display Dear ImGui internals: windows, draw commands, various internal state, etc.
   IMGUI_API void ShowAboutWindow (bool* p_open = NULL);    // create About window. display Dear ImGui version, credits and build/system information.
+
   IMGUI_API void ShowStyleEditor (ImGuiStyle* ref = NULL); // add style editor block (not a window). you can pass in a reference ImGuiStyle structure to compare to, revert to and save to (else it uses the default style)
   IMGUI_API bool ShowStyleSelector (const char* label);    // add style selector block (not a window), essentially a combo listing the default styles.
   IMGUI_API void ShowFontSelector (const char* label);     // add font selector block (not a window), essentially a combo listing the loaded fonts.
+
   IMGUI_API void ShowUserGuide ();                         // add basic help/info block (not a window): how to manipulate ImGui as a end-user (mouse/keyboard controls).
 
   IMGUI_API const char* GetVersion();  // get the compiled version string e.g. "1.80 WIP" (essentially the value for IMGUI_VERSION from the compiled version of imgui.cpp)
@@ -338,19 +341,19 @@ namespace ImGui {
   IMGUI_API void SetNextWindowSize(const ImVec2& size, ImGuiCond cond = 0);                  // set next window size. set axis to 0.0f to force an auto-fit on this axis. call before Begin()
   IMGUI_API void SetNextWindowSizeConstraints(const ImVec2& size_min, const ImVec2& size_max, ImGuiSizeCallback custom_callback = NULL, void* custom_callback_data = NULL); // set next window size limits. use -1,-1 on either X/Y axis to preserve the current size. Sizes will be rounded down. Use callback to apply non-trivial programmatic constraints.
 
-  IMGUI_API void SetNextWindowContentSize(const ImVec2& size);                               // set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0.0f to leave it automatic. call before Begin()
-  IMGUI_API void SetNextWindowCollapsed(bool collapsed, ImGuiCond cond = 0);                 // set next window collapsed state. call before Begin()
+  IMGUI_API void SetNextWindowContentSize(const ImVec2& size);               // set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0.0f to leave it automatic. call before Begin()
+  IMGUI_API void SetNextWindowCollapsed(bool collapsed, ImGuiCond cond = 0); // set next window collapsed state. call before Begin()
 
-  IMGUI_API void SetNextWindowFocus();                                                       // set next window to be focused / top-most. call before Begin()
-  IMGUI_API void SetNextWindowBgAlpha(float alpha);                                          // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
-  IMGUI_API void SetNextWindowViewport(ImGuiID viewport_id);                                 // set next window viewport
+  IMGUI_API void SetNextWindowFocus();                       // set next window to be focused / top-most. call before Begin()
+  IMGUI_API void SetNextWindowBgAlpha(float alpha);          // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
+  IMGUI_API void SetNextWindowViewport(ImGuiID viewport_id); // set next window viewport
 
-  IMGUI_API void SetWindowPos(const ImVec2& pos, ImGuiCond cond = 0);                        // (not recommended) set current window position - call within Begin()/End(). prefer using SetNextWindowPos(), as this may incur tearing and side-effects.
-  IMGUI_API void SetWindowSize(const ImVec2& size, ImGuiCond cond = 0);                      // (not recommended) set current window size - call within Begin()/End(). set to ImVec2(0, 0) to force an auto-fit. prefer using SetNextWindowSize(), as this may incur tearing and minor side-effects.
-  IMGUI_API void SetWindowCollapsed(bool collapsed, ImGuiCond cond = 0);                     // (not recommended) set current window collapsed state. prefer using SetNextWindowCollapsed().
+  IMGUI_API void SetWindowPos(const ImVec2& pos, ImGuiCond cond = 0);        // (not recommended) set current window position - call within Begin()/End(). prefer using SetNextWindowPos(), as this may incur tearing and side-effects.
+  IMGUI_API void SetWindowSize(const ImVec2& size, ImGuiCond cond = 0);      // (not recommended) set current window size - call within Begin()/End(). set to ImVec2(0, 0) to force an auto-fit. prefer using SetNextWindowSize(), as this may incur tearing and minor side-effects.
+  IMGUI_API void SetWindowCollapsed(bool collapsed, ImGuiCond cond = 0);     // (not recommended) set current window collapsed state. prefer using SetNextWindowCollapsed().
 
-  IMGUI_API void SetWindowFocus();                                                           // (not recommended) set current window to be focused / top-most. prefer using SetNextWindowFocus().
-  IMGUI_API void SetWindowFontScale(float scale);                                            // [OBSOLETE] set font scale. Adjust IO.FontGlobalScale if you want to scale all windows. This is an old API! For correct scaling, prefer to reload font + rebuild ImFontAtlas + call style.ScaleAllSizes().
+  IMGUI_API void SetWindowFocus();                // (not recommended) set current window to be focused / top-most. prefer using SetNextWindowFocus().
+  IMGUI_API void SetWindowFontScale(float scale); // [OBSOLETE] set font scale. Adjust IO.FontGlobalScale if you want to scale all windows. This is an old API! For correct scaling, prefer to reload font + rebuild ImFontAtlas + call style.ScaleAllSizes().
 
   IMGUI_API void SetWindowPos(const char* name, const ImVec2& pos, ImGuiCond cond = 0);      // set named window position.
   IMGUI_API void SetWindowSize(const char* name, const ImVec2& size, ImGuiCond cond = 0);    // set named window size. set axis to 0.0f to force an auto-fit on this axis.
@@ -432,10 +435,10 @@ namespace ImGui {
   //    Window-local coordinates:   SameLine(), GetCursorPos(), SetCursorPos(), GetCursorStartPos(), GetContentRegionMax(), GetWindowContentRegion*(), PushTextWrapPos()
   //    Absolute coordinate:        GetCursorScreenPos(), SetCursorScreenPos(), all ImDrawList:: functions.
 
-  IMGUI_API void Separator();                                                    // separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.
+  IMGUI_API void Separator();  // separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.
   IMGUI_API void SameLine (float offset_from_start_x=0.0f, float spacing=-1.0f);  // call between widgets or groups to layout them horizontally. X position given in window coordinates.
-  IMGUI_API void NewLine();                        // undo a SameLine() or force a new line when in an horizontal-layout context.
-  IMGUI_API void Spacing();                        // add vertical spacing.
+  IMGUI_API void NewLine(); // undo a SameLine() or force a new line when in an horizontal-layout context.
+  IMGUI_API void Spacing(); // add vertical spacing.
 
   IMGUI_API void Dummy (const ImVec2& size);       // add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
   IMGUI_API void Indent (float indent_w = 0.0f);   // move content position toward the right, by indent_w, or style.IndentSpacing if indent_w <= 0
@@ -445,8 +448,8 @@ namespace ImGui {
   IMGUI_API void EndGroup();   // unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 
   IMGUI_API ImVec2 GetCursorPos(); // cursor position in window coordinates (relative to window position)
-  IMGUI_API float GetCursorPosX(); //   (some functions are using window-relative coordinates, such as: GetCursorPos, GetCursorStartPos, GetContentRegionMax, GetWindowContentRegion* etc.
-  IMGUI_API float GetCursorPosY(); //    other functions such as GetCursorScreenPos or everything in ImDrawList::
+  IMGUI_API float GetCursorPosX(); // (some functions are using window-relative coordinates, such as: GetCursorPos, GetCursorStartPos, GetContentRegionMax, GetWindowContentRegion* etc.
+  IMGUI_API float GetCursorPosY(); // other functions such as GetCursorScreenPos or everything in ImDrawList::
 
   IMGUI_API void SetCursorPos (const ImVec2& local_pos); //    are using the main, absolute coordinate system.
   IMGUI_API void SetCursorPosX (float local_x); //    GetWindowPos() + GetCursorPos() == GetCursorScreenPos() etc.)
@@ -479,6 +482,7 @@ namespace ImGui {
   IMGUI_API void PushID (const char* str_id_begin, const char* str_id_end); // push string into the ID stack (will hash string).
   IMGUI_API void PushID (const void* ptr_id);                               // push pointer into the ID stack (will hash pointer).
   IMGUI_API void PushID (int int_id);                                       // push integer into the ID stack (will hash integer).
+
   IMGUI_API void PopID();                                                  // pop from the ID stack.
 
   IMGUI_API ImGuiID GetID (const char* str_id);                                // calculate unique ID (hash of whole ID stack + given parameter). e.g. if you want to query into ImGuiStorage yourself
@@ -491,7 +495,6 @@ namespace ImGui {
   IMGUI_API void Text (const char* fmt, ...) IM_FMTARGS(1); // formatted text
 
   IMGUI_API void TextV (const char* fmt, va_list args) IM_FMTLIST(1);
-
   IMGUI_API void TextColored (const ImVec4& col, const char* fmt, ...) IM_FMTARGS(2); // shortcut for PushStyleColor(ImGuiCol_Text, col); Text(fmt, ...); PopStyleColor();
   IMGUI_API void TextColoredV (const ImVec4& col, const char* fmt, va_list args) IM_FMTLIST(2);
 
