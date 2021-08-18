@@ -6,8 +6,7 @@ Simple paint testbed, just for fun
 - moving towards a paintbox/photoShop mashup
 
 build
-
-git clone http://github/colinpaint/paint
+- git clone http://github/colinpaint/paint
 - cd paint
 - mkdir build
 - cd build
