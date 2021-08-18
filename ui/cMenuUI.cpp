@@ -24,7 +24,12 @@ using namespace fmt;
 
 class cMenuUI : public cUI {
 public:
-  cMenuUI (const std::string& name) : cUI(name) {}
+  //{{{
+  cMenuUI (const std::string& name) : cUI(name) {
+    for (int i =0 ; i < 56; i++)
+      mSwatches.push_back (cColor(0.f,0.f,0.f, 0.f));
+    }
+  //}}}
   virtual ~cMenuUI() = default;
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
@@ -39,9 +44,9 @@ public:
                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse);
 
     ImGui::BeginGroup();
-    ImGui::Button ("Paint", { 100, 0 });
-    ImGui::Button ("Graphics", { 100, 0 });
-    if (ImGui::Button ("Effect", { 100, 0 })) {
+    ImGui::Button ("Paint", {100,0});
+    ImGui::Button ("Graphics", {100,0});
+    if (ImGui::Button ("Effect", {100,0})) {
       ImGui::OpenPopup ("hsv");
       if (ImGui::BeginPopupModal ("hsv")) {
         //{{{  hsv popup
@@ -72,9 +77,9 @@ public:
         }
         //}}}
       }
-    ImGui::Button ("Pasteup", { 100, 0 });
+    ImGui::Button ("Pasteup", {100,0});
 
-    if (ImGui::Button ("Library", { 100, 0 })) {
+    if (ImGui::Button ("Library", {100,0})) {
       //{{{  save dialog
       char const* filters[] = { "*.png" };
       char const* fileName = tinyfd_saveFileDialog ("save file", "", 1, filters, "image files");
@@ -95,7 +100,7 @@ public:
     cBrush* brush = cBrush::getCurBrush();
     for (auto& item : cBrush::getClassRegister())
       if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(),
-                             cBrush::isCurBrushByName (item.first), 0, ImVec2 (150, 20)))
+                             cBrush::isCurBrushByName (item.first), 0, {150, 20}))
         cBrush::setCurBrushByName (item.first, brush->getRadius(), graphics);
 
     float radius = brush->getRadius();
@@ -110,29 +115,16 @@ public:
 
     ImGui::EndGroup();
     //}}}
-    //{{{  colour selection
+    //{{{  swatches
     ImGui::SameLine();
     ImGui::BeginGroup();
-
-    // colorPicker
-    ImGui::SetNextItemWidth (200);
-
-    ImVec4 imBrushColor = ImVec4 (brush->getColor().r,brush->getColor().g,brush->getColor().b, brush->getColor().a);
-    ImGui::ColorPicker4 (
-      "colour", (float*)&imBrushColor,
-      ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel,
-      nullptr);
-    brush->setColor (cColor (imBrushColor.x, imBrushColor.y, imBrushColor.z, imBrushColor.w));
-
-    // iterate swatches
     unsigned swatchIndex = 0;
     for (auto& swatch : mSwatches) {
       bool disabled = swatch.a == 0.f;
       int alphaPrev = disabled ? ImGuiColorEditFlags_AlphaPreview : 0;
       if (ImGui::ColorButton (format ("swatch##{}", swatchIndex).c_str(),
                               ImVec4 (swatch.r,swatch.g,swatch.b, swatch.a),
-                              ImGuiColorEditFlags_NoTooltip | alphaPrev,
-                              ImVec2 (20, 20)) && !disabled)
+                              ImGuiColorEditFlags_NoTooltip | alphaPrev, {20, 20}) && !disabled)
         brush->setColor (swatch);
 
       // swatch popup
@@ -153,7 +145,21 @@ public:
       if (++swatchIndex % 8)
         ImGui::SameLine();
       }
+    ImGui::EndGroup();
+    //}}}
+    //{{{  colour
+    ImGui::SameLine();
+    ImGui::BeginGroup();
 
+    // colorPicker
+    ImGui::SetNextItemWidth (200);
+
+    ImVec4 imBrushColor = ImVec4 (brush->getColor().r,brush->getColor().g,brush->getColor().b, brush->getColor().a);
+    ImGui::ColorPicker4 (
+      "colour", (float*)&imBrushColor,
+      ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel,
+      nullptr);
+    brush->setColor (cColor (imBrushColor.x, imBrushColor.y, imBrushColor.z, imBrushColor.w));
     ImGui::EndGroup();
     //}}}
 
