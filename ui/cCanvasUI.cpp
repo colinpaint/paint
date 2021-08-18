@@ -28,12 +28,9 @@ public:
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
 
-    float width = ImGui::GetIO().DisplaySize.x;
-    float height = ImGui::GetIO().DisplaySize.y;
-    ImGui::SetNextWindowSize(ImVec2(256.f, 256.f));
-    ImGui::SetNextWindowPos (ImVec2(width - 256.f, 0.f));
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
+    ImGui::SetWindowPos (ImVec2(ImGui::GetIO().DisplaySize.x - ImGui::GetWindowWidth(), 0.f));
 
     unsigned layerIndex = 0;
     for (auto layer : canvas.getLayers()) {

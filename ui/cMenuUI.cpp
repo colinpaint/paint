@@ -21,13 +21,6 @@
 using namespace std;
 using namespace fmt;
 //}}}
-//{{{
-constexpr ImGuiColorEditFlags kColorSelectorFlags =
-  ImGuiColorEditFlags_HDR |
-  ImGuiColorEditFlags_Float |
-  ImGuiColorEditFlags_NoInputs |
-  ImGuiColorEditFlags_PickerHueWheel;
-//}}}
 
 class cMenuUI : public cUI {
 public:
@@ -36,46 +29,51 @@ public:
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
 
-    float width = ImGui::GetIO().DisplaySize.x;
-    float height = ImGui::GetIO().DisplaySize.y;
-    ImGui::SetNextWindowSize(ImVec2(width, 256.f));
-    ImGui::SetNextWindowPos (ImVec2(0.f,height - 256.f));
+    // coerce next window to bottom full width, 256 high
+    ImGui::SetNextWindowSize (ImVec2(ImGui::GetIO().DisplaySize.x, 220.f));
+    ImGui::SetNextWindowPos (ImVec2(0.f, ImGui::GetIO().DisplaySize.y - 220.f));
 
-    ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
+    ImGui::Begin (getName().c_str(), NULL,
+                  ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration |
+                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse);
 
     ImGui::BeginGroup();
-    if (ImGui::Button ("hsv"))
+    ImGui::Button ("Paint");
+    ImGui::Button ("Graphics");
+    if (ImGui::Button ("Effect")) {
       ImGui::OpenPopup ("hsv");
+      if (ImGui::BeginPopupModal ("hsv")) {
+        //{{{  hsv popup
+        float hue = canvas.getCurLayer()->getHue();
+        float sat = canvas.getCurLayer()->getSat();
+        float val = canvas.getCurLayer()->getVal();
+        if (ImGui::SliderFloat ("hue", &hue, -1.0f, 1.0f))
+          canvas.getCurLayer()->setHueSatVal (hue, sat, val);
+        if (ImGui::SliderFloat ("sat", &sat, -1.0f, 1.0f))
+          canvas.getCurLayer()->setHueSatVal (hue, sat, val);
+        if (ImGui::SliderFloat ("val", &val, -1.0f, 1.0f))
+          canvas.getCurLayer()->setHueSatVal (hue, sat, val);
 
-    if (ImGui::BeginPopupModal ("hsv")) {
-      //{{{  hsv popup
-      float hue = canvas.getCurLayer()->getHue();
-      float sat = canvas.getCurLayer()->getSat();
-      float val = canvas.getCurLayer()->getVal();
-      if (ImGui::SliderFloat ("hue", &hue, -1.0f, 1.0f))
-        canvas.getCurLayer()->setHueSatVal (hue, sat, val);
-      if (ImGui::SliderFloat ("sat", &sat, -1.0f, 1.0f))
-        canvas.getCurLayer()->setHueSatVal (hue, sat, val);
-      if (ImGui::SliderFloat ("val", &val, -1.0f, 1.0f))
-        canvas.getCurLayer()->setHueSatVal (hue, sat, val);
+        if (ImGui::Button ("confirm##hsv")) {
+          // persist changes
+          canvas.renderCurLayer();
+          canvas.getCurLayer()->setHueSatVal (0.f, 0.f, 0.f);
+          ImGui::CloseCurrentPopup();
+          }
 
-      if (ImGui::Button ("confirm##hsv")) {
-        // persist changes
-        canvas.renderCurLayer();
-        canvas.getCurLayer()->setHueSatVal (0.f, 0.f, 0.f);
-        ImGui::CloseCurrentPopup();
+        ImGui::SameLine();
+        if (ImGui::Button ("cancel##hsv")) {
+          canvas.getCurLayer()->setHueSatVal (0.f, 0.f, 0.f);
+          ImGui::CloseCurrentPopup();
+          }
+
+        ImGui::EndPopup();
         }
-
-      ImGui::SameLine();
-      if (ImGui::Button ("cancel##hsv")) {
-        canvas.getCurLayer()->setHueSatVal (0.f, 0.f, 0.f);
-        ImGui::CloseCurrentPopup();
-        }
-
-      ImGui::EndPopup();
+        //}}}
       }
-      //}}}
-    if (ImGui::Button ("save")) {
+    ImGui::Button ("Pasteup");
+
+    if (ImGui::Button ("Library")) {
       //{{{  save dialog
       char const* filters[] = { "*.png" };
       char const* fileName = tinyfd_saveFileDialog ("save file", "", 1, filters, "image files");
@@ -113,10 +111,14 @@ public:
     ImGui::BeginGroup();
 
     // colorPicker
-
     ImGui::SetNextItemWidth (200);
     ImVec4 imBrushColor = ImVec4 (brush->getColor().r,brush->getColor().g,brush->getColor().b, brush->getColor().a);
-    ImGui::ColorPicker4 ("colour", (float*)&imBrushColor, kColorSelectorFlags, nullptr);
+    ImGui::ColorPicker4 (
+      "colour", (float*)&imBrushColor,
+      ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel,
+      nullptr);
+
+    ImGui::SetNextItemWidth (200);
     float opacity = brush->getColor().a;
     ImGui::SliderFloat ("opacity", &opacity, 0.f, 1.f);
     brush->setColor (cColor (imBrushColor.x, imBrushColor.y, imBrushColor.z, opacity));
