@@ -5,17 +5,17 @@ Simple paint testbed, just for fun
 - based on ImGui-paint, which demonstrated this combination worked as a testbed
 - moving towards a paintbox/photoShop mashup
 
-build 
+build
 
 git clone http://github/colinpaint/paint
-  cd paint
-  mkdir build
-  cd build
-  cmake ..
+  $cd paint
+  $mkdir build
+  $cd build
+  $make ..
 
 Linux
-  make -j 4
-  ./paintbox
+  $make -j 4
+  $./paintbox
 
 Windows
   paintbox.sln in build directory
