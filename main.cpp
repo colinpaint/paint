@@ -76,7 +76,9 @@ int main (int numArgs, char* args[]) {
   if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
     exit (EXIT_FAILURE);
 
-  ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f);
+  ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
+  //ImGui::GetStyle().ScaleAllSizes (1.8f);
+  //ImGui::GetIO().FontGlobalScale = relative_scale;
 
   // create canvas
   cCanvas canvas (params.empty() ? "../piccies/tv.jpg" : params[0], graphics);

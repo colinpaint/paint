@@ -1,5 +1,5 @@
 // cDirectX11Graphics.cpp - !!! need to finsh quad, frameBuffer and shader !!!
-#ifdef WIN32 // stop linux trying to compile
+#ifdef WIN32 // stop linux compile, simpler cmake
 //{{{  includes
 #include <cstdint>
 #include <cmath>
@@ -713,16 +713,16 @@ namespace {
 
       setupRenderState (drawData);
       //{{{  calc orthoProject matrix
-      const float L = drawData->DisplayPos.x;
-      const float R = drawData->DisplayPos.x + drawData->DisplaySize.x;
-      const float T = drawData->DisplayPos.y;
-      const float B = drawData->DisplayPos.y + drawData->DisplaySize.y;
+      const float left = drawData->DisplayPos.x;
+      const float right = drawData->DisplayPos.x + drawData->DisplaySize.x;
+      const float top = drawData->DisplayPos.y;
+      const float bottom = drawData->DisplayPos.y + drawData->DisplaySize.y;
 
       const float kOrthoMatrix[4][4] = {
-         2.0f/(R-L),  0.0f,        0.0f, 0.0f ,
-         0.0f,        2.0f/(T-B),  0.0f, 0.0f ,
-         0.0f,        0.0f,        0.5f, 0.0f ,
-         (R+L)/(L-R), (T+B)/(B-T), 0.5f, 1.0f ,
+         2.f/(right-left),          0.f,                       0.f,  0.f,
+         0.f,                       2.f/(top-bottom),          0.f,  0.f,
+         0.f,                       0.f,                       0.5f, 0.f,
+         (right+left)/(left-right), (top+bottom)/(bottom-top), 0.5f, 1.f,
         };
       //}}}
       //{{{  copy kOrthoMatrix to mapped GPU vertexConstantBuffer
@@ -1051,6 +1051,18 @@ cPaintShader* cDirectX11Graphics::createPaintShader() {
 //}}}
 
 //{{{
+void cDirectX11Graphics::windowResize (int width, int height) {
+
+  //cLog::log (LOGINFO, format ("cGraphics::windowResized {}", width, height));
+  sBackendData* backendData = getBackendData();
+  if (backendData) {
+    backendData->mMainRenderTargetView->Release();
+    backendData->mDxgiSwapChain->ResizeBuffers (0, width, height, DXGI_FORMAT_UNKNOWN, 0);
+    createMainRenderTarget();
+    }
+  }
+//}}}
+//{{{
 void cDirectX11Graphics::newFrame() {
 
   sBackendData* backendData = getBackendData();
@@ -1076,18 +1088,6 @@ void cDirectX11Graphics::draw() {
 
   // really draw imGui drawList
   renderDrawData (ImGui::GetDrawData());
-  }
-//}}}
-//{{{
-void cDirectX11Graphics::windowResize (int width, int height) {
-
-  //cLog::log (LOGINFO, format ("cGraphics::windowResized {}", width, height));
-  sBackendData* backendData = getBackendData();
-  if (backendData) {
-    backendData->mMainRenderTargetView->Release();
-    backendData->mDxgiSwapChain->ResizeBuffers (0, width, height, DXGI_FORMAT_UNKNOWN, 0);
-    createMainRenderTarget();
-    }
   }
 //}}}
 #endif

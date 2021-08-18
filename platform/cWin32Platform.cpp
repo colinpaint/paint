@@ -1,5 +1,5 @@
 // cWin32Platform.cpp - imGui backend win32Impl wrapper
-#ifdef WIN32 // stop linux trying to compile
+#ifdef WIN32 // stop linux compile, simpler cmake
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX

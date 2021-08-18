@@ -1598,6 +1598,11 @@ cPaintShader* cOpenGlGraphics::createPaintShader() {
 //}}}
 
 //{{{
+void cOpenGlGraphics::windowResize (int width, int height) {
+  cLog::log (LOGINFO, format ("cOpenGlGraphics windowResize {} {}", width, height));
+  }
+//}}}
+//{{{
 void cOpenGlGraphics::newFrame() {
 
   if (!gFontLoaded) {
@@ -1611,10 +1616,5 @@ void cOpenGlGraphics::newFrame() {
 //{{{
 void cOpenGlGraphics::draw() {
   renderDrawData (ImGui::GetDrawData());
-  }
-//}}}
-//{{{
-void cOpenGlGraphics::windowResize (int width, int height) {
-  cLog::log (LOGINFO, format ("cOpenGlGraphics windowResize {} {}", width, height));
   }
 //}}}

@@ -1,26 +1,12 @@
-//{{{
-// dear imgui
 // (binary_to_compressed_c.cpp)
 // Helper tool to turn a file into a C array, if you want to embed font data in your source code.
-
 // The data is first compressed with stb_compress() to reduce source code size,
-// then encoded in Base85 to fit in a string so we can fit roughly 4 bytes of compressed data into 5 bytes of source code (suggested by @mmalex)
-// (If we used 32-bit constants it would require take 11 bytes of source code to encode 4 bytes, and be endianness dependent)
+// then encoded in Base85 to fit in a string so we can fit roughly
+//  4 bytes of compressed data into 5 bytes of source code (suggested by @mmalex)
+// (If we used 32-bit constants it would require take 11 bytes of source code to encode 4 bytes, 
+// and be endianness dependent)
 // Note that even with compression, the output array is likely to be bigger than the binary file..
 // Load compressed TTF fonts with ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF()
-
-// Build with, e.g:
-//   # cl.exe binary_to_compressed_c.cpp
-//   # g++ binary_to_compressed_c.cpp
-//   # clang++ binary_to_compressed_c.cpp
-// You can also find a precompiled Windows binary in the binary/demo package available from https://github.com/ocornut/imgui
-
-// Usage:
-//   binary_to_compressed_c.exe [-base85] [-nocompress] <inputfile> <symbolname>
-// Usage example:
-//   # binary_to_compressed_c.exe myfont.ttf MyFont > myfont.cpp
-//   # binary_to_compressed_c.exe -base85 myfont.ttf MyFont > myfont.cpp
-//}}}
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <string.h>
@@ -39,8 +25,6 @@ char Encode85Byte (unsigned int x) {
 //}}}
 
 //{{{
-// stb_compress* from stb.h - definition
-////////////////////           compressor         ///////////////////////
 static stb_uint stb_adler32 (stb_uint adler32, stb_uchar *buffer, stb_uint buflen) {
 
   const unsigned long ADLER_MOD = 65521;
@@ -144,8 +128,8 @@ static  stb_uint stb__hashsize = 32768;
 static unsigned int stb__running_adler;
 //{{{
 static int stb_compress_chunk (stb_uchar *history,
-    stb_uchar *start, stb_uchar *end, int length,
-    int *pending_literals, stb_uchar **chash, stb_uint mask) {
+                               stb_uchar *start, stb_uchar *end, int length,
+                               int *pending_literals, stb_uchar **chash, stb_uint mask) {
 
   (void)history;
   int window = stb__window;
@@ -297,7 +281,7 @@ bool binary_to_compressed_c (const char* filename, const char* symbol,
 
   // Read file
   FILE* f = fopen (filename, "rb");
-  if (!f) 
+  if (!f)
     return false;
   int data_sz;
 

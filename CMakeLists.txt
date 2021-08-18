@@ -47,6 +47,7 @@ add_subdirectory (tinyfiledialog/)
 add_subdirectory (imgui/)
 add_subdirectory (log/)
 
+# main + static init registered cpp, !!! translation unit problem to solve !!!
 file (GLOB SRCFILES
   ${CMAKE_SOURCE_DIR}/main.cpp
   ${CMAKE_SOURCE_DIR}/platform/*.cpp
