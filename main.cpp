@@ -42,7 +42,7 @@ int main (int numArgs, char* args[]) {
   eLogLevel logLevel = LOGINFO;
   string platformName = "glfw";
   string graphicsName = "opengl";
-  //{{{  parse params from command line
+  //{{{  parse command line args to params  
   // args to params
   vector <string> params;
   for (int i = 1; i < numArgs; i++)
