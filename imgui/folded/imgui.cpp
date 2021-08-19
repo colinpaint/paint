@@ -7929,6 +7929,7 @@ float ImGui::GetWindowContentRegionWidth()
     return window->ContentRegionRect.GetWidth();
 }
 //}}}
+
 //{{{
 // Lock horizontal starting position + capture group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 // Groups are currently a mishmash of functionalities which should perhaps be clarified and separated.
@@ -8021,6 +8022,7 @@ void ImGui::EndGroup()
 }
 //}}}
 
+//{{{  scroll
 //{{{
 // Helper to snap on edges when aiming at an item very close to the edge,
 // So the difference between WindowPadding and ItemSpacing will be in the visible area after scrolling.
@@ -8236,7 +8238,8 @@ void ImGui::SetScrollHereY(float center_y_ratio)
     window->ScrollTargetEdgeSnapDist.y = ImMax(0.0f, window->WindowPadding.y - spacing_y);
 }
 //}}}
-
+//}}}
+//{{{  tooltip
 //{{{
 void ImGui::BeginTooltip()
 {
@@ -8299,7 +8302,8 @@ void ImGui::SetTooltip(const char* fmt, ...)
     va_end(args);
 }
 //}}}
-
+//}}}
+//{{{  popup
 //{{{
 // Supported flags: ImGuiPopupFlags_AnyPopupId, ImGuiPopupFlags_AnyPopupLevel
 bool ImGui::IsPopupOpen(ImGuiID id, ImGuiPopupFlags popup_flags)
@@ -8840,7 +8844,8 @@ ImVec2 ImGui::FindBestWindowPosForPopup(ImGuiWindow* window)
     return window->Pos;
 }
 //}}}
-
+//}}}
+//{{{  nav
 //{{{
 // FIXME-NAV: The existence of SetNavID vs SetFocusID properly needs to be clarified/reworked.
 void ImGui::SetNavID(ImGuiID id, ImGuiNavLayer nav_layer, ImGuiID focus_scope_id, const ImRect& rect_rel)
@@ -10053,7 +10058,8 @@ void ImGui::NavUpdateWindowingOverlay()
     PopStyleVar();
 }
 //}}}
-
+//}}}
+//{{{  drag drop
 //{{{
 void ImGui::ClearDragDrop()
 {
@@ -10370,7 +10376,8 @@ void ImGui::EndDragDropTarget()
     g.DragDropWithinTarget = false;
 }
 //}}}
-
+//}}}
+//{{{  log
 //{{{
 // Pass text data straight to log (without being displayed)
 static inline void LogTextV(ImGuiContext& g, const char* fmt, va_list args)
@@ -10622,7 +10629,8 @@ void ImGui::LogButtons()
         LogToClipboard();
 }
 //}}}
-
+//}}}
+//{{{  settings
 //{{{
 // Called by NewFrame()
 void ImGui::UpdateSettings()
@@ -10959,7 +10967,8 @@ static void WindowSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandl
     }
 }
 //}}}
-
+//}}}
+//{{{  viewport
 //{{{
 ImGuiViewport* ImGui::GetMainViewport()
 {
@@ -11856,6 +11865,8 @@ const ImGuiPlatformMonitor* ImGui::GetViewportPlatformMonitor(ImGuiViewport* vie
     return &g.FallbackMonitor;
 }
 //}}}
+//}}}
+
 //{{{
 void ImGui::DestroyPlatformWindow(ImGuiViewportP* viewport)
 {
@@ -12024,6 +12035,7 @@ namespace ImGui
     static void             DockSettingsHandler_WriteAll(ImGuiContext* imgui_ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf);
 }
 //}}}
+//{{{  dockContext
 //{{{
 void ImGui::DockContextInitialize(ImGuiContext* ctx)
 {
@@ -12628,7 +12640,8 @@ bool ImGui::DockContextCalcDropPosForDocking(ImGuiWindow* target, ImGuiDockNode*
     return true;
 }
 //}}}
-
+//}}}
+//{{{  dockNode
 //{{{
 ImGuiDockNode::ImGuiDockNode(ImGuiID id)
 {
@@ -12679,7 +12692,8 @@ static void DockNodeHideWindowDuringHostWindowCreation(ImGuiWindow* window)
     window->HiddenFramesCanSkipItems = window->Active ? 1 : 2;
 }
 //}}}
-
+//}}}
+//{{{  other dock
 //{{{
 static void ImGui::DockNodeAddWindow(ImGuiDockNode* node, ImGuiWindow* window, bool add_to_tab_bar)
 {
@@ -15526,6 +15540,7 @@ static void ImGui::DockSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettings
     buf->appendf("\n");
 }
 //}}}
+//}}}
 
 #ifdef _MSC_VER
   #pragma comment(lib, "user32")
@@ -15655,7 +15670,6 @@ static void SetClipboardTextFn_DefaultImpl(void*, const char* text)
     }
     //}}}
   #endif
-
 
   #ifndef IMGUI_DISABLE_METRICS_WINDOW
     //{{{
