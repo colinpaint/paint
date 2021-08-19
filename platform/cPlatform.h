@@ -5,7 +5,7 @@
 #include <map>
 #include <functional>
 
-#include "../utils/cPointRect.h"
+#include "../utils/cPointRectColor.h"
 class cGraphics;
 //}}}
 

@@ -9,7 +9,8 @@
 //#include <vec3.hpp>
 #include <mat4x4.hpp>
 
-#include "../utils/cPointRect.h"
+#include "../utils/cPointRectColor.h"
+#include "../utils/cVec.h"
 //}}}
 
 //{{{

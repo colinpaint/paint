@@ -55,6 +55,7 @@ file (GLOB SRCFILES
   ${CMAKE_SOURCE_DIR}/ui/*.cpp
   )
 file (GLOB HEADER_FILES
+  ${CMAKE_SOURCE_DIR}/utils/*.h
   ${CMAKE_SOURCE_DIR}/canvas/*.h
   ${CMAKE_SOURCE_DIR}/platform/*.h
   ${CMAKE_SOURCE_DIR}/graphics/*.h
