@@ -13,6 +13,7 @@
 
 // imGui
 #include <imgui.h>
+#include <backends/imgui_impl_dx11.h>
 
 // glm
 #include <mat4x4.hpp>
@@ -25,6 +26,7 @@
 using namespace std;
 using namespace fmt;
 //}}}
+//#define USE_IMPL  // not working yet, impl is simple to implement but useful to use released backend
 
 constexpr bool kDebug = false;
 namespace {
@@ -924,53 +926,57 @@ bool cDirectX11Graphics::init (void* device, void* deviceContext, void* swapChai
 
   bool ok = false;
 
-  // allocate backendData
-  sBackendData* backendData = IM_NEW (sBackendData)();
+  #ifdef USE_IMPL
 
-  // set backend capabilities
-  ImGui::GetIO().BackendRendererUserData = (void*)backendData;
-  ImGui::GetIO().BackendRendererName = "imgui_impl_dx11";
-  ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-  // We can create multi-viewports on the Renderer side (optional)
-  ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+  #else
+    // allocate backendData
+    sBackendData* backendData = IM_NEW (sBackendData)();
 
-  // Get factory from device adpater
-  ID3D11Device* d3dDevice = (ID3D11Device*)device;
-  ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)deviceContext;
-  IDXGISwapChain* dxgiSwapChain = (IDXGISwapChain*)swapChain;
+    // set backend capabilities
+    ImGui::GetIO().BackendRendererUserData = (void*)backendData;
+    ImGui::GetIO().BackendRendererName = "imgui_impl_dx11";
+    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+    // We can create multi-viewports on the Renderer side (optional)
+    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 
-  IDXGIDevice* dxgiDevice = NULL;
-  if (d3dDevice->QueryInterface (IID_PPV_ARGS (&dxgiDevice)) == S_OK) {
-    IDXGIAdapter* dxgiAdapter = NULL;
-    if (dxgiDevice->GetParent (IID_PPV_ARGS (&dxgiAdapter)) == S_OK) {
-      IDXGIFactory* dxgiFactory = NULL;
-      if (dxgiAdapter->GetParent (IID_PPV_ARGS (&dxgiFactory)) == S_OK) {
-        backendData->mD3dDevice = d3dDevice;
-        backendData->mD3dDeviceContext = d3dDeviceContext;
-        backendData->mDxgiSwapChain = dxgiSwapChain;
-        backendData->mDxgiFactory = dxgiFactory;
-        backendData->mD3dDevice->AddRef();
-        backendData->mD3dDeviceContext->AddRef();
+    // Get factory from device adpater
+    ID3D11Device* d3dDevice = (ID3D11Device*)device;
+    ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)deviceContext;
+    IDXGISwapChain* dxgiSwapChain = (IDXGISwapChain*)swapChain;
 
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-          // init platFormInterface
-          ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-          platform_io.Renderer_CreateWindow = createWindow;
-          platform_io.Renderer_DestroyWindow = destroyWindow;
-          platform_io.Renderer_SetWindowSize = setWindowSize;
-          platform_io.Renderer_RenderWindow = renderWindow;
-          platform_io.Renderer_SwapBuffers = swapBuffers;
+    IDXGIDevice* dxgiDevice = NULL;
+    if (d3dDevice->QueryInterface (IID_PPV_ARGS (&dxgiDevice)) == S_OK) {
+      IDXGIAdapter* dxgiAdapter = NULL;
+      if (dxgiDevice->GetParent (IID_PPV_ARGS (&dxgiAdapter)) == S_OK) {
+        IDXGIFactory* dxgiFactory = NULL;
+        if (dxgiAdapter->GetParent (IID_PPV_ARGS (&dxgiFactory)) == S_OK) {
+          backendData->mD3dDevice = d3dDevice;
+          backendData->mD3dDeviceContext = d3dDeviceContext;
+          backendData->mDxgiSwapChain = dxgiSwapChain;
+          backendData->mDxgiFactory = dxgiFactory;
+          backendData->mD3dDevice->AddRef();
+          backendData->mD3dDeviceContext->AddRef();
+
+          if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            // init platFormInterface
+            ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+            platform_io.Renderer_CreateWindow = createWindow;
+            platform_io.Renderer_DestroyWindow = destroyWindow;
+            platform_io.Renderer_SetWindowSize = setWindowSize;
+            platform_io.Renderer_RenderWindow = renderWindow;
+            platform_io.Renderer_SwapBuffers = swapBuffers;
+            }
+
+          // create resources
+          ok = createResources();
+          ok &= createMainRenderTarget();
+          cLog::log (LOGINFO, format ("graphics DirectX11 init ok {}", ok));
           }
-
-        // create resources
-        ok = createResources();
-        ok &= createMainRenderTarget();
-        cLog::log (LOGINFO, format ("graphics DirectX11 init ok {}", ok));
+        dxgiAdapter->Release();
         }
-      dxgiAdapter->Release();
+      dxgiDevice->Release();
       }
-    dxgiDevice->Release();
-    }
+  #endif
 
   return ok;
   }
@@ -978,31 +984,35 @@ bool cDirectX11Graphics::init (void* device, void* deviceContext, void* swapChai
 //{{{
 void cDirectX11Graphics::shutdown() {
 
-  ImGui::DestroyPlatformWindows();
+  #ifdef USE_IMPL
 
-  sBackendData* backendData = getBackendData();
-  if (backendData) {
-    backendData->mFontSampler->Release();
-    backendData->mFontTextureView->Release();
-    backendData->mIndexBuffer->Release();
-    backendData->mVertexBuffer->Release();
-    backendData->mBlendState->Release();
-    backendData->mDepthStencilState->Release();
-    backendData->mRasterizerState->Release();
-    backendData->mPixelShader->Release();
-    backendData->mVertexConstantBuffer->Release();
-    backendData->mInputLayout->Release();
-    backendData->mVertexShader->Release();
-    backendData->mDxgiFactory->Release();
-    backendData->mD3dDevice->Release();
-    backendData->mDxgiSwapChain->Release();
-    backendData->mMainRenderTargetView->Release();
-    }
+  #else
+    ImGui::DestroyPlatformWindows();
 
-  ImGui::GetIO().BackendRendererName = NULL;
-  ImGui::GetIO().BackendRendererUserData = NULL;
+    sBackendData* backendData = getBackendData();
+    if (backendData) {
+      backendData->mFontSampler->Release();
+      backendData->mFontTextureView->Release();
+      backendData->mIndexBuffer->Release();
+      backendData->mVertexBuffer->Release();
+      backendData->mBlendState->Release();
+      backendData->mDepthStencilState->Release();
+      backendData->mRasterizerState->Release();
+      backendData->mPixelShader->Release();
+      backendData->mVertexConstantBuffer->Release();
+      backendData->mInputLayout->Release();
+      backendData->mVertexShader->Release();
+      backendData->mDxgiFactory->Release();
+      backendData->mD3dDevice->Release();
+      backendData->mDxgiSwapChain->Release();
+      backendData->mMainRenderTargetView->Release();
+      }
 
-  IM_DELETE (backendData);
+    ImGui::GetIO().BackendRendererName = NULL;
+    ImGui::GetIO().BackendRendererUserData = NULL;
+
+    IM_DELETE (backendData);
+  #endif
   }
 //}}}
 
@@ -1065,11 +1075,16 @@ void cDirectX11Graphics::windowResize (int width, int height) {
 //{{{
 void cDirectX11Graphics::newFrame() {
 
-  sBackendData* backendData = getBackendData();
-  if (!backendData->mFontLoaded) {
-    createFontTexture();
-    backendData->mFontLoaded = true;
-    }
+  #ifdef USE_IMPL
+
+  #else
+    sBackendData* backendData = getBackendData();
+    if (!backendData->mFontLoaded) {
+      createFontTexture();
+      backendData->mFontLoaded = true;
+      }
+
+  #endif
 
   ImGui::NewFrame();
   }
@@ -1077,17 +1092,21 @@ void cDirectX11Graphics::newFrame() {
 //{{{
 void cDirectX11Graphics::draw (cPoint windowSize) {
 
-  sBackendData* backendData = getBackendData();
+  #ifdef USE_IMPL
 
-  // set mainRenderTarget
-  backendData->mD3dDeviceContext->OMSetRenderTargets (1, &backendData->mMainRenderTargetView, NULL);
+  #else
+    sBackendData* backendData = getBackendData();
 
-  // clear mainRenderTarget
-  const float kClearColorWithAlpha[4] = { 0.25f,0.25f,0.25f, 1.f };
-  backendData->mD3dDeviceContext->ClearRenderTargetView (backendData->mMainRenderTargetView, kClearColorWithAlpha);
+    // set mainRenderTarget
+    backendData->mD3dDeviceContext->OMSetRenderTargets (1, &backendData->mMainRenderTargetView, NULL);
 
-  // really draw imGui drawList
-  renderDrawData (ImGui::GetDrawData());
+    // clear mainRenderTarget
+    const float kClearColorWithAlpha[4] = { 0.25f,0.25f,0.25f, 1.f };
+    backendData->mD3dDeviceContext->ClearRenderTargetView (backendData->mMainRenderTargetView, kClearColorWithAlpha);
+
+    // really draw imGui drawList
+    renderDrawData (ImGui::GetDrawData());
+  #endif
   }
 //}}}
 #endif
