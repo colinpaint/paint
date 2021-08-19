@@ -1,4 +1,4 @@
-// cUI.cpp - static manager and maybe
+// cUI.cpp - static manager and UI base class
 //{{{  includes
 #include "cUI.h"
 
@@ -9,6 +9,7 @@
 
 // imGui
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include "../graphics/cGraphics.h"
 #include "../brush/cBrush.h"
@@ -19,8 +20,13 @@ using namespace std;
 using namespace fmt;
 //}}}
 #define DRAW_CANVAS // useful to disable canvas when bringing up backends
+#define SHOW_DEMO
 
-// static register manager
+namespace {
+  bool gShowDemoWindow;
+  }
+
+// static register
 //{{{
 cUI* cUI::createByName (const string& name) {
 // create class by name from classRegister, add instance to instances
@@ -111,11 +117,15 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPoint windowSize) {
   for (auto& ui : getInstanceRegister())
     ui.second->addToDrawList (canvas, graphics);
 
+  #ifdef SHOW_DEMO
+    ImGui::ShowDemoWindow (&gShowDemoWindow);
+  #endif
+
   ImGui::Render();
   }
 //}}}
 
-// protected
+// protected:
 //{{{
 bool cUI::registerClass (const string& name, const cUI::createFuncType createFunc) {
 // register class createFunc by name to classRegister, add instance to instances
@@ -133,7 +143,7 @@ bool cUI::registerClass (const string& name, const cUI::createFuncType createFun
   }
 //}}}
 
-// static private
+// private:
 //{{{
 map<const string, cUI::createFuncType>& cUI::getClassRegister() {
 // static map inside static method ensures map is created before use

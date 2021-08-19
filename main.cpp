@@ -65,8 +65,8 @@ int main (int numArgs, char* args[]) {
   // list static registered classes
   cPlatform::listRegisteredClasses();
   cGraphics::listRegisteredClasses();
-  cUI::listRegisteredClasses();
   cBrush::listRegisteredClasses();
+  cUI::listRegisteredClasses();
 
   // create platform, graphics, UI font
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false);

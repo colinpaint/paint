@@ -38,5 +38,5 @@ private:
   static std::map<const std::string, cUI*>& getInstanceRegister();
 
   // base class registered name
-  std::string mName;
+  const std::string mName;
   };
