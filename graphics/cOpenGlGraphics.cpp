@@ -1457,7 +1457,7 @@ public:
   void windowResize (int width, int height) final;
 
 protected:
-  bool init (void* device, void* deviceContext, void* swapChain) final;
+  bool init (cPlatform& platform) final;
 
 private:
   static cGraphics* create (const std::string& className);
@@ -1569,7 +1569,7 @@ void cOpenGlGraphics::draw (cPoint windowSize) {
 
 // protected:
 //{{{
-bool cOpenGlGraphics::init (void* device, void* deviceContext, void* swapChain) {
+bool cOpenGlGraphics::init (cPlatform& platform) {
 // anonymous device pointers unused
 
   // get openGL version

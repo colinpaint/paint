@@ -11,6 +11,8 @@
 
 #include "../utils/cPointRectColor.h"
 #include "../utils/cVec.h"
+
+class cPlatform;
 //}}}
 
 //{{{
@@ -125,7 +127,7 @@ public:
 class cGraphics {
 public:
   // static register
-  static cGraphics& createByName (const std::string& name, void* device, void* deviceContext, void* swapChain);
+  static cGraphics& createByName (const std::string& name, cPlatform& platform);
   static void listClasses();
 
   // base class
@@ -149,7 +151,7 @@ public:
   virtual void draw (cPoint windowSize) = 0;
 
 protected:
-  virtual bool init (void* device, void* deviceContext, void* swapChain) = 0;
+  virtual bool init (cPlatform& platform) = 0;
 
   // static register
   using createFunc = cGraphics*(*)(const std::string& name);

@@ -21,6 +21,7 @@
 #include <gtc/matrix_transform.hpp>
 
 #include "cGraphics.h"
+#include "../platform/cPlatform.h"
 #include "../utils/cLog.h"
 
 using namespace std;
@@ -911,7 +912,7 @@ public:
   void windowResize (int width, int height) final;
 
 protected:
-  bool init (void* device, void* deviceContext, void* swapChain) final;
+  bool init (cPlatform& platform) final;
 
 private:
   static cGraphics* create (const std::string& className);
@@ -1049,7 +1050,7 @@ void cDx11Graphics::draw (cPoint windowSize) {
 //}}}
 // protected:
 //{{{
-bool cDx11Graphics::init (void* device, void* deviceContext, void* swapChain) {
+bool cDx11Graphics::init (cPlatform& platform) {
 
   bool ok = false;
 
@@ -1067,9 +1068,9 @@ bool cDx11Graphics::init (void* device, void* deviceContext, void* swapChain) {
     ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 
     // Get factory from device adpater
-    ID3D11Device* d3dDevice = (ID3D11Device*)device;
-    ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)deviceContext;
-    IDXGISwapChain* dxgiSwapChain = (IDXGISwapChain*)swapChain;
+    ID3D11Device* d3dDevice = (ID3D11Device*)platform.getDevice();
+    ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)platform.getDeviceContext();
+    IDXGISwapChain* dxgiSwapChain = (IDXGISwapChain*)platform.getSwapChain();
 
     IDXGIDevice* dxgiDevice = NULL;
     if (d3dDevice->QueryInterface (IID_PPV_ARGS (&dxgiDevice)) == S_OK) {

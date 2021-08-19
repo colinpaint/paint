@@ -6,7 +6,6 @@
 #include <functional>
 
 #include "../utils/cPointRectColor.h"
-class cGraphics;
 //}}}
 
 class cPlatform {
@@ -19,10 +18,12 @@ public:
   virtual void shutdown() = 0;
 
   // gets
+  virtual cPoint getWindowSize() = 0;
+
+  // - anonymous dx11 platform -> graphics interface
   virtual void* getDevice() = 0;
   virtual void* getDeviceContext() = 0;
   virtual void* getSwapChain() = 0;
-  virtual cPoint getWindowSize() = 0;
 
   // actions
   virtual bool pollEvents() = 0;

@@ -19,7 +19,6 @@
 #include <backends/imgui_impl_glfw.h>
 
 #include "cPlatform.h"
-#include "../utils/cPointRectColor.h"
 #include "../utils/cLog.h"
 
 using namespace std;

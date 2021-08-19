@@ -15,7 +15,7 @@ using namespace fmt;
 
 // public
 //{{{
-cGraphics& cGraphics::createByName (const string& name, void* device, void* deviceContext, void* swapChain) {
+cGraphics& cGraphics::createByName (const string& name, cPlatform& platform) {
 
   cGraphics* graphics = getClassRegister()[name](name);
   if (!graphics) {
@@ -23,7 +23,7 @@ cGraphics& cGraphics::createByName (const string& name, void* device, void* devi
     exit (EXIT_FAILURE);
     }
 
-  graphics->init (device, deviceContext, swapChain);
+  graphics->init (platform);
   return *graphics;
   }
 //}}}
