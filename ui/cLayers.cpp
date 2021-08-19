@@ -1,4 +1,4 @@
-// cCanvasUI.cpp
+// cLayersUI.cpp
 //{{{  includes
 #include <cstdint>
 #include <vector>
@@ -21,13 +21,12 @@ using namespace std;
 using namespace fmt;
 //}}}
 
-class cCanvasUI : public cUI {
+class cLayersUI : public cUI {
 public:
-  cCanvasUI (const std::string& name) : cUI(name) {}
-  virtual ~cCanvasUI() = default;
+  cLayersUI (const std::string& name) : cUI(name) {}
+  virtual ~cLayersUI() = default;
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
-
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     ImGui::SetWindowPos (ImVec2(ImGui::GetIO().DisplaySize.x - ImGui::GetWindowWidth(), 0.f));
