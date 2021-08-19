@@ -1,4 +1,4 @@
-// cDirectX11Graphics.cpp - !!! need to finsh quad, frameBuffer and shader !!!
+// cDx11Graphics.cpp - !!! need to finsh quad, frameBuffer and shader !!!
 #ifdef WIN32 // stop linux compile, simpler cmake
 //{{{  includes
 #include <cstdint>
@@ -31,10 +31,10 @@ using namespace fmt;
 constexpr bool kDebug = false;
 namespace {
   //{{{
-  class cDirectX11Quad : public cQuad {
+  class cDx11Quad : public cQuad {
   public:
     //{{{
-    cDirectX11Quad (cPoint size) : cQuad(mSize) {
+    cDx11Quad (cPoint size) : cQuad(mSize) {
 
       // vertices
       //glGenBuffers (1, &mVertexBufferObject);
@@ -54,7 +54,7 @@ namespace {
       }
     //}}}
     //{{{
-    cDirectX11Quad (cPoint size, const cRect& rect) : cQuad(size) {
+    cDx11Quad (cPoint size, const cRect& rect) : cQuad(size) {
 
       // vertexArray
 
@@ -80,7 +80,7 @@ namespace {
       //mNumIndices = sizeof(kIndices);
       }
     //}}}
-    virtual ~cDirectX11Quad() = default;
+    virtual ~cDx11Quad() = default;
 
     //{{{
     void draw() {
@@ -89,24 +89,24 @@ namespace {
     };
   //}}}
   //{{{
-  class cDirectX11FrameBuffer : public cFrameBuffer {
+  class cDx11FrameBuffer : public cFrameBuffer {
   public:
-    cDirectX11FrameBuffer() : cFrameBuffer({0,0}) {
+    cDx11FrameBuffer() : cFrameBuffer({0,0}) {
       mImageFormat = 0;
       mInternalFormat = 0;
       }
 
-    cDirectX11FrameBuffer (cPoint size, eFormat format) : cFrameBuffer(size) {
+    cDx11FrameBuffer (cPoint size, eFormat format) : cFrameBuffer(size) {
       mImageFormat = 0;
       mInternalFormat = 0;
       }
 
-    cDirectX11FrameBuffer (uint8_t* pixels, cPoint size, eFormat format) : cFrameBuffer(size) {
+    cDx11FrameBuffer (uint8_t* pixels, cPoint size, eFormat format) : cFrameBuffer(size) {
       mImageFormat = 0;
       mInternalFormat = 0;
       }
 
-    virtual ~cDirectX11FrameBuffer() {
+    virtual ~cDx11FrameBuffer() {
       free (mPixels);
       }
 
@@ -225,11 +225,11 @@ namespace {
     };
   //}}}
   //{{{
-  class cDirectX11PaintShader : public cPaintShader {
+  class cDx11PaintShader : public cPaintShader {
   public:
-    cDirectX11PaintShader() : cPaintShader() {
+    cDx11PaintShader() : cPaintShader() {
       }
-    virtual ~cDirectX11PaintShader() = default;
+    virtual ~cDx11PaintShader() = default;
 
     // sets
     void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
@@ -242,11 +242,11 @@ namespace {
     };
   //}}}
   //{{{
-  class cDirectX11LayerShader : public cLayerShader {
+  class cDx11LayerShader : public cLayerShader {
   public:
-    cDirectX11LayerShader() : cLayerShader() {
+    cDx11LayerShader() : cLayerShader() {
       }
-    virtual ~cDirectX11LayerShader() = default;
+    virtual ~cDx11LayerShader() = default;
 
     // sets
     void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
@@ -259,11 +259,11 @@ namespace {
     };
   //}}}
   //{{{
-  class cDirectX11CanvasShader : public cCanvasShader {
+  class cDx11CanvasShader : public cCanvasShader {
   public:
-    cDirectX11CanvasShader() : cCanvasShader() {
+    cDx11CanvasShader() : cCanvasShader() {
       }
-    virtual ~cDirectX11CanvasShader()  = default;
+    virtual ~cDx11CanvasShader()  = default;
 
     // sets
     void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
@@ -889,7 +889,7 @@ namespace {
   }
 
 //{{{
-class cDirectX11Graphics : public cGraphics {
+class cDx11Graphics : public cGraphics {
 public:
   void shutdown() final;
 
@@ -915,12 +915,12 @@ protected:
 
 private:
   static cGraphics* create (const std::string& className);
-  inline static const bool mRegistered = registerClass ("directx", &create);
+  inline static const bool mRegistered = registerClass ("dx11", &create);
   };
 //}}}
 
 //{{{
-void cDirectX11Graphics::shutdown() {
+void cDx11Graphics::shutdown() {
 
   #ifdef USE_IMPL
 
@@ -956,50 +956,50 @@ void cDirectX11Graphics::shutdown() {
 
 // resource creates
 //{{{
-cQuad* cDirectX11Graphics::createQuad (cPoint size) {
-  return new cDirectX11Quad (size);
+cQuad* cDx11Graphics::createQuad (cPoint size) {
+  return new cDx11Quad (size);
   }
 //}}}
 //{{{
-cQuad* cDirectX11Graphics::createQuad (cPoint size, const cRect& rect) {
-  return new cDirectX11Quad (size, rect);
-  }
-//}}}
-
-//{{{
-cFrameBuffer* cDirectX11Graphics::createFrameBuffer() {
-  return new cDirectX11FrameBuffer();
-  }
-//}}}
-//{{{
-cFrameBuffer* cDirectX11Graphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
-  return new cDirectX11FrameBuffer (size, format);
-  }
-//}}}
-//{{{
-cFrameBuffer* cDirectX11Graphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
-  return new cDirectX11FrameBuffer (pixels, size, format);
+cQuad* cDx11Graphics::createQuad (cPoint size, const cRect& rect) {
+  return new cDx11Quad (size, rect);
   }
 //}}}
 
 //{{{
-cCanvasShader* cDirectX11Graphics::createCanvasShader() {
-  return new cDirectX11CanvasShader();
+cFrameBuffer* cDx11Graphics::createFrameBuffer() {
+  return new cDx11FrameBuffer();
   }
 //}}}
 //{{{
-cLayerShader* cDirectX11Graphics::createLayerShader() {
-  return new cDirectX11LayerShader();
+cFrameBuffer* cDx11Graphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
+  return new cDx11FrameBuffer (size, format);
   }
 //}}}
 //{{{
-cPaintShader* cDirectX11Graphics::createPaintShader() {
-  return new cDirectX11PaintShader();
+cFrameBuffer* cDx11Graphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
+  return new cDx11FrameBuffer (pixels, size, format);
   }
 //}}}
 
 //{{{
-void cDirectX11Graphics::windowResize (int width, int height) {
+cCanvasShader* cDx11Graphics::createCanvasShader() {
+  return new cDx11CanvasShader();
+  }
+//}}}
+//{{{
+cLayerShader* cDx11Graphics::createLayerShader() {
+  return new cDx11LayerShader();
+  }
+//}}}
+//{{{
+cPaintShader* cDx11Graphics::createPaintShader() {
+  return new cDx11PaintShader();
+  }
+//}}}
+
+//{{{
+void cDx11Graphics::windowResize (int width, int height) {
 
   //cLog::log (LOGINFO, format ("cGraphics::windowResized {}", width, height));
   sBackendData* backendData = getBackendData();
@@ -1011,7 +1011,7 @@ void cDirectX11Graphics::windowResize (int width, int height) {
   }
 //}}}
 //{{{
-void cDirectX11Graphics::newFrame() {
+void cDx11Graphics::newFrame() {
 
   #ifdef USE_IMPL
 
@@ -1028,7 +1028,7 @@ void cDirectX11Graphics::newFrame() {
   }
 //}}}
 //{{{
-void cDirectX11Graphics::draw (cPoint windowSize) {
+void cDx11Graphics::draw (cPoint windowSize) {
 
   #ifdef USE_IMPL
 
@@ -1049,7 +1049,7 @@ void cDirectX11Graphics::draw (cPoint windowSize) {
 //}}}
 // protected:
 //{{{
-bool cDirectX11Graphics::init (void* device, void* deviceContext, void* swapChain) {
+bool cDx11Graphics::init (void* device, void* deviceContext, void* swapChain) {
 
   bool ok = false;
 
@@ -1097,7 +1097,7 @@ bool cDirectX11Graphics::init (void* device, void* deviceContext, void* swapChai
           // create resources
           ok = createResources();
           ok &= createMainRenderTarget();
-          cLog::log (LOGINFO, format ("graphics DirectX11 init ok {}", ok));
+          cLog::log (LOGINFO, format ("graphics Dx11 init ok {}", ok));
           }
         dxgiAdapter->Release();
         }
@@ -1111,8 +1111,8 @@ bool cDirectX11Graphics::init (void* device, void* deviceContext, void* swapChai
 
 // private:
 //{{{
-cGraphics* cDirectX11Graphics::create (const std::string& className) {
-  return new cDirectX11Graphics();
+cGraphics* cDx11Graphics::create (const std::string& className) {
+  return new cDx11Graphics();
   }
 //}}}
 #endif

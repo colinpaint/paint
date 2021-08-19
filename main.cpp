@@ -52,7 +52,7 @@ int main (int numArgs, char* args[]) {
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
     else if (*it == "win32") { platformString = *it; params.erase (it); }
-    else if (*it == "directx") { graphicsString = *it; params.erase (it); }
+    else if (*it == "dx11") { graphicsString = *it; params.erase (it); }
     else ++it;
     };
   //}}}
