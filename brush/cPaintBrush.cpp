@@ -1,4 +1,4 @@
-// cPaintBrush.cpp - paint brush to frameBuffer
+// cPaintBrush.cpp - paint brush to frameBuffer - 3 versions
 //{{{  includes
 #include <cstdint>
 #include <cmath>
@@ -16,7 +16,7 @@ using namespace std;
 using namespace fmt;
 //}}}
 
-// cPaintGpuBrush
+// cPaintGpuBrush - gpu shader line segment
 class cPaintGpuBrush : public cBrush {
 public:
   //{{{
@@ -89,6 +89,7 @@ public:
 private:
   cGraphics& mGraphics;
   cPaintShader* mShader = nullptr;
+
   //{{{
   static cBrush* create (cGraphics& graphics, const std::string& className, float radius) {
     return new cPaintGpuBrush (graphics, className, radius);
@@ -98,7 +99,7 @@ private:
   };
 
 
-// cPaintCpuBrush
+// cPaintCpuBrush - cpu stamp, calc shape pixels on the fly
 class cPaintCpuBrush : public cBrush {
 public:
   //{{{
@@ -218,6 +219,7 @@ private:
     mPrevPos = pos;
     }
   //}}}
+
   //{{{
   static cBrush* create (cGraphics& graphics, const std::string& className, float radius) {
     return new cPaintCpuBrush (graphics, className, radius);
@@ -227,7 +229,7 @@ private:
   };
 
 
-// cPaintCpuShapeBrush
+// cPaintCpuShapeBrush - cpu stamp, precalc brush shape
 class cPaintCpuShapeBrush : public cPaintCpuBrush {
 public:
   //{{{

@@ -12,11 +12,10 @@ class cGraphics;
 class cPlatform {
 public:
   // static register
-  static cPlatform& createByName (const std::string& name);
+  static cPlatform& createByName (const std::string& name, const cPoint& windowSize, bool showViewports);
   static void listClasses();
 
   // base class
-  virtual bool init (const cPoint& windowSize, bool showViewports) = 0;
   virtual void shutdown() = 0;
 
   // gets
@@ -39,4 +38,6 @@ protected:
   using createFunc = cPlatform*(*)(const std::string& name);
   static bool registerClass (const std::string& name, const createFunc factoryMethod);
   static std::map<const std::string, createFunc>& getClassRegister();
+
+  virtual bool init (const cPoint& windowSize, bool showViewports) = 0;
   };

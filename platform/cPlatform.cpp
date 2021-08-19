@@ -12,8 +12,16 @@ using namespace fmt;
 
 // static - public
 //{{{
-cPlatform& cPlatform::createByName (const string& name) {
-  return *getClassRegister()[name](name);
+cPlatform& cPlatform::createByName (const string& name, const cPoint& windowSize, bool showViewports) {
+
+  cPlatform* platform = getClassRegister()[name](name);
+  if (!platform) {
+    cLog::log (LOGERROR, format ("platform create failed - {} not found", name));
+    exit (EXIT_FAILURE);
+    }
+
+  platform->init (windowSize, showViewports);
+  return *platform;
   }
 //}}}
 //{{{

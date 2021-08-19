@@ -84,7 +84,6 @@ namespace {
 //{{{
 class cWin32Platform : public cPlatform {
 public:
-  bool init (const cPoint& windowSize, bool showViewports) final;
   void shutdown() final;
 
   // gets
@@ -98,17 +97,77 @@ public:
   void newFrame() final;
   void present() final;
 
+protected:
+  bool init (const cPoint& windowSize, bool showViewports) final;
+
 private:
-  //{{{
-  static cPlatform* create (const std::string& className) {
-    return new cWin32Platform();
-    }
-  //}}}
+  static cPlatform* create (const std::string& className);
   inline static const bool mRegistered = registerClass ("win32", &create);
   };
 //}}}
 
 // cWin32Platform
+//{{{
+void cWin32Platform::shutdown() {
+
+  ImGui_ImplWin32_Shutdown();
+  ImGui::DestroyContext();
+
+  gSwapChain->Release();
+  gD3dDeviceContext->Release();
+  gD3dDevice->Release();
+
+  ::DestroyWindow (gHWnd);
+  ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
+  }
+//}}}
+
+// gets
+void* cWin32Platform::getDevice() { return (void*)gD3dDevice; }
+void* cWin32Platform::getDeviceContext() { return (void*)gD3dDeviceContext; }
+void* cWin32Platform::getSwapChain() { return (void*)gSwapChain; }
+cPoint cWin32Platform::getWindowSize() { return gWindowSize; }
+
+// actions
+//{{{
+bool cWin32Platform::pollEvents() {
+// Poll and handle messages (inputs, window resize, etc.)
+// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
+// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
+// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+
+  MSG msg;
+  while (::PeekMessage (&msg, NULL, 0U, 0U, PM_REMOVE)) {
+    ::TranslateMessage (&msg);
+    ::DispatchMessage (&msg);
+    if (msg.message == WM_QUIT)
+      return false;
+    }
+
+  return true;
+  }
+//}}}
+//{{{
+void cWin32Platform::newFrame() {
+  ImGui_ImplWin32_NewFrame();
+  }
+//}}}
+//{{{
+void cWin32Platform::present() {
+
+  // update and render additional platform windows
+  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
+    }
+
+  gSwapChain->Present(1, 0); // Present with vsync
+  //gSwapChain->Present(0, 0); // Present without vsync
+  }
+//}}}
+
+// protected:
 //{{{
 bool cWin32Platform::init (const cPoint& windowSize, bool showViewports) {
 
@@ -195,63 +254,11 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports) {
   return true;
   }
 //}}}
+
+// private:
 //{{{
-void cWin32Platform::shutdown() {
-
-  ImGui_ImplWin32_Shutdown();
-  ImGui::DestroyContext();
-
-  gSwapChain->Release();
-  gD3dDeviceContext->Release();
-  gD3dDevice->Release();
-
-  ::DestroyWindow (gHWnd);
-  ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
-  }
-//}}}
-
-// gets
-void* cWin32Platform::getDevice() { return (void*)gD3dDevice; }
-void* cWin32Platform::getDeviceContext() { return (void*)gD3dDeviceContext; }
-void* cWin32Platform::getSwapChain() { return (void*)gSwapChain; }
-cPoint cWin32Platform::getWindowSize() { return gWindowSize; }
-
-// actions
-//{{{
-bool cWin32Platform::pollEvents() {
-// Poll and handle messages (inputs, window resize, etc.)
-// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
-// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-
-  MSG msg;
-  while (::PeekMessage (&msg, NULL, 0U, 0U, PM_REMOVE)) {
-    ::TranslateMessage (&msg);
-    ::DispatchMessage (&msg);
-    if (msg.message == WM_QUIT)
-      return false;
-    }
-
-  return true;
-  }
-//}}}
-//{{{
-void cWin32Platform::newFrame() {
-  ImGui_ImplWin32_NewFrame();
-  }
-//}}}
-//{{{
-void cWin32Platform::present() {
-
-  // update and render additional platform windows
-  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-    ImGui::UpdatePlatformWindows();
-    ImGui::RenderPlatformWindowsDefault();
-    }
-
-  gSwapChain->Present(1, 0); // Present with vsync
-  //gSwapChain->Present(0, 0); // Present without vsync
+cPlatform* cWin32Platform::create (const std::string& className) {
+  return new cWin32Platform();
   }
 //}}}
 #endif

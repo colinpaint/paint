@@ -15,8 +15,16 @@ using namespace fmt;
 
 // public
 //{{{
-cGraphics& cGraphics::createByName (const string& name) {
-  return *getClassRegister()[name](name);
+cGraphics& cGraphics::createByName (const string& name, void* device, void* deviceContext, void* swapChain) {
+
+  cGraphics* graphics = getClassRegister()[name](name);
+  if (!graphics) {
+    cLog::log (LOGERROR, format ("graphics create failed - {} not found", name));
+    exit (EXIT_FAILURE);
+    }
+
+  graphics->init (device, deviceContext, swapChain);
+  return *graphics;
   }
 //}}}
 //{{{

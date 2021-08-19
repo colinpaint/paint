@@ -891,7 +891,6 @@ namespace {
 //{{{
 class cDirectX11Graphics : public cGraphics {
 public:
-  bool init (void* device, void* deviceContext, void* swapChain) final;
   void shutdown() final;
 
   // create resources
@@ -911,76 +910,15 @@ public:
   void draw (cPoint windowSize) final;
   void windowResize (int width, int height) final;
 
+protected:
+  bool init (void* device, void* deviceContext, void* swapChain) final;
+
 private:
-  //{{{
-  static cGraphics* create (const std::string& className) {
-    return new cDirectX11Graphics();
-    }
-  //}}}
+  static cGraphics* create (const std::string& className);
   inline static const bool mRegistered = registerClass ("directx", &create);
   };
 //}}}
 
-//{{{
-bool cDirectX11Graphics::init (void* device, void* deviceContext, void* swapChain) {
-
-  bool ok = false;
-
-  #ifdef USE_IMPL
-
-  #else
-    // allocate backendData
-    sBackendData* backendData = IM_NEW (sBackendData)();
-
-    // set backend capabilities
-    ImGui::GetIO().BackendRendererUserData = (void*)backendData;
-    ImGui::GetIO().BackendRendererName = "imgui_impl_dx11";
-    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-    // We can create multi-viewports on the Renderer side (optional)
-    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
-
-    // Get factory from device adpater
-    ID3D11Device* d3dDevice = (ID3D11Device*)device;
-    ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)deviceContext;
-    IDXGISwapChain* dxgiSwapChain = (IDXGISwapChain*)swapChain;
-
-    IDXGIDevice* dxgiDevice = NULL;
-    if (d3dDevice->QueryInterface (IID_PPV_ARGS (&dxgiDevice)) == S_OK) {
-      IDXGIAdapter* dxgiAdapter = NULL;
-      if (dxgiDevice->GetParent (IID_PPV_ARGS (&dxgiAdapter)) == S_OK) {
-        IDXGIFactory* dxgiFactory = NULL;
-        if (dxgiAdapter->GetParent (IID_PPV_ARGS (&dxgiFactory)) == S_OK) {
-          backendData->mD3dDevice = d3dDevice;
-          backendData->mD3dDeviceContext = d3dDeviceContext;
-          backendData->mDxgiSwapChain = dxgiSwapChain;
-          backendData->mDxgiFactory = dxgiFactory;
-          backendData->mD3dDevice->AddRef();
-          backendData->mD3dDeviceContext->AddRef();
-
-          if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-            // init platFormInterface
-            ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-            platform_io.Renderer_CreateWindow = createWindow;
-            platform_io.Renderer_DestroyWindow = destroyWindow;
-            platform_io.Renderer_SetWindowSize = setWindowSize;
-            platform_io.Renderer_RenderWindow = renderWindow;
-            platform_io.Renderer_SwapBuffers = swapBuffers;
-            }
-
-          // create resources
-          ok = createResources();
-          ok &= createMainRenderTarget();
-          cLog::log (LOGINFO, format ("graphics DirectX11 init ok {}", ok));
-          }
-        dxgiAdapter->Release();
-        }
-      dxgiDevice->Release();
-      }
-  #endif
-
-  return ok;
-  }
-//}}}
 //{{{
 void cDirectX11Graphics::shutdown() {
 
@@ -1107,6 +1045,74 @@ void cDirectX11Graphics::draw (cPoint windowSize) {
     // really draw imGui drawList
     renderDrawData (ImGui::GetDrawData());
   #endif
+  }
+//}}}
+// protected:
+//{{{
+bool cDirectX11Graphics::init (void* device, void* deviceContext, void* swapChain) {
+
+  bool ok = false;
+
+  #ifdef USE_IMPL
+
+  #else
+    // allocate backendData
+    sBackendData* backendData = IM_NEW (sBackendData)();
+
+    // set backend capabilities
+    ImGui::GetIO().BackendRendererUserData = (void*)backendData;
+    ImGui::GetIO().BackendRendererName = "imgui_impl_dx11";
+    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+    // We can create multi-viewports on the Renderer side (optional)
+    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+
+    // Get factory from device adpater
+    ID3D11Device* d3dDevice = (ID3D11Device*)device;
+    ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)deviceContext;
+    IDXGISwapChain* dxgiSwapChain = (IDXGISwapChain*)swapChain;
+
+    IDXGIDevice* dxgiDevice = NULL;
+    if (d3dDevice->QueryInterface (IID_PPV_ARGS (&dxgiDevice)) == S_OK) {
+      IDXGIAdapter* dxgiAdapter = NULL;
+      if (dxgiDevice->GetParent (IID_PPV_ARGS (&dxgiAdapter)) == S_OK) {
+        IDXGIFactory* dxgiFactory = NULL;
+        if (dxgiAdapter->GetParent (IID_PPV_ARGS (&dxgiFactory)) == S_OK) {
+          backendData->mD3dDevice = d3dDevice;
+          backendData->mD3dDeviceContext = d3dDeviceContext;
+          backendData->mDxgiSwapChain = dxgiSwapChain;
+          backendData->mDxgiFactory = dxgiFactory;
+          backendData->mD3dDevice->AddRef();
+          backendData->mD3dDeviceContext->AddRef();
+
+          if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            // init platFormInterface
+            ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+            platform_io.Renderer_CreateWindow = createWindow;
+            platform_io.Renderer_DestroyWindow = destroyWindow;
+            platform_io.Renderer_SetWindowSize = setWindowSize;
+            platform_io.Renderer_RenderWindow = renderWindow;
+            platform_io.Renderer_SwapBuffers = swapBuffers;
+            }
+
+          // create resources
+          ok = createResources();
+          ok &= createMainRenderTarget();
+          cLog::log (LOGINFO, format ("graphics DirectX11 init ok {}", ok));
+          }
+        dxgiAdapter->Release();
+        }
+      dxgiDevice->Release();
+      }
+  #endif
+
+  return ok;
+  }
+//}}}
+
+// private:
+//{{{
+cGraphics* cDirectX11Graphics::create (const std::string& className) {
+  return new cDirectX11Graphics();
   }
 //}}}
 #endif

@@ -124,11 +124,10 @@ public:
 class cGraphics {
 public:
   // static register
-  static cGraphics& createByName (const std::string& name);
+  static cGraphics& createByName (const std::string& name, void* device, void* deviceContext, void* swapChain);
   static void listClasses();
 
   // base class
-  virtual bool init (void* device, void* deviceContext, void* swapChain) = 0;
   virtual void shutdown() = 0;
 
   // create graphics resources
@@ -149,6 +148,8 @@ public:
   virtual void draw (cPoint windowSize) = 0;
 
 protected:
+  virtual bool init (void* device, void* deviceContext, void* swapChain) = 0;
+
   // static register
   using createFunc = cGraphics*(*)(const std::string& name);
   static bool registerClass (const std::string& name, const createFunc factoryMethod);

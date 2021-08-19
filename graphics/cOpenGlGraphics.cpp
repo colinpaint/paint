@@ -1436,7 +1436,6 @@ namespace {
 //{{{
 class cOpenGlGraphics : public cGraphics {
 public:
-  bool init (void* device, void* deviceContext, void* swapChain) final;
   void shutdown() final;
 
   // create resources
@@ -1456,94 +1455,15 @@ public:
   void draw (cPoint windowSize) final;
   void windowResize (int width, int height) final;
 
+protected:
+  bool init (void* device, void* deviceContext, void* swapChain) final;
+
 private:
-  //{{{
-  static cGraphics* create (const std::string& className) {
-    return new cOpenGlGraphics();
-    }
-  //}}}
+  static cGraphics* create (const std::string& className);
   inline static const bool mRegistered = registerClass ("opengl", &create);
   };
 //}}}
 
-//{{{
-bool cOpenGlGraphics::init (void* device, void* deviceContext, void* swapChain) {
-// anonymous device pointers unused
-
-  // get openGL version
-  string glVersionString = (const char*)glGetString (GL_VERSION);
-  #if defined(IMGUI_IMPL_OPENGL_ES2)
-    gGlVersion = 200; // GLES 2
-  #else
-    GLint glMajor = 0;
-    //glGetIntegerv (GL_MAJOR_VERSION, &glMajor);
-    GLint glMinor = 0;
-    //glGetIntegerv (GL_MINOR_VERSION, &glMinor);
-    //if ((glMajor == 0) && (glMinor == 0))
-    // Query GL_VERSION string desktop GL 2.x
-    sscanf (glVersionString.c_str(), "%d.%d", &glMajor, &glMinor);
-    gGlVersion = ((glMajor * 10) + glMinor) * 10;
-  #endif
-  cLog::log (LOGINFO, format ("OpenGL {} - {}", glVersionString, gGlVersion));
-
-
-  #ifndef USE_IMPL
-    // set imGui backend capabilities flags
-    ImGui::GetIO().BackendRendererName = "openGL3";
-    //{{{  vertexOffset
-    #ifdef IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET
-      if (gGlVersion >= 320) {
-        gDrawBase = true;
-        ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-        cLog::log (LOGINFO, "- hasVtxOffset");
-        }
-    #endif
-    //}}}
-    //{{{  clipOrigin
-    #if defined (GL_CLIP_ORIGIN)
-      GLenum currentClipOrigin = 0;
-      glGetIntegerv (GL_CLIP_ORIGIN, (GLint*)&currentClipOrigin);
-      if (currentClipOrigin == GL_UPPER_LEFT)
-        gClipOriginBottomLeft = false;
-    #endif
-    //}}}
-
-    // enable ImGui viewports
-    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
-
-    // set ImGui renderWindow
-    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-      ImGui::GetPlatformIO().Renderer_RenderWindow = renderWindow;
-  #endif
-
-  // get GLSL version
-  string glslVersionString = (const char*)glGetString (GL_SHADING_LANGUAGE_VERSION);
-  int glslMajor = 0;
-  int glslMinor = 0;
-  sscanf (glslVersionString.c_str(), "%d.%d", &glslMajor, &glslMinor);
-  gGlslVersion = (glslMajor * 100) + glslMinor;
-  cLog::log (LOGINFO, format ("GLSL {} - {}", glslVersionString, gGlslVersion));
-
-  #ifdef USE_IMPL
-    ImGui_ImplOpenGL3_Init (glslVersionString.c_str());
-  #else
-    cLog::log (LOGINFO, format ("Renderer {}", glGetString (GL_RENDERER)));
-    cLog::log (LOGINFO, format ("- Vendor {}", glGetString (GL_VENDOR)));
-
-    cLog::log (LOGINFO, format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
-    cLog::log (LOGINFO, "- hasViewports");
-
-    // create vertex array buffers
-    glGenBuffers (1, &gVboHandle);
-    glGenBuffers (1, &gElementsHandle);
-
-    // create shader
-    gShader = new cDrawListShader (gGlslVersion);
-  #endif
-
-  return true;
-  }
-//}}}
 //{{{
 void cOpenGlGraphics::shutdown() {
 
@@ -1643,5 +1563,92 @@ void cOpenGlGraphics::draw (cPoint windowSize) {
   #else
     renderDrawData (ImGui::GetDrawData());
   #endif
+  }
+//}}}
+
+// protected:
+//{{{
+bool cOpenGlGraphics::init (void* device, void* deviceContext, void* swapChain) {
+// anonymous device pointers unused
+
+  // get openGL version
+  string glVersionString = (const char*)glGetString (GL_VERSION);
+  #if defined(IMGUI_IMPL_OPENGL_ES2)
+    gGlVersion = 200; // GLES 2
+  #else
+    GLint glMajor = 0;
+    //glGetIntegerv (GL_MAJOR_VERSION, &glMajor);
+    GLint glMinor = 0;
+    //glGetIntegerv (GL_MINOR_VERSION, &glMinor);
+    //if ((glMajor == 0) && (glMinor == 0))
+    // Query GL_VERSION string desktop GL 2.x
+    sscanf (glVersionString.c_str(), "%d.%d", &glMajor, &glMinor);
+    gGlVersion = ((glMajor * 10) + glMinor) * 10;
+  #endif
+  cLog::log (LOGINFO, format ("OpenGL {} - {}", glVersionString, gGlVersion));
+
+
+  #ifndef USE_IMPL
+    // set imGui backend capabilities flags
+    ImGui::GetIO().BackendRendererName = "openGL3";
+    //{{{  vertexOffset
+    #ifdef IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET
+      if (gGlVersion >= 320) {
+        gDrawBase = true;
+        ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+        cLog::log (LOGINFO, "- hasVtxOffset");
+        }
+    #endif
+    //}}}
+    //{{{  clipOrigin
+    #if defined (GL_CLIP_ORIGIN)
+      GLenum currentClipOrigin = 0;
+      glGetIntegerv (GL_CLIP_ORIGIN, (GLint*)&currentClipOrigin);
+      if (currentClipOrigin == GL_UPPER_LEFT)
+        gClipOriginBottomLeft = false;
+    #endif
+    //}}}
+
+    // enable ImGui viewports
+    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+
+    // set ImGui renderWindow
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+      ImGui::GetPlatformIO().Renderer_RenderWindow = renderWindow;
+  #endif
+
+  // get GLSL version
+  string glslVersionString = (const char*)glGetString (GL_SHADING_LANGUAGE_VERSION);
+  int glslMajor = 0;
+  int glslMinor = 0;
+  sscanf (glslVersionString.c_str(), "%d.%d", &glslMajor, &glslMinor);
+  gGlslVersion = (glslMajor * 100) + glslMinor;
+  cLog::log (LOGINFO, format ("GLSL {} - {}", glslVersionString, gGlslVersion));
+
+  #ifdef USE_IMPL
+    ImGui_ImplOpenGL3_Init (glslVersionString.c_str());
+  #else
+    cLog::log (LOGINFO, format ("Renderer {}", glGetString (GL_RENDERER)));
+    cLog::log (LOGINFO, format ("- Vendor {}", glGetString (GL_VENDOR)));
+
+    cLog::log (LOGINFO, format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
+    cLog::log (LOGINFO, "- hasViewports");
+
+    // create vertex array buffers
+    glGenBuffers (1, &gVboHandle);
+    glGenBuffers (1, &gElementsHandle);
+
+    // create shader
+    gShader = new cDrawListShader (gGlslVersion);
+  #endif
+
+  return true;
+  }
+//}}}
+
+// private:
+//{{{
+cGraphics* cOpenGlGraphics::create (const string& className) {
+  return new cOpenGlGraphics();
   }
 //}}}

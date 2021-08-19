@@ -66,15 +66,12 @@ int main (int numArgs, char* args[]) {
   cUI::listClasses();
   cBrush::listClasses();
 
-  // create and start platform
-  cPlatform& platform = cPlatform::createByName (platformString);
-  if (!platform.init (cPoint(1200, 800), false))
-    exit (EXIT_FAILURE);
+  // create platform
+  cPlatform& platform = cPlatform::createByName (platformString, cPoint(1200, 800), false);
 
-  // create and start graphics
-  cGraphics& graphics = cGraphics::createByName (graphicsString);
-  if (!graphics.init (platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain()))
-    exit (EXIT_FAILURE);
+  // create graphics
+  cGraphics& graphics = cGraphics::createByName (
+    graphicsString, platform.getDevice(), platform.getDeviceContext(), platform.getSwapChain());
 
   ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
   //ImGui::GetStyle().ScaleAllSizes (1.8f);

@@ -52,7 +52,6 @@ namespace {
 //{{{
 class cGlfwPlatform : public cPlatform {
 public:
-  bool init (const cPoint& windowSize, bool showViewports) final;
   void shutdown() final;
 
   // gets
@@ -66,6 +65,9 @@ public:
   void newFrame() final;
   void present() final;
 
+protected:
+  bool init (const cPoint& windowSize, bool showViewports) final;
+
 private:
   static cPlatform* create (const std::string& className);
   inline static const bool mRegistered = registerClass ("glfw", &create);
@@ -73,6 +75,64 @@ private:
 //}}}
 
 // cGlfwPlatform
+//{{{
+void cGlfwPlatform::shutdown() {
+
+  ImGui_ImplGlfw_Shutdown();
+
+  glfwDestroyWindow (gWindow);
+  glfwTerminate();
+
+  ImGui::DestroyContext();
+  }
+//}}}
+
+// gets
+void* cGlfwPlatform::getDevice() { return nullptr; }
+void* cGlfwPlatform::getDeviceContext() { return nullptr; }
+void* cGlfwPlatform::getSwapChain() { return nullptr; }
+//{{{
+cPoint cGlfwPlatform::getWindowSize() {
+
+  int width;
+  int height;
+  glfwGetWindowSize (gWindow, &width, &height);
+  return cPoint (width, height);
+  }
+//}}}
+
+// actions
+//{{{
+bool cGlfwPlatform::pollEvents() {
+
+  if (glfwWindowShouldClose (gWindow))
+    return false;
+  else {
+    glfwPollEvents();
+    return true;
+    }
+  }
+//}}}
+//{{{
+void cGlfwPlatform::newFrame() {
+  ImGui_ImplGlfw_NewFrame();
+  }
+//}}}
+//{{{
+void cGlfwPlatform::present() {
+
+  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+    GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
+    glfwMakeContextCurrent (backupCurrentContext);
+    }
+
+  glfwSwapBuffers (gWindow);
+  }
+//}}}
+
+// protected:
 //{{{
 bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports) {
 
@@ -144,63 +204,8 @@ bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports) {
   return true;
   }
 //}}}
-//{{{
-void cGlfwPlatform::shutdown() {
 
-  ImGui_ImplGlfw_Shutdown();
-
-  glfwDestroyWindow (gWindow);
-  glfwTerminate();
-
-  ImGui::DestroyContext();
-  }
-//}}}
-
-// gets
-void* cGlfwPlatform::getDevice() { return nullptr; }
-void* cGlfwPlatform::getDeviceContext() { return nullptr; }
-void* cGlfwPlatform::getSwapChain() { return nullptr; }
-//{{{
-cPoint cGlfwPlatform::getWindowSize() {
-
-  int width;
-  int height;
-  glfwGetWindowSize (gWindow, &width, &height);
-  return cPoint (width, height);
-  }
-//}}}
-
-// actions
-//{{{
-bool cGlfwPlatform::pollEvents() {
-
-  if (glfwWindowShouldClose (gWindow))
-    return false;
-  else {
-    glfwPollEvents();
-    return true;
-    }
-  }
-//}}}
-//{{{
-void cGlfwPlatform::newFrame() {
-  ImGui_ImplGlfw_NewFrame();
-  }
-//}}}
-//{{{
-void cGlfwPlatform::present() {
-
-  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-    GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
-    ImGui::UpdatePlatformWindows();
-    ImGui::RenderPlatformWindowsDefault();
-    glfwMakeContextCurrent (backupCurrentContext);
-    }
-
-  glfwSwapBuffers (gWindow);
-  }
-//}}}
-
+// private:
 //{{{
 cPlatform* cGlfwPlatform::create (const string& className) {
   return new cGlfwPlatform();
