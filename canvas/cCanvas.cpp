@@ -17,7 +17,7 @@
 
 #include "../brush/cBrush.h"
 #include "../graphics/cGraphics.h"
-#include "../log/cLog.h"
+#include "../utils/cLog.h"
 
 #include "cLayer.h"
 

@@ -29,7 +29,7 @@
 #include "canvas/cCanvas.h"
 
 // log
-#include "log/cLog.h"
+#include "utils/cLog.h"
 
 using namespace std;
 using namespace fmt;

@@ -16,7 +16,7 @@
 #include "../brush/cBrush.h"
 #include "../canvas/cLayer.h"
 #include "../canvas/cCanvas.h"
-#include "../log/cLog.h"
+#include "../utils/cLog.h"
 
 using namespace std;
 using namespace fmt;

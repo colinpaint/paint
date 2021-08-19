@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include "../graphics/cGraphics.h"
-#include "../log/cLog.h"
+#include "../utils/cLog.h"
 
 using namespace std;
 using namespace fmt;

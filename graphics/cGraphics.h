@@ -9,7 +9,7 @@
 //#include <vec3.hpp>
 #include <mat4x4.hpp>
 
-#include "cPointRect.h"
+#include "../utils/cPointRect.h"
 //}}}
 
 //{{{

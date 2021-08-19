@@ -20,7 +20,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT ms
 #endif
 
 #include "cPlatform.h"
-#include "../log/cLog.h"
+#include "../utils/cLog.h"
 
 using namespace std;
 using namespace fmt;

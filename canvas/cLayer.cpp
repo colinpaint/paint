@@ -12,7 +12,7 @@
 
 #include "../graphics/cGraphics.h"
 #include "../brush/cBrush.h"
-#include "../log/cLog.h"
+#include "../utils/cLog.h"
 
 using namespace std;
 using namespace fmt;

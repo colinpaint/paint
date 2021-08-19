@@ -5,7 +5,7 @@
 #include <string>
 #include <map>
 
-#include "../graphics/cPointRect.h"
+#include "../utils/cPointRect.h"
 class cGraphics;
 class cFrameBuffer;
 //}}}

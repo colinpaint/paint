@@ -45,7 +45,7 @@ add_subdirectory (glfw/)
 add_subdirectory (canvas/)
 add_subdirectory (tinyfiledialog/)
 add_subdirectory (imgui/)
-add_subdirectory (log/)
+add_subdirectory (utils/)
 
 # main + static init registered, ??? TU problem in library ???
 file (GLOB SRCFILES
@@ -70,7 +70,7 @@ add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
 # link, watch out for order dependent static link in linux
 if (WIN32)
-  target_link_libraries (paintbox canvas tinyfiledialog imgui log glad glfw opengl32 d3d11 d3dcompiler)
+  target_link_libraries (paintbox canvas tinyfiledialog imgui utils glad glfw opengl32 d3d11 d3dcompiler)
 else()
-  target_link_libraries (paintbox canvas tinyfiledialog imgui log glad glfw GL)
+  target_link_libraries (paintbox canvas tinyfiledialog imgui utils glad glfw GL)
 endif()

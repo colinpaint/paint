@@ -20,7 +20,7 @@
 #include <backends/imgui_impl_opengl3.h>
 
 #include "cGraphics.h"
-#include "../log/cLog.h"
+#include "../utils/cLog.h"
 
 // OpenGL >= 3.1 has GL_PRIMITIVE_RESTART state
 // OpenGL >= 3.3 has glBindSampler()
