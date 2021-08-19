@@ -112,9 +112,6 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
     ui.second->addToDrawList (canvas, graphics);
 
   ImGui::Render();
-
-  // draw imGui::drawList to screen window frameBuffer
-  graphics.draw();
   }
 //}}}
 

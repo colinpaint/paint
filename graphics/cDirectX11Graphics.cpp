@@ -906,7 +906,7 @@ public:
 
   // actions
   void newFrame() final;
-  void draw() final;
+  void draw (cPoint windowSize) final;
   void windowResize (int width, int height) final;
 
 private:
@@ -1075,7 +1075,7 @@ void cDirectX11Graphics::newFrame() {
   }
 //}}}
 //{{{
-void cDirectX11Graphics::draw() {
+void cDirectX11Graphics::draw (cPoint windowSize) {
 
   sBackendData* backendData = getBackendData();
 

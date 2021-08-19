@@ -91,7 +91,10 @@ int main (int numArgs, char* args[]) {
       platform.newFrame();
       graphics.windowResize (width, height);
       graphics.newFrame();
+
       cUI::draw (canvas, graphics);
+
+      graphics.draw (platform.getWindowSize());
       platform.present();
       }
     );
@@ -102,6 +105,7 @@ int main (int numArgs, char* args[]) {
     platform.newFrame();
     graphics.newFrame();
     cUI::draw (canvas, graphics);
+    graphics.draw (platform.getWindowSize());
     platform.present();
     }
 

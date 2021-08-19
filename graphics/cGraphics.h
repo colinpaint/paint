@@ -146,7 +146,7 @@ public:
   // actions
   virtual void windowResize (int width, int height) = 0;
   virtual void newFrame() = 0;
-  virtual void draw() = 0;
+  virtual void draw (cPoint windowSize) = 0;
 
 protected:
   // static register
