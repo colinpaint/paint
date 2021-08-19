@@ -28,7 +28,7 @@ cGraphics& cGraphics::createByName (const string& name, cPlatform& platform) {
   }
 //}}}
 //{{{
-void cGraphics::listClasses() {
+void cGraphics::listRegisteredClasses() {
 
   cLog::log (LOGINFO, "graphics register");
   for (auto& ui : getClassRegister())

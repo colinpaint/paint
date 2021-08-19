@@ -36,7 +36,7 @@ cUI* cUI::createByName (const string& name) {
   }
 //}}}
 //{{{
-void cUI::listClasses() {
+void cUI::listRegisteredClasses() {
 
   cLog::log (LOGINFO, "ui register");
   for (auto& ui : getClassRegister())

@@ -14,7 +14,7 @@ class cUI {
 public:
   // static register
   static cUI* createByName (const std::string& name);
-  static void listClasses();
+  static void listRegisteredClasses();
   static void listInstances();
 
   // static draw

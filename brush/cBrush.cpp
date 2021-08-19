@@ -43,7 +43,7 @@ map<const string, cBrush::createFunc>& cBrush::getClassRegister() {
   }
 //}}}
 //{{{
-void cBrush::listClasses() {
+void cBrush::listRegisteredClasses() {
 
   cLog::log (LOGINFO, "brush register");
   for (auto& ui : getClassRegister())

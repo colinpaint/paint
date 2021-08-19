@@ -20,7 +20,7 @@ public:
   // static register manager
   static cBrush* createByName (cGraphics& graphics, const std::string& name, float radius);
   static std::map<const std::string, createFunc>& getClassRegister();
-  static void listClasses();
+  static void listRegisteredClasses();
 
   // static curBrush
   static cBrush* getCurBrush() { return mCurBrush; }

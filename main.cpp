@@ -19,7 +19,7 @@
 // UI font
 #include "font/itcSymbolBold.h"
 
-// self registered using static var init idiom
+// self registered classes using static var init idiom
 #include "platform/cPlatform.h"
 #include "graphics/cGraphics.h"
 #include "brush/cBrush.h"
@@ -42,18 +42,18 @@ int main (int numArgs, char* args[]) {
   eLogLevel logLevel = LOGINFO;
   string platformName = "glfw";
   string graphicsName = "opengl";
-  //{{{  args to params
+  //{{{  parse params from command line
+  // args to params
   vector <string> params;
   for (int i = 1; i < numArgs; i++)
     params.push_back (args[i]);
-  //}}}
-  //{{{  parse params, use,remove recognised params
+
+  // parse and remove recognised params
   for (auto it = params.begin(); it < params.end();) {
     if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
-    else if (*it == "win32") { platformName = *it; params.erase (it); }
-    else if (*it == "dx11") { graphicsName = *it; params.erase (it); }
+    else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
     else ++it;
     };
   //}}}
@@ -63,10 +63,10 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, format ("paintbox {} {}", platformName, graphicsName));
 
   // list static registered classes
-  cPlatform::listClasses();
-  cGraphics::listClasses();
-  cUI::listClasses();
-  cBrush::listClasses();
+  cPlatform::listRegisteredClasses();
+  cGraphics::listRegisteredClasses();
+  cUI::listRegisteredClasses();
+  cBrush::listRegisteredClasses();
 
   // create platform, graphics, UI font
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false);

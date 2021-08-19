@@ -128,7 +128,7 @@ class cGraphics {
 public:
   // static register
   static cGraphics& createByName (const std::string& name, cPlatform& platform);
-  static void listClasses();
+  static void listRegisteredClasses();
 
   // base class
   virtual void shutdown() = 0;

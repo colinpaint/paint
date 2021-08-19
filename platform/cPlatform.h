@@ -12,7 +12,7 @@ class cPlatform {
 public:
   // static register
   static cPlatform& createByName (const std::string& name, const cPoint& windowSize, bool showViewports);
-  static void listClasses();
+  static void listRegisteredClasses();
 
   // base class
   virtual void shutdown() = 0;

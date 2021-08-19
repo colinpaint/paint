@@ -25,7 +25,7 @@ cPlatform& cPlatform::createByName (const string& name, const cPoint& windowSize
   }
 //}}}
 //{{{
-void cPlatform::listClasses() {
+void cPlatform::listRegisteredClasses() {
   cLog::log (LOGINFO, "platform register");
   for (auto& ui : getClassRegister())
     cLog::log (LOGINFO, format ("- {}", ui.first));
