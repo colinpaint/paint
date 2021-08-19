@@ -43,7 +43,6 @@ set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory (glfw/)
 add_subdirectory (canvas/)
-add_subdirectory (tinyfiledialog/)
 add_subdirectory (imgui/)
 add_subdirectory (utils/)
 
@@ -57,7 +56,6 @@ file (GLOB SRCFILES
   )
 file (GLOB HEADER_FILES
   ${CMAKE_SOURCE_DIR}/canvas/*.h
-  ${CMAKE_SOURCE_DIR}/tinyfiledialog/*.h
   ${CMAKE_SOURCE_DIR}/platform/*.h
   ${CMAKE_SOURCE_DIR}/graphics/*.h
   ${CMAKE_SOURCE_DIR}/log/*.h
@@ -70,7 +68,7 @@ add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
 # link, watch out for order dependent static link in linux
 if (WIN32)
-  target_link_libraries (paintbox canvas tinyfiledialog imgui utils glad glfw opengl32 d3d11 d3dcompiler)
+  target_link_libraries (paintbox canvas imgui utils glad glfw opengl32 d3d11 d3dcompiler)
 else()
-  target_link_libraries (paintbox canvas tinyfiledialog imgui utils glad glfw GL)
+  target_link_libraries (paintbox canvas imgui utils glad glfw GL)
 endif()

@@ -10,7 +10,7 @@
 // stb
 #include <stb_image_write.h>
 
-#include "../tinyfiledialog/tinyfiledialogs.h"
+#include "../utils/tinyfiledialogs.h"
 
 #include "cUI.h"
 #include "../brush/cBrush.h"
