@@ -41,7 +41,7 @@ public:
 
   float getRadius() { return mRadius; }
   float getBoundRadius() { return mRadius + 1.f; }
-  cRect getBoundRect (cVec2 pos, cFrameBuffer& frameBuffer);
+  cRect getBoundRect (cVec2 pos, const cFrameBuffer& frameBuffer);
 
   void setColor (const cColor& color);
   void setColor (float r, float g, float b, float a);

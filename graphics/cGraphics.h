@@ -35,11 +35,11 @@ public:
   virtual ~cFrameBuffer() = default;
 
   /// gets
-  cPoint getSize() { return mSize; }
+  cPoint getSize() const { return mSize; }
   unsigned getId() { return mFrameBufferObject; }
   unsigned getTextureId() { return mColorTextureId; }
-  unsigned getNumPixels() { return mSize.x * mSize.y; }
-  unsigned getNumPixelBytes() { return  mSize.x * mSize.y * 4; }
+  unsigned getNumPixels() const { return mSize.x * mSize.y; }
+  unsigned getNumPixelBytes() const { return  mSize.x * mSize.y * 4; }
 
   virtual uint8_t* getPixels() = 0;
 

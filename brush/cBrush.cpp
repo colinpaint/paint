@@ -64,7 +64,7 @@ bool cBrush::isCurBrushByName (const string& name) {
 
 // gets
 //{{{
-cRect cBrush::getBoundRect (cVec2 pos, cFrameBuffer& frameBuffer) {
+cRect cBrush::getBoundRect (cVec2 pos, const cFrameBuffer& frameBuffer) {
 // return boundRect of line from mPrevPos to pos of brush mRadius, cliiped to frameBuffer
 
   const float boundRadius = getBoundRadius();
