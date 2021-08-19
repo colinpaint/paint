@@ -1,9 +1,12 @@
-// cPaintCpuBrush.cpp - paint brush to frameBuffer
+// cPaintBrush.cpp - paint brush to frameBuffer
 //{{{  includes
 #include <cstdint>
 #include <cmath>
 #include <string>
 #include <algorithm>
+
+// glm
+#include <gtc/matrix_transform.hpp>
 
 #include "cBrush.h"
 #include "../graphics/cGraphics.h"
@@ -13,11 +16,93 @@ using namespace std;
 using namespace fmt;
 //}}}
 
+// cPaintGpuBrush
+class cPaintGpuBrush : public cBrush {
+public:
+  //{{{
+  cPaintGpuBrush (cGraphics& graphics, const string& className, float radius)
+      : cBrush(className, radius), mGraphics(graphics) {
+
+    mShader = graphics.createPaintShader();
+    setRadius (radius);
+    }
+  //}}}
+  //{{{
+  ~cPaintGpuBrush() {
+    delete mShader;
+    }
+  //}}}
+  //{{{
+  void paint (cVec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) {
+
+    if (first)
+      mPrevPos = pos;
+
+    cRect boundRect = getBoundRect (pos, frameBuffer);
+    if (!boundRect.isEmpty()) {
+      const float widthF = static_cast<float>(frameBuffer->getSize().x);
+      const float heightF = static_cast<float>(frameBuffer->getSize().y);
+
+      // target, boundRect probably ignored for frameBuffer1
+      frameBuffer1->setTarget (boundRect);
+      frameBuffer1->invalidate();
+      frameBuffer1->setBlend();
+
+      // shader
+      mShader->use();
+
+      //{{{  calc orthoProject matrix
+      //const float left = drawData->DisplayPos.x;
+      //const float right = drawData->DisplayPos.x + drawData->DisplaySize.x;
+      //const float top = drawData->DisplayPos.y;
+      //const float bottom = drawData->DisplayPos.y + drawData->DisplaySize.y;
+
+      //const float kOrthoMatrix[4][4] = {
+         //2.f/(right-left),          0.f,                       0.f,  0.f,
+         //0.f,                       2.f/(top-bottom),          0.f,  0.f,
+         //0.f,                       0.f,                       0.5f, 0.f,
+         //(right+left)/(left-right), (top+bottom)/(bottom-top), 0.5f, 1.f,
+        //};
+      //}}}
+
+      mShader->setModelProject (glm::mat4 (1.f), glm::ortho (0.f,widthF, 0.f,heightF, -1.f,1.f));
+      mShader->setStroke (pos, mPrevPos, getRadius(), getColor());
+
+      // source
+      frameBuffer->setSource();
+      frameBuffer->checkStatus();
+      //frameBuffer->reportInfo();
+
+      // draw boundRect to frameBuffer1 target
+      cQuad* quad = mGraphics.createQuad (frameBuffer->getSize(), boundRect);
+      quad->draw();
+      delete quad;
+
+      // blit boundRect frameBuffer1 back to frameBuffer
+      frameBuffer->blit (frameBuffer1, boundRect.getTL(), boundRect);
+      }
+
+    mPrevPos = pos;
+    }
+  //}}}
+
+private:
+  cGraphics& mGraphics;
+  cPaintShader* mShader = nullptr;
+  //{{{
+  static cBrush* create (cGraphics& graphics, const std::string& className, float radius) {
+    return new cPaintGpuBrush (graphics, className, radius);
+    }
+  //}}}
+  inline static const bool mRegistered = registerClass ("paintGpu", &create);
+  };
+
+
 // cPaintCpuBrush
 class cPaintCpuBrush : public cBrush {
 public:
   //{{{
-  cPaintCpuBrush (const string& className, float radius, cGraphics& graphics)
+  cPaintCpuBrush (cGraphics& graphics, const string& className, float radius)
       : cBrush(className, radius) {
     setRadius (radius);
     }
@@ -66,7 +151,6 @@ protected:
     return static_cast<uint8_t>(255.f * (1.f - clamp (sqrtf((i*i) + (j*j)) - radius, 0.f, 1.f)));
     }
   //}}}
-
   int32_t mShapeRadius = 0;
   int32_t mShapeSize = 0;
 
@@ -134,10 +218,9 @@ private:
     mPrevPos = pos;
     }
   //}}}
-
   //{{{
-  static cBrush* create (const std::string& className, float radius, cGraphics& graphics) {
-    return new cPaintCpuBrush (className, radius, graphics);
+  static cBrush* create (cGraphics& graphics, const std::string& className, float radius) {
+    return new cPaintCpuBrush (graphics, className, radius);
     }
   //}}}
   inline static bool mRegistered = registerClass ("paintCpu", &create);
@@ -148,8 +231,8 @@ private:
 class cPaintCpuShapeBrush : public cPaintCpuBrush {
 public:
   //{{{
-  cPaintCpuShapeBrush (const string& className, float radius, cGraphics& graphics)
-      : cPaintCpuBrush(className, radius, graphics) {
+  cPaintCpuShapeBrush (cGraphics& graphics, const string& className, float radius)
+      : cPaintCpuBrush (graphics, className, radius) {
 
     setRadius (radius);
     }
@@ -269,13 +352,12 @@ private:
   // vars
   int32_t mSubPixels = 4;
   float mSubPixelResolution = 0.f;
-
   uint8_t* mShape = nullptr;
   float mCreatedShapeRadius = 0.f;
 
   //{{{
-  static cBrush* create (const std::string& className, float radius, cGraphics& graphics) {
-    return new cPaintCpuShapeBrush (className, radius, graphics);
+  static cBrush* create (cGraphics& graphics, const std::string& className, float radius) {
+    return new cPaintCpuShapeBrush (graphics, className, radius);
     }
   //}}}
   inline static const bool mRegistered = registerClass ("paintCpuShape", &create);

@@ -101,7 +101,7 @@ public:
     for (auto& item : cBrush::getClassRegister())
       if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(),
                              cBrush::isCurBrushByName (item.first), 0, {150, 20}))
-        cBrush::setCurBrushByName (item.first, brush->getRadius(), graphics);
+        cBrush::setCurBrushByName (graphics, item.first, brush->getRadius());
 
     float radius = brush->getRadius();
     ImGui::SetNextItemWidth (150);

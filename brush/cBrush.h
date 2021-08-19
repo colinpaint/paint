@@ -12,18 +12,18 @@ class cFrameBuffer;
 
 class cBrush {
 private:
-  using createFunc = cBrush*(*)(const std::string& name, float radius, cGraphics& graphics);
+  using createFunc = cBrush*(*)(cGraphics& graphics, const std::string& name, float radius);
 
 public:
   // static register manager
-  static cBrush* createByName (const std::string& name, float radius, cGraphics& graphics);
+  static cBrush* createByName (cGraphics& graphics, const std::string& name, float radius);
   static std::map<const std::string, createFunc>& getClassRegister();
   static void listClasses();
 
   // static curBrush
   static cBrush* getCurBrush() { return mCurBrush; }
   static bool isCurBrushByName (const std::string& name);
-  static cBrush* setCurBrushByName (const std::string& name, float radius, cGraphics& graphics);
+  static cBrush* setCurBrushByName (cGraphics& graphics, const std::string& name, float radius);
 
   // base class
   cBrush (const std::string& name, float radius) : mName(name) {}

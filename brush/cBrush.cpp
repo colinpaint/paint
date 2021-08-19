@@ -16,7 +16,7 @@ using namespace fmt;
 
 // static curBrush
 //{{{
-cBrush* cBrush::setCurBrushByName (const string& name, float radius, cGraphics& graphics) {
+cBrush* cBrush::setCurBrushByName (cGraphics& graphics, const string& name, float radius) {
 
   if (!isCurBrushByName (name)) {
     // default color if no curBrush
@@ -26,7 +26,7 @@ cBrush* cBrush::setCurBrushByName (const string& name, float radius, cGraphics& 
       color = mCurBrush->getColor();
     delete mCurBrush;
 
-    mCurBrush = createByName (name, radius, graphics);
+    mCurBrush = createByName (graphics, name, radius);
     mCurBrush->setColor (color);
     cLog::log (LOGINFO, "setCurBrushByName " + name);
     }
@@ -52,8 +52,8 @@ void cBrush::listClasses() {
 //}}}
 
 //{{{
-cBrush* cBrush::createByName (const string& name, float radius, cGraphics& graphics) {
-  return getClassRegister()[name](name, radius, graphics);
+cBrush* cBrush::createByName (cGraphics& graphics, const string& name, float radius) {
+  return getClassRegister()[name](graphics, name, radius);
   }
 //}}}
 //{{{

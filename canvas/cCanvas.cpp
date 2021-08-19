@@ -187,7 +187,7 @@ void cCanvas::createResources() {
   mWindowFrameBuffer = mGraphics.createFrameBuffer();
 
   // select brush
-  cBrush::setCurBrushByName ("paintGpu", 20.f, mGraphics);
+  cBrush::setCurBrushByName (mGraphics, "paintGpu", 20.f);
   }
 //}}}
 //{{{
