@@ -54,8 +54,8 @@ void cUI::listInstances() {
 
 // static draw
 //{{{
-void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
-// draw with imGui, using graphics
+void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPoint windowSize) {
+// draw canvas and its UI's with imGui, using graphics
 // - canvas background
 //   - dummy fullscreen window, no draw,move,scroll,focus
 //     - dummy invisibleButton captures mouse events
@@ -79,8 +79,8 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
                     ImGui::IsMouseClicked (ImGuiMouseButton_Left),
                     ImGui::IsMouseDragging (ImGuiMouseButton_Left, 0.f),
                     ImGui::IsMouseReleased (ImGuiMouseButton_Left),
-                    cVec2 (ImGui::GetMousePos().x - (ImGui::GetWindowWidth() / 2.f),
-                           ImGui::GetMousePos().y - (ImGui::GetWindowHeight() / 2.f)),
+                    cVec2 (ImGui::GetMousePos().x - (windowSize.x / 2.f),
+                           ImGui::GetMousePos().y - (windowSize.y / 2.f)),
                     cVec2 (ImGui::GetMouseDragDelta (ImGuiMouseButton_Left).x,
                            ImGui::GetMouseDragDelta (ImGuiMouseButton_Left).y));
 
@@ -102,7 +102,7 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics) {
       }
 
     // draw canvas to screen window frameBuffer
-    canvas.draw (cPoint ((int)ImGui::GetWindowSize().x, (int)ImGui::GetWindowSize().y));
+    canvas.draw (windowSize);
   #endif
 
   ImGui::End();

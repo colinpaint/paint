@@ -91,9 +91,7 @@ int main (int numArgs, char* args[]) {
       platform.newFrame();
       graphics.windowResize (width, height);
       graphics.newFrame();
-
-      cUI::draw (canvas, graphics);
-
+      cUI::draw (canvas, graphics, platform.getWindowSize());
       graphics.draw (platform.getWindowSize());
       platform.present();
       }
@@ -104,7 +102,7 @@ int main (int numArgs, char* args[]) {
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
-    cUI::draw (canvas, graphics);
+    cUI::draw (canvas, graphics, platform.getWindowSize());
     graphics.draw (platform.getWindowSize());
     platform.present();
     }

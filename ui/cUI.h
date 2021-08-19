@@ -18,7 +18,7 @@ public:
   static void listInstances();
 
   // static draw
-  static void draw (cCanvas& canvas, cGraphics& graphics);
+  static void draw (cCanvas& canvas, cGraphics& graphics, cPoint windowSize);
 
   // base class
   cUI (const std::string& name) : mName(name) {}
