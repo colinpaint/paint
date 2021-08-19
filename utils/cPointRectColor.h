@@ -1,8 +1,7 @@
-// cPointRectColor.h - simple types
+// cPointRectColor.h - simple portable types
 #pragma once
 //{{{  includes
 #include <cstdint>
-#include <cstring>
 #include <cmath>
 #include <algorithm>
 //}}}
