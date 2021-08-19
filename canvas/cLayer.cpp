@@ -19,7 +19,7 @@ using namespace fmt;
 //}}}
 
 namespace {
-  cLayerShader* shader = nullptr;
+  cLayerShader* gShader = nullptr;
   }
 
 //{{{
@@ -31,11 +31,17 @@ cLayer::cLayer (cPoint size, cFrameBuffer::eFormat format, cGraphics& graphics)
   auto data = static_cast<uint8_t*>(malloc (numBytes));
   memset (data, 0, numBytes);
   mFrameBuffer = graphics.createFrameBuffer (data, size, format);
+  if (!mFrameBuffer)
+     cLog::log (LOGERROR, "createFrameBuffer failed");
   free (data);
 
   mFrameBuffer1 = graphics.createFrameBuffer (size, format);
+  if (!mFrameBuffer1)
+    cLog::log (LOGERROR, "createFrameBuffer failed");
 
   mQuad = graphics.createQuad (size);
+  if (!mQuad)
+    cLog::log (LOGERROR, "createQuad failed");
   }
 //}}}
 //{{{
@@ -43,9 +49,16 @@ cLayer::cLayer (uint8_t* data, cPoint size, cFrameBuffer::eFormat format, cGraph
     : mSize(size), mFormat(format), mGraphics(graphics) {
 
   mFrameBuffer = graphics.createFrameBuffer (data, size, format);
+  if (!mFrameBuffer)
+     cLog::log (LOGERROR, "createFrameBuffer failed");
+
   mFrameBuffer1 = graphics.createFrameBuffer (size, format);
+  if (!mFrameBuffer1)
+    cLog::log (LOGERROR, "createFrameBuffer failed");
 
   mQuad = graphics.createQuad (size);
+  if (!mQuad)
+    cLog::log (LOGERROR, "createQuad failed");
   }
 //}}}
 //{{{
@@ -95,14 +108,17 @@ void cLayer::draw (const cPoint& size) {
     mFrameBuffer->setSource();
     mFrameBuffer->checkStatus();
 
-    if (!shader)
-      shader = mGraphics.createLayerShader();
+    if (!gShader) {
+      gShader = mGraphics.createLayerShader();
+      if (!gShader)
+        cLog::log (LOGERROR, "createLayerShader failed");
+      }
 
-    shader->use();
-    shader->setModelProject (
+    gShader->use();
+    gShader->setModelProject (
       glm::translate (glm::mat4 (1.f), glm::vec3 ((size.x - mSize.x)/2.f, (size.y - mSize.y)/2.f, 0.f)),
       glm::ortho (0.f,static_cast<float>(size.x), 0.f,static_cast<float>(size.y), -1.f,1.f));
-    shader->setHueSatVal (0.f, 0.f, 0.f);
+    gShader->setHueSatVal (0.f, 0.f, 0.f);
 
     mQuad->draw();
     }
