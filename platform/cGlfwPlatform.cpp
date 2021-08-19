@@ -48,6 +48,7 @@ namespace {
   //}}}
   }
 
+// cGlfwPlatform class header, easy to extract header if static register not ok
 //{{{
 class cGlfwPlatform : public cPlatform {
 public:
@@ -68,12 +69,13 @@ protected:
   bool init (const cPoint& windowSize, bool showViewports) final;
 
 private:
+  // static register
   static cPlatform* create (const std::string& className);
   inline static const bool mRegistered = registerClass ("glfw", &create);
   };
 //}}}
 
-// cGlfwPlatform
+// public:
 //{{{
 void cGlfwPlatform::shutdown() {
 

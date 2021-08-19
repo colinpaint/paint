@@ -1434,6 +1434,7 @@ namespace {
   #endif
   }
 
+// cOpenGlGraphics class header, easy to extract header if static register not ok
 //{{{
 class cOpenGlGraphics : public cGraphics {
 public:
@@ -1460,11 +1461,13 @@ protected:
   bool init (cPlatform& platform) final;
 
 private:
+  // static register
   static cGraphics* create (const std::string& className);
   inline static const bool mRegistered = registerClass ("opengl", &create);
   };
 //}}}
 
+// public:
 //{{{
 void cOpenGlGraphics::shutdown() {
 
@@ -1491,7 +1494,7 @@ void cOpenGlGraphics::shutdown() {
   }
 //}}}
 
-// resource creates
+// - resource creates
 //{{{
 cQuad* cOpenGlGraphics::createQuad (cPoint size) {
   return new cOpenGlQuad (size);

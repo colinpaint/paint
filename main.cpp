@@ -1,4 +1,4 @@
-// main.cpp - paintbox main 
+// main.cpp - paintbox main
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -62,7 +62,7 @@ int main (int numArgs, char* args[]) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, format ("paintbox {} {}", platformName, graphicsName));
 
-  // list static var init registered classes
+  // list static registered classes
   cPlatform::listClasses();
   cGraphics::listClasses();
   cUI::listClasses();

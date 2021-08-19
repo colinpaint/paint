@@ -889,6 +889,7 @@ namespace {
   //}}}
   }
 
+// cDx11Graphics class header, easy to extract header if static register not ok
 //{{{
 class cDx11Graphics : public cGraphics {
 public:
@@ -915,11 +916,13 @@ protected:
   bool init (cPlatform& platform) final;
 
 private:
+  // static register
   static cGraphics* create (const std::string& className);
   inline static const bool mRegistered = registerClass ("dx11", &create);
   };
 //}}}
 
+// public:
 //{{{
 void cDx11Graphics::shutdown() {
 
@@ -955,7 +958,7 @@ void cDx11Graphics::shutdown() {
   }
 //}}}
 
-// resource creates
+// - resource creates
 //{{{
 cQuad* cDx11Graphics::createQuad (cPoint size) {
   return new cDx11Quad (size);
@@ -1048,6 +1051,7 @@ void cDx11Graphics::draw (cPoint windowSize) {
   #endif
   }
 //}}}
+
 // protected:
 //{{{
 bool cDx11Graphics::init (cPlatform& platform) {

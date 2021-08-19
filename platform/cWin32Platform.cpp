@@ -81,6 +81,7 @@ namespace {
   //}}}
   }
 
+// cWin32Platform class header, easy to extract header if static register not ok
 //{{{
 class cWin32Platform : public cPlatform {
 public:
@@ -101,12 +102,13 @@ protected:
   bool init (const cPoint& windowSize, bool showViewports) final;
 
 private:
+  // static register
   static cPlatform* create (const std::string& className);
   inline static const bool mRegistered = registerClass ("win32", &create);
   };
 //}}}
 
-// cWin32Platform
+// public:
 //{{{
 void cWin32Platform::shutdown() {
 
