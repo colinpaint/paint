@@ -10,12 +10,11 @@
 // stb
 #include <stb_image_write.h>
 
-#include "../utils/tinyfiledialogs.h"
-
 #include "cUI.h"
 #include "../brush/cBrush.h"
 #include "../canvas/cLayer.h"
 #include "../canvas/cCanvas.h"
+#include "../utils/tinyfiledialogs.h"
 #include "../utils/cLog.h"
 
 using namespace std;

@@ -21,8 +21,8 @@
 // self registered using static var init idiom
 #include "platform/cPlatform.h"
 #include "graphics/cGraphics.h"
-#include "ui/cUI.h"
 #include "brush/cBrush.h"
+#include "ui/cUI.h"
 
 // canvas
 #include "canvas/cLayer.h"
