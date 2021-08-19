@@ -33,20 +33,20 @@ public:
     }
   //}}}
   //{{{
-  void paint (cVec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) {
+  void paint (cVec2 pos, bool first, cFrameBuffer& frameBuffer, cFrameBuffer& frameBuffer1) {
 
     if (first)
       mPrevPos = pos;
 
     cRect boundRect = getBoundRect (pos, frameBuffer);
     if (!boundRect.isEmpty()) {
-      const float widthF = static_cast<float>(frameBuffer->getSize().x);
-      const float heightF = static_cast<float>(frameBuffer->getSize().y);
+      const float widthF = static_cast<float>(frameBuffer.getSize().x);
+      const float heightF = static_cast<float>(frameBuffer.getSize().y);
 
       // target, boundRect probably ignored for frameBuffer1
-      frameBuffer1->setTarget (boundRect);
-      frameBuffer1->invalidate();
-      frameBuffer1->setBlend();
+      frameBuffer1.setTarget (boundRect);
+      frameBuffer1.invalidate();
+      frameBuffer1.setBlend();
 
       // shader
       mShader->use();
@@ -69,17 +69,17 @@ public:
       mShader->setStroke (pos, mPrevPos, getRadius(), getColor());
 
       // source
-      frameBuffer->setSource();
-      frameBuffer->checkStatus();
+      frameBuffer.setSource();
+      frameBuffer.checkStatus();
       //frameBuffer->reportInfo();
 
       // draw boundRect to frameBuffer1 target
-      cQuad* quad = mGraphics.createQuad (frameBuffer->getSize(), boundRect);
+      cQuad* quad = mGraphics.createQuad (frameBuffer.getSize(), boundRect);
       quad->draw();
       delete quad;
 
       // blit boundRect frameBuffer1 back to frameBuffer
-      frameBuffer->blit (frameBuffer1, boundRect.getTL(), boundRect);
+      frameBuffer.blit (frameBuffer1, boundRect.getTL(), boundRect);
       }
 
     mPrevPos = pos;
@@ -118,11 +118,11 @@ public:
     }
   //}}}
   //{{{
-  void paint (cVec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) {
+  void paint (cVec2 pos, bool first, cFrameBuffer& frameBuffer, cFrameBuffer& frameBuffer1) {
 
     if (first) {
       stamp (pos, frameBuffer);
-      frameBuffer->pixelsChanged (getBoundRect(pos, frameBuffer));
+      frameBuffer.pixelsChanged (getBoundRect(pos, frameBuffer));
       }
 
     else {
@@ -141,7 +141,7 @@ public:
           stamp (mPrevPos + inc, frameBuffer);
         }
 
-      frameBuffer->pixelsChanged (boundRect);
+      frameBuffer.pixelsChanged (boundRect);
       }
     }
   //}}}
@@ -157,11 +157,11 @@ protected:
 
 private:
   //{{{
-  virtual void stamp (cVec2 pos, cFrameBuffer* frameBuffer) {
+  virtual void stamp (cVec2 pos, cFrameBuffer& frameBuffer) {
   // stamp brushShape into image, clipped by width,height to pos, update mPrevPos
 
-    int32_t width = frameBuffer->getSize().x;
-    int32_t height = frameBuffer->getSize().y;
+    int32_t width = frameBuffer.getSize().x;
+    int32_t height = frameBuffer.getSize().y;
 
     // x
     int32_t xInt = static_cast<int32_t>(pos.x);
@@ -178,7 +178,7 @@ private:
     float ySubPixelFrac = pos.y - yInt;
 
     // point to first image pix
-    uint8_t* frame = frameBuffer->getPixels() + ((yFirst * width) + xFirst) * 4;
+    uint8_t* frame = frameBuffer.getPixels() + ((yFirst * width) + xFirst) * 4;
     int32_t frameRowInc = (width - mShapeSize + leftClipShape + rightClipShape) * 4;
 
     // iterate j then i, -radius to +radius clipped by frame, offset by x,y SubPixelFrac
@@ -266,7 +266,7 @@ public:
 
 private:
   //{{{
-  void reportShape() {
+  void listShape() {
 
     uint8_t* shapePtr = mShape;
     for (int y = 0; y < mShapeSize; y++) {
@@ -278,11 +278,11 @@ private:
     }
   //}}}
   //{{{
-  void stamp (cVec2 pos, cFrameBuffer* frameBuffer) final {
+  void stamp (cVec2 pos, cFrameBuffer& frameBuffer) final {
   // stamp brushShape into image, clipped by width,height to pos, update mPrevPos
 
-    int32_t width = frameBuffer->getSize().x;
-    int32_t height = frameBuffer->getSize().y;
+    int32_t width = frameBuffer.getSize().x;
+    int32_t height = frameBuffer.getSize().y;
 
     // x
     int32_t xInt = static_cast<int32_t>(pos.x);
@@ -299,7 +299,7 @@ private:
     float ySubPixelFrac = pos.y - yInt;
 
     // point to first image pix
-    uint8_t* frame = frameBuffer->getPixels() + ((yFirst * width) + xFirst) * 4;
+    uint8_t* frame = frameBuffer.getPixels() + ((yFirst * width) + xFirst) * 4;
     int32_t frameRowInc = (width - mShapeSize + leftClipShape + rightClipShape) * 4;
 
     int32_t xSub = static_cast<int>(xSubPixelFrac / mSubPixelResolution);

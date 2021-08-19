@@ -34,9 +34,11 @@ public:
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
 
+    float const kMenuHeight = 184.f;
+
     // coerce next window to bottom full width, height
-    ImGui::SetNextWindowPos ({0.f, ImGui::GetIO().DisplaySize.y - 200.f});
-    ImGui::SetNextWindowSize ({ImGui::GetIO().DisplaySize.x, 200.f});
+    ImGui::SetNextWindowPos ({0.f, ImGui::GetIO().DisplaySize.y - kMenuHeight});
+    ImGui::SetNextWindowSize ({ImGui::GetIO().DisplaySize.x, kMenuHeight});
 
     ImGui::Begin (getName().c_str(), NULL,
                   ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration |
@@ -44,9 +46,9 @@ public:
                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse);
 
     ImGui::BeginGroup();
-    ImGui::Button ("Paint", {100,0});
-    ImGui::Button ("Graphics", {100,0});
-    if (ImGui::Button ("Effect", {100,0})) {
+    ImGui::Button ("Paint", {100.f,0.f});
+    ImGui::Button ("Graphics", {100.f,0.f});
+    if (ImGui::Button ("Effect", {100.f,0.f})) {
       ImGui::OpenPopup ("hsv");
       if (ImGui::BeginPopupModal ("hsv")) {
         //{{{  hsv popup
@@ -77,9 +79,9 @@ public:
         }
         //}}}
       }
-    ImGui::Button ("Pasteup", {100,0});
+    ImGui::Button ("Pasteup", {100.f,0.f});
 
-    if (ImGui::Button ("Library", {100,0})) {
+    if (ImGui::Button ("Library", {100.f,0.f})) {
       //{{{  save dialog
       char const* filters[] = { "*.png" };
       char const* fileName = tinyfd_saveFileDialog ("save file", "", 1, filters, "image files");
@@ -93,22 +95,22 @@ public:
       //}}}
     ImGui::EndGroup();
 
-    //{{{  brush selection
+    //{{{  brushSelector
     ImGui::SameLine();
     ImGui::BeginGroup();
 
     cBrush* brush = cBrush::getCurBrush();
     for (auto& item : cBrush::getClassRegister())
       if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(),
-                             cBrush::isCurBrushByName (item.first), 0, {150, 20}))
+                             cBrush::isCurBrushByName (item.first), 0, {150.f, 20.f}))
         cBrush::setCurBrushByName (graphics, item.first, brush->getRadius());
 
     float radius = brush->getRadius();
-    ImGui::SetNextItemWidth (150);
+    ImGui::SetNextItemWidth (150.f);
     if (ImGui::SliderFloat ("radius", &radius, 1.f, 100.f))
       brush->setRadius (radius);
 
-    ImGui::SetNextItemWidth (150);
+    ImGui::SetNextItemWidth (150.f);
     cColor color = brush->getColor();
     ImGui::SliderFloat ("opacity", &color.a, 0.f, 1.f);
     brush->setColor (color);
@@ -124,7 +126,7 @@ public:
       int alphaPrev = disabled ? ImGuiColorEditFlags_AlphaPreview : 0;
       if (ImGui::ColorButton (format ("swatch##{}", swatchIndex).c_str(),
                               ImVec4 (swatch.r,swatch.g,swatch.b, swatch.a),
-                              ImGuiColorEditFlags_NoTooltip | alphaPrev, {20, 20}) && !disabled)
+                              ImGuiColorEditFlags_NoTooltip | alphaPrev, {20.f, 20.f}) && !disabled)
         brush->setColor (swatch);
 
       // swatch popup
@@ -147,21 +149,27 @@ public:
       }
     ImGui::EndGroup();
     //}}}
-    //{{{  colour
+    //{{{  colourPicker
     ImGui::SameLine();
     ImGui::BeginGroup();
 
     // colorPicker
-    ImGui::SetNextItemWidth (200);
+    ImGui::SetNextItemWidth (kMenuHeight);
 
     ImVec4 imBrushColor = ImVec4 (brush->getColor().r,brush->getColor().g,brush->getColor().b, brush->getColor().a);
     ImGui::ColorPicker4 (
       "colour", (float*)&imBrushColor,
-      ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel,
+      ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float |
+      ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview |
+      ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel,
       nullptr);
     brush->setColor (cColor (imBrushColor.x, imBrushColor.y, imBrushColor.z, imBrushColor.w));
+
     ImGui::EndGroup();
     //}}}
+
+    ImGui::SameLine();
+    ImGui::ColorButton ("color", imBrushColor, ImGuiColorEditFlags_NoTooltip, {40.f, 7 * (20.f + 4.f)});
 
     ImGui::End();
     }

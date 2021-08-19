@@ -182,7 +182,7 @@ namespace {
 
     void clear (const cColor& color) {}
     //{{{
-    void blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect) {
+    void blit (cFrameBuffer& src, cPoint srcPoint, const cRect& dstRect) {
 
       mDirtyPixelsRect += dstRect;
 

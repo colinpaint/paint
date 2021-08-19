@@ -41,7 +41,7 @@ public:
 
   float getRadius() { return mRadius; }
   float getBoundRadius() { return mRadius + 1.f; }
-  cRect getBoundRect (cVec2 pos, cFrameBuffer* frameBuffer);
+  cRect getBoundRect (cVec2 pos, cFrameBuffer& frameBuffer);
 
   void setColor (const cColor& color);
   void setColor (float r, float g, float b, float a);
@@ -49,7 +49,7 @@ public:
 
   // virtuals
   virtual void setRadius (float radius) { mRadius = radius; }
-  virtual void paint (cVec2 pos, bool first, cFrameBuffer* frameBuffer, cFrameBuffer* frameBuffer1) = 0;
+  virtual void paint (cVec2 pos, bool first, cFrameBuffer& frameBuffer, cFrameBuffer& frameBuffer1) = 0;
 
 protected:
   float mRadius = 0.f;

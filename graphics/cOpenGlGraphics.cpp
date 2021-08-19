@@ -331,8 +331,9 @@ namespace {
       }
     //}}}
     //{{{
-    void blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect) final {
-      glBindFramebuffer (GL_READ_FRAMEBUFFER, src->getId());
+    void blit (cFrameBuffer& src, cPoint srcPoint, const cRect& dstRect) final {
+
+      glBindFramebuffer (GL_READ_FRAMEBUFFER, src.getId());
       glBindFramebuffer (GL_DRAW_FRAMEBUFFER, mFrameBufferObject);
       glBlitFramebuffer (srcPoint.x, srcPoint.y, srcPoint.x + dstRect.getWidth(), srcPoint.y + dstRect.getHeight(),
                          dstRect.left, dstRect.top, dstRect.right, dstRect.bottom,

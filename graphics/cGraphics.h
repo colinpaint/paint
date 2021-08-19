@@ -56,7 +56,7 @@ public:
   virtual void pixelsChanged (const cRect& rect) = 0;
 
   virtual void clear (const cColor& color) = 0;
-  virtual void blit (cFrameBuffer* src, cPoint srcPoint, const cRect& dstRect) = 0;
+  virtual void blit (cFrameBuffer& src, cPoint srcPoint, const cRect& dstRect) = 0;
 
   virtual bool checkStatus() = 0;
   virtual void reportInfo() = 0;

@@ -84,7 +84,7 @@ uint8_t* cLayer::getRenderedPixels() {
 void cLayer::paint (cBrush* brush, cVec2 pos, bool first) {
 // paint using brush onto layer's frameBuffers
 
-  brush->paint (pos, first, mFrameBuffer, mFrameBuffer1);
+  brush->paint (pos, first, *mFrameBuffer, *mFrameBuffer1);
   }
 //}}}
 //{{{

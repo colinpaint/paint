@@ -672,7 +672,7 @@ bool ImGui::SmallButton (const char* label)
 
 //{{{
 // Tip: use ImGui::PushID()/PopID() to push indices or pointers in the ID stack.
-// Then you can keep 'str_id' empty or the same for all your buttons 
+// Then you can keep 'str_id' empty or the same for all your buttons
 // (instead of creating a string based on a non-string id)
 bool ImGui::InvisibleButton (const char* str_id, const ImVec2& size_arg, ImGuiButtonFlags flags)
 {
@@ -4984,6 +4984,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
     return value_changed;
 }
 //}}}
+
 //{{{
 bool ImGui::ColorPicker3(const char* label, float col[3], ImGuiColorEditFlags flags)
 {
