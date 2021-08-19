@@ -76,7 +76,7 @@ public:
 private:
   //{{{
   static cUI* create (const string& className) {
-    return new cCanvasUI (className);
+    return new cLayersUI (className);
     }
   //}}}
   inline static const bool mRegistered = registerClass ("layers", &create);
