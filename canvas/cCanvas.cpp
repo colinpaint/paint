@@ -160,7 +160,7 @@ void cCanvas::draw (cPoint windowSize) {
   mShader->use();
 
   cMatrix4x4 model;
-  model.translate (cVec3 ((windowSize.x - mSize.x)/2.f, (windowSize.y - mSize.y)/2.f, 0.f));
+  model.setTranslate (cVec3 ((windowSize.x - mSize.x)/2.f, (windowSize.y - mSize.y)/2.f, 0.f));
   cMatrix4x4 projection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
   mShader->setModelProjection (model, projection);
 

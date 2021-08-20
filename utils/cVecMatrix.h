@@ -1,4 +1,4 @@
-// cVecMateix.h - simple, readable, portable types
+// cVecMateix.h - simple, minimal, readable, portable types
 // - use glm if you want the full monty
 #pragma once
 //{{{  includes
@@ -8,11 +8,10 @@
 #include <algorithm>
 //}}}
 
-//{{{
+// cVec2
 struct cVec2 {
   float x;
   float y;
-
   //{{{
   cVec2()  {
     x = 0;
@@ -68,13 +67,12 @@ struct cVec2 {
     }
   //}}}
   };
-//}}}
-//{{{
+
+// cVec3
 struct cVec3 {
   float x;
   float y;
   float z;
-
   //{{{
   cVec3()  {
     x = 0;
@@ -90,39 +88,14 @@ struct cVec3 {
     }
   //}}}
   };
-//}}}
-//{{{
-struct cVec4 {
-  float x;
-  float y;
-  float z;
-  float w;
 
-  //{{{
-  cVec4()  {
-    x = 0;
-    y = 0;
-    z = 0;
-    w = 0;
-    }
-  //}}}
-  //{{{
-  cVec4 (float x, float y, float z, float w ) {
-    this->x = x;
-    this->y = y;
-    this->z = z;
-    this->w = w;
-    }
-  //}}}
-  };
-//}}}
-
-//{{{
+// cMatrix4x4
 struct cMatrix4x4 {
   float mat[4][4];
-
   //{{{
   cMatrix4x4() {
+  // construct identity matrix
+
     mat[0][0] = 1.f;
     mat[0][1] = 0.f;
     mat[0][2] = 0.f;
@@ -169,12 +142,23 @@ struct cMatrix4x4 {
     mat[3][3] = 1.f;
     }
   //}}}
+
   //{{{
-  void translate (const cVec3& pos) {
-    mat[3][0] += pos.x;
-    mat[3][1] += pos.y;
-    mat[3][2] += pos.z;
+  void setTranslate (const cVec3& pos) {
+  // set translate to pos
+
+    mat[3][0] = pos.x;
+    mat[3][1] = pos.y;
+    mat[3][2] = pos.z;
+    }
+  //}}}
+  //{{{
+  void translate (const cVec3& offset) {
+  // translate by offset
+
+    mat[3][0] += offset.x;
+    mat[3][1] += offset.y;
+    mat[3][2] += offset.z;
     }
   //}}}
   };
-//}}}
