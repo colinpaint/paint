@@ -758,9 +758,9 @@ namespace {
 
     // sets
     //{{{
-    void setModelProject (const cMatrix4x4& model, const cMatrix4x4& project) final {
+    void setModelProjection (const cMatrix4x4& model, const cMatrix4x4& projection) final {
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&project);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
       }
     //}}}
     //{{{
@@ -971,9 +971,9 @@ namespace {
 
     // sets
     //{{{
-    void setModelProject (const cMatrix4x4& model, const cMatrix4x4& project) final {
+    void setModelProjection (const cMatrix4x4& model, const cMatrix4x4& projection) final {
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&project);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
       }
     //}}}
     //{{{
@@ -1036,9 +1036,9 @@ namespace {
 
     // sets
     //{{{
-    void setModelProject (const cMatrix4x4& model, const cMatrix4x4& project) final {
+    void setModelProjection (const cMatrix4x4& model, const cMatrix4x4& projection) final {
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&project);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
       }
     //}}}
 

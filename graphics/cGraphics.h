@@ -91,7 +91,7 @@ public:
   virtual ~cQuadShader() = default;
 
   // sets
-  virtual void setModelProject (const cMatrix4x4& model, const cMatrix4x4& project) = 0;
+  virtual void setModelProjection (const cMatrix4x4& model, const cMatrix4x4& projection) = 0;
   };
 //}}}
 //{{{

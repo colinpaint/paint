@@ -145,17 +145,28 @@ struct cMatrix4x4 {
     }
   //}}}
   //{{{
-  void setOrtho (float left, float right, float bottom, float top, float zNear, float zFar) {
+  cMatrix4x4 (float left, float right, float bottom, float top, float zNear, float zFar) {
+  // construct ortho projection matrix
 
     mat[0][0] = 2.f / (right - left);
+    mat[0][1] = 0.f;
+    mat[0][2] = 0.f;
+    mat[0][3] = 0.f;
 
+    mat[1][0] = 0.f;
     mat[1][1] = 2.f / (top - bottom);
+    mat[1][2] = 0.f;
+    mat[1][3] = 0.f;
 
+    mat[2][0] = 0.f;
+    mat[2][1] = 0.f;
     mat[2][2] = -2.f / (zFar - zNear);
+    mat[2][3] = 0.f;
 
     mat[3][0] = - (right + left) / (right - left);
     mat[3][1] = - (top + bottom) / (top - bottom);
     mat[3][2] = - (zFar + zNear) / (zFar - zNear);
+    mat[3][3] = 1.f;
     }
   //}}}
   //{{{

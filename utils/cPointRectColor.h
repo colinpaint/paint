@@ -1,4 +1,4 @@
-// cPointRectColor.h - simple portable types
+// cPointRectColor.h - simple,readable, portable types
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -148,6 +148,7 @@ struct cRect {
   };
 //}}}
 
+// "color" in imGui so don't use "colour" here
 //{{{
 struct cColor {
   float r;
