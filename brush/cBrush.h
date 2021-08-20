@@ -17,7 +17,7 @@ private:
   using createFunc = cBrush*(*)(cGraphics& graphics, const std::string& name, float radius);
 
 public:
-  // static register manager
+  // static register
   static cBrush* createByName (cGraphics& graphics, const std::string& name, float radius);
   static std::map<const std::string, createFunc>& getClassRegister();
   static void listRegisteredClasses();
@@ -64,6 +64,7 @@ protected:
   cVec2 mPrevPos = cVec2(0.f,0.f);
 
 protected:
+  // static register
   static bool registerClass (const std::string& name, const createFunc factoryMethod);
 
 private:
