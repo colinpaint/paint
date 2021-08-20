@@ -1,4 +1,4 @@
-// main.cpp - paintbox main
+// main.cpp - paintbox main, uses imGui, stb, (glm replaced by simpler types in utils cVecMat.h for readability)
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -42,7 +42,7 @@ int main (int numArgs, char* args[]) {
   eLogLevel logLevel = LOGINFO;
   string platformName = "glfw";
   string graphicsName = "opengl";
-  //{{{  parse command line args to params  
+  //{{{  parse command line args to params
   // args to params
   vector <string> params;
   for (int i = 1; i < numArgs; i++)
