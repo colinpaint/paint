@@ -6,7 +6,7 @@
 #include <map>
 
 #include "../utils/cPointRectColor.h"
-#include "../utils/cVecMat.h"
+#include "../utils/cVecMatrix.h"
 
 class cGraphics;
 class cFrameBuffer;

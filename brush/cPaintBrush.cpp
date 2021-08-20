@@ -48,8 +48,8 @@ public:
       // shader
       mShader->use();
 
-      cMat4x4 model;
-      cMat4x4 project;
+      cMatrix4x4 model;
+      cMatrix4x4 project;
       project.setOrtho (0.f, widthF, 0.f, heightF, -1.f, 1.f);
       mShader->setModelProject (model, project);
       mShader->setStroke (pos, mPrevPos, getRadius(), getColor());

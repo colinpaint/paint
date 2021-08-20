@@ -1,4 +1,5 @@
-// cVecMat.h - simple portable types
+// cVecMateix.h - simple, readable, portable types
+// - use glm if you want the full monty
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -117,11 +118,11 @@ struct cVec4 {
 //}}}
 
 //{{{
-struct cMat4x4 {
+struct cMatrix4x4 {
   float mat[4][4];
 
   //{{{
-  cMat4x4() {
+  cMatrix4x4() {
     mat[0][0] = 1.f;
     mat[0][1] = 0.f;
     mat[0][2] = 0.f;

@@ -216,7 +216,7 @@ namespace {
     virtual ~cDx11PaintShader() = default;
 
     // sets
-    void setModelProject (const cMat4x4& model, const cMat4x4& project) final {
+    void setModelProject (const cMatrix4x4& model, const cMatrix4x4& project) final {
       }
     void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
       }
@@ -233,7 +233,7 @@ namespace {
     virtual ~cDx11LayerShader() = default;
 
     // sets
-    void setModelProject (const cMat4x4& model, const cMat4x4& project) final {
+    void setModelProject (const cMatrix4x4& model, const cMatrix4x4& project) final {
       }
     void setHueSatVal (float hue, float sat, float val) final {
       }
@@ -250,7 +250,7 @@ namespace {
     virtual ~cDx11CanvasShader()  = default;
 
     // sets
-    void setModelProject (const cMat4x4& model, const cMat4x4& project) final {
+    void setModelProject (const cMatrix4x4& model, const cMatrix4x4& project) final {
       }
 
     void use() final {

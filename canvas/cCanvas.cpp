@@ -158,9 +158,9 @@ void cCanvas::draw (cPoint windowSize) {
 
   // - shader
   mShader->use();
-  cMat4x4 model;
+  cMatrix4x4 model;
   model.translate (cVec3 ((windowSize.x - mSize.x)/2.f, (windowSize.y - mSize.y)/2.f, 0.f));
-  cMat4x4 project;
+  cMatrix4x4 project;
   project.setOrtho (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
   mShader->setModelProject (model, project);
 
