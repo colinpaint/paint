@@ -1272,8 +1272,8 @@ namespace {
 
       // sets
       //{{{
-      void setMatrix (float* matrix) {
-        glUniformMatrix4fv (mAttribLocationProjMtx, 1, GL_FALSE, matrix);
+      void setMatrix (const cMat4x4& matrix) {
+        glUniformMatrix4fv (mAttribLocationProjMtx, 1, GL_FALSE, (float*)&matrix);
         }
       //}}}
 
@@ -1293,7 +1293,7 @@ namespace {
       int32_t mAttribLocationVtxColor = 0;
       };
     //}}}
-    cDrawListShader* gShader;
+    cDrawListShader* gDrawListShader;
 
     //{{{
     void setRenderState (ImDrawData* drawData, int width, int height, GLuint vertexArrayObject) {
@@ -1312,24 +1312,19 @@ namespace {
       glBlendEquation (GL_FUNC_ADD);
       glEnable (GL_BLEND);
 
-      gShader->use();
+      gDrawListShader->use();
       glViewport (0, 0, (GLsizei)width, (GLsizei)height);
 
       // set orthoProject matrix
-      float L = drawData->DisplayPos.x;
-      float R = drawData->DisplayPos.x + drawData->DisplaySize.x;
-      float T = drawData->DisplayPos.y;;
-      float B = drawData->DisplayPos.y;;
+      float left = drawData->DisplayPos.x;
+      float right = drawData->DisplayPos.x + drawData->DisplaySize.x;
+      float top = drawData->DisplayPos.y;;
+      float bottom = drawData->DisplayPos.y;;
       if (gClipOriginBottomLeft) // bottom left origin ortho project
-        B += drawData->DisplaySize.y;
+        bottom += drawData->DisplaySize.y;
       else // top left origin ortho project
-        T += drawData->DisplaySize.y;
-      float orthoProjectMatrix[4][4] = { { 2.0f/(R-L),  0.0f,        0.0f, 0.0f },
-                                         { 0.0f,        2.0f/(T-B),  0.0f, 0.0f },
-                                         { 0.0f,        0.0f,       -1.0f, 0.0f },
-                                         { (R+L)/(L-R), (T+B)/(B-T), 0.0f, 1.0f },
-                                       };
-      gShader->setMatrix ((float*)orthoProjectMatrix);
+        top += drawData->DisplaySize.y;
+      gDrawListShader->setMatrix (cMat4x4(left, right, bottom, top, -1.f, 1.f));
 
       // bind vertex/index buffers and setup attributes for ImDrawVert
       glBindVertexArray (vertexArrayObject);
@@ -1337,16 +1332,16 @@ namespace {
       glBindBuffer (GL_ARRAY_BUFFER, gVboHandle);
       glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, gElementsHandle);
 
-      glEnableVertexAttribArray (gShader->getAttribLocationVtxPos());
-      glVertexAttribPointer (gShader->getAttribLocationVtxPos(), 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
+      glEnableVertexAttribArray (gDrawListShader->getAttribLocationVtxPos());
+      glVertexAttribPointer (gDrawListShader->getAttribLocationVtxPos(), 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
                              (GLvoid*)IM_OFFSETOF(ImDrawVert, pos));
 
-      glEnableVertexAttribArray (gShader->getAttribLocationVtxUV());
-      glVertexAttribPointer (gShader->getAttribLocationVtxUV(), 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
+      glEnableVertexAttribArray (gDrawListShader->getAttribLocationVtxUV());
+      glVertexAttribPointer (gDrawListShader->getAttribLocationVtxUV(), 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
                              (GLvoid*)IM_OFFSETOF(ImDrawVert, uv));
 
-      glEnableVertexAttribArray (gShader->getAttribLocationVtxColor());
-      glVertexAttribPointer (gShader->getAttribLocationVtxColor(), 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert),
+      glEnableVertexAttribArray (gDrawListShader->getAttribLocationVtxColor());
+      glVertexAttribPointer (gDrawListShader->getAttribLocationVtxColor(), 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert),
                              (GLvoid*)IM_OFFSETOF(ImDrawVert, col));
       }
     //}}}
@@ -1478,7 +1473,7 @@ void cOpenGlGraphics::shutdown() {
       glDeleteBuffers (1, &gElementsHandle);
 
     // destroy shader
-    delete gShader;
+    delete gDrawListShader;
 
     // destroy font texture
     if (gFontTexture) {
@@ -1638,7 +1633,7 @@ bool cOpenGlGraphics::init (cPlatform& platform) {
     glGenBuffers (1, &gElementsHandle);
 
     // create shader
-    gShader = new cDrawListShader (gGlslVersion);
+    gDrawListShader = new cDrawListShader (gGlslVersion);
   #endif
 
   return true;
