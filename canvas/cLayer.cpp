@@ -7,9 +7,6 @@
 #include <string>
 #include <algorithm>
 
-// glm
-#include <gtc/matrix_transform.hpp>
-
 #include "../graphics/cGraphics.h"
 #include "../brush/cBrush.h"
 #include "../utils/cLog.h"
@@ -115,9 +112,12 @@ void cLayer::draw (const cPoint& size) {
       }
 
     gShader->use();
-    gShader->setModelProject (
-      glm::translate (glm::mat4 (1.f), glm::vec3 ((size.x - mSize.x)/2.f, (size.y - mSize.y)/2.f, 0.f)),
-      glm::ortho (0.f,static_cast<float>(size.x), 0.f,static_cast<float>(size.y), -1.f,1.f));
+
+    cMat4x4 model;
+    model.translate (cVec3 ((size.x - mSize.x)/2.f, (size.y - mSize.y)/2.f, 0.f));
+    cMat4x4 project;
+    project.setOrtho (0.f,static_cast<float>(size.x) , 0.f, static_cast<float>(size.y), -1.f, 1.f);
+    gShader->setModelProject (model, project);
     gShader->setHueSatVal (0.f, 0.f, 0.f);
 
     mQuad->draw();

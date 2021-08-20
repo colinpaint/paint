@@ -24,13 +24,15 @@ if (OPENGL_VERSION STREQUAL "OPENGL_21")
   # openGL 2.1 with fbo vbo extensions
   include_directories (${CMAKE_SOURCE_DIR}/glad2.1+fbo+vao/include
                        ${CMAKE_SOURCE_DIR}/glfw/include
-                       ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
+                       ${CMAKE_SOURCE_DIR}/imgui 
+                       ${CMAKE_SOURCE_DIR}/stb)
   add_subdirectory (glad2.1+fbo+vao/)
 else()
   # openGL >= 3.0
   include_directories (${CMAKE_SOURCE_DIR}/glad4.5core/include
                        ${CMAKE_SOURCE_DIR}/glfw/include
-                       ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/glm ${CMAKE_SOURCE_DIR}/stb)
+                       ${CMAKE_SOURCE_DIR}/imgui 
+                       ${CMAKE_SOURCE_DIR}/stb)
   add_subdirectory (glad4.5core/)
 endif()
 

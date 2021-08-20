@@ -11,9 +11,6 @@
 // glfw
 #include <GLFW/glfw3.h>
 
-// glm
-#include <vec2.hpp>
-
 // imGui
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>

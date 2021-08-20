@@ -5,12 +5,8 @@
 #include <string>
 #include <map>
 
-// glm
-//#include <vec3.hpp>
-#include <mat4x4.hpp>
-
 #include "../utils/cPointRectColor.h"
-#include "../utils/cVec.h"
+#include "../utils/cVecMat.h"
 
 class cPlatform;
 //}}}
@@ -95,7 +91,7 @@ public:
   virtual ~cQuadShader() = default;
 
   // sets
-  virtual void setModelProject (const glm::mat4& model, const glm::mat4& project) = 0;
+  virtual void setModelProject (const cMat4x4& model, const cMat4x4& project) = 0;
   };
 //}}}
 //{{{

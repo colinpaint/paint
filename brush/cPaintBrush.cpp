@@ -5,9 +5,6 @@
 #include <string>
 #include <algorithm>
 
-// glm
-#include <gtc/matrix_transform.hpp>
-
 #include "cBrush.h"
 #include "../graphics/cGraphics.h"
 #include "../utils/cLog.h"
@@ -51,21 +48,10 @@ public:
       // shader
       mShader->use();
 
-      //{{{  calc orthoProject matrix
-      //const float left = drawData->DisplayPos.x;
-      //const float right = drawData->DisplayPos.x + drawData->DisplaySize.x;
-      //const float top = drawData->DisplayPos.y;
-      //const float bottom = drawData->DisplayPos.y + drawData->DisplaySize.y;
-
-      //const float kOrthoMatrix[4][4] = {
-         //2.f/(right-left),          0.f,                       0.f,  0.f,
-         //0.f,                       2.f/(top-bottom),          0.f,  0.f,
-         //0.f,                       0.f,                       0.5f, 0.f,
-         //(right+left)/(left-right), (top+bottom)/(bottom-top), 0.5f, 1.f,
-        //};
-      //}}}
-
-      mShader->setModelProject (glm::mat4 (1.f), glm::ortho (0.f,widthF, 0.f,heightF, -1.f,1.f));
+      cMat4x4 model;
+      cMat4x4 project;
+      project.setOrtho (0.f, widthF, 0.f, heightF, -1.f, 1.f);
+      mShader->setModelProject (model, project);
       mShader->setStroke (pos, mPrevPos, getRadius(), getColor());
 
       // source

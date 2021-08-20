@@ -10,11 +10,6 @@
 // glad
 #include <glad/glad.h>
 
-// glm
-#include <mat4x4.hpp>
-#include <gtc/type_ptr.hpp>
-#include <gtc/matrix_transform.hpp>
-
 // imGui
 #include <imgui.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -763,9 +758,9 @@ namespace {
 
     // sets
     //{{{
-    void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, glm::value_ptr (model));
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, glm::value_ptr (project));
+    void setModelProject (const cMat4x4& model, const cMat4x4& project) final {
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&project);
       }
     //}}}
     //{{{
@@ -976,9 +971,9 @@ namespace {
 
     // sets
     //{{{
-    void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, glm::value_ptr (model));
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, glm::value_ptr (project));
+    void setModelProject (const cMat4x4& model, const cMat4x4& project) final {
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&project);
       }
     //}}}
     //{{{
@@ -1041,9 +1036,9 @@ namespace {
 
     // sets
     //{{{
-    void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, glm::value_ptr (model));
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, glm::value_ptr (project));
+    void setModelProject (const cMat4x4& model, const cMat4x4& project) final {
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&project);
       }
     //}}}
 

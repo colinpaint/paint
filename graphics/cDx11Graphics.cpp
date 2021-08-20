@@ -1,6 +1,8 @@
 // cDx11Graphics.cpp - !!! need to finsh quad, frameBuffer and shader !!!
 #ifdef WIN32 // stop linux compile, simpler cmake
 //{{{  includes
+#define NOMINMAX
+
 #include <cstdint>
 #include <cmath>
 #include <string>
@@ -14,11 +16,6 @@
 // imGui
 #include <imgui.h>
 #include <backends/imgui_impl_dx11.h>
-
-// glm
-#include <mat4x4.hpp>
-#include <gtc/type_ptr.hpp>
-#include <gtc/matrix_transform.hpp>
 
 #include "cGraphics.h"
 #include "../platform/cPlatform.h"
@@ -219,7 +216,7 @@ namespace {
     virtual ~cDx11PaintShader() = default;
 
     // sets
-    void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
+    void setModelProject (const cMat4x4& model, const cMat4x4& project) final {
       }
     void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
       }
@@ -236,7 +233,7 @@ namespace {
     virtual ~cDx11LayerShader() = default;
 
     // sets
-    void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
+    void setModelProject (const cMat4x4& model, const cMat4x4& project) final {
       }
     void setHueSatVal (float hue, float sat, float val) final {
       }
@@ -253,7 +250,7 @@ namespace {
     virtual ~cDx11CanvasShader()  = default;
 
     // sets
-    void setModelProject (const glm::mat4& model, const glm::mat4& project) final {
+    void setModelProject (const cMat4x4& model, const cMat4x4& project) final {
       }
 
     void use() final {

@@ -1,4 +1,4 @@
-// cVec.h - simple portable types
+// cVecMat.h - simple portable types
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -117,11 +117,11 @@ struct cVec4 {
 //}}}
 
 //{{{
-struct cMat44 {
+struct cMat4x4 {
   float mat[4][4];
 
   //{{{
-  cMat44() {
+  cMat4x4() {
     mat[0][0] = 1.f;
     mat[0][1] = 0.f;
     mat[0][2] = 0.f;
@@ -144,8 +144,24 @@ struct cMat44 {
     }
   //}}}
   //{{{
-  cMat44 (const cMat44& mat) {
-    memcpy (this, &mat, sizeof (cMat44));
+  void setOrtho (float left, float right, float bottom, float top, float zNear, float zFar) {
+
+    mat[0][0] = 2.f / (right - left);
+
+    mat[1][1] = 2.f / (top - bottom);
+
+    mat[2][2] = -2.f / (zFar - zNear);
+
+    mat[3][0] = - (right + left) / (right - left);
+    mat[3][1] = - (top + bottom) / (top - bottom);
+    mat[3][2] = - (zFar + zNear) / (zFar - zNear);
+    }
+  //}}}
+  //{{{
+  void translate (const cVec3& pos) {
+    mat[3][0] += pos.x;
+    mat[3][1] += pos.y;
+    mat[3][2] += pos.z;
     }
   //}}}
   };
