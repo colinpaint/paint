@@ -48,9 +48,8 @@ public:
       // shader
       mShader->use();
 
-      cMatrix4x4 model;
-      cMatrix4x4 projection (0.f, widthF, 0.f, heightF, -1.f, 1.f);
-      mShader->setModelProjection (model, projection);
+      cMat4x4 projection (0.f, widthF, 0.f, heightF, -1.f, 1.f);
+      mShader->setModelProjection (cMat4x4(), projection);
 
       mShader->setStroke (pos, mPrevPos, getRadius(), getColor());
 

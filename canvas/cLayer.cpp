@@ -113,9 +113,9 @@ void cLayer::draw (const cPoint& size) {
 
     gShader->use();
 
-    cMatrix4x4 model;
+    cMat4x4 model;
     model.setTranslate (cVec3 ((size.x - mSize.x)/2.f, (size.y - mSize.y)/2.f, 0.f));
-    cMatrix4x4 projection (0.f,static_cast<float>(size.x) , 0.f, static_cast<float>(size.y), -1.f, 1.f);
+    cMat4x4 projection (0.f,static_cast<float>(size.x) , 0.f, static_cast<float>(size.y), -1.f, 1.f);
     gShader->setModelProjection (model, projection);
 
     gShader->setHueSatVal (0.f, 0.f, 0.f);

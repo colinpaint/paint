@@ -6,7 +6,7 @@
 #include <map>
 
 #include "../utils/cPointRectColor.h"
-#include "../utils/cVecMatrix.h"
+#include "../utils/cVecMat.h"
 
 class cPlatform;
 //}}}
@@ -91,7 +91,7 @@ public:
   virtual ~cQuadShader() = default;
 
   // sets
-  virtual void setModelProjection (const cMatrix4x4& model, const cMatrix4x4& projection) = 0;
+  virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) = 0;
   };
 //}}}
 //{{{

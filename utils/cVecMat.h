@@ -89,11 +89,11 @@ struct cVec3 {
   //}}}
   };
 
-// cMatrix4x4
-struct cMatrix4x4 {
+// cMat4x4
+struct cMat4x4 {
   float mat[4][4];
   //{{{
-  cMatrix4x4() {
+  cMat4x4() {
   // construct identity matrix
 
     mat[0][0] = 1.f;
@@ -118,7 +118,7 @@ struct cMatrix4x4 {
     }
   //}}}
   //{{{
-  cMatrix4x4 (float left, float right, float bottom, float top, float zNear, float zFar) {
+  cMat4x4 (float left, float right, float bottom, float top, float zNear, float zFar) {
   // construct ortho projection matrix
 
     mat[0][0] = 2.f / (right - left);
