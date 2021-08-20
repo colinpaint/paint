@@ -34,7 +34,7 @@
 using namespace std;
 using namespace fmt;
 //}}}
-//#define USE_IMPL  // not working yet, impl is simple to implement but useful to use released backend
+//#define USE_IMPL // use imgui backend impl untouched, !!! not working yet !!!
 constexpr bool kDebug = false;
 
 namespace {
@@ -1061,7 +1061,7 @@ namespace {
   int gGlslVersion = 0; // major.minor * 100
 
   #ifndef USE_IMPL
-    // options
+    // local implementation of backend impl
     bool gDrawBase = false;
     bool gClipOriginBottomLeft = true;
 
