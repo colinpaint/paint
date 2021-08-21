@@ -12,7 +12,8 @@ using namespace fmt;
 
 // static - public
 //{{{
-cPlatform& cPlatform::createByName (const string& name, const cPoint& windowSize, bool showViewports) {
+cPlatform& cPlatform::createByName (const string& name, const cPoint& windowSize, 
+                                    bool showViewports, bool vsync) {
 
   cPlatform* platform = getClassRegister()[name](name);
   if (!platform) {
@@ -20,7 +21,7 @@ cPlatform& cPlatform::createByName (const string& name, const cPoint& windowSize
     exit (EXIT_FAILURE);
     }
 
-  platform->init (windowSize, showViewports);
+  platform->init (windowSize, showViewports, vsync);
   return *platform;
   }
 //}}}

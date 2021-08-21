@@ -87,7 +87,7 @@ public:
   void present() final;
 
 protected:
-  bool init (const cPoint& windowSize, bool showViewports) final;
+  bool init (const cPoint& windowSize, bool showViewports, bool vsync) final;
 
 private:
   // static register
@@ -156,7 +156,7 @@ void cGlfwPlatform::present() {
 
 // protected:
 //{{{
-bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports) {
+bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports, bool vsync) {
 
   cLog::log (LOGINFO, format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
 
@@ -222,8 +222,7 @@ bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports) {
 
   ImGui_ImplGlfw_InitForOpenGL (gWindow, true);
 
-  //glfwSwapInterval (0);
-  glfwSwapInterval (1);
+  glfwSwapInterval (vsync ? 1 : 0);
 
   gPlatform = this;
 

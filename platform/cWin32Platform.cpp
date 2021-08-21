@@ -30,6 +30,7 @@ namespace {
   cPlatform* gPlatform = nullptr;
   WNDCLASSEX gWndClass;
   HWND gHWnd;
+  bool gVsync = true;
 
   cPoint gWindowSize;
   ID3D11Device* gD3dDevice = NULL;
@@ -99,7 +100,7 @@ public:
   void present() final;
 
 protected:
-  bool init (const cPoint& windowSize, bool showViewports) final;
+  bool init (const cPoint& windowSize, bool showViewports, bool vsync) final;
 
 private:
   // static register
@@ -164,14 +165,13 @@ void cWin32Platform::present() {
     ImGui::RenderPlatformWindowsDefault();
     }
 
-  gSwapChain->Present(1, 0); // Present with vsync
-  //gSwapChain->Present(0, 0); // Present without vsync
+  gSwapChain->Present(gVsync ? 1 : 0, 0); 
   }
 //}}}
 
 // protected:
 //{{{
-bool cWin32Platform::init (const cPoint& windowSize, bool showViewports) {
+bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vsync) {
 
   // register app class
   gWndClass = { sizeof(WNDCLASSEX),
@@ -252,6 +252,7 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports) {
   ImGui_ImplWin32_Init (gHWnd);
 
   gPlatform = this;
+  gVsync = vsync;
 
   return true;
   }

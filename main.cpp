@@ -43,6 +43,7 @@ int main (int numArgs, char* args[]) {
   string platformName = "glfw";
   string graphicsName = "opengl";
   bool showDemoWindow = false;
+  bool vsync = false;
   //{{{  parse command line args to params
   // args to params
   vector <string> params;
@@ -55,6 +56,7 @@ int main (int numArgs, char* args[]) {
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
     else if (*it == "demo") { showDemoWindow = true; params.erase (it); }
+    else if (*it == "vsync") { vsync = true; params.erase (it); }
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
     else ++it;
     };
@@ -71,7 +73,7 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI font
-  cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false);
+  cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
   ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
 
