@@ -45,9 +45,9 @@ public:
                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse);
 
     ImGui::BeginGroup();
-    ImGui::Button ("Paint", {100.f,0.f});
-    ImGui::Button ("Graphics", {100.f,0.f});
-    if (ImGui::Button ("Effect", {100.f,0.f})) {
+    toggleButton ("Paint", mOn[0], {100.f,0.f});
+    toggleButton ("Graphics", mOn[1], {100.f,0.f});
+    if (toggleButton ("Effect", mOn[2], {100.f,0.f})) {
       ImGui::OpenPopup ("hsv");
       if (ImGui::BeginPopupModal ("hsv")) {
         //{{{  hsv popup
@@ -78,9 +78,9 @@ public:
         }
         //}}}
       }
-    ImGui::Button ("Pasteup", {100.f,0.f});
+    toggleButton ("Pasteup", mOn[3], {100.f,0.f});
 
-    if (ImGui::Button ("Library", {100.f,0.f})) {
+    if (toggleButton ("Library", mOn[4], {100.f,0.f})) {
       //{{{  save dialog
       char const* filters[] = { "*.png" };
       char const* fileName = tinyfd_saveFileDialog ("save file", "", 1, filters, "image files");
@@ -175,6 +175,8 @@ public:
 
 private:
   std::vector<cColor> mSwatches;
+  bool mOn[5] = { false, false, false, false, false };
+
   //{{{
   static cUI* create (const string& className) {
     return new cMenuUI (className);

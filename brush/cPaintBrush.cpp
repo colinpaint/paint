@@ -30,7 +30,7 @@ public:
     }
   //}}}
   //{{{
-  void paint (cVec2 pos, bool first, cFrameBuffer& frameBuffer, cFrameBuffer& frameBuffer1) {
+  void paint (cVec2 pos, bool first, cFrameBuffer& frameBuffer, cFrameBuffer& frameBuffer1) final {
 
     if (first)
       mPrevPos = pos;
@@ -103,7 +103,7 @@ public:
     }
   //}}}
   //{{{
-  void paint (cVec2 pos, bool first, cFrameBuffer& frameBuffer, cFrameBuffer& frameBuffer1) {
+  void paint (cVec2 pos, bool first, cFrameBuffer& frameBuffer, cFrameBuffer& frameBuffer1) final {
 
     if (first) {
       stamp (pos, frameBuffer);

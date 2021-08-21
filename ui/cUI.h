@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 
+struct ImVec2;
 #include "../utils/cPointRectColor.h"
 class cGraphics;
 class cCanvas;
@@ -27,6 +28,8 @@ public:
   std::string getName() const { return mName; }
 
   virtual void addToDrawList (cCanvas& canvas, cGraphics& graphics) = 0;
+
+  bool toggleButton (const char* label, bool& on, const ImVec2& size_arg);
 
 protected:
   using createFuncType = cUI*(*)(const std::string& name);

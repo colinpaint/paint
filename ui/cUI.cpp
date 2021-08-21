@@ -9,6 +9,9 @@
 
 // imGui
 #include <imgui.h>
+
+// imGui - internal, exposed for custom widget
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 
 #include "../graphics/cGraphics.h"
@@ -21,7 +24,6 @@ using namespace fmt;
 //}}}
 #define DRAW_CANVAS // useful to disable canvas when bringing up backends
 #define SHOW_DEMO
-
 namespace {
   bool gShowDemoWindow;
   }
@@ -62,10 +64,10 @@ void cUI::listInstances() {
 //{{{
 void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPoint windowSize) {
 // draw canvas and its UI's with imGui, using graphics
-// - canvas background
+// - draw canvas background
 //   - dummy fullscreen window, no draw,move,scroll,focus
 //     - dummy invisibleButton captures mouse events
-// - registered UI instances
+// - draw registered UI instances
 
   // set dummy background window to full display size
   ImGui::SetNextWindowPos (ImVec2(0,0));
@@ -122,6 +124,58 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPoint windowSize) {
   #endif
 
   ImGui::Render();
+  }
+//}}}
+
+// imGui custom widgets
+//{{{
+bool cUI::toggleButton (const char* label, bool& on, const ImVec2& size_arg) {
+// based on ImGui::ButtonEx
+
+  ImGuiButtonFlags flags = ImGuiButtonFlags_None;
+  ImGuiWindow* window = ImGui::GetCurrentWindow();
+  if (window->SkipItems)
+    return false;
+
+  ImGuiContext& g = *GImGui;
+  const ImGuiStyle& style = g.Style;
+  const ImGuiID id = window->GetID(label);
+  const ImVec2 label_size = ImGui::CalcTextSize(label, NULL, true);
+
+  ImVec2 pos = window->DC.CursorPos;
+  if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset)
+    // Try to vertically align buttons that are smaller/have no padding
+    // so that text baseline matches (bit hacky, since it shouldn't be a flag)
+    pos.y += window->DC.CurrLineTextBaseOffset - style.FramePadding.y;
+  ImVec2 size = ImGui::CalcItemSize (size_arg, label_size.x + style.FramePadding.x * 2.0f,
+                                     label_size.y + style.FramePadding.y * 2.0f);
+
+  const ImRect bb (pos, pos + size);
+  ImGui::ItemSize (size, style.FramePadding.y);
+  if (!ImGui::ItemAdd (bb, id))
+    return false;
+
+  if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
+    flags |= ImGuiButtonFlags_Repeat;
+
+  bool hovered, held;
+  bool pressed = ImGui::ButtonBehavior (bb, id, &hovered, &held, flags);
+
+  // Render
+  const ImU32 col = ImGui::GetColorU32 (
+    (held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+  ImGui::RenderNavHighlight (bb, id);
+  ImGui::RenderFrame (bb.Min, bb.Max, col, true, style.FrameRounding);
+
+  if (g.LogEnabled)
+    ImGui::LogSetNextTextDecoration ("[", "]");
+
+  ImGui::RenderTextClipped (bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL,
+                            &label_size, style.ButtonTextAlign, &bb);
+
+  IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+
+  return pressed;
   }
 //}}}
 
