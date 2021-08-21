@@ -118,12 +118,6 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPoint windowSize) {
   // add registered UI instances to imGui drawList
   for (auto& ui : getInstanceRegister())
     ui.second->addToDrawList (canvas, graphics);
-
-  #ifdef SHOW_DEMO
-    ImGui::ShowDemoWindow (&gShowDemoWindow);
-  #endif
-
-  ImGui::Render();
   }
 //}}}
 
