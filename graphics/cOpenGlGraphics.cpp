@@ -1061,9 +1061,6 @@ namespace {
     bool gClipOriginBottomLeft = true;
 
     // resources
-    GLuint gVboHandle = 0;
-    GLuint gElementsHandle = 0;
-
     GLuint gFontTexture = 0;
     bool gFontLoaded = false;
     //{{{
@@ -1295,6 +1292,8 @@ namespace {
     //}}}
     cDrawListShader* gDrawListShader;
 
+    GLuint gVboHandle = 0;
+    GLuint gElementsHandle = 0;
     //{{{
     void setRenderState (ImDrawData* drawData, int width, int height, GLuint vertexArrayObject) {
 
@@ -1345,6 +1344,7 @@ namespace {
                              (GLvoid*)IM_OFFSETOF(ImDrawVert, col));
       }
     //}}}
+
     //{{{
     void renderDrawData (ImDrawData* drawData) {
 
