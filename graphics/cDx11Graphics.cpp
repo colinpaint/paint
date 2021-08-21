@@ -904,9 +904,9 @@ public:
   cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
   cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
 
-  cCanvasShader* createCanvasShader() final;
-  cLayerShader* createLayerShader() final;
   cPaintShader* createPaintShader() final;
+  cLayerShader* createLayerShader() final;
+  cCanvasShader* createCanvasShader() final;
 
   // actions
   void newFrame() final;
@@ -1026,7 +1026,6 @@ void cDx11Graphics::newFrame() {
       createFontTexture();
       backendData->mFontLoaded = true;
       }
-
   #endif
 
   ImGui::NewFrame();
@@ -1034,6 +1033,8 @@ void cDx11Graphics::newFrame() {
 //}}}
 //{{{
 void cDx11Graphics::drawUI (cPoint windowSize) {
+
+  ImGui::Render();
 
   #ifdef USE_IMPL
     // todo

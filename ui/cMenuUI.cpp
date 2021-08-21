@@ -41,12 +41,12 @@ public:
     ImGui::Begin (getName().c_str(), NULL,
                   ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration |
                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse |
-                  ImGuiWindowFlags_NoSavedSettings 
+                  ImGuiWindowFlags_NoSavedSettings
                   );
 
     // draw interlocked mainMenu and its subMenus
     const ImVec2 kButtonSize = {100.f,0.f};
-    mMenuIndex = interlockedButtons ({"Paint", "Graphics", "Effects", "Pasteup", "Library"}, mMenuIndex, {100.f,0.f});
+    mMenuIndex = interlockedButtons ({"Paint", "Graphics", "Effects", "Pasteup", "Library"}, mMenuIndex, kButtonSize);
     switch (mMenuIndex) {
       //{{{
       case 0: // paint
@@ -55,20 +55,21 @@ public:
         ImGui::SameLine();
         ImGui::BeginGroup();
 
+        const ImVec2 kSubButtonSize = {150.f,22.f};
         cBrush* brush = cBrush::getCurBrush();
         for (auto& item : cBrush::getClassRegister())
           if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(),
-                                 cBrush::isCurBrushByName (item.first), 0, {150.f, 22.f}))
+                                 cBrush::isCurBrushByName (item.first), 0, kSubButtonSize))
             cBrush::setCurBrushByName (graphics, item.first, brush->getRadius());
 
         //{{{  radius
         float radius = brush->getRadius();
-        ImGui::SetNextItemWidth (150.f);
+        ImGui::SetNextItemWidth (kSubButtonSize.x);
         if (ImGui::SliderFloat ("radius", &radius, 1.f, 100.f))
           brush->setRadius (radius);
         //}}}
         //{{{  opacity
-        ImGui::SetNextItemWidth (150.f);
+        ImGui::SetNextItemWidth (kSubButtonSize.x);
         cColor color = brush->getColor();
         ImGui::SliderFloat ("opacity", &color.a, 0.f, 1.f);
         brush->setColor (color);
@@ -85,7 +86,8 @@ public:
           int alphaPrev = disabled ? ImGuiColorEditFlags_AlphaPreview : 0;
           if (ImGui::ColorButton (format ("swatch##{}", swatchIndex).c_str(),
                                   ImVec4 (swatch.r,swatch.g,swatch.b, swatch.a),
-                                  ImGuiColorEditFlags_NoTooltip | alphaPrev, {20.f, 20.f}) && !disabled)
+                                  ImGuiColorEditFlags_NoTooltip | alphaPrev,
+                                  {kSubButtonSize.y - 2.f, kSubButtonSize.y - 2.f}) && !disabled)
             brush->setColor (swatch);
 
           // swatch popup
@@ -133,7 +135,7 @@ public:
         }
       //}}}
       //{{{
-      case 1: // graphics 
+      case 1: // graphics
         {
         ImGui::SameLine();
         ImGui::Button ("todo", kButtonSize);
@@ -143,6 +145,8 @@ public:
       //{{{
       case 2: // effects
         {
+        const ImVec2 kSubButtonSize = {200.f,22.f};
+
         ImGui::SameLine();
         ImGui::BeginGroup();
 
@@ -150,15 +154,15 @@ public:
         float sat = canvas.getCurLayer()->getSat();
         float val = canvas.getCurLayer()->getVal();
 
-        ImGui::SetNextItemWidth (200.f);
+        ImGui::SetNextItemWidth (kSubButtonSize.x);
         if (ImGui::SliderFloat ("hue", &hue, -1.0f, 1.0f))
           canvas.getCurLayer()->setHueSatVal (hue, sat, val);
 
-        ImGui::SetNextItemWidth (200.f);
+        ImGui::SetNextItemWidth (kSubButtonSize.x);
         if (ImGui::SliderFloat ("sat", &sat, -1.0f, 1.0f))
           canvas.getCurLayer()->setHueSatVal (hue, sat, val);
 
-        ImGui::SetNextItemWidth (200.f);
+        ImGui::SetNextItemWidth (kSubButtonSize.x);
         if (ImGui::SliderFloat ("val", &val, -1.0f, 1.0f))
           canvas.getCurLayer()->setHueSatVal (hue, sat, val);
 
@@ -176,7 +180,7 @@ public:
         }
       //}}}
       //{{{
-      case 4: // library 
+      case 4: // library
         {
         ImGui::SameLine();
 

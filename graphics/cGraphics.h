@@ -71,6 +71,7 @@ protected:
   cRect mDirtyPixelsRect = cRect(0,0,0,0);
   };
 //}}}
+
 //{{{
 class cShader {
 public:
@@ -94,6 +95,7 @@ public:
   virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) = 0;
   };
 //}}}
+
 //{{{
 class cPaintShader : public cQuadShader {
 public:
@@ -137,9 +139,9 @@ public:
   virtual cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) = 0;
   virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) = 0;
 
-  virtual cCanvasShader* createCanvasShader() = 0;
-  virtual cLayerShader* createLayerShader() = 0;
   virtual cPaintShader* createPaintShader() = 0;
+  virtual cLayerShader* createLayerShader() = 0;
+  virtual cCanvasShader* createCanvasShader() = 0;
 
   // actions
   virtual void windowResize (int width, int height) = 0;

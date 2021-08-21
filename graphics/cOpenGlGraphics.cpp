@@ -1438,9 +1438,9 @@ public:
   cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
   cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
 
-  cCanvasShader* createCanvasShader() final;
-  cLayerShader* createLayerShader() final;
   cPaintShader* createPaintShader() final;
+  cLayerShader* createLayerShader() final;
+  cCanvasShader* createCanvasShader() final;
 
   // actions
   void newFrame() final;
@@ -1550,6 +1550,8 @@ void cOpenGlGraphics::newFrame() {
 //}}}
 //{{{
 void cOpenGlGraphics::drawUI (cPoint windowSize) {
+
+  ImGui::Render();
 
   #ifdef USE_IMPL
     glViewport (0, 0, windowSize.x, windowSize.y);
