@@ -32,7 +32,7 @@ public:
 
 protected:
   bool toggleButton (std::string label, bool toggleOn, const ImVec2& size_arg);
-  int interlockedMenu (const std::vector<std::string>& menuVector, int menuIndex, const ImVec2& size_arg);
+  unsigned interlockedButtons (const std::vector<std::string>& buttonVector, unsigned index, const ImVec2& size_arg);
 
   using createFuncType = cUI*(*)(const std::string& name);
   static bool registerClass (const std::string& name, const createFuncType createFunc);

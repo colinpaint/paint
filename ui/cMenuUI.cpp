@@ -33,9 +33,8 @@ public:
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
 
+    // coerce window to bottom fullWidth, kMenuHeight
     float const kMenuHeight = 184.f;
-
-    // coerce next window to bottom full width, height
     ImGui::SetNextWindowPos ({0.f, ImGui::GetIO().DisplaySize.y - kMenuHeight});
     ImGui::SetNextWindowSize ({ImGui::GetIO().DisplaySize.x, kMenuHeight});
 
@@ -44,12 +43,9 @@ public:
                   ImGuiWindowFlags_NoSavedSettings |
                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse);
 
-    // main menu interlocked
+    // draw interlockedMenu and its subMenu
     const ImVec2 kButtonSize = {100.f,0.f};
-
-    mMenuIndex = interlockedMenu ({"Paint", "Graphics", "Effects", "Pasteup", "Library"}, mMenuIndex, {100.f,0.f});
-
-    // switch subMenu
+    mMenuIndex = interlockedButtons ({"Paint", "Graphics", "Effects", "Pasteup", "Library"}, mMenuIndex, {100.f,0.f});
     switch (mMenuIndex) {
       //{{{
       case 0: {
@@ -136,12 +132,13 @@ public:
       //}}}
       //{{{
       case 1: {
+        ImGui::SameLine();
+        ImGui::Button ("todo", kButtonSize);
         break;
         }
       //}}}
       //{{{
       case 2: {
-
         ImGui::SameLine();
         ImGui::BeginGroup();
 
@@ -168,12 +165,13 @@ public:
       //}}}
       //{{{
       case 3: {
+        ImGui::SameLine();
+        ImGui::Button ("todo", kButtonSize);
         break;
         }
       //}}}
       //{{{
       case 4: {
-
         ImGui::SameLine();
 
         if (ImGui::Button ("save", kButtonSize)) {
@@ -192,6 +190,8 @@ public:
       //}}}
       //{{{
       default:
+        ImGui::SameLine();
+        ImGui::Button ("default", kButtonSize);
         break;
       //}}}
       }
@@ -200,7 +200,7 @@ public:
     }
 
 private:
-  int mMenuIndex = 0;
+  unsigned mMenuIndex = 0;
 
   std::vector<cColor> mSwatches;
 

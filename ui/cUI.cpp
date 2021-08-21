@@ -181,16 +181,20 @@ bool cUI::toggleButton (string label, bool toggleOn, const ImVec2& size_arg) {
   }
 //}}}
 //{{{
-int cUI::interlockedMenu (const vector<string>& menuVector, int menuIndex, const ImVec2& size_arg) {
-// interlockedMenu helper, returns menuIndex
+unsigned cUI::interlockedButtons (const vector<string>& buttonVector, unsigned index, const ImVec2& size_arg) {
+// interlockedButtons helper
+// draw buttonVector as toggleButtons with index toggled on
+// return index of last or pressed menu button
 
   ImGui::BeginGroup();
-  for (auto it = menuVector.begin(); it != menuVector.end(); ++it)
-    if (toggleButton (*it, menuIndex == int(it - menuVector.begin()), size_arg))
-      menuIndex = int(it - menuVector.begin());
+
+  for (auto it = buttonVector.begin(); it != buttonVector.end(); ++it)
+    if (toggleButton (*it, index == static_cast<unsigned>(it - buttonVector.begin()), size_arg))
+      index = static_cast<unsigned>(it - buttonVector.begin());
+
   ImGui::EndGroup();
 
-  return menuIndex;
+  return index;
   }
 //}}}
 
