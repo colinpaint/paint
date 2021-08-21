@@ -144,7 +144,7 @@ public:
   // actions
   virtual void windowResize (int width, int height) = 0;
   virtual void newFrame() = 0;
-  virtual void draw (cPoint windowSize) = 0;
+  virtual void drawUI (cPoint windowSize) = 0;
 
 protected:
   virtual bool init (cPlatform& platform) = 0;

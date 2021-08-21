@@ -910,7 +910,7 @@ public:
 
   // actions
   void newFrame() final;
-  void draw (cPoint windowSize) final;
+  void drawUI (cPoint windowSize) final;
   void windowResize (int width, int height) final;
 
 protected:
@@ -1033,7 +1033,7 @@ void cDx11Graphics::newFrame() {
   }
 //}}}
 //{{{
-void cDx11Graphics::draw (cPoint windowSize) {
+void cDx11Graphics::drawUI (cPoint windowSize) {
 
   #ifdef USE_IMPL
     // todo

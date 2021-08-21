@@ -1444,7 +1444,7 @@ public:
 
   // actions
   void newFrame() final;
-  void draw (cPoint windowSize) final;
+  void drawUI (cPoint windowSize) final;
   void windowResize (int width, int height) final;
 
 protected:
@@ -1549,7 +1549,7 @@ void cOpenGlGraphics::newFrame() {
   }
 //}}}
 //{{{
-void cOpenGlGraphics::draw (cPoint windowSize) {
+void cOpenGlGraphics::drawUI (cPoint windowSize) {
 
   #ifdef USE_IMPL
     glViewport (0, 0, windowSize.x, windowSize.y);

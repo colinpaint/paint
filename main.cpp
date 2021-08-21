@@ -86,10 +86,13 @@ int main (int numArgs, char* args[]) {
       platform.newFrame();
       graphics.windowResize (width, height);
       graphics.newFrame();
-      cUI::draw (canvas, graphics, platform.getWindowSize());
+
+      if (showDemoWindow)
+        cUI::draw (canvas, graphics, platform.getWindowSize());
+
       ImGui::ShowDemoWindow (&showDemoWindow);
       ImGui::Render();
-      graphics.draw (platform.getWindowSize());
+      graphics.drawUI (platform.getWindowSize());
       platform.present();
       }
     );
@@ -103,7 +106,7 @@ int main (int numArgs, char* args[]) {
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
     ImGui::Render();
-    graphics.draw (platform.getWindowSize());
+    graphics.drawUI (platform.getWindowSize());
     platform.present();
     }
 
