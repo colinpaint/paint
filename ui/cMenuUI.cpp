@@ -40,15 +40,17 @@ public:
 
     ImGui::Begin (getName().c_str(), NULL,
                   ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration |
-                  ImGuiWindowFlags_NoSavedSettings |
-                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse);
+                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse |
+                  ImGuiWindowFlags_NoSavedSettings 
+                  );
 
-    // draw interlockedMenu and its subMenu
+    // draw interlocked mainMenu and its subMenus
     const ImVec2 kButtonSize = {100.f,0.f};
     mMenuIndex = interlockedButtons ({"Paint", "Graphics", "Effects", "Pasteup", "Library"}, mMenuIndex, {100.f,0.f});
     switch (mMenuIndex) {
       //{{{
-      case 0: {
+      case 0: // paint
+        {
         // brushSelector
         ImGui::SameLine();
         ImGui::BeginGroup();
@@ -131,14 +133,16 @@ public:
         }
       //}}}
       //{{{
-      case 1: {
+      case 1: // graphics 
+        {
         ImGui::SameLine();
         ImGui::Button ("todo", kButtonSize);
         break;
         }
       //}}}
       //{{{
-      case 2: {
+      case 2: // effects
+        {
         ImGui::SameLine();
         ImGui::BeginGroup();
 
@@ -164,14 +168,16 @@ public:
         }
       //}}}
       //{{{
-      case 3: {
+      case 3: // pasteup
+        {
         ImGui::SameLine();
         ImGui::Button ("todo", kButtonSize);
         break;
         }
       //}}}
       //{{{
-      case 4: {
+      case 4: // library 
+        {
         ImGui::SameLine();
 
         if (ImGui::Button ("save", kButtonSize)) {
