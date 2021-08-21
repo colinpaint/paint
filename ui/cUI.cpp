@@ -129,7 +129,7 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPoint windowSize) {
 
 // protected:
 //{{{
-bool cUI::toggleButton (const char* label, bool toggleOn, const ImVec2& size_arg) {
+bool cUI::toggleButton (string label, bool toggleOn, const ImVec2& size_arg) {
 // imGui custom widget - based on ImGui::ButtonEx
 
   ImGuiButtonFlags flags = ImGuiButtonFlags_None;
@@ -140,8 +140,8 @@ bool cUI::toggleButton (const char* label, bool toggleOn, const ImVec2& size_arg
 
   ImGuiContext& g = *GImGui;
   const ImGuiStyle& style = g.Style;
-  const ImGuiID id = window->GetID (label);
-  const ImVec2 label_size = ImGui::CalcTextSize (label, NULL, true);
+  const ImGuiID id = window->GetID (label.c_str());
+  const ImVec2 label_size = ImGui::CalcTextSize (label.c_str(), NULL, true);
 
   ImVec2 size = ImGui::CalcItemSize (size_arg,
                                      label_size.x + style.FramePadding.x * 2.0f,
@@ -172,12 +172,25 @@ bool cUI::toggleButton (const char* label, bool toggleOn, const ImVec2& size_arg
     ImGui::LogSetNextTextDecoration ("[", "]");
 
   ImGui::RenderTextClipped (bb.Min + style.FramePadding, bb.Max - style.FramePadding,
-                            label, NULL, &label_size,
+                            label.c_str(), NULL, &label_size,
                             style.ButtonTextAlign, &bb);
 
   IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
 
   return pressed;
+  }
+//}}}
+//{{{
+int cUI::interlockedMenu (const vector<string>& menuVector, int menuIndex, const ImVec2& size_arg) {
+// interlockedMenu helper, returns menuIndex
+
+  ImGui::BeginGroup();
+  for (auto it = menuVector.begin(); it != menuVector.end(); ++it)
+    if (toggleButton (*it, menuIndex == int(it - menuVector.begin()), size_arg))
+      menuIndex = int(it - menuVector.begin());
+  ImGui::EndGroup();
+
+  return menuIndex;
   }
 //}}}
 

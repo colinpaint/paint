@@ -3,6 +3,7 @@
 //{{{  includes
 #include <cstdint>
 #include <string>
+#include <vector>
 #include <map>
 
 struct ImVec2;
@@ -30,7 +31,8 @@ public:
   virtual void addToDrawList (cCanvas& canvas, cGraphics& graphics) = 0;
 
 protected:
-  bool toggleButton (const char* label, bool toggleOn, const ImVec2& size_arg);
+  bool toggleButton (std::string label, bool toggleOn, const ImVec2& size_arg);
+  int interlockedMenu (const std::vector<std::string>& menuVector, int menuIndex, const ImVec2& size_arg);
 
   using createFuncType = cUI*(*)(const std::string& name);
   static bool registerClass (const std::string& name, const createFuncType createFunc);

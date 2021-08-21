@@ -44,22 +44,15 @@ public:
                   ImGuiWindowFlags_NoSavedSettings |
                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse);
 
-    ImGui::BeginGroup();
-    if (toggleButton ("Paint", mMenuState == eMenuPaint, {100.f,0.f}))
-      mMenuState = eMenuPaint;
-    if (toggleButton ("Graphics", mMenuState == eMenuGraphics, {100.f,0.f}))
-      mMenuState = eMenuGraphics;
-    if (toggleButton ("Effects", mMenuState == eMenuEffects, {100.f,0.f}))
-      mMenuState = eMenuEffects;
-    if (toggleButton ("Pasteup", mMenuState == eMenuPasteup, {100.f,0.f}))
-      mMenuState = eMenuPasteup;
-    if (toggleButton ("Library", mMenuState == eMenuLibrary, {100.f,0.f}))
-      mMenuState = eMenuLibrary;
-    ImGui::EndGroup();
+    // main menu interlocked
+    const ImVec2 kButtonSize = {100.f,0.f};
 
-    switch (mMenuState) {
+    mMenuIndex = interlockedMenu ({"Paint", "Graphics", "Effects", "Pasteup", "Library"}, mMenuIndex, {100.f,0.f});
+
+    // switch subMenu
+    switch (mMenuIndex) {
       //{{{
-      case eMenuPaint: {
+      case 0: {
         // brushSelector
         ImGui::SameLine();
         ImGui::BeginGroup();
@@ -67,7 +60,7 @@ public:
         cBrush* brush = cBrush::getCurBrush();
         for (auto& item : cBrush::getClassRegister())
           if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(),
-                                 cBrush::isCurBrushByName (item.first), 0, {150.f, 20.f}))
+                                 cBrush::isCurBrushByName (item.first), 0, {150.f, 22.f}))
             cBrush::setCurBrushByName (graphics, item.first, brush->getRadius());
 
         //{{{  radius
@@ -121,8 +114,6 @@ public:
         // colourPicker
         ImGui::SameLine();
         ImGui::BeginGroup();
-
-        // colorPicker
         ImGui::SetNextItemWidth (kMenuHeight);
 
         ImVec4 imBrushColor = ImVec4 (brush->getColor().r,brush->getColor().g,brush->getColor().b, brush->getColor().a);
@@ -135,17 +126,21 @@ public:
         brush->setColor (cColor (imBrushColor.x, imBrushColor.y, imBrushColor.z, imBrushColor.w));
 
         ImGui::EndGroup();
+
+        // no group for last button
         ImGui::SameLine();
         ImGui::ColorButton ("color", imBrushColor, ImGuiColorEditFlags_NoTooltip, {40.f, 7 * (20.f + 4.f)});
+
         break;
         }
       //}}}
       //{{{
-      case eMenuGraphics:
+      case 1: {
         break;
+        }
       //}}}
       //{{{
-      case eMenuEffects: {
+      case 2: {
 
         ImGui::SameLine();
         ImGui::BeginGroup();
@@ -172,15 +167,16 @@ public:
         }
       //}}}
       //{{{
-      case eMenuPasteup:
+      case 3: {
         break;
+        }
       //}}}
       //{{{
-      case eMenuLibrary: {
+      case 4: {
 
         ImGui::SameLine();
 
-        if (ImGui::Button ("save", {100.f,0.f})) {
+        if (ImGui::Button ("save", kButtonSize)) {
           char const* filters[] = { "*.png" };
           char const* fileName = tinyfd_saveFileDialog ("save file", "", 1, filters, "image files");
           if (fileName) {
@@ -194,14 +190,17 @@ public:
         break;
         }
       //}}}
+      //{{{
+      default:
+        break;
+      //}}}
       }
 
     ImGui::End();
     }
 
 private:
-  enum eMenuState { eMenuNone, eMenuPaint, eMenuGraphics, eMenuEffects, eMenuPasteup, eMenuLibrary };
-  eMenuState mMenuState = eMenuPaint;
+  int mMenuIndex = 0;
 
   std::vector<cColor> mSwatches;
 
