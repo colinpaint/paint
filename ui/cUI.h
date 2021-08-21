@@ -29,9 +29,9 @@ public:
 
   virtual void addToDrawList (cCanvas& canvas, cGraphics& graphics) = 0;
 
-  bool toggleButton (const char* label, bool& on, const ImVec2& size_arg);
-
 protected:
+  bool toggleButton (const char* label, bool toggleOn, const ImVec2& size_arg);
+
   using createFuncType = cUI*(*)(const std::string& name);
   static bool registerClass (const std::string& name, const createFuncType createFunc);
 
