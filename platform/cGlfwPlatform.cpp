@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <string>
+#include <array>
 
 // glad
 #include <glad/glad.h>
@@ -26,11 +27,35 @@ namespace {
   cPlatform* gPlatform = nullptr;
   GLFWwindow* gWindow = nullptr;
 
+  GLFWmonitor* gMonitor = nullptr;
+  std::array <int, 2> gWindowPos { 0,0 };
+  std::array <int, 2> gWindowSize { 0,0 };
+
   //{{{
   void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
 
-    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS)) // exit
+    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS))
+      // exit
       glfwSetWindowShouldClose (window, true);
+
+    else if ((key == GLFW_KEY_F) && (action == GLFW_PRESS)) {
+      // toggle fullscreen
+      if (glfwGetWindowMonitor (window) == nullptr) {
+        // backup window position and window size
+        glfwGetWindowPos (window, &gWindowPos[0], &gWindowPos[1]);
+        glfwGetWindowSize (window, &gWindowSize[0], &gWindowSize[1]);
+
+        // get resolution of monitor
+        const GLFWvidmode* mode = glfwGetVideoMode (glfwGetPrimaryMonitor());
+
+        // switch to full screen
+        glfwSetWindowMonitor  (window, gMonitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+        }
+      else
+        // restore last window size and position
+        glfwSetWindowMonitor (window, nullptr, gWindowPos[0], gWindowPos[1], gWindowSize[0], gWindowSize[1], 0);
+      }
+
     else if (key >= 0 && key < 1024)
       if (action == GLFW_RELEASE) {
         // other user key actions
@@ -168,6 +193,10 @@ bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports) {
     cLog::log (LOGERROR, "cPlatform - glfwCreateWindow failed");
     return false;
     }
+
+  gMonitor = glfwGetPrimaryMonitor();
+  glfwGetWindowSize (gWindow, &gWindowSize[0], &gWindowSize[1]);
+  glfwGetWindowPos (gWindow, &gWindowPos[0], &gWindowPos[1]);
 
   glfwMakeContextCurrent (gWindow);
 
