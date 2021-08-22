@@ -10,9 +10,8 @@ set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FO
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED True)
 
-set (OPENGL_VERSION "OPENGL_40")
-
 # openGL versions
+set (OPENGL_VERSION "OPENGL_40")
 if (OPENGL_VERSION STREQUAL "OPENGL_21")
   # openGL 2.1 with fbo vbo extensions
   include_directories (${CMAKE_SOURCE_DIR}/glad2.1+fbo+vao/include
@@ -59,7 +58,7 @@ file (GLOB HEADER_FILES
   ${CMAKE_SOURCE_DIR}/ui/*.h
   )
 
-# main executable
+# executable
 add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
 # target
