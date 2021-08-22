@@ -1,30 +1,14 @@
 project (imgui)
 
-file (GLOB HEADER_FILES *.h)
-file (GLOB SRCFILES *.cpp)
+file (GLOB HEADER_FILES *.h implot/*.h)
+file (GLOB SOURCE_FILES *.cpp implot/*.cpp)
 
 if (WIN32)
-  add_library (imgui
-    ${HEADER_FILES}
-    ${SRCFILES}
-    backends/imgui_impl_glfw.h
-    backends/imgui_impl_glfw.cpp
-    backends/imgui_impl_opengl3.h
-    backends/imgui_impl_opengl3.cpp
-    backends/imgui_impl_win32.h
-    backends/imgui_impl_win32.cpp
-    backends/imgui_impl_dx11.h
-    backends/imgui_impl_dx11.cpp
-    )
-
+  file (GLOB BACKEND_HEADER_FILES backends/*.h)
+  file (GLOB BACKEND_SOURCE_FILES backends/*.cpp)
 else()
-  add_library (imgui
-    ${HEADER_FILES}
-    ${SRCFILES}
-    backends/imgui_impl_glfw.h
-    backends/imgui_impl_glfw.cpp
-    backends/imgui_impl_opengl3.h
-    backends/imgui_impl_opengl3.cpp
-    )
-
+  file (GLOB BACKEND_HEADER_FILES backends/imgui_impl_glfw.h backends/imgui_impl_opengl3.h)
+  file (GLOB BACKEND_SOURCE_FILES backends/imgui_impl_glfw.cpp backends/imgui_impl_opengl3.cpp)
 endif()
+
+add_library (imgui ${BACKEND_SOURCE_FILES} ${SOURCE_FILES} ${HEADER_FILES} ${BACKEND_HEADER_FILES} )

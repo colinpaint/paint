@@ -13,6 +13,7 @@
 
 // imGui
 #include <imgui.h>
+#include <implot/implot.h>
 #include <backends/imgui_impl_glfw.h>
 
 #include "cPlatform.h"
@@ -105,6 +106,7 @@ void cGlfwPlatform::shutdown() {
   glfwDestroyWindow (gWindow);
   glfwTerminate();
 
+  ImPlot::DestroyContext();
   ImGui::DestroyContext();
   }
 //}}}
@@ -213,6 +215,7 @@ bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports, bool vsy
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGui::StyleColorsClassic();
+  ImPlot::CreateContext();
 
   ImGuiIO& io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;

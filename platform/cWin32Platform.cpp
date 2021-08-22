@@ -12,6 +12,7 @@
 #include <tchar.h>
 
 #include <imgui.h>
+#include <implot/implot.h>
 #include <backends/imgui_impl_win32.h>
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -114,6 +115,8 @@ private:
 void cWin32Platform::shutdown() {
 
   ImGui_ImplWin32_Shutdown();
+
+  ImPlot::DestroyContext();
   ImGui::DestroyContext();
 
   gSwapChain->Release();
@@ -165,7 +168,7 @@ void cWin32Platform::present() {
     ImGui::RenderPlatformWindowsDefault();
     }
 
-  gSwapChain->Present(gVsync ? 1 : 0, 0); 
+  gSwapChain->Present(gVsync ? 1 : 0, 0);
   }
 //}}}
 
@@ -228,6 +231,7 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vs
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGui::StyleColorsDark();
+  ImPlot::CreateContext();
 
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
   //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
