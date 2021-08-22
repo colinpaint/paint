@@ -62,12 +62,14 @@ file (GLOB HEADER_FILES
 # main executable
 add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
-# link, watch out for order dependent static link in linux
+# target
 if (MSVC)
   target_compile_options (paintbox PRIVATE /W4 /WX /FA /arch:AVX /fp:fast /O2)
   target_link_libraries (paintbox canvas imgui utils glad glfw opengl32 d3d11 d3dcompiler)
 else()
-  target_compile_options (paintbox PRIVATE -Wall -Wextra -pedantic -Werror -mavx2 -Ofast -no-pie)
+  # no -mavx -Werror
+  target_compile_options (paintbox PRIVATE -Wall -Wextra -pedantic -Ofast -no-pie)
+  target_link_options (paintbox PRIVATE -no-pie)
+  # watch out for order dependent static link in linux
   target_link_libraries (paintbox canvas imgui utils glad glfw GL)
-#  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -no-pie")
 endif()
