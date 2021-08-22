@@ -18,7 +18,6 @@ if (OPENGL_VERSION STREQUAL "OPENGL_21")
                        ${CMAKE_SOURCE_DIR}/stb)
   add_subdirectory (glad2.1+fbo+vao/)
 else()
-  # openGL >= 3.0
   include_directories (${CMAKE_SOURCE_DIR}/glad4.5core/include
                        ${CMAKE_SOURCE_DIR}/glfw/include
                        ${CMAKE_SOURCE_DIR}/imgui
@@ -60,14 +59,13 @@ file (GLOB HEADER_FILES
 add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
 # target
-target_compile_features (paintbox PUBLIC cxx_std_17)
+target_compile_features (paintbox PRIVATE cxx_std_17)
 if (MSVC)
   target_compile_options (paintbox PRIVATE /W4 /WX /FA /arch:AVX /fp:fast /O2)
   target_link_libraries (paintbox canvas imgui utils glad glfw opengl32 d3d11 d3dcompiler)
 else()
-  # no -mavx -Werror
+  # watch out for order dependent static link in linux, no compile options -mavx -Werror
   target_compile_options (paintbox PRIVATE -Wall -Wextra -pedantic -Ofast -no-pie)
   target_link_options (paintbox PRIVATE -no-pie)
-  # watch out for order dependent static link in linux
   target_link_libraries (paintbox canvas imgui utils glad glfw GL)
 endif()

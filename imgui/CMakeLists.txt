@@ -12,3 +12,4 @@ else()
 endif()
 
 add_library (imgui ${BACKEND_SOURCE_FILES} ${SOURCE_FILES} ${HEADER_FILES} ${BACKEND_HEADER_FILES} )
+target_compile_features (imgui PRIVATE cxx_std_17)
