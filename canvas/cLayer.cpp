@@ -128,6 +128,7 @@ void cLayer::draw (const cPoint& size) {
 //{{{
 void cLayer::replace (uint8_t* pixels) {
 
+  (void)pixels;
   //free (mPixels);
   //mPixels = pixels;
   //update (0,0, mWidth,mHeight);

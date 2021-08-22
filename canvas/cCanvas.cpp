@@ -130,6 +130,9 @@ void cCanvas::renderCurLayer() {
 //{{{
 void cCanvas::mouse (bool active, bool clicked, bool dragging, bool released, cVec2 pos, cVec2 drag) {
 
+  (void)dragging;
+  (void)released;
+  (void)drag;
   // just paint for now, will expand to other actions, graphics,cut,paste,effects
   if (active)
     getCurLayer()->paint (cBrush::getCurBrush(), getLayerPos (pos), clicked);
@@ -198,5 +201,5 @@ cVec2 cCanvas::getLayerPos (cVec2 pos) {
   pos.y = (mSize.y/2.f) + pos.y;
 
   return pos;
-  };
+  }
 //}}}

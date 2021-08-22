@@ -43,7 +43,7 @@ public:
                   ImGuiWindowFlags_NoSavedSettings);
 
     // draw mainMenu as interlocked buttons, select mainMenuIndex
-    mMainMenuIndex = interlockedButtons ({ "Paint", "Graphics", "Effects", "Pasteup", "Library" },
+    mMainMenuIndex = interlockedButtons ({"Paint", "Graphics", "Effects", "Pasteup", "Library"},
                                          mMainMenuIndex, kMainMenuButtonSize);
     // draw mainMenu selected subMenu
     switch (mMainMenuIndex) {

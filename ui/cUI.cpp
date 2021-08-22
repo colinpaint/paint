@@ -24,9 +24,6 @@ using namespace fmt;
 //}}}
 #define DRAW_CANVAS // useful to disable canvas when bringing up backends
 #define SHOW_DEMO
-namespace {
-  bool gShowDemoWindow;
-  }
 
 // static register
 //{{{

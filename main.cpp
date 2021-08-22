@@ -15,7 +15,7 @@
 
 // imGui
 #include <imgui.h>
-#include <implot/implot.h>
+#include <implot.h>
 
 // UI font
 #include "font/itcSymbolBold.h"

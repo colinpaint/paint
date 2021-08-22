@@ -13,7 +13,7 @@
 
 // imGui
 #include <imgui.h>
-#include <implot/implot.h>
+#include <implot.h>
 #include <backends/imgui_impl_glfw.h>
 
 #include "cPlatform.h"
@@ -33,7 +33,7 @@ namespace {
 
   //{{{
   void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
-    
+
     (void)scancode;
     (void)mode;
     if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS))

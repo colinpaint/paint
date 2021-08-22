@@ -15,12 +15,14 @@ if (OPENGL_VERSION STREQUAL "OPENGL_21")
   include_directories (${CMAKE_SOURCE_DIR}/glad2.1+fbo+vao/include
                        ${CMAKE_SOURCE_DIR}/glfw/include
                        ${CMAKE_SOURCE_DIR}/imgui
+                       ${CMAKE_SOURCE_DIR}/implot
                        ${CMAKE_SOURCE_DIR}/stb)
   add_subdirectory (glad2.1+fbo+vao/)
 else()
   include_directories (${CMAKE_SOURCE_DIR}/glad4.5core/include
                        ${CMAKE_SOURCE_DIR}/glfw/include
                        ${CMAKE_SOURCE_DIR}/imgui
+                       ${CMAKE_SOURCE_DIR}/implot
                        ${CMAKE_SOURCE_DIR}/stb)
   add_subdirectory (glad4.5core/)
 endif()
@@ -35,9 +37,10 @@ set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory (glfw/)
 add_subdirectory (canvas/)
 add_subdirectory (imgui/)
+add_subdirectory (implot/)
 add_subdirectory (utils/)
 
-# main + static init registered, ??? TU problem in library ???
+# main + static init registered .cpp
 file (GLOB SRCFILES
   ${CMAKE_SOURCE_DIR}/main.cpp
   ${CMAKE_SOURCE_DIR}/platform/*.cpp
@@ -58,14 +61,13 @@ file (GLOB HEADER_FILES
 # executable
 add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
-# target
 target_compile_features (paintbox PRIVATE cxx_std_17)
 if (MSVC)
-  target_compile_options (paintbox PRIVATE /W4 /WX /FA /arch:AVX /fp:fast /O2)
-  target_link_libraries (paintbox canvas imgui utils glad glfw opengl32 d3d11 d3dcompiler)
+  target_compile_options (paintbox PRIVATE /W4 /arch:AVX /fp:fast /O2)
+  target_link_libraries (paintbox canvas implot imgui utils glad glfw opengl32 d3d11 d3dcompiler)
 else()
   # watch out for order dependent static link in linux, no compile options -mavx -Werror
-  target_compile_options (paintbox PRIVATE -Wall -Wextra -pedantic -Ofast -no-pie)
+  target_compile_options (paintbox PRIVATE -Wall -Wextra -pedantic -Ofast)
   target_link_options (paintbox PRIVATE -no-pie)
-  target_link_libraries (paintbox canvas imgui utils glad glfw GL)
+  target_link_libraries (paintbox canvas implot imgui utils glad glfw GL)
 endif()
