@@ -28,7 +28,7 @@ public:
   static cBrush* setCurBrushByName (cGraphics& graphics, const std::string& name, float radius);
 
   // base class
-  cBrush (const std::string& name, float radius) : mName(name) {}
+  cBrush (const std::string& name, float radius) : mName(name) { (void)radius; }
   virtual ~cBrush() = default;
 
   std::string getName() const { return mName; }

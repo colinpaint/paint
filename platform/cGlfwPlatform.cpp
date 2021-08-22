@@ -33,7 +33,9 @@ namespace {
 
   //{{{
   void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
-
+    
+    (void)scancode;
+    (void)mode;
     if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS))
       // exit
       glfwSetWindowShouldClose (window, true);
@@ -46,10 +48,10 @@ namespace {
         glfwGetWindowSize (window, &gWindowSize.x, &gWindowSize.y);
 
         // get resolution of monitor
-        const GLFWvidmode* mode = glfwGetVideoMode (glfwGetPrimaryMonitor());
+        const GLFWvidmode* vidMode = glfwGetVideoMode (glfwGetPrimaryMonitor());
 
         // switch to full screen
-        glfwSetWindowMonitor  (window, gMonitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+        glfwSetWindowMonitor  (window, gMonitor, 0, 0, vidMode->width, vidMode->height, vidMode->refreshRate);
         }
       else
         // restore last window size and position
@@ -64,6 +66,8 @@ namespace {
   //}}}
   //{{{
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
+
+    (void)window;
     if (gPlatform)
       gPlatform->mResizeCallback (width, height);
     }
@@ -236,6 +240,8 @@ bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports, bool vsy
 // private:
 //{{{
 cPlatform* cGlfwPlatform::create (const string& className) {
+
+  (void)className;
   return new cGlfwPlatform();
   }
 //}}}

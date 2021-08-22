@@ -90,6 +90,7 @@ public:
   //{{{
   cPaintCpuBrush (cGraphics& graphics, const string& className, float radius)
       : cBrush(className, radius) {
+    (void)graphics;
     setRadius (radius);
     }
   //}}}
@@ -104,7 +105,8 @@ public:
   //}}}
   //{{{
   void paint (cVec2 pos, bool first, cFrameBuffer& frameBuffer, cFrameBuffer& frameBuffer1) final {
-
+    
+    (void)frameBuffer1;
     if (first) {
       stamp (pos, frameBuffer);
       frameBuffer.pixelsChanged (getBoundRect(pos, frameBuffer));
@@ -185,13 +187,13 @@ private:
             // blend foreground colour into background frame
             uint16_t background = 255 - foreground;
             uint16_t r = (mR * foreground) + (*frame * background);
-            *frame++ = r / 255;
+            *frame++ = (uint8_t)(r / 255);
             uint16_t g = (mG * foreground) + (*frame * background);
-            *frame++ = g / 255;
+            *frame++ = (uint8_t)(g / 255);
             uint16_t b = (mB * foreground) + (*frame * background);
-            *frame++ = b / 255;
+            *frame++ = (uint8_t)(b / 255);
             uint16_t a = (mA * foreground) + (*frame * background);
-            *frame++ = a / 255;
+            *frame++ = (uint8_t)(a / 255);
             }
           }
         else
@@ -314,13 +316,13 @@ private:
             // blend foreground into background
             uint16_t background = 255 - foreground;
             uint16_t r = (mR * foreground) + (*frame * background);
-            *frame++ = r / 255;
+            *frame++ = (uint8_t)(r / 255);
             uint16_t g = (mG * foreground) + (*frame * background);
-            *frame++ = g / 255;
+            *frame++ = (uint8_t)(g / 255);
             uint16_t b = (mB * foreground) + (*frame * background);
-            *frame++ = b / 255;
+            *frame++ = (uint8_t)(b / 255);
             uint16_t a = (mA * foreground) + (*frame * background);
-            *frame++ = a / 255;
+            *frame++ = (uint8_t)(a / 255);
             }
           }
         else

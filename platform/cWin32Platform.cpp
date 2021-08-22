@@ -175,7 +175,7 @@ void cWin32Platform::present() {
 // protected:
 //{{{
 bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vsync) {
-
+  (void)showViewports;
   // register app class
   gWndClass = { sizeof(WNDCLASSEX),
                 CS_CLASSDC, WndProc, 0L, 0L,
@@ -265,6 +265,7 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vs
 // private:
 //{{{
 cPlatform* cWin32Platform::create (const std::string& className) {
+  (void)className;
   return new cWin32Platform();
   }
 //}}}

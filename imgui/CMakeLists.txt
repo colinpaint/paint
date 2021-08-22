@@ -3,7 +3,7 @@ project (imgui)
 file (GLOB HEADER_FILES *.h implot/*.h)
 file (GLOB SOURCE_FILES *.cpp implot/*.cpp)
 
-if (WIN32)
+if (MSVC)
   file (GLOB BACKEND_HEADER_FILES backends/*.h)
   file (GLOB BACKEND_SOURCE_FILES backends/*.cpp)
 else()

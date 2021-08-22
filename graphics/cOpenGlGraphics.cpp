@@ -978,9 +978,9 @@ namespace {
     //}}}
     //{{{
     void setHueSatVal (float hue, float sat, float val) final {
-      glUniform1f (glGetUniformLocation (mId, "uHue"), 0.f);
-      glUniform1f (glGetUniformLocation (mId, "uSat"), 0.f);
-      glUniform1f (glGetUniformLocation (mId, "uVal"), 0.f);
+      glUniform1f (glGetUniformLocation (mId, "uHue"), hue);
+      glUniform1f (glGetUniformLocation (mId, "uSat"), sat);
+      glUniform1f (glGetUniformLocation (mId, "uVal"), val);
       }
     //}}}
 
@@ -1551,6 +1551,7 @@ void cOpenGlGraphics::newFrame() {
 //{{{
 void cOpenGlGraphics::drawUI (cPoint windowSize) {
 
+  (void)windowSize;
   ImGui::Render();
 
   #ifdef USE_IMPL
@@ -1567,6 +1568,8 @@ void cOpenGlGraphics::drawUI (cPoint windowSize) {
 bool cOpenGlGraphics::init (cPlatform& platform) {
 // anonymous device pointers unused
 
+  (void)platform;
+  
   // get openGL version
   string glVersionString = (const char*)glGetString (GL_VERSION);
   #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -1645,6 +1648,8 @@ bool cOpenGlGraphics::init (cPlatform& platform) {
 // private:
 //{{{
 cGraphics* cOpenGlGraphics::create (const string& className) {
+
+  (void)className;
   return new cOpenGlGraphics();
   }
 //}}}

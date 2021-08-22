@@ -12,26 +12,19 @@ set (CMAKE_CXX_STANDARD_REQUIRED True)
 
 set (OPENGL_VERSION "OPENGL_40")
 
-# compiler,linker flags
-if (WIN32)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:fast /arch:AVX")
-else()
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -no-pie")
-endif()
-
 # openGL versions
 if (OPENGL_VERSION STREQUAL "OPENGL_21")
   # openGL 2.1 with fbo vbo extensions
   include_directories (${CMAKE_SOURCE_DIR}/glad2.1+fbo+vao/include
                        ${CMAKE_SOURCE_DIR}/glfw/include
-                       ${CMAKE_SOURCE_DIR}/imgui 
+                       ${CMAKE_SOURCE_DIR}/imgui
                        ${CMAKE_SOURCE_DIR}/stb)
   add_subdirectory (glad2.1+fbo+vao/)
 else()
   # openGL >= 3.0
   include_directories (${CMAKE_SOURCE_DIR}/glad4.5core/include
                        ${CMAKE_SOURCE_DIR}/glfw/include
-                       ${CMAKE_SOURCE_DIR}/imgui 
+                       ${CMAKE_SOURCE_DIR}/imgui
                        ${CMAKE_SOURCE_DIR}/stb)
   add_subdirectory (glad4.5core/)
 endif()
@@ -70,8 +63,11 @@ file (GLOB HEADER_FILES
 add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
 # link, watch out for order dependent static link in linux
-if (WIN32)
+if (MSVC)
+  target_compile_options (paintbox PRIVATE /W4 /WX /FA /arch:AVX /fp:fast /O2)
   target_link_libraries (paintbox canvas imgui utils glad glfw opengl32 d3d11 d3dcompiler)
 else()
+  target_compile_options (paintbox PRIVATE -Wall -Wextra -pedantic -Werror -mavx2 -Ofast -no-pie)
   target_link_libraries (paintbox canvas imgui utils glad glfw GL)
+#  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -no-pie")
 endif()

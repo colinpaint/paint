@@ -187,7 +187,7 @@ public:
           if (fileName) {
             cPoint size;
             uint8_t* pixels = canvas.getPixels (size);
-            int result = stbi_write_png (fileName, size.x, size.y, 4, pixels, size.x* 4);
+            stbi_write_png (fileName, size.x, size.y, 4, pixels, size.x* 4);
             free (pixels);
             }
           }

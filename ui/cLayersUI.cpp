@@ -27,7 +27,7 @@ public:
   virtual ~cLayersUI() = default;
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
-
+    (void)graphics;
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     ImGui::SetWindowPos (ImVec2(ImGui::GetIO().DisplaySize.x - ImGui::GetWindowWidth(), 0.f));
 

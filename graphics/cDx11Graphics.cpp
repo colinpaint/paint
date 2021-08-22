@@ -95,11 +95,14 @@ namespace {
       }
 
     cDx11FrameBuffer (cPoint size, eFormat format) : cFrameBuffer(size) {
+      (void)format;
       mImageFormat = 0;
       mInternalFormat = 0;
       }
 
     cDx11FrameBuffer (uint8_t* pixels, cPoint size, eFormat format) : cFrameBuffer(size) {
+      (void)format;
+      (void)pixels;
       mImageFormat = 0;
       mInternalFormat = 0;
       }
@@ -178,10 +181,11 @@ namespace {
       }
     //}}}
 
-    void clear (const cColor& color) {}
+    void clear (const cColor& color) { (void)color; }
     //{{{
     void blit (cFrameBuffer& src, cPoint srcPoint, const cRect& dstRect) {
 
+      (void)src;
       mDirtyPixelsRect += dstRect;
 
       if (kDebug)
@@ -204,7 +208,8 @@ namespace {
 
   //{{{
   uint32_t compileShader (const string& vertShaderString, const string& fragShaderString) {
-
+    (void)vertShaderString;
+    (void)fragShaderString;
     return 0;
     }
   //}}}
@@ -217,8 +222,14 @@ namespace {
 
     // sets
     void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
       }
     void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
+      (void)pos;
+      (void)prevPos;
+      (void)radius;
+      (void)color;
       }
 
     void use() final {
@@ -234,8 +245,13 @@ namespace {
 
     // sets
     void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
       }
     void setHueSatVal (float hue, float sat, float val) final {
+      (void)hue;
+      (void)sat;
+      (void)val;
       }
 
     void use() final {
@@ -251,6 +267,8 @@ namespace {
 
     // sets
     void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
       }
 
     void use() final {
@@ -331,6 +349,7 @@ namespace {
       virtual ~cDrawListShader() = default;
 
       void setMatrix (float* matrix) {
+        (void)matrix;
         }
 
       void use() final {
@@ -1033,7 +1052,8 @@ void cDx11Graphics::newFrame() {
 //}}}
 //{{{
 void cDx11Graphics::drawUI (cPoint windowSize) {
-
+  
+  (void)windowSize;
   ImGui::Render();
 
   #ifdef USE_IMPL
@@ -1120,6 +1140,7 @@ bool cDx11Graphics::init (cPlatform& platform) {
 //{{{
 cGraphics* cDx11Graphics::create (const std::string& className) {
 
+  (void)className;
   return new cDx11Graphics();
   }
 //}}}
