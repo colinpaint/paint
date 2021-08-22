@@ -43,16 +43,14 @@ public:
                   ImGuiWindowFlags_NoSavedSettings);
 
     // draw mainMenu as interlocked buttons, select mainMenuIndex
-    const ImVec2 kMainMenuButtonSize = { 100.f,0.f };
     mMainMenuIndex = interlockedButtons ({ "Paint", "Graphics", "Effects", "Pasteup", "Library" },
                                          mMainMenuIndex, kMainMenuButtonSize);
     // draw mainMenu selected subMenu
     switch (mMainMenuIndex) {
       //{{{
       case 0: { // paint
-        constexpr unsigned kSwatchesPerRow = 8;
         const ImVec2 kSubButtonSize = { 150.f, 18.f+4.f };
-        const ImVec2 kColorButtonSize = { 40.f, ((mColorSwatches.size()/kSwatchesPerRow)+1) * kSubButtonSize.y };
+        const ImVec2 kColorButtonSize = { 40.f, kSwatchRows * kSubButtonSize.y };
 
         // brush group
         ImGui::SameLine();
@@ -108,7 +106,7 @@ public:
             }
 
           // swatch line wrap
-          if (++swatchIndex % kSwatchesPerRow)
+          if (++swatchIndex % kSwatchPerRow)
             ImGui::SameLine();
           }
           //}}}
@@ -204,13 +202,16 @@ public:
     }
 
 private:
-  // const
-  static inline float kMenuHeight = 184.f;
-  static inline const unsigned kNumColorSwatches = 56;
+  // const - could be more dynamic
+  static inline const float kMenuHeight = 184.f;
+  static inline const ImVec2 kMainMenuButtonSize = { 100.f,0.f };
+
+  static inline const unsigned kSwatchPerRow = 8;
+  static inline const unsigned kSwatchRows = 7;
 
   // vars
   unsigned mMainMenuIndex = 0;
-  array<cColor, kNumColorSwatches> mColorSwatches;
+  array<cColor, kSwatchRows * kSwatchPerRow> mColorSwatches;
 
   // static register
   //{{{
