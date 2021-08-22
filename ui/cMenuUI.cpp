@@ -20,7 +20,6 @@
 using namespace std;
 using namespace fmt;
 //}}}
-constexpr unsigned kNumColorSwatches = 56;
 
 class cMenuUI : public cUI {
 public:
@@ -54,8 +53,8 @@ public:
       //{{{
       case 0: { // paint
         constexpr unsigned kSwatchesPerRow = 8;
-        const ImVec2 kSubButtonSize = { 150.f,22.f };
-        const ImVec2 kBrushColorButtonSize = { 40.f, ((mColorSwatches.size() / kSwatchesPerRow) + 1) * (20.f + 4.f) };
+        const ImVec2 kSubButtonSize = { 150.f, 18.f+4.f };
+        const ImVec2 kColorButtonSize = { 40.f, ((mColorSwatches.size()/kSwatchesPerRow)+1) * kSubButtonSize.y };
 
         // brush group
         ImGui::SameLine();
@@ -134,7 +133,7 @@ public:
 
         // no group for last color button
         ImGui::SameLine();
-        ImGui::ColorButton ("color", imBrushColor, ImGuiColorEditFlags_NoTooltip, kBrushColorButtonSize);
+        ImGui::ColorButton ("color", imBrushColor, ImGuiColorEditFlags_NoTooltip, kColorButtonSize);
 
         break;
         }
@@ -208,6 +207,9 @@ public:
 
 private:
   unsigned mMainMenuIndex = 0;
+
+  // colorSwatches
+  static inline const unsigned kNumColorSwatches = 56;
   array<cColor, kNumColorSwatches> mColorSwatches;
 
   // static register
