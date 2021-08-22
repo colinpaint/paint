@@ -3,12 +3,10 @@ cmake_minimum_required (VERSION 3.10)
 cmake_policy (SET CMP0072 NEW)
 
 # project name
-project (paintbox)
+project (paintbox VERSION 1.0.0)
 
 # config
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
-set (CMAKE_CXX_STANDARD 17)
-set (CMAKE_CXX_STANDARD_REQUIRED True)
 
 # openGL versions
 set (OPENGL_VERSION "OPENGL_40")
@@ -62,6 +60,7 @@ file (GLOB HEADER_FILES
 add_executable (paintbox ${SRCFILES} ${HEADER_FILES})
 
 # target
+target_compile_features (paintbox PUBLIC cxx_std_17)
 if (MSVC)
   target_compile_options (paintbox PRIVATE /W4 /WX /FA /arch:AVX /fp:fast /O2)
   target_link_libraries (paintbox canvas imgui utils glad glfw opengl32 d3d11 d3dcompiler)
