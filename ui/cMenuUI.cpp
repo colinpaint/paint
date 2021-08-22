@@ -33,8 +33,6 @@ public:
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
 
-    constexpr float kMenuHeight = 184.f;
-
     // coerce window to bottom fullWidth, kMenuHeight
     ImGui::SetNextWindowPos ({0.f, ImGui::GetIO().DisplaySize.y - kMenuHeight});
     ImGui::SetNextWindowSize ({ImGui::GetIO().DisplaySize.x, kMenuHeight});
@@ -206,10 +204,12 @@ public:
     }
 
 private:
-  unsigned mMainMenuIndex = 0;
-
-  // colorSwatches
+  // const
+  static inline float kMenuHeight = 184.f;
   static inline const unsigned kNumColorSwatches = 56;
+
+  // vars
+  unsigned mMainMenuIndex = 0;
   array<cColor, kNumColorSwatches> mColorSwatches;
 
   // static register
