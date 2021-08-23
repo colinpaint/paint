@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <array>
+#include <chrono>
 
 // imGui
 #include <imgui.h>
@@ -124,13 +125,18 @@ public:
                              ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel,
                              nullptr);
         brush->setColor ({imBrushColor.x,imBrushColor.y,imBrushColor.z, imBrushColor.w});
-
         ImGui::EndGroup();
 
         // no group for last color button
         ImGui::SameLine();
+        ImGui::BeginGroup();
         ImGui::ColorButton ("color", imBrushColor, ImGuiColorEditFlags_NoTooltip, kColorButtonSize);
+        ImGui::EndGroup();
 
+        ImGui::SameLine();
+        ImGui::BeginGroup();
+        clockButton ("clock", std::chrono::system_clock::now(), {100.f,100.f});
+        ImGui::EndGroup();
         break;
         }
       //}}}

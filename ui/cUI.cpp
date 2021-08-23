@@ -21,6 +21,7 @@
 
 using namespace std;
 using namespace fmt;
+using namespace chrono;
 //}}}
 #define DRAW_CANVAS // useful to disable canvas when bringing up backends
 #define SHOW_DEMO
@@ -120,7 +121,71 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPoint windowSize) {
 
 // protected:
 //{{{
-bool cUI::toggleButton (string label, bool toggleOn, const ImVec2& size_arg) {
+bool cUI::clockButton (const string& label, system_clock::time_point timePoint, const ImVec2& size_arg) {
+
+  ImGuiButtonFlags flags = ImGuiButtonFlags_None;
+
+  ImGuiWindow* window = ImGui::GetCurrentWindow();
+  if (window->SkipItems)
+    return false;
+
+  ImGuiContext& g = *GImGui;
+  const ImGuiStyle& style = g.Style;
+  const ImVec2 label_size = ImGui::CalcTextSize (label.c_str(), NULL, true);
+
+  ImVec2 size = ImGui::CalcItemSize (
+    size_arg, label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+
+  ImVec2 pos = window->DC.CursorPos;
+  const ImRect bb (pos, pos + size);
+  ImGui::ItemSize (size, style.FramePadding.y);
+
+  const ImGuiID id = window->GetID (label.c_str());
+  if (!ImGui::ItemAdd (bb, id))
+    return false;
+
+  if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
+    flags |= ImGuiButtonFlags_Repeat;
+
+  bool hovered;
+  bool held;
+  bool pressed = ImGui::ButtonBehavior (bb, id, &hovered, &held, flags);
+
+  float radius = bb.GetHeight() / 2.f;
+  auto col = (held || hovered) ?ImGui::GetColorU32 (ImGuiCol_ButtonHovered) : IM_COL32_WHITE;
+  window->DrawList->AddCircle (bb.GetCenter(), radius, col, 32, 3.f);
+
+  const float kPi = 3.1415926f;
+  auto datePoint = floor<date::days>(timePoint);
+  auto timeOfDay = date::make_time (duration_cast<milliseconds>(timePoint - datePoint));
+
+  float hourRadius = radius * 0.6f;
+  float hourValue = timeOfDay.hours().count() + (timeOfDay.minutes().count() / 60.f);
+  float hourAngle = (1.f - (hourValue / 6.f)) * kPi;
+  window->DrawList->AddLine (
+    bb.GetCenter(), bb.GetCenter() + ImVec2(hourRadius * sin (hourAngle), hourRadius * cos (hourAngle)),
+    col, 2.f);
+
+  float minuteRadius = radius * 0.75f;
+  float minuteValue = timeOfDay.minutes().count() + (timeOfDay.seconds().count() / 60.f);
+  float minuteAngle = (1.f - (minuteValue/30.f)) * kPi;
+  window->DrawList->AddLine (
+    bb.GetCenter(), bb.GetCenter() + ImVec2(minuteRadius * sin (minuteAngle), minuteRadius * cos (minuteAngle)),
+    col, 2.f);
+
+  float secondRadius = radius * 0.85f;
+  float secondValue = (float)timeOfDay.seconds().count();
+  float secondAngle = (1.f - (secondValue /30.f)) * kPi;
+  window->DrawList->AddLine (
+    bb.GetCenter(), bb.GetCenter() + ImVec2(secondRadius * sin (secondAngle), secondRadius * cos (secondAngle)),
+    col, 2.f);
+
+  IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+  return pressed;
+  }
+//}}}
+//{{{
+bool cUI::toggleButton (const string& label, bool toggleOn, const ImVec2& size_arg) {
 // imGui custom widget - based on ImGui::ButtonEx
 
   ImGuiButtonFlags flags = ImGuiButtonFlags_None;

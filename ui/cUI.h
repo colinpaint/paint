@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <chrono>
+#include "../utils/date.h"
 
 struct ImVec2;
 #include "../utils/cPointRectColor.h"
@@ -31,7 +33,8 @@ public:
   virtual void addToDrawList (cCanvas& canvas, cGraphics& graphics) = 0;
 
 protected:
-  bool toggleButton (std::string label, bool toggleOn, const ImVec2& size_arg);
+  bool clockButton (const std::string& label, std::chrono::system_clock::time_point timePoint, const ImVec2& size_arg);
+  bool toggleButton (const std::string& label, bool toggleOn, const ImVec2& size_arg);
   unsigned interlockedButtons (const std::vector<std::string>& buttonVector, unsigned index, const ImVec2& size_arg);
 
   using createFuncType = cUI*(*)(const std::string& name);
