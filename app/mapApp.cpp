@@ -32,12 +32,11 @@
 namespace fs = std::filesystem;
 //}}}
 //{{{  defines
-
 #define TILE_SERVER   "https://a.tile.openstreetmap.org/" // the tile map server url
-#define TILE_SIZE     256                                 // the expected size of tiles in pixels, e.g. 256x256px
-#define MAX_ZOOM      19                                  // the maximum zoom level provided by the server
-#define MAX_THREADS   2                                   // the maximum threads to use for downloading tiles (OSC stricly forbids more than 2)
-#define USER_AGENT    "ImMaps/0.1"                        // change this to represent your own app if you extend this code
+#define TILE_SIZE     256          // the expected size of tiles in pixels, e.g. 256x256px
+#define MAX_ZOOM      19           // the maximum zoom level provided by the server
+#define MAX_THREADS   2            // the maximum threads to use for downloading tiles (OSC stricly forbids more than 2)
+#define USER_AGENT    "ImMaps/0.1" // change this to represent your own app if you extend this code
 
 #define PI 3.14159265359
 //}}}
@@ -145,10 +144,10 @@ bool operator < (const TileCoord& l, const TileCoord& r) {
 
   if ( l.x < r.x )
     return true;
-  if ( l.x > r.x ) 
+  if ( l.x > r.x )
     return false;
 
-  if ( l.y < r.y ) 
+  if ( l.y < r.y )
     return true;
   if ( l.y > r.y )
     return false;
@@ -447,7 +446,7 @@ void update() {
   ImPlotAxisFlags ax_flags = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoGridLines| ImPlotAxisFlags_Foreground;
   ImPlot::PushStyleColor (ImPlotCol_XAxisGrid,ClearColor);
   ImPlot::PushStyleColor (ImPlotCol_YAxisGrid,ClearColor);
-  if (ImPlot::BeginPlot ("##Map", 0,0, ImVec2(-1,-1), 
+  if (ImPlot::BeginPlot ("##Map", 0,0, ImVec2(-1,-1),
                          ImPlotFlags_Equal | ImPlotFlags_NoMousePos,
                          ax_flags,ax_flags | ImPlotAxisFlags_Invert)) {
     auto pos  = ImPlot::GetPlotPos();
@@ -459,7 +458,7 @@ void update() {
     if (debug) {
       float ys[] = {1,1};
       ImPlot::SetNextFillStyle ({1,0,0,1},0.5f);
-      ImPlot::PlotShaded("##Bounds",ys,2);
+      ImPlot::PlotShaded ("##Bounds",ys,2);
       }
 
     for (auto& pair : region) {

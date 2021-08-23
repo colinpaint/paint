@@ -14,10 +14,11 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 
+#include "../utils/utils.h"
+#include "../utils/cLog.h"
 #include "../graphics/cGraphics.h"
 #include "../brush/cBrush.h"
 #include "../canvas/cCanvas.h"
-#include "../utils/cLog.h"
 
 using namespace std;
 using namespace fmt;
@@ -123,16 +124,14 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPoint windowSize) {
 //{{{
 bool cUI::clockButton (const string& label, system_clock::time_point timePoint, const ImVec2& size_arg) {
 
-  ImGuiButtonFlags flags = ImGuiButtonFlags_None;
-
   ImGuiWindow* window = ImGui::GetCurrentWindow();
   if (window->SkipItems)
     return false;
 
   ImGuiContext& g = *GImGui;
   const ImGuiStyle& style = g.Style;
-  const ImVec2 label_size = ImGui::CalcTextSize (label.c_str(), NULL, true);
 
+  const ImVec2 label_size = ImGui::CalcTextSize (label.c_str(), NULL, true);
   ImVec2 size = ImGui::CalcItemSize (
     size_arg, label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
 
@@ -144,6 +143,7 @@ bool cUI::clockButton (const string& label, system_clock::time_point timePoint, 
   if (!ImGui::ItemAdd (bb, id))
     return false;
 
+  ImGuiButtonFlags flags = ImGuiButtonFlags_None;
   if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
     flags |= ImGuiButtonFlags_Repeat;
 
@@ -151,36 +151,53 @@ bool cUI::clockButton (const string& label, system_clock::time_point timePoint, 
   bool held;
   bool pressed = ImGui::ButtonBehavior (bb, id, &hovered, &held, flags);
 
-  const float radius = bb.GetHeight() / 2.f;
-  auto col = (held || hovered) ?ImGui::GetColorU32 (ImGuiCol_ButtonHovered) : IM_COL32_WHITE;
+  const float radius = bb.GetWidth() / 2.f;
+  ImU32 col = (held || hovered) ?ImGui::GetColorU32 (ImGuiCol_ButtonHovered) : IM_COL32_WHITE;
   window->DrawList->AddCircle (bb.GetCenter(), radius, col, 32, 3.f);
 
   const float kPi = 3.1415926f;
   auto datePoint = floor<date::days>(timePoint);
   auto timeOfDay = date::make_time (duration_cast<milliseconds>(timePoint - datePoint));
 
+  //{{{  draw hourHand
   const float hourRadius = radius * 0.6f;
   const float hourValue = static_cast<float>(timeOfDay.hours().count()) + (timeOfDay.minutes().count() / 60.f);
   const float hourAngle = (1.f - (hourValue / 6.f)) * kPi;
-  window->DrawList->AddLine (
-    bb.GetCenter(), bb.GetCenter() + ImVec2(hourRadius * sin (hourAngle), hourRadius * cos (hourAngle)),
-    col, 2.f);
 
+  window->DrawList->AddLine (
+    bb.GetCenter(),
+    bb.GetCenter() + ImVec2(hourRadius * sin (hourAngle), hourRadius * cos (hourAngle)),
+    col, 2.f);
+  //}}}
+  //{{{  draw minuteHand
   const float minuteRadius = radius * 0.75f;
   const float minuteValue = static_cast<float>(timeOfDay.minutes().count()) + (timeOfDay.seconds().count() / 60.f);
   const float minuteAngle = (1.f - (minuteValue / 30.f)) * kPi;
-  window->DrawList->AddLine (
-    bb.GetCenter(), bb.GetCenter() + ImVec2(minuteRadius * sin (minuteAngle), minuteRadius * cos (minuteAngle)),
-    col, 2.f);
 
+  window->DrawList->AddLine (
+    bb.GetCenter(),
+    bb.GetCenter() + ImVec2(minuteRadius * sin (minuteAngle), minuteRadius * cos (minuteAngle)),
+    col, 2.f);
+  //}}}
+  //{{{  draw secondHand
   const float secondRadius = radius * 0.85f;
   const float secondValue = static_cast<float>(timeOfDay.seconds().count());
   const float secondAngle = (1.f - (secondValue / 30.f)) * kPi;
-  window->DrawList->AddLine (
-    bb.GetCenter(), bb.GetCenter() + ImVec2(secondRadius * sin (secondAngle), secondRadius * cos (secondAngle)),
-    col, 2.f);
 
-  IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+  window->DrawList->AddLine (
+    bb.GetCenter(),
+    bb.GetCenter() + ImVec2(secondRadius * sin (secondAngle), secondRadius * cos (secondAngle)),
+    col, 2.f);
+  //}}}
+
+  string timeString = date::format ("%H:%M:%S ", date::floor<chrono::seconds>(timePoint));
+  //const ImVec2 timeStringSize = ImGui::CalcTextSize (timeString.c_str(), NULL, true);
+  window->DrawList->AddText (bb.GetBL(), col, timeString.c_str(), NULL);
+
+  string dateString = date::format ("%a %d %b %y", date::floor<chrono::seconds>(timePoint));
+  window->DrawList->AddText (bb.GetBL() - ImVec2 (0.f, 18.f), col, dateString.c_str(), NULL);
+
+  IMGUI_TEST_ENGINE_ITEM_INFO(id, label.c_str(), g.LastItemData.StatusFlags);
   return pressed;
   }
 //}}}

@@ -135,7 +135,7 @@ public:
 
         ImGui::SameLine();
         ImGui::BeginGroup();
-        clockButton ("clock", std::chrono::system_clock::now(), {100.f,100.f});
+        clockButton ("clock", chrono::system_clock::now(), {110.f,150.f});
         ImGui::EndGroup();
         break;
         }
