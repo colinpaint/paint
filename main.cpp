@@ -43,10 +43,10 @@ int main (int numArgs, char* args[]) {
 
   // default params
   eLogLevel logLevel = LOGINFO;
+  bool vsync = false;
   string platformName = "glfw";
   string graphicsName = "opengl";
   bool showDemoWindow = false;
-  bool vsync = false;
   bool showPlotWindow = false;
   //{{{  parse command line args to params
   // args to params
@@ -82,6 +82,8 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
   ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
 
+  // should clear main screen here before file loads
+
   // create canvas
   cCanvas canvas (params.empty() ? "../piccies/tv.jpg" : params[0], graphics);
   if (params.size() > 1)
@@ -110,7 +112,7 @@ int main (int numArgs, char* args[]) {
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
     if (showPlotWindow)
-      //{{{  implot build option, strange long compile problem
+      //{{{  implot is a build option, strange long compile time 
       #ifdef USE_IMPLOT
         ImPlot::ShowDemoWindow();
       #endif

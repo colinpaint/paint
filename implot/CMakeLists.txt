@@ -12,3 +12,5 @@ if (MSVC)
 else()
   target_compile_options (implot PRIVATE -Wall -Wextra -pedantic -Ofast)
 endif()
+
+target_include_directories (target_compile_options PUBLIC . ../imgui)

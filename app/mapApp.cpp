@@ -347,8 +347,8 @@ private:
           for (;;) {
             TileCoord coord; {
               std::unique_lock<std::mutex> lock(m_queue_mutex);
-              m_condition.wait(lock, [this] { 
-                return m_stop || !m_queue.empty(); 
+              m_condition.wait(lock, [this] {
+                return m_stop || !m_queue.empty();
                 });
 
               if (m_stop && m_queue.empty()) {
