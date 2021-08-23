@@ -37,7 +37,7 @@ add_subdirectory (utils)
 # executable
 # - main + static init registered .cpp
 file (GLOB SOURCE_FILES platform/*.cpp graphics/*.cpp brush/*.cpp ui/*.cpp main.cpp)
-file (GLOB HEADER_FILES platform/*.h graphics/*.h brush/*.h ui/*.h utils/*.h canvas/*.h )
+file (GLOB HEADER_FILES platform/*.h   graphics/*.h   brush/*.h   ui/*.h   utils/*.h canvas/*.h )
 add_executable (paintbox ${SOURCE_FILES} ${HEADER_FILES})
 
 # target common
