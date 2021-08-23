@@ -160,22 +160,22 @@ bool cUI::clockButton (const string& label, system_clock::time_point timePoint, 
   auto timeOfDay = date::make_time (duration_cast<milliseconds>(timePoint - datePoint));
 
   float hourRadius = radius * 0.6f;
-  float hourValue = timeOfDay.hours().count() + (timeOfDay.minutes().count() / 60.f);
+  float hourValue = static_cast<float>(timeOfDay.hours().count()) + (timeOfDay.minutes().count() / 60.f);
   float hourAngle = (1.f - (hourValue / 6.f)) * kPi;
   window->DrawList->AddLine (
     bb.GetCenter(), bb.GetCenter() + ImVec2(hourRadius * sin (hourAngle), hourRadius * cos (hourAngle)),
     col, 2.f);
 
   float minuteRadius = radius * 0.75f;
-  float minuteValue = timeOfDay.minutes().count() + (timeOfDay.seconds().count() / 60.f);
-  float minuteAngle = (1.f - (minuteValue/30.f)) * kPi;
+  float minuteValue = static_cast<float>(timeOfDay.minutes().count()) + (timeOfDay.seconds().count() / 60.f);
+  float minuteAngle = (1.f - (minuteValue / 30.f)) * kPi;
   window->DrawList->AddLine (
     bb.GetCenter(), bb.GetCenter() + ImVec2(minuteRadius * sin (minuteAngle), minuteRadius * cos (minuteAngle)),
     col, 2.f);
 
   float secondRadius = radius * 0.85f;
-  float secondValue = (float)timeOfDay.seconds().count();
-  float secondAngle = (1.f - (secondValue /30.f)) * kPi;
+  float secondValue = static_cast<float>(timeOfDay.seconds().count());
+  float secondAngle = (1.f - (secondValue / 30.f)) * kPi;
   window->DrawList->AddLine (
     bb.GetCenter(), bb.GetCenter() + ImVec2(secondRadius * sin (secondAngle), secondRadius * cos (secondAngle)),
     col, 2.f);
