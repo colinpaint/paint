@@ -20,3 +20,5 @@ if (MSVC)
 else()
   target_compile_options (imgui PRIVATE -Wall -Wextra -pedantic -Ofast)
 endif()
+
+target_include_directories (imgui PUBLIC . ../glfw/include)
