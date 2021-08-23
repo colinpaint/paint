@@ -46,53 +46,46 @@ namespace fs = std::filesystem;
 #include "stb/stb_image.h"
 //{{{
 struct Image {
- //{{{
- Image() : Width(0),
-           Height(0),
-           Texture(0)
- {
- }
- //}}}
- Image( const Image& ) = delete;
- Image& operator=( const Image& ) = delete;
-  //{{{
-  ~Image() {
-    if (Texture != 0)
-      glDeleteTextures(1, &Texture);
-  }
-  //}}}
-
-  //{{{
-  bool LoadFromFile(const char *filepath) {
-
-    if (Texture != 0)
-      glDeleteTextures(1, &Texture);
-
-    Texture = 0;
-    unsigned char *image_data = stbi_load(filepath, &Width, &Height, NULL, 4);
-    if (image_data == nullptr)
-      return false;
-
-    glGenTextures(1, &Texture);
-    glBindTexture(GL_TEXTURE_2D, Texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
-      glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    #endif
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-
-    stbi_image_free(image_data);
-    return true;
-    }
-  //}}}
-
   int Width;
   int Height;
   GLuint Texture;
+
+
+  Image() : Width(0), Height(0), Texture(0) {}
+  Image (const Image&) = delete;
+  Image& operator = (const Image&) = delete;
+
+  ~Image() {
+    if (Texture != 0)
+      glDeleteTextures (1, &Texture);
+    }
+
+  bool LoadFromFile(const char *filepath) {
+    if (Texture != 0)
+      glDeleteTextures (1, &Texture);
+
+    Texture = 0;
+    unsigned char *image_data = stbi_load (filepath, &Width, &Height, NULL, 4);
+    if (image_data == nullptr)
+      return false;
+
+    glGenTextures (1, &Texture);
+    glBindTexture (GL_TEXTURE_2D, Texture);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
+      glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+    #endif
+
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+
+    stbi_image_free (image_data);
+
+    return true;
+    }
   };
 //}}}
 
@@ -142,15 +135,26 @@ struct TileCoord {
   };
 //}}}
 //{{{
-bool operator<(const TileCoord& l, const TileCoord& r) {
-    if ( l.z < r.z )  return true;
-    if ( l.z > r.z )  return false;
-    if ( l.x < r.x )  return true;
-    if ( l.x > r.x )  return false;
-    if ( l.y < r.y )  return true;
-    if ( l.y > r.y )  return false;
-                      return false;
-}
+bool operator < (const TileCoord& l, const TileCoord& r) {
+
+  if ( l.z < r.z )
+    return true;
+
+  if ( l.z > r.z )
+    return false;
+
+  if ( l.x < r.x )
+    return true;
+  if ( l.x > r.x ) 
+    return false;
+
+  if ( l.y < r.y ) 
+    return true;
+  if ( l.y > r.y )
+    return false;
+
+  return false;
+  }
 //}}}
 
 typedef Image TileImage;
@@ -164,11 +168,11 @@ enum TileState : int {
 //}}}
 //{{{
 struct Tile {
-  Tile() : state(TileState::Unavailable) {  }
-  Tile(TileState s) : state(s) { }
-
   TileState state;
   TileImage image;
+
+  Tile() : state(TileState::Unavailable) {}
+  Tile (TileState s) : state(s) {}
   };
 //}}}
 //{{{
@@ -176,7 +180,7 @@ size_t curl_write_cb (void *ptr, size_t size, size_t nmemb, void *userdata) {
 
   FILE *stream = (FILE*)userdata;
   if (!stream) {
-    printf("No stream\n");
+    printf ("No stream\n");
     return 0;
     }
 
@@ -289,7 +293,7 @@ private:
   void download_tile(TileCoord coord) {
 
     auto dir = coord.dir();
-    fs::create_directories(dir);
+    fs::create_directories (dir);
     if (fs::exists(dir)) {
       m_tiles[coord] = std::make_shared<Tile>(Downloading); {
         std::unique_lock<std::mutex> lock(m_queue_mutex);
@@ -325,7 +329,7 @@ private:
     m_fails++;
     printf("TileManager[00]: Failed to load \"%s\"\n", path.c_str());
 
-    if (!fs::remove(path))
+    if (!fs::remove (path))
       printf("TileManager[00]: Failed to remove \"%s\"\n", path.c_str());
     printf("TileManager[00]: Removed \"%s\"\n",path.c_str());
 
@@ -365,24 +369,24 @@ private:
             auto dir = coord.dir();
             auto path = coord.path();
             auto url = coord.url();
-            FILE *fp = fopen(coord.path().c_str(), "wb");
+            FILE* fp = fopen (coord.path().c_str(), "wb");
             if (fp) {
               curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
               curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-              CURLcode cc = curl_easy_perform(curl);
+              CURLcode cc = curl_easy_perform (curl);
               fclose(fp);
               if (cc != CURLE_OK) {
-                printf("TileManager[%02d]: Failed to download: \"%s\"\n", thrd, url.c_str());
+                printf ("TileManager[%02d]: Failed to download: \"%s\"\n", thrd, url.c_str());
                 long rc = 0;
-                curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &rc);
+                curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &rc);
                 if (!((rc == 200 || rc == 201) && rc != CURLE_ABORTED_BY_CALLBACK))
-                  printf("TileManager[%02d]: Response code: %d\n",thrd,rc);
-                fs::remove(coord.path());
+                  printf ("TileManager[%02d]: Response code: %d\n",thrd,rc);
+                fs::remove (coord.path());
                 success = false;
                 }
               }
             else {
-              printf("TileManager[%02d]: Failed to open or create file \"%s\"\n",thrd, path.c_str());
+              printf ("TileManager[%02d]: Failed to open or create file \"%s\"\n",thrd, path.c_str());
               success = false;
               }
             if (success) {
@@ -393,7 +397,7 @@ private:
             else {
               m_fails++;
               std::lock_guard<std::mutex> lock(m_tiles_mutex);
-              m_tiles.erase(coord);
+              m_tiles.erase (coord);
               }
             m_working--;
             }
@@ -418,76 +422,70 @@ private:
   };
 //}}}
 
-struct ImMaps : public App {
-  using App::App;
-  //{{{
-  void update() override {
+TileManager mngr;
+//{{{
+void update() {
 
-    static int renders = 0;
-    static bool debug = false;
-    if (ImGui::IsKeyPressed (ImGui::GetKeyIndex(ImGuiKey_A)))
-        debug = !debug;
+  static int renders = 0;
+  static bool debug = false;
+  if (ImGui::IsKeyPressed (ImGui::GetKeyIndex(ImGuiKey_A)))
+      debug = !debug;
 
-    ImGui::SetNextWindowPos ({0,0});
-    ImGui::SetNextWindowSize (get_window_size());
-    ImGui::Begin ("Map",0,ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoTitleBar);
-    if (debug) {
-      int wk = mngr.threads_working();
-      int dl = mngr.tiles_downloaded();
-      int ld = mngr.tiles_loaded();
-      int ca = mngr.tiles_cached();
-      int fa = mngr.tiles_failed();
-      ImGui::Text ("FPS: %.2f    Working: %d    Downloads: %d    Loads: %d    Caches: %d    Fails: %d    Renders: %d", ImGui::GetIO().Framerate, wk, dl, ld, ca, fa, renders);
-      }
-
-    ImPlot::SetNextPlotLimits(0,1,0,1);
-    ImPlotAxisFlags ax_flags = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoGridLines| ImPlotAxisFlags_Foreground;
-    ImPlot::PushStyleColor (ImPlotCol_XAxisGrid,ClearColor);
-    ImPlot::PushStyleColor (ImPlotCol_YAxisGrid,ClearColor);
-    if (ImPlot::BeginPlot ("##Map",0,0,ImVec2(-1,-1),ImPlotFlags_Equal|ImPlotFlags_NoMousePos,ax_flags,ax_flags|ImPlotAxisFlags_Invert)) {
-      auto pos  = ImPlot::GetPlotPos();
-      auto size = ImPlot::GetPlotSize();
-      auto limits = ImPlot::GetPlotLimits();
-      auto& region = mngr.get_region (limits,size);
-      renders = 0;
-
-      if (debug) {
-        float ys[] = {1,1};
-        ImPlot::SetNextFillStyle ({1,0,0,1},0.5f);
-        ImPlot::PlotShaded("##Bounds",ys,2);
-        }
-
-      for (auto& pair : region) {
-        TileCoord coord = pair.first;
-        std::shared_ptr<Tile> tile = pair.second;
-        auto [bmin,bmax] = coord.bounds();
-        if (tile != nullptr) {
-          auto col = debug ? ((coord.x % 2 == 0 && coord.y % 2 != 0) || (coord.x % 2 != 0 && coord.y % 2 == 0))? ImVec4(1,0,1,1) : ImVec4(1,1,0,1) : ImVec4(1,1,1,1);
-          ImPlot::PlotImage("##Tiles", (void*)(intptr_t)tile->image.Texture,bmin,bmax,{0,0},{1,1},col);
-          }
-        if (debug)
-          ImPlot::PlotText (coord.label().c_str(), (bmin.x+bmax.x)/2, (bmin.y+bmax.y)/2);
-        renders++;
-        }
-
-      ImPlot::PushPlotClipRect();
-      static const char* label = ICON_FA_COPYRIGHT " OpenStreetMap Contributors";
-      auto label_size = ImGui::CalcTextSize(label);
-      auto label_off = ImPlot::GetStyle().MousePosPadding;
-      ImPlot::GetPlotDrawList()->AddText ({pos.x + label_off.x, pos.y+size.y-label_size.y-label_off.y},
-                                          IM_COL32_BLACK,label);
-      ImPlot::PopPlotClipRect();
-      ImPlot::EndPlot();
-      }
-
-    ImPlot::PopStyleColor (2);
-    ImGui::End();
+  ImGui::SetNextWindowPos ({0,0});
+  ImGui::SetNextWindowSize (get_window_size());
+  ImGui::Begin ("Map",0,ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoTitleBar);
+  if (debug) {
+    int wk = mngr.threads_working();
+    int dl = mngr.tiles_downloaded();
+    int ld = mngr.tiles_loaded();
+    int ca = mngr.tiles_cached();
+    int fa = mngr.tiles_failed();
+    ImGui::Text ("FPS: %.2f    Working: %d    Downloads: %d    Loads: %d    Caches: %d    Fails: %d    Renders: %d", ImGui::GetIO().Framerate, wk, dl, ld, ca, fa, renders);
     }
-  //}}}
-  TileManager mngr;
-  };
 
-int main (int argc, char **argv) {
-  ImMaps app (960,540,"ImMaps");
-  app.run();
+  ImPlot::SetNextPlotLimits(0,1,0,1);
+  ImPlotAxisFlags ax_flags = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoGridLines| ImPlotAxisFlags_Foreground;
+  ImPlot::PushStyleColor (ImPlotCol_XAxisGrid,ClearColor);
+  ImPlot::PushStyleColor (ImPlotCol_YAxisGrid,ClearColor);
+  if (ImPlot::BeginPlot ("##Map", 0,0, ImVec2(-1,-1), 
+                         ImPlotFlags_Equal | ImPlotFlags_NoMousePos,
+                         ax_flags,ax_flags | ImPlotAxisFlags_Invert)) {
+    auto pos  = ImPlot::GetPlotPos();
+    auto size = ImPlot::GetPlotSize();
+    auto limits = ImPlot::GetPlotLimits();
+    auto& region = mngr.get_region (limits,size);
+    renders = 0;
+
+    if (debug) {
+      float ys[] = {1,1};
+      ImPlot::SetNextFillStyle ({1,0,0,1},0.5f);
+      ImPlot::PlotShaded("##Bounds",ys,2);
+      }
+
+    for (auto& pair : region) {
+      TileCoord coord = pair.first;
+      std::shared_ptr<Tile> tile = pair.second;
+      auto [bmin,bmax] = coord.bounds();
+      if (tile != nullptr) {
+        auto col = debug ? ((coord.x % 2 == 0 && coord.y % 2 != 0) || (coord.x % 2 != 0 && coord.y % 2 == 0))? ImVec4(1,0,1,1) : ImVec4(1,1,0,1) : ImVec4(1,1,1,1);
+        ImPlot::PlotImage ("##Tiles", (void*)(intptr_t)tile->image.Texture,bmin,bmax,{0,0},{1,1},col);
+        }
+      if (debug)
+        ImPlot::PlotText (coord.label().c_str(), (bmin.x+bmax.x)/2, (bmin.y+bmax.y)/2);
+      renders++;
+      }
+
+    ImPlot::PushPlotClipRect();
+    static const char* label = ICON_FA_COPYRIGHT " OpenStreetMap Contributors";
+    auto label_size = ImGui::CalcTextSize (label);
+    auto label_off = ImPlot::GetStyle().MousePosPadding;
+    ImPlot::GetPlotDrawList()->AddText ({pos.x + label_off.x, pos.y+size.y-label_size.y-label_off.y},
+                                        IM_COL32_BLACK,label);
+    ImPlot::PopPlotClipRect();
+    ImPlot::EndPlot();
+    }
+
+  ImPlot::PopStyleColor (2);
+  ImGui::End();
   }
+//}}}

@@ -30,19 +30,18 @@ set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory (glfw)
-add_subdirectory (canvas)
 add_subdirectory (imgui)
 add_subdirectory (utils)
+add_subdirectory (canvas)
 
 # executable
-# - main + static init registered .cpp
-file (GLOB SOURCE_FILES platform/*.cpp graphics/*.cpp brush/*.cpp ui/*.cpp main.cpp)
-file (GLOB HEADER_FILES platform/*.h   graphics/*.h   brush/*.h   ui/*.h   utils/*.h canvas/*.h )
-add_executable (paintbox ${SOURCE_FILES} ${HEADER_FILES})
+# - main + static registered .cpp
+file (GLOB SOURCE_FILES main.cpp platform/*.cpp graphics/*.cpp brush/*.cpp ui/*.cpp)
+add_executable (paintbox ${SOURCE_FILES})
 
-# target common
+# target 
 target_compile_features (paintbox PRIVATE cxx_std_17)
-target_include_directories (paintbox PUBLIC glfw/include imgui implot stb)
+target_include_directories (paintbox PUBLIC glfw/include stb)
 
 if (OPENGL_VERSION STREQUAL "OPENGL_21")
   target_include_directories (paintbox PUBLIC glad2.1+fbo+vao/include)
