@@ -15,7 +15,9 @@
 
 // imGui
 #include <imgui.h>
-#include <implot.h>
+#ifdef USE_IMPLOT
+  #include <implot.h>
+#endif
 
 // UI font
 #include "font/itcSymbolBold.h"
@@ -44,8 +46,12 @@ int main (int numArgs, char* args[]) {
   string platformName = "glfw";
   string graphicsName = "opengl";
   bool showDemoWindow = false;
-  bool showPlotWindow = false;
   bool vsync = false;
+  //{{{  implot
+  #ifdef USE_IMPLOT
+    bool showPlotWindow = false;
+  #endif
+  //}}}
   //{{{  parse command line args to params
   // args to params
   vector <string> params;
@@ -58,9 +64,14 @@ int main (int numArgs, char* args[]) {
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
     else if (*it == "demo") { showDemoWindow = true; params.erase (it); }
-    else if (*it == "plot") { showPlotWindow = true; params.erase (it); }
     else if (*it == "vsync") { vsync = true; params.erase (it); }
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
+
+    // implot
+    #ifdef USE_IMPLOT
+      else if (*it == "plot") { showPlotWindow = true; params.erase (it); }
+    #endif
+
     else ++it;
     };
   //}}}
@@ -107,8 +118,12 @@ int main (int numArgs, char* args[]) {
     cUI::draw (canvas, graphics, platform.getWindowSize());
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
-    if (showPlotWindow)
-      ImPlot::ShowDemoWindow();
+    //{{{  implot
+    #ifdef USE_IMPLOT
+      if (showPlotWindow)
+        ImPlot::ShowDemoWindow();
+    #endif
+    //}}}
     graphics.drawUI (platform.getWindowSize());
     platform.present();
     }

@@ -12,8 +12,10 @@
 #include <tchar.h>
 
 #include <imgui.h>
-#include <implot/implot.h>
 #include <backends/imgui_impl_win32.h>
+#ifdef USE_IMPLOT
+  #include <implot.h>
+#endif
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #ifndef WM_DPICHANGED
@@ -116,7 +118,9 @@ void cWin32Platform::shutdown() {
 
   ImGui_ImplWin32_Shutdown();
 
-  ImPlot::DestroyContext();
+  #ifdef USE_IMPLOT
+    ImPlot::DestroyContext();
+  #endif
   ImGui::DestroyContext();
 
   gSwapChain->Release();
@@ -175,7 +179,9 @@ void cWin32Platform::present() {
 // protected:
 //{{{
 bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vsync) {
+
   (void)showViewports;
+
   // register app class
   gWndClass = { sizeof(WNDCLASSEX),
                 CS_CLASSDC, WndProc, 0L, 0L,
@@ -231,7 +237,9 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vs
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGui::StyleColorsDark();
-  ImPlot::CreateContext();
+  #ifdef USE_IMPLOT
+    ImPlot::CeateContext();
+  #endif
 
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
   //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking

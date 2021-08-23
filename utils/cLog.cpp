@@ -341,6 +341,9 @@ namespace { // anonymous
   //{{{
   void handleSignal (int signal, void* info, void* secret) {
 
+    (void)info;
+    (void)secret;
+
     // report signal type
     switch (signal) {
       case SIGSEGV:
