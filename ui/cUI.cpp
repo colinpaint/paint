@@ -151,7 +151,7 @@ bool cUI::clockButton (const string& label, system_clock::time_point timePoint, 
   bool held;
   bool pressed = ImGui::ButtonBehavior (bb, id, &hovered, &held, flags);
 
-  float radius = bb.GetHeight() / 2.f;
+  const float radius = bb.GetHeight() / 2.f;
   auto col = (held || hovered) ?ImGui::GetColorU32 (ImGuiCol_ButtonHovered) : IM_COL32_WHITE;
   window->DrawList->AddCircle (bb.GetCenter(), radius, col, 32, 3.f);
 
@@ -159,23 +159,23 @@ bool cUI::clockButton (const string& label, system_clock::time_point timePoint, 
   auto datePoint = floor<date::days>(timePoint);
   auto timeOfDay = date::make_time (duration_cast<milliseconds>(timePoint - datePoint));
 
-  float hourRadius = radius * 0.6f;
-  float hourValue = static_cast<float>(timeOfDay.hours().count()) + (timeOfDay.minutes().count() / 60.f);
-  float hourAngle = (1.f - (hourValue / 6.f)) * kPi;
+  const float hourRadius = radius * 0.6f;
+  const float hourValue = static_cast<float>(timeOfDay.hours().count()) + (timeOfDay.minutes().count() / 60.f);
+  const float hourAngle = (1.f - (hourValue / 6.f)) * kPi;
   window->DrawList->AddLine (
     bb.GetCenter(), bb.GetCenter() + ImVec2(hourRadius * sin (hourAngle), hourRadius * cos (hourAngle)),
     col, 2.f);
 
-  float minuteRadius = radius * 0.75f;
-  float minuteValue = static_cast<float>(timeOfDay.minutes().count()) + (timeOfDay.seconds().count() / 60.f);
-  float minuteAngle = (1.f - (minuteValue / 30.f)) * kPi;
+  const float minuteRadius = radius * 0.75f;
+  const float minuteValue = static_cast<float>(timeOfDay.minutes().count()) + (timeOfDay.seconds().count() / 60.f);
+  const float minuteAngle = (1.f - (minuteValue / 30.f)) * kPi;
   window->DrawList->AddLine (
     bb.GetCenter(), bb.GetCenter() + ImVec2(minuteRadius * sin (minuteAngle), minuteRadius * cos (minuteAngle)),
     col, 2.f);
 
-  float secondRadius = radius * 0.85f;
-  float secondValue = static_cast<float>(timeOfDay.seconds().count());
-  float secondAngle = (1.f - (secondValue / 30.f)) * kPi;
+  const float secondRadius = radius * 0.85f;
+  const float secondValue = static_cast<float>(timeOfDay.seconds().count());
+  const float secondAngle = (1.f - (secondValue / 30.f)) * kPi;
   window->DrawList->AddLine (
     bb.GetCenter(), bb.GetCenter() + ImVec2(secondRadius * sin (secondAngle), secondRadius * cos (secondAngle)),
     col, 2.f);
