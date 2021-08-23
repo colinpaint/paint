@@ -7,14 +7,16 @@ project (paintbox VERSION 1.0.0)
 
 # config
 set (USE_IMPLOT "NO_IMPLOT")
-set (OPENGL_VERSION "OPENGL_40")
+set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 
 # subdirectories
+find_package (OpenGL REQUIRED)
+
 if (OPENGL_VERSION STREQUAL "OPENGL_21")
   include_directories (glad2.1+fbo+vao/include)
   add_subdirectory (glad2.1+fbo+vao)
-else()
+elseif (OPENGL_VERSION STREQUAL "OPENGL_45")
   include_directories (glad4.5core/include)
   add_subdirectory (glad4.5core)
 endif()
@@ -23,7 +25,6 @@ if (USE_IMPLOT STREQUAL "USE_IMPLOT")
   add_subdirectory (implot)
 endif()
 
-find_package (OpenGL REQUIRED)
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -39,7 +40,7 @@ add_subdirectory (canvas)
 file (GLOB SOURCE_FILES main.cpp platform/*.cpp graphics/*.cpp brush/*.cpp ui/*.cpp)
 add_executable (paintbox ${SOURCE_FILES})
 
-# target 
+# target
 target_compile_features (paintbox PRIVATE cxx_std_17)
 target_include_directories (paintbox PUBLIC glfw/include stb)
 
