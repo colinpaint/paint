@@ -47,11 +47,7 @@ int main (int numArgs, char* args[]) {
   string graphicsName = "opengl";
   bool showDemoWindow = false;
   bool vsync = false;
-  //{{{  implot
-  #ifdef USE_IMPLOT
-    bool showPlotWindow = false;
-  #endif
-  //}}}
+  bool showPlotWindow = false;
   //{{{  parse command line args to params
   // args to params
   vector <string> params;
@@ -66,12 +62,7 @@ int main (int numArgs, char* args[]) {
     else if (*it == "demo") { showDemoWindow = true; params.erase (it); }
     else if (*it == "vsync") { vsync = true; params.erase (it); }
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
-
-    // implot
-    #ifdef USE_IMPLOT
-      else if (*it == "plot") { showPlotWindow = true; params.erase (it); }
-    #endif
-
+    else if (*it == "plot") { showPlotWindow = true; params.erase (it); }
     else ++it;
     };
   //}}}
