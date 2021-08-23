@@ -109,12 +109,12 @@ int main (int numArgs, char* args[]) {
     cUI::draw (canvas, graphics, platform.getWindowSize());
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
-    //{{{  implot
-    #ifdef USE_IMPLOT
-      if (showPlotWindow)
+    if (showPlotWindow)
+      //{{{  implot build option, strange long compile problem
+      #ifdef USE_IMPLOT
         ImPlot::ShowDemoWindow();
-    #endif
-    //}}}
+      #endif
+      //}}}
     graphics.drawUI (platform.getWindowSize());
     platform.present();
     }

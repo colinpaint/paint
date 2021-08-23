@@ -18,14 +18,14 @@ if (OPENGL_VERSION STREQUAL "OPENGL_21")
                        ${CMAKE_SOURCE_DIR}/imgui
                        ${CMAKE_SOURCE_DIR}/implot
                        ${CMAKE_SOURCE_DIR}/stb)
-  add_subdirectory (glad2.1+fbo+vao/)
+  add_subdirectory (glad2.1+fbo+vao)
 else()
   include_directories (${CMAKE_SOURCE_DIR}/glad4.5core/include
                        ${CMAKE_SOURCE_DIR}/glfw/include
                        ${CMAKE_SOURCE_DIR}/imgui
                        ${CMAKE_SOURCE_DIR}/implot
                        ${CMAKE_SOURCE_DIR}/stb)
-  add_subdirectory (glad4.5core/)
+  add_subdirectory (glad4.5core)
 endif()
 
 # subdirectories
@@ -35,13 +35,13 @@ set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
-add_subdirectory (glfw/)
-add_subdirectory (canvas/)
-add_subdirectory (imgui/)
-add_subdirectory (utils/)
+add_subdirectory (glfw)
+add_subdirectory (canvas)
+add_subdirectory (imgui)
+add_subdirectory (utils)
 
 if (USE_IMPLOT STREQUAL "USE_IMPLOT")
-  add_subdirectory (implot/)
+  add_subdirectory (implot)
 endif()
 
 # main + static init registered .cpp
