@@ -43,11 +43,11 @@ int main (int numArgs, char* args[]) {
 
   // default params
   eLogLevel logLevel = LOGINFO;
-  bool vsync = false;
   string platformName = "glfw";
   string graphicsName = "opengl";
   bool showDemoWindow = false;
   bool showPlotWindow = false;
+  bool vsync = false;
   //{{{  parse command line args to params
   // args to params
   vector <string> params;
@@ -59,10 +59,10 @@ int main (int numArgs, char* args[]) {
     if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
-    else if (*it == "demo") { showDemoWindow = true; params.erase (it); }
-    else if (*it == "vsync") { vsync = true; params.erase (it); }
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
+    else if (*it == "demo") { showDemoWindow = true; params.erase (it); }
     else if (*it == "plot") { showPlotWindow = true; params.erase (it); }
+    else if (*it == "vsync") { vsync = true; params.erase (it); }
     else ++it;
     };
   //}}}

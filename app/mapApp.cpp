@@ -49,7 +49,6 @@ struct Image {
   int Height;
   GLuint Texture;
 
-
   Image() : Width(0), Height(0), Texture(0) {}
   Image (const Image&) = delete;
   Image& operator = (const Image&) = delete;
@@ -426,9 +425,10 @@ TileManager mngr;
 void update() {
 
   static int renders = 0;
+
   static bool debug = false;
-  if (ImGui::IsKeyPressed (ImGui::GetKeyIndex(ImGuiKey_A)))
-      debug = !debug;
+  if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_A)))
+    debug = !debug;
 
   ImGui::SetNextWindowPos ({0,0});
   ImGui::SetNextWindowSize (get_window_size());

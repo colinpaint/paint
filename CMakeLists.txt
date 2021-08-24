@@ -7,7 +7,7 @@ project (paintbox VERSION 1.0.0)
 
 # config
 #set (USE_IMPLOT)
-set (OPENGL_VERSION "OPENGL_45")
+set (OPENGL_VERSION "OPENGL_4.5")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 
 find_package (OpenGL REQUIRED)
@@ -22,17 +22,20 @@ target_compile_features (paintbox PRIVATE cxx_std_17)
 target_include_directories (paintbox PUBLIC glfw/include stb)
 
 target_compile_definitions (paintbox PUBLIC OPENGL_VERSION)
-if (OPENGL_VERSION STREQUAL "OPENGL_21")
+if (OPENGL_VERSION STREQUAL "OPENGL_2.1")
+  # about GLES level openGL
   include_directories (glad2.1+fbo+vao/include)
   add_subdirectory (glad2.1+fbo+vao)
   target_include_directories (paintbox PUBLIC glad2.1+fbo+vao/include)
 else()
+  # my highest openGL implementation
   include_directories (glad4.5core/include)
   add_subdirectory (glad4.5core)
   target_include_directories (paintbox PUBLIC glad4.5core/include)
 endif()
 
 if (USE_IMPLOT)
+  # optioned as implot compiles very slowly
   add_subdirectory (implot)
   target_link_libraries (paintbox implot)
   target_compile_definitions (paintbox PUBLIC USE_IMPLOT)

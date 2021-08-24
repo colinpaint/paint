@@ -129,11 +129,10 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
 
   ImGuiContext& g = *GImGui;
   const ImGuiStyle& style = g.Style;
-
   //const ImVec2 label_size = ImGui::CalcTextSize (label.c_str(), NULL, true);
   const ImVec2 size = ImGui::CalcItemSize (size_arg, -2.f * style.FramePadding.x, -2.0f * style.FramePadding.y);
 
-  ImVec2 pos = window->DC.CursorPos;
+  const ImVec2 pos = window->DC.CursorPos;
   const ImRect rect (pos, pos + size);
   ImGui::ItemSize (size, style.FramePadding.y);
 
@@ -141,51 +140,43 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
   if (!ImGui::ItemAdd (rect, id))
     return false;
 
-  ImGuiButtonFlags flags = ImGuiButtonFlags_None;
-  if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
-    flags |= ImGuiButtonFlags_Repeat;
-
   bool hovered;
   bool held;
+  ImGuiButtonFlags flags = ImGuiButtonFlags_None;
   bool pressed = ImGui::ButtonBehavior (rect, id, &hovered, &held, flags);
 
-  // is this tyhe simplest, compared to the string below ???
-  auto datePoint = floor<date::days>(timePoint);
-  auto timeOfDay = date::make_time (chrono::duration_cast<chrono::milliseconds>(timePoint - datePoint));
-  //{{{  draw clock graphic
+  const auto datePoint = floor<date::days>(timePoint);
+  const auto timeOfDay = date::make_time (chrono::duration_cast<chrono::milliseconds>(timePoint - datePoint));
+
+  // draw face circle
   const float kPi = 3.1415926f;
   const float radius = rect.GetWidth() / 2.f;
-
   const ImU32 col = (held || hovered) ?ImGui::GetColorU32 (ImGuiCol_ButtonHovered) : IM_COL32_WHITE;
   window->DrawList->AddCircle (rect.GetCenter(), radius, col, 32, 3.f);
 
   // draw hourHand
   float handRadius = radius * 0.6f;
   float angle = (1.f - ((timeOfDay.hours().count()) + (timeOfDay.minutes().count() / 60.f) / 6.f)) * kPi;
-  window->DrawList->AddLine (rect.GetCenter(),
-                             rect.GetCenter() + ImVec2(handRadius * sin (angle), handRadius * cos (angle)),
-                             col, 2.f);
+  window->DrawList->AddLine (
+    rect.GetCenter(), rect.GetCenter() + ImVec2(handRadius * sin (angle), handRadius * cos (angle)), col, 2.f);
 
   // draw minuteHand
   handRadius = radius * 0.75f;
   angle = (1.f - ((timeOfDay.minutes().count()) + (timeOfDay.seconds().count() / 60.f) / 30.f)) * kPi;
-  window->DrawList->AddLine (rect.GetCenter(),
-                             rect.GetCenter() + ImVec2(handRadius * sin (angle), handRadius * cos (angle)),
-                             col, 2.f);
+  window->DrawList->AddLine (
+    rect.GetCenter(), rect.GetCenter() + ImVec2(handRadius * sin (angle), handRadius * cos (angle)), col, 2.f);
 
   // draw secondHand
   handRadius = radius * 0.85f;
   angle = (1.f - (timeOfDay.seconds().count() / 30.f)) * kPi;
-  window->DrawList->AddLine (rect.GetCenter(),
-                             rect.GetCenter() + ImVec2(handRadius * sin (angle), handRadius * cos (angle)),
-                             col, 2.f);
-  //}}}
+  window->DrawList->AddLine (
+    rect.GetCenter(), rect.GetCenter() + ImVec2(handRadius * sin (angle), handRadius * cos (angle)), col, 2.f);
 
+  // draw time,date labels
+  const string dateString = date::format ("%a %d %b %y", date::floor<chrono::seconds>(timePoint));
+  window->DrawList->AddText (rect.GetBL() - ImVec2 (0.f,18.f), col, dateString.c_str(), NULL);
   const string timeString = date::format ("%H:%M:%S", date::floor<chrono::seconds>(timePoint));
   window->DrawList->AddText (rect.GetBL(), col, timeString.c_str(), NULL);
-
-  const string dateString = date::format ("%a %d %b %y", date::floor<chrono::seconds>(timePoint));
-  window->DrawList->AddText (rect.GetBL() - ImVec2 (0.f, 18.f), col, dateString.c_str(), NULL);
 
   IMGUI_TEST_ENGINE_ITEM_INFO(id, label.c_str(), g.LastItemData.StatusFlags);
   return pressed;
@@ -216,6 +207,10 @@ bool cUI::toggleButton (const string& label, bool toggleOn, const ImVec2& size_a
   ImGui::ItemSize (size, style.FramePadding.y);
   if (!ImGui::ItemAdd (bb, id))
     return false;
+
+  // repeat ???
+  if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
+    flags |= ImGuiButtonFlags_Repeat;
 
   bool hovered;
   bool held;
