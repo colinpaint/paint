@@ -21,7 +21,6 @@
 #include "../canvas/cCanvas.h"
 
 using namespace std;
-using namespace fmt;
 //}}}
 #define DRAW_CANVAS // useful to disable canvas when bringing up backends
 #define SHOW_DEMO
@@ -46,7 +45,7 @@ void cUI::listRegisteredClasses() {
 
   cLog::log (LOGINFO, "ui register");
   for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("- {}", ui.first));
+    cLog::log (LOGINFO, fmt::format ("- {}", ui.first));
   }
 //}}}
 //{{{
@@ -54,7 +53,7 @@ void cUI::listInstances() {
 
   cLog::log (LOGINFO, "ui instance register");
   for (auto& ui : getInstanceRegister())
-    cLog::log (LOGINFO, format ("- {}", ui.first));
+    cLog::log (LOGINFO, fmt::format ("- {}", ui.first));
   }
 //}}}
 
@@ -147,6 +146,9 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
 
   const auto datePoint = floor<date::days>(timePoint);
   const auto timeOfDay = date::make_time (chrono::duration_cast<chrono::milliseconds>(timePoint - datePoint));
+  const int hours = (int)timeOfDay.hours().count() % 12;
+  const int mins = (int)timeOfDay.minutes().count();
+  const int secs = (int)timeOfDay.seconds().count();
 
   // draw face circle
   const float kPi = 3.1415926f;
@@ -155,26 +157,30 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
   window->DrawList->AddCircle (rect.GetCenter(), radius, col, 32, 3.f);
 
   // draw hourHand
-  float handRadius = radius * 0.6f;
-  float angle = (1.f - ((timeOfDay.hours().count()) + (timeOfDay.minutes().count() / 60.f) / 6.f)) * kPi;
+  const float hourRadius = radius * 0.6f;
+  const float hourAngle = (1.f - (hours + (mins / 60.f) / 6.f)) * kPi;
   window->DrawList->AddLine (
-    rect.GetCenter(), rect.GetCenter() + ImVec2(handRadius * sin (angle), handRadius * cos (angle)), col, 2.f);
+    rect.GetCenter(), rect.GetCenter() + ImVec2(hourRadius * sin (hourAngle), hourRadius * cos (hourAngle)), col, 2.f);
 
   // draw minuteHand
-  handRadius = radius * 0.75f;
-  angle = (1.f - ((timeOfDay.minutes().count()) + (timeOfDay.seconds().count() / 60.f) / 30.f)) * kPi;
+  const float minRadius = radius * 0.75f;
+  const float minAngle = (1.f - (mins + (secs / 60.f) / 30.f)) * kPi;
   window->DrawList->AddLine (
-    rect.GetCenter(), rect.GetCenter() + ImVec2(handRadius * sin (angle), handRadius * cos (angle)), col, 2.f);
+    rect.GetCenter(), rect.GetCenter() + ImVec2(minRadius * sin (minAngle), minRadius * cos (minAngle)), col, 2.f);
 
   // draw secondHand
-  handRadius = radius * 0.85f;
-  angle = (1.f - (timeOfDay.seconds().count() / 30.f)) * kPi;
+  const float secRadius = radius * 0.85f;
+  const float secAngle = (1.f - (secs / 30.f)) * kPi;
   window->DrawList->AddLine (
-    rect.GetCenter(), rect.GetCenter() + ImVec2(handRadius * sin (angle), handRadius * cos (angle)), col, 2.f);
+    rect.GetCenter(), rect.GetCenter() + ImVec2(secRadius * sin (secAngle), secRadius * cos (secAngle)), col, 2.f);
 
   // draw time,date labels
+  const string debugString = fmt::format ("{} {} {}", radius, minRadius, minAngle);
+  window->DrawList->AddText (rect.GetBL() - ImVec2 (0.f,48.f), col, debugString.c_str(), NULL);
+  const string debugString1 = fmt::format ("{} {} {}", hours, mins, secs);
+  window->DrawList->AddText (rect.GetBL() - ImVec2 (0.f,32.f), col, debugString1.c_str(), NULL);
   const string dateString = date::format ("%a %d %b %y", date::floor<chrono::seconds>(timePoint));
-  window->DrawList->AddText (rect.GetBL() - ImVec2 (0.f,18.f), col, dateString.c_str(), NULL);
+  window->DrawList->AddText (rect.GetBL() - ImVec2 (0.f,16.f), col, dateString.c_str(), NULL);
   const string timeString = date::format ("%H:%M:%S", date::floor<chrono::seconds>(timePoint));
   window->DrawList->AddText (rect.GetBL(), col, timeString.c_str(), NULL);
 

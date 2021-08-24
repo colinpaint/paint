@@ -1,4 +1,4 @@
-// main.cpp - paintbox main, uses imGui, stb, (glm replaced by simpler types in utils cVecMat.h for readability)
+// main.cpp - paintbox main, uses imGui, stb
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
