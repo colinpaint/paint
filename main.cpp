@@ -102,7 +102,7 @@ int main (int numArgs, char* args[]) {
       graphics.windowResize (width, height);
       graphics.newFrame();
       if (showDemoWindow)
-        cUI::draw (canvas, graphics, platform, platform.getWindowSize());
+        cUI::draw (canvas, graphics, platform);
       ImGui::ShowDemoWindow (&showDemoWindow);
       graphics.drawUI (platform.getWindowSize());
       platform.present();
@@ -114,7 +114,7 @@ int main (int numArgs, char* args[]) {
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
-    cUI::draw (canvas, graphics, platform, platform.getWindowSize());
+    cUI::draw (canvas, graphics, platform);
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
     //{{{  show implot build option, strange long compile time
