@@ -12,4 +12,4 @@ else()
   target_compile_options (canvas PRIVATE -Wall -Wextra -pedantic -Ofast)
 endif()
 
-target_include_directories (canvas PUBLIC ../glfw/include ../imgui ../stb)
+target_include_directories (canvas PUBLIC ../imgui ../stb)

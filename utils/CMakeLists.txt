@@ -1,9 +1,9 @@
 project (utils)
 
 file (GLOB HEADER_FILES *.h)
-file (GLOB SRCFILES *.cpp *.c)
+file (GLOB SOURCE_FILES *.cpp *.c)
 
-add_library (utils ${HEADER_FILES} ${SRCFILES})
+add_library (utils ${HEADER_FILES} ${SOURCE_FILES})
 
 target_compile_features (utils PRIVATE cxx_std_17)
 

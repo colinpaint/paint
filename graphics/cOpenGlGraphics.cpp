@@ -596,7 +596,7 @@ namespace {
   //}}}
 
   // shader
-  #ifdef OPENGL_2
+  #ifdef OPENGL_21
     //{{{
     const string kQuadVertShader =
       "#version 120\n"
@@ -693,7 +693,7 @@ namespace {
     //{{{
     cOpenGlPaintShader() : cPaintShader() {
 
-      #ifdef OPENGL_2
+      #ifdef OPENGL_21
         const string kFragShader =
           "#version 120\n"
 
@@ -787,7 +787,7 @@ namespace {
     //{{{
     cOpenGlLayerShader() : cLayerShader() {
 
-      #ifdef OPENGL_2
+      #ifdef OPENGL_21
         //{{{
         const string kFragShader =
           "#version 120\n"
@@ -998,7 +998,7 @@ namespace {
     //{{{
     cOpenGlCanvasShader() : cCanvasShader() {
 
-      #ifdef OPENGL_2
+      #ifdef OPENGL_21
         const string kFragShader =
           "#version 120\n"
 
@@ -1569,7 +1569,7 @@ bool cOpenGlGraphics::init (cPlatform& platform) {
 // anonymous device pointers unused
 
   (void)platform;
-  
+
   // get openGL version
   string glVersionString = (const char*)glGetString (GL_VERSION);
   #if defined(IMGUI_IMPL_OPENGL_ES2)

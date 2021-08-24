@@ -12,7 +12,7 @@ using namespace fmt;
 
 // static - public
 //{{{
-cPlatform& cPlatform::createByName (const string& name, const cPoint& windowSize, 
+cPlatform& cPlatform::createByName (const string& name, const cPoint& windowSize,
                                     bool showViewports, bool vsync) {
 
   cPlatform* platform = getClassRegister()[name](name);
@@ -30,6 +30,12 @@ void cPlatform::listRegisteredClasses() {
   cLog::log (LOGINFO, "platform register");
   for (auto& ui : getClassRegister())
     cLog::log (LOGINFO, format ("- {}", ui.first));
+  }
+//}}}
+
+//{{{
+chrono::system_clock::time_point cPlatform::now() {
+  return chrono::system_clock::now() + chrono::seconds(getDaylightSeconds());
   }
 //}}}
 

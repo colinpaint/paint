@@ -2,6 +2,7 @@
 #pragma once
 //{{{  includes
 #include <string>
+#include <chrono>
 #include <map>
 #include <functional>
 
@@ -20,11 +21,13 @@ public:
 
   // gets
   virtual cPoint getWindowSize() = 0;
+  std::chrono::system_clock::time_point now();
 
   // - anonymous dx11 platform -> graphics interface
   virtual void* getDevice() = 0;
   virtual void* getDeviceContext() = 0;
   virtual void* getSwapChain() = 0;
+  virtual int getDaylightSeconds() = 0;
 
   // actions
   virtual bool pollEvents() = 0;

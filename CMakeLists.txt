@@ -7,7 +7,7 @@ project (paintbox VERSION 1.0.0)
 
 # config
 #set (USE_IMPLOT)
-set (OPENGL_VERSION "OPENGL_4.5")
+set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 
 find_package (OpenGL REQUIRED)
@@ -22,13 +22,11 @@ target_compile_features (paintbox PRIVATE cxx_std_17)
 target_include_directories (paintbox PUBLIC glfw/include stb)
 
 target_compile_definitions (paintbox PUBLIC OPENGL_VERSION)
-if (OPENGL_VERSION STREQUAL "OPENGL_2.1")
-  # about GLES level openGL
+if (OPENGL_VERSION STREQUAL "OPENGL_21")
   include_directories (glad2.1+fbo+vao/include)
   add_subdirectory (glad2.1+fbo+vao)
   target_include_directories (paintbox PUBLIC glad2.1+fbo+vao/include)
-else()
-  # my highest openGL implementation
+elseif (OPENGL_VERSION STREQUAL "OPENGL_45")
   include_directories (glad4.5core/include)
   add_subdirectory (glad4.5core)
   target_include_directories (paintbox PUBLIC glad4.5core/include)
@@ -52,7 +50,7 @@ set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory (glfw)
 
 target_link_libraries (paintbox canvas imgui utils glfw glad)
-# target platform
+
 if (MSVC)
   target_compile_options (paintbox PUBLIC /W4 /arch:AVX /fp:fast)
   target_link_libraries (paintbox opengl32 d3d11 d3dcompiler)

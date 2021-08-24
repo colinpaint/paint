@@ -34,6 +34,7 @@ namespace {
   WNDCLASSEX gWndClass;
   HWND gHWnd;
   bool gVsync = true;
+  int gDaylightSeconds = 0;
 
   cPoint gWindowSize;
   ID3D11Device* gD3dDevice = NULL;
@@ -96,6 +97,7 @@ public:
   void* getDeviceContext() final;
   void* getSwapChain() final;
   cPoint getWindowSize() final;
+  int getDaylightSeconds() final;
 
   // actions
   bool pollEvents() final;
@@ -137,6 +139,11 @@ void* cWin32Platform::getDevice() { return (void*)gD3dDevice; }
 void* cWin32Platform::getDeviceContext() { return (void*)gD3dDeviceContext; }
 void* cWin32Platform::getSwapChain() { return (void*)gSwapChain; }
 cPoint cWin32Platform::getWindowSize() { return gWindowSize; }
+//{{{
+int cWin32Platform::getDaylightSeconds() {
+  return gDaylightSeconds;
+  }
+//}}}
 
 // actions
 //{{{
@@ -262,6 +269,10 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vs
     }
 
   ImGui_ImplWin32_Init (gHWnd);
+
+  TIME_ZONE_INFORMATION timeZoneInfo;
+  if (GetTimeZoneInformation (&timeZoneInfo) == TIME_ZONE_ID_DAYLIGHT)
+    gDaylightSeconds = -timeZoneInfo.DaylightBias * 60;
 
   gPlatform = this;
   gVsync = vsync;

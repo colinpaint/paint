@@ -59,7 +59,7 @@ void cUI::listInstances() {
 
 // static draw
 //{{{
-void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPoint windowSize) {
+void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, cPoint windowSize) {
 // draw canvas and its UI's with imGui, using graphics
 // - draw canvas background
 //   - dummy fullscreen window, no draw,move,scroll,focus
@@ -114,7 +114,7 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPoint windowSize) {
 
   // add registered UI instances to imGui drawList
   for (auto& ui : getInstanceRegister())
-    ui.second->addToDrawList (canvas, graphics);
+    ui.second->addToDrawList (canvas, graphics, platform);
   }
 //}}}
 
@@ -158,13 +158,13 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
 
   // draw hourHand
   const float hourRadius = radius * 0.6f;
-  const float hourAngle = (1.f - (hours + (mins / 60.f) / 6.f)) * kPi;
+  const float hourAngle = (1.f - (hours + (mins / 60.f)) / 6.f) * kPi;
   window->DrawList->AddLine (
     rect.GetCenter(), rect.GetCenter() + ImVec2(hourRadius * sin (hourAngle), hourRadius * cos (hourAngle)), col, 2.f);
 
   // draw minuteHand
   const float minRadius = radius * 0.75f;
-  const float minAngle = (1.f - (mins + (secs / 60.f) / 30.f)) * kPi;
+  const float minAngle = (1.f - (mins + (secs / 60.f)) / 30.f) * kPi;
   window->DrawList->AddLine (
     rect.GetCenter(), rect.GetCenter() + ImVec2(minRadius * sin (minAngle), minRadius * cos (minAngle)), col, 2.f);
 
@@ -174,13 +174,9 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
   window->DrawList->AddLine (
     rect.GetCenter(), rect.GetCenter() + ImVec2(secRadius * sin (secAngle), secRadius * cos (secAngle)), col, 2.f);
 
-  // draw time,date labels
-  const string debugString = fmt::format ("{} {} {}", radius, minRadius, minAngle);
-  window->DrawList->AddText (rect.GetBL() - ImVec2 (0.f,48.f), col, debugString.c_str(), NULL);
-  const string debugString1 = fmt::format ("{} {} {}", hours, mins, secs);
-  window->DrawList->AddText (rect.GetBL() - ImVec2 (0.f,32.f), col, debugString1.c_str(), NULL);
+  // draw date,time labels
   const string dateString = date::format ("%a %d %b %y", date::floor<chrono::seconds>(timePoint));
-  window->DrawList->AddText (rect.GetBL() - ImVec2 (0.f,16.f), col, dateString.c_str(), NULL);
+  window->DrawList->AddText (rect.GetBL() - ImVec2(0.f,16.f), col, dateString.c_str(), NULL);
   const string timeString = date::format ("%H:%M:%S", date::floor<chrono::seconds>(timePoint));
   window->DrawList->AddText (rect.GetBL(), col, timeString.c_str(), NULL);
 

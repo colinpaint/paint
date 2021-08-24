@@ -11,6 +11,8 @@
 // stb
 #include <stb_image_write.h>
 
+#include "../platform/cPlatform.h"
+
 #include "cUI.h"
 #include "../brush/cBrush.h"
 #include "../canvas/cLayer.h"
@@ -32,7 +34,7 @@ public:
   //}}}
   virtual ~cMenuUI() = default;
 
-  void addToDrawList (cCanvas& canvas, cGraphics& graphics) final {
+  void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform) final {
 
     // coerce window to bottom fullWidth, kMenuHeight
     ImGui::SetNextWindowPos ({0.f, ImGui::GetIO().DisplaySize.y - kMenuHeight});
@@ -135,7 +137,7 @@ public:
 
         ImGui::SameLine();
         ImGui::BeginGroup();
-        clockButton ("clock", chrono::system_clock::now(), {110.f,150.f});
+        clockButton ("clock", platform.now(), {110.f,150.f});
         ImGui::EndGroup();
         break;
         }
