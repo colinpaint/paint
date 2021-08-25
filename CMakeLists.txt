@@ -2,6 +2,10 @@
 cmake_minimum_required (VERSION 3.16)
 cmake_policy (SET CMP0072 NEW)
 
+#set (USE_IMPLOT)
+set (OPENGL_VERSION "OPENGL_45")
+set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
+
 # glfw
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -44,13 +48,18 @@ add_library (imgui ${IMGUI_SOURCE_FILES} ${IMGUI_HEADER_FILES} ${BACKEND_SOURCE_
 target_include_directories (imgui PUBLIC imgui glfw/include)
 target_link_libraries (imgui PUBLIC utils)
 
-# main project
-project (paintbox VERSION 1.0.0)
+if (USE_IMPLOT)
+  # optioned as implot compiles very slowly
+  project (implot)
+  file (GLOB HEADER_FILES *.h)
+  file (GLOB SOURCE_FILES *.cpp)
+  add_library (implot ${HEADER_FILES} ${SOURCE_FILES})
+  target_compile_features (implot PRIVATE cxx_std_17)
+  target_include_directories (implot PUBLIC implot imgui utils)
+endif()
 
-# config
-#set (USE_IMPLOT)
-set (OPENGL_VERSION "OPENGL_45")
-set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
+### main project ###
+project (paintbox VERSION 1.0.0)
 
 find_package (OpenGL REQUIRED)
 
@@ -66,16 +75,14 @@ elseif (OPENGL_VERSION STREQUAL "OPENGL_45")
   add_subdirectory (glad4.5core)
 endif()
 
-if (USE_IMPLOT)
-  # optioned as implot compiles very slowly
-  add_subdirectory (implot)
-  target_compile_definitions (paintbox PUBLIC USE_IMPLOT)
-  target_link_libraries (paintbox PUBLIC implot)
-endif()
-
 target_compile_definitions (paintbox PUBLIC OPENGL_VERSION)
 target_include_directories (paintbox PUBLIC glfw/include stb)
 target_link_libraries (paintbox PUBLIC canvas imgui utils glfw glad)
+
+if (USE_IMPLOT)
+  target_compile_definitions (paintbox PUBLIC USE_IMPLOT)
+  target_link_libraries (paintbox PUBLIC implot)
+endif()
 
 if (MSVC)
   target_link_libraries (paintbox PUBLIC opengl32 d3d11 d3dcompiler)
