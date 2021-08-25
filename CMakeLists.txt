@@ -25,14 +25,6 @@ else()
   target_compile_options (utils PUBLIC -Wall -Wextra -pedantic -Ofast -std=c++2a)
 endif()
 
-# canvas project
-project (canvas)
-file (GLOB CANVAS_HEADER_FILES canvas/*.h)
-file (GLOB CANVAS_SRCFILES canvas/*.cpp)
-add_library (canvas ${CANVAS_HEADER_FILES} ${CANVAS_SRCFILES})
-target_include_directories (canvas PUBLIC imgui stb)
-target_link_libraries (canvas PUBLIC utils)
-
 # imgui project
 project (imgui)
 file (GLOB IMGUI_HEADER_FILES imgui/*.h)
@@ -57,6 +49,14 @@ if (USE_IMPLOT)
   target_compile_features (implot PRIVATE cxx_std_17)
   target_include_directories (implot PUBLIC implot imgui utils)
 endif()
+
+# canvas project
+project (canvas)
+file (GLOB CANVAS_HEADER_FILES canvas/*.h)
+file (GLOB CANVAS_SRCFILES canvas/*.cpp)
+add_library (canvas ${CANVAS_HEADER_FILES} ${CANVAS_SRCFILES})
+target_include_directories (canvas PUBLIC imgui stb)
+target_link_libraries (canvas PUBLIC utils)
 
 ### main project ###
 project (paintbox VERSION 1.0.0)
