@@ -2,6 +2,14 @@
 cmake_minimum_required (VERSION 3.16)
 cmake_policy (SET CMP0072 NEW)
 
+# glfw
+set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory (glfw)
+
 # utils project
 project (utils)
 file (GLOB UTILS_HEADER_FILES utils/*.h)
@@ -20,6 +28,21 @@ file (GLOB CANVAS_SRCFILES canvas/*.cpp)
 add_library (canvas ${CANVAS_HEADER_FILES} ${CANVAS_SRCFILES})
 target_include_directories (canvas PUBLIC imgui stb)
 target_link_libraries (canvas PUBLIC utils)
+
+# imgui project
+project (imgui)
+file (GLOB IMGUI_HEADER_FILES imgui/*.h)
+file (GLOB IMGUI_SOURCE_FILES imgui/*.cpp)
+if (MSVC)
+  file (GLOB BACKEND_HEADER_FILES imgui/backends/*.h)
+  file (GLOB BACKEND_SOURCE_FILES imgui/backends/*.cpp)
+else()
+  file (GLOB BACKEND_HEADER_FILES imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
+  file (GLOB BACKEND_SOURCE_FILES imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
+endif()
+add_library (imgui ${IMGUI_SOURCE_FILES} ${IMGUI_HEADER_FILES} ${BACKEND_SOURCE_FILES} ${BACKEND_HEADER_FILES})
+target_include_directories (imgui PUBLIC imgui glfw/include)
+target_link_libraries (imgui PUBLIC utils)
 
 # main project
 project (paintbox VERSION 1.0.0)
@@ -50,15 +73,6 @@ if (USE_IMPLOT)
   target_link_libraries (paintbox PUBLIC implot)
 endif()
 
-set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
-add_subdirectory (glfw)
-add_subdirectory (imgui)
-
-#  target_compile_options including c++20 defined PUBLIC in utils
 target_compile_definitions (paintbox PUBLIC OPENGL_VERSION)
 target_include_directories (paintbox PUBLIC glfw/include stb)
 target_link_libraries (paintbox PUBLIC canvas imgui utils glfw glad)

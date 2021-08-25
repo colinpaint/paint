@@ -33,7 +33,6 @@ using namespace fmt;
 namespace {
   cPlatform* gPlatform = nullptr;
   GLFWwindow* gWindow = nullptr;
-  int gDaylightSeconds = 0;
 
   GLFWmonitor* gMonitor = nullptr;
   cPoint gWindowPos = { 0,0 };
@@ -242,12 +241,6 @@ bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports, bool vsy
   ImGui_ImplGlfw_InitForOpenGL (gWindow, true);
 
   glfwSwapInterval (vsync ? 1 : 0);
-
-  #ifdef _WIN32
-    TIME_ZONE_INFORMATION timeZoneInfo;
-    if (GetTimeZoneInformation (&timeZoneInfo) == TIME_ZONE_ID_DAYLIGHT)
-      gDaylightSeconds = -timeZoneInfo.DaylightBias * 60;
-  #endif
 
   gPlatform = this;
 

@@ -34,7 +34,6 @@ namespace {
   WNDCLASSEX gWndClass;
   HWND gHWnd;
   bool gVsync = true;
-  int gDaylightSeconds = 0;
 
   cPoint gWindowSize;
   ID3D11Device* gD3dDevice = NULL;
@@ -263,10 +262,6 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vs
     }
 
   ImGui_ImplWin32_Init (gHWnd);
-
-  TIME_ZONE_INFORMATION timeZoneInfo;
-  if (GetTimeZoneInformation (&timeZoneInfo) == TIME_ZONE_ID_DAYLIGHT)
-    gDaylightSeconds = -timeZoneInfo.DaylightBias * 60;
 
   gPlatform = this;
   gVsync = vsync;
