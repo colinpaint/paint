@@ -15,11 +15,11 @@ add_library (imgui ${SOURCE_FILES} ${HEADER_FILES} ${BACKEND_SOURCE_FILES} ${BAC
 
 target_include_directories (imgui PUBLIC . ../glfw/include)
 
-target_compile_features (imgui PRIVATE cxx_std_17)
+target_compile_features (imgui PUBLIC cxx_std_17)
 
 if (MSVC)
-  target_compile_options (imgui PRIVATE /W4 /arch:AVX /fp:fast)
+  target_compile_options (imgui PUBLIC /W4 /arch:AVX /fp:fast)
 else()
-  target_compile_options (imgui PRIVATE -Wall -Wextra -pedantic -Ofast)
+  target_compile_options (imgui PUBLIC -Wall -Wextra -pedantic -Ofast)
 endif()
 
