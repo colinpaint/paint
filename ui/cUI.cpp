@@ -21,6 +21,7 @@
 #include "../canvas/cCanvas.h"
 
 using namespace std;
+// too many formats for using namespace fmt
 //}}}
 #define DRAW_CANVAS // useful to disable canvas when bringing up backends
 #define SHOW_DEMO
@@ -141,20 +142,19 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
 
   bool hovered;
   bool held;
-  ImGuiButtonFlags flags = ImGuiButtonFlags_None;
-  bool pressed = ImGui::ButtonBehavior (rect, id, &hovered, &held, flags);
+  bool pressed = ImGui::ButtonBehavior (rect, id, &hovered, &held, ImGuiButtonFlags_None);
 
   const auto datePoint = floor<date::days>(timePoint);
   const auto timeOfDay = date::make_time (chrono::duration_cast<chrono::milliseconds>(timePoint - datePoint));
-  const int hours = (int)timeOfDay.hours().count() % 12;
-  const int mins = (int)timeOfDay.minutes().count();
-  const int secs = (int)timeOfDay.seconds().count();
+  const int hours = timeOfDay.hours().count() % 12;
+  const int mins = timeOfDay.minutes().count();
+  const int secs = static_cast<int>(timeOfDay.seconds().count());
 
   // draw face circle
   const float kPi = 3.1415926f;
   const float radius = rect.GetWidth() / 2.f;
-  const ImU32 col = (held || hovered) ?ImGui::GetColorU32 (ImGuiCol_ButtonHovered) : IM_COL32_WHITE;
-  window->DrawList->AddCircle (rect.GetCenter(), radius, col, 32, 3.f);
+  const ImU32 col = (held || hovered) ? ImGui::GetColorU32 (ImGuiCol_ButtonHovered) : IM_COL32_WHITE;
+  window->DrawList->AddCircle (rect.GetCenter(), radius, col, 0, 3.f);
 
   // draw hourHand
   const float hourRadius = radius * 0.6f;
@@ -188,49 +188,42 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
 bool cUI::toggleButton (const string& label, bool toggleOn, const ImVec2& size_arg) {
 // imGui custom widget - based on ImGui::ButtonEx
 
-  ImGuiButtonFlags flags = ImGuiButtonFlags_None;
-
   ImGuiWindow* window = ImGui::GetCurrentWindow();
   if (window->SkipItems)
     return false;
 
   ImGuiContext& g = *GImGui;
   const ImGuiStyle& style = g.Style;
-  const ImGuiID id = window->GetID (label.c_str());
+
   const ImVec2 label_size = ImGui::CalcTextSize (label.c_str(), NULL, true);
+  const ImVec2 size = ImGui::CalcItemSize (
+    size_arg, label_size.x + style.FramePadding.x * 2.f, label_size.y + style.FramePadding.y * 2.f);
 
-  ImVec2 size = ImGui::CalcItemSize (size_arg,
-                                     label_size.x + style.FramePadding.x * 2.0f,
-                                     label_size.y + style.FramePadding.y * 2.0f);
-
-  ImVec2 pos = window->DC.CursorPos;
-  const ImRect bb (pos, pos + size);
-
+  const ImVec2 pos = window->DC.CursorPos;
+  const ImRect rect (pos, pos + size);
   ImGui::ItemSize (size, style.FramePadding.y);
-  if (!ImGui::ItemAdd (bb, id))
-    return false;
 
-  // repeat ???
-  if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
-    flags |= ImGuiButtonFlags_Repeat;
+  const ImGuiID id = window->GetID (label.c_str());
+  if (!ImGui::ItemAdd (rect, id))
+    return false;
 
   bool hovered;
   bool held;
-  bool pressed = ImGui::ButtonBehavior (bb, id, &hovered, &held, flags);
+  bool pressed = ImGui::ButtonBehavior (rect, id, &hovered, &held, ImGuiButtonFlags_None);
 
   // Render
   const ImU32 col = ImGui::GetColorU32 (
     toggleOn || (held && hovered) ? ImGuiCol_ButtonActive :
                                     (hovered ? ImGuiCol_ButtonHovered : ImGuiCol_FrameBg));
-  ImGui::RenderNavHighlight (bb, id);
-  ImGui::RenderFrame (bb.Min, bb.Max, col, true, style.FrameRounding);
+  ImGui::RenderNavHighlight (rect, id);
+  ImGui::RenderFrame (rect.Min, rect.Max, col, true, style.FrameRounding);
 
   if (g.LogEnabled)
     ImGui::LogSetNextTextDecoration ("[", "]");
 
-  ImGui::RenderTextClipped (bb.Min + style.FramePadding, bb.Max - style.FramePadding,
+  ImGui::RenderTextClipped (rect.Min + style.FramePadding, rect.Max - style.FramePadding,
                             label.c_str(), NULL, &label_size,
-                            style.ButtonTextAlign, &bb);
+                            style.ButtonTextAlign, &rect);
 
   IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
 
