@@ -93,7 +93,6 @@ public:
   void* getDeviceContext() final;
   void* getSwapChain() final;
   cPoint getWindowSize() final;
-  int getDaylightSeconds() final;
 
   // actions
   bool pollEvents() final;
@@ -137,11 +136,6 @@ cPoint cGlfwPlatform::getWindowSize() {
   int height;
   glfwGetWindowSize (gWindow, &width, &height);
   return cPoint (width, height);
-  }
-//}}}
-//{{{
-int cGlfwPlatform::getDaylightSeconds() {
-  return gDaylightSeconds;
   }
 //}}}
 

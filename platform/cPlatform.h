@@ -27,7 +27,6 @@ public:
   virtual void* getDevice() = 0;
   virtual void* getDeviceContext() = 0;
   virtual void* getSwapChain() = 0;
-  virtual int getDaylightSeconds() = 0;
 
   // actions
   virtual bool pollEvents() = 0;

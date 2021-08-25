@@ -97,7 +97,6 @@ public:
   void* getDeviceContext() final;
   void* getSwapChain() final;
   cPoint getWindowSize() final;
-  int getDaylightSeconds() final;
 
   // actions
   bool pollEvents() final;
@@ -139,11 +138,6 @@ void* cWin32Platform::getDevice() { return (void*)gD3dDevice; }
 void* cWin32Platform::getDeviceContext() { return (void*)gD3dDeviceContext; }
 void* cWin32Platform::getSwapChain() { return (void*)gSwapChain; }
 cPoint cWin32Platform::getWindowSize() { return gWindowSize; }
-//{{{
-int cWin32Platform::getDaylightSeconds() {
-  return gDaylightSeconds;
-  }
-//}}}
 
 // actions
 //{{{

@@ -18,10 +18,6 @@ file (GLOB SOURCE_FILES main.cpp platform/*.cpp graphics/*.cpp brush/*.cpp ui/*.
 add_executable (paintbox ${SOURCE_FILES})
 
 # target
-target_compile_features (paintbox PUBLIC cxx_std_17)
-target_include_directories (paintbox PUBLIC glfw/include stb)
-target_compile_definitions (paintbox PUBLIC OPENGL_VERSION)
-
 if (OPENGL_VERSION STREQUAL "OPENGL_21")
   add_subdirectory (glad2.1+fbo+vao)
 elseif (OPENGL_VERSION STREQUAL "OPENGL_45")
@@ -31,8 +27,8 @@ endif()
 if (USE_IMPLOT)
   # optioned as implot compiles very slowly
   add_subdirectory (implot)
+  target_compile_definitions (paintbox PUBLIC USE_IMPLOT)
   target_link_libraries (paintbox PUBLIC implot)
-  #target_compile_definitions (paintbox PUBLIC USE_IMPLOT)
 endif()
 
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -45,6 +41,9 @@ add_subdirectory (utils)
 add_subdirectory (imgui)
 add_subdirectory (canvas)
 
+target_compile_features (paintbox PUBLIC cxx_std_17)
+target_compile_definitions (paintbox PUBLIC OPENGL_VERSION)
+target_include_directories (paintbox PUBLIC glfw/include stb)
 target_link_libraries (paintbox PUBLIC canvas imgui utils glfw glad)
 
 if (MSVC)
