@@ -71,6 +71,7 @@ namespace { // anonymous
 
   const int kMaxBuffer = 10000;
   enum eLogLevel mLogLevel = LOGERROR;
+  chrono::hours gDaylightSavingHours;
 
   map <uint64_t, string> mThreadNameMap;
 
@@ -79,7 +80,6 @@ namespace { // anonymous
 
   FILE* mFile = NULL;
   bool mBuffer = false;
-  int mDaylightSecs = 0;
 
   #ifdef _WIN32
   //{{{  windows console
@@ -429,18 +429,19 @@ cLog::~cLog() {
 //{{{
 bool cLog::init (enum eLogLevel logLevel, bool buffer, const string& logFilePath, const string& title) {
 
+  // get daylight saving flag
+  time_t current_time;
+  time (&current_time);
+  struct tm* timeinfo = localtime (&current_time);
+  gDaylightSavingHours = chrono::hours ((timeinfo->tm_isdst == 1) ? 1 : 0);
+
   #ifdef _WIN32
     hStdOut = GetStdHandle (STD_OUTPUT_HANDLE);
     DWORD consoleMode = ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
     SetConsoleMode (hStdOut, consoleMode);
-
-    TIME_ZONE_INFORMATION timeZoneInfo;
-    if (GetTimeZoneInformation (&timeZoneInfo) == TIME_ZONE_ID_DAYLIGHT)
-      mDaylightSecs = -timeZoneInfo.DaylightBias * 60;
   #endif
 
   #ifdef __linux__
-
     #ifdef TRACEBACK
       if (memoryAlloc == NULL)
         memoryAlloc = new char[kMemoryAlloc];
@@ -457,7 +458,6 @@ bool cLog::init (enum eLogLevel logLevel, bool buffer, const string& logFilePath
       perror ("cCrash - sigaction(SIGABBRT)");
     if (sigaction (SIGFPE, &sa, NULL) < 0)
       perror ("cCrash - sigaction(SIGFPE)");
-    // !!! need linux daylight timezone !!!
   #endif
 
   mBuffer = buffer;
@@ -556,7 +556,7 @@ void cLog::log (enum eLogLevel logLevel, const string& logStr) {
 
   lock_guard<mutex> lockGuard (mLinesMutex);
 
-  chrono::time_point<chrono::system_clock> now = chrono::system_clock::now() + chrono::seconds (mDaylightSecs);
+  chrono::time_point<chrono::system_clock> now = chrono::system_clock::now() + gDaylightSavingHours;
 
   if (mBuffer) {
     // buffer for widget display
