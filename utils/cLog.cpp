@@ -567,13 +567,14 @@ void cLog::log (enum eLogLevel logLevel, const string& logStr) {
 
   else if (logLevel <= mLogLevel) {
     string timeString = date::format ("%T", date::floor<chrono::microseconds>(now - date::floor<date::days>(now)));
-    fputs (format ("{}{} {}{} {}{}\n", kConsoleWhite, timeString,
-                                       kConsoleLightGrey, getThreadNameString (getThreadId()),
-                                       kLevelColours[logLevel], logStr).c_str(),
+    fputs (fmt::format ("{}{} {}{} {}{}\n",
+                        kConsoleWhite, timeString, kConsoleLightGrey, getThreadNameString (getThreadId()),
+                        kLevelColours[logLevel], logStr).c_str(),
            stdout);
 
     if (mFile) {
-      fputs (format ("{}{} {}{} {}{}\n", timeString, getThreadNameString (getThreadId()), logStr).c_str(), mFile);
+      fputs (fmt::format ("{}{} {}{} {}{}\n",
+             timeString, getThreadNameString (getThreadId()), logStr).c_str(), mFile);
       fflush (mFile);
       }
     }
