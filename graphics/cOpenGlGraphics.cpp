@@ -1,5 +1,6 @@
 // cOpenGlGraphics.cpp
-//{{{  includes
+//{{{
+//includes
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <cstdint>
@@ -27,7 +28,7 @@
 #endif
 
 using namespace std;
-[//}}}
+//}}}
 //#define USE_IMPL // use imgui backend impl untouched, !!! not working yet !!!
 constexpr bool kDebug = false;
 
@@ -1621,15 +1622,15 @@ bool cOpenGlGraphics::init (cPlatform& platform) {
   int glslMinor = 0;
   sscanf (glslVersionString.c_str(), "%d.%d", &glslMajor, &glslMinor);
   gGlslVersion = (glslMajor * 100) + glslMinor;
-  cLog::log (LOGINFO, format ("GLSL {} - {}", glslVersionString, gGlslVersion));
+  cLog::log (LOGINFO, fmt::format ("GLSL {} - {}", glslVersionString, gGlslVersion));
 
   #ifdef USE_IMPL
     ImGui_ImplOpenGL3_Init (glslVersionString.c_str());
   #else
-    cLog::log (LOGINFO, format ("Renderer {}", glGetString (GL_RENDERER)));
-    cLog::log (LOGINFO, format ("- Vendor {}", glGetString (GL_VENDOR)));
+    cLog::log (LOGINFO, fmt::format ("Renderer {}", glGetString (GL_RENDERER)));
+    cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
 
-    cLog::log (LOGINFO, format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
+    cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
     cLog::log (LOGINFO, "- hasViewports");
 
     // create vertex array buffers

@@ -174,9 +174,9 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
     rect.GetCenter(), rect.GetCenter() + ImVec2(secRadius * sin (secAngle), secRadius * cos (secAngle)), col, 2.f);
 
   // draw date,time labels
-  const string dateString = date::format ("%a %d %b %y", date::floor<chrono::seconds>(timePoint));
+  const string dateString = date::format ("%a %d %b %y", chrono::floor<chrono::seconds>(timePoint));
   window->DrawList->AddText (rect.GetBL() - ImVec2(0.f,16.f), col, dateString.c_str(), NULL);
-  const string timeString = date::format ("%H:%M:%S", date::floor<chrono::seconds>(timePoint));
+  const string timeString = date::format ("%H:%M:%S", chrono::floor<chrono::seconds>(timePoint));
   window->DrawList->AddText (rect.GetBL(), col, timeString.c_str(), NULL);
 
   IMGUI_TEST_ENGINE_ITEM_INFO(id, label.c_str(), g.LastItemData.StatusFlags);
