@@ -51,7 +51,6 @@
 #define stat64_utf8   stat64
 
 using namespace std;
-using namespace chrono;
 //}}}
 
 namespace { // anonymous
@@ -557,7 +556,7 @@ void cLog::log (enum eLogLevel logLevel, const string& logStr) {
 
   lock_guard<mutex> lockGuard (mLinesMutex);
 
-  time_point<system_clock> now = system_clock::now() + chrono::seconds (mDaylightSecs);
+  chrono::time_point<chrono::system_clock> now = chrono::system_clock::now() + chrono::seconds (mDaylightSecs);
 
   if (mBuffer) {
     // buffer for widget display
@@ -567,7 +566,7 @@ void cLog::log (enum eLogLevel logLevel, const string& logStr) {
     }
 
   else if (logLevel <= mLogLevel) {
-    string timeString = date::format ("%T", date::floor<microseconds>(now - date::floor<date::days>(now)));
+    string timeString = date::format ("%T", date::floor<chrono::microseconds>(now - date::floor<date::days>(now)));
     fputs (format ("{}{} {}{} {}{}\n", kConsoleWhite, timeString,
                                        kConsoleLightGrey, getThreadNameString (getThreadId()),
                                        kLevelColours[logLevel], logStr).c_str(),
