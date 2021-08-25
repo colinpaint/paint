@@ -5,6 +5,7 @@ cmake_policy (SET CMP0072 NEW)
 #set (USE_IMPLOT)
 set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
+#target_compile_features (implot PRIVATE cxx_std_17)
 
 # glfw
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -40,13 +41,12 @@ add_library (imgui ${IMGUI_SOURCE_FILES} ${IMGUI_HEADER_FILES} ${BACKEND_SOURCE_
 target_include_directories (imgui PUBLIC imgui glfw/include)
 target_link_libraries (imgui PUBLIC utils)
 
+# ImPlot optioned as it compiles slowly
 if (USE_IMPLOT)
-  # optioned as implot compiles very slowly
   project (implot)
   file (GLOB HEADER_FILES *.h)
   file (GLOB SOURCE_FILES *.cpp)
   add_library (implot ${HEADER_FILES} ${SOURCE_FILES})
-  target_compile_features (implot PRIVATE cxx_std_17)
   target_include_directories (implot PUBLIC implot imgui utils)
 endif()
 
@@ -65,8 +65,9 @@ find_package (OpenGL REQUIRED)
 
 # executable
 # - main + static registered .cpp
+file (GLOB HEADER_FILES platform/*.h graphics/*.h brush/*.h ui/*.h)
 file (GLOB SOURCE_FILES main.cpp platform/*.cpp graphics/*.cpp brush/*.cpp ui/*.cpp)
-add_executable (paintbox ${SOURCE_FILES})
+add_executable (paintbox ${SOURCE_FILES} ${HEADER_FILES})
 
 # target
 if (OPENGL_VERSION STREQUAL "OPENGL_21")
