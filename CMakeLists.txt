@@ -5,7 +5,7 @@ cmake_policy (SET CMP0072 NEW)
 #set (USE_IMPLOT)
 set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
-#target_compile_features (implot PRIVATE cxx_std_17)
+#target_compile_features (project PRIVATE cxx_std_20)
 
 # glfw
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -21,7 +21,7 @@ file (GLOB UTILS_HEADER_FILES utils/*.h)
 file (GLOB UTILS_SOURCE_FILES utils/*.cpp utils/*.c)
 add_library (utils ${UTILS_HEADER_FILES} ${UTILS_SOURCE_FILES})
 if (MSVC)
-  target_compile_options (utils PUBLIC /W4 /arch:AVX /fp:fast /std:c++20)
+  target_compile_options (utils PUBLIC /W4 /arch:AVX /fp:fast /std:c++latest)
 else()
   target_compile_options (utils PUBLIC -Wall -Wextra -pedantic -Ofast -std=c++2a)
 endif()
@@ -63,21 +63,20 @@ project (paintbox VERSION 1.0.0)
 
 find_package (OpenGL REQUIRED)
 
-# executable
-# - main + static registered .cpp
+# executable - main + static registered .cpp
 file (GLOB HEADER_FILES platform/*.h graphics/*.h brush/*.h ui/*.h)
 file (GLOB SOURCE_FILES main.cpp platform/*.cpp graphics/*.cpp brush/*.cpp ui/*.cpp)
 add_executable (paintbox ${SOURCE_FILES} ${HEADER_FILES})
 
-# target
+target_compile_definitions (paintbox PUBLIC OPENGL_VERSION)
+target_include_directories (paintbox PUBLIC glfw/include stb)
+
 if (OPENGL_VERSION STREQUAL "OPENGL_21")
   add_subdirectory (glad2.1+fbo+vao)
 elseif (OPENGL_VERSION STREQUAL "OPENGL_45")
   add_subdirectory (glad4.5core)
 endif()
 
-target_compile_definitions (paintbox PUBLIC OPENGL_VERSION)
-target_include_directories (paintbox PUBLIC glfw/include stb)
 target_link_libraries (paintbox PUBLIC canvas imgui utils glfw glad)
 
 if (USE_IMPLOT)

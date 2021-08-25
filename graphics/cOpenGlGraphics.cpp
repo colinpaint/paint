@@ -27,8 +27,7 @@
 #endif
 
 using namespace std;
-using namespace fmt;
-//}}}
+[//}}}
 //#define USE_IMPL // use imgui backend impl untouched, !!! not working yet !!!
 constexpr bool kDebug = false;
 

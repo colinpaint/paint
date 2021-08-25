@@ -21,7 +21,6 @@
 #include "../canvas/cCanvas.h"
 
 using namespace std;
-// too many formats for using namespace fmt
 //}}}
 #define DRAW_CANVAS // useful to disable canvas when bringing up backends
 #define SHOW_DEMO
@@ -145,7 +144,7 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
   bool pressed = ImGui::ButtonBehavior (rect, id, &hovered, &held, ImGuiButtonFlags_None);
 
   const auto datePoint = floor<date::days>(timePoint);
-  const auto timeOfDay = date::make_time (chrono::duration_cast<chrono::milliseconds>(timePoint - datePoint));
+  const auto timeOfDay = date::make_time (chrono::duration_cast<chrono::seconds>(timePoint - datePoint));
   const int hours = timeOfDay.hours().count() % 12;
   const int mins = timeOfDay.minutes().count();
   const int secs = static_cast<int>(timeOfDay.seconds().count());

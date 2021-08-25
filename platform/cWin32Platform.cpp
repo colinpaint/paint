@@ -26,7 +26,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT ms
 #include "../utils/cLog.h"
 
 using namespace std;
-using namespace fmt;
 //}}}
 
 namespace {
@@ -227,7 +226,7 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vs
     return false;
     }
     //}}}
-  cLog::log (LOGINFO, format ("platform DirectX11 device created - featureLevel:{:x}", featureLevel));
+  cLog::log (LOGINFO, fmt::format ("platform DirectX11 device created - featureLevel:{:x}", featureLevel));
 
   // Show the window
   ::ShowWindow (gHWnd, SW_SHOWDEFAULT);

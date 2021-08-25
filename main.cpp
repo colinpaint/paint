@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+//#include <format>
 
 // stb - invoke header only library implementation here
 #define STB_IMAGE_IMPLEMENTATION
@@ -34,7 +35,6 @@
 #include "utils/cLog.h"
 
 using namespace std;
-using namespace fmt;
 //}}}
 
 int main (int numArgs, char* args[]) {
@@ -67,7 +67,7 @@ int main (int numArgs, char* args[]) {
 
   // start log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, format ("paintbox {} {}", platformName, graphicsName));
+  cLog::log (LOGNOTICE, fmt::format ("paintbox {} {}", platformName, graphicsName));
 
   // list static registered classes
   cPlatform::listRegisteredClasses();

@@ -10,7 +10,6 @@
 #include "../utils/cLog.h"
 
 using namespace std;
-using namespace fmt;
 //}}}
 
 // cPaintGpuBrush - gpu shader line segment

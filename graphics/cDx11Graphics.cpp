@@ -22,7 +22,6 @@
 #include "../utils/cLog.h"
 
 using namespace std;
-using namespace fmt;
 //}}}
 //#define USE_IMPL // use released imgui backend impl untouched, !!! framework only, not finished !!!
 

@@ -51,7 +51,6 @@
 #define stat64_utf8   stat64
 
 using namespace std;
-using namespace fmt;
 using namespace chrono;
 //}}}
 

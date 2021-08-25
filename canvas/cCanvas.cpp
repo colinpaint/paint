@@ -18,7 +18,6 @@
 #include "cLayer.h"
 
 using namespace std;
-using namespace fmt;
 //}}}
 
 //{{{

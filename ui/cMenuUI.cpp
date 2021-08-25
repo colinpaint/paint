@@ -21,7 +21,6 @@
 #include "../utils/cLog.h"
 
 using namespace std;
-using namespace fmt;
 //}}}
 
 class cMenuUI : public cUI {
