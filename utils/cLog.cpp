@@ -563,7 +563,7 @@ void cLog::log (enum eLogLevel logLevel, const string& logStr) {
     }
 
   else if (logLevel <= mLogLevel) {
-    string timeString = date::format ("%T", chrono::floor<chrono::microseconds>(now - chrono::floor<chrono::days>(now)));
+    string timeString = date::format ("%T", chrono::floor<chrono::microseconds>(now - chrono::floor<date::days>(now)));
     fputs (fmt::format ("{}{} {}{} {}{}\n",
                         kConsoleWhite, timeString, kConsoleLightGrey, getThreadNameString (getThreadId()),
                         kLevelColours[logLevel], logStr).c_str(),

@@ -104,7 +104,7 @@ public:
   //}}}
   //{{{
   void paint (cVec2 pos, bool first, cFrameBuffer& frameBuffer, cFrameBuffer& frameBuffer1) final {
-    
+
     (void)frameBuffer1;
     if (first) {
       stamp (pos, frameBuffer);
@@ -258,7 +258,7 @@ private:
     for (int y = 0; y < mShapeSize; y++) {
       string str;
       for (int x = 0; x < mShapeSize; x++)
-        str += format ("{:3d} ", *shapePtr++);
+        str += fmt::format ("{:3d} ", *shapePtr++);
       cLog::log (LOGINFO, str);
       }
     }

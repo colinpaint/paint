@@ -172,7 +172,7 @@ void cGlfwPlatform::present() {
 //{{{
 bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports, bool vsync) {
 
-  cLog::log (LOGINFO, format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
+  cLog::log (LOGINFO, fmt::format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
 
   // GLFW init
   if (!glfwInit()) {

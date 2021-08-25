@@ -46,7 +46,7 @@ void cBrush::listRegisteredClasses() {
 
   cLog::log (LOGINFO, "brush register");
   for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("- {}", ui.first));
+    cLog::log (LOGINFO, fmt::format ("- {}", ui.first));
   }
 //}}}
 

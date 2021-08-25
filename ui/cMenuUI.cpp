@@ -61,7 +61,7 @@ public:
         // registered brushes
         cBrush* brush = cBrush::getCurBrush();
         for (auto& item : cBrush::getClassRegister())
-          if (ImGui::Selectable (format (item.first.c_str(), item.first).c_str(),
+          if (ImGui::Selectable (fmt::format (item.first.c_str(), item.first).c_str(),
                                  cBrush::isCurBrushByName (item.first), 0, kSubButtonSize))
             cBrush::setCurBrushByName (graphics, item.first, brush->getRadius());
 
@@ -87,7 +87,7 @@ public:
           //{{{  iterate swatches
           bool disabled = swatch.a == 0.f;
           int alphaPrev = disabled ? ImGuiColorEditFlags_AlphaPreview : 0;
-          if (ImGui::ColorButton (format ("swatch##{}", swatchIndex).c_str(),
+          if (ImGui::ColorButton (fmt::format ("swatch##{}", swatchIndex).c_str(),
                                   ImVec4 (swatch.r,swatch.g,swatch.b, swatch.a),
                                   ImGuiColorEditFlags_NoTooltip | alphaPrev,
                                   {kSubButtonSize.y - 2.f, kSubButtonSize.y - 2.f}) && !disabled)

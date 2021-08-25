@@ -116,13 +116,13 @@ namespace {
       if (!mPixels) {
         // create mPixels, texture pixels shadow buffer
         if (kDebug)
-          cLog::log (LOGINFO, format ("getPixels malloc {}", getNumPixelBytes()));
+          cLog::log (LOGINFO, fmt::format ("getPixels malloc {}", getNumPixelBytes()));
         mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
         }
 
       else if (!mDirtyPixelsRect.isEmpty()) {
         if (kDebug)
-          cLog::log (LOGINFO, format ("getPixels get {},{} {},{}",
+          cLog::log (LOGINFO, fmt::format ("getPixels get {},{} {},{}",
                                       mDirtyPixelsRect.left, mDirtyPixelsRect.top,
                                       mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
 
@@ -174,7 +174,7 @@ namespace {
 
       if (mPixels) {
         if (kDebug)
-          cLog::log (LOGINFO, format ("pixelsChanged {},{} {},{} - dirty {},{} {},{}",
+          cLog::log (LOGINFO, fmt::format ("pixelsChanged {},{} {},{} - dirty {},{} {},{}",
                                       rect.left, rect.top, rect.getWidth(), rect.getHeight()));
         }
       }
@@ -188,7 +188,7 @@ namespace {
       mDirtyPixelsRect += dstRect;
 
       if (kDebug)
-        cLog::log (LOGINFO, format ("blit src:{},{} dst:{},{} {},{} dirty:{},{} {},{}",
+        cLog::log (LOGINFO, fmt::format ("blit src:{},{} dst:{},{} {},{} dirty:{},{} {},{}",
                                     srcPoint.x, srcPoint.y,
                                     dstRect.left, dstRect.top, dstRect.getWidth(), dstRect.getHeight(),
                                     mDirtyPixelsRect.left, mDirtyPixelsRect.top,
@@ -199,7 +199,7 @@ namespace {
     bool cFrameBuffer::checkStatus() { return true; }
     //{{{
     void reportInfo() {
-      cLog::log (LOGINFO, format ("frameBuffer reportInfo {},{}", mSize.x, mSize.y));
+      cLog::log (LOGINFO, fmt::format ("frameBuffer reportInfo {},{}", mSize.x, mSize.y));
       }
     //}}}
     };
@@ -1024,7 +1024,7 @@ cPaintShader* cDx11Graphics::createPaintShader() {
 //{{{
 void cDx11Graphics::windowResize (int width, int height) {
 
-  //cLog::log (LOGINFO, format ("cGraphics::windowResized {}", width, height));
+  //cLog::log (LOGINFO, fmt::format ("cGraphics::windowResized {}", width, height));
   sBackendData* backendData = getBackendData();
   if (backendData) {
     backendData->mMainRenderTargetView->Release();
@@ -1051,7 +1051,7 @@ void cDx11Graphics::newFrame() {
 //}}}
 //{{{
 void cDx11Graphics::drawUI (cPoint windowSize) {
-  
+
   (void)windowSize;
   ImGui::Render();
 
@@ -1123,7 +1123,7 @@ bool cDx11Graphics::init (cPlatform& platform) {
           // create resources
           ok = createResources();
           ok &= createMainRenderTarget();
-          cLog::log (LOGINFO, format ("graphics Dx11 init ok {}", ok));
+          cLog::log (LOGINFO, fmt::format ("graphics Dx11 init ok {}", ok));
           }
         dxgiAdapter->Release();
         }

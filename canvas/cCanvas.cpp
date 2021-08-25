@@ -39,7 +39,7 @@ cCanvas::cCanvas (const string& fileName, cGraphics& graphics) : mName(fileName)
   layer->setName (fileName);
   mLayers.push_back (layer);
 
-  cLog::log (LOGINFO, format ("new canvas - {} {} {} {}", fileName, mSize.x, mSize.y, mNumChannels));
+  cLog::log (LOGINFO, fmt::format ("new canvas - {} {} {} {}", fileName, mSize.x, mSize.y, mNumChannels));
 
   createResources();
   }
@@ -81,7 +81,7 @@ unsigned cCanvas::newLayer (const string& fileName) {
   int numChannels;
   uint8_t* pixels = stbi_load (fileName.c_str(), &size.x, &size.y, &numChannels, 0);
 
-  cLog::log (LOGINFO, format ("new layer {} {},{} {}", fileName, size.x, size.y, numChannels));
+  cLog::log (LOGINFO, fmt::format ("new layer {} {},{} {}", fileName, size.x, size.y, numChannels));
 
   // new layer, transfer ownership of pixels to texture
   mLayers.push_back (new cLayer (pixels, size, cFrameBuffer::eRGBA, mGraphics));

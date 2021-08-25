@@ -18,7 +18,7 @@ cGraphics& cGraphics::createByName (const string& name, cPlatform& platform) {
 
   cGraphics* graphics = getClassRegister()[name](name);
   if (!graphics) {
-    cLog::log (LOGERROR, format ("graphics create failed - {} not found", name));
+    cLog::log (LOGERROR, fmt::format ("graphics create failed - {} not found", name));
     exit (EXIT_FAILURE);
     }
 
@@ -31,7 +31,7 @@ void cGraphics::listRegisteredClasses() {
 
   cLog::log (LOGINFO, "graphics register");
   for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, format ("- {}", ui.first));
+    cLog::log (LOGINFO, fmt::format ("- {}", ui.first));
   }
 //}}}
 

@@ -33,7 +33,7 @@ public:
 
     unsigned layerIndex = 0;
     for (auto layer : canvas.getLayers()) {
-      if (ImGui::Selectable (format ("##{}", layerIndex).c_str(), canvas.isCurLayer (layerIndex), 0,
+      if (ImGui::Selectable (fmt::format ("##{}", layerIndex).c_str(), canvas.isCurLayer (layerIndex), 0,
                              ImVec2 (ImGui::GetWindowSize().x, 30)))
         canvas.switchCurLayer (layerIndex);
 

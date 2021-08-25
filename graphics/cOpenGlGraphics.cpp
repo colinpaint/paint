@@ -218,7 +218,7 @@ namespace {
       if (!mPixels) {
         // create mPixels, texture pixels shadow buffer
         if (kDebug)
-          cLog::log (LOGINFO, format ("getPixels malloc {}", getNumPixelBytes()));
+          cLog::log (LOGINFO, fmt::format ("getPixels malloc {}", getNumPixelBytes()));
         mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
         glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
@@ -226,7 +226,7 @@ namespace {
 
       else if (!mDirtyPixelsRect.isEmpty()) {
         if (kDebug)
-          cLog::log (LOGINFO, format ("getPixels get {},{} {},{}",
+          cLog::log (LOGINFO, fmt::format ("getPixels get {},{} {},{}",
                                       mDirtyPixelsRect.left, mDirtyPixelsRect.top,
                                       mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
 
@@ -313,7 +313,7 @@ namespace {
         //glTexImage2D (GL_TEXTURE_2D, 0, mInternalFormat, mSize.x, mSize.y, 0, mImageFormat, GL_UNSIGNED_BYTE, mPixels);
 
         if (kDebug)
-          cLog::log (LOGINFO, format ("pixelsChanged {},{} {},{} - dirty {},{} {},{}",
+          cLog::log (LOGINFO, fmt::format ("pixelsChanged {},{} {},{} - dirty {},{} {},{}",
                                       rect.left, rect.top, rect.getWidth(), rect.getHeight()));
         }
       }
@@ -338,7 +338,7 @@ namespace {
       mDirtyPixelsRect += dstRect;
 
       if (kDebug)
-        cLog::log (LOGINFO, format ("blit src:{},{} dst:{},{} {},{} dirty:{},{} {},{}",
+        cLog::log (LOGINFO, fmt::format ("blit src:{},{} dst:{},{} {},{} dirty:{},{} {},{}",
                                     srcPoint.x, srcPoint.y,
                                     dstRect.left, dstRect.top, dstRect.getWidth(), dstRect.getHeight(),
                                     mDirtyPixelsRect.left, mDirtyPixelsRect.top,
@@ -397,7 +397,7 @@ namespace {
       GLint multiSampleCount = 0;
       glGetIntegerv (GL_MAX_SAMPLES, &multiSampleCount);
 
-      cLog::log (LOGINFO, format ("frameBuffer maxColorAttach {} masSamples {}", colorBufferCount, multiSampleCount));
+      cLog::log (LOGINFO, fmt::format ("frameBuffer maxColorAttach {} masSamples {}", colorBufferCount, multiSampleCount));
 
       //  print info of the colorbuffer attachable image
       GLint objectType;
@@ -409,11 +409,11 @@ namespace {
           glGetFramebufferAttachmentParameteriv (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i,
                                                  GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &objectId);
           string formatName;
-          cLog::log (LOGINFO, format ("- color{}", i));
+          cLog::log (LOGINFO, fmt::format ("- color{}", i));
           if (objectType == GL_TEXTURE)
-            cLog::log (LOGINFO, format ("  - GL_TEXTURE {}", getTextureParameters (objectId)));
+            cLog::log (LOGINFO, fmt::format ("  - GL_TEXTURE {}", getTextureParameters (objectId)));
           else if(objectType == GL_RENDERBUFFER)
-            cLog::log (LOGINFO, format ("  - GL_RENDERBUFFER {}", getRenderbufferParameters (objectId)));
+            cLog::log (LOGINFO, fmt::format ("  - GL_RENDERBUFFER {}", getRenderbufferParameters (objectId)));
           }
         }
 
@@ -423,13 +423,13 @@ namespace {
       if (objectType != GL_NONE) {
         glGetFramebufferAttachmentParameteriv (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                                GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &objectId);
-        cLog::log (LOGINFO, format ("depth"));
+        cLog::log (LOGINFO, fmt::format ("depth"));
         switch (objectType) {
           case GL_TEXTURE:
-            cLog::log (LOGINFO, format ("- GL_TEXTURE {}", getTextureParameters(objectId)));
+            cLog::log (LOGINFO, fmt::format ("- GL_TEXTURE {}", getTextureParameters(objectId)));
             break;
           case GL_RENDERBUFFER:
-            cLog::log (LOGINFO, format ("- GL_RENDERBUFFER {}", getRenderbufferParameters(objectId)));
+            cLog::log (LOGINFO, fmt::format ("- GL_RENDERBUFFER {}", getRenderbufferParameters(objectId)));
             break;
           }
         }
@@ -440,13 +440,13 @@ namespace {
       if (objectType != GL_NONE) {
         glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
                                               GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &objectId);
-        cLog::log (LOGINFO, format ("stencil"));
+        cLog::log (LOGINFO, fmt::format ("stencil"));
         switch (objectType) {
           case GL_TEXTURE:
-            cLog::log (LOGINFO, format ("- GL_TEXTURE {}", getTextureParameters(objectId)));
+            cLog::log (LOGINFO, fmt::format ("- GL_TEXTURE {}", getTextureParameters(objectId)));
             break;
           case GL_RENDERBUFFER:
-            cLog::log (LOGINFO, format ("- GL_RENDERBUFFER {}", getRenderbufferParameters(objectId)));
+            cLog::log (LOGINFO, fmt::format ("- GL_RENDERBUFFER {}", getRenderbufferParameters(objectId)));
             break;
           }
         }
@@ -554,7 +554,7 @@ namespace {
           break;
         #endif
         default:
-            formatName = format ("Unknown Format {}", formatNum);
+            formatName = fmt::format ("Unknown Format {}", formatNum);
             break;
         }
 
@@ -573,7 +573,7 @@ namespace {
       glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);          // get texture height
       glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &formatNum); // get texture internal format
 
-      return format (" {} {} {}", width, height, getInternalFormat (formatNum));
+      return fmt::format (" {} {} {}", width, height, getInternalFormat (formatNum));
       }
     //}}}
     //{{{
@@ -589,7 +589,7 @@ namespace {
       glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &formatNum); // get renderbuffer internal format
       glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_SAMPLES, &samples);   // get multisample count
 
-      return format (" {} {} {} {}", width, height, samples, getInternalFormat (formatNum));
+      return fmt::format (" {} {} {} {}", width, height, samples, getInternalFormat (formatNum));
       }
     //}}}
     };
@@ -644,7 +644,7 @@ namespace {
       //{{{  error, exit
       char errMessage[512];
       glGetProgramInfoLog (vertShader, 512, NULL, errMessage);
-      cLog::log (LOGERROR, format ("vertShader failed {}", errMessage));
+      cLog::log (LOGERROR, fmt::format ("vertShader failed {}", errMessage));
 
       exit (EXIT_FAILURE);
       }
@@ -660,7 +660,7 @@ namespace {
       //{{{  error, exit
       char errMessage[512];
       glGetProgramInfoLog (fragShader, 512, NULL, errMessage);
-      cLog::log (LOGERROR, format ("fragShader failed {}", errMessage));
+      cLog::log (LOGERROR, fmt::format ("fragShader failed {}", errMessage));
       exit (EXIT_FAILURE);
       }
       //}}}
@@ -675,7 +675,7 @@ namespace {
       //{{{  error, exit
       char errMessage[512];
       glGetProgramInfoLog (id, 512, NULL, errMessage);
-      cLog::log (LOGERROR, format ("shaderProgram failed {} ",  errMessage));
+      cLog::log (LOGERROR, fmt::format ("shaderProgram failed {} ",  errMessage));
 
       exit (EXIT_FAILURE);
       }
@@ -1530,7 +1530,7 @@ cPaintShader* cOpenGlGraphics::createPaintShader() {
 
 //{{{
 void cOpenGlGraphics::windowResize (int width, int height) {
-  cLog::log (LOGINFO, format ("cOpenGlGraphics windowResize {} {}", width, height));
+  cLog::log (LOGINFO, fmt::format ("cOpenGlGraphics windowResize {} {}", width, height));
   }
 //}}}
 //{{{
@@ -1584,7 +1584,7 @@ bool cOpenGlGraphics::init (cPlatform& platform) {
     sscanf (glVersionString.c_str(), "%d.%d", &glMajor, &glMinor);
     gGlVersion = ((glMajor * 10) + glMinor) * 10;
   #endif
-  cLog::log (LOGINFO, format ("OpenGL {} - {}", glVersionString, gGlVersion));
+  cLog::log (LOGINFO, fmt::format ("OpenGL {} - {}", glVersionString, gGlVersion));
 
 
   #ifndef USE_IMPL
