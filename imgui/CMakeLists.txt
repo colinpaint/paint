@@ -14,12 +14,4 @@ endif()
 add_library (imgui ${SOURCE_FILES} ${HEADER_FILES} ${BACKEND_SOURCE_FILES} ${BACKEND_HEADER_FILES})
 
 target_include_directories (imgui PUBLIC . ../glfw/include)
-
-target_compile_features (imgui PUBLIC cxx_std_17)
-
-if (MSVC)
-  target_compile_options (imgui PUBLIC /W4 /arch:AVX /fp:fast)
-else()
-  target_compile_options (imgui PUBLIC -Wall -Wextra -pedantic -Ofast)
-endif()
-
+target_link_libraries (imgui PUBLIC utils)
