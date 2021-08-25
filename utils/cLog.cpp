@@ -427,7 +427,7 @@ cLog::~cLog() {
 //}}}
 
 //{{{
-bool cLog::init (enum eLogLevel logLevel, bool buffer, const string& logFilePath, const string& title) {
+bool cLog::init (enum eLogLevel logLevel, bool buffer, const string& logFilePath) {
 
   // get daylightSaving hours
   time_t current_time;
@@ -471,9 +471,6 @@ bool cLog::init (enum eLogLevel logLevel, bool buffer, const string& logFilePath
     }
 
   setThreadName ("main");
-
-  // write title to the log
-  log (LOGNOTICE, title);
 
   return mFile != NULL;
   }

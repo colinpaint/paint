@@ -30,8 +30,7 @@ public:
 
   static bool init (eLogLevel logLevel = LOGINFO,
                     bool buffer = false,
-                    const std::string& logFilePath = "",
-                    const std::string& title = "");
+                    const std::string& logFilePath = "");
 
   static void setDaylightOffset (int offset);
   static void close();
