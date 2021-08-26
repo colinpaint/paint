@@ -41,7 +41,7 @@
 #include <system_error>  // std::system_error
 #include <utility>       // std::swap
 
-#include "core.h"
+#include "formatCore.h"
 
 #ifdef __INTEL_COMPILER
 #  define FMT_ICC_VERSION __INTEL_COMPILER

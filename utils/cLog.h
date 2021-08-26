@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 
-#include "core.h" //  fmt::format core, used by a lot of logging
+#include "formatCore.h" //  fmt::format core, used by a lot of logging
 //}}}
 
 // no class or namespace qualification, reduces code clutter - cLog::log (LOG* - bad enough
