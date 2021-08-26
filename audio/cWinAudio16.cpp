@@ -385,9 +385,9 @@ void cAudio::open (int srcChannels, int srcSampleRate) {
   memset (&waveformatex, 0, sizeof (WAVEFORMATEX));
   waveformatex.wFormatTag      = WAVE_FORMAT_PCM;
   waveformatex.wBitsPerSample  = kBitsPerSample;
-  waveformatex.nChannels       = srcChannels;
+  waveformatex.nChannels       = (WORD)srcChannels;
   waveformatex.nSamplesPerSec  = (unsigned long)srcSampleRate;
-  waveformatex.nBlockAlign     = srcChannels * kBitsPerSample / 8;
+  waveformatex.nBlockAlign     = (WORD)(srcChannels * kBitsPerSample / 8);
   waveformatex.nAvgBytesPerSec = waveformatex.nSamplesPerSec * srcChannels * kBitsPerSample / 8;
 
   if (mXAudio2->CreateSourceVoice (&mSourceVoice, &waveformatex,

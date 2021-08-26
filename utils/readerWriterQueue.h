@@ -777,6 +777,7 @@ namespace readerWriterQueue {
 
         size_t nextBlockFront = nextBlock->front.load();
         size_t nextBlockTail = nextBlock->localTail = nextBlock->tail.load();
+        (void)nextBlockTail;
         fence (memory_order_acquire);
 
         // Since the tailBlock is only ever advanced after being written to,
@@ -1297,6 +1298,7 @@ namespace readerWriterQueue {
         return false;
         }
       bool success = inner.try_dequeue(result);
+      (void)success;
       assert(success);
       return true;
       }

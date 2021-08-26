@@ -1,6 +1,9 @@
 // cSubtitle.h
 #pragma once
+#include <cstdint>
+#include <string>
 #include <vector>
+#include "../utils/cLog.h"
 
 class cSubtitle {
 public:
@@ -195,7 +198,6 @@ public:
     return false;
     }
   //}}}
-
   //{{{
   void debug (std::string prefix) {
 
@@ -1303,7 +1305,7 @@ private:
       }
 
     if (mDisplayDefinitionDebug)
-      cLog::log (LOGINFO, fmt::format ("{} x:{} y:{} w:{} h:{}", 
+      cLog::log (LOGINFO, fmt::format ("{} x:{} y:{} w:{} h:{}",
                           displayWindow != 0 ? "window" : "",mDisplayDefinition->mX,mDisplayDefinition->mY,
                           mDisplayDefinition->mWidth, mDisplayDefinition->mHeight));
     return true;

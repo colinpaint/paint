@@ -1730,6 +1730,7 @@ public:
                             //}}}
                           [&](const uint8_t* data, int length) noexcept {
                             //{{{  data callback lambda
+                            (void)data;
                             (void)length;
                             mLoadSize = http.getContentSize();
                             mLoadFrac = float(http.getContentSize()) / http.getHeaderContentSize();
@@ -1917,7 +1918,7 @@ public:
     struct sockaddr_in recvAddr;
     recvAddr.sin_family = AF_INET;
     recvAddr.sin_addr.s_addr = htonl (INADDR_ANY);
-    recvAddr.sin_port = htons (mPort);
+    recvAddr.sin_port = htons ((u_short)mPort);
     if (::bind (rtpReceiveSocket, (struct sockaddr*)&recvAddr, sizeof(recvAddr)) != 0) {
       //{{{  error return
       cLog::log (LOGERROR, "socket bind failed");
@@ -1960,6 +1961,7 @@ public:
     //{{{
     auto streamCallback = [&](int sid, int pid, int type) noexcept {
 
+      (void)sid;
       if (mPidParsers.find (pid) == mPidParsers.end()) {
         // new stream pid
         switch (type) {
@@ -2011,7 +2013,8 @@ public:
     //}}}
     //{{{
     auto eitCallback = [&](int sid, bool now, cDvbEpgItem& epgItem) noexcept {
-
+      
+      (void)sid;
       //cLog::log (LOGINFO, format ("eit callback sid {} {}", sid, name));
       //mSid = sid;
       if (now) // copy to now
@@ -2625,9 +2628,9 @@ public:
 
       // get next fileChunk
       memcpy (buffer, frame, bytesLeft);
-      size_t size = fread (buffer + bytesLeft, 1, kFileChunkSize-bytesLeft, file);
-      bytesLeft += size;
-      mStreamPos += (int)size;
+      size_t bytesRead = fread (buffer + bytesLeft, 1, kFileChunkSize-bytesLeft, file);
+      bytesLeft += bytesRead;
+      mStreamPos += (int)bytesRead;
       mLoadFrac = float(mStreamPos) / mFileSize;
 
       frame = buffer;

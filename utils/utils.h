@@ -10,7 +10,6 @@ inline std::string getTimeString (uint32_t secs) {
   return fmt::format ("{}:{}:{}", secs / (60 * 60), (secs / 60) % 60, secs % 60);
   }
 //}}}
-
 //{{{
 inline std::string getPtsString (int64_t pts) {
 // 90khz int64_t pts - miss out zeros
@@ -30,9 +29,9 @@ inline std::string getPtsString (int64_t pts) {
     pts /= 60;
     uint32_t hours = pts % 60;
 
-    //std::string str (hours ? (dec (hours) + ':' + dec (mins, 2, '0')) : dec (mins));
-    //return str + ':' + dec(secs, 2, '0') + ':' + dec(hs, 2, '0');
-    return "";
+    
+    std::string hourMinString = hours ? fmt::format ("{}:{:02}", hours,mins) : fmt::format ("{}",mins);
+    return fmt::format ("{}:{:02}:{:02}", hourMinString, secs, hs);
     }
   }
 //}}}
@@ -55,8 +54,7 @@ inline std::string getFullPtsString (int64_t pts) {
     pts /= 60;
     uint32_t hours = pts % 60;
 
-    //return dec (hours,2,'0') + ':' + dec (mins,2,'0') + ':' + dec(secs,2,'0') + ':' + dec(hs,2,'0');
-    return "";
+    return fmt::format ("{:02} {:02} {:02} {:02}", hours,mins,secs,hs);
     }
   }
 //}}}
@@ -66,8 +64,7 @@ inline std::string getPtsFramesString (int64_t pts, int64_t ptsDuration) {
 
   int64_t frames = pts / ptsDuration;
   int64_t subFrames = pts % ptsDuration;
-  //return dec(frames) + '.' + dec(subFrames, 4, '0');
-  return"";
+  return fmt::format ("{}.{:04}", frames,subFrames);
   }
 //}}}
 

@@ -10,7 +10,7 @@
 #include "../utils/cLog.h"
 
 using namespace std;
-using namespace chrono;
+//using namespace chrono;
 //}}}
 constexpr bool kMoreLog = false;
 
@@ -2318,8 +2318,8 @@ cAacDecoder::~cAacDecoder() {
 
 //{{{
 float* cAacDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, int64_t pts) {
-
-  auto timePoint = system_clock::now();
+  (void)pts;
+  auto timePoint = chrono::system_clock::now();
 
   mNumChannels = 0;
   mSampleRate = 0;
@@ -2405,7 +2405,7 @@ float* cAacDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, int64_t 
 
   int frameNum = 0; //nnn
   bool jumped = false; //nnn
-  auto took = duration_cast<microseconds>(system_clock::now() - timePoint).count();
+  auto took = duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
   cLog::log (LOGINFO1, fmt::format ("aac frameNum:{} {}x{} {}us {}{}{}{}",
              frameNum, mNumSamples, mNumChannels, int(took),
              jumped ? 'j':' ', mSbrEnabled ? 's':' ', mTnsUsed ? 't':' ', mPnsUsed ? 'p':' '));
@@ -2794,13 +2794,13 @@ static void decodeICSInfo (cBitStream* bsi, sIcsInfo* icsInfo, uint8_t sampRateI
  * Outputs:     updated sIcsInfo
  **************************************************************************************/
 
-  icsInfo->icsResBit = bsi->getBits (1);
-  icsInfo->winSequence = bsi->getBits (2);
-  icsInfo->winShape = bsi->getBits (1);
+  icsInfo->icsResBit = (uint8_t)bsi->getBits (1);
+  icsInfo->winSequence = (uint8_t)bsi->getBits (2);
+  icsInfo->winShape = (uint8_t)bsi->getBits (1);
   if (icsInfo->winSequence == 2) {
     // short block
-    icsInfo->maxSFB = bsi->getBits (4);
-    icsInfo->sfGroup = bsi->getBits (7);
+    icsInfo->maxSFB = (uint8_t)bsi->getBits (4);
+    icsInfo->sfGroup = (uint8_t)bsi->getBits (7);
     icsInfo->numWinGroup = 1;
     icsInfo->winGroupLen[0] = 1;
 
@@ -2820,14 +2820,14 @@ static void decodeICSInfo (cBitStream* bsi, sIcsInfo* icsInfo, uint8_t sampRateI
 
   else {
     // long block
-    icsInfo->maxSFB = bsi->getBits (6);
-    icsInfo->predictorDataPresent = bsi->getBits (1);
+    icsInfo->maxSFB = (uint8_t)bsi->getBits (6);
+    icsInfo->predictorDataPresent = (uint8_t)bsi->getBits (1);
     if (icsInfo->predictorDataPresent) {
-      icsInfo->predictorReset =  bsi->getBits (1);
+      icsInfo->predictorReset = (uint8_t)bsi->getBits (1);
       if (icsInfo->predictorReset)
-        icsInfo->predictorResetGroupNum = bsi->getBits (5);
+        icsInfo->predictorResetGroupNum = (uint8_t)bsi->getBits (5);
       for (auto sfb = 0; sfb < min (icsInfo->maxSFB, predSFBMax[sampRateIdx]); sfb++)
-        icsInfo->predictionUsed[sfb] = bsi->getBits (1);
+        icsInfo->predictionUsed[sfb] = (uint8_t)bsi->getBits (1);
       }
     icsInfo->numWinGroup = 1;
     icsInfo->winGroupLen[0] = 1;
@@ -2933,11 +2933,11 @@ static void decodePulseInfo (cBitStream* bsi, sPulseInfo* pi) {
  * Outputs:     updated sPulseInfo
  **************************************************************************************/
 
-  pi->numPulse = bsi->getBits (2) + 1;   /* add 1 here */
-  pi->startSFB = bsi->getBits (6);
+  pi->numPulse = (uint8_t)bsi->getBits (2) + 1;   /* add 1 here */
+  pi->startSFB = (uint8_t)bsi->getBits (6);
   for (auto i = 0; i < pi->numPulse; i++) {
-    pi->offset[i] = bsi->getBits (5);
-    pi->amp[i] = bsi->getBits (4);
+    pi->offset[i] = (uint8_t)bsi->getBits (5);
+    pi->amp[i] = (uint8_t)bsi->getBits (4);
     }
   }
 //}}}
@@ -2958,19 +2958,19 @@ static void decodeTNSInfo (cBitStream* bsi, int32_t winSequence, sTnsInfo* ti, i
   if (winSequence == 2) {
     // short blocks
     for (auto w = 0; w < NWINDOWS_SHORT; w++) {
-      ti->numFilt[w] = bsi->getBits (1);
+      ti->numFilt[w] = (uint8_t)bsi->getBits (1);
       if (ti->numFilt[w]) {
-        ti->coefRes[w] = bsi->getBits (1) + 3;
-        *filtLength = bsi->getBits (4);
-        *filtOrder =  bsi->getBits (3);
+        ti->coefRes[w] = (uint8_t)bsi->getBits (1) + 3;
+        *filtLength = (uint8_t)bsi->getBits (4);
+        *filtOrder = (uint8_t)bsi->getBits (3);
         if (*filtOrder) {
-          *filtDir++ = bsi->getBits (1);
+          *filtDir++ = (uint8_t)bsi->getBits (1);
           int32_t compress = bsi->getBits (1);
           int32_t coefBits = (int)ti->coefRes[w] - compress;  /* 2, 3, or 4 */
           int8_t s = sgnMask[coefBits - 2];
           int8_t n = negMask[coefBits - 2];
           for (auto i = 0; i < *filtOrder; i++) {
-            int8_t c = bsi->getBits (coefBits);
+            int8_t c = (uint8_t)bsi->getBits (coefBits);
             if (c & s)
               c |= n;
             *tnsCoef++ = c;
@@ -2983,20 +2983,20 @@ static void decodeTNSInfo (cBitStream* bsi, int32_t winSequence, sTnsInfo* ti, i
     }
   else {
     // long blocks
-    ti->numFilt[0] = bsi->getBits (2);
+    ti->numFilt[0] = (uint8_t)bsi->getBits (2);
     if (ti->numFilt[0])
-      ti->coefRes[0] = bsi->getBits (1) + 3;
+      ti->coefRes[0] = (uint8_t)bsi->getBits (1) + 3;
     for (auto f = 0; f < ti->numFilt[0]; f++) {
-      *filtLength = bsi->getBits (6);
-      *filtOrder = bsi->getBits (5);
+      *filtLength = (uint8_t)bsi->getBits (6);
+      *filtOrder = (uint8_t)bsi->getBits (5);
       if (*filtOrder) {
-        *filtDir++ = bsi->getBits (1);
+        *filtDir++ = (uint8_t)bsi->getBits (1);
         int32_t compress = bsi->getBits (1);
         int32_t coefBits = (int)ti->coefRes[0] - compress;  /* 2, 3, or 4 */
         int8_t s = sgnMask[coefBits - 2];
         int8_t n = negMask[coefBits - 2];
         for (auto i = 0; i < *filtOrder; i++) {
-          int8_t c = bsi->getBits (coefBits);
+          int8_t c = (uint8_t)bsi->getBits (coefBits);
           if (c & s)
             c |= n;
           *tnsCoef++ = c;
@@ -3017,17 +3017,17 @@ static void decodeGainControlInfo (cBitStream* bsi, int32_t winSequence, sGainCo
  * Outputs:     updated sGainControlInfo
  **************************************************************************************/
 
-  gi->maxBand = bsi->getBits (2);
+  gi->maxBand = (uint8_t)bsi->getBits (2);
   int32_t maxWin =  (int)gainBits[winSequence][0];
   int32_t locBitsZero = (int)gainBits[winSequence][1];
   int32_t locBits = (int)gainBits[winSequence][2];
 
   for (auto bd = 1; bd <= gi->maxBand; bd++) {
     for (auto wd = 0; wd < maxWin; wd++) {
-      gi->adjNum[bd][wd] = bsi->getBits (3);
+      gi->adjNum[bd][wd] = (uint8_t)bsi->getBits (3);
       for (auto ad = 0; ad < gi->adjNum[bd][wd]; ad++) {
-        gi->alevCode[bd][wd][ad] = bsi->getBits (4);
-        gi->alocCode[bd][wd][ad] = bsi->getBits (wd == 0 ? locBitsZero : locBits);
+        gi->alevCode[bd][wd][ad] = (uint8_t)bsi->getBits (4);
+        gi->alocCode[bd][wd][ad] = (uint8_t)bsi->getBits (wd == 0 ? locBitsZero : locBits);
         }
       }
     }
@@ -3053,17 +3053,17 @@ static void decodeICS (sInfoBase* psi, cBitStream* bsi, int32_t ch) {
   decodeScaleFactors (bsi, icsInfo->numWinGroup, icsInfo->maxSFB, globalGain, psi->sfbCodeBook[ch], psi->scaleFactors[ch]);
 
   sPulseInfo* pi = &psi->pulseInfo[ch];
-  pi->pulseDataPresent = bsi->getBits (1);
+  pi->pulseDataPresent = (uint8_t)bsi->getBits (1);
   if (pi->pulseDataPresent)
     decodePulseInfo (bsi, pi);
 
   auto ti = &psi->tnsInfo[ch];
-  ti->tnsDataPresent = bsi->getBits (1);
+  ti->tnsDataPresent = (uint8_t)bsi->getBits (1);
   if (ti->tnsDataPresent)
     decodeTNSInfo (bsi, icsInfo->winSequence, ti, ti->coef);
 
   sGainControlInfo* gi = &psi->gainControlInfo[ch];
-  gi->gainControlDataPresent = bsi->getBits (1);
+  gi->gainControlDataPresent = (uint8_t)bsi->getBits (1);
   if (gi->gainControlDataPresent)
     decodeGainControlInfo (bsi, icsInfo->winSequence, gi);
   }
@@ -3445,7 +3445,7 @@ void cAacDecoder::decodeDataStreamElement (cBitStream* bsi) {
   mInfoBase->dataCount = dataCount;
   uint8_t* dataBuf = mInfoBase->dataBuf;
   while (dataCount--)
-    *dataBuf++ = bsi->getBits (8);
+    *dataBuf++ = (uint8_t)bsi->getBits (8);
   }
 //}}}
 //{{{
@@ -3461,61 +3461,61 @@ void cAacDecoder::decodeProgramConfigElement (cBitStream* bsi, sProgConfigElemen
 
   cLog::log (LOGERROR, "aac unexpected decodeProgramConfigElement");
 
-  pce->elemInstTag = bsi->getBits (4);
-  pce->profile = bsi->getBits (2);
-  pce->sampRateIdx = bsi->getBits (4);
-  pce->numFCE = bsi->getBits (4);
-  pce->numSCE = bsi->getBits (4);
-  pce->numBCE = bsi->getBits (4);
-  pce->numLCE = bsi->getBits (2);
-  pce->numADE = bsi->getBits (3);
-  pce->numCCE = bsi->getBits (4);
+  pce->elemInstTag = (uint8_t)bsi->getBits (4);
+  pce->profile = (uint8_t)bsi->getBits (2);
+  pce->sampRateIdx = (uint8_t)bsi->getBits (4);
+  pce->numFCE = (uint8_t)bsi->getBits (4);
+  pce->numSCE = (uint8_t)bsi->getBits (4);
+  pce->numBCE = (uint8_t)bsi->getBits (4);
+  pce->numLCE = (uint8_t)bsi->getBits (2);
+  pce->numADE = (uint8_t)bsi->getBits (3);
+  pce->numCCE = (uint8_t)bsi->getBits (4);
 
-  pce->monoMixdown = bsi->getBits (1) << 4;  /* present flag */
+  pce->monoMixdown = (uint8_t)bsi->getBits (1) << 4;  /* present flag */
   if (pce->monoMixdown)
     pce->monoMixdown |= bsi->getBits (4);  /* element number */
 
-  pce->stereoMixdown = bsi->getBits (1) << 4;  /* present flag */
+  pce->stereoMixdown = (uint8_t)bsi->getBits (1) << 4;  /* present flag */
   if (pce->stereoMixdown)
     pce->stereoMixdown  |= bsi->getBits (4); /* element number */
 
-  pce->matrixMixdown = bsi->getBits (1) << 4;  /* present flag */
+  pce->matrixMixdown = (uint8_t)bsi->getBits (1) << 4;  /* present flag */
   if (pce->matrixMixdown) {
     pce->matrixMixdown  |= bsi->getBits (2) << 1;  /* index */
     pce->matrixMixdown  |= bsi->getBits (1);     /* pseudo-surround enable */
     }
 
   for (auto i = 0; i < pce->numFCE; i++) {
-    pce->fce[i]  = bsi->getBits (1) << 4;  /* is_cpe flag */
+    pce->fce[i]  = (uint8_t)bsi->getBits (1) << 4;  /* is_cpe flag */
     pce->fce[i] |= bsi->getBits (4);     /* tag select */
     }
 
   for (auto i = 0; i < pce->numSCE; i++) {
-    pce->sce[i]  = bsi->getBits (1) << 4;  /* is_cpe flag */
+    pce->sce[i]  = (uint8_t)bsi->getBits (1) << 4;  /* is_cpe flag */
     pce->sce[i] |= bsi->getBits (4);     /* tag select */
     }
 
   for (auto i = 0; i < pce->numBCE; i++) {
-    pce->bce[i]  = bsi->getBits (1) << 4;  /* is_cpe flag */
+    pce->bce[i]  = (uint8_t)bsi->getBits (1) << 4;  /* is_cpe flag */
     pce->bce[i] |= bsi->getBits (4);     /* tag select */
     }
 
   for (auto i = 0; i < pce->numLCE; i++)
-    pce->lce[i] = bsi->getBits (4);      /* tag select */
+    pce->lce[i] = (uint8_t)bsi->getBits (4);      /* tag select */
 
   for (auto i = 0; i < pce->numADE; i++)
-    pce->ade[i] = bsi->getBits (4);      /* tag select */
+    pce->ade[i] = (uint8_t)bsi->getBits (4);      /* tag select */
 
   for (auto i = 0; i < pce->numCCE; i++) {
-    pce->cce[i]  = bsi->getBits (1) << 4;  /* independent/dependent flag */
+    pce->cce[i]  = (uint8_t)bsi->getBits (1) << 4;  /* independent/dependent flag */
     pce->cce[i] |= bsi->getBits (4);     /* tag select */
     }
 
   bsi->byteAlignBitstream();
 
-  pce->commentBytes = bsi->getBits (8);
+  pce->commentBytes = (uint8_t)bsi->getBits (8);
   for (auto i = 0; i < pce->commentBytes; i++)
-    pce->commentField[i] = bsi->getBits (8);
+    pce->commentField[i] = (uint8_t)bsi->getBits (8);
   }
 //}}}
 //{{{
@@ -3535,7 +3535,7 @@ void cAacDecoder::decodeFillElement (cBitStream* bsi) {
   mInfoBase->fillCount = fillCount;
   uint8_t* fillBuf = mInfoBase->fillBuf;
   while (fillCount--)
-    *fillBuf++ = bsi->getBits (8);
+    *fillBuf++ = (uint8_t)bsi->getBits (8);
 
   // fill elements don't have instance tag
   mCurrInstTag = -1;
@@ -3565,22 +3565,22 @@ bool cAacDecoder::unpackADTSHeader (uint8_t*& buffer, int32_t& bitOffset, int32_
     return true;
 
   // fixed fields - should not change from frame to frame
-  mInfoBase->adtsHeader.id = bsi.getBits (1);
-  mInfoBase->adtsHeader.layer = bsi.getBits (2);
-  mInfoBase->adtsHeader.protectBit = bsi.getBits (1);
-  mInfoBase->adtsHeader.profile = bsi.getBits (2);
-  mInfoBase->adtsHeader.sampRateIdx =  bsi.getBits (4);
-  mInfoBase->adtsHeader.privateBit = bsi.getBits (1);
-  mInfoBase->adtsHeader.channelConfig = bsi.getBits (3);
-  mInfoBase->adtsHeader.origCopy = bsi.getBits (1);
-  mInfoBase->adtsHeader.home = bsi.getBits (1);
+  mInfoBase->adtsHeader.id = (uint8_t)bsi.getBits (1);
+  mInfoBase->adtsHeader.layer = (uint8_t)bsi.getBits (2);
+  mInfoBase->adtsHeader.protectBit = (uint8_t)bsi.getBits (1);
+  mInfoBase->adtsHeader.profile = (uint8_t)bsi.getBits (2);
+  mInfoBase->adtsHeader.sampRateIdx = (uint8_t)bsi.getBits (4);
+  mInfoBase->adtsHeader.privateBit = (uint8_t)bsi.getBits (1);
+  mInfoBase->adtsHeader.channelConfig = (uint8_t)bsi.getBits (3);
+  mInfoBase->adtsHeader.origCopy = (uint8_t)bsi.getBits (1);
+  mInfoBase->adtsHeader.home = (uint8_t)bsi.getBits (1);
 
   // variable fields - can change from frame to frame
-  mInfoBase->adtsHeader.copyBit = bsi.getBits (1);
-  mInfoBase->adtsHeader.copyStart = bsi.getBits (1);
+  mInfoBase->adtsHeader.copyBit = (uint8_t)bsi.getBits (1);
+  mInfoBase->adtsHeader.copyStart = (uint8_t)bsi.getBits (1);
   mInfoBase->adtsHeader.frameLength = bsi.getBits (13);
   mInfoBase->adtsHeader.bufferFull = bsi.getBits (11);
-  mInfoBase->adtsHeader.numRawDataBlocks = bsi.getBits (2) + 1;
+  mInfoBase->adtsHeader.numRawDataBlocks = (uint8_t)bsi.getBits (2) + 1;
 
   // note - MPEG4 spec, correction 1 changes how CRC is handled when protectBit == 0 and numRawDataBlocks > 1
   if (mInfoBase->adtsHeader.protectBit == 0)
@@ -3756,18 +3756,18 @@ static int32_t unpackSBRHeader (cBitStream* bsi, sSbrHeader* sbrHdr) {
   sbrHdrPrev.crossOverBand = sbrHdr->crossOverBand;
   sbrHdrPrev.noiseBands = sbrHdr->noiseBands;
 
-  sbrHdr->ampRes = bsi->getBits (1);
-  sbrHdr->startFreq = bsi->getBits (4);
-  sbrHdr->stopFreq = bsi->getBits (4);
-  sbrHdr->crossOverBand = bsi->getBits (3);
-  sbrHdr->resBitsHdr = bsi->getBits (2);
-  sbrHdr->hdrExtra1 = bsi->getBits (1);
-  sbrHdr->hdrExtra2 = bsi->getBits (1);
+  sbrHdr->ampRes = (uint8_t)bsi->getBits (1);
+  sbrHdr->startFreq = (uint8_t)bsi->getBits (4);
+  sbrHdr->stopFreq = (uint8_t)bsi->getBits (4);
+  sbrHdr->crossOverBand = (uint8_t)bsi->getBits (3);
+  sbrHdr->resBitsHdr = (uint8_t)bsi->getBits (2);
+  sbrHdr->hdrExtra1 = (uint8_t)bsi->getBits (1);
+  sbrHdr->hdrExtra2 = (uint8_t)bsi->getBits (1);
 
   if (sbrHdr->hdrExtra1) {
-    sbrHdr->freqScale = bsi->getBits (2);
-    sbrHdr->alterScale = bsi->getBits (1);
-    sbrHdr->noiseBands = bsi->getBits (2);
+    sbrHdr->freqScale = (uint8_t)bsi->getBits (2);
+    sbrHdr->alterScale = (uint8_t)bsi->getBits (1);
+    sbrHdr->noiseBands = (uint8_t)bsi->getBits (2);
     }
   else {
     // defaults
@@ -3777,10 +3777,10 @@ static int32_t unpackSBRHeader (cBitStream* bsi, sSbrHeader* sbrHdr) {
     }
 
   if (sbrHdr->hdrExtra2) {
-    sbrHdr->limiterBands = bsi->getBits (2);
-    sbrHdr->limiterGains = bsi->getBits (2);
-    sbrHdr->interpFreq = bsi->getBits (1);
-    sbrHdr->smoothMode = bsi->getBits (1);
+    sbrHdr->limiterBands = (uint8_t)bsi->getBits (2);
+    sbrHdr->limiterGains = (uint8_t)bsi->getBits (2);
+    sbrHdr->interpFreq = (uint8_t)bsi->getBits (1);
+    sbrHdr->smoothMode = (uint8_t)bsi->getBits (1);
     }
   else {
     // defaults
@@ -4446,7 +4446,7 @@ static void unpackSBRGrid (cBitStream* bsi, sSbrHeader* sbrHdr, sSbrGrid* sbrGri
   uint8_t absBordLead=0, absBordTrail=0, absBorder;
 
   sbrGrid->ampResFrame = sbrHdr->ampRes;
-  sbrGrid->frameClass = bsi->getBits (2);
+  sbrGrid->frameClass = (uint8_t)bsi->getBits (2);
   switch (sbrGrid->frameClass) {
     //{{{
     case SBR_GRID_FIXFIX:
@@ -4455,7 +4455,7 @@ static void unpackSBRGrid (cBitStream* bsi, sSbrHeader* sbrHdr, sSbrGrid* sbrGri
       if (sbrGrid->numEnv == 1)
         sbrGrid->ampResFrame = 0;
 
-      sbrGrid->freqRes[0] = bsi->getBits (1);
+      sbrGrid->freqRes[0] = (uint8_t)bsi->getBits (1);
       for (env = 1; env < sbrGrid->numEnv; env++)
          sbrGrid->freqRes[env] = sbrGrid->freqRes[0];
 
@@ -4478,17 +4478,17 @@ static void unpackSBRGrid (cBitStream* bsi, sSbrHeader* sbrHdr, sSbrGrid* sbrGri
     //}}}
     //{{{
     case SBR_GRID_FIXVAR:
-      absBorder = bsi->getBits (2) + NUM_TIME_SLOTS;
-      numRelBorder = bsi->getBits (2);
+      absBorder = (uint8_t)bsi->getBits (2) + NUM_TIME_SLOTS;
+      numRelBorder = (uint8_t)bsi->getBits (2);
       sbrGrid->numEnv = numRelBorder + 1;
       for (rel = 0; rel < numRelBorder; rel++)
-        relBorder[rel] = 2*bsi->getBits (2) + 2;
+        relBorder[rel] = 2* (uint8_t)bsi->getBits (2) + 2;
 
       pBits = cLog2[sbrGrid->numEnv + 1];
-      sbrGrid->pointer = bsi->getBits (pBits);
+      sbrGrid->pointer = (uint8_t)bsi->getBits (pBits);
 
       for (env = sbrGrid->numEnv - 1; env >= 0; env--)
-        sbrGrid->freqRes[env] = bsi->getBits (1);
+        sbrGrid->freqRes[env] = (uint8_t)bsi->getBits (1);
 
       absBordLead =  0;
       absBordTrail = absBorder;
@@ -4505,17 +4505,17 @@ static void unpackSBRGrid (cBitStream* bsi, sSbrHeader* sbrHdr, sSbrGrid* sbrGri
     //}}}
     //{{{
     case SBR_GRID_VARFIX:
-      absBorder = bsi->getBits (2);
-      numRelBorder = bsi->getBits (2);
+      absBorder = (uint8_t)bsi->getBits (2);
+      numRelBorder = (uint8_t)bsi->getBits (2);
       sbrGrid->numEnv = numRelBorder + 1;
       for (rel = 0; rel < numRelBorder; rel++)
-        relBorder[rel] = 2*bsi->getBits (2) + 2;
+        relBorder[rel] = 2* (uint8_t)bsi->getBits (2) + 2;
 
       pBits = cLog2[sbrGrid->numEnv + 1];
-      sbrGrid->pointer = bsi->getBits (pBits);
+      sbrGrid->pointer = (uint8_t)bsi->getBits (pBits);
 
       for (env = 0; env < sbrGrid->numEnv; env++)
-        sbrGrid->freqRes[env] = bsi->getBits (1);
+        sbrGrid->freqRes[env] = (uint8_t)bsi->getBits (1);
 
       absBordLead =  absBorder;
       absBordTrail = NUM_TIME_SLOTS;
@@ -4533,24 +4533,24 @@ static void unpackSBRGrid (cBitStream* bsi, sSbrHeader* sbrHdr, sSbrGrid* sbrGri
     //}}}
     //{{{
     case SBR_GRID_VARVAR:
-      absBordLead = bsi->getBits (2);  /* absBorder0 */
-      absBordTrail = bsi->getBits (2) + NUM_TIME_SLOTS; /* absBorder1 */
-      numRelBorder0 = bsi->getBits (2);
-      numRelBorder1 = bsi->getBits (2);
+      absBordLead = (uint8_t)bsi->getBits (2);  /* absBorder0 */
+      absBordTrail = (uint8_t)bsi->getBits (2) + NUM_TIME_SLOTS; /* absBorder1 */
+      numRelBorder0 = (uint8_t)bsi->getBits (2);
+      numRelBorder1 = (uint8_t)bsi->getBits (2);
 
       sbrGrid->numEnv = numRelBorder0 + numRelBorder1 + 1;
 
       for (rel = 0; rel < numRelBorder0; rel++)
-        relBorder0[rel] = 2*bsi->getBits ( 2) + 2;
+        relBorder0[rel] = 2* (uint8_t)bsi->getBits ( 2) + 2;
 
       for (rel = 0; rel < numRelBorder1; rel++)
-        relBorder1[rel] = 2*bsi->getBits (2) + 2;
+        relBorder1[rel] = 2* (uint8_t)bsi->getBits (2) + 2;
 
       pBits = cLog2[numRelBorder0 + numRelBorder1 + 2];
-      sbrGrid->pointer = bsi->getBits (pBits);
+      sbrGrid->pointer = (uint8_t)bsi->getBits (pBits);
 
       for (env = 0; env < sbrGrid->numEnv; env++)
-        sbrGrid->freqRes[env] = bsi->getBits (1);
+        sbrGrid->freqRes[env] = (uint8_t)bsi->getBits (1);
 
       numRelLead = numRelBorder0;
       numRelTrail = numRelBorder1;
@@ -4611,10 +4611,10 @@ static void unpackDeltaTimeFreq (cBitStream* bsi, int32_t numEnv, uint8_t* delta
  **************************************************************************************/
 
   for (auto env = 0; env < numEnv; env++)
-    deltaFlagEnv[env] = bsi->getBits (1);
+    deltaFlagEnv[env] = (uint8_t)bsi->getBits (1);
 
   for (auto noiseFloor = 0; noiseFloor < numNoiseFloors; noiseFloor++)
-    deltaFlagNoise[noiseFloor] = bsi->getBits (1);
+    deltaFlagNoise[noiseFloor] = (uint8_t)bsi->getBits (1);
   }
 //}}}
 //{{{
@@ -4627,7 +4627,7 @@ static void unpackInverseFilterMode (cBitStream* bsi, int32_t numNoiseFloorBands
  **************************************************************************************/
 
   for (auto n = 0; n < numNoiseFloorBands; n++)
-    mode[n] = bsi->getBits (2);
+    mode[n] = (uint8_t)bsi->getBits (2);
   }
 //}}}
 //{{{
@@ -4642,7 +4642,7 @@ static void unpackSinusoids (cBitStream* bsi, int32_t nHigh, int32_t addHarmonic
   int32_t n = 0;
   if (addHarmonicFlag)
     for (  ; n < nHigh; n++)
-      addHarmonic[n] = bsi->getBits (1);
+      addHarmonic[n] = (uint8_t)bsi->getBits (1);
 
   // zero out unused bands
   for (     ; n < MAX_QMF_BANDS; n++)
@@ -4769,9 +4769,9 @@ static void unpackSBRSingleChannel (cBitStream* bsi, sInfoSbr* psi, int32_t chan
   auto sbrFreq =  &(psi->sbrFreq[channelBase]);
   auto sbrChanL = &(psi->sbrChan[channelBase+0]);
 
-  psi->dataExtra = bsi->getBits (1);
+  psi->dataExtra = (uint8_t)bsi->getBits (1);
   if (psi->dataExtra)
-    psi->resBitsData = bsi->getBits (4);
+    psi->resBitsData = (uint8_t)bsi->getBits (4);
 
   unpackSBRGrid (bsi, sbrHdr, sbrGridL);
   unpackDeltaTimeFreq (bsi, sbrGridL->numEnv, sbrChanL->deltaFlagEnv, sbrGridL->numNoiseFloors, sbrChanL->deltaFlagNoise);
@@ -4780,10 +4780,10 @@ static void unpackSBRSingleChannel (cBitStream* bsi, sInfoSbr* psi, int32_t chan
   decodeSBREnvelope (bsi, psi, sbrGridL, sbrFreq, sbrChanL, 0);
   decodeSBRNoise (bsi, psi, sbrGridL, sbrFreq, sbrChanL, 0);
 
-  sbrChanL->addHarmonicFlag[1] = bsi->getBits (1);
+  sbrChanL->addHarmonicFlag[1] = (uint8_t)bsi->getBits (1);
   unpackSinusoids (bsi, sbrFreq->nHigh, sbrChanL->addHarmonicFlag[1], sbrChanL->addHarmonic[1]);
 
-  psi->extendedDataPresent = bsi->getBits (1);
+  psi->extendedDataPresent = (uint8_t)bsi->getBits (1);
   if (psi->extendedDataPresent) {
     psi->extendedDataSize = bsi->getBits (4);
     if (psi->extendedDataSize == 15)
@@ -4817,10 +4817,10 @@ static void unpackSBRChannelPair (cBitStream* bsi, sInfoSbr* psi, int32_t channe
   auto sbrChanL = &(psi->sbrChan[channelBase+0]);
   auto sbrChanR = &(psi->sbrChan[channelBase+1]);
 
-  psi->dataExtra = bsi->getBits (1);
+  psi->dataExtra = (uint8_t)bsi->getBits (1);
   if (psi->dataExtra) {
-    psi->resBitsData = bsi->getBits (4);
-    psi->resBitsData = bsi->getBits (4);
+    psi->resBitsData = (uint8_t)bsi->getBits (4);
+    psi->resBitsData = (uint8_t)bsi->getBits (4);
     }
 
   psi->couplingFlag = bsi->getBits (1);
@@ -4857,13 +4857,13 @@ static void unpackSBRChannelPair (cBitStream* bsi, sInfoSbr* psi, int32_t channe
     decodeSBRNoise (bsi, psi, sbrGridR, sbrFreq, sbrChanR, 1);
     }
 
-  sbrChanL->addHarmonicFlag[1] = bsi->getBits (1);
+  sbrChanL->addHarmonicFlag[1] = (uint8_t)bsi->getBits (1);
   unpackSinusoids (bsi, sbrFreq->nHigh, sbrChanL->addHarmonicFlag[1], sbrChanL->addHarmonic[1]);
 
-  sbrChanR->addHarmonicFlag[1] = bsi->getBits (1);
+  sbrChanR->addHarmonicFlag[1] = (uint8_t)bsi->getBits (1);
   unpackSinusoids (bsi, sbrFreq->nHigh, sbrChanR->addHarmonicFlag[1], sbrChanR->addHarmonic[1]);
 
-  psi->extendedDataPresent = bsi->getBits (1);
+  psi->extendedDataPresent = (uint8_t)bsi->getBits (1);
   if (psi->extendedDataPresent) {
     psi->extendedDataSize = bsi->getBits (4);
     if (psi->extendedDataSize == 15)
@@ -7556,8 +7556,6 @@ static int32_t calcCovariance1 (int32_t* XBuf, int32_t* p01reN, int32_t* p01imN,
     *p11reN = p11re.r.hi32 >> hiShift;  *p22reN = p22re.r.hi32 >> hiShift;
     return (32 - 2*FBITS_OUT_QMFA - hiShift);
     }
-
-  return 0;
   }
 //}}}
 //{{{
@@ -7663,8 +7661,6 @@ static int32_t calcCovariance2 (int32_t* XBuf, int32_t* p02reN, int32_t* p02imN)
     *p02imN = p02im.r.hi32 >> hiShift;
     return (32 - 2*FBITS_OUT_QMFA - hiShift);
     }
-
-  return 0;
   }
 //}}}
 
