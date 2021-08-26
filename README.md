@@ -18,3 +18,6 @@ Linux
 
 Windows
 - paintbox.sln in build directory
+
+Linux trick to use clang
+- CXX="clang++" CC="clang" cmake ..

@@ -23,7 +23,8 @@ add_library (utils ${UTILS_HEADER_FILES} ${UTILS_SOURCE_FILES})
 if (MSVC)
   target_compile_options (utils PUBLIC /W4 /arch:AVX /fp:fast /std:c++latest)
 else()
-  target_compile_options (utils PUBLIC -Wall -Wextra -pedantic -Ofast -std=c++2a)
+  target_compile_options (utils PUBLIC -Wall -Wextra -Wno-missing-field-initializers -Wno-format-overflow
+                                       -pedantic -Ofast -std=c++2a)
 endif()
 
 # imgui project
