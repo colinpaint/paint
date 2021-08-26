@@ -386,18 +386,18 @@ FMT_BEGIN_NAMESPACE
   //{{{
   /** Creates a text style from the foreground (text) color. */
   FMT_CONSTEXPR inline text_style fg (detail::color_type foreground) FMT_NOEXCEPT {
-    return text_style(true, foreground);
+    return text_style (true, foreground);
   }
   //}}}
   //{{{
   /** Creates a text style from the background color. */
   FMT_CONSTEXPR inline text_style bg (detail::color_type background) FMT_NOEXCEPT {
-    return text_style(false, background);
+    return text_style (false, background);
   }
   //}}}
   //{{{
   FMT_CONSTEXPR inline text_style operator | (emphasis lhs, emphasis rhs) FMT_NOEXCEPT {
-    return text_style(lhs) | rhs;
+    return text_style (lhs) | rhs;
   }
   //}}}
 
@@ -493,17 +493,15 @@ FMT_BEGIN_NAMESPACE
     };
     //}}}
     //{{{
-    template <typename Char> FMT_CONSTEXPR ansi_color_escape<Char> make_foreground_color (
-        detail::color_type foreground) FMT_NOEXCEPT {
+    template <typename Char> FMT_CONSTEXPR ansi_color_escape<Char> make_foreground_color (detail::color_type foreground) FMT_NOEXCEPT {
 
-      return ansi_color_escape<Char>(foreground, "\x1b[38;2;");
+      return ansi_color_escape<Char> (foreground, "\x1b[38;2;");
     }
     //}}}
     //{{{
-    template <typename Char> FMT_CONSTEXPR ansi_color_escape<Char> make_background_color (
-        detail::color_type background) FMT_NOEXCEPT {
+    template <typename Char> FMT_CONSTEXPR ansi_color_escape<Char> make_background_color (detail::color_type background) FMT_NOEXCEPT {
 
-      return ansi_color_escape<Char>(background, "\x1b[48;2;");
+      return ansi_color_escape<Char> (background, "\x1b[48;2;");
     }
     //}}}
     //{{{
@@ -515,29 +513,29 @@ FMT_BEGIN_NAMESPACE
 
     //{{{
     template <typename Char> inline void fputs (const Char* chars, FILE* stream) FMT_NOEXCEPT {
-      std::fputs(chars, stream);
+      std::fputs (chars, stream);
     }
     //}}}
     //{{{
     template <> inline void fputs<wchar_t> (const wchar_t* chars, FILE* stream) FMT_NOEXCEPT {
-      std::fputws(chars, stream);
+      std::fputws (chars, stream);
     }
     //}}}
 
     //{{{
     template <typename Char> inline void reset_color (FILE* stream) FMT_NOEXCEPT {
-      fputs("\x1b[0m", stream);
+      fputs ("\x1b[0m", stream);
     }
     //}}}
     //{{{
     template <> inline void reset_color<wchar_t> (FILE* stream) FMT_NOEXCEPT {
-      fputs(L"\x1b[0m", stream);
+      fputs (L"\x1b[0m", stream);
     }
     //}}}
     //{{{
     template <typename Char> inline void reset_color (buffer<Char>& buffer) FMT_NOEXCEPT {
-      auto reset_color = string_view("\x1b[0m");
-      buffer.append(reset_color.begin(), reset_color.end());
+      auto reset_color = string_view ("\x1b[0m");
+      buffer.append (reset_color.begin(), reset_color.end());
     }
     //}}}
 
@@ -550,24 +548,24 @@ FMT_BEGIN_NAMESPACE
       if (ts.has_emphasis()) {
         has_style = true;
         auto emphasis = detail::make_emphasis<Char>(ts.get_emphasis());
-        buf.append(emphasis.begin(), emphasis.end());
+        buf.append (emphasis.begin(), emphasis.end());
       }
 
       if (ts.has_foreground()) {
         has_style = true;
-        auto foreground = detail::make_foreground_color<Char>(ts.get_foreground());
-        buf.append(foreground.begin(), foreground.end());
+        auto foreground = detail::make_foreground_color<Char> (ts.get_foreground());
+        buf.append (foreground.begin(), foreground.end());
       }
 
       if (ts.has_background()) {
         has_style = true;
-        auto background = detail::make_background_color<Char>(ts.get_background());
-        buf.append(background.begin(), background.end());
+        auto background = detail::make_background_color<Char> (ts.get_background());
+        buf.append (background.begin(), background.end());
       }
 
-      detail::vformat_to(buf, format_str, args, {});
+      detail::vformat_to (buf, format_str, args, {});
 
-      if (has_style) detail::reset_color<Char>(buf);
+      if (has_style) detail::reset_color<Char> (buf);
     }
     //}}}
     FMT_END_DETAIL_NAMESPACE
@@ -598,8 +596,7 @@ FMT_BEGIN_NAMESPACE
   template <typename S, typename... Args, FMT_ENABLE_IF(detail::is_string<S>::value)>
   void print (std::FILE* f, const text_style& ts, const S& format_str, const Args&... args) {
 
-    vprint(f, ts, format_str,
-           fmt::make_args_checked<Args...>(format_str, args...));
+    vprint (f, ts, format_str, fmt::make_args_checked<Args...>(format_str, args...));
   }
   //}}}
   //{{{  template print
@@ -616,7 +613,7 @@ FMT_BEGIN_NAMESPACE
    */
   template <typename S, typename... Args, FMT_ENABLE_IF(detail::is_string<S>::value)>
   void print (const text_style& ts, const S& format_str, const Args&... args) {
-    return print(stdout, ts, format_str, args...);
+    return print (stdout, ts, format_str, args...);
   }
   //}}}
   //{{{  template vformat
@@ -624,7 +621,7 @@ FMT_BEGIN_NAMESPACE
   inline std::basic_string<Char> vformat (const text_style& ts, const S& format_str, basic_format_args<buffer_context<type_identity_t<Char>>> args) {
 
     basic_memory_buffer<Char> buf;
-    detail::vformat_to (buf, ts, to_string_view(format_str), args);
+    detail::vformat_to (buf, ts, to_string_view (format_str), args);
     return fmt::to_string (buf);
   }
   //}}}
@@ -644,8 +641,7 @@ FMT_BEGIN_NAMESPACE
   template <typename S, typename... Args, typename Char = char_t<S>>
   inline std::basic_string<Char> format(const text_style& ts, const S& format_str, const Args&... args) {
 
-    return fmt::vformat (ts, to_string_view(format_str),
-                         fmt::make_args_checked<Args...>(format_str, args...));
+    return fmt::vformat (ts, to_string_view (format_str), fmt::make_args_checked<Args...>(format_str, args...));
   }
   //}}}
   //{{{  template vformat_to
@@ -654,11 +650,11 @@ FMT_BEGIN_NAMESPACE
    */
   template <typename OutputIt, typename Char, FMT_ENABLE_IF(detail::is_output_iterator<OutputIt, Char>::value)>
   OutputIt vformat_to (OutputIt out, const text_style& ts, basic_string_view<Char> format_str,
-              basic_format_args<buffer_context<type_identity_t<Char>>> args) {
+                       basic_format_args<buffer_context<type_identity_t<Char>>> args) {
 
     auto&& buf = detail::get_buffer<Char>(out);
-    detail::vformat_to(buf, ts, format_str, args);
-    return detail::get_iterator(buf);
+    detail::vformat_to (buf, ts, format_str, args);
+    return detail::get_iterator (buf);
   }
   //}}}
   //{{{  template format_to
@@ -675,14 +671,11 @@ FMT_BEGIN_NAMESPACE
     \endrst
   */
   template <typename OutputIt, typename S, typename... Args,
-            bool enable = detail::is_output_iterator<OutputIt, char_t<S>>::value&&
-            detail::is_string<S>::value>
+            bool enable = detail::is_output_iterator<OutputIt, char_t<S>>::value&& detail::is_string<S>::value>
   inline auto format_to (OutputIt out, const text_style& ts, const S& format_str,
-                         Args&&... args) ->
-                         typename std::enable_if<enable, OutputIt>::type {
+                         Args&&... args) -> typename std::enable_if<enable, OutputIt>::type {
 
-    return vformat_to(out, ts, to_string_view(format_str),
-                      fmt::make_args_checked<Args...>(format_str, args...));
+    return vformat_to (out, ts, to_string_view(format_str), fmt::make_args_checked<Args...>(format_str, args...));
   }
   //}}}
 

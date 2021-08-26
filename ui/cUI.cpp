@@ -14,7 +14,6 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 
-#include "../utils/utils.h"
 #include "../utils/cLog.h"
 #include "../graphics/cGraphics.h"
 #include "../brush/cBrush.h"
