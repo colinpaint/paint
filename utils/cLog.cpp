@@ -42,9 +42,10 @@
 #include <map>
 #include <chrono>
 
-#include "core.h"
-#include "date.h"
 #include "cLog.h"
+
+#include "formatColor.h"
+#include "date.h"
 
 #define remove_utf8   remove
 #define rename_utf8   rename
@@ -68,7 +69,7 @@ public:
   };
 //}}}
 
-namespace { 
+namespace {
   const char kConsoleMidGrey[] =   "\033[38;5;243m";
   const char kConsoleLightGrey[] = "\033[38;5;249m";
   const char kConsoleWhite[] =     "\033[38;5;255m";
@@ -575,10 +576,9 @@ void cLog::log (enum eLogLevel logLevel, const string& logStr) {
 
   else if (logLevel <= mLogLevel) {
     string timeString = date::format ("%T", chrono::floor<chrono::microseconds>(now - chrono::floor<date::days>(now)));
-    fputs (fmt::format ("{}{} {}{} {}{}\n",
-                        kConsoleWhite, timeString, kConsoleLightGrey, getThreadNameString (getThreadId()),
-                        kLevelColours[logLevel], logStr).c_str(),
-           stdout);
+    fmt::print (fg (fmt::color::floral_white) | fmt::emphasis::bold,
+                "{} {}{} {}{}\n",
+                timeString, kConsoleLightGrey, getThreadNameString (getThreadId()), kLevelColours[logLevel], logStr);
 
     if (mFile) {
       fputs (fmt::format ("{}{} {}{} {}{}\n",
