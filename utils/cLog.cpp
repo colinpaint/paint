@@ -40,6 +40,7 @@
 #include <mutex>
 #include <deque>
 #include <map>
+#include <chrono>
 
 #include "core.h"
 #include "date.h"
@@ -53,7 +54,21 @@
 using namespace std;
 //}}}
 
-namespace { // anonymous
+//{{{
+class cLine {
+public:
+  cLine (eLogLevel logLevel, uint64_t threadId,
+         chrono::time_point<chrono::system_clock> timePoint, const string& lineString)
+    : mLogLevel(logLevel), mThreadId(threadId), mTimePoint(timePoint), mString(lineString) {}
+
+  eLogLevel mLogLevel;
+  uint64_t mThreadId;
+  chrono::time_point<chrono::system_clock> mTimePoint;
+  string mString;
+  };
+//}}}
+
+namespace { 
   const char kConsoleMidGrey[] =   "\033[38;5;243m";
   const char kConsoleLightGrey[] = "\033[38;5;249m";
   const char kConsoleWhite[] =     "\033[38;5;255m";
@@ -74,11 +89,12 @@ namespace { // anonymous
 
   map <uint64_t, string> mThreadNameMap;
 
+  deque <cLine> mLineDeque;
   mutex mLinesMutex;
-  deque <cLog::cLine> mLineDeque;
 
   FILE* mFile = NULL;
   bool mBuffer = false;
+
   chrono::hours gDaylightSavingHours;
 
   #ifdef _WIN32
@@ -393,7 +409,11 @@ namespace { // anonymous
 
 //{{{
 cLog::~cLog() {
-  close();
+
+  if (mFile) {
+    fclose (mFile);
+    mFile = NULL;
+    }
 
   #ifdef __linux__
     //{{{  Disable alternative signal handler stack
@@ -473,15 +493,6 @@ bool cLog::init (enum eLogLevel logLevel, bool buffer, const string& logFilePath
   setThreadName ("main");
 
   return mFile != NULL;
-  }
-//}}}
-//{{{
-void cLog::close() {
-
-  if (mFile) {
-    fclose (mFile);
-    mFile = NULL;
-    }
   }
 //}}}
 

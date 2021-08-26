@@ -21,7 +21,7 @@ file (GLOB UTILS_HEADER_FILES utils/*.h)
 file (GLOB UTILS_SOURCE_FILES utils/*.cpp utils/*.c)
 add_library (utils ${UTILS_HEADER_FILES} ${UTILS_SOURCE_FILES})
 if (MSVC)
-  target_compile_options (utils PUBLIC /W4 /arch:AVX /fp:fast /std:c++latest)
+  target_compile_options (utils PUBLIC /W4 /arch:AVX /fp:fast /std:c++20)
 else()
   target_compile_options (utils PUBLIC -Wall -Wextra -Wno-missing-field-initializers -Wno-format-overflow
                                        -pedantic -Ofast -std=c++2a)
@@ -59,7 +59,7 @@ add_library (canvas ${CANVAS_HEADER_FILES} ${CANVAS_SRCFILES})
 target_include_directories (canvas PUBLIC imgui stb)
 target_link_libraries (canvas PUBLIC utils)
 
-### main project ###
+################## main project ###################
 project (paintbox VERSION 1.0.0)
 
 find_package (OpenGL REQUIRED)
