@@ -16,16 +16,17 @@ class cLog {
 public:
   ~cLog();
 
-  static bool init (eLogLevel logLevel = LOGINFO,
-                    bool buffer = false,
-                    const std::string& logFilePath = "");
+  static bool init (eLogLevel logLevel = LOGINFO, bool buffer = false, const std::string& logFilePath = "");
 
+  // get
   static enum eLogLevel getLogLevel();
 
+  // set
   static void cycleLogLevel();
   static void setLogLevel (eLogLevel logLevel);
   static void setThreadName (const std::string& name);
 
+  // log
   static void log (eLogLevel logLevel, const std::string& logStr);
   static void log (eLogLevel logLevel, const char* format, ... );
 
@@ -35,5 +36,5 @@ public:
   static bool getLine (cLine& line, unsigned lineNum, unsigned& lastLineIndex);
 
 private:
-  static std::string getThreadNameString (uint64_t threadId);
+  static std::string getThreadName (uint64_t threadId);
   };

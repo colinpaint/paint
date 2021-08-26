@@ -5,6 +5,11 @@
   #define _CRT_SECURE_NO_WARNINGS
   #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
   #define NOMINMAX
+#endif
+
+#include "cLog.h"
+
+#ifdef _WIN32
   #include "windows.h"
 #endif
 
@@ -41,8 +46,6 @@
 #include <deque>
 #include <map>
 #include <chrono>
-
-#include "cLog.h"
 
 #include "formatColor.h"
 #include "date.h"
@@ -408,6 +411,7 @@ namespace {
   #endif
   }
 
+// public:
 //{{{
 cLog::~cLog() {
 
@@ -502,15 +506,6 @@ enum eLogLevel cLog::getLogLevel() {
   return mLogLevel;
   }
 //}}}
-//{{{
-string cLog::getThreadNameString (uint64_t threadId) {
-  auto it = mThreadNameMap.find (threadId);
-  if (it != mThreadNameMap.end())
-    return it->second;
-  else
-    return fmt::format ("{4x}", threadId / 8);
-  }
-//}}}
 
 //{{{
 void cLog::cycleLogLevel() {
@@ -575,14 +570,13 @@ void cLog::log (enum eLogLevel logLevel, const string& logStr) {
     }
 
   else if (logLevel <= mLogLevel) {
-    string timeString = date::format ("%T", chrono::floor<chrono::microseconds>(now - chrono::floor<date::days>(now)));
+    string timeString = date::format ("%T", chrono::floor<chrono::microseconds>(now));
     fmt::print (fg (fmt::color::floral_white) | fmt::emphasis::bold,
                 "{} {}{} {}{}\n",
-                timeString, kConsoleLightGrey, getThreadNameString (getThreadId()), kLevelColours[logLevel], logStr);
+                kConsoleLightGrey, timeString, getThreadName (getThreadId()), kLevelColours[logLevel], logStr);
 
     if (mFile) {
-      fputs (fmt::format ("{}{} {}{} {}{}\n",
-             timeString, getThreadNameString (getThreadId()), logStr).c_str(), mFile);
+      fputs (fmt::format ("{} {} {}\n", timeString, getThreadName (getThreadId()), logStr).c_str(), mFile);
       fflush (mFile);
       }
     }
@@ -646,5 +640,17 @@ bool cLog::getLine (cLine& line, unsigned lineNum, unsigned& lastLineIndex) {
         }
 
   return false;
+  }
+//}}}
+
+// private:
+//{{{
+string cLog::getThreadName (uint64_t threadId) {
+
+  auto it = mThreadNameMap.find (threadId);
+  if (it != mThreadNameMap.end())
+    return it->second;
+  else
+    return fmt::format ("{4x}", threadId / 8);
   }
 //}}}
