@@ -27,6 +27,20 @@ else()
                                        -pedantic -Ofast -std=c++2a)
 endif()
 
+# audio project
+project (audio)
+file (GLOB AUDIO_HEADER_FILES audio/*.h)
+file (GLOB AUDIO_SOURCE_FILES audio/*.cpp)
+add_library (audio ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
+target_link_libraries (audio PUBLIC utils)
+
+# net project
+project (net)
+file (GLOB NET_HEADER_FILES net/*.h)
+file (GLOB NET_SOURCE_FILES net/*.cpp)
+add_library (net ${NET_HEADER_FILES} ${NET_SOURCE_FILES})
+target_link_libraries (net PUBLIC utils)
+
 # imgui project
 project (imgui)
 file (GLOB IMGUI_HEADER_FILES imgui/*.h)
