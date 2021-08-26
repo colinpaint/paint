@@ -34,12 +34,34 @@ file (GLOB AUDIO_SOURCE_FILES audio/*.cpp)
 add_library (audio ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
 target_link_libraries (audio PUBLIC utils)
 
+# kiss project
+project (kiss)
+file (GLOB KISS_HEADER_FILES kiss/*.h)
+file (GLOB KISS_SOURCE_FILES kiss/*.c)
+add_library (kiss ${KISS_HEADER_FILES} ${KISS_SOURCE_FILES})
+target_link_libraries (kiss PUBLIC utils)
+
+# decoder project
+project (decoder)
+file (GLOB DECODER_HEADER_FILES decoder/*.h)
+file (GLOB DECODER_SOURCE_FILES decoder/*.cpp)
+add_library (decoder ${DECODER_HEADER_FILES} ${DECODER_SOURCE_FILES})
+target_include_directories (decoder PUBLIC ffmpeg/inc)
+target_link_libraries (decoder PUBLIC utils)
+
 # net project
 project (net)
 file (GLOB NET_HEADER_FILES net/*.h)
 file (GLOB NET_SOURCE_FILES net/*.cpp)
 add_library (net ${NET_HEADER_FILES} ${NET_SOURCE_FILES})
 target_link_libraries (net PUBLIC utils)
+
+# dvb project
+project (dvb)
+file (GLOB DVB_HEADER_FILES dvb/*.h)
+file (GLOB DVB_SOURCE_FILES dvb/*.cpp)
+add_library (dvb ${DVB_HEADER_FILES} ${DVB_SOURCE_FILES})
+target_link_libraries (dvb PUBLIC utils)
 
 # imgui project
 project (imgui)

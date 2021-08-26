@@ -1,37 +1,42 @@
-// cWInAudio32.cpp
-#ifdef __WIN32
-
+// cWinAudio.cpp
+#ifdef _WIN32
 //{{{  includes
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
-#include "cWinAudio32.h"
+#include "cWinAudio16.h"
 
 #include <cstdint>
 #include "../utils/cLog.h"
 
 #pragma comment(lib,"Xaudio2.lib")
 //}}}
+//{{{  const
 const int kMaxBuffers = 2;
+
 const int kMaxChannels = 6;
-const int kBitsPerSample = 32;
+const int kBitsPerSample = 16;
+const int kBytesPerChannel = 2;
+
 const int kMaxSamples = 2048;
+//}}}
 
 // public
 //{{{
 cAudio::cAudio (int srcChannels, int srcSampleRate, int latency, bool int16) : mDstVolume(kDefaultVolume) {
 
-  (void)latency;
   (void)int16;
+  (void) latency;
 
   // alloc and clear mSilence
-  mSilence = (float*)calloc (kMaxChannels * kMaxSamples, kBitsPerSample/8);
+  mSilence = (int16_t*)malloc (kMaxChannels * kMaxSamples * kBytesPerChannel);
+  memset (mSilence, 0, kMaxChannels * kMaxSamples * kBytesPerChannel);
 
   // guess initial buffer alloc
   for (auto i = 0; i < kMaxBuffers; i++) {
     XAUDIO2_BUFFER buffer;
     memset (&buffer, 0, sizeof (XAUDIO2_BUFFER));
-    buffer.AudioBytes = kMaxChannels * kMaxSamples * kBitsPerSample/4;
-    buffer.pAudioData = (const BYTE*)malloc (buffer.AudioBytes);
+    buffer.AudioBytes = kMaxChannels * kMaxSamples * kBytesPerChannel;
+    buffer.pAudioData = (const BYTE*)malloc (kMaxChannels * kMaxSamples * kBytesPerChannel);
     mBuffers.push_back (buffer);
     }
   open (srcChannels, srcSampleRate);
@@ -60,17 +65,17 @@ void cAudio::play (int srcChannels, void* srcSamples, int srcNumSamples, float p
 
   if (srcChannels != mSrcChannels) {
     //{{{  recreate sourceVoice with new num of channels
-    cLog::log (LOGNOTICE, fmt::format ("audPlay - srcChannels:{} changedTo:{}" + mSrcChannels, srcChannels));
+    cLog::log (LOGNOTICE, fmt::format ("audPlay - srcChannels:{} changedTo {}",mSrcChannels,srcChannels));
     close();
 
     open (srcChannels, mSrcSampleRate);
     }
     //}}}
 
-  int len = srcChannels * srcNumSamples * kBitsPerSample/8;
+  int len = srcChannels * srcNumSamples * 2;
   if (srcNumSamples > kMaxSamples) {
     //{{{  error, return
-    cLog::log (LOGERROR, fmt::format ("audPlay - too many samples {}", srcNumSamples));
+    cLog::log (LOGERROR, fmt::format("audPlay - too many samples {}",srcNumSamples));
     return;
     }
     //}}}
@@ -141,7 +146,7 @@ void cAudio::play (int srcChannels, void* srcSamples, int srcNumSamples, float p
             }
             //}}}
           }
-        cLog::log (LOGNOTICE,fmt::format ("6 to 2 mixdown changed to {}", mMixDown));
+        cLog::log (LOGNOTICE, fmt::format ("6 to 2 mixdown changed to {}",mMixDown));
         }
         //}}}
       else if (mDstChannels == 4) {
@@ -288,7 +293,7 @@ void cAudio::play (int srcChannels, void* srcSamples, int srcNumSamples, float p
             }
             //}}}
           }
-        cLog::log (LOGNOTICE, fmt::format ("6 to 6 mixdown changed to {} ", mMixDown));
+        cLog::log (LOGNOTICE, fmt::format ("6 to 6 mixdown changed to {}",mMixDown));
         }
         //}}}
       }
@@ -300,7 +305,7 @@ void cAudio::play (int srcChannels, void* srcSamples, int srcNumSamples, float p
                                   1.f, 0.f,  // dst L
                                   0.f, 1.f}; // dst R
         mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
-        cLog::log (LOGNOTICE, fmt::format ("2 to 2 mixdown changed to {} nothing changed", mMixDown));
+        cLog::log (LOGNOTICE, fmt::format("2 to 2 mixdown changed to{}  nothing changed ", mMixDown));
         }
         //}}}
       else if (mDstChannels == 4) {
@@ -323,7 +328,7 @@ void cAudio::play (int srcChannels, void* srcSamples, int srcNumSamples, float p
                                    1.f, 0.f,  // dst BL
                                    0.f, 1.f}; // dst BR
         mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
-        cLog::log (LOGNOTICE, fmt::format( "2 to 6 mixdown changed to {} nothing changed", mMixDown));
+        cLog::log (LOGNOTICE, fmt::format ("2 to 6 mixdown changed to {} nothing changed",mMixDown));
         }
         //}}}
       }
@@ -340,7 +345,6 @@ void cAudio::play (int srcChannels, void* srcSamples, int srcNumSamples, float p
   }
 //}}}
 
-// private
 //{{{
 void cAudio::open (int srcChannels, int srcSampleRate) {
 
@@ -350,7 +354,7 @@ void cAudio::open (int srcChannels, int srcSampleRate) {
   // create XAudio2 engine.
   if (XAudio2Create (&mXAudio2) != S_OK) {
     //{{{  error, return
-    cLog::log (LOGERROR, "cWinAudio32 - XAudio2Create failed");
+    cLog::log (LOGERROR, "cWinAudio - XAudio2Create failed");
     return;
     }
     //}}}
@@ -358,7 +362,7 @@ void cAudio::open (int srcChannels, int srcSampleRate) {
   // create masteringVoice
   if (mXAudio2->CreateMasteringVoice (&mMasteringVoice, XAUDIO2_DEFAULT_CHANNELS, srcSampleRate) != S_OK) {
     //{{{  error, return
-    cLog::log (LOGERROR, "cWinAudio32 - CreateMasteringVoice failed");
+    cLog::log (LOGERROR, "cWinAudio - CreateMasteringVoice failed");
     return;
     }
     //}}}
@@ -373,18 +377,18 @@ void cAudio::open (int srcChannels, int srcSampleRate) {
   mMasteringVoice->GetVoiceDetails (&masteringVoiceDetails);
   mDstChannels = masteringVoiceDetails.InputChannels;
   mDstSampleRate = masteringVoiceDetails.InputSampleRate;
-  cLog::log (LOGINFO, fmt::format ("cWinAudio32 - audOpen mask:{:x} channels:{}  sampleRate:{}",
-                                   mDstChannelMask, mDstChannels, mDstSampleRate));
+  cLog::log (LOGINFO, fmt::format ("cWinAudio - audOpen mask:{} channels{} smapleRate{}",
+                                   mDstChannelMask,mDstChannels,mDstSampleRate));
 
   // create sourceVoice
   WAVEFORMATEX waveformatex;
   memset (&waveformatex, 0, sizeof (WAVEFORMATEX));
-  waveformatex.wFormatTag      = WAVE_FORMAT_IEEE_FLOAT;
+  waveformatex.wFormatTag      = WAVE_FORMAT_PCM;
   waveformatex.wBitsPerSample  = kBitsPerSample;
-  waveformatex.nChannels       = static_cast<WORD>(srcChannels);
+  waveformatex.nChannels       = srcChannels;
   waveformatex.nSamplesPerSec  = (unsigned long)srcSampleRate;
   waveformatex.nBlockAlign     = srcChannels * kBitsPerSample / 8;
-  waveformatex.nAvgBytesPerSec = static_cast<WORD>(waveformatex.nSamplesPerSec * srcChannels * kBitsPerSample / 8);
+  waveformatex.nAvgBytesPerSec = waveformatex.nSamplesPerSec * srcChannels * kBitsPerSample / 8;
 
   if (mXAudio2->CreateSourceVoice (&mSourceVoice, &waveformatex,
                                    0, XAUDIO2_DEFAULT_FREQ_RATIO, &mVoiceCallback, nullptr, nullptr) != S_OK) {

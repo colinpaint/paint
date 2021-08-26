@@ -1,4 +1,4 @@
-// cWinAudio32.h
+// cWinAudio16.h
 #pragma once
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <xaudio2.h>
 #include <vector>
-
 #include "iAudio.h"
 //}}}
 
@@ -84,7 +83,7 @@ private:
   int mSrcSampleRate = 0;
 
   // buffers
-  float* mSilence = nullptr;
+  int16_t* mSilence = nullptr;
 
   int mBufferIndex = 0;
   std::vector<XAUDIO2_BUFFER> mBuffers;
