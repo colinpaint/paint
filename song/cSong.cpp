@@ -539,7 +539,7 @@ void cHlsSong::setBaseHls (int64_t pts, chrono::system_clock::time_point timePoi
 
   mBaseTimePoint = timePoint + offset;
   auto midnightBaseTimePoint = date::floor<date::days>(mBaseTimePoint);
-  mBaseSinceMidnightMs = duration_cast<chrono::milliseconds>(mBaseTimePoint - midnightBaseTimePoint).count();
+  mBaseSinceMidnightMs = chrono::duration_cast<chrono::milliseconds>(mBaseTimePoint - midnightBaseTimePoint).count();
 
   mBaseChunkNum = chunkNum;
   }
