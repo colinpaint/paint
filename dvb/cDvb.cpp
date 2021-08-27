@@ -757,7 +757,7 @@ cDvb::cDvb (int frequency, int adapter) : mFrequency(frequency), mAdapter(adapte
 
     #endif
     }
-  };
+  }
 //}}}
 //{{{
 cDvb::~cDvb() {

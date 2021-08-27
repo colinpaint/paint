@@ -116,6 +116,7 @@ namespace { // anonymous
                         chrono::system_clock::time_point starttime,
                         bool selected) {
 
+      (void)starttime;
       lock_guard<mutex> lockGuard (mFileMutex);
 
       service->closeFile();
@@ -173,12 +174,16 @@ namespace { // anonymous
 
     //{{{
     virtual bool audDecodePes (cPidInfo* pidInfo, bool skip) {
+      (void)pidInfo;
+      (void)skip;
       //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " a - " + dec(pidInfo->getBufUsed());
       return false;
       }
     //}}}
     //{{{
     virtual bool vidDecodePes (cPidInfo* pidInfo, bool skip) {
+      (void)pidInfo;
+      (void)skip;
       //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
       return false;
       }
@@ -188,7 +193,7 @@ namespace { // anonymous
 
       if (kDebug)
         cLog::log (LOGINFO1, fmt::format ("subtitle pid:{} sid:{} size:{} {} {} ",
-                            pidInfo->mPid, pidInfo->mSid,                             
+                            pidInfo->mPid, pidInfo->mSid,
                             pidInfo->getBufUsed(),getFullPtsString (pidInfo->mPts), getChannelStringBySid (pidInfo->mSid)));
 
       if (mDecodeSubtitle) {
@@ -233,7 +238,7 @@ cTsDvb::cTsDvb (int frequency, const string& root,
     : cDvb (frequency, 0), mDecodeSubtitle(decodeSubtitle) {
 
   mDvbTransportStream = new cDvbTransportStream (root, channelNames, recordNames, decodeSubtitle);
-  };
+  }
 //}}}
 //{{{
 cTsDvb::~cTsDvb() {

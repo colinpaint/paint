@@ -49,7 +49,8 @@ file (GLOB DECODER_HEADER_FILES decoder/*.h)
 file (GLOB DECODER_SOURCE_FILES decoder/*.cpp)
 add_library (decoder ${DECODER_HEADER_FILES} ${DECODER_SOURCE_FILES})
 target_include_directories (decoder PUBLIC ffmpeg/inc)
-target_link_libraries (decoder PUBLIC utils)
+target_link_directories (audio PUBLIC ffmpeg/x64)
+target_link_libraries (decoder PUBLIC utils avutil avcodec avformat swresample swscale)
 
 # net project
 project (net)
@@ -105,9 +106,9 @@ file (GLOB CAPTURE_HEADER_FILES audio/*.h)
 file (GLOB CAPTURE_SOURCE_FILES app/capture.cpp)
 
 add_executable (captureApp ${CAPTURE_SOURCE_FILES} ${CAPTURE_HEADER_FILES})
-#target_include_directories (captureApp PUBLIC ffmpeg/inc)
-target_link_directories (captureApp PUBLIC ffmpeg/x64)
-target_link_libraries (captureApp PUBLIC audio winmm avrt)
+#target_include_directories (captureApp PRIVATE ffmpeg/inc)
+target_link_directories (captureApp PRIVATE ffmpeg/x64)
+target_link_libraries (captureApp PRIVATE winmm avrt audio)
 endif()
 
 ################## paintbox main project ###################

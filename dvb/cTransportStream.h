@@ -208,17 +208,25 @@ public:
   std::map <int, cService> mServiceMap;
 
 protected:
+  //{{{
   virtual void start (cService* service, const std::string& name,
                       std::chrono::system_clock::time_point time,
                       std::chrono::system_clock::time_point startTime,
-                      bool selected) {}
-  virtual void pesPacket (int sid, int pid, uint8_t* ts) {}
-  virtual void stop (cService* service) {}
+                      bool selected) {
+   (void)service;
+   (void)name;
+   (void)time;
+   (void)startTime;
+   (void)selected;
+   }
+  //}}}
+  virtual void pesPacket (int sid, int pid, uint8_t* ts) { (void)sid; (void)pid; (void)ts; }
+  virtual void stop (cService* service) { (void)service; }
 
-  virtual bool audDecodePes (cPidInfo* pidInfo, bool skip) { return false; }
-  virtual bool audAltDecodePes (cPidInfo* pidInfo, bool skip) { return false; }
-  virtual bool vidDecodePes (cPidInfo* pidInfo, bool skip) { return false; }
-  virtual bool subDecodePes (cPidInfo* pidInfo) { return false; }
+  virtual bool audDecodePes (cPidInfo* pidInfo, bool skip) { (void)pidInfo; (void)skip; return false; }
+  virtual bool audAltDecodePes (cPidInfo* pidInfo, bool skip) { (void)pidInfo; (void)skip; return false; }
+  virtual bool vidDecodePes (cPidInfo* pidInfo, bool skip) { (void)pidInfo; (void)skip; return false; }
+  virtual bool subDecodePes (cPidInfo* pidInfo) { (void)pidInfo; return false; }
 
   void clearPidCounts();
   void clearPidContinuity();

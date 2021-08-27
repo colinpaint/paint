@@ -5952,7 +5952,7 @@ string cDvbUtils::getString (uint8_t* buf) {
 
     return str;
     }
-  };
+  }
 //}}}
 
 // cTsBlockPool members

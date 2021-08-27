@@ -768,12 +768,14 @@ char cTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int st
               return 0;
             retData |= *mDecBuffer++ << nbits;
             mDecBufferSize -= 8;
-          case 1:
+            // fall through
+           case 1:
             nbits -= 8;
             if (mDecBufferSize < 8)
               return 0;
             retData |= *mDecBuffer++ << nbits;
             mDecBufferSize -= 8;
+            // fall through
           case 0:
             break;
           }
@@ -1333,6 +1335,7 @@ void cTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
 //{{{
 void cTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
 
+  (void)pidInfo;
   auto nit = (sNit*)buf;
   auto sectionLength = HILO(nit->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
@@ -1383,6 +1386,7 @@ void cTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
 void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
 // SDT name services in mServiceMap
 
+  (void)pidInfo;
   auto sdt = (sSdt*)buf;
   auto sectionLength = HILO(sdt->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
@@ -1453,7 +1457,7 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
 //}}}
 //{{{
 void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
-
+  (void)pidInfo;
   auto eit = (sEit*)buf;
   auto sectionLength = HILO(eit->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {

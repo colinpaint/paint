@@ -2013,7 +2013,7 @@ public:
     //}}}
     //{{{
     auto eitCallback = [&](int sid, bool now, cDvbEpgItem& epgItem) noexcept {
-      
+
       (void)sid;
       //cLog::log (LOGINFO, format ("eit callback sid {} {}", sid, name));
       //mSid = sid;
@@ -2788,7 +2788,7 @@ cLoader::cLoader() {
   // create and use idle load
   mLoadIdle = new cLoadIdle();
   mLoadSource = mLoadIdle;
-  };
+  }
 //}}}
 //{{{
 cLoader::~cLoader() {
@@ -2811,7 +2811,7 @@ bool cLoader::togglePlaying() { return mLoadSource->togglePlaying(); }
 bool cLoader::skipBegin() { return  mLoadSource->skipBegin(); }
 bool cLoader::skipEnd() { return mLoadSource->skipEnd(); }
 bool cLoader::skipBack (bool shift, bool control) { return mLoadSource->skipBack (shift, control); }
-bool cLoader::skipForward (bool shift, bool control) { return mLoadSource->skipForward (shift, control); };
+bool cLoader::skipForward (bool shift, bool control) { return mLoadSource->skipForward (shift, control); }
 void cLoader::exit() { mLoadSource->exit(); }
 
 // cLoader load

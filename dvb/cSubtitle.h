@@ -203,15 +203,12 @@ public:
 
     if (mRects.empty())
       cLog::log (LOGINFO, "subtitle empty");
-    //else
-    //  for (unsigned int i = 0; i < mRects.size(); i++) {
-    //    cLog::log (LOGINFO, prefix +
-    //                        "rect:" + dec(i) +
-    //                        " x:"  + dec(mRects[i]->mX) +
-    //                        " y:"  + dec(mRects[i]->mY) +
-    //                        " w:"  + dec(mRects[i]->mWidth) +
-    //                        " h:"  + dec(mRects[i]->mHeight));
-    //    }
+    else
+      for (unsigned int i = 0; i < mRects.size(); i++) 
+        cLog::log (LOGINFO, fmt::format ("{} rect:{} x:{} y:{} w:{} h:{}", 
+                                         prefix, i,
+                                         mRects[i]->mX, mRects[i]->mY, 
+                                         mRects[i]->mWidth, mRects[i]->mHeight));
     }
   //}}}
 
