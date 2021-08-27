@@ -15,6 +15,8 @@ public:
   //{{{
   cAudio (int srcChannels, int srcSampleRate, int latency, bool int16) {
 
+    (void)srcChannels;
+    (void)srcSampleRate;
     int err = snd_pcm_open (&mHandle, "default", SND_PCM_STREAM_PLAYBACK, 0);
     if (err < 0)
       printf ("audOpen - snd_pcm_open error: %s\n", snd_strerror (err));

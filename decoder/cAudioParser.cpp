@@ -66,6 +66,7 @@ eAudioFrameType cAudioParser::parseSomeFrames (uint8_t* framePtr, uint8_t* frame
 bool cAudioParser::parseId3Tag (uint8_t* framePtr, uint8_t* frameEnd) {
 // look for ID3 Jpeg tag
 
+  (void)frameEnd;
   auto ptr = framePtr;
   auto tag = (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
 

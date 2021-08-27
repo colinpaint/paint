@@ -723,7 +723,7 @@ public:
 
     mPes = (uint8_t*)malloc (kInitPesSize);
     if (useQueue)
-      thread ([=](){ dequeThread(); }).detach();
+      thread ([=,this](){ dequeThread(); }).detach();
     }
   //}}}
   //{{{

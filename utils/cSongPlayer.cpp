@@ -87,7 +87,7 @@ using namespace chrono;
     }
 #else
   cSongPlayer::cSongPlayer (cSong* song, bool streaming) {
-    thread playerThread = thread ([=]() {
+    thread playerThread = thread ([=, this]() {
       // player lambda
       cLog::setThreadName ("play");
       float silence [2048*2] = { 0.f };
