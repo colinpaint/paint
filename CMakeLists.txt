@@ -29,7 +29,7 @@ if (MSVC)
   target_compile_options (utils PUBLIC /W4 /arch:AVX /fp:fast /std:c++20)
 else()
   target_compile_options (utils PUBLIC -Wall -Wextra -Wno-missing-field-initializers -Wno-format-overflow
-                                       -pedantic -Ofast -std=c++2a)
+                                       -flax-vector-conversions -pedantic -Ofast -std=c++2a)
 endif()
 
 ### audio project
@@ -148,7 +148,7 @@ endif()
 if (MSVC)
   target_link_libraries (paintbox PUBLIC song audio decoder dvb kiss net opengl32 d3d11 d3dcompiler ws2_32)
 else()
-  target_link_libraries (paintbox PUBLIC GL)
+  target_link_libraries (paintbox PUBLIC song audio decoder dvb kiss net pthread asound GL)
   target_link_options (paintbox PUBLIC -no-pie)
 endif()
 
