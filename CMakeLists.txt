@@ -7,7 +7,7 @@ set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 #target_compile_features (project PRIVATE cxx_std_20)
 
-# glfw
+# glfw project
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -32,7 +32,9 @@ project (audio)
 file (GLOB AUDIO_HEADER_FILES audio/*.h)
 file (GLOB AUDIO_SOURCE_FILES audio/*.cpp)
 add_library (audio ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
-target_link_libraries (audio PUBLIC utils)
+target_include_directories (audio PUBLIC ffmpeg/inc)
+target_link_directories (audio PUBLIC ffmpeg/x64)
+target_link_libraries (audio PUBLIC utils avutil avcodec avformat swresample swscale)
 
 # kiss project
 project (kiss)
@@ -95,7 +97,20 @@ add_library (canvas ${CANVAS_HEADER_FILES} ${CANVAS_SRCFILES})
 target_include_directories (canvas PUBLIC imgui stb)
 target_link_libraries (canvas PUBLIC utils)
 
-################## main project ###################
+################## WIN32 audio wsapi capture main project ###################
+if (MSVC)
+project (captureApp VERSION 1.0.0)
+
+file (GLOB CAPTURE_HEADER_FILES audio/*.h)
+file (GLOB CAPTURE_SOURCE_FILES app/capture.cpp)
+
+add_executable (captureApp ${CAPTURE_SOURCE_FILES} ${CAPTURE_HEADER_FILES})
+#target_include_directories (captureApp PUBLIC ffmpeg/inc)
+target_link_directories (captureApp PUBLIC ffmpeg/x64)
+target_link_libraries (captureApp PUBLIC audio winmm avrt)
+endif()
+
+################## paintbox main project ###################
 project (paintbox VERSION 1.0.0)
 
 find_package (OpenGL REQUIRED)
@@ -127,3 +142,4 @@ else()
   target_link_libraries (paintbox PUBLIC GL)
   target_link_options (paintbox PUBLIC -no-pie)
 endif()
+
