@@ -102,15 +102,13 @@ target_link_libraries (canvas PUBLIC utils)
 
 ################## WIN32 audio wsapi capture main project ###################
 if (MSVC)
-project (captureApp VERSION 1.0.0)
+project (captureAudio VERSION 1.0.0)
 
 file (GLOB CAPTURE_HEADER_FILES audio/*.h)
-file (GLOB CAPTURE_SOURCE_FILES app/capture.cpp)
+file (GLOB CAPTURE_SOURCE_FILES captureAudio/capture.cpp)
 
-add_executable (captureApp ${CAPTURE_SOURCE_FILES} ${CAPTURE_HEADER_FILES})
-#target_include_directories (captureApp PRIVATE ffmpeg/inc)
-target_link_directories (captureApp PRIVATE ffmpeg/x64)
-target_link_libraries (captureApp PRIVATE winmm avrt audio)
+add_executable (captureAudio ${CAPTURE_SOURCE_FILES} ${CAPTURE_HEADER_FILES})
+target_link_libraries (captureAudio PRIVATE winmm avrt audio)
 endif()
 
 ################## paintbox main project ###################
