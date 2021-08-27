@@ -73,20 +73,15 @@ public:
 //}}}
 
 namespace {
-  const char kConsoleMidGrey[] =   "\033[38;5;243m";
-  const char kConsoleLightGrey[] = "\033[38;5;249m";
-  const char kConsoleWhite[] =     "\033[38;5;255m";
-  //{{{
-  const char kLevelColours[][13] = {
-    "\033[38;5;255m", // 0 notice white
-    "\033[38;5;208m", // 1 title  orange
-    "\033[38;5;196m", // 2 error  light red
-    "\033[38;5;220m", // 3 info   yellow
-    "\033[38;5;112m", // 4 info1  green
-    "\033[38;5;144m", // 5 info2  greenish yellow
-    "\033[38;5;147m", // 6 info3  bluish
+  const fmt::color kLevelColours[] = {
+    fmt::color::white,        // notice
+    fmt::color::orange,       // title
+    fmt::color::light_salmon, // error
+    fmt::color::yellow,       // info
+    fmt::color::green,        // info1
+    fmt::color::lime_green,   // info2
+    fmt::color::lavender,     // info3
     };
-  //}}}
 
   const int kMaxBuffer = 10000;
   enum eLogLevel mLogLevel = LOGERROR;
@@ -570,13 +565,17 @@ void cLog::log (enum eLogLevel logLevel, const string& logStr) {
     }
 
   else if (logLevel <= mLogLevel) {
-    string timeString = date::format ("%T", chrono::floor<chrono::microseconds>(now));
-    fmt::print (fg (fmt::color::floral_white) | fmt::emphasis::bold,
-                "{} {}{} {}{}\n",
-               timeString, kConsoleLightGrey, getThreadName (getThreadId()), kLevelColours[logLevel], logStr);
+    fmt::print (fg (fmt::color::floral_white), // | fmt::emphasis::bold,
+                "{} {} {}\n",
+                date::format ("%T", chrono::floor<chrono::microseconds>(now)),
+                fmt::format (fg (fmt::color::dark_gray), "{}", getThreadName (getThreadId())),
+                fmt::format (fg (kLevelColours[logLevel]), "{}", logStr));
 
     if (mFile) {
-      fputs (fmt::format ("{} {} {}\n", timeString, getThreadName (getThreadId()), logStr).c_str(), mFile);
+      fputs (fmt::format ("{} {} {}\n",
+                          date::format("%T", chrono::floor<chrono::microseconds>(now)),
+                          getThreadName (getThreadId()),
+                          logStr).c_str(), mFile);
       fflush (mFile);
       }
     }
@@ -610,18 +609,17 @@ void cLog::log (enum eLogLevel logLevel, const char* format, ... ) {
 //{{{
 void cLog::clearScreen() {
 
-  string formatString (fmt::format ("\033[{};{}H\033[J\n", 1, 1));  // cursorPos, clear to end of screen
+  // cursorPos, clear to end of screen
+  string formatString (fmt::format ("\033[{};{}H\033[J\n", 1, 1));  
   fputs (formatString.c_str(), stdout);
   fflush (stdout);
   }
 //}}}
 //{{{
 void cLog::status (int row, int colourIndex, const string& statusString) {
-// send colour, pos row column 1, clear from cursor to end of line
 
-  string formatString (fmt::format ("{}\033[{};{}H{}\033[K", kLevelColours[colourIndex], row+1, 1, statusString));
-  fputs (formatString.c_str(), stdout);
-  fflush (stdout);
+  // send colour, pos row column 1, clear from cursor to end of line
+  fmt::print (fg (kLevelColours[colourIndex]), "\033[{};{}H{}\033[K{}", row+1, 1, statusString);
   }
 //}}}
 
