@@ -255,26 +255,26 @@ public:
   //}}}
   virtual ~cPtsSong() {}
 
-  virtual int64_t getFramePtsDuration() { return mFramePtsDuration; }
-  virtual int64_t getFrameNumFromPts (int64_t pts) { return pts / mFramePtsDuration; }
-  virtual int64_t getPtsFromFrameNum (int64_t frameNum) { return frameNum * mFramePtsDuration; }
+  virtual int64_t getFramePtsDuration() final { return mFramePtsDuration; }
+  virtual int64_t getFrameNumFromPts (int64_t pts) final { return pts / mFramePtsDuration; }
+  virtual int64_t getPtsFromFrameNum (int64_t frameNum) final { return frameNum * mFramePtsDuration; }
 
-  virtual int64_t getFirstPts() { return mFrameMap.empty() ? 0 : mFrameMap.begin()->second->getPts(); }
-  virtual int64_t getLastPts() { return mFrameMap.empty() ? 0 : mFrameMap.rbegin()->second->getPts();  }
+  virtual int64_t getFirstPts() final { return mFrameMap.empty() ? 0 : mFrameMap.begin()->second->getPts(); }
+  virtual int64_t getLastPts() final { return mFrameMap.empty() ? 0 : mFrameMap.rbegin()->second->getPts();  }
 
-  virtual bool getPlayFinished();
-  virtual std::string getFirstTimeString (int daylightSeconds);
-  virtual std::string getPlayTimeString (int daylightSeconds);
-  virtual std::string getLastTimeString (int daylightSeconds);
+  virtual bool getPlayFinished() final;
+  virtual std::string getFirstTimeString (int daylightSeconds) final;
+  virtual std::string getPlayTimeString (int daylightSeconds) final;
+  virtual std::string getLastTimeString (int daylightSeconds) final;
 
-  virtual cFrame* findFrameByPts (int64_t pts) { return findFrameByFrameNum (getFrameNumFromPts(pts)); }
-  virtual cFrame* findPlayFrame() { return findFrameByPts (mPlayPts); }
+  virtual cFrame* findFrameByPts (int64_t pts) final { return findFrameByFrameNum (getFrameNumFromPts(pts)); }
+  virtual cFrame* findPlayFrame() final { return findFrameByPts (mPlayPts); }
 
   void setBasePts (int64_t pts);
 
-  virtual void setPlayPts (int64_t pts);
-  virtual void setPlayFirstFrame();
-  virtual void setPlayLastFrame();
+  virtual void setPlayPts (int64_t pts) final;
+  virtual void setPlayFirstFrame() final;
+  virtual void setPlayLastFrame() final;
 
 protected:
   int64_t mFramePtsDuration = 1;

@@ -123,7 +123,7 @@ private:
 class cPidParser {
 public:
   cPidParser (int pid, const string& name) : mPid(pid), mPidName(name) {}
-  virtual ~cPidParser() {}
+  virtual ~cPidParser() = default;
 
   virtual int getQueueSize() { return 0; }
   virtual float getQueueFrac() { return 0.f; }
@@ -178,9 +178,10 @@ public:
   cPatParser (function<void (int programPid, int programSid)> callback)
     : cPidParser (0, "pat"), mCallback(callback) {}
   //}}}
-  virtual ~cPatParser() {}
+  virtual ~cPatParser() = default;
 
-  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, int continuityCount, bool reuseFromFront) {
+  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, 
+                               int continuityCount, bool reuseFromFront) final {
     (void)continuityCount;
     (void)reuseFromFront;
     if (payloadStart) {
@@ -246,9 +247,10 @@ public:
   cPmtParser (int pid, int sid, function<void (int streamSid, int streamPid, int streamType)> callback)
     : cPidParser (pid, "pmt"), mSid(sid), mCallback(callback) {}
   //}}}
-  virtual ~cPmtParser() {}
+  virtual ~cPmtParser()  = default;
 
-  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, int continuityCount, bool reuseFromFront) {
+  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, 
+                               int continuityCount, bool reuseFromFront) final {
 
     (void)continuityCount;
     (void)reuseFromFront;
@@ -321,9 +323,10 @@ public:
   cTdtParser (function<void (const string& timeString)> callback)
     : cPidParser (0x14, "tdt"), mCallback(callback) {}
   //}}}
-  virtual ~cTdtParser() {}
+  virtual ~cTdtParser()  = default;
 
-  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, int continuityCount, bool reuseFromFront) {
+  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, 
+                               int continuityCount, bool reuseFromFront) final {
 
     (void)continuityCount;
     (void)reuseFromFront;
@@ -413,10 +416,11 @@ class cSdtParser : public cSectionParser {
 public:
   cSdtParser (function<void (int sid, const string& name)> callback)
     : cSectionParser (0x11, "sdt"), mCallback(callback) {}
-  virtual ~cSdtParser() {}
+  virtual ~cSdtParser()  = default;
 
   //{{{
-  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, int continuityCount, bool reuseFromFront) {
+  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, 
+                               int continuityCount, bool reuseFromFront) final {
 
     (void)continuityCount;
     (void)reuseFromFront;
@@ -529,10 +533,11 @@ class cEitParser : public cSectionParser {
 public:
   cEitParser (function<void (int sid, bool now, cDvbEpgItem& epgItem)> callback)
     : cSectionParser (0x12, "eit"), mCallback(callback) {}
-  virtual ~cEitParser() {}
+  virtual ~cEitParser()  = default;
 
   //{{{
-  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, int continuityCount, bool reuseFromFront) {
+  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, 
+                               int continuityCount, bool reuseFromFront) final {
 
     (void)continuityCount;
     (void)reuseFromFront;
@@ -857,10 +862,10 @@ public:
       : cPesParser(pid, "aud", useQueue), mAudioDecoder(audioDecoder), mCallback(callback) {
     }
   //}}}
-  virtual ~cAudioPesParser() {}
+  virtual ~cAudioPesParser() = default;
 
 protected:
-  virtual void decode (bool reuseFromFront, uint8_t* pes, int size, int64_t pts, int64_t dts) {
+  virtual void decode (bool reuseFromFront, uint8_t* pes, int size, int64_t pts, int64_t dts) final {
   // decode pes to audio frames
     (void)dts;
     uint8_t* framePes = pes;
@@ -893,10 +898,10 @@ public:
   cVideoPesParser (int pid, iVideoPool* videoPool, bool useQueue)
     : cPesParser (pid, "vid", useQueue), mVideoPool(videoPool) {}
   //}}}
-  virtual ~cVideoPesParser() {}
+  virtual ~cVideoPesParser() = default;
 
 protected:
-  void decode (bool reuseFromFront, uint8_t* pes, int size, int64_t pts, int64_t dts) {
+  void decode (bool reuseFromFront, uint8_t* pes, int size, int64_t pts, int64_t dts) final {
     mVideoPool->decodeFrame (reuseFromFront, pes, size, pts, dts);
     }
 
@@ -910,7 +915,7 @@ private:
 class cLoadSource : public iLoad {
 public:
   cLoadSource (const string& name) : mName(name) {}
-  virtual ~cLoadSource() {}
+  virtual ~cLoadSource() = default;
 
   // iLoad gets
   virtual cSong* getSong() = 0;
@@ -1017,20 +1022,20 @@ protected:
 class cLoadIdle : public cLoadSource {
 public:
   cLoadIdle() : cLoadSource("idle") {}
-  virtual ~cLoadIdle() {}
+  virtual ~cLoadIdle() = default;
 
-  virtual cSong* getSong() { return nullptr; }
-  virtual iVideoPool* getVideoPool() { return nullptr; }
+  virtual cSong* getSong() final { return nullptr; }
+  virtual iVideoPool* getVideoPool() final { return nullptr; }
 
-  virtual bool recognise (const vector<string>& params) { (void)params; return true; }
-  virtual void load() {}
-  virtual void exit() {}
+  virtual bool recognise (const vector<string>& params) final { (void)params; return true; }
+  virtual void load() final {}
+  virtual void exit() final {}
 
-  virtual bool togglePlaying() { return false; }
-  virtual bool skipBegin() { return false; }
-  virtual bool skipEnd() { return false; }
-  virtual bool skipBack (bool shift, bool control) { (void)shift; (void)control; return false; }
-  virtual bool skipForward (bool shift, bool control) { (void)shift; (void)control; return false; };
+  virtual bool togglePlaying() final { return false; }
+  virtual bool skipBegin() final { return false; }
+  virtual bool skipEnd() final { return false; }
+  virtual bool skipBack (bool shift, bool control) final { (void)shift; (void)control; return false; }
+  virtual bool skipForward (bool shift, bool control) final { (void)shift; (void)control; return false; };
   };
 //}}}
 //{{{
@@ -1042,12 +1047,12 @@ public:
     mSampleRate = 48000;
     }
   //}}}
-  virtual ~cLoadDvb() {}
+  virtual ~cLoadDvb() = default;
 
-  virtual cSong* getSong() { return mPtsSong; }
-  virtual iVideoPool* getVideoPool() { return mVideoPool; }
+  virtual cSong* getSong() final { return mPtsSong; }
+  virtual iVideoPool* getVideoPool() final { return mVideoPool; }
   //{{{
-  virtual string getInfoString() {
+  virtual string getInfoString() final {
   // return sizes
 
     int audioQueueSize = 0;
@@ -1070,7 +1075,7 @@ public:
     }
   //}}}
   //{{{
-  virtual float getFracs (float& audioFrac, float& videoFrac) {
+  virtual float getFracs (float& audioFrac, float& videoFrac) final {
   // return fracs for spinner graphic, true if ok to display
 
     audioFrac = 0.f;
@@ -1095,7 +1100,7 @@ public:
   //}}}
 
   //{{{
-  virtual bool recognise (const vector<string>& params) {
+  virtual bool recognise (const vector<string>& params) final {
 
     if (params[0] != "dvb")
       return false;
@@ -1107,7 +1112,7 @@ public:
     }
   //}}}
   //{{{
-  virtual void load() {
+  virtual void load() final {
 
     mExit = false;
     mRunning = true;
@@ -1316,10 +1321,10 @@ private:
 class cLoadIcyCast : public cLoadSource {
 public:
   cLoadIcyCast() : cLoadSource("icyCast") {}
-  virtual ~cLoadIcyCast() {}
+  virtual ~cLoadIcyCast() = default;
 
-  virtual cSong* getSong() { return mSong; }
-  virtual iVideoPool* getVideoPool() { return mVideoPool; }
+  virtual cSong* getSong() final { return mSong; }
+  virtual iVideoPool* getVideoPool() final { return mVideoPool; }
   //{{{
   virtual string getInfoString() {
     return format ("{} - {}", mUrl, mLastTitleString);
@@ -1327,7 +1332,7 @@ public:
   //}}}
 
   //{{{
-  virtual bool recognise (const vector<string>& params) {
+  virtual bool recognise (const vector<string>& params) final {
 
     mUrl = params[0];
     mParsedUrl.parse (mUrl);
@@ -1335,7 +1340,7 @@ public:
     }
   //}}}
   //{{{
-  virtual void load() {
+  virtual void load() final {
 
     iAudioDecoder* audioDecoder = nullptr;
 
@@ -1490,13 +1495,13 @@ private:
 class cLoadStream : public cLoadSource {
 public:
   cLoadStream (const string& name) : cLoadSource(name) {}
-  virtual ~cLoadStream() {}
+  virtual ~cLoadStream() = default;
 
-  virtual cSong* getSong() { return mPtsSong; }
-  virtual iVideoPool* getVideoPool() { return mVideoPool; }
+  virtual cSong* getSong() override { return mPtsSong; }
+  virtual iVideoPool* getVideoPool() override { return mVideoPool; }
 
   //{{{
-  virtual string getInfoString() {
+  virtual string getInfoString() override {
 
     int audioQueueSize = 0;
     auto audioIt = mPidParsers.find (mAudioPid);
@@ -1512,7 +1517,7 @@ public:
     }
   //}}}
   //{{{
-  virtual float getFracs (float& audioFrac, float& videoFrac) {
+  virtual float getFracs (float& audioFrac, float& videoFrac) final {
   // return fracs for spinner graphic, true if ok to display
 
     audioFrac = 0.f;
@@ -1550,12 +1555,12 @@ public:
     mSampleRate = 48000;
     }
   //}}}
-  virtual ~cLoadHls() {}
+  virtual ~cLoadHls() = default;
 
-  virtual cSong* getSong() { return mHlsSong; }
-  virtual iVideoPool* getVideoPool() { return mVideoPool; }
+  virtual cSong* getSong() final { return mHlsSong; }
+  virtual iVideoPool* getVideoPool() final { return mVideoPool; }
   //{{{
-  virtual string getInfoString() {
+  virtual string getInfoString() final {
 
     int audioQueueSize = 0;
     auto audioIt = mPidParsers.find (mAudioPid);
@@ -1574,7 +1579,7 @@ public:
   //}}}
 
   //{{{
-  virtual bool recognise (const vector<string>& params) {
+  virtual bool recognise (const vector<string>& params) final {
   //  parse params to recognise load
 
     for (auto& param : params) {
@@ -1627,7 +1632,7 @@ public:
     }
   //}}}
   //{{{
-  virtual void load() {
+  virtual void load() final {
 
     mExit = false;
     mRunning = true;
@@ -1852,7 +1857,7 @@ public:
   //}}}
 
   //{{{
-  virtual string getInfoString() {
+  virtual string getInfoString() final {
     return format ("sid:{} {} {} {} {} {}",
                    mSid, mServiceName,
                    mTimeString,
@@ -1862,7 +1867,7 @@ public:
   //}}}
 
   //{{{
-  virtual bool recognise (const vector<string>& params) {
+  virtual bool recognise (const vector<string>& params) final {
 
     if (params[0] != "rtp")
       return false;
@@ -1882,7 +1887,7 @@ public:
     }
   //}}}
   //{{{
-  virtual void load() {
+  virtual void load() final {
 
     mExit = false;
     mRunning = true;
@@ -2134,7 +2139,7 @@ private:
 class cLoadFile : public cLoadSource {
 public:
   cLoadFile (const string& name) : cLoadSource(name) {}
-  virtual ~cLoadFile() {}
+  virtual ~cLoadFile() = default;
 
 protected:
   //{{{
@@ -2207,12 +2212,12 @@ public:
     mSampleRate = 48000;
     }
   //}}}
-  virtual ~cLoadTsFile() {}
+  virtual ~cLoadTsFile() = default;
 
-  virtual cSong* getSong() { return mPtsSong; }
-  virtual iVideoPool* getVideoPool() { return mVideoPool; }
+  virtual cSong* getSong() final { return mPtsSong; }
+  virtual iVideoPool* getVideoPool() final { return mVideoPool; }
   //{{{
-  virtual string getInfoString() {
+  virtual string getInfoString() final {
   // return sizes
 
     int audioQueueSize = 0;
@@ -2235,7 +2240,7 @@ public:
     }
   //}}}
   //{{{
-  virtual float getFracs (float& audioFrac, float& videoFrac) {
+  virtual float getFracs (float& audioFrac, float& videoFrac) final {
   // return fracs for spinner graphic, true if ok to display
 
 
@@ -2261,7 +2266,7 @@ public:
   //}}}
 
   //{{{
-  virtual bool skipBack (bool shift, bool control) {
+  virtual bool skipBack (bool shift, bool control) final {
 
     if (mTargetPts == -1)
       mTargetPts = mPtsSong->getPlayPts();
@@ -2273,7 +2278,7 @@ public:
     };
   //}}}
   //{{{
-  virtual bool skipForward (bool shift, bool control) {
+  virtual bool skipForward (bool shift, bool control) final {
 
     if (mTargetPts == -1)
       mTargetPts = mPtsSong->getPlayPts();
@@ -2286,7 +2291,7 @@ public:
   //}}}
 
   //{{{
-  virtual bool recognise (const vector<string>& params) {
+  virtual bool recognise (const vector<string>& params) final {
 
     if (!getFileSize (params[0]))
       return false;
@@ -2300,7 +2305,7 @@ public:
     }
   //}}}
   //{{{
-  virtual void load() {
+  virtual void load() final {
   // manage our own file read, block on > 100 frames after playPts, manage kipping
   // - can't mmap because of commmon case of growing ts file size
   // - chunks are ts packet aligned
@@ -2558,17 +2563,17 @@ private:
 class cLoadWavFile : public cLoadFile {
 public:
   cLoadWavFile() : cLoadFile("wav") {}
-  virtual ~cLoadWavFile() {}
+  virtual ~cLoadWavFile() = default;
 
-  virtual cSong* getSong() { return mSong; }
-  virtual iVideoPool* getVideoPool() { return nullptr; }
+  virtual cSong* getSong() final { return mSong; }
+  virtual iVideoPool* getVideoPool() final { return nullptr; }
   //{{{
-  virtual string getInfoString() {
+  virtual string getInfoString() final {
     return format ("{} {}k", mFilename, mStreamPos / 1024);
     }
   //}}}
   //{{{
-  virtual float getFracs (float& audioFrac, float& videoFrac) {
+  virtual float getFracs (float& audioFrac, float& videoFrac) final {
   // return fracs for spinner graphic, true if ok to display
 
     audioFrac = 0.f;
@@ -2578,7 +2583,7 @@ public:
   //}}}
 
   //{{{
-  virtual bool recognise (const vector<string>& params) {
+  virtual bool recognise (const vector<string>& params) final {
 
     if (!getFileSize (params[0]))
       return false;
@@ -2587,7 +2592,7 @@ public:
     }
   //}}}
   //{{{
-  virtual void load() {
+  virtual void load() final {
   // wav - ??? could use ffmpeg to decode all the variants ???
   // - preload whole file, could mmap but not really worth it being the exception
 
@@ -2662,17 +2667,17 @@ private:
 class cLoadMp3AacFile : public cLoadFile {
 public:
   cLoadMp3AacFile() : cLoadFile("mp3Aac") {}
-  virtual ~cLoadMp3AacFile() {}
+  virtual ~cLoadMp3AacFile() = default;
 
-  virtual cSong* getSong() { return mSong; }
-  virtual iVideoPool* getVideoPool() { return nullptr; }
+  virtual cSong* getSong() final { return mSong; }
+  virtual iVideoPool* getVideoPool() final { return nullptr; }
   //{{{
-  virtual string getInfoString() {
+  virtual string getInfoString() final {
     return format("{} {}x{}hz {}k", mFilename, mNumChannels, mSampleRate, mStreamPos/1024);
     }
   //}}}
   //{{{
-  virtual float getFracs (float& audioFrac, float& videoFrac) {
+  virtual float getFracs (float& audioFrac, float& videoFrac) final {
   // return fracs for spinner graphic, true if ok to display
 
     audioFrac = 0.f;
@@ -2682,7 +2687,7 @@ public:
   //}}}
 
   //{{{
-  virtual bool recognise (const vector<string>& params) {
+  virtual bool recognise (const vector<string>& params) final {
 
     if (!getFileSize (params[0]))
       return false;
@@ -2692,7 +2697,7 @@ public:
     }
   //}}}
   //{{{
-  virtual void load() {
+  virtual void load() final {
   // aac,mp3 - load file in kFileChunkSize chunks, buffer big enough for last chunk partial frame
   // - preload whole file
 

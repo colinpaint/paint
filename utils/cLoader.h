@@ -35,18 +35,18 @@ public:
   virtual ~cLoader();
 
   // iLoad gets
-  virtual cSong* getSong();
-  virtual iVideoPool* getVideoPool();
-  virtual std::string getInfoString();
-  virtual float getFracs (float& audioFrac, float& videoFrac);
+  virtual cSong* getSong() override;
+  virtual iVideoPool* getVideoPool() override;
+  virtual std::string getInfoString() override;
+  virtual float getFracs (float& audioFrac, float& videoFrac) override;
 
   // iLoad actions
-  virtual bool togglePlaying();
-  virtual bool skipBegin();
-  virtual bool skipEnd();
-  virtual bool skipBack (bool shift, bool control);
-  virtual bool skipForward (bool shift, bool control);
-  virtual void exit();
+  virtual bool togglePlaying() override;
+  virtual bool skipBegin() override;
+  virtual bool skipEnd() override;
+  virtual bool skipBack (bool shift, bool control) override;
+  virtual bool skipForward (bool shift, bool control) override;
+  virtual void exit() override;
 
   // load
   void launchLoad (const std::vector<std::string>& params);

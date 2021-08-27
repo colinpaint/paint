@@ -1,4 +1,4 @@
-// cSongPlayer.cpp - audio,video loader,player
+// cSongPlayer.cpp - player
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
@@ -36,7 +36,7 @@ using namespace chrono;
       float samples [2048*2] = { 0.f };
 
       song->togglePlaying();
-      //{{{  WSAPI player thread, video just follows play pts
+      //{{{  WSAPI player thread, video follows playPts
       auto device = getDefaultAudioOutputDevice();
       if (device) {
         cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", song->getSampleRate());
@@ -52,7 +52,7 @@ using namespace chrono;
             frame = song->findPlayFrame();
             if (song->getPlaying() && frame && frame->getSamples()) {
               if (song->getNumChannels() == 1) {
-                //{{{  mono to stereo
+                // mono to stereo
                 auto src = frame->getSamples();
                 auto dst = samples;
                 for (int i = 0; i < song->getSamplesPerFrame(); i++) {
@@ -60,7 +60,6 @@ using namespace chrono;
                   *dst++ = *src++;
                   }
                 }
-                //}}}
               else
                 memcpy (samples, frame->getSamples(), song->getSamplesPerFrame() * song->getNumChannels() * sizeof(float));
               srcSamples = samples;
@@ -85,6 +84,7 @@ using namespace chrono;
       });
     playerThread.detach();
     }
+
 #else
   cSongPlayer::cSongPlayer (cSong* song, bool streaming) {
     thread playerThread = thread ([=, this]() {
@@ -94,7 +94,7 @@ using namespace chrono;
       float samples [2048*2] = { 0.f };
 
       song->togglePlaying();
-      //{{{  audio16 player thread, video just follows play pts
+      //{{{  audio16 player thread, video follows playPts
       cAudio audio (2, song->getSampleRate(), 40000, false);
 
       cSong::cFrame* frame;
