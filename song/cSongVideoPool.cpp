@@ -1997,7 +1997,7 @@ private:
   };
 //}}}
 
-//#ifdef _WIN32
+#ifdef _WIN32
   //#include "../../libmfx/include/mfxvideo++.h"
   //{{{
   //class cMfxVideoPool : public cVideoPool {
@@ -2138,7 +2138,7 @@ private:
     //vector <mfxFrameSurface1*> mSurfacePool;
     //};
   //}}}
-//#endif
+#endif
 
 // iVideoPool static factory create
 //{{{

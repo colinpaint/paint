@@ -44,6 +44,7 @@ public:
   virtual ~cRadioUI() = default;
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform) final {
+
     (void)canvas;
     (void)graphics;
     (void)platform;

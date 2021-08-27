@@ -20,6 +20,7 @@ project (utils)
 file (GLOB UTILS_HEADER_FILES utils/*.h)
 file (GLOB UTILS_SOURCE_FILES utils/*.cpp utils/*.c)
 add_library (utils ${UTILS_HEADER_FILES} ${UTILS_SOURCE_FILES})
+
 target_include_directories (utils PUBLIC ffmpeg/inc)
 target_link_directories (utils PUBLIC ffmpeg/x64)
 target_link_libraries (utils PUBLIC avutil avcodec avformat swresample swscale)
