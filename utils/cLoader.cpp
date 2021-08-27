@@ -49,8 +49,6 @@
 #include "../dvb/cDvbUtils.h"
 
 using namespace std;
-using namespace fmt;
-using namespace chrono;
 //}}}
 
 //{{{
@@ -58,7 +56,7 @@ class cDvbEpgItem {
 public:
   cDvbEpgItem() {}
 
-  cDvbEpgItem (const string& programName, system_clock::time_point startTime, seconds duration)
+  cDvbEpgItem (const string& programName, chrono::system_clock::time_point startTime, chrono::seconds duration)
     : mProgramName(programName), mStartTime(startTime), mDuration(duration) {}
 
   cDvbEpgItem (const cDvbEpgItem& epgItem)
@@ -68,13 +66,13 @@ public:
 
   // gets
   string getProgramName() { return mProgramName; }
-  system_clock::time_point getStartTime() { return mStartTime; }
-  seconds getDuration() { return mDuration; }
+  chrono::system_clock::time_point getStartTime() { return mStartTime; }
+  chrono::seconds getDuration() { return mDuration; }
 
 private:
   string mProgramName;
-  system_clock::time_point mStartTime;
-  seconds mDuration;
+  chrono::system_clock::time_point mStartTime;
+  chrono::seconds mDuration;
   };
 //}}}
 //{{{
@@ -114,7 +112,7 @@ private:
   string mName;
 
   cDvbEpgItem mNowEpgItem;
-  map <system_clock::time_point, cDvbEpgItem*> mEpgItemMap;
+  map <chrono::system_clock::time_point, cDvbEpgItem*> mEpgItemMap;
   };
 //}}}
 
@@ -180,7 +178,7 @@ public:
   //}}}
   virtual ~cPatParser() = default;
 
-  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, 
+  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart,
                                int continuityCount, bool reuseFromFront) final {
     (void)continuityCount;
     (void)reuseFromFront;
@@ -216,7 +214,7 @@ public:
       sectionLength -= kPatHeaderLength + 4;
       if (sectionLength > tsLeft) {
         //{{{  sectionLength error, return
-        cLog::log (LOGERROR, format ("{} sectionLength:{} tsLeft:{}", mPidName, sectionLength, tsLeft));
+        cLog::log (LOGERROR, fmt::format ("{} sectionLength:{} tsLeft:{}", mPidName, sectionLength, tsLeft));
         return;
         }
         //}}}
@@ -249,7 +247,7 @@ public:
   //}}}
   virtual ~cPmtParser()  = default;
 
-  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, 
+  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart,
                                int continuityCount, bool reuseFromFront) final {
 
     (void)continuityCount;
@@ -291,7 +289,7 @@ public:
 
       if (sectionLength > tsLeft) {
         //{{{  sectionLength error return
-        cLog::log (LOGERROR, format ("{} sectionLength:{} tsLeft:{}", mPidName, sectionLength, tsLeft));
+        cLog::log (LOGERROR, fmt::format ("{} sectionLength:{} tsLeft:{}", mPidName, sectionLength, tsLeft));
         return;
         }
         //}}}
@@ -325,7 +323,7 @@ public:
   //}}}
   virtual ~cTdtParser()  = default;
 
-  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, 
+  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart,
                                int continuityCount, bool reuseFromFront) final {
 
     (void)continuityCount;
@@ -344,8 +342,8 @@ public:
       if (tid == 0x70) {
         int sectionLength = cDvbUtils::getSectionLength (ts+1);
         if (sectionLength >= 8) {
-          auto timePoint = system_clock::from_time_t (cDvbUtils::getEpochTime (ts+3) + cDvbUtils::getBcdTime (ts+5));
-          string timeString = date::format ("%T", date::floor<seconds>(timePoint));
+          auto timePoint = chrono::system_clock::from_time_t (cDvbUtils::getEpochTime (ts+3) + cDvbUtils::getBcdTime (ts+5));
+          string timeString = date::format ("%T", date::floor<chrono::seconds>(timePoint));
           mCallback (timeString);
           }
         }
@@ -380,7 +378,7 @@ protected:
       // allocate double size of mSection buffer
       mAllocSectionSize *= 2;
       mSection = (uint8_t*)realloc (mSection, mAllocSectionSize);
-      cLog::log (LOGINFO1, format ("{} sdt allocSize doubled to {}", mPidName, mAllocSectionSize));
+      cLog::log (LOGINFO1, fmt::format ("{} sdt allocSize doubled to {}", mPidName, mAllocSectionSize));
       }
 
     memcpy (mSection + mSectionSize, buf, bytesToAdd);
@@ -395,7 +393,7 @@ protected:
 
     if (cDvbUtils::getCrc32 (mSection, mSectionLength) != 0) {
       // section crc error
-      cLog::log (LOGERROR, format ("{} crc sectionSize:{} sectionLength:{}", mPidName, mSectionSize, mSectionLength));
+      cLog::log (LOGERROR, fmt::format ("{} crc sectionSize:{} sectionLength:{}", mPidName, mSectionSize, mSectionLength));
       mSectionSize = 0;
       return false;
       }
@@ -419,7 +417,7 @@ public:
   virtual ~cSdtParser()  = default;
 
   //{{{
-  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, 
+  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart,
                                int continuityCount, bool reuseFromFront) final {
 
     (void)continuityCount;
@@ -430,7 +428,7 @@ public:
 
       int pointerField = ts[0];
       if (pointerField)
-        cLog::log (LOGINFO, format ("{} pointerField:{}", mPidName, pointerField));
+        cLog::log (LOGINFO, fmt::format ("{} pointerField:{}", mPidName, pointerField));
 
       ts++;
       tsLeft--;
@@ -493,22 +491,22 @@ public:
               //}}}
               //{{{
               case 0x5F: // privateData
-                cLog::log (LOGINFO1, format ("privateData descriptor len:{}", descrLength));
+                cLog::log (LOGINFO1, fmt::format ("privateData descriptor len:{}", descrLength));
                 break;
               //}}}
               //{{{
               case 0x73: // defaultAuthority
-                cLog::log (LOGINFO1, format ("defaultAuthority descriptor len:{}", descrLength));
+                cLog::log (LOGINFO1, fmt::format ("defaultAuthority descriptor len:{}", descrLength));
                 break;
               //}}}
               //{{{
               case 0x7e: // futureUse
-                cLog::log (LOGINFO1, format ("futureDescriptor len:{}", descrLength));
+                cLog::log (LOGINFO1, fmt::format ("futureDescriptor len:{}", descrLength));
                 break;
               //}}}
               //{{{
               default:
-                cLog::log (LOGERROR, format ("unknown descriptor tag:{} len:{}", tag, descrLength));
+                cLog::log (LOGERROR, fmt::format ("unknown descriptor tag:{} len:{}", tag, descrLength));
                 break;
               //}}}
               }
@@ -536,7 +534,7 @@ public:
   virtual ~cEitParser()  = default;
 
   //{{{
-  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, 
+  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart,
                                int continuityCount, bool reuseFromFront) final {
 
     (void)continuityCount;
@@ -599,8 +597,8 @@ public:
 
         // iterate eit events
         while (mSectionLength > 0) {
-          system_clock::time_point startTime = system_clock::from_time_t (cDvbUtils::getEpochTime (ts+2) + cDvbUtils::getBcdTime (ts+4));
-          seconds duration (cDvbUtils::getBcdTime (ts+7));
+          chrono::system_clock::time_point startTime = chrono::system_clock::from_time_t (cDvbUtils::getEpochTime (ts+2) + cDvbUtils::getBcdTime (ts+4));
+          chrono::seconds duration (cDvbUtils::getBcdTime (ts+7));
           int running = (ts[10] & 0xE0) >> 5;
           int loopLength = ((ts[10] & 0x0F) << 8) + ts[11];
           //{{{  unused fields
@@ -633,42 +631,42 @@ public:
               //}}}
               //{{{
               case 0x4E: // extendedEvent
-                cLog::log (LOGINFO,  format ("{} extendedEvent descriptor tag:{} len:{}", tidInfo, tag, descrLength));
+                cLog::log (LOGINFO, fmt::format ("{} extendedEvent descriptor tag:{} len:{}", tidInfo, tag, descrLength));
                 break;
               //}}}
               //{{{
               case 0x50: // component
-                cLog::log (LOGINFO1, format ("{} componentDescriptor tag:{} len:{}", tidInfo, tag, descrLength));
+                cLog::log (LOGINFO1, fmt::format ("{} componentDescriptor tag:{} len:{}", tidInfo, tag, descrLength));
                 break;
               //}}}
               //{{{
               case 0x54: // current
-                cLog::log (LOGINFO1,  format ("{} currentDescriptor tag:{} len:{}", tidInfo, tag, descrLength));
+                cLog::log (LOGINFO1, fmt::format ("{} currentDescriptor tag:{} len:{}", tidInfo, tag, descrLength));
                 break;
               //}}}
               //{{{
               case 0x5F: // defaultAuthority
-                cLog::log (LOGINFO1,  format ("{} defaultAuthority tag:{} len:{}", tidInfo, tag, descrLength));
+                cLog::log (LOGINFO1, fmt::format ("{} defaultAuthority tag:{} len:{}", tidInfo, tag, descrLength));
                 break;
               //}}}
               //{{{
               case 0x76: // contentId
-                cLog::log (LOGINFO1,  format ("{} contentId tag:{} len:{}", tidInfo, tag, descrLength));
+                cLog::log (LOGINFO1, fmt::format ("{} contentId tag:{} len:{}", tidInfo, tag, descrLength));
                 break;
               //}}}
               //{{{
               case 0x7E: // ftaContentMangement
-                cLog::log (LOGINFO1,  format ("{} ftaContentMangement tag:{} len:{}", tidInfo, tag, descrLength));
+                cLog::log (LOGINFO1, fmt::format ("{} ftaContentMangement tag:{} len:{}", tidInfo, tag, descrLength));
                 break;
               //}}}
               //{{{
               case 0x89: // guidance
-                cLog::log (LOGINFO1,  format ("{} guidance tag:{} len:{}", tidInfo, tag, descrLength));
+                cLog::log (LOGINFO1, fmt::format ("{} guidance tag:{} len:{}", tidInfo, tag, descrLength));
                 break;
               //}}}
               //{{{
               default:
-                cLog::log (LOGERROR, format ("{} unknown eitEvent descriptor tag:{} len:{}", tidInfo, tag, descrLength));
+                cLog::log (LOGERROR, fmt::format ("{} unknown eitEvent descriptor tag:{} len:{}", tidInfo, tag, descrLength));
                 break;
               //}}}
               }
@@ -1071,7 +1069,7 @@ public:
         }
       }
 
-    return format ("sid:{} aq:{} vq:{}", mCurSid, audioQueueSize, videoQueueSize);
+    return fmt::format ("sid:{} aq:{} vq:{}", mCurSid, audioQueueSize, videoQueueSize);
     }
   //}}}
   //{{{
@@ -1118,7 +1116,7 @@ public:
     mRunning = true;
     mLoadFrac = 0.f;
 
-    cLog::log (LOGINFO, format ("cDvbSource {}", mFrequency));
+    cLog::log (LOGINFO, fmt::format ("cDvbSource {}", mFrequency));
     auto dvb = new cDvb (mFrequency, 0);
 
     mPtsSong = new cPtsSong (eAudioFrameType::eAacAdts, mNumChannels, mSampleRate, 1024, 1920, 0);
@@ -1134,7 +1132,7 @@ public:
       if (it != mServices.end()) {
         cDvbService* service = (*it).second;
         if (service->setName (name))
-          cLog::log (LOGINFO, format ("SDT name changed sid {} {}", sid, name));
+          cLog::log (LOGINFO, fmt::format ("SDT name changed sid {} {}", sid, name));
         };
       };
     //}}}
@@ -1327,7 +1325,7 @@ public:
   virtual iVideoPool* getVideoPool() final { return mVideoPool; }
   //{{{
   virtual string getInfoString() {
-    return format ("{} - {}", mUrl, mLastTitleString);
+    return fmt::format ("{} - {}", mUrl, mLastTitleString);
     }
   //}}}
 
@@ -1513,7 +1511,7 @@ public:
     if (videoIt != mPidParsers.end())
       videoQueueSize = (*videoIt).second->getQueueSize();
 
-    return format ("aq:{} vq:{}", audioQueueSize, videoQueueSize);
+    return fmt::format ("aq:{} vq:{}", audioQueueSize, videoQueueSize);
     }
   //}}}
   //{{{
@@ -1574,7 +1572,7 @@ public:
         videoQueueSize = (*videoIt).second->getQueueSize();
       }
 
-    return format ("{} {}k aq:{} vq:{}", mChannel, mLoadSize/1000, audioQueueSize, videoQueueSize);
+    return fmt::format ("{} {}k aq:{} vq:{}", mChannel, mLoadSize/1000, audioQueueSize, videoQueueSize);
     }
   //}}}
 
@@ -1623,7 +1621,7 @@ public:
 
     mHost = "as-hls-uk-live.akamaized.net";
     string pathFormat = mRadio ? "pool_904/live/uk/{0}/{0}.isml/{0}-audio={1}"
-                               : format ("pool_902/live/uk/{{0}}/{{0}}.isml/{{0}}-pa{0}={{1}}{1}",
+                               : fmt::format ("pool_902/live/uk/{{0}}/{{0}}.isml/{{0}}-pa{0}={{1}}{1}",
                                          mLowAudioRate ? 3 : 4, mVideoRate ? "-video={2}" : "");
     mM3u8PathFormat = pathFormat + ".norewind.m3u8";
     mTsPathFormat = pathFormat + "-{3}.ts";
@@ -1694,7 +1692,7 @@ public:
       cPlatformHttp http;
 
       // get m3u8 file
-      string m3u8Path = format (mM3u8PathFormat, mChannel, mAudioRate, mVideoRate);
+      string m3u8Path = fmt::format (mM3u8PathFormat, mChannel, mAudioRate, mVideoRate);
       mHost = http.getRedirect (mHost, m3u8Path);
       if (http.getContent()) {
         //{{{  parse m3u8 file
@@ -1703,7 +1701,7 @@ public:
 
         // get value for tag #EXT-X-PROGRAM-DATE-TIME:
         istringstream inputStream (getTagValue (http.getContent(), "#EXT-X-PROGRAM-DATE-TIME:", '\n'));
-        system_clock::time_point extXProgramDateTimePoint;
+        chrono::system_clock::time_point extXProgramDateTimePoint;
         inputStream >> date::parse ("%FT%T", extXProgramDateTimePoint);
 
         // get value for tag #EXT-X-MEDIA-SEQUENCE:
@@ -1721,13 +1719,13 @@ public:
           if (chunkNum > 0) {
             // get chunkNum ts file
             int contentParsed = 0;
-            string tsPath = format (mTsPathFormat, mChannel, mAudioRate, mVideoRate, chunkNum);
+            string tsPath = fmt::format (mTsPathFormat, mChannel, mAudioRate, mVideoRate, chunkNum);
             if (http.get (mHost, tsPath, "",
                           [&](const string& key, const string& value) noexcept {
                             //{{{  header callback lambda
                             (void)value;
                             if (key == "content-length")
-                              cLog::log (LOGINFO1, format ("chunk:{} pts:{} size:{}k",
+                              cLog::log (LOGINFO1, fmt::format ("chunk:{} pts:{} size:{}k",
                                          chunkNum,
                                          getPtsFramesString (loadPts, mHlsSong->getFramePtsDuration()),
                                          http.getHeaderContentSize()/1000));
@@ -1858,10 +1856,10 @@ public:
 
   //{{{
   virtual string getInfoString() final {
-    return format ("sid:{} {} {} {} {} {}",
+    return fmt::format ("sid:{} {} {} {} {} {}",
                    mSid, mServiceName,
                    mTimeString,
-                   date::format ("%H:%M", floor<seconds>(mNowEpgItem.getStartTime())),
+                   date::format ("%H:%M", chrono::floor<chrono::seconds>(mNowEpgItem.getStartTime())),
                    mNowEpgItem.getProgramName(), cLoadStream::getInfoString());
     }
   //}}}
@@ -1877,7 +1875,7 @@ public:
 
     if (params.size() > 1) {
       int channel = stoi (params[1]);
-      mMulticastAddress = format ("239.255.1.{}", channel);
+      mMulticastAddress = fmt::format ("239.255.1.{}", channel);
       }
     else
       mMulticastAddress = "239.255.1.3";
@@ -2027,7 +2025,7 @@ public:
 
       else {
         // add to epg if new, later than now today
-        auto todayTime = system_clock::now();
+        auto todayTime = chrono::system_clock::now();
         auto todayDatePoint = date::floor<date::days>(todayTime);
         auto todayYearMonthDay = date::year_month_day{todayDatePoint};
         auto today = todayYearMonthDay.day();
@@ -2041,9 +2039,9 @@ public:
           auto epgItemIt = mEpgItemMap.find (epgItem.getStartTime());
           if (epgItemIt == mEpgItemMap.end()) {
             mEpgItemMap.insert (
-              map<system_clock::time_point, cDvbEpgItem*>::value_type (epgItem.getStartTime(), new cDvbEpgItem (epgItem)));
-            cLog::log (LOGINFO, format ("epg {} {}",
-                                date::format ("%H:%M", floor<seconds>(epgItem.getStartTime())),
+              map<chrono::system_clock::time_point, cDvbEpgItem*>::value_type (epgItem.getStartTime(), new cDvbEpgItem (epgItem)));
+            cLog::log (LOGINFO, fmt::format ("epg {} {}",
+                                date::format ("%H:%M", chrono::floor<chrono::seconds>(epgItem.getStartTime())),
                                 epgItem.getProgramName()));
             }
           }
@@ -2131,7 +2129,7 @@ private:
   string mTimeString;
 
   cDvbEpgItem mNowEpgItem;
-  map <system_clock::time_point, cDvbEpgItem*> mEpgItemMap;
+  map <chrono::system_clock::time_point, cDvbEpgItem*> mEpgItemMap;
   };
 //}}}
 
@@ -2236,7 +2234,7 @@ public:
         }
       }
 
-    return format ("{}packets sid:{} aq:{} vq:{}", mStreamPos/188, mCurSid, audioQueueSize, videoQueueSize);
+    return fmt::format ("{}packets sid:{} aq:{} vq:{}", mStreamPos/188, mCurSid, audioQueueSize, videoQueueSize);
     }
   //}}}
   //{{{
@@ -2428,7 +2426,7 @@ public:
       if (it != mServices.end()) {
         cDvbService* service = (*it).second;
         if (service->setName (name))
-          cLog::log (LOGINFO, format ("SDT sid {} {}", sid, name));
+          cLog::log (LOGINFO, fmt::format ("SDT sid {} {}", sid, name));
         };
       };
     //}}}
@@ -2569,7 +2567,7 @@ public:
   virtual iVideoPool* getVideoPool() final { return nullptr; }
   //{{{
   virtual string getInfoString() final {
-    return format ("{} {}k", mFilename, mStreamPos / 1024);
+    return fmt::format ("{} {}k", mFilename, mStreamPos / 1024);
     }
   //}}}
   //{{{
@@ -2673,7 +2671,7 @@ public:
   virtual iVideoPool* getVideoPool() final { return nullptr; }
   //{{{
   virtual string getInfoString() final {
-    return format("{} {}x{}hz {}k", mFilename, mNumChannels, mSampleRate, mStreamPos/1024);
+    return fmt::format("{} {}x{}hz {}k", mFilename, mNumChannels, mSampleRate, mStreamPos/1024);
     }
   //}}}
   //{{{
@@ -2822,7 +2820,7 @@ void cLoader::exit() { mLoadSource->exit(); }
 // cLoader load
 //{{{
 void cLoader::launchLoad (const vector<string>& params) {
-// launch rcognised load as thread
+// launch recognised load as thread
 
   mLoadSource->exit();
   mLoadSource = mLoadIdle;

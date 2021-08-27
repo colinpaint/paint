@@ -573,7 +573,7 @@ void cLog::log (enum eLogLevel logLevel, const string& logStr) {
     string timeString = date::format ("%T", chrono::floor<chrono::microseconds>(now));
     fmt::print (fg (fmt::color::floral_white) | fmt::emphasis::bold,
                 "{} {}{} {}{}\n",
-                kConsoleLightGrey, timeString, getThreadName (getThreadId()), kLevelColours[logLevel], logStr);
+               timeString, kConsoleLightGrey, getThreadName (getThreadId()), kLevelColours[logLevel], logStr);
 
     if (mFile) {
       fputs (fmt::format ("{} {} {}\n", timeString, getThreadName (getThreadId()), logStr).c_str(), mFile);
