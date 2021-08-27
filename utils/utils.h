@@ -55,7 +55,7 @@ inline std::string getPtsString (int64_t pts) {
 
 
     std::string hourMinString = hours ? fmt::format ("{}:{:02}", hours,mins) : fmt::format ("{}",mins);
-    return fmt::format ("{}:{:02}:{:02}", hourMinString, secs, hs);
+    return fmt::format ("{}:{:02d}:{:02d}", hourMinString, secs, hs);
     }
   }
 //}}}
@@ -78,7 +78,7 @@ inline std::string getFullPtsString (int64_t pts) {
     pts /= 60;
     uint32_t hours = pts % 60;
 
-    return fmt::format ("{:02} {:02} {:02} {:02}", hours,mins,secs,hs);
+    return fmt::format ("{:02d} {:02d} {:02d} {:02d}", hours,mins,secs,hs);
     }
   }
 //}}}
@@ -88,7 +88,7 @@ inline std::string getPtsFramesString (int64_t pts, int64_t ptsDuration) {
 
   int64_t frames = pts / ptsDuration;
   int64_t subFrames = pts % ptsDuration;
-  return fmt::format ("{}.{:04}", frames,subFrames);
+  return fmt::format ("{}.{:04d}", frames,subFrames);
   }
 //}}}
 

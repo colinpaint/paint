@@ -45,6 +45,13 @@ file (GLOB KISS_SOURCE_FILES kiss/*.c)
 add_library (kiss ${KISS_HEADER_FILES} ${KISS_SOURCE_FILES})
 target_link_libraries (kiss PUBLIC utils)
 
+# song project
+project (song)
+file (GLOB SONG_HEADER_FILES song/*.h)
+file (GLOB SONG_SOURCE_FILES song/*.cpp)
+add_library (song ${SONG_HEADER_FILES} ${SONG_SOURCE_FILES})
+target_link_libraries (song PUBLIC utils)
+
 # decoder project
 project (decoder)
 file (GLOB DECODER_HEADER_FILES decoder/*.h)
@@ -138,7 +145,7 @@ if (USE_IMPLOT)
 endif()
 
 if (MSVC)
-  target_link_libraries (paintbox PUBLIC audio decoder dvb kiss net opengl32 d3d11 d3dcompiler ws2_32)
+  target_link_libraries (paintbox PUBLIC song audio decoder dvb kiss net opengl32 d3d11 d3dcompiler ws2_32)
 else()
   target_link_libraries (paintbox PUBLIC GL)
   target_link_options (paintbox PUBLIC -no-pie)

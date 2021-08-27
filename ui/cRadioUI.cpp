@@ -7,9 +7,10 @@
 // imgui
 #include <imgui.h>
 
+#include "../song/cSongLoader.h"
+
 #include "cUI.h"
 #include "../utils/cLog.h"
-#include "../utils/cLoader.h"
 
 using namespace std;
 //}}}
@@ -49,24 +50,24 @@ public:
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     if (ImGui::Button ("radio1"))
-      mLoader.launchLoad (kRadio1);
+      mSongLoader.launchLoad (kRadio1);
     if (ImGui::Button ("radio2"))
-      mLoader.launchLoad (kRadio2);
+      mSongLoader.launchLoad (kRadio2);
     if (ImGui::Button ("radio3"))
-      mLoader.launchLoad (kRadio3);
+      mSongLoader.launchLoad (kRadio3);
     if (ImGui::Button ("radio4"))
-      mLoader.launchLoad (kRadio3);
+      mSongLoader.launchLoad (kRadio3);
     if (ImGui::Button ("radio5"))
-      mLoader.launchLoad (kRadio5);
+      mSongLoader.launchLoad (kRadio5);
     if (ImGui::Button ("radio6"))
-      mLoader.launchLoad (kRadio6);
+      mSongLoader.launchLoad (kRadio6);
     if (ImGui::Button ("wqxr"))
-      mLoader.launchLoad (kWqxr);
+      mSongLoader.launchLoad (kWqxr);
     ImGui::End();
     }
 
 private:
-  cLoader mLoader;
+  cSongLoader mSongLoader;
 
   //{{{
   static cUI* create (const string& className) {

@@ -1,4 +1,4 @@
-// cLoader.cpp - audio,video loader, launches cSongPlayer
+// cSongLoader.cpp - audio,video loader, launches cSongPlayer
 //{{{  includes
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
@@ -12,25 +12,20 @@
 // c
 #include "sys/stat.h"
 
-#include "cLoader.h"
+#include "cSong.h"
+#include "cSongLoader.h"
 #include "cSongPlayer.h"
 
 // utils
-#include "date.h"
-#include "cLog.h"
-
-// container
-#include "cSong.h"
+#include "../utils/utils.h"
+#include "../utils/date.h"
+#include "../utils/cLog.h"
+#include "../utils/iVideoPool.h"
 
 // audio decode
 #include "../decoder/cAudioParser.h"
 #include "../decoder/iAudioDecoder.h"
 #include "../decoder/cFFmpegAudioDecoder.h"
-
-// video pool
-#include "iVideoPool.h"
-
-#include "utils.h"
 
 // net
 #ifdef _WIN32
@@ -910,7 +905,7 @@ private:
 
 // cLoadSource
 //{{{
-class cLoadSource : public iLoad {
+class cLoadSource : public iSongLoad {
 public:
   cLoadSource (const string& name) : mName(name) {}
   virtual ~cLoadSource() = default;
@@ -2326,6 +2321,7 @@ public:
     // init parsers, callbacks
     //{{{
     auto audioFrameCallback = [&](bool reuseFromFront, float* samples, int64_t pts) noexcept {
+
       mPtsSong->addFrame (reuseFromFront, pts, samples, mPtsSong->getNumFrames()+1);
 
       if (loadPts < 0)
@@ -2347,6 +2343,7 @@ public:
     //}}}
     //{{{
     auto streamCallback = [&](int sid, int pid, int type) noexcept {
+
       if (mPidParsers.find (pid) == mPidParsers.end()) {
         // new stream pid
         auto it = mServices.find (sid);
@@ -2422,6 +2419,7 @@ public:
     //}}}
     //{{{
     auto sdtCallback = [&](int sid, const string& name) noexcept {
+
       auto it = mServices.find (sid);
       if (it != mServices.end()) {
         cDvbService* service = (*it).second;
@@ -2432,6 +2430,7 @@ public:
     //}}}
     //{{{
     auto programCallback = [&](int pid, int sid) noexcept {
+
       if ((sid > 0) && (mPidParsers.find (pid) == mPidParsers.end())) {
         cLog::log (LOGINFO, "PAT adding pid:service %d::%d", pid, sid);
         mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cPmtParser (pid, sid, streamCallback)));
@@ -2778,7 +2777,7 @@ private:
 
 // cLoader public
 //{{{
-cLoader::cLoader() {
+cSongLoader::cSongLoader() {
 
   mLoadSources.push_back (new cLoadRtp());
   mLoadSources.push_back (new cLoadDvb());
@@ -2794,7 +2793,7 @@ cLoader::cLoader() {
   }
 //}}}
 //{{{
-cLoader::~cLoader() {
+cSongLoader::~cSongLoader() {
 
   for (auto loadSource : mLoadSources)
     delete loadSource;
@@ -2804,22 +2803,22 @@ cLoader::~cLoader() {
 //}}}
 
 // cLoader iLoad gets
-cSong* cLoader::getSong() { return mLoadSource->getSong(); }
-iVideoPool* cLoader::getVideoPool() { return mLoadSource->getVideoPool(); }
-string cLoader::getInfoString() { return mLoadSource->getInfoString(); }
-float cLoader::getFracs (float& audioFrac, float& videoFrac) { return mLoadSource->getFracs (audioFrac, videoFrac); }
+cSong* cSongLoader::getSong() { return mLoadSource->getSong(); }
+iVideoPool* cSongLoader::getVideoPool() { return mLoadSource->getVideoPool(); }
+string cSongLoader::getInfoString() { return mLoadSource->getInfoString(); }
+float cSongLoader::getFracs (float& audioFrac, float& videoFrac) { return mLoadSource->getFracs (audioFrac, videoFrac); }
 
 // cLoader iLoad actions
-bool cLoader::togglePlaying() { return mLoadSource->togglePlaying(); }
-bool cLoader::skipBegin() { return  mLoadSource->skipBegin(); }
-bool cLoader::skipEnd() { return mLoadSource->skipEnd(); }
-bool cLoader::skipBack (bool shift, bool control) { return mLoadSource->skipBack (shift, control); }
-bool cLoader::skipForward (bool shift, bool control) { return mLoadSource->skipForward (shift, control); }
-void cLoader::exit() { mLoadSource->exit(); }
+bool cSongLoader::togglePlaying() { return mLoadSource->togglePlaying(); }
+bool cSongLoader::skipBegin() { return  mLoadSource->skipBegin(); }
+bool cSongLoader::skipEnd() { return mLoadSource->skipEnd(); }
+bool cSongLoader::skipBack (bool shift, bool control) { return mLoadSource->skipBack (shift, control); }
+bool cSongLoader::skipForward (bool shift, bool control) { return mLoadSource->skipForward (shift, control); }
+void cSongLoader::exit() { mLoadSource->exit(); }
 
 // cLoader load
 //{{{
-void cLoader::launchLoad (const vector<string>& params) {
+void cSongLoader::launchLoad (const vector<string>& params) {
 // launch recognised load as thread
 
   mLoadSource->exit();
@@ -2846,7 +2845,7 @@ void cLoader::launchLoad (const vector<string>& params) {
   }
 //}}}
 //{{{
-void cLoader::load (const vector<string>& params) {
+void cSongLoader::load (const vector<string>& params) {
 // run recognised load
 
   mLoadSource->exit();

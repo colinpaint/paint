@@ -15,9 +15,9 @@
 #endif
 
 // utils
-#include "date.h"
-#include "utils.h"
-#include "cLog.h"
+#include "../utils/date.h"
+#include "../utils/utils.h"
+#include "../utils/cLog.h"
 
 // container
 #include "cSong.h"

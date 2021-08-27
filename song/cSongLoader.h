@@ -1,4 +1,4 @@
-// cLoader.h - video, audio - loader,player
+// cSongLoader.h - video, audio - loader,player
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -11,9 +11,9 @@ class cSong;
 class iVideoPool;
 //}}}
 
-class iLoad {
+class iSongLoad {
 public:
-  virtual ~iLoad() {}
+  virtual ~iSongLoad() {}
 
   virtual cSong* getSong() = 0;
   virtual iVideoPool* getVideoPool() = 0;
@@ -29,10 +29,10 @@ public:
   virtual void exit() = 0;
   };
 
-class cLoader : public iLoad {
+class cSongLoader : public iSongLoad {
 public:
-  cLoader();
-  virtual ~cLoader();
+  cSongLoader();
+  virtual ~cSongLoader();
 
   // iLoad gets
   virtual cSong* getSong() override;

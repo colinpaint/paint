@@ -4,9 +4,9 @@
 
 #include "cSong.h"
 
-#include "date.h"
-#include "cLog.h"
-#include "utils.h"
+#include "../utils/date.h"
+#include "../utils/utils.h"
+#include "../utils/cLog.h"
 
 using namespace std;
 using namespace fmt;

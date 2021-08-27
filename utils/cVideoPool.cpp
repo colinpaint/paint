@@ -96,7 +96,7 @@ extern "C" {
   //}}}
 #endif
 
-#include "cSong.h"
+#include "../song/cSong.h"
 
 using namespace std;
 using namespace fmt;
