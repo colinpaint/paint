@@ -898,7 +898,7 @@ public:
 
 protected:
   void decode (bool reuseFromFront, uint8_t* pes, int size, int64_t pts, int64_t dts) final {
-    //mVideoPool->decodeFrame (reuseFromFront, pes, size, pts, dts);
+    mVideoPool->decodeFrame (reuseFromFront, pes, size, pts, dts);
     }
 
 private:
@@ -1192,7 +1192,7 @@ public:
               service->setVideoPid (pid);
 
               if (service->isSelected()) {
-                //mVideoPool = iVideoPool::create (true, 100, mPtsSong);
+                mVideoPool = iVideoPool::create (true, 100, mPtsSong);
                 mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cVideoPesParser (pid, mVideoPool, true)));
                 }
 
@@ -1663,7 +1663,7 @@ public:
           case 27: // h264video
             if (mVideoRate) {
               mVideoPid  = pid;
-              //mVideoPool = iVideoPool::create (mFfmpeg, 192, mHlsSong);
+              mVideoPool = iVideoPool::create (mFfmpeg, 192, mHlsSong);
               mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cVideoPesParser (pid, mVideoPool, true)));
               }
             break;
@@ -1986,7 +1986,7 @@ public:
           case 27: // h264video
             mVideoPid = pid;
 
-            //mVideoPool = iVideoPool::create (true, 100, mPtsSong);
+            mVideoPool = iVideoPool::create (true, 100, mPtsSong);
             mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cVideoPesParser (pid, mVideoPool, true)));
 
             break;
@@ -2382,7 +2382,7 @@ public:
               service->setVideoPid (pid);
 
               if (service->isSelected()) {
-                //mVideoPool = iVideoPool::create (true, 100, mPtsSong);
+                mVideoPool = iVideoPool::create (true, 100, mPtsSong);
                 mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cVideoPesParser (pid, mVideoPool, true)));
                 }
 
@@ -2486,7 +2486,7 @@ public:
             //}}}
             bytesLeft = 0;
             waitForPts = true;
-            //mVideoPool->flush (mTargetPts);
+            mVideoPool->flush (mTargetPts);
             }
             //}}}
           else if (diffPts < -100000) {
@@ -2503,7 +2503,7 @@ public:
             //}}}
             bytesLeft = 0;
             waitForPts = true;
-            //mVideoPool->flush (mTargetPts);
+            mVideoPool->flush (mTargetPts);
             }
             //}}}
           else
