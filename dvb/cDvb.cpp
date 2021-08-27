@@ -322,17 +322,20 @@ namespace { // anonymous
       // ISampleGrabberCB methods
       STDMETHODIMP_(ULONG) AddRef() { return ++ul_cbrc; }
       STDMETHODIMP_(ULONG) Release() { return --ul_cbrc; }
-      STDMETHODIMP QueryInterface (REFIID riid, void** p_p_object) { return E_NOTIMPL; }
+      STDMETHODIMP QueryInterface (REFIID riid, void** p_p_object) { (void)riid,  (void)p_p_object; return E_NOTIMPL; }
 
       //{{{
       STDMETHODIMP BufferCB (double sampleTime, BYTE* samples, long sampleLen) {
+        (void)sampleTime;
+        (void)samples;
+        (void)sampleLen;
         cLog::log (LOGERROR, "cSampleGrabberCB::BufferCB called");
         return S_OK;
         }
       //}}}
       //{{{
       STDMETHODIMP SampleCB (double sampleTime, IMediaSample* mediaSample) {
-
+        (void)sampleTime;
         if (mediaSample->IsDiscontinuity() == S_OK)
           cLog::log (LOGERROR, "cSampleGrabCB::SampleCB sample isDiscontinuity");
 
@@ -417,9 +420,9 @@ namespace { // anonymous
 
             Microsoft::WRL::ComPtr<IPin> toPin;
             while (toPins->Next (1, &toPin, NULL) == S_OK) {
-              Microsoft::WRL::ComPtr<IPin> connectedPin;
-              toPin->ConnectedTo (&connectedPin);
-              if (!connectedPin) {
+              Microsoft::WRL::ComPtr<IPin> connectedPinTo;
+              toPin->ConnectedTo (&connectedPinTo);
+              if (!connectedPinTo) {
                 // match toPin info
                 PIN_INFO toPinInfo;
                 toPin->QueryPinInfo (&toPinInfo);
@@ -464,7 +467,6 @@ namespace { // anonymous
       systemDevEnum->CreateClassEnumerator (clsid, &classEnumerator, 0);
 
       if (classEnumerator) {
-        int i = 1;
         IMoniker* moniker = NULL;
         ULONG fetched;
         while (classEnumerator->Next (1, &moniker, &fetched) == S_OK) {
@@ -551,13 +553,13 @@ namespace { // anonymous
       if (mDvbTuningSpace2->put_NetworkID (9018) != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - put_NetworkID failed");
 
-      if (mDvbTuningSpace2->put_FrequencyMapping (L"") != S_OK)
+      if (mDvbTuningSpace2->put_FrequencyMapping ((BSTR)L"") != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - put_FrequencyMapping failed");
 
-      if (mDvbTuningSpace2->put_UniqueName (L"DTV DVB-T") != S_OK)
+      if (mDvbTuningSpace2->put_UniqueName ((BSTR)L"DTV DVB-T") != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - put_UniqueName failed");
 
-      if (mDvbTuningSpace2->put_FriendlyName (L"DTV DVB-T") != S_OK)
+      if (mDvbTuningSpace2->put_FriendlyName ((BSTR)L"DTV DVB-T") != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - put_FriendlyName failed");
       //}}}
       //{{{  create dvbtLocator and setup in dvbTuningSpace2 interface
@@ -848,7 +850,7 @@ void cDvb::reset() {
 //}}}
 //{{{
 int cDvb::setFilter (uint16_t pid) {
-
+  (void)pid;
   #ifdef _WIN32
     return 0;
   #endif
@@ -885,7 +887,8 @@ int cDvb::setFilter (uint16_t pid) {
 //}}}
 //{{{
 void cDvb::unsetFilter (int fd, uint16_t pid) {
-
+  (void)fd;
+  (void)pid;
 #ifdef __linux__
   if (ioctl (fd, DMX_STOP) < 0)
     cLog::log (LOGERROR, format("dvbUnsetFilter - stop failed {}", strerror (errno)));
@@ -899,6 +902,8 @@ void cDvb::unsetFilter (int fd, uint16_t pid) {
 // get block
 //{{{
 int cDvb::getBlock (uint8_t*& block, int& blockSize) {
+  (void)blockSize;
+  (void)block;
 
   #ifdef _WIN32
     cLog::log (LOGERROR, "getBlock not implemented");

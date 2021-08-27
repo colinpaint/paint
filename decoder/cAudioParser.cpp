@@ -78,7 +78,7 @@ bool cAudioParser::parseId3Tag (uint8_t* framePtr, uint8_t* frameEnd) {
     ptr += 10;
 
     while (ptr < framePtr + tagSize) {
-      auto tag = (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
+      tag = (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
       auto frameSize = (ptr[4] << 24) | (ptr[5] << 16) | (ptr[6] << 8) | ptr[7];
       if (!frameSize)
         break;
