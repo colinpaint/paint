@@ -158,19 +158,19 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
   const float hourRadius = radius * 0.6f;
   const float hourAngle = (1.f - (hours + (mins / 60.f)) / 6.f) * kPi;
   window->DrawList->AddLine (
-    rect.GetCenter(), rect.GetCenter() + ImVec2(hourRadius * sin (hourAngle), hourRadius * cos (hourAngle)), col, 2.f);
+    rect.GetCenter(), rect.GetCenter() + ImVec2(hourRadius * sin (hourAngle), hourRadius * cos (hourAngle)), IM_COL32_WHITE, 2.f);
 
   // draw minuteHand
   const float minRadius = radius * 0.75f;
   const float minAngle = (1.f - (mins + (secs / 60.f)) / 30.f) * kPi;
   window->DrawList->AddLine (
-    rect.GetCenter(), rect.GetCenter() + ImVec2(minRadius * sin (minAngle), minRadius * cos (minAngle)), col, 2.f);
+    rect.GetCenter(), rect.GetCenter() + ImVec2(minRadius * sin (minAngle), minRadius * cos (minAngle)), IM_COL32_WHITE, 2.f);
 
   // draw secondHand
   const float secRadius = radius * 0.85f;
   const float secAngle = (1.f - (secs / 30.f)) * kPi;
   window->DrawList->AddLine (
-    rect.GetCenter(), rect.GetCenter() + ImVec2(secRadius * sin (secAngle), secRadius * cos (secAngle)), col, 2.f);
+    rect.GetCenter(), rect.GetCenter() + ImVec2(secRadius * sin (secAngle), secRadius * cos (secAngle)), IM_COL32_WHITE, 2.f);
 
   // draw date,time labels
   const string dateString = date::format ("%a %d %b %y", chrono::floor<chrono::seconds>(timePoint));
