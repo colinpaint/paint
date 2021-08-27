@@ -6,10 +6,34 @@
 //#include "date.h"
 
 //{{{
-inline std::string getTimeString (uint32_t secs) {
-  return fmt::format ("{}:{}:{}", secs / (60 * 60), (secs / 60) % 60, secs % 60);
+//inline std::string getTimeString (uint32_t secs) {
+  //return fmt::format ("{}:{}:{}", secs / (60 * 60), (secs / 60) % 60, secs % 60);
+  //}
+//}}}
+//{{{
+inline std::string getTimeString (int64_t value, int daylightSeconds) {
+
+  int64_t subSeconds = (value % 100);
+  value /= 100;
+
+  value += daylightSeconds;
+  int64_t seconds = value % 60;
+  value /= 60;
+
+  int64_t minutes = value % 60;
+  value /= 60;
+
+  int64_t hours = value;
+
+  if (hours > 0)
+    return fmt::format ("{}:{:02d}:{:02d}:{:02d}", hours, minutes, seconds, subSeconds);
+  else if (minutes > 0)
+    return fmt::format ("{}:{:02d}:{:02d}", minutes, seconds, subSeconds);
+  else
+    return fmt::format ("{}:{:02d}", seconds, subSeconds);
   }
 //}}}
+
 //{{{
 inline std::string getPtsString (int64_t pts) {
 // 90khz int64_t pts - miss out zeros
@@ -29,7 +53,7 @@ inline std::string getPtsString (int64_t pts) {
     pts /= 60;
     uint32_t hours = pts % 60;
 
-    
+
     std::string hourMinString = hours ? fmt::format ("{}:{:02}", hours,mins) : fmt::format ("{}",mins);
     return fmt::format ("{}:{:02}:{:02}", hourMinString, secs, hs);
     }

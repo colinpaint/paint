@@ -1,4 +1,4 @@
-// cSong.cpp - audioFrames container
+// cSong.cpp - audioFrame container
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -199,25 +199,29 @@ bool cSong::getPlayFinished() {
 string cSong::getFirstTimeString (int daylightSeconds) {
 
   (void)daylightSeconds;
+
   // scale firstFrameNum as seconds*100
   int64_t value = getSecondsFromFrames (getFirstFrameNum() * 100);
   if (!value)
     return "";
 
-  return getTimeString (getSecondsFromFrames (value));
+  return getTimeString (getSecondsFromFrames (value), 0);
   }
 //}}}
 //{{{
 string cSong::getPlayTimeString (int daylightSeconds) {
 // scale pts = frameNum as seconds*100
+
   return getTimeString (getSecondsFromFrames (getPlayPts() * 100), daylightSeconds);
   }
 //}}}
 //{{{
 string cSong::getLastTimeString (int daylightSeconds) {
+
   (void)daylightSeconds;
+
   // scale frameNum as seconds*100
-  return getTimeString (getSecondsFromFrames (getLastFrameNum() * 100));
+  return getTimeString (getSecondsFromFrames (getLastFrameNum() * 100), 0);
   }
 //}}}
 
@@ -364,31 +368,6 @@ void cSong::addFrame (bool reuseFront, int64_t pts, float* samples, int64_t tota
   }
 //}}}
 
-// cSong - protected
-//{{{
-string cSong::getTimeString (int64_t value, int daylightSeconds) {
-
-  int64_t subSeconds = (value % 100);
-  value /= 100;
-
-  value += daylightSeconds;
-  int64_t seconds = value % 60;
-  value /= 60;
-
-  int64_t minutes = value % 60;
-  value /= 60;
-
-  int64_t hours = value;
-
-  if (hours > 0)
-    return format ("{}:{:02d}:{:02d}:{:02d}", hours, minutes, seconds, subSeconds);
-  else if (minutes > 0)
-    return format ("{}:{:02d}:{:02d}", minutes, seconds, subSeconds);
-  else
-    return format ("{}:{:02d}", seconds, subSeconds);
-  }
-//}}}
-
 // cSong - private
 //{{{
 int64_t cSong::skipPrev (int64_t fromPts, bool silence) {
@@ -481,7 +460,11 @@ void cPtsSong::setBasePts (int64_t pts) {
   mBaseSinceMidnightMs = 0;
   }
 //}}}
-void cPtsSong::setPlayPts (int64_t pts) { mPlayPts = min (pts, getLastPts() + getFramePtsDuration()); }
+//{{{
+void cPtsSong::setPlayPts (int64_t pts) {
+  mPlayPts = min (pts, getLastPts() + getFramePtsDuration());
+  }
+//}}}
 //{{{
 void cPtsSong::setPlayFirstFrame() {
   setPlayPts (mSelect.empty() ? getFirstPts() : getPtsFromFrameNum (mSelect.getFirstFrameNum()));
@@ -498,10 +481,11 @@ void cPtsSong::setPlayLastFrame() {
 cHlsSong::cHlsSong (eAudioFrameType frameType, int numChannels,
                     int sampleRate, int samplesPerFrame,
                     int64_t framePtsDuration, int maxMapSize, int framesPerChunk)
-  : cPtsSong(frameType, numChannels, sampleRate, samplesPerFrame, framePtsDuration, maxMapSize),
-    mFramesPerChunk(framesPerChunk) {}
+    : cPtsSong(frameType, numChannels, sampleRate, samplesPerFrame, framePtsDuration, maxMapSize),
+      mFramesPerChunk(framesPerChunk) {
+
+  }
 //}}}
-cHlsSong::~cHlsSong() {}
 
 //{{{
 int cHlsSong::getLoadChunkNum (int64_t& loadPts, bool& reuseFromFront) {
@@ -523,7 +507,7 @@ int cHlsSong::getLoadChunkNum (int64_t& loadPts, bool& reuseFromFront) {
   // check playPts chunkNum for firstFrame of chunk loaded
   if (!findFrameByPts (loadPts)) {
     reuseFromFront = loadPts >= mPlayPts;
-    cLog::log (LOGINFO1, fmt::format ("getLoadChunk - load offset:{} {} chunkNum{} pts{} {}", 
+    cLog::log (LOGINFO1, fmt::format ("getLoadChunk - load offset:{} {} chunkNum{} pts{} {}",
                            frameNumOffset, chunkNumOffset,chunkNum, getPtsFramesString (loadPts, getFramePtsDuration()),
                            (reuseFromFront ? " front" : " back")));
     return chunkNum;

@@ -1,4 +1,4 @@
-// cSong.h - container of audio frames,power,peak,fft,range select, hls numbering
+// cSong.h - audioFrame container - power,peak,fft,range select, hls numbering
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -197,7 +197,6 @@ public:
   void addFrame (bool reuseFront, int64_t pts, float* samples, int64_t totalFrames);
 
 protected:
-  std::string getTimeString (int64_t value, int daylightSeconds = 0);
   //{{{  vars
   std::shared_mutex mSharedMutex;
 
@@ -253,7 +252,7 @@ public:
             int samplesPerFrame, int64_t framePtsDuration, int maxMapSize)
     : cSong (frameType, numChannels, sampleRate, samplesPerFrame, maxMapSize), mFramePtsDuration(framePtsDuration)  {}
   //}}}
-  virtual ~cPtsSong() {}
+  virtual ~cPtsSong() = default;
 
   virtual int64_t getFramePtsDuration() final { return mFramePtsDuration; }
   virtual int64_t getFrameNumFromPts (int64_t pts) final { return pts / mFramePtsDuration; }
@@ -290,7 +289,7 @@ class cHlsSong : public cPtsSong {
 public:
   cHlsSong (eAudioFrameType frameType, int numChannels, int sampleRate,
             int samplesPerFrame, int64_t framePtsDuration, int maxMapSize, int framesPerChunk);
-  virtual ~cHlsSong();
+  virtual ~cHlsSong() = default;
 
   // gets
   int64_t getBasePlayPts() { return mPlayPts - mBasePts; }
