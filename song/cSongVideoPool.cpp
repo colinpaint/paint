@@ -1949,7 +1949,7 @@ public:
           ret = avcodec_receive_frame (mAvContext, avFrame);
           if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
             break;
-          mDecodeMicroSeconds = duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+          mDecodeMicroSeconds = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
           // extract frame info from decode
           mWidth = avFrame->width;
@@ -2082,7 +2082,7 @@ private:
         //if (status == MFX_ERR_NONE) {
           //status = mSession.SyncOperation (syncDecode, 60000);
           //if (status == MFX_ERR_NONE) {
-            //mDecodeMicroSeconds = duration_cast<microseconds>(system_clock::now() - timePoint).count();
+            //mDecodeMicroSeconds = chrono::duration_cast<chrono::microseconds>(system_clock::now() - timePoint).count();
 
             //mPtsDuration = (kPtsPerSecond * surface->Info.FrameRateExtD) / surface->Info.FrameRateExtN;
 
@@ -2093,7 +2093,7 @@ private:
             //int linesize[2] = { surface->Data.Pitch, surface->Data.Pitch/2 };
             //timePoint = system_clock::now();
             //frame->setYuv420 (nullptr, data, linesize);
-            //mYuv420MicroSeconds = duration_cast<microseconds>(system_clock::now() - timePoint).count();
+            //mYuv420MicroSeconds = chrono::duration_cast<chrono::microseconds>(system_clock::now() - timePoint).count();
 
             //{
             //unique_lock<shared_mutex> lock (mSharedMutex);
