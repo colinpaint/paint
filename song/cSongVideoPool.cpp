@@ -1,4 +1,4 @@
-// cVideoPool.cpp
+// cSongVideoPool.cpp - video just follows songPlayer audio pts, hoping video has been preloaded correctly
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -15,6 +15,8 @@
 // utils
 #include "../utils/utils.h"
 #include "../utils/cLog.h"
+
+#include "cSong.h"
 
 extern "C" {
   #include <libavcodec/avcodec.h>
@@ -96,11 +98,7 @@ extern "C" {
   //}}}
 #endif
 
-#include "../song/cSong.h"
-
 using namespace std;
-using namespace fmt;
-using namespace chrono;
 //}}}
 constexpr int kPtsPerSecond = 90000;
 
@@ -1787,7 +1785,7 @@ public:
   virtual int getHeight() { return mHeight; }
   //{{{
   virtual string getInfoString() {
-    return format ("{}x{} {:5d}:{:4d}", mWidth, mHeight, mDecodeMicroSeconds, mYuv420MicroSeconds);
+    return fmt::format ("{}x{} {:5d}:{:4d}", mWidth, mHeight, mDecodeMicroSeconds, mYuv420MicroSeconds);
     }
   //}}}
   virtual map <int64_t, iVideoFrame*>& getFramePool() { return mFramePool; }
@@ -1909,7 +1907,7 @@ public:
   //{{{
   virtual void decodeFrame (bool reuseFromFront, uint8_t* pes, unsigned int pesSize, int64_t pts, int64_t dts) {
 
-    system_clock::time_point timePoint = system_clock::now();
+    chrono::system_clock::time_point timePoint = chrono::system_clock::now();
 
     // ffmpeg doesn't maintain correct avFrame.pts, decode frames in presentation order and pts correct on I frames
     char frameType = getH264FrameType (pes, pesSize);
@@ -1951,7 +1949,7 @@ public:
           ret = avcodec_receive_frame (mAvContext, avFrame);
           if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
             break;
-          mDecodeMicroSeconds = duration_cast<microseconds>(system_clock::now() - timePoint).count();
+          mDecodeMicroSeconds = duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
           // extract frame info from decode
           mWidth = avFrame->width;
@@ -1963,13 +1961,13 @@ public:
             auto frame = getFreeFrame (reuseFromFront, mGuessPts);
 
             frame->set (mGuessPts, pesSize, mWidth, mHeight, frameType);
-            timePoint = system_clock::now();
+            timePoint = chrono::system_clock::now();
             if (!mSwsContext)
               mSwsContext = sws_getContext (mWidth, mHeight, AV_PIX_FMT_YUV420P,
                                             mWidth, mHeight, AV_PIX_FMT_RGBA,
                                             SWS_BILINEAR, NULL, NULL, NULL);
             frame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
-            mYuv420MicroSeconds = duration_cast<microseconds>(system_clock::now() - timePoint).count();
+            mYuv420MicroSeconds = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
             {
             unique_lock<shared_mutex> lock (mSharedMutex);

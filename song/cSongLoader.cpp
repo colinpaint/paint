@@ -12,17 +12,19 @@
 // c
 #include "sys/stat.h"
 
-#include "cSong.h"
-#include "cSongLoader.h"
-#include "cSongPlayer.h"
-
 // utils
 #include "../utils/utils.h"
 #include "../utils/date.h"
 #include "../utils/cLog.h"
-#include "../utils/iVideoPool.h"
 
-// audio decode
+// song
+#include "cSong.h"
+#include "cSongLoader.h"
+#include "cSongPlayer.h"
+#include "iVideoPool.h"
+#include "readerWriterQueue.h"
+
+// decoder
 #include "../decoder/cAudioParser.h"
 #include "../decoder/iAudioDecoder.h"
 #include "../decoder/cFFmpegAudioDecoder.h"
@@ -38,8 +40,7 @@
   #include "../net/cLinuxHttp.h"
 #endif
 
-#include "readerWriterQueue.h"
-
+// dvb
 #include "../dvb/cDvb.h"
 #include "../dvb/cDvbUtils.h"
 

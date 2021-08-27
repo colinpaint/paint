@@ -7,6 +7,14 @@
 
 #include <thread>
 
+// utils
+#include "../utils/date.h"
+#include "../utils/utils.h"
+#include "../utils/cLog.h"
+
+// song
+#include "cSong.h"
+
 #ifdef _WIN32
   #include "../audio/audioWASAPI.h"
   #include "../audio/cWinAudio16.h"
@@ -14,16 +22,7 @@
   #include "../audio/cLinuxAudio.h"
 #endif
 
-// utils
-#include "../utils/date.h"
-#include "../utils/utils.h"
-#include "../utils/cLog.h"
-
-// container
-#include "cSong.h"
-
 using namespace std;
-using namespace chrono;
 //}}}
 
 #ifdef _WIN32

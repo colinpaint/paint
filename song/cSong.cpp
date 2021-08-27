@@ -9,8 +9,6 @@
 #include "../utils/cLog.h"
 
 using namespace std;
-using namespace fmt;
-using namespace chrono;
 //}}}
 //{{{  constexpr
 constexpr static float kMinPowerValue = 0.25f;
@@ -531,7 +529,7 @@ int cHlsSong::getLoadChunkNum (int64_t& loadPts, bool& reuseFromFront) {
   }
 //}}}
 //{{{
-void cHlsSong::setBaseHls (int64_t pts, system_clock::time_point timePoint, seconds offset, int chunkNum) {
+void cHlsSong::setBaseHls (int64_t pts, chrono::system_clock::time_point timePoint, chrono::seconds offset, int chunkNum) {
 // set baseChunkNum, baseTimePoint and baseFrame (sinceMidnight)
 
   cLog::log (LOGINFO, fmt::format ("setBase chunk: {} pts {}", chunkNum, getPtsString (pts)));
@@ -541,7 +539,7 @@ void cHlsSong::setBaseHls (int64_t pts, system_clock::time_point timePoint, seco
 
   mBaseTimePoint = timePoint + offset;
   auto midnightBaseTimePoint = date::floor<date::days>(mBaseTimePoint);
-  mBaseSinceMidnightMs = duration_cast<milliseconds>(mBaseTimePoint - midnightBaseTimePoint).count();
+  mBaseSinceMidnightMs = duration_cast<chrono::milliseconds>(mBaseTimePoint - midnightBaseTimePoint).count();
 
   mBaseChunkNum = chunkNum;
   }
