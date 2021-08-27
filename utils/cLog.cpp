@@ -73,16 +73,13 @@ public:
 //}}}
 
 namespace {
-  const fmt::color kLevelColours[] = {
-    fmt::color::white,        // notice
-    fmt::color::orange,       // title
-    fmt::color::light_salmon, // error
-    fmt::color::yellow,       // info
-    fmt::color::green,        // info1
-    fmt::color::lime_green,   // info2
-    fmt::color::lavender,     // info3
-    };
-
+  const fmt::color kLevelColours[] = { fmt::color::white,        // notice
+                                       fmt::color::orange,       // title
+                                       fmt::color::light_salmon, // error
+                                       fmt::color::yellow,       // info
+                                       fmt::color::green,        // info1
+                                       fmt::color::lime_green,   // info2
+                                       fmt::color::lavender};    // info3
   const int kMaxBuffer = 10000;
   enum eLogLevel mLogLevel = LOGERROR;
 
@@ -565,8 +562,7 @@ void cLog::log (enum eLogLevel logLevel, const string& logStr) {
     }
 
   else if (logLevel <= mLogLevel) {
-    fmt::print (fg (fmt::color::floral_white), // | fmt::emphasis::bold,
-                "{} {} {}\n",
+    fmt::print (fg (fmt::color::floral_white) | fmt::emphasis::bold, "{} {} {}\n",
                 date::format ("%T", chrono::floor<chrono::microseconds>(now)),
                 fmt::format (fg (fmt::color::dark_gray), "{}", getThreadName (getThreadId())),
                 fmt::format (fg (kLevelColours[logLevel]), "{}", logStr));
@@ -610,7 +606,7 @@ void cLog::log (enum eLogLevel logLevel, const char* format, ... ) {
 void cLog::clearScreen() {
 
   // cursorPos, clear to end of screen
-  string formatString (fmt::format ("\033[{};{}H\033[J\n", 1, 1));  
+  string formatString (fmt::format ("\033[{};{}H\033[J\n", 1, 1));
   fputs (formatString.c_str(), stdout);
   fflush (stdout);
   }

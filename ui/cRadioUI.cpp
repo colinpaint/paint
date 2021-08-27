@@ -56,7 +56,7 @@ public:
     if (ImGui::Button ("radio3"))
       mSongLoader.launchLoad (kRadio3);
     if (ImGui::Button ("radio4"))
-      mSongLoader.launchLoad (kRadio3);
+      mSongLoader.launchLoad (kRadio4);
     if (ImGui::Button ("radio5"))
       mSongLoader.launchLoad (kRadio5);
     if (ImGui::Button ("radio6"))
