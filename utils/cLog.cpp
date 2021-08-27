@@ -73,8 +73,7 @@ public:
 //}}}
 
 namespace {
-  const fmt::color kLevelColours[] = { fmt::color::white,        // notice
-                                       fmt::color::orange,       // title
+  const fmt::color kLevelColours[] = { fmt::color::orange,       // notice
                                        fmt::color::light_salmon, // error
                                        fmt::color::yellow,       // info
                                        fmt::color::green,        // info1
@@ -504,7 +503,6 @@ void cLog::cycleLogLevel() {
 // cycle log level for L key presses in gui
 
   switch (mLogLevel) {
-    case LOGTITLE:  setLogLevel (LOGNOTICE); break;
     case LOGNOTICE: setLogLevel(LOGERROR);   break;
     case LOGERROR:  setLogLevel(LOGINFO);    break;
     case LOGINFO:   setLogLevel(LOGINFO1);   break;
@@ -521,7 +519,6 @@ void cLog::setLogLevel (enum eLogLevel logLevel) {
   logLevel = max (LOGNOTICE, min (LOGINFO3, logLevel));
   if (mLogLevel != logLevel) {
     switch (logLevel) {
-      case LOGTITLE:  cLog::log (LOGNOTICE, "setLogLevel to LOGTITLE"); break;
       case LOGNOTICE: cLog::log (LOGNOTICE, "setLogLevel to LOGNOTICE"); break;
       case LOGERROR:  cLog::log (LOGNOTICE, "setLogLevel to LOGERROR"); break;
       case LOGINFO:   cLog::log (LOGNOTICE, "setLogLevel to LOGINFO");  break;

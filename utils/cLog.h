@@ -8,7 +8,7 @@
 //}}}
 
 // no class or namespace qualification, reduces code clutter - cLog::log (LOG* - bad enough
-enum eLogLevel { LOGTITLE, LOGNOTICE, LOGERROR, LOGINFO, LOGINFO1, LOGINFO2, LOGINFO3 };
+enum eLogLevel { LOGNOTICE, LOGERROR, LOGINFO, LOGINFO1, LOGINFO2, LOGINFO3 };
 
 class cLine;
 

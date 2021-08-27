@@ -142,12 +142,13 @@ public:
   virtual void processLast (bool reuseFromFront) { (void)reuseFromFront; }
 
 protected:
-  // main override
   //{{{
-  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, int continuityCount, bool reuseFromFront) {
+  virtual void processPayload (uint8_t* ts, int tsLeft, bool payloadStart, 
+                               int continuityCount, bool reuseFromFront) {
 
     (void)continuityCount;
     (void)reuseFromFront;
+
     string info;
     for (int i = 0; i < tsLeft; i++) {
       int value = ts[i];
@@ -164,6 +165,7 @@ protected:
   bool mGotPayloadStart = false;
   };
 //}}}
+
 //{{{
 class cPatParser : public cPidParser {
 // assumes section length fits in this packet, no need to buffer
@@ -2735,14 +2737,21 @@ public:
         chunkBytesLeft -= frameSize;
         mStreamPos += frameSize;
         if (samples) {
-          if (!mSong) // first decoded frame gives aacHE sampleRate,samplesPerFrame
+          if (!mSong) 
+            // first decoded frame gives aacHE sampleRate,samplesPerFrame
             mSong = new cSong (mAudioFrameType, decoder->getNumChannels(), decoder->getSampleRate(),
                                decoder->getNumSamplesPerFrame(), 0);
+
+          // add frame to song
           mSong->addFrame (true, pts, samples, (mFileSize * mSong->getNumFrames()) / mStreamPos);
           pts += mSong->getFramePtsDuration();
+
           if (!mSongPlayer)
+            // start songPlayer
             mSongPlayer = new cSongPlayer (mSong, false);
           }
+
+        // progress
         mLoadFrac = float(mStreamPos) / mFileSize;
         }
 
@@ -2776,7 +2785,7 @@ private:
   };
 //}}}
 
-// cLoader public
+// cSongLoader public
 //{{{
 cSongLoader::cSongLoader() {
 
@@ -2803,13 +2812,13 @@ cSongLoader::~cSongLoader() {
   }
 //}}}
 
-// cLoader iLoad gets
+// cSongLoader iLoad gets
 cSong* cSongLoader::getSong() { return mLoadSource->getSong(); }
 iVideoPool* cSongLoader::getVideoPool() { return mLoadSource->getVideoPool(); }
 string cSongLoader::getInfoString() { return mLoadSource->getInfoString(); }
 float cSongLoader::getFracs (float& audioFrac, float& videoFrac) { return mLoadSource->getFracs (audioFrac, videoFrac); }
 
-// cLoader iLoad actions
+// cSongLoader iLoad actions
 bool cSongLoader::togglePlaying() { return mLoadSource->togglePlaying(); }
 bool cSongLoader::skipBegin() { return  mLoadSource->skipBegin(); }
 bool cSongLoader::skipEnd() { return mLoadSource->skipEnd(); }
@@ -2817,7 +2826,7 @@ bool cSongLoader::skipBack (bool shift, bool control) { return mLoadSource->skip
 bool cSongLoader::skipForward (bool shift, bool control) { return mLoadSource->skipForward (shift, control); }
 void cSongLoader::exit() { mLoadSource->exit(); }
 
-// cLoader load
+// cSongLoader load
 //{{{
 void cSongLoader::launchLoad (const vector<string>& params) {
 // launch recognised load as thread
