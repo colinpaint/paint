@@ -7,7 +7,7 @@ set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 #target_compile_features (project PRIVATE cxx_std_20)
 
-# glfw project
+### glfw project
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -15,7 +15,7 @@ set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory (glfw)
 
-# utils project
+### utils project
 project (utils)
 file (GLOB UTILS_HEADER_FILES utils/*.h)
 file (GLOB UTILS_SOURCE_FILES utils/*.cpp utils/*.c)
@@ -31,28 +31,28 @@ else()
                                        -pedantic -Ofast -std=c++2a)
 endif()
 
-# audio project
+### audio project
 project (audio)
 file (GLOB AUDIO_HEADER_FILES audio/*.h)
 file (GLOB AUDIO_SOURCE_FILES audio/*.cpp)
 add_library (audio ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
 target_link_libraries (audio PUBLIC utils)
 
-# kiss project
+### kiss project
 project (kiss)
 file (GLOB KISS_HEADER_FILES kiss/*.h)
 file (GLOB KISS_SOURCE_FILES kiss/*.c)
 add_library (kiss ${KISS_HEADER_FILES} ${KISS_SOURCE_FILES})
 target_link_libraries (kiss PUBLIC utils)
 
-# song project
+### song project
 project (song)
 file (GLOB SONG_HEADER_FILES song/*.h)
 file (GLOB SONG_SOURCE_FILES song/*.cpp)
 add_library (song ${SONG_HEADER_FILES} ${SONG_SOURCE_FILES})
 target_link_libraries (song PUBLIC utils)
 
-# decoder project
+### decoder project
 project (decoder)
 file (GLOB DECODER_HEADER_FILES decoder/*.h)
 file (GLOB DECODER_SOURCE_FILES decoder/*.cpp)
@@ -61,21 +61,21 @@ target_include_directories (decoder PUBLIC ffmpeg/inc)
 target_link_directories (audio PUBLIC ffmpeg/x64)
 target_link_libraries (decoder PUBLIC utils avutil avcodec avformat swresample swscale)
 
-# net project
+### net project
 project (net)
 file (GLOB NET_HEADER_FILES net/*.h)
 file (GLOB NET_SOURCE_FILES net/*.cpp)
 add_library (net ${NET_HEADER_FILES} ${NET_SOURCE_FILES})
 target_link_libraries (net PUBLIC utils)
 
-# dvb project
+### dvb project
 project (dvb)
 file (GLOB DVB_HEADER_FILES dvb/*.h)
 file (GLOB DVB_SOURCE_FILES dvb/*.cpp)
 add_library (dvb ${DVB_HEADER_FILES} ${DVB_SOURCE_FILES})
 target_link_libraries (dvb PUBLIC utils)
 
-# imgui project
+### imgui project
 project (imgui)
 file (GLOB IMGUI_HEADER_FILES imgui/*.h)
 file (GLOB IMGUI_SOURCE_FILES imgui/*.cpp)
@@ -90,7 +90,7 @@ add_library (imgui ${IMGUI_SOURCE_FILES} ${IMGUI_HEADER_FILES} ${BACKEND_SOURCE_
 target_include_directories (imgui PUBLIC imgui glfw/include)
 target_link_libraries (imgui PUBLIC utils)
 
-# ImPlot optioned as it compiles slowly
+### ImPlot project ### optioned as it compiles slowly ###
 if (USE_IMPLOT)
   project (implot)
   file (GLOB HEADER_FILES *.h)
@@ -99,7 +99,7 @@ if (USE_IMPLOT)
   target_include_directories (implot PUBLIC implot imgui utils)
 endif()
 
-# canvas project
+### canvas project
 project (canvas)
 file (GLOB CANVAS_HEADER_FILES canvas/*.h)
 file (GLOB CANVAS_SRCFILES canvas/*.cpp)
