@@ -44,7 +44,7 @@
 
   #pragma comment (lib,"strmiids")
 
-  #include "../utils/cBipBuffer.h"
+  #include "cBipBuffer.h"
   //}}}
 #endif
 

@@ -13,8 +13,8 @@
 #include <map>
 
 // utils
-#include "utils.h"
-#include "cLog.h"
+#include "../utils/utils.h"
+#include "../utils/cLog.h"
 
 extern "C" {
   #include <libavcodec/avcodec.h>
