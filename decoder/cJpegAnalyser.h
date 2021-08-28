@@ -447,6 +447,7 @@ public:
 private:
   //{{{
   uint32_t read (uint8_t* buffer, uint32_t bytes) {
+
     memcpy (buffer, mBufferPtr, bytes);
     mBufferPtr += bytes;
     return bytes;

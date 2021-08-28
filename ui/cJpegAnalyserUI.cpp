@@ -42,7 +42,6 @@ static const vector<string> kRtp4  = {"rtp 4"};
 static const vector<string> kRtp5  = {"rtp 5"};
 //}}}
 
-
 class cJpegAnalyserUI : public cUI {
 public:
   //{{{
@@ -72,7 +71,7 @@ public:
   //}}}
 
   //{{{
-  void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform) final {
+  void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
 
     //{{{  unused params
     (void)canvas;
@@ -92,16 +91,17 @@ public:
     ImGui::Text (date::format ("access - %H:%M:%S %a %d %b %y", chrono::floor<chrono::seconds>(mLastAccessTimePoint)).c_str());
     ImGui::Text (date::format ("write  - %H:%M:%S %a %d %b %y", chrono::floor<chrono::seconds>(mLastWriteTimePoint)).c_str());
 
+    ImGui::PushFont (monoFont);
     int address = 0;
     for (int j = 0; j < 16; j++) {
-      string str = fmt::format ("{:04d}: ", address);
+      string str = fmt::format ("{:04x}: ", address);
       for (int i = 0; i < 16; i++)
-        str += fmt::format ("{:02X} ", fileBuf[address++]);
+        str += fmt::format ("{:02x} ", fileBuf[address++]);
       ImGui::Text (str.c_str());
       }
+    ImGui::PopFont();
 
     ImGui::End();
-
     }
   //}}}
 
@@ -123,6 +123,8 @@ private:
     return chrono::system_clock::time_point { duration_cast<chrono::system_clock::duration>(withUnixEpoch) };
     }
   //}}}
+
+  ImFont* mMonoFont = nullptr;
 
   string mFilename = "../piccies/tv.jpg";
   HANDLE fileHandle;

@@ -20,6 +20,7 @@
 
 // UI font
 #include "font/itcSymbolBold.h"
+#include "../font/droidSansMono.h"
 
 // self registered classes using static var init idiom
 #include "platform/cPlatform.h"
@@ -79,6 +80,7 @@ int main (int numArgs, char* args[]) {
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
   ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
+  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f);
 
   // should clear main screen here before file loads
 
@@ -94,7 +96,7 @@ int main (int numArgs, char* args[]) {
       graphics.windowResize (width, height);
       graphics.newFrame();
       if (showDemoWindow)
-        cUI::draw (canvas, graphics, platform);
+        cUI::draw (canvas, graphics, platform, monoFont);
       ImGui::ShowDemoWindow (&showDemoWindow);
       graphics.drawUI (platform.getWindowSize());
       platform.present();
@@ -117,7 +119,7 @@ int main (int numArgs, char* args[]) {
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
-    cUI::draw (canvas, graphics, platform);
+    cUI::draw (canvas, graphics, platform, monoFont);
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
     if (showPlotWindow) {

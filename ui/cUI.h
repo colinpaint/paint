@@ -13,6 +13,7 @@ struct ImVec2;
 class cGraphics;
 class cPlatform;
 class cCanvas;
+struct ImFont;
 //}}}
 
 class cUI {
@@ -23,7 +24,7 @@ public:
   static void listInstances();
 
   // static draw
-  static void draw (cCanvas& canvas, cGraphics& graphics, cPlatform& platforma);
+  static void draw (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont);
 
   // base class
   cUI (const std::string& name) : mName(name) {}
@@ -31,7 +32,7 @@ public:
 
   std::string getName() const { return mName; }
 
-  virtual void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform) = 0;
+  virtual void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) = 0;
 
 protected:
   bool clockButton (const std::string& label, std::chrono::system_clock::time_point timePoint, const ImVec2& size_arg);

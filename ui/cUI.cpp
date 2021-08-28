@@ -58,7 +58,7 @@ void cUI::listInstances() {
 
 // static draw
 //{{{
-void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPlatform& platform) {
+void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) {
 // draw canvas and its UI's with imGui, using graphics
 // - draw canvas background
 //   - dummy fullscreen window, no draw,move,scroll,focus
@@ -113,7 +113,7 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPlatform& platform) {
 
   // add registered UI instances to imGui drawList
   for (auto& ui : getInstanceRegister())
-    ui.second->addToDrawList (canvas, graphics, platform);
+    ui.second->addToDrawList (canvas, graphics, platform, monoFont);
   }
 //}}}
 
