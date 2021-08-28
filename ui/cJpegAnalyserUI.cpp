@@ -17,35 +17,14 @@
 #include "../decoder/cJpegAnalyser.h"
 
 using namespace std;
-//}}}
-//{{{  const
-static const vector<string> kRadio1 = {"r1", "a128"};
-static const vector<string> kRadio2 = {"r2", "a128"};
-static const vector<string> kRadio3 = {"r3", "a320"};
-static const vector<string> kRadio4 = {"r4", "a64"};
-static const vector<string> kRadio5 = {"r5", "a128"};
-static const vector<string> kRadio6 = {"r6", "a128"};
-
-static const vector<string> kBbc1   = {"bbc1", "a128"};
-static const vector<string> kBbc2   = {"bbc2", "a128"};
-static const vector<string> kBbc4   = {"bbc4", "a128"};
-static const vector<string> kNews   = {"news", "a128"};
-static const vector<string> kBbcSw  = {"sw", "a128"};
-
-static const vector<string> kWqxr  = {"http://stream.wqxr.org/js-stream.aac"};
-static const vector<string> kDvb  = {"dvb"};
-
-static const vector<string> kRtp1  = {"rtp 1"};
-static const vector<string> kRtp2  = {"rtp 2"};
-static const vector<string> kRtp3  = {"rtp 3"};
-static const vector<string> kRtp4  = {"rtp 4"};
-static const vector<string> kRtp5  = {"rtp 5"};
+using namespace chrono;
 //}}}
 
 class cJpegAnalyserUI : public cUI {
 public:
   //{{{
-  cJpegAnalyserUI (const std::string& name) : cUI(name) {
+  cJpegAnalyserUI (const string& name) : cUI(name) {
+
     fileHandle = CreateFile (mFilename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     mapHandle = CreateFileMapping (fileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
     fileBuf = (uint8_t*)MapViewOfFile (mapHandle, FILE_MAP_READ, 0, 0, 0);
@@ -87,11 +66,11 @@ public:
                               mFilename.c_str(), fileBufLen,
                               jpegAnalyser.getWidth(), jpegAnalyser.getHeight()).c_str());
 
-    ImGui::Text (date::format ("create - %H:%M:%S %a %d %b %y", chrono::floor<chrono::seconds>(mCreationTimePoint)).c_str());
-    ImGui::Text (date::format ("access - %H:%M:%S %a %d %b %y", chrono::floor<chrono::seconds>(mLastAccessTimePoint)).c_str());
-    ImGui::Text (date::format ("write  - %H:%M:%S %a %d %b %y", chrono::floor<chrono::seconds>(mLastWriteTimePoint)).c_str());
-
     ImGui::PushFont (monoFont);
+    ImGui::Text (date::format ("create %H:%M:%S %a %d %b %y", floor<seconds>(mCreationTimePoint)).c_str());
+    ImGui::Text (date::format ("access %H:%M:%S %a %d %b %y", floor<seconds>(mLastAccessTimePoint)).c_str());
+    ImGui::Text (date::format ("write  %H:%M:%S %a %d %b %y", floor<seconds>(mLastWriteTimePoint)).c_str());
+
     int address = 0;
     for (int j = 0; j < 16; j++) {
       string str = fmt::format ("{:04x}: ", address);
@@ -107,20 +86,20 @@ public:
 
 private:
   //{{{
-  static chrono::system_clock::time_point getFileTimePoint (FILETIME fileTime) {
+  static system_clock::time_point getFileTimePoint (FILETIME fileTime) {
 
     // filetime_duration has the same layout as FILETIME; 100ns intervals
-    using filetime_duration = chrono::duration<int64_t, ratio<1, 10'000'000>>;
+    using filetime_duration = duration<int64_t, ratio<1, 10'000'000>>;
 
     // January 1, 1601 (NT epoch) - January 1, 1970 (Unix epoch):
-    constexpr chrono::duration<int64_t> nt_to_unix_epoch { INT64_C(-11644473600) };
+    constexpr duration<int64_t> nt_to_unix_epoch { INT64_C(-11644473600) };
 
     const filetime_duration asDuration{static_cast<int64_t> (
         (static_cast<uint64_t>((fileTime).dwHighDateTime) << 32) | (fileTime).dwLowDateTime)};
 
     const auto withUnixEpoch = asDuration + nt_to_unix_epoch;
 
-    return chrono::system_clock::time_point { duration_cast<chrono::system_clock::duration>(withUnixEpoch) };
+    return system_clock::time_point { duration_cast<system_clock::duration>(withUnixEpoch) };
     }
   //}}}
 
@@ -132,12 +111,27 @@ private:
   uint8_t* fileBuf;
   DWORD fileBufLen;
 
-  std::string mExifTimeString;
-  std::chrono::time_point<std::chrono::system_clock> mExifTimePoint;
-  std::chrono::time_point<std::chrono::system_clock> mCreationTimePoint;
-  std::chrono::time_point<std::chrono::system_clock> mLastAccessTimePoint;
-  std::chrono::time_point<std::chrono::system_clock> mLastWriteTimePoint;
+  string mExifTimeString;
+  time_point<system_clock> mExifTimePoint;
+  time_point<system_clock> mCreationTimePoint;
+  time_point<system_clock> mLastAccessTimePoint;
+  time_point<system_clock> mLastWriteTimePoint;
 
+  //{{{  static const
+  inline static const vector<string> kRadio1 = {"r1", "a128"};
+  inline static const vector<string> kRadio2 = {"r2", "a128"};
+  inline static const vector<string> kRadio3 = {"r3", "a320"};
+  inline static const vector<string> kRadio4 = {"r4", "a64"};
+  inline static const vector<string> kRadio5 = {"r5", "a128"};
+  inline static const vector<string> kRadio6 = {"r6", "a128"};
+
+  inline static const vector<string> kBbc1   = {"bbc1", "a128"};
+
+  inline static const vector<string> kWqxr  = {"http://stream.wqxr.org/js-stream.aac"};
+  inline static const vector<string> kDvb  = {"dvb"};
+
+  inline static const vector<string> kRtp1  = {"rtp 1"};
+  //}}}
   //{{{
   static cUI* create (const string& className) {
     return new cJpegAnalyserUI (className);

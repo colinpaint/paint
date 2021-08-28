@@ -1,4 +1,4 @@
-// cJpegAnalyser.h - portable jpeg analyser - based on tiny jpeg decoder, jhead
+// cJpegAnalyser.h - jpeg analyser - based on tiny jpeg decoder, jhead
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -6,294 +6,205 @@
 #include <stdio.h>
 //}}}
 
-//{{{  static const
-static const int kBodyBufferSize = 0x200;
-static const int kPoolBufferSize = 0xB00;
-static const int kInputBufferSize = 0x10000;
-
-static const int kBcB = (int)(1.772 * 1024);
-static const int kGcB = (int)(0.344 * 1024);
-static const int kGcR = (int)(0.714 * 1024);
-static const int kRcR = (int)(1.402 * 1024);
-
-static const int32_t M2  = (int32_t)(1.08239 * 4096);
-static const int32_t M4  = (int32_t)(2.61313 * 4096);
-static const int32_t M5  = (int32_t)(1.84776 * 4096);
-static const int32_t M13 = (int32_t)(1.41421 * 4096);
-
-//{{{
-static const uint8_t  kClip8[1024] = {
-  // 0..255
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-  32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-  64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
-  96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
-  128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
-  160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
-  192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
-  224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
-
-  // 256..511
-  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-
-  // -512..-257
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-  // -256..-1
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-//}}}
-//{{{
-static const uint8_t  kZigZag[64] = {
-   0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
-  12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
-  35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
-  58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
-  };
-//}}}
-//{{{
-static const uint16_t kScaleFactor[64] = {
-  (uint16_t)(1.00000*8192), (uint16_t)(1.38704*8192), (uint16_t)(1.30656*8192), (uint16_t)(1.17588*8192),
-  (uint16_t)(1.00000*8192), (uint16_t)(0.78570*8192), (uint16_t)(0.54120*8192), (uint16_t)(0.27590*8192),
-  (uint16_t)(1.38704*8192), (uint16_t)(1.92388*8192), (uint16_t)(1.81226*8192), (uint16_t)(1.63099*8192),
-  (uint16_t)(1.38704*8192), (uint16_t)(1.08979*8192), (uint16_t)(0.75066*8192), (uint16_t)(0.38268*8192),
-  (uint16_t)(1.30656*8192), (uint16_t)(1.81226*8192), (uint16_t)(1.70711*8192), (uint16_t)(1.53636*8192),
-  (uint16_t)(1.30656*8192), (uint16_t)(1.02656*8192), (uint16_t)(0.70711*8192), (uint16_t)(0.36048*8192),
-  (uint16_t)(1.17588*8192), (uint16_t)(1.63099*8192), (uint16_t)(1.53636*8192), (uint16_t)(1.38268*8192),
-  (uint16_t)(1.17588*8192), (uint16_t)(0.92388*8192), (uint16_t)(0.63638*8192), (uint16_t)(0.32442*8192),
-  (uint16_t)(1.00000*8192), (uint16_t)(1.38704*8192), (uint16_t)(1.30656*8192), (uint16_t)(1.17588*8192),
-  (uint16_t)(1.00000*8192), (uint16_t)(0.78570*8192), (uint16_t)(0.54120*8192), (uint16_t)(0.27590*8192),
-  (uint16_t)(0.78570*8192), (uint16_t)(1.08979*8192), (uint16_t)(1.02656*8192), (uint16_t)(0.92388*8192),
-  (uint16_t)(0.78570*8192), (uint16_t)(0.61732*8192), (uint16_t)(0.42522*8192), (uint16_t)(0.21677*8192),
-  (uint16_t)(0.54120*8192), (uint16_t)(0.75066*8192), (uint16_t)(0.70711*8192), (uint16_t)(0.63638*8192),
-  (uint16_t)(0.54120*8192), (uint16_t)(0.42522*8192), (uint16_t)(0.29290*8192), (uint16_t)(0.14932*8192),
-  (uint16_t)(0.27590*8192), (uint16_t)(0.38268*8192), (uint16_t)(0.36048*8192), (uint16_t)(0.32442*8192),
-  (uint16_t)(0.27590*8192), (uint16_t)(0.21678*8192), (uint16_t)(0.14932*8192), (uint16_t)(0.07612*8192)
-  };
-//}}}
-
-// exif
-//{{{  tags x
-// tags
-#define TAG_INTEROP_INDEX          0x0001
-#define TAG_INTEROP_VERSION        0x0002
-//}}}
-//{{{  tags 1xx
-#define TAG_IMAGE_WIDTH            0x0100
-#define TAG_IMAGE_LENGTH           0x0101
-#define TAG_BITS_PER_SAMPLE        0x0102
-#define TAG_COMPRESSION            0x0103
-#define TAG_PHOTOMETRIC_INTERP     0x0106
-#define TAG_FILL_ORDER             0x010A
-#define TAG_DOCUMENT_NAME          0x010D
-#define TAG_IMAGE_DESCRIPTION      0x010E
-#define TAG_MAKE                   0x010F
-#define TAG_MODEL                  0x0110
-#define TAG_SRIP_OFFSET            0x0111
-#define TAG_ORIENTATION            0x0112
-#define TAG_SAMPLES_PER_PIXEL      0x0115
-#define TAG_ROWS_PER_STRIP         0x0116
-#define TAG_STRIP_BYTE_COUNTS      0x0117
-#define TAG_X_RESOLUTION           0x011A
-#define TAG_Y_RESOLUTION           0x011B
-#define TAG_PLANAR_CONFIGURATION   0x011C
-#define TAG_RESOLUTION_UNIT        0x0128
-#define TAG_TRANSFER_FUNCTION      0x012D
-#define TAG_SOFTWARE               0x0131
-#define TAG_DATETIME               0x0132
-#define TAG_ARTIST                 0x013B
-#define TAG_WHITE_POINT            0x013E
-#define TAG_PRIMARY_CHROMATICITIES 0x013F
-#define TAG_TRANSFER_RANGE         0x0156
-//}}}
-//{{{  tags 2xx
-#define TAG_JPEG_PROC              0x0200
-#define TAG_THUMBNAIL_OFFSET       0x0201
-#define TAG_THUMBNAIL_LENGTH       0x0202
-#define TAG_Y_CB_CR_COEFFICIENTS   0x0211
-#define TAG_Y_CB_CR_SUB_SAMPLING   0x0212
-#define TAG_Y_CB_CR_POSITIONING    0x0213
-#define TAG_REFERENCE_BLACK_WHITE  0x0214
-//}}}
-//{{{  tags 1xxx
-#define TAG_RELATED_IMAGE_WIDTH    0x1001
-#define TAG_RELATED_IMAGE_LENGTH   0x1002
-//}}}
-//{{{  tags 8xxx
-#define TAG_CFA_REPEAT_PATTERN_DIM 0x828D
-#define TAG_CFA_PATTERN1           0x828E
-#define TAG_BATTERY_LEVEL          0x828F
-#define TAG_COPYRIGHT              0x8298
-#define TAG_EXPOSURETIME           0x829A
-#define TAG_FNUMBER                0x829D
-#define TAG_IPTC_NAA               0x83BB
-#define TAG_EXIF_OFFSET            0x8769
-#define TAG_INTER_COLOR_PROFILE    0x8773
-#define TAG_EXPOSURE_PROGRAM       0x8822
-#define TAG_SPECTRAL_SENSITIVITY   0x8824
-#define TAG_GPSINFO                0x8825
-#define TAG_ISO_EQUIVALENT         0x8827
-#define TAG_OECF                   0x8828
-//}}}
-//{{{  tags 9xxx
-#define TAG_EXIF_VERSION           0x9000
-#define TAG_DATETIME_ORIGINAL      0x9003
-#define TAG_DATETIME_DIGITIZED     0x9004
-#define TAG_COMPONENTS_CONFIG      0x9101
-#define TAG_CPRS_BITS_PER_PIXEL    0x9102
-#define TAG_SHUTTERSPEED           0x9201
-#define TAG_APERTURE               0x9202
-#define TAG_BRIGHTNESS_VALUE       0x9203
-#define TAG_EXPOSURE_BIAS          0x9204
-#define TAG_MAXAPERTURE            0x9205
-#define TAG_SUBJECT_DISTANCE       0x9206
-#define TAG_METERING_MODE          0x9207
-#define TAG_LIGHT_SOURCE           0x9208
-#define TAG_FLASH                  0x9209
-#define TAG_FOCALLENGTH            0x920A
-#define TAG_SUBJECTAREA            0x9214
-#define TAG_MAKER_NOTE             0x927C
-#define TAG_USERCOMMENT            0x9286
-#define TAG_SUBSEC_TIME            0x9290
-#define TAG_SUBSEC_TIME_ORIG       0x9291
-#define TAG_SUBSEC_TIME_DIG        0x9292
-
-#define TAG_WINXP_TITLE            0x9c9b // Windows XP - not part of exif standard.
-#define TAG_WINXP_COMMENT          0x9c9c // Windows XP - not part of exif standard.
-#define TAG_WINXP_AUTHOR           0x9c9d // Windows XP - not part of exif standard.
-#define TAG_WINXP_KEYWORDS         0x9c9e // Windows XP - not part of exif standard.
-#define TAG_WINXP_SUBJECT          0x9c9f // Windows XP - not part of exif standard.
-//}}}
-//{{{  tags Axxx
-#define TAG_FLASH_PIX_VERSION      0xA000
-#define TAG_COLOR_SPACE            0xA001
-#define TAG_PIXEL_X_DIMENSION      0xA002
-#define TAG_PIXEL_Y_DIMENSION      0xA003
-#define TAG_RELATED_AUDIO_FILE     0xA004
-#define TAG_INTEROP_OFFSET         0xA005
-#define TAG_FLASH_ENERGY           0xA20B
-#define TAG_SPATIAL_FREQ_RESP      0xA20C
-#define TAG_FOCAL_PLANE_XRES       0xA20E
-#define TAG_FOCAL_PLANE_YRES       0xA20F
-#define TAG_FOCAL_PLANE_UNITS      0xA210
-#define TAG_SUBJECT_LOCATION       0xA214
-#define TAG_EXPOSURE_INDEX         0xA215
-#define TAG_SENSING_METHOD         0xA217
-#define TAG_FILE_SOURCE            0xA300
-#define TAG_SCENE_TYPE             0xA301
-#define TAG_CFA_PATTERN            0xA302
-#define TAG_CUSTOM_RENDERED        0xA401
-#define TAG_EXPOSURE_MODE          0xA402
-#define TAG_WHITEBALANCE           0xA403
-#define TAG_DIGITALZOOMRATIO       0xA404
-#define TAG_FOCALLENGTH_35MM       0xA405
-#define TAG_SCENE_CAPTURE_TYPE     0xA406
-#define TAG_GAIN_CONTROL           0xA407
-#define TAG_CONTRAST               0xA408
-#define TAG_SATURATION             0xA409
-#define TAG_SHARPNESS              0xA40A
-#define TAG_DISTANCE_RANGE         0xA40C
-#define TAG_IMAGE_UNIQUE_ID        0xA420
-//}}}
-//{{{  format
-#define FMT_BYTE       1
-#define FMT_STRING     2
-#define FMT_USHORT     3
-#define FMT_ULONG      4
-#define FMT_URATIONAL  5
-#define FMT_SBYTE      6
-#define FMT_UNDEFINED  7
-#define FMT_SSHORT     8
-#define FMT_SLONG      9
-#define FMT_SRATIONAL 10
-#define FMT_SINGLE    11
-#define FMT_DOUBLE    12
-//}}}
-
-static const int kBytesPerFormat[] = { 0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8 };
-static const char* kWeekDay[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-//}}}
-//{{{
-class cExifInfo {
-public:
-  std::string mExifMake;
-  std::string mExifModel;
-  uint32_t mExifOrientation = 0;
-  float mExifExposure = 0;
-  float mExifFocalLength = 0;
-  float mExifAperture = 0;
-  tm mExifTm;
-  std::string mExifTimeString;
-  };
-//}}}
-//{{{
-class cExifGpsInfo {
-public:
-  cExifGpsInfo() {}
-
-  //{{{
-  std::string getString() {
-
-    std::string str = fmt::format ("{} {} {} {} {} {} {} {} {}", mDatum,
-                                  mLatitudeDeg,mLatitudeRef,mLatitudeMin,mLatitudeSec,
-                                  mLongitudeDeg,mLongitudeRef,mLongitudeMin,mLongitudeSec);
-    str += fmt::format ("{} {}", mAltitude, mAltitudeRef);
-    str += fmt::format ("{} {}", mImageDirection, mImageDirectionRef);
-    str += fmt::format ("{} {} {} {}", mDate,mHour,mMinute,mSecond);
-    return str;
-    }
-  //}}}
-
-  int mVersion = 0;
-
-  wchar_t mLatitudeRef = 0;
-  float mLatitudeDeg = 0;
-  float mLatitudeMin = 0;
-  float mLatitudeSec = 0;
-
-  char mLongitudeRef = 0;
-  float mLongitudeDeg = 0;
-  float mLongitudeMin = 0;
-  float mLongitudeSec = 0;
-
-  wchar_t mAltitudeRef = 0;
-  float mAltitude = 0;
-
-  wchar_t mImageDirectionRef;
-  float mImageDirection = 0;
-
-  float mHour = 0;
-  float mMinute = 0;
-  float mSecond = 0;
-
-  std::string mDate;
-  std::string mDatum;
-  };
-//}}}
-
 class cJpegAnalyser {
 public:
+  //{{{  defines
+  // exif
+  //{{{  tags x
+  // tags
+  #define TAG_INTEROP_INDEX          0x0001
+  #define TAG_INTEROP_VERSION        0x0002
+  //}}}
+  //{{{  tags 1xx
+  #define TAG_IMAGE_WIDTH            0x0100
+  #define TAG_IMAGE_LENGTH           0x0101
+  #define TAG_BITS_PER_SAMPLE        0x0102
+  #define TAG_COMPRESSION            0x0103
+  #define TAG_PHOTOMETRIC_INTERP     0x0106
+  #define TAG_FILL_ORDER             0x010A
+  #define TAG_DOCUMENT_NAME          0x010D
+  #define TAG_IMAGE_DESCRIPTION      0x010E
+  #define TAG_MAKE                   0x010F
+  #define TAG_MODEL                  0x0110
+  #define TAG_SRIP_OFFSET            0x0111
+  #define TAG_ORIENTATION            0x0112
+  #define TAG_SAMPLES_PER_PIXEL      0x0115
+  #define TAG_ROWS_PER_STRIP         0x0116
+  #define TAG_STRIP_BYTE_COUNTS      0x0117
+  #define TAG_X_RESOLUTION           0x011A
+  #define TAG_Y_RESOLUTION           0x011B
+  #define TAG_PLANAR_CONFIGURATION   0x011C
+  #define TAG_RESOLUTION_UNIT        0x0128
+  #define TAG_TRANSFER_FUNCTION      0x012D
+  #define TAG_SOFTWARE               0x0131
+  #define TAG_DATETIME               0x0132
+  #define TAG_ARTIST                 0x013B
+  #define TAG_WHITE_POINT            0x013E
+  #define TAG_PRIMARY_CHROMATICITIES 0x013F
+  #define TAG_TRANSFER_RANGE         0x0156
+  //}}}
+  //{{{  tags 2xx
+  #define TAG_JPEG_PROC              0x0200
+  #define TAG_THUMBNAIL_OFFSET       0x0201
+  #define TAG_THUMBNAIL_LENGTH       0x0202
+  #define TAG_Y_CB_CR_COEFFICIENTS   0x0211
+  #define TAG_Y_CB_CR_SUB_SAMPLING   0x0212
+  #define TAG_Y_CB_CR_POSITIONING    0x0213
+  #define TAG_REFERENCE_BLACK_WHITE  0x0214
+  //}}}
+  //{{{  tags 1xxx
+  #define TAG_RELATED_IMAGE_WIDTH    0x1001
+  #define TAG_RELATED_IMAGE_LENGTH   0x1002
+  //}}}
+  //{{{  tags 8xxx
+  #define TAG_CFA_REPEAT_PATTERN_DIM 0x828D
+  #define TAG_CFA_PATTERN1           0x828E
+  #define TAG_BATTERY_LEVEL          0x828F
+  #define TAG_COPYRIGHT              0x8298
+  #define TAG_EXPOSURETIME           0x829A
+  #define TAG_FNUMBER                0x829D
+  #define TAG_IPTC_NAA               0x83BB
+  #define TAG_EXIF_OFFSET            0x8769
+  #define TAG_INTER_COLOR_PROFILE    0x8773
+  #define TAG_EXPOSURE_PROGRAM       0x8822
+  #define TAG_SPECTRAL_SENSITIVITY   0x8824
+  #define TAG_GPSINFO                0x8825
+  #define TAG_ISO_EQUIVALENT         0x8827
+  #define TAG_OECF                   0x8828
+  //}}}
+  //{{{  tags 9xxx
+  #define TAG_EXIF_VERSION           0x9000
+  #define TAG_DATETIME_ORIGINAL      0x9003
+  #define TAG_DATETIME_DIGITIZED     0x9004
+  #define TAG_COMPONENTS_CONFIG      0x9101
+  #define TAG_CPRS_BITS_PER_PIXEL    0x9102
+  #define TAG_SHUTTERSPEED           0x9201
+  #define TAG_APERTURE               0x9202
+  #define TAG_BRIGHTNESS_VALUE       0x9203
+  #define TAG_EXPOSURE_BIAS          0x9204
+  #define TAG_MAXAPERTURE            0x9205
+  #define TAG_SUBJECT_DISTANCE       0x9206
+  #define TAG_METERING_MODE          0x9207
+  #define TAG_LIGHT_SOURCE           0x9208
+  #define TAG_FLASH                  0x9209
+  #define TAG_FOCALLENGTH            0x920A
+  #define TAG_SUBJECTAREA            0x9214
+  #define TAG_MAKER_NOTE             0x927C
+  #define TAG_USERCOMMENT            0x9286
+  #define TAG_SUBSEC_TIME            0x9290
+  #define TAG_SUBSEC_TIME_ORIG       0x9291
+  #define TAG_SUBSEC_TIME_DIG        0x9292
+
+  #define TAG_WINXP_TITLE            0x9c9b // Windows XP - not part of exif standard.
+  #define TAG_WINXP_COMMENT          0x9c9c // Windows XP - not part of exif standard.
+  #define TAG_WINXP_AUTHOR           0x9c9d // Windows XP - not part of exif standard.
+  #define TAG_WINXP_KEYWORDS         0x9c9e // Windows XP - not part of exif standard.
+  #define TAG_WINXP_SUBJECT          0x9c9f // Windows XP - not part of exif standard.
+  //}}}
+  //{{{  tags Axxx
+  #define TAG_FLASH_PIX_VERSION      0xA000
+  #define TAG_COLOR_SPACE            0xA001
+  #define TAG_PIXEL_X_DIMENSION      0xA002
+  #define TAG_PIXEL_Y_DIMENSION      0xA003
+  #define TAG_RELATED_AUDIO_FILE     0xA004
+  #define TAG_INTEROP_OFFSET         0xA005
+  #define TAG_FLASH_ENERGY           0xA20B
+  #define TAG_SPATIAL_FREQ_RESP      0xA20C
+  #define TAG_FOCAL_PLANE_XRES       0xA20E
+  #define TAG_FOCAL_PLANE_YRES       0xA20F
+  #define TAG_FOCAL_PLANE_UNITS      0xA210
+  #define TAG_SUBJECT_LOCATION       0xA214
+  #define TAG_EXPOSURE_INDEX         0xA215
+  #define TAG_SENSING_METHOD         0xA217
+  #define TAG_FILE_SOURCE            0xA300
+  #define TAG_SCENE_TYPE             0xA301
+  #define TAG_CFA_PATTERN            0xA302
+  #define TAG_CUSTOM_RENDERED        0xA401
+  #define TAG_EXPOSURE_MODE          0xA402
+  #define TAG_WHITEBALANCE           0xA403
+  #define TAG_DIGITALZOOMRATIO       0xA404
+  #define TAG_FOCALLENGTH_35MM       0xA405
+  #define TAG_SCENE_CAPTURE_TYPE     0xA406
+  #define TAG_GAIN_CONTROL           0xA407
+  #define TAG_CONTRAST               0xA408
+  #define TAG_SATURATION             0xA409
+  #define TAG_SHARPNESS              0xA40A
+  #define TAG_DISTANCE_RANGE         0xA40C
+  #define TAG_IMAGE_UNIQUE_ID        0xA420
+  //}}}
+  //{{{  format
+  #define FMT_BYTE       1
+  #define FMT_STRING     2
+  #define FMT_USHORT     3
+  #define FMT_ULONG      4
+  #define FMT_URATIONAL  5
+  #define FMT_SBYTE      6
+  #define FMT_UNDEFINED  7
+  #define FMT_SSHORT     8
+  #define FMT_SLONG      9
+  #define FMT_SRATIONAL 10
+  #define FMT_SINGLE    11
+  #define FMT_DOUBLE    12
+  //}}}
+  //}}}
+  //{{{
+  class cExifInfo {
+  public:
+    std::string mExifMake;
+    std::string mExifModel;
+    uint32_t mExifOrientation = 0;
+    float mExifExposure = 0;
+    float mExifFocalLength = 0;
+    float mExifAperture = 0;
+    tm mExifTm;
+    std::string mExifTimeString;
+    };
+  //}}}
+  //{{{
+  class cExifGpsInfo {
+  public:
+    cExifGpsInfo() {}
+
+    //{{{
+    std::string getString() {
+
+      std::string str = fmt::format ("{} {} {} {} {} {} {} {} {}", mDatum,
+                                    mLatitudeDeg,mLatitudeRef,mLatitudeMin,mLatitudeSec,
+                                    mLongitudeDeg,mLongitudeRef,mLongitudeMin,mLongitudeSec);
+      str += fmt::format ("{} {}", mAltitude, mAltitudeRef);
+      str += fmt::format ("{} {}", mImageDirection, mImageDirectionRef);
+      str += fmt::format ("{} {} {} {}", mDate,mHour,mMinute,mSecond);
+      return str;
+      }
+    //}}}
+
+    int mVersion = 0;
+
+    wchar_t mLatitudeRef = 0;
+    float mLatitudeDeg = 0;
+    float mLatitudeMin = 0;
+    float mLatitudeSec = 0;
+
+    char mLongitudeRef = 0;
+    float mLongitudeDeg = 0;
+    float mLongitudeMin = 0;
+    float mLongitudeSec = 0;
+
+    wchar_t mAltitudeRef = 0;
+    float mAltitude = 0;
+
+    wchar_t mImageDirectionRef;
+    float mImageDirection = 0;
+
+    float mHour = 0;
+    float mMinute = 0;
+    float mSecond = 0;
+
+    std::string mDate;
+    std::string mDatum;
+    };
+  //}}}
+
   //{{{
   cJpegAnalyser (uint16_t components, uint8_t* buffer)
       : mBuffer(buffer), mBufferPtr(buffer), mBytesPerPixel(components)  {
@@ -331,7 +242,9 @@ public:
     mThumbBytes = 0;
 
     // read first word, must be SOI marker
-    if ((read (mInputBuffer, 2) != 2) || (mInputBuffer[0] != 0xFF) || (mInputBuffer[1] != 0xD8))
+    if (read (mInputBuffer, 2) != 2)
+      return false;
+    if ((mInputBuffer[0] != 0xFF) || (mInputBuffer[1] != 0xD8))
       return false;
 
     uint32_t offset = 2;
@@ -1464,6 +1377,96 @@ private:
     }
   //}}}
 
+  //{{{  static const
+  inline static const int kBodyBufferSize = 0x200;
+  inline static const int kPoolBufferSize = 0xB00;
+  inline static const int kInputBufferSize = 0x10000;
+
+  inline static const int kBcB = (int)(1.772 * 1024);
+  inline static const int kGcB = (int)(0.344 * 1024);
+  inline static const int kGcR = (int)(0.714 * 1024);
+  inline static const int kRcR = (int)(1.402 * 1024);
+
+  inline static const int32_t M2  = (int32_t)(1.08239 * 4096);
+  inline static const int32_t M4  = (int32_t)(2.61313 * 4096);
+  inline static const int32_t M5  = (int32_t)(1.84776 * 4096);
+  inline static const int32_t M13 = (int32_t)(1.41421 * 4096);
+
+  //{{{
+  inline static const uint8_t  kClip8[1024] = {
+    // 0..255
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+    32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+    64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+    96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
+    128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
+    160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+    192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
+    224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
+
+    // 256..511
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+
+    // -512..-257
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+
+    // -256..-1
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  };
+  //}}}
+  //{{{
+  inline static const uint8_t  kZigZag[64] = {
+     0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
+    12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
+    35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
+    58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
+    };
+  //}}}
+  //{{{
+  inline static const uint16_t kScaleFactor[64] = {
+    (uint16_t)(1.00000*8192), (uint16_t)(1.38704*8192), (uint16_t)(1.30656*8192), (uint16_t)(1.17588*8192),
+    (uint16_t)(1.00000*8192), (uint16_t)(0.78570*8192), (uint16_t)(0.54120*8192), (uint16_t)(0.27590*8192),
+    (uint16_t)(1.38704*8192), (uint16_t)(1.92388*8192), (uint16_t)(1.81226*8192), (uint16_t)(1.63099*8192),
+    (uint16_t)(1.38704*8192), (uint16_t)(1.08979*8192), (uint16_t)(0.75066*8192), (uint16_t)(0.38268*8192),
+    (uint16_t)(1.30656*8192), (uint16_t)(1.81226*8192), (uint16_t)(1.70711*8192), (uint16_t)(1.53636*8192),
+    (uint16_t)(1.30656*8192), (uint16_t)(1.02656*8192), (uint16_t)(0.70711*8192), (uint16_t)(0.36048*8192),
+    (uint16_t)(1.17588*8192), (uint16_t)(1.63099*8192), (uint16_t)(1.53636*8192), (uint16_t)(1.38268*8192),
+    (uint16_t)(1.17588*8192), (uint16_t)(0.92388*8192), (uint16_t)(0.63638*8192), (uint16_t)(0.32442*8192),
+    (uint16_t)(1.00000*8192), (uint16_t)(1.38704*8192), (uint16_t)(1.30656*8192), (uint16_t)(1.17588*8192),
+    (uint16_t)(1.00000*8192), (uint16_t)(0.78570*8192), (uint16_t)(0.54120*8192), (uint16_t)(0.27590*8192),
+    (uint16_t)(0.78570*8192), (uint16_t)(1.08979*8192), (uint16_t)(1.02656*8192), (uint16_t)(0.92388*8192),
+    (uint16_t)(0.78570*8192), (uint16_t)(0.61732*8192), (uint16_t)(0.42522*8192), (uint16_t)(0.21677*8192),
+    (uint16_t)(0.54120*8192), (uint16_t)(0.75066*8192), (uint16_t)(0.70711*8192), (uint16_t)(0.63638*8192),
+    (uint16_t)(0.54120*8192), (uint16_t)(0.42522*8192), (uint16_t)(0.29290*8192), (uint16_t)(0.14932*8192),
+    (uint16_t)(0.27590*8192), (uint16_t)(0.38268*8192), (uint16_t)(0.36048*8192), (uint16_t)(0.32442*8192),
+    (uint16_t)(0.27590*8192), (uint16_t)(0.21678*8192), (uint16_t)(0.14932*8192), (uint16_t)(0.07612*8192)
+    };
+  //}}}
+
+  inline static const int kBytesPerFormat[] = { 0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8 };
+  inline static const char* kWeekDay[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+  //}}}
   //{{{  vars
   uint8_t* mBuffer = nullptr;
   uint8_t* mBufferPtr = nullptr;
