@@ -214,11 +214,10 @@ namespace {
     //{{{
     uint32_t getUe() {
 
-      uint32_t bits;
-      uint32_t read;
+      uint32_t bits  = 0;
+      uint32_t read = 0;
       int bits_left;
       bool done = false;
-      bits = 0;
 
       // we want to read 8 bits at a time - if we don't have 8 bits,
       // read what's left, and shift.  The exp_golomb_bits calc remains the same.
@@ -283,9 +282,9 @@ namespace {
       else {
         // if we are byte aligned, check for 0x7f value - this will indicate
         // we need to skip those bits
-        uint8_t readval = peekBits (8);
+        uint8_t readval = (uint8_t)peekBits (8);
         if (readval == 0x7f)
-          readval = getBits (8);
+          readval = (uint8_t)getBits (8);
         }
 
       return temp;
@@ -420,7 +419,7 @@ public:
   virtual char getFrameType() { return mFrameType; }
   virtual uint32_t* getBuffer8888() { return mBuffer8888; }
 
-  virtual void setFree (bool free, int64_t pts) { mFree = free; }
+  virtual void setFree (bool free, int64_t pts) { (void)pts; mFree = free; }
 
   // sets
   //{{{
@@ -446,6 +445,9 @@ public:
   //}}}
   //{{{
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize) {
+    (void)context;
+    (void)data; 
+    (void)linesize;
     cLog::log (LOGERROR, "setYuv420 planar not implemented");
     }
   //}}}
@@ -472,6 +474,7 @@ private:
     #if defined(INTEL_SSSE3)
       virtual void setYuv420 (void* context, uint8_t** data, int* linesize) {
       // interleaved, intel intrinsics ssse3 convert, fast, uses shuffle
+        (void)context;
 
         // const
         __m128i zero  = _mm_set1_epi32 (0x00000000);
@@ -526,11 +529,11 @@ private:
             __m128i gvHi = _mm_mullo_epi16 (facgv, vHi);
 
             // y0 y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15
-            __m128i y = _mm_load_si128 (srcY128r0++);
+            __m128i yhilo = _mm_load_si128 (srcY128r0++);
             // ((0.y0 0.y1 0.y2  0.y3  0.y4  0.y5  0.y6  0.y7)  - ysub) * facy
-            __m128i yLo = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y, zero), ysub), facy);
+            __m128i yLo = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (yhilo, zero), ysub), facy);
             // ((0.y8 0.y9 0.y10 0.y11 0.y12 0.y13 0.y14 0.y15) - ysub) * facy
-            __m128i yHi = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y, zero), ysub), facy);
+            __m128i yHi = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (yhilo, zero), ysub), facy);
 
             // rrrr.. saturated
             __m128i r = _mm_packus_epi16 (_mm_srai_epi16 (_mm_add_epi16 (yLo, rvLo), 6),
@@ -554,11 +557,11 @@ private:
 
             //row 1
             // y0 y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15
-            y = _mm_load_si128 (srcY128r1++);
+            yhilo = _mm_load_si128 (srcY128r1++);
             // ((0.y0 0.y1 0.y2  0.y3  0.y4  0.y5  0.y6  0.y7)  - ysub) * facy
-            yLo = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y, zero), ysub), facy);
+            yLo = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (yhilo, zero), ysub), facy);
             // ((0.y8 0.y9 0.y10 0.y11 0.y12 0.y13 0.y14 0.y15) - ysub) * facy
-            yHi = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y, zero), ysub), facy);
+            yHi = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (yhilo, zero), ysub), facy);
 
             // rrrr.. saturated
             r = _mm_packus_epi16 (_mm_srai_epi16 (_mm_add_epi16 (yLo, rvLo), 6),
@@ -602,6 +605,7 @@ private:
       //{{{
       virtual void setYuv420 (void* context, uint8_t** data, int* linesize) {
       // intel intrinsics sse2 convert, fast, but sws is same sort of thing may be a bit faster in the loops
+        (void)context;
 
         uint8_t* yBuffer = data[0];
         uint8_t* uBuffer = data[1];
@@ -831,7 +835,7 @@ public:
 
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize) {
   // table lookup convert, bug in first pix pos stride != width
-
+    (void)context;
     constexpr uint32_t kFix = 0x40080100;
     //{{{
     static const uint32_t kTableY[256] = {
@@ -1640,9 +1644,9 @@ public:
           yuv += fix >> 8;
           }
           //}}}
-        *dstPtr++ = yuv;
-        *dstPtr++ = yuv >> 22;
-        *dstPtr++ = yuv >> 11;
+        *dstPtr++ = (uint8_t)yuv;
+        *dstPtr++ = (uint8_t)(yuv >> 22);
+        *dstPtr++ = (uint8_t)(yuv >> 11);
         *dstPtr++ = 0xFF;
 
         // row 0 pix 1
@@ -1656,9 +1660,9 @@ public:
           yuv += fix >> 8;
           }
           //}}}
-        *dstPtr++ = yuv;
-        *dstPtr++ = yuv >> 22;
-        *dstPtr++ = yuv >> 11;
+        *dstPtr++ = (uint8_t)yuv;
+        *dstPtr++ = (uint8_t)(yuv >> 22);
+        *dstPtr++ = (uint8_t)(yuv >> 11);
         *dstPtr++ = 0xFF;
 
         // row 1 pix 0
@@ -1672,9 +1676,9 @@ public:
           yuv += fix >> 8;
           }
           //}}}
-        *dstPtr1++ = yuv;
-        *dstPtr1++ = yuv >> 22;
-        *dstPtr1++ = yuv >> 11;
+        *dstPtr1++ = (uint8_t)yuv;
+        *dstPtr1++ = (uint8_t)(yuv >> 22);
+        *dstPtr1++ = (uint8_t)(yuv >> 11);
         *dstPtr1++ = 0xFF;
 
         // row 1 pix 1
@@ -1688,9 +1692,9 @@ public:
           yuv += fix >> 8;
           }
           //}}}
-        *dstPtr1++ = yuv;
-        *dstPtr1++ = yuv >> 22;
-        *dstPtr1++ = yuv >> 11;
+        *dstPtr1++ = (uint8_t)yuv;
+        *dstPtr1++ = (uint8_t)(yuv >> 22);
+        *dstPtr1++ = (uint8_t)(yuv >> 11);
         *dstPtr1++ = 0xFF;
         }
         //}}}
@@ -1709,7 +1713,8 @@ public:
   virtual ~cFramePlanarRgbaSimple() {}
 
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize) {
-
+    (void)context;
+    (void)linesize;
     uint8_t* y = (uint8_t*)data[0];
     uint8_t* u = (uint8_t*)data[1];
     uint8_t* v = (uint8_t*)data[2];
@@ -1826,6 +1831,7 @@ protected:
   //{{{
   iVideoFrame* getFreeFrame (bool reuseFromFront, int64_t pts) {
   // return youngest frame in pool if older than playPts - (halfPoolSize * duration)
+    (void)reuseFromFront;
 
     while (true) {
       if ((int)mFramePool.size() < mMaxPoolSize) {
@@ -2152,7 +2158,7 @@ private:
 //{{{
 iVideoPool* iVideoPool::create (bool ffmpeg, int poolSize, cSong* song) {
 // create cVideoPool
-
+  (void)ffmpeg;
   //#ifdef _WIN32
   //  if (!ffmpeg)
   //    return new cMfxVideoPool (poolSize, song);
