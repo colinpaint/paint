@@ -78,6 +78,19 @@ namespace {
       gPlatform->mResizeCallback (width, height);
     }
   //}}}
+  //{{{
+  void dropCallback (GLFWwindow* window, int count, const char** paths) {
+
+    (void)window;
+
+    vector<string> dropItems;
+    for (int i = 0;  i < count;  i++)
+      dropItems.push_back (paths[i]);
+
+    if (gPlatform)
+      gPlatform->mDropCallback (dropItems);
+    }
+  //}}}
   }
 
 // cGlfwPlatform class header, easy to extract header if static register not ok
@@ -216,6 +229,7 @@ bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports, bool vsy
   // set callbacks
   glfwSetKeyCallback (gWindow, keyCallback);
   glfwSetFramebufferSizeCallback (gWindow, framebufferSizeCallback);
+  glfwSetDropCallback (gWindow, dropCallback);
 
   // GLAD init before any openGL function
   if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {

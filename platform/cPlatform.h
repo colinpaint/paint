@@ -35,7 +35,10 @@ public:
 
   // callback
   void setResizeCallback (std::function<void (int width, int height)> callback) { mResizeCallback = callback; }
+  void setDropCallback (std::function<void (std::vector<std::string> dropItems)> callback) { mDropCallback = callback; }
+
   std::function <void (int programPid, int programSid)> mResizeCallback;
+  std::function <void (std::vector<std::string> dropItems)> mDropCallback;
 
 protected:
   // static register

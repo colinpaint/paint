@@ -624,7 +624,7 @@ private:
 
       if (bits) {
         if (nonModifyColour != 1 || bits != 1)
-          *pixBuf++ = mapTable ? mapTable[bits] : bits;
+          *pixBuf++ = mapTable ? (uint8_t)mapTable[bits] : (uint8_t)bits;
         pixPos++;
         }
 
@@ -647,7 +647,7 @@ private:
           runLength += 2;
           bits = mapTable ? mapTable[0] : 0;
           while ((runLength-- > 0) && (pixPos < pixBufSize)) {
-            *pixBuf++ = bits;
+            *pixBuf++ = (uint8_t)bits;
             pixPos++;
             }
           }
@@ -673,7 +673,7 @@ private:
                 bits = mapTable[bits];
 
               while ((runLength-- > 0) && (pixPos < pixBufSize)) {
-                *pixBuf++ = bits;
+                *pixBuf++ = (uint8_t)bits;
                 pixPos++;
                 }
               }
@@ -685,7 +685,7 @@ private:
             if (bits == 0) {
               //{{{  0
               bits = mapTable ? mapTable[0] : 0;
-              *pixBuf++ = bits;
+              *pixBuf++ = (uint8_t)bits;
               pixPos ++;
               }
               //}}}
@@ -696,7 +696,7 @@ private:
               if (mRunDebug)
                 str += fmt::format (":run:{}",runLength);
               while ((runLength-- > 0) && (pixPos < pixBufSize)) {
-                *pixBuf++ = bits;
+                *pixBuf++ = (uint8_t)bits;
                 pixPos++;
                 }
               }
@@ -717,7 +717,7 @@ private:
                 if (mapTable)
                   bits = mapTable[bits];
                 while ((runLength-- > 0) && (pixPos < pixBufSize)) {
-                  *pixBuf++ = bits;
+                  *pixBuf++ = (uint8_t)bits;
                   pixPos++;
                   }
                 }
@@ -739,7 +739,7 @@ private:
                 if (mapTable)
                   bits = mapTable[bits];
                 while ((runLength-- > 0) && (pixPos < pixBufSize)) {
-                  *pixBuf++ = bits;
+                  *pixBuf++ = (uint8_t)bits;
                   pixPos++;
                   }
                 }

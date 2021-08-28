@@ -101,6 +101,17 @@ int main (int numArgs, char* args[]) {
       }
     );
     //}}}
+  platform.setDropCallback (
+    //{{{  drop lambda
+    [&](vector<string> dropItems) noexcept {
+
+      for (auto& item : dropItems) {
+        cLog::log (LOGINFO, item);
+        canvas.newLayer (item);
+        }     
+      }
+    );
+    //}}}
 
   // main UI loop
   while (platform.pollEvents()) {
