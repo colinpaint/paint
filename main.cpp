@@ -108,7 +108,7 @@ int main (int numArgs, char* args[]) {
       for (auto& item : dropItems) {
         cLog::log (LOGINFO, item);
         canvas.newLayer (item);
-        }     
+        }
       }
     );
     //}}}
