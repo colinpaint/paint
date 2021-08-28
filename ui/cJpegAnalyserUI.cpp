@@ -25,113 +25,69 @@ public:
   //{{{
   cJpegAnalyserUI (const string& name) : cUI(name) {
 
-    fileHandle = CreateFile (mFilename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    mapHandle = CreateFileMapping (fileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
-    fileBuf = (uint8_t*)MapViewOfFile (mapHandle, FILE_MAP_READ, 0, 0, 0);
-    fileBufLen = GetFileSize (fileHandle, NULL);
-
-    FILETIME creationTime;
-    FILETIME lastAccessTime;
-    FILETIME lastWriteTime;
-    GetFileTime (fileHandle, &creationTime, &lastAccessTime, &lastWriteTime);
-
-    mCreationTimePoint = getFileTimePoint (creationTime);
-    mLastAccessTimePoint = getFileTimePoint (lastAccessTime);
-    mLastWriteTimePoint = getFileTimePoint (lastWriteTime);
+    mJpegAnalyser = new cJpegAnalyser ("../piccies/quantel.jpg", 3);
     }
   //}}}
   //{{{
   virtual ~cJpegAnalyserUI() {
     // close the file mapping object
-    UnmapViewOfFile (fileBuf);
-    CloseHandle (mapHandle);
-    CloseHandle (fileHandle);
+    delete mJpegAnalyser;
     }
   //}}}
 
-  //{{{
   void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
-
     //{{{  unused params
     (void)canvas;
     (void)graphics;
     (void)platform;
     //}}}
+
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
-
-    cJpegAnalyser jpegAnalyser (3, fileBuf);
-    jpegAnalyser.readHeader();
-
-    ImGui::Text (fmt::format ("{} {}bytes {}x{}",
-                              mFilename.c_str(), fileBufLen,
-                              jpegAnalyser.getWidth(), jpegAnalyser.getHeight()).c_str());
+    ImGui::Text (fmt::format ("{} size {}", mJpegAnalyser->getFilename(), mJpegAnalyser->getFileSize()).c_str());
 
     ImGui::PushFont (monoFont);
-    ImGui::Text (date::format ("create %H:%M:%S %a %d %b %y", floor<seconds>(mCreationTimePoint)).c_str());
-    ImGui::Text (date::format ("access %H:%M:%S %a %d %b %y", floor<seconds>(mLastAccessTimePoint)).c_str());
-    ImGui::Text (date::format ("write  %H:%M:%S %a %d %b %y", floor<seconds>(mLastWriteTimePoint)).c_str());
+    ImGui::Text (mJpegAnalyser->getCreationString().c_str());
+    ImGui::Text (mJpegAnalyser->getAccessString().c_str());
+    ImGui::Text (mJpegAnalyser->getWriteString().c_str());
 
-    int address = 0;
-    for (int j = 0; j < 16; j++) {
-      string str = fmt::format ("{:04x}: ", address);
-      for (int i = 0; i < 16; i++)
-        str += fmt::format ("{:02x} ", fileBuf[address++]);
+    mJpegAnalyser->readHeader (
+      [&](uint8_t* ptr, uint32_t offset, uint32_t bytes, const std::string info) noexcept {
+        ImGui::Text (fmt::format ("{} {} {}", info, offset, bytes).c_str());
+
+        while (true) {
+          string str = fmt::format ("{:04x}: ", offset);
+          for (uint32_t curByte = 0; curByte < 16; curByte++) {
+            str += fmt::format ("{:02x} ", *ptr++);
+            if (--bytes == 0)
+              break;
+            offset++;
+            }
+          ImGui::Text (str.c_str());
+          if (bytes == 0)
+            break;
+          }
+        }
+      );
+    ImGui::Text (fmt::format ("{}x{}", mJpegAnalyser->getWidth(), mJpegAnalyser->getHeight()).c_str());
+
+    uint8_t* fileBufferfPtr = mJpegAnalyser->getFilePtr();
+    uint32_t offset = 0;
+    for (int rows = 0; rows < 64; rows++) {
+      string str = fmt::format ("{:04x}: ", offset);
+      for (int columns = 0; columns < 16; columns++)
+        str += fmt::format ("{:02x} ", *fileBufferfPtr++);
+      offset += 64;
       ImGui::Text (str.c_str());
       }
-    ImGui::PopFont();
 
+    ImGui::PopFont();
     ImGui::End();
     }
-  //}}}
 
 private:
-  //{{{
-  static system_clock::time_point getFileTimePoint (FILETIME fileTime) {
-
-    // filetime_duration has the same layout as FILETIME; 100ns intervals
-    using filetime_duration = duration<int64_t, ratio<1, 10'000'000>>;
-
-    // January 1, 1601 (NT epoch) - January 1, 1970 (Unix epoch):
-    constexpr duration<int64_t> nt_to_unix_epoch { INT64_C(-11644473600) };
-
-    const filetime_duration asDuration{static_cast<int64_t> (
-        (static_cast<uint64_t>((fileTime).dwHighDateTime) << 32) | (fileTime).dwLowDateTime)};
-
-    const auto withUnixEpoch = asDuration + nt_to_unix_epoch;
-
-    return system_clock::time_point { duration_cast<system_clock::duration>(withUnixEpoch) };
-    }
-  //}}}
-
   ImFont* mMonoFont = nullptr;
+  cJpegAnalyser* mJpegAnalyser;
 
-  string mFilename = "../piccies/tv.jpg";
-  HANDLE fileHandle;
-  HANDLE mapHandle;
-  uint8_t* fileBuf;
-  DWORD fileBufLen;
-
-  string mExifTimeString;
-  time_point<system_clock> mExifTimePoint;
-  time_point<system_clock> mCreationTimePoint;
-  time_point<system_clock> mLastAccessTimePoint;
-  time_point<system_clock> mLastWriteTimePoint;
-
-  //{{{  static const
-  inline static const vector<string> kRadio1 = {"r1", "a128"};
-  inline static const vector<string> kRadio2 = {"r2", "a128"};
-  inline static const vector<string> kRadio3 = {"r3", "a320"};
-  inline static const vector<string> kRadio4 = {"r4", "a64"};
-  inline static const vector<string> kRadio5 = {"r5", "a128"};
-  inline static const vector<string> kRadio6 = {"r6", "a128"};
-
-  inline static const vector<string> kBbc1   = {"bbc1", "a128"};
-
-  inline static const vector<string> kWqxr  = {"http://stream.wqxr.org/js-stream.aac"};
-  inline static const vector<string> kDvb  = {"dvb"};
-
-  inline static const vector<string> kRtp1  = {"rtp 1"};
-  //}}}
   //{{{
   static cUI* create (const string& className) {
     return new cJpegAnalyserUI (className);

@@ -1,14 +1,124 @@
 // cJpegAnalyser.h - jpeg analyser - based on tiny jpeg decoder, jhead
 #pragma once
 //{{{  includes
+#define _CRT_SECURE_NO_WARNINGS
+#define NOMINMAX
+#include <windows.h>
+
 #include <cstdint>
 #include <string>
 #include <stdio.h>
+#include <chrono>
+#include <functional>
 //}}}
 
-class cJpegAnalyser {
+//{{{
+class cFileAnalyser {
 public:
-  //{{{  defines
+  //{{{
+  cFileAnalyser (const std::string& filename) : mFilename(filename) {
+
+    mFileHandle = CreateFile (mFilename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    mMapHandle = CreateFileMapping (mFileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
+    mFileBuffer = (uint8_t*)MapViewOfFile (mMapHandle, FILE_MAP_READ, 0, 0, 0);
+    mFileSize = GetFileSize (mFileHandle, NULL);
+
+    FILETIME creationTime;
+    FILETIME accessTime;
+    FILETIME writeTime;
+    GetFileTime (mFileHandle, &creationTime, &accessTime, &writeTime);
+
+    mCreationTimePoint = getFileTimePoint (creationTime);
+    mAccessTimePoint = getFileTimePoint (accessTime);
+    mWriteTimePoint = getFileTimePoint (writeTime);
+
+    mCreationString = date::format ("create %H:%M:%S %a %d %b %y", std::chrono::floor<std::chrono::seconds>(mCreationTimePoint));
+    mAccessString = date::format ("access %H:%M:%S %a %d %b %y", std::chrono::floor<std::chrono::seconds>(mAccessTimePoint));
+    mWriteString = date::format ("write  %H:%M:%S %a %d %b %y", std::chrono::floor<std::chrono::seconds>(mWriteTimePoint));
+
+    reset();
+    }
+  //}}}
+  //{{{
+  virtual ~cFileAnalyser() {
+    UnmapViewOfFile (mFileBuffer);
+    CloseHandle (mMapHandle);
+    CloseHandle (mFileHandle);
+    }
+  //}}}
+
+  uint8_t* getFilePtr() { return mFileBufferPtr; }
+  uint32_t getFileSize() { return mFileSize; }
+
+  std::string getFilename() { return mFilename; }
+  std::string getCreationString() { return mCreationString; }
+  std::string getAccessString() { return mAccessString; }
+  std::string getWriteString() { return mWriteString; }
+
+  //{{{
+  void reset() {
+    mFileBufferPtr = mFileBuffer;
+    mFileBytesLeft = mFileSize;
+    }
+  //}}}
+
+  //{{{
+  uint32_t readBytes (uint8_t* buffer, uint32_t bytesToRead) {
+
+    if (bytesToRead <= mFileBytesLeft) {
+      memcpy (buffer, mFileBufferPtr, bytesToRead);
+      mFileBufferPtr += bytesToRead;
+      mFileBytesLeft -= bytesToRead;
+      return bytesToRead;
+      }
+    else
+      return 0;
+    }
+  //}}}
+
+private:
+  //{{{
+  static std::chrono::system_clock::time_point getFileTimePoint (FILETIME fileTime) {
+
+    // filetime_duration has the same layout as FILETIME; 100ns intervals
+    using filetime_duration = std::chrono::duration<int64_t, std::ratio<1, 10'000'000>>;
+
+    // January 1, 1601 (NT epoch) - January 1, 1970 (Unix epoch):
+    constexpr std::chrono::duration<int64_t> nt_to_unix_epoch { INT64_C(-11644473600) };
+
+    const filetime_duration asDuration{static_cast<int64_t> (
+        (static_cast<uint64_t>((fileTime).dwHighDateTime) << 32) | (fileTime).dwLowDateTime)};
+
+    const auto withUnixEpoch = asDuration + nt_to_unix_epoch;
+
+    return std::chrono::system_clock::time_point { std::chrono::duration_cast<std::chrono::system_clock::duration>(withUnixEpoch) };
+    }
+  //}}}
+
+  std::string mFilename;
+
+  HANDLE mFileHandle;
+  HANDLE mMapHandle;
+  uint8_t* mFileBuffer = nullptr;
+  uint32_t mFileSize = 0;
+
+  uint8_t* mFileBufferPtr = nullptr;
+  uint32_t mFileBytesLeft = 0;
+
+  std::chrono::time_point<std::chrono::system_clock> mExifTimePoint;
+  std::chrono::time_point<std::chrono::system_clock> mCreationTimePoint;
+  std::chrono::time_point<std::chrono::system_clock> mAccessTimePoint;
+  std::chrono::time_point<std::chrono::system_clock> mWriteTimePoint;
+
+  std::string mCreationString;
+  std::string mAccessString;
+  std::string mWriteString;
+  };
+//}}}
+
+class cJpegAnalyser : public cFileAnalyser {
+public:
+  //{{{  tags
   // exif
   //{{{  tags x
   // tags
@@ -206,8 +316,8 @@ public:
   //}}}
 
   //{{{
-  cJpegAnalyser (uint16_t components, uint8_t* buffer)
-      : mBuffer(buffer), mBufferPtr(buffer), mBytesPerPixel(components)  {
+  cJpegAnalyser (const std::string& filename, uint16_t components)
+      : cFileAnalyser(filename), mBytesPerPixel(components) {
 
     memset (mQtable, 0, 4 * sizeof(int32_t));
 
@@ -226,31 +336,39 @@ public:
     }
   //}}}
 
+  // gets
   int getWidth() { return mWidth; }
   int getHeight() { return mHeight; }
 
-  // gets
-  uint32_t getPoolBytesLeft() { return mPoolBytesLeft; }
   int getThumbOffset() { return mThumbBytes > 0 ? mThumbOffset : 0; }
   int getThumbBytes() { return mThumbBytes; }
+  uint32_t getPoolBytesLeft() { return mPoolBytesLeft; }
+
   //{{{
-  bool readHeader() {
+  bool readHeader (std::function <void (uint8_t* ptr, uint32_t offset, uint32_t bytes, const std::string& info)> callback) {
+
+    mCallback = callback;
+
+    reset();
 
     mPoolPtr = mPoolBuffer;
     mPoolBytesLeft = kPoolBufferSize;
+
     mThumbOffset = 0;
     mThumbBytes = 0;
 
     // read first word, must be SOI marker
-    if (read (mInputBuffer, 2) != 2)
+    if (readBytes (mInputBuffer, 2) != 2)
       return false;
     if ((mInputBuffer[0] != 0xFF) || (mInputBuffer[1] != 0xD8))
       return false;
 
     uint32_t offset = 2;
     while (true) {
+      uint8_t* ptr = getFilePtr();
+      uint32_t startOffset = offset;
       //{{{  read marker, length
-      if (read (mInputBuffer, 4) != 4)
+      if (readBytes (mInputBuffer, 4) != 4)
         return false;
 
       uint16_t marker = mInputBuffer[0]<<8 | mInputBuffer[1];
@@ -262,48 +380,139 @@ public:
       offset += 4;
       //}}}
       //{{{  read marker body into mInputBuffer
-      if (read (mInputBuffer, length) != length)
+      if (readBytes (mInputBuffer, length) != length)
         return false;
 
       offset += length;
       //}}}
       switch (marker & 0xFF) {
-        case 0xC0: if (!parseSOF (mInputBuffer, length)) return false; break; // SOF
-        case 0xC1: break;// SOF1
-        case 0xC2: break;// SOF2
-        case 0xC3: break;// SOF3
-        case 0xC4: if (!parseHFT (mInputBuffer, length)) return false; break; // HFT
-        case 0xC5: break;// SOF5
-        case 0xC6: break;// SOF6
-        case 0xC7: break;// SOF7
-        case 0xC9: break;// SOF9
-        case 0xCA: break;// SOF10
-        case 0xCB: break;// SOF11
-        case 0xCD: break;// SOF13
-        case 0xCE: break;// SOF14
-        case 0xCF: break;// SOF15
+        //{{{
+        case 0xC0: // SOF
+          mCallback (ptr, startOffset, length, "SOF ");
+          if (!parseSOF (mInputBuffer, length))
+            return false;
+          break;
+        //}}}
+        //{{{
+        case 0xC1: // SOF1
+          mCallback (ptr, startOffset, length, "SOF1");
+          break;
+        //}}}
+        //{{{
+        case 0xC2: // SOF2
+          mCallback (ptr, startOffset, length, "SOF2");
+          break;
+        //}}}
+        //{{{
+        case 0xC3: // SOF3
+          mCallback (ptr, startOffset, length, "APP0");
+          break; // APP0
+        //}}}
+        //{{{
+        case 0xC4: // HFT
+          mCallback (ptr, startOffset, length, "HFT ");
+          if (!parseHFT (mInputBuffer, length))
+            return false;
+          break;
+        //}}}
+        //{{{
+        case 0xC5: // SOF5
+          mCallback (ptr, startOffset, length, "SOF5");
+          break;
+        //}}}
+        //{{{
+        case 0xC6: // SOF6
+          mCallback (ptr, startOffset, length, "SOF6");
+          break;
+        //}}}
+        //{{{
+        case 0xC7: // SOF7
+          mCallback (ptr, startOffset, length, "SOF7");
+          break;
+        //}}}
+        //{{{
+        case 0xC9: // SOF9
+          mCallback (ptr, startOffset, length, "SOF9");
+          break;
+        //}}}
+        //{{{
+        case 0xCA: // SOF10
+          mCallback (ptr, startOffset, length, "SOF10");
+          break;
+        //}}}
+        //{{{
+        case 0xCB: // SOF11
+          mCallback (ptr, startOffset, length, "SOF11");
+          break;
+        //}}}
+        //{{{
+        case 0xCD: // SOF13
+          mCallback (ptr, startOffset, length, "SOF13");
+          break;
+        //}}}
+        //{{{
+        case 0xCE: // SOF14
+          mCallback (ptr, startOffset, length, "SOF14");
+          break;
+        //}}}
+        //{{{
+        case 0xCF: // SOF15
+          mCallback (ptr, startOffset, length, "SOF15");
+          break;
+        //}}}
 
-        case 0xD9: break;// EOI
+        //{{{
+        case 0xD9: // EOI
+          mCallback (ptr, startOffset, length, "EOI ");
+          break;
+        //}}}
+        //{{{
         case 0xDA:
-          //{{{  parseSOS
+          //  parseSOS
+          mCallback (ptr, startOffset, length, "SOS");
+
           if (!parseSOS (mInputBuffer, length))
             return false;
 
           // Pre-load the JPEG data to extract it from the bit stream
           offset %= kBodyBufferSize;
-          mDataCounter = offset ? read (mInputBuffer + length, kBodyBufferSize - offset) : 0;
+          mDataCounter = offset ? readBytes(mInputBuffer + length, kBodyBufferSize - offset) : 0;
           mDataPtr = offset ? mInputBuffer + length - 1 : mInputBuffer;
           mDataMask = 0;
 
           return true;
-          //}}}
-        case 0xDB: if (!parseDQT (mInputBuffer, length)) return false; break; // DQT
-        case 0xDD: parseDRI (mInputBuffer, length); break;
-
-        case 0xE0: break; // APP0
-        case 0xE1: parseAPP (mInputBuffer, length); break; // APP1
-        default: // unknown
+        //}}}
+        //{{{
+        case 0xDB: // DQT
+          mCallback (ptr, startOffset, length, "DQT ");
+          if (!parseDQT (mInputBuffer, length))
+            return false;
           break;
+        //}}}
+        //{{{
+        case 0xDD: // DRI
+          mCallback (ptr, startOffset, length, "DRI ");
+          parseDRI (mInputBuffer, length);
+          break;
+        //}}}
+
+        //{{{
+        case 0xE0: // APP0
+          mCallback (ptr, startOffset, length, "APP0");
+          break;
+        //}}}
+        //{{{
+        case 0xE1: // APP1
+          mCallback (ptr, startOffset, length, "APP1");
+          parseAPP (mInputBuffer, length);
+          break;
+        //}}}
+
+        //{{{
+        default: // unknown
+          mCallback (ptr, startOffset, length, fmt::format ("{:02x} unknown", marker & 0xFF));
+          break;
+        //}}}
         }
       }
 
@@ -358,15 +567,6 @@ public:
   //}}}
 
 private:
-  //{{{
-  uint32_t read (uint8_t* buffer, uint32_t bytes) {
-
-    memcpy (buffer, mBufferPtr, bytes);
-    mBufferPtr += bytes;
-    return bytes;
-    }
-  //}}}
-
   //{{{
   uint8_t* alloc (uint32_t bytes) {
 
@@ -847,7 +1047,7 @@ private:
         if (!dc) {
           // No input data is available, re-fill input buffer
           dp = mInputBuffer; // Top of input buffer
-          dc = read (dp, kBodyBufferSize);
+          dc = readBytes (dp, kBodyBufferSize);
           if (!dc)
             return false;
           }
@@ -903,7 +1103,7 @@ private:
         if (!dc) {
           // No input data is available, re-fill input buffer
           dp = mInputBuffer; // Top of input buffer
-          dc = read (dp, kBodyBufferSize);
+          dc = readBytes (dp, kBodyBufferSize);
           if (!dc)
             return false; // read error or wrong stream termination
           }
@@ -1069,7 +1269,7 @@ private:
       if (!dc) {
         // No input data is available, re-fill input buffer
         dp = mInputBuffer;
-        dc = read (dp, kBodyBufferSize);
+        dc = readBytes (dp, kBodyBufferSize);
         if (!dc)
           return false;
         }
@@ -1468,11 +1668,16 @@ private:
   inline static const char* kWeekDay[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
   //}}}
   //{{{  vars
-  uint8_t* mBuffer = nullptr;
-  uint8_t* mBufferPtr = nullptr;
+  std::function <void (uint8_t* ptr, uint32_t offset, uint32_t bytes, const std::string& info)> mCallback;
+
+  uint16_t mBytesPerPixel = 0;
 
   uint32_t mWidth = 0;    // Size of the input image
   uint32_t mHeight = 0;   // Size of the input image
+
+  // thumb
+  uint32_t mThumbOffset = 0;
+  uint32_t mThumbBytes = 0;
 
   uint8_t mScaleShift = 0; // Output scaling ratio
   uint8_t msx = 0;         // MCU size in unit of block (width, height)
@@ -1482,6 +1687,7 @@ private:
   uint8_t* mPoolBuffer;
   uint8_t* mPoolPtr;
   uint32_t mPoolBytesLeft; // size of momory pool (bytes available)
+
   uint8_t* mMcuBuffer;     // working buffer for the MCU
   uint8_t* mIdctRgbBuffer; // working buffer for IDCT and RGB output
 
@@ -1502,12 +1708,7 @@ private:
   uint32_t mFrameHeight = 0;
   uint8_t* mFrameBuffer = nullptr;
 
-  // thumb
-  uint32_t mThumbOffset = 0;
-  uint32_t mThumbBytes = 0;
-
-  uint16_t mBytesPerPixel = 0;
-
+  std::string mExifTimeString;
   cExifInfo mExifInfo;
   cExifGpsInfo mExifGpsInfo;
   //}}}

@@ -80,7 +80,7 @@ int main (int numArgs, char* args[]) {
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
   ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
-  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f);
+  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f);
 
   // should clear main screen here before file loads
 
