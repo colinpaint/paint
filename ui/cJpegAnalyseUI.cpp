@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include <chrono>
 
 // imgui
 #include <imgui.h>
@@ -22,7 +21,6 @@
 #include "../utils/cLog.h"
 
 using namespace std;
-using namespace chrono;
 //}}}
 #ifdef _WIN32
 
