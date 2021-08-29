@@ -10,13 +10,16 @@
 #include <stdio.h>
 #include <chrono>
 #include <functional>
+
+#include "../utils/formatCore.h"
+#include "../utils/date.h"
 //}}}
 
 //{{{
-class cFileAnalyser {
+class cFileAnalyse {
 public:
   //{{{
-  cFileAnalyser (const std::string& filename) : mFilename(filename) {
+  cFileAnalyse (const std::string& filename) : mFilename(filename) {
 
     mFileHandle = CreateFile (mFilename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     mMapHandle = CreateFileMapping (mFileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
@@ -40,7 +43,7 @@ public:
     }
   //}}}
   //{{{
-  virtual ~cFileAnalyser() {
+  virtual ~cFileAnalyse() {
     UnmapViewOfFile (mFileBuffer);
     CloseHandle (mMapHandle);
     CloseHandle (mFileHandle);
@@ -126,7 +129,7 @@ private:
 //}}}
 
 //{{{
-class cJpegAnalyser : public cFileAnalyser {
+class cJpegAnalyse : public cFileAnalyse {
 public:
   using uHeaderLambda = std::function <void (const std::string& info, uint8_t* ptr,
                                              unsigned offset, unsigned numBytes)>;
@@ -328,8 +331,8 @@ public:
   //}}}
 
   //{{{
-  cJpegAnalyser (const std::string& filename, unsigned components)
-      : cFileAnalyser(filename), mBytesPerPixel(components) {
+  cJpegAnalyse (const std::string& filename, unsigned components)
+      : cFileAnalyse(filename), mBytesPerPixel(components) {
 
     memset (mQtable, 0, 4 * sizeof(int32_t));
 
@@ -342,7 +345,7 @@ public:
     }
   //}}}
   //{{{
-  virtual ~cJpegAnalyser() {
+  virtual ~cJpegAnalyse() {
     free (mPoolBuffer);
     free (mInputBuffer);
     }

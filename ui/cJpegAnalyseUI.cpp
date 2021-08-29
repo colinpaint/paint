@@ -12,26 +12,32 @@
 // imgui
 #include <imgui.h>
 
+// decoder
+#include "../decoder/cJpegAnalyse.h"
+
+// ui
 #include "cUI.h"
+
+// utils
 #include "../utils/cLog.h"
-#include "../decoder/cJpegAnalyser.h"
 
 using namespace std;
 using namespace chrono;
 //}}}
+#ifdef _WIN32
 
-class cJpegAnalyserUI : public cUI {
+class cJpegAnalyseUI : public cUI {
 public:
   //{{{
-  cJpegAnalyserUI (const string& name) : cUI(name) {
+  cJpegAnalyseUI (const string& name) : cUI(name) {
 
-    mJpegAnalyser = new cJpegAnalyser ("../piccies/quantel.jpg", 3);
+    mJpegAnalyse = new cJpegAnalyse ("../piccies/quantel.jpg", 3);
     }
   //}}}
   //{{{
-  virtual ~cJpegAnalyserUI() {
+  virtual ~cJpegAnalyseUI() {
     // close the file mapping object
-    delete mJpegAnalyser;
+    delete mJpegAnalyse;
     }
   //}}}
 
@@ -47,16 +53,16 @@ public:
     ImGui::PushFont(monoFont);
 
     // titles
-    ImGui::Text(fmt::format ("{} size {}", mJpegAnalyser->getFilename(), mJpegAnalyser->getFileSize()).c_str());
-    ImGui::Text (mJpegAnalyser->getCreationString().c_str());
-    ImGui::Text (mJpegAnalyser->getAccessString().c_str());
-    ImGui::Text (mJpegAnalyser->getWriteString().c_str());
+    ImGui::Text(fmt::format ("{} size {}", mJpegAnalyse->getFilename(), mJpegAnalyse->getFileSize()).c_str());
+    ImGui::Text (mJpegAnalyse->getCreationString().c_str());
+    ImGui::Text (mJpegAnalyse->getAccessString().c_str());
+    ImGui::Text (mJpegAnalyse->getWriteString().c_str());
 
     // analyse button
     if (toggleButton ("analyse", mAnalyse))
       mAnalyse = !mAnalyse;
     if (mAnalyse) {
-      mJpegAnalyser->readHeader (
+      mJpegAnalyse->readHeader (
         [&](const string info, uint8_t* ptr, unsigned offset, unsigned numBytes) noexcept {
           (void)offset;
           ImGui::Text (fmt::format ("{} - {} bytes", info, numBytes).c_str());
@@ -68,13 +74,13 @@ public:
 
       // body title
       ImGui::Text (fmt::format ("body of imageSize {}x{}",
-                                mJpegAnalyser->getWidth(), mJpegAnalyser->getHeight()).c_str());
+                                mJpegAnalyse->getWidth(), mJpegAnalyse->getHeight()).c_str());
       }
 
     // hex dump
     ImGui::Indent (10.f);
-    printHex (mJpegAnalyser->getReadPtr(),
-              mJpegAnalyser->getReadBytesLeft() < 0x200 ? mJpegAnalyser->getReadBytesLeft() : 0x200);
+    printHex (mJpegAnalyse->getReadPtr(),
+              mJpegAnalyse->getReadBytesLeft() < 0x200 ? mJpegAnalyse->getReadBytesLeft() : 0x200);
     ImGui::Unindent (10.f);
 
     ImGui::PopFont();
@@ -83,7 +89,7 @@ public:
 
 private:
   ImFont* mMonoFont = nullptr;
-  cJpegAnalyser* mJpegAnalyser;
+  cJpegAnalyse* mJpegAnalyse;
   bool mAnalyse = false;
 
   //{{{
@@ -115,8 +121,9 @@ private:
 
   //{{{
   static cUI* create (const string& className) {
-    return new cJpegAnalyserUI (className);
+    return new cJpegAnalyseUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("jpegAnalyser", &create);
+  inline static const bool mRegistered = registerClass ("jpegAnalyse", &create);
   };
+#endif
