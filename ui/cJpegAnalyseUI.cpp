@@ -64,12 +64,16 @@ public:
       mShowHexDump = !mShowHexDump;
 
     if (mShowFileTimes) {
-      //{{{  show fileFtimes
+      //{{{  show fileTimes
+      ImGui::Indent (10.f);
       ImGui::Text (mJpegAnalyse->getCreationString().c_str());
       ImGui::Text (mJpegAnalyse->getAccessString().c_str());
       ImGui::Text (mJpegAnalyse->getWriteString().c_str());
+      ImGui::Unindent (10.f);
       }
       //}}}
+
+    mJpegAnalyse->resetReadBytes();
     if (mShowAnalyse) {
       mJpegAnalyse->readHeader (
         //{{{  jpegTag lambda
@@ -77,8 +81,10 @@ public:
           //{{{  unused params
           (void)offset;
           //}}}
+
           ImGui::Text (fmt::format ("{} - {} bytes", info, numBytes).c_str());
-          if (mShowHexDump && numBytes) {
+
+          if (numBytes && mShowHexDump) {
             ImGui::Indent (10.f);
             printHex (ptr, numBytes);
             ImGui::Unindent (10.f);
@@ -90,20 +96,25 @@ public:
           //{{{  unused params
           (void)offset;
           //}}}
+          ImGui::Indent (10.f);
           ImGui::Text (fmt::format ("exif {}", info, numBytes).c_str());
 
-          if (mShowHexDump && numBytes) {
+          if (numBytes && mShowHexDump) {
             ImGui::Indent (10.f);
             printHex (ptr, numBytes);
             ImGui::Unindent (10.f);
             }
+
+          ImGui::Unindent (10.f);
           }
         //}}}
         );
+
       ImGui::Text (fmt::format ("image size {}x{} - body {} bytes",
                    mJpegAnalyse->getWidth(), mJpegAnalyse->getHeight(),
                    mJpegAnalyse->getReadBytesLeft()).c_str());
       }
+
     if (mShowHexDump) {
       //{{{  show hexDump
       ImGui::Indent (10.f);

@@ -167,6 +167,8 @@ namespace {
 //{{{
 bool cJpegAnalyse::readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) {
 
+  resetReadBytes();
+
   mJpegTagLambda = jpegTagLambda;
   mExifTagLambda = exifTagLambda;
 
@@ -174,7 +176,6 @@ bool cJpegAnalyse::readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambd
   mThumbBytes = 0;
 
   // read first word, must be SOI marker
-  resetReadBytes();
   uint8_t* startPtr = getReadPtr();
   uint8_t* readPtr = readBytes (2);
   if (!readPtr)
@@ -327,12 +328,12 @@ bool cJpegAnalyse::readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambd
       //}}}
 
       //{{{
-      case 0xE2: 
+      case 0xE2:
         mJpegTagLambda ("E2 tag", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
-      case 0xED: 
+      case 0xED:
         mJpegTagLambda ("ED tag", startPtr, startOffset, length);
         break;
       //}}}
