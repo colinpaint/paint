@@ -50,25 +50,23 @@ public:
 
     // buttons
     ImGui::Text(fmt::format ("{} size {}", mJpegAnalyse->getFilename(), mJpegAnalyse->getFileSize()).c_str());
-    if (toggleButton ("fileTimes", mFileTimes))
-      mFileTimes = !mFileTimes;
-
+    if (toggleButton ("fileTimes", mShowFileTimes))
+      mShowFileTimes = !mShowFileTimes;
     ImGui::SameLine();
-    if (toggleButton ("analyse", mAnalyse))
-      mAnalyse = !mAnalyse;
-
+    if (toggleButton ("analyse", mShowAnalyse))
+      mShowAnalyse = !mShowAnalyse;
     ImGui::SameLine();
-    if (toggleButton ("hexDump", mHexDump))
-      mHexDump = !mHexDump;
+    if (toggleButton ("hexDump", mShowHexDump))
+      mShowHexDump = !mShowHexDump;
 
-    if (mFileTimes) {
+    if (mShowFileTimes) {
       //{{{  show fileFtimes
       ImGui::Text (mJpegAnalyse->getCreationString().c_str());
       ImGui::Text (mJpegAnalyse->getAccessString().c_str());
       ImGui::Text (mJpegAnalyse->getWriteString().c_str());
       }
       //}}}
-    if (mAnalyse) {
+    if (mShowAnalyse) {
       mJpegAnalyse->readHeader (
         //{{{  jpegTag lambda
         [&](const string info, uint8_t* ptr, unsigned offset, unsigned numBytes) noexcept {
@@ -76,7 +74,7 @@ public:
           (void)offset;
           //}}}
           ImGui::Text (fmt::format ("{} - {} bytes", info, numBytes).c_str());
-          if (mHexDump && numBytes) {
+          if (mShowHexDump && numBytes) {
             ImGui::Indent (10.f);
             printHex (ptr, numBytes);
             ImGui::Unindent (10.f);
@@ -90,7 +88,7 @@ public:
           //}}}
           ImGui::Text (fmt::format ("exif {}", info, numBytes).c_str());
 
-          if (mHexDump && numBytes) {
+          if (mShowHexDump && numBytes) {
             ImGui::Indent (10.f);
             printHex (ptr, numBytes);
             ImGui::Unindent (10.f);
@@ -102,7 +100,7 @@ public:
                    mJpegAnalyse->getWidth(), mJpegAnalyse->getHeight(),
                    mJpegAnalyse->getReadBytesLeft()).c_str());
       }
-    if (mHexDump) {
+    if (mShowHexDump) {
       //{{{  show hexDump
       ImGui::Indent (10.f);
       printHex (mJpegAnalyse->getReadPtr(),
@@ -118,9 +116,10 @@ public:
 private:
   cJpegAnalyse* mJpegAnalyse;
   ImFont* mMonoFont = nullptr;
-  bool mFileTimes = false;
-  bool mAnalyse = false;
-  bool mHexDump = false;
+
+  bool mShowFileTimes = false;
+  bool mShowAnalyse = false;
+  bool mShowHexDump = false;
 
   //{{{
   static void printHex (uint8_t* ptr, unsigned numBytes) {
