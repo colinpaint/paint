@@ -43,42 +43,39 @@ public:
     //}}}
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
-    ImGui::Text (fmt::format ("{} size {}", mJpegAnalyser->getFilename(), mJpegAnalyser->getFileSize()).c_str());
 
-    ImGui::PushFont (monoFont);
+    ImGui::PushFont(monoFont);
+
+    // titles
+    ImGui::Text(fmt::format ("{} size {}", mJpegAnalyser->getFilename(), mJpegAnalyser->getFileSize()).c_str());
     ImGui::Text (mJpegAnalyser->getCreationString().c_str());
     ImGui::Text (mJpegAnalyser->getAccessString().c_str());
     ImGui::Text (mJpegAnalyser->getWriteString().c_str());
 
-    mJpegAnalyser->readHeader (
-      [&](uint8_t* ptr, uint32_t offset, uint32_t bytes, const std::string info) noexcept {
-        ImGui::Text (fmt::format ("{} {} {}", info, offset, bytes).c_str());
-
-        while (true) {
-          string str = fmt::format ("{:04x}: ", offset);
-          for (uint32_t curByte = 0; curByte < 16; curByte++) {
-            str += fmt::format ("{:02x} ", *ptr++);
-            if (--bytes == 0)
-              break;
-            offset++;
-            }
-          ImGui::Text (str.c_str());
-          if (bytes == 0)
-            break;
+    // analyse button
+    if (toggleButton ("analyse", mAnalyse))
+      mAnalyse = !mAnalyse;
+    if (mAnalyse) {
+      mJpegAnalyser->readHeader (
+        [&](const string info, uint8_t* ptr, unsigned offset, unsigned numBytes) noexcept {
+          (void)offset;
+          ImGui::Text (fmt::format ("{} - {} bytes", info, numBytes).c_str());
+          ImGui::Indent (10.f);
+          printHex (ptr, numBytes);
+          ImGui::Unindent (10.f);
           }
-        }
-      );
-    ImGui::Text (fmt::format ("{}x{}", mJpegAnalyser->getWidth(), mJpegAnalyser->getHeight()).c_str());
+        );
 
-    uint8_t* fileBufferfPtr = mJpegAnalyser->getFilePtr();
-    uint32_t offset = 0;
-    for (int rows = 0; rows < 64; rows++) {
-      string str = fmt::format ("{:04x}: ", offset);
-      for (int columns = 0; columns < 16; columns++)
-        str += fmt::format ("{:02x} ", *fileBufferfPtr++);
-      offset += 64;
-      ImGui::Text (str.c_str());
+      // body title
+      ImGui::Text (fmt::format ("body of imageSize {}x{}",
+                                mJpegAnalyser->getWidth(), mJpegAnalyser->getHeight()).c_str());
       }
+
+    // hex dump
+    ImGui::Indent (10.f);
+    printHex (mJpegAnalyser->getReadPtr(),
+              mJpegAnalyser->getReadBytesLeft() < 0x200 ? mJpegAnalyser->getReadBytesLeft() : 0x200);
+    ImGui::Unindent (10.f);
 
     ImGui::PopFont();
     ImGui::End();
@@ -87,6 +84,34 @@ public:
 private:
   ImFont* mMonoFont = nullptr;
   cJpegAnalyser* mJpegAnalyser;
+  bool mAnalyse = false;
+
+  //{{{
+  static void printHex (uint8_t* ptr, unsigned numBytes) {
+
+    const unsigned kColumns = 16;
+
+    unsigned offset = 0;
+    while (numBytes > 0) {
+     string hexString = fmt::format ("{:04x}: ", offset);
+     string asciiString;
+     for (unsigned curByte = 0; curByte < kColumns; curByte++) {
+       if (numBytes > 0) {
+         // append byte
+         numBytes--;
+         uint8_t value = *ptr++;
+         hexString += fmt::format ("{:02x} ", value);
+         asciiString += (value > 0x20) && (value < 0x80) ? value : 0x2e;
+         }
+       else // pad row
+         hexString += "   ";
+       }
+
+     ImGui::Text ((hexString + " " + asciiString).c_str());
+     offset += kColumns;
+     }
+   }
+  //}}}
 
   //{{{
   static cUI* create (const string& className) {

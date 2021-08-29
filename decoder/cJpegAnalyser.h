@@ -36,7 +36,7 @@ public:
     mAccessString = date::format ("access %H:%M:%S %a %d %b %y", std::chrono::floor<std::chrono::seconds>(mAccessTimePoint));
     mWriteString = date::format ("write  %H:%M:%S %a %d %b %y", std::chrono::floor<std::chrono::seconds>(mWriteTimePoint));
 
-    reset();
+    resetReadBytes();
     }
   //}}}
   //{{{
@@ -47,28 +47,37 @@ public:
     }
   //}}}
 
-  uint8_t* getFilePtr() { return mFileBufferPtr; }
+  // whole file
+  uint8_t* getFileBuffer() { return mFileBuffer; }
   uint32_t getFileSize() { return mFileSize; }
 
+  // file readBytes info
+  uint8_t* getReadPtr() { return mReadPtr; }
+  uint32_t getReadBytesLeft() { return mReadBytesLeft; }
+
+  // file info
   std::string getFilename() { return mFilename; }
   std::string getCreationString() { return mCreationString; }
   std::string getAccessString() { return mAccessString; }
   std::string getWriteString() { return mWriteString; }
 
+  std::chrono::time_point<std::chrono::system_clock> getCreationTimePoint() { return mCreationTimePoint; }
+  std::chrono::time_point<std::chrono::system_clock> getAccessTimePoint() { return mAccessTimePoint; }
+  std::chrono::time_point<std::chrono::system_clock> getWriteTimePoint() { return mWriteTimePoint; }
+
   //{{{
-  void reset() {
-    mFileBufferPtr = mFileBuffer;
-    mFileBytesLeft = mFileSize;
+  void resetReadBytes() {
+    mReadPtr = mFileBuffer;
+    mReadBytesLeft = mFileSize;
     }
   //}}}
-
   //{{{
   uint32_t readBytes (uint8_t* buffer, uint32_t bytesToRead) {
 
-    if (bytesToRead <= mFileBytesLeft) {
-      memcpy (buffer, mFileBufferPtr, bytesToRead);
-      mFileBufferPtr += bytesToRead;
-      mFileBytesLeft -= bytesToRead;
+    if (bytesToRead <= mReadBytesLeft) {
+      memcpy (buffer, mReadPtr, bytesToRead);
+      mReadPtr += bytesToRead;
+      mReadBytesLeft -= bytesToRead;
       return bytesToRead;
       }
     else
@@ -99,13 +108,13 @@ private:
 
   HANDLE mFileHandle;
   HANDLE mMapHandle;
+
   uint8_t* mFileBuffer = nullptr;
   uint32_t mFileSize = 0;
 
-  uint8_t* mFileBufferPtr = nullptr;
-  uint32_t mFileBytesLeft = 0;
+  uint8_t* mReadPtr = nullptr;
+  uint32_t mReadBytesLeft = 0;
 
-  std::chrono::time_point<std::chrono::system_clock> mExifTimePoint;
   std::chrono::time_point<std::chrono::system_clock> mCreationTimePoint;
   std::chrono::time_point<std::chrono::system_clock> mAccessTimePoint;
   std::chrono::time_point<std::chrono::system_clock> mWriteTimePoint;
@@ -116,8 +125,11 @@ private:
   };
 //}}}
 
+//{{{
 class cJpegAnalyser : public cFileAnalyser {
 public:
+  using uHeaderLambda = std::function <void (const std::string& info, uint8_t* ptr,
+                                             unsigned offset, unsigned numBytes)>;
   //{{{  tags
   // exif
   //{{{  tags x
@@ -316,7 +328,7 @@ public:
   //}}}
 
   //{{{
-  cJpegAnalyser (const std::string& filename, uint16_t components)
+  cJpegAnalyser (const std::string& filename, unsigned components)
       : cFileAnalyser(filename), mBytesPerPixel(components) {
 
     memset (mQtable, 0, 4 * sizeof(int32_t));
@@ -345,30 +357,30 @@ public:
   uint32_t getPoolBytesLeft() { return mPoolBytesLeft; }
 
   //{{{
-  bool readHeader (std::function <void (uint8_t* ptr, uint32_t offset, uint32_t bytes, const std::string& info)> callback) {
+  bool readHeader (uHeaderLambda headerLambda) {
 
-    mCallback = callback;
-
-    reset();
+    mHeaderLambda = headerLambda;
 
     mPoolPtr = mPoolBuffer;
     mPoolBytesLeft = kPoolBufferSize;
-
     mThumbOffset = 0;
     mThumbBytes = 0;
 
     // read first word, must be SOI marker
-    if (readBytes (mInputBuffer, 2) != 2)
+    resetReadBytes();
+    uint8_t* ptr = getReadPtr();
+    if (!readBytes (mInputBuffer, 2))
       return false;
     if ((mInputBuffer[0] != 0xFF) || (mInputBuffer[1] != 0xD8))
       return false;
+    mHeaderLambda ("SOI", ptr, 0, 2);
 
     uint32_t offset = 2;
     while (true) {
-      uint8_t* ptr = getFilePtr();
+      ptr = getReadPtr();
       uint32_t startOffset = offset;
       //{{{  read marker, length
-      if (readBytes (mInputBuffer, 4) != 4)
+      if (!readBytes (mInputBuffer, 4))
         return false;
 
       uint16_t marker = mInputBuffer[0]<<8 | mInputBuffer[1];
@@ -380,7 +392,7 @@ public:
       offset += 4;
       //}}}
       //{{{  read marker body into mInputBuffer
-      if (readBytes (mInputBuffer, length) != length)
+      if (!readBytes (mInputBuffer, length))
         return false;
 
       offset += length;
@@ -388,95 +400,100 @@ public:
       switch (marker & 0xFF) {
         //{{{
         case 0xC0: // SOF
-          mCallback (ptr, startOffset, length, "SOF ");
+          mHeaderLambda ("SOF", ptr, startOffset, length);
           if (!parseSOF (mInputBuffer, length))
             return false;
           break;
         //}}}
         //{{{
         case 0xC1: // SOF1
-          mCallback (ptr, startOffset, length, "SOF1");
+          mHeaderLambda ("SOF1", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC2: // SOF2
-          mCallback (ptr, startOffset, length, "SOF2");
+          mHeaderLambda ("SOF2", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC3: // SOF3
-          mCallback (ptr, startOffset, length, "APP0");
-          break; // APP0
+          mHeaderLambda ("SOF3F", ptr, startOffset, length);
+          break;
         //}}}
         //{{{
         case 0xC4: // HFT
-          mCallback (ptr, startOffset, length, "HFT ");
+          mHeaderLambda ("HFT", ptr, startOffset, length);
           if (!parseHFT (mInputBuffer, length))
             return false;
           break;
         //}}}
         //{{{
         case 0xC5: // SOF5
-          mCallback (ptr, startOffset, length, "SOF5");
+          mHeaderLambda ("SOF5", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC6: // SOF6
-          mCallback (ptr, startOffset, length, "SOF6");
+          mHeaderLambda ("SOF6", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC7: // SOF7
-          mCallback (ptr, startOffset, length, "SOF7");
+          mHeaderLambda ("SOF7", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC9: // SOF9
-          mCallback (ptr, startOffset, length, "SOF9");
+          mHeaderLambda ("SOF9", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xCA: // SOF10
-          mCallback (ptr, startOffset, length, "SOF10");
+          mHeaderLambda ("SOF10", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xCB: // SOF11
-          mCallback (ptr, startOffset, length, "SOF11");
+          mHeaderLambda ("SOF11", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xCD: // SOF13
-          mCallback (ptr, startOffset, length, "SOF13");
+          mHeaderLambda ("SOF13", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xCE: // SOF14
-          mCallback (ptr, startOffset, length, "SOF14");
+          mHeaderLambda ("SOF14", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xCF: // SOF15
-          mCallback (ptr, startOffset, length, "SOF15");
+          mHeaderLambda ("SOF15", ptr, startOffset, length);
           break;
         //}}}
 
         //{{{
         case 0xD9: // EOI
-          mCallback (ptr, startOffset, length, "EOI ");
+          mHeaderLambda ("EOI", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xDA:
           //  parseSOS
-          mCallback (ptr, startOffset, length, "SOS");
+          mHeaderLambda ("SOS", ptr, startOffset, length);
 
           if (!parseSOS (mInputBuffer, length))
             return false;
 
           // Pre-load the JPEG data to extract it from the bit stream
           offset %= kBodyBufferSize;
-          mDataCounter = offset ? readBytes(mInputBuffer + length, kBodyBufferSize - offset) : 0;
+          if (offset) {
+            readBytes(mInputBuffer + length, kBodyBufferSize - offset);
+            mDataCounter = kBodyBufferSize - offset;
+            }
+          else
+            mDataCounter = 0;
           mDataPtr = offset ? mInputBuffer + length - 1 : mInputBuffer;
           mDataMask = 0;
 
@@ -484,33 +501,33 @@ public:
         //}}}
         //{{{
         case 0xDB: // DQT
-          mCallback (ptr, startOffset, length, "DQT ");
+          mHeaderLambda ("DQT", ptr, startOffset, length);
           if (!parseDQT (mInputBuffer, length))
             return false;
           break;
         //}}}
         //{{{
         case 0xDD: // DRI
-          mCallback (ptr, startOffset, length, "DRI ");
+          mHeaderLambda ("DRI", ptr, startOffset, length);
           parseDRI (mInputBuffer, length);
           break;
         //}}}
 
         //{{{
         case 0xE0: // APP0
-          mCallback (ptr, startOffset, length, "APP0");
+          mHeaderLambda ("APP0", ptr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xE1: // APP1
-          mCallback (ptr, startOffset, length, "APP1");
+          mHeaderLambda ("APP1", ptr, startOffset, length);
           parseAPP (mInputBuffer, length);
           break;
         //}}}
 
         //{{{
         default: // unknown
-          mCallback (ptr, startOffset, length, fmt::format ("{:02x} unknown", marker & 0xFF));
+          mHeaderLambda (fmt::format ("{:02x} unknown", marker & 0xFF), ptr, startOffset, length);
           break;
         //}}}
         }
@@ -819,7 +836,7 @@ private:
     }
   //}}}
   //{{{
-  bool parseAPP (uint8_t* ptr, uint32_t length) {
+  bool parseAPP (uint8_t* ptr, unsigned length) {
   // find and read APP1 EXIF marker, return true if thumb, valid mThumbBuffer, mThumbLength
 
     (void)length;
@@ -856,7 +873,7 @@ private:
     }
   //}}}
   //{{{
-  bool parseDQT (uint8_t* ptr, uint32_t length) {
+  bool parseDQT (uint8_t* ptr, unsigned length) {
   // create de-quantization and prescaling tables with a DQT segment
 
     while (length) {
@@ -888,7 +905,7 @@ private:
     }
   //}}}
   //{{{
-  bool parseHFT (uint8_t* ptr, uint32_t length) {
+  bool parseHFT (uint8_t* ptr, unsigned length) {
   // Create huffman code tables with a DHT segment
 
     while (length) {
@@ -948,13 +965,13 @@ private:
     }
   //}}}
   //{{{
-  bool parseDRI (uint8_t* ptr, uint32_t length) {
+  bool parseDRI (uint8_t* ptr, unsigned length) {
     mNumRst = ptr[0]<<8 | ptr[1];
     return length >= 2;
     }
   //}}}
   //{{{
-  bool parseSOF (uint8_t* ptr, uint32_t length) {
+  bool parseSOF (uint8_t* ptr, unsigned length) {
     (void)length;
     mHeight = ptr[1]<<8 | ptr[2];
     mWidth =  ptr[3]<<8 | ptr[4];
@@ -991,7 +1008,7 @@ private:
     }
   //}}}
   //{{{
-  bool parseSOS (uint8_t* ptr, uint32_t length) {
+  bool parseSOS (uint8_t* ptr, unsigned length) {
     (void)length;
     if (!mWidth || !mHeight)
       return false;
@@ -1047,8 +1064,8 @@ private:
         if (!dc) {
           // No input data is available, re-fill input buffer
           dp = mInputBuffer; // Top of input buffer
-          dc = readBytes (dp, kBodyBufferSize);
-          if (!dc)
+          dc = kBodyBufferSize;
+          if  (!readBytes (dp, kBodyBufferSize))
             return false;
           }
         else
@@ -1103,8 +1120,8 @@ private:
         if (!dc) {
           // No input data is available, re-fill input buffer
           dp = mInputBuffer; // Top of input buffer
-          dc = readBytes (dp, kBodyBufferSize);
-          if (!dc)
+          dc = kBodyBufferSize;
+          if (!readBytes (dp, kBodyBufferSize))
             return false; // read error or wrong stream termination
           }
         else
@@ -1269,8 +1286,8 @@ private:
       if (!dc) {
         // No input data is available, re-fill input buffer
         dp = mInputBuffer;
-        dc = readBytes (dp, kBodyBufferSize);
-        if (!dc)
+        dc = kBodyBufferSize;
+        if (!readBytes (dp, kBodyBufferSize))
           return false;
         }
       else
@@ -1668,16 +1685,16 @@ private:
   inline static const char* kWeekDay[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
   //}}}
   //{{{  vars
-  std::function <void (uint8_t* ptr, uint32_t offset, uint32_t bytes, const std::string& info)> mCallback;
+  uHeaderLambda mHeaderLambda;
 
-  uint16_t mBytesPerPixel = 0;
+  unsigned mBytesPerPixel = 0;
 
-  uint32_t mWidth = 0;    // Size of the input image
-  uint32_t mHeight = 0;   // Size of the input image
+  unsigned mWidth = 0;    // Size of the input image
+  unsigned mHeight = 0;   // Size of the input image
 
   // thumb
-  uint32_t mThumbOffset = 0;
-  uint32_t mThumbBytes = 0;
+  unsigned mThumbOffset = 0;
+  unsigned mThumbBytes = 0;
 
   uint8_t mScaleShift = 0; // Output scaling ratio
   uint8_t msx = 0;         // MCU size in unit of block (width, height)
@@ -1713,3 +1730,4 @@ private:
   cExifGpsInfo mExifGpsInfo;
   //}}}
   };
+//}}}

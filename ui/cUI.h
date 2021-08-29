@@ -8,12 +8,15 @@
 #include <chrono>
 #include "../utils/date.h"
 
-struct ImVec2;
+// imgui
+#include "../imgui/imgui.h"
+
+// utils
 #include "../utils/cPointRectColor.h"
+
 class cGraphics;
 class cPlatform;
 class cCanvas;
-struct ImFont;
 //}}}
 
 class cUI {
@@ -36,7 +39,7 @@ public:
 
 protected:
   bool clockButton (const std::string& label, std::chrono::system_clock::time_point timePoint, const ImVec2& size_arg);
-  bool toggleButton (const std::string& label, bool toggleOn, const ImVec2& size_arg);
+  bool toggleButton (const std::string& label, bool toggleOn, const ImVec2& size_arg = ImVec2(0, 0));
   unsigned interlockedButtons (const std::vector<std::string>& buttonVector, unsigned index, const ImVec2& size_arg);
 
   using createFuncType = cUI*(*)(const std::string& name);
