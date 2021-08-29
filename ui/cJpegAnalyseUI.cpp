@@ -17,6 +17,9 @@
 // ui
 #include "cUI.h"
 
+// canvas
+#include "../canvas/cCanvas.h"
+
 // utils
 #include "../utils/cLog.h"
 
@@ -28,8 +31,6 @@ class cJpegAnalyseUI : public cUI {
 public:
   //{{{
   cJpegAnalyseUI (const string& name) : cUI(name) {
-
-    mJpegAnalyse = new cJpegAnalyse ("../piccies/bigGps.jpg", 3);
     }
   //}}}
   //{{{
@@ -41,10 +42,13 @@ public:
 
   void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
     //{{{  unused params
-    (void)canvas;
     (void)graphics;
     (void)platform;
     //}}}
+
+    if (!mJpegAnalyse)
+      mJpegAnalyse = new cJpegAnalyse (canvas.getName(), 3);
+
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     ImGui::PushFont(monoFont);
 
@@ -136,7 +140,7 @@ private:
          numBytes--;
          uint8_t value = *ptr++;
          hexString += fmt::format ("{:02x} ", value);
-         asciiString += (value > 0x20) && (value < 0x80) ? value : 0x2e;
+         asciiString += (value > 0x20) && (value < 0x80) ? value : '.';
          }
        else // pad row
          hexString += "   ";

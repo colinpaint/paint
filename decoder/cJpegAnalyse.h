@@ -32,10 +32,12 @@ private:
   public:
     std::string mExifMake;
     std::string mExifModel;
+
     uint32_t mExifOrientation = 0;
     float mExifExposure = 0;
     float mExifFocalLength = 0;
     float mExifAperture = 0;
+
     tm mExifTm;
     std::string mExifTimeString;
     };
@@ -95,20 +97,21 @@ private:
   unsigned mBytesPerPixel = 0;
 
   // SOF values
-  unsigned mWidth = 0;    // Size of the input image
-  unsigned mHeight = 0;   // Size of the input image
-  unsigned mSx = 0;         // MCU size in unit of block (width, height)
-  unsigned mSy = 0;         // MCU size in unit of block (width, height)
-  uint8_t mQtableId[3];    // Quantization table ID of each component
+  unsigned mWidth = 0;  // Size of the input image
+  unsigned mHeight = 0; // Size of the input image
+  unsigned mSx = 0;     // MCU size in unit of block (width, height)
+  unsigned mSy = 0;     // MCU size in unit of block (width, height)
+  uint8_t mQtableId[3]; // Quantization table ID of each component
 
   // NRI value
-  unsigned mNumRst = 0;    // Restart inverval in MCUs
+  unsigned mNumRst = 0; // Restart inverval in MCUs
 
-  // thumb
+  // thumbnail
   unsigned mThumbOffset = 0;
   unsigned mThumbBytes = 0;
 
-  std::string mExifTimeString;
+  // exif
   cExifInfo mExifInfo;
   cExifGpsInfo mExifGpsInfo;
+  std::string mExifTimeString;
   };

@@ -225,7 +225,7 @@ bool cJpegAnalyse::readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambd
       //}}}
       //{{{
       case 0xC2: // SOF2
-        mJpegTagLambda ("SOF2", startPtr, startOffset, length);
+        mJpegTagLambda ("SOF2 - decode todo", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
@@ -323,6 +323,17 @@ bool cJpegAnalyse::readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambd
       case 0xE1: // APP1
         mJpegTagLambda ("APP1", startPtr, startOffset, length);
         parseAPP (readPtr, length);
+        break;
+      //}}}
+
+      //{{{
+      case 0xE2: 
+        mJpegTagLambda ("E2 tag", startPtr, startOffset, length);
+        break;
+      //}}}
+      //{{{
+      case 0xED: 
+        mJpegTagLambda ("ED tag", startPtr, startOffset, length);
         break;
       //}}}
 
