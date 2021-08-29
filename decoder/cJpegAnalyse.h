@@ -75,16 +75,17 @@ public:
     }
   //}}}
   //{{{
-  uint32_t readBytes (uint8_t* buffer, uint32_t bytesToRead) {
+  uint8_t* readBytes (uint32_t bytesToRead) {
+  // return pointer to start of bytes in memoryMapped buffer if available, else return nullptr
 
     if (bytesToRead <= mReadBytesLeft) {
-      memcpy (buffer, mReadPtr, bytesToRead);
+      uint8_t* ptr = mReadPtr;
       mReadPtr += bytesToRead;
       mReadBytesLeft -= bytesToRead;
-      return bytesToRead;
+      return ptr;
       }
     else
-      return 0;
+      return nullptr;
     }
   //}}}
 
@@ -128,11 +129,10 @@ private:
   };
 //}}}
 
-//{{{
 class cJpegAnalyse : public cFileAnalyse {
 public:
-  using uHeaderLambda = std::function <void (const std::string& info, uint8_t* ptr,
-                                             unsigned offset, unsigned numBytes)>;
+  using uTagLambda = std::function <void (const std::string& info, uint8_t* ptr,
+                                          unsigned offset, unsigned numBytes)>;
   //{{{  tags
   // exif
   //{{{  tags x
@@ -330,26 +330,9 @@ public:
     };
   //}}}
 
-  //{{{
   cJpegAnalyse (const std::string& filename, unsigned components)
-      : cFileAnalyse(filename), mBytesPerPixel(components) {
-
-    memset (mQtable, 0, 4 * sizeof(int32_t));
-
-    memset (mHuffBits, 0, 2 * 2);
-    memset (mHuffData, 0, 2 * 2);
-    memset (mHuffCode, 0, 2 * 2 * sizeof(uint16_t));
-
-    mPoolBuffer = (uint8_t*)malloc (kPoolBufferSize);
-    mInputBuffer = (uint8_t*)malloc (kInputBufferSize);
-    }
-  //}}}
-  //{{{
-  virtual ~cJpegAnalyse() {
-    free (mPoolBuffer);
-    free (mInputBuffer);
-    }
-  //}}}
+    : cFileAnalyse(filename), mBytesPerPixel(components) {}
+  virtual ~cJpegAnalyse() = default;
 
   // gets
   int getWidth() { return mWidth; }
@@ -357,45 +340,46 @@ public:
 
   int getThumbOffset() { return mThumbBytes > 0 ? mThumbOffset : 0; }
   int getThumbBytes() { return mThumbBytes; }
-  uint32_t getPoolBytesLeft() { return mPoolBytesLeft; }
 
   //{{{
-  bool readHeader (uHeaderLambda headerLambda) {
+  bool readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) {
 
-    mHeaderLambda = headerLambda;
+    mJpegTagLambda = jpegTagLambda;
+    mExifTagLambda = exifTagLambda;
 
-    mPoolPtr = mPoolBuffer;
-    mPoolBytesLeft = kPoolBufferSize;
     mThumbOffset = 0;
     mThumbBytes = 0;
 
     // read first word, must be SOI marker
     resetReadBytes();
-    uint8_t* ptr = getReadPtr();
-    if (!readBytes (mInputBuffer, 2))
+    uint8_t* startPtr = getReadPtr();
+    uint8_t* readPtr = readBytes (2);
+    if (!readPtr)
       return false;
-    if ((mInputBuffer[0] != 0xFF) || (mInputBuffer[1] != 0xD8))
+    if ((readPtr[0] != 0xFF) || (readPtr[1] != 0xD8))
       return false;
-    mHeaderLambda ("SOI", ptr, 0, 2);
+    mJpegTagLambda ("SOI", startPtr, 0, 2);
 
     uint32_t offset = 2;
     while (true) {
-      ptr = getReadPtr();
+      startPtr = getReadPtr();
       uint32_t startOffset = offset;
-      //{{{  read marker, length
-      if (!readBytes (mInputBuffer, 4))
+      //{{{  read marker,length
+      readPtr = readBytes (4);
+      if (!readPtr)
         return false;
 
-      uint16_t marker = mInputBuffer[0]<<8 | mInputBuffer[1];
-      uint16_t length = mInputBuffer[2]<<8 | mInputBuffer[3];
-      if (((marker>>8) != 0xFF) || (length <= 2))
+      uint16_t marker = (readPtr[0] << 8) | readPtr[1];
+      uint16_t length = (readPtr[2] << 8) | readPtr[3];
+      if (((marker >> 8) != 0xFF) || (length <= 2))
         return false;
 
       length -= 2;
       offset += 4;
       //}}}
-      //{{{  read marker body into mInputBuffer
-      if (!readBytes (mInputBuffer, length))
+      //{{{  read marker body
+      readPtr = readBytes (length);
+      if (!readPtr)
         return false;
 
       offset += length;
@@ -403,134 +387,125 @@ public:
       switch (marker & 0xFF) {
         //{{{
         case 0xC0: // SOF
-          mHeaderLambda ("SOF", ptr, startOffset, length);
-          if (!parseSOF (mInputBuffer, length))
+          if (!parseSOF (readPtr, length))
             return false;
+
+          mJpegTagLambda (fmt::format ("SOF - image:{}x{} mcu:{}x{} QtableId:{}:{}:{}:{}",
+                                       mWidth, mHeight, mSx, mSy, mQtableId[0], mQtableId[1], mQtableId[2], mQtableId[3]),
+                          startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC1: // SOF1
-          mHeaderLambda ("SOF1", ptr, startOffset, length);
+          mJpegTagLambda ("SOF1", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC2: // SOF2
-          mHeaderLambda ("SOF2", ptr, startOffset, length);
+          mJpegTagLambda ("SOF2", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC3: // SOF3
-          mHeaderLambda ("SOF3F", ptr, startOffset, length);
+          mJpegTagLambda ("SOF3F", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC4: // HFT
-          mHeaderLambda ("HFT", ptr, startOffset, length);
-          if (!parseHFT (mInputBuffer, length))
+          mJpegTagLambda ("HFT", startPtr, startOffset, length);
+          if (!parseHFT (readPtr, length))
             return false;
           break;
         //}}}
         //{{{
         case 0xC5: // SOF5
-          mHeaderLambda ("SOF5", ptr, startOffset, length);
+          mJpegTagLambda ("SOF5", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC6: // SOF6
-          mHeaderLambda ("SOF6", ptr, startOffset, length);
+          mJpegTagLambda ("SOF6", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC7: // SOF7
-          mHeaderLambda ("SOF7", ptr, startOffset, length);
+          mJpegTagLambda ("SOF7", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xC9: // SOF9
-          mHeaderLambda ("SOF9", ptr, startOffset, length);
+          mJpegTagLambda ("SOF9", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xCA: // SOF10
-          mHeaderLambda ("SOF10", ptr, startOffset, length);
+          mJpegTagLambda ("SOF10", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xCB: // SOF11
-          mHeaderLambda ("SOF11", ptr, startOffset, length);
+          mJpegTagLambda ("SOF11", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xCD: // SOF13
-          mHeaderLambda ("SOF13", ptr, startOffset, length);
+          mJpegTagLambda ("SOF13", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xCE: // SOF14
-          mHeaderLambda ("SOF14", ptr, startOffset, length);
+          mJpegTagLambda ("SOF14", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xCF: // SOF15
-          mHeaderLambda ("SOF15", ptr, startOffset, length);
+          mJpegTagLambda ("SOF15", startPtr, startOffset, length);
           break;
         //}}}
 
         //{{{
         case 0xD9: // EOI
-          mHeaderLambda ("EOI", ptr, startOffset, length);
-          break;
-        //}}}
-        //{{{
-        case 0xDA:
-          //  parseSOS
-          mHeaderLambda ("SOS", ptr, startOffset, length);
-
-          if (!parseSOS (mInputBuffer, length))
-            return false;
-
-          // Pre-load the JPEG data to extract it from the bit stream
-          offset %= kBodyBufferSize;
-          if (offset) {
-            readBytes(mInputBuffer + length, kBodyBufferSize - offset);
-            mDataCounter = kBodyBufferSize - offset;
-            }
-          else
-            mDataCounter = 0;
-          mDataPtr = offset ? mInputBuffer + length - 1 : mInputBuffer;
-          mDataMask = 0;
-
+          mJpegTagLambda ("EOI", startPtr, startOffset, length);
           return true;
         //}}}
         //{{{
+        case 0xDA: // SOS
+          //  parseSOS
+          mJpegTagLambda ("SOS", startPtr, startOffset, length);
+
+          if (!parseSOS (readPtr, length))
+            return false;
+          break;
+        //}}}
+        //{{{
         case 0xDB: // DQT
-          mHeaderLambda ("DQT", ptr, startOffset, length);
-          if (!parseDQT (mInputBuffer, length))
+          mJpegTagLambda ("DQT", startPtr, startOffset, length);
+          if (!parseDQT (readPtr, length))
             return false;
           break;
         //}}}
         //{{{
         case 0xDD: // DRI
-          mHeaderLambda ("DRI", ptr, startOffset, length);
-          parseDRI (mInputBuffer, length);
+          parseDRI (readPtr, length);
+          mJpegTagLambda (fmt::format ("DRI {}", mNumRst), startPtr, startOffset, length);
           break;
         //}}}
 
         //{{{
         case 0xE0: // APP0
-          mHeaderLambda ("APP0", ptr, startOffset, length);
+          mJpegTagLambda ("APP0", startPtr, startOffset, length);
           break;
         //}}}
         //{{{
         case 0xE1: // APP1
-          mHeaderLambda ("APP1", ptr, startOffset, length);
-          parseAPP (mInputBuffer, length);
+          mJpegTagLambda ("APP1", startPtr, startOffset, length);
+          parseAPP (readPtr, length);
           break;
         //}}}
 
         //{{{
         default: // unknown
-          mHeaderLambda (fmt::format ("{:02x} unknown", marker & 0xFF), ptr, startOffset, length);
+          mJpegTagLambda (fmt::format ("{:02x} unknown", marker & 0xFF), startPtr, startOffset, length);
           break;
         //}}}
         }
@@ -539,68 +514,8 @@ public:
     return false;
     }
   //}}}
-  //{{{
-  uint8_t* decodeBody (uint8_t scaleShift) {
-
-    mScaleShift = scaleShift;
-    mFrameWidth = mWidth >> scaleShift;
-    mFrameHeight = mHeight >> scaleShift;
-    mFrameBuffer = (uint8_t*)malloc (mFrameWidth * mFrameHeight * mBytesPerPixel);
-
-    // Initialize DC values
-    mDcValue[0] = 0;
-    mDcValue[1] = 0;
-    mDcValue[2] = 0;
-
-    uint16_t restartCount = 0;
-    uint16_t restartInterval = 0;
-
-    // iterate MCUs
-    for (uint32_t y = 0; y < mHeight; y += msy*8) {
-      for (uint32_t x = 0; x < mWidth; x += msx*8) {
-        if (mNumRst && restartInterval++ == mNumRst) {
-          // process restart interval if DRI header found
-          if (!restart (restartCount++))  {
-            free (mFrameBuffer);
-            return nullptr;
-            }
-          restartInterval = 1;
-          }
-
-        // load MCU, decompress huffman coded stream and apply IDCT
-        if (!mcuLoad()) {
-          free (mFrameBuffer);
-          return nullptr;
-          }
-
-        // process MCU, color space conversion, scaling and output
-        if (!mcuProcess (x, y)) {
-          free (mFrameBuffer);
-          return nullptr;
-          }
-        }
-      }
-
-    //printf ("bytes left %d\n", mPoolBytesLeft);
-    return mFrameBuffer;
-    }
-  //}}}
 
 private:
-  //{{{
-  uint8_t* alloc (uint32_t bytes) {
-
-    // align block size to the word boundary
-    bytes = (bytes + 3) & ~3;
-    mPoolBytesLeft -= bytes;
-    auto allocation = mPoolPtr;
-    mPoolPtr += bytes;
-
-    // return allocated memory block
-    return allocation;
-    }
-  //}}}
-
   //{{{
   uint16_t getExifWord (uint8_t* ptr, bool intelEndian) {
 
@@ -783,6 +698,7 @@ private:
     ptr += 2;
 
     for (auto entry = 0; entry < numDirectoryEntries; entry++) {
+      uint8_t* startPtr = ptr;
       auto tag = getExifWord (ptr, intelEndian);
       auto format = getExifWord (ptr+2, intelEndian);
       auto components = getExifLong (ptr+4, intelEndian);
@@ -795,35 +711,76 @@ private:
       uint32_t denominator;
       switch (tag) {
         case TAG_EXIF_OFFSET:
-          parseExifDirectory (offsetBasePtr, offsetBasePtr + offset, intelEndian); break;
+          parseExifDirectory (offsetBasePtr, offsetBasePtr + offset, intelEndian);
+          break;
+        //{{{
         case TAG_ORIENTATION:
-          mExifInfo.mExifOrientation = offset; break;
+          mExifInfo.mExifOrientation = offset;
+          mExifTagLambda (fmt::format ("orientation {}", mExifInfo.mExifOrientation), startPtr, 0, bytes);
+          break;
+        //}}}
+        //{{{
         case TAG_APERTURE:
-          mExifInfo.mExifAperture = (float)exp(getExifSignedRational (valuePtr, intelEndian, numerator, denominator)*log(2)*0.5); break;
+          mExifInfo.mExifAperture = (float)exp(getExifSignedRational (valuePtr, intelEndian, numerator, denominator)*log(2)*0.5);
+          mExifTagLambda (fmt::format ("aperture {}", mExifInfo.mExifAperture), startPtr, 0, bytes);
+          break;
+        //}}}
+        //{{{
         case TAG_FOCALLENGTH:
-          mExifInfo.mExifFocalLength = getExifSignedRational (valuePtr, intelEndian, numerator, denominator); break;
+          mExifInfo.mExifFocalLength = getExifSignedRational (valuePtr, intelEndian, numerator, denominator);
+          mExifTagLambda (fmt::format ("focalLength {}", mExifInfo.mExifFocalLength), startPtr, 0, bytes);
+          break;
+        //}}}
+        //{{{
         case TAG_EXPOSURETIME:
-          mExifInfo.mExifExposure = getExifSignedRational (valuePtr, intelEndian, numerator, denominator); break;
+          mExifInfo.mExifExposure = getExifSignedRational (valuePtr, intelEndian, numerator, denominator);
+          mExifTagLambda (fmt::format ("exposure {}", mExifInfo.mExifExposure), startPtr, 0, bytes);
+          break;
+        //}}}
+        //{{{
         case TAG_MAKE:
-          if (mExifInfo.mExifMake.empty())
+          if (mExifInfo.mExifMake.empty()) {
             mExifInfo.mExifMake = (char*)valuePtr;
+            mExifTagLambda (fmt::format ("make {}", mExifInfo.mExifMake), startPtr, 0, bytes);
+            }
           break;
+        //}}}
+        //{{{
         case TAG_MODEL:
-          if (mExifInfo.mExifModel.empty())
+          if (mExifInfo.mExifModel.empty()) {
             mExifInfo.mExifModel = (char*)valuePtr;
+            mExifTagLambda (fmt::format ("model {}", mExifInfo.mExifModel), startPtr, 0, bytes);
+            }
           break;
+        //}}}
         case TAG_DATETIME:
         case TAG_DATETIME_ORIGINAL:
+        //{{{
         case TAG_DATETIME_DIGITIZED:
-          if (mExifInfo.mExifTimeString.empty())
+          if (mExifInfo.mExifTimeString.empty()) {
             mExifInfo.mExifTimeString = getExifTime (valuePtr, &mExifInfo.mExifTm);
+            mExifTagLambda (fmt::format ("dateTime {}", mExifInfo.mExifTimeString), startPtr, 0, bytes);
+            }
           break;
+        //}}}
+        //{{{
         case TAG_THUMBNAIL_OFFSET:
-          mThumbOffset = offset; break;
+          mThumbOffset = offset;
+          mExifTagLambda (fmt::format ("thumbOffset {}", mThumbOffset), startPtr, 0, bytes);
+          break;
+        //}}}
+        //{{{
         case TAG_THUMBNAIL_LENGTH:
-          mThumbBytes = offset; break;
+          mThumbBytes = offset;
+          mExifTagLambda (fmt::format ("thumbLength {}", mThumbBytes), startPtr, 0, bytes);
+          break;
+        //}}}
+        //{{{
         case TAG_GPSINFO:
-          getExifGpsInfo (offsetBasePtr + offset, offsetBasePtr, intelEndian); break;
+          getExifGpsInfo (offsetBasePtr + offset, offsetBasePtr, intelEndian);
+          mExifTagLambda (fmt::format ("gps"), startPtr, 0, bytes);
+          break;
+        //}}}
         //case TAG_MAXAPERTURE:
         //  printf ("TAG_MAXAPERTURE\n"); break;
         //case TAG_SHUTTERSPEED:
@@ -843,6 +800,7 @@ private:
   // find and read APP1 EXIF marker, return true if thumb, valid mThumbBuffer, mThumbLength
 
     (void)length;
+
     // check exifId
     if (getExifLong (ptr, false) != 0x45786966)
       return false;
@@ -878,106 +836,32 @@ private:
   //{{{
   bool parseDQT (uint8_t* ptr, unsigned length) {
   // create de-quantization and prescaling tables with a DQT segment
-
-    while (length) {
-      if (length < 65)
-        return false;
-      length -= 65;
-
-      // table property
-      auto d = *ptr++;
-      if (d & 0xF0) // not 8-bit resolution
-        return false;
-
-      // table ID
-      uint32_t i = d & 3;
-
-      // alloc memory for table
-      auto tablePtr = (int32_t*)alloc (64 * sizeof (int32_t));
-
-      // register table
-      mQtable[i] = tablePtr;
-      for (uint32_t j = 0; i < 64; i++) {
-        // load table, apply scale factor of Arai algorithm to the de-quantizers
-        auto z = kZigZag[j];
-        tablePtr[z] = (int32_t)((uint32_t)*ptr++ * kScaleFactor[z]);
-        }
-      }
-
+    (void)ptr;
+    (void)length;
     return true;
     }
   //}}}
   //{{{
   bool parseHFT (uint8_t* ptr, unsigned length) {
   // Create huffman code tables with a DHT segment
-
-    while (length) {
-      if (length < 17)
-        return false;
-      length -= 17;
-
-      // table number and class
-      uint8_t d = *ptr++;
-      uint32_t cls = (d >> 4);
-
-      // class = dc(0)/ac(1), table number = 0/1
-      uint32_t num = d & 0x0F;
-      if (d & 0xEE)
-        return false;
-
-      auto bitDistributionTablePtr = (uint8_t*)alloc (16);
-      mHuffBits[num][cls] = bitDistributionTablePtr;
-
-      uint32_t np = 0;
-      for (uint32_t i = 0; i < 16; i++) {
-        // load number of patterns for 1 to 16-bit code
-        uint32_t b = *ptr++;
-        bitDistributionTablePtr[i] = (uint8_t)b;
-        // get sum of code words for each code
-        np += b;
-        }
-
-      auto codeWordTablePtr = (uint16_t*)alloc (np * sizeof (uint16_t));
-      mHuffCode[num][cls] = codeWordTablePtr;
-
-      uint16_t hc = 0;
-      uint32_t j = 0;
-      for (uint32_t i = 0; i < 16; i++, hc <<= 1) {
-        // rebuild huffman code word table
-        uint32_t b = bitDistributionTablePtr[i];
-        while (b--)
-          codeWordTablePtr[j++] = hc++;
-        }
-
-      if (length < np)
-        return false;  // Err: wrong ptr size
-      length -= np;
-
-      auto decodedDataPtr = (uint8_t*)alloc (np);
-      mHuffData[num][cls] = decodedDataPtr;
-      for (uint32_t i = 0; i < np; i++) {
-        // Load decoded data corresponds to each code ward
-        uint8_t d1 = *ptr++;
-        if (!cls && d1 > 11)
-          return false;
-        *decodedDataPtr++ = d1;
-        }
-      }
-
+    (void)ptr;
+    (void)length;
     return true;
     }
   //}}}
   //{{{
   bool parseDRI (uint8_t* ptr, unsigned length) {
-    mNumRst = ptr[0]<<8 | ptr[1];
+    mNumRst = ptr[0] << 8 | ptr[1];
     return length >= 2;
     }
   //}}}
   //{{{
   bool parseSOF (uint8_t* ptr, unsigned length) {
+
     (void)length;
-    mHeight = ptr[1]<<8 | ptr[2];
-    mWidth =  ptr[3]<<8 | ptr[4];
+
+    mHeight = ptr[1] << 8 | ptr[2];
+    mWidth =  ptr[3] << 8 | ptr[4];
 
     // only Y/Cb/Cr format
     if (ptr[5] != 3)
@@ -993,8 +877,8 @@ private:
           return false;
 
         // Size of MCU [blocks]
-        msx = b >> 4;
-        msy = b & 15;
+        mSx = b >> 4;
+        mSy = b & 15;
         }
       else if (b != 0x11) // Cb/Cr component
         return false;
@@ -1012,725 +896,43 @@ private:
   //}}}
   //{{{
   bool parseSOS (uint8_t* ptr, unsigned length) {
+
     (void)length;
+
     if (!mWidth || !mHeight)
       return false;
+
     if (ptr[0] != 3)
       return false;
 
-    // Check if all tables corresponding to each components have been loaded
-    for (auto i = 0; i < 3; i++) {
-      uint8_t b = ptr[2 + 2 * i]; // Get huffman table ID
-
-      // Different table number for DC/AC element
-      if (b != 0x00 && b != 0x11)
-        return false;
-
-      b = i ? 1 : 0;
-      // Check huffman table for this component
-      if (!mHuffBits[b][0] || !mHuffBits[b][1])
-        return false;
-      if (!mQtable [mQtableId [i]])
-        return false;
-      }
-
-    // Allocate working buffer for MCU and RGB
-    uint32_t numYblocks = msy * msx; // Number of Y blocks in the MCU
-    if (!numYblocks) // SOF0 not loaded
-      return false;
-    mMcuBuffer = (uint8_t*)alloc ((numYblocks + 2) * 64);
-
-    // allocate buffer for IDCT, RGB, at least 256 bytes for IDCT
-    auto idctRgbBufferSize = numYblocks * 64 * 2 + 64;
-    if (idctRgbBufferSize < 256)
-      idctRgbBufferSize = 256;
-    mIdctRgbBuffer = (uint8_t*)alloc (idctRgbBufferSize);
-
-    // Initialization succeeded. Ready to decompress the JPEG image
     return true;
     }
-  //}}}
-
-  //{{{
-  int bitEtract (uint32_t nBits) {
-  // Extract N bits from input stream
-
-    auto msk = mDataMask;
-    uint32_t dc = mDataCounter;
-    auto dp = mDataPtr; // Bit mask, number of data available, read ptr
-    auto s = *dp;
-
-    uint32_t v = 0;
-    uint32_t f = 0;
-    do {
-      if (!msk) {
-        if (!dc) {
-          // No input data is available, re-fill input buffer
-          dp = mInputBuffer; // Top of input buffer
-          dc = kBodyBufferSize;
-          if  (!readBytes (dp, kBodyBufferSize))
-            return false;
-          }
-        else
-          dp++;     // Next data ptr
-
-        dc--;       // Decrement number of available bytes
-        if (f) {
-          // In flag sequence?
-          f = 0;      // Exit flag sequence
-          if (*dp != 0)
-            return false; // Err: unexpected flag is detected (may be collapted data)
-          *dp = s = 0xFF;     // The flag is a data 0xFF
-          }
-        else {
-          s = *dp;        // Get next data byte
-          if (s == 0xFF) {
-            // start of flag sequence?
-            f = 1;
-            continue;  // Enter flag sequence
-            }
-          }
-        msk = 0x80;   // Read from MSB
-        }
-
-      v <<= 1;  // Get a bit
-      if (s & msk)
-        v++;
-      msk >>= 1;
-      nBits--;
-      } while (nBits);
-
-    mDataMask = msk;
-    mDataCounter = dc;
-    mDataPtr = dp;
-
-    return (int)v;
-    }
-  //}}}
-  //{{{
-  int huffExtract (const uint8_t* hbits, const uint16_t* hcode, const uint8_t* hdata) {
-  // Extract a huffman decoded data from input stream
-
-    auto msk = mDataMask;
-    uint32_t dc = mDataCounter;
-    auto dp = mDataPtr; // Bit mask, number of data available, read ptr
-    auto s = *dp;
-    uint32_t v = 0;
-    uint32_t f = 0;
-    uint32_t bl = 16;  // Max code lengthgth
-    do {
-      if (!msk) {
-        if (!dc) {
-          // No input data is available, re-fill input buffer
-          dp = mInputBuffer; // Top of input buffer
-          dc = kBodyBufferSize;
-          if (!readBytes (dp, kBodyBufferSize))
-            return false; // read error or wrong stream termination
-          }
-        else
-          dp++; // Next data ptr
-
-        dc--;   // Decrement number of available bytes
-        if (f) {
-          // In flag sequence?
-          f = 0;    // Exit flag sequence
-          if (*dp != 0)
-            return false; // unexpected flag is detected (may be collapted data)
-          *dp = s = 0xFF; // The flag is a data 0xFF
-          }
-        else {
-          s = *dp; // Get next data byte
-          if (s == 0xFF) {
-            // start of flag sequence
-            f = 1;
-            continue;  // Enter flag sequence, get trailing byte
-            }
-          }
-        msk = 0x80;
-        }
-
-      // Get a bit
-      v <<= 1;
-      if (s & msk)
-        v++;
-      msk >>= 1;
-
-      for (uint32_t nd = *hbits++; nd; nd--) {
-        // Search the code word in this bit lengthgth
-        if (v == *hcode++) {
-          // Matched
-          mDataMask = msk;
-          mDataCounter = dc;
-          mDataPtr = dp;
-          return *hdata;
-          }
-        hdata++;
-        }
-      bl--;
-      } while (bl);
-
-    return true;
-    }
-  //}}}
-  //{{{
-  void idct (int32_t* src, uint8_t* dst) {
-  // Apply Inverse-DCT in Arai Algorithm (see also aa_idct.png)
-
-    for (uint32_t i = 0; i < 8; i++, src++) {
-      //{{{  process columns
-      int32_t v0 = *src;
-      int32_t v5 = *(src+8);
-      int32_t v1 = *(src+16);
-      int32_t v7 = *(src+24);
-      int32_t v2 = *(src+32);
-      int32_t v6 = *(src+40);
-      int32_t v3 = *(src+48);
-      int32_t v4 = *(src+56);
-
-      // process even elements
-      int32_t t10 = v0 + v2;
-      int32_t t12 = v0 - v2;
-      int32_t t11 = (v1 - v3) * M13 >> 12;
-
-      v3 += v1;
-      t11 -= v3;
-      v0 = t10 + v3;
-      v3 = t10 - v3;
-      v1 = t11 + t12;
-      v2 = t12 - t11;
-
-      // process odd elements
-      t10 = v5 - v4;
-      t11 = v5 + v4;
-      t12 = v6 - v7;
-      v7 += v6;
-      v5 = (t11 - v7) * M13 >> 12;
-      v7 += t11;
-
-      int32_t t13 = (t10 + t12) * M5 >> 12;
-      v4 = t13 - (t10 * M2 >> 12);
-      v6 = t13 - (t12 * M4 >> 12) - v7;
-      v5 -= v6;
-      v4 -= v5;
-
-      // writeback transformed values
-      *src = v0 + v7;
-      *(src+8) = v1 + v6;
-      *(src+16) = v2 + v5;
-      *(src+24) = v3 + v4;
-      *(src+32) = v3 - v4;
-      *(src+40) = v2 - v5;
-      *(src+48) = v1 - v6;
-      *(src+56) = v0 - v7;
-      }
-      //}}}
-
-    src -= 8;
-    for (uint32_t i = 0; i < 8; i++) {
-      //{{{  process rows
-      int32_t v0 = *src++ + (128L << 8);
-      int32_t v5 = *src++;
-      int32_t v1 = *src++;
-      int32_t v7 = *src++;
-      int32_t v2 = *src++;
-      int32_t v6 = *src++;
-      int32_t v3 = *src++;
-      int32_t v4 = *src++;
-
-      // process even elements
-      int32_t t10 = v0 + v2;
-      int32_t t12 = v0 - v2;
-      int32_t t11 = (v1 - v3) * M13 >> 12;
-      v3 += v1;
-      t11 -= v3;
-      v0 = t10 + v3;
-      v3 = t10 - v3;
-      v1 = t11 + t12;
-      v2 = t12 - t11;
-
-      // process odd elements
-      t10 = v5 - v4;
-      t11 = v5 + v4;
-      t12 = v6 - v7;
-      v7 += v6;
-      v5 = (t11 - v7) * M13 >> 12;
-      v7 += t11;
-
-      int32_t t13 = (t10 + t12) * M5 >> 12;
-      v4 = t13 - (t10 * M2 >> 12);
-      v6 = t13 - (t12 * M4 >> 12) - v7;
-      v5 -= v6;
-      v4 -= v5;
-
-      // descale the transformed values 8 bits and output
-      *dst++ = kClip8 [(v0 + v7) >> 8];
-      *dst++ = kClip8 [(v1 + v6) >> 8];
-      *dst++ = kClip8 [(v2 + v5) >> 8];
-      *dst++ = kClip8 [(v3 + v4) >> 8];
-      *dst++ = kClip8 [(v3 - v4) >> 8];
-      *dst++ = kClip8 [(v2 - v5) >> 8];
-      *dst++ = kClip8 [(v1 - v6) >> 8];
-      *dst++ = kClip8 [(v0 - v7) >> 8];
-      }
-      //}}}
-    }
-  //}}}
-
-  //{{{
-  bool restart (uint16_t rstn) {
-  // Process restart interval
-
-    // Discard padding bits and get two bytes from the input stream
-    auto dp = mDataPtr;
-    uint32_t dc = mDataCounter;
-    uint16_t d = 0;
-
-    for (uint32_t i = 0; i < 2; i++) {
-      if (!dc) {
-        // No input data is available, re-fill input buffer
-        dp = mInputBuffer;
-        dc = kBodyBufferSize;
-        if (!readBytes (dp, kBodyBufferSize))
-          return false;
-        }
-      else
-        dp++;
-      dc--;
-      // Get a byte
-      d = (d << 8) | *dp;
-      }
-
-    mDataPtr = dp;
-    mDataCounter = dc;
-    mDataMask = 0;
-
-    // Check the marker
-    if ((d & 0xFFD8) != 0xFFD0 || (d & 7) != (rstn & 7)) // expected RSTn marker is not detected
-      return false;
-
-    // Reset DC offset
-    mDcValue[0] = 0;
-    mDcValue[1] = 0;
-    mDcValue[2] = 0;
-
-    return true;
-    }
-  //}}}
-  //{{{
-  bool mcuLoad() {
-
-    uint32_t nby = msx * msy;  // Number of Y blocks (1, 2 or 4)
-    uint32_t nbc = 2;          // Number of C blocks (2)
-    auto mcuBuf = mMcuBuffer;  // Pointer to the first block
-    auto idctBuf = (int32_t*)mIdctRgbBuffer;
-
-    for (uint32_t blk = 0; blk < nby + nbc; blk++, mcuBuf += 64) {
-      uint32_t cmp = (blk < nby) ? 0 : blk - nby + 1;  // Component number 0:Y, 1:Cb, 2:Cr
-      uint32_t id = cmp ? 1 : 0;                       // Huffman table ID of the component
-      auto dqf = mQtable[mQtableId[cmp]];   // De-quantize table ID for this component
-      //{{{  huffman decode DC from input
-      auto hb = mHuffBits[id][0];  // Huffman table for the DC element
-      auto hc = mHuffCode[id][0];
-      auto hd = mHuffData[id][0];
-
-      // Extract a huffman coded data (bit length)
-      int b = huffExtract (hb, hc, hd);
-      if (b < 0)
-        return false;  // invalid code or input
-
-      int d = mDcValue[cmp];         // DC value of previous block
-      if (b) {                  // If there is any difference from previous block
-        int e = bitEtract (b);  // Extract data bits
-        if (e < 0)
-          return false;
-
-        // MSB position
-        b = 1 << (b - 1);
-        if (!(e & b)) // Restore sign if needed
-          e -= (b << 1) - 1;
-
-        // Get current value
-        d += e;
-        mDcValue[cmp] = (int16_t)d;  // Save current DC value for next block
-        }
-
-      // De-quantize, apply scale factor of Arai algorithm and descale 8 bits
-      idctBuf[0] = d * dqf[0] >> 8;
-      //}}}
-      //{{{  huffman decode 63 AC from input
-      memset (idctBuf+1, 0, 63*sizeof(uint32_t));
-
-      hb = mHuffBits[id][1];
-      hc = mHuffCode[id][1];
-      hd = mHuffData[id][1];
-
-      // Top of the AC elements
-      uint32_t i = 1;
-      do {
-        // Extract a huffman coded value (zero runs and bit lengthgth)
-        int b1 = huffExtract (hb, hc, hd);
-        if (b1 == 0) // EOB
-          break;
-        if (b1 < 0)
-          return false;
-
-        // Number of leading zero elements
-        auto z = (uint32_t)b1 >> 4;
-        if (z) {
-          // Skip zero elements
-          i += z;
-          if (i >= 64) // Too long zero run
-            return false;
-          }
-
-        // Bit length
-        if (b1 &= 0x0F) {
-          // Extract data bits
-          d = bitEtract (b1);
-          if (d < 0)
-            return false;
-
-          // MSB position
-          b1 = 1 << (b1 - 1);
-          if (!(d & b1)) // Restore negative value if needed
-            d -= (b1 << 1) - 1;
-
-          // De-quantize, apply scale factor of Arai algorithm and descale 8 bits
-          z = kZigZag[i];
-          idctBuf[z] = d * dqf[z] >> 8;
-          }
-        } while (++i < 64);  // next AC element
-      //}}}
-
-      if (mScaleShift == 3)  // only use DC element
-        *mcuBuf = uint8_t ((*idctBuf / 256) + 128);
-      else
-        idct (idctBuf, mcuBuf);
-      }
-
-    return true;
-    }
-  //}}}
-  //{{{
-  bool mcuProcess (uint32_t x, uint32_t y) {
-
-    uint32_t mx = msx * 8;
-    uint32_t my = msy * 8;
-
-    uint32_t rx = (x + mx <= mWidth) ? mx : mWidth - x;
-    uint32_t ry = (y + my <= mHeight) ? my : mHeight - y;
-    if (!rx || !ry)
-      return true;
-
-    if (mScaleShift) {
-      // scaled
-      x >>= mScaleShift;
-      y >>= mScaleShift;
-      rx >>= mScaleShift;
-      ry >>= mScaleShift;
-      if (!rx || !ry)
-        return true;
-
-      if (mScaleShift == 3) {
-        //{{{  1/8 scaling, just use DC value
-        auto dstPtr = mFrameBuffer + ((y * mFrameWidth) + x) * mBytesPerPixel;
-        auto stride = (mFrameWidth - rx) * mBytesPerPixel;
-
-        auto chromaPtr = mMcuBuffer + (mx * my);
-        int32_t cb = *chromaPtr - 128;
-        int32_t cr = *(chromaPtr + 64) - 128;
-
-        for (uint32_t iy = 0; iy < my; iy += 8, dstPtr += stride) {
-          auto lumaPtr = mMcuBuffer;
-          if (iy == 8)
-            lumaPtr += 64 * 2;
-          for (uint32_t ix = 0; ix < mx; ix += 8, lumaPtr += 64) {
-            // convert YCbCr to BGRA
-            *dstPtr++ = kClip8 [*lumaPtr +  ((kBcB * cb) >> 10)];
-            *dstPtr++ = kClip8 [*lumaPtr - (((kGcB * cb) + (kGcR * cr)) >> 10)];
-            *dstPtr++ = kClip8 [*lumaPtr +  ((kRcR * cr) >> 10)];
-            if (mBytesPerPixel == 4)
-              *dstPtr++ = 0xFF;
-            }
-          }
-        }
-        //}}}
-      else {
-        //{{{  1/2, 1/4 scaling
-        auto bgra = mIdctRgbBuffer;
-        for (uint32_t iy = 0; iy < my; iy++) {
-          auto chromaPtr = mMcuBuffer;
-          auto lumaPtr = chromaPtr + iy * 8;
-          if (my == 16) {
-            // Double block height?
-            chromaPtr += 64 * 4 + (iy >> 1) * 8;
-            if (iy >= 8)
-              lumaPtr += 64;
-            }
-          else
-            // Single block height
-            chromaPtr += mx * 8 + iy * 8;
-
-          for (uint32_t ix = 0; ix < mx; ix++) {
-            // Get CbCr component and restore right level
-            int32_t cb = *chromaPtr - 128;
-            int32_t cr = *(chromaPtr + 64) - 128;
-            if (mx == 16) {
-              // Double block width
-              if (ix == 8) // Jump to next block if double block heigt
-                lumaPtr += 64 - 8;
-
-              // Increase chroma pointer every two pixels
-              chromaPtr += ix & 1;
-              }
-            else // Single block width, Increase chroma pointer every pixel
-              chromaPtr++;
-
-            // Convert YCbCr to BGRA
-            *bgra++ = kClip8 [*lumaPtr +  ((kBcB * cb) >> 10)];
-            *bgra++ = kClip8 [*lumaPtr - (((kGcB * cb) + (kGcR * cr)) >> 10)];
-            *bgra++ = kClip8 [*lumaPtr +  ((kRcR * cr) >> 10)];
-            }
-          }
-
-        //{{{  average scaleShift 1,2
-        uint32_t s = mScaleShift * 2;   // number of shifts for averaging
-        uint32_t w = 1 << mScaleShift;  // Width of square
-        uint32_t a = (mx - w) * 3;      // Bytes to skip for next line in the square
-
-        auto output = (uint8_t*)mIdctRgbBuffer;
-        for (uint32_t iy = 0; iy < my; iy += w) {
-          for (uint32_t ix = 0; ix < mx; ix += w) {
-            bgra = (uint8_t*)mIdctRgbBuffer + (iy * mx + ix) * 3;
-            uint32_t v1 = 0;
-            uint32_t v2 = 0;
-            uint32_t v3 = 0;
-            for (uint32_t y1 = 0; y1 < w; y1++) {
-              // Accumulate BGR values in the square
-              for (uint32_t x1 = 0; x1 < w; x1++) {
-                v1 += *bgra++;
-                v2 += *bgra++;
-                v3 += *bgra++;
-                }
-              bgra += a;
-              }
-
-            // Put the averaged value as a pixel
-            *output++ = (uint8_t)(v1 >> s);
-            *output++ = (uint8_t)(v2 >> s);
-            *output++ = (uint8_t)(v3 >> s);
-            }
-          }
-        //}}}
-        //{{{  squeeze up pixel table if a part of MCU is to be truncated
-        mx >>= mScaleShift;
-        if (rx < mx) {
-          auto src = (uint8_t*)mIdctRgbBuffer;
-          auto dst = (uint8_t*)mIdctRgbBuffer;
-          for (uint32_t y1 = 0; y1 < ry; y1++, src += (mx - rx) * 3) {
-            for (uint32_t x1 = 0; x1 < rx; x1++) {
-              *dst++ = *src++;
-              *dst++ = *src++;
-              *dst++ = *src++;
-              }
-            }
-          }
-        //}}}
-
-        auto src = mIdctRgbBuffer;
-        auto dstPtr = mFrameBuffer + ((y * mFrameWidth) + x) * mBytesPerPixel;
-        auto stride = (mFrameWidth - rx) * mBytesPerPixel;
-        for (uint32_t j = 0; j < ry; j++, dstPtr += stride)
-          for (uint32_t i = 0; i < rx; i++) {
-            *dstPtr++ = *src++; // B
-            *dstPtr++ = *src++; // G
-            *dstPtr++ = *src++; // R
-            if (mBytesPerPixel == 4)
-              *dstPtr++ = 0xFF;
-            }
-        }
-        //}}}
-      }
-    else {
-      //{{{  1/1 scaling
-      auto dstPtr = mFrameBuffer + ((y * mFrameWidth) + x) * mBytesPerPixel;
-      auto stride = (mFrameWidth - rx) * mBytesPerPixel;
-
-      for (uint32_t iy = 0; iy < ry; iy++, dstPtr += stride) {
-        auto chromaPtr = mMcuBuffer;
-        auto lumaPtr = chromaPtr + iy * 8;
-        if (my == 16) {
-          // Double block height
-          chromaPtr += 64 * 4 + (iy >> 1) * 8;
-          if (iy >= 8)
-            lumaPtr += 64;
-          }
-        else
-          // Single block height
-          chromaPtr += mx * 8 + iy * 8;
-
-        for (uint32_t ix = 0; ix < rx; ix++, lumaPtr++) {
-          // get CbCr components as signed int
-          int32_t cb = *chromaPtr - 128;
-          int32_t cr = *(chromaPtr + 64) - 128;
-          if (mx == 16) {
-            // double block width, increase chroma pointer every two pixels
-            if (ix == 8) // jump to next block if double block height
-              lumaPtr += 64 - 8;
-            chromaPtr += ix & 1;
-            }
-          else // single block width, increase chroma pointer every pixel
-            chromaPtr++;
-
-          // convert YCbCr to BGRA
-          *dstPtr++ = kClip8 [*lumaPtr +  ((kBcB * cb) >> 10)];
-          *dstPtr++ = kClip8 [*lumaPtr - (((kGcB * cb) + (kGcR * cr)) >> 10)];
-          *dstPtr++ = kClip8 [*lumaPtr +  ((kRcR * cr) >> 10)];
-          if (mBytesPerPixel == 4)
-            *dstPtr++ = 0xFF;
-          }
-        }
-      }
-      //}}}
-
-    return y + ry <= mFrameHeight;
-    }
-  //}}}
-
-  //{{{  static const
-  inline static const int kBodyBufferSize = 0x200;
-  inline static const int kPoolBufferSize = 0xB00;
-  inline static const int kInputBufferSize = 0x10000;
-
-  inline static const int kBcB = (int)(1.772 * 1024);
-  inline static const int kGcB = (int)(0.344 * 1024);
-  inline static const int kGcR = (int)(0.714 * 1024);
-  inline static const int kRcR = (int)(1.402 * 1024);
-
-  inline static const int32_t M2  = (int32_t)(1.08239 * 4096);
-  inline static const int32_t M4  = (int32_t)(2.61313 * 4096);
-  inline static const int32_t M5  = (int32_t)(1.84776 * 4096);
-  inline static const int32_t M13 = (int32_t)(1.41421 * 4096);
-
-  //{{{
-  inline static const uint8_t  kClip8[1024] = {
-    // 0..255
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-    32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-    64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
-    96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
-    128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
-    160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
-    192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
-    224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
-
-    // 256..511
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-
-    // -512..-257
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-    // -256..-1
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-  };
-  //}}}
-  //{{{
-  inline static const uint8_t  kZigZag[64] = {
-     0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
-    12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
-    35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
-    58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
-    };
-  //}}}
-  //{{{
-  inline static const uint16_t kScaleFactor[64] = {
-    (uint16_t)(1.00000*8192), (uint16_t)(1.38704*8192), (uint16_t)(1.30656*8192), (uint16_t)(1.17588*8192),
-    (uint16_t)(1.00000*8192), (uint16_t)(0.78570*8192), (uint16_t)(0.54120*8192), (uint16_t)(0.27590*8192),
-    (uint16_t)(1.38704*8192), (uint16_t)(1.92388*8192), (uint16_t)(1.81226*8192), (uint16_t)(1.63099*8192),
-    (uint16_t)(1.38704*8192), (uint16_t)(1.08979*8192), (uint16_t)(0.75066*8192), (uint16_t)(0.38268*8192),
-    (uint16_t)(1.30656*8192), (uint16_t)(1.81226*8192), (uint16_t)(1.70711*8192), (uint16_t)(1.53636*8192),
-    (uint16_t)(1.30656*8192), (uint16_t)(1.02656*8192), (uint16_t)(0.70711*8192), (uint16_t)(0.36048*8192),
-    (uint16_t)(1.17588*8192), (uint16_t)(1.63099*8192), (uint16_t)(1.53636*8192), (uint16_t)(1.38268*8192),
-    (uint16_t)(1.17588*8192), (uint16_t)(0.92388*8192), (uint16_t)(0.63638*8192), (uint16_t)(0.32442*8192),
-    (uint16_t)(1.00000*8192), (uint16_t)(1.38704*8192), (uint16_t)(1.30656*8192), (uint16_t)(1.17588*8192),
-    (uint16_t)(1.00000*8192), (uint16_t)(0.78570*8192), (uint16_t)(0.54120*8192), (uint16_t)(0.27590*8192),
-    (uint16_t)(0.78570*8192), (uint16_t)(1.08979*8192), (uint16_t)(1.02656*8192), (uint16_t)(0.92388*8192),
-    (uint16_t)(0.78570*8192), (uint16_t)(0.61732*8192), (uint16_t)(0.42522*8192), (uint16_t)(0.21677*8192),
-    (uint16_t)(0.54120*8192), (uint16_t)(0.75066*8192), (uint16_t)(0.70711*8192), (uint16_t)(0.63638*8192),
-    (uint16_t)(0.54120*8192), (uint16_t)(0.42522*8192), (uint16_t)(0.29290*8192), (uint16_t)(0.14932*8192),
-    (uint16_t)(0.27590*8192), (uint16_t)(0.38268*8192), (uint16_t)(0.36048*8192), (uint16_t)(0.32442*8192),
-    (uint16_t)(0.27590*8192), (uint16_t)(0.21678*8192), (uint16_t)(0.14932*8192), (uint16_t)(0.07612*8192)
-    };
   //}}}
 
   inline static const int kBytesPerFormat[] = { 0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8 };
   inline static const char* kWeekDay[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-  //}}}
   //{{{  vars
-  uHeaderLambda mHeaderLambda;
+  uTagLambda mJpegTagLambda;
+  uTagLambda mExifTagLambda;
 
   unsigned mBytesPerPixel = 0;
 
+  // SOF values
   unsigned mWidth = 0;    // Size of the input image
   unsigned mHeight = 0;   // Size of the input image
+  unsigned mSx = 0;         // MCU size in unit of block (width, height)
+  unsigned mSy = 0;         // MCU size in unit of block (width, height)
+  uint8_t mQtableId[3];    // Quantization table ID of each component
+
+  // NRI value
+  unsigned mNumRst = 0;    // Restart inverval in MCUs
 
   // thumb
   unsigned mThumbOffset = 0;
   unsigned mThumbBytes = 0;
-
-  uint8_t mScaleShift = 0; // Output scaling ratio
-  uint8_t msx = 0;         // MCU size in unit of block (width, height)
-  uint8_t msy = 0;         // MCU size in unit of block (width, height)
-  uint16_t mNumRst = 0;    // Restart inverval in MCUs
-
-  uint8_t* mPoolBuffer;
-  uint8_t* mPoolPtr;
-  uint32_t mPoolBytesLeft; // size of momory pool (bytes available)
-
-  uint8_t* mMcuBuffer;     // working buffer for the MCU
-  uint8_t* mIdctRgbBuffer; // working buffer for IDCT and RGB output
-
-  uint8_t* mInputBuffer;   // bit stream input buffer
-  uint32_t mDataCounter;   // Number of bytes available in the input buffer
-  uint8_t* mDataPtr;       // Current data read ptr
-  uint8_t mDataMask;       // Current bit in the current read byte
-
-  int16_t mDcValue[3];     // Previous DC element of each component
-  uint8_t mQtableId[3];    // Quantization table ID of each component
-  int32_t* mQtable[4];     // Dequaitizer tables [id]
-
-  uint8_t* mHuffBits[2][2];  // Huffman bit distribution tables [id][dcac]
-  uint8_t* mHuffData[2][2];  // Huffman decoded data tables [id][dcac]
-  uint16_t* mHuffCode[2][2]; // Huffman code word tables [id][dcac]
-
-  uint32_t mFrameWidth = 0;
-  uint32_t mFrameHeight = 0;
-  uint8_t* mFrameBuffer = nullptr;
 
   std::string mExifTimeString;
   cExifInfo mExifInfo;
   cExifGpsInfo mExifGpsInfo;
   //}}}
   };
-//}}}
