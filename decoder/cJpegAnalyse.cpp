@@ -385,12 +385,12 @@ void cJpegAnalyse::getExifGpsInfo (uint8_t* ptr, uint8_t* offsetBasePtr, bool in
   ptr += 2;
 
   for (auto entry = 0; entry < numDirectoryEntries; entry++) {
-    auto tag = getExifWord (ptr, intelEndian);
-    auto format = getExifWord (ptr+2, intelEndian);
-    auto components = getExifLong (ptr+4, intelEndian);
-    auto offset = getExifLong (ptr+8, intelEndian);
-    auto bytes = components * kBytesPerFormat[format];
-    auto valuePtr = (bytes <= 4) ? ptr+8 : offsetBasePtr + offset;
+    uint16_t tag = getExifWord (ptr, intelEndian);
+    uint16_t format = getExifWord (ptr+2, intelEndian);
+    uint32_t components = getExifLong (ptr+4, intelEndian);
+    uint32_t offset = getExifLong (ptr+8, intelEndian);
+    uint32_t bytes = components * kBytesPerFormat[format];
+    uint8_t* valuePtr = (bytes <= 4) ? ptr+8 : offsetBasePtr + offset;
     ptr += 12;
 
     uint32_t numerator;
@@ -536,25 +536,25 @@ string cJpegAnalyse::getExifTime (uint8_t* ptr, struct tm* tmPtr) {
 //{{{
 void cJpegAnalyse::parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, bool intelEndian) {
 
-  auto numDirectoryEntries = getExifWord (ptr, intelEndian);
+  uint16_t numDirectoryEntries = getExifWord (ptr, intelEndian);
   ptr += 2;
 
-  for (auto entry = 0; entry < numDirectoryEntries; entry++) {
+  for (uint16_t entry = 0; entry < numDirectoryEntries; entry++) {
     uint8_t* startPtr = ptr;
-    auto tag = getExifWord (ptr, intelEndian);
-    auto format = getExifWord (ptr+2, intelEndian);
-    auto components = getExifLong (ptr+4, intelEndian);
-    auto offset = getExifLong (ptr+8, intelEndian);
-    auto bytes = components * kBytesPerFormat[format];
-    auto valuePtr = (bytes <= 4) ? ptr+8 : offsetBasePtr + offset;
+    uint16_t tag = getExifWord (ptr, intelEndian);
+    uint16_t format = getExifWord (ptr+2, intelEndian);
+    uint32_t components = getExifLong (ptr+4, intelEndian);
+    uint32_t offset = getExifLong (ptr+8, intelEndian);
+    uint32_t bytes = components * kBytesPerFormat[format];
+    uint8_t* valuePtr = (bytes <= 4) ? ptr+8 : offsetBasePtr + offset;
     ptr += 12;
 
-    uint32_t numerator;
-    uint32_t denominator;
     switch (tag) {
+      //{{{
       case TAG_EXIF_OFFSET:
         parseExifDirectory (offsetBasePtr, offsetBasePtr + offset, intelEndian);
         break;
+      //}}}
       //{{{
       case TAG_ORIENTATION:
         mExifInfo.mExifOrientation = offset;
@@ -562,47 +562,65 @@ void cJpegAnalyse::parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, boo
         break;
       //}}}
       //{{{
-      case TAG_APERTURE:
+      case TAG_APERTURE: {
+        uint32_t numerator;
+        uint32_t denominator;
         mExifInfo.mExifAperture = (float)exp(getExifSignedRational (valuePtr, intelEndian, numerator, denominator)*log(2)*0.5);
         mCallback (1, fmt::format ("exifAperture {}", mExifInfo.mExifAperture), startPtr, 0, bytes);
         break;
+        }
       //}}}
       //{{{
-      case TAG_FOCALLENGTH:
+      case TAG_FOCALLENGTH: {
+        uint32_t numerator;
+        uint32_t denominator;
         mExifInfo.mExifFocalLength = getExifSignedRational (valuePtr, intelEndian, numerator, denominator);
         mCallback (1, fmt::format ("exifFocalLength {}", mExifInfo.mExifFocalLength), startPtr, 0, bytes);
         break;
+        }
       //}}}
       //{{{
-      case TAG_EXPOSURETIME:
+      case TAG_EXPOSURETIME: {
+        uint32_t numerator;
+        uint32_t denominator;
         mExifInfo.mExifExposure = getExifSignedRational (valuePtr, intelEndian, numerator, denominator);
         mCallback (1, fmt::format ("exifExposure {}", mExifInfo.mExifExposure), startPtr, 0, bytes);
+        break;
+        }
+      //}}}
+      //{{{
+      case TAG_COMPRESSION:
+        mCallback (1, "exifCompression", startPtr, 0, bytes);
         break;
       //}}}
       //{{{
       case TAG_MAKE:
-        if (mExifInfo.mExifMake.empty()) {
-          mExifInfo.mExifMake = (char*)valuePtr;
-          mCallback (1, fmt::format ("exifMake {}", mExifInfo.mExifMake), startPtr, 0, bytes);
-          }
+        mExifInfo.mExifMake = (char*)valuePtr;
+        mCallback (1, fmt::format ("exifMake {}", mExifInfo.mExifMake), startPtr, 0, bytes);
         break;
       //}}}
       //{{{
       case TAG_MODEL:
-        if (mExifInfo.mExifModel.empty()) {
-          mExifInfo.mExifModel = (char*)valuePtr;
-          mCallback (1, fmt::format ("exifModel {}", mExifInfo.mExifModel), startPtr, 0, bytes);
-          }
+        mExifInfo.mExifModel = (char*)valuePtr;
+        mCallback (1, fmt::format ("exifModel {}", mExifInfo.mExifModel), startPtr, 0, bytes);
         break;
       //}}}
+      //{{{
       case TAG_DATETIME:
+        mExifInfo.mExifTimeString = getExifTime (valuePtr, &mExifInfo.mExifTm);
+        mCallback (1, fmt::format ("exifDateTime {}", mExifInfo.mExifTimeString), startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
       case TAG_DATETIME_ORIGINAL:
+        mExifInfo.mExifTimeOriginalString = getExifTime (valuePtr, &mExifInfo.mExifTmOriginal);
+        mCallback (1, fmt::format ("exifDateTimeOriginal {}", mExifInfo.mExifTimeString), startPtr, 0, bytes);
+        break;
+      //}}}
       //{{{
       case TAG_DATETIME_DIGITIZED:
-        if (mExifInfo.mExifTimeString.empty()) {
-          mExifInfo.mExifTimeString = getExifTime (valuePtr, &mExifInfo.mExifTm);
-          mCallback(1, fmt::format ("exifDateTime {}", mExifInfo.mExifTimeString), startPtr, 0, bytes);
-          }
+        mExifInfo.mExifTimeDigitizedString = getExifTime (valuePtr, &mExifInfo.mExifTmDigitized);
+        mCallback (1, fmt::format ("exifDateTimeDigitized {}", mExifInfo.mExifTimeString), startPtr, 0, bytes);
         break;
       //}}}
       //{{{
@@ -623,16 +641,170 @@ void cJpegAnalyse::parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, boo
         mCallback (1, fmt::format ("exifGps {}", mExifGpsInfo.getString()), startPtr, 0, bytes);
         break;
       //}}}
-      //case TAG_MAXAPERTURE:
-      //  printf ("TAG_MAXAPERTURE\n"); break;
-      //case TAG_SHUTTERSPEED:
-      //  printf ("TAG_SHUTTERSPEED\n"); break;
-      default:;
-      //  printf ("TAG %x\n", tag);
+      //{{{
+      case TAG_MAXAPERTURE:
+        mCallback (1, "exifMaxAperture", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_SHUTTERSPEED:
+        mCallback (1, "exifShutterSpeed", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_X_RESOLUTION:
+        mCallback (1, "exifResolutionX", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_Y_RESOLUTION:
+        mCallback (1, "exifResolutionY", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_RESOLUTION_UNIT:
+        mCallback (1, "exifResolutionUnit", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_SOFTWARE:
+        mCallback (1, fmt::format ("exifSoftware {}", (char*)valuePtr), startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_Y_CB_CR_POSITIONING:
+        mCallback (1, "exifCbCrPosition", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_FNUMBER:
+        mCallback (1, "exifFnumber", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_EXPOSURE_PROGRAM:
+        mCallback (1, "exifExposureProgram", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_ISO_EQUIVALENT:
+        mCallback (1, "exifIsoEquivalent", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_EXIF_VERSION:
+        mCallback (1, "exifVersion", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_BRIGHTNESS_VALUE:
+        mCallback (1, "exifBrightness", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_EXPOSURE_BIAS:
+        mCallback (1, "exifExposureBias", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_METERING_MODE:
+        mCallback (1, "exifMeteringMode", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_FLASH:
+        mCallback (1, "exifFlash", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_MAKER_NOTE:
+        mCallback (1, "exifMakerNote", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_FLASH_PIX_VERSION:
+        mCallback (1, "exifPixVersion", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_COLOR_SPACE:
+        mCallback (1, "exifColorSpace", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_PIXEL_X_DIMENSION:
+        mCallback (1, "exifDimensionX", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_PIXEL_Y_DIMENSION:
+        mCallback (1, "exifDimeansionY", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_INTEROP_OFFSET:
+        mCallback (1, "exifInteropOffset", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_SCENE_TYPE:
+        mCallback (1, "exifSceneType", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_CUSTOM_RENDERED:
+        mCallback (1, "exifCustomRendered", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_EXPOSURE_MODE:
+        mCallback (1, "exifExposureMode", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_WHITEBALANCE:
+        mCallback (1, "exifWhiteBalance", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_DIGITALZOOMRATIO:
+        mCallback (1, "exifDigitalZoomRatio", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_SCENE_CAPTURE_TYPE:
+        mCallback (1, "exifSceneCapture", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_CONTRAST:
+        mCallback (1, "exifContrast", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_SATURATION:
+        mCallback (1, "exifSaturation", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_SHARPNESS:
+        mCallback (1, "exifSharpness", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      case TAG_COMPONENTS_CONFIG:
+        mCallback (1, "exifComponentsConfig", startPtr, 0, bytes);
+        break;
+      //}}}
+      //{{{
+      default:
+        mCallback (1, fmt::format ("exif tag {:x}", tag), startPtr, 0, bytes);
+        break;
+      //}}}
       }
     }
 
-  auto extraDirectoryOffset = getExifLong (ptr, intelEndian);
+  uint32_t extraDirectoryOffset = getExifLong (ptr, intelEndian);
   if (extraDirectoryOffset > 4)
     parseExifDirectory (offsetBasePtr, offsetBasePtr + extraDirectoryOffset, intelEndian);
   }
@@ -684,7 +856,7 @@ void cJpegAnalyse::parseAPP1 (const string& tag, uint8_t* startPtr, uint32_t off
     }
   ptr += 2;
 
-  auto offsetBasePtr = ptr;
+  uint8_t* offsetBasePtr = ptr;
 
   // endian
   bool intelEndian = getExifWord (ptr, false) == 0x4949;
@@ -704,12 +876,11 @@ void cJpegAnalyse::parseAPP1 (const string& tag, uint8_t* startPtr, uint32_t off
     }
   ptr += 4;
 
+  mCallback (0, tag + " exif", startPtr, offset, length);
   parseExifDirectory (offsetBasePtr, ptr, intelEndian);
 
   // dodgy add to offset of SOImarker(2), APP1marker(2), APP1length(2), EXIF00marker(6)
   mExifThumbOffset += 2 + 2 + 2 + 6;
-
-  mCallback (0, tag, startPtr, offset, length);
   }
 //}}}
 //{{{
@@ -742,13 +913,13 @@ void cJpegAnalyse::parseSOF (const string& tag, uint8_t* startPtr, uint32_t offs
   //{{{  unused param
   (void)length;
   //}}}
-  mPrecision = ptr[0];
+  uint8_t precision = ptr[0];
   mHeight = ptr[1] << 8 | ptr[2];
   mWidth =  ptr[3] << 8 | ptr[4];
-  mNumImageComponentsFrame = ptr[5];
-  string str = fmt::format ("{} {}x{} {}bit", tag, mWidth, mHeight, mPrecision);
+  uint8_t numImageComponentsFrame = ptr[5];
+  string str = fmt::format ("{} {}x{} {}bit", tag, mWidth, mHeight, precision);
 
-  for (uint8_t i = 0; i < mNumImageComponentsFrame; i++) {
+  for (uint8_t i = 0; i < numImageComponentsFrame; i++) {
     uint8_t componentId = ptr[6 + 3 * i];
     uint8_t horizSample = ptr[7 + (3 * i)] >> 4;
     uint8_t vertSample = ptr[7 + (3 * i)] & 15;
@@ -788,8 +959,8 @@ void cJpegAnalyse::parseDRI (const string& tag, uint8_t* startPtr, uint32_t offs
   (void)ptr;
   (void)length;
   //}}}
-  mNumRst = ptr[0] << 8 | ptr[1];
-  mCallback (0, fmt::format ("{} {}", tag, mNumRst), startPtr, offset, length);
+  uint16_t numRst = ptr[0] << 8 | ptr[1];
+  mCallback (0, fmt::format ("{} {}", tag, numRst), startPtr, offset, length);
   }
 //}}}
 //{{{
@@ -821,9 +992,10 @@ void cJpegAnalyse::parseSOS (const string& tag, uint8_t* startPtr, uint32_t offs
 //{{{
 string cJpegAnalyse::cExifGpsInfo::getString() {
 
-  string str = fmt::format ("{} {} {} {} {} {} {} {} {}", mDatum,
-                                mLatitudeDeg,mLatitudeRef,mLatitudeMin,mLatitudeSec,
-                                mLongitudeDeg,mLongitudeRef,mLongitudeMin,mLongitudeSec);
+  string str = fmt::format ("{} {} {} {} {} {} {} {} {}",
+                            mDatum,
+                            mLatitudeDeg,mLatitudeRef,mLatitudeMin,mLatitudeSec,
+                            mLongitudeDeg,mLongitudeRef,mLongitudeMin,mLongitudeSec);
 
   str += fmt::format ("{} {}", mAltitude, mAltitudeRef);
   str += fmt::format ("{} {}", mImageDirection, mImageDirectionRef);

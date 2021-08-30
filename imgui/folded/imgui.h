@@ -510,7 +510,7 @@ namespace ImGui {
   IMGUI_API void BulletText (const char* fmt, ...) IM_FMTARGS(1); // shortcut for Bullet()+Text()
   IMGUI_API void BulletTextV (const char* fmt, va_list args) IM_FMTLIST(1);
   //}}}
-  //{{{  Widgets Main
+  //{{{  Widgets buttons
   // - Most widgets return true when the value has been changed or when pressed/selected
   // - You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.
 
@@ -947,7 +947,7 @@ namespace ImGui {
   IMGUI_API ImGuiViewport* GetMainViewport();                                                 // return primary/default viewport. This can never be NULL.
   //}}}
 
-  //{{{  Miscellaneous Utilities
+  //{{{  utilities
   IMGUI_API bool IsRectVisible (const ImVec2& size);                             // test if rectangle (of given size, starting from cursor position) is visible / not clipped.
   IMGUI_API bool IsRectVisible (const ImVec2& rect_min, const ImVec2& rect_max); // test if rectangle (in screen space) is visible / not clipped. to perform coarse clipping on user's side.
 
@@ -970,17 +970,17 @@ namespace ImGui {
 
   IMGUI_API bool BeginChildFrame (ImGuiID id, const ImVec2& size, ImGuiWindowFlags flags = 0); // helper to create a child window / scrolling region that looks like a normal widget frame
   IMGUI_API void EndChildFrame();    // always call EndChildFrame() regardless of BeginChildFrame() return values (which indicates a collapsed/clipped window)
-  //}}}
-  //{{{  Text Utilities
+
+  // Text Utilities
   IMGUI_API ImVec2 CalcTextSize(const char* text, const char* text_end = NULL, bool hide_text_after_double_hash = false, float wrap_width = -1.0f);
-  //}}}
-  //{{{  Color Utilities
+
+  // Color Utilities
   IMGUI_API ImVec4 ColorConvertU32ToFloat4 (ImU32 in);
   IMGUI_API ImU32 ColorConvertFloat4ToU32 (const ImVec4& in);
   IMGUI_API void ColorConvertRGBtoHSV (float r, float g, float b, float& out_h, float& out_s, float& out_v);
   IMGUI_API void ColorConvertHSVtoRGB (float h, float s, float v, float& out_r, float& out_g, float& out_b);
   //}}}
-  //{{{  Inputs Utilities: Keyboard
+  //{{{  other utilities
   // - For 'int user_key_index' you can use your own indices/enums according to how your backend/engine stored them in io.KeysDown[].
   // - We don't know the meaning of those value. You can use GetKeyIndex() to map a ImGuiKey_ value into the user index.
   IMGUI_API int GetKeyIndex (ImGuiKey imgui_key);                                    // map ImGuiKey_* values into user's key index. == io.KeyMap[key]
@@ -991,8 +991,8 @@ namespace ImGui {
 
   IMGUI_API int GetKeyPressedAmount (int key_index, float repeat_delay, float rate); // uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate
   IMGUI_API void CaptureKeyboardFromApp (bool want_capture_keyboard_value = true);    // attention: misleading name! manually override io.WantCaptureKeyboard flag next frame (said flag is entirely left for your application to handle). e.g. force capture keyboard when your widget is being hovered. This is equivalent to setting "io.WantCaptureKeyboard = want_capture_keyboard_value"; after the next NewFrame() call.
-  //}}}
-  //{{{  Inputs Utilities: Mouse
+
+  // Inputs Utilities: Mouse
   // - To refer to a mouse button, you may use named enums in your code e.g. ImGuiMouseButton_Left, ImGuiMouseButton_Right.
   // - You can also use regular integer: it is forever guaranteed that 0=Left, 1=Right, 2=Middle.
   // - Dragging operations are only reported after mouse has moved a certain distance away from the initial clicking position (see 'lock_threshold' and 'io.MouseDraggingThreshold')
@@ -1015,24 +1015,23 @@ namespace ImGui {
   IMGUI_API void SetMouseCursor (ImGuiMouseCursor cursor_type);              // set desired cursor type
 
   IMGUI_API void CaptureMouseFromApp (bool want_capture_mouse_value = true); // attention: misleading name! manually override io.WantCaptureMouse flag next frame (said flag is entirely left for your application to handle). This is equivalent to setting "io.WantCaptureMouse = want_capture_mouse_value;" after the next NewFrame() call.
-  //}}}
-  //{{{  Clipboard Utilities
+
+  //  Clipboard Utilities
   // - Also see the LogToClipboard() function to capture GUI into clipboard, or easily output text data to the clipboard.
   IMGUI_API const char* GetClipboardText();
   IMGUI_API void SetClipboardText(const char* text);
-  //}}}
-  //{{{  Settings/.Ini Utilities
+
+  // Settings/.Ini Utilities
   // - The disk functions are automatically called if io.IniFilename != NULL (default is "imgui.ini").
   // - Set io.IniFilename to NULL to load/save manually. Read io.WantSaveIniSettings description about handling .ini saving manually.
   // - Important: default value "imgui.ini" is relative to current working dir! Most apps will want to lock this to an absolute path (e.g. same path as executables).
-
   IMGUI_API void LoadIniSettingsFromDisk (const char* ini_filename); // call after CreateContext() and before the first call to NewFrame(). NewFrame() automatically calls LoadIniSettingsFromDisk(io.IniFilename).
   IMGUI_API void LoadIniSettingsFromMemory (const char* ini_data, size_t ini_size=0); // call after CreateContext() and before the first call to NewFrame() to provide .ini data from your own data source.
 
   IMGUI_API void SaveIniSettingsToDisk (const char* ini_filename); // this is automatically called (if io.IniFilename is not empty) a few seconds after any modification that should be reflected in the .ini file (and also by DestroyContext).
   IMGUI_API const char* SaveIniSettingsToMemory (size_t* out_ini_size = NULL); // return a zero-terminated string with the .ini data which you can save by your own mean. call when io.WantSaveIniSettings is set, then save data by your own mean and clear io.WantSaveIniSettings.
-  //}}}
-  //{{{  Debug Utilities
+
+  // Debug Utilities
   // - This is used by the IMGUI_CHECKVERSION() macro.
   IMGUI_API bool DebugCheckVersionAndDataLayout (const char* version_str, size_t sz_io, size_t sz_style, size_t sz_vec2, size_t sz_vec4, size_t sz_drawvert, size_t sz_drawidx); // This is called by IMGUI_CHECKVERSION() macro.
   //}}}

@@ -37,7 +37,11 @@ private:
     float mExifAperture = 0;
 
     tm mExifTm;
+    tm mExifTmOriginal;
+    tm mExifTmDigitized;
     std::string mExifTimeString;
+    std::string mExifTimeOriginalString;
+    std::string mExifTimeDigitizedString;
     };
   //}}}
   //{{{
@@ -102,11 +106,6 @@ private:
   // SOF
   uint16_t mWidth = 0;  // Size of the input image
   uint16_t mHeight = 0; // Size of the input image
-  uint8_t mPrecision = 0;
-  uint8_t mNumImageComponentsFrame = 0;
-
-  // NRI value
-  uint16_t mNumRst = 0; // Restart inverval in MCUs
 
   // exif
   cExifInfo mExifInfo;
