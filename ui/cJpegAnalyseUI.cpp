@@ -86,7 +86,7 @@ public:
             toggle = !toggle;
           if (toggle) {
             ImGui::Indent (10.f);
-            printHex (ptr, numBytes < 0x200 ?numBytes : 0x200);
+            printHex (ptr, numBytes < 0x400 ?numBytes : 0x400);
             ImGui::Unindent (10.f);
             }
 

@@ -170,8 +170,6 @@ bool cJpegAnalyse::analyse (tCallback callback) {
   mCallback = callback;
 
   resetReadBytes();
-  mExifThumbOffset = 0;
-  mExifThumbBytes = 0;
 
   // read first word, must be SOI marker
   uint8_t* markerPtr = getReadPtr();
@@ -212,134 +210,134 @@ bool cJpegAnalyse::analyse (tCallback callback) {
 
     offset += length;
     //}}}
-    switch (marker & 0xFF) {
+    switch (marker) {
       //{{{
-      case 0xC0: // SOF
+      case 0xFFC0: // SOF
         parseSOF ("SOF baseDCT", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
       //{{{
-      case 0xC1: // SOF1
+      case 0xFFC1: // SOF1
         mCallback (0, "SOF1 extSeqDCT", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xC2: // SOF2
+      case 0xFFC2: // SOF2
         parseSOF ("SOF2 progDCT", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
       //{{{
-      case 0xC3: // SOF3
+      case 0xFFC3: // SOF3
         mCallback (0, "SOF3F", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xC4: // HFT
+      case 0xFFC4: // HFT
         parseHFT ("HFT huffmanTable", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
 
       //{{{
-      case 0xC5: // SOF5
+      case 0xFFC5: // SOF5
         mCallback (0, "SOF5", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xC6: // SOF6
+      case 0xFFC6: // SOF6
         mCallback (0, "SOF6", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xC7: // SOF7
+      case 0xFFC7: // SOF7
         mCallback (0, "SOF7", markerPtr, markerOffset, length);
         break;
       //}}}
 
       //{{{
-      case 0xC9: // SOF9
+      case 0xFFC9: // SOF9
         mCallback (0, "SOF9", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xCA: // SOF10
+      case 0xFFCA: // SOF10
         mCallback (0, "SOF10", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xCB: // SOF11
+      case 0xFFCB: // SOF11
         mCallback (0, "SOF11 lossless", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xCC: // DAC
+      case 0xFFCC: // DAC
         mCallback (0, "DAC arithmeticCoding", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xCD: // SOF13
+      case 0xFFCD: // SOF13
         mCallback (0, "SOF13", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xCE: // SOF14
+      case 0xFFCE: // SOF14
         mCallback (0, "SOF14", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xCF: // SOF15
+      case 0xFFCF: // SOF15
         mCallback (0, "SOF15", markerPtr, markerOffset, length);
         break;
       //}}}
 
       //{{{
-      case 0xD9: // EOI
+      case 0xFFD9: // EOI
         mCallback (0, "EOI", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xDB: // DQT
+      case 0xFFDB: // DQT
         parseDQT ("DQT", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
       //{{{
-      case 0xDC: // DNL
+      case 0xFFDC: // DNL
         mCallback (0, "DNL  dunmberLines", markerPtr, markerOffset, length);
         break;
       //}}}
       //{{{
-      case 0xDD: // DRI
+      case 0xFFDD: // DRI
         parseDRI ("DRI resetInterval", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
       //{{{
-      case 0xDE: // DHP
+      case 0xFFDE: // DHP
         mCallback (0, "DHP- hierachialProgressive", markerPtr, markerOffset, length);
         break;
       //}}}
 
       //{{{
-      case 0xE0: // APP0
+      case 0xFFE0: // APP0
         parseAPP0 ("APP0", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
       //{{{
-      case 0xE1: // APP1
+      case 0xFFE1: // APP1
         parseAPP1 ("APP1", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
       //{{{
-      case 0xE2: // APP2
+      case 0xFFE2: // APP2
         parseAPP2 ("APP2", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
       //{{{
-      case 0xED: // APP14
+      case 0xFFED: // APP14
         parseAPP14 ("APP14", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
 
       //{{{
-      case 0xDA: // SOS, marks end for now till we decode body
+      case 0xFFDA: // SOS, marks end until full body decode
         parseSOS ("SOS startOfScan", markerPtr, markerOffset, readPtr, length);
 
         mCallback (0, "body", readPtr, markerOffset, getReadBytesLeft());
@@ -347,7 +345,7 @@ bool cJpegAnalyse::analyse (tCallback callback) {
       //}}}
       //{{{
       default: // unknown
-        mCallback (0, fmt::format ("{:02x} unknown", marker & 0xFF), markerPtr, markerOffset, length);
+        mCallback (0, fmt::format ("{:04x} marker", marker), markerPtr, markerOffset, length);
         break;
       //}}}
       }
