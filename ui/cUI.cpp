@@ -245,6 +245,30 @@ unsigned cUI::interlockedButtons (const vector<string>& buttonVector, unsigned i
   return index;
   }
 //}}}
+//{{{
+void cUI::printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columns) {
+
+  unsigned offset = 0;
+  while (numBytes > 0) {
+    string hexString = fmt::format ("{:04x}: ", offset);
+    string asciiString;
+    for (unsigned curByte = 0; curByte < columns; curByte++) {
+      if (numBytes > 0) {
+        // append byte
+        numBytes--;
+        uint8_t value = *ptr++;
+        hexString += fmt::format ("{:02x} ", value);
+        asciiString += (value > 0x20) && (value < 0x80) ? value : '.';
+        }
+      else // pad row
+        hexString += "   ";
+      }
+
+    ImGui::Text ((hexString + " " + asciiString).c_str());
+    offset += columns;
+    }
+  }
+//}}}
 
 // - static manager
 //{{{

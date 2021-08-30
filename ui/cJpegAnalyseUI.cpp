@@ -86,7 +86,7 @@ public:
             toggle = !toggle;
           if (toggle) {
             ImGui::Indent (10.f);
-            printHex (ptr, numBytes < 0x400 ?numBytes : 0x400);
+            printHex (ptr, numBytes < 0x400 ?numBytes : 0x400, 16);
             ImGui::Unindent (10.f);
             }
 
@@ -105,7 +105,7 @@ public:
 
       mJpegAnalyse->resetRead();
       printHex (mJpegAnalyse->getReadPtr(),
-                mJpegAnalyse->getReadBytesLeft() < 0x200 ? mJpegAnalyse->getReadBytesLeft() : 0x200);
+                mJpegAnalyse->getReadBytesLeft() < 0x200 ? mJpegAnalyse->getReadBytesLeft() : 0x200, 16);
 
       ImGui::Unindent (10.f);
       }
@@ -123,32 +123,6 @@ private:
   bool mShowAnalyse = false;
   bool mShowHexDump = false;
   bool toggle = false;
-  //{{{
-  static void printHex (uint8_t* ptr, unsigned numBytes) {
-
-    const unsigned kColumns = 16;
-
-    unsigned offset = 0;
-    while (numBytes > 0) {
-     string hexString = fmt::format ("{:04x}: ", offset);
-     string asciiString;
-     for (unsigned curByte = 0; curByte < kColumns; curByte++) {
-       if (numBytes > 0) {
-         // append byte
-         numBytes--;
-         uint8_t value = *ptr++;
-         hexString += fmt::format ("{:02x} ", value);
-         asciiString += (value > 0x20) && (value < 0x80) ? value : '.';
-         }
-       else // pad row
-         hexString += "   ";
-       }
-
-     ImGui::Text ((hexString + " " + asciiString).c_str());
-     offset += kColumns;
-     }
-   }
-  //}}}
 
   //{{{
   static cUI* create (const string& className) {

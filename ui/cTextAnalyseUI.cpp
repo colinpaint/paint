@@ -1,10 +1,6 @@
 // cTextAnalyseUI.cpp
 #ifdef _WIN32
 //{{{  includes
-#define _CRT_SECURE_NO_WARNINGS
-#define NOMINMAX
-#include <windows.h>
-
 #include <cstdint>
 #include <vector>
 #include <string>
@@ -75,8 +71,7 @@ public:
       ImGui::Indent (10.f);
 
       mTextAnalyse->resetRead();
-      printHex (mTextAnalyse->getReadPtr(),
-                mTextAnalyse->getReadBytesLeft() < 0x200 ? mTextAnalyse->getReadBytesLeft() : 0x200);
+      printHex (mTextAnalyse->getReadPtr(), mTextAnalyse->getReadBytesLeft(), 16);
 
       ImGui::Unindent (10.f);
       }
@@ -100,33 +95,6 @@ private:
   ImFont* mMonoFont = nullptr;
   bool mShowFolded = true;
   bool mShowHexDump = false;
-
-  //{{{
-  static void printHex (uint8_t* ptr, unsigned numBytes) {
-
-    const unsigned kColumns = 16;
-
-    unsigned offset = 0;
-    while (numBytes > 0) {
-     string hexString = fmt::format ("{:04x}: ", offset);
-     string asciiString;
-     for (unsigned curByte = 0; curByte < kColumns; curByte++) {
-       if (numBytes > 0) {
-         // append byte
-         numBytes--;
-         uint8_t value = *ptr++;
-         hexString += fmt::format ("{:02x} ", value);
-         asciiString += (value > 0x20) && (value < 0x80) ? value : '.';
-         }
-       else // pad row
-         hexString += "   ";
-       }
-
-     ImGui::Text ((hexString + " " + asciiString).c_str());
-     offset += kColumns;
-     }
-   }
-  //}}}
 
   //{{{
   static cUI* create (const string& className) {
