@@ -2,18 +2,15 @@
 #pragma once
 //{{{  includes
 #include "cFileAnalyse.h"
-
-#include <cstdint>
-#include <string>
 #include <functional>
 //}}}
 
 class cJpegAnalyse : public cFileAnalyse {
 private:
   using uTagLambda = std::function <void (const std::string& info, uint8_t* ptr,
-                                          unsigned offset, unsigned numBytes)>;
+                                          uint32_t offset, uint32_t numBytes)>;
 public:
-  cJpegAnalyse (const std::string& filename, unsigned components)
+  cJpegAnalyse (const std::string& filename, uint8_t components)
     : cFileAnalyse(filename), mBytesPerPixel(components) {}
   virtual ~cJpegAnalyse() = default;
 
@@ -24,7 +21,7 @@ public:
   int getThumbOffset() { return mThumbBytes > 0 ? mThumbOffset : 0; }
   int getThumbBytes() { return mThumbBytes; }
 
-  bool readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambda);
+  bool analyse (uTagLambda jpegTagLambda, uTagLambda exifTagLambda);
 
 private:
   //{{{
@@ -83,32 +80,32 @@ private:
   std::string getExifTime (uint8_t* ptr, struct tm* tmPtr);
 
   void parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, bool intelEndian);
-  bool parseAPP (uint8_t* ptr, unsigned length);
-  bool parseDQT (uint8_t* ptr, unsigned length);
-  bool parseHFT (uint8_t* ptr, unsigned length);
-  bool parseDRI (uint8_t* ptr, unsigned length);
-  bool parseSOF (uint8_t* ptr, unsigned length);
-  bool parseSOS (uint8_t* ptr, unsigned length);
+  void parseAPP0 (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
+  void parseAPP1 (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
+  void parseSOF (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
+  void parseDQT (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
+  void parseHFT (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
+  void parseDRI (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
+  void parseSOS (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
 
   // vars
   uTagLambda mJpegTagLambda;
   uTagLambda mExifTagLambda;
 
-  unsigned mBytesPerPixel = 0;
+  uint8_t mBytesPerPixel = 0;
 
-  // SOF values
-  unsigned mWidth = 0;  // Size of the input image
-  unsigned mHeight = 0; // Size of the input image
-  unsigned mSx = 0;     // MCU size in unit of block (width, height)
-  unsigned mSy = 0;     // MCU size in unit of block (width, height)
-  uint8_t mQtableId[3]; // Quantization table ID of each component
+  // SOF
+  uint8_t mPrecision = 0;
+  uint16_t mWidth = 0;  // Size of the input image
+  uint16_t mHeight = 0; // Size of the input image
+  uint8_t mNumImageComponentsFrame = 0;
 
   // NRI value
-  unsigned mNumRst = 0; // Restart inverval in MCUs
+  uint16_t mNumRst = 0; // Restart inverval in MCUs
 
   // thumbnail
-  unsigned mThumbOffset = 0;
-  unsigned mThumbBytes = 0;
+  uint32_t mThumbOffset = 0;
+  uint32_t mThumbBytes = 0;
 
   // exif
   cExifInfo mExifInfo;

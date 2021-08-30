@@ -1,4 +1,4 @@
-// cJpegAnalyser.cpp - jpeg analyser - based on tiny jpeg decoder, jhead
+// cJpegAnalyser.cpp
 #ifdef _WIN32
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
@@ -163,9 +163,9 @@ namespace {
   const char* kWeekDay[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
   }
 
-// cJpegAnalyse
+// public:
 //{{{
-bool cJpegAnalyse::readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) {
+bool cJpegAnalyse::analyse (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) {
 
   resetReadBytes();
 
@@ -211,22 +211,17 @@ bool cJpegAnalyse::readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambd
     switch (marker & 0xFF) {
       //{{{
       case 0xC0: // SOF
-        if (!parseSOF (readPtr, length))
-          return false;
-
-        mJpegTagLambda (fmt::format ("SOF - image:{}x{} mcu:{}x{} QtableId:{}:{}:{}:{}",
-                                     mWidth, mHeight, mSx, mSy, mQtableId[0], mQtableId[1], mQtableId[2], mQtableId[3]),
-                        startPtr, startOffset, length);
+        parseSOF ("SOF baseDCT", startPtr, startOffset, readPtr, length);
         break;
       //}}}
       //{{{
       case 0xC1: // SOF1
-        mJpegTagLambda ("SOF1", startPtr, startOffset, length);
+        mJpegTagLambda ("SOF1 extSeqDCT", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
       case 0xC2: // SOF2
-        mJpegTagLambda ("SOF2 - decode todo", startPtr, startOffset, length);
+        parseSOF ("SOF2 progDCT", startPtr, startOffset, readPtr, length);
         break;
       //}}}
       //{{{
@@ -236,11 +231,10 @@ bool cJpegAnalyse::readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambd
       //}}}
       //{{{
       case 0xC4: // HFT
-        mJpegTagLambda ("HFT", startPtr, startOffset, length);
-        if (!parseHFT (readPtr, length))
-          return false;
+        parseHFT ("HFT huffmanTable", startPtr, startOffset, readPtr, length);
         break;
       //}}}
+
       //{{{
       case 0xC5: // SOF5
         mJpegTagLambda ("SOF5", startPtr, startOffset, length);
@@ -256,6 +250,7 @@ bool cJpegAnalyse::readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambd
         mJpegTagLambda ("SOF7", startPtr, startOffset, length);
         break;
       //}}}
+
       //{{{
       case 0xC9: // SOF9
         mJpegTagLambda ("SOF9", startPtr, startOffset, length);
@@ -268,7 +263,12 @@ bool cJpegAnalyse::readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambd
       //}}}
       //{{{
       case 0xCB: // SOF11
-        mJpegTagLambda ("SOF11", startPtr, startOffset, length);
+        mJpegTagLambda ("SOF11 lossless", startPtr, startOffset, length);
+        break;
+      //}}}
+      //{{{
+      case 0xCC: // DAC
+        mJpegTagLambda ("DAC arithmeticCoding", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
@@ -294,47 +294,48 @@ bool cJpegAnalyse::readHeader (uTagLambda jpegTagLambda, uTagLambda exifTagLambd
       //}}}
       //{{{
       case 0xDA: // SOS
-        //  parseSOS
-        mJpegTagLambda ("SOS", startPtr, startOffset, length);
-
-        if (!parseSOS (readPtr, length))
-          return false;
+        parseSOS ("SOS startOfScan", startPtr, startOffset, readPtr, length);
         break;
       //}}}
       //{{{
       case 0xDB: // DQT
-        mJpegTagLambda ("DQT", startPtr, startOffset, length);
-        if (!parseDQT (readPtr, length))
-          return false;
+        parseDQT ("DQT", startPtr, startOffset, readPtr, length);
+        break;
+      //}}}
+      //{{{
+      case 0xDC: // DNL
+        mJpegTagLambda ("DNL  dunmberLines", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
       case 0xDD: // DRI
-        parseDRI (readPtr, length);
-        mJpegTagLambda (fmt::format ("DRI {}", mNumRst), startPtr, startOffset, length);
+        parseDRI ("DRI resetInterval", startPtr, startOffset, readPtr, length);
+        break;
+      //}}}
+      //{{{
+      case 0xDE: // DHP
+        mJpegTagLambda ("DHP- hierachialProgressive", startPtr, startOffset, length);
         break;
       //}}}
 
       //{{{
       case 0xE0: // APP0
-        mJpegTagLambda ("APP0", startPtr, startOffset, length);
+        parseAPP0 ("APP0", startPtr, startOffset, readPtr, length);
         break;
       //}}}
       //{{{
       case 0xE1: // APP1
-        mJpegTagLambda ("APP1", startPtr, startOffset, length);
-        parseAPP (readPtr, length);
-        break;
-      //}}}
-
-      //{{{
-      case 0xE2:
-        mJpegTagLambda ("E2 tag", startPtr, startOffset, length);
+        parseAPP1 ("APP1", startPtr, startOffset, readPtr, length);
         break;
       //}}}
       //{{{
-      case 0xED:
-        mJpegTagLambda ("ED tag", startPtr, startOffset, length);
+      case 0xE2: // APP2
+        mJpegTagLambda ("APP2", startPtr, startOffset, length);
+        break;
+      //}}}
+      //{{{
+      case 0xED: // APP14
+        mJpegTagLambda ("APP14", startPtr, startOffset, length);
         break;
       //}}}
 
@@ -614,7 +615,7 @@ void cJpegAnalyse::parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, boo
       //{{{
       case TAG_GPSINFO:
         getExifGpsInfo (offsetBasePtr + offset, offsetBasePtr, intelEndian);
-        mExifTagLambda (fmt::format ("gps"), startPtr, 0, bytes);
+        mExifTagLambda (fmt::format ("gps {}", mExifGpsInfo.getString()), startPtr, 0, bytes);
         break;
       //}}}
       //case TAG_MAXAPERTURE:
@@ -631,20 +632,50 @@ void cJpegAnalyse::parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, boo
     parseExifDirectory (offsetBasePtr, offsetBasePtr + extraDirectoryOffset, intelEndian);
   }
 //}}}
+
 //{{{
-bool cJpegAnalyse::parseAPP (uint8_t* ptr, unsigned length) {
-// find and read APP1 EXIF marker, return true if thumb, valid mThumbBuffer, mThumbLength
+void cJpegAnalyse::parseAPP0 (const string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length) {
+// read APP0 JFIF marker
 
+  //{{{  unused
+  (void)ptr;
   (void)length;
+  //}}}
 
+  uint8_t id[6];
+  for (int i = 0; i < 5; i++)
+    id[i] = ptr[i];
+  id[5] = 0; // extra null termination
+
+  uint16_t version = ptr[5] << 8 || ptr[6];
+  uint8_t units = ptr[7];
+  uint8_t xDensity = ptr[8];
+  uint8_t yDensity = ptr[9];
+
+  mJpegTagLambda (fmt::format ("{} {} version:{} units:{} density:{}x{}", tag, id, version, units, xDensity, yDensity),
+                  startPtr, offset, length);
+  }
+//}}}
+//{{{
+void cJpegAnalyse::parseAPP1 (const string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length) {
+// read APP1 EXIF marker, return true if thumb, valid mThumbBuffer, mThumbLength
+
+  //{{{  unused
+  (void)ptr;
+  (void)length;
+  //}}}
   // check exifId
-  if (getExifLong (ptr, false) != 0x45786966)
-    return false;
+  if (getExifLong (ptr, false) != 0x45786966) {
+    mJpegTagLambda (tag + " not exif", startPtr, offset, length);
+    return;
+    }
   ptr += 4;
 
   // check 0 word
-  if (getExifWord (ptr, false) != 0x0000)
-    return false;
+  if (getExifWord (ptr, false) != 0x0000) {
+    mJpegTagLambda (tag + " missing zero", startPtr, offset, length);
+    return;
+    }
   ptr += 2;
 
   auto offsetBasePtr = ptr;
@@ -654,94 +685,104 @@ bool cJpegAnalyse::parseAPP (uint8_t* ptr, unsigned length) {
   ptr += 2;
 
   // 002a word
-  if (getExifWord (ptr, intelEndian) != 0x002a)
-    return false;
+  if (getExifWord (ptr, intelEndian) != 0x002a) {
+    mJpegTagLambda (tag + "no 2a", startPtr, offset, length);
+    return;
+    }
   ptr += 2;
 
   // firstOffset 8
-  if (getExifLong (ptr, intelEndian) != 8)
-    return false;
+  if (getExifLong (ptr, intelEndian) != 8) {
+    mJpegTagLambda (tag + "no first offset" , startPtr, offset, length);
+    return;
+    }
   ptr += 4;
 
   parseExifDirectory (offsetBasePtr, ptr, intelEndian);
 
   mThumbOffset += 6 + 6; // SOImarker(2), APP1marker(2), APP1length(2), EXIF00marker(6)
-  return mThumbBytes > 0;
-  }
-//}}}
-//{{{
-bool cJpegAnalyse::parseDQT (uint8_t* ptr, unsigned length) {
-// create de-quantization and prescaling tables with a DQT segment
-  (void)ptr;
-  (void)length;
-  return true;
-  }
-//}}}
-//{{{
-bool cJpegAnalyse::parseHFT (uint8_t* ptr, unsigned length) {
-// Create huffman code tables with a DHT segment
-  (void)ptr;
-  (void)length;
-  return true;
-  }
-//}}}
-//{{{
-bool cJpegAnalyse::parseDRI (uint8_t* ptr, unsigned length) {
-  mNumRst = ptr[0] << 8 | ptr[1];
-  return length >= 2;
-  }
-//}}}
-//{{{
-bool cJpegAnalyse::parseSOF (uint8_t* ptr, unsigned length) {
 
-  (void)length;
+  mJpegTagLambda (tag, startPtr, offset, length);
+  }
+//}}}
+//{{{
+void cJpegAnalyse::parseSOF (const string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length) {
 
+  //{{{  unused param
+  (void)length;
+  //}}}
+  mPrecision = ptr[0];
   mHeight = ptr[1] << 8 | ptr[2];
   mWidth =  ptr[3] << 8 | ptr[4];
+  mNumImageComponentsFrame = ptr[5];
+  string str = fmt::format ("{} {}x{} {}bit", tag, mWidth, mHeight, mPrecision);
 
-  // only Y/Cb/Cr format
-  if (ptr[5] != 3)
-    return false;
-
-  // Check three image components
-  for (auto i = 0; i < 3; i++) {
-    // Get sampling factor
-    uint8_t b = ptr[7 + 3 * i];
-    if (!i) {
-      // Y component
-      if (b != 0x11 && b != 0x22 && b != 0x21) //  Check sampling factor, only 4:4:4, 4:2:0 or 4:2:2
-        return false;
-
-      // Size of MCU [blocks]
-      mSx = b >> 4;
-      mSy = b & 15;
-      }
-    else if (b != 0x11) // Cb/Cr component
-      return false;
-
-    // Get dequantizer table ID for this component
-    b = ptr[8 + 3 * i];
-    if (b > 3)
-      return false;
-
-    mQtableId[i] = b;
+  for (uint8_t i = 0; i < mNumImageComponentsFrame; i++) {
+    uint8_t componentId = ptr[6 + 3 * i];
+    uint8_t horizSample = ptr[7 + (3 * i)] >> 4;
+    uint8_t vertSample = ptr[7 + (3 * i)] & 15;
+    uint8_t qtableId = ptr[8 + 3 * i];
+    str += fmt::format (" {}:{}x{}t{}", componentId, horizSample, vertSample, qtableId);
     }
 
-  return true;
+  mJpegTagLambda (str, startPtr, offset, length);
   }
 //}}}
 //{{{
-bool cJpegAnalyse::parseSOS (uint8_t* ptr, unsigned length) {
+void cJpegAnalyse::parseDQT (const string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length) {
+// create de-quantization and prescaling tables with a DQT segment
 
+  //{{{  unused
+  (void)ptr;
   (void)length;
+  //}}}
+  mJpegTagLambda (tag, startPtr, offset, length);
+  }
+//}}}
+//{{{
+void cJpegAnalyse::parseHFT (const string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length) {
+// Create huffman code tables with a DHT segment
 
-  if (!mWidth || !mHeight)
-    return false;
+  //{{{  unused
+  (void)ptr;
+  (void)length;
+  //}}}
+  mJpegTagLambda (tag, startPtr, offset, length);
+  }
+//}}}
+//{{{
+void cJpegAnalyse::parseDRI (const string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length) {
 
-  if (ptr[0] != 3)
-    return false;
+  //{{{  unused
+  (void)ptr;
+  (void)length;
+  //}}}
+  mNumRst = ptr[0] << 8 | ptr[1];
+  mJpegTagLambda (fmt::format ("{} {}", tag, mNumRst), startPtr, offset, length);
+  }
+//}}}
+//{{{
+void cJpegAnalyse::parseSOS (const string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length) {
 
-  return true;
+  //{{{  unused
+  (void)ptr;
+  (void)length;
+  //}}}
+  uint8_t numComponents = ptr[0];
+
+  string str;
+  for (uint8_t i = 0; i < numComponents; i++) {
+    uint8_t component = ptr[1 + (i*2)];
+    uint8_t dcTable = ptr[2 + (i*2)] >> 4;
+    uint8_t acTable = ptr[2 + (i*2)] & 0xF;
+    str += fmt::format (" {}ac{}dc{}", component, dcTable, acTable);
+    }
+
+  uint8_t ss = ptr[3 + (numComponents*2)];
+  uint8_t se = ptr[4 + (numComponents*2)];
+  uint8_t approx = ptr[5 + (numComponents*2)];
+
+  mJpegTagLambda (fmt::format ("{} {} ss:{} se:{} approx{:02x}", tag, str, ss, se, approx), startPtr, offset, length);
   }
 //}}}
 
@@ -752,6 +793,7 @@ string cJpegAnalyse::cExifGpsInfo::getString() {
   string str = fmt::format ("{} {} {} {} {} {} {} {} {}", mDatum,
                                 mLatitudeDeg,mLatitudeRef,mLatitudeMin,mLatitudeSec,
                                 mLongitudeDeg,mLongitudeRef,mLongitudeMin,mLongitudeSec);
+
   str += fmt::format ("{} {}", mAltitude, mAltitudeRef);
   str += fmt::format ("{} {}", mImageDirection, mImageDirectionRef);
   str += fmt::format ("{} {} {} {}", mDate,mHour,mMinute,mSecond);

@@ -1,4 +1,5 @@
 // cJpegAnalyserUI.cpp
+#ifdef _WIN32
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
@@ -25,7 +26,6 @@
 
 using namespace std;
 //}}}
-#ifdef _WIN32
 
 class cJpegAnalyseUI : public cUI {
 public:
@@ -75,7 +75,7 @@ public:
 
     mJpegAnalyse->resetReadBytes();
     if (mShowAnalyse) {
-      mJpegAnalyse->readHeader (
+      mJpegAnalyse->analyse (
         //{{{  jpegTag lambda
         [&](const string info, uint8_t* ptr, unsigned offset, unsigned numBytes) noexcept {
           //{{{  unused params
