@@ -82,6 +82,7 @@ bool cFileAnalyse::readLine (string& line) {
   while (endPtr) {
     if (*endPtr == 0x0d) { // carraige return, end of line
       line = string (beginPtr, endPtr);
+      mReadLineNumber++;
       return true;
       }
     else if (*endPtr == 0x0a) { // skip line feed
@@ -93,7 +94,6 @@ bool cFileAnalyse::readLine (string& line) {
     }
 
   line = "eof";
-  endPtr = nullptr;
   return false;
   }
 //}}}

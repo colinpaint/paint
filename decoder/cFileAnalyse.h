@@ -18,6 +18,7 @@ public:
   // file readBytes info
   uint8_t* getReadPtr() { return mReadPtr; }
   uint32_t getReadBytesLeft() { return mReadBytesLeft; }
+  uint32_t getReadLineNumber() { return mReadLineNumber; }
 
   // file info
   std::string getFilename() { return mFilename; }
@@ -33,6 +34,7 @@ public:
   void resetRead() {
     mReadPtr = mFileBuffer;
     mReadBytesLeft = mFileSize;
+    mReadLineNumber = 0;
     }
   //}}}
   //{{{
@@ -63,6 +65,7 @@ private:
 
   uint8_t* mReadPtr = nullptr;
   uint32_t mReadBytesLeft = 0;
+  uint32_t mReadLineNumber = 0;
 
   std::chrono::time_point<std::chrono::system_clock> mCreationTimePoint;
   std::chrono::time_point<std::chrono::system_clock> mAccessTimePoint;
