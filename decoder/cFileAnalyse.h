@@ -49,7 +49,7 @@ public:
       return nullptr;
     }
   //}}}
-  uint8_t* readLine (uint8_t*& lineEndPtr);
+  bool readLine (uint8_t*& beginPtr, uint8_t*& endPtr);
 
 private:
   // vars

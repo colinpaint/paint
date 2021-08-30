@@ -171,12 +171,11 @@ bool cTextAnalyse::analyse (tCallback callback) {
   resetReadBytes();
 
   uint32_t lineNumber = 0;
+  uint8_t* lineStartPtr;
   uint8_t* lineEndPtr;
-  uint8_t* lineStartPtr = readLine (lineEndPtr);
-
   uint32_t foldLevel = 0;
   uint32_t lastFoldLevel = 0;
-  while (lineStartPtr) {
+  while (readLine (lineStartPtr, lineEndPtr)) {
     string line (lineStartPtr, lineEndPtr);
     size_t foldStart = line.find ("//{{{");
     if (foldStart != string::npos)
@@ -190,14 +189,12 @@ bool cTextAnalyse::analyse (tCallback callback) {
       if (foldComment.empty()) {
         // no comment on fold line, search for first none comment line
         // !!! should check for more folds or unfold !!!
-        lineStartPtr = readLine (lineEndPtr);
         lineNumber++;
-        while (lineStartPtr) {
+        while (readLine (lineStartPtr, lineEndPtr)) {
           foldComment = string (lineStartPtr, lineEndPtr);
           size_t commentStart = foldComment.find ("//");
           if (commentStart == string::npos)
             break;
-          lineStartPtr = readLine (lineEndPtr);
           lineNumber++;
           }
         }
@@ -212,8 +209,6 @@ bool cTextAnalyse::analyse (tCallback callback) {
 
     lastFoldLevel = foldLevel;
 
-    // read next line
-    lineStartPtr = readLine (lineEndPtr);
     lineNumber++;
     }
 

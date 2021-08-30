@@ -85,13 +85,10 @@ public:
       //{{{  show all lines
       mTextAnalyse->resetReadBytes();
 
-      while (true) {
-        uint8_t* lineEndPtr;
-        uint8_t* lineStartPtr = mTextAnalyse->readLine (lineEndPtr);
-        if (!lineStartPtr)
-          break;
+      uint8_t* lineEndPtr;
+      uint8_t* lineStartPtr;
+      while (mTextAnalyse->readLine (lineStartPtr, lineEndPtr))
         ImGui::Text (string (lineStartPtr, lineEndPtr).c_str());
-        }
       }
       //}}}
 
