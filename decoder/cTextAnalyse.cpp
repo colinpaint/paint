@@ -15,20 +15,20 @@ using namespace std;
 //}}}
 
 // public:
+//{{{
 bool cTextAnalyse::analyse (tCallback callback) {
 
   mCallback = callback;
   resetRead();
 
-  mFolds.clear();
-
+  uint32_t foldIndex = 0;
   uint32_t foldLevel = 0;
   string line;
   while (readLine (line)) {
     size_t foldStart = line.find ("//{{{");
     if (foldStart != string::npos) {
+      foldIndex++;
       foldLevel++;
-      mFolds.push_back (sFold (getReadLineNumber(), false));
       }
 
     if (foldLevel == 0)
@@ -50,7 +50,7 @@ bool cTextAnalyse::analyse (tCallback callback) {
       for (int i = 0; i < foldStart; i++)
         foldPrefix += " ";
       foldPrefix += "...";
-      mCallback (foldPrefix + foldComment, 1, (uint32_t)mFolds.size());
+      mCallback (foldPrefix + foldComment, 1, foldIndex);
       }
 
     else if (line.find ("//}}}") != string::npos)
@@ -59,4 +59,19 @@ bool cTextAnalyse::analyse (tCallback callback) {
 
   return true;
   }
+//}}}
+//{{{
+uint32_t cTextAnalyse::indexFolds() {
+
+  resetRead();
+  mFolds.clear();
+
+  string line;
+  while (readLine (line)) 
+    if (line.find ("//{{{") != string::npos)
+      mFolds.push_back (sFold (getReadLineNumber(), false));
+
+  return (uint32_t)mFolds.size();
+  }
+//}}}
 #endif

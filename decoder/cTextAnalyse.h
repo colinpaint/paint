@@ -13,9 +13,9 @@ public:
   cTextAnalyse (const std::string& filename) : cFileAnalyse(filename) {}
   virtual ~cTextAnalyse() = default;
 
-  uint32_t getNumFolds() { return (uint32_t)mFolds.size(); }
   tCallback mCallback;
   bool analyse (tCallback callback);
+  uint32_t indexFolds();
 
 private:
   struct sFold {

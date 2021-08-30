@@ -43,13 +43,15 @@ public:
     (void)platform;
     //}}}
 
-    if (!mTextAnalyse)
+    if (!mTextAnalyse) {
       mTextAnalyse = new cTextAnalyse ("../brush/cPaintBrush.cpp");
+      mNumFolds = mTextAnalyse->indexFolds();
+      }
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     ImGui::PushFont(monoFont);
 
-    ImGui::Text (fmt::format ("folds {}", mTextAnalyse->getNumFolds()).c_str());
+    ImGui::Text (fmt::format ("folds {}", mNumFolds).c_str());
     if (toggleButton ("fold", mShowFolded))
       mShowFolded = !mShowFolded;
 
@@ -97,6 +99,7 @@ private:
   ImFont* mMonoFont = nullptr;
   bool mShowFolded = true;
   bool mShowHexDump = false;
+  uint32_t mNumFolds = 0;
 
   //{{{
   static cUI* create (const string& className) {
