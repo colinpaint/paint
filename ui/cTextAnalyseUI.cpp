@@ -53,13 +53,47 @@ public:
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     ImGui::PushFont(monoFont);
 
-    mTextAnalyse->analyse (
-      // callback lambda
-      [&](int lineType, const string& info) noexcept {
-        (void)lineType;
-        ImGui::Text (info.c_str());
+    if (toggleButton ("folded", mShowFolded))
+      mShowFolded = !mShowFolded;
+
+    ImGui::SameLine();
+    if (toggleButton ("hexDump", mShowHexDump))
+      mShowHexDump = !mShowHexDump;
+
+    if (mShowFolded)
+      //{{{  analyse
+      mTextAnalyse->analyse (
+        // callback lambda
+        [&](int lineType, const string& info) noexcept {
+          (void)lineType;
+          ImGui::Text (info.c_str());
+          }
+        );
+      //}}}
+    else if (mShowHexDump) {
+      //{{{  show hexDump
+      ImGui::Indent (10.f);
+
+      mTextAnalyse->resetReadBytes();
+      printHex (mTextAnalyse->getReadPtr(),
+                mTextAnalyse->getReadBytesLeft() < 0x200 ? mTextAnalyse->getReadBytesLeft() : 0x200);
+
+      ImGui::Unindent (10.f);
+      }
+      //}}}
+    else {
+      //{{{  show all lines
+      mTextAnalyse->resetReadBytes();
+
+      while (true) {
+        uint8_t* lineEndPtr;
+        uint8_t* lineStartPtr = mTextAnalyse->readLine (lineEndPtr);
+        if (!lineStartPtr)
+          break;
+        ImGui::Text (string (lineStartPtr, lineEndPtr).c_str());
         }
-      );
+      }
+      //}}}
 
     ImGui::PopFont();
     ImGui::End();
@@ -68,6 +102,8 @@ public:
 private:
   cTextAnalyse* mTextAnalyse = nullptr;
   ImFont* mMonoFont = nullptr;
+  bool mShowFolded = false;
+  bool mShowHexDump = false;
 
   //{{{
   static void printHex (uint8_t* ptr, unsigned numBytes) {
