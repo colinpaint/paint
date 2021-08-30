@@ -182,9 +182,10 @@ bool cJpegAnalyse::analyse (tCallback callback) {
   uint32_t offset = 2;
 
   while (true) {
+    //{{{  read marker,length
     markerPtr = getReadPtr();
     uint32_t markerOffset = offset;
-    //{{{  read marker,length
+
     readPtr = readBytes (4);
     if (!readPtr) {
       mCallback (0, "no marker ", markerPtr, markerOffset, 0);
@@ -200,8 +201,8 @@ bool cJpegAnalyse::analyse (tCallback callback) {
 
     length -= 2;
     offset += 4;
-    //}}}
-    //{{{  read marker body
+
+    //  read marker body
     readPtr = readBytes (length);
     if (!readPtr) {
       mCallback (0, "markerBody short", markerPtr, markerOffset, length);
