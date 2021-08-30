@@ -116,7 +116,7 @@ public:
     }
 
 private:
-  cJpegAnalyse* mJpegAnalyse;
+  cJpegAnalyse* mJpegAnalyse = nullptr;
   ImFont* mMonoFont = nullptr;
 
   bool mShowFileTimes = false;
@@ -155,6 +155,6 @@ private:
     return new cJpegAnalyseUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("jpegAnalyse", &create);
+  //inline static const bool mRegistered = registerClass ("jpegAnalyse", &create);
   };
 #endif
