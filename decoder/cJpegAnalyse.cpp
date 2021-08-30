@@ -178,7 +178,7 @@ bool cJpegAnalyse::analyse (tCallback callback) {
     return false;
   if ((readPtr[0] != 0xFF) || (readPtr[1] != 0xD8))
     return false;
-  mCallback (0, "SOI", markerPtr, 0, 2);
+  mCallback (0, "SOI startOfInformation", markerPtr, 0, 2);
   uint32_t offset = 2;
 
   while (true) {
@@ -297,7 +297,7 @@ bool cJpegAnalyse::analyse (tCallback callback) {
       //}}}
       //{{{
       case 0xFFDB: // DQT
-        parseDQT ("DQT", markerPtr, markerOffset, readPtr, length);
+        parseDQT ("DQT quantisationTable ", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
       //{{{
