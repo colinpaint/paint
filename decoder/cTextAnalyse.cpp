@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 #include <functional>
 
 #include "../utils/formatCore.h"
@@ -19,16 +20,20 @@ bool cTextAnalyse::analyse (tCallback callback) {
   mCallback = callback;
   resetRead();
 
+  mFolds.clear();
+
   uint32_t foldLevel = 0;
   string line;
   while (readLine (line)) {
     size_t foldStart = line.find ("//{{{");
-    if (foldStart != string::npos)
+    if (foldStart != string::npos) {
       foldLevel++;
+      mFolds.push_back (sFold (getReadLineNumber(), false));
+      }
 
     if (foldLevel == 0)
-      // jsut use line
-      mCallback (0, line);
+      // just use line
+      mCallback (line, 0, 0);
 
     else if (foldStart != string::npos) {
       // start of new fold, find comment in startFoldLine, or next uncommented line
@@ -45,8 +50,9 @@ bool cTextAnalyse::analyse (tCallback callback) {
       for (int i = 0; i < foldStart; i++)
         foldPrefix += " ";
       foldPrefix += "...";
-      mCallback (1, foldPrefix + foldComment);
+      mCallback (foldPrefix + foldComment, 1, (uint32_t)mFolds.size());
       }
+
     else if (line.find ("//}}}") != string::npos)
       foldLevel--;
     }

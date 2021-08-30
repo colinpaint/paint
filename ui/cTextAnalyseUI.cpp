@@ -44,11 +44,12 @@ public:
     //}}}
 
     if (!mTextAnalyse)
-     mTextAnalyse = new cTextAnalyse ("../brush/cPaintBrush.cpp");
+      mTextAnalyse = new cTextAnalyse ("../brush/cPaintBrush.cpp");
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     ImGui::PushFont(monoFont);
 
+    ImGui::Text (fmt::format ("folds {}", mTextAnalyse->getNumFolds()).c_str());
     if (toggleButton ("fold", mShowFolded))
       mShowFolded = !mShowFolded;
 
@@ -60,9 +61,10 @@ public:
       //{{{  analyse
       mTextAnalyse->analyse (
         // callback lambda
-        [&](int lineType, const string& info) noexcept {
+        [&](const string& info, int lineType, uint32_t foldNum) noexcept {
           (void)lineType;
-          ImGui::Text (info.c_str());
+          (void)foldNum;
+          ImGui::Text (fmt::format ("{} {} {}", lineType, foldNum, info).c_str());
           }
         );
       //}}}
