@@ -170,7 +170,6 @@ bool cTextAnalyse::analyse (tCallback callback) {
   resetRead();
 
   uint32_t foldLevel = 0;
-  uint32_t lastFoldLevel = 0;
 
   string line;
   while (readLine (line)) {
@@ -179,12 +178,14 @@ bool cTextAnalyse::analyse (tCallback callback) {
       foldLevel++;
 
     if (foldLevel == 0)
+      // jsut use line
       mCallback (0, line);
-    else if (foldLevel != lastFoldLevel) {
-      // new foldLevel
+
+    else if (foldStart != string::npos) {
+      // start of new fold, find comment in startFoldLine, or next uncommented line
       string foldComment = line.substr (foldStart+5);
       if (foldComment.empty()) {
-        // no comment on fold line, search for first none comment line
+        // no comment in startFoldLine, search for first none comment line
         // !!! should check for more folds or unfold !!!
         while (readLine (foldComment))
           if (foldComment.find ("//") == string::npos)
@@ -199,8 +200,6 @@ bool cTextAnalyse::analyse (tCallback callback) {
       }
     else if (line.find ("//}}}") != string::npos)
       foldLevel--;
-
-    lastFoldLevel = foldLevel;
     }
 
   return true;
