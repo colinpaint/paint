@@ -49,6 +49,7 @@ public:
       return nullptr;
     }
   //}}}
+  uint8_t* readLine (uint8_t*& lineEndPtr);
 
 private:
   // vars

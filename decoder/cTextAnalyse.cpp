@@ -171,45 +171,50 @@ bool cTextAnalyse::analyse (tCallback callback) {
   resetReadBytes();
 
   uint32_t lineNumber = 0;
-  uint8_t* lineStartPtr = readBytes (1);
-  uint8_t* lineEndPtr = lineStartPtr;
+  uint8_t* lineEndPtr;
+  uint8_t* lineStartPtr = readLine (lineEndPtr);
 
   uint32_t foldLevel = 0;
   uint32_t lastFoldLevel = 0;
-  while (lineEndPtr) {
-    if (*lineEndPtr == 0x0d) { // carraige return, end of line
-      // find foldStart, foldEnd pattern in line
-      string line (lineStartPtr, lineEndPtr);
-      size_t foldStart = line.find ("//{{{");
-      if (foldStart != string::npos)
-        foldLevel++;
-      foldStart += 5;
+  while (lineStartPtr) {
+    string line (lineStartPtr, lineEndPtr);
+    size_t foldStart = line.find ("//{{{");
+    if (foldStart != string::npos)
+      foldLevel++;
 
-      if (foldLevel && (foldLevel != lastFoldLevel))
-        // new foldLevel, other than lowest
-        // - if empty need to see into first non comment line
-        mCallback (fmt::format ("{} {} ... {}", lineNumber, foldLevel, string (lineStartPtr+foldStart, lineEndPtr)),
-                                lineStartPtr, static_cast<uint32_t>(lineEndPtr - lineStartPtr));
-      else if (!foldLevel) 
-        // lowest fold level, show all
-        mCallback (fmt::format ("{} {} {}", lineNumber, foldLevel, line),
-                   lineStartPtr, static_cast<uint32_t>(lineEndPtr - lineStartPtr));
-
-      if (line.find ("//}}}") != string::npos)
-        foldLevel--;
-
-      lastFoldLevel = foldLevel;
-
-      lineNumber++;
-      lineStartPtr = readBytes (1);
-      lineEndPtr = lineStartPtr;
+    if (foldLevel == 0)
+      mCallback (0, line);
+    else if (foldLevel != lastFoldLevel) {
+      // new foldLevel
+      string foldComment (lineStartPtr+foldStart+5, lineEndPtr);
+      if (foldComment.empty()) {
+        // no comment on fold line, search for first none comment line
+        // !!! should check for more folds or unfold !!!
+        lineStartPtr = readLine (lineEndPtr);
+        lineNumber++;
+        while (lineStartPtr) {
+          foldComment = string (lineStartPtr, lineEndPtr);
+          size_t commentStart = foldComment.find ("//");
+          if (commentStart == string::npos)
+            break;
+          lineStartPtr = readLine (lineEndPtr);
+          lineNumber++;
+          }
+        }
+      string foldPrefix;
+      for (int i = 0; i < foldStart; i++)
+        foldPrefix += " ";
+      foldPrefix += "...";
+      mCallback (1, foldPrefix + foldComment);
       }
-    else if (*lineEndPtr == 0x0a) { // skip line feed
-      lineStartPtr = readBytes (1);
-      lineEndPtr = lineStartPtr;
-      }
-    else  // next char
-      lineEndPtr = readBytes (1);
+    else if (line.find ("//}}}") != string::npos)
+      foldLevel--;
+
+    lastFoldLevel = foldLevel;
+
+    // read next line
+    lineStartPtr = readLine (lineEndPtr);
+    lineNumber++;
     }
 
   return true;

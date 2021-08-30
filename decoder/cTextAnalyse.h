@@ -7,7 +7,7 @@
 
 class cTextAnalyse : public cFileAnalyse {
 private:
-  using tCallback = std::function <void (const std::string& info, uint8_t* ptr, uint32_t numBytes)>;
+  using tCallback = std::function <void (int lineType, const std::string& info)>;
 public:
   cTextAnalyse (const std::string& filename) : cFileAnalyse(filename) {}
   virtual ~cTextAnalyse() = default;

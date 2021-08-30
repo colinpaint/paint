@@ -71,4 +71,27 @@ cFileAnalyse::~cFileAnalyse() {
   CloseHandle (mFileHandle);
   }
 //}}}
+
+//{{{
+uint8_t* cFileAnalyse::readLine (uint8_t*& lineEndPtr) {
+// return lineStartPtr,lineEndPtr of line terminated by carraige return
+
+  uint8_t* lineStartPtr = readBytes (1);
+  lineEndPtr = lineStartPtr;
+
+  while (lineEndPtr) {
+    if (*lineEndPtr == 0x0d) // carraige return, end of line
+      return lineStartPtr;
+    else if (*lineEndPtr == 0x0a) { // skip line feed
+      lineStartPtr = readBytes (1);
+      lineEndPtr = lineStartPtr;
+      }
+    else // next char
+      lineEndPtr = readBytes (1);
+    }
+
+  lineEndPtr = nullptr;
+  return nullptr;
+  }
+//}}}
 #endif

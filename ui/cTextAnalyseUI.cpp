@@ -48,18 +48,15 @@ public:
     //}}}
 
     if (!mTextAnalyse)
-     mTextAnalyse = new cTextAnalyse ("../decoder/cAacDecoder.cpp");
+     mTextAnalyse = new cTextAnalyse ("../brush/cPaintBrush.cpp");
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     ImGui::PushFont(monoFont);
 
     mTextAnalyse->analyse (
       // callback lambda
-      [&](const string info, uint8_t* ptr, unsigned numBytes) noexcept {
-        //{{{  unused params
-        (void)ptr;
-        (void)numBytes;
-        //}}}
+      [&](int lineType, const string& info) noexcept {
+        (void)lineType;
         ImGui::Text (info.c_str());
         }
       );
