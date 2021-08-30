@@ -24,5 +24,5 @@ private:
     sFold (uint32_t startLineNumber, bool open) : mStartLineNumber(startLineNumber), mOpen(open) {}
     };
 
-  std::vector<sFold> mFolds;
+  std::vector<sFold> mFoldsIndex;
   };

@@ -64,14 +64,14 @@ bool cTextAnalyse::analyse (tCallback callback) {
 uint32_t cTextAnalyse::indexFolds() {
 
   resetRead();
-  mFolds.clear();
+  mFoldsIndex.clear();
 
   string line;
-  while (readLine (line)) 
+  while (readLine (line))
     if (line.find ("//{{{") != string::npos)
-      mFolds.push_back (sFold (getReadLineNumber(), false));
+      mFoldsIndex.push_back (sFold (getReadLineNumber(), false));
 
-  return (uint32_t)mFolds.size();
+  return (uint32_t)mFoldsIndex.size();
   }
 //}}}
 #endif
