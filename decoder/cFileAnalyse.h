@@ -30,7 +30,7 @@ public:
   std::chrono::time_point<std::chrono::system_clock> getWriteTimePoint() { return mWriteTimePoint; }
 
   //{{{
-  void resetReadBytes() {
+  void resetRead() {
     mReadPtr = mFileBuffer;
     mReadBytesLeft = mFileSize;
     }
@@ -49,7 +49,7 @@ public:
       return nullptr;
     }
   //}}}
-  bool readLine (uint8_t*& beginPtr, uint8_t*& endPtr);
+  bool readLine (std::string& line);
 
 private:
   // vars

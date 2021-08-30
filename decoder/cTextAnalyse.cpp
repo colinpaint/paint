@@ -167,16 +167,13 @@ namespace {
 bool cTextAnalyse::analyse (tCallback callback) {
 
   mCallback = callback;
-
-  resetReadBytes();
+  resetRead();
 
   uint32_t lineNumber = 0;
-  uint8_t* lineStartPtr;
-  uint8_t* lineEndPtr;
   uint32_t foldLevel = 0;
   uint32_t lastFoldLevel = 0;
-  while (readLine (lineStartPtr, lineEndPtr)) {
-    string line (lineStartPtr, lineEndPtr);
+  string line;
+  while (readLine (line)) {
     size_t foldStart = line.find ("//{{{");
     if (foldStart != string::npos)
       foldLevel++;
@@ -185,19 +182,18 @@ bool cTextAnalyse::analyse (tCallback callback) {
       mCallback (0, line);
     else if (foldLevel != lastFoldLevel) {
       // new foldLevel
-      string foldComment (lineStartPtr+foldStart+5, lineEndPtr);
+      string foldComment = line.substr (foldStart+5);
       if (foldComment.empty()) {
         // no comment on fold line, search for first none comment line
         // !!! should check for more folds or unfold !!!
         lineNumber++;
-        while (readLine (lineStartPtr, lineEndPtr)) {
-          foldComment = string (lineStartPtr, lineEndPtr);
-          size_t commentStart = foldComment.find ("//");
-          if (commentStart == string::npos)
+        while (readLine (foldComment)) {
+          if (foldComment.find ("//") == string::npos)
             break;
           lineNumber++;
           }
         }
+
       string foldPrefix;
       for (int i = 0; i < foldStart; i++)
         foldPrefix += " ";

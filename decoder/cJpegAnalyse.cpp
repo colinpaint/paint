@@ -168,8 +168,7 @@ namespace {
 bool cJpegAnalyse::analyse (tCallback callback) {
 
   mCallback = callback;
-
-  resetReadBytes();
+  resetRead();
 
   // read first word, must be SOI marker
   uint8_t* markerPtr = getReadPtr();

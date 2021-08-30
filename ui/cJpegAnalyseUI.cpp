@@ -72,7 +72,7 @@ public:
       mShowAnalyse = !mShowAnalyse;
     if (mShowAnalyse) {
       //{{{  show analyse
-      mJpegAnalyse->resetReadBytes();
+      mJpegAnalyse->resetRead();
       mJpegAnalyse->analyse (
         // callback lambda
         [&](uint8_t level, const string info, uint8_t* ptr, unsigned offset, unsigned numBytes) noexcept {
@@ -103,7 +103,7 @@ public:
       //{{{  show hexDump
       ImGui::Indent (10.f);
 
-      mJpegAnalyse->resetReadBytes();
+      mJpegAnalyse->resetRead();
       printHex (mJpegAnalyse->getReadPtr(),
                 mJpegAnalyse->getReadBytesLeft() < 0x200 ? mJpegAnalyse->getReadBytesLeft() : 0x200);
 

@@ -53,7 +53,7 @@ public:
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     ImGui::PushFont(monoFont);
 
-    if (toggleButton ("folded", mShowFolded))
+    if (toggleButton ("fold", mShowFolded))
       mShowFolded = !mShowFolded;
 
     ImGui::SameLine();
@@ -74,7 +74,7 @@ public:
       //{{{  show hexDump
       ImGui::Indent (10.f);
 
-      mTextAnalyse->resetReadBytes();
+      mTextAnalyse->resetRead();
       printHex (mTextAnalyse->getReadPtr(),
                 mTextAnalyse->getReadBytesLeft() < 0x200 ? mTextAnalyse->getReadBytesLeft() : 0x200);
 
@@ -83,12 +83,11 @@ public:
       //}}}
     else {
       //{{{  show all lines
-      mTextAnalyse->resetReadBytes();
+      mTextAnalyse->resetRead();
 
-      uint8_t* lineEndPtr;
-      uint8_t* lineStartPtr;
-      while (mTextAnalyse->readLine (lineStartPtr, lineEndPtr))
-        ImGui::Text (string (lineStartPtr, lineEndPtr).c_str());
+      string line;
+      while (mTextAnalyse->readLine (line))
+        ImGui::Text (line.c_str());
       }
       //}}}
 
@@ -99,7 +98,7 @@ public:
 private:
   cTextAnalyse* mTextAnalyse = nullptr;
   ImFont* mMonoFont = nullptr;
-  bool mShowFolded = false;
+  bool mShowFolded = true;
   bool mShowHexDump = false;
 
   //{{{

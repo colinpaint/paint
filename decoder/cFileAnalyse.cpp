@@ -60,7 +60,7 @@ cFileAnalyse::cFileAnalyse (const string& filename) : mFilename(filename) {
   mAccessString = date::format ("access %H:%M:%S %a %d %b %y", chrono::floor<chrono::seconds>(mAccessTimePoint));
   mWriteString = date::format ("write  %H:%M:%S %a %d %b %y", chrono::floor<chrono::seconds>(mWriteTimePoint));
 
-  resetReadBytes();
+  resetRead();
   }
 //}}}
 //{{{
@@ -73,15 +73,17 @@ cFileAnalyse::~cFileAnalyse() {
 //}}}
 
 //{{{
-bool cFileAnalyse::readLine (uint8_t*& beginPtr, uint8_t*& endPtr) {
+bool cFileAnalyse::readLine (string& line) {
 // return false if no more lines, else true with beginPtr,endPtr of line terminated by carraige return
 
-  beginPtr = readBytes (1);
-  endPtr = beginPtr;
+  uint8_t* beginPtr = readBytes (1);
+  uint8_t* endPtr = beginPtr;
 
   while (endPtr) {
-    if (*endPtr == 0x0d) // carraige return, end of line
-      return beginPtr;
+    if (*endPtr == 0x0d) { // carraige return, end of line
+      line = string (beginPtr, endPtr);
+      return true;
+      }
     else if (*endPtr == 0x0a) { // skip line feed
       beginPtr = readBytes (1);
       endPtr = beginPtr;
@@ -90,7 +92,7 @@ bool cFileAnalyse::readLine (uint8_t*& beginPtr, uint8_t*& endPtr) {
       endPtr = readBytes (1);
     }
 
-  beginPtr = nullptr;
+  line = "eof";
   endPtr = nullptr;
   return false;
   }
