@@ -56,59 +56,57 @@ public:
     ImGui::Text(fmt::format ("{} size {}", mJpegAnalyse->getFilename(), mJpegAnalyse->getFileSize()).c_str());
     if (toggleButton ("fileTimes", mShowFileTimes))
       mShowFileTimes = !mShowFileTimes;
-    ImGui::SameLine();
-    if (toggleButton ("analyse", mShowAnalyse))
-      mShowAnalyse = !mShowAnalyse;
-    ImGui::SameLine();
-    if (toggleButton ("hexDump", mShowHexDump))
-      mShowHexDump = !mShowHexDump;
-
     if (mShowFileTimes) {
       //{{{  show fileTimes
       ImGui::Indent (10.f);
+
       ImGui::Text (mJpegAnalyse->getCreationString().c_str());
       ImGui::Text (mJpegAnalyse->getAccessString().c_str());
       ImGui::Text (mJpegAnalyse->getWriteString().c_str());
+
       ImGui::Unindent (10.f);
       }
       //}}}
 
-    mJpegAnalyse->resetReadBytes();
+    if (toggleButton ("analyse", mShowAnalyse))
+      mShowAnalyse = !mShowAnalyse;
     if (mShowAnalyse) {
+      //{{{  show analyse
+      mJpegAnalyse->resetReadBytes();
       mJpegAnalyse->analyse (
-        //{{{  jpegTag lambda
+        // callback lambda
         [&](uint8_t level, const string info, uint8_t* ptr, unsigned offset, unsigned numBytes) noexcept {
           //{{{  unused params
           (void)offset;
           //}}}
-
           if (level)
             ImGui::Indent (level * 10.f);
 
-          ImGui::Text (fmt::format ("{} - {} bytes", info, numBytes).c_str());
-
-          if (numBytes && mShowHexDump) {
+          if (toggleButton (fmt::format ("{} - {} bytes", info, numBytes).c_str(), toggle))
+            toggle = !toggle;
+          if (toggle) {
             ImGui::Indent (10.f);
-            printHex (ptr, numBytes);
+            printHex (ptr, numBytes < 0x200 ? numBytes : 0x200);
             ImGui::Unindent (10.f);
             }
 
           if (level)
             ImGui::Unindent (level * 10.f);
           }
-        //}}}
         );
-
-      ImGui::Text (fmt::format ("image size {}x{} - body {} bytes",
-                   mJpegAnalyse->getWidth(), mJpegAnalyse->getHeight(),
-                   mJpegAnalyse->getReadBytesLeft()).c_str());
       }
+      //}}}
 
+    if (toggleButton ("hexDump", mShowHexDump))
+      mShowHexDump = !mShowHexDump;
     if (mShowHexDump) {
       //{{{  show hexDump
       ImGui::Indent (10.f);
+
+      mJpegAnalyse->resetReadBytes();
       printHex (mJpegAnalyse->getReadPtr(),
                 mJpegAnalyse->getReadBytesLeft() < 0x200 ? mJpegAnalyse->getReadBytesLeft() : 0x200);
+
       ImGui::Unindent (10.f);
       }
       //}}}
@@ -124,7 +122,7 @@ private:
   bool mShowFileTimes = false;
   bool mShowAnalyse = false;
   bool mShowHexDump = false;
-
+  bool toggle = false;
   //{{{
   static void printHex (uint8_t* ptr, unsigned numBytes) {
 
