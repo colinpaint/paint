@@ -77,10 +77,13 @@ public:
     if (mShowAnalyse) {
       mJpegAnalyse->analyse (
         //{{{  jpegTag lambda
-        [&](const string info, uint8_t* ptr, unsigned offset, unsigned numBytes) noexcept {
+        [&](uint8_t level, const string info, uint8_t* ptr, unsigned offset, unsigned numBytes) noexcept {
           //{{{  unused params
           (void)offset;
           //}}}
+
+          if (level)
+            ImGui::Indent (level * 10.f);
 
           ImGui::Text (fmt::format ("{} - {} bytes", info, numBytes).c_str());
 
@@ -89,23 +92,9 @@ public:
             printHex (ptr, numBytes);
             ImGui::Unindent (10.f);
             }
-          },
-        //}}}
-        //{{{  exifTag lambda
-        [&](const string info, uint8_t* ptr, unsigned offset, unsigned numBytes) noexcept {
-          //{{{  unused params
-          (void)offset;
-          //}}}
-          ImGui::Indent (10.f);
-          ImGui::Text (fmt::format ("exif {}", info, numBytes).c_str());
 
-          if (numBytes && mShowHexDump) {
-            ImGui::Indent (10.f);
-            printHex (ptr, numBytes);
-            ImGui::Unindent (10.f);
-            }
-
-          ImGui::Unindent (10.f);
+          if (level)
+            ImGui::Unindent (level * 10.f);
           }
         //}}}
         );

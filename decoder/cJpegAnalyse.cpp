@@ -165,13 +165,11 @@ namespace {
 
 // public:
 //{{{
-bool cJpegAnalyse::analyse (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) {
+bool cJpegAnalyse::analyse (uLambda callback) {
+
+  mCallback = callback;
 
   resetReadBytes();
-
-  mJpegTagLambda = jpegTagLambda;
-  mExifTagLambda = exifTagLambda;
-
   mThumbOffset = 0;
   mThumbBytes = 0;
 
@@ -182,7 +180,7 @@ bool cJpegAnalyse::analyse (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) 
     return false;
   if ((readPtr[0] != 0xFF) || (readPtr[1] != 0xD8))
     return false;
-  mJpegTagLambda ("SOI", startPtr, 0, 2);
+  mCallback (0, "SOI", startPtr, 0, 2);
 
   uint32_t offset = 2;
   while (true) {
@@ -216,7 +214,7 @@ bool cJpegAnalyse::analyse (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) 
       //}}}
       //{{{
       case 0xC1: // SOF1
-        mJpegTagLambda ("SOF1 extSeqDCT", startPtr, startOffset, length);
+        mCallback (0, "SOF1 extSeqDCT", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
@@ -226,7 +224,7 @@ bool cJpegAnalyse::analyse (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) 
       //}}}
       //{{{
       case 0xC3: // SOF3
-        mJpegTagLambda ("SOF3F", startPtr, startOffset, length);
+        mCallback (0, "SOF3F", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
@@ -237,59 +235,59 @@ bool cJpegAnalyse::analyse (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) 
 
       //{{{
       case 0xC5: // SOF5
-        mJpegTagLambda ("SOF5", startPtr, startOffset, length);
+        mCallback (0, "SOF5", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
       case 0xC6: // SOF6
-        mJpegTagLambda ("SOF6", startPtr, startOffset, length);
+        mCallback (0, "SOF6", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
       case 0xC7: // SOF7
-        mJpegTagLambda ("SOF7", startPtr, startOffset, length);
+        mCallback (0, "SOF7", startPtr, startOffset, length);
         break;
       //}}}
 
       //{{{
       case 0xC9: // SOF9
-        mJpegTagLambda ("SOF9", startPtr, startOffset, length);
+        mCallback (0, "SOF9", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
       case 0xCA: // SOF10
-        mJpegTagLambda ("SOF10", startPtr, startOffset, length);
+        mCallback (0, "SOF10", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
       case 0xCB: // SOF11
-        mJpegTagLambda ("SOF11 lossless", startPtr, startOffset, length);
+        mCallback (0, "SOF11 lossless", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
       case 0xCC: // DAC
-        mJpegTagLambda ("DAC arithmeticCoding", startPtr, startOffset, length);
+        mCallback (0, "DAC arithmeticCoding", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
       case 0xCD: // SOF13
-        mJpegTagLambda ("SOF13", startPtr, startOffset, length);
+        mCallback (0, "SOF13", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
       case 0xCE: // SOF14
-        mJpegTagLambda ("SOF14", startPtr, startOffset, length);
+        mCallback (0, "SOF14", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
       case 0xCF: // SOF15
-        mJpegTagLambda ("SOF15", startPtr, startOffset, length);
+        mCallback (0, "SOF15", startPtr, startOffset, length);
         break;
       //}}}
 
       //{{{
       case 0xD9: // EOI
-        mJpegTagLambda ("EOI", startPtr, startOffset, length);
+        mCallback (0, "EOI", startPtr, startOffset, length);
         return true;
       //}}}
       //{{{
@@ -304,7 +302,7 @@ bool cJpegAnalyse::analyse (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) 
       //}}}
       //{{{
       case 0xDC: // DNL
-        mJpegTagLambda ("DNL  dunmberLines", startPtr, startOffset, length);
+        mCallback (0, "DNL  dunmberLines", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
@@ -314,7 +312,7 @@ bool cJpegAnalyse::analyse (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) 
       //}}}
       //{{{
       case 0xDE: // DHP
-        mJpegTagLambda ("DHP- hierachialProgressive", startPtr, startOffset, length);
+        mCallback (0, "DHP- hierachialProgressive", startPtr, startOffset, length);
         break;
       //}}}
 
@@ -330,18 +328,18 @@ bool cJpegAnalyse::analyse (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) 
       //}}}
       //{{{
       case 0xE2: // APP2
-        mJpegTagLambda ("APP2", startPtr, startOffset, length);
+        mCallback (0, "APP2", startPtr, startOffset, length);
         break;
       //}}}
       //{{{
       case 0xED: // APP14
-        mJpegTagLambda ("APP14", startPtr, startOffset, length);
+        mCallback (0, "APP14", startPtr, startOffset, length);
         break;
       //}}}
 
       //{{{
       default: // unknown
-        mJpegTagLambda (fmt::format ("{:02x} unknown", marker & 0xFF), startPtr, startOffset, length);
+        mCallback (0, fmt::format ("{:02x} unknown", marker & 0xFF), startPtr, startOffset, length);
         break;
       //}}}
       }
@@ -351,7 +349,7 @@ bool cJpegAnalyse::analyse (uTagLambda jpegTagLambda, uTagLambda exifTagLambda) 
   }
 //}}}
 
-// private:
+// exif parse utils
 //{{{
 uint16_t cJpegAnalyse::getExifWord (uint8_t* ptr, bool intelEndian) {
 
@@ -373,7 +371,6 @@ float cJpegAnalyse::getExifSignedRational (uint8_t* ptr, bool intelEndian, uint3
   return (denominator == 0) ? 0 : (float)numerator / (float)denominator;
   }
 //}}}
-
 //{{{
 void cJpegAnalyse::getExifGpsInfo (uint8_t* ptr, uint8_t* offsetBasePtr, bool intelEndian) {
 
@@ -528,6 +525,7 @@ string cJpegAnalyse::getExifTime (uint8_t* ptr, struct tm* tmPtr) {
   }
 //}}}
 
+// exif tag parser
 //{{{
 void cJpegAnalyse::parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, bool intelEndian) {
 
@@ -553,32 +551,32 @@ void cJpegAnalyse::parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, boo
       //{{{
       case TAG_ORIENTATION:
         mExifInfo.mExifOrientation = offset;
-        mExifTagLambda (fmt::format ("orientation {}", mExifInfo.mExifOrientation), startPtr, 0, bytes);
+        mCallback (1, fmt::format ("exifOrientation {}", mExifInfo.mExifOrientation), startPtr, 0, bytes);
         break;
       //}}}
       //{{{
       case TAG_APERTURE:
         mExifInfo.mExifAperture = (float)exp(getExifSignedRational (valuePtr, intelEndian, numerator, denominator)*log(2)*0.5);
-        mExifTagLambda (fmt::format ("aperture {}", mExifInfo.mExifAperture), startPtr, 0, bytes);
+        mCallback (1, fmt::format ("exifAperture {}", mExifInfo.mExifAperture), startPtr, 0, bytes);
         break;
       //}}}
       //{{{
       case TAG_FOCALLENGTH:
         mExifInfo.mExifFocalLength = getExifSignedRational (valuePtr, intelEndian, numerator, denominator);
-        mExifTagLambda (fmt::format ("focalLength {}", mExifInfo.mExifFocalLength), startPtr, 0, bytes);
+        mCallback (1, fmt::format ("exifFocalLength {}", mExifInfo.mExifFocalLength), startPtr, 0, bytes);
         break;
       //}}}
       //{{{
       case TAG_EXPOSURETIME:
         mExifInfo.mExifExposure = getExifSignedRational (valuePtr, intelEndian, numerator, denominator);
-        mExifTagLambda (fmt::format ("exposure {}", mExifInfo.mExifExposure), startPtr, 0, bytes);
+        mCallback (1, fmt::format ("exifExposure {}", mExifInfo.mExifExposure), startPtr, 0, bytes);
         break;
       //}}}
       //{{{
       case TAG_MAKE:
         if (mExifInfo.mExifMake.empty()) {
           mExifInfo.mExifMake = (char*)valuePtr;
-          mExifTagLambda (fmt::format ("make {}", mExifInfo.mExifMake), startPtr, 0, bytes);
+          mCallback (1, fmt::format ("exifMake {}", mExifInfo.mExifMake), startPtr, 0, bytes);
           }
         break;
       //}}}
@@ -586,7 +584,7 @@ void cJpegAnalyse::parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, boo
       case TAG_MODEL:
         if (mExifInfo.mExifModel.empty()) {
           mExifInfo.mExifModel = (char*)valuePtr;
-          mExifTagLambda (fmt::format ("model {}", mExifInfo.mExifModel), startPtr, 0, bytes);
+          mCallback (1, fmt::format ("exifModel {}", mExifInfo.mExifModel), startPtr, 0, bytes);
           }
         break;
       //}}}
@@ -596,26 +594,26 @@ void cJpegAnalyse::parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, boo
       case TAG_DATETIME_DIGITIZED:
         if (mExifInfo.mExifTimeString.empty()) {
           mExifInfo.mExifTimeString = getExifTime (valuePtr, &mExifInfo.mExifTm);
-          mExifTagLambda (fmt::format ("dateTime {}", mExifInfo.mExifTimeString), startPtr, 0, bytes);
+          mCallback(1, fmt::format ("exifDateTime {}", mExifInfo.mExifTimeString), startPtr, 0, bytes);
           }
         break;
       //}}}
       //{{{
       case TAG_THUMBNAIL_OFFSET:
         mThumbOffset = offset;
-        mExifTagLambda (fmt::format ("thumbOffset {}", mThumbOffset), startPtr, 0, bytes);
+        mCallback (1, fmt::format ("exifThumbOffset {}", mThumbOffset), startPtr, 0, bytes);
         break;
       //}}}
       //{{{
       case TAG_THUMBNAIL_LENGTH:
         mThumbBytes = offset;
-        mExifTagLambda (fmt::format ("thumbLength {}", mThumbBytes), startPtr, 0, bytes);
+        mCallback (1, fmt::format ("exifThumbLength {}", mThumbBytes), startPtr, 0, bytes);
         break;
       //}}}
       //{{{
       case TAG_GPSINFO:
         getExifGpsInfo (offsetBasePtr + offset, offsetBasePtr, intelEndian);
-        mExifTagLambda (fmt::format ("gps {}", mExifGpsInfo.getString()), startPtr, 0, bytes);
+        mCallback (1, fmt::format ("exifGps {}", mExifGpsInfo.getString()), startPtr, 0, bytes);
         break;
       //}}}
       //case TAG_MAXAPERTURE:
@@ -633,6 +631,7 @@ void cJpegAnalyse::parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, boo
   }
 //}}}
 
+// jpeg tag parsers
 //{{{
 void cJpegAnalyse::parseAPP0 (const string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length) {
 // read APP0 JFIF marker
@@ -652,7 +651,7 @@ void cJpegAnalyse::parseAPP0 (const string& tag, uint8_t* startPtr, uint32_t off
   uint8_t xDensity = ptr[8];
   uint8_t yDensity = ptr[9];
 
-  mJpegTagLambda (fmt::format ("{} {} version:{} units:{} density:{}x{}", tag, id, version, units, xDensity, yDensity),
+  mCallback (0, fmt::format ("{} {} version:{} units:{} density:{}x{}", tag, id, version, units, xDensity, yDensity),
                   startPtr, offset, length);
   }
 //}}}
@@ -666,14 +665,14 @@ void cJpegAnalyse::parseAPP1 (const string& tag, uint8_t* startPtr, uint32_t off
   //}}}
   // check exifId
   if (getExifLong (ptr, false) != 0x45786966) {
-    mJpegTagLambda (tag + " not exif", startPtr, offset, length);
+    mCallback (0, tag + " not exif", startPtr, offset, length);
     return;
     }
   ptr += 4;
 
   // check 0 word
   if (getExifWord (ptr, false) != 0x0000) {
-    mJpegTagLambda (tag + " missing zero", startPtr, offset, length);
+    mCallback (0, tag + " missing zero", startPtr, offset, length);
     return;
     }
   ptr += 2;
@@ -686,14 +685,14 @@ void cJpegAnalyse::parseAPP1 (const string& tag, uint8_t* startPtr, uint32_t off
 
   // 002a word
   if (getExifWord (ptr, intelEndian) != 0x002a) {
-    mJpegTagLambda (tag + "no 2a", startPtr, offset, length);
+    mCallback (0, tag + "no 2a", startPtr, offset, length);
     return;
     }
   ptr += 2;
 
   // firstOffset 8
   if (getExifLong (ptr, intelEndian) != 8) {
-    mJpegTagLambda (tag + "no first offset" , startPtr, offset, length);
+    mCallback (0, tag + "no first offset" , startPtr, offset, length);
     return;
     }
   ptr += 4;
@@ -702,7 +701,7 @@ void cJpegAnalyse::parseAPP1 (const string& tag, uint8_t* startPtr, uint32_t off
 
   mThumbOffset += 6 + 6; // SOImarker(2), APP1marker(2), APP1length(2), EXIF00marker(6)
 
-  mJpegTagLambda (tag, startPtr, offset, length);
+  mCallback (0, tag, startPtr, offset, length);
   }
 //}}}
 //{{{
@@ -725,7 +724,7 @@ void cJpegAnalyse::parseSOF (const string& tag, uint8_t* startPtr, uint32_t offs
     str += fmt::format (" {}:{}x{}t{}", componentId, horizSample, vertSample, qtableId);
     }
 
-  mJpegTagLambda (str, startPtr, offset, length);
+  mCallback (0, str, startPtr, offset, length);
   }
 //}}}
 //{{{
@@ -736,7 +735,7 @@ void cJpegAnalyse::parseDQT (const string& tag, uint8_t* startPtr, uint32_t offs
   (void)ptr;
   (void)length;
   //}}}
-  mJpegTagLambda (tag, startPtr, offset, length);
+  mCallback (0, tag, startPtr, offset, length);
   }
 //}}}
 //{{{
@@ -747,7 +746,7 @@ void cJpegAnalyse::parseHFT (const string& tag, uint8_t* startPtr, uint32_t offs
   (void)ptr;
   (void)length;
   //}}}
-  mJpegTagLambda (tag, startPtr, offset, length);
+  mCallback (0, tag, startPtr, offset, length);
   }
 //}}}
 //{{{
@@ -758,7 +757,7 @@ void cJpegAnalyse::parseDRI (const string& tag, uint8_t* startPtr, uint32_t offs
   (void)length;
   //}}}
   mNumRst = ptr[0] << 8 | ptr[1];
-  mJpegTagLambda (fmt::format ("{} {}", tag, mNumRst), startPtr, offset, length);
+  mCallback (0, fmt::format ("{} {}", tag, mNumRst), startPtr, offset, length);
   }
 //}}}
 //{{{
@@ -782,7 +781,7 @@ void cJpegAnalyse::parseSOS (const string& tag, uint8_t* startPtr, uint32_t offs
   uint8_t se = ptr[4 + (numComponents*2)];
   uint8_t approx = ptr[5 + (numComponents*2)];
 
-  mJpegTagLambda (fmt::format ("{} {} ss:{} se:{} approx{:02x}", tag, str, ss, se, approx), startPtr, offset, length);
+  mCallback (0, fmt::format ("{} {} ss:{} se:{} approx{:02x}", tag, str, ss, se, approx), startPtr, offset, length);
   }
 //}}}
 
