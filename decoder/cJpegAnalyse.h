@@ -7,9 +7,8 @@
 
 class cJpegAnalyse : public cFileAnalyse {
 private:
-  using uLambda = std::function <void (uint8_t level,
-                                       const std::string& info, uint8_t* ptr,
-                                       uint32_t offset, uint32_t numBytes)>;
+  using tCallback = std::function <void (uint8_t level, const std::string& info, uint8_t* ptr,
+                                         uint32_t offset, uint32_t numBytes)>;
 public:
   cJpegAnalyse (const std::string& filename, uint8_t components)
     : cFileAnalyse(filename), mBytesPerPixel(components) {}
@@ -19,10 +18,10 @@ public:
   int getWidth() { return mWidth; }
   int getHeight() { return mHeight; }
 
-  int getThumbOffset() { return mThumbBytes > 0 ? mThumbOffset : 0; }
-  int getThumbBytes() { return mThumbBytes; }
+  int getThumbOffset() { return mExifThumbBytes > 0 ? mExifThumbOffset : 0; }
+  int getThumbBytes() { return mExifThumbBytes; }
 
-  bool analyse (uLambda callback);
+  bool analyse (tCallback callback);
 
 private:
   // exif parse utils
@@ -87,6 +86,8 @@ private:
   // jpeg tag parsers
   void parseAPP0 (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
   void parseAPP1 (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
+  void parseAPP2 (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
+  void parseAPP14 (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
   void parseSOF (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
   void parseDQT (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
   void parseHFT (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
@@ -94,25 +95,23 @@ private:
   void parseSOS (const std::string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length);
 
   // vars
-  uLambda mCallback;
+  tCallback mCallback;
 
   uint8_t mBytesPerPixel = 0;
 
   // SOF
-  uint8_t mPrecision = 0;
   uint16_t mWidth = 0;  // Size of the input image
   uint16_t mHeight = 0; // Size of the input image
+  uint8_t mPrecision = 0;
   uint8_t mNumImageComponentsFrame = 0;
 
   // NRI value
   uint16_t mNumRst = 0; // Restart inverval in MCUs
 
-  // thumbnail
-  uint32_t mThumbOffset = 0;
-  uint32_t mThumbBytes = 0;
-
   // exif
   cExifInfo mExifInfo;
   cExifGpsInfo mExifGpsInfo;
   std::string mExifTimeString;
+  uint32_t mExifThumbOffset = 0;
+  uint32_t mExifThumbBytes = 0;
   };

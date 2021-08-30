@@ -165,13 +165,13 @@ namespace {
 
 // public:
 //{{{
-bool cJpegAnalyse::analyse (uLambda callback) {
+bool cJpegAnalyse::analyse (tCallback callback) {
 
   mCallback = callback;
 
   resetReadBytes();
-  mThumbOffset = 0;
-  mThumbBytes = 0;
+  mExifThumbOffset = 0;
+  mExifThumbBytes = 0;
 
   // read first word, must be SOI marker
   uint8_t* markerPtr = getReadPtr();
@@ -329,12 +329,12 @@ bool cJpegAnalyse::analyse (uLambda callback) {
       //}}}
       //{{{
       case 0xE2: // APP2
-        mCallback (0, "APP2", markerPtr, markerOffset, length);
+        parseAPP2 ("APP2", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
       //{{{
       case 0xED: // APP14
-        mCallback (0, "APP14", markerPtr, markerOffset, length);
+        parseAPP14 ("APP14", markerPtr, markerOffset, readPtr, length);
         break;
       //}}}
 
@@ -608,14 +608,14 @@ void cJpegAnalyse::parseExifDirectory (uint8_t* offsetBasePtr, uint8_t* ptr, boo
       //}}}
       //{{{
       case TAG_THUMBNAIL_OFFSET:
-        mThumbOffset = offset;
-        mCallback (1, fmt::format ("exifThumbOffset {}", mThumbOffset), startPtr, 0, bytes);
+        mExifThumbOffset = offset;
+        mCallback (1, fmt::format ("exifThumbOffset {}", mExifThumbOffset), startPtr, 0, bytes);
         break;
       //}}}
       //{{{
       case TAG_THUMBNAIL_LENGTH:
-        mThumbBytes = offset;
-        mCallback (1, fmt::format ("exifThumbLength {}", mThumbBytes), startPtr, 0, bytes);
+        mExifThumbBytes = offset;
+        mCallback (1, fmt::format ("exifThumbLength {}", mExifThumbBytes), startPtr, 0, bytes);
         break;
       //}}}
       //{{{
@@ -673,7 +673,7 @@ void cJpegAnalyse::parseAPP1 (const string& tag, uint8_t* startPtr, uint32_t off
   //}}}
   // check exifId
   if (getExifLong (ptr, false) != 0x45786966) {
-    mCallback (0, tag + " not exif", startPtr, offset, length);
+    mCallback (0, tag + " missing exif tag", startPtr, offset, length);
     return;
     }
   ptr += 4;
@@ -693,23 +693,48 @@ void cJpegAnalyse::parseAPP1 (const string& tag, uint8_t* startPtr, uint32_t off
 
   // 002a word
   if (getExifWord (ptr, intelEndian) != 0x002a) {
-    mCallback (0, tag + "no 2a", startPtr, offset, length);
+    mCallback (0, tag + "missing 2a", startPtr, offset, length);
     return;
     }
   ptr += 2;
 
   // firstOffset 8
   if (getExifLong (ptr, intelEndian) != 8) {
-    mCallback (0, tag + "no first offset" , startPtr, offset, length);
+    mCallback (0, tag + "missing first offset" , startPtr, offset, length);
     return;
     }
   ptr += 4;
 
   parseExifDirectory (offsetBasePtr, ptr, intelEndian);
 
-  mThumbOffset += 6 + 6; // SOImarker(2), APP1marker(2), APP1length(2), EXIF00marker(6)
+  // dodgy add to offset of SOImarker(2), APP1marker(2), APP1length(2), EXIF00marker(6)
+  mExifThumbOffset += 2 + 2 + 2 + 6;
 
   mCallback (0, tag, startPtr, offset, length);
+  }
+//}}}
+//{{{
+void cJpegAnalyse::parseAPP2 (const string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length) {
+// read APP2 marker
+
+  //{{{  unused
+  (void)ptr;
+  (void)length;
+  //}}}
+  // dodgy use of ptr as title
+  mCallback (0, fmt::format ("{} {}", tag, ptr), startPtr, offset, length);
+  }
+//}}}
+//{{{
+void cJpegAnalyse::parseAPP14 (const string& tag, uint8_t* startPtr, uint32_t offset, uint8_t* ptr, uint32_t length) {
+// read APP14
+
+  //{{{  unused
+  (void)ptr;
+  (void)length;
+  //}}}
+  // dodgy use of ptr as title
+  mCallback (0, fmt::format ("{} {}", tag, ptr), startPtr, offset, length);
   }
 //}}}
 //{{{
