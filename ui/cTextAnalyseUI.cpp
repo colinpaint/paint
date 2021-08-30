@@ -55,11 +55,9 @@ public:
 
     mTextAnalyse->analyse (
       // callback lambda
-      [&](uint8_t level, const string info, uint8_t* ptr, unsigned offset, unsigned numBytes) noexcept {
+      [&](const string info, uint8_t* ptr, unsigned numBytes) noexcept {
         //{{{  unused params
         (void)ptr;
-        (void)offset;
-        (void)level;
         (void)numBytes;
         //}}}
         ImGui::Text (info.c_str());

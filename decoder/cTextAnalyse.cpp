@@ -171,24 +171,45 @@ bool cTextAnalyse::analyse (tCallback callback) {
   resetReadBytes();
 
   uint32_t lineNumber = 0;
-  uint8_t* lineStart = readBytes (1);
-  uint8_t* lineEnd = lineStart;
+  uint8_t* lineStartPtr = readBytes (1);
+  uint8_t* lineEndPtr = lineStartPtr;
 
-  while (lineEnd) {
-    if (*lineEnd == 0x0d) {
-      // skip carraige return, callback with line
-      mCallback (0, fmt::format ("{} {}", lineNumber++, string (lineStart, lineEnd)), 
-                 lineStart, 0, static_cast<uint32_t>(lineEnd - lineStart));
-      lineStart = readBytes (1);
-      lineEnd = lineStart;
+  uint32_t foldLevel = 0;
+  uint32_t lastFoldLevel = 0;
+  while (lineEndPtr) {
+    if (*lineEndPtr == 0x0d) { // carraige return, end of line
+      // find foldStart, foldEnd pattern in line
+      string line (lineStartPtr, lineEndPtr);
+      size_t foldStart = line.find ("//{{{");
+      if (foldStart != string::npos)
+        foldLevel++;
+      foldStart += 5;
+
+      if (foldLevel && (foldLevel != lastFoldLevel))
+        // new foldLevel, other than lowest
+        // - if empty need to see into first non comment line
+        mCallback (fmt::format ("{} {} ... {}", lineNumber, foldLevel, string (lineStartPtr+foldStart, lineEndPtr)),
+                                lineStartPtr, static_cast<uint32_t>(lineEndPtr - lineStartPtr));
+      else if (!foldLevel) 
+        // lowest fold level, show all
+        mCallback (fmt::format ("{} {} {}", lineNumber, foldLevel, line),
+                   lineStartPtr, static_cast<uint32_t>(lineEndPtr - lineStartPtr));
+
+      if (line.find ("//}}}") != string::npos)
+        foldLevel--;
+
+      lastFoldLevel = foldLevel;
+
+      lineNumber++;
+      lineStartPtr = readBytes (1);
+      lineEndPtr = lineStartPtr;
       }
-    else if (*lineEnd == 0x0a) {
-      // skip line feed
-      lineStart = readBytes (1);
-      lineEnd = lineStart;
+    else if (*lineEndPtr == 0x0a) { // skip line feed
+      lineStartPtr = readBytes (1);
+      lineEndPtr = lineStartPtr;
       }
-    else
-      lineEnd = readBytes (1);
+    else  // next char
+      lineEndPtr = readBytes (1);
     }
 
   return true;
