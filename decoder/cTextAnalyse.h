@@ -8,12 +8,12 @@
 
 class cTextAnalyse : public cFileView {
 private:
-  using tCallback = std::function <void (const std::string& info, int lineType)>;
+  using tCallback = std::function <void (const std::string& info, uint32_t lineNumber)>;
 public:
   cTextAnalyse (const std::string& filename) : cFileView(filename) {}
   virtual ~cTextAnalyse() = default;
 
-  uint32_t readAndParse();
+  void readAndParse();
   bool analyse (tCallback callback);
 
 private:
@@ -31,15 +31,7 @@ private:
     sLine() {}
     };
 
-  struct sFold {
-    uint32_t mBeginLineNumber;
-    uint32_t mEndLineNumber;
-
-    sFold (uint32_t beginLineNumber) : mBeginLineNumber(beginLineNumber), mEndLineNumber(beginLineNumber) {}
-    };
-
   std::vector<sLine> mLines;
-  std::vector<sFold> mFolds;
 
   inline static const std::string kFoldBeginMarker = "//{{{";
   inline static const std::string kFoldEndMarker = "//}}}";

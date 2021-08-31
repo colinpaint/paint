@@ -45,7 +45,7 @@ public:
 
     if (!mTextAnalyse) {
       mTextAnalyse = new cTextAnalyse ("../brush/cPaintBrush.cpp");
-      mNumFolds = mTextAnalyse->readAndParse();
+      mTextAnalyse->readAndParse();
       }
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
@@ -81,8 +81,8 @@ public:
       mTextAnalyse->resetRead();
       mTextAnalyse->analyse (
         // callback lambda
-        [&](const string& info, int lineType) noexcept {
-          ImGui::Text (fmt::format ("{} {}", lineType, info).c_str());
+        [&](const string& info, uint32_t lineNumber) noexcept {
+          ImGui::Text (fmt::format ("{:03d} {}", lineNumber, info).c_str());
           }
         );
       }
@@ -128,7 +128,6 @@ private:
   bool mShowMixed = false;
   bool mShowMixedFull = false;
   bool mShowHexDump = false;
-  uint32_t mNumFolds = 0;
 
   //{{{
   static cUI* create (const string& className) {

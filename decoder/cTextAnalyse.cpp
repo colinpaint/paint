@@ -20,23 +20,27 @@ using namespace std;
 
 // public:
 //{{{
-uint32_t cTextAnalyse::readAndParse() {
-// read in lines, form sLine, parse for folding
+void cTextAnalyse::readAndParse() {
+// read lines, parse for folding, save a sLine for each line to mLines,
 // !!! should strip all leading spaces into indent, not just folds !!!
+
+  // mFoldBegin, mFoldOpen,mFoldonlyOpen probably single state for foldBegin line, mFoldEnd for foldEnd lines
+
   resetRead();
   mLines.clear();
 
-  sLine line;
   uint8_t* ptr;
   uint32_t address;
   uint32_t numBytes;
+
+  sLine line;
   line.mFoldLevel = 0;
   line.mFoldOpen = false;
   while (readLine (line.mText, line.mLineNumber, ptr, address, numBytes)) {
     line.mFoldBeginIndent = line.mText.find (kFoldBeginMarker);
     line.mFoldBegin = (line.mFoldBeginIndent != string::npos);
     if (line.mFoldBegin) {
-      // found foldStartMarker, remove it and its indent from mText, must regenerate on save
+      // found a foldStartMarker, remove it and its indent from mText, must regenerate on save
       line.mText = line.mText.substr (line.mFoldBeginIndent + kFoldBeginMarker.size());
       line.mFoldLevel++;
       line.mFoldEnd = false;
@@ -49,8 +53,6 @@ uint32_t cTextAnalyse::readAndParse() {
     if (line.mFoldEnd)
       line.mFoldLevel--;
     }
-
-  return (uint32_t)mFolds.size();
   }
 //}}}
 
@@ -60,27 +62,28 @@ bool cTextAnalyse::analyse (tCallback callback) {
 
   // iterate mLines spitting out text to display
   for (auto it = mLines.begin(); it != mLines.end(); ++it) {
-    if (it->mFoldLevel == 0) // just use line
-      mCallback (it->mText, 0);
+    if (it->mFoldLevel == 0) // just show it
+      mCallback (it->mText, it->mLineNumber);
     else if (it->mFoldBegin) {
-      // begin of new fold, save indent and comment before we search if empty for acomment
-      size_t foldBeginIndent = it->mFoldBeginIndent;
-      string foldText = it->mText;
-      if (foldText.empty()) {
-        // no fold text, search for first none comment line
+      //  show foldBegin line, prefix indent and ... folded symbol
+      string foldPrefix;
+      for (int i = 0; i < it->mFoldBeginIndent; i++)
+        foldPrefix += " ";
+      foldPrefix += "...";
+
+      if (it->mText.empty()) {
+        // no foldBegin text, use first non-comment line foldBegin text
         // !!! should check for more folds or unfold !!!
-        while (++it != mLines.end())
+        uint32_t lineNumber = it->mLineNumber;
+        while (++it != mLines.end()) {
           if (it->mText.find (kCommentMarker) == string::npos) {
-            foldText = it->mText;
+            mCallback (foldPrefix + it->mText, lineNumber);
             break;
             }
+          }
         }
-
-      // add indent and ... folded symbol
-      string foldPrefix;
-      for (int i = 0; i < foldBeginIndent; i++)
-        foldPrefix += " ";
-      mCallback (foldPrefix + "..." + foldText, 1);
+      else
+        mCallback (foldPrefix + it->mText, it->mLineNumber);
       }
     }
 
