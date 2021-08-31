@@ -41,7 +41,8 @@ protected:
   bool clockButton (const std::string& label, std::chrono::system_clock::time_point timePoint, const ImVec2& size_arg);
   bool toggleButton (const std::string& label, bool toggleOn, const ImVec2& size_arg = ImVec2(0, 0));
   unsigned interlockedButtons (const std::vector<std::string>& buttonVector, unsigned index, const ImVec2& size_arg);
-  static void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columns);
+
+  static void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t address, bool full);
 
   using createFuncType = cUI*(*)(const std::string& name);
   static bool registerClass (const std::string& name, const createFuncType createFunc);

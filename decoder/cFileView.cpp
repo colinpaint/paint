@@ -73,9 +73,10 @@ cFileView::~cFileView() {
 //}}}
 
 //{{{
-bool cFileView::readLine (string& line, uint32_t& lineNumber, uint8_t*& ptr, uint32_t& numBytes) {
+bool cFileView::readLine (string& line, uint32_t& lineNumber, uint8_t*& ptr, uint32_t& address, uint32_t& numBytes) {
 // return false if no more lines, else true with beginPtr,endPtr of line terminated by carraige return
 
+  address = getReadAddress();
   uint8_t* beginPtr = readBytes (1);
   uint8_t* endPtr = beginPtr;
 
@@ -84,7 +85,7 @@ bool cFileView::readLine (string& line, uint32_t& lineNumber, uint8_t*& ptr, uin
       line = string (beginPtr, endPtr);
       lineNumber = mReadLineNumber++;
       ptr = beginPtr;
-      numBytes = (uint32_t)(endPtr - beginPtr); // !!! want to include lf !!!
+      numBytes = (uint32_t)(endPtr - beginPtr) + 1; // !!! want to include lf !!!
       return true;
       }
     else if (*endPtr == 0x0a) { // skip line feed
@@ -98,6 +99,7 @@ bool cFileView::readLine (string& line, uint32_t& lineNumber, uint8_t*& ptr, uin
   line = "eof";
   lineNumber = mReadLineNumber;
   ptr = nullptr;
+  address = 0;
   numBytes = 0;
   return false;
   }

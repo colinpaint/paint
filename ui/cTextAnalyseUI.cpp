@@ -56,11 +56,33 @@ public:
       mShowFolded = !mShowFolded;
 
     ImGui::SameLine();
+    if (toggleButton ("mixed", mShowMixed))
+      mShowMixed = !mShowMixed;
+
+    ImGui::SameLine();
+    if (toggleButton ("mixedFull", mShowMixedFull))
+      mShowMixedFull = !mShowMixedFull;
+
+    ImGui::SameLine();
     if (toggleButton ("hexDump", mShowHexDump))
       mShowHexDump = !mShowHexDump;
 
-    if (mShowFolded)
-      //{{{  analyse
+    if (!mShowFolded && !mShowHexDump && !mShowMixed && !mShowMixedFull) {
+      //{{{  show unfolded
+      string line;
+      uint32_t lineNumber;
+      uint8_t* ptr;
+      uint32_t address;
+      uint32_t numBytes;
+
+      mTextAnalyse->resetRead();
+      while (mTextAnalyse->readLine (line, lineNumber, ptr, address, numBytes))
+        ImGui::Text (fmt::format ("{:3d} {}", lineNumber, line).c_str());
+      }
+      //}}}
+    if (mShowFolded) {
+      //{{{  show folded
+      mTextAnalyse->resetRead();
       mTextAnalyse->analyse (
         // callback lambda
         [&](const string& info, int lineType, uint32_t foldNum) noexcept {
@@ -69,24 +91,35 @@ public:
           ImGui::Text (fmt::format ("{} {} {}", lineType, foldNum, info).c_str());
           }
         );
-      //}}}
-    else if (mShowHexDump) {
-      //{{{  show hexDump
-      ImGui::Indent (10.f);
-
-      mTextAnalyse->resetRead();
-      printHex (mTextAnalyse->getReadPtr(), mTextAnalyse->getReadBytesLeft(), 16);
-
-      ImGui::Unindent (10.f);
       }
       //}}}
-    else {
-      //{{{  show all lines
-      mTextAnalyse->resetRead();
-
+    if (mShowMixed || mShowMixedFull) {
+      //{{{  show mixed
       string line;
-      while (mTextAnalyse->readLine (line))
-        ImGui::Text (line.c_str());
+      uint32_t lineNumber;
+      uint8_t* ptr;
+      uint32_t address;
+      uint32_t numBytes;
+
+      mTextAnalyse->resetRead();
+      while (mTextAnalyse->readLine (line, lineNumber, ptr, address, numBytes)) {
+        if (mShowMixedFull) {
+          ImGui::Text (fmt::format ("{:4d} {}", lineNumber, line).c_str());
+          ImGui::Indent (10.f);
+          printHex (ptr, numBytes, 16, address, true);
+          ImGui::Unindent (10.f);
+          }
+        else {
+          ImGui::Text (line.c_str());
+          printHex (ptr, numBytes, 32, 0, false);
+          }
+        }
+      }
+      //}}}
+    if (mShowHexDump) {
+      //{{{  show hexDump
+      mTextAnalyse->resetRead();
+      printHex (mTextAnalyse->getReadPtr(), mTextAnalyse->getReadBytesLeft(), 16, 0, true);
       }
       //}}}
 
@@ -98,6 +131,8 @@ private:
   cTextAnalyse* mTextAnalyse = nullptr;
   ImFont* mMonoFont = nullptr;
   bool mShowFolded = true;
+  bool mShowMixed = false;
+  bool mShowMixedFull = false;
   bool mShowHexDump = false;
   uint32_t mNumFolds = 0;
 

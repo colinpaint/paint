@@ -28,5 +28,14 @@ private:
       : mStartLineNumber(startLineNumber), mLastLineNumber(startLineNumber), mLevel(level), mOpen(open) {}
     };
 
-  std::vector<sFold> mFoldsIndex;
+  struct sLine {
+    std::string mText;
+    uint32_t mLineNumber;
+
+    sLine (const std::string& text, uint32_t lineNumber)
+      : mText(text), mLineNumber(lineNumber) {}
+    };
+
+  std::vector<sFold> mFolds;
+  std::vector<sLine> mLines;
   };

@@ -245,14 +245,30 @@ unsigned cUI::interlockedButtons (const vector<string>& buttonVector, unsigned i
   return index;
   }
 //}}}
-//{{{
-void cUI::printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columns) {
 
-  unsigned offset = 0;
+//{{{
+void cUI::printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t address, bool full) {
+
+  uint32_t firstRowPad = address % columnsPerRow;
+  address -= firstRowPad;
+
   while (numBytes > 0) {
-    string hexString = fmt::format ("{:04x}: ", offset);
+    string hexString;
+    if (full)
+      hexString = fmt::format ("{:04x}: ", address);
     string asciiString;
-    for (unsigned curByte = 0; curByte < columns; curByte++) {
+
+    // pad leading row values
+    uint32_t byteInRow = 0;
+    while (firstRowPad > 0) {
+      hexString += "   ";
+      asciiString += " ";
+      byteInRow++;
+      firstRowPad--;
+      }
+
+    // rest of row
+    while (byteInRow < columnsPerRow) {
       if (numBytes > 0) {
         // append byte
         numBytes--;
@@ -260,12 +276,18 @@ void cUI::printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columns) {
         hexString += fmt::format ("{:02x} ", value);
         asciiString += (value > 0x20) && (value < 0x80) ? value : '.';
         }
-      else // pad row
+      else // pad trailing row values
         hexString += "   ";
+
+      byteInRow++;
       }
 
-    ImGui::Text ((hexString + " " + asciiString).c_str());
-    offset += columns;
+    if (full)
+      ImGui::Text ((hexString + " " + asciiString).c_str());
+    else
+      ImGui::Text (hexString.c_str());
+
+    address += columnsPerRow;
     }
   }
 //}}}

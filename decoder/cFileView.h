@@ -17,6 +17,7 @@ public:
 
   // file readBytes info
   uint8_t* getReadPtr() { return mReadPtr; }
+  uint32_t getReadAddress() { return mReadAddress; }
   uint32_t getReadBytesLeft() { return mReadBytesLeft; }
   uint32_t getReadLineNumber() { return mReadLineNumber; }
 
@@ -35,6 +36,7 @@ public:
     mReadPtr = mFileBuffer;
     mReadBytesLeft = mFileSize;
     mReadLineNumber = 0;
+    mReadAddress = 0;
     }
   //}}}
   //{{{
@@ -45,13 +47,14 @@ public:
       uint8_t* ptr = mReadPtr;
       mReadPtr += bytesToRead;
       mReadBytesLeft -= bytesToRead;
+      mReadAddress += bytesToRead;
       return ptr;
       }
     else
       return nullptr;
     }
   //}}}
-  bool readLine (std::string& line, uint32_t& lineNumber, uint8_t*& ptr, uint32_t& numBytes);
+  bool readLine (std::string& line, uint32_t& lineNumber, uint8_t*& ptr, uint32_t& address, uint32_t& numBytes);
 
 private:
   // vars
@@ -64,6 +67,7 @@ private:
   uint32_t mFileSize = 0;
 
   uint8_t* mReadPtr = nullptr;
+  uint32_t mReadAddress = 0;
   uint32_t mReadBytesLeft = 0;
   uint32_t mReadLineNumber = 0;
 

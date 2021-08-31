@@ -86,7 +86,7 @@ public:
             toggle = !toggle;
           if (toggle) {
             ImGui::Indent (10.f);
-            printHex (ptr, numBytes < 0x400 ?numBytes : 0x400, 16);
+            printHex (ptr, numBytes < 0x400 ?numBytes : 0x400, 16, 0, true);
             ImGui::Unindent (10.f);
             }
 
@@ -105,7 +105,7 @@ public:
 
       mJpegAnalyse->resetRead();
       printHex (mJpegAnalyse->getReadPtr(),
-                mJpegAnalyse->getReadBytesLeft() < 0x200 ? mJpegAnalyse->getReadBytesLeft() : 0x200, 16);
+                mJpegAnalyse->getReadBytesLeft() < 0x200 ? mJpegAnalyse->getReadBytesLeft() : 0x200, 16, 0, true);
 
       ImGui::Unindent (10.f);
       }
