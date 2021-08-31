@@ -66,19 +66,26 @@ bool cTextAnalyse::analyse (tCallback callback) {
   return true;
   }
 //}}}
-//{{{
-uint32_t cTextAnalyse::indexFolds() {
+
+uint32_t cTextAnalyse::index() {
 // make index of fold starts
 
   resetRead();
-  mFolds.clear();
+  mLines.clear();
 
-  uint32_t foldLevel = 0;
   string line;
   uint32_t lineNumber;
   uint8_t* ptr;
   uint32_t address;
   uint32_t numBytes;
+  while (readLine (line, lineNumber, ptr, address, numBytes)) {
+    mLines.push_back (sLine(line, lineNumber));
+    }
+
+  resetRead();
+  mFolds.clear();
+
+  uint32_t foldLevel = 0;
   while (readLine (line, lineNumber, ptr, address, numBytes))
     if (line.find ("//{{{") != string::npos)
       mFolds.push_back (sFold (getReadLineNumber(), ++foldLevel, false));
@@ -87,5 +94,4 @@ uint32_t cTextAnalyse::indexFolds() {
 
   return (uint32_t)mFolds.size();
   }
-//}}}
 #endif

@@ -13,11 +13,20 @@ public:
   cTextAnalyse (const std::string& filename) : cFileView(filename) {}
   virtual ~cTextAnalyse() = default;
 
-  tCallback mCallback;
   bool analyse (tCallback callback);
-  uint32_t indexFolds();
+  uint32_t index();
 
 private:
+  tCallback mCallback;
+
+  struct sLine {
+    std::string mText;
+    uint32_t mLineNumber;
+
+    sLine (const std::string& text, uint32_t lineNumber)
+      : mText(text), mLineNumber(lineNumber) {}
+    };
+
   struct sFold {
     uint32_t mStartLineNumber;
     uint32_t mLastLineNumber;
@@ -28,14 +37,6 @@ private:
       : mStartLineNumber(startLineNumber), mLastLineNumber(startLineNumber), mLevel(level), mOpen(open) {}
     };
 
-  struct sLine {
-    std::string mText;
-    uint32_t mLineNumber;
-
-    sLine (const std::string& text, uint32_t lineNumber)
-      : mText(text), mLineNumber(lineNumber) {}
-    };
-
-  std::vector<sFold> mFolds;
   std::vector<sLine> mLines;
+  std::vector<sFold> mFolds;
   };
