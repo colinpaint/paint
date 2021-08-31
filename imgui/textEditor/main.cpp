@@ -1,3 +1,4 @@
+//{{{
 // ImGui - standalone example application for DirectX 11
 // If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
 
@@ -13,6 +14,7 @@
 #include <tchar.h>
 
 #include "ImGuiColorTextEdit/TextEditor.h"
+//}}}
 
 // Data
 static ID3D11Device*            g_pd3dDevice = NULL;
@@ -21,6 +23,8 @@ static IDXGISwapChain*          g_pSwapChain = NULL;
 static ID3D11RenderTargetView*  g_mainRenderTargetView = NULL;
 
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+//{{{
 
 void CreateRenderTarget()
 {
@@ -38,12 +42,15 @@ void CreateRenderTarget()
 	g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
 	pBackBuffer->Release();
 }
-
+//}}}
+//{{{
 void CleanupRenderTarget()
 {
 	if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = NULL; }
 }
+//}}}
 
+//{{{
 HRESULT CreateDeviceD3D(HWND hWnd)
 {
 	// Setup swap chain
@@ -76,7 +83,8 @@ HRESULT CreateDeviceD3D(HWND hWnd)
 
 	return S_OK;
 }
-
+//}}}
+//{{{
 void CleanupDeviceD3D()
 {
 	CleanupRenderTarget();
@@ -84,15 +92,16 @@ void CleanupDeviceD3D()
 	if (g_pd3dDeviceContext) { g_pd3dDeviceContext->Release(); g_pd3dDeviceContext = NULL; }
 	if (g_pd3dDevice) { g_pd3dDevice->Release(); g_pd3dDevice = NULL; }
 }
+//}}}
 
+//{{{
 //extern LRESULT ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
 		return true;
 
-	switch (msg)
-	{
+	switch (msg) {
 	case WM_SIZE:
 		if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED)
 		{
@@ -103,35 +112,40 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			ImGui_ImplDX11_CreateDeviceObjects();
 		}
 		return 0;
+
 	case WM_SYSCOMMAND:
 		if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
 			return 0;
 		break;
+
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
 	}
+
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+//}}}
 
-int main(int, char**)
-{
-	// Create application window
+//{{{
+int main(int, char**) {
+	//{{{  Create application window
 	WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, LoadCursor(NULL, IDC_ARROW), NULL, NULL, _T("ImGui Example"), NULL };
 	RegisterClassEx(&wc);
 	HWND hwnd = CreateWindow(_T("ImGui Example"), _T("ImGui DirectX11 Example"), WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
-
-	// Initialize Direct3D
+	//}}}
+	//{{{  Initialize Direct3D
 	if (CreateDeviceD3D(hwnd) < 0)
 	{
 		CleanupDeviceD3D();
 		UnregisterClass(_T("ImGui Example"), wc.hInstance);
 		return 1;
 	}
-
-	// Show the window
+	//}}}
+	//{{{  Show the window
 	ShowWindow(hwnd, SW_SHOWDEFAULT);
 	UpdateWindow(hwnd);
+	//}}}
 
 	ImGui::CreateContext();
 
@@ -143,28 +157,26 @@ int main(int, char**)
 	// (there is a default font, this is only if you want to change it. see extra_fonts/README.txt for more details)
 	ImVec4 clear_col = ImColor(114, 144, 154);
 
-	///////////////////////////////////////////////////////////////////////
 	// TEXT EDITOR SAMPLE
 	TextEditor editor;
 	auto lang = TextEditor::LanguageDefinition::CPlusPlus();
-
-	// set your own known preprocessor symbols...
+	//{{{  set your own known preprocessor symbols...
 	static const char* ppnames[] = { "NULL", "PM_REMOVE",
 		"ZeroMemory", "DXGI_SWAP_EFFECT_DISCARD", "D3D_FEATURE_LEVEL", "D3D_DRIVER_TYPE_HARDWARE", "WINAPI","D3D11_SDK_VERSION", "assert" };
 	// ... and their corresponding values
-	static const char* ppvalues[] = { 
-		"#define NULL ((void*)0)", 
+	static const char* ppvalues[] = {
+		"#define NULL ((void*)0)",
 		"#define PM_REMOVE (0x0001)",
-		"Microsoft's own memory zapper function\n(which is a macro actually)\nvoid ZeroMemory(\n\t[in] PVOID  Destination,\n\t[in] SIZE_T Length\n); ", 
-		"enum DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_DISCARD = 0", 
-		"enum D3D_FEATURE_LEVEL", 
+		"Microsoft's own memory zapper function\n(which is a macro actually)\nvoid ZeroMemory(\n\t[in] PVOID  Destination,\n\t[in] SIZE_T Length\n); ",
+		"enum DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_DISCARD = 0",
+		"enum D3D_FEATURE_LEVEL",
 		"enum D3D_DRIVER_TYPE::D3D_DRIVER_TYPE_HARDWARE  = ( D3D_DRIVER_TYPE_UNKNOWN + 1 )",
 		"#define WINAPI __stdcall",
 		"#define D3D11_SDK_VERSION (7)",
 		" #define assert(expression) (void)(                                                  \n"
-        "    (!!(expression)) ||                                                              \n"
-        "    (_wassert(_CRT_WIDE(#expression), _CRT_WIDE(__FILE__), (unsigned)(__LINE__)), 0) \n"
-        " )"
+				"    (!!(expression)) ||                                                              \n"
+				"    (_wassert(_CRT_WIDE(#expression), _CRT_WIDE(__FILE__), (unsigned)(__LINE__)), 0) \n"
+				" )"
 		};
 
 	for (int i = 0; i < sizeof(ppnames) / sizeof(ppnames[0]); ++i)
@@ -173,14 +185,14 @@ int main(int, char**)
 		id.mDeclaration = ppvalues[i];
 		lang.mPreprocIdentifiers.insert(std::make_pair(std::string(ppnames[i]), id));
 	}
-
-	// set your own identifiers
+	//}}}
+	//{{{  set your own identifiers
 	static const char* identifiers[] = {
 		"HWND", "HRESULT", "LPRESULT","D3D11_RENDER_TARGET_VIEW_DESC", "DXGI_SWAP_CHAIN_DESC","MSG","LRESULT","WPARAM", "LPARAM","UINT","LPVOID",
 		"ID3D11Device", "ID3D11DeviceContext", "ID3D11Buffer", "ID3D11Buffer", "ID3D10Blob", "ID3D11VertexShader", "ID3D11InputLayout", "ID3D11Buffer",
 		"ID3D10Blob", "ID3D11PixelShader", "ID3D11SamplerState", "ID3D11ShaderResourceView", "ID3D11RasterizerState", "ID3D11BlendState", "ID3D11DepthStencilState",
 		"IDXGISwapChain", "ID3D11RenderTargetView", "ID3D11Texture2D", "TextEditor" };
-	static const char* idecls[] = 
+	static const char* idecls[] =
 	{
 		"typedef HWND_* HWND", "typedef long HRESULT", "typedef long* LPRESULT", "struct D3D11_RENDER_TARGET_VIEW_DESC", "struct DXGI_SWAP_CHAIN_DESC",
 		"typedef tagMSG MSG\n * Message structure","typedef LONG_PTR LRESULT","WPARAM", "LPARAM","UINT","LPVOID",
@@ -193,6 +205,7 @@ int main(int, char**)
 		id.mDeclaration = std::string(idecls[i]);
 		lang.mIdentifiers.insert(std::make_pair(std::string(identifiers[i]), id));
 	}
+	//}}}
 	editor.SetLanguageDefinition(lang);
 	//editor.SetPalette(TextEditor::GetLightPalette());
 
@@ -209,8 +222,7 @@ int main(int, char**)
 	//editor.SetBreakpoints(bpts);
 
 	static const char* fileToEdit = "ImGuiColorTextEdit/TextEditor.cpp";
-//	static const char* fileToEdit = "test.cpp";
-
+//  static const char* fileToEdit = "test.cpp";
 	{
 		std::ifstream t(fileToEdit);
 		if (t.good())
@@ -320,3 +332,4 @@ int main(int, char**)
 
 	return 0;
 }
+//}}}
