@@ -8,7 +8,7 @@
 
 class cTextAnalyse : public cFileView {
 private:
-  using tCallback = std::function <void (const std::string& info, int lineType, uint32_t foldNum)>;
+  using tCallback = std::function <void (const std::string& info, int lineType)>;
 public:
   cTextAnalyse (const std::string& filename) : cFileView(filename) {}
   virtual ~cTextAnalyse() = default;
@@ -21,22 +21,28 @@ private:
 
   struct sLine {
     std::string mText;
+    std::string mFoldComment;
     uint32_t mLineNumber;
+    uint32_t mFoldLevel;
+    bool mFoldBegin;
+    bool mFoldEnd;
+    size_t mFoldBeginPos;
+    bool mFoldOpen;
 
-    sLine (const std::string& text, uint32_t lineNumber)
-      : mText(text), mLineNumber(lineNumber) {}
+    sLine() {}
     };
 
   struct sFold {
-    uint32_t mStartLineNumber;
-    uint32_t mLastLineNumber;
-    uint32_t mLevel;
-    bool mOpen;
+    uint32_t mBeginLineNumber;
+    uint32_t mEndLineNumber;
 
-    sFold (uint32_t startLineNumber, uint32_t level, bool open)
-      : mStartLineNumber(startLineNumber), mLastLineNumber(startLineNumber), mLevel(level), mOpen(open) {}
+    sFold (uint32_t beginLineNumber) : mBeginLineNumber(beginLineNumber), mEndLineNumber(beginLineNumber) {}
     };
 
   std::vector<sLine> mLines;
   std::vector<sFold> mFolds;
+
+  inline static const std::string kFoldBeginMarker = "//{{{";
+  inline static const std::string kFoldEndMarker = "//}}}";
+  inline static const std::string kCommentMarker = "//";
   };

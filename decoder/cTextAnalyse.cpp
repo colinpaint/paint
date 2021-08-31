@@ -19,77 +19,70 @@ using namespace std;
 //}}}
 
 // public:
-//{{{
 bool cTextAnalyse::analyse (tCallback callback) {
 
   mCallback = callback;
 
-  uint32_t foldIndex = 0;
-  uint32_t foldLevel = 0;
-
+  // iterate lines of text
   for (auto it = mLines.begin(); it != mLines.end(); ++it) {
-    size_t foldStart = it->mText.find ("//{{{");
-    if (foldStart != string::npos) {
-      foldIndex++;
-      foldLevel++;
-      }
-
-    if (foldLevel == 0)
-      // just use line
-      mCallback (it->mText, 0, 0);
-
-    else if (foldStart != string::npos) {
-      // start of new fold, find comment in startFoldLine, or next uncommented line
-      string foldComment = it->mText.substr (foldStart+5);
+    if (it->mFoldLevel == 0) // just use line
+      mCallback (it->mText, 0);
+    else if (it->mFoldBegin) {
+      // begin of new fold, save indent and comment before we search if empty for acomment
+      size_t foldBeginPos = it->mFoldBeginPos;
+      string foldComment = it->mFoldComment;
       if (foldComment.empty()) {
-        // no comment in startFoldLine, search for first none comment line
+        // no fold comment, search for first none comment line
         // !!! should check for more folds or unfold !!!
         while (++it != mLines.end())
-          if (it->mText.find ("//") == string::npos) {
+          if (it->mText.find (kCommentMarker) == string::npos) {
             foldComment = it->mText;
             break;
             }
         }
 
       string foldPrefix;
-      for (int i = 0; i < foldStart; i++)
+      for (int i = 0; i < foldBeginPos; i++)
         foldPrefix += " ";
       foldPrefix += "...";
-      mCallback (foldPrefix + foldComment, 1, foldIndex);
+      mCallback (foldPrefix + foldComment, 1);
       }
-
-    else if (it->mText.find ("//}}}") != string::npos)
-      foldLevel--;
     }
 
   return true;
   }
-//}}}
 
 uint32_t cTextAnalyse::index() {
-// make index of fold starts
+// read in lines, lookinf for foldBegin, folEnd marker, maining foldLevel
 
   resetRead();
   mLines.clear();
 
-  string line;
-  uint32_t lineNumber;
   uint8_t* ptr;
   uint32_t address;
   uint32_t numBytes;
-  while (readLine (line, lineNumber, ptr, address, numBytes)) {
-    mLines.push_back (sLine(line, lineNumber));
+
+  sLine line;
+  line.mFoldLevel = 0;
+  line.mFoldOpen = false;
+  while (readLine (line.mText, line.mLineNumber, ptr, address, numBytes)) {
+    line.mFoldBeginPos = line.mText.find (kFoldBeginMarker);
+    line.mFoldBegin = (line.mFoldBeginPos != string::npos);
+    if (line.mFoldBegin) {
+      line.mFoldComment = line.mText.substr (line.mFoldBeginPos+5);
+      line.mFoldLevel++;
+      line.mFoldEnd = false;
+      }
+    else {
+      line.mFoldComment = "";
+      line.mFoldEnd = (line.mText.find (kFoldEndMarker) != string::npos);
+      }
+
+    mLines.push_back (line);
+
+    if (line.mFoldEnd)
+      line.mFoldLevel--;
     }
-
-  resetRead();
-  mFolds.clear();
-
-  uint32_t foldLevel = 0;
-  while (readLine (line, lineNumber, ptr, address, numBytes))
-    if (line.find ("//{{{") != string::npos)
-      mFolds.push_back (sFold (getReadLineNumber(), ++foldLevel, false));
-    else if (line.find ("//}}}") != string::npos)
-      foldLevel--;
 
   return (uint32_t)mFolds.size();
   }

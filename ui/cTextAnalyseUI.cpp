@@ -49,20 +49,16 @@ public:
       }
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
-    ImGui::PushFont(monoFont);
+    ImGui::PushFont (monoFont);
 
-    ImGui::Text (fmt::format ("folds {}", mNumFolds).c_str());
     if (toggleButton ("fold", mShowFolded))
       mShowFolded = !mShowFolded;
-
     ImGui::SameLine();
     if (toggleButton ("mixed", mShowMixed))
       mShowMixed = !mShowMixed;
-
     ImGui::SameLine();
     if (toggleButton ("mixedFull", mShowMixedFull))
       mShowMixedFull = !mShowMixedFull;
-
     ImGui::SameLine();
     if (toggleButton ("hexDump", mShowHexDump))
       mShowHexDump = !mShowHexDump;
@@ -85,10 +81,8 @@ public:
       mTextAnalyse->resetRead();
       mTextAnalyse->analyse (
         // callback lambda
-        [&](const string& info, int lineType, uint32_t foldNum) noexcept {
-          (void)lineType;
-          (void)foldNum;
-          ImGui::Text (fmt::format ("{} {} {}", lineType, foldNum, info).c_str());
+        [&](const string& info, int lineType) noexcept {
+          ImGui::Text (fmt::format ("{} {}", lineType, info).c_str());
           }
         );
       }
