@@ -1,7 +1,7 @@
-// cFileAnalyse.cpp - analyse base class
+// cFileView.cpp - analyse base class
 #ifdef _WIN32
 //{{{  includes
-#include "cFileAnalyse.h"
+#include "cFileView.h"
 
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
@@ -40,7 +40,7 @@ namespace {
   }
 
 //{{{
-cFileAnalyse::cFileAnalyse (const string& filename) : mFilename(filename) {
+cFileView::cFileView (const string& filename) : mFilename(filename) {
 
   mFileHandle = CreateFile (mFilename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
   mMapHandle = CreateFileMapping (mFileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
@@ -64,7 +64,7 @@ cFileAnalyse::cFileAnalyse (const string& filename) : mFilename(filename) {
   }
 //}}}
 //{{{
-cFileAnalyse::~cFileAnalyse() {
+cFileView::~cFileView() {
 
   UnmapViewOfFile (mFileBuffer);
   CloseHandle (mMapHandle);
@@ -73,7 +73,7 @@ cFileAnalyse::~cFileAnalyse() {
 //}}}
 
 //{{{
-bool cFileAnalyse::readLine (string& line) {
+bool cFileView::readLine (string& line, uint32_t& lineNumber, uint8_t*& ptr, uint32_t& numBytes) {
 // return false if no more lines, else true with beginPtr,endPtr of line terminated by carraige return
 
   uint8_t* beginPtr = readBytes (1);
@@ -82,7 +82,9 @@ bool cFileAnalyse::readLine (string& line) {
   while (endPtr) {
     if (*endPtr == 0x0d) { // carraige return, end of line
       line = string (beginPtr, endPtr);
-      mReadLineNumber++;
+      lineNumber = mReadLineNumber++;
+      ptr = beginPtr;
+      numBytes = (uint32_t)(endPtr - beginPtr); // !!! want to include lf !!!
       return true;
       }
     else if (*endPtr == 0x0a) { // skip line feed
@@ -94,6 +96,9 @@ bool cFileAnalyse::readLine (string& line) {
     }
 
   line = "eof";
+  lineNumber = mReadLineNumber;
+  ptr = nullptr;
+  numBytes = 0;
   return false;
   }
 //}}}

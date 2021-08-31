@@ -1,4 +1,4 @@
-// cFileAnalyse.h - file analyser
+// cFileView.h - file view for analysers
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -6,10 +6,10 @@
 #include <chrono>
 //}}}
 
-class cFileAnalyse {
+class cFileView {
 public:
-  cFileAnalyse (const std::string& filename);
-  virtual ~cFileAnalyse();
+  cFileView (const std::string& filename);
+  virtual ~cFileView();
 
   // whole file
   uint8_t* getFileBuffer() { return mFileBuffer; }
@@ -51,7 +51,7 @@ public:
       return nullptr;
     }
   //}}}
-  bool readLine (std::string& line);
+  bool readLine (std::string& line, uint32_t& lineNumber, uint8_t*& ptr, uint32_t& numBytes);
 
 private:
   // vars

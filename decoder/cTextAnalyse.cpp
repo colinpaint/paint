@@ -23,8 +23,12 @@ bool cTextAnalyse::analyse (tCallback callback) {
 
   uint32_t foldIndex = 0;
   uint32_t foldLevel = 0;
+
   string line;
-  while (readLine (line)) {
+  uint32_t lineNumber;
+  uint8_t* ptr;
+  uint32_t numBytes;
+  while (readLine (line, lineNumber, ptr, numBytes)) {
     size_t foldStart = line.find ("//{{{");
     if (foldStart != string::npos) {
       foldIndex++;
@@ -41,12 +45,14 @@ bool cTextAnalyse::analyse (tCallback callback) {
       if (foldComment.empty()) {
         // no comment in startFoldLine, search for first none comment line
         // !!! should check for more folds or unfold !!!
-        while (readLine (foldComment))
+        while (readLine (foldComment, lineNumber, ptr, numBytes))
           if (foldComment.find ("//") == string::npos)
             break;
         }
 
       string foldPrefix;
+      //int count = 10; fmt::format repeat
+      //fmt::format("{:\t>{}}", "", count);
       for (int i = 0; i < foldStart; i++)
         foldPrefix += " ";
       foldPrefix += "...";
@@ -62,14 +68,21 @@ bool cTextAnalyse::analyse (tCallback callback) {
 //}}}
 //{{{
 uint32_t cTextAnalyse::indexFolds() {
+// make index of fold starts
 
   resetRead();
   mFoldsIndex.clear();
 
+  uint32_t foldLevel = 0;
   string line;
-  while (readLine (line))
+  uint32_t lineNumber;
+  uint8_t* ptr;
+  uint32_t numBytes;
+  while (readLine (line, lineNumber, ptr, numBytes))
     if (line.find ("//{{{") != string::npos)
-      mFoldsIndex.push_back (sFold (getReadLineNumber(), false));
+      mFoldsIndex.push_back (sFold (getReadLineNumber(), ++foldLevel, false));
+    else if (line.find ("//}}}") != string::npos)
+      foldLevel--;
 
   return (uint32_t)mFoldsIndex.size();
   }

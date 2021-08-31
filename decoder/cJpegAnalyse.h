@@ -1,17 +1,17 @@
 // cJpegAnalyser.h - jpeg analyser - based on tiny jpeg decoder, jhead
 #pragma once
 //{{{  includes
-#include "cFileAnalyse.h"
+#include "cFileView.h"
 #include <functional>
 //}}}
 
-class cJpegAnalyse : public cFileAnalyse {
+class cJpegAnalyse : public cFileView {
 private:
   using tCallback = std::function <void (uint8_t level, const std::string& info, uint8_t* ptr,
                                          uint32_t offset, uint32_t numBytes)>;
 public:
   cJpegAnalyse (const std::string& filename, uint8_t components)
-    : cFileAnalyse(filename), mBytesPerPixel(components) {}
+    : cFileView(filename), mBytesPerPixel(components) {}
   virtual ~cJpegAnalyse() = default;
 
   // gets
