@@ -29,23 +29,22 @@ bool cTextAnalyse::analyse (tCallback callback) {
       mCallback (it->mText, 0);
     else if (it->mFoldBegin) {
       // begin of new fold, save indent and comment before we search if empty for acomment
-      size_t foldBeginPos = it->mFoldBeginPos;
-      string foldComment = it->mFoldComment;
-      if (foldComment.empty()) {
-        // no fold comment, search for first none comment line
+      size_t foldBeginIndent = it->mFoldBeginIndent;
+      string foldText = it->mText;
+      if (foldText.empty()) {
+        // no fold text, search for first none comment line
         // !!! should check for more folds or unfold !!!
         while (++it != mLines.end())
           if (it->mText.find (kCommentMarker) == string::npos) {
-            foldComment = it->mText;
+            foldText = it->mText;
             break;
             }
         }
 
       string foldPrefix;
-      for (int i = 0; i < foldBeginPos; i++)
+      for (int i = 0; i < foldBeginIndent; i++)
         foldPrefix += " ";
-      foldPrefix += "...";
-      mCallback (foldPrefix + foldComment, 1);
+      mCallback (foldPrefix + "..." + foldText, 1);
       }
     }
 
@@ -66,17 +65,16 @@ uint32_t cTextAnalyse::index() {
   line.mFoldLevel = 0;
   line.mFoldOpen = false;
   while (readLine (line.mText, line.mLineNumber, ptr, address, numBytes)) {
-    line.mFoldBeginPos = line.mText.find (kFoldBeginMarker);
-    line.mFoldBegin = (line.mFoldBeginPos != string::npos);
+    line.mFoldBeginIndent = line.mText.find (kFoldBeginMarker);
+    line.mFoldBegin = (line.mFoldBeginIndent != string::npos);
     if (line.mFoldBegin) {
-      line.mFoldComment = line.mText.substr (line.mFoldBeginPos+5);
+      // found foldStartMarker, remove it and its indent from mText, must regenerate on save
+      line.mText = line.mText.substr (line.mFoldBeginIndent + kFoldBeginMarker.size());
       line.mFoldLevel++;
       line.mFoldEnd = false;
       }
-    else {
-      line.mFoldComment = "";
+    else // search for foldEndMarker, leave it in mText, never displayed, still there on save
       line.mFoldEnd = (line.mText.find (kFoldEndMarker) != string::npos);
-      }
 
     mLines.push_back (line);
 

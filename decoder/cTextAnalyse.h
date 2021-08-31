@@ -21,12 +21,11 @@ private:
 
   struct sLine {
     std::string mText;
-    std::string mFoldComment;
     uint32_t mLineNumber;
     uint32_t mFoldLevel;
+    size_t mFoldBeginIndent;
     bool mFoldBegin;
     bool mFoldEnd;
-    size_t mFoldBeginPos;
     bool mFoldOpen;
 
     sLine() {}
