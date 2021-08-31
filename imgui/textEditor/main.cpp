@@ -160,9 +160,14 @@ int main(int, char**) {
 	// TEXT EDITOR SAMPLE
 	TextEditor editor;
 	auto lang = TextEditor::LanguageDefinition::CPlusPlus();
-	//{{{  set your own known preprocessor symbols...
-	static const char* ppnames[] = { "NULL", "PM_REMOVE",
-		"ZeroMemory", "DXGI_SWAP_EFFECT_DISCARD", "D3D_FEATURE_LEVEL", "D3D_DRIVER_TYPE_HARDWARE", "WINAPI","D3D11_SDK_VERSION", "assert" };
+	// set your own known preprocessor symbols...
+	//{{{
+	static const char* ppnames[] = { 
+		"NULL", "PM_REMOVE",
+		"ZeroMemory", "DXGI_SWAP_EFFECT_DISCARD", "D3D_FEATURE_LEVEL", "D3D_DRIVER_TYPE_HARDWARE", 
+		"WINAPI","D3D11_SDK_VERSION", "assert" };
+	//}}}
+	//{{{
 	// ... and their corresponding values
 	static const char* ppvalues[] = {
 		"#define NULL ((void*)0)",
@@ -178,34 +183,42 @@ int main(int, char**) {
 				"    (_wassert(_CRT_WIDE(#expression), _CRT_WIDE(__FILE__), (unsigned)(__LINE__)), 0) \n"
 				" )"
 		};
-
-	for (int i = 0; i < sizeof(ppnames) / sizeof(ppnames[0]); ++i)
-	{
+	//}}}
+	for (int i = 0; i < sizeof(ppnames) / sizeof(ppnames[0]); ++i) {
 		TextEditor::Identifier id;
 		id.mDeclaration = ppvalues[i];
 		lang.mPreprocIdentifiers.insert(std::make_pair(std::string(ppnames[i]), id));
 	}
-	//}}}
-	//{{{  set your own identifiers
+
+	// set your own identifiers
+	//{{{
 	static const char* identifiers[] = {
-		"HWND", "HRESULT", "LPRESULT","D3D11_RENDER_TARGET_VIEW_DESC", "DXGI_SWAP_CHAIN_DESC","MSG","LRESULT","WPARAM", "LPARAM","UINT","LPVOID",
-		"ID3D11Device", "ID3D11DeviceContext", "ID3D11Buffer", "ID3D11Buffer", "ID3D10Blob", "ID3D11VertexShader", "ID3D11InputLayout", "ID3D11Buffer",
-		"ID3D10Blob", "ID3D11PixelShader", "ID3D11SamplerState", "ID3D11ShaderResourceView", "ID3D11RasterizerState", "ID3D11BlendState", "ID3D11DepthStencilState",
+		"HWND", "HRESULT", "LPRESULT","D3D11_RENDER_TARGET_VIEW_DESC", "DXGI_SWAP_CHAIN_DESC","MSG",
+		"LRESULT","WPARAM", "LPARAM","UINT","LPVOID",
+		"ID3D11Device", "ID3D11DeviceContext", "ID3D11Buffer", "ID3D11Buffer", "ID3D10Blob", 
+		"ID3D11VertexShader", "ID3D11InputLayout", "ID3D11Buffer",
+		"ID3D10Blob", "ID3D11PixelShader", "ID3D11SamplerState", "ID3D11ShaderResourceView", 
+		"ID3D11RasterizerState", "ID3D11BlendState", "ID3D11DepthStencilState",
 		"IDXGISwapChain", "ID3D11RenderTargetView", "ID3D11Texture2D", "TextEditor" };
+	//}}}
+	//{{{
 	static const char* idecls[] =
 	{
-		"typedef HWND_* HWND", "typedef long HRESULT", "typedef long* LPRESULT", "struct D3D11_RENDER_TARGET_VIEW_DESC", "struct DXGI_SWAP_CHAIN_DESC",
-		"typedef tagMSG MSG\n * Message structure","typedef LONG_PTR LRESULT","WPARAM", "LPARAM","UINT","LPVOID",
-		"ID3D11Device", "ID3D11DeviceContext", "ID3D11Buffer", "ID3D11Buffer", "ID3D10Blob", "ID3D11VertexShader", "ID3D11InputLayout", "ID3D11Buffer",
-		"ID3D10Blob", "ID3D11PixelShader", "ID3D11SamplerState", "ID3D11ShaderResourceView", "ID3D11RasterizerState", "ID3D11BlendState", "ID3D11DepthStencilState",
+		"typedef HWND_* HWND", "typedef long HRESULT", "typedef long* LPRESULT", 
+		"struct D3D11_RENDER_TARGET_VIEW_DESC", "struct DXGI_SWAP_CHAIN_DESC",
+		"typedef tagMSG MSG\n * Message structure","typedef LONG_PTR LRESULT",
+		"WPARAM", "LPARAM","UINT","LPVOID",
+		"ID3D11Device", "ID3D11DeviceContext", "ID3D11Buffer", "ID3D11Buffer", 
+		"ID3D10Blob", "ID3D11VertexShader", "ID3D11InputLayout", "ID3D11Buffer",
+		"ID3D10Blob", "ID3D11PixelShader", "ID3D11SamplerState", "ID3D11ShaderResourceView", 
+		"ID3D11RasterizerState", "ID3D11BlendState", "ID3D11DepthStencilState",
 		"IDXGISwapChain", "ID3D11RenderTargetView", "ID3D11Texture2D", "class TextEditor" };
-	for (int i = 0; i < sizeof(identifiers) / sizeof(identifiers[0]); ++i)
-	{
+	//}}}
+	for (int i = 0; i < sizeof(identifiers) / sizeof(identifiers[0]); ++i) {
 		TextEditor::Identifier id;
 		id.mDeclaration = std::string(idecls[i]);
 		lang.mIdentifiers.insert(std::make_pair(std::string(identifiers[i]), id));
 	}
-	//}}}
 	editor.SetLanguageDefinition(lang);
 	//editor.SetPalette(TextEditor::GetLightPalette());
 
@@ -222,23 +235,20 @@ int main(int, char**) {
 	//editor.SetBreakpoints(bpts);
 
 	static const char* fileToEdit = "ImGuiColorTextEdit/TextEditor.cpp";
-//  static const char* fileToEdit = "test.cpp";
+	//  static const char* fileToEdit = "test.cpp";
 	{
 		std::ifstream t(fileToEdit);
-		if (t.good())
-		{
+		if (t.good()) {
 			std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 			editor.SetText(str);
-		}
+			}
 	}
 
 	// Main loop
 	MSG msg;
 	ZeroMemory(&msg, sizeof(msg));
-	while (msg.message != WM_QUIT)
-	{
-		if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
-		{
+	while (msg.message != WM_QUIT) {
+		if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 			continue;
@@ -252,12 +262,9 @@ int main(int, char**) {
 		auto cpos = editor.GetCursorPosition();
 		ImGui::Begin("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
 		ImGui::SetWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
-		if (ImGui::BeginMenuBar())
-		{
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("Save"))
-				{
+		if (ImGui::BeginMenuBar()) {
+			if (ImGui::BeginMenu("File")) {
+				if (ImGui::MenuItem("Save")) {
 					auto textToSave = editor.GetText();
 					/// save text....
 				}
@@ -265,8 +272,7 @@ int main(int, char**) {
 					break;
 				ImGui::EndMenu();
 			}
-			if (ImGui::BeginMenu("Edit"))
-			{
+			if (ImGui::BeginMenu("Edit")) {
 				bool ro = editor.IsReadOnly();
 				if (ImGui::MenuItem("Read-only mode", nullptr, &ro))
 					editor.SetReadOnly(ro);
@@ -296,8 +302,7 @@ int main(int, char**) {
 				ImGui::EndMenu();
 			}
 
-			if (ImGui::BeginMenu("View"))
-			{
+			if (ImGui::BeginMenu("View")) {
 				if (ImGui::MenuItem("Dark palette"))
 					editor.SetPalette(TextEditor::GetDarkPalette());
 				if (ImGui::MenuItem("Light palette"))

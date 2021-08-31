@@ -326,40 +326,53 @@ private:
   typedef std::vector<UndoRecord> UndoBuffer;
   //{{{  members
   void ProcessInputs();
+
   void Colorize(int aFromLine = 0, int aCount = -1);
   void ColorizeRange(int aFromLine = 0, int aToLine = 0);
   void ColorizeInternal();
+
   float TextDistanceToLineStart(const Coordinates& aFrom) const;
   void EnsureCursorVisible();
+
   int GetPageSize() const;
   std::string GetText(const Coordinates& aStart, const Coordinates& aEnd) const;
+
   Coordinates GetActualCursorCoordinates() const;
   Coordinates SanitizeCoordinates(const Coordinates& aValue) const;
   void Advance(Coordinates& aCoordinates) const;
+
   void DeleteRange(const Coordinates& aStart, const Coordinates& aEnd);
   int InsertTextAt(Coordinates& aWhere, const char* aValue);
+
   void AddUndo(UndoRecord& aValue);
+
   Coordinates ScreenPosToCoordinates(const ImVec2& aPosition) const;
   Coordinates FindWordStart(const Coordinates& aFrom) const;
   Coordinates FindWordEnd(const Coordinates& aFrom) const;
   Coordinates FindNextWord(const Coordinates& aFrom) const;
+
   int GetCharacterIndex(const Coordinates& aCoordinates) const;
   int GetCharacterColumn(int aLine, int aIndex) const;
   int GetLineCharacterCount(int aLine) const;
   int GetLineMaxColumn(int aLine) const;
+
   bool IsOnWordBoundary(const Coordinates& aAt) const;
+
   void RemoveLine(int aStart, int aEnd);
   void RemoveLine(int aIndex);
   Line& InsertLine(int aIndex);
+
   void EnterCharacter(ImWchar aChar, bool aShift);
   void Backspace();
   void DeleteSelection();
+
   std::string GetWordUnderCursor() const;
   std::string GetWordAt(const Coordinates& aCoords) const;
   ImU32 GetGlyphColor(const Glyph& aGlyph) const;
 
   void HandleKeyboardInputs();
   void HandleMouseInputs();
+
   void Render();
   //}}}
   //{{{  vars
