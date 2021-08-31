@@ -13,8 +13,8 @@ public:
   cTextAnalyse (const std::string& filename) : cFileView(filename) {}
   virtual ~cTextAnalyse() = default;
 
+  uint32_t readAndParse();
   bool analyse (tCallback callback);
-  uint32_t index();
 
 private:
   tCallback mCallback;

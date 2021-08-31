@@ -45,7 +45,7 @@ public:
 
     if (!mTextAnalyse) {
       mTextAnalyse = new cTextAnalyse ("../brush/cPaintBrush.cpp");
-      mNumFolds = mTextAnalyse->index();
+      mNumFolds = mTextAnalyse->readAndParse();
       }
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
