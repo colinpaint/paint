@@ -119,7 +119,7 @@ int main (int numArgs, char* args[]) {
     //}}}
 
   //{{{  declare cTextEditor
-  ifstream fileStream ("C:\\main.cpp");
+  ifstream fileStream ("C:\\projects\\paint\\imgui\\cTextEditor.cpp");
   string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
 
   auto languageDefinition = cTextEditor::LanguageDefinition::CPlusPlus();
