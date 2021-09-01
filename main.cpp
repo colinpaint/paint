@@ -262,45 +262,45 @@ int main (int numArgs, char* args[]) {
     //{{{
     auto cpos = editor.GetCursorPosition();
 
-    ImGui::Begin("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
-    ImGui::SetWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
+    ImGui::Begin ("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+    ImGui::SetWindowSize (ImVec2(800, 600), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar()) {
       //{{{  menu bar
-      if (ImGui::BeginMenu("File")) {
-        if (ImGui::MenuItem("Save")) {
+      if (ImGui::BeginMenu ("File")) {
+        if (ImGui::MenuItem ("Save")) {
           auto textToSave = editor.GetText();
           /// save text....
         }
-        if (ImGui::MenuItem("Quit", "Alt-F4"))
+        if (ImGui::MenuItem ("Quit", "Alt-F4"))
           break;
         ImGui::EndMenu();
       }
-      if (ImGui::BeginMenu("Edit")) {
+      if (ImGui::BeginMenu ("Edit")) {
         bool ro = editor.IsReadOnly();
-        if (ImGui::MenuItem("Read-only mode", nullptr, &ro))
-          editor.SetReadOnly(ro);
+        if (ImGui::MenuItem ("Read-only mode", nullptr, &ro))
+          editor.SetReadOnly (ro);
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Undo", "ALT-Backspace", nullptr, !ro && editor.CanUndo()))
+        if (ImGui::MenuItem ("Undo", "ALT-Backspace", nullptr, !ro && editor.CanUndo()))
           editor.Undo();
-        if (ImGui::MenuItem("Redo", "Ctrl-Y", nullptr, !ro && editor.CanRedo()))
+        if (ImGui::MenuItem ("Redo", "Ctrl-Y", nullptr, !ro && editor.CanRedo()))
           editor.Redo();
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Copy", "Ctrl-C", nullptr, editor.HasSelection()))
+        if (ImGui::MenuItem ("Copy", "Ctrl-C", nullptr, editor.HasSelection()))
           editor.Copy();
-        if (ImGui::MenuItem("Cut", "Ctrl-X", nullptr, !ro && editor.HasSelection()))
+        if (ImGui::MenuItem ("Cut", "Ctrl-X", nullptr, !ro && editor.HasSelection()))
           editor.Cut();
-        if (ImGui::MenuItem("Delete", "Del", nullptr, !ro && editor.HasSelection()))
+        if (ImGui::MenuItem ("Delete", "Del", nullptr, !ro && editor.HasSelection()))
           editor.Delete();
-        if (ImGui::MenuItem("Paste", "Ctrl-V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
+        if (ImGui::MenuItem ("Paste", "Ctrl-V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
           editor.Paste();
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Select all", nullptr, nullptr))
-          editor.SetSelection(cTextEditor::Coordinates(), cTextEditor::Coordinates(editor.GetTotalLines(), 0));
+        if (ImGui::MenuItem ("Select all", nullptr, nullptr))
+          editor.SetSelection (cTextEditor::sCoordinates(), cTextEditor::sCoordinates (editor.GetTotalLines(), 0));
 
         ImGui::EndMenu();
       }
@@ -310,8 +310,6 @@ int main (int numArgs, char* args[]) {
           editor.SetPalette (cTextEditor::GetDarkPalette());
         if (ImGui::MenuItem ("Light palette"))
           editor.SetPalette (cTextEditor::GetLightPalette());
-        if (ImGui::MenuItem ("Retro blue palette"))
-          editor.SetPalette (cTextEditor::GetRetroBluePalette());
         ImGui::EndMenu();
       }
       ImGui::EndMenuBar();
