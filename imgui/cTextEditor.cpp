@@ -362,7 +362,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
       };
     //}}}
     for (auto& k : cppKeywords)
-      langDef.mKeywords.insert(k);
+      langDef.mKeywords.insert (k);
 
     //{{{
     static const char* const identifiers[] = {
@@ -375,23 +375,19 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
       "isalnum", "isalpha", "isdigit", "isgraph", "ispunct", "isspace", "isupper",
       "kbhit",
       "log10", "log2", "log",
-      "memcmp", "modf",
-      "pow", "printf",
-      "sprintf", "snprintf",
-      "putchar", "putenv", "puts",
+      "map", "memcmp", "modf", "min", "max"
+      "pow", "printf", "putchar", "putenv", "puts",
       "rand", "remove", "rename",
-      "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror",
+      "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "set", "std", "string", "sprintf", "snprintf",
       "time", "tolower", "toupper",
-      "std", "string", "vector",
-      "map", "unordered_map",
-      "set",
-      "unordered_set", "min", "max"
+      "unordered_map", "unordered_set", 
+      "vector",
       };
     //}}}
     for (auto& k : identifiers) {
       sIdentifier id;
       id.mDeclaration = "Built-in function";
-      langDef.mIdentifiers.insert(make_pair(string(k), id));
+      langDef.mIdentifiers.insert (make_pair (string (k), id));
       }
 
     langDef.mTokenize = [](const char * in_begin, const char * in_end,
@@ -1553,7 +1549,7 @@ void cTextEditor::Redo (int steps) {
 //}}}
 
 //{{{
-void cTextEditor::Render (const char* aTitle, const ImVec2& aSize, bool aBorder) {
+void cTextEditor::Render (const char* title, const ImVec2& size, bool border) {
 
   mWithinRender = true;
   mTextChanged = false;
@@ -1563,7 +1559,7 @@ void cTextEditor::Render (const char* aTitle, const ImVec2& aSize, bool aBorder)
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
   if (!mIgnoreImGuiChild)
-    ImGui::BeginChild (aTitle, aSize, aBorder,
+    ImGui::BeginChild (title, size, border,
                        ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar |
                        ImGuiWindowFlags_NoMove);
 

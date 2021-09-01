@@ -259,10 +259,9 @@ int main (int numArgs, char* args[]) {
       }
       //}}}
     //{{{
-    auto cpos = editor.GetCursorPosition();
-
     ImGui::Begin ("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::SetWindowSize (ImVec2(800, 600), ImGuiCond_FirstUseEver);
+
     if (ImGui::BeginMenuBar()) {
       //{{{  menu bar
       if (ImGui::BeginMenu ("File")) {
@@ -315,11 +314,12 @@ int main (int numArgs, char* args[]) {
       }
       //}}}
 
-    ImGui::Text ("%6d/%-6d %6d lines  | %s | %s | %s | %s",
-                 cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
+    ImGui::Text ("%6d/%-6d %6d lines  | %s | %s | %s",
+                 editor.GetCursorPosition().mLine + 1, editor.GetCursorPosition().mColumn + 1,
+                 editor.GetTotalLines(),
                  editor.IsOverwrite() ? "Ovr" : "Ins",
                  editor.CanUndo() ? "*" : " ",
-                 editor.GetLanguage().mName.c_str(), "fileName");
+                 editor.GetLanguage().mName.c_str());
 
     editor.Render("cTextEditor");
 

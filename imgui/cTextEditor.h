@@ -43,13 +43,7 @@ public:
     Max
     };
   //}}}
-  //{{{
-  enum class eSelectionMode {
-    Normal,
-    Word,
-    Line
-    };
-  //}}}
+  enum class eSelectionMode { Normal, Word, Line };
 
   //{{{
   struct sGlyph {
@@ -59,7 +53,7 @@ public:
     bool mMultiLineComment : 1;
     bool mPreprocessor : 1;
 
-    sGlyph(uint8_t aChar, ePaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
+    sGlyph (uint8_t aChar, ePaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
       mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
     };
   //}}}
@@ -167,8 +161,8 @@ public:
 
     // vars
     std::string mName;
-    tKeywords mKeywords;
 
+    tKeywords mKeywords;
     tIdentifiers mIdentifiers;
     tIdentifiers mPreprocIdentifiers;
 
@@ -277,7 +271,7 @@ public:
   void Undo (int steps = 1);
   void Redo (int steps = 1);
 
-  void Render (const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
+  void Render (const char* title, const ImVec2& size = ImVec2(), bool border = false);
   //}}}
   //{{{  static gets
   static const tPalette& GetDarkPalette();
