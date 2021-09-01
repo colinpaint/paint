@@ -32,10 +32,10 @@ namespace {
     }
   //}}}
   //{{{
+  int UTF8CharLength (uint8_t c) {
   // https://en.wikipedia.org/wiki/UTF-8
   // We assume that the char is a standalone character (<128)
   // or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
-  int UTF8CharLength (uint8_t c) {
 
     if ((c & 0xFE) == 0xFC)
       return 6;
@@ -47,6 +47,7 @@ namespace {
       return 3;
     else if ((c & 0xE0) == 0xC0)
       return 2;
+
     return 1;
     }
   //}}}
@@ -91,7 +92,7 @@ namespace {
   //}}}
   //{{{
   bool TokenizeCStyleString (const char* in_begin, const char* in_end,
-                                    const char*& out_begin, const char*& out_end) {
+                             const char*& out_begin, const char*& out_end) {
 
     const char* p = in_begin;
 
@@ -119,7 +120,7 @@ namespace {
   //}}}
   //{{{
   bool TokenizeCStyleCharacterLiteral (const char* in_begin, const char* in_end,
-                                              const char*& out_begin, const char*& out_end) {
+                                       const char*& out_begin, const char*& out_end) {
 
     const char * p = in_begin;
 
@@ -146,7 +147,7 @@ namespace {
   //}}}
   //{{{
   bool TokenizeCStyleIdentifier (const char* in_begin, const char* in_end,
-                                        const char*& out_begin, const char*& out_end)
+                                 const char*& out_begin, const char*& out_end)
   {
     const char * p = in_begin;
 
@@ -167,7 +168,7 @@ namespace {
   //}}}
   //{{{
   bool TokenizeCStyleNumber (const char* in_begin, const char* in_end,
-                                    const char*& out_begin, const char*& out_end) {
+                             const char*& out_begin, const char*& out_end) {
 
     const char * p = in_begin;
     const bool startsWithNumber = *p >= '0' && *p <= '9';
@@ -246,7 +247,7 @@ namespace {
   //}}}
   //{{{
   bool TokenizeCStylePunctuation (const char* in_begin, const char* in_end,
-                                         const char*& out_begin, const char*& out_end) {
+                                  const char*& out_begin, const char*& out_end) {
 
     (void)in_end;
 
@@ -298,6 +299,7 @@ cTextEditor::sUndoRecord::sUndoRecord(
   assert(mRemovedStart <= mRemovedEnd);
   }
 //}}}
+
 //{{{
 void cTextEditor::sUndoRecord::Undo (cTextEditor* aEditor) {
 
@@ -314,8 +316,7 @@ void cTextEditor::sUndoRecord::Undo (cTextEditor* aEditor) {
 
   aEditor->mState = mBefore;
   aEditor->EnsureCursorVisible();
-
-}
+  }
 //}}}
 //{{{
 void cTextEditor::sUndoRecord::Redo (cTextEditor* aEditor) {
@@ -412,7 +413,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
         out_begin = in_end;
         out_end = in_end;
         paletteIndex = ePaletteIndex::Default;
-      }
+        }
       else if (TokenizeCStyleString (in_begin, in_end, out_begin, out_end))
         paletteIndex = ePaletteIndex::String;
       else if (TokenizeCStyleCharacterLiteral (in_begin, in_end, out_begin, out_end))
@@ -492,15 +493,24 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::HLSL() {
       langDef.mIdentifiers.insert(make_pair(string(k), id));
       }
 
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", ePaletteIndex::Preprocessor));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'", ePaletteIndex::CharLiteral));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Identifier));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", ePaletteIndex::Preprocessor));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'", ePaletteIndex::CharLiteral));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Identifier));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
 
     langDef.mCommentStart = "/*";
     langDef.mCommentEnd = "*/";
@@ -516,10 +526,11 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::HLSL() {
   }
 //}}}
 //{{{
-const cTextEditor::sLanguage& cTextEditor::sLanguage::GLSL()
-{
+const cTextEditor::sLanguage& cTextEditor::sLanguage::GLSL() {
+
   static bool inited = false;
   static sLanguage langDef;
+
   if (!inited) {
     //{{{
     static const char* const keywords[] = {
@@ -543,15 +554,24 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::GLSL()
       langDef.mIdentifiers.insert(make_pair(string(k), id));
       }
 
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", ePaletteIndex::Preprocessor));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'",ePaletteIndex::CharLiteral));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Identifier));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", ePaletteIndex::Preprocessor));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'",ePaletteIndex::CharLiteral));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Identifier));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
 
     langDef.mCommentStart = "/*";
     langDef.mCommentEnd = "*/";
@@ -571,6 +591,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::C() {
 
   static bool inited = false;
   static sLanguage langDef;
+
   if (!inited) {
     //{{{
     static const char* const keywords[] = {
@@ -678,14 +699,22 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::SQL() {
       langDef.mIdentifiers.insert (make_pair (string(k), id));
       }
 
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("\\\'[^\\\']*\\\'", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Identifier));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("\\\'[^\\\']*\\\'", ePaletteIndex::String));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Identifier));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
 
     langDef.mCommentStart = "/*";
     langDef.mCommentEnd = "*/";
@@ -705,6 +734,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::AngelScript() {
 
   static bool inited = false;
   static sLanguage langDef;
+
   if (!inited) {
     //{{{
     static const char* const keywords[] = {
@@ -730,14 +760,22 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::AngelScript() {
       langDef.mIdentifiers.insert (make_pair (string(k), id));
       }
 
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Identifier));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'", ePaletteIndex::String));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Identifier));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
 
     langDef.mCommentStart = "/*";
     langDef.mCommentEnd = "*/";
@@ -757,6 +795,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::Lua() {
 
   static bool inited = false;
   static sLanguage langDef;
+
   if (!inited) {
     //{{{
     static const char* const keywords[] = {
@@ -788,13 +827,20 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::Lua() {
       langDef.mIdentifiers.insert (make_pair(string(k), id));
       }
 
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("\\\'[^\\\']*\\\'", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Identifier));
-    langDef.mTokenRegexStrings.push_back (make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex> ("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex> ("\\\'[^\\\']*\\\'", ePaletteIndex::String));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex> ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex> ("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Identifier));
+    langDef.mTokenRegexStrings.push_back (
+      make_pair<string, ePaletteIndex> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
 
     langDef.mCommentStart = "--[[";
     langDef.mCommentEnd = "]]";
@@ -815,7 +861,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::Lua() {
 cTextEditor::cTextEditor()
   : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4),
     mOverwrite(false) , mReadOnly(false) , mWithinRender(false),
-    mScrollToCursor(false), mScrollToTop(false), 
+    mScrollToCursor(false), mScrollToTop(false),
     mTextChanged(false), mColorizerEnabled(true),
     mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false),
     mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(eSelectionMode::Normal) , mCheckComments(true),
@@ -2642,7 +2688,7 @@ void cTextEditor::HandleKeyboardInputs() {
 
   if (ImGui::IsWindowFocused()) {
     if (ImGui::IsWindowHovered())
-      ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput);
+      ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
     //ImGui::CaptureKeyboardFromApp(true);
 
     io.WantCaptureKeyboard = true;
@@ -2650,62 +2696,62 @@ void cTextEditor::HandleKeyboardInputs() {
 
     if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Z)))
       Undo();
-    else if (!IsReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Backspace)))
+    else if (!IsReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Backspace)))
       Undo();
-    else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Y)))
+    else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Y)))
       Redo();
-    else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)))
-      MoveUp(1, shift);
-    else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)))
-      MoveDown(1, shift);
-    else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)))
-      MoveLeft(1, shift, ctrl);
-    else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)))
-      MoveRight(1, shift, ctrl);
-    else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp)))
-      MoveUp(GetPageSize() - 4, shift);
-    else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown)))
-      MoveDown(GetPageSize() - 4, shift);
-    else if (!alt && ctrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)))
-      MoveTop(shift);
-    else if (ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)))
-      MoveBottom(shift);
-    else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)))
-      MoveHome(shift);
-    else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)))
-      MoveEnd(shift);
-    else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete)))
+    else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_UpArrow)))
+      MoveUp (1, shift);
+    else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_DownArrow)))
+      MoveDown (1, shift);
+    else if (!alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_LeftArrow)))
+      MoveLeft (1, shift, ctrl);
+    else if (!alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_RightArrow)))
+      MoveRight (1, shift, ctrl);
+    else if (!alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageUp)))
+      MoveUp (GetPageSize() - 4, shift);
+    else if (!alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageDown)))
+      MoveDown (GetPageSize() - 4, shift);
+    else if (!alt && ctrl && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Home)))
+      MoveTop (shift);
+    else if (ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_End)))
+      MoveBottom (shift);
+    else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Home)))
+      MoveHome (shift);
+    else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_End)))
+      MoveEnd (shift);
+    else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Delete)))
       Delete();
-    else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Backspace)))
+    else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Backspace)))
       Backspace();
-    else if (!ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Insert)))
+    else if (!ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_Insert)))
       mOverwrite ^= true;
-    else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Insert)))
+    else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_Insert)))
       Copy();
-    else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_C)))
+    else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_C)))
       Copy();
-    else if (!IsReadOnly() && !ctrl && shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Insert)))
+    else if (!IsReadOnly() && !ctrl && shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Insert)))
       Paste();
-    else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_V)))
+    else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_V)))
       Paste();
     else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_X)))
       Cut();
-    else if (!ctrl && shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete)))
+    else if (!ctrl && shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_Delete)))
       Cut();
-    else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_A)))
+    else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_A)))
       SelectAll();
-    else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)))
-      EnterCharacter('\n', false);
-    else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Tab)))
-      EnterCharacter('\t', shift);
+    else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Enter)))
+      EnterCharacter ('\n', false);
+    else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Tab)))
+      EnterCharacter ('\t', shift);
 
     if (!IsReadOnly() && !io.InputQueueCharacters.empty()) {
       for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
         auto c = io.InputQueueCharacters[i];
         if (c != 0 && (c == '\n' || c >= 32))
-          EnterCharacter(c, shift);
+          EnterCharacter (c, shift);
         }
-      io.InputQueueCharacters.resize(0);
+      io.InputQueueCharacters.resize (0);
       }
     }
   }
@@ -2878,7 +2924,7 @@ void cTextEditor::Render() {
       auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA (
         ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
       drawList->AddText (ImVec2 (lineStartScreenPos.x + mTextStart - lineNoWidth,
-                                 lineStartScreenPos.y), 
+                                 lineStartScreenPos.y),
                          mPalette[(int)ePaletteIndex::LineNumber], buf);
 
       if (mState.mCursorPosition.mLine == lineNo) {
@@ -2887,7 +2933,7 @@ void cTextEditor::Render() {
         // Highlight the current line (where the cursor is)
         if (!HasSelection()) {
           auto end = ImVec2 (start.x + contentSize.x + scrollX, start.y + mCharAdvance.y);
-          drawList->AddRectFilled (start, end, 
+          drawList->AddRectFilled (start, end,
             mPalette[(int)(focused ? ePaletteIndex::CurrentLineFill : ePaletteIndex::CurrentLineFillInactive)]);
           drawList->AddRect (start, end, mPalette[(int)ePaletteIndex::CurrentLineEdge], 1.0f);
           }
@@ -2943,7 +2989,7 @@ void cTextEditor::Render() {
 
         if (glyph.mChar == '\t') {
           auto oldX = bufferOffset.x;
-          bufferOffset.x = (1.0f + 
+          bufferOffset.x = (1.0f +
             floor ((1.0f + bufferOffset.x) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
           ++i;
 
