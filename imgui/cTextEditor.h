@@ -150,13 +150,13 @@ public:
     };
   //}}}
 
-  typedef std::vector<sGlyph> Line;
-  typedef std::vector<Line> Lines;
-  typedef std::unordered_map<std::string, sIdentifier> Identifiers;
-  typedef std::unordered_set<std::string> Keywords;
-  typedef std::map<int, std::string> ErrorMarkers;
-  typedef std::unordered_set<int> Breakpoints;
-  typedef std::array<ImU32, (unsigned)ePaletteIndex::Max> Palette;
+  typedef std::vector<sGlyph> tLine;
+  typedef std::vector<tLine> tLines;
+  typedef std::unordered_map<std::string, sIdentifier> tIdentifiers;
+  typedef std::unordered_set<std::string> tKeywords;
+  typedef std::map<int, std::string> tErrorMarkers;
+  typedef std::unordered_set<int> tBreakpoints;
+  typedef std::array<ImU32, (unsigned)ePaletteIndex::Max> tPalette;
 
   //{{{
   struct sLanguageDefinition {
@@ -168,10 +168,10 @@ public:
 
     // vars
     std::string mName;
-    Keywords mKeywords;
+    tKeywords mKeywords;
 
-    Identifiers mIdentifiers;
-    Identifiers mPreprocIdentifiers;
+    tIdentifiers mIdentifiers;
+    tIdentifiers mPreprocIdentifiers;
 
     std::string mCommentStart;
     std::string mCommentEnd;
@@ -205,12 +205,12 @@ public:
 
 
   const sLanguageDefinition& GetLanguageDefinition() const { return mLanguageDefinition; }
-  const Palette& GetPalette() const { return mPaletteBase; }
+  const tPalette& GetPalette() const { return mPaletteBase; }
 
-  void SetErrorMarkers (const ErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
-  void SetBreakpoints (const Breakpoints& aMarkers) { mBreakpoints = aMarkers; }
+  void SetErrorMarkers (const tErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
+  void SetBreakpoints (const tBreakpoints& aMarkers) { mBreakpoints = aMarkers; }
   void SetLanguageDefinition (const sLanguageDefinition& aLanguageDef);
-  void SetPalette (const Palette& aValue);
+  void SetPalette (const tPalette& aValue);
   void SetText (const std::string& aText);
   void SetTextLines (const std::vector<std::string>& aLines);
 
@@ -281,15 +281,15 @@ public:
   void Redo (int aSteps = 1);
   //}}}
   //{{{  static members
-  static const Palette& GetDarkPalette();
-  static const Palette& GetLightPalette();
-  static const Palette& GetRetroBluePalette();
+  static const tPalette& GetDarkPalette();
+  static const tPalette& GetLightPalette();
+  static const tPalette& GetRetroBluePalette();
   //}}}
 
 private:
   typedef std::vector<std::pair<std::regex, ePaletteIndex>> RegexList;
   //{{{
-  struct EditorState
+  struct sEditorState
   {
     Coordinates mSelectionStart;
     Coordinates mSelectionEnd;
@@ -297,13 +297,13 @@ private:
   };
   //}}}
   //{{{
-  class UndoRecord
+  class sUndoRecord
   {
   public:
-    UndoRecord() {}
-    ~UndoRecord() {}
+    sUndoRecord() {}
+    ~sUndoRecord() {}
 
-    UndoRecord(
+    sUndoRecord(
       const std::string& aAdded,
       const cTextEditor::Coordinates aAddedStart,
       const cTextEditor::Coordinates aAddedEnd,
@@ -312,8 +312,8 @@ private:
       const cTextEditor::Coordinates aRemovedStart,
       const cTextEditor::Coordinates aRemovedEnd,
 
-      cTextEditor::EditorState& aBefore,
-      cTextEditor::EditorState& aAfter);
+      cTextEditor::sEditorState& aBefore,
+      cTextEditor::sEditorState& aAfter);
 
     void Undo (cTextEditor* aEditor);
     void Redo (cTextEditor* aEditor);
@@ -326,12 +326,12 @@ private:
     Coordinates mRemovedStart;
     Coordinates mRemovedEnd;
 
-    EditorState mBefore;
-    EditorState mAfter;
+    sEditorState mBefore;
+    sEditorState mAfter;
   };
   //}}}
 
-  typedef std::vector<UndoRecord> UndoBuffer;
+  typedef std::vector<sUndoRecord> UndoBuffer;
   //{{{  members
   void ProcessInputs();
 
@@ -352,7 +352,7 @@ private:
   void DeleteRange(const Coordinates& aStart, const Coordinates& aEnd);
   int InsertTextAt(Coordinates& aWhere, const char* aValue);
 
-  void AddUndo(UndoRecord& aValue);
+  void AddUndo(sUndoRecord& aValue);
 
   Coordinates ScreenPosToCoordinates(const ImVec2& aPosition) const;
   Coordinates FindWordStart(const Coordinates& aFrom) const;
@@ -368,7 +368,7 @@ private:
 
   void RemoveLine(int aStart, int aEnd);
   void RemoveLine(int aIndex);
-  Line& InsertLine(int aIndex);
+  tLine& InsertLine(int aIndex);
 
   void EnterCharacter(ImWchar aChar, bool aShift);
   void Backspace();
@@ -385,8 +385,8 @@ private:
   //}}}
   //{{{  vars
   float mLineSpacing;
-  Lines mLines;
-  EditorState mState;
+  tLines mLines;
+  sEditorState mState;
   UndoBuffer mUndoBuffer;
   int mUndoIndex;
 
@@ -408,14 +408,14 @@ private:
   bool mIgnoreImGuiChild;
   bool mShowWhitespaces;
 
-  Palette mPaletteBase;
-  Palette mPalette;
+  tPalette mPaletteBase;
+  tPalette mPalette;
   sLanguageDefinition mLanguageDefinition;
   RegexList mRegexList;
 
   bool mCheckComments;
-  Breakpoints mBreakpoints;
-  ErrorMarkers mErrorMarkers;
+  tBreakpoints mBreakpoints;
+  tErrorMarkers mErrorMarkers;
   ImVec2 mCharAdvance;
   Coordinates mInteractiveStart, mInteractiveEnd;
   std::string mLineBuffer;

@@ -65,7 +65,7 @@ cTextEditor::cTextEditor()
   SetPalette (GetDarkPalette());
   SetLanguageDefinition (sLanguageDefinition::HLSL());
 
-  mLines.push_back (Line());
+  mLines.push_back (tLine());
   }
 //}}}
 
@@ -82,7 +82,7 @@ void cTextEditor::SetLanguageDefinition (const sLanguageDefinition& aLanguageDef
   }
 //}}}
 //{{{
-void cTextEditor::SetPalette (const Palette& aValue) {
+void cTextEditor::SetPalette (const tPalette& aValue) {
   mPaletteBase = aValue;
   }
 //}}}
@@ -90,14 +90,14 @@ void cTextEditor::SetPalette (const Palette& aValue) {
 void cTextEditor::SetText (const string& aText) {
 
   mLines.clear();
-  mLines.emplace_back (Line());
+  mLines.emplace_back (tLine());
 
   for (auto chr : aText) {
     if (chr == '\r') {
       // ignore the carriage return character
       }
     else if (chr == '\n')
-      mLines.emplace_back (Line());
+      mLines.emplace_back (tLine());
     else {
       mLines.back().emplace_back (sGlyph (chr, ePaletteIndex::Default));
       }
@@ -118,7 +118,7 @@ void cTextEditor::SetTextLines (const vector<string>& aLines) {
   mLines.clear();
 
   if (aLines.empty()) {
-    mLines.emplace_back (Line());
+    mLines.emplace_back (tLine());
     }
   else {
     mLines.resize(aLines.size());
@@ -356,7 +356,7 @@ int cTextEditor::InsertTextAt (Coordinates& /* inout */ aWhere, const char * aVa
   }
 //}}}
 //{{{
-void cTextEditor::AddUndo (UndoRecord& aValue) {
+void cTextEditor::AddUndo (sUndoRecord& aValue) {
 
   assert(!mReadOnly);
   //printf("AddUndo: (@%d.%d) +\'%s' [%d.%d .. %d.%d], -\'%s', [%d.%d .. %d.%d] (@%d.%d)\n",
@@ -639,16 +639,16 @@ void cTextEditor::RemoveLine (int aStart, int aEnd) {
   assert (aEnd >= aStart);
   assert (mLines.size() > (size_t)(aEnd - aStart));
 
-  ErrorMarkers etmp;
+  tErrorMarkers etmp;
   for (auto& i : mErrorMarkers) {
-    ErrorMarkers::value_type e(i.first >= aStart ? i.first - 1 : i.first, i.second);
+    tErrorMarkers::value_type e(i.first >= aStart ? i.first - 1 : i.first, i.second);
     if (e.first >= aStart && e.first <= aEnd)
       continue;
     etmp.insert(e);
     }
   mErrorMarkers = move (etmp);
 
-  Breakpoints btmp;
+  tBreakpoints btmp;
   for (auto i : mBreakpoints) {
     if (i >= aStart && i <= aEnd)
       continue;
@@ -668,16 +668,16 @@ void cTextEditor::RemoveLine (int aIndex) {
   assert(!mReadOnly);
   assert(mLines.size() > 1);
 
-  ErrorMarkers etmp;
+  tErrorMarkers etmp;
   for (auto& i : mErrorMarkers) {
-    ErrorMarkers::value_type e(i.first > aIndex ? i.first - 1 : i.first, i.second);
+    tErrorMarkers::value_type e(i.first > aIndex ? i.first - 1 : i.first, i.second);
     if (e.first - 1 == aIndex)
       continue;
     etmp.insert(e);
     }
   mErrorMarkers = move (etmp);
 
-  Breakpoints btmp;
+  tBreakpoints btmp;
   for (auto i : mBreakpoints) {
     if (i == aIndex)
       continue;
@@ -692,18 +692,18 @@ void cTextEditor::RemoveLine (int aIndex) {
   }
 //}}}
 //{{{
-cTextEditor::Line& cTextEditor::InsertLine (int aIndex) {
+cTextEditor::tLine& cTextEditor::InsertLine (int aIndex) {
 
   assert (!mReadOnly);
 
-  auto& result = *mLines.insert (mLines.begin() + aIndex, Line());
+  auto& result = *mLines.insert (mLines.begin() + aIndex, tLine());
 
-  ErrorMarkers etmp;
+  tErrorMarkers etmp;
   for (auto& i : mErrorMarkers)
-    etmp.insert (ErrorMarkers::value_type (i.first >= aIndex ? i.first + 1 : i.first, i.second));
+    etmp.insert (tErrorMarkers::value_type (i.first >= aIndex ? i.first + 1 : i.first, i.second));
   mErrorMarkers = move (etmp);
 
-  Breakpoints btmp;
+  tBreakpoints btmp;
   for (auto i : mBreakpoints)
     btmp.insert(i >= aIndex ? i + 1 : i);
   mBreakpoints = move (btmp);
@@ -1183,7 +1183,7 @@ void cTextEditor::Render (const char* aTitle, const ImVec2& aSize, bool aBorder)
 void cTextEditor::EnterCharacter (ImWchar aChar, bool aShift) {
 
   assert(!mReadOnly);
-  UndoRecord u;
+  sUndoRecord u;
   u.mBefore = mState;
 
   if (HasSelection()) {
@@ -1674,7 +1674,7 @@ void cTextEditor::Delete() {
   if (mLines.empty())
     return;
 
-  UndoRecord u;
+  sUndoRecord u;
   u.mBefore = mState;
 
   if (HasSelection()) {
@@ -1728,7 +1728,7 @@ void cTextEditor::Backspace() {
   if (mLines.empty())
     return;
 
-  UndoRecord u;
+  sUndoRecord u;
   u.mBefore = mState;
 
   if (HasSelection()) {
@@ -1755,9 +1755,9 @@ void cTextEditor::Backspace() {
       auto prevSize = GetLineMaxColumn (mState.mCursorPosition.mLine - 1);
       prevLine.insert (prevLine.end(), line.begin(), line.end());
 
-      ErrorMarkers etmp;
+      tErrorMarkers etmp;
       for (auto& i : mErrorMarkers)
-        etmp.insert (ErrorMarkers::value_type (i.first - 1 == mState.mCursorPosition.mLine ? i.first - 1 : i.first, i.second));
+        etmp.insert (tErrorMarkers::value_type (i.first - 1 == mState.mCursorPosition.mLine ? i.first - 1 : i.first, i.second));
       mErrorMarkers = move (etmp);
 
       RemoveLine (mState.mCursorPosition.mLine);
@@ -1836,7 +1836,7 @@ void cTextEditor::Cut() {
     }
   else {
     if (HasSelection()) {
-      UndoRecord u;
+      sUndoRecord u;
       u.mBefore = mState;
       u.mRemoved = GetSelectedText();
       u.mRemovedStart = mState.mSelectionStart;
@@ -1859,7 +1859,7 @@ void cTextEditor::Paste() {
 
   auto clipText = ImGui::GetClipboardText();
   if (clipText != nullptr && strlen (clipText) > 0) {
-    UndoRecord u;
+    sUndoRecord u;
     u.mBefore = mState;
 
     if (HasSelection()) {
@@ -1899,9 +1899,9 @@ void cTextEditor::Redo (int aSteps) {
 //}}}
 
 //{{{
-const cTextEditor::Palette& cTextEditor::GetDarkPalette() {
+const cTextEditor::tPalette& cTextEditor::GetDarkPalette() {
 
-  const static Palette p = { {
+  const static tPalette p = { {
     0xff7f7f7f, // Default
     0xffd69c56, // Keyword
     0xff00ff00, // Number
@@ -1929,9 +1929,9 @@ const cTextEditor::Palette& cTextEditor::GetDarkPalette() {
   }
 //}}}
 //{{{
-const cTextEditor::Palette& cTextEditor::GetLightPalette() {
+const cTextEditor::tPalette& cTextEditor::GetLightPalette() {
 
-  const static Palette p = { {
+  const static tPalette p = { {
     0xff7f7f7f, // None
     0xffff0c06, // Keyword
     0xff008000, // Number
@@ -1959,9 +1959,9 @@ const cTextEditor::Palette& cTextEditor::GetLightPalette() {
   }
 //}}}
 //{{{
-const cTextEditor::Palette& cTextEditor::GetRetroBluePalette() {
+const cTextEditor::tPalette& cTextEditor::GetRetroBluePalette() {
 
-  const static Palette p = { {
+  const static tPalette p = { {
     0xff00ffff, // None
     0xffffff00, // Keyword
     0xff00ff00, // Number
@@ -2332,10 +2332,10 @@ int cTextEditor::GetPageSize() const {
 //}}}
 
 //{{{
-cTextEditor::UndoRecord::UndoRecord (
+cTextEditor::sUndoRecord::sUndoRecord(
   const string& aAdded, const cTextEditor::Coordinates aAddedStart, const cTextEditor::Coordinates aAddedEnd,
   const string& aRemoved, const cTextEditor::Coordinates aRemovedStart, const cTextEditor::Coordinates aRemovedEnd,
-  cTextEditor::EditorState& aBefore, cTextEditor::EditorState& aAfter)
+  cTextEditor::sEditorState& aBefore, cTextEditor::sEditorState& aAfter)
     : mAdded(aAdded), mAddedStart(aAddedStart), mAddedEnd(aAddedEnd),
       mRemoved(aRemoved), mRemovedStart(aRemovedStart), mRemovedEnd(aRemovedEnd),
       mBefore(aBefore), mAfter(aAfter) {
@@ -2345,7 +2345,7 @@ cTextEditor::UndoRecord::UndoRecord (
   }
 //}}}
 //{{{
-void cTextEditor::UndoRecord::Undo (cTextEditor* aEditor) {
+void cTextEditor::sUndoRecord::Undo (cTextEditor* aEditor) {
 
   if (!mAdded.empty()) {
     aEditor->DeleteRange (mAddedStart, mAddedEnd);
@@ -2364,7 +2364,7 @@ void cTextEditor::UndoRecord::Undo (cTextEditor* aEditor) {
 }
 //}}}
 //{{{
-void cTextEditor::UndoRecord::Redo (cTextEditor* aEditor) {
+void cTextEditor::sUndoRecord::Redo (cTextEditor* aEditor) {
 
   if (!mRemoved.empty()) {
     aEditor->DeleteRange (mRemovedStart, mRemovedEnd);
