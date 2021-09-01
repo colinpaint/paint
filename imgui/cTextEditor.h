@@ -80,9 +80,9 @@ public:
 
     sCoordinates() : mLine(0), mColumn(0) {}
     //{{{
-    sCoordinates(int aLine, int aColumn) : mLine(aLine), mColumn(aColumn)
+    sCoordinates(int line, int aColumn) : mLine(line), mColumn(aColumn)
     {
-      assert(aLine >= 0);
+      assert(line >= 0);
       assert(aColumn >= 0);
     }
     static sCoordinates Invalid() { static sCoordinates invalid(-1, -1); return invalid; }
@@ -183,12 +183,12 @@ public:
 
     // static const
     static const sLanguage& CPlusPlus();
+    static const sLanguage& C();
     static const sLanguage& HLSL();
     static const sLanguage& GLSL();
-    static const sLanguage& C();
-    static const sLanguage& SQL();
     static const sLanguage& AngelScript();
     static const sLanguage& Lua();
+    static const sLanguage& SQL();
     };
   //}}}
 
@@ -223,44 +223,44 @@ public:
   inline int GetTabSize() const { return mTabSize; }
   //}}}
   //{{{  sets
-  void SetErrorMarkers (const tErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
-  void SetBreakpoints (const tBreakpoints& aMarkers) { mBreakpoints = aMarkers; }
-  void SetLanguage (const sLanguage& aLanguageDef);
-  void SetPalette (const tPalette& aValue);
+  void SetErrorMarkers (const tErrorMarkers& markers) { mErrorMarkers = markers; }
+  void SetBreakpoints (const tBreakpoints& markers) { mBreakpoints = markers; }
+  void SetLanguage (const sLanguage& language);
+  void SetPalette (const tPalette& value);
 
-  void SetText (const std::string& aText);
-  void SetTextLines (const std::vector<std::string>& aLines);
+  void SetText (const std::string& text);
+  void SetTextLines (const std::vector<std::string>& lines);
 
-  void SetReadOnly (bool aValue) { mReadOnly = aValue; }
-  void SetColorizerEnable (bool aValue) { mColorizerEnabled = aValue; }
+  void SetReadOnly (bool value) { mReadOnly = value; }
+  void SetColorizerEnable (bool value) { mColorizerEnabled = value; }
 
-  void SetCursorPosition (const sCoordinates& aPosition);
-  void SetTabSize (int aValue) { mTabSize = std::max(0, std::min(32, aValue)); }
-  void SetSelectionStart (const sCoordinates& aPosition);
-  void SetSelectionEnd (const sCoordinates& aPosition);
-  void SetSelection (const sCoordinates& aStart, const sCoordinates& aEnd, eSelectionMode aMode = eSelectionMode::Normal);
+  void SetCursorPosition (const sCoordinates& position);
+  void SetTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
+  void SetSelectionStart (const sCoordinates& position);
+  void SetSelectionEnd (const sCoordinates& position);
+  void SetSelection (const sCoordinates& startCord, const sCoordinates& endCord, eSelectionMode aMode = eSelectionMode::Normal);
 
-  inline void SetHandleMouseInputs (bool aValue) { mHandleMouseInputs = aValue;}
-  inline void SetHandleKeyboardInputs (bool aValue) { mHandleKeyboardInputs = aValue;}
-  inline void SetImGuiChildIgnored (bool aValue) { mIgnoreImGuiChild = aValue;}
-  inline void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
+  inline void SetHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
+  inline void SetHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
+  inline void SetImGuiChildIgnored (bool value) { mIgnoreImGuiChild = value;}
+  inline void SetShowWhitespaces(bool value) { mShowWhitespaces = value; }
   //}}}
   //{{{  actions
-  void MoveUp (int aAmount = 1, bool aSelect = false);
-  void MoveDown (int aAmount = 1, bool aSelect = false);
-  void MoveLeft (int aAmount = 1, bool aSelect = false, bool aWordMode = false);
-  void MoveRight (int aAmount = 1, bool aSelect = false, bool aWordMode = false);
+  void MoveUp (int aAmount = 1, bool select = false);
+  void MoveDown (int aAmount = 1, bool select = false);
+  void MoveLeft (int aAmount = 1, bool select = false, bool wordMode = false);
+  void MoveRight (int aAmount = 1, bool select = false, bool wordMode = false);
 
-  void MoveTop (bool aSelect = false);
-  void MoveBottom (bool aSelect = false);
-  void MoveHome (bool aSelect = false);
-  void MoveEnd (bool aSelect = false);
+  void MoveTop (bool select = false);
+  void MoveBottom (bool select = false);
+  void MoveHome (bool select = false);
+  void MoveEnd (bool select = false);
 
   void SelectAll();
   void SelectWordUnderCursor();
 
-  void InsertText(const char* aValue);
-  void InsertText (const std::string& aValue) { InsertText (aValue.c_str()); }
+  void InsertText(const char* value);
+  void InsertText (const std::string& value) { InsertText (value.c_str()); }
   void Copy();
   void Cut();
   void Paste();
@@ -307,8 +307,8 @@ private:
       cTextEditor::sEditorState& aBefore,
       cTextEditor::sEditorState& aAfter);
 
-    void Undo (cTextEditor* aEditor);
-    void Redo (cTextEditor* aEditor);
+    void Undo (cTextEditor* editor);
+    void Redo (cTextEditor* editor);
 
     std::string mAdded;
     sCoordinates mAddedStart;
@@ -328,46 +328,46 @@ private:
   bool IsOnWordBoundary (const sCoordinates& aAt) const;
 
   int GetPageSize() const;
-  std::string GetText (const sCoordinates& aStart, const sCoordinates& aEnd) const;
+  std::string GetText (const sCoordinates& startCord, const sCoordinates& endCord) const;
   sCoordinates GetActualCursorCoordinates() const { return SanitizeCoordinates (mState.mCursorPosition); }
 
   int GetCharacterIndex (const sCoordinates& aCoordinates) const;
-  int GetCharacterColumn (int aLine, int aIndex) const;
-  int GetLineCharacterCount (int aLine) const;
-  int GetLineMaxColumn (int aLine) const;
+  int GetCharacterColumn (int lineCoord, int index) const;
+  int GetLineCharacterCount (int lineCoord) const;
+  int GetLineMaxColumn (int lineCoord) const;
 
-  std::string GetWordAt (const sCoordinates& aCoords) const;
+  std::string GetWordAt (const sCoordinates& coords) const;
   std::string GetWordUnderCursor() const;
-  ImU32 GetGlyphColor (const sGlyph& aGlyph) const;
+  ImU32 GetGlyphColor (const sGlyph& glyph) const;
 
-  float TextDistanceToLineStart (const sCoordinates& aFrom) const;
+  float TextDistanceToLineStart (const sCoordinates& from) const;
   //}}}
   //{{{  coords
-  sCoordinates SanitizeCoordinates (const sCoordinates& aValue) const;
-  sCoordinates ScreenPosToCoordinates (const ImVec2& aPosition) const;
+  sCoordinates SanitizeCoordinates (const sCoordinates& value) const;
+  sCoordinates ScreenPosToCoordinates (const ImVec2& position) const;
   //}}}
   //{{{  find
-  sCoordinates FindWordStart (const sCoordinates& aFrom) const;
-  sCoordinates FindWordEnd (const sCoordinates& aFrom) const;
-  sCoordinates FindNextWord (const sCoordinates& aFrom) const;
+  sCoordinates FindWordStart (const sCoordinates& from) const;
+  sCoordinates FindWordEnd (const sCoordinates& from) const;
+  sCoordinates FindNextWord (const sCoordinates& from) const;
   //}}}
   //{{{  colorize
-  void Colorize (int aFromLine = 0, int aCount = -1);
-  void ColorizeRange (int aFromLine = 0, int aToLine = 0);
+  void Colorize (int fromLine = 0, int count = -1);
+  void ColorizeRange (int fromLine = 0, int toLine = 0);
   void ColorizeInternal();
   //}}}
   //{{{  actions
   void EnsureCursorVisible();
 
   void Advance (sCoordinates& aCoordinates) const;
-  void DeleteRange (const sCoordinates& aStart, const sCoordinates& aEnd);
-  int InsertTextAt (sCoordinates& aWhere, const char* aValue);
+  void DeleteRange (const sCoordinates& startCord, const sCoordinates& endCord);
+  int InsertTextAt (sCoordinates& aWhere, const char* value);
 
-  void AddUndo (sUndoRecord& aValue);
+  void AddUndo (sUndoRecord& value);
 
-  void RemoveLine (int aStart, int aEnd);
-  void RemoveLine (int aIndex);
-  tLine& InsertLine (int aIndex);
+  void RemoveLine (int startCord, int endCord);
+  void RemoveLine (int index);
+  tLine& InsertLine (int index);
 
   void EnterCharacter (ImWchar aChar, bool aShift);
 
@@ -375,8 +375,8 @@ private:
   void DeleteSelection();
   //}}}
 
-  void HandleKeyboardInputs();
   void HandleMouseInputs();
+  void HandleKeyboardInputs();
 
   void Render();
   //{{{  vars
