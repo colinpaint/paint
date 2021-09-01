@@ -6,7 +6,9 @@
 #include <string>
 #include <vector>
 #include <functional>
-//#include <format>
+
+#include <fstream>
+#include <streambuf>
 
 // stb - invoke header only library implementation here
 #define STB_IMAGE_IMPLEMENTATION
@@ -38,9 +40,6 @@
 
 using namespace std;
 //}}}
-
-#include <fstream>
-#include <streambuf>
 
 int main (int numArgs, char* args[]) {
 
@@ -119,18 +118,23 @@ int main (int numArgs, char* args[]) {
     );
     //}}}
 
-  //{{{
-  cTextEditor editor;
-  auto lang = cTextEditor::LanguageDefinition::CPlusPlus();
+  //{{{  declare cTextEditor
+  ifstream fileStream ("C:\\main.cpp");
+  string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
 
-  // set your own known preprocessor symbols...
-  //{{{
+  auto languageDefinition = cTextEditor::LanguageDefinition::CPlusPlus();
+  //{{{  set your own preprocessor
   static const char* ppnames[] = {
-    "NULL", "PM_REMOVE",
-    "ZeroMemory", "DXGI_SWAP_EFFECT_DISCARD", "D3D_FEATURE_LEVEL", "D3D_DRIVER_TYPE_HARDWARE",
-    "WINAPI","D3D11_SDK_VERSION", "assert" };
-  //}}}
-  //{{{
+    "NULL",
+    "PM_REMOVE",
+    "ZeroMemory",
+    "DXGI_SWAP_EFFECT_DISCARD",
+    "D3D_FEATURE_LEVEL",
+    "D3D_DRIVER_TYPE_HARDWARE",
+    "WINAPI",
+    "D3D11_SDK_VERSION",
+    "assert" };
+
   // ... and their corresponding values
   static const char* ppvalues[] = {
     "#define NULL ((void*)0)",
@@ -146,64 +150,99 @@ int main (int numArgs, char* args[]) {
         "    (_wassert(_CRT_WIDE(#expression), _CRT_WIDE(__FILE__), (unsigned)(__LINE__)), 0) \n"
         " )"
     };
-  //}}}
+
   for (int i = 0; i < sizeof(ppnames) / sizeof(ppnames[0]); ++i) {
     cTextEditor::Identifier id;
     id.mDeclaration = ppvalues[i];
-    lang.mPreprocIdentifiers.insert(std::make_pair(std::string(ppnames[i]), id));
+    languageDefinition.mPreprocIdentifiers.insert (std::make_pair(std::string(ppnames[i]), id));
     }
-
-  // set your own identifiers
-  //{{{
+  //}}}
+  //{{{  set your own identifiers
   static const char* identifiers[] = {
-    "HWND", "HRESULT", "LPRESULT","D3D11_RENDER_TARGET_VIEW_DESC", "DXGI_SWAP_CHAIN_DESC","MSG",
-    "LRESULT","WPARAM", "LPARAM","UINT","LPVOID",
-    "ID3D11Device", "ID3D11DeviceContext", "ID3D11Buffer", "ID3D11Buffer", "ID3D10Blob",
-    "ID3D11VertexShader", "ID3D11InputLayout", "ID3D11Buffer",
-    "ID3D10Blob", "ID3D11PixelShader", "ID3D11SamplerState", "ID3D11ShaderResourceView",
-    "ID3D11RasterizerState", "ID3D11BlendState", "ID3D11DepthStencilState",
-    "IDXGISwapChain", "ID3D11RenderTargetView", "ID3D11Texture2D", "cTextEditor" };
-  //}}}
-  //{{{
-  static const char* idecls[] =
-  {
-    "typedef HWND_* HWND", "typedef long HRESULT", "typedef long* LPRESULT",
-    "struct D3D11_RENDER_TARGET_VIEW_DESC", "struct DXGI_SWAP_CHAIN_DESC",
-    "typedef tagMSG MSG\n * Message structure","typedef LONG_PTR LRESULT",
-    "WPARAM", "LPARAM","UINT","LPVOID",
-    "ID3D11Device", "ID3D11DeviceContext", "ID3D11Buffer", "ID3D11Buffer",
-    "ID3D10Blob", "ID3D11VertexShader", "ID3D11InputLayout", "ID3D11Buffer",
-    "ID3D10Blob", "ID3D11PixelShader", "ID3D11SamplerState", "ID3D11ShaderResourceView",
-    "ID3D11RasterizerState", "ID3D11BlendState", "ID3D11DepthStencilState",
-    "IDXGISwapChain", "ID3D11RenderTargetView", "ID3D11Texture2D", "class cTextEditor" };
-  //}}}
+    "HWND",
+    "HRESULT",
+    "LPRESULT",
+    "D3D11_RENDER_TARGET_VIEW_DESC",
+    "DXGI_SWAP_CHAIN_DESC","MSG",
+    "LRESULT",
+    "WPARAM",
+    "LPARAM",
+    "UINT",
+    "LPVOID",
+    "ID3D11Device",
+    "ID3D11DeviceContext",
+    "ID3D11Buffer", "ID3D11Buffer",
+    "ID3D10Blob",
+    "ID3D11VertexShader",
+    "ID3D11InputLayout",
+    "ID3D11Buffer",
+    "ID3D10Blob",
+    "ID3D11PixelShader",
+    "ID3D11SamplerState",
+    "ID3D11ShaderResourceView",
+    "ID3D11RasterizerState",
+    "ID3D11BlendState",
+    "ID3D11DepthStencilState",
+    "IDXGISwapChain",
+    "ID3D11RenderTargetView",
+    "ID3D11Texture2D",
+    "cTextEditor" };
+
+  static const char* idecls[] = {
+    "typedef HWND_* HWND",
+    "typedef long HRESULT",
+    "typedef long* LPRESULT",
+    "struct D3D11_RENDER_TARGET_VIEW_DESC",
+    "struct DXGI_SWAP_CHAIN_DESC",
+    "typedef tagMSG MSG\n * Message structure",
+    "typedef LONG_PTR LRESULT",
+    "WPARAM",
+    "LPARAM",
+    "UINT",
+    "LPVOID",
+    "ID3D11Device",
+    "ID3D11DeviceContext",
+    "ID3D11Buffer",
+    "ID3D11Buffer",
+    "ID3D10Blob",
+    "ID3D11VertexShader",
+    "ID3D11InputLayout",
+    "ID3D11Buffer",
+    "ID3D10Blob",
+    "ID3D11PixelShader",
+    "ID3D11SamplerState",
+    "ID3D11ShaderResourceView",
+    "ID3D11RasterizerState",
+    "ID3D11BlendState",
+    "ID3D11DepthStencilState",
+    "IDXGISwapChain",
+    "ID3D11RenderTargetView",
+    "ID3D11Texture2D",
+    "class cTextEditor" };
+
   for (int i = 0; i < sizeof(identifiers) / sizeof(identifiers[0]); ++i) {
     cTextEditor::Identifier id;
     id.mDeclaration = std::string(idecls[i]);
-    lang.mIdentifiers.insert(std::make_pair(std::string(identifiers[i]), id));
+    languageDefinition.mIdentifiers.insert (std::make_pair(std::string(identifiers[i]), id));
     }
+  //}}}
 
-  editor.SetLanguageDefinition (lang);
-  //editor.SetPalette(cTextEditor::GetLightPalette());
-
-  // error markers
-  cTextEditor::ErrorMarkers markers;
-  markers.insert(std::make_pair<int, std::string>(6, "Example error here:\nInclude file not found: \"cTextEditor.h\""));
-  markers.insert(std::make_pair<int, std::string>(41, "Another example error"));
-  editor.SetErrorMarkers(markers);
-
-  // "breakpoint" markers
+  cTextEditor editor;
+  editor.SetLanguageDefinition (languageDefinition);
+  editor.SetPalette(cTextEditor::GetLightPalette());
+  editor.SetText (str);
+  //{{{  error markers
+  //cTextEditor::ErrorMarkers markers;
+  //markers.insert (std::make_pair<int, std::string>(6, "Example error here:\nInclude file not found: \"cTextEditor.h\""));
+  //markers.insert (std::make_pair<int, std::string>(41, "Another example error"));
+  //editor.SetErrorMarkers (markers);
+  //}}}
+  //{{{  "breakpoint" markers
   //cTextEditor::Breakpoints bpts;
   //bpts.insert(24);
   //bpts.insert(47);
-  //editor.SetBreakpoints(bpts);
-
-  static const char* fileToEdit = "C:/Users/colin/Desktop/cPaintBrush.cpp";
-  //std::ifstream t(fileToEdit);
-  //if (t.good()) {
-    //std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-  editor.SetText("int main (int numArgs, char* args[] {\n}\n");
-
+  //editor.SetBreakpoints (bpts);
+  //}}}
   //}}}
 
   // main UI loop
@@ -279,10 +318,11 @@ int main (int numArgs, char* args[]) {
       }
       //}}}
 
-    ImGui::Text ("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
+    ImGui::Text ("%6d/%-6d %6d lines  | %s | %s | %s | %s",
+                 cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
                  editor.IsOverwrite() ? "Ovr" : "Ins",
                  editor.CanUndo() ? "*" : " ",
-                 editor.GetLanguageDefinition().mName.c_str(), fileToEdit);
+                 editor.GetLanguageDefinition().mName.c_str(), "fileName");
 
     editor.Render("cTextEditor");
 

@@ -3,15 +3,14 @@
 //{{{  includes
 #include <cstdint>
 #include <string>
+#include <memory>
+#include <regex>
 
 #include <vector>
 #include <array>
-#include <memory>
-#include <unordered_set>
-#include <unordered_map>
 #include <map>
-
-#include <regex>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "imgui.h"
 //}}}
@@ -51,6 +50,7 @@ public:
     Line
     };
   //}}}
+
   //{{{
   struct Breakpoint {
     int mLine;
@@ -143,7 +143,6 @@ public:
   typedef std::map<int, std::string> ErrorMarkers;
   typedef std::unordered_set<int> Breakpoints;
   typedef std::array<ImU32, (unsigned)PaletteIndex::Max> Palette;
-  //typedef uint8_t Char;
 
   //{{{
   struct Glyph {
@@ -159,6 +158,7 @@ public:
   //}}}
   typedef std::vector<Glyph> Line;
   typedef std::vector<Line> Lines;
+
   //{{{
   struct LanguageDefinition {
 
@@ -200,20 +200,19 @@ public:
   cTextEditor();
   ~cTextEditor() = default;
   //{{{  members
-  void SetLanguageDefinition(const LanguageDefinition& aLanguageDef);
   const LanguageDefinition& GetLanguageDefinition() const { return mLanguageDefinition; }
-
   const Palette& GetPalette() const { return mPaletteBase; }
-  void SetPalette(const Palette& aValue);
 
-  void SetErrorMarkers(const ErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
-  void SetBreakpoints(const Breakpoints& aMarkers) { mBreakpoints = aMarkers; }
+  void SetErrorMarkers (const ErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
+  void SetBreakpoints (const Breakpoints& aMarkers) { mBreakpoints = aMarkers; }
+  void SetLanguageDefinition (const LanguageDefinition& aLanguageDef);
+  void SetPalette (const Palette& aValue);
+  void SetText (const std::string& aText);
+  void SetTextLines (const std::vector<std::string>& aLines);
 
-  void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
-  void SetText(const std::string& aText);
+  void Render (const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
+
   std::string GetText() const;
-
-  void SetTextLines(const std::vector<std::string>& aLines);
   std::vector<std::string> GetTextLines() const;
 
   std::string GetSelectedText() const;

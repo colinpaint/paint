@@ -26,6 +26,25 @@ bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Bi
 //}}}
 
 static bool IsUTFSequence (char c) { return (c & 0xC0) == 0x80; }
+//{{{
+// https://en.wikipedia.org/wiki/UTF-8
+// We assume that the char is a standalone character (<128)
+// or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
+static int UTF8CharLength (uint8_t c) {
+
+  if ((c & 0xFE) == 0xFC)
+    return 6;
+  if ((c & 0xFC) == 0xF8)
+    return 5;
+  if ((c & 0xF8) == 0xF0)
+    return 4;
+  else if ((c & 0xF0) == 0xE0)
+    return 3;
+  else if ((c & 0xE0) == 0xC0)
+    return 2;
+  return 1;
+  }
+//}}}
 
 //{{{
 cTextEditor::cTextEditor()
@@ -60,6 +79,60 @@ void cTextEditor::SetLanguageDefinition (const LanguageDefinition& aLanguageDef)
 //{{{
 void cTextEditor::SetPalette (const Palette& aValue) {
   mPaletteBase = aValue;
+  }
+//}}}
+//{{{
+void cTextEditor::SetText (const string& aText) {
+
+  mLines.clear();
+  mLines.emplace_back (Line());
+
+  for (auto chr : aText) {
+    if (chr == '\r') {
+      // ignore the carriage return character
+      }
+    else if (chr == '\n')
+      mLines.emplace_back (Line());
+    else {
+      mLines.back().emplace_back (Glyph(chr, PaletteIndex::Default));
+      }
+    }
+
+  mTextChanged = true;
+  mScrollToTop = true;
+
+  mUndoBuffer.clear();
+  mUndoIndex = 0;
+
+  Colorize();
+  }
+//}}}
+//{{{
+void cTextEditor::SetTextLines (const vector<string>& aLines) {
+
+  mLines.clear();
+
+  if (aLines.empty()) {
+    mLines.emplace_back (Line());
+    }
+  else {
+    mLines.resize(aLines.size());
+    for (size_t i = 0; i < aLines.size(); ++i) {
+      const string& aLine = aLines[i];
+
+      mLines[i].reserve(aLine.size());
+      for (size_t j = 0; j < aLine.size(); ++j)
+        mLines[i].emplace_back(Glyph (aLine[j], PaletteIndex::Default));
+      }
+    }
+
+  mTextChanged = true;
+  mScrollToTop = true;
+
+  mUndoBuffer.clear();
+  mUndoIndex = 0;
+
+  Colorize();
   }
 //}}}
 
@@ -100,6 +173,7 @@ string cTextEditor::GetText (const Coordinates& aStart, const Coordinates& aEnd)
 //}}}
 //{{{
 cTextEditor::Coordinates cTextEditor::GetActualCursorCoordinates() const {
+
   return SanitizeCoordinates (mState.mCursorPosition);
   }
 //}}}
@@ -123,32 +197,13 @@ cTextEditor::Coordinates cTextEditor::SanitizeCoordinates (const Coordinates& aV
     }
 
   else {
-    column = mLines.empty() ? 0 : min(column, GetLineMaxColumn(line));
+    column = mLines.empty() ? 0 : min (column, GetLineMaxColumn (line));
     return Coordinates (line, column);
     }
 
   }
 //}}}
 
-//{{{
-// https://en.wikipedia.org/wiki/UTF-8
-// We assume that the char is a standalone character (<128)
-// or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
-static int UTF8CharLength (uint8_t c) {
-
-  if ((c & 0xFE) == 0xFC)
-    return 6;
-  if ((c & 0xFC) == 0xF8)
-    return 5;
-  if ((c & 0xF8) == 0xF0)
-    return 4;
-  else if ((c & 0xF0) == 0xE0)
-    return 3;
-  else if ((c & 0xE0) == 0xC0)
-    return 2;
-  return 1;
-  }
-//}}}
 //{{{
 static inline int ImTextCharToUtf8 (char* buf, int buf_size, unsigned int c) {
 // "Borrowed" from ImGui source
@@ -159,15 +214,15 @@ static inline int ImTextCharToUtf8 (char* buf, int buf_size, unsigned int c) {
     }
 
   if (c < 0x800) {
-    if (buf_size < 2) return 0;
+    if (buf_size < 2) 
+      return 0;
     buf[0] = (char)(0xc0 + (c >> 6));
     buf[1] = (char)(0x80 + (c & 0x3f));
     return 2;
     }
 
-  if (c >= 0xdc00 && c < 0xe000) {
+  if (c >= 0xdc00 && c < 0xe000) 
     return 0;
-    }
 
   if (c >= 0xd800 && c < 0xdc00) {
     if (buf_size < 4) return 0;
@@ -212,8 +267,8 @@ void cTextEditor::Advance (Coordinates& aCoordinates) const {
 //{{{
 void cTextEditor::DeleteRange (const Coordinates& aStart, const Coordinates& aEnd) {
 
-  assert(aEnd >= aStart);
-  assert(!mReadOnly);
+  assert (aEnd >= aStart);
+  assert (!mReadOnly);
 
   //printf("D(%d.%d)-(%d.%d)\n", aStart.mLine, aStart.mColumn, aEnd.mLine, aEnd.mColumn);
 
@@ -231,6 +286,7 @@ void cTextEditor::DeleteRange (const Coordinates& aStart, const Coordinates& aEn
     else
       line.erase(line.begin() + start, line.begin() + end);
     }
+
   else {
     auto& firstLine = mLines[aStart.mLine];
     auto& lastLine = mLines[aEnd.mLine];
@@ -251,10 +307,11 @@ void cTextEditor::DeleteRange (const Coordinates& aStart, const Coordinates& aEn
 //{{{
 int cTextEditor::InsertTextAt (Coordinates& /* inout */ aWhere, const char * aValue) {
 
-  assert(!mReadOnly);
+  assert (!mReadOnly);
 
-  int cindex = GetCharacterIndex(aWhere);
+  int cindex = GetCharacterIndex (aWhere);
   int totalLines = 0;
+
   while (*aValue != '\0') {
     assert(!mLines.empty());
 
@@ -266,7 +323,7 @@ int cTextEditor::InsertTextAt (Coordinates& /* inout */ aWhere, const char * aVa
       if (cindex < (int)mLines[aWhere.mLine].size()) {
         auto& newLine = InsertLine(aWhere.mLine + 1);
         auto& line = mLines[aWhere.mLine];
-        newLine.insert(newLine.begin(), line.begin() + cindex, line.end());
+        newLine.insert (newLine.begin(), line.begin() + cindex, line.end());
         line.erase(line.begin() + cindex, line.end());
         }
       else {
@@ -278,11 +335,12 @@ int cTextEditor::InsertTextAt (Coordinates& /* inout */ aWhere, const char * aVa
       ++totalLines;
       ++aValue;
       }
+
     else {
       auto& line = mLines[aWhere.mLine];
       auto d = UTF8CharLength(*aValue);
       while (d-- > 0 && *aValue != '\0')
-        line.insert(line.begin() + cindex++, Glyph(*aValue++, PaletteIndex::Default));
+        line.insert (line.begin() + cindex++, Glyph(*aValue++, PaletteIndex::Default));
       ++aWhere.mColumn;
       }
 
@@ -303,7 +361,7 @@ void cTextEditor::AddUndo (UndoRecord& aValue) {
   //  aValue.mAfter.mCursorPosition.mLine, aValue.mAfter.mCursorPosition.mColumn
   //  );
 
-  mUndoBuffer.resize((size_t)(mUndoIndex + 1));
+  mUndoBuffer.resize ((size_t)(mUndoIndex + 1));
   mUndoBuffer.back() = aValue;
   ++mUndoIndex;
   }
@@ -315,11 +373,11 @@ cTextEditor::Coordinates cTextEditor::ScreenPosToCoordinates (const ImVec2& aPos
   ImVec2 origin = ImGui::GetCursorScreenPos();
   ImVec2 local(aPosition.x - origin.x, aPosition.y - origin.y);
 
-  int lineNo = max(0, (int)floor(local.y / mCharAdvance.y));
+  int lineNo = max(0, (int)floor (local.y / mCharAdvance.y));
   int columnCoord = 0;
 
   if (lineNo >= 0 && lineNo < (int)mLines.size()) {
-    auto& line = mLines.at(lineNo);
+    auto& line = mLines.at (lineNo);
 
     int columnIndex = 0;
     float columnX = 0.0f;
@@ -346,16 +404,18 @@ cTextEditor::Coordinates cTextEditor::ScreenPosToCoordinates (const ImVec2& aPos
         while (i < 6 && d-- > 0)
           buf[i++] = line[columnIndex++].mChar;
         buf[i] = '\0';
-        columnWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf).x;
+
+        columnWidth = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, buf).x;
         if (mTextStart + columnX + columnWidth * 0.5f > local.x)
           break;
+
         columnX += columnWidth;
         columnCoord++;
         }
       }
     }
 
-  return SanitizeCoordinates(Coordinates(lineNo, columnCoord));
+  return SanitizeCoordinates (Coordinates(lineNo, columnCoord));
   }
 //}}}
 //{{{
@@ -432,9 +492,10 @@ cTextEditor::Coordinates cTextEditor::FindNextWord (const Coordinates& aFrom) co
     return at;
 
   // skip to the next non-word character
-  auto cindex = GetCharacterIndex(aFrom);
   bool isword = false;
   bool skip = false;
+
+  auto cindex = GetCharacterIndex(aFrom);
   if (cindex < (int)mLines[at.mLine].size()) {
     auto& line = mLines[at.mLine];
     isword = isalnum(line[cindex].mChar);
@@ -444,15 +505,15 @@ cTextEditor::Coordinates cTextEditor::FindNextWord (const Coordinates& aFrom) co
   while (!isword || skip) {
     if (at.mLine >= mLines.size()) {
       auto l = max(0, (int) mLines.size() - 1);
-      return Coordinates(l, GetLineMaxColumn(l));
+      return Coordinates (l, GetLineMaxColumn(l));
       }
 
     auto& line = mLines[at.mLine];
     if (cindex < (int)line.size()) {
-      isword = isalnum(line[cindex].mChar);
+      isword = isalnum (line[cindex].mChar);
 
       if (isword && !skip)
-        return Coordinates(at.mLine, GetCharacterColumn(at.mLine, cindex));
+        return Coordinates (at.mLine, GetCharacterColumn(at.mLine, cindex));
 
       if (!isword)
         skip = false;
@@ -479,6 +540,7 @@ int cTextEditor::GetCharacterIndex (const Coordinates& aCoordinates) const {
 
   auto& line = mLines[aCoordinates.mLine];
   int c = 0;
+
   int i = 0;
   for (; i < line.size() && c < aCoordinates.mColumn;) {
     if (line[i].mChar == '\t')
@@ -499,6 +561,7 @@ int cTextEditor::GetCharacterColumn (int aLine, int aIndex) const {
 
   auto& line = mLines[aLine];
   int col = 0;
+
   int i = 0;
   while (i < aIndex && i < (int)line.size()) {
     auto c = line[i].mChar;
@@ -657,11 +720,10 @@ string cTextEditor::GetWordAt (const Coordinates& aCoords) const {
   auto start = FindWordStart (aCoords);
   auto end = FindWordEnd (aCoords);
 
-  string r;
-
   auto istart = GetCharacterIndex (start);
   auto iend = GetCharacterIndex (end);
 
+  string r;
   for (auto it = istart; it < iend; ++it)
     r.push_back (mLines[aCoords.mLine][it].mChar);
 
@@ -1109,61 +1171,6 @@ void cTextEditor::Render (const char* aTitle, const ImVec2& aSize, bool aBorder)
   ImGui::PopStyleColor();
 
   mWithinRender = false;
-  }
-//}}}
-
-//{{{
-void cTextEditor::SetText (const string& aText) {
-
-  mLines.clear();
-  mLines.emplace_back (Line());
-
-  for (auto chr : aText) {
-    if (chr == '\r') {
-      // ignore the carriage return character
-      }
-    else if (chr == '\n')
-      mLines.emplace_back (Line());
-    else {
-      mLines.back().emplace_back (Glyph(chr, PaletteIndex::Default));
-      }
-    }
-
-  mTextChanged = true;
-  mScrollToTop = true;
-
-  mUndoBuffer.clear();
-  mUndoIndex = 0;
-
-  Colorize();
-  }
-//}}}
-//{{{
-void cTextEditor::SetTextLines (const vector<string>& aLines) {
-
-  mLines.clear();
-
-  if (aLines.empty()) {
-    mLines.emplace_back (Line());
-    }
-  else {
-    mLines.resize(aLines.size());
-    for (size_t i = 0; i < aLines.size(); ++i) {
-      const string& aLine = aLines[i];
-
-      mLines[i].reserve(aLine.size());
-      for (size_t j = 0; j < aLine.size(); ++j)
-        mLines[i].emplace_back(Glyph (aLine[j], PaletteIndex::Default));
-      }
-    }
-
-  mTextChanged = true;
-  mScrollToTop = true;
-
-  mUndoBuffer.clear();
-  mUndoIndex = 0;
-
-  Colorize();
   }
 //}}}
 
