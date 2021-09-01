@@ -144,13 +144,13 @@ public:
     };
   //}}}
 
-  typedef std::vector<sGlyph> tLine;
-  typedef std::vector<tLine> tLines;
-  typedef std::array<ImU32, (unsigned)ePaletteIndex::Max> tPalette;
-  typedef std::unordered_map<std::string, sIdent> tIdents;
-  typedef std::unordered_set<std::string> tKeywords;
-  typedef std::map<int, std::string> tErrorMarkers;
-  typedef std::unordered_set<int> tBreaks;
+  using tLine = std::vector<sGlyph>;
+  using tLines = std::vector<tLine>;
+  using tPalette = std::array<ImU32, (unsigned)ePaletteIndex::Max>;
+  using tIdents = std::unordered_map<std::string, sIdent>;
+  using tKeywords = std::unordered_set<std::string>;
+  using tErrorMarkers = std::map<int, std::string>;
+  using tBreaks = std::unordered_set<int>;
   //{{{
   struct sLanguage {
     // typedef
