@@ -258,7 +258,7 @@ int main (int numArgs, char* args[]) {
       #endif
       }
       //}}}
-    //{{{
+    //{{{  render textEditor
     ImGui::Begin ("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::SetWindowSize (ImVec2(800, 600), ImGuiCond_FirstUseEver);
 
@@ -268,11 +268,12 @@ int main (int numArgs, char* args[]) {
         if (ImGui::MenuItem ("Save")) {
           auto textToSave = editor.GetText();
           /// save text....
-        }
+          }
         if (ImGui::MenuItem ("Quit", "Alt-F4"))
           break;
         ImGui::EndMenu();
-      }
+        }
+
       if (ImGui::BeginMenu ("Edit")) {
         bool ro = editor.IsReadOnly();
         if (ImGui::MenuItem ("Read-only mode", nullptr, &ro))
@@ -301,15 +302,8 @@ int main (int numArgs, char* args[]) {
           editor.SetSelection (cTextEditor::sCoordinates(), cTextEditor::sCoordinates (editor.GetTotalLines(), 0));
 
         ImGui::EndMenu();
-      }
+        }
 
-      if (ImGui::BeginMenu ("View")) {
-        if (ImGui::MenuItem ("Dark palette"))
-          editor.SetPalette (cTextEditor::GetDarkPalette());
-        if (ImGui::MenuItem ("Light palette"))
-          editor.SetPalette (cTextEditor::GetLightPalette());
-        ImGui::EndMenu();
-      }
       ImGui::EndMenuBar();
       }
       //}}}

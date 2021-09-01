@@ -156,8 +156,8 @@ public:
     // typedef
     typedef std::pair<std::string, ePaletteIndex> TokenRegexString;
     typedef std::vector<TokenRegexString> TokenRegexStrings;
-    typedef bool (*TokenizeCallback)(const char* in_begin, const char* in_end,
-                                     const char*& out_begin, const char*& out_end, ePaletteIndex& paletteIndex);
+    typedef bool (*TokenizeCallback)(const char* inBegin, const char* inEnd,
+                                     const char*& outBegin, const char*& outEnd, ePaletteIndex& paletteIndex);
 
     // vars
     std::string mName;
@@ -324,10 +324,9 @@ private:
   //}}}
 
   typedef std::vector<sUndoRecord> tUndoBuffer;
-  //{{{  members
+  //{{{  gets
   bool IsOnWordBoundary (const sCoordinates& aAt) const;
 
-  // gets
   int GetPageSize() const;
   std::string GetText (const sCoordinates& aStart, const sCoordinates& aEnd) const;
   sCoordinates GetActualCursorCoordinates() const { return SanitizeCoordinates (mState.mCursorPosition); }
@@ -337,39 +336,49 @@ private:
   int GetLineCharacterCount (int aLine) const;
   int GetLineMaxColumn (int aLine) const;
 
-  std::string GetWordUnderCursor() const;
   std::string GetWordAt (const sCoordinates& aCoords) const;
+  std::string GetWordUnderCursor() const;
   ImU32 GetGlyphColor (const sGlyph& aGlyph) const;
 
+  float TextDistanceToLineStart (const sCoordinates& aFrom) const;
+  //}}}
+  //{{{  coords
   sCoordinates SanitizeCoordinates (const sCoordinates& aValue) const;
   sCoordinates ScreenPosToCoordinates (const ImVec2& aPosition) const;
+  //}}}
+  //{{{  find
   sCoordinates FindWordStart (const sCoordinates& aFrom) const;
   sCoordinates FindWordEnd (const sCoordinates& aFrom) const;
   sCoordinates FindNextWord (const sCoordinates& aFrom) const;
-
+  //}}}
+  //{{{  colorize
   void Colorize (int aFromLine = 0, int aCount = -1);
   void ColorizeRange (int aFromLine = 0, int aToLine = 0);
   void ColorizeInternal();
-
-  float TextDistanceToLineStart (const sCoordinates& aFrom) const;
+  //}}}
+  //{{{  actions
   void EnsureCursorVisible();
 
   void Advance (sCoordinates& aCoordinates) const;
   void DeleteRange (const sCoordinates& aStart, const sCoordinates& aEnd);
   int InsertTextAt (sCoordinates& aWhere, const char* aValue);
+
   void AddUndo (sUndoRecord& aValue);
+
   void RemoveLine (int aStart, int aEnd);
   void RemoveLine (int aIndex);
   tLine& InsertLine (int aIndex);
+
   void EnterCharacter (ImWchar aChar, bool aShift);
+
   void Backspace();
   void DeleteSelection();
+  //}}}
 
   void HandleKeyboardInputs();
   void HandleMouseInputs();
 
   void Render();
-  //}}}
   //{{{  vars
   float mLineSpacing;
   tLines mLines;

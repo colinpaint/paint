@@ -1,4 +1,4 @@
-// cTextEditor.cpp
+// cTextEditor.cpp - nicked from https://github.com/BalazsJako/ImGuiColorTextEdit
 //{{{  includes
 #include <algorithm>
 #include <chrono>
@@ -15,7 +15,7 @@ using namespace std;
 //}}}
 //{{{  template bool equals
 template<class InputIt1, class InputIt2, class BinaryPredicate>
-bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, BinaryPredicate p) {
+bool equals (InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, BinaryPredicate p) {
   for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
     if (!p(*first1, *first2))
       return false;
@@ -91,24 +91,24 @@ namespace {
     }
   //}}}
   //{{{
-  bool TokenizeCStyleString (const char* in_begin, const char* in_end,
-                             const char*& out_begin, const char*& out_end) {
+  bool TokenizeCStyleString (const char* inBegin, const char* inEnd,
+                             const char*& outBegin, const char*& outEnd) {
 
-    const char* p = in_begin;
+    const char* p = inBegin;
 
     if (*p == '"') {
       p++;
 
-      while (p < in_end) {
+      while (p < inEnd) {
         // handle end of string
         if (*p == '"') {
-          out_begin = in_begin;
-          out_end = p + 1;
+          outBegin = inBegin;
+          outEnd = p + 1;
           return true;
          }
 
         // handle escape character for "
-        if (*p == '\\' && p + 1 < in_end && p[1] == '"')
+        if (*p == '\\' && p + 1 < inEnd && p[1] == '"')
           p++;
 
         p++;
@@ -119,25 +119,25 @@ namespace {
     }
   //}}}
   //{{{
-  bool TokenizeCStyleCharacterLiteral (const char* in_begin, const char* in_end,
-                                       const char*& out_begin, const char*& out_end) {
+  bool TokenizeCStyleCharacterLiteral (const char* inBegin, const char* inEnd,
+                                       const char*& outBegin, const char*& outEnd) {
 
-    const char * p = in_begin;
+    const char * p = inBegin;
 
     if (*p == '\'') {
       p++;
 
       // handle escape characters
-      if (p < in_end && *p == '\\')
+      if (p < inEnd && *p == '\\')
         p++;
 
-      if (p < in_end)
+      if (p < inEnd)
         p++;
 
       // handle end of character literal
-      if (p < in_end && *p == '\'') {
-        out_begin = in_begin;
-        out_end = p + 1;
+      if (p < inEnd && *p == '\'') {
+        outBegin = inBegin;
+        outEnd = p + 1;
         return true;
         }
       }
@@ -146,20 +146,20 @@ namespace {
     }
   //}}}
   //{{{
-  bool TokenizeCStyleIdentifier (const char* in_begin, const char* in_end,
-                                 const char*& out_begin, const char*& out_end) {
+  bool TokenizeCStyleIdentifier (const char* inBegin, const char* inEnd,
+                                 const char*& outBegin, const char*& outEnd) {
 
-    const char * p = in_begin;
+    const char * p = inBegin;
 
     if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || *p == '_') {
       p++;
 
-      while ((p < in_end) && ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') ||
+      while ((p < inEnd) && ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') ||
              (*p >= '0' && *p <= '9') || *p == '_'))
         p++;
 
-      out_begin = in_begin;
-      out_end = p;
+      outBegin = inBegin;
+      outEnd = p;
       return true;
       }
 
@@ -167,17 +167,17 @@ namespace {
     }
   //}}}
   //{{{
-  bool TokenizeCStyleNumber (const char* in_begin, const char* in_end,
-                             const char*& out_begin, const char*& out_end) {
+  bool TokenizeCStyleNumber (const char* inBegin, const char* inEnd,
+                             const char*& outBegin, const char*& outEnd) {
 
-    const char * p = in_begin;
+    const char * p = inBegin;
     const bool startsWithNumber = *p >= '0' && *p <= '9';
     if (*p != '+' && *p != '-' && !startsWithNumber)
       return false;
 
     p++;
     bool hasNumber = startsWithNumber;
-    while (p < in_end && (*p >= '0' && *p <= '9')) {
+    while (p < inEnd && (*p >= '0' && *p <= '9')) {
       hasNumber = true;
       p++;
       }
@@ -187,35 +187,35 @@ namespace {
     bool isHex = false;
     bool isFloat = false;
     bool isBinary = false;
-    if (p < in_end) {
+    if (p < inEnd) {
       if (*p == '.') {
         isFloat = true;
         p++;
-        while (p < in_end && (*p >= '0' && *p <= '9'))
+        while (p < inEnd && (*p >= '0' && *p <= '9'))
           p++;
         }
       else if (*p == 'x' || *p == 'X') { // hex formatted integer of the type 0xef80
         isHex = true;
         p++;
-        while (p < in_end && ((*p >= '0' && *p <= '9') || (*p >= 'a' && *p <= 'f') || (*p >= 'A' && *p <= 'F')))
+        while (p < inEnd && ((*p >= '0' && *p <= '9') || (*p >= 'a' && *p <= 'f') || (*p >= 'A' && *p <= 'F')))
           p++;
         }
       else if (*p == 'b' || *p == 'B') { // binary formatted integer of the type 0b01011101
         isBinary = true;
         p++;
-        while (p < in_end && (*p >= '0' && *p <= '1'))
+        while (p < inEnd && (*p >= '0' && *p <= '1'))
           p++;
         }
       }
 
     if (isHex == false && isBinary == false) { // floating point exponent
-      if (p < in_end && (*p == 'e' || *p == 'E')) {
+      if (p < inEnd && (*p == 'e' || *p == 'E')) {
         isFloat = true;
         p++;
-        if (p < in_end && (*p == '+' || *p == '-'))
+        if (p < inEnd && (*p == '+' || *p == '-'))
           p++;
         bool hasDigits = false;
-        while (p < in_end && (*p >= '0' && *p <= '9')) {
+        while (p < inEnd && (*p >= '0' && *p <= '9')) {
           hasDigits = true;
           p++;
           }
@@ -224,26 +224,26 @@ namespace {
         }
 
       // single precision floating point type
-      if (p < in_end && *p == 'f')
+      if (p < inEnd && *p == 'f')
         p++;
       }
 
     if (isFloat == false) // integer size type
-      while (p < in_end && (*p == 'u' || *p == 'U' || *p == 'l' || *p == 'L'))
+      while (p < inEnd && (*p == 'u' || *p == 'U' || *p == 'l' || *p == 'L'))
         p++;
 
-    out_begin = in_begin;
-    out_end = p;
+    outBegin = inBegin;
+    outEnd = p;
     return true;
     }
   //}}}
   //{{{
-  bool TokenizeCStylePunctuation (const char* in_begin, const char* in_end,
-                                  const char*& out_begin, const char*& out_end) {
+  bool TokenizeCStylePunctuation (const char* inBegin, const char* inEnd,
+                                  const char*& outBegin, const char*& outEnd) {
 
-    (void)in_end;
+    (void)inEnd;
 
-    switch (*in_begin) {
+    switch (*inBegin) {
       case '[':
       case ']':
       case '{':
@@ -268,8 +268,8 @@ namespace {
       case ';':
       case ',':
       case '.':
-        out_begin = in_begin;
-        out_end = in_begin + 1;
+        outBegin = inBegin;
+        outEnd = inBegin + 1;
         return true;
       }
 
@@ -380,7 +380,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
       "rand", "remove", "rename",
       "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "set", "std", "string", "sprintf", "snprintf",
       "time", "tolower", "toupper",
-      "unordered_map", "unordered_set", 
+      "unordered_map", "unordered_set",
       "vector",
       };
     //}}}
@@ -390,27 +390,27 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
       langDef.mIdentifiers.insert (make_pair (string (k), id));
       }
 
-    langDef.mTokenize = [](const char * in_begin, const char * in_end,
-                           const char *& out_begin, const char *& out_end, ePaletteIndex & paletteIndex) -> bool {
+    langDef.mTokenize = [](const char * inBegin, const char * inEnd,
+                           const char *& outBegin, const char *& outEnd, ePaletteIndex & paletteIndex) -> bool {
       paletteIndex = ePaletteIndex::Max;
 
-      while (in_begin < in_end && isascii(*in_begin) && isblank(*in_begin))
-        in_begin++;
+      while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
+        inBegin++;
 
-      if (in_begin == in_end) {
-        out_begin = in_end;
-        out_end = in_end;
+      if (inBegin == inEnd) {
+        outBegin = inEnd;
+        outEnd = inEnd;
         paletteIndex = ePaletteIndex::Default;
         }
-      else if (TokenizeCStyleString (in_begin, in_end, out_begin, out_end))
+      else if (TokenizeCStyleString (inBegin, inEnd, outBegin, outEnd))
         paletteIndex = ePaletteIndex::String;
-      else if (TokenizeCStyleCharacterLiteral (in_begin, in_end, out_begin, out_end))
+      else if (TokenizeCStyleCharacterLiteral (inBegin, inEnd, outBegin, outEnd))
         paletteIndex = ePaletteIndex::CharLiteral;
-      else if (TokenizeCStyleIdentifier (in_begin, in_end, out_begin, out_end))
+      else if (TokenizeCStyleIdentifier (inBegin, inEnd, outBegin, outEnd))
         paletteIndex = ePaletteIndex::Identifier;
-      else if (TokenizeCStyleNumber (in_begin, in_end, out_begin, out_end))
+      else if (TokenizeCStyleNumber (inBegin, inEnd, outBegin, outEnd))
         paletteIndex = ePaletteIndex::Number;
-      else if (TokenizeCStylePunctuation (in_begin, in_end, out_begin, out_end))
+      else if (TokenizeCStylePunctuation (inBegin, inEnd, outBegin, outEnd))
         paletteIndex = ePaletteIndex::Punctuation;
 
       return paletteIndex != ePaletteIndex::Max;
@@ -603,27 +603,27 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::C() {
       langDef.mIdentifiers.insert (make_pair (string(k), id));
       }
 
-    langDef.mTokenize = [](const char * in_begin, const char * in_end,
-                           const char *& out_begin, const char *& out_end, ePaletteIndex & paletteIndex) -> bool {
+    langDef.mTokenize = [](const char * inBegin, const char * inEnd,
+                           const char *& outBegin, const char *& outEnd, ePaletteIndex & paletteIndex) -> bool {
       paletteIndex = ePaletteIndex::Max;
 
-      while (in_begin < in_end && isascii(*in_begin) && isblank(*in_begin))
-        in_begin++;
+      while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
+        inBegin++;
 
-      if (in_begin == in_end) {
-        out_begin = in_end;
-        out_end = in_end;
+      if (inBegin == inEnd) {
+        outBegin = inEnd;
+        outEnd = inEnd;
         paletteIndex = ePaletteIndex::Default;
         }
-      else if (TokenizeCStyleString(in_begin, in_end, out_begin, out_end))
+      else if (TokenizeCStyleString (inBegin, inEnd, outBegin, outEnd))
         paletteIndex = ePaletteIndex::String;
-      else if (TokenizeCStyleCharacterLiteral(in_begin, in_end, out_begin, out_end))
+      else if (TokenizeCStyleCharacterLiteral (inBegin, inEnd, outBegin, outEnd))
         paletteIndex = ePaletteIndex::CharLiteral;
-      else if (TokenizeCStyleIdentifier(in_begin, in_end, out_begin, out_end))
+      else if (TokenizeCStyleIdentifier (inBegin, inEnd, outBegin, outEnd))
         paletteIndex = ePaletteIndex::Identifier;
-      else if (TokenizeCStyleNumber(in_begin, in_end, out_begin, out_end))
+      else if (TokenizeCStyleNumber (inBegin, inEnd, outBegin, outEnd))
         paletteIndex = ePaletteIndex::Number;
-      else if (TokenizeCStylePunctuation(in_begin, in_end, out_begin, out_end))
+      else if (TokenizeCStylePunctuation (inBegin, inEnd, outBegin, outEnd))
         paletteIndex = ePaletteIndex::Punctuation;
 
       return paletteIndex != ePaletteIndex::Max;
@@ -864,8 +864,7 @@ cTextEditor::cTextEditor()
   mLines.push_back (tLine());
   }
 //}}}
-
-// gets
+//{{{  gets
 //{{{
 bool cTextEditor::IsOnWordBoundary (const sCoordinates& aAt) const {
 
@@ -1000,8 +999,8 @@ int cTextEditor::GetLineMaxColumn (int aLine) const {
   return col;
   }
 //}}}
-
-// sets
+//}}}
+//{{{  sets
 //{{{
 void cTextEditor::SetLanguage (const sLanguage& aLanguageDef) {
 
@@ -1137,8 +1136,8 @@ void cTextEditor::SetSelection (const sCoordinates& aStart, const sCoordinates& 
     mCursorPositionChanged = true;
   }
 //}}}
-
-// actions
+//}}}
+//{{{  actions
 //{{{
 void cTextEditor::MoveUp (int aAmount, bool aSelect) {
 
@@ -1547,7 +1546,7 @@ void cTextEditor::Redo (int steps) {
     mUndoBuffer[mUndoIndex++].Redo (this);
   }
 //}}}
-
+//}}}
 //{{{
 void cTextEditor::Render (const char* title, const ImVec2& size, bool border) {
 
@@ -1650,6 +1649,7 @@ const cTextEditor::tPalette& cTextEditor::GetLightPalette() {
 //}}}
 
 // private:
+//{{{  gets
 //{{{
 int cTextEditor::GetPageSize() const {
 
@@ -1742,7 +1742,8 @@ ImU32 cTextEditor::GetGlyphColor (const sGlyph& aGlyph) const {
   return color;
   }
 //}}}
-
+//}}}
+//{{{  coords
 //{{{
 cTextEditor::sCoordinates cTextEditor::SanitizeCoordinates (const sCoordinates& aValue) const {
 
@@ -1820,6 +1821,8 @@ cTextEditor::sCoordinates cTextEditor::ScreenPosToCoordinates (const ImVec2& aPo
   return SanitizeCoordinates (sCoordinates(lineNo, columnCoord));
   }
 //}}}
+//}}}
+//{{{  finds
 //{{{
 cTextEditor::sCoordinates cTextEditor::FindWordStart (const sCoordinates& aFrom) const {
 
@@ -1933,7 +1936,8 @@ cTextEditor::sCoordinates cTextEditor::FindNextWord (const sCoordinates& aFrom) 
   return at;
   }
 //}}}
-
+//}}}
+//{{{  colorize
 //{{{
 void cTextEditor::Colorize (int aFromLine, int aLines) {
 
@@ -2055,24 +2059,21 @@ void cTextEditor::ColorizeInternal() {
     auto concatenate = false;   // '\' on the very end of the line
     auto currentLine = 0;
     auto currentIndex = 0;
+
     while (currentLine < endLine || currentIndex < endIndex) {
       auto& line = mLines[currentLine];
-
       if (currentIndex == 0 && !concatenate) {
         withinSingleLineComment = false;
         withinPreproc = false;
         firstChar = true;
-      }
-
+        }
       concatenate = false;
 
       if (!line.empty()) {
         auto& g = line[currentIndex];
         auto c = g.mChar;
-
         if (c != mLanguage.mPreprocChar && !isspace(c))
           firstChar = false;
-
         if (currentIndex == (int)line.size() - 1 && line[line.size() - 1].mChar == '\\')
           concatenate = true;
 
@@ -2112,11 +2113,11 @@ void cTextEditor::ColorizeInternal() {
 
             if (singleStartStr.size() > 0 &&
               currentIndex + singleStartStr.size() <= line.size() &&
-              equals(singleStartStr.begin(), singleStartStr.end(), from, from + singleStartStr.size(), pred)) {
+              equals (singleStartStr.begin(), singleStartStr.end(), from, from + singleStartStr.size(), pred)) {
               withinSingleLineComment = true;
               }
             else if (!withinSingleLineComment && currentIndex + startStr.size() <= line.size() &&
-              equals(startStr.begin(), startStr.end(), from, from + startStr.size(), pred)) {
+              equals (startStr.begin(), startStr.end(), from, from + startStr.size(), pred)) {
               commentStartLine = currentLine;
               commentStartIndex = currentIndex;
               }
@@ -2134,6 +2135,7 @@ void cTextEditor::ColorizeInternal() {
               }
             }
           }
+
         line[currentIndex].mPreprocessor = withinPreproc;
         currentIndex += UTF8CharLength(c);
         if (currentIndex >= (int)line.size()) {
@@ -2152,7 +2154,7 @@ void cTextEditor::ColorizeInternal() {
   if (mColorRangeMin < mColorRangeMax) {
     const int increment = (mLanguage.mTokenize == nullptr) ? 10 : 10000;
     const int to = min(mColorRangeMin + increment, mColorRangeMax);
-    ColorizeRange(mColorRangeMin, to);
+    ColorizeRange (mColorRangeMin, to);
     mColorRangeMin = to;
 
     if (mColorRangeMax == mColorRangeMin) {
@@ -2163,7 +2165,8 @@ void cTextEditor::ColorizeInternal() {
     }
   }
 //}}}
-
+//}}}
+//{{{  utils
 //{{{
 float cTextEditor::TextDistanceToLineStart (const sCoordinates& aFrom) const {
 
@@ -2226,7 +2229,8 @@ void cTextEditor::EnsureCursorVisible() {
     ImGui::SetScrollX (max(0.0f, len + mTextStart + 4 - width));
   }
 //}}}
-
+//}}}
+//{{{  actions
 //{{{
 void cTextEditor::Advance (sCoordinates& aCoordinates) const {
 
@@ -2666,6 +2670,7 @@ void cTextEditor::DeleteSelection() {
   Colorize (mState.mSelectionStart.mLine, 1);
   }
 //}}}
+//}}}
 
 //{{{
 void cTextEditor::HandleKeyboardInputs() {
@@ -2808,12 +2813,13 @@ void cTextEditor::HandleMouseInputs() {
 //{{{
 void cTextEditor::Render() {
 
-  //{{{  Compute mCharAdvance regarding to scaled font size (Ctrl + mouse wheel)
+  //{{{  calc mCharAdvance regarding to scaled font size (Ctrl + mouse wheel)
   const float fontSize = ImGui::GetFont()->CalcTextSizeA (
     ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
+
   mCharAdvance = ImVec2 (fontSize, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
   //}}}
-  //{{{  Update palette with the current alpha from style
+  //{{{  update palette with the current alpha from style
   for (int i = 0; i < (int)ePaletteIndex::Max; ++i) {
     auto color = ImGui::ColorConvertU32ToFloat4 (mPaletteBase[i]);
     color.w *= ImGui::GetStyle().Alpha;
@@ -2907,7 +2913,7 @@ void cTextEditor::Render() {
           }
         }
       //}}}
-      //{{{  draw line number (right aligned)
+      //{{{  draw lineNumber rightAligned
       snprintf(buf, 16, "%d  ", lineNo + 1);
 
       auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA (
@@ -2959,7 +2965,7 @@ void cTextEditor::Render() {
           }
         }
       //}}}
-      //{{{  render colorized text
+      //{{{  render colored text
       auto prevColor = line.empty() ? mPalette[(int)ePaletteIndex::Default] : GetGlyphColor(line[0]);
       ImVec2 bufferOffset;
 
@@ -2970,7 +2976,8 @@ void cTextEditor::Render() {
         if ((color != prevColor || glyph.mChar == '\t' || glyph.mChar == ' ') && !mLineBuffer.empty()) {
           const ImVec2 newOffset (textScreenPos.x + bufferOffset.x, textScreenPos.y + bufferOffset.y);
           drawList->AddText (newOffset, prevColor, mLineBuffer.c_str());
-          auto textSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, mLineBuffer.c_str(), nullptr, nullptr);
+          auto textSize = ImGui::GetFont()->CalcTextSizeA (
+            ImGui::GetFontSize(), FLT_MAX, -1.0f, mLineBuffer.c_str(), nullptr, nullptr);
           bufferOffset.x += textSize.x;
           mLineBuffer.clear();
           }
@@ -2978,8 +2985,8 @@ void cTextEditor::Render() {
 
         if (glyph.mChar == '\t') {
           auto oldX = bufferOffset.x;
-          bufferOffset.x = (1.0f +
-            floor ((1.0f + bufferOffset.x) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
+          bufferOffset.x = (1.0f + floor ((1.0f + bufferOffset.x) / (float(mTabSize) * spaceSize))) *
+                           (float(mTabSize) * spaceSize);
           ++i;
 
           if (mShowWhitespaces) {
@@ -3022,7 +3029,7 @@ void cTextEditor::Render() {
       //}}}
       ++lineNo;
       }
-    //{{{  draw a tooltip on known identifiers/preprocessor symbols
+    //{{{  draw tooltip on known identifiers/preprocessor symbols
     if (ImGui::IsMousePosValid()) {
       auto id = GetWordAt (ScreenPosToCoordinates (ImGui::GetMousePos()));
       if (!id.empty()) {
