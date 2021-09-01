@@ -74,21 +74,20 @@ public:
   // how many space is necessary to reach the next tab stop.
   // For example, coordinate (1, 5) represents the character 'B' in a line "\tABC", when mTabSize = 4,
   // because it is rendered as "    ABC" on the screen.
-  struct sLineColumn {
+  struct sRowColumn {
     int mLine;
     int mColumn;
 
-    sLineColumn() : mLine(0), mColumn(0) {}
+    sRowColumn() : mLine(0), mColumn(0) {}
     //{{{
-    sLineColumn (int line, int aColumn) : mLine(line), mColumn(aColumn)
-    {
-      assert(line >= 0);
-      assert(aColumn >= 0);
-    }
-    static sLineColumn Invalid() { static sLineColumn invalid(-1, -1); return invalid; }
+    sRowColumn (int line, int column) : mLine(line), mColumn(column) {
+      assert (line >= 0);
+      assert (column >= 0);
+      }
     //}}}
+    static sRowColumn Invalid() { static sRowColumn invalid(-1, -1); return invalid; }
     //{{{
-    bool operator ==(const sLineColumn& o) const
+    bool operator ==(const sRowColumn& o) const
     {
       return
         mLine == o.mLine &&
@@ -96,7 +95,7 @@ public:
     }
     //}}}
     //{{{
-    bool operator !=(const sLineColumn& o) const
+    bool operator !=(const sRowColumn& o) const
     {
       return
         mLine != o.mLine ||
@@ -104,7 +103,7 @@ public:
     }
     //}}}
     //{{{
-    bool operator <(const sLineColumn& o) const
+    bool operator <(const sRowColumn& o) const
     {
       if (mLine != o.mLine)
         return mLine < o.mLine;
@@ -112,7 +111,7 @@ public:
     }
     //}}}
     //{{{
-    bool operator >(const sLineColumn& o) const
+    bool operator >(const sRowColumn& o) const
     {
       if (mLine != o.mLine)
         return mLine > o.mLine;
@@ -120,7 +119,7 @@ public:
     }
     //}}}
     //{{{
-    bool operator <=(const sLineColumn& o) const
+    bool operator <=(const sRowColumn& o) const
     {
       if (mLine != o.mLine)
         return mLine < o.mLine;
@@ -128,7 +127,7 @@ public:
     }
     //}}}
     //{{{
-    bool operator >=(const sLineColumn& o) const
+    bool operator >=(const sRowColumn& o) const
     {
       if (mLine != o.mLine)
         return mLine > o.mLine;
@@ -139,7 +138,7 @@ public:
   //}}}
   //{{{
   struct sIdent {
-    sLineColumn mLocation;
+    sRowColumn mLocation;
     std::string mDeclaration;
     };
   //}}}
@@ -218,7 +217,7 @@ public:
   std::string getCurrentLineText()const;
   int getTotalLines() const { return (int)mLines.size(); }
 
-  sLineColumn getCursorPosition() const { return getActualCursorLineColumn(); }
+  sRowColumn getCursorPosition() const { return getActualCursorRowColumn(); }
 
   inline int getTabSize() const { return mTabSize; }
   //}}}
@@ -234,11 +233,11 @@ public:
   void setReadOnly (bool value) { mReadOnly = value; }
   void setColorizerEnable (bool value) { mColorizerEnabled = value; }
 
-  void setCursorPosition (const sLineColumn& position);
+  void setCursorPosition (const sRowColumn& position);
   void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
-  void setSelectionStart (const sLineColumn& position);
-  void setSelectionEnd (const sLineColumn& position);
-  void setSelection (const sLineColumn& startCord, const sLineColumn& endCord, eSelectionMode aMode = eSelectionMode::Normal);
+  void setSelectionStart (const sRowColumn& position);
+  void setSelectionEnd (const sRowColumn& position);
+  void setSelection (const sRowColumn& startCord, const sRowColumn& endCord, eSelectionMode aMode = eSelectionMode::Normal);
 
   inline void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
   inline void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
@@ -283,9 +282,9 @@ private:
   //{{{
   struct sEditorState
   {
-    sLineColumn mSelectionStart;
-    sLineColumn mSelectionEnd;
-    sLineColumn mCursorPosition;
+    sRowColumn mSelectionStart;
+    sRowColumn mSelectionEnd;
+    sRowColumn mCursorPosition;
   };
   //}}}
   //{{{
@@ -297,12 +296,12 @@ private:
 
     sUndoRecord(
       const std::string& aAdded,
-      const cTextEditor::sLineColumn aAddedStart,
-      const cTextEditor::sLineColumn aAddedEnd,
+      const cTextEditor::sRowColumn aAddedStart,
+      const cTextEditor::sRowColumn aAddedEnd,
 
       const std::string& aRemoved,
-      const cTextEditor::sLineColumn aRemovedStart,
-      const cTextEditor::sLineColumn aRemovedEnd,
+      const cTextEditor::sRowColumn aRemovedStart,
+      const cTextEditor::sRowColumn aRemovedEnd,
 
       cTextEditor::sEditorState& aBefore,
       cTextEditor::sEditorState& aAfter);
@@ -311,12 +310,12 @@ private:
     void Redo (cTextEditor* editor);
 
     std::string mAdded;
-    sLineColumn mAddedStart;
-    sLineColumn mAddedEnd;
+    sRowColumn mAddedStart;
+    sRowColumn mAddedEnd;
 
     std::string mRemoved;
-    sLineColumn mRemovedStart;
-    sLineColumn mRemovedEnd;
+    sRowColumn mRemovedStart;
+    sRowColumn mRemovedEnd;
 
     sEditorState mBefore;
     sEditorState mAfter;
@@ -325,31 +324,31 @@ private:
 
   typedef std::vector<sUndoRecord> tUndoBuffer;
   //{{{  gets
-  bool isOnWordBoundary (const sLineColumn& aAt) const;
+  bool isOnWordBoundary (const sRowColumn& aAt) const;
 
   int getPageSize() const;
-  std::string getText (const sLineColumn& startCord, const sLineColumn& endCord) const;
-  sLineColumn getActualCursorLineColumn() const { return sanitizeLineColumn (mState.mCursorPosition); }
+  std::string getText (const sRowColumn& startCord, const sRowColumn& endCord) const;
+  sRowColumn getActualCursorRowColumn() const { return sanitizeRowColumn (mState.mCursorPosition); }
 
-  int getCharacterIndex (const sLineColumn& lineColumn) const;
+  int getCharacterIndex (const sRowColumn& rowColumn) const;
   int getCharacterColumn (int lineCoord, int index) const;
   int getLineCharacterCount (int lineCoord) const;
   int getLineMaxColumn (int lineCoord) const;
 
-  std::string getWordAt (const sLineColumn& lineColumn) const;
+  std::string getWordAt (const sRowColumn& rowColumn) const;
   std::string getWordUnderCursor() const;
   ImU32 getGlyphColor (const sGlyph& glyph) const;
 
-  float getTextDistanceToLineStart (const sLineColumn& from) const;
+  float getTextDistanceToLineStart (const sRowColumn& from) const;
   //}}}
   //{{{  sets
-  sLineColumn sanitizeLineColumn (const sLineColumn& lineColumn) const;
-  sLineColumn screenPosToLineColumn (const ImVec2& position) const;
+  sRowColumn sanitizeRowColumn (const sRowColumn& rowColumn) const;
+  sRowColumn screenPosToRowColumn (const ImVec2& position) const;
   //}}}
   //{{{  find
-  sLineColumn findWordStart (const sLineColumn& from) const;
-  sLineColumn findWordEnd (const sLineColumn& from) const;
-  sLineColumn findNextWord (const sLineColumn& from) const;
+  sRowColumn findWordStart (const sRowColumn& from) const;
+  sRowColumn findWordEnd (const sRowColumn& from) const;
+  sRowColumn findNextWord (const sRowColumn& from) const;
   //}}}
   //{{{  colorize
   void colorize (int fromLine = 0, int count = -1);
@@ -359,9 +358,9 @@ private:
   //{{{  actions
   void ensureCursorVisible();
 
-  void advance (sLineColumn& lineColumn) const;
-  void deleteRange (const sLineColumn& startCord, const sLineColumn& endCord);
-  int insertTextAt (sLineColumn& aWhere, const char* value);
+  void advance (sRowColumn& rowColumn) const;
+  void deleteRange (const sRowColumn& startCord, const sRowColumn& endCord);
+  int insertTextAt (sRowColumn& aWhere, const char* value);
 
   void addUndo (sUndoRecord& value);
 
@@ -380,40 +379,52 @@ private:
 
   void render();
   //{{{  vars
-  float mLineSpacing;
   tLines mLines;
-  sEditorState mState;
-  tUndoBuffer mUndoBuffer;
-  int mUndoIndex;
-
-  int mTabSize;
-  bool mOverwrite;
-  bool mReadOnly;
-  bool mWithinRender;
-  bool mScrollToCursor;
-  bool mScrollToTop;
-  bool mTextChanged;
-  bool mColorizerEnabled;
-  float mTextStart;                   // position (in pixels) where a code line starts relative to the left of the cTextEditor.
-  int  mLeftMargin;
-  bool mCursorPositionChanged;
-  int mColorRangeMin, mColorRangeMax;
-  eSelectionMode mSelectionMode;
-  bool mHandleKeyboardInputs;
-  bool mHandleMouseInputs;
-  bool mIgnoreImGuiChild;
-  bool mShowWhitespaces;
 
   tPalette mPaletteBase;
   tPalette mPalette;
   sLanguage mLanguage;
   tRegexList mRegexList;
-
-  bool mCheckComments;
   tBreaks mBreaks;
   tErrorMarkers mErrorMarkers;
+
+  float mLineSpacing;
+
+  sEditorState mState;
+
+  tUndoBuffer mUndoBuffer;
+  int mUndoIndex;
+
+  int mTabSize;
+
+  bool mOverwrite;
+  bool mReadOnly;
+  bool mWithinRender;
+  bool mScrollToCursor;
+  bool mScrollToTop;
+
+  bool mTextChanged;
+  bool mColorizerEnabled;
+
+  float mTextStart; // position (in pixels) where a code line starts relative to the left of the cTextEditor.
+  int mLeftMargin;
+  bool mCursorPositionChanged;
+
+  int mColorRangeMin;
+  int mColorRangeMax;
+  eSelectionMode mSelectionMode;
+
+  bool mHandleKeyboardInputs;
+  bool mHandleMouseInputs;
+  bool mIgnoreImGuiChild;
+  bool mShowWhitespaces;
+
+  bool mCheckComments;
   ImVec2 mCharAdvance;
-  sLineColumn mInteractiveStart, mInteractiveEnd;
+
+  sRowColumn mInteractiveStart;
+  sRowColumn mInteractiveEnd;
+
   std::string mLineBuffer;
   uint64_t mStartTime;
 

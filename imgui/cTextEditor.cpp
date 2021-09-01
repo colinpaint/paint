@@ -326,8 +326,8 @@ namespace {
 // cTextEditor::sUndoRecord
 //{{{
 cTextEditor::sUndoRecord::sUndoRecord (
-  const string& aAdded, const cTextEditor::sLineColumn aAddedStart, const cTextEditor::sLineColumn aAddedEnd,
-  const string& aRemoved, const cTextEditor::sLineColumn aRemovedStart, const cTextEditor::sLineColumn aRemovedEnd,
+  const string& aAdded, const cTextEditor::sRowColumn aAddedStart, const cTextEditor::sRowColumn aAddedEnd,
+  const string& aRemoved, const cTextEditor::sRowColumn aRemovedStart, const cTextEditor::sRowColumn aRemovedEnd,
   cTextEditor::sEditorState& aBefore, cTextEditor::sEditorState& aAfter)
     : mAdded(aAdded), mAddedStart(aAddedStart), mAddedEnd(aAddedEnd),
       mRemoved(aRemoved), mRemovedStart(aRemovedStart), mRemovedEnd(aRemovedEnd),
@@ -911,7 +911,7 @@ cTextEditor::cTextEditor()
 //}}}
 //{{{  gets
 //{{{
-bool cTextEditor::isOnWordBoundary (const sLineColumn& aAt) const {
+bool cTextEditor::isOnWordBoundary (const sRowColumn& aAt) const {
 
   if (aAt.mLine >= (int)mLines.size() || aAt.mColumn == 0)
     return true;
@@ -930,7 +930,7 @@ bool cTextEditor::isOnWordBoundary (const sLineColumn& aAt) const {
 
 //{{{
 string cTextEditor::getText() const {
-  return getText (sLineColumn(), sLineColumn((int)mLines.size(), 0));
+  return getText (sRowColumn(), sRowColumn((int)mLines.size(), 0));
   }
 //}}}
 //{{{
@@ -964,22 +964,22 @@ string cTextEditor::getCurrentLineText()const {
 
   auto lineLength = getLineMaxColumn (mState.mCursorPosition.mLine);
   return getText (
-    sLineColumn (mState.mCursorPosition.mLine, 0),
-    sLineColumn (mState.mCursorPosition.mLine, lineLength));
+    sRowColumn (mState.mCursorPosition.mLine, 0),
+    sRowColumn (mState.mCursorPosition.mLine, lineLength));
   }
 //}}}
 
 //{{{
-int cTextEditor::getCharacterIndex (const sLineColumn& lineColumn) const {
+int cTextEditor::getCharacterIndex (const sRowColumn& rowColumn) const {
 
-  if (lineColumn.mLine >= mLines.size())
+  if (rowColumn.mLine >= mLines.size())
     return -1;
 
-  auto& line = mLines[lineColumn.mLine];
+  auto& line = mLines[rowColumn.mLine];
   int c = 0;
 
   int i = 0;
-  for (; i < line.size() && c < lineColumn.mColumn;) {
+  for (; i < line.size() && c < rowColumn.mColumn;) {
     if (line[i].mChar == '\t')
       c = (c / mTabSize) * mTabSize + mTabSize;
     else
@@ -1120,7 +1120,7 @@ void cTextEditor::setTextLines (const vector<string>& lines) {
 //}}}
 
 //{{{
-void cTextEditor::setCursorPosition (const sLineColumn& position) {
+void cTextEditor::setCursorPosition (const sRowColumn& position) {
 
   if (mState.mCursorPosition != position) {
     mState.mCursorPosition = position;
@@ -1131,29 +1131,29 @@ void cTextEditor::setCursorPosition (const sLineColumn& position) {
 //}}}
 
 //{{{
-void cTextEditor::setSelectionStart (const sLineColumn& position) {
+void cTextEditor::setSelectionStart (const sRowColumn& position) {
 
-  mState.mSelectionStart = sanitizeLineColumn (position);
+  mState.mSelectionStart = sanitizeRowColumn (position);
   if (mState.mSelectionStart > mState.mSelectionEnd)
     swap (mState.mSelectionStart, mState.mSelectionEnd);
   }
 //}}}
 //{{{
-void cTextEditor::setSelectionEnd (const sLineColumn& position) {
+void cTextEditor::setSelectionEnd (const sRowColumn& position) {
 
-  mState.mSelectionEnd = sanitizeLineColumn (position);
+  mState.mSelectionEnd = sanitizeRowColumn (position);
   if (mState.mSelectionStart > mState.mSelectionEnd)
     swap (mState.mSelectionStart, mState.mSelectionEnd);
   }
 //}}}
 //{{{
-void cTextEditor::setSelection (const sLineColumn& startCord, const sLineColumn& endCord, eSelectionMode aMode) {
+void cTextEditor::setSelection (const sRowColumn& startCord, const sRowColumn& endCord, eSelectionMode aMode) {
 
   auto oldSelStart = mState.mSelectionStart;
   auto oldSelEnd = mState.mSelectionEnd;
 
-  mState.mSelectionStart = sanitizeLineColumn (startCord);
-  mState.mSelectionEnd = sanitizeLineColumn(endCord);
+  mState.mSelectionStart = sanitizeRowColumn (startCord);
+  mState.mSelectionEnd = sanitizeRowColumn(endCord);
   if (mState.mSelectionStart > mState.mSelectionEnd)
     swap (mState.mSelectionStart, mState.mSelectionEnd);
 
@@ -1171,8 +1171,8 @@ void cTextEditor::setSelection (const sLineColumn& startCord, const sLineColumn&
     case cTextEditor::eSelectionMode::Line: {
       const auto lineNo = mState.mSelectionEnd.mLine;
       const auto lineSize = (size_t)lineNo < mLines.size() ? mLines[lineNo].size() : 0;
-      mState.mSelectionStart = sLineColumn (mState.mSelectionStart.mLine, 0);
-      mState.mSelectionEnd = sLineColumn (lineNo, getLineMaxColumn (lineNo));
+      mState.mSelectionStart = sRowColumn (mState.mSelectionStart.mLine, 0);
+      mState.mSelectionEnd = sRowColumn (lineNo, getLineMaxColumn (lineNo));
       break;
       }
 
@@ -1243,7 +1243,7 @@ void cTextEditor::moveLeft (int aAmount, bool select, bool wordMode) {
     return;
 
   auto oldPos = mState.mCursorPosition;
-  mState.mCursorPosition = getActualCursorLineColumn();
+  mState.mCursorPosition = getActualCursorRowColumn();
   auto line = mState.mCursorPosition.mLine;
   auto cindex = getCharacterIndex (mState.mCursorPosition);
 
@@ -1267,14 +1267,14 @@ void cTextEditor::moveLeft (int aAmount, bool select, bool wordMode) {
         }
       }
 
-    mState.mCursorPosition = sLineColumn (line, getCharacterColumn(line, cindex));
+    mState.mCursorPosition = sRowColumn (line, getCharacterColumn(line, cindex));
     if (wordMode) {
       mState.mCursorPosition = findWordStart (mState.mCursorPosition);
       cindex = getCharacterIndex (mState.mCursorPosition);
       }
     }
 
-  mState.mCursorPosition = sLineColumn (line, getCharacterColumn(line, cindex));
+  mState.mCursorPosition = sRowColumn (line, getCharacterColumn(line, cindex));
 
   assert(mState.mCursorPosition.mColumn >= 0);
   if (select) {
@@ -1317,7 +1317,7 @@ void cTextEditor::moveRight (int aAmount, bool select, bool wordMode) {
       }
     else {
       cindex += utf8CharLength (line[cindex].mChar);
-      mState.mCursorPosition = sLineColumn (lindex, getCharacterColumn (lindex, cindex));
+      mState.mCursorPosition = sRowColumn (lindex, getCharacterColumn (lindex, cindex));
       if (wordMode)
         mState.mCursorPosition = findNextWord (mState.mCursorPosition);
       }
@@ -1325,7 +1325,7 @@ void cTextEditor::moveRight (int aAmount, bool select, bool wordMode) {
 
   if (select) {
     if (oldPos == mInteractiveEnd)
-      mInteractiveEnd = sanitizeLineColumn(mState.mCursorPosition);
+      mInteractiveEnd = sanitizeRowColumn(mState.mCursorPosition);
     else if (oldPos == mInteractiveStart)
       mInteractiveStart = mState.mCursorPosition;
     else {
@@ -1345,7 +1345,7 @@ void cTextEditor::moveRight (int aAmount, bool select, bool wordMode) {
 void cTextEditor::moveTop (bool select) {
 
   auto oldPos = mState.mCursorPosition;
-  setCursorPosition(sLineColumn(0, 0));
+  setCursorPosition (sRowColumn(0, 0));
 
   if (mState.mCursorPosition != oldPos) {
     if (select) {
@@ -1362,7 +1362,7 @@ void cTextEditor::moveTop (bool select) {
 void cTextEditor::moveBottom (bool select) {
 
   auto oldPos = getCursorPosition();
-  auto newPos = sLineColumn ((int)mLines.size() - 1, 0);
+  auto newPos = sRowColumn ((int)mLines.size() - 1, 0);
 
   setCursorPosition (newPos);
 
@@ -1380,7 +1380,7 @@ void cTextEditor::moveBottom (bool select) {
 void cTextEditor::moveHome (bool select) {
 
   auto oldPos = mState.mCursorPosition;
-  setCursorPosition (sLineColumn(mState.mCursorPosition.mLine, 0));
+  setCursorPosition (sRowColumn(mState.mCursorPosition.mLine, 0));
 
   if (mState.mCursorPosition != oldPos) {
     if (select) {
@@ -1404,7 +1404,7 @@ void cTextEditor::moveHome (bool select) {
 void cTextEditor::moveEnd (bool select) {
 
   auto oldPos = mState.mCursorPosition;
-  setCursorPosition (sLineColumn(mState.mCursorPosition.mLine, getLineMaxColumn (oldPos.mLine)));
+  setCursorPosition (sRowColumn(mState.mCursorPosition.mLine, getLineMaxColumn (oldPos.mLine)));
 
   if (mState.mCursorPosition != oldPos) {
     if (select) {
@@ -1427,7 +1427,7 @@ void cTextEditor::moveEnd (bool select) {
 
 //{{{
 void cTextEditor::selectAll() {
-  setSelection (sLineColumn (0, 0), sLineColumn((int)mLines.size(), 0));
+  setSelection (sRowColumn (0, 0), sRowColumn((int)mLines.size(), 0));
   }
 //}}}
 //{{{
@@ -1444,7 +1444,7 @@ void cTextEditor::InsertText (const char * value) {
   if (value == nullptr)
     return;
 
-  auto pos = getActualCursorLineColumn();
+  auto pos = getActualCursorRowColumn();
   auto start = min (pos, mState.mSelectionStart);
   int totalLines = pos.mLine - start.mLine;
 
@@ -1464,7 +1464,7 @@ void cTextEditor::copy() {
   else {
     if (!mLines.empty()) {
       string str;
-      auto& line = mLines[getActualCursorLineColumn().mLine];
+      auto& line = mLines[getActualCursorRowColumn().mLine];
       for (auto& g : line)
         str.push_back(g.mChar);
       ImGui::SetClipboardText (str.c_str());
@@ -1513,11 +1513,11 @@ void cTextEditor::paste() {
       }
 
     u.mAdded = clipText;
-    u.mAddedStart = getActualCursorLineColumn();
+    u.mAddedStart = getActualCursorRowColumn();
 
     InsertText (clipText);
 
-    u.mAddedEnd = getActualCursorLineColumn();
+    u.mAddedEnd = getActualCursorRowColumn();
     u.mAfter = mState;
     addUndo (u);
     }
@@ -1542,7 +1542,7 @@ void cTextEditor::deleteIt() {
     }
 
   else {
-    auto pos = getActualCursorLineColumn();
+    auto pos = getActualCursorRowColumn();
     setCursorPosition (pos);
     auto& line = mLines[pos.mLine];
 
@@ -1551,7 +1551,7 @@ void cTextEditor::deleteIt() {
         return;
 
       u.mRemoved = '\n';
-      u.mRemovedStart = u.mRemovedEnd = getActualCursorLineColumn();
+      u.mRemovedStart = u.mRemovedEnd = getActualCursorRowColumn();
       advance (u.mRemovedEnd);
 
       auto& nextLine = mLines[pos.mLine + 1];
@@ -1560,7 +1560,7 @@ void cTextEditor::deleteIt() {
       }
     else {
       auto cindex = getCharacterIndex(pos);
-      u.mRemovedStart = u.mRemovedEnd = getActualCursorLineColumn();
+      u.mRemovedStart = u.mRemovedEnd = getActualCursorRowColumn();
       u.mRemovedEnd.mColumn++;
       u.mRemoved = getText (u.mRemovedStart, u.mRemovedEnd);
 
@@ -1646,7 +1646,7 @@ int cTextEditor::getPageSize() const {
   }
 //}}}
 //{{{
-string cTextEditor::getText (const sLineColumn& startCord, const sLineColumn& endCord) const {
+string cTextEditor::getText (const sRowColumn& startCord, const sRowColumn& endCord) const {
 
   string result;
 
@@ -1690,17 +1690,17 @@ string cTextEditor::getWordUnderCursor() const {
   }
 //}}}
 //{{{
-string cTextEditor::getWordAt (const sLineColumn& lineColumn) const {
+string cTextEditor::getWordAt (const sRowColumn& rowColumn) const {
 
-  auto start = findWordStart (lineColumn);
-  auto end = findWordEnd (lineColumn);
+  auto start = findWordStart (rowColumn);
+  auto end = findWordEnd (rowColumn);
 
   auto istart = getCharacterIndex (start);
   auto iend = getCharacterIndex (end);
 
   string r;
   for (auto it = istart; it < iend; ++it)
-    r.push_back (mLines[lineColumn.mLine][it].mChar);
+    r.push_back (mLines[rowColumn.mLine][it].mChar);
 
   return r;
   }
@@ -1733,10 +1733,10 @@ ImU32 cTextEditor::getGlyphColor (const sGlyph& glyph) const {
 //}}}
 //{{{
 //{{{
-cTextEditor::sLineColumn cTextEditor::sanitizeLineColumn (const sLineColumn& lineColumn) const {
+cTextEditor::sRowColumn cTextEditor::sanitizeRowColumn (const sRowColumn& rowColumn) const {
 
-  auto line = lineColumn.mLine;
-  auto column = lineColumn.mColumn;
+  auto line = rowColumn.mLine;
+  auto column = rowColumn.mColumn;
 
   if (line >= (int)mLines.size()) {
     if (mLines.empty()) {
@@ -1748,18 +1748,18 @@ cTextEditor::sLineColumn cTextEditor::sanitizeLineColumn (const sLineColumn& lin
       column = getLineMaxColumn (line);
       }
 
-    return sLineColumn (line, column);
+    return sRowColumn (line, column);
     }
 
   else {
     column = mLines.empty() ? 0 : min (column, getLineMaxColumn (line));
-    return sLineColumn (line, column);
+    return sRowColumn (line, column);
     }
 
   }
 //}}}
 //{{{
-cTextEditor::sLineColumn cTextEditor::screenPosToLineColumn (const ImVec2& position) const {
+cTextEditor::sRowColumn cTextEditor::screenPosToRowColumn (const ImVec2& position) const {
 
   ImVec2 origin = ImGui::GetCursorScreenPos();
   ImVec2 local (position.x - origin.x, position.y - origin.y);
@@ -1806,15 +1806,15 @@ cTextEditor::sLineColumn cTextEditor::screenPosToLineColumn (const ImVec2& posit
       }
     }
 
-  return sanitizeLineColumn(sLineColumn(lineNo, columnCoord));
+  return sanitizeRowColumn (sRowColumn (lineNo, columnCoord));
   }
 //}}}
 //}}}
 //{{{  finds
 //{{{
-cTextEditor::sLineColumn cTextEditor::findWordStart (const sLineColumn& from) const {
+cTextEditor::sRowColumn cTextEditor::findWordStart (const sRowColumn& from) const {
 
-  sLineColumn at = from;
+  sRowColumn at = from;
   if (at.mLine >= (int)mLines.size())
     return at;
 
@@ -1841,13 +1841,13 @@ cTextEditor::sLineColumn cTextEditor::findWordStart (const sLineColumn& from) co
     --cindex;
     }
 
-  return sLineColumn(at.mLine, getCharacterColumn(at.mLine, cindex));
+  return sRowColumn(at.mLine, getCharacterColumn(at.mLine, cindex));
   }
 //}}}
 //{{{
-cTextEditor::sLineColumn cTextEditor::findWordEnd (const sLineColumn& from) const {
+cTextEditor::sRowColumn cTextEditor::findWordEnd (const sRowColumn& from) const {
 
-  sLineColumn at = from;
+  sRowColumn at = from;
   if (at.mLine >= (int)mLines.size())
     return at;
 
@@ -1874,13 +1874,13 @@ cTextEditor::sLineColumn cTextEditor::findWordEnd (const sLineColumn& from) cons
     cindex += d;
     }
 
-  return sLineColumn (from.mLine, getCharacterColumn (from.mLine, cindex));
+  return sRowColumn (from.mLine, getCharacterColumn (from.mLine, cindex));
   }
 //}}}
 //{{{
-cTextEditor::sLineColumn cTextEditor::findNextWord (const sLineColumn& from) const {
+cTextEditor::sRowColumn cTextEditor::findNextWord (const sRowColumn& from) const {
 
-  sLineColumn at = from;
+  sRowColumn at = from;
   if (at.mLine >= (int)mLines.size())
     return at;
 
@@ -1898,7 +1898,7 @@ cTextEditor::sLineColumn cTextEditor::findNextWord (const sLineColumn& from) con
   while (!isword || skip) {
     if (at.mLine >= mLines.size()) {
       auto l = max(0, (int) mLines.size() - 1);
-      return sLineColumn (l, getLineMaxColumn(l));
+      return sRowColumn (l, getLineMaxColumn(l));
       }
 
     auto& line = mLines[at.mLine];
@@ -1906,7 +1906,7 @@ cTextEditor::sLineColumn cTextEditor::findNextWord (const sLineColumn& from) con
       isword = isalnum (line[cindex].mChar);
 
       if (isword && !skip)
-        return sLineColumn (at.mLine, getCharacterColumn(at.mLine, cindex));
+        return sRowColumn (at.mLine, getCharacterColumn(at.mLine, cindex));
 
       if (!isword)
         skip = false;
@@ -2156,7 +2156,7 @@ void cTextEditor::colorizeInternal() {
 //}}}
 //{{{  utils
 //{{{
-float cTextEditor::getTextDistanceToLineStart (const sLineColumn& from) const {
+float cTextEditor::getTextDistanceToLineStart (const sRowColumn& from) const {
 
   auto& line = mLines[from.mLine];
   float distance = 0.0f;
@@ -2204,7 +2204,7 @@ void cTextEditor::ensureCursorVisible() {
   auto left = (int)ceil(scrollX / mCharAdvance.x);
   auto right = (int)ceil((scrollX + width) / mCharAdvance.x);
 
-  auto pos = getActualCursorLineColumn();
+  auto pos = getActualCursorRowColumn();
   auto len = getTextDistanceToLineStart (pos);
 
   if (pos.mLine < top)
@@ -2220,28 +2220,28 @@ void cTextEditor::ensureCursorVisible() {
 //}}}
 //{{{  actions
 //{{{
-void cTextEditor::advance (sLineColumn& lineColumn) const {
+void cTextEditor::advance (sRowColumn& rowColumn) const {
 
-  if (lineColumn.mLine < (int)mLines.size()) {
-    auto& line = mLines[lineColumn.mLine];
-    auto cindex = getCharacterIndex (lineColumn);
+  if (rowColumn.mLine < (int)mLines.size()) {
+    auto& line = mLines[rowColumn.mLine];
+    auto cindex = getCharacterIndex (rowColumn);
 
     if (cindex + 1 < (int)line.size()) {
       auto delta = utf8CharLength (line[cindex].mChar);
       cindex = min (cindex + delta, (int)line.size() - 1);
       }
     else {
-      ++lineColumn.mLine;
+      ++rowColumn.mLine;
       cindex = 0;
       }
 
-    lineColumn.mColumn = getCharacterColumn (lineColumn.mLine, cindex);
+    rowColumn.mColumn = getCharacterColumn (rowColumn.mLine, cindex);
     }
   }
 //}}}
 
 //{{{
-void cTextEditor::deleteRange (const sLineColumn& startCord, const sLineColumn& endCord) {
+void cTextEditor::deleteRange (const sRowColumn& startCord, const sRowColumn& endCord) {
 
   assert (endCord >= startCord);
   assert (!mReadOnly);
@@ -2281,7 +2281,7 @@ void cTextEditor::deleteRange (const sLineColumn& startCord, const sLineColumn& 
   }
 //}}}
 //{{{
-int cTextEditor::insertTextAt (sLineColumn& /* inout */ aWhere, const char* value) {
+int cTextEditor::insertTextAt (sRowColumn& /* inout */ aWhere, const char* value) {
 
   assert (!mReadOnly);
 
@@ -2478,16 +2478,16 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool aShift) {
         }
 
       if (modified) {
-        start = sLineColumn (start.mLine, getCharacterColumn (start.mLine, 0));
-        sLineColumn rangeEnd;
+        start = sRowColumn (start.mLine, getCharacterColumn (start.mLine, 0));
+        sRowColumn rangeEnd;
         if (originalEnd.mColumn != 0) {
-          end = sLineColumn (end.mLine, getLineMaxColumn (end.mLine));
+          end = sRowColumn (end.mLine, getLineMaxColumn (end.mLine));
           rangeEnd = end;
           u.mAdded = getText (start, end);
           }
         else {
-          end = sLineColumn (originalEnd.mLine, 0);
-          rangeEnd = sLineColumn (end.mLine - 1, getLineMaxColumn (end.mLine - 1));
+          end = sRowColumn (originalEnd.mLine, 0);
+          rangeEnd = sRowColumn (end.mLine - 1, getLineMaxColumn (end.mLine - 1));
           u.mAdded = getText (start, rangeEnd);
           }
 
@@ -2513,7 +2513,7 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool aShift) {
       }
     } // HasSelection
 
-  auto coord = getActualCursorLineColumn();
+  auto coord = getActualCursorRowColumn();
   u.mAddedStart = coord;
 
   assert (!mLines.empty());
@@ -2530,7 +2530,7 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool aShift) {
     auto cindex = getCharacterIndex (coord);
     newLine.insert (newLine.end(), line.begin() + cindex, line.end());
     line.erase (line.begin() + cindex, line.begin() + line.size());
-    setCursorPosition (sLineColumn(coord.mLine + 1, getCharacterColumn (coord.mLine + 1, (int)whitespaceSize)));
+    setCursorPosition (sRowColumn(coord.mLine + 1, getCharacterColumn (coord.mLine + 1, (int)whitespaceSize)));
     u.mAdded = (char)aChar;
     }
 
@@ -2545,7 +2545,7 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool aShift) {
       if (mOverwrite && cindex < (int)line.size()) {
         auto d = utf8CharLength (line[cindex].mChar);
         u.mRemovedStart = mState.mCursorPosition;
-        u.mRemovedEnd = sLineColumn(coord.mLine, getCharacterColumn (coord.mLine, cindex + d));
+        u.mRemovedEnd = sRowColumn(coord.mLine, getCharacterColumn (coord.mLine, cindex + d));
         while (d-- > 0 && cindex < (int)line.size()) {
           u.mRemoved += line[cindex].mChar;
           line.erase(line.begin() + cindex);
@@ -2556,7 +2556,7 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool aShift) {
         line.insert(line.begin() + cindex, sGlyph (*p, ePaletteIndex::Default));
       u.mAdded = buf;
 
-      setCursorPosition(sLineColumn(coord.mLine, getCharacterColumn (coord.mLine, cindex)));
+      setCursorPosition(sRowColumn(coord.mLine, getCharacterColumn (coord.mLine, cindex)));
       }
     else
       return;
@@ -2564,7 +2564,7 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool aShift) {
 
   mTextChanged = true;
 
-  u.mAddedEnd = getActualCursorLineColumn();
+  u.mAddedEnd = getActualCursorRowColumn();
   u.mAfter = mState;
 
   addUndo(u);
@@ -2593,7 +2593,7 @@ void cTextEditor::backspace() {
     }
 
   else {
-    auto pos = getActualCursorLineColumn();
+    auto pos = getActualCursorRowColumn();
     setCursorPosition (pos);
 
     if (mState.mCursorPosition.mColumn == 0) {
@@ -2601,7 +2601,7 @@ void cTextEditor::backspace() {
         return;
 
       u.mRemoved = '\n';
-      u.mRemovedStart = u.mRemovedEnd = sLineColumn (pos.mLine - 1, getLineMaxColumn (pos.mLine - 1));
+      u.mRemovedStart = u.mRemovedEnd = sRowColumn (pos.mLine - 1, getLineMaxColumn (pos.mLine - 1));
       advance (u.mRemovedEnd);
 
       auto& line = mLines[mState.mCursorPosition.mLine];
@@ -2628,7 +2628,7 @@ void cTextEditor::backspace() {
       //if (cindex > 0 && UTF8CharLength(line[cindex].mChar) > 1)
       //  --cindex;
 
-      u.mRemovedStart = u.mRemovedEnd = getActualCursorLineColumn();
+      u.mRemovedStart = u.mRemovedEnd = getActualCursorRowColumn();
       --u.mRemovedStart.mColumn;
       --mState.mCursorPosition.mColumn;
 
@@ -2683,7 +2683,7 @@ void cTextEditor::handleMouseInputs() {
       // Left mouse button triple click
       if (tripleClick) {
         if (!ctrl) {
-          mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenPosToLineColumn (ImGui::GetMousePos());
+          mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenPosToRowColumn (ImGui::GetMousePos());
           mSelectionMode = eSelectionMode::Line;
           setSelection (mInteractiveStart, mInteractiveEnd, mSelectionMode);
           }
@@ -2693,7 +2693,7 @@ void cTextEditor::handleMouseInputs() {
       // left mouse button double click
       else if (doubleClick) {
         if (!ctrl) {
-          mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenPosToLineColumn(ImGui::GetMousePos());
+          mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenPosToRowColumn(ImGui::GetMousePos());
           if (mSelectionMode == eSelectionMode::Line)
             mSelectionMode = eSelectionMode::Normal;
           else
@@ -2705,7 +2705,7 @@ void cTextEditor::handleMouseInputs() {
 
       // left mouse button click
       else if (click) {
-        mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenPosToLineColumn(ImGui::GetMousePos());
+        mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenPosToRowColumn(ImGui::GetMousePos());
         if (ctrl)
           mSelectionMode = eSelectionMode::Word;
         else
@@ -2717,7 +2717,7 @@ void cTextEditor::handleMouseInputs() {
       // left mouse button dragging (=> update selection)
       else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
         io.WantCaptureMouse = true;
-        mState.mCursorPosition = mInteractiveEnd = screenPosToLineColumn (ImGui::GetMousePos());
+        mState.mCursorPosition = mInteractiveEnd = screenPosToRowColumn (ImGui::GetMousePos());
         setSelection (mInteractiveStart, mInteractiveEnd, mSelectionMode);
         }
       }
@@ -2856,10 +2856,10 @@ void cTextEditor::render() {
       ImVec2 textScreenPos = ImVec2 (lineStartScreenPos.x + mTextStart, lineStartScreenPos.y);
 
       auto& line = mLines[lineNo];
-      longest = max(mTextStart + getTextDistanceToLineStart (sLineColumn (lineNo, getLineMaxColumn (lineNo))), longest);
+      longest = max(mTextStart + getTextDistanceToLineStart (sRowColumn (lineNo, getLineMaxColumn (lineNo))), longest);
       auto columnNo = 0;
-      sLineColumn lineStartCoord (lineNo, 0);
-      sLineColumn lineEndCoord (lineNo, getLineMaxColumn (lineNo));
+      sRowColumn lineStartCoord (lineNo, 0);
+      sRowColumn lineEndCoord (lineNo, getLineMaxColumn (lineNo));
       //{{{  draw selection for the current line
       float sstart = -1.0f;
       float ssend = -1.0f;
@@ -3029,7 +3029,7 @@ void cTextEditor::render() {
       }
     //{{{  draw tooltip on known idents/preprocessor symbols
     if (ImGui::IsMousePosValid()) {
-      auto id = getWordAt (screenPosToLineColumn (ImGui::GetMousePos()));
+      auto id = getWordAt (screenPosToRowColumn (ImGui::GetMousePos()));
       if (!id.empty()) {
         auto it = mLanguage.mIdents.find (id);
         if (it != mLanguage.mIdents.end()) {
