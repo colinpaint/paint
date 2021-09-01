@@ -122,7 +122,7 @@ int main (int numArgs, char* args[]) {
   ifstream fileStream ("C:\\projects\\paint\\imgui\\cTextEditor.cpp");
   string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
 
-  auto languageDefinition = cTextEditor::LanguageDefinition::CPlusPlus();
+  auto languageDefinition = cTextEditor::sLanguageDefinition::CPlusPlus();
   //{{{  set your own preprocessor
   static const char* ppnames[] = {
     "NULL",
@@ -152,9 +152,9 @@ int main (int numArgs, char* args[]) {
     };
 
   for (int i = 0; i < sizeof(ppnames) / sizeof(ppnames[0]); ++i) {
-    cTextEditor::Identifier id;
+    cTextEditor::sIdentifier id;
     id.mDeclaration = ppvalues[i];
-    languageDefinition.mPreprocIdentifiers.insert (std::make_pair(std::string(ppnames[i]), id));
+    languageDefinition.mPreprocIdentifiers.insert (make_pair(string(ppnames[i]), id));
     }
   //}}}
   //{{{  set your own identifiers
@@ -221,9 +221,9 @@ int main (int numArgs, char* args[]) {
     "class cTextEditor" };
 
   for (int i = 0; i < sizeof(identifiers) / sizeof(identifiers[0]); ++i) {
-    cTextEditor::Identifier id;
-    id.mDeclaration = std::string(idecls[i]);
-    languageDefinition.mIdentifiers.insert (std::make_pair(std::string(identifiers[i]), id));
+    cTextEditor::sIdentifier id;
+    id.mDeclaration = string(idecls[i]);
+    languageDefinition.mIdentifiers.insert (make_pair(string(identifiers[i]), id));
     }
   //}}}
 
@@ -233,8 +233,8 @@ int main (int numArgs, char* args[]) {
   editor.SetText (str);
   //{{{  error markers
   //cTextEditor::ErrorMarkers markers;
-  //markers.insert (std::make_pair<int, std::string>(6, "Example error here:\nInclude file not found: \"cTextEditor.h\""));
-  //markers.insert (std::make_pair<int, std::string>(41, "Another example error"));
+  //markers.insert (make_pair<int, string>(6, "Example error here:\nInclude file not found: \"cTextEditor.h\""));
+  //markers.insert (make_pair<int, string>(41, "Another example error"));
   //editor.SetErrorMarkers (markers);
   //}}}
   //{{{  "breakpoint" markers

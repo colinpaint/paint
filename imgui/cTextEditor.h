@@ -18,7 +18,7 @@
 class cTextEditor {
 public:
   //{{{
-  enum class PaletteIndex {
+  enum class ePaletteIndex {
     Default,
     Keyword,
     Number,
@@ -44,7 +44,7 @@ public:
     };
   //}}}
   //{{{
-  enum class SelectionMode {
+  enum class eSelectionMode {
     Normal,
     Word,
     Line
@@ -52,12 +52,24 @@ public:
   //}}}
 
   //{{{
-  struct Breakpoint {
+  struct sGlyph {
+    uint8_t mChar;
+    ePaletteIndex mColorIndex = ePaletteIndex::Default;
+    bool mComment : 1;
+    bool mMultiLineComment : 1;
+    bool mPreprocessor : 1;
+
+    sGlyph(uint8_t aChar, ePaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
+      mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
+    };
+  //}}}
+  //{{{
+  struct sBreakpoint {
     int mLine;
     bool mEnabled;
     std::string mCondition;
 
-    Breakpoint() : mLine(-1), mEnabled(false) {}
+    sBreakpoint() : mLine(-1), mEnabled(false) {}
     };
   //}}}
   //{{{
@@ -132,80 +144,72 @@ public:
   };
   //}}}
   //{{{
-  struct Identifier {
+  struct sIdentifier {
     Coordinates mLocation;
     std::string mDeclaration;
     };
   //}}}
 
-  typedef std::unordered_map<std::string, Identifier> Identifiers;
+  typedef std::vector<sGlyph> Line;
+  typedef std::vector<Line> Lines;
+  typedef std::unordered_map<std::string, sIdentifier> Identifiers;
   typedef std::unordered_set<std::string> Keywords;
   typedef std::map<int, std::string> ErrorMarkers;
   typedef std::unordered_set<int> Breakpoints;
-  typedef std::array<ImU32, (unsigned)PaletteIndex::Max> Palette;
+  typedef std::array<ImU32, (unsigned)ePaletteIndex::Max> Palette;
 
   //{{{
-  struct Glyph {
-    uint8_t mChar;
-    PaletteIndex mColorIndex = PaletteIndex::Default;
-    bool mComment : 1;
-    bool mMultiLineComment : 1;
-    bool mPreprocessor : 1;
-
-    Glyph(uint8_t aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
-      mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
-    };
-  //}}}
-  typedef std::vector<Glyph> Line;
-  typedef std::vector<Line> Lines;
-
-  //{{{
-  struct LanguageDefinition {
-
-    typedef std::pair<std::string, PaletteIndex> TokenRegexString;
+  struct sLanguageDefinition {
+    // typedef
+    typedef std::pair<std::string, ePaletteIndex> TokenRegexString;
     typedef std::vector<TokenRegexString> TokenRegexStrings;
-    typedef bool(*TokenizeCallback)(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end, PaletteIndex & paletteIndex);
+    typedef bool (*TokenizeCallback)(const char* in_begin, const char* in_end,
+                                     const char*& out_begin, const char*& out_end, ePaletteIndex& paletteIndex);
 
+    // vars
     std::string mName;
     Keywords mKeywords;
+
     Identifiers mIdentifiers;
     Identifiers mPreprocIdentifiers;
-    std::string mCommentStart, mCommentEnd, mSingleLineComment;
+
+    std::string mCommentStart;
+    std::string mCommentEnd;
+    std::string mSingleLineComment;
+
     char mPreprocChar;
     bool mAutoIndentation;
 
     TokenizeCallback mTokenize;
-
     TokenRegexStrings mTokenRegexStrings;
 
     bool mCaseSensitive;
 
-    //{{{
-    LanguageDefinition()
-      : mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
-    {
-    }
-    //}}}
+    // init
+    sLanguageDefinition() : mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true) {}
 
-    static const LanguageDefinition& CPlusPlus();
-    static const LanguageDefinition& HLSL();
-    static const LanguageDefinition& GLSL();
-    static const LanguageDefinition& C();
-    static const LanguageDefinition& SQL();
-    static const LanguageDefinition& AngelScript();
-    static const LanguageDefinition& Lua();
+    // static const
+    static const sLanguageDefinition& CPlusPlus();
+    static const sLanguageDefinition& HLSL();
+    static const sLanguageDefinition& GLSL();
+    static const sLanguageDefinition& C();
+    static const sLanguageDefinition& SQL();
+    static const sLanguageDefinition& AngelScript();
+    static const sLanguageDefinition& Lua();
     };
   //}}}
 
   cTextEditor();
   ~cTextEditor() = default;
   //{{{  members
-  const LanguageDefinition& GetLanguageDefinition() const { return mLanguageDefinition; }
+
+
+  const sLanguageDefinition& GetLanguageDefinition() const { return mLanguageDefinition; }
   const Palette& GetPalette() const { return mPaletteBase; }
 
   void SetErrorMarkers (const ErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
   void SetBreakpoints (const Breakpoints& aMarkers) { mBreakpoints = aMarkers; }
-  void SetLanguageDefinition (const LanguageDefinition& aLanguageDef);
+  void SetLanguageDefinition (const sLanguageDefinition& aLanguageDef);
   void SetPalette (const Palette& aValue);
   void SetText (const std::string& aText);
   void SetTextLines (const std::vector<std::string>& aLines);
@@ -221,13 +225,13 @@ public:
   int GetTotalLines() const { return (int)mLines.size(); }
   bool IsOverwrite() const { return mOverwrite; }
 
-  void SetReadOnly(bool aValue);
+  void SetReadOnly (bool aValue) { mReadOnly = aValue; }
   bool IsReadOnly() const { return mReadOnly; }
   bool IsTextChanged() const { return mTextChanged; }
   bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
 
   bool IsColorizerEnabled() const { return mColorizerEnabled; }
-  void SetColorizerEnable(bool aValue);
+  void SetColorizerEnable (bool aValue) { mColorizerEnabled = aValue; }
 
   Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
   void SetCursorPosition(const Coordinates& aPosition);
@@ -244,11 +248,11 @@ public:
   inline void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
   inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
 
-  void SetTabSize(int aValue);
+  void SetTabSize (int aValue) { mTabSize = std::max(0, std::min(32, aValue)); }
   inline int GetTabSize() const { return mTabSize; }
 
-  void InsertText(const std::string& aValue);
   void InsertText(const char* aValue);
+  void InsertText (const std::string& aValue) { InsertText (aValue.c_str()); }
 
   void MoveUp(int aAmount = 1, bool aSelect = false);
   void MoveDown(int aAmount = 1, bool aSelect = false);
@@ -261,7 +265,7 @@ public:
 
   void SetSelectionStart(const Coordinates& aPosition);
   void SetSelectionEnd(const Coordinates& aPosition);
-  void SetSelection(const Coordinates& aStart, const Coordinates& aEnd, SelectionMode aMode = SelectionMode::Normal);
+  void SetSelection(const Coordinates& aStart, const Coordinates& aEnd, eSelectionMode aMode = eSelectionMode::Normal);
   void SelectWordUnderCursor();
   void SelectAll();
   bool HasSelection() const;
@@ -283,7 +287,7 @@ public:
   //}}}
 
 private:
-  typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
+  typedef std::vector<std::pair<std::regex, ePaletteIndex>> RegexList;
   //{{{
   struct EditorState
   {
@@ -372,7 +376,7 @@ private:
 
   std::string GetWordUnderCursor() const;
   std::string GetWordAt(const Coordinates& aCoords) const;
-  ImU32 GetGlyphColor(const Glyph& aGlyph) const;
+  ImU32 GetGlyphColor(const sGlyph& aGlyph) const;
 
   void HandleKeyboardInputs();
   void HandleMouseInputs();
@@ -398,7 +402,7 @@ private:
   int  mLeftMargin;
   bool mCursorPositionChanged;
   int mColorRangeMin, mColorRangeMax;
-  SelectionMode mSelectionMode;
+  eSelectionMode mSelectionMode;
   bool mHandleKeyboardInputs;
   bool mHandleMouseInputs;
   bool mIgnoreImGuiChild;
@@ -406,7 +410,7 @@ private:
 
   Palette mPaletteBase;
   Palette mPalette;
-  LanguageDefinition mLanguageDefinition;
+  sLanguageDefinition mLanguageDefinition;
   RegexList mRegexList;
 
   bool mCheckComments;
