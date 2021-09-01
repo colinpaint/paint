@@ -228,8 +228,8 @@ int main (int numArgs, char* args[]) {
   //}}}
 
   cTextEditor editor;
-  editor.SetLanguage (language);
-  editor.SetText (str);
+  editor.setLanguage (language);
+  editor.setText (str);
   //{{{  error markers
   //cTextEditor::ErrorMarkers markers;
   //markers.insert (make_pair<int, string>(6, "Example error here:\nInclude file not found: \"cTextEditor.h\""));
@@ -266,7 +266,7 @@ int main (int numArgs, char* args[]) {
       //{{{  menu bar
       if (ImGui::BeginMenu ("File")) {
         if (ImGui::MenuItem ("Save")) {
-          auto textToSave = editor.GetText();
+          auto textToSave = editor.getText();
           /// save text....
           }
         if (ImGui::MenuItem ("Quit", "Alt-F4"))
@@ -277,7 +277,7 @@ int main (int numArgs, char* args[]) {
       if (ImGui::BeginMenu ("Edit")) {
         bool ro = editor.IsReadOnly();
         if (ImGui::MenuItem ("Read-only mode", nullptr, &ro))
-          editor.SetReadOnly (ro);
+          editor.setReadOnly (ro);
         ImGui::Separator();
 
         if (ImGui::MenuItem ("Undo", "ALT-Backspace", nullptr, !ro && editor.CanUndo()))
@@ -299,7 +299,7 @@ int main (int numArgs, char* args[]) {
         ImGui::Separator();
 
         if (ImGui::MenuItem ("Select all", nullptr, nullptr))
-          editor.SetSelection (cTextEditor::sCoordinates(), cTextEditor::sCoordinates (editor.GetTotalLines(), 0));
+          editor.setSelection (cTextEditor::sCoordinates(), cTextEditor::sCoordinates (editor.getTotalLines(), 0));
 
         ImGui::EndMenu();
         }
@@ -309,11 +309,11 @@ int main (int numArgs, char* args[]) {
       //}}}
 
     ImGui::Text ("%6d/%-6d %6d lines  | %s | %s | %s",
-                 editor.GetCursorPosition().mLine + 1, editor.GetCursorPosition().mColumn + 1,
-                 editor.GetTotalLines(),
+                 editor.getCursorPosition().mLine + 1, editor.getCursorPosition().mColumn + 1,
+                 editor.getTotalLines(),
                  editor.IsOverwrite() ? "Ovr" : "Ins",
                  editor.CanUndo() ? "*" : " ",
-                 editor.GetLanguage().mName.c_str());
+                 editor.getLanguage().mName.c_str());
 
     editor.Render("cTextEditor");
 

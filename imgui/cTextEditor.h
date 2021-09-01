@@ -208,53 +208,53 @@ public:
   inline bool IsImGuiChildIgnored() const { return mIgnoreImGuiChild; }
   inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
 
-  const sLanguage& GetLanguage() const { return mLanguage; }
-  const tPalette& GetPalette() const { return mPaletteBase; }
+  const sLanguage& getLanguage() const { return mLanguage; }
+  const tPalette& getPalette() const { return mPaletteBase; }
 
-  std::string GetText() const;
-  std::vector<std::string> GetTextLines() const;
+  std::string getText() const;
+  std::vector<std::string> getTextLines() const;
 
-  std::string GetSelectedText() const;
-  std::string GetCurrentLineText()const;
-  int GetTotalLines() const { return (int)mLines.size(); }
+  std::string getSelectedText() const;
+  std::string getCurrentLineText()const;
+  int getTotalLines() const { return (int)mLines.size(); }
 
-  sCoordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
+  sCoordinates getCursorPosition() const { return getActualCursorCoordinates(); }
 
-  inline int GetTabSize() const { return mTabSize; }
+  inline int getTabSize() const { return mTabSize; }
   //}}}
   //{{{  sets
-  void SetErrorMarkers (const tErrorMarkers& markers) { mErrorMarkers = markers; }
-  void SetBreakpoints (const tBreakpoints& markers) { mBreakpoints = markers; }
-  void SetLanguage (const sLanguage& language);
-  void SetPalette (const tPalette& value);
+  void setErrorMarkers (const tErrorMarkers& markers) { mErrorMarkers = markers; }
+  void setBreakpoints (const tBreakpoints& markers) { mBreakpoints = markers; }
+  void setLanguage (const sLanguage& language);
+  void setPalette (const tPalette& value);
 
-  void SetText (const std::string& text);
-  void SetTextLines (const std::vector<std::string>& lines);
+  void setText (const std::string& text);
+  void setTextLines (const std::vector<std::string>& lines);
 
-  void SetReadOnly (bool value) { mReadOnly = value; }
-  void SetColorizerEnable (bool value) { mColorizerEnabled = value; }
+  void setReadOnly (bool value) { mReadOnly = value; }
+  void setColorizerEnable (bool value) { mColorizerEnabled = value; }
 
-  void SetCursorPosition (const sCoordinates& position);
-  void SetTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
-  void SetSelectionStart (const sCoordinates& position);
-  void SetSelectionEnd (const sCoordinates& position);
-  void SetSelection (const sCoordinates& startCord, const sCoordinates& endCord, eSelectionMode aMode = eSelectionMode::Normal);
+  void setCursorPosition (const sCoordinates& position);
+  void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
+  void setSelectionStart (const sCoordinates& position);
+  void setSelectionEnd (const sCoordinates& position);
+  void setSelection (const sCoordinates& startCord, const sCoordinates& endCord, eSelectionMode aMode = eSelectionMode::Normal);
 
-  inline void SetHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
-  inline void SetHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
-  inline void SetImGuiChildIgnored (bool value) { mIgnoreImGuiChild = value;}
-  inline void SetShowWhitespaces(bool value) { mShowWhitespaces = value; }
+  inline void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
+  inline void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
+  inline void setImGuiChildIgnored (bool value) { mIgnoreImGuiChild = value;}
+  inline void setShowWhitespaces(bool value) { mShowWhitespaces = value; }
   //}}}
   //{{{  actions
-  void MoveUp (int aAmount = 1, bool select = false);
-  void MoveDown (int aAmount = 1, bool select = false);
-  void MoveLeft (int aAmount = 1, bool select = false, bool wordMode = false);
-  void MoveRight (int aAmount = 1, bool select = false, bool wordMode = false);
+  void moveUp (int aAmount = 1, bool select = false);
+  void moveDown (int aAmount = 1, bool select = false);
+  void moveLeft (int aAmount = 1, bool select = false, bool wordMode = false);
+  void moveRight (int aAmount = 1, bool select = false, bool wordMode = false);
 
-  void MoveTop (bool select = false);
-  void MoveBottom (bool select = false);
-  void MoveHome (bool select = false);
-  void MoveEnd (bool select = false);
+  void moveTop (bool select = false);
+  void moveBottom (bool select = false);
+  void moveHome (bool select = false);
+  void moveEnd (bool select = false);
 
   void SelectAll();
   void SelectWordUnderCursor();
@@ -274,8 +274,8 @@ public:
   void Render (const char* title, const ImVec2& size = ImVec2(), bool border = false);
   //}}}
   //{{{  static gets
-  static const tPalette& GetDarkPalette();
-  static const tPalette& GetLightPalette();
+  static const tPalette& getDarkPalette();
+  static const tPalette& getLightPalette();
   //}}}
 
 private:
@@ -327,18 +327,18 @@ private:
   //{{{  gets
   bool IsOnWordBoundary (const sCoordinates& aAt) const;
 
-  int GetPageSize() const;
-  std::string GetText (const sCoordinates& startCord, const sCoordinates& endCord) const;
-  sCoordinates GetActualCursorCoordinates() const { return SanitizeCoordinates (mState.mCursorPosition); }
+  int getPageSize() const;
+  std::string getText (const sCoordinates& startCord, const sCoordinates& endCord) const;
+  sCoordinates getActualCursorCoordinates() const { return SanitizeCoordinates (mState.mCursorPosition); }
 
-  int GetCharacterIndex (const sCoordinates& aCoordinates) const;
-  int GetCharacterColumn (int lineCoord, int index) const;
-  int GetLineCharacterCount (int lineCoord) const;
-  int GetLineMaxColumn (int lineCoord) const;
+  int getCharacterIndex (const sCoordinates& aCoordinates) const;
+  int getCharacterColumn (int lineCoord, int index) const;
+  int getLineCharacterCount (int lineCoord) const;
+  int getLineMaxColumn (int lineCoord) const;
 
-  std::string GetWordAt (const sCoordinates& coords) const;
-  std::string GetWordUnderCursor() const;
-  ImU32 GetGlyphColor (const sGlyph& glyph) const;
+  std::string getWordAt (const sCoordinates& coords) const;
+  std::string getWordUnderCursor() const;
+  ImU32 getGlyphColor (const sGlyph& glyph) const;
 
   float TextDistanceToLineStart (const sCoordinates& from) const;
   //}}}
@@ -347,14 +347,14 @@ private:
   sCoordinates ScreenPosToCoordinates (const ImVec2& position) const;
   //}}}
   //{{{  find
-  sCoordinates FindWordStart (const sCoordinates& from) const;
-  sCoordinates FindWordEnd (const sCoordinates& from) const;
-  sCoordinates FindNextWord (const sCoordinates& from) const;
+  sCoordinates findWordStart (const sCoordinates& from) const;
+  sCoordinates findWordEnd (const sCoordinates& from) const;
+  sCoordinates findNextWord (const sCoordinates& from) const;
   //}}}
   //{{{  colorize
-  void Colorize (int fromLine = 0, int count = -1);
-  void ColorizeRange (int fromLine = 0, int toLine = 0);
-  void ColorizeInternal();
+  void colorize (int fromLine = 0, int count = -1);
+  void colorizeRange (int fromLine = 0, int toLine = 0);
+  void colorizeInternal();
   //}}}
   //{{{  actions
   void EnsureCursorVisible();
