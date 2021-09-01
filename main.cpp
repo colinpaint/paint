@@ -152,13 +152,13 @@ int main (int numArgs, char* args[]) {
     };
 
   for (int i = 0; i < sizeof(ppnames) / sizeof(ppnames[0]); ++i) {
-    cTextEditor::sIdentifier id;
+    cTextEditor::sIdent id;
     id.mDeclaration = ppvalues[i];
-    language.mPreprocIdentifiers.insert (make_pair (string (ppnames[i]), id));
+    language.mPreprocIdents.insert (make_pair (string (ppnames[i]), id));
     }
   //}}}
-  //{{{  set your own identifiers
-  static const char* identifiers[] = {
+  //{{{  set your own idents
+  static const char* idents[] = {
     "HWND",
     "HRESULT",
     "LPRESULT",
@@ -220,10 +220,10 @@ int main (int numArgs, char* args[]) {
     "ID3D11Texture2D",
     "class cTextEditor" };
 
-  for (int i = 0; i < sizeof(identifiers) / sizeof(identifiers[0]); ++i) {
-    cTextEditor::sIdentifier id;
+  for (int i = 0; i < sizeof(idents) / sizeof(idents[0]); ++i) {
+    cTextEditor::sIdent id;
     id.mDeclaration = string (idecls[i]);
-    language.mIdentifiers.insert (make_pair (string (identifiers[i]), id));
+    language.mIdents.insert (make_pair (string (idents[i]), id));
     }
   //}}}
 
@@ -236,11 +236,11 @@ int main (int numArgs, char* args[]) {
   //markers.insert (make_pair<int, string>(41, "Another example error"));
   //editor.SetErrorMarkers (markers);
   //}}}
-  //{{{  "breakpoint" markers
-  //cTextEditor::Breakpoints bpts;
+  //{{{  "break" markers
+  //cTextEditor::Breaks bpts;
   //bpts.insert(24);
   //bpts.insert(47);
-  //editor.SetBreakpoints (bpts);
+  //editor.SetBreaks (bpts);
   //}}}
   //}}}
 
@@ -298,7 +298,7 @@ int main (int numArgs, char* args[]) {
         ImGui::Separator();
 
         if (ImGui::MenuItem ("Select all", nullptr, nullptr))
-          editor.setSelection (cTextEditor::sCoordinates(), cTextEditor::sCoordinates (editor.getTotalLines(), 0));
+          editor.setSelection (cTextEditor::sLineColumn(), cTextEditor::sLineColumn(editor.getTotalLines(), 0));
 
         ImGui::EndMenu();
         }

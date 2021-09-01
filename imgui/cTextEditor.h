@@ -26,16 +26,16 @@ public:
     CharLiteral,
     Punctuation,
     Preprocessor,
-    Identifier,
-    KnownIdentifier,
-    PreprocIdentifier,
+    Ident,
+    KnownIdent,
+    PreprocIdent,
     Comment,
     MultiLineComment,
     Background,
     Cursor,
     Selection,
     ErrorMarker,
-    Breakpoint,
+    Break,
     LineNumber,
     CurrentLineFill,
     CurrentLineFillInactive,
@@ -58,12 +58,12 @@ public:
     };
   //}}}
   //{{{
-  struct sBreakpoint {
+  struct sBreak {
     int mLine;
     bool mEnabled;
     std::string mCondition;
 
-    sBreakpoint() : mLine(-1), mEnabled(false) {}
+    sBreak() : mLine(-1), mEnabled(false) {}
     };
   //}}}
   //{{{
@@ -74,21 +74,21 @@ public:
   // how many space is necessary to reach the next tab stop.
   // For example, coordinate (1, 5) represents the character 'B' in a line "\tABC", when mTabSize = 4,
   // because it is rendered as "    ABC" on the screen.
-  struct sCoordinates {
+  struct sLineColumn {
     int mLine;
     int mColumn;
 
-    sCoordinates() : mLine(0), mColumn(0) {}
+    sLineColumn() : mLine(0), mColumn(0) {}
     //{{{
-    sCoordinates(int line, int aColumn) : mLine(line), mColumn(aColumn)
+    sLineColumn (int line, int aColumn) : mLine(line), mColumn(aColumn)
     {
       assert(line >= 0);
       assert(aColumn >= 0);
     }
-    static sCoordinates Invalid() { static sCoordinates invalid(-1, -1); return invalid; }
+    static sLineColumn Invalid() { static sLineColumn invalid(-1, -1); return invalid; }
     //}}}
     //{{{
-    bool operator ==(const sCoordinates& o) const
+    bool operator ==(const sLineColumn& o) const
     {
       return
         mLine == o.mLine &&
@@ -96,7 +96,7 @@ public:
     }
     //}}}
     //{{{
-    bool operator !=(const sCoordinates& o) const
+    bool operator !=(const sLineColumn& o) const
     {
       return
         mLine != o.mLine ||
@@ -104,7 +104,7 @@ public:
     }
     //}}}
     //{{{
-    bool operator <(const sCoordinates& o) const
+    bool operator <(const sLineColumn& o) const
     {
       if (mLine != o.mLine)
         return mLine < o.mLine;
@@ -112,7 +112,7 @@ public:
     }
     //}}}
     //{{{
-    bool operator >(const sCoordinates& o) const
+    bool operator >(const sLineColumn& o) const
     {
       if (mLine != o.mLine)
         return mLine > o.mLine;
@@ -120,7 +120,7 @@ public:
     }
     //}}}
     //{{{
-    bool operator <=(const sCoordinates& o) const
+    bool operator <=(const sLineColumn& o) const
     {
       if (mLine != o.mLine)
         return mLine < o.mLine;
@@ -128,7 +128,7 @@ public:
     }
     //}}}
     //{{{
-    bool operator >=(const sCoordinates& o) const
+    bool operator >=(const sLineColumn& o) const
     {
       if (mLine != o.mLine)
         return mLine > o.mLine;
@@ -138,8 +138,8 @@ public:
   };
   //}}}
   //{{{
-  struct sIdentifier {
-    sCoordinates mLocation;
+  struct sIdent {
+    sLineColumn mLocation;
     std::string mDeclaration;
     };
   //}}}
@@ -147,10 +147,10 @@ public:
   typedef std::vector<sGlyph> tLine;
   typedef std::vector<tLine> tLines;
   typedef std::array<ImU32, (unsigned)ePaletteIndex::Max> tPalette;
-  typedef std::unordered_map<std::string, sIdentifier> tIdentifiers;
+  typedef std::unordered_map<std::string, sIdent> tIdents;
   typedef std::unordered_set<std::string> tKeywords;
   typedef std::map<int, std::string> tErrorMarkers;
-  typedef std::unordered_set<int> tBreakpoints;
+  typedef std::unordered_set<int> tBreaks;
   //{{{
   struct sLanguage {
     // typedef
@@ -163,8 +163,8 @@ public:
     std::string mName;
 
     tKeywords mKeywords;
-    tIdentifiers mIdentifiers;
-    tIdentifiers mPreprocIdentifiers;
+    tIdents mIdents;
+    tIdents mPreprocIdents;
 
     std::string mCommentStart;
     std::string mCommentEnd;
@@ -218,13 +218,13 @@ public:
   std::string getCurrentLineText()const;
   int getTotalLines() const { return (int)mLines.size(); }
 
-  sCoordinates getCursorPosition() const { return getActualCursorCoordinates(); }
+  sLineColumn getCursorPosition() const { return getActualCursorLineColumn(); }
 
   inline int getTabSize() const { return mTabSize; }
   //}}}
   //{{{  sets
   void setErrorMarkers (const tErrorMarkers& markers) { mErrorMarkers = markers; }
-  void setBreakpoints (const tBreakpoints& markers) { mBreakpoints = markers; }
+  void setBreaks (const tBreaks& markers) { mBreaks = markers; }
   void setLanguage (const sLanguage& language);
   void setPalette (const tPalette& value);
 
@@ -234,11 +234,11 @@ public:
   void setReadOnly (bool value) { mReadOnly = value; }
   void setColorizerEnable (bool value) { mColorizerEnabled = value; }
 
-  void setCursorPosition (const sCoordinates& position);
+  void setCursorPosition (const sLineColumn& position);
   void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
-  void setSelectionStart (const sCoordinates& position);
-  void setSelectionEnd (const sCoordinates& position);
-  void setSelection (const sCoordinates& startCord, const sCoordinates& endCord, eSelectionMode aMode = eSelectionMode::Normal);
+  void setSelectionStart (const sLineColumn& position);
+  void setSelectionEnd (const sLineColumn& position);
+  void setSelection (const sLineColumn& startCord, const sLineColumn& endCord, eSelectionMode aMode = eSelectionMode::Normal);
 
   inline void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
   inline void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
@@ -283,9 +283,9 @@ private:
   //{{{
   struct sEditorState
   {
-    sCoordinates mSelectionStart;
-    sCoordinates mSelectionEnd;
-    sCoordinates mCursorPosition;
+    sLineColumn mSelectionStart;
+    sLineColumn mSelectionEnd;
+    sLineColumn mCursorPosition;
   };
   //}}}
   //{{{
@@ -297,12 +297,12 @@ private:
 
     sUndoRecord(
       const std::string& aAdded,
-      const cTextEditor::sCoordinates aAddedStart,
-      const cTextEditor::sCoordinates aAddedEnd,
+      const cTextEditor::sLineColumn aAddedStart,
+      const cTextEditor::sLineColumn aAddedEnd,
 
       const std::string& aRemoved,
-      const cTextEditor::sCoordinates aRemovedStart,
-      const cTextEditor::sCoordinates aRemovedEnd,
+      const cTextEditor::sLineColumn aRemovedStart,
+      const cTextEditor::sLineColumn aRemovedEnd,
 
       cTextEditor::sEditorState& aBefore,
       cTextEditor::sEditorState& aAfter);
@@ -311,12 +311,12 @@ private:
     void Redo (cTextEditor* editor);
 
     std::string mAdded;
-    sCoordinates mAddedStart;
-    sCoordinates mAddedEnd;
+    sLineColumn mAddedStart;
+    sLineColumn mAddedEnd;
 
     std::string mRemoved;
-    sCoordinates mRemovedStart;
-    sCoordinates mRemovedEnd;
+    sLineColumn mRemovedStart;
+    sLineColumn mRemovedEnd;
 
     sEditorState mBefore;
     sEditorState mAfter;
@@ -325,31 +325,31 @@ private:
 
   typedef std::vector<sUndoRecord> tUndoBuffer;
   //{{{  gets
-  bool IsOnWordBoundary (const sCoordinates& aAt) const;
+  bool isOnWordBoundary (const sLineColumn& aAt) const;
 
   int getPageSize() const;
-  std::string getText (const sCoordinates& startCord, const sCoordinates& endCord) const;
-  sCoordinates getActualCursorCoordinates() const { return SanitizeCoordinates (mState.mCursorPosition); }
+  std::string getText (const sLineColumn& startCord, const sLineColumn& endCord) const;
+  sLineColumn getActualCursorLineColumn() const { return sanitizeLineColumn (mState.mCursorPosition); }
 
-  int getCharacterIndex (const sCoordinates& aCoordinates) const;
+  int getCharacterIndex (const sLineColumn& lineColumn) const;
   int getCharacterColumn (int lineCoord, int index) const;
   int getLineCharacterCount (int lineCoord) const;
   int getLineMaxColumn (int lineCoord) const;
 
-  std::string getWordAt (const sCoordinates& coords) const;
+  std::string getWordAt (const sLineColumn& lineColumn) const;
   std::string getWordUnderCursor() const;
   ImU32 getGlyphColor (const sGlyph& glyph) const;
 
-  float TextDistanceToLineStart (const sCoordinates& from) const;
+  float getTextDistanceToLineStart (const sLineColumn& from) const;
   //}}}
-  //{{{  coords
-  sCoordinates SanitizeCoordinates (const sCoordinates& value) const;
-  sCoordinates ScreenPosToCoordinates (const ImVec2& position) const;
+  //{{{  sets
+  sLineColumn sanitizeLineColumn (const sLineColumn& lineColumn) const;
+  sLineColumn screenPosToLineColumn (const ImVec2& position) const;
   //}}}
   //{{{  find
-  sCoordinates findWordStart (const sCoordinates& from) const;
-  sCoordinates findWordEnd (const sCoordinates& from) const;
-  sCoordinates findNextWord (const sCoordinates& from) const;
+  sLineColumn findWordStart (const sLineColumn& from) const;
+  sLineColumn findWordEnd (const sLineColumn& from) const;
+  sLineColumn findNextWord (const sLineColumn& from) const;
   //}}}
   //{{{  colorize
   void colorize (int fromLine = 0, int count = -1);
@@ -359,9 +359,9 @@ private:
   //{{{  actions
   void ensureCursorVisible();
 
-  void advance (sCoordinates& aCoordinates) const;
-  void deleteRange (const sCoordinates& startCord, const sCoordinates& endCord);
-  int insertTextAt (sCoordinates& aWhere, const char* value);
+  void advance (sLineColumn& lineColumn) const;
+  void deleteRange (const sLineColumn& startCord, const sLineColumn& endCord);
+  int insertTextAt (sLineColumn& aWhere, const char* value);
 
   void addUndo (sUndoRecord& value);
 
@@ -375,8 +375,8 @@ private:
   void deleteSelection();
   //}}}
 
-  void HandleMouseInputs();
-  void HandleKeyboardInputs();
+  void handleMouseInputs();
+  void handleKeyboardInputs();
 
   void render();
   //{{{  vars
@@ -410,10 +410,10 @@ private:
   tRegexList mRegexList;
 
   bool mCheckComments;
-  tBreakpoints mBreakpoints;
+  tBreaks mBreaks;
   tErrorMarkers mErrorMarkers;
   ImVec2 mCharAdvance;
-  sCoordinates mInteractiveStart, mInteractiveEnd;
+  sLineColumn mInteractiveStart, mInteractiveEnd;
   std::string mLineBuffer;
   uint64_t mStartTime;
 
