@@ -195,18 +195,18 @@ public:
   cTextEditor();
   ~cTextEditor() = default;
   //{{{  gets
-  bool IsOverwrite() const { return mOverwrite; }
-  bool IsReadOnly() const { return mReadOnly; }
-  bool IsTextChanged() const { return mTextChanged; }
-  bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
-  bool IsColorizerEnabled() const { return mColorizerEnabled; }
+  bool isOverwrite() const { return mOverwrite; }
+  bool isReadOnly() const { return mReadOnly; }
+  bool isTextChanged() const { return mTextChanged; }
+  bool isCursorPositionChanged() const { return mCursorPositionChanged; }
+  bool isColorizerEnabled() const { return mColorizerEnabled; }
 
-  bool HasSelection() const { return mState.mSelectionEnd > mState.mSelectionStart; }
+  bool hasSelection() const { return mState.mSelectionEnd > mState.mSelectionStart; }
 
-  inline bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
-  inline bool IsHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
-  inline bool IsImGuiChildIgnored() const { return mIgnoreImGuiChild; }
-  inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
+  inline bool isHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
+  inline bool isHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
+  inline bool isImGuiChildIgnored() const { return mIgnoreImGuiChild; }
+  inline bool isShowingWhitespaces() const { return mShowWhitespaces; }
 
   const sLanguage& getLanguage() const { return mLanguage; }
   const tPalette& getPalette() const { return mPaletteBase; }
@@ -256,22 +256,22 @@ public:
   void moveHome (bool select = false);
   void moveEnd (bool select = false);
 
-  void SelectAll();
-  void SelectWordUnderCursor();
+  void selectAll();
+  void selectWordUnderCursor();
 
   void InsertText(const char* value);
   void InsertText (const std::string& value) { InsertText (value.c_str()); }
-  void Copy();
-  void Cut();
-  void Paste();
-  void Delete();
+  void copy();
+  void cut();
+  void paste();
+  void deleteIt();
 
-  bool CanUndo() const { return !mReadOnly && mUndoIndex > 0; }
-  bool CanRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); }
-  void Undo (int steps = 1);
-  void Redo (int steps = 1);
+  bool canUndo() const { return !mReadOnly && mUndoIndex > 0; }
+  bool canRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); }
+  void undo (int steps = 1);
+  void redo (int steps = 1);
 
-  void Render (const char* title, const ImVec2& size = ImVec2(), bool border = false);
+  void render (const char* title, const ImVec2& size = ImVec2(), bool border = false);
   //}}}
   //{{{  static gets
   static const tPalette& getDarkPalette();
@@ -357,28 +357,28 @@ private:
   void colorizeInternal();
   //}}}
   //{{{  actions
-  void EnsureCursorVisible();
+  void ensureCursorVisible();
 
-  void Advance (sCoordinates& aCoordinates) const;
-  void DeleteRange (const sCoordinates& startCord, const sCoordinates& endCord);
-  int InsertTextAt (sCoordinates& aWhere, const char* value);
+  void advance (sCoordinates& aCoordinates) const;
+  void deleteRange (const sCoordinates& startCord, const sCoordinates& endCord);
+  int insertTextAt (sCoordinates& aWhere, const char* value);
 
-  void AddUndo (sUndoRecord& value);
+  void addUndo (sUndoRecord& value);
 
-  void RemoveLine (int startCord, int endCord);
-  void RemoveLine (int index);
-  tLine& InsertLine (int index);
+  void removeLine (int startCord, int endCord);
+  void removeLine (int index);
+  tLine& insertLine (int index);
 
-  void EnterCharacter (ImWchar aChar, bool aShift);
+  void enterCharacter (ImWchar aChar, bool aShift);
 
-  void Backspace();
-  void DeleteSelection();
+  void backspace();
+  void deleteSelection();
   //}}}
 
   void HandleMouseInputs();
   void HandleKeyboardInputs();
 
-  void Render();
+  void render();
   //{{{  vars
   float mLineSpacing;
   tLines mLines;

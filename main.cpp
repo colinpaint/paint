@@ -275,27 +275,26 @@ int main (int numArgs, char* args[]) {
         }
 
       if (ImGui::BeginMenu ("Edit")) {
-        bool ro = editor.IsReadOnly();
+        bool ro = editor.isReadOnly();
         if (ImGui::MenuItem ("Read-only mode", nullptr, &ro))
           editor.setReadOnly (ro);
         ImGui::Separator();
 
-        if (ImGui::MenuItem ("Undo", "ALT-Backspace", nullptr, !ro && editor.CanUndo()))
-          editor.Undo();
-        if (ImGui::MenuItem ("Redo", "Ctrl-Y", nullptr, !ro && editor.CanRedo()))
-          editor.Redo();
+        if (ImGui::MenuItem ("Undo", "ALT-Backspace", nullptr, !ro && editor.canUndo()))
+          editor.undo();
+        if (ImGui::MenuItem ("Redo", "Ctrl-Y", nullptr, !ro && editor.canRedo()))
+          editor.redo();
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem ("Copy", "Ctrl-C", nullptr, editor.HasSelection()))
-          editor.Copy();
-        if (ImGui::MenuItem ("Cut", "Ctrl-X", nullptr, !ro && editor.HasSelection()))
-          editor.Cut();
-        if (ImGui::MenuItem ("Delete", "Del", nullptr, !ro && editor.HasSelection()))
-          editor.Delete();
+        if (ImGui::MenuItem ("Copy", "Ctrl-C", nullptr, editor.hasSelection()))
+          editor.copy();
+        if (ImGui::MenuItem ("Cut", "Ctrl-X", nullptr, !ro && editor.hasSelection()))
+          editor.cut();
+        if (ImGui::MenuItem ("Delete", "Del", nullptr, !ro && editor.hasSelection()))
+          editor.deleteIt();
         if (ImGui::MenuItem ("Paste", "Ctrl-V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
-          editor.Paste();
-
+          editor.paste();
         ImGui::Separator();
 
         if (ImGui::MenuItem ("Select all", nullptr, nullptr))
@@ -311,11 +310,11 @@ int main (int numArgs, char* args[]) {
     ImGui::Text ("%6d/%-6d %6d lines  | %s | %s | %s",
                  editor.getCursorPosition().mLine + 1, editor.getCursorPosition().mColumn + 1,
                  editor.getTotalLines(),
-                 editor.IsOverwrite() ? "Ovr" : "Ins",
-                 editor.CanUndo() ? "*" : " ",
+                 editor.isOverwrite() ? "overwrite" : "insert",
+                 editor.canUndo() ? "undo" : " ",
                  editor.getLanguage().mName.c_str());
 
-    editor.Render("cTextEditor");
+    editor.render ("cTextEditor");
 
     ImGui::End();
     //}}}

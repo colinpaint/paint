@@ -341,36 +341,36 @@ cTextEditor::sUndoRecord::sUndoRecord (
 void cTextEditor::sUndoRecord::Undo (cTextEditor* editor) {
 
   if (!mAdded.empty()) {
-    editor->DeleteRange (mAddedStart, mAddedEnd);
+    editor->deleteRange (mAddedStart, mAddedEnd);
     editor->colorize (mAddedStart.mLine - 1, mAddedEnd.mLine - mAddedStart.mLine + 2);
     }
 
   if (!mRemoved.empty()) {
     auto start = mRemovedStart;
-    editor->InsertTextAt (start, mRemoved.c_str());
+    editor->insertTextAt (start, mRemoved.c_str());
     editor->colorize (mRemovedStart.mLine - 1, mRemovedEnd.mLine - mRemovedStart.mLine + 2);
     }
 
   editor->mState = mBefore;
-  editor->EnsureCursorVisible();
+  editor->ensureCursorVisible();
   }
 //}}}
 //{{{
 void cTextEditor::sUndoRecord::Redo (cTextEditor* editor) {
 
   if (!mRemoved.empty()) {
-    editor->DeleteRange (mRemovedStart, mRemovedEnd);
+    editor->deleteRange (mRemovedStart, mRemovedEnd);
     editor->colorize (mRemovedStart.mLine - 1, mRemovedEnd.mLine - mRemovedStart.mLine + 1);
     }
 
   if (!mAdded.empty()) {
     auto start = mAddedStart;
-    editor->InsertTextAt (start, mAdded.c_str());
+    editor->insertTextAt (start, mAdded.c_str());
     editor->colorize (mAddedStart.mLine - 1, mAddedEnd.mLine - mAddedStart.mLine + 1);
     }
 
   editor->mState = mAfter;
-  editor->EnsureCursorVisible();
+  editor->ensureCursorVisible();
   }
 //}}}
 
@@ -1125,7 +1125,7 @@ void cTextEditor::setCursorPosition (const sCoordinates& position) {
   if (mState.mCursorPosition != position) {
     mState.mCursorPosition = position;
     mCursorPositionChanged = true;
-    EnsureCursorVisible();
+    ensureCursorVisible();
     }
   }
 //}}}
@@ -1206,8 +1206,7 @@ void cTextEditor::moveUp (int aAmount, bool select) {
       mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
 
     setSelection (mInteractiveStart, mInteractiveEnd);
-
-    EnsureCursorVisible();
+    ensureCursorVisible();
     }
   }
 //}}}
@@ -1233,7 +1232,7 @@ void cTextEditor::moveDown (int aAmount, bool select) {
       mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
 
     setSelection (mInteractiveStart, mInteractiveEnd);
-    EnsureCursorVisible();
+    ensureCursorVisible();
     }
   }
 //}}}
@@ -1292,7 +1291,7 @@ void cTextEditor::moveLeft (int aAmount, bool select, bool wordMode) {
     mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
 
   setSelection (mInteractiveStart, mInteractiveEnd, select && wordMode ? eSelectionMode::Word : eSelectionMode::Normal);
-  EnsureCursorVisible();
+  ensureCursorVisible();
   }
 //}}}
 //{{{
@@ -1338,7 +1337,7 @@ void cTextEditor::moveRight (int aAmount, bool select, bool wordMode) {
     mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
 
   setSelection (mInteractiveStart, mInteractiveEnd, select && wordMode ? eSelectionMode::Word : eSelectionMode::Normal);
-  EnsureCursorVisible();
+  ensureCursorVisible();
   }
 //}}}
 
@@ -1427,12 +1426,12 @@ void cTextEditor::moveEnd (bool select) {
 //}}}
 
 //{{{
-void cTextEditor::SelectAll() {
+void cTextEditor::selectAll() {
   setSelection (sCoordinates (0, 0), sCoordinates((int)mLines.size(), 0));
   }
 //}}}
 //{{{
-void cTextEditor::SelectWordUnderCursor() {
+void cTextEditor::selectWordUnderCursor() {
 
   auto c = getCursorPosition();
   setSelection (findWordStart(c), findWordEnd(c));
@@ -1449,7 +1448,7 @@ void cTextEditor::InsertText (const char * value) {
   auto start = min (pos, mState.mSelectionStart);
   int totalLines = pos.mLine - start.mLine;
 
-  totalLines += InsertTextAt (pos, value);
+  totalLines += insertTextAt (pos, value);
 
   setSelection (pos, pos);
   setCursorPosition (pos);
@@ -1457,9 +1456,9 @@ void cTextEditor::InsertText (const char * value) {
   }
 //}}}
 //{{{
-void cTextEditor::Copy() {
+void cTextEditor::copy() {
 
-  if (HasSelection()) {
+  if (hasSelection()) {
     ImGui::SetClipboardText (getSelectedText().c_str());
     }
   else {
@@ -1474,32 +1473,31 @@ void cTextEditor::Copy() {
   }
 //}}}
 //{{{
-void cTextEditor::Cut() {
+void cTextEditor::cut() {
 
-  if (IsReadOnly()) {
-    Copy();
-    }
+  if (isReadOnly()) 
+    copy();
   else {
-    if (HasSelection()) {
+    if (hasSelection()) {
       sUndoRecord u;
       u.mBefore = mState;
       u.mRemoved = getSelectedText();
       u.mRemovedStart = mState.mSelectionStart;
       u.mRemovedEnd = mState.mSelectionEnd;
 
-      Copy();
-      DeleteSelection();
+      copy();
+      deleteSelection();
 
       u.mAfter = mState;
-      AddUndo (u);
+      addUndo (u);
       }
     }
   }
 //}}}
 //{{{
-void cTextEditor::Paste() {
+void cTextEditor::paste() {
 
-  if (IsReadOnly())
+  if (isReadOnly())
     return;
 
   auto clipText = ImGui::GetClipboardText();
@@ -1507,11 +1505,11 @@ void cTextEditor::Paste() {
     sUndoRecord u;
     u.mBefore = mState;
 
-    if (HasSelection()) {
+    if (hasSelection()) {
       u.mRemoved = getSelectedText();
       u.mRemovedStart = mState.mSelectionStart;
       u.mRemovedEnd = mState.mSelectionEnd;
-      DeleteSelection();
+      deleteSelection();
       }
 
     u.mAdded = clipText;
@@ -1521,12 +1519,12 @@ void cTextEditor::Paste() {
 
     u.mAddedEnd = getActualCursorCoordinates();
     u.mAfter = mState;
-    AddUndo (u);
+    addUndo (u);
     }
   }
 //}}}
 //{{{
-void cTextEditor::Delete() {
+void cTextEditor::deleteIt() {
 
   assert(!mReadOnly);
 
@@ -1536,11 +1534,11 @@ void cTextEditor::Delete() {
   sUndoRecord u;
   u.mBefore = mState;
 
-  if (HasSelection()) {
+  if (hasSelection()) {
     u.mRemoved = getSelectedText();
     u.mRemovedStart = mState.mSelectionStart;
     u.mRemovedEnd = mState.mSelectionEnd;
-    DeleteSelection();
+    deleteSelection();
     }
 
   else {
@@ -1554,11 +1552,11 @@ void cTextEditor::Delete() {
 
       u.mRemoved = '\n';
       u.mRemovedStart = u.mRemovedEnd = getActualCursorCoordinates();
-      Advance (u.mRemovedEnd);
+      advance (u.mRemovedEnd);
 
       auto& nextLine = mLines[pos.mLine + 1];
       line.insert (line.end(), nextLine.begin(), nextLine.end());
-      RemoveLine (pos.mLine + 1);
+      removeLine (pos.mLine + 1);
       }
     else {
       auto cindex = getCharacterIndex(pos);
@@ -1576,27 +1574,27 @@ void cTextEditor::Delete() {
     }
 
   u.mAfter = mState;
-  AddUndo (u);
+  addUndo (u);
   }
 //}}}
 
 //{{{
-void cTextEditor::Undo (int steps) {
+void cTextEditor::undo (int steps) {
 
-  while (CanUndo() && steps-- > 0)
+  while (canUndo() && steps-- > 0)
     mUndoBuffer[--mUndoIndex].Undo (this);
   }
 //}}}
 //{{{
-void cTextEditor::Redo (int steps) {
+void cTextEditor::redo (int steps) {
 
-  while (CanRedo() && steps-- > 0)
+  while (canRedo() && steps-- > 0)
     mUndoBuffer[mUndoIndex++].Redo (this);
   }
 //}}}
 //}}}
 //{{{
-void cTextEditor::Render (const char* title, const ImVec2& size, bool border) {
+void cTextEditor::render (const char* title, const ImVec2& size, bool border) {
 
   mWithinRender = true;
   mTextChanged = false;
@@ -1619,7 +1617,7 @@ void cTextEditor::Render (const char* title, const ImVec2& size, bool border) {
     HandleMouseInputs();
 
   colorizeInternal();
-  Render();
+  render();
 
   if (mHandleKeyboardInputs)
     ImGui::PopAllowKeyboardFocus();
@@ -2187,7 +2185,7 @@ float cTextEditor::TextDistanceToLineStart (const sCoordinates& from) const {
   }
 //}}}
 //{{{
-void cTextEditor::EnsureCursorVisible() {
+void cTextEditor::ensureCursorVisible() {
 
   if (!mWithinRender) {
     mScrollToCursor = true;
@@ -2222,7 +2220,7 @@ void cTextEditor::EnsureCursorVisible() {
 //}}}
 //{{{  actions
 //{{{
-void cTextEditor::Advance (sCoordinates& aCoordinates) const {
+void cTextEditor::advance (sCoordinates& aCoordinates) const {
 
   if (aCoordinates.mLine < (int)mLines.size()) {
     auto& line = mLines[aCoordinates.mLine];
@@ -2241,8 +2239,9 @@ void cTextEditor::Advance (sCoordinates& aCoordinates) const {
     }
   }
 //}}}
+
 //{{{
-void cTextEditor::DeleteRange (const sCoordinates& startCord, const sCoordinates& endCord) {
+void cTextEditor::deleteRange (const sCoordinates& startCord, const sCoordinates& endCord) {
 
   assert (endCord >= startCord);
   assert (!mReadOnly);
@@ -2275,14 +2274,14 @@ void cTextEditor::DeleteRange (const sCoordinates& startCord, const sCoordinates
       firstLine.insert(firstLine.end(), lastLine.begin(), lastLine.end());
 
     if (startCord.mLine < endCord.mLine)
-      RemoveLine(startCord.mLine + 1, endCord.mLine + 1);
+      removeLine(startCord.mLine + 1, endCord.mLine + 1);
     }
 
   mTextChanged = true;
   }
 //}}}
 //{{{
-int cTextEditor::InsertTextAt (sCoordinates& /* inout */ aWhere, const char* value) {
+int cTextEditor::insertTextAt (sCoordinates& /* inout */ aWhere, const char* value) {
 
   assert (!mReadOnly);
 
@@ -2298,14 +2297,14 @@ int cTextEditor::InsertTextAt (sCoordinates& /* inout */ aWhere, const char* val
       }
     else if (*value == '\n') {
       if (cindex < (int)mLines[aWhere.mLine].size()) {
-        auto& newLine = InsertLine(aWhere.mLine + 1);
+        auto& newLine = insertLine (aWhere.mLine + 1);
         auto& line = mLines[aWhere.mLine];
         newLine.insert (newLine.begin(), line.begin() + cindex, line.end());
-        line.erase(line.begin() + cindex, line.end());
+        line.erase (line.begin() + cindex, line.end());
         }
-      else {
-        InsertLine(aWhere.mLine + 1);
-        }
+      else
+        insertLine (aWhere.mLine + 1);
+
       ++aWhere.mLine;
       aWhere.mColumn = 0;
       cindex = 0;
@@ -2328,7 +2327,7 @@ int cTextEditor::InsertTextAt (sCoordinates& /* inout */ aWhere, const char* val
   }
 //}}}
 //{{{
-void cTextEditor::AddUndo (sUndoRecord& value) {
+void cTextEditor::addUndo (sUndoRecord& value) {
 
   assert(!mReadOnly);
   //printf("AddUndo: (@%d.%d) +\'%s' [%d.%d .. %d.%d], -\'%s', [%d.%d .. %d.%d] (@%d.%d)\n",
@@ -2343,8 +2342,9 @@ void cTextEditor::AddUndo (sUndoRecord& value) {
   ++mUndoIndex;
   }
 //}}}
+
 //{{{
-void cTextEditor::RemoveLine (int startCord, int endCord) {
+void cTextEditor::removeLine (int startCord, int endCord) {
 
   assert (!mReadOnly);
   assert (endCord >= startCord);
@@ -2374,7 +2374,7 @@ void cTextEditor::RemoveLine (int startCord, int endCord) {
   }
 //}}}
 //{{{
-void cTextEditor::RemoveLine (int index) {
+void cTextEditor::removeLine (int index) {
 
   assert(!mReadOnly);
   assert(mLines.size() > 1);
@@ -2402,8 +2402,9 @@ void cTextEditor::RemoveLine (int index) {
   mTextChanged = true;
   }
 //}}}
+
 //{{{
-cTextEditor::tLine& cTextEditor::InsertLine (int index) {
+cTextEditor::tLine& cTextEditor::insertLine (int index) {
 
   assert (!mReadOnly);
 
@@ -2422,14 +2423,15 @@ cTextEditor::tLine& cTextEditor::InsertLine (int index) {
   return result;
   }
 //}}}
+
 //{{{
-void cTextEditor::EnterCharacter (ImWchar aChar, bool aShift) {
+void cTextEditor::enterCharacter (ImWchar aChar, bool aShift) {
 
   assert(!mReadOnly);
   sUndoRecord u;
   u.mBefore = mState;
 
-  if (HasSelection()) {
+  if (hasSelection()) {
     if (aChar == '\t' && mState.mSelectionStart.mLine != mState.mSelectionEnd.mLine) {
       auto start = mState.mSelectionStart;
       auto end = mState.mSelectionEnd;
@@ -2495,9 +2497,9 @@ void cTextEditor::EnterCharacter (ImWchar aChar, bool aShift) {
 
         mState.mSelectionStart = start;
         mState.mSelectionEnd = end;
-        AddUndo (u);
+        addUndo (u);
         mTextChanged = true;
-        EnsureCursorVisible();
+        ensureCursorVisible();
         }
 
       return;
@@ -2507,7 +2509,7 @@ void cTextEditor::EnterCharacter (ImWchar aChar, bool aShift) {
       u.mRemoved = getSelectedText();
       u.mRemovedStart = mState.mSelectionStart;
       u.mRemovedEnd = mState.mSelectionEnd;
-      DeleteSelection();
+      deleteSelection();
       }
     } // HasSelection
 
@@ -2516,7 +2518,7 @@ void cTextEditor::EnterCharacter (ImWchar aChar, bool aShift) {
 
   assert (!mLines.empty());
   if (aChar == '\n') {
-    InsertLine (coord.mLine + 1);
+    insertLine (coord.mLine + 1);
     auto& line = mLines[coord.mLine];
     auto& newLine = mLines[coord.mLine + 1];
 
@@ -2565,14 +2567,15 @@ void cTextEditor::EnterCharacter (ImWchar aChar, bool aShift) {
   u.mAddedEnd = getActualCursorCoordinates();
   u.mAfter = mState;
 
-  AddUndo(u);
+  addUndo(u);
 
   colorize (coord.mLine - 1, 3);
-  EnsureCursorVisible();
+  ensureCursorVisible();
   }
 //}}}
+
 //{{{
-void cTextEditor::Backspace() {
+void cTextEditor::backspace() {
 
   assert(!mReadOnly);
 
@@ -2582,11 +2585,11 @@ void cTextEditor::Backspace() {
   sUndoRecord u;
   u.mBefore = mState;
 
-  if (HasSelection()) {
+  if (hasSelection()) {
     u.mRemoved = getSelectedText();
     u.mRemovedStart = mState.mSelectionStart;
     u.mRemovedEnd = mState.mSelectionEnd;
-    DeleteSelection();
+    deleteSelection();
     }
 
   else {
@@ -2599,7 +2602,7 @@ void cTextEditor::Backspace() {
 
       u.mRemoved = '\n';
       u.mRemovedStart = u.mRemovedEnd = sCoordinates (pos.mLine - 1, getLineMaxColumn (pos.mLine - 1));
-      Advance (u.mRemovedEnd);
+      advance (u.mRemovedEnd);
 
       auto& line = mLines[mState.mCursorPosition.mLine];
       auto& prevLine = mLines[mState.mCursorPosition.mLine - 1];
@@ -2611,7 +2614,7 @@ void cTextEditor::Backspace() {
         etmp.insert (tErrorMarkers::value_type (i.first - 1 == mState.mCursorPosition.mLine ? i.first - 1 : i.first, i.second));
       mErrorMarkers = move (etmp);
 
-      RemoveLine (mState.mCursorPosition.mLine);
+      removeLine (mState.mCursorPosition.mLine);
       --mState.mCursorPosition.mLine;
       mState.mCursorPosition.mColumn = prevSize;
       }
@@ -2637,23 +2640,23 @@ void cTextEditor::Backspace() {
 
     mTextChanged = true;
 
-    EnsureCursorVisible();
+    ensureCursorVisible();
     colorize (mState.mCursorPosition.mLine, 1);
     }
 
   u.mAfter = mState;
-  AddUndo (u);
+  addUndo (u);
   }
 //}}}
 //{{{
-void cTextEditor::DeleteSelection() {
+void cTextEditor::deleteSelection() {
 
   assert(mState.mSelectionEnd >= mState.mSelectionStart);
 
   if (mState.mSelectionEnd == mState.mSelectionStart)
     return;
 
-  DeleteRange (mState.mSelectionStart, mState.mSelectionEnd);
+  deleteRange (mState.mSelectionStart, mState.mSelectionEnd);
 
   setSelection (mState.mSelectionStart, mState.mSelectionStart);
   setCursorPosition (mState.mSelectionStart);
@@ -2737,12 +2740,12 @@ void cTextEditor::HandleKeyboardInputs() {
     io.WantCaptureKeyboard = true;
     io.WantTextInput = true;
 
-    if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Z)))
-      Undo();
-    else if (!IsReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Backspace)))
-      Undo();
-    else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Y)))
-      Redo();
+    if (!isReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Z)))
+      undo();
+    else if (!isReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Backspace)))
+      undo();
+    else if (!isReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Y)))
+      redo();
     else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_UpArrow)))
       moveUp (1, shift);
     else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_DownArrow)))
@@ -2763,36 +2766,36 @@ void cTextEditor::HandleKeyboardInputs() {
       moveHome (shift);
     else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_End)))
       moveEnd (shift);
-    else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Delete)))
-      Delete();
-    else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Backspace)))
-      Backspace();
+    else if (!isReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Delete)))
+      deleteIt();
+    else if (!isReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Backspace)))
+      backspace();
     else if (!ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_Insert)))
       mOverwrite ^= true;
     else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_Insert)))
-      Copy();
+      copy();
     else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_C)))
-      Copy();
-    else if (!IsReadOnly() && !ctrl && shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Insert)))
-      Paste();
-    else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_V)))
-      Paste();
+      copy();
+    else if (!isReadOnly() && !ctrl && shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Insert)))
+      paste();
+    else if (!isReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_V)))
+      paste();
     else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_X)))
-      Cut();
+      cut();
     else if (!ctrl && shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_Delete)))
-      Cut();
+      cut();
     else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_A)))
-      SelectAll();
-    else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Enter)))
-      EnterCharacter ('\n', false);
-    else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Tab)))
-      EnterCharacter ('\t', shift);
+      selectAll();
+    else if (!isReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Enter)))
+      enterCharacter ('\n', false);
+    else if (!isReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Tab)))
+      enterCharacter ('\t', shift);
 
-    if (!IsReadOnly() && !io.InputQueueCharacters.empty()) {
+    if (!isReadOnly() && !io.InputQueueCharacters.empty()) {
       for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
         auto c = io.InputQueueCharacters[i];
         if (c != 0 && (c == '\n' || c >= 32))
-          EnterCharacter (c, shift);
+          enterCharacter (c, shift);
         }
       io.InputQueueCharacters.resize (0);
       }
@@ -2801,7 +2804,7 @@ void cTextEditor::HandleKeyboardInputs() {
 //}}}
 
 //{{{
-void cTextEditor::Render() {
+void cTextEditor::render() {
 
   //{{{  calc mCharAdvance regarding to scaled font size (Ctrl + mouse wheel)
   const float fontSize = ImGui::GetFont()->CalcTextSizeA (
@@ -2837,7 +2840,7 @@ void cTextEditor::Render() {
   auto lineMax = max (0,
     min ((int)mLines.size() - 1, lineNo + (int)floor((scrollY + contentSize.y) / mCharAdvance.y)));
 
-  //{{{  Deduce mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
+  //{{{  calc mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
   char buf[16];
   snprintf (buf, 16, " %d ", globalLineMax);
   mTextStart = ImGui::GetFont()->CalcTextSizeA (
@@ -2853,7 +2856,7 @@ void cTextEditor::Render() {
       ImVec2 textScreenPos = ImVec2 (lineStartScreenPos.x + mTextStart, lineStartScreenPos.y);
 
       auto& line = mLines[lineNo];
-      longest = max(mTextStart + TextDistanceToLineStart (sCoordinates (lineNo, getLineMaxColumn(lineNo))), longest);
+      longest = max(mTextStart + TextDistanceToLineStart (sCoordinates (lineNo, getLineMaxColumn (lineNo))), longest);
       auto columnNo = 0;
       sCoordinates lineStartCoord (lineNo, 0);
       sCoordinates lineEndCoord (lineNo, getLineMaxColumn (lineNo));
@@ -2892,19 +2895,22 @@ void cTextEditor::Render() {
 
         if (ImGui::IsMouseHoveringRect (lineStartScreenPos, end)) {
           ImGui::BeginTooltip();
+
           ImGui::PushStyleColor( ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
           ImGui::Text ("Error at line %d:", errorIt->first);
           ImGui::PopStyleColor();
+
           ImGui::Separator();
           ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.2f, 1.0f));
           ImGui::Text ("%s", errorIt->second.c_str());
           ImGui::PopStyleColor();
+
           ImGui::EndTooltip();
           }
         }
       //}}}
       //{{{  draw lineNumber rightAligned
-      snprintf(buf, 16, "%d  ", lineNo + 1);
+      snprintf (buf, 16, "%d  ", lineNo + 1);
 
       auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA (
         ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
@@ -2915,15 +2921,15 @@ void cTextEditor::Render() {
       if (mState.mCursorPosition.mLine == lineNo) {
         auto focused = ImGui::IsWindowFocused();
 
-        // Highlight the current line (where the cursor is)
-        if (!HasSelection()) {
+        // highlight the current line (where the cursor is)
+        if (!hasSelection()) {
           auto end = ImVec2 (start.x + contentSize.x + scrollX, start.y + mCharAdvance.y);
           drawList->AddRectFilled (start, end,
             mPalette[(int)(focused ? ePaletteIndex::CurrentLineFill : ePaletteIndex::CurrentLineFillInactive)]);
           drawList->AddRect (start, end, mPalette[(int)ePaletteIndex::CurrentLineEdge], 1.0f);
           }
 
-        // Render the cursor
+        // render cursor
         if (focused) {
           auto timeEnd = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
           auto elapsed = timeEnd - mStartTime;
@@ -3003,11 +3009,13 @@ void cTextEditor::Render() {
           bufferOffset.x += spaceSize;
           i++;
           }
+
         else {
           auto l = utf8CharLength (glyph.mChar);
           while (l-- > 0)
             mLineBuffer.push_back (line[i++].mChar);
           }
+
         ++columnNo;
         }
 
@@ -3029,6 +3037,7 @@ void cTextEditor::Render() {
           ImGui::TextUnformatted (it->second.mDeclaration.c_str());
           ImGui::EndTooltip();
           }
+
         else {
           auto pi = mLanguage.mPreprocIdentifiers.find (id);
           if (pi != mLanguage.mPreprocIdentifiers.end()) {
@@ -3046,7 +3055,7 @@ void cTextEditor::Render() {
 
   if (mScrollToCursor) {
     //{{{  scroll to cursor
-    EnsureCursorVisible();
+    ensureCursorVisible();
     ImGui::SetWindowFocus();
     mScrollToCursor = false;
     }
