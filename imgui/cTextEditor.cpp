@@ -147,8 +147,8 @@ namespace {
   //}}}
   //{{{
   bool TokenizeCStyleIdentifier (const char* in_begin, const char* in_end,
-                                 const char*& out_begin, const char*& out_end)
-  {
+                                 const char*& out_begin, const char*& out_end) {
+
     const char * p = in_begin;
 
     if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || *p == '_') {
@@ -172,12 +172,10 @@ namespace {
 
     const char * p = in_begin;
     const bool startsWithNumber = *p >= '0' && *p <= '9';
-
     if (*p != '+' && *p != '-' && !startsWithNumber)
       return false;
 
     p++;
-
     bool hasNumber = startsWithNumber;
     while (p < in_end && (*p >= '0' && *p <= '9')) {
       hasNumber = true;
@@ -186,10 +184,9 @@ namespace {
     if (hasNumber == false)
       return false;
 
-    bool isFloat = false;
     bool isHex = false;
+    bool isFloat = false;
     bool isBinary = false;
-
     if (p < in_end) {
       if (*p == '.') {
         isFloat = true;
@@ -197,15 +194,13 @@ namespace {
         while (p < in_end && (*p >= '0' && *p <= '9'))
           p++;
         }
-      else if (*p == 'x' || *p == 'X') {
-        // hex formatted integer of the type 0xef80
+      else if (*p == 'x' || *p == 'X') { // hex formatted integer of the type 0xef80
         isHex = true;
         p++;
         while (p < in_end && ((*p >= '0' && *p <= '9') || (*p >= 'a' && *p <= 'f') || (*p >= 'A' && *p <= 'F')))
           p++;
         }
-      else if (*p == 'b' || *p == 'B') {
-        // binary formatted integer of the type 0b01011101
+      else if (*p == 'b' || *p == 'B') { // binary formatted integer of the type 0b01011101
         isBinary = true;
         p++;
         while (p < in_end && (*p >= '0' && *p <= '1'))
@@ -213,8 +208,7 @@ namespace {
         }
       }
 
-    if (isHex == false && isBinary == false) {
-      // floating point exponent
+    if (isHex == false && isBinary == false) { // floating point exponent
       if (p < in_end && (*p == 'e' || *p == 'E')) {
         isFloat = true;
         p++;
@@ -234,11 +228,9 @@ namespace {
         p++;
       }
 
-    if (isFloat == false) {
-      // integer size type
+    if (isFloat == false) // integer size type
       while (p < in_end && (*p == 'u' || *p == 'U' || *p == 'l' || *p == 'L'))
         p++;
-      }
 
     out_begin = in_begin;
     out_end = p;
@@ -287,7 +279,7 @@ namespace {
   }
 //{{{  cTextEditor::sUndoRecord
 //{{{
-cTextEditor::sUndoRecord::sUndoRecord(
+cTextEditor::sUndoRecord::sUndoRecord (
   const string& aAdded, const cTextEditor::sCoordinates aAddedStart, const cTextEditor::sCoordinates aAddedEnd,
   const string& aRemoved, const cTextEditor::sCoordinates aRemovedStart, const cTextEditor::sCoordinates aRemovedEnd,
   cTextEditor::sEditorState& aBefore, cTextEditor::sEditorState& aAfter)
@@ -295,8 +287,8 @@ cTextEditor::sUndoRecord::sUndoRecord(
       mRemoved(aRemoved), mRemovedStart(aRemovedStart), mRemovedEnd(aRemovedEnd),
       mBefore(aBefore), mAfter(aAfter) {
 
-  assert(mAddedStart <= mAddedEnd);
-  assert(mRemovedStart <= mRemovedEnd);
+  assert (mAddedStart <= mAddedEnd);
+  assert (mRemovedStart <= mRemovedEnd);
   }
 //}}}
 
@@ -866,7 +858,7 @@ cTextEditor::cTextEditor()
     mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false),
     mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(eSelectionMode::Normal) , mCheckComments(true),
     mLastClick(-1.0f),
-    mHandleKeyboardInputs(true), mHandleMouseInputs(true), 
+    mHandleKeyboardInputs(true), mHandleMouseInputs(true),
     mIgnoreImGuiChild(false), mShowWhitespaces(true) ,
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()) {
 
@@ -2877,9 +2869,9 @@ void cTextEditor::Render() {
       float sstart = -1.0f;
       float ssend = -1.0f;
 
-      assert(mState.mSelectionStart <= mState.mSelectionEnd);
+      assert (mState.mSelectionStart <= mState.mSelectionEnd);
       if (mState.mSelectionStart <= lineEndCoord)
-        sstart = mState.mSelectionStart > lineStartCoord ? TextDistanceToLineStart(mState.mSelectionStart) : 0.0f;
+        sstart = mState.mSelectionStart > lineStartCoord ? TextDistanceToLineStart (mState.mSelectionStart) : 0.0f;
       if (mState.mSelectionEnd > lineStartCoord)
         ssend = TextDistanceToLineStart(mState.mSelectionEnd < lineEndCoord ? mState.mSelectionEnd : lineEndCoord);
 
@@ -2924,8 +2916,8 @@ void cTextEditor::Render() {
 
       auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA (
         ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
-      drawList->AddText (ImVec2 (lineStartScreenPos.x + mTextStart - lineNoWidth,
-                                 lineStartScreenPos.y),
+
+      drawList->AddText (ImVec2 (lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y),
                          mPalette[(int)ePaletteIndex::LineNumber], buf);
 
       if (mState.mCursorPosition.mLine == lineNo) {

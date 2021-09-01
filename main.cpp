@@ -222,8 +222,8 @@ int main (int numArgs, char* args[]) {
 
   for (int i = 0; i < sizeof(identifiers) / sizeof(identifiers[0]); ++i) {
     cTextEditor::sIdentifier id;
-    id.mDeclaration = string(idecls[i]);
-    language.mIdentifiers.insert (make_pair(string(identifiers[i]), id));
+    id.mDeclaration = string (idecls[i]);
+    language.mIdentifiers.insert (make_pair (string (identifiers[i]), id));
     }
   //}}}
 
