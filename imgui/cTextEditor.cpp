@@ -815,7 +815,8 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::Lua() {
 cTextEditor::cTextEditor()
   : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4),
     mOverwrite(false) , mReadOnly(false) , mWithinRender(false),
-    mScrollToCursor(false), mScrollToTop(false), mTextChanged(false), mColorizerEnabled(true),
+    mScrollToCursor(false), mScrollToTop(false), 
+    mTextChanged(false), mColorizerEnabled(true),
     mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false),
     mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(eSelectionMode::Normal) , mCheckComments(true),
     mLastClick(-1.0f),
@@ -1104,24 +1105,6 @@ void cTextEditor::SetSelection (const sCoordinates& aStart, const sCoordinates& 
 
 // actions
 //{{{
-void cTextEditor::InsertText (const char * aValue) {
-
-  if (aValue == nullptr)
-    return;
-
-  auto pos = GetActualCursorCoordinates();
-  auto start = min (pos, mState.mSelectionStart);
-  int totalLines = pos.mLine - start.mLine;
-
-  totalLines += InsertTextAt (pos, aValue);
-
-  SetSelection (pos, pos);
-  SetCursorPosition (pos);
-  Colorize (start.mLine - 1, totalLines + 2);
-  }
-//}}}
-
-//{{{
 void cTextEditor::MoveUp (int aAmount, bool aSelect) {
 
   auto oldPos = mState.mCursorPosition;
@@ -1276,6 +1259,7 @@ void cTextEditor::MoveRight (int aAmount, bool aSelect, bool aWordMode) {
   EnsureCursorVisible();
   }
 //}}}
+
 //{{{
 void cTextEditor::MoveTop (bool aSelect) {
 
@@ -1361,18 +1345,35 @@ void cTextEditor::MoveEnd (bool aSelect) {
 //}}}
 
 //{{{
+void cTextEditor::SelectAll() {
+  SetSelection (sCoordinates (0, 0), sCoordinates((int)mLines.size(), 0));
+  }
+//}}}
+//{{{
 void cTextEditor::SelectWordUnderCursor() {
 
   auto c = GetCursorPosition();
   SetSelection (FindWordStart(c), FindWordEnd(c));
   }
 //}}}
+
 //{{{
-void cTextEditor::SelectAll() {
-  SetSelection (sCoordinates (0, 0), sCoordinates((int)mLines.size(), 0));
+void cTextEditor::InsertText (const char * aValue) {
+
+  if (aValue == nullptr)
+    return;
+
+  auto pos = GetActualCursorCoordinates();
+  auto start = min (pos, mState.mSelectionStart);
+  int totalLines = pos.mLine - start.mLine;
+
+  totalLines += InsertTextAt (pos, aValue);
+
+  SetSelection (pos, pos);
+  SetCursorPosition (pos);
+  Colorize (start.mLine - 1, totalLines + 2);
   }
 //}}}
-
 //{{{
 void cTextEditor::Copy() {
 
@@ -1498,16 +1499,16 @@ void cTextEditor::Delete() {
 //}}}
 
 //{{{
-void cTextEditor::Undo (int aSteps) {
+void cTextEditor::Undo (int steps) {
 
-  while (CanUndo() && aSteps-- > 0)
+  while (CanUndo() && steps-- > 0)
     mUndoBuffer[--mUndoIndex].Undo (this);
   }
 //}}}
 //{{{
-void cTextEditor::Redo (int aSteps) {
+void cTextEditor::Redo (int steps) {
 
-  while (CanRedo() && aSteps-- > 0)
+  while (CanRedo() && steps-- > 0)
     mUndoBuffer[mUndoIndex++].Redo (this);
   }
 //}}}
@@ -2772,17 +2773,18 @@ void cTextEditor::HandleMouseInputs() {
 //{{{
 void cTextEditor::Render() {
 
-  // Compute mCharAdvance regarding to scaled font size (Ctrl + mouse wheel)
+  //{{{  Compute mCharAdvance regarding to scaled font size (Ctrl + mouse wheel)
   const float fontSize = ImGui::GetFont()->CalcTextSizeA (
     ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
   mCharAdvance = ImVec2 (fontSize, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
-
-  // Update palette with the current alpha from style
+  //}}}
+  //{{{  Update palette with the current alpha from style
   for (int i = 0; i < (int)ePaletteIndex::Max; ++i) {
-    auto color = ImGui::ColorConvertU32ToFloat4(mPaletteBase[i]);
+    auto color = ImGui::ColorConvertU32ToFloat4 (mPaletteBase[i]);
     color.w *= ImGui::GetStyle().Alpha;
     mPalette[i] = ImGui::ColorConvertFloat4ToU32 (color);
-  }
+    }
+  //}}}
 
   assert (mLineBuffer.empty());
   auto contentSize = ImGui::GetWindowContentRegionMax();
@@ -2790,39 +2792,41 @@ void cTextEditor::Render() {
   float longest (mTextStart);
 
   if (mScrollToTop) {
+    //{{{  scroll to top
     mScrollToTop = false;
     ImGui::SetScrollY (0.f);
-  }
+    }
+    //}}}
 
   ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
   auto scrollX = ImGui::GetScrollX();
   auto scrollY = ImGui::GetScrollY();
-  auto lineNo = (int)floor(scrollY / mCharAdvance.y);
+  auto lineNo = (int)floor (scrollY / mCharAdvance.y);
   auto globalLineMax = (int)mLines.size();
   auto lineMax = max (0,
     min ((int)mLines.size() - 1, lineNo + (int)floor((scrollY + contentSize.y) / mCharAdvance.y)));
 
-  // Deduce mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
+  //{{{  Deduce mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
   char buf[16];
-  snprintf(buf, 16, " %d ", globalLineMax);
+  snprintf (buf, 16, " %d ", globalLineMax);
   mTextStart = ImGui::GetFont()->CalcTextSizeA (
     ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x + mLeftMargin;
+  //}}}
 
   if (!mLines.empty()) {
     float spaceSize = ImGui::GetFont()->CalcTextSizeA (
       ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
 
     while (lineNo <= lineMax) {
-      ImVec2 lineStartScreenPos = ImVec2(cursorScreenPos.x, cursorScreenPos.y + lineNo * mCharAdvance.y);
-      ImVec2 textScreenPos = ImVec2(lineStartScreenPos.x + mTextStart, lineStartScreenPos.y);
+      ImVec2 lineStartScreenPos = ImVec2 (cursorScreenPos.x, cursorScreenPos.y + lineNo * mCharAdvance.y);
+      ImVec2 textScreenPos = ImVec2 (lineStartScreenPos.x + mTextStart, lineStartScreenPos.y);
 
       auto& line = mLines[lineNo];
       longest = max(mTextStart + TextDistanceToLineStart (sCoordinates (lineNo, GetLineMaxColumn(lineNo))), longest);
       auto columnNo = 0;
       sCoordinates lineStartCoord (lineNo, 0);
       sCoordinates lineEndCoord (lineNo, GetLineMaxColumn(lineNo));
-
-      // Draw selection for the current line
+      //{{{  draw selection for the current line
       float sstart = -1.0f;
       float ssend = -1.0f;
 
@@ -2836,52 +2840,56 @@ void cTextEditor::Render() {
         ssend += mCharAdvance.x;
 
       if (sstart != -1 && ssend != -1 && sstart < ssend) {
-        ImVec2 vstart(lineStartScreenPos.x + mTextStart + sstart, lineStartScreenPos.y);
-        ImVec2 vend(lineStartScreenPos.x + mTextStart + ssend, lineStartScreenPos.y + mCharAdvance.y);
-        drawList->AddRectFilled(vstart, vend, mPalette[(int)ePaletteIndex::Selection]);
+        ImVec2 vstart (lineStartScreenPos.x + mTextStart + sstart, lineStartScreenPos.y);
+        ImVec2 vend (lineStartScreenPos.x + mTextStart + ssend, lineStartScreenPos.y + mCharAdvance.y);
+        drawList->AddRectFilled (vstart, vend, mPalette[(int)ePaletteIndex::Selection]);
         }
+      //}}}
+      //{{{  draw breakpoints
+      auto start = ImVec2 (lineStartScreenPos.x + scrollX, lineStartScreenPos.y);
 
-      // Draw breakpoints
-      auto start = ImVec2(lineStartScreenPos.x + scrollX, lineStartScreenPos.y);
-
-      if (mBreakpoints.count(lineNo + 1) != 0) {
-        auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-        drawList->AddRectFilled(start, end, mPalette[(int)ePaletteIndex::Breakpoint]);
+      if (mBreakpoints.count (lineNo + 1) != 0) {
+        auto end = ImVec2 (lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+        drawList->AddRectFilled (start, end, mPalette[(int)ePaletteIndex::Breakpoint]);
         }
-
-      // Draw error markers
-      auto errorIt = mErrorMarkers.find(lineNo + 1);
+      //}}}
+      //{{{  draw error markers
+      auto errorIt = mErrorMarkers.find (lineNo + 1);
       if (errorIt != mErrorMarkers.end()) {
-        auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-        drawList->AddRectFilled(start, end, mPalette[(int)ePaletteIndex::ErrorMarker]);
+        auto end = ImVec2 (lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+        drawList->AddRectFilled (start, end, mPalette[(int)ePaletteIndex::ErrorMarker]);
 
-        if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end)) {
+        if (ImGui::IsMouseHoveringRect (lineStartScreenPos, end)) {
           ImGui::BeginTooltip();
-          ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
-          ImGui::Text("Error at line %d:", errorIt->first);
+          ImGui::PushStyleColor( ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
+          ImGui::Text ("Error at line %d:", errorIt->first);
           ImGui::PopStyleColor();
           ImGui::Separator();
-          ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.2f, 1.0f));
-          ImGui::Text("%s", errorIt->second.c_str());
+          ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.2f, 1.0f));
+          ImGui::Text ("%s", errorIt->second.c_str());
           ImGui::PopStyleColor();
           ImGui::EndTooltip();
           }
         }
-
-      // Draw line number (right aligned)
+      //}}}
+      //{{{  draw line number (right aligned)
       snprintf(buf, 16, "%d  ", lineNo + 1);
 
-      auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
-      drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)ePaletteIndex::LineNumber], buf);
+      auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA (
+        ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
+      drawList->AddText (ImVec2 (lineStartScreenPos.x + mTextStart - lineNoWidth,
+                                 lineStartScreenPos.y), 
+                         mPalette[(int)ePaletteIndex::LineNumber], buf);
 
       if (mState.mCursorPosition.mLine == lineNo) {
         auto focused = ImGui::IsWindowFocused();
 
         // Highlight the current line (where the cursor is)
         if (!HasSelection()) {
-          auto end = ImVec2(start.x + contentSize.x + scrollX, start.y + mCharAdvance.y);
-          drawList->AddRectFilled(start, end, mPalette[(int)(focused ? ePaletteIndex::CurrentLineFill : ePaletteIndex::CurrentLineFillInactive)]);
-          drawList->AddRect(start, end, mPalette[(int)ePaletteIndex::CurrentLineEdge], 1.0f);
+          auto end = ImVec2 (start.x + contentSize.x + scrollX, start.y + mCharAdvance.y);
+          drawList->AddRectFilled (start, end, 
+            mPalette[(int)(focused ? ePaletteIndex::CurrentLineFill : ePaletteIndex::CurrentLineFillInactive)]);
+          drawList->AddRect (start, end, mPalette[(int)ePaletteIndex::CurrentLineEdge], 1.0f);
           }
 
         // Render the cursor
@@ -2915,8 +2923,8 @@ void cTextEditor::Render() {
             }
           }
         }
-
-      // Render colorized text
+      //}}}
+      //{{{  render colorized text
       auto prevColor = line.empty() ? mPalette[(int)ePaletteIndex::Default] : GetGlyphColor(line[0]);
       ImVec2 bufferOffset;
 
@@ -2925,7 +2933,7 @@ void cTextEditor::Render() {
         auto color = GetGlyphColor (glyph);
 
         if ((color != prevColor || glyph.mChar == '\t' || glyph.mChar == ' ') && !mLineBuffer.empty()) {
-          const ImVec2 newOffset(textScreenPos.x + bufferOffset.x, textScreenPos.y + bufferOffset.y);
+          const ImVec2 newOffset (textScreenPos.x + bufferOffset.x, textScreenPos.y + bufferOffset.y);
           drawList->AddText (newOffset, prevColor, mLineBuffer.c_str());
           auto textSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, mLineBuffer.c_str(), nullptr, nullptr);
           bufferOffset.x += textSize.x;
@@ -2935,7 +2943,8 @@ void cTextEditor::Render() {
 
         if (glyph.mChar == '\t') {
           auto oldX = bufferOffset.x;
-          bufferOffset.x = (1.0f + floor((1.0f + bufferOffset.x) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
+          bufferOffset.x = (1.0f + 
+            floor ((1.0f + bufferOffset.x) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
           ++i;
 
           if (mShowWhitespaces) {
@@ -2963,7 +2972,7 @@ void cTextEditor::Render() {
           i++;
           }
         else {
-          auto l = UTF8CharLength(glyph.mChar);
+          auto l = UTF8CharLength (glyph.mChar);
           while (l-- > 0)
             mLineBuffer.push_back (line[i++].mChar);
           }
@@ -2975,38 +2984,40 @@ void cTextEditor::Render() {
         drawList->AddText (newOffset, prevColor, mLineBuffer.c_str());
         mLineBuffer.clear();
         }
-
+      //}}}
       ++lineNo;
       }
-
-    // Draw a tooltip on known identifiers/preprocessor symbols
+    //{{{  draw a tooltip on known identifiers/preprocessor symbols
     if (ImGui::IsMousePosValid()) {
-      auto id = GetWordAt(ScreenPosToCoordinates (ImGui::GetMousePos()));
+      auto id = GetWordAt (ScreenPosToCoordinates (ImGui::GetMousePos()));
       if (!id.empty()) {
-        auto it = mLanguage.mIdentifiers.find(id);
+        auto it = mLanguage.mIdentifiers.find (id);
         if (it != mLanguage.mIdentifiers.end()) {
           ImGui::BeginTooltip();
-          ImGui::TextUnformatted(it->second.mDeclaration.c_str());
+          ImGui::TextUnformatted (it->second.mDeclaration.c_str());
           ImGui::EndTooltip();
           }
         else {
-          auto pi = mLanguage.mPreprocIdentifiers.find(id);
+          auto pi = mLanguage.mPreprocIdentifiers.find (id);
           if (pi != mLanguage.mPreprocIdentifiers.end()) {
             ImGui::BeginTooltip();
-            ImGui::TextUnformatted(pi->second.mDeclaration.c_str());
+            ImGui::TextUnformatted (pi->second.mDeclaration.c_str());
             ImGui::EndTooltip();
             }
           }
         }
       }
+    //}}}
     }
 
   ImGui::Dummy (ImVec2 ((longest + 2), mLines.size() * mCharAdvance.y));
 
   if (mScrollToCursor) {
+    //{{{  scroll to cursor
     EnsureCursorVisible();
     ImGui::SetWindowFocus();
     mScrollToCursor = false;
     }
+    //}}}
   }
 //}}}

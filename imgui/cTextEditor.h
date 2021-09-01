@@ -200,19 +200,20 @@ public:
 
   cTextEditor();
   ~cTextEditor() = default;
-  //{{{  is
+  //{{{  gets
   bool IsOverwrite() const { return mOverwrite; }
   bool IsReadOnly() const { return mReadOnly; }
   bool IsTextChanged() const { return mTextChanged; }
   bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
   bool IsColorizerEnabled() const { return mColorizerEnabled; }
 
+  bool HasSelection() const { return mState.mSelectionEnd > mState.mSelectionStart; }
+
   inline bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
   inline bool IsHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
   inline bool IsImGuiChildIgnored() const { return mIgnoreImGuiChild; }
   inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
-  //}}}
-  //{{{  gets
+
   const sLanguage& GetLanguage() const { return mLanguage; }
   const tPalette& GetPalette() const { return mPaletteBase; }
 
@@ -251,35 +252,34 @@ public:
   inline void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
   //}}}
   //{{{  actions
-  void InsertText(const char* aValue);
-  void InsertText (const std::string& aValue) { InsertText (aValue.c_str()); }
-
   void MoveUp (int aAmount = 1, bool aSelect = false);
   void MoveDown (int aAmount = 1, bool aSelect = false);
   void MoveLeft (int aAmount = 1, bool aSelect = false, bool aWordMode = false);
   void MoveRight (int aAmount = 1, bool aSelect = false, bool aWordMode = false);
+
   void MoveTop (bool aSelect = false);
   void MoveBottom (bool aSelect = false);
   void MoveHome (bool aSelect = false);
   void MoveEnd (bool aSelect = false);
 
-  void SelectWordUnderCursor();
   void SelectAll();
-  bool HasSelection() const { return mState.mSelectionEnd > mState.mSelectionStart; }
+  void SelectWordUnderCursor();
 
+  void InsertText(const char* aValue);
+  void InsertText (const std::string& aValue) { InsertText (aValue.c_str()); }
   void Copy();
   void Cut();
   void Paste();
   void Delete();
 
   bool CanUndo() const { return !mReadOnly && mUndoIndex > 0; }
-  void Undo (int aSteps = 1);
   bool CanRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); }
-  void Redo (int aSteps = 1);
+  void Undo (int steps = 1);
+  void Redo (int steps = 1);
 
   void Render (const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
   //}}}
-  //{{{  static members
+  //{{{  static gets
   static const tPalette& GetDarkPalette();
   static const tPalette& GetLightPalette();
   //}}}
