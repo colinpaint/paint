@@ -122,7 +122,7 @@ int main (int numArgs, char* args[]) {
   ifstream fileStream ("C:\\projects\\paint\\imgui\\cTextEditor.cpp");
   string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
 
-  auto languageDefinition = cTextEditor::sLanguageDefinition::CPlusPlus();
+  auto language = cTextEditor::sLanguage::CPlusPlus();
   //{{{  set your own preprocessor
   static const char* ppnames[] = {
     "NULL",
@@ -154,7 +154,7 @@ int main (int numArgs, char* args[]) {
   for (int i = 0; i < sizeof(ppnames) / sizeof(ppnames[0]); ++i) {
     cTextEditor::sIdentifier id;
     id.mDeclaration = ppvalues[i];
-    languageDefinition.mPreprocIdentifiers.insert (make_pair(string(ppnames[i]), id));
+    language.mPreprocIdentifiers.insert (make_pair (string (ppnames[i]), id));
     }
   //}}}
   //{{{  set your own identifiers
@@ -223,12 +223,12 @@ int main (int numArgs, char* args[]) {
   for (int i = 0; i < sizeof(identifiers) / sizeof(identifiers[0]); ++i) {
     cTextEditor::sIdentifier id;
     id.mDeclaration = string(idecls[i]);
-    languageDefinition.mIdentifiers.insert (make_pair(string(identifiers[i]), id));
+    language.mIdentifiers.insert (make_pair(string(identifiers[i]), id));
     }
   //}}}
 
   cTextEditor editor;
-  editor.SetLanguageDefinition (languageDefinition);
+  editor.SetLanguage (language);
   editor.SetPalette(cTextEditor::GetLightPalette());
   editor.SetText (str);
   //{{{  error markers
@@ -320,7 +320,7 @@ int main (int numArgs, char* args[]) {
                  cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
                  editor.IsOverwrite() ? "Ovr" : "Ins",
                  editor.CanUndo() ? "*" : " ",
-                 editor.GetLanguageDefinition().mName.c_str(), "fileName");
+                 editor.GetLanguage().mName.c_str(), "fileName");
 
     editor.Render("cTextEditor");
 
