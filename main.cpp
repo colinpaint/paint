@@ -17,7 +17,7 @@
 // imGui
 #include <imgui.h>
 #include "../implot/implot.h"
-#include "../imgui/TextEditor.h"
+#include "../imgui/cTextEditor.h"
 
 // UI font
 #include "font/itcSymbolBold.h"
@@ -119,9 +119,9 @@ int main (int numArgs, char* args[]) {
     );
     //}}}
 
-  //{{{  textEditor
-  TextEditor editor;
-  auto lang = TextEditor::LanguageDefinition::CPlusPlus();
+  //{{{
+  cTextEditor editor;
+  auto lang = cTextEditor::LanguageDefinition::CPlusPlus();
 
   // set your own known preprocessor symbols...
   //{{{
@@ -148,7 +148,7 @@ int main (int numArgs, char* args[]) {
     };
   //}}}
   for (int i = 0; i < sizeof(ppnames) / sizeof(ppnames[0]); ++i) {
-    TextEditor::Identifier id;
+    cTextEditor::Identifier id;
     id.mDeclaration = ppvalues[i];
     lang.mPreprocIdentifiers.insert(std::make_pair(std::string(ppnames[i]), id));
     }
@@ -162,7 +162,7 @@ int main (int numArgs, char* args[]) {
     "ID3D11VertexShader", "ID3D11InputLayout", "ID3D11Buffer",
     "ID3D10Blob", "ID3D11PixelShader", "ID3D11SamplerState", "ID3D11ShaderResourceView",
     "ID3D11RasterizerState", "ID3D11BlendState", "ID3D11DepthStencilState",
-    "IDXGISwapChain", "ID3D11RenderTargetView", "ID3D11Texture2D", "TextEditor" };
+    "IDXGISwapChain", "ID3D11RenderTargetView", "ID3D11Texture2D", "cTextEditor" };
   //}}}
   //{{{
   static const char* idecls[] =
@@ -175,25 +175,25 @@ int main (int numArgs, char* args[]) {
     "ID3D10Blob", "ID3D11VertexShader", "ID3D11InputLayout", "ID3D11Buffer",
     "ID3D10Blob", "ID3D11PixelShader", "ID3D11SamplerState", "ID3D11ShaderResourceView",
     "ID3D11RasterizerState", "ID3D11BlendState", "ID3D11DepthStencilState",
-    "IDXGISwapChain", "ID3D11RenderTargetView", "ID3D11Texture2D", "class TextEditor" };
+    "IDXGISwapChain", "ID3D11RenderTargetView", "ID3D11Texture2D", "class cTextEditor" };
   //}}}
   for (int i = 0; i < sizeof(identifiers) / sizeof(identifiers[0]); ++i) {
-    TextEditor::Identifier id;
+    cTextEditor::Identifier id;
     id.mDeclaration = std::string(idecls[i]);
     lang.mIdentifiers.insert(std::make_pair(std::string(identifiers[i]), id));
     }
 
   editor.SetLanguageDefinition (lang);
-  //editor.SetPalette(TextEditor::GetLightPalette());
+  //editor.SetPalette(cTextEditor::GetLightPalette());
 
   // error markers
-  TextEditor::ErrorMarkers markers;
-  markers.insert(std::make_pair<int, std::string>(6, "Example error here:\nInclude file not found: \"TextEditor.h\""));
+  cTextEditor::ErrorMarkers markers;
+  markers.insert(std::make_pair<int, std::string>(6, "Example error here:\nInclude file not found: \"cTextEditor.h\""));
   markers.insert(std::make_pair<int, std::string>(41, "Another example error"));
   editor.SetErrorMarkers(markers);
 
   // "breakpoint" markers
-  //TextEditor::Breakpoints bpts;
+  //cTextEditor::Breakpoints bpts;
   //bpts.insert(24);
   //bpts.insert(47);
   //editor.SetBreakpoints(bpts);
@@ -220,7 +220,7 @@ int main (int numArgs, char* args[]) {
       #endif
       }
       //}}}
-    //{{{  texteditor
+    //{{{
     auto cpos = editor.GetCursorPosition();
 
     ImGui::Begin("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
@@ -261,18 +261,18 @@ int main (int numArgs, char* args[]) {
         ImGui::Separator();
 
         if (ImGui::MenuItem("Select all", nullptr, nullptr))
-          editor.SetSelection(TextEditor::Coordinates(), TextEditor::Coordinates(editor.GetTotalLines(), 0));
+          editor.SetSelection(cTextEditor::Coordinates(), cTextEditor::Coordinates(editor.GetTotalLines(), 0));
 
         ImGui::EndMenu();
       }
 
-      if (ImGui::BeginMenu("View")) {
-        if (ImGui::MenuItem("Dark palette"))
-          editor.SetPalette(TextEditor::GetDarkPalette());
-        if (ImGui::MenuItem("Light palette"))
-          editor.SetPalette(TextEditor::GetLightPalette());
-        if (ImGui::MenuItem("Retro blue palette"))
-          editor.SetPalette(TextEditor::GetRetroBluePalette());
+      if (ImGui::BeginMenu ("View")) {
+        if (ImGui::MenuItem ("Dark palette"))
+          editor.SetPalette (cTextEditor::GetDarkPalette());
+        if (ImGui::MenuItem ("Light palette"))
+          editor.SetPalette (cTextEditor::GetLightPalette());
+        if (ImGui::MenuItem ("Retro blue palette"))
+          editor.SetPalette (cTextEditor::GetRetroBluePalette());
         ImGui::EndMenu();
       }
       ImGui::EndMenuBar();
@@ -284,7 +284,7 @@ int main (int numArgs, char* args[]) {
                  editor.CanUndo() ? "*" : " ",
                  editor.GetLanguageDefinition().mName.c_str(), fileToEdit);
 
-    editor.Render("TextEditor");
+    editor.Render("cTextEditor");
 
     ImGui::End();
     //}}}

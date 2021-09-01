@@ -1,3 +1,4 @@
+// cTextEditor.h
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -15,7 +16,7 @@
 #include "imgui.h"
 //}}}
 
-class TextEditor {
+class cTextEditor {
 public:
   //{{{
   enum class PaletteIndex {
@@ -196,8 +197,8 @@ public:
     };
   //}}}
 
-  TextEditor();
-  ~TextEditor() = default;
+  cTextEditor();
+  ~cTextEditor() = default;
   //{{{  members
   void SetLanguageDefinition(const LanguageDefinition& aLanguageDef);
   const LanguageDefinition& GetLanguageDefinition() const { return mLanguageDefinition; }
@@ -301,18 +302,18 @@ private:
 
     UndoRecord(
       const std::string& aAdded,
-      const TextEditor::Coordinates aAddedStart,
-      const TextEditor::Coordinates aAddedEnd,
+      const cTextEditor::Coordinates aAddedStart,
+      const cTextEditor::Coordinates aAddedEnd,
 
       const std::string& aRemoved,
-      const TextEditor::Coordinates aRemovedStart,
-      const TextEditor::Coordinates aRemovedEnd,
+      const cTextEditor::Coordinates aRemovedStart,
+      const cTextEditor::Coordinates aRemovedEnd,
 
-      TextEditor::EditorState& aBefore,
-      TextEditor::EditorState& aAfter);
+      cTextEditor::EditorState& aBefore,
+      cTextEditor::EditorState& aAfter);
 
-    void Undo(TextEditor* aEditor);
-    void Redo(TextEditor* aEditor);
+    void Undo (cTextEditor* aEditor);
+    void Redo (cTextEditor* aEditor);
 
     std::string mAdded;
     Coordinates mAddedStart;
@@ -394,7 +395,7 @@ private:
   bool mScrollToTop;
   bool mTextChanged;
   bool mColorizerEnabled;
-  float mTextStart;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
+  float mTextStart;                   // position (in pixels) where a code line starts relative to the left of the cTextEditor.
   int  mLeftMargin;
   bool mCursorPositionChanged;
   int mColorRangeMin, mColorRangeMax;
