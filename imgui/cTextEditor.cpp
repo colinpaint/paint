@@ -866,10 +866,11 @@ cTextEditor::cTextEditor()
     mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false),
     mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(eSelectionMode::Normal) , mCheckComments(true),
     mLastClick(-1.0f),
-    mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true) ,
+    mHandleKeyboardInputs(true), mHandleMouseInputs(true), 
+    mIgnoreImGuiChild(false), mShowWhitespaces(true) ,
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()) {
 
-  SetPalette (GetDarkPalette());
+  SetPalette (GetLightPalette());
   SetLanguage (sLanguage::HLSL());
 
   mLines.push_back (tLine());
@@ -2767,16 +2768,16 @@ void cTextEditor::HandleMouseInputs() {
   if (ImGui::IsWindowHovered()) {
     if (!shift && !alt) {
       auto click = ImGui::IsMouseClicked(0);
-      auto doubleClick = ImGui::IsMouseDoubleClicked(0);
+      auto doubleClick = ImGui::IsMouseDoubleClicked (0);
       auto t = ImGui::GetTime();
       auto tripleClick = click && !doubleClick && (mLastClick != -1.0f && (t - mLastClick) < io.MouseDoubleClickTime);
 
       // Left mouse button triple click
       if (tripleClick) {
         if (!ctrl) {
-          mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
+          mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates (ImGui::GetMousePos());
           mSelectionMode = eSelectionMode::Line;
-          SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+          SetSelection (mInteractiveStart, mInteractiveEnd, mSelectionMode);
           }
         mLastClick = -1.0f;
         }
@@ -2784,32 +2785,32 @@ void cTextEditor::HandleMouseInputs() {
       // left mouse button double click
       else if (doubleClick) {
         if (!ctrl) {
-          mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
+          mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates (ImGui::GetMousePos());
           if (mSelectionMode == eSelectionMode::Line)
             mSelectionMode = eSelectionMode::Normal;
           else
             mSelectionMode = eSelectionMode::Word;
-          SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+          SetSelection (mInteractiveStart, mInteractiveEnd, mSelectionMode);
           }
         mLastClick = (float)ImGui::GetTime();
         }
 
       // left mouse button click
       else if (click) {
-        mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
+        mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates (ImGui::GetMousePos());
         if (ctrl)
           mSelectionMode = eSelectionMode::Word;
         else
           mSelectionMode = eSelectionMode::Normal;
-        SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+        SetSelection (mInteractiveStart, mInteractiveEnd, mSelectionMode);
         mLastClick = (float)ImGui::GetTime();
         }
 
       // left mouse button dragging (=> update selection)
-      else if (ImGui::IsMouseDragging(0) && ImGui::IsMouseDown(0)) {
+      else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
         io.WantCaptureMouse = true;
-        mState.mCursorPosition = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
-        SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+        mState.mCursorPosition = mInteractiveEnd = ScreenPosToCoordinates (ImGui::GetMousePos());
+        SetSelection (mInteractiveStart, mInteractiveEnd, mSelectionMode);
         }
       }
     }

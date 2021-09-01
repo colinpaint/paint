@@ -229,7 +229,6 @@ int main (int numArgs, char* args[]) {
 
   cTextEditor editor;
   editor.SetLanguage (language);
-  editor.SetPalette(cTextEditor::GetLightPalette());
   editor.SetText (str);
   //{{{  error markers
   //cTextEditor::ErrorMarkers markers;
