@@ -53,8 +53,8 @@ public:
     bool mMultiLineComment : 1;
     bool mPreprocessor : 1;
 
-    sGlyph (uint8_t aChar, ePaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
-      mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
+    sGlyph (uint8_t aChar, ePaletteIndex aColorIndex) 
+      : mChar(aChar), mColorIndex(aColorIndex), mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
     };
   //}}}
   //{{{
@@ -146,17 +146,17 @@ public:
   using tLine = std::vector<sGlyph>;
   using tLines = std::vector<tLine>;
   using tPalette = std::array<ImU32, (unsigned)ePaletteIndex::Max>;
-  using tIdents = std::unordered_map<std::string, sIdent>;
+  using tBreaks = std::unordered_set<int>;
   using tKeywords = std::unordered_set<std::string>;
   using tErrorMarkers = std::map<int, std::string>;
-  using tBreaks = std::unordered_set<int>;
+  using tIdents = std::unordered_map<std::string, sIdent>;
   //{{{
   struct sLanguage {
     // typedef
-    typedef std::pair<std::string, ePaletteIndex> TokenRegexString;
-    typedef std::vector<TokenRegexString> TokenRegexStrings;
-    typedef bool (*TokenizeCallback)(const char* inBegin, const char* inEnd,
-                                     const char*& outBegin, const char*& outEnd, ePaletteIndex& paletteIndex);
+    typedef std::pair<std::string, ePaletteIndex> tTokenRegexString;
+    typedef std::vector<tTokenRegexString> tTokenRegexStrings;
+    typedef bool (*tTokenizeCallback)(const char* inBegin, const char* inEnd,
+                                      const char*& outBegin, const char*& outEnd, ePaletteIndex& paletteIndex);
 
     // vars
     std::string mName;
@@ -172,8 +172,8 @@ public:
     char mPreprocChar;
     bool mAutoIndentation;
 
-    TokenizeCallback mTokenize;
-    TokenRegexStrings mTokenRegexStrings;
+    tTokenizeCallback mTokenize;
+    tTokenRegexStrings mTokenRegexStrings;
 
     bool mCaseSensitive;
 
@@ -280,21 +280,19 @@ public:
 private:
   typedef std::vector<std::pair<std::regex, ePaletteIndex>> tRegexList;
   //{{{
-  struct sEditorState
-  {
+  struct sEditorState {
     sRowColumn mSelectionStart;
     sRowColumn mSelectionEnd;
     sRowColumn mCursorPosition;
-  };
+    };
   //}}}
   //{{{
-  class sUndoRecord
-  {
+  class sUndoRecord {
   public:
     sUndoRecord() {}
     ~sUndoRecord() {}
 
-    sUndoRecord(
+    sUndoRecord (
       const std::string& aAdded,
       const cTextEditor::sRowColumn aAddedStart,
       const cTextEditor::sRowColumn aAddedEnd,
@@ -319,7 +317,7 @@ private:
 
     sEditorState mBefore;
     sEditorState mAfter;
-  };
+    };
   //}}}
 
   typedef std::vector<sUndoRecord> tUndoBuffer;

@@ -379,7 +379,7 @@ void cTextEditor::sUndoRecord::Redo (cTextEditor* editor) {
 const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
 
   static bool inited = false;
-  static sLanguage langDef;
+  static sLanguage language;
 
   if (!inited) {
     //{{{
@@ -407,7 +407,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
       };
     //}}}
     for (auto& k : cppKeywords)
-      langDef.mKeywords.insert (k);
+      language.mKeywords.insert (k);
 
     //{{{
     static const char* const idents[] = {
@@ -432,10 +432,10 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      langDef.mIdents.insert (make_pair (string (k), id));
+      language.mIdents.insert (make_pair (string (k), id));
       }
 
-    langDef.mTokenize = [](const char * inBegin, const char * inEnd,
+    language.mTokenize = [](const char * inBegin, const char * inEnd,
                            const char *& outBegin, const char *& outEnd, ePaletteIndex & paletteIndex) -> bool {
       paletteIndex = ePaletteIndex::Max;
 
@@ -461,24 +461,24 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
       return paletteIndex != ePaletteIndex::Max;
       };
 
-    langDef.mCommentStart = "/*";
-    langDef.mCommentEnd = "*/";
-    langDef.mSingleLineComment = "//";
-    langDef.mCaseSensitive = true;
-    langDef.mAutoIndentation = true;
-    langDef.mName = "C++";
+    language.mCommentStart = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = true;
+    language.mName = "C++";
 
     inited = true;
     }
 
-  return langDef;
+  return language;
   }
 //}}}
 //{{{
 const cTextEditor::sLanguage& cTextEditor::sLanguage::C() {
 
   static bool inited = false;
-  static sLanguage langDef;
+  static sLanguage language;
 
   if (!inited) {
     //{{{
@@ -489,7 +489,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::C() {
     };
     //}}}
     for (auto& k : keywords)
-      langDef.mKeywords.insert(k);
+      language.mKeywords.insert(k);
 
     //{{{
     static const char* const idents[] = {
@@ -500,10 +500,10 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::C() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      langDef.mIdents.insert (make_pair (string(k), id));
+      language.mIdents.insert (make_pair (string(k), id));
       }
 
-    langDef.mTokenize = [](const char * inBegin, const char * inEnd,
+    language.mTokenize = [](const char * inBegin, const char * inEnd,
                            const char *& outBegin, const char *& outEnd, ePaletteIndex & paletteIndex) -> bool {
       paletteIndex = ePaletteIndex::Max;
 
@@ -529,24 +529,24 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::C() {
       return paletteIndex != ePaletteIndex::Max;
       };
 
-    langDef.mCommentStart = "/*";
-    langDef.mCommentEnd = "*/";
-    langDef.mSingleLineComment = "//";
-    langDef.mCaseSensitive = true;
-    langDef.mAutoIndentation = true;
-    langDef.mName = "C";
+    language.mCommentStart = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = true;
+    language.mName = "C";
 
     inited = true;
     }
 
-  return langDef;
+  return language;
   }
 //}}}
 //{{{
 const cTextEditor::sLanguage& cTextEditor::sLanguage::HLSL() {
 
   static bool inited = false;
-  static sLanguage langDef;
+  static sLanguage language;
 
   if (!inited) {
     //{{{
@@ -569,7 +569,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::HLSL() {
     };
     //}}}
     for (auto& k : keywords)
-      langDef.mKeywords.insert(k);
+      language.mKeywords.insert(k);
 
     //{{{
     static const char* const idents[] = {
@@ -591,46 +591,46 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::HLSL() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      langDef.mIdents.insert(make_pair(string(k), id));
+      language.mIdents.insert(make_pair(string(k), id));
       }
 
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", ePaletteIndex::Preprocessor));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'", ePaletteIndex::CharLiteral));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Ident));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
 
-    langDef.mCommentStart = "/*";
-    langDef.mCommentEnd = "*/";
-    langDef.mSingleLineComment = "//";
-    langDef.mCaseSensitive = true;
-    langDef.mAutoIndentation = true;
-    langDef.mName = "HLSL";
+    language.mCommentStart = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = true;
+    language.mName = "HLSL";
 
     inited = true;
     }
 
-  return langDef;
+  return language;
   }
 //}}}
 //{{{
 const cTextEditor::sLanguage& cTextEditor::sLanguage::GLSL() {
 
   static bool inited = false;
-  static sLanguage langDef;
+  static sLanguage language;
 
   if (!inited) {
     //{{{
@@ -641,7 +641,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::GLSL() {
     };
     //}}}
     for (auto& k : keywords)
-      langDef.mKeywords.insert(k);
+      language.mKeywords.insert(k);
 
     //{{{
     static const char* const idents[] = {
@@ -652,46 +652,46 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::GLSL() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      langDef.mIdents.insert(make_pair(string(k), id));
+      language.mIdents.insert(make_pair(string(k), id));
       }
 
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", ePaletteIndex::Preprocessor));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'",ePaletteIndex::CharLiteral));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Ident));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
 
-    langDef.mCommentStart = "/*";
-    langDef.mCommentEnd = "*/";
-    langDef.mSingleLineComment = "//";
-    langDef.mCaseSensitive = true;
-    langDef.mAutoIndentation = true;
-    langDef.mName = "GLSL";
+    language.mCommentStart = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = true;
+    language.mName = "GLSL";
 
     inited = true;
     }
 
-  return langDef;
+  return language;
   }
 //}}}
 //{{{
 const cTextEditor::sLanguage& cTextEditor::sLanguage::AngelScript() {
 
   static bool inited = false;
-  static sLanguage langDef;
+  static sLanguage language;
 
   if (!inited) {
     //{{{
@@ -704,7 +704,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::AngelScript() {
     //}}}
 
     for (auto& k : keywords)
-      langDef.mKeywords.insert(k);
+      language.mKeywords.insert(k);
 
     //{{{
     static const char* const idents[] = {
@@ -715,44 +715,44 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::AngelScript() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      langDef.mIdents.insert (make_pair (string(k), id));
+      language.mIdents.insert (make_pair (string(k), id));
       }
 
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Ident));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
 
-    langDef.mCommentStart = "/*";
-    langDef.mCommentEnd = "*/";
-    langDef.mSingleLineComment = "//";
-    langDef.mCaseSensitive = true;
-    langDef.mAutoIndentation = true;
-    langDef.mName = "AngelScript";
+    language.mCommentStart = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = true;
+    language.mName = "AngelScript";
 
     inited = true;
     }
 
-  return langDef;
+  return language;
   }
 //}}}
 //{{{
 const cTextEditor::sLanguage& cTextEditor::sLanguage::Lua() {
 
   static bool inited = false;
-  static sLanguage langDef;
+  static sLanguage language;
 
   if (!inited) {
     //{{{
@@ -762,7 +762,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::Lua() {
     //}}}
 
     for (auto& k : keywords)
-      langDef.mKeywords.insert(k);
+      language.mKeywords.insert(k);
 
     //{{{
     static const char* const idents[] = {
@@ -782,42 +782,42 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::Lua() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      langDef.mIdents.insert (make_pair(string(k), id));
+      language.mIdents.insert (make_pair(string(k), id));
       }
 
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex> ("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex> ("\\\'[^\\\']*\\\'", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex> ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex> ("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Ident));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
 
-    langDef.mCommentStart = "--[[";
-    langDef.mCommentEnd = "]]";
-    langDef.mSingleLineComment = "--";
-    langDef.mCaseSensitive = true;
-    langDef.mAutoIndentation = false;
-    langDef.mName = "Lua";
+    language.mCommentStart = "--[[";
+    language.mCommentEnd = "]]";
+    language.mSingleLineComment = "--";
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = false;
+    language.mName = "Lua";
 
     inited = true;
     }
 
-  return langDef;
+  return language;
   }
 //}}}
 //{{{
 const cTextEditor::sLanguage& cTextEditor::sLanguage::SQL() {
 
   static bool inited = false;
-  static sLanguage langDef;
+  static sLanguage language;
 
   if (!inited) {
     //{{{
@@ -836,7 +836,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::SQL() {
     //}}}
 
     for (auto& k : keywords)
-      langDef.mKeywords.insert(k);
+      language.mKeywords.insert(k);
 
     //{{{
     static const char* const idents[] = {
@@ -855,37 +855,37 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::SQL() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      langDef.mIdents.insert (make_pair (string(k), id));
+      language.mIdents.insert (make_pair (string(k), id));
       }
 
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("\\\'[^\\\']*\\\'", ePaletteIndex::String));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Ident));
-    langDef.mTokenRegexStrings.push_back (
+    language.mTokenRegexStrings.push_back (
       make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
 
-    langDef.mCommentStart = "/*";
-    langDef.mCommentEnd = "*/";
-    langDef.mSingleLineComment = "//";
-    langDef.mCaseSensitive = false;
-    langDef.mAutoIndentation = false;
-    langDef.mName = "SQL";
+    language.mCommentStart = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+    language.mCaseSensitive = false;
+    language.mAutoIndentation = false;
+    language.mName = "SQL";
 
     inited = true;
     }
 
-  return langDef;
+  return language;
   }
 //}}}
 
@@ -2843,6 +2843,7 @@ void cTextEditor::render() {
   //{{{  calc mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
   char buf[16];
   snprintf (buf, 16, " %d ", globalLineMax);
+
   mTextStart = ImGui::GetFont()->CalcTextSizeA (
     ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x + mLeftMargin;
   //}}}
@@ -3027,7 +3028,7 @@ void cTextEditor::render() {
       //}}}
       ++lineNo;
       }
-    //{{{  draw tooltip on known idents/preprocessor symbols
+    //{{{  draw tooltip on idents/preprocessor symbols
     if (ImGui::IsMousePosValid()) {
       auto id = getWordAt (screenPosToRowColumn (ImGui::GetMousePos()));
       if (!id.empty()) {
