@@ -1,25 +1,25 @@
 // cTextEditor.cpp - nicked from https://github.com/BalazsJako/ImGuiColorTextEdit
 //{{{  includes
-#include <algorithm>
-#include <chrono>
 #include <string>
-#include <regex>
 #include <cmath>
+#include <algorithm>
+#include <regex>
+#include <chrono>
 
 #include "cTextEditor.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui.h" // for imGui::GetCurrentWindow()
+#include "imgui.h"
 
 #include "../utils/cLog.h"
 
 using namespace std;
 //}}}
-//{{{  template bool equals
+//{{{  template equals
 template<class InputIt1, class InputIt2, class BinaryPredicate>
 bool equals (InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, BinaryPredicate p) {
   for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
-    if (!p(*first1, *first2))
+    if (!p (*first1, *first2))
       return false;
     }
 
@@ -78,67 +78,67 @@ namespace {
   //}}}
 
   //{{{
-  bool IsUTFSequence (char c) {
-    return (c & 0xC0) == 0x80;
+  bool IsUTFSequence (char ch) {
+    return (ch & 0xC0) == 0x80;
     }
   //}}}
   //{{{
-  int utf8CharLength (uint8_t c) {
+  int utf8CharLength (uint8_t ch) {
   // https://en.wikipedia.org/wiki/UTF-8
   // We assume that the char is a standalone character (<128)
   // or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
 
-    if ((c & 0xFE) == 0xFC)
+    if ((ch & 0xFE) == 0xFC)
       return 6;
-    if ((c & 0xFC) == 0xF8)
+    if ((ch & 0xFC) == 0xF8)
       return 5;
-    if ((c & 0xF8) == 0xF0)
+    if ((ch & 0xF8) == 0xF0)
       return 4;
-    else if ((c & 0xF0) == 0xE0)
+    else if ((ch & 0xF0) == 0xE0)
       return 3;
-    else if ((c & 0xE0) == 0xC0)
+    else if ((ch & 0xE0) == 0xC0)
       return 2;
 
     return 1;
     }
   //}}}
   //{{{
-  int ImTextCharToUtf8 (char* buf, int buf_size, uint32_t c) {
-  // "Borrowed" from ImGui source
+  int ImTextCharToUtf8 (char* buf, int buf_size, uint32_t ch) {
 
-    if (c < 0x80) {
-      buf[0] = (char)c;
+    if (ch < 0x80) {
+      buf[0] = (char)ch;
       return 1;
       }
 
-    if (c < 0x800) {
+    if (ch < 0x800) {
       if (buf_size < 2)
         return 0;
-      buf[0] = (char)(0xc0 + (c >> 6));
-      buf[1] = (char)(0x80 + (c & 0x3f));
+      buf[0] = (char)(0xc0 + (ch >> 6));
+      buf[1] = (char)(0x80 + (ch & 0x3f));
       return 2;
       }
 
-    if (c >= 0xdc00 && c < 0xe000)
+    if ((ch >= 0xdc00) && (ch < 0xe000))
       return 0;
 
-    if (c >= 0xd800 && c < 0xdc00) {
-      if (buf_size < 4) return 0;
-      buf[0] = (char)(0xf0 + (c >> 18));
-      buf[1] = (char)(0x80 + ((c >> 12) & 0x3f));
-      buf[2] = (char)(0x80 + ((c >> 6) & 0x3f));
-      buf[3] = (char)(0x80 + ((c) & 0x3f));
+    if ((ch >= 0xd800) && (ch < 0xdc00)) {
+      if (buf_size < 4)
+        return 0;
+      buf[0] = (char)(0xf0 + (ch >> 18));
+      buf[1] = (char)(0x80 + ((ch >> 12) & 0x3f));
+      buf[2] = (char)(0x80 + ((ch >> 6) & 0x3f));
+      buf[3] = (char)(0x80 + ((ch) & 0x3f));
       return 4;
       }
 
-    //else if (c < 0x10000)
-      {
-      if (buf_size < 3) return 0;
-      buf[0] = (char)(0xe0 + (c >> 12));
-      buf[1] = (char)(0x80 + ((c >> 6) & 0x3f));
-      buf[2] = (char)(0x80 + ((c) & 0x3f));
-      return 3;
-      }
+    //else c < 0x10000
+    if (buf_size < 3)
+      return 0;
+
+    buf[0] = (char)(0xe0 + (ch >> 12));
+    buf[1] = (char)(0x80 + ((ch >> 6) & 0x3f));
+    buf[2] = (char)(0x80 + ((ch) & 0x3f));
+    return 3;
     }
   //}}}
 
@@ -328,12 +328,12 @@ namespace {
 // cTextEditor::sUndoRecord
 //{{{
 cTextEditor::sUndoRecord::sUndoRecord (const string& added,
-                                       const cTextEditor::sRowColumn addedStart, 
+                                       const cTextEditor::sRowColumn addedStart,
                                        const cTextEditor::sRowColumn addedEnd,
-                                       const string& removed, 
-                                       const cTextEditor::sRowColumn removedStart, 
+                                       const string& removed,
+                                       const cTextEditor::sRowColumn removedStart,
                                        const cTextEditor::sRowColumn removedEnd,
-                                       cTextEditor::sEditorState& before, 
+                                       cTextEditor::sEditorState& before,
                                        cTextEditor::sEditorState& after)
 
     : mAdded(added), mAddedStart(addedStart), mAddedEnd(addedEnd),
@@ -903,7 +903,7 @@ cTextEditor::cTextEditor()
     mOverwrite(false) , mReadOnly(false) , mWithinRender(false), mScrollToCursor(false), mScrollToTop(false),
     mTextChanged(false), mColorizerEnabled(true),
     mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false),
-    mColorRangeMin(0), mColorRangeMax(0), 
+    mColorRangeMin(0), mColorRangeMax(0),
     mSelectionMode(eSelectionMode::Normal) ,
     mHandleKeyboardInputs(true), mHandleMouseInputs(true),
     mIgnoreImGuiChild(false), mShowWhitespaces(true), mCheckComments(true),
@@ -1469,7 +1469,7 @@ void cTextEditor::InsertText (const char * value) {
 //{{{
 void cTextEditor::copy() {
 
-  if (hasSelection()) 
+  if (hasSelection())
     ImGui::SetClipboardText (getSelectedText().c_str());
 
   else if (!mLines.empty()) {
