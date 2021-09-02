@@ -70,12 +70,12 @@ public:
   //}}}
   //{{{
   struct sRowColumn {
-    int mLine;
+    int mRow;
     int mColumn;
 
-    sRowColumn() : mLine(0), mColumn(0) {}
+    sRowColumn() : mRow(0), mColumn(0) {}
     //{{{
-    sRowColumn (int line, int column) : mLine(line), mColumn(column) {
+    sRowColumn (int row, int column) : mRow(row), mColumn(column) {
       assert (line >= 0);
       assert (column >= 0);
       }
@@ -84,54 +84,46 @@ public:
     static sRowColumn Invalid() { static sRowColumn invalid(-1,-1); return invalid; }
 
     //{{{
-    bool operator ==(const sRowColumn& o) const
-    {
-      return
-        mLine == o.mLine &&
-        mColumn == o.mColumn;
-    }
+    bool operator == (const sRowColumn& o) const {
+      return mRow == o.mRow && mColumn == o.mColumn;
+      }
     //}}}
     //{{{
-    bool operator !=(const sRowColumn& o) const
-    {
-      return
-        mLine != o.mLine ||
-        mColumn != o.mColumn;
-    }
+    bool operator != (const sRowColumn& o) const {
+      return mRow != o.mRow || mColumn != o.mColumn; }
     //}}}
     //{{{
-    bool operator <(const sRowColumn& o) const
-    {
-      if (mLine != o.mLine)
-        return mLine < o.mLine;
+    bool operator < (const sRowColumn& o) const {
+
+      if (mRow != o.mRow)
+        return mRow < o.mRow;
+
       return mColumn < o.mColumn;
-    }
+      }
     //}}}
     //{{{
-    bool operator >(const sRowColumn& o) const
-    {
-      if (mLine != o.mLine)
-        return mLine > o.mLine;
+    bool operator > (const sRowColumn& o) const {
+      if (mRow != o.mRow)
+        return mRow > o.mRow;
       return mColumn > o.mColumn;
-    }
+      }
     //}}}
     //{{{
-    bool operator <=(const sRowColumn& o) const
-    {
-      if (mLine != o.mLine)
-        return mLine < o.mLine;
+    bool operator <= (const sRowColumn& o) const {
+      if (mRow != o.mRow)
+        return mRow < o.mRow;
+
       return mColumn <= o.mColumn;
-    }
+      }
     //}}}
     //{{{
-    bool operator >=(const sRowColumn& o) const
-    {
-      if (mLine != o.mLine)
-        return mLine > o.mLine;
+    bool operator >= (const sRowColumn& o) const {
+      if (mRow != o.mRow)
+        return mRow > o.mRow;
       return mColumn >= o.mColumn;
-    }
+      }
     //}}}
-  };
+    };
   //}}}
   //{{{
   struct sIdent {

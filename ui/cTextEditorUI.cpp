@@ -222,7 +222,7 @@ public:
       //}}}
 
     ImGui::Text ("%6d/%-6d %6d lines  | %s | %s | %s",
-                 mTextEditor.getCursorPosition().mLine + 1, mTextEditor.getCursorPosition().mColumn + 1,
+                 mTextEditor.getCursorPosition().mRow + 1, mTextEditor.getCursorPosition().mColumn + 1,
                  mTextEditor.getTotalLines(),
                  mTextEditor.isOverwrite() ? "overwrite" : "insert",
                  mTextEditor.canUndo() ? "undo" : " ",
