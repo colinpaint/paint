@@ -424,6 +424,7 @@ private:
   int mUndoIndex;
 
   int mTabSize;
+  float mTextStart;
 
   bool mOverwrite;
   bool mReadOnly;
@@ -433,9 +434,6 @@ private:
 
   bool mTextChanged;
   bool mColorizerEnabled;
-
-  float mTextStart; // position (in pixels) where a code line starts relative to the left of the cTextEditor.
-  int mLeftMargin;
   bool mCursorPositionChanged;
 
   int mColorRangeMin;
