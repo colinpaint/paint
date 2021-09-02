@@ -453,9 +453,7 @@ private:
   sRowColumn mInteractiveStart;
   sRowColumn mInteractiveEnd;
 
-  std::string mLineBuffer;
   uint64_t mStartTime;
-
   float mLastClick;
   //}}}
   };
