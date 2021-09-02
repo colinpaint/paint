@@ -211,8 +211,8 @@ public:
         ImGui::Separator();
 
         if (ImGui::MenuItem ("Select all", nullptr, nullptr))
-          mTextEditor.setSelection (cTextEditor::sRowColumn(),
-                                    cTextEditor::sRowColumn (mTextEditor.getTotalLines(), 0));
+          mTextEditor.setSelection (cTextEditor::sPosition(),
+                                    cTextEditor::sPosition(mTextEditor.getTotalLines(), 0));
 
         ImGui::EndMenu();
         }

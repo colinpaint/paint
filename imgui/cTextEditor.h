@@ -70,30 +70,30 @@ public:
     };
   //}}}
   //{{{
-  struct sRowColumn {
+  struct sPosition {
   // pos in screen co-ords
     int mRow;
     int mColumn;
 
-    sRowColumn() : mRow(0), mColumn(0) {}
+    sPosition() : mRow(0), mColumn(0) {}
     //{{{
-    sRowColumn (int row, int column) : mRow(row), mColumn(column) {
+    sPosition (int row, int column) : mRow(row), mColumn(column) {
       assert (line >= 0);
       assert (column >= 0);
       }
     //}}}
 
     //{{{
-    bool operator == (const sRowColumn& o) const {
+    bool operator == (const sPosition& o) const {
       return mRow == o.mRow && mColumn == o.mColumn;
       }
     //}}}
     //{{{
-    bool operator != (const sRowColumn& o) const {
+    bool operator != (const sPosition& o) const {
       return mRow != o.mRow || mColumn != o.mColumn; }
     //}}}
     //{{{
-    bool operator < (const sRowColumn& o) const {
+    bool operator < (const sPosition& o) const {
 
       if (mRow != o.mRow)
         return mRow < o.mRow;
@@ -102,14 +102,14 @@ public:
       }
     //}}}
     //{{{
-    bool operator > (const sRowColumn& o) const {
+    bool operator > (const sPosition& o) const {
       if (mRow != o.mRow)
         return mRow > o.mRow;
       return mColumn > o.mColumn;
       }
     //}}}
     //{{{
-    bool operator <= (const sRowColumn& o) const {
+    bool operator <= (const sPosition& o) const {
       if (mRow != o.mRow)
         return mRow < o.mRow;
 
@@ -117,7 +117,7 @@ public:
       }
     //}}}
     //{{{
-    bool operator >= (const sRowColumn& o) const {
+    bool operator >= (const sPosition& o) const {
       if (mRow != o.mRow)
         return mRow > o.mRow;
       return mColumn >= o.mColumn;
@@ -184,7 +184,7 @@ public:
   //}}}
   //{{{
   struct sIdent {
-    sRowColumn mLocation;
+    sPosition mLocation;
     std::string mDeclaration;
     };
   //}}}
@@ -252,7 +252,7 @@ public:
   std::string getCurrentLineText()const;
   int getTotalLines() const { return (int)mLines.size(); }
 
-  sRowColumn getCursorPosition() const { return getActualCursorRowColumn(); }
+  sPosition getCursorPosition() const { return getActualCursorposition(); }
 
   inline int getTabSize() const { return mTabSize; }
   //}}}
@@ -267,11 +267,11 @@ public:
   void setReadOnly (bool value) { mReadOnly = value; }
   void setColorizerEnable (bool value) { mColorizerEnabled = value; }
 
-  void setCursorPosition (const sRowColumn& position);
+  void setCursorPosition (const sPosition& position);
   void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
-  void setSelectionStart (const sRowColumn& position);
-  void setSelectionEnd (const sRowColumn& position);
-  void setSelection (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn, eSelection mode = eSelection::Normal);
+  void setSelectionStart (const sPosition& position);
+  void setSelectionEnd (const sPosition& position);
+  void setSelection (const sPosition& startposition, const sPosition& endposition, eSelection mode = eSelection::Normal);
 
   inline void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
   inline void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
@@ -304,16 +304,16 @@ public:
   void undo (int steps = 1);
   void redo (int steps = 1);
 
-  void render (const char* title, const ImVec2& size = ImVec2(), bool border = false);
+  void render (const std::string& title, const ImVec2& size = ImVec2(), bool border = false);
   //}}}
 
 private:
   typedef std::vector<std::pair<std::regex,ePalette>> tRegexList;
   //{{{
   struct sEditorState {
-    sRowColumn mSelectionStart;
-    sRowColumn mSelectionEnd;
-    sRowColumn mCursorPosition;
+    sPosition mSelectionStart;
+    sPosition mSelectionEnd;
+    sPosition mCursorPosition;
     };
   //}}}
   //{{{
@@ -324,12 +324,12 @@ private:
 
     sUndoRecord (
       const std::string& added,
-      const cTextEditor::sRowColumn addedStart,
-      const cTextEditor::sRowColumn addedEnd,
+      const cTextEditor::sPosition addedStart,
+      const cTextEditor::sPosition addedEnd,
 
       const std::string& aRemoved,
-      const cTextEditor::sRowColumn removedStart,
-      const cTextEditor::sRowColumn removedEnd,
+      const cTextEditor::sPosition removedStart,
+      const cTextEditor::sPosition removedEnd,
 
       cTextEditor::sEditorState& before,
       cTextEditor::sEditorState& after);
@@ -338,12 +338,12 @@ private:
     void redo (cTextEditor* editor);
 
     std::string mAdded;
-    sRowColumn mAddedStart;
-    sRowColumn mAddedEnd;
+    sPosition mAddedStart;
+    sPosition mAddedEnd;
 
     std::string mRemoved;
-    sRowColumn mRemovedStart;
-    sRowColumn mRemovedEnd;
+    sPosition mRemovedStart;
+    sPosition mRemovedEnd;
 
     sEditorState mBefore;
     sEditorState mAfter;
@@ -352,31 +352,31 @@ private:
 
   typedef std::vector<sUndoRecord> tUndoBuffer;
   //{{{  gets
-  bool isOnWordBoundary (const sRowColumn& at) const;
+  bool isOnWordBoundary (const sPosition& position) const;
 
-  std::string getText (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn) const;
-  sRowColumn getActualCursorRowColumn() const { return sanitizeRowColumn (mState.mCursorPosition); }
+  std::string getText (const sPosition& startposition, const sPosition& endposition) const;
+  sPosition getActualCursorposition() const { return sanitizePosition (mState.mCursorPosition); }
 
-  int getCharacterIndex (const sRowColumn& rowColumn) const;
+  int getCharacterIndex (const sPosition& position) const;
   int getCharacterColumn (int lineNumber, int index) const;
   int getLineCharacterCount (int row) const;
   int getLineMaxColumn (int row) const;
 
-  std::string getWordAt (const sRowColumn& rowColumn) const;
+  std::string getWordAt (const sPosition& position) const;
   std::string getWordUnderCursor() const;
   ImU32 getGlyphColor (const sGlyph& glyph) const;
 
-  float getTextDistanceToLineStart (const sRowColumn& from) const;
+  float getTextDistanceToLineStart (const sPosition& from) const;
   int getPageNumLines() const;
   //}}}
   //{{{  sets
-  sRowColumn sanitizeRowColumn (const sRowColumn& rowColumn) const;
-  sRowColumn screenPosToRowColumn (const ImVec2& position) const;
+  sPosition sanitizePosition (const sPosition& position) const;
+  sPosition screenToPosition (const ImVec2& pos) const;
   //}}}
   //{{{  find
-  sRowColumn findWordStart (const sRowColumn& from) const;
-  sRowColumn findWordEnd (const sRowColumn& from) const;
-  sRowColumn findNextWord (const sRowColumn& from) const;
+  sPosition findWordStart (const sPosition& from) const;
+  sPosition findWordEnd (const sPosition& from) const;
+  sPosition findNextWord (const sPosition& from) const;
   //}}}
   //{{{  colorize
   void colorize (int fromLine = 0, int count = -1);
@@ -386,13 +386,13 @@ private:
   //{{{  actions
   void ensureCursorVisible();
 
-  void advance (sRowColumn& rowColumn) const;
-  void deleteRange (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn);
-  int insertTextAt (sRowColumn& where, const char* value);
+  void advance (sPosition& position) const;
+  void deleteRange (const sPosition& startposition, const sPosition& endposition);
+  int insertTextAt (sPosition& where, const char* value);
 
   void addUndo (sUndoRecord& value);
 
-  void removeLine (int startRowColumn, int endRowColumn);
+  void removeLine (int startposition, int endposition);
   void removeLine (int index);
   std::vector<sGlyph>& insertLine (int index);
 
@@ -448,8 +448,8 @@ private:
   bool mCheckComments;
   ImVec2 mCharAdvance;
 
-  sRowColumn mInteractiveStart;
-  sRowColumn mInteractiveEnd;
+  sPosition mInteractiveStart;
+  sPosition mInteractiveEnd;
 
   uint64_t mStartTime;
   float mLastClick;
