@@ -1,5 +1,4 @@
 // cTextEditorUI.cpp
-#ifdef _WIN32
 //{{{  includes
 #include <cstdint>
 #include <vector>
@@ -24,6 +23,102 @@
 using namespace std;
 //}}}
 
+namespace {
+  //{{{
+  const vector<string> kPreProcessorNames = {
+    "NULL",
+    "PM_REMOVE",
+    "ZeroMemory",
+    "DXGI_SWAP_EFFECT_DISCARD",
+    "D3D_FEATURE_LEVEL",
+    "D3D_DRIVER_TYPE_HARDWARE",
+    "WINAPI",
+    "D3D11_SDK_VERSION",
+    "assert"
+    };
+  //}}}
+  //{{{
+  const vector<string> kPreProcessorValues = {
+    "#define NULL ((void*)0)",
+    "#define PM_REMOVE (0x0001)",
+    "Microsoft's own memory zapper function\n(which is a macro actually)\nvoid ZeroMemory(\n\t[in] PVOID  Destination,\n\t[in] SIZE_T Length\n); ",
+    "enum DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_DISCARD = 0",
+    "enum D3D_FEATURE_LEVEL",
+    "enum D3D_DRIVER_TYPE::D3D_DRIVER_TYPE_HARDWARE  = ( D3D_DRIVER_TYPE_UNKNOWN + 1 )",
+    "#define WINAPI __stdcall",
+    "#define D3D11_SDK_VERSION (7)",
+    " #define assert(expression) (void)(                                                  \n"
+        "    (!!(expression)) ||                                                              \n"
+        "    (_wassert(_CRT_WIDE(#expression), _CRT_WIDE(__FILE__), (unsigned)(__LINE__)), 0) \n"
+        " )"
+    };
+  //}}}
+  //{{{
+  const vector<string> kIdents = {
+    "HWND",
+    "HRESULT",
+    "LPRESULT",
+    "D3D11_RENDER_TARGET_VIEW_DESC",
+    "DXGI_SWAP_CHAIN_DESC","MSG",
+    "LRESULT",
+    "WPARAM",
+    "LPARAM",
+    "UINT",
+    "LPVOID",
+    "ID3D11Device",
+    "ID3D11DeviceContext",
+    "ID3D11Buffer", "ID3D11Buffer",
+    "ID3D10Blob",
+    "ID3D11VertexShader",
+    "ID3D11InputLayout",
+    "ID3D11Buffer",
+    "ID3D10Blob",
+    "ID3D11PixelShader",
+    "ID3D11SamplerState",
+    "ID3D11ShaderResourceView",
+    "ID3D11RasterizerState",
+    "ID3D11BlendState",
+    "ID3D11DepthStencilState",
+    "IDXGISwapChain",
+    "ID3D11RenderTargetView",
+    "ID3D11Texture2D",
+    "cTextEditor" };
+  //}}}
+  //{{{
+  const vector<string> kIdecls = {
+    "typedef HWND_* HWND",
+    "typedef long HRESULT",
+    "typedef long* LPRESULT",
+    "struct D3D11_RENDER_TARGET_VIEW_DESC",
+    "struct DXGI_SWAP_CHAIN_DESC",
+    "typedef tagMSG MSG\n * Message structure",
+    "typedef LONG_PTR LRESULT",
+    "WPARAM",
+    "LPARAM",
+    "UINT",
+    "LPVOID",
+    "ID3D11Device",
+    "ID3D11DeviceContext",
+    "ID3D11Buffer",
+    "ID3D11Buffer",
+    "ID3D10Blob",
+    "ID3D11VertexShader",
+    "ID3D11InputLayout",
+    "ID3D11Buffer",
+    "ID3D10Blob",
+    "ID3D11PixelShader",
+    "ID3D11SamplerState",
+    "ID3D11ShaderResourceView",
+    "ID3D11RasterizerState",
+    "ID3D11BlendState",
+    "ID3D11DepthStencilState",
+    "IDXGISwapChain",
+    "ID3D11RenderTargetView",
+    "ID3D11Texture2D",
+    "class cTextEditor" };
+  //}}}
+  }
+
 class cTextEditorUI : public cUI {
 public:
   //{{{
@@ -47,116 +142,29 @@ public:
       //{{{  load text
       mTextLoaded = true;
 
-      ifstream fileStream ("C:\\projects\\paint\\imgui\\cTextEditor.cpp");
+      // set file
+      #ifdef _WIN32
+        ifstream fileStream ("C:/projects/paint/imgui/cTextEditor.cpp");
+      #else
+        ifstream fileStream ("/projects/paint/imgui/cTextEditor.cpp");
+      #endif
       string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
-
-      auto language = cTextEditor::sLanguage::CPlusPlus();
-      //{{{  set your own preprocessor
-      static const char* ppnames[] = {
-        "NULL",
-        "PM_REMOVE",
-        "ZeroMemory",
-        "DXGI_SWAP_EFFECT_DISCARD",
-        "D3D_FEATURE_LEVEL",
-        "D3D_DRIVER_TYPE_HARDWARE",
-        "WINAPI",
-        "D3D11_SDK_VERSION",
-        "assert" };
-
-      // ... and their corresponding values
-      static const char* ppvalues[] = {
-        "#define NULL ((void*)0)",
-        "#define PM_REMOVE (0x0001)",
-        "Microsoft's own memory zapper function\n(which is a macro actually)\nvoid ZeroMemory(\n\t[in] PVOID  Destination,\n\t[in] SIZE_T Length\n); ",
-        "enum DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_DISCARD = 0",
-        "enum D3D_FEATURE_LEVEL",
-        "enum D3D_DRIVER_TYPE::D3D_DRIVER_TYPE_HARDWARE  = ( D3D_DRIVER_TYPE_UNKNOWN + 1 )",
-        "#define WINAPI __stdcall",
-        "#define D3D11_SDK_VERSION (7)",
-        " #define assert(expression) (void)(                                                  \n"
-            "    (!!(expression)) ||                                                              \n"
-            "    (_wassert(_CRT_WIDE(#expression), _CRT_WIDE(__FILE__), (unsigned)(__LINE__)), 0) \n"
-            " )"
-        };
-
-      for (int i = 0; i < sizeof(ppnames) / sizeof(ppnames[0]); ++i) {
-        cTextEditor::sIdent id;
-        id.mDeclaration = ppvalues[i];
-        language.mPreprocIdents.insert (make_pair (string (ppnames[i]), id));
-        }
-      //}}}
-      //{{{  set your own idents
-      static const char* idents[] = {
-        "HWND",
-        "HRESULT",
-        "LPRESULT",
-        "D3D11_RENDER_TARGET_VIEW_DESC",
-        "DXGI_SWAP_CHAIN_DESC","MSG",
-        "LRESULT",
-        "WPARAM",
-        "LPARAM",
-        "UINT",
-        "LPVOID",
-        "ID3D11Device",
-        "ID3D11DeviceContext",
-        "ID3D11Buffer", "ID3D11Buffer",
-        "ID3D10Blob",
-        "ID3D11VertexShader",
-        "ID3D11InputLayout",
-        "ID3D11Buffer",
-        "ID3D10Blob",
-        "ID3D11PixelShader",
-        "ID3D11SamplerState",
-        "ID3D11ShaderResourceView",
-        "ID3D11RasterizerState",
-        "ID3D11BlendState",
-        "ID3D11DepthStencilState",
-        "IDXGISwapChain",
-        "ID3D11RenderTargetView",
-        "ID3D11Texture2D",
-        "cTextEditor" };
-
-      static const char* idecls[] = {
-        "typedef HWND_* HWND",
-        "typedef long HRESULT",
-        "typedef long* LPRESULT",
-        "struct D3D11_RENDER_TARGET_VIEW_DESC",
-        "struct DXGI_SWAP_CHAIN_DESC",
-        "typedef tagMSG MSG\n * Message structure",
-        "typedef LONG_PTR LRESULT",
-        "WPARAM",
-        "LPARAM",
-        "UINT",
-        "LPVOID",
-        "ID3D11Device",
-        "ID3D11DeviceContext",
-        "ID3D11Buffer",
-        "ID3D11Buffer",
-        "ID3D10Blob",
-        "ID3D11VertexShader",
-        "ID3D11InputLayout",
-        "ID3D11Buffer",
-        "ID3D10Blob",
-        "ID3D11PixelShader",
-        "ID3D11SamplerState",
-        "ID3D11ShaderResourceView",
-        "ID3D11RasterizerState",
-        "ID3D11BlendState",
-        "ID3D11DepthStencilState",
-        "IDXGISwapChain",
-        "ID3D11RenderTargetView",
-        "ID3D11Texture2D",
-        "class cTextEditor" };
-
-      for (int i = 0; i < sizeof(idents) / sizeof(idents[0]); ++i) {
-        cTextEditor::sIdent id;
-        id.mDeclaration = string (idecls[i]);
-        language.mIdents.insert (make_pair (string (idents[i]), id));
-        }
-      //}}}
-
-      mTextEditor.setLanguage (language);
       mTextEditor.setText (str);
+
+      // set language
+      cTextEditor::sLanguage language = cTextEditor::sLanguage::CPlusPlus();
+      for (size_t i = 0; i < kPreProcessorNames.size(); i++) {
+        cTextEditor::sIdent id;
+        id.mDeclaration = kPreProcessorValues[i];
+        language.mPreprocIdents.insert (make_pair (kPreProcessorNames[i], id));
+        }
+      for (size_t i = 0; i < kIdents.size(); i++) {
+        cTextEditor::sIdent id;
+        id.mDeclaration = kIdecls[i];
+        language.mIdents.insert (make_pair (kIdents[i], id));
+        }
+      mTextEditor.setLanguage (language);
+
       //{{{  error markers
       //cTextEditor::ErrorMarkers markers;
       //markers.insert (make_pair<int, string>(6, "Example error here:\nInclude file not found: \"cTextEditor.h\""));
@@ -209,7 +217,7 @@ public:
         ImGui::Separator();
 
         if (ImGui::MenuItem ("Select all", nullptr, nullptr))
-          mTextEditor.setSelection (cTextEditor::sRowColumn(), 
+          mTextEditor.setSelection (cTextEditor::sRowColumn(),
                                     cTextEditor::sRowColumn (mTextEditor.getTotalLines(), 0));
 
         ImGui::EndMenu();
@@ -246,4 +254,3 @@ private:
   //}}}
   inline static const bool mRegistered = registerClass ("textEditor", &create);
   };
-#endif

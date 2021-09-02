@@ -53,7 +53,7 @@ public:
     bool mMultiLineComment : 1;
     bool mPreprocessor : 1;
 
-    sGlyph (uint8_t aChar, ePaletteIndex aColorIndex) 
+    sGlyph (uint8_t aChar, ePaletteIndex aColorIndex)
       : mChar(aChar), mColorIndex(aColorIndex), mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
     };
   //}}}

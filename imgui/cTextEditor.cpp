@@ -897,11 +897,11 @@ cTextEditor::cTextEditor()
     mScrollToCursor(false), mScrollToTop(false),
     mTextChanged(false), mColorizerEnabled(true),
     mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false),
-    mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(eSelectionMode::Normal) , mCheckComments(true),
-    mLastClick(-1.0f),
+    mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(eSelectionMode::Normal) ,
     mHandleKeyboardInputs(true), mHandleMouseInputs(true),
-    mIgnoreImGuiChild(false), mShowWhitespaces(true) ,
-    mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()) {
+    mIgnoreImGuiChild(false), mShowWhitespaces(true), mCheckComments(true),
+    mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
+    mLastClick(-1.0f) {
 
   setPalette (getLightPalette());
   setLanguage (sLanguage::HLSL());
@@ -917,7 +917,7 @@ bool cTextEditor::isOnWordBoundary (const sRowColumn& aAt) const {
     return true;
 
   auto& line = mLines[aAt.mLine];
-  auto cindex = getCharacterIndex (aAt);
+  int cindex = getCharacterIndex (aAt);
   if (cindex >= (int)line.size())
     return true;
 
@@ -972,14 +972,15 @@ string cTextEditor::getCurrentLineText()const {
 //{{{
 int cTextEditor::getCharacterIndex (const sRowColumn& rowColumn) const {
 
-  if (rowColumn.mLine >= mLines.size())
+  // !! this is dodgy !!!
+  if ((unsigned)rowColumn.mLine >= mLines.size())
     return -1;
 
   auto& line = mLines[rowColumn.mLine];
   int c = 0;
 
   int i = 0;
-  for (; i < line.size() && c < rowColumn.mColumn;) {
+  for (; i < (int)line.size() && (c < rowColumn.mColumn);) {
     if (line[i].mChar == '\t')
       c = (c / mTabSize) * mTabSize + mTabSize;
     else
@@ -993,7 +994,7 @@ int cTextEditor::getCharacterIndex (const sRowColumn& rowColumn) const {
 //{{{
 int cTextEditor::getCharacterColumn (int lineCoord, int index) const {
 
-  if (lineCoord >= mLines.size())
+  if (lineCoord >= (int)mLines.size())
     return 0;
 
   auto& line = mLines[lineCoord];
@@ -1016,7 +1017,7 @@ int cTextEditor::getCharacterColumn (int lineCoord, int index) const {
 //{{{
 int cTextEditor::getLineCharacterCount (int lineCoord) const {
 
-  if (lineCoord >= mLines.size())
+  if (lineCoord >= (int)mLines.size())
     return 0;
 
   auto& line = mLines[lineCoord];
@@ -1030,7 +1031,7 @@ int cTextEditor::getLineCharacterCount (int lineCoord) const {
 //{{{
 int cTextEditor::getLineMaxColumn (int lineCoord) const {
 
-  if (lineCoord >= mLines.size())
+  if (lineCoord >= (int)mLines.size())
     return 0;
 
   auto& line = mLines[lineCoord];
@@ -1170,7 +1171,7 @@ void cTextEditor::setSelection (const sRowColumn& startCord, const sRowColumn& e
 
     case cTextEditor::eSelectionMode::Line: {
       const auto lineNo = mState.mSelectionEnd.mLine;
-      const auto lineSize = (size_t)lineNo < mLines.size() ? mLines[lineNo].size() : 0;
+      //const auto lineSize = (size_t)lineNo < mLines.size() ? mLines[lineNo].size() : 0;
       mState.mSelectionStart = sRowColumn (mState.mSelectionStart.mLine, 0);
       mState.mSelectionEnd = sRowColumn (lineNo, getLineMaxColumn (lineNo));
       break;
@@ -1299,7 +1300,7 @@ void cTextEditor::moveRight (int aAmount, bool select, bool wordMode) {
 
   auto oldPos = mState.mCursorPosition;
 
-  if (mLines.empty() || oldPos.mLine >= mLines.size())
+  if (mLines.empty() || oldPos.mLine >= (int)mLines.size())
     return;
 
   auto cindex = getCharacterIndex (mState.mCursorPosition);
@@ -1307,8 +1308,8 @@ void cTextEditor::moveRight (int aAmount, bool select, bool wordMode) {
     auto lindex = mState.mCursorPosition.mLine;
     auto& line = mLines[lindex];
 
-    if (cindex >= line.size()) {
-      if (mState.mCursorPosition.mLine < mLines.size() - 1) {
+    if (cindex >= (int)line.size()) {
+      if (mState.mCursorPosition.mLine < (int)mLines.size() - 1) {
         mState.mCursorPosition.mLine = max(0, min((int)mLines.size() - 1, mState.mCursorPosition.mLine + 1));
         mState.mCursorPosition.mColumn = 0;
         }
@@ -1559,7 +1560,7 @@ void cTextEditor::deleteIt() {
       removeLine (pos.mLine + 1);
       }
     else {
-      auto cindex = getCharacterIndex(pos);
+      auto cindex = getCharacterIndex (pos);
       u.mRemovedStart = u.mRemovedEnd = getActualCursorRowColumn();
       u.mRemovedEnd.mColumn++;
       u.mRemoved = getText (u.mRemovedStart, u.mRemovedEnd);
@@ -1657,7 +1658,7 @@ string cTextEditor::getText (const sRowColumn& startCord, const sRowColumn& endC
   auto iend = getCharacterIndex (endCord);
 
   size_t s = 0;
-  for (size_t i = lstart; i < lend; i++)
+  for (size_t i = lstart; i < (size_t)lend; i++)
     s += mLines[i].size();
 
   result.reserve (s + s / 8);
@@ -1819,7 +1820,7 @@ cTextEditor::sRowColumn cTextEditor::findWordStart (const sRowColumn& from) cons
     return at;
 
   auto& line = mLines[at.mLine];
-  auto cindex = getCharacterIndex(at);
+  auto cindex = getCharacterIndex (at);
 
   if (cindex >= (int)line.size())
     return at;
@@ -1896,7 +1897,7 @@ cTextEditor::sRowColumn cTextEditor::findNextWord (const sRowColumn& from) const
     }
 
   while (!isword || skip) {
-    if (at.mLine >= mLines.size()) {
+    if (at.mLine >= (int)mLines.size()) {
       auto l = max(0, (int) mLines.size() - 1);
       return sRowColumn (l, getLineMaxColumn(l));
       }
@@ -2036,17 +2037,17 @@ void cTextEditor::colorizeInternal() {
     return;
 
   if (mCheckComments) {
-    auto endLine = mLines.size();
-    auto endIndex = 0;
-    auto commentStartLine = endLine;
-    auto commentStartIndex = endIndex;
-    auto withinString = false;
-    auto withinSingleLineComment = false;
-    auto withinPreproc = false;
-    auto firstChar = true;      // there is no other non-whitespace characters in the line before
-    auto concatenate = false;   // '\' on the very end of the line
-    auto currentLine = 0;
-    auto currentIndex = 0;
+    int endLine = (int)mLines.size();
+    int endIndex = 0;
+    int commentStartLine = endLine;
+    int commentStartIndex = endIndex;
+    bool withinString = false;
+    bool withinSingleLineComment = false;
+    bool withinPreproc = false;
+    bool firstChar = true;      // there is no other non-whitespace characters in the line before
+    bool concatenate = false;   // '\' on the very end of the line
+    int currentLine = 0;
+    int currentIndex = 0;
 
     while (currentLine < endLine || currentIndex < endIndex) {
       auto& line = mLines[currentLine];
@@ -2065,7 +2066,8 @@ void cTextEditor::colorizeInternal() {
         if (currentIndex == (int)line.size() - 1 && line[line.size() - 1].mChar == '\\')
           concatenate = true;
 
-        bool inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
+        bool inComment = (commentStartLine < currentLine ||
+                          (commentStartLine == currentLine && commentStartIndex <= currentIndex));
 
         if (withinString) {
           line[currentIndex].mMultiLineComment = inComment;
@@ -2110,7 +2112,8 @@ void cTextEditor::colorizeInternal() {
               commentStartIndex = currentIndex;
               }
 
-            inComment = inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
+            inComment = (commentStartLine < currentLine ||
+                         (commentStartLine == currentLine && commentStartIndex <= currentIndex));
 
             line[currentIndex].mMultiLineComment = inComment;
             line[currentIndex].mComment = withinSingleLineComment;
@@ -2164,19 +2167,19 @@ float cTextEditor::getTextDistanceToLineStart (const sRowColumn& from) const {
   float spaceSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
 
   int colIndex = getCharacterIndex (from);
-  for (size_t it = 0u; it < line.size() && it < colIndex; ) {
-    if (line[it].mChar == '\t') {
+  for (int i = 0; i < (int)line.size() && (int)i < colIndex;) {
+    if (line[i].mChar == '\t') {
       distance = (1.0f + floor((1.0f + distance) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
-      ++it;
+      ++i;
       }
     else {
-      auto d = utf8CharLength (line[it].mChar);
+      auto d = utf8CharLength (line[i].mChar);
       char tempCString[7];
-      int i = 0;
-      for (; i < 6 && d-- > 0 && it < (int)line.size(); i++, it++)
-        tempCString[i] = line[it].mChar;
+      int j = 0;
+      for (; j < 6 && d-- > 0 && i < (int)line.size(); j++, i++)
+        tempCString[j] = line[i].mChar;
 
-      tempCString[i] = '\0';
+      tempCString[j] = '\0';
       distance += ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, tempCString, nullptr, nullptr).x;
       }
     }
@@ -2225,7 +2228,6 @@ void cTextEditor::advance (sRowColumn& rowColumn) const {
   if (rowColumn.mLine < (int)mLines.size()) {
     auto& line = mLines[rowColumn.mLine];
     auto cindex = getCharacterIndex (rowColumn);
-
     if (cindex + 1 < (int)line.size()) {
       auto delta = utf8CharLength (line[cindex].mChar);
       cindex = min (cindex + delta, (int)line.size() - 1);
@@ -2253,7 +2255,6 @@ void cTextEditor::deleteRange (const sRowColumn& startCord, const sRowColumn& en
 
   auto start = getCharacterIndex(startCord);
   auto end = getCharacterIndex(endCord);
-
   if (startCord.mLine == endCord.mLine) {
     auto& line = mLines[startCord.mLine];
     auto n = getLineMaxColumn(startCord.mLine);
@@ -2632,7 +2633,7 @@ void cTextEditor::backspace() {
       --u.mRemovedStart.mColumn;
       --mState.mCursorPosition.mColumn;
 
-      while (cindex < line.size() && cend-- > cindex) {
+      while (cindex < (int)line.size() && cend-- > cindex) {
         u.mRemoved += line[cindex].mChar;
         line.erase(line.begin() + cindex);
         }
@@ -2966,7 +2967,7 @@ void cTextEditor::render() {
       auto prevColor = line.empty() ? mPalette[(int)ePaletteIndex::Default] : getGlyphColor (line[0]);
       ImVec2 bufferOffset;
 
-      for (int i = 0; i < line.size();) {
+      for (int i = 0; i < (int)line.size();) {
         auto& glyph = line[i];
         auto color = getGlyphColor (glyph);
 
