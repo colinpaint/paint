@@ -76,6 +76,50 @@ namespace {
     0x40000000, // Current line edge
     };
   //}}}
+  //{{{
+  const vector<string> kCppKeywords = {
+    "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit", "atomic_noexcept", "auto",
+    "bitand", "bitor", "bool", "break",
+    "case", "catch", "char", "char16_t", "char32_t", "class", "compl", "concept", "const", "constexpr", "const_cast", "continue",
+    "decltype", "default", "delete", "do", "double", "dynamic_cast",
+    "else", "enum", "explicit", "export", "extern",
+    "false", "float", "for", "friend",
+    "goto",
+    "if", "import", "inline", "int",
+    "long",
+    "module", "mutable",
+    "namespace", "new", "noexcept", "not", "not_eq", "nullptr",
+    "operator", "or", "or_eq",
+    "private", "protected", "public",
+    "register", "reinterpret_cast", "requires", "return",
+    "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "synchronized",
+    "template", "this", "thread_local", "throw", "true", "try", "typedef", "typeid", "typename",
+    "union", "unsigned", "using",
+    "virtual", "void", "volatile",
+    "wchar_t", "while",
+    "xor", "xor_eq"
+    };
+  //}}}
+  //{{{
+  const vector<string> kCppIdents = {
+    "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol",
+    "ceil", "clock", "cosh", "ctime",
+    "div",
+    "exit",
+    "fabs", "floor", "fmod",
+    "getchar", "getenv",
+    "isalnum", "isalpha", "isdigit", "isgraph", "ispunct", "isspace", "isupper",
+    "kbhit",
+    "log10", "log2", "log",
+    "map", "memcmp", "modf", "min", "max"
+    "pow", "printf", "putchar", "putenv", "puts",
+    "rand", "remove", "rename",
+    "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "set", "std", "string", "sprintf", "snprintf",
+    "time", "tolower", "toupper",
+    "unordered_map", "unordered_set",
+    "vector",
+    };
+  //}}}
 
   //{{{
   bool IsUTFSequence (char ch) {
@@ -389,57 +433,13 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
   static sLanguage language;
 
   if (!inited) {
-    //{{{
-    static const char* const cppKeywords[] = {
-      "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit", "atomic_noexcept", "auto",
-      "bitand", "bitor", "bool", "break",
-      "case", "catch", "char", "char16_t", "char32_t", "class", "compl", "concept", "const", "constexpr", "const_cast", "continue",
-      "decltype", "default", "delete", "do", "double", "dynamic_cast",
-      "else", "enum", "explicit", "export", "extern",
-      "false", "float", "for", "friend",
-      "goto",
-      "if", "import", "inline", "int",
-      "long",
-      "module", "mutable",
-      "namespace", "new", "noexcept", "not", "not_eq", "nullptr",
-      "operator", "or", "or_eq",
-      "private", "protected", "public",
-      "register", "reinterpret_cast", "requires", "return",
-      "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "synchronized",
-      "template", "this", "thread_local", "throw", "true", "try", "typedef", "typeid", "typename",
-      "union", "unsigned", "using",
-      "virtual", "void", "volatile",
-      "wchar_t", "while",
-      "xor", "xor_eq"
-      };
-    //}}}
-    for (auto& k : cppKeywords)
-      language.mKeywords.insert (k);
+    for (auto& cppKeyword:  kCppKeywords)
+      language.mKeywords.insert (cppKeyword);
 
-    //{{{
-    static const char* const idents[] = {
-      "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol",
-      "ceil", "clock", "cosh", "ctime",
-      "div",
-      "exit",
-      "fabs", "floor", "fmod",
-      "getchar", "getenv",
-      "isalnum", "isalpha", "isdigit", "isgraph", "ispunct", "isspace", "isupper",
-      "kbhit",
-      "log10", "log2", "log",
-      "map", "memcmp", "modf", "min", "max"
-      "pow", "printf", "putchar", "putenv", "puts",
-      "rand", "remove", "rename",
-      "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "set", "std", "string", "sprintf", "snprintf",
-      "time", "tolower", "toupper",
-      "unordered_map", "unordered_set",
-      "vector",
-      };
-    //}}}
-    for (auto& k : idents) {
+    for (auto& cppIdent : kCppIdents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (string (k), id));
+      language.mIdents.insert (make_pair (cppIdent, id));
       }
 
     language.mTokenize = [](const char * inBegin, const char * inEnd,
@@ -598,7 +598,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::HLSL() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      language.mIdents.insert(make_pair(string(k), id));
+      language.mIdents.insert (make_pair (string(k), id));
       }
 
     language.mTokenRegexStrings.push_back (
@@ -659,7 +659,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::GLSL() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      language.mIdents.insert(make_pair(string(k), id));
+      language.mIdents.insert (make_pair (string(k), id));
       }
 
     language.mTokenRegexStrings.push_back (
@@ -722,7 +722,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::AngelScript() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (string(k), id));
+      language.mIdents.insert (make_pair (string (k), id));
       }
 
     language.mTokenRegexStrings.push_back (
@@ -862,7 +862,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::SQL() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (string(k), id));
+      language.mIdents.insert (make_pair (string (k), id));
       }
 
     language.mTokenRegexStrings.push_back (
