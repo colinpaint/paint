@@ -2328,6 +2328,11 @@ void cTextEditor::handleKeyboardInputs() {
 //{{{
 void cTextEditor::render() {
 
+  // cheap and cheerful null terminated string buffer
+  constexpr int kMaxLineCount = 256;
+  char lineStr[kMaxLineCount];
+  unsigned lineCount = 0;
+
   //{{{  calc mCharAdvance regarding to scaled font size (Ctrl + mouse wheel)
   const float fontSize = ImGui::GetFont()->CalcTextSizeA (
     ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
@@ -2341,10 +2346,6 @@ void cTextEditor::render() {
     mPalette[i] = ImGui::ColorConvertFloat4ToU32 (color);
     }
   //}}}
-
-  constexpr int kMaxLineCount = 256;
-  char lineStr[kMaxLineCount];
-  int lineCount = 0;
 
   ImVec2 contentSize = ImGui::GetWindowContentRegionMax();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -2484,8 +2485,7 @@ void cTextEditor::render() {
       ImU32 prevColor = glyphs.empty() ? mPalette[(int)ePalette::Default] : getGlyphColor (glyphs[0]);
       ImVec2 bufferOffset;
 
-      for (int i = 0; i < (int)glyphs.size();) {
-        sGlyph& glyph = glyphs[i];
+      for (auto glyph : glyphs) {
         ImU32 color = getGlyphColor (glyph);
 
         if (((color != prevColor) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && lineCount) {
@@ -2505,7 +2505,6 @@ void cTextEditor::render() {
           float oldX = bufferOffset.x;
           bufferOffset.x = (1.0f + floor ((1.0f + bufferOffset.x) / (float(mTabSize) * spaceSize))) *
                            (float(mTabSize) * spaceSize);
-          ++i;
 
           if (mShowWhitespaces) {
             const float s = ImGui::GetFontSize();
@@ -2529,14 +2528,13 @@ void cTextEditor::render() {
             drawList->AddCircleFilled (ImVec2(x, y), 1.5f, 0x80808080, 4);
             }
           bufferOffset.x += spaceSize;
-          i++;
           }
 
         else {
           // !!!check for overflow, truncation !!!
           int l = utf8CharLength (glyph.mChar);
           while ((l-- > 0) && (lineCount < (kMaxLineCount-2)))
-            lineStr[lineCount++] = glyphs[i++].mChar;
+            lineStr[lineCount++] = glyph.mChar;
           }
 
         ++columnNo;
