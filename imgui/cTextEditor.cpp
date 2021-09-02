@@ -2375,26 +2375,27 @@ void cTextEditor::handleKeyboardInputs() {
 //{{{
 void cTextEditor::render() {
 
-  // cheap and cheerful null terminated str buffer
-  constexpr int kMaxLineCount = 256;
-  char lineStr[kMaxLineCount];
-  unsigned lineCount = 0;
-
-  // calc mCharSize
-  const float spaceSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f,
-                                                           " ", nullptr, nullptr).x;
-  const float fontSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f,
-                                                          "#", nullptr, nullptr).x;
-  mCharSize = ImVec2 (fontSize, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
-
+  ImFont* font = ImGui::GetFont();
+  float fontSize = ImGui::GetFontSize();
   ImVec2 contentSize = ImGui::GetWindowContentRegionMax();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
+  ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
   //{{{  update palette alpha from style
   for (int i = 0; i < (size_t)ePalette::Max; ++i) {
     ImVec4 color = ImGui::ColorConvertU32ToFloat4 (mPaletteBase[i]);
     color.w *= ImGui::GetStyle().Alpha;
     mPalette[i] = ImGui::ColorConvertFloat4ToU32 (color);
     }
+  //}}}
+  //{{{  cheap and cheerful null terminated str buffer
+  constexpr int kMaxLineCount = 256;
+  char lineStr[kMaxLineCount];
+  unsigned lineCount = 0;
+  //}}}
+  //{{{  calc character mCharSize
+  const float spaceSize = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
+  const float charWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
+  mCharSize = ImVec2 (charWidth, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
   //}}}
 
   if (mScrollToTop) {
@@ -2403,60 +2404,51 @@ void cTextEditor::render() {
     ImGui::SetScrollY (0.f);
     }
     //}}}
-
-  ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
   float scrollX = ImGui::GetScrollX();
   float scrollY = ImGui::GetScrollY();
 
-  float longestLine = mTextStart;
+  float widestLine = mTextStart;
   if (!mLines.empty()) {
     int lineNumber = (unsigned)floor (scrollY / mCharSize.y);
-
-    // line number str
     char lineNumberStr[27];
     snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d %d %d %d %4d ", (int)mLines.size(), 1,1,1, 0);
-    mTextStart = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f,
-                                                  lineNumberStr, nullptr, nullptr).x + kLeftTextMargin;
+    mTextStart = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x + kLeftTextMargin;
     int maxVisibleLines = (int)ceil ((scrollY + contentSize.y) / mCharSize.y);
 
     for (int visibleLines = 0;
          (lineNumber < (int)mLines.size()) && (visibleLines < maxVisibleLines); lineNumber++, visibleLines++) {
       sLine& line = mLines[lineNumber];
+      vector<sGlyph>& glyphs = line.mGlyphs;
+
       ImVec2 linePos = ImVec2 (cursorScreenPos.x, cursorScreenPos.y + lineNumber * mCharSize.y);
       ImVec2 textPos = ImVec2 (linePos.x + mTextStart, linePos.y);
-
-      vector<sGlyph>& glyphs = line.mGlyphs;
-      longestLine = max (longestLine,
+      widestLine = max (widestLine,
         mTextStart + getTextDistanceToLineStart (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
-      sPosition lineStartCoord (lineNumber, 0);
-      sPosition lineEndCoord (lineNumber, getLineMaxColumn (lineNumber));
       //{{{  draw line selection
-      float sstart = -1.0f;
-      float ssend = -1.0f;
-
+      float xStart = -1.0f;
+      float xEnd = -1.0f;
+      sPosition lineStartPosition (lineNumber, 0);
+      sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
       assert (mState.mSelectionStart <= mState.mSelectionEnd);
-
-      if (mState.mSelectionStart <= lineEndCoord)
-        sstart = mState.mSelectionStart > lineStartCoord ? getTextDistanceToLineStart (mState.mSelectionStart) : 0.0f;
-
-      if (mState.mSelectionEnd > lineStartCoord)
-        ssend = getTextDistanceToLineStart (mState.mSelectionEnd < lineEndCoord ? mState.mSelectionEnd : lineEndCoord);
-
+      if (mState.mSelectionStart <= lineEndPosition)
+        xStart = mState.mSelectionStart > lineStartPosition ? getTextDistanceToLineStart (mState.mSelectionStart) : 0.0f;
+      if (mState.mSelectionEnd > lineStartPosition)
+        xEnd = getTextDistanceToLineStart (mState.mSelectionEnd < lineEndPosition ? mState.mSelectionEnd : lineEndPosition);
       if (mState.mSelectionEnd.mLineNumber > lineNumber)
-        ssend += mCharSize.x;
-
-      if (sstart != -1 && ssend != -1 && sstart < ssend) {
-        ImVec2 vstart (linePos.x + mTextStart + sstart, linePos.y);
-        ImVec2 vend (linePos.x + mTextStart + ssend, linePos.y + mCharSize.y);
-        drawList->AddRectFilled (vstart, vend, mPalette[(size_t)ePalette::Selection]);
+        xEnd += mCharSize.x;
+      if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd)) {
+        drawList->AddRectFilled (ImVec2 (linePos.x + mTextStart + xStart, linePos.y),
+                                 ImVec2 (linePos.x + mTextStart + xEnd, linePos.y + mCharSize.y),
+                                 mPalette[(size_t)ePalette::Selection]);
         }
       //}}}
+
+      ImVec2 startPos = ImVec2 (linePos.x + scrollX, linePos.y);
       //{{{  draw marker
-      ImVec2 start = ImVec2 (linePos.x + scrollX, linePos.y);
       auto errorIt = mMarkers.find (lineNumber + 1);
       if (errorIt != mMarkers.end()) {
         ImVec2 end = ImVec2 (linePos.x + contentSize.x + 2.0f * scrollX, linePos.y + mCharSize.y);
-        drawList->AddRectFilled (start, end, mPalette[(size_t)ePalette::Marker]);
+        drawList->AddRectFilled (startPos, end, mPalette[(size_t)ePalette::Marker]);
 
         if (ImGui::IsMouseHoveringRect (linePos, end)) {
           ImGui::BeginTooltip();
@@ -2478,7 +2470,7 @@ void cTextEditor::render() {
       snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d %d %d %d %4d ",
                 lineNumber+1, line.mFoldLevel, line.mFoldBegin, line.mFoldEnd, line.mFoldLineNumber+1);
 
-      float lineNumberWidth = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f,
+      float lineNumberWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f,
                                                                lineNumberStr, nullptr, nullptr).x;
 
       drawList->AddText (ImVec2 (linePos.x + mTextStart - lineNumberWidth, linePos.y),
@@ -2490,10 +2482,10 @@ void cTextEditor::render() {
 
         // highlight cursor line
         if (!hasSelection()) {
-          ImVec2 end = ImVec2 (start.x + contentSize.x + scrollX, start.y + mCharSize.y);
-          drawList->AddRectFilled (start, end,
+          ImVec2 endPos = ImVec2 (startPos.x + contentSize.x + scrollX, startPos.y + mCharSize.y);
+          drawList->AddRectFilled (startPos, endPos,
             mPalette[(int)(focused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
-          drawList->AddRect (start, end, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
+          drawList->AddRect (startPos, endPos, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
           }
 
         // draw flashing cursor
@@ -2515,7 +2507,7 @@ void cTextEditor::render() {
                 char cursorBuf[2];
                 cursorBuf[0] = glyphs[cindex].mChar;
                 cursorBuf[1] = 0;
-                width = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, cursorBuf).x;
+                width = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, cursorBuf).x;
                 }
               }
 
@@ -2542,8 +2534,8 @@ void cTextEditor::render() {
                              prevColor, lineStr);
           lineCount = 0;
 
-          ImVec2 textSize = ImGui::GetFont()->CalcTextSizeA (
-            ImGui::GetFontSize(), FLT_MAX, -1.0f, lineStr, nullptr, nullptr);
+          ImVec2 textSize = font->CalcTextSizeA (
+            fontSize, FLT_MAX, -1.0f, lineStr, nullptr, nullptr);
           bufferOffset.x += textSize.x;
           }
         prevColor = color;
@@ -2554,14 +2546,13 @@ void cTextEditor::render() {
                            (float(mTabSize) * spaceSize);
 
           if (mShowWhitespaces) {
-            const float s = ImGui::GetFontSize();
             const float x1 = textPos.x + oldX + 1.0f;
             const float x2 = textPos.x + bufferOffset.x - 1.0f;
-            const float y = textPos.y + bufferOffset.y + s * 0.5f;
+            const float y = textPos.y + bufferOffset.y + fontSize * 0.5f;
             const ImVec2 p1(x1, y);
             const ImVec2 p2(x2, y);
-            const ImVec2 p3(x2 - s * 0.2f, y - s * 0.2f);
-            const ImVec2 p4(x2 - s * 0.2f, y + s * 0.2f);
+            const ImVec2 p3(x2 - fontSize * 0.2f, y - fontSize * 0.2f);
+            const ImVec2 p4(x2 - fontSize * 0.2f, y + fontSize * 0.2f);
             drawList->AddLine (p1, p2, 0x90909090);
             drawList->AddLine (p2, p3, 0x90909090);
             drawList->AddLine (p2, p4, 0x90909090);
@@ -2569,9 +2560,8 @@ void cTextEditor::render() {
           }
         else if (glyph.mChar == ' ') {
           if (mShowWhitespaces) {
-            const float s = ImGui::GetFontSize();
             const float x = textPos.x + bufferOffset.x + spaceSize * 0.5f;
-            const float y = textPos.y + bufferOffset.y + s * 0.5f;
+            const float y = textPos.y + bufferOffset.y + fontSize * 0.5f;
             drawList->AddCircleFilled (ImVec2(x, y), 1.5f, 0x80808080, 4);
             }
           bufferOffset.x += spaceSize;
@@ -2617,7 +2607,8 @@ void cTextEditor::render() {
     //}}}
     }
 
-  ImGui::Dummy (ImVec2 ((longestLine + 2), mLines.size() * mCharSize.y));
+  // dummy button 
+  ImGui::Dummy (ImVec2 (widestLine + 2, mLines.size() * mCharSize.y));
 
   if (mScrollToCursor) {
     //{{{  scroll to cursor
