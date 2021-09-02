@@ -11,6 +11,8 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h" // for imGui::GetCurrentWindow()
 
+#include "../utils/cLog.h"
+
 using namespace std;
 //}}}
 //{{{  template bool equals
@@ -937,16 +939,15 @@ string cTextEditor::getText() const {
 vector<string> cTextEditor::getTextLines() const {
 
   vector<string> result;
-  result.reserve(mLines.size());
+  result.reserve (mLines.size());
 
   for (auto & line : mLines) {
     string text;
     text.resize (line.size());
-
     for (size_t i = 0; i < line.size(); ++i)
       text[i] = line[i].mChar;
 
-    result.emplace_back(move(text));
+    result.emplace_back (move (text));
     }
 
   return result;
@@ -962,7 +963,7 @@ string cTextEditor::getSelectedText() const {
 //{{{
 string cTextEditor::getCurrentLineText()const {
 
-  auto lineLength = getLineMaxColumn (mState.mCursorPosition.mLine);
+  int lineLength = getLineMaxColumn (mState.mCursorPosition.mLine);
   return getText (
     sRowColumn (mState.mCursorPosition.mLine, 0),
     sRowColumn (mState.mCursorPosition.mLine, lineLength));
@@ -972,9 +973,10 @@ string cTextEditor::getCurrentLineText()const {
 //{{{
 int cTextEditor::getCharacterIndex (const sRowColumn& rowColumn) const {
 
-  // !! this is dodgy !!!
-  if ((unsigned)rowColumn.mLine >= mLines.size())
+  if (rowColumn.mLine >= (int)mLines.size()) {
+    cLog::log (LOGERROR, "cTextEditor::getCharacterIndex");
     return -1;
+    }
 
   auto& line = mLines[rowColumn.mLine];
   int c = 0;
@@ -1001,7 +1003,7 @@ int cTextEditor::getCharacterColumn (int lineCoord, int index) const {
   int col = 0;
 
   int i = 0;
-  while (i < index && i < (int)line.size()) {
+  while ((i < index) && i < ((int)line.size())) {
     auto c = line[i].mChar;
     i += utf8CharLength (c);
     if (c == '\t')
@@ -1022,7 +1024,7 @@ int cTextEditor::getLineCharacterCount (int lineCoord) const {
 
   auto& line = mLines[lineCoord];
   int c = 0;
-  for (unsigned i = 0; i < line.size(); c++)
+  for (size_t i = 0; i < line.size(); c++)
     i += utf8CharLength (line[i].mChar);
 
   return c;
@@ -1036,7 +1038,7 @@ int cTextEditor::getLineMaxColumn (int lineCoord) const {
 
   auto& line = mLines[lineCoord];
   int col = 0;
-  for (unsigned i = 0; i < line.size(); ) {
+  for (size_t i = 0; i < line.size(); ) {
     auto c = line[i].mChar;
     if (c == '\t')
       col = (col / mTabSize) * mTabSize + mTabSize;
@@ -1103,7 +1105,6 @@ void cTextEditor::setTextLines (const vector<string>& lines) {
     mLines.resize (lines.size());
     for (size_t i = 0; i < lines.size(); ++i) {
       const string& line = lines[i];
-
       mLines[i].reserve (line.size());
       for (size_t j = 0; j < line.size(); ++j)
         mLines[i].emplace_back (sGlyph (line[j], ePaletteIndex::Default));
@@ -1188,10 +1189,10 @@ void cTextEditor::setSelection (const sRowColumn& startCord, const sRowColumn& e
 //}}}
 //{{{  actions
 //{{{
-void cTextEditor::moveUp (int aAmount, bool select) {
+void cTextEditor::moveUp (int amount, bool select) {
 
-  auto oldPos = mState.mCursorPosition;
-  mState.mCursorPosition.mLine = max (0, mState.mCursorPosition.mLine - aAmount);
+  sRowColumn oldPos = mState.mCursorPosition;
+  mState.mCursorPosition.mLine = max (0, mState.mCursorPosition.mLine - amount);
   if (oldPos != mState.mCursorPosition) {
     if (select) {
       if (oldPos == mInteractiveStart)
@@ -1212,11 +1213,11 @@ void cTextEditor::moveUp (int aAmount, bool select) {
   }
 //}}}
 //{{{
-void cTextEditor::moveDown (int aAmount, bool select) {
+void cTextEditor::moveDown (int amount, bool select) {
 
   assert(mState.mCursorPosition.mColumn >= 0);
   auto oldPos = mState.mCursorPosition;
-  mState.mCursorPosition.mLine = max (0, min((int)mLines.size() - 1, mState.mCursorPosition.mLine + aAmount));
+  mState.mCursorPosition.mLine = max (0, min((int)mLines.size() - 1, mState.mCursorPosition.mLine + amount));
 
   if (mState.mCursorPosition != oldPos) {
     if (select) {
@@ -1238,7 +1239,7 @@ void cTextEditor::moveDown (int aAmount, bool select) {
   }
 //}}}
 //{{{
-void cTextEditor::moveLeft (int aAmount, bool select, bool wordMode) {
+void cTextEditor::moveLeft (int amount, bool select, bool wordMode) {
 
   if (mLines.empty())
     return;
@@ -1248,7 +1249,7 @@ void cTextEditor::moveLeft (int aAmount, bool select, bool wordMode) {
   auto line = mState.mCursorPosition.mLine;
   auto cindex = getCharacterIndex (mState.mCursorPosition);
 
-  while (aAmount-- > 0) {
+  while (amount-- > 0) {
     if (cindex == 0) {
       if (line > 0) {
         --line;
@@ -1296,37 +1297,37 @@ void cTextEditor::moveLeft (int aAmount, bool select, bool wordMode) {
   }
 //}}}
 //{{{
-void cTextEditor::moveRight (int aAmount, bool select, bool wordMode) {
+void cTextEditor::moveRight(int amount, bool select, bool wordMode) {
 
   auto oldPos = mState.mCursorPosition;
 
-  if (mLines.empty() || oldPos.mLine >= (int)mLines.size())
+  if (mLines.empty() || oldPos.mLine >= mLines.size())
     return;
 
   auto cindex = getCharacterIndex (mState.mCursorPosition);
-  while (aAmount-- > 0) {
+  while (amount-- > 0) {
     auto lindex = mState.mCursorPosition.mLine;
     auto& line = mLines[lindex];
 
-    if (cindex >= (int)line.size()) {
-      if (mState.mCursorPosition.mLine < (int)mLines.size() - 1) {
-        mState.mCursorPosition.mLine = max(0, min((int)mLines.size() - 1, mState.mCursorPosition.mLine + 1));
+    if (cindex >= line.size()) {
+      if (mState.mCursorPosition.mLine < mLines.size() - 1) {
+        mState.mCursorPosition.mLine = max (0, min((int)mLines.size() - 1, mState.mCursorPosition.mLine + 1));
         mState.mCursorPosition.mColumn = 0;
         }
       else
         return;
       }
     else {
-      cindex += utf8CharLength (line[cindex].mChar);
-      mState.mCursorPosition = sRowColumn (lindex, getCharacterColumn (lindex, cindex));
+      cindex += utf8CharLength(line[cindex].mChar);
+      mState.mCursorPosition = sRowColumn (lindex, getCharacterColumn(lindex, cindex));
       if (wordMode)
-        mState.mCursorPosition = findNextWord (mState.mCursorPosition);
-      }
+         mState.mCursorPosition = findNextWord (mState.mCursorPosition);
+     }
     }
 
   if (select) {
     if (oldPos == mInteractiveEnd)
-      mInteractiveEnd = sanitizeRowColumn(mState.mCursorPosition);
+      mInteractiveEnd = sanitizeRowColumn (mState.mCursorPosition);
     else if (oldPos == mInteractiveStart)
       mInteractiveStart = mState.mCursorPosition;
     else {
@@ -1774,7 +1775,7 @@ cTextEditor::sRowColumn cTextEditor::screenPosToRowColumn (const ImVec2& positio
     int columnIndex = 0;
     float columnX = 0.0f;
 
-    while ((size_t)columnIndex < line.size()) {
+    while (columnIndex < (int)line.size()) {
       float columnWidth = 0.0f;
 
       if (line[columnIndex].mChar == '\t') {
@@ -1957,7 +1958,7 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
     if (line.empty())
       continue;
 
-    buffer.resize(line.size());
+    buffer.resize (line.size());
     for (size_t j = 0; j < line.size(); ++j) {
       auto& col = line[j];
       buffer[j] = col.mChar;
@@ -2063,7 +2064,7 @@ void cTextEditor::colorizeInternal() {
         auto c = g.mChar;
         if (c != mLanguage.mPreprocChar && !isspace(c))
           firstChar = false;
-        if (currentIndex == (int)line.size() - 1 && line[line.size() - 1].mChar == '\\')
+        if ((currentIndex == (int)line.size() - 1) && (line[line.size() - 1].mChar == '\\'))
           concatenate = true;
 
         bool inComment = (commentStartLine < currentLine ||
@@ -2073,7 +2074,7 @@ void cTextEditor::colorizeInternal() {
           line[currentIndex].mMultiLineComment = inComment;
 
           if (c == '\"') {
-            if (currentIndex + 1 < (int)line.size() && line[currentIndex + 1].mChar == '\"') {
+            if ((currentIndex + 1 < (int)line.size()) && (line[currentIndex + 1].mChar == '\"')) {
               currentIndex += 1;
               if (currentIndex < (int)line.size())
                 line[currentIndex].mMultiLineComment = inComment;
@@ -2101,13 +2102,13 @@ void cTextEditor::colorizeInternal() {
             auto& startStr = mLanguage.mCommentStart;
             auto& singleStartStr = mLanguage.mSingleLineComment;
 
-            if (singleStartStr.size() > 0 &&
-              currentIndex + singleStartStr.size() <= line.size() &&
-              equals (singleStartStr.begin(), singleStartStr.end(), from, from + singleStartStr.size(), pred)) {
+            if ((singleStartStr.size() > 0) &&
+                (currentIndex + singleStartStr.size() <= line.size()) &&
+                equals (singleStartStr.begin(), singleStartStr.end(), from, from + singleStartStr.size(), pred)) {
               withinSingleLineComment = true;
               }
-            else if (!withinSingleLineComment && currentIndex + startStr.size() <= line.size() &&
-              equals (startStr.begin(), startStr.end(), from, from + startStr.size(), pred)) {
+            else if ((!withinSingleLineComment && currentIndex + startStr.size() <= line.size()) &&
+                     equals (startStr.begin(), startStr.end(), from, from + startStr.size(), pred)) {
               commentStartLine = currentLine;
               commentStartIndex = currentIndex;
               }
@@ -2167,7 +2168,7 @@ float cTextEditor::getTextDistanceToLineStart (const sRowColumn& from) const {
   float spaceSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
 
   int colIndex = getCharacterIndex (from);
-  for (int i = 0; i < (int)line.size() && (int)i < colIndex;) {
+  for (size_t i = 0; (i < line.size()) && ((int)i < colIndex);) {
     if (line[i].mChar == '\t') {
       distance = (1.0f + floor((1.0f + distance) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
       ++i;
@@ -2176,7 +2177,7 @@ float cTextEditor::getTextDistanceToLineStart (const sRowColumn& from) const {
       auto d = utf8CharLength (line[i].mChar);
       char tempCString[7];
       int j = 0;
-      for (; j < 6 && d-- > 0 && i < (int)line.size(); j++, i++)
+      for (; j < 6 && d-- > 0 && i < line.size(); j++, i++)
         tempCString[j] = line[i].mChar;
 
       tempCString[j] = '\0';

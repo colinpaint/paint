@@ -245,10 +245,10 @@ public:
   inline void setShowWhitespaces(bool value) { mShowWhitespaces = value; }
   //}}}
   //{{{  actions
-  void moveUp (int aAmount = 1, bool select = false);
-  void moveDown (int aAmount = 1, bool select = false);
-  void moveLeft (int aAmount = 1, bool select = false, bool wordMode = false);
-  void moveRight (int aAmount = 1, bool select = false, bool wordMode = false);
+  void moveUp (int amount = 1, bool select = false);
+  void moveDown (int amount = 1, bool select = false);
+  void moveLeft (int amount = 1, bool select = false, bool wordMode = false);
+  void moveRight (int amount = 1, bool select = false, bool wordMode = false);
 
   void moveTop (bool select = false);
   void moveBottom (bool select = false);
