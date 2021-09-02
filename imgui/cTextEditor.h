@@ -354,7 +354,6 @@ private:
   //{{{  gets
   bool isOnWordBoundary (const sRowColumn& at) const;
 
-  int getPageSize() const;
   std::string getText (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn) const;
   sRowColumn getActualCursorRowColumn() const { return sanitizeRowColumn (mState.mCursorPosition); }
 
@@ -368,6 +367,7 @@ private:
   ImU32 getGlyphColor (const sGlyph& glyph) const;
 
   float getTextDistanceToLineStart (const sRowColumn& from) const;
+  int getPageNumLines() const;
   //}}}
   //{{{  sets
   sRowColumn sanitizeRowColumn (const sRowColumn& rowColumn) const;
