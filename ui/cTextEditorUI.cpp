@@ -165,17 +165,11 @@ public:
         }
       mTextEditor.setLanguage (language);
 
-      //{{{  error markers
-      //cTextEditor::ErrorMarkers markers;
+      //{{{  markers
+      //cTextEditor::Markers markers;
       //markers.insert (make_pair<int, string>(6, "Example error here:\nInclude file not found: \"cTextEditor.h\""));
       //markers.insert (make_pair<int, string>(41, "Another example error"));
-      //editor.SetErrorMarkers (markers);
-      //}}}
-      //{{{  "break" markers
-      //cTextEditor::Breaks bpts;
-      //bpts.insert(24);
-      //bpts.insert(47);
-      //editor.SetBreaks (bpts);
+      //editor.SetMarkers (markers);
       //}}}
       }
       //}}}

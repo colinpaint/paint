@@ -34,8 +34,7 @@ public:
     Background,
     Cursor,
     Selection,
-    ErrorMarker,
-    Break,
+    Marker,
     LineNumber,
     CurrentLineFill,
     CurrentLineFillInactive,
@@ -55,15 +54,6 @@ public:
 
     sGlyph (uint8_t aChar, ePaletteIndex aColorIndex)
       : mChar(aChar), mColorIndex(aColorIndex), mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
-    };
-  //}}}
-  //{{{
-  struct sBreak {
-    int mLine;
-    bool mEnabled;
-    std::string mCondition;
-
-    sBreak() : mLine(-1), mEnabled(false) {}
     };
   //}}}
   //{{{
@@ -146,9 +136,8 @@ public:
   using tLine = std::vector<sGlyph>;
   using tLines = std::vector<tLine>;
   using tPalette = std::array<ImU32, (unsigned)ePaletteIndex::Max>;
-  using tBreaks = std::unordered_set<int>;
   using tKeywords = std::unordered_set<std::string>;
-  using tErrorMarkers = std::map<int, std::string>;
+  using tMarkers = std::map<int, std::string>;
   using tIdents = std::unordered_map<std::string, sIdent>;
   //{{{
   struct sLanguage {
@@ -222,8 +211,7 @@ public:
   inline int getTabSize() const { return mTabSize; }
   //}}}
   //{{{  sets
-  void setErrorMarkers (const tErrorMarkers& markers) { mErrorMarkers = markers; }
-  void setBreaks (const tBreaks& markers) { mBreaks = markers; }
+  void setMarkers (const tMarkers& markers) { mMarkers = markers; }
   void setLanguage (const sLanguage& language);
   void setPalette (const tPalette& value);
 
@@ -358,7 +346,7 @@ private:
 
   void advance (sRowColumn& rowColumn) const;
   void deleteRange (const sRowColumn& startCord, const sRowColumn& endCord);
-  int insertTextAt (sRowColumn& aWhere, const char* value);
+  int insertTextAt (sRowColumn& where, const char* value);
 
   void addUndo (sUndoRecord& value);
 
@@ -366,7 +354,7 @@ private:
   void removeLine (int index);
   tLine& insertLine (int index);
 
-  void enterCharacter (ImWchar aChar, bool aShift);
+  void enterCharacter (ImWchar aChar, bool shift);
 
   void backspace();
   void deleteSelection();
@@ -383,8 +371,7 @@ private:
   tPalette mPalette;
   sLanguage mLanguage;
   tRegexList mRegexList;
-  tBreaks mBreaks;
-  tErrorMarkers mErrorMarkers;
+  tMarkers mMarkers;
 
   float mLineSpacing;
 

@@ -45,8 +45,7 @@ namespace {
     0xff101010, // Background
     0xffe0e0e0, // Cursor
     0x80a06020, // Selection
-    0x800020ff, // ErrorMarker
-    0x40f08000, // Break
+    0x800020ff, // Marker
     0xff707000, // Line number
     0x40000000, // Current line fill
     0x40808080, // Current line fill (inactive)
@@ -70,8 +69,7 @@ namespace {
     0xffffffff, // Background
     0xff000000, // Cursor
     0x80600000, // Selection
-    0xa00010ff, // ErrorMarker
-    0x80f08000, // Break
+    0xa00010ff, // Marker
     0xff505000, // Line number
     0x40000000, // Current line fill
     0x40808080, // Current line fill (inactive)
@@ -1299,9 +1297,9 @@ void cTextEditor::moveLeft (int amount, bool select, bool wordMode) {
 //{{{
 void cTextEditor::moveRight(int amount, bool select, bool wordMode) {
 
-  auto oldPos = mState.mCursorPosition;
+  sRowColumn oldPos = mState.mCursorPosition;
 
-  if (mLines.empty() || oldPos.mLine >= mLines.size())
+  if (mLines.empty() || oldPos.mLine >= (int)mLines.size())
     return;
 
   auto cindex = getCharacterIndex (mState.mCursorPosition);
@@ -1309,9 +1307,9 @@ void cTextEditor::moveRight(int amount, bool select, bool wordMode) {
     auto lindex = mState.mCursorPosition.mLine;
     auto& line = mLines[lindex];
 
-    if (cindex >= line.size()) {
-      if (mState.mCursorPosition.mLine < mLines.size() - 1) {
-        mState.mCursorPosition.mLine = max (0, min((int)mLines.size() - 1, mState.mCursorPosition.mLine + 1));
+    if (cindex >= (int)line.size()) {
+      if (mState.mCursorPosition.mLine < (int)mLines.size() - 1) {
+        mState.mCursorPosition.mLine = max (0, min ((int)mLines.size() - 1, mState.mCursorPosition.mLine + 1));
         mState.mCursorPosition.mColumn = 0;
         }
       else
@@ -1319,7 +1317,7 @@ void cTextEditor::moveRight(int amount, bool select, bool wordMode) {
       }
     else {
       cindex += utf8CharLength(line[cindex].mChar);
-      mState.mCursorPosition = sRowColumn (lindex, getCharacterColumn(lindex, cindex));
+      mState.mCursorPosition = sRowColumn (lindex, getCharacterColumn (lindex, cindex));
       if (wordMode)
          mState.mCursorPosition = findNextWord (mState.mCursorPosition);
      }
@@ -1338,7 +1336,8 @@ void cTextEditor::moveRight(int amount, bool select, bool wordMode) {
   else
     mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
 
-  setSelection (mInteractiveStart, mInteractiveEnd, select && wordMode ? eSelectionMode::Word : eSelectionMode::Normal);
+  setSelection (mInteractiveStart, mInteractiveEnd,
+                select && wordMode ? eSelectionMode::Word : eSelectionMode::Normal);
   ensureCursorVisible();
   }
 //}}}
@@ -1683,30 +1682,6 @@ string cTextEditor::getText (const sRowColumn& startCord, const sRowColumn& endC
   return result;
   }
 //}}}
-
-//{{{
-string cTextEditor::getWordUnderCursor() const {
-
-  auto c = getCursorPosition();
-  return getWordAt (c);
-  }
-//}}}
-//{{{
-string cTextEditor::getWordAt (const sRowColumn& rowColumn) const {
-
-  auto start = findWordStart (rowColumn);
-  auto end = findWordEnd (rowColumn);
-
-  auto istart = getCharacterIndex (start);
-  auto iend = getCharacterIndex (end);
-
-  string r;
-  for (auto it = istart; it < iend; ++it)
-    r.push_back (mLines[rowColumn.mLine][it].mChar);
-
-  return r;
-  }
-//}}}
 //{{{
 ImU32 cTextEditor::getGlyphColor (const sGlyph& glyph) const {
 
@@ -1732,8 +1707,62 @@ ImU32 cTextEditor::getGlyphColor (const sGlyph& glyph) const {
   return color;
   }
 //}}}
+
+//{{{
+string cTextEditor::getWordAt (const sRowColumn& rowColumn) const {
+
+  auto start = findWordStart (rowColumn);
+  auto end = findWordEnd (rowColumn);
+
+  auto istart = getCharacterIndex (start);
+  auto iend = getCharacterIndex (end);
+
+  string r;
+  for (auto it = istart; it < iend; ++it)
+    r.push_back (mLines[rowColumn.mLine][it].mChar);
+
+  return r;
+  }
 //}}}
 //{{{
+string cTextEditor::getWordUnderCursor() const {
+
+  auto c = getCursorPosition();
+  return getWordAt (c);
+  }
+//}}}
+
+//{{{
+float cTextEditor::getTextDistanceToLineStart (const sRowColumn& from) const {
+
+  auto& line = mLines[from.mLine];
+  float distance = 0.0f;
+
+  float spaceSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
+
+  int colIndex = getCharacterIndex (from);
+  for (size_t i = 0; (i < line.size()) && ((int)i < colIndex);) {
+    if (line[i].mChar == '\t') {
+      distance = (1.0f + floor((1.0f + distance) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
+      ++i;
+      }
+    else {
+      auto d = utf8CharLength (line[i].mChar);
+      char tempCString[7];
+      int j = 0;
+      for (; j < 6 && d-- > 0 && i < line.size(); j++, i++)
+        tempCString[j] = line[i].mChar;
+
+      tempCString[j] = '\0';
+      distance += ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, tempCString, nullptr, nullptr).x;
+      }
+    }
+
+  return distance;
+  }
+//}}}
+
+// rowColumn
 //{{{
 cTextEditor::sRowColumn cTextEditor::sanitizeRowColumn (const sRowColumn& rowColumn) const {
 
@@ -1769,7 +1798,7 @@ cTextEditor::sRowColumn cTextEditor::screenPosToRowColumn (const ImVec2& positio
   int lineNo = max(0, (int)floor (local.y / mCharAdvance.y));
   int columnCoord = 0;
 
-  if (lineNo >= 0 && lineNo < (int)mLines.size()) {
+  if ((lineNo >= 0) && (lineNo < (int)mLines.size())) {
     auto& line = mLines.at (lineNo);
 
     int columnIndex = 0;
@@ -1811,8 +1840,8 @@ cTextEditor::sRowColumn cTextEditor::screenPosToRowColumn (const ImVec2& positio
   return sanitizeRowColumn (sRowColumn (lineNo, columnCoord));
   }
 //}}}
-//}}}
-//{{{  finds
+
+// finds
 //{{{
 cTextEditor::sRowColumn cTextEditor::findWordStart (const sRowColumn& from) const {
 
@@ -2158,36 +2187,7 @@ void cTextEditor::colorizeInternal() {
   }
 //}}}
 //}}}
-//{{{  utils
-//{{{
-float cTextEditor::getTextDistanceToLineStart (const sRowColumn& from) const {
-
-  auto& line = mLines[from.mLine];
-  float distance = 0.0f;
-
-  float spaceSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
-
-  int colIndex = getCharacterIndex (from);
-  for (size_t i = 0; (i < line.size()) && ((int)i < colIndex);) {
-    if (line[i].mChar == '\t') {
-      distance = (1.0f + floor((1.0f + distance) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
-      ++i;
-      }
-    else {
-      auto d = utf8CharLength (line[i].mChar);
-      char tempCString[7];
-      int j = 0;
-      for (; j < 6 && d-- > 0 && i < line.size(); j++, i++)
-        tempCString[j] = line[i].mChar;
-
-      tempCString[j] = '\0';
-      distance += ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, tempCString, nullptr, nullptr).x;
-      }
-    }
-
-  return distance;
-  }
-//}}}
+//{{{  actions
 //{{{
 void cTextEditor::ensureCursorVisible() {
 
@@ -2215,14 +2215,13 @@ void cTextEditor::ensureCursorVisible() {
     ImGui::SetScrollY (max(0.0f, (pos.mLine - 1) * mCharAdvance.y));
   if (pos.mLine > bottom - 4)
     ImGui::SetScrollY (max(0.0f, (pos.mLine + 4) * mCharAdvance.y - height));
+
   if (len + mTextStart < left + 4)
     ImGui::SetScrollX (max(0.0f, len + mTextStart - 4));
   if (len + mTextStart > right - 4)
     ImGui::SetScrollX (max(0.0f, len + mTextStart + 4 - width));
   }
 //}}}
-//}}}
-//{{{  actions
 //{{{
 void cTextEditor::advance (sRowColumn& rowColumn) const {
 
@@ -2243,6 +2242,156 @@ void cTextEditor::advance (sRowColumn& rowColumn) const {
   }
 //}}}
 
+//{{{
+void cTextEditor::addUndo (sUndoRecord& value) {
+
+  assert(!mReadOnly);
+  //printf("AddUndo: (@%d.%d) +\'%s' [%d.%d .. %d.%d], -\'%s', [%d.%d .. %d.%d] (@%d.%d)\n",
+  //  value.mBefore.mCursorPosition.mLine, value.mBefore.mCursorPosition.mColumn,
+  //  value.mAdded.c_str(), value.mAddedStart.mLine, value.mAddedStart.mColumn, value.mAddedEnd.mLine, value.mAddedEnd.mColumn,
+  //  value.mRemoved.c_str(), value.mRemovedStart.mLine, value.mRemovedStart.mColumn, value.mRemovedEnd.mLine, value.mRemovedEnd.mColumn,
+  //  value.mAfter.mCursorPosition.mLine, value.mAfter.mCursorPosition.mColumn
+  //  );
+
+  mUndoBuffer.resize ((size_t)(mUndoIndex + 1));
+  mUndoBuffer.back() = value;
+  ++mUndoIndex;
+  }
+//}}}
+
+//{{{
+void cTextEditor::removeLine (int startCord, int endCord) {
+
+  assert (!mReadOnly);
+  assert (endCord >= startCord);
+  assert (mLines.size() > (size_t)(endCord - startCord));
+
+  tMarkers etmp;
+  for (auto& i : mMarkers) {
+    tMarkers::value_type e(i.first >= startCord ? i.first - 1 : i.first, i.second);
+    if (e.first >= startCord && e.first <= endCord)
+      continue;
+    etmp.insert(e);
+    }
+  mMarkers = move (etmp);
+
+  mLines.erase (mLines.begin() + startCord, mLines.begin() + endCord);
+  assert (!mLines.empty());
+
+  mTextChanged = true;
+  }
+//}}}
+//{{{
+void cTextEditor::removeLine (int index) {
+
+  assert(!mReadOnly);
+  assert(mLines.size() > 1);
+
+  tMarkers etmp;
+  for (auto& i : mMarkers) {
+    tMarkers::value_type e(i.first > index ? i.first - 1 : i.first, i.second);
+    if (e.first - 1 == index)
+      continue;
+    etmp.insert(e);
+    }
+  mMarkers = move (etmp);
+
+  mLines.erase (mLines.begin() + index);
+  assert (!mLines.empty());
+
+  mTextChanged = true;
+  }
+//}}}
+
+//{{{
+void cTextEditor::backspace() {
+
+  assert(!mReadOnly);
+
+  if (mLines.empty())
+    return;
+
+  sUndoRecord u;
+  u.mBefore = mState;
+
+  if (hasSelection()) {
+    u.mRemoved = getSelectedText();
+    u.mRemovedStart = mState.mSelectionStart;
+    u.mRemovedEnd = mState.mSelectionEnd;
+    deleteSelection();
+    }
+
+  else {
+    auto pos = getActualCursorRowColumn();
+    setCursorPosition (pos);
+
+    if (mState.mCursorPosition.mColumn == 0) {
+      if (mState.mCursorPosition.mLine == 0)
+        return;
+
+      u.mRemoved = '\n';
+      u.mRemovedStart = u.mRemovedEnd = sRowColumn (pos.mLine - 1, getLineMaxColumn (pos.mLine - 1));
+      advance (u.mRemovedEnd);
+
+      auto& line = mLines[mState.mCursorPosition.mLine];
+      auto& prevLine = mLines[mState.mCursorPosition.mLine - 1];
+      auto prevSize = getLineMaxColumn (mState.mCursorPosition.mLine - 1);
+      prevLine.insert (prevLine.end(), line.begin(), line.end());
+
+      tMarkers etmp;
+      for (auto& i : mMarkers)
+        etmp.insert (tMarkers::value_type (i.first - 1 == mState.mCursorPosition.mLine ? i.first - 1 : i.first, i.second));
+      mMarkers = move (etmp);
+
+      removeLine (mState.mCursorPosition.mLine);
+      --mState.mCursorPosition.mLine;
+      mState.mCursorPosition.mColumn = prevSize;
+      }
+    else {
+      auto& line = mLines[mState.mCursorPosition.mLine];
+      auto cindex = getCharacterIndex (pos) - 1;
+      auto cend = cindex + 1;
+      while (cindex > 0 && IsUTFSequence (line[cindex].mChar))
+        --cindex;
+
+      //if (cindex > 0 && UTF8CharLength(line[cindex].mChar) > 1)
+      //  --cindex;
+
+      u.mRemovedStart = u.mRemovedEnd = getActualCursorRowColumn();
+      --u.mRemovedStart.mColumn;
+      --mState.mCursorPosition.mColumn;
+
+      while (cindex < (int)line.size() && cend-- > cindex) {
+        u.mRemoved += line[cindex].mChar;
+        line.erase(line.begin() + cindex);
+        }
+      }
+
+    mTextChanged = true;
+
+    ensureCursorVisible();
+    colorize (mState.mCursorPosition.mLine, 1);
+    }
+
+  u.mAfter = mState;
+  addUndo (u);
+  }
+//}}}
+//{{{
+void cTextEditor::deleteSelection() {
+
+  assert(mState.mSelectionEnd >= mState.mSelectionStart);
+
+  if (mState.mSelectionEnd == mState.mSelectionStart)
+    return;
+
+  deleteRange (mState.mSelectionStart, mState.mSelectionEnd);
+
+  setSelection (mState.mSelectionStart, mState.mSelectionStart);
+  setCursorPosition (mState.mSelectionStart);
+  colorize (mState.mSelectionStart.mLine, 1);
+  }
+//}}}
 //{{{
 void cTextEditor::deleteRange (const sRowColumn& startCord, const sRowColumn& endCord) {
 
@@ -2282,154 +2431,12 @@ void cTextEditor::deleteRange (const sRowColumn& startCord, const sRowColumn& en
   mTextChanged = true;
   }
 //}}}
+
 //{{{
-int cTextEditor::insertTextAt (sRowColumn& /* inout */ aWhere, const char* value) {
+void cTextEditor::enterCharacter (ImWchar aChar, bool shift) {
 
   assert (!mReadOnly);
 
-  int cindex = getCharacterIndex (aWhere);
-  int totalLines = 0;
-
-  while (*value != '\0') {
-    assert(!mLines.empty());
-
-    if (*value == '\r') {
-      // skip
-      ++value;
-      }
-    else if (*value == '\n') {
-      if (cindex < (int)mLines[aWhere.mLine].size()) {
-        auto& newLine = insertLine (aWhere.mLine + 1);
-        auto& line = mLines[aWhere.mLine];
-        newLine.insert (newLine.begin(), line.begin() + cindex, line.end());
-        line.erase (line.begin() + cindex, line.end());
-        }
-      else
-        insertLine (aWhere.mLine + 1);
-
-      ++aWhere.mLine;
-      aWhere.mColumn = 0;
-      cindex = 0;
-      ++totalLines;
-      ++value;
-      }
-
-    else {
-      auto& line = mLines[aWhere.mLine];
-      auto d = utf8CharLength (*value);
-      while (d-- > 0 && *value != '\0')
-        line.insert (line.begin() + cindex++, sGlyph (*value++, ePaletteIndex::Default));
-      ++aWhere.mColumn;
-      }
-
-    mTextChanged = true;
-    }
-
-  return totalLines;
-  }
-//}}}
-//{{{
-void cTextEditor::addUndo (sUndoRecord& value) {
-
-  assert(!mReadOnly);
-  //printf("AddUndo: (@%d.%d) +\'%s' [%d.%d .. %d.%d], -\'%s', [%d.%d .. %d.%d] (@%d.%d)\n",
-  //  value.mBefore.mCursorPosition.mLine, value.mBefore.mCursorPosition.mColumn,
-  //  value.mAdded.c_str(), value.mAddedStart.mLine, value.mAddedStart.mColumn, value.mAddedEnd.mLine, value.mAddedEnd.mColumn,
-  //  value.mRemoved.c_str(), value.mRemovedStart.mLine, value.mRemovedStart.mColumn, value.mRemovedEnd.mLine, value.mRemovedEnd.mColumn,
-  //  value.mAfter.mCursorPosition.mLine, value.mAfter.mCursorPosition.mColumn
-  //  );
-
-  mUndoBuffer.resize ((size_t)(mUndoIndex + 1));
-  mUndoBuffer.back() = value;
-  ++mUndoIndex;
-  }
-//}}}
-
-//{{{
-void cTextEditor::removeLine (int startCord, int endCord) {
-
-  assert (!mReadOnly);
-  assert (endCord >= startCord);
-  assert (mLines.size() > (size_t)(endCord - startCord));
-
-  tErrorMarkers etmp;
-  for (auto& i : mErrorMarkers) {
-    tErrorMarkers::value_type e(i.first >= startCord ? i.first - 1 : i.first, i.second);
-    if (e.first >= startCord && e.first <= endCord)
-      continue;
-    etmp.insert(e);
-    }
-  mErrorMarkers = move (etmp);
-
-  tBreaks btmp;
-  for (auto i : mBreaks) {
-    if (i >= startCord && i <= endCord)
-      continue;
-    btmp.insert (i >= startCord ? i - 1 : i);
-    }
-  mBreaks = move(btmp);
-
-  mLines.erase (mLines.begin() + startCord, mLines.begin() + endCord);
-  assert (!mLines.empty());
-
-  mTextChanged = true;
-  }
-//}}}
-//{{{
-void cTextEditor::removeLine (int index) {
-
-  assert(!mReadOnly);
-  assert(mLines.size() > 1);
-
-  tErrorMarkers etmp;
-  for (auto& i : mErrorMarkers) {
-    tErrorMarkers::value_type e(i.first > index ? i.first - 1 : i.first, i.second);
-    if (e.first - 1 == index)
-      continue;
-    etmp.insert(e);
-    }
-  mErrorMarkers = move (etmp);
-
-  tBreaks btmp;
-  for (auto i : mBreaks) {
-    if (i == index)
-      continue;
-    btmp.insert(i >= index ? i - 1 : i);
-    }
-  mBreaks = move (btmp);
-
-  mLines.erase (mLines.begin() + index);
-  assert (!mLines.empty());
-
-  mTextChanged = true;
-  }
-//}}}
-
-//{{{
-cTextEditor::tLine& cTextEditor::insertLine (int index) {
-
-  assert (!mReadOnly);
-
-  auto& result = *mLines.insert (mLines.begin() + index, tLine());
-
-  tErrorMarkers etmp;
-  for (auto& i : mErrorMarkers)
-    etmp.insert (tErrorMarkers::value_type (i.first >= index ? i.first + 1 : i.first, i.second));
-  mErrorMarkers = move (etmp);
-
-  tBreaks btmp;
-  for (auto i : mBreaks)
-    btmp.insert(i >= index ? i + 1 : i);
-  mBreaks = move (btmp);
-
-  return result;
-  }
-//}}}
-
-//{{{
-void cTextEditor::enterCharacter (ImWchar aChar, bool aShift) {
-
-  assert(!mReadOnly);
   sUndoRecord u;
   u.mBefore = mState;
 
@@ -2450,7 +2457,6 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool aShift) {
 
       //if (end.mColumn >= getLineMaxColumn(end.mLine))
       //  end.mColumn = getLineMaxColumn(end.mLine) - 1;
-
       u.mRemovedStart = start;
       u.mRemovedEnd = end;
       u.mRemoved = getText (start, end);
@@ -2459,7 +2465,7 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool aShift) {
 
       for (int i = start.mLine; i <= end.mLine; i++) {
         auto& line = mLines[i];
-        if (aShift) {
+        if (shift) {
           if (!line.empty()) {
             if (line.front().mChar == '\t') {
               line.erase(line.begin());
@@ -2575,94 +2581,65 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool aShift) {
   ensureCursorVisible();
   }
 //}}}
-
 //{{{
-void cTextEditor::backspace() {
+int cTextEditor::insertTextAt (sRowColumn& /* inout */ where, const char* value) {
 
-  assert(!mReadOnly);
+  assert (!mReadOnly);
 
-  if (mLines.empty())
-    return;
+  int cindex = getCharacterIndex (where);
+  int totalLines = 0;
 
-  sUndoRecord u;
-  u.mBefore = mState;
+  while (*value != '\0') {
+    assert(!mLines.empty());
 
-  if (hasSelection()) {
-    u.mRemoved = getSelectedText();
-    u.mRemovedStart = mState.mSelectionStart;
-    u.mRemovedEnd = mState.mSelectionEnd;
-    deleteSelection();
-    }
-
-  else {
-    auto pos = getActualCursorRowColumn();
-    setCursorPosition (pos);
-
-    if (mState.mCursorPosition.mColumn == 0) {
-      if (mState.mCursorPosition.mLine == 0)
-        return;
-
-      u.mRemoved = '\n';
-      u.mRemovedStart = u.mRemovedEnd = sRowColumn (pos.mLine - 1, getLineMaxColumn (pos.mLine - 1));
-      advance (u.mRemovedEnd);
-
-      auto& line = mLines[mState.mCursorPosition.mLine];
-      auto& prevLine = mLines[mState.mCursorPosition.mLine - 1];
-      auto prevSize = getLineMaxColumn (mState.mCursorPosition.mLine - 1);
-      prevLine.insert (prevLine.end(), line.begin(), line.end());
-
-      tErrorMarkers etmp;
-      for (auto& i : mErrorMarkers)
-        etmp.insert (tErrorMarkers::value_type (i.first - 1 == mState.mCursorPosition.mLine ? i.first - 1 : i.first, i.second));
-      mErrorMarkers = move (etmp);
-
-      removeLine (mState.mCursorPosition.mLine);
-      --mState.mCursorPosition.mLine;
-      mState.mCursorPosition.mColumn = prevSize;
+    if (*value == '\r') {
+      // skip
+      ++value;
       }
-    else {
-      auto& line = mLines[mState.mCursorPosition.mLine];
-      auto cindex = getCharacterIndex (pos) - 1;
-      auto cend = cindex + 1;
-      while (cindex > 0 && IsUTFSequence (line[cindex].mChar))
-        --cindex;
-
-      //if (cindex > 0 && UTF8CharLength(line[cindex].mChar) > 1)
-      //  --cindex;
-
-      u.mRemovedStart = u.mRemovedEnd = getActualCursorRowColumn();
-      --u.mRemovedStart.mColumn;
-      --mState.mCursorPosition.mColumn;
-
-      while (cindex < (int)line.size() && cend-- > cindex) {
-        u.mRemoved += line[cindex].mChar;
-        line.erase(line.begin() + cindex);
+    else if (*value == '\n') {
+      if (cindex < (int)mLines[where.mLine].size()) {
+        auto& newLine = insertLine (where.mLine + 1);
+        auto& line = mLines[where.mLine];
+        newLine.insert (newLine.begin(), line.begin() + cindex, line.end());
+        line.erase (line.begin() + cindex, line.end());
         }
+      else
+        insertLine (where.mLine + 1);
+
+      ++where.mLine;
+      where.mColumn = 0;
+      cindex = 0;
+      ++totalLines;
+      ++value;
+      }
+
+    else {
+      auto& line = mLines[where.mLine];
+      auto d = utf8CharLength (*value);
+      while (d-- > 0 && *value != '\0')
+        line.insert (line.begin() + cindex++, sGlyph (*value++, ePaletteIndex::Default));
+      ++where.mColumn;
       }
 
     mTextChanged = true;
-
-    ensureCursorVisible();
-    colorize (mState.mCursorPosition.mLine, 1);
     }
 
-  u.mAfter = mState;
-  addUndo (u);
+  return totalLines;
   }
 //}}}
 //{{{
-void cTextEditor::deleteSelection() {
+cTextEditor::tLine& cTextEditor::insertLine (int index) {
 
-  assert(mState.mSelectionEnd >= mState.mSelectionStart);
+  assert (!mReadOnly);
 
-  if (mState.mSelectionEnd == mState.mSelectionStart)
-    return;
+  auto& result = *mLines.insert (mLines.begin() + index, tLine());
 
-  deleteRange (mState.mSelectionStart, mState.mSelectionEnd);
+  tMarkers etmp;
+  for (auto& i : mMarkers)
+    etmp.insert (tMarkers::value_type (i.first >= index ? i.first + 1 : i.first, i.second));
+  mMarkers = move (etmp);
 
-  setSelection (mState.mSelectionStart, mState.mSelectionStart);
-  setCursorPosition (mState.mSelectionStart);
-  colorize (mState.mSelectionStart.mLine, 1);
+  return result;
   }
 //}}}
 //}}}
@@ -2882,19 +2859,12 @@ void cTextEditor::render() {
         drawList->AddRectFilled (vstart, vend, mPalette[(int)ePaletteIndex::Selection]);
         }
       //}}}
-      //{{{  draw breaks
-      auto start = ImVec2 (lineStartScreenPos.x + scrollX, lineStartScreenPos.y);
-
-      if (mBreaks.count (lineNo + 1) != 0) {
-        auto end = ImVec2 (lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-        drawList->AddRectFilled (start, end, mPalette[(int)ePaletteIndex::Break]);
-        }
-      //}}}
       //{{{  draw error markers
-      auto errorIt = mErrorMarkers.find (lineNo + 1);
-      if (errorIt != mErrorMarkers.end()) {
+      auto start = ImVec2 (lineStartScreenPos.x + scrollX, lineStartScreenPos.y);
+      auto errorIt = mMarkers.find (lineNo + 1);
+      if (errorIt != mMarkers.end()) {
         auto end = ImVec2 (lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-        drawList->AddRectFilled (start, end, mPalette[(int)ePaletteIndex::ErrorMarker]);
+        drawList->AddRectFilled (start, end, mPalette[(int)ePaletteIndex::Marker]);
 
         if (ImGui::IsMouseHoveringRect (lineStartScreenPos, end)) {
           ImGui::BeginTooltip();
