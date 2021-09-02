@@ -17,9 +17,9 @@
 
 class cTextEditor {
 public:
-  enum class eSelectionMode { Normal, Word, Line };
+  enum class eSelection { Normal, Word, Line };
   //{{{
-  enum class ePaletteIndex {
+  enum class ePalette {
     Default,
     Keyword,
     Number,
@@ -46,12 +46,12 @@ public:
   //{{{
   struct sGlyph {
     uint8_t mChar;
-    ePaletteIndex mColorIndex = ePaletteIndex::Default;
+    ePalette mColorIndex = ePalette::Default;
     bool mComment : 1;
     bool mMultiLineComment : 1;
     bool mPreprocessor : 1;
 
-    sGlyph (uint8_t ch, ePaletteIndex colorIndex)
+    sGlyph (uint8_t ch, ePalette colorIndex)
       : mChar(ch), mColorIndex(colorIndex), mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
     };
   //}}}
@@ -194,10 +194,10 @@ public:
   //{{{
   struct sLanguage {
     // typedef
-    typedef std::pair<std::string, ePaletteIndex> tTokenRegexString;
+    typedef std::pair<std::string, ePalette> tTokenRegexString;
     typedef std::vector<tTokenRegexString> tTokenRegexStrings;
     typedef bool (*tTokenizeCallback)(const char* inBegin, const char* inEnd,
-                                      const char*& outBegin, const char*& outEnd, ePaletteIndex& paletteIndex);
+                                      const char*& outBegin, const char*& outEnd, ePalette& palette);
 
     // vars
     std::string mName;
@@ -249,7 +249,7 @@ public:
   inline bool isShowingWhitespaces() const { return mShowWhitespaces; }
 
   const sLanguage& getLanguage() const { return mLanguage; }
-  const std::array<ImU32, (uint32_t)ePaletteIndex::Max>& getPalette() const { return mPaletteBase; }
+  const std::array<ImU32, (uint32_t)ePalette::Max>& getPalette() const { return mPaletteBase; }
 
   std::string getText() const;
   std::vector<std::string> getTextLines() const;
@@ -265,7 +265,7 @@ public:
   //{{{  sets
   void setMarkers (const std::map<int,std::string>& markers) { mMarkers = markers; }
   void setLanguage (const sLanguage& language);
-  void setPalette (const std::array<ImU32,(uint32_t)ePaletteIndex::Max>& value);
+  void setPalette (const std::array<ImU32,(uint32_t)ePalette::Max>& value);
 
   void setText (const std::string& text);
   void setTextLines (const std::vector<std::string>& lines);
@@ -277,7 +277,7 @@ public:
   void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
   void setSelectionStart (const sRowColumn& position);
   void setSelectionEnd (const sRowColumn& position);
-  void setSelection (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn, eSelectionMode mode = eSelectionMode::Normal);
+  void setSelection (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn, eSelection mode = eSelection::Normal);
 
   inline void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
   inline void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
@@ -313,12 +313,12 @@ public:
   void render (const char* title, const ImVec2& size = ImVec2(), bool border = false);
   //}}}
   //{{{  static gets
-  static const std::array<ImU32, (uint32_t)ePaletteIndex::Max>& getDarkPalette();
-  static const std::array<ImU32, (uint32_t)ePaletteIndex::Max>& getLightPalette();
+  static const std::array<ImU32, (uint32_t)ePalette::Max>& getDarkPalette();
+  static const std::array<ImU32, (uint32_t)ePalette::Max>& getLightPalette();
   //}}}
 
 private:
-  typedef std::vector<std::pair<std::regex,ePaletteIndex>> tRegexList;
+  typedef std::vector<std::pair<std::regex,ePalette>> tRegexList;
   //{{{
   struct sEditorState {
     sRowColumn mSelectionStart;
@@ -419,8 +419,9 @@ private:
   //{{{  vars
   std::vector<sLine> mLines;
 
-  std::array<ImU32,(uint32_t)ePaletteIndex::Max> mPaletteBase;
-  std::array<ImU32,(uint32_t)ePaletteIndex::Max> mPalette;
+  std::array<ImU32,(uint32_t)ePalette::Max> mPaletteBase;
+  std::array<ImU32,(uint32_t)ePalette::Max> mPalette;
+
   sLanguage mLanguage;
   tRegexList mRegexList;
   std::map<int, std::string> mMarkers;
@@ -449,7 +450,7 @@ private:
 
   int mColorRangeMin;
   int mColorRangeMax;
-  eSelectionMode mSelectionMode;
+  eSelection mSelection;
 
   bool mHandleKeyboardInputs;
   bool mHandleMouseInputs;

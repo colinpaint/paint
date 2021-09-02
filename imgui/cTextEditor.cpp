@@ -28,8 +28,9 @@ bool equals (InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, B
 //}}}
 
 namespace {
+  //{{{  const
   //{{{
-  const array <ImU32, (uint32_t)cTextEditor::ePaletteIndex::Max> kDarkPalette = {
+  const array <ImU32, (uint32_t)cTextEditor::ePalette::Max> kDarkPalette = {
     0xff7f7f7f, // Default
     0xffd69c56, // Keyword
     0xff00ff00, // Number
@@ -53,7 +54,7 @@ namespace {
     };
   //}}}
   //{{{
-  const array <ImU32, (uint32_t)cTextEditor::ePaletteIndex::Max> kLightPalette = {
+  const array <ImU32, (uint32_t)cTextEditor::ePalette::Max> kLightPalette = {
     0xff7f7f7f, // None
     0xffff0c06, // Keyword
     0xff008000, // Number
@@ -120,7 +121,20 @@ namespace {
     "vector",
     };
   //}}}
-
+  //{{{
+  const vector<string> kCKeywords = {
+    "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short",
+    "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary",
+    "_Noreturn", "_Static_assert", "_Thread_local"
+  };
+  //}}}
+  //{{{
+  const vector<string> kCIdents = {
+    "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
+    "ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper"
+  };
+  //}}}
+  //}}}
   //{{{
   bool IsUTFSequence (char ch) {
     return (ch & 0xC0) == 0x80;
@@ -429,8 +443,8 @@ void cTextEditor::sUndoRecord::redo (cTextEditor* editor) {
 //{{{
 const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
 
-  static bool inited = false;
   static sLanguage language;
+  static bool inited = false;
 
   if (!inited) {
     for (auto& cppKeyword:  kCppKeywords)
@@ -442,9 +456,9 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
       language.mIdents.insert (make_pair (cppIdent, id));
       }
 
-    language.mTokenize = [](const char * inBegin, const char * inEnd,
-                           const char *& outBegin, const char *& outEnd, ePaletteIndex & paletteIndex) -> bool {
-      paletteIndex = ePaletteIndex::Max;
+    language.mTokenize = [](const char* inBegin, const char* inEnd,
+                           const char*& outBegin, const char*& outEnd, ePalette& palette) -> bool {
+      palette = ePalette::Max;
 
       while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
         inBegin++;
@@ -452,20 +466,20 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
       if (inBegin == inEnd) {
         outBegin = inEnd;
         outEnd = inEnd;
-        paletteIndex = ePaletteIndex::Default;
+        palette = ePalette::Default;
         }
       else if (findString (inBegin, inEnd, outBegin, outEnd))
-        paletteIndex = ePaletteIndex::String;
+        palette = ePalette::String;
       else if (findCharacterLiteral (inBegin, inEnd, outBegin, outEnd))
-        paletteIndex = ePaletteIndex::CharLiteral;
+        palette = ePalette::CharLiteral;
       else if (findIdent (inBegin, inEnd, outBegin, outEnd))
-        paletteIndex = ePaletteIndex::Ident;
+        palette = ePalette::Ident;
       else if (findNumber (inBegin, inEnd, outBegin, outEnd))
-        paletteIndex = ePaletteIndex::Number;
+        palette = ePalette::Number;
       else if (findPunctuation (inBegin, inEnd, outBegin, outEnd))
-        paletteIndex = ePaletteIndex::Punctuation;
+        palette = ePalette::Punctuation;
 
-      return paletteIndex != ePaletteIndex::Max;
+      return palette != ePalette::Max;
       };
 
     language.mCommentStart = "/*";
@@ -484,35 +498,22 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
 //{{{
 const cTextEditor::sLanguage& cTextEditor::sLanguage::C() {
 
-  static bool inited = false;
   static sLanguage language;
+  static bool inited = false;
 
   if (!inited) {
-    //{{{
-    static const char* const keywords[] = {
-      "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short",
-      "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary",
-      "_Noreturn", "_Static_assert", "_Thread_local"
-    };
-    //}}}
-    for (auto& k : keywords)
-      language.mKeywords.insert(k);
+    for (auto& keywordString : kCKeywords)
+      language.mKeywords.insert (keywordString);
 
-    //{{{
-    static const char* const idents[] = {
-      "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
-      "ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper"
-    };
-    //}}}
-    for (auto& k : idents) {
+    for (auto& identString : kCIdents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (string(k), id));
+      language.mIdents.insert (make_pair (identString, id));
       }
 
     language.mTokenize = [](const char * inBegin, const char * inEnd,
-                           const char *& outBegin, const char *& outEnd, ePaletteIndex & paletteIndex) -> bool {
-      paletteIndex = ePaletteIndex::Max;
+                           const char *& outBegin, const char *& outEnd, ePalette & palette) -> bool {
+      palette = ePalette::Max;
 
       while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
         inBegin++;
@@ -520,20 +521,20 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::C() {
       if (inBegin == inEnd) {
         outBegin = inEnd;
         outEnd = inEnd;
-        paletteIndex = ePaletteIndex::Default;
+        palette = ePalette::Default;
         }
       else if (findString (inBegin, inEnd, outBegin, outEnd))
-        paletteIndex = ePaletteIndex::String;
+        palette = ePalette::String;
       else if (findCharacterLiteral (inBegin, inEnd, outBegin, outEnd))
-        paletteIndex = ePaletteIndex::CharLiteral;
+        palette = ePalette::CharLiteral;
       else if (findIdent (inBegin, inEnd, outBegin, outEnd))
-        paletteIndex = ePaletteIndex::Ident;
+        palette = ePalette::Ident;
       else if (findNumber (inBegin, inEnd, outBegin, outEnd))
-        paletteIndex = ePaletteIndex::Number;
+        palette = ePalette::Number;
       else if (findPunctuation (inBegin, inEnd, outBegin, outEnd))
-        paletteIndex = ePaletteIndex::Punctuation;
+        palette = ePalette::Punctuation;
 
-      return paletteIndex != ePaletteIndex::Max;
+      return palette != ePalette::Max;
       };
 
     language.mCommentStart = "/*";
@@ -602,23 +603,23 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::HLSL() {
       }
 
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", ePaletteIndex::Preprocessor));
+      make_pair<string, ePalette>("[ \\t]*#[ \\t]*[a-zA-Z_]+", ePalette::Preprocessor));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
+      make_pair<string, ePalette>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePalette::String));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'", ePaletteIndex::CharLiteral));
+      make_pair<string, ePalette>("\\'\\\\?[^\\']\\'", ePalette::CharLiteral));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("0[0-7]+[Uu]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Ident));
+      make_pair<string, ePalette>("[a-zA-Z_][a-zA-Z0-9_]*", ePalette::Ident));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
+      make_pair<string, ePalette>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePalette::Punctuation));
 
     language.mCommentStart = "/*";
     language.mCommentEnd = "*/";
@@ -663,23 +664,23 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::GLSL() {
       }
 
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", ePaletteIndex::Preprocessor));
+      make_pair<string, ePalette>("[ \\t]*#[ \\t]*[a-zA-Z_]+", ePalette::Preprocessor));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
+      make_pair<string, ePalette>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePalette::String));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'",ePaletteIndex::CharLiteral));
+      make_pair<string, ePalette>("\\'\\\\?[^\\']\\'",ePalette::CharLiteral));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("0[0-7]+[Uu]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Ident));
+      make_pair<string, ePalette>("[a-zA-Z_][a-zA-Z0-9_]*", ePalette::Ident));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
+      make_pair<string, ePalette>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePalette::Punctuation));
 
     language.mCommentStart = "/*";
     language.mCommentEnd = "*/";
@@ -726,21 +727,21 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::AngelScript() {
       }
 
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
+      make_pair<string, ePalette>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePalette::String));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("\\'\\\\?[^\\']\\'", ePaletteIndex::String));
+      make_pair<string, ePalette>("\\'\\\\?[^\\']\\'", ePalette::String));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("0[0-7]+[Uu]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Ident));
+      make_pair<string, ePalette>("[a-zA-Z_][a-zA-Z0-9_]*", ePalette::Ident));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
+      make_pair<string, ePalette>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePalette::Punctuation));
 
     language.mCommentStart = "/*";
     language.mCommentEnd = "*/";
@@ -793,19 +794,19 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::Lua() {
       }
 
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex> ("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
+      make_pair<string, ePalette> ("L?\\\"(\\\\.|[^\\\"])*\\\"", ePalette::String));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex> ("\\\'[^\\\']*\\\'", ePaletteIndex::String));
+      make_pair<string, ePalette> ("\\\'[^\\\']*\\\'", ePalette::String));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
+      make_pair<string, ePalette> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex> ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette> ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex> ("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Ident));
+      make_pair<string, ePalette> ("[a-zA-Z_][a-zA-Z0-9_]*", ePalette::Ident));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
+      make_pair<string, ePalette> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePalette::Punctuation));
 
     language.mCommentStart = "--[[";
     language.mCommentEnd = "]]";
@@ -866,21 +867,21 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::SQL() {
       }
 
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePaletteIndex::String));
+      make_pair<string, ePalette>("L?\\\"(\\\\.|[^\\\"])*\\\"", ePalette::String));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("\\\'[^\\\']*\\\'", ePaletteIndex::String));
+      make_pair<string, ePalette>("\\\'[^\\\']*\\\'", ePalette::String));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("0[0-7]+[Uu]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePaletteIndex::Number));
+      make_pair<string, ePalette>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", ePalette::Number));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", ePaletteIndex::Ident));
+      make_pair<string, ePalette>("[a-zA-Z_][a-zA-Z0-9_]*", ePalette::Ident));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, ePaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePaletteIndex::Punctuation));
+      make_pair<string, ePalette>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", ePalette::Punctuation));
 
     language.mCommentStart = "/*";
     language.mCommentEnd = "*/";
@@ -904,7 +905,7 @@ cTextEditor::cTextEditor()
     mTextChanged(false), mColorizerEnabled(true),
     mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false),
     mColorRangeMin(0), mColorRangeMax(0),
-    mSelectionMode(eSelectionMode::Normal) ,
+    mSelection(eSelection::Normal) ,
     mHandleKeyboardInputs(true), mHandleMouseInputs(true),
     mIgnoreImGuiChild(false), mShowWhitespaces(true), mCheckComments(true),
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
@@ -1070,7 +1071,7 @@ void cTextEditor::setText (const string& text) {
     else if (chr == '\n')
       mLines.emplace_back (vector<sGlyph>());
     else
-      mLines.back().mGlyphs.emplace_back (sGlyph (chr, ePaletteIndex::Default));
+      mLines.back().mGlyphs.emplace_back (sGlyph (chr, ePalette::Default));
 
   mTextChanged = true;
   mScrollToTop = true;
@@ -1096,7 +1097,7 @@ void cTextEditor::setTextLines (const vector<string>& lines) {
       const string& line = lines[i];
       mLines[i].mGlyphs.reserve (line.size());
       for (size_t j = 0; j < line.size(); ++j)
-        mLines[i].mGlyphs.emplace_back (sGlyph (line[j], ePaletteIndex::Default));
+        mLines[i].mGlyphs.emplace_back (sGlyph (line[j], ePalette::Default));
       }
     }
 
@@ -1111,7 +1112,7 @@ void cTextEditor::setTextLines (const vector<string>& lines) {
 //}}}
 
 //{{{
-void cTextEditor::setPalette (const array<ImU32,(uint32_t)ePaletteIndex::Max>& value) {
+void cTextEditor::setPalette (const array<ImU32,(uint32_t)ePalette::Max>& value) {
   mPaletteBase = value;
   }
 //}}}
@@ -1156,7 +1157,7 @@ void cTextEditor::setSelectionEnd (const sRowColumn& position) {
   }
 //}}}
 //{{{
-void cTextEditor::setSelection (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn, eSelectionMode mode) {
+void cTextEditor::setSelection (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn, eSelection mode) {
 
   sRowColumn oldSelStart = mState.mSelectionStart;
   sRowColumn oldSelEnd = mState.mSelectionEnd;
@@ -1167,17 +1168,17 @@ void cTextEditor::setSelection (const sRowColumn& startRowColumn, const sRowColu
     swap (mState.mSelectionStart, mState.mSelectionEnd);
 
   switch (mode) {
-    case cTextEditor::eSelectionMode::Normal:
+    case cTextEditor::eSelection::Normal:
       break;
 
-    case cTextEditor::eSelectionMode::Word: {
+    case cTextEditor::eSelection::Word: {
       mState.mSelectionStart = findWordStart (mState.mSelectionStart);
       if (!isOnWordBoundary (mState.mSelectionEnd))
         mState.mSelectionEnd = findWordEnd (findWordStart (mState.mSelectionEnd));
       break;
       }
 
-    case cTextEditor::eSelectionMode::Line: {
+    case cTextEditor::eSelection::Line: {
       const int lineNo = mState.mSelectionEnd.mRow;
       //const auto lineSize = (size_t)lineNo < mLines.size() ? mLines[lineNo].size() : 0;
       mState.mSelectionStart = sRowColumn (mState.mSelectionStart.mRow, 0);
@@ -1300,7 +1301,7 @@ void cTextEditor::moveLeft (int amount, bool select, bool wordMode) {
   else
     mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
 
-  setSelection (mInteractiveStart, mInteractiveEnd, select && wordMode ? eSelectionMode::Word : eSelectionMode::Normal);
+  setSelection (mInteractiveStart, mInteractiveEnd, select && wordMode ? eSelection::Word : eSelection::Normal);
   ensureCursorVisible();
   }
 //}}}
@@ -1347,7 +1348,7 @@ void cTextEditor::moveRight(int amount, bool select, bool wordMode) {
     mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
 
   setSelection (mInteractiveStart, mInteractiveEnd,
-                select && wordMode ? eSelectionMode::Word : eSelectionMode::Normal);
+                select && wordMode ? eSelection::Word : eSelection::Normal);
 
   ensureCursorVisible();
   }
@@ -1612,7 +1613,7 @@ void cTextEditor::render (const char* title, const ImVec2& size, bool border) {
   mTextChanged = false;
   mCursorPositionChanged = false;
 
-  ImGui::PushStyleColor (ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4 (mPalette[(int)ePaletteIndex::Background]));
+  ImGui::PushStyleColor (ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4 (mPalette[(int)ePalette::Background]));
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
   if (!mIgnoreImGuiChild)
@@ -1645,8 +1646,8 @@ void cTextEditor::render (const char* title, const ImVec2& size, bool border) {
 //}}}
 
 // public static
-const array<ImU32,(uint32_t)cTextEditor::ePaletteIndex::Max>& cTextEditor::getDarkPalette() { return kDarkPalette; }
-const array<ImU32,(uint32_t)cTextEditor::ePaletteIndex::Max>& cTextEditor::getLightPalette() { return kLightPalette; }
+const array<ImU32,(uint32_t)cTextEditor::ePalette::Max>& cTextEditor::getDarkPalette() { return kDarkPalette; }
+const array<ImU32,(uint32_t)cTextEditor::ePalette::Max>& cTextEditor::getLightPalette() { return kLightPalette; }
 
 // private:
 //{{{  gets
@@ -1697,17 +1698,17 @@ string cTextEditor::getText (const sRowColumn& startRowColumn, const sRowColumn&
 ImU32 cTextEditor::getGlyphColor (const sGlyph& glyph) const {
 
   if (!mColorizerEnabled)
-    return mPalette[(int)ePaletteIndex::Default];
+    return mPalette[(int)ePalette::Default];
 
   if (glyph.mComment)
-    return mPalette[(int)ePaletteIndex::Comment];
+    return mPalette[(int)ePalette::Comment];
 
   if (glyph.mMultiLineComment)
-    return mPalette[(int)ePaletteIndex::MultiLineComment];
+    return mPalette[(int)ePalette::MultiLineComment];
 
   auto const color = mPalette[(int)glyph.mColorIndex];
   if (glyph.mPreprocessor) {
-    const auto ppcolor = mPalette[(int)ePaletteIndex::Preprocessor];
+    const auto ppcolor = mPalette[(int)ePalette::Preprocessor];
     const int c0 = ((ppcolor & 0xff) + (color & 0xff)) / 2;
     const int c1 = (((ppcolor >> 8) & 0xff) + ((color >> 8) & 0xff)) / 2;
     const int c2 = (((ppcolor >> 16) & 0xff) + ((color >> 16) & 0xff)) / 2;
@@ -1869,7 +1870,7 @@ cTextEditor::sRowColumn cTextEditor::findWordStart (const sRowColumn& from) cons
   while (cindex > 0 && isspace (glyphs[cindex].mChar))
     --cindex;
 
-  ePaletteIndex cstart = (ePaletteIndex)glyphs[cindex].mColorIndex;
+  ePalette cstart = (ePalette)glyphs[cindex].mColorIndex;
   while (cindex > 0) {
     uint8_t c = glyphs[cindex].mChar;
     if ((c & 0xC0) != 0x80) { // not UTF code sequence 10xxxxxx
@@ -1877,7 +1878,7 @@ cTextEditor::sRowColumn cTextEditor::findWordStart (const sRowColumn& from) cons
         cindex++;
         break;
         }
-      if (cstart != (ePaletteIndex)glyphs[size_t(cindex - 1)].mColorIndex)
+      if (cstart != (ePalette)glyphs[size_t(cindex - 1)].mColorIndex)
         break;
       }
     --cindex;
@@ -1900,11 +1901,11 @@ cTextEditor::sRowColumn cTextEditor::findWordEnd (const sRowColumn& from) const 
     return at;
 
   bool prevspace = (bool)isspace (glyphs[cindex].mChar);
-  ePaletteIndex cstart = (ePaletteIndex)glyphs[cindex].mColorIndex;
+  ePalette cstart = (ePalette)glyphs[cindex].mColorIndex;
   while (cindex < (int)glyphs.size()) {
     uint8_t c = glyphs[cindex].mChar;
     int d = utf8CharLength (c);
-    if (cstart != (ePaletteIndex)glyphs[cindex].mColorIndex)
+    if (cstart != (ePalette)glyphs[cindex].mColorIndex)
       break;
 
     if (prevspace != !!isspace(c)) {
@@ -2002,7 +2003,7 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
     for (size_t j = 0; j < glyphs.size(); ++j) {
       sGlyph& col = glyphs[j];
       buffer[j] = col.mChar;
-      col.mColorIndex = ePaletteIndex::Default;
+      col.mColorIndex = ePalette::Default;
       }
 
     const char * bufferBegin = &buffer.front();
@@ -2011,7 +2012,7 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
     for (auto first = bufferBegin; first != last; ) {
       const char * token_begin = nullptr;
       const char * token_end = nullptr;
-      ePaletteIndex token_color = ePaletteIndex::Default;
+      ePalette token_color = ePalette::Default;
 
       bool hasTokenizeResult = false;
       if (mLanguage.mTokenize != nullptr) {
@@ -2039,7 +2040,7 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
         }
       else {
         const size_t token_length = token_end - token_begin;
-        if (token_color == ePaletteIndex::Ident) {
+        if (token_color == ePalette::Ident) {
           id.assign (token_begin, token_end);
 
           // almost all languages use lower case to specify keywords, so shouldn't this use ::tolower ?
@@ -2049,15 +2050,15 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
 
           if (!glyphs[first - bufferBegin].mPreprocessor) {
             if (mLanguage.mKeywords.count(id) != 0)
-              token_color = ePaletteIndex::Keyword;
+              token_color = ePalette::Keyword;
             else if (mLanguage.mIdents.count(id) != 0)
-              token_color = ePaletteIndex::KnownIdent;
+              token_color = ePalette::KnownIdent;
             else if (mLanguage.mPreprocIdents.count(id) != 0)
-              token_color = ePaletteIndex::PreprocIdent;
+              token_color = ePalette::PreprocIdent;
             }
           else {
             if (mLanguage.mPreprocIdents.count(id) != 0)
-              token_color = ePaletteIndex::PreprocIdent;
+              token_color = ePalette::PreprocIdent;
             }
           }
 
@@ -2490,7 +2491,7 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool shift) {
             }
           }
         else {
-          glyphs.insert (glyphs.begin(), sGlyph ('\t', cTextEditor::ePaletteIndex::Background));
+          glyphs.insert (glyphs.begin(), sGlyph ('\t', cTextEditor::ePalette::Background));
           modified = true;
           }
         }
@@ -2571,7 +2572,7 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool shift) {
         }
 
       for (auto p = buf; *p != '\0'; p++, ++cindex)
-        glyphs.insert (glyphs.begin() + cindex, sGlyph (*p, ePaletteIndex::Default));
+        glyphs.insert (glyphs.begin() + cindex, sGlyph (*p, ePalette::Default));
       u.mAdded = buf;
 
       setCursorPosition (sRowColumn(coord.mRow, getCharacterColumn (coord.mRow, cindex)));
@@ -2627,7 +2628,7 @@ int cTextEditor::insertTextAt (sRowColumn& /* inout */ where, const char* value)
       vector<sGlyph>& glyphs = mLines[where.mRow].mGlyphs;
       auto d = utf8CharLength (*value);
       while (d-- > 0 && *value != '\0')
-        glyphs.insert (glyphs.begin() + cindex++, sGlyph (*value++, ePaletteIndex::Default));
+        glyphs.insert (glyphs.begin() + cindex++, sGlyph (*value++, ePalette::Default));
       ++where.mColumn;
       }
 
@@ -2673,8 +2674,8 @@ void cTextEditor::handleMouseInputs() {
       if (tripleClick) {
         if (!ctrl) {
           mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenPosToRowColumn (ImGui::GetMousePos());
-          mSelectionMode = eSelectionMode::Line;
-          setSelection (mInteractiveStart, mInteractiveEnd, mSelectionMode);
+          mSelection = eSelection::Line;
+          setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
           }
         mLastClick = -1.0f;
         }
@@ -2683,11 +2684,11 @@ void cTextEditor::handleMouseInputs() {
       else if (doubleClick) {
         if (!ctrl) {
           mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenPosToRowColumn(ImGui::GetMousePos());
-          if (mSelectionMode == eSelectionMode::Line)
-            mSelectionMode = eSelectionMode::Normal;
+          if (mSelection == eSelection::Line)
+            mSelection = eSelection::Normal;
           else
-            mSelectionMode = eSelectionMode::Word;
-          setSelection (mInteractiveStart, mInteractiveEnd, mSelectionMode);
+            mSelection = eSelection::Word;
+          setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
           }
         mLastClick = (float)ImGui::GetTime();
         }
@@ -2696,10 +2697,10 @@ void cTextEditor::handleMouseInputs() {
       else if (click) {
         mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenPosToRowColumn(ImGui::GetMousePos());
         if (ctrl)
-          mSelectionMode = eSelectionMode::Word;
+          mSelection = eSelection::Word;
         else
-          mSelectionMode = eSelectionMode::Normal;
-        setSelection (mInteractiveStart, mInteractiveEnd, mSelectionMode);
+          mSelection = eSelection::Normal;
+        setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
         mLastClick = (float)ImGui::GetTime();
         }
 
@@ -2707,7 +2708,7 @@ void cTextEditor::handleMouseInputs() {
       else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
         io.WantCaptureMouse = true;
         mState.mCursorPosition = mInteractiveEnd = screenPosToRowColumn (ImGui::GetMousePos());
-        setSelection (mInteractiveStart, mInteractiveEnd, mSelectionMode);
+        setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
         }
       }
     }
@@ -2802,7 +2803,7 @@ void cTextEditor::render() {
   mCharAdvance = ImVec2 (fontSize, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
   //}}}
   //{{{  update palette with the current alpha from style
-  for (int i = 0; i < (int)ePaletteIndex::Max; ++i) {
+  for (int i = 0; i < (int)ePalette::Max; ++i) {
     auto color = ImGui::ColorConvertU32ToFloat4 (mPaletteBase[i]);
     color.w *= ImGui::GetStyle().Alpha;
     mPalette[i] = ImGui::ColorConvertFloat4ToU32 (color);
@@ -2866,7 +2867,7 @@ void cTextEditor::render() {
       if (sstart != -1 && ssend != -1 && sstart < ssend) {
         ImVec2 vstart (lineStartScreenPos.x + mTextStart + sstart, lineStartScreenPos.y);
         ImVec2 vend (lineStartScreenPos.x + mTextStart + ssend, lineStartScreenPos.y + mCharAdvance.y);
-        drawList->AddRectFilled (vstart, vend, mPalette[(int)ePaletteIndex::Selection]);
+        drawList->AddRectFilled (vstart, vend, mPalette[(int)ePalette::Selection]);
         }
       //}}}
       //{{{  draw error markers
@@ -2874,7 +2875,7 @@ void cTextEditor::render() {
       auto errorIt = mMarkers.find (lineNo + 1);
       if (errorIt != mMarkers.end()) {
         auto end = ImVec2 (lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-        drawList->AddRectFilled (start, end, mPalette[(int)ePaletteIndex::Marker]);
+        drawList->AddRectFilled (start, end, mPalette[(int)ePalette::Marker]);
 
         if (ImGui::IsMouseHoveringRect (lineStartScreenPos, end)) {
           ImGui::BeginTooltip();
@@ -2899,7 +2900,7 @@ void cTextEditor::render() {
         ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
 
       drawList->AddText (ImVec2 (lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y),
-                         mPalette[(int)ePaletteIndex::LineNumber], buf);
+                         mPalette[(int)ePalette::LineNumber], buf);
 
       if (mState.mCursorPosition.mRow == lineNo) {
         auto focused = ImGui::IsWindowFocused();
@@ -2908,8 +2909,8 @@ void cTextEditor::render() {
         if (!hasSelection()) {
           auto end = ImVec2 (start.x + contentSize.x + scrollX, start.y + mCharAdvance.y);
           drawList->AddRectFilled (start, end,
-            mPalette[(int)(focused ? ePaletteIndex::CurrentLineFill : ePaletteIndex::CurrentLineFillInactive)]);
-          drawList->AddRect (start, end, mPalette[(int)ePaletteIndex::CurrentLineEdge], 1.0f);
+            mPalette[(int)(focused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
+          drawList->AddRect (start, end, mPalette[(int)ePalette::CurrentLineEdge], 1.0f);
           }
 
         // render cursor
@@ -2937,7 +2938,7 @@ void cTextEditor::render() {
 
             ImVec2 cstart (textScreenPos.x + cx, lineStartScreenPos.y);
             ImVec2 cend (textScreenPos.x + cx + width, lineStartScreenPos.y + mCharAdvance.y);
-            drawList->AddRectFilled (cstart, cend, mPalette[(int)ePaletteIndex::Cursor]);
+            drawList->AddRectFilled (cstart, cend, mPalette[(int)ePalette::Cursor]);
             if (elapsed > 800)
               mStartTime = timeEnd;
             }
@@ -2945,7 +2946,7 @@ void cTextEditor::render() {
         }
       //}}}
       //{{{  render colored text
-      auto prevColor = glyphs.empty() ? mPalette[(int)ePaletteIndex::Default] : getGlyphColor (glyphs[0]);
+      auto prevColor = glyphs.empty() ? mPalette[(int)ePalette::Default] : getGlyphColor (glyphs[0]);
       ImVec2 bufferOffset;
 
       for (int i = 0; i < (int)glyphs.size();) {
