@@ -918,8 +918,8 @@ void cTextEditor::setPalette (bool lightPalette) {
 void cTextEditor::setLanguage (const sLanguage& language) {
 
   mLanguage = language;
-  mRegexList.clear();
 
+  mRegexList.clear();
   for (auto& r : mLanguage.mTokenRegexStrings)
     mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
 
