@@ -58,15 +58,14 @@ public:
   //{{{
   struct sLine {
     std::vector<sGlyph> mGlyphs;
-    uint32_t mLineNumber;
     uint8_t mFoldLevel;
-    bool mFoldStart : 1;
+    bool mFoldBegin : 1;
     bool mFoldEnd : 1;
     bool mFoldOpen : 1;
 
-    sLine() : mGlyphs(), mLineNumber(0), mFoldLevel(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
+    sLine() : mGlyphs(), mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
     sLine (const std::vector<sGlyph>& line) :
-      mGlyphs(line), mLineNumber(0), mFoldLevel(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
+      mGlyphs(line), mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
     };
   //}}}
   //{{{
@@ -206,6 +205,8 @@ public:
     std::string mCommentStart;
     std::string mCommentEnd;
     std::string mSingleLineComment;
+    std::string mFoldBeginMarker;
+    std::string mFoldEndMarker;
 
     char mPreprocChar;
     bool mAutoIndentation;
@@ -381,6 +382,7 @@ private:
   void colorizeRange (int fromLine = 0, int toLine = 0);
   void colorizeInternal();
   //}}}
+  void parseFolds();
   //{{{  actions
   void ensureCursorVisible();
 
@@ -451,4 +453,5 @@ private:
   uint64_t mStartTime;
   float mLastClick;
   //}}}
+
   };

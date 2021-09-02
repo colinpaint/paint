@@ -628,6 +628,7 @@ void cTextEditor::setText (const string& text) {
   mUndoBuffer.clear();
   mUndoIndex = 0;
 
+  parseFolds();
   colorize();
   }
 //}}}
@@ -656,6 +657,7 @@ void cTextEditor::setTextLines (const vector<string>& lines) {
   mUndoBuffer.clear();
   mUndoIndex = 0;
 
+  parseFolds();
   colorize();
   }
 //}}}
@@ -1132,7 +1134,7 @@ void cTextEditor::deleteIt() {
       }
 
     mTextChanged = true;
-    colorize(pos.mRow, 1);
+    colorize (pos.mRow, 1);
     }
 
   u.mAfter = mState;
@@ -1518,7 +1520,7 @@ void cTextEditor::colorize (int fromLine, int lines) {
   mColorRangeMin = min (mColorRangeMin, fromLine);
   mColorRangeMax = max (mColorRangeMax, toLine);
   mColorRangeMin = max (0, mColorRangeMin);
-  mColorRangeMax = max(mColorRangeMin, mColorRangeMax);
+  mColorRangeMax = max (mColorRangeMin, mColorRangeMax);
 
   mCheckComments = true;
   }
@@ -1738,6 +1740,35 @@ void cTextEditor::colorizeInternal() {
     }
   }
 //}}}
+//}}}
+
+//{{{
+void cTextEditor::parseFolds() {
+
+  uint8_t foldLevel = 0;
+
+  for (auto& line : mLines) {
+    string text;
+    for (auto glyph : line.mGlyphs)
+      text += glyph.mChar;
+
+    size_t foldBeginIndent = text.find (mLanguage.mFoldBeginMarker);
+    line.mFoldBegin = (foldBeginIndent != string::npos);
+    if (line.mFoldBegin)
+      foldLevel++;
+
+    size_t foldEndIndent = text.find (mLanguage.mFoldEndMarker);
+    line.mFoldEnd = (foldEndIndent != string::npos);
+
+    line.mFoldLevel = foldLevel;
+
+    if (line.mFoldEnd)
+      foldLevel--;
+
+    line.mFoldOpen = false;
+    }
+
+  }
 //}}}
 //{{{  actions
 //{{{
@@ -2694,6 +2725,8 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
     language.mCommentStart = "/*";
     language.mCommentEnd = "*/";
     language.mSingleLineComment = "//";
+    language.mFoldBeginMarker = "//{{{";
+    language.mFoldEndMarker = "//}}}";
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
     language.mName = "C++";
