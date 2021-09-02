@@ -82,8 +82,6 @@ public:
       }
     //}}}
 
-    static sRowColumn Invalid() { static sRowColumn invalid(-1,-1); return invalid; }
-
     //{{{
     bool operator == (const sRowColumn& o) const {
       return mRow == o.mRow && mColumn == o.mColumn;
@@ -140,8 +138,6 @@ public:
       assert (column >= 0);
       }
     //}}}
-
-    static sLineColumn Invalid() { static sLineColumn invalid(-1,-1); return invalid; }
 
     //{{{
     bool operator == (const sLineColumn& o) const {
