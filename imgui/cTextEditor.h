@@ -217,7 +217,7 @@ public:
   void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
   void setSelectionStart (const sRowColumn& position);
   void setSelectionEnd (const sRowColumn& position);
-  void setSelection (const sRowColumn& startCord, const sRowColumn& endCord, eSelectionMode aMode = eSelectionMode::Normal);
+  void setSelection (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn, eSelectionMode mode = eSelectionMode::Normal);
 
   inline void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
   inline void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
@@ -305,13 +305,13 @@ private:
   bool isOnWordBoundary (const sRowColumn& aAt) const;
 
   int getPageSize() const;
-  std::string getText (const sRowColumn& startCord, const sRowColumn& endCord) const;
+  std::string getText (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn) const;
   sRowColumn getActualCursorRowColumn() const { return sanitizeRowColumn (mState.mCursorPosition); }
 
   int getCharacterIndex (const sRowColumn& rowColumn) const;
-  int getCharacterColumn (int lineCoord, int index) const;
-  int getLineCharacterCount (int lineCoord) const;
-  int getLineMaxColumn (int lineCoord) const;
+  int getCharacterColumn (int row, int index) const;
+  int getLineCharacterCount (int row) const;
+  int getLineMaxColumn (int row) const;
 
   std::string getWordAt (const sRowColumn& rowColumn) const;
   std::string getWordUnderCursor() const;
@@ -337,12 +337,12 @@ private:
   void ensureCursorVisible();
 
   void advance (sRowColumn& rowColumn) const;
-  void deleteRange (const sRowColumn& startCord, const sRowColumn& endCord);
+  void deleteRange (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn);
   int insertTextAt (sRowColumn& where, const char* value);
 
   void addUndo (sUndoRecord& value);
 
-  void removeLine (int startCord, int endCord);
+  void removeLine (int startRowColumn, int endRowColumn);
   void removeLine (int index);
   std::vector<sGlyph>& insertLine (int index);
 
