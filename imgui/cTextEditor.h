@@ -58,25 +58,28 @@ public:
   //{{{
   struct sLine {
     std::vector<sGlyph> mGlyphs;
+    uint32_t mFoldLineNumber; // foldStart except for fold start which is foldEnd
+    uint32_t mFoldTitleLineNumber; // lineNumber for foldTitle
     uint8_t mFoldLevel;
     bool mFoldBegin : 1;
     bool mFoldEnd : 1;
     bool mFoldOpen : 1;
 
-    sLine() : mGlyphs(), mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
+    sLine() : mGlyphs(), mFoldLineNumber(0), mFoldTitleLineNumber(0), 
+              mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
     sLine (const std::vector<sGlyph>& line) :
-      mGlyphs(line), mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
+      mGlyphs(line), mFoldLineNumber(0), mFoldTitleLineNumber(0),
+      mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
     };
   //}}}
   //{{{
   struct sPosition {
-  // pos in screen co-ords
-    int mRow;
+    int mLineNumber;
     int mColumn;
 
-    sPosition() : mRow(0), mColumn(0) {}
+    sPosition() : mLineNumber(0), mColumn(0) {}
     //{{{
-    sPosition (int row, int column) : mRow(row), mColumn(column) {
+    sPosition (int lineNumber, int column) : mLineNumber(lineNumber), mColumn(column) {
       assert (row >= 0);
       assert (column >= 0);
       }
@@ -84,88 +87,31 @@ public:
 
     //{{{
     bool operator == (const sPosition& o) const {
-      return mRow == o.mRow && mColumn == o.mColumn;
+      return mLineNumber == o.mLineNumber && mColumn == o.mColumn;
       }
     //}}}
     //{{{
     bool operator != (const sPosition& o) const {
-      return mRow != o.mRow || mColumn != o.mColumn; }
+      return mLineNumber != o.mLineNumber || mColumn != o.mColumn; }
     //}}}
     //{{{
     bool operator < (const sPosition& o) const {
 
-      if (mRow != o.mRow)
-        return mRow < o.mRow;
+      if (mLineNumber != o.mLineNumber)
+        return mLineNumber < o.mLineNumber;
 
       return mColumn < o.mColumn;
       }
     //}}}
     //{{{
     bool operator > (const sPosition& o) const {
-      if (mRow != o.mRow)
-        return mRow > o.mRow;
-      return mColumn > o.mColumn;
-      }
-    //}}}
-    //{{{
-    bool operator <= (const sPosition& o) const {
-      if (mRow != o.mRow)
-        return mRow < o.mRow;
-
-      return mColumn <= o.mColumn;
-      }
-    //}}}
-    //{{{
-    bool operator >= (const sPosition& o) const {
-      if (mRow != o.mRow)
-        return mRow > o.mRow;
-      return mColumn >= o.mColumn;
-      }
-    //}}}
-    };
-  //}}}
-  //{{{
-  struct sLineColumn {
-  // pos in file co-ords
-
-    int mLineNumber;
-    int mColumn;
-
-    sLineColumn() : mLineNumber(0), mColumn(0) {}
-    //{{{
-    sLineColumn (int lineNumber, int column) : mLineNumber(lineNumber), mColumn(column) {
-      assert (lineNumber >= 0);
-      assert (column >= 0);
-      }
-    //}}}
-
-    //{{{
-    bool operator == (const sLineColumn& o) const {
-      return mLineNumber == o.mLineNumber && mColumn == o.mColumn;
-      }
-    //}}}
-    //{{{
-    bool operator != (const sLineColumn& o) const {
-      return mLineNumber != o.mLineNumber || mColumn != o.mColumn; }
-    //}}}
-    //{{{
-    bool operator < (const sLineColumn& o) const {
-
-      if (mLineNumber != o.mLineNumber)
-        return mLineNumber < o.mLineNumber;
-
-      return mColumn < o.mColumn;
-      }
-    //}}}
-    //{{{
-    bool operator > (const sLineColumn& o) const {
       if (mLineNumber != o.mLineNumber)
         return mLineNumber > o.mLineNumber;
       return mColumn > o.mColumn;
       }
     //}}}
     //{{{
-    bool operator <= (const sLineColumn& o) const {
+    bool operator <= (const sPosition& o) const {
       if (mLineNumber != o.mLineNumber)
         return mLineNumber < o.mLineNumber;
 
@@ -173,7 +119,7 @@ public:
       }
     //}}}
     //{{{
-    bool operator >= (const sLineColumn& o) const {
+    bool operator >= (const sPosition& o) const {
       if (mLineNumber != o.mLineNumber)
         return mLineNumber > o.mLineNumber;
       return mColumn >= o.mColumn;

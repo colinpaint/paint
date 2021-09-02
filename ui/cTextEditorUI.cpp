@@ -146,7 +146,7 @@ public:
       #ifdef _WIN32
         ifstream fileStream ("C:/projects/paint/imgui/cTextEditor.cpp");
       #else
-        ifstream fileStream ("/projects/paint/imgui/cTextEditor.cpp");
+        ifstream fileStream ("/home/pi/paint/imgui/cTextEditor.cpp");
       #endif
       string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
       mTextEditor.setText (str);
@@ -221,12 +221,14 @@ public:
       }
       //}}}
 
-    ImGui::Text ("%6d/%-6d %6d lines  | %s | %s | %s",
-                 mTextEditor.getCursorPosition().mRow + 1, mTextEditor.getCursorPosition().mColumn + 1,
+    ImGui::Text ("%d:%d:%d %s %s %s",
+                 mTextEditor.getCursorPosition().mColumn + 1,
+                 mTextEditor.getCursorPosition().mLineNumber + 1,
                  mTextEditor.getTotalLines(),
+                 mTextEditor.getLanguage().mName.c_str(),
                  mTextEditor.isOverwrite() ? "overwrite" : "insert",
-                 mTextEditor.canUndo() ? "undo" : " ",
-                 mTextEditor.getLanguage().mName.c_str());
+                 mTextEditor.canUndo() ? "undo" : " "
+                 );
     ImGui::PushFont (monoFont);
 
     mTextEditor.render ("cTextEditor");
