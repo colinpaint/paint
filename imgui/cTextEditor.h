@@ -65,7 +65,7 @@ public:
     bool mFoldEnd : 1;
     bool mFoldOpen : 1;
 
-    sLine() : mGlyphs(), mFoldLineNumber(0), mFoldTitleLineNumber(0), 
+    sLine() : mGlyphs(), mFoldLineNumber(0), mFoldTitleLineNumber(0),
               mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
     sLine (const std::vector<sGlyph>& line) :
       mGlyphs(line), mFoldLineNumber(0), mFoldTitleLineNumber(0),
@@ -176,6 +176,7 @@ public:
   cTextEditor();
   ~cTextEditor() = default;
   //{{{  gets
+  bool isFolded() const { return mFolded; }
   bool isOverwrite() const { return mOverwrite; }
   bool isReadOnly() const { return mReadOnly; }
   bool isTextChanged() const { return mTextChanged; }
@@ -217,6 +218,8 @@ public:
   void setSelectionStart (const sPosition& position);
   void setSelectionEnd (const sPosition& position);
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
+
+  void setFolded (bool folded) { mFolded = folded; }
 
   inline void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
   inline void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
@@ -372,6 +375,7 @@ private:
   int mTabSize;
   float mTextStart;
 
+  bool mFolded;
   bool mOverwrite;
   bool mReadOnly;
   bool mWithinRender;
@@ -391,7 +395,7 @@ private:
   bool mShowWhitespaces;
 
   bool mCheckComments;
-  ImVec2 mCharAdvance;
+  ImVec2 mCharSize;
 
   sPosition mInteractiveStart;
   sPosition mInteractiveEnd;

@@ -1313,7 +1313,7 @@ float cTextEditor::getTextDistanceToLineStart (const sPosition& from) const {
 //{{{
 int cTextEditor::getPageNumLines() const {
   float height = ImGui::GetWindowHeight() - 20.f;
-  return (int)floor (height / mCharAdvance.y);
+  return (int)floor (height / mCharSize.y);
   }
 //}}}
 
@@ -1324,7 +1324,7 @@ cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
   ImVec2 origin = ImGui::GetCursorScreenPos();
   ImVec2 local = ImVec2 (pos.x - origin.x, pos.y - origin.y);
 
-  int lineNumber = max (0, (int)floor (local.y / mCharAdvance.y));
+  int lineNumber = max (0, (int)floor (local.y / mCharSize.y));
   int columnCoord = 0;
 
   if ((lineNumber >= 0) && (lineNumber < (int)mLines.size())) {
@@ -1790,19 +1790,19 @@ void cTextEditor::ensureCursorVisible() {
   auto height = ImGui::GetWindowHeight();
   auto width = ImGui::GetWindowWidth();
 
-  int top = 1 + (int)ceil(scrollY / mCharAdvance.y);
-  int bottom = (int)ceil((scrollY + height) / mCharAdvance.y);
+  int top = 1 + (int)ceil(scrollY / mCharSize.y);
+  int bottom = (int)ceil((scrollY + height) / mCharSize.y);
 
-  int left = (int)ceil(scrollX / mCharAdvance.x);
-  int right = (int)ceil((scrollX + width) / mCharAdvance.x);
+  int left = (int)ceil(scrollX / mCharSize.x);
+  int right = (int)ceil((scrollX + width) / mCharSize.x);
 
   sPosition pos = getActualCursorposition();
   float len = getTextDistanceToLineStart (pos);
 
   if (pos.mLineNumber < top)
-    ImGui::SetScrollY (max (0.0f, (pos.mLineNumber - 1) * mCharAdvance.y));
+    ImGui::SetScrollY (max (0.0f, (pos.mLineNumber - 1) * mCharSize.y));
   if (pos.mLineNumber > bottom - 4)
-    ImGui::SetScrollY (max (0.0f, (pos.mLineNumber + 4) * mCharAdvance.y - height));
+    ImGui::SetScrollY (max (0.0f, (pos.mLineNumber + 4) * mCharSize.y - height));
 
   if (len + mTextStart < left + 4)
     ImGui::SetScrollX (max(0.0f, len + mTextStart - 4));
@@ -2380,12 +2380,12 @@ void cTextEditor::render() {
   char lineStr[kMaxLineCount];
   unsigned lineCount = 0;
 
-  // calc mCharAdvance
+  // calc mCharSize
   const float spaceSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f,
                                                            " ", nullptr, nullptr).x;
   const float fontSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f,
                                                           "#", nullptr, nullptr).x;
-  mCharAdvance = ImVec2 (fontSize, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
+  mCharSize = ImVec2 (fontSize, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
 
   ImVec2 contentSize = ImGui::GetWindowContentRegionMax();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -2410,19 +2410,19 @@ void cTextEditor::render() {
 
   float longestLine = mTextStart;
   if (!mLines.empty()) {
-    int lineNumber = (unsigned)floor (scrollY / mCharAdvance.y);
+    int lineNumber = (unsigned)floor (scrollY / mCharSize.y);
 
     // line number str
     char lineNumberStr[27];
     snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d %d %d %d %4d ", (int)mLines.size(), 1,1,1, 0);
     mTextStart = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f,
                                                   lineNumberStr, nullptr, nullptr).x + kLeftTextMargin;
-    int maxVisibleLines = (int)ceil ((scrollY + contentSize.y) / mCharAdvance.y);
+    int maxVisibleLines = (int)ceil ((scrollY + contentSize.y) / mCharSize.y);
 
-    for (int visibleLines = 0; 
+    for (int visibleLines = 0;
          (lineNumber < (int)mLines.size()) && (visibleLines < maxVisibleLines); lineNumber++, visibleLines++) {
       sLine& line = mLines[lineNumber];
-      ImVec2 linePos = ImVec2 (cursorScreenPos.x, cursorScreenPos.y + lineNumber * mCharAdvance.y);
+      ImVec2 linePos = ImVec2 (cursorScreenPos.x, cursorScreenPos.y + lineNumber * mCharSize.y);
       ImVec2 textPos = ImVec2 (linePos.x + mTextStart, linePos.y);
 
       vector<sGlyph>& glyphs = line.mGlyphs;
@@ -2443,11 +2443,11 @@ void cTextEditor::render() {
         ssend = getTextDistanceToLineStart (mState.mSelectionEnd < lineEndCoord ? mState.mSelectionEnd : lineEndCoord);
 
       if (mState.mSelectionEnd.mLineNumber > lineNumber)
-        ssend += mCharAdvance.x;
+        ssend += mCharSize.x;
 
       if (sstart != -1 && ssend != -1 && sstart < ssend) {
         ImVec2 vstart (linePos.x + mTextStart + sstart, linePos.y);
-        ImVec2 vend (linePos.x + mTextStart + ssend, linePos.y + mCharAdvance.y);
+        ImVec2 vend (linePos.x + mTextStart + ssend, linePos.y + mCharSize.y);
         drawList->AddRectFilled (vstart, vend, mPalette[(size_t)ePalette::Selection]);
         }
       //}}}
@@ -2455,7 +2455,7 @@ void cTextEditor::render() {
       ImVec2 start = ImVec2 (linePos.x + scrollX, linePos.y);
       auto errorIt = mMarkers.find (lineNumber + 1);
       if (errorIt != mMarkers.end()) {
-        ImVec2 end = ImVec2 (linePos.x + contentSize.x + 2.0f * scrollX, linePos.y + mCharAdvance.y);
+        ImVec2 end = ImVec2 (linePos.x + contentSize.x + 2.0f * scrollX, linePos.y + mCharSize.y);
         drawList->AddRectFilled (start, end, mPalette[(size_t)ePalette::Marker]);
 
         if (ImGui::IsMouseHoveringRect (linePos, end)) {
@@ -2490,7 +2490,7 @@ void cTextEditor::render() {
 
         // highlight cursor line
         if (!hasSelection()) {
-          ImVec2 end = ImVec2 (start.x + contentSize.x + scrollX, start.y + mCharAdvance.y);
+          ImVec2 end = ImVec2 (start.x + contentSize.x + scrollX, start.y + mCharSize.y);
           drawList->AddRectFilled (start, end,
             mPalette[(int)(focused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
           drawList->AddRect (start, end, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
@@ -2520,7 +2520,7 @@ void cTextEditor::render() {
               }
 
             drawList->AddRectFilled (ImVec2 (textPos.x + cx, linePos.y),
-                                     ImVec2 (textPos.x + cx + width, linePos.y + mCharAdvance.y),
+                                     ImVec2 (textPos.x + cx + width, linePos.y + mCharSize.y),
                                      mPalette[(size_t)ePalette::Cursor]);
             if (elapsed > 800)
               mStartTime = timeEnd;
@@ -2617,7 +2617,7 @@ void cTextEditor::render() {
     //}}}
     }
 
-  ImGui::Dummy (ImVec2 ((longestLine + 2), mLines.size() * mCharAdvance.y));
+  ImGui::Dummy (ImVec2 ((longestLine + 2), mLines.size() * mCharSize.y));
 
   if (mScrollToCursor) {
     //{{{  scroll to cursor

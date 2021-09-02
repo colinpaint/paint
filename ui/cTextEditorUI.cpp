@@ -189,8 +189,13 @@ public:
 
       if (ImGui::BeginMenu ("Edit")) {
         bool ro = mTextEditor.isReadOnly();
-        if (ImGui::MenuItem ("Read-only mode", nullptr, &ro))
+        if (ImGui::MenuItem ("ReadOnly", nullptr, &ro))
           mTextEditor.setReadOnly (ro);
+        ImGui::Separator();
+
+        bool folded = mTextEditor.isFolded();
+        if (ImGui::MenuItem ("Folded", nullptr, &folded))
+          mTextEditor.setFolded (folded);
         ImGui::Separator();
 
         if (ImGui::MenuItem ("Undo", "ALT-Backspace", nullptr, !ro && mTextEditor.canUndo()))
@@ -227,7 +232,8 @@ public:
                  mTextEditor.getTotalLines(),
                  mTextEditor.getLanguage().mName.c_str(),
                  mTextEditor.isOverwrite() ? "overwrite" : "insert",
-                 mTextEditor.canUndo() ? "undo" : " "
+                 mTextEditor.canUndo() ? "undo" : " ",
+                 mTextEditor.isFolded() ? "folded" : " "
                  );
     ImGui::PushFont (monoFont);
 
