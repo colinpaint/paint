@@ -2414,16 +2414,17 @@ void cTextEditor::render() {
     char lineNumberStr[27];
     snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d %d %d %d %4d ", (int)mLines.size(), 1,1,1, 0);
     mTextStart = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x + kLeftTextMargin;
-    int maxVisibleLines = (int)ceil ((scrollY + contentSize.y) / mCharSize.y);
 
-    for (int visibleLines = 0;
-         (lineNumber < (int)mLines.size()) && (visibleLines < maxVisibleLines); visibleLines++) {
+    ImVec2 linePos = {cursorScreenPos.x, cursorScreenPos.y + lineNumber * mCharSize.y};
+    ImVec2 textPos = {linePos.x + mTextStart, linePos.y};
+    ImVec2 startPos = {linePos.x + scrollX, linePos.y};
+
+    int visibleLines = 0;
+    int maxVisibleLines = (int)ceil ((scrollY + contentSize.y) / mCharSize.y);
+    while ((lineNumber < (int)mLines.size()) && (visibleLines < maxVisibleLines)) {
       sLine& line = mLines[lineNumber];
       vector<sGlyph>& glyphs = line.mGlyphs;
 
-      ImVec2 linePos = {cursorScreenPos.x, cursorScreenPos.y + lineNumber * mCharSize.y};
-      ImVec2 textPos = {linePos.x + mTextStart, linePos.y};
-      ImVec2 startPos = {linePos.x + scrollX, linePos.y};
       widestLine = max (widestLine,
         mTextStart + getTextDistanceToLineStart (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
       //{{{  draw select
@@ -2443,8 +2444,8 @@ void cTextEditor::render() {
         xEnd += mCharSize.x;
 
       if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd)) {
-        drawList->AddRectFilled (ImVec2 (linePos.x + mTextStart + xStart, linePos.y),
-                                 ImVec2 (linePos.x + mTextStart + xEnd, linePos.y + mCharSize.y),
+        drawList->AddRectFilled ({linePos.x + mTextStart + xStart, linePos.y},
+                                 {linePos.x + mTextStart + xEnd, linePos.y + mCharSize.y},
                                  mPalette[(size_t)ePalette::Selection]);
         }
       //}}}
@@ -2584,10 +2585,17 @@ void cTextEditor::render() {
         lineCount = 0;
         }
       //}}}
+
+      // next line
       if (mFolded && line.mFoldBegin)
         lineNumber = line.mFoldLineNumber + 1;
       else
         lineNumber++;
+
+      linePos.y += mCharSize.y;
+      textPos.y += mCharSize.y;
+      startPos.y += mCharSize.y;
+      visibleLines++;
       }
     //{{{  draw tooltip on idents, preprocessor symbols
     if (ImGui::IsMousePosValid()) {
