@@ -51,25 +51,26 @@ public:
     bool mMultiLineComment : 1;
     bool mPreprocessor : 1;
 
-    sGlyph (uint8_t aChar, ePaletteIndex aColorIndex)
-      : mChar(aChar), mColorIndex(aColorIndex), mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
+    sGlyph (uint8_t ch, ePaletteIndex colorIndex)
+      : mChar(ch), mColorIndex(colorIndex), mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
     };
   //}}}
   //{{{
   struct sLine {
-  // editor line
-    std::vector<sGlyph> mLine;
-    uint32_t mNumber;
-    bool mFoldStart;
-    bool mFoldEnd;
-    bool mFoldOpen;
+    std::vector<sGlyph> mGlyphs;
+    uint32_t mLineNumber;
+    bool mFoldStart : 1;
+    bool mFoldEnd : 1;
+    bool mFoldOpen : 1;
 
-    sLine() : mLine(), mNumber(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
-    sLine (std::vector<sGlyph> line): mLine(line), mNumber(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
+    sLine() : mGlyphs(), mLineNumber(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
+    sLine (const std::vector<sGlyph>& line) :
+      mGlyphs(line), mLineNumber(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
     };
   //}}}
   //{{{
   struct sRowColumn {
+  // pos in screen co-ords
     int mRow;
     int mColumn;
 
@@ -120,6 +121,65 @@ public:
     bool operator >= (const sRowColumn& o) const {
       if (mRow != o.mRow)
         return mRow > o.mRow;
+      return mColumn >= o.mColumn;
+      }
+    //}}}
+    };
+  //}}}
+  //{{{
+  struct sLineColumn {
+  // pos in file co-ords
+
+    int mLineIndex;
+    int mColumn;
+
+    sLineColumn() : mLineIndex(0), mColumn(0) {}
+    //{{{
+    sLineColumn (int line, int column) : mLineIndex(line), mColumn(column) {
+      assert (line >= 0);
+      assert (column >= 0);
+      }
+    //}}}
+
+    static sLineColumn Invalid() { static sLineColumn invalid(-1,-1); return invalid; }
+
+    //{{{
+    bool operator == (const sLineColumn& o) const {
+      return mLineIndex == o.mLineIndex && mColumn == o.mColumn;
+      }
+    //}}}
+    //{{{
+    bool operator != (const sLineColumn& o) const {
+      return mLineIndex != o.mLineIndex || mColumn != o.mColumn; }
+    //}}}
+    //{{{
+    bool operator < (const sLineColumn& o) const {
+
+      if (mLineIndex != o.mLineIndex)
+        return mLineIndex < o.mLineIndex;
+
+      return mColumn < o.mColumn;
+      }
+    //}}}
+    //{{{
+    bool operator > (const sLineColumn& o) const {
+      if (mLineIndex != o.mLineIndex)
+        return mLineIndex > o.mLineIndex;
+      return mColumn > o.mColumn;
+      }
+    //}}}
+    //{{{
+    bool operator <= (const sLineColumn& o) const {
+      if (mLineIndex != o.mLineIndex)
+        return mLineIndex < o.mLineIndex;
+
+      return mColumn <= o.mColumn;
+      }
+    //}}}
+    //{{{
+    bool operator >= (const sLineColumn& o) const {
+      if (mLineIndex != o.mLineIndex)
+        return mLineIndex > o.mLineIndex;
       return mColumn >= o.mColumn;
       }
     //}}}
@@ -302,7 +362,7 @@ private:
 
   typedef std::vector<sUndoRecord> tUndoBuffer;
   //{{{  gets
-  bool isOnWordBoundary (const sRowColumn& aAt) const;
+  bool isOnWordBoundary (const sRowColumn& at) const;
 
   int getPageSize() const;
   std::string getText (const sRowColumn& startRowColumn, const sRowColumn& endRowColumn) const;
