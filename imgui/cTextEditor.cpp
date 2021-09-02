@@ -2380,6 +2380,7 @@ void cTextEditor::render() {
   ImVec2 contentSize = ImGui::GetWindowContentRegionMax();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
+  bool focused = ImGui::IsWindowFocused();
   //{{{  update palette alpha from style
   for (int i = 0; i < (size_t)ePalette::Max; ++i) {
     ImVec4 color = ImGui::ColorConvertU32ToFloat4 (mPaletteBase[i]);
@@ -2416,49 +2417,52 @@ void cTextEditor::render() {
     int maxVisibleLines = (int)ceil ((scrollY + contentSize.y) / mCharSize.y);
 
     for (int visibleLines = 0;
-         (lineNumber < (int)mLines.size()) && (visibleLines < maxVisibleLines); lineNumber++, visibleLines++) {
+         (lineNumber < (int)mLines.size()) && (visibleLines < maxVisibleLines); visibleLines++) {
       sLine& line = mLines[lineNumber];
       vector<sGlyph>& glyphs = line.mGlyphs;
 
-      ImVec2 linePos = ImVec2 (cursorScreenPos.x, cursorScreenPos.y + lineNumber * mCharSize.y);
-      ImVec2 textPos = ImVec2 (linePos.x + mTextStart, linePos.y);
+      ImVec2 linePos = {cursorScreenPos.x, cursorScreenPos.y + lineNumber * mCharSize.y};
+      ImVec2 textPos = {linePos.x + mTextStart, linePos.y};
+      ImVec2 startPos = {linePos.x + scrollX, linePos.y};
       widestLine = max (widestLine,
         mTextStart + getTextDistanceToLineStart (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
-      //{{{  draw line selection
+      //{{{  draw select
       float xStart = -1.0f;
       float xEnd = -1.0f;
+
       sPosition lineStartPosition (lineNumber, 0);
       sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
       assert (mState.mSelectionStart <= mState.mSelectionEnd);
+
       if (mState.mSelectionStart <= lineEndPosition)
         xStart = mState.mSelectionStart > lineStartPosition ? getTextDistanceToLineStart (mState.mSelectionStart) : 0.0f;
+
       if (mState.mSelectionEnd > lineStartPosition)
         xEnd = getTextDistanceToLineStart (mState.mSelectionEnd < lineEndPosition ? mState.mSelectionEnd : lineEndPosition);
       if (mState.mSelectionEnd.mLineNumber > lineNumber)
         xEnd += mCharSize.x;
+
       if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd)) {
         drawList->AddRectFilled (ImVec2 (linePos.x + mTextStart + xStart, linePos.y),
                                  ImVec2 (linePos.x + mTextStart + xEnd, linePos.y + mCharSize.y),
                                  mPalette[(size_t)ePalette::Selection]);
         }
       //}}}
-
-      ImVec2 startPos = ImVec2 (linePos.x + scrollX, linePos.y);
       //{{{  draw marker
       auto errorIt = mMarkers.find (lineNumber + 1);
       if (errorIt != mMarkers.end()) {
-        ImVec2 end = ImVec2 (linePos.x + contentSize.x + 2.0f * scrollX, linePos.y + mCharSize.y);
-        drawList->AddRectFilled (startPos, end, mPalette[(size_t)ePalette::Marker]);
+        ImVec2 markerEndPos = {linePos.x + contentSize.x + 2.0f * scrollX, linePos.y + mCharSize.y};
+        drawList->AddRectFilled (startPos, markerEndPos, mPalette[(size_t)ePalette::Marker]);
 
-        if (ImGui::IsMouseHoveringRect (linePos, end)) {
+        if (ImGui::IsMouseHoveringRect (linePos, markerEndPos)) {
           ImGui::BeginTooltip();
 
-          ImGui::PushStyleColor( ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
+          ImGui::PushStyleColor( ImGuiCol_Text, ImVec4(1.0f,0.2f,0.2f, 1.0f));
           ImGui::Text ("Error at line %d:", errorIt->first);
           ImGui::PopStyleColor();
 
           ImGui::Separator();
-          ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.2f, 1.0f));
+          ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f,1.0f,0.2f, 1.0f));
           ImGui::Text ("%s", errorIt->second.c_str());
           ImGui::PopStyleColor();
 
@@ -2466,7 +2470,7 @@ void cTextEditor::render() {
           }
         }
       //}}}
-      //{{{  draw lineNumber
+      //{{{  draw lineNumber, rightJustified
       snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d %d %d %d %4d ",
                 lineNumber+1, line.mFoldLevel, line.mFoldBegin, line.mFoldEnd, line.mFoldLineNumber+1);
 
@@ -2478,14 +2482,12 @@ void cTextEditor::render() {
       //}}}
       if (mState.mCursorPosition.mLineNumber == lineNumber) {
         //{{{  draw cursor
-        auto focused = ImGui::IsWindowFocused();
-
         // highlight cursor line
         if (!hasSelection()) {
-          ImVec2 endPos = ImVec2 (startPos.x + contentSize.x + scrollX, startPos.y + mCharSize.y);
-          drawList->AddRectFilled (startPos, endPos,
+          ImVec2 cursorEndPos = {startPos.x + contentSize.x + scrollX, startPos.y + mCharSize.y};
+          drawList->AddRectFilled (startPos, cursorEndPos,
             mPalette[(int)(focused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
-          drawList->AddRect (startPos, endPos, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
+          drawList->AddRect (startPos, cursorEndPos, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
           }
 
         // draw flashing cursor
@@ -2582,23 +2584,27 @@ void cTextEditor::render() {
         lineCount = 0;
         }
       //}}}
+      if (mFolded && line.mFoldBegin)
+        lineNumber = line.mFoldLineNumber + 1;
+      else
+        lineNumber++;
       }
-    //{{{  draw tooltip on idents/preprocessor symbols
+    //{{{  draw tooltip on idents, preprocessor symbols
     if (ImGui::IsMousePosValid()) {
       string id = getWordAt (screenToPosition (ImGui::GetMousePos()));
       if (!id.empty()) {
-        auto it = mLanguage.mIdents.find (id);
-        if (it != mLanguage.mIdents.end()) {
+        auto identIt = mLanguage.mIdents.find (id);
+        if (identIt != mLanguage.mIdents.end()) {
           ImGui::BeginTooltip();
-          ImGui::TextUnformatted (it->second.mDeclaration.c_str());
+          ImGui::TextUnformatted (identIt->second.mDeclaration.c_str());
           ImGui::EndTooltip();
           }
 
         else {
-          auto pi = mLanguage.mPreprocIdents.find (id);
-          if (pi != mLanguage.mPreprocIdents.end()) {
+          auto preProcIdentIt = mLanguage.mPreprocIdents.find (id);
+          if (preProcIdentIt != mLanguage.mPreprocIdents.end()) {
             ImGui::BeginTooltip();
-            ImGui::TextUnformatted (pi->second.mDeclaration.c_str());
+            ImGui::TextUnformatted (preProcIdentIt->second.mDeclaration.c_str());
             ImGui::EndTooltip();
             }
           }
@@ -2607,7 +2613,7 @@ void cTextEditor::render() {
     //}}}
     }
 
-  // dummy button 
+  // dummy button
   ImGui::Dummy (ImVec2 (widestLine + 2, mLines.size() * mCharSize.y));
 
   if (mScrollToCursor) {
