@@ -233,7 +233,6 @@ public:
   bool isReadOnly() const { return mReadOnly; }
   bool isTextChanged() const { return mTextChanged; }
   bool isCursorPositionChanged() const { return mCursorPositionChanged; }
-  bool isColorizerEnabled() const { return mColorizerEnabled; }
 
   bool hasSelection() const { return mState.mSelectionEnd > mState.mSelectionStart; }
 
@@ -265,13 +264,12 @@ public:
   void setTextLines (const std::vector<std::string>& lines);
 
   void setReadOnly (bool value) { mReadOnly = value; }
-  void setColorizerEnable (bool value) { mColorizerEnabled = value; }
 
   void setCursorPosition (const sPosition& position);
   void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
   void setSelectionStart (const sPosition& position);
   void setSelectionEnd (const sPosition& position);
-  void setSelection (const sPosition& startposition, const sPosition& endposition, eSelection mode = eSelection::Normal);
+  void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
   inline void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
   inline void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
@@ -354,7 +352,7 @@ private:
   //{{{  gets
   bool isOnWordBoundary (const sPosition& position) const;
 
-  std::string getText (const sPosition& startposition, const sPosition& endposition) const;
+  std::string getText (const sPosition& startPosition, const sPosition& endPosition) const;
   sPosition getActualCursorposition() const { return sanitizePosition (mState.mCursorPosition); }
 
   int getCharacterIndex (const sPosition& position) const;
@@ -370,8 +368,8 @@ private:
   int getPageNumLines() const;
   //}}}
   //{{{  sets
-  sPosition sanitizePosition (const sPosition& position) const;
   sPosition screenToPosition (const ImVec2& pos) const;
+  sPosition sanitizePosition (const sPosition& position) const;
   //}}}
   //{{{  find
   sPosition findWordStart (const sPosition& from) const;
@@ -387,16 +385,16 @@ private:
   void ensureCursorVisible();
 
   void advance (sPosition& position) const;
-  void deleteRange (const sPosition& startposition, const sPosition& endposition);
+  void deleteRange (const sPosition& startPosition, const sPosition& endPosition);
   int insertTextAt (sPosition& where, const char* value);
 
   void addUndo (sUndoRecord& value);
 
-  void removeLine (int startposition, int endposition);
+  void removeLine (int startPosition, int endPosition);
   void removeLine (int index);
   std::vector<sGlyph>& insertLine (int index);
 
-  void enterCharacter (ImWchar aChar, bool shift);
+  void enterCharacter (ImWchar ch, bool shift);
 
   void backspace();
   void deleteSelection();
@@ -433,7 +431,6 @@ private:
   bool mScrollToTop;
 
   bool mTextChanged;
-  bool mColorizerEnabled;
   bool mCursorPositionChanged;
 
   int mColorRangeMin;
