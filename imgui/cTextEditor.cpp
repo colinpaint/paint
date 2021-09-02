@@ -1015,20 +1015,6 @@ int cTextEditor::getCharacterColumn (int lineCoord, int index) const {
 //}}}
 
 //{{{
-int cTextEditor::getLineCharacterCount (int lineCoord) const {
-
-  if (lineCoord >= (int)mLines.size())
-    return 0;
-
-  auto& line = mLines[lineCoord];
-  int c = 0;
-  for (size_t i = 0; i < line.size(); c++)
-    i += utf8CharLength (line[i].mChar);
-
-  return c;
-  }
-//}}}
-//{{{
 int cTextEditor::getLineMaxColumn (int lineCoord) const {
 
   if (lineCoord >= (int)mLines.size())
@@ -1048,28 +1034,25 @@ int cTextEditor::getLineMaxColumn (int lineCoord) const {
   return col;
   }
 //}}}
+//{{{
+int cTextEditor::getLineCharacterCount (int lineCoord) const {
+
+  if (lineCoord >= (int)mLines.size())
+    return 0;
+
+  auto& line = mLines[lineCoord];
+  int c = 0;
+  for (size_t i = 0; i < line.size(); c++)
+    i += utf8CharLength (line[i].mChar);
+
+  return c;
+  }
+//}}}
 //}}}
 //{{{  sets
 //{{{
-void cTextEditor::setLanguage (const sLanguage& language) {
-
-  mLanguage = language;
-  mRegexList.clear();
-
-  for (auto& r : mLanguage.mTokenRegexStrings)
-    mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
-
-  colorize();
-  }
-//}}}
-//{{{
-void cTextEditor::setPalette (const tPalette& value) {
-  mPaletteBase = value;
-  }
-//}}}
-
-//{{{
 void cTextEditor::setText (const string& text) {
+// break test into lines, store in internal mLines structure
 
   mLines.clear();
   mLines.emplace_back (tLine());
@@ -1094,11 +1077,13 @@ void cTextEditor::setText (const string& text) {
 //}}}
 //{{{
 void cTextEditor::setTextLines (const vector<string>& lines) {
+// store vector of lines in internal mLines structure
 
   mLines.clear();
 
   if (lines.empty())
     mLines.emplace_back (tLine());
+
   else {
     mLines.resize (lines.size());
     for (size_t i = 0; i < lines.size(); ++i) {
@@ -1114,6 +1099,24 @@ void cTextEditor::setTextLines (const vector<string>& lines) {
 
   mUndoBuffer.clear();
   mUndoIndex = 0;
+
+  colorize();
+  }
+//}}}
+
+//{{{
+void cTextEditor::setPalette (const tPalette& value) {
+  mPaletteBase = value;
+  }
+//}}}
+//{{{
+void cTextEditor::setLanguage (const sLanguage& language) {
+
+  mLanguage = language;
+  mRegexList.clear();
+
+  for (auto& r : mLanguage.mTokenRegexStrings)
+    mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
 
   colorize();
   }
@@ -2035,7 +2038,8 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
 
           // todo : allmost all language definitions use lower case to specify keywords, so shouldn't this use ::tolower ?
           if (!mLanguage.mCaseSensitive)
-            transform (id.begin(), id.end(), id.begin(), ::toupper);
+            transform (id.begin(), id.end(), id.begin(), 
+                       [](uint8_t ch) { return static_cast<uint8_t>(std::toupper (ch)); });
 
           if (!line[first - bufferBegin].mPreprocessor) {
             if (mLanguage.mKeywords.count(id) != 0)
