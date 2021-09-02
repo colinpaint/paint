@@ -353,7 +353,7 @@ void cTextEditor::sUndoRecord::undo (cTextEditor* editor) {
     }
 
   if (!mRemoved.empty()) {
-    auto start = mRemovedStart;
+    sRowColumn start = mRemovedStart;
     editor->insertTextAt (start, mRemoved.c_str());
     editor->colorize (mRemovedStart.mLine - 1, mRemovedEnd.mLine - mRemovedStart.mLine + 2);
     }
@@ -371,7 +371,7 @@ void cTextEditor::sUndoRecord::redo (cTextEditor* editor) {
     }
 
   if (!mAdded.empty()) {
-    auto start = mAddedStart;
+    sRowColumn start = mAddedStart;
     editor->insertTextAt (start, mAdded.c_str());
     editor->colorize (mAddedStart.mLine - 1, mAddedEnd.mLine - mAddedStart.mLine + 1);
     }
@@ -711,7 +711,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::AngelScript() {
     //}}}
 
     for (auto& k : keywords)
-      language.mKeywords.insert(k);
+      language.mKeywords.insert (k);
 
     //{{{
     static const char* const idents[] = {
@@ -769,7 +769,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::Lua() {
     //}}}
 
     for (auto& k : keywords)
-      language.mKeywords.insert(k);
+      language.mKeywords.insert (k);
 
     //{{{
     static const char* const idents[] = {
@@ -789,7 +789,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::Lua() {
     for (auto& k : idents) {
       sIdent id;
       id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair(string(k), id));
+      language.mIdents.insert (make_pair (string(k), id));
       }
 
     language.mTokenRegexStrings.push_back (
@@ -843,7 +843,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::SQL() {
     //}}}
 
     for (auto& k : keywords)
-      language.mKeywords.insert(k);
+      language.mKeywords.insert (k);
 
     //{{{
     static const char* const idents[] = {
@@ -913,7 +913,7 @@ cTextEditor::cTextEditor()
   setPalette (getLightPalette());
   setLanguage (sLanguage::HLSL());
 
-  mLines.push_back (tLine());
+  mLines.push_back (vector<sGlyph>());
   }
 //}}}
 //{{{  gets
@@ -923,7 +923,7 @@ bool cTextEditor::isOnWordBoundary (const sRowColumn& aAt) const {
   if (aAt.mLine >= (int)mLines.size() || aAt.mColumn == 0)
     return true;
 
-  const tLine& line = mLines[aAt.mLine].mLine;
+  const vector<sGlyph>& line = mLines[aAt.mLine].mLine;
   int cindex = getCharacterIndex (aAt);
   if (cindex >= (int)line.size())
     return true;
@@ -983,7 +983,7 @@ int cTextEditor::getCharacterIndex (const sRowColumn& rowColumn) const {
     return -1;
     }
 
-  const tLine& line = mLines[rowColumn.mLine].mLine;
+  const vector<sGlyph>& line = mLines[rowColumn.mLine].mLine;
   int c = 0;
 
   int i = 0;
@@ -1004,12 +1004,12 @@ int cTextEditor::getCharacterColumn (int lineCoord, int index) const {
   if (lineCoord >= (int)mLines.size())
     return 0;
 
-  const tLine& line = mLines[lineCoord].mLine;
+  const vector<sGlyph>& line = mLines[lineCoord].mLine;
   int col = 0;
 
   int i = 0;
   while ((i < index) && i < ((int)line.size())) {
-    auto c = line[i].mChar;
+    uint8_t c = line[i].mChar;
     i += utf8CharLength (c);
     if (c == '\t')
       col = (col / mTabSize) * mTabSize + mTabSize;
@@ -1027,10 +1027,10 @@ int cTextEditor::getLineMaxColumn (int lineCoord) const {
   if (lineCoord >= (int)mLines.size())
     return 0;
 
-  const tLine& line = mLines[lineCoord].mLine;
+  const vector<sGlyph>& line = mLines[lineCoord].mLine;
   int col = 0;
   for (size_t i = 0; i < line.size(); ) {
-    auto c = line[i].mChar;
+    uint8_t c = line[i].mChar;
     if (c == '\t')
       col = (col / mTabSize) * mTabSize + mTabSize;
     else
@@ -1047,7 +1047,7 @@ int cTextEditor::getLineCharacterCount (int lineCoord) const {
   if (lineCoord >= (int)mLines.size())
     return 0;
 
-  const tLine& line = mLines[lineCoord].mLine;
+  const vector<sGlyph>& line = mLines[lineCoord].mLine;
   int c = 0;
   for (size_t i = 0; i < line.size(); c++)
     i += utf8CharLength (line[i].mChar);
@@ -1062,14 +1062,14 @@ void cTextEditor::setText (const string& text) {
 // break test into lines, store in internal mLines structure
 
   mLines.clear();
-  mLines.emplace_back (tLine());
+  mLines.emplace_back (vector<sGlyph>());
 
   for (auto chr : text)
     if (chr == '\r') {
       // ignore the carriage return character
       }
     else if (chr == '\n')
-      mLines.emplace_back (tLine());
+      mLines.emplace_back (vector<sGlyph>());
     else
       mLines.back().mLine.emplace_back (sGlyph (chr, ePaletteIndex::Default));
 
@@ -1089,7 +1089,7 @@ void cTextEditor::setTextLines (const vector<string>& lines) {
   mLines.clear();
 
   if (lines.empty())
-    mLines.emplace_back (tLine());
+    mLines.emplace_back (vector<sGlyph>());
 
   else {
     mLines.resize (lines.size());
@@ -1112,7 +1112,7 @@ void cTextEditor::setTextLines (const vector<string>& lines) {
 //}}}
 
 //{{{
-void cTextEditor::setPalette (const tPalette& value) {
+void cTextEditor::setPalette (const array<ImU32,(uint32_t)ePaletteIndex::Max>& value) {
   mPaletteBase = value;
   }
 //}}}
@@ -1159,8 +1159,8 @@ void cTextEditor::setSelectionEnd (const sRowColumn& position) {
 //{{{
 void cTextEditor::setSelection (const sRowColumn& startCord, const sRowColumn& endCord, eSelectionMode aMode) {
 
-  auto oldSelStart = mState.mSelectionStart;
-  auto oldSelEnd = mState.mSelectionEnd;
+  sRowColumn oldSelStart = mState.mSelectionStart;
+  sRowColumn oldSelEnd = mState.mSelectionEnd;
 
   mState.mSelectionStart = sanitizeRowColumn (startCord);
   mState.mSelectionEnd = sanitizeRowColumn(endCord);
@@ -1179,7 +1179,7 @@ void cTextEditor::setSelection (const sRowColumn& startCord, const sRowColumn& e
       }
 
     case cTextEditor::eSelectionMode::Line: {
-      const auto lineNo = mState.mSelectionEnd.mLine;
+      const int lineNo = mState.mSelectionEnd.mLine;
       //const auto lineSize = (size_t)lineNo < mLines.size() ? mLines[lineNo].size() : 0;
       mState.mSelectionStart = sRowColumn (mState.mSelectionStart.mLine, 0);
       mState.mSelectionEnd = sRowColumn (lineNo, getLineMaxColumn (lineNo));
@@ -1224,7 +1224,7 @@ void cTextEditor::moveUp (int amount, bool select) {
 void cTextEditor::moveDown (int amount, bool select) {
 
   assert(mState.mCursorPosition.mColumn >= 0);
-  auto oldPos = mState.mCursorPosition;
+  sRowColumn oldPos = mState.mCursorPosition;
   mState.mCursorPosition.mLine = max (0, min((int)mLines.size() - 1, mState.mCursorPosition.mLine + amount));
 
   if (mState.mCursorPosition != oldPos) {
@@ -1252,10 +1252,10 @@ void cTextEditor::moveLeft (int amount, bool select, bool wordMode) {
   if (mLines.empty())
     return;
 
-  auto oldPos = mState.mCursorPosition;
+  sRowColumn oldPos = mState.mCursorPosition;
   mState.mCursorPosition = getActualCursorRowColumn();
-  auto line = mState.mCursorPosition.mLine;
-  auto cindex = getCharacterIndex (mState.mCursorPosition);
+  int line = mState.mCursorPosition.mLine;
+  int cindex = getCharacterIndex (mState.mCursorPosition);
 
   while (amount-- > 0) {
     if (cindex == 0) {
@@ -1312,9 +1312,9 @@ void cTextEditor::moveRight(int amount, bool select, bool wordMode) {
   if (mLines.empty() || oldPos.mLine >= (int)mLines.size())
     return;
 
-  auto cindex = getCharacterIndex (mState.mCursorPosition);
+  int cindex = getCharacterIndex (mState.mCursorPosition);
   while (amount-- > 0) {
-    auto lindex = mState.mCursorPosition.mLine;
+    int lindex = mState.mCursorPosition.mLine;
     sLine& line = mLines[lindex];
 
     if (cindex >= (int)line.mLine.size()) {
@@ -1355,7 +1355,7 @@ void cTextEditor::moveRight(int amount, bool select, bool wordMode) {
 //{{{
 void cTextEditor::moveTop (bool select) {
 
-  auto oldPos = mState.mCursorPosition;
+  sRowColumn oldPos = mState.mCursorPosition;
   setCursorPosition (sRowColumn(0, 0));
 
   if (mState.mCursorPosition != oldPos) {
@@ -1372,8 +1372,8 @@ void cTextEditor::moveTop (bool select) {
 //{{{
 void cTextEditor::moveBottom (bool select) {
 
-  auto oldPos = getCursorPosition();
-  auto newPos = sRowColumn ((int)mLines.size() - 1, 0);
+  sRowColumn oldPos = getCursorPosition();
+  sRowColumn newPos = sRowColumn ((int)mLines.size() - 1, 0);
 
   setCursorPosition (newPos);
 
@@ -1390,7 +1390,7 @@ void cTextEditor::moveBottom (bool select) {
 //{{{
 void cTextEditor::moveHome (bool select) {
 
-  auto oldPos = mState.mCursorPosition;
+  sRowColumn oldPos = mState.mCursorPosition;
   setCursorPosition (sRowColumn(mState.mCursorPosition.mLine, 0));
 
   if (mState.mCursorPosition != oldPos) {
@@ -1414,7 +1414,7 @@ void cTextEditor::moveHome (bool select) {
 //{{{
 void cTextEditor::moveEnd (bool select) {
 
-  auto oldPos = mState.mCursorPosition;
+  sRowColumn oldPos = mState.mCursorPosition;
   setCursorPosition (sRowColumn(mState.mCursorPosition.mLine, getLineMaxColumn (oldPos.mLine)));
 
   if (mState.mCursorPosition != oldPos) {
@@ -1444,7 +1444,7 @@ void cTextEditor::selectAll() {
 //{{{
 void cTextEditor::selectWordUnderCursor() {
 
-  auto c = getCursorPosition();
+  sRowColumn c = getCursorPosition();
   setSelection (findWordStart (c), findWordEnd (c));
   }
 //}}}
@@ -1455,8 +1455,8 @@ void cTextEditor::insertText (const char * value) {
   if (value == nullptr)
     return;
 
-  auto pos = getActualCursorRowColumn();
-  auto start = min (pos, mState.mSelectionStart);
+  sRowColumn pos = getActualCursorRowColumn();
+  sRowColumn start = min (pos, mState.mSelectionStart);
   int totalLines = pos.mLine - start.mLine;
 
   totalLines += insertTextAt (pos, value);
@@ -1555,7 +1555,7 @@ void cTextEditor::deleteIt() {
   else {
     sRowColumn pos = getActualCursorRowColumn();
     setCursorPosition (pos);
-    tLine& line = mLines[pos.mLine].mLine;
+    vector<sGlyph>& line = mLines[pos.mLine].mLine;
 
     if (pos.mColumn == getLineMaxColumn (pos.mLine)) {
       if (pos.mLine == (int)mLines.size() - 1)
@@ -1565,7 +1565,7 @@ void cTextEditor::deleteIt() {
       u.mRemovedStart = u.mRemovedEnd = getActualCursorRowColumn();
       advance (u.mRemovedEnd);
 
-      tLine& nextLine = mLines[pos.mLine + 1].mLine;
+      vector<sGlyph>& nextLine = mLines[pos.mLine + 1].mLine;
       line.insert (line.end(), nextLine.begin(), nextLine.end());
       removeLine (pos.mLine + 1);
       }
@@ -1644,8 +1644,8 @@ void cTextEditor::render (const char* title, const ImVec2& size, bool border) {
 //}}}
 
 // public static
-const cTextEditor::tPalette& cTextEditor::getDarkPalette() { return kDarkPalette; }
-const cTextEditor::tPalette& cTextEditor::getLightPalette() { return kLightPalette; }
+const array<ImU32,(uint32_t)cTextEditor::ePaletteIndex::Max>& cTextEditor::getDarkPalette() { return kDarkPalette; }
+const array<ImU32,(uint32_t)cTextEditor::ePaletteIndex::Max>& cTextEditor::getLightPalette() { return kLightPalette; }
 
 // private:
 //{{{  gets
@@ -1677,7 +1677,7 @@ string cTextEditor::getText (const sRowColumn& startCord, const sRowColumn& endC
     if (lstart >= (int)mLines.size())
       break;
 
-    const tLine& line = mLines[lstart].mLine;
+    const vector<sGlyph>& line = mLines[lstart].mLine;
     if (istart < (int)line.size()) {
       result += line[istart].mChar;
       istart++;
@@ -1745,7 +1745,7 @@ string cTextEditor::getWordUnderCursor() const {
 //{{{
 float cTextEditor::getTextDistanceToLineStart (const sRowColumn& from) const {
 
-  const tLine& line = mLines[from.mLine].mLine;
+  const vector<sGlyph>& line = mLines[from.mLine].mLine;
   float distance = 0.0f;
 
   float spaceSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
@@ -1809,7 +1809,7 @@ cTextEditor::sRowColumn cTextEditor::screenPosToRowColumn (const ImVec2& positio
   int columnCoord = 0;
 
   if ((lineNo >= 0) && (lineNo < (int)mLines.size())) {
-    const tLine& line = mLines.at (lineNo).mLine;
+    const vector<sGlyph>& line = mLines.at (lineNo).mLine;
 
     int columnIndex = 0;
     float columnX = 0.0f;
@@ -1859,7 +1859,7 @@ cTextEditor::sRowColumn cTextEditor::findWordStart (const sRowColumn& from) cons
   if (at.mLine >= (int)mLines.size())
     return at;
 
-  const tLine& line = mLines[at.mLine].mLine;
+  const vector<sGlyph>& line = mLines[at.mLine].mLine;
   int cindex = getCharacterIndex (at);
 
   if (cindex >= (int)line.size())
@@ -1892,7 +1892,7 @@ cTextEditor::sRowColumn cTextEditor::findWordEnd (const sRowColumn& from) const 
   if (at.mLine >= (int)mLines.size())
     return at;
 
-  const tLine& line = mLines[at.mLine].mLine;
+  const vector<sGlyph>& line = mLines[at.mLine].mLine;
   int cindex = getCharacterIndex (at);
 
   if (cindex >= (int)line.size())
@@ -1931,7 +1931,7 @@ cTextEditor::sRowColumn cTextEditor::findNextWord (const sRowColumn& from) const
 
   int cindex = getCharacterIndex (from);
   if (cindex < (int)mLines[at.mLine].mLine.size()) {
-    const tLine& line = mLines[at.mLine].mLine;
+    const vector<sGlyph>& line = mLines[at.mLine].mLine;
     isword = isalnum(line[cindex].mChar);
     skip = isword;
     }
@@ -1942,7 +1942,7 @@ cTextEditor::sRowColumn cTextEditor::findNextWord (const sRowColumn& from) const
       return sRowColumn (l, getLineMaxColumn(l));
       }
 
-    const tLine& line = mLines[at.mLine].mLine;
+    const vector<sGlyph>& line = mLines[at.mLine].mLine;
     if (cindex < (int)line.size()) {
       isword = isalnum (line[cindex].mChar);
 
@@ -1992,7 +1992,7 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
 
   int endLine = max(0, min((int)mLines.size(), toLine));
   for (int i = fromLine; i < endLine; ++i) {
-    tLine& line = mLines[i].mLine;
+    vector<sGlyph>& line = mLines[i].mLine;
 
     if (line.empty())
       continue;
@@ -2089,7 +2089,7 @@ void cTextEditor::colorizeInternal() {
     int currentIndex = 0;
 
     while (currentLine < endLine || currentIndex < endIndex) {
-      tLine& line = mLines[currentLine].mLine;
+      vector<sGlyph>& line = mLines[currentLine].mLine;
       if (currentIndex == 0 && !concatenate) {
         withinSingleLineComment = false;
         withinPreproc = false;
@@ -2235,7 +2235,7 @@ void cTextEditor::ensureCursorVisible() {
 void cTextEditor::advance (sRowColumn& rowColumn) const {
 
   if (rowColumn.mLine < (int)mLines.size()) {
-    const tLine& line = mLines[rowColumn.mLine].mLine;
+    const vector<sGlyph>& line = mLines[rowColumn.mLine].mLine;
     int cindex = getCharacterIndex (rowColumn);
     if (cindex + 1 < (int)line.size()) {
       auto delta = utf8CharLength (line[cindex].mChar);
@@ -2275,9 +2275,9 @@ void cTextEditor::removeLine (int startCord, int endCord) {
   assert (endCord >= startCord);
   assert (mLines.size() > (size_t)(endCord - startCord));
 
-  tMarkers etmp;
+  map<int,string> etmp;
   for (auto& i : mMarkers) {
-    tMarkers::value_type e(i.first >= startCord ? i.first - 1 : i.first, i.second);
+    map<int,string>::value_type e(i.first >= startCord ? i.first - 1 : i.first, i.second);
     if (e.first >= startCord && e.first <= endCord)
       continue;
     etmp.insert(e);
@@ -2296,9 +2296,9 @@ void cTextEditor::removeLine (int index) {
   assert(!mReadOnly);
   assert(mLines.size() > 1);
 
-  tMarkers etmp;
+  map<int,string> etmp;
   for (auto& i : mMarkers) {
-    tMarkers::value_type e(i.first > index ? i.first - 1 : i.first, i.second);
+    map<int,string>::value_type e(i.first > index ? i.first - 1 : i.first, i.second);
     if (e.first - 1 == index)
       continue;
     etmp.insert(e);
@@ -2342,14 +2342,14 @@ void cTextEditor::backspace() {
       u.mRemovedStart = u.mRemovedEnd = sRowColumn (pos.mLine - 1, getLineMaxColumn (pos.mLine - 1));
       advance (u.mRemovedEnd);
 
-      tLine& line = mLines[mState.mCursorPosition.mLine].mLine;
-      tLine& prevLine = mLines[mState.mCursorPosition.mLine - 1].mLine;
+      vector<sGlyph>& line = mLines[mState.mCursorPosition.mLine].mLine;
+      vector<sGlyph>& prevLine = mLines[mState.mCursorPosition.mLine - 1].mLine;
       int prevSize = getLineMaxColumn (mState.mCursorPosition.mLine - 1);
       prevLine.insert (prevLine.end(), line.begin(), line.end());
 
-      tMarkers etmp;
+      map<int,string> etmp;
       for (auto& i : mMarkers)
-        etmp.insert (tMarkers::value_type (i.first - 1 == mState.mCursorPosition.mLine ? i.first - 1 : i.first, i.second));
+        etmp.insert (map<int,string>::value_type (i.first - 1 == mState.mCursorPosition.mLine ? i.first - 1 : i.first, i.second));
       mMarkers = move (etmp);
 
       removeLine (mState.mCursorPosition.mLine);
@@ -2357,7 +2357,7 @@ void cTextEditor::backspace() {
       mState.mCursorPosition.mColumn = prevSize;
       }
     else {
-      tLine& line = mLines[mState.mCursorPosition.mLine].mLine;
+      vector<sGlyph>& line = mLines[mState.mCursorPosition.mLine].mLine;
       int cindex = getCharacterIndex (pos) - 1;
       int cend = cindex + 1;
       while (cindex > 0 && IsUTFSequence (line[cindex].mChar))
@@ -2415,7 +2415,7 @@ void cTextEditor::deleteRange (const sRowColumn& startCord, const sRowColumn& en
   auto start = getCharacterIndex(startCord);
   auto end = getCharacterIndex(endCord);
   if (startCord.mLine == endCord.mLine) {
-    tLine& line = mLines[startCord.mLine].mLine;
+    vector<sGlyph>& line = mLines[startCord.mLine].mLine;
     int  n = getLineMaxColumn (startCord.mLine);
     if (endCord.mColumn >= n)
       line.erase (line.begin() + start, line.end());
@@ -2424,8 +2424,8 @@ void cTextEditor::deleteRange (const sRowColumn& startCord, const sRowColumn& en
     }
 
   else {
-    tLine& firstLine = mLines[startCord.mLine].mLine;
-    tLine& lastLine = mLines[endCord.mLine].mLine;
+    vector<sGlyph>& firstLine = mLines[startCord.mLine].mLine;
+    vector<sGlyph>& lastLine = mLines[endCord.mLine].mLine;
 
     firstLine.erase(firstLine.begin() + start, firstLine.end());
     lastLine.erase(lastLine.begin(), lastLine.begin() + end);
@@ -2473,7 +2473,7 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool shift) {
       bool modified = false;
 
       for (int i = start.mLine; i <= end.mLine; i++) {
-        tLine& line = mLines[i].mLine;
+        vector<sGlyph>& line = mLines[i].mLine;
         if (shift) {
           if (!line.empty()) {
             if (line.front().mChar == '\t') {
@@ -2536,8 +2536,8 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool shift) {
   assert (!mLines.empty());
   if (aChar == '\n') {
     insertLine (coord.mLine + 1);
-    tLine& line = mLines[coord.mLine].mLine;
-    tLine& newLine = mLines[coord.mLine + 1].mLine;
+    vector<sGlyph>& line = mLines[coord.mLine].mLine;
+    vector<sGlyph>& newLine = mLines[coord.mLine + 1].mLine;
 
     if (mLanguage.mAutoIndentation)
       for (size_t it = 0; it < line.size() && isascii(line[it].mChar) && isblank(line[it].mChar); ++it)
@@ -2556,7 +2556,7 @@ void cTextEditor::enterCharacter (ImWchar aChar, bool shift) {
     int e = ImTextCharToUtf8(buf, 7, aChar);
     if (e > 0) {
       buf[e] = '\0';
-      tLine& line = mLines[coord.mLine].mLine;
+      vector<sGlyph>& line = mLines[coord.mLine].mLine;
       int cindex = getCharacterIndex (coord);
 
       if (mOverwrite && cindex < (int)line.size()) {
@@ -2607,8 +2607,8 @@ int cTextEditor::insertTextAt (sRowColumn& /* inout */ where, const char* value)
       }
     else if (*value == '\n') {
       if (cindex < (int)mLines[where.mLine].mLine.size()) {
-        tLine& newLine = insertLine (where.mLine + 1);
-        tLine& line = mLines[where.mLine].mLine;
+        vector<sGlyph>& newLine = insertLine (where.mLine + 1);
+        vector<sGlyph>& line = mLines[where.mLine].mLine;
         newLine.insert (newLine.begin(), line.begin() + cindex, line.end());
         line.erase (line.begin() + cindex, line.end());
         }
@@ -2623,7 +2623,7 @@ int cTextEditor::insertTextAt (sRowColumn& /* inout */ where, const char* value)
       }
 
     else {
-      tLine& line = mLines[where.mLine].mLine;
+      vector<sGlyph>& line = mLines[where.mLine].mLine;
       auto d = utf8CharLength (*value);
       while (d-- > 0 && *value != '\0')
         line.insert (line.begin() + cindex++, sGlyph (*value++, ePaletteIndex::Default));
@@ -2637,15 +2637,15 @@ int cTextEditor::insertTextAt (sRowColumn& /* inout */ where, const char* value)
   }
 //}}}
 //{{{
-cTextEditor::tLine& cTextEditor::insertLine (int index) {
+vector<cTextEditor::sGlyph>& cTextEditor::insertLine (int index) {
 
   assert (!mReadOnly);
 
-  sLine& result = *mLines.insert (mLines.begin() + index, tLine());
+  sLine& result = *mLines.insert (mLines.begin() + index, vector<sGlyph>());
 
-  tMarkers etmp;
+  map<int,string> etmp;
   for (auto& i : mMarkers)
-    etmp.insert (tMarkers::value_type (i.first >= index ? i.first + 1 : i.first, i.second));
+    etmp.insert (map<int,string>::value_type (i.first >= index ? i.first + 1 : i.first, i.second));
   mMarkers = move (etmp);
 
   return result.mLine;
@@ -2844,7 +2844,7 @@ void cTextEditor::render() {
       ImVec2 lineStartScreenPos = ImVec2 (cursorScreenPos.x, cursorScreenPos.y + lineNo * mCharAdvance.y);
       ImVec2 textScreenPos = ImVec2 (lineStartScreenPos.x + mTextStart, lineStartScreenPos.y);
 
-      tLine& line = mLines[lineNo].mLine;
+      vector<sGlyph>& line = mLines[lineNo].mLine;
       longest = max(mTextStart + getTextDistanceToLineStart (sRowColumn (lineNo, getLineMaxColumn (lineNo))), longest);
       auto columnNo = 0;
       sRowColumn lineStartCoord (lineNo, 0);

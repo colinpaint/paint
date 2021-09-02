@@ -18,7 +18,6 @@
 class cTextEditor {
 public:
   enum class eSelectionMode { Normal, Word, Line };
-
   //{{{
   enum class ePaletteIndex {
     Default,
@@ -44,7 +43,6 @@ public:
     Max
     };
   //}}}
-  using tPalette = std::array<ImU32, (unsigned)ePaletteIndex::Max>;
   //{{{
   struct sGlyph {
     uint8_t mChar;
@@ -57,28 +55,20 @@ public:
       : mChar(aChar), mColorIndex(aColorIndex), mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
     };
   //}}}
-  using tLine = std::vector<sGlyph>;
   //{{{
   struct sLine {
-    tLine mLine;
+  // editor line
+    std::vector<sGlyph> mLine;
     uint32_t mNumber;
     bool mFoldStart;
     bool mFoldEnd;
     bool mFoldOpen;
 
     sLine() : mLine(), mNumber(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
-    sLine (tLine line): mLine(line), mNumber(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
+    sLine (std::vector<sGlyph> line): mLine(line), mNumber(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
     };
   //}}}
-  using tLines = std::vector<sLine>;
   //{{{
-  // Represents a character coordinate from the user's point of view,
-  // i. e. consider an uniform grid (assuming fixed-width font) on the
-  // screen as it is rendered, and each cell has its own coordinate, starting from 0.
-  // Tabs are counted as [1..mTabSize] count empty spaces, depending on
-  // how many space is necessary to reach the next tab stop.
-  // For example, coordinate (1, 5) represents the character 'B' in a line "\tABC", when mTabSize = 4,
-  // because it is rendered as "    ABC" on the screen.
   struct sRowColumn {
     int mLine;
     int mColumn;
@@ -90,7 +80,9 @@ public:
       assert (column >= 0);
       }
     //}}}
-    static sRowColumn Invalid() { static sRowColumn invalid(-1, -1); return invalid; }
+
+    static sRowColumn Invalid() { static sRowColumn invalid(-1,-1); return invalid; }
+
     //{{{
     bool operator ==(const sRowColumn& o) const
     {
@@ -141,16 +133,12 @@ public:
     //}}}
   };
   //}}}
-
-  using tKeywords = std::unordered_set<std::string>;
-  using tMarkers = std::map<int, std::string>;
   //{{{
   struct sIdent {
     sRowColumn mLocation;
     std::string mDeclaration;
     };
   //}}}
-  using tIdents = std::unordered_map<std::string, sIdent>;
   //{{{
   struct sLanguage {
     // typedef
@@ -162,9 +150,9 @@ public:
     // vars
     std::string mName;
 
-    tKeywords mKeywords;
-    tIdents mIdents;
-    tIdents mPreprocIdents;
+    std::unordered_set<std::string> mKeywords;
+    std::unordered_map<std::string,sIdent> mIdents;
+    std::unordered_map<std::string,sIdent> mPreprocIdents;
 
     std::string mCommentStart;
     std::string mCommentEnd;
@@ -209,7 +197,7 @@ public:
   inline bool isShowingWhitespaces() const { return mShowWhitespaces; }
 
   const sLanguage& getLanguage() const { return mLanguage; }
-  const tPalette& getPalette() const { return mPaletteBase; }
+  const std::array<ImU32, (uint32_t)ePaletteIndex::Max>& getPalette() const { return mPaletteBase; }
 
   std::string getText() const;
   std::vector<std::string> getTextLines() const;
@@ -223,9 +211,9 @@ public:
   inline int getTabSize() const { return mTabSize; }
   //}}}
   //{{{  sets
-  void setMarkers (const tMarkers& markers) { mMarkers = markers; }
+  void setMarkers (const std::map<int,std::string>& markers) { mMarkers = markers; }
   void setLanguage (const sLanguage& language);
-  void setPalette (const tPalette& value);
+  void setPalette (const std::array<ImU32,(uint32_t)ePaletteIndex::Max>& value);
 
   void setText (const std::string& text);
   void setTextLines (const std::vector<std::string>& lines);
@@ -273,12 +261,12 @@ public:
   void render (const char* title, const ImVec2& size = ImVec2(), bool border = false);
   //}}}
   //{{{  static gets
-  static const tPalette& getDarkPalette();
-  static const tPalette& getLightPalette();
+  static const std::array<ImU32, (uint32_t)ePaletteIndex::Max>& getDarkPalette();
+  static const std::array<ImU32, (uint32_t)ePaletteIndex::Max>& getLightPalette();
   //}}}
 
 private:
-  typedef std::vector<std::pair<std::regex, ePaletteIndex>> tRegexList;
+  typedef std::vector<std::pair<std::regex,ePaletteIndex>> tRegexList;
   //{{{
   struct sEditorState {
     sRowColumn mSelectionStart;
@@ -364,7 +352,7 @@ private:
 
   void removeLine (int startCord, int endCord);
   void removeLine (int index);
-  tLine& insertLine (int index);
+  std::vector<sGlyph>& insertLine (int index);
 
   void enterCharacter (ImWchar aChar, bool shift);
 
@@ -377,13 +365,13 @@ private:
 
   void render();
   //{{{  vars
-  tLines mLines;
+  std::vector<sLine> mLines;
 
-  tPalette mPaletteBase;
-  tPalette mPalette;
+  std::array<ImU32,(uint32_t)ePaletteIndex::Max> mPaletteBase;
+  std::array<ImU32,(uint32_t)ePaletteIndex::Max> mPalette;
   sLanguage mLanguage;
   tRegexList mRegexList;
-  tMarkers mMarkers;
+  std::map<int, std::string> mMarkers;
 
   float mLineSpacing;
 
