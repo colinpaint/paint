@@ -281,19 +281,19 @@ private:
     ~sUndoRecord() {}
 
     sUndoRecord (
-      const std::string& aAdded,
-      const cTextEditor::sRowColumn aAddedStart,
-      const cTextEditor::sRowColumn aAddedEnd,
+      const std::string& added,
+      const cTextEditor::sRowColumn addedStart,
+      const cTextEditor::sRowColumn addedEnd,
 
       const std::string& aRemoved,
-      const cTextEditor::sRowColumn aRemovedStart,
-      const cTextEditor::sRowColumn aRemovedEnd,
+      const cTextEditor::sRowColumn removedStart,
+      const cTextEditor::sRowColumn removedEnd,
 
-      cTextEditor::sEditorState& aBefore,
-      cTextEditor::sEditorState& aAfter);
+      cTextEditor::sEditorState& before,
+      cTextEditor::sEditorState& after);
 
-    void Undo (cTextEditor* editor);
-    void Redo (cTextEditor* editor);
+    void undo (cTextEditor* editor);
+    void redo (cTextEditor* editor);
 
     std::string mAdded;
     sRowColumn mAddedStart;

@@ -29,7 +29,7 @@ bool equals (InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, B
 
 namespace {
   //{{{
-  const array <ImU32, (unsigned)cTextEditor::ePaletteIndex::Max> kDarkPalette = {
+  const array <ImU32, (uint32_t)cTextEditor::ePaletteIndex::Max> kDarkPalette = {
     0xff7f7f7f, // Default
     0xffd69c56, // Keyword
     0xff00ff00, // Number
@@ -53,7 +53,7 @@ namespace {
     };
   //}}}
   //{{{
-  const array <ImU32, (unsigned)cTextEditor::ePaletteIndex::Max> kLightPalette = {
+  const array <ImU32, (uint32_t)cTextEditor::ePaletteIndex::Max> kLightPalette = {
     0xff7f7f7f, // None
     0xffff0c06, // Keyword
     0xff008000, // Number
@@ -76,6 +76,7 @@ namespace {
     0x40000000, // Current line edge
     };
   //}}}
+
   //{{{
   bool IsUTFSequence (char c) {
     return (c & 0xC0) == 0x80;
@@ -102,7 +103,7 @@ namespace {
     }
   //}}}
   //{{{
-  int ImTextCharToUtf8 (char* buf, int buf_size, unsigned int c) {
+  int ImTextCharToUtf8 (char* buf, int buf_size, uint32_t c) {
   // "Borrowed" from ImGui source
 
     if (c < 0x80) {
@@ -140,6 +141,7 @@ namespace {
       }
     }
   //}}}
+
   //{{{
   bool findString (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
@@ -325,20 +327,25 @@ namespace {
 
 // cTextEditor::sUndoRecord
 //{{{
-cTextEditor::sUndoRecord::sUndoRecord (
-  const string& aAdded, const cTextEditor::sRowColumn aAddedStart, const cTextEditor::sRowColumn aAddedEnd,
-  const string& aRemoved, const cTextEditor::sRowColumn aRemovedStart, const cTextEditor::sRowColumn aRemovedEnd,
-  cTextEditor::sEditorState& aBefore, cTextEditor::sEditorState& aAfter)
-    : mAdded(aAdded), mAddedStart(aAddedStart), mAddedEnd(aAddedEnd),
-      mRemoved(aRemoved), mRemovedStart(aRemovedStart), mRemovedEnd(aRemovedEnd),
-      mBefore(aBefore), mAfter(aAfter) {
+cTextEditor::sUndoRecord::sUndoRecord (const string& added,
+                                       const cTextEditor::sRowColumn addedStart, 
+                                       const cTextEditor::sRowColumn addedEnd,
+                                       const string& removed, 
+                                       const cTextEditor::sRowColumn removedStart, 
+                                       const cTextEditor::sRowColumn removedEnd,
+                                       cTextEditor::sEditorState& before, 
+                                       cTextEditor::sEditorState& after)
+
+    : mAdded(added), mAddedStart(addedStart), mAddedEnd(addedEnd),
+      mRemoved(removed), mRemovedStart(removedStart), mRemovedEnd(removedEnd),
+      mBefore(before), mAfter(after) {
 
   assert (mAddedStart <= mAddedEnd);
   assert (mRemovedStart <= mRemovedEnd);
   }
 //}}}
 //{{{
-void cTextEditor::sUndoRecord::Undo (cTextEditor* editor) {
+void cTextEditor::sUndoRecord::undo (cTextEditor* editor) {
 
   if (!mAdded.empty()) {
     editor->deleteRange (mAddedStart, mAddedEnd);
@@ -356,7 +363,7 @@ void cTextEditor::sUndoRecord::Undo (cTextEditor* editor) {
   }
 //}}}
 //{{{
-void cTextEditor::sUndoRecord::Redo (cTextEditor* editor) {
+void cTextEditor::sUndoRecord::redo (cTextEditor* editor) {
 
   if (!mRemoved.empty()) {
     editor->deleteRange (mRemovedStart, mRemovedEnd);
@@ -893,11 +900,11 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::SQL() {
 //{{{
 cTextEditor::cTextEditor()
   : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4),
-    mOverwrite(false) , mReadOnly(false) , mWithinRender(false),
-    mScrollToCursor(false), mScrollToTop(false),
+    mOverwrite(false) , mReadOnly(false) , mWithinRender(false), mScrollToCursor(false), mScrollToTop(false),
     mTextChanged(false), mColorizerEnabled(true),
     mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false),
-    mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(eSelectionMode::Normal) ,
+    mColorRangeMin(0), mColorRangeMax(0), 
+    mSelectionMode(eSelectionMode::Normal) ,
     mHandleKeyboardInputs(true), mHandleMouseInputs(true),
     mIgnoreImGuiChild(false), mShowWhitespaces(true), mCheckComments(true),
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
@@ -1431,14 +1438,14 @@ void cTextEditor::moveEnd (bool select) {
 
 //{{{
 void cTextEditor::selectAll() {
-  setSelection (sRowColumn (0, 0), sRowColumn((int)mLines.size(), 0));
+  setSelection (sRowColumn (0,0), sRowColumn ((int)mLines.size(), 0));
   }
 //}}}
 //{{{
 void cTextEditor::selectWordUnderCursor() {
 
   auto c = getCursorPosition();
-  setSelection (findWordStart(c), findWordEnd(c));
+  setSelection (findWordStart (c), findWordEnd (c));
   }
 //}}}
 
@@ -1462,17 +1469,15 @@ void cTextEditor::InsertText (const char * value) {
 //{{{
 void cTextEditor::copy() {
 
-  if (hasSelection()) {
+  if (hasSelection()) 
     ImGui::SetClipboardText (getSelectedText().c_str());
-    }
-  else {
-    if (!mLines.empty()) {
-      string str;
-      auto& line = mLines[getActualCursorRowColumn().mLine];
-      for (auto& g : line)
-        str.push_back(g.mChar);
-      ImGui::SetClipboardText (str.c_str());
-      }
+
+  else if (!mLines.empty()) {
+    string str;
+    auto& line = mLines[getActualCursorRowColumn().mLine];
+    for (auto& g : line)
+      str.push_back (g.mChar);
+    ImGui::SetClipboardText (str.c_str());
     }
   }
 //}}}
@@ -1481,6 +1486,7 @@ void cTextEditor::cut() {
 
   if (isReadOnly())
     copy();
+
   else {
     if (hasSelection()) {
       sUndoRecord u;
@@ -1508,7 +1514,6 @@ void cTextEditor::paste() {
   if (clipText != nullptr && strlen (clipText) > 0) {
     sUndoRecord u;
     u.mBefore = mState;
-
     if (hasSelection()) {
       u.mRemoved = getSelectedText();
       u.mRemovedStart = mState.mSelectionStart;
@@ -1586,14 +1591,14 @@ void cTextEditor::deleteIt() {
 void cTextEditor::undo (int steps) {
 
   while (canUndo() && steps-- > 0)
-    mUndoBuffer[--mUndoIndex].Undo (this);
+    mUndoBuffer[--mUndoIndex].undo (this);
   }
 //}}}
 //{{{
 void cTextEditor::redo (int steps) {
 
   while (canRedo() && steps-- > 0)
-    mUndoBuffer[mUndoIndex++].Redo (this);
+    mUndoBuffer[mUndoIndex++].redo (this);
   }
 //}}}
 //}}}
@@ -2034,11 +2039,11 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
       else {
         const size_t token_length = token_end - token_begin;
         if (token_color == ePaletteIndex::Ident) {
-          id.assign(token_begin, token_end);
+          id.assign (token_begin, token_end);
 
-          // todo : allmost all language definitions use lower case to specify keywords, so shouldn't this use ::tolower ?
+          // almost all languages use lower case to specify keywords, so shouldn't this use ::tolower ?
           if (!mLanguage.mCaseSensitive)
-            transform (id.begin(), id.end(), id.begin(), 
+            transform (id.begin(), id.end(), id.begin(),
                        [](uint8_t ch) { return static_cast<uint8_t>(std::toupper (ch)); });
 
           if (!line[first - bufferBegin].mPreprocessor) {
