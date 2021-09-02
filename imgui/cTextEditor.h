@@ -226,9 +226,6 @@ public:
     static const sLanguage& C();
     static const sLanguage& HLSL();
     static const sLanguage& GLSL();
-    static const sLanguage& AngelScript();
-    static const sLanguage& Lua();
-    static const sLanguage& SQL();
     };
   //}}}
 
