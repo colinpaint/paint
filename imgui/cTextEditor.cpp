@@ -89,7 +89,6 @@ namespace {
     "false", "float", "for", "friend",
     "goto",
     "if", "import", "inline", "int",
-    //"#include", "#ifdef", "#else", "#endif",
     "long",
     "module", "mutable",
     "namespace", "new", "noexcept", "not", "not_eq", "nullptr",
@@ -468,7 +467,7 @@ cTextEditor::cTextEditor()
     mLastClick(-1.0f) {
 
   mPaletteBase = kLightPalette;
-  setLanguage (sLanguage::HLSL());
+  setLanguage (sLanguage::CPlusPlus());
 
   mLines.push_back (vector<sGlyph>());
   }
@@ -1538,7 +1537,6 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
   int endLine = max(0, min((int)mLines.size(), toLine));
   for (int i = fromLine; i < endLine; ++i) {
     vector<sGlyph>& glyphs = mLines[i].mGlyphs;
-
     if (glyphs.empty())
       continue;
 
@@ -1561,10 +1559,9 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
       if (mLanguage.mTokenize != nullptr) {
         if (mLanguage.mTokenize (first, last, token_begin, token_end, token_color))
           hasTokenizeResult = true;
-      }
+        }
 
       if (hasTokenizeResult == false) {
-        // todo : remove
         //printf("using regex for %.*s\n", first + 10 < last ? 10 : int(last - first), first);
         for (auto& p : mRegexList) {
           if (regex_search (first, last, results, p.first, regex_constants::match_continuous)) {
@@ -1578,9 +1575,9 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
           }
         }
 
-      if (hasTokenizeResult == false) {
+      if (hasTokenizeResult == false)
         first++;
-        }
+
       else {
         const size_t token_length = token_end - token_begin;
         if (token_color == ePalette::Ident) {
@@ -1592,17 +1589,15 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
                        [](uint8_t ch) { return static_cast<uint8_t>(std::toupper (ch)); });
 
           if (!glyphs[first - bufferBegin].mPreprocessor) {
-            if (mLanguage.mKeywords.count(id) != 0)
+            if (mLanguage.mKeywords.count (id) != 0)
               token_color = ePalette::Keyword;
-            else if (mLanguage.mIdents.count(id) != 0)
+            else if (mLanguage.mIdents.count (id) != 0)
               token_color = ePalette::KnownIdent;
-            else if (mLanguage.mPreprocIdents.count(id) != 0)
+            else if (mLanguage.mPreprocIdents.count (id) != 0)
               token_color = ePalette::PreprocIdent;
             }
-          else {
-            if (mLanguage.mPreprocIdents.count(id) != 0)
-              token_color = ePalette::PreprocIdent;
-            }
+          else if (mLanguage.mPreprocIdents.count(id) != 0)
+            token_color = ePalette::PreprocIdent;
           }
 
         for (size_t j = 0; j < token_length; ++j)
@@ -1682,16 +1677,17 @@ void cTextEditor::colorizeInternal() {
           else {
             auto pred = [](const char& a, const sGlyph& b) { return a == b.mChar; };
             auto from = line.begin() + currentIndex;
-            string& startStr = mLanguage.mCommentStart;
-            string& singleStartStr = mLanguage.mSingleLineComment;
+            string& startString = mLanguage.mCommentStart;
+            string& singleStartString = mLanguage.mSingleLineComment;
 
-            if ((singleStartStr.size() > 0) &&
-                (currentIndex + singleStartStr.size() <= line.size()) &&
-                equals (singleStartStr.begin(), singleStartStr.end(), from, from + singleStartStr.size(), pred)) {
+            if ((singleStartString.size() > 0) &&
+                (currentIndex + singleStartString.size() <= line.size()) &&
+                equals (singleStartString.begin(), singleStartString.end(),
+                        from, from + singleStartString.size(), pred)) {
               withinSingleLineComment = true;
               }
-            else if ((!withinSingleLineComment && currentIndex + startStr.size() <= line.size()) &&
-                     equals (startStr.begin(), startStr.end(), from, from + startStr.size(), pred)) {
+            else if ((!withinSingleLineComment && currentIndex + startString.size() <= line.size()) &&
+                     equals (startString.begin(), startString.end(), from, from + startString.size(), pred)) {
               commentStartLine = currentLine;
               commentStartIndex = currentIndex;
               }
@@ -1702,9 +1698,9 @@ void cTextEditor::colorizeInternal() {
             line[currentIndex].mMultiLineComment = inComment;
             line[currentIndex].mComment = withinSingleLineComment;
 
-            string& endStr = mLanguage.mCommentEnd;
-            if (currentIndex + 1 >= (int)endStr.size() &&
-              equals(endStr.begin(), endStr.end(), from + 1 - endStr.size(), from + 1, pred)) {
+            string& endString = mLanguage.mCommentEnd;
+            if (currentIndex + 1 >= (int)endString.size() &&
+              equals (endString.begin(), endString.end(), from + 1 - endString.size(), from + 1, pred)) {
               commentStartIndex = endIndex;
               commentStartLine = endLine;
               }
@@ -1767,7 +1763,6 @@ void cTextEditor::parseFolds() {
 
     line.mFoldOpen = false;
     }
-
   }
 //}}}
 //{{{  actions
@@ -1846,7 +1841,7 @@ void cTextEditor::addUndo (sUndoRecord& value) {
 void cTextEditor::removeLine (int startPosition, int endPosition) {
 
   assert (!mReadOnly);
-  assert (endposition >= startPosition);
+  assert (endPosition >= startPosition);
   assert (int(mLines.size()) > endPosition - startPosition);
 
   map<int,string> etmp;
@@ -2408,20 +2403,21 @@ void cTextEditor::render() {
     int lineNumber = (unsigned)floor (scrollY / mCharAdvance.y);
 
     // line number str
-    char lineNumberStr[16];
-    snprintf (lineNumberStr, 16, " %d ", (int)mLines.size());
+    char lineNumberStr[22];
+    snprintf (lineNumberStr, 22, " %d %d %d %d", (int)mLines.size(), 1,1,1);
     mTextStart = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f,
                                                   lineNumberStr, nullptr, nullptr).x + kLeftTextMargin;
     int lineNumberMax = max (0,
       min ((int)mLines.size() - 1, lineNumber + (int)floor((scrollY + contentSize.y) / mCharAdvance.y)));
 
     for (; lineNumber <= lineNumberMax; lineNumber++) {
+      sLine& line = mLines[lineNumber];
       ImVec2 linePos = ImVec2 (cursorScreenPos.x, cursorScreenPos.y + lineNumber * mCharAdvance.y);
       ImVec2 textPos = ImVec2 (linePos.x + mTextStart, linePos.y);
 
-      vector<sGlyph>& glyphs = mLines[lineNumber].mGlyphs;
-      longestLine = max (longestLine, mTextStart + getTextDistanceToLineStart (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
-      int columnNo = 0;
+      vector<sGlyph>& glyphs = line.mGlyphs;
+      longestLine = max (longestLine,
+        mTextStart + getTextDistanceToLineStart (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
       sPosition lineStartCoord (lineNumber, 0);
       sPosition lineEndCoord (lineNumber, getLineMaxColumn (lineNumber));
       //{{{  draw line selection
@@ -2469,9 +2465,12 @@ void cTextEditor::render() {
         }
       //}}}
       //{{{  draw lineNumber
-      snprintf (lineNumberStr, 16, "%d  ", lineNumber + 1);
+      snprintf (lineNumberStr, 22, "%d %d %d %d ",
+                lineNumber + 1, line.mFoldLevel, line.mFoldBegin, line.mFoldEnd);
+
       float numberWidth = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f,
                                                            lineNumberStr, nullptr, nullptr).x;
+
       drawList->AddText (ImVec2 (linePos.x + mTextStart - numberWidth, linePos.y),
                          mPalette[(size_t)ePalette::LineNumber], lineNumberStr);
       //}}}
@@ -2574,8 +2573,6 @@ void cTextEditor::render() {
           while ((l-- > 0) && (lineCount < (kMaxLineCount-2)))
             lineStr[lineCount++] = glyph.mChar;
           }
-
-        ++columnNo;
         }
 
       if (lineCount) {
@@ -2782,6 +2779,8 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::C() {
     language.mCommentStart = "/*";
     language.mCommentEnd = "*/";
     language.mSingleLineComment = "//";
+    language.mFoldBeginMarker = "//{{{";
+    language.mFoldEndMarker = "//}}}";
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
     language.mName = "C";
@@ -2830,6 +2829,8 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::HLSL() {
     language.mCommentStart = "/*";
     language.mCommentEnd = "*/";
     language.mSingleLineComment = "//";
+    language.mFoldBeginMarker = "#{{{";
+    language.mFoldEndMarker = "#}}}";
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
     language.mName = "HLSL";
@@ -2878,6 +2879,8 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::GLSL() {
     language.mCommentStart = "/*";
     language.mCommentEnd = "*/";
     language.mSingleLineComment = "//";
+    language.mFoldBeginMarker = "#{{{";
+    language.mFoldEndMarker = "#}}}";
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
     language.mName = "GLSL";

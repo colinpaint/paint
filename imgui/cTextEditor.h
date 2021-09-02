@@ -77,7 +77,7 @@ public:
     sPosition() : mRow(0), mColumn(0) {}
     //{{{
     sPosition (int row, int column) : mRow(row), mColumn(column) {
-      assert (line >= 0);
+      assert (row >= 0);
       assert (column >= 0);
       }
     //}}}
