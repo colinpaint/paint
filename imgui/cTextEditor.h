@@ -246,7 +246,7 @@ public:
   inline bool isShowingWhitespaces() const { return mShowWhitespaces; }
 
   const sLanguage& getLanguage() const { return mLanguage; }
-  const std::array<ImU32, (uint32_t)ePalette::Max>& getPalette() const { return mPaletteBase; }
+  const std::array<ImU32, (size_t)ePalette::Max>& getPalette() const { return mPaletteBase; }
 
   std::string getText() const;
   std::vector<std::string> getTextLines() const;
@@ -262,7 +262,7 @@ public:
   //{{{  sets
   void setMarkers (const std::map<int,std::string>& markers) { mMarkers = markers; }
   void setLanguage (const sLanguage& language);
-  void setPalette (const std::array<ImU32,(uint32_t)ePalette::Max>& value);
+  void setPalette (const std::array<ImU32,(size_t)ePalette::Max>& value);
 
   void setText (const std::string& text);
   void setTextLines (const std::vector<std::string>& lines);
@@ -310,8 +310,8 @@ public:
   void render (const char* title, const ImVec2& size = ImVec2(), bool border = false);
   //}}}
   //{{{  static gets
-  static const std::array<ImU32, (uint32_t)ePalette::Max>& getDarkPalette();
-  static const std::array<ImU32, (uint32_t)ePalette::Max>& getLightPalette();
+  static const std::array<ImU32, (size_t)ePalette::Max>& getDarkPalette();
+  static const std::array<ImU32, (size_t)ePalette::Max>& getLightPalette();
   //}}}
 
 private:
@@ -416,8 +416,8 @@ private:
   //{{{  vars
   std::vector<sLine> mLines;
 
-  std::array<ImU32,(uint32_t)ePalette::Max> mPaletteBase;
-  std::array<ImU32,(uint32_t)ePalette::Max> mPalette;
+  std::array<ImU32, (size_t)ePalette::Max> mPaletteBase;
+  std::array<ImU32, (size_t)ePalette::Max> mPalette;
 
   sLanguage mLanguage;
   tRegexList mRegexList;
