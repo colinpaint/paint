@@ -17,6 +17,8 @@
 
 class cTextEditor {
 public:
+  enum class eSelectionMode { Normal, Word, Line };
+
   //{{{
   enum class ePaletteIndex {
     Default,
@@ -42,8 +44,7 @@ public:
     Max
     };
   //}}}
-  enum class eSelectionMode { Normal, Word, Line };
-
+  using tPalette = std::array<ImU32, (unsigned)ePaletteIndex::Max>;
   //{{{
   struct sGlyph {
     uint8_t mChar;
@@ -56,6 +57,20 @@ public:
       : mChar(aChar), mColorIndex(aColorIndex), mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
     };
   //}}}
+  using tLine = std::vector<sGlyph>;
+  //{{{
+  struct sLine {
+    tLine mLine;
+    uint32_t mNumber;
+    bool mFoldStart;
+    bool mFoldEnd;
+    bool mFoldOpen;
+
+    sLine() : mLine(), mNumber(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
+    sLine (tLine line): mLine(line), mNumber(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
+    };
+  //}}}
+  using tLines = std::vector<sLine>;
   //{{{
   // Represents a character coordinate from the user's point of view,
   // i. e. consider an uniform grid (assuming fixed-width font) on the
@@ -126,18 +141,15 @@ public:
     //}}}
   };
   //}}}
+
+  using tKeywords = std::unordered_set<std::string>;
+  using tMarkers = std::map<int, std::string>;
   //{{{
   struct sIdent {
     sRowColumn mLocation;
     std::string mDeclaration;
     };
   //}}}
-
-  using tLine = std::vector<sGlyph>;
-  using tLines = std::vector<tLine>;
-  using tPalette = std::array<ImU32, (unsigned)ePaletteIndex::Max>;
-  using tKeywords = std::unordered_set<std::string>;
-  using tMarkers = std::map<int, std::string>;
   using tIdents = std::unordered_map<std::string, sIdent>;
   //{{{
   struct sLanguage {
@@ -246,8 +258,8 @@ public:
   void selectAll();
   void selectWordUnderCursor();
 
-  void InsertText(const char* value);
-  void InsertText (const std::string& value) { InsertText (value.c_str()); }
+  void insertText(const char* value);
+  void insertText (const std::string& value) { insertText (value.c_str()); }
   void copy();
   void cut();
   void paste();
