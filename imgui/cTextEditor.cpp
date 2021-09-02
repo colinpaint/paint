@@ -764,18 +764,11 @@ vector<string> cTextEditor::getTextLines() const {
 //}}}
 
 //{{{
-string cTextEditor::getSelectedText() const {
-  return getText (mState.mSelectionStart, mState.mSelectionEnd);
-  }
-
-//}}}
-//{{{
 string cTextEditor::getCurrentLineText()const {
 
   int lineLength = getLineMaxColumn (mState.mCursorPosition.mRow);
-  return getText (
-    sRowColumn (mState.mCursorPosition.mRow, 0),
-    sRowColumn (mState.mCursorPosition.mRow, lineLength));
+  return getText (sRowColumn (mState.mCursorPosition.mRow, 0),
+                  sRowColumn (mState.mCursorPosition.mRow, lineLength));
   }
 //}}}
 
@@ -788,6 +781,7 @@ int cTextEditor::getCharacterIndex (const sRowColumn& rowColumn) const {
     }
 
   const vector<sGlyph>& glyphs = mLines[rowColumn.mRow].mGlyphs;
+
   int c = 0;
   int i = 0;
   for (; i < (int)glyphs.size() && (c < rowColumn.mColumn);) {
@@ -802,14 +796,15 @@ int cTextEditor::getCharacterIndex (const sRowColumn& rowColumn) const {
   }
 //}}}
 //{{{
-int cTextEditor::getCharacterColumn (int row, int index) const {
+int cTextEditor::getCharacterColumn (int lineNumber, int index) const {
+// handle tabs
 
-  if (row >= (int)mLines.size())
+  if (lineNumber >= (int)mLines.size())
     return 0;
 
-  const vector<sGlyph>& glyphs = mLines[row].mGlyphs;
-  int col = 0;
+  const vector<sGlyph>& glyphs = mLines[lineNumber].mGlyphs;
 
+  int col = 0;
   int i = 0;
   while ((i < index) && i < ((int)glyphs.size())) {
     uint8_t c = glyphs[i].mChar;
@@ -947,6 +942,7 @@ void cTextEditor::setCursorPosition (const sRowColumn& position) {
 void cTextEditor::setSelectionStart (const sRowColumn& position) {
 
   mState.mSelectionStart = sanitizeRowColumn (position);
+
   if (mState.mSelectionStart > mState.mSelectionEnd)
     swap (mState.mSelectionStart, mState.mSelectionEnd);
   }
@@ -982,10 +978,10 @@ void cTextEditor::setSelection (const sRowColumn& startRowColumn, const sRowColu
       }
 
     case cTextEditor::eSelection::Line: {
-      const int lineNo = mState.mSelectionEnd.mRow;
-      //const auto lineSize = (size_t)lineNo < mLines.size() ? mLines[lineNo].size() : 0;
+      const int lineNumber = mState.mSelectionEnd.mRow;
+      //const auto lineSize = (size_t)lineNumber < mLines.size() ? mLines[lineNumber].size() : 0;
       mState.mSelectionStart = sRowColumn (mState.mSelectionStart.mRow, 0);
-      mState.mSelectionEnd = sRowColumn (lineNo, getLineMaxColumn (lineNo));
+      mState.mSelectionEnd = sRowColumn (lineNumber, getLineMaxColumn (lineNumber));
       break;
       }
 
@@ -1610,11 +1606,11 @@ cTextEditor::sRowColumn cTextEditor::screenPosToRowColumn (const ImVec2& positio
   ImVec2 origin = ImGui::GetCursorScreenPos();
   ImVec2 local (position.x - origin.x, position.y - origin.y);
 
-  int lineNo = max(0, (int)floor (local.y / mCharAdvance.y));
+  int lineNumber = max(0, (int)floor (local.y / mCharAdvance.y));
   int columnCoord = 0;
 
-  if ((lineNo >= 0) && (lineNo < (int)mLines.size())) {
-    const vector<sGlyph>& glyphs = mLines.at (lineNo).mGlyphs;
+  if ((lineNumber >= 0) && (lineNumber < (int)mLines.size())) {
+    const vector<sGlyph>& glyphs = mLines.at (lineNumber).mGlyphs;
 
     int columnIndex = 0;
     float columnX = 0.0f;
@@ -1652,7 +1648,7 @@ cTextEditor::sRowColumn cTextEditor::screenPosToRowColumn (const ImVec2& positio
       }
     }
 
-  return sanitizeRowColumn (sRowColumn (lineNo, columnCoord));
+  return sanitizeRowColumn (sRowColumn (lineNumber, columnCoord));
   }
 //}}}
 
@@ -1673,7 +1669,7 @@ cTextEditor::sRowColumn cTextEditor::findWordStart (const sRowColumn& from) cons
   while (cindex > 0 && isspace (glyphs[cindex].mChar))
     --cindex;
 
-  ePalette cstart = (ePalette)glyphs[cindex].mColorIndex;
+  ePalette cstart = glyphs[cindex].mColorIndex;
   while (cindex > 0) {
     uint8_t c = glyphs[cindex].mChar;
     if ((c & 0xC0) != 0x80) { // not UTF code sequence 10xxxxxx
@@ -1681,7 +1677,7 @@ cTextEditor::sRowColumn cTextEditor::findWordStart (const sRowColumn& from) cons
         cindex++;
         break;
         }
-      if (cstart != (ePalette)glyphs[size_t(cindex - 1)].mColorIndex)
+      if (cstart != glyphs[size_t(cindex - 1)].mColorIndex)
         break;
       }
     --cindex;
@@ -1704,11 +1700,11 @@ cTextEditor::sRowColumn cTextEditor::findWordEnd (const sRowColumn& from) const 
     return at;
 
   bool prevspace = (bool)isspace (glyphs[cindex].mChar);
-  ePalette cstart = (ePalette)glyphs[cindex].mColorIndex;
+  ePalette cstart = glyphs[cindex].mColorIndex;
   while (cindex < (int)glyphs.size()) {
     uint8_t c = glyphs[cindex].mChar;
     int d = utf8CharLength (c);
-    if (cstart != (ePalette)glyphs[cindex].mColorIndex)
+    if (cstart != glyphs[cindex].mColorIndex)
       break;
 
     if (prevspace != !!isspace(c)) {
@@ -2629,10 +2625,10 @@ void cTextEditor::render() {
   ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
   float scrollX = ImGui::GetScrollX();
   float scrollY = ImGui::GetScrollY();
-  int lineNo = (int)floor (scrollY / mCharAdvance.y);
+  int lineNumber = (int)floor (scrollY / mCharAdvance.y);
   int globalLineMax = (int)mLines.size();
   int lineMax = max (0,
-    min ((int)mLines.size() - 1, lineNo + (int)floor((scrollY + contentSize.y) / mCharAdvance.y)));
+    min ((int)mLines.size() - 1, lineNumber + (int)floor((scrollY + contentSize.y) / mCharAdvance.y)));
 
   //{{{  calc mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
   char buf[16];
@@ -2646,15 +2642,15 @@ void cTextEditor::render() {
     float spaceSize = ImGui::GetFont()->CalcTextSizeA (
       ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
 
-    while (lineNo <= lineMax) {
-      ImVec2 lineStartScreenPos = ImVec2 (cursorScreenPos.x, cursorScreenPos.y + lineNo * mCharAdvance.y);
+    while (lineNumber <= lineMax) {
+      ImVec2 lineStartScreenPos = ImVec2 (cursorScreenPos.x, cursorScreenPos.y + lineNumber * mCharAdvance.y);
       ImVec2 textScreenPos = ImVec2 (lineStartScreenPos.x + mTextStart, lineStartScreenPos.y);
 
-      vector<sGlyph>& glyphs = mLines[lineNo].mGlyphs;
-      longest = max(mTextStart + getTextDistanceToLineStart (sRowColumn (lineNo, getLineMaxColumn (lineNo))), longest);
+      vector<sGlyph>& glyphs = mLines[lineNumber].mGlyphs;
+      longest = max(mTextStart + getTextDistanceToLineStart (sRowColumn (lineNumber, getLineMaxColumn (lineNumber))), longest);
       int columnNo = 0;
-      sRowColumn lineStartCoord (lineNo, 0);
-      sRowColumn lineEndCoord (lineNo, getLineMaxColumn (lineNo));
+      sRowColumn lineStartCoord (lineNumber, 0);
+      sRowColumn lineEndCoord (lineNumber, getLineMaxColumn (lineNumber));
       //{{{  draw selection for the current line
       float sstart = -1.0f;
       float ssend = -1.0f;
@@ -2665,7 +2661,7 @@ void cTextEditor::render() {
       if (mState.mSelectionEnd > lineStartCoord)
         ssend = getTextDistanceToLineStart (mState.mSelectionEnd < lineEndCoord ? mState.mSelectionEnd : lineEndCoord);
 
-      if (mState.mSelectionEnd.mRow > lineNo)
+      if (mState.mSelectionEnd.mRow > lineNumber)
         ssend += mCharAdvance.x;
 
       if (sstart != -1 && ssend != -1 && sstart < ssend) {
@@ -2676,7 +2672,7 @@ void cTextEditor::render() {
       //}}}
       //{{{  draw error markers
       ImVec2 start = ImVec2 (lineStartScreenPos.x + scrollX, lineStartScreenPos.y);
-      auto errorIt = mMarkers.find (lineNo + 1);
+      auto errorIt = mMarkers.find (lineNumber + 1);
       if (errorIt != mMarkers.end()) {
         ImVec2 end = ImVec2 (lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
         drawList->AddRectFilled (start, end, mPalette[(int)ePalette::Marker]);
@@ -2698,15 +2694,15 @@ void cTextEditor::render() {
         }
       //}}}
       //{{{  draw lineNumber rightAligned
-      snprintf (buf, 16, "%d  ", lineNo + 1);
+      snprintf (buf, 16, "%d  ", lineNumber + 1);
 
-      float lineNoWidth = ImGui::GetFont()->CalcTextSizeA (
+      float lineNumberWidth = ImGui::GetFont()->CalcTextSizeA (
         ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
 
-      drawList->AddText (ImVec2 (lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y),
+      drawList->AddText (ImVec2 (lineStartScreenPos.x + mTextStart - lineNumberWidth, lineStartScreenPos.y),
                          mPalette[(int)ePalette::LineNumber], buf);
 
-      if (mState.mCursorPosition.mRow == lineNo) {
+      if (mState.mCursorPosition.mRow == lineNumber) {
         auto focused = ImGui::IsWindowFocused();
 
         // highlight the current line (where the cursor is)
@@ -2813,7 +2809,7 @@ void cTextEditor::render() {
         mLineBuffer.clear();
         }
       //}}}
-      ++lineNo;
+      ++lineNumber;
       }
     //{{{  draw tooltip on idents/preprocessor symbols
     if (ImGui::IsMousePosValid()) {

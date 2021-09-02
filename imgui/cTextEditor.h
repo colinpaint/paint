@@ -130,13 +130,13 @@ public:
   struct sLineColumn {
   // pos in file co-ords
 
-    int mLineIndex;
+    int mLineNumber;
     int mColumn;
 
-    sLineColumn() : mLineIndex(0), mColumn(0) {}
+    sLineColumn() : mLineNumber(0), mColumn(0) {}
     //{{{
-    sLineColumn (int line, int column) : mLineIndex(line), mColumn(column) {
-      assert (line >= 0);
+    sLineColumn (int lineNumber, int column) : mLineNumber(lineNumber), mColumn(column) {
+      assert (lineNumber >= 0);
       assert (column >= 0);
       }
     //}}}
@@ -145,41 +145,41 @@ public:
 
     //{{{
     bool operator == (const sLineColumn& o) const {
-      return mLineIndex == o.mLineIndex && mColumn == o.mColumn;
+      return mLineNumber == o.mLineNumber && mColumn == o.mColumn;
       }
     //}}}
     //{{{
     bool operator != (const sLineColumn& o) const {
-      return mLineIndex != o.mLineIndex || mColumn != o.mColumn; }
+      return mLineNumber != o.mLineNumber || mColumn != o.mColumn; }
     //}}}
     //{{{
     bool operator < (const sLineColumn& o) const {
 
-      if (mLineIndex != o.mLineIndex)
-        return mLineIndex < o.mLineIndex;
+      if (mLineNumber != o.mLineNumber)
+        return mLineNumber < o.mLineNumber;
 
       return mColumn < o.mColumn;
       }
     //}}}
     //{{{
     bool operator > (const sLineColumn& o) const {
-      if (mLineIndex != o.mLineIndex)
-        return mLineIndex > o.mLineIndex;
+      if (mLineNumber != o.mLineNumber)
+        return mLineNumber > o.mLineNumber;
       return mColumn > o.mColumn;
       }
     //}}}
     //{{{
     bool operator <= (const sLineColumn& o) const {
-      if (mLineIndex != o.mLineIndex)
-        return mLineIndex < o.mLineIndex;
+      if (mLineNumber != o.mLineNumber)
+        return mLineNumber < o.mLineNumber;
 
       return mColumn <= o.mColumn;
       }
     //}}}
     //{{{
     bool operator >= (const sLineColumn& o) const {
-      if (mLineIndex != o.mLineIndex)
-        return mLineIndex > o.mLineIndex;
+      if (mLineNumber != o.mLineNumber)
+        return mLineNumber > o.mLineNumber;
       return mColumn >= o.mColumn;
       }
     //}}}
@@ -250,8 +250,8 @@ public:
 
   std::string getText() const;
   std::vector<std::string> getTextLines() const;
+  std::string getSelectedText() const { return getText (mState.mSelectionStart, mState.mSelectionEnd); }
 
-  std::string getSelectedText() const;
   std::string getCurrentLineText()const;
   int getTotalLines() const { return (int)mLines.size(); }
 
@@ -366,7 +366,7 @@ private:
   sRowColumn getActualCursorRowColumn() const { return sanitizeRowColumn (mState.mCursorPosition); }
 
   int getCharacterIndex (const sRowColumn& rowColumn) const;
-  int getCharacterColumn (int row, int index) const;
+  int getCharacterColumn (int lineNumber, int index) const;
   int getLineCharacterCount (int row) const;
   int getLineMaxColumn (int row) const;
 
