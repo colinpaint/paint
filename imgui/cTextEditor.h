@@ -59,13 +59,14 @@ public:
   struct sLine {
     std::vector<sGlyph> mGlyphs;
     uint32_t mLineNumber;
+    uint8_t mFoldLevel;
     bool mFoldStart : 1;
     bool mFoldEnd : 1;
     bool mFoldOpen : 1;
 
-    sLine() : mGlyphs(), mLineNumber(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
+    sLine() : mGlyphs(), mLineNumber(0), mFoldLevel(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
     sLine (const std::vector<sGlyph>& line) :
-      mGlyphs(line), mLineNumber(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
+      mGlyphs(line), mLineNumber(0), mFoldLevel(0), mFoldStart(false), mFoldEnd(false), mFoldOpen(false) {}
     };
   //}}}
   //{{{
@@ -258,7 +259,7 @@ public:
   //{{{  sets
   void setMarkers (const std::map<int,std::string>& markers) { mMarkers = markers; }
   void setLanguage (const sLanguage& language);
-  void setPalette (const std::array<ImU32,(size_t)ePalette::Max>& value);
+  void setPalette (bool lightPalette);
 
   void setText (const std::string& text);
   void setTextLines (const std::vector<std::string>& lines);
@@ -304,10 +305,6 @@ public:
   void redo (int steps = 1);
 
   void render (const char* title, const ImVec2& size = ImVec2(), bool border = false);
-  //}}}
-  //{{{  static gets
-  static const std::array<ImU32, (size_t)ePalette::Max>& getDarkPalette();
-  static const std::array<ImU32, (size_t)ePalette::Max>& getLightPalette();
   //}}}
 
 private:

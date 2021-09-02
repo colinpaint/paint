@@ -714,7 +714,7 @@ cTextEditor::cTextEditor()
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
     mLastClick(-1.0f) {
 
-  setPalette (getLightPalette());
+  mPaletteBase = kLightPalette;
   setLanguage (sLanguage::HLSL());
 
   mLines.push_back (vector<sGlyph>());
@@ -910,8 +910,8 @@ void cTextEditor::setTextLines (const vector<string>& lines) {
 //}}}
 
 //{{{
-void cTextEditor::setPalette (const array<ImU32,(size_t)ePalette::Max>& value) {
-  mPaletteBase = value;
+void cTextEditor::setPalette (bool lightPalette) {
+  mPaletteBase = (lightPalette ? kLightPalette : kDarkPalette);
   }
 //}}}
 //{{{
@@ -1443,10 +1443,6 @@ void cTextEditor::render (const char* title, const ImVec2& size, bool border) {
   mWithinRender = false;
   }
 //}}}
-
-// public static
-const array<ImU32,(size_t)cTextEditor::ePalette::Max>& cTextEditor::getDarkPalette() { return kDarkPalette; }
-const array<ImU32,(size_t)cTextEditor::ePalette::Max>& cTextEditor::getLightPalette() { return kLightPalette; }
 
 // private:
 //{{{  gets
