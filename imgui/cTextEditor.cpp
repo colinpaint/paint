@@ -2482,10 +2482,9 @@ void cTextEditor::render() {
     mGlyphsStart += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
     }
     //}}}
-
-  ImVec2 linePos = {cursorScreenPos.x, cursorScreenPos.y + (lineIndex * mCharSize.y)};
-  ImVec2 textPos = {linePos.x + mGlyphsStart, linePos.y};
-  ImVec2 startPos = {linePos.x + scrollX, linePos.y};
+  ImVec2 cursorPos = {cursorScreenPos.x + scrollX, cursorScreenPos.y + (lineIndex * mCharSize.y)};
+  ImVec2 linePos = {cursorScreenPos.x, cursorPos.y};
+  ImVec2 textPos = {cursorScreenPos.x + mGlyphsStart, cursorPos.y};
 
   float widestLine = mGlyphsStart;
   while (lineIndex < maxLineIndex) {
@@ -2521,7 +2520,7 @@ void cTextEditor::render() {
     auto markerIt = mMarkers.find (lineNumber + 1);
     if (markerIt != mMarkers.end()) {
       ImVec2 markerEndPos = {linePos.x + contentSize.x + 2.0f * scrollX, linePos.y + mCharSize.y};
-      drawList->AddRectFilled (startPos, markerEndPos, mPalette[(size_t)ePalette::Marker]);
+      drawList->AddRectFilled (cursorPos, markerEndPos, mPalette[(size_t)ePalette::Marker]);
 
       if (ImGui::IsMouseHoveringRect (linePos, markerEndPos)) {
         ImGui::BeginTooltip();
@@ -2563,10 +2562,10 @@ void cTextEditor::render() {
       //{{{  draw cursor
       // highlight cursor line
       if (!hasSelect()) {
-        ImVec2 cursorEndPos = {startPos.x + contentSize.x + scrollX, startPos.y + mCharSize.y};
-        drawList->AddRectFilled (startPos, cursorEndPos,
+        ImVec2 cursorEndPos = {cursorPos.x + contentSize.x + scrollX, cursorPos.y + mCharSize.y};
+        drawList->AddRectFilled (cursorPos, cursorEndPos,
           mPalette[(int)(focused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
-        drawList->AddRect (startPos, cursorEndPos, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
+        drawList->AddRect (cursorPos, cursorEndPos, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
         }
 
       // draw flashing cursor
@@ -2657,8 +2656,8 @@ void cTextEditor::render() {
     //}}}
 
     // nextLine
+    cursorPos.y += mCharSize.y;
     textPos.y += mCharSize.y;
-    startPos.y += mCharSize.y;
     linePos.y += mCharSize.y;
     lineIndex++;
     }
@@ -2686,7 +2685,7 @@ void cTextEditor::render() {
     }
   //}}}
 
-  // dummy button sized to maximum width,height, sets scroll regions without drawing them
+  // dummy button, sized to maximum width,height, sets scroll regions without drawing them
   ImGui::Dummy (ImVec2(widestLine + 2, (mShowFolded ? mVisibleLines.size() : mLines.size()) * mCharSize.y));
 
   if (mScrollToCursor) {
