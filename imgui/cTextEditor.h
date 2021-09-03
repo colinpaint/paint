@@ -46,29 +46,37 @@ public:
   //{{{
   struct sGlyph {
     uint8_t mChar;
-    ePalette mColorIndex = ePalette::Default;
-    bool mComment : 1;
-    bool mMultiLineComment : 1;
-    bool mPreprocessor : 1;
+    ePalette mColorIndex;
+    bool mComment:1;
+    bool mMultiLineComment:1;
+    bool mPreProc:1;
 
-    sGlyph (uint8_t ch, ePalette colorIndex)
-      : mChar(ch), mColorIndex(colorIndex), mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
+    sGlyph (uint8_t ch, ePalette colorIndex) :
+      mChar(ch),
+      mColorIndex(colorIndex),
+      mComment(false), mMultiLineComment(false), mPreProc(false) {}
     };
   //}}}
   //{{{
   struct sLine {
     std::vector<sGlyph> mGlyphs;
+
     uint32_t mFoldLineNumber; // foldStart except for fold start which is foldEnd
     uint32_t mFoldTitleLineNumber; // lineNumber for foldTitle
-    uint8_t mFoldLevel;
-    bool mFoldBegin : 1;
-    bool mFoldEnd : 1;
-    bool mFoldOpen : 1;
 
-    sLine() : mGlyphs(), mFoldLineNumber(0), mFoldTitleLineNumber(0),
-              mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
+    uint8_t mFoldLevel;
+    bool mFoldBegin:1;
+    bool mFoldEnd:1;
+    bool mFoldOpen:1;
+
+    sLine() :
+      mGlyphs(),
+      mFoldLineNumber(0), mFoldTitleLineNumber(0),
+      mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
+
     sLine (const std::vector<sGlyph>& line) :
-      mGlyphs(line), mFoldLineNumber(0), mFoldTitleLineNumber(0),
+      mGlyphs(line),
+      mFoldLineNumber(0), mFoldTitleLineNumber(0),
       mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
     };
   //}}}
@@ -190,7 +198,7 @@ public:
   inline bool isShowingWhitespaces() const { return mShowWhitespaces; }
 
   const sLanguage& getLanguage() const { return mLanguage; }
-  const std::array<ImU32, (size_t)ePalette::Max>& getPalette() const { return mPaletteBase; }
+  const std::array <ImU32,(size_t)ePalette::Max>& getPalette() const { return mPaletteBase; }
 
   std::string getText() const;
   std::vector<std::string> getTextLines() const;
@@ -332,6 +340,7 @@ private:
   void colorizeInternal();
   //}}}
   void parseFolds();
+  void updateFolds();
   //{{{  actions
   void ensureCursorVisible();
 
@@ -356,14 +365,15 @@ private:
 
   void render();
   //{{{  vars
-  std::vector<sLine> mLines;
+  std::vector <sLine> mLines;
+  std::vector <uint32_t> mVisibleLines;
 
-  std::array<ImU32, (size_t)ePalette::Max> mPaletteBase;
-  std::array<ImU32, (size_t)ePalette::Max> mPalette;
+  std::array <ImU32,(size_t)ePalette::Max> mPaletteBase;
+  std::array <ImU32,(size_t)ePalette::Max> mPalette;
 
   sLanguage mLanguage;
   tRegexList mRegexList;
-  std::map<int, std::string> mMarkers;
+  std::map <int,std::string> mMarkers;
 
   float mLineSpacing;
 
@@ -373,7 +383,7 @@ private:
   int mUndoIndex;
 
   int mTabSize;
-  float mTextStart;
+  float mGlyphsStart;
 
   bool mFolded;
   bool mOverwrite;
@@ -403,5 +413,4 @@ private:
   uint64_t mStartTime;
   float mLastClick;
   //}}}
-
   };
