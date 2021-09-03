@@ -237,7 +237,7 @@ public:
       }
       //}}}
 
-    ImGui::Text ("%d:%d:%d %s %s %s",
+    ImGui::Text ("%d:%d:%d %s %s %s %s",
                  mTextEditor.getCursorPosition().mColumn + 1,
                  mTextEditor.getCursorPosition().mLineNumber + 1,
                  mTextEditor.getTotalLines(),

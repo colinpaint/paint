@@ -2425,7 +2425,7 @@ void cTextEditor::render() {
   ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
   bool focused = ImGui::IsWindowFocused();
   //{{{  update palette alpha from style
-  for (int i = 0; i < (size_t)ePalette::Max; ++i) {
+  for (uint8_t i = 0; i < (uint8_t)ePalette::Max; ++i) {
     ImVec4 color = ImGui::ColorConvertU32ToFloat4 (mPaletteBase[i]);
     color.w *= ImGui::GetStyle().Alpha;
     mPalette[i] = ImGui::ColorConvertFloat4ToU32 (color);
