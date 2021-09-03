@@ -1800,11 +1800,15 @@ void cTextEditor::updateFolds() {
 
   lineNumber = 0;
   for (auto& line : mLines) {
-    if (line.mFoldBegin)
+    if (line.mFoldBegin){
       foldLevelOpen[line.mFoldLevel] = line.mFoldOpen;
-
-    if (foldLevelOpen[line.mFoldLevel])
       mVisibleLines.push_back (lineNumber);
+      }
+    else if (foldLevelOpen[line.mFoldLevel])
+      mVisibleLines.push_back (lineNumber);
+
+    if (line.mFoldEnd)
+      foldLevelOpen[line.mFoldLevel] = false;
 
     lineNumber++;
     }
