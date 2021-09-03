@@ -194,22 +194,16 @@ public:
           mTextEditor.setReadOnly (readOnly);
         //}}}
         //{{{  folded
-        ImGui::Separator();
-
         bool folded = mTextEditor.isFolded();
         if (ImGui::MenuItem ("Folded", nullptr, &folded))
           mTextEditor.setFolded (folded);
         //}}}
         //{{{  showLineNumbers
-        ImGui::Separator();
-
         bool showLineNumbers = mTextEditor.isShowLineNumbers();
         if (ImGui::MenuItem ("Line Numbers", nullptr, &showLineNumbers))
           mTextEditor.setShowLineNumbers (showLineNumbers);
         //}}}
         //{{{  showLineDebug
-        ImGui::Separator();
-
         bool showLineDebug = mTextEditor.isShowLineDebug();
         if (ImGui::MenuItem ("Line debug", nullptr, &showLineDebug))
           mTextEditor.setShowLineDebug (showLineDebug);
@@ -222,7 +216,6 @@ public:
           mTextEditor.redo();
 
         ImGui::Separator();
-
         if (ImGui::MenuItem ("Copy", "Ctrl-C", nullptr, mTextEditor.hasSelection()))
           mTextEditor.copy();
         if (ImGui::MenuItem ("Cut", "Ctrl-X", nullptr, !readOnly && mTextEditor.hasSelection()))
@@ -231,8 +224,8 @@ public:
           mTextEditor.deleteIt();
         if (ImGui::MenuItem ("Paste", "Ctrl-V", nullptr, !readOnly && ImGui::GetClipboardText() != nullptr))
           mTextEditor.paste();
-        ImGui::Separator();
 
+        ImGui::Separator();
         if (ImGui::MenuItem ("Select all", nullptr, nullptr))
           mTextEditor.setSelection (cTextEditor::sPosition(),
                                     cTextEditor::sPosition(mTextEditor.getTotalLines(), 0));
