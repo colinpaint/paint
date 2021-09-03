@@ -457,13 +457,13 @@ namespace {
 //{{{
 cTextEditor::cTextEditor()
   : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mGlyphsStart(kLeftTextMargin),
-    mShowFolded(false), mShowLineNumbers(true), mShowLineDebug(false),
     mOverwrite(false) , mReadOnly(false),
-    mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), 
     mTextChanged(false), mCursorPositionChanged(false),
+    mShowWhiteSpace(true), mShowFolded(false), mShowLineNumbers(true), mShowLineDebug(false),
+    mIgnoreImGuiChild(false), mCheckComments(true),
+    mWithinRender(false), mScrollToCursor(false), mScrollToTop(false),
     mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
     mHandleKeyboardInputs(true), mHandleMouseInputs(true),
-    mIgnoreImGuiChild(false), mShowWhitespaces(true), mCheckComments(true),
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
     mLastClick(-1.0f) {
 
@@ -1024,7 +1024,7 @@ void cTextEditor::insertText (const char* value) {
 //{{{
 void cTextEditor::copy() {
 
-  if (hasSelection())
+  if (hasSelect())
     ImGui::SetClipboardText (getSelectedText().c_str());
 
   else if (!mLines.empty()) {
@@ -1044,7 +1044,7 @@ void cTextEditor::cut() {
   if (isReadOnly())
     copy();
 
-  else if (hasSelection()) {
+  else if (hasSelect()) {
     sUndoRecord u;
     u.mBefore = mState;
     u.mRemoved = getSelectedText();
@@ -1069,7 +1069,7 @@ void cTextEditor::paste() {
   if (clipText != nullptr && strlen (clipText) > 0) {
     sUndoRecord u;
     u.mBefore = mState;
-    if (hasSelection()) {
+    if (hasSelect()) {
       u.mRemoved = getSelectedText();
       u.mRemovedStart = mState.mSelectionStart;
       u.mRemovedEnd = mState.mSelectionEnd;
@@ -1098,7 +1098,7 @@ void cTextEditor::deleteIt() {
   sUndoRecord u;
   u.mBefore = mState;
 
-  if (hasSelection()) {
+  if (hasSelect()) {
     u.mRemoved = getSelectedText();
     u.mRemovedStart = mState.mSelectionStart;
     u.mRemovedEnd = mState.mSelectionEnd;
@@ -1145,14 +1145,14 @@ void cTextEditor::deleteIt() {
 //{{{
 void cTextEditor::undo (int steps) {
 
-  while (canUndo() && steps-- > 0)
+  while (hasUndo() && steps-- > 0)
     mUndoBuffer[--mUndoIndex].undo (this);
   }
 //}}}
 //{{{
 void cTextEditor::redo (int steps) {
 
-  while (canRedo() && steps-- > 0)
+  while (hasRedo() && steps-- > 0)
     mUndoBuffer[mUndoIndex++].redo (this);
   }
 //}}}
@@ -1894,11 +1894,11 @@ void cTextEditor::removeLine (int startPosition, int endPosition) {
   assert (int(mLines.size()) > endPosition - startPosition);
 
   map<int,string> etmp;
-  for (auto& i : mMarkers) {
-    map<int,string>::value_type e(i.first >= startPosition ? i.first - 1 : i.first, i.second);
-    if (e.first >= startPosition && e.first <= endPosition)
+  for (auto& marker : mMarkers) {
+    map<int,string>::value_type e((marker.first >= startPosition) ? marker.first - 1 : marker.first, marker.second);
+    if ((e.first >= startPosition) && (e.first <= endPosition))
       continue;
-    etmp.insert(e);
+    etmp.insert (e);
     }
   mMarkers = move (etmp);
 
@@ -1915,11 +1915,11 @@ void cTextEditor::removeLine (int index) {
   assert(mLines.size() > 1);
 
   map<int,string> etmp;
-  for (auto& i : mMarkers) {
-    map<int,string>::value_type e(i.first > index ? i.first - 1 : i.first, i.second);
+  for (auto& marker : mMarkers) {
+    map<int,string>::value_type e(marker.first > index ? marker.first - 1 : marker.first, marker.second);
     if (e.first - 1 == index)
       continue;
-    etmp.insert(e);
+    etmp.insert (e);
     }
   mMarkers = move (etmp);
 
@@ -1941,7 +1941,7 @@ void cTextEditor::backspace() {
   sUndoRecord u;
   u.mBefore = mState;
 
-  if (hasSelection()) {
+  if (hasSelect()) {
     u.mRemoved = getSelectedText();
     u.mRemovedStart = mState.mSelectionStart;
     u.mRemovedEnd = mState.mSelectionEnd;
@@ -1966,8 +1966,9 @@ void cTextEditor::backspace() {
       prevLine.insert (prevLine.end(), line.begin(), line.end());
 
       map<int,string> etmp;
-      for (auto& i : mMarkers)
-        etmp.insert (map<int,string>::value_type (i.first - 1 == mState.mCursorPosition.mLineNumber ? i.first - 1 : i.first, i.second));
+      for (auto& marker : mMarkers)
+        etmp.insert (map<int,string>::value_type (
+          marker.first - 1 == mState.mCursorPosition.mLineNumber ? marker.first - 1 : marker.first, marker.second));
       mMarkers = move (etmp);
 
       removeLine (mState.mCursorPosition.mLineNumber);
@@ -2067,7 +2068,7 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
   sUndoRecord u;
   u.mBefore = mState;
 
-  if (hasSelection()) {
+  if (hasSelect()) {
     if ((ch == '\t') &&
         (mState.mSelectionStart.mLineNumber != mState.mSelectionEnd.mLineNumber)) {
       auto start = mState.mSelectionStart;
@@ -2162,11 +2163,11 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
       for (size_t it = 0; (it < glyphs.size()) && isascii (glyphs[it].mChar) && isblank (glyphs[it].mChar); ++it)
         newLine.push_back (glyphs[it]);
 
-    const size_t whitespaceSize = newLine.size();
+    const size_t whiteSpaceSize = newLine.size();
     auto cindex = getCharacterIndex (coord);
     newLine.insert (newLine.end(), glyphs.begin() + cindex, glyphs.end());
     glyphs.erase (glyphs.begin() + cindex, glyphs.begin() + glyphs.size());
-    setCursorPosition (sPosition (coord.mLineNumber + 1, getCharacterColumn (coord.mLineNumber + 1, (int)whitespaceSize)));
+    setCursorPosition (sPosition (coord.mLineNumber + 1, getCharacterColumn (coord.mLineNumber + 1, (int)whiteSpaceSize)));
     u.mAdded = (char)ch;
     }
 
@@ -2263,8 +2264,8 @@ vector<cTextEditor::sGlyph>& cTextEditor::insertLine (int index) {
   sLine& result = *mLines.insert (mLines.begin() + index, vector<sGlyph>());
 
   map<int,string> etmp;
-  for (auto& i : mMarkers)
-    etmp.insert (map<int,string>::value_type (i.first >= index ? i.first + 1 : i.first, i.second));
+  for (auto& marker : mMarkers)
+    etmp.insert (map<int,string>::value_type (marker.first >= index ? marker.first + 1 : marker.first, marker.second));
   mMarkers = move (etmp);
 
   return result.mGlyphs;
@@ -2515,21 +2516,21 @@ void cTextEditor::render() {
       }
     //}}}
     //{{{  draw marker
-    auto errorIt = mMarkers.find (lineNumber + 1);
-    if (errorIt != mMarkers.end()) {
+    auto markerIt = mMarkers.find (lineNumber + 1);
+    if (markerIt != mMarkers.end()) {
       ImVec2 markerEndPos = {linePos.x + contentSize.x + 2.0f * scrollX, linePos.y + mCharSize.y};
       drawList->AddRectFilled (startPos, markerEndPos, mPalette[(size_t)ePalette::Marker]);
 
       if (ImGui::IsMouseHoveringRect (linePos, markerEndPos)) {
         ImGui::BeginTooltip();
 
-        ImGui::PushStyleColor( ImGuiCol_Text, ImVec4(1.0f,0.2f,0.2f, 1.0f));
-        ImGui::Text ("Error at line %d:", errorIt->first);
+        ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f,0.2f,0.2f, 1.0f));
+        ImGui::Text ("marker at line %d:", markerIt->first);
         ImGui::PopStyleColor();
 
         ImGui::Separator();
         ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f,1.0f,0.2f, 1.0f));
-        ImGui::Text ("%s", errorIt->second.c_str());
+        ImGui::Text ("%s", markerIt->second.c_str());
         ImGui::PopStyleColor();
 
         ImGui::EndTooltip();
@@ -2559,7 +2560,7 @@ void cTextEditor::render() {
     if (mState.mCursorPosition.mLineNumber == static_cast<int>(lineNumber)) {
       //{{{  draw cursor
       // highlight cursor line
-      if (!hasSelection()) {
+      if (!hasSelect()) {
         ImVec2 cursorEndPos = {startPos.x + contentSize.x + scrollX, startPos.y + mCharSize.y};
         drawList->AddRectFilled (startPos, cursorEndPos,
           mPalette[(int)(focused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
@@ -2615,7 +2616,7 @@ void cTextEditor::render() {
         xOffset =
           (1.0f + floor ((1.0f + xOffset) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
 
-        if (mShowWhitespaces) {
+        if (mShowWhiteSpace) {
           const float x1 = textPos.x + oldX + 1.0f;
           const float x2 = textPos.x + xOffset - 1.0f;
           const float y = textPos.y + fontSize * 0.5f;
@@ -2629,7 +2630,7 @@ void cTextEditor::render() {
           }
         }
       else if (glyph.mChar == ' ') {
-        if (mShowWhitespaces) {
+        if (mShowWhiteSpace) {
           const float x = textPos.x + xOffset + spaceSize * 0.5f;
           const float y = textPos.y + fontSize * 0.5f;
           drawList->AddCircleFilled (ImVec2(x, y), 1.5f, 0x80808080, 4);
@@ -2683,7 +2684,7 @@ void cTextEditor::render() {
     }
   //}}}
 
-  // dummy button, trick, covers whole size of lines vector when we only add visible lines
+  // dummy button sized to maximum width,height, sets scroll regions without drawing them
   ImGui::Dummy (ImVec2(widestLine + 2, (mShowFolded ? mVisibleLines.size() : mLines.size()) * mCharSize.y));
 
   if (mScrollToCursor) {

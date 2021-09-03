@@ -166,10 +166,10 @@ public:
       mTextEditor.setLanguage (language);
 
       //{{{  markers
-      //cTextEditor::Markers markers;
-      //markers.insert (make_pair<int, string>(6, "Example error here:\nInclude file not found: \"cTextEditor.h\""));
-      //markers.insert (make_pair<int, string>(41, "Another example error"));
-      //editor.SetMarkers (markers);
+      map <int,string> markers;
+      markers.insert (make_pair<int, string>(6, "Example error here:\nInclude file not found: \"cTextEditor.h\""));
+      markers.insert (make_pair<int, string>(41, "Another example error"));
+      mTextEditor.setMarkers (markers);
       //}}}
       }
       //}}}
@@ -193,6 +193,11 @@ public:
         if (ImGui::MenuItem ("ReadOnly", nullptr, &readOnly))
           mTextEditor.setReadOnly (readOnly);
         //}}}
+        //{{{  showWhiteSpace
+        bool showWhiteSpace = mTextEditor.isShowWhiteSpace();
+        if (ImGui::MenuItem ("White space", nullptr, &showWhiteSpace))
+          mTextEditor.setShowWhiteSpace (showWhiteSpace);
+        //}}}
         //{{{  folded
         bool folded = mTextEditor.isFolded();
         if (ImGui::MenuItem ("Folded", nullptr, &folded))
@@ -210,17 +215,17 @@ public:
         //}}}
 
         ImGui::Separator();
-        if (ImGui::MenuItem ("Undo", "ALT-Backspace", nullptr, !readOnly && mTextEditor.canUndo()))
+        if (ImGui::MenuItem ("Undo", "ALT-Backspace", nullptr, !readOnly && mTextEditor.hasUndo()))
           mTextEditor.undo();
-        if (ImGui::MenuItem ("Redo", "Ctrl-Y", nullptr, !readOnly && mTextEditor.canRedo()))
+        if (ImGui::MenuItem ("Redo", "Ctrl-Y", nullptr, !readOnly && mTextEditor.hasRedo()))
           mTextEditor.redo();
 
         ImGui::Separator();
-        if (ImGui::MenuItem ("Copy", "Ctrl-C", nullptr, mTextEditor.hasSelection()))
+        if (ImGui::MenuItem ("Copy", "Ctrl-C", nullptr, mTextEditor.hasSelect()))
           mTextEditor.copy();
-        if (ImGui::MenuItem ("Cut", "Ctrl-X", nullptr, !readOnly && mTextEditor.hasSelection()))
+        if (ImGui::MenuItem ("Cut", "Ctrl-X", nullptr, !readOnly && mTextEditor.hasSelect()))
           mTextEditor.cut();
-        if (ImGui::MenuItem ("Delete", "Del", nullptr, !readOnly && mTextEditor.hasSelection()))
+        if (ImGui::MenuItem ("Delete", "Del", nullptr, !readOnly && mTextEditor.hasSelect()))
           mTextEditor.deleteIt();
         if (ImGui::MenuItem ("Paste", "Ctrl-V", nullptr, !readOnly && ImGui::GetClipboardText() != nullptr))
           mTextEditor.paste();
@@ -237,15 +242,18 @@ public:
       }
       //}}}
 
-    ImGui::Text ("%d:%d:%d %s%s%s%s%s",
+    ImGui::Text ("%d:%d:%d %s%s%s%s%s%s%s%s",
                  mTextEditor.getCursorPosition().mColumn + 1,
                  mTextEditor.getCursorPosition().mLineNumber + 1,
                  mTextEditor.getTotalLines(),
                  mTextEditor.getLanguage().mName.c_str(),
                  mTextEditor.isOverwrite() ? " overwrite" : " insert",
                  mTextEditor.isReadOnly() ? " readOnly" : "",
-                 mTextEditor.canUndo() ? " undo" : "",
-                 mTextEditor.isFolded() ? " folded" : ""
+                 mTextEditor.hasUndo() ? " undo" : "",
+                 mTextEditor.hasRedo() ? " redo" : "",
+                 mTextEditor.isFolded() ? " folded" : "",
+                 mTextEditor.isShowWhiteSpace() ? " whiteSpace" : "",
+                 mTextEditor.isShowLineNumbers() ? " lineNumbers" : ""
                  );
     ImGui::PushFont (monoFont);
 

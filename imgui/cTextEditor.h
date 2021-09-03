@@ -182,6 +182,7 @@ public:
   ~cTextEditor() = default;
   //{{{  gets
   bool isFolded() const { return mShowFolded; }
+  bool isShowWhiteSpace() const { return mShowWhiteSpace; }
   bool isShowLineNumbers() const { return mShowLineNumbers; }
   bool isShowLineDebug() const { return mShowLineDebug; }
 
@@ -190,12 +191,11 @@ public:
   bool isTextChanged() const { return mTextChanged; }
   bool isCursorPositionChanged() const { return mCursorPositionChanged; }
 
-  bool hasSelection() const { return mState.mSelectionEnd > mState.mSelectionStart; }
+  bool hasSelect () const { return mState.mSelectionEnd > mState.mSelectionStart; }
 
-  inline bool isHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
-  inline bool isHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
-  inline bool isImGuiChildIgnored() const { return mIgnoreImGuiChild; }
-  inline bool isShowingWhitespaces() const { return mShowWhitespaces; }
+  bool isHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
+  bool isHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
+  bool isImGuiChildIgnored() const { return mIgnoreImGuiChild; }
 
   const sLanguage& getLanguage() const { return mLanguage; }
   const std::array <ImU32,(size_t)ePalette::Max>& getPalette() const { return mPaletteBase; }
@@ -209,17 +209,21 @@ public:
 
   sPosition getCursorPosition() const { return getActualCursorposition(); }
 
-  inline int getTabSize() const { return mTabSize; }
+  int getTabSize() const { return mTabSize; }
   //}}}
   //{{{  sets
-  void setMarkers (const std::map<int,std::string>& markers) { mMarkers = markers; }
-  void setLanguage (const sLanguage& language);
-  void setPalette (bool lightPalette);
-
   void setText (const std::string& text);
   void setTextLines (const std::vector<std::string>& lines);
 
-  void setReadOnly (bool value) { mReadOnly = value; }
+  void setReadOnly (bool readOnly) { mReadOnly = readOnly; }
+  void setFolded (bool folded) { mShowFolded = folded; }
+  void setShowLineDebug (bool showLineDebug) { mShowLineDebug = showLineDebug; }
+  void setShowLineNumbers (bool showLineNumbers) { mShowLineNumbers = showLineNumbers; }
+  void setShowWhiteSpace (bool showWhiteSpace) { mShowWhiteSpace = showWhiteSpace; }
+
+  void setPalette (bool lightPalette);
+  void setMarkers (const std::map<int,std::string>& markers) { mMarkers = markers; }
+  void setLanguage (const sLanguage& language);
 
   void setCursorPosition (const sPosition& position);
   void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
@@ -227,14 +231,9 @@ public:
   void setSelectionEnd (const sPosition& position);
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
-  void setFolded (bool folded) { mShowFolded = folded; }
-  void setShowLineDebug (bool showLineDebug) { mShowLineDebug = showLineDebug; }
-  void setShowLineNumbers (bool showLineNumbers) { mShowLineNumbers = showLineNumbers; }
-
-  inline void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
-  inline void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
-  inline void setImGuiChildIgnored (bool value) { mIgnoreImGuiChild = value;}
-  inline void setShowWhitespaces(bool value) { mShowWhitespaces = value; }
+  void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
+  void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
+  void setImGuiChildIgnored (bool value) { mIgnoreImGuiChild = value;}
   //}}}
   //{{{  actions
   void moveUp (int amount = 1, bool select = false);
@@ -257,8 +256,8 @@ public:
   void paste();
   void deleteIt();
 
-  bool canUndo() const { return !mReadOnly && mUndoIndex > 0; }
-  bool canRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); }
+  bool hasUndo() const { return !mReadOnly && mUndoIndex > 0; }
+  bool hasRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); }
   void undo (int steps = 1);
   void redo (int steps = 1);
 
@@ -387,18 +386,22 @@ private:
   int mTabSize;
   float mGlyphsStart;
 
+  bool mOverwrite;
+  bool mReadOnly;
+  bool mTextChanged;
+  bool mCursorPositionChanged;
+
+  bool mShowWhiteSpace;
   bool mShowFolded;
   bool mShowLineNumbers;
   bool mShowLineDebug;
 
-  bool mOverwrite;
-  bool mReadOnly;
+  bool mIgnoreImGuiChild;
+  bool mCheckComments;
+
   bool mWithinRender;
   bool mScrollToCursor;
   bool mScrollToTop;
-
-  bool mTextChanged;
-  bool mCursorPositionChanged;
 
   int mColorRangeMin;
   int mColorRangeMax;
@@ -406,10 +409,7 @@ private:
 
   bool mHandleKeyboardInputs;
   bool mHandleMouseInputs;
-  bool mIgnoreImGuiChild;
-  bool mShowWhitespaces;
 
-  bool mCheckComments;
   ImVec2 mCharSize;
 
   sPosition mInteractiveStart;
