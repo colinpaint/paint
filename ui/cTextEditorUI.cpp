@@ -237,14 +237,15 @@ public:
       }
       //}}}
 
-    ImGui::Text ("%d:%d:%d %s %s %s %s",
+    ImGui::Text ("%d:%d:%d %s%s%s%s%s",
                  mTextEditor.getCursorPosition().mColumn + 1,
                  mTextEditor.getCursorPosition().mLineNumber + 1,
                  mTextEditor.getTotalLines(),
                  mTextEditor.getLanguage().mName.c_str(),
-                 mTextEditor.isOverwrite() ? "overwrite" : "insert",
-                 mTextEditor.canUndo() ? "undo" : " ",
-                 mTextEditor.isFolded() ? "folded" : " "
+                 mTextEditor.isOverwrite() ? " overwrite" : " insert",
+                 mTextEditor.isReadOnly() ? " readOnly" : "",
+                 mTextEditor.canUndo() ? " undo" : "",
+                 mTextEditor.isFolded() ? " folded" : ""
                  );
     ImGui::PushFont (monoFont);
 

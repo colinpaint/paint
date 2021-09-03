@@ -456,16 +456,12 @@ namespace {
 // cTextEditor
 //{{{
 cTextEditor::cTextEditor()
-  : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4),
-
-    mGlyphsStart(20.f),
+  : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mGlyphsStart(kLeftTextMargin),
     mShowFolded(false), mShowLineNumbers(true), mShowLineDebug(false),
-
     mOverwrite(false) , mReadOnly(false),
-    mWithinRender(false), mScrollToCursor(false), mScrollToTop(false),
+    mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), 
     mTextChanged(false), mCursorPositionChanged(false),
-    mColorRangeMin(0), mColorRangeMax(0),
-    mSelection(eSelection::Normal) ,
+    mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
     mHandleKeyboardInputs(true), mHandleMouseInputs(true),
     mIgnoreImGuiChild(false), mShowWhitespaces(true), mCheckComments(true),
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
