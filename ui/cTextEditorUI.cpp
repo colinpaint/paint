@@ -188,30 +188,48 @@ public:
         }
 
       if (ImGui::BeginMenu ("Edit")) {
-        bool ro = mTextEditor.isReadOnly();
-        if (ImGui::MenuItem ("ReadOnly", nullptr, &ro))
-          mTextEditor.setReadOnly (ro);
+        //{{{  readOnly
+        bool readOnly = mTextEditor.isReadOnly();
+        if (ImGui::MenuItem ("ReadOnly", nullptr, &readOnly))
+          mTextEditor.setReadOnly (readOnly);
+        //}}}
+        //{{{  folded
         ImGui::Separator();
 
         bool folded = mTextEditor.isFolded();
         if (ImGui::MenuItem ("Folded", nullptr, &folded))
           mTextEditor.setFolded (folded);
+        //}}}
+        //{{{  showLineNumbers
         ImGui::Separator();
 
-        if (ImGui::MenuItem ("Undo", "ALT-Backspace", nullptr, !ro && mTextEditor.canUndo()))
+        bool showLineNumbers = mTextEditor.isShowLineNumbers();
+        if (ImGui::MenuItem ("Line Numbers", nullptr, &showLineNumbers))
+          mTextEditor.setShowLineNumbers (showLineNumbers);
+        //}}}
+        //{{{  showLineDebug
+        ImGui::Separator();
+
+        bool showLineDebug = mTextEditor.isShowLineDebug();
+        if (ImGui::MenuItem ("Line debug", nullptr, &showLineDebug))
+          mTextEditor.setShowLineDebug (showLineDebug);
+        //}}}
+
+        ImGui::Separator();
+        if (ImGui::MenuItem ("Undo", "ALT-Backspace", nullptr, !readOnly && mTextEditor.canUndo()))
           mTextEditor.undo();
-        if (ImGui::MenuItem ("Redo", "Ctrl-Y", nullptr, !ro && mTextEditor.canRedo()))
+        if (ImGui::MenuItem ("Redo", "Ctrl-Y", nullptr, !readOnly && mTextEditor.canRedo()))
           mTextEditor.redo();
 
         ImGui::Separator();
 
         if (ImGui::MenuItem ("Copy", "Ctrl-C", nullptr, mTextEditor.hasSelection()))
           mTextEditor.copy();
-        if (ImGui::MenuItem ("Cut", "Ctrl-X", nullptr, !ro && mTextEditor.hasSelection()))
+        if (ImGui::MenuItem ("Cut", "Ctrl-X", nullptr, !readOnly && mTextEditor.hasSelection()))
           mTextEditor.cut();
-        if (ImGui::MenuItem ("Delete", "Del", nullptr, !ro && mTextEditor.hasSelection()))
+        if (ImGui::MenuItem ("Delete", "Del", nullptr, !readOnly && mTextEditor.hasSelection()))
           mTextEditor.deleteIt();
-        if (ImGui::MenuItem ("Paste", "Ctrl-V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
+        if (ImGui::MenuItem ("Paste", "Ctrl-V", nullptr, !readOnly && ImGui::GetClipboardText() != nullptr))
           mTextEditor.paste();
         ImGui::Separator();
 

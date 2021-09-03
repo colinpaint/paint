@@ -457,7 +457,10 @@ namespace {
 //{{{
 cTextEditor::cTextEditor()
   : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4),
+
     mGlyphsStart(20.f),
+    mShowFolded(false), mShowLineNumbers(true), mShowLineDebug(false),
+
     mOverwrite(false) , mReadOnly(false),
     mWithinRender(false), mScrollToCursor(false), mScrollToTop(false),
     mTextChanged(false), mCursorPositionChanged(false),
@@ -2420,10 +2423,12 @@ void cTextEditor::render() {
     mPalette[i] = ImGui::ColorConvertFloat4ToU32 (color);
     }
   //}}}
-  //{{{  cheap and cheerful null terminated str buffer
+  //{{{  cheap and cheerful null terminated str buffers
   constexpr int kMaxLineCount = 256;
   char lineStr[kMaxLineCount];
   unsigned lineCount = 0;
+
+  char lineNumberStr[10];
   //}}}
   //{{{  calc character mCharSize
   const float spaceSize = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
@@ -2441,11 +2446,20 @@ void cTextEditor::render() {
   float scrollY = ImGui::GetScrollY();
 
   int lineNumber = (unsigned)floor (scrollY / mCharSize.y);
-  //{{{  measure lineNumber width
-  char lineNumberStr[10];
-  snprintf (lineNumberStr, sizeof(lineNumberStr), "%d ", (int)mLines.size());
-  mGlyphsStart = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x + kLeftTextMargin;
-  //}}}
+
+  mGlyphsStart = kLeftTextMargin;
+  if (mShowLineNumbers) {
+    //{{{  measure lineNumber width
+    snprintf (lineNumberStr, sizeof(lineNumberStr), "%d ", (int)mLines.size());
+    mGlyphsStart += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
+    }
+    //}}}
+  else if (mShowLineDebug) {
+    //{{{  measure lineDebug width
+    snprintf (lineNumberStr, sizeof(lineNumberStr), "%1d %4d %d ", 1, 1, (int)mLines.size());
+    mGlyphsStart += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
+    }
+    //}}}
 
   ImVec2 linePos = {cursorScreenPos.x, cursorScreenPos.y + lineNumber * mCharSize.y};
   ImVec2 textPos = {linePos.x + mGlyphsStart, linePos.y};
@@ -2504,14 +2518,26 @@ void cTextEditor::render() {
         }
       }
     //}}}
-    //{{{  draw lineNumber, rightJustified
-    snprintf (lineNumberStr, sizeof(lineNumberStr), "%d ", lineNumber+1);
+    if (mShowLineNumbers) {
+      //{{{  draw lineNumber, rightJustified
+      snprintf (lineNumberStr, sizeof(lineNumberStr), "%d ", lineNumber+1);
 
-    float lineNumberWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
+      float lineNumberWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
 
-    drawList->AddText (ImVec2 (linePos.x + mGlyphsStart - lineNumberWidth, linePos.y),
-                       mPalette[(size_t)ePalette::LineNumber], lineNumberStr);
-    //}}}
+      drawList->AddText (ImVec2 (linePos.x + mGlyphsStart - lineNumberWidth, linePos.y),
+                         mPalette[(size_t)ePalette::LineNumber], lineNumberStr);
+      }
+      //}}}
+    else if (mShowLineDebug) {
+      //{{{  draw lineDebug, rightJustified
+      snprintf (lineNumberStr, sizeof(lineNumberStr), "%1d %4d %d ", line.mFoldLevel, line.mFoldLineNumber+1, lineNumber+1);
+
+      float lineNumberWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
+
+      drawList->AddText (ImVec2 (linePos.x + mGlyphsStart - lineNumberWidth, linePos.y),
+                         mPalette[(size_t)ePalette::LineNumber], lineNumberStr);
+      }
+      //}}}
     if (mState.mCursorPosition.mLineNumber == lineNumber) {
       //{{{  draw cursor
       // highlight cursor line
@@ -2611,7 +2637,7 @@ void cTextEditor::render() {
 
     // next line
     visibleLines++;
-    if (mFolded && line.mFoldBegin)
+    if (mShowFolded && line.mFoldBegin)
       lineNumber = line.mFoldLineNumber + 1;
     else
       lineNumber++;

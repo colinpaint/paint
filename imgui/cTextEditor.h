@@ -47,6 +47,7 @@ public:
   struct sGlyph {
     uint8_t mChar;
     ePalette mColorIndex;
+
     bool mComment:1;
     bool mMultiLineComment:1;
     bool mPreProc:1;
@@ -59,7 +60,7 @@ public:
   //}}}
   //{{{
   struct sLine {
-    std::vector<sGlyph> mGlyphs;
+    std::vector <sGlyph> mGlyphs;
 
     uint32_t mFoldLineNumber; // foldStart except for fold start which is foldEnd
     uint32_t mFoldTitleLineNumber; // lineNumber for foldTitle
@@ -86,12 +87,7 @@ public:
     int mColumn;
 
     sPosition() : mLineNumber(0), mColumn(0) {}
-    //{{{
-    sPosition (int lineNumber, int column) : mLineNumber(lineNumber), mColumn(column) {
-      assert (row >= 0);
-      assert (column >= 0);
-      }
-    //}}}
+    sPosition (int lineNumber, int column) : mLineNumber(lineNumber), mColumn(column) {}
 
     //{{{
     bool operator == (const sPosition& o) const {
@@ -152,9 +148,9 @@ public:
     // vars
     std::string mName;
 
-    std::unordered_set<std::string> mKeywords;
-    std::unordered_map<std::string,sIdent> mIdents;
-    std::unordered_map<std::string,sIdent> mPreprocIdents;
+    std::unordered_set <std::string> mKeywords;
+    std::unordered_map <std::string,sIdent> mIdents;
+    std::unordered_map <std::string,sIdent> mPreprocIdents;
 
     std::string mCommentStart;
     std::string mCommentEnd;
@@ -184,7 +180,10 @@ public:
   cTextEditor();
   ~cTextEditor() = default;
   //{{{  gets
-  bool isFolded() const { return mFolded; }
+  bool isFolded() const { return mShowFolded; }
+  bool isShowLineNumbers() const { return mShowLineNumbers; }
+  bool isShowLineDebug() const { return mShowLineDebug; }
+
   bool isOverwrite() const { return mOverwrite; }
   bool isReadOnly() const { return mReadOnly; }
   bool isTextChanged() const { return mTextChanged; }
@@ -227,7 +226,9 @@ public:
   void setSelectionEnd (const sPosition& position);
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
-  void setFolded (bool folded) { mFolded = folded; }
+  void setFolded (bool folded) { mShowFolded = folded; }
+  void setShowLineDebug (bool showLineDebug) { mShowLineDebug = showLineDebug; }
+  void setShowLineNumbers (bool showLineNumbers) { mShowLineNumbers = showLineNumbers; }
 
   inline void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
   inline void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
@@ -264,7 +265,7 @@ public:
   //}}}
 
 private:
-  typedef std::vector<std::pair<std::regex,ePalette>> tRegexList;
+  typedef std::vector <std::pair <std::regex,ePalette>> tRegexList;
   //{{{
   struct sEditorState {
     sPosition mSelectionStart;
@@ -385,7 +386,10 @@ private:
   int mTabSize;
   float mGlyphsStart;
 
-  bool mFolded;
+  bool mShowFolded;
+  bool mShowLineNumbers;
+  bool mShowLineDebug;
+
   bool mOverwrite;
   bool mReadOnly;
   bool mWithinRender;
