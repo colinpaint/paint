@@ -64,6 +64,7 @@ public:
 
     uint32_t mFoldLineNumber; // foldBegin lineNumber, except for foldBegin which is set to foldEnd lineNumber
     uint32_t mFoldTitleLineNumber; // lineNumber for foldTitle
+    uint16_t mFoldIndent;
 
     uint8_t mFoldLevel;
     bool mFoldBegin:1;
@@ -72,12 +73,12 @@ public:
 
     sLine() :
       mGlyphs(),
-      mFoldLineNumber(0), mFoldTitleLineNumber(0),
+      mFoldLineNumber(0), mFoldTitleLineNumber(0), mFoldIndent(0),
       mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
 
     sLine (const std::vector<sGlyph>& line) :
       mGlyphs(line),
-      mFoldLineNumber(0), mFoldTitleLineNumber(0),
+      mFoldLineNumber(0), mFoldTitleLineNumber(0), mFoldIndent(0),
       mFoldLevel(0), mFoldBegin(false), mFoldEnd(false), mFoldOpen(false) {}
     };
   //}}}

@@ -1751,13 +1751,17 @@ void cTextEditor::parseFolds() {
     for (auto& glyph : line.mGlyphs)
       text += glyph.mChar;
 
-    line.mFoldLevel = 0;
+    // we set these
     size_t foldBeginIndent = text.find (mLanguage.mFoldBeginMarker);
     line.mFoldBegin = (foldBeginIndent != string::npos);
+    line.mFoldIndent = line.mFoldBegin ? static_cast<uint16_t>(foldBeginIndent) : 0u;
+
     size_t foldEndIndent = text.find (mLanguage.mFoldEndMarker);
     line.mFoldEnd = (foldEndIndent != string::npos);
-    line.mFoldOpen = false;
 
+    // updateFolds set these
+    line.mFoldLevel = 0;
+    line.mFoldOpen = false;
     line.mFoldLineNumber = 0;
     line.mFoldTitleLineNumber = 0;
     }
@@ -1767,7 +1771,10 @@ void cTextEditor::parseFolds() {
 //}}}
 //{{{
 void cTextEditor::updateFolds() {
+// set mFoldLevel and mFoldBeginLineNumbers for every line
+// - create mVisibleLines vector
 
+  // init
   uint8_t foldLevel = 0;
   uint32_t foldLevelBeginLineNumbers [256] = { 0 };
 
@@ -1776,30 +1783,29 @@ void cTextEditor::updateFolds() {
 
   mVisibleLines.clear();
 
+  // iterate all lines
   uint32_t lineNumber = 0;
   for (auto& line : mLines) {
     if (line.mFoldBegin) {
       // set foldLevel
       foldLevel++;
 
-      // set fold beginLineNumber for this level
+      // set foldBeginLineNumber for current foldLevel
       foldLevelBeginLineNumbers [foldLevel] = lineNumber;
 
       // foldLevel is open
       foldLevelOpen[foldLevel] = line.mFoldOpen;
-
-      // line is visible, add to mVisibleLines
-      mVisibleLines.push_back (lineNumber);
       }
-    else if (foldLevelOpen[foldLevel])
-      // line is visible, add to mVisibleLines
+
+    if (line.mFoldBegin || foldLevelOpen[foldLevel]) // visible, add to mVisibleLines
       mVisibleLines.push_back (lineNumber);
 
-    line.mFoldLineNumber = foldLevelBeginLineNumbers [foldLevel];
+    // for every line, set mFoldLevel, and our mFoldLineNumber to matching foldBegin lineNumber
     line.mFoldLevel = foldLevel;
+    line.mFoldLineNumber = foldLevelBeginLineNumbers [foldLevel];
 
     if (line.mFoldEnd) {
-      // foldBegin mFoldLineNumber set to foldEnd lineNumber to help reverse traversal
+      // matching foldBegin mFoldLineNumber set to foldEnd lineNumber to help reverse traversal
       mLines[foldLevelBeginLineNumbers [foldLevel]].mFoldLineNumber  = lineNumber;
 
       // foldLevel closed
