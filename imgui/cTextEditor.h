@@ -52,6 +52,11 @@ public:
     bool mMultiLineComment:1;
     bool mPreProc:1;
 
+    sGlyph() :
+      mChar(' '),
+      mColorIndex(ePalette::Default),
+      mComment(false), mMultiLineComment(false), mPreProc(false) {}
+
     sGlyph (uint8_t ch, ePalette colorIndex) :
       mChar(ch),
       mColorIndex(colorIndex),
@@ -207,7 +212,7 @@ public:
   std::string getCurrentLineText()const;
   int getTotalLines() const { return (int)mLines.size(); }
 
-  sPosition getCursorPosition() const { return getActualCursorposition(); }
+  sPosition getCursorPosition() const { return getActualCursorPosition(); }
 
   int getTabSize() const { return mTabSize; }
   //}}}
@@ -312,7 +317,7 @@ private:
   bool isOnWordBoundary (const sPosition& position) const;
 
   std::string getText (const sPosition& startPosition, const sPosition& endPosition) const;
-  sPosition getActualCursorposition() const { return sanitizePosition (mState.mCursorPosition); }
+  sPosition getActualCursorPosition() const { return sanitizePosition (mState.mCursorPosition); }
 
   int getCharacterIndex (const sPosition& position) const;
   int getCharacterColumn (int lineNumber, int index) const;
