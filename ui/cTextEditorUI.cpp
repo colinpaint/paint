@@ -139,7 +139,7 @@ public:
     //}}}
 
     if (!mTextLoaded) {
-      //{{{  load text
+      //{{{  init mTextEditor
       mTextLoaded = true;
 
       // set file
@@ -148,29 +148,32 @@ public:
       #else
         ifstream fileStream ("/home/pi/paint/imgui/cTextEditor.cpp");
       #endif
+
       string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
       mTextEditor.setText (str);
 
       // set language
       cTextEditor::sLanguage language = cTextEditor::sLanguage::CPlusPlus();
+
       for (size_t i = 0; i < kPreProcessorNames.size(); i++) {
         cTextEditor::sIdent id;
         id.mDeclaration = kPreProcessorValues[i];
         language.mPreprocIdents.insert (make_pair (kPreProcessorNames[i], id));
         }
+
       for (size_t i = 0; i < kIdents.size(); i++) {
         cTextEditor::sIdent id;
         id.mDeclaration = kIdecls[i];
         language.mIdents.insert (make_pair (kIdents[i], id));
         }
+
       mTextEditor.setLanguage (language);
 
-      //{{{  markers
+      // markers
       map <int,string> markers;
-      markers.insert (make_pair<int, string>(6, "Example error here:\nInclude file not found: \"cTextEditor.h\""));
-      markers.insert (make_pair<int, string>(41, "Another example error"));
+      markers.insert (make_pair<int,string>(6, "marker here"));
+      markers.insert (make_pair<int,string>(41, "another marker here"));
       mTextEditor.setMarkers (markers);
-      //}}}
       }
       //}}}
 
