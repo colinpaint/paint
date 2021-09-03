@@ -62,7 +62,7 @@ public:
   struct sLine {
     std::vector <sGlyph> mGlyphs;
 
-    uint32_t mFoldLineNumber; // foldStart except for fold start which is foldEnd
+    uint32_t mFoldLineNumber; // foldBegin lineNumber, except for foldBegin which is set to foldEnd lineNumber
     uint32_t mFoldTitleLineNumber; // lineNumber for foldTitle
 
     uint8_t mFoldLevel;

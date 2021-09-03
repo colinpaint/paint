@@ -1768,47 +1768,45 @@ void cTextEditor::parseFolds() {
 //{{{
 void cTextEditor::updateFolds() {
 
-  // update line mFoldLevel, mFoldLevelStartLineNumber
   uint8_t foldLevel = 0;
-  uint32_t foldLevelStartLineNumbers [256] = { 0 };
-
-  uint32_t lineNumber = 0;
-  for (auto& line : mLines) {
-    // set foldLevel and foldStartLinenumber
-    if (line.mFoldBegin) {
-      foldLevel++;
-      foldLevelStartLineNumbers [foldLevel] = lineNumber;
-      }
-
-    line.mFoldLineNumber = foldLevelStartLineNumbers [foldLevel];
-    line.mFoldLevel = foldLevel;
-
-    if (line.mFoldEnd) {
-      // foldBegin foldLineNumber is foldEnd lineNumber
-      mLines[foldLevelStartLineNumbers [foldLevel]].mFoldLineNumber  = lineNumber;
-      foldLevel--;
-      }
-
-    lineNumber++;
-    }
-
-  // set visibleLines vector
-  mVisibleLines.clear();
+  uint32_t foldLevelBeginLineNumbers [256] = { 0 };
 
   bool foldLevelOpen [256] = { false };
   foldLevelOpen[0] = true;
 
-  lineNumber = 0;
+  mVisibleLines.clear();
+
+  uint32_t lineNumber = 0;
   for (auto& line : mLines) {
-    if (line.mFoldBegin){
-      foldLevelOpen[line.mFoldLevel] = line.mFoldOpen;
+    if (line.mFoldBegin) {
+      // set foldLevel
+      foldLevel++;
+
+      // set fold beginLineNumber for this level
+      foldLevelBeginLineNumbers [foldLevel] = lineNumber;
+
+      // foldLevel is open
+      foldLevelOpen[foldLevel] = line.mFoldOpen;
+
+      // line is visible, add to mVisibleLines
       mVisibleLines.push_back (lineNumber);
       }
-    else if (foldLevelOpen[line.mFoldLevel])
+    else if (foldLevelOpen[foldLevel])
+      // line is visible, add to mVisibleLines
       mVisibleLines.push_back (lineNumber);
 
-    if (line.mFoldEnd)
-      foldLevelOpen[line.mFoldLevel] = false;
+    line.mFoldLineNumber = foldLevelBeginLineNumbers [foldLevel];
+    line.mFoldLevel = foldLevel;
+
+    if (line.mFoldEnd) {
+      // foldBegin mFoldLineNumber set to foldEnd lineNumber to help reverse traversal
+      mLines[foldLevelBeginLineNumbers [foldLevel]].mFoldLineNumber  = lineNumber;
+
+      // foldLevel closed
+      foldLevelOpen[foldLevel] = false;
+
+      foldLevel--;
+      }
 
     lineNumber++;
     }
