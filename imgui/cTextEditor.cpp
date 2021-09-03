@@ -2472,7 +2472,7 @@ void cTextEditor::render() {
   mGlyphsStart = kLeftTextMargin;
   if (mShowLineDebug) {
     //{{{  measure lineDebug width
-    snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d:%4d %1d %4d:%4d", 1,1, 1, 1,1);
+    snprintf (lineNumberStr, sizeof(lineNumberStr), "%1d%4d:%4d:%4d ",1,1,1,1);
     mGlyphsStart += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
     }
     //}}}
@@ -2541,8 +2541,8 @@ void cTextEditor::render() {
     //}}}
     if (mShowLineDebug) {
       //{{{  draw lineDebug, rightJustified
-      snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d:%4d %1d %4d:%4d ",
-                lineIndex+1, maxLineIndex, line.mFoldLevel, line.mFoldLineNumber+1, lineNumber+1);
+      snprintf (lineNumberStr, sizeof(lineNumberStr), "%1d %4d:%4d:%4d ",
+                line.mFoldLevel, line.mFoldLineNumber+1, line.mFoldTitleLineNumber+1, lineNumber+1);
 
       float strWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
       drawList->AddText (ImVec2 (mGlyphsStart + linePos.x - strWidth, linePos.y),
