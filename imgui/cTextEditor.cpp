@@ -2428,7 +2428,7 @@ void cTextEditor::render() {
   char lineStr[kMaxLineCount];
   unsigned lineCount = 0;
 
-  char lineNumberStr[10];
+  char lineNumberStr[32];
   //}}}
   //{{{  calc character mCharSize
   const float spaceSize = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
@@ -2446,18 +2446,18 @@ void cTextEditor::render() {
   float scrollY = ImGui::GetScrollY();
   //{{{  calc lineIndex, maxLineIndex, lineNumber from scrollY
   uint32_t lineIndex = static_cast<uint32_t>(floor (scrollY / mCharSize.y));
-  uint32_t maxLineIndex = static_cast<uint32_t>(ceil ((scrollY + contentSize.y) / mCharSize.y));
+  uint32_t maxLineIndex = lineIndex + static_cast<uint32_t>(ceil ((scrollY + contentSize.y) / mCharSize.y));
   uint32_t lineNumber;
 
   if (mShowFolded) {
-    lineIndex = min (lineIndex, static_cast<uint32_t>(mVisibleLines.size()));
-    maxLineIndex = min (maxLineIndex, static_cast<uint32_t>(mVisibleLines.size()));
+    lineIndex = min (lineIndex, static_cast<uint32_t>(mVisibleLines.size()-1));
+    maxLineIndex = max (0u, min (static_cast<uint32_t>(mVisibleLines.size()-1), maxLineIndex));
     lineNumber = mVisibleLines[lineIndex];
     }
 
   else {
-    lineIndex = min (lineIndex, static_cast<uint32_t>(mLines.size()));
-    maxLineIndex = min (maxLineIndex, static_cast<uint32_t>(mLines.size()));
+    lineIndex = min (lineIndex, static_cast<uint32_t>(mLines.size()-1));
+    maxLineIndex = max (0u, min (static_cast<uint32_t>(mLines.size()-1), maxLineIndex));
     lineNumber = lineIndex;
     }
   //}}}
@@ -2465,7 +2465,7 @@ void cTextEditor::render() {
   mGlyphsStart = kLeftTextMargin;
   if (mShowLineDebug) {
     //{{{  measure lineDebug width
-    snprintf (lineNumberStr, sizeof(lineNumberStr), "%1d %4d %4d ", 1, 1, (int)mLines.size());
+    snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d:%4d %1d %4d:%4d", 1,1, 1, 1,1);
     mGlyphsStart += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
     }
     //}}}
@@ -2534,11 +2534,11 @@ void cTextEditor::render() {
     //}}}
     if (mShowLineDebug) {
       //{{{  draw lineDebug, rightJustified
-      snprintf (lineNumberStr, sizeof(lineNumberStr), "%1d %4d %4d ", line.mFoldLevel, line.mFoldLineNumber+1, lineNumber+1);
+      snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d:%4d %1d %4d:%4d ",
+                lineIndex+1, maxLineIndex, line.mFoldLevel, line.mFoldLineNumber+1, lineNumber+1);
 
-      float lineNumberWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
-
-      drawList->AddText (ImVec2 (linePos.x + mGlyphsStart - lineNumberWidth, linePos.y),
+      float strWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
+      drawList->AddText (ImVec2 (mGlyphsStart + linePos.x - strWidth, linePos.y),
                          mPalette[(size_t)ePalette::LineNumber], lineNumberStr);
       }
       //}}}
@@ -2679,7 +2679,7 @@ void cTextEditor::render() {
     }
   //}}}
 
-  // dummy button
+  // dummy button, trick, covers whole size of lines vector when we only add visible lines
   ImGui::Dummy (ImVec2(widestLine + 2, (mShowFolded ? mVisibleLines.size() : mLines.size()) * mCharSize.y));
 
   if (mScrollToCursor) {
