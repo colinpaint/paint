@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <regex>
 #include <chrono>
+#include <functional>
 
 #include "cTextEditor.h"
 
@@ -748,8 +749,12 @@ void cTextEditor::setSelection (const sPosition& startPosition, const sPosition&
 //}}}
 //{{{  actions
 //{{{
-void cTextEditor::moveUp (int amount, bool select) {
+void cTextEditor::moveUp (int amount, bool select, bool ctrl) {
 
+  //{{{  unuused
+  (void)amount;
+  (void)ctrl;
+  //}}}
   sPosition oldPosition = mState.mCursorPosition;
   mState.mCursorPosition.mLineNumber = max (0, mState.mCursorPosition.mLineNumber - amount);
   if (oldPosition != mState.mCursorPosition) {
@@ -772,8 +777,12 @@ void cTextEditor::moveUp (int amount, bool select) {
   }
 //}}}
 //{{{
-void cTextEditor::moveDown (int amount, bool select) {
+void cTextEditor::moveDown (int amount, bool select, bool ctrl) {
 
+  //{{{  unuused
+  (void)amount;
+  (void)ctrl;
+  //}}}
   assert(mState.mCursorPosition.mColumn >= 0);
   sPosition oldPosition = mState.mCursorPosition;
   mState.mCursorPosition.mLineNumber = max (0, min((int)mLines.size() - 1, mState.mCursorPosition.mLineNumber + amount));
@@ -906,8 +915,12 @@ void cTextEditor::moveRight(int amount, bool select, bool wordMode) {
 //}}}
 
 //{{{
-void cTextEditor::moveTop (bool select) {
+void cTextEditor::moveTop (int amount, bool select, bool ctrl) {
 
+  //{{{  unuused
+  (void)amount;
+  (void)ctrl;
+  //}}}
   sPosition oldPosition = mState.mCursorPosition;
   setCursorPosition (sPosition(0, 0));
 
@@ -924,8 +937,12 @@ void cTextEditor::moveTop (bool select) {
   }
 //}}}
 //{{{
-void cTextEditor::moveBottom (bool select) {
+void cTextEditor::moveBottom (int amount, bool select, bool ctrl) {
 
+  //{{{  unuused
+  (void)amount;
+  (void)ctrl;
+  //}}}
   sPosition oldPosition = getCursorPosition();
   sPosition newPosition = sPosition ((int)mLines.size() - 1, 0);
 
@@ -942,8 +959,12 @@ void cTextEditor::moveBottom (bool select) {
   }
 //}}}
 //{{{
-void cTextEditor::moveHome (bool select) {
+void cTextEditor::moveHome (int amount, bool select, bool ctrl) {
 
+  //{{{  unuused
+  (void)amount;
+  (void)ctrl;
+  //}}}
   sPosition oldPosition = mState.mCursorPosition;
   setCursorPosition (sPosition(mState.mCursorPosition.mLineNumber, 0));
 
@@ -966,8 +987,12 @@ void cTextEditor::moveHome (bool select) {
   }
 //}}}
 //{{{
-void cTextEditor::moveEnd (bool select) {
+void cTextEditor::moveEnd (int amount, bool select, bool ctrl) {
 
+  //{{{  unuused
+  (void)amount;
+  (void)ctrl;
+  //}}}
   sPosition oldPosition = mState.mCursorPosition;
   setCursorPosition (sPosition (mState.mCursorPosition.mLineNumber, getLineMaxColumn (oldPosition.mLineNumber)));
 
@@ -2338,66 +2363,76 @@ void cTextEditor::handleMouseInputs() {
 //{{{
 void cTextEditor::handleKeyboardInputs() {
 
-  ImGuiIO& io = ImGui::GetIO();
-  auto shift = io.KeyShift;
-  auto ctrl =  io.KeyCtrl;
-  auto alt = io.KeyAlt;
+  //{{{
+  struct sSimpleActionKeySpec {
+    bool mWritable;
+    bool mCtrl;
+    bool mShift;
+    bool mAlt;
+    ImGuiKey mKey;
+    function <void()> mKeyFunc;
+    };
+  //}}}
+  const vector <sSimpleActionKeySpec> kSimpleActionKeySpecs = {
+  // writable ctrl   shift  alt    key                 action
+     {true,   true,  false, false, ImGuiKey_Z,         [this]{undo();} },
+     {true,   true,  false, false, ImGuiKey_Y,         [this]{redo();} },
+     {true,   false, false, false, ImGuiKey_Backspace, [this]{backspace();} },
+     {true,   false, false, false, ImGuiKey_Delete,    [this]{deleteIt();} },
+     {true,   true,  false, false, ImGuiKey_X,         [this]{cut();} },
+     {true,   true,  false, false, ImGuiKey_V,         [this]{paste();} },
+     {false,  true,  false, false, ImGuiKey_C,         [this]{copy();} },
+     {false,  true,  false, false, ImGuiKey_A,         [this]{selectAll();} },
+     {false,  false, false, false, ImGuiKey_Insert,    [this]{toggleOverwrite();} },
+     };
 
   if (ImGui::IsWindowFocused()) {
     if (ImGui::IsWindowHovered())
       ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
-    //ImGui::CaptureKeyboardFromApp (true);
 
+    ImGuiIO& io = ImGui::GetIO();
     io.WantCaptureKeyboard = true;
     io.WantTextInput = true;
+    auto shift = io.KeyShift;
+    auto ctrl =  io.KeyCtrl;
+    auto alt = io.KeyAlt;
 
-    if (!isReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Z)))
-      undo();
-    else if (!isReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Backspace)))
-      undo();
-    else if (!isReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Y)))
-      redo();
-    else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_UpArrow)))
-      moveUp (1, shift);
+    // handle simpleAction keys
+    for (auto& keySpec : kSimpleActionKeySpecs)
+      //{{{  actionKeys
+      if ((!keySpec.mWritable || (keySpec.mWritable && !isReadOnly())) &&
+          (keySpec.mCtrl == ctrl) && (keySpec.mShift == shift) && (keySpec.mAlt == alt) &&
+          ImGui::IsKeyPressed (ImGui::GetKeyIndex (keySpec.mKey))) {
+        keySpec.mKeyFunc();
+        break;
+        }
+      //}}}
+
+    //{{{  handle move keys
+    if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_UpArrow)))
+      moveUp (1, shift, ctrl);
     else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_DownArrow)))
-      moveDown (1, shift);
+      moveDown (1, shift,ctrl);
     else if (!alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_LeftArrow)))
       moveLeft (1, shift, ctrl);
     else if (!alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_RightArrow)))
       moveRight (1, shift, ctrl);
     else if (!alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageUp)))
-      moveUp (getPageNumLines() - 4, shift);
+      moveUp (getPageNumLines() - 4, shift, ctrl);
     else if (!alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageDown)))
-      moveDown (getPageNumLines() - 4, shift);
+      moveDown (getPageNumLines() - 4, shift, ctrl);
     else if (!alt && ctrl && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Home)))
-      moveTop (shift);
+      moveTop (1,shift, ctrl);
     else if (ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_End)))
-      moveBottom (shift);
+      moveBottom (1, shift, ctrl);
     else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Home)))
-      moveHome (shift);
+      moveHome (1,shift, ctrl);
     else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_End)))
-      moveEnd (shift);
-    else if (!isReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Delete)))
-      deleteIt();
-    else if (!isReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Backspace)))
-      backspace();
-    else if (!ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_Insert)))
-      mOverwrite ^= true;
-    else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_Insert)))
-      copy();
-    else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_C)))
-      copy();
-    else if (!isReadOnly() && !ctrl && shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Insert)))
-      paste();
-    else if (!isReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_V)))
-      paste();
-    else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_X)))
-      cut();
-    else if (!ctrl && shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_Delete)))
-      cut();
-    else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex (ImGuiKey_A)))
-      selectAll();
-    else if (!isReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Enter)))
+      moveEnd (1, shift, ctrl);
+    //}}}
+
+    // handle character keys
+    if (!isReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Enter)))
       enterCharacter ('\n', false);
     else if (!isReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Tab)))
       enterCharacter ('\t', shift);

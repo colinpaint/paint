@@ -236,20 +236,22 @@ public:
   void setSelectionEnd (const sPosition& position);
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
+  void toggleOverwrite() { mOverwrite ^= true; }
+
   void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
   void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
   void setImGuiChildIgnored (bool value) { mIgnoreImGuiChild = value;}
   //}}}
   //{{{  actions
-  void moveUp (int amount = 1, bool select = false);
-  void moveDown (int amount = 1, bool select = false);
+  void moveUp (int amount, bool select, bool ctrl);
+  void moveDown (int amount = 1, bool select = false, bool ctrl = false);
   void moveLeft (int amount = 1, bool select = false, bool wordMode = false);
   void moveRight (int amount = 1, bool select = false, bool wordMode = false);
 
-  void moveTop (bool select = false);
-  void moveBottom (bool select = false);
-  void moveHome (bool select = false);
-  void moveEnd (bool select = false);
+  void moveTop (int amount = 1, bool select = false, bool ctrl = false);
+  void moveBottom (int amount = 1, bool select = false, bool ctrl = false);
+  void moveHome (int amount = 1, bool select = false, bool ctrl = false);
+  void moveEnd (int amount = 1, bool select = false, bool ctrl = false);
 
   void selectAll();
   void selectWordUnderCursor();
