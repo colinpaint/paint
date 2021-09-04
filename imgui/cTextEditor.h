@@ -70,23 +70,21 @@ public:
   struct sLine {
     std::vector <sGlyph> mGlyphs;
 
-    uint32_t mLineNumber;  // probably redundant
     uint32_t mFoldLineNumber; // foldBegin lineNumber, except for foldBegin which is set to foldEnd lineNumber
     uint32_t mFoldTitleLineNumber; // lineNumber for foldTitle
     uint16_t mIndent;
 
-    uint8_t mFoldLevel;
     bool mFoldBegin:1;
     bool mFoldEnd:1;
     bool mFoldOpen:1;
     bool mHasComment:1;
 
     sLine() :
-      mGlyphs(), mLineNumber(0), mFoldLineNumber(0), mFoldTitleLineNumber(0), mIndent(0), mFoldLevel(0),
+      mGlyphs(), mFoldLineNumber(0), mFoldTitleLineNumber(0), mIndent(0),
       mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mHasComment(false) {}
 
     sLine (const std::vector<sGlyph>& line) :
-      mGlyphs(line), mLineNumber(0), mFoldLineNumber(0), mFoldTitleLineNumber(0), mIndent(0), mFoldLevel(0),
+      mGlyphs(line), mFoldLineNumber(0), mFoldTitleLineNumber(0), mIndent(0),
       mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mHasComment(false) {}
     };
   //}}}
@@ -408,8 +406,8 @@ private:
 
   // fold
   void parseFolds();
-  uint32_t skipFold (std::vector<cTextEditor::sLine>::iterator& it, uint32_t lineNumber);
-  uint32_t updateFold (std::vector<cTextEditor::sLine>::iterator& it, uint8_t foldLevel, uint32_t lineNumber, bool foldOpen);
+  uint32_t updateFold (std::vector<cTextEditor::sLine>::iterator& it, uint32_t lineNumber,
+                       bool parentOpen, bool foldOpen);
   void updateFolds();
 
   void handleMouseInputs();

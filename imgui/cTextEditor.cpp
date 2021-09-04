@@ -2321,7 +2321,6 @@ void cTextEditor::parseFolds() {
     line.mFoldEnd = (foldEndIndent != string::npos);
 
     // init fields set by updateFolds
-    line.mFoldLevel = 0;
     line.mFoldOpen = false;
     line.mFoldLineNumber = 0;
     line.mFoldTitleLineNumber = 0xFFFFFFFF;
@@ -2331,62 +2330,29 @@ void cTextEditor::parseFolds() {
   }
 //}}}
 //{{{
-uint32_t cTextEditor::skipFold (vector<sLine>::iterator& it, uint32_t lineNumber) {
-                                    
-  cLog::log (LOGINFO, fmt::format ("skip begin line:{}", lineNumber));
+uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint32_t lineNumber,
+                                  bool parentOpen, bool foldOpen) {
 
-  // always show the foldBegin line
-  it++;
-  lineNumber++;
-
-  bool done = false;
-  while (!done && (it < mLines.end())) {
-    if (it->mFoldBegin)
-      lineNumber = skipFold (it, lineNumber);
-    else {
-      if (it->mFoldEnd)
-        done = true;
-      it++;
-      lineNumber++;
-      }
-    }
-
-  cLog::log (LOGINFO, fmt::format ("-- skip end line:{}", lineNumber));
-  return lineNumber;
-  }
-//}}}
-//{{{
-uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint8_t foldLevel, uint32_t lineNumber, bool foldOpen) {
-
-  cLog::log (LOGINFO, fmt::format ("begin line:{} level:{} {}", lineNumber, foldLevel, (foldOpen?"open":"closed")));
-
-  foldLevel++;
   uint32_t beginLineNumber = lineNumber;
 
-  // always show the foldBegin line
-  it->mLineNumber = lineNumber;
-  it->mFoldLineNumber = lineNumber;
-  it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1; // if no comment search for first noComment line
-  it->mFoldLevel = foldLevel;
-  mVisibleLines.push_back (lineNumber);
+  if (parentOpen) {
+    it->mFoldLineNumber = lineNumber;
+    it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1; // if no comment search for first noComment line
+    mVisibleLines.push_back (lineNumber);
+    }
+
   it++;
   lineNumber++;
 
   bool done = false;
   while (!done && (it < mLines.end())) {
-    it->mLineNumber = lineNumber;
     it->mFoldLineNumber = beginLineNumber;
     it->mFoldTitleLineNumber = 0xFFFFFFFF;
-    it->mFoldLevel = foldLevel;
     // update beginFold line with endFold lineNumber, helps reverse traversal
     mLines[beginLineNumber].mFoldLineNumber = lineNumber;
 
-    if (it->mFoldBegin) {
-      if (foldOpen)
-        lineNumber = updateFold (it, foldLevel, lineNumber, it->mFoldOpen);
-      else
-        lineNumber = skipFold (it, lineNumber);
-      }
+    if (it->mFoldBegin)
+      lineNumber = updateFold (it, lineNumber, foldOpen, it->mFoldOpen);
     else {
       if (it->mFoldEnd)
         done = true;
@@ -2397,7 +2363,6 @@ uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint8_t foldLevel
       }
     }
 
-  cLog::log (LOGINFO, fmt::format ("--end line:{} level:{}", lineNumber, foldLevel));
   return lineNumber;
   }
 //}}}
@@ -2406,7 +2371,7 @@ void cTextEditor::updateFolds() {
 
   mVisibleLines.clear();
   vector<sLine>::iterator it = mLines.begin();
-  updateFold (it, 0, 0, true);
+  updateFold (it, 0, true, true);
   }
 //}}}
 
@@ -2632,7 +2597,7 @@ void cTextEditor::render() {
   mGlyphsStart = kLeftTextMargin;
   if (mShowLineDebug) {
     //{{{  add lineDebug width to mGlyphsStart
-    snprintf (lineNumberStr, sizeof(lineNumberStr), "%1d%4d:%4d:%4d ",1,1,1,1);
+    snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d:%4d:%4d ",1,1,1);
     mGlyphsStart += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
     }
     //}}}
@@ -2700,8 +2665,8 @@ void cTextEditor::render() {
 
     if (mShowLineDebug) {
       //{{{  draw lineDebug, rightJustified
-      snprintf (lineNumberStr, sizeof(lineNumberStr), "%1d %4d:%4d:%4d ",
-                line.mFoldLevel, line.mFoldLineNumber+1, line.mFoldTitleLineNumber+1, lineNumber+1);
+      snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d:%4d:%4d ",
+                line.mFoldLineNumber+1, line.mFoldTitleLineNumber+1, lineNumber+1);
 
       float strWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
       drawList->AddText (ImVec2 (mGlyphsStart + linePos.x - strWidth, linePos.y),
