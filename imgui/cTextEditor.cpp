@@ -2336,8 +2336,8 @@ uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint32_t lineNumb
   uint32_t beginLineNumber = lineNumber;
 
   if (parentOpen) {
-    it->mFoldLineNumber = lineNumber;
-    it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1; // if no comment search for first noComment line
+    // if no comment search for first noComment line
+    it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1; 
     mVisibleLines.push_back (lineNumber);
     }
 
