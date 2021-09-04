@@ -457,14 +457,21 @@ namespace {
 // cTextEditor
 //{{{
 cTextEditor::cTextEditor()
-  : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mGlyphsStart(kLeftTextMargin),
+  : mTabSize(4), mGlyphsStart(kLeftTextMargin),
+    mLineSpacing(1.0f), mWithinRender(false), mScrollToTop(false), mScrollToCursor(false),
+
     mTextChanged(false), mCursorPositionChanged(false),
+
     mOverwrite(false) , mReadOnly(false),
     mShowWhiteSpace(true), mShowFolded(false), mShowLineNumbers(true), mShowLineDebug(false),
+
     mIgnoreImGuiChild(false), mCheckComments(true),
-    mWithinRender(false), mScrollToCursor(false), mScrollToTop(false),
+
     mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
+    mUndoIndex(0),
+
     mHandleKeyboardInputs(true), mHandleMouseInputs(true),
+
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
     mLastClick(-1.0f) {
 
@@ -2346,19 +2353,19 @@ void cTextEditor::colorizeInternal() {
 void cTextEditor::handleMouseInputs() {
 
   ImGuiIO& io = ImGui::GetIO();
-
-  auto shift = io.KeyShift;
-  auto ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
-  auto alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+  bool shift = io.KeyShift;
+  bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+  bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
 
   if (ImGui::IsWindowHovered()) {
     if (!shift && !alt) {
-      auto click = ImGui::IsMouseClicked(0);
-      auto doubleClick = ImGui::IsMouseDoubleClicked (0);
-      auto t = ImGui::GetTime();
-      auto tripleClick = click && !doubleClick && (mLastClick != -1.0f && (t - mLastClick) < io.MouseDoubleClickTime);
+      bool singleClick = ImGui::IsMouseClicked (0);
+      bool doubleClick = ImGui::IsMouseDoubleClicked (0);
+      bool tripleClick = singleClick &&
+                         !doubleClick &&
+                         ((mLastClick != -1.0f) && (ImGui::GetTime() - mLastClick) < io.MouseDoubleClickTime);
 
-      // Left mouse button triple click
+      // Left mouse tripleClick
       if (tripleClick) {
         if (!ctrl) {
           mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenToPosition (ImGui::GetMousePos());
@@ -2368,7 +2375,7 @@ void cTextEditor::handleMouseInputs() {
         mLastClick = -1.0f;
         }
 
-      // left mouse button double click
+      // left mouse doubleClick
       else if (doubleClick) {
         if (!ctrl) {
           mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenToPosition(ImGui::GetMousePos());
@@ -2381,8 +2388,8 @@ void cTextEditor::handleMouseInputs() {
         mLastClick = static_cast<float>(ImGui::GetTime());
         }
 
-      // left mouse button click
-      else if (click) {
+      // left mouse sinngleClick
+      else if (singleClick) {
         mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenToPosition (ImGui::GetMousePos());
         if (ctrl)
           mSelection = eSelection::Word;
@@ -2416,17 +2423,17 @@ void cTextEditor::handleKeyboardInputs() {
     };
   //}}}
   const vector <sActionKey> kActionKeys = {
-  //  alt    ctrl   shift  key                writable        function
+  //  alt    ctrl   shift  key               writable         function
+     // edit
+     {false, true,  false, ImGuiKey_X,          true,  [this]{cut();}},
+     {false, true,  false, ImGuiKey_V,          true,  [this]{paste();}},
+     {false, false, false, ImGuiKey_Delete,     true,  [this]{deleteIt();}},
+     {false, false, false, ImGuiKey_Backspace,  true,  [this]{backspace();}},
+     {false, true,  false, ImGuiKey_Z,          true,  [this]{undo();}},
+     {false, true,  false, ImGuiKey_Y,          true,  [this]{redo();}},
+     // edit without change
      {false, true,  false, ImGuiKey_C,          false, [this]{copy();}},
      {false, true,  false, ImGuiKey_A,          false, [this]{selectAll();}},
-
-     // mode
-     {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverwrite();}},
-     {false, true,  false, ImGuiKey_Space,      false, [this]{toggleFolded();}},
-     //{false, false, false, ImGuiKey_Insert,     false, [this]{toggleShowLineNumbers();}},
-     //{false, false, false, ImGuiKey_Insert,     false, [this]{toggleShowLineDebug();}},
-     //{false, false, false, ImGuiKey_Insert,     false, [this]{toggleShowLineWhiteSpace();}},
-
      // move
      {false, false, false, ImGuiKey_UpArrow,    false, [this]{moveLineUp();}},
      {false, false, true,  ImGuiKey_UpArrow,    false, [this]{moveLineUpSelect();}},
@@ -2450,14 +2457,13 @@ void cTextEditor::handleKeyboardInputs() {
      {false, false, false, ImGuiKey_End,        false, [this]{moveEnd();}},
      {false, true,  false, ImGuiKey_End,        false, [this]{moveBottom();}},
      {false, true,  true,  ImGuiKey_End,        false, [this]{moveBottomSelect();}},
-
-     // change
-     {false, true,  false, ImGuiKey_Z,          true,  [this]{undo();}},
-     {false, true,  false, ImGuiKey_Y,          true,  [this]{redo();}},
-     {false, true,  false, ImGuiKey_X,          true,  [this]{cut();}},
-     {false, true,  false, ImGuiKey_V,          true,  [this]{paste();}},
-     {false, false, false, ImGuiKey_Backspace,  true,  [this]{backspace();}},
-     {false, false, false, ImGuiKey_Delete,     true,  [this]{deleteIt();}},
+     // toggle mode
+     {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverwrite();}},
+     {true,  false, false, ImGuiKey_Space,      false, [this]{toggleFolded();}},
+     {true,  false, false, ImGuiKey_PageUp,     false, [this]{toggleLineNumbers();}},
+     {true,  false, false, ImGuiKey_PageDown,   false, [this]{toggleLineDebug();}},
+     {true,  false, false, ImGuiKey_Home,       false, [this]{toggleLineWhiteSpace();}},
+     {true,  false, false, ImGuiKey_End,        false, [this]{toggleLineWhiteSpace();}},
      };
 
   if (!ImGui::IsWindowFocused())
@@ -2467,11 +2473,11 @@ void cTextEditor::handleKeyboardInputs() {
     ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
 
   ImGuiIO& io = ImGui::GetIO();
-  io.WantTextInput = true;
+  bool shift = io.KeyShift;
+  bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+  bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
   io.WantCaptureKeyboard = true;
-  auto shift = io.KeyShift;
-  auto ctrl =  io.KeyCtrl;
-  auto alt = io.KeyAlt;
+  io.WantTextInput = true;
 
   for (auto& actionKey : kActionKeys)
     //{{{  dispatch matched actionKey

@@ -238,15 +238,15 @@ public:
   void setSelectionEnd (const sPosition& position);
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
+  void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
+  void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
+  void setImGuiChildIgnored (bool value) { mIgnoreImGuiChild = value;}
+
   void toggleOverwrite() { mOverwrite ^= true; }
   void toggleFolded() { mShowFolded ^= true; }
   void toggleLineNumbers() { mShowLineNumbers ^= true; }
   void toggleLineDebug() { mShowLineDebug ^= true; }
   void toggleLineWhiteSpace() { mShowWhiteSpace ^= true; }
-
-  void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
-  void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
-  void setImGuiChildIgnored (bool value) { mIgnoreImGuiChild = value;}
   //}}}
   //{{{  actions
   // move
@@ -419,11 +419,16 @@ private:
   tRegexList mRegexList;
   std::map <int,std::string> mMarkers;
 
-  sEditorState mState;
-  float mLineSpacing;
   int mTabSize;
   float mGlyphsStart;
+
+  // internal 
+  sEditorState mState;
+  float mLineSpacing;
   ImVec2 mCharSize;
+  bool mWithinRender;
+  bool mScrollToCursor;
+  bool mScrollToTop;
 
   // changed flags
   bool mTextChanged;
@@ -442,11 +447,6 @@ private:
   // options
   bool mIgnoreImGuiChild;
   bool mCheckComments;
-
-  // internal flags
-  bool mWithinRender;
-  bool mScrollToCursor;
-  bool mScrollToTop;
 
   // range
   int mColorRangeMin;
