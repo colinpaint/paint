@@ -363,7 +363,7 @@ private:
   std::string getWordAt (const sPosition& position) const;
   std::string getWordUnderCursor() const;
 
-  float getTextDistanceToLineStart (const sPosition& from) const;
+  float getTextWidth (const sPosition& position) const;
   int getPageNumLines() const;
   //}}}
   //{{{  utils
