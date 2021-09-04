@@ -1,10 +1,25 @@
 // cTextEditor.cpp - nicked from https://github.com/BalazsJako/ImGuiColorTextEdit
+// - remember this file is used to test itself
 //{{{  includes
-#include <string>
+// dummy comment
+
+/* and some old style c comments
+   to test comment handling in this editor
+*/
+
+#include <cstdint>
 #include <cmath>
 #include <algorithm>
-#include <regex>
+
+#include <string>
+#include <vector>
+#include <array>
+#include <map>
+#include <unordered_map>
+#include <unordered_set>
+
 #include <chrono>
+#include <regex>
 #include <functional>
 
 #include "cTextEditor.h"
@@ -480,12 +495,15 @@ cTextEditor::cTextEditor()
 //}}}
 //{{{  gets
 //{{{
-string cTextEditor::getText() const {
+string cTextEditor::getTextString() const {
+// get text as single string
+
   return getText (sPosition(), sPosition((int)mLines.size(), 0));
   }
 //}}}
 //{{{
-vector<string> cTextEditor::getTextLines() const {
+vector<string> cTextEditor::getTextStrings() const {
+// get text as vector of string
 
   vector<string> result;
   result.reserve (mLines.size());
@@ -505,7 +523,7 @@ vector<string> cTextEditor::getTextLines() const {
 //}}}
 //{{{  sets
 //{{{
-void cTextEditor::setText (const string& text) {
+void cTextEditor::setTextString (const string& text) {
 // break test into lines, store in internal mLines structure
 
   mLines.clear();
@@ -532,7 +550,7 @@ void cTextEditor::setText (const string& text) {
   }
 //}}}
 //{{{
-void cTextEditor::setTextLines (const vector<string>& lines) {
+void cTextEditor::setTextStrings (const vector<string>& lines) {
 // store vector of lines in internal mLines structure
 
   mLines.clear();
@@ -697,6 +715,7 @@ void cTextEditor::moveBottomSelect() {
   setSelection (mInteractiveStart, mInteractiveEnd);
   }
 //}}}
+
 //{{{
 void cTextEditor::moveHome() {
 
@@ -709,7 +728,6 @@ void cTextEditor::moveHome() {
     }
   }
 //}}}
-
 //{{{
 void cTextEditor::moveHomeSelect() {
 
@@ -794,22 +812,6 @@ void cTextEditor::copy() {
     }
   }
 //}}}
-
-// undo
-//{{{
-void cTextEditor::undo (int steps) {
-
-  while (hasUndo() && steps-- > 0)
-    mUndoBuffer[--mUndoIndex].undo (this);
-  }
-//}}}
-//{{{
-void cTextEditor::redo (int steps) {
-
-  while (hasRedo() && steps-- > 0)
-    mUndoBuffer[mUndoIndex++].redo (this);
-  }
-//}}}
 //{{{
 void cTextEditor::cut() {
 
@@ -857,6 +859,22 @@ void cTextEditor::paste() {
     u.mAfter = mState;
     addUndo (u);
     }
+  }
+//}}}
+
+// undo
+//{{{
+void cTextEditor::undo (int steps) {
+
+  while (hasUndo() && steps-- > 0)
+    mUndoBuffer[--mUndoIndex].undo (this);
+  }
+//}}}
+//{{{
+void cTextEditor::redo (int steps) {
+
+  while (hasRedo() && steps-- > 0)
+    mUndoBuffer[mUndoIndex++].redo (this);
   }
 //}}}
 
@@ -969,7 +987,6 @@ void cTextEditor::backspace() {
 
       //if (cindex > 0 && UTF8CharLength(line[cindex].mChar) > 1)
       //  --cindex;                       glyphs
-
       u.mRemovedStart = u.mRemovedEnd = getCursorPosition();
       --u.mRemovedStart.mColumn;
       --mState.mCursorPosition.mColumn;
@@ -994,7 +1011,6 @@ void cTextEditor::backspace() {
 void cTextEditor::deleteSelection() {
 
   assert(mState.mSelectionEnd >= mState.mSelectionStart);
-
   if (mState.mSelectionEnd == mState.mSelectionStart)
     return;
 
@@ -1002,6 +1018,7 @@ void cTextEditor::deleteSelection() {
 
   setSelection (mState.mSelectionStart, mState.mSelectionStart);
   setCursorPosition (mState.mSelectionStart);
+
   colorize (mState.mSelectionStart.mLineNumber, 1);
   }
 //}}}
@@ -1021,8 +1038,10 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
       auto start = mState.mSelectionStart;
       auto end = mState.mSelectionEnd;
       auto originalEnd = end;
+
       if (start > end)
-        swap(start, end);
+        swap (start, end);
+
       start.mColumn = 0;
       // end.mColumn = end.mGlyphs < mLines.size() ? mLines[end.mGlyphs].size() : 0;
       if (end.mColumn == 0 && end.mLineNumber > 0)
@@ -1102,7 +1121,7 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
 
   assert (!mLines.empty());
   if (ch == '\n') {
-    //{{{  carraige return
+    //{{{  carraigeReturn
     insertLine (position.mLineNumber + 1);
     vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
     vector<sGlyph>& newLine = mLines[position.mLineNumber + 1].mGlyphs;
@@ -1120,19 +1139,17 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
     }
     //}}}
   else {
-    //{{{  other
     char buf[7];
     int e = imTextCharToUtf8 (buf, 7, ch);
     if (e > 0) {
       buf[e] = '\0';
       vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
       int cindex = getCharacterIndex (position);
-
-      if (mOverwrite && cindex < (int)glyphs.size()) {
+      if (mOverwrite && (cindex < (int)glyphs.size())) {
         auto d = utf8CharLength (glyphs[cindex].mChar);
         u.mRemovedStart = mState.mCursorPosition;
-        u.mRemovedEnd = sPosition(position.mLineNumber, getCharacterColumn (position.mLineNumber, cindex + d));
-        while (d-- > 0 && cindex < (int)glyphs.size()) {
+        u.mRemovedEnd = sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, cindex + d));
+        while ((d-- > 0) && (cindex < (int)glyphs.size())) {
           u.mRemoved += glyphs[cindex].mChar;
           glyphs.erase (glyphs.begin() + cindex);
           }
@@ -1141,21 +1158,19 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
       for (auto p = buf; *p != '\0'; p++, ++cindex)
         glyphs.insert (glyphs.begin() + cindex, sGlyph (*p, ePalette::Default));
       u.mAdded = buf;
-
       setCursorPosition (sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, cindex)));
       }
     else
       return;
     }
-    //}}}
-
   mTextChanged = true;
 
   u.mAddedEnd = getCursorPosition();
   u.mAfter = mState;
-  addUndo(u);
+  addUndo (u);
 
   colorize (position.mLineNumber - 1, 3);
+
   ensureCursorVisible();
   }
 //}}}
@@ -1301,6 +1316,7 @@ int cTextEditor::getLineCharacterCount (int row) const {
 
 //{{{
 string cTextEditor::getText (const sPosition& startPosition, const sPosition& endPosition) const {
+// get text as string with carraigeReturn line breaks
 
   string result;
 
@@ -1320,9 +1336,8 @@ string cTextEditor::getText (const sPosition& startPosition, const sPosition& en
     if (lstart >= (int)mLines.size())
       break;
 
-    const vector<sGlyph>& glyphs = mLines[lstart].mGlyphs;
-    if (istart < (int)glyphs.size()) {
-      result += glyphs[istart].mChar;
+    if (istart < (int)mLines[lstart].mGlyphs.size()) {
+      result += mLines[lstart].mGlyphs[istart].mChar;
       istart++;
       }
     else {
@@ -2041,83 +2056,6 @@ void cTextEditor::addUndo (sUndoRecord& value) {
   }
 //}}}
 
-// folds
-//{{{
-void cTextEditor::parseFolds() {
-
-  for (auto& line : mLines) {
-    string text;
-    for (auto& glyph : line.mGlyphs)
-      text += glyph.mChar;
-
-    // we set these
-    size_t foldBeginIndent = text.find (mLanguage.mFoldBeginMarker);
-    line.mFoldBegin = (foldBeginIndent != string::npos);
-    line.mFoldIndent = line.mFoldBegin ? static_cast<uint16_t>(foldBeginIndent) : 0u;
-
-    size_t foldEndIndent = text.find (mLanguage.mFoldEndMarker);
-    line.mFoldEnd = (foldEndIndent != string::npos);
-
-    // updateFolds set these
-    line.mFoldLevel = 0;
-    line.mFoldOpen = false;
-    line.mFoldLineNumber = 0;
-    line.mFoldTitleLineNumber = 0;
-    }
-
-  updateFolds();
-  }
-//}}}
-//{{{
-void cTextEditor::updateFolds() {
-// set mFoldLevel and mFoldBeginLineNumbers for every line
-// - create mVisibleLines vector
-
-  // init
-  uint8_t foldLevel = 0;
-  uint32_t foldLevelBeginLineNumbers [256] = { 0 };
-
-  bool foldLevelOpen [256] = { false };
-  foldLevelOpen[0] = true;
-
-  mVisibleLines.clear();
-
-  // iterate all lines
-  uint32_t lineNumber = 0;
-  for (auto& line : mLines) {
-    if (line.mFoldBegin) {
-      // set foldLevel
-      foldLevel++;
-
-      // set foldBeginLineNumber for current foldLevel
-      foldLevelBeginLineNumbers [foldLevel] = lineNumber;
-
-      // foldLevel is open
-      foldLevelOpen[foldLevel] = line.mFoldOpen;
-      }
-
-    if (line.mFoldBegin || foldLevelOpen[foldLevel]) // visible, add to mVisibleLines
-      mVisibleLines.push_back (lineNumber);
-
-    // for every line, set mFoldLevel, and our mFoldLineNumber to matching foldBegin lineNumber
-    line.mFoldLevel = foldLevel;
-    line.mFoldLineNumber = foldLevelBeginLineNumbers [foldLevel];
-
-    if (line.mFoldEnd) {
-      // matching foldBegin mFoldLineNumber set to foldEnd lineNumber to help reverse traversal
-      mLines[foldLevelBeginLineNumbers [foldLevel]].mFoldLineNumber  = lineNumber;
-
-      // foldLevel closed
-      foldLevelOpen[foldLevel] = false;
-
-      foldLevel--;
-      }
-
-    lineNumber++;
-    }
-  }
-//}}}
-
 // colorize
 //{{{
 void cTextEditor::colorize (int fromLine, int lines) {
@@ -2344,6 +2282,85 @@ void cTextEditor::colorizeInternal() {
     }
   }
 //}}}
+//}}}
+
+// fold
+//{{{
+void cTextEditor::parseFolds() {
+
+  for (auto& line : mLines) {
+    string text;
+    for (auto& glyph : line.mGlyphs)
+      text += glyph.mChar;
+
+    // we set these
+    size_t foldBeginIndent = text.find (mLanguage.mFoldBeginMarker);
+    line.mFoldBegin = (foldBeginIndent != string::npos);
+    line.mFoldIndent = line.mFoldBegin ? static_cast<uint16_t>(foldBeginIndent) : 0u;
+
+    size_t foldEndIndent = text.find (mLanguage.mFoldEndMarker);
+    line.mFoldEnd = (foldEndIndent != string::npos);
+
+    // updateFolds set these
+    line.mFoldLevel = 0;
+    line.mFoldOpen = false;
+    line.mFoldLineNumber = 0;
+    line.mFoldTitleLineNumber = 0xFFFFFFFF;
+    }
+
+  updateFolds();
+  }
+//}}}
+//{{{
+void cTextEditor::updateFolds() {
+// set mFoldLevel and mFoldBeginLineNumbers for every line
+// - create mVisibleLines vector
+
+  uint8_t foldLevel = 0;
+  uint32_t foldLevelBeginLineNumbers [256] = { 0 };
+
+  bool foldLevelOpen [256] = { false };
+  foldLevelOpen[0] = true;
+
+  mVisibleLines.clear();
+
+  // iterate mLines
+  uint32_t lineNumber = 0;
+  for (auto& line : mLines) {
+    if (line.mFoldBegin) {
+      // set foldLevel
+      foldLevel++;
+
+      // set foldBeginLineNumber for current foldLevel
+      foldLevelBeginLineNumbers [foldLevel] = lineNumber;
+
+      // !!!search for first non comment line if fold comment empty !!!
+      line.mFoldTitleLineNumber = lineNumber;
+
+      // foldLevel is open
+      foldLevelOpen[foldLevel] = line.mFoldOpen;
+      }
+
+    if (line.mFoldBegin || foldLevelOpen[foldLevel]) // visible, add to mVisibleLines
+      mVisibleLines.push_back (lineNumber);
+
+    // for every line, set mFoldLevel, set mFoldLineNumber to foldBegin lineNumber
+    line.mFoldLevel = foldLevel;
+    line.mFoldLineNumber = foldLevelBeginLineNumbers [foldLevel];
+
+    if (line.mFoldEnd) {
+      // matching foldBegin mFoldLineNumber set to foldEnd lineNumber to help reverse traversal
+      mLines[foldLevelBeginLineNumbers [foldLevel]].mFoldLineNumber  = lineNumber;
+
+      // foldLevel closed
+      foldLevelOpen[foldLevel] = false;
+
+      foldLevel--;
+      }
+
+    lineNumber++;
+    }
+  }
 //}}}
 
 //{{{

@@ -186,27 +186,27 @@ public:
   cTextEditor();
   ~cTextEditor() = default;
   //{{{  gets
+  bool isReadOnly() const { return mReadOnly; }
+  bool isOverwrite() const { return mOverwrite; }
+  bool isTextChanged() const { return mTextChanged; }
+  bool isCursorPositionChanged() const { return mCursorPositionChanged; }
+
   bool isFolded() const { return mShowFolded; }
   bool isShowWhiteSpace() const { return mShowWhiteSpace; }
   bool isShowLineNumbers() const { return mShowLineNumbers; }
   bool isShowLineDebug() const { return mShowLineDebug; }
 
-  bool isOverwrite() const { return mOverwrite; }
-  bool isReadOnly() const { return mReadOnly; }
-  bool isTextChanged() const { return mTextChanged; }
-  bool isCursorPositionChanged() const { return mCursorPositionChanged; }
-
   bool hasSelect() const { return mState.mSelectionEnd > mState.mSelectionStart; }
   bool hasUndo() const { return !mReadOnly && mUndoIndex > 0; }
   bool hasRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); }
 
+  bool isImGuiChildIgnored() const { return mIgnoreImGuiChild; }
   bool isHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
   bool isHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
-  bool isImGuiChildIgnored() const { return mIgnoreImGuiChild; }
 
-  std::string getText() const;
-  std::vector<std::string> getTextLines() const;
-  int getTotalLines() const { return (int)mLines.size(); }
+  std::string getTextString() const;
+  std::vector<std::string> getTextStrings() const;
+  int getTextNumLines() const { return (int)mLines.size(); }
 
   int getTabSize() const { return mTabSize; }
   sPosition getCursorPosition() const { return sanitizePosition (mState.mCursorPosition); }
@@ -214,8 +214,8 @@ public:
   const sLanguage& getLanguage() const { return mLanguage; }
   //}}}
   //{{{  sets
-  void setText (const std::string& text);
-  void setTextLines (const std::vector<std::string>& lines);
+  void setTextString (const std::string& text);
+  void setTextStrings (const std::vector<std::string>& lines);
 
   void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
   void setReadOnly (bool readOnly) { mReadOnly = readOnly; }
@@ -394,14 +394,14 @@ private:
   // undo
   void addUndo (sUndoRecord& value);
 
-  // fold
-  void parseFolds();
-  void updateFolds();
-
   // colorize
   void colorize (int fromLine = 0, int count = -1);
   void colorizeRange (int fromLine = 0, int toLine = 0);
   void colorizeInternal();
+
+  // fold
+  void parseFolds();
+  void updateFolds();
   //}}}
   void handleMouseInputs();
   void handleKeyboardInputs();

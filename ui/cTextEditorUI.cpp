@@ -150,11 +150,10 @@ public:
       #endif
 
       string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
-      mTextEditor.setText (str);
+      mTextEditor.setTextString (str);
 
       // set language
       cTextEditor::sLanguage language = cTextEditor::sLanguage::cPlus();
-
       for (size_t i = 0; i < kPreProcessorNames.size(); i++) {
         cTextEditor::sIdent id;
         id.mDeclaration = kPreProcessorValues[i];
@@ -166,13 +165,11 @@ public:
         id.mDeclaration = kIdecls[i];
         language.mIdents.insert (make_pair (kIdents[i], id));
         }
-
       mTextEditor.setLanguage (language);
 
       // markers
       map <int,string> markers;
-      markers.insert (make_pair<int,string>(6, "marker here"));
-      markers.insert (make_pair<int,string>(41, "another marker here"));
+      markers.insert (make_pair<int,string>(41, "marker here"));
       mTextEditor.setMarkers (markers);
       }
       //}}}
@@ -184,7 +181,7 @@ public:
       //{{{  menu bar
       if (ImGui::BeginMenu ("File")) {
         if (ImGui::MenuItem ("Save")) {
-          auto textToSave = mTextEditor.getText();
+          auto textToSave = mTextEditor.getTextString();
           /// save text....
           }
         ImGui::EndMenu();
@@ -234,9 +231,8 @@ public:
           mTextEditor.paste();
 
         ImGui::Separator();
-        if (ImGui::MenuItem ("Select all", nullptr, nullptr))
-          mTextEditor.setSelection (cTextEditor::sPosition(),
-                                    cTextEditor::sPosition(mTextEditor.getTotalLines(), 0));
+        if (ImGui::MenuItem ("Select all", "Ctrl-A"))
+          mTextEditor.selectAll();
 
         ImGui::EndMenu();
         }
@@ -248,7 +244,7 @@ public:
     ImGui::Text ("%d:%d:%d %s%s%s%s%s%s%s%s",
                  mTextEditor.getCursorPosition().mColumn + 1,
                  mTextEditor.getCursorPosition().mLineNumber + 1,
-                 mTextEditor.getTotalLines(),
+                 mTextEditor.getTextNumLines(),
                  mTextEditor.getLanguage().mName.c_str(),
                  mTextEditor.isOverwrite() ? " overwrite" : " insert",
                  mTextEditor.isReadOnly() ? " readOnly" : "",
