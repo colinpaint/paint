@@ -153,7 +153,7 @@ public:
       mTextEditor.setText (str);
 
       // set language
-      cTextEditor::sLanguage language = cTextEditor::sLanguage::CPlusPlus();
+      cTextEditor::sLanguage language = cTextEditor::sLanguage::cPlus();
 
       for (size_t i = 0; i < kPreProcessorNames.size(); i++) {
         cTextEditor::sIdent id;

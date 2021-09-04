@@ -176,10 +176,10 @@ public:
     sLanguage() : mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true) {}
 
     // static const
-    static const sLanguage& CPlusPlus();
-    static const sLanguage& C();
-    static const sLanguage& HLSL();
-    static const sLanguage& GLSL();
+    static const sLanguage& cPlus();
+    static const sLanguage& c();
+    static const sLanguage& hlsl();
+    static const sLanguage& glsl();
     };
   //}}}
 

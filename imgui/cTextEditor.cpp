@@ -473,7 +473,7 @@ cTextEditor::cTextEditor()
     mLastClick(-1.0f) {
 
   mPaletteBase = kLightPalette;
-  setLanguage (sLanguage::CPlusPlus());
+  setLanguage (sLanguage::cPlus());
 
   mLines.push_back (vector<sGlyph>());
   }
@@ -2850,7 +2850,7 @@ void cTextEditor::sUndoRecord::redo (cTextEditor* editor) {
 
 // cTextEditor::sLanguage
 //{{{
-const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
+const cTextEditor::sLanguage& cTextEditor::sLanguage::cPlus() {
 
   static sLanguage language;
   static bool inited = false;
@@ -2909,7 +2909,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::CPlusPlus() {
   }
 //}}}
 //{{{
-const cTextEditor::sLanguage& cTextEditor::sLanguage::C() {
+const cTextEditor::sLanguage& cTextEditor::sLanguage::c() {
 
   static sLanguage language;
   static bool inited = false;
@@ -2966,7 +2966,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::C() {
   }
 //}}}
 //{{{
-const cTextEditor::sLanguage& cTextEditor::sLanguage::HLSL() {
+const cTextEditor::sLanguage& cTextEditor::sLanguage::hlsl() {
 
   static bool inited = false;
   static sLanguage language;
@@ -3016,7 +3016,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::HLSL() {
   }
 //}}}
 //{{{
-const cTextEditor::sLanguage& cTextEditor::sLanguage::GLSL() {
+const cTextEditor::sLanguage& cTextEditor::sLanguage::glsl() {
 
   static bool inited = false;
   static sLanguage language;
