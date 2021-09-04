@@ -239,6 +239,10 @@ public:
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
   void toggleOverwrite() { mOverwrite ^= true; }
+  void toggleFolded() { mShowFolded ^= true; }
+  void toggleLineNumbers() { mShowLineNumbers ^= true; }
+  void toggleLineDebug() { mShowLineDebug ^= true; }
+  void toggleLineWhiteSpace() { mShowWhiteSpace ^= true; }
 
   void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
   void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
@@ -415,44 +419,49 @@ private:
   tRegexList mRegexList;
   std::map <int,std::string> mMarkers;
 
-  float mLineSpacing;
-
   sEditorState mState;
-
-  tUndoBuffer mUndoBuffer;
-  int mUndoIndex;
-
+  float mLineSpacing;
   int mTabSize;
   float mGlyphsStart;
+  ImVec2 mCharSize;
 
-  bool mOverwrite;
-  bool mReadOnly;
+  // changed flags
   bool mTextChanged;
   bool mCursorPositionChanged;
 
+  // modes
+  bool mOverwrite;
+  bool mReadOnly;
+
+  // shows
   bool mShowWhiteSpace;
   bool mShowFolded;
   bool mShowLineNumbers;
   bool mShowLineDebug;
 
+  // options
   bool mIgnoreImGuiChild;
   bool mCheckComments;
 
+  // internal flags
   bool mWithinRender;
   bool mScrollToCursor;
   bool mScrollToTop;
 
+  // range
   int mColorRangeMin;
   int mColorRangeMax;
-  eSelection mSelection;
-
-  bool mHandleKeyboardInputs;
-  bool mHandleMouseInputs;
-
-  ImVec2 mCharSize;
-
   sPosition mInteractiveStart;
   sPosition mInteractiveEnd;
+  eSelection mSelection;
+
+  // undo
+  int mUndoIndex;
+  tUndoBuffer mUndoBuffer;
+
+  // input
+  bool mHandleKeyboardInputs;
+  bool mHandleMouseInputs;
 
   uint64_t mStartTime;
   float mLastClick;

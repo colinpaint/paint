@@ -458,8 +458,8 @@ namespace {
 //{{{
 cTextEditor::cTextEditor()
   : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mGlyphsStart(kLeftTextMargin),
-    mOverwrite(false) , mReadOnly(false),
     mTextChanged(false), mCursorPositionChanged(false),
+    mOverwrite(false) , mReadOnly(false),
     mShowWhiteSpace(true), mShowFolded(false), mShowLineNumbers(true), mShowLineDebug(false),
     mIgnoreImGuiChild(false), mCheckComments(true),
     mWithinRender(false), mScrollToCursor(false), mScrollToTop(false),
@@ -2407,87 +2407,100 @@ void cTextEditor::handleKeyboardInputs() {
 
   //{{{
   struct sActionKey {
-    bool mWritable;
+    bool mAlt;
     bool mCtrl;
     bool mShift;
-    bool mAlt;
     ImGuiKey mKey;
+    bool mWritable;
     function <void()> mActionFunc;
     };
   //}}}
-  const vector <sActionKey> kActionKeyMap = {
-  // writable ctrl   shift  alt    key                  action
-     {true,   true,  false, false, ImGuiKey_Z,          [this]{undo();} },
-     {true,   true,  false, false, ImGuiKey_Y,          [this]{redo();} },
-     {true,   false, false, false, ImGuiKey_Backspace,  [this]{backspace();} },
-     {true,   false, false, false, ImGuiKey_Delete,     [this]{deleteIt();} },
-     {true,   true,  false, false, ImGuiKey_X,          [this]{cut();} },
-     {true,   true,  false, false, ImGuiKey_V,          [this]{paste();} },
-     {false,  true,  false, false, ImGuiKey_C,          [this]{copy();} },
-     {false,  true,  false, false, ImGuiKey_A,          [this]{selectAll();} },
-     {false,  false, false, false, ImGuiKey_Insert,     [this]{toggleOverwrite();} },
-     {false,  false, false, false, ImGuiKey_Home,       [this]{moveHome();} },
-     {false,  true,  false, false, ImGuiKey_Home,       [this]{moveTop();} },
-     {false,  true,  true,  false, ImGuiKey_Home,       [this]{moveTopSelect();} },
-     {false,  false, false, false, ImGuiKey_End,        [this]{moveEnd();} },
-     {false,  true,  false, false, ImGuiKey_End,        [this]{moveBottom();} },
-     {false,  true,  true,  false, ImGuiKey_End,        [this]{moveBottomSelect();} },
-     {false,  false, false, false, ImGuiKey_UpArrow,    [this]{moveLineUp();} },
-     {false,  false, true,  false, ImGuiKey_UpArrow,    [this]{moveLineUpSelect();} },
-     {false,  false, false, false, ImGuiKey_DownArrow,  [this]{moveLineDown();} },
-     {false,  false, true,  false, ImGuiKey_DownArrow,  [this]{moveLineDownSelect();} },
-     {false,  false, false, false, ImGuiKey_PageUp,     [this]{movePageUp();} },
-     {false,  false, true,  false, ImGuiKey_PageUp,     [this]{movePageUpSelect();} },
-     {false,  false, false, false, ImGuiKey_PageDown,   [this]{movePageDown();} },
-     {false,  false, true,  false, ImGuiKey_PageDown,   [this]{movePageDownSelect();} },
-     {false,  false, false, false, ImGuiKey_LeftArrow,  [this]{moveLeft(); } },
-     {false,  false, true,  false, ImGuiKey_LeftArrow,  [this]{moveLeftSelect(); } },
-     {false,  true,  false, false, ImGuiKey_LeftArrow,  [this]{moveLeftWord(); } },
-     {false,  true,  true,  false, ImGuiKey_LeftArrow,  [this]{moveLeftWordSelect(); } },
-     {false,  false, false, false, ImGuiKey_RightArrow, [this]{moveRight(); } },
-     {false,  false, true,  false, ImGuiKey_RightArrow, [this]{moveRightSelect(); } },
-     {false,  true,  false, false, ImGuiKey_RightArrow, [this]{moveRightWord(); } },
-     {false,  true,  true,  false, ImGuiKey_RightArrow, [this]{moveRightWordSelect(); } },
+  const vector <sActionKey> kActionKeys = {
+  //  alt    ctrl   shift  key                writable        function
+     {false, true,  false, ImGuiKey_C,          false, [this]{copy();}},
+     {false, true,  false, ImGuiKey_A,          false, [this]{selectAll();}},
+
+     // mode
+     {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverwrite();}},
+     {false, true,  false, ImGuiKey_Space,      false, [this]{toggleFolded();}},
+     //{false, false, false, ImGuiKey_Insert,     false, [this]{toggleShowLineNumbers();}},
+     //{false, false, false, ImGuiKey_Insert,     false, [this]{toggleShowLineDebug();}},
+     //{false, false, false, ImGuiKey_Insert,     false, [this]{toggleShowLineWhiteSpace();}},
+
+     // move
+     {false, false, false, ImGuiKey_UpArrow,    false, [this]{moveLineUp();}},
+     {false, false, true,  ImGuiKey_UpArrow,    false, [this]{moveLineUpSelect();}},
+     {false, false, false, ImGuiKey_DownArrow,  false, [this]{moveLineDown();}},
+     {false, false, true,  ImGuiKey_DownArrow,  false, [this]{moveLineDownSelect();}},
+     {false, false, false, ImGuiKey_LeftArrow,  false, [this]{moveLeft();}},
+     {false, true,  false, ImGuiKey_LeftArrow,  false, [this]{moveLeftWord();}},
+     {false, false, true,  ImGuiKey_LeftArrow,  false, [this]{moveLeftSelect();}},
+     {false, true,  true,  ImGuiKey_LeftArrow,  false, [this]{moveLeftWordSelect();}},
+     {false, false, false, ImGuiKey_RightArrow, false, [this]{moveRight();}},
+     {false, true,  false, ImGuiKey_RightArrow, false, [this]{moveRightWord();}},
+     {false, false, true,  ImGuiKey_RightArrow, false, [this]{moveRightSelect();}},
+     {false, true,  true,  ImGuiKey_RightArrow, false, [this]{moveRightWordSelect();}},
+     {false, false, false, ImGuiKey_PageUp,     false, [this]{movePageUp();}},
+     {false, false, true,  ImGuiKey_PageUp,     false, [this]{movePageUpSelect();}},
+     {false, false, false, ImGuiKey_PageDown,   false, [this]{movePageDown();}},
+     {false, false, true,  ImGuiKey_PageDown,   false, [this]{movePageDownSelect();}},
+     {false, false, false, ImGuiKey_Home,       false, [this]{moveHome();}},
+     {false, true,  false, ImGuiKey_Home,       false, [this]{moveTop();}},
+     {false, true,  true,  ImGuiKey_Home,       false, [this]{moveTopSelect();}},
+     {false, false, false, ImGuiKey_End,        false, [this]{moveEnd();}},
+     {false, true,  false, ImGuiKey_End,        false, [this]{moveBottom();}},
+     {false, true,  true,  ImGuiKey_End,        false, [this]{moveBottomSelect();}},
+
+     // change
+     {false, true,  false, ImGuiKey_Z,          true,  [this]{undo();}},
+     {false, true,  false, ImGuiKey_Y,          true,  [this]{redo();}},
+     {false, true,  false, ImGuiKey_X,          true,  [this]{cut();}},
+     {false, true,  false, ImGuiKey_V,          true,  [this]{paste();}},
+     {false, false, false, ImGuiKey_Backspace,  true,  [this]{backspace();}},
+     {false, false, false, ImGuiKey_Delete,     true,  [this]{deleteIt();}},
      };
 
-  if (ImGui::IsWindowFocused()) {
-    if (ImGui::IsWindowHovered())
-      ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
+  if (!ImGui::IsWindowFocused())
+    return;
 
-    ImGuiIO& io = ImGui::GetIO();
-    io.WantTextInput = true;
-    io.WantCaptureKeyboard = true;
-    auto shift = io.KeyShift;
-    auto ctrl =  io.KeyCtrl;
-    auto alt = io.KeyAlt;
+  if (ImGui::IsWindowHovered())
+    ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
 
-    for (auto& actionKey : kActionKeyMap)
-      //{{{  dispatch matched actionKey
-      if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mKey)) &&
-          (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
-          (actionKey.mCtrl == ctrl) && 
-          (actionKey.mShift == shift) && 
-          (actionKey.mAlt == alt)) {
+  ImGuiIO& io = ImGui::GetIO();
+  io.WantTextInput = true;
+  io.WantCaptureKeyboard = true;
+  auto shift = io.KeyShift;
+  auto ctrl =  io.KeyCtrl;
+  auto alt = io.KeyAlt;
 
-        actionKey.mActionFunc();
-        break;
-        }
-      //}}}
+  for (auto& actionKey : kActionKeys)
+    //{{{  dispatch matched actionKey
+    if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mKey)) &&
+        (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
+        (actionKey.mCtrl == ctrl) &&
+        (actionKey.mShift == shift) &&
+        (actionKey.mAlt == alt)) {
 
-    // handle character keys
-    if (!isReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Enter)))
-      enterCharacter ('\n', false);
-    else if (!isReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Tab)))
-      enterCharacter ('\t', shift);
-
-    if (!isReadOnly() && !io.InputQueueCharacters.empty()) {
-      for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
-        auto c = io.InputQueueCharacters[i];
-        if (c != 0 && (c == '\n' || c >= 32))
-          enterCharacter (c, shift);
-        }
-      io.InputQueueCharacters.resize (0);
+      actionKey.mActionFunc();
+      break;
       }
+    //}}}
+
+  if (isReadOnly())
+    return;
+
+  // character keys
+  if (!ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Enter)))
+   enterCharacter ('\n', false);
+  else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Tab)))
+    enterCharacter ('\t', shift);
+  if (!io.InputQueueCharacters.empty()) {
+    for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
+      auto ch = io.InputQueueCharacters[i];
+      if (ch != 0 && (ch == '\n' || ch >= 32))
+        enterCharacter (ch, shift);
+      }
+    io.InputQueueCharacters.resize (0);
     }
   }
 //}}}
