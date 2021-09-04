@@ -197,6 +197,8 @@ public:
   bool isCursorPositionChanged() const { return mCursorPositionChanged; }
 
   bool hasSelect () const { return mState.mSelectionEnd > mState.mSelectionStart; }
+  bool hasUndo() const { return !mReadOnly && mUndoIndex > 0; }
+  bool hasRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); }
 
   bool isHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
   bool isHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
@@ -243,33 +245,54 @@ public:
   void setImGuiChildIgnored (bool value) { mIgnoreImGuiChild = value;}
   //}}}
   //{{{  actions
-  void moveUp (int amount, bool select, bool ctrl);
-  void moveDown (int amount = 1, bool select = false, bool ctrl = false);
-  void moveLeft (int amount = 1, bool select = false, bool wordMode = false);
-  void moveRight (int amount = 1, bool select = false, bool wordMode = false);
+  // move
+  void moveLeft() { moveLeft (1, false, false); }
+  void moveLeftSelect() { moveLeft (1, true, false); }
+  void moveLeftWord() { moveLeft (1, false, true); }
+  void moveLeftWordSelect() { moveLeft (1, true, true); }
+  void moveRight() { moveRight (1, false, false); }
+  void moveRightSelect() { moveRight (1, true, false); }
+  void moveRightWord() { moveRight (1, false, true); }
+  void moveRightWordSelect() { moveRight (1, true, true); }
 
-  void moveTop (int amount = 1, bool select = false, bool ctrl = false);
-  void moveBottom (int amount = 1, bool select = false, bool ctrl = false);
-  void moveHome (int amount = 1, bool select = false, bool ctrl = false);
-  void moveEnd (int amount = 1, bool select = false, bool ctrl = false);
+  void moveLineUp() { moveUp (1); }
+  void moveLineUpSelect() { moveUpSelect (1); }
+  void moveLineDown() { moveDown (1); }
+  void moveLineDownSelect() { moveDownSelect (1); }
+  void movePageUp() { moveUp (getPageNumLines() - 4); }
+  void movePageUpSelect() { moveUpSelect (getPageNumLines() - 4); }
+  void movePageDown() { moveDown (getPageNumLines() - 4); }
+  void movePageDownSelect() { moveDownSelect (getPageNumLines() - 4); }
 
+  void moveTop();
+  void moveTopSelect();
+  void moveBottom();
+  void moveBottomSelect();
+
+  void moveHome();
+  void moveHomeSelect();
+  void moveEnd();
+  void moveEndSelect();
+
+  // select
   void selectAll();
   void selectWordUnderCursor();
 
-  void insertText(const char* value);
-  void insertText (const std::string& value) { insertText (value.c_str()); }
+  // cut and paste
   void copy();
   void cut();
   void paste();
-  void deleteIt();
 
-  bool hasUndo() const { return !mReadOnly && mUndoIndex > 0; }
-  bool hasRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); }
+  void deleteIt();
+  void backspace();
+  void deleteSelection();
+
   void undo (int steps = 1);
   void redo (int steps = 1);
 
-  void render (const std::string& title, const ImVec2& size = ImVec2(), bool border = false);
+  void enterCharacter (ImWchar ch, bool shift);
   //}}}
+  void render (const std::string& title, const ImVec2& size = ImVec2(), bool border = false);
 
 private:
   typedef std::vector <std::pair <std::regex,ePalette>> tRegexList;
@@ -333,39 +356,45 @@ private:
   float getTextDistanceToLineStart (const sPosition& from) const;
   int getPageNumLines() const;
   //}}}
-  //{{{  sets
+  //{{{  utils
+  void advance (sPosition& position) const;
+  void ensureCursorVisible();
+
   sPosition screenToPosition (const ImVec2& pos) const;
   sPosition sanitizePosition (const sPosition& position) const;
-  //}}}
-  //{{{  find
+
   sPosition findWordStart (const sPosition& from) const;
   sPosition findWordEnd (const sPosition& from) const;
   sPosition findNextWord (const sPosition& from) const;
+
+  void moveLeft (int amount, bool select , bool wordMode);
+  void moveRight (int amount, bool select, bool wordMode);
+  void moveUp (int amount);
+  void moveUpSelect (int amount);
+  void moveDown (int amount);
+  void moveDownSelect( int amount);
+
+  // insert
+  std::vector<sGlyph>& insertLine (int index);
+  void insertText (const char* value);
+  void insertText (const std::string& value) { insertText (value.c_str()); }
+  int insertTextAt (sPosition& where, const char* value);
+
+  // delete
+  void removeLine (int startPosition, int endPosition);
+  void removeLine (int index);
+  void deleteRange (const sPosition& startPosition, const sPosition& endPosition);
+
+  void parseFolds();
+  void updateFolds();
   //}}}
   //{{{  colorize
   void colorize (int fromLine = 0, int count = -1);
   void colorizeRange (int fromLine = 0, int toLine = 0);
   void colorizeInternal();
   //}}}
-  void parseFolds();
-  void updateFolds();
-  //{{{  actions
-  void ensureCursorVisible();
-
-  void advance (sPosition& position) const;
-  void deleteRange (const sPosition& startPosition, const sPosition& endPosition);
-  int insertTextAt (sPosition& where, const char* value);
-
+  //{{{  undo
   void addUndo (sUndoRecord& value);
-
-  void removeLine (int startPosition, int endPosition);
-  void removeLine (int index);
-  std::vector<sGlyph>& insertLine (int index);
-
-  void enterCharacter (ImWchar ch, bool shift);
-
-  void backspace();
-  void deleteSelection();
   //}}}
 
   void handleMouseInputs();
