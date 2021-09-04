@@ -2287,21 +2287,36 @@ void cTextEditor::colorizeInternal() {
 // fold
 //{{{
 void cTextEditor::parseFolds() {
+// parse beginFold and endFold markers, set simple flags
 
   for (auto& line : mLines) {
     string text;
     for (auto& glyph : line.mGlyphs)
       text += glyph.mChar;
 
-    // we set these
     size_t foldBeginIndent = text.find (mLanguage.mFoldBeginMarker);
     line.mFoldBegin = (foldBeginIndent != string::npos);
-    line.mFoldIndent = line.mFoldBegin ? static_cast<uint16_t>(foldBeginIndent) : 0u;
+
+    if (line.mFoldBegin) {
+      line.mIndent = static_cast<uint16_t>(foldBeginIndent + mLanguage.mFoldBeginMarker.size());
+      // has text after the foldBeginMarker
+      line.mHasComment = (text.size() != (foldBeginIndent + mLanguage.mFoldBeginMarker.size()));
+      }
+    else {
+      size_t indent = text.find_first_not_of (' ');
+      if (indent != string::npos)
+        line.mIndent = static_cast<uint16_t>(indent);
+      else
+        line.mIndent = 0;
+
+      // has "//" style comment as first text in line
+      line.mHasComment = (text.find (mLanguage.mSingleLineComment, indent) != string::npos);
+      }
 
     size_t foldEndIndent = text.find (mLanguage.mFoldEndMarker);
     line.mFoldEnd = (foldEndIndent != string::npos);
 
-    // updateFolds set these
+    // init fields set by updateFolds
     line.mFoldLevel = 0;
     line.mFoldOpen = false;
     line.mFoldLineNumber = 0;
@@ -2335,9 +2350,9 @@ void cTextEditor::updateFolds() {
       foldLevelBeginLineNumbers [foldLevel] = lineNumber;
 
       // !!!search for first non comment line if fold comment empty !!!
-      line.mFoldTitleLineNumber = lineNumber;
+      line.mFoldTitleLineNumber = line.mHasComment ? lineNumber : lineNumber + 1;
 
-      // foldLevel is open
+      // foldLevel open
       foldLevelOpen[foldLevel] = line.mFoldOpen;
       }
 
@@ -2598,7 +2613,16 @@ void cTextEditor::render() {
 
   float widestLine = mGlyphsStart;
   while (lineIndex < maxLineIndex) {
-    lineNumber = mShowFolded ? mVisibleLines[lineIndex] : lineIndex;
+    if (mShowFolded) {
+      //{{{  calc line number
+      lineNumber = mVisibleLines[lineIndex];
+      if (mLines[lineNumber].mFoldBegin)
+        lineNumber = mLines[lineNumber].mFoldTitleLineNumber;
+      }
+      //}}}
+    else
+      lineNumber = lineIndex;
+
     sLine& line = mLines[lineNumber];
     vector<sGlyph>& glyphs = line.mGlyphs;
 
