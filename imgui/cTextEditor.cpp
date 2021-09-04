@@ -458,19 +458,16 @@ namespace {
 //{{{
 cTextEditor::cTextEditor()
   : mTabSize(4), mGlyphsStart(kLeftTextMargin),
-    mLineSpacing(1.0f), mWithinRender(false), mScrollToTop(false), mScrollToCursor(false),
 
     mTextChanged(false), mCursorPositionChanged(false),
-
-    mOverwrite(false) , mReadOnly(false),
+    mOverwrite(false) , mReadOnly(false), mIgnoreImGuiChild(false), mCheckComments(true),
     mShowWhiteSpace(true), mShowFolded(false), mShowLineNumbers(true), mShowLineDebug(false),
-
-    mIgnoreImGuiChild(false), mCheckComments(true),
 
     mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
     mUndoIndex(0),
 
     mHandleKeyboardInputs(true), mHandleMouseInputs(true),
+    mLineSpacing(1.0f), mWithinRender(false), mScrollToTop(false), mScrollToCursor(false),
 
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
     mLastClick(-1.0f) {
@@ -2463,7 +2460,6 @@ void cTextEditor::handleKeyboardInputs() {
      {true,  false, false, ImGuiKey_PageUp,     false, [this]{toggleLineNumbers();}},
      {true,  false, false, ImGuiKey_PageDown,   false, [this]{toggleLineDebug();}},
      {true,  false, false, ImGuiKey_Home,       false, [this]{toggleLineWhiteSpace();}},
-     {true,  false, false, ImGuiKey_End,        false, [this]{toggleLineWhiteSpace();}},
      };
 
   if (!ImGui::IsWindowFocused())
