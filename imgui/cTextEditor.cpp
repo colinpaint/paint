@@ -2600,21 +2600,21 @@ void cTextEditor::render() {
     }
   //}}}
 
+  ImVec2 cursorPos = {cursorScreenPos.x + scrollX, cursorScreenPos.y + (lineIndex * mCharSize.y)};
+  ImVec2 linePos = {cursorScreenPos.x, cursorPos.y};
   mGlyphsStart = kLeftTextMargin;
   if (mShowLineDebug) {
-    //{{{  measure lineDebug width
+    //{{{  add lineDebug width to mGlyphsStart
     snprintf (lineNumberStr, sizeof(lineNumberStr), "%1d%4d:%4d:%4d ",1,1,1,1);
     mGlyphsStart += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
     }
     //}}}
   else if (mShowLineNumbers) {
-    //{{{  measure lineNumber width
+    //{{{  add lineNumber width to mGlyphsStart
     snprintf (lineNumberStr, sizeof(lineNumberStr), "%d ", (int)mLines.size());
     mGlyphsStart += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
     }
     //}}}
-  ImVec2 cursorPos = {cursorScreenPos.x + scrollX, cursorScreenPos.y + (lineIndex * mCharSize.y)};
-  ImVec2 linePos = {cursorScreenPos.x, cursorPos.y};
   ImVec2 textPos = {cursorScreenPos.x + mGlyphsStart, cursorPos.y};
 
   float widestLine = mGlyphsStart;
