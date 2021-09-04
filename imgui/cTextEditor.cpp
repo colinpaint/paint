@@ -1203,7 +1203,10 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
     handleMouseInputs();
 
   colorizeInternal();
+
+  preRender();
   render();
+  postRender();
 
   if (mHandleKeyboardInputs)
     ImGui::PopAllowKeyboardFocus();
@@ -2337,7 +2340,7 @@ uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint32_t lineNumb
 
   if (parentOpen) {
     // if no comment search for first noComment line
-    it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1; 
+    it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1;
     mVisibleLines.push_back (lineNumber);
     }
 
@@ -2532,309 +2535,76 @@ void cTextEditor::handleKeyboardInputs() {
 //}}}
 
 //{{{
-void cTextEditor::render() {
+void cTextEditor::preRender() {
+//  setup render context
 
-  ImFont* font = ImGui::GetFont();
-  float fontSize = ImGui::GetFontSize();
-  ImVec2 contentSize = ImGui::GetWindowContentRegionMax();
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
-  ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
-  bool focused = ImGui::IsWindowFocused();
-  //{{{  update palette alpha from style
+  mFont = ImGui::GetFont();
+  mFontSize = ImGui::GetFontSize();
+  mContentSize = ImGui::GetWindowContentRegionMax();
+  mDrawList = ImGui::GetWindowDrawList();
+  mCursorScreenPos = ImGui::GetCursorScreenPos();
+  mFocused = ImGui::IsWindowFocused();
+
+  // update palette alpha from style
   for (uint8_t i = 0; i < (uint8_t)ePalette::Max; ++i) {
     ImVec4 color = ImGui::ColorConvertU32ToFloat4 (mPaletteBase[i]);
     color.w *= ImGui::GetStyle().Alpha;
     mPalette[i] = ImGui::ColorConvertFloat4ToU32 (color);
     }
-  //}}}
-  //{{{  cheap and cheerful null terminated str buffers
-  char str[kMaxCount];
-  unsigned count = 0;
+  mCount = 0;
 
-  char lineNumberStr[32];
-  //}}}
-  //{{{  calc character mCharSize
-  const float spaceSize = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
-  const float charWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
-
-  mCharSize = ImVec2 (charWidth, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
-  //}}}
+  // calc character mCharSize
+  mSpaceSize = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
+  mCharWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
+  mCharSize = ImVec2 (mCharWidth, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
 
   if (mScrollToTop) {
-    //{{{  scroll to top
     mScrollToTop = false;
     ImGui::SetScrollY (0.f);
     }
-    //}}}
-  float scrollX = ImGui::GetScrollX();
-  float scrollY = ImGui::GetScrollY();
-  //{{{  calc lineIndex, maxLineIndex, lineNumber from scrollY
-  uint32_t lineIndex = static_cast<uint32_t>(floor (scrollY / mCharSize.y));
-  uint32_t maxLineIndex = lineIndex + static_cast<uint32_t>(ceil ((scrollY + contentSize.y) / mCharSize.y));
-  uint32_t lineNumber;
+
+  // calc lineIndex, maxLineIndex, lineNumber from scroll
+  mScrollX = ImGui::GetScrollX();
+  mScrollY = ImGui::GetScrollY();
+  mLineIndex = static_cast<uint32_t>(floor (mScrollY / mCharSize.y));
+  mMaxLineIndex = mLineIndex + static_cast<uint32_t>(ceil ((mScrollY + mContentSize.y) / mCharSize.y));
 
   if (mShowFolded) {
-    lineIndex = min (lineIndex, static_cast<uint32_t>(mVisibleLines.size()-1));
-    maxLineIndex = max (0u, min (static_cast<uint32_t>(mVisibleLines.size()-1), maxLineIndex));
-    lineNumber = mVisibleLines[lineIndex];
+    mLineIndex = min (mLineIndex, static_cast<uint32_t>(mVisibleLines.size()-1));
+    mMaxLineIndex = max (0u, min (static_cast<uint32_t>(mVisibleLines.size()-1), mMaxLineIndex));
+    mLineNumber = mVisibleLines[mLineIndex];
     }
-
   else {
-    lineIndex = min (lineIndex, static_cast<uint32_t>(mLines.size()-1));
-    maxLineIndex = max (0u, min (static_cast<uint32_t>(mLines.size()-1), maxLineIndex));
-    lineNumber = lineIndex;
+    mLineIndex = min (mLineIndex, static_cast<uint32_t>(mLines.size()-1));
+    mMaxLineIndex = max (0u, min (static_cast<uint32_t>(mLines.size()-1), mMaxLineIndex));
+    mLineNumber = mLineIndex;
     }
-  //}}}
 
-  ImVec2 cursorPos = {cursorScreenPos.x + scrollX, cursorScreenPos.y + (lineIndex * mCharSize.y)};
-  ImVec2 linePos = {cursorScreenPos.x, cursorPos.y};
+  mCursorPos = {mCursorScreenPos.x + mScrollX, mCursorScreenPos.y + (mLineIndex * mCharSize.y)};
+  mLinePos = {mCursorScreenPos.x, mCursorPos.y};
+
   mGlyphsStart = kLeftTextMargin;
   if (mShowLineDebug) {
     //{{{  add lineDebug width to mGlyphsStart
-    snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d:%4d:%4d ",1,1,1);
-    mGlyphsStart += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
+    snprintf (mLineNumberStr, sizeof(mLineNumberStr), "%4d:%4d:%4d ",1,1,1);
+    mGlyphsStart += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mLineNumberStr, nullptr, nullptr).x;
     }
     //}}}
   else if (mShowLineNumbers) {
     //{{{  add lineNumber width to mGlyphsStart
-    snprintf (lineNumberStr, sizeof(lineNumberStr), "%d ", (int)mLines.size());
-    mGlyphsStart += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
+    snprintf (mLineNumberStr, sizeof(mLineNumberStr), "%d ", (int)mLines.size());
+    mGlyphsStart += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mLineNumberStr, nullptr, nullptr).x;
     }
     //}}}
-  ImVec2 textPos = {cursorScreenPos.x + mGlyphsStart, cursorPos.y};
+  mTextPos = {mCursorScreenPos.x + mGlyphsStart, mCursorPos.y};
 
-  float width = mGlyphsStart;
-  while (lineIndex < maxLineIndex) {
-    // get glyphs lineNumber
-    lineNumber = mShowFolded ?
-      (mLines[mVisibleLines[lineIndex]].mFoldBegin ? mLines[mVisibleLines[lineIndex]].mFoldTitleLineNumber : mVisibleLines[lineIndex]) :
-      lineIndex;
-    sLine& line = mLines[lineNumber];
-    vector<sGlyph>& glyphs = line.mGlyphs;
-    width = max (width, mGlyphsStart + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
-    //{{{  draw select graphic
-    float xStart = -1.0f;
-    float xEnd = -1.0f;
+  mTextWidth = mGlyphsStart;
+  }
+//}}}
+//{{{
+void cTextEditor::postRender() {
 
-    sPosition lineStartPosition (lineNumber, 0);
-    sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
-    assert (mState.mSelectionStart <= mState.mSelectionEnd);
-
-    if (mState.mSelectionStart <= lineEndPosition)
-      xStart = mState.mSelectionStart > lineStartPosition ? getTextWidth (mState.mSelectionStart) : 0.0f;
-
-    if (mState.mSelectionEnd > lineStartPosition)
-      xEnd = getTextWidth (mState.mSelectionEnd < lineEndPosition ? mState.mSelectionEnd : lineEndPosition);
-    if (mState.mSelectionEnd.mLineNumber > static_cast<int>(lineNumber))
-      xEnd += mCharSize.x;
-
-    if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd)) {
-      drawList->AddRectFilled ({linePos.x + mGlyphsStart + xStart, linePos.y},
-                               {linePos.x + mGlyphsStart + xEnd, linePos.y + mCharSize.y},
-                               mPalette[(size_t)ePalette::Selection]);
-      }
-    //}}}
-    //{{{  draw marker
-    auto markerIt = mMarkers.find (lineNumber + 1);
-    if (markerIt != mMarkers.end()) {
-      ImVec2 markerEndPos = {linePos.x + contentSize.x + 2.0f * scrollX, linePos.y + mCharSize.y};
-      drawList->AddRectFilled (cursorPos, markerEndPos, mPalette[(size_t)ePalette::Marker]);
-
-      if (ImGui::IsMouseHoveringRect (linePos, markerEndPos)) {
-        ImGui::BeginTooltip();
-
-        ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f,0.2f,0.2f, 1.0f));
-        ImGui::Text ("marker at line %d:", markerIt->first);
-        ImGui::PopStyleColor();
-
-        ImGui::Separator();
-        ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f,1.0f,0.2f, 1.0f));
-        ImGui::Text ("%s", markerIt->second.c_str());
-        ImGui::PopStyleColor();
-
-        ImGui::EndTooltip();
-        }
-      }
-    //}}}
-
-    if (mShowLineDebug) {
-      //{{{  draw lineDebug, rightJustified
-      snprintf (lineNumberStr, sizeof(lineNumberStr), "%4d:%4d:%4d ",
-                line.mFoldLineNumber+1, line.mFoldTitleLineNumber+1, lineNumber+1);
-
-      float strWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
-      drawList->AddText (ImVec2 (mGlyphsStart + linePos.x - strWidth, linePos.y),
-                         mPalette[(size_t)ePalette::LineNumber], lineNumberStr);
-      }
-      //}}}
-    else if (mShowLineNumbers) {
-      //{{{  draw lineNumber, rightJustified
-      snprintf (lineNumberStr, sizeof(lineNumberStr), "%d ", lineNumber+1);
-
-      float lineNumberWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, lineNumberStr, nullptr, nullptr).x;
-
-      drawList->AddText (ImVec2 (linePos.x + mGlyphsStart - lineNumberWidth, linePos.y),
-                         mPalette[(size_t)ePalette::LineNumber], lineNumberStr);
-      }
-      //}}}
-
-    // draw main text line
-    if (!hasSelect() && (lineNumber == static_cast<uint32_t>(mState.mCursorPosition.mLineNumber))) {
-      //{{{  highlight cursor line before drawText
-      ImVec2 cursorEndPos = {cursorPos.x + contentSize.x + scrollX, cursorPos.y + mCharSize.y};
-
-      drawList->AddRectFilled (cursorPos, cursorEndPos,
-        mPalette[(int)(focused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
-
-      drawList->AddRect (cursorPos, cursorEndPos, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
-      }
-      //}}}
-    float xOffset = 0.f;
-    ImU32 prefixColor = 0;
-    bool forcePrefixColor = false;
-    if (mShowFolded) {
-      //{{{  draw fold prefix text
-      sLine& foldLine = mLines[mVisibleLines[lineIndex]];
-
-      if (foldLine.mFoldBegin) {
-        if (foldLine.mFoldOpen) {
-          // foldBegin foldOpen
-          string prefixString = mLanguage.mFoldBeginOpen;
-          prefixColor = mPalette[(size_t)ePalette::FoldBeginOpen];
-          drawList->AddText (ImVec2 (textPos.x + xOffset, textPos.y), prefixColor, prefixString.c_str());
-          xOffset += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
-
-          }
-        else {
-          // foldBegin foldClosed
-          string prefixString;
-          for (uint8_t i = 0; i < line.mIndent; i++)
-            prefixString += ' ';
-          prefixString += mLanguage.mFoldBeginClosed;
-          prefixColor = mPalette[(size_t)ePalette::FoldBeginClosed];
-          drawList->AddText (ImVec2 (textPos.x + xOffset, textPos.y), prefixColor, prefixString.c_str());
-          xOffset += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
-          forcePrefixColor = true;
-          }
-        }
-
-      else if (foldLine.mFoldEnd) {
-        // foldEnd
-        string prefixString = mLanguage.mFoldEnd;
-        prefixColor = mPalette[(size_t)ePalette::FoldEnd];
-        drawList->AddText (ImVec2 (textPos.x + xOffset, textPos.y), prefixColor, prefixString.c_str());
-        xOffset += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
-
-        // no more to draw
-        return;
-        }
-      }
-      //}}}
-    //{{{  draw text
-    ImU32 prevColor = glyphs.empty() ? mPalette[(size_t)ePalette::Default] : getGlyphColor (glyphs[0]);
-
-    for (auto& glyph : glyphs) {
-      // write text on colour change
-      ImU32 color = getGlyphColor (glyph);
-      if (((color != prevColor) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && count) {
-        //{{{  draw glyphs with color
-        str[count] = 0;
-        drawList->AddText (ImVec2 (textPos.x + xOffset, textPos.y), forcePrefixColor ? prefixColor : prevColor, str);
-        xOffset += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, str, nullptr, nullptr).x;
-        count = 0;
-        }
-        //}}}
-      prevColor = color;
-
-      if (glyph.mChar == '\t') {
-        //{{{  tab
-        float oldX = xOffset;
-        xOffset =
-          (1.0f + floor ((1.0f + xOffset) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
-
-        if (mShowWhiteSpace) {
-          //{{{  draw tab whiteSpace marker
-          const float x1 = textPos.x + oldX + 1.0f;
-          const float x2 = textPos.x + xOffset - 1.0f;
-          const float y = textPos.y + fontSize * 0.5f;
-          const ImVec2 p1(x1, y);
-          const ImVec2 p2(x2, y);
-          const ImVec2 p3(x2 - fontSize * 0.2f, y - fontSize * 0.2f);
-          const ImVec2 p4(x2 - fontSize * 0.2f, y + fontSize * 0.2f);
-          drawList->AddLine (p1, p2, 0x90909090);
-          drawList->AddLine (p2, p3, 0x90909090);
-          drawList->AddLine (p2, p4, 0x90909090);
-          }
-          //}}}
-        }
-        //}}}
-      else if (glyph.mChar == ' ') {
-        //{{{  space
-        if (mShowWhiteSpace) {
-          //{{{  draw space whiteSpace marker
-          const float x = textPos.x + xOffset + spaceSize * 0.5f;
-          const float y = textPos.y + fontSize * 0.5f;
-          drawList->AddCircleFilled (ImVec2(x, y), 1.5f, 0x80808080, 4);
-          }
-          //}}}
-        xOffset += spaceSize;
-        }
-        //}}}
-      else {
-        //{{{  normal
-        // !!!check for overflow, truncation !!!
-        int l = utf8CharLength (glyph.mChar);
-        while ((l-- > 0) && (count < (kMaxCount-2)))
-          str[count++] = glyph.mChar;
-        }
-        //}}}
-      }
-
-    if (count) {
-      // write remaining text
-      str[count] = 0;
-      drawList->AddText (ImVec2 (textPos.x + xOffset, textPos.y), forcePrefixColor ? prefixColor : prevColor, str);
-      count = 0;
-      }
-    //}}}
-    if (focused && (lineNumber == static_cast<uint32_t>(mState.mCursorPosition.mLineNumber))) {
-      //{{{  draw flashing cursor after drawText
-      auto timeEnd = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
-      auto elapsed = timeEnd - mStartTime;
-      if (elapsed > 400) {
-        float cursorWidth = 1.f;
-        int cindex = getCharacterIndex (mState.mCursorPosition);
-        float cx = getTextWidth (mState.mCursorPosition);
-
-        if (mOverwrite && (cindex < (int)glyphs.size())) {
-          if (glyphs[cindex].mChar == '\t') {
-            float x = (1.0f + floor((1.0f + cx) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
-            cursorWidth = x - cx;
-            }
-          else {
-            char cursorBuf[2];
-            cursorBuf[0] = glyphs[cindex].mChar;
-            cursorBuf[1] = 0;
-            cursorWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, cursorBuf).x;
-            }
-          }
-        drawList->AddRectFilled ({textPos.x + cx, linePos.y},
-                                 {textPos.x + cx + cursorWidth, linePos.y + mCharSize.y},
-                                 mPalette[(size_t)ePalette::Cursor]);
-        if (elapsed > 800)
-          mStartTime = timeEnd;
-        }
-      }
-      //}}}
-
-    // nextLine
-    cursorPos.y += mCharSize.y;
-    textPos.y += mCharSize.y;
-    linePos.y += mCharSize.y;
-    lineIndex++;
-    }
-
-  //{{{  draw tooltip for idents,preProcs
+  // draw tooltip for idents,preProcs
   if (ImGui::IsMousePosValid()) {
     string id = getWordAt (screenToPosition (ImGui::GetMousePos()));
     if (!id.empty()) {
@@ -2855,21 +2625,250 @@ void cTextEditor::render() {
         }
       }
     }
-  //}}}
 
-  //{{{
   // dummy button, sized to maximum width,height, sets scroll regions without drawing them
-  //}}}
-  ImGui::Dummy (ImVec2(width + 2, (mShowFolded ? mVisibleLines.size() : mLines.size()) * mCharSize.y));
+  ImGui::Dummy (ImVec2(mTextWidth + 2, (mShowFolded ? mVisibleLines.size() : mLines.size()) * mCharSize.y));
 
   if (mScrollToCursor) {
-    //{{{  scroll to cursor
+    // scroll to cursor
     ensureCursorVisible();
     ImGui::SetWindowFocus();
-
     mScrollToCursor = false;
     }
+  }
+//}}}
+//{{{
+void cTextEditor::render() {
+
+  while (mLineIndex < mMaxLineIndex) {
+    // get glyphs lineNumber
+    mLineNumber = mShowFolded ?
+      (mLines[mVisibleLines[mLineIndex]].mFoldBegin ? mLines[mVisibleLines[mLineIndex]].mFoldTitleLineNumber : mVisibleLines[mLineIndex]) :
+      mLineIndex;
+
+    sLine& line = mLines[mLineNumber];
+    vector<sGlyph>& glyphs = line.mGlyphs;
+    mTextWidth = max (mTextWidth, mGlyphsStart + getTextWidth (sPosition (mLineNumber, getLineMaxColumn (mLineNumber))));
+    //{{{  draw select graphic
+    float xStart = -1.0f;
+    float xEnd = -1.0f;
+
+    sPosition lineStartPosition (mLineNumber, 0);
+    sPosition lineEndPosition (mLineNumber, getLineMaxColumn (mLineNumber));
+    assert (mState.mSelectionStart <= mState.mSelectionEnd);
+
+    if (mState.mSelectionStart <= lineEndPosition)
+      xStart = mState.mSelectionStart > lineStartPosition ? getTextWidth (mState.mSelectionStart) : 0.0f;
+
+    if (mState.mSelectionEnd > lineStartPosition)
+      xEnd = getTextWidth (mState.mSelectionEnd < lineEndPosition ? mState.mSelectionEnd : lineEndPosition);
+    if (mState.mSelectionEnd.mLineNumber > static_cast<int>(mLineNumber))
+      xEnd += mCharSize.x;
+
+    if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd)) {
+      mDrawList->AddRectFilled ({mLinePos.x + mGlyphsStart + xStart, mLinePos.y},
+                               {mLinePos.x + mGlyphsStart + xEnd, mLinePos.y + mCharSize.y},
+                               mPalette[(size_t)ePalette::Selection]);
+      }
     //}}}
+    //{{{  draw marker
+    auto markerIt = mMarkers.find (mLineNumber + 1);
+    if (markerIt != mMarkers.end()) {
+      ImVec2 markerEndPos = {mLinePos.x + mContentSize.x + 2.0f * mScrollX, mLinePos.y + mCharSize.y};
+      mDrawList->AddRectFilled (mCursorPos, markerEndPos, mPalette[(size_t)ePalette::Marker]);
+
+      if (ImGui::IsMouseHoveringRect (mLinePos, markerEndPos)) {
+        ImGui::BeginTooltip();
+
+        ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f,0.2f,0.2f, 1.0f));
+        ImGui::Text ("marker at line %d:", markerIt->first);
+        ImGui::PopStyleColor();
+
+        ImGui::Separator();
+        ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f,1.0f,0.2f, 1.0f));
+        ImGui::Text ("%s", markerIt->second.c_str());
+        ImGui::PopStyleColor();
+
+        ImGui::EndTooltip();
+        }
+      }
+    //}}}
+
+    if (mShowLineDebug) {
+      //{{{  draw lineDebug, rightJustified
+      snprintf (mLineNumberStr, sizeof(mLineNumberStr), "%4d:%4d:%4d ",
+                line.mFoldLineNumber+1, line.mFoldTitleLineNumber+1, mLineNumber+1);
+      float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mLineNumberStr, nullptr, nullptr).x;
+      mDrawList->AddText (ImVec2 (mGlyphsStart + mLinePos.x - strWidth, mLinePos.y),
+                          mPalette[(size_t)ePalette::LineNumber], mLineNumberStr);
+      }
+      //}}}
+    else if (mShowLineNumbers) {
+      //{{{  draw lineNumber, rightJustified
+      snprintf (mLineNumberStr, sizeof(mLineNumberStr), "%d ", mLineNumber+1);
+      float lineNumberWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mLineNumberStr, nullptr, nullptr).x;
+      mDrawList->AddText (ImVec2 (mLinePos.x + mGlyphsStart - lineNumberWidth, mLinePos.y),
+                          mPalette[(size_t)ePalette::LineNumber], mLineNumberStr);
+      }
+      //}}}
+
+    // draw main text line
+    if (!hasSelect() && (mLineNumber == static_cast<uint32_t>(mState.mCursorPosition.mLineNumber))) {
+      //{{{  highlight cursor line before drawText
+      ImVec2 cursorEndPos = {mCursorPos.x + mContentSize.x + mScrollX, mCursorPos.y + mCharSize.y};
+
+      mDrawList->AddRectFilled (mCursorPos, cursorEndPos,
+        mPalette[(int)(mFocused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
+
+      mDrawList->AddRect (mCursorPos, cursorEndPos, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
+      }
+      //}}}
+
+    float xOffset = 0.f;
+    ImU32 prefixColor = 0;
+    bool forcePrefixColor = false;
+    if (mShowFolded) {
+      //{{{  draw fold prefix text
+      sLine& foldLine = mLines[mVisibleLines[mLineIndex]];
+      if (foldLine.mFoldBegin) {
+        if (foldLine.mFoldOpen) {
+          // foldBegin foldOpen
+          string prefixString = mLanguage.mFoldBeginOpen;
+          prefixColor = mPalette[(size_t)ePalette::FoldBeginOpen];
+          mDrawList->AddText (ImVec2 (mTextPos.x + xOffset, mTextPos.y), prefixColor, prefixString.c_str());
+          xOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
+
+          }
+        else {
+          // foldBegin foldClosed
+          string prefixString;
+          for (uint8_t i = 0; i < line.mIndent; i++)
+            prefixString += ' ';
+          prefixString += mLanguage.mFoldBeginClosed;
+          prefixColor = mPalette[(size_t)ePalette::FoldBeginClosed];
+          mDrawList->AddText (ImVec2 (mTextPos.x + xOffset, mTextPos.y), prefixColor, prefixString.c_str());
+          xOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
+          forcePrefixColor = true;
+          }
+        }
+
+      else if (foldLine.mFoldEnd) {
+        // foldEnd
+        string prefixString = mLanguage.mFoldEnd;
+        prefixColor = mPalette[(size_t)ePalette::FoldEnd];
+        mDrawList->AddText (ImVec2 (mTextPos.x + xOffset, mTextPos.y), prefixColor, prefixString.c_str());
+        xOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
+
+        // no more to draw
+        return;
+        }
+      }
+      //}}}
+
+    //{{{  draw text
+    ImU32 prevColor = glyphs.empty() ? mPalette[(size_t)ePalette::Default] : getGlyphColor (glyphs[0]);
+
+    for (auto& glyph : glyphs) {
+      // write text on colour change
+      ImU32 color = getGlyphColor (glyph);
+      if (((color != prevColor) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && mCount) {
+        //{{{  draw glyphs with color
+        mStr[mCount] = 0;
+        mDrawList->AddText (ImVec2 (mTextPos.x + xOffset, mTextPos.y), forcePrefixColor ? prefixColor : prevColor, mStr);
+        xOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mStr, nullptr, nullptr).x;
+        mCount = 0;
+        }
+        //}}}
+      prevColor = color;
+
+      if (glyph.mChar == '\t') {
+        //{{{  tab
+        float oldX = xOffset;
+        xOffset =
+          (1.0f + floor ((1.0f + xOffset) / (float(mTabSize) * mSpaceSize))) * (float(mTabSize) * mSpaceSize);
+
+        if (mShowWhiteSpace) {
+          //{{{  draw tab whiteSpace marker
+          const float x1 = mTextPos.x + oldX + 1.0f;
+          const float x2 = mTextPos.x + xOffset - 1.0f;
+          const float y = mTextPos.y + mFontSize * 0.5f;
+          const ImVec2 p1(x1, y);
+          const ImVec2 p2(x2, y);
+          const ImVec2 p3(x2 - mFontSize * 0.2f, y - mFontSize * 0.2f);
+          const ImVec2 p4(x2 - mFontSize * 0.2f, y + mFontSize * 0.2f);
+          mDrawList->AddLine (p1, p2, 0x90909090);
+          mDrawList->AddLine (p2, p3, 0x90909090);
+          mDrawList->AddLine (p2, p4, 0x90909090);
+          }
+          //}}}
+        }
+        //}}}
+      else if (glyph.mChar == ' ') {
+        //{{{  space
+        if (mShowWhiteSpace) {
+          //{{{  draw space whiteSpace marker
+          const float x = mTextPos.x + xOffset + mSpaceSize * 0.5f;
+          const float y = mTextPos.y + mFontSize * 0.5f;
+          mDrawList->AddCircleFilled (ImVec2(x, y), 1.5f, 0x80808080, 4);
+          }
+          //}}}
+        xOffset += mSpaceSize;
+        }
+        //}}}
+      else {
+        //{{{  normal
+        // !!!check for overflow, truncation !!!
+        int l = utf8CharLength (glyph.mChar);
+        while ((l-- > 0) && (mCount < (kMaxCount-2)))
+          mStr[mCount++] = glyph.mChar;
+        }
+        //}}}
+      }
+
+    if (mCount) {
+      // write remaining text
+      mStr[mCount] = 0;
+      mDrawList->AddText (ImVec2 (mTextPos.x + xOffset, mTextPos.y), forcePrefixColor ? prefixColor : prevColor, mStr);
+      mCount = 0;
+      }
+    //}}}
+
+    if (mFocused && (mLineNumber == static_cast<uint32_t>(mState.mCursorPosition.mLineNumber))) {
+      //{{{  draw flashing cursor after drawText
+      auto timeEnd = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+      auto elapsed = timeEnd - mStartTime;
+      if (elapsed > 400) {
+        float cursorWidth = 1.f;
+        int cindex = getCharacterIndex (mState.mCursorPosition);
+        float cx = getTextWidth (mState.mCursorPosition);
+
+        if (mOverwrite && (cindex < (int)glyphs.size())) {
+          if (glyphs[cindex].mChar == '\t') {
+            float x = (1.0f + floor((1.0f + cx) / (float(mTabSize) * mSpaceSize))) * (float(mTabSize) * mSpaceSize);
+            cursorWidth = x - cx;
+            }
+          else {
+            char cursorBuf[2];
+            cursorBuf[0] = glyphs[cindex].mChar;
+            cursorBuf[1] = 0;
+            cursorWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, cursorBuf).x;
+            }
+          }
+        mDrawList->AddRectFilled ({mTextPos.x + cx, mLinePos.y},
+                                 {mTextPos.x + cx + cursorWidth, mLinePos.y + mCharSize.y},
+                                 mPalette[(size_t)ePalette::Cursor]);
+        if (elapsed > 800)
+          mStartTime = timeEnd;
+        }
+      }
+      //}}}
+
+    // nextLine
+    mCursorPos.y += mCharSize.y;
+    mTextPos.y += mCharSize.y;
+    mLinePos.y += mCharSize.y;
+    mLineIndex++;
+    }
   }
 //}}}
 

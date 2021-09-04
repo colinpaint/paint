@@ -413,6 +413,9 @@ private:
 
   void handleMouseInputs();
   void handleKeyboardInputs();
+
+  void preRender();
+  void postRender();
   void render();
 
   //{{{  vars
@@ -472,7 +475,7 @@ private:
   float mLastClick;
   //}}}
 
-  // render vars
+  //{{{  render context vars
   ImFont* mFont = nullptr;
   float mFontSize = 0.f;
   ImVec2 mContentSize;
@@ -493,4 +496,5 @@ private:
   ImVec2 mLinePos;
   ImVec2 mTextPos;
   float mTextWidth = 0.f;
+  //}}}
   };
