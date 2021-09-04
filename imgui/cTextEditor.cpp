@@ -2341,23 +2341,21 @@ uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint32_t lineNumb
     mVisibleLines.push_back (lineNumber);
     }
 
-  it++;
-  lineNumber++;
-
   while (it < mLines.end()) {
-    it->mFoldLineNumber = beginLineNumber;
-    if (it->mFoldBegin)
-      lineNumber = updateFold (it, lineNumber, foldOpen, it->mFoldOpen);
-    else if (it->mFoldEnd) {
-      // update beginFold line with endFold lineNumber, helps reverse traversal
-      mLines[beginLineNumber].mFoldLineNumber = lineNumber;
-      return lineNumber;
-      }
-    else if (foldOpen)
-      mVisibleLines.push_back (lineNumber);
-
     it++;
     lineNumber++;
+    if (it < mLines.end()) {
+      it->mFoldLineNumber = beginLineNumber;
+      if (it->mFoldBegin)
+        lineNumber = updateFold (it, lineNumber, foldOpen, it->mFoldOpen);
+      else if (it->mFoldEnd) {
+        // update beginFold line with endFold lineNumber, helps reverse traversal
+        mLines[beginLineNumber].mFoldLineNumber = lineNumber;
+        return lineNumber;
+        }
+      else if (foldOpen)
+        mVisibleLines.push_back (lineNumber);
+      }
     }
 
   return lineNumber;
