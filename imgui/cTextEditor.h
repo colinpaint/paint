@@ -40,6 +40,9 @@ public:
     CurrentLineFill,
     CurrentLineFillInactive,
     CurrentLineEdge,
+    FoldBeginClosed,
+    FoldBeginOpen,
+    FoldEnd,
     Max
     };
   //}}}
@@ -162,6 +165,9 @@ public:
     std::string mSingleLineComment;
     std::string mFoldBeginMarker;
     std::string mFoldEndMarker;
+    std::string mFoldBeginOpen;
+    std::string mFoldBeginClosed;
+    std::string mFoldEnd;
 
     char mPreprocChar;
     bool mAutoIndentation;
@@ -191,9 +197,9 @@ public:
   bool isCursorPositionChanged() const { return mCursorPositionChanged; }
 
   bool isFolded() const { return mShowFolded; }
-  bool isShowWhiteSpace() const { return mShowWhiteSpace; }
   bool isShowLineNumbers() const { return mShowLineNumbers; }
   bool isShowLineDebug() const { return mShowLineDebug; }
+  bool isShowWhiteSpace() const { return mShowWhiteSpace; }
 
   bool hasSelect() const { return mState.mSelectionEnd > mState.mSelectionStart; }
   bool hasUndo() const { return !mReadOnly && mUndoIndex > 0; }
@@ -397,11 +403,13 @@ private:
   void colorize (int fromLine = 0, int count = -1);
   void colorizeRange (int fromLine = 0, int toLine = 0);
   void colorizeInternal();
+  //}}}
 
   // fold
   void parseFolds();
+  void updateFold (std::vector<sLine>::iterator it);
   void updateFolds();
-  //}}}
+
   void handleMouseInputs();
   void handleKeyboardInputs();
   void render();
@@ -431,10 +439,10 @@ private:
   bool mCheckComments;
 
   // shows
-  bool mShowWhiteSpace;
   bool mShowFolded;
   bool mShowLineNumbers;
   bool mShowLineDebug;
+  bool mShowWhiteSpace;
 
   // range
   int mColorRangeMin;
