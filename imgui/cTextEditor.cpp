@@ -2341,7 +2341,7 @@ uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint32_t lineNumb
     mVisibleLines.push_back (lineNumber);
     }
 
-  while (it < mLines.end()) {
+  while (true) {
     it++;
     lineNumber++;
     if (it < mLines.end()) {
@@ -2356,9 +2356,9 @@ uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint32_t lineNumb
       else if (foldOpen)
         mVisibleLines.push_back (lineNumber);
       }
+    else
+      return lineNumber;
     }
-
-  return lineNumber;
   }
 //}}}
 //{{{
