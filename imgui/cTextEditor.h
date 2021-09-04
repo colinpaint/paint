@@ -408,6 +408,7 @@ private:
 
   // fold
   void parseFolds();
+  uint32_t skipFold (std::vector<cTextEditor::sLine>::iterator& it, uint32_t lineNumber);
   uint32_t updateFold (std::vector<cTextEditor::sLine>::iterator& it, uint8_t foldLevel, uint32_t lineNumber, bool foldOpen);
   void updateFolds();
 

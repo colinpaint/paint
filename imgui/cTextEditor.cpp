@@ -2331,6 +2331,31 @@ void cTextEditor::parseFolds() {
   }
 //}}}
 //{{{
+uint32_t cTextEditor::skipFold (vector<sLine>::iterator& it, uint32_t lineNumber) {
+                                    
+  cLog::log (LOGINFO, fmt::format ("skip begin line:{}", lineNumber));
+
+  // always show the foldBegin line
+  it++;
+  lineNumber++;
+
+  bool done = false;
+  while (!done && (it < mLines.end())) {
+    if (it->mFoldBegin)
+      lineNumber = skipFold (it, lineNumber);
+    else {
+      if (it->mFoldEnd)
+        done = true;
+      it++;
+      lineNumber++;
+      }
+    }
+
+  cLog::log (LOGINFO, fmt::format ("-- skip end line:{}", lineNumber));
+  return lineNumber;
+  }
+//}}}
+//{{{
 uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint8_t foldLevel, uint32_t lineNumber, bool foldOpen) {
 
   cLog::log (LOGINFO, fmt::format ("begin line:{} level:{} {}", lineNumber, foldLevel, (foldOpen?"open":"closed")));
@@ -2356,8 +2381,12 @@ uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint8_t foldLevel
     // update beginFold line with endFold lineNumber, helps reverse traversal
     mLines[beginLineNumber].mFoldLineNumber = lineNumber;
 
-    if (foldOpen && it->mFoldBegin)
-      lineNumber = updateFold (it, foldLevel, lineNumber, it->mFoldOpen);
+    if (it->mFoldBegin) {
+      if (foldOpen)
+        lineNumber = updateFold (it, foldLevel, lineNumber, it->mFoldOpen);
+      else
+        lineNumber = skipFold (it, lineNumber);
+      }
     else {
       if (it->mFoldEnd)
         done = true;
