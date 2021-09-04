@@ -2344,23 +2344,20 @@ uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint32_t lineNumb
   it++;
   lineNumber++;
 
-  bool done = false;
-  while (!done && (it < mLines.end())) {
+  while (it < mLines.end()) {
     it->mFoldLineNumber = beginLineNumber;
-    it->mFoldTitleLineNumber = 0xFFFFFFFF;
-    // update beginFold line with endFold lineNumber, helps reverse traversal
-    mLines[beginLineNumber].mFoldLineNumber = lineNumber;
-
     if (it->mFoldBegin)
       lineNumber = updateFold (it, lineNumber, foldOpen, it->mFoldOpen);
-    else {
-      if (it->mFoldEnd)
-        done = true;
-      else if (foldOpen)
-        mVisibleLines.push_back (lineNumber);
-      it++;
-      lineNumber++;
+    else if (it->mFoldEnd) {
+      // update beginFold line with endFold lineNumber, helps reverse traversal
+      mLines[beginLineNumber].mFoldLineNumber = lineNumber;
+      return lineNumber;
       }
+    else if (foldOpen)
+      mVisibleLines.push_back (lineNumber);
+
+    it++;
+    lineNumber++;
     }
 
   return lineNumber;
