@@ -208,14 +208,10 @@ public:
   std::vector<std::string> getTextLines() const;
   int getTotalLines() const { return (int)mLines.size(); }
 
-  const sLanguage& getLanguage() const { return mLanguage; }
-  const std::array <ImU32,(size_t)ePalette::Max>& getPalette() const { return mPaletteBase; }
-
-  sPosition getCursorPosition() const { return getActualCursorPosition(); }
-  std::string getSelectedText() const { return getText (mState.mSelectionStart, mState.mSelectionEnd); }
-  std::string getCurrentLineText() const;
-
   int getTabSize() const { return mTabSize; }
+  sPosition getCursorPosition() const { return sanitizePosition (mState.mCursorPosition); }
+
+  const sLanguage& getLanguage() const { return mLanguage; }
   //}}}
   //{{{  sets
   void setText (const std::string& text);
@@ -345,17 +341,21 @@ private:
   //{{{  gets
   bool isOnWordBoundary (const sPosition& position) const;
 
-  std::string getText (const sPosition& startPosition, const sPosition& endPosition) const;
-  sPosition getActualCursorPosition() const { return sanitizePosition (mState.mCursorPosition); }
+  std::string getSelectedText() const { return getText (mState.mSelectionStart, mState.mSelectionEnd); }
 
   int getCharacterIndex (const sPosition& position) const;
   int getCharacterColumn (int lineNumber, int index) const;
+
   int getLineCharacterCount (int row) const;
   int getLineMaxColumn (int row) const;
 
+  std::string getText (const sPosition& startPosition, const sPosition& endPosition) const;
+  ImU32 getGlyphColor (const sGlyph& glyph) const;
+
+  std::string getCurrentLineText() const;
+
   std::string getWordAt (const sPosition& position) const;
   std::string getWordUnderCursor() const;
-  ImU32 getGlyphColor (const sGlyph& glyph) const;
 
   float getTextDistanceToLineStart (const sPosition& from) const;
   int getPageNumLines() const;
