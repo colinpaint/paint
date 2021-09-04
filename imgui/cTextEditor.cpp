@@ -2333,58 +2333,54 @@ void cTextEditor::parseFolds() {
   }
 //}}}
 //{{{
-void cTextEditor::updateFold (vector<sLine>::iterator it) {
+uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint8_t foldLevel, uint32_t lineNumber, bool foldOpen) {
+
+  cLog::log (LOGINFO, fmt::format ("begin line:{} level:{} {}", lineNumber, foldLevel, (foldOpen?"open":"closed")));
+
+  foldLevel++;
+  uint32_t beginLineNumber = lineNumber;
+
+  // always show the foldBegin line
+  it->mLineNumber = lineNumber;
+  it->mFoldLineNumber = lineNumber;
+  it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1; // if no comment search for first noComment line
+  it->mFoldLevel = foldLevel;
+  mVisibleLines.push_back (lineNumber);
+
+  it++;
+  lineNumber++;
+  bool done = false;
+  while (!done && (it < mLines.end())) {
+    it->mLineNumber = lineNumber;
+    it->mFoldLineNumber = beginLineNumber;
+    it->mFoldTitleLineNumber = 0xFFFFFFFF;
+    it->mFoldLevel = foldLevel;
+    // update beginFold line with endFold lineNumber, helps reverse traversal
+    mLines[beginLineNumber].mFoldLineNumber = lineNumber;
+
+    if (foldOpen && it->mFoldBegin)
+      lineNumber = updateFold (it, foldLevel, lineNumber, it->mFoldOpen);
+    else {
+      if (it->mFoldEnd)
+        done = true;
+      else if (foldOpen)
+        mVisibleLines.push_back (lineNumber);
+      it++;
+      lineNumber++;
+      }
+    }
+
+  cLog::log (LOGINFO, fmt::format ("--end line:{} level:{}", lineNumber, foldLevel));
+  return lineNumber;
   }
 //}}}
 //{{{
 void cTextEditor::updateFolds() {
-// set mFoldLevel and mFoldBeginLineNumbers for every line
-// - create mVisibleLines vector
-
-  uint8_t foldLevel = 0;
-  uint32_t foldLevelBeginLineNumbers [256] = { 0 };
-
-  bool foldLevelOpen [256] = { false };
-  foldLevelOpen[0] = true;
 
   mVisibleLines.clear();
-
-  // iterate mLines
-  uint32_t lineNumber = 0;
-  for (auto it = mLines.begin(); it < mLines.end(); ++it) {
-    if (it->mFoldBegin) {
-      // set foldLevel
-      foldLevel++;
-
-      // set foldBeginLineNumber for current foldLevel
-      foldLevelBeginLineNumbers [foldLevel] = lineNumber;
-
-      // !!!search for first non comment line if fold comment empty !!!
-      it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1;
-
-      // foldLevel open
-      foldLevelOpen[foldLevel] = it->mFoldOpen;
-      }
-
-    if (it->mFoldBegin || foldLevelOpen[foldLevel]) // visible, add to mVisibleLines
-      mVisibleLines.push_back (lineNumber);
-
-    // for every line, set mFoldLevel, set mFoldLineNumber to foldBegin lineNumber
-    it->mFoldLevel = foldLevel;
-    it->mFoldLineNumber = foldLevelBeginLineNumbers [foldLevel];
-
-    if (it->mFoldEnd) {
-      // matching foldBegin mFoldLineNumber set to foldEnd lineNumber to help reverse traversal
-      mLines[foldLevelBeginLineNumbers [foldLevel]].mFoldLineNumber  = lineNumber;
-
-      // foldLevel closed
-      foldLevelOpen[foldLevel] = false;
-
-      foldLevel--;
-      }
-
-    lineNumber++;
-    }
+  vector<sLine>::iterator it = mLines.begin();
+  uint32_t lineNumber = updateFold (it, 0, 0, true);
+  cLog::log (LOGINFO, fmt::format ("update folds {}", lineNumber));
   }
 //}}}
 

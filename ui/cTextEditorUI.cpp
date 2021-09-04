@@ -144,7 +144,7 @@ public:
 
       // set file
       #ifdef _WIN32
-        ifstream fileStream ("C:/projects/paint/imgui/cTextEditor.cpp");
+        ifstream fileStream ("C:/projects/paint/imgui/cTest.cpp");
       #else
         ifstream fileStream ("/home/pi/paint/imgui/cTextEditor.cpp");
       #endif
