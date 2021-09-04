@@ -700,9 +700,7 @@ void cTextEditor::moveTopSelect() {
 //{{{
 void cTextEditor::moveBottom() {
 
-  sPosition oldPosition = getCursorPosition();
   sPosition newPosition = sPosition ((int)mLines.size() - 1, 0);
-
   setCursorPosition (newPosition);
   mInteractiveStart = mInteractiveEnd = newPosition;
   setSelection (mInteractiveStart, mInteractiveEnd);

@@ -465,8 +465,8 @@ private:
   float mLineSpacing;
   ImVec2 mCharSize;
   bool mWithinRender;
-  bool mScrollToCursor;
   bool mScrollToTop;
+  bool mScrollToCursor;
 
   uint64_t mStartTime;
   float mLastClick;
