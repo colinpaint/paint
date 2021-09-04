@@ -357,16 +357,18 @@ private:
   int getPageNumLines() const;
   //}}}
   //{{{  utils
-  void advance (sPosition& position) const;
   void ensureCursorVisible();
 
+  void advance (sPosition& position) const;
   sPosition screenToPosition (const ImVec2& pos) const;
   sPosition sanitizePosition (const sPosition& position) const;
 
+  // find
   sPosition findWordStart (const sPosition& from) const;
   sPosition findWordEnd (const sPosition& from) const;
   sPosition findNextWord (const sPosition& from) const;
 
+  // move
   void moveLeft (int amount, bool select , bool wordMode);
   void moveRight (int amount, bool select, bool wordMode);
   void moveUp (int amount);
@@ -385,16 +387,17 @@ private:
   void removeLine (int index);
   void deleteRange (const sPosition& startPosition, const sPosition& endPosition);
 
+  // undo
+  void addUndo (sUndoRecord& value);
+
+  // fold
   void parseFolds();
   void updateFolds();
-  //}}}
-  //{{{  colorize
+
+  // colorize
   void colorize (int fromLine = 0, int count = -1);
   void colorizeRange (int fromLine = 0, int toLine = 0);
   void colorizeInternal();
-  //}}}
-  //{{{  undo
-  void addUndo (sUndoRecord& value);
   //}}}
 
   void handleMouseInputs();

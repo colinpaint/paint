@@ -1424,25 +1424,6 @@ int cTextEditor::getPageNumLines() const {
 //}}}
 //{{{  utils
 //{{{
-void cTextEditor::advance (sPosition& position) const {
-
-  if (position.mLineNumber < (int)mLines.size()) {
-    const vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
-    int cindex = getCharacterIndex (position);
-    if (cindex + 1 < (int)glyphs.size()) {
-      auto delta = utf8CharLength (glyphs[cindex].mChar);
-      cindex = min (cindex + delta, (int)glyphs.size() - 1);
-      }
-    else {
-      ++position.mLineNumber;
-      cindex = 0;
-      }
-
-    position.mColumn = getCharacterColumn (position.mLineNumber, cindex);
-    }
-  }
-//}}}
-//{{{
 void cTextEditor::ensureCursorVisible() {
 
   if (!mWithinRender) {
@@ -1477,6 +1458,25 @@ void cTextEditor::ensureCursorVisible() {
   }
 //}}}
 
+//{{{
+void cTextEditor::advance (sPosition& position) const {
+
+  if (position.mLineNumber < (int)mLines.size()) {
+    const vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
+    int cindex = getCharacterIndex (position);
+    if (cindex + 1 < (int)glyphs.size()) {
+      auto delta = utf8CharLength (glyphs[cindex].mChar);
+      cindex = min (cindex + delta, (int)glyphs.size() - 1);
+      }
+    else {
+      ++position.mLineNumber;
+      cindex = 0;
+      }
+
+    position.mColumn = getCharacterColumn (position.mLineNumber, cindex);
+    }
+  }
+//}}}
 //{{{
 cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
 
@@ -1555,6 +1555,7 @@ cTextEditor::sPosition cTextEditor::sanitizePosition (const sPosition& position)
   }
 //}}}
 
+// find
 //{{{
 cTextEditor::sPosition cTextEditor::findWordStart (const sPosition& from) const {
 
@@ -1669,6 +1670,7 @@ cTextEditor::sPosition cTextEditor::findNextWord (const sPosition& from) const {
   }
 //}}}
 
+// move
 //{{{
 void cTextEditor::moveLeft (int amount, bool select, bool wordMode) {
 
@@ -2035,6 +2037,7 @@ void cTextEditor::addUndo (sUndoRecord& value) {
   }
 //}}}
 
+// folds
 //{{{
 void cTextEditor::parseFolds() {
 
@@ -2110,8 +2113,8 @@ void cTextEditor::updateFolds() {
     }
   }
 //}}}
-//}}}
-//{{{  colorize
+
+// colorize
 //{{{
 void cTextEditor::colorize (int fromLine, int lines) {
 
@@ -2460,9 +2463,12 @@ void cTextEditor::handleKeyboardInputs() {
 
     for (auto& actionKey : kActionKeyMap)
       //{{{  dispatch matched actionKey
-      if ((!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
-          (actionKey.mCtrl == ctrl) && (actionKey.mShift == shift) && (actionKey.mAlt == alt) &&
-          ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mKey))) {
+      if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mKey)) &&
+          (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
+          (actionKey.mCtrl == ctrl) && 
+          (actionKey.mShift == shift) && 
+          (actionKey.mAlt == alt)) {
+
         actionKey.mActionFunc();
         break;
         }
