@@ -2624,7 +2624,7 @@ void cTextEditor::render() {
     sLine& line = mLines[lineNumber];
     vector<sGlyph>& glyphs = line.mGlyphs;
     width = max (width, mGlyphsStart + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
-    //{{{  draw select
+    //{{{  draw select graphic
     float xStart = -1.0f;
     float xEnd = -1.0f;
 
@@ -2830,7 +2830,7 @@ void cTextEditor::render() {
             cursorWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, cursorBuf).x;
             }
           }
-        drawList->AddRectFilled ({textPos.x + cx, linePos.y}, 
+        drawList->AddRectFilled ({textPos.x + cx, linePos.y},
                                  {textPos.x + cx + cursorWidth, linePos.y + mCharSize.y},
                                  mPalette[(size_t)ePalette::Cursor]);
         if (elapsed > 800)
