@@ -483,16 +483,15 @@ private:
   ImDrawList* mDrawList = nullptr;
   ImVec2 mCursorScreenPos;
   bool mFocused = false;
+
   char mStr[kMaxCount];
   uint8_t mCount = 0;
-  char mLineNumberStr[32];
   float mSpaceSize = 0.f;
   float mCharWidth = 0.f;
   float mScrollX = 0.f;
   float mScrollY = 0.f;
   uint32_t mLineIndex = 0;
   uint32_t mMaxLineIndex = 0;
-  uint32_t mLineNumber = 0;
   ImVec2 mCursorPos;
   ImVec2 mLinePos;
   ImVec2 mTextPos;
