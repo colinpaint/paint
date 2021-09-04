@@ -2346,9 +2346,9 @@ uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint8_t foldLevel
   it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1; // if no comment search for first noComment line
   it->mFoldLevel = foldLevel;
   mVisibleLines.push_back (lineNumber);
-
   it++;
   lineNumber++;
+
   bool done = false;
   while (!done && (it < mLines.end())) {
     it->mLineNumber = lineNumber;
@@ -2379,8 +2379,7 @@ void cTextEditor::updateFolds() {
 
   mVisibleLines.clear();
   vector<sLine>::iterator it = mLines.begin();
-  uint32_t lineNumber = updateFold (it, 0, 0, true);
-  cLog::log (LOGINFO, fmt::format ("update folds {}", lineNumber));
+  updateFold (it, 0, 0, true);
   }
 //}}}
 
@@ -2571,11 +2570,8 @@ void cTextEditor::render() {
   //{{{  calc character mCharSize
   const float spaceSize = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
   const float charWidth = font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
+
   mCharSize = ImVec2 (charWidth, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
-  //}}}
-  //{{{  init fold lineType
-  enum eLineType { eNormal, eFoldBeginClosed, eFoldBeginOpen, eFoldMiddleOpen, eFoldEndOpen };
-  eLineType lineType = eNormal;;
   //}}}
 
   if (mScrollToTop) {
@@ -2623,27 +2619,10 @@ void cTextEditor::render() {
 
   float widestLine = mGlyphsStart;
   while (lineIndex < maxLineIndex) {
-    //{{{  calc lineNumber
-    if (mShowFolded) {
-      lineNumber = mVisibleLines[lineIndex];
-      if (mLines[lineNumber].mFoldBegin) {
-        if (mLines[lineNumber].mFoldOpen) {
-          lineType = eFoldBeginOpen;
-          }
-        else {
-          lineNumber = mLines[lineNumber].mFoldTitleLineNumber;
-          lineType = eFoldBeginClosed;
-          }
-        }
-      else if (mLines[lineNumber].mFoldEnd) {
-        lineType = eFoldEndOpen;
-        }
-      else
-        lineType = eFoldMiddleOpen;
-      }
-    else
-      lineNumber = lineIndex;
-    //}}}
+    // get glyphs lineNumber
+    lineNumber = mShowFolded ?
+      (mLines[mVisibleLines[lineIndex]].mFoldBegin ? mLines[mVisibleLines[lineIndex]].mFoldTitleLineNumber : mVisibleLines[lineIndex]) :
+      lineIndex;
     sLine& line = mLines[lineNumber];
     vector<sGlyph>& glyphs = line.mGlyphs;
     widestLine = max (widestLine,
@@ -2725,51 +2704,51 @@ void cTextEditor::render() {
       }
       //}}}
 
-    //{{{  draw line glyphs, prefixed by fold, colored
+    // draw line glyphs, prefixed by fold, colored
     float xOffset = 0.f;
-
-    // draw prefix
-    bool drawOnlyPrefix = false;
-    string prefixString;
     ImU32 prefixColor = 0;
     bool forcePrefixColor = false;
-    switch (lineType) {
-      //{{{
-      case eFoldBeginClosed:
-        for (uint8_t i = 0; i < line.mIndent; i++)
-          prefixString += ' ';
-        prefixString += mLanguage.mFoldBeginClosed;
+    if (mShowFolded) {
+      //{{{  draw fold prefix
+      sLine& foldLine = mLines[mVisibleLines[lineIndex]];
 
-        prefixColor = mPalette[(size_t)ePalette::FoldBeginClosed];
-        forcePrefixColor = true;
+      if (foldLine.mFoldBegin) {
+        if (foldLine.mFoldOpen) {
+          // foldBegin foldOpen
+          string prefixString = mLanguage.mFoldBeginOpen;
+          prefixColor = mPalette[(size_t)ePalette::FoldBeginOpen];
+          drawList->AddText (ImVec2 (textPos.x + xOffset, textPos.y), prefixColor, prefixString.c_str());
+          xOffset += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
 
-        break;
-      //}}}
-      //{{{
-      case eFoldBeginOpen:
-        prefixString = mLanguage.mFoldBeginOpen;
-        prefixColor = mPalette[(size_t)ePalette::FoldBeginOpen];
-        break;
-      //}}}
-      //{{{
-      case eFoldEndOpen:
-        prefixString = mLanguage.mFoldEnd;
+          }
+        else {
+          // foldBegin foldClosed
+          string prefixString;
+          for (uint8_t i = 0; i < line.mIndent; i++)
+            prefixString += ' ';
+          prefixString += mLanguage.mFoldBeginClosed;
+          prefixColor = mPalette[(size_t)ePalette::FoldBeginClosed];
+          drawList->AddText (ImVec2 (textPos.x + xOffset, textPos.y), prefixColor, prefixString.c_str());
+          xOffset += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
+          forcePrefixColor = true;
+          }
+        }
+
+      else if (foldLine.mFoldEnd) {
+        // foldEnd
+        string prefixString = mLanguage.mFoldEnd;
         prefixColor = mPalette[(size_t)ePalette::FoldEnd];
-        drawOnlyPrefix = true;
-        break;
-      //}}}
-      }
+        drawList->AddText (ImVec2 (textPos.x + xOffset, textPos.y), prefixColor, prefixString.c_str());
+        xOffset += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
 
-    if (!prefixString.empty()) {
-      //{{{  draw prefix
-      drawList->AddText (ImVec2 (textPos.x + xOffset, textPos.y), prefixColor, prefixString.c_str());
-      xOffset += font->CalcTextSizeA (fontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
+        // no more to draw
+        return;
+        }
       }
       //}}}
-    if (drawOnlyPrefix)
-      return;
-
+    //{{{  draw glyphs
     ImU32 prevColor = glyphs.empty() ? mPalette[(size_t)ePalette::Default] : getGlyphColor (glyphs[0]);
+
     for (auto& glyph : glyphs) {
       // write text on colour change
       ImU32 color = getGlyphColor (glyph);
