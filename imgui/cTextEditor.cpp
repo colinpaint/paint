@@ -2548,7 +2548,6 @@ void cTextEditor::render() {
     }
   //}}}
   //{{{  cheap and cheerful null terminated str buffers
-  constexpr int kMaxCount = 256;
   char str[kMaxCount];
   unsigned count = 0;
 
