@@ -417,6 +417,7 @@ private:
   void preRender();
   void postRender();
   void render();
+  void renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber);
 
   //{{{  vars
   std::vector <sLine> mLines;
