@@ -1200,8 +1200,7 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
   handleKeyboardInputs();
   ImGui::PushAllowKeyboardFocus (true);
 
-  if (mHandleMouseInputs)
-    handleMouseInputs();
+  handleMouseInputs();
 
   colorizeInternal();
 
@@ -1211,14 +1210,15 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
 
   mVisibleLines.clear();
   if (mShowFolded) {
-    // iterate all lines to mVisibleLines, clip renderLine to minLineIndex,maxLineIndex for speed
+    //{{{  iterate lines, create mVisibleLines, clip renderLine to minLineIndex,maxLineIndex 
     vector<sLine>::iterator it = mLines.begin();
     uint32_t lineNumber = 0;
     uint32_t lineIndex = 0;
     renderFold (it, lineNumber, lineIndex, minLineIndex, maxLineIndex, true, true);
     }
+    //}}}
   else {
-    //{{{  simple iterate lines
+    //{{{  simple renderLine visible lines
     uint32_t lineNumber = minLineIndex;
     while (lineNumber < min (maxLineIndex, (uint32_t)mLines.size())) {
       renderLine (lineNumber, 0);
@@ -1404,7 +1404,7 @@ ImU32 cTextEditor::getGlyphColor (const sGlyph& glyph) const {
 string cTextEditor::getCurrentLineText() const {
 
   int lineLength = getLineMaxColumn (mState.mCursorPosition.mLineNumber);
-  return getText (sPosition (mState.mCursorPosition.mLineNumber, 0), 
+  return getText (sPosition (mState.mCursorPosition.mLineNumber, 0),
                   sPosition (mState.mCursorPosition.mLineNumber, lineLength));
   }
 //}}}
@@ -1534,7 +1534,7 @@ cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
 
       if (glyphs[columnIndex].mChar == '\t') {
         float oldX = columnX;
-        float newColumnX = (1.0f + floor ((1.0f + columnX) / 
+        float newColumnX = (1.0f + floor ((1.0f + columnX) /
                            (float(mTabSize) * mCharSize.x))) * (float(mTabSize) * mCharSize.x);
         columnWidth = newColumnX - oldX;
         if (mGlyphsStart + columnX + columnWidth * 0.5f > local.x)
