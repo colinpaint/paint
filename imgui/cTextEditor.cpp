@@ -2627,10 +2627,6 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   char* strPtr = str;
   char* strLastPtr = str + sizeof(str) - 1;
 
-  // point to line and its glyphs
-  sLine& line = mLines[lineNumber];
-  vector<sGlyph>& glyphs = line.mGlyphs;
-
   //{{{  draw select background
   float xStart = -1.0f;
   float xEnd = -1.0f;
@@ -2674,7 +2670,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
       }
     }
   //}}}
-  //{{{  draw cursor background 
+  //{{{  draw cursor background
   if (!hasSelect() && (lineNumber == static_cast<uint32_t>(mState.mCursorPosition.mLineNumber))) {
     // highlight cursor line before drawText
     ImVec2 cursorEndPos = mCursorPos + ImVec2 (mContentSize.x, mCharSize.y);
@@ -2686,6 +2682,8 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     }
   //}}}
 
+  // point to line and its glyphs
+  sLine& line = mLines[lineNumber];
   if (mShowLineDebug) {
     //{{{  draw lineDebug, rightJustified
     snprintf (str, sizeof(str), "%4d:%4d:%4d ", line.mFoldLineNumber+1, line.mFoldTitleLineNumber+1, lineNumber+1);
@@ -2704,6 +2702,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
                         mPalette[(size_t)ePalette::LineNumber], str);
     }
     //}}}
+
 
   float textOffset = 0.f;
   ImU32 prefixColor = 0;
@@ -2745,6 +2744,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     }
 
   // draw main text
+  vector<sGlyph>& glyphs = line.mGlyphs;
   ImU32 prevColor = glyphs.empty() ? mPalette[(size_t)ePalette::Default] : getGlyphColor (glyphs[0]);
   for (auto& glyph : glyphs) {
     // write text on colour change
