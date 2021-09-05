@@ -1212,11 +1212,18 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
 
   if (mShowFolded) {
     // iterate lines
-    while (mLineIndex < mMaxLineIndex) {
-      uint32_t lineNumber = mVisibleLines[mLineIndex];
-      renderLine (mLines[lineNumber].mFoldBegin ? mLines[lineNumber].mFoldTitleLineNumber : lineNumber, lineNumber);
-      mLineIndex++;
-      }
+    //while (mLineIndex < mMaxLineIndex) {
+    //  uint32_t lineNumber = mVisibleLines[mLineIndex];
+    //  renderLine (mLines[lineNumber].mFoldBegin ? mLines[lineNumber].mFoldTitleLineNumber : lineNumber, lineNumber);
+     // mLineIndex++;
+    //  }
+
+    // create mVisibleLines
+    mVisibleLines.clear();
+    vector<sLine>::iterator it = mLines.begin();
+    uint32_t lineNumber = 0;
+    uint32_t lineIndex = 0;
+    renderFold (it, lineNumber, lineIndex, true, true);
     }
   else {
     // iterate lines
@@ -2701,10 +2708,10 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   ImU32 prefixColor = 0;
   bool forcePrefixColor = false;
   if (mShowFolded) {
-    sLine& foldLine = mLines[beginFoldLineNumber];
+    //sLine& foldLine = mLines[beginFoldLineNumber];
     //{{{  draw fold prefix
-    if (foldLine.mFoldBegin) {
-      if (foldLine.mFoldOpen) {
+    if (line.mFoldBegin) {
+      if (line.mFoldOpen) {
         // foldBegin - foldOpen
         prefixColor = mPalette[(size_t)ePalette::FoldBeginOpen];
         mDrawList->AddText (mTextPos, prefixColor, mLanguage.mFoldBeginOpen.c_str());
@@ -2723,7 +2730,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
         }
       }
 
-    else if (foldLine.mFoldEnd) {
+    else if (line.mFoldEnd) {
       // foldEnd
       string prefixString = mLanguage.mFoldEnd;
       prefixColor = mPalette[(size_t)ePalette::FoldEnd];
@@ -2835,7 +2842,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   }
 //}}}
 //{{{
-void cTextEditor::renderFold (vector<sLine>::iterator& it, uint32_t& lineNumber,
+void cTextEditor::renderFold (vector<sLine>::iterator& it, uint32_t& lineNumber, uint32_t& lineIndex,
                               bool parentOpen, bool foldOpen) {
 
   uint32_t beginLineNumber = lineNumber;
@@ -2844,7 +2851,9 @@ void cTextEditor::renderFold (vector<sLine>::iterator& it, uint32_t& lineNumber,
     // if no comment search for first noComment line
     it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1;
     mVisibleLines.push_back (lineNumber);
-    renderLine (lineNumber, it->mFoldTitleLineNumber);
+    if ((lineIndex >= mLineIndex) && (lineIndex < mMaxLineIndex))
+      renderLine (lineNumber, it->mFoldTitleLineNumber);
+    lineIndex++;
     }
 
   while (true) {
@@ -2853,7 +2862,7 @@ void cTextEditor::renderFold (vector<sLine>::iterator& it, uint32_t& lineNumber,
     if (it < mLines.end()) {
       it->mFoldLineNumber = beginLineNumber;
       if (it->mFoldBegin)
-        updateFold (it, lineNumber, foldOpen, it->mFoldOpen);
+        renderFold (it, lineNumber, lineIndex, foldOpen, it->mFoldOpen);
       else if (it->mFoldEnd) {
         // update beginFold line with endFold lineNumber, helps reverse traversal
         mLines[beginLineNumber].mFoldLineNumber = lineNumber;
@@ -2861,7 +2870,9 @@ void cTextEditor::renderFold (vector<sLine>::iterator& it, uint32_t& lineNumber,
         }
       else if (foldOpen) {
         mVisibleLines.push_back (lineNumber);
-        renderLine (lineNumber, 0xFFFFFFFF);
+        if ((lineIndex >= mLineIndex) && (lineIndex < mMaxLineIndex))
+          renderLine (lineNumber, 0xFFFFFFFF);
+        lineIndex++;
         }
       }
     else

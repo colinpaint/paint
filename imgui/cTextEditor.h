@@ -416,7 +416,8 @@ private:
 
   void preRender();
   void renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber);
-  void renderFold (std::vector<sLine>::iterator& it, uint32_t& lineNumber, bool parentOpen, bool foldOpen);
+  void renderFold (std::vector<sLine>::iterator& it, uint32_t& lineNumber, uint32_t& lineIndex, 
+                   bool parentOpen, bool foldOpen);
   void postRender();
 
   //{{{  vars
