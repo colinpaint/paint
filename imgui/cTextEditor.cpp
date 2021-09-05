@@ -2564,9 +2564,9 @@ void cTextEditor::preRender() {
 
   // calc lineIndex, maxLineIndex, lineNumber from scroll
   mScrollX = ImGui::GetScrollX();
-  mScrollY = ImGui::GetScrollY();
-  mLineIndex = static_cast<uint32_t>(floor (mScrollY / mCharSize.y));
-  mMaxLineIndex = mLineIndex + static_cast<uint32_t>(ceil ((mScrollY + mContentSize.y) / mCharSize.y));
+  float scrollY = ImGui::GetScrollY();
+  mLineIndex = static_cast<uint32_t>(floor (scrollY / mCharSize.y));
+  mMaxLineIndex = mLineIndex + static_cast<uint32_t>(ceil ((scrollY + mContentSize.y) / mCharSize.y));
 
   if (mShowFolded) {
     mLineIndex = min (mLineIndex, static_cast<uint32_t>(mVisibleLines.size()-1));

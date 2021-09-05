@@ -492,7 +492,6 @@ private:
   float mSpaceSize = 0.f;
   float mCharWidth = 0.f;
   float mScrollX = 0.f;
-  float mScrollY = 0.f;
   float mGlyphsStart = 0.f;
   float mTextWidth = 0.f;
 
