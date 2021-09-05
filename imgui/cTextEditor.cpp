@@ -2371,6 +2371,11 @@ void cTextEditor::handleMouseInputs() {
             mSelection = eSelection::Word;
           setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
           }
+        else {
+          if (mLines[mState.mCursorPosition.mLineNumber].mFoldBegin)
+            mLines[mState.mCursorPosition.mLineNumber].mFoldOpen ^= true;
+          }
+
         mLastClick = static_cast<float>(ImGui::GetTime());
         }
 
@@ -2391,7 +2396,8 @@ void cTextEditor::handleMouseInputs() {
       // left mouse button dragging (=> update selection)
       else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
         io.WantCaptureMouse = true;
-        mState.mCursorPosition = mInteractiveEnd = screenToPosition (ImGui::GetMousePos());
+        mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
+        mInteractiveEnd = mState.mCursorPosition;
         setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
         }
       }
