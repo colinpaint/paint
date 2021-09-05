@@ -410,7 +410,6 @@ private:
   void parseFolds();
   uint32_t updateFold (std::vector<cTextEditor::sLine>::iterator& it, uint32_t lineNumber,
                        bool parentOpen, bool foldOpen);
-  void updateFolds();
 
   void handleMouseInputs();
   void handleKeyboardInputs();

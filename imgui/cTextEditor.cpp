@@ -2350,7 +2350,9 @@ void cTextEditor::parseFolds() {
     line.mFoldTitleLineNumber = 0xFFFFFFFF;
     }
 
-  updateFolds();
+  mVisibleLines.clear();
+  vector<sLine>::iterator it = mLines.begin();
+  updateFold (it, 0, true, true);
   }
 //}}}
 //{{{
@@ -2383,14 +2385,6 @@ uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint32_t lineNumb
     else
       return lineNumber;
     }
-  }
-//}}}
-//{{{
-void cTextEditor::updateFolds() {
-
-  mVisibleLines.clear();
-  vector<sLine>::iterator it = mLines.begin();
-  updateFold (it, 0, true, true);
   }
 //}}}
 
