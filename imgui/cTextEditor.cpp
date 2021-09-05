@@ -2835,6 +2835,41 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   }
 //}}}
 //{{{
+void cTextEditor::renderFold (vector<sLine>::iterator& it, uint32_t& lineNumber,
+                              bool parentOpen, bool foldOpen) {
+
+  uint32_t beginLineNumber = lineNumber;
+
+  if (parentOpen) {
+    // if no comment search for first noComment line
+    it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1;
+    mVisibleLines.push_back (lineNumber);
+    renderLine (lineNumber, it->mFoldTitleLineNumber);
+    }
+
+  while (true) {
+    it++;
+    lineNumber++;
+    if (it < mLines.end()) {
+      it->mFoldLineNumber = beginLineNumber;
+      if (it->mFoldBegin)
+        updateFold (it, lineNumber, foldOpen, it->mFoldOpen);
+      else if (it->mFoldEnd) {
+        // update beginFold line with endFold lineNumber, helps reverse traversal
+        mLines[beginLineNumber].mFoldLineNumber = lineNumber;
+        return;
+        }
+      else if (foldOpen) {
+        mVisibleLines.push_back (lineNumber);
+        renderLine (lineNumber, 0xFFFFFFFF);
+        }
+      }
+    else
+      return;
+    }
+  }
+//}}}
+//{{{
 void cTextEditor::postRender() {
 
   // draw tooltip for idents,preProcs

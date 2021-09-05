@@ -408,7 +408,7 @@ private:
 
   // fold
   void parseFolds();
-  void updateFold (std::vector<cTextEditor::sLine>::iterator& it, uint32_t& lineNumber, 
+  void updateFold (std::vector<cTextEditor::sLine>::iterator& it, uint32_t& lineNumber,
                    bool parentOpen, bool foldOpen);
 
   void handleMouseInputs();
@@ -416,6 +416,7 @@ private:
 
   void preRender();
   void renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber);
+  void renderFold (std::vector<sLine>::iterator& it, uint32_t& lineNumber, bool parentOpen, bool foldOpen);
   void postRender();
 
   //{{{  vars
