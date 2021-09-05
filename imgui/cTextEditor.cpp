@@ -2581,19 +2581,7 @@ void cTextEditor::preRender() {
     ImGui::SetScrollY (0.f);
     }
 
-  // calc lineIndex, maxLineIndex, lineNumber from scroll
-  mLineIndex = static_cast<uint32_t>(floor (ImGui::GetScrollY() / mCharSize.y));
-  mMaxLineIndex = mLineIndex + static_cast<uint32_t>(ceil ((ImGui::GetScrollY() + mContentSize.y) / mCharSize.y));
-
-  if (mShowFolded) {
-    mLineIndex = min (mLineIndex, static_cast<uint32_t>(mVisibleLines.size()-1));
-    mMaxLineIndex = max (0u, min (static_cast<uint32_t>(mVisibleLines.size()-1), mMaxLineIndex));
-    }
-  else {
-    mLineIndex = min (mLineIndex, static_cast<uint32_t>(mLines.size()-1));
-    mMaxLineIndex = max (0u, min (static_cast<uint32_t>(mLines.size()-1), mMaxLineIndex));
-    }
-
+  // measure lineNUmber width
   float lineNumberWidth = 0.f;
   if (mShowLineDebug) {
     //{{{  add lineDebug width to mGlyphsStart
@@ -2609,11 +2597,23 @@ void cTextEditor::preRender() {
     lineNumberWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, str, nullptr, nullptr).x;
     }
     //}}}
-
-  mScrollX = ImGui::GetScrollX();
   mGlyphsStart = kLeftTextMargin + lineNumberWidth;
   mMaxTextWidth = mGlyphsStart;
 
+  // calc lineIndex, maxLineIndex, lineNumber from scroll
+  mLineIndex = static_cast<uint32_t>(floor (ImGui::GetScrollY() / mCharSize.y));
+  mMaxLineIndex = mLineIndex + static_cast<uint32_t>(ceil ((ImGui::GetScrollY() + mContentSize.y) / mCharSize.y));
+
+  if (mShowFolded) {
+    mLineIndex = min (mLineIndex, static_cast<uint32_t>(mVisibleLines.size()-1));
+    mMaxLineIndex = max (0u, min (static_cast<uint32_t>(mVisibleLines.size()-1), mMaxLineIndex));
+    }
+  else {
+    mLineIndex = min (mLineIndex, static_cast<uint32_t>(mLines.size()-1));
+    mMaxLineIndex = max (0u, min (static_cast<uint32_t>(mLines.size()-1), mMaxLineIndex));
+    }
+
+  mScrollX = ImGui::GetScrollX();
   mCursorPos = mCursorScreenPos + ImVec2 (mScrollX, mLineIndex * mCharSize.y);
   mLinePos = {mCursorScreenPos.x, mCursorPos.y};
   mTextPos = {mCursorScreenPos.x + mGlyphsStart, mCursorPos.y};
@@ -2831,11 +2831,11 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   // expand maxTextWidth with this line's textWidth
   mMaxTextWidth = max (mMaxTextWidth, mGlyphsStart + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
 
-  // reset textPos.x to start of line, inc y to nextLine
-  mTextPos.x = mCursorScreenPos.x + mGlyphsStart;
-  mTextPos.y += mCharSize.y;
+  // nextLine
   mCursorPos.y += mCharSize.y;
   mLinePos.y += mCharSize.y;
+  mTextPos.x = mCursorScreenPos.x + mGlyphsStart;
+  mTextPos.y += mCharSize.y;
   }
 //}}}
 //{{{
