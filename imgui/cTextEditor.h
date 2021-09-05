@@ -14,7 +14,6 @@
 
 #include "imgui.h"
 //}}}
-constexpr int kMaxCount = 256;
 struct ImFont;
 class cTextEditor {
 public:
@@ -41,6 +40,8 @@ public:
     CurrentLineFill,
     CurrentLineFillInactive,
     CurrentLineEdge,
+    WhiteSpace,
+    Tab,
     FoldBeginClosed,
     FoldBeginOpen,
     FoldEnd,

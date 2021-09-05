@@ -69,6 +69,8 @@ namespace {
     0x40000000, // Current line fill
     0x40808080, // Current line fill (inactive)
     0x40a0a0a0, // Current line edge
+    0xff808080, // WhiteSpace
+    0xff404040, // Tab
     0xffff0000, // FoldBeginClosed,
     0xff0000ff, // FoldBeginOpen,
     0xff00ff00, // FoldEnd,
@@ -96,6 +98,8 @@ namespace {
     0x40000000, // Current line fill
     0x40808080, // Current line fill (inactive)
     0x40000000, // Current line edge
+    0xff808080, // WhiteSpace,
+    0xff404040, // Tab
     0xffff0000, // FoldBeginClosed,
     0xff0000ff, // FoldBeginOpen,
     0xff00ff00, // FoldEnd,
@@ -482,7 +486,7 @@ cTextEditor::cTextEditor()
   : mTabSize(4),
     mTextChanged(false), mCursorPositionChanged(false),
     mOverwrite(false) , mReadOnly(false), mIgnoreImGuiChild(false), mCheckComments(true),
-    mShowFolded(true), mShowLineNumbers(false), mShowLineDebug(false), mShowWhiteSpace(false),
+    mShowFolded(true), mShowLineNumbers(false), mShowLineDebug(false), mShowWhiteSpace(true),
 
     mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
     mUndoIndex(0),
@@ -2593,14 +2597,14 @@ void cTextEditor::preRender() {
   float lineNumberWidth = 0.f;
   if (mShowLineDebug) {
     //{{{  add lineDebug width to mGlyphsStart
-    char str[kMaxCount];
+    char str[32];
     snprintf (str, sizeof(str), "%4d:%4d:%4d ",1,1,1);
     lineNumberWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, str, nullptr, nullptr).x;
     }
     //}}}
   else if (mShowLineNumbers) {
     //{{{  add lineNumber width to mGlyphsStart
-    char str[kMaxCount];
+    char str[32];
     snprintf (str, sizeof(str), "%d ", (int)mLines.size());
     lineNumberWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, str, nullptr, nullptr).x;
     }
@@ -2619,9 +2623,9 @@ void cTextEditor::preRender() {
 void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber) {
 
   // c style str buffer, null terminated
-  char str[kMaxCount];
+  char str[256];
   char* strPtr = str;
-  char* strLastPtr = str + kMaxCount - 1;
+  char* strLastPtr = str + sizeof(str) - 1;
 
   // point to line and its glyphs
   sLine& line = mLines[lineNumber];
@@ -2747,50 +2751,46 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     // write text on colour change
     ImU32 color = getGlyphColor (glyph);
     if (((color != prevColor) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && (strPtr != str)) {
-      //{{{  draw main text word with color
+      //{{{  draw colored glyphs word
       // draw and measure text
       *strPtr = 0;
       mDrawList->AddText (ImVec2 (mTextPos.x + textOffset, mTextPos.y), forcePrefixColor ? prefixColor : prevColor, str);
       textOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, str, nullptr, nullptr).x;
       strPtr = str;
+
       prevColor = color;
       }
       //}}}
 
     if (glyph.mChar == '\t') {
-      //{{{  add tab
+      //{{{  draw tab
       float prevTextOffset = textOffset;
       textOffset = (1.0f + floor ((1.0f + textOffset) / (float(mTabSize) * mSpaceSize))) * (float(mTabSize) * mSpaceSize);
 
       if (mShowWhiteSpace) {
+        // lefthand of tab arrow
+        const ImVec2 pos1 = mTextPos + ImVec2 (prevTextOffset + 1.0f, mFontSize * 0.5f);
+
+        // righthand of tab arrow
+        const ImVec2 pos2 = mTextPos + ImVec2 (textOffset - 1.0f, mFontSize * 0.5f);
+
         // draw tab whiteSpace marker
-        const float x1 = mTextPos.x + prevTextOffset + 1.0f;
-        const float x2 = mTextPos.x + textOffset - 1.0f;
-        const float y = mTextPos.y + mFontSize * 0.5f;
-        const ImVec2 p1(x1, y);
-        const ImVec2 p2(x2, y);
-        const ImVec2 p3(x2 - mFontSize * 0.2f, y - mFontSize * 0.2f);
-        const ImVec2 p4(x2 - mFontSize * 0.2f, y + mFontSize * 0.2f);
-        mDrawList->AddLine (p1, p2, 0x90909090);
-        mDrawList->AddLine (p2, p3, 0x90909090);
-        mDrawList->AddLine (p2, p4, 0x90909090);
+        mDrawList->AddLine (pos1, pos2, mPalette[(size_t)ePalette::Tab]);
+        mDrawList->AddLine (pos2, pos2 + ImVec2 (mFontSize * -0.2f, mFontSize * -0.2f), mPalette[(size_t)ePalette::Tab]);
+        mDrawList->AddLine (pos2, pos2 + ImVec2 (mFontSize * -0.2f, mFontSize * 0.2f), mPalette[(size_t)ePalette::Tab]);
         }
       }
       //}}}
     else if (glyph.mChar == ' ') {
-      //{{{  add space
-      if (mShowWhiteSpace) {
-        // draw space whiteSpace marker
-        const float x = mTextPos.x + textOffset + mSpaceSize * 0.5f;
-        const float y = mTextPos.y + mFontSize * 0.5f;
-        mDrawList->AddCircleFilled (ImVec2(x, y), 1.5f, 0x80808080, 4);
-        }
-
+      //{{{  draw space
+      if (mShowWhiteSpace)
+        mDrawList->AddCircleFilled (mTextPos + ImVec2(textOffset + mSpaceSize * 0.5f, mFontSize * 0.5f), 1.5f,
+                                    mPalette[(size_t)ePalette::WhiteSpace], 4);
       textOffset += mSpaceSize;
       }
       //}}}
     else {
-      //{{{  add other char
+      //{{{  add char to str
       int l = utf8CharLength (glyph.mChar);
       while ((l-- > 0) && (strPtr < strLastPtr))
         *strPtr++ = glyph.mChar;
@@ -2798,7 +2798,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
       //}}}
     }
   if (strPtr != str) {
-    //{{{  draw remaining main text
+    //{{{  draw remaining glyphs
     *strPtr = 0;
     mDrawList->AddText (ImVec2 (mTextPos.x + textOffset, mTextPos.y), forcePrefixColor ? prefixColor : prevColor, str);
     }
