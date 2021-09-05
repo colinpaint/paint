@@ -491,7 +491,6 @@ cTextEditor::cTextEditor()
     mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
     mUndoIndex(0),
 
-    mHandleKeyboardInputs(true), mHandleMouseInputs(true),
     mLineSpacing(1.0f), mWithinRender(false), mScrollToTop(false), mScrollToCursor(false),
 
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
@@ -511,6 +510,7 @@ string cTextEditor::getTextString() const {
   return getText (sPosition(), sPosition((int)mLines.size(), 0));
   }
 //}}}
+
 //{{{
 vector<string> cTextEditor::getTextStrings() const {
 // get text as vector of string
@@ -540,9 +540,8 @@ void cTextEditor::setTextString (const string& text) {
   mLines.emplace_back (vector<sGlyph>());
 
   for (auto ch : text) {
-    if (ch == '\r') {
-      // ignore the carriage return character
-      }
+    if (ch == '\r') // ignored but flag set
+      mHasCR = true;
     else if (ch == '\n')
       mLines.emplace_back (vector<sGlyph>());
     else
@@ -1198,10 +1197,8 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
                        ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar |
                        ImGuiWindowFlags_NoMove);
 
-  if (mHandleKeyboardInputs) {
-    handleKeyboardInputs();
-    ImGui::PushAllowKeyboardFocus (true);
-    }
+  handleKeyboardInputs();
+  ImGui::PushAllowKeyboardFocus (true);
 
   if (mHandleMouseInputs)
     handleMouseInputs();
@@ -1221,18 +1218,18 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
     renderFold (it, lineNumber, lineIndex, minLineIndex, maxLineIndex, true, true);
     }
   else {
-    // simple iterate lines
+    //{{{  simple iterate lines
     uint32_t lineNumber = minLineIndex;
     while (lineNumber < min (maxLineIndex, (uint32_t)mLines.size())) {
       renderLine (lineNumber, 0);
       lineNumber++;
       }
     }
+    //}}}
 
   postRender();
 
-  if (mHandleKeyboardInputs)
-    ImGui::PopAllowKeyboardFocus();
+  ImGui::PopAllowKeyboardFocus();
 
   if (!mIgnoreImGuiChild)
     ImGui::EndChild();
@@ -1346,9 +1343,7 @@ int cTextEditor::getLineCharacterCount (int row) const {
 
 //{{{
 string cTextEditor::getText (const sPosition& startPosition, const sPosition& endPosition) const {
-// get text as string with carraigeReturn line breaks
-
-  string result;
+// get text as string with lineFeed line breaks
 
   int lstart = startPosition.mLineNumber;
   int lend = endPosition.mLineNumber;
@@ -1360,6 +1355,7 @@ string cTextEditor::getText (const sPosition& startPosition, const sPosition& en
   for (size_t i = lstart; i < (size_t)lend; i++)
     s += mLines[i].mGlyphs.size();
 
+  string result;
   result.reserve (s + s / 8);
 
   while (istart < iend || lstart < lend) {
@@ -1390,6 +1386,7 @@ ImU32 cTextEditor::getGlyphColor (const sGlyph& glyph) const {
     return mPalette[(size_t)ePalette::MultiLineComment];
 
   auto const color = mPalette[(size_t)glyph.mColorIndex];
+
   if (glyph.mPreProc) {
     const auto ppcolor = mPalette[(size_t)ePalette::Preprocessor];
     const int c0 = ((ppcolor & 0xff) + (color & 0xff)) / 2;
@@ -1407,31 +1404,24 @@ ImU32 cTextEditor::getGlyphColor (const sGlyph& glyph) const {
 string cTextEditor::getCurrentLineText() const {
 
   int lineLength = getLineMaxColumn (mState.mCursorPosition.mLineNumber);
-  return getText (sPosition(mState.mCursorPosition.mLineNumber, 0), sPosition(mState.mCursorPosition.mLineNumber, lineLength));
+  return getText (sPosition (mState.mCursorPosition.mLineNumber, 0), 
+                  sPosition (mState.mCursorPosition.mLineNumber, lineLength));
   }
 //}}}
 
 //{{{
 string cTextEditor::getWordAt (const sPosition& position) const {
 
-  sPosition start = findWordStart (position);
-  sPosition end = findWordEnd (position);
-
-  int istart = getCharacterIndex (start);
-  int iend = getCharacterIndex (end);
-
   string r;
-  for (int it = istart; it < iend; ++it)
-    r.push_back (mLines[position.mLineNumber].mGlyphs[it].mChar);
+  for (int i = getCharacterIndex (findWordStart (position)); i < getCharacterIndex (findWordEnd (position)); ++i)
+    r.push_back (mLines[position.mLineNumber].mGlyphs[i].mChar);
 
   return r;
   }
 //}}}
 //{{{
 string cTextEditor::getWordUnderCursor() const {
-
-  sPosition c = getCursorPosition();
-  return getWordAt (c);
+  return getWordAt (getCursorPosition());
   }
 //}}}
 
@@ -1440,24 +1430,22 @@ float cTextEditor::getTextWidth (const sPosition& position) const {
 // get width of text from start to position
 
   const vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
-  float spaceSize = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
 
   float distance = 0.0f;
   int colIndex = getCharacterIndex (position);
   for (size_t i = 0; (i < glyphs.size()) && ((int)i < colIndex);) {
     if (glyphs[i].mChar == '\t') {
-      distance = (1.0f + floor((1.0f + distance) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
+      distance = (1.0f + floor((1.0f + distance) / (float(mTabSize) * mCharSize.x))) * (float(mTabSize) * mCharSize.x);
       ++i;
       }
     else {
       int d = utf8CharLength (glyphs[i].mChar);
-      char tempCString[7];
+      char str[7];
       int j = 0;
       for (; j < 6 && d-- > 0 && i < glyphs.size(); j++, i++)
-        tempCString[j] = glyphs[i].mChar;
-
-      tempCString[j] = '\0';
-      distance += ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, tempCString, nullptr, nullptr).x;
+        str[j] = glyphs[i].mChar;
+      str[j] = 0;
+      distance += ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, str, nullptr, nullptr).x;
       }
     }
 
@@ -1545,9 +1533,9 @@ cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
       float columnWidth = 0.0f;
 
       if (glyphs[columnIndex].mChar == '\t') {
-        float spaceSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, " ").x;
         float oldX = columnX;
-        float newColumnX = (1.0f + floor ((1.0f + columnX) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
+        float newColumnX = (1.0f + floor ((1.0f + columnX) / 
+                           (float(mTabSize) * mCharSize.x))) * (float(mTabSize) * mCharSize.x);
         columnWidth = newColumnX - oldX;
         if (mGlyphsStart + columnX + columnWidth * 0.5f > local.x)
           break;
@@ -2472,7 +2460,6 @@ void cTextEditor::handleKeyboardInputs() {
 
   if (!ImGui::IsWindowFocused())
     return;
-
   if (ImGui::IsWindowHovered())
     ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
 
@@ -2789,9 +2776,8 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
 //}}}
 //{{{
 void cTextEditor::renderFold (vector<sLine>::iterator& it, uint32_t& lineNumber, uint32_t& lineIndex,
-                              uint32_t minLineIndex, uint32_t maxLineIndex,
-                              bool parentOpen, bool foldOpen) {
-// full recursive traversal of mLines to produce mVisbleLines of folds
+                              uint32_t minLineIndex, uint32_t maxLineIndex, bool parentOpen, bool foldOpen) {
+// recursive traversal of mLines to produce mVisbleLines of folds
 // - only minLineIndex to maxLineIndex actuially drawn with renderLine
 
   uint32_t beginLineNumber = lineNumber;

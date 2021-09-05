@@ -13,8 +13,10 @@
 #include <unordered_set>
 
 #include "imgui.h"
-//}}}
+
 struct ImFont;
+//}}}
+
 class cTextEditor {
 public:
   enum class eSelection { Normal, Word, Line };
@@ -205,10 +207,9 @@ public:
   bool hasSelect() const { return mState.mSelectionEnd > mState.mSelectionStart; }
   bool hasUndo() const { return !mReadOnly && mUndoIndex > 0; }
   bool hasRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); }
+  bool hasCR() const { return mHasCR; }
 
   bool isImGuiChildIgnored() const { return mIgnoreImGuiChild; }
-  bool isHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
-  bool isHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
 
   std::string getTextString() const;
   std::vector<std::string> getTextStrings() const;
@@ -241,8 +242,6 @@ public:
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
   void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
-  void setHandleKeyboardInputs (bool value) { mHandleKeyboardInputs = value;}
-  void setImGuiChildIgnored (bool value) { mIgnoreImGuiChild = value;}
 
   void toggleOverwrite() { mOverwrite ^= true; }
   void toggleFolded() { mShowFolded ^= true; }
@@ -413,11 +412,9 @@ private:
   void handleKeyboardInputs();
 
   void preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex);
-
   void renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber);
   void renderFold (std::vector<sLine>::iterator& it, uint32_t& lineNumber, uint32_t& lineIndex,
-                   uint32_t minLineIndex, uint32_t maxLineIndex,
-                   bool parentOpen, bool foldOpen);
+                   uint32_t minLineIndex, uint32_t maxLineIndex, bool parentOpen, bool foldOpen);
   void postRender();
 
   //{{{  vars
@@ -433,6 +430,7 @@ private:
   std::array <ImU32,(size_t)ePalette::Max> mPaletteBase;
 
   int mTabSize;
+  bool mHasCR = false;
 
   // changed flags
   bool mTextChanged;
