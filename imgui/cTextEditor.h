@@ -485,9 +485,6 @@ private:
   uint32_t mLineIndex = 0;
   uint32_t mMaxLineIndex = 0;
 
-  char mStr[kMaxCount];
-  uint8_t mStrLen = 0;
-
   float mSpaceSize = 0.f;
   float mCharWidth = 0.f;
   float mScrollX = 0.f;
