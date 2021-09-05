@@ -241,13 +241,11 @@ public:
   void setSelectionEnd (const sPosition& position);
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
-  void setHandleMouseInputs (bool value) { mHandleMouseInputs = value;}
-
-  void toggleOverwrite() { mOverwrite ^= true; }
-  void toggleFolded() { mShowFolded ^= true; }
-  void toggleLineNumbers() { mShowLineNumbers ^= true; }
-  void toggleLineDebug() { mShowLineDebug ^= true; }
-  void toggleLineWhiteSpace() { mShowWhiteSpace ^= true; }
+  void toggleOverwrite() { mOverwrite = !mOverwrite; }
+  void toggleFolded() { mShowFolded = !mShowFolded; }
+  void toggleLineNumbers() { mShowLineNumbers = !mShowLineNumbers; }
+  void toggleLineDebug() { mShowLineDebug = !mShowLineDebug; }
+  void toggleLineWhiteSpace() { mShowWhiteSpace = !mShowWhiteSpace; }
   //}}}
   //{{{  actions
   // move
@@ -459,10 +457,6 @@ private:
   int mUndoIndex;
   tUndoBuffer mUndoBuffer;
 
-  // input
-  bool mHandleKeyboardInputs;
-  bool mHandleMouseInputs;
-
   // internal
   sEditorState mState;
   float mLineSpacing;
@@ -480,12 +474,12 @@ private:
   ImVec2 mCursorScreenPos;
   bool mFocused = false;
 
-  float mGlyphsStart = 0.f; // start of main text ?prefix?
-  ImVec2 mCharSize;  // size of character grid, space wide, fontHeight high
-  ImVec2 mCursorPos; // startPos of background cursors
-  ImVec2 mCursorEndPos; // endPos of background cursors
-  ImVec2 mLinePos;   // starPos of lineNumber
-  ImVec2 mTextPos;   // pos of main text,
-  float mMaxWidth = 0.f; // maxWidth of all lines, used to set scroll regions
+  ImVec2 mCharSize;       // size of character grid, space wide, fontHeight high
+  ImVec2 mCursorPos;      // startPos of background cursor
+  ImVec2 mCursorEndPos;   // endPos of background cursor
+  ImVec2 mLinePos;        // starPos of lineNumber
+  float mTextStart = 0.f; // startx of main text ?prefix?
+  ImVec2 mTextPos;        // pos of main text,
+  float mMaxWidth = 0.f;  // maxWidth of all lines, used to set scroll regions
   //}}}
   };

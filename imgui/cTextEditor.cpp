@@ -1210,7 +1210,7 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
 
   mVisibleLines.clear();
   if (mShowFolded) {
-    //{{{  iterate lines, create mVisibleLines, clip renderLine to minLineIndex,maxLineIndex 
+    //{{{  iterate lines, create mVisibleLines, clip renderLine to minLineIndex,maxLineIndex
     vector<sLine>::iterator it = mLines.begin();
     uint32_t lineNumber = 0;
     uint32_t lineIndex = 0;
@@ -1488,10 +1488,10 @@ void cTextEditor::ensureCursorVisible() {
   if (position.mLineNumber > bottom - 4)
     ImGui::SetScrollY (max (0.0f, (position.mLineNumber + 4) * mCharSize.y - height));
 
-  if (length + mGlyphsStart < left + 4)
-    ImGui::SetScrollX (max(0.0f, length + mGlyphsStart - 4));
-  if (length + mGlyphsStart > right - 4)
-    ImGui::SetScrollX (max(0.0f, length + mGlyphsStart + 4 - width));
+  if (length + mTextStart < left + 4)
+    ImGui::SetScrollX (max(0.0f, length + mTextStart - 4));
+  if (length + mTextStart > right - 4)
+    ImGui::SetScrollX (max(0.0f, length + mTextStart + 4 - width));
   }
 //}}}
 
@@ -1537,7 +1537,7 @@ cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
         float newColumnX = (1.0f + floor ((1.0f + columnX) /
                            (float(mTabSize) * mCharSize.x))) * (float(mTabSize) * mCharSize.x);
         columnWidth = newColumnX - oldX;
-        if (mGlyphsStart + columnX + columnWidth * 0.5f > local.x)
+        if (mTextStart + columnX + columnWidth * 0.5f > local.x)
           break;
         columnX = newColumnX;
         columnCoord = (columnCoord / mTabSize) * mTabSize + mTabSize;
@@ -1553,7 +1553,7 @@ cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
         buf[i] = '\0';
 
         columnWidth = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.0f, buf).x;
-        if (mGlyphsStart + columnX + columnWidth * 0.5f > local.x)
+        if (mTextStart + columnX + columnWidth * 0.5f > local.x)
           break;
 
         columnX += columnWidth;
@@ -2521,8 +2521,8 @@ void cTextEditor::preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex) {
     }
 
   // calc character mCharSize
-  mCharSize = ImVec2(mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x,
-                     ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
+  mCharSize = ImVec2 (mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x,
+                      ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
 
   if (mScrollToTop) {
     mScrollToTop = false;
@@ -2532,20 +2532,20 @@ void cTextEditor::preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex) {
   // measure lineNumber width
   float lineNumberWidth = 0.f;
   if (mShowLineDebug) {
-    //{{{  add lineDebug width to mGlyphsStart
+    //{{{  get lineDebug width
     char str[32];
     snprintf (str, sizeof(str), "%4d:%4d:%4d ",1,1,1);
     lineNumberWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, str, nullptr, nullptr).x;
     }
     //}}}
   else if (mShowLineNumbers) {
-    //{{{  add lineNumber width to mGlyphsStart
+    //{{{  get lineNumber width
     char str[32];
     snprintf (str, sizeof(str), "%d ", (int)mLines.size());
     lineNumberWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, str, nullptr, nullptr).x;
     }
     //}}}
-  mGlyphsStart = kLeftTextMargin + lineNumberWidth;
+  mTextStart = kLeftTextMargin + lineNumberWidth;
   mMaxWidth = 0;
 
   // calc lineIndex, maxLineIndex, lineNumber from scroll
@@ -2555,7 +2555,7 @@ void cTextEditor::preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex) {
   mCursorPos = mCursorScreenPos + ImVec2 (ImGui::GetScrollX(), minLineIndex * mCharSize.y);
   mCursorEndPos = mCursorPos + ImVec2 (contentSize.x, mCharSize.y);
   mLinePos = {mCursorScreenPos.x, mCursorPos.y};
-  mTextPos = {mCursorScreenPos.x + mGlyphsStart, mCursorPos.y};
+  mTextPos = {mCursorScreenPos.x + mTextStart, mCursorPos.y};
   }
 //}}}
 //{{{
@@ -2586,8 +2586,8 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     xEnd += mCharSize.x;
 
   if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd))
-    mDrawList->AddRectFilled (mLinePos + ImVec2 (mGlyphsStart + xStart, 0.f),
-                              mLinePos + ImVec2 (mGlyphsStart + xEnd,  mCharSize.y),
+    mDrawList->AddRectFilled (mLinePos + ImVec2 (mTextStart + xStart, 0.f),
+                              mLinePos + ImVec2 (mTextStart + xEnd,  mCharSize.y),
                               mPalette[(size_t)ePalette::Selection]);
   //}}}
   //{{{  draw marker background
@@ -2623,7 +2623,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     snprintf (str, sizeof(str), "%4d:%4d:%4d ", line.mFoldLineNumber+1, line.mFoldTitleLineNumber+1, lineNumber+1);
     float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, str, nullptr, nullptr).x;
 
-    mDrawList->AddText (ImVec2 (mGlyphsStart + mLinePos.x - strWidth, mLinePos.y),
+    mDrawList->AddText (ImVec2 (mTextStart + mLinePos.x - strWidth, mLinePos.y),
                         mPalette[(size_t)ePalette::LineNumber], str);
     }
     //}}}
@@ -2632,7 +2632,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     snprintf (str, sizeof(str), "%d ", lineNumber+1);
     float lineNumberWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, str, nullptr, nullptr).x;
 
-    mDrawList->AddText (ImVec2 (mLinePos.x + mGlyphsStart - lineNumberWidth, mLinePos.y),
+    mDrawList->AddText (ImVec2 (mLinePos.x + mTextStart - lineNumberWidth, mLinePos.y),
                         mPalette[(size_t)ePalette::LineNumber], str);
     }
     //}}}
@@ -2764,13 +2764,13 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     //}}}
 
   // expand mMaxWidth with our maxWidth, !!! what about prefix width !!!
-  mMaxWidth = max (mMaxWidth, mGlyphsStart + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
+  mMaxWidth = max (mMaxWidth, mTextStart + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
 
   // nextLine
   mCursorPos.y += mCharSize.y;
   mCursorEndPos.y += mCharSize.y;
   mLinePos.y += mCharSize.y;
-  mTextPos.x = mCursorScreenPos.x + mGlyphsStart;
+  mTextPos.x = mCursorScreenPos.x + mTextStart;
   mTextPos.y += mCharSize.y;
   }
 //}}}
