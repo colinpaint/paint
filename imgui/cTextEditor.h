@@ -415,9 +415,8 @@ private:
   void handleKeyboardInputs();
 
   void preRender();
-  void postRender();
-  void render();
   void renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber);
+  void postRender();
 
   //{{{  vars
   std::vector <sLine> mLines;

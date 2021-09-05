@@ -1205,7 +1205,18 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
   colorizeInternal();
 
   preRender();
-  render();
+
+  while (mLineIndex < mMaxLineIndex) {
+    if (mShowFolded) {
+      uint32_t lineNumber = mVisibleLines[mLineIndex];
+      renderLine (mLines[lineNumber].mFoldBegin ? mLines[lineNumber].mFoldTitleLineNumber : lineNumber,
+                  lineNumber);
+      }
+    else
+      renderLine (mLineIndex, 0);
+    mLineIndex++;
+    }
+
   postRender();
 
   if (mHandleKeyboardInputs)
@@ -2827,21 +2838,6 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   mCursorPos.y += mCharSize.y;
   mTextPos.y += mCharSize.y;
   mLinePos.y += mCharSize.y;
-  }
-//}}}
-//{{{
-void cTextEditor::render() {
-
-  while (mLineIndex < mMaxLineIndex) {
-    if (mShowFolded) {
-      uint32_t lineNumber = mVisibleLines[mLineIndex];
-      renderLine (mLines[lineNumber].mFoldBegin ? mLines[lineNumber].mFoldTitleLineNumber : lineNumber,
-                  lineNumber);
-      }
-    else
-      renderLine (mLineIndex, 0);
-    mLineIndex++;
-    }
   }
 //}}}
 //{{{
