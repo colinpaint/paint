@@ -2350,14 +2350,17 @@ void cTextEditor::parseFolds() {
     line.mFoldTitleLineNumber = 0xFFFFFFFF;
     }
 
+  // create mVisibleLines
   mVisibleLines.clear();
+
   vector<sLine>::iterator it = mLines.begin();
-  updateFold (it, 0, true, true);
+  uint32_t lineNumber = 0;
+  updateFold (it, lineNumber, true, true);
   }
 //}}}
 //{{{
-uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint32_t lineNumber,
-                                  bool parentOpen, bool foldOpen) {
+void cTextEditor::updateFold (vector<sLine>::iterator& it, uint32_t& lineNumber,
+                              bool parentOpen, bool foldOpen) {
 
   uint32_t beginLineNumber = lineNumber;
 
@@ -2373,17 +2376,17 @@ uint32_t cTextEditor::updateFold (vector<sLine>::iterator& it, uint32_t lineNumb
     if (it < mLines.end()) {
       it->mFoldLineNumber = beginLineNumber;
       if (it->mFoldBegin)
-        lineNumber = updateFold (it, lineNumber, foldOpen, it->mFoldOpen);
+        updateFold (it, lineNumber, foldOpen, it->mFoldOpen);
       else if (it->mFoldEnd) {
         // update beginFold line with endFold lineNumber, helps reverse traversal
         mLines[beginLineNumber].mFoldLineNumber = lineNumber;
-        return lineNumber;
+        return;
         }
       else if (foldOpen)
         mVisibleLines.push_back (lineNumber);
       }
     else
-      return lineNumber;
+      return;
     }
   }
 //}}}
