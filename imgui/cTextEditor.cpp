@@ -1208,7 +1208,12 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
 
   colorizeInternal();
 
+
   preRender();
+
+  uint32_t minLineIndex;
+  uint32_t maxLineIndex;
+  preRenderLineIndex (minLineIndex, maxLineIndex);
 
   if (mShowFolded) {
     // iterate lines
@@ -1216,12 +1221,12 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
     vector<sLine>::iterator it = mLines.begin();
     uint32_t lineNumber = 0;
     uint32_t lineIndex = 0;
-    renderFold (it, lineNumber, lineIndex, mLineIndex, mMaxLineIndex, true, true);
+    renderFold (it, lineNumber, lineIndex, minLineIndex, maxLineIndex, true, true);
     }
   else {
     // simple iterate lines
-    uint32_t lineNumber = mLineIndex;
-    while (lineNumber < mMaxLineIndex) {
+    uint32_t lineNumber = minLineIndex;
+    while (lineNumber < maxLineIndex) {
       renderLine (lineNumber, 0);
       lineNumber++;
       }
@@ -2597,23 +2602,26 @@ void cTextEditor::preRender() {
     //}}}
   mGlyphsStart = kLeftTextMargin + lineNumberWidth;
   mMaxWidth = 0;
+  }
+//}}}
+//{{{
+void cTextEditor::preRenderLineIndex (uint32_t& minLineIndex, uint32_t& maxLineIndex) {
 
   // calc lineIndex, maxLineIndex, lineNumber from scroll
-  mScrollY = ImGui::GetScrollY();
-  mLineIndex = static_cast<uint32_t>(floor (mScrollY / mCharSize.y));
-  mMaxLineIndex = mLineIndex + static_cast<uint32_t>(ceil ((mScrollY + mContentSize.y) / mCharSize.y));
+  minLineIndex = static_cast<uint32_t>(floor (ImGui::GetScrollY() / mCharSize.y));
+  maxLineIndex = minLineIndex + static_cast<uint32_t>(ceil ((ImGui::GetScrollY() + mContentSize.y) / mCharSize.y));
 
   if (mShowFolded) {
-    mLineIndex = min (mLineIndex, static_cast<uint32_t>(mVisibleLines.size()-1));
-    mMaxLineIndex = max (0u, min (static_cast<uint32_t>(mVisibleLines.size()-1), mMaxLineIndex));
+    minLineIndex = min (minLineIndex, static_cast<uint32_t>(mVisibleLines.size()-1));
+    maxLineIndex = max (0u, min (static_cast<uint32_t>(mVisibleLines.size()-1), maxLineIndex));
     }
   else {
-    mLineIndex = min (mLineIndex, static_cast<uint32_t>(mLines.size()-1));
-    mMaxLineIndex = max (0u, min (static_cast<uint32_t>(mLines.size()-1), mMaxLineIndex));
+    minLineIndex = min (minLineIndex, static_cast<uint32_t>(mLines.size()-1));
+    maxLineIndex = max (0u, min (static_cast<uint32_t>(mLines.size()-1), maxLineIndex));
     }
 
-  mScrollX = ImGui::GetScrollX();
-  mCursorPos = mCursorScreenPos + ImVec2 (mScrollX, mLineIndex * mCharSize.y);
+  mCursorPos = mCursorScreenPos + ImVec2 (ImGui::GetScrollX(), minLineIndex * mCharSize.y);
+  mCursorEndPos = mCursorPos + ImVec2 (mContentSize.x, mCharSize.y);
   mLinePos = {mCursorScreenPos.x, mCursorPos.y};
   mTextPos = {mCursorScreenPos.x + mGlyphsStart, mCursorPos.y};
   }
@@ -2650,10 +2658,8 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   //{{{  draw marker background
   auto markerIt = mMarkers.find (lineNumber + 1);
   if (markerIt != mMarkers.end()) {
-    ImVec2 markerEndPos = mLinePos + ImVec2(mScrollX + mContentSize.x, mCharSize.y);
-    mDrawList->AddRectFilled (mCursorPos, markerEndPos, mPalette[(size_t)ePalette::Marker]);
-
-    if (ImGui::IsMouseHoveringRect (mLinePos, markerEndPos)) {
+    mDrawList->AddRectFilled (mCursorPos, mCursorEndPos, mPalette[(size_t)ePalette::Marker]);
+    if (ImGui::IsMouseHoveringRect (mCursorPos, mCursorEndPos)) {
       ImGui::BeginTooltip();
 
       ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.f,1.f,1.f, 1.f));
@@ -2668,13 +2674,9 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   //}}}
   //{{{  draw cursor background
   if (!hasSelect() && (lineNumber == static_cast<uint32_t>(mState.mCursorPosition.mLineNumber))) {
-    // highlight cursor line before drawText
-    ImVec2 cursorEndPos = mCursorPos + ImVec2(mScrollX + mContentSize.x, mCharSize.y);
-
-    mDrawList->AddRectFilled (mCursorPos, cursorEndPos,
-      mPalette[(int)(mFocused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
-
-    mDrawList->AddRect (mCursorPos, cursorEndPos, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
+    mDrawList->AddRectFilled (mCursorPos, mCursorEndPos,
+      mPalette[mFocused ? (size_t)ePalette::CurrentLineFill : (size_t)ePalette::CurrentLineFillInactive]);
+    mDrawList->AddRect (mCursorPos, mCursorEndPos, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
     }
   //}}}
 
@@ -2829,6 +2831,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
 
   // nextLine
   mCursorPos.y += mCharSize.y;
+  mCursorEndPos.y += mCharSize.y;
   mLinePos.y += mCharSize.y;
   mTextPos.x = mCursorScreenPos.x + mGlyphsStart;
   mTextPos.y += mCharSize.y;

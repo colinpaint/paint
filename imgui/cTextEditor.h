@@ -415,6 +415,8 @@ private:
   void handleKeyboardInputs();
 
   void preRender();
+  void preRenderLineIndex (uint32_t& minLineIndex, uint32_t& maxLineIndex);
+
   void renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber);
   void renderFold (std::vector<sLine>::iterator& it, uint32_t& lineNumber, uint32_t& lineIndex,
                    uint32_t minLineIndex, uint32_t maxLineIndex,
@@ -484,14 +486,10 @@ private:
   ImVec2 mCursorScreenPos;
   bool mFocused = false;
 
-  float mScrollX = 0.f;
-  float mScrollY = 0.f;
-  uint32_t mLineIndex = 0;
-  uint32_t mMaxLineIndex = 0;
-
   float mGlyphsStart = 0.f; // start of main text ?prefix?
   ImVec2 mCharSize;  // size of character grid, space wide, fontHeight high
   ImVec2 mCursorPos; // startPos of background cursors
+  ImVec2 mCursorEndPos; // endPos of background cursors
   ImVec2 mLinePos;   // starPos of lineNumber
   ImVec2 mTextPos;   // pos of main text,
   float mMaxWidth = 0.f; // maxWidth of all lines, used to set scroll regions
