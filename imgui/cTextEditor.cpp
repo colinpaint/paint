@@ -1206,15 +1206,19 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
 
   preRender();
 
-  while (mLineIndex < mMaxLineIndex) {
-    if (mShowFolded) {
+  // iterate lines
+  if (mShowFolded) {
+    while (mLineIndex < mMaxLineIndex) {
       uint32_t lineNumber = mVisibleLines[mLineIndex];
-      renderLine (mLines[lineNumber].mFoldBegin ? mLines[lineNumber].mFoldTitleLineNumber : lineNumber,
-                  lineNumber);
+      renderLine (mLines[lineNumber].mFoldBegin ? mLines[lineNumber].mFoldTitleLineNumber : lineNumber, lineNumber);
+      mLineIndex++;
       }
-    else
+    }
+  else {
+    while (mLineIndex < mMaxLineIndex) {
       renderLine (mLineIndex, 0);
-    mLineIndex++;
+      mLineIndex++;
+      }
     }
 
   postRender();
