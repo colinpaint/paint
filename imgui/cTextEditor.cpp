@@ -1212,18 +1212,11 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
 
   if (mShowFolded) {
     // iterate lines
-    //while (mLineIndex < mMaxLineIndex) {
-    //  uint32_t lineNumber = mVisibleLines[mLineIndex];
-    //  renderLine (mLines[lineNumber].mFoldBegin ? mLines[lineNumber].mFoldTitleLineNumber : lineNumber, lineNumber);
-     // mLineIndex++;
-    //  }
-
-    // create mVisibleLines
     mVisibleLines.clear();
     vector<sLine>::iterator it = mLines.begin();
     uint32_t lineNumber = 0;
     uint32_t lineIndex = 0;
-    renderFold (it, lineNumber, lineIndex, true, true);
+    renderFold (it, lineNumber, lineIndex, mLineIndex, mMaxLineIndex, true, true);
     }
   else {
     // iterate lines
@@ -2843,6 +2836,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
 //}}}
 //{{{
 void cTextEditor::renderFold (vector<sLine>::iterator& it, uint32_t& lineNumber, uint32_t& lineIndex,
+                              uint32_t minLineIndex, uint32_t maxLineIndex,
                               bool parentOpen, bool foldOpen) {
 
   uint32_t beginLineNumber = lineNumber;
@@ -2851,7 +2845,7 @@ void cTextEditor::renderFold (vector<sLine>::iterator& it, uint32_t& lineNumber,
     // if no comment search for first noComment line
     it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1;
     mVisibleLines.push_back (lineNumber);
-    if ((lineIndex >= mLineIndex) && (lineIndex < mMaxLineIndex))
+    if ((lineIndex >= minLineIndex) && (lineIndex < maxLineIndex))
       renderLine (lineNumber, it->mFoldTitleLineNumber);
     lineIndex++;
     }
@@ -2862,7 +2856,7 @@ void cTextEditor::renderFold (vector<sLine>::iterator& it, uint32_t& lineNumber,
     if (it < mLines.end()) {
       it->mFoldLineNumber = beginLineNumber;
       if (it->mFoldBegin)
-        renderFold (it, lineNumber, lineIndex, foldOpen, it->mFoldOpen);
+        renderFold (it, lineNumber, lineIndex, minLineIndex, maxLineIndex, foldOpen, it->mFoldOpen);
       else if (it->mFoldEnd) {
         // update beginFold line with endFold lineNumber, helps reverse traversal
         mLines[beginLineNumber].mFoldLineNumber = lineNumber;
