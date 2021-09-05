@@ -2576,10 +2576,6 @@ void cTextEditor::preRender() {
     mMaxLineIndex = max (0u, min (static_cast<uint32_t>(mLines.size()-1), mMaxLineIndex));
     }
 
-  mScrollX = ImGui::GetScrollX();
-  mCursorPos = mCursorScreenPos + ImVec2 (mScrollX, mLineIndex * mCharSize.y);
-  mLinePos = {mCursorScreenPos.x, mCursorPos.y};
-
   float lineNumberWidth = 0.f;
   if (mShowLineDebug) {
     //{{{  add lineDebug width to mGlyphsStart
@@ -2594,8 +2590,12 @@ void cTextEditor::preRender() {
     }
     //}}}
 
+  mScrollX = ImGui::GetScrollX();
   mGlyphsStart = kLeftTextMargin + lineNumberWidth;
   mTextWidth = mGlyphsStart;
+
+  mCursorPos = mCursorScreenPos + ImVec2 (mScrollX, mLineIndex * mCharSize.y);
+  mLinePos = {mCursorScreenPos.x, mCursorPos.y};
   mTextPos = {mCursorScreenPos.x + mGlyphsStart, mCursorPos.y};
   }
 //}}}
