@@ -2168,7 +2168,7 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
             else if (mLanguage.mPreprocIdents.count (id) != 0)
               token_color = ePalette::PreprocIdent;
             }
-          else if (mLanguage.mPreprocIdents.count(id) != 0)
+          else if (mLanguage.mPreprocIdents.count (id) != 0)
             token_color = ePalette::PreprocIdent;
           }
 
