@@ -1219,7 +1219,7 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
     renderFold (it, lineNumber, lineIndex, mLineIndex, mMaxLineIndex, true, true);
     }
   else {
-    // iterate lines
+    // simple iterate lines
     uint32_t lineNumber = mLineIndex;
     while (lineNumber < mMaxLineIndex) {
       renderLine (lineNumber, 0);
@@ -2864,7 +2864,7 @@ void cTextEditor::renderFold (vector<sLine>::iterator& it, uint32_t& lineNumber,
         }
       else if (foldOpen) {
         mVisibleLines.push_back (lineNumber);
-        if ((lineIndex >= mLineIndex) && (lineIndex < mMaxLineIndex))
+        if ((lineIndex >= minLineIndex) && (lineIndex < maxLineIndex))
           renderLine (lineNumber, 0xFFFFFFFF);
         lineIndex++;
         }
