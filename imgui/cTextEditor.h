@@ -488,7 +488,7 @@ private:
   float mSpaceWidth = 0.f;
   float mScrollX = 0.f;
   float mGlyphsStart = 0.f;
-  float mMaxTextWidth = 0.f;
+  float mMaxWidth = 0.f;
 
   ImVec2 mCharSize;
   ImVec2 mCursorPos;

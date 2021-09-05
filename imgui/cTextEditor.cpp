@@ -2580,7 +2580,7 @@ void cTextEditor::preRender() {
     ImGui::SetScrollY (0.f);
     }
 
-  // measure lineNUmber width
+  // measure lineNumber width
   float lineNumberWidth = 0.f;
   if (mShowLineDebug) {
     //{{{  add lineDebug width to mGlyphsStart
@@ -2597,7 +2597,7 @@ void cTextEditor::preRender() {
     }
     //}}}
   mGlyphsStart = kLeftTextMargin + lineNumberWidth;
-  mMaxTextWidth = 0;
+  mMaxWidth = 0;
 
   // calc lineIndex, maxLineIndex, lineNumber from scroll
   mLineIndex = static_cast<uint32_t>(floor (ImGui::GetScrollY() / mCharSize.y));
@@ -2824,8 +2824,8 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     }
     //}}}
 
-  // expand maxTextWidth with our maxWidth
-  mMaxTextWidth = max (mMaxTextWidth, getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
+  // expand mMaxWidth with our maxWidth, !!! what about prefix width !!!
+  mMaxWidth = max (mMaxWidth, mGlyphsStart + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
 
   // nextLine
   mCursorPos.y += mCharSize.y;
@@ -2860,8 +2860,7 @@ void cTextEditor::postRender() {
     }
 
   // dummy button, sized to maximum width,height, sets scroll regions without drawing them
-  ImGui::Dummy ({mGlyphsStart + mMaxTextWidth + 2.0f,
-                 (mShowFolded ? mVisibleLines.size() : mLines.size()) * mCharSize.y});
+  ImGui::Dummy ({mMaxWidth, (mShowFolded ? mVisibleLines.size() : mLines.size()) * mCharSize.y});
 
   if (mScrollToCursor) {
     // scroll to cursor
