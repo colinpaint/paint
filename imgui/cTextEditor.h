@@ -408,14 +408,11 @@ private:
 
   // fold
   void parseFolds();
-  void updateFold (std::vector<cTextEditor::sLine>::iterator& it, uint32_t& lineNumber,
-                   bool parentOpen, bool foldOpen);
 
   void handleMouseInputs();
   void handleKeyboardInputs();
 
-  void preRender();
-  void preRenderLineIndex (uint32_t& minLineIndex, uint32_t& maxLineIndex);
+  void preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex);
 
   void renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber);
   void renderFold (std::vector<sLine>::iterator& it, uint32_t& lineNumber, uint32_t& lineIndex,
@@ -482,7 +479,6 @@ private:
   ImFont* mFont = nullptr;
   float mFontSize = 0.f;
   ImDrawList* mDrawList = nullptr;
-  ImVec2 mContentSize;
   ImVec2 mCursorScreenPos;
   bool mFocused = false;
 
