@@ -2631,7 +2631,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   sLine& line = mLines[lineNumber];
   vector<sGlyph>& glyphs = line.mGlyphs;
 
-  //{{{  draw select graphic
+  //{{{  draw select background
   float xStart = -1.0f;
   float xEnd = -1.0f;
 
@@ -2652,7 +2652,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
                               mLinePos + ImVec2 (mGlyphsStart + xEnd,  mCharSize.y),
                               mPalette[(size_t)ePalette::Selection]);
   //}}}
-  //{{{  draw marker
+  //{{{  draw marker background
   auto markerIt = mMarkers.find (lineNumber + 1);
   if (markerIt != mMarkers.end()) {
     ImVec2 markerEndPos = {mLinePos.x + mContentSize.x + 2.0f * mScrollX, mLinePos.y + mCharSize.y};
@@ -2674,6 +2674,17 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
       }
     }
   //}}}
+  //{{{  draw cursor background 
+  if (!hasSelect() && (lineNumber == static_cast<uint32_t>(mState.mCursorPosition.mLineNumber))) {
+    // highlight cursor line before drawText
+    ImVec2 cursorEndPos = mCursorPos + ImVec2 (mContentSize.x, mCharSize.y);
+
+    mDrawList->AddRectFilled (mCursorPos, cursorEndPos,
+      mPalette[(int)(mFocused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
+
+    mDrawList->AddRect (mCursorPos, cursorEndPos, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
+    }
+  //}}}
 
   if (mShowLineDebug) {
     //{{{  draw lineDebug, rightJustified
@@ -2691,18 +2702,6 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
 
     mDrawList->AddText (ImVec2 (mLinePos.x + mGlyphsStart - lineNumberWidth, mLinePos.y),
                         mPalette[(size_t)ePalette::LineNumber], str);
-    }
-    //}}}
-
-  // cursor background ?
-  if (!hasSelect() && (lineNumber == static_cast<uint32_t>(mState.mCursorPosition.mLineNumber))) {
-    //{{{  highlight cursor line before drawText
-    ImVec2 cursorEndPos = mCursorPos + ImVec2 (mContentSize.x, mCharSize.y);
-
-    mDrawList->AddRectFilled (mCursorPos, cursorEndPos,
-      mPalette[(int)(mFocused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
-
-    mDrawList->AddRect (mCursorPos, cursorEndPos, mPalette[(size_t)ePalette::CurrentLineEdge], 1.0f);
     }
     //}}}
 
