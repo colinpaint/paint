@@ -1523,21 +1523,19 @@ void cTextEditor::advance (sPosition& position) const {
 //{{{
 cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
 
-  ImVec2 origin = ImGui::GetCursorScreenPos();
-  ImVec2 local = ImVec2 (pos.x - origin.x, pos.y - origin.y);
+  ImVec2 local = pos - ImGui::GetCursorScreenPos();
 
-  int lineNumber = max (0, (int)floor (local.y / mCharSize.y));
   int columnCoord = 0;
+  int lineIndex = max (0, static_cast<int>(floor (local.y / mCharSize.y)));
 
+  int lineNumber = mShowFolded ? mVisibleLines[lineIndex] : lineIndex;
   if ((lineNumber >= 0) && (lineNumber < (int)mLines.size())) {
     const vector<sGlyph>& glyphs = mLines[lineNumber].mGlyphs;
 
     int columnIndex = 0;
     float columnX = 0.0f;
-
     while (columnIndex < (int)glyphs.size()) {
       float columnWidth = 0.0f;
-
       if (glyphs[columnIndex].mChar == '\t') {
         float oldX = columnX;
         float newColumnX = (1.0f + floor ((1.0f + columnX) /
@@ -1574,27 +1572,16 @@ cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
 //{{{
 cTextEditor::sPosition cTextEditor::sanitizePosition (const sPosition& position) const {
 
-  int line = position.mLineNumber;
-  int column = position.mColumn;
-
-  if (line >= (int)mLines.size()) {
-    if (mLines.empty()) {
-      line = 0;
-      column = 0;
-      }
-    else {
-      line = (int)mLines.size() - 1;
-      column = getLineMaxColumn (line);
-      }
-
-    return sPosition (line, column);
+  if (position.mLineNumber >= static_cast<int>(mLines.size())) {
+    if (mLines.empty())
+      return sPosition (0,0);
+    else
+      return sPosition (static_cast<int>(mLines.size())-1,
+                        getLineMaxColumn (static_cast<int>(mLines.size()-1)));
     }
-
-  else {
-    column = mLines.empty() ? 0 : min (column, getLineMaxColumn (line));
-    return sPosition (line, column);
-    }
-
+  else
+    return sPosition (position.mLineNumber,
+                      mLines.empty() ? 0 : min (position.mColumn, getLineMaxColumn (position.mLineNumber)));
   }
 //}}}
 
