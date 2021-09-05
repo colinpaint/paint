@@ -482,17 +482,16 @@ private:
   ImVec2 mCursorScreenPos;
   bool mFocused = false;
 
+  float mScrollX = 0.f;
+  float mScrollY = 0.f;
   uint32_t mLineIndex = 0;
   uint32_t mMaxLineIndex = 0;
 
-  float mSpaceWidth = 0.f;
-  float mScrollX = 0.f;
-  float mGlyphsStart = 0.f;
-  float mMaxWidth = 0.f;
-
-  ImVec2 mCharSize;
-  ImVec2 mCursorPos;
-  ImVec2 mLinePos;
-  ImVec2 mTextPos;
+  float mGlyphsStart = 0.f; // start of main text ?prefix?
+  ImVec2 mCharSize;  // size of character grid, space wide, fontHeight high
+  ImVec2 mCursorPos; // startPos of background cursors
+  ImVec2 mLinePos;   // starPos of lineNumber
+  ImVec2 mTextPos;   // pos of main text,
+  float mMaxWidth = 0.f; // maxWidth of all lines, used to set scroll regions
   //}}}
   };

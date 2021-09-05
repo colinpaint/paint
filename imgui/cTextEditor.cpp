@@ -2572,8 +2572,8 @@ void cTextEditor::preRender() {
     }
 
   // calc character mCharSize
-  mSpaceWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
-  mCharSize = ImVec2 (mSpaceWidth, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
+  mCharSize = ImVec2(mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x,
+                     ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
 
   if (mScrollToTop) {
     mScrollToTop = false;
@@ -2600,8 +2600,9 @@ void cTextEditor::preRender() {
   mMaxWidth = 0;
 
   // calc lineIndex, maxLineIndex, lineNumber from scroll
-  mLineIndex = static_cast<uint32_t>(floor (ImGui::GetScrollY() / mCharSize.y));
-  mMaxLineIndex = mLineIndex + static_cast<uint32_t>(ceil ((ImGui::GetScrollY() + mContentSize.y) / mCharSize.y));
+  mScrollY = ImGui::GetScrollY();
+  mLineIndex = static_cast<uint32_t>(floor (mScrollY / mCharSize.y));
+  mMaxLineIndex = mLineIndex + static_cast<uint32_t>(ceil ((mScrollY + mContentSize.y) / mCharSize.y));
 
   if (mShowFolded) {
     mLineIndex = min (mLineIndex, static_cast<uint32_t>(mVisibleLines.size()-1));
@@ -2757,7 +2758,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     if (glyph.mChar == '\t') {
       //{{{  draw tab
       const ImVec2 pos1 = mTextPos + ImVec2 (1.0f, mFontSize * 0.5f);
-      mTextPos.x = (1.0f + floor ((1.0f + mTextPos.x) / (mTabSize * mSpaceWidth))) * (mTabSize * mSpaceWidth);
+      mTextPos.x = (1.0f + floor ((1.0f + mTextPos.x) / (mTabSize * mCharSize.x))) * (mTabSize * mCharSize.x);
 
       if (mShowWhiteSpace) {
         // righthand of tab arrow
@@ -2773,9 +2774,9 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     else if (glyph.mChar == ' ') {
       //{{{  draw space
       if (mShowWhiteSpace)
-        mDrawList->AddCircleFilled (mTextPos + ImVec2(mSpaceWidth * 0.5f, mFontSize * 0.5f), 1.5f,
+        mDrawList->AddCircleFilled (mTextPos + ImVec2(mCharSize.x * 0.5f, mFontSize * 0.5f), 1.5f,
                                     mPalette[(size_t)ePalette::WhiteSpace], 4);
-      mTextPos.x += mSpaceWidth;
+      mTextPos.x += mCharSize.x;
       }
       //}}}
     else {
@@ -2805,7 +2806,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
 
       if (mOverwrite && (cindex < (int)glyphs.size())) {
         if (glyphs[cindex].mChar == '\t') {
-          float x = (1.0f + floor((1.0f + cx) / (float(mTabSize) * mSpaceWidth))) * (float(mTabSize) * mSpaceWidth);
+          float x = (1.0f + floor((1.0f + cx) / (float(mTabSize) * mCharSize.x))) * (float(mTabSize) * mCharSize.x);
           cursorWidth = x - cx;
           }
         else {
