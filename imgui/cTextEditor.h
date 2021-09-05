@@ -474,7 +474,6 @@ private:
   uint64_t mStartTime;
   float mLastClick;
   //}}}
-
   //{{{  render context vars
   ImFont* mFont = nullptr;
   float mFontSize = 0.f;

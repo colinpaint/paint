@@ -26,6 +26,7 @@
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
+#include "imgui_internal.h"
 
 #include "../utils/cLog.h"
 
@@ -2563,10 +2564,8 @@ void cTextEditor::preRender() {
     }
 
   // calc lineIndex, maxLineIndex, lineNumber from scroll
-  mScrollX = ImGui::GetScrollX();
-  float scrollY = ImGui::GetScrollY();
-  mLineIndex = static_cast<uint32_t>(floor (scrollY / mCharSize.y));
-  mMaxLineIndex = mLineIndex + static_cast<uint32_t>(ceil ((scrollY + mContentSize.y) / mCharSize.y));
+  mLineIndex = static_cast<uint32_t>(floor (ImGui::GetScrollY() / mCharSize.y));
+  mMaxLineIndex = mLineIndex + static_cast<uint32_t>(ceil ((ImGui::GetScrollY() + mContentSize.y) / mCharSize.y));
 
   if (mShowFolded) {
     mLineIndex = min (mLineIndex, static_cast<uint32_t>(mVisibleLines.size()-1));
@@ -2577,25 +2576,27 @@ void cTextEditor::preRender() {
     mMaxLineIndex = max (0u, min (static_cast<uint32_t>(mLines.size()-1), mMaxLineIndex));
     }
 
-  mCursorPos = {mCursorScreenPos.x + mScrollX, mCursorScreenPos.y + (mLineIndex * mCharSize.y)};
+  mScrollX = ImGui::GetScrollX();
+  mCursorPos = mCursorScreenPos + ImVec2 (mScrollX, mLineIndex * mCharSize.y);
   mLinePos = {mCursorScreenPos.x, mCursorPos.y};
 
-  mGlyphsStart = kLeftTextMargin;
+  float lineNumberWidth = 0.f;
   if (mShowLineDebug) {
     //{{{  add lineDebug width to mGlyphsStart
     snprintf (mStr, sizeof(mStr), "%4d:%4d:%4d ",1,1,1);
-    mGlyphsStart += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mStr, nullptr, nullptr).x;
+    lineNumberWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mStr, nullptr, nullptr).x;
     }
     //}}}
   else if (mShowLineNumbers) {
     //{{{  add lineNumber width to mGlyphsStart
     snprintf (mStr, sizeof(mStr), "%d ", (int)mLines.size());
-    mGlyphsStart += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mStr, nullptr, nullptr).x;
+    lineNumberWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mStr, nullptr, nullptr).x;
     }
     //}}}
-  mTextPos = {mCursorScreenPos.x + mGlyphsStart, mCursorPos.y};
 
+  mGlyphsStart = kLeftTextMargin + lineNumberWidth;
   mTextWidth = mGlyphsStart;
+  mTextPos = {mCursorScreenPos.x + mGlyphsStart, mCursorPos.y};
   }
 //}}}
 //{{{
