@@ -2572,9 +2572,8 @@ void cTextEditor::preRender() {
     }
 
   // calc character mCharSize
-  mSpaceSize = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
-  mCharWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
-  mCharSize = ImVec2 (mCharWidth, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
+  mSpaceWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
+  mCharSize = ImVec2 (mSpaceWidth, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
 
   if (mScrollToTop) {
     mScrollToTop = false;
@@ -2598,7 +2597,7 @@ void cTextEditor::preRender() {
     }
     //}}}
   mGlyphsStart = kLeftTextMargin + lineNumberWidth;
-  mMaxTextWidth = mGlyphsStart;
+  mMaxTextWidth = 0;
 
   // calc lineIndex, maxLineIndex, lineNumber from scroll
   mLineIndex = static_cast<uint32_t>(floor (ImGui::GetScrollY() / mCharSize.y));
@@ -2651,18 +2650,15 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   //{{{  draw marker background
   auto markerIt = mMarkers.find (lineNumber + 1);
   if (markerIt != mMarkers.end()) {
-    ImVec2 markerEndPos = {mLinePos.x + mContentSize.x + 2.0f * mScrollX, mLinePos.y + mCharSize.y};
+    ImVec2 markerEndPos = mLinePos + ImVec2(mScrollX + mContentSize.x, mCharSize.y);
     mDrawList->AddRectFilled (mCursorPos, markerEndPos, mPalette[(size_t)ePalette::Marker]);
 
     if (ImGui::IsMouseHoveringRect (mLinePos, markerEndPos)) {
       ImGui::BeginTooltip();
 
-      ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f,0.2f,0.2f, 1.0f));
+      ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.f,1.f,1.f, 1.f));
       ImGui::Text ("marker at line %d:", markerIt->first);
-      ImGui::PopStyleColor();
-
       ImGui::Separator();
-      ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.0f,1.0f,0.2f, 1.0f));
       ImGui::Text ("%s", markerIt->second.c_str());
       ImGui::PopStyleColor();
 
@@ -2673,7 +2669,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   //{{{  draw cursor background
   if (!hasSelect() && (lineNumber == static_cast<uint32_t>(mState.mCursorPosition.mLineNumber))) {
     // highlight cursor line before drawText
-    ImVec2 cursorEndPos = mCursorPos + ImVec2 (mContentSize.x, mCharSize.y);
+    ImVec2 cursorEndPos = mCursorPos + ImVec2(mScrollX + mContentSize.x, mCharSize.y);
 
     mDrawList->AddRectFilled (mCursorPos, cursorEndPos,
       mPalette[(int)(mFocused ? ePalette::CurrentLineFill : ePalette::CurrentLineFillInactive)]);
@@ -2761,7 +2757,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     if (glyph.mChar == '\t') {
       //{{{  draw tab
       const ImVec2 pos1 = mTextPos + ImVec2 (1.0f, mFontSize * 0.5f);
-      mTextPos.x = (1.0f + floor ((1.0f + mTextPos.x) / (mTabSize * mSpaceSize))) * (mTabSize * mSpaceSize);
+      mTextPos.x = (1.0f + floor ((1.0f + mTextPos.x) / (mTabSize * mSpaceWidth))) * (mTabSize * mSpaceWidth);
 
       if (mShowWhiteSpace) {
         // righthand of tab arrow
@@ -2777,9 +2773,9 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     else if (glyph.mChar == ' ') {
       //{{{  draw space
       if (mShowWhiteSpace)
-        mDrawList->AddCircleFilled (mTextPos + ImVec2(mSpaceSize * 0.5f, mFontSize * 0.5f), 1.5f,
+        mDrawList->AddCircleFilled (mTextPos + ImVec2(mSpaceWidth * 0.5f, mFontSize * 0.5f), 1.5f,
                                     mPalette[(size_t)ePalette::WhiteSpace], 4);
-      mTextPos.x += mSpaceSize;
+      mTextPos.x += mSpaceWidth;
       }
       //}}}
     else {
@@ -2809,7 +2805,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
 
       if (mOverwrite && (cindex < (int)glyphs.size())) {
         if (glyphs[cindex].mChar == '\t') {
-          float x = (1.0f + floor((1.0f + cx) / (float(mTabSize) * mSpaceSize))) * (float(mTabSize) * mSpaceSize);
+          float x = (1.0f + floor((1.0f + cx) / (float(mTabSize) * mSpaceWidth))) * (float(mTabSize) * mSpaceWidth);
           cursorWidth = x - cx;
           }
         else {
@@ -2828,8 +2824,8 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     }
     //}}}
 
-  // expand maxTextWidth with this line's textWidth
-  mMaxTextWidth = max (mMaxTextWidth, mGlyphsStart + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
+  // expand maxTextWidth with our maxWidth
+  mMaxTextWidth = max (mMaxTextWidth, getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber))));
 
   // nextLine
   mCursorPos.y += mCharSize.y;
@@ -2864,7 +2860,8 @@ void cTextEditor::postRender() {
     }
 
   // dummy button, sized to maximum width,height, sets scroll regions without drawing them
-  ImGui::Dummy ({mMaxTextWidth + 2.0f, (mShowFolded ? mVisibleLines.size() : mLines.size()) * mCharSize.y});
+  ImGui::Dummy ({mGlyphsStart + mMaxTextWidth + 2.0f,
+                 (mShowFolded ? mVisibleLines.size() : mLines.size()) * mCharSize.y});
 
   if (mScrollToCursor) {
     // scroll to cursor
