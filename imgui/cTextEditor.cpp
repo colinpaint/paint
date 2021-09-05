@@ -1210,8 +1210,8 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
 
   preRender();
 
-  // iterate lines
   if (mShowFolded) {
+    // iterate lines
     while (mLineIndex < mMaxLineIndex) {
       uint32_t lineNumber = mVisibleLines[mLineIndex];
       renderLine (mLines[lineNumber].mFoldBegin ? mLines[lineNumber].mFoldTitleLineNumber : lineNumber, lineNumber);
@@ -1219,9 +1219,11 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
       }
     }
   else {
-    while (mLineIndex < mMaxLineIndex) {
-      renderLine (mLineIndex, 0);
-      mLineIndex++;
+    // iterate lines
+    uint32_t lineNumber = mLineIndex;
+    while (lineNumber < mMaxLineIndex) {
+      renderLine (lineNumber, 0);
+      lineNumber++;
       }
     }
 
