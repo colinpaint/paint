@@ -2628,11 +2628,10 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   if (mState.mSelectionEnd.mLineNumber > static_cast<int>(lineNumber))
     xEnd += mCharSize.x;
 
-  if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd)) {
+  if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd))
     mDrawList->AddRectFilled (mLinePos + ImVec2 (mGlyphsStart + xStart, 0.f),
                               mLinePos + ImVec2 (mGlyphsStart + xEnd,  mCharSize.y),
                               mPalette[(size_t)ePalette::Selection]);
-    }
   //}}}
   //{{{  draw marker
   auto markerIt = mMarkers.find (lineNumber + 1);
@@ -2693,18 +2692,16 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   bool forcePrefixColor = false;
   if (mShowFolded) {
     sLine& foldLine = mLines[beginFoldLineNumber];
-    //{{{  draw fold prefix text
+    //{{{  draw fold prefix
     if (foldLine.mFoldBegin) {
       if (foldLine.mFoldOpen) {
-        // foldBegin foldOpen
-        string prefixString = mLanguage.mFoldBeginOpen;
+        // foldBegin - foldOpen
         prefixColor = mPalette[(size_t)ePalette::FoldBeginOpen];
-        mDrawList->AddText (ImVec2 (mTextPos.x + textOffset, mTextPos.y), prefixColor, prefixString.c_str());
-        textOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
-
+        mDrawList->AddText (ImVec2 (mTextPos.x + textOffset, mTextPos.y), prefixColor, mLanguage.mFoldBeginOpen.c_str());
+        textOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mLanguage.mFoldBeginOpen.c_str(), nullptr, nullptr).x;
         }
       else {
-        // foldBegin foldClosed
+        // foldBegin - foldClosed
         string prefixString;
         for (uint8_t i = 0; i < line.mIndent; i++)
           prefixString += ' ';
@@ -2720,8 +2717,8 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
       // foldEnd
       string prefixString = mLanguage.mFoldEnd;
       prefixColor = mPalette[(size_t)ePalette::FoldEnd];
-      mDrawList->AddText (ImVec2 (mTextPos.x + textOffset, mTextPos.y), prefixColor, prefixString.c_str());
-      textOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
+      mDrawList->AddText (ImVec2 (mTextPos.x + textOffset, mTextPos.y), prefixColor, mLanguage.mFoldEnd.c_str());
+      textOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mLanguage.mFoldEnd.c_str(), nullptr, nullptr).x;
 
       // no more to draw
       return;
