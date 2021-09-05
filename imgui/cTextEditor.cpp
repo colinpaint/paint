@@ -478,8 +478,7 @@ namespace {
 // cTextEditor
 //{{{
 cTextEditor::cTextEditor()
-  : mTabSize(4), mGlyphsStart(kLeftTextMargin),
-
+  : mTabSize(4),
     mTextChanged(false), mCursorPositionChanged(false),
     mOverwrite(false) , mReadOnly(false), mIgnoreImGuiChild(false), mCheckComments(true),
     mShowFolded(true), mShowLineNumbers(false), mShowLineDebug(false), mShowWhiteSpace(false),
@@ -2551,7 +2550,7 @@ void cTextEditor::preRender() {
     color.w *= ImGui::GetStyle().Alpha;
     mPalette[i] = ImGui::ColorConvertFloat4ToU32 (color);
     }
-  mCount = 0;
+  mStrLen = 0;
 
   // calc character mCharSize
   mSpaceSize = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
@@ -2777,12 +2776,12 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   for (auto& glyph : glyphs) {
     // write text on colour change
     ImU32 color = getGlyphColor (glyph);
-    if (((color != prevColor) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && mCount) {
+    if (((color != prevColor) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && mStrLen) {
       //{{{  draw main text word with color
-      mStr[mCount] = 0;
+      mStr[mStrLen] = 0;
       mDrawList->AddText (ImVec2 (mTextPos.x + xTextOffset, mTextPos.y), forcePrefixColor ? prefixColor : prevColor, mStr);
       xTextOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mStr, nullptr, nullptr).x;
-      mCount = 0;
+      mStrLen = 0;
 
       prevColor = color;
       }
@@ -2826,16 +2825,16 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
       //{{{  add other char
       // !!!check for overflow, truncation !!!
       int l = utf8CharLength (glyph.mChar);
-      while ((l-- > 0) && (mCount < (kMaxCount-2)))
-        mStr[mCount++] = glyph.mChar;
+      while ((l-- > 0) && (mStrLen < (kMaxCount-2)))
+        mStr[mStrLen++] = glyph.mChar;
       }
       //}}}
     }
-  if (mCount) {
+  if (mStrLen) {
     //{{{  draw remaining main text
-    mStr[mCount] = 0;
+    mStr[mStrLen] = 0;
     mDrawList->AddText (ImVec2 (mTextPos.x + xTextOffset, mTextPos.y), forcePrefixColor ? prefixColor : prevColor, mStr);
-    mCount = 0;
+    mStrLen = 0;
     }
     //}}}
 

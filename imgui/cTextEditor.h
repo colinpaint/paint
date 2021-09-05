@@ -423,15 +423,15 @@ private:
   std::vector <sLine> mLines;
   std::vector <uint32_t> mVisibleLines;
 
-  std::array <ImU32,(size_t)ePalette::Max> mPaletteBase;
-  std::array <ImU32,(size_t)ePalette::Max> mPalette;
-
+  // config
   sLanguage mLanguage;
   tRegexList mRegexList;
   std::map <int,std::string> mMarkers;
 
+  std::array <ImU32,(size_t)ePalette::Max> mPalette;
+  std::array <ImU32,(size_t)ePalette::Max> mPaletteBase;
+
   int mTabSize;
-  float mGlyphsStart;
 
   // changed flags
   bool mTextChanged;
@@ -467,7 +467,6 @@ private:
   // internal
   sEditorState mState;
   float mLineSpacing;
-  ImVec2 mCharSize;
   bool mWithinRender;
   bool mScrollToTop;
   bool mScrollToCursor;
@@ -479,22 +478,27 @@ private:
   //{{{  render context vars
   ImFont* mFont = nullptr;
   float mFontSize = 0.f;
-  ImVec2 mContentSize;
   ImDrawList* mDrawList = nullptr;
+  ImVec2 mContentSize;
   ImVec2 mCursorScreenPos;
   bool mFocused = false;
 
+  uint32_t mLineIndex = 0;
+  uint32_t mMaxLineIndex = 0;
+
   char mStr[kMaxCount];
-  uint8_t mCount = 0;
+  uint8_t mStrLen = 0;
+
   float mSpaceSize = 0.f;
   float mCharWidth = 0.f;
   float mScrollX = 0.f;
   float mScrollY = 0.f;
-  uint32_t mLineIndex = 0;
-  uint32_t mMaxLineIndex = 0;
+  float mGlyphsStart = 0.f;
+  float mTextWidth = 0.f;
+
+  ImVec2 mCharSize;
   ImVec2 mCursorPos;
   ImVec2 mLinePos;
   ImVec2 mTextPos;
-  float mTextWidth = 0.f;
   //}}}
   };
