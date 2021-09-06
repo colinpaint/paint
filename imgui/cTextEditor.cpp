@@ -487,7 +487,7 @@ cTextEditor::cTextEditor()
   : mTabSize(4),
     mTextChanged(false), mCursorPositionChanged(false),
     mOverwrite(false) , mReadOnly(false), mIgnoreImGuiChild(false), mCheckComments(true),
-    mShowFolded(true), mShowLineNumbers(false), mShowLineDebug(false), mShowWhiteSpace(true),
+    mShowFolded(true), mShowLineNumbers(false), mShowLineDebug(false), mShowWhiteSpace(false),
 
     mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
     mUndoIndex(0),
