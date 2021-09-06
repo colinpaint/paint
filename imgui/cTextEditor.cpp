@@ -2620,7 +2620,7 @@ void cTextEditor::renderText (vector <sGlyph>& glyphs, bool forcePrefixColor, Im
       mTextPos.x += mCharSize.x;
       }
     else {
-      // add char 
+      // add char
       int l = utf8CharLength (glyph.mChar);
       while ((l-- > 0) && (strPtr < strLastPtr))
         *strPtr++ = glyph.mChar;
@@ -2636,9 +2636,6 @@ void cTextEditor::renderText (vector <sGlyph>& glyphs, bool forcePrefixColor, Im
 //}}}
 //{{{
 void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber) {
-
-  if (lineNumber >= mLines.size())
-    return;
 
   //{{{  draw select background
   float xStart = -1.0f;
@@ -2687,8 +2684,6 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   //}}}
 
   sLine& line = mLines[lineNumber];
-  vector<sGlyph>& glyphs = line.mGlyphs;
-
   if (mShowLineDebug) {
     //{{{  draw lineDebug, rightJustified
     char str[32];
@@ -2710,6 +2705,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     }
     //}}}
 
+  vector<sGlyph>& glyphs = line.mGlyphs;
   if (mShowFolded && line.mFoldBegin) {
     if (line.mFoldOpen) {
      //{{{  draw foldOpen prefix + text
@@ -2742,9 +2738,8 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   else // simple
     renderText (glyphs, false, 0);
 
-  // cursor symbol ?
   if (mFocused && (lineNumber == static_cast<uint32_t>(mState.mCursorPosition.mLineNumber))) {
-    //{{{  draw flashing cursor after drawText
+    //{{{  draw character cursor
     // flash
     auto timeEnd = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
     auto elapsed = timeEnd - mStartTime;
@@ -2752,10 +2747,11 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
       if (elapsed > 800)
         mStartTime = timeEnd;
 
-      // get cursor pos
+      // cursor pos, width
       float cursorWidth = 2.f;
       int cindex = getCharacterIndex (mState.mCursorPosition);
       float cx = getTextWidth (mState.mCursorPosition);
+
       if (mOverwrite && (cindex < (int)glyphs.size())) {
         //{{{  widen overwrite cursor
         if (glyphs[cindex].mChar == '\t') {
