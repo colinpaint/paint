@@ -108,7 +108,7 @@ project (canvas)
 project (fed VERSION 1.0.0)
   # canvas and brush stuff to shut up link till i fix cUi
   file (GLOB FED_HEADER_FILES platform/*.h graphics/*.h ui/*.h)
-  file (GLOB FED_SOURCE_FILES fed/main.cpp platform/*.cpp graphics/*.cpp ui/cUI.cpp
+  file (GLOB FED_SOURCE_FILES fed/fedMain.cpp platform/*.cpp graphics/*.cpp ui/cUI.cpp
                               ui/cTextEditorUI.cpp)
   # ui/cTextAnalyseUI.cpp
   # ui/cJpegAnalyseUI.cpp
@@ -127,7 +127,7 @@ project (paintbox VERSION 1.0.0)
 
   # executable - main + static registered .cpp
   file (GLOB HEADER_FILES platform/*.h graphics/*.h brush/*.h ui/*.h)
-  file (GLOB SOURCE_FILES main.cpp platform/*.cpp graphics/*.cpp brush/*.cpp ui/cUI.cpp
+  file (GLOB SOURCE_FILES paintMain.cpp platform/*.cpp graphics/*.cpp brush/*.cpp ui/cUI.cpp
                           ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cUILayersUI.cpp ui/cRadioUI.cpp)
   add_executable (paintbox ${SOURCE_FILES} ${HEADER_FILES})
 

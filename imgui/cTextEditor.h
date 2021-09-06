@@ -410,6 +410,7 @@ private:
   void handleKeyboardInputs();
 
   void preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex);
+  void renderText (std::vector <sGlyph>& glyphs, bool forcePrefix, ImU32 prefixColor);
   void renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber);
   void renderFold (std::vector<sLine>::iterator& it, uint32_t& lineNumber, uint32_t& lineIndex,
                    uint32_t minLineIndex, uint32_t maxLineIndex, bool parentOpen, bool foldOpen);

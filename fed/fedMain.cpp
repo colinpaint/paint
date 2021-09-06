@@ -1,4 +1,4 @@
-// main.cpp - fed folding editor main, uses imGui, stb
+// fedMain.cpp - fed folding editor main, uses imGui, stb
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 

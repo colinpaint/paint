@@ -1,4 +1,4 @@
-// main.cpp - paintbox main, uses imGui, stb
+// paintMain.cpp - paintbox main, uses imGui, stb
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
