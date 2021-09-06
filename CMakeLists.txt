@@ -95,16 +95,27 @@ project (canvas)
   target_include_directories (canvas PUBLIC imgui stb)
   target_link_libraries (canvas PUBLIC utils)
 
-### WIN32 audio wsapi capture main project 
-if (MSVC)
-project (captureAudio VERSION 1.0.0)
-  file (GLOB CAPTURE_HEADER_FILES audio/*.h)
-  file (GLOB CAPTURE_SOURCE_FILES captureAudio/capture.cpp)
-  add_executable (captureAudio ${CAPTURE_SOURCE_FILES} ${CAPTURE_HEADER_FILES})
-  target_link_libraries (captureAudio PRIVATE winmm avrt audio)
-endif()
+### WIN32 audio wsapi capture main project
+#if (MSVC)
+#project (captureAudio VERSION 1.0.0)
+#  file (GLOB CAPTURE_HEADER_FILES audio/*.h)
+#  file (GLOB CAPTURE_SOURCE_FILES captureAudio/capture.cpp)
+#  add_executable (captureAudio ${CAPTURE_SOURCE_FILES} ${CAPTURE_HEADER_FILES})
+#  target_link_libraries (captureAudio PRIVATE winmm avrt audio)
+#endif()
 
-### paintbox main project 
+### fed folding editor
+project (fed VERSION 1.0.0)
+  # canvas and brush stuff to shut up link till i fix cUi
+  file (GLOB FED_HEADER_FILES platform/*.h graphics/*.h ui/*.h)
+  file (GLOB FED_SOURCE_FILES fed/main.cpp platform/*.cpp graphics/*.cpp brush/cBrush.cpp 
+                               ui/cUI.cpp ui/cTextEditorUI.cpp ui/cTextEditor.cpp)
+  add_executable (fed ${FED_SOURCE_FILES} ${FED_HEADER_FILES})
+  target_include_directories (fed PUBLIC imgui stb)
+  # canvas and brush   to shut up link c
+  target_link_libraries (fed PUBLIC canvas imgui utils glfw glad opengl32 d3d11 d3dcompiler ws2_32)
+
+### paintbox main project
 project (paintbox VERSION 1.0.0)
   find_package (OpenGL REQUIRED)
 

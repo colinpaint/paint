@@ -58,7 +58,7 @@ void cUI::listInstances() {
 
 // static draw
 //{{{
-void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) {
+void cUI::draw (cCanvas* canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) {
 // draw canvas and its UI's with imGui, using graphics
 // - draw canvas background
 //   - dummy fullscreen window, no draw,move,scroll,focus
@@ -79,7 +79,7 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFon
   #ifdef DRAW_CANVAS
     // route mouse,leftButton events to canvas, with centred pos coords
     if (ImGui::IsItemHovered() || ImGui::IsItemActive()) {
-      canvas.mouse (ImGui::IsItemActive(),
+      canvas->mouse (ImGui::IsItemActive(),
                     ImGui::IsMouseClicked (ImGuiMouseButton_Left),
                     ImGui::IsMouseDragging (ImGuiMouseButton_Left, 0.f),
                     ImGui::IsMouseReleased (ImGuiMouseButton_Left),
@@ -106,7 +106,7 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFon
       }
 
     // draw canvas to screen window frameBuffer
-    canvas.draw (cPoint ((int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y));
+    canvas->draw (cPoint ((int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y));
   #endif
 
   ImGui::End();
@@ -114,6 +114,13 @@ void cUI::draw (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFon
   // add registered UI instances to imGui drawList
   for (auto& ui : getInstanceRegister())
     ui.second->addToDrawList (canvas, graphics, platform, monoFont);
+  }
+//}}}
+//{{{
+void cUI::drawSimple (cGraphics& graphics, cPlatform& platform, ImFont* monoFont) {
+
+  for (auto& ui : getInstanceRegister())
+    ui.second->addToDrawList (nullptr, graphics, platform, monoFont);
   }
 //}}}
 

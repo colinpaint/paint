@@ -36,7 +36,7 @@ public:
     }
   //}}}
 
-  void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+  void addToDrawList (cCanvas* canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
     //{{{  unused params
     (void)canvas;
     (void)graphics;

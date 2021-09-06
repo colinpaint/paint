@@ -1,4 +1,4 @@
-// main.cpp - paintbox main, uses imGui, stb
+// main.cpp - fed folding editor main, uses imGui, stb
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -14,25 +14,18 @@
 #include <stb_image_write.h>
 
 // imGui
-#include <imgui.h>
-#include "../implot/implot.h"
+#include "../imgui/imgui.h"
 
 // UI font
-#include "font/itcSymbolBold.h"
+#include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
 // self registered classes using static var init idiom
-#include "platform/cPlatform.h"
-#include "graphics/cGraphics.h"
-#include "brush/cBrush.h"
-#include "ui/cUI.h"
+#include "../platform/cPlatform.h"
+#include "../graphics/cGraphics.h"
+#include "../ui/cUI.h"
 
-// canvas
-#include "canvas/cLayer.h"
-#include "canvas/cCanvas.h"
-
-// log
-#include "utils/cLog.h"
+#include "../utils/cLog.h"
 
 using namespace std;
 //}}}
@@ -67,12 +60,11 @@ int main (int numArgs, char* args[]) {
 
   // start log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, fmt::format ("paintbox {} {}", platformName, graphicsName));
+  cLog::log (LOGNOTICE, fmt::format ("fed {} {}", platformName, graphicsName));
 
   // list static registered classes
   cPlatform::listRegisteredClasses();
   cGraphics::listRegisteredClasses();
-  cBrush::listRegisteredClasses();
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI font
@@ -81,13 +73,6 @@ int main (int numArgs, char* args[]) {
   ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
   ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f);
 
-  // should clear main screen here before file loads
-
-  // create canvas
-  cCanvas canvas (params.empty() ? "../piccies/tv.jpg" : params[0], graphics);
-  if (params.size() > 1)
-    canvas.newLayer (params[1]);
-
   platform.setResizeCallback (
     //{{{  resize lambda
     [&](int width, int height) noexcept {
@@ -95,7 +80,7 @@ int main (int numArgs, char* args[]) {
       graphics.windowResize (width, height);
       graphics.newFrame();
       if (showDemoWindow)
-        cUI::draw (&canvas, graphics, platform, monoFont);
+        cUI::drawSimple (graphics, platform, monoFont);
       ImGui::ShowDemoWindow (&showDemoWindow);
       graphics.drawUI (platform.getWindowSize());
       platform.present();
@@ -108,7 +93,6 @@ int main (int numArgs, char* args[]) {
 
       for (auto& item : dropItems) {
         cLog::log (LOGINFO, item);
-        canvas.newLayer (item);
         }
       }
     );
@@ -118,17 +102,9 @@ int main (int numArgs, char* args[]) {
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
-    cUI::draw (&canvas, graphics, platform, monoFont);
+    cUI::drawSimple (graphics, platform, monoFont);
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
-    if (showPlotWindow) {
-      //{{{  optional implot
-      #ifdef USE_IMPLOT
-        ImPlot::ShowDemoWindow();
-      #endif
-      }
-      //}}}
-
     graphics.drawUI (platform.getWindowSize());
     platform.present();
     }

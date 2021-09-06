@@ -33,7 +33,7 @@ public:
   //}}}
   virtual ~cMenuUI() = default;
 
-  void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+  void addToDrawList (cCanvas* canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
     (void)monoFont;
 
     // coerce window to bottom fullWidth, kMenuHeight
@@ -156,21 +156,21 @@ public:
         ImGui::SameLine();
         ImGui::BeginGroup();
 
-        float hue = canvas.getCurLayer()->getHue();
-        float sat = canvas.getCurLayer()->getSat();
-        float val = canvas.getCurLayer()->getVal();
+        float hue = canvas->getCurLayer()->getHue();
+        float sat = canvas->getCurLayer()->getSat();
+        float val = canvas->getCurLayer()->getVal();
 
         ImGui::SetNextItemWidth (kSubButtonSize.x);
         if (ImGui::SliderFloat ("hue", &hue, -1.0f, 1.0f))
-          canvas.getCurLayer()->setHueSatVal (hue, sat, val);
+          canvas->getCurLayer()->setHueSatVal (hue, sat, val);
 
         ImGui::SetNextItemWidth (kSubButtonSize.x);
         if (ImGui::SliderFloat ("sat", &sat, -1.0f, 1.0f))
-          canvas.getCurLayer()->setHueSatVal (hue, sat, val);
+          canvas->getCurLayer()->setHueSatVal (hue, sat, val);
 
         ImGui::SetNextItemWidth (kSubButtonSize.x);
         if (ImGui::SliderFloat ("val", &val, -1.0f, 1.0f))
-          canvas.getCurLayer()->setHueSatVal (hue, sat, val);
+          canvas->getCurLayer()->setHueSatVal (hue, sat, val);
 
         ImGui::EndGroup();
 
@@ -194,7 +194,7 @@ public:
           char const* fileName = tinyfd_saveFileDialog ("save file", "", 1, filters, "image files");
           if (fileName) {
             cPoint size;
-            uint8_t* pixels = canvas.getPixels (size);
+            uint8_t* pixels = canvas->getPixels (size);
             stbi_write_png (fileName, size.x, size.y, 4, pixels, size.x* 4);
             free (pixels);
             }

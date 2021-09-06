@@ -40,14 +40,14 @@ public:
     }
   //}}}
 
-  void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+  void addToDrawList (cCanvas* canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
     //{{{  unused params
     (void)graphics;
     (void)platform;
     //}}}
 
     if (!mJpegAnalyse)
-      mJpegAnalyse = new cJpegAnalyse (canvas.getName(), 3);
+      mJpegAnalyse = new cJpegAnalyse (canvas->getName(), 3);
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     ImGui::PushFont(monoFont);

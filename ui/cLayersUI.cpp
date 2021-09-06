@@ -25,7 +25,7 @@ public:
   cLayersUI (const std::string& name) : cUI(name) {}
   virtual ~cLayersUI() = default;
 
-  void addToDrawList (cCanvas& canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+  void addToDrawList (cCanvas* canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
     (void)graphics;
     (void)platform;
     (void)monoFont;
@@ -33,18 +33,18 @@ public:
     ImGui::SetWindowPos (ImVec2(ImGui::GetIO().DisplaySize.x - ImGui::GetWindowWidth(), 0.f));
 
     unsigned layerIndex = 0;
-    for (auto layer : canvas.getLayers()) {
-      if (ImGui::Selectable (fmt::format ("##{}", layerIndex).c_str(), canvas.isCurLayer (layerIndex), 0,
+    for (auto layer : canvas->getLayers()) {
+      if (ImGui::Selectable (fmt::format ("##{}", layerIndex).c_str(), canvas->isCurLayer (layerIndex), 0,
                              ImVec2 (ImGui::GetWindowSize().x, 30)))
-        canvas.switchCurLayer (layerIndex);
+        canvas->switchCurLayer (layerIndex);
 
       if (ImGui::BeginPopupContextItem()) {
         bool visible = layer->isVisible();
         if (ImGui::MenuItem ("visible", "", &visible))
           layer->setVisible (visible);
 
-        if (ImGui::MenuItem ("delete", "", false, canvas.getNumLayers() != 1))
-          canvas.deleteLayer (layerIndex);
+        if (ImGui::MenuItem ("delete", "", false, canvas->getNumLayers() != 1))
+          canvas->deleteLayer (layerIndex);
 
         ImGui::Separator();
         if (ImGui::MenuItem ("cancel"))
@@ -67,8 +67,8 @@ public:
       }
 
     if (ImGui::Button ("new layer")) {
-      unsigned newLayerIndex = canvas.newLayer();
-      canvas.switchCurLayer (newLayerIndex);
+      unsigned newLayerIndex = canvas->newLayer();
+      canvas->switchCurLayer (newLayerIndex);
       }
 
     ImGui::End();
