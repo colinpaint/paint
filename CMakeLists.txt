@@ -108,12 +108,18 @@ project (canvas)
 project (fed VERSION 1.0.0)
   # canvas and brush stuff to shut up link till i fix cUi
   file (GLOB FED_HEADER_FILES platform/*.h graphics/*.h ui/*.h)
-  file (GLOB FED_SOURCE_FILES fed/main.cpp platform/*.cpp graphics/*.cpp brush/cBrush.cpp 
-                               ui/cUI.cpp ui/cTextEditorUI.cpp ui/cTextEditor.cpp)
+  file (GLOB FED_SOURCE_FILES fed/main.cpp platform/*.cpp graphics/*.cpp ui/cUI.cpp 
+                              fed/cTextEditorUI.cpp)
+  # ui/cTextAnalyseUI.cpp
+  # ui/cJpegAnalyseUI.cpp
   add_executable (fed ${FED_SOURCE_FILES} ${FED_HEADER_FILES})
   target_include_directories (fed PUBLIC imgui stb)
-  # canvas and brush   to shut up link c
-  target_link_libraries (fed PUBLIC canvas imgui utils glfw glad opengl32 d3d11 d3dcompiler ws2_32)
+  if (MSVC)
+    target_link_libraries (fed PUBLIC imgui utils glfw glad opengl32 d3d11 d3dcompiler ws2_32)
+  else()
+    target_link_libraries (fed PUBLIC imgui utils glfw glad GL)
+    target_link_options (paintbox PUBLIC -no-pie)
+  endif()
 
 ### paintbox main project
 project (paintbox VERSION 1.0.0)
@@ -121,7 +127,8 @@ project (paintbox VERSION 1.0.0)
 
   # executable - main + static registered .cpp
   file (GLOB HEADER_FILES platform/*.h graphics/*.h brush/*.h ui/*.h)
-  file (GLOB SOURCE_FILES main.cpp platform/*.cpp graphics/*.cpp brush/*.cpp ui/*.cpp)
+  file (GLOB SOURCE_FILES main.cpp platform/*.cpp graphics/*.cpp brush/*.cpp ui/cUI.cpp  
+                          ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cUILayersUI.cpp ui/cRadioUI.cpp)
   add_executable (paintbox ${SOURCE_FILES} ${HEADER_FILES})
 
   target_compile_definitions (paintbox PUBLIC OPENGL_VERSION)

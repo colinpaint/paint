@@ -28,7 +28,6 @@ public:
 
   // static draw
   static void draw (cCanvas* canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont);
-  static void drawSimple (cGraphics& graphics, cPlatform& platform, ImFont* monoFont);
 
   // base class
   cUI (const std::string& name) : mName(name) {}

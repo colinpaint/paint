@@ -80,7 +80,7 @@ int main (int numArgs, char* args[]) {
       graphics.windowResize (width, height);
       graphics.newFrame();
       if (showDemoWindow)
-        cUI::drawSimple (graphics, platform, monoFont);
+        cUI::draw (nullptr, graphics, platform, monoFont);
       ImGui::ShowDemoWindow (&showDemoWindow);
       graphics.drawUI (platform.getWindowSize());
       platform.present();
@@ -102,7 +102,7 @@ int main (int numArgs, char* args[]) {
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
-    cUI::drawSimple (graphics, platform, monoFont);
+    cUI::draw (nullptr, graphics, platform, monoFont);
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
     graphics.drawUI (platform.getWindowSize());

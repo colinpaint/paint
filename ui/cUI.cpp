@@ -59,68 +59,10 @@ void cUI::listInstances() {
 // static draw
 //{{{
 void cUI::draw (cCanvas* canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) {
-// draw canvas and its UI's with imGui, using graphics
-// - draw canvas background
-//   - dummy fullscreen window, no draw,move,scroll,focus
-//     - dummy invisibleButton captures mouse events
-// - draw registered UI instances
+// draw registered UI instances
 
-  // set dummy background window to full display size
-  ImGui::SetNextWindowPos (ImVec2(0,0));
-  ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-  ImGui::Begin ("bgnd", NULL,
-                ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground |
-                ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse |
-                ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
-
-  // fullWindow invisibleButton grabbing mouse,leftButton events
-  ImGui::InvisibleButton ("bgnd", ImGui::GetWindowSize(), ImGuiButtonFlags_MouseButtonLeft);
-
-  #ifdef DRAW_CANVAS
-    // route mouse,leftButton events to canvas, with centred pos coords
-    if (ImGui::IsItemHovered() || ImGui::IsItemActive()) {
-      canvas->mouse (ImGui::IsItemActive(),
-                    ImGui::IsMouseClicked (ImGuiMouseButton_Left),
-                    ImGui::IsMouseDragging (ImGuiMouseButton_Left, 0.f),
-                    ImGui::IsMouseReleased (ImGuiMouseButton_Left),
-                    cVec2 (ImGui::GetMousePos().x - (ImGui::GetIO().DisplaySize.x / 2.f),
-                           ImGui::GetMousePos().y - (ImGui::GetIO().DisplaySize.y / 2.f)),
-                    cVec2 (ImGui::GetMouseDragDelta (ImGuiMouseButton_Left).x,
-                           ImGui::GetMouseDragDelta (ImGuiMouseButton_Left).y));
-
-      if (!ImGui::IsItemActive()) {
-        // draw outline circle cursor
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        cBrush* brush = cBrush::getCurBrush();
-        draw_list->AddCircle (ImGui::GetMousePos(), brush->getRadius() + 1.f,
-                              ImGui::GetColorU32(IM_COL32(0,0,0,255)));
-        //{{{  possible filledCircle
-        //draw_list->AddCircleFilled (ImGui::GetMousePos(), brush->getRadius() + 1.f,
-          //ImGui::GetColorU32 (
-            //IM_COL32(brush->getColor().x * 255, brush->getColor().y * 255, brush->getColor().z * 255, 255)));
-        //}}}
-        }
-      }
-    else {
-      // possible swipe detection here
-      }
-
-    // draw canvas to screen window frameBuffer
-    canvas->draw (cPoint ((int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y));
-  #endif
-
-  ImGui::End();
-
-  // add registered UI instances to imGui drawList
   for (auto& ui : getInstanceRegister())
     ui.second->addToDrawList (canvas, graphics, platform, monoFont);
-  }
-//}}}
-//{{{
-void cUI::drawSimple (cGraphics& graphics, cPlatform& platform, ImFont* monoFont) {
-
-  for (auto& ui : getInstanceRegister())
-    ui.second->addToDrawList (nullptr, graphics, platform, monoFont);
   }
 //}}}
 

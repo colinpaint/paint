@@ -8,11 +8,11 @@
 #include <streambuf>
 
 // imgui
-#include <imgui.h>
-#include <cTextEditor.h>
+#include "../imgui/imgui.h"
+#include "../imgui/cTextEditor.h"
 
 // ui
-#include "cUI.h"
+#include "../ui/cUI.h"
 
 // canvas
 #include "../canvas/cCanvas.h"
@@ -101,8 +101,13 @@ public:
       }
       //}}}
 
-    ImGui::Begin ("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
-    ImGui::SetWindowSize (ImVec2(800, 600), ImGuiCond_FirstUseEver);
+    // full screen window
+    ImGui::SetNextWindowPos (ImVec2(0,0));
+    ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
+
+    ImGui::Begin ("Text Editor Demo", nullptr, 
+                  ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar|
+                  ImGuiWindowFlags_NoMove);
 
     if (ImGui::BeginMenuBar()) {
       //{{{  menu bar
