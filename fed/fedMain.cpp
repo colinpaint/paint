@@ -71,7 +71,16 @@ int main (int numArgs, char* args[]) {
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
   ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
-  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f);
+
+
+  cApp app (platform, graphics);
+  #ifdef _WIN32
+    app.setName (params.empty() ? "../imgui/cTextEditor.cpp" : params[0]);
+  #else
+    app.setName (params.empty() ?"/home/pi/paint/imgui/cTextEditor.cpp" : params[0]);
+  #endif
+
+  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 
   platform.setResizeCallback (
     //{{{  resize lambda
@@ -80,7 +89,7 @@ int main (int numArgs, char* args[]) {
       graphics.windowResize (width, height);
       graphics.newFrame();
       if (showDemoWindow)
-        cUI::draw (nullptr, graphics, platform, monoFont);
+        cUI::draw (&app);
       ImGui::ShowDemoWindow (&showDemoWindow);
       graphics.drawUI (platform.getWindowSize());
       platform.present();
@@ -98,13 +107,11 @@ int main (int numArgs, char* args[]) {
     );
     //}}}
 
-  string defaultFile = "../imgui/cTextEditor.cpp";
-
   // main UI loop
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
-    cUI::draw (params.empty() ? nullptr : (void*)(params[0].c_str()), graphics, platform, monoFont);
+    cUI::draw (&app);
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
     graphics.drawUI (platform.getWindowSize());

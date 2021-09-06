@@ -31,12 +31,7 @@ public:
   cCanvasUI (const string& name) : cUI(name) {}
   virtual ~cCanvasUI() = default;
 
-  void addToDrawList (void* app, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
-    //{{{  unused params
-    (void)graphics;
-    (void)platform;
-    (void)monoFont;
-    //}}}
+  void addToDrawList (cApp* app) final {
     cCanvas* canvas = (cCanvas*)app;
 
     // set dummy background window to full display size

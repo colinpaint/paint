@@ -79,12 +79,13 @@ int main (int numArgs, char* args[]) {
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
   ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
-  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f);
 
   // should clear main screen here before file loads
 
   // create canvas
-  cCanvas canvas (params.empty() ? "../piccies/tv.jpg" : params[0], graphics);
+  cCanvas canvas (platform, graphics, params.empty() ? "../piccies/tv.jpg" : params[0]);
+  canvas.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(&droidSansMono, droidSansMonoSize, 16.f));
+
   if (params.size() > 1)
     canvas.newLayer (params[1]);
 
@@ -95,7 +96,7 @@ int main (int numArgs, char* args[]) {
       graphics.windowResize (width, height);
       graphics.newFrame();
       if (showDemoWindow)
-        cUI::draw (&canvas, graphics, platform, monoFont);
+        cUI::draw (&canvas);
       ImGui::ShowDemoWindow (&showDemoWindow);
       graphics.drawUI (platform.getWindowSize());
       platform.present();
@@ -118,7 +119,7 @@ int main (int numArgs, char* args[]) {
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
-    cUI::draw (&canvas, graphics, platform, monoFont);
+    cUI::draw (&canvas);
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
     if (showPlotWindow) {

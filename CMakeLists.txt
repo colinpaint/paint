@@ -52,7 +52,7 @@ project (song)
   file (GLOB SONG_HEADER_FILES song/*.h)
   file (GLOB SONG_SOURCE_FILES song/*.cpp)
   add_library (song ${SONG_HEADER_FILES} ${SONG_SOURCE_FILES})
-  target_link_libraries (song PUBLIC utils)
+  target_link_libraries (song PUBLIC utils decoder)
 
 project (net)
   file (GLOB NET_HEADER_FILES net/*.h)
@@ -113,12 +113,14 @@ project (fed VERSION 1.0.0)
   # ui/cTextAnalyseUI.cpp
   # ui/cJpegAnalyseUI.cpp
   add_executable (fed ${FED_SOURCE_FILES} ${FED_HEADER_FILES})
-  target_include_directories (fed PUBLIC imgui stb)
+  target_include_directories (fed PRIVATE imgui stb)
+
+  target_link_libraries (fed PRIVATE imgui utils glfw glad)
   if (MSVC)
-    target_link_libraries (fed PUBLIC imgui utils glfw glad opengl32 d3d11 d3dcompiler ws2_32)
+    target_link_libraries (fed PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
   else()
-    target_link_libraries (fed PUBLIC imgui utils glfw glad GL)
-    target_link_options (paintbox PUBLIC -no-pie)
+    target_link_libraries (fed PRIVATE GL)
+    target_link_options (fed PRIVATE -no-pie)
   endif()
 
 ### paintbox main project
@@ -128,11 +130,11 @@ project (paintbox VERSION 1.0.0)
   # executable - main + static registered .cpp
   file (GLOB HEADER_FILES platform/*.h graphics/*.h brush/*.h ui/*.h)
   file (GLOB SOURCE_FILES paintMain.cpp platform/*.cpp graphics/*.cpp brush/*.cpp ui/cUI.cpp
-                          ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cUILayersUI.cpp ui/cRadioUI.cpp)
+                          ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp ui/cRadioUI.cpp)
   add_executable (paintbox ${SOURCE_FILES} ${HEADER_FILES})
 
-  target_compile_definitions (paintbox PUBLIC OPENGL_VERSION)
-  target_include_directories (paintbox PUBLIC glfw/include stb)
+  target_compile_definitions (paintbox PRIVATE OPENGL_VERSION)
+  target_include_directories (paintbox PRIVATE glfw/include stb)
 
   if (OPENGL_VERSION STREQUAL "OPENGL_21")
     add_subdirectory (glad2.1+fbo+vao)
@@ -140,16 +142,16 @@ project (paintbox VERSION 1.0.0)
     add_subdirectory (glad4.5core)
   endif()
 
-  target_link_libraries (paintbox PUBLIC canvas imgui utils glfw glad)
+  target_link_libraries (paintbox PRIVATE canvas imgui utils glfw glad)
 
   if (USE_IMPLOT)
-    target_compile_definitions (paintbox PUBLIC USE_IMPLOT)
-    target_link_libraries (paintbox PUBLIC implot)
+    target_compile_definitions (paintbox PRIVATE USE_IMPLOT)
+    target_link_libraries (paintbox PRIVATE implot)
   endif()
 
   if (MSVC)
-    target_link_libraries (paintbox PUBLIC song audio decoder dvb kiss net opengl32 d3d11 d3dcompiler ws2_32)
+    target_link_libraries (paintbox PRIVATE song audio decoder dvb kiss net opengl32 d3d11 d3dcompiler ws2_32)
   else()
-    target_link_libraries (paintbox PUBLIC song audio decoder dvb kiss net pthread asound GL)
-    target_link_options (paintbox PUBLIC -no-pie)
+    target_link_libraries (paintbox PRIVATE song audio decoder dvb kiss net pthread asound GL)
+    target_link_options (paintbox PRIVATE -no-pie)
   endif()

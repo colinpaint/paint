@@ -21,7 +21,8 @@ using namespace std;
 //}}}
 
 //{{{
-cCanvas::cCanvas (cPoint size, cGraphics& graphics) : mSize(size), mNumChannels(4), mGraphics(graphics) {
+cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, cPoint size)
+   : cApp (platform, graphics), mSize(size), mNumChannels(4) {
 
   // create empty layer
   mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, graphics));
@@ -29,7 +30,10 @@ cCanvas::cCanvas (cPoint size, cGraphics& graphics) : mSize(size), mNumChannels(
   }
 //}}}
 //{{{
-cCanvas::cCanvas (const string& fileName, cGraphics& graphics) : mName(fileName), mGraphics(graphics) {
+cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, const string& fileName)
+    : cApp (platform, graphics) {
+
+  setName (fileName);
 
   // load file image
   uint8_t* pixels = stbi_load (fileName.c_str(), &mSize.x, &mSize.y, &mNumChannels, 4);

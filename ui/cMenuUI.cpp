@@ -33,9 +33,8 @@ public:
   //}}}
   virtual ~cMenuUI() = default;
 
-  void addToDrawList (void* app, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+  void addToDrawList (cApp* app) final {
 
-    (void)monoFont;
     cCanvas* canvas = (cCanvas*)app;
 
     // coerce window to bottom fullWidth, kMenuHeight
@@ -66,7 +65,7 @@ public:
         for (auto& item : cBrush::getClassRegister())
           if (ImGui::Selectable (fmt::format (item.first.c_str(), item.first).c_str(),
                                  cBrush::isCurBrushByName (item.first), 0, kSubButtonSize))
-            cBrush::setCurBrushByName (graphics, item.first, brush->getRadius());
+            cBrush::setCurBrushByName (canvas->getGraphics(), item.first, brush->getRadius());
 
         // radius
         float radius = brush->getRadius();
@@ -139,7 +138,7 @@ public:
 
         ImGui::SameLine();
         ImGui::BeginGroup();
-        clockButton ("clock", platform.now(), {110.f,150.f});
+        clockButton ("clock", app->getPlatform().now(), {110.f,150.f});
         ImGui::EndGroup();
         break;
         }

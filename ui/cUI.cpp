@@ -58,11 +58,11 @@ void cUI::listInstances() {
 
 // static draw
 //{{{
-void cUI::draw (void* app, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) {
+void cUI::draw (cApp* app) {
 // draw registered UI instances
 
   for (auto& ui : getInstanceRegister())
-    ui.second->addToDrawList (app, graphics, platform, monoFont);
+    ui.second->addToDrawList (app);
   }
 //}}}
 

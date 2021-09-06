@@ -2726,6 +2726,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
      mDrawList->AddText (mTextPos, mPalette[(size_t)ePalette::FoldBeginClosed], prefixString.c_str());
      mTextPos.x += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, prefixString.c_str(), nullptr, nullptr).x;
 
+     // use the best line for closed beginFold text
      renderText (mLines[beginFoldLineNumber].mGlyphs, true, mPalette[(size_t)ePalette::FoldBeginClosed]);
      }
      //}}}

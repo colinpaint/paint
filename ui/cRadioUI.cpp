@@ -43,12 +43,7 @@ public:
   cRadioUI (const std::string& name) : cUI(name) {}
   virtual ~cRadioUI() = default;
 
-  void addToDrawList (void* app, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
-
-    (void)app;
-    (void)graphics;
-    (void)platform;
-    (void)monoFont;
+  void addToDrawList (cApp* app) final {
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     if (ImGui::Button ("radio1"))

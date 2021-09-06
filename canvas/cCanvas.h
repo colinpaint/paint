@@ -5,16 +5,19 @@
 #include <string>
 #include <vector>
 
+#include "../utils/cApp.h"
 #include "../graphics/cGraphics.h"
+
+class cPlatform;
 class cLayer;
 class cBrush;
 //}}}
 
-class cCanvas {
+class cCanvas : public cApp {
 public:
-  cCanvas (cPoint size, cGraphics& graphics);
-  cCanvas (const std::string& fileName, cGraphics& graphics);
-  ~cCanvas();
+  cCanvas (cPlatform& platform, cGraphics& graphics, cPoint size);
+  cCanvas (cPlatform& platform, cGraphics& graphics, const std::string& fileName);
+  virtual ~cCanvas();
 
   // gets
   std::string getName() { return mName; }
@@ -55,7 +58,6 @@ private:
 
   cPoint mSize;
   int mNumChannels = 0;
-  cGraphics& mGraphics;
 
   unsigned mCurLayerIndex = 0;
   std::vector<cLayer*> mLayers;
