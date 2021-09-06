@@ -2529,6 +2529,7 @@ void cTextEditor::preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex) {
 
   mFont = ImGui::GetFont();
   mFontSize = ImGui::GetFontSize();
+  mFontHalfSize = mFontSize/2.f;
   mDrawList = ImGui::GetWindowDrawList();
   mCursorScreenPos = ImGui::GetCursorScreenPos();
   mFocused = ImGui::IsWindowFocused();
@@ -2580,7 +2581,7 @@ void cTextEditor::preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex) {
   }
 //}}}
 //{{{
-void cTextEditor::renderText (vector <sGlyph>& glyphs, bool forcePrefixColor, ImU32 prefixColor) {
+void cTextEditor::renderText (const vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor) {
 
   // c style str buffer, null terminated
   char str[256];
@@ -2594,7 +2595,7 @@ void cTextEditor::renderText (vector <sGlyph>& glyphs, bool forcePrefixColor, Im
     if (((nextColor != color) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && (strPtr != str)) {
       // draw colored glyphs word
       *strPtr = 0;
-      mDrawList->AddText (mTextPos, forcePrefixColor ? prefixColor : color, str);
+      mDrawList->AddText (mTextPos, forceColor ? forcedColor : color, str);
       mTextPos.x += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, str, nullptr, nullptr).x;
       strPtr = str;
 
@@ -2605,8 +2606,8 @@ void cTextEditor::renderText (vector <sGlyph>& glyphs, bool forcePrefixColor, Im
       mTextPos.x = (1.0f + floor ((1.0f + mTextPos.x) / (mTabSize * mCharSize.x))) * (mTabSize * mCharSize.x);
       if (mShowWhiteSpace) {
         // ad tab and draw whiteSpace arrow
-        const ImVec2 pos1 = mTextPos + ImVec2 (1.0f, mFontSize * 0.5f);
-        const ImVec2 pos2 = mTextPos + ImVec2 (-1.0f, mFontSize * 0.5f);
+        const ImVec2 pos1 = mTextPos + ImVec2 (1.0f, mFontHalfSize);
+        const ImVec2 pos2 = mTextPos + ImVec2 (-1.0f, mFontHalfSize);
         mDrawList->AddLine (pos1, pos2, mPalette[(size_t)ePalette::Tab]);
         mDrawList->AddLine (pos2, pos2 + ImVec2 (mFontSize * -0.2f, mFontSize * -0.2f), mPalette[(size_t)ePalette::Tab]);
         mDrawList->AddLine (pos2, pos2 + ImVec2 (mFontSize * -0.2f, mFontSize * 0.2f), mPalette[(size_t)ePalette::Tab]);
@@ -2615,8 +2616,8 @@ void cTextEditor::renderText (vector <sGlyph>& glyphs, bool forcePrefixColor, Im
     else if (glyph.mChar == ' ') {
       if (mShowWhiteSpace)
         //  add space and draw whiteSpace circle
-        mDrawList->AddCircleFilled (mTextPos + ImVec2(mCharSize.x * 0.5f, mFontSize * 0.5f), 2.f,
-                                    mPalette[(size_t)ePalette::WhiteSpace], 4);
+        mDrawList->AddCircleFilled (mTextPos + ImVec2(mCharSize.x/2.f, mFontHalfSize),
+                                    2.f, mPalette[(size_t)ePalette::WhiteSpace], 4);
       mTextPos.x += mCharSize.x;
       }
     else {
@@ -2630,7 +2631,7 @@ void cTextEditor::renderText (vector <sGlyph>& glyphs, bool forcePrefixColor, Im
   if (strPtr != str) {
     // draw remaining glyphs
     *strPtr = 0;
-    mDrawList->AddText (mTextPos, forcePrefixColor ? prefixColor : color, str);
+    mDrawList->AddText (mTextPos, forceColor ? forcedColor : color, str);
     }
   }
 //}}}

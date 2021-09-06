@@ -410,7 +410,7 @@ private:
   void handleKeyboardInputs();
 
   void preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex);
-  void renderText (std::vector <sGlyph>& glyphs, bool forcePrefix, ImU32 prefixColor);
+  void renderText (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
   void renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber);
   void renderFold (std::vector<sLine>::iterator& it, uint32_t& lineNumber, uint32_t& lineIndex,
                    uint32_t minLineIndex, uint32_t maxLineIndex, bool parentOpen, bool foldOpen);
@@ -471,6 +471,7 @@ private:
   //{{{  render context vars
   ImFont* mFont = nullptr;
   float mFontSize = 0.f;
+  float mFontHalfSize = 0.f;
   ImDrawList* mDrawList = nullptr;
   ImVec2 mCursorScreenPos;
   bool mFocused = false;
