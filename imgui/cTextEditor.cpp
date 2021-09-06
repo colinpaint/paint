@@ -2345,14 +2345,14 @@ void cTextEditor::handleMouseInputs() {
 
   if (ImGui::IsWindowHovered()) {
     if (!shift && !alt) {
-      bool singleClick = ImGui::IsMouseClicked (0);
-      bool doubleClick = ImGui::IsMouseDoubleClicked (0);
-      bool tripleClick = singleClick &&
-                         !doubleClick &&
-                         ((mLastClick != -1.0f) && (ImGui::GetTime() - mLastClick) < io.MouseDoubleClickTime);
-
-      // Left mouse tripleClick
-      if (tripleClick) {
+      bool leftSingleClick = ImGui::IsMouseClicked (0);
+      bool righttSingleClick = ImGui::IsMouseClicked (1);
+      bool leftDoubleClick = ImGui::IsMouseDoubleClicked (0);
+      bool leftTripleClick = leftSingleClick &&
+                             !leftDoubleClick &&
+                             ((mLastClick != -1.0f) && (ImGui::GetTime() - mLastClick) < io.MouseDoubleClickTime);
+      if (leftTripleClick) {
+        //{{{  left mouse tripleClick
         if (!ctrl) {
           mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenToPosition (ImGui::GetMousePos());
           mSelection = eSelection::Line;
@@ -2360,9 +2360,9 @@ void cTextEditor::handleMouseInputs() {
           }
         mLastClick = -1.0f;
         }
-
-      // left mouse doubleClick
-      else if (doubleClick) {
+        //}}}
+      else if (leftDoubleClick) {
+        //{{{  left mouse doubleClick
         if (!ctrl) {
           mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenToPosition(ImGui::GetMousePos());
           if (mSelection == eSelection::Line)
@@ -2371,16 +2371,11 @@ void cTextEditor::handleMouseInputs() {
             mSelection = eSelection::Word;
           setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
           }
-        else {
-          if (mLines[mState.mCursorPosition.mLineNumber].mFoldBegin)
-            mLines[mState.mCursorPosition.mLineNumber].mFoldOpen ^= true;
-          }
-
         mLastClick = static_cast<float>(ImGui::GetTime());
         }
-
-      // left mouse sinngleClick
-      else if (singleClick) {
+        //}}}
+      else if (leftSingleClick) {
+        //{{{  left mouse sinngleClick
         mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
         mInteractiveStart = mState.mCursorPosition;
         mInteractiveEnd = mState.mCursorPosition;
@@ -2392,14 +2387,33 @@ void cTextEditor::handleMouseInputs() {
         setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
         mLastClick = static_cast<float>(ImGui::GetTime());
         }
-
-      // left mouse button dragging (=> update selection)
+        //}}}
       else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
+        //{{{  left mouse button dragging (=> update selection)
         io.WantCaptureMouse = true;
         mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
         mInteractiveEnd = mState.mCursorPosition;
         setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
         }
+        //}}}
+
+      if (righttSingleClick) {
+        //{{{  right mouse right singleClick
+        if (mShowFolded) {
+          // test cursor position
+          sPosition position = screenToPosition (ImGui::GetMousePos());
+          if (mLines[position.mLineNumber].mFoldBegin) {
+            // set cursor position
+            mState.mCursorPosition = position;
+            mInteractiveStart = position;
+            mInteractiveEnd = position;
+
+            // open fold
+            mLines[position.mLineNumber].mFoldOpen ^= true;
+            }
+          }
+        };
+        //}}}
       }
     }
   }
