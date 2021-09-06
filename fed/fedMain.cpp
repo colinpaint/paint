@@ -75,11 +75,10 @@ int main (int numArgs, char* args[]) {
 
   cApp app (platform, graphics);
   #ifdef _WIN32
-    app.setName (params.empty() ? "../imgui/cTextEditor.cpp" : params[0]);
+    app.setName (params.empty() ? "C:/projects/paint/imgui/cTextEditor.cpp" : params[0]);
   #else
     app.setName (params.empty() ?"/home/pi/paint/imgui/cTextEditor.cpp" : params[0]);
   #endif
-
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 
   platform.setResizeCallback (
