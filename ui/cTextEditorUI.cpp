@@ -12,7 +12,7 @@
 #include "../imgui/cTextEditor.h"
 
 // ui
-#include "../ui/cUI.h"
+#include "cUI.h"
 
 // canvas
 #include "../canvas/cCanvas.h"
