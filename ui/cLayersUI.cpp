@@ -25,10 +25,14 @@ public:
   cLayersUI (const std::string& name) : cUI(name) {}
   virtual ~cLayersUI() = default;
 
-  void addToDrawList (cCanvas* canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+  void addToDrawList (void* app, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+
     (void)graphics;
     (void)platform;
     (void)monoFont;
+
+    cCanvas* canvas = (cCanvas*)app;
+
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     ImGui::SetWindowPos (ImVec2(ImGui::GetIO().DisplaySize.x - ImGui::GetWindowWidth(), 0.f));
 

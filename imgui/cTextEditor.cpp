@@ -49,7 +49,7 @@ namespace {
   //{{{  const
   //{{{
   const array <ImU32, (size_t)cTextEditor::ePalette::Max> kLightPalette = {
-    0xff7f7f7f, // None
+    0xff606060, // None
     0xffff0c06, // Keyword
     0xff008000, // Number
     0xff2020a0, // String

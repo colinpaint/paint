@@ -98,11 +98,13 @@ int main (int numArgs, char* args[]) {
     );
     //}}}
 
+  string defaultFile = "../imgui/cTextEditor.cpp";
+
   // main UI loop
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
-    cUI::draw (nullptr, graphics, platform, monoFont);
+    cUI::draw (params.empty() ? nullptr : (void*)(params[0].c_str()), graphics, platform, monoFont);
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
     graphics.drawUI (platform.getWindowSize());

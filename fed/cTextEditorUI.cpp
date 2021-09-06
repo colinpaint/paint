@@ -58,9 +58,9 @@ public:
     }
   //}}}
 
-  void addToDrawList (cCanvas* canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+  void addToDrawList (void* app, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
     //{{{  unused params
-    (void)canvas;
+    (void)app;
     (void)graphics;
     (void)platform;
     //}}}
@@ -71,9 +71,9 @@ public:
 
       // set file
       #ifdef _WIN32
-        ifstream fileStream ("C:/projects/paint/imgui/cTextEditor.cpp");
+        ifstream fileStream (app ? (const char*)app : "C:/projects/paint/imgui/cTextEditor.cpp");
       #else
-        ifstream fileStream ("/home/pi/paint/imgui/cTextEditor.cpp");
+        ifstream fileStream (app ? (const char*)app : "/home/pi/paint/imgui/cTextEditor.cpp");
       #endif
 
       string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
@@ -105,7 +105,7 @@ public:
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
-    ImGui::Begin ("Text Editor Demo", nullptr, 
+    ImGui::Begin ("Text Editor Demo", nullptr,
                   ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar|
                   ImGuiWindowFlags_NoMove);
 

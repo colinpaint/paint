@@ -43,9 +43,9 @@ public:
   cRadioUI (const std::string& name) : cUI(name) {}
   virtual ~cRadioUI() = default;
 
-  void addToDrawList (cCanvas* canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+  void addToDrawList (void* app, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
 
-    (void)canvas;
+    (void)app;
     (void)graphics;
     (void)platform;
     (void)monoFont;

@@ -33,8 +33,10 @@ public:
   //}}}
   virtual ~cMenuUI() = default;
 
-  void addToDrawList (cCanvas* canvas, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+  void addToDrawList (void* app, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+
     (void)monoFont;
+    cCanvas* canvas = (cCanvas*)app;
 
     // coerce window to bottom fullWidth, kMenuHeight
     ImGui::SetNextWindowPos ({0.f, ImGui::GetIO().DisplaySize.y - kMenuHeight});
