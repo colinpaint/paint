@@ -14,10 +14,11 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 
-#include "../utils/cLog.h"
 #include "../graphics/cGraphics.h"
 #include "../brush/cBrush.h"
 #include "../canvas/cCanvas.h"
+
+#include "../utils/cLog.h"
 
 using namespace std;
 //}}}
@@ -232,9 +233,9 @@ void cUI::printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uin
       }
 
     if (full)
-      ImGui::Text ((hexString + " " + asciiString).c_str());
+      ImGui::Text ("%s %s", hexString.c_str(), asciiString.c_str());
     else
-      ImGui::Text (hexString.c_str());
+      ImGui::Text ("%s", hexString.c_str());
 
     address += columnsPerRow;
     }

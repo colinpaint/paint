@@ -45,6 +45,9 @@ public:
 
   void addToDrawList (cApp* app) final {
 
+    //{{{  unused param
+    (void)app;
+    //}}}
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     if (ImGui::Button ("radio1"))
       mSongLoader.launchLoad (kRadio1);
