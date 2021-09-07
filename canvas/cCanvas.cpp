@@ -74,7 +74,7 @@ uint8_t* cCanvas::getPixels (cPoint& size) {
 // layers
 //{{{
 unsigned cCanvas::newLayer() {
-  mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, mGraphics));
+  mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, getGraphics()));
   return static_cast<unsigned>(mLayers.size() - 1);
   }
 //}}}
@@ -88,7 +88,7 @@ unsigned cCanvas::newLayer (const string& fileName) {
   cLog::log (LOGINFO, fmt::format ("new layer {} {},{} {}", fileName, size.x, size.y, numChannels));
 
   // new layer, transfer ownership of pixels to texture
-  mLayers.push_back (new cLayer (pixels, size, cFrameBuffer::eRGBA, mGraphics));
+  mLayers.push_back (new cLayer (pixels, size, cFrameBuffer::eRGBA, getGraphics()));
   return static_cast<unsigned>(mLayers.size() - 1);
 }
 //}}}
@@ -179,19 +179,19 @@ void cCanvas::draw (cPoint windowSize) {
 void cCanvas::createResources() {
 
   // create quad
-  mQuad = mGraphics.createQuad (mSize);
+  mQuad = getGraphics().createQuad (mSize);
 
   // create canvasShader
-  mShader = mGraphics.createCanvasShader();
+  mShader = getGraphics().createCanvasShader();
 
   // create target
-  mFrameBuffer = mGraphics.createFrameBuffer (nullptr, mSize, cFrameBuffer::eRGBA);
+  mFrameBuffer = getGraphics().createFrameBuffer (nullptr, mSize, cFrameBuffer::eRGBA);
 
   // create window
-  mWindowFrameBuffer = mGraphics.createFrameBuffer();
+  mWindowFrameBuffer = getGraphics().createFrameBuffer();
 
   // select brush
-  cBrush::setCurBrushByName (mGraphics, "paintGpu", 20.f);
+  cBrush::setCurBrushByName (getGraphics(), "paintGpu", 20.f);
   }
 //}}}
 //{{{

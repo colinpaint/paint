@@ -40,7 +40,7 @@ public:
     }
   //}}}
 
-  void addToDrawList (void* app, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
+  void addToDrawList (void& app, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
     //{{{  unused params
     (void)graphics;
     (void)platform;

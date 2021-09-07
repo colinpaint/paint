@@ -58,14 +58,14 @@ public:
     }
   //}}}
 
-  void addToDrawList (cApp* app) final {
+  void addToDrawList (cApp& app) final {
 
     if (!mTextLoaded) {
       //{{{  init mTextEditor
       mTextLoaded = true;
 
       // set file
-      ifstream fileStream (app->getName());
+      ifstream fileStream (app.getName());
 
       string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
       mTextEditor.setTextString (str);
@@ -177,7 +177,7 @@ public:
                  mTextEditor.isShowWhiteSpace() ? " whiteSpace" : "",
                  mTextEditor.isShowLineNumbers() ? " lineNumbers" : ""
                  );
-    ImGui::PushFont (app->getMonoFont());
+    ImGui::PushFont (app.getMonoFont());
 
     mTextEditor.render ("cTextEditor");
     ImGui::PopFont();

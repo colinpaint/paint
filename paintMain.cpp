@@ -98,7 +98,7 @@ int main (int numArgs, char* args[]) {
       graphics.windowResize (width, height);
       graphics.newFrame();
       if (showDemoWindow)
-        cUI::draw (&canvas);
+        cUI::draw (canvas);
       ImGui::ShowDemoWindow (&showDemoWindow);
       graphics.drawUI (platform.getWindowSize());
       platform.present();
@@ -121,7 +121,7 @@ int main (int numArgs, char* args[]) {
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
-    cUI::draw (&canvas);
+    cUI::draw (canvas);
     if (showDemoWindow)
       ImGui::ShowDemoWindow (&showDemoWindow);
     if (showPlotWindow) {

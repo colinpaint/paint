@@ -59,7 +59,7 @@ void cUI::listInstances() {
 
 // static draw
 //{{{
-void cUI::draw (cApp* app) {
+void cUI::draw (cApp& app) {
 // draw registered UI instances
 
   for (auto& ui : getInstanceRegister())

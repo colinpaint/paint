@@ -20,7 +20,6 @@ public:
   virtual ~cCanvas();
 
   // gets
-  std::string getName() { return mName; }
   cPoint getSize() { return mSize; }
 
   size_t getNumLayers() { return mLayers.size(); }
@@ -33,9 +32,6 @@ public:
   cLayer* getCurLayer() { return getLayer (mCurLayerIndex); }
 
   uint8_t* getPixels (cPoint& size);
-
-  // set
-  void setName (const std::string name) { mName = name; }
 
   // layers
   unsigned newLayer();
@@ -52,9 +48,6 @@ public:
 private:
   void createResources();
   cVec2 getLayerPos (cVec2 pos);
-
-  // vars
-  std::string mName;
 
   cPoint mSize;
   int mNumChannels = 0;

@@ -30,7 +30,7 @@ public:
   static void listInstances();
 
   // static draw
-  static void draw (cApp* app);
+  static void draw (cApp& app);
 
   // base class
   cUI (const std::string& name) : mName(name) {}
@@ -38,7 +38,7 @@ public:
 
   std::string getName() const { return mName; }
 
-  virtual void addToDrawList (cApp* app) = 0;
+  virtual void addToDrawList (cApp& app) = 0;
 
 protected:
   bool clockButton (const std::string& label, std::chrono::system_clock::time_point timePoint, const ImVec2& size_arg);

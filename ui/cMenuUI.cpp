@@ -33,9 +33,9 @@ public:
   //}}}
   virtual ~cMenuUI() = default;
 
-  void addToDrawList (cApp* app) final {
+  void addToDrawList (cApp& app) final {
 
-    cCanvas* canvas = (cCanvas*)app;
+    cCanvas& canvas = dynamic_cast<cCanvas&>(app);
 
     // coerce window to bottom fullWidth, kMenuHeight
     ImGui::SetNextWindowPos ({0.f, ImGui::GetIO().DisplaySize.y - kMenuHeight});
@@ -65,7 +65,7 @@ public:
         for (auto& item : cBrush::getClassRegister())
           if (ImGui::Selectable (fmt::format (item.first.c_str(), item.first).c_str(),
                                  cBrush::isCurBrushByName (item.first), 0, kSubButtonSize))
-            cBrush::setCurBrushByName (canvas->getGraphics(), item.first, brush->getRadius());
+            cBrush::setCurBrushByName (canvas.getGraphics(), item.first, brush->getRadius());
 
         // radius
         float radius = brush->getRadius();
@@ -138,7 +138,7 @@ public:
 
         ImGui::SameLine();
         ImGui::BeginGroup();
-        clockButton ("clock", app->getPlatform().now(), {110.f,150.f});
+        clockButton ("clock", app.getPlatform().now(), {110.f,150.f});
         ImGui::EndGroup();
         break;
         }
@@ -157,21 +157,21 @@ public:
         ImGui::SameLine();
         ImGui::BeginGroup();
 
-        float hue = canvas->getCurLayer()->getHue();
-        float sat = canvas->getCurLayer()->getSat();
-        float val = canvas->getCurLayer()->getVal();
+        float hue = canvas.getCurLayer()->getHue();
+        float sat = canvas.getCurLayer()->getSat();
+        float val = canvas.getCurLayer()->getVal();
 
         ImGui::SetNextItemWidth (kSubButtonSize.x);
         if (ImGui::SliderFloat ("hue", &hue, -1.0f, 1.0f))
-          canvas->getCurLayer()->setHueSatVal (hue, sat, val);
+          canvas.getCurLayer()->setHueSatVal (hue, sat, val);
 
         ImGui::SetNextItemWidth (kSubButtonSize.x);
         if (ImGui::SliderFloat ("sat", &sat, -1.0f, 1.0f))
-          canvas->getCurLayer()->setHueSatVal (hue, sat, val);
+          canvas.getCurLayer()->setHueSatVal (hue, sat, val);
 
         ImGui::SetNextItemWidth (kSubButtonSize.x);
         if (ImGui::SliderFloat ("val", &val, -1.0f, 1.0f))
-          canvas->getCurLayer()->setHueSatVal (hue, sat, val);
+          canvas.getCurLayer()->setHueSatVal (hue, sat, val);
 
         ImGui::EndGroup();
 
@@ -195,7 +195,7 @@ public:
           char const* fileName = tinyfd_saveFileDialog ("save file", "", 1, filters, "image files");
           if (fileName) {
             cPoint size;
-            uint8_t* pixels = canvas->getPixels (size);
+            uint8_t* pixels = canvas.getPixels (size);
             stbi_write_png (fileName, size.x, size.y, 4, pixels, size.x* 4);
             free (pixels);
             }

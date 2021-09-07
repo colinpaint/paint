@@ -43,7 +43,7 @@ public:
   cRadioUI (const std::string& name) : cUI(name) {}
   virtual ~cRadioUI() = default;
 
-  void addToDrawList (cApp* app) final {
+  void addToDrawList (cApp& app) final {
 
     //{{{  unused param
     (void)app;
