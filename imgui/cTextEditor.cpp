@@ -484,10 +484,10 @@ namespace {
 // cTextEditor
 //{{{
 cTextEditor::cTextEditor()
-  : mTabSize(4),
+  : mHasTabs(false), mTabSize(4), mHasFolds(false), mHasCR(false),
     mTextChanged(false), mCursorPositionChanged(false),
     mOverwrite(false) , mReadOnly(false), mIgnoreImGuiChild(false), mCheckComments(true),
-    mShowFolded(true), mShowLineNumbers(false), mShowLineDebug(false), mShowWhiteSpace(false),
+    mShowFolds(false), mShowLineNumbers(false), mShowLineDebug(false), mShowWhiteSpace(false),
 
     mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
     mUndoIndex(0),
@@ -504,6 +504,14 @@ cTextEditor::cTextEditor()
   }
 //}}}
 //{{{  gets
+//{{{
+bool cTextEditor::hasClipboardText() {
+
+  const char* clipText = ImGui::GetClipboardText();
+  return (clipText != nullptr) && (strlen (clipText) > 0);
+  }
+//}}}
+
 //{{{
 string cTextEditor::getTextString() const {
 // get text as single string
@@ -545,8 +553,11 @@ void cTextEditor::setTextString (const string& text) {
       mHasCR = true;
     else if (ch == '\n')
       mLines.emplace_back (vector<sGlyph>());
-    else
+    else {
+      if (ch ==  '\t')
+        mHasTabs = true;
       mLines.back().mGlyphs.emplace_back (sGlyph (ch, ePalette::Default));
+      }
     }
 
   mTextChanged = true;
@@ -573,8 +584,11 @@ void cTextEditor::setTextStrings (const vector<string>& lines) {
     for (size_t i = 0; i < lines.size(); ++i) {
       const string& line = lines[i];
       mLines[i].mGlyphs.reserve (line.size());
-      for (size_t j = 0; j < line.size(); ++j)
+      for (size_t j = 0; j < line.size(); ++j) {
+        if (line[j] ==  '\t')
+          mHasTabs = true;
         mLines[i].mGlyphs.emplace_back (sGlyph (line[j], ePalette::Default));
+        }
       }
     }
 
@@ -847,8 +861,7 @@ void cTextEditor::paste() {
   if (isReadOnly())
     return;
 
-  const char* clipText = ImGui::GetClipboardText();
-  if (clipText != nullptr && strlen (clipText) > 0) {
+  if (hasClipboardText()) {
     sUndoRecord undo;
     undo.mBefore = mState;
     if (hasSelect()) {
@@ -858,6 +871,7 @@ void cTextEditor::paste() {
       deleteSelection();
       }
 
+    const char* clipText = ImGui::GetClipboardText();
     undo.mAdded = clipText;
     undo.mAddedStart = getCursorPosition();
 
@@ -1216,7 +1230,7 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
   preRender (minLineIndex, maxLineIndex);
 
   mVisibleLines.clear();
-  if (mShowFolded) {
+  if (mShowFolds) {
     //{{{  iterate lines, create mVisibleLines, clip renderLine to minLineIndex,maxLineIndex
     vector<sLine>::iterator it = mLines.begin();
     uint32_t lineNumber = 0;
@@ -1529,7 +1543,7 @@ cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
   int columnCoord = 0;
   int lineIndex = max (0, static_cast<int>(floor (local.y / mCharSize.y)));
 
-  int lineNumber = mShowFolded ? mVisibleLines[lineIndex] : lineIndex;
+  int lineNumber = mShowFolds ? mVisibleLines[lineIndex] : lineIndex;
   if ((lineNumber >= 0) && (lineNumber < (int)mLines.size())) {
     const vector<sGlyph>& glyphs = mLines[lineNumber].mGlyphs;
 
@@ -2315,6 +2329,7 @@ void cTextEditor::parseFolds() {
       line.mIndent = static_cast<uint16_t>(foldBeginIndent);
       // has text after the foldBeginMarker
       line.mHasComment = (text.size() != (foldBeginIndent + mLanguage.mFoldBeginMarker.size()));
+      mHasFolds = true;
       }
     else {
       // normal line, find indent, find comment
@@ -2337,6 +2352,8 @@ void cTextEditor::parseFolds() {
     line.mFoldLineNumber = 0;
     line.mFoldTitleLineNumber = 0xFFFFFFFF;
     }
+
+  mShowFolds = mHasFolds;
   }
 //}}}
 
@@ -2404,7 +2421,7 @@ void cTextEditor::handleMouseInputs() {
 
       if (righttSingleClick) {
         //{{{  right mouse right singleClick
-        if (mShowFolded) {
+        if (mShowFolds) {
           // test cursor position
           sPosition position = screenToPosition (ImGui::GetMousePos());
           if (mLines[position.mLineNumber].mFoldBegin) {
@@ -2473,7 +2490,7 @@ void cTextEditor::handleKeyboardInputs() {
      {false, true,  true,  ImGuiKey_End,        false, [this]{moveBottomSelect();}},
      // toggle mode
      {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverwrite();}},
-     {true,  false, false, ImGuiKey_Space,      false, [this]{toggleShowFolded();}},
+     {true,  false, false, ImGuiKey_Space,      false, [this]{toggleShowFolds();}},
      {true,  false, false, ImGuiKey_PageUp,     false, [this]{toggleShowLineNumbers();}},
      {true,  false, false, ImGuiKey_PageDown,   false, [this]{toggleShowLineDebug();}},
      {true,  false, false, ImGuiKey_Home,       false, [this]{toggleShowWhiteSpace();}},
@@ -2707,7 +2724,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
     //}}}
 
   vector<sGlyph>& glyphs = line.mGlyphs;
-  if (mShowFolded && line.mFoldBegin) {
+  if (mShowFolds && line.mFoldBegin) {
     if (line.mFoldOpen) {
      //{{{  draw foldOpen prefix + text
      mDrawList->AddText (mTextPos, mPalette[(size_t)ePalette::FoldBeginOpen], mLanguage.mFoldBeginOpen.c_str());
@@ -2731,7 +2748,7 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
      }
      //}}}
     }
-  else if (mShowFolded && line.mFoldEnd) {
+  else if (mShowFolds && line.mFoldEnd) {
     //{{{  draw foldEnd prefix, no text
     mDrawList->AddText (mTextPos, mPalette[(size_t)ePalette::FoldEnd], mLanguage.mFoldEnd.c_str());
     mTextPos.x += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.0f, mLanguage.mFoldEnd.c_str(), nullptr, nullptr).x;
@@ -2864,7 +2881,7 @@ void cTextEditor::postRender() {
     }
 
   // dummy button, sized to maximum width,height, sets scroll regions without drawing them
-  ImGui::Dummy ({mMaxWidth, (mShowFolded ? mVisibleLines.size() : mLines.size()) * mCharSize.y});
+  ImGui::Dummy ({mMaxWidth, (mShowFolds ? mVisibleLines.size() : mLines.size()) * mCharSize.y});
 
   if (mScrollToCursor) {
     // scroll to cursor

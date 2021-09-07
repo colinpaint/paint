@@ -95,41 +95,44 @@ public:
     // full screen window
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-
-    ImGui::Begin ("Text Editor Demo", nullptr, 
+    ImGui::Begin ("Text Editor Demo", nullptr,
                   ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove);
 
-    if (toggleButton ("folded", mTextEditor.isFolded()))
-      mTextEditor.toggleShowFolded();
-    ImGui::SameLine();
-    if (toggleButton ("lineNumbers", mTextEditor.isShowLineNumbers()))
+    //{{{  line button
+    if (toggleButton ("line", mTextEditor.isShowLineNumbers()))
       mTextEditor.toggleShowLineNumbers();
+    //}}}
+    if (mTextEditor.hasFolds()) {
+      //{{{  folded button
+      ImGui::SameLine();
+      if (toggleButton ("folded", mTextEditor.isShowFolds()))
+        mTextEditor.toggleShowFolds();
+      }
+      //}}}
+    //{{{  space button
     ImGui::SameLine();
-    if (toggleButton ("lineDebug", mTextEditor.isShowLineDebug()))
-      mTextEditor.toggleShowLineDebug();
-    ImGui::SameLine();
-    if (toggleButton ("whiteSpace", mTextEditor.isShowWhiteSpace()))
+    if (toggleButton ("space", mTextEditor.isShowWhiteSpace()))
       mTextEditor.toggleShowWhiteSpace();
+    //}}}
+    //{{{  readOnly button
     ImGui::SameLine();
     if (ImGui::Button (mTextEditor.isReadOnly() ? "readOnly" : "writable"))
       mTextEditor.toggleReadOnly();
+    //}}}
+    //{{{  overwrite button
     ImGui::SameLine();
     if (ImGui::Button (mTextEditor.isOverwrite() ? "overwrite" : "insert"))
       mTextEditor.toggleOverwrite();
-    if (mTextEditor.hasUndo()) {
-      ImGui::SameLine();
-      if (ImGui::Button ("undo"))
-        mTextEditor.undo();
-      }
-    if (mTextEditor.hasRedo()) {
-      ImGui::SameLine();
-      if (ImGui::Button ("redo"))
-        mTextEditor.redo();
-      }
-    if (mTextEditor.hasSelect()) {
+    //}}}
+    if (mTextEditor.hasClipboardText()) {
+      //{{{  paste button
       ImGui::SameLine();
       if (ImGui::Button ("paste"))
         mTextEditor.paste();
+      }
+      //}}}
+    if (mTextEditor.hasSelect()) {
+      //{{{  copy, cut, delete buttons
       ImGui::SameLine();
       if (ImGui::Button ("copy"))
         mTextEditor.copy();
@@ -140,16 +143,41 @@ public:
       if (ImGui::Button ("delete"))
         mTextEditor.deleteIt();
       }
-
+      //}}}
+    if (mTextEditor.hasUndo()) {
+      //{{{  undo button
+      ImGui::SameLine();
+      if (ImGui::Button ("undo"))
+        mTextEditor.undo();
+      }
+      //}}}
+    if (mTextEditor.hasRedo()) {
+      //{{{  redo button
+      ImGui::SameLine();
+      if (ImGui::Button ("redo"))
+        mTextEditor.redo();
+      }
+      //}}}
+    //{{{  debug button
     ImGui::SameLine();
-    ImGui::Text ("%d:%d:%d %s",
-                 mTextEditor.getCursorPosition().mColumn+1,
-                 mTextEditor.getCursorPosition().mLineNumber+1,
-                 mTextEditor.getTextNumLines(),
-                 mTextEditor.getLanguage().mName.c_str()
-                 );
-    ImGui::PushFont (app.getMonoFont());
+    if (toggleButton ("debug", mTextEditor.isShowLineDebug()))
+      mTextEditor.toggleShowLineDebug();
+    //}}}
+    //{{{  debug button
+    ImGui::SameLine();
+    if (toggleButton ("debug", mTextEditor.isShowLineDebug()))
+      mTextEditor.toggleShowLineDebug();
+    //}}}
+    //{{{  info text
+    ImGui::SameLine();
+    ImGui::Text ("%d:%d:%d %s%s%s%", mTextEditor.getCursorPosition().mColumn+1,
+                                     mTextEditor.getCursorPosition().mLineNumber+1, mTextEditor.getTextNumLines(),
+                                     mTextEditor.getLanguage().mName.c_str(),
+                                     mTextEditor.hasTabs() ? " tabs":"",
+                                     mTextEditor.hasCR() ? " CR":"");
+    //}}}
 
+    ImGui::PushFont (app.getMonoFont());
     mTextEditor.render ("cTextEditor");
     ImGui::PopFont();
 

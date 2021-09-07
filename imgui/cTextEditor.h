@@ -199,14 +199,17 @@ public:
   bool isTextChanged() const { return mTextChanged; }
   bool isCursorPositionChanged() const { return mCursorPositionChanged; }
 
-  bool isFolded() const { return mShowFolded; }
+  bool isShowFolds() const { return mShowFolds; }
   bool isShowLineNumbers() const { return mShowLineNumbers; }
   bool isShowLineDebug() const { return mShowLineDebug; }
   bool isShowWhiteSpace() const { return mShowWhiteSpace; }
 
   bool hasSelect() const { return mState.mSelectionEnd > mState.mSelectionStart; }
+  bool hasClipboardText();
   bool hasUndo() const { return !mReadOnly && mUndoIndex > 0; }
   bool hasRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); }
+  bool hasTabs() const { return mHasTabs; }
+  bool hasFolds() const { return mHasFolds; }
   bool hasCR() const { return mHasCR; }
 
   bool isImGuiChildIgnored() const { return mIgnoreImGuiChild; }
@@ -215,7 +218,7 @@ public:
   std::vector<std::string> getTextStrings() const;
   int getTextNumLines() const { return (int)mLines.size(); }
 
-  int getTabSize() const { return mTabSize; }
+  uint32_t getTabSize() const { return mTabSize; }
   sPosition getCursorPosition() const { return sanitizePosition (mState.mCursorPosition); }
 
   const sLanguage& getLanguage() const { return mLanguage; }
@@ -227,7 +230,7 @@ public:
   void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
   void setReadOnly (bool readOnly) { mReadOnly = readOnly; }
 
-  void setFolded (bool folded) { mShowFolded = folded; }
+  void setShowFolds (bool showFolds) { mShowFolds = showFolds; }
   void setShowLineDebug (bool showLineDebug) { mShowLineDebug = showLineDebug; }
   void setShowLineNumbers (bool showLineNumbers) { mShowLineNumbers = showLineNumbers; }
   void setShowWhiteSpace (bool showWhiteSpace) { mShowWhiteSpace = showWhiteSpace; }
@@ -243,7 +246,7 @@ public:
 
   void toggleReadOnly() { mReadOnly = !mReadOnly; }
   void toggleOverwrite() { mOverwrite = !mOverwrite; }
-  void toggleShowFolded() { mShowFolded = !mShowFolded; }
+  void toggleShowFolds() { mShowFolds = !mShowFolds; }
   void toggleShowLineNumbers() { mShowLineNumbers = !mShowLineNumbers; }
   void toggleShowLineDebug() { mShowLineDebug = !mShowLineDebug; }
   void toggleShowWhiteSpace() { mShowWhiteSpace = !mShowWhiteSpace; }
@@ -429,7 +432,9 @@ private:
   std::array <ImU32,(size_t)ePalette::Max> mPalette;
   std::array <ImU32,(size_t)ePalette::Max> mPaletteBase;
 
+  bool mHasTabs = false;
   int mTabSize;
+  bool mHasFolds = false;
   bool mHasCR = false;
 
   // changed flags
@@ -443,7 +448,7 @@ private:
   bool mCheckComments;
 
   // shows
-  bool mShowFolded;
+  bool mShowFolds;
   bool mShowLineNumbers;
   bool mShowLineDebug;
   bool mShowWhiteSpace;
