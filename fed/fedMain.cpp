@@ -72,7 +72,7 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
   ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
 
-
+  // create app to tie stuff together
   cApp app (platform, graphics);
   #ifdef _WIN32
     app.setName (params.empty() ? "C:/projects/paint/imgui/cTextEditor.cpp" : params[0]);

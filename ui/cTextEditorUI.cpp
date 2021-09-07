@@ -96,86 +96,57 @@ public:
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
-    ImGui::Begin ("Text Editor Demo", nullptr,
-                  ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar|
-                  ImGuiWindowFlags_NoMove);
+    ImGui::Begin ("Text Editor Demo", nullptr, 
+                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove);
 
-    if (ImGui::BeginMenuBar()) {
-      //{{{  menu bar
-      if (ImGui::BeginMenu ("File")) {
-        if (ImGui::MenuItem ("Save")) {
-          auto textToSave = mTextEditor.getTextString();
-          /// save text....
-          }
-        ImGui::EndMenu();
-        }
-
-      if (ImGui::BeginMenu ("Edit")) {
-        //{{{  readOnly
-        bool readOnly = mTextEditor.isReadOnly();
-        if (ImGui::MenuItem ("ReadOnly", nullptr, &readOnly))
-          mTextEditor.setReadOnly (readOnly);
-        //}}}
-        //{{{  showWhiteSpace
-        bool showWhiteSpace = mTextEditor.isShowWhiteSpace();
-        if (ImGui::MenuItem ("White space", nullptr, &showWhiteSpace))
-          mTextEditor.setShowWhiteSpace (showWhiteSpace);
-        //}}}
-        //{{{  folded
-        bool folded = mTextEditor.isFolded();
-        if (ImGui::MenuItem ("Folded", nullptr, &folded))
-          mTextEditor.setFolded (folded);
-        //}}}
-        //{{{  showLineNumbers
-        bool showLineNumbers = mTextEditor.isShowLineNumbers();
-        if (ImGui::MenuItem ("Line Numbers", nullptr, &showLineNumbers))
-          mTextEditor.setShowLineNumbers (showLineNumbers);
-        //}}}
-        //{{{  showLineDebug
-        bool showLineDebug = mTextEditor.isShowLineDebug();
-        if (ImGui::MenuItem ("Line debug", nullptr, &showLineDebug))
-          mTextEditor.setShowLineDebug (showLineDebug);
-        //}}}
-
-        ImGui::Separator();
-        if (ImGui::MenuItem ("Undo", "ALT-Backspace", nullptr, !readOnly && mTextEditor.hasUndo()))
-          mTextEditor.undo();
-        if (ImGui::MenuItem ("Redo", "Ctrl-Y", nullptr, !readOnly && mTextEditor.hasRedo()))
-          mTextEditor.redo();
-
-        ImGui::Separator();
-        if (ImGui::MenuItem ("Copy", "Ctrl-C", nullptr, mTextEditor.hasSelect()))
-          mTextEditor.copy();
-        if (ImGui::MenuItem ("Cut", "Ctrl-X", nullptr, !readOnly && mTextEditor.hasSelect()))
-          mTextEditor.cut();
-        if (ImGui::MenuItem ("Delete", "Del", nullptr, !readOnly && mTextEditor.hasSelect()))
-          mTextEditor.deleteIt();
-        if (ImGui::MenuItem ("Paste", "Ctrl-V", nullptr, !readOnly && ImGui::GetClipboardText() != nullptr))
-          mTextEditor.paste();
-
-        ImGui::Separator();
-        if (ImGui::MenuItem ("Select all", "Ctrl-A"))
-          mTextEditor.selectAll();
-
-        ImGui::EndMenu();
-        }
-
-      ImGui::EndMenuBar();
+    if (toggleButton ("folded", mTextEditor.isFolded()))
+      mTextEditor.toggleShowFolded();
+    ImGui::SameLine();
+    if (toggleButton ("lineNumbers", mTextEditor.isShowLineNumbers()))
+      mTextEditor.toggleShowLineNumbers();
+    ImGui::SameLine();
+    if (toggleButton ("lineDebug", mTextEditor.isShowLineDebug()))
+      mTextEditor.toggleShowLineDebug();
+    ImGui::SameLine();
+    if (toggleButton ("whiteSpace", mTextEditor.isShowWhiteSpace()))
+      mTextEditor.toggleShowWhiteSpace();
+    ImGui::SameLine();
+    if (ImGui::Button (mTextEditor.isReadOnly() ? "readOnly" : "writable"))
+      mTextEditor.toggleReadOnly();
+    ImGui::SameLine();
+    if (ImGui::Button (mTextEditor.isOverwrite() ? "overwrite" : "insert"))
+      mTextEditor.toggleOverwrite();
+    if (mTextEditor.hasUndo()) {
+      ImGui::SameLine();
+      if (ImGui::Button ("undo"))
+        mTextEditor.undo();
       }
-      //}}}
+    if (mTextEditor.hasRedo()) {
+      ImGui::SameLine();
+      if (ImGui::Button ("redo"))
+        mTextEditor.redo();
+      }
+    if (mTextEditor.hasSelect()) {
+      ImGui::SameLine();
+      if (ImGui::Button ("paste"))
+        mTextEditor.paste();
+      ImGui::SameLine();
+      if (ImGui::Button ("copy"))
+        mTextEditor.copy();
+      ImGui::SameLine();
+      if (ImGui::Button ("cut"))
+        mTextEditor.cut();
+      ImGui::SameLine();
+      if (ImGui::Button ("delete"))
+        mTextEditor.deleteIt();
+      }
 
-    ImGui::Text ("%d:%d:%d %s%s%s%s%s%s%s%s",
-                 mTextEditor.getCursorPosition().mColumn + 1,
-                 mTextEditor.getCursorPosition().mLineNumber + 1,
+    ImGui::SameLine();
+    ImGui::Text ("%d:%d:%d %s",
+                 mTextEditor.getCursorPosition().mColumn+1,
+                 mTextEditor.getCursorPosition().mLineNumber+1,
                  mTextEditor.getTextNumLines(),
-                 mTextEditor.getLanguage().mName.c_str(),
-                 mTextEditor.isOverwrite() ? " overwrite" : " insert",
-                 mTextEditor.isReadOnly() ? " readOnly" : "",
-                 mTextEditor.hasUndo() ? " undo" : "",
-                 mTextEditor.hasRedo() ? " redo" : "",
-                 mTextEditor.isFolded() ? " folded" : "",
-                 mTextEditor.isShowWhiteSpace() ? " whiteSpace" : "",
-                 mTextEditor.isShowLineNumbers() ? " lineNumbers" : ""
+                 mTextEditor.getLanguage().mName.c_str()
                  );
     ImGui::PushFont (app.getMonoFont());
 

@@ -241,11 +241,12 @@ public:
   void setSelectionEnd (const sPosition& position);
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
+  void toggleReadOnly() { mReadOnly = !mReadOnly; }
   void toggleOverwrite() { mOverwrite = !mOverwrite; }
-  void toggleFolded() { mShowFolded = !mShowFolded; }
-  void toggleLineNumbers() { mShowLineNumbers = !mShowLineNumbers; }
-  void toggleLineDebug() { mShowLineDebug = !mShowLineDebug; }
-  void toggleLineWhiteSpace() { mShowWhiteSpace = !mShowWhiteSpace; }
+  void toggleShowFolded() { mShowFolded = !mShowFolded; }
+  void toggleShowLineNumbers() { mShowLineNumbers = !mShowLineNumbers; }
+  void toggleShowLineDebug() { mShowLineDebug = !mShowLineDebug; }
+  void toggleShowWhiteSpace() { mShowWhiteSpace = !mShowWhiteSpace; }
   //}}}
   //{{{  actions
   // move

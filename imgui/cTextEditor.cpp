@@ -2473,10 +2473,10 @@ void cTextEditor::handleKeyboardInputs() {
      {false, true,  true,  ImGuiKey_End,        false, [this]{moveBottomSelect();}},
      // toggle mode
      {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverwrite();}},
-     {true,  false, false, ImGuiKey_Space,      false, [this]{toggleFolded();}},
-     {true,  false, false, ImGuiKey_PageUp,     false, [this]{toggleLineNumbers();}},
-     {true,  false, false, ImGuiKey_PageDown,   false, [this]{toggleLineDebug();}},
-     {true,  false, false, ImGuiKey_Home,       false, [this]{toggleLineWhiteSpace();}},
+     {true,  false, false, ImGuiKey_Space,      false, [this]{toggleShowFolded();}},
+     {true,  false, false, ImGuiKey_PageUp,     false, [this]{toggleShowLineNumbers();}},
+     {true,  false, false, ImGuiKey_PageDown,   false, [this]{toggleShowLineDebug();}},
+     {true,  false, false, ImGuiKey_Home,       false, [this]{toggleShowWhiteSpace();}},
      };
 
   if (!ImGui::IsWindowFocused())
