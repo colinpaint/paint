@@ -23,6 +23,8 @@
 // self registered classes using static var init idiom
 #include "../platform/cPlatform.h"
 #include "../graphics/cGraphics.h"
+
+#include "../ui/cApp.h"
 #include "../ui/cUI.h"
 
 #include "../utils/cLog.h"

@@ -25,6 +25,8 @@
 #include "platform/cPlatform.h"
 #include "graphics/cGraphics.h"
 #include "brush/cBrush.h"
+
+#include "ui/cApp.h"
 #include "ui/cUI.h"
 
 // canvas
