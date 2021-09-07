@@ -114,16 +114,6 @@ public:
     if (toggleButton ("space", mTextEditor.isShowWhiteSpace()))
       mTextEditor.toggleShowWhiteSpace();
     //}}}
-    //{{{  readOnly button
-    ImGui::SameLine();
-    if (ImGui::Button (mTextEditor.isReadOnly() ? "readOnly" : "writable"))
-      mTextEditor.toggleReadOnly();
-    //}}}
-    //{{{  overwrite button
-    ImGui::SameLine();
-    if (ImGui::Button (mTextEditor.isOverwrite() ? "overwrite" : "insert"))
-      mTextEditor.toggleOverwrite();
-    //}}}
     if (mTextEditor.hasClipboardText()) {
       //{{{  paste button
       ImGui::SameLine();
@@ -158,10 +148,15 @@ public:
         mTextEditor.redo();
       }
       //}}}
-    //{{{  debug button
+    //{{{  readOnly button
     ImGui::SameLine();
-    if (toggleButton ("debug", mTextEditor.isShowLineDebug()))
-      mTextEditor.toggleShowLineDebug();
+    if (ImGui::Button (mTextEditor.isReadOnly() ? "readOnly" : "writable"))
+      mTextEditor.toggleReadOnly();
+    //}}}
+    //{{{  overwrite button
+    ImGui::SameLine();
+    if (ImGui::Button (mTextEditor.isOverwrite() ? "overwrite" : "insert"))
+      mTextEditor.toggleOverwrite();
     //}}}
     //{{{  debug button
     ImGui::SameLine();
