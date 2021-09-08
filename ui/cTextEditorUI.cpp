@@ -89,6 +89,8 @@ public:
       map <int,string> markers;
       markers.insert (make_pair<int,string>(41, "marker here"));
       mTextEditor.setMarkers (markers);
+
+      ImGui::SetWindowFocus();
       }
       //}}}
 

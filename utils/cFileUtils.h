@@ -16,6 +16,7 @@
 class cFileUtils {
 public:
   static std::string resolveShortcut (const std::string& shortcut) {
+  // resolve windows shprtcut .lnk fileName
 
     // get IShellLink interface
     IShellLinkA* iShellLink;
@@ -38,7 +39,7 @@ public:
           if (iShellLink->GetPath (szPath, MAX_PATH, &wfd, SLGP_RAWPATH) == S_OK) {
             // Get the description of the target
             char szDesc[MAX_PATH];
-            if (iShellLink->GetDescription (szDesc, MAX_PATH) == S_OK) 
+            if (iShellLink->GetDescription (szDesc, MAX_PATH) == S_OK)
               return std::string (szPath);
             }
           }

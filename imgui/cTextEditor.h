@@ -308,33 +308,26 @@ public:
 private:
   typedef std::vector <std::pair <std::regex,ePalette>> tRegexList;
   //{{{
-  struct sEditorState {
+  struct sCursorSelectionState {
+    sPosition mCursorPosition;
     sPosition mSelectionStart;
     sPosition mSelectionEnd;
-    sPosition mCursorPosition;
     };
   //}}}
   //{{{
-  class sUndoRecord {
+  class sUndo {
   public:
-    sUndoRecord() {}
-    ~sUndoRecord() {}
+    sUndo() {}
+    ~sUndo() {}
 
-    sUndoRecord (
-      const std::string& added,
-      const cTextEditor::sPosition addedStart,
-      const cTextEditor::sPosition addedEnd,
-
-      const std::string& aRemoved,
-      const cTextEditor::sPosition removedStart,
-      const cTextEditor::sPosition removedEnd,
-
-      cTextEditor::sEditorState& before,
-      cTextEditor::sEditorState& after);
+    sUndo (const std::string& added, const cTextEditor::sPosition addedStart, const cTextEditor::sPosition addedEnd,
+           const std::string& aRemoved, const cTextEditor::sPosition removedStart, const cTextEditor::sPosition removedEnd,
+           cTextEditor::sCursorSelectionState& before, cTextEditor::sCursorSelectionState& after);
 
     void undo (cTextEditor* editor);
     void redo (cTextEditor* editor);
 
+    // vars
     std::string mAdded;
     sPosition mAddedStart;
     sPosition mAddedEnd;
@@ -343,12 +336,12 @@ private:
     sPosition mRemovedStart;
     sPosition mRemovedEnd;
 
-    sEditorState mBefore;
-    sEditorState mAfter;
+    sCursorSelectionState mBefore;
+    sCursorSelectionState mAfter;
     };
   //}}}
 
-  typedef std::vector<sUndoRecord> tUndoBuffer;
+  typedef std::vector<sUndo> tUndoBuffer;
   //{{{  gets
   bool isOnWordBoundary (const sPosition& position) const;
 
@@ -403,7 +396,7 @@ private:
   void deleteRange (const sPosition& startPosition, const sPosition& endPosition);
 
   // undo
-  void addUndo (sUndoRecord& value);
+  void addUndo (sUndo& value);
 
   // colorize
   void colorize (int fromLine = 0, int count = -1);
@@ -469,7 +462,7 @@ private:
   tUndoBuffer mUndoBuffer;
 
   // internal
-  sEditorState mState;
+  sCursorSelectionState mState;
   float mLineSpacing;
   bool mWithinRender;
   bool mScrollToTop;
@@ -486,12 +479,11 @@ private:
   ImVec2 mCursorScreenPos;
   bool mFocused = false;
 
-  ImVec2 mCharSize;       // size of character grid, space wide, fontHeight high
-  ImVec2 mCursorPos;      // startPos of background cursor
-  ImVec2 mCursorEndPos;   // endPos of background cursor
-  ImVec2 mLinePos;        // starPos of lineNumber
-  float mTextStart = 0.f; // startx of main text ?prefix?
-  ImVec2 mTextPos;        // pos of main text,
-  float mMaxWidth = 0.f;  // maxWidth of all lines, used to set scroll regions
+  float mGlyphsStart = 0.f;  // start x of main text
+  float mMaxLineWidth = 0.f; // width of widest line, used to set scroll region
+  ImVec2 mCharSize;          // size of character grid, space wide, fontHeight high
+  ImVec2 mCursorPos;         // start pos of line cursor bgnd
+  ImVec2 mLinePos;           // start pos of lineNumber
+  ImVec2 mTextPos;           // running pos of glyphs
   //}}}
   };
