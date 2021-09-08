@@ -694,6 +694,8 @@ void cTextEditor::moveLeft() {
   if (mLines.empty())
     return;
 
+  sPosition position = mState.mCursorPosition;
+
   //mState.mCursorPosition = getCursorPosition();
   int column = getCharacterIndex (mState.mCursorPosition);
   int lineNumber = mState.mCursorPosition.mLineNumber;
@@ -710,17 +712,19 @@ void cTextEditor::moveLeft() {
   else {
     // move to previous column on same line
     --column;
-    if (column > 0) 
+    if (column > 0)
       while (column > 0 && isUtfSequence (mLines[lineNumber].mGlyphs[column].mChar))
         --column;
     }
 
   mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
 
-  mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-  setSelection (mInteractiveStart, mInteractiveEnd, eSelection::Normal);
-
-  ensureCursorVisible();
+  if (mState.mCursorPosition != position) {
+    mInteractiveStart = mState.mCursorPosition;
+    mInteractiveEnd = mState.mCursorPosition;
+    setSelection (mInteractiveStart, mInteractiveEnd, eSelection::Normal);
+    ensureCursorVisible();
+    }
   }
 //}}}
 //{{{
@@ -728,6 +732,8 @@ void cTextEditor::moveRight() {
 
   if (mLines.empty())
     return;
+
+  sPosition position = mState.mCursorPosition;
 
   int column = getCharacterIndex (mState.mCursorPosition);
   int lineNumber = mState.mCursorPosition.mLineNumber;
@@ -747,20 +753,23 @@ void cTextEditor::moveRight() {
     mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
     }
 
-  mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-  setSelection (mInteractiveStart, mInteractiveEnd, eSelection::Normal);
-
-  ensureCursorVisible();
+  if (mState.mCursorPosition != position) {
+    mInteractiveStart = mState.mCursorPosition;
+    mInteractiveEnd = mState.mCursorPosition;
+    setSelection (mInteractiveStart, mInteractiveEnd, eSelection::Normal);
+    ensureCursorVisible();
+    }
   }
 //}}}
 
 //{{{
 void cTextEditor::moveTop() {
 
-  sPosition oldPosition = mState.mCursorPosition;
+  sPosition position = mState.mCursorPosition;
+
   setCursorPosition (sPosition(0,0));
 
-  if (mState.mCursorPosition != oldPosition) {
+  if (mState.mCursorPosition != position) {
     mInteractiveStart = mState.mCursorPosition;
     mInteractiveEnd = mState.mCursorPosition;
     setSelection (mInteractiveStart, mInteractiveEnd);
@@ -770,11 +779,11 @@ void cTextEditor::moveTop() {
 //{{{
 void cTextEditor::moveTopSelect() {
 
-  sPosition oldPosition = mState.mCursorPosition;
-  setCursorPosition (sPosition(0,0));
+  sPosition position = mState.mCursorPosition;
+  setCursorPosition (sPosition (0,0));
 
-  if (mState.mCursorPosition != oldPosition) {
-    mInteractiveEnd = oldPosition;
+  if (mState.mCursorPosition != position) {
+    mInteractiveEnd = position;
     mInteractiveStart = mState.mCursorPosition;
     setSelection (mInteractiveStart, mInteractiveEnd);
     }
@@ -783,34 +792,40 @@ void cTextEditor::moveTopSelect() {
 //{{{
 void cTextEditor::moveBottom() {
 
-  sPosition newPosition = sPosition ((int)mLines.size() - 1, 0);
-  setCursorPosition (newPosition);
-  mInteractiveStart = mInteractiveEnd = newPosition;
-  setSelection (mInteractiveStart, mInteractiveEnd);
+  sPosition position = mState.mCursorPosition;
+  setCursorPosition (sPosition ((int)mLines.size()-1, 0));
+
+  if (mState.mCursorPosition != position) {
+    mInteractiveStart = mState.mCursorPosition;
+    mInteractiveEnd = mState.mCursorPosition;
+    setSelection (mInteractiveStart, mInteractiveEnd);
+    }
   }
 //}}}
 //{{{
 void cTextEditor::moveBottomSelect() {
 
-  sPosition oldPosition = getCursorPosition();
-  sPosition newPosition = sPosition ((int)mLines.size() - 1, 0);
+  sPosition position = mState.mCursorPosition;
 
-  setCursorPosition (newPosition);
+  setCursorPosition (sPosition ((int)mLines.size()-1, 0));
 
-  mInteractiveStart = oldPosition;
-  mInteractiveEnd = newPosition;
-  setSelection (mInteractiveStart, mInteractiveEnd);
+  if (mState.mCursorPosition != position) {
+    mInteractiveStart = position;
+    mInteractiveEnd = getCursorPosition();
+    setSelection (mInteractiveStart, mInteractiveEnd);
+    }
   }
 //}}}
 
 //{{{
 void cTextEditor::moveHome() {
 
-  sPosition oldPosition = mState.mCursorPosition;
-  setCursorPosition (sPosition(mState.mCursorPosition.mLineNumber, 0));
+  sPosition position = mState.mCursorPosition;
+  setCursorPosition (sPosition (mState.mCursorPosition.mLineNumber, 0));
 
-  if (mState.mCursorPosition != oldPosition) {
-    mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
+  if (mState.mCursorPosition != position) {
+    mInteractiveStart = mState.mCursorPosition;
+    mInteractiveEnd = mState.mCursorPosition;
     setSelection (mInteractiveStart, mInteractiveEnd);
     }
   }
@@ -818,17 +833,18 @@ void cTextEditor::moveHome() {
 //{{{
 void cTextEditor::moveHomeSelect() {
 
-  sPosition oldPosition = mState.mCursorPosition;
-  setCursorPosition (sPosition(mState.mCursorPosition.mLineNumber, 0));
+  sPosition position = mState.mCursorPosition;
 
-  if (mState.mCursorPosition != oldPosition) {
-    if (oldPosition == mInteractiveStart)
+  setCursorPosition (sPosition (mState.mCursorPosition.mLineNumber, 0));
+
+  if (mState.mCursorPosition != position) {
+    if (position == mInteractiveStart)
       mInteractiveStart = mState.mCursorPosition;
-    else if (oldPosition == mInteractiveEnd)
+    else if (position == mInteractiveEnd)
       mInteractiveEnd = mState.mCursorPosition;
     else {
       mInteractiveStart = mState.mCursorPosition;
-      mInteractiveEnd = oldPosition;
+      mInteractiveEnd = position;
       }
 
     setSelection (mInteractiveStart, mInteractiveEnd);
@@ -838,11 +854,13 @@ void cTextEditor::moveHomeSelect() {
 //{{{
 void cTextEditor::moveEnd() {
 
-  sPosition oldPosition = mState.mCursorPosition;
-  setCursorPosition (sPosition (mState.mCursorPosition.mLineNumber, getLineMaxColumn (oldPosition.mLineNumber)));
+  sPosition position = mState.mCursorPosition;
 
-  if (mState.mCursorPosition != oldPosition) {
-    mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
+  setCursorPosition (sPosition (mState.mCursorPosition.mLineNumber, getLineMaxColumn (position.mLineNumber)));
+
+  if (mState.mCursorPosition != position) {
+    mInteractiveStart = mState.mCursorPosition;
+    mInteractiveEnd = mState.mCursorPosition;
     setSelection (mInteractiveStart, mInteractiveEnd);
     }
   }
@@ -850,16 +868,17 @@ void cTextEditor::moveEnd() {
 //{{{
 void cTextEditor::moveEndSelect() {
 
-  sPosition oldPosition = mState.mCursorPosition;
-  setCursorPosition (sPosition (mState.mCursorPosition.mLineNumber, getLineMaxColumn (oldPosition.mLineNumber)));
+  sPosition position = mState.mCursorPosition;
 
-  if (mState.mCursorPosition != oldPosition) {
-    if (oldPosition == mInteractiveEnd)
+  setCursorPosition (sPosition (mState.mCursorPosition.mLineNumber, getLineMaxColumn (position.mLineNumber)));
+
+  if (mState.mCursorPosition != position) {
+    if (position == mInteractiveEnd)
       mInteractiveEnd = mState.mCursorPosition;
-    else if (oldPosition == mInteractiveStart)
+    else if (position == mInteractiveStart)
       mInteractiveStart = mState.mCursorPosition;
     else {
-      mInteractiveStart = oldPosition;
+      mInteractiveStart = position;
       mInteractiveEnd = mState.mCursorPosition;
       }
     setSelection (mInteractiveStart, mInteractiveEnd);
@@ -1826,6 +1845,7 @@ void cTextEditor::moveUp (int amount) {
     mInteractiveStart = mState.mCursorPosition;
     mInteractiveEnd = mState.mCursorPosition;
     setSelection (mInteractiveStart, mInteractiveEnd);
+
     ensureCursorVisible();
     }
   }
