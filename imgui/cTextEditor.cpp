@@ -694,33 +694,29 @@ void cTextEditor::moveLeft() {
   if (mLines.empty())
     return;
 
-  sPosition oldPosition = mState.mCursorPosition;
-  mState.mCursorPosition = getCursorPosition();
-
-  int line = mState.mCursorPosition.mLineNumber;
-  int cindex = getCharacterIndex (mState.mCursorPosition);
-  if (cindex == 0) {
-    if (line > 0) {
-      --line;
-      if ((int)mLines.size() > line)
-        cindex = (int)mLines[line].mGlyphs.size();
+  //mState.mCursorPosition = getCursorPosition();
+  int column = getCharacterIndex (mState.mCursorPosition);
+  int lineNumber = mState.mCursorPosition.mLineNumber;
+  if (column == 0) {
+    // move to end of prevous line
+    if (lineNumber > 0) {
+      --lineNumber;
+      if ((int)mLines.size() > lineNumber)
+        column = (int)mLines[lineNumber].mGlyphs.size();
       else
-        cindex = 0;
+        column = 0;
       }
     }
   else {
-    --cindex;
-    if (cindex > 0) {
-      if ((int)mLines.size() > line) {
-        while (cindex > 0 && isUtfSequence (mLines[line].mGlyphs[cindex].mChar))
-          --cindex;
-        }
-      }
+    // move to previous column on same line
+    --column;
+    if (column > 0) 
+      while (column > 0 && isUtfSequence (mLines[lineNumber].mGlyphs[column].mChar))
+        --column;
     }
 
-  mState.mCursorPosition = sPosition (line, getCharacterColumn (line, cindex));
+  mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
 
-  assert (mState.mCursorPosition.mColumn >= 0);
   mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
   setSelection (mInteractiveStart, mInteractiveEnd, eSelection::Normal);
 
@@ -733,25 +729,22 @@ void cTextEditor::moveRight() {
   if (mLines.empty())
     return;
 
-  sPosition oldPosition = mState.mCursorPosition;
-  if (oldPosition.mLineNumber >= (int)mLines.size())
-    return;
-
-  int cindex = getCharacterIndex (mState.mCursorPosition);
-  int lindex = mState.mCursorPosition.mLineNumber;
-
-  sLine& line = mLines [lindex];
-  if (cindex >= (int)line.mGlyphs.size()) {
-    if (mState.mCursorPosition.mLineNumber < (int)mLines.size() - 1) {
-      mState.mCursorPosition.mLineNumber = max (0, min ((int)mLines.size() - 1, mState.mCursorPosition.mLineNumber + 1));
+  int column = getCharacterIndex (mState.mCursorPosition);
+  int lineNumber = mState.mCursorPosition.mLineNumber;
+  if (column >= (int)mLines [lineNumber].mGlyphs.size()) {
+    // move to start of next line
+    if (mState.mCursorPosition.mLineNumber < (int)mLines.size()-1) {
+      mState.mCursorPosition.mLineNumber =
+        max (0, min ((int)mLines.size() - 1, mState.mCursorPosition.mLineNumber + 1));
       mState.mCursorPosition.mColumn = 0;
       }
     else
       return;
     }
   else {
-    cindex += utf8CharLength (line.mGlyphs[cindex].mChar);
-    mState.mCursorPosition = sPosition (lindex, getCharacterColumn (lindex, cindex));
+    // move to next columm on same line
+    column += utf8CharLength (mLines [lineNumber].mGlyphs[column].mChar);
+    mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
     }
 
   mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
