@@ -114,7 +114,7 @@ public:
     if (toggleButton ("space", mTextEditor.isShowWhiteSpace()))
       mTextEditor.toggleShowWhiteSpace();
     //}}}
-    if (mTextEditor.hasClipboardText()) {
+    if (mTextEditor.hasClipboardText() && !mTextEditor.isReadOnly()) {
       //{{{  paste button
       ImGui::SameLine();
       if (ImGui::Button ("paste"))
@@ -126,22 +126,24 @@ public:
       ImGui::SameLine();
       if (ImGui::Button ("copy"))
         mTextEditor.copy();
-      ImGui::SameLine();
-      if (ImGui::Button ("cut"))
-        mTextEditor.cut();
-      ImGui::SameLine();
-      if (ImGui::Button ("delete"))
-        mTextEditor.deleteIt();
+       if (!mTextEditor.isReadOnly()) {
+         ImGui::SameLine();
+        if (ImGui::Button ("cut"))
+          mTextEditor.cut();
+        ImGui::SameLine();
+        if (ImGui::Button ("delete"))
+          mTextEditor.deleteIt();
+        }
       }
       //}}}
-    if (mTextEditor.hasUndo()) {
+    if (!mTextEditor.isReadOnly() && mTextEditor.hasUndo()) {
       //{{{  undo button
       ImGui::SameLine();
       if (ImGui::Button ("undo"))
         mTextEditor.undo();
       }
       //}}}
-    if (mTextEditor.hasRedo()) {
+    if (!mTextEditor.isReadOnly() && mTextEditor.hasRedo()) {
       //{{{  redo button
       ImGui::SameLine();
       if (ImGui::Button ("redo"))
@@ -165,8 +167,9 @@ public:
     //}}}
     //{{{  info text
     ImGui::SameLine();
-    ImGui::Text ("%d:%d:%d %s%s%s%", mTextEditor.getCursorPosition().mColumn+1,
-                                     mTextEditor.getCursorPosition().mLineNumber+1, mTextEditor.getTextNumLines(),
+    ImGui::Text ("%d:%d:%d %s%s%s", mTextEditor.getCursorPosition().mColumn+1,
+                                     mTextEditor.getCursorPosition().mLineNumber+1,
+                                     mTextEditor.getTextNumLines(),
                                      mTextEditor.getLanguage().mName.c_str(),
                                      mTextEditor.hasTabs() ? " tabs":"",
                                      mTextEditor.hasCR() ? " CR":"");
