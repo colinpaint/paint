@@ -689,6 +689,79 @@ void cTextEditor::setSelection (const sPosition& startPosition, const sPosition&
 //{{{  actions
 // move
 //{{{
+void cTextEditor::moveLeft() {
+
+  if (mLines.empty())
+    return;
+
+  sPosition oldPosition = mState.mCursorPosition;
+  mState.mCursorPosition = getCursorPosition();
+
+  int line = mState.mCursorPosition.mLineNumber;
+  int cindex = getCharacterIndex (mState.mCursorPosition);
+  if (cindex == 0) {
+    if (line > 0) {
+      --line;
+      if ((int)mLines.size() > line)
+        cindex = (int)mLines[line].mGlyphs.size();
+      else
+        cindex = 0;
+      }
+    }
+  else {
+    --cindex;
+    if (cindex > 0) {
+      if ((int)mLines.size() > line) {
+        while (cindex > 0 && isUtfSequence (mLines[line].mGlyphs[cindex].mChar))
+          --cindex;
+        }
+      }
+    }
+
+  mState.mCursorPosition = sPosition (line, getCharacterColumn (line, cindex));
+
+  assert (mState.mCursorPosition.mColumn >= 0);
+  mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
+  setSelection (mInteractiveStart, mInteractiveEnd, eSelection::Normal);
+
+  ensureCursorVisible();
+  }
+//}}}
+//{{{
+void cTextEditor::moveRight() {
+
+  if (mLines.empty())
+    return;
+
+  sPosition oldPosition = mState.mCursorPosition;
+  if (oldPosition.mLineNumber >= (int)mLines.size())
+    return;
+
+  int cindex = getCharacterIndex (mState.mCursorPosition);
+  int lindex = mState.mCursorPosition.mLineNumber;
+
+  sLine& line = mLines [lindex];
+  if (cindex >= (int)line.mGlyphs.size()) {
+    if (mState.mCursorPosition.mLineNumber < (int)mLines.size() - 1) {
+      mState.mCursorPosition.mLineNumber = max (0, min ((int)mLines.size() - 1, mState.mCursorPosition.mLineNumber + 1));
+      mState.mCursorPosition.mColumn = 0;
+      }
+    else
+      return;
+    }
+  else {
+    cindex += utf8CharLength (line.mGlyphs[cindex].mChar);
+    mState.mCursorPosition = sPosition (lindex, getCharacterColumn (lindex, cindex));
+    }
+
+  mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
+  setSelection (mInteractiveStart, mInteractiveEnd, eSelection::Normal);
+
+  ensureCursorVisible();
+  }
+//}}}
+
+//{{{
 void cTextEditor::moveTop() {
 
   sPosition oldPosition = mState.mCursorPosition;
@@ -1496,41 +1569,6 @@ int cTextEditor::getPageNumLines() const {
 //}}}
 //{{{  utils
 //{{{
-void cTextEditor::ensureCursorVisible() {
-
-  if (!mWithinRender) {
-    mScrollToCursor = true;
-    return;
-    }
-
-  float scrollX = ImGui::GetScrollX();
-  float scrollY = ImGui::GetScrollY();
-
-  auto height = ImGui::GetWindowHeight();
-  auto width = ImGui::GetWindowWidth();
-
-  int top = 1 + (int)ceil(scrollY / mCharSize.y);
-  int bottom = (int)ceil((scrollY + height) / mCharSize.y);
-
-  int left = (int)ceil(scrollX / mCharSize.x);
-  int right = (int)ceil((scrollX + width) / mCharSize.x);
-
-  sPosition position = getCursorPosition();
-  float length = getTextWidth (position);
-
-  if (position.mLineNumber < top)
-    ImGui::SetScrollY (max (0.f, (position.mLineNumber - 1) * mCharSize.y));
-  if (position.mLineNumber > bottom - 4)
-    ImGui::SetScrollY (max (0.f, (position.mLineNumber + 4) * mCharSize.y - height));
-
-  if (length + mGlyphsOffset < left + 4)
-    ImGui::SetScrollX (max(0.f, length + mGlyphsOffset - 4));
-  if (length + mGlyphsOffset > right - 4)
-    ImGui::SetScrollX (max(0.f, length + mGlyphsOffset + 4 - width));
-  }
-//}}}
-
-//{{{
 void cTextEditor::advance (sPosition& position) const {
 
   if (position.mLineNumber < (int)mLines.size()) {
@@ -1611,6 +1649,39 @@ cTextEditor::sPosition cTextEditor::sanitizePosition (const sPosition& position)
   else
     return sPosition (position.mLineNumber,
                       mLines.empty() ? 0 : min (position.mColumn, getLineMaxColumn (position.mLineNumber)));
+  }
+//}}}
+//{{{
+void cTextEditor::ensureCursorVisible() {
+
+  if (!mWithinRender) {
+    mScrollToCursor = true;
+    return;
+    }
+
+  float scrollX = ImGui::GetScrollX();
+  float scrollY = ImGui::GetScrollY();
+
+  float height = ImGui::GetWindowHeight();
+  int top = 1 + (int)ceil(scrollY / mCharSize.y);
+  int bottom = (int)ceil((scrollY + height) / mCharSize.y);
+
+  float width = ImGui::GetWindowWidth();
+  int left = (int)ceil(scrollX / mCharSize.x);
+  int right = (int)ceil((scrollX + width) / mCharSize.x);
+
+  sPosition position = getCursorPosition();
+  float length = getTextWidth (position);
+
+  if (position.mLineNumber < top)
+    ImGui::SetScrollY (max (0.f, (position.mLineNumber - 1) * mCharSize.y));
+  if (position.mLineNumber > bottom - 4)
+    ImGui::SetScrollY (max (0.f, (position.mLineNumber + 4) * mCharSize.y - height));
+
+  if (length + mGlyphsOffset < left + 4)
+    ImGui::SetScrollX (max(0.f, length + mGlyphsOffset - 4));
+  if (length + mGlyphsOffset > right - 4)
+    ImGui::SetScrollX (max(0.f, length + mGlyphsOffset + 4 - width));
   }
 //}}}
 
@@ -1731,114 +1802,6 @@ cTextEditor::sPosition cTextEditor::findNextWord (const sPosition& from) const {
 
 // move
 //{{{
-void cTextEditor::moveLeft (int amount, bool select, bool wordMode) {
-
-  if (mLines.empty())
-    return;
-
-  sPosition oldPosition = mState.mCursorPosition;
-  mState.mCursorPosition = getCursorPosition();
-
-  int line = mState.mCursorPosition.mLineNumber;
-  int cindex = getCharacterIndex (mState.mCursorPosition);
-
-  while (amount-- > 0) {
-    if (cindex == 0) {
-      if (line > 0) {
-        --line;
-        if ((int)mLines.size() > line)
-          cindex = (int)mLines[line].mGlyphs.size();
-        else
-          cindex = 0;
-        }
-      }
-    else {
-      --cindex;
-      if (cindex > 0) {
-        if ((int)mLines.size() > line) {
-          while (cindex > 0 && isUtfSequence (mLines[line].mGlyphs[cindex].mChar))
-            --cindex;
-          }
-        }
-      }
-
-    mState.mCursorPosition = sPosition (line, getCharacterColumn (line, cindex));
-    if (wordMode) {
-      mState.mCursorPosition = findWordStart (mState.mCursorPosition);
-      cindex = getCharacterIndex (mState.mCursorPosition);
-      }
-    }
-
-  mState.mCursorPosition = sPosition (line, getCharacterColumn (line, cindex));
-
-  assert (mState.mCursorPosition.mColumn >= 0);
-  if (select) {
-    if (oldPosition == mInteractiveStart)
-      mInteractiveStart = mState.mCursorPosition;
-    else if (oldPosition == mInteractiveEnd)
-      mInteractiveEnd = mState.mCursorPosition;
-    else {
-      mInteractiveStart = mState.mCursorPosition;
-      mInteractiveEnd = oldPosition;
-      }
-    }
-  else
-    mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-
-  setSelection (mInteractiveStart, mInteractiveEnd, select && wordMode ? eSelection::Word : eSelection::Normal);
-  ensureCursorVisible();
-  }
-//}}}
-//{{{
-void cTextEditor::moveRight (int amount, bool select, bool wordMode) {
-
-  sPosition oldPosition = mState.mCursorPosition;
-
-  if (mLines.empty() || oldPosition.mLineNumber >= (int)mLines.size())
-    return;
-
-  int cindex = getCharacterIndex (mState.mCursorPosition);
-  while (amount-- > 0) {
-    int lindex = mState.mCursorPosition.mLineNumber;
-    sLine& line = mLines [lindex];
-
-    if (cindex >= (int)line.mGlyphs.size()) {
-      if (mState.mCursorPosition.mLineNumber < (int)mLines.size() - 1) {
-        mState.mCursorPosition.mLineNumber = max (0, min ((int)mLines.size() - 1, mState.mCursorPosition.mLineNumber + 1));
-        mState.mCursorPosition.mColumn = 0;
-        }
-      else
-        return;
-      }
-    else {
-      cindex += utf8CharLength (line.mGlyphs[cindex].mChar);
-      mState.mCursorPosition = sPosition (lindex, getCharacterColumn (lindex, cindex));
-      if (wordMode)
-         mState.mCursorPosition = findNextWord (mState.mCursorPosition);
-     }
-    }
-
-  if (select) {
-    if (oldPosition == mInteractiveEnd)
-      mInteractiveEnd = sanitizePosition (mState.mCursorPosition);
-    else if (oldPosition == mInteractiveStart)
-      mInteractiveStart = mState.mCursorPosition;
-    else {
-      mInteractiveStart = oldPosition;
-      mInteractiveEnd = mState.mCursorPosition;
-      }
-    }
-  else
-    mInteractiveStart = mInteractiveEnd = mState.mCursorPosition;
-
-  setSelection (mInteractiveStart, mInteractiveEnd,
-                select && wordMode ? eSelection::Word : eSelection::Normal);
-
-  ensureCursorVisible();
-  }
-//}}}
-
-//{{{
 void cTextEditor::moveUp (int amount) {
 
   if (mLines.empty())
@@ -1875,27 +1838,6 @@ void cTextEditor::moveUp (int amount) {
   }
 //}}}
 //{{{
-void cTextEditor::moveUpSelect (int amount) {
-
-  sPosition oldPosition = mState.mCursorPosition;
-  mState.mCursorPosition.mLineNumber = max (0, mState.mCursorPosition.mLineNumber - amount);
-
-  if (oldPosition != mState.mCursorPosition) {
-    if (oldPosition == mInteractiveStart)
-      mInteractiveStart = mState.mCursorPosition;
-    else if (oldPosition == mInteractiveEnd)
-      mInteractiveEnd = mState.mCursorPosition;
-    else {
-      mInteractiveStart = mState.mCursorPosition;
-      mInteractiveEnd = oldPosition;
-      }
-
-    setSelection (mInteractiveStart, mInteractiveEnd);
-    ensureCursorVisible();
-    }
-  }
-//}}}
-//{{{
 void cTextEditor::moveDown (int amount) {
 
   if (mLines.empty())
@@ -1921,29 +1863,6 @@ void cTextEditor::moveDown (int amount) {
   if (mState.mCursorPosition != position) {
     mInteractiveStart = mState.mCursorPosition;
     mInteractiveEnd = mState.mCursorPosition;
-    setSelection (mInteractiveStart, mInteractiveEnd);
-    ensureCursorVisible();
-    }
-  }
-//}}}
-//{{{
-void cTextEditor::moveDownSelect (int amount) {
-
-  assert(mState.mCursorPosition.mColumn >= 0);
-
-  sPosition oldPosition = mState.mCursorPosition;
-  mState.mCursorPosition.mLineNumber = max (0, min((int)mLines.size() - 1, mState.mCursorPosition.mLineNumber + amount));
-
-  if (mState.mCursorPosition != oldPosition) {
-    if (oldPosition == mInteractiveEnd)
-      mInteractiveEnd = mState.mCursorPosition;
-    else if (oldPosition == mInteractiveStart)
-      mInteractiveStart = mState.mCursorPosition;
-    else {
-      mInteractiveStart = oldPosition;
-      mInteractiveEnd = mState.mCursorPosition;
-      }
-
     setSelection (mInteractiveStart, mInteractiveEnd);
     ensureCursorVisible();
     }
@@ -2563,22 +2482,12 @@ void cTextEditor::handleKeyboardInputs() {
      {false, true,  false, ImGuiKey_C,          false, [this]{copy();}},
      {false, true,  false, ImGuiKey_A,          false, [this]{selectAll();}},
      // move
-     {false, false, false, ImGuiKey_UpArrow,    false, [this]{moveLineUp();}},
-     {false, false, true,  ImGuiKey_UpArrow,    false, [this]{moveLineUpSelect();}},
-     {false, false, false, ImGuiKey_DownArrow,  false, [this]{moveLineDown();}},
-     {false, false, true,  ImGuiKey_DownArrow,  false, [this]{moveLineDownSelect();}},
      {false, false, false, ImGuiKey_LeftArrow,  false, [this]{moveLeft();}},
-     {false, true,  false, ImGuiKey_LeftArrow,  false, [this]{moveLeftWord();}},
-     {false, false, true,  ImGuiKey_LeftArrow,  false, [this]{moveLeftSelect();}},
-     {false, true,  true,  ImGuiKey_LeftArrow,  false, [this]{moveLeftWordSelect();}},
      {false, false, false, ImGuiKey_RightArrow, false, [this]{moveRight();}},
-     {false, true,  false, ImGuiKey_RightArrow, false, [this]{moveRightWord();}},
-     {false, false, true,  ImGuiKey_RightArrow, false, [this]{moveRightSelect();}},
-     {false, true,  true,  ImGuiKey_RightArrow, false, [this]{moveRightWordSelect();}},
+     {false, false, false, ImGuiKey_UpArrow,    false, [this]{moveLineUp();}},
      {false, false, false, ImGuiKey_PageUp,     false, [this]{movePageUp();}},
-     {false, false, true,  ImGuiKey_PageUp,     false, [this]{movePageUpSelect();}},
+     {false, false, false, ImGuiKey_DownArrow,  false, [this]{moveLineDown();}},
      {false, false, false, ImGuiKey_PageDown,   false, [this]{movePageDown();}},
-     {false, false, true,  ImGuiKey_PageDown,   false, [this]{movePageDownSelect();}},
      {false, false, false, ImGuiKey_Home,       false, [this]{moveHome();}},
      {false, true,  false, ImGuiKey_Home,       false, [this]{moveTop();}},
      {false, true,  true,  ImGuiKey_Home,       false, [this]{moveTopSelect();}},

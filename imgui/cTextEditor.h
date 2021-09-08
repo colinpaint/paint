@@ -256,23 +256,13 @@ public:
   //}}}
   //{{{  actions
   // move
-  void moveLeft() { moveLeft (1, false, false); }
-  void moveLeftSelect() { moveLeft (1, true, false); }
-  void moveLeftWord() { moveLeft (1, false, true); }
-  void moveLeftWordSelect() { moveLeft (1, true, true); }
-  void moveRight() { moveRight (1, false, false); }
-  void moveRightSelect() { moveRight (1, true, false); }
-  void moveRightWord() { moveRight (1, false, true); }
-  void moveRightWordSelect() { moveRight (1, true, true); }
+  void moveLeft();
+  void moveRight();
 
   void moveLineUp() { moveUp (1); }
-  void moveLineUpSelect() { moveUpSelect (1); }
   void moveLineDown() { moveDown (1); }
-  void moveLineDownSelect() { moveDownSelect (1); }
   void movePageUp() { moveUp (getPageNumLines() - 4); }
-  void movePageUpSelect() { moveUpSelect (getPageNumLines() - 4); }
   void movePageDown() { moveDown (getPageNumLines() - 4); }
-  void movePageDownSelect() { moveDownSelect (getPageNumLines() - 4); }
 
   void moveTop();
   void moveTopSelect();
@@ -368,11 +358,11 @@ private:
   int getPageNumLines() const;
   //}}}
   //{{{  utils
-  void ensureCursorVisible();
 
   void advance (sPosition& position) const;
   sPosition screenToPosition (const ImVec2& pos) const;
   sPosition sanitizePosition (const sPosition& position) const;
+  void ensureCursorVisible();
 
   // find
   sPosition findWordStart (const sPosition& from) const;
