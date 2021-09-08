@@ -481,7 +481,7 @@ private:
   bool mFocused = false;
 
   ImVec2 mCharSize;          // size of character grid, space wide, fontHeight high
-  float mGlyphsStart = 0.f;  // start x of main text
+  float mGlyphsOffset = 0.f; // start offset of glyphs
   float mMaxLineWidth = 0.f; // width of widest line, used to set scroll region
   ImVec2 mLineBeginPos;      // start pos of line cursor bgnd
   ImVec2 mGlyphsPos;         // running pos of glyphs
