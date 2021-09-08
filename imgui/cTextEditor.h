@@ -297,6 +297,10 @@ public:
   void undo (int steps = 1);
   void redo (int steps = 1);
 
+  // fold
+  void openFold();
+  void closeFold();
+
   void enterCharacter (ImWchar ch, bool shift);
   //}}}
   void render (const std::string& title, const ImVec2& size = ImVec2(), bool border = false);

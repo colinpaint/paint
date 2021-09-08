@@ -95,9 +95,10 @@ public:
     // full screen window
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-    ImGui::Begin ("Text Editor Demo", nullptr,
+    ImGui::Begin ("fed", nullptr,
                   ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove);
 
+    // top button bar
     //{{{  line button
     if (toggleButton ("line", mTextEditor.isShowLineNumbers()))
       mTextEditor.toggleShowLineNumbers();

@@ -1201,6 +1201,18 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
   ensureCursorVisible();
   }
 //}}}
+
+// fold
+//{{{
+void cTextEditor::openFold() {
+  cLog::log (LOGINFO, "openfold");
+  }
+//}}}
+//{{{
+void cTextEditor::closeFold() {
+  cLog::log (LOGINFO, "closefold");
+  }
+//}}}
 //}}}
 //{{{
 void cTextEditor::render (const string& title, const ImVec2& size, bool border) {
@@ -2442,19 +2454,59 @@ void cTextEditor::handleMouseInputs() {
 //}}}
 //{{{
 void cTextEditor::handleKeyboardInputs() {
+  //{{{  numpad codes
+  // -------------------------------------------------------------------------------------
+  // |GLFW_KEY_NUM_LOCK | GLFW_KEY_KP_DIVIDE | GLFW_KEY_KP_MULTIPLY | GLFW_KEY_KP_SUBTRACT|
+  // |  numlock         |        /           |           *          |      -              |
+  // |   0x11a          |      0x14b         |         0x14c        |    0x14d            |
+  // |------------------------------------------------------------------------------------|
+  // |GLFW_KEY_KP_7     | GLFW_KEY_KP_8      | GLFW_KEY_KP_9        | GLFW_KEY_KP_ADD;    |
+  // |      7           |      8             |      9               |      +              |
+  // |    0x147         |    0x148           |    0x149             |    0x14e            |
+  // | -------------------------------------------------------------|                     |
+  // |GLFW_KEY_KP_4     | GLFW_KEY_KP_5      | GLFW_KEY_KP_6        |                     |
+  // |      4           |      5             |      6               |                     |
+  // |    0x144         |    0x145           |    0x146             |                     |
+  // | -----------------------------------------------------------------------------------|
+  // |GLFW_KEY_KP_1     | GLFW_KEY_KP_2      | GLFW_KEY_KP_3        | GLFW_KEY_KP_ENTER   |
+  // |      1           |      2             |      3               |    enter            |
+  // |    0x141         |    0x142           |   0x143              |   0x14f             |
+  // | -------------------------------------------------------------|                     |
+  // |GLFW_KEY_KP_0                          | GLFW_KEY_KP_DECIMAL  |                     |
+  // |      0                                |      .               |                     |
+  // |    0x140                              |    0x14a             |                     |
+  // --------------------------------------------------------------------------------------
+  constexpr int kNumpadNumlock = 0x11a;
+  constexpr int kNumpad0 = 0x140;
+  constexpr int kNumpad1 = 0x141;
+  constexpr int kNumpad2 = 0x142;
+  constexpr int kNumpad3 = 0x143;
+  constexpr int kNumpad4 = 0x144;
+  constexpr int kNumpad5 = 0x145;
+  constexpr int kNumpad6 = 0x146;
+  constexpr int kNumpad7 = 0x147;
+  constexpr int kNumpad8 = 0x148;
+  constexpr int kNumpad9 = 0x149;
+  constexpr int kNumpadDecimal = 0x14a;
+  constexpr int kNumpadDivide = 0x14b;
+  constexpr int kNumpadMultiply = 0x14c;
+  constexpr int kNumpadSubtract = 0x14d;
+  constexpr int kNumpadAdd = 0x14e;
+  constexpr int kNumpadEnter = 0x14f;
+  //}}}
 
   //{{{
   struct sActionKey {
     bool mAlt;
     bool mCtrl;
     bool mShift;
-    ImGuiKey mKey;
+    int mGuiKey;
     bool mWritable;
     function <void()> mActionFunc;
     };
   //}}}
   const vector <sActionKey> kActionKeys = {
-  //  alt    ctrl   shift  key               writable         function
+  //  alt    ctrl   shift  guiKey               keyCode    writable         function
      // edit
      {false, true,  false, ImGuiKey_X,          true,  [this]{cut();}},
      {false, true,  false, ImGuiKey_V,          true,  [this]{paste();}},
@@ -2494,6 +2546,9 @@ void cTextEditor::handleKeyboardInputs() {
      {true,  false, false, ImGuiKey_PageUp,     false, [this]{toggleShowLineNumbers();}},
      {true,  false, false, ImGuiKey_PageDown,   false, [this]{toggleShowLineDebug();}},
      {true,  false, false, ImGuiKey_Home,       false, [this]{toggleShowWhiteSpace();}},
+     // numpad
+     {false, false, false, kNumpad1,            false, [this]{openFold();}},
+     {false, false, false, kNumpad3,            false, [this]{closeFold();}},
      };
 
   if (!ImGui::IsWindowFocused())
@@ -2510,7 +2565,8 @@ void cTextEditor::handleKeyboardInputs() {
 
   for (auto& actionKey : kActionKeys)
     //{{{  dispatch matched actionKey
-    if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mKey)) &&
+    if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
+         ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
         (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
         (actionKey.mCtrl == ctrl) &&
         (actionKey.mShift == shift) &&

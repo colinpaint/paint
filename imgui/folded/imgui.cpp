@@ -4277,6 +4277,7 @@ bool ImGui::IsMouseHoveringRect(const ImVec2& r_min, const ImVec2& r_max, bool c
     return true;
 }
 //}}}
+
 //{{{
 int ImGui::GetKeyIndex(ImGuiKey imgui_key)
 {
@@ -4292,6 +4293,7 @@ bool ImGui::IsKeyDown(int user_key_index)
 {
     if (user_key_index < 0)
         return false;
+
     ImGuiContext& g = *GImGui;
     IM_ASSERT(user_key_index >= 0 && user_key_index < IM_ARRAYSIZE(g.IO.KeysDown));
     return g.IO.KeysDown[user_key_index];
@@ -4322,24 +4324,28 @@ int ImGui::GetKeyPressedAmount(int key_index, float repeat_delay, float repeat_r
     ImGuiContext& g = *GImGui;
     if (key_index < 0)
         return 0;
+
     IM_ASSERT(key_index >= 0 && key_index < IM_ARRAYSIZE(g.IO.KeysDown));
     const float t = g.IO.KeysDownDuration[key_index];
     return CalcTypematicRepeatAmount(t - g.IO.DeltaTime, t, repeat_delay, repeat_rate);
 }
 //}}}
-
 //{{{
 bool ImGui::IsKeyPressed(int user_key_index, bool repeat)
 {
     ImGuiContext& g = *GImGui;
     if (user_key_index < 0)
         return false;
+
     IM_ASSERT(user_key_index >= 0 && user_key_index < IM_ARRAYSIZE(g.IO.KeysDown));
     const float t = g.IO.KeysDownDuration[user_key_index];
+
     if (t == 0.0f)
         return true;
+
     if (repeat && t > g.IO.KeyRepeatDelay)
         return GetKeyPressedAmount(user_key_index, g.IO.KeyRepeatDelay, g.IO.KeyRepeatRate) > 0;
+
     return false;
 }
 //}}}
@@ -4352,6 +4358,7 @@ bool ImGui::IsKeyReleased(int user_key_index)
     return g.IO.KeysDownDurationPrev[user_key_index] >= 0.0f && !g.IO.KeysDown[user_key_index];
 }
 //}}}
+
 //{{{
 bool ImGui::IsMouseDown(ImGuiMouseButton button)
 {
