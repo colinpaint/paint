@@ -196,6 +196,7 @@ public:
   //{{{  gets
   bool isReadOnly() const { return mReadOnly; }
   bool isOverwrite() const { return mOverwrite; }
+
   bool isTextChanged() const { return mTextChanged; }
   bool isCursorPosChanged() const { return mCursorPosChanged; }
 
@@ -204,6 +205,7 @@ public:
   bool isShowLineDebug() const { return mShowLineDebug; }
   bool isShowWhiteSpace() const { return mShowWhiteSpace; }
 
+  // has
   bool hasSelect() const { return mState.mSelectionEnd > mState.mSelectionStart; }
   bool hasClipboardText();
   bool hasUndo() const { return !mReadOnly && mUndoIndex > 0; }
@@ -214,6 +216,7 @@ public:
 
   bool isImGuiChildIgnored() const { return mIgnoreImGuiChild; }
 
+  // get
   std::string getTextString() const;
   std::vector<std::string> getTextStrings() const;
   int getTextNumLines() const { return (int)mLines.size(); }
@@ -227,6 +230,10 @@ public:
   void setTextString (const std::string& text);
   void setTextStrings (const std::vector<std::string>& lines);
 
+  void setPalette (bool lightPalette);
+  void setMarkers (const std::map<int,std::string>& markers) { mMarkers = markers; }
+  void setLanguage (const sLanguage& language);
+
   void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
   void setReadOnly (bool readOnly) { mReadOnly = readOnly; }
 
@@ -234,10 +241,6 @@ public:
   void setShowLineDebug (bool showLineDebug) { mShowLineDebug = showLineDebug; }
   void setShowLineNumbers (bool showLineNumbers) { mShowLineNumbers = showLineNumbers; }
   void setShowWhiteSpace (bool showWhiteSpace) { mShowWhiteSpace = showWhiteSpace; }
-
-  void setPalette (bool lightPalette);
-  void setMarkers (const std::map<int,std::string>& markers) { mMarkers = markers; }
-  void setLanguage (const sLanguage& language);
 
   void setCursorPosition (const sPosition& position);
   void setSelectionStart (const sPosition& position);

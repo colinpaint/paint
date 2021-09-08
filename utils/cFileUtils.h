@@ -45,7 +45,7 @@ public:
           }
         }
       }
-    return "";
+    return shortcut;
     }
   };
 #endif
