@@ -411,7 +411,7 @@ private:
   void handleKeyboardInputs();
 
   void preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex);
-  void renderText (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
+  void renderGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
   void renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber);
   void renderFold (std::vector<sLine>::iterator& it, uint32_t& lineNumber, uint32_t& lineIndex,
                    uint32_t minLineIndex, uint32_t maxLineIndex, bool parentOpen, bool foldOpen);
@@ -484,6 +484,6 @@ private:
   ImVec2 mCharSize;          // size of character grid, space wide, fontHeight high
   ImVec2 mCursorPos;         // start pos of line cursor bgnd
   ImVec2 mLinePos;           // start pos of lineNumber
-  ImVec2 mTextPos;           // running pos of glyphs
+  ImVec2 mGlyphsPos;         // running pos of glyphs
   //}}}
   };
