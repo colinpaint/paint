@@ -202,7 +202,7 @@ public:
 
   bool isShowFolds() const { return mShowFolds; }
   bool isShowLineNumbers() const { return mShowLineNumbers; }
-  bool isShowLineDebug() const { return mShowLineDebug; }
+  bool isShowDebug() const { return mShowDebug; }
   bool isShowWhiteSpace() const { return mShowWhiteSpace; }
 
   // has
@@ -238,7 +238,7 @@ public:
   void setReadOnly (bool readOnly) { mReadOnly = readOnly; }
 
   void setShowFolds (bool showFolds) { mShowFolds = showFolds; }
-  void setShowLineDebug (bool showLineDebug) { mShowLineDebug = showLineDebug; }
+  void setShowDebug (bool showDebug) { mShowDebug = showDebug; }
   void setShowLineNumbers (bool showLineNumbers) { mShowLineNumbers = showLineNumbers; }
   void setShowWhiteSpace (bool showWhiteSpace) { mShowWhiteSpace = showWhiteSpace; }
 
@@ -251,7 +251,7 @@ public:
   void toggleOverwrite() { mOverwrite = !mOverwrite; }
   void toggleShowFolds() { mShowFolds = !mShowFolds; }
   void toggleShowLineNumbers() { mShowLineNumbers = !mShowLineNumbers; }
-  void toggleShowLineDebug() { mShowLineDebug = !mShowLineDebug; }
+  void toggleShowDebug() { mShowDebug = !mShowDebug; }
   void toggleShowWhiteSpace() { mShowWhiteSpace = !mShowWhiteSpace; }
   //}}}
   //{{{  actions
@@ -446,7 +446,7 @@ private:
   // shows
   bool mShowFolds;
   bool mShowLineNumbers;
-  bool mShowLineDebug;
+  bool mShowDebug;
   bool mShowWhiteSpace;
 
   // range

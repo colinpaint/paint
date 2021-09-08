@@ -100,11 +100,17 @@ public:
     ImGui::Begin ("fed", nullptr,
                   ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove);
 
-    // top button bar
-    //{{{  line button
+    // line button
     if (toggleButton ("line", mTextEditor.isShowLineNumbers()))
       mTextEditor.toggleShowLineNumbers();
-    //}}}
+    if (mTextEditor.isShowLineNumbers())
+      //{{{  debug button
+      if (mTextEditor.isShowLineNumbers()) {
+        ImGui::SameLine();
+        if (toggleButton ("debug", mTextEditor.isShowDebug()))
+          mTextEditor.toggleShowDebug();
+        }
+      //}}}
     if (mTextEditor.hasFolds()) {
       //{{{  folded button
       ImGui::SameLine();
@@ -155,18 +161,13 @@ public:
       //}}}
     //{{{  readOnly button
     ImGui::SameLine();
-    if (ImGui::Button (mTextEditor.isReadOnly() ? "readOnly" : "writable"))
+    if (toggleButton ("readOnly", mTextEditor.isReadOnly()))
       mTextEditor.toggleReadOnly();
     //}}}
     //{{{  overwrite button
     ImGui::SameLine();
-    if (ImGui::Button (mTextEditor.isOverwrite() ? "overwrite" : "insert"))
+    if (toggleButton ("insert", !mTextEditor.isOverwrite()))
       mTextEditor.toggleOverwrite();
-    //}}}
-    //{{{  debug button
-    ImGui::SameLine();
-    if (toggleButton ("debug", mTextEditor.isShowLineDebug()))
-      mTextEditor.toggleShowLineDebug();
     //}}}
     //{{{  info text
     ImGui::SameLine();

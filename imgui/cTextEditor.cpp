@@ -486,7 +486,7 @@ namespace {
 cTextEditor::cTextEditor()
   : mHasTabs(false), mTabSize(4), mHasFolds(false), mHasCR(false),
     mOverwrite(false) , mReadOnly(false), mIgnoreImGuiChild(false), mCheckComments(true),
-    mShowFolds(false), mShowLineNumbers(false), mShowLineDebug(false), mShowWhiteSpace(false),
+    mShowFolds(false), mShowLineNumbers(false), mShowDebug(false), mShowWhiteSpace(false),
 
     mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
     mUndoIndex(0),
@@ -2550,10 +2550,6 @@ void cTextEditor::handleKeyboardInputs() {
      {false, true,  true,  ImGuiKey_End,        false, [this]{moveBottomSelect();}},
      // toggle mode
      {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverwrite();}},
-     {true,  false, false, ImGuiKey_Space,      false, [this]{toggleShowFolds();}},
-     {true,  false, false, ImGuiKey_PageUp,     false, [this]{toggleShowLineNumbers();}},
-     {true,  false, false, ImGuiKey_PageDown,   false, [this]{toggleShowLineDebug();}},
-     {true,  false, false, ImGuiKey_Home,       false, [this]{toggleShowWhiteSpace();}},
      // numpad
      {false, false, false, kNumpad1,            false, [this]{openFold();}},
      {false, false, false, kNumpad3,            false, [this]{closeFold();}},
@@ -2634,20 +2630,22 @@ void cTextEditor::preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex) {
 
   // measure lineNumber width
   mGlyphsOffset = kLeftTextMargin;
-  if (mShowLineDebug) {
-    //{{{  get lineDebug width
-    char str[32];
-    snprintf (str, sizeof(str), "%4d:%4d:%4d ",1,1,1);
-    mGlyphsOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+  if (mShowLineNumbers) {
+    if (mShowDebug) {
+      //{{{  get lineDebug width
+      char str[32];
+      snprintf (str, sizeof(str), "%4d:%4d:%4d ",1,1,1);
+      mGlyphsOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      }
+      //}}}
+    else {
+      //{{{  get lineNumber width
+      char str[32];
+      snprintf (str, sizeof(str), "%d ", (int)mLines.size());
+      mGlyphsOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      }
+      //}}}
     }
-    //}}}
-  else if (mShowLineNumbers) {
-    //{{{  get lineNumber width
-    char str[32];
-    snprintf (str, sizeof(str), "%d ", (int)mLines.size());
-    mGlyphsOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
-    }
-    //}}}
   mMaxLineWidth = 0;
 
   // calc lineIndex, maxLineIndex, lineNumber from scroll
@@ -2771,25 +2769,26 @@ void cTextEditor::renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber)
   //}}}
 
   sLine& line = mLines[lineNumber];
-  if (mShowLineDebug) {
-    //{{{  draw lineDebug, rightJustified
-    char str[32];
-    snprintf (str, sizeof(str), "%4d:%4d:%4d ", line.mFoldLineNumber+1, line.mFoldTitleLineNumber+1, lineNumber+1);
+  if (mShowLineNumbers) {
+    if (mShowDebug) {
+      //{{{  draw debug, rightJustified
+      char str[32];
+      snprintf (str, sizeof(str), "%4d:%4d:%4d ", line.mFoldLineNumber+1, line.mFoldTitleLineNumber+1, lineNumber+1);
 
-    float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
-    mDrawList->AddText (mGlyphsPos - ImVec2 (strWidth,0), mPalette[(size_t)ePalette::LineNumber], str);
+      float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      mDrawList->AddText (mGlyphsPos - ImVec2 (strWidth,0), mPalette[(size_t)ePalette::LineNumber], str);
+      }
+      //}}}
+    else {
+      //{{{  draw lineNumber, rightJustified
+      char str[32];
+      snprintf (str, sizeof(str), "%d ", lineNumber+1);
+
+      float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      mDrawList->AddText (mGlyphsPos - ImVec2 (strWidth,0), mPalette[(size_t)ePalette::LineNumber], str);
+      }
+      //}}}
     }
-    //}}}
-  else if (mShowLineNumbers) {
-    //{{{  draw lineNumber, rightJustified
-    char str[32];
-    snprintf (str, sizeof(str), "%d ", lineNumber+1);
-
-    float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
-    mDrawList->AddText (mGlyphsPos - ImVec2 (strWidth,0), mPalette[(size_t)ePalette::LineNumber], str);
-    }
-    //}}}
-
   vector<sGlyph>& glyphs = line.mGlyphs;
   if (mShowFolds && line.mFoldBegin) {
     if (line.mFoldOpen) {
