@@ -33,7 +33,8 @@
 #include "canvas/cLayer.h"
 #include "canvas/cCanvas.h"
 
-// log
+// utils
+#include "../utils/cFileUtils.h"
 #include "utils/cLog.h"
 
 using namespace std;
@@ -85,7 +86,12 @@ int main (int numArgs, char* args[]) {
   // should clear main screen here before file loads
 
   // create canvas
-  cCanvas canvas (platform, graphics, params.empty() ? "../piccies/tv.jpg" : params[0]);
+  #ifdef _WIN32 
+    cCanvas canvas (platform, graphics, params.empty() ? "../piccies/tv.jpg" :
+                                                         cFileUtils::resolveShortcut (params[0]));
+  #else
+    cCanvas canvas (platform, graphics, params.empty() ? "../piccies/tv.jpg" : params[0]);
+  #endif
   canvas.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(&droidSansMono, droidSansMonoSize, 16.f));
 
   if (params.size() > 1)

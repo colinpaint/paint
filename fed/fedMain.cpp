@@ -24,9 +24,12 @@
 #include "../platform/cPlatform.h"
 #include "../graphics/cGraphics.h"
 
+// ui
 #include "../ui/cApp.h"
 #include "../ui/cUI.h"
 
+// utils
+#include "../utils/cFileUtils.h"
 #include "../utils/cLog.h"
 
 using namespace std;
@@ -75,9 +78,11 @@ int main (int numArgs, char* args[]) {
   // create app to tie stuff together
   cApp app (platform, graphics);
   #ifdef _WIN32
-    app.setName (params.empty() ? "C:/projects/paint/imgui/cTextEditor.cpp" : params[0]);
+    app.setName (params.empty() ? "C:/projects/paint/imgui/cTextEditor.cpp" :
+                                  cFileUtils::resolveShortcut (params[0]));
   #else
-    app.setName (params.empty() ?"/home/pi/paint/imgui/cTextEditor.cpp" : params[0]);
+    app.setName (params.empty() ? "/home/pi/paint/imgui/cTextEditor.cpp" : 
+                                  params[0]);
   #endif
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 
