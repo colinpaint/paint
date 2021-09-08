@@ -485,14 +485,14 @@ namespace {
 //{{{
 cTextEditor::cTextEditor()
   : mHasTabs(false), mTabSize(4), mHasFolds(false), mHasCR(false),
-    mTextChanged(false), mCursorPositionChanged(false),
     mOverwrite(false) , mReadOnly(false), mIgnoreImGuiChild(false), mCheckComments(true),
     mShowFolds(false), mShowLineNumbers(false), mShowLineDebug(false), mShowWhiteSpace(false),
 
     mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
     mUndoIndex(0),
 
-    mLineSpacing(1.f), mWithinRender(false), mScrollToTop(false), mScrollToCursor(false),
+    mWithinRender(false), mScrollToTop(false), mScrollToCursor(false),
+    mTextChanged(false), mCursorPosChanged(false),
 
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
     mLastClick(-1.f) {
@@ -560,7 +560,7 @@ void cTextEditor::setTextString (const string& text) {
       }
     }
 
-  mTextChanged = true;
+  //mTextChanged = true;
   mScrollToTop = true;
 
   mUndoBuffer.clear();
@@ -592,7 +592,7 @@ void cTextEditor::setTextStrings (const vector<string>& lines) {
       }
     }
 
-  mTextChanged = true;
+  //mTextChanged = true;
   mScrollToTop = true;
 
   mUndoBuffer.clear();
@@ -626,7 +626,7 @@ void cTextEditor::setCursorPosition (const sPosition& position) {
 
   if (mState.mCursorPosition != position) {
     mState.mCursorPosition = position;
-    mCursorPositionChanged = true;
+    mCursorPosChanged = true;
     ensureCursorVisible();
     }
   }
@@ -682,7 +682,7 @@ void cTextEditor::setSelection (const sPosition& startPosition, const sPosition&
     }
 
   if (mState.mSelectionStart != oldSelStart || mState.mSelectionEnd != oldSelEnd)
-    mCursorPositionChanged = true;
+    mCursorPosChanged = true;
   }
 //}}}
 //}}}
@@ -1219,9 +1219,10 @@ void cTextEditor::closeFold() {
 void cTextEditor::render (const string& title, const ImVec2& size, bool border) {
 // main ui handle io and draw routine
 
-  mTextChanged = false;
+  //mTextChanged = false;
+  //mCursorPosChanged = false;
+
   mWithinRender = true;
-  mCursorPositionChanged = false;
 
   ImGui::PushStyleColor (ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4 (mPalette[(size_t)ePalette::Background]));
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
@@ -2483,23 +2484,23 @@ void cTextEditor::handleKeyboardInputs() {
   // - ImGuiKeys small subset of normal keyboard keys
   // - have I misunderstood something here ?
 
-  constexpr int kNumpadNumlock = 0x11a;
-  constexpr int kNumpad0 = 0x140;
+  //constexpr int kNumpadNumlock = 0x11a;
+  //constexpr int kNumpad0 = 0x140;
   constexpr int kNumpad1 = 0x141;
-  constexpr int kNumpad2 = 0x142;
+  //constexpr int kNumpad2 = 0x142;
   constexpr int kNumpad3 = 0x143;
-  constexpr int kNumpad4 = 0x144;
-  constexpr int kNumpad5 = 0x145;
-  constexpr int kNumpad6 = 0x146;
-  constexpr int kNumpad7 = 0x147;
-  constexpr int kNumpad8 = 0x148;
-  constexpr int kNumpad9 = 0x149;
-  constexpr int kNumpadDecimal = 0x14a;
-  constexpr int kNumpadDivide = 0x14b;
-  constexpr int kNumpadMultiply = 0x14c;
-  constexpr int kNumpadSubtract = 0x14d;
-  constexpr int kNumpadAdd = 0x14e;
-  constexpr int kNumpadEnter = 0x14f;
+  //constexpr int kNumpad4 = 0x144;
+  //constexpr int kNumpad5 = 0x145;
+  //constexpr int kNumpad6 = 0x146;
+  //constexpr int kNumpad7 = 0x147;
+  //constexpr int kNumpad8 = 0x148;
+  //constexpr int kNumpad9 = 0x149;
+  //constexpr int kNumpadDecimal = 0x14a;
+  //constexpr int kNumpadDivide = 0x14b;
+  //constexpr int kNumpadMultiply = 0x14c;
+  //constexpr int kNumpadSubtract = 0x14d;
+  //constexpr int kNumpadAdd = 0x14e;
+  //constexpr int kNumpadEnter = 0x14f;
   //}}}
 
   //{{{
@@ -2624,7 +2625,7 @@ void cTextEditor::preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex) {
 
   // calc character mCharSize
   mCharSize = ImVec2 (mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, " ", nullptr, nullptr).x,
-                      ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
+                      ImGui::GetTextLineHeightWithSpacing());
 
   if (mScrollToTop) {
     mScrollToTop = false;

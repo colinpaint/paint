@@ -170,12 +170,14 @@ public:
     //}}}
     //{{{  info text
     ImGui::SameLine();
-    ImGui::Text ("%d:%d:%d %s%s%s", mTextEditor.getCursorPosition().mColumn+1,
-                                     mTextEditor.getCursorPosition().mLineNumber+1,
-                                     mTextEditor.getTextNumLines(),
-                                     mTextEditor.getLanguage().mName.c_str(),
-                                     mTextEditor.hasTabs() ? " tabs":"",
-                                     mTextEditor.hasCR() ? " CR":"");
+    ImGui::Text ("%d:%d:%d %s%s%s%s%s", mTextEditor.getCursorPosition().mColumn+1,
+                                        mTextEditor.getCursorPosition().mLineNumber+1,
+                                        mTextEditor.getTextNumLines(),
+                                        mTextEditor.getLanguage().mName.c_str(),
+                                        mTextEditor.isTextChanged() ? " edited":"",
+                                        mTextEditor.isCursorPosChanged() ? " cursor":"",
+                                        mTextEditor.hasTabs() ? " tabs":"",
+                                        mTextEditor.hasCR() ? " CR":"");
     //}}}
 
     ImGui::PushFont (app.getMonoFont());

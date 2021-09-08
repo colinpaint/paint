@@ -197,7 +197,7 @@ public:
   bool isReadOnly() const { return mReadOnly; }
   bool isOverwrite() const { return mOverwrite; }
   bool isTextChanged() const { return mTextChanged; }
-  bool isCursorPositionChanged() const { return mCursorPositionChanged; }
+  bool isCursorPosChanged() const { return mCursorPosChanged; }
 
   bool isShowFolds() const { return mShowFolds; }
   bool isShowLineNumbers() const { return mShowLineNumbers; }
@@ -434,10 +434,6 @@ private:
   bool mHasFolds = false;
   bool mHasCR = false;
 
-  // changed flags
-  bool mTextChanged;
-  bool mCursorPositionChanged;
-
   // modes
   bool mOverwrite;
   bool mReadOnly;
@@ -463,10 +459,12 @@ private:
 
   // internal
   sCursorSelectionState mState;
-  float mLineSpacing;
   bool mWithinRender;
   bool mScrollToTop;
   bool mScrollToCursor;
+
+  bool mTextChanged;
+  bool mCursorPosChanged;
 
   uint64_t mStartTime;
   float mLastClick;
