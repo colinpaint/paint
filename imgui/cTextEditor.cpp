@@ -1841,10 +1841,32 @@ void cTextEditor::moveRight (int amount, bool select, bool wordMode) {
 //{{{
 void cTextEditor::moveUp (int amount) {
 
-  sPosition oldPosition = mState.mCursorPosition;
-  mState.mCursorPosition.mLineNumber = max (0, mState.mCursorPosition.mLineNumber - amount);
+  if (mLines.empty())
+    return;
 
-  if (oldPosition != mState.mCursorPosition) {
+  sPosition position = mState.mCursorPosition;
+
+  int lineNumber = mState.mCursorPosition.mLineNumber;
+  if (lineNumber == 0)
+    return;
+
+  for (int i = 0; i < amount; i++) {
+    sLine& line = mLines[lineNumber-1];
+    if (mShowFolds && line.mFoldEnd) {
+      if (mLines[line.mFoldLineNumber].mFoldOpen) // step into bottom of open fold
+        lineNumber -= 2; // check stepping onto a closed fold
+      else // step to foldBegin
+        lineNumber = line.mFoldLineNumber;
+      }
+    else
+      lineNumber -= 1;
+    if (lineNumber <= 1) // no more to dec to
+      break;
+    }
+
+  mState.mCursorPosition.mLineNumber = lineNumber;
+
+  if (mState.mCursorPosition != position) {
     mInteractiveStart = mState.mCursorPosition;
     mInteractiveEnd = mState.mCursorPosition;
     setSelection (mInteractiveStart, mInteractiveEnd);
@@ -1876,12 +1898,27 @@ void cTextEditor::moveUpSelect (int amount) {
 //{{{
 void cTextEditor::moveDown (int amount) {
 
+  if (mLines.empty())
+    return;
+
   assert (mState.mCursorPosition.mColumn >= 0);
+  sPosition position = mState.mCursorPosition;
 
-  sPosition oldPosition = mState.mCursorPosition;
-  mState.mCursorPosition.mLineNumber = max (0, min((int)mLines.size() - 1, mState.mCursorPosition.mLineNumber + amount));
+  int lineNumber = mState.mCursorPosition.mLineNumber;
 
-  if (mState.mCursorPosition != oldPosition) {
+  for (int i = 0; i < amount; i++) {
+    if (lineNumber >= (int)mLines.size()-1) // no more to inc to
+      break;
+    sLine& line = mLines[lineNumber];
+    if (mShowFolds && line.mFoldBegin && !line.mFoldOpen) // skip past closed fold
+      lineNumber = line.mFoldLineNumber + 1;
+    else
+      lineNumber += 1;
+    }
+
+  mState.mCursorPosition.mLineNumber = lineNumber;
+
+  if (mState.mCursorPosition != position) {
     mInteractiveStart = mState.mCursorPosition;
     mInteractiveEnd = mState.mCursorPosition;
     setSelection (mInteractiveStart, mInteractiveEnd);
@@ -2550,6 +2587,7 @@ void cTextEditor::handleKeyboardInputs() {
      {false, true,  true,  ImGuiKey_End,        false, [this]{moveBottomSelect();}},
      // toggle mode
      {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverwrite();}},
+     {false, true,  false, ImGuiKey_Space,      false, [this]{toggleShowFolds();}},
      // numpad
      {false, false, false, kNumpad1,            false, [this]{openFold();}},
      {false, false, false, kNumpad3,            false, [this]{closeFold();}},
