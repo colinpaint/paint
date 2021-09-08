@@ -2420,6 +2420,7 @@ void cTextEditor::handleMouseInputs() {
         else
           mSelection = eSelection::Normal;
         setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
+
         mLastClick = static_cast<float>(ImGui::GetTime());
         }
         //}}}
