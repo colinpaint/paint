@@ -1205,12 +1205,14 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
 // fold
 //{{{
 void cTextEditor::openFold() {
-  cLog::log (LOGINFO, "openfold");
+  if (mLines[mState.mCursorPosition.mLineNumber].mFoldBegin)
+    mLines[mState.mCursorPosition.mLineNumber].mFoldOpen = true;
   }
 //}}}
 //{{{
 void cTextEditor::closeFold() {
-  cLog::log (LOGINFO, "closefold");
+  if (mLines[mState.mCursorPosition.mLineNumber].mFoldBegin)
+    mLines[mState.mCursorPosition.mLineNumber].mFoldOpen = false;
   }
 //}}}
 //}}}
