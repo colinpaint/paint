@@ -261,16 +261,8 @@ public:
   void moveLineDown() { moveDown (1); }
   void movePageUp()   { moveUp (getPageNumLines() - 4); }
   void movePageDown() { moveDown (getPageNumLines() - 4); }
-
-  void moveTop();
-  void moveTopSelect();
-  void moveBot();
-  void moveBotSelect();
-
   void moveHome();
-  void moveHomeSelect();
   void moveEnd();
-  void moveEndSelect();
 
   // select
   void selectAll();
@@ -294,7 +286,7 @@ public:
 
   void enterCharacter (ImWchar ch, bool shift);
   //}}}
-  void render (const std::string& title, const ImVec2& size = ImVec2(), bool border = false);
+  void render();
 
 private:
   typedef std::vector <std::pair <std::regex,ePalette>> tRegexList;

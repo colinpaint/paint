@@ -754,93 +754,18 @@ void cTextEditor::moveRight() {
     }
   }
 //}}}
-
-//{{{
-void cTextEditor::moveTop() {
-
-  sPosition position = mState.mCursorPosition;
-
-  setCursorPosition (sPosition(0,0));
-
-  if (mState.mCursorPosition != position) {
-    mInteractiveStart = mState.mCursorPosition;
-    mInteractiveEnd = mState.mCursorPosition;
-    setSelection (mInteractiveStart, mInteractiveEnd);
-    }
-  }
-//}}}
-//{{{
-void cTextEditor::moveTopSelect() {
-
-  sPosition position = mState.mCursorPosition;
-  setCursorPosition (sPosition (0,0));
-
-  if (mState.mCursorPosition != position) {
-    mInteractiveEnd = position;
-    mInteractiveStart = mState.mCursorPosition;
-    setSelection (mInteractiveStart, mInteractiveEnd);
-    }
-  }
-//}}}
-//{{{
-void cTextEditor::moveBot() {
-
-  sPosition position = mState.mCursorPosition;
-  setCursorPosition (sPosition ((int)mLines.size()-1, 0));
-
-  if (mState.mCursorPosition != position) {
-    mInteractiveStart = mState.mCursorPosition;
-    mInteractiveEnd = mState.mCursorPosition;
-    setSelection (mInteractiveStart, mInteractiveEnd);
-    }
-  }
-//}}}
-//{{{
-void cTextEditor::moveBotSelect() {
-
-  sPosition position = mState.mCursorPosition;
-
-  setCursorPosition (sPosition ((int)mLines.size()-1, 0));
-
-  if (mState.mCursorPosition != position) {
-    mInteractiveStart = position;
-    mInteractiveEnd = getCursorPosition();
-    setSelection (mInteractiveStart, mInteractiveEnd);
-    }
-  }
-//}}}
-
 //{{{
 void cTextEditor::moveHome() {
 
   sPosition position = mState.mCursorPosition;
-  setCursorPosition (sPosition (mState.mCursorPosition.mLineNumber, 0));
+
+  setCursorPosition (sPosition (0,0));
 
   if (mState.mCursorPosition != position) {
     mInteractiveStart = mState.mCursorPosition;
     mInteractiveEnd = mState.mCursorPosition;
     setSelection (mInteractiveStart, mInteractiveEnd);
-    }
-  }
-//}}}
-//{{{
-void cTextEditor::moveHomeSelect() {
-
-  sPosition position = mState.mCursorPosition;
-
-  setCursorPosition (sPosition (mState.mCursorPosition.mLineNumber, 0));
-
-  if (mState.mCursorPosition != position) {
-    if (position == mInteractiveStart)
-      mInteractiveStart = mState.mCursorPosition;
-    else if (position == mInteractiveEnd)
-      mInteractiveEnd = mState.mCursorPosition;
-    else {
-      mInteractiveStart = mState.mCursorPosition;
-      mInteractiveEnd = position;
-      }
-
-    setSelection (mInteractiveStart, mInteractiveEnd);
+    ensureCursorVisible();
     }
   }
 //}}}
@@ -849,32 +774,13 @@ void cTextEditor::moveEnd() {
 
   sPosition position = mState.mCursorPosition;
 
-  setCursorPosition (sPosition (mState.mCursorPosition.mLineNumber, getLineMaxColumn (position.mLineNumber)));
+  setCursorPosition ({(int)mLines.size()-1, 0});
 
   if (mState.mCursorPosition != position) {
     mInteractiveStart = mState.mCursorPosition;
     mInteractiveEnd = mState.mCursorPosition;
     setSelection (mInteractiveStart, mInteractiveEnd);
-    }
-  }
-//}}}
-//{{{
-void cTextEditor::moveEndSelect() {
-
-  sPosition position = mState.mCursorPosition;
-
-  setCursorPosition (sPosition (mState.mCursorPosition.mLineNumber, getLineMaxColumn (position.mLineNumber)));
-
-  if (mState.mCursorPosition != position) {
-    if (position == mInteractiveEnd)
-      mInteractiveEnd = mState.mCursorPosition;
-    else if (position == mInteractiveStart)
-      mInteractiveStart = mState.mCursorPosition;
-    else {
-      mInteractiveStart = position;
-      mInteractiveEnd = mState.mCursorPosition;
-      }
-    setSelection (mInteractiveStart, mInteractiveEnd);
+    ensureCursorVisible();
     }
   }
 //}}}
@@ -1313,16 +1219,13 @@ void cTextEditor::closeFold() {
 //}}}
 //}}}
 //{{{
-void cTextEditor::render (const string& title, const ImVec2& size, bool border) {
+void cTextEditor::render() {
 // main ui handle io and draw routine
 
-  ImGui::PushStyleColor (ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4 (mPalette[(size_t)ePalette::Background]));
+  //ImGui::PushStyleColor (ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4 (mPalette[(size_t)ePalette::Background]));
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
-
-  ImGui::BeginChild (title.c_str(), size, border,
-                     ImGuiWindowFlags_HorizontalScrollbar |
-                     ImGuiWindowFlags_AlwaysHorizontalScrollbar |
-                     ImGuiWindowFlags_NoMove);
+  //ImGui::BeginChild ("textEditor", ImVec2(0.f,0.f), false,
+  //                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove);
 
   handleKeyboardInputs();
   ImGui::PushAllowKeyboardFocus (true);
@@ -1344,11 +1247,11 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
   mDebugString = fmt::format ("line:{} index:{} scrolly:{} scrollx:{}",
                                getCursorPosition().mLineNumber, lineNumberToIndex (getCursorPosition().mLineNumber),
                                ImGui::GetScrollY(), ImGui::GetScrollX());
-  ImGui::EndChild();
+  //ImGui::EndChild();
 
   ImGui::PopAllowKeyboardFocus();
   ImGui::PopStyleVar();
-  ImGui::PopStyleColor();
+  //ImGui::PopStyleColor();
   }
 //}}}
 
@@ -2284,19 +2187,19 @@ void cTextEditor::ensureCursorVisible() {
   sPosition position = getCursorPosition();
   int lineIndex = lineNumberToIndex (position.mLineNumber);
 
-  int topLineIndex = static_cast<int>(floor (ImGui::GetScrollY() / mCharSize.y));
-  int botLineIndex =
-    min (getMaxLineIndex(), static_cast<int>(ceil ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mCharSize.y)));
-  if (lineIndex < topLineIndex) {
-    cLog::log (LOGINFO, fmt::format ("top {} {} {}", lineIndex, topLineIndex,
-                                     max (0.f, lineIndex * mCharSize.y)));
-    //ImGui::SetScrollY (max (0.f, lineIndex * mCharSize.y));
+  int topIndex = static_cast<int>(floor (ImGui::GetScrollY() / mCharSize.y));
+  int botIndex = min (getMaxLineIndex(),
+                     static_cast<int>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mCharSize.y)));
+  if (lineIndex <= topIndex+1) {
+    cLog::log (LOGINFO, fmt::format ("top:{} line:{}", topIndex, lineIndex));
+    ImGui::SetScrollY (max (0.f, (lineIndex - 1) * mCharSize.y));
     }
-  else if (lineIndex > botLineIndex) {
-    cLog::log (LOGINFO, fmt::format ("bot {} {} {}", lineIndex, botLineIndex,
-                                     max (0.f, lineIndex * mCharSize.y)));
-    //ImGui::SetScrollY (max (0.f, lineIndex * mCharSize.y));
+  else if (lineIndex >= botIndex-7) {
+    cLog::log (LOGINFO, fmt::format ("bot:{} line:{}", botIndex, lineIndex));
+    ImGui::SetScrollY (max (0.f, (lineIndex+7) * mCharSize.y) - ImGui::GetWindowHeight());
     }
+  else
+    cLog::log (LOGINFO, fmt::format ("top:{} bot:{} line:{}", topIndex, botIndex, lineIndex));
 
   //{{{  left right
   //float textWidth = getTextWidth (position);
@@ -2522,11 +2425,7 @@ void cTextEditor::handleKeyboardInputs() {
      {false, false, false, ImGuiKey_PageUp,     false, [this]{movePageUp();}},
      {false, false, false, ImGuiKey_PageDown,   false, [this]{movePageDown();}},
      {false, false, false, ImGuiKey_Home,       false, [this]{moveHome();}},
-     {false, true,  false, ImGuiKey_Home,       false, [this]{moveTop();}},
-     {false, true,  true,  ImGuiKey_Home,       false, [this]{moveTopSelect();}},
      {false, false, false, ImGuiKey_End,        false, [this]{moveEnd();}},
-     {false, true,  false, ImGuiKey_End,        false, [this]{moveBot();}},
-     {false, true,  true,  ImGuiKey_End,        false, [this]{moveBotSelect();}},
      // toggle mode
      {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverwrite();}},
      {false, true,  false, ImGuiKey_Space,      false, [this]{toggleShowFolds();}},
@@ -2607,7 +2506,7 @@ void cTextEditor::preRender() {
   if (mShowLineNumbers) {
     char str[32];
     if (mShowDebug) // get lineDebug width
-      snprintf (str, sizeof(str), "%4d%4d %4d ",1,1,1);
+      snprintf (str, sizeof(str), "%4d%4d ",1,1);
     else // get lineNumber width
       snprintf (str, sizeof(str), "%d ", (int)mLines.size());
     mGlyphsOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
@@ -2742,7 +2641,7 @@ void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber) {
     if (mShowDebug) {
       //{{{  draw debug, zeroBased, rightJustified
       char str[32];
-      snprintf (str, sizeof(str), "%4d:%4d %4d ", lineNumber, line.mFoldTitleLineNumber, (int)ImGui::GetScrollY());
+      snprintf (str, sizeof(str), "%4d:%4d ", lineNumber, line.mFoldTitleLineNumber);
       float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
       mDrawList->AddText (mGlyphsPos - ImVec2 (strWidth,0), mPalette[(size_t)ePalette::LineNumber], str);
       }

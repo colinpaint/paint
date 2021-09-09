@@ -97,6 +97,7 @@ public:
     // full screen window
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
+    ImGui::PushStyleColor (ImGuiCol_WindowBg, ImGui::ColorConvertU32ToFloat4 (0xffffffff));
     ImGui::Begin ("fed", nullptr,
                   ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove);
 
@@ -183,10 +184,11 @@ public:
     //}}}
 
     ImGui::PushFont (app.getMonoFont());
-    mTextEditor.render ("cTextEditor");
+    mTextEditor.render();
     ImGui::PopFont();
 
     ImGui::End();
+    ImGui::PopStyleColor();
     }
 
 private:
