@@ -264,8 +264,8 @@ public:
 
   void moveTop();
   void moveTopSelect();
-  void moveBottom();
-  void moveBottomSelect();
+  void moveBot();
+  void moveBotSelect();
 
   void moveHome();
   void moveHomeSelect();
