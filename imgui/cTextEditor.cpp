@@ -2864,23 +2864,25 @@ void cTextEditor::renderFold (int& lineNumber, int& lineIndex, bool parentOpen, 
 
   if (parentOpen) {
     // if no comment, search for first noComment line, assume next line for now
-    mLines[lineNumber].mFoldTitleLineNumber = mLines[lineNumber].mHasComment ? lineNumber : lineNumber + 1;
+    sLine& line = mLines[lineNumber];
+    line.mFoldTitleLineNumber = line.mHasComment ? lineNumber : lineNumber + 1;
 
     // show foldBegin line
     mVisibleLines.push_back (lineNumber);
     if ((lineIndex >= mMinLineIndex) && (lineIndex <= mMaxLineIndex))
-      renderLine (lineNumber, mLines[lineNumber].mFoldTitleLineNumber, lineIndex);
+      renderLine (lineNumber, line.mFoldTitleLineNumber, lineIndex);
     lineIndex++;
     }
 
   while (true) {
     lineNumber++;
     if (lineNumber < mLines.size()) {
-      mLines[lineNumber].mFoldLineNumber = beginLineNumber;
-      if (mLines[lineNumber].mFoldBegin)
-        renderFold (lineNumber, lineIndex, foldOpen, mLines[lineNumber].mFoldOpen);
-      else if (mLines[lineNumber].mFoldEnd) {
-        // update beginFold line with endFold lineNumber, helps reverse traversal
+      sLine& line = mLines[lineNumber];
+      line.mFoldLineNumber = beginLineNumber;
+      if (line.mFoldBegin)
+        renderFold (lineNumber, lineIndex, foldOpen, line.mFoldOpen);
+      else if (line.mFoldEnd) {
+        // set beginFoldLine.mFoldLineNumber with endFold lineNumber, helps reverse traversal
         mLines[beginLineNumber].mFoldLineNumber = lineNumber;
         if (foldOpen) {
           // show foldEnd line of open fold
