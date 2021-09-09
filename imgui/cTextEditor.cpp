@@ -1680,29 +1680,37 @@ void cTextEditor::ensureCursorVisible() {
     return;
     }
 
-  float scrollX = ImGui::GetScrollX();
-  float scrollY = ImGui::GetScrollY();
-
-  float height = ImGui::GetWindowHeight();
-  int top = 1 + (int)ceil(scrollY / mCharSize.y);
-  int bottom = (int)ceil((scrollY + height) / mCharSize.y);
-
-  float width = ImGui::GetWindowWidth();
-  int left = (int)ceil(scrollX / mCharSize.x);
-  int right = (int)ceil((scrollX + width) / mCharSize.x);
+  ImVec2 contentSize = ImGui::GetWindowContentRegionMax();
 
   sPosition position = getCursorPosition();
-  float length = getTextWidth (position);
+  int lineIndex = lineNumberToIndex (position.mLineNumber);
 
-  if (position.mLineNumber < top)
-    ImGui::SetScrollY (max (0.f, (position.mLineNumber - 1) * mCharSize.y));
-  if (position.mLineNumber > bottom - 4)
-    ImGui::SetScrollY (max (0.f, (position.mLineNumber + 4) * mCharSize.y - height));
+  int topLineIndex = static_cast<int>(floor (ImGui::GetScrollY() / mCharSize.y));
+  if (lineIndex < (topLineIndex + 4)) 
+    // set scroll to see top line
+    ImGui::SetScrollY (max (0.f, (lineIndex - 4) * mCharSize.y));
+  else {
+    // test bottom line
+    int bottomLineIndex = min (getMaxLineIndex(),
+      mMinLineIndex + static_cast<int>(ceil ((ImGui::GetScrollY() + contentSize.y) / mCharSize.y)));
+    if (lineIndex > (bottomLineIndex - 4)) 
+      // set scroll to see bottom line
+      ImGui::SetScrollY (max (0.f, (lineIndex + 4) * mCharSize.y - contentSize.y));
+    }
 
-  if (length + mGlyphsOffset < left + 4)
-    ImGui::SetScrollX (max(0.f, length + mGlyphsOffset - 4));
-  if (length + mGlyphsOffset > right - 4)
-    ImGui::SetScrollX (max(0.f, length + mGlyphsOffset + 4 - width));
+  float textWidth = getTextWidth (position);
+
+  int leftColumn = (int)floor(ImGui::GetScrollX() / mCharSize.x);
+  if (mGlyphsOffset + textWidth < leftColumn + 4) 
+    // set scroll to see leftColumn
+    ImGui::SetScrollX (max(0.f, mGlyphsOffset + textWidth - 4));
+  else { 
+    // test rightColumn
+    int rightColumn = (int)ceil((ImGui::GetScrollX() + contentSize.x) / mCharSize.x);
+    if (mGlyphsOffset + textWidth > rightColumn - 4) 
+      // set scroll to see  rightColumn
+      ImGui::SetScrollX (max(0.f, mGlyphsOffset + textWidth + 4 - contentSize.x));
+    }
   }
 //}}}
 
@@ -2604,7 +2612,7 @@ void cTextEditor::preRender() {
 
   // calc mMinLineIndex, mMaxLineIndex from scroll
   mMinLineIndex = static_cast<int>(floor (ImGui::GetScrollY() / mCharSize.y));
-  mMaxLineIndex = min (getMaxLineIndex(), 
+  mMaxLineIndex = min (getMaxLineIndex(),
                        mMinLineIndex + static_cast<int>(ceil ((ImGui::GetScrollY() + contentSize.y) / mCharSize.y)));
 
   mLineBeginPos = mCursorScreenPos + ImVec2 (ImGui::GetScrollX(), mMinLineIndex * mCharSize.y);
@@ -2814,10 +2822,10 @@ void cTextEditor::renderLine (int lineNumber, int beginFoldLineNumber, int lineI
     }
     //}}}
 
-  // expand mMaxWidth with our maxWidth, !!! what about prefix width !!!
+  // expand mMaxLineWidth with our maxWidth
   mMaxLineWidth = max (mMaxLineWidth, glyphsEnd);
 
-  // nextLine
+  // set pos to start of next line
   mLineBeginPos.y += mCharSize.y;
   mGlyphsPos.x = mCursorScreenPos.x + mGlyphsOffset;
   mGlyphsPos.y += mCharSize.y;
