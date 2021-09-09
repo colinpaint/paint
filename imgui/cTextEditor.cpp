@@ -1228,10 +1228,9 @@ void cTextEditor::render() {
   colorizeInternal();
 
   preRender();
-  if (mShowFolds) {
-    mFoldLines.clear();
+  mFoldLines.clear();
+  if (mShowFolds) 
     renderFold (0, true, true);
-    }
   else {
     for (int lineNumber = 0; lineNumber <= getMaxLineIndex(); lineNumber++)
       renderLine (lineNumber, 0);
