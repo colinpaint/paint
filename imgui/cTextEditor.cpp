@@ -2366,7 +2366,6 @@ void cTextEditor::parseFolds() {
 
     // init fields set by updateFolds
     line.mFoldOpen = false;
-    line.mFoldLineNumber = 0;
     line.mFoldTitleLineNumber = -1;
     }
 
@@ -2627,7 +2626,7 @@ void cTextEditor::preRender() {
   if (mShowLineNumbers) {
     char str[32];
     if (mShowDebug) // get lineDebug width
-      snprintf (str, sizeof(str), "%4d:%4d:%4d:%4d ",1,1,1,1);
+      snprintf (str, sizeof(str), "%4d:%4d:%4d ",1,1,1);
     else // get lineNumber width
       snprintf (str, sizeof(str), "%d ", (int)mLines.size());
     mGlyphsOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
@@ -2701,7 +2700,7 @@ void cTextEditor::renderGlyphs (const vector <sGlyph>& glyphs, bool forceColor, 
   }
 //}}}
 //{{{
-void cTextEditor::renderLine (int lineNumber, int beginFoldLineNumber, int lineIndex) {
+void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
 
   float glyphsEnd = mGlyphsOffset + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber)));
   //{{{  draw select background
@@ -2760,8 +2759,8 @@ void cTextEditor::renderLine (int lineNumber, int beginFoldLineNumber, int lineI
     if (mShowDebug) {
       //{{{  draw debug, rightJustified
       char str[32];
-      snprintf (str, sizeof(str), "%4d:%4d:%4d:%4d ",
-                lineIndex+1, lineNumber+1, line.mFoldLineNumber+1, line.mFoldTitleLineNumber+1);
+      snprintf (str, sizeof(str), "%4d:%4d:%4d ",
+                lineIndex+1, lineNumber+1, line.mFoldTitleLineNumber+1);
       float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
       mDrawList->AddText (mGlyphsPos - ImVec2 (strWidth,0), mPalette[(size_t)ePalette::LineNumber], str);
       }
@@ -2796,8 +2795,8 @@ void cTextEditor::renderLine (int lineNumber, int beginFoldLineNumber, int lineI
      mDrawList->AddText (mGlyphsPos, mPalette[(size_t)ePalette::FoldBeginClosed], prefixString.c_str());
      mGlyphsPos.x += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, prefixString.c_str(), nullptr, nullptr).x;
 
-     // use the best line for closed beginFold text
-     renderGlyphs (mLines[beginFoldLineNumber].mGlyphs, true, mPalette[(size_t)ePalette::FoldBeginClosed]);
+     // a closed fold with no comments may be using the first nonComment line in fold for glyphs
+     renderGlyphs (mLines[glyphsLineNumber].mGlyphs, true, mPalette[(size_t)ePalette::FoldBeginClosed]);
      }
      //}}}
     }
@@ -2860,8 +2859,6 @@ void cTextEditor::renderFold (int& lineNumber, int& lineIndex, bool parentOpen, 
 // recursive traversal of mLines to produce mVisbleLines of folds
 // - only renderLine mMinLineIndex to mMaxLineIndex for speed
 
-  int beginLineNumber = lineNumber;
-
   if (parentOpen) {
     // if no comment, search for first noComment line, assume next line for now
     sLine& line = mLines[lineNumber];
@@ -2878,17 +2875,14 @@ void cTextEditor::renderFold (int& lineNumber, int& lineIndex, bool parentOpen, 
     lineNumber++;
     if (lineNumber < mLines.size()) {
       sLine& line = mLines[lineNumber];
-      line.mFoldLineNumber = beginLineNumber;
       if (line.mFoldBegin)
         renderFold (lineNumber, lineIndex, foldOpen, line.mFoldOpen);
       else if (line.mFoldEnd) {
-        // set beginFoldLine.mFoldLineNumber with endFold lineNumber, helps reverse traversal
-        mLines[beginLineNumber].mFoldLineNumber = lineNumber;
         if (foldOpen) {
           // show foldEnd line of open fold
           mVisibleLines.push_back (lineNumber);
           if ((lineIndex >= mMinLineIndex) && (lineIndex <= mMaxLineIndex))
-            renderLine (lineNumber, -1, lineIndex);
+            renderLine (lineNumber, lineNumber, lineIndex);
           lineIndex++;
           }
         return;
@@ -2897,7 +2891,7 @@ void cTextEditor::renderFold (int& lineNumber, int& lineIndex, bool parentOpen, 
         // show all lines of open fold
         mVisibleLines.push_back (lineNumber);
         if ((lineIndex >= mMinLineIndex) && (lineIndex < mMaxLineIndex))
-          renderLine (lineNumber, -1, lineIndex);
+          renderLine (lineNumber, lineNumber, lineIndex);
         lineIndex++;
         }
       }

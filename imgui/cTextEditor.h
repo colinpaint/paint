@@ -74,7 +74,6 @@ public:
   struct sLine {
     std::vector <sGlyph> mGlyphs;
 
-    int mFoldLineNumber;      // foldBegin lineNumber, except for foldBegin which is set to foldEnd lineNumber
     int mFoldTitleLineNumber; // lineNumber for foldTitle
     int16_t mIndent;
 
@@ -84,11 +83,11 @@ public:
     bool mHasComment:1;
 
     sLine() :
-      mGlyphs(), mFoldLineNumber(0), mFoldTitleLineNumber(0), mIndent(0),
+      mGlyphs(), mFoldTitleLineNumber(0), mIndent(0),
       mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mHasComment(false) {}
 
     sLine (const std::vector<sGlyph>& line) :
-      mGlyphs(line), mFoldLineNumber(0), mFoldTitleLineNumber(0), mIndent(0),
+      mGlyphs(line), mFoldTitleLineNumber(0), mIndent(0),
       mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mHasComment(false) {}
     };
   //}}}
