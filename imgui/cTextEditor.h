@@ -223,6 +223,8 @@ public:
   sPosition getCursorPosition() const { return sanitizePosition (mState.mCursorPosition); }
 
   const sLanguage& getLanguage() const { return mLanguage; }
+
+  std::string getDebugString();
   //}}}
   //{{{  sets
   void setTextString (const std::string& text);

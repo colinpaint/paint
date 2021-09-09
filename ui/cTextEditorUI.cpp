@@ -171,13 +171,15 @@ public:
     //}}}
     //{{{  info text
     ImGui::SameLine();
-    ImGui::Text ("%d:%d:%d %s%s%s%s", mTextEditor.getCursorPosition().mColumn+1,
+    ImGui::Text ("%d:%d:%d %s%s%s%s%s", mTextEditor.getCursorPosition().mColumn+1,
                                         mTextEditor.getCursorPosition().mLineNumber+1,
                                         mTextEditor.getTextNumLines(),
                                         mTextEditor.getLanguage().mName.c_str(),
                                         mTextEditor.isTextEdited() ? " edited":"",
                                         mTextEditor.hasTabs() ? " tabs":"",
-                                        mTextEditor.hasCR() ? " CR":"");
+                                        mTextEditor.hasCR() ? " CR":"",
+                                        mTextEditor.getDebugString().c_str()
+                                        );
     //}}}
 
     ImGui::PushFont (app.getMonoFont());
