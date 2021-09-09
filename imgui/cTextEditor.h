@@ -74,9 +74,9 @@ public:
   struct sLine {
     std::vector <sGlyph> mGlyphs;
 
-    uint32_t mFoldLineNumber; // foldBegin lineNumber, except for foldBegin which is set to foldEnd lineNumber
-    uint32_t mFoldTitleLineNumber; // lineNumber for foldTitle
-    uint16_t mIndent;
+    int mFoldLineNumber;      // foldBegin lineNumber, except for foldBegin which is set to foldEnd lineNumber
+    int mFoldTitleLineNumber; // lineNumber for foldTitle
+    int16_t mIndent;
 
     bool mFoldBegin:1;
     bool mFoldEnd:1;
@@ -259,10 +259,10 @@ public:
   void moveLeft();
   void moveRight();
 
-  void moveLineUp() { moveUp (1); }
-  void moveLineDown() { moveDown (1); }
-  void movePageUp() { moveUp (getPageNumLines() - 4); }
-  void movePageDown() { moveDown (getPageNumLines() - 4); }
+  void moveLineUp()   { moveUpDown (-1); }
+  void moveLineDown() { moveUpDown (1); }
+  void movePageUp()   { moveUpDown (-getPageNumLines() + 4); }
+  void movePageDown() { moveUpDown (getPageNumLines() - 4); }
 
   void moveTop();
   void moveTopSelect();
@@ -356,12 +356,14 @@ private:
 
   float getTextWidth (const sPosition& position) const;
   int getPageNumLines() const;
+  int getMaxLineIndex() const;
   //}}}
   //{{{  utils
-
   void advance (sPosition& position) const;
   sPosition screenToPosition (const ImVec2& pos) const;
   sPosition sanitizePosition (const sPosition& position) const;
+  int lineIndexToNumber (int lineIndex) const;
+  int lineNumberToIndex (int lineNumber) const;
   void ensureCursorVisible();
 
   // find
@@ -372,10 +374,7 @@ private:
   // move
   void moveLeft (int amount, bool select , bool wordMode);
   void moveRight (int amount, bool select, bool wordMode);
-  void moveUp (int amount);
-  void moveUpSelect (int amount);
-  void moveDown (int amount);
-  void moveDownSelect( int amount);
+  void moveUpDown (int amount);
 
   // insert
   std::vector<sGlyph>& insertLine (int index);
@@ -403,16 +402,15 @@ private:
   void handleMouseInputs();
   void handleKeyboardInputs();
 
-  void preRender (uint32_t& minLineIndex, uint32_t& maxLineIndex);
+  void preRender();
   void renderGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
-  void renderLine (uint32_t lineNumber, uint32_t beginFoldLineNumber);
-  void renderFold (std::vector<sLine>::iterator& it, uint32_t& lineNumber, uint32_t& lineIndex,
-                   uint32_t minLineIndex, uint32_t maxLineIndex, bool parentOpen, bool foldOpen);
+  void renderLine (int lineNumber, int beginFoldLineNumber, int lineIndex);
+  void renderFold (std::vector<sLine>::iterator& it, int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
   void postRender();
 
   //{{{  vars
   std::vector <sLine> mLines;
-  std::vector <uint32_t> mVisibleLines;
+  std::vector <int> mVisibleLines;
 
   // config
   sLanguage mLanguage;
@@ -469,6 +467,9 @@ private:
   ImDrawList* mDrawList = nullptr;
   ImVec2 mCursorScreenPos;
   bool mFocused = false;
+
+  int mMinLineIndex = -1;
+  int mMaxLineIndex = -1;
 
   ImVec2 mCharSize;          // size of character grid, space wide, fontHeight high
   float mGlyphsOffset = 0.f; // start offset of glyphs
