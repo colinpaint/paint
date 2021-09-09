@@ -1335,12 +1335,11 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
   mFoldLines.clear();
 
   int lineNumber = 0;
-  int lineIndex = 0;
   if (mShowFolds)
-    renderFold (lineNumber, lineIndex, true, true);
+    renderFold (lineNumber, true, true);
   else {
     while (lineNumber <= getMaxLineIndex())
-      renderLine (lineNumber++, 0, lineIndex++);
+      renderLine (lineNumber++, 0);
     }
 
   postRender();
@@ -2611,7 +2610,7 @@ void cTextEditor::preRender() {
   if (mShowLineNumbers) {
     char str[32];
     if (mShowDebug) // get lineDebug width
-      snprintf (str, sizeof(str), "%4d:%4d:%4d ",1,1,1);
+      snprintf (str, sizeof(str), "%4d:%4d ",1,1);
     else // get lineNumber width
       snprintf (str, sizeof(str), "%d ", (int)mLines.size());
     mGlyphsOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
@@ -2680,8 +2679,12 @@ void cTextEditor::renderGlyphs (const vector <sGlyph>& glyphs, bool forceColor, 
   }
 //}}}
 //{{{
-void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
-// !!! implement simple off window cull here if too slow !!!
+void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber) {
+
+  if (mShowFolds)
+    mFoldLines.push_back (lineNumber);
+
+  // !!! implement simple off window cull here if too slow !!!
 
   float glyphsEnd = mGlyphsOffset + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber)));
   //{{{  draw select background
@@ -2740,7 +2743,7 @@ void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber, int lineInde
     if (mShowDebug) {
       //{{{  draw debug, zeroBased, rightJustified
       char str[32];
-      snprintf (str, sizeof(str), "%4d:%4d:%4d ", lineIndex, lineNumber, line.mFoldTitleLineNumber);
+      snprintf (str, sizeof(str), "%4d:%4d ", lineNumber, line.mFoldTitleLineNumber);
       float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
       mDrawList->AddText (mGlyphsPos - ImVec2 (strWidth,0), mPalette[(size_t)ePalette::LineNumber], str);
       }
@@ -2835,44 +2838,31 @@ void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber, int lineInde
   }
 //}}}
 //{{{
-void cTextEditor::renderFold (int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen) {
+int cTextEditor::renderFold (int lineNumber, bool parentOpen, bool foldOpen) {
 // recursive traversal of mLines to produce mVisbleLines of folds
 
   if (parentOpen) {
-    // if no comment, search for first noComment line, assume next line for now
+    // show foldBegin line
+    // - if no foldBegin comment, search for first noComment line, !!!! assume next line for now !!!!
     sLine& line = mLines[lineNumber];
     line.mFoldTitleLineNumber = line.mHasComment ? lineNumber : lineNumber + 1;
-
-    // show foldBegin line
-    mFoldLines.push_back (lineNumber);
-    renderLine (lineNumber, line.mFoldTitleLineNumber, lineIndex);
-    lineIndex++;
+    renderLine (lineNumber, line.mFoldTitleLineNumber);
     }
 
   while (true) {
-    lineNumber++;
-    if (lineNumber < mLines.size()) {
-      sLine& line = mLines[lineNumber];
-      if (line.mFoldBegin)
-        renderFold (lineNumber, lineIndex, foldOpen, line.mFoldOpen);
-      else if (line.mFoldEnd) {
-        if (foldOpen) {
-          // show foldEnd line of open fold
-          mFoldLines.push_back (lineNumber);
-          renderLine (lineNumber, lineNumber, lineIndex);
-          lineIndex++;
-          }
-        return;
-        }
-      else if (foldOpen) {
-        // show all lines of open fold
-        mFoldLines.push_back (lineNumber);
-        renderLine (lineNumber, lineNumber, lineIndex);
-        lineIndex++;
-        }
+    if (++lineNumber >= mLines.size())
+      return lineNumber;
+
+    sLine& line = mLines[lineNumber];
+    if (line.mFoldBegin)
+      lineNumber = renderFold (lineNumber, foldOpen, line.mFoldOpen);
+    else if (line.mFoldEnd) {
+      if (foldOpen) // show foldEnd line of open fold
+        renderLine (lineNumber, lineNumber);
+      return lineNumber;
       }
-    else
-      return;
+    else if (foldOpen) // show all lines of open fold
+      renderLine (lineNumber, lineNumber);
     }
   }
 //}}}

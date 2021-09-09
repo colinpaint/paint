@@ -403,8 +403,8 @@ private:
 
   void preRender();
   void renderGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
-  void renderLine (int lineNumber, int beginFoldLineNumber, int lineIndex);
-  void renderFold (int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
+  void renderLine (int lineNumber, int beginFoldLineNumber);
+  int renderFold (int lineNumber, bool parentOpen, bool foldOpen);
   void postRender();
 
   //{{{  vars
