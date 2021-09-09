@@ -47,7 +47,7 @@ int main (int numArgs, char* args[]) {
   string platformName = "glfw";
   string graphicsName = "opengl";
   bool showDemoWindow = false;
-  bool vsync = false;
+  bool vsync = true;
   bool showPlotWindow = false;
   //{{{  parse command line args to params
   // args to params
@@ -62,7 +62,7 @@ int main (int numArgs, char* args[]) {
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
     else if (*it == "demo") { showDemoWindow = true; params.erase (it); }
-    else if (*it == "vsync") { vsync = true; params.erase (it); }
+    else if (*it == "free") { vsync = false; params.erase (it); }
     else if (*it == "plot") { showPlotWindow = true; params.erase (it); }
     else ++it;
     };
@@ -86,7 +86,7 @@ int main (int numArgs, char* args[]) {
   // should clear main screen here before file loads
 
   // create canvas
-  #ifdef _WIN32 
+  #ifdef _WIN32
     cCanvas canvas (platform, graphics, params.empty() ? "../piccies/tv.jpg" :
                                                          cFileUtils::resolveShortcut (params[0]));
   #else

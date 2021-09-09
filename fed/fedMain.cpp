@@ -42,7 +42,7 @@ int main (int numArgs, char* args[]) {
   string platformName = "glfw";
   string graphicsName = "opengl";
   bool showDemoWindow = false;
-  bool vsync = false;
+  bool vsync = true;
   //{{{  parse command line args to params
   // args to params
   vector <string> params;
@@ -56,7 +56,7 @@ int main (int numArgs, char* args[]) {
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
     else if (*it == "demo") { showDemoWindow = true; params.erase (it); }
-    else if (*it == "vsync") { vsync = true; params.erase (it); }
+    else if (*it == "free") { vsync = false; params.erase (it); }
     else ++it;
     };
   //}}}
@@ -81,7 +81,7 @@ int main (int numArgs, char* args[]) {
     app.setName (params.empty() ? "C:/projects/paint/imgui/cTextEditor.cpp" :
                                   cFileUtils::resolveShortcut (params[0]));
   #else
-    app.setName (params.empty() ? "/home/pi/paint/imgui/cTextEditor.cpp" : 
+    app.setName (params.empty() ? "/home/pi/paint/imgui/cTextEditor.cpp" :
                                   params[0]);
   #endif
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));

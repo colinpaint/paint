@@ -486,7 +486,7 @@ namespace {
 cTextEditor::cTextEditor()
   : mTextEdited(false),
     mHasTabs(false), mTabSize(4), mHasFolds(false), mHasCR(false),
-    mOverwrite(false) , mReadOnly(false), mIgnoreImGuiChild(false), mCheckComments(true),
+    mOverwrite(false) , mReadOnly(false), mCheckComments(true),
     //mShowFolds(false), mShowLineNumbers(false), mShowDebug(false), mShowWhiteSpace(false),
     mShowFolds(false), mShowLineNumbers(true), mShowDebug(true), mShowWhiteSpace(false),
 
@@ -536,12 +536,6 @@ vector<string> cTextEditor::getTextStrings() const {
     }
 
   return result;
-  }
-//}}}
-
-//{{{
-string cTextEditor::getDebugString() {
-  return fmt::format ("minIndex:{} maxIndex{}", mMinLineIndex, mMaxLineIndex);
   }
 //}}}
 //}}}
@@ -1325,10 +1319,9 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
   ImGui::PushStyleColor (ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4 (mPalette[(size_t)ePalette::Background]));
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
 
-  if (!mIgnoreImGuiChild)
-    ImGui::BeginChild (title.c_str(), size, border,
-                       ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar |
-                       ImGuiWindowFlags_NoMove);
+  ImGui::BeginChild(title.c_str(), size, border,
+    ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar |
+    ImGuiWindowFlags_NoMove);
 
   handleKeyboardInputs();
   ImGui::PushAllowKeyboardFocus (true);
@@ -1341,29 +1334,26 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
 
   mVisibleLines.clear();
   if (mShowFolds) {
-    //{{{  iterate lines, create mVisibleLines
+    //  iterate lines, creating mVisibleLines, drawing visible lines
     int lineNumber = 0;
     int lineIndex = 0;
     renderFold (lineNumber, lineIndex, true, true);
     }
-    //}}}
   else {
-    //{{{  simple renderLine visible lines
-    int lineNumber = mMinLineIndex;
-    while (lineNumber <= mMaxLineIndex) {
-      renderLine (lineNumber, 0, lineNumber);
+    // draw lines from mBeginLineIndex unitl end of lines or bottom of screen
+    int lineNumber = mBeginLineIndex;
+    while ((lineNumber <= getMaxLineIndex()) && renderLine (lineNumber, lineNumber, lineNumber))
       lineNumber++;
-      }
     }
-    //}}}
 
   postRender();
 
+  mDebugString = fmt::format ("line:{} index:{} minIndex:{} scrolly:{} scrollx:{}",
+                               getCursorPosition().mLineNumber, lineNumberToIndex (getCursorPosition().mLineNumber),
+                               mBeginLineIndex, ImGui::GetScrollY(), ImGui::GetScrollX());
+  ImGui::EndChild();
+
   ImGui::PopAllowKeyboardFocus();
-
-  if (!mIgnoreImGuiChild)
-    ImGui::EndChild();
-
   ImGui::PopStyleVar();
   ImGui::PopStyleColor();
   }
@@ -2302,36 +2292,32 @@ void cTextEditor::ensureCursorVisible() {
   int lineIndex = lineNumberToIndex (position.mLineNumber);
 
   int topLineIndex = static_cast<int>(floor (ImGui::GetScrollY() / mCharSize.y));
-  if (lineIndex < (topLineIndex + 4)) {
-    cLog::log (LOGINFO, fmt::format ("scroll top cursor:{} top:{}", lineIndex, topLineIndex));
-    // set scroll to see top line
-    ImGui::SetScrollY (max (0.f, (lineIndex - 4) * mCharSize.y));
+  int botLineIndex =
+    min (getMaxLineIndex(), mBeginLineIndex + static_cast<int>(ceil (ImGui::GetWindowHeight() / mCharSize.y)));
+  if (lineIndex < topLineIndex) {
+    cLog::log (LOGINFO, fmt::format ("top {} {} {}", lineIndex, topLineIndex,
+                                     max (0.f, lineIndex * mCharSize.y)));
+    ImGui::SetScrollY (max (0.f, lineIndex * mCharSize.y));
     }
-  else {
-    // test bot line
-    int botLineIndex = min (getMaxLineIndex(), 
-                            mMinLineIndex + static_cast<int>(ceil (ImGui::GetWindowHeight() / mCharSize.y)));
-    if (lineIndex > (botLineIndex - 4))
-      cLog::log (LOGINFO, fmt::format ("scroll bot cursor:{} bot:{}", lineIndex, botLineIndex));
-
-      // set scroll to see bot line
-      ImGui::SetScrollY (max (0.f, (lineIndex + 4) * mCharSize.y - ImGui::GetWindowHeight()));
+  else if (lineIndex > botLineIndex) {
+    cLog::log (LOGINFO, fmt::format ("bot {} {} {}", lineIndex, botLineIndex,
+                                     max (0.f, lineIndex * mCharSize.y)));
+    ImGui::SetScrollY (max (0.f, lineIndex * mCharSize.y));
     }
 
-  float textWidth = getTextWidth (position);
-
-  int leftColumn = (int)floor(ImGui::GetScrollX() / mCharSize.x);
-  if (mGlyphsOffset + textWidth < leftColumn + 4) {
-    // set scroll to see leftColumn
-    ImGui::SetScrollX (max (0.f, mGlyphsOffset + textWidth - 4));
-    }
-  else {
-    // test rightColumn
-    int rightColumn = (int)ceil((ImGui::GetScrollX() + ImGui::GetWindowWidth()) / mCharSize.x);
-    if (mGlyphsOffset + textWidth > rightColumn - 4)
-      // set scroll to see rightColumn
-      ImGui::SetScrollX (max (0.f, mGlyphsOffset + textWidth + 4 - ImGui::GetWindowWidth()));
-    }
+  //{{{  left right
+  //float textWidth = getTextWidth (position);
+  //int leftColumn = (int)floor(ImGui::GetScrollX() / mCharSize.x);
+  //int rightColumn = (int)ceil((ImGui::GetScrollX() + ImGui::GetWindowWidth()) / mCharSize.x);
+  //if (mGlyphsOffset + textWidth < leftColumn + 4) {
+    //cLog::log (LOGINFO, "left");
+    //ImGui::SetScrollX (max (0.f, mGlyphsOffset + textWidth - 4));
+    //}
+  //else if (mGlyphsOffset + textWidth > rightColumn - 4) {
+    //cLog::log (LOGINFO, "right");
+    //ImGui::SetScrollX (max (0.f, mGlyphsOffset + textWidth + 4 - ImGui::GetWindowWidth()));
+    //}
+  //}}}
   }
 //}}}
 
@@ -2635,12 +2621,12 @@ void cTextEditor::preRender() {
     }
   mMaxLineWidth = 0;
 
-  // calc mMinLineIndex, mMaxLineIndex from scroll
-  mMinLineIndex = static_cast<int>(floor (ImGui::GetScrollY() / mCharSize.y));
-  mMaxLineIndex = min (getMaxLineIndex(), 
-                       mMinLineIndex + static_cast<int>(ceil (ImGui::GetContentRegionMax().y / mCharSize.y)));
+  // calc mBeginLineIndex
+  mBeginLineIndex = static_cast<int>(ceil (ImGui::GetScrollY() / mCharSize.y));
+  mWindowBottom = (mBeginLineIndex * mCharSize.y) + ImGui::GetWindowHeight() - 2;
+  ImGui::SetScrollY (mBeginLineIndex * mCharSize.y);
 
-  mLineBeginPos = mCursorScreenPos + ImVec2 (ImGui::GetScrollX(), mMinLineIndex * mCharSize.y);
+  mLineBeginPos = mCursorScreenPos + ImVec2 (ImGui::GetScrollX(), mBeginLineIndex * mCharSize.y);
   mGlyphsPos = mLineBeginPos + ImVec2 (mGlyphsOffset, 0);
   }
 //}}}
@@ -2702,7 +2688,8 @@ void cTextEditor::renderGlyphs (const vector <sGlyph>& glyphs, bool forceColor, 
   }
 //}}}
 //{{{
-void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
+bool cTextEditor::renderLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
+// retunr false if next line off bottom of screen
 
   float glyphsEnd = mGlyphsOffset + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber)));
   //{{{  draw select background
@@ -2853,13 +2840,15 @@ void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber, int lineInde
   mLineBeginPos.y += mCharSize.y;
   mGlyphsPos.x = mCursorScreenPos.x + mGlyphsOffset;
   mGlyphsPos.y += mCharSize.y;
+
+  return mLineBeginPos.y < mWindowBottom;
   }
 //}}}
 //{{{
-void cTextEditor::renderFold (int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen) {
+bool cTextEditor::renderFold (int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen) {
 // recursive traversal of mLines to produce mVisbleLines of folds
-// - only renderLine mMinLineIndex to mMaxLineIndex for speed
-
+// - only render lines from mBeginLineIndex to end of lines or past bottom of window
+  bool drawLine = true;
   if (parentOpen) {
     // if no comment, search for first noComment line, assume next line for now
     sLine& line = mLines[lineNumber];
@@ -2867,8 +2856,8 @@ void cTextEditor::renderFold (int& lineNumber, int& lineIndex, bool parentOpen, 
 
     // show foldBegin line
     mVisibleLines.push_back (lineNumber);
-    if ((lineIndex >= mMinLineIndex) && (lineIndex <= mMaxLineIndex))
-      renderLine (lineNumber, line.mFoldTitleLineNumber, lineIndex);
+    if ((lineIndex >= mBeginLineIndex) && drawLine)
+      drawLine = renderLine (lineNumber, line.mFoldTitleLineNumber, lineIndex);
     lineIndex++;
     }
 
@@ -2877,27 +2866,27 @@ void cTextEditor::renderFold (int& lineNumber, int& lineIndex, bool parentOpen, 
     if (lineNumber < mLines.size()) {
       sLine& line = mLines[lineNumber];
       if (line.mFoldBegin)
-        renderFold (lineNumber, lineIndex, foldOpen, line.mFoldOpen);
+        drawLine = renderFold (lineNumber, lineIndex, foldOpen, line.mFoldOpen);
       else if (line.mFoldEnd) {
         if (foldOpen) {
           // show foldEnd line of open fold
           mVisibleLines.push_back (lineNumber);
-          if ((lineIndex >= mMinLineIndex) && (lineIndex <= mMaxLineIndex))
-            renderLine (lineNumber, lineNumber, lineIndex);
+          if ((lineIndex >= mBeginLineIndex) && drawLine)
+            drawLine = renderLine (lineNumber, lineNumber, lineIndex);
           lineIndex++;
           }
-        return;
+        return drawLine;
         }
       else if (foldOpen) {
         // show all lines of open fold
         mVisibleLines.push_back (lineNumber);
-        if ((lineIndex >= mMinLineIndex) && (lineIndex < mMaxLineIndex))
-          renderLine (lineNumber, lineNumber, lineIndex);
+        if ((lineIndex >= mBeginLineIndex) && drawLine)
+          drawLine = renderLine (lineNumber, lineNumber, lineIndex);
         lineIndex++;
         }
       }
     else
-      return;
+      return drawLine;
     }
   }
 //}}}

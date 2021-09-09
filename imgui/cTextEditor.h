@@ -212,8 +212,6 @@ public:
   bool hasFolds() const { return mHasFolds; }
   bool hasCR() const { return mHasCR; }
 
-  bool isImGuiChildIgnored() const { return mIgnoreImGuiChild; }
-
   // get
   std::string getTextString() const;
   std::vector<std::string> getTextStrings() const;
@@ -224,7 +222,7 @@ public:
 
   const sLanguage& getLanguage() const { return mLanguage; }
 
-  std::string getDebugString();
+  std::string getDebugString() { return mDebugString; }
   //}}}
   //{{{  sets
   void setTextString (const std::string& text);
@@ -405,8 +403,8 @@ private:
 
   void preRender();
   void renderGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
-  void renderLine (int lineNumber, int beginFoldLineNumber, int lineIndex);
-  void renderFold (int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
+  bool renderLine (int lineNumber, int beginFoldLineNumber, int lineIndex);
+  bool renderFold (int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
   void postRender();
 
   //{{{  vars
@@ -430,7 +428,6 @@ private:
   // modes
   bool mOverwrite;
   bool mReadOnly;
-  bool mIgnoreImGuiChild;
   bool mCheckComments;
 
   // shows
@@ -455,6 +452,7 @@ private:
 
   uint64_t mStartTime;
   float mLastClick;
+  std::string mDebugString;
   //}}}
   //{{{  render context vars
   ImFont* mFont = nullptr;
@@ -464,8 +462,8 @@ private:
   ImVec2 mCursorScreenPos;
   bool mFocused = false;
 
-  int mMinLineIndex = -1;
-  int mMaxLineIndex = -1;
+  int mBeginLineIndex = -1;  // lineIndex of first line in window
+  float mWindowBottom = 0;
 
   ImVec2 mCharSize;          // size of character grid, space wide, fontHeight high
   float mGlyphsOffset = 0.f; // start offset of glyphs
