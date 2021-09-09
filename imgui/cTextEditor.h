@@ -74,7 +74,7 @@ public:
   struct sLine {
     std::vector <sGlyph> mGlyphs;
 
-    int mFoldTitleLineNumber; // lineNumber for foldTitle
+    int mFoldTitleLineNumber; // closed foldTitle glyphs lineNumber
     int16_t mIndent;
 
     bool mFoldBegin:1;

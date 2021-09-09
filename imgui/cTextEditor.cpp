@@ -1290,14 +1290,33 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
 // fold
 //{{{
 void cTextEditor::openFold() {
-  if (mLines[mState.mCursorPosition.mLineNumber].mFoldBegin)
-    mLines[mState.mCursorPosition.mLineNumber].mFoldOpen = true;
+  if (mShowFolds)
+    if (mLines[mState.mCursorPosition.mLineNumber].mFoldBegin)
+      mLines[mState.mCursorPosition.mLineNumber].mFoldOpen = true;
   }
 //}}}
 //{{{
 void cTextEditor::closeFold() {
-  if (mLines[mState.mCursorPosition.mLineNumber].mFoldBegin)
-    mLines[mState.mCursorPosition.mLineNumber].mFoldOpen = false;
+
+  if (mShowFolds) {
+    int lineNumber = mState.mCursorPosition.mLineNumber;
+    sLine& line = mLines[lineNumber];
+
+    if (line.mFoldBegin && line.mFoldOpen) // if at open foldBegin, close it
+      line.mFoldOpen = false;
+    else {
+      // search back for this fold's foldBegin and close it
+      // - !!! need to skip foldEnd foldBegin pairs !!!
+      while (--lineNumber >= 0) {
+        line = mLines[lineNumber];
+        if (line.mFoldBegin && line.mFoldOpen) {
+          line.mFoldOpen = false;
+          // !!!! set cursor position to lineNumber !!!
+          break;
+          }
+        }
+      }
+    }
   }
 //}}}
 //}}}
