@@ -2685,7 +2685,9 @@ void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber) {
     mFoldLines.push_back (lineNumber);
 
   // !!! implement simple off window cull here if too slow !!!
-
+  //if (((mLineBeginPos.y + mCharSize.y) > ImGui::GetScrollY()) &&
+  //    (mLineBeginPos.y < (ImGui::GetScrollY() + ImGui::GetWindowHeight()))) {
+  mGlyphsPos.x = mCursorScreenPos.x + mGlyphsOffset;
   float glyphsEnd = mGlyphsOffset + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber)));
   //{{{  draw select background
   float xStart = -1.f;
@@ -2833,7 +2835,6 @@ void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber) {
 
   // set pos to start of next line
   mLineBeginPos.y += mCharSize.y;
-  mGlyphsPos.x = mCursorScreenPos.x + mGlyphsOffset;
   mGlyphsPos.y += mCharSize.y;
   }
 //}}}
