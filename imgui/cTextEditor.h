@@ -403,13 +403,13 @@ private:
 
   void preRender();
   void renderGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
-  bool renderLine (int lineNumber, int beginFoldLineNumber, int lineIndex);
-  bool renderFold (int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
+  void renderLine (int lineNumber, int beginFoldLineNumber, int lineIndex);
+  void renderFold (int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
   void postRender();
 
   //{{{  vars
   std::vector <sLine> mLines;
-  std::vector <int> mVisibleLines;
+  std::vector <int> mFoldLines;
   bool mTextEdited;
 
   // config
@@ -461,9 +461,6 @@ private:
   ImDrawList* mDrawList = nullptr;
   ImVec2 mCursorScreenPos;
   bool mFocused = false;
-
-  int mBeginLineIndex = -1;  // lineIndex of first line in window
-  float mWindowBottom = 0;
 
   ImVec2 mCharSize;          // size of character grid, space wide, fontHeight high
   float mGlyphsOffset = 0.f; // start offset of glyphs
