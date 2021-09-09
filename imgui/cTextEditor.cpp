@@ -1331,17 +1331,14 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
   colorizeInternal();
 
   preRender();
-
-  mFoldLines.clear();
-
-  int lineNumber = 0;
-  if (mShowFolds)
-    renderFold (lineNumber, true, true);
-  else {
-    while (lineNumber <= getMaxLineIndex())
-      renderLine (lineNumber++, 0);
+  if (mShowFolds) {
+    mFoldLines.clear();
+    renderFold (0, true, true);
     }
-
+  else {
+    for (int lineNumber = 0; lineNumber <= getMaxLineIndex(); lineNumber++)
+      renderLine (lineNumber, 0);
+    }
   postRender();
 
   mDebugString = fmt::format ("line:{} index:{} scrolly:{} scrollx:{}",
@@ -2293,12 +2290,12 @@ void cTextEditor::ensureCursorVisible() {
   if (lineIndex < topLineIndex) {
     cLog::log (LOGINFO, fmt::format ("top {} {} {}", lineIndex, topLineIndex,
                                      max (0.f, lineIndex * mCharSize.y)));
-    ImGui::SetScrollY (max (0.f, lineIndex * mCharSize.y));
+    //ImGui::SetScrollY (max (0.f, lineIndex * mCharSize.y));
     }
   else if (lineIndex > botLineIndex) {
     cLog::log (LOGINFO, fmt::format ("bot {} {} {}", lineIndex, botLineIndex,
                                      max (0.f, lineIndex * mCharSize.y)));
-    ImGui::SetScrollY (max (0.f, lineIndex * mCharSize.y));
+    //ImGui::SetScrollY (max (0.f, lineIndex * mCharSize.y));
     }
 
   //{{{  left right
@@ -2610,7 +2607,7 @@ void cTextEditor::preRender() {
   if (mShowLineNumbers) {
     char str[32];
     if (mShowDebug) // get lineDebug width
-      snprintf (str, sizeof(str), "%4d:%4d ",1,1);
+      snprintf (str, sizeof(str), "%4d%4d %4d ",1,1,1);
     else // get lineNumber width
       snprintf (str, sizeof(str), "%d ", (int)mLines.size());
     mGlyphsOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
@@ -2745,7 +2742,7 @@ void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber) {
     if (mShowDebug) {
       //{{{  draw debug, zeroBased, rightJustified
       char str[32];
-      snprintf (str, sizeof(str), "%4d:%4d ", lineNumber, line.mFoldTitleLineNumber);
+      snprintf (str, sizeof(str), "%4d:%4d %4d ", lineNumber, line.mFoldTitleLineNumber, (int)ImGui::GetScrollY());
       float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
       mDrawList->AddText (mGlyphsPos - ImVec2 (strWidth,0), mPalette[(size_t)ePalette::LineNumber], str);
       }
