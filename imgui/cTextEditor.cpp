@@ -1222,13 +1222,7 @@ void cTextEditor::closeFold() {
 void cTextEditor::render() {
 // main ui handle io and draw routine
 
-  //ImGui::PushStyleColor (ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4 (mPalette[(size_t)ePalette::Background]));
-  ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
-  //ImGui::BeginChild ("textEditor", ImVec2(0.f,0.f), false,
-  //                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove);
-
   handleKeyboardInputs();
-  ImGui::PushAllowKeyboardFocus (true);
   handleMouseInputs();
 
   colorizeInternal();
@@ -1247,11 +1241,6 @@ void cTextEditor::render() {
   mDebugString = fmt::format ("line:{} index:{} scrolly:{} scrollx:{}",
                                getCursorPosition().mLineNumber, lineNumberToIndex (getCursorPosition().mLineNumber),
                                ImGui::GetScrollY(), ImGui::GetScrollX());
-  //ImGui::EndChild();
-
-  ImGui::PopAllowKeyboardFocus();
-  ImGui::PopStyleVar();
-  //ImGui::PopStyleColor();
   }
 //}}}
 

@@ -98,6 +98,7 @@ public:
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
     ImGui::PushStyleColor (ImGuiCol_WindowBg, ImGui::ColorConvertU32ToFloat4 (0xffffffff));
+    ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
     ImGui::Begin ("fed", nullptr,
                   ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove);
 
@@ -188,6 +189,7 @@ public:
     ImGui::PopFont();
 
     ImGui::End();
+    ImGui::PopStyleVar();
     ImGui::PopStyleColor();
     }
 
