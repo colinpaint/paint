@@ -1330,10 +1330,9 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
   mVisibleLines.clear();
   if (mShowFolds) {
     //{{{  iterate lines, create mVisibleLines
-    vector<sLine>::iterator it = mLines.begin();
     int lineNumber = 0;
     int lineIndex = 0;
-    renderFold (it, lineNumber, lineIndex, true, true);
+    renderFold (lineNumber, lineIndex, true, true);
     }
     //}}}
   else {
@@ -1686,14 +1685,14 @@ void cTextEditor::ensureCursorVisible() {
   int lineIndex = lineNumberToIndex (position.mLineNumber);
 
   int topLineIndex = static_cast<int>(floor (ImGui::GetScrollY() / mCharSize.y));
-  if (lineIndex < (topLineIndex + 4)) 
+  if (lineIndex < (topLineIndex + 4))
     // set scroll to see top line
     ImGui::SetScrollY (max (0.f, (lineIndex - 4) * mCharSize.y));
   else {
     // test bottom line
     int bottomLineIndex = min (getMaxLineIndex(),
       mMinLineIndex + static_cast<int>(ceil ((ImGui::GetScrollY() + contentSize.y) / mCharSize.y)));
-    if (lineIndex > (bottomLineIndex - 4)) 
+    if (lineIndex > (bottomLineIndex - 4))
       // set scroll to see bottom line
       ImGui::SetScrollY (max (0.f, (lineIndex + 4) * mCharSize.y - contentSize.y));
     }
@@ -1701,13 +1700,13 @@ void cTextEditor::ensureCursorVisible() {
   float textWidth = getTextWidth (position);
 
   int leftColumn = (int)floor(ImGui::GetScrollX() / mCharSize.x);
-  if (mGlyphsOffset + textWidth < leftColumn + 4) 
+  if (mGlyphsOffset + textWidth < leftColumn + 4)
     // set scroll to see leftColumn
     ImGui::SetScrollX (max(0.f, mGlyphsOffset + textWidth - 4));
-  else { 
+  else {
     // test rightColumn
     int rightColumn = (int)ceil((ImGui::GetScrollX() + contentSize.x) / mCharSize.x);
-    if (mGlyphsOffset + textWidth > rightColumn - 4) 
+    if (mGlyphsOffset + textWidth > rightColumn - 4)
       // set scroll to see  rightColumn
       ImGui::SetScrollX (max(0.f, mGlyphsOffset + textWidth + 4 - contentSize.x));
     }
@@ -1865,7 +1864,7 @@ cTextEditor::sPosition cTextEditor::findNextWord (const sPosition& from) const {
 
 // move
 //{{{
-void cTextEditor::moveUpDown (int amount) {
+void cTextEditor::moveUp (int amount) {
 
   if (mLines.empty())
     return;
@@ -1877,7 +1876,32 @@ void cTextEditor::moveUpDown (int amount) {
     return;
 
   int lineIndex = lineNumberToIndex (lineNumber);
-  lineIndex = min (getMaxLineIndex(), max (0, lineIndex + amount));
+  lineIndex = max (0, lineIndex - amount);
+  lineNumber = lineIndexToNumber (lineIndex);
+
+  mState.mCursorPosition.mLineNumber = lineNumber;
+
+  if (mState.mCursorPosition != position) {
+    mInteractiveStart = mState.mCursorPosition;
+    mInteractiveEnd = mState.mCursorPosition;
+    setSelection (mInteractiveStart, mInteractiveEnd);
+
+    ensureCursorVisible();
+    }
+  }
+//}}}
+//{{{
+void cTextEditor::moveDown (int amount) {
+
+  if (mLines.empty())
+    return;
+
+  sPosition position = mState.mCursorPosition;
+
+  int lineNumber = mState.mCursorPosition.mLineNumber;
+
+  int lineIndex = lineNumberToIndex (lineNumber);
+  lineIndex = min (getMaxLineIndex(), lineIndex + amount);
   lineNumber = lineIndexToNumber (lineIndex);
 
   mState.mCursorPosition.mLineNumber = lineNumber;
@@ -2832,8 +2856,7 @@ void cTextEditor::renderLine (int lineNumber, int beginFoldLineNumber, int lineI
   }
 //}}}
 //{{{
-void cTextEditor::renderFold (vector<sLine>::iterator& it, int& lineNumber, int& lineIndex,
-                              bool parentOpen, bool foldOpen) {
+void cTextEditor::renderFold (int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen) {
 // recursive traversal of mLines to produce mVisbleLines of folds
 // - only renderLine mMinLineIndex to mMaxLineIndex for speed
 
@@ -2841,23 +2864,22 @@ void cTextEditor::renderFold (vector<sLine>::iterator& it, int& lineNumber, int&
 
   if (parentOpen) {
     // if no comment, search for first noComment line, assume next line for now
-    it->mFoldTitleLineNumber = it->mHasComment ? lineNumber : lineNumber + 1;
+    mLines[lineNumber].mFoldTitleLineNumber = mLines[lineNumber].mHasComment ? lineNumber : lineNumber + 1;
 
     // show foldBegin line
     mVisibleLines.push_back (lineNumber);
     if ((lineIndex >= mMinLineIndex) && (lineIndex <= mMaxLineIndex))
-      renderLine (lineNumber, it->mFoldTitleLineNumber, lineIndex);
+      renderLine (lineNumber, mLines[lineNumber].mFoldTitleLineNumber, lineIndex);
     lineIndex++;
     }
 
   while (true) {
-    it++;
     lineNumber++;
-    if (it < mLines.end()) {
-      it->mFoldLineNumber = beginLineNumber;
-      if (it->mFoldBegin)
-        renderFold (it, lineNumber, lineIndex, foldOpen, it->mFoldOpen);
-      else if (it->mFoldEnd) {
+    if (lineNumber < mLines.size()) {
+      mLines[lineNumber].mFoldLineNumber = beginLineNumber;
+      if (mLines[lineNumber].mFoldBegin)
+        renderFold (lineNumber, lineIndex, foldOpen, mLines[lineNumber].mFoldOpen);
+      else if (mLines[lineNumber].mFoldEnd) {
         // update beginFold line with endFold lineNumber, helps reverse traversal
         mLines[beginLineNumber].mFoldLineNumber = lineNumber;
         if (foldOpen) {

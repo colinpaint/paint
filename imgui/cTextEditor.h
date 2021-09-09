@@ -259,10 +259,10 @@ public:
   void moveLeft();
   void moveRight();
 
-  void moveLineUp()   { moveUpDown (-1); }
-  void moveLineDown() { moveUpDown (1); }
-  void movePageUp()   { moveUpDown (-getPageNumLines() + 4); }
-  void movePageDown() { moveUpDown (getPageNumLines() - 4); }
+  void moveLineUp()   { moveUp (1); }
+  void moveLineDown() { moveDown (1); }
+  void movePageUp()   { moveUp (getPageNumLines() - 4); }
+  void movePageDown() { moveDown (getPageNumLines() - 4); }
 
   void moveTop();
   void moveTopSelect();
@@ -374,7 +374,8 @@ private:
   // move
   void moveLeft (int amount, bool select , bool wordMode);
   void moveRight (int amount, bool select, bool wordMode);
-  void moveUpDown (int amount);
+  void moveUp (int amount);
+  void moveDown (int amount);
 
   // insert
   std::vector<sGlyph>& insertLine (int index);
@@ -405,7 +406,7 @@ private:
   void preRender();
   void renderGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
   void renderLine (int lineNumber, int beginFoldLineNumber, int lineIndex);
-  void renderFold (std::vector<sLine>::iterator& it, int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
+  void renderFold (int& lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
   void postRender();
 
   //{{{  vars
