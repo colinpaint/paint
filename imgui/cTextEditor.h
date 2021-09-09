@@ -196,8 +196,7 @@ public:
   bool isReadOnly() const { return mReadOnly; }
   bool isOverwrite() const { return mOverwrite; }
 
-  bool isTextChanged() const { return mTextChanged; }
-  bool isCursorPosChanged() const { return mCursorPosChanged; }
+  bool isTextEdited() const { return mTextEdited; }
 
   bool isShowFolds() const { return mShowFolds; }
   bool isShowLineNumbers() const { return mShowLineNumbers; }
@@ -411,6 +410,7 @@ private:
   //{{{  vars
   std::vector <sLine> mLines;
   std::vector <int> mVisibleLines;
+  bool mTextEdited;
 
   // config
   sLanguage mLanguage;
@@ -450,12 +450,6 @@ private:
 
   // internal
   sCursorSelectionState mState;
-  bool mWithinRender;
-  bool mScrollToTop;
-  bool mScrollToCursor;
-
-  bool mTextChanged;
-  bool mCursorPosChanged;
 
   uint64_t mStartTime;
   float mLastClick;

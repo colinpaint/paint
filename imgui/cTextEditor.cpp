@@ -484,7 +484,8 @@ namespace {
 // cTextEditor
 //{{{
 cTextEditor::cTextEditor()
-  : mHasTabs(false), mTabSize(4), mHasFolds(false), mHasCR(false),
+  : mTextEdited(false),
+    mHasTabs(false), mTabSize(4), mHasFolds(false), mHasCR(false),
     mOverwrite(false) , mReadOnly(false), mIgnoreImGuiChild(false), mCheckComments(true),
     //mShowFolds(false), mShowLineNumbers(false), mShowDebug(false), mShowWhiteSpace(false),
     mShowFolds(false), mShowLineNumbers(true), mShowDebug(true), mShowWhiteSpace(false),
@@ -492,8 +493,6 @@ cTextEditor::cTextEditor()
     mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
     mUndoIndex(0),
 
-    mWithinRender(false), mScrollToTop(false), mScrollToCursor(false),
-    mTextChanged(false), mCursorPosChanged(false),
 
     mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
     mLastClick(-1.f) {
@@ -561,8 +560,7 @@ void cTextEditor::setTextString (const string& text) {
       }
     }
 
-  //mTextChanged = true;
-  mScrollToTop = true;
+  mTextEdited = false;
 
   mUndoBuffer.clear();
   mUndoIndex = 0;
@@ -593,8 +591,7 @@ void cTextEditor::setTextStrings (const vector<string>& lines) {
       }
     }
 
-  //mTextChanged = true;
-  mScrollToTop = true;
+  mTextEdited = false;
 
   mUndoBuffer.clear();
   mUndoIndex = 0;
@@ -627,7 +624,6 @@ void cTextEditor::setCursorPosition (const sPosition& position) {
 
   if (mState.mCursorPosition != position) {
     mState.mCursorPosition = position;
-    mCursorPosChanged = true;
     ensureCursorVisible();
     }
   }
@@ -681,9 +677,6 @@ void cTextEditor::setSelection (const sPosition& startPosition, const sPosition&
     default:
       break;
     }
-
-  if (mState.mSelectionStart != oldSelStart || mState.mSelectionEnd != oldSelEnd)
-    mCursorPosChanged = true;
   }
 //}}}
 //}}}
@@ -1030,7 +1023,7 @@ void cTextEditor::deleteIt() {
         glyphs.erase (glyphs.begin() + cindex);
       }
 
-    mTextChanged = true;
+    mTextEdited = true;
     colorize (position.mLineNumber, 1);
     }
 
@@ -1102,7 +1095,7 @@ void cTextEditor::backspace() {
         glyphs.erase (glyphs.begin() + cindex);
         }
       }
-    mTextChanged = true;
+    mTextEdited = true;
 
     ensureCursorVisible();
     colorize (mState.mCursorPosition.mLineNumber, 1);
@@ -1204,7 +1197,7 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
         mState.mSelectionStart = start;
         mState.mSelectionEnd = end;
         addUndo (undo);
-        mTextChanged = true;
+        mTextEdited = true;
 
         ensureCursorVisible();
         }
@@ -1276,7 +1269,7 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
       return;
     }
 
-  mTextChanged = true;
+  mTextEdited = true;
 
   undo.mAddedEnd = getCursorPosition();
   undo.mAfter = mState;
@@ -1324,11 +1317,6 @@ void cTextEditor::closeFold() {
 void cTextEditor::render (const string& title, const ImVec2& size, bool border) {
 // main ui handle io and draw routine
 
-  //mTextChanged = false;
-  //mCursorPosChanged = false;
-
-  mWithinRender = true;
-
   ImGui::PushStyleColor (ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4 (mPalette[(size_t)ePalette::Background]));
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
 
@@ -1373,8 +1361,6 @@ void cTextEditor::render (const string& title, const ImVec2& size, bool border) 
 
   ImGui::PopStyleVar();
   ImGui::PopStyleColor();
-
-  mWithinRender = false;
   }
 //}}}
 
@@ -1693,11 +1679,6 @@ cTextEditor::sPosition cTextEditor::sanitizePosition (const sPosition& position)
 //{{{
 void cTextEditor::ensureCursorVisible() {
 
-  if (!mWithinRender) {
-    mScrollToCursor = true;
-    return;
-    }
-
   ImVec2 contentSize = ImGui::GetWindowContentRegionMax();
 
   sPosition position = getCursorPosition();
@@ -1991,7 +1972,7 @@ int cTextEditor::insertTextAt (sPosition& where, const char* value) {
       ++where.mColumn;
       }
 
-    mTextChanged = true;
+    mTextEdited = true;
     }
 
   return totalLines;
@@ -2036,7 +2017,7 @@ void cTextEditor::removeLine (int startPosition, int endPosition) {
   mLines.erase (mLines.begin() + startPosition, mLines.begin() + endPosition);
   assert (!mLines.empty());
 
-  mTextChanged = true;
+  mTextEdited = true;
   }
 //}}}
 //{{{
@@ -2057,7 +2038,7 @@ void cTextEditor::removeLine (int index) {
   mLines.erase (mLines.begin() + index);
   assert (!mLines.empty());
 
-  mTextChanged = true;
+  mTextEdited = true;
   }
 //}}}
 //{{{
@@ -2096,7 +2077,7 @@ void cTextEditor::deleteRange (const sPosition& startPosition, const sPosition& 
       removeLine (startPosition.mLineNumber + 1, endPosition.mLineNumber + 1);
     }
 
-  mTextChanged = true;
+  mTextEdited = true;
   }
 //}}}
 
@@ -2635,11 +2616,6 @@ void cTextEditor::preRender() {
   mCharSize = ImVec2 (mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, " ", nullptr, nullptr).x,
                       ImGui::GetTextLineHeightWithSpacing());
 
-  if (mScrollToTop) {
-    mScrollToTop = false;
-    ImGui::SetScrollY (0.f);
-    }
-
   // measure lineNumber width
   mGlyphsOffset = kLeftTextMargin;
   if (mShowLineNumbers) {
@@ -2946,13 +2922,6 @@ void cTextEditor::postRender() {
 
   // dummy button, sized to maximum width,height, sets scroll regions without drawing them
   ImGui::Dummy ({ mMaxLineWidth, (mShowFolds ? mVisibleLines.size() : mLines.size()) * mCharSize.y});
-
-  if (mScrollToCursor) {
-    // scroll to cursor
-    ensureCursorVisible();
-    ImGui::SetWindowFocus();
-    mScrollToCursor = false;
-    }
   }
 //}}}
 
