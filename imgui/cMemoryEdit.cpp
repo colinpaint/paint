@@ -120,25 +120,20 @@ void cMemoryEdit::drawContents (void* voidMemData, size_t memSize, size_t baseDi
 
   cSizes sizes;
   calcSizes (sizes, memSize, baseDisplayAddress);
-  ImGuiStyle& style = ImGui::GetStyle();
   ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+  // showDataPreview until next draw
+  drawOptionsLine (sizes, memData, memSize, baseDisplayAddress);
+  if (mOptShowDataPreview)
+    drawPreviewLine (sizes, memData, memSize, baseDisplayAddress);
 
   // We begin into our scrolling region with the 'ImGuiWindowFlags_NoMove'
   // - to prevent click from moving the window.
   // This is used as a facility since our main click detection code
   // - doesn't assign an ActiveId so the click would normally be caught as a window-move.
-  const float heightSeparator = style.ItemSpacing.y;
-
-  float footerHeight = mOptFooterExtraHeight + heightSeparator + ImGui::GetFrameHeightWithSpacing() * 1;
-  if (mOptShowDataPreview)
-    footerHeight += heightSeparator +
-                    ImGui::GetFrameHeightWithSpacing() * 1 +
-                    ImGui::GetTextLineHeightWithSpacing() * 3;
-
-  ImGui::BeginChild ("##scrolling", ImVec2(0, -footerHeight), false,
-                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-  ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-  ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+  ImGui::BeginChild ("##scrolling", ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
+  ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, ImVec2(0,0));
+  ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
 
   // We are not really using the clipper API correctly here,
   // - we rely on visible_start_addr / visible_end_addr for our scrolling function.
@@ -394,15 +389,6 @@ void cMemoryEdit::drawContents (void* voidMemData, size_t memSize, size_t baseDi
     mDataEditingAddr = dataEditingAddrNext;
     mDataPreviewAddr = dataEditingAddrNext;
     }
-
-  // delay showDataPreview until next draw
-  bool wasShowDataPreview = mOptShowDataPreview;
-  ImGui::Separator();
-  drawOptionsLine (sizes, memData, memSize, baseDisplayAddress);
-  if (wasShowDataPreview) {
-    ImGui::Separator();
-    drawPreviewLine (sizes, memData, memSize, baseDisplayAddress);
-    }
   }
 //}}}
 
@@ -481,7 +467,7 @@ void cMemoryEdit::gotoAddrAndHighlight (size_t addrMin, size_t addrMax) {
   mHighlightMin = addrMin;
   mHighlightMax = addrMax;
   }
-//}}}  
+//}}}
 
 //{{{
 void cMemoryEdit::drawOptionsLine (const cSizes& sizes, void* memData, size_t memSize, size_t baseDisplayAddress) {
