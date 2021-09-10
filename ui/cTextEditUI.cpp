@@ -68,7 +68,7 @@ public:
     ImGui::PushFont (app.getMonoFont());
     static char data[0x10000];
     size_t dataSize = 0x10000;
-    memoryEdit.drawWindow ("Memory Editor", this, dataSize, 0);
+    memoryEdit.drawWindow ("Memory Editor", (uint8_t*)this, dataSize, 0);
     ImGui::PopFont();
 
     return;
