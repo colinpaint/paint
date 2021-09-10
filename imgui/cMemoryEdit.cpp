@@ -30,6 +30,9 @@
 
 #include <stdio.h>  // sprintf, scanf
 
+#include "../imgui/imgui.h"
+#include "../imgui/myImguiWidgets.h"
+
 #include "../utils/cLog.h"
 
 #ifdef _MSC_VER
@@ -106,10 +109,17 @@ void cMemoryEdit::drawWindow (const string& title, uint8_t* memData, size_t memS
 //{{{
 void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDisplayAddress) {
 
+  ImDrawList* draw_list = ImGui::GetWindowDrawList();
+  const ImU32 colorText = ImGui::GetColorU32 (ImGuiCol_Text);
+  const ImU32 colorDisabled = mGreyOutZeroes ? ImGui::GetColorU32 (ImGuiCol_TextDisabled) : colorText;
+
+  const char* formatAddress = mUpperCaseHex ? "%0*" _PRISizeT "X: " : "%0*" _PRISizeT "x: ";
+  const char* formatData = mUpperCaseHex ? "%0*" _PRISizeT "X" : "%0*" _PRISizeT "x";
+  const char* formatByte = mUpperCaseHex ? "%02X" : "%02x";
+  const char* formatByteSpace = mUpperCaseHex ? "%02X " : "%02x ";
+
   cSizes sizes;
   calcSizes (sizes, memSize, baseDisplayAddress);
-  ImDrawList* draw_list = ImGui::GetWindowDrawList();
-
   drawHeader (sizes, memData, memSize, baseDisplayAddress);
 
   // We begin into our scrolling region with the 'ImGuiWindowFlags_NoMove'
@@ -136,7 +146,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
   if (mDataAddress >= memSize)
     mDataAddress = (size_t)-1;
 
-  size_t previewDataTypeSize = mOptShowDataPreview ? getDataTypeSize (mPreviewDataType) : 0;
+  size_t previewDataTypeSize = getDataTypeSize (mPreviewDataType);
   size_t data_editing_addr_backup = mDataEditingAddr;
   size_t dataEditingAddrNext = (size_t)-1;
 
@@ -174,17 +184,10 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
 
   // draw vertical separator
   ImVec2 window_pos = ImGui::GetWindowPos();
-  if (mOptShowAscii)
+  if (mShowAscii)
     draw_list->AddLine (ImVec2 (window_pos.x + sizes.mPosAsciiStart - sizes.mGlyphWidth, window_pos.y),
                         ImVec2 (window_pos.x + sizes.mPosAsciiStart - sizes.mGlyphWidth, window_pos.y + 9999),
                         ImGui::GetColorU32 (ImGuiCol_Border));
-
-  const ImU32 colorText = ImGui::GetColorU32 (ImGuiCol_Text);
-  const ImU32 colorDisabled = mOptGreyOutZeroes ? ImGui::GetColorU32 (ImGuiCol_TextDisabled) : colorText;
-  const char* formatAddress = mOptUpperCaseHex ? "%0*" _PRISizeT "X: " : "%0*" _PRISizeT "x: ";
-  const char* formatData = mOptUpperCaseHex ? "%0*" _PRISizeT "X" : "%0*" _PRISizeT "x";
-  const char* formatByte = mOptUpperCaseHex ? "%02X" : "%02x";
-  const char* formatByteSpace = mOptUpperCaseHex ? "%02X " : "%02x ";
 
   for (int line_i = clipper.DisplayStart; line_i < clipper.DisplayEnd; line_i++) {
     //{{{  display only visible lines
@@ -194,26 +197,24 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
     // draw hex
     for (int n = 0; n < mCols && addr < memSize; n++, addr++) {
       float bytePosX = sizes.mPosHexStart + sizes.mHexCellWidth * n;
-      if (mOptMidColsCount > 0)
-        bytePosX += (float)(n / mOptMidColsCount) * sizes.mSpacingBetweenMidCols;
+      if (mMidColsCount > 0)
+        bytePosX += (float)(n / mMidColsCount) * sizes.mSpacingBetweenMidCols;
       ImGui::SameLine (bytePosX);
 
       // draw highlight
       bool isHighlightFromUserRange = (addr >= mHighlightMin && addr < mHighlightMax);
       bool isHighlightFromPreview = (addr >= mDataAddress && addr < mDataAddress + previewDataTypeSize);
-
       if (isHighlightFromUserRange || isHighlightFromPreview) {
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
         float highlightWidth = sizes.mGlyphWidth * 2;
-
         bool isNextByteHighlighted =  (addr + 1 < memSize) &&
                                       ((mHighlightMax != (size_t)-1 && addr + 1 < mHighlightMax));
         if (isNextByteHighlighted || (n + 1 == mCols)) {
           highlightWidth = sizes.mHexCellWidth;
-          if ((mOptMidColsCount > 0) &&
+          if ((mMidColsCount > 0) &&
               (n > 0) && ((n + 1) < mCols) &&
-              (((n + 1) % mOptMidColsCount) == 0))
+              (((n + 1) % mMidColsCount) == 0))
             highlightWidth += sizes.mSpacingBetweenMidCols;
           }
 
@@ -299,23 +300,20 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
         // NB: The trailing space is not visible but ensure there's no gap that the mouse cannot click on.
         ImU8 b = memData[addr];
 
-        if (mOptShowHexII) {
+        if (mShowHexII || mHoverHexII) {
           if ((b >= 32 && b < 128))
             ImGui::Text (".%c ", b);
-          else if (b == 0xFF && mOptGreyOutZeroes)
+          else if (b == 0xFF && mGreyOutZeroes)
             ImGui::TextDisabled ("## ");
           else if (b == 0x00)
             ImGui::Text ("   ");
           else
             ImGui::Text (formatByteSpace, b);
           }
-
-        else {
-          if (b == 0 && mOptGreyOutZeroes)
-            ImGui::TextDisabled ("00 ");
-          else
-            ImGui::Text (formatByteSpace, b);
-          }
+        else if (b == 0 && mGreyOutZeroes)
+          ImGui::TextDisabled ("00 ");
+        else
+          ImGui::Text (formatByteSpace, b);
 
         if (!mReadOnly && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0)) {
           mDataEditingTakeFocus = true;
@@ -325,7 +323,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
         //}}}
       }
 
-    if (mOptShowAscii) {
+    if (mShowAscii) {
       //{{{  draw ASCII values
       ImGui::SameLine (sizes.mPosAsciiStart);
       ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -589,7 +587,7 @@ void cMemoryEdit::calcSizes (cSizes& sizes, size_t memSize, size_t baseDisplayAd
 
   ImGuiStyle& style = ImGui::GetStyle();
 
-  sizes.mAddrDigitsCount = mOptAddrDigitsCount;
+  sizes.mAddrDigitsCount = mAddrDigitsCount;
   if (sizes.mAddrDigitsCount == 0)
     for (size_t n = baseDisplayAddress + memSize - 1; n > 0; n >>= 4)
       sizes.mAddrDigitsCount++;
@@ -602,10 +600,10 @@ void cMemoryEdit::calcSizes (cSizes& sizes, size_t memSize, size_t baseDisplayAd
   sizes.mPosHexEnd = sizes.mPosHexStart + (sizes.mHexCellWidth * mCols);
   sizes.mPosAsciiStart = sizes.mPosAsciiEnd = sizes.mPosHexEnd;
 
-  if (mOptShowAscii) {
+  if (mShowAscii) {
     sizes.mPosAsciiStart = sizes.mPosHexEnd + sizes.mGlyphWidth * 1;
-    if (mOptMidColsCount > 0)
-      sizes.mPosAsciiStart += (float)((mCols + mOptMidColsCount - 1) / mOptMidColsCount) * sizes.mSpacingBetweenMidCols;
+    if (mMidColsCount > 0)
+      sizes.mPosAsciiStart += (float)((mCols + mMidColsCount - 1) / mMidColsCount) * sizes.mSpacingBetweenMidCols;
     sizes.mPosAsciiEnd = sizes.mPosAsciiStart + mCols * sizes.mGlyphWidth;
     }
 
@@ -641,7 +639,9 @@ void cMemoryEdit::drawHeader (const cSizes& sizes, uint8_t* memData, size_t memS
 
   // draw hexII box
   ImGui::SameLine();
-  ImGui::Checkbox ("hexII", &mOptShowHexII);
+  if (toggleButton ("hexII", mShowHexII))
+    mShowHexII = !mShowHexII;
+  mHoverHexII = ImGui::IsItemHovered();
 
   // draw gotoAddress box
   ImGui::SetNextItemWidth ((2 * style.FramePadding.x) + ((sizes.mAddrDigitsCount + 1) * sizes.mGlyphWidth));

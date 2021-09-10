@@ -64,18 +64,19 @@ private:
   bool mReadOnly = false;
 
   // gui options
-  int  mOptAddrDigitsCount= 0;      // number of addr digits to display (default calculated based on maximum displayed addr).
+  int mAddrDigitsCount= 0;      // number of addr digits to display (default calculated based on maximum displayed addr).
   int mCols = 16;
-  bool mOptShowHexII = false;       // display values in HexII representation instead of regular hexadecimal: hide null/zero bytes, ascii values as ".X".
-  bool mOptShowDataPreview = false; // display preview the decimal/binary/hex/float representation of the currently selected bytes.
+  bool mShowHexII = false;
+  bool mHoverHexII = false;
+  bool mDataPreview = false;
 
   // gui options removed
-  int mOptMidColsCount = 8;         // set to 0 to disable extra spacing between every mid-cols.
-  bool mOptGreyOutZeroes = true;    // display null/zero bytes using the TextDisabled color.
-  bool mOptUpperCaseHex = false;    // display hexadecimal values as "FF" instead of "ff".
-  bool mOptShowAscii = true;        // display ASCII representation on the right side.
+  int mMidColsCount = 8;         // set to 0 to disable extra spacing between every mid-cols.
+  bool mGreyOutZeroes = true;    // display null/zero bytes using the TextDisabled color.
+  bool mUpperCaseHex = false;    // display hexadecimal values as "FF" instead of "ff".
+  bool mShowAscii = true;        // display ASCII representation on the right side.
 
-  ImU32 mHighlightColor = IM_COL32(255, 255, 255, 50);  // background color of highlighted bytes.
+  ImU32 mHighlightColor = IM_COL32 (255, 255, 255, 50);  // background color of highlighted bytes.
 
   size_t mDataAddress = (size_t)-1;
   size_t mDataEditingAddr = (size_t)-1;
