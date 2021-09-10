@@ -51,8 +51,8 @@
 using namespace std;
 //}}}
 constexpr bool kShowAscii = true;
-constexpr bool kUpperCaseHex = false;
 constexpr bool kGreyZeroes = true;
+constexpr bool kUpperCaseHex = false;
 
 namespace {
   //{{{  const
@@ -133,7 +133,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
 
   // We are not really using the clipper API correctly here,
-  // - we rely on visible_start_addr / visible_end_addr for our scrolling function.
+  // - we rely on visibleBeginAddr / visibleEndAddr for our scrolling function.
   const int line_total_count = (int)((memSize + mCols - 1) / mCols);
   ImGuiListClipper clipper;
   clipper.Begin (line_total_count, sizes.mLineHeight);
@@ -188,8 +188,8 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
   //{{{  draw vertical separator
   if (kShowAscii) {
     ImVec2 windowPos = ImGui::GetWindowPos();
-    draw_list->AddLine (ImVec2 (windowPos.x + sizes.mPosAsciiStart - sizes.mGlyphWidth, windowPos.y),
-                        ImVec2 (windowPos.x + sizes.mPosAsciiStart - sizes.mGlyphWidth, windowPos.y + 9999),
+    draw_list->AddLine (ImVec2 (windowPos.x + sizes.mAsciiBeginPos - sizes.mGlyphWidth, windowPos.y),
+                        ImVec2 (windowPos.x + sizes.mAsciiBeginPos - sizes.mGlyphWidth, windowPos.y + 9999),
                         ImGui::GetColorU32 (ImGuiCol_Border));
     }
   //}}}
@@ -201,7 +201,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
 
     // draw hex
     for (int n = 0; n < mCols && addr < memSize; n++, addr++) {
-      float bytePosX = sizes.mPosHexStart + sizes.mHexCellWidth * n;
+      float bytePosX = sizes.mHexBeginPos + sizes.mHexCellWidth * n;
       if (mMidColsCount > 0)
         bytePosX += (float)(n / mMidColsCount) * sizes.mSpacingBetweenMidCols;
       ImGui::SameLine (bytePosX);
@@ -332,12 +332,12 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
 
     if (kShowAscii) {
       //{{{  draw ASCII values
-      ImGui::SameLine (sizes.mPosAsciiStart);
+      ImGui::SameLine (sizes.mAsciiBeginPos);
       ImVec2 pos = ImGui::GetCursorScreenPos();
       addr = lineNumber * mCols;
 
       ImGui::PushID (lineNumber);
-      if (ImGui::InvisibleButton ("ascii", ImVec2 (sizes.mPosAsciiEnd - sizes.mPosAsciiStart, sizes.mLineHeight))) {
+      if (ImGui::InvisibleButton ("ascii", ImVec2 (sizes.mAsciiEndPos - sizes.mAsciiBeginPos, sizes.mLineHeight))) {
         mDataEditingAddr = mDataAddress = addr + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / sizes.mGlyphWidth);
         mDataEditingTakeFocus = true;
         }
@@ -607,21 +607,22 @@ void cMemoryEdit::calcSizes (cSizes& sizes, size_t memSize, size_t baseDisplayAd
       sizes.mAddrDigitsCount++;
 
   sizes.mLineHeight = ImGui::GetTextLineHeight();
-  sizes.mGlyphWidth = ImGui::CalcTextSize ("F").x + 1;                  // We assume the font is mono-space
+  sizes.mGlyphWidth = ImGui::CalcTextSize ("F").x + 1;                      // We assume the font is mono-space
   sizes.mHexCellWidth = (float)(int)(sizes.mGlyphWidth * 2.5f);             // "FF " we include trailing space in the width to easily catch clicks everywhere
   sizes.mSpacingBetweenMidCols = (float)(int)(sizes.mHexCellWidth * 0.25f); // Every OptMidColsCount columns we add a bit of extra spacing
-  sizes.mPosHexStart = (sizes.mAddrDigitsCount + 2) * sizes.mGlyphWidth;
-  sizes.mPosHexEnd = sizes.mPosHexStart + (sizes.mHexCellWidth * mCols);
-  sizes.mPosAsciiStart = sizes.mPosAsciiEnd = sizes.mPosHexEnd;
+
+  sizes.mHexBeginPos = (sizes.mAddrDigitsCount + 2) * sizes.mGlyphWidth;
+  sizes.mHexEndPos = sizes.mHexBeginPos + (sizes.mHexCellWidth * mCols);
+  sizes.mAsciiBeginPos = sizes.mAsciiEndPos = sizes.mHexEndPos;
 
   if (kShowAscii) {
-    sizes.mPosAsciiStart = sizes.mPosHexEnd + sizes.mGlyphWidth * 1;
+    sizes.mAsciiBeginPos = sizes.mHexEndPos + sizes.mGlyphWidth * 1;
     if (mMidColsCount > 0)
-      sizes.mPosAsciiStart += (float)((mCols + mMidColsCount - 1) / mMidColsCount) * sizes.mSpacingBetweenMidCols;
-    sizes.mPosAsciiEnd = sizes.mPosAsciiStart + mCols * sizes.mGlyphWidth;
+      sizes.mAsciiBeginPos += (float)((mCols + mMidColsCount - 1) / mMidColsCount) * sizes.mSpacingBetweenMidCols;
+    sizes.mAsciiEndPos = sizes.mAsciiBeginPos + mCols * sizes.mGlyphWidth;
     }
 
-  sizes.mWindowWidth = sizes.mPosAsciiEnd + style.ScrollbarSize + style.WindowPadding.x * 2 + sizes.mGlyphWidth;
+  sizes.mWindowWidth = sizes.mAsciiEndPos + style.ScrollbarSize + style.WindowPadding.x * 2 + sizes.mGlyphWidth;
   }
 //}}}
 //{{{
@@ -641,7 +642,7 @@ void cMemoryEdit::drawHeader (const cSizes& sizes, uint8_t* memData, size_t memS
 
   // draw col box
   ImGui::SetNextItemWidth ((2.f*style.FramePadding.x) + (7.f*sizes.mGlyphWidth));
-  ImGui::DragInt ("##col", &mCols, 0.2f, 2, 64, "%d col");
+  ImGui::DragInt ("##col", &mCols, 0.2f, 2, 64, "%d wide");
 
   // draw hexII box
   ImGui::SameLine();

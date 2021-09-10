@@ -30,11 +30,11 @@ private:
     float mHexCellWidth = 0;
     float mSpacingBetweenMidCols = 0;
 
-    float mPosHexStart = 0;
-    float mPosHexEnd = 0;
+    float mHexBeginPos = 0;
+    float mHexEndPos = 0;
 
-    float mPosAsciiStart = 0;
-    float mPosAsciiEnd = 0;
+    float mAsciiBeginPos = 0;
+    float mAsciiEndPos = 0;
 
     float mWindowWidth = 0;
     };
