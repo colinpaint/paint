@@ -47,7 +47,6 @@
 //{{{  includes
 #include "cMemoryEdit.h"
 
-#include <cstdint>
 #include <stdio.h>  // sprintf, scanf
 
 #ifdef _MSC_VER
@@ -68,9 +67,9 @@ using namespace std;
 
 namespace {
   //{{{
-  void* littleEndianFunc (void* dst, void* src, size_t s, int is_little_endian) {
+  void* littleEndianFunc (void* dst, void* src, size_t s, int isLittleEndian) {
 
-    if (is_little_endian)
+    if (isLittleEndian)
       return memcpy (dst, src, s);
 
     else {
@@ -84,9 +83,9 @@ namespace {
     }
   //}}}
   //{{{
-  void* bigEndianFunc (void* dst, void* src, size_t s, int is_little_endian) {
+  void* bigEndianFunc (void* dst, void* src, size_t s, int isLittleEndian) {
 
-    if (is_little_endian) {
+     if (isLittleEndian) {
       uint8_t* dstPtr = (uint8_t*)dst;
       uint8_t* srcPtr = (uint8_t*)src + s - 1;
       for (int i = 0, n = (int)s; i < n; ++i)
@@ -131,14 +130,12 @@ void cMemoryEdit::drawWindow (const string& title, void* voidMemData, size_t mem
 //{{{
 void cMemoryEdit::drawContents (void* voidMemData, size_t memSize, size_t baseDisplayAddress) {
 
-  if (mCols < 1)
-    mCols = 1;
-
   ImU8* memData = (ImU8*)voidMemData;
 
-  sSizes s;
-  calcSizes(s, memSize, baseDisplayAddress);
+  sSizes sizes;
+  calcSizes (sizes, memSize, baseDisplayAddress);
   ImGuiStyle& style = ImGui::GetStyle();
+  ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
   // We begin into our scrolling region with the 'ImGuiWindowFlags_NoMove'
   // - to prevent click from moving the window.
@@ -150,17 +147,16 @@ void cMemoryEdit::drawContents (void* voidMemData, size_t memSize, size_t baseDi
     footer_height += height_separator + ImGui::GetFrameHeightWithSpacing() * 1;
   if (mOptShowDataPreview)
     footer_height += height_separator + ImGui::GetFrameHeightWithSpacing() * 1 + ImGui::GetTextLineHeightWithSpacing() * 3;
-  ImGui::BeginChild ("##scrolling", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-  ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
+  ImGui::BeginChild ("##scrolling", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
   ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, ImVec2(0, 0));
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
   // We are not really using the clipper API correctly here,
-  // because we rely on visible_start_addr/visible_end_addr for our scrolling function.
+  // - we rely on visible_start_addr / visible_end_addr for our scrolling function.
   const int line_total_count = (int)((memSize + mCols - 1) / mCols);
   ImGuiListClipper clipper;
-  clipper.Begin(line_total_count, s.mLineHeight);
+  clipper.Begin (line_total_count, sizes.mLineHeight);
   clipper.Step();
   const size_t visible_start_addr = clipper.DisplayStart * mCols;
   const size_t visible_end_addr = clipper.DisplayEnd * mCols;
@@ -171,12 +167,14 @@ void cMemoryEdit::drawContents (void* voidMemData, size_t memSize, size_t baseDi
   if (mDataPreviewAddr >= memSize)
     mDataPreviewAddr = (size_t)-1;
 
-  size_t preview_data_type_size = mOptShowDataPreview ? getDataTypeSize (mPreviewDataType) : 0;
+  size_t previewDataTypeSize = mOptShowDataPreview ? getDataTypeSize (mPreviewDataType) : 0;
   size_t data_editing_addr_backup = mDataEditingAddr;
   size_t data_editing_addr_next = (size_t)-1;
 
   if (mDataEditingAddr != (size_t)-1) {
-    //{{{  move cursor but only apply on next frame so scrolling with be synchronized (because currently we can't change the scrolling while the window is being rendered)
+    //{{{  move cursor
+    // move cursor but only apply on next frame so scrolling with be synchronized
+    // - because currently we can't change the scrolling while the window is being rendered)
     if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_UpArrow)) && mDataEditingAddr >= (size_t)mCols) {
       data_editing_addr_next = mDataEditingAddr - mCols;
       mDataEditingTakeFocus = true;
@@ -196,66 +194,71 @@ void cMemoryEdit::drawContents (void* voidMemData, size_t memSize, size_t baseDi
     }
     //}}}
   if (data_editing_addr_next != (size_t)-1 && (data_editing_addr_next / mCols) != (data_editing_addr_backup / mCols)) {
-    //{{{  track cursor movements
+    //{{{  track cursor
     const int scroll_offset = ((int)(data_editing_addr_next / mCols) - (int)(data_editing_addr_backup / mCols));
     const bool scroll_desired = (scroll_offset < 0 && data_editing_addr_next < visible_start_addr + mCols * 2) || (scroll_offset > 0 && data_editing_addr_next > visible_end_addr - mCols * 2);
     if (scroll_desired)
-      ImGui::SetScrollY (ImGui::GetScrollY() + scroll_offset * s.mLineHeight);
+      ImGui::SetScrollY (ImGui::GetScrollY() + scroll_offset * sizes.mLineHeight);
     }
     //}}}
 
   // draw vertical separator
   ImVec2 window_pos = ImGui::GetWindowPos();
   if (mOptShowAscii)
-    draw_list->AddLine (ImVec2 (window_pos.x + s.mPosAsciiStart - s.mGlyphWidth, window_pos.y), ImVec2(window_pos.x + s.mPosAsciiStart - s.mGlyphWidth, window_pos.y + 9999), ImGui::GetColorU32(ImGuiCol_Border));
+    draw_list->AddLine (ImVec2 (window_pos.x + sizes.mPosAsciiStart - sizes.mGlyphWidth, window_pos.y),
+                        ImVec2 (window_pos.x + sizes.mPosAsciiStart - sizes.mGlyphWidth, window_pos.y + 9999),
+                        ImGui::GetColorU32 (ImGuiCol_Border));
 
-  const ImU32 color_text = ImGui::GetColorU32(ImGuiCol_Text);
-  const ImU32 color_disabled = mOptGreyOutZeroes ? ImGui::GetColorU32(ImGuiCol_TextDisabled) : color_text;
+  const ImU32 color_text = ImGui::GetColorU32 (ImGuiCol_Text);
+  const ImU32 color_disabled = mOptGreyOutZeroes ? ImGui::GetColorU32 (ImGuiCol_TextDisabled) : color_text;
   const char* format_address = mOptUpperCaseHex ? "%0*" _PRISizeT "X: " : "%0*" _PRISizeT "x: ";
   const char* format_data = mOptUpperCaseHex ? "%0*" _PRISizeT "X" : "%0*" _PRISizeT "x";
   const char* format_byte = mOptUpperCaseHex ? "%02X" : "%02x";
   const char* format_byte_space = mOptUpperCaseHex ? "%02X " : "%02x ";
 
   for (int line_i = clipper.DisplayStart; line_i < clipper.DisplayEnd; line_i++) {
-    //{{{  isplay only visible lines
+    //{{{  display only visible lines
     size_t addr = (size_t)(line_i * mCols);
-    ImGui::Text (format_address, s.mAddrDigitsCount, baseDisplayAddress + addr);
+    ImGui::Text (format_address, sizes.mAddrDigitsCount, baseDisplayAddress + addr);
 
-    // Draw Hexadecimal
+    // draw hex
     for (int n = 0; n < mCols && addr < memSize; n++, addr++) {
-      float byte_pos_x = s.mPosHexStart + s.mHexCellWidth * n;
+      float byte_pos_x = sizes.mPosHexStart + sizes.mHexCellWidth * n;
       if (mOptMidColsCount > 0)
-        byte_pos_x += (float)(n / mOptMidColsCount) * s.mSpacingBetweenMidCols;
+        byte_pos_x += (float)(n / mOptMidColsCount) * sizes.mSpacingBetweenMidCols;
       ImGui::SameLine(byte_pos_x);
 
-      // Draw highlight
+      // draw highlight
       bool is_highlight_from_user_range = (addr >= mHighlightMin && addr < mHighlightMax);
       bool is_highlight_from_user_func = (mHighlightFn && mHighlightFn(memData, addr));
-      bool is_highlight_from_preview = (addr >= mDataPreviewAddr && addr < mDataPreviewAddr + preview_data_type_size);
+      bool is_highlight_from_preview = (addr >= mDataPreviewAddr && addr < mDataPreviewAddr + previewDataTypeSize);
       if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview) {
         ImVec2 pos = ImGui::GetCursorScreenPos();
-        float highlight_width = s.mGlyphWidth * 2;
+        float highlight_width = sizes.mGlyphWidth * 2;
         bool is_next_byte_highlighted =  (addr + 1 < memSize) && ((mHighlightMax != (size_t)-1 && addr + 1 < mHighlightMax) || (mHighlightFn && mHighlightFn(memData, addr + 1)));
         if (is_next_byte_highlighted || (n + 1 == mCols)) {
-          highlight_width = s.mHexCellWidth;
+          highlight_width = sizes.mHexCellWidth;
           if (mOptMidColsCount > 0 && n > 0 && (n + 1) < mCols && ((n + 1) % mOptMidColsCount) == 0)
-            highlight_width += s.mSpacingBetweenMidCols;
+            highlight_width += sizes.mSpacingBetweenMidCols;
           }
-        draw_list->AddRectFilled (pos, ImVec2(pos.x + highlight_width, pos.y + s.mLineHeight), mHighlightColor);
+        draw_list->AddRectFilled (pos, ImVec2(pos.x + highlight_width, pos.y + sizes.mLineHeight), mHighlightColor);
         }
 
       if (mDataEditingAddr == addr) {
-        // Display text input on current byte
+        // display text input on current byte
         bool data_write = false;
         ImGui::PushID ((void*)addr);
         if (mDataEditingTakeFocus) {
             ImGui::SetKeyboardFocusHere();
             ImGui::CaptureKeyboardFromApp (true);
-            sprintf (mAddrInputBuf, format_data, s.mAddrDigitsCount, baseDisplayAddress + addr);
+            sprintf (mAddrInputBuf, format_data, sizes.mAddrDigitsCount, baseDisplayAddress + addr);
             sprintf (mDataInputBuf, format_byte, mReadFn ? mReadFn(memData, addr) : memData[addr]);
         }
       struct UserData {
         //{{{
+        char   CurrentBufOverwrite[3];  // Input
+        int    CursorPos;               // Output
+
         static int Callback(ImGuiInputTextCallbackData* data) {
         // FIXME: We should have a way to retrieve the text edit cursor position more easily in the API
         //  this is rather tedious. This is such a ugly mess we may be better off not using InputText() at all here.
@@ -274,9 +277,6 @@ void cMemoryEdit::drawContents (void* voidMemData, size_t memSize, size_t baseDi
             }
           return 0;
           }
-
-        char   CurrentBufOverwrite[3];  // Input
-        int    CursorPos;               // Output
         //}}}
         };
       UserData user_data;
@@ -288,13 +288,10 @@ void cMemoryEdit::drawContents (void* voidMemData, size_t memSize, size_t baseDi
                                   ImGuiInputTextFlags_AutoSelectAll |
                                   ImGuiInputTextFlags_NoHorizontalScroll |
                                   ImGuiInputTextFlags_CallbackAlways;
-      #if IMGUI_VERSION_NUM >= 18104
-        flags |= ImGuiInputTextFlags_AlwaysOverwrite;
-      #else
-        flags |= ImGuiInputTextFlags_AlwaysInsertMode;
-      #endif
+      flags |= ImGuiInputTextFlags_AlwaysOverwrite;
+      //flags |= ImGuiInputTextFlags_AlwaysInsertMode;
 
-      ImGui::SetNextItemWidth (s.mGlyphWidth * 2);
+      ImGui::SetNextItemWidth (sizes.mGlyphWidth * 2);
       if (ImGui::InputText ("##data", mDataInputBuf, IM_ARRAYSIZE(mDataInputBuf), flags, UserData::Callback, &user_data))
         data_write = data_next = true;
       else if (!mDataEditingTakeFocus && !ImGui::IsItemActive())
@@ -336,6 +333,7 @@ void cMemoryEdit::drawContents (void* voidMemData, size_t memSize, size_t baseDi
         else
           ImGui::Text(format_byte_space, b);
         }
+
       if (!mReadOnly && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0)) {
         mDataEditingTakeFocus = true;
         data_editing_addr_next = addr;
@@ -345,25 +343,30 @@ void cMemoryEdit::drawContents (void* voidMemData, size_t memSize, size_t baseDi
     //}}}
 
   if (mOptShowAscii) {
-    //{{{  Draw ASCII values
-    ImGui::SameLine(s.mPosAsciiStart);
+    //{{{  draw ASCII values
+    ImGui::SameLine (sizes.mPosAsciiStart);
     ImVec2 pos = ImGui::GetCursorScreenPos();
     addr = line_i * mCols;
+
     ImGui::PushID(line_i);
-    if (ImGui::InvisibleButton("ascii", ImVec2(s.mPosAsciiEnd - s.mPosAsciiStart, s.mLineHeight))) {
-      mDataEditingAddr = mDataPreviewAddr = addr + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / s.mGlyphWidth);
+    if (ImGui::InvisibleButton("ascii", ImVec2 (sizes.mPosAsciiEnd - sizes.mPosAsciiStart, sizes.mLineHeight))) {
+      mDataEditingAddr = mDataPreviewAddr = addr + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / sizes.mGlyphWidth);
       mDataEditingTakeFocus = true;
       }
+
     ImGui::PopID();
     for (int n = 0; n < mCols && addr < memSize; n++, addr++) {
       if (addr == mDataEditingAddr) {
-          draw_list->AddRectFilled(pos, ImVec2(pos.x + s.mGlyphWidth, pos.y + s.mLineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
-          draw_list->AddRectFilled(pos, ImVec2(pos.x + s.mGlyphWidth, pos.y + s.mLineHeight), ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+          draw_list->AddRectFilled (pos, ImVec2 (pos.x + sizes.mGlyphWidth, pos.y + sizes.mLineHeight),
+                                   ImGui::GetColorU32(ImGuiCol_FrameBg));
+          draw_list->AddRectFilled (pos, ImVec2 (pos.x + sizes.mGlyphWidth, pos.y + sizes.mLineHeight),
+                                   ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
           }
+
         unsigned char c = mReadFn ? mReadFn(memData, addr) : memData[addr];
         char display_c = (c < 32 || c >= 128) ? '.' : c;
         draw_list->AddText(pos, (display_c == c) ? color_text : color_disabled, &display_c, &display_c + 1);
-        pos.x += s.mGlyphWidth;
+        pos.x += sizes.mGlyphWidth;
         }
       }
     }
@@ -376,28 +379,30 @@ void cMemoryEdit::drawContents (void* voidMemData, size_t memSize, size_t baseDi
 
   // Notify the main window of our ideal child content size
   // - (FIXME: we are missing an API to get the contents size from the child)
-  ImGui::SetCursorPosX (s.mWindowWidth);
+  ImGui::SetCursorPosX (sizes.mWindowWidth);
 
   if (data_next && mDataEditingAddr < memSize) {
-    mDataEditingAddr = mDataPreviewAddr = mDataEditingAddr + 1;
+    mDataEditingAddr++;
+    mDataPreviewAddr = mDataEditingAddr;
     mDataEditingTakeFocus = true;
     }
   else if (data_editing_addr_next != (size_t)-1) {
-    mDataEditingAddr = mDataPreviewAddr = data_editing_addr_next;
+    mDataEditingAddr = data_editing_addr_next;
+    mDataPreviewAddr = data_editing_addr_next;
     }
 
   const bool lock_show_data_preview = mOptShowDataPreview;
   if (mOptShowOptions) {
     //{{{  draw options
     ImGui::Separator();
-    drawOptionsLine (s, memData, memSize, baseDisplayAddress);
+    drawOptionsLine (sizes, memData, memSize, baseDisplayAddress);
     }
     //}}}
 
   if (lock_show_data_preview) {
     //{{{  show preview
     ImGui::Separator();
-    drawPreviewLine (s, memData, memSize, baseDisplayAddress);
+    drawPreviewLine (sizes, memData, memSize, baseDisplayAddress);
     }
     //}}}
   }
@@ -416,60 +421,60 @@ bool cMemoryEdit::isBigEndian() const {
   }
 //}}}
 //{{{
-size_t cMemoryEdit::getDataTypeSize (ImGuiDataType data_type) const {
+size_t cMemoryEdit::getDataTypeSize (ImGuiDataType dataType) const {
 
   const size_t sizes[] = { 1, 1, 2, 2, 4, 4, 8, 8, sizeof(float), sizeof(double) };
 
-  IM_ASSERT(data_type >= 0 && data_type < ImGuiDataType_COUNT);
-  return sizes[data_type];
+  IM_ASSERT(dataType >= 0 && dataType < ImGuiDataType_COUNT);
+  return sizes[dataType];
   }
 //}}}
 //{{{
-const char* cMemoryEdit::getDataTypeDesc (ImGuiDataType data_type) const {
+const char* cMemoryEdit::getDataTypeDesc (ImGuiDataType dataType) const {
 
   const char* descs[] = { "Int8", "Uint8", "Int16", "Uint16", "Int32",
                           "Uint32", "Int64", "Uint64", "Float", "Double" };
 
-  IM_ASSERT(data_type >= 0 && data_type < ImGuiDataType_COUNT);
-  return descs[data_type];
+  IM_ASSERT(dataType >= 0 && dataType < ImGuiDataType_COUNT);
+  return descs[dataType];
   }
 //}}}
 //{{{
-const char* cMemoryEdit::getDataFormatDesc (eDataFormat data_format) const {
+const char* cMemoryEdit::getDataFormatDesc (eDataFormat dataFormat) const {
 
   const char* descs[] = { "Bin", "Dec", "Hex" };
 
-  IM_ASSERT(data_format >= 0 && data_format < DataFormat_COUNT);
-  return descs[data_format];
+  IM_ASSERT(dataFormat >= 0 && dataFormat < DataFormat_COUNT);
+  return descs[dataFormat];
   }
 //}}}
 
 //{{{
-void cMemoryEdit::calcSizes (sSizes& s, size_t memSize, size_t baseDisplayAddress) {
+void cMemoryEdit::calcSizes (sSizes& sizes, size_t memSize, size_t baseDisplayAddress) {
 
   ImGuiStyle& style = ImGui::GetStyle();
 
-  s.mAddrDigitsCount = mOptAddrDigitsCount;
-  if (s.mAddrDigitsCount == 0)
+  sizes.mAddrDigitsCount = mOptAddrDigitsCount;
+  if (sizes.mAddrDigitsCount == 0)
     for (size_t n = baseDisplayAddress + memSize - 1; n > 0; n >>= 4)
-      s.mAddrDigitsCount++;
+      sizes.mAddrDigitsCount++;
 
-  s.mLineHeight = ImGui::GetTextLineHeight();
-  s.mGlyphWidth = ImGui::CalcTextSize ("F").x + 1;                  // We assume the font is mono-space
-  s.mHexCellWidth = (float)(int)(s.mGlyphWidth * 2.5f);             // "FF " we include trailing space in the width to easily catch clicks everywhere
-  s.mSpacingBetweenMidCols = (float)(int)(s.mHexCellWidth * 0.25f); // Every OptMidColsCount columns we add a bit of extra spacing
-  s.mPosHexStart = (s.mAddrDigitsCount + 2) * s.mGlyphWidth;
-  s.mPosHexEnd = s.mPosHexStart + (s.mHexCellWidth * mCols);
-  s.mPosAsciiStart = s.mPosAsciiEnd = s.mPosHexEnd;
+  sizes.mLineHeight = ImGui::GetTextLineHeight();
+  sizes.mGlyphWidth = ImGui::CalcTextSize ("F").x + 1;                  // We assume the font is mono-space
+  sizes.mHexCellWidth = (float)(int)(sizes.mGlyphWidth * 2.5f);             // "FF " we include trailing space in the width to easily catch clicks everywhere
+  sizes.mSpacingBetweenMidCols = (float)(int)(sizes.mHexCellWidth * 0.25f); // Every OptMidColsCount columns we add a bit of extra spacing
+  sizes.mPosHexStart = (sizes.mAddrDigitsCount + 2) * sizes.mGlyphWidth;
+  sizes.mPosHexEnd = sizes.mPosHexStart + (sizes.mHexCellWidth * mCols);
+  sizes.mPosAsciiStart = sizes.mPosAsciiEnd = sizes.mPosHexEnd;
 
   if (mOptShowAscii) {
-    s.mPosAsciiStart = s.mPosHexEnd + s.mGlyphWidth * 1;
+    sizes.mPosAsciiStart = sizes.mPosHexEnd + sizes.mGlyphWidth * 1;
     if (mOptMidColsCount > 0)
-      s.mPosAsciiStart += (float)((mCols + mOptMidColsCount - 1) / mOptMidColsCount) * s.mSpacingBetweenMidCols;
-    s.mPosAsciiEnd = s.mPosAsciiStart + mCols * s.mGlyphWidth;
+      sizes.mPosAsciiStart += (float)((mCols + mOptMidColsCount - 1) / mOptMidColsCount) * sizes.mSpacingBetweenMidCols;
+    sizes.mPosAsciiEnd = sizes.mPosAsciiStart + mCols * sizes.mGlyphWidth;
     }
 
-  s.mWindowWidth = s.mPosAsciiEnd + style.ScrollbarSize + style.WindowPadding.x * 2 + s.mGlyphWidth;
+  sizes.mWindowWidth = sizes.mPosAsciiEnd + style.ScrollbarSize + style.WindowPadding.x * 2 + sizes.mGlyphWidth;
   }
 //}}}
 //{{{
@@ -503,7 +508,7 @@ const char* cMemoryEdit::formatBinary (const uint8_t* buf, int width) const {
 //}}}
 
 //{{{
-void cMemoryEdit::drawOptionsLine (const sSizes& s, void* memData, size_t memSize, size_t baseDisplayAddress) {
+void cMemoryEdit::drawOptionsLine (const sSizes& sizes, void* memData, size_t memSize, size_t baseDisplayAddress) {
 
   IM_UNUSED(memData);
   ImGuiStyle& style = ImGui::GetStyle();
@@ -514,7 +519,7 @@ void cMemoryEdit::drawOptionsLine (const sSizes& s, void* memData, size_t memSiz
     ImGui::OpenPopup ("context");
 
   if (ImGui::BeginPopup ("context")) {
-    ImGui::SetNextItemWidth (s.mGlyphWidth * 7 + style.FramePadding.x * 2.f);
+    ImGui::SetNextItemWidth (sizes.mGlyphWidth * 7 + style.FramePadding.x * 2.f);
     if (ImGui::DragInt ("##cols", &mCols, 0.2f, 4, 32, "%d cols")) {
       mContentsWidthChanged = true;
       if (mCols < 1)
@@ -532,9 +537,10 @@ void cMemoryEdit::drawOptionsLine (const sSizes& s, void* memData, size_t memSiz
     }
 
   ImGui::SameLine();
-  ImGui::Text (format_range, s.mAddrDigitsCount, baseDisplayAddress, s.mAddrDigitsCount, baseDisplayAddress + memSize - 1);
+  ImGui::Text (format_range, sizes.mAddrDigitsCount, baseDisplayAddress,
+               sizes.mAddrDigitsCount, baseDisplayAddress + memSize - 1);
   ImGui::SameLine();
-  ImGui::SetNextItemWidth ((s.mAddrDigitsCount + 1) * s.mGlyphWidth + style.FramePadding.x * 2.f);
+  ImGui::SetNextItemWidth ((sizes.mAddrDigitsCount + 1) * sizes.mGlyphWidth + style.FramePadding.x * 2.f);
   if (ImGui::InputText ("##addr", mAddrInputBuf, IM_ARRAYSIZE(mAddrInputBuf),
                          ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
     size_t goto_addr;
@@ -557,7 +563,7 @@ void cMemoryEdit::drawOptionsLine (const sSizes& s, void* memData, size_t memSiz
   }
 //}}}
 //{{{
-void cMemoryEdit::drawPreviewLine (const sSizes& s, void* voidMemData, size_t memSize, size_t baseDisplayAddress) {
+void cMemoryEdit::drawPreviewLine (const sSizes& sizes, void* voidMemData, size_t memSize, size_t baseDisplayAddress) {
 
   IM_UNUSED(baseDisplayAddress);
   ImU8* memData = (ImU8*)voidMemData;
@@ -568,7 +574,7 @@ void cMemoryEdit::drawPreviewLine (const sSizes& s, void* voidMemData, size_t me
   ImGui::Text ("Preview as:");
 
   ImGui::SameLine();
-  ImGui::SetNextItemWidth ((s.mGlyphWidth * 10.f) + style.FramePadding.x * 2.f + style.ItemInnerSpacing.x);
+  ImGui::SetNextItemWidth ((sizes.mGlyphWidth * 10.f) + style.FramePadding.x * 2.f + style.ItemInnerSpacing.x);
   if (ImGui::BeginCombo("##combo_type", getDataTypeDesc (mPreviewDataType), ImGuiComboFlags_HeightLargest)) {
     for (int n = 0; n < ImGuiDataType_COUNT; n++)
       if (ImGui::Selectable (getDataTypeDesc((ImGuiDataType)n), mPreviewDataType == n))
@@ -577,28 +583,28 @@ void cMemoryEdit::drawPreviewLine (const sSizes& s, void* voidMemData, size_t me
     }
 
   ImGui::SameLine();
-  ImGui::SetNextItemWidth ((s.mGlyphWidth * 6.f) + style.FramePadding.x * 2.f + style.ItemInnerSpacing.x);
+  ImGui::SetNextItemWidth ((sizes.mGlyphWidth * 6.f) + style.FramePadding.x * 2.f + style.ItemInnerSpacing.x);
   ImGui::Combo ("##combo_endianess", &mPreviewEndianess, "LE\0BE\0\0");
 
   char buf[128] = "";
-  float x = s.mGlyphWidth * 6.f;
+  float x = sizes.mGlyphWidth * 6.f;
   bool has_value = mDataPreviewAddr != (size_t)-1;
   if (has_value)
-    drawPreviewData (mDataPreviewAddr, memData, memSize, mPreviewDataType, DataFormat_Dec, buf, (size_t)IM_ARRAYSIZE(buf));
+    drawPreviewData (mDataPreviewAddr, memData, memSize, mPreviewDataType, eDataFormatDec, buf, (size_t)IM_ARRAYSIZE(buf));
 
   ImGui::Text("Dec");
   ImGui::SameLine(x);
   ImGui::TextUnformatted (has_value ? buf : "N/A");
 
   if (has_value)
-    drawPreviewData (mDataPreviewAddr, memData, memSize, mPreviewDataType, DataFormat_Hex, buf, (size_t)IM_ARRAYSIZE(buf));
+    drawPreviewData (mDataPreviewAddr, memData, memSize, mPreviewDataType, eDataFormatHex, buf, (size_t)IM_ARRAYSIZE(buf));
 
   ImGui::Text("Hex");
   ImGui::SameLine(x);
   ImGui::TextUnformatted (has_value ? buf : "N/A");
 
   if (has_value)
-    drawPreviewData (mDataPreviewAddr, memData, memSize, mPreviewDataType, DataFormat_Bin, buf, (size_t)IM_ARRAYSIZE(buf));
+    drawPreviewData (mDataPreviewAddr, memData, memSize, mPreviewDataType, eDataFormatBin, buf, (size_t)IM_ARRAYSIZE(buf));
 
   buf[IM_ARRAYSIZE (buf) - 1] = 0;
   ImGui::Text ("Bin");
@@ -607,12 +613,12 @@ void cMemoryEdit::drawPreviewLine (const sSizes& s, void* voidMemData, size_t me
   }
 //}}}
 //{{{
-void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memSize, ImGuiDataType data_type,
-                      eDataFormat data_format, char* out_buf, size_t out_buf_size) const {
+void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memSize, ImGuiDataType dataType,
+                      eDataFormat dataFormat, char* out_buf, size_t out_buf_size) const {
 
   uint8_t buf[8];
 
-  size_t elem_size = getDataTypeSize(data_type);
+  size_t elem_size = getDataTypeSize (dataType);
   size_t size = addr + elem_size > memSize ? memSize - addr : elem_size;
   if (mReadFn)
     for (int i = 0, n = (int)size; i < n; ++i)
@@ -620,7 +626,7 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
   else
     memcpy(buf, memData + addr, size);
 
-  if (data_format == DataFormat_Bin) {
+  if (dataFormat == eDataFormatBin) {
     uint8_t binbuf[8];
     endianCopy (binbuf, buf, size);
     ImSnprintf (out_buf, out_buf_size, "%s", formatBinary(binbuf, (int)size * 8));
@@ -628,18 +634,18 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
     }
 
   out_buf[0] = 0;
-  switch (data_type) {
+  switch (dataType) {
     //{{{
     case ImGuiDataType_S8: {
       int8_t int8 = 0;
       endianCopy (&int8, buf, size);
 
-      if (data_format == DataFormat_Dec) {
+      if (dataFormat == eDataFormatDec) {
         ImSnprintf(out_buf, out_buf_size, "%hhd", int8);
         return;
         }
 
-      if (data_format == DataFormat_Hex) {
+      if (dataFormat == eDataFormatHex) {
         ImSnprintf(out_buf, out_buf_size, "0x%02x", int8 & 0xFF);
         return;
         }
@@ -652,12 +658,12 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
       uint8_t uint8 = 0;
       endianCopy (&uint8, buf, size);
 
-      if (data_format == DataFormat_Dec) {
+      if (dataFormat == eDataFormatDec) {
         ImSnprintf(out_buf, out_buf_size, "%hhu", uint8);
         return;
         }
 
-      if (data_format == DataFormat_Hex) {
+      if (dataFormat == eDataFormatHex) {
         ImSnprintf(out_buf, out_buf_size, "0x%02x", uint8 & 0XFF);
         return;
         }
@@ -670,12 +676,12 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
       int16_t int16 = 0;
       endianCopy (&int16, buf, size);
 
-      if (data_format == DataFormat_Dec) {
+      if (dataFormat == eDataFormatDec) {
         ImSnprintf(out_buf, out_buf_size, "%hd", int16);
         return;
         }
 
-      if (data_format == DataFormat_Hex) {
+      if (dataFormat == eDataFormatHex) {
         ImSnprintf(out_buf, out_buf_size, "0x%04x", int16 & 0xFFFF);
         return;
         }
@@ -688,12 +694,12 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
       uint16_t uint16 = 0;
       endianCopy (&uint16, buf, size);
 
-      if (data_format == DataFormat_Dec) {
+      if (dataFormat == eDataFormatDec) {
         ImSnprintf(out_buf, out_buf_size, "%hu", uint16);
         return;
         }
 
-      if (data_format == DataFormat_Hex) {
+      if (dataFormat == eDataFormatHex) {
         ImSnprintf(out_buf, out_buf_size, "0x%04x", uint16 & 0xFFFF);
         return;
         }
@@ -706,12 +712,12 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
       int32_t int32 = 0;
       endianCopy (&int32, buf, size);
 
-      if (data_format == DataFormat_Dec) {
+      if (dataFormat == eDataFormatDec) {
         ImSnprintf(out_buf, out_buf_size, "%d", int32);
         return;
         }
 
-      if (data_format == DataFormat_Hex) {
+      if (dataFormat == eDataFormatHex) {
         ImSnprintf(out_buf, out_buf_size, "0x%08x", int32);
         return;
         }
@@ -724,12 +730,12 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
       uint32_t uint32 = 0;
       endianCopy (&uint32, buf, size);
 
-      if (data_format == DataFormat_Dec) {
+      if (dataFormat == eDataFormatDec) {
         ImSnprintf(out_buf, out_buf_size, "%u", uint32);
         return;
         }
 
-      if (data_format == DataFormat_Hex) {
+      if (dataFormat == eDataFormatHex) {
         ImSnprintf(out_buf, out_buf_size, "0x%08x", uint32);
         return;
         }
@@ -742,12 +748,12 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
       int64_t int64 = 0;
       endianCopy (&int64, buf, size);
 
-      if (data_format == DataFormat_Dec) {
+      if (dataFormat == eDataFormatDec) {
         ImSnprintf(out_buf, out_buf_size, "%lld", (long long)int64);
         return;
         }
 
-      if (data_format == DataFormat_Hex) {
+      if (dataFormat == eDataFormatHex) {
         ImSnprintf(out_buf, out_buf_size, "0x%016llx", (long long)int64);
         return;
         }
@@ -760,12 +766,12 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
       uint64_t uint64 = 0;
       endianCopy (&uint64, buf, size);
 
-      if (data_format == DataFormat_Dec) {
+      if (dataFormat == eDataFormatDec) {
         ImSnprintf(out_buf, out_buf_size, "%llu", (long long)uint64);
         return;
         }
 
-      if (data_format == DataFormat_Hex) {
+      if (dataFormat == eDataFormatHex) {
         ImSnprintf(out_buf, out_buf_size, "0x%016llx", (long long)uint64);
         return;
         }
@@ -778,12 +784,12 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
       float float32 = 0.f;
       endianCopy (&float32, buf, size);
 
-      if (data_format == DataFormat_Dec) {
+      if (dataFormat == eDataFormatDec) {
         ImSnprintf(out_buf, out_buf_size, "%f", float32);
         return;
         }
 
-      if (data_format == DataFormat_Hex) {
+      if (dataFormat == eDataFormatHex) {
         ImSnprintf(out_buf, out_buf_size, "%a", float32);
         return;
         }
@@ -796,12 +802,12 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
       double float64 = 0.0;
       endianCopy (&float64, buf, size);
 
-      if (data_format == DataFormat_Dec) {
+      if (dataFormat == eDataFormatDec) {
         ImSnprintf(out_buf, out_buf_size, "%f", float64);
         return;
         }
 
-      if (data_format == DataFormat_Hex) {
+      if (dataFormat == eDataFormatHex) {
         ImSnprintf(out_buf, out_buf_size, "%a", float64);
         return;
         }
@@ -818,11 +824,11 @@ void cMemoryEdit::drawPreviewData (size_t addr, const ImU8* memData, size_t memS
 //}}}
 
 //{{{
-void cMemoryEdit::gotoAddrAndHighlight (size_t addr_min, size_t addr_max) {
+void cMemoryEdit::gotoAddrAndHighlight (size_t addrMin, size_t addrMax) {
 
-  mGotoAddr = addr_min;
-  mHighlightMin = addr_min;
-  mHighlightMax = addr_max;
+  mGotoAddr = addrMin;
+  mHighlightMin = addrMin;
+  mHighlightMax = addrMax;
   }
 //}}}
 

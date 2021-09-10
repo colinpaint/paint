@@ -3,7 +3,6 @@
 //{{{  includes
 #include <cstdint>
 #include <string>
-#include <stdio.h>  // sprintf, scanf
 
 // imgui
 #include "../imgui/imgui.h"
@@ -18,7 +17,7 @@ public:
   void drawContents (void* voidMemData, size_t memSize, size_t baseDisplayAddress);
 
 private:
-  enum eDataFormat { DataFormat_Bin, DataFormat_Dec, DataFormat_Hex, DataFormat_COUNT };
+  enum eDataFormat { eDataFormatBin, eDataFormatDec, eDataFormatHex, eDataFormat_COUNT };
   //{{{
   struct sSizes {
     int   mAddrDigitsCount;
@@ -37,19 +36,19 @@ private:
   //}}}
 
   bool isBigEndian() const;
-  size_t getDataTypeSize (ImGuiDataType data_type) const;
-  const char* getDataTypeDesc (ImGuiDataType data_type) const;
-  const char* getDataFormatDesc (eDataFormat data_format) const;
+  size_t getDataTypeSize (ImGuiDataType dataType) const;
+  const char* getDataTypeDesc (ImGuiDataType dataType) const;
+  const char* getDataFormatDesc (eDataFormat dataFormat) const;
 
-  void calcSizes (sSizes& s, size_t memSize, size_t baseDisplayAddress);
+  void calcSizes (sSizes& sizes, size_t memSize, size_t baseDisplayAddress);
   void* endianCopy (void* dst, void* src, size_t size) const;
   const char* formatBinary (const uint8_t* buf, int width) const;
 
-  void drawOptionsLine (const sSizes& s, void* memData, size_t memSize, size_t baseDisplayAddress);
-  void drawPreviewLine (const sSizes& s, void* voidMemData, size_t memSize, size_t baseDisplayAddress);
-  void drawPreviewData (size_t addr, const ImU8* memData, size_t memSize, ImGuiDataType data_type,
-                        eDataFormat data_format, char* out_buf, size_t out_buf_size) const;
-  void gotoAddrAndHighlight (size_t addr_min, size_t addr_max);
+  void drawOptionsLine (const sSizes& sizes, void* memData, size_t memSize, size_t baseDisplayAddress);
+  void drawPreviewLine (const sSizes& sizes, void* voidMemData, size_t memSize, size_t baseDisplayAddress);
+  void drawPreviewData (size_t addr, const ImU8* memData, size_t memSize, ImGuiDataType dataType,
+                        eDataFormat dataFormat, char* out_buf, size_t out_buf_size) const;
+  void gotoAddrAndHighlight (size_t addrMin, size_t addrMax);
 
   // settings
   bool  mOpen = true;  // set to false when DrawWindow() was closed. ignore if not using DrawWindow().
