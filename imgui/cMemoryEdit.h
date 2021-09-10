@@ -90,7 +90,7 @@ private:
   size_t mHighlightMin = (size_t)-1;
   size_t mHighlightMax = (size_t)-1;
 
-  ImGuiDataType mPreviewDataType = ImGuiDataType_S32;
+  ImGuiDataType mPreviewDataType = ImGuiDataType_U8;
   int mPreviewEndianess = 0;
 
   char mOutBuf [128] = { 0 };

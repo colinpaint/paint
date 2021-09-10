@@ -137,8 +137,8 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
   clipper.Begin (line_total_count, sizes.mLineHeight);
   clipper.Step();
 
-  const size_t visible_start_addr = clipper.DisplayStart * mCols;
-  const size_t visible_end_addr = clipper.DisplayEnd * mCols;
+  const size_t visibleBeginAddr = clipper.DisplayStart * mCols;
+  const size_t visibleEndAddr = clipper.DisplayEnd * mCols;
 
   bool dataNext = false;
   if (mReadOnly || mDataEditingAddr >= memSize)
@@ -147,7 +147,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
     mDataAddress = (size_t)-1;
 
   size_t previewDataTypeSize = getDataTypeSize (mPreviewDataType);
-  size_t data_editing_addr_backup = mDataEditingAddr;
+  size_t dataEditingAddrBackup = mDataEditingAddr;
   size_t dataEditingAddrNext = (size_t)-1;
 
   if (mDataEditingAddr != (size_t)-1) {
@@ -158,14 +158,17 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
       dataEditingAddrNext = mDataEditingAddr - mCols;
       mDataEditingTakeFocus = true;
       }
+
     else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_DownArrow)) && mDataEditingAddr < memSize - mCols) {
       dataEditingAddrNext = mDataEditingAddr + mCols;
       mDataEditingTakeFocus = true;
       }
+
     else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_LeftArrow)) && mDataEditingAddr > 0) {
       dataEditingAddrNext = mDataEditingAddr - 1;
       mDataEditingTakeFocus = true;
       }
+
     else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_RightArrow)) && mDataEditingAddr < memSize - 1) {
       dataEditingAddrNext = mDataEditingAddr + 1;
       mDataEditingTakeFocus = true;
@@ -173,12 +176,13 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
     }
     //}}}
   if ((dataEditingAddrNext != (size_t)-1) && (
-      (dataEditingAddrNext / mCols) != (data_editing_addr_backup / mCols))) {
+      (dataEditingAddrNext / mCols) != (dataEditingAddrBackup / mCols))) {
     //{{{  track cursor
-    const int scroll_offset = ((int)(dataEditingAddrNext / mCols) - (int)(data_editing_addr_backup / mCols));
-    const bool scroll_desired = (scroll_offset < 0 && dataEditingAddrNext < visible_start_addr + mCols * 2) || (scroll_offset > 0 && dataEditingAddrNext > visible_end_addr - mCols * 2);
-    if (scroll_desired)
-      ImGui::SetScrollY (ImGui::GetScrollY() + scroll_offset * sizes.mLineHeight);
+    const int scrollOffset = ((int)(dataEditingAddrNext / mCols) - (int)(dataEditingAddrBackup / mCols));
+    const bool scrollDesired = ((scrollOffset < 0) && (dataEditingAddrNext < visibleBeginAddr + (mCols * 2))) ||
+                               ((scrollOffset > 0) && (dataEditingAddrNext > visibleEndAddr - (mCols * 2)));
+    if (scrollDesired)
+      ImGui::SetScrollY (ImGui::GetScrollY() + scrollOffset * sizes.mLineHeight);
     }
     //}}}
 
@@ -315,7 +319,8 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
         else
           ImGui::Text (formatByteSpace, b);
 
-        if (!mReadOnly && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0)) {
+        if (!mReadOnly && 
+            ImGui::IsItemHovered() && ImGui::IsMouseClicked (0)) {
           mDataEditingTakeFocus = true;
           dataEditingAddrNext = addr;
           }
