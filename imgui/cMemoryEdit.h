@@ -68,7 +68,8 @@ private:
   int mCols = 16;
   bool mShowHexII = false;
   bool mHoverHexII = false;
-  bool mDataPreview = false;
+  bool mBigEndian = false;
+  bool mHoverEndian = false;
 
   // gui options removed
   int mMidColsCount = 8;         // set to 0 to disable extra spacing between every mid-cols.
@@ -91,10 +92,9 @@ private:
   size_t mHighlightMax = (size_t)-1;
 
   ImGuiDataType mPreviewDataType = ImGuiDataType_U8;
-  int mPreviewEndianess = 0;
 
   char mOutBuf [128] = { 0 };
 
-  void* (*mEndianFunc)(void*, void*, size_t, int) = nullptr;
+  void* (*mEndianFunc)(void*, void*, size_t, bool) = nullptr;
   //}}}
   };

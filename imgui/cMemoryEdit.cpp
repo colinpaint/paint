@@ -58,7 +58,7 @@ namespace {
   const size_t kSizes[] = {1, 1, 2, 2, 4, 4, 8, 8, sizeof(float), sizeof(double)};
   //}}}
   //{{{
-  void* littleEndianFunc (void* dst, void* src, size_t s, int isLittleEndian) {
+  void* littleEndianFunc (void* dst, void* src, size_t s, bool isLittleEndian) {
 
     if (isLittleEndian)
       return memcpy (dst, src, s);
@@ -73,7 +73,7 @@ namespace {
     }
   //}}}
   //{{{
-  void* bigEndianFunc (void* dst, void* src, size_t s, int isLittleEndian) {
+  void* bigEndianFunc (void* dst, void* src, size_t s, bool isLittleEndian) {
 
      if (isLittleEndian) {
       uint8_t* dstPtr = (uint8_t*)dst;
@@ -628,7 +628,7 @@ void* cMemoryEdit::endianCopy (void* dst, void* src, size_t size) {
   if (!mEndianFunc)
     mEndianFunc = isBigEndian() ? bigEndianFunc : littleEndianFunc;
 
-  return mEndianFunc (dst, src, size, mPreviewEndianess);
+  return mEndianFunc (dst, src, size, mBigEndian ^ mHoverEndian);
   }
 //}}}
 
@@ -678,7 +678,7 @@ void cMemoryEdit::drawHeader (const cSizes& sizes, uint8_t* memData, size_t memS
 
   if (mDataAddress != (size_t)-1) {
     // draw dataType combo
-    ImGui::SetNextItemWidth ((2.f*style.FramePadding.x) + (6.f*sizes.mGlyphWidth) + style.ItemInnerSpacing.x);
+    ImGui::SetNextItemWidth ((2*style.FramePadding.x) + (8*sizes.mGlyphWidth) + style.ItemInnerSpacing.x);
     ImGui::SameLine();
     if (ImGui::BeginCombo ("##combo_type", getDataTypeDesc (mPreviewDataType), ImGuiComboFlags_HeightLargest)) {
       for (int dataType = 0; dataType < ImGuiDataType_COUNT; dataType++)
@@ -688,9 +688,12 @@ void cMemoryEdit::drawHeader (const cSizes& sizes, uint8_t* memData, size_t memS
       }
 
     // draw endian combo
-    ImGui::SetNextItemWidth ((2.f*style.FramePadding.x) + (6.f*sizes.mGlyphWidth) + style.ItemInnerSpacing.x);
-    ImGui::SameLine();
-    ImGui::Combo ("##combo_endianess", &mPreviewEndianess, "LE\0BE\0\0");
+    if ((int)mPreviewDataType > 1) {
+      ImGui::SameLine();
+      if (toggleButton ("big", mBigEndian))
+        mBigEndian = !mBigEndian;
+      mHoverEndian = ImGui::IsItemHovered();
+      }
 
     // draw dec
     ImGui::SameLine();
