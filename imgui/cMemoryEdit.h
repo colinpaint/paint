@@ -41,7 +41,7 @@ private:
   //}}}
 
   // gets
-  bool isBigEndian() const;
+  bool isCpuBigEndian() const;
   bool isReadOnly() const { return mReadOnly; };
   size_t getDataTypeSize (ImGuiDataType dataType) const;
   const char* getDataTypeDesc (ImGuiDataType dataType) const;
@@ -52,21 +52,23 @@ private:
   void setReadOnly (bool readOnly) { mReadOnly = readOnly; }
   void toggleReadOnly() { mReadOnly = !mReadOnly; }
 
-  void calcSizes (cSizes& sizes, size_t memSize, size_t baseDisplayAddress);
+  void calcSizes (size_t memSize, size_t baseDisplayAddress);
   void* endianCopy (void* dst, void* src, size_t size);
 
   // draws
-  void drawHeader (const cSizes& sizes, uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
-  void drawLine (const cSizes& sizes, int lineNumber, uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
+  void drawHeader (uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
+  void drawLine (int lineNumber, uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
 
   //{{{  vars
   // settings
   bool mOpen = true;                // set false when DrawWindow() closed
   bool mReadOnly = false;
 
+  cSizes mSizes;
+
   // gui options
   int mAddrDigitsCount= 0;      // number of addr digits to display (default calculated based on maximum displayed addr).
-  int mCols = 16;
+  int mColumns = 16;
   bool mShowHexII = false;
   bool mHoverHexII = false;
   bool mBigEndian = false;
@@ -75,11 +77,14 @@ private:
   // gui options removed
   int mMidColsCount = 8;         // set to 0 to disable extra spacing between every mid-cols.
 
-  ImU32 mHighlightColor = IM_COL32 (255, 255, 255, 50);  // background color of highlighted bytes.
+  ImU32 mTextColor;
+  ImU32 mGreyColor;
+  ImU32 mHighlightColor;
 
   size_t mDataAddress = (size_t)-1;
   size_t mDataEditingAddr = (size_t)-1;
-
+  bool mDataNext = false;
+  size_t mDataEditingAddrNext = (size_t)-1;
   bool mDataEditingTakeFocus = false;
 
   char mDataInputBuf[32] = {0};
@@ -93,6 +98,4 @@ private:
 
   char mOutBuf [128] = { 0 };
   //}}}
-  bool mDataNext = false;
-  size_t mDataEditingAddrNext = (size_t)-1;
   };
