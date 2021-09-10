@@ -57,6 +57,7 @@ private:
 
   // draws
   void drawHeader (const cSizes& sizes, uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
+  void drawLine (const cSizes& sizes, int lineNumber, uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
 
   //{{{  vars
   // settings
@@ -92,4 +93,6 @@ private:
 
   char mOutBuf [128] = { 0 };
   //}}}
+  bool mDataNext = false;
+  size_t mDataEditingAddrNext = (size_t)-1;
   };
