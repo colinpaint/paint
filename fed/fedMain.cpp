@@ -78,10 +78,10 @@ int main (int numArgs, char* args[]) {
   // create app to tie stuff together
   cApp app (platform, graphics);
   #ifdef _WIN32
-    app.setName (params.empty() ? "C:/projects/paint/imgui/cTextEditor.cpp" :
+    app.setName (params.empty() ? "C:/projects/paint/imgui/cTextEdit.cpp" :
                                   cFileUtils::resolveShortcut (params[0]));
   #else
-    app.setName (params.empty() ? "/home/pi/paint/imgui/cTextEditor.cpp" :
+    app.setName (params.empty() ? "/home/pi/paint/imgui/cTextEdit.cpp" :
                                   params[0]);
   #endif
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));

@@ -16,8 +16,8 @@
 // ui
 #include "cUI.h"
 
-// canvas
-#include "../canvas/cCanvas.h"
+// decoder
+#include "../decoder/cFileView.h"
 
 // utils
 #include "../utils/cLog.h"
@@ -58,23 +58,29 @@ public:
   //{{{
   virtual ~cTextEditUI() {
     // close the file mapping object
+    delete mFileView;
     }
   //}}}
 
   void addToDrawList (cApp& app) final {
 
+    if (!mLoaded) {
+      mLoaded = true;
+      mFileView = new cFileView ("C:/projects/paint/build/Release/fed.exe");
+      }
+
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
     ImGui::PushFont (app.getMonoFont());
-    size_t dataSize = 0x10000;
-    memoryEdit.drawWindow ("Memory Editor", (uint8_t*)this, dataSize, 0);
+    //memoryEdit.drawWindow ("Memory Editor", mFileView->getReadPtr(), mFileView->getReadBytesLeft(), 0);
+    memoryEdit.drawWindow ("Memory Editor", (uint8_t*)this, 0x10000, 0);
     ImGui::PopFont();
 
     return;
 
-    if (!mTextLoaded) {
+    if (!mLoaded) {
       //{{{  init mTextEditor
-      mTextLoaded = true;
+      mLoaded = true;
 
       // set file
       ifstream fileStream (app.getName());
@@ -206,9 +212,8 @@ public:
     }
 
 private:
-  bool mTextLoaded = false;
-  ImFont* mMonoFont = nullptr;
-
+  bool mLoaded = false;
+  cFileView* mFileView = nullptr;
   cTextEditor mTextEditor;
 
   //{{{

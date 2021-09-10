@@ -302,7 +302,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
       else {
         //{{{  display text
         // NB: The trailing space is not visible but ensure there's no gap that the mouse cannot click on.
-        ImU8 b = memData[addr];
+       ImU8 b = memData[addr];
 
         if (mShowHexII || mHoverHexII) {
           if ((b >= 32 && b < 128))
