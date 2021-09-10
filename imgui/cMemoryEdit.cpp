@@ -30,7 +30,9 @@
 
 #include <stdio.h>  // sprintf, scanf
 
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "../imgui/imgui.h"
+#include "../imgui/imgui_internal.h"
 #include "../imgui/myImguiWidgets.h"
 
 #include "../utils/cLog.h"
@@ -215,7 +217,9 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
 
 //{{{
 void cMemoryEdit::gotoAddrAndHighlight (size_t addrMin, size_t addrMax) {
+
   mEdit.mGotoAddr = addrMin;
+
   mEdit.mHighlightMin = addrMin;
   mEdit.mHighlightMax = addrMax;
   }
@@ -568,10 +572,10 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
     ImGui::SameLine (bytePosX);
 
     // highlight
-    bool isHighlightUserRange = ((addr >= mEdit.mHighlightMin) && (addr < mEdit.mHighlightMax));
+    bool isHighlightRange = ((addr >= mEdit.mHighlightMin) && (addr < mEdit.mHighlightMax));
     bool isHighlightPreview = ((addr >= mEdit.mDataAddress) &&
                                (addr < (mEdit.mDataAddress + getDataTypeSize (mOptions.mPreviewDataType))));
-    if (isHighlightUserRange || isHighlightPreview) {
+    if (isHighlightRange || isHighlightPreview) {
       //{{{  draw hex highlight
       ImVec2 pos = ImGui::GetCursorScreenPos();
 
@@ -579,7 +583,7 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
       bool isNextByteHighlighted =  (addr+1 < info.mMemSize) &&
                                     (((mEdit.mHighlightMax != (size_t)-1) && (addr + 1 < mEdit.mHighlightMax)));
 
-      if (isNextByteHighlighted || (column + 1 == mOptions.mColumns)) {
+      if (isNextByteHighlighted || ((column + 1) == mOptions.mColumns)) {
         highlightWidth = context.mHexCellWidth;
         if ((mOptions.mMidColsCount > 0) &&
             (column > 0) && ((column + 1) < mOptions.mColumns) &&
@@ -587,7 +591,7 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
           highlightWidth += context.mSpacingBetweenMidCols;
         }
 
-      draw_list->AddRectFilled (pos, ImVec2(pos.x + highlightWidth, pos.y + context.mLineHeight), context.mHighlightColor);
+      draw_list->AddRectFilled (pos, pos + ImVec2(highlightWidth, context.mLineHeight), context.mHighlightColor);
       }
       //}}}
     if (mEdit.mDataEditingAddr == addr) {
@@ -665,7 +669,7 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
     else {
       //{{{  display text
       // NB: The trailing space is not visible but ensure there's no gap that the mouse cannot click on.
-      ImU8 value = info.mMemData[addr];
+      uint8_t value = info.mMemData[addr];
 
       if (mOptions.mShowHexII || mOptions.mHoverHexII) {
         if ((value >= 32) && (value < 128))
