@@ -73,9 +73,6 @@ private:
 
   // gui options removed
   int mMidColsCount = 8;         // set to 0 to disable extra spacing between every mid-cols.
-  bool mGreyOutZeroes = true;    // display null/zero bytes using the TextDisabled color.
-  bool mUpperCaseHex = false;    // display hexadecimal values as "FF" instead of "ff".
-  bool mShowAscii = true;        // display ASCII representation on the right side.
 
   ImU32 mHighlightColor = IM_COL32 (255, 255, 255, 50);  // background color of highlighted bytes.
 

@@ -50,6 +50,9 @@
 
 using namespace std;
 //}}}
+constexpr bool kShowAscii = true;
+constexpr bool kUpperCaseHex = false;
+constexpr bool kGreyZeroes = true;
 
 namespace {
   //{{{  const
@@ -95,11 +98,8 @@ void cMemoryEdit::drawWindow (const string& title, uint8_t* memData, size_t memS
 // standalone Memory Editor window
 
   mOpen = true;
-  ImGui::Begin (title.c_str(), &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
 
-  //  if (ImGui::IsWindowHovered (ImGuiHoveredFlags_RootAndChildWindows) &&
-  //     ImGui::IsMouseReleased (ImGuiMouseButton_Right))
-  //    ImGui::OpenPopup ("context");
+  ImGui::Begin (title.c_str(), &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
 
   drawContents (memData, memSize, baseDisplayAddress);
 
@@ -111,12 +111,12 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
 
   ImDrawList* draw_list = ImGui::GetWindowDrawList();
   const ImU32 colorText = ImGui::GetColorU32 (ImGuiCol_Text);
-  const ImU32 colorDisabled = mGreyOutZeroes ? ImGui::GetColorU32 (ImGuiCol_TextDisabled) : colorText;
+  const ImU32 colorDisabled = kGreyZeroes ? ImGui::GetColorU32 (ImGuiCol_TextDisabled) : colorText;
 
-  const char* formatAddress = mUpperCaseHex ? "%0*" _PRISizeT "X: " : "%0*" _PRISizeT "x: ";
-  const char* formatData = mUpperCaseHex ? "%0*" _PRISizeT "X" : "%0*" _PRISizeT "x";
-  const char* formatByte = mUpperCaseHex ? "%02X" : "%02x";
-  const char* formatByteSpace = mUpperCaseHex ? "%02X " : "%02x ";
+  const char* formatByte = kUpperCaseHex ? "%02X" : "%02x";
+  const char* formatData = kUpperCaseHex ? "%0*" _PRISizeT "X" : "%0*" _PRISizeT "x";
+  const char* formatAddress = kUpperCaseHex ? "%0*" _PRISizeT "X: " : "%0*" _PRISizeT "x: ";
+  const char* formatByteSpace = kUpperCaseHex ? "%02X " : "%02x ";
 
   size_t previewDataSize = getDataTypeSize (mPreviewDataType);
 
@@ -138,7 +138,6 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
   ImGuiListClipper clipper;
   clipper.Begin (line_total_count, sizes.mLineHeight);
   clipper.Step();
-
   const size_t visibleBeginAddr = clipper.DisplayStart * mCols;
   const size_t visibleEndAddr = clipper.DisplayEnd * mCols;
 
@@ -148,9 +147,8 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
   if (mDataAddress >= memSize)
     mDataAddress = (size_t)-1;
 
-  size_t dataEditingAddrBackup = mDataEditingAddr;
+  size_t prevDataEditingAddr = mDataEditingAddr;
   size_t dataEditingAddrNext = (size_t)-1;
-
   if (mDataEditingAddr != (size_t)-1) {
     //{{{  move cursor
     // move cursor but only apply on next frame so scrolling with be synchronized
@@ -176,10 +174,10 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
       }
     }
     //}}}
-  if ((dataEditingAddrNext != (size_t)-1) && (
-      (dataEditingAddrNext / mCols) != (dataEditingAddrBackup / mCols))) {
+  if ((dataEditingAddrNext != (size_t)-1) &&
+      ((dataEditingAddrNext / mCols) != (prevDataEditingAddr / mCols))) {
     //{{{  track cursor
-    const int scrollOffset = ((int)(dataEditingAddrNext / mCols) - (int)(dataEditingAddrBackup / mCols));
+    const int scrollOffset = ((int)(dataEditingAddrNext / mCols) - (int)(prevDataEditingAddr / mCols));
     const bool scrollDesired = ((scrollOffset < 0) && (dataEditingAddrNext < visibleBeginAddr + (mCols * 2))) ||
                                ((scrollOffset > 0) && (dataEditingAddrNext > visibleEndAddr - (mCols * 2)));
     if (scrollDesired)
@@ -187,16 +185,18 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
     }
     //}}}
 
-  // draw vertical separator
-  ImVec2 window_pos = ImGui::GetWindowPos();
-  if (mShowAscii)
-    draw_list->AddLine (ImVec2 (window_pos.x + sizes.mPosAsciiStart - sizes.mGlyphWidth, window_pos.y),
-                        ImVec2 (window_pos.x + sizes.mPosAsciiStart - sizes.mGlyphWidth, window_pos.y + 9999),
+  //{{{  draw vertical separator
+  if (kShowAscii) {
+    ImVec2 windowPos = ImGui::GetWindowPos();
+    draw_list->AddLine (ImVec2 (windowPos.x + sizes.mPosAsciiStart - sizes.mGlyphWidth, windowPos.y),
+                        ImVec2 (windowPos.x + sizes.mPosAsciiStart - sizes.mGlyphWidth, windowPos.y + 9999),
                         ImGui::GetColorU32 (ImGuiCol_Border));
+    }
+  //}}}
 
-  for (int line_i = clipper.DisplayStart; line_i < clipper.DisplayEnd; line_i++) {
+  for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
     //{{{  display only visible lines
-    size_t addr = (size_t)(line_i * mCols);
+    size_t addr = (size_t)(lineNumber * mCols);
     ImGui::Text (formatAddress, sizes.mAddrDigitsCount, baseDisplayAddress + addr);
 
     // draw hex
@@ -307,15 +307,17 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
         if (mShowHexII || mHoverHexII) {
           if ((b >= 32 && b < 128))
             ImGui::Text (".%c ", b);
-          else if (b == 0xFF && mGreyOutZeroes)
+          else if ((b == 0xFF) && kGreyZeroes)
             ImGui::TextDisabled ("## ");
           else if (b == 0x00)
             ImGui::Text ("   ");
           else
             ImGui::Text (formatByteSpace, b);
           }
-        else if (b == 0 && mGreyOutZeroes)
+
+        else if ((b == 0) && kGreyZeroes)
           ImGui::TextDisabled ("00 ");
+
         else
           ImGui::Text (formatByteSpace, b);
 
@@ -328,13 +330,13 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
         //}}}
       }
 
-    if (mShowAscii) {
+    if (kShowAscii) {
       //{{{  draw ASCII values
       ImGui::SameLine (sizes.mPosAsciiStart);
       ImVec2 pos = ImGui::GetCursorScreenPos();
-      addr = line_i * mCols;
+      addr = lineNumber * mCols;
 
-      ImGui::PushID (line_i);
+      ImGui::PushID (lineNumber);
       if (ImGui::InvisibleButton ("ascii", ImVec2 (sizes.mPosAsciiEnd - sizes.mPosAsciiStart, sizes.mLineHeight))) {
         mDataEditingAddr = mDataAddress = addr + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / sizes.mGlyphWidth);
         mDataEditingTakeFocus = true;
@@ -612,7 +614,7 @@ void cMemoryEdit::calcSizes (cSizes& sizes, size_t memSize, size_t baseDisplayAd
   sizes.mPosHexEnd = sizes.mPosHexStart + (sizes.mHexCellWidth * mCols);
   sizes.mPosAsciiStart = sizes.mPosAsciiEnd = sizes.mPosHexEnd;
 
-  if (mShowAscii) {
+  if (kShowAscii) {
     sizes.mPosAsciiStart = sizes.mPosHexEnd + sizes.mGlyphWidth * 1;
     if (mMidColsCount > 0)
       sizes.mPosAsciiStart += (float)((mCols + mMidColsCount - 1) / mMidColsCount) * sizes.mSpacingBetweenMidCols;
