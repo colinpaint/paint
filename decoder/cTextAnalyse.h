@@ -1,7 +1,7 @@
 // cTextAnalyse.h - jpeg analyser - based on tiny jpeg decoder, jhead
 #pragma once
 //{{{  includes
-#include "cFileView.h"
+#include "../utils/cFileView.h"
 #include <vector>
 #include <functional>
 //}}}

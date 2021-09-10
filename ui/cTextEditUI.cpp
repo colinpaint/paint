@@ -17,7 +17,7 @@
 #include "cUI.h"
 
 // decoder
-#include "../decoder/cFileView.h"
+#include "../utils/cFileView.h"
 
 // utils
 #include "../utils/cLog.h"
@@ -66,7 +66,7 @@ public:
 
     if (!mLoaded) {
       mLoaded = true;
-      mFileView = new cFileView ("C:/projects/paint/build/Release/fed.exe");
+      //mFileView = new cFileView ("C:/projects/paint/build/Release/fed.exe");
       }
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
