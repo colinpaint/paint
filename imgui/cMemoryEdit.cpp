@@ -118,6 +118,8 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
   const char* formatByte = mUpperCaseHex ? "%02X" : "%02x";
   const char* formatByteSpace = mUpperCaseHex ? "%02X " : "%02x ";
 
+  size_t previewDataSize = getDataTypeSize (mPreviewDataType);
+
   cSizes sizes;
   calcSizes (sizes, memSize, baseDisplayAddress);
   drawHeader (sizes, memData, memSize, baseDisplayAddress);
@@ -146,7 +148,6 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
   if (mDataAddress >= memSize)
     mDataAddress = (size_t)-1;
 
-  size_t previewDataTypeSize = getDataTypeSize (mPreviewDataType);
   size_t dataEditingAddrBackup = mDataEditingAddr;
   size_t dataEditingAddrNext = (size_t)-1;
 
@@ -206,14 +207,13 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
       ImGui::SameLine (bytePosX);
 
       // draw highlight
-      bool isHighlightFromUserRange = (addr >= mHighlightMin && addr < mHighlightMax);
-      bool isHighlightFromPreview = (addr >= mDataAddress && addr < mDataAddress + previewDataTypeSize);
+      bool isHighlightFromUserRange = ((addr >= mHighlightMin) && (addr < mHighlightMax));
+      bool isHighlightFromPreview = ((addr >= mDataAddress) && (addr < (mDataAddress + previewDataSize)));
       if (isHighlightFromUserRange || isHighlightFromPreview) {
         ImVec2 pos = ImGui::GetCursorScreenPos();
-
-        float highlightWidth = sizes.mGlyphWidth * 2;
+        float highlightWidth = 2 * sizes.mGlyphWidth;
         bool isNextByteHighlighted =  (addr + 1 < memSize) &&
-                                      ((mHighlightMax != (size_t)-1 && addr + 1 < mHighlightMax));
+                                      (((mHighlightMax != (size_t)-1) && (addr + 1 < mHighlightMax)));
         if (isNextByteHighlighted || (n + 1 == mCols)) {
           highlightWidth = sizes.mHexCellWidth;
           if ((mMidColsCount > 0) &&
@@ -319,7 +319,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
         else
           ImGui::Text (formatByteSpace, b);
 
-        if (!mReadOnly && 
+        if (!mReadOnly &&
             ImGui::IsItemHovered() && ImGui::IsMouseClicked (0)) {
           mDataEditingTakeFocus = true;
           dataEditingAddrNext = addr;
@@ -341,7 +341,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
         }
 
       ImGui::PopID();
-      for (int n = 0; n < mCols && addr < memSize; n++, addr++) {
+      for (int column = 0; column < mCols && addr < memSize; column++, addr++) {
         if (addr == mDataEditingAddr) {
           draw_list->AddRectFilled (pos, ImVec2 (pos.x + sizes.mGlyphWidth, pos.y + sizes.mLineHeight),
                                    ImGui::GetColorU32 (ImGuiCol_FrameBg));
@@ -349,9 +349,9 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
                                    ImGui::GetColorU32 (ImGuiCol_TextSelectedBg));
           }
 
-        unsigned char c = memData[addr];
-        char display_c = (c < 32 || c >= 128) ? '.' : c;
-        draw_list->AddText(pos, (display_c == c) ? colorText : colorDisabled, &display_c, &display_c + 1);
+        uint8_t value = memData[addr];
+        char displayCh = (value < 32 || value >= 128) ? '.' : value;
+        draw_list->AddText (pos, (displayCh == value) ? colorText : colorDisabled, &displayCh, &displayCh + 1);
         pos.x += sizes.mGlyphWidth;
         }
       }
@@ -377,6 +377,13 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
     mDataEditingAddr = dataEditingAddrNext;
     mDataAddress = dataEditingAddrNext;
     }
+  }
+//}}}
+//{{{
+void cMemoryEdit::gotoAddrAndHighlight (size_t addrMin, size_t addrMax) {
+  mGotoAddr = addrMin;
+  mHighlightMin = addrMin;
+  mHighlightMax = addrMax;
   }
 //}}}
 
@@ -622,14 +629,6 @@ void* cMemoryEdit::endianCopy (void* dst, void* src, size_t size) {
     mEndianFunc = isBigEndian() ? bigEndianFunc : littleEndianFunc;
 
   return mEndianFunc (dst, src, size, mPreviewEndianess);
-  }
-//}}}
-//{{{
-void cMemoryEdit::gotoAddrAndHighlight (size_t addrMin, size_t addrMax) {
-
-  mGotoAddr = addrMin;
-  mHighlightMin = addrMin;
-  mHighlightMax = addrMax;
   }
 //}}}
 

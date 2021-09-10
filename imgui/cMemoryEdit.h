@@ -15,6 +15,7 @@ public:
 
   void drawWindow (const std::string& title, uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
   void drawContents (uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
+  void gotoAddrAndHighlight (size_t addrMin, size_t addrMax);
 
 private:
   enum class eDataFormat { eBin, eDec, eHex, eMax };
@@ -53,7 +54,6 @@ private:
 
   void calcSizes (cSizes& sizes, size_t memSize, size_t baseDisplayAddress);
   void* endianCopy (void* dst, void* src, size_t size);
-  void gotoAddrAndHighlight (size_t addrMin, size_t addrMax);
 
   // draws
   void drawHeader (const cSizes& sizes, uint8_t* memData, size_t memSize, size_t baseDisplayAddress);

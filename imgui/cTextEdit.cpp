@@ -646,9 +646,6 @@ void cTextEditor::setSelectionEnd (const sPosition& position) {
 //{{{
 void cTextEditor::setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode) {
 
-  sPosition oldSelStart = mState.mSelectionStart;
-  sPosition oldSelEnd = mState.mSelectionEnd;
-
   mState.mSelectionStart = sanitizePosition (startPosition);
   mState.mSelectionEnd = sanitizePosition (endPosition);
   if (mState.mSelectionStart > mState.mSelectionEnd)
@@ -1500,7 +1497,7 @@ cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
   int lineIndex = max (0, static_cast<int>(floor (local.y / mCharSize.y)));
 
   int lineNumber = lineIndexToNumber (lineIndex);
-  if ((lineNumber >= 0) && (lineNumber < mLines.size())) {
+  if ((lineNumber >= 0) && (lineNumber < (int)mLines.size())) {
     const vector<sGlyph>& glyphs = mLines[lineNumber].mGlyphs;
 
     int columnIndex = 0;
@@ -2735,7 +2732,7 @@ int cTextEditor::renderFold (int lineNumber, bool parentOpen, bool foldOpen) {
     }
 
   while (true) {
-    if (++lineNumber >= mLines.size())
+    if (++lineNumber >= (int)mLines.size())
       return lineNumber;
 
     sLine& line = mLines[lineNumber];
