@@ -84,7 +84,6 @@ namespace {
       return memcpy (dst, src, s);
     }
   //}}}
-  void* (*gEndianFunc)(void*, void*, size_t, int) = nullptr;
   }
 
 // public:
@@ -614,12 +613,12 @@ void cMemoryEdit::calcSizes (cSizes& sizes, size_t memSize, size_t baseDisplayAd
   }
 //}}}
 //{{{
-void* cMemoryEdit::endianCopy (void* dst, void* src, size_t size) const {
+void* cMemoryEdit::endianCopy (void* dst, void* src, size_t size) {
 
-  if (!gEndianFunc)
-    gEndianFunc = isBigEndian() ? bigEndianFunc : littleEndianFunc;
+  if (!mEndianFunc)
+    mEndianFunc = isBigEndian() ? bigEndianFunc : littleEndianFunc;
 
-  return gEndianFunc (dst, src, size, mPreviewEndianess);
+  return mEndianFunc (dst, src, size, mPreviewEndianess);
   }
 //}}}
 //{{{
@@ -637,7 +636,7 @@ void cMemoryEdit::drawHeader (const cSizes& sizes, uint8_t* memData, size_t memS
   ImGuiStyle& style = ImGui::GetStyle();
 
   // draw col box
-  ImGui::SetNextItemWidth ((2 * style.FramePadding.x) + (7 * sizes.mGlyphWidth));
+  ImGui::SetNextItemWidth ((2.f*style.FramePadding.x) + (7.f*sizes.mGlyphWidth));
   ImGui::DragInt ("##col", &mCols, 0.2f, 2, 64, "%d col");
 
   // draw hexII box
@@ -657,7 +656,7 @@ void cMemoryEdit::drawHeader (const cSizes& sizes, uint8_t* memData, size_t memS
       }
     }
     //}}}
-  if (mGotoAddr != (size_t) - 1) {
+  if (mGotoAddr != (size_t)-1) {
     //{{{  valid goto address
     if (mGotoAddr < memSize) {
       // use gotoAddress and scroll to it
@@ -675,8 +674,8 @@ void cMemoryEdit::drawHeader (const cSizes& sizes, uint8_t* memData, size_t memS
 
   if (mDataAddress != (size_t)-1) {
     // draw dataType combo
+    ImGui::SetNextItemWidth ((2.f*style.FramePadding.x) + (6.f*sizes.mGlyphWidth) + style.ItemInnerSpacing.x);
     ImGui::SameLine();
-    ImGui::SetNextItemWidth ((sizes.mGlyphWidth * 10.f) + style.FramePadding.x * 2.f + style.ItemInnerSpacing.x);
     if (ImGui::BeginCombo ("##combo_type", getDataTypeDesc (mPreviewDataType), ImGuiComboFlags_HeightLargest)) {
       for (int dataType = 0; dataType < ImGuiDataType_COUNT; dataType++)
         if (ImGui::Selectable (getDataTypeDesc((ImGuiDataType)dataType), mPreviewDataType == dataType))
@@ -685,9 +684,14 @@ void cMemoryEdit::drawHeader (const cSizes& sizes, uint8_t* memData, size_t memS
       }
 
     // draw endian combo
+    ImGui::SetNextItemWidth ((2.f*style.FramePadding.x) + (6.f*sizes.mGlyphWidth) + style.ItemInnerSpacing.x);
     ImGui::SameLine();
-    ImGui::SetNextItemWidth ((sizes.mGlyphWidth * 6.f) + style.FramePadding.x * 2.f + style.ItemInnerSpacing.x);
     ImGui::Combo ("##combo_endianess", &mPreviewEndianess, "LE\0BE\0\0");
+
+    // draw dec
+    ImGui::SameLine();
+    getDataStr (mDataAddress, memData, memSize, mPreviewDataType, eDataFormat::eDec);
+    ImGui::Text ("dec:%s", getDataStr (mDataAddress, memData, memSize, mPreviewDataType, eDataFormat::eDec));
 
     // draw hex
     ImGui::SameLine();
@@ -698,11 +702,6 @@ void cMemoryEdit::drawHeader (const cSizes& sizes, uint8_t* memData, size_t memS
     ImGui::SameLine();
     getDataStr (mDataAddress, memData, memSize, mPreviewDataType, eDataFormat::eBin);
     ImGui::Text ("bin:%s", getDataStr (mDataAddress, memData, memSize, mPreviewDataType, eDataFormat::eBin));
-
-    // draw dec
-    ImGui::SameLine();
-    getDataStr (mDataAddress, memData, memSize, mPreviewDataType, eDataFormat::eDec);
-    ImGui::Text ("dec:%s", getDataStr (mDataAddress, memData, memSize, mPreviewDataType, eDataFormat::eDec));
     }
   }
 //}}}

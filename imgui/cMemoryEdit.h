@@ -45,14 +45,14 @@ private:
   size_t getDataTypeSize (ImGuiDataType dataType) const;
   const char* getDataTypeDesc (ImGuiDataType dataType) const;
   const char* getDataFormatDesc (eDataFormat dataFormat) const;
-  const char* getDataStr (size_t addr, const uint8_t* memData, size_t memSize, 
+  const char* getDataStr (size_t addr, const uint8_t* memData, size_t memSize,
                           ImGuiDataType dataType, eDataFormat dataFormat);
 
   void setReadOnly (bool readOnly) { mReadOnly = readOnly; }
   void toggleReadOnly() { mReadOnly = !mReadOnly; }
 
   void calcSizes (cSizes& sizes, size_t memSize, size_t baseDisplayAddress);
-  void* endianCopy (void* dst, void* src, size_t size) const;
+  void* endianCopy (void* dst, void* src, size_t size);
   void gotoAddrAndHighlight (size_t addrMin, size_t addrMax);
 
   // draws
@@ -93,5 +93,7 @@ private:
   int mPreviewEndianess = 0;
 
   char mOutBuf [128] = { 0 };
+
+  void* (*mEndianFunc)(void*, void*, size_t, int) = nullptr;
   //}}}
   };
