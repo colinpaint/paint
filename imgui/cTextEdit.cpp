@@ -1219,7 +1219,7 @@ void cTextEditor::closeFold() {
 //}}}
 //}}}
 //{{{
-void cTextEditor::render() {
+void cTextEditor::drawContents() {
 // main ui handle io and draw routine
 
   handleKeyboardInputs();
@@ -1229,7 +1229,7 @@ void cTextEditor::render() {
 
   preRender();
   mFoldLines.clear();
-  if (mShowFolds) 
+  if (mShowFolds)
     renderFold (0, true, true);
   else {
     for (int lineNumber = 0; lineNumber <= getMaxLineIndex(); lineNumber++)

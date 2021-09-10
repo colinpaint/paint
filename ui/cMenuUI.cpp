@@ -219,7 +219,7 @@ private:
   static inline const unsigned kSwatchRows = 7;
 
   // vars
-  unsigned mMainMenuIndex = 0;
+  uint8_t mMainMenuIndex = 0;
   array<cColor, kSwatchRows * kSwatchPerRow> mColorSwatches;
 
   // static register

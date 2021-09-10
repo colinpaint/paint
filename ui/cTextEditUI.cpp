@@ -197,7 +197,7 @@ public:
     //}}}
 
     ImGui::PushFont (app.getMonoFont());
-    mTextEditor.render();
+    mTextEditor.drawContents();
     ImGui::PopFont();
 
     ImGui::End();

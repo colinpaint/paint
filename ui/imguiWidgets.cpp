@@ -1,75 +1,73 @@
-// cUI.cpp - static manager and UI base class
+// imguiWidgets - my imgui widgets
 //{{{  includes
-#include "cUI.h"
+#include "imguiWidgets.h"
 
 #include <cstdint>
 #include <cmath>
 #include <string>
+#include <vector>
 #include <algorithm>
+#include <chrono>
 
 // imGui
 #include <imgui.h>
-
-// imGui - internal, exposed for custom widget
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 
-#include "../graphics/cGraphics.h"
-#include "../brush/cBrush.h"
-#include "../canvas/cCanvas.h"
-
+#include "../utils/date.h"
 #include "../utils/cLog.h"
 
 using namespace std;
 //}}}
-#define DRAW_CANVAS // useful to disable canvas when bringing up backends
-#define SHOW_DEMO
 
-// static register
 //{{{
-cUI* cUI::createByName (const string& name) {
-// create class by name from classRegister, add instance to instances
+void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t address, bool full) {
 
-  auto uiIt = getInstanceRegister().find (name);
-  if (uiIt == getInstanceRegister().end()) {
-    auto ui = getClassRegister()[name](name);
-    getInstanceRegister().insert (make_pair (name, ui));
-    return ui;
+  uint32_t firstRowPad = address % columnsPerRow;
+  address -= firstRowPad;
+
+  while (numBytes > 0) {
+    string hexString;
+    if (full)
+      hexString = fmt::format ("{:04x}: ", address);
+    string asciiString;
+
+    // pad leading row values
+    uint32_t byteInRow = 0;
+    while (firstRowPad > 0) {
+      hexString += "   ";
+      asciiString += " ";
+      byteInRow++;
+      firstRowPad--;
+      }
+
+    // rest of row
+    while (byteInRow < columnsPerRow) {
+      if (numBytes > 0) {
+        // append byte
+        numBytes--;
+        uint8_t value = *ptr++;
+        hexString += fmt::format ("{:02x} ", value);
+        asciiString += (value > 0x20) && (value < 0x80) ? value : '.';
+        }
+      else // pad trailing row values
+        hexString += "   ";
+
+      byteInRow++;
+      }
+
+    if (full)
+      ImGui::Text ("%s %s", hexString.c_str(), asciiString.c_str());
+    else
+      ImGui::Text ("%s", hexString.c_str());
+
+    address += columnsPerRow;
     }
-  else
-    return uiIt->second;
-  }
-//}}}
-//{{{
-void cUI::listRegisteredClasses() {
-
-  cLog::log (LOGINFO, "ui register");
-  for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, fmt::format ("- {}", ui.first));
-  }
-//}}}
-//{{{
-void cUI::listInstances() {
-
-  cLog::log (LOGINFO, "ui instance register");
-  for (auto& ui : getInstanceRegister())
-    cLog::log (LOGINFO, fmt::format ("- {}", ui.first));
   }
 //}}}
 
-// static draw
 //{{{
-void cUI::draw (cApp& app) {
-// draw registered UI instances
-
-  for (auto& ui : getInstanceRegister())
-    ui.second->addToDrawList (app);
-  }
-//}}}
-
-// protected:
-//{{{
-bool cUI::clockButton (const string& label, chrono::system_clock::time_point timePoint, const ImVec2& size_arg) {
+bool clockButton (const string& label, chrono::system_clock::time_point timePoint, const ImVec2& size_arg) {
 
   ImGuiWindow* window = ImGui::GetCurrentWindow();
   if (window->SkipItems)
@@ -133,7 +131,7 @@ bool cUI::clockButton (const string& label, chrono::system_clock::time_point tim
   }
 //}}}
 //{{{
-bool cUI::toggleButton (const string& label, bool toggleOn, const ImVec2& size_arg) {
+bool toggleButton (const string& label, bool toggleOn, const ImVec2& size_arg) {
 // imGui custom widget - based on ImGui::ButtonEx
 
   ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -179,7 +177,7 @@ bool cUI::toggleButton (const string& label, bool toggleOn, const ImVec2& size_a
   }
 //}}}
 //{{{
-uint8_t cUI::interlockedButtons (const vector<string>& buttonVector, uint8_t index, const ImVec2& size_arg) {
+uint8_t interlockedButtons (const vector<string>& buttonVector, uint8_t index, const ImVec2& size_arg) {
 // interlockedButtons helper
 // draw buttonVector as toggleButtons with index toggled on
 // return index of last or pressed menu button
@@ -193,87 +191,5 @@ uint8_t cUI::interlockedButtons (const vector<string>& buttonVector, uint8_t ind
   ImGui::EndGroup();
 
   return index;
-  }
-//}}}
-
-//{{{
-void cUI::printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t address, bool full) {
-
-  uint32_t firstRowPad = address % columnsPerRow;
-  address -= firstRowPad;
-
-  while (numBytes > 0) {
-    string hexString;
-    if (full)
-      hexString = fmt::format ("{:04x}: ", address);
-    string asciiString;
-
-    // pad leading row values
-    uint32_t byteInRow = 0;
-    while (firstRowPad > 0) {
-      hexString += "   ";
-      asciiString += " ";
-      byteInRow++;
-      firstRowPad--;
-      }
-
-    // rest of row
-    while (byteInRow < columnsPerRow) {
-      if (numBytes > 0) {
-        // append byte
-        numBytes--;
-        uint8_t value = *ptr++;
-        hexString += fmt::format ("{:02x} ", value);
-        asciiString += (value > 0x20) && (value < 0x80) ? value : '.';
-        }
-      else // pad trailing row values
-        hexString += "   ";
-
-      byteInRow++;
-      }
-
-    if (full)
-      ImGui::Text ("%s %s", hexString.c_str(), asciiString.c_str());
-    else
-      ImGui::Text ("%s", hexString.c_str());
-
-    address += columnsPerRow;
-    }
-  }
-//}}}
-
-// - static manager
-//{{{
-bool cUI::registerClass (const string& name, const cUI::createFuncType createFunc) {
-// register class createFunc by name to classRegister, add instance to instances
-
-  if (getClassRegister().find (name) == getClassRegister().end()) {
-    // class name not found - add to classRegister map
-    getClassRegister().insert (make_pair (name, createFunc));
-
-    // create instance of class and add to instances map
-    getInstanceRegister().insert (make_pair (name, createFunc (name)));
-    return true;
-    }
-  else
-    return false;
-  }
-//}}}
-
-// private:
-//{{{
-map<const string, cUI::createFuncType>& cUI::getClassRegister() {
-// static map inside static method ensures map is created before use
-
-  static map<const string, createFuncType> mClassRegister;
-  return mClassRegister;
-  }
-//}}}
-//{{{
-map<const string, cUI*>& cUI::getInstanceRegister() {
-// static map inside static method ensures map is created before use
-
-  static map<const string, cUI*> mInstances;
-  return mInstances;
   }
 //}}}

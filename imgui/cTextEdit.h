@@ -286,7 +286,7 @@ public:
 
   void enterCharacter (ImWchar ch, bool shift);
   //}}}
-  void render();
+  void drawContents();
 
 private:
   typedef std::vector <std::pair <std::regex,ePalette>> tRegexList;
