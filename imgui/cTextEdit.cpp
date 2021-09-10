@@ -22,7 +22,7 @@
 #include <regex>
 #include <functional>
 
-#include "cTextEditor.h"
+#include "cTextEdit.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"

@@ -1,4 +1,4 @@
-// cTextEditorUI.cpp
+// cTextEditUI.cpp
 //{{{  includes
 #include <cstdint>
 #include <vector>
@@ -9,7 +9,8 @@
 
 // imgui
 #include "../imgui/imgui.h"
-#include "../imgui/cTextEditor.h"
+#include "../imgui/cTextEdit.h"
+#include "../imgui/cMemoryEdit.h"
 
 // ui
 #include "cUI.h"
@@ -44,21 +45,28 @@ namespace {
     "ident decl",
     };
   //}}}
+  cMemoryEdit memoryEdit;
   }
 
-class cTextEditorUI : public cUI {
+class cTextEditUI : public cUI {
 public:
   //{{{
-  cTextEditorUI (const string& name) : cUI(name) {
+  cTextEditUI (const string& name) : cUI(name) {
     }
   //}}}
   //{{{
-  virtual ~cTextEditorUI() {
+  virtual ~cTextEditUI() {
     // close the file mapping object
     }
   //}}}
 
   void addToDrawList (cApp& app) final {
+
+    ImGui::PushFont (app.getMonoFont());
+    memoryEdit.drawWindow ("Memory Editor", &app, 0x10000);
+    ImGui::PopFont();
+
+    return;
 
     if (!mTextLoaded) {
       //{{{  init mTextEditor
@@ -201,8 +209,8 @@ private:
 
   //{{{
   static cUI* create (const string& className) {
-    return new cTextEditorUI (className);
+    return new cTextEditUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("textEditor", &create);
+  inline static const bool mRegistered = registerClass ("textEdit", &create);
   };

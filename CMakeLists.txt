@@ -111,7 +111,7 @@ project (fed VERSION 1.0.0)
   # canvas and brush stuff to shut up link till i fix cUi
   file (GLOB FED_HEADER_FILES platform/*.h graphics/*.h ui/*.h)
   file (GLOB FED_SOURCE_FILES fed/fedMain.cpp platform/*.cpp graphics/*.cpp ui/cUI.cpp
-                              ui/cTextEditorUI.cpp)
+                              ui/cTextEditUI.cpp)
   # ui/cTextAnalyseUI.cpp
   # ui/cJpegAnalyseUI.cpp
   add_executable (fed ${FED_SOURCE_FILES} ${FED_HEADER_FILES})
