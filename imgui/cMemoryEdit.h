@@ -2,23 +2,11 @@
 #pragma once
 //{{{  includes
 #include <cstdint>
+#include <string>
 #include <stdio.h>  // sprintf, scanf
 
+// imgui
 #include "../imgui/imgui.h"
-
-
-#ifdef _MSC_VER
-  #define _PRISizeT   "I"
-  #define ImSnprintf  _snprintf
-#else
-  #define _PRISizeT   "z"
-  #define ImSnprintf  snprintf
-#endif
-
-#ifdef _MSC_VER
-  #pragma warning (push)
-  #pragma warning (disable: 4996) // warning C4996: 'sprintf': This function or variable may be unsafe.
-#endif
 //}}}
 
 class cMemoryEdit {
@@ -26,7 +14,7 @@ public:
   cMemoryEdit() = default;
   ~cMemoryEdit() = default;
 
-  void drawWindow (const char* title, void* voidMemData, size_t memSize, size_t baseDisplayAddress);
+  void drawWindow (const std::string& title, void* voidMemData, size_t memSize, size_t baseDisplayAddress);
   void drawContents (void* voidMemData, size_t memSize, size_t baseDisplayAddress);
 
 private:
@@ -94,9 +82,3 @@ private:
   int     mPreviewEndianess = 0;
   ImGuiDataType mPreviewDataType = ImGuiDataType_S32;
   };
-
-#undef _PRISizeT
-#undef ImSnprintf
-#ifdef _MSC_VER
-  #pragma warning (pop)
-#endif

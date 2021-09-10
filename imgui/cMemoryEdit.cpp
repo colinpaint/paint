@@ -1,5 +1,4 @@
-//{{{
-// cMemoryEdit.cpp - hacked version of https://github.com/ocornut/imgui_club
+//{{{  cMemoryEdit.cpp - hacked version of https://github.com/ocornut/imgui_club
 // Get latest version at http://www.github.com/ocornut/imgui_club
 //
 // Right-click anywhere to access the Options menu!
@@ -63,11 +62,13 @@
   #pragma warning (push)
   #pragma warning (disable: 4996) // warning C4996: 'sprintf': This function or variable may be unsafe.
 #endif
+
+using namespace std;
 //}}}
 
 namespace {
   //{{{
-  void* littleEndianCopy (void* dst, void* src, size_t s, int is_little_endian) {
+  void* littleEndianFunc (void* dst, void* src, size_t s, int is_little_endian) {
 
     if (is_little_endian)
       return memcpy (dst, src, s);
@@ -83,7 +84,7 @@ namespace {
     }
   //}}}
   //{{{
-  void* bigEndianCopy (void* dst, void* src, size_t s, int is_little_endian) {
+  void* bigEndianFunc (void* dst, void* src, size_t s, int is_little_endian) {
 
     if (is_little_endian) {
       uint8_t* dstPtr = (uint8_t*)dst;
@@ -97,12 +98,12 @@ namespace {
       return memcpy (dst, src, s);
     }
   //}}}
-  void* (*gEndianFuncPtr)(void*, void*, size_t, int) = nullptr;
+  void* (*gEndianFunc)(void*, void*, size_t, int) = nullptr;
   }
 
 // public:
 //{{{
-void cMemoryEdit::drawWindow (const char* title, void* voidMemData, size_t memSize, size_t baseDisplayAddress) {
+void cMemoryEdit::drawWindow (const string& title, void* voidMemData, size_t memSize, size_t baseDisplayAddress) {
 // Standalone Memory Editor window
 
   sSizes s;
@@ -110,7 +111,7 @@ void cMemoryEdit::drawWindow (const char* title, void* voidMemData, size_t memSi
   ImGui::SetNextWindowSizeConstraints (ImVec2 (0.f,0.f), ImVec2(s.mWindowWidth, FLT_MAX));
 
   mOpen = true;
-  if (ImGui::Begin (title, &mOpen, ImGuiWindowFlags_NoScrollbar)) {
+  if (ImGui::Begin (title.c_str(), &mOpen, ImGuiWindowFlags_NoScrollbar)) {
 
     if (ImGui::IsWindowHovered (ImGuiHoveredFlags_RootAndChildWindows) &&
         ImGui::IsMouseReleased (ImGuiMouseButton_Right))
@@ -474,10 +475,10 @@ void cMemoryEdit::calcSizes (sSizes& s, size_t memSize, size_t baseDisplayAddres
 //{{{
 void* cMemoryEdit::endianCopy (void* dst, void* src, size_t size) const {
 
-  if (!gEndianFuncPtr)
-    gEndianFuncPtr = isBigEndian() ? bigEndianCopy : littleEndianCopy;
+  if (!gEndianFunc)
+    gEndianFunc = isBigEndian() ? bigEndianFunc : littleEndianFunc;
 
-  return gEndianFuncPtr (dst, src, size, mPreviewEndianess);
+  return gEndianFunc (dst, src, size, mPreviewEndianess);
   }
 //}}}
 //{{{
