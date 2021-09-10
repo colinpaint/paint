@@ -63,7 +63,9 @@ public:
   void addToDrawList (cApp& app) final {
 
     ImGui::PushFont (app.getMonoFont());
-    memoryEdit.drawWindow ("Memory Editor", &app, 0x10000);
+    static char data[0x10000];
+    size_t dataSize = 0x10000;
+    memoryEdit.drawWindow ("Memory Editor", this, dataSize, 0);
     ImGui::PopFont();
 
     return;
