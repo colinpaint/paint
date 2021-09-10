@@ -19,19 +19,20 @@ public:
 private:
   enum eDataFormat { eDataFormatBin, eDataFormatDec, eDataFormatHex, eDataFormat_COUNT };
   //{{{
-  struct sSizes {
-    int   mAddrDigitsCount;
-    float mLineHeight;
-    float mGlyphWidth;
-    float mHexCellWidth;
-    float mSpacingBetweenMidCols;
-    float mPosHexStart;
-    float mPosHexEnd;
-    float mPosAsciiStart;
-    float mPosAsciiEnd;
-    float mWindowWidth;
+  class cSizes {
+  public:
+    int   mAddrDigitsCount = 0;
+    float mLineHeight = 0;
+    float mGlyphWidth = 0;
+    float mHexCellWidth = 0;
+    float mSpacingBetweenMidCols = 0;
+    float mPosHexStart = 0;
+    float mPosHexEnd = 0;
+    float mPosAsciiStart = 0;
+    float mPosAsciiEnd = 0;
+    float mWindowWidth = 0;
 
-    sSizes() { memset(this, 0, sizeof(*this)); }
+    cSizes() = default;
     };
   //}}}
 
@@ -40,16 +41,17 @@ private:
   const char* getDataTypeDesc (ImGuiDataType dataType) const;
   const char* getDataFormatDesc (eDataFormat dataFormat) const;
 
-  void calcSizes (sSizes& sizes, size_t memSize, size_t baseDisplayAddress);
+  void calcSizes (cSizes& sizes, size_t memSize, size_t baseDisplayAddress);
   void* endianCopy (void* dst, void* src, size_t size) const;
   const char* formatBinary (const uint8_t* buf, int width) const;
 
-  void drawOptionsLine (const sSizes& sizes, void* memData, size_t memSize, size_t baseDisplayAddress);
-  void drawPreviewLine (const sSizes& sizes, void* voidMemData, size_t memSize, size_t baseDisplayAddress);
+  void drawOptionsLine (const cSizes& sizes, void* memData, size_t memSize, size_t baseDisplayAddress);
+  void drawPreviewLine (const cSizes& sizes, void* voidMemData, size_t memSize, size_t baseDisplayAddress);
   void drawPreviewData (size_t addr, const ImU8* memData, size_t memSize, ImGuiDataType dataType,
                         eDataFormat dataFormat, char* out_buf, size_t out_buf_size) const;
   void gotoAddrAndHighlight (size_t addrMin, size_t addrMax);
 
+  //{{{  vars
   // settings
   bool  mOpen = true;  // set to false when DrawWindow() was closed. ignore if not using DrawWindow().
   bool  mReadOnly = false;
@@ -80,4 +82,5 @@ private:
   size_t  mHighlightMax = (size_t)-1;
   int     mPreviewEndianess = 0;
   ImGuiDataType mPreviewDataType = ImGuiDataType_S32;
+  //}}}
   };
