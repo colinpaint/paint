@@ -13,14 +13,14 @@ public:
   cMemoryEdit() = default;
   ~cMemoryEdit() = default;
 
-  void drawWindow (const std::string& title, uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
-  void drawContents (uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
+  void drawWindow (const std::string& title, uint8_t* memData, size_t memSize, size_t baseAddress);
+  void drawContents (uint8_t* memData, size_t memSize, size_t baseAddress);
   void gotoAddrAndHighlight (size_t addrMin, size_t addrMax);
 
 private:
   enum class eDataFormat { eBin, eDec, eHex, eMax };
   //{{{
-  class cSizes {
+  class cContext {
   public:
     int mAddrDigitsCount = 0;
 
@@ -37,6 +37,10 @@ private:
     float mAsciiEndPos = 0;
 
     float mWindowWidth = 0;
+
+    ImU32 mTextColor;
+    ImU32 mGreyColor;
+    ImU32 mHighlightColor;
     };
   //}}}
 
@@ -52,19 +56,23 @@ private:
   void setReadOnly (bool readOnly) { mReadOnly = readOnly; }
   void toggleReadOnly() { mReadOnly = !mReadOnly; }
 
-  void calcSizes (size_t memSize, size_t baseDisplayAddress);
+  void setContext (size_t memSize, size_t baseAddress);
   void* endianCopy (void* dst, void* src, size_t size);
 
   // draws
-  void drawHeader (uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
-  void drawLine (int lineNumber, uint8_t* memData, size_t memSize, size_t baseDisplayAddress);
+  void drawHeader (uint8_t* memData, size_t memSize, size_t baseAddress);
+  void drawLine (int lineNumber);
 
   //{{{  vars
   // settings
   bool mOpen = true;                // set false when DrawWindow() closed
   bool mReadOnly = false;
 
-  cSizes mSizes;
+  cContext mContext;
+
+  uint8_t* mMemData = nullptr;
+  size_t mMemSize = 0;
+  size_t mBaseAddress = 0;
 
   // gui options
   int mAddrDigitsCount= 0;      // number of addr digits to display (default calculated based on maximum displayed addr).
@@ -76,10 +84,6 @@ private:
 
   // gui options removed
   int mMidColsCount = 8;         // set to 0 to disable extra spacing between every mid-cols.
-
-  ImU32 mTextColor;
-  ImU32 mGreyColor;
-  ImU32 mHighlightColor;
 
   size_t mDataAddress = (size_t)-1;
   size_t mDataEditingAddr = (size_t)-1;
