@@ -90,6 +90,7 @@ namespace {
       return memcpy (dst, src, s);
     }
   //}}}
+  void* (*gEndianFunc)(void*, void*, size_t, bool) = nullptr;
   }
 
 // public:
@@ -302,7 +303,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseDis
       else {
         //{{{  display text
         // NB: The trailing space is not visible but ensure there's no gap that the mouse cannot click on.
-       ImU8 b = memData[addr];
+        ImU8 b = memData[addr];
 
         if (mShowHexII || mHoverHexII) {
           if ((b >= 32 && b < 128))
@@ -392,6 +393,7 @@ void cMemoryEdit::gotoAddrAndHighlight (size_t addrMin, size_t addrMax) {
 // private:
 //{{{
 bool cMemoryEdit::isBigEndian() const {
+// is cpu bigEndian
 
   uint16_t x = 1;
 
@@ -628,10 +630,11 @@ void cMemoryEdit::calcSizes (cSizes& sizes, size_t memSize, size_t baseDisplayAd
 //{{{
 void* cMemoryEdit::endianCopy (void* dst, void* src, size_t size) {
 
-  if (!mEndianFunc)
-    mEndianFunc = isBigEndian() ? bigEndianFunc : littleEndianFunc;
+  if (!gEndianFunc)
+    gEndianFunc = isBigEndian() ? bigEndianFunc : littleEndianFunc;
 
-  return mEndianFunc (dst, src, size, mBigEndian ^ mHoverEndian);
+
+  return gEndianFunc (dst, src, size, mBigEndian ^ mHoverEndian);
   }
 //}}}
 

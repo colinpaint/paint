@@ -91,7 +91,5 @@ private:
   ImGuiDataType mPreviewDataType = ImGuiDataType_U8;
 
   char mOutBuf [128] = { 0 };
-
-  void* (*mEndianFunc)(void*, void*, size_t, bool) = nullptr;
   //}}}
   };
