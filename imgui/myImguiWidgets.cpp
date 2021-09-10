@@ -1,6 +1,6 @@
-// imguiWidgets - my imgui widgets
+// myImguiWidgets - my imgui widgets
 //{{{  includes
-#include "imguiWidgets.h"
+#include "myImguiWidgets.h"
 
 #include <cstdint>
 #include <cmath>
@@ -10,9 +10,9 @@
 #include <chrono>
 
 // imGui
-#include <imgui.h>
+#include "imgui.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
+#include "imgui_internal.h"
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"

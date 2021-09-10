@@ -11,6 +11,7 @@
 #include "../imgui/imgui.h"
 #include "../imgui/cTextEdit.h"
 #include "../imgui/cMemoryEdit.h"
+#include "../imgui/myImguiWidgets.h"
 
 // ui
 #include "cUI.h"

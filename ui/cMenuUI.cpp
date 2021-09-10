@@ -6,7 +6,8 @@
 #include <chrono>
 
 // imGui
-#include <imgui.h>
+#include "../imgui/imgui.h"
+#include "../imgui/myImguiWidgets.h"
 
 // stb
 #include <stb_image_write.h>
@@ -14,6 +15,7 @@
 #include "../platform/cPlatform.h"
 
 #include "cUI.h"
+
 #include "../brush/cBrush.h"
 #include "../canvas/cLayer.h"
 #include "../canvas/cCanvas.h"

@@ -41,11 +41,6 @@ public:
   virtual void addToDrawList (cApp& app) = 0;
 
 protected:
-  static bool clockButton (const std::string& label, std::chrono::system_clock::time_point timePoint, const ImVec2& size_arg);
-  static bool toggleButton (const std::string& label, bool toggleOn, const ImVec2& size_arg = ImVec2(0, 0));
-  static uint8_t interlockedButtons (const std::vector<std::string>& buttonVector, uint8_t index, const ImVec2& size_arg);
-  static void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t address, bool full);
-
   using createFuncType = cUI*(*)(const std::string& name);
   static bool registerClass (const std::string& name, const createFuncType createFunc);
 
