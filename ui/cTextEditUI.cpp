@@ -73,7 +73,8 @@ public:
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
     ImGui::PushFont (app.getMonoFont());
     //memoryEdit.drawWindow ("Memory Editor", mFileView->getReadPtr(), mFileView->getReadBytesLeft(), 0);
-    memoryEdit.drawWindow ("Memory Editor", (uint8_t*)this, 0x10000, 0);
+    //memoryEdit.drawWindow ("Memory Editor", (uint8_t*)this, sizeof(*this), 0);
+    memoryEdit.drawWindow ("Memory Editor", (uint8_t*)(this), 0x10000, 0);
     ImGui::PopFont();
 
     return;

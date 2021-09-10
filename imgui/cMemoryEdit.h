@@ -13,45 +13,21 @@ public:
   void drawWindow (const std::string& title, uint8_t* memData, size_t memSize, size_t baseAddress);
   void drawContents (uint8_t* memData, size_t memSize, size_t baseAddress);
 
-  void gotoAddrAndHighlight (size_t addrMin, size_t addrMax);
+  void setAddrHighlight (size_t addrMin, size_t addrMax);
 
 private:
   enum class eDataFormat { eBin, eDec, eHex, eMax };
   //{{{
-  class cOptions {
+  class cInfo {
   public:
-    bool mReadOnly = false;
+    //{{{
+    cInfo (uint8_t* memData, size_t memSize, size_t baseAddress)
+      : mMemData(memData), mMemSize(memSize), mBaseAddress(baseAddress) {}
+    //}}}
 
-    int mAddrDigitsCount= 0; // number of addr digits to display (default calculated based on maximum displayed addr).
-
-    int mColumns = 16;
-    int mMidColsCount = 8;   // set to 0 to disable extra spacing between every mid-cols.
-
-    bool mShowHexII = false;
-    bool mHoverHexII = false;
-
-    bool mBigEndian = false;
-    bool mHoverEndian = false;
-
-    ImGuiDataType mPreviewDataType = ImGuiDataType_U8;
-    };
-  //}}}
-  //{{{
-  class cEdit {
-  public:
-    size_t mDataAddress = (size_t)-1;
-    bool mDataNext = false;
-
-    size_t mDataEditingAddr = (size_t)-1;
-    size_t mDataEditingAddrNext = (size_t)-1;
-    bool mDataEditingTakeFocus = false;
-
-    char mDataInputBuf[32] = {0};
-    char mAddrInputBuf[32] = {0};
-    size_t mGotoAddr = (size_t)-1;
-
-    size_t mHighlightMin = (size_t)-1;
-    size_t mHighlightMax = (size_t)-1;
+    uint8_t* mMemData = nullptr;
+    const size_t mMemSize = 0;
+    const size_t mBaseAddress = 0;
     };
   //}}}
   //{{{
@@ -78,11 +54,40 @@ private:
     };
   //}}}
   //{{{
-  class cInfo {
+  class cEdit {
   public:
-    uint8_t* mMemData = nullptr;
-    size_t mMemSize = 0;
-    size_t mBaseAddress = 0;
+    size_t mDataAddress = (size_t)-1;
+    bool mDataNext = false;
+
+    size_t mDataEditingAddr = (size_t)-1;
+    size_t mDataEditingAddrNext = (size_t)-1;
+    bool mDataEditingTakeFocus = false;
+
+    char mDataInputBuf[32] = {0};
+    char mAddrInputBuf[32] = {0};
+    size_t mGotoAddr = (size_t)-1;
+
+    size_t mHighlightMin = (size_t)-1;
+    size_t mHighlightMax = (size_t)-1;
+    };
+  //}}}
+  //{{{
+  class cOptions {
+  public:
+    bool mReadOnly = false;
+
+    int mAddrDigitsCount= 0; // number of addr digits to display (default calculated based on maximum displayed addr).
+
+    int mColumns = 16;
+    int mMidColsCount = 8;   // set to 0 to disable extra spacing between every mid-cols.
+
+    bool mShowHexII = false;
+    bool mHoverHexII = false;
+
+    bool mBigEndian = false;
+    bool mHoverEndian = false;
+
+    ImGuiDataType mPreviewDataType = ImGuiDataType_U8;
     };
   //}}}
 
@@ -103,14 +108,14 @@ private:
   void* endianCopy (void* dst, void* src, size_t size);
 
   // draws
-  void drawHeader (const cInfo& info, const cContext& context);
+  void drawTop (const cInfo& info, const cContext& context);
   void drawLine (int lineNumber, const cInfo& info, const cContext& context);
 
   // vars
   bool mOpen = true;  // set false when DrawWindow() closed
 
-  cOptions mOptions;
   cEdit mEdit;
+  cOptions mOptions;
 
   char mOutBuf [128] = { 0 };
   };

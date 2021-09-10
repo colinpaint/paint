@@ -123,15 +123,12 @@ void cMemoryEdit::drawWindow (const string& title, uint8_t* memData, size_t memS
 //{{{
 void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAddress) {
 
-  // save memory address
-  cInfo info;
-  info.mMemData = memData;
-  info.mMemSize = memSize;
-  info.mBaseAddress = baseAddress;
+  cInfo info (memData, memSize, baseAddress);
 
   cContext context;
   setContext (info, context);
-  drawHeader (info, context);
+
+  drawTop (info, context);
 
   // begin child scroll window
   ImGui::BeginChild ("##scrolling", ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
@@ -216,7 +213,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
 //}}}
 
 //{{{
-void cMemoryEdit::gotoAddrAndHighlight (size_t addrMin, size_t addrMax) {
+void cMemoryEdit::setAddrHighlight (size_t addrMin, size_t addrMax) {
 
   mEdit.mGotoAddr = addrMin;
 
@@ -475,7 +472,7 @@ void* cMemoryEdit::endianCopy (void* dst, void* src, size_t size) {
 //}}}
 
 //{{{
-void cMemoryEdit::drawHeader (const cInfo& info, const cContext& context) {
+void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
 
   ImGuiStyle& style = ImGui::GetStyle();
 
