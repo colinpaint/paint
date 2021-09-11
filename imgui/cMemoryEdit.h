@@ -64,7 +64,7 @@ private:
 
     bool mEditingTakeFocus = false;
     size_t mEditingAddress = kUndefinedAddress;
-    size_t mEditingAddressNext = kUndefinedAddress;
+    size_t mNextEditingAddress = kUndefinedAddress;
 
     char mDataInputBuf[32] = {0};
     char mAddressInputBuf[32] = {0};
@@ -95,7 +95,7 @@ private:
   // gets
   bool isCpuBigEndian() const;
   bool isReadOnly() const { return mOptions.mReadOnly; };
-  bool isValidAddress (size_t address) { return address != kUndefinedAddress; }
+  bool isValid (size_t address) { return address != kUndefinedAddress; }
 
   size_t getDataTypeSize (ImGuiDataType dataType) const;
   std::string getDataTypeDesc (ImGuiDataType dataType) const;
