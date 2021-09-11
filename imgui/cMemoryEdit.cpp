@@ -467,6 +467,8 @@ void cMemoryEdit::setContext (const cInfo& info, cContext& context) {
   context.mTextColor = ImGui::GetColorU32 (ImGuiCol_Text);
   context.mGreyColor = ImGui::GetColorU32 (ImGuiCol_TextDisabled);
   context.mHighlightColor = IM_COL32 (255, 255, 255, 50);  // highlight background color
+  context.mFrameBgndColor = ImGui::GetColorU32 (ImGuiCol_FrameBg);
+  context.mTextSelectBgndColor = ImGui::GetColorU32 (ImGuiCol_TextSelectedBg);
   }
 //}}}
 
@@ -704,26 +706,27 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
     ImVec2 pos = ImGui::GetCursorScreenPos();
     address = lineNumber * mOptions.mColumns;
 
+    // invisibleButton over righthand ascii text for mouse hits
     ImGui::PushID (lineNumber);
     if (ImGui::InvisibleButton ("ascii", ImVec2 (context.mAsciiEndPos - context.mAsciiBeginPos, context.mLineHeight))) {
       mEdit.mDataAddress = address + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / context.mGlyphWidth);
       mEdit.mEditingAddress = mEdit.mDataAddress;
       mEdit.mEditingTakeFocus = true;
       }
-
     ImGui::PopID();
+
     for (int column = 0; (column < mOptions.mColumns) && (address < info.mMemSize); column++, address++) {
       if (address == mEdit.mEditingAddress) {
-        draw_list->AddRectFilled (pos, ImVec2 (pos.x + context.mGlyphWidth, pos.y + context.mLineHeight),
-                                 ImGui::GetColorU32 (ImGuiCol_FrameBg));
-        draw_list->AddRectFilled (pos, ImVec2 (pos.x + context.mGlyphWidth, pos.y + context.mLineHeight),
-                                 ImGui::GetColorU32 (ImGuiCol_TextSelectedBg));
+        ImVec2 posEnd = pos + ImVec2 (context.mGlyphWidth, context.mLineHeight);
+        draw_list->AddRectFilled (pos, posEnd, context.mFrameBgndColor);
+        draw_list->AddRectFilled (pos, posEnd, context.mTextSelectBgndColor);
         }
 
       uint8_t value = info.mMemData[address];
       char displayCh = ((value < 32) || (value >= 128)) ? '.' : value;
       ImU32 color = (!kGreyZeroes || (value == displayCh)) ? context.mTextColor :  context.mGreyColor;
       draw_list->AddText (pos, color, &displayCh, &displayCh + 1);
+
       pos.x += context.mGlyphWidth;
       }
     }

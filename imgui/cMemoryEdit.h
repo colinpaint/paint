@@ -52,6 +52,8 @@ private:
     ImU32 mTextColor;
     ImU32 mGreyColor;
     ImU32 mHighlightColor;
+    ImU32 mFrameBgndColor;
+    ImU32 mTextSelectBgndColor;
     };
   //}}}
   //{{{
