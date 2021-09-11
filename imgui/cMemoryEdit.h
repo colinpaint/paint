@@ -60,11 +60,11 @@ private:
   class cEdit {
   public:
     bool mDataNext = false;
-    size_t mDataAddress = 0;
+    size_t mDataAddress = kUndefinedAddress;
 
-    bool mEditingTakeFocus = false;
-    size_t mEditingAddress = kUndefinedAddress;
-    size_t mNextEditingAddress = kUndefinedAddress;
+    bool mEditTakeFocus = false;
+    size_t mEditAddress = kUndefinedAddress;
+    size_t mNextEditAddress = kUndefinedAddress;
 
     char mDataInputBuf[32] = { 0 };
     char mAddressInputBuf[32] = { 0 };
@@ -88,7 +88,7 @@ private:
     bool mBigEndian = false;
     bool mHoverEndian = false;
 
-    ImGuiDataType mPreviewDataType = ImGuiDataType_U8;
+    ImGuiDataType mDataType = ImGuiDataType_U8;
     };
   //}}}
 
