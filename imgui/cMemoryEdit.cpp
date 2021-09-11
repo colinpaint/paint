@@ -1,11 +1,4 @@
 //{{{  cMemoryEdit.cpp - hacked version of https://github.com/ocornut/imgui_club
-// Get latest version at http://www.github.com/ocornut/imgui_club
-//
-// Right-click anywhere to access the Options menu!
-// You can adjust the keyboard repeat delay/rate in ImGuiIO.
-// The code assume a mono-space font for simplicity!
-// If you don't use the default font, use ImGui::PushFont()/PopFont() to switch to a mono-space font before calling this.
-//
 // Usage:
 //   // Create a window and draw memory editor inside it:
 //   static MemoryEditor mem_edit_1;
@@ -19,11 +12,6 @@
 //   ImGui::Begin("MyWindow")
 //   mem_edit_2.DrawContents(this, sizeof(*this), (size_t)this);
 //   ImGui::End();
-//
-// Todo/Bugs:
-// - This is generally old code, it should work but please don't use this as reference!
-// - Arrows are being sent to the InputText() about to disappear which for LeftArrow makes the text cursor appear at position 1 for one frame.
-// - Using InputText() is awkward and maybe overkill here, consider implementing something custom.
 //}}}
 //{{{  includes
 #include "cMemoryEdit.h"
@@ -56,7 +44,7 @@ using namespace std;
 constexpr bool kShowAscii = true;
 constexpr bool kGreyZeroes = true;
 constexpr bool kUpperCaseHex = false;
-constexpr float kPageOffset = 2.f;  // margin between top/bottom of page and cursor
+constexpr int kPageMarginLines = 3;
 
 namespace {
   //{{{  const string
@@ -142,23 +130,15 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
   ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, ImVec2(0,0));
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
 
-  // clipper begin
-  ImGuiListClipper clipper;
-  clipper.Begin (static_cast<int>((memSize + mOptions.mColumns-1)/mOptions.mColumns), context.mLineHeight);
-  clipper.Step();
-  const size_t visibleBeginAddress = clipper.DisplayStart * mOptions.mColumns;
-  const size_t visibleEndAddress = clipper.DisplayEnd * mOptions.mColumns;
-
   mEdit.mDataNext = false;
   if (mOptions.mReadOnly || (mEdit.mEditAddress >= memSize))
     mEdit.mEditAddress = kUndefinedAddress;
   if (mEdit.mDataAddress >= memSize)
     mEdit.mDataAddress = kUndefinedAddress;
 
-  size_t prevEditAddress = mEdit.mEditAddress;
   mEdit.mNextEditAddress = kUndefinedAddress;
   if (isValid (mEdit.mEditAddress)) {
-    //{{{  move cursor
+    //{{{  move cursor next time
     // move cursor but only apply on next frame so scrolling with be synchronized
     // - because currently we can't change the scrolling while the window is being rendered)
     if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_LeftArrow)) &&
@@ -203,13 +183,24 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
     }
     //}}}
 
+  // clipper begin
+  ImGuiListClipper clipper;
+  clipper.Begin (static_cast<int>((memSize + mOptions.mColumns-1) / mOptions.mColumns), context.mLineHeight);
+  clipper.Step();
+
   if (isValid (mEdit.mNextEditAddress) &&
-      ((mEdit.mNextEditAddress/mOptions.mColumns) != (prevEditAddress/mOptions.mColumns))) {
-    //{{{  scroll tracks cursor
-    int offset = ((int)(mEdit.mNextEditAddress/mOptions.mColumns) - (int)(prevEditAddress/mOptions.mColumns));
-    if (((offset < 0) && (mEdit.mNextEditAddress < (visibleBeginAddress + (mOptions.mColumns * kPageOffset)))) ||
-        ((offset > 0) && (mEdit.mNextEditAddress > (visibleEndAddress - (mOptions.mColumns * kPageOffset)))))
-      ImGui::SetScrollY (ImGui::GetScrollY() + (offset * context.mLineHeight));
+      ((mEdit.mNextEditAddress / mOptions.mColumns) != (mEdit.mEditAddress / mOptions.mColumns))) {
+    //{{{  minimal scroll, to ensure nextEditAddress which is on a new line, is onScreen
+    // calc lines for address's
+    int editAddressLine = static_cast<int>(mEdit.mEditAddress / mOptions.mColumns);
+    int nextEditAddressLine = static_cast<int>(mEdit.mNextEditAddress / mOptions.mColumns);
+    int scrollOffsetLines = nextEditAddressLine - editAddressLine;
+
+    // do we need to scroll
+    bool beforeStart = (scrollOffsetLines < 0) && (nextEditAddressLine < (clipper.DisplayStart + kPageMarginLines));
+    bool afterEnd = (scrollOffsetLines > 0) && (nextEditAddressLine >= (clipper.DisplayEnd - kPageMarginLines));
+    if (beforeStart || afterEnd)
+      ImGui::SetScrollY (ImGui::GetScrollY() + (scrollOffsetLines * context.mLineHeight));
     }
     //}}}
 
@@ -512,7 +503,7 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
 
   // draw columns button
   ImGui::SetNextItemWidth ((2.f*style.FramePadding.x) + (7.f*context.mGlyphWidth));
-  ImGui::DragInt ("##col", &mOptions.mColumns, 0.2f, 2, 64, "%d wide");
+  ImGui::DragInt ("##column", &mOptions.mColumns, 0.2f, 2, 64, "%d wide");
 
   // draw hexII button
   ImGui::SameLine();
@@ -523,7 +514,7 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
   // draw gotoAddress button
   ImGui::SetNextItemWidth ((2 * style.FramePadding.x) + ((context.mAddressDigitsCount + 1) * context.mGlyphWidth));
   ImGui::SameLine();
-  if (ImGui::InputText ("##address", mEdit.mAddressInputBuf, IM_ARRAYSIZE(mEdit.mAddressInputBuf),
+  if (ImGui::InputText ("##address", mEdit.mAddressInputBuf, sizeof(mEdit.mAddressInputBuf),
                          ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
     //{{{  consume input into gotoAddress
     size_t gotoAddress;
@@ -539,7 +530,7 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
     if (mEdit.mGotoAddress < info.mMemSize) {
       // use gotoAddress and scroll to it
       ImGui::BeginChild (kChildScrollStr);
-      ImGui::SetScrollFromPosY (ImGui::GetCursorStartPos().y + 
+      ImGui::SetScrollFromPosY (ImGui::GetCursorStartPos().y +
                                 (mEdit.mGotoAddress/mOptions.mColumns) * context.mLineHeight);
       ImGui::EndChild();
 
@@ -556,7 +547,7 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
     // draw dataType combo
     ImGui::SetNextItemWidth ((2*style.FramePadding.x) + (8*context.mGlyphWidth) + style.ItemInnerSpacing.x);
     ImGui::SameLine();
-    if (ImGui::BeginCombo ("##combo_type", getDataTypeDesc (mOptions.mDataType).c_str(), ImGuiComboFlags_HeightLargest)) {
+    if (ImGui::BeginCombo ("##comboType", getDataTypeDesc (mOptions.mDataType).c_str(), ImGuiComboFlags_HeightLargest)) {
       for (int dataType = 0; dataType < ImGuiDataType_COUNT; dataType++)
         if (ImGui::Selectable (getDataTypeDesc((ImGuiDataType)dataType).c_str(), mOptions.mDataType == dataType))
           mOptions.mDataType = (ImGuiDataType)dataType;
@@ -674,7 +665,7 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
 
       ImGui::SetNextItemWidth (context.mGlyphWidth * 2);
 
-      if (ImGui::InputText ("##data", mEdit.mDataInputBuf, IM_ARRAYSIZE(mEdit.mDataInputBuf), flags, sUserData::callback, &userData))
+      if (ImGui::InputText ("##data", mEdit.mDataInputBuf, sizeof(mEdit.mDataInputBuf), flags, sUserData::callback, &userData))
         dataWrite = mEdit.mDataNext = true;
       else if (!mEdit.mEditTakeFocus && !ImGui::IsItemActive())
         mEdit.mEditAddress = mEdit.mNextEditAddress = kUndefinedAddress;
