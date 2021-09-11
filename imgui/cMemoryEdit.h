@@ -60,14 +60,14 @@ private:
   class cEdit {
   public:
     bool mDataNext = false;
-    size_t mDataAddress = kUndefinedAddress;
+    size_t mDataAddress = 0;
 
     bool mEditingTakeFocus = false;
     size_t mEditingAddress = kUndefinedAddress;
     size_t mNextEditingAddress = kUndefinedAddress;
 
-    char mDataInputBuf[32] = {0};
-    char mAddressInputBuf[32] = {0};
+    char mDataInputBuf[32] = { 0 };
+    char mAddressInputBuf[32] = { 0 };
     size_t mGotoAddress = kUndefinedAddress;
 
     size_t mHighlightMin = kUndefinedAddress;

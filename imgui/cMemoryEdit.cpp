@@ -148,7 +148,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
   const size_t visibleEndAddress = clipper.DisplayEnd * mOptions.mColumns;
 
   mEdit.mDataNext = false;
-  if (mOptions.mReadOnly || mEdit.mEditingAddress >= memSize)
+  if (mOptions.mReadOnly || (mEdit.mEditingAddress >= memSize))
     mEdit.mEditingAddress = kUndefinedAddress;
   if (mEdit.mDataAddress >= memSize)
     mEdit.mDataAddress = kUndefinedAddress;
@@ -160,7 +160,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
     // move cursor but only apply on next frame so scrolling with be synchronized
     // - because currently we can't change the scrolling while the window is being rendered)
     if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_LeftArrow)) &&
-             mEdit.mEditingAddress > 0) {
+        mEdit.mEditingAddress > 0) {
       mEdit.mNextEditingAddress = mEdit.mEditingAddress - 1;
       mEdit.mEditingTakeFocus = true;
       }
@@ -171,7 +171,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
       }
 
     else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_UpArrow)) &&
-        mEdit.mEditingAddress >= (size_t)mOptions.mColumns) {
+             mEdit.mEditingAddress >= (size_t)mOptions.mColumns) {
       mEdit.mNextEditingAddress = mEdit.mEditingAddress - mOptions.mColumns;
       mEdit.mEditingTakeFocus = true;
       }
@@ -225,7 +225,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
 
   // Notify the main window of our ideal child content size
   ImGui::SetCursorPosX (context.mWindowWidth);
-  if (mEdit.mDataNext && mEdit.mEditingAddress < memSize) {
+  if (mEdit.mDataNext && (mEdit.mEditingAddress < memSize)) {
     mEdit.mEditingAddress++;
     mEdit.mDataAddress = mEdit.mEditingAddress;
     mEdit.mEditingTakeFocus = true;
@@ -539,8 +539,9 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
       ImGui::BeginChild ("##scrolling");
       ImGui::SetScrollFromPosY (ImGui::GetCursorStartPos().y + (mEdit.mGotoAddress / mOptions.mColumns) * ImGui::GetTextLineHeight());
       ImGui::EndChild();
-      mEdit.mEditingAddress = mEdit.mGotoAddress;
+
       mEdit.mDataAddress = mEdit.mGotoAddress;
+      mEdit.mEditingAddress = mEdit.mGotoAddress;
       mEdit.mEditingTakeFocus = true;
       }
 
