@@ -33,13 +33,13 @@ private:
   //{{{
   class cContext {
   public:
-    float mLineHeight = 0;
     float mGlyphWidth = 0;
+    float mLineHeight = 0;
 
     int mAddrDigitsCount = 0;
 
     float mHexCellWidth = 0;
-    float mSpacingBetweenMidCols = 0;
+    float mExtraSpaceWidth = 0;
     float mHexBeginPos = 0;
     float mHexEndPos = 0;
 
@@ -76,10 +76,8 @@ private:
   public:
     bool mReadOnly = false;
 
-    int mAddrDigitsCount= 0; // number of addr digits to display (default calculated based on maximum displayed addr).
-
     int mColumns = 16;
-    int mMidColsCount = 8;   // set to 0 to disable extra spacing between every mid-cols.
+    int mColumnExtraSpace = 8;
 
     bool mShowHexII = false;
     bool mHoverHexII = false;
@@ -96,16 +94,16 @@ private:
   bool isReadOnly() const { return mOptions.mReadOnly; };
 
   size_t getDataTypeSize (ImGuiDataType dataType) const;
-  const char* getDataTypeDesc (ImGuiDataType dataType) const;
-  const char* getDataFormatDesc (eDataFormat dataFormat) const;
-  const char* getDataStr (size_t addr, const cInfo& info, ImGuiDataType dataType, eDataFormat dataFormat);
+  std::string getDataTypeDesc (ImGuiDataType dataType) const;
+  std::string getDataFormatDesc (eDataFormat dataFormat) const;
+  std::string getDataStr (size_t addr, const cInfo& info, ImGuiDataType dataType, eDataFormat dataFormat);
 
   // sets
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
 
   void setContext (const cInfo& info, cContext& context);
-  void* endianCopy (void* dst, void* src, size_t size);
+  void* copyEndian (void* dst, void* src, size_t size);
 
   // draws
   void drawTop (const cInfo& info, const cContext& context);
