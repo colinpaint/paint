@@ -77,6 +77,8 @@ namespace {
 
   const char* kFormatData = kUpperCaseHex ? "%0*" _PRISizeT "X" : "%0*" _PRISizeT "x";
   const char* kFormatAddress = kUpperCaseHex ? "%0*" _PRISizeT "X: " : "%0*" _PRISizeT "x: ";
+
+  const char* kChildScrollStr = "##scrolling";
   //}}}
   //{{{
   void* bigEndianFunc (void* dst, void* src, size_t s, bool isLittleEndian) {
@@ -136,7 +138,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
   drawTop (info, context);
 
   // child scroll window begin
-  ImGui::BeginChild ("##scrolling", ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
+  ImGui::BeginChild (kChildScrollStr, ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
   ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, ImVec2(0,0));
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
 
@@ -536,8 +538,9 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
     //{{{  valid goto address
     if (mEdit.mGotoAddress < info.mMemSize) {
       // use gotoAddress and scroll to it
-      ImGui::BeginChild ("##scrolling");
-      ImGui::SetScrollFromPosY (ImGui::GetCursorStartPos().y + (mEdit.mGotoAddress / mOptions.mColumns) * ImGui::GetTextLineHeight());
+      ImGui::BeginChild (kChildScrollStr);
+      ImGui::SetScrollFromPosY (ImGui::GetCursorStartPos().y + 
+                                (mEdit.mGotoAddress/mOptions.mColumns) * context.mLineHeight);
       ImGui::EndChild();
 
       mEdit.mDataAddress = mEdit.mGotoAddress;
