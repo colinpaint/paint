@@ -435,11 +435,10 @@ string cMemoryEdit::getDataStr (size_t address, const cInfo& info, ImGuiDataType
 //{{{
 void cMemoryEdit::setContext (const cInfo& info, cContext& context) {
 
-  // size of address box
+  // address box size
   context.mAddressDigitsCount = 0;
-  if (context.mAddressDigitsCount == 0)
-    for (size_t n = info.mBaseAddress + info.mMemSize - 1; n > 0; n >>= 4)
-      context.mAddressDigitsCount++;
+  for (size_t n = info.mBaseAddress + info.mMemSize - 1; n > 0; n >>= 4)
+    context.mAddressDigitsCount++;
 
   // char size
   context.mGlyphWidth = ImGui::CalcTextSize (" ").x; // assume monoSpace font
@@ -447,12 +446,12 @@ void cMemoryEdit::setContext (const cInfo& info, cContext& context) {
   context.mHexCellWidth = (float)(int)(context.mGlyphWidth * 2.5f);
   context.mExtraSpaceWidth = (float)(int)(context.mHexCellWidth * 0.25f);
 
-  // hex
+  // hex begin,end
   context.mHexBeginPos = (context.mAddressDigitsCount + 2) * context.mGlyphWidth;
   context.mHexEndPos = context.mHexBeginPos + (context.mHexCellWidth * mOptions.mColumns);
   context.mAsciiBeginPos = context.mAsciiEndPos = context.mHexEndPos;
 
-  // ascii
+  // ascii begin,end
   context.mAsciiBeginPos = context.mHexEndPos + context.mGlyphWidth * 1;
   if (mOptions.mColumnExtraSpace > 0)
     context.mAsciiBeginPos += (float)((mOptions.mColumns + mOptions.mColumnExtraSpace - 1) /
@@ -463,7 +462,7 @@ void cMemoryEdit::setContext (const cInfo& info, cContext& context) {
   ImGuiStyle& style = ImGui::GetStyle();
   context.mWindowWidth = context.mAsciiEndPos + style.ScrollbarSize + style.WindowPadding.x * 2 + context.mGlyphWidth;
 
-  // color
+  // colors
   context.mTextColor = ImGui::GetColorU32 (ImGuiCol_Text);
   context.mGreyColor = ImGui::GetColorU32 (ImGuiCol_TextDisabled);
   context.mHighlightColor = IM_COL32 (255, 255, 255, 50);  // highlight background color
