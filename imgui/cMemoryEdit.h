@@ -1,4 +1,4 @@
-// cMemoryEdit.h - hacked version of https://github.com/ocornut/imgui_club
+// cMemoryEdit.h 
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -116,9 +116,7 @@ private:
 
   // vars
   bool mOpen = true;  // set false when DrawWindow() closed
-
   cEdit mEdit;
   cOptions mOptions;
-
   char mOutBuf [128] = { 0 };
   };

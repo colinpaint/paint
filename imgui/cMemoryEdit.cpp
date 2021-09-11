@@ -478,7 +478,7 @@ void cMemoryEdit::setContext (const cInfo& info, cContext& context) {
   ImGuiStyle& style = ImGui::GetStyle();
   context.mWindowWidth = (2.f*style.WindowPadding.x) + context.mAsciiEndPos + style.ScrollbarSize + context.mGlyphWidth;
 
-  // guess ???
+  // page up,down inc
   context.mNumPageLines = static_cast<int>(ImGui::GetWindowHeight() / ImGui::GetTextLineHeight()) - kPageMarginLines;
 
   // colors
