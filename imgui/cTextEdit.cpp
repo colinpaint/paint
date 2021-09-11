@@ -1,4 +1,4 @@
-// cTextEditor.cpp - nicked from https://github.com/BalazsJako/ImGuiColorTextEdit
+// cTextEdit.cpp - nicked from https://github.com/BalazsJako/ImGuiColorTextEdit
 // - remember this file is used to test itself
 //{{{  includes
 // dummy comment
@@ -48,7 +48,7 @@ constexpr int kLeftTextMargin = 10;
 namespace {
   //{{{  const
   //{{{
-  const array <ImU32, (size_t)cTextEditor::ePalette::Max> kLightPalette = {
+  const array <ImU32, (size_t)cTextEdit::ePalette::Max> kLightPalette = {
     0xff606060, // None
     0xffff0c06, // Keyword
     0xff008000, // Number
@@ -77,7 +77,7 @@ namespace {
     };
   //}}}
   //{{{
-  const array <ImU32, (size_t)cTextEditor::ePalette::Max> kDarkPalette = {
+  const array <ImU32, (size_t)cTextEdit::ePalette::Max> kDarkPalette = {
     0xff7f7f7f, // Default
     0xffd69c56, // Keyword
     0xff00ff00, // Number
@@ -481,9 +481,9 @@ namespace {
   //}}}
   }
 
-// cTextEditor
+// cTextEdit
 //{{{
-cTextEditor::cTextEditor()
+cTextEdit::cTextEdit()
   : mTextEdited(false),
     mHasTabs(false), mTabSize(4), mHasFolds(false), mHasCR(false),
     mOverwrite(false) , mReadOnly(false), mCheckComments(true),
@@ -505,7 +505,7 @@ cTextEditor::cTextEditor()
 //}}}
 //{{{  gets
 //{{{
-bool cTextEditor::hasClipboardText() {
+bool cTextEdit::hasClipboardText() {
 
   const char* clipText = ImGui::GetClipboardText();
   return (clipText != nullptr) && (strlen (clipText) > 0);
@@ -513,14 +513,14 @@ bool cTextEditor::hasClipboardText() {
 //}}}
 
 //{{{
-string cTextEditor::getTextString() const {
+string cTextEdit::getTextString() const {
 // get text as single string
 
   return getText (sPosition(), sPosition((int)mLines.size(), 0));
   }
 //}}}
 //{{{
-vector<string> cTextEditor::getTextStrings() const {
+vector<string> cTextEdit::getTextStrings() const {
 // get text as vector of string
 
   vector<string> result;
@@ -541,7 +541,7 @@ vector<string> cTextEditor::getTextStrings() const {
 //}}}
 //{{{  sets
 //{{{
-void cTextEditor::setTextString (const string& text) {
+void cTextEdit::setTextString (const string& text) {
 // break test into lines, store in internal mLines structure
 
   mLines.clear();
@@ -569,7 +569,7 @@ void cTextEditor::setTextString (const string& text) {
   }
 //}}}
 //{{{
-void cTextEditor::setTextStrings (const vector<string>& lines) {
+void cTextEdit::setTextStrings (const vector<string>& lines) {
 // store vector of lines in internal mLines structure
 
   mLines.clear();
@@ -601,12 +601,12 @@ void cTextEditor::setTextStrings (const vector<string>& lines) {
 //}}}
 
 //{{{
-void cTextEditor::setPalette (bool lightPalette) {
+void cTextEdit::setPalette (bool lightPalette) {
   mPaletteBase = (lightPalette ? kLightPalette : kDarkPalette);
   }
 //}}}
 //{{{
-void cTextEditor::setLanguage (const sLanguage& language) {
+void cTextEdit::setLanguage (const sLanguage& language) {
 
   mLanguage = language;
 
@@ -619,7 +619,7 @@ void cTextEditor::setLanguage (const sLanguage& language) {
 //}}}
 
 //{{{
-void cTextEditor::setCursorPosition (const sPosition& position) {
+void cTextEdit::setCursorPosition (const sPosition& position) {
 
   if (mState.mCursorPosition != position) {
     mState.mCursorPosition = position;
@@ -628,7 +628,7 @@ void cTextEditor::setCursorPosition (const sPosition& position) {
   }
 //}}}
 //{{{
-void cTextEditor::setSelectionStart (const sPosition& position) {
+void cTextEdit::setSelectionStart (const sPosition& position) {
 
   mState.mSelectionStart = sanitizePosition (position);
   if (mState.mSelectionStart > mState.mSelectionEnd)
@@ -636,7 +636,7 @@ void cTextEditor::setSelectionStart (const sPosition& position) {
   }
 //}}}
 //{{{
-void cTextEditor::setSelectionEnd (const sPosition& position) {
+void cTextEdit::setSelectionEnd (const sPosition& position) {
 
   mState.mSelectionEnd = sanitizePosition (position);
   if (mState.mSelectionStart > mState.mSelectionEnd)
@@ -644,7 +644,7 @@ void cTextEditor::setSelectionEnd (const sPosition& position) {
   }
 //}}}
 //{{{
-void cTextEditor::setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode) {
+void cTextEdit::setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode) {
 
   mState.mSelectionStart = sanitizePosition (startPosition);
   mState.mSelectionEnd = sanitizePosition (endPosition);
@@ -652,17 +652,17 @@ void cTextEditor::setSelection (const sPosition& startPosition, const sPosition&
     swap (mState.mSelectionStart, mState.mSelectionEnd);
 
   switch (mode) {
-    case cTextEditor::eSelection::Normal:
+    case cTextEdit::eSelection::Normal:
       break;
 
-    case cTextEditor::eSelection::Word: {
+    case cTextEdit::eSelection::Word: {
       mState.mSelectionStart = findWordStart (mState.mSelectionStart);
       if (!isOnWordBoundary (mState.mSelectionEnd))
         mState.mSelectionEnd = findWordEnd (findWordStart (mState.mSelectionEnd));
       break;
       }
 
-    case cTextEditor::eSelection::Line: {
+    case cTextEdit::eSelection::Line: {
       const int lineNumber = mState.mSelectionEnd.mLineNumber;
       //const auto lineSize = (size_t)lineNumber < mLines.size() ? mLines[lineNumber].size() : 0;
       mState.mSelectionStart = sPosition (mState.mSelectionStart.mLineNumber, 0);
@@ -679,7 +679,7 @@ void cTextEditor::setSelection (const sPosition& startPosition, const sPosition&
 //{{{  actions
 // move
 //{{{
-void cTextEditor::moveLeft() {
+void cTextEdit::moveLeft() {
 
   if (mLines.empty())
     return;
@@ -718,7 +718,7 @@ void cTextEditor::moveLeft() {
   }
 //}}}
 //{{{
-void cTextEditor::moveRight() {
+void cTextEdit::moveRight() {
 
   if (mLines.empty())
     return;
@@ -752,7 +752,7 @@ void cTextEditor::moveRight() {
   }
 //}}}
 //{{{
-void cTextEditor::moveHome() {
+void cTextEdit::moveHome() {
 
   sPosition position = mState.mCursorPosition;
 
@@ -767,7 +767,7 @@ void cTextEditor::moveHome() {
   }
 //}}}
 //{{{
-void cTextEditor::moveEnd() {
+void cTextEdit::moveEnd() {
 
   sPosition position = mState.mCursorPosition;
 
@@ -784,12 +784,12 @@ void cTextEditor::moveEnd() {
 
 // select
 //{{{
-void cTextEditor::selectAll() {
+void cTextEdit::selectAll() {
   setSelection (sPosition (0,0), sPosition ((int)mLines.size(), 0));
   }
 //}}}
 //{{{
-void cTextEditor::selectWordUnderCursor() {
+void cTextEdit::selectWordUnderCursor() {
 
   sPosition cursorPosition = getCursorPosition();
   setSelection (findWordStart (cursorPosition), findWordEnd (cursorPosition));
@@ -798,7 +798,7 @@ void cTextEditor::selectWordUnderCursor() {
 
 // cut and paste
 //{{{
-void cTextEditor::copy() {
+void cTextEdit::copy() {
 
   if (hasSelect())
     ImGui::SetClipboardText (getSelectedText().c_str());
@@ -815,7 +815,7 @@ void cTextEditor::copy() {
   }
 //}}}
 //{{{
-void cTextEditor::cut() {
+void cTextEdit::cut() {
 
   if (isReadOnly())
     copy();
@@ -836,7 +836,7 @@ void cTextEditor::cut() {
   }
 //}}}
 //{{{
-void cTextEditor::paste() {
+void cTextEdit::paste() {
 
   if (isReadOnly())
     return;
@@ -866,14 +866,14 @@ void cTextEditor::paste() {
 
 // undo
 //{{{
-void cTextEditor::undo (int steps) {
+void cTextEdit::undo (int steps) {
 
   while (hasUndo() && steps-- > 0)
     mUndoBuffer[--mUndoIndex].undo (this);
   }
 //}}}
 //{{{
-void cTextEditor::redo (int steps) {
+void cTextEdit::redo (int steps) {
 
   while (hasRedo() && steps-- > 0)
     mUndoBuffer[mUndoIndex++].redo (this);
@@ -882,7 +882,7 @@ void cTextEditor::redo (int steps) {
 
 // delete
 //{{{
-void cTextEditor::deleteIt() {
+void cTextEdit::deleteIt() {
 
   if (mLines.empty())
     return;
@@ -934,7 +934,7 @@ void cTextEditor::deleteIt() {
   }
 //}}}
 //{{{
-void cTextEditor::backspace() {
+void cTextEdit::backspace() {
 
   if (mLines.empty())
     return;
@@ -1008,7 +1008,7 @@ void cTextEditor::backspace() {
   }
 //}}}
 //{{{
-void cTextEditor::deleteSelection() {
+void cTextEdit::deleteSelection() {
 
   assert(mState.mSelectionEnd >= mState.mSelectionStart);
   if (mState.mSelectionEnd == mState.mSelectionStart)
@@ -1025,7 +1025,7 @@ void cTextEditor::deleteSelection() {
 
 // insert
 //{{{
-void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
+void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
   sUndo undo;
   undo.mBefore = mState;
@@ -1072,7 +1072,7 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
             }
           }
         else {
-          glyphs.insert (glyphs.begin(), sGlyph ('\t', cTextEditor::ePalette::Background));
+          glyphs.insert (glyphs.begin(), sGlyph ('\t', cTextEdit::ePalette::Background));
           modified = true;
           }
         }
@@ -1184,14 +1184,14 @@ void cTextEditor::enterCharacter (ImWchar ch, bool shift) {
 
 // fold
 //{{{
-void cTextEditor::openFold() {
+void cTextEdit::openFold() {
   if (mShowFolds)
     if (mLines[mState.mCursorPosition.mLineNumber].mFoldBegin)
       mLines[mState.mCursorPosition.mLineNumber].mFoldOpen = true;
   }
 //}}}
 //{{{
-void cTextEditor::closeFold() {
+void cTextEdit::closeFold() {
 
   if (mShowFolds) {
     int lineNumber = mState.mCursorPosition.mLineNumber;
@@ -1216,7 +1216,7 @@ void cTextEditor::closeFold() {
 //}}}
 //}}}
 //{{{
-void cTextEditor::drawContents() {
+void cTextEdit::drawContents() {
 // main ui handle io and draw routine
 
   handleKeyboardInputs();
@@ -1243,7 +1243,7 @@ void cTextEditor::drawContents() {
 // private:
 //{{{  gets
 //{{{
-bool cTextEditor::isOnWordBoundary (const sPosition& position) const {
+bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
 
   if (position.mLineNumber >= (int)mLines.size() || position.mColumn == 0)
     return true;
@@ -1259,10 +1259,10 @@ bool cTextEditor::isOnWordBoundary (const sPosition& position) const {
 //}}}
 
 //{{{
-int cTextEditor::getCharacterIndex (const sPosition& position) const {
+int cTextEdit::getCharacterIndex (const sPosition& position) const {
 
   if (position.mLineNumber >= (int)mLines.size()) {
-    cLog::log (LOGERROR, "cTextEditor::getCharacterIndex - lineNumber too big");
+    cLog::log (LOGERROR, "cTextEdit::getCharacterIndex - lineNumber too big");
     return 0;
     }
 
@@ -1282,7 +1282,7 @@ int cTextEditor::getCharacterIndex (const sPosition& position) const {
   }
 //}}}
 //{{{
-int cTextEditor::getCharacterColumn (int lineNumber, int index) const {
+int cTextEdit::getCharacterColumn (int lineNumber, int index) const {
 // handle tabs
 
   if (lineNumber >= (int)mLines.size())
@@ -1306,7 +1306,7 @@ int cTextEditor::getCharacterColumn (int lineNumber, int index) const {
 //}}}
 
 //{{{
-int cTextEditor::getLineMaxColumn (int row) const {
+int cTextEdit::getLineMaxColumn (int row) const {
 
   if (row >= (int)mLines.size())
     return 0;
@@ -1326,7 +1326,7 @@ int cTextEditor::getLineMaxColumn (int row) const {
   }
 //}}}
 //{{{
-int cTextEditor::getLineCharacterCount (int row) const {
+int cTextEdit::getLineCharacterCount (int row) const {
 
   if (row >= (int)mLines.size())
     return 0;
@@ -1341,7 +1341,7 @@ int cTextEditor::getLineCharacterCount (int row) const {
 //}}}
 
 //{{{
-string cTextEditor::getText (const sPosition& startPosition, const sPosition& endPosition) const {
+string cTextEdit::getText (const sPosition& startPosition, const sPosition& endPosition) const {
 // get text as string with lineFeed line breaks
 
   int lstart = startPosition.mLineNumber;
@@ -1376,7 +1376,7 @@ string cTextEditor::getText (const sPosition& startPosition, const sPosition& en
   }
 //}}}
 //{{{
-ImU32 cTextEditor::getGlyphColor (const sGlyph& glyph) const {
+ImU32 cTextEdit::getGlyphColor (const sGlyph& glyph) const {
 
   if (glyph.mComment)
     return mPalette[(size_t)ePalette::Comment];
@@ -1400,7 +1400,7 @@ ImU32 cTextEditor::getGlyphColor (const sGlyph& glyph) const {
 //}}}
 
 //{{{
-string cTextEditor::getCurrentLineText() const {
+string cTextEdit::getCurrentLineText() const {
 
   int lineLength = getLineMaxColumn (mState.mCursorPosition.mLineNumber);
   return getText (sPosition (mState.mCursorPosition.mLineNumber, 0),
@@ -1409,7 +1409,7 @@ string cTextEditor::getCurrentLineText() const {
 //}}}
 
 //{{{
-string cTextEditor::getWordAt (const sPosition& position) const {
+string cTextEdit::getWordAt (const sPosition& position) const {
 
   string r;
   for (int i = getCharacterIndex (findWordStart (position)); i < getCharacterIndex (findWordEnd (position)); ++i)
@@ -1419,13 +1419,13 @@ string cTextEditor::getWordAt (const sPosition& position) const {
   }
 //}}}
 //{{{
-string cTextEditor::getWordUnderCursor() const {
+string cTextEdit::getWordUnderCursor() const {
   return getWordAt (getCursorPosition());
   }
 //}}}
 
 //{{{
-float cTextEditor::getTextWidth (const sPosition& position) const {
+float cTextEdit::getTextWidth (const sPosition& position) const {
 // get textWidth to position
 
   const vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
@@ -1452,14 +1452,14 @@ float cTextEditor::getTextWidth (const sPosition& position) const {
   }
 //}}}
 //{{{
-int cTextEditor::getPageNumLines() const {
+int cTextEdit::getPageNumLines() const {
   float height = ImGui::GetWindowHeight() - 20.f;
   return (int)floor (height / mCharSize.y);
   }
 //}}}
 
 //{{{
-int cTextEditor::getMaxLineIndex() const {
+int cTextEdit::getMaxLineIndex() const {
 
   if (mShowFolds)
     return static_cast<int>(mFoldLines.size()-1);
@@ -1470,7 +1470,7 @@ int cTextEditor::getMaxLineIndex() const {
 //}}}
 //{{{  utils
 //{{{
-void cTextEditor::advance (sPosition& position) const {
+void cTextEdit::advance (sPosition& position) const {
 
   if (position.mLineNumber < (int)mLines.size()) {
     const vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
@@ -1489,7 +1489,7 @@ void cTextEditor::advance (sPosition& position) const {
   }
 //}}}
 //{{{
-cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
+cTextEdit::sPosition cTextEdit::screenToPosition (const ImVec2& pos) const {
 
   ImVec2 local = pos - ImGui::GetCursorScreenPos();
 
@@ -1538,7 +1538,7 @@ cTextEditor::sPosition cTextEditor::screenToPosition (const ImVec2& pos) const {
   }
 //}}}
 //{{{
-cTextEditor::sPosition cTextEditor::sanitizePosition (const sPosition& position) const {
+cTextEdit::sPosition cTextEdit::sanitizePosition (const sPosition& position) const {
 
   if (position.mLineNumber >= static_cast<int>(mLines.size())) {
     if (mLines.empty())
@@ -1555,7 +1555,7 @@ cTextEditor::sPosition cTextEditor::sanitizePosition (const sPosition& position)
 
 // lineIndex
 //{{{
-int cTextEditor::lineIndexToNumber (int lineIndex) const {
+int cTextEdit::lineIndexToNumber (int lineIndex) const {
 
   if (!mShowFolds)
     return lineIndex;
@@ -1567,7 +1567,7 @@ int cTextEditor::lineIndexToNumber (int lineIndex) const {
   }
 //}}}
 //{{{
-int cTextEditor::lineNumberToIndex (int lineNumber) const {
+int cTextEdit::lineNumberToIndex (int lineNumber) const {
 
   if (!mShowFolds) // lineIndex is  lineNumber
     return lineNumber;
@@ -1589,7 +1589,7 @@ int cTextEditor::lineNumberToIndex (int lineNumber) const {
 
 // find
 //{{{
-cTextEditor::sPosition cTextEditor::findWordStart (const sPosition& from) const {
+cTextEdit::sPosition cTextEdit::findWordStart (const sPosition& from) const {
 
   sPosition at = from;
   if (at.mLineNumber >= (int)mLines.size())
@@ -1622,7 +1622,7 @@ cTextEditor::sPosition cTextEditor::findWordStart (const sPosition& from) const 
   }
 //}}}
 //{{{
-cTextEditor::sPosition cTextEditor::findWordEnd (const sPosition& from) const {
+cTextEdit::sPosition cTextEdit::findWordEnd (const sPosition& from) const {
 
   sPosition at = from;
   if (at.mLineNumber >= (int)mLines.size())
@@ -1655,7 +1655,7 @@ cTextEditor::sPosition cTextEditor::findWordEnd (const sPosition& from) const {
   }
 //}}}
 //{{{
-cTextEditor::sPosition cTextEditor::findNextWord (const sPosition& from) const {
+cTextEdit::sPosition cTextEdit::findNextWord (const sPosition& from) const {
 
   sPosition at = from;
   if (at.mLineNumber >= (int)mLines.size())
@@ -1704,7 +1704,7 @@ cTextEditor::sPosition cTextEditor::findNextWord (const sPosition& from) const {
 
 // move
 //{{{
-void cTextEditor::moveUp (int amount) {
+void cTextEdit::moveUp (int amount) {
 
   if (mLines.empty())
     return;
@@ -1731,7 +1731,7 @@ void cTextEditor::moveUp (int amount) {
   }
 //}}}
 //{{{
-void cTextEditor::moveDown (int amount) {
+void cTextEdit::moveDown (int amount) {
 
   if (mLines.empty())
     return;
@@ -1758,7 +1758,7 @@ void cTextEditor::moveDown (int amount) {
 
 // insert
 //{{{
-vector<cTextEditor::sGlyph>& cTextEditor::insertLine (int index) {
+vector<cTextEdit::sGlyph>& cTextEdit::insertLine (int index) {
 
   assert (!mReadOnly);
 
@@ -1773,7 +1773,7 @@ vector<cTextEditor::sGlyph>& cTextEditor::insertLine (int index) {
   }
 //}}}
 //{{{
-int cTextEditor::insertTextAt (sPosition& where, const char* value) {
+int cTextEdit::insertTextAt (sPosition& where, const char* value) {
 
   assert (!mReadOnly);
 
@@ -1819,7 +1819,7 @@ int cTextEditor::insertTextAt (sPosition& where, const char* value) {
   }
 //}}}
 //{{{
-void cTextEditor::insertText (const char* value) {
+void cTextEdit::insertText (const char* value) {
 
   if (value == nullptr)
     return;
@@ -1839,7 +1839,7 @@ void cTextEditor::insertText (const char* value) {
 
 // delete
 //{{{
-void cTextEditor::removeLine (int startPosition, int endPosition) {
+void cTextEdit::removeLine (int startPosition, int endPosition) {
 
   assert (!mReadOnly);
   assert (endPosition >= startPosition);
@@ -1861,7 +1861,7 @@ void cTextEditor::removeLine (int startPosition, int endPosition) {
   }
 //}}}
 //{{{
-void cTextEditor::removeLine (int index) {
+void cTextEdit::removeLine (int index) {
 
   assert(!mReadOnly);
   assert(mLines.size() > 1);
@@ -1882,7 +1882,7 @@ void cTextEditor::removeLine (int index) {
   }
 //}}}
 //{{{
-void cTextEditor::deleteRange (const sPosition& startPosition, const sPosition& endPosition) {
+void cTextEdit::deleteRange (const sPosition& startPosition, const sPosition& endPosition) {
 
   assert (endPosition >= startPosition);
   assert (!mReadOnly);
@@ -1923,7 +1923,7 @@ void cTextEditor::deleteRange (const sPosition& startPosition, const sPosition& 
 
 // undo
 //{{{
-void cTextEditor::addUndo (sUndo& value) {
+void cTextEdit::addUndo (sUndo& value) {
 
   assert(!mReadOnly);
   //printf("AddUndo: (@%d.%d) +\'%s' [%d.%d .. %d.%d], -\'%s', [%d.%d .. %d.%d] (@%d.%d)\n",
@@ -1941,7 +1941,7 @@ void cTextEditor::addUndo (sUndo& value) {
 
 // colorize
 //{{{
-void cTextEditor::colorize (int fromLine, int lines) {
+void cTextEdit::colorize (int fromLine, int lines) {
 
   int toLine = lines == -1 ? (int)mLines.size() : min((int)mLines.size(), fromLine + lines);
 
@@ -1954,7 +1954,7 @@ void cTextEditor::colorize (int fromLine, int lines) {
   }
 //}}}
 //{{{
-void cTextEditor::colorizeRange (int fromLine, int toLine) {
+void cTextEdit::colorizeRange (int fromLine, int toLine) {
 
   if (mLines.empty() || fromLine >= toLine)
     return;
@@ -2039,7 +2039,7 @@ void cTextEditor::colorizeRange (int fromLine, int toLine) {
   }
 //}}}
 //{{{
-void cTextEditor::colorizeInternal() {
+void cTextEdit::colorizeInternal() {
 
   if (mLines.empty())
     return;
@@ -2167,7 +2167,7 @@ void cTextEditor::colorizeInternal() {
 //}}}
 //}}}
 //{{{
-void cTextEditor::ensureCursorVisible() {
+void cTextEdit::ensureCursorVisible() {
 
   sPosition position = getCursorPosition();
   int lineIndex = lineNumberToIndex (position.mLineNumber);
@@ -2204,7 +2204,7 @@ void cTextEditor::ensureCursorVisible() {
 
 // fold
 //{{{
-void cTextEditor::parseFolds() {
+void cTextEdit::parseFolds() {
 // parse beginFold and endFold markers, set simple flags
 
   for (auto& line : mLines) {
@@ -2249,7 +2249,7 @@ void cTextEditor::parseFolds() {
 //}}}
 
 //{{{
-void cTextEditor::handleMouseInputs() {
+void cTextEdit::handleMouseInputs() {
 
   ImGuiIO& io = ImGui::GetIO();
   bool shift = io.KeyShift;
@@ -2333,7 +2333,7 @@ void cTextEditor::handleMouseInputs() {
   }
 //}}}
 //{{{
-void cTextEditor::handleKeyboardInputs() {
+void cTextEdit::handleKeyboardInputs() {
   //{{{  numpad codes
   // -------------------------------------------------------------------------------------
   // |    numlock       |        /           |        *             |        -            |
@@ -2465,7 +2465,7 @@ void cTextEditor::handleKeyboardInputs() {
 //}}}
 
 //{{{
-void cTextEditor::preRender() {
+void cTextEdit::preRender() {
 //  setup render context
 
   mFont = ImGui::GetFont();
@@ -2503,7 +2503,7 @@ void cTextEditor::preRender() {
   }
 //}}}
 //{{{
-void cTextEditor::renderGlyphs (const vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor) {
+void cTextEdit::renderGlyphs (const vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor) {
 
   // c style str buffer, null terminated
   char str[256];
@@ -2560,7 +2560,7 @@ void cTextEditor::renderGlyphs (const vector <sGlyph>& glyphs, bool forceColor, 
   }
 //}}}
 //{{{
-void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber) {
+void cTextEdit::renderLine (int lineNumber, int glyphsLineNumber) {
 
   if (mShowFolds)
     mFoldLines.push_back (lineNumber);
@@ -2720,7 +2720,7 @@ void cTextEditor::renderLine (int lineNumber, int glyphsLineNumber) {
   }
 //}}}
 //{{{
-int cTextEditor::renderFold (int lineNumber, bool parentOpen, bool foldOpen) {
+int cTextEdit::renderFold (int lineNumber, bool parentOpen, bool foldOpen) {
 // recursive traversal of mLines to produce mVisbleLines of folds
 
   if (parentOpen) {
@@ -2749,7 +2749,7 @@ int cTextEditor::renderFold (int lineNumber, bool parentOpen, bool foldOpen) {
   }
 //}}}
 //{{{
-void cTextEditor::postRender() {
+void cTextEdit::postRender() {
 
   // draw tooltip for idents,preProcs
   if (ImGui::IsMousePosValid()) {
@@ -2778,16 +2778,16 @@ void cTextEditor::postRender() {
   }
 //}}}
 
-// cTextEditor::sUndo
+// cTextEdit::sUndo
 //{{{
-cTextEditor::sUndo::sUndo (const string& added,
-                                       const cTextEditor::sPosition addedStart,
-                                       const cTextEditor::sPosition addedEnd,
+cTextEdit::sUndo::sUndo (const string& added,
+                                       const cTextEdit::sPosition addedStart,
+                                       const cTextEdit::sPosition addedEnd,
                                        const string& removed,
-                                       const cTextEditor::sPosition removedStart,
-                                       const cTextEditor::sPosition removedEnd,
-                                       cTextEditor::sCursorSelectionState& before,
-                                       cTextEditor::sCursorSelectionState& after)
+                                       const cTextEdit::sPosition removedStart,
+                                       const cTextEdit::sPosition removedEnd,
+                                       cTextEdit::sCursorSelectionState& before,
+                                       cTextEdit::sCursorSelectionState& after)
 
     : mAdded(added), mAddedStart(addedStart), mAddedEnd(addedEnd),
       mRemoved(removed), mRemovedStart(removedStart), mRemovedEnd(removedEnd),
@@ -2798,7 +2798,7 @@ cTextEditor::sUndo::sUndo (const string& added,
   }
 //}}}
 //{{{
-void cTextEditor::sUndo::undo (cTextEditor* editor) {
+void cTextEdit::sUndo::undo (cTextEdit* editor) {
 
   if (!mAdded.empty()) {
     editor->deleteRange (mAddedStart, mAddedEnd);
@@ -2816,7 +2816,7 @@ void cTextEditor::sUndo::undo (cTextEditor* editor) {
   }
 //}}}
 //{{{
-void cTextEditor::sUndo::redo (cTextEditor* editor) {
+void cTextEdit::sUndo::redo (cTextEdit* editor) {
 
   if (!mRemoved.empty()) {
     editor->deleteRange (mRemovedStart, mRemovedEnd);
@@ -2834,9 +2834,9 @@ void cTextEditor::sUndo::redo (cTextEditor* editor) {
   }
 //}}}
 
-// cTextEditor::sLanguage
+// cTextEdit::sLanguage
 //{{{
-const cTextEditor::sLanguage& cTextEditor::sLanguage::cPlus() {
+const cTextEdit::sLanguage& cTextEdit::sLanguage::cPlus() {
 
   static sLanguage language;
   static bool inited = false;
@@ -2898,7 +2898,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::cPlus() {
   }
 //}}}
 //{{{
-const cTextEditor::sLanguage& cTextEditor::sLanguage::c() {
+const cTextEdit::sLanguage& cTextEdit::sLanguage::c() {
 
   static sLanguage language;
   static bool inited = false;
@@ -2958,7 +2958,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::c() {
   }
 //}}}
 //{{{
-const cTextEditor::sLanguage& cTextEditor::sLanguage::hlsl() {
+const cTextEdit::sLanguage& cTextEdit::sLanguage::hlsl() {
 
   static bool inited = false;
   static sLanguage language;
@@ -3011,7 +3011,7 @@ const cTextEditor::sLanguage& cTextEditor::sLanguage::hlsl() {
   }
 //}}}
 //{{{
-const cTextEditor::sLanguage& cTextEditor::sLanguage::glsl() {
+const cTextEdit::sLanguage& cTextEdit::sLanguage::glsl() {
 
   static bool inited = false;
   static sLanguage language;

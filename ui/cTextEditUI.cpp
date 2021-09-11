@@ -64,10 +64,8 @@ public:
 
   void addToDrawList (cApp& app) final {
 
-    if (!mLoaded) {
-      mLoaded = true;
+    //if (!mFileView)
       //mFileView = new cFileView ("C:/projects/paint/build/Release/fed.exe");
-      }
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
@@ -79,35 +77,34 @@ public:
 
     return;
 
-    if (!mLoaded) {
-      //{{{  init mTextEditor
-      mLoaded = true;
+    if (!mTextEdit) {
+      mTextEdit = new cTextEdit();
 
       // set file
       ifstream fileStream (app.getName());
 
       string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
-      mTextEditor.setTextString (str);
+      mTextEdit->setTextString (str);
 
       // set language
-      cTextEditor::sLanguage language = cTextEditor::sLanguage::cPlus();
+      cTextEdit::sLanguage language = cTextEdit::sLanguage::cPlus();
       for (size_t i = 0; i < kPreProcessorNames.size(); i++) {
-        cTextEditor::sIdent id;
+        cTextEdit::sIdent id;
         id.mDeclaration = kPreProcessorValues[i];
         language.mPreprocIdents.insert (make_pair (kPreProcessorNames[i], id));
         }
 
       for (size_t i = 0; i < kIdents.size(); i++) {
-        cTextEditor::sIdent id;
+        cTextEdit::sIdent id;
         id.mDeclaration = kIdecls[i];
         language.mIdents.insert (make_pair (kIdents[i], id));
         }
-      mTextEditor.setLanguage (language);
+      mTextEdit->setLanguage (language);
 
       // markers
       map <int,string> markers;
       markers.insert (make_pair<int,string>(41, "marker here"));
-      mTextEditor.setMarkers (markers);
+      mTextEdit->setMarkers (markers);
 
       ImGui::SetWindowFocus();
       }
@@ -122,89 +119,89 @@ public:
                   ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove);
 
     // line button
-    if (toggleButton ("line", mTextEditor.isShowLineNumbers()))
-      mTextEditor.toggleShowLineNumbers();
-    if (mTextEditor.isShowLineNumbers())
+    if (toggleButton ("line", mTextEdit->isShowLineNumbers()))
+      mTextEdit->toggleShowLineNumbers();
+    if (mTextEdit->isShowLineNumbers())
       //{{{  debug button
-      if (mTextEditor.isShowLineNumbers()) {
+      if (mTextEdit->isShowLineNumbers()) {
         ImGui::SameLine();
-        if (toggleButton ("debug", mTextEditor.isShowDebug()))
-          mTextEditor.toggleShowDebug();
+        if (toggleButton ("debug", mTextEdit->isShowDebug()))
+          mTextEdit->toggleShowDebug();
         }
       //}}}
-    if (mTextEditor.hasFolds()) {
+    if (mTextEdit->hasFolds()) {
       //{{{  folded button
       ImGui::SameLine();
-      if (toggleButton ("folded", mTextEditor.isShowFolds()))
-        mTextEditor.toggleShowFolds();
+      if (toggleButton ("folded", mTextEdit->isShowFolds()))
+        mTextEdit->toggleShowFolds();
       }
       //}}}
     //{{{  space button
     ImGui::SameLine();
-    if (toggleButton ("space", mTextEditor.isShowWhiteSpace()))
-      mTextEditor.toggleShowWhiteSpace();
+    if (toggleButton ("space", mTextEdit->isShowWhiteSpace()))
+      mTextEdit->toggleShowWhiteSpace();
     //}}}
-    if (mTextEditor.hasClipboardText() && !mTextEditor.isReadOnly()) {
+    if (mTextEdit->hasClipboardText() && !mTextEdit->isReadOnly()) {
       //{{{  paste button
       ImGui::SameLine();
       if (ImGui::Button ("paste"))
-        mTextEditor.paste();
+        mTextEdit->paste();
       }
       //}}}
-    if (mTextEditor.hasSelect()) {
+    if (mTextEdit->hasSelect()) {
       //{{{  copy, cut, delete buttons
       ImGui::SameLine();
       if (ImGui::Button ("copy"))
-        mTextEditor.copy();
-       if (!mTextEditor.isReadOnly()) {
+        mTextEdit->copy();
+       if (!mTextEdit->isReadOnly()) {
          ImGui::SameLine();
         if (ImGui::Button ("cut"))
-          mTextEditor.cut();
+          mTextEdit->cut();
         ImGui::SameLine();
         if (ImGui::Button ("delete"))
-          mTextEditor.deleteIt();
+          mTextEdit->deleteIt();
         }
       }
       //}}}
-    if (!mTextEditor.isReadOnly() && mTextEditor.hasUndo()) {
+    if (!mTextEdit->isReadOnly() && mTextEdit->hasUndo()) {
       //{{{  undo button
       ImGui::SameLine();
       if (ImGui::Button ("undo"))
-        mTextEditor.undo();
+        mTextEdit->undo();
       }
       //}}}
-    if (!mTextEditor.isReadOnly() && mTextEditor.hasRedo()) {
+    if (!mTextEdit->isReadOnly() && mTextEdit->hasRedo()) {
       //{{{  redo button
       ImGui::SameLine();
       if (ImGui::Button ("redo"))
-        mTextEditor.redo();
+        mTextEdit->redo();
       }
       //}}}
     //{{{  readOnly button
     ImGui::SameLine();
-    if (toggleButton ("readOnly", mTextEditor.isReadOnly()))
-      mTextEditor.toggleReadOnly();
+    if (toggleButton ("readOnly", mTextEdit->isReadOnly()))
+      mTextEdit->toggleReadOnly();
     //}}}
     //{{{  overwrite button
     ImGui::SameLine();
-    if (toggleButton ("insert", !mTextEditor.isOverwrite()))
-      mTextEditor.toggleOverwrite();
+    if (toggleButton ("insert", !mTextEdit->isOverwrite()))
+      mTextEdit->toggleOverwrite();
     //}}}
     //{{{  info text
     ImGui::SameLine();
-    ImGui::Text ("%d:%d:%d %s%s%s%s%s", mTextEditor.getCursorPosition().mColumn+1,
-                                        mTextEditor.getCursorPosition().mLineNumber+1,
-                                        mTextEditor.getTextNumLines(),
-                                        mTextEditor.getLanguage().mName.c_str(),
-                                        mTextEditor.isTextEdited() ? " edited":"",
-                                        mTextEditor.hasTabs() ? " tabs":"",
-                                        mTextEditor.hasCR() ? " CR":"",
-                                        mTextEditor.getDebugString().c_str()
+    ImGui::Text ("%d:%d:%d %s%s%s%s%s", mTextEdit->getCursorPosition().mColumn+1,
+                                        mTextEdit->getCursorPosition().mLineNumber+1,
+                                        mTextEdit->getTextNumLines(),
+                                        mTextEdit->getLanguage().mName.c_str(),
+                                        mTextEdit->isTextEdited() ? " edited":"",
+                                        mTextEdit->hasTabs() ? " tabs":"",
+                                        mTextEdit->hasCR() ? " CR":"",
+                                        mTextEdit->getDebugString().c_str()
                                         );
     //}}}
 
     ImGui::PushFont (app.getMonoFont());
-    mTextEditor.drawContents();
+    mTextEdit->drawContents();
     ImGui::PopFont();
 
     ImGui::End();
@@ -213,9 +210,8 @@ public:
     }
 
 private:
-  bool mLoaded = false;
   cFileView* mFileView = nullptr;
-  cTextEditor mTextEditor;
+  cTextEdit* mTextEdit = nullptr;
 
   //{{{
   static cUI* create (const string& className) {

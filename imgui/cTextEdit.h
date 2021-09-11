@@ -1,4 +1,4 @@
-// cTextEditor.h
+// cTextEdit.h
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -17,7 +17,7 @@
 struct ImFont;
 //}}}
 
-class cTextEditor {
+class cTextEdit {
 public:
   enum class eSelection { Normal, Word, Line };
   //{{{
@@ -190,8 +190,8 @@ public:
     };
   //}}}
 
-  cTextEditor();
-  ~cTextEditor() = default;
+  cTextEdit();
+  ~cTextEdit() = default;
   //{{{  gets
   bool isReadOnly() const { return mReadOnly; }
   bool isOverwrite() const { return mOverwrite; }
@@ -303,12 +303,12 @@ private:
     sUndo() {}
     ~sUndo() {}
 
-    sUndo (const std::string& added, const cTextEditor::sPosition addedStart, const cTextEditor::sPosition addedEnd,
-           const std::string& aRemoved, const cTextEditor::sPosition removedStart, const cTextEditor::sPosition removedEnd,
-           cTextEditor::sCursorSelectionState& before, cTextEditor::sCursorSelectionState& after);
+    sUndo (const std::string& added, const cTextEdit::sPosition addedStart, const cTextEdit::sPosition addedEnd,
+           const std::string& aRemoved, const cTextEdit::sPosition removedStart, const cTextEdit::sPosition removedEnd,
+           cTextEdit::sCursorSelectionState& before, cTextEdit::sCursorSelectionState& after);
 
-    void undo (cTextEditor* editor);
-    void redo (cTextEditor* editor);
+    void undo (cTextEdit* editor);
+    void redo (cTextEdit* editor);
 
     // vars
     std::string mAdded;
