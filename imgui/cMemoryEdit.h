@@ -48,6 +48,7 @@ private:
     float mAsciiEndPos = 0;
 
     float mWindowWidth = 0;
+    int mNumPageLines = 0;
 
     ImU32 mTextColor;
     ImU32 mGreyColor;

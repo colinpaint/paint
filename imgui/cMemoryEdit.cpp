@@ -172,12 +172,12 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
 
     // !!!page size of 10 not right, scroll not right !!!
     else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageUp))) {
-      mEdit.mNextEditAddress = (size_t)max (0, (int)mEdit.mEditAddress - (10 * mOptions.mColumns));
+      mEdit.mNextEditAddress = (size_t)max (0, (int)mEdit.mEditAddress - (context.mNumPageLines * mOptions.mColumns));
       mEdit.mEditTakeFocus = true;
       }
     else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageDown))) {
       mEdit.mNextEditAddress = min (info.mMemSize - mOptions.mColumns,
-                                    mEdit.mEditAddress + (10 *  mOptions.mColumns));
+                                    mEdit.mEditAddress + (context.mNumPageLines *  mOptions.mColumns));
       mEdit.mEditTakeFocus = true;
       }
     }
@@ -477,6 +477,9 @@ void cMemoryEdit::setContext (const cInfo& info, cContext& context) {
   // windowWidth
   ImGuiStyle& style = ImGui::GetStyle();
   context.mWindowWidth = (2.f*style.WindowPadding.x) + context.mAsciiEndPos + style.ScrollbarSize + context.mGlyphWidth;
+
+  // guess ???
+  context.mNumPageLines = static_cast<int>(ImGui::GetWindowHeight() / ImGui::GetTextLineHeight()) - kPageMarginLines;
 
   // colors
   context.mTextColor = ImGui::GetColorU32 (ImGuiCol_Text);
