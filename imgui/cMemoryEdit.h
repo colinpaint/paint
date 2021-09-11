@@ -16,7 +16,7 @@ public:
   void setAddrHighlight (size_t addrMin, size_t addrMax);
 
 private:
-  enum class eDataFormat { eBin, eDec, eHex, eMax };
+  enum class eDataFormat { eDec, eBin, eHex };
   //{{{
   class cInfo {
   public:

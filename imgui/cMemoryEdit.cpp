@@ -29,7 +29,7 @@
 #include "cMemoryEdit.h"
 
 #include <stdio.h>  // sprintf, scanf
-#include <array>  
+#include <array>
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "../imgui/imgui.h"
@@ -77,21 +77,6 @@ namespace {
   const char* kFormatByteSpace = kUpperCaseHex ? "%02X " : "%02x ";
 
   //{{{
-  void* littleEndianFunc (void* dst, void* src, size_t s, bool isLittleEndian) {
-
-    if (isLittleEndian)
-      return memcpy (dst, src, s);
-
-    else {
-      uint8_t* dstPtr = (uint8_t*)dst;
-      uint8_t* srcPtr = (uint8_t*)src + s - 1;
-      for (int i = 0, n = (int)s; i < n; ++i)
-        memcpy (dstPtr++, srcPtr--, 1);
-      return dst;
-      }
-    }
-  //}}}
-  //{{{
   void* bigEndianFunc (void* dst, void* src, size_t s, bool isLittleEndian) {
 
      if (isLittleEndian) {
@@ -106,6 +91,21 @@ namespace {
       return memcpy (dst, src, s);
     }
   //}}}
+  //{{{
+  void* littleEndianFunc (void* dst, void* src, size_t s, bool isLittleEndian) {
+
+    if (isLittleEndian)
+      return memcpy (dst, src, s);
+
+    else {
+      uint8_t* dstPtr = (uint8_t*)dst;
+      uint8_t* srcPtr = (uint8_t*)src + s - 1;
+      for (int i = 0, n = (int)s; i < n; ++i)
+        memcpy (dstPtr++, srcPtr--, 1);
+      return dst;
+      }
+    }
+  //}}}
   void* (*gEndianFunc)(void*, void*, size_t, bool) = nullptr;
   }
 
@@ -117,9 +117,7 @@ void cMemoryEdit::drawWindow (const string& title, uint8_t* memData, size_t memS
   mOpen = true;
 
   ImGui::Begin (title.c_str(), &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
-
   drawContents (memData, memSize, baseAddress);
-
   ImGui::End();
   }
 //}}}
@@ -433,35 +431,38 @@ string cMemoryEdit::getDataStr (size_t addr, const cInfo& info, ImGuiDataType da
 //{{{
 void cMemoryEdit::setContext (const cInfo& info, cContext& context) {
 
-  context.mTextColor = ImGui::GetColorU32 (ImGuiCol_Text);
-  context.mGreyColor = ImGui::GetColorU32 (ImGuiCol_TextDisabled);
-  context.mHighlightColor = IM_COL32 (255, 255, 255, 50);  // background color of highlighted bytes.
-
-  ImGuiStyle& style = ImGui::GetStyle();
-
+  // size of addr box
   context.mAddrDigitsCount = 0;
   if (context.mAddrDigitsCount == 0)
     for (size_t n = info.mBaseAddress + info.mMemSize - 1; n > 0; n >>= 4)
       context.mAddrDigitsCount++;
 
+  // char size
   context.mGlyphWidth = ImGui::CalcTextSize (" ").x; // assume monoSpace font
   context.mLineHeight = ImGui::GetTextLineHeight();
   context.mHexCellWidth = (float)(int)(context.mGlyphWidth * 2.5f);
   context.mExtraSpaceWidth = (float)(int)(context.mHexCellWidth * 0.25f);
 
+  // hex
   context.mHexBeginPos = (context.mAddrDigitsCount + 2) * context.mGlyphWidth;
   context.mHexEndPos = context.mHexBeginPos + (context.mHexCellWidth * mOptions.mColumns);
   context.mAsciiBeginPos = context.mAsciiEndPos = context.mHexEndPos;
 
-  if (kShowAscii) {
-    context.mAsciiBeginPos = context.mHexEndPos + context.mGlyphWidth * 1;
-    if (mOptions.mColumnExtraSpace > 0)
-      context.mAsciiBeginPos += (float)((mOptions.mColumns + mOptions.mColumnExtraSpace - 1) /
-        mOptions.mColumnExtraSpace) * context.mExtraSpaceWidth;
-    context.mAsciiEndPos = context.mAsciiBeginPos + mOptions.mColumns * context.mGlyphWidth;
-    }
+  // ascii
+  context.mAsciiBeginPos = context.mHexEndPos + context.mGlyphWidth * 1;
+  if (mOptions.mColumnExtraSpace > 0)
+    context.mAsciiBeginPos += (float)((mOptions.mColumns + mOptions.mColumnExtraSpace - 1) /
+      mOptions.mColumnExtraSpace) * context.mExtraSpaceWidth;
+  context.mAsciiEndPos = context.mAsciiBeginPos + mOptions.mColumns * context.mGlyphWidth;
 
+  // windowWidth
+  ImGuiStyle& style = ImGui::GetStyle();
   context.mWindowWidth = context.mAsciiEndPos + style.ScrollbarSize + style.WindowPadding.x * 2 + context.mGlyphWidth;
+
+  // color
+  context.mTextColor = ImGui::GetColorU32 (ImGuiCol_Text);
+  context.mGreyColor = ImGui::GetColorU32 (ImGuiCol_TextDisabled);
+  context.mHighlightColor = IM_COL32 (255, 255, 255, 50);  // highlight background color
   }
 //}}}
 
@@ -471,7 +472,6 @@ void* cMemoryEdit::copyEndian (void* dst, void* src, size_t size) {
 
   if (!gEndianFunc)
     gEndianFunc = isCpuBigEndian() ? bigEndianFunc : littleEndianFunc;
-
 
   return gEndianFunc (dst, src, size, mOptions.mBigEndian ^ mOptions.mHoverEndian);
   }
@@ -483,17 +483,17 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
 
   ImGuiStyle& style = ImGui::GetStyle();
 
-  // draw col box
+  // draw columns button
   ImGui::SetNextItemWidth ((2.f*style.FramePadding.x) + (7.f*context.mGlyphWidth));
   ImGui::DragInt ("##col", &mOptions.mColumns, 0.2f, 2, 64, "%d wide");
 
-  // draw hexII box
+  // draw hexII button
   ImGui::SameLine();
   if (toggleButton ("hexII", mOptions.mShowHexII))
     mOptions.mShowHexII = !mOptions.mShowHexII;
   mOptions.mHoverHexII = ImGui::IsItemHovered();
 
-  // draw gotoAddress box
+  // draw gotoAddress button
   ImGui::SetNextItemWidth ((2 * style.FramePadding.x) + ((context.mAddrDigitsCount + 1) * context.mGlyphWidth));
   ImGui::SameLine();
   if (ImGui::InputText ("##addr", mEdit.mAddrInputBuf, IM_ARRAYSIZE(mEdit.mAddrInputBuf),
@@ -542,19 +542,12 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
       }
 
     // draw dec
-    ImGui::SameLine();
-    getDataStr (mEdit.mDataAddress, info, mOptions.mPreviewDataType, eDataFormat::eDec);
-    ImGui::Text ("dec:%s", getDataStr (mEdit.mDataAddress, info, mOptions.mPreviewDataType, eDataFormat::eDec).c_str());
-
-    // draw hex
-    ImGui::SameLine();
-    getDataStr (mEdit.mDataAddress, info, mOptions.mPreviewDataType, eDataFormat::eHex);
-    ImGui::Text ("hex:%s", getDataStr (mEdit.mDataAddress, info, mOptions.mPreviewDataType, eDataFormat::eHex).c_str());
-
-    // draw bin
-    ImGui::SameLine();
-    getDataStr (mEdit.mDataAddress, info, mOptions.mPreviewDataType, eDataFormat::eBin);
-    ImGui::Text ("bin:%s", getDataStr (mEdit.mDataAddress, info, mOptions.mPreviewDataType, eDataFormat::eBin).c_str());
+    for (int dataFormat = (int)eDataFormat::eDec; dataFormat < (int)eDataFormat::eBin; dataFormat++) {
+      ImGui::SameLine();
+      ImGui::Text ("%s:%s",
+                   getDataFormatDesc (static_cast<eDataFormat>(dataFormat)).c_str(),
+                   getDataStr (mEdit.mDataAddress, info, mOptions.mPreviewDataType, static_cast<eDataFormat>(dataFormat)).c_str());
+      }
     }
   }
 //}}}
