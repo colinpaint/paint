@@ -13,10 +13,11 @@ public:
   void drawWindow (const std::string& title, uint8_t* memData, size_t memSize, size_t baseAddress);
   void drawContents (uint8_t* memData, size_t memSize, size_t baseAddress);
 
-  void setAddrHighlight (size_t addrMin, size_t addrMax);
+  void setAddressHighlight (size_t addressMin, size_t addressMax);
 
 private:
   enum class eDataFormat { eDec, eBin, eHex };
+  static const size_t kUndefinedAddress = (size_t)-1;
   //{{{
   class cInfo {
   public:
@@ -36,7 +37,7 @@ private:
     float mGlyphWidth = 0;
     float mLineHeight = 0;
 
-    int mAddrDigitsCount = 0;
+    int mAddressDigitsCount = 0;
 
     float mHexCellWidth = 0;
     float mExtraSpaceWidth = 0;
@@ -56,19 +57,19 @@ private:
   //{{{
   class cEdit {
   public:
-    size_t mDataAddress = (size_t)-1;
+    size_t mDataAddress = kUndefinedAddress;
     bool mDataNext = false;
 
-    size_t mDataEditingAddr = (size_t)-1;
-    size_t mDataEditingAddrNext = (size_t)-1;
+    size_t mDataEditingAddress = kUndefinedAddress;
+    size_t mDataEditingAddressNext = kUndefinedAddress;
     bool mDataEditingTakeFocus = false;
 
     char mDataInputBuf[32] = {0};
-    char mAddrInputBuf[32] = {0};
-    size_t mGotoAddr = (size_t)-1;
+    char mAddressInputBuf[32] = {0};
+    size_t mGotoAddress = kUndefinedAddress;
 
-    size_t mHighlightMin = (size_t)-1;
-    size_t mHighlightMax = (size_t)-1;
+    size_t mHighlightMin = kUndefinedAddress;
+    size_t mHighlightMax = kUndefinedAddress;
     };
   //}}}
   //{{{
@@ -92,11 +93,12 @@ private:
   // gets
   bool isCpuBigEndian() const;
   bool isReadOnly() const { return mOptions.mReadOnly; };
+  bool isValidAddress (size_t address) { return address != kUndefinedAddress; }
 
   size_t getDataTypeSize (ImGuiDataType dataType) const;
   std::string getDataTypeDesc (ImGuiDataType dataType) const;
   std::string getDataFormatDesc (eDataFormat dataFormat) const;
-  std::string getDataStr (size_t addr, const cInfo& info, ImGuiDataType dataType, eDataFormat dataFormat);
+  std::string getDataStr (size_t address, const cInfo& info, ImGuiDataType dataType, eDataFormat dataFormat);
 
   // sets
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
