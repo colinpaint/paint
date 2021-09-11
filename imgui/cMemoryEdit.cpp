@@ -131,23 +131,21 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
 
   mEdit.mDataNext = false;
-  if (mOptions.mReadOnly || (mEdit.mEditAddress >= memSize))
+  if (mOptions.mReadOnly || (mEdit.mEditAddress >= info.mMemSize))
     mEdit.mEditAddress = kUndefinedAddress;
-  if (mEdit.mDataAddress >= memSize)
+  if (mEdit.mDataAddress >= info.mMemSize)
     mEdit.mDataAddress = kUndefinedAddress;
 
   mEdit.mNextEditAddress = kUndefinedAddress;
   if (isValid (mEdit.mEditAddress)) {
-    //{{{  move cursor next time
-    // move cursor but only apply on next frame so scrolling with be synchronized
-    // - because currently we can't change the scrolling while the window is being rendered)
+    //{{{  move cursor, mNextEditAddress, apply next time, scroll cannot be set as window is being rendered)
     if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_LeftArrow)) &&
         mEdit.mEditAddress > 0) {
       mEdit.mNextEditAddress = mEdit.mEditAddress - 1;
       mEdit.mEditTakeFocus = true;
       }
     else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_RightArrow)) &&
-             mEdit.mEditAddress < memSize - 1) {
+             mEdit.mEditAddress < info.mMemSize - 1) {
       mEdit.mNextEditAddress = mEdit.mEditAddress + 1;
       mEdit.mEditTakeFocus = true;
       }
@@ -158,17 +156,8 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
       mEdit.mEditTakeFocus = true;
       }
     else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_DownArrow)) &&
-             mEdit.mEditAddress < memSize - mOptions.mColumns) {
+             mEdit.mEditAddress < info.mMemSize - mOptions.mColumns) {
       mEdit.mNextEditAddress = mEdit.mEditAddress + mOptions.mColumns;
-      mEdit.mEditTakeFocus = true;
-      }
-
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageUp))) {
-      mEdit.mNextEditAddress = (size_t)max (0, (int)mEdit.mEditAddress - (10 * mOptions.mColumns));
-      mEdit.mEditTakeFocus = true;
-      }
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageDown))) {
-      mEdit.mNextEditAddress = min (memSize - mOptions.mColumns, mEdit.mEditAddress + (10 *  mOptions.mColumns));
       mEdit.mEditTakeFocus = true;
       }
 
@@ -180,27 +169,41 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
       mEdit.mNextEditAddress = info.mMemSize - 1;
       mEdit.mEditTakeFocus = true;
       }
+
+    // !!!page size of 10 not right, scroll not right !!!
+    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageUp))) {
+      mEdit.mNextEditAddress = (size_t)max (0, (int)mEdit.mEditAddress - (10 * mOptions.mColumns));
+      mEdit.mEditTakeFocus = true;
+      }
+    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageDown))) {
+      mEdit.mNextEditAddress = min (info.mMemSize - mOptions.mColumns,
+                                    mEdit.mEditAddress + (10 *  mOptions.mColumns));
+      mEdit.mEditTakeFocus = true;
+      }
     }
     //}}}
 
   // clipper begin
   ImGuiListClipper clipper;
-  clipper.Begin (static_cast<int>((memSize + mOptions.mColumns-1) / mOptions.mColumns), context.mLineHeight);
+  int maxNumLines = static_cast<int>((info.mMemSize + (mOptions.mColumns-1)) / mOptions.mColumns);
+  clipper.Begin (maxNumLines, context.mLineHeight);
   clipper.Step();
 
-  if (isValid (mEdit.mNextEditAddress) &&
-      ((mEdit.mNextEditAddress / mOptions.mColumns) != (mEdit.mEditAddress / mOptions.mColumns))) {
-    //{{{  minimal scroll, to ensure nextEditAddress which is on a new line, is onScreen
-    // calc lines for address's
-    int editAddressLine = static_cast<int>(mEdit.mEditAddress / mOptions.mColumns);
-    int nextEditAddressLine = static_cast<int>(mEdit.mNextEditAddress / mOptions.mColumns);
-    int scrollOffsetLines = nextEditAddressLine - editAddressLine;
+  if (isValid (mEdit.mNextEditAddress)) {
+    //{{{  calc minimum scroll to keep mNextEditAddress on screen
+    int lineNumber = static_cast<int>(mEdit.mEditAddress / mOptions.mColumns);
+    int nextLineNumber = static_cast<int>(mEdit.mNextEditAddress / mOptions.mColumns);
 
-    // do we need to scroll
-    bool beforeStart = (scrollOffsetLines < 0) && (nextEditAddressLine < (clipper.DisplayStart + kPageMarginLines));
-    bool afterEnd = (scrollOffsetLines > 0) && (nextEditAddressLine >= (clipper.DisplayEnd - kPageMarginLines));
-    if (beforeStart || afterEnd)
-      ImGui::SetScrollY (ImGui::GetScrollY() + (scrollOffsetLines * context.mLineHeight));
+    int lineNumberOffset = nextLineNumber - lineNumber;
+    if (lineNumberOffset) {
+      // nextEditAddress is on new line
+      bool beforeStart = (lineNumberOffset < 0) && (nextLineNumber < (clipper.DisplayStart + kPageMarginLines));
+      bool afterEnd = (lineNumberOffset > 0) && (nextLineNumber >= (clipper.DisplayEnd - kPageMarginLines));
+
+      // is minimum scroll neeeded
+      if (beforeStart || afterEnd)
+        ImGui::SetScrollY (ImGui::GetScrollY() + (lineNumberOffset * context.mLineHeight));
+      }
     }
     //}}}
 
@@ -218,7 +221,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
 
   // Notify the main window of our ideal child content size
   ImGui::SetCursorPosX (context.mWindowWidth);
-  if (mEdit.mDataNext && (mEdit.mEditAddress < memSize)) {
+  if (mEdit.mDataNext && (mEdit.mEditAddress < info.mMemSize)) {
     mEdit.mEditAddress++;
     mEdit.mDataAddress = mEdit.mEditAddress;
     mEdit.mEditTakeFocus = true;
