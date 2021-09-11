@@ -57,12 +57,12 @@ private:
   //{{{
   class cEdit {
   public:
-    size_t mDataAddress = kUndefinedAddress;
     bool mDataNext = false;
+    size_t mDataAddress = kUndefinedAddress;
 
-    size_t mDataEditingAddress = kUndefinedAddress;
-    size_t mDataEditingAddressNext = kUndefinedAddress;
-    bool mDataEditingTakeFocus = false;
+    bool mEditingTakeFocus = false;
+    size_t mEditingAddress = kUndefinedAddress;
+    size_t mEditingAddressNext = kUndefinedAddress;
 
     char mDataInputBuf[32] = {0};
     char mAddressInputBuf[32] = {0};

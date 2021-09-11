@@ -148,45 +148,45 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
   const size_t visibleEndAddress = clipper.DisplayEnd * mOptions.mColumns;
 
   mEdit.mDataNext = false;
-  if (mOptions.mReadOnly || mEdit.mDataEditingAddress >= memSize)
-    mEdit.mDataEditingAddress = kUndefinedAddress;
+  if (mOptions.mReadOnly || mEdit.mEditingAddress >= memSize)
+    mEdit.mEditingAddress = kUndefinedAddress;
   if (mEdit.mDataAddress >= memSize)
     mEdit.mDataAddress = kUndefinedAddress;
 
-  size_t prevDataEditingAddress = mEdit.mDataEditingAddress;
-  mEdit.mDataEditingAddressNext = kUndefinedAddress;
-  if (isValidAddress (mEdit.mDataEditingAddress)) {
+  size_t prevEditingAddress = mEdit.mEditingAddress;
+  mEdit.mEditingAddressNext = kUndefinedAddress;
+  if (isValidAddress (mEdit.mEditingAddress)) {
     //{{{  move cursor
     // move cursor but only apply on next frame so scrolling with be synchronized
     // - because currently we can't change the scrolling while the window is being rendered)
-    if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_UpArrow)) && mEdit.mDataEditingAddress >= (size_t)mOptions.mColumns) {
-      mEdit.mDataEditingAddressNext = mEdit.mDataEditingAddress - mOptions.mColumns;
-      mEdit.mDataEditingTakeFocus = true;
+    if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_UpArrow)) && mEdit.mEditingAddress >= (size_t)mOptions.mColumns) {
+      mEdit.mEditingAddressNext = mEdit.mEditingAddress - mOptions.mColumns;
+      mEdit.mEditingTakeFocus = true;
       }
 
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_DownArrow)) && mEdit.mDataEditingAddress < memSize - mOptions.mColumns) {
-      mEdit.mDataEditingAddressNext = mEdit.mDataEditingAddress + mOptions.mColumns;
-      mEdit.mDataEditingTakeFocus = true;
+    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_DownArrow)) && mEdit.mEditingAddress < memSize - mOptions.mColumns) {
+      mEdit.mEditingAddressNext = mEdit.mEditingAddress + mOptions.mColumns;
+      mEdit.mEditingTakeFocus = true;
       }
 
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_LeftArrow)) && mEdit.mDataEditingAddress > 0) {
-      mEdit.mDataEditingAddressNext = mEdit.mDataEditingAddress - 1;
-      mEdit.mDataEditingTakeFocus = true;
+    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_LeftArrow)) && mEdit.mEditingAddress > 0) {
+      mEdit.mEditingAddressNext = mEdit.mEditingAddress - 1;
+      mEdit.mEditingTakeFocus = true;
       }
 
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_RightArrow)) && mEdit.mDataEditingAddress < memSize - 1) {
-      mEdit.mDataEditingAddressNext = mEdit.mDataEditingAddress + 1;
-      mEdit.mDataEditingTakeFocus = true;
+    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_RightArrow)) && mEdit.mEditingAddress < memSize - 1) {
+      mEdit.mEditingAddressNext = mEdit.mEditingAddress + 1;
+      mEdit.mEditingTakeFocus = true;
       }
     }
     //}}}
 
-  if (isValidAddress (mEdit.mDataEditingAddressNext) &&
-      ((mEdit.mDataEditingAddressNext / mOptions.mColumns) != (prevDataEditingAddress / mOptions.mColumns))) {
+  if (isValidAddress (mEdit.mEditingAddressNext) &&
+      ((mEdit.mEditingAddressNext / mOptions.mColumns) != (prevEditingAddress / mOptions.mColumns))) {
     //{{{  scroll tracks cursor
-    int offset = ((int)(mEdit.mDataEditingAddressNext/ mOptions.mColumns) - (int)(prevDataEditingAddress/ mOptions.mColumns));
-    if (((offset < 0) && (mEdit.mDataEditingAddressNext < (visibleBeginAddress + (mOptions.mColumns * kPageOffset)))) ||
-        ((offset > 0) && (mEdit.mDataEditingAddressNext > (visibleEndAddress - (mOptions.mColumns * kPageOffset)))))
+    int offset = ((int)(mEdit.mEditingAddressNext/ mOptions.mColumns) - (int)(prevEditingAddress/ mOptions.mColumns));
+    if (((offset < 0) && (mEdit.mEditingAddressNext < (visibleBeginAddress + (mOptions.mColumns * kPageOffset)))) ||
+        ((offset > 0) && (mEdit.mEditingAddressNext > (visibleEndAddress - (mOptions.mColumns * kPageOffset)))))
       ImGui::SetScrollY (ImGui::GetScrollY() + (offset * context.mLineHeight));
     }
     //}}}
@@ -205,14 +205,14 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
 
   // Notify the main window of our ideal child content size
   ImGui::SetCursorPosX (context.mWindowWidth);
-  if (mEdit.mDataNext && mEdit.mDataEditingAddress < memSize) {
-    mEdit.mDataEditingAddress++;
-    mEdit.mDataAddress = mEdit.mDataEditingAddress;
-    mEdit.mDataEditingTakeFocus = true;
+  if (mEdit.mDataNext && mEdit.mEditingAddress < memSize) {
+    mEdit.mEditingAddress++;
+    mEdit.mDataAddress = mEdit.mEditingAddress;
+    mEdit.mEditingTakeFocus = true;
     }
-  else if (isValidAddress (mEdit.mDataEditingAddressNext)) {
-    mEdit.mDataEditingAddress = mEdit.mDataEditingAddressNext;
-    mEdit.mDataAddress = mEdit.mDataEditingAddressNext;
+  else if (isValidAddress (mEdit.mEditingAddressNext)) {
+    mEdit.mEditingAddress = mEdit.mEditingAddressNext;
+    mEdit.mDataAddress = mEdit.mEditingAddressNext;
     }
   }
 //}}}
@@ -518,9 +518,9 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
       ImGui::BeginChild ("##scrolling");
       ImGui::SetScrollFromPosY (ImGui::GetCursorStartPos().y + (mEdit.mGotoAddress / mOptions.mColumns) * ImGui::GetTextLineHeight());
       ImGui::EndChild();
-      mEdit.mDataEditingAddress = mEdit.mGotoAddress;
+      mEdit.mEditingAddress = mEdit.mGotoAddress;
       mEdit.mDataAddress = mEdit.mGotoAddress;
-      mEdit.mDataEditingTakeFocus = true;
+      mEdit.mEditingTakeFocus = true;
       }
 
     mEdit.mGotoAddress = kUndefinedAddress;
@@ -596,12 +596,12 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
       draw_list->AddRectFilled (pos, pos + ImVec2(highlightWidth, context.mLineHeight), context.mHighlightColor);
       }
       //}}}
-    if (mEdit.mDataEditingAddress == address) {
+    if (mEdit.mEditingAddress == address) {
       //{{{  display text input on current byte
       bool dataWrite = false;
 
       ImGui::PushID ((void*)address);
-      if (mEdit.mDataEditingTakeFocus) {
+      if (mEdit.mEditingTakeFocus) {
         ImGui::SetKeyboardFocusHere();
         ImGui::CaptureKeyboardFromApp (true);
         sprintf (mEdit.mAddressInputBuf, kFormatData, context.mAddressDigitsCount, info.mBaseAddress + address);
@@ -651,14 +651,14 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
 
       if (ImGui::InputText ("##data", mEdit.mDataInputBuf, IM_ARRAYSIZE(mEdit.mDataInputBuf), flags, sUserData::callback, &userData))
         dataWrite = mEdit.mDataNext = true;
-      else if (!mEdit.mDataEditingTakeFocus && !ImGui::IsItemActive())
-        mEdit.mDataEditingAddress = mEdit.mDataEditingAddressNext = kUndefinedAddress;
+      else if (!mEdit.mEditingTakeFocus && !ImGui::IsItemActive())
+        mEdit.mEditingAddress = mEdit.mEditingAddressNext = kUndefinedAddress;
 
-      mEdit.mDataEditingTakeFocus = false;
+      mEdit.mEditingTakeFocus = false;
 
       if (userData.mCursorPos >= 2)
         dataWrite = mEdit.mDataNext = true;
-      if (isValidAddress (mEdit.mDataEditingAddressNext))
+      if (isValidAddress (mEdit.mEditingAddressNext))
         dataWrite = mEdit.mDataNext = false;
 
       unsigned int dataInputValue = 0;
@@ -690,8 +690,8 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
 
       if (!mOptions.mReadOnly &&
           ImGui::IsItemHovered() && ImGui::IsMouseClicked (0)) {
-        mEdit.mDataEditingTakeFocus = true;
-        mEdit.mDataEditingAddressNext = address;
+        mEdit.mEditingTakeFocus = true;
+        mEdit.mEditingAddressNext = address;
         }
       }
       //}}}
@@ -707,13 +707,13 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
     ImGui::PushID (lineNumber);
     if (ImGui::InvisibleButton ("ascii", ImVec2 (context.mAsciiEndPos - context.mAsciiBeginPos, context.mLineHeight))) {
       mEdit.mDataAddress = address + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / context.mGlyphWidth);
-      mEdit.mDataEditingAddress = mEdit.mDataAddress;
-      mEdit.mDataEditingTakeFocus = true;
+      mEdit.mEditingAddress = mEdit.mDataAddress;
+      mEdit.mEditingTakeFocus = true;
       }
 
     ImGui::PopID();
     for (int column = 0; (column < mOptions.mColumns) && (address < info.mMemSize); column++, address++) {
-      if (address == mEdit.mDataEditingAddress) {
+      if (address == mEdit.mEditingAddress) {
         draw_list->AddRectFilled (pos, ImVec2 (pos.x + context.mGlyphWidth, pos.y + context.mLineHeight),
                                  ImGui::GetColorU32 (ImGuiCol_FrameBg));
         draw_list->AddRectFilled (pos, ImVec2 (pos.x + context.mGlyphWidth, pos.y + context.mLineHeight),
