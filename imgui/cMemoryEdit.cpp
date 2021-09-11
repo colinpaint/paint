@@ -59,7 +59,7 @@ constexpr bool kUpperCaseHex = false;
 constexpr float kPageOffset = 2.f;  // margin between top/bottom of page and cursor
 
 namespace {
-  const array<string,3> kFormatDescs = {"Bin", "Dec", "Hex"};
+  const array<string,3> kFormatDescs = {"Dec", "Bin", "Hex"};
   //{{{
   const array<string,10> kTypeDescs = {"Int8", "Uint8", "Int16", "Uint16",
                                      "Int32", "Uint32", "Int64", "Uint64",
@@ -541,12 +541,12 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
       mOptions.mHoverEndian = ImGui::IsItemHovered();
       }
 
-    // draw dec
-    for (int dataFormat = (int)eDataFormat::eDec; dataFormat < (int)eDataFormat::eBin; dataFormat++) {
+    // draw formats,  !! why can't you inc,iterate an enum
+    for (eDataFormat dataFormat = eDataFormat::eDec; dataFormat <= eDataFormat::eHex;
+         dataFormat = static_cast<eDataFormat>((static_cast<int>(dataFormat)+1))) {
       ImGui::SameLine();
-      ImGui::Text ("%s:%s",
-                   getDataFormatDesc (static_cast<eDataFormat>(dataFormat)).c_str(),
-                   getDataStr (mEdit.mDataAddress, info, mOptions.mPreviewDataType, static_cast<eDataFormat>(dataFormat)).c_str());
+      ImGui::Text ("%s:%s", getDataFormatDesc (dataFormat).c_str(),
+                            getDataStr (mEdit.mDataAddress, info, mOptions.mPreviewDataType, dataFormat).c_str());
       }
     }
   }
