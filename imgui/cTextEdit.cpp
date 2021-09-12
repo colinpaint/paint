@@ -484,23 +484,12 @@ namespace {
 // cTextEdit
 //{{{
 cTextEdit::cTextEdit()
-  : mTextEdited(false),
-    mHasTabs(false), mTabSize(4), mHasFolds(false), mHasCR(false),
-    mOverwrite(false) , mReadOnly(false), mCheckComments(true),
-    //mShowFolds(false), mShowLineNumbers(false), mShowDebug(false), mShowWhiteSpace(false),
-    mShowFolds(false), mShowLineNumbers(true), mShowDebug(true), mShowWhiteSpace(false),
-
-    mColorRangeMin(0), mColorRangeMax(0), mSelection(eSelection::Normal),
-    mUndoIndex(0),
-
-
-    mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
+  : mStartTime(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count()),
     mLastClick(-1.f) {
 
-  mPaletteBase = kLightPalette;
+  mInfo.mLines.push_back (vector<sGlyph>());
+  mOptions.mPaletteBase = kLightPalette;
   setLanguage (sLanguage::cPlus());
-
-  mLines.push_back (vector<sGlyph>());
   }
 //}}}
 //{{{  gets
@@ -516,7 +505,7 @@ bool cTextEdit::hasClipboardText() {
 string cTextEdit::getTextString() const {
 // get text as single string
 
-  return getText (sPosition(), sPosition((int)mLines.size(), 0));
+  return getText (sPosition(), sPosition((int)mInfo.mLines.size(), 0));
   }
 //}}}
 //{{{
@@ -524,9 +513,9 @@ vector<string> cTextEdit::getTextStrings() const {
 // get text as vector of string
 
   vector<string> result;
-  result.reserve (mLines.size());
+  result.reserve (mInfo.mLines.size());
 
-  for (auto& line : mLines) {
+  for (auto& line : mInfo.mLines) {
     string text;
     text.resize (line.mGlyphs.size());
     for (size_t i = 0; i < line.mGlyphs.size(); ++i)
@@ -544,25 +533,25 @@ vector<string> cTextEdit::getTextStrings() const {
 void cTextEdit::setTextString (const string& text) {
 // break test into lines, store in internal mLines structure
 
-  mLines.clear();
-  mLines.emplace_back (vector<sGlyph>());
+  mInfo.mLines.clear();
+  mInfo.mLines.emplace_back (vector<sGlyph>());
 
   for (auto ch : text) {
     if (ch == '\r') // ignored but flag set
-      mHasCR = true;
+      mInfo.mHasCR = true;
     else if (ch == '\n')
-      mLines.emplace_back (vector<sGlyph>());
+      mInfo.mLines.emplace_back (vector<sGlyph>());
     else {
       if (ch ==  '\t')
-        mHasTabs = true;
-      mLines.back().mGlyphs.emplace_back (sGlyph (ch, ePalette::Default));
+        mInfo.mHasTabs = true;
+      mInfo.mLines.back().mGlyphs.emplace_back (sGlyph (ch, ePalette::Default));
       }
     }
 
-  mTextEdited = false;
+  mInfo.mTextEdited = false;
 
-  mUndoBuffer.clear();
-  mUndoIndex = 0;
+  mUndoList.mUndoBuffer.clear();
+  mUndoList.mUndoIndex = 0;
 
   parseFolds();
   colorize();
@@ -572,28 +561,28 @@ void cTextEdit::setTextString (const string& text) {
 void cTextEdit::setTextStrings (const vector<string>& lines) {
 // store vector of lines in internal mLines structure
 
-  mLines.clear();
+  mInfo.mLines.clear();
 
   if (lines.empty())
-    mLines.emplace_back (vector<sGlyph>());
+    mInfo.mLines.emplace_back (vector<sGlyph>());
 
   else {
-    mLines.resize (lines.size());
+    mInfo.mLines.resize (lines.size());
     for (size_t i = 0; i < lines.size(); ++i) {
       const string& line = lines[i];
-      mLines[i].mGlyphs.reserve (line.size());
+      mInfo.mLines[i].mGlyphs.reserve (line.size());
       for (size_t j = 0; j < line.size(); ++j) {
         if (line[j] ==  '\t')
-          mHasTabs = true;
-        mLines[i].mGlyphs.emplace_back (sGlyph (line[j], ePalette::Default));
+          mInfo.mHasTabs = true;
+        mInfo.mLines[i].mGlyphs.emplace_back (sGlyph (line[j], ePalette::Default));
         }
       }
     }
 
-  mTextEdited = false;
+  mInfo.mTextEdited = false;
 
-  mUndoBuffer.clear();
-  mUndoIndex = 0;
+  mUndoList.mUndoBuffer.clear();
+  mUndoList.mUndoIndex = 0;
 
   parseFolds();
   colorize();
@@ -602,17 +591,17 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
 
 //{{{
 void cTextEdit::setPalette (bool lightPalette) {
-  mPaletteBase = (lightPalette ? kLightPalette : kDarkPalette);
+  mOptions.mPaletteBase = (lightPalette ? kLightPalette : kDarkPalette);
   }
 //}}}
 //{{{
 void cTextEdit::setLanguage (const sLanguage& language) {
 
-  mLanguage = language;
+  mOptions.mLanguage = language;
 
-  mRegexList.clear();
-  for (auto& r : mLanguage.mTokenRegexStrings)
-    mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
+  mOptions.mRegexList.clear();
+  for (auto& r : mOptions.mLanguage.mTokenRegexStrings)
+    mOptions.mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
 
   colorize();
   }
@@ -621,8 +610,8 @@ void cTextEdit::setLanguage (const sLanguage& language) {
 //{{{
 void cTextEdit::setCursorPosition (const sPosition& position) {
 
-  if (mState.mCursorPosition != position) {
-    mState.mCursorPosition = position;
+  if (mEdit.mState.mCursorPosition != position) {
+    mEdit.mState.mCursorPosition = position;
     ensureCursorVisible();
     }
   }
@@ -630,43 +619,43 @@ void cTextEdit::setCursorPosition (const sPosition& position) {
 //{{{
 void cTextEdit::setSelectionStart (const sPosition& position) {
 
-  mState.mSelectionStart = sanitizePosition (position);
-  if (mState.mSelectionStart > mState.mSelectionEnd)
-    swap (mState.mSelectionStart, mState.mSelectionEnd);
+  mEdit.mState.mSelectionStart = sanitizePosition (position);
+  if (mEdit.mState.mSelectionStart > mEdit.mState.mSelectionEnd)
+    swap (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd);
   }
 //}}}
 //{{{
 void cTextEdit::setSelectionEnd (const sPosition& position) {
 
-  mState.mSelectionEnd = sanitizePosition (position);
-  if (mState.mSelectionStart > mState.mSelectionEnd)
-    swap (mState.mSelectionStart, mState.mSelectionEnd);
+  mEdit.mState.mSelectionEnd = sanitizePosition (position);
+  if (mEdit.mState.mSelectionStart > mEdit.mState.mSelectionEnd)
+    swap (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd);
   }
 //}}}
 //{{{
 void cTextEdit::setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode) {
 
-  mState.mSelectionStart = sanitizePosition (startPosition);
-  mState.mSelectionEnd = sanitizePosition (endPosition);
-  if (mState.mSelectionStart > mState.mSelectionEnd)
-    swap (mState.mSelectionStart, mState.mSelectionEnd);
+  mEdit.mState.mSelectionStart = sanitizePosition (startPosition);
+  mEdit.mState.mSelectionEnd = sanitizePosition (endPosition);
+  if (mEdit.mState.mSelectionStart > mEdit.mState.mSelectionEnd)
+    swap (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd);
 
   switch (mode) {
     case cTextEdit::eSelection::Normal:
       break;
 
     case cTextEdit::eSelection::Word: {
-      mState.mSelectionStart = findWordStart (mState.mSelectionStart);
-      if (!isOnWordBoundary (mState.mSelectionEnd))
-        mState.mSelectionEnd = findWordEnd (findWordStart (mState.mSelectionEnd));
+      mEdit.mState.mSelectionStart = findWordStart (mEdit.mState.mSelectionStart);
+      if (!isOnWordBoundary (mEdit.mState.mSelectionEnd))
+        mEdit.mState.mSelectionEnd = findWordEnd (findWordStart (mEdit.mState.mSelectionEnd));
       break;
       }
 
     case cTextEdit::eSelection::Line: {
-      const int lineNumber = mState.mSelectionEnd.mLineNumber;
+      const int lineNumber = mEdit.mState.mSelectionEnd.mLineNumber;
       //const auto lineSize = (size_t)lineNumber < mLines.size() ? mLines[lineNumber].size() : 0;
-      mState.mSelectionStart = sPosition (mState.mSelectionStart.mLineNumber, 0);
-      mState.mSelectionEnd = sPosition (lineNumber, getLineMaxColumn (lineNumber));
+      mEdit.mState.mSelectionStart = sPosition (mEdit.mState.mSelectionStart.mLineNumber, 0);
+      mEdit.mState.mSelectionEnd = sPosition (lineNumber, getLineMaxColumn (lineNumber));
       break;
       }
 
@@ -681,20 +670,20 @@ void cTextEdit::setSelection (const sPosition& startPosition, const sPosition& e
 //{{{
 void cTextEdit::moveLeft() {
 
-  if (mLines.empty())
+  if (mInfo.mLines.empty())
     return;
 
-  sPosition position = mState.mCursorPosition;
+  sPosition position = mEdit.mState.mCursorPosition;
 
-  //mState.mCursorPosition = getCursorPosition();
-  int column = getCharacterIndex (mState.mCursorPosition);
-  int lineNumber = mState.mCursorPosition.mLineNumber;
+  //mEdit.mState.mCursorPosition = getCursorPosition();
+  int column = getCharacterIndex (mEdit.mState.mCursorPosition);
+  int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
   if (column == 0) {
     // move to end of prevous line
     if (lineNumber > 0) {
       --lineNumber;
-      if ((int)mLines.size() > lineNumber)
-        column = (int)mLines[lineNumber].mGlyphs.size();
+      if ((int)mInfo.mLines.size() > lineNumber)
+        column = (int)mInfo.mLines[lineNumber].mGlyphs.size();
       else
         column = 0;
       }
@@ -703,16 +692,16 @@ void cTextEdit::moveLeft() {
     // move to previous column on same line
     --column;
     if (column > 0)
-      while (column > 0 && isUtfSequence (mLines[lineNumber].mGlyphs[column].mChar))
+      while (column > 0 && isUtfSequence (mInfo.mLines[lineNumber].mGlyphs[column].mChar))
         --column;
     }
 
-  mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
+  mEdit.mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
 
-  if (mState.mCursorPosition != position) {
-    mInteractiveStart = mState.mCursorPosition;
-    mInteractiveEnd = mState.mCursorPosition;
-    setSelection (mInteractiveStart, mInteractiveEnd, eSelection::Normal);
+  if (mEdit.mState.mCursorPosition != position) {
+    mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, eSelection::Normal);
     ensureCursorVisible();
     }
   }
@@ -720,33 +709,33 @@ void cTextEdit::moveLeft() {
 //{{{
 void cTextEdit::moveRight() {
 
-  if (mLines.empty())
+  if (mInfo.mLines.empty())
     return;
 
-  sPosition position = mState.mCursorPosition;
+  sPosition position = mEdit.mState.mCursorPosition;
 
-  int column = getCharacterIndex (mState.mCursorPosition);
-  int lineNumber = mState.mCursorPosition.mLineNumber;
-  if (column >= (int)mLines [lineNumber].mGlyphs.size()) {
+  int column = getCharacterIndex (mEdit.mState.mCursorPosition);
+  int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
+  if (column >= (int)mInfo.mLines [lineNumber].mGlyphs.size()) {
     // move to start of next line
-    if (mState.mCursorPosition.mLineNumber < (int)mLines.size()-1) {
-      mState.mCursorPosition.mLineNumber =
-        max (0, min ((int)mLines.size() - 1, mState.mCursorPosition.mLineNumber + 1));
-      mState.mCursorPosition.mColumn = 0;
+    if (mEdit.mState.mCursorPosition.mLineNumber < (int)mInfo.mLines.size()-1) {
+      mEdit.mState.mCursorPosition.mLineNumber =
+        max (0, min ((int)mInfo.mLines.size() - 1, mEdit.mState.mCursorPosition.mLineNumber + 1));
+      mEdit.mState.mCursorPosition.mColumn = 0;
       }
     else
       return;
     }
   else {
     // move to next columm on same line
-    column += utf8CharLength (mLines [lineNumber].mGlyphs[column].mChar);
-    mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
+    column += utf8CharLength (mInfo.mLines [lineNumber].mGlyphs[column].mChar);
+    mEdit.mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
     }
 
-  if (mState.mCursorPosition != position) {
-    mInteractiveStart = mState.mCursorPosition;
-    mInteractiveEnd = mState.mCursorPosition;
-    setSelection (mInteractiveStart, mInteractiveEnd, eSelection::Normal);
+  if (mEdit.mState.mCursorPosition != position) {
+    mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, eSelection::Normal);
     ensureCursorVisible();
     }
   }
@@ -754,14 +743,14 @@ void cTextEdit::moveRight() {
 //{{{
 void cTextEdit::moveHome() {
 
-  sPosition position = mState.mCursorPosition;
+  sPosition position = mEdit.mState.mCursorPosition;
 
   setCursorPosition (sPosition (0,0));
 
-  if (mState.mCursorPosition != position) {
-    mInteractiveStart = mState.mCursorPosition;
-    mInteractiveEnd = mState.mCursorPosition;
-    setSelection (mInteractiveStart, mInteractiveEnd);
+  if (mEdit.mState.mCursorPosition != position) {
+    mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd);
     ensureCursorVisible();
     }
   }
@@ -769,14 +758,14 @@ void cTextEdit::moveHome() {
 //{{{
 void cTextEdit::moveEnd() {
 
-  sPosition position = mState.mCursorPosition;
+  sPosition position = mEdit.mState.mCursorPosition;
 
-  setCursorPosition ({(int)mLines.size()-1, 0});
+  setCursorPosition ({(int)mInfo.mLines.size()-1, 0});
 
-  if (mState.mCursorPosition != position) {
-    mInteractiveStart = mState.mCursorPosition;
-    mInteractiveEnd = mState.mCursorPosition;
-    setSelection (mInteractiveStart, mInteractiveEnd);
+  if (mEdit.mState.mCursorPosition != position) {
+    mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd);
     ensureCursorVisible();
     }
   }
@@ -785,7 +774,7 @@ void cTextEdit::moveEnd() {
 // select
 //{{{
 void cTextEdit::selectAll() {
-  setSelection (sPosition (0,0), sPosition ((int)mLines.size(), 0));
+  setSelection (sPosition (0,0), sPosition ((int)mInfo.mLines.size(), 0));
   }
 //}}}
 //{{{
@@ -803,8 +792,8 @@ void cTextEdit::copy() {
   if (hasSelect())
     ImGui::SetClipboardText (getSelectedText().c_str());
 
-  else if (!mLines.empty()) {
-    sLine& line = mLines[getCursorPosition().mLineNumber];
+  else if (!mInfo.mLines.empty()) {
+    sLine& line = mInfo.mLines[getCursorPosition().mLineNumber];
 
     string str;
     for (auto& glyph : line.mGlyphs)
@@ -822,15 +811,15 @@ void cTextEdit::cut() {
 
   else if (hasSelect()) {
     sUndo undo;
-    undo.mBefore = mState;
+    undo.mBefore = mEdit.mState;
     undo.mRemoved = getSelectedText();
-    undo.mRemovedStart = mState.mSelectionStart;
-    undo.mRemovedEnd = mState.mSelectionEnd;
+    undo.mRemovedStart = mEdit.mState.mSelectionStart;
+    undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
 
     copy();
     deleteSelection();
 
-    undo.mAfter = mState;
+    undo.mAfter = mEdit.mState;
     addUndo (undo);
     }
   }
@@ -843,11 +832,11 @@ void cTextEdit::paste() {
 
   if (hasClipboardText()) {
     sUndo undo;
-    undo.mBefore = mState;
+    undo.mBefore = mEdit.mState;
     if (hasSelect()) {
       undo.mRemoved = getSelectedText();
-      undo.mRemovedStart = mState.mSelectionStart;
-      undo.mRemovedEnd = mState.mSelectionEnd;
+      undo.mRemovedStart = mEdit.mState.mSelectionStart;
+      undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
       deleteSelection();
       }
 
@@ -858,7 +847,7 @@ void cTextEdit::paste() {
     insertText (clipText);
 
     undo.mAddedEnd = getCursorPosition();
-    undo.mAfter = mState;
+    undo.mAfter = mEdit.mState;
     addUndo (undo);
     }
   }
@@ -869,14 +858,14 @@ void cTextEdit::paste() {
 void cTextEdit::undo (int steps) {
 
   while (hasUndo() && steps-- > 0)
-    mUndoBuffer[--mUndoIndex].undo (this);
+    mUndoList.mUndoBuffer[--mUndoList.mUndoIndex].undo (this);
   }
 //}}}
 //{{{
 void cTextEdit::redo (int steps) {
 
   while (hasRedo() && steps-- > 0)
-    mUndoBuffer[mUndoIndex++].redo (this);
+    mUndoList.mUndoBuffer[mUndoList.mUndoIndex++].redo (this);
   }
 //}}}
 
@@ -884,33 +873,33 @@ void cTextEdit::redo (int steps) {
 //{{{
 void cTextEdit::deleteIt() {
 
-  if (mLines.empty())
+  if (mInfo.mLines.empty())
     return;
 
   sUndo undo;
-  undo.mBefore = mState;
+  undo.mBefore = mEdit.mState;
 
   if (hasSelect()) {
     undo.mRemoved = getSelectedText();
-    undo.mRemovedStart = mState.mSelectionStart;
-    undo.mRemovedEnd = mState.mSelectionEnd;
+    undo.mRemovedStart = mEdit.mState.mSelectionStart;
+    undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
     deleteSelection();
     }
 
   else {
     sPosition position = getCursorPosition();
     setCursorPosition (position);
-    vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
+    vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
     if (position.mColumn == getLineMaxColumn (position.mLineNumber)) {
-      if (position.mLineNumber == (int)mLines.size() - 1)
+      if (position.mLineNumber == (int)mInfo.mLines.size() - 1)
         return;
 
       undo.mRemoved = '\n';
       undo.mRemovedStart = undo.mRemovedEnd = getCursorPosition();
       advance (undo.mRemovedEnd);
 
-      vector<sGlyph>& nextLineGlyphs = mLines[position.mLineNumber + 1].mGlyphs;
+      vector<sGlyph>& nextLineGlyphs = mInfo.mLines[position.mLineNumber + 1].mGlyphs;
       glyphs.insert (glyphs.end(), nextLineGlyphs.begin(), nextLineGlyphs.end());
       removeLine (position.mLineNumber + 1);
       }
@@ -925,28 +914,28 @@ void cTextEdit::deleteIt() {
         glyphs.erase (glyphs.begin() + cindex);
       }
 
-    mTextEdited = true;
+    mInfo.mTextEdited = true;
     colorize (position.mLineNumber, 1);
     }
 
-  undo.mAfter = mState;
+  undo.mAfter = mEdit.mState;
   addUndo (undo);
   }
 //}}}
 //{{{
 void cTextEdit::backspace() {
 
-  if (mLines.empty())
+  if (mInfo.mLines.empty())
     return;
 
   sUndo undo;
-  undo.mBefore = mState;
+  undo.mBefore = mEdit.mState;
 
   if (hasSelect()) {
     //{{{  backspace delete selection
     undo.mRemoved = getSelectedText();
-    undo.mRemovedStart = mState.mSelectionStart;
-    undo.mRemovedEnd = mState.mSelectionEnd;
+    undo.mRemovedStart = mEdit.mState.mSelectionStart;
+    undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
 
     deleteSelection();
     }
@@ -955,32 +944,32 @@ void cTextEdit::backspace() {
   else {
     sPosition position = getCursorPosition();
     setCursorPosition (position);
-    if (mState.mCursorPosition.mColumn == 0) {
-      if (mState.mCursorPosition.mLineNumber == 0)
+    if (mEdit.mState.mCursorPosition.mColumn == 0) {
+      if (mEdit.mState.mCursorPosition.mLineNumber == 0)
         return;
 
       undo.mRemoved = '\n';
       undo.mRemovedStart = undo.mRemovedEnd = sPosition (position.mLineNumber - 1, getLineMaxColumn (position.mLineNumber - 1));
       advance (undo.mRemovedEnd);
 
-      vector<sGlyph>& line = mLines[mState.mCursorPosition.mLineNumber].mGlyphs;
-      vector<sGlyph>& prevLine = mLines[mState.mCursorPosition.mLineNumber - 1].mGlyphs;
-      int prevSize = getLineMaxColumn (mState.mCursorPosition.mLineNumber - 1);
+      vector<sGlyph>& line = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mGlyphs;
+      vector<sGlyph>& prevLine = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber - 1].mGlyphs;
+      int prevSize = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber - 1);
       prevLine.insert (prevLine.end(), line.begin(), line.end());
 
       map<int,string> etmp;
-      for (auto& marker : mMarkers)
+      for (auto& marker : mOptions.mMarkers)
         etmp.insert (map<int,string>::value_type (
-          marker.first - 1 == mState.mCursorPosition.mLineNumber ? marker.first - 1 : marker.first, marker.second));
-      mMarkers = move (etmp);
+          marker.first - 1 == mEdit.mState.mCursorPosition.mLineNumber ? marker.first - 1 : marker.first, marker.second));
+      mOptions.mMarkers = move (etmp);
 
-      removeLine (mState.mCursorPosition.mLineNumber);
-      --mState.mCursorPosition.mLineNumber;
-      mState.mCursorPosition.mColumn = prevSize;
+      removeLine (mEdit.mState.mCursorPosition.mLineNumber);
+      --mEdit.mState.mCursorPosition.mLineNumber;
+      mEdit.mState.mCursorPosition.mColumn = prevSize;
       }
 
     else {
-      vector<sGlyph>& glyphs = mLines[mState.mCursorPosition.mLineNumber].mGlyphs;
+      vector<sGlyph>& glyphs = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mGlyphs;
       int cindex = getCharacterIndex (position) - 1;
       int cend = cindex + 1;
       while ((cindex > 0) && isUtfSequence (glyphs[cindex].mChar))
@@ -990,36 +979,36 @@ void cTextEdit::backspace() {
       //  --cindex;
       undo.mRemovedStart = undo.mRemovedEnd = getCursorPosition();
       --undo.mRemovedStart.mColumn;
-      --mState.mCursorPosition.mColumn;
+      --mEdit.mState.mCursorPosition.mColumn;
 
       while ((cindex < (int)glyphs.size()) && (cend-- > cindex)) {
         undo.mRemoved += glyphs[cindex].mChar;
         glyphs.erase (glyphs.begin() + cindex);
         }
       }
-    mTextEdited = true;
+    mInfo.mTextEdited = true;
 
     ensureCursorVisible();
-    colorize (mState.mCursorPosition.mLineNumber, 1);
+    colorize (mEdit.mState.mCursorPosition.mLineNumber, 1);
     }
 
-  undo.mAfter = mState;
+  undo.mAfter = mEdit.mState;
   addUndo (undo);
   }
 //}}}
 //{{{
 void cTextEdit::deleteSelection() {
 
-  assert(mState.mSelectionEnd >= mState.mSelectionStart);
-  if (mState.mSelectionEnd == mState.mSelectionStart)
+  assert(mEdit.mState.mSelectionEnd >= mEdit.mState.mSelectionStart);
+  if (mEdit.mState.mSelectionEnd == mEdit.mState.mSelectionStart)
     return;
 
-  deleteRange (mState.mSelectionStart, mState.mSelectionEnd);
+  deleteRange (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd);
 
-  setSelection (mState.mSelectionStart, mState.mSelectionStart);
-  setCursorPosition (mState.mSelectionStart);
+  setSelection (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionStart);
+  setCursorPosition (mEdit.mState.mSelectionStart);
 
-  colorize (mState.mSelectionStart.mLineNumber, 1);
+  colorize (mEdit.mState.mSelectionStart.mLineNumber, 1);
   }
 //}}}
 
@@ -1028,24 +1017,24 @@ void cTextEdit::deleteSelection() {
 void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
   sUndo undo;
-  undo.mBefore = mState;
+  undo.mBefore = mEdit.mState;
 
   if (hasSelect()) {
-    if ((ch == '\t') && (mState.mSelectionStart.mLineNumber != mState.mSelectionEnd.mLineNumber)) {
+    if ((ch == '\t') && (mEdit.mState.mSelectionStart.mLineNumber != mEdit.mState.mSelectionEnd.mLineNumber)) {
       //{{{  tab insert into selection
-      auto start = mState.mSelectionStart;
-      auto end = mState.mSelectionEnd;
+      auto start = mEdit.mState.mSelectionStart;
+      auto end = mEdit.mState.mSelectionEnd;
       auto originalEnd = end;
 
       if (start > end)
         swap (start, end);
 
       start.mColumn = 0;
-      // end.mColumn = end.mGlyphs < mLines.size() ? mLines[end.mGlyphs].size() : 0;
+      // end.mColumn = end.mGlyphs < mInfo.mLines.size() ? mInfo.mLines[end.mGlyphs].size() : 0;
       if (end.mColumn == 0 && end.mLineNumber > 0)
         --end.mLineNumber;
-      if (end.mLineNumber >= (int)mLines.size())
-        end.mLineNumber = mLines.empty() ? 0 : (int)mLines.size() - 1;
+      if (end.mLineNumber >= (int)mInfo.mLines.size())
+        end.mLineNumber = mInfo.mLines.empty() ? 0 : (int)mInfo.mLines.size() - 1;
       end.mColumn = getLineMaxColumn (end.mLineNumber);
 
       //if (end.mColumn >= getLineMaxColumn(end.mGlyphs))
@@ -1056,7 +1045,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
       bool modified = false;
       for (int i = start.mLineNumber; i <= end.mLineNumber; i++) {
-        vector<sGlyph>& glyphs = mLines[i].mGlyphs;
+        vector<sGlyph>& glyphs = mInfo.mLines[i].mGlyphs;
         if (shift) {
           if (!glyphs.empty()) {
             if (glyphs.front().mChar == '\t') {
@@ -1064,7 +1053,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
               modified = true;
               }
             else {
-              for (int j = 0; j < mTabSize && !glyphs.empty() && glyphs.front().mChar == ' '; j++) {
+              for (int j = 0; j < mInfo.mTabSize && !glyphs.empty() && glyphs.front().mChar == ' '; j++) {
                 glyphs.erase (glyphs.begin());
                 modified = true;
                 }
@@ -1094,12 +1083,12 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
         undo.mAddedStart = start;
         undo.mAddedEnd = rangeEnd;
-        undo.mAfter = mState;
+        undo.mAfter = mEdit.mState;
 
-        mState.mSelectionStart = start;
-        mState.mSelectionEnd = end;
+        mEdit.mState.mSelectionStart = start;
+        mEdit.mState.mSelectionEnd = end;
         addUndo (undo);
-        mTextEdited = true;
+        mInfo.mTextEdited = true;
 
         ensureCursorVisible();
         }
@@ -1111,8 +1100,8 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
     else {
       //{{{  deleteSelection before insert
       undo.mRemoved = getSelectedText();
-      undo.mRemovedStart = mState.mSelectionStart;
-      undo.mRemovedEnd = mState.mSelectionEnd;
+      undo.mRemovedStart = mEdit.mState.mSelectionStart;
+      undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
       deleteSelection();
       }
       //}}}
@@ -1121,14 +1110,14 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   auto position = getCursorPosition();
   undo.mAddedStart = position;
 
-  assert (!mLines.empty());
+  assert (!mInfo.mLines.empty());
   if (ch == '\n') {
     //{{{  enter carraigeReturn
     insertLine (position.mLineNumber + 1);
-    vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
-    vector<sGlyph>& newLine = mLines[position.mLineNumber+1].mGlyphs;
+    vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+    vector<sGlyph>& newLine = mInfo.mLines[position.mLineNumber+1].mGlyphs;
 
-    if (mLanguage.mAutoIndentation)
+    if (mOptions.mLanguage.mAutoIndentation)
       for (size_t it = 0; (it < glyphs.size()) && isascii (glyphs[it].mChar) && isblank (glyphs[it].mChar); ++it)
         newLine.push_back (glyphs[it]);
 
@@ -1149,11 +1138,11 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
     int e = imTextCharToUtf8 (buf, 7, ch);
     if (e > 0) {
       buf[e] = '\0';
-      vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
+      vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
       int cindex = getCharacterIndex (position);
-      if (mOverwrite && (cindex < (int)glyphs.size())) {
+      if (mOptions.mOverwrite && (cindex < (int)glyphs.size())) {
         auto d = utf8CharLength (glyphs[cindex].mChar);
-        undo.mRemovedStart = mState.mCursorPosition;
+        undo.mRemovedStart = mEdit.mState.mCursorPosition;
         undo.mRemovedEnd = sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, cindex + d));
         while ((d-- > 0) && (cindex < (int)glyphs.size())) {
           undo.mRemoved += glyphs[cindex].mChar;
@@ -1171,10 +1160,10 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       return;
     }
 
-  mTextEdited = true;
+  mInfo.mTextEdited = true;
 
   undo.mAddedEnd = getCursorPosition();
-  undo.mAfter = mState;
+  undo.mAfter = mEdit.mState;
   addUndo (undo);
 
   colorize (position.mLineNumber - 1, 3);
@@ -1185,17 +1174,17 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 // fold
 //{{{
 void cTextEdit::openFold() {
-  if (mShowFolds)
-    if (mLines[mState.mCursorPosition.mLineNumber].mFoldBegin)
-      mLines[mState.mCursorPosition.mLineNumber].mFoldOpen = true;
+  if (mOptions.mShowFolds)
+    if (mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFoldBegin)
+      mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFoldOpen = true;
   }
 //}}}
 //{{{
 void cTextEdit::closeFold() {
 
-  if (mShowFolds) {
-    int lineNumber = mState.mCursorPosition.mLineNumber;
-    sLine& line = mLines[lineNumber];
+  if (mOptions.mShowFolds) {
+    int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
+    sLine& line = mInfo.mLines[lineNumber];
 
     if (line.mFoldBegin && line.mFoldOpen) // if at open foldBegin, close it
       line.mFoldOpen = false;
@@ -1203,7 +1192,7 @@ void cTextEdit::closeFold() {
       // search back for this fold's foldBegin and close it
       // - !!! need to skip foldEnd foldBegin pairs !!!
       while (--lineNumber >= 0) {
-        line = mLines[lineNumber];
+        line = mInfo.mLines[lineNumber];
         if (line.mFoldBegin && line.mFoldOpen) {
           line.mFoldOpen = false;
           // !!!! set cursor position to lineNumber !!!
@@ -1215,6 +1204,18 @@ void cTextEdit::closeFold() {
   }
 //}}}
 //}}}
+
+//{{{
+void cTextEdit::drawWindow (const string& title) {
+// standalone Memory Editor window
+
+  mOpen = true;
+
+  ImGui::Begin (title.c_str(), &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
+  drawContents();
+  ImGui::End();
+  }
+//}}}
 //{{{
 void cTextEdit::drawContents() {
 // main ui handle io and draw routine
@@ -1225,8 +1226,8 @@ void cTextEdit::drawContents() {
   colorizeInternal();
 
   preRender();
-  mFoldLines.clear();
-  if (mShowFolds)
+  mInfo.mFoldLines.clear();
+  if (mOptions.mShowFolds)
     renderFold (0, true, true);
   else {
     for (int lineNumber = 0; lineNumber <= getMaxLineIndex(); lineNumber++)
@@ -1245,10 +1246,10 @@ void cTextEdit::drawContents() {
 //{{{
 bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
 
-  if (position.mLineNumber >= (int)mLines.size() || position.mColumn == 0)
+  if (position.mLineNumber >= (int)mInfo.mLines.size() || position.mColumn == 0)
     return true;
 
-  const vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
+  const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
   int cindex = getCharacterIndex (position);
   if (cindex >= (int)glyphs.size())
     return true;
@@ -1261,18 +1262,18 @@ bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
 //{{{
 int cTextEdit::getCharacterIndex (const sPosition& position) const {
 
-  if (position.mLineNumber >= (int)mLines.size()) {
+  if (position.mLineNumber >= (int)mInfo.mLines.size()) {
     cLog::log (LOGERROR, "cTextEdit::getCharacterIndex - lineNumber too big");
     return 0;
     }
 
-  const vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
+  const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
   int c = 0;
   int i = 0;
   for (; i < (int)glyphs.size() && (c < position.mColumn);) {
     if (glyphs[i].mChar == '\t')
-      c = (c / mTabSize) * mTabSize + mTabSize;
+      c = (c / mInfo.mTabSize) * mInfo.mTabSize + mInfo.mTabSize;
     else
       ++c;
     i += utf8CharLength (glyphs[i].mChar);
@@ -1285,10 +1286,10 @@ int cTextEdit::getCharacterIndex (const sPosition& position) const {
 int cTextEdit::getCharacterColumn (int lineNumber, int index) const {
 // handle tabs
 
-  if (lineNumber >= (int)mLines.size())
+  if (lineNumber >= (int)mInfo.mLines.size())
     return 0;
 
-  const vector<sGlyph>& glyphs = mLines[lineNumber].mGlyphs;
+  const vector<sGlyph>& glyphs = mInfo.mLines[lineNumber].mGlyphs;
 
   int col = 0;
   int i = 0;
@@ -1296,7 +1297,7 @@ int cTextEdit::getCharacterColumn (int lineNumber, int index) const {
     uint8_t c = glyphs[i].mChar;
     i += utf8CharLength (c);
     if (c == '\t')
-      col = (col / mTabSize) * mTabSize + mTabSize;
+      col = (col / mInfo.mTabSize) * mInfo.mTabSize + mInfo.mTabSize;
     else
       col++;
     }
@@ -1308,15 +1309,15 @@ int cTextEdit::getCharacterColumn (int lineNumber, int index) const {
 //{{{
 int cTextEdit::getLineMaxColumn (int row) const {
 
-  if (row >= (int)mLines.size())
+  if (row >= (int)mInfo.mLines.size())
     return 0;
 
-  const vector<sGlyph>& glyphs = mLines[row].mGlyphs;
+  const vector<sGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
   int col = 0;
   for (size_t i = 0; i < glyphs.size(); ) {
     uint8_t c = glyphs[i].mChar;
     if (c == '\t')
-      col = (col / mTabSize) * mTabSize + mTabSize;
+      col = (col / mInfo.mTabSize) * mInfo.mTabSize + mInfo.mTabSize;
     else
       col++;
     i += utf8CharLength (c);
@@ -1328,10 +1329,10 @@ int cTextEdit::getLineMaxColumn (int row) const {
 //{{{
 int cTextEdit::getLineCharacterCount (int row) const {
 
-  if (row >= (int)mLines.size())
+  if (row >= (int)mInfo.mLines.size())
     return 0;
 
-  const vector<sGlyph>& glyphs = mLines[row].mGlyphs;
+  const vector<sGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
   int c = 0;
   for (size_t i = 0; i < glyphs.size(); c++)
     i += utf8CharLength (glyphs[i].mChar);
@@ -1352,17 +1353,17 @@ string cTextEdit::getText (const sPosition& startPosition, const sPosition& endP
 
   size_t s = 0;
   for (size_t i = lstart; i < (size_t)lend; i++)
-    s += mLines[i].mGlyphs.size();
+    s += mInfo.mLines[i].mGlyphs.size();
 
   string result;
   result.reserve (s + s / 8);
 
   while (istart < iend || lstart < lend) {
-    if (lstart >= (int)mLines.size())
+    if (lstart >= (int)mInfo.mLines.size())
       break;
 
-    if (istart < (int)mLines[lstart].mGlyphs.size()) {
-      result += mLines[lstart].mGlyphs[istart].mChar;
+    if (istart < (int)mInfo.mLines[lstart].mGlyphs.size()) {
+      result += mInfo.mLines[lstart].mGlyphs[istart].mChar;
       istart++;
       }
     else {
@@ -1379,15 +1380,15 @@ string cTextEdit::getText (const sPosition& startPosition, const sPosition& endP
 ImU32 cTextEdit::getGlyphColor (const sGlyph& glyph) const {
 
   if (glyph.mComment)
-    return mPalette[(size_t)ePalette::Comment];
+    return mOptions.mPalette[(size_t)ePalette::Comment];
 
   if (glyph.mMultiLineComment)
-    return mPalette[(size_t)ePalette::MultiLineComment];
+    return mOptions.mPalette[(size_t)ePalette::MultiLineComment];
 
-  auto const color = mPalette[(size_t)glyph.mColorIndex];
+  auto const color = mOptions.mPalette[(size_t)glyph.mColorIndex];
 
   if (glyph.mPreProc) {
-    const auto ppcolor = mPalette[(size_t)ePalette::Preprocessor];
+    const auto ppcolor = mOptions.mPalette[(size_t)ePalette::Preprocessor];
     const int c0 = ((ppcolor & 0xff) + (color & 0xff)) / 2;
     const int c1 = (((ppcolor >> 8) & 0xff) + ((color >> 8) & 0xff)) / 2;
     const int c2 = (((ppcolor >> 16) & 0xff) + ((color >> 16) & 0xff)) / 2;
@@ -1402,9 +1403,9 @@ ImU32 cTextEdit::getGlyphColor (const sGlyph& glyph) const {
 //{{{
 string cTextEdit::getCurrentLineText() const {
 
-  int lineLength = getLineMaxColumn (mState.mCursorPosition.mLineNumber);
-  return getText (sPosition (mState.mCursorPosition.mLineNumber, 0),
-                  sPosition (mState.mCursorPosition.mLineNumber, lineLength));
+  int lineLength = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber);
+  return getText (sPosition (mEdit.mState.mCursorPosition.mLineNumber, 0),
+                  sPosition (mEdit.mState.mCursorPosition.mLineNumber, lineLength));
   }
 //}}}
 
@@ -1413,7 +1414,7 @@ string cTextEdit::getWordAt (const sPosition& position) const {
 
   string r;
   for (int i = getCharacterIndex (findWordStart (position)); i < getCharacterIndex (findWordEnd (position)); ++i)
-    r.push_back (mLines[position.mLineNumber].mGlyphs[i].mChar);
+    r.push_back (mInfo.mLines[position.mLineNumber].mGlyphs[i].mChar);
 
   return r;
   }
@@ -1428,13 +1429,13 @@ string cTextEdit::getWordUnderCursor() const {
 float cTextEdit::getTextWidth (const sPosition& position) const {
 // get textWidth to position
 
-  const vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
+  const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
   float distance = 0.f;
   int colIndex = getCharacterIndex (position);
   for (size_t i = 0; (i < glyphs.size()) && ((int)i < colIndex);) {
     if (glyphs[i].mChar == '\t') {
-      distance = (1.f + floor((1.f + distance) / (float(mTabSize) * mCharSize.x))) * (float(mTabSize) * mCharSize.x);
+      distance = (1.f + floor((1.f + distance) / (float(mInfo.mTabSize) * mContext.mCharSize.x))) * (float(mInfo.mTabSize) * mContext.mCharSize.x);
       ++i;
       }
     else {
@@ -1454,17 +1455,17 @@ float cTextEdit::getTextWidth (const sPosition& position) const {
 //{{{
 int cTextEdit::getPageNumLines() const {
   float height = ImGui::GetWindowHeight() - 20.f;
-  return (int)floor (height / mCharSize.y);
+  return (int)floor (height / mContext.mCharSize.y);
   }
 //}}}
 
 //{{{
 int cTextEdit::getMaxLineIndex() const {
 
-  if (mShowFolds)
-    return static_cast<int>(mFoldLines.size()-1);
+  if (mOptions.mShowFolds)
+    return static_cast<int>(mInfo.mFoldLines.size()-1);
   else
-    return static_cast<int>(mLines.size()-1);
+    return static_cast<int>(mInfo.mLines.size()-1);
   }
 //}}}
 //}}}
@@ -1472,8 +1473,8 @@ int cTextEdit::getMaxLineIndex() const {
 //{{{
 void cTextEdit::advance (sPosition& position) const {
 
-  if (position.mLineNumber < (int)mLines.size()) {
-    const vector<sGlyph>& glyphs = mLines[position.mLineNumber].mGlyphs;
+  if (position.mLineNumber < (int)mInfo.mLines.size()) {
+    const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
     int cindex = getCharacterIndex (position);
     if (cindex + 1 < (int)glyphs.size()) {
       auto delta = utf8CharLength (glyphs[cindex].mChar);
@@ -1494,11 +1495,11 @@ cTextEdit::sPosition cTextEdit::screenToPosition (const ImVec2& pos) const {
   ImVec2 local = pos - ImGui::GetCursorScreenPos();
 
   int columnCoord = 0;
-  int lineIndex = max (0, static_cast<int>(floor (local.y / mCharSize.y)));
+  int lineIndex = max (0, static_cast<int>(floor (local.y / mContext.mCharSize.y)));
 
   int lineNumber = lineIndexToNumber (lineIndex);
-  if ((lineNumber >= 0) && (lineNumber < (int)mLines.size())) {
-    const vector<sGlyph>& glyphs = mLines[lineNumber].mGlyphs;
+  if ((lineNumber >= 0) && (lineNumber < (int)mInfo.mLines.size())) {
+    const vector<sGlyph>& glyphs = mInfo.mLines[lineNumber].mGlyphs;
 
     int columnIndex = 0;
     float columnX = 0.f;
@@ -1507,12 +1508,12 @@ cTextEdit::sPosition cTextEdit::screenToPosition (const ImVec2& pos) const {
       if (glyphs[columnIndex].mChar == '\t') {
         float oldX = columnX;
         float newColumnX = (1.f + floor ((1.f + columnX) /
-                           (float(mTabSize) * mCharSize.x))) * (float(mTabSize) * mCharSize.x);
+                           (float(mInfo.mTabSize) * mContext.mCharSize.x))) * (float(mInfo.mTabSize) * mContext.mCharSize.x);
         columnWidth = newColumnX - oldX;
-        if (mGlyphsOffset + columnX + columnWidth * 0.5f > local.x)
+        if (mContext.mGlyphsOffset + columnX + columnWidth * 0.5f > local.x)
           break;
         columnX = newColumnX;
-        columnCoord = (columnCoord / mTabSize) * mTabSize + mTabSize;
+        columnCoord = (columnCoord / mInfo.mTabSize) * mInfo.mTabSize + mInfo.mTabSize;
         columnIndex++;
         }
 
@@ -1525,7 +1526,7 @@ cTextEdit::sPosition cTextEdit::screenToPosition (const ImVec2& pos) const {
         buf[i] = '\0';
 
         columnWidth = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize(), FLT_MAX, -1.f, buf).x;
-        if (mGlyphsOffset + columnX + columnWidth * 0.5f > local.x)
+        if (mContext.mGlyphsOffset + columnX + columnWidth * 0.5f > local.x)
           break;
 
         columnX += columnWidth;
@@ -1540,16 +1541,16 @@ cTextEdit::sPosition cTextEdit::screenToPosition (const ImVec2& pos) const {
 //{{{
 cTextEdit::sPosition cTextEdit::sanitizePosition (const sPosition& position) const {
 
-  if (position.mLineNumber >= static_cast<int>(mLines.size())) {
-    if (mLines.empty())
+  if (position.mLineNumber >= static_cast<int>(mInfo.mLines.size())) {
+    if (mInfo.mLines.empty())
       return sPosition (0,0);
     else
-      return sPosition (static_cast<int>(mLines.size())-1,
-                        getLineMaxColumn (static_cast<int>(mLines.size()-1)));
+      return sPosition (static_cast<int>(mInfo.mLines.size())-1,
+                        getLineMaxColumn (static_cast<int>(mInfo.mLines.size()-1)));
     }
   else
     return sPosition (position.mLineNumber,
-                      mLines.empty() ? 0 : min (position.mColumn, getLineMaxColumn (position.mLineNumber)));
+                      mInfo.mLines.empty() ? 0 : min (position.mColumn, getLineMaxColumn (position.mLineNumber)));
   }
 //}}}
 
@@ -1557,11 +1558,11 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (const sPosition& position) con
 //{{{
 int cTextEdit::lineIndexToNumber (int lineIndex) const {
 
-  if (!mShowFolds)
+  if (!mOptions.mShowFolds)
     return lineIndex;
 
-  if ((lineIndex >= 0) && (lineIndex < static_cast<int>(mFoldLines.size())))
-    return mFoldLines[lineIndex];
+  if ((lineIndex >= 0) && (lineIndex < static_cast<int>(mInfo.mFoldLines.size())))
+    return mInfo.mFoldLines[lineIndex];
 
   return -1;
   }
@@ -1569,21 +1570,21 @@ int cTextEdit::lineIndexToNumber (int lineIndex) const {
 //{{{
 int cTextEdit::lineNumberToIndex (int lineNumber) const {
 
-  if (!mShowFolds) // lineIndex is  lineNumber
+  if (!mOptions.mShowFolds) // lineIndex is  lineNumber
     return lineNumber;
 
-  if (mFoldLines.empty()) { // no entry for that index
+  if (mInfo.mFoldLines.empty()) { // no entry for that index
     cLog::log (LOGERROR, fmt::format ("lineNumberToIndex {} mFoldLines empty", lineNumber));
     return -1;
     }
 
-  auto it = find (mFoldLines.begin(), mFoldLines.end(), lineNumber);
-  if (it == mFoldLines.end()) {
+  auto it = find (mInfo.mFoldLines.begin(), mInfo.mFoldLines.end(), lineNumber);
+  if (it == mInfo.mFoldLines.end()) {
     cLog::log (LOGERROR, fmt::format ("lineNumberToIndex {} not found", lineNumber));
     return -1;
     }
   else
-    return int(it - mFoldLines.begin());
+    return int(it - mInfo.mFoldLines.begin());
   }
 //}}}
 
@@ -1592,10 +1593,10 @@ int cTextEdit::lineNumberToIndex (int lineNumber) const {
 cTextEdit::sPosition cTextEdit::findWordStart (const sPosition& from) const {
 
   sPosition at = from;
-  if (at.mLineNumber >= (int)mLines.size())
+  if (at.mLineNumber >= (int)mInfo.mLines.size())
     return at;
 
-  const vector<sGlyph>& glyphs = mLines[at.mLineNumber].mGlyphs;
+  const vector<sGlyph>& glyphs = mInfo.mLines[at.mLineNumber].mGlyphs;
   int cindex = getCharacterIndex (at);
 
   if (cindex >= (int)glyphs.size())
@@ -1625,10 +1626,10 @@ cTextEdit::sPosition cTextEdit::findWordStart (const sPosition& from) const {
 cTextEdit::sPosition cTextEdit::findWordEnd (const sPosition& from) const {
 
   sPosition at = from;
-  if (at.mLineNumber >= (int)mLines.size())
+  if (at.mLineNumber >= (int)mInfo.mLines.size())
     return at;
 
-  const vector<sGlyph>& glyphs = mLines[at.mLineNumber].mGlyphs;
+  const vector<sGlyph>& glyphs = mInfo.mLines[at.mLineNumber].mGlyphs;
   int cindex = getCharacterIndex (at);
 
   if (cindex >= (int)glyphs.size())
@@ -1658,7 +1659,7 @@ cTextEdit::sPosition cTextEdit::findWordEnd (const sPosition& from) const {
 cTextEdit::sPosition cTextEdit::findNextWord (const sPosition& from) const {
 
   sPosition at = from;
-  if (at.mLineNumber >= (int)mLines.size())
+  if (at.mLineNumber >= (int)mInfo.mLines.size())
     return at;
 
   // skip to the next non-word character
@@ -1666,19 +1667,19 @@ cTextEdit::sPosition cTextEdit::findNextWord (const sPosition& from) const {
   bool skip = false;
 
   int cindex = getCharacterIndex (from);
-  if (cindex < (int)mLines[at.mLineNumber].mGlyphs.size()) {
-    const vector<sGlyph>& glyphs = mLines[at.mLineNumber].mGlyphs;
+  if (cindex < (int)mInfo.mLines[at.mLineNumber].mGlyphs.size()) {
+    const vector<sGlyph>& glyphs = mInfo.mLines[at.mLineNumber].mGlyphs;
     isword = isalnum (glyphs[cindex].mChar);
     skip = isword;
     }
 
   while (!isword || skip) {
-    if (at.mLineNumber >= (int)mLines.size()) {
-      int l = max(0, (int)mLines.size() - 1);
+    if (at.mLineNumber >= (int)mInfo.mLines.size()) {
+      int l = max(0, (int)mInfo.mLines.size() - 1);
       return sPosition (l, getLineMaxColumn(l));
       }
 
-    const vector<sGlyph>& glyphs = mLines[at.mLineNumber].mGlyphs;
+    const vector<sGlyph>& glyphs = mInfo.mLines[at.mLineNumber].mGlyphs;
     if (cindex < (int)glyphs.size()) {
       isword = isalnum (glyphs[cindex].mChar);
 
@@ -1706,12 +1707,12 @@ cTextEdit::sPosition cTextEdit::findNextWord (const sPosition& from) const {
 //{{{
 void cTextEdit::moveUp (int amount) {
 
-  if (mLines.empty())
+  if (mInfo.mLines.empty())
     return;
 
-  sPosition position = mState.mCursorPosition;
+  sPosition position = mEdit.mState.mCursorPosition;
 
-  int lineNumber = mState.mCursorPosition.mLineNumber;
+  int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
   if (lineNumber == 0)
     return;
 
@@ -1719,12 +1720,12 @@ void cTextEdit::moveUp (int amount) {
   lineIndex = max (0, lineIndex - amount);
   lineNumber = lineIndexToNumber (lineIndex);
 
-  mState.mCursorPosition.mLineNumber = lineNumber;
+  mEdit.mState.mCursorPosition.mLineNumber = lineNumber;
 
-  if (mState.mCursorPosition != position) {
-    mInteractiveStart = mState.mCursorPosition;
-    mInteractiveEnd = mState.mCursorPosition;
-    setSelection (mInteractiveStart, mInteractiveEnd);
+  if (mEdit.mState.mCursorPosition != position) {
+    mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd);
 
     ensureCursorVisible();
     }
@@ -1733,23 +1734,23 @@ void cTextEdit::moveUp (int amount) {
 //{{{
 void cTextEdit::moveDown (int amount) {
 
-  if (mLines.empty())
+  if (mInfo.mLines.empty())
     return;
 
-  sPosition position = mState.mCursorPosition;
+  sPosition position = mEdit.mState.mCursorPosition;
 
-  int lineNumber = mState.mCursorPosition.mLineNumber;
+  int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
 
   int lineIndex = lineNumberToIndex (lineNumber);
   lineIndex = min (getMaxLineIndex(), lineIndex + amount);
   lineNumber = lineIndexToNumber (lineIndex);
 
-  mState.mCursorPosition.mLineNumber = lineNumber;
+  mEdit.mState.mCursorPosition.mLineNumber = lineNumber;
 
-  if (mState.mCursorPosition != position) {
-    mInteractiveStart = mState.mCursorPosition;
-    mInteractiveEnd = mState.mCursorPosition;
-    setSelection (mInteractiveStart, mInteractiveEnd);
+  if (mEdit.mState.mCursorPosition != position) {
+    mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd);
 
     ensureCursorVisible();
     }
@@ -1762,12 +1763,12 @@ vector<cTextEdit::sGlyph>& cTextEdit::insertLine (int index) {
 
   assert (!mReadOnly);
 
-  sLine& result = *mLines.insert (mLines.begin() + index, vector<sGlyph>());
+  sLine& result = *mInfo.mLines.insert (mInfo.mLines.begin() + index, vector<sGlyph>());
 
   map<int,string> etmp;
-  for (auto& marker : mMarkers)
+  for (auto& marker : mOptions.mMarkers)
     etmp.insert (map<int,string>::value_type (marker.first >= index ? marker.first + 1 : marker.first, marker.second));
-  mMarkers = move (etmp);
+  mOptions.mMarkers = move (etmp);
 
   return result.mGlyphs;
   }
@@ -1781,16 +1782,16 @@ int cTextEdit::insertTextAt (sPosition& where, const char* value) {
   int totalLines = 0;
 
   while (*value != '\0') {
-    assert(!mLines.empty());
+    assert(!mInfo.mLines.empty());
 
     if (*value == '\r') {
       // skip
       ++value;
       }
     else if (*value == '\n') {
-      if (cindex < (int)mLines[where.mLineNumber].mGlyphs.size()) {
+      if (cindex < (int)mInfo.mLines[where.mLineNumber].mGlyphs.size()) {
         vector <sGlyph>& newLine = insertLine (where.mLineNumber + 1);
-        vector <sGlyph>& line = mLines[where.mLineNumber].mGlyphs;
+        vector <sGlyph>& line = mInfo.mLines[where.mLineNumber].mGlyphs;
         newLine.insert (newLine.begin(), line.begin() + cindex, line.end());
         line.erase (line.begin() + cindex, line.end());
         }
@@ -1805,14 +1806,14 @@ int cTextEdit::insertTextAt (sPosition& where, const char* value) {
       }
 
     else {
-      vector <sGlyph>& glyphs = mLines[where.mLineNumber].mGlyphs;
+      vector <sGlyph>& glyphs = mInfo.mLines[where.mLineNumber].mGlyphs;
       auto d = utf8CharLength (*value);
       while (d-- > 0 && *value != '\0')
         glyphs.insert (glyphs.begin() + cindex++, sGlyph (*value++, ePalette::Default));
       ++where.mColumn;
       }
 
-    mTextEdited = true;
+    mInfo.mTextEdited = true;
     }
 
   return totalLines;
@@ -1825,7 +1826,7 @@ void cTextEdit::insertText (const char* value) {
     return;
 
   sPosition position = getCursorPosition();
-  sPosition startPosition = min (position, mState.mSelectionStart);
+  sPosition startPosition = min (position, mEdit.mState.mSelectionStart);
 
   int totalLines = position.mLineNumber - startPosition.mLineNumber;
   totalLines += insertTextAt (position, value);
@@ -1843,42 +1844,42 @@ void cTextEdit::removeLine (int startPosition, int endPosition) {
 
   assert (!mReadOnly);
   assert (endPosition >= startPosition);
-  assert (int(mLines.size()) > endPosition - startPosition);
+  assert (int(mInfo.mLines.size()) > endPosition - startPosition);
 
   map<int,string> etmp;
-  for (auto& marker : mMarkers) {
+  for (auto& marker : mOptions.mMarkers) {
     map<int,string>::value_type e((marker.first >= startPosition) ? marker.first - 1 : marker.first, marker.second);
     if ((e.first >= startPosition) && (e.first <= endPosition))
       continue;
     etmp.insert (e);
     }
-  mMarkers = move (etmp);
+  mOptions.mMarkers = move (etmp);
 
-  mLines.erase (mLines.begin() + startPosition, mLines.begin() + endPosition);
-  assert (!mLines.empty());
+  mInfo.mLines.erase (mInfo.mLines.begin() + startPosition, mInfo.mLines.begin() + endPosition);
+  assert (!mInfo.mLines.empty());
 
-  mTextEdited = true;
+  mInfo.mTextEdited = true;
   }
 //}}}
 //{{{
 void cTextEdit::removeLine (int index) {
 
   assert(!mReadOnly);
-  assert(mLines.size() > 1);
+  assert(mInfo.mLines.size() > 1);
 
   map<int,string> etmp;
-  for (auto& marker : mMarkers) {
+  for (auto& marker : mOptions.mMarkers) {
     map<int,string>::value_type e(marker.first > index ? marker.first - 1 : marker.first, marker.second);
     if (e.first - 1 == index)
       continue;
     etmp.insert (e);
     }
-  mMarkers = move (etmp);
+  mOptions.mMarkers = move (etmp);
 
-  mLines.erase (mLines.begin() + index);
-  assert (!mLines.empty());
+  mInfo.mLines.erase (mInfo.mLines.begin() + index);
+  assert (!mInfo.mLines.empty());
 
-  mTextEdited = true;
+  mInfo.mTextEdited = true;
   }
 //}}}
 //{{{
@@ -1895,7 +1896,7 @@ void cTextEdit::deleteRange (const sPosition& startPosition, const sPosition& en
   auto start = getCharacterIndex (startPosition);
   auto end = getCharacterIndex (endPosition);
   if (startPosition.mLineNumber == endPosition.mLineNumber) {
-    vector<sGlyph>& glyphs = mLines[startPosition.mLineNumber].mGlyphs;
+    vector<sGlyph>& glyphs = mInfo.mLines[startPosition.mLineNumber].mGlyphs;
     int  n = getLineMaxColumn (startPosition.mLineNumber);
     if (endPosition.mColumn >= n)
       glyphs.erase (glyphs.begin() + start, glyphs.end());
@@ -1904,8 +1905,8 @@ void cTextEdit::deleteRange (const sPosition& startPosition, const sPosition& en
     }
 
   else {
-    vector<sGlyph>& firstLine = mLines[startPosition.mLineNumber].mGlyphs;
-    vector<sGlyph>& lastLine = mLines[endPosition.mLineNumber].mGlyphs;
+    vector<sGlyph>& firstLine = mInfo.mLines[startPosition.mLineNumber].mGlyphs;
+    vector<sGlyph>& lastLine = mInfo.mLines[endPosition.mLineNumber].mGlyphs;
 
     firstLine.erase (firstLine.begin() + start, firstLine.end());
     lastLine.erase (lastLine.begin(), lastLine.begin() + end);
@@ -1917,7 +1918,7 @@ void cTextEdit::deleteRange (const sPosition& startPosition, const sPosition& en
       removeLine (startPosition.mLineNumber + 1, endPosition.mLineNumber + 1);
     }
 
-  mTextEdited = true;
+  mInfo.mTextEdited = true;
   }
 //}}}
 
@@ -1933,9 +1934,9 @@ void cTextEdit::addUndo (sUndo& value) {
   //  value.mAfter.mCursorPosition.mGlyphs, value.mAfter.mCursorPosition.mColumn
   //  );
 
-  mUndoBuffer.resize ((size_t)(mUndoIndex + 1));
-  mUndoBuffer.back() = value;
-  ++mUndoIndex;
+  mUndoList.mUndoBuffer.resize ((size_t)(mUndoList.mUndoIndex + 1));
+  mUndoList.mUndoBuffer.back() = value;
+  ++mUndoList.mUndoIndex;
   }
 //}}}
 
@@ -1943,29 +1944,29 @@ void cTextEdit::addUndo (sUndo& value) {
 //{{{
 void cTextEdit::colorize (int fromLine, int lines) {
 
-  int toLine = lines == -1 ? (int)mLines.size() : min((int)mLines.size(), fromLine + lines);
+  int toLine = lines == -1 ? (int)mInfo.mLines.size() : min((int)mInfo.mLines.size(), fromLine + lines);
 
-  mColorRangeMin = min (mColorRangeMin, fromLine);
-  mColorRangeMax = max (mColorRangeMax, toLine);
-  mColorRangeMin = max (0, mColorRangeMin);
-  mColorRangeMax = max (mColorRangeMin, mColorRangeMax);
+  mEdit.mColorRangeMin = min (mEdit.mColorRangeMin, fromLine);
+  mEdit.mColorRangeMax = max (mEdit.mColorRangeMax, toLine);
+  mEdit.mColorRangeMin = max (0, mEdit.mColorRangeMin);
+  mEdit.mColorRangeMax = max (mEdit.mColorRangeMin, mEdit.mColorRangeMax);
 
-  mCheckComments = true;
+  mOptions.mCheckComments = true;
   }
 //}}}
 //{{{
 void cTextEdit::colorizeRange (int fromLine, int toLine) {
 
-  if (mLines.empty() || fromLine >= toLine)
+  if (mInfo.mLines.empty() || fromLine >= toLine)
     return;
 
   string buffer;
   cmatch results;
   string id;
 
-  int endLine = max(0, min((int)mLines.size(), toLine));
+  int endLine = max(0, min((int)mInfo.mLines.size(), toLine));
   for (int i = fromLine; i < endLine; ++i) {
-    vector<sGlyph>& glyphs = mLines[i].mGlyphs;
+    vector<sGlyph>& glyphs = mInfo.mLines[i].mGlyphs;
     if (glyphs.empty())
       continue;
 
@@ -1985,14 +1986,14 @@ void cTextEdit::colorizeRange (int fromLine, int toLine) {
       ePalette token_color = ePalette::Default;
 
       bool hasTokenizeResult = false;
-      if (mLanguage.mTokenize != nullptr) {
-        if (mLanguage.mTokenize (first, last, token_begin, token_end, token_color))
+      if (mOptions.mLanguage.mTokenize != nullptr) {
+        if (mOptions.mLanguage.mTokenize (first, last, token_begin, token_end, token_color))
           hasTokenizeResult = true;
         }
 
       if (hasTokenizeResult == false) {
         //printf("using regex for %.*s\n", first + 10 < last ? 10 : int(last - first), first);
-        for (auto& p : mRegexList) {
+        for (auto& p : mOptions.mRegexList) {
           if (regex_search (first, last, results, p.first, regex_constants::match_continuous)) {
             hasTokenizeResult = true;
             auto& v = *results.begin();
@@ -2013,19 +2014,19 @@ void cTextEdit::colorizeRange (int fromLine, int toLine) {
           id.assign (token_begin, token_end);
 
           // almost all languages use lower case to specify keywords, so shouldn't this use ::tolower ?
-          if (!mLanguage.mCaseSensitive)
+          if (!mOptions.mLanguage.mCaseSensitive)
             transform (id.begin(), id.end(), id.begin(),
                        [](uint8_t ch) { return static_cast<uint8_t>(std::toupper (ch)); });
 
           if (!glyphs[first - bufferBegin].mPreProc) {
-            if (mLanguage.mKeywords.count (id) != 0)
+            if (mOptions.mLanguage.mKeywords.count (id) != 0)
               token_color = ePalette::Keyword;
-            else if (mLanguage.mIdents.count (id) != 0)
+            else if (mOptions.mLanguage.mIdents.count (id) != 0)
               token_color = ePalette::KnownIdent;
-            else if (mLanguage.mPreprocIdents.count (id) != 0)
+            else if (mOptions.mLanguage.mPreprocIdents.count (id) != 0)
               token_color = ePalette::PreprocIdent;
             }
-          else if (mLanguage.mPreprocIdents.count (id) != 0)
+          else if (mOptions.mLanguage.mPreprocIdents.count (id) != 0)
             token_color = ePalette::PreprocIdent;
           }
 
@@ -2041,11 +2042,11 @@ void cTextEdit::colorizeRange (int fromLine, int toLine) {
 //{{{
 void cTextEdit::colorizeInternal() {
 
-  if (mLines.empty())
+  if (mInfo.mLines.empty())
     return;
 
-  if (mCheckComments) {
-    int endLine = (int)mLines.size();
+  if (mOptions.mCheckComments) {
+    int endLine = (int)mInfo.mLines.size();
     int endIndex = 0;
     int commentStartLine = endLine;
     int commentStartIndex = endIndex;
@@ -2058,7 +2059,7 @@ void cTextEdit::colorizeInternal() {
     int currentIndex = 0;
 
     while (currentLine < endLine || currentIndex < endIndex) {
-      vector<sGlyph>& line = mLines[currentLine].mGlyphs;
+      vector<sGlyph>& line = mInfo.mLines[currentLine].mGlyphs;
       if (currentIndex == 0 && !concatenate) {
         withinSingleLineComment = false;
         withinPreproc = false;
@@ -2069,7 +2070,7 @@ void cTextEdit::colorizeInternal() {
       if (!line.empty()) {
         sGlyph& g = line[currentIndex];
         uint8_t c = g.mChar;
-        if (c != mLanguage.mPreprocChar && !isspace(c))
+        if (c != mOptions.mLanguage.mPreprocChar && !isspace(c))
           firstChar = false;
         if ((currentIndex == (int)line.size() - 1) && (line[line.size() - 1].mChar == '\\'))
           concatenate = true;
@@ -2096,7 +2097,7 @@ void cTextEdit::colorizeInternal() {
             }
           }
         else {
-          if (firstChar && c == mLanguage.mPreprocChar)
+          if (firstChar && c == mOptions.mLanguage.mPreprocChar)
             withinPreproc = true;
 
           if (c == '\"') {
@@ -2106,8 +2107,8 @@ void cTextEdit::colorizeInternal() {
           else {
             auto pred = [](const char& a, const sGlyph& b) { return a == b.mChar; };
             auto from = line.begin() + currentIndex;
-            string& startString = mLanguage.mCommentStart;
-            string& singleStartString = mLanguage.mSingleLineComment;
+            string& startString = mOptions.mLanguage.mCommentStart;
+            string& singleStartString = mOptions.mLanguage.mSingleLineComment;
 
             if ((singleStartString.size() > 0) &&
                 (currentIndex + singleStartString.size() <= line.size()) &&
@@ -2127,7 +2128,7 @@ void cTextEdit::colorizeInternal() {
             line[currentIndex].mMultiLineComment = inComment;
             line[currentIndex].mComment = withinSingleLineComment;
 
-            string& endString = mLanguage.mCommentEnd;
+            string& endString = mOptions.mLanguage.mCommentEnd;
             if (currentIndex + 1 >= (int)endString.size() &&
               equals (endString.begin(), endString.end(), from + 1 - endString.size(), from + 1, pred)) {
               commentStartIndex = endIndex;
@@ -2148,18 +2149,18 @@ void cTextEdit::colorizeInternal() {
         ++currentLine;
         }
       }
-    mCheckComments = false;
+    mOptions.mCheckComments = false;
     }
 
-  if (mColorRangeMin < mColorRangeMax) {
-    const int increment = (mLanguage.mTokenize == nullptr) ? 10 : 10000;
-    const int to = min(mColorRangeMin + increment, mColorRangeMax);
-    colorizeRange (mColorRangeMin, to);
-    mColorRangeMin = to;
+  if (mEdit.mColorRangeMin < mEdit.mColorRangeMax) {
+    const int increment = (mOptions.mLanguage.mTokenize == nullptr) ? 10 : 10000;
+    const int to = min(mEdit.mColorRangeMin + increment, mEdit.mColorRangeMax);
+    colorizeRange (mEdit.mColorRangeMin, to);
+    mEdit.mColorRangeMin = to;
 
-    if (mColorRangeMax == mColorRangeMin) {
-      mColorRangeMin = numeric_limits<int>::max();
-      mColorRangeMax = 0;
+    if (mEdit.mColorRangeMax == mEdit.mColorRangeMin) {
+      mEdit.mColorRangeMin = numeric_limits<int>::max();
+      mEdit.mColorRangeMax = 0;
       }
     return;
     }
@@ -2172,24 +2173,24 @@ void cTextEdit::ensureCursorVisible() {
   sPosition position = getCursorPosition();
   int lineIndex = lineNumberToIndex (position.mLineNumber);
 
-  int topIndex = static_cast<int>(floor (ImGui::GetScrollY() / mCharSize.y));
+  int topIndex = static_cast<int>(floor (ImGui::GetScrollY() / mContext.mCharSize.y));
   int botIndex = min (getMaxLineIndex(),
-                     static_cast<int>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mCharSize.y)));
+                     static_cast<int>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mContext.mCharSize.y)));
   if (lineIndex <= topIndex+1) {
     cLog::log (LOGINFO, fmt::format ("top:{} line:{}", topIndex, lineIndex));
-    ImGui::SetScrollY (max (0.f, (lineIndex - 1) * mCharSize.y));
+    ImGui::SetScrollY (max (0.f, (lineIndex - 1) * mContext.mCharSize.y));
     }
   else if (lineIndex >= botIndex-7) {
     cLog::log (LOGINFO, fmt::format ("bot:{} line:{}", botIndex, lineIndex));
-    ImGui::SetScrollY (max (0.f, (lineIndex+7) * mCharSize.y) - ImGui::GetWindowHeight());
+    ImGui::SetScrollY (max (0.f, (lineIndex+7) * mContext.mCharSize.y) - ImGui::GetWindowHeight());
     }
   else
     cLog::log (LOGINFO, fmt::format ("top:{} bot:{} line:{}", topIndex, botIndex, lineIndex));
 
   //{{{  left right
   //float textWidth = getTextWidth (position);
-  //int leftColumn = (int)floor(ImGui::GetScrollX() / mCharSize.x);
-  //int rightColumn = (int)ceil((ImGui::GetScrollX() + ImGui::GetWindowWidth()) / mCharSize.x);
+  //int leftColumn = (int)floor(ImGui::GetScrollX() / mContext.mCharSize.x);
+  //int rightColumn = (int)ceil((ImGui::GetScrollX() + ImGui::GetWindowWidth()) / mContext.mCharSize.x);
   //if (mGlyphsOffset + textWidth < leftColumn + 4) {
     //cLog::log (LOGINFO, "left");
     //ImGui::SetScrollX (max (0.f, mGlyphsOffset + textWidth - 4));
@@ -2207,21 +2208,21 @@ void cTextEdit::ensureCursorVisible() {
 void cTextEdit::parseFolds() {
 // parse beginFold and endFold markers, set simple flags
 
-  for (auto& line : mLines) {
+  for (auto& line : mInfo.mLines) {
     string text;
     for (auto& glyph : line.mGlyphs)
       text += glyph.mChar;
 
     // look for foldBegin text
-    size_t foldBeginIndent = text.find (mLanguage.mFoldBeginMarker);
+    size_t foldBeginIndent = text.find (mOptions.mLanguage.mFoldBeginMarker);
     line.mFoldBegin = (foldBeginIndent != string::npos);
 
     if (line.mFoldBegin) {
       // found foldBegin text, find ident
       line.mIndent = static_cast<uint16_t>(foldBeginIndent);
       // has text after the foldBeginMarker
-      line.mHasComment = (text.size() != (foldBeginIndent + mLanguage.mFoldBeginMarker.size()));
-      mHasFolds = true;
+      line.mHasComment = (text.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
+      mInfo.mHasFolds = true;
       }
     else {
       // normal line, find indent, find comment
@@ -2232,11 +2233,11 @@ void cTextEdit::parseFolds() {
         line.mIndent = 0;
 
       // has "//" style comment as first text in line
-      line.mHasComment = (text.find (mLanguage.mSingleLineComment, indent) != string::npos);
+      line.mHasComment = (text.find (mOptions.mLanguage.mSingleLineComment, indent) != string::npos);
       }
 
     // look for foldEnd text
-    size_t foldEndIndent = text.find (mLanguage.mFoldEndMarker);
+    size_t foldEndIndent = text.find (mOptions.mLanguage.mFoldEndMarker);
     line.mFoldEnd = (foldEndIndent != string::npos);
 
     // init fields set by updateFolds
@@ -2244,7 +2245,7 @@ void cTextEdit::parseFolds() {
     line.mFoldTitleLineNumber = -1;
     }
 
-  mShowFolds = mHasFolds;
+  mOptions.mShowFolds = mInfo.mHasFolds;
   }
 //}}}
 
@@ -2267,9 +2268,9 @@ void cTextEdit::handleMouseInputs() {
       if (leftTripleClick) {
         //{{{  left mouse tripleClick
         if (!ctrl) {
-          mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenToPosition (ImGui::GetMousePos());
-          mSelection = eSelection::Line;
-          setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
+          mEdit.mState.mCursorPosition = mEdit.mInteractiveStart = mEdit.mInteractiveEnd = screenToPosition (ImGui::GetMousePos());
+          mEdit.mSelection = eSelection::Line;
+          setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
           }
         mLastClick = -1.f;
         }
@@ -2277,27 +2278,27 @@ void cTextEdit::handleMouseInputs() {
       else if (leftDoubleClick) {
         //{{{  left mouse doubleClick
         if (!ctrl) {
-          mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = screenToPosition(ImGui::GetMousePos());
-          if (mSelection == eSelection::Line)
-            mSelection = eSelection::Normal;
+          mEdit.mState.mCursorPosition = mEdit.mInteractiveStart = mEdit.mInteractiveEnd = screenToPosition(ImGui::GetMousePos());
+          if (mEdit.mSelection == eSelection::Line)
+            mEdit.mSelection = eSelection::Normal;
           else
-            mSelection = eSelection::Word;
-          setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
+            mEdit.mSelection = eSelection::Word;
+          setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
           }
         mLastClick = static_cast<float>(ImGui::GetTime());
         }
         //}}}
       else if (leftSingleClick) {
         //{{{  left mouse sinngleClick
-        mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
-        mInteractiveStart = mState.mCursorPosition;
-        mInteractiveEnd = mState.mCursorPosition;
+        mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
+        mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+        mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
 
         if (ctrl)
-          mSelection = eSelection::Word;
+          mEdit.mSelection = eSelection::Word;
         else
-          mSelection = eSelection::Normal;
-        setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
+          mEdit.mSelection = eSelection::Normal;
+        setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
 
         mLastClick = static_cast<float>(ImGui::GetTime());
         }
@@ -2305,25 +2306,25 @@ void cTextEdit::handleMouseInputs() {
       else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
         //{{{  left mouse button dragging (=> update selection)
         io.WantCaptureMouse = true;
-        mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
-        mInteractiveEnd = mState.mCursorPosition;
-        setSelection (mInteractiveStart, mInteractiveEnd, mSelection);
+        mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
+        mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+        setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
         }
         //}}}
 
       if (righttSingleClick) {
         //{{{  right mouse right singleClick
-        if (mShowFolds) {
+        if (mOptions.mShowFolds) {
           // test cursor position
           sPosition position = screenToPosition (ImGui::GetMousePos());
-          if (mLines[position.mLineNumber].mFoldBegin) {
+          if (mInfo.mLines[position.mLineNumber].mFoldBegin) {
             // set cursor position
-            mState.mCursorPosition = position;
-            mInteractiveStart = position;
-            mInteractiveEnd = position;
+            mEdit.mState.mCursorPosition = position;
+            mEdit.mInteractiveStart = position;
+            mEdit.mInteractiveEnd = position;
 
             // open fold
-            mLines[position.mLineNumber].mFoldOpen ^= true;
+            mInfo.mLines[position.mLineNumber].mFoldOpen ^= true;
             }
           }
         };
@@ -2467,38 +2468,38 @@ void cTextEdit::handleKeyboardInputs() {
 void cTextEdit::preRender() {
 //  setup render context
 
-  mFont = ImGui::GetFont();
-  mFontSize = ImGui::GetFontSize();
-  mFontHalfSize = mFontSize/2.f;
-  mDrawList = ImGui::GetWindowDrawList();
-  mCursorScreenPos = ImGui::GetCursorScreenPos();
-  mFocused = ImGui::IsWindowFocused();
+  mContext.mFont = ImGui::GetFont();
+  mContext.mFontSize = ImGui::GetFontSize();
+  mContext.mFontHalfSize = mContext.mFontSize/2.f;
+  mContext.mDrawList = ImGui::GetWindowDrawList();
+  mContext.mCursorScreenPos = ImGui::GetCursorScreenPos();
+  mContext.mFocused = ImGui::IsWindowFocused();
 
   // update palette alpha from style
   for (uint8_t i = 0; i < (uint8_t)ePalette::Max; ++i) {
-    ImVec4 color = ImGui::ColorConvertU32ToFloat4 (mPaletteBase[i]);
+    ImVec4 color = ImGui::ColorConvertU32ToFloat4 (mOptions.mPaletteBase[i]);
     color.w *= ImGui::GetStyle().Alpha;
-    mPalette[i] = ImGui::ColorConvertFloat4ToU32 (color);
+    mOptions.mPalette[i] = ImGui::ColorConvertFloat4ToU32 (color);
     }
 
-  // calc character mCharSize
-  mCharSize = ImVec2 (mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, " ", nullptr, nullptr).x,
+  // calc character mContext.mCharSize
+  mContext.mCharSize = ImVec2 (mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, " ", nullptr, nullptr).x,
                       ImGui::GetTextLineHeightWithSpacing());
 
   // measure lineNumber width
-  mGlyphsOffset = kLeftTextMargin;
-  if (mShowLineNumbers) {
+  mContext.mGlyphsOffset = kLeftTextMargin;
+  if (mOptions.mShowLineNumbers) {
     char str[32];
-    if (mShowDebug) // get lineDebug width
+    if (mOptions.mShowDebug) // get lineDebug width
       snprintf (str, sizeof(str), "%4d%4d ",1,1);
     else // get lineNumber width
-      snprintf (str, sizeof(str), "%d ", (int)mLines.size());
-    mGlyphsOffset += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      snprintf (str, sizeof(str), "%d ", (int)mInfo.mLines.size());
+    mContext.mGlyphsOffset += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
     }
-  mMaxLineWidth = 0;
+  mContext.mMaxLineWidth = 0;
 
-  mLineBeginPos = mCursorScreenPos + ImVec2 (ImGui::GetScrollX(), 0.f);
-  mGlyphsPos = mLineBeginPos + ImVec2 (mGlyphsOffset, 0);
+  mContext.mLineBeginPos = mContext.mCursorScreenPos + ImVec2 (ImGui::GetScrollX(), 0.f);
+  mContext.mGlyphsPos = mContext.mLineBeginPos + ImVec2 (mContext.mGlyphsOffset, 0);
   }
 //}}}
 //{{{
@@ -2509,39 +2510,39 @@ void cTextEdit::renderGlyphs (const vector <sGlyph>& glyphs, bool forceColor, Im
   char* strPtr = str;
   char* strLastPtr = str + sizeof(str) - 1;
 
-  ImU32 color = glyphs.empty() ? mPalette[(size_t)ePalette::Default] : getGlyphColor (glyphs[0]);
+  ImU32 color = glyphs.empty() ? mOptions.mPalette[(size_t)ePalette::Default] : getGlyphColor (glyphs[0]);
 
   for (auto& glyph : glyphs) {
     ImU32 nextColor = getGlyphColor (glyph);
     if (((nextColor != color) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && (strPtr != str)) {
       // draw colored glyphs word
       *strPtr = 0;
-      mDrawList->AddText (mGlyphsPos, forceColor ? forcedColor : color, str);
-      mGlyphsPos.x += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      mContext.mDrawList->AddText (mContext.mGlyphsPos, forceColor ? forcedColor : color, str);
+      mContext.mGlyphsPos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
       strPtr = str;
 
       color = nextColor;
       }
 
     if (glyph.mChar == '\t') {
-      const ImVec2 arrowLeftPos = mGlyphsPos + ImVec2 (1.f, mFontHalfSize);
-      mGlyphsPos.x = (1.f + floor ((1.f + mGlyphsPos.x) / (mTabSize * mCharSize.x))) * (mTabSize * mCharSize.x);
-      if (mShowWhiteSpace) {
+      const ImVec2 arrowLeftPos = mContext.mGlyphsPos + ImVec2 (1.f, mContext.mFontHalfSize);
+      mContext.mGlyphsPos.x = (1.f + floor ((1.f + mContext.mGlyphsPos.x) / (mInfo.mTabSize * mContext.mCharSize.x))) * (mInfo.mTabSize * mContext.mCharSize.x);
+      if (mOptions.mShowWhiteSpace) {
         // add tab and draw arrow
-        const ImVec2 arrowRightPos = mGlyphsPos + ImVec2 (-1.f, mFontHalfSize);
-        mDrawList->AddLine (arrowLeftPos, arrowRightPos, mPalette[(size_t)ePalette::Tab]);
-        mDrawList->AddLine (arrowRightPos, arrowRightPos + ImVec2 (mFontSize * -0.2f, mFontSize * -0.2f),
-                            mPalette[(size_t)ePalette::Tab]);
-        mDrawList->AddLine (arrowRightPos, arrowRightPos + ImVec2 (mFontSize * -0.2f, mFontSize * 0.2f),
-                            mPalette[(size_t)ePalette::Tab]);
+        const ImVec2 arrowRightPos = mContext.mGlyphsPos + ImVec2 (-1.f, mContext.mFontHalfSize);
+        mContext.mDrawList->AddLine (arrowLeftPos, arrowRightPos,mOptions.mPalette[(size_t)ePalette::Tab]);
+        mContext.mDrawList->AddLine (arrowRightPos, arrowRightPos + ImVec2 (mContext.mFontSize * -0.2f, mContext.mFontSize * -0.2f),
+                            mOptions.mPalette[(size_t)ePalette::Tab]);
+        mContext.mDrawList->AddLine (arrowRightPos, arrowRightPos + ImVec2 (mContext.mFontSize * -0.2f, mContext.mFontSize * 0.2f),
+                            mOptions.mPalette[(size_t)ePalette::Tab]);
         }
       }
     else if (glyph.mChar == ' ') {
-      if (mShowWhiteSpace)
+      if (mOptions.mShowWhiteSpace)
         //  add space and draw circle
-        mDrawList->AddCircleFilled (mGlyphsPos + ImVec2(mCharSize.x/2.f, mFontHalfSize),
-                                    2.f, mPalette[(size_t)ePalette::WhiteSpace], 4);
-      mGlyphsPos.x += mCharSize.x;
+        mContext.mDrawList->AddCircleFilled (mContext.mGlyphsPos + ImVec2(mContext.mCharSize.x/2.f, mContext.mFontHalfSize),
+                                    2.f, mOptions.mPalette[(size_t)ePalette::WhiteSpace], 4);
+      mContext.mGlyphsPos.x += mContext.mCharSize.x;
       }
     else {
       // add char
@@ -2554,21 +2555,21 @@ void cTextEdit::renderGlyphs (const vector <sGlyph>& glyphs, bool forceColor, Im
   if (strPtr != str) {
     // draw remaining glyphs
     *strPtr = 0;
-    mDrawList->AddText (mGlyphsPos, forceColor ? forcedColor : color, str);
+    mContext.mDrawList->AddText (mContext.mGlyphsPos, forceColor ? forcedColor : color, str);
     }
   }
 //}}}
 //{{{
 void cTextEdit::renderLine (int lineNumber, int glyphsLineNumber) {
 
-  if (mShowFolds)
-    mFoldLines.push_back (lineNumber);
+  if (mOptions.mShowFolds)
+    mInfo.mFoldLines.push_back (lineNumber);
 
   // !!! implement simple off window cull here if too slow !!!
-  //if (((mLineBeginPos.y + mCharSize.y) > ImGui::GetScrollY()) &&
+  //if (((mLineBeginPos.y + mContext.mCharSize.y) > ImGui::GetScrollY()) &&
   //    (mLineBeginPos.y < (ImGui::GetScrollY() + ImGui::GetWindowHeight()))) {
-  mGlyphsPos.x = mCursorScreenPos.x + mGlyphsOffset;
-  float glyphsEnd = mGlyphsOffset + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber)));
+  mContext.mGlyphsPos.x = mContext.mCursorScreenPos.x + mContext.mGlyphsOffset;
+  float glyphsEnd = mContext.mGlyphsOffset + getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber)));
   //{{{  draw select background
   float xStart = -1.f;
   float xEnd = -1.f;
@@ -2576,26 +2577,26 @@ void cTextEdit::renderLine (int lineNumber, int glyphsLineNumber) {
   sPosition lineStartPosition (lineNumber, 0);
   sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
 
-  if (mState.mSelectionStart <= lineEndPosition)
-    xStart = mState.mSelectionStart > lineStartPosition ? getTextWidth (mState.mSelectionStart) : 0.f;
+  if (mEdit.mState.mSelectionStart <= lineEndPosition)
+    xStart = mEdit.mState.mSelectionStart > lineStartPosition ? getTextWidth (mEdit.mState.mSelectionStart) : 0.f;
 
-  if (mState.mSelectionEnd > lineStartPosition)
-    xEnd = getTextWidth (mState.mSelectionEnd < lineEndPosition ? mState.mSelectionEnd : lineEndPosition);
+  if (mEdit.mState.mSelectionEnd > lineStartPosition)
+    xEnd = getTextWidth (mEdit.mState.mSelectionEnd < lineEndPosition ? mEdit.mState.mSelectionEnd : lineEndPosition);
 
-  if (mState.mSelectionEnd.mLineNumber > static_cast<int>(lineNumber))
-    xEnd += mCharSize.x;
+  if (mEdit.mState.mSelectionEnd.mLineNumber > static_cast<int>(lineNumber))
+    xEnd += mContext.mCharSize.x;
 
   if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd))
-    mDrawList->AddRectFilled (mLineBeginPos + ImVec2 (mGlyphsOffset + xStart, 0.f),
-                              mLineBeginPos + ImVec2 (mGlyphsOffset + xEnd,  mCharSize.y),
-                              mPalette[(size_t)ePalette::Selection]);
+    mContext.mDrawList->AddRectFilled (mContext.mLineBeginPos + ImVec2 (mContext.mGlyphsOffset + xStart, 0.f),
+      mContext.mLineBeginPos + ImVec2 (mContext.mGlyphsOffset + xEnd,  mContext.mCharSize.y),
+                              mOptions.mPalette[(size_t)ePalette::Selection]);
   //}}}
   //{{{  draw marker background
-  auto markerIt = mMarkers.find (lineNumber + 1);
-  if (markerIt != mMarkers.end()) {
-    mDrawList->AddRectFilled (mLineBeginPos, mLineBeginPos + ImVec2 (glyphsEnd, mCharSize.y),
-                              mPalette[(size_t)ePalette::Marker]);
-    if (ImGui::IsMouseHoveringRect (mLineBeginPos, mLineBeginPos + ImVec2 (glyphsEnd, mCharSize.y))) {
+  auto markerIt = mOptions.mMarkers.find (lineNumber + 1);
+  if (markerIt != mOptions.mMarkers.end()) {
+    mContext.mDrawList->AddRectFilled (mContext.mLineBeginPos, mContext.mLineBeginPos + ImVec2 (glyphsEnd, mContext.mCharSize.y),
+      mOptions.mPalette[(size_t)ePalette::Marker]);
+    if (ImGui::IsMouseHoveringRect (mContext.mLineBeginPos, mContext.mLineBeginPos + ImVec2 (glyphsEnd, mContext.mCharSize.y))) {
       ImGui::BeginTooltip();
 
       ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.f,1.f,1.f, 1.f));
@@ -2609,25 +2610,25 @@ void cTextEdit::renderLine (int lineNumber, int glyphsLineNumber) {
     }
   //}}}
   //{{{  draw cursor line background
-  if (!hasSelect() && (lineNumber == mState.mCursorPosition.mLineNumber)) {
+  if (!hasSelect() && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
 
-    mDrawList->AddRectFilled (mLineBeginPos, mLineBeginPos + ImVec2 (glyphsEnd, mCharSize.y),
-                              mPalette[mFocused ? (size_t)ePalette::CurrentLineFill
+    mContext.mDrawList->AddRectFilled (mContext.mLineBeginPos, mContext.mLineBeginPos + ImVec2 (glyphsEnd, mContext.mCharSize.y),
+      mOptions.mPalette[mContext.mFocused ? (size_t)ePalette::CurrentLineFill
                                                 : (size_t)ePalette::CurrentLineFillInactive]);
 
-    mDrawList->AddRect (mLineBeginPos, mLineBeginPos + ImVec2 (glyphsEnd, mCharSize.y),
-                        mPalette[(size_t)ePalette::CurrentLineEdge], 1.f);
+    mContext.mDrawList->AddRect (mContext.mLineBeginPos, mContext.mLineBeginPos + ImVec2 (glyphsEnd, mContext.mCharSize.y),
+      mOptions.mPalette[(size_t)ePalette::CurrentLineEdge], 1.f);
     }
   //}}}
 
-  sLine& line = mLines[lineNumber];
-  if (mShowLineNumbers) {
-    if (mShowDebug) {
+  sLine& line = mInfo.mLines[lineNumber];
+  if (mOptions.mShowLineNumbers) {
+    if (mOptions.mShowDebug) {
       //{{{  draw debug, zeroBased, rightJustified
       char str[32];
       snprintf (str, sizeof(str), "%4d:%4d ", lineNumber, line.mFoldTitleLineNumber);
-      float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
-      mDrawList->AddText (mGlyphsPos - ImVec2 (strWidth,0), mPalette[(size_t)ePalette::LineNumber], str);
+      float strWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      mContext.mDrawList->AddText (mContext.mGlyphsPos - ImVec2 (strWidth,0), mOptions.mPalette[(size_t)ePalette::LineNumber], str);
       }
       //}}}
     else {
@@ -2635,17 +2636,17 @@ void cTextEdit::renderLine (int lineNumber, int glyphsLineNumber) {
       char str[32];
       snprintf (str, sizeof(str), "%d ", lineNumber+1);
 
-      float strWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
-      mDrawList->AddText (mGlyphsPos - ImVec2 (strWidth,0), mPalette[(size_t)ePalette::LineNumber], str);
+      float strWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      mContext.mDrawList->AddText (mContext.mGlyphsPos - ImVec2 (strWidth,0), mOptions.mPalette[(size_t)ePalette::LineNumber], str);
       }
       //}}}
     }
   vector<sGlyph>& glyphs = line.mGlyphs;
-  if (mShowFolds && line.mFoldBegin) {
+  if (mOptions.mShowFolds && line.mFoldBegin) {
     if (line.mFoldOpen) {
      //{{{  draw foldOpen prefix + glyphs
-     mDrawList->AddText (mGlyphsPos, mPalette[(size_t)ePalette::FoldBeginOpen], mLanguage.mFoldBeginOpen.c_str());
-     mGlyphsPos.x += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, mLanguage.mFoldBeginOpen.c_str(), nullptr, nullptr).x;
+      mContext.mDrawList->AddText (mContext.mGlyphsPos, mOptions.mPalette[(size_t)ePalette::FoldBeginOpen], mOptions.mLanguage.mFoldBeginOpen.c_str());
+      mContext.mGlyphsPos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, mOptions.mLanguage.mFoldBeginOpen.c_str(), nullptr, nullptr).x;
 
      renderGlyphs (glyphs, false, 0);
      }
@@ -2655,26 +2656,26 @@ void cTextEdit::renderLine (int lineNumber, int glyphsLineNumber) {
      string prefixString;
      for (uint8_t i = 0; i < line.mIndent; i++)
        prefixString += ' ';
-     prefixString += mLanguage.mFoldBeginClosed;
+     prefixString += mOptions.mLanguage.mFoldBeginClosed;
 
-     mDrawList->AddText (mGlyphsPos, mPalette[(size_t)ePalette::FoldBeginClosed], prefixString.c_str());
-     mGlyphsPos.x += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, prefixString.c_str(), nullptr, nullptr).x;
+     mContext.mDrawList->AddText (mContext.mGlyphsPos, mOptions.mPalette[(size_t)ePalette::FoldBeginClosed], prefixString.c_str());
+     mContext.mGlyphsPos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, prefixString.c_str(), nullptr, nullptr).x;
 
      // a closed fold with no comments may be using the first nonComment line in fold for glyphs
-     renderGlyphs (mLines[glyphsLineNumber].mGlyphs, true, mPalette[(size_t)ePalette::FoldBeginClosed]);
+     renderGlyphs (mInfo.mLines[glyphsLineNumber].mGlyphs, true, mOptions.mPalette[(size_t)ePalette::FoldBeginClosed]);
      }
      //}}}
     }
-  else if (mShowFolds && line.mFoldEnd) {
+  else if (mOptions.mShowFolds && line.mFoldEnd) {
     //{{{  draw foldEnd prefix, no glyphs
-    mDrawList->AddText (mGlyphsPos, mPalette[(size_t)ePalette::FoldEnd], mLanguage.mFoldEnd.c_str());
-    mGlyphsPos.x += mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, mLanguage.mFoldEnd.c_str(), nullptr, nullptr).x;
+    mContext.mDrawList->AddText (mContext.mGlyphsPos, mOptions.mPalette[(size_t)ePalette::FoldEnd], mOptions.mLanguage.mFoldEnd.c_str());
+    mContext.mGlyphsPos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, mOptions.mLanguage.mFoldEnd.c_str(), nullptr, nullptr).x;
     }
     //}}}
   else // just draw glyphs
     renderGlyphs (glyphs, false, 0);
 
-  if (mFocused && (lineNumber == mState.mCursorPosition.mLineNumber)) {
+  if (mContext.mFocused && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
     //{{{  draw character cursor
     // flash
     auto timeEnd = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
@@ -2685,56 +2686,56 @@ void cTextEdit::renderLine (int lineNumber, int glyphsLineNumber) {
 
       // cursor pos, width
       float cursorWidth = 2.f;
-      int cindex = getCharacterIndex (mState.mCursorPosition);
-      float cx = getTextWidth (mState.mCursorPosition);
+      int cindex = getCharacterIndex (mEdit.mState.mCursorPosition);
+      float cx = getTextWidth (mEdit.mState.mCursorPosition);
 
-      if (mOverwrite && (cindex < (int)glyphs.size())) {
+      if (mOptions.mOverwrite && (cindex < (int)glyphs.size())) {
         //{{{  widen overwrite cursor
         if (glyphs[cindex].mChar == '\t') {
-          float x = (1.f + floor((1.f + cx) / (float(mTabSize) * mCharSize.x))) * (float(mTabSize) * mCharSize.x);
+          float x = (1.f + floor((1.f + cx) / (float(mInfo.mTabSize) * mContext.mCharSize.x))) * (float(mInfo.mTabSize) * mContext.mCharSize.x);
           cursorWidth = x - cx;
           }
         else {
           char cursorBuf[2];
           cursorBuf[0] = glyphs[cindex].mChar;
           cursorBuf[1] = 0;
-          cursorWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, cursorBuf).x;
+          cursorWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, cursorBuf).x;
           }
         }
         //}}}
 
-      mDrawList->AddRectFilled ({mCursorScreenPos.x + mGlyphsOffset + cx -1.f, mLineBeginPos.y},
-                                {mCursorScreenPos.x + mGlyphsOffset + cx -1.f + cursorWidth, mLineBeginPos.y + mCharSize.y},
-                                mPalette[(size_t)ePalette::Cursor]);
+      mContext.mDrawList->AddRectFilled ({ mContext.mCursorScreenPos.x + mContext.mGlyphsOffset + cx -1.f, mContext.mLineBeginPos.y},
+       { mContext.mCursorScreenPos.x + mContext.mGlyphsOffset + cx -1.f + cursorWidth, mContext.mLineBeginPos.y + mContext.mCharSize.y},
+                                 mOptions.mPalette[(size_t)ePalette::Cursor]);
       }
     }
     //}}}
 
   // expand mMaxLineWidth with our maxWidth
-  mMaxLineWidth = max (mMaxLineWidth, glyphsEnd);
+  mContext.mMaxLineWidth = max (mContext.mMaxLineWidth, glyphsEnd);
 
   // set pos to start of next line
-  mLineBeginPos.y += mCharSize.y;
-  mGlyphsPos.y += mCharSize.y;
+  mContext.mLineBeginPos.y += mContext.mCharSize.y;
+  mContext.mGlyphsPos.y += mContext.mCharSize.y;
   }
 //}}}
 //{{{
 int cTextEdit::renderFold (int lineNumber, bool parentOpen, bool foldOpen) {
-// recursive traversal of mLines to produce mVisbleLines of folds
+// recursive traversal of mInfo.mLines to produce mVisbleLines of folds
 
   if (parentOpen) {
     // show foldBegin line
     // - if no foldBegin comment, search for first noComment line, !!!! assume next line for now !!!!
-    sLine& line = mLines[lineNumber];
+    sLine& line = mInfo.mLines[lineNumber];
     line.mFoldTitleLineNumber = line.mHasComment ? lineNumber : lineNumber + 1;
     renderLine (lineNumber, line.mFoldTitleLineNumber);
     }
 
   while (true) {
-    if (++lineNumber >= (int)mLines.size())
+    if (++lineNumber >= (int)mInfo.mLines.size())
       return lineNumber;
 
-    sLine& line = mLines[lineNumber];
+    sLine& line = mInfo.mLines[lineNumber];
     if (line.mFoldBegin)
       lineNumber = renderFold (lineNumber, foldOpen, line.mFoldOpen);
     else if (line.mFoldEnd) {
@@ -2754,16 +2755,16 @@ void cTextEdit::postRender() {
   if (ImGui::IsMousePosValid()) {
     string id = getWordAt (screenToPosition (ImGui::GetMousePos()));
     if (!id.empty()) {
-      auto identIt = mLanguage.mIdents.find (id);
-      if (identIt != mLanguage.mIdents.end()) {
+      auto identIt = mOptions.mLanguage.mIdents.find (id);
+      if (identIt != mOptions.mLanguage.mIdents.end()) {
         ImGui::BeginTooltip();
         ImGui::TextUnformatted (identIt->second.mDeclaration.c_str());
         ImGui::EndTooltip();
         }
 
       else {
-        auto preProcIdentIt = mLanguage.mPreprocIdents.find (id);
-        if (preProcIdentIt != mLanguage.mPreprocIdents.end()) {
+        auto preProcIdentIt = mOptions.mLanguage.mPreprocIdents.find (id);
+        if (preProcIdentIt != mOptions.mLanguage.mPreprocIdents.end()) {
           ImGui::BeginTooltip();
           ImGui::TextUnformatted (preProcIdentIt->second.mDeclaration.c_str());
           ImGui::EndTooltip();
@@ -2773,7 +2774,7 @@ void cTextEdit::postRender() {
     }
 
   // dummy button, sized to maximum width,height, sets scroll regions without drawing them
-  ImGui::Dummy ({ mMaxLineWidth, getMaxLineIndex() * mCharSize.y});
+  ImGui::Dummy ({ mContext.mMaxLineWidth, getMaxLineIndex() * mContext.mCharSize.y});
   }
 //}}}
 
@@ -2810,7 +2811,7 @@ void cTextEdit::sUndo::undo (cTextEdit* editor) {
     editor->colorize (mRemovedStart.mLineNumber - 1, mRemovedEnd.mLineNumber - mRemovedStart.mLineNumber + 2);
     }
 
-  editor->mState = mBefore;
+  editor->mEdit.mState = mBefore;
   editor->ensureCursorVisible();
   }
 //}}}
@@ -2828,7 +2829,7 @@ void cTextEdit::sUndo::redo (cTextEdit* editor) {
     editor->colorize (mAddedStart.mLineNumber - 1, mAddedEnd.mLineNumber - mAddedStart.mLineNumber + 1);
     }
 
-  editor->mState = mAfter;
+  editor->mEdit.mState = mAfter;
   editor->ensureCursorVisible();
   }
 //}}}

@@ -193,34 +193,34 @@ public:
   cTextEdit();
   ~cTextEdit() = default;
   //{{{  gets
-  bool isReadOnly() const { return mReadOnly; }
-  bool isOverwrite() const { return mOverwrite; }
+  bool isReadOnly() const { return mOptions.mReadOnly; }
+  bool isOverwrite() const { return mOptions.mOverwrite; }
 
-  bool isTextEdited() const { return mTextEdited; }
+  bool isTextEdited() const { return mInfo.mTextEdited; }
 
-  bool isShowFolds() const { return mShowFolds; }
-  bool isShowLineNumbers() const { return mShowLineNumbers; }
-  bool isShowDebug() const { return mShowDebug; }
-  bool isShowWhiteSpace() const { return mShowWhiteSpace; }
+  bool isShowFolds() const { return mOptions.mShowFolds; }
+  bool isShowLineNumbers() const { return mOptions.mShowLineNumbers; }
+  bool isShowDebug() const { return mOptions.mShowDebug; }
+  bool isShowWhiteSpace() const { return mOptions.mShowWhiteSpace; }
 
   // has
-  bool hasSelect() const { return mState.mSelectionEnd > mState.mSelectionStart; }
+  bool hasSelect() const { return mEdit.mState.mSelectionEnd > mEdit.mState.mSelectionStart; }
   bool hasClipboardText();
-  bool hasUndo() const { return !mReadOnly && mUndoIndex > 0; }
-  bool hasRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); }
-  bool hasTabs() const { return mHasTabs; }
-  bool hasFolds() const { return mHasFolds; }
-  bool hasCR() const { return mHasCR; }
+  bool hasUndo() const { return !mOptions.mReadOnly && mUndoList.mUndoIndex > 0; }
+  bool hasRedo() const { return !mOptions.mReadOnly && mUndoList.mUndoIndex < (int)mUndoList.mUndoBuffer.size(); }
+  bool hasTabs() const { return mInfo.mHasTabs; }
+  bool hasFolds() const { return mInfo.mHasFolds; }
+  bool hasCR() const { return mInfo.mHasCR; }
 
   // get
   std::string getTextString() const;
   std::vector<std::string> getTextStrings() const;
-  int getTextNumLines() const { return (int)mLines.size(); }
+  int getTextNumLines() const { return (int)mInfo.mLines.size(); }
 
-  uint32_t getTabSize() const { return mTabSize; }
-  sPosition getCursorPosition() const { return sanitizePosition (mState.mCursorPosition); }
+  uint32_t getTabSize() const { return mInfo.mTabSize; }
+  sPosition getCursorPosition() const { return sanitizePosition (mEdit.mState.mCursorPosition); }
 
-  const sLanguage& getLanguage() const { return mLanguage; }
+  const sLanguage& getLanguage() const { return mOptions.mLanguage; }
 
   std::string getDebugString() { return mDebugString; }
   //}}}
@@ -229,28 +229,28 @@ public:
   void setTextStrings (const std::vector<std::string>& lines);
 
   void setPalette (bool lightPalette);
-  void setMarkers (const std::map<int,std::string>& markers) { mMarkers = markers; }
+  void setMarkers (const std::map<int,std::string>& markers) { mOptions.mMarkers = markers; }
   void setLanguage (const sLanguage& language);
 
-  void setTabSize (int value) { mTabSize = std::max (0, std::min (32, value)); }
-  void setReadOnly (bool readOnly) { mReadOnly = readOnly; }
+  void setTabSize (int value) { mInfo.mTabSize = std::max (0, std::min (32, value)); }
+  void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
 
-  void setShowFolds (bool showFolds) { mShowFolds = showFolds; }
-  void setShowDebug (bool showDebug) { mShowDebug = showDebug; }
-  void setShowLineNumbers (bool showLineNumbers) { mShowLineNumbers = showLineNumbers; }
-  void setShowWhiteSpace (bool showWhiteSpace) { mShowWhiteSpace = showWhiteSpace; }
+  void setShowFolds (bool showFolds) { mOptions.mShowFolds = showFolds; }
+  void setShowDebug (bool showDebug) { mOptions.mShowDebug = showDebug; }
+  void setShowLineNumbers (bool showLineNumbers) { mOptions.mShowLineNumbers = showLineNumbers; }
+  void setShowWhiteSpace (bool showWhiteSpace) { mOptions.mShowWhiteSpace = showWhiteSpace; }
 
   void setCursorPosition (const sPosition& position);
   void setSelectionStart (const sPosition& position);
   void setSelectionEnd (const sPosition& position);
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
-  void toggleReadOnly() { mReadOnly = !mReadOnly; }
-  void toggleOverwrite() { mOverwrite = !mOverwrite; }
-  void toggleShowFolds() { mShowFolds = !mShowFolds; }
-  void toggleShowLineNumbers() { mShowLineNumbers = !mShowLineNumbers; }
-  void toggleShowDebug() { mShowDebug = !mShowDebug; }
-  void toggleShowWhiteSpace() { mShowWhiteSpace = !mShowWhiteSpace; }
+  void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
+  void toggleOverwrite() { mOptions.mOverwrite = !mOptions.mOverwrite; }
+  void toggleShowFolds() { mOptions.mShowFolds = !mOptions.mShowFolds; }
+  void toggleShowLineNumbers() { mOptions.mShowLineNumbers = !mOptions.mShowLineNumbers; }
+  void toggleShowDebug() { mOptions.mShowDebug = !mOptions.mShowDebug; }
+  void toggleShowWhiteSpace() { mOptions.mShowWhiteSpace = !mOptions.mShowWhiteSpace; }
   //}}}
   //{{{  actions
   // move
@@ -286,6 +286,8 @@ public:
 
   void enterCharacter (ImWchar ch, bool shift);
   //}}}
+
+  void drawWindow (const std::string& title);
   void drawContents();
 
 private:
@@ -324,11 +326,86 @@ private:
     };
   //}}}
 
+  //{{{
+  class cOptions {
+  public:
+    // modes
+    bool mOverwrite = false;
+    bool mReadOnly = false;
+    bool mCheckComments = true;
+
+    // shows
+    bool mShowFolds = false;
+    bool mShowLineNumbers = true;
+    bool mShowDebug = true;
+    bool mShowWhiteSpace = false;
+
+    sLanguage mLanguage;
+    tRegexList mRegexList;
+    std::map <int,std::string> mMarkers;
+
+    std::array <ImU32,(size_t)ePalette::Max> mPalette;
+    std::array <ImU32,(size_t)ePalette::Max> mPaletteBase;
+    };
+  //}}}
+  //{{{
+  class cInfo {
+  public:
+    std::string mFilename;
+    std::vector <sLine> mLines;
+    std::vector <int> mFoldLines;
+
+    bool mHasTabs = false;
+    int mTabSize = 4;
+    bool mHasFolds = false;
+    bool mHasCR = false;
+
+    bool mTextEdited = false;
+    };
+  //}}}
+  //{{{
+  class cContext {
+  public:
+    ImFont* mFont = nullptr;
+    float mFontSize = 0.f;
+    float mFontHalfSize = 0.f;
+    ImDrawList* mDrawList = nullptr;
+    ImVec2 mCursorScreenPos;
+    bool mFocused = false;
+
+    ImVec2 mCharSize;          // size of character grid, space wide, fontHeight high
+    float mGlyphsOffset = 0.f; // start offset of glyphs
+    float mMaxLineWidth = 0.f; // width of widest line, used to set scroll region
+    ImVec2 mLineBeginPos;      // start pos of line cursor bgnd
+    ImVec2 mGlyphsPos;         // running pos of glyphs
+    };
+  //}}}
+  //{{{
+  class cEdit {
+  public:
+    int mColorRangeMin = 0;
+    int mColorRangeMax = 0;
+    sPosition mInteractiveStart;
+    sPosition mInteractiveEnd;
+    eSelection mSelection = eSelection::Normal;
+
+    sCursorSelectionState mState;
+    };
+  //}}}
+
   typedef std::vector<sUndo> tUndoBuffer;
+  //{{{
+  class cUndoList {
+  public:
+    int mUndoIndex = 0;
+    tUndoBuffer mUndoBuffer;
+    };
+  //}}}
+
   //{{{  gets
   bool isOnWordBoundary (const sPosition& position) const;
 
-  std::string getSelectedText() const { return getText (mState.mSelectionStart, mState.mSelectionEnd); }
+  std::string getSelectedText() const { return getText (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd); }
 
   int getCharacterIndex (const sPosition& position) const;
   int getCharacterColumn (int lineNumber, int index) const;
@@ -400,64 +477,16 @@ private:
   void postRender();
 
   //{{{  vars
-  std::vector <sLine> mLines;
-  std::vector <int> mFoldLines;
-  bool mTextEdited;
+  bool mOpen = true;  // set false when DrawWindow() closed
 
-  // config
-  sLanguage mLanguage;
-  tRegexList mRegexList;
-  std::map <int,std::string> mMarkers;
-
-  std::array <ImU32,(size_t)ePalette::Max> mPalette;
-  std::array <ImU32,(size_t)ePalette::Max> mPaletteBase;
-
-  bool mHasTabs = false;
-  int mTabSize;
-  bool mHasFolds = false;
-  bool mHasCR = false;
-
-  // modes
-  bool mOverwrite;
-  bool mReadOnly;
-  bool mCheckComments;
-
-  // shows
-  bool mShowFolds;
-  bool mShowLineNumbers;
-  bool mShowDebug;
-  bool mShowWhiteSpace;
-
-  // range
-  int mColorRangeMin;
-  int mColorRangeMax;
-  sPosition mInteractiveStart;
-  sPosition mInteractiveEnd;
-  eSelection mSelection;
-
-  // undo
-  int mUndoIndex;
-  tUndoBuffer mUndoBuffer;
-
-  // internal
-  sCursorSelectionState mState;
+  cOptions mOptions;
+  cInfo mInfo;
+  cContext mContext;
+  cEdit mEdit;
+  cUndoList mUndoList;
 
   uint64_t mStartTime;
   float mLastClick;
   std::string mDebugString;
-  //}}}
-  //{{{  render context vars
-  ImFont* mFont = nullptr;
-  float mFontSize = 0.f;
-  float mFontHalfSize = 0.f;
-  ImDrawList* mDrawList = nullptr;
-  ImVec2 mCursorScreenPos;
-  bool mFocused = false;
-
-  ImVec2 mCharSize;          // size of character grid, space wide, fontHeight high
-  float mGlyphsOffset = 0.f; // start offset of glyphs
-  float mMaxLineWidth = 0.f; // width of widest line, used to set scroll region
-  ImVec2 mLineBeginPos;      // start pos of line cursor bgnd
-  ImVec2 mGlyphsPos;         // running pos of glyphs
   //}}}
   };
