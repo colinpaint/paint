@@ -53,12 +53,12 @@ private:
   class cInfo {
   public:
     //{{{
-    cInfo (uint8_t* memData, size_t memSize) 
+    cInfo (uint8_t* memData, size_t memSize)
       : mMemData(memData), mMemSize(memSize), mBaseAddress(kUndefinedAddress) {}
     //}}}
     //{{{
-    void setBaseAddress (size_t baseAddress) { 
-      mBaseAddress = baseAddress; 
+    void setBaseAddress (size_t baseAddress) {
+      mBaseAddress = baseAddress;
       }
     //}}}
 
