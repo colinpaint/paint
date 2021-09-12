@@ -467,7 +467,7 @@ private:
   void handleKeyboardInputs();
 
   void drawTop();
-  void drawGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
+  float drawGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
   void drawLine (int lineNumber, int beginFoldLineNumber);
   int drawFold (int lineNumber, bool parentOpen, bool foldOpen);
 
