@@ -214,7 +214,7 @@ void cMemEdit::moveLeft() {
 void cMemEdit::moveRight() {
 
   if (isValid (mEdit.mEditAddress)) {
-    if (mEdit.mEditAddress < mInfo.mMemSize - 1) {
+    if (mEdit.mEditAddress < mInfo.mMemSize - 2) {
       mEdit.mNextEditAddress = mEdit.mEditAddress + 1;
       mEdit.mEditTakeFocus = true;
       }
@@ -247,9 +247,14 @@ void cMemEdit::moveLineDown() {
 void cMemEdit::movePageUp() {
 
   if (isValid (mEdit.mEditAddress)) {
-    int lines = mContext.mNumPageLines;
-    while (lines-- > 0)
-      moveLineUp();
+    if (mEdit.mEditAddress >= (size_t)mOptions.mColumns) {
+      // could be better
+      mEdit.mNextEditAddress = mEdit.mEditAddress;
+      int lines = mContext.mNumPageLines;
+      while ((lines-- > 0) && (mEdit.mNextEditAddress >= (size_t)mOptions.mColumns))
+        mEdit.mNextEditAddress -= mOptions.mColumns;
+      mEdit.mEditTakeFocus = true;
+      }
     }
   }
 //}}}
@@ -257,9 +262,14 @@ void cMemEdit::movePageUp() {
 void cMemEdit::movePageDown() {
 
   if (isValid (mEdit.mEditAddress)) {
-    int lines = mContext.mNumPageLines;
-    while (lines-- > 0)
-      moveLineDown();
+    if (mEdit.mEditAddress < mInfo.mMemSize - mOptions.mColumns) {
+      // could be better
+      mEdit.mNextEditAddress = mEdit.mEditAddress;
+      int lines = mContext.mNumPageLines;
+      while ((lines-- > 0)  && (mEdit.mNextEditAddress < (mInfo.mMemSize - mOptions.mColumns)))
+        mEdit.mNextEditAddress += mOptions.mColumns;
+      mEdit.mEditTakeFocus = true;
+      }
     }
   }
 //}}}
