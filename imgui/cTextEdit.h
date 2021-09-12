@@ -293,37 +293,11 @@ private:
   //{{{
   struct sCursorSelectionState {
     sPosition mCursorPosition;
+
     sPosition mSelectionStart;
     sPosition mSelectionEnd;
     };
   //}}}
-  //{{{
-  class sUndo {
-  public:
-    sUndo() {}
-    ~sUndo() {}
-
-    sUndo (const std::string& added, const cTextEdit::sPosition addedStart, const cTextEdit::sPosition addedEnd,
-           const std::string& aRemoved, const cTextEdit::sPosition removedStart, const cTextEdit::sPosition removedEnd,
-           cTextEdit::sCursorSelectionState& before, cTextEdit::sCursorSelectionState& after);
-
-    void undo (cTextEdit* textEdit);
-    void redo (cTextEdit* textEdit);
-
-    // vars
-    std::string mAdded;
-    sPosition mAddedStart;
-    sPosition mAddedEnd;
-
-    std::string mRemoved;
-    sPosition mRemovedStart;
-    sPosition mRemovedEnd;
-
-    sCursorSelectionState mBefore;
-    sCursorSelectionState mAfter;
-    };
-  //}}}
-
   //{{{
   class cOptions {
   public:
@@ -364,17 +338,18 @@ private:
   //{{{
   class cContext {
   public:
-    void update (const cOptions& options);
+    void update();
+
+    ImDrawList* mDrawList = nullptr;
+    bool mFocused = false;
 
     ImFont* mFont = nullptr;
     float mFontSize = 0.f;
-    ImDrawList* mDrawList = nullptr;
-    bool mFocused = false;
 
     float mLineHeight = 0.f;
     float mGlyphWidth = 0.f;
 
-    float mGlyphsBegin = 0.f;
+    float mTextBegin = 0.f;
     };
   //}}}
   //{{{
@@ -390,13 +365,37 @@ private:
     sCursorSelectionState mState;
     };
   //}}}
+  //{{{
+  class sUndo {
+  public:
+    sUndo() {}
+    ~sUndo() {}
 
-  typedef std::vector<sUndo> tUndoBuffer;
+    sUndo (const std::string& added, const cTextEdit::sPosition addedStart, const cTextEdit::sPosition addedEnd,
+           const std::string& aRemoved, const cTextEdit::sPosition removedStart, const cTextEdit::sPosition removedEnd,
+           cTextEdit::sCursorSelectionState& before, cTextEdit::sCursorSelectionState& after);
+
+    void undo (cTextEdit* textEdit);
+    void redo (cTextEdit* textEdit);
+
+    // vars
+    std::string mAdded;
+    sPosition mAddedStart;
+    sPosition mAddedEnd;
+
+    std::string mRemoved;
+    sPosition mRemovedStart;
+    sPosition mRemovedEnd;
+
+    sCursorSelectionState mBefore;
+    sCursorSelectionState mAfter;
+    };
+  //}}}
   //{{{
   class cUndoList {
   public:
     int mIndex = 0;
-    tUndoBuffer mBuffer;
+    std::vector <sUndo> mBuffer;
     };
   //}}}
 
@@ -481,7 +480,7 @@ private:
   cEdit mEdit;
   cUndoList mUndoList;
 
-  uint64_t mStartTime;
+  uint64_t mFlashTime;
   float mLastClick;
   //}}}
   };
