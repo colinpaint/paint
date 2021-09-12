@@ -63,6 +63,9 @@ public:
 
   void addToDrawList (cApp& app) final {
 
+    ImGui::SetNextWindowPos (ImVec2(0,0));
+    ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
+
     //if (!mFileView)
       //mFileView = new cFileView ("C:/projects/paint/build/Release/fed.exe");
 
@@ -70,8 +73,6 @@ public:
     //if (!mMemEdit)
       //mMemEdit = new cMemEdit ((uint8_t*)(this), 0x10000);
 
-    //ImGui::SetNextWindowPos (ImVec2(0,0));
-    //ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
     //ImGui::PushFont (app.getMonoFont());
     ////mMemEdit->drawWindow ("Memory Editor", mFileView->getReadPtr(), mFileView->getReadBytesLeft(), 0);
     ////mMemEdit->drawWindow ("Memory Editor", (uint8_t*)this, sizeof(*this), 0);
@@ -82,6 +83,7 @@ public:
     //}}}
 
     if (!mTextEdit) {
+      //{{{  create cTextEdit for app name
       mTextEdit = new cTextEdit();
 
       // set file
@@ -109,108 +111,14 @@ public:
       map <int,string> markers;
       markers.insert (make_pair<int,string>(41, "marker here"));
       mTextEdit->setMarkers (markers);
-
-      ImGui::SetWindowFocus();
       }
       //}}}
 
     // full screen window
-    ImGui::SetNextWindowPos (ImVec2(0,0));
-    ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-    ImGui::PushStyleColor (ImGuiCol_WindowBg, ImGui::ColorConvertU32ToFloat4 (0xffefefef));
-    ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
-    ImGui::Begin ("fed", nullptr,
-                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove);
-
-    // line button
-    if (toggleButton ("line", mTextEdit->isShowLineNumbers()))
-      mTextEdit->toggleShowLineNumbers();
-    if (mTextEdit->isShowLineNumbers())
-      //{{{  debug button
-      if (mTextEdit->isShowLineNumbers()) {
-        ImGui::SameLine();
-        if (toggleButton ("debug", mTextEdit->isShowDebug()))
-          mTextEdit->toggleShowDebug();
-        }
-      //}}}
-    if (mTextEdit->hasFolds()) {
-      //{{{  folded button
-      ImGui::SameLine();
-      if (toggleButton ("folded", mTextEdit->isShowFolds()))
-        mTextEdit->toggleShowFolds();
-      }
-      //}}}
-    //{{{  space button
-    ImGui::SameLine();
-    if (toggleButton ("space", mTextEdit->isShowWhiteSpace()))
-      mTextEdit->toggleShowWhiteSpace();
-    //}}}
-    if (mTextEdit->hasClipboardText() && !mTextEdit->isReadOnly()) {
-      //{{{  paste button
-      ImGui::SameLine();
-      if (ImGui::Button ("paste"))
-        mTextEdit->paste();
-      }
-      //}}}
-    if (mTextEdit->hasSelect()) {
-      //{{{  copy, cut, delete buttons
-      ImGui::SameLine();
-      if (ImGui::Button ("copy"))
-        mTextEdit->copy();
-       if (!mTextEdit->isReadOnly()) {
-         ImGui::SameLine();
-        if (ImGui::Button ("cut"))
-          mTextEdit->cut();
-        ImGui::SameLine();
-        if (ImGui::Button ("delete"))
-          mTextEdit->deleteIt();
-        }
-      }
-      //}}}
-    if (!mTextEdit->isReadOnly() && mTextEdit->hasUndo()) {
-      //{{{  undo button
-      ImGui::SameLine();
-      if (ImGui::Button ("undo"))
-        mTextEdit->undo();
-      }
-      //}}}
-    if (!mTextEdit->isReadOnly() && mTextEdit->hasRedo()) {
-      //{{{  redo button
-      ImGui::SameLine();
-      if (ImGui::Button ("redo"))
-        mTextEdit->redo();
-      }
-      //}}}
-    //{{{  readOnly button
-    ImGui::SameLine();
-    if (toggleButton ("readOnly", mTextEdit->isReadOnly()))
-      mTextEdit->toggleReadOnly();
-    //}}}
-    //{{{  overwrite button
-    ImGui::SameLine();
-    if (toggleButton ("insert", !mTextEdit->isOverwrite()))
-      mTextEdit->toggleOverwrite();
-    //}}}
-    //{{{  info text
-    ImGui::SameLine();
-    ImGui::Text ("%d:%d:%d %s%s%s%s%s", mTextEdit->getCursorPosition().mColumn+1,
-                                        mTextEdit->getCursorPosition().mLineNumber+1,
-                                        mTextEdit->getTextNumLines(),
-                                        mTextEdit->getLanguage().mName.c_str(),
-                                        mTextEdit->isTextEdited() ? " edited":"",
-                                        mTextEdit->hasTabs() ? " tabs":"",
-                                        mTextEdit->hasCR() ? " CR":"",
-                                        mTextEdit->getDebugString().c_str()
-                                        );
-    //}}}
-
+    ImGui::SetWindowFocus();
     ImGui::PushFont (app.getMonoFont());
-    mTextEdit->drawContents();
+    mTextEdit->drawWindow ("fed");
     ImGui::PopFont();
-
-    ImGui::End();
-    ImGui::PopStyleVar();
-    ImGui::PopStyleColor();
     }
 
 private:

@@ -366,6 +366,8 @@ private:
   //{{{
   class cContext {
   public:
+    void update (const cOptions& options, const cInfo& info);
+
     ImFont* mFont = nullptr;
     float mFontSize = 0.f;
     float mFontHalfSize = 0.f;
@@ -385,6 +387,7 @@ private:
   public:
     int mColorRangeMin = 0;
     int mColorRangeMax = 0;
+
     sPosition mInteractiveStart;
     sPosition mInteractiveEnd;
     eSelection mSelection = eSelection::Normal;
@@ -470,11 +473,11 @@ private:
   void handleMouseInputs();
   void handleKeyboardInputs();
 
-  void preRender();
-  void renderGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
-  void renderLine (int lineNumber, int beginFoldLineNumber);
-  int renderFold (int lineNumber, bool parentOpen, bool foldOpen);
-  void postRender();
+  void drawTop();
+  void drawGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
+  void drawLine (int lineNumber, int beginFoldLineNumber);
+  int drawFold (int lineNumber, bool parentOpen, bool foldOpen);
+  void postDraw();
 
   //{{{  vars
   bool mOpen = true;  // set false when DrawWindow() closed
