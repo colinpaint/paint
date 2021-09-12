@@ -10,7 +10,7 @@
 // imgui
 #include "../imgui/imgui.h"
 #include "../imgui/cTextEdit.h"
-#include "../imgui/cMemoryEdit.h"
+#include "../imgui/cMemEdit.h"
 #include "../imgui/myImguiWidgets.h"
 
 // ui
@@ -46,7 +46,6 @@ namespace {
     "ident decl",
     };
   //}}}
-  cMemoryEdit memoryEdit;
   }
 
 class cTextEditUI : public cUI {
@@ -67,12 +66,15 @@ public:
     //if (!mFileView)
       //mFileView = new cFileView ("C:/projects/paint/build/Release/fed.exe");
 
+    if (!mMemEdit)
+      mMemEdit = new cMemEdit ((uint8_t*)(this), 0x10000);
+
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
     ImGui::PushFont (app.getMonoFont());
-    //memoryEdit.drawWindow ("Memory Editor", mFileView->getReadPtr(), mFileView->getReadBytesLeft(), 0);
-    //memoryEdit.drawWindow ("Memory Editor", (uint8_t*)this, sizeof(*this), 0);
-    memoryEdit.drawWindow ("Memory Editor", (uint8_t*)(this), 0x10000, 0);
+    //mMemEdit->drawWindow ("Memory Editor", mFileView->getReadPtr(), mFileView->getReadBytesLeft(), 0);
+    //mMemEdit->drawWindow ("Memory Editor", (uint8_t*)this, sizeof(*this), 0);
+    mMemEdit->drawWindow ("Memory Editor", 0);
     ImGui::PopFont();
 
     return;
@@ -212,6 +214,7 @@ public:
 private:
   cFileView* mFileView = nullptr;
   cTextEdit* mTextEdit = nullptr;
+  cMemEdit* mMemEdit = nullptr;
 
   //{{{
   static cUI* create (const string& className) {

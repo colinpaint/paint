@@ -2391,8 +2391,7 @@ void cTextEdit::handleKeyboardInputs() {
     };
   //}}}
   const vector <sActionKey> kActionKeys = {
-  //  alt    ctrl   shift  guiKey               keyCode    writable         function
-     // edit
+  //  alt    ctrl   shift  guiKey               writable      function
      {false, true,  false, ImGuiKey_X,          true,  [this]{cut();}},
      {false, true,  false, ImGuiKey_V,          true,  [this]{paste();}},
      {false, false, false, ImGuiKey_Delete,     true,  [this]{deleteIt();}},

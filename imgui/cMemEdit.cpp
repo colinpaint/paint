@@ -1,4 +1,4 @@
-//{{{  cMemoryEdit.cpp - hacked version of https://github.com/ocornut/imgui_club
+//{{{  cMemEdit.cpp - hacked version of https://github.com/ocornut/imgui_club
 // Usage:
 //   // Create a window and draw memory editor inside it:
 //   static MemoryEditor mem_edit_1;
@@ -14,10 +14,11 @@
 //   ImGui::End();
 //}}}
 //{{{  includes
-#include "cMemoryEdit.h"
+#include "cMemEdit.h"
 
 #include <stdio.h>  // sprintf, scanf
 #include <array>
+#include <functional>
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "../imgui/imgui.h"
@@ -47,7 +48,7 @@ constexpr bool kUpperCaseHex = false;
 constexpr int kPageMarginLines = 3;
 
 namespace {
-  //{{{  const string
+  //{{{  const strings
   const array<string,3> kFormatDescs = { "Dec", "Bin", "Hex" };
 
   const array<string,10> kTypeDescs = { "Int8", "Uint8", "Int16", "Uint16",
@@ -103,90 +104,45 @@ namespace {
 
 // public:
 //{{{
-void cMemoryEdit::drawWindow (const string& title, uint8_t* memData, size_t memSize, size_t baseAddress) {
+cMemEdit::cMemEdit (uint8_t* memData, size_t memSize) : mInfo(memData,memSize) {
+
+  mStartTime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+  mLastClick = 0.f;
+  }
+//}}}
+
+//{{{
+void cMemEdit::drawWindow (const string& title, size_t baseAddress) {
 // standalone Memory Editor window
 
   mOpen = true;
 
   ImGui::Begin (title.c_str(), &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
-  drawContents (memData, memSize, baseAddress);
+  drawContents (baseAddress);
   ImGui::End();
   }
 //}}}
 //{{{
-void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAddress) {
+void cMemEdit::drawContents (size_t baseAddress) {
 
-  // info to display
-  cInfo info (memData, memSize, baseAddress);
+  mInfo.setBaseAddress (baseAddress);
+  mContext.init (mOptions, mInfo); // context of sizes,colours
+  mEdit.begin (mOptions, mInfo);
 
-  // context of sizes, colour we will display it with
-  cContext context;
-  setContext (info, context);
+  handleKeyboardInputs();
+  handleMouseInputs();
 
-  drawTop (info, context);
+  drawTop();
 
   // child scroll window begin
   ImGui::BeginChild (kChildScrollStr, ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
   ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, ImVec2(0,0));
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
 
-  mEdit.mDataNext = false;
-  if (mOptions.mReadOnly || (mEdit.mEditAddress >= info.mMemSize))
-    mEdit.mEditAddress = kUndefinedAddress;
-  if (mEdit.mDataAddress >= info.mMemSize)
-    mEdit.mDataAddress = kUndefinedAddress;
-
-  mEdit.mNextEditAddress = kUndefinedAddress;
-  if (isValid (mEdit.mEditAddress)) {
-    //{{{  move cursor, mNextEditAddress, apply next time, scroll cannot be set as window is being rendered)
-    if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_LeftArrow)) &&
-        mEdit.mEditAddress > 0) {
-      mEdit.mNextEditAddress = mEdit.mEditAddress - 1;
-      mEdit.mEditTakeFocus = true;
-      }
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_RightArrow)) &&
-             mEdit.mEditAddress < info.mMemSize - 1) {
-      mEdit.mNextEditAddress = mEdit.mEditAddress + 1;
-      mEdit.mEditTakeFocus = true;
-      }
-
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_UpArrow)) &&
-             mEdit.mEditAddress >= (size_t)mOptions.mColumns) {
-      mEdit.mNextEditAddress = mEdit.mEditAddress - mOptions.mColumns;
-      mEdit.mEditTakeFocus = true;
-      }
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_DownArrow)) &&
-             mEdit.mEditAddress < info.mMemSize - mOptions.mColumns) {
-      mEdit.mNextEditAddress = mEdit.mEditAddress + mOptions.mColumns;
-      mEdit.mEditTakeFocus = true;
-      }
-
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Home))) {
-      mEdit.mNextEditAddress = 0u;
-      mEdit.mEditTakeFocus = true;
-      }
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_End))) {
-      mEdit.mNextEditAddress = info.mMemSize - 1;
-      mEdit.mEditTakeFocus = true;
-      }
-
-    // !!!page size of 10 not right, scroll not right !!!
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageUp))) {
-      mEdit.mNextEditAddress = (size_t)max (0, (int)mEdit.mEditAddress - (context.mNumPageLines * mOptions.mColumns));
-      mEdit.mEditTakeFocus = true;
-      }
-    else if (ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_PageDown))) {
-      mEdit.mNextEditAddress = min (info.mMemSize - mOptions.mColumns,
-                                    mEdit.mEditAddress + (context.mNumPageLines *  mOptions.mColumns));
-      mEdit.mEditTakeFocus = true;
-      }
-    }
-    //}}}
-
   // clipper begin
   ImGuiListClipper clipper;
-  int maxNumLines = static_cast<int>((info.mMemSize + (mOptions.mColumns-1)) / mOptions.mColumns);
-  clipper.Begin (maxNumLines, context.mLineHeight);
+  int maxNumLines = static_cast<int>((mInfo.mMemSize + (mOptions.mColumns-1)) / mOptions.mColumns);
+  clipper.Begin (maxNumLines, mContext.mLineHeight);
   clipper.Step();
 
   if (isValid (mEdit.mNextEditAddress)) {
@@ -202,14 +158,14 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
 
       // is minimum scroll neeeded
       if (beforeStart || afterEnd)
-        ImGui::SetScrollY (ImGui::GetScrollY() + (lineNumberOffset * context.mLineHeight));
+        ImGui::SetScrollY (ImGui::GetScrollY() + (lineNumberOffset * mContext.mLineHeight));
       }
     }
     //}}}
 
   // clipper iterate
   for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++)
-    drawLine (lineNumber, info, context);
+    drawLine (lineNumber);
 
   // clipper end
   clipper.Step();
@@ -220,8 +176,8 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
   ImGui::EndChild();
 
   // Notify the main window of our ideal child content size
-  ImGui::SetCursorPosX (context.mWindowWidth);
-  if (mEdit.mDataNext && (mEdit.mEditAddress < info.mMemSize)) {
+  ImGui::SetCursorPosX (mContext.mWindowWidth);
+  if (mEdit.mDataNext && (mEdit.mEditAddress < mInfo.mMemSize)) {
     mEdit.mEditAddress++;
     mEdit.mDataAddress = mEdit.mEditAddress;
     mEdit.mEditTakeFocus = true;
@@ -234,7 +190,7 @@ void cMemoryEdit::drawContents (uint8_t* memData, size_t memSize, size_t baseAdd
 //}}}
 
 //{{{
-void cMemoryEdit::setAddressHighlight (size_t addressMin, size_t addressMax) {
+void cMemEdit::setAddressHighlight (size_t addressMin, size_t addressMax) {
 
   mEdit.mGotoAddress = addressMin;
 
@@ -243,9 +199,96 @@ void cMemoryEdit::setAddressHighlight (size_t addressMin, size_t addressMax) {
   }
 //}}}
 
+//{{{
+void cMemEdit::moveLeft() {
+
+  if (isValid (mEdit.mEditAddress)) {
+    if (mEdit.mEditAddress > 0) {
+      mEdit.mNextEditAddress = mEdit.mEditAddress - 1;
+      mEdit.mEditTakeFocus = true;
+      }
+    }
+  }
+//}}}
+//{{{
+void cMemEdit::moveRight() {
+
+  if (isValid (mEdit.mEditAddress)) {
+    if (mEdit.mEditAddress < mInfo.mMemSize - 1) {
+      mEdit.mNextEditAddress = mEdit.mEditAddress + 1;
+      mEdit.mEditTakeFocus = true;
+      }
+    }
+  }
+//}}}
+//{{{
+void cMemEdit::moveLineUp() {
+
+  if (isValid (mEdit.mEditAddress)) {
+    if (mEdit.mEditAddress >= (size_t)mOptions.mColumns) {
+      mEdit.mNextEditAddress = mEdit.mEditAddress - mOptions.mColumns;
+      mEdit.mEditTakeFocus = true;
+      }
+    }
+  }
+//}}}
+//{{{
+void cMemEdit::moveLineDown() {
+
+  if (isValid (mEdit.mEditAddress)) {
+    if (mEdit.mEditAddress < mInfo.mMemSize - mOptions.mColumns) {
+      mEdit.mNextEditAddress = mEdit.mEditAddress + mOptions.mColumns;
+      mEdit.mEditTakeFocus = true;
+      }
+    }
+  }
+//}}}
+//{{{
+void cMemEdit::movePageUp() {
+
+  if (isValid (mEdit.mEditAddress)) {
+    int lines = mContext.mNumPageLines;
+    while (lines-- > 0)
+      moveLineUp();
+    }
+  }
+//}}}
+//{{{
+void cMemEdit::movePageDown() {
+
+  if (isValid (mEdit.mEditAddress)) {
+    int lines = mContext.mNumPageLines;
+    while (lines-- > 0)
+      moveLineDown();
+    }
+  }
+//}}}
+//{{{
+void cMemEdit::moveHome() {
+
+  if (isValid (mEdit.mEditAddress)) {
+    if (mEdit.mEditAddress > 0) {
+      mEdit.mNextEditAddress = 0;
+      mEdit.mEditTakeFocus = true;
+      }
+    }
+  }
+//}}}
+//{{{
+void cMemEdit::moveEnd() {
+
+  if (isValid (mEdit.mEditAddress)) {
+    if (mEdit.mEditAddress < (mInfo.mMemSize - 2)) {
+      mEdit.mNextEditAddress = mInfo.mMemSize - 1;
+      mEdit.mEditTakeFocus = true;
+      }
+    }
+  }
+//}}}
+
 // private:
 //{{{
-bool cMemoryEdit::isCpuBigEndian() const {
+bool cMemEdit::isCpuBigEndian() const {
 // is cpu bigEndian
 
   uint16_t x = 1;
@@ -257,29 +300,29 @@ bool cMemoryEdit::isCpuBigEndian() const {
   }
 //}}}
 //{{{
-size_t cMemoryEdit::getDataTypeSize (ImGuiDataType dataType) const {
+size_t cMemEdit::getDataTypeSize (ImGuiDataType dataType) const {
   return kTypeSizes[dataType];
   }
 //}}}
 //{{{
-string cMemoryEdit::getDataTypeDesc (ImGuiDataType dataType) const {
+string cMemEdit::getDataTypeDesc (ImGuiDataType dataType) const {
   return kTypeDescs[(size_t)dataType];
   }
 //}}}
 //{{{
-string cMemoryEdit::getDataFormatDesc (cMemoryEdit::eDataFormat dataFormat) const {
+string cMemEdit::getDataFormatDesc (cMemEdit::eDataFormat dataFormat) const {
   return kFormatDescs[(size_t)dataFormat];
   }
 //}}}
 //{{{
-string cMemoryEdit::getDataStr (size_t address, const cInfo& info, ImGuiDataType dataType, eDataFormat dataFormat) {
+string cMemEdit::getDataStr (size_t address, ImGuiDataType dataType, eDataFormat dataFormat) {
 // return pointer to mOutBuf
 
   size_t elemSize = getDataTypeSize (dataType);
-  size_t size = ((address + elemSize) > info.mMemSize) ? (info.mMemSize - address) : elemSize;
+  size_t size = ((address + elemSize) > mInfo.mMemSize) ? (mInfo.mMemSize - address) : elemSize;
 
   uint8_t buf[8];
-  memcpy (buf, info.mMemData + address, size);
+  memcpy (buf, mInfo.mMemData + address, size);
 
   mOutBuf[0] = 0;
   if (dataFormat == eDataFormat::eBin) {
@@ -447,52 +490,9 @@ string cMemoryEdit::getDataStr (size_t address, const cInfo& info, ImGuiDataType
   }
 //}}}
 
-// sets
-//{{{
-void cMemoryEdit::setContext (const cInfo& info, cContext& context) {
-
-  // address box size
-  context.mAddressDigitsCount = 0;
-  for (size_t n = info.mBaseAddress + info.mMemSize - 1; n > 0; n >>= 4)
-    context.mAddressDigitsCount++;
-
-  // char size
-  context.mGlyphWidth = ImGui::CalcTextSize (" ").x; // assume monoSpace font
-  context.mLineHeight = ImGui::GetTextLineHeight();
-  context.mHexCellWidth = (float)(int)(context.mGlyphWidth * 2.5f);
-  context.mExtraSpaceWidth = (float)(int)(context.mHexCellWidth * 0.25f);
-
-  // hex begin,end
-  context.mHexBeginPos = (context.mAddressDigitsCount + 2) * context.mGlyphWidth;
-  context.mHexEndPos = context.mHexBeginPos + (context.mHexCellWidth * mOptions.mColumns);
-  context.mAsciiBeginPos = context.mAsciiEndPos = context.mHexEndPos;
-
-  // ascii begin,end
-  context.mAsciiBeginPos = context.mHexEndPos + context.mGlyphWidth * 1;
-  if (mOptions.mColumnExtraSpace > 0)
-    context.mAsciiBeginPos += (float)((mOptions.mColumns + mOptions.mColumnExtraSpace - 1) /
-      mOptions.mColumnExtraSpace) * context.mExtraSpaceWidth;
-  context.mAsciiEndPos = context.mAsciiBeginPos + mOptions.mColumns * context.mGlyphWidth;
-
-  // windowWidth
-  ImGuiStyle& style = ImGui::GetStyle();
-  context.mWindowWidth = (2.f*style.WindowPadding.x) + context.mAsciiEndPos + style.ScrollbarSize + context.mGlyphWidth;
-
-  // page up,down inc
-  context.mNumPageLines = static_cast<int>(ImGui::GetWindowHeight() / ImGui::GetTextLineHeight()) - kPageMarginLines;
-
-  // colors
-  context.mTextColor = ImGui::GetColorU32 (ImGuiCol_Text);
-  context.mGreyColor = ImGui::GetColorU32 (ImGuiCol_TextDisabled);
-  context.mHighlightColor = IM_COL32 (255, 255, 255, 50);  // highlight background color
-  context.mFrameBgndColor = ImGui::GetColorU32 (ImGuiCol_FrameBg);
-  context.mTextSelectBgndColor = ImGui::GetColorU32 (ImGuiCol_TextSelectedBg);
-  }
-//}}}
-
 // copy
 //{{{
-void* cMemoryEdit::copyEndian (void* dst, void* src, size_t size) {
+void* cMemEdit::copyEndian (void* dst, void* src, size_t size) {
 
   if (!gEndianFunc)
     gEndianFunc = isCpuBigEndian() ? bigEndianFunc : littleEndianFunc;
@@ -501,14 +501,102 @@ void* cMemoryEdit::copyEndian (void* dst, void* src, size_t size) {
   }
 //}}}
 
+//{{{
+void cMemEdit::handleMouseInputs() {
+
+  ImGuiIO& io = ImGui::GetIO();
+  bool shift = io.KeyShift;
+  bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+  bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+
+  if (ImGui::IsWindowHovered()) {
+    if (!ctrl && !shift && !alt) {
+      bool leftSingleClick = ImGui::IsMouseClicked (0);
+      bool righttSingleClick = ImGui::IsMouseClicked (1);
+      bool leftDoubleClick = ImGui::IsMouseDoubleClicked (0);
+      bool leftTripleClick = leftSingleClick &&
+                             !leftDoubleClick &&
+                             ((mLastClick != -1.f) && (ImGui::GetTime() - mLastClick) < io.MouseDoubleClickTime);
+      if (leftTripleClick) {
+        mLastClick = -1.f;
+        }
+      else if (leftDoubleClick) {
+        mLastClick = static_cast<float>(ImGui::GetTime());
+        }
+      else if (leftSingleClick) {
+        mLastClick = static_cast<float>(ImGui::GetTime());
+        }
+      else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
+        io.WantCaptureMouse = true;
+        }
+
+      if (righttSingleClick) {
+        };
+      }
+    }
+  }
+//}}}
+//{{{
+void cMemEdit::handleKeyboardInputs() {
+
+  //{{{
+  struct sActionKey {
+    bool mAlt;
+    bool mCtrl;
+    bool mShift;
+    int mGuiKey;
+    bool mWritable;
+    function <void()> mActionFunc;
+    };
+  //}}}
+  const vector <sActionKey> kActionKeys = {
+  //  alt    ctrl   shift  guiKey               writable      function
+     {false, false, false, ImGuiKey_LeftArrow,  false, [this]{moveLeft();}},
+     {false, false, false, ImGuiKey_RightArrow, false, [this]{moveRight();}},
+     {false, false, false, ImGuiKey_UpArrow,    false, [this]{moveLineUp();}},
+     {false, false, false, ImGuiKey_DownArrow,  false, [this]{moveLineDown();}},
+     {false, false, false, ImGuiKey_PageUp,     false, [this]{movePageUp();}},
+     {false, false, false, ImGuiKey_PageDown,   false, [this]{movePageDown();}},
+     {false, false, false, ImGuiKey_Home,       false, [this]{moveHome();}},
+     {false, false, false, ImGuiKey_End,        false, [this]{moveEnd();}},
+     };
+
+  //if (!ImGui::IsWindowFocused())
+  //  return;
+  //if (ImGui::IsWindowHovered())
+  //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
+
+  ImGuiIO& io = ImGui::GetIO();
+  bool shift = io.KeyShift;
+  bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+  bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+  //io.WantCaptureKeyboard = true;
+  //io.WantTextInput = true;
+
+  for (auto& actionKey : kActionKeys) {
+    // dispatch matched actionKey
+    if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
+         ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
+        (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
+        (actionKey.mCtrl == ctrl) &&
+        (actionKey.mShift == shift) &&
+        (actionKey.mAlt == alt)) {
+
+      actionKey.mActionFunc();
+      break;
+      }
+    }
+  }
+//}}}
+
 // draw
 //{{{
-void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
+void cMemEdit::drawTop() {
 
   ImGuiStyle& style = ImGui::GetStyle();
 
   // draw columns button
-  ImGui::SetNextItemWidth ((2.f*style.FramePadding.x) + (7.f*context.mGlyphWidth));
+  ImGui::SetNextItemWidth ((2.f*style.FramePadding.x) + (7.f*mContext.mGlyphWidth));
   ImGui::DragInt ("##column", &mOptions.mColumns, 0.2f, 2, 64, "%d wide");
 
   // draw hexII button
@@ -518,14 +606,14 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
   mOptions.mHoverHexII = ImGui::IsItemHovered();
 
   // draw gotoAddress button
-  ImGui::SetNextItemWidth ((2 * style.FramePadding.x) + ((context.mAddressDigitsCount + 1) * context.mGlyphWidth));
+  ImGui::SetNextItemWidth ((2 * style.FramePadding.x) + ((mContext.mAddressDigitsCount + 1) * mContext.mGlyphWidth));
   ImGui::SameLine();
   if (ImGui::InputText ("##address", mEdit.mAddressInputBuf, sizeof(mEdit.mAddressInputBuf),
                          ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
     //{{{  consume input into gotoAddress
     size_t gotoAddress;
     if (sscanf (mEdit.mAddressInputBuf, "%" _PRISizeT "X", &gotoAddress) == 1) {
-      mEdit.mGotoAddress = gotoAddress - info.mBaseAddress;
+      mEdit.mGotoAddress = gotoAddress - mInfo.mBaseAddress;
       mEdit.mHighlightMin = mEdit.mHighlightMax = kUndefinedAddress;
       }
     }
@@ -533,11 +621,11 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
 
   if (isValid (mEdit.mGotoAddress)) {
     //{{{  valid goto address
-    if (mEdit.mGotoAddress < info.mMemSize) {
+    if (mEdit.mGotoAddress < mInfo.mMemSize) {
       // use gotoAddress and scroll to it
       ImGui::BeginChild (kChildScrollStr);
       ImGui::SetScrollFromPosY (ImGui::GetCursorStartPos().y +
-                                (mEdit.mGotoAddress/mOptions.mColumns) * context.mLineHeight);
+                                (mEdit.mGotoAddress/mOptions.mColumns) * mContext.mLineHeight);
       ImGui::EndChild();
 
       mEdit.mDataAddress = mEdit.mGotoAddress;
@@ -551,7 +639,7 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
 
   if (isValid (mEdit.mDataAddress)) {
     // draw dataType combo
-    ImGui::SetNextItemWidth ((2*style.FramePadding.x) + (8*context.mGlyphWidth) + style.ItemInnerSpacing.x);
+    ImGui::SetNextItemWidth ((2*style.FramePadding.x) + (8*mContext.mGlyphWidth) + style.ItemInnerSpacing.x);
     ImGui::SameLine();
     if (ImGui::BeginCombo ("##comboType", getDataTypeDesc (mOptions.mDataType).c_str(), ImGuiComboFlags_HeightLargest)) {
       for (int dataType = 0; dataType < ImGuiDataType_COUNT; dataType++)
@@ -573,26 +661,27 @@ void cMemoryEdit::drawTop (const cInfo& info, const cContext& context) {
          dataFormat = static_cast<eDataFormat>((static_cast<int>(dataFormat)+1))) {
       ImGui::SameLine();
       ImGui::Text ("%s:%s", getDataFormatDesc (dataFormat).c_str(),
-                            getDataStr (mEdit.mDataAddress, info, mOptions.mDataType, dataFormat).c_str());
+                            getDataStr (mEdit.mDataAddress, mOptions.mDataType, dataFormat).c_str());
       }
     }
   }
 //}}}
 //{{{
-void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& context) {
+void cMemEdit::drawLine (int lineNumber) {
 
   ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
   // draw address
   size_t address = static_cast<size_t>(lineNumber * mOptions.mColumns);
-  ImGui::Text (kFormatAddress, context.mAddressDigitsCount, info.mBaseAddress + address);
+  ImGui::Text (kFormatAddress, mContext.mAddressDigitsCount, mInfo.mBaseAddress + address);
 
   // draw hex
-  for (int column = 0; column < mOptions.mColumns && address < info.mMemSize; column++, address++) {
-    float bytePosX = context.mHexBeginPos + context.mHexCellWidth * column;
+  for (int column = 0; column < mOptions.mColumns && address < mInfo.mMemSize; column++, address++) {
+    float bytePosX = mContext.mHexBeginPos + mContext.mHexCellWidth * column;
     if (mOptions.mColumnExtraSpace > 0)
-      bytePosX += (float)(column / mOptions.mColumnExtraSpace) * context.mExtraSpaceWidth;
+      bytePosX += (float)(column / mOptions.mColumnExtraSpace) * mContext.mExtraSpaceWidth;
 
+    // next hex value text
     ImGui::SameLine (bytePosX);
 
     // highlight
@@ -603,19 +692,19 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
       //{{{  draw hex highlight
       ImVec2 pos = ImGui::GetCursorScreenPos();
 
-      float highlightWidth = 2 * context.mGlyphWidth;
-      bool isNextByteHighlighted = (address+1 < info.mMemSize) &&
+      float highlightWidth = 2 * mContext.mGlyphWidth;
+      bool isNextByteHighlighted = (address+1 < mInfo.mMemSize) &&
                                    ((isValid (mEdit.mHighlightMax) && (address + 1 < mEdit.mHighlightMax)));
 
       if (isNextByteHighlighted || ((column + 1) == mOptions.mColumns)) {
-        highlightWidth = context.mHexCellWidth;
+        highlightWidth = mContext.mHexCellWidth;
         if ((mOptions.mColumnExtraSpace > 0) &&
             (column > 0) && ((column + 1) < mOptions.mColumns) &&
             (((column + 1) % mOptions.mColumnExtraSpace) == 0))
-          highlightWidth += context.mExtraSpaceWidth;
+          highlightWidth += mContext.mExtraSpaceWidth;
         }
 
-      draw_list->AddRectFilled (pos, pos + ImVec2(highlightWidth, context.mLineHeight), context.mHighlightColor);
+      draw_list->AddRectFilled (pos, pos + ImVec2(highlightWidth, mContext.mLineHeight), mContext.mHighlightColor);
       }
       //}}}
     if (mEdit.mEditAddress == address) {
@@ -626,8 +715,8 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
       if (mEdit.mEditTakeFocus) {
         ImGui::SetKeyboardFocusHere();
         ImGui::CaptureKeyboardFromApp (true);
-        sprintf (mEdit.mAddressInputBuf, kFormatData, context.mAddressDigitsCount, info.mBaseAddress + address);
-        sprintf (mEdit.mDataInputBuf, kFormatByte, info.mMemData[address]);
+        sprintf (mEdit.mAddressInputBuf, kFormatData, mContext.mAddressDigitsCount, mInfo.mBaseAddress + address);
+        sprintf (mEdit.mDataInputBuf, kFormatByte, mInfo.mMemData[address]);
         }
 
       //{{{
@@ -661,7 +750,7 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
       sUserData userData;
       userData.mCursorPos = -1;
 
-      sprintf (userData.mCurrentBufOverwrite, kFormatByte, info.mMemData[address]);
+      sprintf (userData.mCurrentBufOverwrite, kFormatByte, mInfo.mMemData[address]);
       ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal |
                                   ImGuiInputTextFlags_EnterReturnsTrue |
                                   ImGuiInputTextFlags_AutoSelectAll |
@@ -669,7 +758,7 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
                                   ImGuiInputTextFlags_CallbackAlways;
       flags |= ImGuiInputTextFlags_AlwaysOverwrite;
 
-      ImGui::SetNextItemWidth (context.mGlyphWidth * 2);
+      ImGui::SetNextItemWidth (mContext.mGlyphWidth * 2);
 
       if (ImGui::InputText ("##data", mEdit.mDataInputBuf, sizeof(mEdit.mDataInputBuf), flags, sUserData::callback, &userData))
         dataWrite = mEdit.mDataNext = true;
@@ -685,7 +774,7 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
 
       unsigned int dataInputValue = 0;
       if (dataWrite && sscanf(mEdit.mDataInputBuf, "%X", &dataInputValue) == 1)
-        info.mMemData[address] = (ImU8)dataInputValue;
+        mInfo.mMemData[address] = (ImU8)dataInputValue;
 
       ImGui::PopID();
       }
@@ -693,7 +782,7 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
     else {
       //{{{  display text
       // NB: The trailing space is not visible but ensure there's no gap that the mouse cannot click on.
-      uint8_t value = info.mMemData[address];
+      uint8_t value = mInfo.mMemData[address];
 
       if (mOptions.mShowHexII || mOptions.mHoverHexII) {
         if ((value >= 32) && (value < 128))
@@ -721,36 +810,79 @@ void cMemoryEdit::drawLine (int lineNumber, const cInfo& info, const cContext& c
 
   if (kShowAscii) {
     //{{{  draw righthand ASCII
-    ImGui::SameLine (context.mAsciiBeginPos);
+    ImGui::SameLine (mContext.mAsciiBeginPos);
 
     ImVec2 pos = ImGui::GetCursorScreenPos();
     address = lineNumber * mOptions.mColumns;
 
     // invisibleButton over righthand ascii text for mouse hits
     ImGui::PushID (lineNumber);
-    if (ImGui::InvisibleButton ("ascii", ImVec2 (context.mAsciiEndPos - context.mAsciiBeginPos, context.mLineHeight))) {
-      mEdit.mDataAddress = address + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / context.mGlyphWidth);
+    if (ImGui::InvisibleButton ("ascii", ImVec2 (mContext.mAsciiEndPos - mContext.mAsciiBeginPos, mContext.mLineHeight))) {
+      mEdit.mDataAddress = address + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / mContext.mGlyphWidth);
       mEdit.mEditAddress = mEdit.mDataAddress;
       mEdit.mEditTakeFocus = true;
       }
     ImGui::PopID();
 
-    for (int column = 0; (column < mOptions.mColumns) && (address < info.mMemSize); column++, address++) {
+    for (int column = 0; (column < mOptions.mColumns) && (address < mInfo.mMemSize); column++, address++) {
       if (address == mEdit.mEditAddress) {
-        ImVec2 posEnd = pos + ImVec2 (context.mGlyphWidth, context.mLineHeight);
-        draw_list->AddRectFilled (pos, posEnd, context.mFrameBgndColor);
-        draw_list->AddRectFilled (pos, posEnd, context.mTextSelectBgndColor);
+        ImVec2 posEnd = pos + ImVec2 (mContext.mGlyphWidth, mContext.mLineHeight);
+        draw_list->AddRectFilled (pos, posEnd, mContext.mFrameBgndColor);
+        draw_list->AddRectFilled (pos, posEnd, mContext.mTextSelectBgndColor);
         }
 
-      uint8_t value = info.mMemData[address];
+      uint8_t value = mInfo.mMemData[address];
       char displayCh = ((value < 32) || (value >= 128)) ? '.' : value;
-      ImU32 color = (!kGreyZeroes || (value == displayCh)) ? context.mTextColor :  context.mGreyColor;
+      ImU32 color = (!kGreyZeroes || (value == displayCh)) ? mContext.mTextColor : mContext.mGreyColor;
       draw_list->AddText (pos, color, &displayCh, &displayCh + 1);
 
-      pos.x += context.mGlyphWidth;
+      pos.x += mContext.mGlyphWidth;
       }
     }
     //}}}
+  }
+//}}}
+
+// cMemEdit::cContext
+//{{{
+void cMemEdit::cContext::init (const cOptions& options, const cInfo& info) {
+
+  // address box size
+  mAddressDigitsCount = 0;
+  for (size_t n = info.mBaseAddress + info.mMemSize - 1; n > 0; n >>= 4)
+    mAddressDigitsCount++;
+
+  // char size
+  mGlyphWidth = ImGui::CalcTextSize (" ").x; // assume monoSpace font
+  mLineHeight = ImGui::GetTextLineHeight();
+  mHexCellWidth = (float)(int)(mGlyphWidth * 2.5f);
+  mExtraSpaceWidth = (float)(int)(mHexCellWidth * 0.25f);
+
+  // hex begin,end
+  mHexBeginPos = (mAddressDigitsCount + 2) * mGlyphWidth;
+  mHexEndPos = mHexBeginPos + (mHexCellWidth * options.mColumns);
+  mAsciiBeginPos = mAsciiEndPos = mHexEndPos;
+
+  // ascii begin,end
+  mAsciiBeginPos = mHexEndPos + mGlyphWidth * 1;
+  if (options.mColumnExtraSpace > 0)
+    mAsciiBeginPos += (float)((options.mColumns + options.mColumnExtraSpace - 1) /
+      options.mColumnExtraSpace) * mExtraSpaceWidth;
+  mAsciiEndPos = mAsciiBeginPos + options.mColumns * mGlyphWidth;
+
+  // windowWidth
+  ImGuiStyle& style = ImGui::GetStyle();
+  mWindowWidth = (2.f*style.WindowPadding.x) + mAsciiEndPos + style.ScrollbarSize + mGlyphWidth;
+
+  // page up,down inc
+  mNumPageLines = static_cast<int>(ImGui::GetWindowHeight() / ImGui::GetTextLineHeight()) - kPageMarginLines;
+
+  // colors
+  mTextColor = ImGui::GetColorU32 (ImGuiCol_Text);
+  mGreyColor = ImGui::GetColorU32 (ImGuiCol_TextDisabled);
+  mHighlightColor = IM_COL32 (255, 255, 255, 50);  // highlight background color
+  mFrameBgndColor = ImGui::GetColorU32 (ImGuiCol_FrameBg);
+  mTextSelectBgndColor = ImGui::GetColorU32 (ImGuiCol_TextSelectedBg);
   }
 //}}}
 
