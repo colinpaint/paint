@@ -198,7 +198,7 @@ public:
 
   bool isTextEdited() const { return mInfo.mTextEdited; }
 
-  bool isShowFolds() const { return mOptions.mShowFolds; }
+  bool isShowFolds() const { return mOptions.mShowFolded; }
   bool isShowLineNumbers() const { return mOptions.mShowLineNumbers; }
   bool isShowDebug() const { return mOptions.mShowDebug; }
   bool isShowWhiteSpace() const { return mOptions.mShowWhiteSpace; }
@@ -221,8 +221,6 @@ public:
   sPosition getCursorPosition() const { return sanitizePosition (mEdit.mState.mCursorPosition); }
 
   const sLanguage& getLanguage() const { return mOptions.mLanguage; }
-
-  std::string getDebugString() { return mDebugString; }
   //}}}
   //{{{  sets
   void setTextString (const std::string& text);
@@ -235,7 +233,7 @@ public:
   void setTabSize (int value) { mInfo.mTabSize = std::max (0, std::min (32, value)); }
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
 
-  void setShowFolds (bool showFolds) { mOptions.mShowFolds = showFolds; }
+  void setShowFolded (bool showFolds) { mOptions.mShowFolded = showFolds; }
   void setShowDebug (bool showDebug) { mOptions.mShowDebug = showDebug; }
   void setShowLineNumbers (bool showLineNumbers) { mOptions.mShowLineNumbers = showLineNumbers; }
   void setShowWhiteSpace (bool showWhiteSpace) { mOptions.mShowWhiteSpace = showWhiteSpace; }
@@ -247,7 +245,7 @@ public:
 
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverwrite() { mOptions.mOverwrite = !mOptions.mOverwrite; }
-  void toggleShowFolds() { mOptions.mShowFolds = !mOptions.mShowFolds; }
+  void toggleShowFolded() { mOptions.mShowFolded = !mOptions.mShowFolded; }
   void toggleShowLineNumbers() { mOptions.mShowLineNumbers = !mOptions.mShowLineNumbers; }
   void toggleShowDebug() { mOptions.mShowDebug = !mOptions.mShowDebug; }
   void toggleShowWhiteSpace() { mOptions.mShowWhiteSpace = !mOptions.mShowWhiteSpace; }
@@ -309,8 +307,8 @@ private:
            const std::string& aRemoved, const cTextEdit::sPosition removedStart, const cTextEdit::sPosition removedEnd,
            cTextEdit::sCursorSelectionState& before, cTextEdit::sCursorSelectionState& after);
 
-    void undo (cTextEdit* editor);
-    void redo (cTextEdit* editor);
+    void undo (cTextEdit* textEdit);
+    void redo (cTextEdit* textEdit);
 
     // vars
     std::string mAdded;
@@ -335,7 +333,7 @@ private:
     bool mCheckComments = true;
 
     // shows
-    bool mShowFolds = false;
+    bool mShowFolded = false;
     bool mShowLineNumbers = true;
     bool mShowDebug = true;
     bool mShowWhiteSpace = false;
@@ -366,20 +364,17 @@ private:
   //{{{
   class cContext {
   public:
-    void update (const cOptions& options, const cInfo& info);
+    void update (const cOptions& options);
 
     ImFont* mFont = nullptr;
     float mFontSize = 0.f;
-    float mFontHalfSize = 0.f;
     ImDrawList* mDrawList = nullptr;
-    ImVec2 mCursorScreenPos;
     bool mFocused = false;
 
-    ImVec2 mCharSize;          // size of character grid, space wide, fontHeight high
-    float mGlyphsOffset = 0.f; // start offset of glyphs
-    float mMaxLineWidth = 0.f; // width of widest line, used to set scroll region
-    ImVec2 mLineBeginPos;      // start pos of line cursor bgnd
-    ImVec2 mGlyphsPos;         // running pos of glyphs
+    float mLineHeight = 0.f;
+    float mGlyphWidth = 0.f;
+
+    float mGlyphsBegin = 0.f;
     };
   //}}}
   //{{{
@@ -477,7 +472,6 @@ private:
   void drawGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
   void drawLine (int lineNumber, int beginFoldLineNumber);
   int drawFold (int lineNumber, bool parentOpen, bool foldOpen);
-  void postDraw();
 
   //{{{  vars
   bool mOpen = true;  // set false when DrawWindow() closed
@@ -490,6 +484,5 @@ private:
 
   uint64_t mStartTime;
   float mLastClick;
-  std::string mDebugString;
   //}}}
   };

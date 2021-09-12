@@ -129,6 +129,8 @@ void cMemEdit::drawContents (size_t baseAddress) {
   mContext.update (mOptions, mInfo); // context of sizes,colours
   mEdit.begin (mOptions, mInfo);
 
+  //ImGui::PushAllowKeyboardFocus (true);
+  //ImGui::PopAllowKeyboardFocus();
   handleKeyboardInputs();
   handleMouseInputs();
 
