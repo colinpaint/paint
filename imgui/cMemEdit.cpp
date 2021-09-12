@@ -126,7 +126,7 @@ void cMemEdit::drawWindow (const string& title, size_t baseAddress) {
 void cMemEdit::drawContents (size_t baseAddress) {
 
   mInfo.setBaseAddress (baseAddress);
-  mContext.init (mOptions, mInfo); // context of sizes,colours
+  mContext.update (mOptions, mInfo); // context of sizes,colours
   mEdit.begin (mOptions, mInfo);
 
   handleKeyboardInputs();
@@ -141,8 +141,7 @@ void cMemEdit::drawContents (size_t baseAddress) {
 
   // clipper begin
   ImGuiListClipper clipper;
-  int maxNumLines = static_cast<int>((mInfo.mMemSize + (mOptions.mColumns-1)) / mOptions.mColumns);
-  clipper.Begin (maxNumLines, mContext.mLineHeight);
+  clipper.Begin (mContext.mNumLines, mContext.mLineHeight);
   clipper.Step();
 
   if (isValid (mEdit.mNextEditAddress)) {
@@ -571,8 +570,6 @@ void cMemEdit::handleKeyboardInputs() {
      {false, false, false, ImGuiKey_End,        false, [this]{moveEnd();}},
      };
 
-  //if (!ImGui::IsWindowFocused())
-  //  return;
   //if (ImGui::IsWindowHovered())
   //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
 
@@ -584,7 +581,7 @@ void cMemEdit::handleKeyboardInputs() {
   //io.WantTextInput = true;
 
   for (auto& actionKey : kActionKeys) {
-    // dispatch matched actionKey
+    //{{{  dispatch matched actionKey
     if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
          ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
         (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
@@ -596,6 +593,7 @@ void cMemEdit::handleKeyboardInputs() {
       break;
       }
     }
+    //}}}
   }
 //}}}
 
@@ -855,7 +853,7 @@ void cMemEdit::drawLine (int lineNumber) {
 
 // cMemEdit::cContext
 //{{{
-void cMemEdit::cContext::init (const cOptions& options, const cInfo& info) {
+void cMemEdit::cContext::update (const cOptions& options, const cInfo& info) {
 
   // address box size
   mAddressDigitsCount = 0;
@@ -886,6 +884,9 @@ void cMemEdit::cContext::init (const cOptions& options, const cInfo& info) {
 
   // page up,down inc
   mNumPageLines = static_cast<int>(ImGui::GetWindowHeight() / ImGui::GetTextLineHeight()) - kPageMarginLines;
+
+  // numLines of memory range
+  mNumLines = static_cast<int>((info.mMemSize + (options.mColumns-1)) / options.mColumns);
 
   // colors
   mTextColor = ImGui::GetColorU32 (ImGuiCol_Text);

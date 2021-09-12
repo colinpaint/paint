@@ -52,9 +52,17 @@ private:
   //{{{
   class cInfo {
   public:
-    cInfo (uint8_t* memData, size_t memSize) : mMemData(memData), mMemSize(memSize), mBaseAddress(kUndefinedAddress) {}
-    void setBaseAddress (size_t baseAddress) { mBaseAddress = baseAddress; }
+    //{{{
+    cInfo (uint8_t* memData, size_t memSize) 
+      : mMemData(memData), mMemSize(memSize), mBaseAddress(kUndefinedAddress) {}
+    //}}}
+    //{{{
+    void setBaseAddress (size_t baseAddress) { 
+      mBaseAddress = baseAddress; 
+      }
+    //}}}
 
+    // vars
     uint8_t* mMemData = nullptr;
     const size_t mMemSize = kUndefinedAddress;
     size_t mBaseAddress = kUndefinedAddress;
@@ -63,8 +71,9 @@ private:
   //{{{
   class cContext {
   public:
-    void init (const cOptions& options, const cInfo& info);
+    void update (const cOptions& options, const cInfo& info);
 
+    // vars
     float mGlyphWidth = 0;
     float mLineHeight = 0;
 
@@ -80,6 +89,8 @@ private:
 
     float mWindowWidth = 0;
     int mNumPageLines = 0;
+
+    int mNumLines = 0;
 
     ImU32 mTextColor;
     ImU32 mGreyColor;
