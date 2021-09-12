@@ -408,13 +408,12 @@ private:
   int getCharacterIndex (const sPosition& position) const;
   int getCharacterColumn (int lineNumber, int index) const;
 
-  int getLineCharacterCount (int row) const;
+  int getLineNumChars (int row) const;
   int getLineMaxColumn (int row) const;
 
   std::string getText (const sPosition& startPosition, const sPosition& endPosition) const;
-  ImU32 getGlyphColor (const sGlyph& glyph) const;
-
   std::string getCurrentLineText() const;
+  ImU32 getGlyphColor (const sGlyph& glyph) const;
 
   std::string getWordAt (const sPosition& position) const;
   std::string getWordUnderCursor() const;

@@ -1172,6 +1172,7 @@ void cTextEdit::closeFold() {
 //}}}
 //}}}
 
+// draws
 //{{{
 void cTextEdit::drawWindow (const string& title) {
 // standalone Memory Editor window
@@ -1265,11 +1266,11 @@ bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
     return true;
 
   const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
-  int cindex = getCharacterIndex (position);
-  if (cindex >= (int)glyphs.size())
+  int characterIndex = getCharacterIndex (position);
+  if (characterIndex >= (int)glyphs.size())
     return true;
 
-  return glyphs[cindex].mColorIndex != glyphs[size_t(cindex - 1)].mColorIndex;
+  return glyphs[characterIndex].mColorIndex != glyphs[size_t(characterIndex - 1)].mColorIndex;
   //return isspace (glyphs[cindex].mChar) != isspace (glyphs[cindex - 1].mChar);
   }
 //}}}
@@ -1277,20 +1278,20 @@ bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
 //{{{
 int cTextEdit::getCharacterIndex (const sPosition& position) const {
 
-  if (position.mLineNumber >= (int)mInfo.mLines.size()) {
+  if (position.mLineNumber >= static_cast<int>(mInfo.mLines.size())) {
     cLog::log (LOGERROR, "cTextEdit::getCharacterIndex - lineNumber too big");
     return 0;
     }
 
-  const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+  const vector <sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
-  int c = 0;
+  int column = 0;
   int i = 0;
-  for (; i < (int)glyphs.size() && (c < position.mColumn);) {
+  for (; (i < static_cast<int>(glyphs.size())) && (column < position.mColumn);) {
     if (glyphs[i].mChar == '\t')
-      c = (c / mInfo.mTabSize) * mInfo.mTabSize + mInfo.mTabSize;
+      column = (column / mInfo.mTabSize) * mInfo.mTabSize + mInfo.mTabSize;
     else
-      ++c;
+      ++column;
     i += utf8CharLength (glyphs[i].mChar);
     }
 
@@ -1301,58 +1302,58 @@ int cTextEdit::getCharacterIndex (const sPosition& position) const {
 int cTextEdit::getCharacterColumn (int lineNumber, int index) const {
 // handle tabs
 
-  if (lineNumber >= (int)mInfo.mLines.size())
+  if (lineNumber >= static_cast<int>(mInfo.mLines.size()))
     return 0;
 
   const vector<sGlyph>& glyphs = mInfo.mLines[lineNumber].mGlyphs;
 
-  int col = 0;
+  int column = 0;
   int i = 0;
-  while ((i < index) && i < ((int)glyphs.size())) {
-    uint8_t c = glyphs[i].mChar;
-    i += utf8CharLength (c);
-    if (c == '\t')
-      col = ((col / mInfo.mTabSize) * mInfo.mTabSize) + mInfo.mTabSize;
+  while ((i < index) && i < (static_cast<int>(glyphs.size()))) {
+    uint8_t ch = glyphs[i].mChar;
+    i += utf8CharLength (ch);
+    if (ch == '\t')
+      column = ((column / mInfo.mTabSize) * mInfo.mTabSize) + mInfo.mTabSize;
     else
-      col++;
+      column++;
     }
 
-  return col;
+  return column;
   }
 //}}}
 
+//{{{
+int cTextEdit::getLineNumChars (int row) const {
+
+  if (row >= static_cast<int>(mInfo.mLines.size()))
+    return 0;
+
+  const vector <sGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
+  int numChars = 0;
+  for (size_t i = 0; i < glyphs.size(); numChars++)
+    i += utf8CharLength (glyphs[i].mChar);
+
+  return numChars;
+  }
+//}}}
 //{{{
 int cTextEdit::getLineMaxColumn (int row) const {
 
-  if (row >= (int)mInfo.mLines.size())
+  if (row >= static_cast<int>(mInfo.mLines.size()))
     return 0;
 
-  const vector<sGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
-  int col = 0;
+  const vector <sGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
+  int column = 0;
   for (size_t i = 0; i < glyphs.size(); ) {
-    uint8_t c = glyphs[i].mChar;
-    if (c == '\t')
-      col = ((col / mInfo.mTabSize) * mInfo.mTabSize) + mInfo.mTabSize;
+    uint8_t ch = glyphs[i].mChar;
+    if (ch == '\t')
+      column = ((column / mInfo.mTabSize) * mInfo.mTabSize) + mInfo.mTabSize;
     else
-      col++;
-    i += utf8CharLength (c);
+      column++;
+    i += utf8CharLength (ch);
     }
 
-  return col;
-  }
-//}}}
-//{{{
-int cTextEdit::getLineCharacterCount (int row) const {
-
-  if (row >= (int)mInfo.mLines.size())
-    return 0;
-
-  const vector<sGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
-  int c = 0;
-  for (size_t i = 0; i < glyphs.size(); c++)
-    i += utf8CharLength (glyphs[i].mChar);
-
-  return c;
+  return column;
   }
 //}}}
 
@@ -1392,6 +1393,14 @@ string cTextEdit::getText (const sPosition& startPosition, const sPosition& endP
   }
 //}}}
 //{{{
+string cTextEdit::getCurrentLineText() const {
+
+  int lineLength = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber);
+  return getText (sPosition (mEdit.mState.mCursorPosition.mLineNumber, 0),
+                  sPosition (mEdit.mState.mCursorPosition.mLineNumber, lineLength));
+  }
+//}}}
+//{{{
 ImU32 cTextEdit::getGlyphColor (const sGlyph& glyph) const {
 
   if (glyph.mComment)
@@ -1412,15 +1421,6 @@ ImU32 cTextEdit::getGlyphColor (const sGlyph& glyph) const {
     }
 
   return color;
-  }
-//}}}
-
-//{{{
-string cTextEdit::getCurrentLineText() const {
-
-  int lineLength = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber);
-  return getText (sPosition (mEdit.mState.mCursorPosition.mLineNumber, 0),
-                  sPosition (mEdit.mState.mCursorPosition.mLineNumber, lineLength));
   }
 //}}}
 
@@ -2290,6 +2290,7 @@ void cTextEdit::handleMouseInputs() {
           mEdit.mSelection = eSelection::Line;
           setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
           }
+
         mLastClick = -1.f;
         }
         //}}}
@@ -2303,11 +2304,12 @@ void cTextEdit::handleMouseInputs() {
             mEdit.mSelection = eSelection::Word;
           setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
           }
+
         mLastClick = static_cast<float>(ImGui::GetTime());
         }
         //}}}
       else if (leftSingleClick) {
-        //{{{  left mouse sinngleClick
+        //{{{  left mouse singleClick
         mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
         mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
         mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
@@ -2324,6 +2326,7 @@ void cTextEdit::handleMouseInputs() {
       else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
         //{{{  left mouse button dragging (=> update selection)
         io.WantCaptureMouse = true;
+
         mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
         mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
         setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
@@ -2345,10 +2348,11 @@ void cTextEdit::handleMouseInputs() {
             mInfo.mLines[position.mLineNumber].mFoldOpen ^= true;
             }
           }
-        };
+        mLastClick = static_cast<float>(ImGui::GetTime());
+        }
         //}}}
       }
-    //}
+  // }
   }
 //}}}
 //{{{
@@ -2447,7 +2451,7 @@ void cTextEdit::handleKeyboardInputs() {
   bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
   bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
   io.WantTextInput = true;
-  io.WantCaptureKeyboard = true;
+  io.WantCaptureKeyboard = false;
 
   for (auto& actionKey : kActionKeys)
     //{{{  dispatch matched actionKey
@@ -2629,6 +2633,7 @@ void cTextEdit::drawTop() {
 //{{{
 void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
 
+  (void)glyphsLineNumber;
   if (mOptions.mShowFolded)
     mInfo.mFoldLines.push_back (lineNumber);
 
