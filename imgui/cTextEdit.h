@@ -206,8 +206,8 @@ public:
   // has
   bool hasSelect() const { return mEdit.mState.mSelectionEnd > mEdit.mState.mSelectionStart; }
   bool hasClipboardText();
-  bool hasUndo() const { return !mOptions.mReadOnly && mUndoList.mUndoIndex > 0; }
-  bool hasRedo() const { return !mOptions.mReadOnly && mUndoList.mUndoIndex < (int)mUndoList.mUndoBuffer.size(); }
+  bool hasUndo() const { return !mOptions.mReadOnly && mUndoList.mIndex > 0; }
+  bool hasRedo() const { return !mOptions.mReadOnly && mUndoList.mIndex < (int)mUndoList.mBuffer.size(); }
   bool hasTabs() const { return mInfo.mHasTabs; }
   bool hasFolds() const { return mInfo.mHasFolds; }
   bool hasCR() const { return mInfo.mHasCR; }
@@ -397,8 +397,8 @@ private:
   //{{{
   class cUndoList {
   public:
-    int mUndoIndex = 0;
-    tUndoBuffer mUndoBuffer;
+    int mIndex = 0;
+    tUndoBuffer mBuffer;
     };
   //}}}
 

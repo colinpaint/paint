@@ -550,8 +550,8 @@ void cTextEdit::setTextString (const string& text) {
 
   mInfo.mTextEdited = false;
 
-  mUndoList.mUndoBuffer.clear();
-  mUndoList.mUndoIndex = 0;
+  mUndoList.mBuffer.clear();
+  mUndoList.mIndex = 0;
 
   parseFolds();
   colorize();
@@ -581,8 +581,8 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
 
   mInfo.mTextEdited = false;
 
-  mUndoList.mUndoBuffer.clear();
-  mUndoList.mUndoIndex = 0;
+  mUndoList.mBuffer.clear();
+  mUndoList.mIndex = 0;
 
   parseFolds();
   colorize();
@@ -858,14 +858,14 @@ void cTextEdit::paste() {
 void cTextEdit::undo (int steps) {
 
   while (hasUndo() && steps-- > 0)
-    mUndoList.mUndoBuffer[--mUndoList.mUndoIndex].undo (this);
+    mUndoList.mBuffer[--mUndoList.mIndex].undo (this);
   }
 //}}}
 //{{{
 void cTextEdit::redo (int steps) {
 
   while (hasRedo() && steps-- > 0)
-    mUndoList.mUndoBuffer[mUndoList.mUndoIndex++].redo (this);
+    mUndoList.mBuffer[mUndoList.mIndex++].redo (this);
   }
 //}}}
 
@@ -1934,9 +1934,9 @@ void cTextEdit::addUndo (sUndo& value) {
   //  value.mAfter.mCursorPosition.mGlyphs, value.mAfter.mCursorPosition.mColumn
   //  );
 
-  mUndoList.mUndoBuffer.resize ((size_t)(mUndoList.mUndoIndex + 1));
-  mUndoList.mUndoBuffer.back() = value;
-  ++mUndoList.mUndoIndex;
+  mUndoList.mBuffer.resize ((size_t)(mUndoList.mIndex + 1));
+  mUndoList.mBuffer.back() = value;
+  ++mUndoList.mIndex;
   }
 //}}}
 
