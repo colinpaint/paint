@@ -711,8 +711,8 @@ void cMemEdit::drawLine (int lineNumber) {
           highlightWidth += mContext.mExtraSpaceWidth;
         }
 
-      ImVec2 posEnd = { pos.x + highlightWidth, pos.y + mContext.mLineHeight};
-      draw_list->AddRectFilled (pos, posEnd, mContext.mHighlightColor);
+      ImVec2 endPos = { pos.x + highlightWidth, pos.y + mContext.mLineHeight};
+      draw_list->AddRectFilled (pos, endPos, mContext.mHighlightColor);
       }
       //}}}
     if (mEdit.mEditAddress == address) {
@@ -834,9 +834,9 @@ void cMemEdit::drawLine (int lineNumber) {
 
     for (int column = 0; (column < mOptions.mColumns) && (address < mInfo.mMemSize); column++, address++) {
       if (address == mEdit.mEditAddress) {
-        ImVec2 posEnd = { pos.x + mContext.mGlyphWidth, pos.y + mContext.mLineHeight };
-        draw_list->AddRectFilled (pos, posEnd, mContext.mFrameBgndColor);
-        draw_list->AddRectFilled (pos, posEnd, mContext.mTextSelectBgndColor);
+        ImVec2 endPos = { pos.x + mContext.mGlyphWidth, pos.y + mContext.mLineHeight };
+        draw_list->AddRectFilled (pos, endPos, mContext.mFrameBgndColor);
+        draw_list->AddRectFilled (pos, endPos, mContext.mTextSelectBgndColor);
         }
 
       uint8_t value = mInfo.mMemData[address];
