@@ -2583,11 +2583,14 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
     if (glyph.mChar == '\t') {
       //{{{  tab
       ImVec2 arrowLeftPos = { pos.x + 1.f, pos.y + mContext.mFontSize/2.f };
-      pos.x = (1.f + floor ((1.f + pos.x) /
-                  mInfo.mTabSize * mContext.mGlyphWidth)) * (mInfo.mTabSize * mContext.mGlyphWidth);
+
+      // apply tab tab
+      float tabEnd = 1.f + floor ((1.f + pos.x) / (mInfo.mTabSize * mContext.mGlyphWidth));
+      pos.x = tabEnd * (mInfo.mTabSize * mContext.mGlyphWidth);
+
       if (mOptions.mShowWhiteSpace) {
         // draw tab arrow
-        ImVec2 arrowRightPos = {pos.x-1.f, pos.y + mContext.mFontSize/2.f};
+        ImVec2 arrowRightPos = { pos.x - 1.f, arrowLeftPos.y };
         mContext.mDrawList->AddLine (arrowLeftPos, arrowRightPos,mOptions.mPalette[(size_t)ePalette::Tab]);
 
         ImVec2 arrowTopPos = { arrowRightPos.x - (mContext.mFontSize * 0.2f) - 1.f,
