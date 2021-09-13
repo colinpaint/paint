@@ -69,18 +69,19 @@ public:
     //if (!mFileView)
       //mFileView = new cFileView ("C:/projects/paint/build/Release/fed.exe");
 
-    //{{{  memedit
-    //if (!mMemEdit)
-      //mMemEdit = new cMemEdit ((uint8_t*)(this), 0x10000);
+    if (false) {
+      //{{{  memEdit
+      if (!mMemEdit)
+        mMemEdit = new cMemEdit ((uint8_t*)(this), 0x10000);
 
-    //ImGui::PushFont (app.getMonoFont());
-    ////mMemEdit->drawWindow ("Memory Editor", mFileView->getReadPtr(), mFileView->getReadBytesLeft(), 0);
-    ////mMemEdit->drawWindow ("Memory Editor", (uint8_t*)this, sizeof(*this), 0);
-    //mMemEdit->drawWindow ("Memory Editor", 0);
-    //ImGui::PopFont();
-
-    //return;
-    //}}}
+      ImGui::PushFont (app.getMonoFont());
+      //mMemEdit->drawWindow ("Memory Editor", mFileView->getReadPtr(), mFileView->getReadBytesLeft(), 0);
+      //mMemEdit->drawWindow ("Memory Editor", (uint8_t*)this, sizeof(*this), 0);
+      mMemEdit->drawWindow ("Memory Editor", 0);
+      ImGui::PopFont();
+      return;
+      }
+      //}}}
 
     if (!mTextEdit) {
       //{{{  create cTextEdit for app name
