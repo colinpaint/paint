@@ -14,23 +14,23 @@
 #include <stb_image_write.h>
 
 // imGui
-#include "../imgui/imgui.h"
+#include "imgui/imgui.h"
 
 // UI font
-#include "../font/itcSymbolBold.h"
-#include "../font/droidSansMono.h"
+#include "font/itcSymbolBold.h"
+#include "font/droidSansMono.h"
 
 // self registered classes using static var init idiom
-#include "../platform/cPlatform.h"
-#include "../graphics/cGraphics.h"
+#include "platform/cPlatform.h"
+#include "graphics/cGraphics.h"
 
 // ui
-#include "../ui/cApp.h"
-#include "../ui/cUI.h"
+#include "ui/cApp.h"
+#include "ui/cUI.h"
 
 // utils
-#include "../utils/cFileUtils.h"
-#include "../utils/cLog.h"
+#include "utils/cFileUtils.h"
+#include "utils/cLog.h"
 
 using namespace std;
 //}}}
@@ -73,7 +73,7 @@ int main (int numArgs, char* args[]) {
   // create platform, graphics, UI font
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
-  ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
+  ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f);
 
   // create app to tie stuff together
   cApp app (platform, graphics);

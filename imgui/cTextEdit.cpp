@@ -3,6 +3,7 @@
 //{{{  includes
 #include "cTextEdit.h"
 
+#include <cmath>
 #include <algorithm>
 #include <functional>
 #include <chrono>
@@ -1764,8 +1765,6 @@ void cTextEdit::moveDown (int amount) {
 //{{{
 vector<cTextEdit::sGlyph>& cTextEdit::insertLine (int index) {
 
-  assert (!mReadOnly);
-
   sLine& result = *mInfo.mLines.insert (mInfo.mLines.begin() + index, vector<sGlyph>());
 
   map<int,string> etmp;
@@ -1778,8 +1777,6 @@ vector<cTextEdit::sGlyph>& cTextEdit::insertLine (int index) {
 //}}}
 //{{{
 int cTextEdit::insertTextAt (sPosition& where, const char* value) {
-
-  assert (!mReadOnly);
 
   int cindex = getCharacterIndex (where);
   int totalLines = 0;
@@ -1845,7 +1842,6 @@ void cTextEdit::insertText (const char* value) {
 //{{{
 void cTextEdit::removeLine (int startPosition, int endPosition) {
 
-  assert (!mReadOnly);
   assert (endPosition >= startPosition);
   assert (int(mInfo.mLines.size()) > endPosition - startPosition);
 
@@ -1867,8 +1863,7 @@ void cTextEdit::removeLine (int startPosition, int endPosition) {
 //{{{
 void cTextEdit::removeLine (int index) {
 
-  assert(!mReadOnly);
-  assert(mInfo.mLines.size() > 1);
+  assert (mInfo.mLines.size() > 1);
 
   map<int,string> etmp;
   for (auto& marker : mOptions.mMarkers) {
@@ -1889,7 +1884,6 @@ void cTextEdit::removeLine (int index) {
 void cTextEdit::deleteRange (const sPosition& startPosition, const sPosition& endPosition) {
 
   assert (endPosition >= startPosition);
-  assert (!mReadOnly);
 
   //printf("D(%d.%d)-(%d.%d)\n", startPosition.mGlyphs, startPosition.mColumn, endPosition.mGlyphs, endPosition.mColumn);
 
@@ -1929,7 +1923,6 @@ void cTextEdit::deleteRange (const sPosition& startPosition, const sPosition& en
 //{{{
 void cTextEdit::addUndo (sUndo& value) {
 
-  assert(!mReadOnly);
   //printf("AddUndo: (@%d.%d) +\'%s' [%d.%d .. %d.%d], -\'%s', [%d.%d .. %d.%d] (@%d.%d)\n",
   //  value.mBefore.mCursorPosition.mGlyphs, value.mBefore.mCursorPosition.mColumn,
   //  value.mAdded.c_str(), value.mAddedStart.mGlyphs, value.mAddedStart.mColumn, value.mAddedEnd.mGlyphs, value.mAddedEnd.mColumn,

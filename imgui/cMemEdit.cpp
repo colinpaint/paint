@@ -16,9 +16,10 @@
 //{{{  includes
 #include "cMemEdit.h"
 
-#include <stdio.h>  // sprintf, scanf
+#include <cmath>
 #include <array>
 #include <functional>
+#include <stdio.h>  // sprintf, scanf
 
 #include "../imgui/myImguiWidgets.h"
 
