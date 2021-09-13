@@ -435,7 +435,7 @@ namespace {
 // cTextEdit
 //{{{
 cTextEdit::cTextEdit()
-  : mFlashTime(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()), mLastClick(-1.f) {
+   : mLastFlashTime(system_clock::now()) {
 
   mInfo.mLines.push_back (vector<sGlyph>());
   mOptions.mPalette = kLightPalette;
@@ -2263,7 +2263,7 @@ void cTextEdit::handleMouseInputs() {
       bool leftDoubleClick = ImGui::IsMouseDoubleClicked (0);
       bool leftTripleClick = leftSingleClick &&
                              !leftDoubleClick &&
-                             ((mLastClick != -1.f) && (ImGui::GetTime() - mLastClick) < io.MouseDoubleClickTime);
+                             ((mLastClickTime != -1.f) && (ImGui::GetTime() - mLastClickTime) < io.MouseDoubleClickTime);
       if (righttSingleClick) {
         //{{{  right mouse right singleClick
         if (mOptions.mShowFolded) {
@@ -2279,7 +2279,8 @@ void cTextEdit::handleMouseInputs() {
             mInfo.mLines[position.mLineNumber].mFoldOpen ^= true;
             }
           }
-        mLastClick = static_cast<float>(ImGui::GetTime());
+
+        mLastClickTime = static_cast<float>(ImGui::GetTime());
         }
         //}}}
       else if (leftTripleClick) {
@@ -2293,7 +2294,7 @@ void cTextEdit::handleMouseInputs() {
           setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
           }
 
-        mLastClick = -1.f;
+        mLastClickTime = -1.f;
         }
         //}}}
       else if (leftDoubleClick) {
@@ -2310,7 +2311,7 @@ void cTextEdit::handleMouseInputs() {
           setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
           }
 
-        mLastClick = static_cast<float>(ImGui::GetTime());
+        mLastClickTime = static_cast<float>(ImGui::GetTime());
         }
         //}}}
       else if (leftSingleClick) {
@@ -2325,7 +2326,7 @@ void cTextEdit::handleMouseInputs() {
           mEdit.mSelection = eSelection::Normal;
         setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
 
-        mLastClick = static_cast<float>(ImGui::GetTime());
+        mLastClickTime = static_cast<float>(ImGui::GetTime());
         }
         //}}}
       else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
@@ -2563,25 +2564,23 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
   if (glyphs.empty())
     return 0.f;
 
-  // c style str buffer, null terminated
-  char str[256];
-  char* strPtr = str;
-  char* strLastPtr = str + sizeof(str) - 1;
-
   // beginPos to measure textWidth on return
   float beginPosX = pos.x;
 
+  // init
+  array <char,256> str;
+  size_t strIndex = 0;
   ImU32 strColor = forceColor ? forcedColor : getGlyphColor (glyphs[0]);
   for (auto& glyph : glyphs) {
     ImU32 color = forceColor ? forcedColor : getGlyphColor (glyph);
-    if (((color != strColor) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && (strPtr != str)) {
-      // draw colored glyphs word
-      *strPtr = 0;
-      mContext.mDrawList->AddText (pos, strColor, str);
-      pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+    if (((color != strColor) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && (strIndex < str.max_size())) {
+      // draw colored glyphs, seperated by colorChange,tab,space
+      str[strIndex] = 0; // null terminate
+      mContext.mDrawList->AddText (pos, strColor, str.data());
+      pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str.data(), nullptr).x;
 
-      // next str
-      strPtr = str;
+      // init for next str
+      strIndex = 0;
       strColor = color;
       }
 
@@ -2619,16 +2618,16 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
       //}}}
     else {
       int length = utf8CharLength (glyph.mChar);
-      while ((length-- > 0) && (strPtr < strLastPtr))
-        *strPtr++ = glyph.mChar;
+      while ((length-- > 0) && (strIndex < str.max_size()))
+        str[strIndex++] = glyph.mChar;
       }
     }
 
-  if (strPtr != str) {
+  if (str.size()) {
     // draw remaining glyphs
-    *strPtr = 0;
-    mContext.mDrawList->AddText (pos, strColor, str);
-    pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+    str[strIndex] = 0; // null terminate
+    mContext.mDrawList->AddText (pos, strColor, str.data());
+    pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str.data(), nullptr, nullptr).x;
     }
 
   // return textWidth
@@ -2665,9 +2664,8 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     mContext.mTextBegin = beginPos.x + lineNumberWidth;
     }
 
-  // draw background highlights
   float textWidth = getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber)));
-  //{{{  draw select background
+  //{{{  draw select background highlight
   sPosition lineStartPosition (lineNumber, 0);
   sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
 
@@ -2689,7 +2687,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     mContext.mDrawList->AddRectFilled (pos, endPos, color);
     }
   //}}}
-  //{{{  draw marker background
+  //{{{  draw marker background highlight
   auto markerIt = mOptions.mMarkers.find (lineNumber + 1);
   if (markerIt != mOptions.mMarkers.end()) {
     ImVec2 endPos = { beginPos.x + mContext.mTextBegin + textWidth, beginPos.y };
@@ -2708,7 +2706,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       }
     }
   //}}}
-  //{{{  draw cursor line background
+  //{{{  draw cursor background highlight
   if (!hasSelect() && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
     ImVec2 endPos = { beginPos.x + mContext.mTextBegin + textWidth, beginPos.y + mContext.mLineHeight };
     ImColor fillColor = mOptions.mPalette[size_t(mContext.mFocused ? ePalette::CurrentLineFill
@@ -2736,12 +2734,12 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
         cLog::log (LOGINFO, "hit foldBegin open prefix");
         }
       textPos.x += prefixWidth;
-      ImGui::SameLine();
 
       float glyphsWidth = drawGlyphs (textPos, line.mGlyphs, false, 0);
 
       // text invisible button
       snprintf (buf, sizeof(buf), "##text%d", lineNumber);
+      ImGui::SameLine();
       if (ImGui::InvisibleButton (buf, ImVec2 (glyphsWidth, mContext.mLineHeight))) {
         cLog::log (LOGINFO, "hit foldBegin open text");
         }
@@ -2766,13 +2764,13 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
         }
 
       textPos.x += prefixWidth;
-      ImGui::SameLine();
 
       float glyphsWidth = drawGlyphs (textPos, mInfo.mLines[glyphsLineNumber].mGlyphs, true,
                                       mOptions.mPalette[(size_t)ePalette::FoldBeginClosed]);
 
       // text invisible button
       snprintf (buf, sizeof(buf), "##text%d", lineNumber);
+      ImGui::SameLine();
       if (ImGui::InvisibleButton (buf, ImVec2 (glyphsWidth, mContext.mLineHeight))) {
         cLog::log (LOGINFO, "hit foldBegin closed text");
          }
@@ -2815,13 +2813,13 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
 
   // cursor
   if (mContext.mFocused && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
-    //{{{  draw character cursor
-    // flash
-    auto timeNow = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-    auto elapsed = timeNow - mFlashTime;
-    if (elapsed > 400) {
-      if (elapsed > 800)
-        mFlashTime = timeNow;
+    //{{{  draw flashing cursor
+    chrono::system_clock::time_point now = system_clock::now();
+
+    auto elapsed = now - mLastFlashTime;
+    if (elapsed > 400ms) {
+      if (elapsed > 800ms)
+        mLastFlashTime = now;
 
       int characterIndex = getCharacterIndex (mEdit.mState.mCursorPosition);
       float widthToCursor = getTextWidth (mEdit.mState.mCursorPosition);

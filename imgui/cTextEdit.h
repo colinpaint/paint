@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <regex>
+#include <chrono>
 
 #include <vector>
 #include <array>
@@ -481,7 +482,7 @@ private:
   cEdit mEdit;
   cUndoList mUndoList;
 
-  uint64_t mFlashTime;
-  float mLastClick;
+  float mLastClickTime = -1;
+  std::chrono::system_clock::time_point mLastFlashTime;
   //}}}
   };
