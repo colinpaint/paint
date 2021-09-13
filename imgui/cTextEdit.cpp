@@ -2560,6 +2560,9 @@ void cTextEdit::drawTop() {
 //{{{
 float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor) {
 
+  if (glyphs.empty())
+    return 0.f;
+
   // c style str buffer, null terminated
   char str[256];
   char* strPtr = str;
@@ -2568,16 +2571,18 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
   // beginPos to measure textWidth on return
   float beginPosX = pos.x;
 
-  ImU32 color = glyphs.empty() ? mOptions.mPalette[(size_t)ePalette::Default] : getGlyphColor (glyphs[0]);
+  ImU32 strColor = forceColor ? forcedColor : getGlyphColor (glyphs[0]);
   for (auto& glyph : glyphs) {
-    ImU32 nextColor = getGlyphColor (glyph);
-    if (((nextColor != color) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && (strPtr != str)) {
+    ImU32 color = forceColor ? forcedColor : getGlyphColor (glyph);
+    if (((color != strColor) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && (strPtr != str)) {
       // draw colored glyphs word
       *strPtr = 0;
-      mContext.mDrawList->AddText (pos, forceColor ? forcedColor : color, str);
+      mContext.mDrawList->AddText (pos, strColor, str);
       pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+
+      // next str
       strPtr = str;
-      color = nextColor;
+      strColor = color;
       }
 
     if (glyph.mChar == '\t') {
@@ -2622,7 +2627,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
   if (strPtr != str) {
     // draw remaining glyphs
     *strPtr = 0;
-    mContext.mDrawList->AddText (pos, forceColor ? forcedColor : color, str);
+    mContext.mDrawList->AddText (pos, strColor, str);
     pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
     }
 
@@ -2803,7 +2808,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
 
     if (ImGui::IsItemHovered() || ImGui::IsItemActive())
       cLog::log (LOGINFO, fmt::format ("hoverit text {} {} {}", lineNumber, ImGui::IsItemHovered(), ImGui::IsItemActive()));
-    
+
     textPos.x += glyphsWidth;
     }
     //}}}
