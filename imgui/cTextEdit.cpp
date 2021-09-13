@@ -2651,7 +2651,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     // draw text overlaid by invisible button
     float lineNumberWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
     mContext.mDrawList->AddText (beginPos, mOptions.mPalette[(size_t)ePalette::LineNumber], buf);
-    
+
     // lineNumber invisible button
     snprintf (buf, sizeof(buf), "##line%d", lineNumber);
     if (ImGui::InvisibleButton (buf, ImVec2 (lineNumberWidth, mContext.mLineHeight)))
@@ -2798,10 +2798,12 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     // text invisible button
     char buf[16];
     snprintf (buf, sizeof(buf), "##text%d", lineNumber);
-    if (ImGui::InvisibleButton (buf, ImVec2 (glyphsWidth, mContext.mLineHeight))) {
-      cLog::log (LOGINFO, "hit text");
-      }
+    if (ImGui::InvisibleButton (buf, ImVec2 (glyphsWidth, mContext.mLineHeight)))
+      cLog::log (LOGINFO, fmt::format ("hit text {}", lineNumber));
 
+    if (ImGui::IsItemHovered() || ImGui::IsItemActive())
+      cLog::log (LOGINFO, fmt::format ("hoverit text {} {} {}", lineNumber, ImGui::IsItemHovered(), ImGui::IsItemActive()));
+    
     textPos.x += glyphsWidth;
     }
     //}}}
