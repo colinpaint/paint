@@ -1,30 +1,12 @@
 // cTextEdit.cpp - nicked from https://github.com/BalazsJako/ImGuiColorTextEdit
 // - remember this file is used to test itself
 //{{{  includes
-// dummy comment
-
-/* and some old style c comments
-   to test comment handling in this editor
-*/
-
-#include <cstdint>
-#include <cmath>
-#include <algorithm>
-
-#include <string>
-#include <vector>
-#include <array>
-#include <map>
-#include <unordered_map>
-#include <unordered_set>
-
-#include <chrono>
-#include <regex>
-#include <functional>
-
 #include "cTextEdit.h"
 
-#include "../imgui/imgui.h"
+#include <algorithm>
+#include <functional>
+#include <chrono>
+
 #include "../imgui/myImguiWidgets.h"
 
 #include "../utils/cLog.h"
@@ -2576,8 +2558,8 @@ void cTextEdit::drawTop() {
 //{{{
 float cTextEdit::drawGlyphs (const vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor) {
 
-  ImVec2 pos = ImGui::GetCursorScreenPos();
-  ImVec2 beginPos = pos;
+  ImVec2 beginPos = ImGui::GetCursorScreenPos();
+  ImVec2 textPos = beginPos;
 
   // c style str buffer, null terminated
   char str[256];
@@ -2591,20 +2573,20 @@ float cTextEdit::drawGlyphs (const vector <sGlyph>& glyphs, bool forceColor, ImU
     if (((nextColor != color) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && (strPtr != str)) {
       // draw colored glyphs word
       *strPtr = 0;
-      mContext.mDrawList->AddText (pos, forceColor ? forcedColor : color, str);
-      pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      mContext.mDrawList->AddText (textPos, forceColor ? forcedColor : color, str);
+      textPos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
       strPtr = str;
 
       color = nextColor;
       }
 
     if (glyph.mChar == '\t') {
-      ImVec2 arrowLeftPos = { pos.x + 1.f, pos.y + mContext.mFontSize/2.f };
-      pos.x = (1.f + floor ((1.f + pos.x) /
-               mInfo.mTabSize * mContext.mGlyphWidth)) * (mInfo.mTabSize * mContext.mGlyphWidth);
+      ImVec2 arrowLeftPos = { textPos.x + 1.f, textPos.y + mContext.mFontSize/2.f };
+      textPos.x = (1.f + floor ((1.f + textPos.x) /
+                  mInfo.mTabSize * mContext.mGlyphWidth)) * (mInfo.mTabSize * mContext.mGlyphWidth);
       if (mOptions.mShowWhiteSpace) {
         // add tab and draw arrow
-        ImVec2 arrowRightPos = {pos.x-1.f, pos.y + mContext.mFontSize/2.f};
+        ImVec2 arrowRightPos = {textPos.x-1.f, textPos.y + mContext.mFontSize/2.f};
         mContext.mDrawList->AddLine (arrowLeftPos, arrowRightPos,mOptions.mPalette[(size_t)ePalette::Tab]);
 
         ImVec2 arrowTopPos = { arrowRightPos.x - (mContext.mFontSize * 0.2f) - 1.f,
@@ -2618,10 +2600,10 @@ float cTextEdit::drawGlyphs (const vector <sGlyph>& glyphs, bool forceColor, ImU
     else if (glyph.mChar == ' ') {
       if (mOptions.mShowWhiteSpace) {
         // add space and draw circle
-        ImVec2 centre = { pos.x  + mContext.mGlyphWidth/2.f, pos.y + mContext.mFontSize/2.f};
+        ImVec2 centre = { textPos.x  + mContext.mGlyphWidth/2.f, textPos.y + mContext.mFontSize/2.f};
         mContext.mDrawList->AddCircleFilled (centre, 2.f, mOptions.mPalette[(size_t)ePalette::WhiteSpace], 4);
         }
-      pos.x += mContext.mGlyphWidth;
+      textPos.x += mContext.mGlyphWidth;
       }
     else {
       // add char
@@ -2634,19 +2616,17 @@ float cTextEdit::drawGlyphs (const vector <sGlyph>& glyphs, bool forceColor, ImU
   if (strPtr != str) {
     // draw remaining glyphs
     *strPtr = 0;
-    mContext.mDrawList->AddText (pos, forceColor ? forcedColor : color, str);
-    pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+    mContext.mDrawList->AddText (textPos, forceColor ? forcedColor : color, str);
+    textPos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
     }
 
-  return pos.x - beginPos.x;
+  // return textWidth
+  return textPos.x - beginPos.x;
   }
 //}}}
 //{{{
 void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
 
-  //{{{  unused
-  (void)glyphsLineNumber;
-  //}}}
   if (mOptions.mShowFolded)
     mInfo.mFoldLines.push_back (lineNumber);
 
@@ -2661,9 +2641,9 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     else
       snprintf (buf, sizeof(buf), "%4d ", lineNumber);
 
+    // draw text overlaid by invisible button
     float width = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
     mContext.mDrawList->AddText (cursorBeginPos, mOptions.mPalette[(size_t)ePalette::LineNumber], buf);
-
     if (ImGui::InvisibleButton ("##lineNumber", ImVec2 (width, mContext.mLineHeight)))
       cLog::log (LOGINFO, "hit lineNumber");
 
@@ -2740,11 +2720,10 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
        prefixString += ' ';
      prefixString += mOptions.mLanguage.mFoldBeginClosed;
      ImVec2 pos = { cursorBeginPos.x + mContext.mTextBegin, cursorBeginPos.y };
-     mContext.mDrawList->AddText (pos,
-                                  mOptions.mPalette[(size_t)ePalette::FoldBeginClosed],
+     mContext.mDrawList->AddText (pos, mOptions.mPalette[(size_t)ePalette::FoldBeginClosed],
                                   prefixString.c_str());
 
-     // a closed fold with no comments may be using the first nonComment line in fold for glyphs
+     // a closed fold with no comment, will use first nonComment line in fold
      drawGlyphs (mInfo.mLines[glyphsLineNumber].mGlyphs, true,
                  mOptions.mPalette[(size_t)ePalette::FoldBeginClosed]);
      }
@@ -2756,11 +2735,12 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     mContext.mDrawList->AddText (pos, mOptions.mPalette[(size_t)ePalette::FoldEnd], mOptions.mLanguage.mFoldEnd.c_str());
     }
     //}}}
-  else {
+  else
     drawGlyphs (line.mGlyphs, false, 0);
-    if (ImGui::InvisibleButton ("##text", ImVec2 (textWidth, mContext.mLineHeight)))
-      cLog::log (LOGINFO, "hit text");
-    }
+
+  // overlay text with invisible button
+  if (ImGui::InvisibleButton ("##text", ImVec2 (textWidth, mContext.mLineHeight)))
+    cLog::log (LOGINFO, "hit text");
 
   if (mContext.mFocused && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
     //{{{  draw character cursor

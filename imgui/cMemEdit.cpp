@@ -20,8 +20,6 @@
 #include <array>
 #include <functional>
 
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include "../imgui/imgui.h"
 #include "../imgui/myImguiWidgets.h"
 
 #include "../utils/cLog.h"
@@ -713,7 +711,7 @@ void cMemEdit::drawLine (int lineNumber) {
           highlightWidth += mContext.mExtraSpaceWidth;
         }
 
-      ImVec2 posEnd = { pos.x + highlightWidth, pos.y + mContext.mLineHeight}; 
+      ImVec2 posEnd = { pos.x + highlightWidth, pos.y + mContext.mLineHeight};
       draw_list->AddRectFilled (pos, posEnd, mContext.mHighlightColor);
       }
       //}}}
