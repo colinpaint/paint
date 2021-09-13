@@ -346,10 +346,11 @@ private:
     ImFont* mFont = nullptr;
     float mFontSize = 0.f;
 
-    float mLineHeight = 0.f;
     float mGlyphWidth = 0.f;
-
+    float mPadding = 0.f;
     float mTextBegin = 0.f;
+
+    float mLineHeight = 0.f;
     };
   //}}}
   //{{{
@@ -467,7 +468,7 @@ private:
   void handleKeyboardInputs();
 
   void drawTop();
-  float drawGlyphs (const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
+  float drawGlyphs (ImVec2 pos, const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
   void drawLine (int lineNumber, int beginFoldLineNumber);
   int drawFold (int lineNumber, bool parentOpen, bool foldOpen);
 

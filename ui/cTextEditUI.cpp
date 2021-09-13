@@ -115,7 +115,6 @@ public:
       //}}}
 
     // full screen window
-    ImGui::SetWindowFocus();
     ImGui::PushFont (app.getMonoFont());
     mTextEdit->drawWindow ("fed");
     ImGui::PopFont();
