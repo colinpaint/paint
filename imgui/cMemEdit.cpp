@@ -22,7 +22,6 @@
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "../imgui/imgui.h"
-#include "../imgui/imgui_internal.h"
 #include "../imgui/myImguiWidgets.h"
 
 #include "../utils/cLog.h"
@@ -714,7 +713,8 @@ void cMemEdit::drawLine (int lineNumber) {
           highlightWidth += mContext.mExtraSpaceWidth;
         }
 
-      draw_list->AddRectFilled (pos, pos + ImVec2(highlightWidth, mContext.mLineHeight), mContext.mHighlightColor);
+      ImVec2 posEnd = { pos.x + highlightWidth, pos.y + mContext.mLineHeight}; 
+      draw_list->AddRectFilled (pos, posEnd, mContext.mHighlightColor);
       }
       //}}}
     if (mEdit.mEditAddress == address) {
@@ -836,7 +836,7 @@ void cMemEdit::drawLine (int lineNumber) {
 
     for (int column = 0; (column < mOptions.mColumns) && (address < mInfo.mMemSize); column++, address++) {
       if (address == mEdit.mEditAddress) {
-        ImVec2 posEnd = pos + ImVec2 (mContext.mGlyphWidth, mContext.mLineHeight);
+        ImVec2 posEnd = { pos.x + mContext.mGlyphWidth, pos.y + mContext.mLineHeight };
         draw_list->AddRectFilled (pos, posEnd, mContext.mFrameBgndColor);
         draw_list->AddRectFilled (pos, posEnd, mContext.mTextSelectBgndColor);
         }
