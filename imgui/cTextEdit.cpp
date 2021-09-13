@@ -2651,7 +2651,10 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     // draw text overlaid by invisible button
     float lineNumberWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
     mContext.mDrawList->AddText (beginPos, mOptions.mPalette[(size_t)ePalette::LineNumber], buf);
-    if (ImGui::InvisibleButton ("##lineNumber", ImVec2 (lineNumberWidth, mContext.mLineHeight)))
+    
+    // lineNumber invisible button
+    snprintf (buf, sizeof(buf), "##line%d", lineNumber);
+    if (ImGui::InvisibleButton (buf, ImVec2 (lineNumberWidth, mContext.mLineHeight)))
       cLog::log (LOGINFO, "hit lineNumber");
     ImGui::SameLine();
     mContext.mTextBegin = beginPos.x + lineNumberWidth;
@@ -2721,14 +2724,20 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
                                    mOptions.mLanguage.mFoldBeginOpen.c_str());
       float prefixWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.0f,
                                                          mOptions.mLanguage.mFoldBeginOpen.c_str(), nullptr, nullptr).x;
-      if (ImGui::InvisibleButton ("##text", ImVec2 (prefixWidth, mContext.mLineHeight))) {
+      // fold invisible button
+      char buf[16];
+      snprintf (buf, sizeof(buf), "##fold%d", lineNumber);
+      if (ImGui::InvisibleButton (buf, ImVec2 (prefixWidth, mContext.mLineHeight))) {
         cLog::log (LOGINFO, "hit foldBegin open prefix");
         }
       textPos.x += prefixWidth;
       ImGui::SameLine();
 
       float glyphsWidth = drawGlyphs (textPos, line.mGlyphs, false, 0);
-      if (ImGui::InvisibleButton ("##text", ImVec2 (glyphsWidth, mContext.mLineHeight))) {
+
+      // text invisible button
+      snprintf (buf, sizeof(buf), "##text%d", lineNumber);
+      if (ImGui::InvisibleButton (buf, ImVec2 (glyphsWidth, mContext.mLineHeight))) {
         cLog::log (LOGINFO, "hit foldBegin open text");
         }
       textPos.x += glyphsWidth;
@@ -2744,8 +2753,10 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       mContext.mDrawList->AddText (textPos, mOptions.mPalette[(size_t)ePalette::FoldBeginClosed], prefixString.c_str());
       float prefixWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.0f,
                                                          prefixString.c_str(), nullptr, nullptr).x;
-
-      if (ImGui::InvisibleButton ("##text", ImVec2 (prefixWidth, mContext.mLineHeight))) {
+      // fold invisible button
+      char buf[16];
+      snprintf (buf, sizeof(buf), "##fold%d", lineNumber);
+      if (ImGui::InvisibleButton (buf, ImVec2 (prefixWidth, mContext.mLineHeight))) {
         cLog::log (LOGINFO, "hit foldBegin closed prefix");
         }
 
@@ -2754,7 +2765,10 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
 
       float glyphsWidth = drawGlyphs (textPos, mInfo.mLines[glyphsLineNumber].mGlyphs, true,
                                       mOptions.mPalette[(size_t)ePalette::FoldBeginClosed]);
-      if (ImGui::InvisibleButton ("##text", ImVec2 (glyphsWidth, mContext.mLineHeight))) {
+
+      // text invisible button
+      snprintf (buf, sizeof(buf), "##text%d", lineNumber);
+      if (ImGui::InvisibleButton (buf, ImVec2 (glyphsWidth, mContext.mLineHeight))) {
         cLog::log (LOGINFO, "hit foldBegin closed text");
          }
       textPos.x += glyphsWidth;
@@ -2766,7 +2780,11 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     mContext.mDrawList->AddText (textPos, mOptions.mPalette[(size_t)ePalette::FoldEnd], mOptions.mLanguage.mFoldEnd.c_str());
     float prefixWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.0f,
                                                        mOptions.mLanguage.mFoldEnd.c_str(), nullptr, nullptr).x;
-    if (ImGui::InvisibleButton ("##text", ImVec2 (prefixWidth, mContext.mLineHeight))) {
+
+    // fold invisible button
+    char buf[16];
+    snprintf (buf, sizeof(buf), "##fold%d", lineNumber);
+    if (ImGui::InvisibleButton (buf, ImVec2 (prefixWidth, mContext.mLineHeight))) {
       cLog::log (LOGINFO, "hit foldEnd");
       }
 
@@ -2776,7 +2794,11 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   else {
     //{{{  draw glyphs text
     float glyphsWidth = drawGlyphs (textPos, line.mGlyphs, false, 0);
-    if (ImGui::InvisibleButton ("##text", ImVec2 (glyphsWidth, mContext.mLineHeight))) {
+
+    // text invisible button
+    char buf[16];
+    snprintf (buf, sizeof(buf), "##text%d", lineNumber);
+    if (ImGui::InvisibleButton (buf, ImVec2 (glyphsWidth, mContext.mLineHeight))) {
       cLog::log (LOGINFO, "hit text");
       }
 
