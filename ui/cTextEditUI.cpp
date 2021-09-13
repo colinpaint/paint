@@ -116,9 +116,7 @@ public:
       //}}}
 
     // full screen window
-    ImGui::PushFont (app.getMonoFont());
-    mTextEdit->drawWindow ("fed");
-    ImGui::PopFont();
+    mTextEdit->drawWindow ("fed", app.getMonoFont());
     }
 
 private:

@@ -197,12 +197,13 @@ public:
   bool isReadOnly() const { return mOptions.mReadOnly; }
   bool isOverwrite() const { return mOptions.mOverwrite; }
 
-  bool isTextEdited() const { return mInfo.mTextEdited; }
-
   bool isShowFolds() const { return mOptions.mShowFolded; }
   bool isShowLineNumbers() const { return mOptions.mShowLineNumbers; }
   bool isShowDebug() const { return mOptions.mShowDebug; }
   bool isShowWhiteSpace() const { return mOptions.mShowWhiteSpace; }
+  bool isShowMonoSpace() const { return mOptions.mShowMonoSpace; }
+
+  bool isTextEdited() const { return mInfo.mTextEdited; }
 
   // has
   bool hasSelect() const { return mEdit.mState.mSelectionEnd > mEdit.mState.mSelectionStart; }
@@ -238,6 +239,7 @@ public:
   void setShowDebug (bool showDebug) { mOptions.mShowDebug = showDebug; }
   void setShowLineNumbers (bool showLineNumbers) { mOptions.mShowLineNumbers = showLineNumbers; }
   void setShowWhiteSpace (bool showWhiteSpace) { mOptions.mShowWhiteSpace = showWhiteSpace; }
+  void setShowMonoSpace (bool showMonoSpace) { mOptions.mShowMonoSpace = showMonoSpace; }
 
   void setCursorPosition (const sPosition& position);
   void setSelectionStart (const sPosition& position);
@@ -250,6 +252,7 @@ public:
   void toggleShowLineNumbers() { mOptions.mShowLineNumbers = !mOptions.mShowLineNumbers; }
   void toggleShowDebug() { mOptions.mShowDebug = !mOptions.mShowDebug; }
   void toggleShowWhiteSpace() { mOptions.mShowWhiteSpace = !mOptions.mShowWhiteSpace; }
+  void toggleShowMonoSpace() { mOptions.mShowMonoSpace = !mOptions.mShowMonoSpace; }
   //}}}
   //{{{  actions
   // move
@@ -286,8 +289,8 @@ public:
   void enterCharacter (ImWchar ch, bool shift);
   //}}}
 
-  void drawWindow (const std::string& title);
-  void drawContents();
+  void drawWindow (const std::string& title, ImFont* monoFont);
+  void drawContents (ImFont* monoFont);
 
 private:
   typedef std::vector <std::pair <std::regex,ePalette>> tRegexList;
@@ -312,6 +315,7 @@ private:
     bool mShowLineNumbers = true;
     bool mShowDebug = true;
     bool mShowWhiteSpace = false;
+    bool mShowMonoSpace = true;
 
     sLanguage mLanguage;
     tRegexList mRegexList;

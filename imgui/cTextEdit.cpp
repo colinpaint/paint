@@ -1153,22 +1153,25 @@ void cTextEdit::closeFold() {
 
 // draws
 //{{{
-void cTextEdit::drawWindow (const string& title) {
+void cTextEdit::drawWindow (const string& title, ImFont* monoFont) {
 // standalone Memory Editor window
 
   mOpen = true;
 
   ImGui::Begin (title.c_str(), &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
 
-  drawContents();
+  drawContents (monoFont);
   ImGui::End();
   }
 //}}}
 //{{{
-void cTextEdit::drawContents() {
+void cTextEdit::drawContents (ImFont* monoFont) {
 // main ui handle io and draw routine
 
   drawTop();
+
+  if (isShowMonoSpace())
+    ImGui::PushFont (monoFont);
 
   // new colours
   ImGui::PushStyleColor (ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4 (0xffefefef));
@@ -1235,6 +1238,9 @@ void cTextEdit::drawContents() {
   ImGui::EndChild();
 
   ImGui::PopStyleColor(2);
+
+  if (isShowMonoSpace())
+    ImGui::PopFont();
   }
 //}}}
 
@@ -2496,10 +2502,14 @@ void cTextEdit::drawTop() {
     }
     //}}}
 
-  // space button
+  ImGui::SameLine();
+  if (toggleButton ("mono", isShowMonoSpace()))
+    toggleShowMonoSpace();
+
   ImGui::SameLine();
   if (toggleButton ("space", isShowWhiteSpace()))
     toggleShowWhiteSpace();
+
 
   if (hasClipboardText() && !isReadOnly()) {
     //{{{  paste button
@@ -2821,27 +2831,30 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       if (elapsed > 800ms)
         mLastFlashTime = now;
 
-      int characterIndex = getCharacterIndex (mEdit.mState.mCursorPosition);
       float widthToCursor = getTextWidth (mEdit.mState.mCursorPosition);
+      int characterIndex = getCharacterIndex (mEdit.mState.mCursorPosition);
 
       float cursorWidth;
-      if (mOptions.mOverwrite && (characterIndex < (int)glyphs.size())) {
-        // widen overwrite cursor
+      if (mOptions.mOverwrite && (characterIndex < static_cast<int>(glyphs.size()))) {
+        // overwrite
         if (glyphs[characterIndex].mChar == '\t') {
+          // widen overwrite tab cursor
           float x = (1.f + floor((1.f + widthToCursor) /
                     (mInfo.mTabSize * mContext.mGlyphWidth))) * (mInfo.mTabSize * mContext.mGlyphWidth);
           cursorWidth = x - widthToCursor;
           }
         else {
+          // widen overwrite char cursor
           char cursorBuf[2];
           cursorBuf[0] = glyphs[characterIndex].mChar;
           cursorBuf[1] = 0;
           cursorWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, cursorBuf).x;
           }
         }
-      else
+      else // insert cursor
         cursorWidth = 2.f;
 
+      // draw cursor
       ImVec2 pos = { beginPos.x + mContext.mTextBegin + widthToCursor - 1.f, beginPos.y };
       ImVec2 endPos = { pos.x + cursorWidth, pos.y + mContext.mLineHeight };
       mContext.mDrawList->AddRectFilled (pos, endPos, mOptions.mPalette[(size_t)ePalette::Cursor]);
