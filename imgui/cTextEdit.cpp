@@ -1452,7 +1452,7 @@ float cTextEdit::getTextWidth (const sPosition& position) const {
       for (; j < 6 && d-- > 0 && i < glyphs.size(); j++, i++)
         str[j] = glyphs[i].mChar;
       str[j] = 0;
-      distance += ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize() * mOptions.mScale, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      distance += ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSizeScaled(), FLT_MAX, -1.f, str, nullptr, nullptr).x;
       }
     }
 
@@ -1532,7 +1532,7 @@ cTextEdit::sPosition cTextEdit::screenToPosition (const ImVec2& pos) const {
           buf[i++] = glyphs[columnIndex++].mChar;
         buf[i] = '\0';
 
-        columnWidth = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSize() * mOptions.mScale, FLT_MAX, -1.f, buf).x;
+        columnWidth = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSizeScaled(), FLT_MAX, -1.f, buf).x;
         if (mContext.mTextBegin + columnX + columnWidth * 0.5f > local.x)
           break;
 
@@ -2586,7 +2586,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
       // draw colored glyphs, seperated by colorChange,tab,space
       str[strIndex] = 0; // null terminate
       mContext.mDrawList->AddText (mContext.mFont, mContext.mFontSizeScaled, pos, strColor, str.data());
-      pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize * mOptions.mScale, FLT_MAX, -1.f, str.data(), nullptr).x;
+      pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSizeScaled(), FLT_MAX, -1.f, str.data(), nullptr).x;
 
       // init for next str
       strIndex = 0;
@@ -2595,7 +2595,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
 
     if (glyph.mChar == '\t') {
       //{{{  tab
-      ImVec2 arrowLeftPos = { pos.x + 1.f, pos.y + mContext.mFontSize/2.f };
+      ImVec2 arrowLeftPos = { pos.x + 1.f, pos.y + mContext.mFontSizeScaled/2.f };
 
       // apply tab tab
       float tabEnd = 1.f + floor ((1.f + pos.x) / (mInfo.mTabSize * mContext.mGlyphWidth));
@@ -2606,11 +2606,11 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
         ImVec2 arrowRightPos = { pos.x - 1.f, arrowLeftPos.y };
         mContext.mDrawList->AddLine (arrowLeftPos, arrowRightPos,mOptions.mPalette[(size_t)ePalette::Tab]);
 
-        ImVec2 arrowTopPos = { arrowRightPos.x - (mContext.mFontSize * 0.2f) - 1.f,
-                               arrowRightPos.y - (mContext.mFontSize * 0.2f) };
+        ImVec2 arrowTopPos = { arrowRightPos.x - (mContext.mFontSizeScaled * 0.2f) - 1.f,
+                               arrowRightPos.y - (mContext.mFontSizeScaled * 0.2f) };
         mContext.mDrawList->AddLine (arrowRightPos, arrowTopPos, mOptions.mPalette[(size_t)ePalette::Tab]);
-        ImVec2 arrowBotPos = { arrowRightPos.x - (mContext.mFontSize * 0.2f) - 1.f,
-                               arrowRightPos.y + (mContext.mFontSize * 0.2f) };
+        ImVec2 arrowBotPos = { arrowRightPos.x - (mContext.mFontSizeScaled * 0.2f) - 1.f,
+                               arrowRightPos.y + (mContext.mFontSizeScaled * 0.2f) };
         mContext.mDrawList->AddLine (arrowRightPos, arrowBotPos, mOptions.mPalette[(size_t)ePalette::Tab]);
         }
       }
@@ -2619,7 +2619,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
       //{{{  space
       if (mOptions.mShowWhiteSpace) {
         // draw circle
-        ImVec2 centre = { pos.x  + mContext.mGlyphWidth/2.f, pos.y + mContext.mFontSize/2.f};
+        ImVec2 centre = { pos.x  + mContext.mGlyphWidth/2.f, pos.y + mContext.mFontSizeScaled/2.f};
         mContext.mDrawList->AddCircleFilled (centre, 2.f, mOptions.mPalette[(size_t)ePalette::WhiteSpace], 4);
         }
       pos.x += mContext.mGlyphWidth;
@@ -2636,7 +2636,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
     // draw remaining glyphs
     str[strIndex] = 0; // null terminate
     mContext.mDrawList->AddText (mContext.mFont, mContext.mFontSizeScaled, pos, strColor, str.data());
-    pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str.data(), nullptr, nullptr).x;
+    pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSizeScaled, FLT_MAX, -1.f, str.data(), nullptr, nullptr).x;
     }
 
   float glyphsWidth = pos.x - beginPosX;
