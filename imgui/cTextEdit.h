@@ -355,7 +355,6 @@ private:
     bool mFocused = false;
 
     ImFont* mFont = nullptr;
-    float mFontSize = 0.f;
     float mFontSizeScaled = 0.f;
 
     float mLineHeight = 0.f;

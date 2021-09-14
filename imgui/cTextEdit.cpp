@@ -1425,7 +1425,7 @@ string cTextEdit::getWordAt (const sPosition& position) const {
   return r;
   }
 //}}}
-//{{{
+//{{{  *
 string cTextEdit::getWordUnderCursor() const {
   return getWordAt (getCursorPosition());
   }
@@ -1452,7 +1452,7 @@ float cTextEdit::getTextWidth (const sPosition& position) const {
       for (; j < 6 && d-- > 0 && i < glyphs.size(); j++, i++)
         str[j] = glyphs[i].mChar;
       str[j] = 0;
-      distance += ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSizeScaled(), FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      distance += ImGui::GetFont()->CalcTextSizeA (mContext.mFontSizeScaled, FLT_MAX, -1.f, str, nullptr, nullptr).x;
       }
     }
 
@@ -1532,7 +1532,7 @@ cTextEdit::sPosition cTextEdit::screenToPosition (const ImVec2& pos) const {
           buf[i++] = glyphs[columnIndex++].mChar;
         buf[i] = '\0';
 
-        columnWidth = ImGui::GetFont()->CalcTextSizeA (ImGui::GetFontSizeScaled(), FLT_MAX, -1.f, buf).x;
+        columnWidth = ImGui::GetFont()->CalcTextSizeA (mContext.mFontSizeScaled, FLT_MAX, -1.f, buf).x;
         if (mContext.mTextBegin + columnX + columnWidth * 0.5f > local.x)
           break;
 
@@ -2586,7 +2586,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
       // draw colored glyphs, seperated by colorChange,tab,space
       str[strIndex] = 0; // null terminate
       mContext.mDrawList->AddText (mContext.mFont, mContext.mFontSizeScaled, pos, strColor, str.data());
-      pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSizeScaled(), FLT_MAX, -1.f, str.data(), nullptr).x;
+      pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSizeScaled, FLT_MAX, -1.f, str.data(), nullptr).x;
 
       // init for next str
       strIndex = 0;
@@ -2907,7 +2907,6 @@ void cTextEdit::cContext::update (const cOptions& options) {
   mFocused = ImGui::IsWindowFocused();
 
   mFont = ImGui::GetFont();
-  mFontSize = ImGui::GetFontSize();
   mFontSizeScaled  = ImGui::GetFontSize() * options.mScale;
 
   mLineHeight = ImGui::GetTextLineHeight() * options.mScale;
