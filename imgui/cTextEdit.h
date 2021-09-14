@@ -223,8 +223,6 @@ public:
   sPosition getCursorPosition() const { return sanitizePosition (mEdit.mState.mCursorPosition); }
 
   const sLanguage& getLanguage() const { return mOptions.mLanguage; }
-
-  float getScale() { return mOptions.mScale; }
   //}}}
   //{{{  sets
   void setTextString (const std::string& text);
@@ -247,8 +245,6 @@ public:
   void setSelectionStart (const sPosition& position);
   void setSelectionEnd (const sPosition& position);
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
-
-  float setScale (float scale) { mOptions.mScale = scale; }
 
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverwrite() { mOptions.mOverwrite = !mOptions.mOverwrite; }
@@ -309,7 +305,7 @@ private:
   //{{{
   class cOptions {
   public:
-    float mScale = 1.f;
+    int mFontSize = 16;
 
     // modes
     bool mOverwrite = false;
@@ -355,7 +351,8 @@ private:
     bool mFocused = false;
 
     ImFont* mFont = nullptr;
-    float mFontSizeScaled = 0.f;
+    float mFontSizeAtlas = 0.f;
+    float mFontSize = 0.f;
 
     float mLineHeight = 0.f;
     float mGlyphWidth = 0.f;
