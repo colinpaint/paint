@@ -17,6 +17,7 @@ public:
   void drawContents (size_t baseAddress);
 
   // set
+  void setMem (uint8_t* memData, size_t memSize);
   void setAddressHighlight (size_t addressMin, size_t addressMax);
 
   // actions
@@ -64,7 +65,7 @@ private:
 
     // vars
     uint8_t* mMemData = nullptr;
-    const size_t mMemSize = kUndefinedAddress;
+    size_t mMemSize = kUndefinedAddress;
     size_t mBaseAddress = kUndefinedAddress;
     };
   //}}}

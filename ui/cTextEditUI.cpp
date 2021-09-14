@@ -77,6 +77,7 @@ public:
       ImGui::PushFont (app.getMonoFont());
       //mMemEdit->drawWindow ("Memory Editor", mFileView->getReadPtr(), mFileView->getReadBytesLeft(), 0);
       //mMemEdit->drawWindow ("Memory Editor", (uint8_t*)this, sizeof(*this), 0);
+      mMemEdit->setMem ((uint8_t*)mMemEdit, sizeof(cMemEdit));
       mMemEdit->drawWindow ("Memory Editor", 0);
       ImGui::PopFont();
       return;

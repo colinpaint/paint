@@ -189,6 +189,12 @@ void cMemEdit::drawContents (size_t baseAddress) {
 //}}}
 
 //{{{
+void cMemEdit::setMem (uint8_t* memData, size_t memSize) {
+  mInfo.mMemData = memData;
+  mInfo.mMemSize = memSize;
+  }
+//}}}
+//{{{
 void cMemEdit::setAddressHighlight (size_t addressMin, size_t addressMax) {
 
   mEdit.mGotoAddress = addressMin;
