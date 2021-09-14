@@ -1432,7 +1432,7 @@ string cTextEdit::getWordUnderCursor() const {
 //}}}
 
 //{{{
-float cTextEdit::getTextWidth (const sPosition& position) const {
+float cTextEdit::getTextWidth (const sPosition& position) {
 // get textWidth to position
 
   const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
@@ -1441,18 +1441,18 @@ float cTextEdit::getTextWidth (const sPosition& position) const {
   int colIndex = getCharacterIndex (position);
   for (size_t i = 0; (i < glyphs.size()) && ((int)i < colIndex);) {
     if (glyphs[i].mChar == '\t') {
-      distance = (1.f + floor((1.f + distance) /
-                 (mInfo.mTabSize * mContext.mGlyphWidth))) * (mInfo.mTabSize * mContext.mGlyphWidth);
+      // tab
+      distance = (1.f + floor((1.f + distance) / (mInfo.mTabSize * mContext.mGlyphWidth))) * (mInfo.mTabSize * mContext.mGlyphWidth);
       ++i;
       }
     else {
-      int d = utf8CharLength (glyphs[i].mChar);
+      int length = utf8CharLength (glyphs[i].mChar);
       char str[7];
       int j = 0;
-      for (; j < 6 && d-- > 0 && i < glyphs.size(); j++, i++)
+      for (; (j < 6) && (length-- > 0) && (i < glyphs.size()); j++, i++)
         str[j] = glyphs[i].mChar;
       str[j] = 0;
-      distance += ImGui::GetFont()->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str, nullptr, nullptr).x;
+      distance += mContext.measureText (str);
       }
     }
 
@@ -1497,7 +1497,7 @@ void cTextEdit::advance (sPosition& position) const {
   }
 //}}}
 //{{{
-cTextEdit::sPosition cTextEdit::screenToPosition (const ImVec2& pos) const {
+cTextEdit::sPosition cTextEdit::screenToPosition (const ImVec2& pos) {
 
   ImVec2 local = {pos.x - ImGui::GetCursorScreenPos().x, pos.y - ImGui::GetCursorScreenPos().y};
 
@@ -1532,8 +1532,8 @@ cTextEdit::sPosition cTextEdit::screenToPosition (const ImVec2& pos) const {
           buf[i++] = glyphs[columnIndex++].mChar;
         buf[i] = '\0';
 
-        columnWidth = ImGui::GetFont()->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, buf).x;
-        if (mContext.mTextBegin + columnX + columnWidth * 0.5f > local.x)
+        columnWidth = mContext.measureText (buf);
+        if ((mContext.mTextBegin + columnX + columnWidth * 0.5f) > local.x)
           break;
 
         columnX += columnWidth;
@@ -2585,8 +2585,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
     if (((color != strColor) || (glyph.mChar == '\t') || (glyph.mChar == ' ')) && (strIndex < str.max_size())) {
       // draw colored glyphs, seperated by colorChange,tab,space
       str[strIndex] = 0; // null terminate
-      mContext.mDrawList->AddText (mContext.mFont, mContext.mFontSize, pos, strColor, str.data());
-      pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str.data(), nullptr).x;
+      pos.x += mContext.drawText (pos, strColor, str.data());
 
       // init for next str
       strIndex = 0;
@@ -2635,8 +2634,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
   if (str.size()) {
     // draw remaining glyphs
     str[strIndex] = 0; // null terminate
-    mContext.mDrawList->AddText (mContext.mFont, mContext.mFontSize, pos, strColor, str.data());
-    pos.x += mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, str.data(), nullptr, nullptr).x;
+    pos.x += mContext.drawText (pos, strColor, str.data());
     }
 
   float glyphsWidth = pos.x - beginPosX;
@@ -2662,9 +2660,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       snprintf (buf, sizeof(buf), "%4d ", lineNumber);
 
     // draw text overlaid by invisible button
-    float lineNumberWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
-    mContext.mDrawList->AddText (mContext.mFont, mContext.mFontSize, beginPos,
-                                 mOptions.mPalette[(size_t)ePalette::LineNumber], buf);
+    float lineNumberWidth = mContext.drawText (beginPos, mOptions.mPalette[(size_t)ePalette::LineNumber], buf);
 
     // lineNumber invisible button
     snprintf (buf, sizeof(buf), "##line%d", lineNumber);
@@ -2733,11 +2729,8 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     if (line.mFoldOpen) {
       //{{{  draw foldOpen prefix + glyphs text
       // draw prefix
-      mContext.mDrawList->AddText (mContext.mFont, mContext.mFontSize, textPos,
-                                   mOptions.mPalette[(size_t)ePalette::FoldBeginOpen],
-                                   mOptions.mLanguage.mFoldBeginOpen.c_str());
-      float prefixWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.0f,
-                                                         mOptions.mLanguage.mFoldBeginOpen.c_str(), nullptr, nullptr).x;
+      float prefixWidth = mContext.drawText (
+        textPos, mOptions.mPalette[(size_t)ePalette::FoldBeginOpen], mOptions.mLanguage.mFoldBeginOpen.c_str());
       // fold invisible button
       char buf[16];
       snprintf (buf, sizeof(buf), "##fold%d", lineNumber);
@@ -2764,11 +2757,8 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
         prefixString += ' ';
       prefixString += mOptions.mLanguage.mFoldBeginClosed;
 
-      mContext.mDrawList->AddText (mContext.mFont, mContext.mFontSize, textPos,
-                                   mOptions.mPalette[(size_t)ePalette::FoldBeginClosed],
-                                   prefixString.c_str());
-      float prefixWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.0f,
-                                                         prefixString.c_str(), nullptr, nullptr).x;
+      float prefixWidth = mContext.drawText (
+        textPos, mOptions.mPalette[(size_t)ePalette::FoldBeginClosed], prefixString.c_str());
       // fold invisible button
       char buf[16];
       snprintf (buf, sizeof(buf), "##fold%d", lineNumber);
@@ -2793,11 +2783,8 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     }
   else if (mOptions.mShowFolded && line.mFoldEnd) {
     //{{{  draw foldEnd prefix, no glyphs text
-    mContext.mDrawList->AddText (mContext.mFont, mContext.mFontSize, textPos,
-                                 mOptions.mPalette[(size_t)ePalette::FoldEnd],
-                                 mOptions.mLanguage.mFoldEnd.c_str());
-    float prefixWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.0f,
-                                                       mOptions.mLanguage.mFoldEnd.c_str(), nullptr, nullptr).x;
+    float prefixWidth = mContext.drawText (
+      textPos, mOptions.mPalette[(size_t)ePalette::FoldEnd], mOptions.mLanguage.mFoldEnd.c_str());
 
     // fold invisible button
     char buf[16];
@@ -2853,7 +2840,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
           char cursorBuf[2];
           cursorBuf[0] = glyphs[characterIndex].mChar;
           cursorBuf[1] = 0;
-          cursorWidth = mContext.mFont->CalcTextSizeA (mContext.mFontSize, FLT_MAX, -1.f, cursorBuf).x;
+          cursorWidth = mContext.measureText (cursorBuf);
           }
         }
       else // insert cursor
@@ -2911,10 +2898,22 @@ void cTextEdit::cContext::update (const cOptions& options) {
   mFontSize = static_cast<float>(options.mFontSize);
 
   mLineHeight = ImGui::GetTextLineHeight() * (mFontSize / mFontSizeAtlas);
-  mGlyphWidth = ImGui::CalcTextSize ("#").x * (mFontSize / mFontSizeAtlas);
+  mGlyphWidth = measureText ("#") * (mFontSize / mFontSizeAtlas);
 
   mPadding = mGlyphWidth / 2.f;
   mTextBegin = 0.f;
+  }
+//}}}
+//{{{
+float cTextEdit::cContext::measureText (const char* str) {
+  return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr).x;
+  }
+//}}}
+//{{{
+float cTextEdit::cContext::drawText (ImVec2 pos, ImU32 color, const char* str) {
+  mDrawList->AddText (mFont, mFontSize, pos, color, str);
+  float width = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, nullptr).x;
+  return width < 1.f ? 1.f : width;
   }
 //}}}
 

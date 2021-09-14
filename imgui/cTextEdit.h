@@ -347,10 +347,12 @@ private:
   public:
     void update (const cOptions& options);
 
+    float measureText (const char* str);
+    float drawText (ImVec2 pos, ImU32 color, const char* str);
+
     ImDrawList* mDrawList = nullptr;
     bool mFocused = false;
 
-    ImFont* mFont = nullptr;
     float mFontSizeAtlas = 0.f;
     float mFontSize = 0.f;
 
@@ -359,6 +361,8 @@ private:
 
     float mPadding = 0.f;
     float mTextBegin = 0.f;
+  private:
+    ImFont* mFont = nullptr;
     };
   //}}}
   //{{{
@@ -426,13 +430,13 @@ private:
   std::string getWordAt (const sPosition& position) const;
   std::string getWordUnderCursor() const;
 
-  float getTextWidth (const sPosition& position) const;
+  float getTextWidth (const sPosition& position);
   int getPageNumLines() const;
   int getMaxLineIndex() const;
   //}}}
   //{{{  utils
   void advance (sPosition& position) const;
-  sPosition screenToPosition (const ImVec2& pos) const;
+  sPosition screenToPosition (const ImVec2& pos);
   sPosition sanitizePosition (const sPosition& position) const;
   int lineIndexToNumber (int lineIndex) const;
   int lineNumberToIndex (int lineNumber) const;
