@@ -2556,7 +2556,7 @@ void cTextEdit::drawTop() {
   // fontSize button
   ImGui::SameLine();
   ImGui::SetNextItemWidth (3 * mContext.mFontAtlasSize);
-  ImGui::DragInt ("##fontSize", &mOptions.mFontSize, 0.2f, 4, 32, "%d");
+  ImGui::DragInt ("##fontSize", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
 
   // info text
   ImGui::SameLine();

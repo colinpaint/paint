@@ -306,6 +306,8 @@ private:
   class cOptions {
   public:
     int mFontSize = 16;
+    int mMinFontSize = 4;
+    int mMaxFontSize = 32;
 
     // modes
     bool mOverwrite = false;
