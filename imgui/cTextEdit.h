@@ -438,8 +438,11 @@ private:
   int getMaxLineIndex() const;
   //}}}
   //{{{  utils
+  float tabEndPos (float columnX);
+  void clickCursor (int lineNumber, float xPos, bool selectWord);
+  sPosition xPosToPosition (int lineNumber, float xPos);
+
   void advance (sPosition& position) const;
-  sPosition screenToPosition (const ImVec2& pos);
   sPosition sanitizePosition (const sPosition& position) const;
   int lineIndexToNumber (int lineIndex) const;
   int lineNumberToIndex (int lineNumber) const;

@@ -1213,28 +1213,30 @@ void cTextEdit::drawContents (ImFont* monoFont) {
     clipper.End();
     }
 
-  if (ImGui::IsMousePosValid()) {
-    string word = getWordAt (screenToPosition (ImGui::GetMousePos()));
-    if (!word.empty()) {
+  //{{{  highlight idents, preproc, rewrite as curso coords not mouse coords
+  //if (ImGui::IsMousePosValid()) {
+    //string word = getWordAt (screenToPosition (ImGui::GetMousePos()));
+    //if (!word.empty()) {
       //{{{  draw tooltip for idents,preProcs
-      auto identIt = mOptions.mLanguage.mIdents.find (word);
-      if (identIt != mOptions.mLanguage.mIdents.end()) {
-        ImGui::BeginTooltip();
-        ImGui::TextUnformatted (identIt->second.mDeclaration.c_str());
-        ImGui::EndTooltip();
-        }
+      //auto identIt = mOptions.mLanguage.mIdents.find (word);
+      //if (identIt != mOptions.mLanguage.mIdents.end()) {
+        //ImGui::BeginTooltip();
+        //ImGui::TextUnformatted (identIt->second.mDeclaration.c_str());
+        //ImGui::EndTooltip();
+        //}
 
-      else {
-        auto preProcIdentIt = mOptions.mLanguage.mPreprocIdents.find (word);
-        if (preProcIdentIt != mOptions.mLanguage.mPreprocIdents.end()) {
-          ImGui::BeginTooltip();
-          ImGui::TextUnformatted (preProcIdentIt->second.mDeclaration.c_str());
-          ImGui::EndTooltip();
-          }
-        }
-      }
+      //else {
+        //auto preProcIdentIt = mOptions.mLanguage.mPreprocIdents.find (word);
+        //if (preProcIdentIt != mOptions.mLanguage.mPreprocIdents.end()) {
+          //ImGui::BeginTooltip();
+          //ImGui::TextUnformatted (preProcIdentIt->second.mDeclaration.c_str());
+          //ImGui::EndTooltip();
+          //}
+        //}
+      //}
       //}}}
-    }
+    //}
+  //}}}
 
   ImGui::PopStyleVar (2);
   //ImGui::PopAllowKeyboardFocus();
@@ -1442,7 +1444,7 @@ float cTextEdit::getTextWidth (const sPosition& position) {
   for (size_t i = 0; (i < glyphs.size()) && ((int)i < colIndex);) {
     if (glyphs[i].mChar == '\t') {
       // tab
-      distance = (1.f + floor((1.f + distance) / (mInfo.mTabSize * mContext.mGlyphWidth))) * (mInfo.mTabSize * mContext.mGlyphWidth);
+      distance = tabEndPos (distance);
       ++i;
       }
     else {
@@ -1477,6 +1479,75 @@ int cTextEdit::getMaxLineIndex() const {
 //}}}
 //{{{  utils
 //{{{
+void cTextEdit::clickCursor (int lineNumber, float xPos, bool selectWord) {
+
+  mEdit.mState.mCursorPosition = xPosToPosition (lineNumber, xPos);
+
+  mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+
+  if (selectWord)
+    mEdit.mSelection = eSelection::Word;
+  else
+    mEdit.mSelection = eSelection::Normal;
+  setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+
+  mLastClickTime = static_cast<float>(ImGui::GetTime());
+  }
+//}}}
+
+//{{{
+float cTextEdit::tabEndPos (float xPos) {
+// return end xPos of tab started at xPos
+
+  float tabWidthPixels = mInfo.mTabSize * mContext.mGlyphWidth;
+  return (1.f + floor ((1.f + xPos) / tabWidthPixels)) * tabWidthPixels;
+  }
+//}}}
+//{{{
+cTextEdit::sPosition cTextEdit::xPosToPosition (int lineNumber, float xPos) {
+
+  int column = 0;
+  if ((lineNumber >= 0) && (lineNumber < (int)mInfo.mLines.size())) {
+    const vector<sGlyph>& glyphs = mInfo.mLines[lineNumber].mGlyphs;
+
+    float columnX = 0.f;
+
+    size_t glyphIndex = 0;
+    while (glyphIndex < glyphs.size()) {
+      float columnWidth = 0.f;
+      if (glyphs[glyphIndex].mChar == '\t') {
+        float oldX = columnX;
+        float endTabX = tabEndPos (columnX);
+        columnWidth = endTabX - oldX;
+        if (mContext.mTextBegin + columnX + (columnWidth/2.f) > xPos)
+          break;
+        columnX = endTabX;
+        column = ((column / mInfo.mTabSize) * mInfo.mTabSize) + mInfo.mTabSize;
+        glyphIndex++;
+        }
+
+      else {
+        array <char,7> str;
+        int length = utf8CharLength (glyphs[glyphIndex].mChar);
+        size_t i = 0;
+        while ((i < str.max_size()-1) && (length-- > 0))
+          str[i++] = glyphs[glyphIndex++].mChar;
+        columnWidth = mContext.measureText (str.data(), str.data()+i);
+        if ((mContext.mTextBegin + columnX + (columnWidth/2.f)) > xPos)
+          break;
+
+        columnX += columnWidth;
+        column++;
+        }
+      }
+    }
+
+  return sanitizePosition (sPosition (lineNumber, column));
+  }
+//}}}
+
+//{{{
 void cTextEdit::advance (sPosition& position) const {
 
   if (position.mLineNumber < (int)mInfo.mLines.size()) {
@@ -1493,53 +1564,6 @@ void cTextEdit::advance (sPosition& position) const {
 
     position.mColumn = getCharacterColumn (position.mLineNumber, cindex);
     }
-  }
-//}}}
-//{{{
-cTextEdit::sPosition cTextEdit::screenToPosition (const ImVec2& pos) {
-
-  ImVec2 local = {pos.x - ImGui::GetCursorScreenPos().x, pos.y - ImGui::GetCursorScreenPos().y};
-
-  int columnCoord = 0;
-  int lineIndex = max (0, static_cast<int>(floor (local.y / mContext.mLineHeight)));
-
-  int lineNumber = lineIndexToNumber (lineIndex);
-  if ((lineNumber >= 0) && (lineNumber < (int)mInfo.mLines.size())) {
-    const vector<sGlyph>& glyphs = mInfo.mLines[lineNumber].mGlyphs;
-
-    int columnIndex = 0;
-    float columnX = 0.f;
-    while (columnIndex < (int)glyphs.size()) {
-      float columnWidth = 0.f;
-      if (glyphs[columnIndex].mChar == '\t') {
-        float oldX = columnX;
-        float newColumnX = (1.f + floor ((1.f + columnX) /
-                           (mInfo.mTabSize * mContext.mGlyphWidth))) * (mInfo.mTabSize * mContext.mGlyphWidth);
-        columnWidth = newColumnX - oldX;
-        if (mContext.mTextBegin + columnX + columnWidth * 0.5f > local.x)
-          break;
-        columnX = newColumnX;
-        columnCoord = ((columnCoord / mInfo.mTabSize) * mInfo.mTabSize) + mInfo.mTabSize;
-        columnIndex++;
-        }
-
-      else {
-        array <char,7> str;
-        int length = utf8CharLength (glyphs[columnIndex].mChar);
-        size_t i = 0;
-        while ((i < str.max_size()-1) && (length-- > 0))
-          str[i++] = glyphs[columnIndex++].mChar;
-        columnWidth = mContext.measureText (str.data(), str.data()+i);
-        if ((mContext.mTextBegin + columnX + columnWidth * 0.5f) > local.x)
-          break;
-
-        columnX += columnWidth;
-        columnCoord++;
-        }
-      }
-    }
-
-  return sanitizePosition (sPosition (lineNumber, columnCoord));
   }
 //}}}
 //{{{
@@ -2252,90 +2276,78 @@ void cTextEdit::handleMouseInputs() {
 
   ImGuiIO& io = ImGui::GetIO();
   bool shift = io.KeyShift;
-  bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+  //bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
   bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
 
   //if (ImGui::IsWindowHovered()) {
     if (!shift && !alt) {
-      bool leftSingleClick = ImGui::IsMouseClicked (0);
-      bool righttSingleClick = ImGui::IsMouseClicked (1);
-      bool leftDoubleClick = ImGui::IsMouseDoubleClicked (0);
-      bool leftTripleClick = leftSingleClick &&
-                             !leftDoubleClick &&
-                             ((mLastClickTime != -1.f) && (ImGui::GetTime() - mLastClickTime) < io.MouseDoubleClickTime);
-      if (righttSingleClick) {
+      //bool leftSingleClick = ImGui::IsMouseClicked (0);
+      //bool righttSingleClick = ImGui::IsMouseClicked (1);
+      //bool leftDoubleClick = ImGui::IsMouseDoubleClicked (0);
+      //bool leftTripleClick = leftSingleClick &&
+      //                       !leftDoubleClick &&
+       //                      ((mLastClickTime != -1.f) && (ImGui::GetTime() - mLastClickTime) < io.MouseDoubleClickTime);
+      //if (righttSingleClick) {
         //{{{  right mouse right singleClick
-        if (mOptions.mShowFolded) {
-          // test cursor position
-          sPosition position = screenToPosition (ImGui::GetMousePos());
-          if (mInfo.mLines[position.mLineNumber].mFoldBegin) {
-            // set cursor position
-            mEdit.mState.mCursorPosition = position;
-            mEdit.mInteractiveStart = position;
-            mEdit.mInteractiveEnd = position;
+        //if (mOptions.mShowFolded) {
+          //// test cursor position
+          //sPosition position = screenToPosition (ImGui::GetMousePos());
+          //if (mInfo.mLines[position.mLineNumber].mFoldBegin) {
+            //// set cursor position
+            //mEdit.mState.mCursorPosition = position;
+            //mEdit.mInteractiveStart = position;
+            //mEdit.mInteractiveEnd = position;
 
-            // open fold
-            mInfo.mLines[position.mLineNumber].mFoldOpen ^= true;
-            }
-          }
+            //// open fold
+            //mInfo.mLines[position.mLineNumber].mFoldOpen ^= true;
+            //}
+          //}
 
-        mLastClickTime = static_cast<float>(ImGui::GetTime());
-        }
+        //mLastClickTime = static_cast<float>(ImGui::GetTime());
+        //}
         //}}}
-      else if (leftTripleClick) {
+      //else if (leftTripleClick) {
         //{{{  left mouse tripleClick
-        if (!ctrl) {
-          mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
-          mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
-          mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+        //if (!ctrl) {
+          //mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
+          //mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+          //mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
 
-          mEdit.mSelection = eSelection::Line;
-          setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
-          }
+          //mEdit.mSelection = eSelection::Line;
+          //setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+          //}
 
-        mLastClickTime = -1.f;
-        }
+        //mLastClickTime = -1.f;
+        //}
         //}}}
-      else if (leftDoubleClick) {
+      //else if (leftDoubleClick) {
         //{{{  left mouse doubleClick
-        if (!ctrl) {
-          mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
-          mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
-          mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+        //if (!ctrl) {
+          //mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
+          //mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+          //mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
 
-          if (mEdit.mSelection == eSelection::Line)
-            mEdit.mSelection = eSelection::Normal;
-          else
-            mEdit.mSelection = eSelection::Word;
-          setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
-          }
+          //if (mEdit.mSelection == eSelection::Line)
+            //mEdit.mSelection = eSelection::Normal;
+          //else
+            //mEdit.mSelection = eSelection::Word;
+          //setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+          //}
 
-        mLastClickTime = static_cast<float>(ImGui::GetTime());
-        }
+        //mLastClickTime = static_cast<float>(ImGui::GetTime());
+        //}
         //}}}
-      else if (leftSingleClick) {
-        //{{{  left mouse singleClick
-        mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
-        mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
-        mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-
-        if (ctrl)
-          mEdit.mSelection = eSelection::Word;
-        else
-          mEdit.mSelection = eSelection::Normal;
-        setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
-
-        mLastClickTime = static_cast<float>(ImGui::GetTime());
-        }
-        //}}}
-      else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
+      //else if (leftSingleClick) {
+        //clickCursor (ctrl);
+      //  }
+      //else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
         //{{{  left mouse button dragging (=> update selection)
-        io.WantCaptureMouse = true;
+        //io.WantCaptureMouse = true;
 
-        mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
-        mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-        setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
-        }
+        //mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
+        //mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+        //setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+        //}
         //}}}
       }
   // }
@@ -2593,9 +2605,8 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
       //{{{  tab
       ImVec2 arrowLeftPos = { pos.x + 1.f, pos.y + mContext.mFontSize / 2.f };
 
-      // apply tab tab
-      float tabEnd = 1.f + floor ((1.f + pos.x) / (mInfo.mTabSize * mContext.mGlyphWidth));
-      pos.x = tabEnd * (mInfo.mTabSize * mContext.mGlyphWidth);
+      // apply tab
+      pos.x = tabEndPos (pos.x);
 
       if (mOptions.mShowWhiteSpace) {
         // draw tab arrow
@@ -2743,6 +2754,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       ImGui::SameLine();
       if (ImGui::InvisibleButton (str.data(), ImVec2 (glyphsWidth, mContext.mLineHeight))) {
         cLog::log (LOGINFO, "hit foldBegin open text");
+        clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, false);
         }
       textPos.x += glyphsWidth;
       }
@@ -2775,7 +2787,8 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       ImGui::SameLine();
       if (ImGui::InvisibleButton (str.data(), ImVec2 (glyphsWidth, mContext.mLineHeight))) {
         cLog::log (LOGINFO, "hit foldBegin closed text");
-         }
+        clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, false);
+        }
       textPos.x += glyphsWidth;
       }
       //}}}
@@ -2789,6 +2802,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     snprintf (str.data(), str.max_size(), "##fold%d", lineNumber);
     if (ImGui::InvisibleButton (str.data(), ImVec2 (prefixWidth, mContext.mLineHeight))) {
       cLog::log (LOGINFO, "hit foldEnd");
+      clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, false);
       }
 
     textPos.x += prefixWidth;
@@ -2803,11 +2817,14 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     // text invisible button
     array <char,16> str;
     snprintf (str.data(), str.max_size(), "##text%d", lineNumber);
-    if (ImGui::InvisibleButton (str.data(), ImVec2 (glyphsWidth, mContext.mLineHeight)))
-      cLog::log (LOGINFO, fmt::format ("hit text {}", lineNumber));
+    if (ImGui::InvisibleButton (str.data(), ImVec2 (glyphsWidth, mContext.mLineHeight))) {
+      cLog::log (LOGINFO, fmt::format ("hit text line:{} x:{} ",
+                          lineNumber,ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x));
+      clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, false);
+      }
 
-    if (ImGui::IsItemHovered() || ImGui::IsItemActive())
-      cLog::log (LOGINFO, fmt::format ("hoverit text {} {} {}", lineNumber, ImGui::IsItemHovered(), ImGui::IsItemActive()));
+    //if (ImGui::IsItemHovered() || ImGui::IsItemActive())
+    //  cLog::log (LOGINFO, fmt::format ("hoverit text {} {} {}", lineNumber, ImGui::IsItemHovered(), ImGui::IsItemActive()));
 
     textPos.x += glyphsWidth;
     }
@@ -2829,12 +2846,8 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       float cursorWidth;
       if (mOptions.mOverwrite && (characterIndex < static_cast<int>(glyphs.size()))) {
         // overwrite
-        if (glyphs[characterIndex].mChar == '\t') {
-          // widen overwrite tab cursor
-          float x = (1.f + floor((1.f + widthToCursor) /
-                    (mInfo.mTabSize * mContext.mGlyphWidth))) * (mInfo.mTabSize * mContext.mGlyphWidth);
-          cursorWidth = x - widthToCursor;
-          }
+        if (glyphs[characterIndex].mChar == '\t') // widen overwrite tab cursor
+          cursorWidth = tabEndPos (widthToCursor) - widthToCursor;
         else {
           // widen overwrite char cursor
           array <char,2> str;
