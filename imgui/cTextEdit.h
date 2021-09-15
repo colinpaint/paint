@@ -347,8 +347,8 @@ private:
   public:
     void update (const cOptions& options);
 
-    float measureText (const char* str);
-    float drawText (ImVec2 pos, ImU32 color, const char* str);
+    float measureText (const char* str, const char* strEnd);
+    float drawText (ImVec2 pos, ImU32 color, const char* str, const char* strEnd);
 
     ImDrawList* mDrawList = nullptr;
     bool mFocused = false;
