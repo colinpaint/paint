@@ -96,6 +96,12 @@ public:
   void* getSwapChain() final;
   cPoint getWindowSize() final;
 
+  bool getVsync() final { return gVsync; }
+
+  // sets
+  void setVsync (bool vsync) final { gVsync = vsync; }
+  void toggleVsync() final { gVsync = !gVsync; }
+
   // actions
   bool pollEvents() final;
   void newFrame() final;
@@ -171,7 +177,7 @@ void cWin32Platform::present() {
     ImGui::RenderPlatformWindowsDefault();
     }
 
-  gSwapChain->Present(gVsync ? 1 : 0, 0);
+  gSwapChain->Present (gVsync ? 1 : 0, 0);
   }
 //}}}
 

@@ -1,5 +1,4 @@
 // cTextEdit.cpp - nicked from https://github.com/BalazsJako/ImGuiColorTextEdit
-// - remember this file is used to test itself
 //{{{  includes
 #include "cTextEdit.h"
 
@@ -8,7 +7,9 @@
 #include <functional>
 #include <chrono>
 
+#include "../ui/cApp.h"
 #include "../imgui/myImguiWidgets.h"
+#include "../platform/cPlatform.h"
 
 #include "../utils/cLog.h"
 
@@ -1154,26 +1155,26 @@ void cTextEdit::closeFold() {
 
 // draws
 //{{{
-void cTextEdit::drawWindow (const string& title, ImFont* monoFont) {
+void cTextEdit::drawWindow (const string& title, cApp& app) {
 // standalone Memory Editor window
 
   mOpen = true;
 
   ImGui::Begin (title.c_str(), &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
 
-  drawContents (monoFont);
+  drawContents (app);
   ImGui::End();
   }
 //}}}
 //{{{
-void cTextEdit::drawContents (ImFont* monoFont) {
+void cTextEdit::drawContents (cApp& app) {
 // main ui handle io and draw routine
 
   //io.FontGlobalScale = 1.f;
-  drawTop();
+  drawTop (app);
 
   if (isShowMonoSpace())
-    ImGui::PushFont (monoFont);
+    ImGui::PushFont (app.getMonoFont());
 
   // new colours
   ImGui::PushStyleColor (ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4 (0xffefefef));
@@ -2484,7 +2485,7 @@ void cTextEdit::handleKeyboardInputs() {
 //}}}
 
 //{{{
-void cTextEdit::drawTop() {
+void cTextEdit::drawTop (cApp& app) {
 
   // lineNumber button
   if (toggleButton ("line", isShowLineNumbers()))
@@ -2570,11 +2571,21 @@ void cTextEdit::drawTop() {
   ImGui::SetNextItemWidth (3 * mContext.mFontAtlasSize);
   ImGui::DragInt ("##fontSize", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
 
+  ImGui::SameLine();
+  if (toggleButton ("vSync", app.getPlatform().getVsync()))
+    app.getPlatform().toggleVsync();
+
+  ImGuiIO& io = ImGui::GetIO();
+  string debugString = fmt::format ("{}:{}:vert:triangle {}:fps",
+                                    io.MetricsRenderVertices,
+                                    io.MetricsRenderIndices/3,
+                                    static_cast<int>(io.Framerate));
   // info text
   ImGui::SameLine();
-  ImGui::Text ("%d:%d:%d %s%s%s%s",
+  ImGui::Text ("%d:%d:%d %s%s%s%s %s",
     getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1, getTextNumLines(),
-    getLanguage().mName.c_str(), isTextEdited() ? " edited":"", hasTabs() ? " tabs":"", hasCR() ? " CR":"");
+    getLanguage().mName.c_str(), isTextEdited() ? " edited":"", hasTabs() ? " tabs":"", hasCR() ? " CR":"",
+    debugString.c_str());
   }
 //}}}
 //{{{
@@ -2824,9 +2835,16 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
                           lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x));
 
     if (ImGui::IsItemActive()) {
-      clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, false);
+      if (ImGui::IsMouseClicked (0)) {
+        //cLog::log (LOGINFO, fmt::format ("singleClick {}", lineNumber));
+        clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, false);
+        }
+      if (ImGui::IsMouseDoubleClicked (0)) {
+        //cLog::log (LOGINFO, fmt::format ("doubleClick {}", lineNumber));
+        clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, true);
+        }
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
-        cLog::log (LOGINFO, fmt::format ("draggingtext line:{} hov:{} act:{} {}:{}", 
+        cLog::log (LOGINFO, fmt::format ("draggingtext line:{} hov:{} act:{} {}:{}",
                    lineNumber, ImGui::IsItemHovered(), ImGui::IsItemActive(),
                    ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x,
                    ImGui::GetMousePos().y - ImGui::GetCursorScreenPos().y));

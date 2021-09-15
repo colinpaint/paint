@@ -28,6 +28,12 @@ public:
   virtual void* getDeviceContext() = 0;
   virtual void* getSwapChain() = 0;
 
+  virtual bool getVsync() = 0;
+
+  // sets
+  virtual void setVsync (bool vsync) = 0;
+  virtual void toggleVsync() = 0;
+
   // actions
   virtual bool pollEvents() = 0;
   virtual void newFrame() = 0;
@@ -37,6 +43,7 @@ public:
   void setResizeCallback (std::function<void (int width, int height)> callback) { mResizeCallback = callback; }
   void setDropCallback (std::function<void (std::vector<std::string> dropItems)> callback) { mDropCallback = callback; }
 
+  // vars
   std::function <void (int programPid, int programSid)> mResizeCallback;
   std::function <void (std::vector<std::string> dropItems)> mDropCallback;
 

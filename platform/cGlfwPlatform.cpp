@@ -104,6 +104,11 @@ public:
   void* getDeviceContext() final;
   void* getSwapChain() final;
   cPoint getWindowSize() final;
+  bool getVsync() final { return mVsync; }
+
+  // sets
+  void setVsync (bool vsync) final;
+  void toggleVsync() final;
 
   // actions
   bool pollEvents() final;
@@ -117,6 +122,7 @@ private:
   // static register
   static cPlatform* create (const std::string& className);
   inline static const bool mRegistered = registerClass ("glfw", &create);
+  bool mVsync = true;
   };
 //}}}
 
@@ -147,6 +153,20 @@ cPoint cGlfwPlatform::getWindowSize() {
   int height;
   glfwGetWindowSize (gWindow, &width, &height);
   return cPoint (width, height);
+  }
+//}}}
+
+// sets
+//{{{
+void cGlfwPlatform::setVsync (bool vsync) {
+  mVsync = vsync;
+  glfwSwapInterval (mVsync ? 1 : 0);
+  }
+//}}}
+//{{{
+void cGlfwPlatform::toggleVsync() {
+  mVsync = !mVsync;
+  glfwSwapInterval (mVsync ? 1 : 0);
   }
 //}}}
 
@@ -253,7 +273,8 @@ bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports, bool vsy
 
   ImGui_ImplGlfw_InitForOpenGL (gWindow, true);
 
-  glfwSwapInterval (vsync ? 1 : 0);
+  mVsync = vsync;
+  glfwSwapInterval (mVsync ? 1 : 0);
 
   gPlatform = this;
 

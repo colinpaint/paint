@@ -15,7 +15,7 @@
 
 #include "../imgui/imgui.h"
 
-struct ImFont;
+class cApp;
 //}}}
 
 class cTextEdit {
@@ -289,8 +289,8 @@ public:
   void enterCharacter (ImWchar ch, bool shift);
   //}}}
 
-  void drawWindow (const std::string& title, ImFont* monoFont);
-  void drawContents (ImFont* monoFont);
+  void drawWindow (const std::string& title, cApp& app);
+  void drawContents (cApp& app);
 
 private:
   typedef std::vector <std::pair <std::regex,ePalette>> tRegexList;
@@ -485,7 +485,7 @@ private:
   void handleMouseInputs();
   void handleKeyboardInputs();
 
-  void drawTop();
+  void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
   void drawLine (int lineNumber, int beginFoldLineNumber);
   int drawFold (int lineNumber, bool parentOpen, bool foldOpen);

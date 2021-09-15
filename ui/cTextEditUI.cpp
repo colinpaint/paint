@@ -117,7 +117,7 @@ public:
       //}}}
 
     // full screen window
-    mTextEdit->drawWindow ("fed", app.getMonoFont());
+    mTextEdit->drawWindow ("fed", app);
     }
 
 private:
