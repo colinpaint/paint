@@ -353,7 +353,7 @@ private:
     ImDrawList* mDrawList = nullptr;
     bool mFocused = false;
 
-    float mFontSizeAtlas = 0.f;
+    float mFontAtlasSize = 0.f;
     float mFontSize = 0.f;
 
     float mLineHeight = 0.f;
@@ -361,6 +361,7 @@ private:
 
     float mPadding = 0.f;
     float mTextBegin = 0.f;
+
   private:
     ImFont* mFont = nullptr;
     };
