@@ -195,24 +195,16 @@ public:
   ~cTextEdit() = default;
   //{{{  gets
   bool isReadOnly() const { return mOptions.mReadOnly; }
-  bool isOverwrite() const { return mOptions.mOverwrite; }
-
-  bool isShowFolds() const { return mOptions.mShowFolded; }
-  bool isShowLineNumbers() const { return mOptions.mShowLineNumbers; }
-  bool isShowDebug() const { return mOptions.mShowDebug; }
-  bool isShowWhiteSpace() const { return mOptions.mShowWhiteSpace; }
-  bool isShowMonoSpace() const { return mOptions.mShowMonoSpace; }
-
   bool isTextEdited() const { return mInfo.mTextEdited; }
+  bool isShowFolds() const { return mOptions.mShowFolded; }
 
   // has
+  bool hasCR() const { return mInfo.mHasCR; }
+  bool hasTabs() const { return mInfo.mHasTabs; }
   bool hasSelect() const { return mEdit.mState.mSelectionEnd > mEdit.mState.mSelectionStart; }
-  bool hasClipboardText();
   bool hasUndo() const { return !mOptions.mReadOnly && mUndoList.mIndex > 0; }
   bool hasRedo() const { return !mOptions.mReadOnly && mUndoList.mIndex < (int)mUndoList.mBuffer.size(); }
-  bool hasTabs() const { return mInfo.mHasTabs; }
-  bool hasFolds() const { return mInfo.mHasFolds; }
-  bool hasCR() const { return mInfo.mHasCR; }
+  bool hasClipboardText();
 
   // get
   std::string getTextString() const;
@@ -232,14 +224,8 @@ public:
   void setMarkers (const std::map<int,std::string>& markers) { mOptions.mMarkers = markers; }
   void setLanguage (const sLanguage& language);
 
-  void setTabSize (int value) { mInfo.mTabSize = std::max (0, std::min (32, value)); }
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
-
-  void setShowFolded (bool showFolds) { mOptions.mShowFolded = showFolds; }
-  void setShowDebug (bool showDebug) { mOptions.mShowDebug = showDebug; }
-  void setShowLineNumbers (bool showLineNumbers) { mOptions.mShowLineNumbers = showLineNumbers; }
-  void setShowWhiteSpace (bool showWhiteSpace) { mOptions.mShowWhiteSpace = showWhiteSpace; }
-  void setShowMonoSpace (bool showMonoSpace) { mOptions.mShowMonoSpace = showMonoSpace; }
+  void setTabSize (int value) { mInfo.mTabSize = std::max (0, std::min (32, value)); }
 
   void setCursorPosition (const sPosition& position);
   void setSelectionStart (const sPosition& position);
@@ -247,7 +233,7 @@ public:
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
-  void toggleOverwrite() { mOptions.mOverwrite = !mOptions.mOverwrite; }
+  void toggleOverWrite() { mOptions.mOverWrite = !mOptions.mOverWrite; }
   void toggleShowFolded() { mOptions.mShowFolded = !mOptions.mShowFolded; }
   void toggleShowLineNumbers() { mOptions.mShowLineNumbers = !mOptions.mShowLineNumbers; }
   void toggleShowDebug() { mOptions.mShowDebug = !mOptions.mShowDebug; }
@@ -310,7 +296,7 @@ private:
     int mMaxFontSize = 32;
 
     // modes
-    bool mOverwrite = false;
+    bool mOverWrite = false;
     bool mReadOnly = false;
     bool mCheckComments = true;
 
@@ -418,8 +404,6 @@ private:
   //{{{  gets
   bool isOnWordBoundary (const sPosition& position) const;
 
-  std::string getSelectedText() const { return getText (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd); }
-
   int getCharacterIndex (const sPosition& position) const;
   int getCharacterColumn (int lineNumber, int index) const;
 
@@ -428,6 +412,8 @@ private:
 
   std::string getText (const sPosition& startPosition, const sPosition& endPosition) const;
   std::string getCurrentLineText() const;
+  std::string getSelectedText() const { return getText (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd); }
+
   ImU32 getGlyphColor (const sGlyph& glyph) const;
 
   std::string getWordAt (const sPosition& position) const;

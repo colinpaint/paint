@@ -1087,7 +1087,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       buf[e] = '\0';
       vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
       int cindex = getCharacterIndex (position);
-      if (mOptions.mOverwrite && (cindex < (int)glyphs.size())) {
+      if (mOptions.mOverWrite && (cindex < (int)glyphs.size())) {
         auto d = utf8CharLength (glyphs[cindex].mChar);
         undo.mRemovedStart = mEdit.mState.mCursorPosition;
         undo.mRemovedEnd = sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, cindex + d));
@@ -1173,7 +1173,7 @@ void cTextEdit::drawContents (cApp& app) {
   //io.FontGlobalScale = 1.f;
   drawTop (app);
 
-  if (isShowMonoSpace())
+  if (mOptions.mShowMonoSpace)
     ImGui::PushFont (app.getMonoFont());
 
   // new colours
@@ -1246,7 +1246,7 @@ void cTextEdit::drawContents (cApp& app) {
 
   ImGui::PopStyleColor(2);
 
-  if (isShowMonoSpace())
+  if (mOptions.mShowMonoSpace)
     ImGui::PopFont();
   }
 //}}}
@@ -2433,7 +2433,7 @@ void cTextEdit::handleKeyboardInputs() {
      {false, false, false, ImGuiKey_Home,       false, [this]{moveHome();}},
      {false, false, false, ImGuiKey_End,        false, [this]{moveEnd();}},
      // toggle mode
-     {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverwrite();}},
+     {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverWrite();}},
      {false, true,  false, ImGuiKey_Space,      false, [this]{toggleShowFolded();}},
      // numpad
      {false, false, false, kNumpad1,            false, [this]{openFold();}},
@@ -2488,19 +2488,18 @@ void cTextEdit::handleKeyboardInputs() {
 void cTextEdit::drawTop (cApp& app) {
 
   // lineNumber button
-  if (toggleButton ("line", isShowLineNumbers()))
+  if (toggleButton ("line", mOptions.mShowLineNumbers))
     toggleShowLineNumbers();
-
-  if (isShowLineNumbers())
+  if (mOptions.mShowLineNumbers)
     //{{{  debug button
-    if (isShowLineNumbers()) {
+    if (mOptions.mShowLineNumbers) {
       ImGui::SameLine();
-      if (toggleButton ("debug", isShowDebug()))
+      if (toggleButton ("debug", mOptions.mShowDebug))
         toggleShowDebug();
       }
     //}}}
 
-  if (hasFolds()) {
+  if (mInfo.mHasFolds) {
     //{{{  folded button
     ImGui::SameLine();
     if (toggleButton ("folded", isShowFolds()))
@@ -2509,11 +2508,10 @@ void cTextEdit::drawTop (cApp& app) {
     //}}}
 
   ImGui::SameLine();
-  if (toggleButton ("mono", isShowMonoSpace()))
+  if (toggleButton ("mono", mOptions.mShowMonoSpace))
     toggleShowMonoSpace();
-
   ImGui::SameLine();
-  if (toggleButton ("space", isShowWhiteSpace()))
+  if (toggleButton ("space", mOptions.mShowWhiteSpace))
     toggleShowWhiteSpace();
 
   if (hasClipboardText() && !isReadOnly()) {
@@ -2547,7 +2545,6 @@ void cTextEdit::drawTop (cApp& app) {
       undo();
     }
     //}}}
-
   if (!isReadOnly() && hasRedo()) {
     //{{{  redo button
     ImGui::SameLine();
@@ -2563,8 +2560,8 @@ void cTextEdit::drawTop (cApp& app) {
 
   // overwrite button
   ImGui::SameLine();
-  if (toggleButton ("insert", !isOverwrite()))
-    toggleOverwrite();
+  if (toggleButton ("insert", !mOptions.mOverWrite))
+    toggleOverWrite();
 
   // fontSize button
   ImGui::SameLine();
@@ -2572,11 +2569,9 @@ void cTextEdit::drawTop (cApp& app) {
   ImGui::DragInt ("##fontSize", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
 
   // info text
-  string infoString = fmt::format ("{}:{}:{} {}",
-                                   getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
-                                   getTextNumLines(), getLanguage().mName.c_str());
   ImGui::SameLine();
-  ImGui::Text (infoString.c_str());
+  ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
+                                           getTextNumLines(), getLanguage().mName).c_str());
 
   // vsync button
   ImGui::SameLine();
@@ -2584,12 +2579,10 @@ void cTextEdit::drawTop (cApp& app) {
     app.getPlatform().toggleVsync();
 
   // debug text
-  string debugString = fmt::format ("{}:{}:vert:triangle {}:fps",
-                                    ImGui::GetIO().MetricsRenderVertices,
-                                    ImGui::GetIO().MetricsRenderIndices/3,
-                                    static_cast<int>(ImGui::GetIO().Framerate));
   ImGui::SameLine();
-  ImGui::Text (debugString.c_str());
+  ImGui::Text (fmt::format ("{}:{}:vert:triangle {}:fps", ImGui::GetIO().MetricsRenderVertices,
+                                                          ImGui::GetIO().MetricsRenderIndices/3,
+                                                          static_cast<int>(ImGui::GetIO().Framerate)).c_str());
   }
 //}}}
 //{{{
@@ -2876,7 +2869,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       int characterIndex = getCharacterIndex (mEdit.mState.mCursorPosition);
 
       float cursorWidth;
-      if (mOptions.mOverwrite && (characterIndex < static_cast<int>(glyphs.size()))) {
+      if (mOptions.mOverWrite && (characterIndex < static_cast<int>(glyphs.size()))) {
         // overwrite
         if (glyphs[characterIndex].mChar == '\t') // widen overwrite tab cursor
           cursorWidth = tabEndPos (widthToCursor) - widthToCursor;
