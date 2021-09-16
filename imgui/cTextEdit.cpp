@@ -2358,7 +2358,6 @@ void cTextEdit::handleMouseInputs() {
 //}}}
 //{{{
 void cTextEdit::handleKeyboardInputs() {
-
   //{{{  numpad codes
   // -------------------------------------------------------------------------------------
   // |    numlock       |        /           |        *             |        -            |
@@ -2440,6 +2439,18 @@ void cTextEdit::handleKeyboardInputs() {
      // numpad
      {false, false, false, kNumpad1,            false, [this]{openFold();}},
      {false, false, false, kNumpad3,            false, [this]{closeFold();}},
+  // {false, false, false, kNumpad0,            false, [this]{FoldCreate();}},
+  // {false, false, false, kNumpad4,            false, [this]{prevFile();}},
+  // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
+  // {false, false, false, kNumpad7,            false, [this]{oldEnter();}},
+  // {false, false, false, kNumpad9,            false, [this]{FoldExit();}},
+  // {false, true,  false, kNumpad0,            false, [this]{FoldRemove();}},
+  // {false, true,  false, kNumpad3,            false, [this]{FoldCloseAll();}},
+  // {true,  false, false, kNumpadMulitply,     false, [this]{FindDialog();}},
+  // {true,  false, false, kNumpadDivide,       false, [this]{ReplaceDialog();}},
+  // {false, false, false, F4                   false, [this]{Copy();}},
+  // {false, true,  false, F                    false, [this]{FindDialog();}},
+  // {true,  false, false, N                    false, [this]{GotoDialog();}},
      };
 
   //if (!ImGui::IsWindowFocused())
@@ -2490,16 +2501,16 @@ void cTextEdit::handleKeyboardInputs() {
 void cTextEdit::drawTop (cApp& app) {
 
   //{{{  lineNumber buttons
-  if (toggleButton ("line", mOptions.mShowLineNumbers))
-    toggleShowLineNumbers();
-  mOptions.mHoverLineNumbers = ImGui::IsItemHovered();
+  if (toggleButton ("line", mOptions.mShowLineNumber))
+    toggleShowLineNumber();
+  mOptions.mHoverLineNumber = ImGui::IsItemHovered();
 
-  if (mOptions.mShowLineNumbers)
+  if (mOptions.mShowLineNumber)
     // debug button
-    if (mOptions.mShowLineNumbers) {
+    if (mOptions.mShowLineNumber) {
       ImGui::SameLine();
-      if (toggleButton ("debug", mOptions.mShowDebug))
-        toggleShowDebug();
+      if (toggleButton ("debug", mOptions.mShowLineDebug))
+        toggleShowLineDebug();
       }
   //}}}
 
@@ -2575,29 +2586,28 @@ void cTextEdit::drawTop (cApp& app) {
     toggleOverWrite();
   //}}}
 
-  //{{{  fontSize and text button
+  //{{{  fontSize button, vert,triangle debug text
   ImGui::SameLine();
   ImGui::SetNextItemWidth (3 * mContext.mFontAtlasSize);
   ImGui::DragInt ("##fontSize", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
 
   if (ImGui::IsItemHovered()) {
-    cLog::log (LOGINFO, fmt::format ("hover {}", ImGui::GetIO().MouseWheel));
     int fontSize = mOptions.mFontSize + static_cast<int>(ImGui::GetIO().MouseWheel);
     mOptions.mFontSize = max (mOptions.mMinFontSize, min (mOptions.mMaxFontSize, fontSize));
     }
 
-    // debug text
+  // debug text
   ImGui::SameLine();
   ImGui::Text (fmt::format ("{}:{}:vert:triangle", ImGui::GetIO().MetricsRenderVertices,
                                                           ImGui::GetIO().MetricsRenderIndices/3).c_str());
   //}}}
-  //{{{  vsync button and text
+  //{{{  vsync button, fps text
   // vsync button
   ImGui::SameLine();
   if (toggleButton ("vSync", app.getPlatform().getVsync()))
     app.getPlatform().toggleVsync();
 
-  // debug text
+  // fps text
   ImGui::SameLine();
   ImGui::Text (fmt::format ("{}:fps", static_cast<int>(ImGui::GetIO().Framerate)).c_str());
   //}}}
@@ -2615,8 +2625,8 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
   if (glyphs.empty())
     return 0.f;
 
-  // beginPos to measure textWidth on return
-  float beginPosX = pos.x;
+  // pos to measure textWidth on return
+  float firstPosX = pos.x;
 
   // init
   array <char,256> str;
@@ -2675,7 +2685,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
   if (i > 0) // draw remaining glyphs
     pos.x += mContext.drawText (pos, strColor, str.data(), str.data()+i);
 
-  return (pos.x - beginPosX);
+  return (pos.x - firstPosX);
   }
 //}}}
 //{{{
@@ -2684,28 +2694,27 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   if (isFolded())
     mInfo.mFoldLines.push_back (lineNumber);
 
-  ImVec2 beginPos = ImGui::GetCursorScreenPos();
-  beginPos.x += mContext.mPadding;
-  mContext.mTextBegin = beginPos.x;
+  ImVec2 leftPos = ImGui::GetCursorScreenPos();
+  leftPos.x += mContext.mPadding;
+  mContext.mTextBegin = leftPos.x;
 
   sLine& line = mInfo.mLines[lineNumber];
-  if (isLineNumbers()) {
+  if (isLineNumber()) {
     array <char,16> str;
-    if (mOptions.mShowDebug)
+    if (mOptions.mShowLineDebug)
       snprintf (str.data(), str.max_size(), "%4d %4d ", lineNumber, line.mFoldTitleLineNumber);
     else
       snprintf (str.data(), str.max_size(), "%4d ", lineNumber);
 
     // draw text overlaid by invisible button
-    float lineNumberWidth = mContext.drawText (beginPos, mOptions.mPalette[(size_t)ePalette::LineNumber],
-                                               str.data(), nullptr);
+    float width = mContext.drawText (leftPos, mOptions.mPalette[(size_t)ePalette::LineNumber], str.data(), nullptr);
 
     // lineNumber invisible button
     snprintf (str.data(), str.max_size(), "##line%d", lineNumber);
-    if (ImGui::InvisibleButton (str.data(), ImVec2 (lineNumberWidth, mContext.mLineHeight)))
+    if (ImGui::InvisibleButton (str.data(), ImVec2 (width, mContext.mLineHeight)))
       cLog::log (LOGINFO, "hit lineNumber");
     ImGui::SameLine();
-    mContext.mTextBegin = beginPos.x + lineNumberWidth;
+    mContext.mTextBegin = leftPos.x + width;
     }
 
   float textWidth = getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber)));
@@ -2725,19 +2734,19 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     xEnd += mContext.mGlyphWidth;
 
   if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd)) {
-    ImVec2 pos = { beginPos.x + mContext.mTextBegin + xStart, beginPos.y };
-    ImVec2 endPos = { beginPos.x + mContext.mTextBegin + xEnd, beginPos.y + mContext.mLineHeight };
+    ImVec2 tlPos = { leftPos.x + mContext.mTextBegin + xStart, leftPos.y };
+    ImVec2 brPos = { leftPos.x + mContext.mTextBegin + xEnd, leftPos.y + mContext.mLineHeight };
     ImColor color = mOptions.mPalette[(size_t)ePalette::Selection];
-    mContext.mDrawList->AddRectFilled (pos, endPos, color);
+    mContext.mDrawList->AddRectFilled (tlPos, brPos, color);
     }
   //}}}
   //{{{  draw marker background highlight
   auto markerIt = mOptions.mMarkers.find (lineNumber + 1);
   if (markerIt != mOptions.mMarkers.end()) {
-    ImVec2 endPos = { beginPos.x + mContext.mTextBegin + textWidth, beginPos.y };
-    mContext.mDrawList->AddRectFilled (beginPos, endPos, mOptions.mPalette[(size_t)ePalette::Marker]);
+    ImVec2 brPos = { leftPos.x + mContext.mTextBegin + textWidth, leftPos.y };
+    mContext.mDrawList->AddRectFilled (leftPos, brPos, mOptions.mPalette[(size_t)ePalette::Marker]);
 
-    if (ImGui::IsMouseHoveringRect (ImGui::GetCursorScreenPos(), endPos)) {
+    if (ImGui::IsMouseHoveringRect (ImGui::GetCursorScreenPos(), brPos)) {
       ImGui::BeginTooltip();
 
       ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.f,1.f,1.f, 1.f));
@@ -2752,16 +2761,16 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   //}}}
   //{{{  draw cursor background highlight
   if (!hasSelect() && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
-    ImVec2 endPos = { beginPos.x + mContext.mTextBegin + textWidth, beginPos.y + mContext.mLineHeight };
+    ImVec2 brPos = { leftPos.x + mContext.mTextBegin + textWidth, leftPos.y + mContext.mLineHeight };
     ImColor fillColor = mOptions.mPalette[size_t(mContext.mFocused ? ePalette::CurrentLineFill
                                                                    : ePalette::CurrentLineFillInactive)];
-    mContext.mDrawList->AddRectFilled (beginPos, endPos, fillColor);
-    mContext.mDrawList->AddRect (beginPos, endPos, mOptions.mPalette[(size_t)ePalette::CurrentLineEdge], 1.f);
+    mContext.mDrawList->AddRectFilled (leftPos, brPos, fillColor);
+    mContext.mDrawList->AddRect (leftPos, brPos, mOptions.mPalette[(size_t)ePalette::CurrentLineEdge], 1.f);
     }
   //}}}
 
   // draw text
-  ImVec2 textPos = { beginPos.x + mContext.mTextBegin, beginPos.y };
+  ImVec2 textPos = { leftPos.x + mContext.mTextBegin, leftPos.y };
   vector <sGlyph>& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
     if (line.mFoldOpen) {
@@ -2908,9 +2917,9 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
         cursorWidth = 2.f;
 
       // draw cursor
-      ImVec2 pos = { beginPos.x + mContext.mTextBegin + widthToCursor - 1.f, beginPos.y };
-      ImVec2 endPos = { pos.x + cursorWidth, pos.y + mContext.mLineHeight };
-      mContext.mDrawList->AddRectFilled (pos, endPos, mOptions.mPalette[(size_t)ePalette::Cursor]);
+      ImVec2 tlPos = { leftPos.x + mContext.mTextBegin + widthToCursor - 1.f, leftPos.y };
+      ImVec2 brPos = { leftPos.x + cursorWidth, leftPos.y + mContext.mLineHeight };
+      mContext.mDrawList->AddRectFilled (tlPos, leftPos, mOptions.mPalette[(size_t)ePalette::Cursor]);
       }
     }
     //}}}

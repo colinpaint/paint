@@ -235,8 +235,8 @@ public:
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverWrite() { mOptions.mOverWrite = !mOptions.mOverWrite; }
   void toggleShowFolded() { mOptions.mShowFolded = !mOptions.mShowFolded; }
-  void toggleShowLineNumbers() { mOptions.mShowLineNumbers = !mOptions.mShowLineNumbers; }
-  void toggleShowDebug() { mOptions.mShowDebug = !mOptions.mShowDebug; }
+  void toggleShowLineNumber() { mOptions.mShowLineNumber = !mOptions.mShowLineNumber; }
+  void toggleShowLineDebug() { mOptions.mShowLineDebug = !mOptions.mShowLineDebug; }
   void toggleShowWhiteSpace() { mOptions.mShowWhiteSpace = !mOptions.mShowWhiteSpace; }
   void toggleShowMonoSpaced() { mOptions.mShowMonoSpaced = !mOptions.mShowMonoSpaced; }
   //}}}
@@ -302,13 +302,13 @@ private:
 
     // shows
     bool mShowFolded = false;
-    bool mShowLineNumbers = true;
-    bool mShowDebug = true;
+    bool mShowLineNumber = true;
+    bool mShowLineDebug = false;
     bool mShowWhiteSpace = false;
     bool mShowMonoSpaced = true;
 
     bool mHoverFolded = false;
-    bool mHoverLineNumbers = false;
+    bool mHoverLineNumber = false;
     bool mHoverWhiteSpace = false;
     bool mHoverMonoSpaced = false;
 
@@ -408,7 +408,7 @@ private:
 
   //{{{  gets
   bool isFolded() const { return mOptions.mShowFolded || mOptions.mHoverFolded; }
-  bool isLineNumbers() const { return mOptions.mShowLineNumbers || mOptions.mHoverLineNumbers; }
+  bool isLineNumber() const { return mOptions.mShowLineNumber || mOptions.mHoverLineNumber; }
   bool isWhiteSpace() const { return mOptions.mShowWhiteSpace || mOptions.mHoverWhiteSpace; }
   bool isMonoSpaced() const { return mOptions.mShowMonoSpaced ^ mOptions.mHoverMonoSpaced; }
 
