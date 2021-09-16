@@ -2580,6 +2580,12 @@ void cTextEdit::drawTop (cApp& app) {
   ImGui::SetNextItemWidth (3 * mContext.mFontAtlasSize);
   ImGui::DragInt ("##fontSize", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
 
+  if (ImGui::IsItemHovered()) {
+    cLog::log (LOGINFO, fmt::format ("hover {}", ImGui::GetIO().MouseWheel));
+    int fontSize = mOptions.mFontSize + static_cast<int>(ImGui::GetIO().MouseWheel);
+    mOptions.mFontSize = max (mOptions.mMinFontSize, min (mOptions.mMaxFontSize, fontSize));
+    }
+
     // debug text
   ImGui::SameLine();
   ImGui::Text (fmt::format ("{}:{}:vert:triangle", ImGui::GetIO().MetricsRenderVertices,
