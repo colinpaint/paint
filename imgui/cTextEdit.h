@@ -168,9 +168,11 @@ public:
     std::string mSingleLineComment;
     std::string mFoldBeginMarker;
     std::string mFoldEndMarker;
-    std::string mFoldBeginOpen;
-    std::string mFoldBeginClosed;
-    std::string mFoldEnd;
+
+    // only used by drawText, no point in being a string
+    const char* mFoldBeginOpen;
+    const char* mFoldBeginClosed;
+    const char* mFoldEnd;
 
     char mPreprocChar;
     bool mAutoIndentation;
@@ -352,8 +354,8 @@ private:
     float mLineHeight = 0.f;
     float mGlyphWidth = 0.f;
 
-    float mLeftPosX = 0.f;
-    float mTextPosX = 0.f;
+    float mLeftPad = 0.f;
+    ImVec2 mTextPos;
 
   private:
     ImFont* mFont = nullptr;
