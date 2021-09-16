@@ -352,8 +352,8 @@ private:
     float mLineHeight = 0.f;
     float mGlyphWidth = 0.f;
 
-    float mPadding = 0.f;
-    float mTextBegin = 0.f;
+    float mLeftPosX = 0.f;
+    float mTextPosX = 0.f;
 
   private:
     ImFont* mFont = nullptr;
@@ -434,7 +434,9 @@ private:
   //}}}
   //{{{  utils
   float tabEndPos (float columnX);
-  void clickCursor (int lineNumber, float xPos, bool selectWord);
+  void clickFold (int lineNumber, bool foldOpen);
+  void clickText (int lineNumber, float xPos, bool selectWord);
+
   sPosition xPosToPosition (int lineNumber, float xPos);
 
   void advance (sPosition& position) const;

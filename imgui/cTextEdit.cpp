@@ -1484,7 +1484,16 @@ string cTextEdit::getWordUnderCursor() const {
 //}}}
 //{{{  utils
 //{{{
-void cTextEdit::clickCursor (int lineNumber, float xPos, bool selectWord) {
+void cTextEdit::clickFold (int lineNumber, bool foldOpen) {
+
+  mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+  mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  mInfo.mLines[lineNumber].mFoldOpen = foldOpen;
+  }
+//}}}
+//{{{
+void cTextEdit::clickText (int lineNumber, float xPos, bool selectWord) {
 
   mEdit.mState.mCursorPosition = xPosToPosition (lineNumber, xPos);
 
@@ -1525,7 +1534,7 @@ cTextEdit::sPosition cTextEdit::xPosToPosition (int lineNumber, float xPos) {
         float oldX = columnX;
         float endTabX = tabEndPos (columnX);
         columnWidth = endTabX - oldX;
-        if (mContext.mTextBegin + columnX + (columnWidth/2.f) > xPos)
+        if (mContext.mTextPosX + columnX + (columnWidth/2.f) > xPos)
           break;
         columnX = endTabX;
         column = ((column / mInfo.mTabSize) * mInfo.mTabSize) + mInfo.mTabSize;
@@ -1539,7 +1548,7 @@ cTextEdit::sPosition cTextEdit::xPosToPosition (int lineNumber, float xPos) {
         while ((i < str.max_size()-1) && (length-- > 0))
           str[i++] = glyphs[glyphIndex++].mChar;
         columnWidth = mContext.measureText (str.data(), str.data()+i);
-        if ((mContext.mTextBegin + columnX + (columnWidth/2.f)) > xPos)
+        if ((mContext.mTextPosX + columnX + (columnWidth/2.f)) > xPos)
           break;
 
         columnX += columnWidth;
@@ -2695,8 +2704,8 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     mInfo.mFoldLines.push_back (lineNumber);
 
   ImVec2 leftPos = ImGui::GetCursorScreenPos();
-  leftPos.x += mContext.mPadding;
-  mContext.mTextBegin = leftPos.x;
+  leftPos.x += mContext.mLeftPosX;
+  mContext.mTextPosX = leftPos.x;
 
   sLine& line = mInfo.mLines[lineNumber];
   if (isLineNumber()) {
@@ -2714,7 +2723,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     if (ImGui::InvisibleButton (str.data(), ImVec2 (width, mContext.mLineHeight)))
       cLog::log (LOGINFO, "hit lineNumber");
     ImGui::SameLine();
-    mContext.mTextBegin = leftPos.x + width;
+    mContext.mTextPosX = leftPos.x + width;
     }
 
   float textWidth = getTextWidth (sPosition (lineNumber, getLineMaxColumn (lineNumber)));
@@ -2734,8 +2743,8 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     xEnd += mContext.mGlyphWidth;
 
   if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd)) {
-    ImVec2 tlPos = { leftPos.x + mContext.mTextBegin + xStart, leftPos.y };
-    ImVec2 brPos = { leftPos.x + mContext.mTextBegin + xEnd, leftPos.y + mContext.mLineHeight };
+    ImVec2 tlPos = { leftPos.x + mContext.mTextPosX + xStart, leftPos.y };
+    ImVec2 brPos = { leftPos.x + mContext.mTextPosX + xEnd, leftPos.y + mContext.mLineHeight };
     ImColor color = mOptions.mPalette[(size_t)ePalette::Selection];
     mContext.mDrawList->AddRectFilled (tlPos, brPos, color);
     }
@@ -2743,7 +2752,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   //{{{  draw marker background highlight
   auto markerIt = mOptions.mMarkers.find (lineNumber + 1);
   if (markerIt != mOptions.mMarkers.end()) {
-    ImVec2 brPos = { leftPos.x + mContext.mTextBegin + textWidth, leftPos.y };
+    ImVec2 brPos = { leftPos.x + mContext.mTextPosX + textWidth, leftPos.y };
     mContext.mDrawList->AddRectFilled (leftPos, brPos, mOptions.mPalette[(size_t)ePalette::Marker]);
 
     if (ImGui::IsMouseHoveringRect (ImGui::GetCursorScreenPos(), brPos)) {
@@ -2761,7 +2770,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   //}}}
   //{{{  draw cursor background highlight
   if (!hasSelect() && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
-    ImVec2 brPos = { leftPos.x + mContext.mTextBegin + textWidth, leftPos.y + mContext.mLineHeight };
+    ImVec2 brPos = { leftPos.x + mContext.mTextPosX + textWidth, leftPos.y + mContext.mLineHeight };
     ImColor fillColor = mOptions.mPalette[size_t(mContext.mFocused ? ePalette::CurrentLineFill
                                                                    : ePalette::CurrentLineFillInactive)];
     mContext.mDrawList->AddRectFilled (leftPos, brPos, fillColor);
@@ -2770,7 +2779,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   //}}}
 
   // draw text
-  ImVec2 textPos = { leftPos.x + mContext.mTextBegin, leftPos.y };
+  ImVec2 textPos = { leftPos.x + mContext.mTextPosX, leftPos.y };
   vector <sGlyph>& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
     if (line.mFoldOpen) {
@@ -2781,58 +2790,47 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       // fold invisible button
       array <char,16> str;
       snprintf (str.data(), str.max_size(), "##fold%d", lineNumber);
-      if (ImGui::InvisibleButton (str.data(), ImVec2 (prefixWidth, mContext.mLineHeight))) {
-        cLog::log (LOGINFO, "hit foldBegin open prefix");
-        }
+      if (ImGui::InvisibleButton (str.data(), ImVec2 (prefixWidth, mContext.mLineHeight)))
+        clickFold (lineNumber, false);
       textPos.x += prefixWidth;
 
+      // draw glyphs text
       float glyphsWidth = drawGlyphs (textPos, line.mGlyphs, false, 0);
-      if (glyphsWidth < 1.f)
-        glyphsWidth = 1.f;
-
-      // text invisible button
-      snprintf (str.data(), str.max_size(), "##text%d", lineNumber);
-      ImGui::SameLine();
-      if (ImGui::InvisibleButton (str.data(), ImVec2 (glyphsWidth, mContext.mLineHeight)))
-        cLog::log (LOGINFO, "hit foldBegin open text");
-      if (ImGui::IsItemActive())
-        clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, false);
-
-      textPos.x += glyphsWidth;
+      if (glyphsWidth > 0.f) {
+        // and its invisible button
+        snprintf (str.data(), str.max_size(), "##text%d", lineNumber);
+        ImGui::SameLine();
+        ImGui::InvisibleButton (str.data(), ImVec2 (glyphsWidth, mContext.mLineHeight));
+        if (ImGui::IsItemActive())
+          clickText (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, ImGui::IsMouseDoubleClicked(0));
+        }
       }
       //}}}
     else {
       //{{{  draw foldClosed prefix + glyphs text
-      string prefixString;
-      for (uint8_t i = 0; i < line.mIndent; i++)
-        prefixString += ' ';
-      prefixString += mOptions.mLanguage.mFoldBeginClosed;
-
+      float indentWidth = line.mIndent * mContext.mGlyphWidth;
+      textPos.x += indentWidth;
       float prefixWidth = mContext.drawText (textPos, mOptions.mPalette[(size_t)ePalette::FoldBeginClosed],
-                                             prefixString.c_str(), nullptr);
-      // fold invisible button
+                                             mOptions.mLanguage.mFoldBeginClosed.c_str(), nullptr);
+
+      // fold closed invisible button, indent + prefix wide
       array <char,16> str;
       snprintf (str.data(), str.max_size(), "##fold%d", lineNumber);
-      if (ImGui::InvisibleButton (str.data(), ImVec2 (prefixWidth, mContext.mLineHeight))) {
-        cLog::log (LOGINFO, "hit foldBegin closed prefix");
-        }
+      if (ImGui::InvisibleButton (str.data(), ImVec2 (indentWidth + prefixWidth, mContext.mLineHeight)))
+        clickFold (lineNumber, true);
 
+      // draw glyphs text
       textPos.x += prefixWidth;
-
       float glyphsWidth = drawGlyphs (textPos, mInfo.mLines[glyphsLineNumber].mGlyphs, true,
                                       mOptions.mPalette[(size_t)ePalette::FoldBeginClosed]);
-      if (glyphsWidth < 1.f)
-        glyphsWidth = 1.f;
-
-      // text invisible button
-      snprintf (str.data(), str.max_size(), "##text%d", lineNumber);
-      ImGui::SameLine();
-      if (ImGui::InvisibleButton (str.data(), ImVec2 (glyphsWidth, mContext.mLineHeight)))
-        cLog::log (LOGINFO, "hit foldBegin closed text");
-      if (ImGui::IsItemActive())
-        clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, false);
-
-      textPos.x += glyphsWidth;
+      if (glyphsWidth > 0.f) {
+        // and its invisible button
+        ImGui::SameLine();
+        snprintf (str.data(), str.max_size(), "##text%d", lineNumber);
+        ImGui::InvisibleButton (str.data(), ImVec2 (glyphsWidth, mContext.mLineHeight));
+        if (ImGui::IsItemActive())
+          clickText (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, ImGui::IsMouseDoubleClicked(0));
+        }
       }
       //}}}
     }
@@ -2840,51 +2838,34 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     //{{{  draw foldEnd prefix, no glyphs text
     float prefixWidth = mContext.drawText (textPos, mOptions.mPalette[(size_t)ePalette::FoldEnd],
                                            mOptions.mLanguage.mFoldEnd.c_str(), nullptr);
-    // fold invisible button
+    // and its invisible button
     array <char,16> str;
     snprintf (str.data(), str.max_size(), "##fold%d", lineNumber);
-    if (ImGui::InvisibleButton (str.data(), ImVec2 (prefixWidth, mContext.mLineHeight)))
-      cLog::log (LOGINFO, "hit foldEnd");
+    ImGui::InvisibleButton (str.data(), ImVec2 (prefixWidth, mContext.mLineHeight));
     if (ImGui::IsItemActive())
-      clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, false);
-
-    textPos.x += prefixWidth;
+      clickFold (lineNumber, false);
     }
     //}}}
   else {
     //{{{  draw glyphs text
     float glyphsWidth = drawGlyphs (textPos, line.mGlyphs, false, 0);
-    if (glyphsWidth < 1.f)
-      glyphsWidth = 1.f;
+    if (glyphsWidth < mContext.mGlyphWidth) // ensure something to pick
+      glyphsWidth = mContext.mGlyphWidth;
 
-    // text invisible button
+    // and its invisibleButton
     array <char,16> str;
     snprintf (str.data(), str.max_size(), "##text%d", lineNumber);
-    if (ImGui::InvisibleButton (str.data(), ImVec2 (glyphsWidth, mContext.mLineHeight)))
-      cLog::log (LOGINFO, fmt::format ("hit text line:{} x:{} ",
-                          lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x));
-
+    ImGui::InvisibleButton (str.data(), ImVec2 (glyphsWidth, mContext.mLineHeight));
     if (ImGui::IsItemActive()) {
-      if (ImGui::IsMouseClicked (0)) {
-        //cLog::log (LOGINFO, fmt::format ("singleClick {}", lineNumber));
-        clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, false);
-        }
-      if (ImGui::IsMouseDoubleClicked (0)) {
-        //cLog::log (LOGINFO, fmt::format ("doubleClick {}", lineNumber));
-        clickCursor (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, true);
-        }
+      if (ImGui::IsMouseClicked (0))
+        clickText (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, ImGui::IsMouseDoubleClicked (0));
+
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
         cLog::log (LOGINFO, fmt::format ("draggingtext line:{} hov:{} act:{} {}:{}",
                    lineNumber, ImGui::IsItemHovered(), ImGui::IsItemActive(),
                    ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x,
                    ImGui::GetMousePos().y - ImGui::GetCursorScreenPos().y));
       }
-
-    //if (ImGui::IsItemHovered())
-    //  cLog::log (LOGINFO, fmt::format ("hover text {} {} {}", lineNumber, ImGui::IsItemHovered(), ImGui::IsItemActive()));
-
-
-    textPos.x += glyphsWidth;
     }
     //}}}
 
@@ -2898,14 +2879,14 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       if (elapsed > 800ms)
         mLastFlashTime = now;
 
-      float widthToCursor = getTextWidth (mEdit.mState.mCursorPosition);
+      float cursorPosX = getTextWidth (mEdit.mState.mCursorPosition);
       int characterIndex = getCharacterIndex (mEdit.mState.mCursorPosition);
 
       float cursorWidth;
       if (mOptions.mOverWrite && (characterIndex < static_cast<int>(glyphs.size()))) {
         // overwrite
         if (glyphs[characterIndex].mChar == '\t') // widen overwrite tab cursor
-          cursorWidth = tabEndPos (widthToCursor) - widthToCursor;
+          cursorWidth = tabEndPos (cursorPosX) - cursorPosX;
         else {
           // widen overwrite char cursor
           array <char,2> str;
@@ -2917,9 +2898,9 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
         cursorWidth = 2.f;
 
       // draw cursor
-      ImVec2 tlPos = { leftPos.x + mContext.mTextBegin + widthToCursor - 1.f, leftPos.y };
-      ImVec2 brPos = { leftPos.x + cursorWidth, leftPos.y + mContext.mLineHeight };
-      mContext.mDrawList->AddRectFilled (tlPos, leftPos, mOptions.mPalette[(size_t)ePalette::Cursor]);
+      ImVec2 tlPos = { leftPos.x + mContext.mTextPosX + cursorPosX - 1.f, leftPos.y };
+      ImVec2 brPos = { tlPos.x + cursorWidth, leftPos.y + mContext.mLineHeight };
+      mContext.mDrawList->AddRectFilled (tlPos, brPos, mOptions.mPalette[(size_t)ePalette::Cursor]);
       }
     }
     //}}}
@@ -2971,8 +2952,8 @@ void cTextEdit::cContext::update (const cOptions& options) {
   mLineHeight = ImGui::GetTextLineHeight() * scale;
   mGlyphWidth = measureText ("#", nullptr) * scale;
 
-  mPadding = mGlyphWidth / 2.f;
-  mTextBegin = 0.f;
+  mLeftPosX = mGlyphWidth / 2.f;
+  mTextPosX = 0.f;
   }
 //}}}
 //{{{
