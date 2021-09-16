@@ -2718,12 +2718,15 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
 
     // draw lineNumber
     float width = mContext.drawText (curPos, mOptions.mPalette[(size_t)ePalette::LineNumber], str.data(), nullptr);
+    curPos.x += width;
+
     // add lineNumber invisible button
     snprintf (str.data(), str.max_size(), "##line%d", lineNumber);
     if (ImGui::InvisibleButton (str.data(), ImVec2 (mContext.mLeftPad + width, mContext.mLineHeight)))
       cLog::log (LOGINFO, "hit lineNumber");
-    leftPad += width;
-    curPos.x += width;
+
+    // leftPad used up by lineNumber invisibleButton, onto nextButton
+    leftPad = 0.f;
     ImGui::SameLine();
     }
 
@@ -2787,23 +2790,24 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       // draw foldPrefix
       float prefixWidth = mContext.drawText (curPos, mOptions.mPalette[(size_t)ePalette::FoldBeginOpen],
                                              mOptions.mLanguage.mFoldBeginOpen, nullptr);
+      curPos.x += prefixWidth;
+
       // add foldPrefix invisibleButton
       array <char,16> str;
       snprintf (str.data(), str.max_size(), "##fold%d", lineNumber);
       if (ImGui::InvisibleButton (str.data(), {leftPad + prefixWidth, mContext.mLineHeight}))
         clickFold (lineNumber, false);
-      curPos.x += prefixWidth;
 
       // draw glyphsText
       mContext.mTextPos = curPos;
-      float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, false, 0);
-      if (glyphsWidth < mContext.mGlyphWidth) // widen ensure something to pick
-        glyphsWidth = mContext.mGlyphWidth;
+      float width = drawGlyphs (curPos, line.mGlyphs, false, 0);
+      if (width < mContext.mGlyphWidth) // widen ensure something to pick
+        width = mContext.mGlyphWidth;
 
       // add glyphsText invisibleButton
       ImGui::SameLine();
       snprintf (str.data(), str.max_size(), "##text%d", lineNumber);
-      ImGui::InvisibleButton (str.data(), {glyphsWidth, mContext.mLineHeight});
+      ImGui::InvisibleButton (str.data(), {width, mContext.mLineHeight});
       if (ImGui::IsItemActive())
         clickText (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, ImGui::IsMouseDoubleClicked(0));
       }
@@ -2817,24 +2821,25 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       // draw foldPrefix
       float prefixWidth =  mContext.drawText (curPos, mOptions.mPalette[(size_t)ePalette::FoldBeginClosed],
                                               mOptions.mLanguage.mFoldBeginClosed, nullptr);
+      curPos.x += prefixWidth;
+
       // add foldClosed prefix invisibleButton, indent + prefix wide
       array <char,16> str;
       snprintf (str.data(), str.max_size(), "##fold%d", lineNumber);
       if (ImGui::InvisibleButton (str.data(), {leftPad + indentWidth + prefixWidth, mContext.mLineHeight}))
         clickFold (lineNumber, true);
-      curPos.x += prefixWidth;
 
       // draw glyphsText
       mContext.mTextPos = curPos;
-      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[glyphsLineNumber].mGlyphs, true,
-                                      mOptions.mPalette[(size_t)ePalette::FoldBeginClosed]);
-      if (glyphsWidth < mContext.mGlyphWidth) // widen ensure something to pick
-        glyphsWidth = mContext.mGlyphWidth;
+      float width = drawGlyphs (curPos, mInfo.mLines[glyphsLineNumber].mGlyphs, true,
+                                mOptions.mPalette[(size_t)ePalette::FoldBeginClosed]);
+      if (width < mContext.mGlyphWidth) // widen ensure something to pick
+        width = mContext.mGlyphWidth;
 
       // and glyphsText invisible button
       ImGui::SameLine();
       snprintf (str.data(), str.max_size(), "##text%d", lineNumber);
-      ImGui::InvisibleButton (str.data(), {glyphsWidth, mContext.mLineHeight});
+      ImGui::InvisibleButton (str.data(), {width, mContext.mLineHeight});
       if (ImGui::IsItemActive())
         clickText (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, ImGui::IsMouseDoubleClicked(0));
       }
@@ -2844,7 +2849,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     //{{{  draw foldEnd prefix, no glyphs text
     float prefixWidth = mContext.drawText (curPos, mOptions.mPalette[(size_t)ePalette::FoldEnd],
                                            mOptions.mLanguage.mFoldEnd, nullptr);
-    mContext.mTextPos = curPos;
+    curPos.x += prefixWidth;
 
     // add foldEnd prefix invisible button
     array <char,16> str;
@@ -2852,20 +2857,25 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     ImGui::InvisibleButton (str.data(), {leftPad + prefixWidth, mContext.mLineHeight});
     if (ImGui::IsItemActive())
       clickFold (lineNumber, false);
+
+    // no text invisibleButton, set pos anyway
+    mContext.mTextPos = curPos;
     }
     //}}}
   else {
     //{{{  draw glyphs text
+    // drawGlyphs
     mContext.mTextPos = curPos;
-    float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, false, 0);
-    if (glyphsWidth < mContext.mGlyphWidth) // widen ensure something to pick
-      glyphsWidth = mContext.mGlyphWidth;
-    curPos.x += glyphsWidth;
+
+    float width = drawGlyphs (curPos, line.mGlyphs, false, 0);
+    if (width < mContext.mGlyphWidth) // widen ensure something to pick
+      width = mContext.mGlyphWidth;
+    curPos.x += width;
 
     // and its invisibleButton
     array <char,16> str;
     snprintf (str.data(), str.max_size(), "##text%d", lineNumber);
-    ImGui::InvisibleButton (str.data(), {leftPad + glyphsWidth, mContext.mLineHeight});
+    ImGui::InvisibleButton (str.data(), {leftPad + width, mContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseClicked (0))
         clickText (lineNumber, ImGui::GetMousePos().x - ImGui::GetCursorScreenPos().x, ImGui::IsMouseDoubleClicked (0));
