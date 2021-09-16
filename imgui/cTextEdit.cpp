@@ -2571,21 +2571,25 @@ void cTextEdit::drawTop (cApp& app) {
   ImGui::SetNextItemWidth (3 * mContext.mFontAtlasSize);
   ImGui::DragInt ("##fontSize", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
 
+  // info text
+  string infoString = fmt::format ("{}:{}:{} {}",
+                                   getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
+                                   getTextNumLines(), getLanguage().mName.c_str());
+  ImGui::SameLine();
+  ImGui::Text (infoString.c_str());
+
+  // vsync button
   ImGui::SameLine();
   if (toggleButton ("vSync", app.getPlatform().getVsync()))
     app.getPlatform().toggleVsync();
 
-  ImGuiIO& io = ImGui::GetIO();
+  // debug text
   string debugString = fmt::format ("{}:{}:vert:triangle {}:fps",
-                                    io.MetricsRenderVertices,
-                                    io.MetricsRenderIndices/3,
-                                    static_cast<int>(io.Framerate));
-  // info text
+                                    ImGui::GetIO().MetricsRenderVertices,
+                                    ImGui::GetIO().MetricsRenderIndices/3,
+                                    static_cast<int>(ImGui::GetIO().Framerate));
   ImGui::SameLine();
-  ImGui::Text ("%d:%d:%d %s%s%s%s %s",
-    getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1, getTextNumLines(),
-    getLanguage().mName.c_str(), isTextEdited() ? " edited":"", hasTabs() ? " tabs":"", hasCR() ? " CR":"",
-    debugString.c_str());
+  ImGui::Text (debugString.c_str());
   }
 //}}}
 //{{{
