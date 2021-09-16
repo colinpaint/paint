@@ -1122,7 +1122,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 //{{{
 void cTextEdit::openFold() {
 
-  if (mOptions.mShowFolded)
+  if (isFolded())
     if (mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFoldBegin)
       mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFoldOpen = true;
   }
@@ -1130,7 +1130,7 @@ void cTextEdit::openFold() {
 //{{{
 void cTextEdit::closeFold() {
 
-  if (mOptions.mShowFolded) {
+  if (isFolded()) {
     int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
     sLine& line = mInfo.mLines[lineNumber];
 
@@ -1173,7 +1173,7 @@ void cTextEdit::drawContents (cApp& app) {
   //io.FontGlobalScale = 1.f;
   drawTop (app);
 
-  if (mOptions.mShowMonoSpace)
+  if (isMonoSpaced())
     ImGui::PushFont (app.getMonoFont());
 
   // new colours
@@ -1193,7 +1193,7 @@ void cTextEdit::drawContents (cApp& app) {
 
   colorizeInternal();
 
-  if (mOptions.mShowFolded) {
+  if (isFolded()) {
     //{{{  draw folded
     mInfo.mFoldLines.clear();
     drawFold (0, true, true);
@@ -1246,29 +1246,13 @@ void cTextEdit::drawContents (cApp& app) {
 
   ImGui::PopStyleColor(2);
 
-  if (mOptions.mShowMonoSpace)
+  if (isMonoSpaced())
     ImGui::PopFont();
   }
 //}}}
 
 // private:
 //{{{  gets
-//{{{
-bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
-
-  if (position.mLineNumber >= (int)mInfo.mLines.size() || position.mColumn == 0)
-    return true;
-
-  const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
-  int characterIndex = getCharacterIndex (position);
-  if (characterIndex >= (int)glyphs.size())
-    return true;
-
-  return glyphs[characterIndex].mColorIndex != glyphs[size_t(characterIndex - 1)].mColorIndex;
-  //return isspace (glyphs[cindex].mChar) != isspace (glyphs[cindex - 1].mChar);
-  }
-//}}}
-
 //{{{
 int cTextEdit::getCharacterIndex (const sPosition& position) const {
 
@@ -1352,6 +1336,49 @@ int cTextEdit::getLineMaxColumn (int row) const {
 //}}}
 
 //{{{
+int cTextEdit::getPageNumLines() const {
+  float height = ImGui::GetWindowHeight() - 20.f;
+  return (int)floor (height / mContext.mLineHeight);
+  }
+//}}}
+//{{{
+int cTextEdit::getMaxLineIndex() const {
+
+  if (isFolded())
+    return static_cast<int>(mInfo.mFoldLines.size()-1);
+  else
+    return static_cast<int>(mInfo.mLines.size()-1);
+  }
+//}}}
+//{{{
+float cTextEdit::getTextWidth (const sPosition& position) {
+// get textWidth to position
+
+  const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+
+  float distance = 0.f;
+  int colIndex = getCharacterIndex (position);
+  for (size_t i = 0; (i < glyphs.size()) && ((int)i < colIndex);) {
+    if (glyphs[i].mChar == '\t') {
+      // tab
+      distance = tabEndPos (distance);
+      ++i;
+      }
+    else {
+      int length = utf8CharLength (glyphs[i].mChar);
+      array <char,7> str;
+      int j = 0;
+      for (; (j < 6) && (length-- > 0) && (i < glyphs.size()); j++, i++)
+        str[j] = glyphs[i].mChar;
+      distance += mContext.measureText (str.data(), str.data()+j);
+      }
+    }
+
+  return distance;
+  }
+//}}}
+
+//{{{
 string cTextEdit::getText (const sPosition& startPosition, const sPosition& endPosition) const {
 // get text as string with lineFeed line breaks
 
@@ -1395,6 +1422,12 @@ string cTextEdit::getCurrentLineText() const {
   }
 //}}}
 //{{{
+string cTextEdit::getSelectedText() const {
+  return getText (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd);
+  }
+//}}}
+
+//{{{
 ImU32 cTextEdit::getGlyphColor (const sGlyph& glyph) const {
 
   if (glyph.mComment)
@@ -1419,6 +1452,21 @@ ImU32 cTextEdit::getGlyphColor (const sGlyph& glyph) const {
 //}}}
 
 //{{{
+bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
+
+  if (position.mLineNumber >= (int)mInfo.mLines.size() || position.mColumn == 0)
+    return true;
+
+  const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+  int characterIndex = getCharacterIndex (position);
+  if (characterIndex >= (int)glyphs.size())
+    return true;
+
+  return glyphs[characterIndex].mColorIndex != glyphs[size_t(characterIndex - 1)].mColorIndex;
+  //return isspace (glyphs[cindex].mChar) != isspace (glyphs[cindex - 1].mChar);
+  }
+//}}}
+//{{{
 string cTextEdit::getWordAt (const sPosition& position) const {
 
   string r;
@@ -1428,53 +1476,9 @@ string cTextEdit::getWordAt (const sPosition& position) const {
   return r;
   }
 //}}}
-//{{{  *
+//{{{
 string cTextEdit::getWordUnderCursor() const {
   return getWordAt (getCursorPosition());
-  }
-//}}}
-
-//{{{
-float cTextEdit::getTextWidth (const sPosition& position) {
-// get textWidth to position
-
-  const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
-
-  float distance = 0.f;
-  int colIndex = getCharacterIndex (position);
-  for (size_t i = 0; (i < glyphs.size()) && ((int)i < colIndex);) {
-    if (glyphs[i].mChar == '\t') {
-      // tab
-      distance = tabEndPos (distance);
-      ++i;
-      }
-    else {
-      int length = utf8CharLength (glyphs[i].mChar);
-      array <char,7> str;
-      int j = 0;
-      for (; (j < 6) && (length-- > 0) && (i < glyphs.size()); j++, i++)
-        str[j] = glyphs[i].mChar;
-      distance += mContext.measureText (str.data(), str.data()+j);
-      }
-    }
-
-  return distance;
-  }
-//}}}
-//{{{
-int cTextEdit::getPageNumLines() const {
-  float height = ImGui::GetWindowHeight() - 20.f;
-  return (int)floor (height / mContext.mLineHeight);
-  }
-//}}}
-
-//{{{
-int cTextEdit::getMaxLineIndex() const {
-
-  if (mOptions.mShowFolded)
-    return static_cast<int>(mInfo.mFoldLines.size()-1);
-  else
-    return static_cast<int>(mInfo.mLines.size()-1);
   }
 //}}}
 //}}}
@@ -1587,7 +1591,7 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (const sPosition& position) con
 //{{{
 int cTextEdit::lineIndexToNumber (int lineIndex) const {
 
-  if (!mOptions.mShowFolded)
+  if (isFolded())
     return lineIndex;
 
   if ((lineIndex >= 0) && (lineIndex < static_cast<int>(mInfo.mFoldLines.size())))
@@ -1599,7 +1603,7 @@ int cTextEdit::lineIndexToNumber (int lineIndex) const {
 //{{{
 int cTextEdit::lineNumberToIndex (int lineNumber) const {
 
-  if (!mOptions.mShowFolded) // lineIndex is  lineNumber
+  if (!isFolded()) // lineIndex is  lineNumber
     return lineNumber;
 
   if (mInfo.mFoldLines.empty()) { // no entry for that index
@@ -2267,8 +2271,6 @@ void cTextEdit::parseFolds() {
     line.mFoldOpen = false;
     line.mFoldTitleLineNumber = -1;
     }
-
-  //mOptions.mShowFolded = mInfo.mHasFolds;
   }
 //}}}
 
@@ -2487,32 +2489,42 @@ void cTextEdit::handleKeyboardInputs() {
 //{{{
 void cTextEdit::drawTop (cApp& app) {
 
-  // lineNumber button
+  //{{{  lineNumber buttons
   if (toggleButton ("line", mOptions.mShowLineNumbers))
     toggleShowLineNumbers();
+  mOptions.mHoverLineNumbers = ImGui::IsItemHovered();
+
   if (mOptions.mShowLineNumbers)
-    //{{{  debug button
+    // debug button
     if (mOptions.mShowLineNumbers) {
       ImGui::SameLine();
       if (toggleButton ("debug", mOptions.mShowDebug))
         toggleShowDebug();
       }
-    //}}}
+  //}}}
 
   if (mInfo.mHasFolds) {
     //{{{  folded button
     ImGui::SameLine();
     if (toggleButton ("folded", isShowFolds()))
       toggleShowFolded();
+    mOptions.mHoverFolded = ImGui::IsItemHovered();
     }
     //}}}
 
+  //{{{  monoSpaced buttom
   ImGui::SameLine();
-  if (toggleButton ("mono", mOptions.mShowMonoSpace))
-    toggleShowMonoSpace();
+  if (toggleButton ("mono", mOptions.mShowMonoSpaced))
+    toggleShowMonoSpaced();
+  else
+    mOptions.mHoverMonoSpaced = ImGui::IsItemHovered();
+  //}}}
+  //{{{  whiteSpace button
   ImGui::SameLine();
   if (toggleButton ("space", mOptions.mShowWhiteSpace))
     toggleShowWhiteSpace();
+  mOptions.mHoverWhiteSpace = ImGui::IsItemHovered();
+  //}}}
 
   if (hasClipboardText() && !isReadOnly()) {
     //{{{  paste button
@@ -2521,7 +2533,6 @@ void cTextEdit::drawTop (cApp& app) {
       paste();
     }
     //}}}
-
   if (hasSelect()) {
     //{{{  copy, cut, delete buttons
     ImGui::SameLine();
@@ -2553,26 +2564,28 @@ void cTextEdit::drawTop (cApp& app) {
     }
     //}}}
 
-  // readOnly button
+  //{{{  readOnly button
   ImGui::SameLine();
   if (toggleButton ("readOnly", isReadOnly()))
     toggleReadOnly();
-
-  // overwrite button
+  //}}}
+  //{{{  overwrite button
   ImGui::SameLine();
   if (toggleButton ("insert", !mOptions.mOverWrite))
     toggleOverWrite();
+  //}}}
 
-  // fontSize button
+  //{{{  fontSize and text button
   ImGui::SameLine();
   ImGui::SetNextItemWidth (3 * mContext.mFontAtlasSize);
   ImGui::DragInt ("##fontSize", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
 
-  // info text
+    // debug text
   ImGui::SameLine();
-  ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
-                                           getTextNumLines(), getLanguage().mName).c_str());
-
+  ImGui::Text (fmt::format ("{}:{}:vert:triangle", ImGui::GetIO().MetricsRenderVertices,
+                                                          ImGui::GetIO().MetricsRenderIndices/3).c_str());
+  //}}}
+  //{{{  vsync button and text
   // vsync button
   ImGui::SameLine();
   if (toggleButton ("vSync", app.getPlatform().getVsync()))
@@ -2580,9 +2593,14 @@ void cTextEdit::drawTop (cApp& app) {
 
   // debug text
   ImGui::SameLine();
-  ImGui::Text (fmt::format ("{}:{}:vert:triangle {}:fps", ImGui::GetIO().MetricsRenderVertices,
-                                                          ImGui::GetIO().MetricsRenderIndices/3,
-                                                          static_cast<int>(ImGui::GetIO().Framerate)).c_str());
+  ImGui::Text (fmt::format ("{}:fps", static_cast<int>(ImGui::GetIO().Framerate)).c_str());
+  //}}}
+
+  //{{{  info text
+  ImGui::SameLine();
+  ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
+                                           getTextNumLines(), getLanguage().mName).c_str());
+  //}}}
   }
 //}}}
 //{{{
@@ -2616,7 +2634,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
       // apply tab
       pos.x = tabEndPos (pos.x);
 
-      if (mOptions.mShowWhiteSpace) {
+      if (isWhiteSpace()) {
         // draw tab arrow
         ImVec2 arrowRightPos = { pos.x - 1.f, arrowLeftPos.y };
         mContext.mDrawList->AddLine (arrowLeftPos, arrowRightPos,mOptions.mPalette[(size_t)ePalette::Tab]);
@@ -2632,7 +2650,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
       //}}}
     else if (glyph.mChar == ' ') {
       //{{{  space
-      if (mOptions.mShowWhiteSpace) {
+      if (isWhiteSpace()) {
         // draw circle
         ImVec2 centre = { pos.x  + mContext.mGlyphWidth/2.f, pos.y + mContext.mFontSize/2.f};
         mContext.mDrawList->AddCircleFilled (centre, 2.f, mOptions.mPalette[(size_t)ePalette::WhiteSpace], 4);
@@ -2657,7 +2675,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
 //{{{
 void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
 
-  if (mOptions.mShowFolded)
+  if (isFolded())
     mInfo.mFoldLines.push_back (lineNumber);
 
   ImVec2 beginPos = ImGui::GetCursorScreenPos();
@@ -2665,7 +2683,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   mContext.mTextBegin = beginPos.x;
 
   sLine& line = mInfo.mLines[lineNumber];
-  if (mOptions.mShowLineNumbers) {
+  if (isLineNumbers()) {
     array <char,16> str;
     if (mOptions.mShowDebug)
       snprintf (str.data(), str.max_size(), "%4d %4d ", lineNumber, line.mFoldTitleLineNumber);
@@ -2739,7 +2757,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   // draw text
   ImVec2 textPos = { beginPos.x + mContext.mTextBegin, beginPos.y };
   vector <sGlyph>& glyphs = line.mGlyphs;
-  if (mOptions.mShowFolded && line.mFoldBegin) {
+  if (isFolded() && line.mFoldBegin) {
     if (line.mFoldOpen) {
       //{{{  draw foldOpen prefix + glyphs text
       // draw prefix
@@ -2803,7 +2821,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       }
       //}}}
     }
-  else if (mOptions.mShowFolded && line.mFoldEnd) {
+  else if (isFolded() && line.mFoldEnd) {
     //{{{  draw foldEnd prefix, no glyphs text
     float prefixWidth = mContext.drawText (textPos, mOptions.mPalette[(size_t)ePalette::FoldEnd],
                                            mOptions.mLanguage.mFoldEnd.c_str(), nullptr);

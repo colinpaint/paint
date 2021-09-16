@@ -238,7 +238,7 @@ public:
   void toggleShowLineNumbers() { mOptions.mShowLineNumbers = !mOptions.mShowLineNumbers; }
   void toggleShowDebug() { mOptions.mShowDebug = !mOptions.mShowDebug; }
   void toggleShowWhiteSpace() { mOptions.mShowWhiteSpace = !mOptions.mShowWhiteSpace; }
-  void toggleShowMonoSpace() { mOptions.mShowMonoSpace = !mOptions.mShowMonoSpace; }
+  void toggleShowMonoSpaced() { mOptions.mShowMonoSpaced = !mOptions.mShowMonoSpaced; }
   //}}}
   //{{{  actions
   // move
@@ -305,7 +305,12 @@ private:
     bool mShowLineNumbers = true;
     bool mShowDebug = true;
     bool mShowWhiteSpace = false;
-    bool mShowMonoSpace = true;
+    bool mShowMonoSpaced = true;
+
+    bool mHoverFolded = false;
+    bool mHoverLineNumbers = false;
+    bool mHoverWhiteSpace = false;
+    bool mHoverMonoSpaced = false;
 
     sLanguage mLanguage;
     tRegexList mRegexList;
@@ -402,7 +407,10 @@ private:
   //}}}
 
   //{{{  gets
-  bool isOnWordBoundary (const sPosition& position) const;
+  bool isFolded() const { return mOptions.mShowFolded || mOptions.mHoverFolded; }
+  bool isLineNumbers() const { return mOptions.mShowLineNumbers || mOptions.mHoverLineNumbers; }
+  bool isWhiteSpace() const { return mOptions.mShowWhiteSpace || mOptions.mHoverWhiteSpace; }
+  bool isMonoSpaced() const { return mOptions.mShowMonoSpaced ^ mOptions.mHoverMonoSpaced; }
 
   int getCharacterIndex (const sPosition& position) const;
   int getCharacterColumn (int lineNumber, int index) const;
@@ -410,18 +418,19 @@ private:
   int getLineNumChars (int row) const;
   int getLineMaxColumn (int row) const;
 
+  int getPageNumLines() const;
+  int getMaxLineIndex() const;
+  float getTextWidth (const sPosition& position);
+
   std::string getText (const sPosition& startPosition, const sPosition& endPosition) const;
   std::string getCurrentLineText() const;
-  std::string getSelectedText() const { return getText (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd); }
+  std::string getSelectedText() const;
 
   ImU32 getGlyphColor (const sGlyph& glyph) const;
 
+  bool isOnWordBoundary (const sPosition& position) const;
   std::string getWordAt (const sPosition& position) const;
   std::string getWordUnderCursor() const;
-
-  float getTextWidth (const sPosition& position);
-  int getPageNumLines() const;
-  int getMaxLineIndex() const;
   //}}}
   //{{{  utils
   float tabEndPos (float columnX);
