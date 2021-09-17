@@ -2792,6 +2792,25 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     }
     //}}}
 
+  //{{{  draw marker background highlight
+  auto markerIt = mOptions.mMarkers.find (lineNumber+1);
+  if (markerIt != mOptions.mMarkers.end()) {
+    ImVec2 brPos = {curPos.x, curPos.y + mContext.mLineHeight};
+    mContext.mDrawList->AddRectFilled (leftPos, brPos, mOptions.mPalette[eMarker]);
+
+    if (ImGui::IsMouseHoveringRect (ImGui::GetCursorScreenPos(), brPos)) {
+      ImGui::BeginTooltip();
+
+      ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.f,1.f,1.f, 1.f));
+      ImGui::Text ("marker at line %d:", markerIt->first);
+      ImGui::Separator();
+      ImGui::Text ("%s", markerIt->second.c_str());
+      ImGui::PopStyleColor();
+
+      ImGui::EndTooltip();
+      }
+    }
+  //}}}
   //{{{  draw select background highlight
   sPosition lineStartPosition (lineNumber, 0);
   sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
@@ -2814,32 +2833,15 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     mContext.mDrawList->AddRectFilled (tlPos, brPos, color);
     }
   //}}}
-  //{{{  draw marker background highlight
-  auto markerIt = mOptions.mMarkers.find (lineNumber + 1);
-  if (markerIt != mOptions.mMarkers.end()) {
-    ImVec2 brPos = {curPos.x, curPos.y + mContext.mLineHeight};
-    mContext.mDrawList->AddRectFilled (leftPos, brPos, mOptions.mPalette[eMarker]);
-
-    if (ImGui::IsMouseHoveringRect (ImGui::GetCursorScreenPos(), brPos)) {
-      ImGui::BeginTooltip();
-
-      ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.f,1.f,1.f, 1.f));
-      ImGui::Text ("marker at line %d:", markerIt->first);
-      ImGui::Separator();
-      ImGui::Text ("%s", markerIt->second.c_str());
-      ImGui::PopStyleColor();
-
-      ImGui::EndTooltip();
+  if (!hasSelect()) {
+    //{{{  draw cursor background highlight
+    if (lineNumber == mEdit.mState.mCursorPosition.mLineNumber) {
+      ImVec2 brPos = {curPos.x, curPos.y + mContext.mLineHeight};
+      mContext.mDrawList->AddRectFilled (leftPos, brPos, mOptions.mPalette[mContext.mFocused ? eCurrentLineFill : eCurrentLineFillInactive]);
+      mContext.mDrawList->AddRect (leftPos, brPos, mOptions.mPalette[eCurrentLineEdge], 1.f);
       }
     }
-  //}}}
-  //{{{  draw cursor background highlight
-  if (!hasSelect() && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
-    ImVec2 brPos = {curPos.x, curPos.y + mContext.mLineHeight};
-    mContext.mDrawList->AddRectFilled (leftPos, brPos, mOptions.mPalette[mContext.mFocused ? eCurrentLineFill : eCurrentLineFillInactive]);
-    mContext.mDrawList->AddRect (leftPos, brPos, mOptions.mPalette[eCurrentLineEdge], 1.f);
-    }
-  //}}}
+    //}}}
 
   if (mContext.mFocused && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
     //{{{  draw flashing cursor
