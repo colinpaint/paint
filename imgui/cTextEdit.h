@@ -493,6 +493,7 @@ private:
   void dragText (int lineNumber, ImVec2 pos);
 
   // folds
+  void parseLine (sLine& line);
   void parseFolds();
 
   void handleKeyboardInputs();

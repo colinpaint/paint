@@ -2289,45 +2289,51 @@ void cTextEdit::dragText (int lineNumber, ImVec2 pos) {
 
 // folds
 //{{{
+void cTextEdit::parseLine (sLine& line) {
+// parse beginFold and endFold markers, set simple flags
+
+  string text;
+  for (auto& glyph : line.mGlyphs)
+    text += glyph.mChar;
+
+  // look for foldBegin text
+  size_t foldBeginIndent = text.find (mOptions.mLanguage.mFoldBeginMarker);
+  line.mFoldBegin = (foldBeginIndent != string::npos);
+
+  if (line.mFoldBegin) {
+    // found foldBegin text, find ident
+    line.mIndent = static_cast<uint16_t>(foldBeginIndent);
+    // has text after the foldBeginMarker
+    line.mComment = (text.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
+    mInfo.mHasFolds = true;
+    }
+  else {
+    // normal line, find indent, find comment
+    size_t indent = text.find_first_not_of (' ');
+    if (indent != string::npos)
+      line.mIndent = static_cast<uint16_t>(indent);
+    else
+      line.mIndent = 0;
+
+    // has "//" style comment as first text in line
+    line.mComment = (text.find (mOptions.mLanguage.mSingleLineComment, indent) != string::npos);
+    }
+
+  // look for foldEnd text
+  size_t foldEndIndent = text.find (mOptions.mLanguage.mFoldEndMarker);
+  line.mFoldEnd = (foldEndIndent != string::npos);
+
+  // init fields set by updateFolds
+  line.mFolded = true;
+  line.mSeeThroughLineNumber = -1;
+  }
+//}}}
+//{{{
 void cTextEdit::parseFolds() {
 // parse beginFold and endFold markers, set simple flags
 
-  for (auto& line : mInfo.mLines) {
-    string text;
-    for (auto& glyph : line.mGlyphs)
-      text += glyph.mChar;
-
-    // look for foldBegin text
-    size_t foldBeginIndent = text.find (mOptions.mLanguage.mFoldBeginMarker);
-    line.mFoldBegin = (foldBeginIndent != string::npos);
-
-    if (line.mFoldBegin) {
-      // found foldBegin text, find ident
-      line.mIndent = static_cast<uint16_t>(foldBeginIndent);
-      // has text after the foldBeginMarker
-      line.mComment = (text.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
-      mInfo.mHasFolds = true;
-      }
-    else {
-      // normal line, find indent, find comment
-      size_t indent = text.find_first_not_of (' ');
-      if (indent != string::npos)
-        line.mIndent = static_cast<uint16_t>(indent);
-      else
-        line.mIndent = 0;
-
-      // has "//" style comment as first text in line
-      line.mComment = (text.find (mOptions.mLanguage.mSingleLineComment, indent) != string::npos);
-      }
-
-    // look for foldEnd text
-    size_t foldEndIndent = text.find (mOptions.mLanguage.mFoldEndMarker);
-    line.mFoldEnd = (foldEndIndent != string::npos);
-
-    // init fields set by updateFolds
-    line.mFolded = true;
-    line.mSeeThroughLineNumber = -1;
-    }
+  for (auto& line : mInfo.mLines)
+    parseLine (line);
   }
 //}}}
 
