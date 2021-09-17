@@ -21,40 +21,45 @@ class cApp;
 class cTextEdit {
 public:
   enum class eSelection { Normal, Word, Line };
-  //{{{
-  enum class ePalette {
-    Default,
-    Keyword,
-    Number,
-    String,
-    CharLiteral,
-    Punctuation,
-    Preprocessor,
-    Ident,
-    KnownIdent,
-    PreprocIdent,
-    Comment,
-    MultiLineComment,
-    Background,
-    Cursor,
-    Selection,
-    Marker,
-    LineNumber,
-    CurrentLineFill,
-    CurrentLineFillInactive,
-    CurrentLineEdge,
-    WhiteSpace,
-    Tab,
-    FoldBeginClosed,
-    FoldBeginOpen,
-    FoldEnd,
-    Max
-    };
+  //{{{  palette const
+  // tried enum but array of foxed it
+  static const uint8_t eDefault =           0;
+  static const uint8_t eKeyword =           1;
+  static const uint8_t eNumber =            2;
+  static const uint8_t eString =            3;
+  static const uint8_t eCharLiteral =       4;
+  static const uint8_t ePunctuation =       5;
+
+  static const uint8_t ePreprocessor =      6;
+  static const uint8_t eIdent =             7;
+  static const uint8_t eKnownIdent =        8;
+  static const uint8_t ePreprocIdent =      9;
+
+  static const uint8_t eComment =          10;
+  static const uint8_t eMultiLineComment = 11;
+
+  static const uint8_t eCursor =           12;
+  static const uint8_t eSelect =           13;
+  static const uint8_t eMarker =           14;
+  static const uint8_t eCurrentLineFill =  15;
+  static const uint8_t eCurrentLineFillInactive = 16;
+  static const uint8_t eCurrentLineEdge =  17;
+
+  static const uint8_t eLineNumber =       18;
+
+  static const uint8_t eWhiteSpace =       19;
+  static const uint8_t eTab =              20;
+
+  static const uint8_t eFoldBeginClosed = 21;
+  static const uint8_t eFoldBeginOpen =   22;
+  static const uint8_t eFoldEnd =         23;
+
+  static const uint8_t eMax =             24;
   //}}}
   //{{{
   struct sGlyph {
     uint8_t mChar;
-    ePalette mColorIndex;
+    uint8_t mColorIndex;
 
     bool mComment:1;
     bool mMultiLineComment:1;
@@ -62,10 +67,10 @@ public:
 
     sGlyph() :
       mChar(' '),
-      mColorIndex(ePalette::Default),
+      mColorIndex(eDefault),
       mComment(false), mMultiLineComment(false), mPreProc(false) {}
 
-    sGlyph (uint8_t ch, ePalette colorIndex) :
+    sGlyph (uint8_t ch, uint8_t colorIndex) :
       mChar(ch),
       mColorIndex(colorIndex),
       mComment(false), mMultiLineComment(false), mPreProc(false) {}
@@ -151,10 +156,10 @@ public:
   //{{{
   struct sLanguage {
     // typedef
-    typedef std::pair<std::string, ePalette> tTokenRegexString;
+    typedef std::pair<std::string, uint8_t> tTokenRegexString;
     typedef std::vector<tTokenRegexString> tTokenRegexStrings;
     typedef bool (*tTokenizeCallback)(const char* inBegin, const char* inEnd,
-                                      const char*& outBegin, const char*& outEnd, ePalette& palette);
+                                      const char*& outBegin, const char*& outEnd, uint8_t& palette);
 
     // vars
     std::string mName;
@@ -281,7 +286,7 @@ public:
   void drawContents (cApp& app);
 
 private:
-  typedef std::vector <std::pair <std::regex,ePalette>> tRegexList;
+  typedef std::vector <std::pair <std::regex,uint8_t>> tRegexList;
   //{{{
   struct sCursorSelectionState {
     sPosition mCursorPosition;
@@ -318,8 +323,8 @@ private:
     tRegexList mRegexList;
     std::map <int,std::string> mMarkers;
 
-    std::array <ImU32,(size_t)ePalette::Max> mPalette;
-    std::array <ImU32,(size_t)ePalette::Max> mPaletteBase;
+    std::array <ImU32,eMax> mPalette;
+    std::array <ImU32,eMax> mPaletteBase;
     };
   //}}}
   //{{{
@@ -342,8 +347,8 @@ private:
   public:
     void update (const cOptions& options);
 
-    float measureText (const char* str, const char* strEnd);
-    float drawText (ImVec2 pos, ImU32 color, const char* str, const char* strEnd);
+    float measureText (const char* str, const char* strEnd) const;
+    float drawText (ImVec2 pos, ImU32 color, const char* str, const char* strEnd = nullptr);
 
     ImDrawList* mDrawList = nullptr;
     bool mFocused = false;
@@ -355,7 +360,6 @@ private:
     float mGlyphWidth = 0.f;
 
     float mLeftPad = 0.f;
-    ImVec2 mTextPos;
 
   private:
     ImFont* mFont = nullptr;
@@ -410,9 +414,9 @@ private:
 
   //{{{  gets
   bool isFolded() const { return mOptions.mShowFolded || mOptions.mHoverFolded; }
-  bool isLineNumber() const { return mOptions.mShowLineNumber || mOptions.mHoverLineNumber; }
-  bool isWhiteSpace() const { return mOptions.mShowWhiteSpace || mOptions.mHoverWhiteSpace; }
-  bool isMonoSpaced() const { return mOptions.mShowMonoSpaced ^ mOptions.mHoverMonoSpaced; }
+  bool isDrawLineNumber() const { return mOptions.mShowLineNumber || mOptions.mHoverLineNumber; }
+  bool isDrawWhiteSpace() const { return mOptions.mShowWhiteSpace || mOptions.mHoverWhiteSpace; }
+  bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced ^ mOptions.mHoverMonoSpaced; }
 
   int getCharacterIndex (const sPosition& position) const;
   int getCharacterColumn (int lineNumber, int index) const;
@@ -422,7 +426,7 @@ private:
 
   int getPageNumLines() const;
   int getMaxLineIndex() const;
-  float getTextWidth (const sPosition& position);
+  float getTextWidth (const sPosition& position) const;
 
   std::string getText (const sPosition& startPosition, const sPosition& endPosition) const;
   std::string getCurrentLineText() const;
@@ -433,19 +437,22 @@ private:
   bool isOnWordBoundary (const sPosition& position) const;
   std::string getWordAt (const sPosition& position) const;
   std::string getWordUnderCursor() const;
+
+  int getTabColumn (int column) const;
+  float getTabEndPosX (float columnX) const;
+  sPosition getPositionFromPosX (int lineNumber, float posX) const;
+
+  int getLineNumberFromIndex (int lineIndex) const;
+  int getLineIndexFromNumber (int lineNumber) const;
   //}}}
   //{{{  utils
-  float tabEndPos (float columnX);
-  void clickFold (int lineNumber, bool foldOpen);
-  void clickText (int lineNumber, float xPos, bool selectWord);
-
-  sPosition xPosToPosition (int lineNumber, float xPos);
-
   void advance (sPosition& position) const;
   sPosition sanitizePosition (const sPosition& position) const;
-  int lineIndexToNumber (int lineIndex) const;
-  int lineNumberToIndex (int lineNumber) const;
   void ensureCursorVisible();
+
+  // clicks
+  void clickFold (int lineNumber, bool foldOpen);
+  void clickText (int lineNumber, float xPos, bool selectWord);
 
   // find
   sPosition findWordStart (const sPosition& from) const;
@@ -498,7 +505,6 @@ private:
   cEdit mEdit;
   cUndoList mUndoList;
 
-  float mLastClickTime = -1;
   std::chrono::system_clock::time_point mLastFlashTime;
   //}}}
   };

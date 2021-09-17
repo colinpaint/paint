@@ -142,7 +142,7 @@ private:
   size_t getDataTypeSize (ImGuiDataType dataType) const;
   std::string getDataTypeDesc (ImGuiDataType dataType) const;
   std::string getDataFormatDesc (eDataFormat dataFormat) const;
-  std::string getDataStr (size_t address, ImGuiDataType dataType, eDataFormat dataFormat);
+  std::string getDataString (size_t address, ImGuiDataType dataType, eDataFormat dataFormat);
 
   // sets
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
@@ -170,6 +170,4 @@ private:
 
   uint64_t mStartTime;
   float mLastClick;
-
-  char mOutBuf [128] = { 0 };
   };
