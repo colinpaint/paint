@@ -33,8 +33,8 @@ namespace {
   //{{{
   const array <ImU32, cTextEdit::eMax> kPalette = {
     0xffefefef, // eBackground
-    0xff404040, // eText
 
+    0xff404040, // eText
     0xffff0c06, // eKeyword
     0xff008000, // eNumber
     0xff2020a0, // eString
@@ -49,11 +49,11 @@ namespace {
     0xff205020, // eComment
     0xff405020, // eMultiLineComment
 
+    0x800010ff, // eMarker
+    0x80600000, // eSelect
     0xff000000, // eCursor
     0x40000000, // eCursorLineFill
     0x40000000, // eCursorLineEdge
-    0x80600000, // eSelection
-    0x800010ff, // eMarker
 
     0xff505000, // eLineNumber
 
@@ -1205,11 +1205,10 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
   ImGui::BeginChild ("##scrolling", ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
-  handleKeyboardInputs();
-
   mContext.update (mOptions);
-
   colorizeInternal();
+
+  handleKeyboardInputs();
 
   if (isFolded()) {
     //{{{  draw folded
@@ -1218,6 +1217,7 @@ void cTextEdit::drawContents (cApp& app) {
     }
     //}}}
   else {
+    //{{{  draw unfolded with clipper
     // clipper begin
     ImGuiListClipper clipper;
     clipper.Begin ((int)mInfo.mLines.size(), mContext.mLineHeight);
@@ -1231,6 +1231,7 @@ void cTextEdit::drawContents (cApp& app) {
     clipper.Step();
     clipper.End();
     }
+    //}}}
 
   //{{{  highlight idents, preproc, rewrite as curso coords not mouse coords
   //if (ImGui::IsMousePosValid()) {
@@ -2420,18 +2421,18 @@ void cTextEdit::handleKeyboardInputs() {
      // numpad
      {false, false, false, kNumpad1,            false, [this]{openFold();}},
      {false, false, false, kNumpad3,            false, [this]{closeFold();}},
-  // {false, false, false, kNumpad0,            false, [this]{FoldCreate();}},
+  // {false, false, false, kNumpad0,            true,  [this]{foldCreate();}},
   // {false, false, false, kNumpad4,            false, [this]{prevFile();}},
   // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
-  // {false, false, false, kNumpad7,            false, [this]{oldEnter();}},
-  // {false, false, false, kNumpad9,            false, [this]{FoldExit();}},
-  // {false, true,  false, kNumpad0,            false, [this]{FoldRemove();}},
-  // {false, true,  false, kNumpad3,            false, [this]{FoldCloseAll();}},
-  // {true,  false, false, kNumpadMulitply,     false, [this]{FindDialog();}},
-  // {true,  false, false, kNumpadDivide,       false, [this]{ReplaceDialog();}},
-  // {false, false, false, F4                   false, [this]{Copy();}},
-  // {false, true,  false, F                    false, [this]{FindDialog();}},
-  // {true,  false, false, N                    false, [this]{GotoDialog();}},
+  // {false, false, false, kNumpad7,            false, [this]{foldEnter();}},
+  // {false, false, false, kNumpad9,            false, [this]{foldExit();}},
+  // {false, true,  false, kNumpad0,            true,  [this]{foldRemove();}},
+  // {false, true,  false, kNumpad3,            false, [this]{foldCloseAll();}},
+  // {true,  false, false, kNumpadMulitply,     false, [this]{findDialog();}},
+  // {true,  false, false, kNumpadDivide,       false, [this]{replaceDialog();}},
+  // {false, false, false, F4                   false, [this]{copy();}},
+  // {false, true,  false, F                    false, [this]{findDialog();}},
+  // {true,  false, false, N                    false, [this]{gotoDialog();}},
      };
 
   //if (!ImGui::IsWindowFocused())

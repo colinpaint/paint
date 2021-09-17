@@ -24,6 +24,7 @@ public:
   //{{{  palette const
   // tried enum but array of foxed it
   static const uint8_t eBackground =        0;
+
   static const uint8_t eText =              1;
   static const uint8_t eKeyword =           2;
   static const uint8_t eNumber =            3;
@@ -39,11 +40,11 @@ public:
   static const uint8_t eComment =          11;
   static const uint8_t eMultiLineComment = 12;
 
-  static const uint8_t eCursor =           13;
-  static const uint8_t eCursorLineFill =   14;
-  static const uint8_t eCursorLineEdge =   15;
-  static const uint8_t eSelect =           16;
-  static const uint8_t eMarker =           17;
+  static const uint8_t eMarker =           13;
+  static const uint8_t eSelect =           14;
+  static const uint8_t eCursor =           15;
+  static const uint8_t eCursorLineFill =   16;
+  static const uint8_t eCursorLineEdge =   17;
 
   static const uint8_t eLineNumber =       18;
 
