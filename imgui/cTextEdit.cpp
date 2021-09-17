@@ -49,11 +49,10 @@ namespace {
     0xff405020, // eMultiLineComment
 
     0xff000000, // eCursor
+    0x40000000, // eCursorLineFill
+    0x40000000, // eCursorLineEdge
     0x80600000, // eSelection
     0x800010ff, // eMarker
-    0x40000000, // eCurrentLineFill
-    0x40808080, // eCurrentLineFillInactive
-    0x40000000, // eCurrentLineEdge
 
     0xff505000, // eLineNumber
 
@@ -261,24 +260,24 @@ namespace {
   //{{{
   bool findString (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
-    const char* p = inBegin;
+    const char* ptr = inBegin;
 
-    if (*p == '"') {
-      p++;
+    if (*ptr == '"') {
+      ptr++;
 
-      while (p < inEnd) {
+      while (ptr < inEnd) {
         // handle end of string
-        if (*p == '"') {
+        if (*ptr == '"') {
           outBegin = inBegin;
-          outEnd = p + 1;
+          outEnd = ptr + 1;
           return true;
          }
 
         // handle escape character for "
-        if (*p == '\\' && p + 1 < inEnd && p[1] == '"')
-          p++;
+        if ((*ptr == '\\') && (ptr + 1 < inEnd) && (ptr[1] == '"'))
+          ptr++;
 
-        p++;
+        ptr++;
         }
       }
 
@@ -288,22 +287,22 @@ namespace {
   //{{{
   bool findCharacterLiteral (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
-    const char * p = inBegin;
+    const char* ptr = inBegin;
 
-    if (*p == '\'') {
-      p++;
+    if (*ptr == '\'') {
+      ptr++;
 
       // handle escape characters
-      if (p < inEnd && *p == '\\')
-        p++;
+      if ((ptr < inEnd) && (*ptr == '\\'))
+        ptr++;
 
-      if (p < inEnd)
-        p++;
+      if (ptr < inEnd)
+        ptr++;
 
       // handle end of character literal
-      if (p < inEnd && *p == '\'') {
+      if ((ptr < inEnd) && (*ptr == '\'')) {
         outBegin = inBegin;
-        outEnd = p + 1;
+        outEnd = ptr + 1;
         return true;
         }
       }
@@ -314,17 +313,22 @@ namespace {
   //{{{
   bool findIdent (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
-    const char * p = inBegin;
+    const char* ptr = inBegin;
 
-    if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || *p == '_') {
-      p++;
+    if (((*ptr >= 'a') && (*ptr <= 'z')) ||
+        ((*ptr >= 'A') && (*ptr <= 'Z')) ||
+        (*ptr == '_')) {
+      ptr++;
 
-      while ((p < inEnd) && ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') ||
-             (*p >= '0' && *p <= '9') || *p == '_'))
-        p++;
+      while ((ptr < inEnd) &&
+             (((*ptr >= 'a') && (*ptr <= 'z')) ||
+              ((*ptr >= 'A') && (*ptr <= 'Z')) ||
+              ((*ptr >= '0') && (*ptr <= '9')) ||
+              (*ptr == '_')))
+        ptr++;
 
       outBegin = inBegin;
-      outEnd = p;
+      outEnd = ptr;
       return true;
       }
 
@@ -334,16 +338,17 @@ namespace {
   //{{{
   bool findNumber (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
-    const char * p = inBegin;
-    const bool startsWithNumber = *p >= '0' && *p <= '9';
-    if (*p != '+' && *p != '-' && !startsWithNumber)
+    const char* ptr = inBegin;
+    const bool startsWithNumber = (*ptr >= '0') && (*ptr <= '9');
+    if ((*ptr != '+') && (*ptr != '-') && !startsWithNumber)
       return false;
 
-    p++;
+    ptr++;
     bool hasNumber = startsWithNumber;
-    while (p < inEnd && (*p >= '0' && *p <= '9')) {
+    while ((ptr < inEnd) &&
+           ((*ptr >= '0') && (*ptr <= '9'))) {
       hasNumber = true;
-      p++;
+      ptr++;
       }
     if (hasNumber == false)
       return false;
@@ -351,61 +356,74 @@ namespace {
     bool isHex = false;
     bool isFloat = false;
     bool isBinary = false;
-    if (p < inEnd) {
-      if (*p == '.') {
+    if (ptr < inEnd) {
+      if (*ptr == '.') {
         isFloat = true;
-        p++;
-        while (p < inEnd && (*p >= '0' && *p <= '9'))
-          p++;
+        ptr++;
+        while ((ptr < inEnd) &&
+               ((*ptr >= '0') && (*ptr <= '9')))
+          ptr++;
         }
-      else if (*p == 'x' || *p == 'X') { // hex formatted integer of the type 0xef80
+      else if ((*ptr == 'x') || (*ptr == 'X')) {
+        //{{{  hex formatted integer of the type 0xef80
         isHex = true;
-        p++;
-        while (p < inEnd && ((*p >= '0' && *p <= '9') || (*p >= 'a' && *p <= 'f') || (*p >= 'A' && *p <= 'F')))
-          p++;
+        ptr++;
+        while ((ptr < inEnd) &&
+               (((*ptr >= '0') && (*ptr <= '9')) ||
+                ((*ptr >= 'a') && (*ptr <= 'f')) ||
+                ((*ptr >= 'A') && (*ptr <= 'F'))))
+          ptr++;
         }
-      else if (*p == 'b' || *p == 'B') { // binary formatted integer of the type 0b01011101
+        //}}}
+      else if ((*ptr == 'b') || (*ptr == 'B')) {
+        //{{{  binary formatted integer of the type 0b01011101
         isBinary = true;
-        p++;
-        while (p < inEnd && (*p >= '0' && *p <= '1'))
-          p++;
+        ptr++;
+        while ((ptr < inEnd) && ((*ptr >= '0') && (*ptr <= '1')))
+          ptr++;
         }
+        //}}}
       }
 
-    if (isHex == false && isBinary == false) { // floating point exponent
-      if (p < inEnd && (*p == 'e' || *p == 'E')) {
+    if (isHex == false && isBinary == false) {
+      //{{{  floating point exponent
+      if (ptr < inEnd && (*ptr == 'e' || *ptr == 'E')) {
         isFloat = true;
-        p++;
-        if (p < inEnd && (*p == '+' || *p == '-'))
-          p++;
+        ptr++;
+        if (ptr < inEnd && (*ptr == '+' || *ptr == '-'))
+          ptr++;
+
         bool hasDigits = false;
-        while (p < inEnd && (*p >= '0' && *p <= '9')) {
+        while (ptr < inEnd && (*ptr >= '0' && *ptr <= '9')) {
           hasDigits = true;
-          p++;
+          ptr++;
           }
         if (hasDigits == false)
           return false;
         }
 
-      // single precision floating point type
-      if (p < inEnd && *p == 'f')
-        p++;
+      // single pecision floating point type
+      if (ptr < inEnd && *ptr == 'f')
+        ptr++;
       }
+      //}}}
 
     if (isFloat == false) // integer size type
-      while (p < inEnd && (*p == 'u' || *p == 'U' || *p == 'l' || *p == 'L'))
-        p++;
+      while ((ptr < inEnd) &&
+             ((*ptr == 'u') || (*ptr == 'U') || (*ptr == 'l') || (*ptr == 'L')))
+        ptr++;
 
     outBegin = inBegin;
-    outEnd = p;
+    outEnd = ptr;
     return true;
     }
   //}}}
   //{{{
   bool findPunctuation (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
+    //{{{  unused param
     (void)inEnd;
-
+    //}}}
     switch (*inBegin) {
       case '[':
       case ']':
@@ -447,7 +465,6 @@ cTextEdit::cTextEdit() {
 
   mInfo.mLines.push_back (vector<sGlyph>());
 
-  mOptions.mPalette = kPalette;
   setLanguage (sLanguage::cPlus());
 
   mLastFlashTime = system_clock::now();
@@ -1132,7 +1149,7 @@ void cTextEdit::openFold() {
 
   if (isFolded())
     if (mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFoldBegin)
-      mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFoldOpen = true;
+      mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFolded = false;
   }
 //}}}
 //{{{
@@ -1142,15 +1159,15 @@ void cTextEdit::closeFold() {
     int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
     sLine& line = mInfo.mLines[lineNumber];
 
-    if (line.mFoldBegin && line.mFoldOpen) // if at open foldBegin, close it
-      line.mFoldOpen = false;
+    if (line.mFoldBegin && !line.mFolded) // if at unfolded foldBegin, fold it
+      line.mFolded = true;
     else {
       // search back for this fold's foldBegin and close it
       // - !!! need to skip foldEnd foldBegin pairs !!!
       while (--lineNumber >= 0) {
         line = mInfo.mLines[lineNumber];
-        if (line.mFoldBegin && line.mFoldOpen) {
-          line.mFoldOpen = false;
+        if (line.mFoldBegin && !line.mFolded) {
+          line.mFolded = true;
           // !!!! set cursor position to lineNumber !!!
           break;
           }
@@ -1180,29 +1197,25 @@ void cTextEdit::drawContents (cApp& app) {
 
   drawTop (app);
 
+  // begin childWindow, new font, new colors
   if (isDrawMonoSpaced())
     ImGui::PushFont (app.getMonoFont());
-
-  // new colours
-  ImGui::PushStyleColor (ImGuiCol_Text, mOptions.mPalette[eText]);
-  ImGui::PushStyleColor (ImGuiCol_ChildBg, mOptions.mPalette[eBackground]);
-
-  ImGui::BeginChild ("##scrolling", ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-
-  // grab padding before it is zeroed in childWindow
-  mContext.update (mOptions);
+  ImGui::PushStyleColor (ImGuiCol_Text, kPalette[eText]);
+  ImGui::PushStyleColor (ImGuiCol_ChildBg, kPalette[eBackground]);
   ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, ImVec2(0,0));
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
+  ImGui::BeginChild ("##scrolling", ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
-  //ImGui::PushAllowKeyboardFocus (true);
   handleKeyboardInputs();
+
+  mContext.update (mOptions);
 
   colorizeInternal();
 
   if (isFolded()) {
     //{{{  draw folded
     mInfo.mFoldLines.clear();
-    drawFold (0, true, true);
+    drawFold (0, false, false);
     }
     //}}}
   else {
@@ -1245,13 +1258,9 @@ void cTextEdit::drawContents (cApp& app) {
     //}
   //}}}
 
-  ImGui::PopStyleVar (2);
-  //ImGui::PopAllowKeyboardFocus();
-
   ImGui::EndChild();
-
+  ImGui::PopStyleVar (2);
   ImGui::PopStyleColor(2);
-
   if (isDrawMonoSpaced())
     ImGui::PopFont();
   }
@@ -1434,16 +1443,18 @@ string cTextEdit::getSelectedText() const {
 //}}}
 
 //{{{
-ImU32 cTextEdit::getGlyphColor (const sGlyph& glyph) const {
+uint8_t cTextEdit::getGlyphColor (const sGlyph& glyph) const {
 
   if (glyph.mComment)
-    return mOptions.mPalette[eComment];
-  if (glyph.mMultiLineComment)
-    return mOptions.mPalette[eMultiLineComment];
-  if (glyph.mPreProc)
-    return mOptions.mPalette[ePreprocessor];
+    return eComment;
 
-  return mOptions.mPalette[glyph.mColorIndex];
+  if (glyph.mMultiLineComment)
+    return eMultiLineComment;
+
+  if (glyph.mPreProc)
+    return ePreprocessor;
+
+  return glyph.mColor;
   }
 //}}}
 
@@ -1458,7 +1469,7 @@ bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
   if (characterIndex >= (int)glyphs.size())
     return true;
 
-  return glyphs[characterIndex].mColorIndex != glyphs[size_t(characterIndex - 1)].mColorIndex;
+  return glyphs[characterIndex].mColor != glyphs[size_t(characterIndex - 1)].mColor;
   //return isspace (glyphs[cindex].mChar) != isspace (glyphs[cindex - 1].mChar);
   }
 //}}}
@@ -1663,7 +1674,7 @@ cTextEdit::sPosition cTextEdit::findWordStart (sPosition fromPosition) const {
   while (characterIndex > 0 && isspace (glyphs[characterIndex].mChar))
     --characterIndex;
 
-  uint8_t color = glyphs[characterIndex].mColorIndex;
+  uint8_t color = glyphs[characterIndex].mColor;
   while (characterIndex > 0) {
     uint8_t ch = glyphs[characterIndex].mChar;
     if ((ch & 0xC0) != 0x80) { // not UTF code sequence 10xxxxxx
@@ -1671,7 +1682,7 @@ cTextEdit::sPosition cTextEdit::findWordStart (sPosition fromPosition) const {
         characterIndex++;
         break;
         }
-      if (color != glyphs[size_t(characterIndex - 1)].mColorIndex)
+      if (color != glyphs[size_t(characterIndex - 1)].mColor)
         break;
       }
     --characterIndex;
@@ -1693,11 +1704,11 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition fromPosition) const {
     return fromPosition;
 
   bool prevSpace = (bool)isspace (glyphs[characterIndex].mChar);
-  uint8_t color = glyphs[characterIndex].mColorIndex;
+  uint8_t color = glyphs[characterIndex].mColor;
   while (characterIndex < (int)glyphs.size()) {
     uint8_t ch = glyphs[characterIndex].mChar;
     int length = utf8CharLength (ch);
-    if (color != glyphs[characterIndex].mColorIndex)
+    if (color != glyphs[characterIndex].mColor)
       break;
 
     if (prevSpace != !!isspace (ch)) {
@@ -2017,7 +2028,7 @@ void cTextEdit::colorizeRange (int fromLine, int toLine) {
     for (size_t j = 0; j < glyphs.size(); ++j) {
       sGlyph& col = glyphs[j];
       buffer[j] = col.mChar;
-      col.mColorIndex = eText;
+      col.mColor = eText;
       }
 
     const char* bufferBegin = &buffer.front();
@@ -2074,7 +2085,7 @@ void cTextEdit::colorizeRange (int fromLine, int toLine) {
           }
 
         for (size_t j = 0; j < token_length; ++j)
-          glyphs[(token_begin - bufferBegin) + j].mColorIndex = token_color;
+          glyphs[(token_begin - bufferBegin) + j].mColor = token_color;
 
         first = token_end;
         }
@@ -2224,13 +2235,13 @@ void cTextEdit::clickLine (int lineNumber) {
   }
 //}}}
 //{{{
-void cTextEdit::clickFold (int lineNumber, bool foldOpen) {
+void cTextEdit::clickFold (int lineNumber, bool folded) {
 
   mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
   mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
   mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
 
-  mInfo.mLines[lineNumber].mFoldOpen = foldOpen;
+  mInfo.mLines[lineNumber].mFolded = folded;
   }
 //}}}
 //{{{
@@ -2250,11 +2261,11 @@ void cTextEdit::dragLine (int lineNumber, float posY) {
 
   int lines = static_cast<int>(posY / mContext.mLineHeight);
   if (!isFolded()) // simple
-    lineNumber = max (0, min ((int)mInfo.mLines.size(), lineNumber + lines));
+    lineNumber = max (0, min ((int)mInfo.mLines.size()-1, lineNumber + lines));
   else {
     int lineIndex = getLineIndexFromNumber (lineNumber);
     if (lineIndex != -1) {
-      lineIndex = max (0, min ((int)mInfo.mFoldLines.size(), lineIndex + lines));
+      lineIndex = max (0, min ((int)mInfo.mFoldLines.size()-1, lineIndex + lines));
       lineNumber = mInfo.mFoldLines[lineIndex];
       }
     }
@@ -2315,7 +2326,7 @@ void cTextEdit::parseFolds() {
     line.mFoldEnd = (foldEndIndent != string::npos);
 
     // init fields set by updateFolds
-    line.mFoldOpen = false;
+    line.mFolded = true;
     line.mFoldTitleLineNumber = -1;
     }
   }
@@ -2462,6 +2473,7 @@ void cTextEdit::handleKeyboardInputs() {
   }
 //}}}
 
+// draws
 //{{{
 void cTextEdit::drawTop (cApp& app) {
 
@@ -2585,7 +2597,7 @@ void cTextEdit::drawTop (cApp& app) {
   }
 //}}}
 //{{{
-float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor) {
+float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, uint8_t forceColor) {
 
   if (glyphs.empty())
     return 0.f;
@@ -2596,36 +2608,37 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
   // init
   array <char,256> str;
 
-  size_t i = 0;
-  ImU32 strColor = forceColor ? forcedColor : getGlyphColor (glyphs[0]);
+  size_t strIndex = 0;
+  uint8_t strColor = (forceColor < eMax) ? forceColor : getGlyphColor (glyphs[0]);
   for (auto& glyph : glyphs) {
-    ImU32 color = forceColor ? forcedColor : getGlyphColor (glyph);
-    if ((i > 0) && (i < str.max_size()) &&
+    uint8_t color = (forceColor < eMax) ? forceColor : getGlyphColor (glyph);
+    if ((strIndex > 0) && (strIndex < str.max_size()) &&
         ((color != strColor) || (glyph.mChar == '\t') || (glyph.mChar == ' '))) {
       // draw colored glyphs, seperated by colorChange,tab,space
-      pos.x += mContext.drawText (pos, strColor, str.data(), str.data()+i);
-      i = 0;
+      pos.x += mContext.drawText (pos, strColor, str.data(), str.data()+strIndex);
+      strIndex = 0;
       strColor = color;
       }
 
     if (glyph.mChar == '\t') {
       //{{{  tab
-      ImVec2 arrowLeftPos = { pos.x + 1.f, pos.y + mContext.mFontSize / 2.f };
+      ImVec2 arrowLeftPos = {pos.x + 1.f, pos.y + mContext.mFontSize/2.f};
 
       // apply tab
       pos.x = getTabEndPosX (pos.x);
 
       if (isDrawWhiteSpace()) {
         // draw tab arrow
-        ImVec2 arrowRightPos = { pos.x - 1.f, arrowLeftPos.y };
-        mContext.mDrawList->AddLine (arrowLeftPos, arrowRightPos,mOptions.mPalette[eTab]);
+        ImVec2 arrowRightPos = {pos.x - 1.f, arrowLeftPos.y};
+        mContext.drawLine (arrowLeftPos, arrowRightPos, eTab);
 
-        ImVec2 arrowTopPos = { arrowRightPos.x - (mContext.mFontSize * 0.2f) - 1.f,
-                               arrowRightPos.y - (mContext.mFontSize * 0.2f) };
-        mContext.mDrawList->AddLine (arrowRightPos, arrowTopPos, mOptions.mPalette[eTab]);
-        ImVec2 arrowBotPos = { arrowRightPos.x - (mContext.mFontSize * 0.2f) - 1.f,
-                               arrowRightPos.y + (mContext.mFontSize * 0.2f) };
-        mContext.mDrawList->AddLine (arrowRightPos, arrowBotPos, mOptions.mPalette[eTab]);
+        ImVec2 arrowTopPos = {arrowRightPos.x - (mContext.mFontSize/4.f) - 1.f,
+                              arrowRightPos.y - (mContext.mFontSize/4.f)};
+        mContext.drawLine (arrowRightPos, arrowTopPos, eTab);
+
+        ImVec2 arrowBotPos = {arrowRightPos.x - (mContext.mFontSize/4.f) - 1.f,
+                              arrowRightPos.y + (mContext.mFontSize/4.f)};
+        mContext.drawLine (arrowRightPos, arrowBotPos, eTab);
         }
       }
       //}}}
@@ -2634,7 +2647,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
       if (isDrawWhiteSpace()) {
         // draw circle
         ImVec2 centre = { pos.x  + mContext.mGlyphWidth/2.f, pos.y + mContext.mFontSize/2.f};
-        mContext.mDrawList->AddCircleFilled (centre, 2.f, mOptions.mPalette[eWhiteSpace], 4);
+        mContext.drawCircle (centre, 2.f, eWhiteSpace);
         }
 
       pos.x += mContext.mGlyphWidth;
@@ -2642,13 +2655,13 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, bool for
       //}}}
     else {
       int length = utf8CharLength (glyph.mChar);
-      while ((length-- > 0) && (i < str.max_size()))
-        str[i++] = glyph.mChar;
+      while ((length-- > 0) && (strIndex < str.max_size()))
+        str[strIndex++] = glyph.mChar;
       }
     }
 
-  if (i > 0) // draw remaining glyphs
-    pos.x += mContext.drawText (pos, strColor, str.data(), str.data()+i);
+  if (strIndex > 0) // draw remaining glyphs
+    pos.x += mContext.drawText (pos, strColor, str.data(), str.data() + strIndex);
 
   return (pos.x - firstPosX);
   }
@@ -2667,9 +2680,19 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   if (isDrawLineNumber()) {
     //{{{  draw lineNumber
     curPos.x += leftPadWidth;
-    float lineNumberWidth = mContext.drawSmallText (curPos, mOptions.mPalette[eLineNumber],
-      (mOptions.mShowLineDebug ? fmt::format ("{:4d} {:4d} ", lineNumber, line.mFoldTitleLineNumber)
-                               : fmt::format ("{:4d} ", lineNumber)).c_str());
+
+    float lineNumberWidth;
+    if (mOptions.mShowLineDebug)
+      lineNumberWidth = mContext.drawText (curPos, eLineNumber,
+        fmt::format ("{:4d} {}{}{}{}{} {:4d} ", lineNumber,
+                                                line.mFoldBegin ? 'b': ' ',
+                                                line.mFoldEnd ? 'e' : ' ',
+                                                line.mHasComment ? 'c': ' ',
+                                                line.mFolded ? 'f': ' ',
+                                                line.mPressed ? 'p': ' ',
+                                                line.mFoldTitleLineNumber).c_str());
+    else
+      lineNumberWidth = mContext.drawSmallText (curPos, eLineNumber, fmt::format ("{:4d} ", lineNumber).c_str());
 
     // add invisibleButton, gobble up leftPad
     ImGui::InvisibleButton (fmt::format ("##line{}", lineNumber).c_str(),
@@ -2691,56 +2714,31 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   ImVec2 textPos = curPos;
   vector <sGlyph>& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
-    if (line.mFoldOpen) {
-      //{{{  draw foldOpen prefix + glyphs text
-      // draw foldPrefix
-      curPos.x += leftPadWidth;
-      float prefixWidth = mContext.drawText (curPos, mOptions.mPalette[eFoldBeginOpen], mOptions.mLanguage.mFoldBeginOpen);
-      curPos.x += prefixWidth;
-
-      // add foldPrefix invisibleButton
-      ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
-                              {leftPadWidth + prefixWidth, mContext.mLineHeight});
-      if (ImGui::IsItemActive())
-        clickFold (lineNumber, false);
-
-      // draw glypheText
-      textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, false, 0);
-      if (glyphsWidth < mContext.mGlyphWidth) // widen to ensure something to pick
-        glyphsWidth = mContext.mGlyphWidth;
-
-      // add invisibleButton
-      ImGui::SameLine();
-      ImGui::InvisibleButton (fmt::format("##text{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
-      if (ImGui::IsItemActive())
-        clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
-
-      curPos.x += glyphsWidth;
-      }
-      //}}}
-    else {
-      //{{{  draw foldClosed prefix + glyphs text
+    if (line.mFolded) {
+      //{{{  draw folded prefix + glyphs text
       // add ident
       curPos.x += leftPadWidth;
+
       float indentWidth = line.mIndent * mContext.mGlyphWidth;
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth =  mContext.drawText (curPos, mOptions.mPalette[eFoldBeginClosed],
-                                              mOptions.mLanguage.mFoldBeginClosed);
+      float prefixWidth = mContext.drawText (curPos, eFoldBeginClosed, mOptions.mLanguage.mFoldBeginClosed);
       curPos.x += prefixWidth;
 
-      // add invisibleButton, indent + prefix wide
-      ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
-                                  {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
-      if (ImGui::IsItemActive())
-        clickFold (lineNumber, true);
+      // add invisibleButton, indent + prefix wide, want to action on press
+      if (ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
+                                  {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight}))
+        line.mPressed = false;
+      if (ImGui::IsItemActive() && !line.mPressed) {
+        // unfold
+        line.mPressed = true;
+        clickFold (lineNumber, false);
+        }
 
-      // draw glypheText
+      // draw glyphs
       textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[glyphsLineNumber].mGlyphs, true,
-                                      mOptions.mPalette[eFoldBeginClosed]);
+      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[glyphsLineNumber].mGlyphs, eFoldBeginClosed);
       if (glyphsWidth < mContext.mGlyphWidth) // widen to ensure something to pick
         glyphsWidth = mContext.mGlyphWidth;
 
@@ -2753,11 +2751,44 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       curPos.x += glyphsWidth;
       }
       //}}}
+    else {
+      //{{{  draw unfolded prefix + glyphs text
+      // draw foldPrefix
+      curPos.x += leftPadWidth;
+
+      float prefixWidth = mContext.drawText (curPos, eFoldBeginOpen, mOptions.mLanguage.mFoldBeginOpen);
+      curPos.x += prefixWidth;
+
+      // add foldPrefix invisibleButton, want to action on press
+      if (ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
+                                  {leftPadWidth + prefixWidth, mContext.mLineHeight}))
+        line.mPressed = false;
+      if (ImGui::IsItemActive() && !line.mPressed) {
+        // fold
+        line.mPressed = true;
+        clickFold (lineNumber, true);
+        }
+
+      // draw glyphs
+      textPos.x = curPos.x;
+      float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, 0xFF);
+      if (glyphsWidth < mContext.mGlyphWidth) // widen to ensure something to pick
+        glyphsWidth = mContext.mGlyphWidth;
+
+      // add invisibleButton
+      ImGui::SameLine();
+      ImGui::InvisibleButton (fmt::format("##text{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
+      if (ImGui::IsItemActive())
+        clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
+
+      curPos.x += glyphsWidth;
+      }
+      //}}}
     }
   else if (isFolded() && line.mFoldEnd) {
     //{{{  draw foldEnd prefix, no glyphs text
     curPos.x += leftPadWidth;
-    float prefixWidth = mContext.drawText (curPos, mOptions.mPalette[eFoldEnd], mOptions.mLanguage.mFoldEnd);
+    float prefixWidth = mContext.drawText (curPos, eFoldEnd, mOptions.mLanguage.mFoldEnd);
 
     // add invisibleButton
     ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
@@ -2774,7 +2805,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
 
     // drawGlyphs
     textPos.x = curPos.x;
-    float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, false, 0);
+    float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, 0xFF);
     if (glyphsWidth < mContext.mGlyphWidth) // widen to ensure something to pick
       glyphsWidth = mContext.mGlyphWidth;
 
@@ -2796,7 +2827,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   auto markerIt = mOptions.mMarkers.find (lineNumber+1);
   if (markerIt != mOptions.mMarkers.end()) {
     ImVec2 brPos = {curPos.x, curPos.y + mContext.mLineHeight};
-    mContext.mDrawList->AddRectFilled (leftPos, brPos, mOptions.mPalette[eMarker]);
+    mContext.drawRect (leftPos, brPos, eMarker);
 
     if (ImGui::IsMouseHoveringRect (ImGui::GetCursorScreenPos(), brPos)) {
       ImGui::BeginTooltip();
@@ -2826,24 +2857,20 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   if (mEdit.mState.mSelectionEnd.mLineNumber > static_cast<int>(lineNumber))
     xEnd += mContext.mGlyphWidth;
 
-  if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd)) {
-    ImVec2 tlPos = { textPos.x + xStart, textPos.y };
-    ImVec2 brPos = { textPos.x + xEnd, textPos.y + mContext.mLineHeight };
-    ImColor color = mOptions.mPalette[eSelect];
-    mContext.mDrawList->AddRectFilled (tlPos, brPos, color);
-    }
+  if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd))
+    mContext.drawRect ({textPos.x + xStart, textPos.y}, {textPos.x + xEnd, textPos.y + mContext.mLineHeight}, eSelect);
   //}}}
   if (!hasSelect()) {
     //{{{  draw cursor background highlight
     if (lineNumber == mEdit.mState.mCursorPosition.mLineNumber) {
       ImVec2 brPos = {curPos.x, curPos.y + mContext.mLineHeight};
-      mContext.mDrawList->AddRectFilled (leftPos, brPos, mOptions.mPalette[mContext.mFocused ? eCurrentLineFill : eCurrentLineFillInactive]);
-      mContext.mDrawList->AddRect (leftPos, brPos, mOptions.mPalette[eCurrentLineEdge], 1.f);
+      mContext.drawRect (leftPos, brPos, eCursorLineFill);
+      mContext.drawRectLine (leftPos, brPos, eCursorLineEdge);
       }
     }
     //}}}
 
-  if (mContext.mFocused && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
+  if (lineNumber == mEdit.mState.mCursorPosition.mLineNumber) {
     //{{{  draw flashing cursor
     auto now = system_clock::now();
     auto elapsed = now - mLastFlashTime;
@@ -2869,7 +2896,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       // draw cursor
       ImVec2 tlPos = {textPos.x + cursorPosX - 1.f, textPos.y};
       ImVec2 brPos = {tlPos.x + cursorWidth, curPos.y + mContext.mLineHeight};
-      mContext.mDrawList->AddRectFilled (tlPos, brPos, mOptions.mPalette[eCursor]);
+      mContext.drawRect (tlPos, brPos, eCursor);
       }
 
     if (elapsed > 800ms)
@@ -2879,10 +2906,10 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   }
 //}}}
 //{{{
-int cTextEdit::drawFold (int lineNumber, bool parentOpen, bool foldOpen) {
+int cTextEdit::drawFold (int lineNumber, bool parentFolded, bool folded) {
 // recursive traversal of mInfo.mLines to produce mVisbleLines of folds
 
-  if (parentOpen) {
+  if (!parentFolded) {
     // show foldBegin line
     // - if no foldBegin comment, search for first noComment line, !!!! assume next line for now !!!!
     sLine& line = mInfo.mLines[lineNumber];
@@ -2896,25 +2923,24 @@ int cTextEdit::drawFold (int lineNumber, bool parentOpen, bool foldOpen) {
 
     sLine& line = mInfo.mLines[lineNumber];
     if (line.mFoldBegin)
-      lineNumber = drawFold (lineNumber, foldOpen, line.mFoldOpen);
+      lineNumber = drawFold (lineNumber, folded, line.mFolded);
     else if (line.mFoldEnd) {
-      if (foldOpen) // show foldEnd line of open fold
+      if (!folded) // show foldEnd line of open fold
         drawLine (lineNumber, lineNumber);
       return lineNumber;
       }
-    else if (foldOpen) // show all lines of open fold
+    else if (!folded) // show all lines of open fold
       drawLine (lineNumber, lineNumber);
     }
   }
 //}}}
 
-// cTextEdit::cContext
+//{{{  cTextEdit::cContext
 //{{{
 void cTextEdit::cContext::update (const cOptions& options) {
 // update draw context
 
   mDrawList = ImGui::GetWindowDrawList();
-  mFocused = ImGui::IsWindowFocused();
 
   mFont = ImGui::GetFont();
   mFontAtlasSize = ImGui::GetFontSize();
@@ -2929,6 +2955,7 @@ void cTextEdit::cContext::update (const cOptions& options) {
   mLeftPad = mGlyphWidth/2.f;
   }
 //}}}
+
 //{{{
 float cTextEdit::cContext::measureText (const char* str, const char* strEnd) const {
 // return width of text
@@ -2936,24 +2963,46 @@ float cTextEdit::cContext::measureText (const char* str, const char* strEnd) con
   return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
   }
 //}}}
+
 //{{{
-float cTextEdit::cContext::drawText (ImVec2 pos, ImU32 color, const char* str, const char* strEnd) {
+float cTextEdit::cContext::drawText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
  // draw and return width of text
 
-  mDrawList->AddText (mFont, mFontSize, pos, color, str, strEnd);
+  mDrawList->AddText (mFont, mFontSize, pos, kPalette[color], str, strEnd);
   return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
   }
 //}}}
 //{{{
-float cTextEdit::cContext::drawSmallText (ImVec2 pos, ImU32 color, const char* str, const char* strEnd) {
+float cTextEdit::cContext::drawSmallText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
  // draw and return width of text
 
   pos.y += mFontSmallOffset;
-  mDrawList->AddText (mFont, mFontSmallSize, pos, color, str, strEnd);
+  mDrawList->AddText (mFont, mFontSmallSize, pos, kPalette[color], str, strEnd);
   return mFont->CalcTextSizeA (mFontSmallSize, FLT_MAX, -1.f, str, strEnd).x;
   }
 //}}}
 
+//{{{
+void cTextEdit::cContext::drawLine (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+  mDrawList->AddLine (pos1, pos2, kPalette[color]);
+  }
+//}}}
+//{{{
+void cTextEdit::cContext::drawCircle (ImVec2 centre, float radius, uint8_t color) {
+  mDrawList->AddCircleFilled (centre, radius, kPalette[color], 4);
+  }
+//}}}
+//{{{
+void cTextEdit::cContext::drawRect (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+  mDrawList->AddRectFilled (pos1, pos2, kPalette[color]);
+  }
+//}}}
+//{{{
+void cTextEdit::cContext::drawRectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+  mDrawList->AddRect (pos1, pos2, kPalette[color], 1.f);
+  }
+//}}}
+//}}}
 //{{{  cTextEdit::sUndo
 //{{{
 cTextEdit::sUndo::sUndo (const string& added,

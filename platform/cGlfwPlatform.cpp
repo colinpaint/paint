@@ -63,11 +63,6 @@ namespace {
         // restore last window size and position
         glfwSetWindowMonitor (window, nullptr, gWindowPos.x, gWindowPos.y, gWindowSize.x, gWindowSize.y, 0);
       }
-
-    else if (key >= 0 && key < 1024)
-      if (action == GLFW_RELEASE) {
-        // other user key actions
-        }
     }
   //}}}
   //{{{

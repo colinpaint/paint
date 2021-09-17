@@ -81,19 +81,17 @@ int main (int numArgs, char* args[]) {
   // create platform, graphics, UI font
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
-  ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
-
-  // should clear main screen here before file loads
-
-  // create canvas
+  //{{{  create canvas and our fonts
   #ifdef _WIN32
-    cCanvas canvas (platform, graphics, params.empty() ? "../piccies/tv.jpg" :
-                                                         cFileUtils::resolveShortcut (params[0]));
+    cCanvas canvas (platform, graphics, 
+      params.empty() ? "../piccies/tv.jpg" : cFileUtils::resolveShortcut (params[0]));
   #else
     cCanvas canvas (platform, graphics, params.empty() ? "../piccies/tv.jpg" : params[0]);
   #endif
-  canvas.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(&droidSansMono, droidSansMonoSize, 16.f));
 
+  canvas.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
+  canvas.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(&droidSansMono, droidSansMonoSize, 16.f));
+  //}}}
   if (params.size() > 1)
     canvas.newLayer (params[1]);
 

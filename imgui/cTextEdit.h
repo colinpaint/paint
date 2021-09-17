@@ -39,33 +39,32 @@ public:
   static const uint8_t eMultiLineComment = 11;
 
   static const uint8_t eCursor =           12;
-  static const uint8_t eSelect =           13;
-  static const uint8_t eMarker =           14;
-  static const uint8_t eCurrentLineFill =  15;
-  static const uint8_t eCurrentLineFillInactive = 16;
-  static const uint8_t eCurrentLineEdge =  17;
+  static const uint8_t eCursorLineFill =   13;
+  static const uint8_t eCursorLineEdge =   14;
+  static const uint8_t eSelect =           15;
+  static const uint8_t eMarker =           16;
 
-  static const uint8_t eLineNumber =       18;
+  static const uint8_t eLineNumber =       17;
 
-  static const uint8_t eWhiteSpace =       19;
-  static const uint8_t eTab =              20;
+  static const uint8_t eWhiteSpace =       18;
+  static const uint8_t eTab =              19;
 
-  static const uint8_t eFoldBeginClosed = 21;
-  static const uint8_t eFoldBeginOpen =   22;
-  static const uint8_t eFoldEnd =         23;
+  static const uint8_t eFoldBeginClosed =  20;
+  static const uint8_t eFoldBeginOpen =    21;
+  static const uint8_t eFoldEnd =          22;
 
-  static const uint8_t eBackground =      24;
-  static const uint8_t eMax =             25;
+  static const uint8_t eBackground =       23;
+  static const uint8_t eMax =              24;
   //}}}
   //{{{
   struct sGlyph {
-    sGlyph() : mChar(' '), mColorIndex(eText), mComment(false), mMultiLineComment(false), mPreProc(false) {}
+    sGlyph() : mChar(' '), mColor(eText), mComment(false), mMultiLineComment(false), mPreProc(false) {}
 
-    sGlyph (uint8_t ch, uint8_t colorIndex) : mChar(ch), mColorIndex(colorIndex),
-                                              mComment(false), mMultiLineComment(false), mPreProc(false) {}
+    sGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
+                                         mComment(false), mMultiLineComment(false), mPreProc(false) {}
 
     uint8_t mChar;
-    uint8_t mColorIndex;
+    uint8_t mColor;
 
     bool mComment:1;
     bool mMultiLineComment:1;
@@ -76,11 +75,11 @@ public:
   struct sLine {
     sLine() :
       mGlyphs(), mFoldTitleLineNumber(0), mIndent(0),
-      mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mHasComment(false) {}
+      mFoldBegin(false), mFoldEnd(false), mHasComment(false), mFolded(true), mPressed(false) {}
 
     sLine (const std::vector<sGlyph>& line) :
       mGlyphs(line), mFoldTitleLineNumber(0), mIndent(0),
-      mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mHasComment(false) {}
+      mFoldBegin(false), mFoldEnd(false), mHasComment(false), mFolded(true), mPressed(false) {}
 
     std::vector <sGlyph> mGlyphs;
 
@@ -89,8 +88,9 @@ public:
 
     bool mFoldBegin:1;
     bool mFoldEnd:1;
-    bool mFoldOpen:1;
     bool mHasComment:1;
+    bool mFolded:1;
+    bool mPressed:1;
     };
   //}}}
   //{{{
@@ -318,9 +318,6 @@ private:
     sLanguage mLanguage;
     tRegexList mRegexList;
     std::map <int,std::string> mMarkers;
-
-    std::array <ImU32,eMax> mPalette;
-    std::array <ImU32,eMax> mPaletteBase;
     };
   //}}}
   //{{{
@@ -344,17 +341,21 @@ private:
     void update (const cOptions& options);
 
     float measureText (const char* str, const char* strEnd) const;
-    float drawText (ImVec2 pos, ImU32 color, const char* str, const char* strEnd = nullptr);
-    float drawSmallText (ImVec2 pos, ImU32 color, const char* str, const char* strEnd = nullptr);
+    float drawText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd = nullptr);
+    float drawSmallText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd = nullptr);
+    void drawLine (ImVec2 pos1, ImVec2 pos2, uint8_t color);
+    void drawCircle (ImVec2 centre, float radius, uint8_t color);
+    void drawRect (ImVec2 pos1, ImVec2 pos2, uint8_t color);
+    void drawRectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color);
 
     ImDrawList* mDrawList = nullptr;
-    bool mFocused = false;
-
     float mFontSize = 0.f;
 
     float mLeftPad = 0.f;
     float mGlyphWidth = 0.f;
     float mLineHeight = 0.f;
+
+    std::array <ImU32,eMax> mPalette;
 
   private:
     ImFont* mFont = nullptr;
@@ -431,7 +432,7 @@ private:
   std::string getCurrentLineText() const;
   std::string getSelectedText() const;
 
-  ImU32 getGlyphColor (const sGlyph& glyph) const;
+  uint8_t getGlyphColor (const sGlyph& glyph) const;
 
   bool isOnWordBoundary (const sPosition& position) const;
   std::string getWordAt (const sPosition& position) const;
@@ -493,7 +494,7 @@ private:
   void handleKeyboardInputs();
 
   void drawTop (cApp& app);
-  float drawGlyphs (ImVec2 pos, const std::vector <sGlyph>& glyphs, bool forceColor, ImU32 forcedColor);
+  float drawGlyphs (ImVec2 pos, const std::vector <sGlyph>& glyphs, uint8_t forceColor);
   void drawLine (int lineNumber, int beginFoldLineNumber);
   int drawFold (int lineNumber, bool parentOpen, bool foldOpen);
 
