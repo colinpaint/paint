@@ -32,6 +32,7 @@ namespace {
   //{{{  const
   //{{{
   const array <ImU32, cTextEdit::eMax> kPalette = {
+    0xffefefef, // eBackground
     0xff404040, // eText
 
     0xffff0c06, // eKeyword
@@ -62,8 +63,6 @@ namespace {
     0xffff0000, // eFoldBeginClosed,
     0xff0000ff, // eFoldBeginOpen,
     0xff0000ff, // eFoldEnd,
-
-    0xffefefef, // eBackground
     };
   //}}}
 
@@ -2306,7 +2305,7 @@ void cTextEdit::parseFolds() {
       // found foldBegin text, find ident
       line.mIndent = static_cast<uint16_t>(foldBeginIndent);
       // has text after the foldBeginMarker
-      line.mHasComment = (text.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
+      line.mComment = (text.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
       mInfo.mHasFolds = true;
       }
     else {
@@ -2318,7 +2317,7 @@ void cTextEdit::parseFolds() {
         line.mIndent = 0;
 
       // has "//" style comment as first text in line
-      line.mHasComment = (text.find (mOptions.mLanguage.mSingleLineComment, indent) != string::npos);
+      line.mComment = (text.find (mOptions.mLanguage.mSingleLineComment, indent) != string::npos);
       }
 
     // look for foldEnd text
@@ -2327,7 +2326,7 @@ void cTextEdit::parseFolds() {
 
     // init fields set by updateFolds
     line.mFolded = true;
-    line.mFoldTitleLineNumber = -1;
+    line.mSeeThroughLineNumber = -1;
     }
   }
 //}}}
@@ -2684,13 +2683,14 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     float lineNumberWidth;
     if (mOptions.mShowLineDebug)
       lineNumberWidth = mContext.drawText (curPos, eLineNumber,
-        fmt::format ("{:4d} {}{}{}{}{} {:4d} ", lineNumber,
-                                                line.mFoldBegin ? 'b': ' ',
-                                                line.mFoldEnd ? 'e' : ' ',
-                                                line.mHasComment ? 'c': ' ',
-                                                line.mFolded ? 'f': ' ',
-                                                line.mPressed ? 'p': ' ',
-                                                line.mFoldTitleLineNumber).c_str());
+        fmt::format ("{:4d} {}{}{}{}{}{} {:4d} ", lineNumber,
+                                                line.mFoldBegin ? 'b':' ',
+                                                line.mFoldEnd   ? 'e':' ',
+                                                line.mComment   ? 'c':' ',
+                                                line.mFolded    ? 'f':' ',
+                                                line.mSelected  ? 's':' ',
+                                                line.mPressed   ? 'p':' ',
+                                                line.mSeeThroughLineNumber).c_str());
     else
       lineNumberWidth = mContext.drawSmallText (curPos, eLineNumber, fmt::format ("{:4d} ", lineNumber).c_str());
 
@@ -2715,7 +2715,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   vector <sGlyph>& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
     if (line.mFolded) {
-      //{{{  draw folded prefix + glyphs text
+      //{{{  draw foldBegin folded ... + glyphs text
       // add ident
       curPos.x += leftPadWidth;
 
@@ -2752,7 +2752,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       }
       //}}}
     else {
-      //{{{  draw unfolded prefix + glyphs text
+      //{{{  draw foldBegin unfolded {{{ + glyphs text
       // draw foldPrefix
       curPos.x += leftPadWidth;
 
@@ -2786,7 +2786,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       //}}}
     }
   else if (isFolded() && line.mFoldEnd) {
-    //{{{  draw foldEnd prefix, no glyphs text
+    //{{{  draw foldEnd }}}, no glyphs text
     curPos.x += leftPadWidth;
     float prefixWidth = mContext.drawText (curPos, eFoldEnd, mOptions.mLanguage.mFoldEnd);
 
@@ -2823,7 +2823,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     }
     //}}}
 
-  //{{{  draw marker background highlight
+  //{{{  draw marker line highlight
   auto markerIt = mOptions.mMarkers.find (lineNumber+1);
   if (markerIt != mOptions.mMarkers.end()) {
     ImVec2 brPos = {curPos.x, curPos.y + mContext.mLineHeight};
@@ -2842,7 +2842,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       }
     }
   //}}}
-  //{{{  draw select background highlight
+  //{{{  draw select line highlight
   sPosition lineStartPosition (lineNumber, 0);
   sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
 
@@ -2860,17 +2860,16 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   if ((xStart != -1) && (xEnd != -1) && (xStart < xEnd))
     mContext.drawRect ({textPos.x + xStart, textPos.y}, {textPos.x + xEnd, textPos.y + mContext.mLineHeight}, eSelect);
   //}}}
-  if (!hasSelect()) {
-    //{{{  draw cursor background highlight
-    if (lineNumber == mEdit.mState.mCursorPosition.mLineNumber) {
+
+  if (lineNumber == mEdit.mState.mCursorPosition.mLineNumber) {
+    // line has cursor
+    if (!hasSelect()) {
+      //{{{  draw cursor line highlight
       ImVec2 brPos = {curPos.x, curPos.y + mContext.mLineHeight};
       mContext.drawRect (leftPos, brPos, eCursorLineFill);
       mContext.drawRectLine (leftPos, brPos, eCursorLineEdge);
       }
-    }
-    //}}}
-
-  if (lineNumber == mEdit.mState.mCursorPosition.mLineNumber) {
+      //}}}
     //{{{  draw flashing cursor
     auto now = system_clock::now();
     auto elapsed = now - mLastFlashTime;
@@ -2901,8 +2900,8 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
 
     if (elapsed > 800ms)
       mLastFlashTime = now;
-    }
     //}}}
+    }
   }
 //}}}
 //{{{
@@ -2913,8 +2912,8 @@ int cTextEdit::drawFold (int lineNumber, bool parentFolded, bool folded) {
     // show foldBegin line
     // - if no foldBegin comment, search for first noComment line, !!!! assume next line for now !!!!
     sLine& line = mInfo.mLines[lineNumber];
-    line.mFoldTitleLineNumber = line.mHasComment ? lineNumber : lineNumber + 1;
-    drawLine (lineNumber, line.mFoldTitleLineNumber);
+    line.mSeeThroughLineNumber = line.mComment ? lineNumber : lineNumber + 1;
+    drawLine (lineNumber, line.mSeeThroughLineNumber);
     }
 
   while (true) {

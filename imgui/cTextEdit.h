@@ -23,37 +23,37 @@ public:
   enum class eSelection { Normal, Word, Line };
   //{{{  palette const
   // tried enum but array of foxed it
-  static const uint8_t eText =              0;
-  static const uint8_t eKeyword =           1;
-  static const uint8_t eNumber =            2;
-  static const uint8_t eString =            3;
-  static const uint8_t eCharLiteral =       4;
-  static const uint8_t ePunctuation =       5;
+  static const uint8_t eBackground =        0;
+  static const uint8_t eText =              1;
+  static const uint8_t eKeyword =           2;
+  static const uint8_t eNumber =            3;
+  static const uint8_t eString =            4;
+  static const uint8_t eCharLiteral =       5;
+  static const uint8_t ePunctuation =       6;
 
-  static const uint8_t ePreprocessor =      6;
-  static const uint8_t eIdent =             7;
-  static const uint8_t eKnownIdent =        8;
-  static const uint8_t ePreprocIdent =      9;
+  static const uint8_t ePreprocessor =      7;
+  static const uint8_t eIdent =             8;
+  static const uint8_t eKnownIdent =        9;
+  static const uint8_t ePreprocIdent =     10;
 
-  static const uint8_t eComment =          10;
-  static const uint8_t eMultiLineComment = 11;
+  static const uint8_t eComment =          11;
+  static const uint8_t eMultiLineComment = 12;
 
-  static const uint8_t eCursor =           12;
-  static const uint8_t eCursorLineFill =   13;
-  static const uint8_t eCursorLineEdge =   14;
-  static const uint8_t eSelect =           15;
-  static const uint8_t eMarker =           16;
+  static const uint8_t eCursor =           13;
+  static const uint8_t eCursorLineFill =   14;
+  static const uint8_t eCursorLineEdge =   15;
+  static const uint8_t eSelect =           16;
+  static const uint8_t eMarker =           17;
 
-  static const uint8_t eLineNumber =       17;
+  static const uint8_t eLineNumber =       18;
 
-  static const uint8_t eWhiteSpace =       18;
-  static const uint8_t eTab =              19;
+  static const uint8_t eWhiteSpace =       19;
+  static const uint8_t eTab =              20;
 
-  static const uint8_t eFoldBeginClosed =  20;
-  static const uint8_t eFoldBeginOpen =    21;
-  static const uint8_t eFoldEnd =          22;
+  static const uint8_t eFoldBeginClosed =  21;
+  static const uint8_t eFoldBeginOpen =    22;
+  static const uint8_t eFoldEnd =          23;
 
-  static const uint8_t eBackground =       23;
   static const uint8_t eMax =              24;
   //}}}
   //{{{
@@ -73,23 +73,27 @@ public:
   //}}}
   //{{{
   struct sLine {
+    //{{{
     sLine() :
-      mGlyphs(), mFoldTitleLineNumber(0), mIndent(0),
-      mFoldBegin(false), mFoldEnd(false), mHasComment(false), mFolded(true), mPressed(false) {}
-
+      mGlyphs(), mSeeThroughLineNumber(-1), mIndent(0),
+      mFoldBegin(false), mFoldEnd(false), mComment(false), mFolded(true), mSelected(false), mPressed(false) {}
+    //}}}
+    //{{{
     sLine (const std::vector<sGlyph>& line) :
-      mGlyphs(line), mFoldTitleLineNumber(0), mIndent(0),
-      mFoldBegin(false), mFoldEnd(false), mHasComment(false), mFolded(true), mPressed(false) {}
+      mGlyphs(line), mSeeThroughLineNumber(-1), mIndent(0),
+      mFoldBegin(false), mFoldEnd(false), mComment(false), mFolded(true), mSelected(false), mPressed(false) {}
+    //}}}
 
     std::vector <sGlyph> mGlyphs;
 
-    int mFoldTitleLineNumber; // closed foldTitle glyphs lineNumber
+    int mSeeThroughLineNumber;
     int16_t mIndent;
 
     bool mFoldBegin:1;
     bool mFoldEnd:1;
-    bool mHasComment:1;
+    bool mComment:1;
     bool mFolded:1;
+    bool mSelected:1;
     bool mPressed:1;
     };
   //}}}
