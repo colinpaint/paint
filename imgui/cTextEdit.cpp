@@ -32,7 +32,7 @@ namespace {
   //{{{  const
   //{{{
   const array <ImU32, cTextEdit::eMax> kPalette = {
-    0xff404040, // eDefault
+    0xff404040, // eText
 
     0xffff0c06, // eKeyword
     0xff008000, // eNumber
@@ -63,6 +63,8 @@ namespace {
     0xffff0000, // eFoldBeginClosed,
     0xff0000ff, // eFoldBeginOpen,
     0xff0000ff, // eFoldEnd,
+
+    0xffefefef, // eBackground
     };
   //}}}
 
@@ -501,7 +503,7 @@ void cTextEdit::setTextString (const string& text) {
     else {
       if (ch ==  '\t')
         mInfo.mHasTabs = true;
-      mInfo.mLines.back().mGlyphs.emplace_back (sGlyph (ch, eDefault));
+      mInfo.mLines.back().mGlyphs.emplace_back (sGlyph (ch, eText));
       }
     }
 
@@ -531,7 +533,7 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
       for (size_t j = 0; j < line.size(); ++j) {
         if (line[j] ==  '\t')
           mInfo.mHasTabs = true;
-        mInfo.mLines[i].mGlyphs.emplace_back (sGlyph (line[j], eDefault));
+        mInfo.mLines[i].mGlyphs.emplace_back (sGlyph (line[j], eText));
         }
       }
     }
@@ -1103,7 +1105,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
         }
 
       for (auto p = buf; *p != '\0'; p++, ++cindex)
-        glyphs.insert (glyphs.begin() + cindex, sGlyph (*p, eDefault));
+        glyphs.insert (glyphs.begin() + cindex, sGlyph (*p, eText));
 
       undo.mAdded = buf;
       setCursorPosition (sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, cindex)));
@@ -1182,8 +1184,8 @@ void cTextEdit::drawContents (cApp& app) {
     ImGui::PushFont (app.getMonoFont());
 
   // new colours
-  ImGui::PushStyleColor (ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4 (0xffefefef));
-  ImGui::PushStyleColor (ImGuiCol_Text, mOptions.mPalette[eDefault]);
+  ImGui::PushStyleColor (ImGuiCol_Text, mOptions.mPalette[eText]);
+  ImGui::PushStyleColor (ImGuiCol_ChildBg, mOptions.mPalette[eBackground]);
 
   ImGui::BeginChild ("##scrolling", ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
@@ -1436,22 +1438,12 @@ ImU32 cTextEdit::getGlyphColor (const sGlyph& glyph) const {
 
   if (glyph.mComment)
     return mOptions.mPalette[eComment];
-
   if (glyph.mMultiLineComment)
     return mOptions.mPalette[eMultiLineComment];
+  if (glyph.mPreProc)
+    return mOptions.mPalette[ePreprocessor];
 
-  auto const color = mOptions.mPalette[glyph.mColorIndex];
-
-  if (glyph.mPreProc) {
-    const auto ppcolor = mOptions.mPalette[ePreprocessor];
-    const int c0 = ((ppcolor & 0xff) + (color & 0xff)) / 2;
-    const int c1 = (((ppcolor >> 8) & 0xff) + ((color >> 8) & 0xff)) / 2;
-    const int c2 = (((ppcolor >> 16) & 0xff) + ((color >> 16) & 0xff)) / 2;
-    const int c3 = (((ppcolor >> 24) & 0xff) + ((color >> 24) & 0xff)) / 2;
-    return ImU32(c0 | (c1 << 8) | (c2 << 16) | (c3 << 24));
-    }
-
-  return color;
+  return mOptions.mPalette[glyph.mColorIndex];
   }
 //}}}
 
@@ -1867,7 +1859,7 @@ int cTextEdit::insertTextAt (sPosition& where, const char* value) {
       vector <sGlyph>& glyphs = mInfo.mLines[where.mLineNumber].mGlyphs;
       auto d = utf8CharLength (*value);
       while (d-- > 0 && *value != '\0')
-        glyphs.insert (glyphs.begin() + cindex++, sGlyph (*value++, eDefault));
+        glyphs.insert (glyphs.begin() + cindex++, sGlyph (*value++, eText));
       ++where.mColumn;
       }
 
@@ -2028,7 +2020,7 @@ void cTextEdit::colorizeRange (int fromLine, int toLine) {
     for (size_t j = 0; j < glyphs.size(); ++j) {
       sGlyph& col = glyphs[j];
       buffer[j] = col.mChar;
-      col.mColorIndex = eDefault;
+      col.mColorIndex = eText;
       }
 
     const char* bufferBegin = &buffer.front();
@@ -2037,7 +2029,7 @@ void cTextEdit::colorizeRange (int fromLine, int toLine) {
     for (auto first = bufferBegin; first != lastChar; ) {
       const char* token_begin = nullptr;
       const char* token_end = nullptr;
-      uint8_t token_color = eDefault;
+      uint8_t token_color = eText;
 
       bool hasTokenizeResult = false;
       if (mOptions.mLanguage.mTokenize != nullptr) {
@@ -2260,7 +2252,7 @@ void cTextEdit::clickText (int lineNumber, float posX, bool selectWord) {
 void cTextEdit::dragLine (int lineNumber, float posY) {
 
   int lines = static_cast<int>(posY / mContext.mLineHeight);
-  if (!isFolded()) // simple 
+  if (!isFolded()) // simple
     lineNumber = max (0, min ((int)mInfo.mLines.size(), lineNumber + lines));
   else {
     int lineIndex = getLineIndexFromNumber (lineNumber);
@@ -2712,7 +2704,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       if (ImGui::IsItemActive())
         clickFold (lineNumber, false);
 
-      // draw glyphsText
+      // draw glypheText
       textPos.x = curPos.x;
       float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, false, 0);
       if (glyphsWidth < mContext.mGlyphWidth) // widen to ensure something to pick
@@ -2745,7 +2737,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       if (ImGui::IsItemActive())
         clickFold (lineNumber, true);
 
-      // draw glyphsText
+      // draw glypheText
       textPos.x = curPos.x;
       float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[glyphsLineNumber].mGlyphs, true,
                                       mOptions.mPalette[eFoldBeginClosed]);
@@ -3041,7 +3033,7 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::cPlus() {
       if (inBegin == inEnd) {
         outBegin = inEnd;
         outEnd = inEnd;
-        palette = eDefault;
+        palette = eText;
         }
       else if (findString (inBegin, inEnd, outBegin, outEnd))
         palette = eString;
@@ -3102,7 +3094,7 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::c() {
       if (inBegin == inEnd) {
         outBegin = inEnd;
         outEnd = inEnd;
-        palette = eDefault;
+        palette = eText;
         }
       else if (findString (inBegin, inEnd, outBegin, outEnd))
         palette = eString;

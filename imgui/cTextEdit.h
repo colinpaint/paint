@@ -23,7 +23,7 @@ public:
   enum class eSelection { Normal, Word, Line };
   //{{{  palette const
   // tried enum but array of foxed it
-  static const uint8_t eDefault =           0;
+  static const uint8_t eText =              0;
   static const uint8_t eKeyword =           1;
   static const uint8_t eNumber =            2;
   static const uint8_t eString =            3;
@@ -54,30 +54,34 @@ public:
   static const uint8_t eFoldBeginOpen =   22;
   static const uint8_t eFoldEnd =         23;
 
-  static const uint8_t eMax =             24;
+  static const uint8_t eBackground =      24;
+  static const uint8_t eMax =             25;
   //}}}
   //{{{
   struct sGlyph {
+    sGlyph() : mChar(' '), mColorIndex(eText), mComment(false), mMultiLineComment(false), mPreProc(false) {}
+
+    sGlyph (uint8_t ch, uint8_t colorIndex) : mChar(ch), mColorIndex(colorIndex), 
+                                              mComment(false), mMultiLineComment(false), mPreProc(false) {}
+
     uint8_t mChar;
     uint8_t mColorIndex;
 
     bool mComment:1;
     bool mMultiLineComment:1;
     bool mPreProc:1;
-
-    sGlyph() :
-      mChar(' '),
-      mColorIndex(eDefault),
-      mComment(false), mMultiLineComment(false), mPreProc(false) {}
-
-    sGlyph (uint8_t ch, uint8_t colorIndex) :
-      mChar(ch),
-      mColorIndex(colorIndex),
-      mComment(false), mMultiLineComment(false), mPreProc(false) {}
     };
   //}}}
   //{{{
   struct sLine {
+    sLine() :
+      mGlyphs(), mFoldTitleLineNumber(0), mIndent(0),
+      mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mHasComment(false) {}
+
+    sLine (const std::vector<sGlyph>& line) :
+      mGlyphs(line), mFoldTitleLineNumber(0), mIndent(0),
+      mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mHasComment(false) {}
+
     std::vector <sGlyph> mGlyphs;
 
     int mFoldTitleLineNumber; // closed foldTitle glyphs lineNumber
@@ -87,21 +91,10 @@ public:
     bool mFoldEnd:1;
     bool mFoldOpen:1;
     bool mHasComment:1;
-
-    sLine() :
-      mGlyphs(), mFoldTitleLineNumber(0), mIndent(0),
-      mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mHasComment(false) {}
-
-    sLine (const std::vector<sGlyph>& line) :
-      mGlyphs(line), mFoldTitleLineNumber(0), mIndent(0),
-      mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mHasComment(false) {}
     };
   //}}}
   //{{{
   struct sPosition {
-    int mLineNumber;
-    int mColumn;
-
     sPosition() : mLineNumber(0), mColumn(0) {}
     sPosition (int lineNumber, int column) : mLineNumber(lineNumber), mColumn(column) {}
 
@@ -145,6 +138,9 @@ public:
       return mColumn >= o.mColumn;
       }
     //}}}
+
+    int mLineNumber;
+    int mColumn;
     };
   //}}}
   //{{{
@@ -155,6 +151,15 @@ public:
   //}}}
   //{{{
   struct sLanguage {
+    // init
+    sLanguage() : mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true) {}
+
+    // static const
+    static const sLanguage& cPlus();
+    static const sLanguage& c();
+    static const sLanguage& hlsl();
+    static const sLanguage& glsl();
+
     // typedef
     typedef std::pair<std::string, uint8_t> tTokenRegexString;
     typedef std::vector<tTokenRegexString> tTokenRegexStrings;
@@ -186,15 +191,6 @@ public:
     tTokenRegexStrings mTokenRegexStrings;
 
     bool mCaseSensitive;
-
-    // init
-    sLanguage() : mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true) {}
-
-    // static const
-    static const sLanguage& cPlus();
-    static const sLanguage& c();
-    static const sLanguage& hlsl();
-    static const sLanguage& glsl();
     };
   //}}}
 
