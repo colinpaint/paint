@@ -333,7 +333,7 @@ string cMemEdit::getDataFormatDesc (cMemEdit::eDataFormat dataFormat) const {
 string cMemEdit::getDataString (size_t address, ImGuiDataType dataType, eDataFormat dataFormat) {
 // return pointer to mOutBuf
 
-  char outBuf[128];
+  array <char,128> outBuf;
 
   size_t elemSize = getDataTypeSize (dataType);
   size_t size = ((address + elemSize) > mInfo.mMemSize) ? (mInfo.mMemSize - address) : elemSize;
@@ -369,9 +369,9 @@ string cMemEdit::getDataString (size_t address, ImGuiDataType dataType, eDataFor
         copyEndian (&int8, buf, size);
 
         if (dataFormat == eDataFormat::eDec)
-          ImSnprintf (outBuf, sizeof(outBuf), "%hhd", int8);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%hhd", int8);
         else if (dataFormat == eDataFormat::eHex)
-          ImSnprintf (outBuf, sizeof (outBuf), "0x%02x", int8 & 0xFF);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%02x", int8 & 0xFF);
 
         break;
         }
@@ -383,9 +383,9 @@ string cMemEdit::getDataString (size_t address, ImGuiDataType dataType, eDataFor
         copyEndian (&uint8, buf, size);
 
         if (dataFormat == eDataFormat::eDec)
-          ImSnprintf (outBuf, sizeof (outBuf), "%hhu", uint8);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%hhu", uint8);
         if (dataFormat == eDataFormat::eHex)
-          ImSnprintf (outBuf, sizeof (outBuf), "0x%02x", uint8 & 0XFF);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%02x", uint8 & 0XFF);
 
         break;
         }
@@ -397,9 +397,9 @@ string cMemEdit::getDataString (size_t address, ImGuiDataType dataType, eDataFor
         copyEndian (&int16, buf, size);
 
         if (dataFormat == eDataFormat::eDec)
-          ImSnprintf (outBuf, sizeof (outBuf), "%hd", int16);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%hd", int16);
         else if (dataFormat == eDataFormat::eHex)
-          ImSnprintf (outBuf, sizeof (outBuf), "0x%04x", int16 & 0xFFFF);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%04x", int16 & 0xFFFF);
 
         break;
         }
@@ -411,9 +411,9 @@ string cMemEdit::getDataString (size_t address, ImGuiDataType dataType, eDataFor
         copyEndian (&uint16, buf, size);
 
         if (dataFormat == eDataFormat::eDec)
-          ImSnprintf (outBuf, sizeof (outBuf), "%hu", uint16);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%hu", uint16);
         else if (dataFormat == eDataFormat::eHex)
-          ImSnprintf (outBuf, sizeof (outBuf), "0x%04x", uint16 & 0xFFFF);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%04x", uint16 & 0xFFFF);
 
         break;
         }
@@ -425,9 +425,9 @@ string cMemEdit::getDataString (size_t address, ImGuiDataType dataType, eDataFor
         copyEndian (&int32, buf, size);
 
         if (dataFormat == eDataFormat::eDec)
-          ImSnprintf (outBuf, sizeof (outBuf), "%d", int32);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%d", int32);
         else if (dataFormat == eDataFormat::eHex)
-          ImSnprintf (outBuf, sizeof (outBuf), "0x%08x", int32);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%08x", int32);
 
         break;
         }
@@ -438,9 +438,9 @@ string cMemEdit::getDataString (size_t address, ImGuiDataType dataType, eDataFor
         copyEndian (&uint32, buf, size);
 
         if (dataFormat == eDataFormat::eDec)
-          ImSnprintf (outBuf, sizeof (outBuf), "%u", uint32);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%u", uint32);
         else if (dataFormat == eDataFormat::eHex)
-          ImSnprintf (outBuf, sizeof (outBuf), "0x%08x", uint32);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%08x", uint32);
 
         break;
         }
@@ -452,9 +452,9 @@ string cMemEdit::getDataString (size_t address, ImGuiDataType dataType, eDataFor
         copyEndian (&int64, buf, size);
 
         if (dataFormat == eDataFormat::eDec)
-          ImSnprintf (outBuf, sizeof (outBuf), "%lld", (long long)int64);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%lld", (long long)int64);
         else if (dataFormat == eDataFormat::eHex)
-          ImSnprintf (outBuf, sizeof (outBuf), "0x%016llx", (long long)int64);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%016llx", (long long)int64);
 
         break;
         }
@@ -466,9 +466,9 @@ string cMemEdit::getDataString (size_t address, ImGuiDataType dataType, eDataFor
         copyEndian (&uint64, buf, size);
 
         if (dataFormat == eDataFormat::eDec)
-          ImSnprintf (outBuf, sizeof (outBuf), "%llu", (long long)uint64);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%llu", (long long)uint64);
         else if (dataFormat == eDataFormat::eHex)
-          ImSnprintf (outBuf, sizeof (outBuf), "0x%016llx", (long long)uint64);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%016llx", (long long)uint64);
 
         break;
         }
@@ -480,9 +480,9 @@ string cMemEdit::getDataString (size_t address, ImGuiDataType dataType, eDataFor
         copyEndian (&float32, buf, size);
 
         if (dataFormat == eDataFormat::eDec)
-          ImSnprintf (outBuf, sizeof (outBuf), "%f", float32);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%f", float32);
         else if (dataFormat == eDataFormat::eHex)
-          ImSnprintf (outBuf, sizeof (outBuf), "%a", float32);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%a", float32);
 
         break;
         }
@@ -494,16 +494,16 @@ string cMemEdit::getDataString (size_t address, ImGuiDataType dataType, eDataFor
         copyEndian (&float64, buf, size);
 
         if (dataFormat == eDataFormat::eDec)
-          ImSnprintf (outBuf, sizeof (outBuf), "%f", float64);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%f", float64);
         else if (dataFormat == eDataFormat::eHex)
-          ImSnprintf (outBuf, sizeof (outBuf), "%a", float64);
+          ImSnprintf (outBuf.data(), outBuf.max_size(), "%a", float64);
         break;
         }
       //}}}
       }
     }
 
-  return string (outBuf);
+  return string (outBuf.data());
   }
 //}}}
 

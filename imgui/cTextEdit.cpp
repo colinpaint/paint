@@ -16,7 +16,7 @@
 using namespace std;
 using namespace chrono;
 //}}}
-//{{{  template equals
+//{{{  template <...> bool equals (...)
 template<class InputIt1, class InputIt2, class BinaryPredicate>
 bool equals (InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, BinaryPredicate p) {
   for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
@@ -24,7 +24,7 @@ bool equals (InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, B
       return false;
     }
 
-  return first1 == last1 && first2 == last2;
+  return (first1 == last1) && (first2 == last2);
   }
 //}}}
 
@@ -443,12 +443,14 @@ namespace {
 
 // cTextEdit
 //{{{
-cTextEdit::cTextEdit()
-   : mLastFlashTime(system_clock::now()) {
+cTextEdit::cTextEdit() {
 
   mInfo.mLines.push_back (vector<sGlyph>());
+
   mOptions.mPalette = kPalette;
   setLanguage (sLanguage::cPlus());
+
+  mLastFlashTime = system_clock::now();
   }
 //}}}
 //{{{  gets
@@ -1177,7 +1179,6 @@ void cTextEdit::drawWindow (const string& title, cApp& app) {
 void cTextEdit::drawContents (cApp& app) {
 // main ui handle io and draw routine
 
-  //io.FontGlobalScale = 1.f;
   drawTop (app);
 
   if (isDrawMonoSpaced())
@@ -1649,116 +1650,113 @@ void cTextEdit::ensureCursorVisible() {
 
 // find
 //{{{
-cTextEdit::sPosition cTextEdit::findWordStart (const sPosition& from) const {
+cTextEdit::sPosition cTextEdit::findWordStart (sPosition fromPosition) const {
 
-  sPosition at = from;
-  if (at.mLineNumber >= (int)mInfo.mLines.size())
-    return at;
+  if (fromPosition.mLineNumber >= (int)mInfo.mLines.size())
+    return fromPosition;
 
-  const vector<sGlyph>& glyphs = mInfo.mLines[at.mLineNumber].mGlyphs;
-  int cindex = getCharacterIndex (at);
+  const vector<sGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
+  int characterIndex = getCharacterIndex (fromPosition);
 
-  if (cindex >= (int)glyphs.size())
-    return at;
+  if (characterIndex >= (int)glyphs.size())
+    return fromPosition;
 
-  while (cindex > 0 && isspace (glyphs[cindex].mChar))
-    --cindex;
+  while (characterIndex > 0 && isspace (glyphs[characterIndex].mChar))
+    --characterIndex;
 
-  uint8_t cstart = glyphs[cindex].mColorIndex;
-  while (cindex > 0) {
-    uint8_t c = glyphs[cindex].mChar;
-    if ((c & 0xC0) != 0x80) { // not UTF code sequence 10xxxxxx
-      if (c <= 32 && isspace(c)) {
-        cindex++;
+  uint8_t color = glyphs[characterIndex].mColorIndex;
+  while (characterIndex > 0) {
+    uint8_t ch = glyphs[characterIndex].mChar;
+    if ((ch & 0xC0) != 0x80) { // not UTF code sequence 10xxxxxx
+      if (ch <= 32 && isspace(ch)) {
+        characterIndex++;
         break;
         }
-      if (cstart != glyphs[size_t(cindex - 1)].mColorIndex)
+      if (color != glyphs[size_t(characterIndex - 1)].mColorIndex)
         break;
       }
-    --cindex;
+    --characterIndex;
     }
 
-  return sPosition (at.mLineNumber, getCharacterColumn (at.mLineNumber, cindex));
+  return sPosition (fromPosition.mLineNumber, getCharacterColumn (fromPosition.mLineNumber, characterIndex));
   }
 //}}}
 //{{{
-cTextEdit::sPosition cTextEdit::findWordEnd (const sPosition& from) const {
+cTextEdit::sPosition cTextEdit::findWordEnd (sPosition fromPosition) const {
 
-  sPosition at = from;
-  if (at.mLineNumber >= (int)mInfo.mLines.size())
-    return at;
+  if (fromPosition.mLineNumber >= (int)mInfo.mLines.size())
+    return fromPosition;
 
-  const vector<sGlyph>& glyphs = mInfo.mLines[at.mLineNumber].mGlyphs;
-  int cindex = getCharacterIndex (at);
+  const vector<sGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
+  int characterIndex = getCharacterIndex (fromPosition);
 
-  if (cindex >= (int)glyphs.size())
-    return at;
+  if (characterIndex >= (int)glyphs.size())
+    return fromPosition;
 
-  bool prevspace = (bool)isspace (glyphs[cindex].mChar);
-  uint8_t cstart = glyphs[cindex].mColorIndex;
-  while (cindex < (int)glyphs.size()) {
-    uint8_t c = glyphs[cindex].mChar;
-    int d = utf8CharLength (c);
-    if (cstart != glyphs[cindex].mColorIndex)
+  bool prevSpace = (bool)isspace (glyphs[characterIndex].mChar);
+  uint8_t color = glyphs[characterIndex].mColorIndex;
+  while (characterIndex < (int)glyphs.size()) {
+    uint8_t ch = glyphs[characterIndex].mChar;
+    int length = utf8CharLength (ch);
+    if (color != glyphs[characterIndex].mColorIndex)
       break;
 
-    if (prevspace != !!isspace(c)) {
-      if (isspace(c))
-        while (cindex < (int)glyphs.size() && isspace (glyphs[cindex].mChar))
-          ++cindex;
+    if (prevSpace != !!isspace (ch)) {
+      if (isspace (ch))
+        while (characterIndex < (int)glyphs.size() && isspace (glyphs[characterIndex].mChar))
+          ++characterIndex;
       break;
       }
-    cindex += d;
+    characterIndex += length;
     }
 
-  return sPosition (from.mLineNumber, getCharacterColumn (from.mLineNumber, cindex));
+  return sPosition (fromPosition.mLineNumber, getCharacterColumn (fromPosition.mLineNumber, characterIndex));
   }
 //}}}
 //{{{
-cTextEdit::sPosition cTextEdit::findNextWord (const sPosition& from) const {
+cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) const {
 
-  sPosition at = from;
-  if (at.mLineNumber >= (int)mInfo.mLines.size())
-    return at;
+  if (fromPosition.mLineNumber >= (int)mInfo.mLines.size())
+    return fromPosition;
 
   // skip to the next non-word character
-  bool isword = false;
+  bool isWord = false;
   bool skip = false;
 
-  int cindex = getCharacterIndex (from);
-  if (cindex < (int)mInfo.mLines[at.mLineNumber].mGlyphs.size()) {
-    const vector<sGlyph>& glyphs = mInfo.mLines[at.mLineNumber].mGlyphs;
-    isword = isalnum (glyphs[cindex].mChar);
-    skip = isword;
+  int characterIndex = getCharacterIndex (fromPosition);
+  if (characterIndex < (int)mInfo.mLines[fromPosition.mLineNumber].mGlyphs.size()) {
+    const vector<sGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
+    isWord = isalnum (glyphs[characterIndex].mChar);
+    skip = isWord;
     }
 
-  while (!isword || skip) {
-    if (at.mLineNumber >= (int)mInfo.mLines.size()) {
-      int l = max(0, (int)mInfo.mLines.size() - 1);
-      return sPosition (l, getLineMaxColumn(l));
+  while (!isWord || skip) {
+    if (fromPosition.mLineNumber >= (int)mInfo.mLines.size()) {
+      int lineNumber = max (0, (int)mInfo.mLines.size()-1);
+      return sPosition (lineNumber, getLineMaxColumn (lineNumber));
       }
 
-    const vector<sGlyph>& glyphs = mInfo.mLines[at.mLineNumber].mGlyphs;
-    if (cindex < (int)glyphs.size()) {
-      isword = isalnum (glyphs[cindex].mChar);
+    const vector<sGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
+    if (characterIndex < (int)glyphs.size()) {
+      isWord = isalnum (glyphs[characterIndex].mChar);
 
-      if (isword && !skip)
-        return sPosition (at.mLineNumber, getCharacterColumn (at.mLineNumber, cindex));
+      if (isWord && !skip)
+        return sPosition (fromPosition.mLineNumber, getCharacterColumn (fromPosition.mLineNumber, characterIndex));
 
-      if (!isword)
+      if (!isWord)
         skip = false;
 
-      cindex++;
+      characterIndex++;
       }
     else {
-      cindex = 0;
-      ++at.mLineNumber;
+      characterIndex = 0;
+      ++fromPosition.mLineNumber;
       skip = false;
-      isword = false;
+      isWord = false;
       }
     }
 
-  return at;
+  return fromPosition;
   }
 //}}}
 
@@ -2553,7 +2551,7 @@ void cTextEdit::drawTop (cApp& app) {
 
   //{{{  fontSize button, vert,triangle debug text
   ImGui::SameLine();
-  ImGui::SetNextItemWidth (3 * mContext.mFontAtlasSize);
+  ImGui::SetNextItemWidth (3 * ImGui::GetFontSize());
   ImGui::DragInt ("##fontSize", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
 
   if (ImGui::IsItemHovered()) {
@@ -2917,6 +2915,8 @@ void cTextEdit::cContext::update (const cOptions& options) {
   mFont = ImGui::GetFont();
   mFontAtlasSize = ImGui::GetFontSize();
   mFontSize = static_cast<float>(options.mFontSize);
+  mFontSmallSize = mFontSize > ((mFontAtlasSize * 2.f) / 3.f) ? ((mFontAtlasSize * 2.f) / 3.f) : mFontSize;
+  mFontSmallOffset = ((mFontSize - mFontSmallSize) * 2.f) / 3.f;
 
   float scale = mFontSize / mFontAtlasSize;
   mLineHeight = ImGui::GetTextLineHeight() * scale;
@@ -2944,13 +2944,13 @@ float cTextEdit::cContext::drawText (ImVec2 pos, ImU32 color, const char* str, c
 float cTextEdit::cContext::drawSmallText (ImVec2 pos, ImU32 color, const char* str, const char* strEnd) {
  // draw and return width of text
 
-  pos.y += mFontSize * 0.125f;
-  mDrawList->AddText (mFont, mFontSize * 0.75f, pos, color, str, strEnd);
-  return mFont->CalcTextSizeA (mFontSize * 0.75f, FLT_MAX, -1.f, str, strEnd).x;
+  pos.y += mFontSmallOffset;
+  mDrawList->AddText (mFont, mFontSmallSize, pos, color, str, strEnd);
+  return mFont->CalcTextSizeA (mFontSmallSize, FLT_MAX, -1.f, str, strEnd).x;
   }
 //}}}
 
-// cTextEdit::sUndo
+//{{{  cTextEdit::sUndo
 //{{{
 cTextEdit::sUndo::sUndo (const string& added,
                          const cTextEdit::sPosition addedStart,
@@ -3004,8 +3004,8 @@ void cTextEdit::sUndo::redo (cTextEdit* textEdit) {
   textEdit->ensureCursorVisible();
   }
 //}}}
-
-// cTextEdit::sLanguage
+//}}}
+//{{{  cTextEdit::sLanguage
 //{{{
 const cTextEdit::sLanguage& cTextEdit::sLanguage::cPlus() {
 
@@ -3233,4 +3233,5 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::glsl() {
 
   return language;
   }
+//}}}
 //}}}

@@ -61,7 +61,7 @@ public:
   struct sGlyph {
     sGlyph() : mChar(' '), mColorIndex(eText), mComment(false), mMultiLineComment(false), mPreProc(false) {}
 
-    sGlyph (uint8_t ch, uint8_t colorIndex) : mChar(ch), mColorIndex(colorIndex), 
+    sGlyph (uint8_t ch, uint8_t colorIndex) : mChar(ch), mColorIndex(colorIndex),
                                               mComment(false), mMultiLineComment(false), mPreProc(false) {}
 
     uint8_t mChar;
@@ -296,7 +296,7 @@ private:
   public:
     int mFontSize = 16;
     int mMinFontSize = 4;
-    int mMaxFontSize = 32;
+    int mMaxFontSize = 24;
 
     // modes
     bool mOverWrite = false;
@@ -350,7 +350,6 @@ private:
     ImDrawList* mDrawList = nullptr;
     bool mFocused = false;
 
-    float mFontAtlasSize = 0.f;
     float mFontSize = 0.f;
 
     float mLeftPad = 0.f;
@@ -359,6 +358,10 @@ private:
 
   private:
     ImFont* mFont = nullptr;
+
+    float mFontAtlasSize = 0.f;
+    float mFontSmallSize = 0.f;
+    float mFontSmallOffset = 0.f;
     };
   //}}}
   //{{{
@@ -447,9 +450,9 @@ private:
   void ensureCursorVisible();
 
   // find
-  sPosition findWordStart (const sPosition& from) const;
-  sPosition findWordEnd (const sPosition& from) const;
-  sPosition findNextWord (const sPosition& from) const;
+  sPosition findWordStart (sPosition fromPosition) const;
+  sPosition findWordEnd (sPosition fromPosition) const;
+  sPosition findNextWord (sPosition fromPosition) const;
 
   // move
   void moveLeft (int amount, bool select , bool wordMode);
