@@ -55,7 +55,12 @@ public:
   static const uint8_t eFoldBeginOpen =    22;
   static const uint8_t eFoldEnd =          23;
 
-  static const uint8_t eMax =              24;
+  static const uint8_t eScrollBackground = 24;
+  static const uint8_t eScrollGrab =       25;
+  static const uint8_t eScrollHover =      26;
+  static const uint8_t eScrollActive =     27;
+
+  static const uint8_t eMax =              28;
   //}}}
   //{{{
   struct sGlyph {
@@ -353,9 +358,7 @@ private:
     void drawRect (ImVec2 pos1, ImVec2 pos2, uint8_t color);
     void drawRectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color);
 
-    ImDrawList* mDrawList = nullptr;
     float mFontSize = 0.f;
-
     float mLeftPad = 0.f;
     float mGlyphWidth = 0.f;
     float mLineHeight = 0.f;
@@ -363,6 +366,7 @@ private:
     std::array <ImU32,eMax> mPalette;
 
   private:
+    ImDrawList* mDrawList = nullptr;
     ImFont* mFont = nullptr;
 
     float mFontAtlasSize = 0.f;

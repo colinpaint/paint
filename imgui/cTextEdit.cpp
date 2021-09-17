@@ -63,6 +63,11 @@ namespace {
     0xffff0000, // eFoldBeginClosed,
     0xff0000ff, // eFoldBeginOpen,
     0xff0000ff, // eFoldEnd,
+
+    0x80404040, // eScrollBackground
+    0x80c0c0c0, // eScrollGrab
+    0x80ffffff, // eScrollHover
+    0xffFFFF00, // eScrollActive
     };
   //}}}
 
@@ -1199,13 +1204,21 @@ void cTextEdit::drawContents (cApp& app) {
   // begin childWindow, new font, new colors
   if (isDrawMonoSpaced())
     ImGui::PushFont (app.getMonoFont());
-  ImGui::PushStyleColor (ImGuiCol_Text, kPalette[eText]);
-  ImGui::PushStyleColor (ImGuiCol_ChildBg, kPalette[eBackground]);
-  ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, ImVec2(0,0));
-  ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
-  ImGui::BeginChild ("##scrolling", ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
   mContext.update (mOptions);
+
+  ImGui::PushStyleColor (ImGuiCol_ScrollbarBg, kPalette[eScrollBackground]);
+  ImGui::PushStyleColor (ImGuiCol_ScrollbarGrab, kPalette[eScrollGrab]);
+  ImGui::PushStyleColor (ImGuiCol_ScrollbarGrabHovered, kPalette[eScrollHover]);
+  ImGui::PushStyleColor (ImGuiCol_ScrollbarGrabActive, kPalette[eScrollActive]);
+  ImGui::PushStyleColor (ImGuiCol_Text, kPalette[eText]);
+  ImGui::PushStyleColor (ImGuiCol_ChildBg, kPalette[eBackground]);
+  ImGui::PushStyleVar (ImGuiStyleVar_ScrollbarSize, mContext.mGlyphWidth*2.f);
+  ImGui::PushStyleVar (ImGuiStyleVar_ScrollbarRounding, 2.f);
+  ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, {0.f,0.f});
+  ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, {0.f,0.f});
+  ImGui::BeginChild ("##scrolling", {0.f,0.f}, false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
+
   colorizeInternal();
 
   handleKeyboardInputs();
@@ -1259,8 +1272,8 @@ void cTextEdit::drawContents (cApp& app) {
   //}}}
 
   ImGui::EndChild();
-  ImGui::PopStyleVar (2);
-  ImGui::PopStyleColor(2);
+  ImGui::PopStyleVar (4);
+  ImGui::PopStyleColor (6);
   if (isDrawMonoSpaced())
     ImGui::PopFont();
   }
