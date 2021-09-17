@@ -450,10 +450,6 @@ private:
   sPosition sanitizePosition (const sPosition& position) const;
   void ensureCursorVisible();
 
-  // clicks
-  void clickFold (int lineNumber, bool foldOpen);
-  void clickText (int lineNumber, float xPos, bool selectWord);
-
   // find
   sPosition findWordStart (const sPosition& from) const;
   sPosition findWordEnd (const sPosition& from) const;
@@ -485,10 +481,14 @@ private:
   void colorizeInternal();
   //}}}
 
-  // fold
+  // clicks
+  void clickLine (int lineNumber);
+  void clickFold (int lineNumber, bool foldOpen);
+  void clickText (int lineNumber, float posX, bool selectWord);
+
+  // folds
   void parseFolds();
 
-  void handleMouseInputs();
   void handleKeyboardInputs();
 
   void drawTop (cApp& app);

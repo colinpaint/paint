@@ -1194,7 +1194,6 @@ void cTextEdit::drawContents (cApp& app) {
 
   //ImGui::PushAllowKeyboardFocus (true);
   handleKeyboardInputs();
-  //handleMouseInputs();
 
   colorizeInternal();
 
@@ -1646,32 +1645,6 @@ void cTextEdit::ensureCursorVisible() {
     //ImGui::SetScrollX (max (0.f, mGlyphsBegin + textWidth + 4 - ImGui::GetWindowWidth()));
     //}
   //}}}
-  }
-//}}}
-
-// clicks
-//{{{
-void cTextEdit::clickFold (int lineNumber, bool foldOpen) {
-
-  mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
-  mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
-  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-  mInfo.mLines[lineNumber].mFoldOpen = foldOpen;
-  }
-//}}}
-//{{{
-void cTextEdit::clickText (int lineNumber, float posX, bool selectWord) {
-
-  mEdit.mState.mCursorPosition = getPositionFromPosX (lineNumber, posX);
-
-  mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
-  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-
-  if (selectWord)
-    mEdit.mSelection = eSelection::Word;
-  else
-    mEdit.mSelection = eSelection::Normal;
-  setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
   }
 //}}}
 
@@ -2242,7 +2215,42 @@ void cTextEdit::colorizeInternal() {
 //}}}
 //}}}
 
-// fold
+// clicks
+//{{{
+void cTextEdit::clickLine (int lineNumber) {
+
+  mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+  mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  mEdit.mSelection = eSelection::Line;
+
+  setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+  }
+//}}}
+//{{{
+void cTextEdit::clickFold (int lineNumber, bool foldOpen) {
+
+  mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+  mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+
+  mInfo.mLines[lineNumber].mFoldOpen = foldOpen;
+  }
+//}}}
+//{{{
+void cTextEdit::clickText (int lineNumber, float posX, bool selectWord) {
+
+  mEdit.mState.mCursorPosition = getPositionFromPosX (lineNumber, posX);
+
+  mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
+  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  mEdit.mSelection = selectWord ? eSelection::Word : eSelection::Normal;
+
+  setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+  }
+//}}}
+
+// folds
 //{{{
 void cTextEdit::parseFolds() {
 // parse beginFold and endFold markers, set simple flags
@@ -2286,76 +2294,7 @@ void cTextEdit::parseFolds() {
   }
 //}}}
 
-//{{{
-void cTextEdit::handleMouseInputs() {
-
-  ImGuiIO& io = ImGui::GetIO();
-  bool shift = io.KeyShift;
-  //bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
-  bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
-
-  //if (ImGui::IsWindowHovered()) {
-    if (!shift && !alt) {
-      //bool leftSingleClick = ImGui::IsMouseClicked (0);
-      //bool righttSingleClick = ImGui::IsMouseClicked (1);
-      //bool leftDoubleClick = ImGui::IsMouseDoubleClicked (0);
-      //bool leftTripleClick = leftSingleClick &&
-      //                       !leftDoubleClick &&
-       //                      ((mLastClickTime != -1.f) && (ImGui::GetTime() - mLastClickTime) < io.MouseDoubleClickTime);
-      //if (righttSingleClick) {
-        //{{{  right mouse right singleClick
-        //if (mOptions.mShowFolded) {
-          //// test cursor position
-          //sPosition position = screenToPosition (ImGui::GetMousePos());
-          //if (mInfo.mLines[position.mLineNumber].mFoldBegin) {
-            //// set cursor position
-            //mEdit.mState.mCursorPosition = position;
-            //mEdit.mInteractiveStart = position;
-            //mEdit.mInteractiveEnd = position;
-
-            //// open fold
-            //mInfo.mLines[position.mLineNumber].mFoldOpen ^= true;
-            //}
-          //}
-
-        //mLastClickTime = static_cast<float>(ImGui::GetTime());
-        //}
-        //}}}
-      //else if (leftTripleClick) {
-        //{{{  left mouse tripleClick
-        //if (!ctrl) {
-          //mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
-          //mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
-          //mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-
-          //mEdit.mSelection = eSelection::Line;
-          //setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
-          //}
-
-        //mLastClickTime = -1.f;
-        //}
-        //}}}
-      //else if (leftDoubleClick) {
-        //{{{  left mouse doubleClick
-        //if (!ctrl) {
-          //mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
-          //mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
-          //mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-
-          //if (mEdit.mSelection == eSelection::Line)
-            //mEdit.mSelection = eSelection::Normal;
-          //else
-            //mEdit.mSelection = eSelection::Word;
-          //setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
-          //}
-
-        //mLastClickTime = static_cast<float>(ImGui::GetTime());
-        //}
-        //}}}
-      //else if (leftSingleClick) {
-        //clickCursor (ctrl);
-      //  }
-      //else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
+//else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
         //{{{  left mouse button dragging (=> update selection)
         //io.WantCaptureMouse = true;
 
@@ -2364,10 +2303,6 @@ void cTextEdit::handleMouseInputs() {
         //setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
         //}
         //}}}
-      }
-  // }
-  }
-//}}}
 //{{{
 void cTextEdit::handleKeyboardInputs() {
   //{{{  numpad codes
@@ -2706,27 +2641,28 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   if (isFolded())
     mInfo.mFoldLines.push_back (lineNumber);
 
-  // leftPos within childWindow
-  float leftPadWidth = mContext.mLeftPad;
   ImVec2 leftPos = ImGui::GetCursorScreenPos();
   ImVec2 curPos = leftPos;
 
+  float leftPadWidth = mContext.mLeftPad;
   sLine& line = mInfo.mLines[lineNumber];
   if (isDrawLineNumber()) {
-    // draw lineNumber
+    //{{{  draw lineNumber
     curPos.x += leftPadWidth;
-    float width = mContext.drawText (curPos, mOptions.mPalette[eLineNumber],
+    float lineNumberWidth = mContext.drawText (curPos, mOptions.mPalette[eLineNumber],
                     (mOptions.mShowLineDebug ? fmt::format ("{:4d} {:4d} ", lineNumber, line.mFoldTitleLineNumber)
                                              : fmt::format ("{:4d} ", lineNumber)).c_str());
-    // add lineNumber invisible button including leftPad
-    if (ImGui::InvisibleButton (fmt::format ("##line{}", lineNumber).c_str(),
-                                {leftPadWidth + width, mContext.mLineHeight}))
-      cLog::log (LOGINFO, fmt::format ("hit lineNumber {}", lineNumber));
-    leftPadWidth = 0.f;
+    // add invisibleButton, gobble up leftPad
+    ImGui::InvisibleButton (fmt::format ("##line{}", lineNumber).c_str(),
+                            {leftPadWidth + lineNumberWidth, mContext.mLineHeight});
+    if (ImGui::IsItemActive())
+      clickLine (lineNumber);
 
-    curPos.x += width;
+    leftPadWidth = 0.f;
+    curPos.x += lineNumberWidth;
     ImGui::SameLine();
     }
+    //}}}
 
   // draw text
   ImVec2 textPos = curPos;
@@ -2740,8 +2676,9 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       curPos.x += prefixWidth;
 
       // add foldPrefix invisibleButton
-      if (ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
-                                  {leftPadWidth + prefixWidth, mContext.mLineHeight}))
+      ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
+                              {leftPadWidth + prefixWidth, mContext.mLineHeight});
+      if (ImGui::IsItemActive())
         clickFold (lineNumber, false);
 
       // draw glyphsText
@@ -2772,8 +2709,9 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       curPos.x += prefixWidth;
 
       // add invisibleButton, indent + prefix wide
-      if (ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
-                                  {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight}))
+      ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
+                                  {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
+      if (ImGui::IsItemActive())
         clickFold (lineNumber, true);
 
       // draw glyphsText
@@ -2787,7 +2725,7 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       ImGui::SameLine();
       ImGui::InvisibleButton (fmt::format ("##text{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive())
-        clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
+        clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
 
       curPos.x += glyphsWidth;
       }
@@ -2883,11 +2821,9 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     }
   //}}}
 
-  // cursor
   if (mContext.mFocused && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
     //{{{  draw flashing cursor
     chrono::system_clock::time_point now = system_clock::now();
-
     auto elapsed = now - mLastFlashTime;
     if (elapsed > 400ms) {
       if (elapsed > 800ms)
