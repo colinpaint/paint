@@ -1645,6 +1645,9 @@ void cTextEdit::ensureCursorVisible() {
     //ImGui::SetScrollX (max (0.f, mGlyphsBegin + textWidth + 4 - ImGui::GetWindowWidth()));
     //}
   //}}}
+
+  // reset flash time
+  mLastFlashTime = system_clock::now();
   }
 //}}}
 
@@ -1779,7 +1782,7 @@ void cTextEdit::moveUp (int amount) {
   int lineIndex = getLineIndexFromNumber (lineNumber);
   lineIndex = max (0, lineIndex - amount);
 
-mEdit.mState.mCursorPosition.mLineNumber = getLineNumberFromIndex(lineIndex);
+  mEdit.mState.mCursorPosition.mLineNumber = getLineNumberFromIndex(lineIndex);
   if (mEdit.mState.mCursorPosition != position) {
     mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
@@ -2249,6 +2252,20 @@ void cTextEdit::clickText (int lineNumber, float posX, bool selectWord) {
   setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
   }
 //}}}
+//{{{
+void cTextEdit::dragLine (int lineNumber, float posY) {
+  //mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
+  //mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  //setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+  }
+//}}}
+//{{{
+void cTextEdit::dragText (int lineNumber, ImVec2 pos) {
+  //mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
+  //mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  //setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+  }
+//}}}
 
 // folds
 //{{{
@@ -2294,15 +2311,6 @@ void cTextEdit::parseFolds() {
   }
 //}}}
 
-//else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
-        //{{{  left mouse button dragging (=> update selection)
-        //io.WantCaptureMouse = true;
-
-        //mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
-        //mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-        //setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
-        //}
-        //}}}
 //{{{
 void cTextEdit::handleKeyboardInputs() {
   //{{{  numpad codes
@@ -2649,14 +2657,19 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   if (isDrawLineNumber()) {
     //{{{  draw lineNumber
     curPos.x += leftPadWidth;
-    float lineNumberWidth = mContext.drawText (curPos, mOptions.mPalette[eLineNumber],
-                    (mOptions.mShowLineDebug ? fmt::format ("{:4d} {:4d} ", lineNumber, line.mFoldTitleLineNumber)
-                                             : fmt::format ("{:4d} ", lineNumber)).c_str());
+    float lineNumberWidth = mContext.drawSmallText (curPos, mOptions.mPalette[eLineNumber],
+      (mOptions.mShowLineDebug ? fmt::format ("{:4d} {:4d} ", lineNumber, line.mFoldTitleLineNumber)
+                               : fmt::format ("{:4d} ", lineNumber)).c_str());
+
     // add invisibleButton, gobble up leftPad
     ImGui::InvisibleButton (fmt::format ("##line{}", lineNumber).c_str(),
                             {leftPadWidth + lineNumberWidth, mContext.mLineHeight});
-    if (ImGui::IsItemActive())
-      clickLine (lineNumber);
+    if (ImGui::IsItemActive()) {
+      if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
+        dragLine (lineNumber, ImGui::GetMousePos().y - curPos.y);
+      else if (ImGui::IsMouseClicked (0))
+        clickLine (lineNumber);
+      }
 
     leftPadWidth = 0.f;
     curPos.x += lineNumberWidth;
@@ -2759,13 +2772,10 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
     ImGui::InvisibleButton (fmt::format ("##text{}", lineNumber).c_str(),
                             {leftPadWidth + glyphsWidth, mContext.mLineHeight});
     if (ImGui::IsItemActive()) {
-      if (ImGui::IsMouseClicked (0))
-        clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
-
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
-        cLog::log (LOGINFO, fmt::format ("draggingtext line:{} hov:{} act:{} {}:{}",
-                   lineNumber, ImGui::IsItemHovered(), ImGui::IsItemActive(),
-                   ImGui::GetMousePos().x - curPos.x, ImGui::GetMousePos().y - curPos.y));
+        dragText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - curPos.y});
+      else if (ImGui::IsMouseClicked (0))
+        clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
       }
 
     curPos.x += glyphsWidth;
@@ -2823,12 +2833,9 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
 
   if (mContext.mFocused && (lineNumber == mEdit.mState.mCursorPosition.mLineNumber)) {
     //{{{  draw flashing cursor
-    chrono::system_clock::time_point now = system_clock::now();
+    auto now = system_clock::now();
     auto elapsed = now - mLastFlashTime;
-    if (elapsed > 400ms) {
-      if (elapsed > 800ms)
-        mLastFlashTime = now;
-
+    if (elapsed < 400ms) {
       float cursorPosX = getTextWidth (mEdit.mState.mCursorPosition);
       int characterIndex = getCharacterIndex (mEdit.mState.mCursorPosition);
 
@@ -2852,6 +2859,9 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       ImVec2 brPos = {tlPos.x + cursorWidth, curPos.y + mContext.mLineHeight};
       mContext.mDrawList->AddRectFilled (tlPos, brPos, mOptions.mPalette[eCursor]);
       }
+
+    if (elapsed > 800ms)
+      mLastFlashTime = now;
     }
     //}}}
   }
@@ -2918,6 +2928,15 @@ float cTextEdit::cContext::drawText (ImVec2 pos, ImU32 color, const char* str, c
 
   mDrawList->AddText (mFont, mFontSize, pos, color, str, strEnd);
   return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
+  }
+//}}}
+//{{{
+float cTextEdit::cContext::drawSmallText (ImVec2 pos, ImU32 color, const char* str, const char* strEnd) {
+ // draw and return width of text
+
+  pos.y += mFontSize * 0.125f;
+  mDrawList->AddText (mFont, mFontSize * 0.75f, pos, color, str, strEnd);
+  return mFont->CalcTextSizeA (mFontSize * 0.75f, FLT_MAX, -1.f, str, strEnd).x;
   }
 //}}}
 

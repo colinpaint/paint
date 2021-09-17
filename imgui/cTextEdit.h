@@ -349,6 +349,7 @@ private:
 
     float measureText (const char* str, const char* strEnd) const;
     float drawText (ImVec2 pos, ImU32 color, const char* str, const char* strEnd = nullptr);
+    float drawSmallText (ImVec2 pos, ImU32 color, const char* str, const char* strEnd = nullptr);
 
     ImDrawList* mDrawList = nullptr;
     bool mFocused = false;
@@ -485,6 +486,8 @@ private:
   void clickLine (int lineNumber);
   void clickFold (int lineNumber, bool foldOpen);
   void clickText (int lineNumber, float posX, bool selectWord);
+  void dragLine (int lineNumber, float posY);
+  void dragText (int lineNumber, ImVec2 pos);
 
   // folds
   void parseFolds();

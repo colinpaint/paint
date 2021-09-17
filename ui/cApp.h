@@ -13,18 +13,23 @@ public:
   virtual ~cApp() = default;
 
   // gets
+  std::string getName() const { return mName; }
   cPlatform& getPlatform() const { return mPlatform; }
   cGraphics& getGraphics() const { return mGraphics; }
-  std::string getName() const { return mName; }
+
+  ImFont* getMainFont() const { return mMainFont; }
   ImFont* getMonoFont() const { return mMonoFont; }
 
   // sets
   void setName (const std::string name) { mName = name; }
-  void setMonoFont (ImFont* mFont) { mMonoFont = mFont; }
+  void setMainFont (ImFont* font) { mMainFont = font; }
+  void setMonoFont (ImFont* font) { mMonoFont = font; }
 
 private:
+  std::string mName;
   cPlatform& mPlatform;
   cGraphics& mGraphics;
-  std::string mName;
+
+  ImFont* mMainFont;
   ImFont* mMonoFont;
   };

@@ -73,10 +73,12 @@ int main (int numArgs, char* args[]) {
   // create platform, graphics, UI font
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
-  ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f);
 
   // create app to tie stuff together
   cApp app (platform, graphics);
+  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
+
+  // add monoSpaced font
   #ifdef _WIN32
     app.setName (params.empty() ? "C:/projects/paint/imgui/cTextEdit.cpp" :
                                   cFileUtils::resolveShortcut (params[0]));
