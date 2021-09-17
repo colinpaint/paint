@@ -1545,11 +1545,13 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (int lineNumber, float posX)
 //{{{
 int cTextEdit::getLineNumberFromIndex (int lineIndex) const {
 
-  if (isFolded())
+  if (!isFolded()) // lineNumber is lineIndex
     return lineIndex;
 
   if ((lineIndex >= 0) && (lineIndex < static_cast<int>(mInfo.mFoldLines.size())))
     return mInfo.mFoldLines[lineIndex];
+  else
+    cLog::log (LOGERROR, fmt::format ("getLineNumberFromIndex {} no line for that index", lineIndex));
 
   return -1;
   }
@@ -1557,17 +1559,19 @@ int cTextEdit::getLineNumberFromIndex (int lineIndex) const {
 //{{{
 int cTextEdit::getLineIndexFromNumber (int lineNumber) const {
 
-  if (!isFolded()) // lineIndex is  lineNumber
+  if (!isFolded()) // lineIndex is lineNumber
     return lineNumber;
 
-  if (mInfo.mFoldLines.empty()) { // no entry for that index
-    cLog::log (LOGERROR, fmt::format ("lineNumberToIndex {} mFoldLines empty", lineNumber));
+  if (mInfo.mFoldLines.empty()) {
+    // no foldLines
+    cLog::log (LOGERROR, fmt::format ("getLineIndexFromNumber {} mFoldLines empty", lineNumber));
     return -1;
     }
 
   auto it = find (mInfo.mFoldLines.begin(), mInfo.mFoldLines.end(), lineNumber);
   if (it == mInfo.mFoldLines.end()) {
-    cLog::log (LOGERROR, fmt::format ("lineNumberToIndex {} not found", lineNumber));
+    // no lineNumber for that index
+    cLog::log (LOGERROR, fmt::format ("getLineIndexFromNumber {} notFound", lineNumber));
     return -1;
     }
   else
@@ -2254,9 +2258,23 @@ void cTextEdit::clickText (int lineNumber, float posX, bool selectWord) {
 //}}}
 //{{{
 void cTextEdit::dragLine (int lineNumber, float posY) {
-  //mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
-  //mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-  //setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+
+  int lines = static_cast<int>(posY / mContext.mLineHeight);
+  if (!isFolded()) // simple 
+    lineNumber = max (0, min ((int)mInfo.mLines.size(), lineNumber + lines));
+  else {
+    int lineIndex = getLineIndexFromNumber (lineNumber);
+    if (lineIndex != -1) {
+      lineIndex = max (0, min ((int)mInfo.mFoldLines.size(), lineIndex + lines));
+      lineNumber = mInfo.mFoldLines[lineIndex];
+      }
+    }
+
+  mEdit.mState.mCursorPosition.mLineNumber = lineNumber;
+  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  mEdit.mSelection = eSelection::Line;
+
+  setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
   }
 //}}}
 //{{{

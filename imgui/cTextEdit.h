@@ -357,10 +357,9 @@ private:
     float mFontAtlasSize = 0.f;
     float mFontSize = 0.f;
 
-    float mLineHeight = 0.f;
-    float mGlyphWidth = 0.f;
-
     float mLeftPad = 0.f;
+    float mGlyphWidth = 0.f;
+    float mLineHeight = 0.f;
 
   private:
     ImFont* mFont = nullptr;
