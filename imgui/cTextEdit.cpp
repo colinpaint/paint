@@ -573,35 +573,35 @@ void cTextEdit::setCursorPosition (const sPosition& position) {
   }
 //}}}
 //{{{
-void cTextEdit::setSelectionStart (const sPosition& position) {
+void cTextEdit::setSelectionBegin (const sPosition& position) {
 
-  mEdit.mState.mSelectionStart = sanitizePosition (position);
-  if (mEdit.mState.mSelectionStart > mEdit.mState.mSelectionEnd)
-    swap (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd);
+  mEdit.mState.mSelectionBegin = sanitizePosition (position);
+  if (mEdit.mState.mSelectionBegin > mEdit.mState.mSelectionEnd)
+    swap (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionEnd);
   }
 //}}}
 //{{{
 void cTextEdit::setSelectionEnd (const sPosition& position) {
 
   mEdit.mState.mSelectionEnd = sanitizePosition (position);
-  if (mEdit.mState.mSelectionStart > mEdit.mState.mSelectionEnd)
-    swap (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd);
+  if (mEdit.mState.mSelectionBegin > mEdit.mState.mSelectionEnd)
+    swap (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionEnd);
   }
 //}}}
 //{{{
 void cTextEdit::setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode) {
 
-  mEdit.mState.mSelectionStart = sanitizePosition (startPosition);
+  mEdit.mState.mSelectionBegin = sanitizePosition (startPosition);
   mEdit.mState.mSelectionEnd = sanitizePosition (endPosition);
-  if (mEdit.mState.mSelectionStart > mEdit.mState.mSelectionEnd)
-    swap (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd);
+  if (mEdit.mState.mSelectionBegin > mEdit.mState.mSelectionEnd)
+    swap (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionEnd);
 
   switch (mode) {
     case cTextEdit::eSelection::Normal:
       break;
 
     case cTextEdit::eSelection::Word: {
-      mEdit.mState.mSelectionStart = findWordStart (mEdit.mState.mSelectionStart);
+      mEdit.mState.mSelectionBegin = findWordStart (mEdit.mState.mSelectionBegin);
       if (!isOnWordBoundary (mEdit.mState.mSelectionEnd))
         mEdit.mState.mSelectionEnd = findWordEnd (findWordStart (mEdit.mState.mSelectionEnd));
       break;
@@ -609,9 +609,8 @@ void cTextEdit::setSelection (const sPosition& startPosition, const sPosition& e
 
     case cTextEdit::eSelection::Line: {
       const int lineNumber = mEdit.mState.mSelectionEnd.mLineNumber;
-      //const auto lineSize = (size_t)lineNumber < mLines.size() ? mLines[lineNumber].size() : 0;
-      mEdit.mState.mSelectionStart = sPosition (mEdit.mState.mSelectionStart.mLineNumber, 0);
-      mEdit.mState.mSelectionEnd = sPosition (lineNumber, getLineMaxColumn (lineNumber));
+      mEdit.mState.mSelectionBegin = {mEdit.mState.mSelectionBegin.mLineNumber, 0};
+      mEdit.mState.mSelectionEnd = {lineNumber, getLineMaxColumn (lineNumber)};
       break;
       }
 
@@ -769,7 +768,7 @@ void cTextEdit::cut() {
     sUndo undo;
     undo.mBefore = mEdit.mState;
     undo.mRemoved = getSelectedText();
-    undo.mRemovedStart = mEdit.mState.mSelectionStart;
+    undo.mRemovedStart = mEdit.mState.mSelectionBegin;
     undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
 
     copy();
@@ -791,7 +790,7 @@ void cTextEdit::paste() {
     undo.mBefore = mEdit.mState;
     if (hasSelect()) {
       undo.mRemoved = getSelectedText();
-      undo.mRemovedStart = mEdit.mState.mSelectionStart;
+      undo.mRemovedStart = mEdit.mState.mSelectionBegin;
       undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
       deleteSelection();
       }
@@ -837,7 +836,7 @@ void cTextEdit::deleteIt() {
 
   if (hasSelect()) {
     undo.mRemoved = getSelectedText();
-    undo.mRemovedStart = mEdit.mState.mSelectionStart;
+    undo.mRemovedStart = mEdit.mState.mSelectionBegin;
     undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
     deleteSelection();
     }
@@ -890,7 +889,7 @@ void cTextEdit::backspace() {
   if (hasSelect()) {
     //{{{  backspace delete selection
     undo.mRemoved = getSelectedText();
-    undo.mRemovedStart = mEdit.mState.mSelectionStart;
+    undo.mRemovedStart = mEdit.mState.mSelectionBegin;
     undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
 
     deleteSelection();
@@ -955,16 +954,16 @@ void cTextEdit::backspace() {
 //{{{
 void cTextEdit::deleteSelection() {
 
-  assert(mEdit.mState.mSelectionEnd >= mEdit.mState.mSelectionStart);
-  if (mEdit.mState.mSelectionEnd == mEdit.mState.mSelectionStart)
+  assert(mEdit.mState.mSelectionEnd >= mEdit.mState.mSelectionBegin);
+  if (mEdit.mState.mSelectionEnd == mEdit.mState.mSelectionBegin)
     return;
 
-  deleteRange (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd);
+  deleteRange (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionEnd);
 
-  setSelection (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionStart);
-  setCursorPosition (mEdit.mState.mSelectionStart);
+  setSelection (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionBegin);
+  setCursorPosition (mEdit.mState.mSelectionBegin);
 
-  colorize (mEdit.mState.mSelectionStart.mLineNumber, 1);
+  colorize (mEdit.mState.mSelectionBegin.mLineNumber, 1);
   }
 //}}}
 
@@ -976,9 +975,9 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   undo.mBefore = mEdit.mState;
 
   if (hasSelect()) {
-    if ((ch == '\t') && (mEdit.mState.mSelectionStart.mLineNumber != mEdit.mState.mSelectionEnd.mLineNumber)) {
+    if ((ch == '\t') && (mEdit.mState.mSelectionBegin.mLineNumber != mEdit.mState.mSelectionEnd.mLineNumber)) {
       //{{{  tab insert into selection
-      auto start = mEdit.mState.mSelectionStart;
+      auto start = mEdit.mState.mSelectionBegin;
       auto end = mEdit.mState.mSelectionEnd;
       auto originalEnd = end;
 
@@ -1041,7 +1040,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
         undo.mAddedEnd = rangeEnd;
         undo.mAfter = mEdit.mState;
 
-        mEdit.mState.mSelectionStart = start;
+        mEdit.mState.mSelectionBegin = start;
         mEdit.mState.mSelectionEnd = end;
         addUndo (undo);
         mInfo.mTextEdited = true;
@@ -1056,7 +1055,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
     else {
       //{{{  deleteSelection before insert
       undo.mRemoved = getSelectedText();
-      undo.mRemovedStart = mEdit.mState.mSelectionStart;
+      undo.mRemovedStart = mEdit.mState.mSelectionBegin;
       undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
       deleteSelection();
       }
@@ -1430,7 +1429,7 @@ string cTextEdit::getCurrentLineText() const {
 //}}}
 //{{{
 string cTextEdit::getSelectedText() const {
-  return getText (mEdit.mState.mSelectionStart, mEdit.mState.mSelectionEnd);
+  return getText (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionEnd);
   }
 //}}}
 
@@ -1874,7 +1873,7 @@ void cTextEdit::insertText (const char* value) {
     return;
 
   sPosition position = getCursorPosition();
-  sPosition startPosition = min (position, mEdit.mState.mSelectionStart);
+  sPosition startPosition = min (position, mEdit.mState.mSelectionBegin);
 
   int totalLines = position.mLineNumber - startPosition.mLineNumber;
   totalLines += insertTextAt (position, value);
@@ -2269,9 +2268,12 @@ void cTextEdit::dragLine (int lineNumber, float posY) {
 //}}}
 //{{{
 void cTextEdit::dragText (int lineNumber, ImVec2 pos) {
-  //mEdit.mState.mCursorPosition = screenToPosition (ImGui::GetMousePos());
-  //mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-  //setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+  //!!! must select new line !!!
+  mEdit.mState.mCursorPosition = getPositionFromPosX (lineNumber, pos.x);
+  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  mEdit.mSelection = eSelection::Normal;
+
+  setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
   }
 //}}}
 
@@ -2795,8 +2797,8 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
   sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
 
   float xStart = -1.f;
-  if (mEdit.mState.mSelectionStart <= lineEndPosition)
-    xStart = (mEdit.mState.mSelectionStart > lineStartPosition) ? getTextWidth (mEdit.mState.mSelectionStart) : 0.f;
+  if (mEdit.mState.mSelectionBegin <= lineEndPosition)
+    xStart = (mEdit.mState.mSelectionBegin > lineStartPosition) ? getTextWidth (mEdit.mState.mSelectionBegin) : 0.f;
 
   float xEnd = -1.f;
   if (mEdit.mState.mSelectionEnd > lineStartPosition)

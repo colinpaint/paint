@@ -204,7 +204,7 @@ public:
   // has
   bool hasCR() const { return mInfo.mHasCR; }
   bool hasTabs() const { return mInfo.mHasTabs; }
-  bool hasSelect() const { return mEdit.mState.mSelectionEnd > mEdit.mState.mSelectionStart; }
+  bool hasSelect() const { return mEdit.mState.mSelectionEnd > mEdit.mState.mSelectionBegin; }
   bool hasUndo() const { return !mOptions.mReadOnly && mUndoList.mIndex > 0; }
   bool hasRedo() const { return !mOptions.mReadOnly && mUndoList.mIndex < (int)mUndoList.mBuffer.size(); }
   bool hasClipboardText();
@@ -231,7 +231,7 @@ public:
   void setTabSize (int value) { mInfo.mTabSize = std::max (0, std::min (32, value)); }
 
   void setCursorPosition (const sPosition& position);
-  void setSelectionStart (const sPosition& position);
+  void setSelectionBegin (const sPosition& position);
   void setSelectionEnd (const sPosition& position);
   void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
 
@@ -287,7 +287,7 @@ private:
   struct sCursorSelectionState {
     sPosition mCursorPosition;
 
-    sPosition mSelectionStart;
+    sPosition mSelectionBegin;
     sPosition mSelectionEnd;
     };
   //}}}

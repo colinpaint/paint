@@ -130,7 +130,6 @@ void cMemEdit::drawContents (size_t baseAddress) {
   //ImGui::PushAllowKeyboardFocus (true);
   //ImGui::PopAllowKeyboardFocus();
   handleKeyboardInputs();
-  handleMouseInputs();
 
   drawTop();
 
@@ -518,41 +517,6 @@ void* cMemEdit::copyEndian (void* dst, void* src, size_t size) {
   }
 //}}}
 
-//{{{
-void cMemEdit::handleMouseInputs() {
-
-  ImGuiIO& io = ImGui::GetIO();
-  bool shift = io.KeyShift;
-  bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
-  bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
-
-  if (ImGui::IsWindowHovered()) {
-    if (!ctrl && !shift && !alt) {
-      bool leftSingleClick = ImGui::IsMouseClicked (0);
-      bool righttSingleClick = ImGui::IsMouseClicked (1);
-      bool leftDoubleClick = ImGui::IsMouseDoubleClicked (0);
-      bool leftTripleClick = leftSingleClick &&
-                             !leftDoubleClick &&
-                             ((mLastClick != -1.f) && (ImGui::GetTime() - mLastClick) < io.MouseDoubleClickTime);
-      if (leftTripleClick) {
-        mLastClick = -1.f;
-        }
-      else if (leftDoubleClick) {
-        mLastClick = static_cast<float>(ImGui::GetTime());
-        }
-      else if (leftSingleClick) {
-        mLastClick = static_cast<float>(ImGui::GetTime());
-        }
-      else if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0)) {
-        io.WantCaptureMouse = true;
-        }
-
-      if (righttSingleClick) {
-        };
-      }
-    }
-  }
-//}}}
 //{{{
 void cMemEdit::handleKeyboardInputs() {
 
