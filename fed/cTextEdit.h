@@ -193,6 +193,11 @@ public:
       mGlyphs(line), mSeeThroughInc(0), mIndent(0),
       mFoldBegin(false), mFoldEnd(false), mComment(false), mFolded(true), mSelected(false), mPressed(false) {}
     //}}}
+    //{{{
+    ~cLine() {
+      mGlyphs.clear();
+      }
+    //}}}
     bool parse (const sLanguage& language);
 
     std::vector <sGlyph> mGlyphs;
@@ -481,10 +486,10 @@ private:
   void moveDown (int amount);
 
   // insert
-  std::vector<sGlyph>& insertLine (int index);
+  cLine& insertLine (int index);
   void insertText (const char* value);
   void insertText (const std::string& value) { insertText (value.c_str()); }
-  int insertTextAt (sPosition& where, const char* value);
+  int insertTextAt (sPosition& position, const char* text);
 
   // delete
   void removeLine (int startPosition, int endPosition);
