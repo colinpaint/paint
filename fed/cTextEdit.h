@@ -160,7 +160,7 @@ public:
     std::unordered_map <std::string,sIdent> mIdents;
     std::unordered_map <std::string,sIdent> mPreprocIdents;
 
-    std::string mCommentStart;
+    std::string mCommentBegin;
     std::string mCommentEnd;
     std::string mSingleLineComment;
     std::string mFoldBeginMarker;
@@ -387,7 +387,7 @@ private:
     int mColorRangeMin = 0;
     int mColorRangeMax = 0;
 
-    sPosition mInteractiveStart;
+    sPosition mInteractiveBegin;
     sPosition mInteractiveEnd;
     eSelection mSelection = eSelection::eNormal;
 
@@ -398,8 +398,8 @@ private:
   class sUndo {
   public:
     sUndo() = default;
-    sUndo (const std::string& added, const cTextEdit::sPosition addedStart, const cTextEdit::sPosition addedEnd,
-           const std::string& aRemoved, const cTextEdit::sPosition removedStart, const cTextEdit::sPosition removedEnd,
+    sUndo (const std::string& added, const cTextEdit::sPosition addedBegin, const cTextEdit::sPosition addedEnd,
+           const std::string& aRemoved, const cTextEdit::sPosition removedBegin, const cTextEdit::sPosition removedEnd,
            cTextEdit::sCursorSelectionState& before, cTextEdit::sCursorSelectionState& after);
     ~sUndo() = default;
 
@@ -408,11 +408,11 @@ private:
 
     // vars
     std::string mAdded;
-    sPosition mAddedStart;
+    sPosition mAddedBegin;
     sPosition mAddedEnd;
 
     std::string mRemoved;
-    sPosition mRemovedStart;
+    sPosition mRemovedBegin;
     sPosition mRemovedEnd;
 
     sCursorSelectionState mBefore;
@@ -443,7 +443,7 @@ private:
   int getMaxLineIndex() const;
   float getTextWidth (const sPosition& position) const;
 
-  std::string getText (const sPosition& startPosition, const sPosition& endPosition) const;
+  std::string getText (const sPosition& beginPosition, const sPosition& endPosition) const;
   std::string getSelectedText() const;
 
   uint8_t getGlyphColor (const sGlyph& glyph) const;
@@ -465,7 +465,7 @@ private:
   void setSelectionBegin (const sPosition& position);
   void setSelectionEnd (const sPosition& position);
 
-  void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode);
+  void setSelection (const sPosition& beginPosition, const sPosition& endPosition, eSelection mode);
   //}}}
   //{{{  utils
   void advance (sPosition& position) const;
@@ -473,7 +473,7 @@ private:
   sPosition sanitizePosition (const sPosition& position) const;
 
   // find
-  sPosition findWordStart (sPosition fromPosition) const;
+  sPosition findWordBegin (sPosition fromPosition) const;
   sPosition findWordEnd (sPosition fromPosition) const;
   sPosition findNextWord (sPosition fromPosition) const;
 
@@ -490,9 +490,9 @@ private:
   int insertTextAt (sPosition& position, const char* text);
 
   // delete
-  void removeLine (int startPosition, int endPosition);
+  void removeLine (int beginPosition, int endPosition);
   void removeLine (int index);
-  void deleteRange (const sPosition& startPosition, const sPosition& endPosition);
+  void deleteRange (const sPosition& beginPosition, const sPosition& endPosition);
 
   // undo
   void addUndo (sUndo& undo);
