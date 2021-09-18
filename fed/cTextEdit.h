@@ -397,12 +397,11 @@ private:
   //{{{
   class sUndo {
   public:
-    sUndo() {}
-    ~sUndo() {}
-
+    sUndo() = default;
     sUndo (const std::string& added, const cTextEdit::sPosition addedStart, const cTextEdit::sPosition addedEnd,
            const std::string& aRemoved, const cTextEdit::sPosition removedStart, const cTextEdit::sPosition removedEnd,
            cTextEdit::sCursorSelectionState& before, cTextEdit::sCursorSelectionState& after);
+    ~sUndo() = default;
 
     void undo (cTextEdit* textEdit);
     void redo (cTextEdit* textEdit);
@@ -496,7 +495,7 @@ private:
   void deleteRange (const sPosition& startPosition, const sPosition& endPosition);
 
   // undo
-  void addUndo (sUndo& value);
+  void addUndo (sUndo& undo);
 
   // colorize
   void colorize (int fromLine = 0, int count = -1);

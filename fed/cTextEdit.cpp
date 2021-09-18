@@ -2001,7 +2001,7 @@ void cTextEdit::deleteRange (const sPosition& startPosition, const sPosition& en
 
 // undo
 //{{{
-void cTextEdit::addUndo (sUndo& value) {
+void cTextEdit::addUndo (sUndo& undo) {
 
   //printf("AddUndo: (@%d.%d) +\'%s' [%d.%d .. %d.%d], -\'%s', [%d.%d .. %d.%d] (@%d.%d)\n",
   //  value.mBefore.mCursorPosition.mGlyphs, value.mBefore.mCursorPosition.mColumn,
@@ -2011,7 +2011,7 @@ void cTextEdit::addUndo (sUndo& value) {
   //  );
 
   mUndoList.mBuffer.resize ((size_t)(mUndoList.mIndex + 1));
-  mUndoList.mBuffer.back() = value;
+  mUndoList.mBuffer.back() = undo;
   ++mUndoList.mIndex;
   }
 //}}}
