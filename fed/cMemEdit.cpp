@@ -578,6 +578,8 @@ void cMemEdit::drawTop() {
   // draw columns button
   ImGui::SetNextItemWidth ((2.f*style.FramePadding.x) + (7.f*mContext.mGlyphWidth));
   ImGui::DragInt ("##column", &mOptions.mColumns, 0.2f, 2, 64, "%d wide");
+  if (ImGui::IsItemHovered()) 
+    mOptions.mColumns = max (2, min (64, mOptions.mColumns + static_cast<int>(ImGui::GetIO().MouseWheel)));
 
   // draw hexII button
   ImGui::SameLine();

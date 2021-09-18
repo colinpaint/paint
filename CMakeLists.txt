@@ -82,7 +82,7 @@ endif()
 if (BUILD_FED)
   project (fed VERSION 1.0.0)
   file (GLOB FED_HEADER_FILES fed/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
-  file (GLOB FED_SOURCE_FILES fed/fedMain.cpp fed/cTextEditUI.cpp fed/cTextEdit.cpp
+  file (GLOB FED_SOURCE_FILES fed/fedMain.cpp fed/cTextEditUI.cpp fed/cTextEdit.cpp fed/cMemEdit.cpp
                               platform/*.cpp graphics/*.cpp ui/cUI.cpp)
 
   add_executable (fed ${FED_SOURCE_FILES} ${FED_HEADER_FILES})
