@@ -14,12 +14,14 @@
 #include <stb_image_write.h>
 
 // imGui
-#include <imgui.h>
-#include "../implot/implot.h"
+#include "imgui/imgui.h"
+#ifdef BUILD_IMPLOT
+  #include "implot/implot.h"
+#endif
 
 // UI font
 #include "font/itcSymbolBold.h"
-#include "../font/droidSansMono.h"
+#include "font/droidSansMono.h"
 
 // self registered classes using static var init idiom
 #include "platform/cPlatform.h"
@@ -83,7 +85,7 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
   //{{{  create canvas and our fonts
   #ifdef _WIN32
-    cCanvas canvas (platform, graphics, 
+    cCanvas canvas (platform, graphics,
       params.empty() ? "../piccies/tv.jpg" : cFileUtils::resolveShortcut (params[0]));
   #else
     cCanvas canvas (platform, graphics, params.empty() ? "../piccies/tv.jpg" : params[0]);
@@ -130,7 +132,7 @@ int main (int numArgs, char* args[]) {
       ImGui::ShowDemoWindow (&showDemoWindow);
     if (showPlotWindow) {
       //{{{  optional implot
-      #ifdef USE_IMPLOT
+      #ifdef BUILD_IMPLOT
         ImPlot::ShowDemoWindow();
       #endif
       }

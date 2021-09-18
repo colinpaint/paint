@@ -2651,7 +2651,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
   if (isFolded()) {
     //{{{  update mFoldLines vector
-    if (lineIndex >= mInfo.mFoldLines.size())
+    if (lineIndex >= static_cast<int>(mInfo.mFoldLines.size()))
       mInfo.mFoldLines.push_back (lineNumber);
     else
       mInfo.mFoldLines[lineIndex] = lineNumber;
