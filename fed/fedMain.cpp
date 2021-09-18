@@ -41,7 +41,6 @@ int main (int numArgs, char* args[]) {
   eLogLevel logLevel = LOGINFO;
   string platformName = "glfw";
   string graphicsName = "opengl";
-  bool showDemoWindow = false;
   bool vsync = true;
   //{{{  parse command line args to params
   // args to params
@@ -55,7 +54,6 @@ int main (int numArgs, char* args[]) {
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
-    else if (*it == "demo") { showDemoWindow = true; params.erase (it); }
     else if (*it == "free") { vsync = false; params.erase (it); }
     else ++it;
     };
@@ -94,9 +92,7 @@ int main (int numArgs, char* args[]) {
       platform.newFrame();
       graphics.windowResize (width, height);
       graphics.newFrame();
-      if (showDemoWindow)
-        cUI::draw (app);
-      ImGui::ShowDemoWindow (&showDemoWindow);
+      cUI::draw (app);
       graphics.drawUI (platform.getWindowSize());
       platform.present();
       }
@@ -105,10 +101,8 @@ int main (int numArgs, char* args[]) {
   platform.setDropCallback (
     //{{{  drop lambda
     [&](vector<string> dropItems) noexcept {
-
-      for (auto& item : dropItems) {
+      for (auto& item : dropItems) 
         cLog::log (LOGINFO, item);
-        }
       }
     );
     //}}}
@@ -118,8 +112,6 @@ int main (int numArgs, char* args[]) {
     platform.newFrame();
     graphics.newFrame();
     cUI::draw (app);
-    if (showDemoWindow)
-      ImGui::ShowDemoWindow (&showDemoWindow);
     graphics.drawUI (platform.getWindowSize());
     platform.present();
     }

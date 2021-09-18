@@ -465,10 +465,8 @@ namespace {
 cTextEdit::cTextEdit() {
 
   mInfo.mLines.push_back (vector<sGlyph>());
-
   setLanguage (sLanguage::cPlus());
-
-  mLastFlashTime = system_clock::now();
+  mLastCursorFlashTimePoint = system_clock::now();
   }
 //}}}
 //{{{  gets
@@ -586,7 +584,7 @@ void cTextEdit::setCursorPosition (const sPosition& position) {
 
   if (mEdit.mState.mCursorPosition != position) {
     mEdit.mState.mCursorPosition = position;
-    ensureCursorVisible();
+    scrollCursorVisible();
     }
   }
 //}}}
@@ -675,7 +673,7 @@ void cTextEdit::moveLeft() {
     mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, eSelection::Normal);
-    ensureCursorVisible();
+    scrollCursorVisible();
     }
   }
 //}}}
@@ -709,7 +707,7 @@ void cTextEdit::moveRight() {
     mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, eSelection::Normal);
-    ensureCursorVisible();
+    scrollCursorVisible();
     }
   }
 //}}}
@@ -724,7 +722,7 @@ void cTextEdit::moveHome() {
     mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd);
-    ensureCursorVisible();
+    scrollCursorVisible();
     }
   }
 //}}}
@@ -739,7 +737,7 @@ void cTextEdit::moveEnd() {
     mEdit.mInteractiveStart = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd);
-    ensureCursorVisible();
+    scrollCursorVisible();
     }
   }
 //}}}
@@ -961,7 +959,7 @@ void cTextEdit::backspace() {
       }
     mInfo.mTextEdited = true;
 
-    ensureCursorVisible();
+    scrollCursorVisible();
     colorize (mEdit.mState.mCursorPosition.mLineNumber, 1);
     }
 
@@ -1063,7 +1061,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
         addUndo (undo);
         mInfo.mTextEdited = true;
 
-        ensureCursorVisible();
+        scrollCursorVisible();
         }
         //}}}
 
@@ -1140,7 +1138,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   addUndo (undo);
 
   colorize (position.mLineNumber - 1, 3);
-  ensureCursorVisible();
+  scrollCursorVisible();
   }
 //}}}
 
@@ -1214,8 +1212,8 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::PushStyleVar (ImGuiStyleVar_ScrollbarRounding, 2.f);
   ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, {0.f,0.f});
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, {0.f,0.f});
-  ImGui::BeginChild ("##scrolling", {0.f,0.f}, false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-
+  ImGui::BeginChild ("##scrolling", {0.f,0.f}, false,
+                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
   colorizeInternal();
 
   handleKeyboardInputs();
@@ -1378,7 +1376,7 @@ int cTextEdit::getMaxLineIndex() const {
 //}}}
 //{{{
 float cTextEdit::getTextWidth (const sPosition& position) const {
-// get textWidth to position
+// get width of text in pixels, of position lineNumberline,  up to position column
 
   const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
@@ -1613,6 +1611,39 @@ void cTextEdit::advance (sPosition& position) const {
     }
   }
 //}}}
+
+//{{{
+void cTextEdit::scrollCursorVisible() {
+
+  ImGui::SetWindowFocus();
+  sPosition position = getCursorPosition();
+
+  // up,down scroll
+  int lineIndex = getLineIndexFromNumber (position.mLineNumber);
+  int minIndex = min (getMaxLineIndex(),
+                   static_cast<int>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mContext.mLineHeight)));
+  if (lineIndex >= minIndex - 3)
+    ImGui::SetScrollY (max (0.f, (lineIndex + 3) * mContext.mLineHeight) - ImGui::GetWindowHeight());
+  else {
+    int maxIndex = static_cast<int>(floor (ImGui::GetScrollY() / mContext.mLineHeight));
+    if (lineIndex < maxIndex + 2)
+      ImGui::SetScrollY (max (0.f, (lineIndex - 2) * mContext.mLineHeight));
+    }
+
+  // left,right scroll
+  float textWidth = mContext.mLineNumberWidth + getTextWidth (position);
+  int minWidth = static_cast<int>(floor (ImGui::GetScrollX()));
+  if (textWidth - (3 * mContext.mGlyphWidth) < minWidth)
+    ImGui::SetScrollX (max (0.f, textWidth - (3 * mContext.mGlyphWidth)));
+  else {
+    int maxWidth = static_cast<int>(ceil (ImGui::GetScrollX() + ImGui::GetWindowWidth()));
+    if (textWidth + (3 * mContext.mGlyphWidth) > maxWidth)
+      ImGui::SetScrollX (max (0.f, textWidth + (3 * mContext.mGlyphWidth) - ImGui::GetWindowWidth()));
+    }
+
+  mLastCursorFlashTimePoint = system_clock::now();
+  }
+//}}}
 //{{{
 cTextEdit::sPosition cTextEdit::sanitizePosition (const sPosition& position) const {
 
@@ -1626,46 +1657,6 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (const sPosition& position) con
   else
     return sPosition (position.mLineNumber,
                       mInfo.mLines.empty() ? 0 : min (position.mColumn, getLineMaxColumn (position.mLineNumber)));
-  }
-//}}}
-//{{{
-void cTextEdit::ensureCursorVisible() {
-
-  ImGui::SetWindowFocus();
-
-  sPosition position = getCursorPosition();
-  int lineIndex = getLineIndexFromNumber (position.mLineNumber);
-
-  int topIndex = static_cast<int>(floor (ImGui::GetScrollY() / mContext.mLineHeight));
-  int botIndex = min (getMaxLineIndex(),
-                     static_cast<int>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mContext.mLineHeight)));
-  if (lineIndex <= topIndex+1) {
-    cLog::log (LOGINFO, fmt::format ("top:{} line:{}", topIndex, lineIndex));
-    //ImGui::SetScrollY (max (0.f, (lineIndex - 1) * mContext.mLineHeight));
-    }
-  else if (lineIndex >= botIndex-7) {
-    cLog::log (LOGINFO, fmt::format ("bot:{} line:{}", botIndex, lineIndex));
-    //ImGui::SetScrollY (max (0.f, (lineIndex+7) * mContext.mLineHeight) - ImGui::GetWindowHeight());
-    }
-  else
-    cLog::log (LOGINFO, fmt::format ("top:{} bot:{} line:{}", topIndex, botIndex, lineIndex));
-
-  //{{{  left right
-  //float textWidth = getTextWidth (position);
-  //int leftColumn = (int)floor(ImGui::GetScrollX() / mContext.mGlyphWidth);
-  //int rightColumn = (int)ceil((ImGui::GetScrollX() + ImGui::GetWindowWidth()) / mContext.mGlyphWidth);
-  //if (mGlyphsBegin + textWidth < leftColumn + 4) {
-    //cLog::log (LOGINFO, "left");
-    //ImGui::SetScrollX (max (0.f, mGlyphsBegin + textWidth - 4));
-    //}
-  //else if (mGlyphsBegin + textWidth > rightColumn - 4) {
-    //cLog::log (LOGINFO, "right");
-    //ImGui::SetScrollX (max (0.f, mGlyphsBegin + textWidth + 4 - ImGui::GetWindowWidth()));
-    //}
-  //}}}
-
-  // reset flash time
-  mLastFlashTime = system_clock::now();
   }
 //}}}
 
@@ -1803,7 +1794,7 @@ void cTextEdit::moveUp (int amount) {
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd);
 
-    ensureCursorVisible();
+    scrollCursorVisible();
     }
   }
 //}}}
@@ -1825,7 +1816,7 @@ void cTextEdit::moveDown (int amount) {
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd);
 
-    ensureCursorVisible();
+    scrollCursorVisible();
     }
   }
 //}}}
@@ -2293,16 +2284,19 @@ void cTextEdit::dragLine (int lineNumber, float posY) {
   mEdit.mSelection = eSelection::Line;
 
   setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+  scrollCursorVisible();
   }
 //}}}
 //{{{
 void cTextEdit::dragText (int lineNumber, ImVec2 pos) {
+
   //!!! must select new line !!!
   mEdit.mState.mCursorPosition = getPositionFromPosX (lineNumber, pos.x);
   mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
   mEdit.mSelection = eSelection::Normal;
 
   setSelection (mEdit.mInteractiveStart, mEdit.mInteractiveEnd, mEdit.mSelection);
+  scrollCursorVisible();
   }
 //}}}
 
@@ -2321,7 +2315,7 @@ void cTextEdit::parseLine (sLine& line) {
 
   if (line.mFoldBegin) {
     // found foldBegin text, find ident
-    line.mIndent = static_cast<uint16_t>(foldBeginIndent);
+    line.mIndent = static_cast<uint8_t>(foldBeginIndent);
     // has text after the foldBeginMarker
     line.mComment = (text.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
     mInfo.mHasFolds = true;
@@ -2330,7 +2324,7 @@ void cTextEdit::parseLine (sLine& line) {
     // normal line, find indent, find comment
     size_t indent = text.find_first_not_of (' ');
     if (indent != string::npos)
-      line.mIndent = static_cast<uint16_t>(indent);
+      line.mIndent = static_cast<uint8_t>(indent);
     else
       line.mIndent = 0;
 
@@ -2344,7 +2338,7 @@ void cTextEdit::parseLine (sLine& line) {
 
   // init fields set by updateFolds
   line.mFolded = true;
-  line.mSeeThroughLineNumber = -1;
+  line.mSeeThroughInc = 0;
   }
 //}}}
 //{{{
@@ -2689,7 +2683,8 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, uint8_t 
   }
 //}}}
 //{{{
-int cTextEdit::drawLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
+int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
+// draw Line and return incremented lineIndex
 
   if (isFolded()) {
     //{{{  update mFoldLines vector
@@ -2709,23 +2704,23 @@ int cTextEdit::drawLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
     //{{{  draw lineNumber
     curPos.x += leftPadWidth;
 
-    float lineNumberWidth;
     if (mOptions.mShowLineDebug)
-      lineNumberWidth = mContext.drawText (curPos, eLineNumber,
-        fmt::format ("{:4d} {}{}{}{}{}{} {:4d} ", lineNumber,
-                                                line.mFoldBegin ? 'b':' ',
-                                                line.mFoldEnd   ? 'e':' ',
-                                                line.mComment   ? 'c':' ',
-                                                line.mFolded    ? 'f':' ',
-                                                line.mSelected  ? 's':' ',
-                                                line.mPressed   ? 'p':' ',
-                                                line.mSeeThroughLineNumber).c_str());
+      mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber, fmt::format ("{:4d} {}{}{}{}{}{} {:2d} {:2d} ",
+        lineNumber,
+        line.mFoldBegin ? 'b':' ',
+        line.mFoldEnd   ? 'e':' ',
+        line.mComment   ? 'c':' ',
+        line.mFolded    ? 'f':' ',
+        line.mSelected  ? 's':' ',
+        line.mPressed   ? 'p':' ',
+        line.mIndent,
+        line.mSeeThroughInc).c_str());
     else
-      lineNumberWidth = mContext.drawSmallText (curPos, eLineNumber, fmt::format ("{:4d} ", lineNumber).c_str());
+      mContext.mLineNumberWidth = mContext.drawSmallText (curPos, eLineNumber, fmt::format ("{:4d} ", lineNumber).c_str());
 
     // add invisibleButton, gobble up leftPad
     ImGui::InvisibleButton (fmt::format ("##line{}", lineNumber).c_str(),
-                            {leftPadWidth + lineNumberWidth, mContext.mLineHeight});
+                            {leftPadWidth + mContext.mLineNumberWidth, mContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
         dragLine (lineNumber, ImGui::GetMousePos().y - curPos.y);
@@ -2734,10 +2729,12 @@ int cTextEdit::drawLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
       }
 
     leftPadWidth = 0.f;
-    curPos.x += lineNumberWidth;
+    curPos.x += mContext.mLineNumberWidth;
     ImGui::SameLine();
     }
     //}}}
+  else
+    mContext.mLineNumberWidth = 0.f;
 
   // draw text
   ImVec2 textPos = curPos;
@@ -2767,8 +2764,8 @@ int cTextEdit::drawLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
 
       // draw glyphs
       textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[glyphsLineNumber].mGlyphs, eFoldBeginClosed);
-      if (glyphsWidth < mContext.mGlyphWidth) // widen to ensure something to pick
+      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[lineNumber + seeThroughInc].mGlyphs, eFoldBeginClosed);
+      if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
         glyphsWidth = mContext.mGlyphWidth;
 
       // add invisible button
@@ -2801,7 +2798,7 @@ int cTextEdit::drawLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
       // draw glyphs
       textPos.x = curPos.x;
       float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, 0xFF);
-      if (glyphsWidth < mContext.mGlyphWidth) // widen to ensure something to pick
+      if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
         glyphsWidth = mContext.mGlyphWidth;
 
       // add invisibleButton
@@ -2835,7 +2832,7 @@ int cTextEdit::drawLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
     // drawGlyphs
     textPos.x = curPos.x;
     float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, 0xFF);
-    if (glyphsWidth < mContext.mGlyphWidth) // widen to ensure something to pick
+    if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
       glyphsWidth = mContext.mGlyphWidth;
 
     // add invisibleButton
@@ -2901,7 +2898,7 @@ int cTextEdit::drawLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
       //}}}
     //{{{  draw flashing cursor
     auto now = system_clock::now();
-    auto elapsed = now - mLastFlashTime;
+    auto elapsed = now - mLastCursorFlashTimePoint;
     if (elapsed < 400ms) {
       float cursorPosX = getTextWidth (mEdit.mState.mCursorPosition);
       int characterIndex = getCharacterIndex (mEdit.mState.mCursorPosition);
@@ -2928,7 +2925,7 @@ int cTextEdit::drawLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
       }
 
     if (elapsed > 800ms)
-      mLastFlashTime = now;
+      mLastCursorFlashTimePoint = now;
     //}}}
     }
 
@@ -2937,14 +2934,15 @@ int cTextEdit::drawLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
 //}}}
 //{{{
 int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool folded) {
-// recursive traversal of mInfo.mLines to produce mVisbleLines of folds
+// recursive traversal of mInfo.mLines to draw visible lines
+// - return lineNumber, lineIndex updated
 
   if (!parentFolded) {
     // show foldBegin line
     // - if no foldBegin comment, search for first noComment line, !!!! assume next line for now !!!!
     sLine& line = mInfo.mLines[lineNumber];
-    line.mSeeThroughLineNumber = line.mComment ? lineNumber : lineNumber + 1;
-    lineIndex = drawLine (lineNumber, line.mSeeThroughLineNumber, lineIndex);
+    line.mSeeThroughInc = line.mComment ? 0 : 1;
+    lineIndex = drawLine (lineNumber, line.mSeeThroughInc, lineIndex);
     }
 
   while (true) {
@@ -2956,11 +2954,11 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
       lineNumber = drawFold (lineNumber, lineIndex, folded, line.mFolded);
     else if (line.mFoldEnd) {
       if (!folded) // show foldEnd line of open fold
-        lineIndex = drawLine (lineNumber, lineNumber, lineIndex);
+        lineIndex = drawLine (lineNumber, 0, lineIndex);
       return lineNumber;
       }
     else if (!folded) // show all lines of open fold
-      lineIndex = drawLine (lineNumber, lineNumber, lineIndex);
+      lineIndex = drawLine (lineNumber, 0, lineIndex);
     }
   }
 //}}}
@@ -2971,7 +2969,6 @@ void cTextEdit::cContext::update (const cOptions& options) {
 // update draw context
 
   mDrawList = ImGui::GetWindowDrawList();
-
   mFont = ImGui::GetFont();
   mFontAtlasSize = ImGui::GetFontSize();
   mFontSize = static_cast<float>(options.mFontSize);
@@ -2979,10 +2976,11 @@ void cTextEdit::cContext::update (const cOptions& options) {
   mFontSmallOffset = ((mFontSize - mFontSmallSize) * 2.f) / 3.f;
 
   float scale = mFontSize / mFontAtlasSize;
-  mLineHeight = ImGui::GetTextLineHeight() * scale;
   mGlyphWidth = measureText ("#", nullptr) * scale;
+  mLineHeight = ImGui::GetTextLineHeight() * scale;
 
   mLeftPad = mGlyphWidth/2.f;
+  mLineNumberWidth = 0.f;
   }
 //}}}
 
@@ -3066,7 +3064,7 @@ void cTextEdit::sUndo::undo (cTextEdit* textEdit) {
     }
 
   textEdit->mEdit.mState = mBefore;
-  textEdit->ensureCursorVisible();
+  textEdit->scrollCursorVisible();
   }
 //}}}
 //{{{
@@ -3084,7 +3082,7 @@ void cTextEdit::sUndo::redo (cTextEdit* textEdit) {
     }
 
   textEdit->mEdit.mState = mAfter;
-  textEdit->ensureCursorVisible();
+  textEdit->scrollCursorVisible();
   }
 //}}}
 //}}}

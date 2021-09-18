@@ -81,19 +81,19 @@ public:
   struct sLine {
     //{{{
     sLine() :
-      mGlyphs(), mSeeThroughLineNumber(-1), mIndent(0),
+      mGlyphs(), mSeeThroughInc(0), mIndent(0),
       mFoldBegin(false), mFoldEnd(false), mComment(false), mFolded(true), mSelected(false), mPressed(false) {}
     //}}}
     //{{{
     sLine (const std::vector<sGlyph>& line) :
-      mGlyphs(line), mSeeThroughLineNumber(-1), mIndent(0),
+      mGlyphs(line), mSeeThroughInc(0), mIndent(0),
       mFoldBegin(false), mFoldEnd(false), mComment(false), mFolded(true), mSelected(false), mPressed(false) {}
     //}}}
 
     std::vector <sGlyph> mGlyphs;
 
-    int mSeeThroughLineNumber;
-    int16_t mIndent;
+    uint8_t mSeeThroughInc;
+    uint8_t mIndent;
 
     bool mFoldBegin:1;
     bool mFoldEnd:1;
@@ -359,9 +359,11 @@ private:
     void drawRectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color);
 
     float mFontSize = 0.f;
-    float mLeftPad = 0.f;
     float mGlyphWidth = 0.f;
     float mLineHeight = 0.f;
+
+    float mLeftPad = 0.f;
+    float mLineNumberWidth = 0.f;
 
     std::array <ImU32,eMax> mPalette;
 
@@ -456,8 +458,8 @@ private:
   //}}}
   //{{{  utils
   void advance (sPosition& position) const;
+  void scrollCursorVisible();
   sPosition sanitizePosition (const sPosition& position) const;
-  void ensureCursorVisible();
 
   // find
   sPosition findWordStart (sPosition fromPosition) const;
@@ -505,7 +507,7 @@ private:
 
   void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const std::vector <sGlyph>& glyphs, uint8_t forceColor);
-  int drawLine (int lineNumber, int beginFoldLineNumber, int lineIndex);
+  int drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex);
   int drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
 
   //{{{  vars
@@ -517,6 +519,6 @@ private:
   cEdit mEdit;
   cUndoList mUndoList;
 
-  std::chrono::system_clock::time_point mLastFlashTime;
+  std::chrono::system_clock::time_point mLastCursorFlashTimePoint;
   //}}}
   };
