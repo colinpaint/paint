@@ -71,7 +71,6 @@ namespace {
     };
   //}}}
 
-  //{{{
   const vector<string> kCppKeywords = {
     "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit", "atomic_noexcept", "auto",
     "bitand", "bitor", "bool", "break",
@@ -95,8 +94,7 @@ namespace {
     "wchar_t", "while",
     "xor", "xor_eq"
     };
-  //}}}
-  //{{{
+
   const vector<string> kCppIdents = {
     "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol",
     "ceil", "clock", "cosh", "ctime",
@@ -115,7 +113,6 @@ namespace {
     "unordered_map", "unordered_set",
     "vector",
     };
-  //}}}
 
   //{{{
   const vector<string> kCKeywords = {
@@ -2272,17 +2269,24 @@ void cTextEdit::clickText (int lineNumber, float posX, bool selectWord) {
 //}}}
 //{{{
 void cTextEdit::dragLine (int lineNumber, float posY) {
+// if folded this will use previous displays mFoldLine vector
+// - we haven't drawn subsequent lines yet
+//   - works because dragging does not change vector
+// - otherwise we would have to delay it to after the whole draw
 
-  int lines = static_cast<int>(posY / mContext.mLineHeight);
-  if (!isFolded()) // simple
-    lineNumber = max (0, min ((int)mInfo.mLines.size()-1, lineNumber + lines));
-  else {
+  int numDragLines = static_cast<int>(posY / mContext.mLineHeight);
+
+  if (isFolded()) {
     int lineIndex = getLineIndexFromNumber (lineNumber);
     if (lineIndex != -1) {
-      lineIndex = max (0, min ((int)mInfo.mFoldLines.size()-1, lineIndex + lines));
+      //cLog::log (LOGINFO, fmt::format ("drag lineNumber:{} numDragLines:{} lineIndex:{} max:{}",
+      //           lineNumber, numDragLines, lineIndex, mInfo.mFoldLines.size()));
+      lineIndex = max (0, min ((int)mInfo.mFoldLines.size()-1, lineIndex + numDragLines));
       lineNumber = mInfo.mFoldLines[lineIndex];
       }
     }
+  else // simple add to lineNumber
+    lineNumber = max (0, min ((int)mInfo.mLines.size()-1, lineNumber + numDragLines));
 
   mEdit.mState.mCursorPosition.mLineNumber = lineNumber;
   mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
@@ -2928,7 +2932,7 @@ int cTextEdit::drawLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
     //}}}
     }
 
-  return lineIndex++;
+  return lineIndex + 1;
   }
 //}}}
 //{{{
