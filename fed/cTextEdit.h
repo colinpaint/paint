@@ -20,9 +20,9 @@ class cApp;
 
 class cTextEdit {
 public:
-  enum class eSelection { Normal, Word, Line };
+  enum class eSelection { eNormal, eWord, eLine };
   //{{{  palette const
-  // tried enum but array of foxed it
+  // should be enum, but array enum size isn't pretty
   static const uint8_t eBackground =        0;
 
   static const uint8_t eText =              1;
@@ -64,10 +64,13 @@ public:
   //}}}
   //{{{
   struct sGlyph {
+    //{{{
     sGlyph() : mChar(' '), mColor(eText), mComment(false), mMultiLineComment(false), mPreProc(false) {}
-
+    //}}}
+    //{{{
     sGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
                                          mComment(false), mMultiLineComment(false), mPreProc(false) {}
+    //}}}
 
     uint8_t mChar;
     uint8_t mColor;
@@ -242,11 +245,6 @@ public:
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
   void setTabSize (int value) { mInfo.mTabSize = std::max (0, std::min (32, value)); }
 
-  void setCursorPosition (const sPosition& position);
-  void setSelectionBegin (const sPosition& position);
-  void setSelectionEnd (const sPosition& position);
-  void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode = eSelection::Normal);
-
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverWrite() { mOptions.mOverWrite = !mOptions.mOverWrite; }
   void toggleShowFolded() { mOptions.mShowFolded = !mOptions.mShowFolded; }
@@ -386,7 +384,7 @@ private:
 
     sPosition mInteractiveStart;
     sPosition mInteractiveEnd;
-    eSelection mSelection = eSelection::Normal;
+    eSelection mSelection = eSelection::eNormal;
 
     sCursorSelectionState mState;
     };
@@ -457,6 +455,14 @@ private:
 
   int getLineNumberFromIndex (int lineIndex) const;
   int getLineIndexFromNumber (int lineNumber) const;
+  //}}}
+  //{{{  sets
+  void setCursorPosition (const sPosition& position);
+
+  void setSelectionBegin (const sPosition& position);
+  void setSelectionEnd (const sPosition& position);
+
+  void setSelection (const sPosition& startPosition, const sPosition& endPosition, eSelection mode);
   //}}}
   //{{{  utils
   void advance (sPosition& position) const;
