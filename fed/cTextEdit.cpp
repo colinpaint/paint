@@ -1420,12 +1420,13 @@ uint8_t cTextEdit::getGlyphColor (const sGlyph& glyph) const {
 //{{{
 bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
 
-  if (position.mLineNumber >= (int)mInfo.mLines.size() || position.mColumn == 0)
+  if ((position.mLineNumber >= static_cast<int>(mInfo.mLines.size())) || (position.mColumn == 0))
     return true;
 
   const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+
   int characterIndex = getCharacterIndex (position);
-  if (characterIndex >= (int)glyphs.size())
+  if (characterIndex >= static_cast<int>(glyphs.size()))
     return true;
 
   return glyphs[characterIndex].mColor != glyphs[size_t(characterIndex - 1)].mColor;
@@ -1435,11 +1436,11 @@ bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
 //{{{
 string cTextEdit::getWordAt (const sPosition& position) const {
 
-  string r;
+  string result;
   for (int i = getCharacterIndex (findWordBegin (position)); i < getCharacterIndex (findWordEnd (position)); ++i)
-    r.push_back (mInfo.mLines[position.mLineNumber].mGlyphs[i].mChar);
+    result.push_back (mInfo.mLines[position.mLineNumber].mGlyphs[i].mChar);
 
-  return r;
+  return result;
   }
 //}}}
 //{{{
@@ -1474,6 +1475,7 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (int lineNumber, float posX)
     while (glyphIndex < glyphs.size()) {
       float columnWidth = 0.f;
       if (glyphs[glyphIndex].mChar == '\t') {
+        // tab
         float oldX = columnX;
         float endTabX = getTabEndPosX (columnX);
         columnWidth = endTabX - oldX;
@@ -1485,11 +1487,14 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (int lineNumber, float posX)
         }
 
       else {
+        // not tab
         array <char,7> str;
         int length = utf8CharLength (glyphs[glyphIndex].mChar);
+
         size_t i = 0;
         while ((i < str.max_size()-1) && (length-- > 0))
           str[i++] = glyphs[glyphIndex++].mChar;
+
         columnWidth = mContext.measureText (str.data(), str.data()+i);
         if (columnX + (columnWidth/2.f) > posX)
           break;
