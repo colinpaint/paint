@@ -517,8 +517,10 @@ void cTextEdit::setTextString (const string& text) {
   for (auto ch : text) {
     if (ch == '\r') // ignored but flag set
       mInfo.mHasCR = true;
-    else if (ch == '\n')
+    else if (ch == '\n') {
+      mInfo.mHasFolds |= mInfo.mLines.back().parse (mOptions.mLanguage);
       mInfo.mLines.emplace_back (vector<sGlyph>());
+      }
     else {
       if (ch ==  '\t')
         mInfo.mHasTabs = true;
@@ -531,7 +533,6 @@ void cTextEdit::setTextString (const string& text) {
   mUndoList.mBuffer.clear();
   mUndoList.mIndex = 0;
 
-  parseFolds();
   colorize();
   }
 //}}}
@@ -543,7 +544,6 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
 
   if (lines.empty())
     mInfo.mLines.emplace_back (vector<sGlyph>());
-
   else {
     mInfo.mLines.resize (lines.size());
     for (size_t i = 0; i < lines.size(); ++i) {
@@ -554,6 +554,7 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
           mInfo.mHasTabs = true;
         mInfo.mLines[i].mGlyphs.emplace_back (sGlyph (line[j], eText));
         }
+      mInfo.mHasFolds |= mInfo.mLines[i].parse (mOptions.mLanguage);
       }
     }
 
@@ -562,7 +563,6 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
   mUndoList.mBuffer.clear();
   mUndoList.mIndex = 0;
 
-  parseFolds();
   colorize();
   }
 //}}}
@@ -765,7 +765,7 @@ void cTextEdit::copy() {
     ImGui::SetClipboardText (getSelectedText().c_str());
 
   else if (!mInfo.mLines.empty()) {
-    sLine& line = mInfo.mLines[getCursorPosition().mLineNumber];
+    cLine& line = mInfo.mLines[getCursorPosition().mLineNumber];
 
     string str;
     for (auto& glyph : line.mGlyphs)
@@ -1157,7 +1157,7 @@ void cTextEdit::closeFold() {
 
   if (isFolded()) {
     int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
-    sLine& line = mInfo.mLines[lineNumber];
+    cLine& line = mInfo.mLines[lineNumber];
 
     if (line.mFoldBegin && !line.mFolded) // if at unfolded foldBegin, fold it
       line.mFolded = true;
@@ -1826,7 +1826,7 @@ void cTextEdit::moveDown (int amount) {
 //{{{
 vector<cTextEdit::sGlyph>& cTextEdit::insertLine (int index) {
 
-  sLine& result = *mInfo.mLines.insert (mInfo.mLines.begin() + index, vector<sGlyph>());
+  cLine& result = *mInfo.mLines.insert (mInfo.mLines.begin() + index, vector<sGlyph>());
 
   map<int,string> etmp;
   for (auto& marker : mOptions.mMarkers)
@@ -2314,56 +2314,6 @@ void cTextEdit::dragText (int lineNumber, ImVec2 pos) {
 
 // folds
 //{{{
-void cTextEdit::parseLine (sLine& line) {
-// parse beginFold and endFold markers, set simple flags
-
-  // glyphs to string
-  string text;
-  for (auto& glyph : line.mGlyphs)
-    text += glyph.mChar;
-
-  // look for foldBegin text
-  size_t foldBeginIndent = text.find (mOptions.mLanguage.mFoldBeginMarker);
-  line.mFoldBegin = (foldBeginIndent != string::npos);
-
-  if (line.mFoldBegin) {
-    // found foldBegin text, find ident
-    line.mIndent = static_cast<uint8_t>(foldBeginIndent);
-    // has text after the foldBeginMarker
-    line.mComment = (text.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
-    mInfo.mHasFolds = true;
-    }
-  else {
-    // normal line, find indent, find comment
-    size_t indent = text.find_first_not_of (' ');
-    if (indent != string::npos)
-      line.mIndent = static_cast<uint8_t>(indent);
-    else
-      line.mIndent = 0;
-
-    // has "//" style comment as first text in line
-    line.mComment = (text.find (mOptions.mLanguage.mSingleLineComment, indent) != string::npos);
-    }
-
-  // look for foldEnd text
-  size_t foldEndIndent = text.find (mOptions.mLanguage.mFoldEndMarker);
-  line.mFoldEnd = (foldEndIndent != string::npos);
-
-  // init fields set by updateFolds
-  line.mFolded = true;
-  line.mSeeThroughInc = 0;
-  }
-//}}}
-//{{{
-void cTextEdit::parseFolds() {
-// parse beginFold and endFold markers, set simple flags
-
-  for (auto& line : mInfo.mLines)
-    parseLine (line);
-  }
-//}}}
-
-//{{{
 void cTextEdit::handleKeyboardInputs() {
   //{{{  numpad codes
   // -------------------------------------------------------------------------------------
@@ -2712,7 +2662,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
   ImVec2 curPos = leftPos;
 
   float leftPadWidth = mContext.mLeftPad;
-  sLine& line = mInfo.mLines[lineNumber];
+  cLine& line = mInfo.mLines[lineNumber];
   if (isDrawLineNumber()) {
     //{{{  draw lineNumber
     curPos.x += leftPadWidth;
@@ -2953,7 +2903,7 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
   if (!parentFolded) {
     // show foldBegin line
     // - if no foldBegin comment, search for first noComment line, !!!! assume next line for now !!!!
-    sLine& line = mInfo.mLines[lineNumber];
+    cLine& line = mInfo.mLines[lineNumber];
     line.mSeeThroughInc = line.mComment ? 0 : 1;
     lineIndex = drawLine (lineNumber, line.mSeeThroughInc, lineIndex);
     }
@@ -2962,7 +2912,7 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
     if (++lineNumber >= (int)mInfo.mLines.size())
       return lineNumber;
 
-    sLine& line = mInfo.mLines[lineNumber];
+    cLine& line = mInfo.mLines[lineNumber];
     if (line.mFoldBegin)
       lineNumber = drawFold (lineNumber, lineIndex, folded, line.mFolded);
     else if (line.mFoldEnd) {
@@ -3329,4 +3279,50 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::glsl() {
   return language;
   }
 //}}}
+//}}}
+
+//{{{
+bool cTextEdit::cLine::parse (const sLanguage& language) {
+// parse beginFold and endFold markers, set simple flags
+
+  bool hasFolds = false;
+
+  // glyphs to string
+  string text;
+  for (auto& glyph : mGlyphs)
+    text += glyph.mChar;
+
+  // look for foldBegin text
+  size_t foldBeginIndent = text.find (language.mFoldBeginMarker);
+  mFoldBegin = (foldBeginIndent != string::npos);
+
+  if (mFoldBegin) {
+    // found foldBegin text, find ident
+    mIndent = static_cast<uint8_t>(foldBeginIndent);
+    // has text after the foldBeginMarker
+    mComment = (text.size() != (foldBeginIndent + language.mFoldBeginMarker.size()));
+    hasFolds = true;
+    }
+  else {
+    // normal line, find indent, find comment
+    size_t indent = text.find_first_not_of (' ');
+    if (indent != string::npos)
+      mIndent = static_cast<uint8_t>(indent);
+    else
+      mIndent = 0;
+
+    // has "//" style comment as first text in line
+    mComment = (text.find (language.mSingleLineComment, indent) != string::npos);
+    }
+
+  // look for foldEnd text
+  size_t foldEndIndent = text.find (language.mFoldEndMarker);
+  mFoldEnd = (foldEndIndent != string::npos);
+
+  // init fields set by updateFolds
+  mFolded = true;
+  mSeeThroughInc = 0;
+
+  return hasFolds;
+  }
 //}}}

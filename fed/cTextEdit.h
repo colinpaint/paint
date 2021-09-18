@@ -78,32 +78,6 @@ public:
     };
   //}}}
   //{{{
-  struct sLine {
-    //{{{
-    sLine() :
-      mGlyphs(), mSeeThroughInc(0), mIndent(0),
-      mFoldBegin(false), mFoldEnd(false), mComment(false), mFolded(true), mSelected(false), mPressed(false) {}
-    //}}}
-    //{{{
-    sLine (const std::vector<sGlyph>& line) :
-      mGlyphs(line), mSeeThroughInc(0), mIndent(0),
-      mFoldBegin(false), mFoldEnd(false), mComment(false), mFolded(true), mSelected(false), mPressed(false) {}
-    //}}}
-
-    std::vector <sGlyph> mGlyphs;
-
-    uint8_t mSeeThroughInc;
-    uint8_t mIndent;
-
-    bool mFoldBegin:1;
-    bool mFoldEnd:1;
-    bool mComment:1;
-    bool mFolded:1;
-    bool mSelected:1;
-    bool mPressed:1;
-    };
-  //}}}
-  //{{{
   struct sPosition {
     sPosition() : mLineNumber(0), mColumn(0) {}
     sPosition (int lineNumber, int column) : mLineNumber(lineNumber), mColumn(column) {}
@@ -201,6 +175,34 @@ public:
     tTokenRegexStrings mTokenRegexStrings;
 
     bool mCaseSensitive;
+    };
+  //}}}
+  //{{{
+  class cLine {
+  public:
+    //{{{
+    cLine() :
+      mGlyphs(), mSeeThroughInc(0), mIndent(0),
+      mFoldBegin(false), mFoldEnd(false), mComment(false), mFolded(true), mSelected(false), mPressed(false) {}
+    //}}}
+    //{{{
+    cLine (const std::vector<sGlyph>& line) :
+      mGlyphs(line), mSeeThroughInc(0), mIndent(0),
+      mFoldBegin(false), mFoldEnd(false), mComment(false), mFolded(true), mSelected(false), mPressed(false) {}
+    //}}}
+    bool parse (const sLanguage& language);
+
+    std::vector <sGlyph> mGlyphs;
+
+    uint8_t mSeeThroughInc;
+    uint8_t mIndent;
+
+    bool mFoldBegin:1;
+    bool mFoldEnd:1;
+    bool mComment:1;
+    bool mFolded:1;
+    bool mSelected:1;
+    bool mPressed:1;
     };
   //}}}
 
@@ -334,7 +336,7 @@ private:
   class cInfo {
   public:
     std::string mFilename;
-    std::vector <sLine> mLines;
+    std::vector <cLine> mLines;
     std::vector <int> mFoldLines;
 
     bool mHasTabs = false;
@@ -500,9 +502,6 @@ private:
   void dragText (int lineNumber, ImVec2 pos);
 
   // folds
-  void parseLine (sLine& line);
-  void parseFolds();
-
   void handleKeyboardInputs();
 
   void drawTop (cApp& app);
