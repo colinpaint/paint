@@ -129,7 +129,7 @@ void cMemEdit::drawContents (size_t baseAddress) {
 
   //ImGui::PushAllowKeyboardFocus (true);
   //ImGui::PopAllowKeyboardFocus();
-  handleKeyboardInputs();
+  handleKeyboard();
 
   drawTop();
 
@@ -518,7 +518,7 @@ void* cMemEdit::copyEndian (void* dst, void* src, size_t size) {
 //}}}
 
 //{{{
-void cMemEdit::handleKeyboardInputs() {
+void cMemEdit::handleKeyboard() {
 
   //{{{
   struct sActionKey {

@@ -502,7 +502,7 @@ private:
   void dragText (int lineNumber, ImVec2 pos);
 
   // folds
-  void handleKeyboardInputs();
+  void handleKeyboard();
 
   void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const std::vector <sGlyph>& glyphs, uint8_t forceColor);

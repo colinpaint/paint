@@ -1217,7 +1217,7 @@ void cTextEdit::drawContents (cApp& app) {
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
   colorizeInternal();
 
-  handleKeyboardInputs();
+  handleKeyboard();
 
   if (isFolded()) {
     //{{{  draw folded
@@ -2314,7 +2314,7 @@ void cTextEdit::dragText (int lineNumber, ImVec2 pos) {
 
 // folds
 //{{{
-void cTextEdit::handleKeyboardInputs() {
+void cTextEdit::handleKeyboard() {
   //{{{  numpad codes
   // -------------------------------------------------------------------------------------
   // |    numlock       |        /           |        *             |        -            |
