@@ -466,6 +466,7 @@ cTextEdit::cTextEdit() {
 
   mInfo.mLines.push_back (vector<sGlyph>());
   setLanguage (sLanguage::cPlus());
+
   mLastCursorFlashTimePoint = system_clock::now();
   }
 //}}}
@@ -2290,7 +2291,18 @@ void cTextEdit::dragLine (int lineNumber, float posY) {
 //{{{
 void cTextEdit::dragText (int lineNumber, ImVec2 pos) {
 
-  //!!! must select new line !!!
+  int numDragLines = static_cast<int>(pos.y / mContext.mLineHeight);
+  if (isFolded()) {
+    if (numDragLines) {
+      // check multiline drag across folds
+      cLog::log (LOGINFO, fmt::format ("dragText - multiLine check across folds"));
+      }
+    }
+  else {
+    // allow multiline drag
+    lineNumber = max (0, min ((int)mInfo.mLines.size()-1, lineNumber + numDragLines));
+    }
+
   mEdit.mState.mCursorPosition = getPositionFromPosX (lineNumber, pos.x);
   mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
   mEdit.mSelection = eSelection::Normal;
@@ -2305,6 +2317,7 @@ void cTextEdit::dragText (int lineNumber, ImVec2 pos) {
 void cTextEdit::parseLine (sLine& line) {
 // parse beginFold and endFold markers, set simple flags
 
+  // glyphs to string
   string text;
   for (auto& glyph : line.mGlyphs)
     text += glyph.mChar;
@@ -3002,7 +3015,7 @@ float cTextEdit::cContext::drawText (ImVec2 pos, uint8_t color, const char* str,
 //}}}
 //{{{
 float cTextEdit::cContext::drawSmallText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
- // draw and return width of text
+ // draw and return width of small text
 
   pos.y += mFontSmallOffset;
   mDrawList->AddText (mFont, mFontSmallSize, pos, kPalette[color], str, strEnd);
@@ -3049,6 +3062,7 @@ cTextEdit::sUndo::sUndo (const string& added,
   assert (mRemovedStart <= mRemovedEnd);
   }
 //}}}
+
 //{{{
 void cTextEdit::sUndo::undo (cTextEdit* textEdit) {
 
