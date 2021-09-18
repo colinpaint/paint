@@ -9,12 +9,14 @@
 
 // imgui
 #include "../imgui/imgui.h"
-#include "../imgui/cTextEdit.h"
-#include "../imgui/cMemEdit.h"
 #include "../imgui/myImguiWidgets.h"
 
+// fed
+#include "../fed/cTextEdit.h"
+#include "../fed/cMemEdit.h"
+
 // ui
-#include "cUI.h"
+#include "../ui/cUI.h"
 
 // decoder
 #include "../utils/cFileView.h"

@@ -80,14 +80,11 @@ if (BUILD_PAINTBOX OR BUILD_FED)
 endif()
 
 if (BUILD_FED)
-  ### fed folding editor
   project (fed VERSION 1.0.0)
-  # canvas and brush stuff to shut up link till i fix cUi
-  file (GLOB FED_HEADER_FILES platform/*.h graphics/*.h ui/*.h imgui/*.h)
-  file (GLOB FED_SOURCE_FILES fedMain.cpp platform/*.cpp graphics/*.cpp
-                              ui/cUI.cpp ui/cTextEditUI.cpp)
-  # ui/cTextAnalyseUI.cpp
-  # ui/cJpegAnalyseUI.cpp
+  file (GLOB FED_HEADER_FILES fed/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
+  file (GLOB FED_SOURCE_FILES fed/fedMain.cpp fed/cTextEditUI.cpp fed/cTextEdit.cpp
+                              platform/*.cpp graphics/*.cpp ui/cUI.cpp)
+
   add_executable (fed ${FED_SOURCE_FILES} ${FED_HEADER_FILES})
   target_include_directories (fed PRIVATE imgui stb)
 
