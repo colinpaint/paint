@@ -52,7 +52,7 @@ namespace {
     0x800010ff, // eMarker
     0x80600000, // eSelect
     0xff000000, // eCursor
-    0x40000000, // eCursorLineFill
+    0x20000000, // eCursorLineFill
     0x40000000, // eCursorLineEdge
 
     0xff505000, // eLineNumber
@@ -1225,8 +1225,9 @@ void cTextEdit::drawContents (cApp& app) {
 
   if (isFolded()) {
     //{{{  draw folded
-    mInfo.mFoldLines.clear();
-    drawFold (0, false, false);
+    int lineIndex = 0;
+    drawFold (0, lineIndex, false, false);
+    mInfo.mFoldLines.resize (lineIndex);
     }
     //}}}
   else {
@@ -1238,7 +1239,7 @@ void cTextEdit::drawContents (cApp& app) {
 
     // clipper iterate
     for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++)
-      drawLine (lineNumber, 0);
+      drawLine (lineNumber, 0, 0);
 
     // clipper end
     clipper.Step();
@@ -2624,9 +2625,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, uint8_t 
   // pos to measure textWidth on return
   float firstPosX = pos.x;
 
-  // init
   array <char,256> str;
-
   size_t strIndex = 0;
   uint8_t strColor = (forceColor < eMax) ? forceColor : getGlyphColor (glyphs[0]);
   for (auto& glyph : glyphs) {
@@ -2686,10 +2685,16 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, uint8_t 
   }
 //}}}
 //{{{
-void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
+int cTextEdit::drawLine (int lineNumber, int glyphsLineNumber, int lineIndex) {
 
-  if (isFolded())
-    mInfo.mFoldLines.push_back (lineNumber);
+  if (isFolded()) {
+    //{{{  update mFoldLines vector
+    if (lineIndex >= mInfo.mFoldLines.size())
+      mInfo.mFoldLines.push_back (lineNumber);
+    else
+      mInfo.mFoldLines[lineIndex] = lineNumber;
+    }
+    //}}}
 
   ImVec2 leftPos = ImGui::GetCursorScreenPos();
   ImVec2 curPos = leftPos;
@@ -2922,10 +2927,12 @@ void cTextEdit::drawLine (int lineNumber, int glyphsLineNumber) {
       mLastFlashTime = now;
     //}}}
     }
+
+  return lineIndex++;
   }
 //}}}
 //{{{
-int cTextEdit::drawFold (int lineNumber, bool parentFolded, bool folded) {
+int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool folded) {
 // recursive traversal of mInfo.mLines to produce mVisbleLines of folds
 
   if (!parentFolded) {
@@ -2933,7 +2940,7 @@ int cTextEdit::drawFold (int lineNumber, bool parentFolded, bool folded) {
     // - if no foldBegin comment, search for first noComment line, !!!! assume next line for now !!!!
     sLine& line = mInfo.mLines[lineNumber];
     line.mSeeThroughLineNumber = line.mComment ? lineNumber : lineNumber + 1;
-    drawLine (lineNumber, line.mSeeThroughLineNumber);
+    lineIndex = drawLine (lineNumber, line.mSeeThroughLineNumber, lineIndex);
     }
 
   while (true) {
@@ -2942,14 +2949,14 @@ int cTextEdit::drawFold (int lineNumber, bool parentFolded, bool folded) {
 
     sLine& line = mInfo.mLines[lineNumber];
     if (line.mFoldBegin)
-      lineNumber = drawFold (lineNumber, folded, line.mFolded);
+      lineNumber = drawFold (lineNumber, lineIndex, folded, line.mFolded);
     else if (line.mFoldEnd) {
       if (!folded) // show foldEnd line of open fold
-        drawLine (lineNumber, lineNumber);
+        lineIndex = drawLine (lineNumber, lineNumber, lineIndex);
       return lineNumber;
       }
     else if (!folded) // show all lines of open fold
-      drawLine (lineNumber, lineNumber);
+      lineIndex = drawLine (lineNumber, lineNumber, lineIndex);
     }
   }
 //}}}

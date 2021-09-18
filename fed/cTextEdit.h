@@ -505,8 +505,8 @@ private:
 
   void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const std::vector <sGlyph>& glyphs, uint8_t forceColor);
-  void drawLine (int lineNumber, int beginFoldLineNumber);
-  int drawFold (int lineNumber, bool parentOpen, bool foldOpen);
+  int drawLine (int lineNumber, int beginFoldLineNumber, int lineIndex);
+  int drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
 
   //{{{  vars
   bool mOpen = true;  // set false when DrawWindow() closed
