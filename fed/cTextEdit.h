@@ -445,7 +445,6 @@ private:
   float getTextWidth (const sPosition& position) const;
 
   std::string getText (const sPosition& startPosition, const sPosition& endPosition) const;
-  std::string getCurrentLineText() const;
   std::string getSelectedText() const;
 
   uint8_t getGlyphColor (const sGlyph& glyph) const;

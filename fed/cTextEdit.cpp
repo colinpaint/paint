@@ -483,7 +483,7 @@ bool cTextEdit::hasClipboardText() {
 string cTextEdit::getTextString() const {
 // get text as single string
 
-  return getText (sPosition(), sPosition((int)mInfo.mLines.size(), 0));
+  return getText (sPosition(), sPosition ((int)mInfo.mLines.size(), 0));
   }
 //}}}
 //{{{
@@ -494,12 +494,12 @@ vector<string> cTextEdit::getTextStrings() const {
   result.reserve (mInfo.mLines.size());
 
   for (auto& line : mInfo.mLines) {
-    string text;
-    text.resize (line.mGlyphs.size());
+    string lineString;
+    lineString.resize (line.mGlyphs.size());
     for (size_t i = 0; i < line.mGlyphs.size(); ++i)
-      text[i] = line.mGlyphs[i].mChar;
+      lineString[i] = line.mGlyphs[i].mChar;
 
-    result.emplace_back (move (text));
+    result.emplace_back (move (lineString));
     }
 
   return result;
@@ -708,13 +708,12 @@ void cTextEdit::copy() {
     ImGui::SetClipboardText (getSelectedText().c_str());
 
   else if (!mInfo.mLines.empty()) {
-    cLine& line = mInfo.mLines[getCursorPosition().mLineNumber];
+    string copyString;
+    for (auto& glyph : mInfo.mLines[getCursorPosition().mLineNumber].mGlyphs)
+      copyString.push_back (glyph.mChar);
 
-    string str;
-    for (auto& glyph : line.mGlyphs)
-      str.push_back (glyph.mChar);
-
-    ImGui::SetClipboardText (str.c_str());
+    // copy as text to clipBoard
+    ImGui::SetClipboardText (copyString.c_str());
     }
   }
 //}}}
@@ -804,29 +803,33 @@ void cTextEdit::deleteIt() {
   else {
     sPosition position = getCursorPosition();
     setCursorPosition (position);
-    vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+    cLine& line = mInfo.mLines[position.mLineNumber];
 
     if (position.mColumn == getLineMaxColumn (position.mLineNumber)) {
-      if (position.mLineNumber == (int)mInfo.mLines.size() - 1)
+      if (position.mLineNumber == static_cast<int>(mInfo.mLines.size()) - 1)
         return;
 
       undo.mRemoved = '\n';
       undo.mRemovedStart = undo.mRemovedEnd = getCursorPosition();
       advance (undo.mRemovedEnd);
 
-      vector<sGlyph>& nextLineGlyphs = mInfo.mLines[position.mLineNumber + 1].mGlyphs;
-      glyphs.insert (glyphs.end(), nextLineGlyphs.begin(), nextLineGlyphs.end());
+      cLine& nextLine = mInfo.mLines[position.mLineNumber + 1];
+      line.mGlyphs.insert (line.mGlyphs.end(), nextLine.mGlyphs.begin(), nextLine.mGlyphs.end());
+      line.parse (mOptions.mLanguage);
+
       removeLine (position.mLineNumber + 1);
       }
+
     else {
       int characterIndex = getCharacterIndex (position);
       undo.mRemovedStart = undo.mRemovedEnd = getCursorPosition();
       undo.mRemovedEnd.mColumn++;
       undo.mRemoved = getText (undo.mRemovedStart, undo.mRemovedEnd);
 
-      int d = utf8CharLength (glyphs[characterIndex].mChar);
-      while (d-- > 0 && characterIndex < (int)glyphs.size())
-        glyphs.erase (glyphs.begin() + characterIndex);
+      int length = utf8CharLength (line.mGlyphs[characterIndex].mChar);
+      while ((length-- > 0) && (characterIndex < static_cast<int>(line.mGlyphs.size())))
+        line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex);
+      line.parse (mOptions.mLanguage);
       }
 
     mInfo.mTextEdited = true;
@@ -864,19 +867,21 @@ void cTextEdit::backspace() {
         return;
 
       undo.mRemoved = '\n';
-      undo.mRemovedStart = undo.mRemovedEnd = sPosition (position.mLineNumber - 1, getLineMaxColumn (position.mLineNumber - 1));
+      undo.mRemovedStart = sPosition (position.mLineNumber - 1, getLineMaxColumn (position.mLineNumber - 1));
+      undo.mRemovedEnd = undo.mRemovedStart;
       advance (undo.mRemovedEnd);
 
-      vector<sGlyph>& line = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mGlyphs;
-      vector<sGlyph>& prevLine = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber - 1].mGlyphs;
-      int prevSize = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber - 1);
-      prevLine.insert (prevLine.end(), line.begin(), line.end());
+      cLine& line = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber];
+      cLine& prevLine = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber - 1];
 
-      map<int,string> etmp;
+      int prevSize = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber - 1);
+      prevLine.mGlyphs.insert (prevLine.mGlyphs.end(), line.mGlyphs.begin(), line.mGlyphs.end());
+
+      map<int,string> markerTemp;
       for (auto& marker : mOptions.mMarkers)
-        etmp.insert (map<int,string>::value_type (
+        markerTemp.insert (map<int,string>::value_type (
           marker.first - 1 == mEdit.mState.mCursorPosition.mLineNumber ? marker.first - 1 : marker.first, marker.second));
-      mOptions.mMarkers = move (etmp);
+      mOptions.mMarkers = move (markerTemp);
 
       removeLine (mEdit.mState.mCursorPosition.mLineNumber);
       --mEdit.mState.mCursorPosition.mLineNumber;
@@ -884,22 +889,21 @@ void cTextEdit::backspace() {
       }
 
     else {
-      vector<sGlyph>& glyphs = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mGlyphs;
+      cLine& line = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber];
       int characterIndex = getCharacterIndex (position) - 1;
-      int cend = characterIndex + 1;
-      while ((characterIndex > 0) && isUtfSequence (glyphs[characterIndex].mChar))
+      int characterIndexEnd = characterIndex + 1;
+      while ((characterIndex > 0) && isUtfSequence (line.mGlyphs[characterIndex].mChar))
         --characterIndex;
 
-      //if (characterIndex > 0 && UTF8CharLength(line[characterIndex].mChar) > 1)
-      //  --characterIndex;
       undo.mRemovedStart = undo.mRemovedEnd = getCursorPosition();
       --undo.mRemovedStart.mColumn;
       --mEdit.mState.mCursorPosition.mColumn;
 
-      while ((characterIndex < (int)glyphs.size()) && (cend-- > characterIndex)) {
-        undo.mRemoved += glyphs[characterIndex].mChar;
-        glyphs.erase (glyphs.begin() + characterIndex);
+      while ((characterIndex < (int)line.mGlyphs.size()) && (characterIndexEnd-- > characterIndex)) {
+        undo.mRemoved += line.mGlyphs[characterIndex].mChar;
+        line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex);
         }
+      line.parse (mOptions.mLanguage);
       }
     mInfo.mTextEdited = true;
 
@@ -1360,43 +1364,35 @@ float cTextEdit::getTextWidth (const sPosition& position) const {
 string cTextEdit::getText (const sPosition& startPosition, const sPosition& endPosition) const {
 // get text as string with lineFeed line breaks
 
-  int lstart = startPosition.mLineNumber;
-  int lend = endPosition.mLineNumber;
+  int startLineNumber = startPosition.mLineNumber;
+  int endLineNumber = endPosition.mLineNumber;
 
-  int istart = getCharacterIndex (startPosition);
-  int iend = getCharacterIndex (endPosition);
+  // count approx num chars, reserve
+  int numChars = 0;
+  for (int lineNumber = startLineNumber; lineNumber < endLineNumber; lineNumber++)
+    numChars += static_cast<int>(mInfo.mLines[lineNumber].mGlyphs.size());
 
-  size_t s = 0;
-  for (size_t i = lstart; i < (size_t)lend; i++)
-    s += mInfo.mLines[i].mGlyphs.size();
+  string textString;
+  textString.reserve (numChars + (numChars / 8));
 
-  string result;
-  result.reserve (s + s / 8);
-
-  while (istart < iend || lstart < lend) {
-    if (lstart >= (int)mInfo.mLines.size())
+  int startCharacterIndex = getCharacterIndex (startPosition);
+  int endCharacterIndex = getCharacterIndex (endPosition);
+  while ((startCharacterIndex < endCharacterIndex) || (startLineNumber < endLineNumber)) {
+    if (startLineNumber >= static_cast<int>(mInfo.mLines.size()))
       break;
 
-    if (istart < (int)mInfo.mLines[lstart].mGlyphs.size()) {
-      result += mInfo.mLines[lstart].mGlyphs[istart].mChar;
-      istart++;
+    if (startCharacterIndex < (int)mInfo.mLines[startLineNumber].mGlyphs.size()) {
+      textString += mInfo.mLines[startLineNumber].mGlyphs[startCharacterIndex].mChar;
+      startCharacterIndex++;
       }
     else {
-      istart = 0;
-      ++lstart;
-      result += '\n';
+      startCharacterIndex = 0;
+      ++startLineNumber;
+      textString += '\n';
       }
     }
 
-  return result;
-  }
-//}}}
-//{{{
-string cTextEdit::getCurrentLineText() const {
-
-  int lineLength = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber);
-  return getText (sPosition (mEdit.mState.mCursorPosition.mLineNumber, 0),
-                  sPosition (mEdit.mState.mCursorPosition.mLineNumber, lineLength));
+  return textString;
   }
 //}}}
 //{{{
