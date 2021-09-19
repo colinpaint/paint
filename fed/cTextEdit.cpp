@@ -38,10 +38,10 @@ namespace {
   constexpr uint8_t eString =            4;
   constexpr uint8_t eCharLiteral =       5;
   constexpr uint8_t ePunctuation =       6;
-  constexpr uint8_t ePreprocessor =      7;
+  constexpr uint8_t ePreProc =           7;
   constexpr uint8_t eIdent =             8;
   constexpr uint8_t eKnownIdent =        9;
-  constexpr uint8_t ePreprocIdent =     10;
+  constexpr uint8_t ePreProcIdent =     10;
   constexpr uint8_t eComment =          11;
   constexpr uint8_t eMultiLineComment = 12;
   constexpr uint8_t eMarker =           13;
@@ -64,16 +64,16 @@ namespace {
   // use lookup to allow for any colorMap
   const vector <ImU32> kPalette = {
     0xffefefef, // eBackground
-    0xff404040, // eText
+    0xff202020, // eText
     0xffff0c06, // eKeyword
     0xff008000, // eNumber
     0xff2020a0, // eString
     0xff304070, // eCharLiteral
     0xff000000, // ePunctuation
-    0xff406060, // ePreprocessor
+    0xff008080, // ePreProc
     0xff404040, // eIdent
     0xff606010, // eKnownIident
-    0xffc040a0, // ePreprocIdent
+    0xffc040a0, // ePreProcIdent
     0xff205020, // eComment
     0xff405020, // eMultiLineComment
     0x800010ff, // eMarker
@@ -90,7 +90,7 @@ namespace {
     0x80404040, // eScrollBackground
     0x80c0c0c0, // eScrollGrab
     0x80ffffff, // eScrollHover
-    0xffFFFF00, // eScrollActive
+    0xff00ffff, // eScrollActive
     };
   //}}}
   //{{{  language const
@@ -568,7 +568,7 @@ void cTextEdit::setTextString (const string& text) {
   mUndoList.mBuffer.clear();
   mUndoList.mIndex = 0;
 
-  colorize();
+  colorize (0, -1);
   }
 //}}}
 //{{{
@@ -598,7 +598,7 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
   mUndoList.mBuffer.clear();
   mUndoList.mIndex = 0;
 
-  colorize();
+  colorize (0, -1);
   }
 //}}}
 
@@ -611,7 +611,7 @@ void cTextEdit::setLanguage (const cLanguage& language) {
   for (auto& r : mOptions.mLanguage.mTokenRegexStrings)
     mOptions.mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
 
-  colorize();
+  colorize (0, -1);
   }
 //}}}
 //}}}
@@ -1193,8 +1193,6 @@ void cTextEdit::drawContents (cApp& app) {
   if (isDrawMonoSpaced())
     ImGui::PushFont (app.getMonoFont());
 
-  mContext.update (mOptions);
-
   ImGui::PushStyleColor (ImGuiCol_ScrollbarBg, kPalette[eScrollBackground]);
   ImGui::PushStyleColor (ImGuiCol_ScrollbarGrab, kPalette[eScrollGrab]);
   ImGui::PushStyleColor (ImGuiCol_ScrollbarGrabHovered, kPalette[eScrollHover]);
@@ -1207,7 +1205,142 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, {0.f,0.f});
   ImGui::BeginChild ("##s", {0.f,0.f}, false,
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-  colorizeInternal();
+
+  mContext.update (mOptions);
+
+  if (mEdit.mCheckComments) {
+    //{{{  check comments
+    int endLine = static_cast<int>(mInfo.mLines.size());
+    int endIndex = 0;
+
+    int commentBeginLine = endLine;
+    int commentBeginIndex = endIndex;
+
+    bool withinString = false;
+    bool withinPreproc = false;
+    bool withinSingleLineComment = false;
+
+    bool firstChar = true;      // there is no other non-whitespace characters in the line before
+    bool concatenate = false;   // '\' on the very end of the line
+
+    int currentLine = 0;
+    int currentIndex = 0;
+    while ((currentLine < endLine) || (currentIndex < endIndex)) {
+      vector<sGlyph>& line = mInfo.mLines[currentLine].mGlyphs;
+      if ((currentIndex == 0) && !concatenate) {
+        withinSingleLineComment = false;
+        withinPreproc = false;
+        firstChar = true;
+        }
+      concatenate = false;
+
+      if (!line.empty()) {
+        //{{{  check line for comment
+        uint8_t ch = line[currentIndex].mChar;
+
+        if ((ch != mOptions.mLanguage.mPreprocChar) && !isspace (ch))
+          firstChar = false;
+
+        if ((currentIndex == static_cast<int>(line.size()) - 1) && (line[line.size() - 1].mChar == '\\'))
+          concatenate = true;
+
+        bool inComment = (commentBeginLine < currentLine) ||
+                         ((commentBeginLine == currentLine) && (commentBeginIndex <= currentIndex));
+
+        if (withinString) {
+          //{{{  within string
+          line[currentIndex].mMultiLineComment = inComment;
+
+          if (ch == '\"') {
+            if ((currentIndex + 1 < static_cast<int>(line.size())) && (line[currentIndex + 1].mChar == '\"')) {
+              currentIndex += 1;
+              if (currentIndex < static_cast<int>(line.size()))
+                line[currentIndex].mMultiLineComment = inComment;
+              }
+            else
+              withinString = false;
+            }
+
+          else if (ch == '\\') {
+            currentIndex += 1;
+            if (currentIndex < static_cast<int>(line.size()))
+              line[currentIndex].mMultiLineComment = inComment;
+            }
+          }
+          //}}}
+        else {
+          if (firstChar && (ch == mOptions.mLanguage.mPreprocChar))
+            withinPreproc = true;
+
+          if (ch == '\"') {
+            withinString = true;
+            line[currentIndex].mMultiLineComment = inComment;
+            }
+
+          else {
+            auto pred = [](const char& a, const sGlyph& b) { return a == b.mChar; };
+            auto from = line.begin() + currentIndex;
+            string& beginString = mOptions.mLanguage.mCommentBegin;
+            string& singleBeginString = mOptions.mLanguage.mSingleLineComment;
+
+            if ((singleBeginString.size() > 0) &&
+                (currentIndex + singleBeginString.size() <= line.size()) &&
+                equals (singleBeginString.begin(), singleBeginString.end(),
+                        from, from + singleBeginString.size(), pred)) {
+              withinSingleLineComment = true;
+              }
+
+            else if ((!withinSingleLineComment && currentIndex + beginString.size() <= line.size()) &&
+                     equals (beginString.begin(), beginString.end(), from, from + beginString.size(), pred)) {
+              commentBeginLine = currentLine;
+              commentBeginIndex = currentIndex;
+              }
+
+            inComment = (commentBeginLine < currentLine) ||
+                        ((commentBeginLine == currentLine) && (commentBeginIndex <= currentIndex));
+            line[currentIndex].mMultiLineComment = inComment;
+            line[currentIndex].mComment = withinSingleLineComment;
+
+            string& endString = mOptions.mLanguage.mCommentEnd;
+            if (currentIndex + 1 >= static_cast<int>(endString.size()) &&
+                equals (endString.begin(), endString.end(), from + 1 - endString.size(), from + 1, pred)) {
+              commentBeginIndex = endIndex;
+              commentBeginLine = endLine;
+              }
+            }
+          }
+
+        line[currentIndex].mPreProc = withinPreproc;
+        currentIndex += utf8CharLength (ch);
+        if (currentIndex >= static_cast<int>(line.size())) {
+          currentIndex = 0;
+          ++currentLine;
+          }
+        }
+        //}}}
+      else {
+        currentIndex = 0;
+        ++currentLine;
+        }
+      }
+
+    mEdit.mCheckComments = false;
+    }
+    //}}}
+  if (mEdit.mColorRangeMin < mEdit.mColorRangeMax) {
+    //{{{  colorize range
+    const int increment = (mOptions.mLanguage.mTokenize == nullptr) ? 10 : 10000;
+    const int to = min (mEdit.mColorRangeMin + increment, mEdit.mColorRangeMax);
+
+    colorizeLines (mEdit.mColorRangeMin, to);
+    mEdit.mColorRangeMin = to;
+
+    if (mEdit.mColorRangeMax == mEdit.mColorRangeMin) {
+      mEdit.mColorRangeMin = numeric_limits<int>::max();
+      mEdit.mColorRangeMax = 0;
+      }
+    }
+    //}}}
 
   //if (ImGui::IsWindowHovered())
   //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
@@ -1448,7 +1581,7 @@ uint8_t cTextEdit::getGlyphColor (const sGlyph& glyph) const {
     return eMultiLineComment;
 
   if (glyph.mPreProc)
-    return ePreprocessor;
+    return ePreProc;
 
   return glyph.mColor;
   }
@@ -2070,20 +2203,7 @@ void cTextEdit::addUndo (cUndo& undo) {
 
 // colorize
 //{{{
-void cTextEdit::colorize (int fromLine, int lines) {
-
-  mEdit.mCheckComments = true;
-
-  mEdit.mColorRangeMin = max (0, min (mEdit.mColorRangeMin, fromLine));
-
-  int toLine = (lines == -1) ? static_cast<int>(mInfo.mLines.size())
-                             : min (static_cast<int>(mInfo.mLines.size()), fromLine + lines);
-  mEdit.mColorRangeMax = max (mEdit.mColorRangeMax, toLine);
-  mEdit.mColorRangeMax = max (mEdit.mColorRangeMin, mEdit.mColorRangeMax);
-  }
-//}}}
-//{{{
-void cTextEdit::colorizeRange (int fromLine, int toLine) {
+void cTextEdit::colorizeLines (int fromLine, int toLine) {
 
   if (mInfo.mLines.empty() || (fromLine >= toLine))
     return;
@@ -2152,10 +2272,10 @@ void cTextEdit::colorizeRange (int fromLine, int toLine) {
             else if (mOptions.mLanguage.mIdents.count (id) != 0)
               tokenColor = eKnownIdent;
             else if (mOptions.mLanguage.mPreprocIdents.count (id) != 0)
-              tokenColor = ePreprocIdent;
+              tokenColor = ePreProcIdent;
             }
           else if (mOptions.mLanguage.mPreprocIdents.count (id) != 0)
-            tokenColor = ePreprocIdent;
+            tokenColor = ePreProcIdent;
           }
 
         for (size_t j = 0; j < tokenLength; ++j)
@@ -2168,142 +2288,16 @@ void cTextEdit::colorizeRange (int fromLine, int toLine) {
   }
 //}}}
 //{{{
-void cTextEdit::colorizeInternal() {
+void cTextEdit::colorize (int fromLine, int lines) {
 
-  if (mInfo.mLines.empty())
-    return;
+  mEdit.mCheckComments = true;
 
-  if (mEdit.mCheckComments) {
-    //{{{  check comments
-    int endLine = static_cast<int>(mInfo.mLines.size());
-    int endIndex = 0;
+  mEdit.mColorRangeMin = max (0, min (mEdit.mColorRangeMin, fromLine));
 
-    int commentBeginLine = endLine;
-    int commentBeginIndex = endIndex;
-
-    bool withinString = false;
-    bool withinPreproc = false;
-    bool withinSingleLineComment = false;
-
-    bool firstChar = true;      // there is no other non-whitespace characters in the line before
-    bool concatenate = false;   // '\' on the very end of the line
-
-    int currentLine = 0;
-    int currentIndex = 0;
-    while ((currentLine < endLine) || (currentIndex < endIndex)) {
-      vector<sGlyph>& line = mInfo.mLines[currentLine].mGlyphs;
-      if ((currentIndex == 0) && !concatenate) {
-        withinSingleLineComment = false;
-        withinPreproc = false;
-        firstChar = true;
-        }
-      concatenate = false;
-
-      if (!line.empty()) {
-        //{{{  check line
-        uint8_t ch = line[currentIndex].mChar;
-
-        if ((ch != mOptions.mLanguage.mPreprocChar) && !isspace (ch))
-          firstChar = false;
-
-        if ((currentIndex == static_cast<int>(line.size()) - 1) && (line[line.size() - 1].mChar == '\\'))
-          concatenate = true;
-
-        bool inComment = (commentBeginLine < currentLine) ||
-                         ((commentBeginLine == currentLine) && (commentBeginIndex <= currentIndex));
-
-        if (withinString) {
-          //{{{  within string
-          line[currentIndex].mMultiLineComment = inComment;
-
-          if (ch == '\"') {
-            if ((currentIndex + 1 < static_cast<int>(line.size())) && (line[currentIndex + 1].mChar == '\"')) {
-              currentIndex += 1;
-              if (currentIndex < static_cast<int>(line.size()))
-                line[currentIndex].mMultiLineComment = inComment;
-              }
-            else
-              withinString = false;
-            }
-
-          else if (ch == '\\') {
-            currentIndex += 1;
-            if (currentIndex < static_cast<int>(line.size()))
-              line[currentIndex].mMultiLineComment = inComment;
-            }
-          }
-          //}}}
-        else {
-          if (firstChar && (ch == mOptions.mLanguage.mPreprocChar))
-            withinPreproc = true;
-
-          if (ch == '\"') {
-            withinString = true;
-            line[currentIndex].mMultiLineComment = inComment;
-            }
-
-          else {
-            auto pred = [](const char& a, const sGlyph& b) { return a == b.mChar; };
-            auto from = line.begin() + currentIndex;
-            string& beginString = mOptions.mLanguage.mCommentBegin;
-            string& singleBeginString = mOptions.mLanguage.mSingleLineComment;
-
-            if ((singleBeginString.size() > 0) &&
-                (currentIndex + singleBeginString.size() <= line.size()) &&
-                equals (singleBeginString.begin(), singleBeginString.end(),
-                        from, from + singleBeginString.size(), pred)) {
-              withinSingleLineComment = true;
-              }
-
-            else if ((!withinSingleLineComment && currentIndex + beginString.size() <= line.size()) &&
-                     equals (beginString.begin(), beginString.end(), from, from + beginString.size(), pred)) {
-              commentBeginLine = currentLine;
-              commentBeginIndex = currentIndex;
-              }
-
-            inComment = (commentBeginLine < currentLine) ||
-                        ((commentBeginLine == currentLine) && (commentBeginIndex <= currentIndex));
-            line[currentIndex].mMultiLineComment = inComment;
-            line[currentIndex].mComment = withinSingleLineComment;
-
-            string& endString = mOptions.mLanguage.mCommentEnd;
-            if (currentIndex + 1 >= static_cast<int>(endString.size()) &&
-                equals (endString.begin(), endString.end(), from + 1 - endString.size(), from + 1, pred)) {
-              commentBeginIndex = endIndex;
-              commentBeginLine = endLine;
-              }
-            }
-          }
-
-        line[currentIndex].mPreProc = withinPreproc;
-        currentIndex += utf8CharLength (ch);
-        if (currentIndex >= static_cast<int>(line.size())) {
-          currentIndex = 0;
-          ++currentLine;
-          }
-        }
-        //}}}
-      else {
-        currentIndex = 0;
-        ++currentLine;
-        }
-      }
-
-    mEdit.mCheckComments = false;
-    }
-    //}}}
-
-  if (mEdit.mColorRangeMin < mEdit.mColorRangeMax) {
-    const int increment = (mOptions.mLanguage.mTokenize == nullptr) ? 10 : 10000;
-    const int to = min (mEdit.mColorRangeMin + increment, mEdit.mColorRangeMax);
-    colorizeRange (mEdit.mColorRangeMin, to);
-    mEdit.mColorRangeMin = to;
-
-    if (mEdit.mColorRangeMax == mEdit.mColorRangeMin) {
-      mEdit.mColorRangeMin = numeric_limits<int>::max();
-      mEdit.mColorRangeMax = 0;
-      }
-    }
+  int toLine = (lines == -1) ? static_cast<int>(mInfo.mLines.size())
+                             : min (static_cast<int>(mInfo.mLines.size()), fromLine + lines);
+  mEdit.mColorRangeMax = max (mEdit.mColorRangeMax, toLine);
+  mEdit.mColorRangeMax = max (mEdit.mColorRangeMin, mEdit.mColorRangeMax);
   }
 //}}}
 //}}}
@@ -2656,14 +2650,15 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       curPos.x += prefixWidth;
 
       // add invisibleButton, indent + prefix wide, want to action on press
-      if (ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
-                                  {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight}))
-        line.mPressed = false;
+      ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
+                              {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive() && !line.mPressed) {
         // unfold
         line.mPressed = true;
         clickFold (lineNumber, false);
         }
+      if (ImGui::IsItemDeactivated())
+        line.mPressed = false;
 
       // draw glyphs
       textPos.x = curPos.x;
@@ -2689,14 +2684,15 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       curPos.x += prefixWidth;
 
       // add foldPrefix invisibleButton, want to action on press
-      if (ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
-                                  {leftPadWidth + prefixWidth, mContext.mLineHeight}))
-        line.mPressed = false;
+      ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
+                              {leftPadWidth + prefixWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive() && !line.mPressed) {
         // fold
         line.mPressed = true;
         clickFold (lineNumber, true);
         }
+      if (ImGui::IsItemDeactivated())
+        line.mPressed = false;
 
       // draw glyphs
       textPos.x = curPos.x;
@@ -3333,7 +3329,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     language.mTokenize = nullptr;
 
     language.mTokenRegexStrings.push_back (
-      make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
+      make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreProc));
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
     language.mTokenRegexStrings.push_back (
@@ -3391,7 +3387,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
     language.mTokenize = nullptr;
 
     language.mTokenRegexStrings.push_back (
-      make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
+      make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreProc));
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
     language.mTokenRegexStrings.push_back (

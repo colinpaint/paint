@@ -456,9 +456,8 @@ private:
   void addUndo (cUndo& undo);
 
   // colorize
-  void colorize (int fromLine = 0, int count = -1);
-  void colorizeRange (int fromLine = 0, int toLine = 0);
-  void colorizeInternal();
+  void colorizeLines (int fromLine, int toLine);
+  void colorize (int fromLine, int count);
   //}}}
 
   // clicks
