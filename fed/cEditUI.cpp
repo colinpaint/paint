@@ -1,4 +1,4 @@
-// cTextEditUI.cpp
+// cEditUI.cpp
 //{{{  includes
 #include <cstdint>
 #include <vector>
@@ -50,14 +50,14 @@ namespace {
   //}}}
   }
 
-class cTextEditUI : public cUI {
+class cEditUI : public cUI {
 public:
   //{{{
-  cTextEditUI (const string& name) : cUI(name) {
+  cEditUI (const string& name) : cUI(name) {
     }
   //}}}
   //{{{
-  virtual ~cTextEditUI() {
+  virtual ~cEditUI() {
     // close the file mapping object
     delete mFileView;
     }
@@ -129,8 +129,8 @@ private:
 
   //{{{
   static cUI* create (const string& className) {
-    return new cTextEditUI (className);
+    return new cEditUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("textEdit", &create);
+  inline static const bool mRegistered = registerClass ("edit", &create);
   };
