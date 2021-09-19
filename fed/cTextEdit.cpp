@@ -2623,7 +2623,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
   const vector <sGlyph>& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
     if (line.mFolded) {
-      //{{{  draw foldBegin folded ... + glyphs text
+      //{{{  draw foldBegin folded ...  glyphs text
       // add ident
       curPos.x += leftPadWidth;
 
@@ -2660,7 +2660,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       }
       //}}}
     else {
-      //{{{  draw foldBegin unfolded {{{ + glyphs text
+      //{{{  draw foldBegin unfolded {{{  glyphs text
       // draw foldPrefix
       curPos.x += leftPadWidth;
 
@@ -2694,7 +2694,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       //}}}
     }
   else if (isFolded() && line.mFoldEnd) {
-    //{{{  draw foldEnd }}}, no glyphs text
+    //{{{  draw foldEnd }}} 
     curPos.x += leftPadWidth;
     float prefixWidth = mContext.drawText (curPos, eFoldEnd, mOptions.mLanguage.mFoldEnd);
 
