@@ -1176,6 +1176,8 @@ void cTextEdit::drawContents (cApp& app) {
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
   colorizeInternal();
 
+  //if (ImGui::IsWindowHovered())
+  //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
   handleKeyboard();
 
   if (isFolded()) {
@@ -2916,11 +2918,6 @@ void cTextEdit::handleKeyboard() {
   // {false, true,  false, F                    false, [this]{findDialog();}},
   // {true,  false, false, N                    false, [this]{gotoDialog();}},
      };
-
-  //if (!ImGui::IsWindowFocused())
-  // return;
-  if (ImGui::IsWindowHovered())
-    ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
 
   ImGuiIO& io = ImGui::GetIO();
   bool shift = io.KeyShift;
