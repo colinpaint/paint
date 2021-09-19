@@ -196,6 +196,7 @@ namespace {
   };
   //}}}
   //}}}
+
   //{{{
   bool isUtfSequence (char ch) {
     return (ch & 0xC0) == 0x80;
@@ -260,6 +261,7 @@ namespace {
     return 3;
     }
   //}}}
+
   //{{{
   bool findString (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
@@ -422,11 +424,8 @@ namespace {
     }
   //}}}
   //{{{
-  bool findPunctuation (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
+  bool findPunctuation (const char* inBegin, const char*& outBegin, const char*& outEnd) {
 
-    //{{{  unused param
-    (void)inEnd;
-    //}}}
     switch (*inBegin) {
       case '[':
       case ']':
@@ -2958,244 +2957,6 @@ void cTextEdit::handleKeyboard() {
   }
 //}}}
 
-//{{{  cTextEdit::cLanguage
-//{{{
-const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
-
-  static cLanguage language;
-  static bool inited = false;
-
-  if (!inited) {
-    for (auto& cppKeyword : kCppKeywords)
-      language.mKeywords.insert (cppKeyword);
-
-    for (auto& cppIdent : kCppIdents) {
-      sIdent id;
-      id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (cppIdent, id));
-      }
-
-    language.mTokenize = [](const char* inBegin, const char* inEnd,
-                            const char*& outBegin, const char*& outEnd, uint8_t& palette) -> bool {
-      // tokenize lambda
-      while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
-        inBegin++;
-      palette = eMax;
-      if (inBegin == inEnd) {
-        outBegin = inEnd;
-        outEnd = inEnd;
-        palette = eText;
-        }
-      else if (findString (inBegin, inEnd, outBegin, outEnd))
-        palette = eString;
-      else if (findCharacterLiteral (inBegin, inEnd, outBegin, outEnd))
-        palette = eCharLiteral;
-      else if (findIdent (inBegin, inEnd, outBegin, outEnd))
-        palette = eIdent;
-      else if (findNumber (inBegin, inEnd, outBegin, outEnd))
-        palette = eNumber;
-      else if (findPunctuation (inBegin, inEnd, outBegin, outEnd))
-        palette = ePunctuation;
-      return (palette != eMax);
-      };
-
-    language.mCommentBegin = "/*";
-    language.mCommentEnd = "*/";
-    language.mSingleLineComment = "//";
-
-    language.mFoldBeginMarker = "//{{{";
-    language.mFoldEndMarker = "//}}}";
-
-    language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "... ";
-    language.mFoldEnd = "}}}";
-
-    language.mCaseSensitive = true;
-    language.mAutoIndentation = true;
-    language.mName = "C++";
-
-    inited = true;
-    }
-
-  return language;
-  }
-//}}}
-//{{{
-const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
-
-  static cLanguage language;
-  static bool inited = false;
-
-  if (!inited) {
-    for (auto& keywordString : kCKeywords)
-      language.mKeywords.insert (keywordString);
-
-    for (auto& identString : kCIdents) {
-      sIdent id;
-      id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (identString, id));
-      }
-
-    language.mTokenize = [](const char * inBegin, const char * inEnd,
-                           const char *& outBegin, const char *& outEnd, uint8_t& palette) -> bool {
-      palette = eMax;
-
-      while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
-        inBegin++;
-
-      if (inBegin == inEnd) {
-        outBegin = inEnd;
-        outEnd = inEnd;
-        palette = eText;
-        }
-      else if (findString (inBegin, inEnd, outBegin, outEnd))
-        palette = eString;
-      else if (findCharacterLiteral (inBegin, inEnd, outBegin, outEnd))
-        palette = eCharLiteral;
-      else if (findIdent (inBegin, inEnd, outBegin, outEnd))
-        palette = eIdent;
-      else if (findNumber (inBegin, inEnd, outBegin, outEnd))
-        palette = eNumber;
-      else if (findPunctuation (inBegin, inEnd, outBegin, outEnd))
-        palette = ePunctuation;
-
-      return palette != eMax;
-      };
-
-    language.mCommentBegin = "/*";
-    language.mCommentEnd = "*/";
-    language.mSingleLineComment = "//";
-
-    language.mFoldBeginMarker = "//{{{";
-    language.mFoldEndMarker = "//}}}";
-
-    language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "... ";
-    language.mFoldEnd = "}}}";
-
-    language.mCaseSensitive = true;
-    language.mAutoIndentation = true;
-    language.mName = "C";
-
-    inited = true;
-    }
-
-  return language;
-  }
-//}}}
-//{{{
-const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
-
-  static bool inited = false;
-  static cLanguage language;
-
-  if (!inited) {
-    for (auto& keywordString : kHlslKeywords)
-      language.mKeywords.insert (keywordString);
-
-    for (auto& identString : kHlslIdents) {
-      sIdent id;
-      id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (identString, id));
-      }
-
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("\\'\\\\?[^\\']\\'", (uint8_t)eCharLiteral));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
-
-    language.mCommentBegin = "/*";
-    language.mCommentEnd = "*/";
-    language.mSingleLineComment = "//";
-
-    language.mFoldBeginMarker = "#{{{";
-    language.mFoldEndMarker = "#}}}";
-
-    language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "... ";
-    language.mFoldEnd = "}}}";
-
-    language.mCaseSensitive = true;
-    language.mAutoIndentation = true;
-    language.mName = "HLSL";
-
-    inited = true;
-    }
-
-  return language;
-  }
-//}}}
-//{{{
-const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
-
-  static bool inited = false;
-  static cLanguage language;
-
-  if (!inited) {
-    for (auto& keywordString : kGlslKeywords)
-      language.mKeywords.insert (keywordString);
-
-    for (auto& identString : kGlslIdents) {
-      sIdent id;
-      id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (identString, id));
-      }
-
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("\\'\\\\?[^\\']\\'", (uint8_t)eCharLiteral));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
-    language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
-
-    language.mCommentBegin = "/*";
-    language.mCommentEnd = "*/";
-    language.mSingleLineComment = "//";
-
-    language.mFoldBeginMarker = "#{{{";
-    language.mFoldEndMarker = "#}}}";
-
-    language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "... ";
-    language.mFoldEnd = "}}}";
-
-    language.mCaseSensitive = true;
-    language.mAutoIndentation = true;
-    language.mName = "GLSL";
-
-    inited = true;
-    }
-
-  return language;
-  }
-//}}}
-//}}}
 //{{{  cTextEdit::cContext
 //{{{
 void cTextEdit::cContext::update (const cOptions& options) {
@@ -3209,7 +2970,7 @@ void cTextEdit::cContext::update (const cOptions& options) {
   mFontSmallOffset = ((mFontSize - mFontSmallSize) * 2.f) / 3.f;
 
   float scale = mFontSize / mFontAtlasSize;
-  mGlyphWidth = measureText ("#", nullptr) * scale;
+  mGlyphWidth = measureText (" ", nullptr) * scale;
   mLineHeight = ImGui::GetTextLineHeight() * scale;
 
   mLeftPad = mGlyphWidth/2.f;
@@ -3320,7 +3081,9 @@ void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
   }
 //}}}
 //}}}
-//{{{  cTextEdit::cLine
+
+// cTextEdit::cLine
+//{{{
 bool cTextEdit::cLine::parse (const cLanguage& language) {
 // parse beginFold and endFold markers, set flags
 
@@ -3363,5 +3126,237 @@ bool cTextEdit::cLine::parse (const cLanguage& language) {
   mSeeThruOffset = 0;
 
   return hasFolds;
+  }
+//}}}
+
+// cTextEdit::cLanguage
+//{{{
+const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
+
+  static cLanguage language;
+
+  static bool inited = false;
+  if (!inited) {
+    for (auto& cppKeyword : kCppKeywords)
+      language.mKeywords.insert (cppKeyword);
+
+    for (auto& cppIdent : kCppIdents) {
+      sIdent id;
+      id.mDeclaration = "Built-in function";
+      language.mIdents.insert (make_pair (cppIdent, id));
+      }
+
+    language.mTokenize = [](const char* inBegin, const char* inEnd,
+                            const char*& outBegin, const char*& outEnd, uint8_t& palette) -> bool {
+      // tokenize lambda
+      while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
+        inBegin++;
+      palette = eMax;
+      if (inBegin == inEnd) {
+        outBegin = inEnd;
+        outEnd = inEnd;
+        palette = eText;
+        }
+      else if (findString (inBegin, inEnd, outBegin, outEnd))
+        palette = eString;
+      else if (findCharacterLiteral (inBegin, inEnd, outBegin, outEnd))
+        palette = eCharLiteral;
+      else if (findIdent (inBegin, inEnd, outBegin, outEnd))
+        palette = eIdent;
+      else if (findNumber (inBegin, inEnd, outBegin, outEnd))
+        palette = eNumber;
+      else if (findPunctuation (inBegin, outBegin, outEnd))
+        palette = ePunctuation;
+      return (palette != eMax);
+      };
+
+    language.mCommentBegin = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+
+    language.mFoldBeginMarker = "//{{{";
+    language.mFoldEndMarker = "//}}}";
+
+    language.mFoldBeginOpen = "{{{";
+    language.mFoldBeginClosed = "... ";
+    language.mFoldEnd = "}}}";
+
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = true;
+    language.mName = "C++";
+
+    inited = true;
+    }
+
+  return language;
+  }
+//}}}
+//{{{
+const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
+
+  static cLanguage language;
+  static bool inited = false;
+  if (!inited) {
+    for (auto& keywordString : kCKeywords)
+      language.mKeywords.insert (keywordString);
+
+    for (auto& identString : kCIdents) {
+      sIdent id;
+      id.mDeclaration = "Built-in function";
+      language.mIdents.insert (make_pair (identString, id));
+      }
+
+    language.mTokenize = [](const char * inBegin, const char * inEnd,
+                           const char *& outBegin, const char *& outEnd, uint8_t& palette) -> bool {
+      palette = eMax;
+      while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
+        inBegin++;
+      if (inBegin == inEnd) {
+        outBegin = inEnd;
+        outEnd = inEnd;
+        palette = eText;
+        }
+      else if (findString (inBegin, inEnd, outBegin, outEnd))
+        palette = eString;
+      else if (findCharacterLiteral (inBegin, inEnd, outBegin, outEnd))
+        palette = eCharLiteral;
+      else if (findIdent (inBegin, inEnd, outBegin, outEnd))
+        palette = eIdent;
+      else if (findNumber (inBegin, inEnd, outBegin, outEnd))
+        palette = eNumber;
+      else if (findPunctuation (inBegin, outBegin, outEnd))
+        palette = ePunctuation;
+      return (palette != eMax);
+      };
+
+    language.mCommentBegin = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+
+    language.mFoldBeginMarker = "//{{{";
+    language.mFoldEndMarker = "//}}}";
+
+    language.mFoldBeginOpen = "{{{";
+    language.mFoldBeginClosed = "... ";
+    language.mFoldEnd = "}}}";
+
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = true;
+    language.mName = "C";
+
+    inited = true;
+    }
+
+  return language;
+  }
+//}}}
+//{{{
+const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
+
+  static bool inited = false;
+  static cLanguage language;
+  if (!inited) {
+    for (auto& keywordString : kHlslKeywords)
+      language.mKeywords.insert (keywordString);
+
+    for (auto& identString : kHlslIdents) {
+      sIdent id;
+      id.mDeclaration = "Built-in function";
+      language.mIdents.insert (make_pair (identString, id));
+      }
+
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("\\'\\\\?[^\\']\\'", (uint8_t)eCharLiteral));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
+
+    language.mCommentBegin = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+
+    language.mFoldBeginMarker = "#{{{";
+    language.mFoldEndMarker = "#}}}";
+
+    language.mFoldBeginOpen = "{{{";
+    language.mFoldBeginClosed = "... ";
+    language.mFoldEnd = "}}}";
+
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = true;
+    language.mName = "HLSL";
+
+    inited = true;
+    }
+
+  return language;
+  }
+//}}}
+//{{{
+const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
+
+  static bool inited = false;
+  static cLanguage language;
+  if (!inited) {
+    for (auto& keywordString : kGlslKeywords)
+      language.mKeywords.insert (keywordString);
+
+    for (auto& identString : kGlslIdents) {
+      sIdent id;
+      id.mDeclaration = "Built-in function";
+      language.mIdents.insert (make_pair (identString, id));
+      }
+
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("\\'\\\\?[^\\']\\'", (uint8_t)eCharLiteral));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
+    language.mTokenRegexStrings.push_back (
+      make_pair<string, uint8_t>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
+
+    language.mCommentBegin = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+
+    language.mFoldBeginMarker = "#{{{";
+    language.mFoldEndMarker = "#}}}";
+
+    language.mFoldBeginOpen = "{{{";
+    language.mFoldBeginClosed = "... ";
+    language.mFoldEnd = "}}}";
+
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = true;
+    language.mName = "GLSL";
+
+    inited = true;
+    }
+
+  return language;
   }
 //}}}
