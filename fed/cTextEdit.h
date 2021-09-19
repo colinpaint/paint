@@ -97,8 +97,6 @@ public:
   //{{{
   class cLanguage {
   public:
-    cLanguage() : mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true) {}
-
     // static const
     static const cLanguage& cPlus();
     static const cLanguage& c();
@@ -115,10 +113,6 @@ public:
     // vars
     std::string mName;
 
-    std::unordered_set <std::string> mKeywords;
-    std::unordered_map <std::string,sIdent> mIdents;
-    std::unordered_map <std::string,sIdent> mPreprocIdents;
-
     std::string mCommentBegin;
     std::string mCommentEnd;
     std::string mSingleLineComment;
@@ -131,12 +125,15 @@ public:
     const char* mFoldEnd;
 
     char mPreprocChar;
+    bool mCaseSensitive;
     bool mAutoIndentation;
+
+    std::unordered_set <std::string> mKeywords;
+    std::unordered_map <std::string,sIdent> mIdents;
+    std::unordered_map <std::string,sIdent> mPreprocIdents;
 
     tTokenizeCallback mTokenize;
     tTokenRegexStrings mTokenRegexStrings;
-
-    bool mCaseSensitive;
     };
   //}}}
   //{{{
@@ -276,7 +273,6 @@ private:
     // modes
     bool mOverWrite = false;
     bool mReadOnly = false;
-    bool mCheckComments = true;
 
     // shows
     bool mShowFolded = false;
@@ -344,6 +340,8 @@ private:
   //{{{
   class cEdit {
   public:
+    bool mCheckComments = true;
+
     int mColorRangeMin = 0;
     int mColorRangeMax = 0;
 

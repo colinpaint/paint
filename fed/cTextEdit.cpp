@@ -2072,15 +2072,14 @@ void cTextEdit::addUndo (cUndo& undo) {
 //{{{
 void cTextEdit::colorize (int fromLine, int lines) {
 
-  int toLine = lines == -1 ? static_cast<int>(mInfo.mLines.size())
-                           : min(static_cast<int>(mInfo.mLines.size()), fromLine + lines);
+  mEdit.mCheckComments = true;
 
-  mEdit.mColorRangeMin = min (mEdit.mColorRangeMin, fromLine);
+  mEdit.mColorRangeMin = max (0, min (mEdit.mColorRangeMin, fromLine));
+
+  int toLine = (lines == -1) ? static_cast<int>(mInfo.mLines.size())
+                             : min (static_cast<int>(mInfo.mLines.size()), fromLine + lines);
   mEdit.mColorRangeMax = max (mEdit.mColorRangeMax, toLine);
-  mEdit.mColorRangeMin = max (0, mEdit.mColorRangeMin);
   mEdit.mColorRangeMax = max (mEdit.mColorRangeMin, mEdit.mColorRangeMax);
-
-  mOptions.mCheckComments = true;
   }
 //}}}
 //{{{
@@ -2174,22 +2173,26 @@ void cTextEdit::colorizeInternal() {
   if (mInfo.mLines.empty())
     return;
 
-  if (mOptions.mCheckComments) {
+  if (mEdit.mCheckComments) {
+    //{{{  check comments
     int endLine = static_cast<int>(mInfo.mLines.size());
     int endIndex = 0;
+
     int commentBeginLine = endLine;
     int commentBeginIndex = endIndex;
+
     bool withinString = false;
-    bool withinSingleLineComment = false;
     bool withinPreproc = false;
+    bool withinSingleLineComment = false;
+
     bool firstChar = true;      // there is no other non-whitespace characters in the line before
     bool concatenate = false;   // '\' on the very end of the line
+
     int currentLine = 0;
     int currentIndex = 0;
-
-    while (currentLine < endLine || currentIndex < endIndex) {
+    while ((currentLine < endLine) || (currentIndex < endIndex)) {
       vector<sGlyph>& line = mInfo.mLines[currentLine].mGlyphs;
-      if (currentIndex == 0 && !concatenate) {
+      if ((currentIndex == 0) && !concatenate) {
         withinSingleLineComment = false;
         withinPreproc = false;
         firstChar = true;
@@ -2197,20 +2200,23 @@ void cTextEdit::colorizeInternal() {
       concatenate = false;
 
       if (!line.empty()) {
-        sGlyph& g = line[currentIndex];
-        uint8_t c = g.mChar;
-        if (c != mOptions.mLanguage.mPreprocChar && !isspace(c))
+        //{{{  check line
+        uint8_t ch = line[currentIndex].mChar;
+
+        if ((ch != mOptions.mLanguage.mPreprocChar) && !isspace (ch))
           firstChar = false;
+
         if ((currentIndex == static_cast<int>(line.size()) - 1) && (line[line.size() - 1].mChar == '\\'))
           concatenate = true;
 
-        bool inComment = (commentBeginLine < currentLine ||
-                          (commentBeginLine == currentLine && commentBeginIndex <= currentIndex));
+        bool inComment = (commentBeginLine < currentLine) ||
+                         ((commentBeginLine == currentLine) && (commentBeginIndex <= currentIndex));
 
         if (withinString) {
+          //{{{  within string
           line[currentIndex].mMultiLineComment = inComment;
 
-          if (c == '\"') {
+          if (ch == '\"') {
             if ((currentIndex + 1 < static_cast<int>(line.size())) && (line[currentIndex + 1].mChar == '\"')) {
               currentIndex += 1;
               if (currentIndex < static_cast<int>(line.size()))
@@ -2219,20 +2225,23 @@ void cTextEdit::colorizeInternal() {
             else
               withinString = false;
             }
-          else if (c == '\\') {
+
+          else if (ch == '\\') {
             currentIndex += 1;
             if (currentIndex < static_cast<int>(line.size()))
               line[currentIndex].mMultiLineComment = inComment;
             }
           }
+          //}}}
         else {
-          if (firstChar && c == mOptions.mLanguage.mPreprocChar)
+          if (firstChar && (ch == mOptions.mLanguage.mPreprocChar))
             withinPreproc = true;
 
-          if (c == '\"') {
+          if (ch == '\"') {
             withinString = true;
             line[currentIndex].mMultiLineComment = inComment;
             }
+
           else {
             auto pred = [](const char& a, const sGlyph& b) { return a == b.mChar; };
             auto from = line.begin() + currentIndex;
@@ -2245,21 +2254,21 @@ void cTextEdit::colorizeInternal() {
                         from, from + singleBeginString.size(), pred)) {
               withinSingleLineComment = true;
               }
+
             else if ((!withinSingleLineComment && currentIndex + beginString.size() <= line.size()) &&
                      equals (beginString.begin(), beginString.end(), from, from + beginString.size(), pred)) {
               commentBeginLine = currentLine;
               commentBeginIndex = currentIndex;
               }
 
-            inComment = (commentBeginLine < currentLine ||
-                         (commentBeginLine == currentLine && commentBeginIndex <= currentIndex));
-
+            inComment = (commentBeginLine < currentLine) ||
+                        ((commentBeginLine == currentLine) && (commentBeginIndex <= currentIndex));
             line[currentIndex].mMultiLineComment = inComment;
             line[currentIndex].mComment = withinSingleLineComment;
 
             string& endString = mOptions.mLanguage.mCommentEnd;
             if (currentIndex + 1 >= static_cast<int>(endString.size()) &&
-              equals (endString.begin(), endString.end(), from + 1 - endString.size(), from + 1, pred)) {
+                equals (endString.begin(), endString.end(), from + 1 - endString.size(), from + 1, pred)) {
               commentBeginIndex = endIndex;
               commentBeginLine = endLine;
               }
@@ -2267,23 +2276,26 @@ void cTextEdit::colorizeInternal() {
           }
 
         line[currentIndex].mPreProc = withinPreproc;
-        currentIndex += utf8CharLength (c);
+        currentIndex += utf8CharLength (ch);
         if (currentIndex >= static_cast<int>(line.size())) {
           currentIndex = 0;
           ++currentLine;
           }
         }
+        //}}}
       else {
         currentIndex = 0;
         ++currentLine;
         }
       }
-    mOptions.mCheckComments = false;
+
+    mEdit.mCheckComments = false;
     }
+    //}}}
 
   if (mEdit.mColorRangeMin < mEdit.mColorRangeMax) {
     const int increment = (mOptions.mLanguage.mTokenize == nullptr) ? 10 : 10000;
-    const int to = min(mEdit.mColorRangeMin + increment, mEdit.mColorRangeMax);
+    const int to = min (mEdit.mColorRangeMin + increment, mEdit.mColorRangeMax);
     colorizeRange (mEdit.mColorRangeMin, to);
     mEdit.mColorRangeMin = to;
 
@@ -2291,7 +2303,6 @@ void cTextEdit::colorizeInternal() {
       mEdit.mColorRangeMin = numeric_limits<int>::max();
       mEdit.mColorRangeMax = 0;
       }
-    return;
     }
   }
 //}}}
@@ -3171,6 +3182,24 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
 
   static bool inited = false;
   if (!inited) {
+    inited = true;
+    language.mName = "C++";
+
+    language.mCommentBegin = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+
+    language.mFoldBeginMarker = "//{{{";
+    language.mFoldEndMarker = "//}}}";
+
+    language.mFoldBeginOpen = "{{{";
+    language.mFoldBeginClosed = "... ";
+    language.mFoldEnd = "}}}";
+
+    language.mPreprocChar = '#';
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = true;
+
     for (auto& cppKeyword : kCppKeywords)
       language.mKeywords.insert (cppKeyword);
 
@@ -3203,6 +3232,19 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
         palette = ePunctuation;
       return (palette != eUndefined);
       };
+    }
+
+  return language;
+  }
+//}}}
+//{{{
+const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
+
+  static cLanguage language;
+  static bool inited = false;
+  if (!inited) {
+    inited = true;
+    language.mName = "C";
 
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
@@ -3215,22 +3257,10 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
     language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
 
+    language.mPreprocChar = '#';
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
-    language.mName = "C++";
 
-    inited = true;
-    }
-
-  return language;
-  }
-//}}}
-//{{{
-const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
-
-  static cLanguage language;
-  static bool inited = false;
-  if (!inited) {
     for (auto& keywordString : kCKeywords)
       language.mKeywords.insert (keywordString);
 
@@ -3262,23 +3292,6 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
         palette = ePunctuation;
       return (palette != eUndefined);
       };
-
-    language.mCommentBegin = "/*";
-    language.mCommentEnd = "*/";
-    language.mSingleLineComment = "//";
-
-    language.mFoldBeginMarker = "//{{{";
-    language.mFoldEndMarker = "//}}}";
-
-    language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "... ";
-    language.mFoldEnd = "}}}";
-
-    language.mCaseSensitive = true;
-    language.mAutoIndentation = true;
-    language.mName = "C";
-
-    inited = true;
     }
 
   return language;
@@ -3290,6 +3303,24 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
   static bool inited = false;
   static cLanguage language;
   if (!inited) {
+    inited = true;
+    language.mName = "HLSL";
+
+    language.mCommentBegin = "/*";
+    language.mCommentEnd = "*/";
+    language.mSingleLineComment = "//";
+
+    language.mFoldBeginMarker = "#{{{";
+    language.mFoldEndMarker = "#}}}";
+
+    language.mFoldBeginOpen = "{{{";
+    language.mFoldBeginClosed = "... ";
+    language.mFoldEnd = "}}}";
+
+    language.mPreprocChar = '#';
+    language.mCaseSensitive = true;
+    language.mAutoIndentation = true;
+
     for (auto& keywordString : kHlslKeywords)
       language.mKeywords.insert (keywordString);
 
@@ -3299,6 +3330,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
       language.mIdents.insert (make_pair (identString, id));
       }
 
+    language.mTokenize = nullptr;
+
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
     language.mTokenRegexStrings.push_back (
@@ -3317,6 +3350,19 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
       make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
+    }
+
+  return language;
+  }
+//}}}
+//{{{
+const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
+
+  static cLanguage language;
+  static bool inited = false;
+  if (!inited) {
+    inited = true;
+    language.mName = "GLSL";
 
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
@@ -3329,22 +3375,10 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
 
+    language.mPreprocChar = '#';
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
-    language.mName = "HLSL";
 
-    inited = true;
-    }
-
-  return language;
-  }
-//}}}
-//{{{
-const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
-
-  static bool inited = false;
-  static cLanguage language;
-  if (!inited) {
     for (auto& keywordString : kGlslKeywords)
       language.mKeywords.insert (keywordString);
 
@@ -3354,6 +3388,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
       language.mIdents.insert (make_pair (identString, id));
       }
 
+    language.mTokenize = nullptr;
+
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
     language.mTokenRegexStrings.push_back (
@@ -3372,23 +3408,6 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
       make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
-
-    language.mCommentBegin = "/*";
-    language.mCommentEnd = "*/";
-    language.mSingleLineComment = "//";
-
-    language.mFoldBeginMarker = "#{{{";
-    language.mFoldEndMarker = "#}}}";
-
-    language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "... ";
-    language.mFoldEnd = "}}}";
-
-    language.mCaseSensitive = true;
-    language.mAutoIndentation = true;
-    language.mName = "GLSL";
-
-    inited = true;
     }
 
   return language;
