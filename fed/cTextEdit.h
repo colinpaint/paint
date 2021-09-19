@@ -137,21 +137,22 @@ public:
     };
   //}}}
   //{{{
-  struct sLanguage {
-    // init
-    sLanguage() : mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true) {}
+  class cLanguage {
+  public:
+    cLanguage() : mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true) {}
 
     // static const
-    static const sLanguage& cPlus();
-    static const sLanguage& c();
-    static const sLanguage& hlsl();
-    static const sLanguage& glsl();
+    static const cLanguage& cPlus();
+    static const cLanguage& c();
+    static const cLanguage& hlsl();
+    static const cLanguage& glsl();
 
     // typedef
-    typedef std::pair<std::string, uint8_t> tTokenRegexString;
-    typedef std::vector<tTokenRegexString> tTokenRegexStrings;
-    typedef bool (*tTokenizeCallback)(const char* inBegin, const char* inEnd,
+    using tTokenRegexString = std::pair<std::string, uint8_t>;
+    using tTokenRegexStrings = std::vector<tTokenRegexString>;
+    using tTokenizeCallback = bool(*)(const char* inBegin, const char* inEnd,
                                       const char*& outBegin, const char*& outEnd, uint8_t& palette);
+
 
     // vars
     std::string mName;
@@ -200,7 +201,7 @@ public:
       mGlyphs.clear();
       }
     //}}}
-    bool parse (const sLanguage& language);
+    bool parse (const cLanguage& language);
 
     std::vector <sGlyph> mGlyphs;
 
@@ -238,7 +239,7 @@ public:
   uint32_t getTabSize() const { return mInfo.mTabSize; }
   sPosition getCursorPosition() const { return sanitizePosition (mEdit.mState.mCursorPosition); }
 
-  const sLanguage& getLanguage() const { return mOptions.mLanguage; }
+  const cLanguage& getLanguage() const { return mOptions.mLanguage; }
   //}}}
   //{{{  sets
   void setTextString (const std::string& text);
@@ -246,7 +247,7 @@ public:
 
   void setPalette (bool lightPalette);
   void setMarkers (const std::map<int,std::string>& markers) { mOptions.mMarkers = markers; }
-  void setLanguage (const sLanguage& language);
+  void setLanguage (const cLanguage& language);
 
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
   void setTabSize (int value) { mInfo.mTabSize = std::max (0, std::min (32, value)); }
@@ -331,7 +332,7 @@ private:
     bool mHoverWhiteSpace = false;
     bool mHoverMonoSpaced = false;
 
-    sLanguage mLanguage;
+    cLanguage mLanguage;
     tRegexList mRegexList;
     std::map <int,std::string> mMarkers;
     };

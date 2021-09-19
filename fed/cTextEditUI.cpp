@@ -97,7 +97,7 @@ public:
       mTextEdit->setTextString (str);
 
       // set language
-      cTextEdit::sLanguage language = cTextEdit::sLanguage::cPlus();
+      cTextEdit::cLanguage language = cTextEdit::cLanguage::cPlus();
       for (size_t i = 0; i < kPreProcessorNames.size(); i++) {
         cTextEdit::sIdent id;
         id.mDeclaration = kPreProcessorValues[i];

@@ -467,7 +467,7 @@ namespace {
 cTextEdit::cTextEdit() {
 
   mInfo.mLines.push_back (vector<sGlyph>());
-  setLanguage (sLanguage::cPlus());
+  setLanguage (cLanguage::cPlus());
 
   mLastCursorFlashTimePoint = system_clock::now();
   }
@@ -570,7 +570,7 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
 //}}}
 
 //{{{
-void cTextEdit::setLanguage (const sLanguage& language) {
+void cTextEdit::setLanguage (const cLanguage& language) {
 
   mOptions.mLanguage = language;
 
@@ -2552,7 +2552,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
     curPos.x += leftPadWidth;
 
     if (mOptions.mShowLineDebug)
-      mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber, fmt::format ("{:4d}{}{}{}{}{}{}{:2d}{:2d} ",
+      mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber, fmt::format ("{:4d}{}{}{}{}{}{:2d}{:2d} ",
         lineNumber,
         line.mComment ? 'c' : ' ',
         line.mFoldBegin ? 'b':' ',
@@ -2950,11 +2950,11 @@ void cTextEdit::handleKeyboard() {
   }
 //}}}
 
-//{{{  cTextEdit::sLanguage
+//{{{  cTextEdit::cLanguage
 //{{{
-const cTextEdit::sLanguage& cTextEdit::sLanguage::cPlus() {
+const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
 
-  static sLanguage language;
+  static cLanguage language;
   static bool inited = false;
 
   if (!inited) {
@@ -2969,12 +2969,10 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::cPlus() {
 
     language.mTokenize = [](const char* inBegin, const char* inEnd,
                             const char*& outBegin, const char*& outEnd, uint8_t& palette) -> bool {
-      //{{{  tokenize lambda
-      palette = eMax;
-
+      // tokenize lambda
       while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
         inBegin++;
-
+      palette = eMax;
       if (inBegin == inEnd) {
         outBegin = inEnd;
         outEnd = inEnd;
@@ -2990,19 +2988,20 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::cPlus() {
         palette = eNumber;
       else if (findPunctuation (inBegin, inEnd, outBegin, outEnd))
         palette = ePunctuation;
-
-      return palette != eMax;
+      return (palette != eMax);
       };
-      //}}}
 
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
     language.mSingleLineComment = "//";
+
     language.mFoldBeginMarker = "//{{{";
     language.mFoldEndMarker = "//}}}";
+
     language.mFoldBeginOpen = "{{{";
     language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
+
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
     language.mName = "C++";
@@ -3014,9 +3013,9 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::cPlus() {
   }
 //}}}
 //{{{
-const cTextEdit::sLanguage& cTextEdit::sLanguage::c() {
+const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
 
-  static sLanguage language;
+  static cLanguage language;
   static bool inited = false;
 
   if (!inited) {
@@ -3058,11 +3057,14 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::c() {
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
     language.mSingleLineComment = "//";
+
     language.mFoldBeginMarker = "//{{{";
     language.mFoldEndMarker = "//}}}";
+
     language.mFoldBeginOpen = "{{{";
     language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
+
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
     language.mName = "C";
@@ -3074,10 +3076,10 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::c() {
   }
 //}}}
 //{{{
-const cTextEdit::sLanguage& cTextEdit::sLanguage::hlsl() {
+const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
 
   static bool inited = false;
-  static sLanguage language;
+  static cLanguage language;
 
   if (!inited) {
     for (auto& keywordString : kHlslKeywords)
@@ -3111,11 +3113,14 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::hlsl() {
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
     language.mSingleLineComment = "//";
+
     language.mFoldBeginMarker = "#{{{";
     language.mFoldEndMarker = "#}}}";
+
     language.mFoldBeginOpen = "{{{";
     language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
+
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
     language.mName = "HLSL";
@@ -3127,10 +3132,10 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::hlsl() {
   }
 //}}}
 //{{{
-const cTextEdit::sLanguage& cTextEdit::sLanguage::glsl() {
+const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
 
   static bool inited = false;
-  static sLanguage language;
+  static cLanguage language;
 
   if (!inited) {
     for (auto& keywordString : kGlslKeywords)
@@ -3164,11 +3169,14 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::glsl() {
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
     language.mSingleLineComment = "//";
+
     language.mFoldBeginMarker = "#{{{";
     language.mFoldEndMarker = "#}}}";
+
     language.mFoldBeginOpen = "{{{";
     language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
+
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
     language.mName = "GLSL";
@@ -3305,7 +3313,7 @@ void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
 //}}}
 //}}}
 //{{{  cTextEdit::cLine
-bool cTextEdit::cLine::parse (const sLanguage& language) {
+bool cTextEdit::cLine::parse (const cLanguage& language) {
 // parse beginFold and endFold markers, set flags
 
   bool hasFolds = false;
