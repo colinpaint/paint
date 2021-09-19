@@ -368,34 +368,39 @@ namespace {
   bool findNumber (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
     const char* ptr = inBegin;
-    const bool startsWithNumber = (*ptr >= '0') && (*ptr <= '9');
-    if ((*ptr != '+') && (*ptr != '-') && !startsWithNumber)
-      return false;
 
-    ptr++;
-    bool hasNumber = startsWithNumber;
+    // skip leading sign +-
+    if ((*ptr == '+') && (*ptr == '-'))
+      ptr++;
+
+    // skip digits 0..9
+    bool isNumber = false;
     while ((ptr < inEnd) &&
            ((*ptr >= '0') && (*ptr <= '9'))) {
-      hasNumber = true;
+      isNumber = true;
       ptr++;
       }
-    if (hasNumber == false)
+    if (!isNumber)
       return false;
 
     bool isHex = false;
     bool isFloat = false;
     bool isBinary = false;
+
     if (ptr < inEnd) {
       if (*ptr == '.') {
+        //{{{  skip floating point frac
         isFloat = true;
         ptr++;
         while ((ptr < inEnd) &&
                ((*ptr >= '0') && (*ptr <= '9')))
           ptr++;
         }
+        //}}}
       else if ((*ptr == 'x') || (*ptr == 'X')) {
-        //{{{  hex formatted integer of the type 0xef80
+        //{{{  skip hex 0xhhhh
         isHex = true;
+
         ptr++;
         while ((ptr < inEnd) &&
                (((*ptr >= '0') && (*ptr <= '9')) ||
@@ -405,8 +410,9 @@ namespace {
         }
         //}}}
       else if ((*ptr == 'b') || (*ptr == 'B')) {
-        //{{{  binary formatted integer of the type 0b01011101
+        //{{{  skip binary 0b0101010
         isBinary = true;
+
         ptr++;
         while ((ptr < inEnd) && ((*ptr >= '0') && (*ptr <= '1')))
           ptr++;
@@ -414,10 +420,11 @@ namespace {
         //}}}
       }
 
-    if (isHex == false && isBinary == false) {
-      //{{{  floating point exponent
+    if (!isHex && !isBinary) {
+      //{{{  skip floating point exponent e+dd
       if (ptr < inEnd && (*ptr == 'e' || *ptr == 'E')) {
         isFloat = true;
+
         ptr++;
         if (ptr < inEnd && (*ptr == '+' || *ptr == '-'))
           ptr++;
@@ -437,13 +444,16 @@ namespace {
       }
       //}}}
 
-    if (isFloat == false) // integer size type
+    if (!isFloat)
+      //{{{  skip trailing integer size ulUL letter
       while ((ptr < inEnd) &&
              ((*ptr == 'u') || (*ptr == 'U') || (*ptr == 'l') || (*ptr == 'L')))
         ptr++;
+      //}}}
 
     outBegin = inBegin;
     outEnd = ptr;
+
     return true;
     }
   //}}}
@@ -2076,83 +2086,83 @@ void cTextEdit::colorize (int fromLine, int lines) {
 //{{{
 void cTextEdit::colorizeRange (int fromLine, int toLine) {
 
-  if (mInfo.mLines.empty() || fromLine >= toLine)
+  if (mInfo.mLines.empty() || (fromLine >= toLine))
     return;
 
-  string buffer;
+  string textString;
   cmatch results;
   string id;
 
-  int endLine = max(0, min(static_cast<int>(mInfo.mLines.size()), toLine));
+  int endLine = max (0, min (static_cast<int>(mInfo.mLines.size()), toLine));
   for (int i = fromLine; i < endLine; ++i) {
     vector<sGlyph>& glyphs = mInfo.mLines[i].mGlyphs;
     if (glyphs.empty())
       continue;
 
-    buffer.resize (glyphs.size());
+    textString.resize (glyphs.size());
     for (size_t j = 0; j < glyphs.size(); ++j) {
       sGlyph& col = glyphs[j];
-      buffer[j] = col.mChar;
+      textString[j] = col.mChar;
       col.mColor = eText;
       }
 
-    const char* bufferBegin = &buffer.front();
-    const char* bufferEnd = bufferBegin + buffer.size();
+    const char* bufferBegin = &textString.front();
+    const char* bufferEnd = bufferBegin + textString.size();
     const char* lastChar = bufferEnd;
-    for (auto first = bufferBegin; first != lastChar; ) {
-      const char* token_begin = nullptr;
-      const char* token_end = nullptr;
-      uint8_t token_color = eText;
+    for (const char* firstChar = bufferBegin; firstChar != lastChar; ) {
+      // iterate chars
+      const char* tokenBegin = nullptr;
+      const char* tokenEnd = nullptr;
+      uint8_t tokenColor = eText;
 
       bool hasTokenizeResult = false;
       if (mOptions.mLanguage.mTokenize != nullptr) {
-        if (mOptions.mLanguage.mTokenize (first, lastChar, token_begin, token_end, token_color))
+        if (mOptions.mLanguage.mTokenize (firstChar, lastChar, tokenBegin, tokenEnd, tokenColor))
           hasTokenizeResult = true;
         }
 
       if (hasTokenizeResult == false) {
         //printf("using regex for %.*s\n", first + 10 < last ? 10 : int(last - first), first);
         for (auto& p : mOptions.mRegexList) {
-          if (regex_search (first, lastChar, results, p.first, regex_constants::match_continuous)) {
+          if (regex_search (firstChar, lastChar, results, p.first, regex_constants::match_continuous)) {
             hasTokenizeResult = true;
             auto& v = *results.begin();
-            token_begin = v.first;
-            token_end = v.second;
-            token_color = p.second;
+            tokenBegin = v.first;
+            tokenEnd = v.second;
+            tokenColor = p.second;
             break;
             }
           }
         }
 
-      if (hasTokenizeResult == false)
-        first++;
-
+      if (!hasTokenizeResult)
+        firstChar++;
       else {
-        const size_t token_length = token_end - token_begin;
-        if (token_color == eIdent) {
-          id.assign (token_begin, token_end);
+        const size_t tokenLength = tokenEnd - tokenBegin;
+        if (tokenColor == eIdent) {
+          id.assign (tokenBegin, tokenEnd);
 
           // almost all languages use lower case to specify keywords, so shouldn't this use ::tolower ?
           if (!mOptions.mLanguage.mCaseSensitive)
             transform (id.begin(), id.end(), id.begin(),
                        [](uint8_t ch) { return static_cast<uint8_t>(std::toupper (ch)); });
 
-          if (!glyphs[first - bufferBegin].mPreProc) {
+          if (!glyphs[firstChar - bufferBegin].mPreProc) {
             if (mOptions.mLanguage.mKeywords.count (id) != 0)
-              token_color = eKeyword;
+              tokenColor = eKeyword;
             else if (mOptions.mLanguage.mIdents.count (id) != 0)
-              token_color = eKnownIdent;
+              tokenColor = eKnownIdent;
             else if (mOptions.mLanguage.mPreprocIdents.count (id) != 0)
-              token_color = ePreprocIdent;
+              tokenColor = ePreprocIdent;
             }
           else if (mOptions.mLanguage.mPreprocIdents.count (id) != 0)
-            token_color = ePreprocIdent;
+            tokenColor = ePreprocIdent;
           }
 
-        for (size_t j = 0; j < token_length; ++j)
-          glyphs[(token_begin - bufferBegin) + j].mColor = token_color;
+        for (size_t j = 0; j < tokenLength; ++j)
+          glyphs[(tokenBegin - bufferBegin) + j].mColor = tokenColor;
 
-        first = token_end;
+        firstChar = tokenEnd;
         }
       }
     }
@@ -2694,7 +2704,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       //}}}
     }
   else if (isFolded() && line.mFoldEnd) {
-    //{{{  draw foldEnd }}} 
+    //{{{  draw foldEnd }}}
     curPos.x += leftPadWidth;
     float prefixWidth = mContext.drawText (curPos, eFoldEnd, mOptions.mLanguage.mFoldEnd);
 
@@ -3173,7 +3183,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
     language.mTokenize = [](const char* inBegin, const char* inEnd,
                             const char*& outBegin, const char*& outEnd, uint8_t& palette) -> bool {
       // tokenize lambda
-      while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
+      while ((inBegin < inEnd) && isascii (*inBegin) && isblank (*inBegin))
         inBegin++;
       palette = eUndefined;
       if (inBegin == inEnd) {
@@ -3230,10 +3240,10 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
       language.mIdents.insert (make_pair (identString, id));
       }
 
-    language.mTokenize = [](const char * inBegin, const char * inEnd,
-                           const char *& outBegin, const char *& outEnd, uint8_t& palette) -> bool {
+    language.mTokenize = [](const char* inBegin, const char* inEnd,
+                            const char*& outBegin, const char*& outEnd, uint8_t& palette) -> bool {
       palette = eUndefined;
-      while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
+      while ((inBegin < inEnd) && isascii (*inBegin) && isblank (*inBegin))
         inBegin++;
       if (inBegin == inEnd) {
         outBegin = inEnd;
@@ -3290,23 +3300,23 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
       }
 
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
+      make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
+      make_pair <string, uint8_t> ("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("\\'\\\\?[^\\']\\'", (uint8_t)eCharLiteral));
+      make_pair <string, uint8_t> ("\\'\\\\?[^\\']\\'", (uint8_t)eCharLiteral));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
+      make_pair <string, uint8_t> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
+      make_pair <string, uint8_t> ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
+      make_pair <string, uint8_t> ("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
+      make_pair <string, uint8_t> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
+      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
+      make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
 
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
@@ -3345,23 +3355,23 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
       }
 
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
+      make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreprocessor));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
+      make_pair <string, uint8_t> ("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("\\'\\\\?[^\\']\\'", (uint8_t)eCharLiteral));
+      make_pair <string, uint8_t> ("\\'\\\\?[^\\']\\'", (uint8_t)eCharLiteral));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
+      make_pair <string, uint8_t> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
+      make_pair <string, uint8_t> ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
+      make_pair <string, uint8_t> ("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
+      make_pair <string, uint8_t> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
+      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
     language.mTokenRegexStrings.push_back (
-      make_pair<string, uint8_t>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
+      make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
 
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";

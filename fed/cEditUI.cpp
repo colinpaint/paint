@@ -1,4 +1,4 @@
-// cEditUI.cpp
+// cEditUI.cpp - will extend to deal with many file types invoking best editUI
 //{{{  includes
 #include <cstdint>
 #include <vector>
