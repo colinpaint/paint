@@ -395,13 +395,13 @@ private:
     };
   //}}}
   //{{{
-  class sUndo {
+  class cUndo {
   public:
-    sUndo() = default;
-    sUndo (const std::string& added, const cTextEdit::sPosition addedBegin, const cTextEdit::sPosition addedEnd,
+    cUndo() = default;
+    cUndo (const std::string& added, const cTextEdit::sPosition addedBegin, const cTextEdit::sPosition addedEnd,
            const std::string& aRemoved, const cTextEdit::sPosition removedBegin, const cTextEdit::sPosition removedEnd,
            cTextEdit::sCursorSelectionState& before, cTextEdit::sCursorSelectionState& after);
-    ~sUndo() = default;
+    ~cUndo() = default;
 
     void undo (cTextEdit* textEdit);
     void redo (cTextEdit* textEdit);
@@ -423,7 +423,7 @@ private:
   class cUndoList {
   public:
     int mIndex = 0;
-    std::vector <sUndo> mBuffer;
+    std::vector <cUndo> mBuffer;
     };
   //}}}
 
@@ -433,7 +433,7 @@ private:
   bool isDrawWhiteSpace() const { return mOptions.mShowWhiteSpace || mOptions.mHoverWhiteSpace; }
   bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced ^ mOptions.mHoverMonoSpaced; }
 
-  int getCharacterIndex (const sPosition& position) const;
+  int getCharacterIndex (sPosition position) const;
   int getCharacterColumn (int lineNumber, int index) const;
 
   int getLineNumChars (int row) const;
@@ -441,15 +441,15 @@ private:
 
   int getPageNumLines() const;
   int getMaxLineIndex() const;
-  float getTextWidth (const sPosition& position) const;
+  float getTextWidth (sPosition position) const;
 
-  std::string getText (const sPosition& beginPosition, const sPosition& endPosition) const;
+  std::string getText (sPosition beginPosition, sPosition endPosition) const;
   std::string getSelectedText() const;
 
   uint8_t getGlyphColor (const sGlyph& glyph) const;
 
-  bool isOnWordBoundary (const sPosition& position) const;
-  std::string getWordAt (const sPosition& position) const;
+  bool isOnWordBoundary (sPosition position) const;
+  std::string getWordAt (sPosition position) const;
   std::string getWordUnderCursor() const;
 
   int getTabColumn (int column) const;
@@ -460,17 +460,17 @@ private:
   int getLineIndexFromNumber (int lineNumber) const;
   //}}}
   //{{{  sets
-  void setCursorPosition (const sPosition& position);
+  void setCursorPosition (sPosition position);
 
-  void setSelectionBegin (const sPosition& position);
-  void setSelectionEnd (const sPosition& position);
+  void setSelectionBegin (sPosition position);
+  void setSelectionEnd (sPosition position);
 
-  void setSelection (const sPosition& beginPosition, const sPosition& endPosition, eSelection mode);
+  void setSelection (sPosition beginPosition, sPosition endPosition, eSelection mode);
   //}}}
   //{{{  utils
   void advance (sPosition& position) const;
   void scrollCursorVisible();
-  sPosition sanitizePosition (const sPosition& position) const;
+  sPosition sanitizePosition (sPosition position) const;
 
   // find
   sPosition findWordBegin (sPosition fromPosition) const;
@@ -492,10 +492,10 @@ private:
   // delete
   void removeLine (int beginPosition, int endPosition);
   void removeLine (int index);
-  void deleteRange (const sPosition& beginPosition, const sPosition& endPosition);
+  void deleteRange (sPosition beginPosition, sPosition endPosition);
 
   // undo
-  void addUndo (sUndo& undo);
+  void addUndo (cUndo& undo);
 
   // colorize
   void colorize (int fromLine = 0, int count = -1);
@@ -510,13 +510,13 @@ private:
   void dragLine (int lineNumber, float posY);
   void dragText (int lineNumber, ImVec2 pos);
 
-  // folds
-  void handleKeyboard();
-
+  // draws
   void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const std::vector <sGlyph>& glyphs, uint8_t forceColor);
   int drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex);
   int drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
+
+  void handleKeyboard();
 
   //{{{  vars
   bool mOpen = true;  // set false when DrawWindow() closed

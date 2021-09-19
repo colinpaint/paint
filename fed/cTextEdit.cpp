@@ -7,9 +7,11 @@
 #include <functional>
 #include <chrono>
 
-#include "../ui/cApp.h"
-#include "../imgui/myImguiWidgets.h"
 #include "../platform/cPlatform.h"
+
+#include "../imgui/myImguiWidgets.h"
+
+#include "../ui/cApp.h"
 
 #include "../utils/cLog.h"
 
@@ -724,7 +726,7 @@ void cTextEdit::cut() {
     copy();
 
   else if (hasSelect()) {
-    sUndo undo;
+    cUndo undo;
     undo.mBefore = mEdit.mState;
     undo.mRemoved = getSelectedText();
     undo.mRemovedBegin = mEdit.mState.mSelectionBegin;
@@ -745,7 +747,7 @@ void cTextEdit::paste() {
     return;
 
   if (hasClipboardText()) {
-    sUndo undo;
+    cUndo undo;
     undo.mBefore = mEdit.mState;
     if (hasSelect()) {
       undo.mRemoved = getSelectedText();
@@ -790,7 +792,7 @@ void cTextEdit::deleteIt() {
   if (mInfo.mLines.empty())
     return;
 
-  sUndo undo;
+  cUndo undo;
   undo.mBefore = mEdit.mState;
 
   if (hasSelect()) {
@@ -846,7 +848,7 @@ void cTextEdit::backspace() {
   if (mInfo.mLines.empty())
     return;
 
-  sUndo undo;
+  cUndo undo;
   undo.mBefore = mEdit.mState;
 
   if (hasSelect()) {
@@ -935,7 +937,7 @@ void cTextEdit::deleteSelection() {
 //{{{
 void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
-  sUndo undo;
+  cUndo undo;
   undo.mBefore = mEdit.mState;
 
   if (hasSelect()) {
@@ -1236,7 +1238,7 @@ void cTextEdit::drawContents (cApp& app) {
 // private:
 //{{{  gets
 //{{{
-int cTextEdit::getCharacterIndex (const sPosition& position) const {
+int cTextEdit::getCharacterIndex (sPosition position) const {
 
   if (position.mLineNumber >= static_cast<int>(mInfo.mLines.size())) {
     cLog::log (LOGERROR, "cTextEdit::getCharacterIndex - lineNumber too big");
@@ -1333,7 +1335,7 @@ int cTextEdit::getMaxLineIndex() const {
   }
 //}}}
 //{{{
-float cTextEdit::getTextWidth (const sPosition& position) const {
+float cTextEdit::getTextWidth (sPosition position) const {
 // get width of text in pixels, of position lineNumberline,  up to position column
 
   const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
@@ -1361,7 +1363,7 @@ float cTextEdit::getTextWidth (const sPosition& position) const {
 //}}}
 
 //{{{
-string cTextEdit::getText (const sPosition& beginPosition, const sPosition& endPosition) const {
+string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) const {
 // get text as string with lineFeed line breaks
 
   int beginLineNumber = beginPosition.mLineNumber;
@@ -1418,7 +1420,7 @@ uint8_t cTextEdit::getGlyphColor (const sGlyph& glyph) const {
 //}}}
 
 //{{{
-bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
+bool cTextEdit::isOnWordBoundary (sPosition position) const {
 
   if ((position.mLineNumber >= static_cast<int>(mInfo.mLines.size())) || (position.mColumn == 0))
     return true;
@@ -1434,7 +1436,7 @@ bool cTextEdit::isOnWordBoundary (const sPosition& position) const {
   }
 //}}}
 //{{{
-string cTextEdit::getWordAt (const sPosition& position) const {
+string cTextEdit::getWordAt (sPosition position) const {
 
   string result;
   for (int i = getCharacterIndex (findWordBegin (position)); i < getCharacterIndex (findWordEnd (position)); ++i)
@@ -1548,7 +1550,7 @@ int cTextEdit::getLineIndexFromNumber (int lineNumber) const {
 //}}}
 //{{{  sets
 //{{{
-void cTextEdit::setCursorPosition (const sPosition& position) {
+void cTextEdit::setCursorPosition (sPosition position) {
 
   if (mEdit.mState.mCursorPosition != position) {
     mEdit.mState.mCursorPosition = position;
@@ -1557,7 +1559,7 @@ void cTextEdit::setCursorPosition (const sPosition& position) {
   }
 //}}}
 //{{{
-void cTextEdit::setSelectionBegin (const sPosition& position) {
+void cTextEdit::setSelectionBegin (sPosition position) {
 
   mEdit.mState.mSelectionBegin = sanitizePosition (position);
   if (mEdit.mState.mSelectionBegin > mEdit.mState.mSelectionEnd)
@@ -1565,7 +1567,7 @@ void cTextEdit::setSelectionBegin (const sPosition& position) {
   }
 //}}}
 //{{{
-void cTextEdit::setSelectionEnd (const sPosition& position) {
+void cTextEdit::setSelectionEnd (sPosition position) {
 
   mEdit.mState.mSelectionEnd = sanitizePosition (position);
   if (mEdit.mState.mSelectionBegin > mEdit.mState.mSelectionEnd)
@@ -1573,7 +1575,7 @@ void cTextEdit::setSelectionEnd (const sPosition& position) {
   }
 //}}}
 //{{{
-void cTextEdit::setSelection (const sPosition& beginPosition, const sPosition& endPosition, eSelection mode) {
+void cTextEdit::setSelection (sPosition beginPosition, sPosition endPosition, eSelection mode) {
 
   mEdit.mState.mSelectionBegin = sanitizePosition (beginPosition);
   mEdit.mState.mSelectionEnd = sanitizePosition (endPosition);
@@ -1658,7 +1660,7 @@ void cTextEdit::scrollCursorVisible() {
   }
 //}}}
 //{{{
-cTextEdit::sPosition cTextEdit::sanitizePosition (const sPosition& position) const {
+cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) const {
 
   if (position.mLineNumber >= static_cast<int>(mInfo.mLines.size())) {
     if (mInfo.mLines.empty())
@@ -1958,7 +1960,7 @@ void cTextEdit::removeLine (int index) {
   }
 //}}}
 //{{{
-void cTextEdit::deleteRange (const sPosition& beginPosition, const sPosition& endPosition) {
+void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
 
   assert (endPosition >= beginPosition);
   if (endPosition == beginPosition)
@@ -2006,7 +2008,7 @@ void cTextEdit::deleteRange (const sPosition& beginPosition, const sPosition& en
 
 // undo
 //{{{
-void cTextEdit::addUndo (sUndo& undo) {
+void cTextEdit::addUndo (cUndo& undo) {
 
   //printf("AddUndo: (@%d.%d) +\'%s' [%d.%d .. %d.%d], -\'%s', [%d.%d .. %d.%d] (@%d.%d)\n",
   //  value.mBefore.mCursorPosition.mGlyphs, value.mBefore.mCursorPosition.mColumn,
@@ -2333,148 +2335,6 @@ void cTextEdit::dragText (int lineNumber, ImVec2 pos) {
 
   setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
   scrollCursorVisible();
-  }
-//}}}
-
-// folds
-//{{{
-void cTextEdit::handleKeyboard() {
-  //{{{  numpad codes
-  // -------------------------------------------------------------------------------------
-  // |    numlock       |        /           |        *             |        -            |
-  // |GLFW_KEY_NUM_LOCK | GLFW_KEY_KP_DIVIDE | GLFW_KEY_KP_MULTIPLY | GLFW_KEY_KP_SUBTRACT|
-  // |     0x11a        |      0x14b         |      0x14c           |      0x14d          |
-  // |------------------------------------------------------------------------------------|
-  // |        7         |        8           |        9             |         +           |
-  // |  GLFW_KEY_KP_7   |   GLFW_KEY_KP_8    |   GLFW_KEY_KP_9      |  GLFW_KEY_KP_ADD;   |
-  // |      0x147       |      0x148         |      0x149           |       0x14e         |
-  // | -------------------------------------------------------------|                     |
-  // |        4         |        5           |        6             |                     |
-  // |  GLFW_KEY_KP_4   |   GLFW_KEY_KP_5    |   GLFW_KEY_KP_6      |                     |
-  // |      0x144       |      0x145         |      0x146           |                     |
-  // | -----------------------------------------------------------------------------------|
-  // |        1         |        2           |        3             |       enter         |
-  // |  GLFW_KEY_KP_1   |   GLFW_KEY_KP_2    |   GLFW_KEY_KP_3      |  GLFW_KEY_KP_ENTER  |
-  // |      0x141       |      0x142         |      0x143           |       0x14f         |
-  // | -------------------------------------------------------------|                     |
-  // |        0                              |        .             |                     |
-  // |  GLFW_KEY_KP_0                        | GLFW_KEY_KP_DECIMAL  |                     |
-  // |      0x140                            |      0x14a           |                     |
-  // --------------------------------------------------------------------------------------
-
-  // glfw keycodes, they are platform specific
-  // - ImGuiKeys small subset of normal keyboard keys
-  // - have I misunderstood something here ?
-
-  //constexpr int kNumpadNumlock = 0x11a;
-  //constexpr int kNumpad0 = 0x140;
-  constexpr int kNumpad1 = 0x141;
-  //constexpr int kNumpad2 = 0x142;
-  constexpr int kNumpad3 = 0x143;
-  //constexpr int kNumpad4 = 0x144;
-  //constexpr int kNumpad5 = 0x145;
-  //constexpr int kNumpad6 = 0x146;
-  //constexpr int kNumpad7 = 0x147;
-  //constexpr int kNumpad8 = 0x148;
-  //constexpr int kNumpad9 = 0x149;
-  //constexpr int kNumpadDecimal = 0x14a;
-  //constexpr int kNumpadDivide = 0x14b;
-  //constexpr int kNumpadMultiply = 0x14c;
-  //constexpr int kNumpadSubtract = 0x14d;
-  //constexpr int kNumpadAdd = 0x14e;
-  //constexpr int kNumpadEnter = 0x14f;
-  //}}}
-  //{{{
-  struct sActionKey {
-    bool mAlt;
-    bool mCtrl;
-    bool mShift;
-    int mGuiKey;
-    bool mWritable;
-    function <void()> mActionFunc;
-    };
-  //}}}
-  const vector <sActionKey> kActionKeys = {
-  //  alt    ctrl   shift  guiKey               writable      function
-     {false, true,  false, ImGuiKey_X,          true,  [this]{cut();}},
-     {false, true,  false, ImGuiKey_V,          true,  [this]{paste();}},
-     {false, false, false, ImGuiKey_Delete,     true,  [this]{deleteIt();}},
-     {false, false, false, ImGuiKey_Backspace,  true,  [this]{backspace();}},
-     {false, true,  false, ImGuiKey_Z,          true,  [this]{undo();}},
-     {false, true,  false, ImGuiKey_Y,          true,  [this]{redo();}},
-     // edit without change
-     {false, true,  false, ImGuiKey_C,          false, [this]{copy();}},
-     {false, true,  false, ImGuiKey_A,          false, [this]{selectAll();}},
-     // move
-     {false, false, false, ImGuiKey_LeftArrow,  false, [this]{moveLeft();}},
-     {false, false, false, ImGuiKey_RightArrow, false, [this]{moveRight();}},
-     {false, false, false, ImGuiKey_UpArrow,    false, [this]{moveLineUp();}},
-     {false, false, false, ImGuiKey_DownArrow,  false, [this]{moveLineDown();}},
-     {false, false, false, ImGuiKey_PageUp,     false, [this]{movePageUp();}},
-     {false, false, false, ImGuiKey_PageDown,   false, [this]{movePageDown();}},
-     {false, false, false, ImGuiKey_Home,       false, [this]{moveHome();}},
-     {false, false, false, ImGuiKey_End,        false, [this]{moveEnd();}},
-     // toggle mode
-     {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverWrite();}},
-     {false, true,  false, ImGuiKey_Space,      false, [this]{toggleShowFolded();}},
-     // numpad
-     {false, false, false, kNumpad1,            false, [this]{openFold();}},
-     {false, false, false, kNumpad3,            false, [this]{closeFold();}},
-  // {false, false, false, kNumpad0,            true,  [this]{foldCreate();}},
-  // {false, false, false, kNumpad4,            false, [this]{prevFile();}},
-  // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
-  // {false, false, false, kNumpad7,            false, [this]{foldEnter();}},
-  // {false, false, false, kNumpad9,            false, [this]{foldExit();}},
-  // {false, true,  false, kNumpad0,            true,  [this]{foldRemove();}},
-  // {false, true,  false, kNumpad3,            false, [this]{foldCloseAll();}},
-  // {true,  false, false, kNumpadMulitply,     false, [this]{findDialog();}},
-  // {true,  false, false, kNumpadDivide,       false, [this]{replaceDialog();}},
-  // {false, false, false, F4                   false, [this]{copy();}},
-  // {false, true,  false, F                    false, [this]{findDialog();}},
-  // {true,  false, false, N                    false, [this]{gotoDialog();}},
-     };
-
-  //if (!ImGui::IsWindowFocused())
-  // return;
-  if (ImGui::IsWindowHovered())
-    ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
-
-  ImGuiIO& io = ImGui::GetIO();
-  bool shift = io.KeyShift;
-  bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
-  bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
-  io.WantTextInput = true;
-  io.WantCaptureKeyboard = false;
-
-  for (auto& actionKey : kActionKeys)
-    //{{{  dispatch any actionKey
-    if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
-         ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
-        (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
-        (actionKey.mCtrl == ctrl) &&
-        (actionKey.mShift == shift) &&
-        (actionKey.mAlt == alt)) {
-
-      actionKey.mActionFunc();
-      break;
-      }
-    //}}}
-
-  if (!isReadOnly()) {
-    // handle character keys
-    if (!ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Enter)))
-     enterCharacter ('\n', false);
-    else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Tab)))
-      enterCharacter ('\t', shift);
-    if (!io.InputQueueCharacters.empty()) {
-      for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
-        auto ch = io.InputQueueCharacters[i];
-        if (ch != 0 && (ch == '\n' || ch >= 32))
-          enterCharacter (ch, shift);
-        }
-      io.InputQueueCharacters.resize (0);
-     }
-   }
   }
 //}}}
 
@@ -2950,130 +2810,147 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
   }
 //}}}
 
-//{{{  cTextEdit::cContext
 //{{{
-void cTextEdit::cContext::update (const cOptions& options) {
-// update draw context
+void cTextEdit::handleKeyboard() {
+  //{{{  numpad codes
+  // -------------------------------------------------------------------------------------
+  // |    numlock       |        /           |        *             |        -            |
+  // |GLFW_KEY_NUM_LOCK | GLFW_KEY_KP_DIVIDE | GLFW_KEY_KP_MULTIPLY | GLFW_KEY_KP_SUBTRACT|
+  // |     0x11a        |      0x14b         |      0x14c           |      0x14d          |
+  // |------------------------------------------------------------------------------------|
+  // |        7         |        8           |        9             |         +           |
+  // |  GLFW_KEY_KP_7   |   GLFW_KEY_KP_8    |   GLFW_KEY_KP_9      |  GLFW_KEY_KP_ADD;   |
+  // |      0x147       |      0x148         |      0x149           |       0x14e         |
+  // | -------------------------------------------------------------|                     |
+  // |        4         |        5           |        6             |                     |
+  // |  GLFW_KEY_KP_4   |   GLFW_KEY_KP_5    |   GLFW_KEY_KP_6      |                     |
+  // |      0x144       |      0x145         |      0x146           |                     |
+  // | -----------------------------------------------------------------------------------|
+  // |        1         |        2           |        3             |       enter         |
+  // |  GLFW_KEY_KP_1   |   GLFW_KEY_KP_2    |   GLFW_KEY_KP_3      |  GLFW_KEY_KP_ENTER  |
+  // |      0x141       |      0x142         |      0x143           |       0x14f         |
+  // | -------------------------------------------------------------|                     |
+  // |        0                              |        .             |                     |
+  // |  GLFW_KEY_KP_0                        | GLFW_KEY_KP_DECIMAL  |                     |
+  // |      0x140                            |      0x14a           |                     |
+  // --------------------------------------------------------------------------------------
 
-  mDrawList = ImGui::GetWindowDrawList();
-  mFont = ImGui::GetFont();
-  mFontAtlasSize = ImGui::GetFontSize();
-  mFontSize = static_cast<float>(options.mFontSize);
-  mFontSmallSize = mFontSize > ((mFontAtlasSize * 2.f) / 3.f) ? ((mFontAtlasSize * 2.f) / 3.f) : mFontSize;
-  mFontSmallOffset = ((mFontSize - mFontSmallSize) * 2.f) / 3.f;
+  // glfw keycodes, they are platform specific
+  // - ImGuiKeys small subset of normal keyboard keys
+  // - have I misunderstood something here ?
 
-  float scale = mFontSize / mFontAtlasSize;
-  mGlyphWidth = measureText ("#", nullptr) * scale;
-  mLineHeight = ImGui::GetTextLineHeight() * scale;
+  //constexpr int kNumpadNumlock = 0x11a;
+  //constexpr int kNumpad0 = 0x140;
+  constexpr int kNumpad1 = 0x141;
+  //constexpr int kNumpad2 = 0x142;
+  constexpr int kNumpad3 = 0x143;
+  //constexpr int kNumpad4 = 0x144;
+  //constexpr int kNumpad5 = 0x145;
+  //constexpr int kNumpad6 = 0x146;
+  //constexpr int kNumpad7 = 0x147;
+  //constexpr int kNumpad8 = 0x148;
+  //constexpr int kNumpad9 = 0x149;
+  //constexpr int kNumpadDecimal = 0x14a;
+  //constexpr int kNumpadDivide = 0x14b;
+  //constexpr int kNumpadMultiply = 0x14c;
+  //constexpr int kNumpadSubtract = 0x14d;
+  //constexpr int kNumpadAdd = 0x14e;
+  //constexpr int kNumpadEnter = 0x14f;
+  //}}}
+  //{{{
+  struct sActionKey {
+    bool mAlt;
+    bool mCtrl;
+    bool mShift;
+    int mGuiKey;
+    bool mWritable;
+    function <void()> mActionFunc;
+    };
+  //}}}
+  const vector <sActionKey> kActionKeys = {
+  //  alt    ctrl   shift  guiKey               writable      function
+     {false, true,  false, ImGuiKey_X,          true,  [this]{cut();}},
+     {false, true,  false, ImGuiKey_V,          true,  [this]{paste();}},
+     {false, false, false, ImGuiKey_Delete,     true,  [this]{deleteIt();}},
+     {false, false, false, ImGuiKey_Backspace,  true,  [this]{backspace();}},
+     {false, true,  false, ImGuiKey_Z,          true,  [this]{undo();}},
+     {false, true,  false, ImGuiKey_Y,          true,  [this]{redo();}},
+     // edit without change
+     {false, true,  false, ImGuiKey_C,          false, [this]{copy();}},
+     {false, true,  false, ImGuiKey_A,          false, [this]{selectAll();}},
+     // move
+     {false, false, false, ImGuiKey_LeftArrow,  false, [this]{moveLeft();}},
+     {false, false, false, ImGuiKey_RightArrow, false, [this]{moveRight();}},
+     {false, false, false, ImGuiKey_UpArrow,    false, [this]{moveLineUp();}},
+     {false, false, false, ImGuiKey_DownArrow,  false, [this]{moveLineDown();}},
+     {false, false, false, ImGuiKey_PageUp,     false, [this]{movePageUp();}},
+     {false, false, false, ImGuiKey_PageDown,   false, [this]{movePageDown();}},
+     {false, false, false, ImGuiKey_Home,       false, [this]{moveHome();}},
+     {false, false, false, ImGuiKey_End,        false, [this]{moveEnd();}},
+     // toggle mode
+     {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverWrite();}},
+     {false, true,  false, ImGuiKey_Space,      false, [this]{toggleShowFolded();}},
+     // numpad
+     {false, false, false, kNumpad1,            false, [this]{openFold();}},
+     {false, false, false, kNumpad3,            false, [this]{closeFold();}},
+  // {false, false, false, kNumpad0,            true,  [this]{foldCreate();}},
+  // {false, false, false, kNumpad4,            false, [this]{prevFile();}},
+  // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
+  // {false, false, false, kNumpad7,            false, [this]{foldEnter();}},
+  // {false, false, false, kNumpad9,            false, [this]{foldExit();}},
+  // {false, true,  false, kNumpad0,            true,  [this]{foldRemove();}},
+  // {false, true,  false, kNumpad3,            false, [this]{foldCloseAll();}},
+  // {true,  false, false, kNumpadMulitply,     false, [this]{findDialog();}},
+  // {true,  false, false, kNumpadDivide,       false, [this]{replaceDialog();}},
+  // {false, false, false, F4                   false, [this]{copy();}},
+  // {false, true,  false, F                    false, [this]{findDialog();}},
+  // {true,  false, false, N                    false, [this]{gotoDialog();}},
+     };
 
-  mLeftPad = mGlyphWidth/2.f;
-  mLineNumberWidth = 0.f;
+  //if (!ImGui::IsWindowFocused())
+  // return;
+  if (ImGui::IsWindowHovered())
+    ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
+
+  ImGuiIO& io = ImGui::GetIO();
+  bool shift = io.KeyShift;
+  bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+  bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+  io.WantTextInput = true;
+  io.WantCaptureKeyboard = false;
+
+  for (auto& actionKey : kActionKeys)
+    //{{{  dispatch any actionKey
+    if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
+         ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
+        (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
+        (actionKey.mCtrl == ctrl) &&
+        (actionKey.mShift == shift) &&
+        (actionKey.mAlt == alt)) {
+
+      actionKey.mActionFunc();
+      break;
+      }
+    //}}}
+
+  if (!isReadOnly()) {
+    // handle character keys
+    if (!ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Enter)))
+     enterCharacter ('\n', false);
+    else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Tab)))
+      enterCharacter ('\t', shift);
+    if (!io.InputQueueCharacters.empty()) {
+      for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
+        auto ch = io.InputQueueCharacters[i];
+        if (ch != 0 && (ch == '\n' || ch >= 32))
+          enterCharacter (ch, shift);
+        }
+      io.InputQueueCharacters.resize (0);
+     }
+   }
   }
 //}}}
 
-//{{{
-float cTextEdit::cContext::measureText (const char* str, const char* strEnd) const {
-// return width of text
-
-  return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
-  }
-//}}}
-
-//{{{
-float cTextEdit::cContext::drawText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
- // draw and return width of text
-
-  mDrawList->AddText (mFont, mFontSize, pos, kPalette[color], str, strEnd);
-  return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
-  }
-//}}}
-//{{{
-float cTextEdit::cContext::drawSmallText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
- // draw and return width of small text
-
-  pos.y += mFontSmallOffset;
-  mDrawList->AddText (mFont, mFontSmallSize, pos, kPalette[color], str, strEnd);
-  return mFont->CalcTextSizeA (mFontSmallSize, FLT_MAX, -1.f, str, strEnd).x;
-  }
-//}}}
-
-//{{{
-void cTextEdit::cContext::drawLine (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
-  mDrawList->AddLine (pos1, pos2, kPalette[color]);
-  }
-//}}}
-//{{{
-void cTextEdit::cContext::drawCircle (ImVec2 centre, float radius, uint8_t color) {
-  mDrawList->AddCircleFilled (centre, radius, kPalette[color], 4);
-  }
-//}}}
-//{{{
-void cTextEdit::cContext::drawRect (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
-  mDrawList->AddRectFilled (pos1, pos2, kPalette[color]);
-  }
-//}}}
-//{{{
-void cTextEdit::cContext::drawRectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
-  mDrawList->AddRect (pos1, pos2, kPalette[color], 1.f);
-  }
-//}}}
-//}}}
-//{{{  cTextEdit::sUndo
-//{{{
-cTextEdit::sUndo::sUndo (const string& added,
-                         const cTextEdit::sPosition addedBegin,
-                         const cTextEdit::sPosition addedEnd,
-                         const string& removed,
-                         const cTextEdit::sPosition removedBegin,
-                         const cTextEdit::sPosition removedEnd,
-                         cTextEdit::sCursorSelectionState& before,
-                         cTextEdit::sCursorSelectionState& after)
-    : mAdded(added), mAddedBegin(addedBegin), mAddedEnd(addedEnd),
-      mRemoved(removed), mRemovedBegin(removedBegin), mRemovedEnd(removedEnd),
-      mBefore(before), mAfter(after) {
-
-  assert (mAddedBegin <= mAddedEnd);
-  assert (mRemovedBegin <= mRemovedEnd);
-  }
-//}}}
-
-//{{{
-void cTextEdit::sUndo::undo (cTextEdit* textEdit) {
-
-  if (!mAdded.empty()) {
-    textEdit->deleteRange (mAddedBegin, mAddedEnd);
-    textEdit->colorize (mAddedBegin.mLineNumber - 1, mAddedEnd.mLineNumber - mAddedBegin.mLineNumber + 2);
-    }
-
-  if (!mRemoved.empty()) {
-    sPosition begin = mRemovedBegin;
-    textEdit->insertTextAt (begin, mRemoved.c_str());
-    textEdit->colorize (mRemovedBegin.mLineNumber - 1, mRemovedEnd.mLineNumber - mRemovedBegin.mLineNumber + 2);
-    }
-
-  textEdit->mEdit.mState = mBefore;
-  textEdit->scrollCursorVisible();
-  }
-//}}}
-//{{{
-void cTextEdit::sUndo::redo (cTextEdit* textEdit) {
-
-  if (!mRemoved.empty()) {
-    textEdit->deleteRange (mRemovedBegin, mRemovedEnd);
-    textEdit->colorize (mRemovedBegin.mLineNumber - 1, mRemovedEnd.mLineNumber - mRemovedBegin.mLineNumber + 1);
-    }
-
-  if (!mAdded.empty()) {
-    sPosition begin = mAddedBegin;
-    textEdit->insertTextAt (begin, mAdded.c_str());
-    textEdit->colorize (mAddedBegin.mLineNumber - 1, mAddedEnd.mLineNumber - mAddedBegin.mLineNumber + 1);
-    }
-
-  textEdit->mEdit.mState = mAfter;
-  textEdit->scrollCursorVisible();
-  }
-//}}}
-//}}}
 //{{{  cTextEdit::sLanguage
 //{{{
 const cTextEdit::sLanguage& cTextEdit::sLanguage::cPlus() {
@@ -3301,6 +3178,130 @@ const cTextEdit::sLanguage& cTextEdit::sLanguage::glsl() {
     }
 
   return language;
+  }
+//}}}
+//}}}
+//{{{  cTextEdit::cContext
+//{{{
+void cTextEdit::cContext::update (const cOptions& options) {
+// update draw context
+
+  mDrawList = ImGui::GetWindowDrawList();
+  mFont = ImGui::GetFont();
+  mFontAtlasSize = ImGui::GetFontSize();
+  mFontSize = static_cast<float>(options.mFontSize);
+  mFontSmallSize = mFontSize > ((mFontAtlasSize * 2.f) / 3.f) ? ((mFontAtlasSize * 2.f) / 3.f) : mFontSize;
+  mFontSmallOffset = ((mFontSize - mFontSmallSize) * 2.f) / 3.f;
+
+  float scale = mFontSize / mFontAtlasSize;
+  mGlyphWidth = measureText ("#", nullptr) * scale;
+  mLineHeight = ImGui::GetTextLineHeight() * scale;
+
+  mLeftPad = mGlyphWidth/2.f;
+  mLineNumberWidth = 0.f;
+  }
+//}}}
+
+//{{{
+float cTextEdit::cContext::measureText (const char* str, const char* strEnd) const {
+// return width of text
+
+  return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
+  }
+//}}}
+
+//{{{
+float cTextEdit::cContext::drawText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
+ // draw and return width of text
+
+  mDrawList->AddText (mFont, mFontSize, pos, kPalette[color], str, strEnd);
+  return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
+  }
+//}}}
+//{{{
+float cTextEdit::cContext::drawSmallText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
+ // draw and return width of small text
+
+  pos.y += mFontSmallOffset;
+  mDrawList->AddText (mFont, mFontSmallSize, pos, kPalette[color], str, strEnd);
+  return mFont->CalcTextSizeA (mFontSmallSize, FLT_MAX, -1.f, str, strEnd).x;
+  }
+//}}}
+
+//{{{
+void cTextEdit::cContext::drawLine (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+  mDrawList->AddLine (pos1, pos2, kPalette[color]);
+  }
+//}}}
+//{{{
+void cTextEdit::cContext::drawCircle (ImVec2 centre, float radius, uint8_t color) {
+  mDrawList->AddCircleFilled (centre, radius, kPalette[color], 4);
+  }
+//}}}
+//{{{
+void cTextEdit::cContext::drawRect (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+  mDrawList->AddRectFilled (pos1, pos2, kPalette[color]);
+  }
+//}}}
+//{{{
+void cTextEdit::cContext::drawRectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+  mDrawList->AddRect (pos1, pos2, kPalette[color], 1.f);
+  }
+//}}}
+//}}}
+//{{{  cTextEdit::sUndo
+//{{{
+cTextEdit::cUndo::cUndo (const string& added,
+                         const cTextEdit::sPosition addedBegin,
+                         const cTextEdit::sPosition addedEnd,
+                         const string& removed,
+                         const cTextEdit::sPosition removedBegin,
+                         const cTextEdit::sPosition removedEnd,
+                         cTextEdit::sCursorSelectionState& before,
+                         cTextEdit::sCursorSelectionState& after)
+    : mAdded(added), mAddedBegin(addedBegin), mAddedEnd(addedEnd),
+      mRemoved(removed), mRemovedBegin(removedBegin), mRemovedEnd(removedEnd),
+      mBefore(before), mAfter(after) {
+
+  assert (mAddedBegin <= mAddedEnd);
+  assert (mRemovedBegin <= mRemovedEnd);
+  }
+//}}}
+
+//{{{
+void cTextEdit::cUndo::undo (cTextEdit* textEdit) {
+
+  if (!mAdded.empty()) {
+    textEdit->deleteRange (mAddedBegin, mAddedEnd);
+    textEdit->colorize (mAddedBegin.mLineNumber - 1, mAddedEnd.mLineNumber - mAddedBegin.mLineNumber + 2);
+    }
+
+  if (!mRemoved.empty()) {
+    sPosition begin = mRemovedBegin;
+    textEdit->insertTextAt (begin, mRemoved.c_str());
+    textEdit->colorize (mRemovedBegin.mLineNumber - 1, mRemovedEnd.mLineNumber - mRemovedBegin.mLineNumber + 2);
+    }
+
+  textEdit->mEdit.mState = mBefore;
+  textEdit->scrollCursorVisible();
+  }
+//}}}
+//{{{
+void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
+
+  if (!mRemoved.empty()) {
+    textEdit->deleteRange (mRemovedBegin, mRemovedEnd);
+    textEdit->colorize (mRemovedBegin.mLineNumber - 1, mRemovedEnd.mLineNumber - mRemovedBegin.mLineNumber + 1);
+    }
+
+  if (!mAdded.empty()) {
+    sPosition begin = mAddedBegin;
+    textEdit->insertTextAt (begin, mAdded.c_str());
+    textEdit->colorize (mAddedBegin.mLineNumber - 1, mAddedEnd.mLineNumber - mAddedBegin.mLineNumber + 1);
+    }
+
+  textEdit->mEdit.mState = mAfter;
+  textEdit->scrollCursorVisible();
   }
 //}}}
 //}}}

@@ -150,7 +150,7 @@ if (BUILD_PAINTBOX)
   # executable - main + static registered .cpp
   file (GLOB HEADER_FILES platform/*.h graphics/*.h brush/*.h ui/*.h)
   file (GLOB SOURCE_FILES paintMain.cpp platform/*.cpp graphics/*.cpp brush/*.cpp
-                          ui/cUI.cpp ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp ui/cRadioUI.cpp)
+                          ui/cUI.cpp ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp)
   add_executable (paintbox ${SOURCE_FILES} ${HEADER_FILES})
 
   target_compile_definitions (paintbox PRIVATE OPENGL_VERSION)
@@ -170,6 +170,7 @@ if (BUILD_PAINTBOX)
   endif()
 
   if (BUILD_AV)
+    add_executable (paintbox PRIVATE ui/cRadioUI.cpp)
     target_link_libraries (paintbox PRIVATE song audio decoder dvb kiss net)
   endif()
 
