@@ -1292,10 +1292,12 @@ void cTextEdit::drawContents (cApp& app) {
   if (mEdit.mColorRangeMin < mEdit.mColorRangeMax) {
     //{{{  colorize range
     const int increment = (mOptions.mLanguage.mTokenize == nullptr) ? 10 : 10000;
-    const int to = min (mEdit.mColorRangeMin + increment, mEdit.mColorRangeMax);
+    const int toLine = min (mEdit.mColorRangeMin + increment, mEdit.mColorRangeMax);
 
-    colorizeLines (mEdit.mColorRangeMin, to);
-    mEdit.mColorRangeMin = to;
+    for (int line = mEdit.mColorRangeMin; line < max (0, min (static_cast<int>(mInfo.mLines.size()), toLine)); ++line)
+      colorizeLine (line);
+
+    mEdit.mColorRangeMin = toLine;
 
     if (mEdit.mColorRangeMax == mEdit.mColorRangeMin) {
       mEdit.mColorRangeMin = numeric_limits<int>::max();
@@ -2098,76 +2100,71 @@ void cTextEdit::addUndo (cUndo& undo) {
 //}}}
 
 //{{{
-void cTextEdit::colorizeLines (int fromLine, int toLine) {
+void cTextEdit::colorizeLine (int line) {
 
-  if (mInfo.mLines.empty() || (fromLine >= toLine))
+  vector<cGlyph>& glyphs = mInfo.mLines[line].mGlyphs;
+  if (glyphs.empty())
     return;
 
-  for (int i = fromLine; i < max (0, min (static_cast<int>(mInfo.mLines.size()), toLine)); ++i) {
-    vector<cGlyph>& glyphs = mInfo.mLines[i].mGlyphs;
-    if (glyphs.empty())
-      continue;
+  string textString;
+  textString.resize (glyphs.size());
+  for (size_t j = 0; j < glyphs.size(); ++j) {
+    cGlyph& col = glyphs[j];
+    textString[j] = col.mChar;
+    col.mColor = eText;
+    }
 
-    string textString;
-    textString.resize (glyphs.size());
-    for (size_t j = 0; j < glyphs.size(); ++j) {
-      cGlyph& col = glyphs[j];
-      textString[j] = col.mChar;
-      col.mColor = eText;
-      }
+  const char* bufferBegin = &textString.front();
+  const char* bufferEnd = bufferBegin + textString.size();
+  const char* lastChar = bufferEnd;
+  for (const char* firstChar = bufferBegin; firstChar != lastChar; ) {
+    // iterate chars
+    const char* tokenBegin = nullptr;
+    const char* tokenEnd = nullptr;
+    uint8_t tokenColor = eText;
 
-    const char* bufferBegin = &textString.front();
-    const char* bufferEnd = bufferBegin + textString.size();
-    const char* lastChar = bufferEnd;
-    for (const char* firstChar = bufferBegin; firstChar != lastChar; ) {
-      // iterate chars
-      const char* tokenBegin = nullptr;
-      const char* tokenEnd = nullptr;
-      uint8_t tokenColor = eText;
-
-      bool hasTokenizeResult = false;
-      if (mOptions.mLanguage.mTokenize != nullptr)
-        if (mOptions.mLanguage.mTokenize (firstChar, lastChar, tokenBegin, tokenEnd, tokenColor))
+    bool hasTokenizeResult = false;
+    if (mOptions.mLanguage.mTokenize != nullptr)
+      if (mOptions.mLanguage.mTokenize (firstChar, lastChar, tokenBegin, tokenEnd, tokenColor))
+        hasTokenizeResult = true;
+    if (!hasTokenizeResult)
+      for (auto& p : mOptions.mRegexList) {
+        cmatch results;
+        if (regex_search (firstChar, lastChar, results, p.first, regex_constants::match_continuous)) {
+          auto& v = *results.begin();
+          tokenBegin = v.first;
+          tokenEnd = v.second;
+          tokenColor = p.second;
           hasTokenizeResult = true;
-      if (!hasTokenizeResult)
-        for (auto& p : mOptions.mRegexList) {
-          cmatch results;
-          if (regex_search (firstChar, lastChar, results, p.first, regex_constants::match_continuous)) {
-            auto& v = *results.begin();
-            tokenBegin = v.first;
-            tokenEnd = v.second;
-            tokenColor = p.second;
-            hasTokenizeResult = true;
-            break;
-            }
+          break;
           }
-
-      if (!hasTokenizeResult)
-        firstChar++;
-      else {
-        const size_t tokenLength = tokenEnd - tokenBegin;
-        if (tokenColor == eBuiltIn) {
-          string id;
-          id.assign (tokenBegin, tokenEnd);
-
-          // almost all languages use lower case to specify keywords, so shouldn't this use ::tolower ?
-          if (!mOptions.mLanguage.mCaseSensitive)
-            transform (id.begin(), id.end(), id.begin(),
-                       [](uint8_t ch) { return static_cast<uint8_t>(std::toupper (ch)); });
-
-          if (!glyphs[firstChar - bufferBegin].mPreProc) {
-            if (mOptions.mLanguage.mKeywords.count (id) != 0)
-              tokenColor = eKeyword;
-            else if (mOptions.mLanguage.mBuiltIns.count (id) != 0)
-              tokenColor = eBuiltIn;
-            }
-          }
-
-        for (size_t j = 0; j < tokenLength; ++j)
-          glyphs[(tokenBegin - bufferBegin) + j].mColor = tokenColor;
-
-        firstChar = tokenEnd;
         }
+
+    if (!hasTokenizeResult)
+      firstChar++;
+    else {
+      const size_t tokenLength = tokenEnd - tokenBegin;
+      if (tokenColor == eBuiltIn) {
+        string id;
+        id.assign (tokenBegin, tokenEnd);
+
+        // almost all languages use lower case to specify keywords, so shouldn't this use ::tolower ?
+        if (!mOptions.mLanguage.mCaseSensitive)
+          transform (id.begin(), id.end(), id.begin(),
+                     [](uint8_t ch) { return static_cast<uint8_t>(std::toupper (ch)); });
+
+        if (!glyphs[firstChar - bufferBegin].mPreProc) {
+          if (mOptions.mLanguage.mKeywords.count (id) != 0)
+            tokenColor = eKeyword;
+          else if (mOptions.mLanguage.mBuiltIns.count (id) != 0)
+            tokenColor = eBuiltIn;
+          }
+        }
+
+      for (size_t j = 0; j < tokenLength; ++j)
+        glyphs[(tokenBegin - bufferBegin) + j].mColor = tokenColor;
+
+      firstChar = tokenEnd;
       }
     }
   }

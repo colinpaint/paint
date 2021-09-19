@@ -453,7 +453,7 @@ private:
   void addUndo (cUndo& undo);
   //}}}
 
-  void colorizeLines (int fromLine, int toLine);
+  void colorizeLine (int line);
   void colorize (int fromLine, int count);
 
   void clickLine (int lineNumber);
