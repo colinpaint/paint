@@ -185,13 +185,15 @@ public:
   public:
     //{{{
     cLine() :
-      mGlyphs(), mSeeThroughInc(0), mIndent(0),
-      mFoldBegin(false), mFoldEnd(false), mComment(false), mFolded(true), mSelected(false), mPressed(false) {}
+      mGlyphs(),
+      mComment(false), mFoldEnd(false), mFoldBegin(false), mFolded(true), mPressed(false),
+      mSeeThruOffset(0), mIndent(0) {}
     //}}}
     //{{{
     cLine (const std::vector<sGlyph>& line) :
-      mGlyphs(line), mSeeThroughInc(0), mIndent(0),
-      mFoldBegin(false), mFoldEnd(false), mComment(false), mFolded(true), mSelected(false), mPressed(false) {}
+      mGlyphs(line),
+      mComment(false), mFoldEnd(false), mFoldBegin(false), mFolded(true), mPressed(false),
+      mSeeThruOffset(0), mIndent(0) {}
     //}}}
     //{{{
     ~cLine() {
@@ -202,15 +204,14 @@ public:
 
     std::vector <sGlyph> mGlyphs;
 
-    uint8_t mSeeThroughInc;
-    uint8_t mIndent;
-
-    bool mFoldBegin:1;
-    bool mFoldEnd:1;
     bool mComment:1;
+    bool mFoldBegin:1;
     bool mFolded:1;
-    bool mSelected:1;
+    bool mFoldEnd:1;
     bool mPressed:1;
+
+    uint8_t mSeeThruOffset;
+    uint8_t mIndent;
     };
   //}}}
 

@@ -1172,7 +1172,7 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::PushStyleVar (ImGuiStyleVar_ScrollbarRounding, 2.f);
   ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, {0.f,0.f});
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, {0.f,0.f});
-  ImGui::BeginChild ("##scrolling", {0.f,0.f}, false,
+  ImGui::BeginChild ("##s", {0.f,0.f}, false,
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
   colorizeInternal();
 
@@ -2431,7 +2431,7 @@ void cTextEdit::drawTop (cApp& app) {
   //{{{  fontSize button, vert,triangle debug text
   ImGui::SameLine();
   ImGui::SetNextItemWidth (3 * ImGui::GetFontSize());
-  ImGui::DragInt ("##fontSize", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
+  ImGui::DragInt ("##fs", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
 
   if (ImGui::IsItemHovered()) {
     int fontSize = mOptions.mFontSize + static_cast<int>(ImGui::GetIO().MouseWheel);
@@ -2552,21 +2552,20 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
     curPos.x += leftPadWidth;
 
     if (mOptions.mShowLineDebug)
-      mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber, fmt::format ("{:4d} {}{}{}{}{}{} {:2d} {:2d} ",
+      mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber, fmt::format ("{:4d}{}{}{}{}{}{}{:2d}{:2d} ",
         lineNumber,
+        line.mComment ? 'c' : ' ',
         line.mFoldBegin ? 'b':' ',
-        line.mFoldEnd   ? 'e':' ',
-        line.mComment   ? 'c':' ',
         line.mFolded    ? 'f':' ',
-        line.mSelected  ? 's':' ',
+        line.mFoldEnd   ? 'e':' ',
         line.mPressed   ? 'p':' ',
         line.mIndent,
-        line.mSeeThroughInc).c_str());
+        line.mSeeThruOffset).c_str());
     else
       mContext.mLineNumberWidth = mContext.drawSmallText (curPos, eLineNumber, fmt::format ("{:4d} ", lineNumber).c_str());
 
     // add invisibleButton, gobble up leftPad
-    ImGui::InvisibleButton (fmt::format ("##line{}", lineNumber).c_str(),
+    ImGui::InvisibleButton (fmt::format ("##l{}", lineNumber).c_str(),
                             {leftPadWidth + mContext.mLineNumberWidth, mContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
@@ -2600,7 +2599,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       curPos.x += prefixWidth;
 
       // add invisibleButton, indent + prefix wide, want to action on press
-      if (ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
+      if (ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                                   {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight}))
         line.mPressed = false;
       if (ImGui::IsItemActive() && !line.mPressed) {
@@ -2617,7 +2616,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
       // add invisible button
       ImGui::SameLine();
-      ImGui::InvisibleButton (fmt::format ("##text{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
+      ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive())
         clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
 
@@ -2633,7 +2632,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       curPos.x += prefixWidth;
 
       // add foldPrefix invisibleButton, want to action on press
-      if (ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
+      if (ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                                   {leftPadWidth + prefixWidth, mContext.mLineHeight}))
         line.mPressed = false;
       if (ImGui::IsItemActive() && !line.mPressed) {
@@ -2650,7 +2649,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
       // add invisibleButton
       ImGui::SameLine();
-      ImGui::InvisibleButton (fmt::format("##text{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
+      ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive())
         clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
 
@@ -2664,7 +2663,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
     float prefixWidth = mContext.drawText (curPos, eFoldEnd, mOptions.mLanguage.mFoldEnd);
 
     // add invisibleButton
-    ImGui::InvisibleButton (fmt::format ("##fold{}", lineNumber).c_str(),
+    ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                             {leftPadWidth + prefixWidth, mContext.mLineHeight});
     if (ImGui::IsItemActive())
       clickFold (lineNumber, false);
@@ -2683,7 +2682,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       glyphsWidth = mContext.mGlyphWidth;
 
     // add invisibleButton
-    ImGui::InvisibleButton (fmt::format ("##text{}", lineNumber).c_str(),
+    ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(),
                             {leftPadWidth + glyphsWidth, mContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
@@ -2788,8 +2787,8 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
     // show foldBegin line
     // - if no foldBegin comment, search for first noComment line, !!!! assume next line for now !!!!
     cLine& line = mInfo.mLines[lineNumber];
-    line.mSeeThroughInc = line.mComment ? 0 : 1;
-    lineIndex = drawLine (lineNumber, line.mSeeThroughInc, lineIndex);
+    line.mSeeThruOffset = line.mComment ? 0 : 1;
+    lineIndex = drawLine (lineNumber, line.mSeeThruOffset, lineIndex);
     }
 
   while (true) {
@@ -3249,7 +3248,7 @@ void cTextEdit::cContext::drawRectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color)
   }
 //}}}
 //}}}
-//{{{  cTextEdit::sUndo
+//{{{  cTextEdit::cUndo
 //{{{
 cTextEdit::cUndo::cUndo (const string& added,
                          const cTextEdit::sPosition addedBegin,
@@ -3345,7 +3344,7 @@ bool cTextEdit::cLine::parse (const sLanguage& language) {
 
   // init fields set by updateFolds
   mFolded = true;
-  mSeeThroughInc = 0;
+  mSeeThruOffset = 0;
 
   return hasFolds;
   }
