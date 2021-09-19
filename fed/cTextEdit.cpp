@@ -387,7 +387,7 @@ namespace {
     bool isFloat = false;
     bool isBinary = false;
 
-    if (ptr < inEnd) {
+    if (ptr < inEnd)
       if (*ptr == '.') {
         //{{{  skip floating point frac
         isFloat = true;
@@ -418,7 +418,6 @@ namespace {
           ptr++;
         }
         //}}}
-      }
 
     if (!isHex && !isBinary) {
       //{{{  skip floating point exponent e+dd
@@ -443,17 +442,16 @@ namespace {
         ptr++;
       }
       //}}}
-
-    if (!isFloat)
+    if (!isFloat) {
       //{{{  skip trailing integer size ulUL letter
       while ((ptr < inEnd) &&
              ((*ptr == 'u') || (*ptr == 'U') || (*ptr == 'l') || (*ptr == 'L')))
         ptr++;
+      }
       //}}}
 
     outBegin = inBegin;
     outEnd = ptr;
-
     return true;
     }
   //}}}
@@ -499,7 +497,7 @@ namespace {
 //{{{
 cTextEdit::cTextEdit() {
 
-  mInfo.mLines.push_back (vector<sGlyph>());
+  mInfo.mLines.push_back (vector<cGlyph>());
   setLanguage (cLanguage::cPlus());
 
   mLastCursorFlashTimePoint = system_clock::now();
@@ -547,19 +545,19 @@ void cTextEdit::setTextString (const string& text) {
 // break test into lines, store in internal mLines structure
 
   mInfo.mLines.clear();
-  mInfo.mLines.emplace_back (vector<sGlyph>());
+  mInfo.mLines.emplace_back (vector<cGlyph>());
 
   for (auto ch : text) {
     if (ch == '\r') // ignored but flag set
       mInfo.mHasCR = true;
     else if (ch == '\n') {
       mInfo.mHasFolds |= mInfo.mLines.back().parse (mOptions.mLanguage);
-      mInfo.mLines.emplace_back (vector<sGlyph>());
+      mInfo.mLines.emplace_back (vector<cGlyph>());
       }
     else {
       if (ch ==  '\t')
         mInfo.mHasTabs = true;
-      mInfo.mLines.back().mGlyphs.emplace_back (sGlyph (ch, eText));
+      mInfo.mLines.back().mGlyphs.emplace_back (cGlyph (ch, eText));
       }
     }
 
@@ -578,7 +576,7 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
   mInfo.mLines.clear();
 
   if (lines.empty())
-    mInfo.mLines.emplace_back (vector<sGlyph>());
+    mInfo.mLines.emplace_back (vector<cGlyph>());
   else {
     mInfo.mLines.resize (lines.size());
     for (size_t i = 0; i < lines.size(); ++i) {
@@ -587,7 +585,7 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
       for (size_t j = 0; j < line.size(); ++j) {
         if (line[j] ==  '\t')
           mInfo.mHasTabs = true;
-        mInfo.mLines[i].mGlyphs.emplace_back (sGlyph (line[j], eText));
+        mInfo.mLines[i].mGlyphs.emplace_back (cGlyph (line[j], eText));
         }
       mInfo.mHasFolds |= mInfo.mLines[i].parse (mOptions.mLanguage);
       }
@@ -999,7 +997,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
       bool modified = false;
       for (int i = begin.mLineNumber; i <= end.mLineNumber; i++) {
-        vector<sGlyph>& glyphs = mInfo.mLines[i].mGlyphs;
+        vector<cGlyph>& glyphs = mInfo.mLines[i].mGlyphs;
         if (shift) {
           if (!glyphs.empty()) {
             if (glyphs.front().mChar == '\t') {
@@ -1015,7 +1013,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
             }
           }
         else {
-          glyphs.insert (glyphs.begin(), sGlyph ('\t', eTab));
+          glyphs.insert (glyphs.begin(), cGlyph ('\t', eTab));
           modified = true;
           }
         }
@@ -1113,7 +1111,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
         }
 
       for (auto p = buf; *p != '\0'; p++, ++characterIndex)
-        line.mGlyphs.insert (line.mGlyphs.begin() + characterIndex, sGlyph (*p, eText));
+        line.mGlyphs.insert (line.mGlyphs.begin() + characterIndex, cGlyph (*p, eText));
 
       line.parse (mOptions.mLanguage);
 
@@ -1226,7 +1224,7 @@ void cTextEdit::drawContents (cApp& app) {
     int currentLine = 0;
     int currentIndex = 0;
     while ((currentLine < endLine) || (currentIndex < endIndex)) {
-      vector<sGlyph>& line = mInfo.mLines[currentLine].mGlyphs;
+      vector<cGlyph>& line = mInfo.mLines[currentLine].mGlyphs;
       if ((currentIndex == 0) && !concatenate) {
         withinSingleLineComment = false;
         withinPreproc = false;
@@ -1278,7 +1276,7 @@ void cTextEdit::drawContents (cApp& app) {
             }
 
           else {
-            auto pred = [](const char& a, const sGlyph& b) { return a == b.mChar; };
+            auto pred = [](const char& a, const cGlyph& b) { return a == b.mChar; };
             auto from = line.begin() + currentIndex;
             string& beginString = mOptions.mLanguage.mCommentBegin;
             string& singleBeginString = mOptions.mLanguage.mSingleLineComment;
@@ -1413,7 +1411,7 @@ int cTextEdit::getCharacterIndex (sPosition position) const {
     return 0;
     }
 
-  const vector <sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+  const vector <cGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
   int column = 0;
   int i = 0;
@@ -1435,7 +1433,7 @@ int cTextEdit::getCharacterColumn (int lineNumber, int index) const {
   if (lineNumber >= static_cast<int>(mInfo.mLines.size()))
     return 0;
 
-  const vector<sGlyph>& glyphs = mInfo.mLines[lineNumber].mGlyphs;
+  const vector<cGlyph>& glyphs = mInfo.mLines[lineNumber].mGlyphs;
 
   int column = 0;
   int i = 0;
@@ -1458,7 +1456,7 @@ int cTextEdit::getLineNumChars (int row) const {
   if (row >= static_cast<int>(mInfo.mLines.size()))
     return 0;
 
-  const vector <sGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
+  const vector <cGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
   int numChars = 0;
   for (size_t i = 0; i < glyphs.size(); numChars++)
     i += utf8CharLength (glyphs[i].mChar);
@@ -1472,7 +1470,7 @@ int cTextEdit::getLineMaxColumn (int row) const {
   if (row >= static_cast<int>(mInfo.mLines.size()))
     return 0;
 
-  const vector <sGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
+  const vector <cGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
   int column = 0;
   for (size_t i = 0; i < glyphs.size(); ) {
     uint8_t ch = glyphs[i].mChar;
@@ -1506,7 +1504,7 @@ int cTextEdit::getMaxLineIndex() const {
 float cTextEdit::getTextWidth (sPosition position) const {
 // get width of text in pixels, of position lineNumberline,  up to position column
 
-  const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+  const vector<cGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
   float distance = 0.f;
   int colIndex = getCharacterIndex (position);
@@ -1572,28 +1570,12 @@ string cTextEdit::getSelectedText() const {
 //}}}
 
 //{{{
-uint8_t cTextEdit::getGlyphColor (const sGlyph& glyph) const {
-
-  if (glyph.mComment)
-    return eComment;
-
-  if (glyph.mMultiLineComment)
-    return eMultiLineComment;
-
-  if (glyph.mPreProc)
-    return ePreProc;
-
-  return glyph.mColor;
-  }
-//}}}
-
-//{{{
 bool cTextEdit::isOnWordBoundary (sPosition position) const {
 
   if ((position.mLineNumber >= static_cast<int>(mInfo.mLines.size())) || (position.mColumn == 0))
     return true;
 
-  const vector<sGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+  const vector<cGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
   int characterIndex = getCharacterIndex (position);
   if (characterIndex >= static_cast<int>(glyphs.size()))
@@ -1637,7 +1619,7 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (int lineNumber, float posX)
 
   int column = 0;
   if ((lineNumber >= 0) && (lineNumber < static_cast<int>(mInfo.mLines.size()))) {
-    const vector<sGlyph>& glyphs = mInfo.mLines[lineNumber].mGlyphs;
+    const vector<cGlyph>& glyphs = mInfo.mLines[lineNumber].mGlyphs;
 
     float columnX = 0.f;
 
@@ -1783,7 +1765,7 @@ void cTextEdit::advance (sPosition& position) const {
   if (position.mLineNumber < static_cast<int>(mInfo.mLines.size())) {
 
     const cLine& line = mInfo.mLines[position.mLineNumber];
-    const vector<sGlyph>& glyphs = line.mGlyphs;
+    const vector<cGlyph>& glyphs = line.mGlyphs;
 
     int characterIndex = getCharacterIndex (position);
     if (characterIndex + 1 < static_cast<int>(glyphs.size())) {
@@ -1860,7 +1842,7 @@ cTextEdit::sPosition cTextEdit::findWordBegin (sPosition fromPosition) const {
   if (fromPosition.mLineNumber >= static_cast<int>(mInfo.mLines.size()))
     return fromPosition;
 
-  const vector<sGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
+  const vector<cGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
   int characterIndex = getCharacterIndex (fromPosition);
 
   if (characterIndex >= static_cast<int>(glyphs.size()))
@@ -1892,7 +1874,7 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition fromPosition) const {
   if (fromPosition.mLineNumber >= static_cast<int>(mInfo.mLines.size()))
     return fromPosition;
 
-  const vector<sGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
+  const vector<cGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
   int characterIndex = getCharacterIndex (fromPosition);
 
   if (characterIndex >= static_cast<int>(glyphs.size()))
@@ -1930,7 +1912,7 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) const {
 
   int characterIndex = getCharacterIndex (fromPosition);
   if (characterIndex < static_cast<int>(mInfo.mLines[fromPosition.mLineNumber].mGlyphs.size())) {
-    const vector<sGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
+    const vector<cGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
     isWord = isalnum (glyphs[characterIndex].mChar);
     skip = isWord;
     }
@@ -1941,7 +1923,7 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) const {
       return sPosition (lineNumber, getLineMaxColumn (lineNumber));
       }
 
-    const vector<sGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
+    const vector<cGlyph>& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
     if (characterIndex < static_cast<int>(glyphs.size())) {
       isWord = isalnum (glyphs[characterIndex].mChar);
 
@@ -2018,7 +2000,7 @@ void cTextEdit::moveDown (int amount) {
 //{{{
 cTextEdit::cLine& cTextEdit::insertLine (int index) {
 
-  cLine& result = *mInfo.mLines.insert (mInfo.mLines.begin() + index, vector<sGlyph>());
+  cLine& result = *mInfo.mLines.insert (mInfo.mLines.begin() + index, vector<cGlyph>());
 
   map<int,string> etmp;
   for (auto& marker : mOptions.mMarkers)
@@ -2064,7 +2046,7 @@ int cTextEdit::insertTextAt (sPosition& position, const char* text) {
       cLine& line = mInfo.mLines[position.mLineNumber];
       auto length = utf8CharLength (*text);
       while ((length-- > 0) && (*text != '\0'))
-        line.mGlyphs.insert (line.mGlyphs.begin() + characterIndex++, sGlyph (*text++, eText));
+        line.mGlyphs.insert (line.mGlyphs.begin() + characterIndex++, cGlyph (*text++, eText));
       ++position.mColumn;
 
       line.parse (mOptions.mLanguage);
@@ -2200,8 +2182,8 @@ void cTextEdit::addUndo (cUndo& undo) {
   ++mUndoList.mIndex;
   }
 //}}}
+//}}}
 
-// colorize
 //{{{
 void cTextEdit::colorizeLines (int fromLine, int toLine) {
 
@@ -2214,13 +2196,13 @@ void cTextEdit::colorizeLines (int fromLine, int toLine) {
 
   int endLine = max (0, min (static_cast<int>(mInfo.mLines.size()), toLine));
   for (int i = fromLine; i < endLine; ++i) {
-    vector<sGlyph>& glyphs = mInfo.mLines[i].mGlyphs;
+    vector<cGlyph>& glyphs = mInfo.mLines[i].mGlyphs;
     if (glyphs.empty())
       continue;
 
     textString.resize (glyphs.size());
     for (size_t j = 0; j < glyphs.size(); ++j) {
-      sGlyph& col = glyphs[j];
+      cGlyph& col = glyphs[j];
       textString[j] = col.mChar;
       col.mColor = eText;
       }
@@ -2235,24 +2217,19 @@ void cTextEdit::colorizeLines (int fromLine, int toLine) {
       uint8_t tokenColor = eText;
 
       bool hasTokenizeResult = false;
-      if (mOptions.mLanguage.mTokenize != nullptr) {
+      if (mOptions.mLanguage.mTokenize != nullptr)
         if (mOptions.mLanguage.mTokenize (firstChar, lastChar, tokenBegin, tokenEnd, tokenColor))
           hasTokenizeResult = true;
-        }
-
-      if (hasTokenizeResult == false) {
-        //printf("using regex for %.*s\n", first + 10 < last ? 10 : int(last - first), first);
-        for (auto& p : mOptions.mRegexList) {
+      if (!hasTokenizeResult)
+        for (auto& p : mOptions.mRegexList)
           if (regex_search (firstChar, lastChar, results, p.first, regex_constants::match_continuous)) {
-            hasTokenizeResult = true;
             auto& v = *results.begin();
             tokenBegin = v.first;
             tokenEnd = v.second;
             tokenColor = p.second;
+            hasTokenizeResult = true;
             break;
             }
-          }
-        }
 
       if (!hasTokenizeResult)
         firstChar++;
@@ -2300,9 +2277,7 @@ void cTextEdit::colorize (int fromLine, int lines) {
   mEdit.mColorRangeMax = max (mEdit.mColorRangeMin, mEdit.mColorRangeMax);
   }
 //}}}
-//}}}
 
-// clicks
 //{{{
 void cTextEdit::clickLine (int lineNumber) {
 
@@ -2389,7 +2364,6 @@ void cTextEdit::dragText (int lineNumber, ImVec2 pos) {
   }
 //}}}
 
-// draws
 //{{{
 void cTextEdit::drawTop (cApp& app) {
 
@@ -2513,7 +2487,7 @@ void cTextEdit::drawTop (cApp& app) {
   }
 //}}}
 //{{{
-float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, uint8_t forceColor) {
+float cTextEdit::drawGlyphs (ImVec2 pos, const vector <cGlyph>& glyphs, uint8_t forceColor) {
 
   if (glyphs.empty())
     return 0.f;
@@ -2523,15 +2497,15 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, uint8_t 
 
   array <char,256> str;
   size_t strIndex = 0;
-  uint8_t strColor = (forceColor == eUndefined) ? getGlyphColor (glyphs[0]) : forceColor;
+  uint8_t lastColor = (forceColor == eUndefined) ? glyphs[0].getColor() : forceColor;
+
   for (auto& glyph : glyphs) {
-    uint8_t color = (forceColor == eUndefined) ? getGlyphColor (glyph) : forceColor;
+    uint8_t color = (forceColor == eUndefined) ? glyph.getColor() : forceColor;
     if ((strIndex > 0) && (strIndex < str.max_size()) &&
-        ((color != strColor) || (glyph.mChar == '\t') || (glyph.mChar == ' '))) {
+        ((color != lastColor) || (glyph.mChar == '\t') || (glyph.mChar == ' '))) {
       // draw colored glyphs, seperated by colorChange,tab,space
-      pos.x += mContext.drawText (pos, strColor, str.data(), str.data()+strIndex);
+      pos.x += mContext.drawText (pos, lastColor, str.data(), str.data() + strIndex);
       strIndex = 0;
-      strColor = color;
       }
 
     if (glyph.mChar == '\t') {
@@ -2572,10 +2546,11 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, uint8_t 
       while ((length-- > 0) && (strIndex < str.max_size()))
         str[strIndex++] = glyph.mChar;
       }
+    lastColor = color;
     }
 
   if (strIndex > 0) // draw remaining glyphs
-    pos.x += mContext.drawText (pos, strColor, str.data(), str.data() + strIndex);
+    pos.x += mContext.drawText (pos, lastColor, str.data(), str.data() + strIndex);
 
   return (pos.x - firstPosX);
   }
@@ -2635,7 +2610,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
   // draw text
   ImVec2 textPos = curPos;
-  const vector <sGlyph>& glyphs = line.mGlyphs;
+  const vector <cGlyph>& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
     if (line.mFolded) {
       //{{{  draw foldBegin folded ...  glyphs text
@@ -3121,6 +3096,22 @@ void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
   textEdit->scrollCursorVisible();
   }
 //}}}
+//}}}
+
+//{{{
+uint8_t cTextEdit::cGlyph::getColor() const {
+
+  if (mComment)
+    return eComment;
+
+  if (mMultiLineComment)
+    return eMultiLineComment;
+
+  if (mPreProc)
+    return ePreProc;
+
+  return mColor;
+  }
 //}}}
 
 // cTextEdit::cLine

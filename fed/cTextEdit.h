@@ -21,24 +21,6 @@ class cTextEdit {
 public:
   enum class eSelection { eNormal, eWord, eLine };
   //{{{
-  struct sGlyph {
-    //{{{
-    sGlyph() : mChar(' '), mColor(0), mComment(false), mMultiLineComment(false), mPreProc(false) {}
-    //}}}
-    //{{{
-    sGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
-                                         mComment(false), mMultiLineComment(false), mPreProc(false) {}
-    //}}}
-
-    uint8_t mChar;
-    uint8_t mColor;
-
-    bool mComment:1;
-    bool mMultiLineComment:1;
-    bool mPreProc:1;
-    };
-  //}}}
-  //{{{
   struct sPosition {
     sPosition() : mLineNumber(0), mColumn(0) {}
     sPosition (int lineNumber, int column) : mLineNumber(lineNumber), mColumn(column) {}
@@ -137,6 +119,27 @@ public:
     };
   //}}}
   //{{{
+  class cGlyph {
+  public:
+    //{{{
+    cGlyph() : mChar(' '), mColor(0), mComment(false), mMultiLineComment(false), mPreProc(false) {}
+    //}}}
+    //{{{
+    cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
+                                         mComment(false), mMultiLineComment(false), mPreProc(false) {}
+    //}}}
+
+    uint8_t getColor() const;
+
+    uint8_t mChar;
+    uint8_t mColor;
+
+    bool mComment:1;
+    bool mMultiLineComment:1;
+    bool mPreProc:1;
+    };
+  //}}}
+  //{{{
   class cLine {
   public:
     //{{{
@@ -146,7 +149,7 @@ public:
       mSeeThruOffset(0), mIndent(0) {}
     //}}}
     //{{{
-    cLine (const std::vector<sGlyph>& line) :
+    cLine (const std::vector<cGlyph>& line) :
       mGlyphs(line),
       mComment(false), mFoldEnd(false), mFoldBegin(false), mFolded(true), mPressed(false),
       mSeeThruOffset(0), mIndent(0) {}
@@ -158,7 +161,7 @@ public:
     //}}}
     bool parse (const cLanguage& language);
 
-    std::vector <sGlyph> mGlyphs;
+    std::vector <cGlyph> mGlyphs;
 
     bool mComment:1;
     bool mFoldBegin:1;
@@ -404,8 +407,6 @@ private:
   std::string getText (sPosition beginPosition, sPosition endPosition) const;
   std::string getSelectedText() const;
 
-  uint8_t getGlyphColor (const sGlyph& glyph) const;
-
   bool isOnWordBoundary (sPosition position) const;
   std::string getWordAt (sPosition position) const;
   std::string getWordUnderCursor() const;
@@ -454,22 +455,19 @@ private:
 
   // undo
   void addUndo (cUndo& undo);
-
-  // colorize
-  void colorizeLines (int fromLine, int toLine);
-  void colorize (int fromLine, int count);
   //}}}
 
-  // clicks
+  void colorizeLines (int fromLine, int toLine);
+  void colorize (int fromLine, int count);
+
   void clickLine (int lineNumber);
   void clickFold (int lineNumber, bool foldOpen);
   void clickText (int lineNumber, float posX, bool selectWord);
   void dragLine (int lineNumber, float posY);
   void dragText (int lineNumber, ImVec2 pos);
 
-  // draws
   void drawTop (cApp& app);
-  float drawGlyphs (ImVec2 pos, const std::vector <sGlyph>& glyphs, uint8_t forceColor);
+  float drawGlyphs (ImVec2 pos, const std::vector <cGlyph>& glyphs, uint8_t forceColor);
   int drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex);
   int drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
 
