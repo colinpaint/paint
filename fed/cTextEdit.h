@@ -157,7 +157,6 @@ public:
       mGlyphs.clear();
       }
     //}}}
-    bool parse (const cLanguage& language);
 
     std::vector <cGlyph> mGlyphs;
 
@@ -453,8 +452,7 @@ private:
   void addUndo (cUndo& undo);
   //}}}
 
-  void colorizeLine (int line);
-  void colorize (int fromLine, int count);
+  void parseLine (cLine& line);
 
   void clickLine (int lineNumber);
   void clickFold (int lineNumber, bool foldOpen);

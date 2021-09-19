@@ -522,7 +522,7 @@ void cTextEdit::setTextString (const string& text) {
     if (ch == '\r') // ignored but flag set
       mInfo.mHasCR = true;
     else if (ch == '\n') {
-      mInfo.mHasFolds |= mInfo.mLines.back().parse (mOptions.mLanguage);
+      parseLine (mInfo.mLines.back());
       mInfo.mLines.emplace_back (vector<cGlyph>());
       }
     else {
@@ -536,8 +536,6 @@ void cTextEdit::setTextString (const string& text) {
 
   mUndoList.mBuffer.clear();
   mUndoList.mIndex = 0;
-
-  colorize (0, -1);
   }
 //}}}
 //{{{
@@ -558,7 +556,7 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
           mInfo.mHasTabs = true;
         mInfo.mLines[i].mGlyphs.emplace_back (cGlyph (line[j], eText));
         }
-      mInfo.mHasFolds |= mInfo.mLines[i].parse (mOptions.mLanguage);
+      parseLine (mInfo.mLines[i]);
       }
     }
 
@@ -566,8 +564,6 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
 
   mUndoList.mBuffer.clear();
   mUndoList.mIndex = 0;
-
-  colorize (0, -1);
   }
 //}}}
 
@@ -579,8 +575,6 @@ void cTextEdit::setLanguage (const cLanguage& language) {
   mOptions.mRegexList.clear();
   for (auto& r : mOptions.mLanguage.mTokenRegexStrings)
     mOptions.mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
-
-  colorize (0, -1);
   }
 //}}}
 //}}}
@@ -819,7 +813,7 @@ void cTextEdit::deleteIt() {
 
       cLine& nextLine = mInfo.mLines[position.mLineNumber + 1];
       line.mGlyphs.insert (line.mGlyphs.end(), nextLine.mGlyphs.begin(), nextLine.mGlyphs.end());
-      line.parse (mOptions.mLanguage);
+      parseLine (line);
 
       removeLine (position.mLineNumber + 1);
       }
@@ -833,11 +827,10 @@ void cTextEdit::deleteIt() {
       int length = utf8CharLength (line.mGlyphs[characterIndex].mChar);
       while ((length-- > 0) && (characterIndex < static_cast<int>(line.mGlyphs.size())))
         line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex);
-      line.parse (mOptions.mLanguage);
+      parseLine (line);
       }
 
     mInfo.mTextEdited = true;
-    colorize (position.mLineNumber, 1);
     }
 
   undo.mAfter = mEdit.mState;
@@ -901,12 +894,11 @@ void cTextEdit::backspace() {
         undo.mRemoved += line.mGlyphs[characterIndex].mChar;
         line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex);
         }
-      line.parse (mOptions.mLanguage);
+      parseLine (line);
       }
     mInfo.mTextEdited = true;
 
     scrollCursorVisible();
-    colorize (mEdit.mState.mCursorPosition.mLineNumber, 1);
     }
 
   undo.mAfter = mEdit.mState;
@@ -924,8 +916,6 @@ void cTextEdit::deleteSelection() {
 
   setSelection (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionBegin, eSelection::eNormal);
   setCursorPosition (mEdit.mState.mSelectionBegin);
-
-  colorize (mEdit.mState.mSelectionBegin.mLineNumber, 1);
   }
 //}}}
 
@@ -1046,10 +1036,10 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
     auto characterIndex = getCharacterIndex (position);
 
     newLine.mGlyphs.insert (newLine.mGlyphs.end(), line.mGlyphs.begin() + characterIndex, line.mGlyphs.end());
-    newLine.parse (mOptions.mLanguage);
+    parseLine (newLine);
 
     line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex, line.mGlyphs.begin() + line.mGlyphs.size());
-    line.parse (mOptions.mLanguage);
+    parseLine (line);
 
     setCursorPosition (sPosition (position.mLineNumber + 1,
                                   getCharacterColumn (position.mLineNumber + 1, static_cast<int>(whiteSpaceSize))));
@@ -1078,7 +1068,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       for (auto p = buf; *p != '\0'; p++, ++characterIndex)
         line.mGlyphs.insert (line.mGlyphs.begin() + characterIndex, cGlyph (*p, eText));
 
-      line.parse (mOptions.mLanguage);
+      parseLine (line);
 
       undo.mAdded = buf;
       setCursorPosition (sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex)));
@@ -1093,7 +1083,6 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   undo.mAfter = mEdit.mState;
   addUndo (undo);
 
-  colorize (position.mLineNumber - 1, 3);
   scrollCursorVisible();
   }
 //}}}
@@ -1295,7 +1284,7 @@ void cTextEdit::drawContents (cApp& app) {
     const int toLine = min (mEdit.mColorRangeMin + increment, mEdit.mColorRangeMax);
 
     for (int line = mEdit.mColorRangeMin; line < max (0, min (static_cast<int>(mInfo.mLines.size()), toLine)); ++line)
-      colorizeLine (line);
+      parseLine (mInfo.mLines[line]);
 
     mEdit.mColorRangeMin = toLine;
 
@@ -1960,10 +1949,10 @@ int cTextEdit::insertTextAt (sPosition& position, const char* text) {
         cLine& newLine = insertLine (position.mLineNumber + 1);
 
         newLine.mGlyphs.insert (newLine.mGlyphs.begin(), line.mGlyphs.begin() + characterIndex, line.mGlyphs.end());
-        newLine.parse (mOptions.mLanguage);
+        parseLine (newLine);
 
         line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex, line.mGlyphs.end());
-        line.parse (mOptions.mLanguage);
+        parseLine (line);
         }
       else
         insertLine (position.mLineNumber + 1);
@@ -1982,7 +1971,7 @@ int cTextEdit::insertTextAt (sPosition& position, const char* text) {
         line.mGlyphs.insert (line.mGlyphs.begin() + characterIndex++, cGlyph (*text++, eText));
       ++position.mColumn;
 
-      line.parse (mOptions.mLanguage);
+      parseLine (line);
       }
 
     mInfo.mTextEdited = true;
@@ -2005,8 +1994,6 @@ void cTextEdit::insertText (const char* value) {
 
   setSelection (position, position, eSelection::eNormal);
   setCursorPosition (position);
-
-  colorize (beginPosition.mLineNumber - 1, totalLines + 2);
   }
 //}}}
 
@@ -2052,7 +2039,7 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
       line.mGlyphs.erase (line.mGlyphs.begin() + beginCharacterIndex, line.mGlyphs.end());
     else
       line.mGlyphs.erase (line.mGlyphs.begin() + beginCharacterIndex, line.mGlyphs.begin() + endCharacterIndex);
-    line.parse (mOptions.mLanguage);
+    parseLine (line);
     }
 
   else {
@@ -2073,8 +2060,8 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
     if (beginPosition.mLineNumber < endPosition.mLineNumber)
       removeLine (beginPosition.mLineNumber + 1, endPosition.mLineNumber + 1);
 
-    firstLine.parse (mOptions.mLanguage);
-    lastLine.parse (mOptions.mLanguage);
+    parseLine (firstLine);
+    parseLine (lastLine);
     }
 
   mInfo.mTextEdited = true;
@@ -2100,18 +2087,52 @@ void cTextEdit::addUndo (cUndo& undo) {
 //}}}
 
 //{{{
-void cTextEdit::colorizeLine (int line) {
+void cTextEdit::parseLine (cLine& line) {
 
-  vector<cGlyph>& glyphs = mInfo.mLines[line].mGlyphs;
-  if (glyphs.empty())
+  // glyphs to string
+  string text;
+  for (auto& glyph : line.mGlyphs)
+    text += glyph.mChar;
+
+  // look for foldBegin text
+  size_t foldBeginIndent = text.find (mOptions.mLanguage.mFoldBeginMarker);
+  line.mFoldBegin = (foldBeginIndent != string::npos);
+
+  if (line.mFoldBegin) {
+    // found foldBegin text, find ident
+    line.mIndent = static_cast<uint8_t>(foldBeginIndent);
+    // has text after the foldBeginMarker
+    line.mComment = (text.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
+    mInfo.mHasFolds = true;
+    }
+  else {
+    // normal line, find indent, find comment
+    size_t indent = text.find_first_not_of (' ');
+    if (indent != string::npos)
+      line.mIndent = static_cast<uint8_t>(indent);
+    else
+      line.mIndent = 0;
+
+    // has "//" style comment as first text in line
+    line.mComment = (text.find (mOptions.mLanguage.mSingleLineComment, indent) != string::npos);
+    }
+
+  // look for foldEnd text
+  size_t foldEndIndent = text.find (mOptions.mLanguage.mFoldEndMarker);
+  line.mFoldEnd = (foldEndIndent != string::npos);
+
+  // init fields set by updateFolds
+  line.mFolded = true;
+  line.mSeeThruOffset = 0;
+
+  if (line.mGlyphs.empty())
     return;
 
   string textString;
-  textString.resize (glyphs.size());
-  for (size_t j = 0; j < glyphs.size(); ++j) {
-    cGlyph& col = glyphs[j];
-    textString[j] = col.mChar;
-    col.mColor = eText;
+  textString.resize (line.mGlyphs.size());
+  for (size_t j = 0; j < line.mGlyphs.size(); ++j) {
+    textString[j] = line.mGlyphs[j].mChar;
+    line.mGlyphs[j].mColor = eText;
     }
 
   const char* bufferBegin = &textString.front();
@@ -2153,7 +2174,7 @@ void cTextEdit::colorizeLine (int line) {
           transform (id.begin(), id.end(), id.begin(),
                      [](uint8_t ch) { return static_cast<uint8_t>(std::toupper (ch)); });
 
-        if (!glyphs[firstChar - bufferBegin].mPreProc) {
+        if (!line.mGlyphs[firstChar - bufferBegin].mPreProc) {
           if (mOptions.mLanguage.mKeywords.count (id) != 0)
             tokenColor = eKeyword;
           else if (mOptions.mLanguage.mBuiltIns.count (id) != 0)
@@ -2162,24 +2183,11 @@ void cTextEdit::colorizeLine (int line) {
         }
 
       for (size_t j = 0; j < tokenLength; ++j)
-        glyphs[(tokenBegin - bufferBegin) + j].mColor = tokenColor;
+        line.mGlyphs[(tokenBegin - bufferBegin) + j].mColor = tokenColor;
 
       firstChar = tokenEnd;
       }
     }
-  }
-//}}}
-//{{{
-void cTextEdit::colorize (int fromLine, int lines) {
-
-  mEdit.mCheckComments = true;
-
-  mEdit.mColorRangeMin = max (0, min (mEdit.mColorRangeMin, fromLine));
-
-  int toLine = (lines == -1) ? static_cast<int>(mInfo.mLines.size())
-                             : min (static_cast<int>(mInfo.mLines.size()), fromLine + lines);
-  mEdit.mColorRangeMax = max (mEdit.mColorRangeMax, toLine);
-  mEdit.mColorRangeMax = max (mEdit.mColorRangeMin, mEdit.mColorRangeMax);
   }
 //}}}
 
@@ -2949,15 +2957,12 @@ cTextEdit::cUndo::cUndo (const string& added,
 //{{{
 void cTextEdit::cUndo::undo (cTextEdit* textEdit) {
 
-  if (!mAdded.empty()) {
+  if (!mAdded.empty())
     textEdit->deleteRange (mAddedBegin, mAddedEnd);
-    textEdit->colorize (mAddedBegin.mLineNumber - 1, mAddedEnd.mLineNumber - mAddedBegin.mLineNumber + 2);
-    }
 
   if (!mRemoved.empty()) {
     sPosition begin = mRemovedBegin;
     textEdit->insertTextAt (begin, mRemoved.c_str());
-    textEdit->colorize (mRemovedBegin.mLineNumber - 1, mRemovedEnd.mLineNumber - mRemovedBegin.mLineNumber + 2);
     }
 
   textEdit->mEdit.mState = mBefore;
@@ -2967,15 +2972,12 @@ void cTextEdit::cUndo::undo (cTextEdit* textEdit) {
 //{{{
 void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
 
-  if (!mRemoved.empty()) {
+  if (!mRemoved.empty())
     textEdit->deleteRange (mRemovedBegin, mRemovedEnd);
-    textEdit->colorize (mRemovedBegin.mLineNumber - 1, mRemovedEnd.mLineNumber - mRemovedBegin.mLineNumber + 1);
-    }
 
   if (!mAdded.empty()) {
     sPosition begin = mAddedBegin;
     textEdit->insertTextAt (begin, mAdded.c_str());
-    textEdit->colorize (mAddedBegin.mLineNumber - 1, mAddedEnd.mLineNumber - mAddedBegin.mLineNumber + 1);
     }
 
   textEdit->mEdit.mState = mAfter;
@@ -2995,53 +2997,6 @@ uint8_t cTextEdit::cGlyph::getColor() const {
   if (mPreProc)
     return ePreProc;
   return mColor;
-  }
-//}}}
-
-// cTextEdit::cLine
-//{{{
-bool cTextEdit::cLine::parse (const cLanguage& language) {
-// parse beginFold and endFold, set flags
-
-  bool hasFolds = false;
-
-  // glyphs to string
-  string text;
-  for (auto& glyph : mGlyphs)
-    text += glyph.mChar;
-
-  // look for foldBegin text
-  size_t foldBeginIndent = text.find (language.mFoldBeginMarker);
-  mFoldBegin = (foldBeginIndent != string::npos);
-
-  if (mFoldBegin) {
-    // found foldBegin text, find ident
-    mIndent = static_cast<uint8_t>(foldBeginIndent);
-    // has text after the foldBeginMarker
-    mComment = (text.size() != (foldBeginIndent + language.mFoldBeginMarker.size()));
-    hasFolds = true;
-    }
-  else {
-    // normal line, find indent, find comment
-    size_t indent = text.find_first_not_of (' ');
-    if (indent != string::npos)
-      mIndent = static_cast<uint8_t>(indent);
-    else
-      mIndent = 0;
-
-    // has "//" style comment as first text in line
-    mComment = (text.find (language.mSingleLineComment, indent) != string::npos);
-    }
-
-  // look for foldEnd text
-  size_t foldEndIndent = text.find (language.mFoldEndMarker);
-  mFoldEnd = (foldEndIndent != string::npos);
-
-  // init fields set by updateFolds
-  mFolded = true;
-  mSeeThruOffset = 0;
-
-  return hasFolds;
   }
 //}}}
 
