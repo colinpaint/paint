@@ -17,55 +17,13 @@
 
 class cApp;
 //}}}
-
 class cTextEdit {
 public:
   enum class eSelection { eNormal, eWord, eLine };
-  //{{{  palette const
-  // should be enum, but array enum size isn't pretty
-  static const uint8_t eBackground =        0;
-
-  static const uint8_t eText =              1;
-  static const uint8_t eKeyword =           2;
-  static const uint8_t eNumber =            3;
-  static const uint8_t eString =            4;
-  static const uint8_t eCharLiteral =       5;
-  static const uint8_t ePunctuation =       6;
-
-  static const uint8_t ePreprocessor =      7;
-  static const uint8_t eIdent =             8;
-  static const uint8_t eKnownIdent =        9;
-  static const uint8_t ePreprocIdent =     10;
-
-  static const uint8_t eComment =          11;
-  static const uint8_t eMultiLineComment = 12;
-
-  static const uint8_t eMarker =           13;
-  static const uint8_t eSelect =           14;
-  static const uint8_t eCursor =           15;
-  static const uint8_t eCursorLineFill =   16;
-  static const uint8_t eCursorLineEdge =   17;
-
-  static const uint8_t eLineNumber =       18;
-
-  static const uint8_t eWhiteSpace =       19;
-  static const uint8_t eTab =              20;
-
-  static const uint8_t eFoldBeginClosed =  21;
-  static const uint8_t eFoldBeginOpen =    22;
-  static const uint8_t eFoldEnd =          23;
-
-  static const uint8_t eScrollBackground = 24;
-  static const uint8_t eScrollGrab =       25;
-  static const uint8_t eScrollHover =      26;
-  static const uint8_t eScrollActive =     27;
-
-  static const uint8_t eMax =              28;
-  //}}}
   //{{{
   struct sGlyph {
     //{{{
-    sGlyph() : mChar(' '), mColor(eText), mComment(false), mMultiLineComment(false), mPreProc(false) {}
+    sGlyph() : mChar(' '), mColor(0), mComment(false), mMultiLineComment(false), mPreProc(false) {}
     //}}}
     //{{{
     sGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
@@ -372,7 +330,7 @@ private:
     float mLeftPad = 0.f;
     float mLineNumberWidth = 0.f;
 
-    std::array <ImU32,eMax> mPalette;
+    std::vector <ImU32> mPalette;
 
   private:
     ImDrawList* mDrawList = nullptr;

@@ -29,50 +29,72 @@ bool equals (InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, B
   return (first1 == last1) && (first2 == last2);
   }
 //}}}
-
 namespace {
-  //{{{  const
-  //{{{
-  const array <ImU32, cTextEdit::eMax> kPalette = {
-    0xffefefef, // eBackground
+  //{{{  palette const
+  constexpr uint8_t eBackground =        0;
+  constexpr uint8_t eText =              1;
+  constexpr uint8_t eKeyword =           2;
+  constexpr uint8_t eNumber =            3;
+  constexpr uint8_t eString =            4;
+  constexpr uint8_t eCharLiteral =       5;
+  constexpr uint8_t ePunctuation =       6;
+  constexpr uint8_t ePreprocessor =      7;
+  constexpr uint8_t eIdent =             8;
+  constexpr uint8_t eKnownIdent =        9;
+  constexpr uint8_t ePreprocIdent =     10;
+  constexpr uint8_t eComment =          11;
+  constexpr uint8_t eMultiLineComment = 12;
+  constexpr uint8_t eMarker =           13;
+  constexpr uint8_t eSelect =           14;
+  constexpr uint8_t eCursor =           15;
+  constexpr uint8_t eCursorLineFill =   16;
+  constexpr uint8_t eCursorLineEdge =   17;
+  constexpr uint8_t eLineNumber =       18;
+  constexpr uint8_t eWhiteSpace =       19;
+  constexpr uint8_t eTab =              20;
+  constexpr uint8_t eFoldBeginClosed =  21;
+  constexpr uint8_t eFoldBeginOpen =    22;
+  constexpr uint8_t eFoldEnd =          23;
+  constexpr uint8_t eScrollBackground = 24;
+  constexpr uint8_t eScrollGrab =       25;
+  constexpr uint8_t eScrollHover =      26;
+  constexpr uint8_t eScrollActive =     27;
+  constexpr uint8_t eUndefined =      0xFF;
 
+  // use lookup to allow for any colorMap
+  const vector <ImU32> kPalette = {
+    0xffefefef, // eBackground
     0xff404040, // eText
     0xffff0c06, // eKeyword
     0xff008000, // eNumber
     0xff2020a0, // eString
     0xff304070, // eCharLiteral
     0xff000000, // ePunctuation
-
     0xff406060, // ePreprocessor
     0xff404040, // eIdent
     0xff606010, // eKnownIident
     0xffc040a0, // ePreprocIdent
-
     0xff205020, // eComment
     0xff405020, // eMultiLineComment
-
     0x800010ff, // eMarker
     0x80600000, // eSelect
     0xff000000, // eCursor
     0x20000000, // eCursorLineFill
     0x40000000, // eCursorLineEdge
-
     0xff505000, // eLineNumber
-
     0xff808080, // eWhiteSpace
     0xff404040, // eTab
-
     0xffff0000, // eFoldBeginClosed,
     0xff0000ff, // eFoldBeginOpen,
     0xff0000ff, // eFoldEnd,
-
     0x80404040, // eScrollBackground
     0x80c0c0c0, // eScrollGrab
     0x80ffffff, // eScrollHover
     0xffFFFF00, // eScrollActive
     };
   //}}}
-
+  //{{{  language const
+  //{{{
   const vector<string> kCppKeywords = {
     "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit", "atomic_noexcept", "auto",
     "bitand", "bitor", "bool", "break",
@@ -96,7 +118,8 @@ namespace {
     "wchar_t", "while",
     "xor", "xor_eq"
     };
-
+  //}}}
+  //{{{
   const vector<string> kCppIdents = {
     "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol",
     "ceil", "clock", "cosh", "ctime",
@@ -115,6 +138,7 @@ namespace {
     "unordered_map", "unordered_set",
     "vector",
     };
+  //}}}
 
   //{{{
   const vector<string> kCKeywords = {
@@ -2484,9 +2508,9 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <sGlyph>& glyphs, uint8_t 
 
   array <char,256> str;
   size_t strIndex = 0;
-  uint8_t strColor = (forceColor < eMax) ? forceColor : getGlyphColor (glyphs[0]);
+  uint8_t strColor = (forceColor == eUndefined) ? getGlyphColor (glyphs[0]) : forceColor;
   for (auto& glyph : glyphs) {
-    uint8_t color = (forceColor < eMax) ? forceColor : getGlyphColor (glyph);
+    uint8_t color = (forceColor == eUndefined) ? getGlyphColor (glyph) : forceColor;
     if ((strIndex > 0) && (strIndex < str.max_size()) &&
         ((color != strColor) || (glyph.mChar == '\t') || (glyph.mChar == ' '))) {
       // draw colored glyphs, seperated by colorChange,tab,space
@@ -2596,7 +2620,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
   // draw text
   ImVec2 textPos = curPos;
-  vector <sGlyph>& glyphs = line.mGlyphs;
+  const vector <sGlyph>& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
     if (line.mFolded) {
       //{{{  draw foldBegin folded ... + glyphs text
@@ -2655,7 +2679,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
       // draw glyphs
       textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, 0xFF);
+      float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, eUndefined);
       if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
         glyphsWidth = mContext.mGlyphWidth;
 
@@ -2689,7 +2713,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
     // drawGlyphs
     textPos.x = curPos.x;
-    float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, 0xFF);
+    float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, eUndefined);
     if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
       glyphsWidth = mContext.mGlyphWidth;
 
@@ -2807,7 +2831,7 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
     if (++lineNumber >= static_cast<int>(mInfo.mLines.size()))
       return lineNumber;
 
-    cLine& line = mInfo.mLines[lineNumber];
+    const cLine& line = mInfo.mLines[lineNumber];
     if (line.mFoldBegin)
       lineNumber = drawFold (lineNumber, lineIndex, folded, line.mFolded);
     else if (line.mFoldEnd) {
@@ -3151,7 +3175,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
       // tokenize lambda
       while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
         inBegin++;
-      palette = eMax;
+      palette = eUndefined;
       if (inBegin == inEnd) {
         outBegin = inEnd;
         outEnd = inEnd;
@@ -3167,7 +3191,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
         palette = eNumber;
       else if (findPunctuation (inBegin, outBegin, outEnd))
         palette = ePunctuation;
-      return (palette != eMax);
+      return (palette != eUndefined);
       };
 
     language.mCommentBegin = "/*";
@@ -3208,7 +3232,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
 
     language.mTokenize = [](const char * inBegin, const char * inEnd,
                            const char *& outBegin, const char *& outEnd, uint8_t& palette) -> bool {
-      palette = eMax;
+      palette = eUndefined;
       while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
         inBegin++;
       if (inBegin == inEnd) {
@@ -3226,7 +3250,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
         palette = eNumber;
       else if (findPunctuation (inBegin, outBegin, outEnd))
         palette = ePunctuation;
-      return (palette != eMax);
+      return (palette != eUndefined);
       };
 
     language.mCommentBegin = "/*";
