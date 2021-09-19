@@ -120,11 +120,11 @@ public:
   class cGlyph {
   public:
     //{{{
-    cGlyph() : mChar(' '), mColor(0), mComment(false), mMultiLineComment(false), mPreProc(false) {}
+    cGlyph() : mChar(' '), mColor(0), mSingleLineComment(false), mMultiLineComment(false), mPreProc(false) {}
     //}}}
     //{{{
     cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
-                                         mComment(false), mMultiLineComment(false), mPreProc(false) {}
+                                         mSingleLineComment(false), mMultiLineComment(false), mPreProc(false) {}
     //}}}
 
     uint8_t getColor() const;
@@ -132,7 +132,7 @@ public:
     uint8_t mChar;
     uint8_t mColor;
 
-    bool mComment:1;
+    bool mSingleLineComment:1;
     bool mMultiLineComment:1;
     bool mPreProc:1;
     };

@@ -21,7 +21,7 @@ using namespace chrono;
 //{{{  template <...> bool equals (...)
 template<class InputIt1, class InputIt2, class BinaryPredicate>
 bool equals (InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, BinaryPredicate p) {
-  for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
+  for (; (first1 != last1) && (first2 != last2); ++first1, ++first2) {
     if (!p (*first1, *first2))
       return false;
     }
@@ -93,133 +93,104 @@ namespace {
     0xff00ffff, // eScrollActive
     };
   //}}}
-  //{{{  language const
-  //{{{
-  const vector<string> kCppKeywords = {
-    "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit", "atomic_noexcept", "auto",
-    "bitand", "bitor", "bool", "break",
-    "case", "catch", "char", "char16_t", "char32_t", "class", "compl", "concept",
-    "const", "constexpr", "const_cast", "continue",
-    "decltype", "default", "delete", "do", "double", "dynamic_cast",
-    "else", "enum", "explicit", "export", "extern",
-    "false", "float", "for", "friend",
-    "goto",
-    "if", "import", "inline", "int",
-    "long",
-    "module", "mutable",
-    "namespace", "new", "noexcept", "not", "not_eq", "nullptr",
-    "operator", "or", "or_eq",
-    "private", "protected", "public",
-    "register", "reinterpret_cast", "requires", "return",
-    "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "synchronized",
-    "template", "this", "thread_local", "throw", "true", "try", "typedef", "typeid", "typename",
-    "union", "unsigned", "using",
-    "virtual", "void", "volatile",
-    "wchar_t", "while",
-    "xor", "xor_eq"
-    };
-  //}}}
-  //{{{
-  const vector<string> kCppBuiltIns = {
-    "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol",
-    "ceil", "clock", "cosh", "ctime",
-    "div",
-    "exit",
-    "fabs", "floor", "fmod",
-    "getchar", "getenv",
-    "isalnum", "isalpha", "isdigit", "isgraph", "ispunct", "isspace", "isupper",
-    "kbhit",
-    "log10", "log2", "log",
-    "map", "memcmp", "modf", "min", "max"
-    "pow", "printf", "putchar", "putenv", "puts",
-    "rand", "remove", "rename",
-    "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "set", "std", "string", "sprintf", "snprintf",
-    "time", "tolower", "toupper",
-    "unordered_map", "unordered_set",
-    "vector",
-    };
-  //}}}
+   //{{{  language const
+   //{{{
+   const vector<string> kCKeywords = {
+     "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit", "atomic_noexcept", "auto",
+     "bitand", "bitor", "bool", "break",
+     "case", "catch", "char", "char16_t", "char32_t", "class", "compl", "concept",
+     "const", "constexpr", "const_cast", "continue",
+     "decltype", "default", "delete", "do", "double", "dynamic_cast",
+     "else", "enum", "explicit", "export", "extern",
+     "false", "float", "for", "friend",
+     "goto",
+     "if", "import", "inline", "int",
+     "long",
+     "module", "mutable",
+     "namespace", "new", "noexcept", "not", "not_eq", "nullptr",
+     "operator", "or", "or_eq",
+     "private", "protected", "public",
+     "register", "reinterpret_cast", "requires", "return",
+     "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "synchronized",
+     "template", "this", "thread_local", "throw", "true", "try", "typedef", "typeid", "typename",
+     "union", "unsigned", "using",
+     "virtual", "void", "volatile",
+     "wchar_t", "while",
+     "xor", "xor_eq"
+     };
+   //}}}
+   //{{{
+   const vector<string> kCBuiltIns = {
+     "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol",
+     "ceil", "clock", "cosh", "ctime",
+     "div",
+     "exit",
+     "fabs", "floor", "fmod",
+     "getchar", "getenv",
+     "isalnum", "isalpha", "isdigit", "isgraph", "ispunct", "isspace", "isupper",
+     "kbhit",
+     "log10", "log2", "log",
+     "map", "memcmp", "modf", "min", "max"
+     "pow", "printf", "putchar", "putenv", "puts",
+     "rand", "remove", "rename",
+     "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "set", "std", "string", "sprintf", "snprintf",
+     "time", "tolower", "toupper",
+     "unordered_map", "unordered_set",
+     "vector",
+     };
+   //}}}
 
-  //{{{
-  const vector<string> kCKeywords = {
-    "auto",
-    "break",
-    "case", "char", "const", "continue",
-    "default", "do", "double",
-    "else", "enum", "extern",
-    "float", "for",
-    "goto",
-    "if", "inline", "int",
-    //"include",
-    "long",
-    "register", "restrict", "return",
-    "short", "signed", "sizeof", "static", "struct", "switch",
-    "typedef", "union", "unsigned",
-    "void", "volatile",
-    "while",
-    "_Alignas", "_Alignof", "_Atomic",
-    "_Bool", "_Complex", "_Generic", "_Imaginary",
-    "_Noreturn", "_Static_assert", "_Thread_local"
-  };
-  //}}}
-  //{{{
-  const vector<string> kCBuiltIns = {
-    "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
-    "ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper"
-  };
-  //}}}
+   //{{{
+   const vector<string> kHlslKeywords = {
+     "AppendStructuredBuffer", "asm", "asm_fragment", "BlendState", "bool", "break", "Buffer", "ByteAddressBuffer", "case", "cbuffer", "centroid", "class", "column_major", "compile", "compile_fragment",
+     "CompileShader", "const", "continue", "ComputeShader", "ConsumeStructuredBuffer", "default", "DepthStencilState", "DepthStencilView", "discard", "do", "double", "DomainShader", "dword", "else",
+     "export", "extern", "false", "float", "for", "fxgroup", "GeometryShader", "groupshared", "half", "Hullshader", "if", "in", "inline", "inout", "InputPatch", "int", "interface", "line", "lineadj",
+     "linear", "LineStream", "matrix", "min16float", "min10float", "min16int", "min12int", "min16uint", "namespace", "nointerpolation", "noperspective", "NULL", "out", "OutputPatch", "packoffset",
+     "pass", "pixelfragment", "PixelShader", "point", "PointStream", "precise", "RasterizerState", "RenderTargetView", "return", "register", "row_major", "RWBuffer", "RWByteAddressBuffer", "RWStructuredBuffer",
+     "RWTexture1D", "RWTexture1DArray", "RWTexture2D", "RWTexture2DArray", "RWTexture3D", "sample", "sampler", "SamplerState", "SamplerComparisonState", "shared", "snorm", "stateblock", "stateblock_state",
+     "static", "string", "struct", "switch", "StructuredBuffer", "tbuffer", "technique", "technique10", "technique11", "texture", "Texture1D", "Texture1DArray", "Texture2D", "Texture2DArray", "Texture2DMS",
+     "Texture2DMSArray", "Texture3D", "TextureCube", "TextureCubeArray", "true", "typedef", "triangle", "triangleadj", "TriangleStream", "uint", "uniform", "unorm", "unsigned", "vector", "vertexfragment",
+     "VertexShader", "void", "volatile", "while",
+     "bool1","bool2","bool3","bool4","double1","double2","double3","double4", "float1", "float2", "float3", "float4", "int1", "int2", "int3", "int4", "in", "out", "inout",
+     "uint1", "uint2", "uint3", "uint4", "dword1", "dword2", "dword3", "dword4", "half1", "half2", "half3", "half4",
+     "float1x1","float2x1","float3x1","float4x1","float1x2","float2x2","float3x2","float4x2",
+     "float1x3","float2x3","float3x3","float4x3","float1x4","float2x4","float3x4","float4x4",
+     "half1x1","half2x1","half3x1","half4x1","half1x2","half2x2","half3x2","half4x2",
+     "half1x3","half2x3","half3x3","half4x3","half1x4","half2x4","half3x4","half4x4",
+   };
+   //}}}
+   //{{{
+   const vector<string> kHlslBuiltIns = {
+     "abort", "abs", "acos", "all", "AllMemoryBarrier", "AllMemoryBarrierWithGroupSync", "any", "asdouble", "asfloat", "asin", "asint", "asint", "asuint",
+     "asuint", "atan", "atan2", "ceil", "CheckAccessFullyMapped", "clamp", "clip", "cos", "cosh", "countbits", "cross", "D3DCOLORtoUBYTE4", "ddx",
+     "ddx_coarse", "ddx_fine", "ddy", "ddy_coarse", "ddy_fine", "degrees", "determinant", "DeviceMemoryBarrier", "DeviceMemoryBarrierWithGroupSync",
+     "distance", "dot", "dst", "errorf", "EvaluateAttributeAtCentroid", "EvaluateAttributeAtSample", "EvaluateAttributeSnapped", "exp", "exp2",
+     "f16tof32", "f32tof16", "faceforward", "firstbithigh", "firstbitlow", "floor", "fma", "fmod", "frac", "frexp", "fwidth", "GetRenderTargetSampleCount",
+     "GetRenderTargetSamplePosition", "GroupMemoryBarrier", "GroupMemoryBarrierWithGroupSync", "InterlockedAdd", "InterlockedAnd", "InterlockedCompareExchange",
+     "InterlockedCompareStore", "InterlockedExchange", "InterlockedMax", "InterlockedMin", "InterlockedOr", "InterlockedXor", "isfinite", "isinf", "isnan",
+     "ldexp", "length", "lerp", "lit", "log", "log10", "log2", "mad", "max", "min", "modf", "msad4", "mul", "noise", "normalize", "pow", "printf",
+     "Process2DQuadTessFactorsAvg", "Process2DQuadTessFactorsMax", "Process2DQuadTessFactorsMin", "ProcessIsolineTessFactors", "ProcessQuadTessFactorsAvg",
+     "ProcessQuadTessFactorsMax", "ProcessQuadTessFactorsMin", "ProcessTriTessFactorsAvg", "ProcessTriTessFactorsMax", "ProcessTriTessFactorsMin",
+     "radians", "rcp", "reflect", "refract", "reversebits", "round", "rsqrt", "saturate", "sign", "sin", "sincos", "sinh", "smoothstep", "sqrt", "step",
+     "tan", "tanh", "tex1D", "tex1D", "tex1Dbias", "tex1Dgrad", "tex1Dlod", "tex1Dproj", "tex2D", "tex2D", "tex2Dbias", "tex2Dgrad", "tex2Dlod", "tex2Dproj",
+     "tex3D", "tex3D", "tex3Dbias", "tex3Dgrad", "tex3Dlod", "tex3Dproj", "texCUBE", "texCUBE", "texCUBEbias", "texCUBEgrad", "texCUBElod", "texCUBEproj", "transpose", "trunc"
+   };
+   //}}}
 
-  //{{{
-  const vector<string> kHlslKeywords = {
-    "AppendStructuredBuffer", "asm", "asm_fragment", "BlendState", "bool", "break", "Buffer", "ByteAddressBuffer", "case", "cbuffer", "centroid", "class", "column_major", "compile", "compile_fragment",
-    "CompileShader", "const", "continue", "ComputeShader", "ConsumeStructuredBuffer", "default", "DepthStencilState", "DepthStencilView", "discard", "do", "double", "DomainShader", "dword", "else",
-    "export", "extern", "false", "float", "for", "fxgroup", "GeometryShader", "groupshared", "half", "Hullshader", "if", "in", "inline", "inout", "InputPatch", "int", "interface", "line", "lineadj",
-    "linear", "LineStream", "matrix", "min16float", "min10float", "min16int", "min12int", "min16uint", "namespace", "nointerpolation", "noperspective", "NULL", "out", "OutputPatch", "packoffset",
-    "pass", "pixelfragment", "PixelShader", "point", "PointStream", "precise", "RasterizerState", "RenderTargetView", "return", "register", "row_major", "RWBuffer", "RWByteAddressBuffer", "RWStructuredBuffer",
-    "RWTexture1D", "RWTexture1DArray", "RWTexture2D", "RWTexture2DArray", "RWTexture3D", "sample", "sampler", "SamplerState", "SamplerComparisonState", "shared", "snorm", "stateblock", "stateblock_state",
-    "static", "string", "struct", "switch", "StructuredBuffer", "tbuffer", "technique", "technique10", "technique11", "texture", "Texture1D", "Texture1DArray", "Texture2D", "Texture2DArray", "Texture2DMS",
-    "Texture2DMSArray", "Texture3D", "TextureCube", "TextureCubeArray", "true", "typedef", "triangle", "triangleadj", "TriangleStream", "uint", "uniform", "unorm", "unsigned", "vector", "vertexfragment",
-    "VertexShader", "void", "volatile", "while",
-    "bool1","bool2","bool3","bool4","double1","double2","double3","double4", "float1", "float2", "float3", "float4", "int1", "int2", "int3", "int4", "in", "out", "inout",
-    "uint1", "uint2", "uint3", "uint4", "dword1", "dword2", "dword3", "dword4", "half1", "half2", "half3", "half4",
-    "float1x1","float2x1","float3x1","float4x1","float1x2","float2x2","float3x2","float4x2",
-    "float1x3","float2x3","float3x3","float4x3","float1x4","float2x4","float3x4","float4x4",
-    "half1x1","half2x1","half3x1","half4x1","half1x2","half2x2","half3x2","half4x2",
-    "half1x3","half2x3","half3x3","half4x3","half1x4","half2x4","half3x4","half4x4",
-  };
-  //}}}
-  //{{{
-  const vector<string> kHlslBuiltIns = {
-    "abort", "abs", "acos", "all", "AllMemoryBarrier", "AllMemoryBarrierWithGroupSync", "any", "asdouble", "asfloat", "asin", "asint", "asint", "asuint",
-    "asuint", "atan", "atan2", "ceil", "CheckAccessFullyMapped", "clamp", "clip", "cos", "cosh", "countbits", "cross", "D3DCOLORtoUBYTE4", "ddx",
-    "ddx_coarse", "ddx_fine", "ddy", "ddy_coarse", "ddy_fine", "degrees", "determinant", "DeviceMemoryBarrier", "DeviceMemoryBarrierWithGroupSync",
-    "distance", "dot", "dst", "errorf", "EvaluateAttributeAtCentroid", "EvaluateAttributeAtSample", "EvaluateAttributeSnapped", "exp", "exp2",
-    "f16tof32", "f32tof16", "faceforward", "firstbithigh", "firstbitlow", "floor", "fma", "fmod", "frac", "frexp", "fwidth", "GetRenderTargetSampleCount",
-    "GetRenderTargetSamplePosition", "GroupMemoryBarrier", "GroupMemoryBarrierWithGroupSync", "InterlockedAdd", "InterlockedAnd", "InterlockedCompareExchange",
-    "InterlockedCompareStore", "InterlockedExchange", "InterlockedMax", "InterlockedMin", "InterlockedOr", "InterlockedXor", "isfinite", "isinf", "isnan",
-    "ldexp", "length", "lerp", "lit", "log", "log10", "log2", "mad", "max", "min", "modf", "msad4", "mul", "noise", "normalize", "pow", "printf",
-    "Process2DQuadTessFactorsAvg", "Process2DQuadTessFactorsMax", "Process2DQuadTessFactorsMin", "ProcessIsolineTessFactors", "ProcessQuadTessFactorsAvg",
-    "ProcessQuadTessFactorsMax", "ProcessQuadTessFactorsMin", "ProcessTriTessFactorsAvg", "ProcessTriTessFactorsMax", "ProcessTriTessFactorsMin",
-    "radians", "rcp", "reflect", "refract", "reversebits", "round", "rsqrt", "saturate", "sign", "sin", "sincos", "sinh", "smoothstep", "sqrt", "step",
-    "tan", "tanh", "tex1D", "tex1D", "tex1Dbias", "tex1Dgrad", "tex1Dlod", "tex1Dproj", "tex2D", "tex2D", "tex2Dbias", "tex2Dgrad", "tex2Dlod", "tex2Dproj",
-    "tex3D", "tex3D", "tex3Dbias", "tex3Dgrad", "tex3Dlod", "tex3Dproj", "texCUBE", "texCUBE", "texCUBEbias", "texCUBEgrad", "texCUBElod", "texCUBEproj", "transpose", "trunc"
-  };
-  //}}}
-
-  //{{{
-  const vector<string> kGlslKeywords = {
-    "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short",
-    "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary",
-    "_Noreturn", "_Static_assert", "_Thread_local"
-  };
-  //}}}
-  //{{{
-  const vector<string> kGlslBuiltIns = {
-    "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
-    "ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper"
-  };
-  //}}}
-  //}}}
+   //{{{
+   const vector<string> kGlslKeywords = {
+     "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short",
+     "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary",
+     "_Noreturn", "_Static_assert", "_Thread_local"
+   };
+   //}}}
+   //{{{
+   const vector<string> kGlslBuiltIns = {
+     "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
+     "ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper"
+   };
+   //}}}
+   //}}}
 
   //{{{
   bool isUtfSequence (char ch) {
@@ -1202,8 +1173,8 @@ void cTextEdit::drawContents (cApp& app) {
 
   if (mEdit.mCheckComments) {
     //{{{  check comments
-    int endLine = static_cast<int>(mInfo.mLines.size());
     int endIndex = 0;
+    int endLine = static_cast<int>(mInfo.mLines.size());
 
     int commentBeginLine = endLine;
     int commentBeginIndex = endIndex;
@@ -1215,11 +1186,11 @@ void cTextEdit::drawContents (cApp& app) {
     bool firstChar = true;      // there is no other non-whitespace characters in the line before
     bool concatenate = false;   // '\' on the very end of the line
 
-    int currentLine = 0;
-    int currentIndex = 0;
-    while ((currentLine < endLine) || (currentIndex < endIndex)) {
-      vector<cGlyph>& line = mInfo.mLines[currentLine].mGlyphs;
-      if ((currentIndex == 0) && !concatenate) {
+    int curLine = 0;
+    int curIndex = 0;
+    while ((curLine < endLine) || (curIndex < endIndex)) {
+      vector<cGlyph>& line = mInfo.mLines[curLine].mGlyphs;
+      if ((curIndex == 0) && !concatenate) {
         withinSingleLineComment = false;
         withinPreproc = false;
         firstChar = true;
@@ -1228,35 +1199,35 @@ void cTextEdit::drawContents (cApp& app) {
 
       if (!line.empty()) {
         //{{{  check line for comment
-        uint8_t ch = line[currentIndex].mChar;
+        uint8_t ch = line[curIndex].mChar;
 
         if ((ch != mOptions.mLanguage.mPreprocChar) && !isspace (ch))
           firstChar = false;
 
-        if ((currentIndex == static_cast<int>(line.size()) - 1) && (line[line.size() - 1].mChar == '\\'))
+        if ((curIndex == static_cast<int>(line.size()) - 1) && (line[line.size() - 1].mChar == '\\'))
           concatenate = true;
 
-        bool inComment = (commentBeginLine < currentLine) ||
-                         ((commentBeginLine == currentLine) && (commentBeginIndex <= currentIndex));
+        bool inComment = (commentBeginLine < curLine) ||
+                         ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
 
         if (withinString) {
           //{{{  within string
-          line[currentIndex].mMultiLineComment = inComment;
+          line[curIndex].mMultiLineComment = inComment;
 
           if (ch == '\"') {
-            if ((currentIndex + 1 < static_cast<int>(line.size())) && (line[currentIndex + 1].mChar == '\"')) {
-              currentIndex += 1;
-              if (currentIndex < static_cast<int>(line.size()))
-                line[currentIndex].mMultiLineComment = inComment;
+            if ((curIndex + 1 < static_cast<int>(line.size())) && (line[curIndex + 1].mChar == '\"')) {
+              curIndex += 1;
+              if (curIndex < static_cast<int>(line.size()))
+                line[curIndex].mMultiLineComment = inComment;
               }
             else
               withinString = false;
             }
 
           else if (ch == '\\') {
-            currentIndex += 1;
-            if (currentIndex < static_cast<int>(line.size()))
-              line[currentIndex].mMultiLineComment = inComment;
+            curIndex += 1;
+            if (curIndex < static_cast<int>(line.size()))
+              line[curIndex].mMultiLineComment = inComment;
             }
           }
           //}}}
@@ -1266,53 +1237,52 @@ void cTextEdit::drawContents (cApp& app) {
 
           if (ch == '\"') {
             withinString = true;
-            line[currentIndex].mMultiLineComment = inComment;
+            line[curIndex].mMultiLineComment = inComment;
             }
 
           else {
             auto pred = [](const char& a, const cGlyph& b) { return a == b.mChar; };
-            auto from = line.begin() + currentIndex;
-            string& beginString = mOptions.mLanguage.mCommentBegin;
-            string& singleBeginString = mOptions.mLanguage.mSingleLineComment;
+            auto from = line.begin() + curIndex;
+            string& commentBegin = mOptions.mLanguage.mCommentBegin;
+            string& singleLineComment = mOptions.mLanguage.mSingleLineComment;
 
-            if ((singleBeginString.size() > 0) &&
-                (currentIndex + singleBeginString.size() <= line.size()) &&
-                equals (singleBeginString.begin(), singleBeginString.end(),
-                        from, from + singleBeginString.size(), pred)) {
+            if ((curIndex + singleLineComment.size() <= line.size()) &&
+                equals (singleLineComment.begin(), singleLineComment.end(),
+                        from, from + singleLineComment.size(), pred)) {
               withinSingleLineComment = true;
               }
 
-            else if ((!withinSingleLineComment && currentIndex + beginString.size() <= line.size()) &&
-                     equals (beginString.begin(), beginString.end(), from, from + beginString.size(), pred)) {
-              commentBeginLine = currentLine;
-              commentBeginIndex = currentIndex;
+            else if ((!withinSingleLineComment && (curIndex + commentBegin.size() <= line.size())) &&
+                     equals (commentBegin.begin(), commentBegin.end(), from, from + commentBegin.size(), pred)) {
+              commentBeginLine = curLine;
+              commentBeginIndex = curIndex;
               }
 
-            inComment = (commentBeginLine < currentLine) ||
-                        ((commentBeginLine == currentLine) && (commentBeginIndex <= currentIndex));
-            line[currentIndex].mMultiLineComment = inComment;
-            line[currentIndex].mComment = withinSingleLineComment;
+            inComment = (commentBeginLine < curLine) ||
+                        ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
+            line[curIndex].mMultiLineComment = inComment;
+            line[curIndex].mSingleLineComment = withinSingleLineComment;
 
-            string& endString = mOptions.mLanguage.mCommentEnd;
-            if (currentIndex + 1 >= static_cast<int>(endString.size()) &&
-                equals (endString.begin(), endString.end(), from + 1 - endString.size(), from + 1, pred)) {
+            string& commentEnd = mOptions.mLanguage.mCommentEnd;
+            if ((curIndex + 1 >= static_cast<int>(commentEnd.size())) &&
+                equals (commentEnd.begin(), commentEnd.end(), from + 1 - commentEnd.size(), from + 1, pred)) {
               commentBeginIndex = endIndex;
               commentBeginLine = endLine;
               }
             }
           }
 
-        line[currentIndex].mPreProc = withinPreproc;
-        currentIndex += utf8CharLength (ch);
-        if (currentIndex >= static_cast<int>(line.size())) {
-          currentIndex = 0;
-          ++currentLine;
+        line[curIndex].mPreProc = withinPreproc;
+        curIndex += utf8CharLength (ch);
+        if (curIndex >= static_cast<int>(line.size())) {
+          curIndex = 0;
+          ++curLine;
           }
         }
         //}}}
       else {
-        currentIndex = 0;
-        ++currentLine;
+        curIndex = 0;
+        ++curLine;
         }
       }
 
@@ -2133,16 +2103,12 @@ void cTextEdit::colorizeLines (int fromLine, int toLine) {
   if (mInfo.mLines.empty() || (fromLine >= toLine))
     return;
 
-  string textString;
-  cmatch results;
-  string id;
-
-  int endLine = max (0, min (static_cast<int>(mInfo.mLines.size()), toLine));
-  for (int i = fromLine; i < endLine; ++i) {
+  for (int i = fromLine; i < max (0, min (static_cast<int>(mInfo.mLines.size()), toLine)); ++i) {
     vector<cGlyph>& glyphs = mInfo.mLines[i].mGlyphs;
     if (glyphs.empty())
       continue;
 
+    string textString;
     textString.resize (glyphs.size());
     for (size_t j = 0; j < glyphs.size(); ++j) {
       cGlyph& col = glyphs[j];
@@ -2164,7 +2130,8 @@ void cTextEdit::colorizeLines (int fromLine, int toLine) {
         if (mOptions.mLanguage.mTokenize (firstChar, lastChar, tokenBegin, tokenEnd, tokenColor))
           hasTokenizeResult = true;
       if (!hasTokenizeResult)
-        for (auto& p : mOptions.mRegexList)
+        for (auto& p : mOptions.mRegexList) {
+          cmatch results;
           if (regex_search (firstChar, lastChar, results, p.first, regex_constants::match_continuous)) {
             auto& v = *results.begin();
             tokenBegin = v.first;
@@ -2173,12 +2140,14 @@ void cTextEdit::colorizeLines (int fromLine, int toLine) {
             hasTokenizeResult = true;
             break;
             }
+          }
 
       if (!hasTokenizeResult)
         firstChar++;
       else {
         const size_t tokenLength = tokenEnd - tokenBegin;
         if (tokenColor == eBuiltIn) {
+          string id;
           id.assign (tokenBegin, tokenEnd);
 
           // almost all languages use lower case to specify keywords, so shouldn't this use ::tolower ?
@@ -2519,7 +2488,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
     if (mOptions.mShowLineDebug)
       mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber, fmt::format ("{:4d}{}{}{}{}{}{:2d}{:2d} ",
         lineNumber,
-        line.mComment ? 'c' : ' ',
+        line.mComment   ? 'c' : ' ',
         line.mFoldBegin ? 'b':' ',
         line.mFolded    ? 'f':' ',
         line.mFoldEnd   ? 'e':' ',
@@ -3018,18 +2987,16 @@ void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
 //}}}
 //}}}
 
+// cTextEdit::cGlyph
 //{{{
 uint8_t cTextEdit::cGlyph::getColor() const {
 
-  if (mComment)
+  if (mSingleLineComment)
     return eComment;
-
   if (mMultiLineComment)
     return eMultiLineComment;
-
   if (mPreProc)
     return ePreProc;
-
   return mColor;
   }
 //}}}
@@ -3107,9 +3074,9 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
 
-    for (auto& keyword : kCppKeywords)
+    for (auto& keyword : kCKeywords)
       language.mKeywords.insert (keyword);
-    for (auto& builtIn : kCppBuiltIns)
+    for (auto& builtIn : kCBuiltIns)
       language.mBuiltIns.insert (builtIn);
 
     language.mTokenize = [](const char* inBegin, const char* inEnd,
