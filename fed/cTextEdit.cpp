@@ -36,29 +36,29 @@ namespace {
   constexpr uint8_t eKeyword =           2;
   constexpr uint8_t eNumber =            3;
   constexpr uint8_t eString =            4;
-  constexpr uint8_t eCharLiteral =       5;
+  constexpr uint8_t eLiteral =           5;
   constexpr uint8_t ePunctuation =       6;
   constexpr uint8_t ePreProc =           7;
-  constexpr uint8_t eIdent =             8;
-  constexpr uint8_t eKnownIdent =        9;
-  constexpr uint8_t ePreProcIdent =     10;
-  constexpr uint8_t eComment =          11;
-  constexpr uint8_t eMultiLineComment = 12;
-  constexpr uint8_t eMarker =           13;
-  constexpr uint8_t eSelect =           14;
-  constexpr uint8_t eCursor =           15;
-  constexpr uint8_t eCursorLineFill =   16;
-  constexpr uint8_t eCursorLineEdge =   17;
-  constexpr uint8_t eLineNumber =       18;
-  constexpr uint8_t eWhiteSpace =       19;
-  constexpr uint8_t eTab =              20;
-  constexpr uint8_t eFoldBeginClosed =  21;
-  constexpr uint8_t eFoldBeginOpen =    22;
-  constexpr uint8_t eFoldEnd =          23;
-  constexpr uint8_t eScrollBackground = 24;
-  constexpr uint8_t eScrollGrab =       25;
-  constexpr uint8_t eScrollHover =      26;
-  constexpr uint8_t eScrollActive =     27;
+  constexpr uint8_t eBuiltIn =           8;
+  constexpr uint8_t eComment =           9;
+  constexpr uint8_t eMultiLineComment = 10;
+
+  constexpr uint8_t eSelect =           11;
+  constexpr uint8_t eCursor =           12;
+  constexpr uint8_t eCursorLineFill =   13;
+  constexpr uint8_t eCursorLineEdge =   14;
+  constexpr uint8_t eLineNumber =       15;
+  constexpr uint8_t eWhiteSpace =       16;
+  constexpr uint8_t eTab =              17;
+
+  constexpr uint8_t eFoldBeginClosed =  18;
+  constexpr uint8_t eFoldBeginOpen =    19;
+  constexpr uint8_t eFoldEnd =          20;
+
+  constexpr uint8_t eScrollBackground = 21;
+  constexpr uint8_t eScrollGrab =       22;
+  constexpr uint8_t eScrollHover =      23;
+  constexpr uint8_t eScrollActive =     24;
   constexpr uint8_t eUndefined =      0xFF;
 
   // use lookup to allow for any colorMap
@@ -68,15 +68,13 @@ namespace {
     0xffff0c06, // eKeyword
     0xff008000, // eNumber
     0xff2020a0, // eString
-    0xff304070, // eCharLiteral
+    0xff304070, // eLiteral
     0xff000000, // ePunctuation
     0xff008080, // ePreProc
-    0xff404040, // eIdent
-    0xff606010, // eKnownIident
-    0xffc040a0, // ePreProcIdent
+    0xff404040, // eBuiltIn
     0xff205020, // eComment
     0xff405020, // eMultiLineComment
-    0x800010ff, // eMarker
+
     0x80600000, // eSelect
     0xff000000, // eCursor
     0x20000000, // eCursorLineFill
@@ -84,9 +82,11 @@ namespace {
     0xff505000, // eLineNumber
     0xff808080, // eWhiteSpace
     0xff404040, // eTab
+
     0xffff0000, // eFoldBeginClosed,
     0xff0000ff, // eFoldBeginOpen,
     0xff0000ff, // eFoldEnd,
+
     0x80404040, // eScrollBackground
     0x80c0c0c0, // eScrollGrab
     0x80ffffff, // eScrollHover
@@ -120,7 +120,7 @@ namespace {
     };
   //}}}
   //{{{
-  const vector<string> kCppIdents = {
+  const vector<string> kCppBuiltIns = {
     "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol",
     "ceil", "clock", "cosh", "ctime",
     "div",
@@ -163,7 +163,7 @@ namespace {
   };
   //}}}
   //{{{
-  const vector<string> kCIdents = {
+  const vector<string> kCBuiltIns = {
     "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
     "ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper"
   };
@@ -189,7 +189,7 @@ namespace {
   };
   //}}}
   //{{{
-  const vector<string> kHlslIdents = {
+  const vector<string> kHlslBuiltIns = {
     "abort", "abs", "acos", "all", "AllMemoryBarrier", "AllMemoryBarrierWithGroupSync", "any", "asdouble", "asfloat", "asin", "asint", "asint", "asuint",
     "asuint", "atan", "atan2", "ceil", "CheckAccessFullyMapped", "clamp", "clip", "cos", "cosh", "countbits", "cross", "D3DCOLORtoUBYTE4", "ddx",
     "ddx_coarse", "ddx_fine", "ddy", "ddy_coarse", "ddy_fine", "degrees", "determinant", "DeviceMemoryBarrier", "DeviceMemoryBarrierWithGroupSync",
@@ -214,7 +214,7 @@ namespace {
   };
   //}}}
   //{{{
-  const vector<string> kGlslIdents = {
+  const vector<string> kGlslBuiltIns = {
     "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
     "ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper"
   };
@@ -314,7 +314,7 @@ namespace {
     }
   //}}}
   //{{{
-  bool findCharacterLiteral (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
+  bool findLiteral (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
     const char* ptr = inBegin;
 
@@ -328,7 +328,7 @@ namespace {
       if (ptr < inEnd)
         ptr++;
 
-      // handle end of character literal
+      // handle end of literal
       if ((ptr < inEnd) && (*ptr == '\'')) {
         outBegin = inBegin;
         outEnd = ptr + 1;
@@ -498,7 +498,7 @@ namespace {
 cTextEdit::cTextEdit() {
 
   mInfo.mLines.push_back (vector<cGlyph>());
-  setLanguage (cLanguage::cPlus());
+  setLanguage (cLanguage::c());
 
   mLastCursorFlashTimePoint = system_clock::now();
   }
@@ -909,12 +909,6 @@ void cTextEdit::backspace() {
 
       int prevSize = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber - 1);
       prevLine.mGlyphs.insert (prevLine.mGlyphs.end(), line.mGlyphs.begin(), line.mGlyphs.end());
-
-      map<int,string> markerTemp;
-      for (auto& marker : mOptions.mMarkers)
-        markerTemp.insert (map<int,string>::value_type (
-          marker.first - 1 == mEdit.mState.mCursorPosition.mLineNumber ? marker.first - 1 : marker.first, marker.second));
-      mOptions.mMarkers = move (markerTemp);
 
       removeLine (mEdit.mState.mCursorPosition.mLineNumber);
       --mEdit.mState.mCursorPosition.mLineNumber;
@@ -1367,31 +1361,6 @@ void cTextEdit::drawContents (cApp& app) {
     clipper.End();
     }
     //}}}
-
-  //{{{  highlight idents, preproc, rewrite as curso coords not mouse coords
-  //if (ImGui::IsMousePosValid()) {
-    //string word = getWordAt (screenToPosition (ImGui::GetMousePos()));
-    //if (!word.empty()) {
-      //{{{  draw tooltip for idents,preProcs
-      //auto identIt = mOptions.mLanguage.mIdents.find (word);
-      //if (identIt != mOptions.mLanguage.mIdents.end()) {
-        //ImGui::BeginTooltip();
-        //ImGui::TextUnformatted (identIt->second.mDeclaration.c_str());
-        //ImGui::EndTooltip();
-        //}
-
-      //else {
-        //auto preProcIdentIt = mOptions.mLanguage.mPreprocIdents.find (word);
-        //if (preProcIdentIt != mOptions.mLanguage.mPreprocIdents.end()) {
-          //ImGui::BeginTooltip();
-          //ImGui::TextUnformatted (preProcIdentIt->second.mDeclaration.c_str());
-          //ImGui::EndTooltip();
-          //}
-        //}
-      //}
-      //}}}
-    //}
-  //}}}
 
   ImGui::EndChild();
   ImGui::PopStyleVar (4);
@@ -1999,15 +1968,7 @@ void cTextEdit::moveDown (int amount) {
 // insert
 //{{{
 cTextEdit::cLine& cTextEdit::insertLine (int index) {
-
-  cLine& result = *mInfo.mLines.insert (mInfo.mLines.begin() + index, vector<cGlyph>());
-
-  map<int,string> etmp;
-  for (auto& marker : mOptions.mMarkers)
-    etmp.insert (map<int,string>::value_type (marker.first >= index ? marker.first + 1 : marker.first, marker.second));
-  mOptions.mMarkers = move (etmp);
-
-  return result;
+  return *mInfo.mLines.insert (mInfo.mLines.begin() + index, vector<cGlyph>());
   }
 //}}}
 //{{{
@@ -2084,15 +2045,6 @@ void cTextEdit::removeLine (int beginPosition, int endPosition) {
   assert (endPosition >= beginPosition);
   assert (int(mInfo.mLines.size()) > endPosition - beginPosition);
 
-  map<int,string> etmp;
-  for (auto& marker : mOptions.mMarkers) {
-    map<int,string>::value_type e((marker.first >= beginPosition) ? marker.first - 1 : marker.first, marker.second);
-    if ((e.first >= beginPosition) && (e.first <= endPosition))
-      continue;
-    etmp.insert (e);
-    }
-  mOptions.mMarkers = move (etmp);
-
   mInfo.mLines.erase (mInfo.mLines.begin() + beginPosition, mInfo.mLines.begin() + endPosition);
   assert (!mInfo.mLines.empty());
 
@@ -2103,15 +2055,6 @@ void cTextEdit::removeLine (int beginPosition, int endPosition) {
 void cTextEdit::removeLine (int index) {
 
   assert (mInfo.mLines.size() > 1);
-
-  map<int,string> etmp;
-  for (auto& marker : mOptions.mMarkers) {
-    map<int,string>::value_type e(marker.first > index ? marker.first - 1 : marker.first, marker.second);
-    if (e.first - 1 == index)
-      continue;
-    etmp.insert (e);
-    }
-  mOptions.mMarkers = move (etmp);
 
   mInfo.mLines.erase (mInfo.mLines.begin() + index);
   assert (!mInfo.mLines.empty());
@@ -2235,7 +2178,7 @@ void cTextEdit::colorizeLines (int fromLine, int toLine) {
         firstChar++;
       else {
         const size_t tokenLength = tokenEnd - tokenBegin;
-        if (tokenColor == eIdent) {
+        if (tokenColor == eBuiltIn) {
           id.assign (tokenBegin, tokenEnd);
 
           // almost all languages use lower case to specify keywords, so shouldn't this use ::tolower ?
@@ -2246,13 +2189,9 @@ void cTextEdit::colorizeLines (int fromLine, int toLine) {
           if (!glyphs[firstChar - bufferBegin].mPreProc) {
             if (mOptions.mLanguage.mKeywords.count (id) != 0)
               tokenColor = eKeyword;
-            else if (mOptions.mLanguage.mIdents.count (id) != 0)
-              tokenColor = eKnownIdent;
-            else if (mOptions.mLanguage.mPreprocIdents.count (id) != 0)
-              tokenColor = ePreProcIdent;
+            else if (mOptions.mLanguage.mBuiltIns.count (id) != 0)
+              tokenColor = eBuiltIn;
             }
-          else if (mOptions.mLanguage.mPreprocIdents.count (id) != 0)
-            tokenColor = ePreProcIdent;
           }
 
         for (size_t j = 0; j < tokenLength; ++j)
@@ -2723,25 +2662,6 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
     }
     //}}}
 
-  //{{{  draw marker line highlight
-  auto markerIt = mOptions.mMarkers.find (lineNumber+1);
-  if (markerIt != mOptions.mMarkers.end()) {
-    ImVec2 brPos = {curPos.x, curPos.y + mContext.mLineHeight};
-    mContext.drawRect (leftPos, brPos, eMarker);
-
-    if (ImGui::IsMouseHoveringRect (ImGui::GetCursorScreenPos(), brPos)) {
-      ImGui::BeginTooltip();
-
-      ImGui::PushStyleColor (ImGuiCol_Text, ImVec4(1.f,1.f,1.f, 1.f));
-      ImGui::Text ("marker at line %d:", markerIt->first);
-      ImGui::Separator();
-      ImGui::Text ("%s", markerIt->second.c_str());
-      ImGui::PopStyleColor();
-
-      ImGui::EndTooltip();
-      }
-    }
-  //}}}
   //{{{  draw select line highlight
   sPosition lineBeginPosition (lineNumber, 0);
   sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
@@ -3117,7 +3037,7 @@ uint8_t cTextEdit::cGlyph::getColor() const {
 // cTextEdit::cLine
 //{{{
 bool cTextEdit::cLine::parse (const cLanguage& language) {
-// parse beginFold and endFold markers, set flags
+// parse beginFold and endFold, set flags
 
   bool hasFolds = false;
 
@@ -3163,7 +3083,7 @@ bool cTextEdit::cLine::parse (const cLanguage& language) {
 
 // cTextEdit::cLanguage
 //{{{
-const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
+const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
 
   static cLanguage language;
 
@@ -3187,14 +3107,10 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
 
-    for (auto& cppKeyword : kCppKeywords)
-      language.mKeywords.insert (cppKeyword);
-
-    for (auto& cppIdent : kCppIdents) {
-      sIdent id;
-      id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (cppIdent, id));
-      }
+    for (auto& keyword : kCppKeywords)
+      language.mKeywords.insert (keyword);
+    for (auto& builtIn : kCppBuiltIns)
+      language.mBuiltIns.insert (builtIn);
 
     language.mTokenize = [](const char* inBegin, const char* inEnd,
                             const char*& outBegin, const char*& outEnd, uint8_t& palette) -> bool {
@@ -3209,70 +3125,10 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::cPlus() {
         }
       else if (findString (inBegin, inEnd, outBegin, outEnd))
         palette = eString;
-      else if (findCharacterLiteral (inBegin, inEnd, outBegin, outEnd))
-        palette = eCharLiteral;
+      else if (findLiteral (inBegin, inEnd, outBegin, outEnd))
+        palette = eLiteral;
       else if (findIdent (inBegin, inEnd, outBegin, outEnd))
-        palette = eIdent;
-      else if (findNumber (inBegin, inEnd, outBegin, outEnd))
-        palette = eNumber;
-      else if (findPunctuation (inBegin, outBegin, outEnd))
-        palette = ePunctuation;
-      return (palette != eUndefined);
-      };
-    }
-
-  return language;
-  }
-//}}}
-//{{{
-const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
-
-  static cLanguage language;
-  static bool inited = false;
-  if (!inited) {
-    inited = true;
-    language.mName = "C";
-
-    language.mCommentBegin = "/*";
-    language.mCommentEnd = "*/";
-    language.mSingleLineComment = "//";
-
-    language.mFoldBeginMarker = "//{{{";
-    language.mFoldEndMarker = "//}}}";
-
-    language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "... ";
-    language.mFoldEnd = "}}}";
-
-    language.mPreprocChar = '#';
-    language.mCaseSensitive = true;
-    language.mAutoIndentation = true;
-
-    for (auto& keywordString : kCKeywords)
-      language.mKeywords.insert (keywordString);
-
-    for (auto& identString : kCIdents) {
-      sIdent id;
-      id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (identString, id));
-      }
-
-    language.mTokenize = [](const char* inBegin, const char* inEnd,
-                            const char*& outBegin, const char*& outEnd, uint8_t& palette) -> bool {
-      palette = eUndefined;
-      while ((inBegin < inEnd) && isascii (*inBegin) && isblank (*inBegin))
-        inBegin++;
-      if (inBegin == inEnd) {
-        outBegin = inEnd;
-        outEnd = inEnd;
-        palette = eText;
-        }
-      else if (findString (inBegin, inEnd, outBegin, outEnd))
-        palette = eString;
-      else if (findCharacterLiteral (inBegin, inEnd, outBegin, outEnd))
-        palette = eCharLiteral;
-      else if (findIdent (inBegin, inEnd, outBegin, outEnd))
-        palette = eIdent;
+        palette = eBuiltIn;
       else if (findNumber (inBegin, inEnd, outBegin, outEnd))
         palette = eNumber;
       else if (findPunctuation (inBegin, outBegin, outEnd))
@@ -3308,14 +3164,10 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
 
-    for (auto& keywordString : kHlslKeywords)
-      language.mKeywords.insert (keywordString);
-
-    for (auto& identString : kHlslIdents) {
-      sIdent id;
-      id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (identString, id));
-      }
+    for (auto& keyword : kHlslKeywords)
+      language.mKeywords.insert (keyword);
+    for (auto& builtIn : kHlslBuiltIns)
+      language.mBuiltIns.insert (builtIn);
 
     language.mTokenize = nullptr;
 
@@ -3324,7 +3176,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
     language.mTokenRegexStrings.push_back (
-      make_pair <string, uint8_t> ("\\'\\\\?[^\\']\\'", (uint8_t)eCharLiteral));
+      make_pair <string, uint8_t> ("\\'\\\\?[^\\']\\'", (uint8_t)eLiteral));
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
@@ -3334,7 +3186,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
-      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
+      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eBuiltIn));
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
     }
@@ -3366,14 +3218,10 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
     language.mCaseSensitive = true;
     language.mAutoIndentation = true;
 
-    for (auto& keywordString : kGlslKeywords)
-      language.mKeywords.insert (keywordString);
-
-    for (auto& identString : kGlslIdents) {
-      sIdent id;
-      id.mDeclaration = "Built-in function";
-      language.mIdents.insert (make_pair (identString, id));
-      }
+    for (auto& keyword : kGlslKeywords)
+      language.mKeywords.insert (keyword);
+    for (auto& builtIn : kGlslBuiltIns)
+      language.mBuiltIns.insert (builtIn);
 
     language.mTokenize = nullptr;
 
@@ -3382,7 +3230,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
     language.mTokenRegexStrings.push_back (
-      make_pair <string, uint8_t> ("\\'\\\\?[^\\']\\'", (uint8_t)eCharLiteral));
+      make_pair <string, uint8_t> ("\\'\\\\?[^\\']\\'", (uint8_t)eLiteral));
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
@@ -3392,7 +3240,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
     language.mTokenRegexStrings.push_back (
-      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdent));
+      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eBuiltIn));
     language.mTokenRegexStrings.push_back (
       make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
     }

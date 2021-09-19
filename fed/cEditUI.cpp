@@ -27,29 +27,6 @@
 using namespace std;
 //}}}
 
-namespace {
-  //{{{
-  const vector<string> kPreProcessorNames = {
-    "preProc",
-    };
-  //}}}
-  //{{{
-  const vector<string> kPreProcessorValues = {
-    "preProcValue",
-    };
-  //}}}
-  //{{{
-  const vector<string> kIdents = {
-    "ident",
-    };
-  //}}}
-  //{{{
-  const vector<string> kIdecls = {
-    "ident decl",
-    };
-  //}}}
-  }
-
 class cEditUI : public cUI {
 public:
   //{{{
@@ -95,26 +72,6 @@ public:
 
       string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
       mTextEdit->setTextString (str);
-
-      // set language
-      cTextEdit::cLanguage language = cTextEdit::cLanguage::cPlus();
-      for (size_t i = 0; i < kPreProcessorNames.size(); i++) {
-        cTextEdit::sIdent id;
-        id.mDeclaration = kPreProcessorValues[i];
-        language.mPreprocIdents.insert (make_pair (kPreProcessorNames[i], id));
-        }
-
-      for (size_t i = 0; i < kIdents.size(); i++) {
-        cTextEdit::sIdent id;
-        id.mDeclaration = kIdecls[i];
-        language.mIdents.insert (make_pair (kIdents[i], id));
-        }
-      mTextEdit->setLanguage (language);
-
-      // markers
-      map <int,string> markers;
-      markers.insert (make_pair<int,string>(41, "marker here"));
-      mTextEdit->setMarkers (markers);
       }
       //}}}
 

@@ -80,7 +80,6 @@ public:
   class cLanguage {
   public:
     // static const
-    static const cLanguage& cPlus();
     static const cLanguage& c();
     static const cLanguage& hlsl();
     static const cLanguage& glsl();
@@ -111,8 +110,7 @@ public:
     bool mAutoIndentation;
 
     std::unordered_set <std::string> mKeywords;
-    std::unordered_map <std::string,sIdent> mIdents;
-    std::unordered_map <std::string,sIdent> mPreprocIdents;
+    std::unordered_set <std::string> mBuiltIns;
 
     tTokenizeCallback mTokenize;
     tTokenRegexStrings mTokenRegexStrings;
@@ -204,7 +202,6 @@ public:
   void setTextStrings (const std::vector<std::string>& lines);
 
   void setPalette (bool lightPalette);
-  void setMarkers (const std::map<int,std::string>& markers) { mOptions.mMarkers = markers; }
   void setLanguage (const cLanguage& language);
 
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
@@ -291,7 +288,6 @@ private:
 
     cLanguage mLanguage;
     tRegexList mRegexList;
-    std::map <int,std::string> mMarkers;
     };
   //}}}
   //{{{
