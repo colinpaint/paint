@@ -2081,17 +2081,17 @@ void cTextEdit::parseComments() {
 
     bool firstNonWhiteSpaceChar = true;
     bool concatenateLine = false;
-    bool withinString = false;
-    bool withinPreproc = false;
-    bool withinSingleLineComment = false;
+    bool inString = false;
+    bool inPreproc = false;
+    bool inSingleLineComment = false;
 
     int curLine = 0;
     int curIndex = 0;
     while ((curLine < endLine) || (curIndex < endIndex)) {
       vector<cGlyph>& glyphs = mInfo.mLines[curLine].mGlyphs;
       if ((curIndex == 0) && !concatenateLine) {
-        withinSingleLineComment = false;
-        withinPreproc = false;
+        inSingleLineComment = false;
+        inPreproc = false;
         firstNonWhiteSpaceChar = true;
         }
       concatenateLine = false;
@@ -2111,55 +2111,61 @@ void cTextEdit::parseComments() {
 
         bool inComment = (commentBeginLine < curLine) || ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
 
-        if (withinString) {
-          //{{{  within string
+        if (inString) {
           glyphs[curIndex].mComment = inComment;
-
           if (ch == '\"') {
+            //{{{  handle trailing "
             if ((curIndex + 1 < static_cast<int>(glyphs.size())) && (glyphs[curIndex + 1].mChar == '\"')) {
               curIndex += 1;
               if (curIndex < static_cast<int>(glyphs.size()))
-                glyphs[curIndex].mComment = inComment;
+                 glyphs[curIndex].mComment = inComment;
               }
             else
-              withinString = false;
+              inString = false;
             }
-
+            //}}}
           else if (ch == '\\') {
+            //{{{  handle \ in string
             curIndex += 1;
             if (curIndex < static_cast<int>(glyphs.size()))
               glyphs[curIndex].mComment = inComment;
             }
+            //}}}
           }
-          //}}}
+
         else {
-          if (firstNonWhiteSpaceChar && (ch == mOptions.mLanguage.mPreprocChar))
-            withinPreproc = true;
+          // leading #, preproc line
+          inPreproc = firstNonWhiteSpaceChar && (ch == mOptions.mLanguage.mPreprocChar);
 
           if (ch == '\"') {
-            withinString = true;
+            //{{{  handle leading "
+            inString = true;
             glyphs[curIndex].mComment = inComment;
             }
+            //}}}
 
           else {
             auto pred = [](const char& a, const cGlyph& b) { return a == b.mChar; };
             auto from = glyphs.begin() + curIndex;
-            string& commentBegin = mOptions.mLanguage.mCommentBegin;
+
+            string& multiCommentBegin = mOptions.mLanguage.mCommentBegin;
+
+            // is this start of singleLine comment
             string& singleLineComment = mOptions.mLanguage.mSingleLineComment;
-
-            if ((curIndex + singleLineComment.size() <= glyphs.size()) && 
+            if ((curIndex + singleLineComment.size() <= glyphs.size()) &&
                 equals (singleLineComment.begin(), singleLineComment.end(), from, from + singleLineComment.size(), pred))
-              withinSingleLineComment = true;
+              inSingleLineComment = true;
 
-            else if (!withinSingleLineComment &&
-                     (curIndex + commentBegin.size() <= glyphs.size()) &&
-                     equals (commentBegin.begin(), commentBegin.end(), from, from + commentBegin.size(), pred)) {
+            // is this start of multiine comment
+            else if (!inSingleLineComment &&
+                     (curIndex + multiCommentBegin.size() <= glyphs.size()) &&
+                     equals (multiCommentBegin.begin(), multiCommentBegin.end(), from, from + multiCommentBegin.size(), pred)) {
               commentBeginLine = curLine;
               commentBeginIndex = curIndex;
               }
 
             inComment = (commentBeginLine < curLine) || ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
-            glyphs[curIndex].mComment = inComment || withinSingleLineComment;
+            glyphs[curIndex].mComment = inComment || inSingleLineComment;
 
             string& commentEnd = mOptions.mLanguage.mCommentEnd;
             if ((curIndex + 1 >= static_cast<int>(commentEnd.size())) &&
@@ -2170,7 +2176,7 @@ void cTextEdit::parseComments() {
             }
           }
 
-        glyphs[curIndex].mPreProc = withinPreproc;
+        glyphs[curIndex].mPreProc = inPreproc;
         curIndex += utf8CharLength (ch);
         //}}}
         if (curIndex >= static_cast<int>(glyphs.size())) {
