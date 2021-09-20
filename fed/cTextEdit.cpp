@@ -2153,13 +2153,13 @@ void cTextEdit::parseComments() {
 
             // is this start of singleLine comment
             string& singleLineComment = mOptions.mLanguage.mSingleLineComment;
-            if ((curIndex + singleLineComment.size() <= glyphs.size()) &&
+            if ((curIndex + singleLineComment.size() <= numGlyphs) &&
                 equals (singleLineComment.begin(), singleLineComment.end(), from, from + singleLineComment.size(), pred))
               inSingleLineComment = true;
 
             // is this start of multiine comment
             else if (!inSingleLineComment &&
-                     (curIndex + multiCommentBegin.size() <= glyphs.size()) &&
+                     (curIndex + multiCommentBegin.size() <= numGlyphs) &&
                      equals (multiCommentBegin.begin(), multiCommentBegin.end(), from, from + multiCommentBegin.size(), pred)) {
               commentBeginLine = curLine;
               commentBeginIndex = curIndex;
