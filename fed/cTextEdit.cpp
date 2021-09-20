@@ -1959,8 +1959,6 @@ void cTextEdit::addUndo (cUndo& undo) {
 void cTextEdit::parseLine (cLine& line) {
 // parse for fold stuff, tokenize and look for keyWords, builtins
 
-  mEdit.mCheckComments = true;
-
   // glyphs to string
   string textString;
   for (auto& glyph : line.mGlyphs) {
@@ -1988,7 +1986,7 @@ void cTextEdit::parseLine (cLine& line) {
       line.mIndent = 0;
 
     // has "//" style comment as first textString in line
-    line.mComment = (textString.find (mOptions.mLanguage.mSingleLineComment, indent) != string::npos);
+    line.mComment = (textString.find (mOptions.mLanguage.mSingleComment, indent) != string::npos);
     }
 
   // look for foldEnd textString
@@ -2065,33 +2063,35 @@ void cTextEdit::parseLine (cLine& line) {
       firstChar++;
     }
     //}}}
+
+  // check whole text for comments later
+  mEdit.mCheckComments = true;
   }
 //}}}
 //{{{
 void cTextEdit::parseComments() {
+// parse all lines for Single comment, begin/end comment, preProc
 
   if (mEdit.mCheckComments) {
     mEdit.mCheckComments = false;
 
     int endIndex = 0;
-    int endLine = static_cast<int>(mInfo.mLines.size());
-
-    int commentBeginLine = endLine;
-    int commentBeginIndex = endIndex;
 
     bool firstNonWhiteSpaceChar = true;
     bool concatenateLine = false;
     bool inString = false;
     bool inPreProc = false;
-    bool inSingleLineComment = false;
+    bool inSingleComment = false;
+    bool inBeginEndComment = false;
 
     int curLine = 0;
     int curIndex = 0;
-    while ((curLine < endLine) || (curIndex < endIndex)) {
+    while ((curLine < static_cast<int>(mInfo.mLines.size())) || (curIndex < endIndex)) {
       vector<cGlyph>& glyphs = mInfo.mLines[curLine].mGlyphs;
       int numGlyphs = static_cast<int>(glyphs.size());
+
       if ((curIndex == 0) && !concatenateLine) {
-        inSingleLineComment = false;
+        inSingleComment = false;
         inPreProc = false;
         firstNonWhiteSpaceChar = true;
         }
@@ -2104,19 +2104,18 @@ void cTextEdit::parseComments() {
         }
       else {
         uint8_t ch = glyphs[curIndex].mChar;
-        //{{{  parse ch for comment
+        //{{{  parse ch, strangely complicated
         if ((ch != mOptions.mLanguage.mPreprocChar) && !isspace (ch))
           firstNonWhiteSpaceChar = false;
 
-        if ((curIndex == numGlyphs - 1) && (glyphs[numGlyphs - 1].mChar == '\\'))
+        // if lastChar on line \ concatenate
+        if ((curIndex == numGlyphs-1) && (glyphs[numGlyphs-1].mChar == '\\'))
           concatenateLine = true;
 
-        bool inBeginEndComment = (commentBeginLine < curLine) || 
-                                 ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
         if (inString) {
           glyphs[curIndex].mComment = inBeginEndComment;
           if (ch == '\"') {
-            //{{{  handle trailing string "
+            //{{{  end of string "
             if ((curIndex + 1 < numGlyphs) && (glyphs[curIndex + 1].mChar == '\"')) {
               curIndex += 1;
               if (curIndex < numGlyphs)
@@ -2127,7 +2126,7 @@ void cTextEdit::parseComments() {
             }
             //}}}
           else if (ch == '\\') {
-            //{{{  handle \ in string "./."
+            //{{{  \ in string "./."
             curIndex += 1;
             if (curIndex < numGlyphs)
               glyphs[curIndex].mComment = inBeginEndComment;
@@ -2139,42 +2138,40 @@ void cTextEdit::parseComments() {
           inPreProc = firstNonWhiteSpaceChar && (ch == mOptions.mLanguage.mPreprocChar);
 
           if (ch == '\"') {
-            //{{{  handle leading string " 
+            //{{{  begin of string "
             inString = true;
             glyphs[curIndex].mComment = inBeginEndComment;
             }
             //}}}
           else {
-            // start of singleLine comment? comparing string to glyphs
-            string& singleLineComment = mOptions.mLanguage.mSingleLineComment;
-            auto from = glyphs.begin() + curIndex;
+
+            // predicate to compare string char with glyph char
             auto pred = [](const char& a, const cGlyph& b) { return a == b.mChar; };
-            if ((curIndex + singleLineComment.size() <= numGlyphs) &&
-                equals (singleLineComment.begin(), singleLineComment.end(), from, from + singleLineComment.size(), pred))
-              inSingleLineComment = true;
+
+            // comparing string to glyphs, start of singleLine comment?
+            auto glyph = glyphs.begin() + curIndex;
+            string& SingleComment = mOptions.mLanguage.mSingleComment;
+            if ((curIndex + SingleComment.size() <= numGlyphs) &&
+                equals (SingleComment.begin(), SingleComment.end(), glyph, glyph + SingleComment.size(), pred))
+              inSingleComment = true;
 
             else {
-              // start of begin comment? comparing string to glyphs
+              // comparing string to glyphs, start of begin/end comment?
               string& multiCommentBegin = mOptions.mLanguage.mCommentBegin;
-              if (!inSingleLineComment &&
+              if (!inSingleComment &&
                   (curIndex + multiCommentBegin.size() <= numGlyphs) &&
-                  equals (multiCommentBegin.begin(), multiCommentBegin.end(), from, from + multiCommentBegin.size(), pred)) {
-                commentBeginLine = curLine;
-                commentBeginIndex = curIndex;
-                }
+                  equals (multiCommentBegin.begin(), multiCommentBegin.end(), glyph, glyph + multiCommentBegin.size(), pred))
+                inBeginEndComment = true;
               }
 
-            inBeginEndComment = (commentBeginLine < curLine) || 
-                                ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
-            glyphs[curIndex].mComment = inSingleLineComment || inBeginEndComment;
+            // set comment flag, after finding begin, but before finding end
+            glyphs[curIndex].mComment = inSingleComment || inBeginEndComment;
 
-            // end of end comment? comparing string to glyphs
+            // comparing string to glyphs, end of begin/end comment?
             string& commentEnd = mOptions.mLanguage.mCommentEnd;
-            if ((curIndex + 1 >= static_cast<int>(commentEnd.size())) &&
-                equals (commentEnd.begin(), commentEnd.end(), from + 1 - commentEnd.size(), from + 1, pred)) {
-              commentBeginIndex = endIndex;
-              commentBeginLine = endLine;
-              }
+            if ((curIndex+1 >= static_cast<int>(commentEnd.size())) &&
+                equals (commentEnd.begin(), commentEnd.end(), glyph+1 - commentEnd.size(), glyph+1, pred))
+              inBeginEndComment = false;
             }
           }
 
@@ -3015,7 +3012,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
 
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
-    language.mSingleLineComment = "//";
+    language.mSingleComment = "//";
 
     language.mFoldBeginMarker = "//{{{";
     language.mFoldEndMarker = "//}}}";
@@ -3072,7 +3069,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
 
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
-    language.mSingleLineComment = "//";
+    language.mSingleComment = "//";
 
     language.mFoldBeginMarker = "#{{{";
     language.mFoldEndMarker = "#}}}";
@@ -3126,7 +3123,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
 
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
-    language.mSingleLineComment = "//";
+    language.mSingleComment = "//";
 
     language.mFoldBeginMarker = "#{{{";
     language.mFoldEndMarker = "#}}}";

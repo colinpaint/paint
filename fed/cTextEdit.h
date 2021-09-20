@@ -96,7 +96,7 @@ public:
 
     std::string mCommentBegin;
     std::string mCommentEnd;
-    std::string mSingleLineComment;
+    std::string mSingleComment;
     std::string mFoldBeginMarker;
     std::string mFoldEndMarker;
 
