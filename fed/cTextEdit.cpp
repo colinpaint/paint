@@ -1,4 +1,8 @@
 // cTextEdit.cpp - nicked from https://github.com/BalazsJako/ImGuiColorTextEdit
+
+/* multiline comment test
+ on another line
+ and */
 //{{{  includes
 #include "cTextEdit.h"
 
@@ -41,24 +45,23 @@ namespace {
   constexpr uint8_t ePreProc =           7;
   constexpr uint8_t eBuiltIn =           8;
   constexpr uint8_t eComment =           9;
-  constexpr uint8_t eMultiLineComment = 10;
 
-  constexpr uint8_t eSelect =           11;
-  constexpr uint8_t eCursor =           12;
-  constexpr uint8_t eCursorLineFill =   13;
-  constexpr uint8_t eCursorLineEdge =   14;
-  constexpr uint8_t eLineNumber =       15;
-  constexpr uint8_t eWhiteSpace =       16;
-  constexpr uint8_t eTab =              17;
+  constexpr uint8_t eSelect =           10;
+  constexpr uint8_t eCursor =           11;
+  constexpr uint8_t eCursorLineFill =   12;
+  constexpr uint8_t eCursorLineEdge =   13;
+  constexpr uint8_t eLineNumber =       14;
+  constexpr uint8_t eWhiteSpace =       15;
+  constexpr uint8_t eTab =              16;
 
-  constexpr uint8_t eFoldBeginClosed =  18;
-  constexpr uint8_t eFoldBeginOpen =    19;
-  constexpr uint8_t eFoldEnd =          20;
+  constexpr uint8_t eFoldBeginClosed =  17;
+  constexpr uint8_t eFoldBeginOpen =    18;
+  constexpr uint8_t eFoldEnd =          19;
 
-  constexpr uint8_t eScrollBackground = 21;
-  constexpr uint8_t eScrollGrab =       22;
-  constexpr uint8_t eScrollHover =      23;
-  constexpr uint8_t eScrollActive =     24;
+  constexpr uint8_t eScrollBackground = 20;
+  constexpr uint8_t eScrollGrab =       21;
+  constexpr uint8_t eScrollHover =      22;
+  constexpr uint8_t eScrollActive =     23;
   constexpr uint8_t eUndefined =      0xFF;
 
   // use lookup to allow for any colorMap
@@ -72,8 +75,7 @@ namespace {
     0xff000000, // ePunctuation
     0xff008080, // ePreProc
     0xff404040, // eBuiltIn
-    0xff205020, // eComment
-    0xff405020, // eMultiLineComment
+    0xff208020, // eComment
 
     0x80600000, // eSelect
     0xff000000, // eCursor
@@ -2077,46 +2079,47 @@ void cTextEdit::parseComments() {
     int commentBeginLine = endLine;
     int commentBeginIndex = endIndex;
 
+    bool firstNonWhiteSpaceChar = true;
+    bool concatenateLine = false;
     bool withinString = false;
     bool withinPreproc = false;
     bool withinSingleLineComment = false;
 
-    bool firstChar = true;      // there is no other non-whitespace characters in the line before
-    bool concatenate = false;   // '\' on the very end of the line
-
     int curLine = 0;
     int curIndex = 0;
     while ((curLine < endLine) || (curIndex < endIndex)) {
-      vector<cGlyph>& line = mInfo.mLines[curLine].mGlyphs;
-      if ((curIndex == 0) && !concatenate) {
+      vector<cGlyph>& glyphs = mInfo.mLines[curLine].mGlyphs;
+      if ((curIndex == 0) && !concatenateLine) {
         withinSingleLineComment = false;
         withinPreproc = false;
-        firstChar = true;
+        firstNonWhiteSpaceChar = true;
         }
-      concatenate = false;
+      concatenateLine = false;
 
-      if (!line.empty()) {
+      if (glyphs.empty()) {
+        curIndex = 0;
+        ++curLine;
+        }
+      else {
         //{{{  check line for comment
-        uint8_t ch = line[curIndex].mChar;
-
+        uint8_t ch = glyphs[curIndex].mChar;
         if ((ch != mOptions.mLanguage.mPreprocChar) && !isspace (ch))
-          firstChar = false;
+          firstNonWhiteSpaceChar = false;
 
-        if ((curIndex == static_cast<int>(line.size()) - 1) && (line[line.size() - 1].mChar == '\\'))
-          concatenate = true;
+        if ((curIndex == static_cast<int>(glyphs.size()) - 1) && (glyphs[glyphs.size() - 1].mChar == '\\'))
+          concatenateLine = true;
 
-        bool inComment = (commentBeginLine < curLine) ||
-                         ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
+        bool inComment = (commentBeginLine < curLine) || ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
 
         if (withinString) {
           //{{{  within string
-          line[curIndex].mMultiLineComment = inComment;
+          glyphs[curIndex].mComment = inComment;
 
           if (ch == '\"') {
-            if ((curIndex + 1 < static_cast<int>(line.size())) && (line[curIndex + 1].mChar == '\"')) {
+            if ((curIndex + 1 < static_cast<int>(glyphs.size())) && (glyphs[curIndex + 1].mChar == '\"')) {
               curIndex += 1;
-              if (curIndex < static_cast<int>(line.size()))
-                line[curIndex].mMultiLineComment = inComment;
+              if (curIndex < static_cast<int>(glyphs.size()))
+                glyphs[curIndex].mComment = inComment;
               }
             else
               withinString = false;
@@ -2124,42 +2127,39 @@ void cTextEdit::parseComments() {
 
           else if (ch == '\\') {
             curIndex += 1;
-            if (curIndex < static_cast<int>(line.size()))
-              line[curIndex].mMultiLineComment = inComment;
+            if (curIndex < static_cast<int>(glyphs.size()))
+              glyphs[curIndex].mComment = inComment;
             }
           }
           //}}}
         else {
-          if (firstChar && (ch == mOptions.mLanguage.mPreprocChar))
+          if (firstNonWhiteSpaceChar && (ch == mOptions.mLanguage.mPreprocChar))
             withinPreproc = true;
 
           if (ch == '\"') {
             withinString = true;
-            line[curIndex].mMultiLineComment = inComment;
+            glyphs[curIndex].mComment = inComment;
             }
 
           else {
             auto pred = [](const char& a, const cGlyph& b) { return a == b.mChar; };
-            auto from = line.begin() + curIndex;
+            auto from = glyphs.begin() + curIndex;
             string& commentBegin = mOptions.mLanguage.mCommentBegin;
             string& singleLineComment = mOptions.mLanguage.mSingleLineComment;
 
-            if ((curIndex + singleLineComment.size() <= line.size()) &&
-                equals (singleLineComment.begin(), singleLineComment.end(),
-                        from, from + singleLineComment.size(), pred)) {
+            if ((curIndex + singleLineComment.size() <= glyphs.size()) && 
+                equals (singleLineComment.begin(), singleLineComment.end(), from, from + singleLineComment.size(), pred))
               withinSingleLineComment = true;
-              }
 
-            else if ((!withinSingleLineComment && (curIndex + commentBegin.size() <= line.size())) &&
+            else if (!withinSingleLineComment &&
+                     (curIndex + commentBegin.size() <= glyphs.size()) &&
                      equals (commentBegin.begin(), commentBegin.end(), from, from + commentBegin.size(), pred)) {
               commentBeginLine = curLine;
               commentBeginIndex = curIndex;
               }
 
-            inComment = (commentBeginLine < curLine) ||
-                        ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
-            line[curIndex].mMultiLineComment = inComment;
-            line[curIndex].mSingleLineComment = withinSingleLineComment;
+            inComment = (commentBeginLine < curLine) || ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
+            glyphs[curIndex].mComment = inComment || withinSingleLineComment;
 
             string& commentEnd = mOptions.mLanguage.mCommentEnd;
             if ((curIndex + 1 >= static_cast<int>(commentEnd.size())) &&
@@ -2170,18 +2170,15 @@ void cTextEdit::parseComments() {
             }
           }
 
-        line[curIndex].mPreProc = withinPreproc;
+        glyphs[curIndex].mPreProc = withinPreproc;
         curIndex += utf8CharLength (ch);
-        if (curIndex >= static_cast<int>(line.size())) {
+        //}}}
+        if (curIndex >= static_cast<int>(glyphs.size())) {
           curIndex = 0;
           ++curLine;
           }
         }
-        //}}}
-      else {
-        curIndex = 0;
-        ++curLine;
-        }
+
       }
     }
   }
@@ -2986,10 +2983,8 @@ void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
 //{{{
 uint8_t cTextEdit::cGlyph::getColor() const {
 
-  if (mSingleLineComment)
+  if (mComment)
     return eComment;
-  if (mMultiLineComment)
-    return eMultiLineComment;
   if (mPreProc)
     return ePreProc;
   return mColor;
