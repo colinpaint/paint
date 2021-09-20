@@ -2082,7 +2082,7 @@ void cTextEdit::parseComments() {
     bool firstNonWhiteSpaceChar = true;
     bool concatenateLine = false;
     bool inString = false;
-    bool inPreproc = false;
+    bool inPreProc = false;
     bool inSingleLineComment = false;
 
     int curLine = 0;
@@ -2092,82 +2092,83 @@ void cTextEdit::parseComments() {
       int numGlyphs = static_cast<int>(glyphs.size());
       if ((curIndex == 0) && !concatenateLine) {
         inSingleLineComment = false;
-        inPreproc = false;
+        inPreProc = false;
         firstNonWhiteSpaceChar = true;
         }
       concatenateLine = false;
 
       if (glyphs.empty()) {
-        curIndex = 0;
+        // next line
         ++curLine;
+        curIndex = 0;
         }
       else {
-        //{{{  check line for comment
         uint8_t ch = glyphs[curIndex].mChar;
+        //{{{  parse ch for comment
         if ((ch != mOptions.mLanguage.mPreprocChar) && !isspace (ch))
           firstNonWhiteSpaceChar = false;
 
         if ((curIndex == numGlyphs - 1) && (glyphs[numGlyphs - 1].mChar == '\\'))
           concatenateLine = true;
 
-        bool inComment = (commentBeginLine < curLine) || ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
-
+        bool inBeginEndComment = (commentBeginLine < curLine) || 
+                                 ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
         if (inString) {
-          glyphs[curIndex].mComment = inComment;
+          glyphs[curIndex].mComment = inBeginEndComment;
           if (ch == '\"') {
-            //{{{  handle trailing "
+            //{{{  handle trailing string "
             if ((curIndex + 1 < numGlyphs) && (glyphs[curIndex + 1].mChar == '\"')) {
               curIndex += 1;
               if (curIndex < numGlyphs)
-                 glyphs[curIndex].mComment = inComment;
+                glyphs[curIndex].mComment = inBeginEndComment;
               }
             else
               inString = false;
             }
             //}}}
           else if (ch == '\\') {
-            //{{{  handle \ in string
+            //{{{  handle \ in string "./."
             curIndex += 1;
             if (curIndex < numGlyphs)
-              glyphs[curIndex].mComment = inComment;
+              glyphs[curIndex].mComment = inBeginEndComment;
             }
             //}}}
           }
-
         else {
-          // leading #, preproc line
-          inPreproc = firstNonWhiteSpaceChar && (ch == mOptions.mLanguage.mPreprocChar);
+          // is firstChar in line preProc # ?
+          inPreProc = firstNonWhiteSpaceChar && (ch == mOptions.mLanguage.mPreprocChar);
 
           if (ch == '\"') {
-            //{{{  handle leading "
+            //{{{  handle leading string " 
             inString = true;
-            glyphs[curIndex].mComment = inComment;
+            glyphs[curIndex].mComment = inBeginEndComment;
             }
             //}}}
-
           else {
-            auto pred = [](const char& a, const cGlyph& b) { return a == b.mChar; };
-            auto from = glyphs.begin() + curIndex;
-
-            string& multiCommentBegin = mOptions.mLanguage.mCommentBegin;
-
-            // is this start of singleLine comment
+            // start of singleLine comment? comparing string to glyphs
             string& singleLineComment = mOptions.mLanguage.mSingleLineComment;
+            auto from = glyphs.begin() + curIndex;
+            auto pred = [](const char& a, const cGlyph& b) { return a == b.mChar; };
             if ((curIndex + singleLineComment.size() <= numGlyphs) &&
                 equals (singleLineComment.begin(), singleLineComment.end(), from, from + singleLineComment.size(), pred))
               inSingleLineComment = true;
 
-            // is this start of multiine comment
-            else if (!inSingleLineComment &&
-                     (curIndex + multiCommentBegin.size() <= numGlyphs) &&
-                     equals (multiCommentBegin.begin(), multiCommentBegin.end(), from, from + multiCommentBegin.size(), pred)) {
-              commentBeginLine = curLine;
-              commentBeginIndex = curIndex;
+            else {
+              // start of begin comment? comparing string to glyphs
+              string& multiCommentBegin = mOptions.mLanguage.mCommentBegin;
+              if (!inSingleLineComment &&
+                  (curIndex + multiCommentBegin.size() <= numGlyphs) &&
+                  equals (multiCommentBegin.begin(), multiCommentBegin.end(), from, from + multiCommentBegin.size(), pred)) {
+                commentBeginLine = curLine;
+                commentBeginIndex = curIndex;
+                }
               }
 
-            inComment = (commentBeginLine < curLine) || ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
-            glyphs[curIndex].mComment = inComment || inSingleLineComment;
+            inBeginEndComment = (commentBeginLine < curLine) || 
+                                ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
+            glyphs[curIndex].mComment = inSingleLineComment || inBeginEndComment;
 
+            // end of end comment? comparing string to glyphs
             string& commentEnd = mOptions.mLanguage.mCommentEnd;
             if ((curIndex + 1 >= static_cast<int>(commentEnd.size())) &&
                 equals (commentEnd.begin(), commentEnd.end(), from + 1 - commentEnd.size(), from + 1, pred)) {
@@ -2177,12 +2178,15 @@ void cTextEdit::parseComments() {
             }
           }
 
-        glyphs[curIndex].mPreProc = inPreproc;
-        curIndex += utf8CharLength (ch);
+        glyphs[curIndex].mPreProc = inPreProc;
         //}}}
+
+        // next ch
+        curIndex += utf8CharLength (ch);
         if (curIndex >= numGlyphs) {
-          curIndex = 0;
+          // next line
           ++curLine;
+          curIndex = 0;
           }
         }
 
