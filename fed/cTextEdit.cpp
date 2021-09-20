@@ -2075,8 +2075,6 @@ void cTextEdit::parseComments() {
   if (mEdit.mCheckComments) {
     mEdit.mCheckComments = false;
 
-    int endIndex = 0;
-
     bool firstNonWhiteSpaceChar = true;
     bool concatenateLine = false;
     bool inString = false;
@@ -2086,13 +2084,14 @@ void cTextEdit::parseComments() {
 
     int curLine = 0;
     int curIndex = 0;
-    while ((curLine < static_cast<int>(mInfo.mLines.size())) || (curIndex < endIndex)) {
+    while (curLine < static_cast<int>(mInfo.mLines.size())) {
       vector<cGlyph>& glyphs = mInfo.mLines[curLine].mGlyphs;
       int numGlyphs = static_cast<int>(glyphs.size());
 
       if ((curIndex == 0) && !concatenateLine) {
-        inSingleComment = false;
+        // init newLine flags using concatenate flag from lastLine
         inPreProc = false;
+        inSingleComment = false;
         firstNonWhiteSpaceChar = true;
         }
       concatenateLine = false;
@@ -2116,7 +2115,7 @@ void cTextEdit::parseComments() {
           glyphs[curIndex].mComment = inBeginEndComment;
           if (ch == '\"') {
             //{{{  end of string "
-            if ((curIndex + 1 < numGlyphs) && (glyphs[curIndex + 1].mChar == '\"')) {
+            if ((curIndex+1 < numGlyphs) && (glyphs[curIndex+1].mChar == '\"')) {
               curIndex += 1;
               if (curIndex < numGlyphs)
                 glyphs[curIndex].mComment = inBeginEndComment;
