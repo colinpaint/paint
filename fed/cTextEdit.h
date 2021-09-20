@@ -143,13 +143,13 @@ public:
     //{{{
     cLine() :
       mGlyphs(),
-      mComment(false), mFoldEnd(false), mFoldBegin(false), mFolded(true), mPressed(false),
+      mComment(false), mFoldBegin(false), mFolded(true), mFoldEnd(false), mPressed(false),
       mSeeThruOffset(0), mIndent(0) {}
     //}}}
     //{{{
     cLine (const std::vector<cGlyph>& line) :
       mGlyphs(line),
-      mComment(false), mFoldEnd(false), mFoldBegin(false), mFolded(true), mPressed(false),
+      mComment(false), mFoldBegin(false), mFolded(true), mFoldEnd(false), mPressed(false),
       mSeeThruOffset(0), mIndent(0) {}
     //}}}
     //{{{
@@ -340,14 +340,11 @@ private:
   public:
     bool mCheckComments = true;
 
-    int mColorRangeMin = 0;
-    int mColorRangeMax = 0;
+    sCursorSelectionState mState;
 
+    eSelection mSelection = eSelection::eNormal;
     sPosition mInteractiveBegin;
     sPosition mInteractiveEnd;
-    eSelection mSelection = eSelection::eNormal;
-
-    sCursorSelectionState mState;
     };
   //}}}
   //{{{
@@ -453,6 +450,7 @@ private:
   //}}}
 
   void parseLine (cLine& line);
+  void parseComments();
 
   void clickLine (int lineNumber);
   void clickFold (int lineNumber, bool foldOpen);
