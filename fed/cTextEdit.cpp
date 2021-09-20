@@ -2089,6 +2089,7 @@ void cTextEdit::parseComments() {
     int curIndex = 0;
     while ((curLine < endLine) || (curIndex < endIndex)) {
       vector<cGlyph>& glyphs = mInfo.mLines[curLine].mGlyphs;
+      int numGlyphs = static_cast<int>(glyphs.size());
       if ((curIndex == 0) && !concatenateLine) {
         inSingleLineComment = false;
         inPreproc = false;
@@ -2106,7 +2107,7 @@ void cTextEdit::parseComments() {
         if ((ch != mOptions.mLanguage.mPreprocChar) && !isspace (ch))
           firstNonWhiteSpaceChar = false;
 
-        if ((curIndex == static_cast<int>(glyphs.size()) - 1) && (glyphs[glyphs.size() - 1].mChar == '\\'))
+        if ((curIndex == numGlyphs - 1) && (glyphs[numGlyphs - 1].mChar == '\\'))
           concatenateLine = true;
 
         bool inComment = (commentBeginLine < curLine) || ((commentBeginLine == curLine) && (commentBeginIndex <= curIndex));
@@ -2115,9 +2116,9 @@ void cTextEdit::parseComments() {
           glyphs[curIndex].mComment = inComment;
           if (ch == '\"') {
             //{{{  handle trailing "
-            if ((curIndex + 1 < static_cast<int>(glyphs.size())) && (glyphs[curIndex + 1].mChar == '\"')) {
+            if ((curIndex + 1 < numGlyphs) && (glyphs[curIndex + 1].mChar == '\"')) {
               curIndex += 1;
-              if (curIndex < static_cast<int>(glyphs.size()))
+              if (curIndex < numGlyphs)
                  glyphs[curIndex].mComment = inComment;
               }
             else
@@ -2127,7 +2128,7 @@ void cTextEdit::parseComments() {
           else if (ch == '\\') {
             //{{{  handle \ in string
             curIndex += 1;
-            if (curIndex < static_cast<int>(glyphs.size()))
+            if (curIndex < numGlyphs)
               glyphs[curIndex].mComment = inComment;
             }
             //}}}
@@ -2179,7 +2180,7 @@ void cTextEdit::parseComments() {
         glyphs[curIndex].mPreProc = inPreproc;
         curIndex += utf8CharLength (ch);
         //}}}
-        if (curIndex >= static_cast<int>(glyphs.size())) {
+        if (curIndex >= numGlyphs) {
           curIndex = 0;
           ++curLine;
           }
