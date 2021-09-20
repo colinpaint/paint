@@ -69,7 +69,7 @@ namespace {
     0xffefefef, // eBackground
     0xff202020, // eText
     0xffff0c06, // eKeyword
-    0xff008000, // eNumber
+    0xff606000, // eNumber
     0xff2020a0, // eString
     0xff304070, // eLiteral
     0xff000000, // ePunctuation
@@ -2076,40 +2076,28 @@ void cTextEdit::parseComments() {
     mEdit.mCheckComments = false;
 
     bool firstNonWhiteSpaceChar = true;
-    bool concatenateLine = false;
+    bool concatenateNextLine = false;
     bool inString = false;
-    bool inPreProc = false;
+    bool inPreProcLine = false;
     bool inSingleComment = false;
     bool inBeginEndComment = false;
 
     int curLine = 0;
     int curIndex = 0;
+
     while (curLine < static_cast<int>(mInfo.mLines.size())) {
+      concatenateNextLine = false;
+
       vector<cGlyph>& glyphs = mInfo.mLines[curLine].mGlyphs;
       int numGlyphs = static_cast<int>(glyphs.size());
-
-      if ((curIndex == 0) && !concatenateLine) {
-        // init newLine flags using concatenate flag from lastLine
-        inPreProc = false;
-        inSingleComment = false;
-        firstNonWhiteSpaceChar = true;
-        }
-      concatenateLine = false;
-
-      if (glyphs.empty()) {
-        // next line
-        ++curLine;
-        curIndex = 0;
-        }
-      else {
+      if (numGlyphs > 0) {
         uint8_t ch = glyphs[curIndex].mChar;
         //{{{  parse ch, strangely complicated
         if ((ch != mOptions.mLanguage.mPreprocChar) && !isspace (ch))
           firstNonWhiteSpaceChar = false;
 
         // if lastChar on line \ concatenate
-        if ((curIndex == numGlyphs-1) && (glyphs[numGlyphs-1].mChar == '\\'))
-          concatenateLine = true;
+        concatenateNextLine = (curIndex == numGlyphs-1) && (glyphs[numGlyphs-1].mChar == '\\');
 
         if (inString) {
           glyphs[curIndex].mComment = inBeginEndComment;
@@ -2134,7 +2122,8 @@ void cTextEdit::parseComments() {
           }
         else {
           // is firstChar in line preProc # ?
-          inPreProc = firstNonWhiteSpaceChar && (ch == mOptions.mLanguage.mPreprocChar);
+          if (firstNonWhiteSpaceChar && (ch == mOptions.mLanguage.mPreprocChar))
+            inPreProcLine = true;
 
           if (ch == '\"') {
             //{{{  begin of string "
@@ -2174,18 +2163,21 @@ void cTextEdit::parseComments() {
             }
           }
 
-        glyphs[curIndex].mPreProc = inPreProc;
+        glyphs[curIndex].mPreProc = inPreProcLine;
         //}}}
-
-        // next ch
         curIndex += utf8CharLength (ch);
-        if (curIndex >= numGlyphs) {
-          // next line
-          ++curLine;
-          curIndex = 0;
-          }
         }
 
+      if (curIndex >= numGlyphs) {
+        // next line
+        ++curLine;
+        curIndex = 0;
+        if (!concatenateNextLine) {
+          inPreProcLine = false;
+          inSingleComment = false;
+          firstNonWhiteSpaceChar = true;
+          }
+        }
       }
     }
   }
