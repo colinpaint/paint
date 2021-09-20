@@ -2134,13 +2134,14 @@ void cTextEdit::parseComments() {
           else {
 
             // predicate to compare string char with glyph char
-            auto pred = [](const char& a, const cGlyph& b) { return a == b.mChar; };
+            auto equalPredicate = [](const char& a, const cGlyph& b) { return a == b.mChar; };
 
             // comparing string to glyphs, start of singleLine comment?
             auto glyph = glyphs.begin() + curIndex;
             string& SingleComment = mOptions.mLanguage.mSingleComment;
             if ((curIndex + SingleComment.size() <= numGlyphs) &&
-                equals (SingleComment.begin(), SingleComment.end(), glyph, glyph + SingleComment.size(), pred))
+                equals (SingleComment.begin(), SingleComment.end(), 
+                        glyph, glyph + SingleComment.size(), equalPredicate))
               inSingleComment = true;
 
             else {
@@ -2148,7 +2149,8 @@ void cTextEdit::parseComments() {
               string& multiCommentBegin = mOptions.mLanguage.mCommentBegin;
               if (!inSingleComment &&
                   (curIndex + multiCommentBegin.size() <= numGlyphs) &&
-                  equals (multiCommentBegin.begin(), multiCommentBegin.end(), glyph, glyph + multiCommentBegin.size(), pred))
+                  equals (multiCommentBegin.begin(), multiCommentBegin.end(), 
+                          glyph, glyph + multiCommentBegin.size(), equalPredicate))
                 inBeginEndComment = true;
               }
 
@@ -2158,7 +2160,8 @@ void cTextEdit::parseComments() {
             // comparing string to glyphs, end of begin/end comment?
             string& commentEnd = mOptions.mLanguage.mCommentEnd;
             if ((curIndex+1 >= static_cast<int>(commentEnd.size())) &&
-                equals (commentEnd.begin(), commentEnd.end(), glyph+1 - commentEnd.size(), glyph+1, pred))
+                equals (commentEnd.begin(), commentEnd.end(), 
+                        glyph+1 - commentEnd.size(), glyph+1, equalPredicate))
               inBeginEndComment = false;
             }
           }
