@@ -22,17 +22,6 @@
 using namespace std;
 using namespace chrono;
 //}}}
-//{{{  template <...> bool equals (...)
-template<class InputIt1, class InputIt2, class BinaryPredicate>
-bool equals (InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, BinaryPredicate p) {
-  for (; (first1 != last1) && (first2 != last2); ++first1, ++first2) {
-    if (!p (*first1, *first2))
-      return false;
-    }
-
-  return (first1 == last1) && (first2 == last2);
-  }
-//}}}
 namespace {
   //{{{  palette const
   constexpr uint8_t eBackground =        0;
@@ -2107,7 +2096,7 @@ void cTextEdit::parseLine (cLine& line) {
 //}}}
 //{{{
 void cTextEdit::parseComments() {
-// parse all lines for Single comment, begin/end comment, preProc
+// simple,fast parse all lines for comments and preProc, #define macros often multiLine
 
   if (mEdit.mCheckComments) {
     mEdit.mCheckComments = false;
@@ -2124,33 +2113,31 @@ void cTextEdit::parseComments() {
       vector<cGlyph>& glyphs = mInfo.mLines[curLine].mGlyphs;
       int numGlyphs = static_cast<int>(glyphs.size());
       if (numGlyphs > 0) {
+        // parse ch
         uint8_t ch = glyphs[curIndex].mChar;
-        //{{{  parse ch
+
+        // check for perProc
         if (inLeadingWhiteSpace && (ch == mOptions.mLanguage.mPreprocChar))
           inPreProcLine = true;
-        else if (!isspace (ch))
+        if (!isspace (ch))
           inLeadingWhiteSpace = false;
-
-        // apply preProc color to rest of line
         if (inPreProcLine)
           glyphs[curIndex].mColor = ePreProc;
 
-        // but comment trumps preProc
         if (ch == '\"') {
-          //{{{  begin of " " quote
+          //{{{  start of string
           inString = true;
           if (inSingleComment || inBeginEndComment)
             glyphs[curIndex].mColor = eComment;
           }
           //}}}
         else if (inString) {
-          //{{{  in " " quotes
+          //{{{  in string
           if (inSingleComment || inBeginEndComment)
             glyphs[curIndex].mColor = eComment;
 
-          if (ch == '\"') // end of " " quotes
+          if (ch == '\"')
             inString = false;
-
           else if (ch == '\\') {
             // \ escapeChar in " " quotes, skip nextChar if any
             if (curIndex+1 < numGlyphs) {
@@ -2162,47 +2149,26 @@ void cTextEdit::parseComments() {
           }
           //}}}
         else {
-          // predicate to compare string char with glyph char
-          auto equalPredicate = [](const char& a, const cGlyph& b) { return a == b.mChar; };
-
-          // comparing string to glyphs, start of singleLine comment?
-          auto glyph = glyphs.begin() + curIndex;
-          string& singleComment = mOptions.mLanguage.mCommentSingle;
-          if ((curIndex + singleComment.size() <= numGlyphs) &&
-              equals (singleComment.begin(), singleComment.end(),
-                      glyph, glyph + singleComment.size(), equalPredicate))
+          //{{{  other
+          if (glyphs[curIndex].mCommentSingle)
             inSingleComment = true;
+          else if (glyphs[curIndex].mCommentBegin)
+            inBeginEndComment = true;
 
-          else {
-            // comparing string to glyphs, start of begin/end comment?
-            string& multiCommentBegin = mOptions.mLanguage.mCommentBegin;
-            if (!inSingleComment &&
-                (curIndex + multiCommentBegin.size() <= numGlyphs) &&
-                equals (multiCommentBegin.begin(), multiCommentBegin.end(),
-                        glyph, glyph + multiCommentBegin.size(), equalPredicate))
-              inBeginEndComment = true;
-            }
-
-          // set comment flag, after finding begin, but before finding end
           if (inSingleComment || inBeginEndComment)
             glyphs[curIndex].mColor = eComment;
 
-          // comparing string to glyphs, end of begin/end comment?
-          string& commentEnd = mOptions.mLanguage.mCommentEnd;
-          if ((curIndex+1 >= static_cast<int>(commentEnd.size())) &&
-              equals (commentEnd.begin(), commentEnd.end(),
-                      glyph+1 - commentEnd.size(), glyph+1, equalPredicate))
+          if (glyphs[curIndex].mCommentEnd)
             inBeginEndComment = false;
           }
-        //}}}
+          //}}}
         curIndex += utf8CharLength (ch);
         }
 
-      // end of line ?
       if (curIndex >= numGlyphs) {
-        // trailing concatenate '\' char ?
+        // end of line, check for trailing concatenate '\' char
         if ((numGlyphs == 0) || (glyphs[numGlyphs-1].mChar != '\\')) {
-          // no, reset line flags
+          // no, reset new line flags
           inLeadingWhiteSpace = true;
           inPreProcLine = false;
           inString = false;
