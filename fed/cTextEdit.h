@@ -106,7 +106,6 @@ public:
     const char* mFoldEnd;
 
     char mPreprocChar;
-    bool mCaseSensitive;
     bool mAutoIndentation;
 
     std::unordered_set <std::string> mKeywords;

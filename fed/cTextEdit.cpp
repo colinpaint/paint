@@ -12,11 +12,8 @@
 #include <chrono>
 
 #include "../platform/cPlatform.h"
-
 #include "../imgui/myImguiWidgets.h"
-
 #include "../ui/cApp.h"
-
 #include "../utils/cLog.h"
 
 using namespace std;
@@ -2032,19 +2029,18 @@ void cTextEdit::parseLine (cLine& line) {
   size_t foldEndIndent = textString.find (mOptions.mLanguage.mFoldEndMarker);
   line.mFoldEnd = (foldEndIndent != string::npos);
 
-  // tokenise, look for keywords and builtins
+  //{{{  search for keywords, builtins
   const char* bufferBegin = &textString.front();
   const char* bufferEnd = bufferBegin + textString.size();
   const char* lastChar = bufferEnd;
+
   for (const char* firstChar = bufferBegin; firstChar != lastChar; ) {
-    //{{{  iterate chars
     const char* tokenBegin = nullptr;
     const char* tokenEnd = nullptr;
     uint8_t tokenColor = eText;
 
-    bool hasTokenizeResult = false;
-
     // try language tokenize
+    bool hasTokenizeResult = false;
     if (mOptions.mLanguage.mTokenize != nullptr)
       if (mOptions.mLanguage.mTokenize (firstChar, lastChar, tokenBegin, tokenEnd, tokenColor))
         hasTokenizeResult = true;
@@ -2066,21 +2062,11 @@ void cTextEdit::parseLine (cLine& line) {
     if (hasTokenizeResult) {
       // got token, look for keywords,builtins
       const size_t tokenLength = tokenEnd - tokenBegin;
-      if (tokenColor == eBuiltIn) {
-        string tokenString (tokenBegin, tokenEnd);
-
-        // almost all languages use lower case to specify keywords, so shouldn't this use ::tolower ?
-        if (!mOptions.mLanguage.mCaseSensitive)
-          transform (tokenString.begin(), tokenString.end(), tokenString.begin(),
-            [](uint8_t ch) {
-              return static_cast<uint8_t>(std::toupper (ch));
-              });
-
-        if (mOptions.mLanguage.mKeywords.count (tokenString) != 0)
-          tokenColor = eKeyword;
-        else if (mOptions.mLanguage.mBuiltIns.count (tokenString) != 0)
-          tokenColor = eBuiltIn;
-        }
+      string tokenString (tokenBegin, tokenEnd);
+      if (mOptions.mLanguage.mKeywords.count (tokenString) != 0)
+        tokenColor = eKeyword;
+      else if (mOptions.mLanguage.mBuiltIns.count (tokenString) != 0)
+        tokenColor = eBuiltIn;
 
       for (size_t j = 0; j < tokenLength; ++j)
         line.mGlyphs[(tokenBegin - bufferBegin) + j].mColor = tokenColor;
@@ -2091,7 +2077,7 @@ void cTextEdit::parseLine (cLine& line) {
     else
       firstChar++;
     }
-    //}}}
+  //}}}
   }
 //}}}
 //{{{
@@ -3009,7 +2995,6 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
     language.mFoldEnd = "}}}";
 
     language.mPreprocChar = '#';
-    language.mCaseSensitive = true;
     language.mAutoIndentation = true;
 
     for (auto& keyword : kCKeywords)
@@ -3066,7 +3051,6 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     language.mFoldEnd = "}}}";
 
     language.mPreprocChar = '#';
-    language.mCaseSensitive = true;
     language.mAutoIndentation = true;
 
     for (auto& keyword : kHlslKeywords)
@@ -3120,7 +3104,6 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
     language.mFoldEnd = "}}}";
 
     language.mPreprocChar = '#';
-    language.mCaseSensitive = true;
     language.mAutoIndentation = true;
 
     for (auto& keyword : kGlslKeywords)
