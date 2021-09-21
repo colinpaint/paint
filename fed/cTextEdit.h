@@ -120,19 +120,17 @@ public:
   class cGlyph {
   public:
     //{{{
-    cGlyph() : mChar(' '), mColor(0), mComment(false), mPreProc(false) {}
+    cGlyph() : mChar(' '), mColor(0), mInComment(false), mInPreProc(false) {}
     //}}}
     //{{{
-    cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color), mComment(false), mPreProc(false) {}
+    cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color), mInComment(false), mInPreProc(false) {}
     //}}}
-
-    uint8_t getColor() const;
 
     uint8_t mChar;
     uint8_t mColor;
 
-    bool mComment:1;
-    bool mPreProc:1;
+    bool mInComment:1;
+    bool mInPreProc:1;
     };
   //}}}
   //{{{

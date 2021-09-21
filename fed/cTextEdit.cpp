@@ -2045,7 +2045,7 @@ void cTextEdit::parseLine (cLine& line) {
               return static_cast<uint8_t>(std::toupper (ch));
               });
 
-        if (!line.mGlyphs[firstChar - bufferBegin].mPreProc) {
+        if (!line.mGlyphs[firstChar - bufferBegin].mInPreProc) {
           if (mOptions.mLanguage.mKeywords.count (tokenString) != 0)
             tokenColor = eKeyword;
           else if (mOptions.mLanguage.mBuiltIns.count (tokenString) != 0)
@@ -2075,111 +2075,111 @@ void cTextEdit::parseComments() {
   if (mEdit.mCheckComments) {
     mEdit.mCheckComments = false;
 
-    bool firstNonWhiteSpaceChar = true;
-    bool concatenateNextLine = false;
-    bool inString = false;
+    bool inLeadingWhiteSpace = true;
     bool inPreProcLine = false;
+    bool inString = false;
     bool inSingleComment = false;
     bool inBeginEndComment = false;
 
     int curLine = 0;
     int curIndex = 0;
-
     while (curLine < static_cast<int>(mInfo.mLines.size())) {
-      concatenateNextLine = false;
-
       vector<cGlyph>& glyphs = mInfo.mLines[curLine].mGlyphs;
       int numGlyphs = static_cast<int>(glyphs.size());
       if (numGlyphs > 0) {
         uint8_t ch = glyphs[curIndex].mChar;
-        //{{{  parse ch, strangely complicated
-        if ((ch != mOptions.mLanguage.mPreprocChar) && !isspace (ch))
-          firstNonWhiteSpaceChar = false;
+        //{{{  parse ch
+        if (inLeadingWhiteSpace && (ch == mOptions.mLanguage.mPreprocChar))
+          inPreProcLine = true;
+        else if (!isspace (ch))
+          inLeadingWhiteSpace = false;
 
-        // if lastChar on line \ concatenate
-        concatenateNextLine = (curIndex == numGlyphs-1) && (glyphs[numGlyphs-1].mChar == '\\');
+        // apply preProc color to rest of line
+        glyphs[curIndex].mInPreProc = inPreProcLine;
+        if (inPreProcLine)
+          glyphs[curIndex].mColor = ePreProc;
 
-        if (inString) {
-          glyphs[curIndex].mComment = inBeginEndComment;
-          if (ch == '\"') {
-            //{{{  end of string "
-            if ((curIndex+1 < numGlyphs) && (glyphs[curIndex+1].mChar == '\"')) {
-              curIndex += 1;
-              if (curIndex < numGlyphs)
-                glyphs[curIndex].mComment = inBeginEndComment;
-              }
-            else
-              inString = false;
-            }
-            //}}}
+        // but comment trumps preProc
+        if (ch == '\"') {
+          //{{{  begin of " " quote
+          inString = true;
+
+          glyphs[curIndex].mInComment = inBeginEndComment;
+          if (inBeginEndComment)
+            glyphs[curIndex].mColor = eComment;
+          }
+          //}}}
+        else if (inString) {
+          //{{{  in " " quotes
+          glyphs[curIndex].mInComment = inBeginEndComment;
+          if (inBeginEndComment)
+            glyphs[curIndex].mColor = eComment;
+
+          if (ch == '\"') // end of " " quotes
+            inString = false;
           else if (ch == '\\') {
-            //{{{  \ in string "./."
-            curIndex += 1;
-            if (curIndex < numGlyphs)
-              glyphs[curIndex].mComment = inBeginEndComment;
-            }
-            //}}}
-          }
-        else {
-          // is firstChar in line preProc # ?
-          if (firstNonWhiteSpaceChar && (ch == mOptions.mLanguage.mPreprocChar))
-            inPreProcLine = true;
-
-          if (ch == '\"') {
-            //{{{  begin of string "
-            inString = true;
-            glyphs[curIndex].mComment = inBeginEndComment;
-            }
-            //}}}
-          else {
-
-            // predicate to compare string char with glyph char
-            auto equalPredicate = [](const char& a, const cGlyph& b) { return a == b.mChar; };
-
-            // comparing string to glyphs, start of singleLine comment?
-            auto glyph = glyphs.begin() + curIndex;
-            string& SingleComment = mOptions.mLanguage.mSingleComment;
-            if ((curIndex + SingleComment.size() <= numGlyphs) &&
-                equals (SingleComment.begin(), SingleComment.end(), 
-                        glyph, glyph + SingleComment.size(), equalPredicate))
-              inSingleComment = true;
-
-            else {
-              // comparing string to glyphs, start of begin/end comment?
-              string& multiCommentBegin = mOptions.mLanguage.mCommentBegin;
-              if (!inSingleComment &&
-                  (curIndex + multiCommentBegin.size() <= numGlyphs) &&
-                  equals (multiCommentBegin.begin(), multiCommentBegin.end(), 
-                          glyph, glyph + multiCommentBegin.size(), equalPredicate))
-                inBeginEndComment = true;
+            // \ escapeChar in " " quotes, skip nextChar if any
+            if (curIndex+1 < numGlyphs) {
+              curIndex++;
+              glyphs[curIndex].mInComment = inBeginEndComment;
+              if (inBeginEndComment)
+                glyphs[curIndex].mColor = eComment;
               }
-
-            // set comment flag, after finding begin, but before finding end
-            glyphs[curIndex].mComment = inSingleComment || inBeginEndComment;
-
-            // comparing string to glyphs, end of begin/end comment?
-            string& commentEnd = mOptions.mLanguage.mCommentEnd;
-            if ((curIndex+1 >= static_cast<int>(commentEnd.size())) &&
-                equals (commentEnd.begin(), commentEnd.end(), 
-                        glyph+1 - commentEnd.size(), glyph+1, equalPredicate))
-              inBeginEndComment = false;
             }
           }
+          //}}}
+        else {
+          // predicate to compare string char with glyph char
+          auto equalPredicate = [](const char& a, const cGlyph& b) { return a == b.mChar; };
 
-        glyphs[curIndex].mPreProc = inPreProcLine;
+          // comparing string to glyphs, start of singleLine comment?
+          auto glyph = glyphs.begin() + curIndex;
+          string& SingleComment = mOptions.mLanguage.mSingleComment;
+          if ((curIndex + SingleComment.size() <= numGlyphs) &&
+              equals (SingleComment.begin(), SingleComment.end(),
+                      glyph, glyph + SingleComment.size(), equalPredicate))
+            inSingleComment = true;
+
+          else {
+            // comparing string to glyphs, start of begin/end comment?
+            string& multiCommentBegin = mOptions.mLanguage.mCommentBegin;
+            if (!inSingleComment &&
+                (curIndex + multiCommentBegin.size() <= numGlyphs) &&
+                equals (multiCommentBegin.begin(), multiCommentBegin.end(),
+                        glyph, glyph + multiCommentBegin.size(), equalPredicate))
+              inBeginEndComment = true;
+            }
+
+          // set comment flag, after finding begin, but before finding end
+          glyphs[curIndex].mInComment = inSingleComment || inBeginEndComment;
+          if (inSingleComment || inBeginEndComment)
+            glyphs[curIndex].mColor = eComment;
+
+          // comparing string to glyphs, end of begin/end comment?
+          string& commentEnd = mOptions.mLanguage.mCommentEnd;
+          if ((curIndex+1 >= static_cast<int>(commentEnd.size())) &&
+              equals (commentEnd.begin(), commentEnd.end(),
+                      glyph+1 - commentEnd.size(), glyph+1, equalPredicate))
+            inBeginEndComment = false;
+          }
         //}}}
         curIndex += utf8CharLength (ch);
         }
 
+      // end of line ?
       if (curIndex >= numGlyphs) {
+        // trailing concatenate '\' char ?
+        if ((numGlyphs == 0) || (glyphs[numGlyphs-1].mChar != '\\')) {
+          // no, reset line flags
+          inLeadingWhiteSpace = true;
+          inPreProcLine = false;
+          inString = false;
+          inSingleComment = false;
+          }
+
         // next line
         ++curLine;
         curIndex = 0;
-        if (!concatenateNextLine) {
-          inPreProcLine = false;
-          inSingleComment = false;
-          firstNonWhiteSpaceChar = true;
-          }
         }
       }
     }
@@ -2405,10 +2405,10 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <cGlyph>& glyphs, uint8_t 
 
   array <char,256> str;
   size_t strIndex = 0;
-  uint8_t lastColor = (forceColor == eUndefined) ? glyphs[0].getColor() : forceColor;
+  uint8_t lastColor = (forceColor == eUndefined) ? glyphs[0].mColor : forceColor;
 
   for (auto& glyph : glyphs) {
-    uint8_t color = (forceColor == eUndefined) ? glyph.getColor() : forceColor;
+    uint8_t color = (forceColor == eUndefined) ? glyph.mColor : forceColor;
     if ((strIndex > 0) && (strIndex < str.max_size()) &&
         ((color != lastColor) || (glyph.mChar == '\t') || (glyph.mChar == ' '))) {
       // draw colored glyphs, seperated by colorChange,tab,space
@@ -2818,8 +2818,12 @@ void cTextEdit::handleKeyboard() {
   // {false, true,  false, kNumpad3,            false, [this]{foldCloseAll();}},
   // {true,  false, false, kNumpadMulitply,     false, [this]{findDialog();}},
   // {true,  false, false, kNumpadDivide,       false, [this]{replaceDialog();}},
+
   // {false, false, false, F4                   false, [this]{copy();}},
   // {false, true,  false, F                    false, [this]{findDialog();}},
+  // {false, true,  false, S                    false, [this]{saveFile();}},
+  // {false, true,  false, A                    false, [this]{saveAllFiles();}},
+  // {false, true,  false, Tab                  false, [this]{removeTabs();}},
   // {true,  false, false, N                    false, [this]{gotoDialog();}},
      };
 
@@ -2979,18 +2983,6 @@ void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
   textEdit->scrollCursorVisible();
   }
 //}}}
-//}}}
-
-// cTextEdit::cGlyph
-//{{{
-uint8_t cTextEdit::cGlyph::getColor() const {
-
-  if (mComment)
-    return eComment;
-  if (mPreProc)
-    return ePreProc;
-  return mColor;
-  }
 //}}}
 
 // cTextEdit::cLanguage
