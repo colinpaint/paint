@@ -94,9 +94,9 @@ public:
     // vars
     std::string mName;
 
+    std::string mCommentSingle;
     std::string mCommentBegin;
     std::string mCommentEnd;
-    std::string mSingleComment;
     std::string mFoldBeginMarker;
     std::string mFoldEndMarker;
 
@@ -120,17 +120,20 @@ public:
   class cGlyph {
   public:
     //{{{
-    cGlyph() : mChar(' '), mColor(0), mInComment(false), mInPreProc(false) {}
+    cGlyph() : mChar(' '), mColor(0),
+               mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
     //}}}
     //{{{
-    cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color), mInComment(false), mInPreProc(false) {}
+    cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
+                                         mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
     //}}}
 
     uint8_t mChar;
     uint8_t mColor;
 
-    bool mInComment:1;
-    bool mInPreProc:1;
+    bool mCommentSingle:1;
+    bool mCommentBegin:1;
+    bool mCommentEnd:1;
     };
   //}}}
   //{{{
@@ -139,13 +142,15 @@ public:
     //{{{
     cLine() :
       mGlyphs(),
-      mComment(false), mFoldBegin(false), mFolded(true), mFoldEnd(false), mPressed(false),
+      mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
+      mFoldBegin(false), mFolded(true), mFoldEnd(false), mPressed(false),
       mSeeThruOffset(0), mIndent(0) {}
     //}}}
     //{{{
     cLine (const std::vector<cGlyph>& line) :
       mGlyphs(line),
-      mComment(false), mFoldBegin(false), mFolded(true), mFoldEnd(false), mPressed(false),
+      mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
+      mFoldBegin(false), mFolded(true), mFoldEnd(false), mPressed(false),
       mSeeThruOffset(0), mIndent(0) {}
     //}}}
     //{{{
@@ -156,7 +161,10 @@ public:
 
     std::vector <cGlyph> mGlyphs;
 
-    bool mComment:1;
+    bool mCommentSingle:1;
+    bool mCommentBegin:1;
+    bool mCommentEnd:1;
+    bool mCommentFold:1;
     bool mFoldBegin:1;
     bool mFolded:1;
     bool mFoldEnd:1;

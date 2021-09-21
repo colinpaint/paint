@@ -36,6 +36,7 @@ bool equals (InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, B
 namespace {
   //{{{  palette const
   constexpr uint8_t eBackground =        0;
+
   constexpr uint8_t eText =              1;
   constexpr uint8_t eKeyword =           2;
   constexpr uint8_t eNumber =            3;
@@ -64,9 +65,10 @@ namespace {
   constexpr uint8_t eScrollActive =     23;
   constexpr uint8_t eUndefined =      0xFF;
 
-  // use lookup to allow for any colorMap
+  // color to ImU32 lookup
   const vector <ImU32> kPalette = {
     0xffefefef, // eBackground
+
     0xff202020, // eText
     0xffff0c06, // eKeyword
     0xff606000, // eNumber
@@ -74,7 +76,7 @@ namespace {
     0xff304070, // eLiteral
     0xff000000, // ePunctuation
     0xff008080, // ePreProc
-    0xff404040, // eBuiltIn
+    0xff400040, // eBuiltIn
     0xff208020, // eComment
 
     0x80600000, // eSelect
@@ -139,6 +141,7 @@ namespace {
     "time", "tolower", "toupper",
     "unordered_map", "unordered_set",
     "vector",
+    "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t",
     };
   //}}}
 
@@ -1959,6 +1962,21 @@ void cTextEdit::addUndo (cUndo& undo) {
 void cTextEdit::parseLine (cLine& line) {
 // parse for fold stuff, tokenize and look for keyWords, builtins
 
+  // check whole text for comments later
+  mEdit.mCheckComments = true;
+
+  line.mCommentBegin = false;
+  line.mCommentEnd = false;
+  line.mCommentSingle = false;
+  line.mFoldBegin = false;
+  line.mFoldEnd = false;
+  line.mFolded = true;
+  line.mIndent = 0;
+  line.mSeeThruOffset = 0;
+
+  if (line.mGlyphs.empty())
+    return;
+
   // glyphs to string
   string textString;
   for (auto& glyph : line.mGlyphs) {
@@ -1966,15 +1984,15 @@ void cTextEdit::parseLine (cLine& line) {
     textString += glyph.mChar;
     }
 
-  // look for foldBegin text
+  // look for foldBegin token
   size_t foldBeginIndent = textString.find (mOptions.mLanguage.mFoldBeginMarker);
   line.mFoldBegin = (foldBeginIndent != string::npos);
 
   if (line.mFoldBegin) {
-    // found foldBegin textString, find ident
+    // found foldBegin token, find ident
     line.mIndent = static_cast<uint8_t>(foldBeginIndent);
     // has textString after the foldBeginMarker
-    line.mComment = (textString.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
+    line.mCommentFold = (textString.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
     mInfo.mHasFolds = true;
     }
   else {
@@ -1984,22 +2002,46 @@ void cTextEdit::parseLine (cLine& line) {
       line.mIndent = static_cast<uint8_t>(indent);
     else
       line.mIndent = 0;
-
-    // has "//" style comment as first textString in line
-    line.mComment = (textString.find (mOptions.mLanguage.mSingleComment, indent) != string::npos);
     }
 
-  // look for foldEnd textString
+  //{{{  look for single line comment
+  size_t pos = 0;
+
+  do {
+    pos = textString.find (mOptions.mLanguage.mCommentSingle, pos);
+    if (pos != string::npos) {
+      line.mCommentSingle = true;
+      for (size_t i = 0; i < mOptions.mLanguage.mCommentSingle.size(); i++)
+        line.mGlyphs[pos++].mCommentSingle = true;
+      }
+    } while (pos != string::npos);
+  //}}}
+  //{{{  look for comment begin
+  pos = 0;
+  do {
+    pos = textString.find (mOptions.mLanguage.mCommentBegin, pos);
+    if (pos != string::npos) {
+      line.mCommentBegin = true;
+      for (size_t i = 0; i < mOptions.mLanguage.mCommentBegin.size(); i++)
+        line.mGlyphs[pos++].mCommentBegin = true;
+      }
+    } while (pos != string::npos);
+  //}}}
+  //{{{  look for comment end
+  pos = 0;
+  do {
+    pos = textString.find (mOptions.mLanguage.mCommentEnd, pos);
+    if (pos != string::npos) {
+      line.mCommentEnd = true;
+      for (size_t i = 0; i < mOptions.mLanguage.mCommentEnd.size(); i++)
+        line.mGlyphs[pos++].mCommentEnd = true;
+      }
+    } while (pos != string::npos);
+  //}}}
+
+  // look for foldEnd token
   size_t foldEndIndent = textString.find (mOptions.mLanguage.mFoldEndMarker);
   line.mFoldEnd = (foldEndIndent != string::npos);
-
-  // init fields set by updateFolds
-  line.mFolded = true;
-  line.mSeeThruOffset = 0;
-
-  // no point looking for tokens in empty line
-  if (line.mGlyphs.empty())
-    return;
 
   // tokenise, look for keywords and builtins
   const char* bufferBegin = &textString.front();
@@ -2045,12 +2087,10 @@ void cTextEdit::parseLine (cLine& line) {
               return static_cast<uint8_t>(std::toupper (ch));
               });
 
-        if (!line.mGlyphs[firstChar - bufferBegin].mInPreProc) {
-          if (mOptions.mLanguage.mKeywords.count (tokenString) != 0)
-            tokenColor = eKeyword;
-          else if (mOptions.mLanguage.mBuiltIns.count (tokenString) != 0)
-            tokenColor = eBuiltIn;
-          }
+        if (mOptions.mLanguage.mKeywords.count (tokenString) != 0)
+          tokenColor = eKeyword;
+        else if (mOptions.mLanguage.mBuiltIns.count (tokenString) != 0)
+          tokenColor = eBuiltIn;
         }
 
       for (size_t j = 0; j < tokenLength; ++j)
@@ -2063,9 +2103,6 @@ void cTextEdit::parseLine (cLine& line) {
       firstChar++;
     }
     //}}}
-
-  // check whole text for comments later
-  mEdit.mCheckComments = true;
   }
 //}}}
 //{{{
@@ -2095,7 +2132,6 @@ void cTextEdit::parseComments() {
           inLeadingWhiteSpace = false;
 
         // apply preProc color to rest of line
-        glyphs[curIndex].mInPreProc = inPreProcLine;
         if (inPreProcLine)
           glyphs[curIndex].mColor = ePreProc;
 
@@ -2103,26 +2139,23 @@ void cTextEdit::parseComments() {
         if (ch == '\"') {
           //{{{  begin of " " quote
           inString = true;
-
-          glyphs[curIndex].mInComment = inBeginEndComment;
-          if (inBeginEndComment)
+          if (inSingleComment || inBeginEndComment)
             glyphs[curIndex].mColor = eComment;
           }
           //}}}
         else if (inString) {
           //{{{  in " " quotes
-          glyphs[curIndex].mInComment = inBeginEndComment;
-          if (inBeginEndComment)
+          if (inSingleComment || inBeginEndComment)
             glyphs[curIndex].mColor = eComment;
 
           if (ch == '\"') // end of " " quotes
             inString = false;
+
           else if (ch == '\\') {
             // \ escapeChar in " " quotes, skip nextChar if any
             if (curIndex+1 < numGlyphs) {
               curIndex++;
-              glyphs[curIndex].mInComment = inBeginEndComment;
-              if (inBeginEndComment)
+              if (inSingleComment || inBeginEndComment)
                 glyphs[curIndex].mColor = eComment;
               }
             }
@@ -2134,10 +2167,10 @@ void cTextEdit::parseComments() {
 
           // comparing string to glyphs, start of singleLine comment?
           auto glyph = glyphs.begin() + curIndex;
-          string& SingleComment = mOptions.mLanguage.mSingleComment;
-          if ((curIndex + SingleComment.size() <= numGlyphs) &&
-              equals (SingleComment.begin(), SingleComment.end(),
-                      glyph, glyph + SingleComment.size(), equalPredicate))
+          string& singleComment = mOptions.mLanguage.mCommentSingle;
+          if ((curIndex + singleComment.size() <= numGlyphs) &&
+              equals (singleComment.begin(), singleComment.end(),
+                      glyph, glyph + singleComment.size(), equalPredicate))
             inSingleComment = true;
 
           else {
@@ -2151,7 +2184,6 @@ void cTextEdit::parseComments() {
             }
 
           // set comment flag, after finding begin, but before finding end
-          glyphs[curIndex].mInComment = inSingleComment || inBeginEndComment;
           if (inSingleComment || inBeginEndComment)
             glyphs[curIndex].mColor = eComment;
 
@@ -2486,13 +2518,16 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
     curPos.x += leftPadWidth;
 
     if (mOptions.mShowLineDebug)
-      mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber, fmt::format ("{:4d}{}{}{}{}{}{:2d}{:2d} ",
+      mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber, fmt::format ("{:4d}{}{}{}{}{}{}{}{}{:2d}{:2d} ",
         lineNumber,
-        line.mComment   ? 'c' : ' ',
-        line.mFoldBegin ? 'b':' ',
-        line.mFolded    ? 'f':' ',
-        line.mFoldEnd   ? 'e':' ',
-        line.mPressed   ? 'p':' ',
+        line.mCommentSingle? 'c' : ' ',
+        line.mCommentBegin ? '{' : ' ',
+        line.mCommentEnd   ? '}' : ' ',
+        line.mCommentFold  ? 'C' : ' ',
+        line.mFoldBegin    ? 'b':' ',
+        line.mFolded       ? 'f':' ',
+        line.mFoldEnd      ? 'e':' ',
+        line.mPressed      ? 'p':' ',
         line.mIndent,
         line.mSeeThruOffset).c_str());
     else
@@ -2704,7 +2739,7 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
     // show foldBegin line
     // - if no foldBegin comment, search for first noComment line, !!!! assume next line for now !!!!
     cLine& line = mInfo.mLines[lineNumber];
-    line.mSeeThruOffset = line.mComment ? 0 : 1;
+    line.mSeeThruOffset = line.mCommentFold ? 0 : 1;
     lineIndex = drawLine (lineNumber, line.mSeeThruOffset, lineIndex);
     }
 
@@ -2998,7 +3033,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
 
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
-    language.mSingleComment = "//";
+    language.mCommentSingle = "//";
 
     language.mFoldBeginMarker = "//{{{";
     language.mFoldEndMarker = "//}}}";
@@ -3017,27 +3052,27 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
       language.mBuiltIns.insert (builtIn);
 
     language.mTokenize = [](const char* inBegin, const char* inEnd,
-                            const char*& outBegin, const char*& outEnd, uint8_t& palette) -> bool {
+                            const char*& outBegin, const char*& outEnd, uint8_t& color) -> bool {
       // tokenize lambda
       while ((inBegin < inEnd) && isascii (*inBegin) && isblank (*inBegin))
         inBegin++;
-      palette = eUndefined;
+      color = eUndefined;
       if (inBegin == inEnd) {
         outBegin = inEnd;
         outEnd = inEnd;
-        palette = eText;
+        color = eText;
         }
       else if (findString (inBegin, inEnd, outBegin, outEnd))
-        palette = eString;
+        color = eString;
       else if (findLiteral (inBegin, inEnd, outBegin, outEnd))
-        palette = eLiteral;
+        color = eLiteral;
       else if (findIdent (inBegin, inEnd, outBegin, outEnd))
-        palette = eBuiltIn;
+        color = eBuiltIn;
       else if (findNumber (inBegin, inEnd, outBegin, outEnd))
-        palette = eNumber;
+        color = eNumber;
       else if (findPunctuation (inBegin, outBegin, outEnd))
-        palette = ePunctuation;
-      return (palette != eUndefined);
+        color = ePunctuation;
+      return (color != eUndefined);
       };
     }
 
@@ -3055,7 +3090,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
 
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
-    language.mSingleComment = "//";
+    language.mCommentSingle = "//";
 
     language.mFoldBeginMarker = "#{{{";
     language.mFoldEndMarker = "#}}}";
@@ -3109,7 +3144,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
 
     language.mCommentBegin = "/*";
     language.mCommentEnd = "*/";
-    language.mSingleComment = "//";
+    language.mCommentSingle = "//";
 
     language.mFoldBeginMarker = "#{{{";
     language.mFoldEndMarker = "#}}}";
