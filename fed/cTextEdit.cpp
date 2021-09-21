@@ -24,46 +24,50 @@ namespace {
   constexpr uint8_t eBackground =        0;
 
   constexpr uint8_t eText =              1;
-  constexpr uint8_t eKeyword =           2;
-  constexpr uint8_t eNumber =            3;
-  constexpr uint8_t eString =            4;
-  constexpr uint8_t eLiteral =           5;
+  constexpr uint8_t eString =            2;
+  constexpr uint8_t eLiteral =           3;
+  constexpr uint8_t eIdentifier =        4;
+  constexpr uint8_t eNumber =            5;
   constexpr uint8_t ePunctuation =       6;
+
   constexpr uint8_t ePreProc =           7;
-  constexpr uint8_t eBuiltIn =           8;
-  constexpr uint8_t eComment =           9;
+  constexpr uint8_t eComment =           8;
+  constexpr uint8_t eKeyWord =           9;
+  constexpr uint8_t eKnownWord =        10;
 
-  constexpr uint8_t eSelect =           10;
-  constexpr uint8_t eCursor =           11;
-  constexpr uint8_t eCursorLineFill =   12;
-  constexpr uint8_t eCursorLineEdge =   13;
-  constexpr uint8_t eLineNumber =       14;
-  constexpr uint8_t eWhiteSpace =       15;
-  constexpr uint8_t eTab =              16;
+  constexpr uint8_t eSelect =           11;
+  constexpr uint8_t eCursor =           12;
+  constexpr uint8_t eCursorLineFill =   13;
+  constexpr uint8_t eCursorLineEdge =   14;
+  constexpr uint8_t eLineNumber =       15;
+  constexpr uint8_t eWhiteSpace =       16;
+  constexpr uint8_t eTab =              17;
 
-  constexpr uint8_t eFoldBeginClosed =  17;
-  constexpr uint8_t eFoldBeginOpen =    18;
-  constexpr uint8_t eFoldEnd =          19;
+  constexpr uint8_t eFoldBeginClosed =  18;
+  constexpr uint8_t eFoldBeginOpen =    19;
+  constexpr uint8_t eFoldEnd =          20;
 
-  constexpr uint8_t eScrollBackground = 20;
-  constexpr uint8_t eScrollGrab =       21;
-  constexpr uint8_t eScrollHover =      22;
-  constexpr uint8_t eScrollActive =     23;
+  constexpr uint8_t eScrollBackground = 21;
+  constexpr uint8_t eScrollGrab =       22;
+  constexpr uint8_t eScrollHover =      23;
+  constexpr uint8_t eScrollActive =     24;
   constexpr uint8_t eUndefined =      0xFF;
 
   // color to ImU32 lookup
   const vector <ImU32> kPalette = {
     0xffefefef, // eBackground
 
-    0xff202020, // eText
-    0xffff0c06, // eKeyword
-    0xff606000, // eNumber
+    0xff808080, // eText
     0xff2020a0, // eString
     0xff304070, // eLiteral
-    0xff000000, // ePunctuation
+    0xff202020, // eIdentifier
+    0xff606000, // eNumber
+    0xff404040, // ePunctuation
+
     0xff008080, // ePreProc
-    0xff400040, // eBuiltIn
-    0xff208020, // eComment
+    0xff008000, // eComment
+    0xffff0c06, // eKeyWord
+    0xff800080, // eKnownWord
 
     0x80600000, // eSelect
     0xff000000, // eCursor
@@ -85,7 +89,7 @@ namespace {
   //}}}
   //{{{  language const
   //{{{
-  const vector<string> kCKeywords = {
+  const vector<string> kKeyWords = {
     "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit", "atomic_noexcept", "auto",
     "bitand", "bitor", "bool", "break",
     "case", "catch", "char", "char16_t", "char32_t", "class", "compl", "concept",
@@ -110,7 +114,7 @@ namespace {
     };
   //}}}
   //{{{
-  const vector<string> kCBuiltIns = {
+  const vector<string> kKnownWords = {
     "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol",
     "ceil", "clock", "cosh", "ctime",
     "div",
@@ -132,7 +136,7 @@ namespace {
   //}}}
 
   //{{{
-  const vector<string> kHlslKeywords = {
+  const vector<string> kHlslKeyWords = {
     "AppendStructuredBuffer", "asm", "asm_fragment", "BlendState", "bool", "break", "Buffer", "ByteAddressBuffer", "case", "cbuffer", "centroid", "class", "column_major", "compile", "compile_fragment",
     "CompileShader", "const", "continue", "ComputeShader", "ConsumeStructuredBuffer", "default", "DepthStencilState", "DepthStencilView", "discard", "do", "double", "DomainShader", "dword", "else",
     "export", "extern", "false", "float", "for", "fxgroup", "GeometryShader", "groupshared", "half", "Hullshader", "if", "in", "inline", "inout", "InputPatch", "int", "interface", "line", "lineadj",
@@ -151,7 +155,7 @@ namespace {
   };
   //}}}
   //{{{
-  const vector<string> kHlslBuiltIns = {
+  const vector<string> kHlslKnownWords = {
     "abort", "abs", "acos", "all", "AllMemoryBarrier", "AllMemoryBarrierWithGroupSync", "any", "asdouble", "asfloat", "asin", "asint", "asint", "asuint",
     "asuint", "atan", "atan2", "ceil", "CheckAccessFullyMapped", "clamp", "clip", "cos", "cosh", "countbits", "cross", "D3DCOLORtoUBYTE4", "ddx",
     "ddx_coarse", "ddx_fine", "ddy", "ddy_coarse", "ddy_fine", "degrees", "determinant", "DeviceMemoryBarrier", "DeviceMemoryBarrierWithGroupSync",
@@ -169,14 +173,14 @@ namespace {
   //}}}
 
   //{{{
-  const vector<string> kGlslKeywords = {
+  const vector<string> kGlslKeyWords = {
     "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short",
     "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary",
     "_Noreturn", "_Static_assert", "_Thread_local"
   };
   //}}}
   //{{{
-  const vector<string> kGlslBuiltIns = {
+  const vector<string> kGlslKnownWords = {
     "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
     "ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper"
   };
@@ -302,7 +306,7 @@ namespace {
     }
   //}}}
   //{{{
-  bool findIdent (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
+  bool findIdentifier (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
     const char* ptr = inBegin;
 
@@ -564,7 +568,7 @@ void cTextEdit::setLanguage (const cLanguage& language) {
   mOptions.mLanguage = language;
 
   mOptions.mRegexList.clear();
-  for (auto& r : mOptions.mLanguage.mTokenRegexStrings)
+  for (auto& r : mOptions.mLanguage.mTokenRegex)
     mOptions.mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
   }
 //}}}
@@ -1946,7 +1950,7 @@ void cTextEdit::addUndo (cUndo& undo) {
 
 //{{{
 void cTextEdit::parseLine (cLine& line) {
-// parse for fold stuff, tokenize and look for keyWords, builtins
+// parse for fold stuff, tokenize and look for keyWords, Known
 
   // check whole text for comments later
   mEdit.mCheckComments = true;
@@ -1975,7 +1979,7 @@ void cTextEdit::parseLine (cLine& line) {
   line.mFoldBegin = (foldBeginIndent != string::npos);
 
   if (line.mFoldBegin) {
-    // found foldBegin token, find ident
+    // found foldBegin token, find indent
     line.mIndent = static_cast<uint8_t>(foldBeginIndent);
     // has textString after the foldBeginMarker
     line.mCommentFold = (textString.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
@@ -2029,7 +2033,7 @@ void cTextEdit::parseLine (cLine& line) {
   size_t foldEndIndent = textString.find (mOptions.mLanguage.mFoldEndMarker);
   line.mFoldEnd = (foldEndIndent != string::npos);
 
-  //{{{  search for keywords, builtins
+  //{{{  search for keyWords, knownWords
   const char* bufferBegin = &textString.front();
   const char* bufferEnd = bufferBegin + textString.size();
   const char* lastChar = bufferEnd;
@@ -2040,12 +2044,9 @@ void cTextEdit::parseLine (cLine& line) {
     uint8_t tokenColor = eText;
 
     // try language tokenize
-    bool hasTokenizeResult = false;
-    if (mOptions.mLanguage.mTokenize != nullptr)
-      if (mOptions.mLanguage.mTokenize (firstChar, lastChar, tokenBegin, tokenEnd, tokenColor))
-        hasTokenizeResult = true;
-
-    if (!hasTokenizeResult)
+    bool found = mOptions.mLanguage.mTokenize &&
+                 mOptions.mLanguage.mTokenize (firstChar, lastChar, tokenBegin, tokenEnd, tokenColor);
+    if (!found)
       // try language regex
       for (auto& p : mOptions.mRegexList) {
         cmatch results;
@@ -2054,19 +2055,18 @@ void cTextEdit::parseLine (cLine& line) {
           tokenBegin = v.first;
           tokenEnd = v.second;
           tokenColor = p.second;
-          hasTokenizeResult = true;
+          found = true;
           break;
           }
         }
-
-    if (hasTokenizeResult) {
-      // got token, look for keywords,builtins
+    if (found) {
+      // got token, look for keyWords, knownWords
       const size_t tokenLength = tokenEnd - tokenBegin;
       string tokenString (tokenBegin, tokenEnd);
-      if (mOptions.mLanguage.mKeywords.count (tokenString) != 0)
-        tokenColor = eKeyword;
-      else if (mOptions.mLanguage.mBuiltIns.count (tokenString) != 0)
-        tokenColor = eBuiltIn;
+      if (mOptions.mLanguage.mKeyWords.count (tokenString) != 0)
+        tokenColor = eKeyWord;
+      else if (mOptions.mLanguage.mKnownWords.count (tokenString) != 0)
+        tokenColor = eKnownWord;
 
       for (size_t j = 0; j < tokenLength; ++j)
         line.mGlyphs[(tokenBegin - bufferBegin) + j].mColor = tokenColor;
@@ -2509,7 +2509,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
   if (isFolded() && line.mFoldBegin) {
     if (line.mFolded) {
       //{{{  draw foldBegin folded ...  glyphs text
-      // add ident
+      // add indent
       curPos.x += leftPadWidth;
 
       float indentWidth = line.mIndent * mContext.mGlyphWidth;
@@ -2997,17 +2997,17 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
     language.mPreprocChar = '#';
     language.mAutoIndentation = true;
 
-    for (auto& keyword : kCKeywords)
-      language.mKeywords.insert (keyword);
-    for (auto& builtIn : kCBuiltIns)
-      language.mBuiltIns.insert (builtIn);
+    for (auto& keyWord : kKeyWords)
+      language.mKeyWords.insert (keyWord);
+    for (auto& knownWord : kKnownWords)
+      language.mKnownWords.insert (knownWord);
 
     language.mTokenize = [](const char* inBegin, const char* inEnd,
                             const char*& outBegin, const char*& outEnd, uint8_t& color) -> bool {
       // tokenize lambda
+      color = eUndefined;
       while ((inBegin < inEnd) && isascii (*inBegin) && isblank (*inBegin))
         inBegin++;
-      color = eUndefined;
       if (inBegin == inEnd) {
         outBegin = inEnd;
         outEnd = inEnd;
@@ -3017,8 +3017,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
         color = eString;
       else if (findLiteral (inBegin, inEnd, outBegin, outEnd))
         color = eLiteral;
-      else if (findIdent (inBegin, inEnd, outBegin, outEnd))
-        color = eBuiltIn;
+      else if (findIdentifier (inBegin, inEnd, outBegin, outEnd))
+        color = eIdentifier;
       else if (findNumber (inBegin, inEnd, outBegin, outEnd))
         color = eNumber;
       else if (findPunctuation (inBegin, outBegin, outEnd))
@@ -3053,30 +3053,30 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     language.mPreprocChar = '#';
     language.mAutoIndentation = true;
 
-    for (auto& keyword : kHlslKeywords)
-      language.mKeywords.insert (keyword);
-    for (auto& builtIn : kHlslBuiltIns)
-      language.mBuiltIns.insert (builtIn);
+    for (auto& keyWord : kHlslKeyWords)
+      language.mKeyWords.insert (keyWord);
+    for (auto& knownWord : kHlslKnownWords)
+      language.mKnownWords.insert (knownWord);
 
     language.mTokenize = nullptr;
 
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreProc));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("\\'\\\\?[^\\']\\'", (uint8_t)eLiteral));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
+      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdentifier));
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
-      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eBuiltIn));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
     }
 
@@ -3106,30 +3106,30 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
     language.mPreprocChar = '#';
     language.mAutoIndentation = true;
 
-    for (auto& keyword : kGlslKeywords)
-      language.mKeywords.insert (keyword);
-    for (auto& builtIn : kGlslBuiltIns)
-      language.mBuiltIns.insert (builtIn);
+    for (auto& keyWord : kGlslKeyWords)
+      language.mKeyWords.insert (keyWord);
+    for (auto& knownWord : kGlslKnownWords)
+      language.mKnownWords.insert (knownWord);
 
     language.mTokenize = nullptr;
 
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreProc));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("\\'\\\\?[^\\']\\'", (uint8_t)eLiteral));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
+      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdentifier));
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegexStrings.push_back (
-      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eBuiltIn));
-    language.mTokenRegexStrings.push_back (
+    language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
     }
 

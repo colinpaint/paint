@@ -108,11 +108,11 @@ public:
     char mPreprocChar;
     bool mAutoIndentation;
 
-    std::unordered_set <std::string> mKeywords;
-    std::unordered_set <std::string> mBuiltIns;
+    std::unordered_set <std::string> mKeyWords;
+    std::unordered_set <std::string> mKnownWords;
 
     tTokenizeCallback mTokenize;
-    tTokenRegexStrings mTokenRegexStrings;
+    tTokenRegexStrings mTokenRegex;
     };
   //}}}
   //{{{
