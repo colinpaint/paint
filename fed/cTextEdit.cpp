@@ -1951,38 +1951,36 @@ void cTextEdit::addUndo (cUndo& undo) {
 
 //{{{
 void cTextEdit::parseWords (cLine& line, const string& textString) {
-// colorize keyWords, knownWords
+// color keyWords, knownWords
 
   const char* strBegin = &textString.front();
   const char* strEnd = strBegin + textString.size();
 
-  size_t i = 0;
-  const char* firstChar = strBegin;
-  while (firstChar < strEnd) {
+  const char* strPtr = strBegin;
+  while (strPtr < strEnd) {
+    // faster search with tokenize
     const char* tokenBegin = nullptr;
     const char* tokenEnd = nullptr;
     uint8_t tokenColor = eText;
+    bool tokenFound = mOptions.mLanguage.mTokenize &&
+                      mOptions.mLanguage.mTokenize (strPtr, strEnd, tokenBegin, tokenEnd, tokenColor);
 
-    // try language tokenize
-    bool found = mOptions.mLanguage.mTokenize &&
-                 mOptions.mLanguage.mTokenize (firstChar, strEnd, tokenBegin, tokenEnd, tokenColor);
-
-    if (!found)
-      // try language regex
+    if (!tokenFound) {
+      // slower search with regex
       for (auto& p : mOptions.mRegexList) {
         cmatch results;
-        if (regex_search (firstChar, strEnd, results, p.first, regex_constants::match_continuous)) {
+        if (regex_search (strPtr, strEnd, results, p.first, regex_constants::match_continuous)) {
           auto& v = *results.begin();
           tokenBegin = v.first;
           tokenEnd = v.second;
           tokenColor = p.second;
-          found = true;
+          tokenFound = true;
           break;
           }
         }
+      }
 
-    if (found) {
-      const size_t tokenLength = tokenEnd - tokenBegin;
+    if (tokenFound) {
       if (tokenColor == eIdentifier) {
         // look for keyWords, knownWords
         string tokenString (tokenBegin, tokenEnd);
@@ -1992,14 +1990,15 @@ void cTextEdit::parseWords (cLine& line, const string& textString) {
           tokenColor = eKnownWord;
         }
 
-      for (size_t j = 0; j < tokenLength; ++j)
-        line.mGlyphs[(tokenBegin - strBegin) + j].mColor = tokenColor;
-
-      firstChar = tokenEnd;
+      // color token glyphs
+      size_t glyphIndex = tokenBegin - strBegin;
+      size_t glyphEnd = tokenEnd - strBegin;
+      while (glyphIndex < glyphEnd)
+        line.mGlyphs[glyphIndex++].mColor = tokenColor;
+      strPtr = tokenEnd;
       }
-
     else
-      firstChar++;
+      strPtr++;
     }
   }
 //}}}
