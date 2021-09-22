@@ -43,14 +43,13 @@ namespace {
   constexpr uint8_t eWhiteSpace =       16;
   constexpr uint8_t eTab =              17;
 
-  constexpr uint8_t eFoldBeginClosed =  18;
-  constexpr uint8_t eFoldBeginOpen =    19;
-  constexpr uint8_t eFoldEnd =          20;
+  constexpr uint8_t eFoldClosed =       18;
+  constexpr uint8_t eFoldOpen =         19;
 
-  constexpr uint8_t eScrollBackground = 21;
-  constexpr uint8_t eScrollGrab =       22;
-  constexpr uint8_t eScrollHover =      23;
-  constexpr uint8_t eScrollActive =     24;
+  constexpr uint8_t eScrollBackground = 20;
+  constexpr uint8_t eScrollGrab =       21;
+  constexpr uint8_t eScrollHover =      22;
+  constexpr uint8_t eScrollActive =     23;
   constexpr uint8_t eUndefined =      0xFF;
 
   // color to ImU32 lookup
@@ -71,15 +70,14 @@ namespace {
 
     0x80600000, // eSelect
     0xff000000, // eCursor
-    0x20000000, // eCursorLineFill
+    0x10000000, // eCursorLineFill
     0x40000000, // eCursorLineEdge
     0xff505000, // eLineNumber
     0xff808080, // eWhiteSpace
     0xff404040, // eTab
 
-    0xffff0000, // eFoldBeginClosed,
-    0xff0000ff, // eFoldBeginOpen,
-    0xff0000ff, // eFoldEnd,
+    0xffff0000, // eFoldClosed,
+    0xff0000ff, // eFoldOpen,
 
     0x80404040, // eScrollBackground
     0x80c0c0c0, // eScrollGrab
@@ -2518,7 +2516,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
   const vector <cGlyph>& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
     if (line.mFolded) {
-      //{{{  draw foldBegin folded ...  glyphs text
+      //{{{  draw foldBegin folded
       // add indent
       curPos.x += leftPadWidth;
 
@@ -2526,7 +2524,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth = mContext.drawText (curPos, eFoldBeginClosed, mOptions.mLanguage.mFoldBeginClosed);
+      float prefixWidth = mContext.drawText (curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed);
       curPos.x += prefixWidth;
 
       // add invisibleButton, indent + prefix wide, want to action on press
@@ -2542,7 +2540,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
       // draw glyphs
       textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[lineNumber + seeThroughInc].mGlyphs, eFoldBeginClosed);
+      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[lineNumber + seeThroughInc].mGlyphs, eFoldClosed);
       if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
         glyphsWidth = mContext.mGlyphWidth;
 
@@ -2556,11 +2554,11 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       }
       //}}}
     else {
-      //{{{  draw foldBegin unfolded {{{  glyphs text
+      //{{{  draw foldBegin open
       // draw foldPrefix
       curPos.x += leftPadWidth;
 
-      float prefixWidth = mContext.drawText (curPos, eFoldBeginOpen, mOptions.mLanguage.mFoldBeginOpen);
+      float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen);
       curPos.x += prefixWidth;
 
       // add foldPrefix invisibleButton, want to action on press
@@ -2591,9 +2589,9 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       //}}}
     }
   else if (isFolded() && line.mFoldEnd) {
-    //{{{  draw foldEnd }}}
+    //{{{  draw foldEnd
     curPos.x += leftPadWidth;
-    float prefixWidth = mContext.drawText (curPos, eFoldEnd, mOptions.mLanguage.mFoldEnd);
+    float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldEnd);
 
     // add invisibleButton
     ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
@@ -2605,7 +2603,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
     }
     //}}}
   else {
-    //{{{  draw glyphs text
+    //{{{  draw glyphs
     curPos.x += leftPadWidth;
 
     // drawGlyphs
@@ -2628,7 +2626,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
     }
     //}}}
 
-  //{{{  draw select line highlight
+  //{{{  draw select highlight
   sPosition lineBeginPosition (lineNumber, 0);
   sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
 
@@ -2650,7 +2648,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
   if (lineNumber == mEdit.mState.mCursorPosition.mLineNumber) {
     // line has cursor
     if (!hasSelect()) {
-      //{{{  draw cursor line highlight
+      //{{{  draw cursor highlight
       ImVec2 brPos = {curPos.x, curPos.y + mContext.mLineHeight};
       mContext.drawRect (leftPos, brPos, eCursorLineFill);
       mContext.drawRectLine (leftPos, brPos, eCursorLineEdge);
