@@ -283,24 +283,24 @@ namespace {
 
   // faster parsers
   //{{{
-  bool findIdentifier (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
+  bool findIdentifier (const char* srcBegin, const char* srcEnd, const char*& dstBegin, const char*& dstEnd) {
 
-    const char* ptr = inBegin;
+    const char* srcPtr = srcBegin;
 
-    if (((*ptr >= 'a') && (*ptr <= 'z')) ||
-        ((*ptr >= 'A') && (*ptr <= 'Z')) ||
-        (*ptr == '_')) {
-      ptr++;
+    if (((*srcPtr >= 'a') && (*srcPtr <= 'z')) ||
+        ((*srcPtr >= 'A') && (*srcPtr <= 'Z')) ||
+        (*srcPtr == '_')) {
+      srcPtr++;
 
-      while ((ptr < inEnd) &&
-             (((*ptr >= 'a') && (*ptr <= 'z')) ||
-              ((*ptr >= 'A') && (*ptr <= 'Z')) ||
-              ((*ptr >= '0') && (*ptr <= '9')) ||
-              (*ptr == '_')))
-        ptr++;
+      while ((srcPtr < srcEnd) &&
+             (((*srcPtr >= 'a') && (*srcPtr <= 'z')) ||
+              ((*srcPtr >= 'A') && (*srcPtr <= 'Z')) ||
+              ((*srcPtr >= '0') && (*srcPtr <= '9')) ||
+              (*srcPtr == '_')))
+        srcPtr++;
 
-      outBegin = inBegin;
-      outEnd = ptr;
+      dstBegin = srcBegin;
+      dstEnd = srcPtr;
       return true;
       }
 
@@ -308,20 +308,20 @@ namespace {
     }
   //}}}
   //{{{
-  bool findNumber (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
+  bool findNumber (const char* srcBegin, const char* srcEnd, const char*& dstBegin, const char*& dstEnd) {
 
-    const char* ptr = inBegin;
+    const char* srcPtr = srcBegin;
 
     // skip leading sign +-
-    if ((*ptr == '+') && (*ptr == '-'))
-      ptr++;
+    if ((*srcPtr == '+') && (*srcPtr == '-'))
+      srcPtr++;
 
     // skip digits 0..9
     bool isNumber = false;
-    while ((ptr < inEnd) &&
-           ((*ptr >= '0') && (*ptr <= '9'))) {
+    while ((srcPtr < srcEnd) &&
+           ((*srcPtr >= '0') && (*srcPtr <= '9'))) {
       isNumber = true;
-      ptr++;
+      srcPtr++;
       }
     if (!isNumber)
       return false;
@@ -330,79 +330,79 @@ namespace {
     bool isFloat = false;
     bool isBinary = false;
 
-    if (ptr < inEnd) {
-      if (*ptr == '.') {
+    if (srcPtr < srcEnd) {
+      if (*srcPtr == '.') {
         //{{{  skip floating point frac
         isFloat = true;
-        ptr++;
-        while ((ptr < inEnd) &&
-               ((*ptr >= '0') && (*ptr <= '9')))
-          ptr++;
+        srcPtr++;
+        while ((srcPtr < srcEnd) &&
+               ((*srcPtr >= '0') && (*srcPtr <= '9')))
+          srcPtr++;
         }
         //}}}
-      else if ((*ptr == 'x') || (*ptr == 'X')) {
+      else if ((*srcPtr == 'x') || (*srcPtr == 'X')) {
         //{{{  skip hex 0xhhhh
         isHex = true;
 
-        ptr++;
-        while ((ptr < inEnd) &&
-               (((*ptr >= '0') && (*ptr <= '9')) ||
-                ((*ptr >= 'a') && (*ptr <= 'f')) ||
-                ((*ptr >= 'A') && (*ptr <= 'F'))))
-          ptr++;
+        srcPtr++;
+        while ((srcPtr < srcEnd) &&
+               (((*srcPtr >= '0') && (*srcPtr <= '9')) ||
+                ((*srcPtr >= 'a') && (*srcPtr <= 'f')) ||
+                ((*srcPtr >= 'A') && (*srcPtr <= 'F'))))
+          srcPtr++;
         }
         //}}}
-      else if ((*ptr == 'b') || (*ptr == 'B')) {
+      else if ((*srcPtr == 'b') || (*srcPtr == 'B')) {
         //{{{  skip binary 0b0101010
         isBinary = true;
 
-        ptr++;
-        while ((ptr < inEnd) && ((*ptr >= '0') && (*ptr <= '1')))
-          ptr++;
+        srcPtr++;
+        while ((srcPtr < srcEnd) && ((*srcPtr >= '0') && (*srcPtr <= '1')))
+          srcPtr++;
         }
         //}}}
       }
 
     if (!isHex && !isBinary) {
       //{{{  skip floating point exponent e+dd
-      if (ptr < inEnd && (*ptr == 'e' || *ptr == 'E')) {
+      if (srcPtr < srcEnd && (*srcPtr == 'e' || *srcPtr == 'E')) {
         isFloat = true;
 
-        ptr++;
-        if (ptr < inEnd && (*ptr == '+' || *ptr == '-'))
-          ptr++;
+        srcPtr++;
+        if (srcPtr < srcEnd && (*srcPtr == '+' || *srcPtr == '-'))
+          srcPtr++;
 
         bool hasDigits = false;
-        while (ptr < inEnd && (*ptr >= '0' && *ptr <= '9')) {
+        while (srcPtr < srcEnd && (*srcPtr >= '0' && *srcPtr <= '9')) {
           hasDigits = true;
-          ptr++;
+          srcPtr++;
           }
         if (hasDigits == false)
           return false;
         }
 
       // single pecision floating point type
-      if (ptr < inEnd && *ptr == 'f')
-        ptr++;
+      if (srcPtr < srcEnd && *srcPtr == 'f')
+        srcPtr++;
       }
       //}}}
     if (!isFloat) {
       //{{{  skip trailing integer size ulUL letter
-      while ((ptr < inEnd) &&
-             ((*ptr == 'u') || (*ptr == 'U') || (*ptr == 'l') || (*ptr == 'L')))
-        ptr++;
+      while ((srcPtr < srcEnd) &&
+             ((*srcPtr == 'u') || (*srcPtr == 'U') || (*srcPtr == 'l') || (*srcPtr == 'L')))
+        srcPtr++;
       }
       //}}}
 
-    outBegin = inBegin;
-    outEnd = ptr;
+    dstBegin = srcBegin;
+    dstEnd = srcPtr;
     return true;
     }
   //}}}
   //{{{
-  bool findPunctuation (const char* inBegin, const char*& outBegin, const char*& outEnd) {
+  bool findPunctuation (const char* srcBegin, const char*& dstBegin, const char*& dstEnd) {
 
-    switch (*inBegin) {
+    switch (*srcBegin) {
       case '[':
       case ']':
       case '{':
@@ -427,8 +427,8 @@ namespace {
       case ';':
       case ',':
       case '.':
-        outBegin = inBegin;
-        outEnd = inBegin + 1;
+        dstBegin = srcBegin;
+        dstEnd = srcBegin + 1;
         return true;
       }
 
@@ -436,26 +436,26 @@ namespace {
     }
   //}}}
   //{{{
-  bool findString (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
+  bool findString (const char* srcBegin, const char* srcEnd, const char*& dstBegin, const char*& dstEnd) {
 
-    const char* ptr = inBegin;
+    const char* srcPtr = srcBegin;
 
-    if (*ptr == '"') {
-      ptr++;
+    if (*srcPtr == '"') {
+      srcPtr++;
 
-      while (ptr < inEnd) {
+      while (srcPtr < srcEnd) {
         // handle end of string
-        if (*ptr == '"') {
-          outBegin = inBegin;
-          outEnd = ptr + 1;
+        if (*srcPtr == '"') {
+          dstBegin = srcBegin;
+          dstEnd = srcPtr + 1;
           return true;
          }
 
         // handle escape character for "
-        if ((*ptr == '\\') && (ptr + 1 < inEnd) && (ptr[1] == '"'))
-          ptr++;
+        if ((*srcPtr == '\\') && (srcPtr + 1 < srcEnd) && (srcPtr[1] == '"'))
+          srcPtr++;
 
-        ptr++;
+        srcPtr++;
         }
       }
 
@@ -463,24 +463,24 @@ namespace {
     }
   //}}}
   //{{{
-  bool findLiteral (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
+  bool findLiteral (const char* srcBegin, const char* srcEnd, const char*& dstBegin, const char*& dstEnd) {
 
-    const char* ptr = inBegin;
+    const char* srcPtr = srcBegin;
 
-    if (*ptr == '\'') {
-      ptr++;
+    if (*srcPtr == '\'') {
+      srcPtr++;
 
       // handle escape characters
-      if ((ptr < inEnd) && (*ptr == '\\'))
-        ptr++;
+      if ((srcPtr < srcEnd) && (*srcPtr == '\\'))
+        srcPtr++;
 
-      if (ptr < inEnd)
-        ptr++;
+      if (srcPtr < srcEnd)
+        srcPtr++;
 
       // handle end of literal
-      if ((ptr < inEnd) && (*ptr == '\'')) {
-        outBegin = inBegin;
-        outEnd = ptr + 1;
+      if ((srcPtr < srcEnd) && (*srcPtr == '\'')) {
+        dstBegin = srcBegin;
+        dstEnd = srcPtr + 1;
         return true;
         }
       }
@@ -505,7 +505,7 @@ cTextEdit::cTextEdit() {
 bool cTextEdit::hasClipboardText() {
 
   const char* clipText = ImGui::GetClipboardText();
-  return (clipText != nullptr) && (strlen (clipText) > 0);
+  return clipText && (strlen (clipText) > 0);
   }
 //}}}
 
@@ -2127,7 +2127,7 @@ void cTextEdit::parseComments() {
 
     bool inString = false;
     bool inSingleComment = false;
-    bool inBeginEndComment = false;
+    bool srcBegsrcEndComment = false;
 
     size_t curIndex = 0;
     size_t curLine = 0;
@@ -2140,13 +2140,13 @@ void cTextEdit::parseComments() {
         if (ch == '\"') {
           //{{{  start of string
           inString = true;
-          if (inSingleComment || inBeginEndComment)
+          if (inSingleComment || srcBegsrcEndComment)
             glyphs[curIndex].mColor = eComment;
           }
           //}}}
         else if (inString) {
           //{{{  in string
-          if (inSingleComment || inBeginEndComment)
+          if (inSingleComment || srcBegsrcEndComment)
             glyphs[curIndex].mColor = eComment;
 
           if (ch == '\"') // end of string
@@ -2156,7 +2156,7 @@ void cTextEdit::parseComments() {
             // \ escapeChar in " " quotes, skip nextChar if any
             if (curIndex+1 < numGlyphs) {
               curIndex++;
-              if (inSingleComment || inBeginEndComment)
+              if (inSingleComment || srcBegsrcEndComment)
                 glyphs[curIndex].mColor = eComment;
               }
             }
@@ -2167,15 +2167,15 @@ void cTextEdit::parseComments() {
           if (glyphs[curIndex].mCommentSingle)
             inSingleComment = true;
           else if (glyphs[curIndex].mCommentBegin)
-            inBeginEndComment = true;
+            srcBegsrcEndComment = true;
 
           // in comment
-          if (inSingleComment || inBeginEndComment)
+          if (inSingleComment || srcBegsrcEndComment)
             glyphs[curIndex].mColor = eComment;
 
           // comment end ?
           if (glyphs[curIndex].mCommentEnd)
-            inBeginEndComment = false;
+            srcBegsrcEndComment = false;
           }
         curIndex += utf8CharLength (ch);
         }
@@ -3028,26 +3028,26 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
     for (auto& knownWord : kKnownWords)
       language.mKnownWords.insert (knownWord);
 
-    language.mTokenSearch = [](const char* inBegin, const char* inEnd,
-                               const char*& outBegin, const char*& outEnd, uint8_t& color) -> bool {
+    language.mTokenSearch = [](const char* srcBegin, const char* srcEnd,
+                               const char*& dstBegin, const char*& dstEnd, uint8_t& color) -> bool {
       // tokeSearch  lambda
       color = eUndefined;
-      while ((inBegin < inEnd) && isascii (*inBegin) && isblank (*inBegin))
-        inBegin++;
-      if (inBegin == inEnd) {
-        outBegin = inEnd;
-        outEnd = inEnd;
+      while ((srcBegin < srcEnd) && isascii (*srcBegin) && isblank (*srcBegin))
+        srcBegin++;
+      if (srcBegin == srcEnd) {
+        dstBegin = srcEnd;
+        dstEnd = srcEnd;
         color = eText;
         }
-      if (findIdentifier (inBegin, inEnd, outBegin, outEnd))
+      if (findIdentifier (srcBegin, srcEnd, dstBegin, dstEnd))
         color = eIdentifier;
-      else if (findNumber (inBegin, inEnd, outBegin, outEnd))
+      else if (findNumber (srcBegin, srcEnd, dstBegin, dstEnd))
         color = eNumber;
-      else if (findPunctuation (inBegin, outBegin, outEnd))
+      else if (findPunctuation (srcBegin, dstBegin, dstEnd))
         color = ePunctuation;
-      else if (findString (inBegin, inEnd, outBegin, outEnd))
+      else if (findString (srcBegin, srcEnd, dstBegin, dstEnd))
         color = eString;
-      else if (findLiteral (inBegin, inEnd, outBegin, outEnd))
+      else if (findLiteral (srcBegin, srcEnd, dstBegin, dstEnd))
         color = eLiteral;
       return (color != eUndefined);
       };

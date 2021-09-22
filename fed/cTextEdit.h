@@ -87,8 +87,8 @@ public:
     // typedef
     using tTokenRegexString = std::pair<std::string, uint8_t>;
     using tTokenRegexStrings = std::vector<tTokenRegexString>;
-    using tTokenSearch = bool(*)(const char* inBegin, const char* inEnd,
-                                 const char*& outBegin, const char*& outEnd, uint8_t& palette);
+    using tTokenSearch = bool(*)(const char* srcBegin, const char* srcEnd,
+                                 const char*& dstBegin, const char*& dstEnd, uint8_t& color);
 
 
     // vars
