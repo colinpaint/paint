@@ -1,7 +1,7 @@
 // cTextEdit.cpp - nicked from https://github.com/BalazsJako/ImGuiColorTextEdit
 
 /* multiline comment test
- on another line
+ on */  /*another line
  and */
 //{{{  includes
 #include "cTextEdit.h"
@@ -162,13 +162,13 @@ namespace {
   //{{{
   const vector<string> kHlslKnownWords = {
     "abort", "abs", "acos", "all", "AllMemoryBarrier", "AllMemoryBarrierWithGroupSync", "any", "asdouble", "asfloat", "asin", "asint", "asint", "asuint",
-    "asuint", "atan", "atan2", "ceil", "CheckAccessFullyMapped", "clamp", "clip", "cos", "cosh", "countbits", "cross", 
+    "asuint", "atan", "atan2", "ceil", "CheckAccessFullyMapped", "clamp", "clip", "cos", "cosh", "countbits", "cross",
     "D3DCOLORtoUBYTE4", "ddx",
     "ddx_coarse", "ddx_fine", "ddy", "ddy_coarse", "ddy_fine", "degrees", "determinant", "DeviceMemoryBarrier", "DeviceMemoryBarrierWithGroupSync",
-    "distance", "dot", "dst", "errorf", 
+    "distance", "dot", "dst", "errorf",
     "EvaluateAttributeAtCentroid", "EvaluateAttributeAtSample", "EvaluateAttributeSnapped", "exp", "exp2",
     "f16tof32", "f32tof16", "faceforward", "firstbithigh", "firstbitlow", "floor", "fma", "fmod", "frac", "frexp", "fwidth",
-    "GetRenderTargetSampleCount", "GetRenderTargetSamplePosition", "GroupMemoryBarrier", "GroupMemoryBarrierWithGroupSync", 
+    "GetRenderTargetSampleCount", "GetRenderTargetSamplePosition", "GroupMemoryBarrier", "GroupMemoryBarrierWithGroupSync",
     "InterlockedAdd", "InterlockedAnd", "InterlockedCompareExchange",
     "InterlockedCompareStore", "InterlockedExchange", "InterlockedMax", "InterlockedMin", "InterlockedOr", "InterlockedXor", "isfinite", "isinf", "isnan",
     "ldexp", "length", "lerp", "lit", "log", "log10", "log2",
@@ -184,32 +184,32 @@ namespace {
 
   //{{{
   const vector<string> kGlslKeyWords = {
-    "auto", "break", 
-    "case", "char", "const", "continue", 
-    "default", "do", "double", 
-    "else", "enum", "extern", 
-    "float", "for", 
+    "auto", "break",
+    "case", "char", "const", "continue",
+    "default", "do", "double",
+    "else", "enum", "extern",
+    "float", "for",
     "goto",
-    "if", "inline", "int", "long", 
+    "if", "inline", "int", "long",
     "register", "restrict", "return",
-    "short", "signed", "sizeof", "static", "struct", "switch", 
-    "typedef", "union", "unsigned", 
-    "void", "volatile", "while", 
-    "_Alignas", "_Alignof", "_Atomic", 
+    "short", "signed", "sizeof", "static", "struct", "switch",
+    "typedef", "union", "unsigned",
+    "void", "volatile", "while",
+    "_Alignas", "_Alignof", "_Atomic",
     "_Bool", "_Complex", "_Generic", "_Imaginary", "_Noreturn", "_Static_assert", "_Thread_local"
     };
   //}}}
   //{{{
   const vector<string> kGlslKnownWords = {
-    "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", 
-    "ceil", "clock", "cosh", "ctime", "div", "exit", 
-    "fabs", "floor", "fmod", 
+    "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol",
+    "ceil", "clock", "cosh", "ctime", "div", "exit",
+    "fabs", "floor", "fmod",
     "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
-    "ispunct", "isspace", "isupper", 
-    "kbhit", "log10", "log2", "log", 
-    "memcmp", "modf", "pow", "putchar", 
-    "putenv", "puts", "rand", "remove", "rename", 
-    "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", 
+    "ispunct", "isspace", "isupper",
+    "kbhit", "log10", "log2", "log",
+    "memcmp", "modf", "pow", "putchar",
+    "putenv", "puts", "rand", "remove", "rename",
+    "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror",
     "time", "tolower", "toupper"
     };
   //}}}
