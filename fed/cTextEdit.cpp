@@ -80,8 +80,8 @@ namespace {
     0xff0000ff, // eFoldOpen,
 
     0x80404040, // eScrollBackground
-    0x80c0c0c0, // eScrollGrab
-    0x80ffffff, // eScrollHover
+    0x80ffffff, // eScrollGrab
+    0xA000ffff, // eScrollHover
     0xff00ffff, // eScrollActive
     };
   //}}}
@@ -2054,37 +2054,17 @@ void cTextEdit::parseLine (cLine& line) {
     return;
 
   // glyphs to string
-  string textString;
+  string glyphString;
   for (auto& glyph : line.mGlyphs) {
     glyph.mColor = eText;
-    textString += glyph.mChar;
-    }
-
-  // find foldBegin token
-  size_t foldBeginIndent = textString.find (mOptions.mLanguage.mFoldBeginMarker);
-  line.mFoldBegin = (foldBeginIndent != string::npos);
-
-  if (line.mFoldBegin) {
-    // found foldBegin token, find indent
-    line.mIndent = static_cast<uint8_t>(foldBeginIndent);
-    // has textString after the foldBeginMarker
-    line.mCommentFold = (textString.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size()));
-    mInfo.mHasFolds = true;
-    }
-  else {
-    // normal line, find indent, find comment
-    size_t indent = textString.find_first_not_of (' ');
-    if (indent != string::npos)
-      line.mIndent = static_cast<uint8_t>(indent);
-    else
-      line.mIndent = 0;
+    glyphString += glyph.mChar;
     }
 
   //{{{  find commentSingle token
   size_t pos = 0;
 
   do {
-    pos = textString.find (mOptions.mLanguage.mCommentSingle, pos);
+    pos = glyphString.find (mOptions.mLanguage.mCommentSingle, pos);
     if (pos != string::npos) {
       line.mCommentSingle = true;
       for (size_t i = 0; i < mOptions.mLanguage.mCommentSingle.size(); i++)
@@ -2096,7 +2076,7 @@ void cTextEdit::parseLine (cLine& line) {
   pos = 0;
 
   do {
-    pos = textString.find (mOptions.mLanguage.mCommentBegin, pos);
+    pos = glyphString.find (mOptions.mLanguage.mCommentBegin, pos);
     if (pos != string::npos) {
       line.mCommentBegin = true;
       for (size_t i = 0; i < mOptions.mLanguage.mCommentBegin.size(); i++)
@@ -2108,7 +2088,7 @@ void cTextEdit::parseLine (cLine& line) {
   pos = 0;
 
   do {
-    pos = textString.find (mOptions.mLanguage.mCommentEnd, pos);
+    pos = glyphString.find (mOptions.mLanguage.mCommentEnd, pos);
     if (pos != string::npos) {
       line.mCommentEnd = true;
       for (size_t i = 0; i < mOptions.mLanguage.mCommentEnd.size(); i++)
@@ -2116,12 +2096,26 @@ void cTextEdit::parseLine (cLine& line) {
       }
     } while (pos != string::npos);
   //}}}
+
+  //{{{  find foldBegin token
+  size_t foldBeginIndent = glyphString.find (mOptions.mLanguage.mFoldBeginMarker);
+  line.mFoldBegin = (foldBeginIndent != string::npos);
+  //}}}
   //{{{  find foldEnd token
-  size_t foldEndIndent = textString.find (mOptions.mLanguage.mFoldEndMarker);
+  size_t foldEndIndent = glyphString.find (mOptions.mLanguage.mFoldEndMarker);
   line.mFoldEnd = (foldEndIndent != string::npos);
   //}}}
+  if (line.mFoldBegin) {
+    // does foldBegin have a comment?
+    line.mCommentFold = glyphString.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size());
+    mInfo.mHasFolds = true;
+    }
 
-  parseTokens (line, textString);
+  // find indent
+  size_t indent = glyphString.find_first_not_of (' ');
+  line.mIndent = (indent == string::npos) ? 0 : static_cast<uint8_t>(indent);
+
+  parseTokens (line, glyphString);
   }
 //}}}
 //{{{
