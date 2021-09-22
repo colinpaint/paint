@@ -157,38 +157,61 @@ namespace {
     "float1x3","float2x3","float3x3","float4x3","float1x4","float2x4","float3x4","float4x4",
     "half1x1","half2x1","half3x1","half4x1","half1x2","half2x2","half3x2","half4x2",
     "half1x3","half2x3","half3x3","half4x3","half1x4","half2x4","half3x4","half4x4",
-  };
+    };
   //}}}
   //{{{
   const vector<string> kHlslKnownWords = {
     "abort", "abs", "acos", "all", "AllMemoryBarrier", "AllMemoryBarrierWithGroupSync", "any", "asdouble", "asfloat", "asin", "asint", "asint", "asuint",
-    "asuint", "atan", "atan2", "ceil", "CheckAccessFullyMapped", "clamp", "clip", "cos", "cosh", "countbits", "cross", "D3DCOLORtoUBYTE4", "ddx",
+    "asuint", "atan", "atan2", "ceil", "CheckAccessFullyMapped", "clamp", "clip", "cos", "cosh", "countbits", "cross", 
+    "D3DCOLORtoUBYTE4", "ddx",
     "ddx_coarse", "ddx_fine", "ddy", "ddy_coarse", "ddy_fine", "degrees", "determinant", "DeviceMemoryBarrier", "DeviceMemoryBarrierWithGroupSync",
-    "distance", "dot", "dst", "errorf", "EvaluateAttributeAtCentroid", "EvaluateAttributeAtSample", "EvaluateAttributeSnapped", "exp", "exp2",
-    "f16tof32", "f32tof16", "faceforward", "firstbithigh", "firstbitlow", "floor", "fma", "fmod", "frac", "frexp", "fwidth", "GetRenderTargetSampleCount",
-    "GetRenderTargetSamplePosition", "GroupMemoryBarrier", "GroupMemoryBarrierWithGroupSync", "InterlockedAdd", "InterlockedAnd", "InterlockedCompareExchange",
+    "distance", "dot", "dst", "errorf", 
+    "EvaluateAttributeAtCentroid", "EvaluateAttributeAtSample", "EvaluateAttributeSnapped", "exp", "exp2",
+    "f16tof32", "f32tof16", "faceforward", "firstbithigh", "firstbitlow", "floor", "fma", "fmod", "frac", "frexp", "fwidth",
+    "GetRenderTargetSampleCount", "GetRenderTargetSamplePosition", "GroupMemoryBarrier", "GroupMemoryBarrierWithGroupSync", 
+    "InterlockedAdd", "InterlockedAnd", "InterlockedCompareExchange",
     "InterlockedCompareStore", "InterlockedExchange", "InterlockedMax", "InterlockedMin", "InterlockedOr", "InterlockedXor", "isfinite", "isinf", "isnan",
-    "ldexp", "length", "lerp", "lit", "log", "log10", "log2", "mad", "max", "min", "modf", "msad4", "mul", "noise", "normalize", "pow", "printf",
+    "ldexp", "length", "lerp", "lit", "log", "log10", "log2",
+    "mad", "max", "min", "modf", "msad4", "mul", "noise", "normalize", "pow", "printf",
     "Process2DQuadTessFactorsAvg", "Process2DQuadTessFactorsMax", "Process2DQuadTessFactorsMin", "ProcessIsolineTessFactors", "ProcessQuadTessFactorsAvg",
     "ProcessQuadTessFactorsMax", "ProcessQuadTessFactorsMin", "ProcessTriTessFactorsAvg", "ProcessTriTessFactorsMax", "ProcessTriTessFactorsMin",
-    "radians", "rcp", "reflect", "refract", "reversebits", "round", "rsqrt", "saturate", "sign", "sin", "sincos", "sinh", "smoothstep", "sqrt", "step",
+    "radians", "rcp", "reflect", "refract", "reversebits", "round", "rsqrt",
+    "saturate", "sign", "sin", "sincos", "sinh", "smoothstep", "sqrt", "step",
     "tan", "tanh", "tex1D", "tex1D", "tex1Dbias", "tex1Dgrad", "tex1Dlod", "tex1Dproj", "tex2D", "tex2D", "tex2Dbias", "tex2Dgrad", "tex2Dlod", "tex2Dproj",
     "tex3D", "tex3D", "tex3Dbias", "tex3Dgrad", "tex3Dlod", "tex3Dproj", "texCUBE", "texCUBE", "texCUBEbias", "texCUBEgrad", "texCUBElod", "texCUBEproj", "transpose", "trunc"
-  };
+    };
   //}}}
 
   //{{{
   const vector<string> kGlslKeyWords = {
-    "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short",
-    "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary",
-    "_Noreturn", "_Static_assert", "_Thread_local"
-  };
+    "auto", "break", 
+    "case", "char", "const", "continue", 
+    "default", "do", "double", 
+    "else", "enum", "extern", 
+    "float", "for", 
+    "goto",
+    "if", "inline", "int", "long", 
+    "register", "restrict", "return",
+    "short", "signed", "sizeof", "static", "struct", "switch", 
+    "typedef", "union", "unsigned", 
+    "void", "volatile", "while", 
+    "_Alignas", "_Alignof", "_Atomic", 
+    "_Bool", "_Complex", "_Generic", "_Imaginary", "_Noreturn", "_Static_assert", "_Thread_local"
+    };
   //}}}
   //{{{
   const vector<string> kGlslKnownWords = {
-    "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
-    "ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper"
-  };
+    "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", 
+    "ceil", "clock", "cosh", "ctime", "div", "exit", 
+    "fabs", "floor", "fmod", 
+    "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
+    "ispunct", "isspace", "isupper", 
+    "kbhit", "log10", "log2", "log", 
+    "memcmp", "modf", "pow", "putchar", 
+    "putenv", "puts", "rand", "remove", "rename", 
+    "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", 
+    "time", "tolower", "toupper"
+    };
   //}}}
   //}}}
 
@@ -1958,7 +1981,7 @@ void cTextEdit::addUndo (cUndo& undo) {
 
 //{{{
 void cTextEdit::parseTokens (cLine& line, const string& textString) {
-// color tokens, keyWords, knownWords
+// parse and color tokens, recognise and color keyWords and knownWords
 
   const char* strBegin = &textString.front();
   const char* strEnd = strBegin + textString.size();
@@ -1969,8 +1992,8 @@ void cTextEdit::parseTokens (cLine& line, const string& textString) {
     const char* tokenBegin = nullptr;
     const char* tokenEnd = nullptr;
     uint8_t tokenColor = eText;
-    bool tokenFound = mOptions.mLanguage.mTokenize &&
-                      mOptions.mLanguage.mTokenize (strPtr, strEnd, tokenBegin, tokenEnd, tokenColor);
+    bool tokenFound = mOptions.mLanguage.mTokenSearch &&
+                      mOptions.mLanguage.mTokenSearch (strPtr, strEnd, tokenBegin, tokenEnd, tokenColor);
 
     if (!tokenFound) {
       // slower regex search
@@ -3009,9 +3032,9 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
     for (auto& knownWord : kKnownWords)
       language.mKnownWords.insert (knownWord);
 
-    language.mTokenize = [](const char* inBegin, const char* inEnd,
-                            const char*& outBegin, const char*& outEnd, uint8_t& color) -> bool {
-      // tokenize lambda
+    language.mTokenSearch = [](const char* inBegin, const char* inEnd,
+                               const char*& outBegin, const char*& outEnd, uint8_t& color) -> bool {
+      // tokeSearch  lambda
       color = eUndefined;
       while ((inBegin < inEnd) && isascii (*inBegin) && isblank (*inBegin))
         inBegin++;
@@ -3066,7 +3089,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     for (auto& knownWord : kHlslKnownWords)
       language.mKnownWords.insert (knownWord);
 
-    language.mTokenize = nullptr;
+    language.mTokenSearch = nullptr;
 
     language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreProc));
@@ -3118,7 +3141,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
     for (auto& knownWord : kGlslKnownWords)
       language.mKnownWords.insert (knownWord);
 
-    language.mTokenize = nullptr;
+    language.mTokenSearch = nullptr;
 
     language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreProc));

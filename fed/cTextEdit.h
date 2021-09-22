@@ -87,8 +87,8 @@ public:
     // typedef
     using tTokenRegexString = std::pair<std::string, uint8_t>;
     using tTokenRegexStrings = std::vector<tTokenRegexString>;
-    using tTokenizeCallback = bool(*)(const char* inBegin, const char* inEnd,
-                                      const char*& outBegin, const char*& outEnd, uint8_t& palette);
+    using tTokenSearch = bool(*)(const char* inBegin, const char* inEnd,
+                                 const char*& outBegin, const char*& outEnd, uint8_t& palette);
 
 
     // vars
@@ -110,7 +110,7 @@ public:
     std::unordered_set <std::string> mKeyWords;
     std::unordered_set <std::string> mKnownWords;
 
-    tTokenizeCallback mTokenize;
+    tTokenSearch mTokenSearch;
     tTokenRegexStrings mTokenRegex;
     };
   //}}}
