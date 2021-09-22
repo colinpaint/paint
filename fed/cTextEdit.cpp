@@ -2060,7 +2060,7 @@ void cTextEdit::parseLine (cLine& line) {
     textString += glyph.mChar;
     }
 
-  // look for foldBegin token
+  // find foldBegin token
   size_t foldBeginIndent = textString.find (mOptions.mLanguage.mFoldBeginMarker);
   line.mFoldBegin = (foldBeginIndent != string::npos);
 
@@ -2080,7 +2080,7 @@ void cTextEdit::parseLine (cLine& line) {
       line.mIndent = 0;
     }
 
-  //{{{  look for single line comment
+  //{{{  find commentSingle token
   size_t pos = 0;
 
   do {
@@ -2092,8 +2092,9 @@ void cTextEdit::parseLine (cLine& line) {
       }
     } while (pos != string::npos);
   //}}}
-  //{{{  look for comment begin
+  //{{{  find commentBegin token
   pos = 0;
+
   do {
     pos = textString.find (mOptions.mLanguage.mCommentBegin, pos);
     if (pos != string::npos) {
@@ -2103,8 +2104,9 @@ void cTextEdit::parseLine (cLine& line) {
       }
     } while (pos != string::npos);
   //}}}
-  //{{{  look for comment end
+  //{{{  find commentEnd token
   pos = 0;
+
   do {
     pos = textString.find (mOptions.mLanguage.mCommentEnd, pos);
     if (pos != string::npos) {
@@ -2114,10 +2116,10 @@ void cTextEdit::parseLine (cLine& line) {
       }
     } while (pos != string::npos);
   //}}}
-
-  // look for foldEnd token
+  //{{{  find foldEnd token
   size_t foldEndIndent = textString.find (mOptions.mLanguage.mFoldEndMarker);
   line.mFoldEnd = (foldEndIndent != string::npos);
+  //}}}
 
   parseTokens (line, textString);
   }
