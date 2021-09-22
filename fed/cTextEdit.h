@@ -452,6 +452,7 @@ private:
   void addUndo (cUndo& undo);
   //}}}
 
+  void parseWords (cLine& line, const std::string& textString);
   void parseLine (cLine& line);
   void parseComments();
 

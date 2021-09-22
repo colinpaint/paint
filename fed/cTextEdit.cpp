@@ -1947,7 +1947,55 @@ void cTextEdit::addUndo (cUndo& undo) {
   }
 //}}}
 //}}}
+//{{{
+void cTextEdit::parseWords (cLine& line, const string& textString) {
+//  search for keyWords, knownWords
 
+  const char* bufferBegin = &textString.front();
+  const char* bufferEnd = bufferBegin + textString.size();
+  const char* lastChar = bufferEnd;
+
+  for (const char* firstChar = bufferBegin; firstChar != lastChar; ) {
+    const char* tokenBegin = nullptr;
+    const char* tokenEnd = nullptr;
+    uint8_t tokenColor = eText;
+
+    // try language tokenize
+    bool found = mOptions.mLanguage.mTokenize &&
+                 mOptions.mLanguage.mTokenize (firstChar, lastChar, tokenBegin, tokenEnd, tokenColor);
+    if (!found)
+      // try language regex
+      for (auto& p : mOptions.mRegexList) {
+        cmatch results;
+        if (regex_search (firstChar, lastChar, results, p.first, regex_constants::match_continuous)) {
+          auto& v = *results.begin();
+          tokenBegin = v.first;
+          tokenEnd = v.second;
+          tokenColor = p.second;
+          found = true;
+          break;
+          }
+        }
+    if (found) {
+      // got token, look for keyWords, knownWords
+      const size_t tokenLength = tokenEnd - tokenBegin;
+      string tokenString (tokenBegin, tokenEnd);
+      if (mOptions.mLanguage.mKeyWords.count (tokenString) != 0)
+        tokenColor = eKeyWord;
+      else if (mOptions.mLanguage.mKnownWords.count (tokenString) != 0)
+        tokenColor = eKnownWord;
+
+      for (size_t j = 0; j < tokenLength; ++j)
+        line.mGlyphs[(tokenBegin - bufferBegin) + j].mColor = tokenColor;
+
+      firstChar = tokenEnd;
+      }
+
+    else
+      firstChar++;
+    }
+  }
+//}}}
 //{{{
 void cTextEdit::parseLine (cLine& line) {
 // parse for fold stuff, tokenize and look for keyWords, Known
@@ -2033,51 +2081,7 @@ void cTextEdit::parseLine (cLine& line) {
   size_t foldEndIndent = textString.find (mOptions.mLanguage.mFoldEndMarker);
   line.mFoldEnd = (foldEndIndent != string::npos);
 
-  //{{{  search for keyWords, knownWords
-  const char* bufferBegin = &textString.front();
-  const char* bufferEnd = bufferBegin + textString.size();
-  const char* lastChar = bufferEnd;
-
-  for (const char* firstChar = bufferBegin; firstChar != lastChar; ) {
-    const char* tokenBegin = nullptr;
-    const char* tokenEnd = nullptr;
-    uint8_t tokenColor = eText;
-
-    // try language tokenize
-    bool found = mOptions.mLanguage.mTokenize &&
-                 mOptions.mLanguage.mTokenize (firstChar, lastChar, tokenBegin, tokenEnd, tokenColor);
-    if (!found)
-      // try language regex
-      for (auto& p : mOptions.mRegexList) {
-        cmatch results;
-        if (regex_search (firstChar, lastChar, results, p.first, regex_constants::match_continuous)) {
-          auto& v = *results.begin();
-          tokenBegin = v.first;
-          tokenEnd = v.second;
-          tokenColor = p.second;
-          found = true;
-          break;
-          }
-        }
-    if (found) {
-      // got token, look for keyWords, knownWords
-      const size_t tokenLength = tokenEnd - tokenBegin;
-      string tokenString (tokenBegin, tokenEnd);
-      if (mOptions.mLanguage.mKeyWords.count (tokenString) != 0)
-        tokenColor = eKeyWord;
-      else if (mOptions.mLanguage.mKnownWords.count (tokenString) != 0)
-        tokenColor = eKnownWord;
-
-      for (size_t j = 0; j < tokenLength; ++j)
-        line.mGlyphs[(tokenBegin - bufferBegin) + j].mColor = tokenColor;
-
-      firstChar = tokenEnd;
-      }
-
-    else
-      firstChar++;
-    }
-  //}}}
+  parseWords (line, textString);
   }
 //}}}
 //{{{
