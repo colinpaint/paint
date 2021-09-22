@@ -24,12 +24,11 @@ namespace {
   constexpr uint8_t eBackground =        0;
 
   constexpr uint8_t eText =              1;
-  constexpr uint8_t eString =            2;
-  constexpr uint8_t eLiteral =           3;
-  constexpr uint8_t eIdentifier =        4;
-  constexpr uint8_t eNumber =            5;
-  constexpr uint8_t ePunctuation =       6;
-
+  constexpr uint8_t eIdentifier =        2;
+  constexpr uint8_t eNumber =            3;
+  constexpr uint8_t ePunctuation =       4;
+  constexpr uint8_t eString =            5;
+  constexpr uint8_t eLiteral =           6;
   constexpr uint8_t ePreProc =           7;
   constexpr uint8_t eComment =           8;
   constexpr uint8_t eKeyWord =           9;
@@ -57,12 +56,11 @@ namespace {
     0xffefefef, // eBackground
 
     0xff808080, // eText
-    0xff2020a0, // eString
-    0xff304070, // eLiteral
     0xff202020, // eIdentifier
     0xff606000, // eNumber
     0xff404040, // ePunctuation
-
+    0xff2020a0, // eString
+    0xff304070, // eLiteral
     0xff008080, // ePreProc
     0xff008000, // eComment
     0xffff0c06, // eKeyWord
@@ -2060,8 +2058,12 @@ void cTextEdit::parseLine (cLine& line) {
     glyphString += glyph.mChar;
     }
 
+  //{{{  find indent
+  size_t indentPos = glyphString.find_first_not_of (' ');
+  line.mIndent = (indentPos == string::npos) ? 0 : static_cast<uint8_t>(indentPos);
+  //}}}
   //{{{  find commentSingle token
-  size_t pos = 0;
+  size_t pos = indentPos;
 
   do {
     pos = glyphString.find (mOptions.mLanguage.mCommentSingle, pos);
@@ -2073,7 +2075,7 @@ void cTextEdit::parseLine (cLine& line) {
     } while (pos != string::npos);
   //}}}
   //{{{  find commentBegin token
-  pos = 0;
+  pos = indentPos;
 
   do {
     pos = glyphString.find (mOptions.mLanguage.mCommentBegin, pos);
@@ -2085,7 +2087,7 @@ void cTextEdit::parseLine (cLine& line) {
     } while (pos != string::npos);
   //}}}
   //{{{  find commentEnd token
-  pos = 0;
+  pos = indentPos;
 
   do {
     pos = glyphString.find (mOptions.mLanguage.mCommentEnd, pos);
@@ -2096,24 +2098,19 @@ void cTextEdit::parseLine (cLine& line) {
       }
     } while (pos != string::npos);
   //}}}
-
   //{{{  find foldBegin token
-  size_t foldBeginIndent = glyphString.find (mOptions.mLanguage.mFoldBeginMarker);
-  line.mFoldBegin = (foldBeginIndent != string::npos);
+  size_t foldBeginPos = glyphString.find (mOptions.mLanguage.mFoldBeginMarker, indentPos);
+  line.mFoldBegin = (foldBeginPos != string::npos);
   //}}}
   //{{{  find foldEnd token
-  size_t foldEndIndent = glyphString.find (mOptions.mLanguage.mFoldEndMarker);
-  line.mFoldEnd = (foldEndIndent != string::npos);
+  size_t foldEndPos = glyphString.find (mOptions.mLanguage.mFoldEndMarker, indentPos);
+  line.mFoldEnd = (foldEndPos != string::npos);
   //}}}
   if (line.mFoldBegin) {
     // does foldBegin have a comment?
-    line.mCommentFold = glyphString.size() != (foldBeginIndent + mOptions.mLanguage.mFoldBeginMarker.size());
+    line.mCommentFold = glyphString.size() != (foldBeginPos + mOptions.mLanguage.mFoldBeginMarker.size());
     mInfo.mHasFolds = true;
     }
-
-  // find indent
-  size_t indent = glyphString.find_first_not_of (' ');
-  line.mIndent = (indent == string::npos) ? 0 : static_cast<uint8_t>(indent);
 
   parseTokens (line, glyphString);
   }
