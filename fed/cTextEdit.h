@@ -105,7 +105,6 @@ public:
     const char* mFoldBeginClosed;
     const char* mFoldEnd;
 
-    char mPreprocChar;
     bool mAutoIndentation;
 
     std::unordered_set <std::string> mKeyWords;
@@ -130,6 +129,7 @@ public:
     uint8_t mChar;
     uint8_t mColor;
 
+    // comment toen flags to speed up whole text comment parsing
     bool mCommentSingle:1;
     bool mCommentBegin:1;
     bool mCommentEnd:1;
@@ -452,7 +452,7 @@ private:
   void addUndo (cUndo& undo);
   //}}}
 
-  void parseWords (cLine& line, const std::string& textString);
+  void parseTokens (cLine& line, const std::string& textString);
   void parseLine (cLine& line);
   void parseComments();
 

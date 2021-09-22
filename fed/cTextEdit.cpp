@@ -253,59 +253,6 @@ namespace {
   //}}}
 
   //{{{
-  bool findString (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
-
-    const char* ptr = inBegin;
-
-    if (*ptr == '"') {
-      ptr++;
-
-      while (ptr < inEnd) {
-        // handle end of string
-        if (*ptr == '"') {
-          outBegin = inBegin;
-          outEnd = ptr + 1;
-          return true;
-         }
-
-        // handle escape character for "
-        if ((*ptr == '\\') && (ptr + 1 < inEnd) && (ptr[1] == '"'))
-          ptr++;
-
-        ptr++;
-        }
-      }
-
-    return false;
-    }
-  //}}}
-  //{{{
-  bool findLiteral (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
-
-    const char* ptr = inBegin;
-
-    if (*ptr == '\'') {
-      ptr++;
-
-      // handle escape characters
-      if ((ptr < inEnd) && (*ptr == '\\'))
-        ptr++;
-
-      if (ptr < inEnd)
-        ptr++;
-
-      // handle end of literal
-      if ((ptr < inEnd) && (*ptr == '\'')) {
-        outBegin = inBegin;
-        outEnd = ptr + 1;
-        return true;
-        }
-      }
-
-    return false;
-    }
-  //}}}
-  //{{{
   bool findIdentifier (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
     const char* ptr = inBegin;
@@ -453,6 +400,59 @@ namespace {
         outBegin = inBegin;
         outEnd = inBegin + 1;
         return true;
+      }
+
+    return false;
+    }
+  //}}}
+  //{{{
+  bool findString (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
+
+    const char* ptr = inBegin;
+
+    if (*ptr == '"') {
+      ptr++;
+
+      while (ptr < inEnd) {
+        // handle end of string
+        if (*ptr == '"') {
+          outBegin = inBegin;
+          outEnd = ptr + 1;
+          return true;
+         }
+
+        // handle escape character for "
+        if ((*ptr == '\\') && (ptr + 1 < inEnd) && (ptr[1] == '"'))
+          ptr++;
+
+        ptr++;
+        }
+      }
+
+    return false;
+    }
+  //}}}
+  //{{{
+  bool findLiteral (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
+
+    const char* ptr = inBegin;
+
+    if (*ptr == '\'') {
+      ptr++;
+
+      // handle escape characters
+      if ((ptr < inEnd) && (*ptr == '\\'))
+        ptr++;
+
+      if (ptr < inEnd)
+        ptr++;
+
+      // handle end of literal
+      if ((ptr < inEnd) && (*ptr == '\'')) {
+        outBegin = inBegin;
+        outEnd = ptr + 1;
+        return true;
+        }
       }
 
     return false;
@@ -1950,8 +1950,8 @@ void cTextEdit::addUndo (cUndo& undo) {
 //}}}
 
 //{{{
-void cTextEdit::parseWords (cLine& line, const string& textString) {
-// color keyWords, knownWords
+void cTextEdit::parseTokens (cLine& line, const string& textString) {
+// color tokens, keyWords, knownWords
 
   const char* strBegin = &textString.front();
   const char* strEnd = strBegin + textString.size();
@@ -2087,18 +2087,16 @@ void cTextEdit::parseLine (cLine& line) {
   size_t foldEndIndent = textString.find (mOptions.mLanguage.mFoldEndMarker);
   line.mFoldEnd = (foldEndIndent != string::npos);
 
-  parseWords (line, textString);
+  parseTokens (line, textString);
   }
 //}}}
 //{{{
 void cTextEdit::parseComments() {
-// simple,fast parse all lines for comments and preProc, #define macros often multiLine
+// simple,fast parse all lines for comments
 
   if (mEdit.mCheckComments) {
     mEdit.mCheckComments = false;
 
-    bool inLeadingWhiteSpace = true;
-    bool inPreProcLine = false;
     bool inString = false;
     bool inSingleComment = false;
     bool inBeginEndComment = false;
@@ -2111,14 +2109,6 @@ void cTextEdit::parseComments() {
       if (numGlyphs > 0) {
         // parse ch
         uint8_t ch = glyphs[curIndex].mChar;
-
-        // check for perProc
-        if (inLeadingWhiteSpace && (ch == mOptions.mLanguage.mPreprocChar))
-          inPreProcLine = true;
-        if (!isspace (ch))
-          inLeadingWhiteSpace = false;
-        if (inPreProcLine)
-          glyphs[curIndex].mColor = ePreProc;
 
         if (ch == '\"') {
           //{{{  start of string
@@ -2164,9 +2154,7 @@ void cTextEdit::parseComments() {
       if (curIndex >= numGlyphs) {
         // end of line, check for trailing concatenate '\' char
         if ((numGlyphs == 0) || (glyphs[numGlyphs-1].mChar != '\\')) {
-          // no, reset new line flags
-          inLeadingWhiteSpace = true;
-          inPreProcLine = false;
+          // no trailing concatenate, reset line flags
           inString = false;
           inSingleComment = false;
           }
@@ -3004,7 +2992,6 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
     language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
 
-    language.mPreprocChar = '#';
     language.mAutoIndentation = true;
 
     for (auto& keyWord : kKeyWords)
@@ -3023,18 +3010,20 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
         outEnd = inEnd;
         color = eText;
         }
-      else if (findString (inBegin, inEnd, outBegin, outEnd))
-        color = eString;
-      else if (findLiteral (inBegin, inEnd, outBegin, outEnd))
-        color = eLiteral;
-      else if (findIdentifier (inBegin, inEnd, outBegin, outEnd))
+      if (findIdentifier (inBegin, inEnd, outBegin, outEnd))
         color = eIdentifier;
       else if (findNumber (inBegin, inEnd, outBegin, outEnd))
         color = eNumber;
       else if (findPunctuation (inBegin, outBegin, outEnd))
         color = ePunctuation;
+      else if (findString (inBegin, inEnd, outBegin, outEnd))
+        color = eString;
+      else if (findLiteral (inBegin, inEnd, outBegin, outEnd))
+        color = eLiteral;
       return (color != eUndefined);
       };
+
+    language.mTokenRegex.push_back (make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreProc));
     }
 
   return language;
@@ -3060,7 +3049,6 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
 
-    language.mPreprocChar = '#';
     language.mAutoIndentation = true;
 
     for (auto& keyWord : kHlslKeyWords)
@@ -3113,7 +3101,6 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
     language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
 
-    language.mPreprocChar = '#';
     language.mAutoIndentation = true;
 
     for (auto& keyWord : kGlslKeyWords)
