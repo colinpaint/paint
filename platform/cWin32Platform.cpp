@@ -108,7 +108,7 @@ public:
   void present() final;
 
 protected:
-  bool init (const cPoint& windowSize, bool showViewports, bool vsync) final;
+  bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
 
 private:
   // static register
@@ -183,9 +183,10 @@ void cWin32Platform::present() {
 
 // protected:
 //{{{
-bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vsync) {
+bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
 
   (void)showViewports;
+  (void)fullScreen;
 
   // register app class
   gWndClass = { sizeof(WNDCLASSEX),

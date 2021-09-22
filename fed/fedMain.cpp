@@ -41,6 +41,7 @@ int main (int numArgs, char* args[]) {
   eLogLevel logLevel = LOGINFO;
   string platformName = "glfw";
   string graphicsName = "opengl";
+  bool fullScreen = false;
   bool vsync = true;
   //{{{  parse command line args to params
   // args to params
@@ -54,6 +55,7 @@ int main (int numArgs, char* args[]) {
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
+    else if (*it == "full") { fullScreen = true; params.erase (it); }
     else if (*it == "free") { vsync = false; params.erase (it); }
     else ++it;
     };
@@ -69,7 +71,7 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI font
-  cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync);
+  cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync, fullScreen);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
 
   // create app to tie stuff together
@@ -101,7 +103,7 @@ int main (int numArgs, char* args[]) {
   platform.setDropCallback (
     //{{{  drop lambda
     [&](vector<string> dropItems) noexcept {
-      for (auto& item : dropItems) 
+      for (auto& item : dropItems)
         cLog::log (LOGINFO, item);
       }
     );

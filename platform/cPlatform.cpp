@@ -14,7 +14,7 @@ using namespace std;
 // static - public
 //{{{
 cPlatform& cPlatform::createByName (const string& name, const cPoint& windowSize,
-                                    bool showViewports, bool vsync) {
+                                    bool showViewports, bool vsync, bool fullScreen) {
 
   cPlatform* platform = getClassRegister()[name](name);
   if (!platform) {
@@ -22,7 +22,7 @@ cPlatform& cPlatform::createByName (const string& name, const cPoint& windowSize
     exit (EXIT_FAILURE);
     }
 
-  platform->init (windowSize, showViewports, vsync);
+  platform->init (windowSize, showViewports, vsync, fullScreen);
   return *platform;
   }
 //}}}

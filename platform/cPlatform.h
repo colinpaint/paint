@@ -13,7 +13,7 @@ class cPlatform {
 public:
   // static register
   static cPlatform& createByName (const std::string& name, const cPoint& windowSize,
-                                  bool showViewports, bool vsync);
+                                  bool showViewports, bool vsync, bool fullScreen);
   static void listRegisteredClasses();
 
   // base class
@@ -53,5 +53,5 @@ protected:
   static bool registerClass (const std::string& name, const createFunc factoryMethod);
   static std::map<const std::string, createFunc>& getClassRegister();
 
-  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync) = 0;
+  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) = 0;
   };

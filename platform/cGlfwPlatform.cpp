@@ -111,7 +111,7 @@ public:
   void present() final;
 
 protected:
-  bool init (const cPoint& windowSize, bool showViewports, bool vsync) final;
+  bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
 
 private:
   // static register
@@ -198,8 +198,9 @@ void cGlfwPlatform::present() {
 
 // protected:
 //{{{
-bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports, bool vsync) {
+bool cGlfwPlatform::init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
 
+  (void)fullScreen;
   cLog::log (LOGINFO, fmt::format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
 
   // GLFW init

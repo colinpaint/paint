@@ -49,6 +49,7 @@ int main (int numArgs, char* args[]) {
   string platformName = "glfw";
   string graphicsName = "opengl";
   bool showDemoWindow = false;
+  bool fullScreen = false;
   bool vsync = true;
   bool showPlotWindow = false;
   //{{{  parse command line args to params
@@ -64,6 +65,7 @@ int main (int numArgs, char* args[]) {
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
     else if (*it == "demo") { showDemoWindow = true; params.erase (it); }
+    else if (*it == "full") { fullScreen = true; params.erase (it); }
     else if (*it == "free") { vsync = false; params.erase (it); }
     else if (*it == "plot") { showPlotWindow = true; params.erase (it); }
     else ++it;
@@ -81,7 +83,7 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI font
-  cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync);
+  cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync, fullScreen);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
   //{{{  create canvas and our fonts
   #ifdef _WIN32
