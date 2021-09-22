@@ -115,23 +115,30 @@ namespace {
   //}}}
   //{{{
   const vector<string> kKnownWords = {
-    "abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol",
+    "abort", "algorithm", "assert",
+    "abs", "acos", "array",  "asin", "atan", "atexit", "atof", "atoi", "atol",
     "ceil", "clock", "cosh", "ctime",
+    "cmath", "cstdint", "chrono",
     "div",
     "exit",
     "fabs", "floor", "fmod",
+    "functional", "fstream",
     "getchar", "getenv",
+    "int8_t", "int16_t", "int32_t", "int64_t",
     "isalnum", "isalpha", "isdigit", "isgraph", "ispunct", "isspace", "isupper",
     "kbhit",
     "log10", "log2", "log",
-    "map", "memcmp", "modf", "min", "max"
-    "pow", "printf", "putchar", "putenv", "puts",
-    "rand", "remove", "rename",
-    "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "set", "std", "string", "sprintf", "snprintf",
+    "map",
+    "memcmp", "modf", "min", "max"
+    "pow",
+    "printf", "putchar", "putenv", "puts",
+    "rand", "regex", "remove", "rename",
+    "sinh", "sqrt", "srand",
+    "std", "string", "sprintf", "snprintf", "strlen", "strcat", "strcmp", "strerror", "set",
+    "streambuf",
     "time", "tolower", "toupper",
-    "unordered_map", "unordered_set",
+    "uint8_t", "uint16_t", "uint32_t", "uint64_t", "unordered_map", "unordered_set",
     "vector",
-    "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t",
     };
   //}}}
 
@@ -187,6 +194,7 @@ namespace {
   //}}}
   //}}}
 
+  // utf
   //{{{
   bool isUtfSequence (char ch) {
     return (ch & 0xC0) == 0x80;
@@ -252,6 +260,7 @@ namespace {
     }
   //}}}
 
+  // faster parsers
   //{{{
   bool findIdentifier (const char* inBegin, const char* inEnd, const char*& outBegin, const char*& outEnd) {
 
@@ -1958,7 +1967,7 @@ void cTextEdit::parseTokens (cLine& line, const string& textString) {
 
   const char* strPtr = strBegin;
   while (strPtr < strEnd) {
-    // faster search with tokenize
+    // faster tokenize search
     const char* tokenBegin = nullptr;
     const char* tokenEnd = nullptr;
     uint8_t tokenColor = eText;
@@ -1966,7 +1975,7 @@ void cTextEdit::parseTokens (cLine& line, const string& textString) {
                       mOptions.mLanguage.mTokenize (strPtr, strEnd, tokenBegin, tokenEnd, tokenColor);
 
     if (!tokenFound) {
-      // slower search with regex
+      // slower regex search
       for (auto& p : mOptions.mRegexList) {
         cmatch results;
         if (regex_search (strPtr, strEnd, results, p.first, regex_constants::match_continuous)) {
@@ -1981,8 +1990,9 @@ void cTextEdit::parseTokens (cLine& line, const string& textString) {
       }
 
     if (tokenFound) {
+      // token to color
       if (tokenColor == eIdentifier) {
-        // look for keyWords, knownWords
+        // extra search for keyWords, knownWords
         string tokenString (tokenBegin, tokenEnd);
         if (mOptions.mLanguage.mKeyWords.count (tokenString) != 0)
           tokenColor = eKeyWord;
@@ -1992,9 +2002,10 @@ void cTextEdit::parseTokens (cLine& line, const string& textString) {
 
       // color token glyphs
       size_t glyphIndex = tokenBegin - strBegin;
-      size_t glyphEnd = tokenEnd - strBegin;
-      while (glyphIndex < glyphEnd)
+      size_t glyphIndexEnd = tokenEnd - strBegin;
+      while (glyphIndex < glyphIndexEnd)
         line.mGlyphs[glyphIndex++].mColor = tokenColor;
+
       strPtr = tokenEnd;
       }
     else
@@ -2101,15 +2112,14 @@ void cTextEdit::parseComments() {
     bool inSingleComment = false;
     bool inBeginEndComment = false;
 
-    int curLine = 0;
-    int curIndex = 0;
-    while (curLine < static_cast<int>(mInfo.mLines.size())) {
+    size_t curIndex = 0;
+    size_t curLine = 0;
+    while (curLine < mInfo.mLines.size()) {
       vector<cGlyph>& glyphs = mInfo.mLines[curLine].mGlyphs;
-      int numGlyphs = static_cast<int>(glyphs.size());
+      size_t numGlyphs = glyphs.size();
       if (numGlyphs > 0) {
         // parse ch
         uint8_t ch = glyphs[curIndex].mChar;
-
         if (ch == '\"') {
           //{{{  start of string
           inString = true;
@@ -2122,8 +2132,9 @@ void cTextEdit::parseComments() {
           if (inSingleComment || inBeginEndComment)
             glyphs[curIndex].mColor = eComment;
 
-          if (ch == '\"')
+          if (ch == '\"') // end of string
             inString = false;
+
           else if (ch == '\\') {
             // \ escapeChar in " " quotes, skip nextChar if any
             if (curIndex+1 < numGlyphs) {
@@ -2135,19 +2146,20 @@ void cTextEdit::parseComments() {
           }
           //}}}
         else {
-          //{{{  other
+          // comment begin?
           if (glyphs[curIndex].mCommentSingle)
             inSingleComment = true;
           else if (glyphs[curIndex].mCommentBegin)
             inBeginEndComment = true;
 
+          // in comment
           if (inSingleComment || inBeginEndComment)
             glyphs[curIndex].mColor = eComment;
 
+          // comment end ?
           if (glyphs[curIndex].mCommentEnd)
             inBeginEndComment = false;
           }
-          //}}}
         curIndex += utf8CharLength (ch);
         }
 
