@@ -353,7 +353,7 @@ namespace {
     bool isFloat = false;
     bool isBinary = false;
 
-    if (ptr < inEnd)
+    if (ptr < inEnd) {
       if (*ptr == '.') {
         //{{{  skip floating point frac
         isFloat = true;
@@ -384,6 +384,7 @@ namespace {
           ptr++;
         }
         //}}}
+      }
 
     if (!isHex && !isBinary) {
       //{{{  skip floating point exponent e+dd
@@ -1955,6 +1956,7 @@ void cTextEdit::parseWords (cLine& line, const string& textString) {
   const char* strBegin = &textString.front();
   const char* strEnd = strBegin + textString.size();
 
+  size_t i = 0;
   const char* firstChar = strBegin;
   while (firstChar < strEnd) {
     const char* tokenBegin = nullptr;
