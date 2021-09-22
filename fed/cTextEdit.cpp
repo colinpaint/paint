@@ -1898,6 +1898,7 @@ void cTextEdit::removeLine (int beginPosition, int endPosition) {
   mInfo.mLines.erase (mInfo.mLines.begin() + beginPosition, mInfo.mLines.begin() + endPosition);
   assert (!mInfo.mLines.empty());
 
+  mEdit.mCheckComments = true;
   mInfo.mTextEdited = true;
   }
 //}}}
@@ -1909,6 +1910,7 @@ void cTextEdit::removeLine (int index) {
   mInfo.mLines.erase (mInfo.mLines.begin() + index);
   assert (!mInfo.mLines.empty());
 
+  mEdit.mCheckComments = true;
   mInfo.mTextEdited = true;
   }
 //}}}
@@ -1930,6 +1932,7 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
       line.mGlyphs.erase (line.mGlyphs.begin() + beginCharacterIndex, line.mGlyphs.end());
     else
       line.mGlyphs.erase (line.mGlyphs.begin() + beginCharacterIndex, line.mGlyphs.begin() + endCharacterIndex);
+
     parseLine (line);
     }
 
