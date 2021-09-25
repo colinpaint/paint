@@ -45,24 +45,31 @@ public:
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
-    //if (!mFileView)
-      //mFileView = new cFileView ("C:/projects/paint/build/Release/fed.exe");
+    if (false) {
+      //{{{  fileView memEdit
+      mFileView = new cFileView ("C:/projects/paint/build/Release/fed.exe");
+      if (!mMemEdit)
+        mMemEdit = new cMemEdit ((uint8_t*)(this), 0x10000);
 
+      ImGui::PushFont (app.getMonoFont());
+      mMemEdit->setMem (mFileView->getReadPtr(), mFileView->getReadBytesLeft());
+      mMemEdit->drawWindow ("Memory Editor", 0);
+      ImGui::PopFont();
+      return;
+      }
+      //}}}
     if (false) {
       //{{{  memEdit
       if (!mMemEdit)
         mMemEdit = new cMemEdit ((uint8_t*)(this), 0x10000);
 
       ImGui::PushFont (app.getMonoFont());
-      //mMemEdit->setMem (mFileView->getReadPtr(), mFileView->getReadBytesLeft());
       mMemEdit->setMem ((uint8_t*)this, 0x80000);
-      //mMemEdit->setMem ((uint8_t*)mMemEdit, sizeof(cMemEdit));
       mMemEdit->drawWindow ("Memory Editor", 0);
       ImGui::PopFont();
       return;
       }
       //}}}
-
     if (!mTextEdit) {
       //{{{  create cTextEdit for app name
       mTextEdit = new cTextEdit();
