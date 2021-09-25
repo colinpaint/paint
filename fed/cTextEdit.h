@@ -277,7 +277,7 @@ private:
     bool mReadOnly = false;
 
     // shows
-    bool mShowFolded = false;
+    bool mShowFolded = true;
     bool mShowLineNumber = true;
     bool mShowLineDebug = false;
     bool mShowWhiteSpace = false;

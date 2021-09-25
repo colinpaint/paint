@@ -2540,6 +2540,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       // add indent
       curPos.x += leftPadWidth;
 
+      // add the indent
       float indentWidth = line.mIndent * mContext.mGlyphWidth;
       curPos.x += indentWidth;
 
@@ -2582,6 +2583,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       // draw foldPrefix
       curPos.x += leftPadWidth;
 
+      // add the indent
       float indentWidth = line.mIndent * mContext.mGlyphWidth;
       curPos.x += indentWidth;
 
@@ -2620,6 +2622,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
     //{{{  draw foldEnd
     curPos.x += leftPadWidth;
 
+    // add the indent
     float indentWidth = line.mIndent * mContext.mGlyphWidth;
     curPos.x += indentWidth;
 
