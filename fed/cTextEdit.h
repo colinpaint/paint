@@ -84,12 +84,11 @@ public:
     static const cLanguage& hlsl();
     static const cLanguage& glsl();
 
-    // typedef
+    // using
     using tTokenRegexString = std::pair<std::string, uint8_t>;
     using tTokenRegexStrings = std::vector<tTokenRegexString>;
     using tTokenSearch = bool(*)(const char* srcBegin, const char* srcEnd,
                                  const char*& dstBegin, const char*& dstEnd, uint8_t& color);
-
 
     // vars
     std::string mName;
@@ -135,6 +134,7 @@ public:
     bool mCommentEnd:1;
     };
   //}}}
+  using tGlyphs = std::vector <cGlyph>;
   //{{{
   class cLine {
   public:
@@ -158,7 +158,7 @@ public:
       }
     //}}}
 
-    std::vector <cGlyph> mGlyphs;
+    tGlyphs mGlyphs;
 
     bool mCommentSingle:1;
     bool mCommentBegin:1;
@@ -256,7 +256,7 @@ public:
   void drawContents (cApp& app);
 
 private:
-  typedef std::vector <std::pair <std::regex,uint8_t>> tRegexList;
+  using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
   //{{{
   struct sCursorSelectionState {
     sPosition mCursorPosition;
@@ -289,7 +289,7 @@ private:
     bool mHoverMonoSpaced = false;
 
     cLanguage mLanguage;
-    tRegexList mRegexList;
+    tRegex mRegexList;
     };
   //}}}
   //{{{
@@ -463,7 +463,7 @@ private:
   void dragText (int lineNumber, ImVec2 pos);
 
   void drawTop (cApp& app);
-  float drawGlyphs (ImVec2 pos, const std::vector <cGlyph>& glyphs, uint8_t forceColor);
+  float drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, size_t skip, uint8_t forceColor);
   int drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex);
   int drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
 
@@ -478,6 +478,6 @@ private:
   cEdit mEdit;
   cUndoList mUndoList;
 
-  std::chrono::system_clock::time_point mLastCursorFlashTimePoint;
+  std::chrono::system_clock::time_point mCursorFlashTimePoint;
   //}}}
   };

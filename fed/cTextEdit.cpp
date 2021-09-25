@@ -222,7 +222,7 @@ namespace {
   //{{{
   int utf8CharLength (uint8_t ch) {
   // https://en.wikipedia.org/wiki/UTF-8
-  // We assume that the char is a standalone character (<128)
+  // We assume that the char is a standalone character ( < 128)
   // or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
 
     if ((ch & 0xFE) == 0xFC)
@@ -495,7 +495,7 @@ cTextEdit::cTextEdit() {
   mInfo.mLines.push_back (vector<cGlyph>());
   setLanguage (cLanguage::c());
 
-  mLastCursorFlashTimePoint = system_clock::now();
+  mCursorFlashTimePoint = system_clock::now();
   }
 //}}}
 //{{{  gets
@@ -1232,7 +1232,7 @@ int cTextEdit::getCharacterIndex (sPosition position) const {
     return 0;
     }
 
-  const vector <cGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+  const tGlyphs& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
   int column = 0;
   int i = 0;
@@ -1277,7 +1277,7 @@ int cTextEdit::getLineNumChars (int row) const {
   if (row >= static_cast<int>(mInfo.mLines.size()))
     return 0;
 
-  const vector <cGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
+  const tGlyphs& glyphs = mInfo.mLines[row].mGlyphs;
   int numChars = 0;
   for (size_t i = 0; i < glyphs.size(); numChars++)
     i += utf8CharLength (glyphs[i].mChar);
@@ -1291,7 +1291,7 @@ int cTextEdit::getLineMaxColumn (int row) const {
   if (row >= static_cast<int>(mInfo.mLines.size()))
     return 0;
 
-  const vector <cGlyph>& glyphs = mInfo.mLines[row].mGlyphs;
+  const tGlyphs& glyphs = mInfo.mLines[row].mGlyphs;
   int column = 0;
   for (size_t i = 0; i < glyphs.size(); ) {
     uint8_t ch = glyphs[i].mChar;
@@ -1632,7 +1632,7 @@ void cTextEdit::scrollCursorVisible() {
       ImGui::SetScrollX (max (0.f, textWidth + (3 * mContext.mGlyphWidth) - ImGui::GetWindowWidth()));
     }
 
-  mLastCursorFlashTimePoint = system_clock::now();
+  mCursorFlashTimePoint = system_clock::now();
   }
 //}}}
 //{{{
@@ -2406,28 +2406,29 @@ void cTextEdit::drawTop (cApp& app) {
   }
 //}}}
 //{{{
-float cTextEdit::drawGlyphs (ImVec2 pos, const vector <cGlyph>& glyphs, uint8_t forceColor) {
+float cTextEdit::drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, size_t skip, uint8_t forceColor) {
 
-  if (glyphs.empty())
+  if (glyphs.empty() || (skip >= glyphs.size()))
     return 0.f;
 
-  // pos to measure textWidth on return
+  // initial pos to measure textWidth on return
   float firstPosX = pos.x;
 
   array <char,256> str;
   size_t strIndex = 0;
-  uint8_t lastColor = (forceColor == eUndefined) ? glyphs[0].mColor : forceColor;
 
-  for (auto& glyph : glyphs) {
-    uint8_t color = (forceColor == eUndefined) ? glyph.mColor : forceColor;
+  uint8_t prevColor = (forceColor == eUndefined) ? glyphs[skip].mColor : forceColor;
+
+  for (size_t i = skip; i < glyphs.size(); i++) {
+    uint8_t color = (forceColor == eUndefined) ? glyphs[i].mColor : forceColor;
     if ((strIndex > 0) && (strIndex < str.max_size()) &&
-        ((color != lastColor) || (glyph.mChar == '\t') || (glyph.mChar == ' '))) {
+        ((color != prevColor) || (glyphs[i].mChar == '\t') || (glyphs[i].mChar == ' '))) {
       // draw colored glyphs, seperated by colorChange,tab,space
-      pos.x += mContext.drawText (pos, lastColor, str.data(), str.data() + strIndex);
+      pos.x += mContext.drawText (pos, prevColor, str.data(), str.data() + strIndex);
       strIndex = 0;
       }
 
-    if (glyph.mChar == '\t') {
+    if (glyphs[i].mChar == '\t') {
       //{{{  tab
       ImVec2 arrowLeftPos = {pos.x + 1.f, pos.y + mContext.mFontSize/2.f};
 
@@ -2449,7 +2450,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <cGlyph>& glyphs, uint8_t 
         }
       }
       //}}}
-    else if (glyph.mChar == ' ') {
+    else if (glyphs[i].mChar == ' ') {
       //{{{  space
       if (isDrawWhiteSpace()) {
         // draw circle
@@ -2461,17 +2462,17 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const vector <cGlyph>& glyphs, uint8_t 
       }
       //}}}
     else {
-      int length = utf8CharLength (glyph.mChar);
+      int length = utf8CharLength (glyphs[i].mChar);
       while ((length-- > 0) && (strIndex < str.max_size()))
-        str[strIndex++] = glyph.mChar;
+        str[strIndex++] = glyphs[i].mChar;
       }
-    lastColor = color;
+    prevColor = color;
     }
 
-  if (strIndex > 0) // draw remaining glyphs
-    pos.x += mContext.drawText (pos, lastColor, str.data(), str.data() + strIndex);
+  if (strIndex > 0) // draw any remaining glyphs
+    pos.x += mContext.drawText (pos, prevColor, str.data(), str.data() + strIndex);
 
-  return (pos.x - firstPosX);
+  return pos.x - firstPosX;
   }
 //}}}
 //{{{
@@ -2532,7 +2533,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
   // draw text
   ImVec2 textPos = curPos;
-  const vector <cGlyph>& glyphs = line.mGlyphs;
+  const tGlyphs& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
     if (line.mFolded) {
       //{{{  draw foldBegin folded
@@ -2559,7 +2560,11 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
       // draw glyphs
       textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[lineNumber + seeThroughInc].mGlyphs, eFoldClosed);
+
+      // calc leading chars to skip
+      size_t skip = seeThroughInc ? mInfo.mLines[lineNumber + seeThroughInc].mIndent
+                                  : line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size();
+      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[lineNumber + seeThroughInc].mGlyphs, skip, eFoldClosed);
       if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
         glyphsWidth = mContext.mGlyphWidth;
 
@@ -2577,12 +2582,15 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       // draw foldPrefix
       curPos.x += leftPadWidth;
 
+      float indentWidth = line.mIndent * mContext.mGlyphWidth;
+      curPos.x += indentWidth;
+
       float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen);
       curPos.x += prefixWidth;
 
       // add foldPrefix invisibleButton, want to action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
-                              {leftPadWidth + prefixWidth, mContext.mLineHeight});
+                              {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive() && !line.mPressed) {
         // fold
         line.mPressed = true;
@@ -2593,7 +2601,8 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
       // draw glyphs
       textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, eUndefined);
+      float glyphsWidth = drawGlyphs (curPos, line.mGlyphs,
+                                      line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size(), eUndefined);
       if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
         glyphsWidth = mContext.mGlyphWidth;
 
@@ -2610,11 +2619,15 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
   else if (isFolded() && line.mFoldEnd) {
     //{{{  draw foldEnd
     curPos.x += leftPadWidth;
+
+    float indentWidth = line.mIndent * mContext.mGlyphWidth;
+    curPos.x += indentWidth;
+
     float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldEnd);
 
     // add invisibleButton
     ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
-                            {leftPadWidth + prefixWidth, mContext.mLineHeight});
+                            {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
     if (ImGui::IsItemActive())
       clickFold (lineNumber, false);
 
@@ -2627,7 +2640,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
     // drawGlyphs
     textPos.x = curPos.x;
-    float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, eUndefined);
+    float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, 0, eUndefined);
     if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
       glyphsWidth = mContext.mGlyphWidth;
 
@@ -2675,7 +2688,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       //}}}
     //{{{  draw flashing cursor
     auto now = system_clock::now();
-    auto elapsed = now - mLastCursorFlashTimePoint;
+    auto elapsed = now - mCursorFlashTimePoint;
     if (elapsed < 400ms) {
       float cursorPosX = getTextWidth (mEdit.mState.mCursorPosition);
       int characterIndex = getCharacterIndex (mEdit.mState.mCursorPosition);
@@ -2702,7 +2715,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       }
 
     if (elapsed > 800ms)
-      mLastCursorFlashTimePoint = now;
+      mCursorFlashTimePoint = now;
     //}}}
     }
 
