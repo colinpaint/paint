@@ -1195,8 +1195,11 @@ void cTextEdit::drawContents (cApp& app) {
     clipper.Step();
 
     // clipper iterate
-    for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++)
+    for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
+      mInfo.mLines[lineNumber].mFirstGlyph = 0;
+      mInfo.mLines[lineNumber].mFirstColumn = 0;
       drawLine (lineNumber, 0, 0);
+      }
 
     // clipper end
     clipper.Step();
@@ -2565,8 +2568,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth = mContext.drawText (curPos, eFoldClosed,
-                            seeThroughInc ? mOptions.mLanguage.mFoldBeginClosedSpace : mOptions.mLanguage.mFoldBeginClosed);
+      float prefixWidth = mContext.drawText (curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed);
       curPos.x += prefixWidth;
 
       // add invisibleButton, indent + prefix wide, action on press
@@ -2664,8 +2666,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       glyphsWidth = mContext.mGlyphWidth;
 
     // add invisibleButton
-    ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(),
-                            {leftPadWidth + glyphsWidth, mContext.mLineHeight});
+    ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {leftPadWidth + glyphsWidth, mContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
         dragText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - curPos.y});
@@ -2748,18 +2749,25 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
 
   if (!parentFolded) {
     // show foldBegin line
-    // - if no foldBegin comment, search for first noComment line, !!!! assume next line for now !!!!
     cLine& line = mInfo.mLines[lineNumber];
 
     if (line.mFoldBegin) {
-      // if comment empty, set seeThruOffst to first non comment line, assume 1 for now
+      // if no fold comment, set seeThruOffst to first non comment line, !!!! just use +1 for now !!!!
       line.mSeeThruOffset = line.mCommentFold ? 0 : 1;
 
       // set firstGlyph displayed after fold marker
-      line.mFirstGlyph = static_cast<uint8_t> (
-        (folded && line.mSeeThruOffset) ? mInfo.mLines[lineNumber + line.mSeeThruOffset].mIndent
-                                        : line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size());
-      line.mFirstColumn = 0; // should be column of firstGlyph
+      if (folded && line.mSeeThruOffset) {
+        line.mFirstGlyph = static_cast<uint8_t>(mInfo.mLines[lineNumber + line.mSeeThruOffset].mIndent);
+        line.mFirstColumn = 0;
+        }
+      else if (folded && !line.mSeeThruOffset) {
+        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
+        line.mFirstColumn = 0;
+        }
+      else { // not folded
+        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size());
+        line.mFirstColumn = 0;
+        }
       }
     else {
       line.mSeeThruOffset = 0;
@@ -3065,9 +3073,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
     language.mFoldBeginMarker = "//{{{";
     language.mFoldEndMarker = "//}}}";
 
-    language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "...";
-    language.mFoldBeginClosedSpace = "... ";
+    language.mFoldBeginOpen = "{{{  ";
+    language.mFoldBeginClosed = "...  ";
     language.mFoldEnd = "}}}";
 
     language.mAutoIndentation = true;
@@ -3123,9 +3130,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     language.mFoldBeginMarker = "#{{{";
     language.mFoldEndMarker = "#}}}";
 
-    language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "...";
-    language.mFoldBeginClosedSpace = "... ";
+    language.mFoldBeginOpen = "{{{  ";
+    language.mFoldBeginClosed = "...  ";
     language.mFoldEnd = "}}}";
 
     language.mAutoIndentation = true;
@@ -3176,9 +3182,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
     language.mFoldBeginMarker = "#{{{";
     language.mFoldEndMarker = "#}}}";
 
-    language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "...";
-    language.mFoldBeginClosedSpace = "... ";
+    language.mFoldBeginOpen = "{{{  ";
+    language.mFoldBeginClosed = "...  ";
     language.mFoldEnd = "}}}";
 
     language.mAutoIndentation = true;
