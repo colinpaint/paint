@@ -102,6 +102,7 @@ public:
     // only used by drawText, no point in being a string
     const char* mFoldBeginOpen;
     const char* mFoldBeginClosed;
+    const char* mFoldBeginClosedSpace;
     const char* mFoldEnd;
 
     bool mAutoIndentation;

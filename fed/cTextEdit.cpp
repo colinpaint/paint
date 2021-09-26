@@ -2545,7 +2545,8 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth = mContext.drawText (curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed);
+      float prefixWidth = mContext.drawText (curPos, eFoldClosed, seeThroughInc ? mOptions.mLanguage.mFoldBeginClosedSpace
+                                                                                : mOptions.mLanguage.mFoldBeginClosed);
       curPos.x += prefixWidth;
 
       // add invisibleButton, indent + prefix wide, want to action on press
@@ -3034,7 +3035,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
     language.mFoldEndMarker = "//}}}";
 
     language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "... ";
+    language.mFoldBeginClosed = "...";
+    language.mFoldBeginClosedSpace = "... ";
     language.mFoldEnd = "}}}";
 
     language.mAutoIndentation = true;
@@ -3091,7 +3093,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     language.mFoldEndMarker = "#}}}";
 
     language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "... ";
+    language.mFoldBeginClosed = "...";
+    language.mFoldBeginClosedSpace = "... ";
     language.mFoldEnd = "}}}";
 
     language.mAutoIndentation = true;
@@ -3143,7 +3146,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
     language.mFoldEndMarker = "#}}}";
 
     language.mFoldBeginOpen = "{{{";
-    language.mFoldBeginClosed = "... ";
+    language.mFoldBeginClosed = "...";
+    language.mFoldBeginClosedSpace = "... ";
     language.mFoldEnd = "}}}";
 
     language.mAutoIndentation = true;
