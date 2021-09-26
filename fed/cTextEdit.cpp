@@ -2048,8 +2048,9 @@ void cTextEdit::parseLine (cLine& line) {
   line.mFoldBegin = false;
   line.mFoldEnd = false;
   line.mFolded = true;
-  line.mIndent = 0;
   line.mSeeThruOffset = 0;
+  line.mIndent = 0;
+  line.mSkip = 0;
 
   if (line.mGlyphs.empty())
     return;
@@ -2406,7 +2407,7 @@ void cTextEdit::drawTop (cApp& app) {
   }
 //}}}
 //{{{
-float cTextEdit::drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, size_t skip, uint8_t forceColor) {
+float cTextEdit::drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, uint8_t skip, uint8_t forceColor) {
 
   if (glyphs.empty() || (skip >= glyphs.size()))
     return 0.f;
@@ -2498,18 +2499,20 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
     curPos.x += leftPadWidth;
 
     if (mOptions.mShowLineDebug)
-      mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber, fmt::format ("{:4d}{}{}{}{}{}{}{}{}{:2d}{:2d} ",
-        lineNumber,
-        line.mCommentSingle? 'c' : ' ',
-        line.mCommentBegin ? '{' : ' ',
-        line.mCommentEnd   ? '}' : ' ',
-        line.mCommentFold  ? 'C' : ' ',
-        line.mFoldBegin    ? 'b':' ',
-        line.mFolded       ? 'f':' ',
-        line.mFoldEnd      ? 'e':' ',
-        line.mPressed      ? 'p':' ',
-        line.mIndent,
-        line.mSeeThruOffset).c_str());
+      mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber,
+        fmt::format ("{:4d}{}{}{}{}{}{}{}{}{:1d}{:2d}{:2d} ",
+          lineNumber,
+          line.mCommentSingle? 'c' : ' ',
+          line.mCommentBegin ? '{' : ' ',
+          line.mCommentEnd   ? '}' : ' ',
+          line.mCommentFold  ? 'C' : ' ',
+          line.mFoldBegin    ? 'b':' ',
+          line.mFolded       ? 'f':' ',
+          line.mFoldEnd      ? 'e':' ',
+          line.mPressed      ? 'p':' ',
+          line.mSeeThruOffset,
+          line.mIndent,
+          line.mSkip).c_str());
     else
       mContext.mLineNumberWidth = mContext.drawSmallText (curPos, eLineNumber, fmt::format ("{:4d} ", lineNumber).c_str());
 
@@ -2564,9 +2567,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       textPos.x = curPos.x;
 
       // calc leading chars to skip
-      size_t skip = seeThroughInc ? mInfo.mLines[lineNumber + seeThroughInc].mIndent
-                                  : line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size();
-      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[lineNumber + seeThroughInc].mGlyphs, skip, eFoldClosed);
+      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[lineNumber + seeThroughInc].mGlyphs, line.mSkip, eFoldClosed);
       if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
         glyphsWidth = mContext.mGlyphWidth;
 
@@ -2605,7 +2606,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       // draw glyphs
       textPos.x = curPos.x;
       float glyphsWidth = drawGlyphs (curPos, line.mGlyphs,
-                                      line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size(), eUndefined);
+                      line.mIndent + static_cast<uint8_t>(mOptions.mLanguage.mFoldBeginMarker.size()), eUndefined);
       if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
         glyphsWidth = mContext.mGlyphWidth;
 
@@ -2735,7 +2736,19 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
     // show foldBegin line
     // - if no foldBegin comment, search for first noComment line, !!!! assume next line for now !!!!
     cLine& line = mInfo.mLines[lineNumber];
-    line.mSeeThruOffset = line.mCommentFold ? 0 : 1;
+
+    if (line.mFoldBegin) {
+      // set fold comment setThruOffst if comment empty, and matching skip into glyphs
+      line.mSeeThruOffset = line.mCommentFold ? 0 : 1;
+      line.mSkip = static_cast<uint8_t> (
+        (folded && line.mSeeThruOffset) ? mInfo.mLines[lineNumber + line.mSeeThruOffset].mIndent
+                                        : line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size());
+      }
+    else {
+      line.mSeeThruOffset = 0;
+      line.mSkip = 0;
+      }
+
     lineIndex = drawLine (lineNumber, line.mSeeThruOffset, lineIndex);
     }
 

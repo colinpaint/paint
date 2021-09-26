@@ -172,6 +172,7 @@ public:
 
     uint8_t mSeeThruOffset;
     uint8_t mIndent;
+    uint8_t mSkip;
     };
   //}}}
 
@@ -464,7 +465,7 @@ private:
   void dragText (int lineNumber, ImVec2 pos);
 
   void drawTop (cApp& app);
-  float drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, size_t skip, uint8_t forceColor);
+  float drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, uint8_t skip, uint8_t forceColor);
   int drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex);
   int drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
 
