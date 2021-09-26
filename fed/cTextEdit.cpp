@@ -2509,7 +2509,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
           line.mFoldBegin    ? 'b':' ',
           line.mFolded       ? 'f':' ',
           line.mFoldEnd      ? 'e':' ',
-          line.mPressed      ? 'p':' ',
+          line.mFoldPressed  ? 'p':' ',
           line.mSeeThruOffset,
           line.mIndent,
           line.mSkip).c_str());
@@ -2555,13 +2555,13 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       // add invisibleButton, indent + prefix wide, want to action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                               {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
-      if (ImGui::IsItemActive() && !line.mPressed) {
+      if (ImGui::IsItemActive() && !line.mFoldPressed) {
         // unfold
-        line.mPressed = true;
+        line.mFoldPressed = true;
         clickFold (lineNumber, false);
         }
       if (ImGui::IsItemDeactivated())
-        line.mPressed = false;
+        line.mFoldPressed = false;
 
       // draw glyphs
       textPos.x = curPos.x;
@@ -2595,13 +2595,13 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       // add foldPrefix invisibleButton, want to action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                               {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
-      if (ImGui::IsItemActive() && !line.mPressed) {
+      if (ImGui::IsItemActive() && !line.mFoldPressed) {
         // fold
-        line.mPressed = true;
+        line.mFoldPressed = true;
         clickFold (lineNumber, true);
         }
       if (ImGui::IsItemDeactivated())
-        line.mPressed = false;
+        line.mFoldPressed = false;
 
       // draw glyphs
       textPos.x = curPos.x;

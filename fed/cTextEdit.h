@@ -143,14 +143,16 @@ public:
     cLine() :
       mGlyphs(),
       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
-      mFoldBegin(false), mFolded(true), mFoldEnd(false), mPressed(false),
+      mFoldBegin(false), mFoldEnd(false), 
+      mFolded(true), mFoldPressed(false),
       mSeeThruOffset(0), mIndent(0) {}
     //}}}
     //{{{
     cLine (const std::vector<cGlyph>& line) :
       mGlyphs(line),
       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
-      mFoldBegin(false), mFolded(true), mFoldEnd(false), mPressed(false),
+      mFoldBegin(false), mFoldEnd(false),
+      mFolded(true), mFoldPressed(false),
       mSeeThruOffset(0), mIndent(0) {}
     //}}}
     //{{{
@@ -161,15 +163,19 @@ public:
 
     tGlyphs mGlyphs;
 
+    // parsed tokens
     bool mCommentSingle:1;
     bool mCommentBegin:1;
     bool mCommentEnd:1;
     bool mCommentFold:1;
     bool mFoldBegin:1;
-    bool mFolded:1;
     bool mFoldEnd:1;
-    bool mPressed:1;
 
+    // fold state
+    bool mFolded:1;
+    bool mFoldPressed:1;
+
+    // offsets
     uint8_t mSeeThruOffset;
     uint8_t mIndent;
     uint8_t mSkip;
