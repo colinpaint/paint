@@ -458,7 +458,7 @@ private:
   void deleteRange (sPosition beginPosition, sPosition endPosition);
 
   // fold
-  void closeFold (int lineNumber);
+  void closeFoldEnd (int lineNumber);
 
   // undo
   void addUndo (cUndo& undo);

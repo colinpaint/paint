@@ -1130,7 +1130,7 @@ void cTextEdit::closeFold() {
     if (line.mFoldBegin && !line.mFolded) // if at unfolded foldBegin, fold it
       line.mFolded = true;
     else
-      closeFold (lineNumber);
+      closeFoldEnd (lineNumber);
     }
   }
 //}}}
@@ -1954,15 +1954,23 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
 
 // fold
 //{{{
-void cTextEdit::closeFold (int lineNumber) {
-// search back for this fold's foldBegin and close it
-// - !!! need to skip foldEnd foldBegin pairs !!!
+void cTextEdit::closeFoldEnd (int lineNumber) {
+// close fold we are at end of
+// -  search back for this fold's foldBegin and close it
+//   - skip foldEnd foldBegin pairs
+
+  int skipFoldPairs = 0;
 
   while (--lineNumber >= 0) {
     cLine& line = mInfo.mLines[lineNumber];
-    if (line.mFoldBegin && !line.mFolded) {
+    if (line.mFoldEnd)
+      skipFoldPairs++;
+    else if (line.mFoldBegin && skipFoldPairs)
+      skipFoldPairs--;
+    else if (line.mFoldBegin && !line.mFolded) {
       line.mFolded = true;
-      // !!!! set cursor position to lineNumber !!!
+      mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+      // possible scroll???
       break;
       }
     }
@@ -2561,7 +2569,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
                             seeThroughInc ? mOptions.mLanguage.mFoldBeginClosedSpace : mOptions.mLanguage.mFoldBeginClosed);
       curPos.x += prefixWidth;
 
-      // add invisibleButton, indent + prefix wide, want to action on press
+      // add invisibleButton, indent + prefix wide, action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                               {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive() && !line.mFoldPressed) {
@@ -2599,7 +2607,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
       float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen);
       curPos.x += prefixWidth;
 
-      // add foldPrefix invisibleButton, want to action on press
+      // add foldPrefix invisibleButton, action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                               {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive() && !line.mFoldPressed) {
@@ -2639,13 +2647,8 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
     // add invisibleButton
     ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                             {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
-    if (ImGui::IsItemActive() && !line.mFoldPressed) {
-      // unfold
-      line.mFoldPressed = true;
-      closeFold (lineNumber);
-      }
-    if (ImGui::IsItemDeactivated())
-      line.mFoldPressed = false;
+    if (ImGui::IsItemActive()) // closeFold at foldEnd, action on press, button is removed while still pressed
+      closeFoldEnd (lineNumber);
 
     textPos.x = curPos.x;
     }
