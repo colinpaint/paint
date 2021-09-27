@@ -145,7 +145,7 @@ public:
       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
       mFoldBegin(false), mFoldEnd(false),
       mFolded(true), mFoldPressed(false),
-      mSeeThruOffset(0), mFirstGlyph(0), mFirstColumn(0) {}
+      mFoldCommentLineNumber(0), mFirstGlyph(0), mFirstColumn(0) {}
     //}}}
     //{{{
     cLine (const std::vector<cGlyph>& line) :
@@ -153,7 +153,7 @@ public:
       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
       mFoldBegin(false), mFoldEnd(false),
       mFolded(true), mFoldPressed(false),
-      mSeeThruOffset(0), mFirstGlyph(0), mFirstColumn(0) {}
+      mFoldCommentLineNumber(0), mFirstGlyph(0), mFirstColumn(0) {}
     //}}}
     //{{{
     ~cLine() {
@@ -176,10 +176,10 @@ public:
     bool mFoldPressed:1;
 
     // offsets
-    uint8_t mSeeThruOffset; // offset of first non comment line fro foldBegin with no comment
-    uint8_t mIndent;        // leading space count
-    uint8_t mFirstGlyph;    // index of first visible glyph, past fold markers
-    uint8_t mFirstColumn;   // column of first visible glyph, past fold prefixes
+    uint32_t mFoldCommentLineNumber; // line number of closed foldBegin comment
+    uint8_t mIndent;                 // leading space count
+    uint8_t mFirstGlyph;             // index of first visible glyph, past fold markers
+    uint8_t mFirstColumn;            // column of first visible glyph, past fold prefixes
     };
   //}}}
 
@@ -475,9 +475,9 @@ private:
   void dragText (int lineNumber, ImVec2 pos);
 
   void drawTop (cApp& app);
-  float drawGlyphs (ImVec2 pos, const cLine& line, uint8_t forceColor);
-  int drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex);
-  int drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool foldOpen);
+  float drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
+  int drawLine (int lineNumber, int lineIndex);
+  int drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool folded);
 
   void handleKeyboard();
 

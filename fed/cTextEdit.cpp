@@ -1196,9 +1196,11 @@ void cTextEdit::drawContents (cApp& app) {
 
     // clipper iterate
     for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
+      // not folded, simple use of line glyphs
+      mInfo.mLines[lineNumber].mFoldCommentLineNumber = lineNumber;
       mInfo.mLines[lineNumber].mFirstGlyph = 0;
       mInfo.mLines[lineNumber].mFirstColumn = 0;
-      drawLine (lineNumber, 0, 0);
+      drawLine (lineNumber, 0);
       }
 
     // clipper end
@@ -1962,15 +1964,22 @@ void cTextEdit::closeFoldEnd (int lineNumber) {
 // -  search back for this fold's foldBegin and close it
 //   - skip foldEnd foldBegin pairs
 
+  cLog::log (LOGINFO, fmt::format ("closeFoldEnd:{}", lineNumber));
+
   int skipFoldPairs = 0;
 
   while (--lineNumber >= 0) {
     cLine& line = mInfo.mLines[lineNumber];
-    if (line.mFoldEnd)
+    if (line.mFoldEnd) {
       skipFoldPairs++;
-    else if (line.mFoldBegin && skipFoldPairs)
+      cLog::log (LOGINFO, fmt::format ("- skip foldEnd:{} {}", lineNumber,skipFoldPairs));
+      }
+    else if (line.mFoldBegin && skipFoldPairs) {
       skipFoldPairs--;
+      cLog::log (LOGINFO, fmt::format (" - skip foldBegin:{} {}", lineNumber, skipFoldPairs));
+      }
     else if (line.mFoldBegin && !line.mFolded) {
+      cLog::log (LOGINFO, fmt::format ("- close foldBegin:{}", lineNumber));
       line.mFolded = true;
       mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
       // possible scroll???
@@ -2066,7 +2075,7 @@ void cTextEdit::parseLine (cLine& line) {
   line.mFoldBegin = false;
   line.mFoldEnd = false;
   line.mFolded = true;
-  line.mSeeThruOffset = 0;
+  line.mFoldCommentLineNumber = 0;
   line.mIndent = 0;
   line.mFirstGlyph = 0;
   line.mFirstColumn = 0;
@@ -2426,9 +2435,9 @@ void cTextEdit::drawTop (cApp& app) {
   }
 //}}}
 //{{{
-float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t forceColor) {
+float cTextEdit::drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor) {
 
-  if (line.mGlyphs.empty())
+  if (glyphs.empty())
     return 0.f;
 
   // initial pos to measure textWidth on return
@@ -2437,18 +2446,18 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t forceColor) 
   array <char,256> str;
   size_t strIndex = 0;
 
-  uint8_t prevColor = (forceColor == eUndefined) ? line.mGlyphs[line.mFirstGlyph].mColor : forceColor;
+  uint8_t prevColor = (forceColor == eUndefined) ? glyphs[firstGlyph].mColor : forceColor;
 
-  for (size_t i = line.mFirstGlyph; i < line.mGlyphs.size(); i++) {
-    uint8_t color = (forceColor == eUndefined) ? line.mGlyphs[i].mColor : forceColor;
+  for (size_t i = firstGlyph; i < glyphs.size(); i++) {
+    uint8_t color = (forceColor == eUndefined) ? glyphs[i].mColor : forceColor;
     if ((strIndex > 0) && (strIndex < str.max_size()) &&
-        ((color != prevColor) || (line.mGlyphs[i].mChar == '\t') || (line.mGlyphs[i].mChar == ' '))) {
+        ((color != prevColor) || (glyphs[i].mChar == '\t') || (glyphs[i].mChar == ' '))) {
       // draw colored glyphs, seperated by colorChange,tab,space
       pos.x += mContext.drawText (pos, prevColor, str.data(), str.data() + strIndex);
       strIndex = 0;
       }
 
-    if (line.mGlyphs[i].mChar == '\t') {
+    if (glyphs[i].mChar == '\t') {
       //{{{  tab
       ImVec2 arrowLeftPos = {pos.x + 1.f, pos.y + mContext.mFontSize/2.f};
 
@@ -2470,7 +2479,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t forceColor) 
         }
       }
       //}}}
-    else if (line.mGlyphs[i].mChar == ' ') {
+    else if (glyphs[i].mChar == ' ') {
       //{{{  space
       if (isDrawWhiteSpace()) {
         // draw circle
@@ -2482,9 +2491,9 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t forceColor) 
       }
       //}}}
     else {
-      int length = utf8CharLength (line.mGlyphs[i].mChar);
+      int length = utf8CharLength (glyphs[i].mChar);
       while ((length-- > 0) && (strIndex < str.max_size()))
-        str[strIndex++] = line.mGlyphs[i].mChar;
+        str[strIndex++] = glyphs[i].mChar;
       }
     prevColor = color;
     }
@@ -2496,7 +2505,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t forceColor) 
   }
 //}}}
 //{{{
-int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
+int cTextEdit::drawLine (int lineNumber, int lineIndex) {
 // draw Line and return incremented lineIndex
 
   if (isFolded()) {
@@ -2519,7 +2528,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
     if (mOptions.mShowLineDebug)
       mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber,
-        fmt::format ("{:4d}{}{}{}{}{}{}{}{}{:1d}{:2d}{:2d}{:2d} ",
+        fmt::format ("{:4d}{}{}{}{}{}{}{}{}{:4d}{:2d}{:2d}{:2d} ",
           lineNumber,
           line.mCommentSingle? 'c' : ' ',
           line.mCommentBegin ? '{' : ' ',
@@ -2529,7 +2538,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
           line.mFolded       ? 'f':' ',
           line.mFoldEnd      ? 'e':' ',
           line.mFoldPressed  ? 'p':' ',
-          line.mSeeThruOffset,
+          line.mFoldCommentLineNumber,
           line.mIndent,
           line.mFirstGlyph,
           line.mFirstColumn).c_str());
@@ -2584,7 +2593,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
       // draw glyphs
       textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, seeThroughInc ? mInfo.mLines[lineNumber + seeThroughInc] : line, eFoldClosed);
+      float glyphsWidth = drawGlyphs (curPos, mInfo.mLines[line.mFoldCommentLineNumber].mGlyphs, line.mFirstGlyph, eFoldClosed);
       if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
         glyphsWidth = mContext.mGlyphWidth;
 
@@ -2622,7 +2631,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
       // draw glyphs
       textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, line, eUndefined);
+      float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
       if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
         glyphsWidth = mContext.mGlyphWidth;
 
@@ -2661,7 +2670,7 @@ int cTextEdit::drawLine (int lineNumber, uint8_t seeThroughInc, int lineIndex) {
 
     // drawGlyphs
     textPos.x = curPos.x;
-    float glyphsWidth = drawGlyphs (curPos, line, eUndefined);
+    float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
     if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
       glyphsWidth = mContext.mGlyphWidth;
 
@@ -2751,31 +2760,27 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
     // show foldBegin line
     cLine& line = mInfo.mLines[lineNumber];
 
+    line.mFoldCommentLineNumber = 0;
+    line.mFirstGlyph = 0;
+    line.mFirstColumn = 0;
+
     if (line.mFoldBegin) {
-      // if no fold comment, set seeThruOffst to first non comment line, !!!! just use +1 for now !!!!
-      line.mSeeThruOffset = line.mCommentFold ? 0 : 1;
-
       // set firstGlyph displayed after fold marker
-      if (folded && line.mSeeThruOffset) {
-        line.mFirstGlyph = static_cast<uint8_t>(mInfo.mLines[lineNumber + line.mSeeThruOffset].mIndent);
-        line.mFirstColumn = 0;
+      if (folded && !line.mCommentFold) {
+        // folded without comment
+        // - set mFoldCommentLineNumber to first non comment line, !!!! just use +1 for now !!!!
+        line.mFoldCommentLineNumber = lineNumber+1;
+        line.mFirstGlyph = mInfo.mLines[line.mFoldCommentLineNumber].mIndent;
+        line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "... "
         }
-      else if (folded && !line.mSeeThruOffset) {
+      else {
+        line.mFoldCommentLineNumber = lineNumber;
         line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
-        line.mFirstColumn = 0;
+        line.mFirstColumn = line.mIndent + 4;// firstGlyph at indent + size of "{{{ "
         }
-      else { // not folded
-        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size());
-        line.mFirstColumn = 0;
-        }
-      }
-    else {
-      line.mSeeThruOffset = 0;
-      line.mFirstGlyph = 0;
-      line.mFirstColumn = 0;
       }
 
-    lineIndex = drawLine (lineNumber, line.mSeeThruOffset, lineIndex);
+    lineIndex = drawLine (lineNumber, lineIndex);
     }
 
   while (true) {
@@ -2787,11 +2792,11 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
       lineNumber = drawFold (lineNumber, lineIndex, folded, line.mFolded);
     else if (line.mFoldEnd) {
       if (!folded) // show foldEnd line of open fold
-        lineIndex = drawLine (lineNumber, 0, lineIndex);
+        lineIndex = drawLine (lineNumber, lineIndex);
       return lineNumber;
       }
     else if (!folded) // show all lines of open fold
-      lineIndex = drawLine (lineNumber, 0, lineIndex);
+      lineIndex = drawLine (lineNumber, lineIndex);
     }
   }
 //}}}
@@ -3073,8 +3078,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
     language.mFoldBeginMarker = "//{{{";
     language.mFoldEndMarker = "//}}}";
 
-    language.mFoldBeginOpen = "{{{  ";
-    language.mFoldBeginClosed = "...  ";
+    language.mFoldBeginOpen = "{{{ ";
+    language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
 
     language.mAutoIndentation = true;
@@ -3130,8 +3135,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
     language.mFoldBeginMarker = "#{{{";
     language.mFoldEndMarker = "#}}}";
 
-    language.mFoldBeginOpen = "{{{  ";
-    language.mFoldBeginClosed = "...  ";
+    language.mFoldBeginOpen = "{{{ ";
+    language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
 
     language.mAutoIndentation = true;
@@ -3182,8 +3187,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
     language.mFoldBeginMarker = "#{{{";
     language.mFoldEndMarker = "#}}}";
 
-    language.mFoldBeginOpen = "{{{  ";
-    language.mFoldBeginClosed = "...  ";
+    language.mFoldBeginOpen = "{{{ ";
+    language.mFoldBeginClosed = "... ";
     language.mFoldEnd = "}}}";
 
     language.mAutoIndentation = true;
