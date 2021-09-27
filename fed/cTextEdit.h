@@ -478,8 +478,8 @@ private:
   float drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
   void drawLine (int lineNumber, int lineIndex);
   void drawUnfolded();
-  int skipToFoldEnd (int lineNumber);
-  int drawFolded (int lineNumber, int lineIndex);
+  int skipFoldLines (int lineNumber);
+  int drawFolded (int lineNumber, bool onlyFold);
 
   void handleKeyboard();
 
