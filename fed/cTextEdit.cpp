@@ -59,7 +59,7 @@ namespace {
     0xff304070, // eLiteral
     0xff008080, // ePreProc
     0xff008000, // eComment
-    0xffff0c06, // eKeyWord
+    0xff1010c0, // eKeyWord
     0xff800080, // eKnownWord
 
     0x80600000, // eSelect
@@ -1173,8 +1173,6 @@ void cTextEdit::drawContents (cApp& app) {
 
   mContext.update (mOptions);
 
-  //if (ImGui::IsWindowHovered())
-  //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
   handleKeyboard();
 
   if (isFolded())
@@ -1931,6 +1929,23 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
 //}}}
 
 // fold
+//{{{
+int cTextEdit::skipFoldLines (int lineNumber) {
+// recursively skip fold lines until matching foldEnd
+
+  while (lineNumber < static_cast<int>(mInfo.mLines.size()))
+    if (mInfo.mLines[lineNumber].mFoldBegin)
+      lineNumber = skipFoldLines (lineNumber + 1);
+    else if (mInfo.mLines[lineNumber].mFoldEnd)
+      return lineNumber + 1;
+    else
+      lineNumber++;
+
+  // error if you run off end. begin/end mismatch
+  cLog::log (LOGERROR, "skipToFoldEnd - run off end");
+  return lineNumber;
+  }
+//}}}
 //{{{
 void cTextEdit::closeFoldEnd (int lineNumber) {
 // close fold we are at end of
@@ -2743,23 +2758,6 @@ void cTextEdit::drawUnfolded() {
   // clipper end
   clipper.Step();
   clipper.End();
-  }
-//}}}
-//{{{
-int cTextEdit::skipFoldLines (int lineNumber) {
-// recursively skip to matching foldEnd
-
-  while (lineNumber < static_cast<int>(mInfo.mLines.size()))
-    if (mInfo.mLines[lineNumber].mFoldBegin)
-      lineNumber = skipFoldLines (lineNumber + 1);
-    else if (mInfo.mLines[lineNumber].mFoldEnd)
-      return lineNumber + 1;
-    else
-      lineNumber++;
-
-  // run off end
-  cLog::log (LOGERROR, "skipToFoldEnd - run off end");
-  return lineNumber;
   }
 //}}}
 //{{{

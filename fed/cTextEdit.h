@@ -458,27 +458,30 @@ private:
   void deleteRange (sPosition beginPosition, sPosition endPosition);
 
   // fold
+  int skipFoldLines (int lineNumber);
   void closeFoldEnd (int lineNumber);
 
   // undo
   void addUndo (cUndo& undo);
   //}}}
 
+  // parse
   void parseTokens (cLine& line, const std::string& textString);
   void parseLine (cLine& line);
   void parseComments();
 
+  // mouse
   void clickLine (int lineNumber);
   void clickFold (int lineNumber, bool foldOpen);
   void clickText (int lineNumber, float posX, bool selectWord);
   void dragLine (int lineNumber, float posY);
   void dragText (int lineNumber, ImVec2 pos);
 
+  // draws
   void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
   void drawLine (int lineNumber, int lineIndex);
   void drawUnfolded();
-  int skipFoldLines (int lineNumber);
   int drawFolded (int lineNumber, bool onlyFold);
 
   void handleKeyboard();
