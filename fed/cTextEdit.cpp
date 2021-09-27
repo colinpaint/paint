@@ -2775,16 +2775,18 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool o
         }
       }
 
+    // draw foldBegin line
     drawLine (lineNumber, lineIndex);
     lineIndex++;
     }
 
   while (++lineNumber < static_cast<int>(mInfo.mLines.size())) {
     if (mInfo.mLines[lineNumber].mFoldBegin)
+      // recursively handle foldBegin line
       lineNumber = drawFold (lineNumber, lineIndex, open, mInfo.mLines[lineNumber].mFoldOpen);
     else {
       if (open) {
-        // foldEnd drawLine of open fold
+        // drawLine of open fold
         drawLine (lineNumber, lineIndex);
         lineIndex++;
         }
