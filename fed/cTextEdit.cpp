@@ -1177,34 +1177,10 @@ void cTextEdit::drawContents (cApp& app) {
   //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
   handleKeyboard();
 
-  if (isFolded()) {
-    //{{{  draw folded
-    int lineIndex = 0;
-    drawFold (0, lineIndex, true, true);
-    mInfo.mFoldLines.resize (lineIndex);
-    }
-    //}}}
-  else {
-    //{{{  draw unfolded with clipper
-    // clipper begin
-    ImGuiListClipper clipper;
-    clipper.Begin (static_cast<int>(mInfo.mLines.size()), mContext.mLineHeight);
-    clipper.Step();
-
-    // clipper iterate
-    for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
-      // not folded, simple use of line glyphs
-      mInfo.mLines[lineNumber].mFoldCommentLineNumber = lineNumber;
-      mInfo.mLines[lineNumber].mFirstGlyph = 0;
-      mInfo.mLines[lineNumber].mFirstColumn = 0;
-       drawLine (lineNumber, 0);
-      }
-
-    // clipper end
-    clipper.Step();
-    clipper.End();
-    }
-    //}}}
+  if (isFolded())
+    mInfo.mFoldLines.resize (drawFolded (0, 0));
+  else
+    drawUnfolded();
 
   ImGui::EndChild();
   ImGui::PopStyleVar (4);
@@ -2747,55 +2723,94 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
   }
 //}}}
 //{{{
-int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool open) {
-// recursive traversal of mInfo.mLines to draw visible lines
-// - return lineNumber, lineIndex updated
+void cTextEdit::drawUnfolded() {
+//  draw unfolded with clipper
 
-  if (parentOpen) {
+  // clipper begin
+  ImGuiListClipper clipper;
+  clipper.Begin (static_cast<int>(mInfo.mLines.size()), mContext.mLineHeight);
+  clipper.Step();
+
+  // clipper iterate
+  for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
+    // not folded, simple use of line glyphs
+    mInfo.mLines[lineNumber].mFoldCommentLineNumber = lineNumber;
+    mInfo.mLines[lineNumber].mFirstGlyph = 0;
+    mInfo.mLines[lineNumber].mFirstColumn = 0;
+    drawLine (lineNumber, 0);
+    }
+
+  // clipper end
+  clipper.Step();
+  clipper.End();
+  }
+//}}}
+//{{{
+int cTextEdit::skipToFoldEnd (int lineNumber) {
+// recursively skip to matching foldEnd
+
+  while (lineNumber < static_cast<int>(mInfo.mLines.size()))
+    if (mInfo.mLines[lineNumber].mFoldBegin)
+      lineNumber = skipToFoldEnd (lineNumber + 1);
+    else if (mInfo.mLines[lineNumber].mFoldEnd)
+      return lineNumber + 1;
+    else
+      lineNumber++;
+
+  // run off end
+  cLog::log (LOGERROR, "skipToFoldEnd - run off end");
+  return lineNumber;
+  }
+//}}}
+//{{{
+int cTextEdit::drawFolded (int lineNumber, int lineIndex) {
+
+  while (lineNumber < static_cast<int>(mInfo.mLines.size())) {
     cLine& line = mInfo.mLines[lineNumber];
-
-    line.mFoldCommentLineNumber = 0;
-    line.mFirstGlyph = 0;
-    line.mFirstColumn = 0;
-
     if (line.mFoldBegin) {
-      // show foldBegin line
-      if (!open && !line.mCommentFold) {
-        // closed fold without comment
+      // foldBegin
+      if (line.mFoldOpen) {
+        // openFold
+        line.mFoldCommentLineNumber = lineNumber;
+        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
+        line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "{{{ "
+        drawLine (lineNumber++, lineIndex++);
+        }
+      else if (line.mCommentFold) {
+        // closedFold with comment
+        line.mFoldCommentLineNumber = lineNumber;
+        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
+        line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "{{{ "
+        drawLine (lineNumber++, lineIndex++);
+        lineNumber = skipToFoldEnd (lineNumber);
+        }
+      else {
+        // closedFold without comment
         // - set mFoldCommentLineNumber to first non comment line, !!!! just use +1 for now !!!!
         line.mFoldCommentLineNumber = lineNumber+1;
         line.mFirstGlyph = mInfo.mLines[line.mFoldCommentLineNumber].mIndent;
         line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "... "
-        }
-      else {
-        // open fold, or closedFold with comment
-        line.mFoldCommentLineNumber = lineNumber;
-        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
-        line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "{{{ "
+        drawLine (lineNumber++, lineIndex++);
+        lineNumber = skipToFoldEnd (lineNumber+1);
         }
       }
-
-    // draw foldBegin line
-    drawLine (lineNumber, lineIndex);
-    lineIndex++;
-    }
-
-  while (++lineNumber < static_cast<int>(mInfo.mLines.size())) {
-    if (mInfo.mLines[lineNumber].mFoldBegin)
-      // recursively handle foldBegin line
-      lineNumber = drawFold (lineNumber, lineIndex, open, mInfo.mLines[lineNumber].mFoldOpen);
+    else if (line.mFoldEnd) {
+      // foldEnd
+      line.mFoldCommentLineNumber = 0;
+      line.mFirstGlyph = 0;
+      line.mFirstColumn = 0;
+      drawLine (lineNumber++, lineIndex++);
+      }
     else {
-      if (open) {
-        // drawLine of open fold
-        drawLine (lineNumber, lineIndex);
-        lineIndex++;
-        }
-      if (mInfo.mLines[lineNumber].mFoldEnd)
-        return lineNumber;
+      // fold middle
+      line.mFoldCommentLineNumber = 0;
+      line.mFirstGlyph = 0;
+      line.mFirstColumn = 0;
+      drawLine (lineNumber++, lineIndex++);
       }
     }
 
-  return lineNumber;
+  return lineIndex;
   }
 //}}}
 

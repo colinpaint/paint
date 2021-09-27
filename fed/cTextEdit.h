@@ -477,7 +477,9 @@ private:
   void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
   void drawLine (int lineNumber, int lineIndex);
-  int drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool open);
+  void drawUnfolded();
+  int skipToFoldEnd (int lineNumber);
+  int drawFolded (int lineNumber, int lineIndex);
 
   void handleKeyboard();
 
