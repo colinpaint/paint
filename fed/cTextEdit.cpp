@@ -1114,7 +1114,7 @@ void cTextEdit::openFold() {
 
   if (isFolded())
     if (mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFoldBegin)
-      mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFolded = false;
+      mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFoldOpen = true;
   }
 //}}}
 //{{{
@@ -1124,8 +1124,8 @@ void cTextEdit::closeFold() {
     int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
     cLine& line = mInfo.mLines[lineNumber];
 
-    if (line.mFoldBegin && !line.mFolded) // if at unfolded foldBegin, fold it
-      line.mFolded = true;
+    if (line.mFoldBegin && line.mFoldOpen) // if at unfolded foldBegin, fold it
+      line.mFoldOpen = false;
     else
       closeFoldEnd (lineNumber);
     }
@@ -1180,7 +1180,7 @@ void cTextEdit::drawContents (cApp& app) {
   if (isFolded()) {
     //{{{  draw folded
     int lineIndex = 0;
-    drawFold (0, lineIndex, false, false);
+    drawFold (0, lineIndex, true, true);
     mInfo.mFoldLines.resize (lineIndex);
     }
     //}}}
@@ -1975,9 +1975,9 @@ void cTextEdit::closeFoldEnd (int lineNumber) {
       skipFoldPairs--;
       cLog::log (LOGINFO, fmt::format (" - skip foldBegin:{} {}", lineNumber, skipFoldPairs));
       }
-    else if (line.mFoldBegin && !line.mFolded) {
+    else if (line.mFoldBegin && line.mFoldOpen) {
       cLog::log (LOGINFO, fmt::format ("- close foldBegin:{}", lineNumber));
-      line.mFolded = true;
+      line.mFoldOpen = false;
       mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
       // possible scroll???
       break;
@@ -2071,7 +2071,7 @@ void cTextEdit::parseLine (cLine& line) {
   line.mCommentSingle = false;
   line.mFoldBegin = false;
   line.mFoldEnd = false;
-  line.mFolded = true;
+  line.mFoldOpen = false;
   line.mFoldCommentLineNumber = 0;
   line.mIndent = 0;
   line.mFirstGlyph = 0;
@@ -2241,7 +2241,7 @@ void cTextEdit::clickFold (int lineNumber, bool folded) {
   mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
   mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
 
-  mInfo.mLines[lineNumber].mFolded = folded;
+  mInfo.mLines[lineNumber].mFoldOpen = !folded;
   }
 //}}}
 //{{{
@@ -2532,7 +2532,7 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
           line.mCommentEnd   ? '}' : ' ',
           line.mCommentFold  ? 'C' : ' ',
           line.mFoldBegin    ? 'b':' ',
-          line.mFolded       ? 'f':' ',
+          line.mFoldOpen     ? 'o':' ',
           line.mFoldEnd      ? 'e':' ',
           line.mFoldPressed  ? 'p':' ',
           line.mFoldCommentLineNumber,
@@ -2564,7 +2564,45 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
   ImVec2 textPos = curPos;
   const tGlyphs& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
-    if (line.mFolded) {
+    if (line.mFoldOpen) {
+      //{{{  draw foldBegin open
+      // draw foldPrefix
+      curPos.x += leftPadWidth;
+
+      // add the indent
+      float indentWidth = line.mIndent * mContext.mGlyphWidth;
+      curPos.x += indentWidth;
+
+      float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen);
+      curPos.x += prefixWidth;
+
+      // add foldPrefix invisibleButton, action on press
+      ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
+                              {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
+      if (ImGui::IsItemActive() && !line.mFoldPressed) {
+        // fold
+        line.mFoldPressed = true;
+        clickFold (lineNumber, true);
+        }
+      if (ImGui::IsItemDeactivated())
+        line.mFoldPressed = false;
+
+      // draw glyphs
+      textPos.x = curPos.x;
+      float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
+      if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
+        glyphsWidth = mContext.mGlyphWidth;
+
+      // add invisibleButton
+      ImGui::SameLine();
+      ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
+      if (ImGui::IsItemActive())
+        clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
+
+      curPos.x += glyphsWidth;
+      }
+      //}}}
+    else {
       //{{{  draw foldBegin folded
       // add indent
       curPos.x += leftPadWidth;
@@ -2599,44 +2637,6 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
       ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive())
         clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
-
-      curPos.x += glyphsWidth;
-      }
-      //}}}
-    else {
-      //{{{  draw foldBegin open
-      // draw foldPrefix
-      curPos.x += leftPadWidth;
-
-      // add the indent
-      float indentWidth = line.mIndent * mContext.mGlyphWidth;
-      curPos.x += indentWidth;
-
-      float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen);
-      curPos.x += prefixWidth;
-
-      // add foldPrefix invisibleButton, action on press
-      ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
-                              {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
-      if (ImGui::IsItemActive() && !line.mFoldPressed) {
-        // fold
-        line.mFoldPressed = true;
-        clickFold (lineNumber, true);
-        }
-      if (ImGui::IsItemDeactivated())
-        line.mFoldPressed = false;
-
-      // draw glyphs
-      textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
-      if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
-        glyphsWidth = mContext.mGlyphWidth;
-
-      // add invisibleButton
-      ImGui::SameLine();
-      ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
-      if (ImGui::IsItemActive())
-        clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
 
       curPos.x += glyphsWidth;
       }
@@ -2747,11 +2747,11 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
   }
 //}}}
 //{{{
-int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool folded) {
+int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool open) {
 // recursive traversal of mInfo.mLines to draw visible lines
 // - return lineNumber, lineIndex updated
 
-  if (!parentFolded) {
+  if (parentOpen) {
     cLine& line = mInfo.mLines[lineNumber];
 
     line.mFoldCommentLineNumber = 0;
@@ -2760,15 +2760,15 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
 
     if (line.mFoldBegin) {
       // show foldBegin line
-      if (folded && !line.mCommentFold) {
-        // folded without comment
+      if (!open && !line.mCommentFold) {
+        // closed fold without comment
         // - set mFoldCommentLineNumber to first non comment line, !!!! just use +1 for now !!!!
         line.mFoldCommentLineNumber = lineNumber+1;
         line.mFirstGlyph = mInfo.mLines[line.mFoldCommentLineNumber].mIndent;
         line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "... "
         }
       else {
-        // not folded, or folded with comment
+        // open fold, or closedFold with comment
         line.mFoldCommentLineNumber = lineNumber;
         line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
         line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "{{{ "
@@ -2779,25 +2779,18 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
     lineIndex++;
     }
 
-  lineNumber++;
-  while (lineNumber < static_cast<int>(mInfo.mLines.size())) {
+  while (++lineNumber < static_cast<int>(mInfo.mLines.size())) {
     if (mInfo.mLines[lineNumber].mFoldBegin)
-      lineNumber = drawFold (lineNumber, lineIndex, folded, mInfo.mLines[lineNumber].mFolded);
-    else if (mInfo.mLines[lineNumber].mFoldEnd) {
-      if (!folded) {
+      lineNumber = drawFold (lineNumber, lineIndex, open, mInfo.mLines[lineNumber].mFoldOpen);
+    else {
+      if (open) {
         // foldEnd drawLine of open fold
         drawLine (lineNumber, lineIndex);
         lineIndex++;
         }
-      return lineNumber;
+      if (mInfo.mLines[lineNumber].mFoldEnd)
+        return lineNumber;
       }
-    else if (!folded) {
-      // drawLine of open fold
-      drawLine (lineNumber, lineIndex);
-      lineIndex++;
-      }
-
-    lineNumber++;
     }
 
   return lineNumber;

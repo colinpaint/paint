@@ -144,7 +144,7 @@ public:
       mGlyphs(),
       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
       mFoldBegin(false), mFoldEnd(false),
-      mFolded(true), mFoldPressed(false),
+      mFoldOpen(false), mFoldPressed(false),
       mFoldCommentLineNumber(0), mFirstGlyph(0), mFirstColumn(0) {}
     //}}}
     //{{{
@@ -152,7 +152,7 @@ public:
       mGlyphs(line),
       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
       mFoldBegin(false), mFoldEnd(false),
-      mFolded(true), mFoldPressed(false),
+      mFoldOpen(false), mFoldPressed(false),
       mFoldCommentLineNumber(0), mFirstGlyph(0), mFirstColumn(0) {}
     //}}}
     //{{{
@@ -172,7 +172,7 @@ public:
     bool mFoldEnd:1;
 
     // fold state
-    bool mFolded:1;
+    bool mFoldOpen:1;
     bool mFoldPressed:1;
 
     // offsets
@@ -477,7 +477,7 @@ private:
   void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
   void drawLine (int lineNumber, int lineIndex);
-  int drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool folded);
+  int drawFold (int lineNumber, int& lineIndex, bool parentOpen, bool open);
 
   void handleKeyboard();
 
