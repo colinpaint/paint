@@ -1,4 +1,4 @@
-// cTextEdit.cpp - nicked from https://github.com/BalazsJako/ImGuiColorTextEdit
+// cTextEdit.cpp
 //{{{  includes
 #include "cTextEdit.h"
 
@@ -1197,7 +1197,7 @@ void cTextEdit::drawContents (cApp& app) {
       mInfo.mLines[lineNumber].mFoldCommentLineNumber = lineNumber;
       mInfo.mLines[lineNumber].mFirstGlyph = 0;
       mInfo.mLines[lineNumber].mFirstColumn = 0;
-      drawLine (lineNumber, 0);
+       drawLine (lineNumber, 0);
       }
 
     // clipper end
@@ -2502,7 +2502,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, uint8_t firstGly
   }
 //}}}
 //{{{
-int cTextEdit::drawLine (int lineNumber, int lineIndex) {
+void cTextEdit::drawLine (int lineNumber, int lineIndex) {
 // draw Line and return incremented lineIndex
 
   if (isFolded()) {
@@ -2744,8 +2744,6 @@ int cTextEdit::drawLine (int lineNumber, int lineIndex) {
       mCursorFlashTimePoint = now;
     //}}}
     }
-
-  return lineIndex + 1;
   }
 //}}}
 //{{{
@@ -2754,7 +2752,6 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
 // - return lineNumber, lineIndex updated
 
   if (!parentFolded) {
-    // show foldBegin line
     cLine& line = mInfo.mLines[lineNumber];
 
     line.mFoldCommentLineNumber = 0;
@@ -2762,7 +2759,7 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
     line.mFirstColumn = 0;
 
     if (line.mFoldBegin) {
-      // set firstGlyph displayed after fold marker
+      // show foldBegin line
       if (folded && !line.mCommentFold) {
         // folded without comment
         // - set mFoldCommentLineNumber to first non comment line, !!!! just use +1 for now !!!!
@@ -2771,30 +2768,39 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
         line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "... "
         }
       else {
+        // not folded, or folded with comment
         line.mFoldCommentLineNumber = lineNumber;
         line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
         line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "{{{ "
         }
       }
 
-    lineIndex = drawLine (lineNumber, lineIndex);
+    drawLine (lineNumber, lineIndex);
+    lineIndex++;
     }
 
-  while (true) {
-    if (++lineNumber >= static_cast<int>(mInfo.mLines.size()))
-      return lineNumber;
-
-    const cLine& line = mInfo.mLines[lineNumber];
-    if (line.mFoldBegin)
-      lineNumber = drawFold (lineNumber, lineIndex, folded, line.mFolded);
-    else if (line.mFoldEnd) {
-      if (!folded) // show foldEnd line of open fold
-        lineIndex = drawLine (lineNumber, lineIndex);
+  lineNumber++;
+  while (lineNumber < static_cast<int>(mInfo.mLines.size())) {
+    if (mInfo.mLines[lineNumber].mFoldBegin)
+      lineNumber = drawFold (lineNumber, lineIndex, folded, mInfo.mLines[lineNumber].mFolded);
+    else if (mInfo.mLines[lineNumber].mFoldEnd) {
+      if (!folded) {
+        // foldEnd drawLine of open fold
+        drawLine (lineNumber, lineIndex);
+        lineIndex++;
+        }
       return lineNumber;
       }
-    else if (!folded) // show all lines of open fold
-      lineIndex = drawLine (lineNumber, lineIndex);
+    else if (!folded) {
+      // drawLine of open fold
+      drawLine (lineNumber, lineIndex);
+      lineIndex++;
+      }
+
+    lineNumber++;
     }
+
+  return lineNumber;
   }
 //}}}
 
