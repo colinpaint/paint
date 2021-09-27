@@ -2322,7 +2322,7 @@ void cTextEdit::drawTop (cApp& app) {
     ImGui::SameLine();
     if (toggleButton ("folded", isShowFolds()))
       toggleShowFolded();
-    mOptions.mHoverFolded = ImGui::IsItemHovered();
+    //mOptions.mHoverFolded = ImGui::IsItemHovered();
     }
     //}}}
 
@@ -2330,14 +2330,13 @@ void cTextEdit::drawTop (cApp& app) {
   ImGui::SameLine();
   if (toggleButton ("mono", mOptions.mShowMonoSpaced))
     toggleShowMonoSpaced();
-  else
-    mOptions.mHoverMonoSpaced = ImGui::IsItemHovered();
+  // mOptions.mHoverMonoSpaced = ImGui::IsItemHovered();
   //}}}
   //{{{  whiteSpace button
   ImGui::SameLine();
   if (toggleButton ("space", mOptions.mShowWhiteSpace))
     toggleShowWhiteSpace();
-  mOptions.mHoverWhiteSpace = ImGui::IsItemHovered();
+  //mOptions.mHoverWhiteSpace = ImGui::IsItemHovered();
   //}}}
 
   if (hasClipboardText() && !isReadOnly()) {
