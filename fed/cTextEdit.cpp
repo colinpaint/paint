@@ -1,8 +1,4 @@
 // cTextEdit.cpp - nicked from https://github.com/BalazsJako/ImGuiColorTextEdit
-
-/* multiline comment test
- on */  /*another line
- and */
 //{{{  includes
 #include "cTextEdit.h"
 
@@ -514,6 +510,7 @@ string cTextEdit::getTextString() const {
   return getText (sPosition(), sPosition (static_cast<int>(mInfo.mLines.size()), 0));
   }
 //}}}
+
 //{{{
 vector<string> cTextEdit::getTextStrings() const {
 // get text as vector of string
@@ -2776,7 +2773,7 @@ int cTextEdit::drawFold (int lineNumber, int& lineIndex, bool parentFolded, bool
       else {
         line.mFoldCommentLineNumber = lineNumber;
         line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
-        line.mFirstColumn = line.mIndent + 4;// firstGlyph at indent + size of "{{{ "
+        line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "{{{ "
         }
       }
 
