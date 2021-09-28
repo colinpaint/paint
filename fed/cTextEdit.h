@@ -346,13 +346,18 @@ private:
   //{{{
   class cEdit {
   public:
+    // parse comments flag
     bool mCheckComments = true;
 
+   // selection state
     sCursorSelectionState mState;
-
     eSelection mSelection = eSelection::eNormal;
     sPosition mInteractiveBegin;
     sPosition mInteractiveEnd;
+
+    // foldOnly state
+    bool mFoldOnly = false;
+    int mFoldOnlyBeginLineNumber = 0;
     };
   //}}}
   //{{{
@@ -468,7 +473,7 @@ private:
 
   // mouse
   void clickLine (int lineNumber);
-  void clickFold (int lineNumber, bool foldOpen);
+  void clickFold (int lineNumber, bool foldOpen, bool foldOnly);
   void clickText (int lineNumber, float posX, bool selectWord);
   void dragLine (int lineNumber, float posY);
   void dragText (int lineNumber, ImVec2 pos);
@@ -478,7 +483,7 @@ private:
   float drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
   void drawLine (int lineNumber, int lineIndex);
   void drawUnfolded();
-  int drawFolded (int lineNumber, bool onlyFold);
+  int drawFolded();
 
   void handleKeyboard();
 

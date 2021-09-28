@@ -1172,7 +1172,7 @@ void cTextEdit::drawContents (cApp& app) {
   handleKeyboard();
 
   if (isFolded())
-    mInfo.mFoldLines.resize (drawFolded (0, false));
+    mInfo.mFoldLines.resize (drawFolded());
   else
     drawUnfolded();
 
@@ -2222,13 +2222,20 @@ void cTextEdit::clickLine (int lineNumber) {
   }
 //}}}
 //{{{
-void cTextEdit::clickFold (int lineNumber, bool folded) {
+void cTextEdit::clickFold (int lineNumber, bool foldOpen, bool foldOnly) {
 
+  // open/close fold
   mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
   mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
   mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
 
-  mInfo.mLines[lineNumber].mFoldOpen = !folded;
+  mInfo.mLines[lineNumber].mFoldOpen = foldOpen;
+
+  if (foldOnly) {
+    // set foldOnly state
+    mEdit.mFoldOnly = foldOpen;
+    mEdit.mFoldOnlyBeginLineNumber = lineNumber;
+    }
   }
 //}}}
 //{{{
@@ -2568,7 +2575,7 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
       if (ImGui::IsItemActive() && !line.mFoldPressed) {
         // fold
         line.mFoldPressed = true;
-        clickFold (lineNumber, true);
+        clickFold (lineNumber, false, ImGui::IsMouseDoubleClicked(0));
         }
       if (ImGui::IsItemDeactivated())
         line.mFoldPressed = false;
@@ -2607,7 +2614,7 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
       if (ImGui::IsItemActive() && !line.mFoldPressed) {
         // unfold
         line.mFoldPressed = true;
-        clickFold (lineNumber, false);
+        clickFold (lineNumber, true, ImGui::IsMouseDoubleClicked(0));
         }
       if (ImGui::IsItemDeactivated())
         line.mFoldPressed = false;
@@ -2756,7 +2763,9 @@ void cTextEdit::drawUnfolded() {
   }
 //}}}
 //{{{
-int cTextEdit::drawFolded (int lineNumber, bool onlyFold) {
+int cTextEdit::drawFolded() {
+
+  int lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
 
   int lineIndex = 0;
   while (lineNumber < static_cast<int>(mInfo.mLines.size())) {
@@ -2804,7 +2813,7 @@ int cTextEdit::drawFolded (int lineNumber, bool onlyFold) {
       line.mFirstGlyph = 0;
       line.mFirstColumn = 0;
       drawLine (lineNumber++, lineIndex++);
-      if (onlyFold)
+      if (mEdit.mFoldOnly)
         return lineIndex;
       }
     }
