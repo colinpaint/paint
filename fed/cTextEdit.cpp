@@ -1023,7 +1023,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
     cLine& newLine = mInfo.mLines[position.mLineNumber+1];
 
     if (mOptions.mLanguage.mAutoIndentation)
-      for (size_t i = 0; 
+      for (size_t i = 0;
           (i < line.mGlyphs.size()) && isascii (line.mGlyphs[i].mChar) && isblank (line.mGlyphs[i].mChar); ++i)
         newLine.mGlyphs.push_back (line.mGlyphs[i]);
     uint32_t indentSize = static_cast<uint32_t>(newLine.mGlyphs.size());
@@ -1043,7 +1043,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
     }
     //}}}
   else {
-    // char
+    // enter ImWchar
     array <char,7> buf;
     uint32_t bufLength = imTextCharToUtf8 (buf.data(), 7, ch);
     if (bufLength > 0) {
@@ -1075,7 +1075,6 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
     else
       return;
     }
-
   mInfo.mTextEdited = true;
 
   undo.mAddedEnd = getCursorPosition();
