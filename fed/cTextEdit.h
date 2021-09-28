@@ -449,9 +449,8 @@ private:
 
   // insert
   cLine& insertLine (int index);
-  void insertText (const char* value);
-  void insertText (const std::string& value) { insertText (value.c_str()); }
-  int insertTextAt (sPosition& position, const char* text);
+  void insertText (const std::string& insertString);
+  int insertTextAt (sPosition& position, const std::string& insertString);
 
   // delete
   void removeLine (int beginPosition, int endPosition);

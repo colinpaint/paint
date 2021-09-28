@@ -772,11 +772,11 @@ void cTextEdit::paste() {
       deleteSelection();
       }
 
-    const char* clipText = ImGui::GetClipboardText();
-    undo.mAdded = clipText;
+    string clipboardString = ImGui::GetClipboardText();
+    undo.mAdded = clipboardString;
     undo.mAddedBegin = getCursorPosition();
 
-    insertText (clipText);
+    insertText (clipboardString);
 
     undo.mAddedEnd = getCursorPosition();
     undo.mAfter = mEdit.mState;
@@ -1111,17 +1111,16 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 //{{{
 void cTextEdit::createFold() {
 
-  string text = mOptions.mLanguage.mFoldBeginMarker +
-                "  new fold - loads of detail to implement\n\n" +
-                mOptions.mLanguage.mFoldEndMarker +
-                "\n";
-
+  string insertString = mOptions.mLanguage.mFoldBeginMarker +
+                        "  new fold - loads of detail to implement\n\n" +
+                        mOptions.mLanguage.mFoldEndMarker +
+                        "\n";
   cUndo undo;
   undo.mBefore = mEdit.mState;
-  undo.mAdded = text.c_str();
+  undo.mAdded = insertString;
   undo.mAddedBegin = getCursorPosition();
 
-  insertText (text.c_str());
+  insertText (insertString);
 
   undo.mAddedEnd = getCursorPosition();
   undo.mAfter = mEdit.mState;
@@ -1787,7 +1786,9 @@ cTextEdit::cLine& cTextEdit::insertLine (int index) {
   }
 //}}}
 //{{{
-int cTextEdit::insertTextAt (sPosition& position, const char* text) {
+int cTextEdit::insertTextAt (sPosition& position, const string& insertString) {
+
+  const char* text = insertString.c_str();
 
   int characterIndex = getCharacterIndex (position);
   int totalLines = 0;
@@ -1835,16 +1836,16 @@ int cTextEdit::insertTextAt (sPosition& position, const char* text) {
   }
 //}}}
 //{{{
-void cTextEdit::insertText (const char* value) {
+void cTextEdit::insertText (const string& insertString) {
 
-  if (value == nullptr)
+  if (insertString.empty())
     return;
 
   sPosition position = getCursorPosition();
   sPosition beginPosition = min (position, mEdit.mState.mSelectionBegin);
 
   int totalLines = position.mLineNumber - beginPosition.mLineNumber;
-  totalLines += insertTextAt (position, value);
+  totalLines += insertTextAt (position, insertString);
 
   setSelection (position, position, eSelection::eNormal);
   setCursorPosition (position);
@@ -3088,7 +3089,7 @@ void cTextEdit::cUndo::undo (cTextEdit* textEdit) {
 
   if (!mRemoved.empty()) {
     sPosition begin = mRemovedBegin;
-    textEdit->insertTextAt (begin, mRemoved.c_str());
+    textEdit->insertTextAt (begin, mRemoved);
     }
 
   textEdit->mEdit.mState = mBefore;
@@ -3103,7 +3104,7 @@ void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
 
   if (!mAdded.empty()) {
     sPosition begin = mAddedBegin;
-    textEdit->insertTextAt (begin, mAdded.c_str());
+    textEdit->insertTextAt (begin, mAdded);
     }
 
   textEdit->mEdit.mState = mAfter;
