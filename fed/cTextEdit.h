@@ -67,7 +67,7 @@ public:
     //}}}
 
     int mLineNumber;
-    int mColumn;
+    uint32_t mColumn;
     };
   //}}}
   //{{{

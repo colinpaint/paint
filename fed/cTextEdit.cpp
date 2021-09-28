@@ -798,7 +798,7 @@ void cTextEdit::deleteIt() {
     setCursorPosition (position);
     cLine& line = mInfo.mLines[position.mLineNumber];
 
-    if (position.mColumn == static_cast<int>(getLineMaxColumn (position.mLineNumber))) {
+    if (position.mColumn == getLineMaxColumn (position.mLineNumber)) {
       if (position.mLineNumber == static_cast<int>(mInfo.mLines.size()) - 1)
         return;
 
@@ -868,7 +868,7 @@ void cTextEdit::backspace() {
       cLine& line = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber];
       cLine& prevLine = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber - 1];
 
-      int prevSize = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber - 1);
+      uint32_t prevSize = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber - 1);
       prevLine.mGlyphs.insert (prevLine.mGlyphs.end(), line.mGlyphs.begin(), line.mGlyphs.end());
 
       removeLine (mEdit.mState.mCursorPosition.mLineNumber);
@@ -942,8 +942,6 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
         end.mLineNumber = mInfo.mLines.empty() ? 0 : static_cast<int>(mInfo.mLines.size()) - 1;
       end.mColumn = getLineMaxColumn (end.mLineNumber);
 
-      //if (end.mColumn >= getLineMaxColumn(end.mGlyphs))
-      //  end.mColumn = getLineMaxColumn(end.mGlyphs) - 1;
       undo.mRemovedBegin = begin;
       undo.mRemovedEnd = end;
       undo.mRemoved = getText (begin, end);
@@ -1518,6 +1516,7 @@ void cTextEdit::setSelection (sPosition beginPosition, sPosition endPosition, eS
       break;
 
     case cTextEdit::eSelection::eWord: {
+      // set word columns
       mEdit.mState.mSelectionBegin = findWordBegin (mEdit.mState.mSelectionBegin);
       if (!isOnWordBoundary (mEdit.mState.mSelectionEnd))
         mEdit.mState.mSelectionEnd = findWordEnd (findWordBegin (mEdit.mState.mSelectionEnd));
@@ -1525,9 +1524,9 @@ void cTextEdit::setSelection (sPosition beginPosition, sPosition endPosition, eS
       }
 
     case cTextEdit::eSelection::eLine: {
-      const int lineNumber = mEdit.mState.mSelectionEnd.mLineNumber;
-      mEdit.mState.mSelectionBegin = {mEdit.mState.mSelectionBegin.mLineNumber, 0};
-      mEdit.mState.mSelectionEnd = {lineNumber, static_cast<int>(getLineMaxColumn (lineNumber))};
+      // set whole line columns
+      mEdit.mState.mSelectionBegin.mColumn = 0;
+      mEdit.mState.mSelectionEnd.mColumn = getLineMaxColumn (mEdit.mState.mSelectionEnd.mLineNumber);
       break;
       }
 
@@ -1604,11 +1603,11 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) const {
 
   if (position.mLineNumber < static_cast<int>(mInfo.mLines.size()))
     return sPosition (position.mLineNumber,
-                      mInfo.mLines.empty() ? 0 : min (position.mColumn, static_cast<int>(getLineMaxColumn (position.mLineNumber))));
+                      mInfo.mLines.empty() ? 0 : min (position.mColumn, getLineMaxColumn (position.mLineNumber)));
   else if (mInfo.mLines.empty())
     return sPosition (0,0);
   else
-    return sPosition (static_cast<int>(mInfo.mLines.size())-1, getLineMaxColumn (static_cast<int>(mInfo.mLines.size()-1)));
+    return sPosition (static_cast<int>(mInfo.mLines.size())-1, getLineMaxColumn (static_cast<int>(mInfo.mLines.size())-1));
   }
 //}}}
 
@@ -1888,7 +1887,7 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
   if (beginPosition.mLineNumber == endPosition.mLineNumber) {
     // delete in same line
     cLine& line = mInfo.mLines[beginPosition.mLineNumber];
-    int maxColumn = getLineMaxColumn (beginPosition.mLineNumber);
+    uint32_t maxColumn = getLineMaxColumn (beginPosition.mLineNumber);
     if (endPosition.mColumn >= maxColumn)
       line.mGlyphs.erase (line.mGlyphs.begin() + beginCharacterIndex, line.mGlyphs.end());
     else
