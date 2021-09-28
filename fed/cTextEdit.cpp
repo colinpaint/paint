@@ -1208,7 +1208,7 @@ uint32_t cTextEdit::getCharacterIndex (sPosition position) const {
   }
 //}}}
 //{{{
-int cTextEdit::getCharacterColumn (int lineNumber, uint32_t characterIndex) const {
+uint32_t cTextEdit::getCharacterColumn (int lineNumber, uint32_t characterIndex) const {
 // handle tabs
 
   if (lineNumber >= static_cast<int>(mInfo.mLines.size()))
@@ -1464,14 +1464,14 @@ int cTextEdit::getLineIndexFromNumber (int lineNumber) const {
   if (mInfo.mFoldLines.empty()) {
     // no foldLines
     cLog::log (LOGERROR, fmt::format ("getLineIndexFromNumber {} mFoldLines empty", lineNumber));
-    return -1;
+    return 0;
     }
 
   auto it = find (mInfo.mFoldLines.begin(), mInfo.mFoldLines.end(), static_cast<uint32_t>(lineNumber));
   if (it == mInfo.mFoldLines.end()) {
     // no lineNumber for that index
     cLog::log (LOGERROR, fmt::format ("getLineIndexFromNumber {} notFound", lineNumber));
-    return -1;
+    return 0;
     }
   else
     return int(it - mInfo.mFoldLines.begin());
