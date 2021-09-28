@@ -18,7 +18,6 @@ using namespace chrono;
 namespace {
   //{{{  palette const
   constexpr uint8_t eBackground =        0;
-
   constexpr uint8_t eText =              1;
   constexpr uint8_t eIdentifier =        2;
   constexpr uint8_t eNumber =            3;
@@ -50,7 +49,6 @@ namespace {
   // color to ImU32 lookup
   const vector <ImU32> kPalette = {
     0xffefefef, // eBackground
-
     0xff808080, // eText
     0xff202020, // eIdentifier
     0xff606000, // eNumber
