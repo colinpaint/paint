@@ -2457,7 +2457,7 @@ void cTextEdit::drawTop (cApp& app) {
   //{{{  info text
   ImGui::SameLine();
   ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
-                                           getTextNumLines(), getLanguage().mName).c_str());
+                                           getNumLines(), getLanguage().mName).c_str());
   //}}}
   }
 //}}}

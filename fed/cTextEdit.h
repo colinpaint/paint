@@ -197,7 +197,7 @@ public:
   // get
   std::string getTextString() const;
   std::vector<std::string> getTextStrings() const;
-  int getTextNumLines() const { return (int)mInfo.mLines.size(); }
+  size_t getNumLines() const { return mInfo.mLines.size(); }
 
   uint32_t getTabSize() const { return mInfo.mTabSize; }
   sPosition getCursorPosition() const { return sanitizePosition (mEdit.mState.mCursorPosition); }
