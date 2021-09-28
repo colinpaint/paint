@@ -197,9 +197,9 @@ public:
   // get
   std::string getTextString() const;
   std::vector<std::string> getTextStrings() const;
-  size_t getNumLines() const { return mInfo.mLines.size(); }
+  uint32_t getNumLines() const { return static_cast<uint32_t>(mInfo.mLines.size()); }
 
-  uint8_t getTabSize() const { return mInfo.mTabSize; }
+  uint32_t getTabSize() const { return mInfo.mTabSize; }
   sPosition getCursorPosition() const { return sanitizePosition (mEdit.mState.mCursorPosition); }
 
   const cLanguage& getLanguage() const { return mOptions.mLanguage; }
@@ -212,7 +212,7 @@ public:
   void setLanguage (const cLanguage& language);
 
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
-  void setTabSize (uint8_t tabSize) { mInfo.mTabSize = tabSize; }
+  void setTabSize (uint32_t tabSize) { mInfo.mTabSize = tabSize; }
 
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverWrite() { mOptions.mOverWrite = !mOptions.mOverWrite; }
@@ -304,6 +304,7 @@ private:
   class cInfo {
   public:
     std::string mFilename;
+
     std::vector <cLine> mLines;
     std::vector <uint32_t> mFoldLines;
 
@@ -311,7 +312,7 @@ private:
     bool mHasCR = false;
     bool mTextEdited = false;
     bool mHasTabs = false;
-    uint8_t mTabSize = 4;
+    uint32_t mTabSize = 4;
     };
   //}}}
   //{{{
@@ -348,9 +349,6 @@ private:
   //{{{
   class cEdit {
   public:
-    // parse comments flag
-    bool mCheckComments = true;
-
    // selection state
     sCursorSelectionState mState;
     eSelection mSelection = eSelection::eNormal;
@@ -359,7 +357,10 @@ private:
 
     // foldOnly state
     bool mFoldOnly = false;
-    int mFoldOnlyBeginLineNumber = 0xFFFFFFFF;
+    uint32_t mFoldOnlyBeginLineNumber = 0;
+
+    // parse comments flag
+    bool mCheckComments = true;
     };
   //}}}
   //{{{
@@ -418,7 +419,7 @@ private:
   std::string getWordAt (sPosition position) const;
   std::string getWordUnderCursor() const;
 
-  uint32_t getTabColumn (int column) const;
+  uint32_t getTabColumn (uint32_t column) const;
   float getTabEndPosX (float columnX) const;
   sPosition getPositionFromPosX (int lineNumber, float posX) const;
 
@@ -482,8 +483,8 @@ private:
   void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);
-  void drawUnfolded();
   uint32_t drawFolded();
+  void drawUnfolded();
 
   void handleKeyboard();
 

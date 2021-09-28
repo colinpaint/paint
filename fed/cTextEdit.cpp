@@ -16,7 +16,6 @@ using namespace std;
 using namespace chrono;
 //}}}
 namespace {
-  constexpr int kLineNumberUndefined = -1;
   //{{{  palette const
   constexpr uint8_t eBackground =        0;
 
@@ -212,7 +211,7 @@ namespace {
 
   // utf
   //{{{
-  bool isUtfSequence (char ch) {
+  bool isUtfSequence (uint8_t ch) {
     return (ch & 0xC0) == 0x80;
     }
   //}}}
@@ -237,7 +236,7 @@ namespace {
     }
   //}}}
   //{{{
-  uint32_t imTextCharToUtf8 (char* buf, int buf_size, uint32_t ch) {
+  uint32_t imTextCharToUtf8 (char* buf, uint8_t buf_size, uint32_t ch) {
 
     if (ch < 0x80) {
       buf[0] = (char)ch;
@@ -601,11 +600,11 @@ void cTextEdit::setLanguage (const cLanguage& language) {
 //{{{
 void cTextEdit::moveLeft() {
 
-  if (mInfo.mLines.empty())
-    return;
-
+  // lineNumber
   sPosition position = mEdit.mState.mCursorPosition;
-  int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
+  int lineNumber = position.mLineNumber;
+
+  // column
   uint32_t column = getCharacterIndex (mEdit.mState.mCursorPosition);
   if (column == 0) {
     // move to end of prevous line
@@ -622,6 +621,7 @@ void cTextEdit::moveLeft() {
 
   mEdit.mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
   if (mEdit.mState.mCursorPosition != position) {
+    // cursor changed
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
@@ -632,11 +632,11 @@ void cTextEdit::moveLeft() {
 //{{{
 void cTextEdit::moveRight() {
 
-  if (mInfo.mLines.empty())
-    return;
-
+  // lineNumber
   sPosition position = mEdit.mState.mCursorPosition;
-  int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
+  int lineNumber = position.mLineNumber;
+
+  // column
   uint32_t column = getCharacterIndex (mEdit.mState.mCursorPosition);
   if (column >= mInfo.mLines [lineNumber].mGlyphs.size()) {
     // move to start of next line
@@ -655,6 +655,7 @@ void cTextEdit::moveRight() {
     }
 
   if (mEdit.mState.mCursorPosition != position) {
+    // cursor changed
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
@@ -666,10 +667,10 @@ void cTextEdit::moveRight() {
 void cTextEdit::moveHome() {
 
   sPosition position = mEdit.mState.mCursorPosition;
-
   setCursorPosition (sPosition (0,0));
 
   if (mEdit.mState.mCursorPosition != position) {
+    // cursor changed
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
@@ -681,10 +682,10 @@ void cTextEdit::moveHome() {
 void cTextEdit::moveEnd() {
 
   sPosition position = mEdit.mState.mCursorPosition;
-
   setCursorPosition ({static_cast<int>(mInfo.mLines.size())-1, 0});
 
   if (mEdit.mState.mCursorPosition != position) {
+    // cursor changed
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
@@ -934,7 +935,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
         swap (begin, end);
 
       begin.mColumn = 0;
-      if (end.mColumn == 0 && end.mLineNumber > 0)
+      if ((end.mColumn == 0) && (end.mLineNumber > 0))
         --end.mLineNumber;
       if (end.mLineNumber >= static_cast<int>(mInfo.mLines.size()))
         end.mLineNumber = mInfo.mLines.empty() ? 0 : static_cast<int>(mInfo.mLines.size()) - 1;
@@ -954,7 +955,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
               modified = true;
               }
             else {
-              for (int j = 0; (j < mInfo.mTabSize) && !glyphs.empty() && (glyphs.front().mChar == ' '); j++) {
+              for (uint32_t j = 0; (j < mInfo.mTabSize) && !glyphs.empty() && (glyphs.front().mChar == ' '); j++) {
                 glyphs.erase (glyphs.begin());
                 modified = true;
                 }
@@ -1378,7 +1379,7 @@ string cTextEdit::getWordUnderCursor() const {
 //}}}
 
 //{{{
-uint32_t cTextEdit::getTabColumn (int column) const {
+uint32_t cTextEdit::getTabColumn (uint32_t column) const {
   return ((column / mInfo.mTabSize) * mInfo.mTabSize) + mInfo.mTabSize;
   }
 //}}}
@@ -2013,7 +2014,7 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
 
     // close down foldOnly
     mEdit.mFoldOnly = false;
-    mEdit.mFoldOnlyBeginLineNumber = kLineNumberUndefined;
+    mEdit.mFoldOnlyBeginLineNumber = 0;
     }
   }
 //}}}
@@ -2763,29 +2764,6 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
   }
 //}}}
 //{{{
-void cTextEdit::drawUnfolded() {
-//  draw unfolded with clipper
-
-  // clipper begin
-  ImGuiListClipper clipper;
-  clipper.Begin (static_cast<int>(mInfo.mLines.size()), mContext.mLineHeight);
-  clipper.Step();
-
-  // clipper iterate
-  for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
-    // not folded, simple use of line glyphs
-    mInfo.mLines[lineNumber].mFoldCommentLineNumber = lineNumber;
-    mInfo.mLines[lineNumber].mFirstGlyph = 0;
-    mInfo.mLines[lineNumber].mFirstColumn = 0;
-    drawLine (lineNumber, 0);
-    }
-
-  // clipper end
-  clipper.Step();
-  clipper.End();
-  }
-//}}}
-//{{{
 uint32_t cTextEdit::drawFolded() {
 
   uint32_t lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
@@ -2842,6 +2820,29 @@ uint32_t cTextEdit::drawFolded() {
     }
 
   return lineIndex;
+  }
+//}}}
+//{{{
+void cTextEdit::drawUnfolded() {
+//  draw unfolded with clipper
+
+  // clipper begin
+  ImGuiListClipper clipper;
+  clipper.Begin (static_cast<int>(mInfo.mLines.size()), mContext.mLineHeight);
+  clipper.Step();
+
+  // clipper iterate
+  for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
+    // not folded, simple use of line glyphs
+    mInfo.mLines[lineNumber].mFoldCommentLineNumber = lineNumber;
+    mInfo.mLines[lineNumber].mFirstGlyph = 0;
+    mInfo.mLines[lineNumber].mFirstColumn = 0;
+    drawLine (lineNumber, 0);
+    }
+
+  // clipper end
+  clipper.Step();
+  clipper.End();
   }
 //}}}
 
