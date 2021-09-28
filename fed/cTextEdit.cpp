@@ -507,7 +507,7 @@ bool cTextEdit::hasClipboardText() {
 string cTextEdit::getTextString() const {
 // get text as single string
 
-  return getText (sPosition(), sPosition (static_cast<int>(mInfo.mLines.size()), 0));
+  return getText (sPosition(), {static_cast<int>(mInfo.mLines.size()), 0});
   }
 //}}}
 
@@ -619,7 +619,7 @@ void cTextEdit::moveLeft() {
   else // move to previous column on same line
     while ((--column > 0) && isUtfSequence (mInfo.mLines[lineNumber].mGlyphs[column].mChar)) {}
 
-  mEdit.mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
+  mEdit.mState.mCursorPosition = {lineNumber, getCharacterColumn (lineNumber, column)};
   if (mEdit.mState.mCursorPosition != position) {
     // cursor changed
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
@@ -651,7 +651,7 @@ void cTextEdit::moveRight() {
   else {
     // move to next columm on same line
     column += utf8CharLength (mInfo.mLines [lineNumber].mGlyphs[column].mChar);
-    mEdit.mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
+    mEdit.mState.mCursorPosition = {lineNumber, getCharacterColumn (lineNumber, column)};
     }
 
   if (mEdit.mState.mCursorPosition != position) {
@@ -667,7 +667,7 @@ void cTextEdit::moveRight() {
 void cTextEdit::moveHome() {
 
   sPosition position = mEdit.mState.mCursorPosition;
-  setCursorPosition (sPosition (0,0));
+  setCursorPosition ({0,0});
 
   if (mEdit.mState.mCursorPosition != position) {
     // cursor changed
@@ -697,7 +697,7 @@ void cTextEdit::moveEnd() {
 // select
 //{{{
 void cTextEdit::selectAll() {
-  setSelection (sPosition (0,0), sPosition (static_cast<int>(mInfo.mLines.size()), 0), eSelection::eNormal);
+  setSelection ({0,0}, {static_cast<int>(mInfo.mLines.size()), 0}, eSelection::eNormal);
   }
 //}}}
 //{{{
@@ -862,7 +862,7 @@ void cTextEdit::backspace() {
         return;
 
       undo.mRemoved = '\n';
-      undo.mRemovedBegin = sPosition (position.mLineNumber - 1, getLineMaxColumn (position.mLineNumber - 1));
+      undo.mRemovedBegin = {position.mLineNumber - 1, getLineMaxColumn (position.mLineNumber - 1)};
       undo.mRemovedEnd = undo.mRemovedBegin;
       advance (undo.mRemovedEnd);
 
@@ -927,26 +927,26 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   if (hasSelect()) {
     if ((ch == '\t') && (mEdit.mState.mSelectionBegin.mLineNumber != mEdit.mState.mSelectionEnd.mLineNumber)) {
       //{{{  tab insert into selection
-      sPosition begin = mEdit.mState.mSelectionBegin;
-      sPosition end = mEdit.mState.mSelectionEnd;
-      sPosition originalEnd = end;
+      sPosition positionBegin = mEdit.mState.mSelectionBegin;
+      sPosition positionEnd = mEdit.mState.mSelectionEnd;
+      sPosition originalEnd = positionEnd;
 
-      if (begin > end)
-        swap (begin, end);
+      if (positionBegin > positionEnd)
+        swap (positionBegin, positionEnd);
 
-      begin.mColumn = 0;
-      if ((end.mColumn == 0) && (end.mLineNumber > 0))
-        --end.mLineNumber;
-      if (end.mLineNumber >= static_cast<int>(mInfo.mLines.size()))
-        end.mLineNumber = mInfo.mLines.empty() ? 0 : static_cast<int>(mInfo.mLines.size()) - 1;
-      end.mColumn = getLineMaxColumn (end.mLineNumber);
+      positionBegin.mColumn = 0;
+      if ((positionEnd.mColumn == 0) && (positionEnd.mLineNumber > 0))
+        --positionEnd.mLineNumber;
+      if (positionEnd.mLineNumber >= static_cast<int>(mInfo.mLines.size()))
+        positionEnd.mLineNumber = mInfo.mLines.empty() ? 0 : static_cast<int>(mInfo.mLines.size()) - 1;
+      positionEnd.mColumn = getLineMaxColumn (positionEnd.mLineNumber);
 
-      undo.mRemovedBegin = begin;
-      undo.mRemovedEnd = end;
-      undo.mRemoved = getText (begin, end);
+      undo.mRemovedBegin = positionBegin;
+      undo.mRemovedEnd = positionEnd;
+      undo.mRemoved = getText (positionBegin, positionEnd);
 
       bool modified = false;
-      for (int i = begin.mLineNumber; i <= end.mLineNumber; i++) {
+      for (int i = positionBegin.mLineNumber; i <= positionEnd.mLineNumber; i++) {
         auto& glyphs = mInfo.mLines[i].mGlyphs;
         if (shift) {
           if (!glyphs.empty()) {
@@ -970,25 +970,25 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
       if (modified) {
         //{{{  not sure what this does yet
-        begin = sPosition (begin.mLineNumber, getCharacterColumn (begin.mLineNumber, 0));
+        positionBegin = { positionBegin.mLineNumber, getCharacterColumn (positionBegin.mLineNumber, 0)};
         sPosition rangeEnd;
         if (originalEnd.mColumn != 0) {
-          end = sPosition (end.mLineNumber, getLineMaxColumn (end.mLineNumber));
-          rangeEnd = end;
-          undo.mAdded = getText (begin, end);
+          positionEnd = {positionEnd.mLineNumber, getLineMaxColumn (positionEnd.mLineNumber)};
+          rangeEnd = positionEnd;
+          undo.mAdded = getText (positionBegin, positionEnd);
           }
         else {
-          end = sPosition (originalEnd.mLineNumber, 0);
-          rangeEnd = sPosition (end.mLineNumber - 1, getLineMaxColumn (end.mLineNumber - 1));
-          undo.mAdded = getText (begin, rangeEnd);
+          positionEnd = {originalEnd.mLineNumber, 0};
+          rangeEnd = {positionEnd.mLineNumber - 1, getLineMaxColumn (positionEnd.mLineNumber - 1)};
+          undo.mAdded = getText (positionBegin, rangeEnd);
           }
 
-        undo.mAddedBegin = begin;
+        undo.mAddedBegin = positionBegin;
         undo.mAddedEnd = rangeEnd;
         undo.mAfter = mEdit.mState;
 
-        mEdit.mState.mSelectionBegin = begin;
-        mEdit.mState.mSelectionEnd = end;
+        mEdit.mState.mSelectionBegin = positionBegin;
+        mEdit.mState.mSelectionEnd = positionEnd;
         addUndo (undo);
         mInfo.mTextEdited = true;
 
@@ -1038,7 +1038,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
     parseLine (line);
 
     // set cursor
-    setCursorPosition (sPosition (position.mLineNumber+1, getCharacterColumn (position.mLineNumber+1, indentSize)));
+    setCursorPosition ({position.mLineNumber+1, getCharacterColumn (position.mLineNumber+1, indentSize)});
     undo.mAdded = (char)ch;
     }
     //}}}
@@ -1054,8 +1054,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       if (mOptions.mOverWrite && (characterIndex < line.mGlyphs.size())) {
         uint32_t length = utf8CharLength(line.mGlyphs[characterIndex].mChar);
         undo.mRemovedBegin = mEdit.mState.mCursorPosition;
-        undo.mRemovedEnd = sPosition (position.mLineNumber,
-                                      getCharacterColumn (position.mLineNumber, characterIndex + length));
+        undo.mRemovedEnd = {position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex + length)};
         while ((length > 0) && (characterIndex < line.mGlyphs.size())) {
           undo.mRemoved += line.mGlyphs[characterIndex].mChar;
           line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex);
@@ -1069,7 +1068,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       parseLine (line);
 
       undo.mAdded = buf.data();
-      setCursorPosition (sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex)));
+      setCursorPosition ({position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex)});
       }
       //}}}
     else
@@ -1437,7 +1436,7 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (int lineNumber, float posX)
       }
     }
 
-  return sanitizePosition (sPosition (lineNumber, column));
+  return sanitizePosition ({lineNumber, column});
   }
 //}}}
 
@@ -1941,7 +1940,7 @@ void cTextEdit::openFold (uint32_t lineNumber) {
 
   if (isFolded()) {
     // position cursor to lineNumber
-    mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+    mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
 
@@ -1956,7 +1955,7 @@ void cTextEdit::openFoldOnly (uint32_t lineNumber) {
 
   if (isFolded()) {
     // position cursor to lineNumber
-    mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+    mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
 
@@ -1978,7 +1977,7 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
 
     if (mInfo.mLines[lineNumber].mFoldBegin) {
       // position cursor to lineNumber
-      mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+      mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
       mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
       mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
 
@@ -2002,7 +2001,7 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
           }
         else if (line.mFoldBegin && line.mFoldOpen) {
           // position cursor to lineNumber
-          mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+          mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
           mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
           mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
 
@@ -2296,7 +2295,7 @@ void cTextEdit::dragSelectText (int lineNumber, ImVec2 pos) {
 //{{{
 void cTextEdit::selectLine (int lineNumber) {
 
-  mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+  mEdit.mState.mCursorPosition = {lineNumber, 0};
   mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
   mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
   mEdit.mSelection = eSelection::eLine;

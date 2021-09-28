@@ -23,7 +23,7 @@ public:
   //{{{
   struct sPosition {
     sPosition() : mLineNumber(0), mColumn(0) {}
-    sPosition (int lineNumber, int column) : mLineNumber(lineNumber), mColumn(column) {}
+    sPosition (int lineNumber, uint32_t column) : mLineNumber(lineNumber), mColumn(column) {}
 
     //{{{
     bool operator == (const sPosition& o) const {
