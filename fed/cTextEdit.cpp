@@ -1015,37 +1015,40 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
   assert (!mInfo.mLines.empty());
   if (ch == '\n') {
-    //{{{  enter carraigeReturn
-    insertLine (position.mLineNumber + 1);
-
+    //{{{  enter carraigeReturn into line
     cLine& line = mInfo.mLines[position.mLineNumber];
+
+    // insert newLine
+    insertLine (position.mLineNumber+1);
     cLine& newLine = mInfo.mLines[position.mLineNumber+1];
 
     if (mOptions.mLanguage.mAutoIndentation)
-      for (size_t it = 0; (it < line.mGlyphs.size()) &&
-                           isascii (line.mGlyphs[it].mChar) && isblank (line.mGlyphs[it].mChar); ++it)
-        newLine.mGlyphs.push_back (line.mGlyphs[it]);
+      for (size_t i = 0; 
+          (i < line.mGlyphs.size()) && isascii (line.mGlyphs[i].mChar) && isblank (line.mGlyphs[i].mChar); ++i)
+        newLine.mGlyphs.push_back (line.mGlyphs[i]);
+    uint32_t indentSize = static_cast<uint32_t>(newLine.mGlyphs.size());
 
-    const size_t whiteSpaceSize = newLine.mGlyphs.size();
-
+    // insert indent and rest of old line
     uint32_t characterIndex = getCharacterIndex (position);
     newLine.mGlyphs.insert (newLine.mGlyphs.end(), line.mGlyphs.begin() + characterIndex, line.mGlyphs.end());
     parseLine (newLine);
 
+    // erase rest of old line
     line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex, line.mGlyphs.begin() + line.mGlyphs.size());
     parseLine (line);
 
-    setCursorPosition (sPosition (position.mLineNumber + 1,
-                                  getCharacterColumn (position.mLineNumber + 1, static_cast<int>(whiteSpaceSize))));
+    // set cursor
+    setCursorPosition (sPosition (position.mLineNumber+1, getCharacterColumn (position.mLineNumber+1, indentSize)));
     undo.mAdded = (char)ch;
     }
     //}}}
   else {
-    // enter char
-    char buf[7];
-    int e = imTextCharToUtf8 (buf, 7, ch);
-    if (e > 0) {
-      buf[e] = '\0';
+    // char
+    array <char,7> buf;
+    uint32_t bufLength = imTextCharToUtf8 (buf.data(), 7, ch);
+    if (bufLength > 0) {
+      //{{{  enter char into line
+      buf[bufLength] = '\0';
       cLine& line = mInfo.mLines[position.mLineNumber];
       uint32_t characterIndex = getCharacterIndex (position);
       if (mOptions.mOverWrite && (characterIndex < line.mGlyphs.size())) {
@@ -1060,14 +1063,15 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
           }
         }
 
-      for (char* p = buf; *p != '\0'; p++, ++characterIndex)
-        line.mGlyphs.insert (line.mGlyphs.begin() + characterIndex, cGlyph (*p, eText));
+      for (char* bufPtr = buf.data(); *bufPtr != '\0'; bufPtr++, ++characterIndex)
+        line.mGlyphs.insert (line.mGlyphs.begin() + characterIndex, cGlyph (*bufPtr, eText));
 
       parseLine (line);
 
-      undo.mAdded = buf;
+      undo.mAdded = buf.data();
       setCursorPosition (sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex)));
       }
+      //}}}
     else
       return;
     }
@@ -2932,6 +2936,7 @@ void cTextEdit::handleKeyboard() {
      {false, false, false, kNumpad7,            false, [this]{openFoldOnly();}},
      {false, false, false, kNumpad9,            false, [this]{closeFold();}},
      {false, false, false, kNumpad0,            true,  [this]{createFold();}},
+  // {false, true, false, kNumpad0,             true,  [this]{closeAllFolds();}},
   // {false, false, false, kNumpad4,            false, [this]{prevFile();}},
   // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
   // {false, true,  false, kNumpad3,            false, [this]{foldCloseAll();}},
