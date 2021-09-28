@@ -422,8 +422,8 @@ private:
   float getTabEndPosX (float columnX) const;
   sPosition getPositionFromPosX (int lineNumber, float posX) const;
 
-  int getLineNumberFromIndex (int lineIndex) const;
-  int getLineIndexFromNumber (int lineNumber) const;
+  int getLineNumberFromIndex (uint32_t lineIndex) const;
+  uint32_t getLineIndexFromNumber (int lineNumber) const;
   //}}}
   //{{{  sets
   void setCursorPosition (sPosition position);
@@ -444,10 +444,8 @@ private:
   sPosition findNextWord (sPosition fromPosition) const;
 
   // move
-  void moveLeft (int amount, bool select , bool wordMode);
-  void moveRight (int amount, bool select, bool wordMode);
-  void moveUp (int amount);
-  void moveDown (int amount);
+  void moveUp (uint32_t amount);
+  void moveDown (uint32_t amount);
 
   // insert
   cLine& insertLine (int index);

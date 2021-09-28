@@ -1442,24 +1442,23 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (int lineNumber, float posX)
 //}}}
 
 //{{{
-int cTextEdit::getLineNumberFromIndex (int lineIndex) const {
+int cTextEdit::getLineNumberFromIndex (uint32_t lineIndex) const {
 
   if (!isFolded()) // lineNumber is lineIndex
-    return lineIndex;
+    return static_cast<int>(lineIndex);
 
-  if ((lineIndex >= 0) && (lineIndex < static_cast<int>(mInfo.mFoldLines.size())))
+  if (lineIndex < mInfo.mFoldLines.size())
     return mInfo.mFoldLines[lineIndex];
-  else
-    cLog::log (LOGERROR, fmt::format ("getLineNumberFromIndex {} no line for that index", lineIndex));
 
-  return -1;
+  cLog::log (LOGERROR, fmt::format ("getLineNumberFromIndex {} no line for that index", lineIndex));
+  return 0;
   }
 //}}}
 //{{{
-int cTextEdit::getLineIndexFromNumber (int lineNumber) const {
+uint32_t cTextEdit::getLineIndexFromNumber (int lineNumber) const {
 
   if (!isFolded()) // lineIndex is lineNumber
-    return lineNumber;
+    return static_cast<uint32_t>(lineNumber);
 
   if (mInfo.mFoldLines.empty()) {
     // no foldLines
@@ -1474,7 +1473,7 @@ int cTextEdit::getLineIndexFromNumber (int lineNumber) const {
     return 0;
     }
   else
-    return int(it - mInfo.mFoldLines.begin());
+    return uint32_t(it - mInfo.mFoldLines.begin());
   }
 //}}}
 //}}}
@@ -1568,13 +1567,13 @@ void cTextEdit::scrollCursorVisible() {
   sPosition position = getCursorPosition();
 
   // up,down scroll
-  int lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  int minIndex = min (static_cast<int>(getMaxLineIndex()),
-                      static_cast<int>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mContext.mLineHeight)));
+  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
+  uint32_t minIndex = min (getMaxLineIndex(),
+                           static_cast<uint32_t>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mContext.mLineHeight)));
   if (lineIndex >= minIndex - 3)
     ImGui::SetScrollY (max (0.f, (lineIndex + 3) * mContext.mLineHeight) - ImGui::GetWindowHeight());
   else {
-    int maxIndex = static_cast<int>(floor (ImGui::GetScrollY() / mContext.mLineHeight));
+    uint32_t maxIndex = static_cast<uint32_t>(floor (ImGui::GetScrollY() / mContext.mLineHeight));
     if (lineIndex < maxIndex + 2)
       ImGui::SetScrollY (max (0.f, (lineIndex - 2) * mContext.mLineHeight));
     }
@@ -1723,22 +1722,25 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) const {
 
 // move
 //{{{
-void cTextEdit::moveUp (int amount) {
+void cTextEdit::moveUp (uint32_t amount) {
 
   if (mInfo.mLines.empty())
     return;
 
+  // lineNumber
   sPosition position = mEdit.mState.mCursorPosition;
-
-  int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
+  int lineNumber = position.mLineNumber;
   if (lineNumber == 0)
     return;
 
-  int lineIndex = getLineIndexFromNumber (lineNumber);
-  lineIndex = max (0, lineIndex - amount);
+  // lineIndex
+  uint32_t lineIndex = getLineIndexFromNumber (lineNumber);
+  lineIndex = (amount < lineIndex) ? lineIndex - amount : 0;
 
-  mEdit.mState.mCursorPosition.mLineNumber = getLineNumberFromIndex(lineIndex);
+  // cursorPosition
+  mEdit.mState.mCursorPosition.mLineNumber = getLineNumberFromIndex (lineIndex);
   if (mEdit.mState.mCursorPosition != position) {
+    // cursor changed
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
@@ -1748,19 +1750,23 @@ void cTextEdit::moveUp (int amount) {
   }
 //}}}
 //{{{
-void cTextEdit::moveDown (int amount) {
+void cTextEdit::moveDown (uint32_t amount) {
 
   if (mInfo.mLines.empty())
     return;
 
+  // lineNumber
   sPosition position = mEdit.mState.mCursorPosition;
-  int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
-  int lineIndex = getLineIndexFromNumber (lineNumber);
-  lineIndex = min (static_cast<int>(getMaxLineIndex()), lineIndex + amount);
+  int lineNumber = position.mLineNumber;
 
+  // lineIndex
+  uint32_t lineIndex = getLineIndexFromNumber (lineNumber);
+  lineIndex = min (getMaxLineIndex(), lineIndex + amount);
+
+  // cursorPosition
   mEdit.mState.mCursorPosition.mLineNumber = getLineNumberFromIndex (lineIndex);
-
   if (mEdit.mState.mCursorPosition != position) {
+    // cursor changed
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
@@ -2307,13 +2313,9 @@ void cTextEdit::dragSelectLine (int lineNumber, float posY) {
   int numDragLines = static_cast<int>(posY / mContext.mLineHeight);
 
   if (isFolded()) {
-    int lineIndex = getLineIndexFromNumber (lineNumber);
-    if (lineIndex != -1) {
-      //cLog::log (LOGINFO, fmt::format ("drag lineNumber:{} numDragLines:{} lineIndex:{} max:{}",
-      //           lineNumber, numDragLines, lineIndex, mInfo.mFoldLines.size()));
-      lineIndex = max (0, min (static_cast<int>(mInfo.mFoldLines.size())-1, lineIndex + numDragLines));
-      lineNumber = mInfo.mFoldLines[lineIndex];
-      }
+    uint32_t lineIndex = getLineIndexFromNumber (lineNumber);
+    lineIndex = max (0u, min (static_cast<uint32_t>(mInfo.mFoldLines.size())-1, lineIndex + numDragLines));
+    lineNumber = mInfo.mFoldLines[lineIndex];
     }
   else // simple add to lineNumber
     lineNumber = max (0, min (static_cast<int>(mInfo.mLines.size())-1, lineNumber + numDragLines));
