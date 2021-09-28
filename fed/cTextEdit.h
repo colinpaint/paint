@@ -473,10 +473,10 @@ private:
   void parseComments();
 
   // mouse
-  void clickLine (int lineNumber);
-  void clickText (int lineNumber, float posX, bool selectWord);
-  void dragLine (int lineNumber, float posY);
-  void dragText (int lineNumber, ImVec2 pos);
+  void selectText (int lineNumber, float posX, bool selectWord);
+  void dragSelectText (int lineNumber, ImVec2 pos);
+  void selectLine (int lineNumber);
+  void dragSelectLine (int lineNumber, float posY);
 
   // draws
   void drawTop (cApp& app);

@@ -2242,18 +2242,7 @@ void cTextEdit::parseComments() {
 //}}}
 
 //{{{
-void cTextEdit::clickLine (int lineNumber) {
-
-  mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
-  mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-  mEdit.mSelection = eSelection::eLine;
-
-  setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
-  }
-//}}}
-//{{{
-void cTextEdit::clickText (int lineNumber, float posX, bool selectWord) {
+void cTextEdit::selectText (int lineNumber, float posX, bool selectWord) {
 
   mEdit.mState.mCursorPosition = getPositionFromPosX (lineNumber, posX);
 
@@ -2265,7 +2254,41 @@ void cTextEdit::clickText (int lineNumber, float posX, bool selectWord) {
   }
 //}}}
 //{{{
-void cTextEdit::dragLine (int lineNumber, float posY) {
+void cTextEdit::dragSelectText (int lineNumber, ImVec2 pos) {
+
+  int numDragLines = static_cast<int>(pos.y / mContext.mLineHeight);
+  if (isFolded()) {
+    if (numDragLines) {
+      // check multiline drag across folds
+      cLog::log (LOGINFO, fmt::format ("dragText - multiLine check across folds"));
+      }
+    }
+  else {
+    // allow multiline drag
+    lineNumber = max (0, min (static_cast<int>(mInfo.mLines.size())-1, lineNumber + numDragLines));
+    }
+
+  mEdit.mState.mCursorPosition = getPositionFromPosX (lineNumber, pos.x);
+  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  mEdit.mSelection = eSelection::eNormal;
+
+  setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
+  scrollCursorVisible();
+  }
+//}}}
+//{{{
+void cTextEdit::selectLine (int lineNumber) {
+
+  mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+  mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
+  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  mEdit.mSelection = eSelection::eLine;
+
+  setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
+  }
+//}}}
+//{{{
+void cTextEdit::dragSelectLine (int lineNumber, float posY) {
 // if folded this will use previous displays mFoldLine vector
 // - we haven't drawn subsequent lines yet
 //   - works because dragging does not change vector
@@ -2288,29 +2311,6 @@ void cTextEdit::dragLine (int lineNumber, float posY) {
   mEdit.mState.mCursorPosition.mLineNumber = lineNumber;
   mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
   mEdit.mSelection = eSelection::eLine;
-
-  setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
-  scrollCursorVisible();
-  }
-//}}}
-//{{{
-void cTextEdit::dragText (int lineNumber, ImVec2 pos) {
-
-  int numDragLines = static_cast<int>(pos.y / mContext.mLineHeight);
-  if (isFolded()) {
-    if (numDragLines) {
-      // check multiline drag across folds
-      cLog::log (LOGINFO, fmt::format ("dragText - multiLine check across folds"));
-      }
-    }
-  else {
-    // allow multiline drag
-    lineNumber = max (0, min (static_cast<int>(mInfo.mLines.size())-1, lineNumber + numDragLines));
-    }
-
-  mEdit.mState.mCursorPosition = getPositionFromPosX (lineNumber, pos.x);
-  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-  mEdit.mSelection = eSelection::eNormal;
 
   setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
   scrollCursorVisible();
@@ -2554,9 +2554,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                             {leftPadWidth + mContext.mLineNumberWidth, mContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
-        dragLine (lineNumber, ImGui::GetMousePos().y - curPos.y);
+        dragSelectLine (lineNumber, ImGui::GetMousePos().y - curPos.y);
       else if (ImGui::IsMouseClicked (0))
-        clickLine (lineNumber);
+        selectLine (lineNumber);
       }
 
     leftPadWidth = 0.f;
@@ -2604,7 +2604,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       ImGui::SameLine();
       ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive())
-        clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
+        selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
 
       curPos.x += glyphsWidth;
       }
@@ -2643,7 +2643,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       ImGui::SameLine();
       ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive())
-        clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
+        selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
 
       curPos.x += glyphsWidth;
       }
@@ -2682,9 +2682,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {leftPadWidth + glyphsWidth, mContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
-        dragText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - curPos.y});
+        dragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - curPos.y});
       else if (ImGui::IsMouseClicked (0))
-        clickText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
+        selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
       }
 
     curPos.x += glyphsWidth;
