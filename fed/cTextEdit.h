@@ -401,7 +401,7 @@ private:
   bool isDrawWhiteSpace() const { return mOptions.mShowWhiteSpace || mOptions.mHoverWhiteSpace; }
   bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced ^ mOptions.mHoverMonoSpaced; }
 
-  int getCharacterIndex (sPosition position) const;
+  uint32_t getCharacterIndex (sPosition position) const;
   int getCharacterColumn (int lineNumber, int index) const;
 
   uint32_t getLineNumChars (int row) const;
