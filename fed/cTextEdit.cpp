@@ -16,7 +16,7 @@ using namespace std;
 using namespace chrono;
 //}}}
 namespace {
-  constexpr uint32_t kLineNumberUndefined = 0xFFFFFFFF;
+  constexpr int kLineNumberUndefined = -1;
   //{{{  palette const
   constexpr uint8_t eBackground =        0;
 
@@ -1924,6 +1924,7 @@ void cTextEdit::addUndo (cUndo& undo) {
 void cTextEdit::openFold (uint32_t lineNumber) {
 
   if (isFolded()) {
+    // position cursor to lineNumber
     mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
@@ -1938,6 +1939,7 @@ void cTextEdit::openFold (uint32_t lineNumber) {
 void cTextEdit::openFoldOnly (uint32_t lineNumber) {
 
   if (isFolded()) {
+    // position cursor to lineNumber
     mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
@@ -1958,8 +1960,15 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
     // close fold containing lineNumber
     cLog::log (LOGINFO, fmt::format ("closeFold line:{}", lineNumber));
 
-    if (mInfo.mLines[lineNumber].mFoldBegin)
+    if (mInfo.mLines[lineNumber].mFoldBegin) {
+      // position cursor to lineNumber
+      mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+      mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
+      mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+
       mInfo.mLines[lineNumber].mFoldOpen = false;
+      }
+
     else {
       // search back for this fold's foldBegin and close it
       // - skip foldEnd foldBegin pairs
@@ -1975,9 +1984,14 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
           cLog::log (LOGINFO, fmt::format (" - skip foldBegin:{} {}", lineNumber, skipFoldPairs));
           }
         else if (line.mFoldBegin && line.mFoldOpen) {
+          // position cursor to lineNumber
+          mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+          mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
+          mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+
           cLog::log (LOGINFO, fmt::format ("- close foldBegin:{}", lineNumber));
           line.mFoldOpen = false;
-          mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+
           // possible scroll???
           break;
           }

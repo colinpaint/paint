@@ -22,9 +22,7 @@ public:
   enum class eSelection { eNormal, eWord, eLine };
   //{{{
   struct sPosition {
-    static const size_t kLineNumberUndefined = 0xFFFFFFFF;
-
-    sPosition() : mLineNumber(kLineNumberUndefined), mColumn(kLineNumberUndefined) {}
+    sPosition() : mLineNumber(0), mColumn(0) {}
     sPosition (int lineNumber, int column) : mLineNumber(lineNumber), mColumn(column) {}
 
     //{{{
@@ -174,10 +172,10 @@ public:
     bool mFoldPressed:1;
 
     // offsets
-    size_t mFoldCommentLineNumber; // line number of closed foldBegin comment
-    uint8_t mIndent;               // leading space count
-    uint8_t mFirstGlyph;           // index of first visible glyph, past fold markers
-    uint8_t mFirstColumn;          // column of first visible glyph, past fold prefixes
+    int mFoldCommentLineNumber; // line number of closed foldBegin comment
+    uint8_t mIndent;            // leading space count
+    uint8_t mFirstGlyph;        // index of first visible glyph, past fold markers
+    uint8_t mFirstColumn;       // column of first visible glyph, past fold prefixes
     };
   //}}}
 
