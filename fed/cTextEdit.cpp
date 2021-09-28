@@ -605,7 +605,6 @@ void cTextEdit::moveLeft() {
     return;
 
   sPosition position = mEdit.mState.mCursorPosition;
-
   int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
   uint32_t column = getCharacterIndex (mEdit.mState.mCursorPosition);
   if (column == 0) {
@@ -622,7 +621,6 @@ void cTextEdit::moveLeft() {
     while ((--column > 0) && isUtfSequence (mInfo.mLines[lineNumber].mGlyphs[column].mChar)) {}
 
   mEdit.mState.mCursorPosition = sPosition (lineNumber, getCharacterColumn (lineNumber, column));
-
   if (mEdit.mState.mCursorPosition != position) {
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
@@ -638,9 +636,7 @@ void cTextEdit::moveRight() {
     return;
 
   sPosition position = mEdit.mState.mCursorPosition;
-
   int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
-
   uint32_t column = getCharacterIndex (mEdit.mState.mCursorPosition);
   if (column >= mInfo.mLines [lineNumber].mGlyphs.size()) {
     // move to start of next line
@@ -818,14 +814,16 @@ void cTextEdit::deleteIt() {
       }
 
     else {
-      uint32_t characterIndex = getCharacterIndex (position);
       undo.mRemovedBegin = undo.mRemovedEnd = getCursorPosition();
       undo.mRemovedEnd.mColumn++;
       undo.mRemoved = getText (undo.mRemovedBegin, undo.mRemovedEnd);
 
-      int length = utf8CharLength (line.mGlyphs[characterIndex].mChar);
-      while ((length-- > 0) && (characterIndex < static_cast<int>(line.mGlyphs.size())))
+      uint32_t characterIndex = getCharacterIndex (position);
+      uint32_t length = utf8CharLength (line.mGlyphs[characterIndex].mChar);
+      while ((length > 0) && (characterIndex < line.mGlyphs.size())) {
         line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex);
+        length--;
+        }
       parseLine (line);
       }
 
@@ -880,6 +878,7 @@ void cTextEdit::backspace() {
 
     else {
       cLine& line = mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber];
+
       uint32_t characterIndex = getCharacterIndex (position) - 1;
       uint32_t characterIndexEnd = characterIndex + 1;
       while ((characterIndex > 0) && isUtfSequence (line.mGlyphs[characterIndex].mChar))
@@ -1053,17 +1052,18 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       cLine& line = mInfo.mLines[position.mLineNumber];
       uint32_t characterIndex = getCharacterIndex (position);
       if (mOptions.mOverWrite && (characterIndex < line.mGlyphs.size())) {
-        auto length = utf8CharLength (line.mGlyphs[characterIndex].mChar);
+        uint32_t length = utf8CharLength(line.mGlyphs[characterIndex].mChar);
         undo.mRemovedBegin = mEdit.mState.mCursorPosition;
         undo.mRemovedEnd = sPosition (position.mLineNumber,
                                       getCharacterColumn (position.mLineNumber, characterIndex + length));
-        while ((length-- > 0) && (characterIndex < static_cast<int>(line.mGlyphs.size()))) {
+        while ((length > 0) && (characterIndex < line.mGlyphs.size())) {
           undo.mRemoved += line.mGlyphs[characterIndex].mChar;
           line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex);
+          length--;
           }
         }
 
-      for (auto p = buf; *p != '\0'; p++, ++characterIndex)
+      for (char* p = buf; *p != '\0'; p++, ++characterIndex)
         line.mGlyphs.insert (line.mGlyphs.begin() + characterIndex, cGlyph (*p, eText));
 
       parseLine (line);
@@ -1286,7 +1286,7 @@ uint32_t cTextEdit::getMaxLineIndex() const {
 float cTextEdit::getTextWidth (sPosition position) const {
 // get width of text in pixels, of position lineNumberline,  up to position column
 
-  const vector<cGlyph>& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+  const cLine::tGlyphs& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
   float distance = 0.f;
   uint32_t characterIndex = getCharacterIndex (position);
@@ -1318,9 +1318,9 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) const
   int endLineNumber = endPosition.mLineNumber;
 
   // count approx num chars, reserve
-  uint32_t numChars = 0;
+  size_t numChars = 0;
   for (int lineNumber = beginLineNumber; lineNumber < endLineNumber; lineNumber++)
-    numChars += static_cast<int>(mInfo.mLines[lineNumber].mGlyphs.size());
+    numChars += mInfo.mLines[lineNumber].mGlyphs.size();
   string textString;
   textString.reserve (numChars + (numChars / 8));
 
@@ -1368,7 +1368,8 @@ bool cTextEdit::isOnWordBoundary (sPosition position) const {
 string cTextEdit::getWordAt (sPosition position) const {
 
   string result;
-  for (uint32_t i = getCharacterIndex (findWordBegin (position)); i < getCharacterIndex (findWordEnd (position)); ++i)
+  for (uint32_t i = getCharacterIndex (findWordBegin (position)); 
+       i < getCharacterIndex (findWordEnd (position)); ++i)
     result.push_back (mInfo.mLines[position.mLineNumber].mGlyphs[i].mChar);
 
   return result;
