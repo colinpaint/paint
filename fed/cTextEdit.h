@@ -253,6 +253,7 @@ public:
   void enterCharacter (ImWchar ch, bool shift);
 
   // fold
+  void createFold();
   void openFold() { openFold (mEdit.mState.mCursorPosition.mLineNumber); }
   void openFoldOnly() { openFoldOnly (mEdit.mState.mCursorPosition.mLineNumber); }
   void closeFold() { closeFold (mEdit.mState.mCursorPosition.mLineNumber); }

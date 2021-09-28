@@ -1104,6 +1104,18 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   scrollCursorVisible();
   }
 //}}}
+
+// fold
+//{{{
+void cTextEdit::createFold() {
+
+  insertText (mOptions.mLanguage.mFoldBeginMarker.c_str());
+  insertText ("  new fold\n");
+  insertText ("\n");
+  insertText (mOptions.mLanguage.mFoldEndMarker.c_str());
+  insertText ("\n");
+  }
+//}}}
 //}}}
 
 // draws
@@ -2866,7 +2878,7 @@ void cTextEdit::handleKeyboard() {
   // - have I misunderstood something here ?
 
   //constexpr int kNumpadNumlock = 0x11a;
-  //constexpr int kNumpad0 = 0x140;
+  constexpr int kNumpad0 = 0x140;
   constexpr int kNumpad1 = 0x141;
   //constexpr int kNumpad2 = 0x142;
   constexpr int kNumpad3 = 0x143;
@@ -2921,7 +2933,7 @@ void cTextEdit::handleKeyboard() {
      {false, false, false, kNumpad3,            false, [this]{closeFold();}},
      {false, false, false, kNumpad7,            false, [this]{openFoldOnly();}},
      {false, false, false, kNumpad9,            false, [this]{closeFold();}},
-  // {false, false, false, kNumpad0,            true,  [this]{foldCreate();}},
+     {false, false, false, kNumpad0,            true,  [this]{createFold();}},
   // {false, false, false, kNumpad4,            false, [this]{prevFile();}},
   // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
   // {false, true,  false, kNumpad3,            false, [this]{foldCloseAll();}},
