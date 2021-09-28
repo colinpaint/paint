@@ -243,13 +243,12 @@ public:
   void cut();
   void paste();
 
+  // delete
   void deleteIt();
   void backspace();
   void deleteSelection();
 
-  void undo (int steps = 1);
-  void redo (int steps = 1);
-
+  // insert
   void enterCharacter (ImWchar ch, bool shift);
 
   // fold
@@ -257,6 +256,10 @@ public:
   void openFold() { openFold (mEdit.mState.mCursorPosition.mLineNumber); }
   void openFoldOnly() { openFoldOnly (mEdit.mState.mCursorPosition.mLineNumber); }
   void closeFold() { closeFold (mEdit.mState.mCursorPosition.mLineNumber); }
+
+  // undo
+  void undo (int steps = 1);
+  void redo (int steps = 1);
   //}}}
 
   void drawWindow (const std::string& title, cApp& app);

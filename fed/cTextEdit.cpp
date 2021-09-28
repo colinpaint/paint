@@ -785,22 +785,6 @@ void cTextEdit::paste() {
   }
 //}}}
 
-// undo
-//{{{
-void cTextEdit::undo (int steps) {
-
-  while (hasUndo() && steps-- > 0)
-    mUndoList.mBuffer[--mUndoList.mIndex].undo (this);
-  }
-//}}}
-//{{{
-void cTextEdit::redo (int steps) {
-
-  while (hasRedo() && steps-- > 0)
-    mUndoList.mBuffer[mUndoList.mIndex++].redo (this);
-  }
-//}}}
-
 // delete
 //{{{
 void cTextEdit::deleteIt() {
@@ -1111,6 +1095,10 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 //{{{
 void cTextEdit::createFold() {
 
+  if (isReadOnly())
+    return;
+
+  // !!!! temp string for now !!!!
   string insertString = mOptions.mLanguage.mFoldBeginMarker +
                         "  new fold - loads of detail to implement\n\n" +
                         mOptions.mLanguage.mFoldEndMarker +
@@ -1125,6 +1113,22 @@ void cTextEdit::createFold() {
   undo.mAddedEnd = getCursorPosition();
   undo.mAfter = mEdit.mState;
   addUndo (undo);
+  }
+//}}}
+
+// undo
+//{{{
+void cTextEdit::undo (int steps) {
+
+  while (hasUndo() && steps-- > 0)
+    mUndoList.mBuffer[--mUndoList.mIndex].undo (this);
+  }
+//}}}
+//{{{
+void cTextEdit::redo (int steps) {
+
+  while (hasRedo() && steps-- > 0)
+    mUndoList.mBuffer[mUndoList.mIndex++].redo (this);
   }
 //}}}
 //}}}
