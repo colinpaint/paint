@@ -1470,7 +1470,7 @@ int cTextEdit::getLineIndexFromNumber (int lineNumber) const {
     return -1;
     }
 
-  auto it = find (mInfo.mFoldLines.begin(), mInfo.mFoldLines.end(), lineNumber);
+  auto it = find (mInfo.mFoldLines.begin(), mInfo.mFoldLines.end(), static_cast<uint32_t>(lineNumber));
   if (it == mInfo.mFoldLines.end()) {
     // no lineNumber for that index
     cLog::log (LOGERROR, fmt::format ("getLineIndexFromNumber {} notFound", lineNumber));
@@ -1926,10 +1926,10 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
 
 // fold
 //{{{
-int cTextEdit::skipFoldLines (int lineNumber) {
+int cTextEdit::skipFoldLines (uint32_t lineNumber) {
 // recursively skip fold lines until matching foldEnd
 
-  while (lineNumber < static_cast<int>(mInfo.mLines.size()))
+  while (lineNumber <mInfo.mLines.size())
     if (mInfo.mLines[lineNumber].mFoldBegin)
       lineNumber = skipFoldLines (lineNumber + 1);
     else if (mInfo.mLines[lineNumber].mFoldEnd)
@@ -1943,7 +1943,7 @@ int cTextEdit::skipFoldLines (int lineNumber) {
   }
 //}}}
 //{{{
-void cTextEdit::closeFoldEnd (int lineNumber) {
+void cTextEdit::closeFoldEnd (uint32_t lineNumber) {
 // close fold we are at end of
 // -  search back for this fold's foldBegin and close it
 //   - skip foldEnd foldBegin pairs
@@ -2495,12 +2495,12 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
   }
 //}}}
 //{{{
-void cTextEdit::drawLine (int lineNumber, int lineIndex) {
+void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 // draw Line and return incremented lineIndex
 
   if (isFolded()) {
     //{{{  update mFoldLines vector
-    if (lineIndex >= static_cast<int>(mInfo.mFoldLines.size()))
+    if (lineIndex >= mInfo.mFoldLines.size())
       mInfo.mFoldLines.push_back (lineNumber);
     else
       mInfo.mFoldLines[lineIndex] = lineNumber;
@@ -2566,7 +2566,7 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
       float indentWidth = line.mIndent * mContext.mGlyphWidth;
       curPos.x += indentWidth;
 
-      float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen);
+      float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen.c_str());
       curPos.x += prefixWidth;
 
       // add foldPrefix invisibleButton, action on press
@@ -2605,7 +2605,7 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth = mContext.drawText (curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed);
+      float prefixWidth = mContext.drawText (curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed.c_str());
       curPos.x += prefixWidth;
 
       // add invisibleButton, indent + prefix wide, action on press
@@ -2643,7 +2643,7 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
     float indentWidth = line.mIndent * mContext.mGlyphWidth;
     curPos.x += indentWidth;
 
-    float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldEnd);
+    float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldEnd.c_str());
 
     // add invisibleButton
     ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
@@ -2696,7 +2696,7 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
     mContext.drawRect ({textPos.x + xBegin, textPos.y}, {textPos.x + xEnd, textPos.y + mContext.mLineHeight}, eSelect);
   //}}}
 
-  if (lineNumber == mEdit.mState.mCursorPosition.mLineNumber) {
+  if (static_cast<int>(lineNumber) == mEdit.mState.mCursorPosition.mLineNumber) {
     // line has cursor
     if (!hasSelect()) {
       //{{{  draw cursor highlight
@@ -2710,10 +2710,10 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
     auto elapsed = now - mCursorFlashTimePoint;
     if (elapsed < 400ms) {
       float cursorPosX = getTextWidth (mEdit.mState.mCursorPosition);
-      int characterIndex = getCharacterIndex (mEdit.mState.mCursorPosition);
+      uint32_t characterIndex = getCharacterIndex (mEdit.mState.mCursorPosition);
 
       float cursorWidth;
-      if (mOptions.mOverWrite && (characterIndex < static_cast<int>(glyphs.size()))) {
+      if (mOptions.mOverWrite && (characterIndex < glyphs.size())) {
         // overwrite
         if (glyphs[characterIndex].mChar == '\t') // widen overwrite tab cursor
           cursorWidth = getTabEndPosX (cursorPosX) - cursorPosX;
@@ -2763,26 +2763,26 @@ void cTextEdit::drawUnfolded() {
   }
 //}}}
 //{{{
-int cTextEdit::drawFolded() {
+uint32_t cTextEdit::drawFolded() {
 
-  int lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
+  uint32_t lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
 
-  int lineIndex = 0;
-  while (lineNumber < static_cast<int>(mInfo.mLines.size())) {
+  uint32_t lineIndex = 0;
+  while (lineNumber < mInfo.mLines.size()) {
     cLine& line = mInfo.mLines[lineNumber];
     if (line.mFoldBegin) {
       if (line.mFoldOpen) {
         // draw openFold line
         line.mFoldCommentLineNumber = lineNumber;
         line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
-        line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "{{{ "
+        line.mFirstColumn = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginOpen.size());
         drawLine (lineNumber++, lineIndex++);
         }
       else if (line.mCommentFold) {
         // draw closedFold with comment line
         line.mFoldCommentLineNumber = lineNumber;
         line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
-        line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "{{{ "
+        line.mFirstColumn = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginOpen.size());
         drawLine (lineNumber++, lineIndex++);
 
         // skip closed fold
@@ -2793,7 +2793,7 @@ int cTextEdit::drawFolded() {
         // - set mFoldCommentLineNumber to first non comment line, !!!! just use +1 for now !!!!
         line.mFoldCommentLineNumber = lineNumber+1;
         line.mFirstGlyph = mInfo.mLines[line.mFoldCommentLineNumber].mIndent;
-        line.mFirstColumn = line.mIndent + 4; // firstGlyph at indent + size of "... "
+        line.mFirstColumn = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginClosed.size());
         drawLine (lineNumber++, lineIndex++);
 
         // skip closed fold

@@ -97,11 +97,9 @@ public:
     std::string mFoldBeginMarker;
     std::string mFoldEndMarker;
 
-    // only used by drawText, no point in being a string
-    const char* mFoldBeginOpen;
-    const char* mFoldBeginClosed;
-    const char* mFoldBeginClosedSpace;
-    const char* mFoldEnd;
+    std::string mFoldBeginOpen;
+    std::string mFoldBeginClosed;
+    std::string mFoldEnd;
 
     bool mAutoIndentation;
 
@@ -174,10 +172,10 @@ public:
     bool mFoldPressed:1;
 
     // offsets
-    uint32_t mFoldCommentLineNumber; // line number of closed foldBegin comment
-    uint8_t mIndent;                 // leading space count
-    uint8_t mFirstGlyph;             // index of first visible glyph, past fold markers
-    uint8_t mFirstColumn;            // column of first visible glyph, past fold prefixes
+    size_t mFoldCommentLineNumber; // line number of closed foldBegin comment
+    uint8_t mIndent;               // leading space count
+    uint8_t mFirstGlyph;           // index of first visible glyph, past fold markers
+    uint8_t mFirstColumn;          // column of first visible glyph, past fold prefixes
     };
   //}}}
 
@@ -302,7 +300,7 @@ private:
   public:
     std::string mFilename;
     std::vector <cLine> mLines;
-    std::vector <int> mFoldLines;
+    std::vector <uint32_t> mFoldLines;
 
     bool mHasTabs = false;
     int mTabSize = 4;
@@ -459,8 +457,8 @@ private:
   void deleteRange (sPosition beginPosition, sPosition endPosition);
 
   // fold
-  int skipFoldLines (int lineNumber);
-  void closeFoldEnd (int lineNumber);
+  int skipFoldLines (uint32_t lineNumber);
+  void closeFoldEnd (uint32_t lineNumber);
 
   // undo
   void addUndo (cUndo& undo);
@@ -481,9 +479,9 @@ private:
   // draws
   void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
-  void drawLine (int lineNumber, int lineIndex);
+  void drawLine (uint32_t lineNumber, uint32_t lineIndex);
   void drawUnfolded();
-  int drawFolded();
+  uint32_t drawFolded();
 
   void handleKeyboard();
 
