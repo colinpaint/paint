@@ -1208,7 +1208,7 @@ uint32_t cTextEdit::getCharacterIndex (sPosition position) const {
   }
 //}}}
 //{{{
-int cTextEdit::getCharacterColumn (int lineNumber, int index) const {
+int cTextEdit::getCharacterColumn (int lineNumber, uint32_t characterIndex) const {
 // handle tabs
 
   if (lineNumber >= static_cast<int>(mInfo.mLines.size()))
@@ -1217,8 +1217,8 @@ int cTextEdit::getCharacterColumn (int lineNumber, int index) const {
   const auto& glyphs = mInfo.mLines[lineNumber].mGlyphs;
 
   uint32_t column = 0;
-  int i = 0;
-  while ((i < index) && i < (static_cast<int>(glyphs.size()))) {
+  uint32_t i = 0;
+  while ((i < characterIndex) && (i < glyphs.size())) {
     uint8_t ch = glyphs[i].mChar;
     i += utf8CharLength (ch);
     if (ch == '\t')
