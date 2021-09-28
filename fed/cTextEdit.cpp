@@ -763,7 +763,9 @@ void cTextEdit::paste() {
   if (hasClipboardText()) {
     cUndo undo;
     undo.mBefore = mEdit.mState;
+
     if (hasSelect()) {
+      // save and delete selection
       undo.mRemoved = getSelectedText();
       undo.mRemovedBegin = mEdit.mState.mSelectionBegin;
       undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
@@ -1109,11 +1111,21 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 //{{{
 void cTextEdit::createFold() {
 
-  insertText (mOptions.mLanguage.mFoldBeginMarker.c_str());
-  insertText ("  new fold\n");
-  insertText ("\n");
-  insertText (mOptions.mLanguage.mFoldEndMarker.c_str());
-  insertText ("\n");
+  string text = mOptions.mLanguage.mFoldBeginMarker +
+                "  new fold - loads of detail to implement\n\n" +
+                mOptions.mLanguage.mFoldEndMarker +
+                "\n";
+
+  cUndo undo;
+  undo.mBefore = mEdit.mState;
+  undo.mAdded = text.c_str();
+  undo.mAddedBegin = getCursorPosition();
+
+  insertText (text.c_str());
+
+  undo.mAddedEnd = getCursorPosition();
+  undo.mAfter = mEdit.mState;
+  addUndo (undo);
   }
 //}}}
 //}}}
@@ -1917,13 +1929,6 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
 //{{{
 void cTextEdit::addUndo (cUndo& undo) {
 
-  //printf("AddUndo: (@%d.%d) +\'%s' [%d.%d .. %d.%d], -\'%s', [%d.%d .. %d.%d] (@%d.%d)\n",
-  //  value.mBefore.mCursorPosition.mGlyphs, value.mBefore.mCursorPosition.mColumn,
-  //  value.mAdded.c_str(), value.mAddedBegin.mGlyphs, value.mAddedBegin.mColumn, value.mAddedEnd.mGlyphs, value.mAddedEnd.mColumn,
-  //  value.mRemoved.c_str(), value.mRemovedBegin.mGlyphs, value.mRemovedBegin.mColumn, value.mRemovedEnd.mGlyphs, value.mRemovedEnd.mColumn,
-  //  value.mAfter.mCursorPosition.mGlyphs, value.mAfter.mCursorPosition.mColumn
-  //  );
-
   mUndoList.mBuffer.resize (static_cast<size_t>(mUndoList.mIndex) + 1);
   mUndoList.mBuffer.back() = undo;
   ++mUndoList.mIndex;
@@ -1985,7 +1990,8 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
       // search back for this fold's foldBegin and close it
       // - skip foldEnd foldBegin pairs
       int skipFoldPairs = 0;
-      while (--lineNumber >= 0) {
+      while (lineNumber > 0) {
+        lineNumber--;
         cLine& line = mInfo.mLines[lineNumber];
         if (line.mFoldEnd) {
           skipFoldPairs++;
