@@ -76,20 +76,17 @@ public:
     std::string mDeclaration;
     };
   //}}}
-  using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
   //{{{
   class cLanguage {
   public:
+    using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
+    using tTokenSearch = bool(*)(const char* srcBegin, const char* srcEnd,
+                                 const char*& dstBegin, const char*& dstEnd, uint8_t& color);
+
     // static const
     static const cLanguage& c();
     static const cLanguage& hlsl();
     static const cLanguage& glsl();
-
-    // using
-    using tTokenRegexString = std::pair<std::string, uint8_t>;
-    using tTokenRegexStrings = std::vector<tTokenRegexString>;
-    using tTokenSearch = bool(*)(const char* srcBegin, const char* srcEnd,
-                                 const char*& dstBegin, const char*& dstEnd, uint8_t& color);
 
     // vars
     std::string mName;
@@ -112,8 +109,7 @@ public:
     std::unordered_set <std::string> mKnownWords;
 
     tTokenSearch mTokenSearch;
-    tTokenRegexStrings mTokenRegex;
-    tRegex mRegexList;
+    cLanguage::tRegex mRegexList;
     };
   //}}}
   //{{{
@@ -137,10 +133,10 @@ public:
     bool mCommentEnd:1;
     };
   //}}}
-  using tGlyphs = std::vector <cGlyph>;
   //{{{
   class cLine {
   public:
+    using tGlyphs = std::vector <cGlyph>;
     //{{{
     cLine() :
       mGlyphs(),
@@ -479,7 +475,7 @@ private:
 
   // draws
   void drawTop (cApp& app);
-  float drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
+  float drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
   void drawLine (int lineNumber, int lineIndex);
   void drawUnfolded();
   int drawFolded (int lineNumber, bool onlyFold);

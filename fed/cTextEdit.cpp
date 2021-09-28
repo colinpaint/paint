@@ -1194,7 +1194,7 @@ int cTextEdit::getCharacterIndex (sPosition position) const {
     return 0;
     }
 
-  const tGlyphs& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
+  const cLine::tGlyphs& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
   int column = 0;
   int i = 0;
@@ -1239,7 +1239,7 @@ int cTextEdit::getLineNumChars (int row) const {
   if (row >= static_cast<int>(mInfo.mLines.size()))
     return 0;
 
-  const tGlyphs& glyphs = mInfo.mLines[row].mGlyphs;
+  const cLine::tGlyphs& glyphs = mInfo.mLines[row].mGlyphs;
   int numChars = 0;
   for (size_t i = 0; i < glyphs.size(); numChars++)
     i += utf8CharLength (glyphs[i].mChar);
@@ -1253,7 +1253,7 @@ int cTextEdit::getLineMaxColumn (int row) const {
   if (row >= static_cast<int>(mInfo.mLines.size()))
     return 0;
 
-  const tGlyphs& glyphs = mInfo.mLines[row].mGlyphs;
+  const cLine::tGlyphs& glyphs = mInfo.mLines[row].mGlyphs;
   int column = 0;
   for (size_t i = 0; i < glyphs.size(); ) {
     uint8_t ch = glyphs[i].mChar;
@@ -2418,7 +2418,7 @@ void cTextEdit::drawTop (cApp& app) {
   }
 //}}}
 //{{{
-float cTextEdit::drawGlyphs (ImVec2 pos, const tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor) {
+float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor) {
 
   if (glyphs.empty())
     return 0.f;
@@ -2548,7 +2548,7 @@ void cTextEdit::drawLine (int lineNumber, int lineIndex) {
 
   // draw text
   ImVec2 textPos = curPos;
-  const tGlyphs& glyphs = line.mGlyphs;
+  const cLine::tGlyphs& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
     if (line.mFoldOpen) {
       //{{{  draw foldBegin open
@@ -3125,10 +3125,8 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
       return (color != eUndefined);
       };
 
-    language.mTokenRegex.push_back (make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreProc));
-    language.mRegexList.clear();
-    for (auto& r : language.mTokenRegex)
-      language.mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
+    language.mRegexList.push_back (
+      make_pair (regex ("[ \\t]*#[ \\t]*[a-zA-Z_]+", regex_constants::optimize), (uint8_t)ePreProc));
     }
 
   return language;
@@ -3163,28 +3161,24 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
 
     language.mTokenSearch = nullptr;
 
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreProc));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("\\'\\\\?[^\\']\\'", (uint8_t)eLiteral));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdentifier));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
-
-    language.mRegexList.clear();
-    for (auto& r : language.mTokenRegex)
-      language.mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
+    language.mRegexList.push_back (
+      make_pair (regex ("[ \\t]*#[ \\t]*[a-zA-Z_]+", regex_constants::optimize), (uint8_t)ePreProc));
+    language.mRegexList.push_back (
+      make_pair (regex ("L?\\\"(\\\\.|[^\\\"])*\\\"", regex_constants::optimize), (uint8_t)eString));
+    language.mRegexList.push_back (
+      make_pair (regex ("\\'\\\\?[^\\']\\'", regex_constants::optimize), (uint8_t)eLiteral));
+    language.mRegexList.push_back (
+      make_pair (regex ("[a-zA-Z_][a-zA-Z0-9_]*", regex_constants::optimize), (uint8_t)eIdentifier));
+    language.mRegexList.push_back (
+      make_pair (regex ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", regex_constants::optimize), (uint8_t)eNumber));
+    language.mRegexList.push_back (
+      make_pair (regex ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+    language.mRegexList.push_back (
+      make_pair (regex ("0[0-7]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+    language.mRegexList.push_back (
+      make_pair (regex ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+    language.mRegexList.push_back (
+      make_pair (regex ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", regex_constants::optimize), (uint8_t)ePunctuation));
     }
 
   return language;
@@ -3219,28 +3213,24 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
 
     language.mTokenSearch = nullptr;
 
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreProc));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("L?\\\"(\\\\.|[^\\\"])*\\\"", (uint8_t)eString));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("\\'\\\\?[^\\']\\'", (uint8_t)eLiteral));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("[a-zA-Z_][a-zA-Z0-9_]*", (uint8_t)eIdentifier));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", (uint8_t)eNumber));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("0[0-7]+[Uu]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
-    language.mTokenRegex.push_back (
-      make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
-
-    language.mRegexList.clear();
-    for (auto& r : language.mTokenRegex)
-      language.mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
+    language.mRegexList.push_back (
+      make_pair (regex ("[ \\t]*#[ \\t]*[a-zA-Z_]+", regex_constants::optimize), (uint8_t)ePreProc));
+    language.mRegexList.push_back (
+      make_pair (regex ("L?\\\"(\\\\.|[^\\\"])*\\\"", regex_constants::optimize), (uint8_t)eString));
+    language.mRegexList.push_back (
+      make_pair (regex ("\\'\\\\?[^\\']\\'", regex_constants::optimize), (uint8_t)eLiteral));
+    language.mRegexList.push_back (
+      make_pair (regex ("[a-zA-Z_][a-zA-Z0-9_]*", regex_constants::optimize), (uint8_t)eIdentifier));
+    language.mRegexList.push_back (
+      make_pair (regex ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", regex_constants::optimize), (uint8_t)eNumber));
+    language.mRegexList.push_back (
+      make_pair (regex ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+    language.mRegexList.push_back (
+      make_pair (regex ("0[0-7]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+    language.mRegexList.push_back (
+      make_pair (regex ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+    language.mRegexList.push_back (
+      make_pair (regex ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", regex_constants::optimize), (uint8_t)ePunctuation));
     }
 
   return language;
