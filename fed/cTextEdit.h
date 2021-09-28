@@ -405,7 +405,7 @@ private:
   int getCharacterColumn (int lineNumber, int index) const;
 
   uint32_t getLineNumChars (int row) const;
-  int getLineMaxColumn (int row) const;
+  uint32_t getLineMaxColumn (int row) const;
 
   uint32_t getPageNumLines() const;
   uint32_t getMaxLineIndex() const;
