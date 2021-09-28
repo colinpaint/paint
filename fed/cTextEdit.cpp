@@ -1925,7 +1925,6 @@ void cTextEdit::parseTokens (cLine& line, const string& textString) {
 
   const char* strBegin = &textString.front();
   const char* strEnd = strBegin + textString.size();
-
   const char* strPtr = strBegin;
   while (strPtr < strEnd) {
     // faster tokenize search
@@ -2061,7 +2060,7 @@ void cTextEdit::parseLine (cLine& line) {
 //}}}
 //{{{
 void cTextEdit::parseComments() {
-// simple,fast parse all lines for comments
+// simple parse all lines for comments
 
   if (mEdit.mCheckComments) {
     mEdit.mCheckComments = false;
@@ -2143,7 +2142,7 @@ void cTextEdit::parseComments() {
 void cTextEdit::openFold (uint32_t lineNumber) {
 
   if (isFolded()) {
-    // position cursor to lineNumber
+    // position cursor to lineNumber, first column
     mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
@@ -2158,7 +2157,7 @@ void cTextEdit::openFold (uint32_t lineNumber) {
 void cTextEdit::openFoldOnly (uint32_t lineNumber) {
 
   if (isFolded()) {
-    // position cursor to lineNumber
+    // position cursor to lineNumber, first column,
     mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
     mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
     mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
@@ -2180,11 +2179,10 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
     cLog::log (LOGINFO, fmt::format ("closeFold line:{}", lineNumber));
 
     if (mInfo.mLines[lineNumber].mFoldBegin) {
-      // position cursor to lineNumber
+      // position cursor to lineNumber, first column
       mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
       mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
       mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-
       mInfo.mLines[lineNumber].mFoldOpen = false;
       }
 
@@ -2204,12 +2202,10 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
           cLog::log (LOGINFO, fmt::format (" - skip foldBegin:{} {}", lineNumber, skipFoldPairs));
           }
         else if (line.mFoldBegin && line.mFoldOpen) {
-          // position cursor to lineNumber
+          // position cursor to lineNumber, first column
           mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
           mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
           mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-
-          cLog::log (LOGINFO, fmt::format ("- close foldBegin:{}", lineNumber));
           line.mFoldOpen = false;
 
           // possible scroll???
