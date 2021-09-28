@@ -462,16 +462,16 @@ private:
   void addUndo (cUndo& undo);
   //}}}
 
+  // parse
+  void parseTokens (cLine& line, const std::string& textString);
+  void parseLine (cLine& line);
+  void parseComments();
+
   //  fold
   void openFold (uint32_t lineNumber);
   void openFoldOnly (uint32_t lineNumber);
   void closeFold (uint32_t lineNumber);
   int skipFoldLines (uint32_t lineNumber);
-
-  // parse
-  void parseTokens (cLine& line, const std::string& textString);
-  void parseLine (cLine& line);
-  void parseComments();
 
   // mouse
   void selectText (int lineNumber, float posX, bool selectWord);

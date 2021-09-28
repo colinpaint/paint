@@ -507,7 +507,7 @@ bool cTextEdit::hasClipboardText() {
 string cTextEdit::getTextString() const {
 // get text as single string
 
-  return getText (sPosition(), {static_cast<int>(mInfo.mLines.size()), 0});
+  return getText ({0,0}, {static_cast<int>(mInfo.mLines.size()), 0});
   }
 //}}}
 
@@ -927,26 +927,26 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   if (hasSelect()) {
     if ((ch == '\t') && (mEdit.mState.mSelectionBegin.mLineNumber != mEdit.mState.mSelectionEnd.mLineNumber)) {
       //{{{  tab insert into selection
-      sPosition positionBegin = mEdit.mState.mSelectionBegin;
-      sPosition positionEnd = mEdit.mState.mSelectionEnd;
-      sPosition originalEnd = positionEnd;
+      sPosition selectBegin = mEdit.mState.mSelectionBegin;
+      sPosition selectEnd = mEdit.mState.mSelectionEnd;
+      sPosition originalEnd = selectEnd;
 
-      if (positionBegin > positionEnd)
-        swap (positionBegin, positionEnd);
+      if (selectBegin > selectEnd)
+        swap (selectBegin, selectEnd);
 
-      positionBegin.mColumn = 0;
-      if ((positionEnd.mColumn == 0) && (positionEnd.mLineNumber > 0))
-        --positionEnd.mLineNumber;
-      if (positionEnd.mLineNumber >= static_cast<int>(mInfo.mLines.size()))
-        positionEnd.mLineNumber = mInfo.mLines.empty() ? 0 : static_cast<int>(mInfo.mLines.size()) - 1;
-      positionEnd.mColumn = getLineMaxColumn (positionEnd.mLineNumber);
+      selectBegin.mColumn = 0;
+      if ((selectEnd.mColumn == 0) && (selectEnd.mLineNumber > 0))
+        --selectEnd.mLineNumber;
+      if (selectEnd.mLineNumber >= static_cast<int>(mInfo.mLines.size()))
+        selectEnd.mLineNumber = mInfo.mLines.empty() ? 0 : static_cast<int>(mInfo.mLines.size()) - 1;
+      selectEnd.mColumn = getLineMaxColumn (selectEnd.mLineNumber);
 
-      undo.mRemovedBegin = positionBegin;
-      undo.mRemovedEnd = positionEnd;
-      undo.mRemoved = getText (positionBegin, positionEnd);
+      undo.mRemovedBegin = selectBegin;
+      undo.mRemovedEnd = selectEnd;
+      undo.mRemoved = getText (selectBegin, selectEnd);
 
       bool modified = false;
-      for (int i = positionBegin.mLineNumber; i <= positionEnd.mLineNumber; i++) {
+      for (int i = selectBegin.mLineNumber; i <= selectEnd.mLineNumber; i++) {
         auto& glyphs = mInfo.mLines[i].mGlyphs;
         if (shift) {
           if (!glyphs.empty()) {
@@ -970,25 +970,25 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
       if (modified) {
         //{{{  not sure what this does yet
-        positionBegin = { positionBegin.mLineNumber, getCharacterColumn (positionBegin.mLineNumber, 0)};
+        selectBegin = { selectBegin.mLineNumber, getCharacterColumn (selectBegin.mLineNumber, 0)};
         sPosition rangeEnd;
         if (originalEnd.mColumn != 0) {
-          positionEnd = {positionEnd.mLineNumber, getLineMaxColumn (positionEnd.mLineNumber)};
-          rangeEnd = positionEnd;
-          undo.mAdded = getText (positionBegin, positionEnd);
+          selectEnd = {selectEnd.mLineNumber, getLineMaxColumn (selectEnd.mLineNumber)};
+          rangeEnd = selectEnd;
+          undo.mAdded = getText (selectBegin, selectEnd);
           }
         else {
-          positionEnd = {originalEnd.mLineNumber, 0};
-          rangeEnd = {positionEnd.mLineNumber - 1, getLineMaxColumn (positionEnd.mLineNumber - 1)};
-          undo.mAdded = getText (positionBegin, rangeEnd);
+          selectEnd = {originalEnd.mLineNumber, 0};
+          rangeEnd = {selectEnd.mLineNumber - 1, getLineMaxColumn (selectEnd.mLineNumber - 1)};
+          undo.mAdded = getText (selectBegin, rangeEnd);
           }
 
-        undo.mAddedBegin = positionBegin;
+        undo.mAddedBegin = selectBegin;
         undo.mAddedEnd = rangeEnd;
         undo.mAfter = mEdit.mState;
 
-        mEdit.mState.mSelectionBegin = positionBegin;
-        mEdit.mState.mSelectionEnd = positionEnd;
+        mEdit.mState.mSelectionBegin = selectBegin;
+        mEdit.mState.mSelectionEnd = selectEnd;
         addUndo (undo);
         mInfo.mTextEdited = true;
 
@@ -1010,7 +1010,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       //}}}
     }
 
-  auto position = getCursorPosition();
+  sPosition position = getCursorPosition();
   undo.mAddedBegin = position;
 
   assert (!mInfo.mLines.empty());
@@ -1934,110 +1934,7 @@ void cTextEdit::addUndo (cUndo& undo) {
 //}}}
 //}}}
 
-// fold
-//{{{
-void cTextEdit::openFold (uint32_t lineNumber) {
-
-  if (isFolded()) {
-    // position cursor to lineNumber
-    mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
-    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-
-    cLine& line = mInfo.mLines[lineNumber];
-    if (line.mFoldBegin)
-      line.mFoldOpen = true;
-    }
-  }
-//}}}
-//{{{
-void cTextEdit::openFoldOnly (uint32_t lineNumber) {
-
-  if (isFolded()) {
-    // position cursor to lineNumber
-    mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
-    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-
-    cLine& line = mInfo.mLines[lineNumber];
-    if (line.mFoldBegin) {
-      line.mFoldOpen = true;
-      mEdit.mFoldOnly = true;
-      mEdit.mFoldOnlyBeginLineNumber = lineNumber;
-      }
-    }
-  }
-//}}}
-//{{{
-void cTextEdit::closeFold (uint32_t lineNumber) {
-
-  if (isFolded()) {
-    // close fold containing lineNumber
-    cLog::log (LOGINFO, fmt::format ("closeFold line:{}", lineNumber));
-
-    if (mInfo.mLines[lineNumber].mFoldBegin) {
-      // position cursor to lineNumber
-      mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
-      mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-      mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-
-      mInfo.mLines[lineNumber].mFoldOpen = false;
-      }
-
-    else {
-      // search back for this fold's foldBegin and close it
-      // - skip foldEnd foldBegin pairs
-      int skipFoldPairs = 0;
-      while (lineNumber > 0) {
-        lineNumber--;
-        cLine& line = mInfo.mLines[lineNumber];
-        if (line.mFoldEnd) {
-          skipFoldPairs++;
-          cLog::log (LOGINFO, fmt::format ("- skip foldEnd:{} {}", lineNumber,skipFoldPairs));
-          }
-        else if (line.mFoldBegin && skipFoldPairs) {
-          skipFoldPairs--;
-          cLog::log (LOGINFO, fmt::format (" - skip foldBegin:{} {}", lineNumber, skipFoldPairs));
-          }
-        else if (line.mFoldBegin && line.mFoldOpen) {
-          // position cursor to lineNumber
-          mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
-          mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-          mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-
-          cLog::log (LOGINFO, fmt::format ("- close foldBegin:{}", lineNumber));
-          line.mFoldOpen = false;
-
-          // possible scroll???
-          break;
-          }
-        }
-      }
-
-    // close down foldOnly
-    mEdit.mFoldOnly = false;
-    mEdit.mFoldOnlyBeginLineNumber = 0;
-    }
-  }
-//}}}
-//{{{
-int cTextEdit::skipFoldLines (uint32_t lineNumber) {
-// recursively skip fold lines until matching foldEnd
-
-  while (lineNumber <mInfo.mLines.size())
-    if (mInfo.mLines[lineNumber].mFoldBegin)
-      lineNumber = skipFoldLines (lineNumber + 1);
-    else if (mInfo.mLines[lineNumber].mFoldEnd)
-      return lineNumber + 1;
-    else
-      lineNumber++;
-
-  // error if you run off end. begin/end mismatch
-  cLog::log (LOGERROR, "skipToFoldEnd - run off end");
-  return lineNumber;
-  }
-//}}}
-
+// parse
 //{{{
 void cTextEdit::parseTokens (cLine& line, const string& textString) {
 // parse and color tokens, recognise and color keyWords and knownWords
@@ -2257,6 +2154,111 @@ void cTextEdit::parseComments() {
   }
 //}}}
 
+// fold
+//{{{
+void cTextEdit::openFold (uint32_t lineNumber) {
+
+  if (isFolded()) {
+    // position cursor to lineNumber
+    mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
+    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+
+    cLine& line = mInfo.mLines[lineNumber];
+    if (line.mFoldBegin)
+      line.mFoldOpen = true;
+    }
+  }
+//}}}
+//{{{
+void cTextEdit::openFoldOnly (uint32_t lineNumber) {
+
+  if (isFolded()) {
+    // position cursor to lineNumber
+    mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
+    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+
+    cLine& line = mInfo.mLines[lineNumber];
+    if (line.mFoldBegin) {
+      line.mFoldOpen = true;
+      mEdit.mFoldOnly = true;
+      mEdit.mFoldOnlyBeginLineNumber = lineNumber;
+      }
+    }
+  }
+//}}}
+//{{{
+void cTextEdit::closeFold (uint32_t lineNumber) {
+
+  if (isFolded()) {
+    // close fold containing lineNumber
+    cLog::log (LOGINFO, fmt::format ("closeFold line:{}", lineNumber));
+
+    if (mInfo.mLines[lineNumber].mFoldBegin) {
+      // position cursor to lineNumber
+      mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
+      mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
+      mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+
+      mInfo.mLines[lineNumber].mFoldOpen = false;
+      }
+
+    else {
+      // search back for this fold's foldBegin and close it
+      // - skip foldEnd foldBegin pairs
+      int skipFoldPairs = 0;
+      while (lineNumber > 0) {
+        lineNumber--;
+        cLine& line = mInfo.mLines[lineNumber];
+        if (line.mFoldEnd) {
+          skipFoldPairs++;
+          cLog::log (LOGINFO, fmt::format ("- skip foldEnd:{} {}", lineNumber,skipFoldPairs));
+          }
+        else if (line.mFoldBegin && skipFoldPairs) {
+          skipFoldPairs--;
+          cLog::log (LOGINFO, fmt::format (" - skip foldBegin:{} {}", lineNumber, skipFoldPairs));
+          }
+        else if (line.mFoldBegin && line.mFoldOpen) {
+          // position cursor to lineNumber
+          mEdit.mState.mCursorPosition = {static_cast<int>(lineNumber), 0};
+          mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
+          mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+
+          cLog::log (LOGINFO, fmt::format ("- close foldBegin:{}", lineNumber));
+          line.mFoldOpen = false;
+
+          // possible scroll???
+          break;
+          }
+        }
+      }
+
+    // close down foldOnly
+    mEdit.mFoldOnly = false;
+    mEdit.mFoldOnlyBeginLineNumber = 0;
+    }
+  }
+//}}}
+//{{{
+int cTextEdit::skipFoldLines (uint32_t lineNumber) {
+// recursively skip fold lines until matching foldEnd
+
+  while (lineNumber <mInfo.mLines.size())
+    if (mInfo.mLines[lineNumber].mFoldBegin)
+      lineNumber = skipFoldLines (lineNumber + 1);
+    else if (mInfo.mLines[lineNumber].mFoldEnd)
+      return lineNumber + 1;
+    else
+      lineNumber++;
+
+  // error if you run off end. begin/end mismatch
+  cLog::log (LOGERROR, "skipToFoldEnd - run off end");
+  return lineNumber;
+  }
+//}}}
+
+// mouse
 //{{{
 void cTextEdit::selectText (int lineNumber, float posX, bool selectWord) {
 
@@ -2329,6 +2331,7 @@ void cTextEdit::dragSelectLine (int lineNumber, float posY) {
   }
 //}}}
 
+// draw
 //{{{
 void cTextEdit::drawTop (cApp& app) {
 
