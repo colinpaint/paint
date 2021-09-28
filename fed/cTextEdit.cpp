@@ -1200,9 +1200,9 @@ int cTextEdit::getCharacterIndex (sPosition position) const {
 
   const cLine::tGlyphs& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
-  int column = 0;
+  uint32_t column = 0;
   int i = 0;
-  for (; (i < static_cast<int>(glyphs.size())) && (column < position.mColumn);) {
+  for (; (i < static_cast<int>(glyphs.size())) && (column < static_cast<uint32_t>(position.mColumn));) {
     if (glyphs[i].mChar == '\t')
       column = getTabColumn (column);
     else
@@ -1222,7 +1222,7 @@ int cTextEdit::getCharacterColumn (int lineNumber, int index) const {
 
   const vector<cGlyph>& glyphs = mInfo.mLines[lineNumber].mGlyphs;
 
-  int column = 0;
+  uint32_t column = 0;
   int i = 0;
   while ((i < index) && i < (static_cast<int>(glyphs.size()))) {
     uint8_t ch = glyphs[i].mChar;
@@ -1238,13 +1238,14 @@ int cTextEdit::getCharacterColumn (int lineNumber, int index) const {
 //}}}
 
 //{{{
-int cTextEdit::getLineNumChars (int row) const {
+uint32_t cTextEdit::getLineNumChars (int row) const {
 
   if (row >= static_cast<int>(mInfo.mLines.size()))
     return 0;
 
   const cLine::tGlyphs& glyphs = mInfo.mLines[row].mGlyphs;
-  int numChars = 0;
+
+  uint32_t numChars = 0;
   for (size_t i = 0; i < glyphs.size(); numChars++)
     i += utf8CharLength (glyphs[i].mChar);
 
@@ -1258,7 +1259,7 @@ int cTextEdit::getLineMaxColumn (int row) const {
     return 0;
 
   const cLine::tGlyphs& glyphs = mInfo.mLines[row].mGlyphs;
-  int column = 0;
+  uint32_t column = 0;
   for (size_t i = 0; i < glyphs.size(); ) {
     uint8_t ch = glyphs[i].mChar;
     if (ch == '\t')
@@ -1273,18 +1274,18 @@ int cTextEdit::getLineMaxColumn (int row) const {
 //}}}
 
 //{{{
-int cTextEdit::getPageNumLines() const {
+uint32_t cTextEdit::getPageNumLines() const {
   float height = ImGui::GetWindowHeight() - 20.f;
-  return static_cast<int>(floor (height / mContext.mLineHeight));
+  return static_cast<uint32_t>(floor (height / mContext.mLineHeight));
   }
 //}}}
 //{{{
-int cTextEdit::getMaxLineIndex() const {
+uint32_t cTextEdit::getMaxLineIndex() const {
 
   if (isFolded())
-    return static_cast<int>(mInfo.mFoldLines.size()-1);
+    return static_cast<uint32_t>(mInfo.mFoldLines.size()-1);
   else
-    return static_cast<int>(mInfo.mLines.size()-1);
+    return static_cast<uint32_t>(mInfo.mLines.size()-1);
   }
 //}}}
 //{{{
@@ -1389,7 +1390,7 @@ string cTextEdit::getWordUnderCursor() const {
 //}}}
 
 //{{{
-int cTextEdit::getTabColumn (int column) const {
+uint32_t cTextEdit::getTabColumn (int column) const {
   return ((column / mInfo.mTabSize) * mInfo.mTabSize) + mInfo.mTabSize;
   }
 //}}}
@@ -1404,7 +1405,7 @@ float cTextEdit::getTabEndPosX (float xPos) const {
 //{{{
 cTextEdit::sPosition cTextEdit::getPositionFromPosX (int lineNumber, float posX) const {
 
-  int column = 0;
+  uint32_t column = 0;
   if ((lineNumber >= 0) && (lineNumber < static_cast<int>(mInfo.mLines.size()))) {
     const vector<cGlyph>& glyphs = mInfo.mLines[lineNumber].mGlyphs;
 
@@ -1577,8 +1578,8 @@ void cTextEdit::scrollCursorVisible() {
 
   // up,down scroll
   int lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  int minIndex = min (getMaxLineIndex(),
-                   static_cast<int>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mContext.mLineHeight)));
+  int minIndex = min (static_cast<int>(getMaxLineIndex()),
+                      static_cast<int>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mContext.mLineHeight)));
   if (lineIndex >= minIndex - 3)
     ImGui::SetScrollY (max (0.f, (lineIndex + 3) * mContext.mLineHeight) - ImGui::GetWindowHeight());
   else {
@@ -1769,7 +1770,7 @@ void cTextEdit::moveDown (int amount) {
   sPosition position = mEdit.mState.mCursorPosition;
   int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
   int lineIndex = getLineIndexFromNumber (lineNumber);
-  lineIndex = min (getMaxLineIndex(), lineIndex + amount);
+  lineIndex = min (static_cast<int>(getMaxLineIndex()), lineIndex + amount);
 
   mEdit.mState.mCursorPosition.mLineNumber = getLineNumberFromIndex (lineIndex);
 

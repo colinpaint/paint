@@ -199,7 +199,7 @@ public:
   std::vector<std::string> getTextStrings() const;
   size_t getNumLines() const { return mInfo.mLines.size(); }
 
-  uint32_t getTabSize() const { return mInfo.mTabSize; }
+  uint8_t getTabSize() const { return mInfo.mTabSize; }
   sPosition getCursorPosition() const { return sanitizePosition (mEdit.mState.mCursorPosition); }
 
   const cLanguage& getLanguage() const { return mOptions.mLanguage; }
@@ -212,7 +212,7 @@ public:
   void setLanguage (const cLanguage& language);
 
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
-  void setTabSize (int value) { mInfo.mTabSize = std::max (0, std::min (32, value)); }
+  void setTabSize (uint8_t tabSize) { mInfo.mTabSize = tabSize; }
 
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverWrite() { mOptions.mOverWrite = !mOptions.mOverWrite; }
@@ -307,12 +307,11 @@ private:
     std::vector <cLine> mLines;
     std::vector <uint32_t> mFoldLines;
 
-    bool mHasTabs = false;
-    int mTabSize = 4;
     bool mHasFolds = false;
     bool mHasCR = false;
-
     bool mTextEdited = false;
+    bool mHasTabs = false;
+    uint8_t mTabSize = 4;
     };
   //}}}
   //{{{
@@ -405,11 +404,11 @@ private:
   int getCharacterIndex (sPosition position) const;
   int getCharacterColumn (int lineNumber, int index) const;
 
-  int getLineNumChars (int row) const;
+  uint32_t getLineNumChars (int row) const;
   int getLineMaxColumn (int row) const;
 
-  int getPageNumLines() const;
-  int getMaxLineIndex() const;
+  uint32_t getPageNumLines() const;
+  uint32_t getMaxLineIndex() const;
   float getTextWidth (sPosition position) const;
 
   std::string getText (sPosition beginPosition, sPosition endPosition) const;
@@ -419,7 +418,7 @@ private:
   std::string getWordAt (sPosition position) const;
   std::string getWordUnderCursor() const;
 
-  int getTabColumn (int column) const;
+  uint32_t getTabColumn (int column) const;
   float getTabEndPosX (float columnX) const;
   sPosition getPositionFromPosX (int lineNumber, float posX) const;
 
