@@ -906,7 +906,6 @@ void cTextEdit::backspace() {
 //{{{
 void cTextEdit::deleteSelection() {
 
-  assert(mEdit.mState.mSelectionEnd >= mEdit.mState.mSelectionBegin);
   if (mEdit.mState.mSelectionEnd == mEdit.mState.mSelectionBegin)
     return;
 
@@ -1013,7 +1012,6 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   sPosition position = getCursorPosition();
   undo.mAddedBegin = position;
 
-  assert (!mInfo.mLines.empty());
   if (ch == '\n') {
     //{{{  enter carraigeReturn into line
     cLine& line = mInfo.mLines[position.mLineNumber];
@@ -1791,8 +1789,6 @@ int cTextEdit::insertTextAt (sPosition& position, const string& insertString) {
 
   const char* text = insertString.c_str();
   while (*text != '\0') {
-    assert (!mInfo.mLines.empty());
-
     if (*text == '\r') // skip
       ++text;
     else if (*text == '\n') {
@@ -1853,12 +1849,7 @@ void cTextEdit::insertText (const string& insertString) {
 //{{{
 void cTextEdit::removeLine (int beginPosition, int endPosition) {
 
-  assert (endPosition >= beginPosition);
-  assert (int(mInfo.mLines.size()) > endPosition - beginPosition);
-
   mInfo.mLines.erase (mInfo.mLines.begin() + beginPosition, mInfo.mLines.begin() + endPosition);
-  assert (!mInfo.mLines.empty());
-
   mEdit.mCheckComments = true;
   mInfo.mTextEdited = true;
   }
@@ -1866,11 +1857,7 @@ void cTextEdit::removeLine (int beginPosition, int endPosition) {
 //{{{
 void cTextEdit::removeLine (int index) {
 
-  assert (mInfo.mLines.size() > 1);
-
   mInfo.mLines.erase (mInfo.mLines.begin() + index);
-  assert (!mInfo.mLines.empty());
-
   mEdit.mCheckComments = true;
   mInfo.mTextEdited = true;
   }
@@ -1878,7 +1865,6 @@ void cTextEdit::removeLine (int index) {
 //{{{
 void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
 
-  assert (endPosition >= beginPosition);
   if (endPosition == beginPosition)
     return;
 
@@ -3072,9 +3058,6 @@ cTextEdit::cUndo::cUndo (const string& added,
     : mAdded(added), mAddedBegin(addedBegin), mAddedEnd(addedEnd),
       mRemoved(removed), mRemovedBegin(removedBegin), mRemovedEnd(removedEnd),
       mBefore(before), mAfter(after) {
-
-  assert (mAddedBegin <= mAddedEnd);
-  assert (mRemovedBegin <= mRemovedEnd);
   }
 //}}}
 
