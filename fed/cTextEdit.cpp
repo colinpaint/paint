@@ -592,10 +592,6 @@ void cTextEdit::setTextStrings (const vector<string>& lines) {
 void cTextEdit::setLanguage (const cLanguage& language) {
 
   mOptions.mLanguage = language;
-
-  mOptions.mRegexList.clear();
-  for (auto& r : mOptions.mLanguage.mTokenRegex)
-    mOptions.mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
   }
 //}}}
 //}}}
@@ -2013,7 +2009,7 @@ void cTextEdit::parseTokens (cLine& line, const string& textString) {
 
     if (!tokenFound) {
       // slower regex search
-      for (auto& p : mOptions.mRegexList) {
+      for (auto& p : mOptions.mLanguage.mRegexList) {
         cmatch results;
         if (regex_search (strPtr, strEnd, results, p.first, regex_constants::match_continuous)) {
           auto& v = *results.begin();
@@ -3130,6 +3126,9 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
       };
 
     language.mTokenRegex.push_back (make_pair <string, uint8_t> ("[ \\t]*#[ \\t]*[a-zA-Z_]+", (uint8_t)ePreProc));
+    language.mRegexList.clear();
+    for (auto& r : language.mTokenRegex)
+      language.mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
     }
 
   return language;
@@ -3182,6 +3181,10 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
       make_pair <string, uint8_t> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
     language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
+
+    language.mRegexList.clear();
+    for (auto& r : language.mTokenRegex)
+      language.mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
     }
 
   return language;
@@ -3234,6 +3237,10 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
       make_pair <string, uint8_t> ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", (uint8_t)eNumber));
     language.mTokenRegex.push_back (
       make_pair <string, uint8_t> ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", (uint8_t)ePunctuation));
+
+    language.mRegexList.clear();
+    for (auto& r : language.mTokenRegex)
+      language.mRegexList.push_back (make_pair (regex (r.first, regex_constants::optimize), r.second));
     }
 
   return language;

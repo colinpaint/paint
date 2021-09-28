@@ -76,6 +76,7 @@ public:
     std::string mDeclaration;
     };
   //}}}
+  using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
   //{{{
   class cLanguage {
   public:
@@ -112,6 +113,7 @@ public:
 
     tTokenSearch mTokenSearch;
     tTokenRegexStrings mTokenRegex;
+    tRegex mRegexList;
     };
   //}}}
   //{{{
@@ -265,7 +267,6 @@ public:
   void drawContents (cApp& app);
 
 private:
-  using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
   //{{{
   struct sCursorSelectionState {
     sPosition mCursorPosition;
@@ -298,7 +299,6 @@ private:
     bool mHoverMonoSpaced = false;
 
     cLanguage mLanguage;
-    tRegex mRegexList;
     };
   //}}}
   //{{{
