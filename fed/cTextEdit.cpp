@@ -870,7 +870,6 @@ void cTextEdit::backspace() {
 
       uint32_t prevSize = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber - 1);
       prevLine.mGlyphs.insert (prevLine.mGlyphs.end(), line.mGlyphs.begin(), line.mGlyphs.end());
-
       removeLine (mEdit.mState.mCursorPosition.mLineNumber);
       --mEdit.mState.mCursorPosition.mLineNumber;
       mEdit.mState.mCursorPosition.mColumn = prevSize;
@@ -927,15 +926,14 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   if (hasSelect()) {
     if ((ch == '\t') && (mEdit.mState.mSelectionBegin.mLineNumber != mEdit.mState.mSelectionEnd.mLineNumber)) {
       //{{{  tab insert into selection
-      auto begin = mEdit.mState.mSelectionBegin;
-      auto end = mEdit.mState.mSelectionEnd;
-      auto originalEnd = end;
+      sPosition begin = mEdit.mState.mSelectionBegin;
+      sPosition end = mEdit.mState.mSelectionEnd;
+      sPosition originalEnd = end;
 
       if (begin > end)
         swap (begin, end);
 
       begin.mColumn = 0;
-      // end.mColumn = end.mGlyphs < mInfo.mLines.size() ? mInfo.mLines[end.mGlyphs].size() : 0;
       if (end.mColumn == 0 && end.mLineNumber > 0)
         --end.mLineNumber;
       if (end.mLineNumber >= static_cast<int>(mInfo.mLines.size()))
