@@ -16,6 +16,7 @@ using namespace std;
 using namespace chrono;
 //}}}
 namespace {
+  constexpr uint32_t kLineNumberUndefined = 0xFFFFFFFF;
   //{{{  palette const
   constexpr uint8_t eBackground =        0;
 
@@ -1103,30 +1104,6 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   scrollCursorVisible();
   }
 //}}}
-
-// fold
-//{{{
-void cTextEdit::openFold() {
-
-  if (isFolded())
-    if (mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFoldBegin)
-      mInfo.mLines[mEdit.mState.mCursorPosition.mLineNumber].mFoldOpen = true;
-  }
-//}}}
-//{{{
-void cTextEdit::closeFold() {
-
-  if (isFolded()) {
-    int lineNumber = mEdit.mState.mCursorPosition.mLineNumber;
-    cLine& line = mInfo.mLines[lineNumber];
-
-    if (line.mFoldBegin && line.mFoldOpen) // if at unfolded foldBegin, fold it
-      line.mFoldOpen = false;
-    else
-      closeFoldEnd (lineNumber);
-    }
-  }
-//}}}
 //}}}
 
 // draws
@@ -1924,55 +1901,6 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
   }
 //}}}
 
-// fold
-//{{{
-int cTextEdit::skipFoldLines (uint32_t lineNumber) {
-// recursively skip fold lines until matching foldEnd
-
-  while (lineNumber <mInfo.mLines.size())
-    if (mInfo.mLines[lineNumber].mFoldBegin)
-      lineNumber = skipFoldLines (lineNumber + 1);
-    else if (mInfo.mLines[lineNumber].mFoldEnd)
-      return lineNumber + 1;
-    else
-      lineNumber++;
-
-  // error if you run off end. begin/end mismatch
-  cLog::log (LOGERROR, "skipToFoldEnd - run off end");
-  return lineNumber;
-  }
-//}}}
-//{{{
-void cTextEdit::closeFoldEnd (uint32_t lineNumber) {
-// close fold we are at end of
-// -  search back for this fold's foldBegin and close it
-//   - skip foldEnd foldBegin pairs
-
-  cLog::log (LOGINFO, fmt::format ("closeFoldEnd:{}", lineNumber));
-
-  int skipFoldPairs = 0;
-
-  while (--lineNumber >= 0) {
-    cLine& line = mInfo.mLines[lineNumber];
-    if (line.mFoldEnd) {
-      skipFoldPairs++;
-      cLog::log (LOGINFO, fmt::format ("- skip foldEnd:{} {}", lineNumber,skipFoldPairs));
-      }
-    else if (line.mFoldBegin && skipFoldPairs) {
-      skipFoldPairs--;
-      cLog::log (LOGINFO, fmt::format (" - skip foldBegin:{} {}", lineNumber, skipFoldPairs));
-      }
-    else if (line.mFoldBegin && line.mFoldOpen) {
-      cLog::log (LOGINFO, fmt::format ("- close foldBegin:{}", lineNumber));
-      line.mFoldOpen = false;
-      mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
-      // possible scroll???
-      break;
-      }
-    }
-  }
-//}}}
-
 // undo
 //{{{
 void cTextEdit::addUndo (cUndo& undo) {
@@ -1989,6 +1917,95 @@ void cTextEdit::addUndo (cUndo& undo) {
   ++mUndoList.mIndex;
   }
 //}}}
+//}}}
+
+// fold
+//{{{
+void cTextEdit::openFold (uint32_t lineNumber) {
+
+  if (isFolded()) {
+    mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+
+    cLine& line = mInfo.mLines[lineNumber];
+    if (line.mFoldBegin)
+      line.mFoldOpen = true;
+    }
+  }
+//}}}
+//{{{
+void cTextEdit::openFoldOnly (uint32_t lineNumber) {
+
+  if (isFolded()) {
+    mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+
+    cLine& line = mInfo.mLines[lineNumber];
+    if (line.mFoldBegin) {
+      line.mFoldOpen = true;
+      mEdit.mFoldOnly = true;
+      mEdit.mFoldOnlyBeginLineNumber = lineNumber;
+      }
+    }
+  }
+//}}}
+//{{{
+void cTextEdit::closeFold (uint32_t lineNumber) {
+
+  if (isFolded()) {
+    // close fold containing lineNumber
+    cLog::log (LOGINFO, fmt::format ("closeFold line:{}", lineNumber));
+
+    if (mInfo.mLines[lineNumber].mFoldBegin)
+      mInfo.mLines[lineNumber].mFoldOpen = false;
+    else {
+      // search back for this fold's foldBegin and close it
+      // - skip foldEnd foldBegin pairs
+      int skipFoldPairs = 0;
+      while (--lineNumber >= 0) {
+        cLine& line = mInfo.mLines[lineNumber];
+        if (line.mFoldEnd) {
+          skipFoldPairs++;
+          cLog::log (LOGINFO, fmt::format ("- skip foldEnd:{} {}", lineNumber,skipFoldPairs));
+          }
+        else if (line.mFoldBegin && skipFoldPairs) {
+          skipFoldPairs--;
+          cLog::log (LOGINFO, fmt::format (" - skip foldBegin:{} {}", lineNumber, skipFoldPairs));
+          }
+        else if (line.mFoldBegin && line.mFoldOpen) {
+          cLog::log (LOGINFO, fmt::format ("- close foldBegin:{}", lineNumber));
+          line.mFoldOpen = false;
+          mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
+          // possible scroll???
+          break;
+          }
+        }
+      }
+
+    // close down foldOnly
+    mEdit.mFoldOnly = false;
+    mEdit.mFoldOnlyBeginLineNumber = kLineNumberUndefined;
+    }
+  }
+//}}}
+//{{{
+int cTextEdit::skipFoldLines (uint32_t lineNumber) {
+// recursively skip fold lines until matching foldEnd
+
+  while (lineNumber <mInfo.mLines.size())
+    if (mInfo.mLines[lineNumber].mFoldBegin)
+      lineNumber = skipFoldLines (lineNumber + 1);
+    else if (mInfo.mLines[lineNumber].mFoldEnd)
+      return lineNumber + 1;
+    else
+      lineNumber++;
+
+  // error if you run off end. begin/end mismatch
+  cLog::log (LOGERROR, "skipToFoldEnd - run off end");
+  return lineNumber;
+  }
 //}}}
 
 //{{{
@@ -2219,23 +2236,6 @@ void cTextEdit::clickLine (int lineNumber) {
   mEdit.mSelection = eSelection::eLine;
 
   setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
-  }
-//}}}
-//{{{
-void cTextEdit::clickFold (int lineNumber, bool foldOpen, bool foldOnly) {
-
-  // open/close fold
-  mEdit.mState.mCursorPosition = sPosition (lineNumber, 0);
-  mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
-
-  mInfo.mLines[lineNumber].mFoldOpen = foldOpen;
-
-  if (foldOnly) {
-    // set foldOnly state
-    mEdit.mFoldOnly = foldOpen;
-    mEdit.mFoldOnlyBeginLineNumber = lineNumber;
-    }
   }
 //}}}
 //{{{
@@ -2525,8 +2525,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
           line.mCommentEnd   ? '}' : ' ',
           line.mCommentFold  ? 'C' : ' ',
           line.mFoldBegin    ? 'b':' ',
-          line.mFoldOpen     ? 'o':' ',
           line.mFoldEnd      ? 'e':' ',
+          line.mFoldOpen     ? 'o' : ' ',
           line.mFoldPressed  ? 'p':' ',
           line.mFoldCommentLineNumber,
           line.mIndent,
@@ -2573,9 +2573,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                               {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive() && !line.mFoldPressed) {
-        // fold
+        // close fold
         line.mFoldPressed = true;
-        clickFold (lineNumber, false, ImGui::IsMouseDoubleClicked(0));
+        closeFold (lineNumber);
         }
       if (ImGui::IsItemDeactivated())
         line.mFoldPressed = false;
@@ -2596,7 +2596,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       }
       //}}}
     else {
-      //{{{  draw foldBegin folded
+      //{{{  draw foldBegin closed
       // add indent
       curPos.x += leftPadWidth;
 
@@ -2612,9 +2612,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                               {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
       if (ImGui::IsItemActive() && !line.mFoldPressed) {
-        // unfold
+        // open fold only
         line.mFoldPressed = true;
-        clickFold (lineNumber, true, ImGui::IsMouseDoubleClicked(0));
+        openFoldOnly (lineNumber);
         }
       if (ImGui::IsItemDeactivated())
         line.mFoldPressed = false;
@@ -2649,7 +2649,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                             {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
     if (ImGui::IsItemActive()) // closeFold at foldEnd, action on press, button is removed while still pressed
-      closeFoldEnd (lineNumber);
+      closeFold (lineNumber);
 
     textPos.x = curPos.x;
     }
@@ -2859,9 +2859,9 @@ void cTextEdit::handleKeyboard() {
   //constexpr int kNumpad4 = 0x144;
   //constexpr int kNumpad5 = 0x145;
   //constexpr int kNumpad6 = 0x146;
-  //constexpr int kNumpad7 = 0x147;
+  constexpr int kNumpad7 = 0x147;
   //constexpr int kNumpad8 = 0x148;
-  //constexpr int kNumpad9 = 0x149;
+  constexpr int kNumpad9 = 0x149;
   //constexpr int kNumpadDecimal = 0x14a;
   //constexpr int kNumpadDivide = 0x14b;
   //constexpr int kNumpadMultiply = 0x14c;
@@ -2905,12 +2905,11 @@ void cTextEdit::handleKeyboard() {
      // numpad
      {false, false, false, kNumpad1,            false, [this]{openFold();}},
      {false, false, false, kNumpad3,            false, [this]{closeFold();}},
+     {false, false, false, kNumpad7,            false, [this]{openFoldOnly();}},
+     {false, false, false, kNumpad9,            false, [this]{closeFold();}},
   // {false, false, false, kNumpad0,            true,  [this]{foldCreate();}},
   // {false, false, false, kNumpad4,            false, [this]{prevFile();}},
   // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
-  // {false, false, false, kNumpad7,            false, [this]{foldEnter();}},
-  // {false, false, false, kNumpad9,            false, [this]{foldExit();}},
-  // {false, true,  false, kNumpad0,            true,  [this]{foldRemove();}},
   // {false, true,  false, kNumpad3,            false, [this]{foldCloseAll();}},
   // {true,  false, false, kNumpadMulitply,     false, [this]{findDialog();}},
   // {true,  false, false, kNumpadDivide,       false, [this]{replaceDialog();}},

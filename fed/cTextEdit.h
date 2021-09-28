@@ -22,7 +22,9 @@ public:
   enum class eSelection { eNormal, eWord, eLine };
   //{{{
   struct sPosition {
-    sPosition() : mLineNumber(0), mColumn(0) {}
+    static const size_t kLineNumberUndefined = 0xFFFFFFFF;
+
+    sPosition() : mLineNumber(kLineNumberUndefined), mColumn(kLineNumberUndefined) {}
     sPosition (int lineNumber, int column) : mLineNumber(lineNumber), mColumn(column) {}
 
     //{{{
@@ -250,11 +252,12 @@ public:
   void undo (int steps = 1);
   void redo (int steps = 1);
 
-  // fold
-  void openFold();
-  void closeFold();
-
   void enterCharacter (ImWchar ch, bool shift);
+
+  // fold
+  void openFold() { openFold (mEdit.mState.mCursorPosition.mLineNumber); }
+  void openFoldOnly() { openFoldOnly (mEdit.mState.mCursorPosition.mLineNumber); }
+  void closeFold() { closeFold (mEdit.mState.mCursorPosition.mLineNumber); }
   //}}}
 
   void drawWindow (const std::string& title, cApp& app);
@@ -355,7 +358,7 @@ private:
 
     // foldOnly state
     bool mFoldOnly = false;
-    int mFoldOnlyBeginLineNumber = 0;
+    int mFoldOnlyBeginLineNumber = 0xFFFFFFFF;
     };
   //}}}
   //{{{
@@ -456,13 +459,15 @@ private:
   void removeLine (int index);
   void deleteRange (sPosition beginPosition, sPosition endPosition);
 
-  // fold
-  int skipFoldLines (uint32_t lineNumber);
-  void closeFoldEnd (uint32_t lineNumber);
-
   // undo
   void addUndo (cUndo& undo);
   //}}}
+
+  //  fold
+  void openFold (uint32_t lineNumber);
+  void openFoldOnly (uint32_t lineNumber);
+  void closeFold (uint32_t lineNumber);
+  int skipFoldLines (uint32_t lineNumber);
 
   // parse
   void parseTokens (cLine& line, const std::string& textString);
@@ -471,7 +476,6 @@ private:
 
   // mouse
   void clickLine (int lineNumber);
-  void clickFold (int lineNumber, bool foldOpen, bool foldOnly);
   void clickText (int lineNumber, float posX, bool selectWord);
   void dragLine (int lineNumber, float posY);
   void dragText (int lineNumber, ImVec2 pos);
