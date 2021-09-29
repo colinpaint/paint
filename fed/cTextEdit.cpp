@@ -505,7 +505,7 @@ bool cTextEdit::hasClipboardText() {
 string cTextEdit::getTextString() const {
 // get text as single string
 
-  return getText ({0,0}, {static_cast<uint32_t>(mInfo.mLines.size()), 0});
+  return getText ({0,0}, {getNumLines(),0});
   }
 //}}}
 
@@ -514,7 +514,7 @@ vector<string> cTextEdit::getTextStrings() const {
 // get text as vector of string
 
   vector<string> result;
-  result.reserve (mInfo.mLines.size());
+  result.reserve (getNumLines());
 
   for (auto& line : mInfo.mLines) {
     string lineString;
@@ -608,7 +608,7 @@ void cTextEdit::moveLeft() {
     // move to end of prevous line
     if (lineNumber > 0) {
       --lineNumber;
-      if (lineNumber < mInfo.mLines.size())
+      if (lineNumber < getNumLines())
         column = static_cast<uint32_t>(mInfo.mLines[lineNumber].mGlyphs.size());
       else
         column = 0;
@@ -638,9 +638,9 @@ void cTextEdit::moveRight() {
   uint32_t column = getCharacterIndex (mEdit.mState.mCursorPosition);
   if (column >= mInfo.mLines [lineNumber].mGlyphs.size()) {
     // move to start of next line
-    if (mEdit.mState.mCursorPosition.mLineNumber < mInfo.mLines.size()-1) {
+    if (mEdit.mState.mCursorPosition.mLineNumber < getNumLines()-1) {
       mEdit.mState.mCursorPosition.mLineNumber =
-        max (0u, min (static_cast<uint32_t>(mInfo.mLines.size()) - 1, mEdit.mState.mCursorPosition.mLineNumber + 1));
+        max (0u, min (getNumLines()-1, mEdit.mState.mCursorPosition.mLineNumber+1));
       mEdit.mState.mCursorPosition.mColumn = 0;
       }
     else
@@ -680,7 +680,7 @@ void cTextEdit::moveHome() {
 void cTextEdit::moveEnd() {
 
   sPosition position = mEdit.mState.mCursorPosition;
-  setCursorPosition ({static_cast<uint32_t>(mInfo.mLines.size())-1, 0});
+  setCursorPosition ({getNumLines()-1, 0});
 
   if (mEdit.mState.mCursorPosition != position) {
     // cursor changed
@@ -695,7 +695,7 @@ void cTextEdit::moveEnd() {
 // select
 //{{{
 void cTextEdit::selectAll() {
-  setSelection ({0,0}, {static_cast<uint32_t>(mInfo.mLines.size()), 0}, eSelection::eNormal);
+  setSelection ({0,0}, {getNumLines(),0}, eSelection::eNormal);
   }
 //}}}
 //{{{
@@ -798,7 +798,7 @@ void cTextEdit::deleteIt() {
     cLine& line = mInfo.mLines[position.mLineNumber];
 
     if (position.mColumn == getLineMaxColumn (position.mLineNumber)) {
-      if (position.mLineNumber == mInfo.mLines.size() - 1)
+      if (position.mLineNumber == getNumLines() - 1)
         return;
 
       undo.mRemoved = '\n';
@@ -934,8 +934,8 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       selectBegin.mColumn = 0;
       if ((selectEnd.mColumn == 0) && (selectEnd.mLineNumber > 0))
         --selectEnd.mLineNumber;
-      if (selectEnd.mLineNumber >= mInfo.mLines.size())
-        selectEnd.mLineNumber = mInfo.mLines.empty() ? 0 : static_cast<int>(mInfo.mLines.size()) - 1;
+      if (selectEnd.mLineNumber >= getNumLines())
+        selectEnd.mLineNumber = mInfo.mLines.empty() ? 0 : getNumLines() - 1;
       selectEnd.mColumn = getLineMaxColumn (selectEnd.mLineNumber);
 
       undo.mRemovedBegin = selectBegin;
@@ -1182,7 +1182,7 @@ void cTextEdit::drawContents (cApp& app) {
 //{{{
 uint32_t cTextEdit::getCharacterIndex (sPosition position) const {
 
-  if (position.mLineNumber >= mInfo.mLines.size()) {
+  if (position.mLineNumber >= getNumLines()) {
     cLog::log (LOGERROR, "cTextEdit::getCharacterIndex - lineNumber too big");
     return 0;
     }
@@ -1203,10 +1203,10 @@ uint32_t cTextEdit::getCharacterIndex (sPosition position) const {
   }
 //}}}
 //{{{
-uint32_t cTextEdit::getCharacterColumn (int lineNumber, uint32_t characterIndex) const {
+uint32_t cTextEdit::getCharacterColumn (uint32_t lineNumber, uint32_t characterIndex) const {
 // handle tabs
 
-  if (lineNumber >= mInfo.mLines.size())
+  if (lineNumber >= getNumLines())
     return 0;
 
   const auto& glyphs = mInfo.mLines[lineNumber].mGlyphs;
@@ -1229,7 +1229,7 @@ uint32_t cTextEdit::getCharacterColumn (int lineNumber, uint32_t characterIndex)
 //{{{
 uint32_t cTextEdit::getLineNumChars (uint32_t row) const {
 
-  if (row >= mInfo.mLines.size())
+  if (row >= getNumLines())
     return 0;
 
   const auto& glyphs = mInfo.mLines[row].mGlyphs;
@@ -1244,7 +1244,7 @@ uint32_t cTextEdit::getLineNumChars (uint32_t row) const {
 //{{{
 uint32_t cTextEdit::getLineMaxColumn (uint32_t row) const {
 
-  if (row >= mInfo.mLines.size())
+  if (row >= getNumLines())
     return 0;
 
   const auto& glyphs = mInfo.mLines[row].mGlyphs;
@@ -1266,15 +1266,6 @@ uint32_t cTextEdit::getLineMaxColumn (uint32_t row) const {
 uint32_t cTextEdit::getPageNumLines() const {
   float height = ImGui::GetWindowHeight() - 20.f;
   return static_cast<uint32_t>(floor (height / mContext.mLineHeight));
-  }
-//}}}
-//{{{
-uint32_t cTextEdit::getMaxLineIndex() const {
-
-  if (isFolded())
-    return static_cast<uint32_t>(mInfo.mFoldLines.size()-1);
-  else
-    return static_cast<uint32_t>(mInfo.mLines.size()-1);
   }
 //}}}
 //{{{
@@ -1309,12 +1300,12 @@ float cTextEdit::getTextWidth (sPosition position) const {
 string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) const {
 // get text as string with lineFeed line breaks
 
-  int beginLineNumber = beginPosition.mLineNumber;
-  int endLineNumber = endPosition.mLineNumber;
+  uint32_t beginLineNumber = beginPosition.mLineNumber;
+  uint32_t endLineNumber = endPosition.mLineNumber;
 
   // count approx num chars, reserve
   size_t numChars = 0;
-  for (int lineNumber = beginLineNumber; lineNumber < endLineNumber; lineNumber++)
+  for (uint32_t lineNumber = beginLineNumber; lineNumber < endLineNumber; lineNumber++)
     numChars += mInfo.mLines[lineNumber].mGlyphs.size();
   string textString;
   textString.reserve (numChars + (numChars / 8));
@@ -1322,7 +1313,7 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) const
   uint32_t beginCharacterIndex = getCharacterIndex (beginPosition);
   uint32_t endCharacterIndex = getCharacterIndex (endPosition);
   while ((beginCharacterIndex < endCharacterIndex) || (beginLineNumber < endLineNumber)) {
-    if (beginLineNumber >= mInfo.mLines.size())
+    if (beginLineNumber >= getNumLines())
       break;
 
     if (beginCharacterIndex < mInfo.mLines[beginLineNumber].mGlyphs.size()) {
@@ -1348,7 +1339,7 @@ string cTextEdit::getSelectedText() const {
 //{{{
 bool cTextEdit::isOnWordBoundary (sPosition position) const {
 
-  if ((position.mLineNumber >= mInfo.mLines.size()) || (position.mColumn == 0))
+  if ((position.mLineNumber >= getNumLines()) || (position.mColumn == 0))
     return true;
 
   const auto& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
@@ -1393,7 +1384,7 @@ float cTextEdit::getTabEndPosX (float xPos) const {
 cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float posX) const {
 
   uint32_t column = 0;
-  if ((lineNumber >= 0) && (lineNumber < mInfo.mLines.size())) {
+  if ((lineNumber >= 0) && (lineNumber < getNumLines())) {
     const auto& glyphs = mInfo.mLines[lineNumber].mGlyphs;
 
     float columnX = 0.f;
@@ -1442,7 +1433,7 @@ uint32_t cTextEdit::getLineNumberFromIndex (uint32_t lineIndex) const {
   if (!isFolded()) // lineNumber is lineIndex
     return lineIndex;
 
-  if (lineIndex < mInfo.mFoldLines.size())
+  if (lineIndex < getNumFoldLines())
     return mInfo.mFoldLines[lineIndex];
 
   cLog::log (LOGERROR, fmt::format ("getLineNumberFromIndex {} no line for that index", lineIndex));
@@ -1537,14 +1528,14 @@ void cTextEdit::setSelection (sPosition beginPosition, sPosition endPosition, eS
 //{{{
 void cTextEdit::advance (sPosition& position) const {
 
-  if (position.mLineNumber < mInfo.mLines.size()) {
+  if (position.mLineNumber < getNumLines()) {
 
     const auto& glyphs = mInfo.mLines[position.mLineNumber].mGlyphs;
 
     uint32_t characterIndex = getCharacterIndex (position);
     if (characterIndex + 1 < glyphs.size()) {
       uint32_t delta = utf8CharLength (glyphs[characterIndex].mChar);
-      characterIndex = min (characterIndex + delta, static_cast<uint32_t>(glyphs.size()) - 1);
+      characterIndex = min (characterIndex + delta, static_cast<uint32_t>(glyphs.size())-1);
       }
     else {
       ++position.mLineNumber;
@@ -1598,14 +1589,13 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) const {
 // - else
 //    or begin of empty lines
 
-  if (position.mLineNumber < mInfo.mLines.size())
+  if (position.mLineNumber < getNumLines())
     return sPosition (position.mLineNumber,
                       mInfo.mLines.empty() ? 0 : min (position.mColumn, getLineMaxColumn (position.mLineNumber)));
   else if (mInfo.mLines.empty())
     return sPosition (0,0);
   else
-    return sPosition (static_cast<uint32_t>(mInfo.mLines.size())-1,
-                      getLineMaxColumn (static_cast<uint32_t>(mInfo.mLines.size())-1));
+    return sPosition (getNumLines()-1, getLineMaxColumn (getNumLines()-1));
   }
 //}}}
 
@@ -1613,7 +1603,7 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) const {
 //{{{
 cTextEdit::sPosition cTextEdit::findWordBegin (sPosition fromPosition) const {
 
-  if (fromPosition.mLineNumber >= mInfo.mLines.size())
+  if (fromPosition.mLineNumber >= getNumLines())
     return fromPosition;
 
   const auto& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
@@ -1644,7 +1634,7 @@ cTextEdit::sPosition cTextEdit::findWordBegin (sPosition fromPosition) const {
 //{{{
 cTextEdit::sPosition cTextEdit::findWordEnd (sPosition fromPosition) const {
 
-  if (fromPosition.mLineNumber >= mInfo.mLines.size())
+  if (fromPosition.mLineNumber >= getNumLines())
     return fromPosition;
 
   const auto& glyphs = mInfo.mLines[fromPosition.mLineNumber].mGlyphs;
@@ -1675,7 +1665,7 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition fromPosition) const {
 //{{{
 cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) const {
 
-  if (fromPosition.mLineNumber >= mInfo.mLines.size())
+  if (fromPosition.mLineNumber >= getNumLines())
     return fromPosition;
 
   // skip to the next non-word character
@@ -1690,8 +1680,8 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) const {
     }
 
   while (!isWord || skip) {
-    if (fromPosition.mLineNumber >= mInfo.mLines.size()) {
-      uint32_t lineNumber = max (0u, static_cast<uint32_t>(mInfo.mLines.size())-1);
+    if (fromPosition.mLineNumber >= getNumLines()) {
+      uint32_t lineNumber = max (0u, getNumLines()-1);
       return sPosition (lineNumber, getLineMaxColumn (lineNumber));
       }
 
@@ -1912,7 +1902,7 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
 //{{{
 void cTextEdit::addUndo (cUndo& undo) {
 
-  mUndoList.mBuffer.resize (static_cast<size_t>(mUndoList.mIndex) + 1);
+  mUndoList.mBuffer.resize (mUndoList.mIndex+1);
   mUndoList.mBuffer.back() = undo;
   ++mUndoList.mIndex;
   }
@@ -2072,7 +2062,7 @@ void cTextEdit::parseComments() {
 
     size_t curIndex = 0;
     size_t curLine = 0;
-    while (curLine < mInfo.mLines.size()) {
+    while (curLine < getNumLines()) {
       auto& glyphs = mInfo.mLines[curLine].mGlyphs;
       size_t numGlyphs = glyphs.size();
       if (numGlyphs > 0) {
@@ -2225,7 +2215,7 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
 int cTextEdit::skipFoldLines (uint32_t lineNumber) {
 // recursively skip fold lines until matching foldEnd
 
-  while (lineNumber <mInfo.mLines.size())
+  while (lineNumber <getNumLines())
     if (mInfo.mLines[lineNumber].mFoldBegin)
       lineNumber = skipFoldLines (lineNumber + 1);
     else if (mInfo.mLines[lineNumber].mFoldEnd)
@@ -2264,7 +2254,7 @@ void cTextEdit::dragSelectText (uint32_t lineNumber, ImVec2 pos) {
     }
   else {
     // allow multiline drag
-    lineNumber = max (0u, min (static_cast<uint32_t>(mInfo.mLines.size())-1, lineNumber + numDragLines));
+    lineNumber = max (0u, min (getNumLines()-1, lineNumber + numDragLines));
     }
 
   mEdit.mState.mCursorPosition = getPositionFromPosX (lineNumber, pos.x);
@@ -2297,11 +2287,11 @@ void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
 
   if (isFolded()) {
     uint32_t lineIndex = getLineIndexFromNumber (lineNumber);
-    lineIndex = max (0u, min (static_cast<uint32_t>(mInfo.mFoldLines.size())-1, lineIndex + numDragLines));
+    lineIndex = max (0u, min (getNumFoldLines()-1, lineIndex + numDragLines));
     lineNumber = mInfo.mFoldLines[lineIndex];
     }
   else // simple add to lineNumber
-    lineNumber = max (0u, min (static_cast<uint32_t>(mInfo.mLines.size())-1, lineNumber + numDragLines));
+    lineNumber = max (0u, min (getNumLines()-1, lineNumber + numDragLines));
 
   mEdit.mState.mCursorPosition.mLineNumber = lineNumber;
   mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
@@ -2510,7 +2500,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
   if (isFolded()) {
     //{{{  update mFoldLines vector
-    if (lineIndex >= mInfo.mFoldLines.size())
+    if (lineIndex >= getNumFoldLines())
       mInfo.mFoldLines.push_back (lineNumber);
     else
       mInfo.mFoldLines[lineIndex] = lineNumber;
@@ -2755,7 +2745,7 @@ uint32_t cTextEdit::drawFolded() {
   uint32_t lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
 
   uint32_t lineIndex = 0;
-  while (lineNumber < mInfo.mLines.size()) {
+  while (lineNumber < getNumLines()) {
     cLine& line = mInfo.mLines[lineNumber];
     if (line.mFoldBegin) {
       if (line.mFoldOpen) {
@@ -2814,7 +2804,7 @@ void cTextEdit::drawUnfolded() {
 
   // clipper begin
   ImGuiListClipper clipper;
-  clipper.Begin (static_cast<int>(mInfo.mLines.size()), mContext.mLineHeight);
+  clipper.Begin (getNumLines(), mContext.mLineHeight);
   clipper.Step();
 
   // clipper iterate

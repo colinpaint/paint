@@ -197,7 +197,6 @@ public:
   // get
   std::string getTextString() const;
   std::vector<std::string> getTextStrings() const;
-  uint32_t getNumLines() const { return static_cast<uint32_t>(mInfo.mLines.size()); }
 
   uint32_t getTabSize() const { return mInfo.mTabSize; }
   sPosition getCursorPosition() const { return sanitizePosition (mEdit.mState.mCursorPosition); }
@@ -391,7 +390,7 @@ private:
   //{{{
   class cUndoList {
   public:
-    int mIndex = 0;
+    uint32_t mIndex = 0;
     std::vector <cUndo> mBuffer;
     };
   //}}}
@@ -402,14 +401,16 @@ private:
   bool isDrawWhiteSpace() const { return mOptions.mShowWhiteSpace || mOptions.mHoverWhiteSpace; }
   bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced ^ mOptions.mHoverMonoSpaced; }
 
-  uint32_t getCharacterIndex (sPosition position) const;
-  uint32_t getCharacterColumn (int lineNumber, uint32_t characterIndex) const;
+  uint32_t getNumLines() const { return static_cast<uint32_t>(mInfo.mLines.size()); }
+  uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mInfo.mFoldLines.size()); }
+  uint32_t getPageNumLines() const;
 
+  uint32_t getCharacterIndex (sPosition position) const;
+  uint32_t getCharacterColumn (uint32_t lineNumber, uint32_t characterIndex) const;
   uint32_t getLineNumChars (uint32_t row) const;
   uint32_t getLineMaxColumn (uint32_t row) const;
+  uint32_t getMaxLineIndex() const { return isFolded() ? getNumFoldLines()-1 : getNumLines()-1; }
 
-  uint32_t getPageNumLines() const;
-  uint32_t getMaxLineIndex() const;
   float getTextWidth (sPosition position) const;
 
   std::string getText (sPosition beginPosition, sPosition endPosition) const;
