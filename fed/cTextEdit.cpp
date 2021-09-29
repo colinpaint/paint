@@ -1954,7 +1954,7 @@ void cTextEdit::parseLine (cLine& line) {
   if (line.mGlyphs.empty())
     return;
 
-  // glyphs to string
+  // create glyphs string
   string glyphString;
   for (auto& glyph : line.mGlyphs) {
     glyph.mColor = eText;
