@@ -598,11 +598,11 @@ void cTextEdit::setLanguage (const cLanguage& language) {
 void cTextEdit::moveLeft() {
 
   // lineNumber
-  sPosition position = mEdit.mState.mCursorPosition;
+  sPosition position = mEdit.mCursor.mPosition;
   uint32_t lineNumber = position.mLineNumber;
 
   // column
-  uint32_t column = getCharacterIndex (mEdit.mState.mCursorPosition);
+  uint32_t column = getCharacterIndex (mEdit.mCursor.mPosition);
   if (column == 0) {
     // move to end of prevous line
     if (lineNumber > 0) {
@@ -616,11 +616,11 @@ void cTextEdit::moveLeft() {
   else // move to previous column on same line
     while ((--column > 0) && isUtfSequence (getGlyphs (lineNumber)[column].mChar)) {}
 
-  mEdit.mState.mCursorPosition = {lineNumber, getCharacterColumn (lineNumber, column)};
-  if (mEdit.mState.mCursorPosition != position) {
+  mEdit.mCursor.mPosition = {lineNumber, getCharacterColumn (lineNumber, column)};
+  if (mEdit.mCursor.mPosition != position) {
     // cursor changed
-    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+    mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
     scrollCursorVisible();
     }
@@ -630,17 +630,17 @@ void cTextEdit::moveLeft() {
 void cTextEdit::moveRight() {
 
   // lineNumber
-  sPosition position = mEdit.mState.mCursorPosition;
+  sPosition position = mEdit.mCursor.mPosition;
   uint32_t lineNumber = position.mLineNumber;
 
   // column
-  uint32_t column = getCharacterIndex (mEdit.mState.mCursorPosition);
+  uint32_t column = getCharacterIndex (mEdit.mCursor.mPosition);
   if (column >= getNumGlyphs (lineNumber)) {
     // move to start of next line
-    if (mEdit.mState.mCursorPosition.mLineNumber < getNumLines()-1) {
-      mEdit.mState.mCursorPosition.mLineNumber =
-        max (0u, min (getNumLines()-1, mEdit.mState.mCursorPosition.mLineNumber+1));
-      mEdit.mState.mCursorPosition.mColumn = 0;
+    if (mEdit.mCursor.mPosition.mLineNumber < getNumLines()-1) {
+      mEdit.mCursor.mPosition.mLineNumber =
+        max (0u, min (getNumLines()-1, mEdit.mCursor.mPosition.mLineNumber+1));
+      mEdit.mCursor.mPosition.mColumn = 0;
       }
     else
       return;
@@ -648,13 +648,13 @@ void cTextEdit::moveRight() {
   else {
     // move to next columm on same line
     column += utf8CharLength (getGlyphs (lineNumber)[column].mChar);
-    mEdit.mState.mCursorPosition = {lineNumber, getCharacterColumn (lineNumber, column)};
+    mEdit.mCursor.mPosition = {lineNumber, getCharacterColumn (lineNumber, column)};
     }
 
-  if (mEdit.mState.mCursorPosition != position) {
+  if (mEdit.mCursor.mPosition != position) {
     // cursor changed
-    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+    mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
     scrollCursorVisible();
     }
@@ -663,13 +663,13 @@ void cTextEdit::moveRight() {
 //{{{
 void cTextEdit::moveHome() {
 
-  sPosition position = mEdit.mState.mCursorPosition;
+  sPosition position = mEdit.mCursor.mPosition;
   setCursorPosition ({0,0});
 
-  if (mEdit.mState.mCursorPosition != position) {
+  if (mEdit.mCursor.mPosition != position) {
     // cursor changed
-    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+    mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
     scrollCursorVisible();
     }
@@ -678,13 +678,13 @@ void cTextEdit::moveHome() {
 //{{{
 void cTextEdit::moveEnd() {
 
-  sPosition position = mEdit.mState.mCursorPosition;
+  sPosition position = mEdit.mCursor.mPosition;
   setCursorPosition ({getNumLines()-1, 0});
 
-  if (mEdit.mState.mCursorPosition != position) {
+  if (mEdit.mCursor.mPosition != position) {
     // cursor changed
-    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+    mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
     scrollCursorVisible();
     }
@@ -730,15 +730,15 @@ void cTextEdit::cut() {
 
   else if (hasSelect()) {
     cUndo undo;
-    undo.mBefore = mEdit.mState;
+    undo.mBefore = mEdit.mCursor;
     undo.mRemoved = getSelectedText();
-    undo.mRemovedBegin = mEdit.mState.mSelectionBegin;
-    undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
+    undo.mRemovedBegin = mEdit.mCursor.mSelectionBegin;
+    undo.mRemovedEnd = mEdit.mCursor.mSelectionEnd;
 
     copy();
     deleteSelection();
 
-    undo.mAfter = mEdit.mState;
+    undo.mAfter = mEdit.mCursor;
     addUndo (undo);
     }
   }
@@ -751,13 +751,13 @@ void cTextEdit::paste() {
 
   if (hasClipboardText()) {
     cUndo undo;
-    undo.mBefore = mEdit.mState;
+    undo.mBefore = mEdit.mCursor;
 
     if (hasSelect()) {
       // save and delete selection
       undo.mRemoved = getSelectedText();
-      undo.mRemovedBegin = mEdit.mState.mSelectionBegin;
-      undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
+      undo.mRemovedBegin = mEdit.mCursor.mSelectionBegin;
+      undo.mRemovedEnd = mEdit.mCursor.mSelectionEnd;
       deleteSelection();
       }
 
@@ -768,7 +768,7 @@ void cTextEdit::paste() {
     insertText (clipboardString);
 
     undo.mAddedEnd = getCursorPosition();
-    undo.mAfter = mEdit.mState;
+    undo.mAfter = mEdit.mCursor;
     addUndo (undo);
     }
   }
@@ -782,12 +782,12 @@ void cTextEdit::deleteIt() {
     return;
 
   cUndo undo;
-  undo.mBefore = mEdit.mState;
+  undo.mBefore = mEdit.mCursor;
 
   if (hasSelect()) {
     undo.mRemoved = getSelectedText();
-    undo.mRemovedBegin = mEdit.mState.mSelectionBegin;
-    undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
+    undo.mRemovedBegin = mEdit.mCursor.mSelectionBegin;
+    undo.mRemovedEnd = mEdit.mCursor.mSelectionEnd;
     deleteSelection();
     }
 
@@ -828,7 +828,7 @@ void cTextEdit::deleteIt() {
     mDoc.mEdited = true;
     }
 
-  undo.mAfter = mEdit.mState;
+  undo.mAfter = mEdit.mCursor;
   addUndo (undo);
   }
 //}}}
@@ -839,13 +839,13 @@ void cTextEdit::backspace() {
     return;
 
   cUndo undo;
-  undo.mBefore = mEdit.mState;
+  undo.mBefore = mEdit.mCursor;
 
   if (hasSelect()) {
     //{{{  backspace delete selection
     undo.mRemoved = getSelectedText();
-    undo.mRemovedBegin = mEdit.mState.mSelectionBegin;
-    undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
+    undo.mRemovedBegin = mEdit.mCursor.mSelectionBegin;
+    undo.mRemovedEnd = mEdit.mCursor.mSelectionEnd;
 
     deleteSelection();
     }
@@ -854,8 +854,8 @@ void cTextEdit::backspace() {
   else {
     sPosition position = getCursorPosition();
     setCursorPosition (position);
-    if (mEdit.mState.mCursorPosition.mColumn == 0) {
-      if (mEdit.mState.mCursorPosition.mLineNumber == 0)
+    if (mEdit.mCursor.mPosition.mColumn == 0) {
+      if (mEdit.mCursor.mPosition.mLineNumber == 0)
         return;
 
       undo.mRemoved = '\n';
@@ -863,26 +863,26 @@ void cTextEdit::backspace() {
       undo.mRemovedEnd = undo.mRemovedBegin;
       advance (undo.mRemovedEnd);
 
-      cLine& line = getLine (mEdit.mState.mCursorPosition.mLineNumber);
-      cLine& prevLine = getLine (mEdit.mState.mCursorPosition.mLineNumber-1);
+      cLine& line = getLine (mEdit.mCursor.mPosition.mLineNumber);
+      cLine& prevLine = getLine (mEdit.mCursor.mPosition.mLineNumber-1);
 
-      uint32_t prevSize = getLineMaxColumn (mEdit.mState.mCursorPosition.mLineNumber - 1);
+      uint32_t prevSize = getLineMaxColumn (mEdit.mCursor.mPosition.mLineNumber - 1);
       prevLine.mGlyphs.insert (prevLine.mGlyphs.end(), line.mGlyphs.begin(), line.mGlyphs.end());
-      removeLine (mEdit.mState.mCursorPosition.mLineNumber);
-      --mEdit.mState.mCursorPosition.mLineNumber;
-      mEdit.mState.mCursorPosition.mColumn = prevSize;
+      removeLine (mEdit.mCursor.mPosition.mLineNumber);
+      --mEdit.mCursor.mPosition.mLineNumber;
+      mEdit.mCursor.mPosition.mColumn = prevSize;
       }
 
     else {
       uint32_t characterIndex = getCharacterIndex (position) - 1;
       uint32_t characterIndexEnd = characterIndex + 1;
-      cLine& line = getLine (mEdit.mState.mCursorPosition.mLineNumber);
+      cLine& line = getLine (mEdit.mCursor.mPosition.mLineNumber);
       while ((characterIndex > 0) && isUtfSequence (line.mGlyphs[characterIndex].mChar))
         --characterIndex;
 
       undo.mRemovedBegin = undo.mRemovedEnd = getCursorPosition();
       --undo.mRemovedBegin.mColumn;
-      --mEdit.mState.mCursorPosition.mColumn;
+      --mEdit.mCursor.mPosition.mColumn;
 
       while ((characterIndex < line.getNumGlyphs()) && (characterIndexEnd-- > characterIndex)) {
         undo.mRemoved += line.mGlyphs[characterIndex].mChar;
@@ -895,20 +895,20 @@ void cTextEdit::backspace() {
     scrollCursorVisible();
     }
 
-  undo.mAfter = mEdit.mState;
+  undo.mAfter = mEdit.mCursor;
   addUndo (undo);
   }
 //}}}
 //{{{
 void cTextEdit::deleteSelection() {
 
-  if (mEdit.mState.mSelectionEnd == mEdit.mState.mSelectionBegin)
+  if (mEdit.mCursor.mSelectionEnd == mEdit.mCursor.mSelectionBegin)
     return;
 
-  deleteRange (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionEnd);
+  deleteRange (mEdit.mCursor.mSelectionBegin, mEdit.mCursor.mSelectionEnd);
 
-  setSelection (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionBegin, eSelection::eNormal);
-  setCursorPosition (mEdit.mState.mSelectionBegin);
+  setSelection (mEdit.mCursor.mSelectionBegin, mEdit.mCursor.mSelectionBegin, eSelection::eNormal);
+  setCursorPosition (mEdit.mCursor.mSelectionBegin);
   }
 //}}}
 
@@ -917,13 +917,13 @@ void cTextEdit::deleteSelection() {
 void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
   cUndo undo;
-  undo.mBefore = mEdit.mState;
+  undo.mBefore = mEdit.mCursor;
 
   if (hasSelect()) {
-    if ((ch == '\t') && (mEdit.mState.mSelectionBegin.mLineNumber != mEdit.mState.mSelectionEnd.mLineNumber)) {
+    if ((ch == '\t') && (mEdit.mCursor.mSelectionBegin.mLineNumber != mEdit.mCursor.mSelectionEnd.mLineNumber)) {
       //{{{  tab insert into selection
-      sPosition selectBegin = mEdit.mState.mSelectionBegin;
-      sPosition selectEnd = mEdit.mState.mSelectionEnd;
+      sPosition selectBegin = mEdit.mCursor.mSelectionBegin;
+      sPosition selectEnd = mEdit.mCursor.mSelectionEnd;
       sPosition originalEnd = selectEnd;
 
       if (selectBegin > selectEnd)
@@ -980,10 +980,10 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
         undo.mAddedBegin = selectBegin;
         undo.mAddedEnd = rangeEnd;
-        undo.mAfter = mEdit.mState;
+        undo.mAfter = mEdit.mCursor;
 
-        mEdit.mState.mSelectionBegin = selectBegin;
-        mEdit.mState.mSelectionEnd = selectEnd;
+        mEdit.mCursor.mSelectionBegin = selectBegin;
+        mEdit.mCursor.mSelectionEnd = selectEnd;
         addUndo (undo);
         mDoc.mEdited = true;
 
@@ -997,8 +997,8 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
     else {
       //{{{  deleteSelection before insert
       undo.mRemoved = getSelectedText();
-      undo.mRemovedBegin = mEdit.mState.mSelectionBegin;
-      undo.mRemovedEnd = mEdit.mState.mSelectionEnd;
+      undo.mRemovedBegin = mEdit.mCursor.mSelectionBegin;
+      undo.mRemovedEnd = mEdit.mCursor.mSelectionEnd;
 
       deleteSelection();
       }
@@ -1047,7 +1047,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       uint32_t characterIndex = getCharacterIndex (position);
       if (mOptions.mOverWrite && (characterIndex < line.getNumGlyphs())) {
         uint32_t length = utf8CharLength(line.mGlyphs[characterIndex].mChar);
-        undo.mRemovedBegin = mEdit.mState.mCursorPosition;
+        undo.mRemovedBegin = mEdit.mCursor.mPosition;
         undo.mRemovedEnd = {position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex + length)};
         while ((length > 0) && (characterIndex < line.getNumGlyphs())) {
           undo.mRemoved += line.mGlyphs[characterIndex].mChar;
@@ -1071,7 +1071,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   mDoc.mEdited = true;
 
   undo.mAddedEnd = getCursorPosition();
-  undo.mAfter = mEdit.mState;
+  undo.mAfter = mEdit.mCursor;
   addUndo (undo);
 
   scrollCursorVisible();
@@ -1091,14 +1091,14 @@ void cTextEdit::createFold() {
                         mOptions.mLanguage.mFoldEndMarker +
                         "\n";
   cUndo undo;
-  undo.mBefore = mEdit.mState;
+  undo.mBefore = mEdit.mCursor;
   undo.mAdded = insertString;
   undo.mAddedBegin = getCursorPosition();
 
   insertText (insertString);
 
   undo.mAddedEnd = getCursorPosition();
-  undo.mAfter = mEdit.mState;
+  undo.mAfter = mEdit.mCursor;
   addUndo (undo);
   }
 //}}}
@@ -1453,8 +1453,8 @@ float cTextEdit::getTabEndPosX (float xPos) {
 //{{{
 void cTextEdit::setCursorPosition (sPosition position) {
 
-  if (mEdit.mState.mCursorPosition != position) {
-    mEdit.mState.mCursorPosition = position;
+  if (mEdit.mCursor.mPosition != position) {
+    mEdit.mCursor.mPosition = position;
     scrollCursorVisible();
     }
   }
@@ -1463,27 +1463,27 @@ void cTextEdit::setCursorPosition (sPosition position) {
 //{{{
 void cTextEdit::setSelectionBegin (sPosition position) {
 
-  mEdit.mState.mSelectionBegin = sanitizePosition (position);
-  if (mEdit.mState.mSelectionBegin > mEdit.mState.mSelectionEnd)
-    swap (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionEnd);
+  mEdit.mCursor.mSelectionBegin = sanitizePosition (position);
+  if (mEdit.mCursor.mSelectionBegin > mEdit.mCursor.mSelectionEnd)
+    swap (mEdit.mCursor.mSelectionBegin, mEdit.mCursor.mSelectionEnd);
   }
 //}}}
 //{{{
 void cTextEdit::setSelectionEnd (sPosition position) {
 
-  mEdit.mState.mSelectionEnd = sanitizePosition (position);
-  if (mEdit.mState.mSelectionBegin > mEdit.mState.mSelectionEnd)
-    swap (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionEnd);
+  mEdit.mCursor.mSelectionEnd = sanitizePosition (position);
+  if (mEdit.mCursor.mSelectionBegin > mEdit.mCursor.mSelectionEnd)
+    swap (mEdit.mCursor.mSelectionBegin, mEdit.mCursor.mSelectionEnd);
   }
 //}}}
 
 //{{{
 void cTextEdit::setSelection (sPosition beginPosition, sPosition endPosition, eSelection mode) {
 
-  mEdit.mState.mSelectionBegin = sanitizePosition (beginPosition);
-  mEdit.mState.mSelectionEnd = sanitizePosition (endPosition);
-  if (mEdit.mState.mSelectionBegin > mEdit.mState.mSelectionEnd)
-    swap (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionEnd);
+  mEdit.mCursor.mSelectionBegin = sanitizePosition (beginPosition);
+  mEdit.mCursor.mSelectionEnd = sanitizePosition (endPosition);
+  if (mEdit.mCursor.mSelectionBegin > mEdit.mCursor.mSelectionEnd)
+    swap (mEdit.mCursor.mSelectionBegin, mEdit.mCursor.mSelectionEnd);
 
   switch (mode) {
     case cTextEdit::eSelection::eNormal:
@@ -1491,16 +1491,16 @@ void cTextEdit::setSelection (sPosition beginPosition, sPosition endPosition, eS
 
     case cTextEdit::eSelection::eWord: {
       // set word columns
-      mEdit.mState.mSelectionBegin = findWordBegin (mEdit.mState.mSelectionBegin);
-      if (!isOnWordBoundary (mEdit.mState.mSelectionEnd))
-        mEdit.mState.mSelectionEnd = findWordEnd (findWordBegin (mEdit.mState.mSelectionEnd));
+      mEdit.mCursor.mSelectionBegin = findWordBegin (mEdit.mCursor.mSelectionBegin);
+      if (!isOnWordBoundary (mEdit.mCursor.mSelectionEnd))
+        mEdit.mCursor.mSelectionEnd = findWordEnd (findWordBegin (mEdit.mCursor.mSelectionEnd));
       break;
       }
 
     case cTextEdit::eSelection::eLine: {
       // set whole line columns
-      mEdit.mState.mSelectionBegin.mColumn = 0;
-      mEdit.mState.mSelectionEnd.mColumn = getLineMaxColumn (mEdit.mState.mSelectionEnd.mLineNumber);
+      mEdit.mCursor.mSelectionBegin.mColumn = 0;
+      mEdit.mCursor.mSelectionEnd.mColumn = getLineMaxColumn (mEdit.mCursor.mSelectionEnd.mLineNumber);
       break;
       }
 
@@ -1699,7 +1699,7 @@ void cTextEdit::moveUp (uint32_t amount) {
     return;
 
   // lineNumber
-  sPosition position = mEdit.mState.mCursorPosition;
+  sPosition position = mEdit.mCursor.mPosition;
   int lineNumber = position.mLineNumber;
   if (lineNumber == 0)
     return;
@@ -1709,11 +1709,11 @@ void cTextEdit::moveUp (uint32_t amount) {
   lineIndex = (amount < lineIndex) ? lineIndex - amount : 0;
 
   // cursorPosition
-  mEdit.mState.mCursorPosition.mLineNumber = getLineNumberFromIndex (lineIndex);
-  if (mEdit.mState.mCursorPosition != position) {
+  mEdit.mCursor.mPosition.mLineNumber = getLineNumberFromIndex (lineIndex);
+  if (mEdit.mCursor.mPosition != position) {
     // cursor changed
-    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+    mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
 
     scrollCursorVisible();
@@ -1727,7 +1727,7 @@ void cTextEdit::moveDown (uint32_t amount) {
     return;
 
   // lineNumber
-  sPosition position = mEdit.mState.mCursorPosition;
+  sPosition position = mEdit.mCursor.mPosition;
   int lineNumber = position.mLineNumber;
 
   // lineIndex
@@ -1735,11 +1735,11 @@ void cTextEdit::moveDown (uint32_t amount) {
   lineIndex = min (getMaxLineIndex(), lineIndex + amount);
 
   // cursorPosition
-  mEdit.mState.mCursorPosition.mLineNumber = getLineNumberFromIndex (lineIndex);
-  if (mEdit.mState.mCursorPosition != position) {
+  mEdit.mCursor.mPosition.mLineNumber = getLineNumberFromIndex (lineIndex);
+  if (mEdit.mCursor.mPosition != position) {
     // cursor changed
-    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+    mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
 
     scrollCursorVisible();
@@ -1810,7 +1810,7 @@ void cTextEdit::insertText (const string& insertString) {
     return;
 
   sPosition position = getCursorPosition();
-  sPosition beginPosition = min (position, mEdit.mState.mSelectionBegin);
+  sPosition beginPosition = min (position, mEdit.mCursor.mSelectionBegin);
 
   int totalLines = position.mLineNumber - beginPosition.mLineNumber;
   totalLines += insertTextAt (position, insertString);
@@ -2120,9 +2120,9 @@ void cTextEdit::openFold (uint32_t lineNumber) {
 
   if (isFolded()) {
     // position cursor to lineNumber, first column
-    mEdit.mState.mCursorPosition = {lineNumber,0};
-    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    mEdit.mCursor.mPosition = {lineNumber,0};
+    mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+    mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
 
     cLine& line = getLine (lineNumber);
     if (line.mFoldBegin)
@@ -2135,9 +2135,9 @@ void cTextEdit::openFoldOnly (uint32_t lineNumber) {
 
   if (isFolded()) {
     // position cursor to lineNumber, first column,
-    mEdit.mState.mCursorPosition = {lineNumber,0};
-    mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-    mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+    mEdit.mCursor.mPosition = {lineNumber,0};
+    mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+    mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
 
     cLine& line = getLine (lineNumber);
     if (line.mFoldBegin) {
@@ -2157,9 +2157,9 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
 
     if (getLine (lineNumber).mFoldBegin) {
       // position cursor to lineNumber, first column
-      mEdit.mState.mCursorPosition = {lineNumber,0};
-      mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-      mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+      mEdit.mCursor.mPosition = {lineNumber,0};
+      mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+      mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
       getLine (lineNumber).mFoldOpen = false;
       }
 
@@ -2180,9 +2180,9 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
           }
         else if (line.mFoldBegin && line.mFoldOpen) {
           // position cursor to lineNumber, first column
-          mEdit.mState.mCursorPosition = {lineNumber,0};
-          mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-          mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+          mEdit.mCursor.mPosition = {lineNumber,0};
+          mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+          mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
           line.mFoldOpen = false;
 
           // possible scroll???
@@ -2219,10 +2219,10 @@ int cTextEdit::skipFoldLines (uint32_t lineNumber) {
 //{{{
 void cTextEdit::selectText (uint32_t lineNumber, float posX, bool selectWord) {
 
-  mEdit.mState.mCursorPosition = getPositionFromPosX (lineNumber, posX);
+  mEdit.mCursor.mPosition = getPositionFromPosX (lineNumber, posX);
 
-  mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+  mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
   mEdit.mSelection = selectWord ? eSelection::eWord : eSelection::eNormal;
 
   setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
@@ -2243,8 +2243,8 @@ void cTextEdit::dragSelectText (uint32_t lineNumber, ImVec2 pos) {
     lineNumber = max (0u, min (getNumLines()-1, lineNumber + numDragLines));
     }
 
-  mEdit.mState.mCursorPosition = getPositionFromPosX (lineNumber, pos.x);
-  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  mEdit.mCursor.mPosition = getPositionFromPosX (lineNumber, pos.x);
+  mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
   mEdit.mSelection = eSelection::eNormal;
 
   setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
@@ -2254,9 +2254,9 @@ void cTextEdit::dragSelectText (uint32_t lineNumber, ImVec2 pos) {
 //{{{
 void cTextEdit::selectLine (uint32_t lineNumber) {
 
-  mEdit.mState.mCursorPosition = {lineNumber, 0};
-  mEdit.mInteractiveBegin = mEdit.mState.mCursorPosition;
-  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  mEdit.mCursor.mPosition = {lineNumber, 0};
+  mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
+  mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
   mEdit.mSelection = eSelection::eLine;
 
   setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
@@ -2279,8 +2279,8 @@ void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
   else // simple add to lineNumber
     lineNumber = max (0u, min (getNumLines()-1, lineNumber + numDragLines));
 
-  mEdit.mState.mCursorPosition.mLineNumber = lineNumber;
-  mEdit.mInteractiveEnd = mEdit.mState.mCursorPosition;
+  mEdit.mCursor.mPosition.mLineNumber = lineNumber;
+  mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
   mEdit.mSelection = eSelection::eLine;
 
   setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
@@ -2669,21 +2669,21 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
   sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
 
   float xBegin = -1.f;
-  if (mEdit.mState.mSelectionBegin <= lineEndPosition)
-    xBegin = (mEdit.mState.mSelectionBegin > lineBeginPosition) ? getTextWidth (mEdit.mState.mSelectionBegin) : 0.f;
+  if (mEdit.mCursor.mSelectionBegin <= lineEndPosition)
+    xBegin = (mEdit.mCursor.mSelectionBegin > lineBeginPosition) ? getTextWidth (mEdit.mCursor.mSelectionBegin) : 0.f;
 
   float xEnd = -1.f;
-  if (mEdit.mState.mSelectionEnd > lineBeginPosition)
-    xEnd = getTextWidth ((mEdit.mState.mSelectionEnd < lineEndPosition) ? mEdit.mState.mSelectionEnd : lineEndPosition);
+  if (mEdit.mCursor.mSelectionEnd > lineBeginPosition)
+    xEnd = getTextWidth ((mEdit.mCursor.mSelectionEnd < lineEndPosition) ? mEdit.mCursor.mSelectionEnd : lineEndPosition);
 
-  if (mEdit.mState.mSelectionEnd.mLineNumber > lineNumber)
+  if (mEdit.mCursor.mSelectionEnd.mLineNumber > lineNumber)
     xEnd += mContext.mGlyphWidth;
 
   if ((xBegin != -1) && (xEnd != -1) && (xBegin < xEnd))
     mContext.drawRect ({textPos.x + xBegin, textPos.y}, {textPos.x + xEnd, textPos.y + mContext.mLineHeight}, eSelect);
   //}}}
 
-  if (lineNumber == mEdit.mState.mCursorPosition.mLineNumber) {
+  if (lineNumber == mEdit.mCursor.mPosition.mLineNumber) {
     // line has cursor
     if (!hasSelect()) {
       //{{{  draw cursor highlight
@@ -2696,8 +2696,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     auto now = system_clock::now();
     auto elapsed = now - mCursorFlashTimePoint;
     if (elapsed < 400ms) {
-      float cursorPosX = getTextWidth (mEdit.mState.mCursorPosition);
-      uint32_t characterIndex = getCharacterIndex (mEdit.mState.mCursorPosition);
+      float cursorPosX = getTextWidth (mEdit.mCursor.mPosition);
+      uint32_t characterIndex = getCharacterIndex (mEdit.mCursor.mPosition);
 
       float cursorWidth;
       if (mOptions.mOverWrite && (characterIndex < glyphs.size())) {
@@ -3027,7 +3027,7 @@ void cTextEdit::cUndo::undo (cTextEdit* textEdit) {
     textEdit->insertTextAt (begin, mRemoved);
     }
 
-  textEdit->mEdit.mState = mBefore;
+  textEdit->mEdit.mCursor = mBefore;
   textEdit->scrollCursorVisible();
   }
 //}}}
@@ -3042,7 +3042,7 @@ void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
     textEdit->insertTextAt (begin, mAdded);
     }
 
-  textEdit->mEdit.mState = mAfter;
+  textEdit->mEdit.mCursor = mAfter;
   textEdit->scrollCursorVisible();
   }
 //}}}

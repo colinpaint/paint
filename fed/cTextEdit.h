@@ -185,7 +185,7 @@ public:
   // has
   bool hasCR() const { return mDoc.mHasCR; }
   bool hasTabs() const { return mDoc.mHasTabs; }
-  bool hasSelect() const { return mEdit.mState.mSelectionEnd > mEdit.mState.mSelectionBegin; }
+  bool hasSelect() const { return mEdit.mCursor.mSelectionEnd > mEdit.mCursor.mSelectionBegin; }
   bool hasUndo() const { return !mOptions.mReadOnly && mUndoList.mIndex > 0; }
   bool hasRedo() const { return !mOptions.mReadOnly && mUndoList.mIndex < (int)mUndoList.mBuffer.size(); }
   bool hasClipboardText();
@@ -195,7 +195,7 @@ public:
   std::vector<std::string> getTextStrings() const;
 
   uint32_t getTabSize() const { return mDoc.mTabSize; }
-  sPosition getCursorPosition() { return sanitizePosition (mEdit.mState.mCursorPosition); }
+  sPosition getCursorPosition() { return sanitizePosition (mEdit.mCursor.mPosition); }
 
   const cLanguage& getLanguage() const { return mOptions.mLanguage; }
   //}}}
@@ -248,9 +248,9 @@ public:
 
   // fold
   void createFold();
-  void openFold() { openFold (mEdit.mState.mCursorPosition.mLineNumber); }
-  void openFoldOnly() { openFoldOnly (mEdit.mState.mCursorPosition.mLineNumber); }
-  void closeFold() { closeFold (mEdit.mState.mCursorPosition.mLineNumber); }
+  void openFold() { openFold (mEdit.mCursor.mPosition.mLineNumber); }
+  void openFoldOnly() { openFoldOnly (mEdit.mCursor.mPosition.mLineNumber); }
+  void closeFold() { closeFold (mEdit.mCursor.mPosition.mLineNumber); }
 
   // undo
   void undo (int steps = 1);
@@ -262,11 +262,18 @@ public:
 
 private:
   //{{{
-  struct sCursorSelectionState {
-    sPosition mCursorPosition;
+  class cDoc {
+  public:
+    std::string mFilename;
 
-    sPosition mSelectionBegin;
-    sPosition mSelectionEnd;
+    std::vector <cLine> mLines;
+    std::vector <uint32_t> mFoldLines;
+
+    bool mEdited = false;
+    bool mHasFolds = false;
+    bool mHasCR = false;
+    bool mHasTabs = false;
+    uint32_t mTabSize = 4;
     };
   //}}}
   //{{{
@@ -293,21 +300,6 @@ private:
     bool mHoverMonoSpaced = false;
 
     cLanguage mLanguage;
-    };
-  //}}}
-  //{{{
-  class cDoc {
-  public:
-    std::string mFilename;
-
-    std::vector <cLine> mLines;
-    std::vector <uint32_t> mFoldLines;
-
-    bool mEdited = false;
-    bool mHasFolds = false;
-    bool mHasCR = false;
-    bool mHasTabs = false;
-    uint32_t mTabSize = 4;
     };
   //}}}
   //{{{
@@ -344,8 +336,14 @@ private:
   //{{{
   class cEdit {
   public:
-   // selection state
-    sCursorSelectionState mState;
+    struct sCursor {
+      sPosition mPosition;
+      sPosition mSelectionBegin;
+      sPosition mSelectionEnd;
+      };
+
+    sCursor mCursor;
+
     eSelection mSelection = eSelection::eNormal;
     sPosition mInteractiveBegin;
     sPosition mInteractiveEnd;
@@ -364,7 +362,7 @@ private:
     cUndo() = default;
     cUndo (const std::string& added, const sPosition addedBegin, const sPosition addedEnd,
            const std::string& removed, const sPosition removedBegin, const sPosition removedEnd,
-           sCursorSelectionState& before, sCursorSelectionState& after)
+           cEdit::sCursor& before, cEdit::sCursor& after)
         : mAdded(added), mAddedBegin(addedBegin), mAddedEnd(addedEnd),
           mRemoved(removed), mRemovedBegin(removedBegin), mRemovedEnd(removedEnd),
           mBefore(before), mAfter(after) {}
@@ -382,8 +380,8 @@ private:
     sPosition mRemovedBegin;
     sPosition mRemovedEnd;
 
-    sCursorSelectionState mBefore;
-    sCursorSelectionState mAfter;
+    cEdit::sCursor mBefore;
+    cEdit::sCursor mAfter;
     };
   //}}}
   //{{{
@@ -408,7 +406,7 @@ private:
   // text
   float getTextWidth (sPosition position);
   std::string getText (sPosition beginPosition, sPosition endPosition);
-  std::string getSelectedText() { return getText (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionEnd); }
+  std::string getSelectedText() { return getText (mEdit.mCursor.mSelectionBegin, mEdit.mCursor.mSelectionEnd); }
 
   // lines
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
