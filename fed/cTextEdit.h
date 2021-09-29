@@ -211,11 +211,11 @@ public:
 
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverWrite() { mOptions.mOverWrite = !mOptions.mOverWrite; }
-  void toggleShowFolded() { mOptions.mShowFolded = !mOptions.mShowFolded; }
   void toggleShowLineNumber() { mOptions.mShowLineNumber = !mOptions.mShowLineNumber; }
   void toggleShowLineDebug() { mOptions.mShowLineDebug = !mOptions.mShowLineDebug; }
   void toggleShowWhiteSpace() { mOptions.mShowWhiteSpace = !mOptions.mShowWhiteSpace; }
   void toggleShowMonoSpaced() { mOptions.mShowMonoSpaced = !mOptions.mShowMonoSpaced; }
+  void toggleShowFolded();
   //}}}
   //{{{  actions
   // move
@@ -253,8 +253,8 @@ public:
   void closeFold() { closeFold (mEdit.mCursor.mPosition.mLineNumber); }
 
   // undo
-  void undo (int steps = 1);
-  void redo (int steps = 1);
+  void undo (uint32_t steps = 1);
+  void redo (uint32_t steps = 1);
   //}}}
 
   void drawWindow (const std::string& title, cApp& app);
@@ -354,6 +354,7 @@ private:
 
     // parse comments flag
     bool mCheckComments = true;
+    bool mScrollVisible = false;
     };
   //}}}
   //{{{

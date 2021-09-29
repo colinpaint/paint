@@ -593,6 +593,14 @@ void cTextEdit::setLanguage (const cLanguage& language) {
 //}}}
 //}}}
 //{{{  actions
+//{{{
+void cTextEdit::toggleShowFolded() {
+
+  mOptions.mShowFolded = !mOptions.mShowFolded;
+  mEdit.mScrollVisible = true;
+  }
+//}}}
+
 // move
 //{{{
 void cTextEdit::moveLeft() {
@@ -622,7 +630,7 @@ void cTextEdit::moveLeft() {
     mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
     mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
-    scrollCursorVisible();
+    mEdit.mScrollVisible = true;
     }
   }
 //}}}
@@ -656,7 +664,7 @@ void cTextEdit::moveRight() {
     mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
     mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
-    scrollCursorVisible();
+    mEdit.mScrollVisible = true;
     }
   }
 //}}}
@@ -671,7 +679,7 @@ void cTextEdit::moveHome() {
     mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
     mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
-    scrollCursorVisible();
+    mEdit.mScrollVisible = true;
     }
   }
 //}}}
@@ -686,7 +694,7 @@ void cTextEdit::moveEnd() {
     mEdit.mInteractiveBegin = mEdit.mCursor.mPosition;
     mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
-    scrollCursorVisible();
+    mEdit.mScrollVisible = true;
     }
   }
 //}}}
@@ -882,9 +890,9 @@ void cTextEdit::backspace() {
         }
       parseLine (line);
       }
-    mDoc.mEdited = true;
 
-    scrollCursorVisible();
+    mDoc.mEdited = true;
+    mEdit.mScrollVisible = true;
     }
 
   undo.mAfter = mEdit.mCursor;
@@ -977,9 +985,9 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
         mEdit.mCursor.mSelectionBegin = selectBegin;
         mEdit.mCursor.mSelectionEnd = selectEnd;
         addUndo (undo);
-        mDoc.mEdited = true;
 
-        scrollCursorVisible();
+        mDoc.mEdited = true;
+        mEdit.mScrollVisible = true;
         }
         //}}}
 
@@ -1066,7 +1074,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   undo.mAfter = mEdit.mCursor;
   addUndo (undo);
 
-  scrollCursorVisible();
+  mEdit.mScrollVisible = true;
   }
 //}}}
 
@@ -1097,17 +1105,25 @@ void cTextEdit::createFold() {
 
 // undo
 //{{{
-void cTextEdit::undo (int steps) {
+void cTextEdit::undo (uint32_t steps) {
 
-  while (hasUndo() && steps-- > 0)
+  while (hasUndo() && steps > 0) {
     mUndoList.mBuffer[--mUndoList.mIndex].undo (this);
+    steps--;
+    }
+
+  scrollCursorVisible();
   }
 //}}}
 //{{{
-void cTextEdit::redo (int steps) {
+void cTextEdit::redo (uint32_t steps) {
 
-  while (hasRedo() && steps-- > 0)
+  while (hasRedo() && steps > 0) {
     mUndoList.mBuffer[mUndoList.mIndex++].redo (this);
+    steps--;
+    }
+
+  scrollCursorVisible();
   }
 //}}}
 //}}}
@@ -1158,6 +1174,9 @@ void cTextEdit::drawContents (cApp& app) {
     mDoc.mFoldLines.resize (drawFolded());
   else
     drawUnfolded();
+
+  if (mEdit.mScrollVisible)
+    scrollCursorVisible();
 
   ImGui::EndChild();
   ImGui::PopStyleVar (4);
@@ -1447,7 +1466,7 @@ void cTextEdit::setCursorPosition (sPosition position) {
 
   if (mEdit.mCursor.mPosition != position) {
     mEdit.mCursor.mPosition = position;
-    scrollCursorVisible();
+    mEdit.mScrollVisible = true;
     }
   }
 //}}}
@@ -1527,12 +1546,13 @@ void cTextEdit::advance (sPosition& position) {
 void cTextEdit::scrollCursorVisible() {
 
   ImGui::SetWindowFocus();
+
   sPosition position = getCursorPosition();
 
   // up,down scroll
   uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  uint32_t minIndex = min (getMaxLineIndex(),
-                           static_cast<uint32_t>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mContext.mLineHeight)));
+  uint32_t minIndex = 
+    min (getMaxLineIndex(), static_cast<uint32_t>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mContext.mLineHeight)));
   if (lineIndex >= minIndex - 3)
     ImGui::SetScrollY (max (0.f, (lineIndex + 3) * mContext.mLineHeight) - ImGui::GetWindowHeight());
   else {
@@ -1553,6 +1573,7 @@ void cTextEdit::scrollCursorVisible() {
     }
 
   mCursorFlashTimePoint = system_clock::now();
+  mEdit.mScrollVisible = false;
   }
 //}}}
 //{{{
@@ -1702,7 +1723,7 @@ void cTextEdit::moveUp (uint32_t amount) {
     mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
 
-    scrollCursorVisible();
+    mEdit.mScrollVisible = true;
     }
   }
 //}}}
@@ -1725,7 +1746,7 @@ void cTextEdit::moveDown (uint32_t amount) {
     mEdit.mInteractiveEnd = mEdit.mCursor.mPosition;
     setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, eSelection::eNormal);
 
-    scrollCursorVisible();
+    mEdit.mScrollVisible = true;
     }
   }
 //}}}
@@ -2231,7 +2252,7 @@ void cTextEdit::dragSelectText (uint32_t lineNumber, ImVec2 pos) {
   mEdit.mSelection = eSelection::eNormal;
 
   setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
-  scrollCursorVisible();
+  mEdit.mScrollVisible = true;
   }
 //}}}
 //{{{
@@ -2267,7 +2288,7 @@ void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
   mEdit.mSelection = eSelection::eLine;
 
   setSelection (mEdit.mInteractiveBegin, mEdit.mInteractiveEnd, mEdit.mSelection);
-  scrollCursorVisible();
+  mEdit.mScrollVisible = true;
   }
 //}}}
 
@@ -3011,7 +3032,6 @@ void cTextEdit::cUndo::undo (cTextEdit* textEdit) {
     }
 
   textEdit->mEdit.mCursor = mBefore;
-  textEdit->scrollCursorVisible();
   }
 //}}}
 //{{{
@@ -3026,7 +3046,6 @@ void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
     }
 
   textEdit->mEdit.mCursor = mAfter;
-  textEdit->scrollCursorVisible();
   }
 //}}}
 //}}}
