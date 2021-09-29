@@ -275,7 +275,7 @@ namespace {
 
   // faster parsers
   //{{{
-  bool findIdentifier (const char* srcBegin, const char* srcEnd, const char*& dstBegin, const char*& dstEnd) {
+  bool findIdentifier (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
 
     const char* srcPtr = srcBegin;
 
@@ -291,8 +291,8 @@ namespace {
               (*srcPtr == '_')))
         srcPtr++;
 
-      dstBegin = srcBegin;
-      dstEnd = srcPtr;
+      tokenBegin = srcBegin;
+      tokenEnd = srcPtr;
       return true;
       }
 
@@ -300,7 +300,7 @@ namespace {
     }
   //}}}
   //{{{
-  bool findNumber (const char* srcBegin, const char* srcEnd, const char*& dstBegin, const char*& dstEnd) {
+  bool findNumber (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
 
     const char* srcPtr = srcBegin;
 
@@ -386,13 +386,13 @@ namespace {
       }
       //}}}
 
-    dstBegin = srcBegin;
-    dstEnd = srcPtr;
+    tokenBegin = srcBegin;
+    tokenEnd = srcPtr;
     return true;
     }
   //}}}
   //{{{
-  bool findPunctuation (const char* srcBegin, const char*& dstBegin, const char*& dstEnd) {
+  bool findPunctuation (const char* srcBegin, const char*& tokenBegin, const char*& tokenEnd) {
 
     switch (*srcBegin) {
       case '[':
@@ -419,8 +419,8 @@ namespace {
       case ';':
       case ',':
       case '.':
-        dstBegin = srcBegin;
-        dstEnd = srcBegin + 1;
+        tokenBegin = srcBegin;
+        tokenEnd = srcBegin + 1;
         return true;
       }
 
@@ -428,7 +428,7 @@ namespace {
     }
   //}}}
   //{{{
-  bool findString (const char* srcBegin, const char* srcEnd, const char*& dstBegin, const char*& dstEnd) {
+  bool findString (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
 
     const char* srcPtr = srcBegin;
 
@@ -438,8 +438,8 @@ namespace {
       while (srcPtr < srcEnd) {
         // handle end of string
         if (*srcPtr == '"') {
-          dstBegin = srcBegin;
-          dstEnd = srcPtr + 1;
+          tokenBegin = srcBegin;
+          tokenEnd = srcPtr + 1;
           return true;
          }
 
@@ -455,7 +455,7 @@ namespace {
     }
   //}}}
   //{{{
-  bool findLiteral (const char* srcBegin, const char* srcEnd, const char*& dstBegin, const char*& dstEnd) {
+  bool findLiteral (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
 
     const char* srcPtr = srcBegin;
 
@@ -471,8 +471,8 @@ namespace {
 
       // handle end of literal
       if ((srcPtr < srcEnd) && (*srcPtr == '\'')) {
-        dstBegin = srcBegin;
-        dstEnd = srcPtr + 1;
+        tokenBegin = srcBegin;
+        tokenEnd = srcPtr + 1;
         return true;
         }
       }
@@ -486,9 +486,9 @@ namespace {
 //{{{
 cTextEdit::cTextEdit() {
 
-  mInfo.mLines.push_back (cLine::tGlyphs());
   setLanguage (cLanguage::c());
 
+  mInfo.mLines.push_back (cLine::tGlyphs());
   mCursorFlashTimePoint = system_clock::now();
   }
 //}}}
@@ -2519,7 +2519,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
           line.mFirstGlyph,
           line.mFirstColumn).c_str());
     else
-      mContext.mLineNumberWidth = mContext.drawSmallText (curPos, eLineNumber, 
+      mContext.mLineNumberWidth = mContext.drawSmallText (curPos, eLineNumber,
                                                           fmt::format ("{:4d} ", lineNumber+1).c_str());
 
     // add invisibleButton, gobble up leftPad
@@ -3080,25 +3080,25 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
       language.mKnownWords.insert (knownWord);
 
     language.mTokenSearch = [](const char* srcBegin, const char* srcEnd,
-                               const char*& dstBegin, const char*& dstEnd, uint8_t& color) -> bool {
-      // tokeSearch  lambda
+                               const char*& tokenBegin, const char*& tokenEnd, uint8_t& color) -> bool {
+      // tokenSearch  lambda
       color = eUndefined;
       while ((srcBegin < srcEnd) && isascii (*srcBegin) && isblank (*srcBegin))
         srcBegin++;
       if (srcBegin == srcEnd) {
-        dstBegin = srcEnd;
-        dstEnd = srcEnd;
+        tokenBegin = srcEnd;
+        tokenEnd = srcEnd;
         color = eText;
         }
-      if (findIdentifier (srcBegin, srcEnd, dstBegin, dstEnd))
+      if (findIdentifier (srcBegin, srcEnd, tokenBegin, tokenEnd))
         color = eIdentifier;
-      else if (findNumber (srcBegin, srcEnd, dstBegin, dstEnd))
+      else if (findNumber (srcBegin, srcEnd, tokenBegin, tokenEnd))
         color = eNumber;
-      else if (findPunctuation (srcBegin, dstBegin, dstEnd))
+      else if (findPunctuation (srcBegin, tokenBegin, tokenEnd))
         color = ePunctuation;
-      else if (findString (srcBegin, srcEnd, dstBegin, dstEnd))
+      else if (findString (srcBegin, srcEnd, tokenBegin, tokenEnd))
         color = eString;
-      else if (findLiteral (srcBegin, srcEnd, dstBegin, dstEnd))
+      else if (findLiteral (srcBegin, srcEnd, tokenBegin, tokenEnd))
         color = eLiteral;
       return (color != eUndefined);
       };
