@@ -488,7 +488,7 @@ cTextEdit::cTextEdit() {
 
   setLanguage (cLanguage::c());
 
-  mInfo.mLines.push_back (cLine::tGlyphs());
+  mDoc.mLines.push_back (cLine::tGlyphs());
   mCursorFlashTimePoint = system_clock::now();
   }
 //}}}
@@ -516,7 +516,7 @@ vector<string> cTextEdit::getTextStrings() const {
   vector<string> result;
   result.reserve (getNumLines());
 
-  for (auto& line : mInfo.mLines) {
+  for (auto& line : mDoc.mLines) {
     string lineString;
     lineString.resize (line.getNumGlyphs());
     for (size_t i = 0; i < line.getNumGlyphs(); ++i)
@@ -534,24 +534,24 @@ vector<string> cTextEdit::getTextStrings() const {
 void cTextEdit::setTextString (const string& text) {
 // break test into lines, store in internal mLines structure
 
-  mInfo.mLines.clear();
-  mInfo.mLines.emplace_back (cLine::tGlyphs());
+  mDoc.mLines.clear();
+  mDoc.mLines.emplace_back (cLine::tGlyphs());
 
   for (auto ch : text) {
     if (ch == '\r') // ignored but flag set
-      mInfo.mHasCR = true;
+      mDoc.mHasCR = true;
     else if (ch == '\n') {
-      parseLine (mInfo.mLines.back());
-      mInfo.mLines.emplace_back (cLine::tGlyphs());
+      parseLine (mDoc.mLines.back());
+      mDoc.mLines.emplace_back (cLine::tGlyphs());
       }
     else {
       if (ch ==  '\t')
-        mInfo.mHasTabs = true;
-      mInfo.mLines.back().mGlyphs.emplace_back (cGlyph (ch, eText));
+        mDoc.mHasTabs = true;
+      mDoc.mLines.back().mGlyphs.emplace_back (cGlyph (ch, eText));
       }
     }
 
-  mInfo.mTextEdited = false;
+  mDoc.mEdited = false;
 
   mUndoList.mBuffer.clear();
   mUndoList.mIndex = 0;
@@ -561,24 +561,24 @@ void cTextEdit::setTextString (const string& text) {
 void cTextEdit::setTextStrings (const vector<string>& lines) {
 // store vector of lines in internal mLines structure
 
-  mInfo.mLines.clear();
+  mDoc.mLines.clear();
 
   if (lines.empty())
-    mInfo.mLines.emplace_back (cLine::tGlyphs());
+    mDoc.mLines.emplace_back (cLine::tGlyphs());
   else {
-    mInfo.mLines.resize (lines.size());
+    mDoc.mLines.resize (lines.size());
     for (size_t i = 0; i < lines.size(); ++i) {
       const string& line = lines[i];
       for (size_t j = 0; j < line.size(); ++j) {
         if (line[j] ==  '\t')
-          mInfo.mHasTabs = true;
-        mInfo.mLines[i].mGlyphs.emplace_back (cGlyph (line[j], eText));
+          mDoc.mHasTabs = true;
+        mDoc.mLines[i].mGlyphs.emplace_back (cGlyph (line[j], eText));
         }
-      parseLine (mInfo.mLines[i]);
+      parseLine (mDoc.mLines[i]);
       }
     }
 
-  mInfo.mTextEdited = false;
+  mDoc.mEdited = false;
 
   mUndoList.mBuffer.clear();
   mUndoList.mIndex = 0;
@@ -712,7 +712,7 @@ void cTextEdit::copy() {
   if (hasSelect())
     ImGui::SetClipboardText (getSelectedText().c_str());
 
-  else if (!mInfo.mLines.empty()) {
+  else if (!mDoc.mLines.empty()) {
     string copyString;
     for (auto& glyph : getGlyphs (getCursorPosition().mLineNumber))
       copyString.push_back (glyph.mChar);
@@ -778,7 +778,7 @@ void cTextEdit::paste() {
 //{{{
 void cTextEdit::deleteIt() {
 
-  if (mInfo.mLines.empty())
+  if (mDoc.mLines.empty())
     return;
 
   cUndo undo;
@@ -825,7 +825,7 @@ void cTextEdit::deleteIt() {
       parseLine (line);
       }
 
-    mInfo.mTextEdited = true;
+    mDoc.mEdited = true;
     }
 
   undo.mAfter = mEdit.mState;
@@ -835,7 +835,7 @@ void cTextEdit::deleteIt() {
 //{{{
 void cTextEdit::backspace() {
 
-  if (mInfo.mLines.empty())
+  if (mDoc.mLines.empty())
     return;
 
   cUndo undo;
@@ -890,7 +890,7 @@ void cTextEdit::backspace() {
         }
       parseLine (line);
       }
-    mInfo.mTextEdited = true;
+    mDoc.mEdited = true;
 
     scrollCursorVisible();
     }
@@ -933,7 +933,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       if ((selectEnd.mColumn == 0) && (selectEnd.mLineNumber > 0))
         --selectEnd.mLineNumber;
       if (selectEnd.mLineNumber >= getNumLines())
-        selectEnd.mLineNumber = mInfo.mLines.empty() ? 0 : getNumLines()-1;
+        selectEnd.mLineNumber = mDoc.mLines.empty() ? 0 : getNumLines()-1;
       selectEnd.mColumn = getLineMaxColumn (selectEnd.mLineNumber);
 
       undo.mRemovedBegin = selectBegin;
@@ -950,7 +950,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
               modified = true;
               }
             else {
-              for (uint32_t j = 0; (j < mInfo.mTabSize) && !glyphs.empty() && (glyphs.front().mChar == ' '); j++) {
+              for (uint32_t j = 0; (j < mDoc.mTabSize) && !glyphs.empty() && (glyphs.front().mChar == ' '); j++) {
                 glyphs.erase (glyphs.begin());
                 modified = true;
                 }
@@ -985,7 +985,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
         mEdit.mState.mSelectionBegin = selectBegin;
         mEdit.mState.mSelectionEnd = selectEnd;
         addUndo (undo);
-        mInfo.mTextEdited = true;
+        mDoc.mEdited = true;
 
         scrollCursorVisible();
         }
@@ -1068,7 +1068,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
     else
       return;
     }
-  mInfo.mTextEdited = true;
+  mDoc.mEdited = true;
 
   undo.mAddedEnd = getCursorPosition();
   undo.mAfter = mEdit.mState;
@@ -1163,7 +1163,7 @@ void cTextEdit::drawContents (cApp& app) {
   handleKeyboard();
 
   if (isFolded())
-    mInfo.mFoldLines.resize (drawFolded());
+    mDoc.mFoldLines.resize (drawFolded());
   else
     drawUnfolded();
 
@@ -1255,7 +1255,7 @@ uint32_t cTextEdit::getLineNumberFromIndex (uint32_t lineIndex) const {
     return lineIndex;
 
   if (lineIndex < getNumFoldLines())
-    return mInfo.mFoldLines[lineIndex];
+    return mDoc.mFoldLines[lineIndex];
 
   cLog::log (LOGERROR, fmt::format ("getLineNumberFromIndex {} no line for that index", lineIndex));
   return 0;
@@ -1267,20 +1267,20 @@ uint32_t cTextEdit::getLineIndexFromNumber (uint32_t lineNumber) const {
   if (!isFolded()) // lineIndex is lineNumber
     return lineNumber;
 
-  if (mInfo.mFoldLines.empty()) {
+  if (mDoc.mFoldLines.empty()) {
     // no foldLines
     cLog::log (LOGERROR, fmt::format ("getLineIndexFromNumber {} mFoldLines empty", lineNumber));
     return 0;
     }
 
-  auto it = find (mInfo.mFoldLines.begin(), mInfo.mFoldLines.end(), lineNumber);
-  if (it == mInfo.mFoldLines.end()) {
+  auto it = find (mDoc.mFoldLines.begin(), mDoc.mFoldLines.end(), lineNumber);
+  if (it == mDoc.mFoldLines.end()) {
     // no lineNumber for that index
     cLog::log (LOGERROR, fmt::format ("getLineIndexFromNumber {} notFound", lineNumber));
     return 0;
     }
   else
-    return uint32_t(it - mInfo.mFoldLines.begin());
+    return uint32_t(it - mDoc.mFoldLines.begin());
   }
 //}}}
 
@@ -1437,14 +1437,14 @@ string cTextEdit::getWordAt (sPosition position) {
 // tab
 //{{{
 uint32_t cTextEdit::getTabColumn (uint32_t column) {
-  return ((column / mInfo.mTabSize) * mInfo.mTabSize) + mInfo.mTabSize;
+  return ((column / mDoc.mTabSize) * mDoc.mTabSize) + mDoc.mTabSize;
   }
 //}}}
 //{{{
 float cTextEdit::getTabEndPosX (float xPos) {
 // return tabEnd xPos of tab containing xPos
 
-  float tabWidthPixels = mInfo.mTabSize * mContext.mGlyphWidth;
+  float tabWidthPixels = mDoc.mTabSize * mContext.mGlyphWidth;
   return (1.f + floor ((1.f + xPos) / tabWidthPixels)) * tabWidthPixels;
   }
 //}}}
@@ -1575,8 +1575,8 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
 
   if (position.mLineNumber < getNumLines())
     return sPosition (position.mLineNumber,
-                      mInfo.mLines.empty() ? 0 : min (position.mColumn, getLineMaxColumn (position.mLineNumber)));
-  else if (mInfo.mLines.empty())
+                      mDoc.mLines.empty() ? 0 : min (position.mColumn, getLineMaxColumn (position.mLineNumber)));
+  else if (mDoc.mLines.empty())
     return sPosition (0,0);
   else
     return sPosition (getNumLines()-1, getLineMaxColumn (getNumLines()-1));
@@ -1695,7 +1695,7 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) {
 //{{{
 void cTextEdit::moveUp (uint32_t amount) {
 
-  if (mInfo.mLines.empty())
+  if (mDoc.mLines.empty())
     return;
 
   // lineNumber
@@ -1723,7 +1723,7 @@ void cTextEdit::moveUp (uint32_t amount) {
 //{{{
 void cTextEdit::moveDown (uint32_t amount) {
 
-  if (mInfo.mLines.empty())
+  if (mDoc.mLines.empty())
     return;
 
   // lineNumber
@@ -1750,7 +1750,7 @@ void cTextEdit::moveDown (uint32_t amount) {
 // insert
 //{{{
 cTextEdit::cLine& cTextEdit::insertLine (uint32_t index) {
-  return *mInfo.mLines.insert (mInfo.mLines.begin() + index, cLine::tGlyphs());
+  return *mDoc.mLines.insert (mDoc.mLines.begin() + index, cLine::tGlyphs());
   }
 //}}}
 //{{{
@@ -1797,7 +1797,7 @@ uint32_t cTextEdit::insertTextAt (sPosition& position, const string& insertStrin
       parseLine (line);
       }
 
-    mInfo.mTextEdited = true;
+    mDoc.mEdited = true;
     }
 
   return totalLines;
@@ -1824,17 +1824,17 @@ void cTextEdit::insertText (const string& insertString) {
 //{{{
 void cTextEdit::removeLine (uint32_t beginPosition, uint32_t endPosition) {
 
-  mInfo.mLines.erase (mInfo.mLines.begin() + beginPosition, mInfo.mLines.begin() + endPosition);
+  mDoc.mLines.erase (mDoc.mLines.begin() + beginPosition, mDoc.mLines.begin() + endPosition);
   mEdit.mCheckComments = true;
-  mInfo.mTextEdited = true;
+  mDoc.mEdited = true;
   }
 //}}}
 //{{{
 void cTextEdit::removeLine (uint32_t index) {
 
-  mInfo.mLines.erase (mInfo.mLines.begin() + index);
+  mDoc.mLines.erase (mDoc.mLines.begin() + index);
   mEdit.mCheckComments = true;
-  mInfo.mTextEdited = true;
+  mDoc.mEdited = true;
   }
 //}}}
 //{{{
@@ -1880,7 +1880,7 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
     parseLine (lastLine);
     }
 
-  mInfo.mTextEdited = true;
+  mDoc.mEdited = true;
   }
 //}}}
 
@@ -2029,7 +2029,7 @@ void cTextEdit::parseLine (cLine& line) {
   if (line.mFoldBegin) {
     // does foldBegin have a comment?
     line.mCommentFold = glyphString.size() != (foldBeginPos + mOptions.mLanguage.mFoldBeginMarker.size());
-    mInfo.mHasFolds = true;
+    mDoc.mHasFolds = true;
     }
 
   parseTokens (line, glyphString);
@@ -2274,7 +2274,7 @@ void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
   if (isFolded()) {
     uint32_t lineIndex = getLineIndexFromNumber (lineNumber);
     lineIndex = max (0u, min (getNumFoldLines()-1, lineIndex + numDragLines));
-    lineNumber = mInfo.mFoldLines[lineIndex];
+    lineNumber = mDoc.mFoldLines[lineIndex];
     }
   else // simple add to lineNumber
     lineNumber = max (0u, min (getNumLines()-1, lineNumber + numDragLines));
@@ -2306,7 +2306,7 @@ void cTextEdit::drawTop (cApp& app) {
       }
   //}}}
 
-  if (mInfo.mHasFolds) {
+  if (mDoc.mHasFolds) {
     //{{{  folded button
     ImGui::SameLine();
     if (toggleButton ("folded", isShowFolds()))
@@ -2380,11 +2380,11 @@ void cTextEdit::drawTop (cApp& app) {
   //{{{  fontSize button, vert,triangle debug text
   ImGui::SameLine();
   ImGui::SetNextItemWidth (3 * ImGui::GetFontSize());
-  ImGui::DragInt ("##fs", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
+  ImGui::DragInt ("##fs", &mOptions.mFontSize, 0.2f, mOptions.mmDocntSize, mOptions.mMaxFontSize, "%d");
 
   if (ImGui::IsItemHovered()) {
     int fontSize = mOptions.mFontSize + static_cast<int>(ImGui::GetIO().MouseWheel);
-    mOptions.mFontSize = max (mOptions.mMinFontSize, min (mOptions.mMaxFontSize, fontSize));
+    mOptions.mFontSize = max (mOptions.mmDocntSize, min (mOptions.mMaxFontSize, fontSize));
     }
 
   // debug text
@@ -2487,9 +2487,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
   if (isFolded()) {
     //{{{  update mFoldLines vector
     if (lineIndex >= getNumFoldLines())
-      mInfo.mFoldLines.push_back (lineNumber);
+      mDoc.mFoldLines.push_back (lineNumber);
     else
-      mInfo.mFoldLines[lineIndex] = lineNumber;
+      mDoc.mFoldLines[lineIndex] = lineNumber;
     }
     //}}}
 
@@ -2895,10 +2895,8 @@ void cTextEdit::handleKeyboard() {
      {false, false, false, kNumpad7,            false, [this]{openFoldOnly();}},
      {false, false, false, kNumpad9,            false, [this]{closeFold();}},
      {false, false, false, kNumpad0,            true,  [this]{createFold();}},
-  // {false, true, false, kNumpad0,             true,  [this]{closeAllFolds();}},
   // {false, false, false, kNumpad4,            false, [this]{prevFile();}},
   // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
-  // {false, true,  false, kNumpad3,            false, [this]{foldCloseAll();}},
   // {true,  false, false, kNumpadMulitply,     false, [this]{findDialog();}},
   // {true,  false, false, kNumpadDivide,       false, [this]{replaceDialog();}},
 

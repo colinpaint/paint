@@ -71,12 +71,6 @@ public:
     };
   //}}}
   //{{{
-  struct sIdent {
-    sPosition mLocation;
-    std::string mDeclaration;
-    };
-  //}}}
-  //{{{
   class cLanguage {
   public:
     using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
@@ -162,16 +156,16 @@ public:
     tGlyphs mGlyphs;
 
     // parsed tokens
-    bool mCommentSingle:1;
-    bool mCommentBegin:1;
-    bool mCommentEnd:1;
-    bool mCommentFold:1;
-    bool mFoldBegin:1;
-    bool mFoldEnd:1;
+    bool mCommentSingle;
+    bool mCommentBegin;
+    bool mCommentEnd;
+    bool mCommentFold;
+    bool mFoldBegin;
+    bool mFoldEnd;
 
     // fold state
-    bool mFoldOpen:1;
-    bool mFoldPressed:1;
+    bool mFoldOpen;
+    bool mFoldPressed;
 
     // offsets
     int mFoldCommentLineNumber; // line number of closed foldBegin comment
@@ -184,13 +178,13 @@ public:
   cTextEdit();
   ~cTextEdit() = default;
   //{{{  gets
+  bool isEdited() const { return mDoc.mEdited; }
   bool isReadOnly() const { return mOptions.mReadOnly; }
-  bool isTextEdited() const { return mInfo.mTextEdited; }
   bool isShowFolds() const { return mOptions.mShowFolded; }
 
   // has
-  bool hasCR() const { return mInfo.mHasCR; }
-  bool hasTabs() const { return mInfo.mHasTabs; }
+  bool hasCR() const { return mDoc.mHasCR; }
+  bool hasTabs() const { return mDoc.mHasTabs; }
   bool hasSelect() const { return mEdit.mState.mSelectionEnd > mEdit.mState.mSelectionBegin; }
   bool hasUndo() const { return !mOptions.mReadOnly && mUndoList.mIndex > 0; }
   bool hasRedo() const { return !mOptions.mReadOnly && mUndoList.mIndex < (int)mUndoList.mBuffer.size(); }
@@ -200,7 +194,7 @@ public:
   std::string getTextString();
   std::vector<std::string> getTextStrings() const;
 
-  uint32_t getTabSize() const { return mInfo.mTabSize; }
+  uint32_t getTabSize() const { return mDoc.mTabSize; }
   sPosition getCursorPosition() { return sanitizePosition (mEdit.mState.mCursorPosition); }
 
   const cLanguage& getLanguage() const { return mOptions.mLanguage; }
@@ -213,7 +207,7 @@ public:
   void setLanguage (const cLanguage& language);
 
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
-  void setTabSize (uint32_t tabSize) { mInfo.mTabSize = tabSize; }
+  void setTabSize (uint32_t tabSize) { mDoc.mTabSize = tabSize; }
 
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverWrite() { mOptions.mOverWrite = !mOptions.mOverWrite; }
@@ -279,7 +273,7 @@ private:
   class cOptions {
   public:
     int mFontSize = 16;
-    int mMinFontSize = 4;
+    int mmDocntSize = 4;
     int mMaxFontSize = 24;
 
     // modes
@@ -302,16 +296,16 @@ private:
     };
   //}}}
   //{{{
-  class cInfo {
+  class cDoc {
   public:
     std::string mFilename;
 
     std::vector <cLine> mLines;
     std::vector <uint32_t> mFoldLines;
 
+    bool mEdited = false;
     bool mHasFolds = false;
     bool mHasCR = false;
-    bool mTextEdited = false;
     bool mHasTabs = false;
     uint32_t mTabSize = 4;
     };
@@ -407,8 +401,8 @@ private:
   bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced ^ mOptions.mHoverMonoSpaced; }
 
   // nums
-  uint32_t getNumLines() const { return static_cast<uint32_t>(mInfo.mLines.size()); }
-  uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mInfo.mFoldLines.size()); }
+  uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
+  uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mDoc.mFoldLines.size()); }
   uint32_t getNumPageLines() const;
 
   // text
@@ -422,7 +416,7 @@ private:
   uint32_t getMaxLineIndex() const { return isFolded() ? getNumFoldLines()-1 : getNumLines()-1; }
 
   // line
-  cLine& getLine (uint32_t lineNumber) { return mInfo.mLines[lineNumber]; }
+  cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
   cLine::tGlyphs& getGlyphs (uint32_t lineNumber) { return getLine (lineNumber).mGlyphs; }
   uint32_t getNumGlyphs (uint32_t lineNumber) { return static_cast<uint32_t>(getLine (lineNumber).mGlyphs.size()); }
 
@@ -508,7 +502,7 @@ private:
   bool mOpen = true;  // set false when DrawWindow() closed
 
   cOptions mOptions;
-  cInfo mInfo;
+  cDoc mDoc;
   cContext mContext;
   cEdit mEdit;
   cUndoList mUndoList;
