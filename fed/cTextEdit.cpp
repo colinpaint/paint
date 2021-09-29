@@ -2519,7 +2519,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
           line.mFirstGlyph,
           line.mFirstColumn).c_str());
     else
-      mContext.mLineNumberWidth = mContext.drawSmallText (curPos, eLineNumber, fmt::format ("{:4d} ", lineNumber).c_str());
+      mContext.mLineNumberWidth = mContext.drawSmallText (curPos, eLineNumber, 
+                                                          fmt::format ("{:4d} ", lineNumber+1).c_str());
 
     // add invisibleButton, gobble up leftPad
     ImGui::InvisibleButton (fmt::format ("##l{}", lineNumber).c_str(),
