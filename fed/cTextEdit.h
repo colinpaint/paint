@@ -23,7 +23,7 @@ public:
   //{{{
   struct sPosition {
     sPosition() : mLineNumber(0), mColumn(0) {}
-    sPosition (int lineNumber, uint32_t column) : mLineNumber(lineNumber), mColumn(column) {}
+    sPosition (uint32_t lineNumber, uint32_t column) : mLineNumber(lineNumber), mColumn(column) {}
 
     //{{{
     bool operator == (const sPosition& o) const {
@@ -66,7 +66,7 @@ public:
       }
     //}}}
 
-    int mLineNumber;
+    uint32_t mLineNumber;
     uint32_t mColumn;
     };
   //}}}
@@ -405,8 +405,8 @@ private:
   uint32_t getCharacterIndex (sPosition position) const;
   uint32_t getCharacterColumn (int lineNumber, uint32_t characterIndex) const;
 
-  uint32_t getLineNumChars (int row) const;
-  uint32_t getLineMaxColumn (int row) const;
+  uint32_t getLineNumChars (uint32_t row) const;
+  uint32_t getLineMaxColumn (uint32_t row) const;
 
   uint32_t getPageNumLines() const;
   uint32_t getMaxLineIndex() const;
@@ -421,10 +421,10 @@ private:
 
   uint32_t getTabColumn (uint32_t column) const;
   float getTabEndPosX (float columnX) const;
-  sPosition getPositionFromPosX (int lineNumber, float posX) const;
+  sPosition getPositionFromPosX (uint32_t lineNumber, float posX) const;
 
-  int getLineNumberFromIndex (uint32_t lineIndex) const;
-  uint32_t getLineIndexFromNumber (int lineNumber) const;
+  uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
+  uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
   //}}}
   //{{{  sets
   void setCursorPosition (sPosition position);
@@ -449,13 +449,13 @@ private:
   void moveDown (uint32_t amount);
 
   // insert
-  cLine& insertLine (int index);
+  cLine& insertLine (uint32_t index);
   void insertText (const std::string& insertString);
-  int insertTextAt (sPosition& position, const std::string& insertString);
+  uint32_t insertTextAt (sPosition& position, const std::string& insertString);
 
   // delete
-  void removeLine (int beginPosition, int endPosition);
-  void removeLine (int index);
+  void removeLine (uint32_t beginPosition, uint32_t endPosition);
+  void removeLine (uint32_t index);
   void deleteRange (sPosition beginPosition, sPosition endPosition);
 
   // undo
@@ -474,10 +474,10 @@ private:
   int skipFoldLines (uint32_t lineNumber);
 
   // mouse
-  void selectText (int lineNumber, float posX, bool selectWord);
-  void dragSelectText (int lineNumber, ImVec2 pos);
-  void selectLine (int lineNumber);
-  void dragSelectLine (int lineNumber, float posY);
+  void selectText (uint32_t lineNumber, float posX, bool selectWord);
+  void dragSelectText (uint32_t lineNumber, ImVec2 pos);
+  void selectLine (uint32_t lineNumber);
+  void dragSelectLine (uint32_t lineNumber, float posY);
 
   // draws
   void drawTop (cApp& app);
