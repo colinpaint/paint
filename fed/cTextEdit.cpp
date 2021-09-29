@@ -1198,7 +1198,7 @@ uint32_t cTextEdit::getNumPageLines() const {
 // text
 //{{{
 float cTextEdit::getTextWidth (sPosition position) {
-// get width of text in pixels, of position lineNumberline,  up to position column
+// get width of text in pixels, of position lineNumber, up to position column
 
   const auto& glyphs = getGlyphs (position.mLineNumber);
 
@@ -1208,15 +1208,19 @@ float cTextEdit::getTextWidth (sPosition position) {
     if (glyphs[i].mChar == '\t') {
       // tab
       distance = getTabEndPosX (distance);
-      ++i;
+      i++;
       }
+
     else {
-      int length = utf8CharLength (glyphs[i].mChar);
       array <char,7> str;
-      int j = 0;
-      for (; (j < 6) && (length-- > 0) && (i < glyphs.size()); j++, i++)
+      uint32_t j = 0;
+      uint32_t length = utf8CharLength (glyphs[i].mChar);
+      for (; (j < 6) && (length > 0) && (i < glyphs.size()); j++, i++) {
         str[j] = glyphs[i].mChar;
-      distance += mContext.measureText (str.data(), str.data()+j);
+        length--;
+        }
+
+      distance += mContext.measureText (str.data(), str.data() + j);
       }
     }
 
@@ -1248,8 +1252,8 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
       beginCharacterIndex++;
       }
     else {
+      beginLineNumber++;
       beginCharacterIndex = 0;
-      ++beginLineNumber;
       textString += '\n';
       }
     }
