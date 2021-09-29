@@ -532,7 +532,7 @@ vector<string> cTextEdit::getTextStrings() const {
 //{{{  sets
 //{{{
 void cTextEdit::setTextString (const string& text) {
-// break test into lines, store in internal mLines structure
+// break text string into lines, save in mLines 
 
   mDoc.mLines.clear();
   mDoc.mLines.emplace_back (cLine::tGlyphs());
@@ -559,7 +559,7 @@ void cTextEdit::setTextString (const string& text) {
 //}}}
 //{{{
 void cTextEdit::setTextStrings (const vector<string>& lines) {
-// store vector of lines in internal mLines structure
+// save vector of lines in mLines
 
   mDoc.mLines.clear();
 
