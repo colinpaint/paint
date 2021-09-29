@@ -157,6 +157,8 @@ public:
       }
     //}}}
 
+    uint32_t getNumGlyphs() const { return static_cast<uint32_t>(mGlyphs.size()); }
+
     tGlyphs mGlyphs;
 
     // parsed tokens
@@ -195,11 +197,11 @@ public:
   bool hasClipboardText();
 
   // get
-  std::string getTextString() const;
+  std::string getTextString();
   std::vector<std::string> getTextStrings() const;
 
   uint32_t getTabSize() const { return mInfo.mTabSize; }
-  sPosition getCursorPosition() const { return sanitizePosition (mEdit.mState.mCursorPosition); }
+  sPosition getCursorPosition() { return sanitizePosition (mEdit.mState.mCursorPosition); }
 
   const cLanguage& getLanguage() const { return mOptions.mLanguage; }
   //}}}
@@ -228,8 +230,8 @@ public:
 
   void moveLineUp()   { moveUp (1); }
   void moveLineDown() { moveDown (1); }
-  void movePageUp()   { moveUp (getPageNumLines() - 4); }
-  void movePageDown() { moveDown (getPageNumLines() - 4); }
+  void movePageUp()   { moveUp (getNumPageLines() - 4); }
+  void movePageDown() { moveDown (getNumPageLines() - 4); }
   void moveHome();
   void moveEnd();
 
@@ -366,9 +368,12 @@ private:
   class cUndo {
   public:
     cUndo() = default;
-    cUndo (const std::string& added, const cTextEdit::sPosition addedBegin, const cTextEdit::sPosition addedEnd,
-           const std::string& aRemoved, const cTextEdit::sPosition removedBegin, const cTextEdit::sPosition removedEnd,
-           cTextEdit::sCursorSelectionState& before, cTextEdit::sCursorSelectionState& after);
+    cUndo (const std::string& added, const sPosition addedBegin, const sPosition addedEnd,
+           const std::string& removed, const sPosition removedBegin, const sPosition removedEnd,
+           sCursorSelectionState& before, sCursorSelectionState& after)
+        : mAdded(added), mAddedBegin(addedBegin), mAddedEnd(addedEnd),
+          mRemoved(removed), mRemovedBegin(removedBegin), mRemovedEnd(removedEnd),
+          mBefore(before), mAfter(after) {}
     ~cUndo() = default;
 
     void undo (cTextEdit* textEdit);
@@ -401,31 +406,41 @@ private:
   bool isDrawWhiteSpace() const { return mOptions.mShowWhiteSpace || mOptions.mHoverWhiteSpace; }
   bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced ^ mOptions.mHoverMonoSpaced; }
 
+  // nums
   uint32_t getNumLines() const { return static_cast<uint32_t>(mInfo.mLines.size()); }
   uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mInfo.mFoldLines.size()); }
-  uint32_t getPageNumLines() const;
+  uint32_t getNumPageLines() const;
 
-  uint32_t getCharacterIndex (sPosition position) const;
-  uint32_t getCharacterColumn (uint32_t lineNumber, uint32_t characterIndex) const;
-  uint32_t getLineNumChars (uint32_t row) const;
-  uint32_t getLineMaxColumn (uint32_t row) const;
-  uint32_t getMaxLineIndex() const { return isFolded() ? getNumFoldLines()-1 : getNumLines()-1; }
+  // text
+  float getTextWidth (sPosition position);
+  std::string getText (sPosition beginPosition, sPosition endPosition);
+  std::string getSelectedText() { return getText (mEdit.mState.mSelectionBegin, mEdit.mState.mSelectionEnd); }
 
-  float getTextWidth (sPosition position) const;
-
-  std::string getText (sPosition beginPosition, sPosition endPosition) const;
-  std::string getSelectedText() const;
-
-  bool isOnWordBoundary (sPosition position) const;
-  std::string getWordAt (sPosition position) const;
-  std::string getWordUnderCursor() const;
-
-  uint32_t getTabColumn (uint32_t column) const;
-  float getTabEndPosX (float columnX) const;
-  sPosition getPositionFromPosX (uint32_t lineNumber, float posX) const;
-
+  // lines
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
   uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
+  uint32_t getMaxLineIndex() const { return isFolded() ? getNumFoldLines()-1 : getNumLines()-1; }
+
+  // line
+  cLine& getLine (uint32_t lineNumber) { return mInfo.mLines[lineNumber]; }
+  cLine::tGlyphs& getGlyphs (uint32_t lineNumber) { return getLine (lineNumber).mGlyphs; }
+  uint32_t getNumGlyphs (uint32_t lineNumber) { return static_cast<uint32_t>(getLine (lineNumber).mGlyphs.size()); }
+
+  // column
+  uint32_t getCharacterIndex (sPosition position);
+  uint32_t getCharacterColumn (uint32_t lineNumber, uint32_t characterIndex);
+  uint32_t getLineNumChars (uint32_t lineNumber);
+  uint32_t getLineMaxColumn (uint32_t lineNumber);
+  sPosition getPositionFromPosX (uint32_t lineNumber, float posX);
+
+  // tab
+  uint32_t getTabColumn (uint32_t column);
+  float getTabEndPosX (float columnX);
+
+  // word
+  bool isOnWordBoundary (sPosition position);
+  std::string getWordAt (sPosition position);
+  std::string getWordUnderCursor() { return getWordAt (getCursorPosition()); }
   //}}}
   //{{{  sets
   void setCursorPosition (sPosition position);
@@ -436,14 +451,14 @@ private:
   void setSelection (sPosition beginPosition, sPosition endPosition, eSelection mode);
   //}}}
   //{{{  utils
-  void advance (sPosition& position) const;
+  void advance (sPosition& position);
   void scrollCursorVisible();
-  sPosition sanitizePosition (sPosition position) const;
+  sPosition sanitizePosition (sPosition position);
 
   // find
-  sPosition findWordBegin (sPosition fromPosition) const;
-  sPosition findWordEnd (sPosition fromPosition) const;
-  sPosition findNextWord (sPosition fromPosition) const;
+  sPosition findWordBegin (sPosition fromPosition);
+  sPosition findWordEnd (sPosition fromPosition);
+  sPosition findNextWord (sPosition fromPosition);
 
   // move
   void moveUp (uint32_t amount);
