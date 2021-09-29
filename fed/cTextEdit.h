@@ -444,8 +444,8 @@ private:
   void setSelection (sPosition beginPosition, sPosition endPosition, eSelection mode);
   //}}}
   //{{{  utils
-  void advance (sPosition& position);
   void scrollCursorVisible();
+  void advance (sPosition& position);
   sPosition sanitizePosition (sPosition position);
 
   // find

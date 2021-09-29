@@ -1523,26 +1523,6 @@ void cTextEdit::setSelection (sPosition beginPosition, sPosition endPosition, eS
 //}}}
 //{{{  utils
 //{{{
-void cTextEdit::advance (sPosition& position) {
-
-  if (position.mLineNumber < getNumLines()) {
-    const auto& glyphs = getGlyphs (position.mLineNumber);
-    uint32_t characterIndex = getCharacterIndex (position);
-    if (characterIndex + 1 < glyphs.size()) {
-      uint32_t delta = utf8CharLength (glyphs[characterIndex].mChar);
-      characterIndex = min (characterIndex + delta, static_cast<uint32_t>(glyphs.size())-1);
-      }
-    else {
-      ++position.mLineNumber;
-      characterIndex = 0;
-      }
-
-    position.mColumn = getCharacterColumn (position.mLineNumber, characterIndex);
-    }
-  }
-//}}}
-
-//{{{
 void cTextEdit::scrollCursorVisible() {
 
   ImGui::SetWindowFocus();
@@ -1551,7 +1531,7 @@ void cTextEdit::scrollCursorVisible() {
 
   // up,down scroll
   uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  uint32_t minIndex = 
+  uint32_t minIndex =
     min (getMaxLineIndex(), static_cast<uint32_t>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mContext.mLineHeight)));
   if (lineIndex >= minIndex - 3)
     ImGui::SetScrollY (max (0.f, (lineIndex + 3) * mContext.mLineHeight) - ImGui::GetWindowHeight());
@@ -1573,7 +1553,27 @@ void cTextEdit::scrollCursorVisible() {
     }
 
   mCursorFlashTimePoint = system_clock::now();
+
   mEdit.mScrollVisible = false;
+  }
+//}}}
+//{{{
+void cTextEdit::advance (sPosition& position) {
+
+  if (position.mLineNumber < getNumLines()) {
+    uint32_t characterIndex = getCharacterIndex (position);
+    const auto& glyphs = getGlyphs (position.mLineNumber);
+    if (characterIndex + 1 < glyphs.size()) {
+      uint32_t delta = utf8CharLength (glyphs[characterIndex].mChar);
+      characterIndex = min (characterIndex + delta, static_cast<uint32_t>(glyphs.size())-1);
+      }
+    else {
+      position.mLineNumber++;
+      characterIndex = 0;
+      }
+
+    position.mColumn = getCharacterColumn (position.mLineNumber, characterIndex);
+    }
   }
 //}}}
 //{{{
