@@ -1,4 +1,4 @@
-// cTextEdit.cpp
+// cTextEdit.cpp - folding text editor
 //{{{  includes
 #include "cTextEdit.h"
 
@@ -532,7 +532,7 @@ vector<string> cTextEdit::getTextStrings() const {
 //{{{  sets
 //{{{
 void cTextEdit::setTextString (const string& text) {
-// break text string into lines, save in mLines 
+// break text string into lines, save in mLines
 
   mDoc.mLines.clear();
   mDoc.mLines.emplace_back (cLine::tGlyphs());
