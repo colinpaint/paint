@@ -797,7 +797,7 @@ void cTextEdit::deleteIt() {
     cLine& line = getLine (position.mLineNumber);
 
     if (position.mColumn == getLineMaxColumn (position.mLineNumber)) {
-      if (position.mLineNumber == getNumLines() - 1)
+      if (position.mLineNumber == getNumLines()-1)
         return;
 
       undo.mRemoved = '\n';
@@ -933,7 +933,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       if ((selectEnd.mColumn == 0) && (selectEnd.mLineNumber > 0))
         --selectEnd.mLineNumber;
       if (selectEnd.mLineNumber >= getNumLines())
-        selectEnd.mLineNumber = mInfo.mLines.empty() ? 0 : getNumLines() - 1;
+        selectEnd.mLineNumber = mInfo.mLines.empty() ? 0 : getNumLines()-1;
       selectEnd.mColumn = getLineMaxColumn (selectEnd.mLineNumber);
 
       undo.mRemovedBegin = selectBegin;
@@ -1367,7 +1367,7 @@ uint32_t cTextEdit::getLineMaxColumn (uint32_t lineNumber) {
 cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float posX) {
 
   uint32_t column = 0;
-  if ((lineNumber >= 0) && (lineNumber < getNumLines())) {
+  if (lineNumber < getNumLines()) {
     float columnX = 0.f;
     size_t glyphIndex = 0;
     const auto& glyphs = getGlyphs (lineNumber);
@@ -2046,58 +2046,58 @@ void cTextEdit::parseComments() {
     bool inSingleComment = false;
     bool srcBegsrcEndComment = false;
 
-    uint32_t curIndex = 0;
-    uint32_t curLine = 0;
-    while (curLine < getNumLines()) {
-      auto& glyphs = getGlyphs (curLine);
-      size_t numGlyphs = glyphs.size();
+    uint32_t glyphIndex = 0;
+    uint32_t lineNumber = 0;
+    while (lineNumber < getNumLines()) {
+      auto& glyphs = getGlyphs (lineNumber);
+      uint32_t numGlyphs = getNumGlyphs (lineNumber);
       if (numGlyphs > 0) {
         // parse ch
-        uint8_t ch = glyphs[curIndex].mChar;
+        uint8_t ch = glyphs[glyphIndex].mChar;
         if (ch == '\"') {
           //{{{  start of string
           inString = true;
           if (inSingleComment || srcBegsrcEndComment)
-            glyphs[curIndex].mColor = eComment;
+            glyphs[glyphIndex].mColor = eComment;
           }
           //}}}
         else if (inString) {
           //{{{  in string
           if (inSingleComment || srcBegsrcEndComment)
-            glyphs[curIndex].mColor = eComment;
+            glyphs[glyphIndex].mColor = eComment;
 
           if (ch == '\"') // end of string
             inString = false;
 
           else if (ch == '\\') {
             // \ escapeChar in " " quotes, skip nextChar if any
-            if (curIndex+1 < numGlyphs) {
-              curIndex++;
+            if (glyphIndex+1 < numGlyphs) {
+              glyphIndex++;
               if (inSingleComment || srcBegsrcEndComment)
-                glyphs[curIndex].mColor = eComment;
+                glyphs[glyphIndex].mColor = eComment;
               }
             }
           }
           //}}}
         else {
           // comment begin?
-          if (glyphs[curIndex].mCommentSingle)
+          if (glyphs[glyphIndex].mCommentSingle)
             inSingleComment = true;
-          else if (glyphs[curIndex].mCommentBegin)
+          else if (glyphs[glyphIndex].mCommentBegin)
             srcBegsrcEndComment = true;
 
           // in comment
           if (inSingleComment || srcBegsrcEndComment)
-            glyphs[curIndex].mColor = eComment;
+            glyphs[glyphIndex].mColor = eComment;
 
           // comment end ?
-          if (glyphs[curIndex].mCommentEnd)
+          if (glyphs[glyphIndex].mCommentEnd)
             srcBegsrcEndComment = false;
           }
-        curIndex += utf8CharLength (ch);
+        glyphIndex += utf8CharLength (ch);
         }
 
-      if (curIndex >= numGlyphs) {
+      if (glyphIndex >= numGlyphs) {
         // end of line, check for trailing concatenate '\' char
         if ((numGlyphs == 0) || (glyphs[numGlyphs-1].mChar != '\\')) {
           // no trailing concatenate, reset line flags
@@ -2106,8 +2106,8 @@ void cTextEdit::parseComments() {
           }
 
         // next line
-        ++curLine;
-        curIndex = 0;
+        lineNumber++;
+        glyphIndex = 0;
         }
       }
     }
