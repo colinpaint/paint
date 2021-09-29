@@ -712,14 +712,12 @@ void cTextEdit::copy() {
   if (hasSelect())
     ImGui::SetClipboardText (getSelectedText().c_str());
 
-  else if (!mDoc.mLines.empty()) {
-    string copyString;
-    for (auto& glyph : getGlyphs (getCursorPosition().mLineNumber))
-      copyString.push_back (glyph.mChar);
+  string copyString;
+  for (auto& glyph : getGlyphs (getCursorPosition().mLineNumber))
+    copyString.push_back (glyph.mChar);
 
-    // copy as text to clipBoard
-    ImGui::SetClipboardText (copyString.c_str());
-    }
+  // copy as text to clipBoard
+  ImGui::SetClipboardText (copyString.c_str());
   }
 //}}}
 //{{{
@@ -778,9 +776,6 @@ void cTextEdit::paste() {
 //{{{
 void cTextEdit::deleteIt() {
 
-  if (mDoc.mLines.empty())
-    return;
-
   cUndo undo;
   undo.mBefore = mEdit.mCursor;
 
@@ -834,9 +829,6 @@ void cTextEdit::deleteIt() {
 //}}}
 //{{{
 void cTextEdit::backspace() {
-
-  if (mDoc.mLines.empty())
-    return;
 
   cUndo undo;
   undo.mBefore = mEdit.mCursor;
@@ -933,7 +925,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       if ((selectEnd.mColumn == 0) && (selectEnd.mLineNumber > 0))
         --selectEnd.mLineNumber;
       if (selectEnd.mLineNumber >= getNumLines())
-        selectEnd.mLineNumber = mDoc.mLines.empty() ? 0 : getNumLines()-1;
+        selectEnd.mLineNumber = getNumLines()-1;
       selectEnd.mColumn = getLineMaxColumn (selectEnd.mLineNumber);
 
       undo.mRemovedBegin = selectBegin;
@@ -1574,10 +1566,7 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
 //    or begin of empty lines
 
   if (position.mLineNumber < getNumLines())
-    return sPosition (position.mLineNumber,
-                      mDoc.mLines.empty() ? 0 : min (position.mColumn, getLineMaxColumn (position.mLineNumber)));
-  else if (mDoc.mLines.empty())
-    return sPosition (0,0);
+    return sPosition (position.mLineNumber, min (position.mColumn, getLineMaxColumn (position.mLineNumber)));
   else
     return sPosition (getNumLines()-1, getLineMaxColumn (getNumLines()-1));
   }
@@ -1695,9 +1684,6 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) {
 //{{{
 void cTextEdit::moveUp (uint32_t amount) {
 
-  if (mDoc.mLines.empty())
-    return;
-
   // lineNumber
   sPosition position = mEdit.mCursor.mPosition;
   int lineNumber = position.mLineNumber;
@@ -1722,9 +1708,6 @@ void cTextEdit::moveUp (uint32_t amount) {
 //}}}
 //{{{
 void cTextEdit::moveDown (uint32_t amount) {
-
-  if (mDoc.mLines.empty())
-    return;
 
   // lineNumber
   sPosition position = mEdit.mCursor.mPosition;
