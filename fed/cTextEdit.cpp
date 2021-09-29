@@ -2403,8 +2403,8 @@ void cTextEdit::drawTop (cApp& app) {
 
   // debug text
   ImGui::SameLine();
-  ImGui::Text (fmt::format ("{}:{}:vert:triangle", ImGui::GetIO().MetricsRenderVertices,
-                                                          ImGui::GetIO().MetricsRenderIndices/3).c_str());
+  ImGui::Text (fmt::format ("{}:{}:vert:triangle", 
+               ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
   //}}}
   //{{{  vsync button, fps text
   // vsync button
