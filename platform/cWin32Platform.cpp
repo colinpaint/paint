@@ -98,7 +98,10 @@ public:
   void* getSwapChain() final;
   cPoint getWindowSize() final;
 
+  bool hasVsync() final { return true; }
   bool getVsync() final { return gVsync; }
+
+  bool hasFullScreen() final { return false; }
   bool getFullScreen() final { return gFullScreen; }
 
   // sets

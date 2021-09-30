@@ -28,7 +28,10 @@ public:
   virtual void* getDeviceContext() = 0;
   virtual void* getSwapChain() = 0;
 
+  virtual bool hasVsync() = 0;
   virtual bool getVsync() = 0;
+
+  virtual bool hasFullScreen() = 0;
   virtual bool getFullScreen() = 0;
 
   // sets

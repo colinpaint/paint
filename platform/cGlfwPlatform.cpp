@@ -80,7 +80,11 @@ public:
   void* getDeviceContext() final;
   void* getSwapChain() final;
   cPoint getWindowSize() final;
+
+  bool hasVsync() final { return true; }
   bool getVsync() final { return mVsync; }
+
+  bool hasFullScreen() final { return true; }
   bool getFullScreen() final { return mFullScreen; }
 
   // sets
@@ -166,7 +170,7 @@ void cGlfwPlatform::toggleFullScreen() {
 bool cGlfwPlatform::pollEvents() {
 
   if (mActionFullScreen) {
-    //{{{  toggle fullscreen
+    //{{{  fullScreen
     if (mFullScreen) {
       // save windowPos and windowSize
       glfwGetWindowPos (gWindow, &gWindowPos.x, &gWindowPos.y);

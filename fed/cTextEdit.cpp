@@ -2393,14 +2393,16 @@ void cTextEdit::drawTop (cApp& app) {
                ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
   //}}}
   //{{{  vsync button, fps text
-  // vsync button
-  ImGui::SameLine();
-  if (toggleButton ("vSync", app.getPlatform().getVsync()))
-    app.getPlatform().toggleVsync();
+  if (app.getPlatform().hasVsync()) {
+    // vsync button
+    ImGui::SameLine();
+    if (toggleButton ("vSync", app.getPlatform().getVsync()))
+      app.getPlatform().toggleVsync();
 
-  // fps text
-  ImGui::SameLine();
-  ImGui::Text (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+    // fps text
+    ImGui::SameLine();
+    ImGui::Text (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+    }
   //}}}
 
   //{{{  info text
@@ -2410,9 +2412,11 @@ void cTextEdit::drawTop (cApp& app) {
   //}}}
 
   //{{{  fullScreen button
-  ImGui::SameLine();
-  if (toggleButton ("full", app.getPlatform().getFullScreen()))
-    app.getPlatform().toggleFullScreen();
+  if (app.getPlatform().hasFullScreen()) {
+    ImGui::SameLine();
+    if (toggleButton ("full", app.getPlatform().getFullScreen()))
+      app.getPlatform().toggleFullScreen();
+    }
   //}}}
   }
 //}}}
