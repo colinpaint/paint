@@ -1128,11 +1128,125 @@ void cTextEdit::drawWindow (const string& title, cApp& app) {
 //}}}
 //{{{
 void cTextEdit::drawContents (cApp& app) {
-// main ui handle io and draw routine
+// main ui io,draw 
+
+  // top line buttons
+  //{{{  lineNumber buttons
+  if (toggleButton ("line", mOptions.mShowLineNumber))
+    toggleShowLineNumber();
+
+  if (mOptions.mShowLineNumber)
+    // debug button
+    if (mOptions.mShowLineNumber) {
+      ImGui::SameLine();
+      if (toggleButton ("debug", mOptions.mShowLineDebug))
+        toggleShowLineDebug();
+      }
+  //}}}
+  if (mDoc.mHasFolds) {
+    //{{{  folded button
+    ImGui::SameLine();
+    if (toggleButton ("folded", isShowFolds()))
+      toggleShowFolded();
+    }
+    //}}}
+  //{{{  monoSpaced buttom
+  ImGui::SameLine();
+  if (toggleButton ("mono", mOptions.mShowMonoSpaced))
+    toggleShowMonoSpaced();
+  //}}}
+  //{{{  whiteSpace button
+  ImGui::SameLine();
+  if (toggleButton ("space", mOptions.mShowWhiteSpace))
+    toggleShowWhiteSpace();
+  //}}}
+  if (hasClipboardText() && !isReadOnly()) {
+    //{{{  paste button
+    ImGui::SameLine();
+    if (ImGui::Button ("paste"))
+      paste();
+    }
+    //}}}
+  if (hasSelect()) {
+    //{{{  copy, cut, delete buttons
+    ImGui::SameLine();
+    if (ImGui::Button ("copy"))
+      copy();
+     if (!isReadOnly()) {
+       ImGui::SameLine();
+      if (ImGui::Button ("cut"))
+        cut();
+      ImGui::SameLine();
+      if (ImGui::Button ("delete"))
+        deleteIt();
+      }
+    }
+    //}}}
+  if (!isReadOnly() && hasUndo()) {
+    //{{{  undo button
+    ImGui::SameLine();
+    if (ImGui::Button ("undo"))
+      undo();
+    }
+    //}}}
+  if (!isReadOnly() && hasRedo()) {
+    //{{{  redo button
+    ImGui::SameLine();
+    if (ImGui::Button ("redo"))
+      redo();
+    }
+    //}}}
+  //{{{  insert button
+  ImGui::SameLine();
+  if (toggleButton ("insert", !mOptions.mOverWrite))
+    toggleOverWrite();
+  //}}}
+  //{{{  readOnly button
+  ImGui::SameLine();
+  if (toggleButton ("readOnly", isReadOnly()))
+    toggleReadOnly();
+  //}}}
+  //{{{  info
+  ImGui::SameLine();
+  ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
+                                           getNumLines(), getLanguage().mName).c_str());
+  //}}}
+  //{{{  fontSize button
+  ImGui::SameLine();
+  ImGui::SetNextItemWidth (3 * ImGui::GetFontSize());
+  ImGui::DragInt ("##fs", &mOptions.mFontSize, 0.2f, mOptions.mmDocntSize, mOptions.mMaxFontSize, "%d");
+
+  if (ImGui::IsItemHovered()) {
+    int fontSize = mOptions.mFontSize + static_cast<int>(ImGui::GetIO().MouseWheel);
+    mOptions.mFontSize = max (mOptions.mmDocntSize, min (mOptions.mMaxFontSize, fontSize));
+    }
+  //}}}
+  //{{{  vertice debug
+  ImGui::SameLine();
+  ImGui::Text (fmt::format ("{}:{}:vert:triangle",
+               ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
+  //}}}
+  //{{{  vsync button,fps
+  if (app.getPlatform().hasVsync()) {
+    // vsync button
+    ImGui::SameLine();
+    if (toggleButton ("vSync", app.getPlatform().getVsync()))
+      app.getPlatform().toggleVsync();
+
+    // fps text
+    ImGui::SameLine();
+    ImGui::Text (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+    }
+  //}}}
+  //{{{  fullScreen button
+  if (app.getPlatform().hasFullScreen()) {
+    ImGui::SameLine();
+    if (toggleButton ("full", app.getPlatform().getFullScreen()))
+      app.getPlatform().toggleFullScreen();
+    }
+  //}}}
 
   parseComments();
-
-  drawTop (app);
 
   // begin childWindow, new font, new colors
   if (isDrawMonoSpaced())
@@ -1150,7 +1264,6 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, {0.f,0.f});
   ImGui::BeginChild ("##s", {0.f,0.f}, false,
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-
   mContext.update (mOptions);
 
   handleKeyboard();
@@ -2261,132 +2374,6 @@ void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
 //}}}
 
 // draw
-//{{{
-void cTextEdit::drawTop (cApp& app) {
-
-  //{{{  lineNumber buttons
-  if (toggleButton ("line", mOptions.mShowLineNumber))
-    toggleShowLineNumber();
-
-  if (mOptions.mShowLineNumber)
-    // debug button
-    if (mOptions.mShowLineNumber) {
-      ImGui::SameLine();
-      if (toggleButton ("debug", mOptions.mShowLineDebug))
-        toggleShowLineDebug();
-      }
-  //}}}
-
-  if (mDoc.mHasFolds) {
-    //{{{  folded button
-    ImGui::SameLine();
-    if (toggleButton ("folded", isShowFolds()))
-      toggleShowFolded();
-    }
-    //}}}
-
-  //{{{  monoSpaced buttom
-  ImGui::SameLine();
-  if (toggleButton ("mono", mOptions.mShowMonoSpaced))
-    toggleShowMonoSpaced();
-  //}}}
-  //{{{  whiteSpace button
-  ImGui::SameLine();
-  if (toggleButton ("space", mOptions.mShowWhiteSpace))
-    toggleShowWhiteSpace();
-  //}}}
-
-  if (hasClipboardText() && !isReadOnly()) {
-    //{{{  paste button
-    ImGui::SameLine();
-    if (ImGui::Button ("paste"))
-      paste();
-    }
-    //}}}
-  if (hasSelect()) {
-    //{{{  copy, cut, delete buttons
-    ImGui::SameLine();
-    if (ImGui::Button ("copy"))
-      copy();
-     if (!isReadOnly()) {
-       ImGui::SameLine();
-      if (ImGui::Button ("cut"))
-        cut();
-      ImGui::SameLine();
-      if (ImGui::Button ("delete"))
-        deleteIt();
-      }
-    }
-    //}}}
-
-  if (!isReadOnly() && hasUndo()) {
-    //{{{  undo button
-    ImGui::SameLine();
-    if (ImGui::Button ("undo"))
-      undo();
-    }
-    //}}}
-  if (!isReadOnly() && hasRedo()) {
-    //{{{  redo button
-    ImGui::SameLine();
-    if (ImGui::Button ("redo"))
-      redo();
-    }
-    //}}}
-
-  //{{{  insert button
-  ImGui::SameLine();
-  if (toggleButton ("insert", !mOptions.mOverWrite))
-    toggleOverWrite();
-  //}}}
-  //{{{  readOnly button
-  ImGui::SameLine();
-  if (toggleButton ("readOnly", isReadOnly()))
-    toggleReadOnly();
-  //}}}
-
-  //{{{  info
-  ImGui::SameLine();
-  ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
-                                           getNumLines(), getLanguage().mName).c_str());
-  //}}}
-  //{{{  fontSize button
-  ImGui::SameLine();
-  ImGui::SetNextItemWidth (3 * ImGui::GetFontSize());
-  ImGui::DragInt ("##fs", &mOptions.mFontSize, 0.2f, mOptions.mmDocntSize, mOptions.mMaxFontSize, "%d");
-
-  if (ImGui::IsItemHovered()) {
-    int fontSize = mOptions.mFontSize + static_cast<int>(ImGui::GetIO().MouseWheel);
-    mOptions.mFontSize = max (mOptions.mmDocntSize, min (mOptions.mMaxFontSize, fontSize));
-    }
-  //}}}
-  //{{{  vertice debug
-  ImGui::SameLine();
-  ImGui::Text (fmt::format ("{}:{}:vert:triangle",
-               ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
-  //}}}
-
-  //{{{  vsync button,fps
-  if (app.getPlatform().hasVsync()) {
-    // vsync button
-    ImGui::SameLine();
-    if (toggleButton ("vSync", app.getPlatform().getVsync()))
-      app.getPlatform().toggleVsync();
-
-    // fps text
-    ImGui::SameLine();
-    ImGui::Text (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
-    }
-  //}}}
-  //{{{  fullScreen button
-  if (app.getPlatform().hasFullScreen()) {
-    ImGui::SameLine();
-    if (toggleButton ("full", app.getPlatform().getFullScreen()))
-      app.getPlatform().toggleFullScreen();
-    }
-  //}}}
-  }
-//}}}
 //{{{
 float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor) {
 

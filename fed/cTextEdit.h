@@ -486,7 +486,6 @@ private:
   void dragSelectLine (uint32_t lineNumber, float posY);
 
   // draw
-  void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);
   uint32_t drawFolded();
