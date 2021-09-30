@@ -914,14 +914,15 @@ void cTextEdit::deleteSelect() {
 
 // insert
 //{{{
-void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
+void cTextEdit::enterCharacter (ImWchar ch) {
 
   cUndo undo;
   undo.mBefore = mEdit.mCursor;
 
   if (hasSelect()) {
-    if ((ch == '\t') && (mEdit.mCursor.mSelectBegin.mLineNumber != mEdit.mCursor.mSelectEnd.mLineNumber)) {
-      //{{{  tab insert into select
+    if ((ch == '\t') && 
+        (mEdit.mCursor.mSelectBegin.mLineNumber != mEdit.mCursor.mSelectEnd.mLineNumber)) {
+      //{{{  tab all select lines
       sPosition selectBegin = mEdit.mCursor.mSelectBegin;
       sPosition selectEnd = mEdit.mCursor.mSelectEnd;
       sPosition originalEnd = selectEnd;
@@ -943,24 +944,8 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       bool modified = false;
       for (uint32_t lineNumber = selectBegin.mLineNumber; lineNumber <= selectEnd.mLineNumber; lineNumber++) {
         auto& glyphs = getGlyphs (lineNumber);
-        if (shift) {
-          if (!glyphs.empty()) {
-            if (glyphs.front().mChar == '\t') {
-              glyphs.erase (glyphs.begin());
-              modified = true;
-              }
-            else {
-              for (uint32_t j = 0; (j < mDoc.mTabSize) && !glyphs.empty() && (glyphs.front().mChar == ' '); j++) {
-                glyphs.erase (glyphs.begin());
-                modified = true;
-                }
-              }
-            }
-          }
-        else {
-          glyphs.insert (glyphs.begin(), cGlyph ('\t', eTab));
-          modified = true;
-          }
+        glyphs.insert (glyphs.begin(), cGlyph ('\t', eTab));
+        modified = true;
         }
 
       if (modified) {
@@ -995,7 +980,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       }
       //}}}
     else {
-      //{{{  deleteSelect before insert
+      //{{{  delete select line
       undo.mRemove = getSelectedText();
       undo.mRemoveBegin = mEdit.mCursor.mSelectBegin;
       undo.mRemoveEnd = mEdit.mCursor.mSelectEnd;
@@ -1009,7 +994,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
   undo.mAddBegin = position;
 
   if (ch == '\n') {
-    //{{{  enter carraigeReturn into line
+    //{{{  enter lineFeed
     cLine& line = getLine (position.mLineNumber);
 
     // insert newLine
@@ -1042,7 +1027,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
     array <char,7> utf8buf;
     uint32_t bufLength = imTextCharToUtf8 (utf8buf.data(), 7, ch);
     if (bufLength > 0) {
-      //{{{  enter char into line
+      //{{{  enter char
       utf8buf[bufLength] = '\0';
       cLine& line = getLine (position.mLineNumber);
       uint32_t characterIndex = getCharacterIndex (position);
@@ -2213,12 +2198,12 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
   }
 //}}}
 //{{{
-int cTextEdit::skipFoldLines (uint32_t lineNumber) {
+int cTextEdit::skipFold (uint32_t lineNumber) {
 // recursively skip fold lines until matching foldEnd
 
   while (lineNumber < getNumLines())
     if (getLine (lineNumber).mFoldBegin)
-      lineNumber = skipFoldLines (lineNumber+1);
+      lineNumber = skipFold (lineNumber+1);
     else if (getLine (lineNumber).mFoldEnd)
       return lineNumber+1;
     else
@@ -2766,7 +2751,7 @@ uint32_t cTextEdit::drawFolded() {
         drawLine (lineNumber++, lineIndex++);
 
         // skip closed fold
-        lineNumber = skipFoldLines (lineNumber);
+        lineNumber = skipFold (lineNumber);
         }
       else {
         // draw closedFold without comment line
@@ -2777,7 +2762,7 @@ uint32_t cTextEdit::drawFolded() {
         drawLine (lineNumber++, lineIndex++);
 
         // skip closed fold
-        lineNumber = skipFoldLines (lineNumber+1);
+        lineNumber = skipFold (lineNumber+1);
         }
       }
     else if (!line.mFoldEnd) {
@@ -2890,6 +2875,8 @@ void cTextEdit::handleKeyboard() {
      {false, false, false, ImGuiKey_Backspace,  true,  [this]{backspace();}},
      {false, true,  false, ImGuiKey_Z,          true,  [this]{undo();}},
      {false, true,  false, ImGuiKey_Y,          true,  [this]{redo();}},
+     {false, false, false, ImGuiKey_Enter,      true,  [this]{enterKey();}},
+     {false, false, false, ImGuiKey_Tab,        true,  [this]{tabKey();}},
      // edit without change
      {false, true,  false, ImGuiKey_C,          false, [this]{copy();}},
      {false, true,  false, ImGuiKey_A,          false, [this]{selectAll();}},
@@ -2915,7 +2902,6 @@ void cTextEdit::handleKeyboard() {
   // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
   // {true,  false, false, kNumpadMulitply,     false, [this]{findDialog();}},
   // {true,  false, false, kNumpadDivide,       false, [this]{replaceDialog();}},
-
   // {false, false, false, F4                   false, [this]{copy();}},
   // {false, true,  false, F                    false, [this]{findDialog();}},
   // {false, true,  false, S                    false, [this]{saveFile();}},
@@ -2924,12 +2910,11 @@ void cTextEdit::handleKeyboard() {
   // {true,  false, false, N                    false, [this]{gotoDialog();}},
      };
 
-  ImGuiIO& io = ImGui::GetIO();
-  bool shift = io.KeyShift;
-  bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
-  bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
-  io.WantTextInput = true;
-  io.WantCaptureKeyboard = false;
+  ImGui::GetIO().WantTextInput = true;
+  ImGui::GetIO().WantCaptureKeyboard = false;
+  bool alt = ImGui::GetIO().ConfigMacOSXBehaviors ? ImGui::GetIO().KeyCtrl : ImGui::GetIO().KeyAlt;
+  bool ctrl = ImGui::GetIO().ConfigMacOSXBehaviors ? ImGui::GetIO().KeySuper : ImGui::GetIO().KeyCtrl;
+  bool shift = ImGui::GetIO().KeyShift;
 
   for (auto& actionKey : kActionKeys)
     //{{{  dispatch any actionKey
@@ -2947,17 +2932,13 @@ void cTextEdit::handleKeyboard() {
 
   if (!isReadOnly()) {
     // handle character keys
-    if (!ctrl && !shift && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Enter)))
-     enterCharacter ('\n', false);
-    else if (!ctrl && !alt && ImGui::IsKeyPressed (ImGui::GetKeyIndex (ImGuiKey_Tab)))
-      enterCharacter ('\t', shift);
-    if (!io.InputQueueCharacters.empty()) {
-      for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
-        auto ch = io.InputQueueCharacters[i];
+    if (!ImGui::GetIO().InputQueueCharacters.empty()) {
+      for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
+        auto ch = ImGui::GetIO().InputQueueCharacters[i];
         if (ch != 0 && (ch == '\n' || ch >= 32))
-          enterCharacter (ch, shift);
+          enterCharacter (ch);
         }
-      io.InputQueueCharacters.resize (0);
+      ImGui::GetIO().InputQueueCharacters.resize (0);
      }
    }
   }

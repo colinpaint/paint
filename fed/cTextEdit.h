@@ -244,7 +244,9 @@ public:
   void deleteSelect();
 
   // insert
-  void enterCharacter (ImWchar ch, bool shift);
+  void enterCharacter (ImWchar ch);
+  void enterKey()    { enterCharacter ('\n'); }
+  void tabKey()      { enterCharacter ('\t'); }
 
   // fold
   void createFold();
@@ -480,7 +482,7 @@ private:
   void openFold (uint32_t lineNumber);
   void openFoldOnly (uint32_t lineNumber);
   void closeFold (uint32_t lineNumber);
-  int skipFoldLines (uint32_t lineNumber);
+  int skipFold (uint32_t lineNumber);
 
   // mouse
   void selectText (uint32_t lineNumber, float posX, bool selectWord);
@@ -488,7 +490,7 @@ private:
   void selectLine (uint32_t lineNumber);
   void dragSelectLine (uint32_t lineNumber, float posY);
 
-  // draws
+  // draw
   void drawTop (cApp& app);
   float drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);
