@@ -482,7 +482,7 @@ private:
   void openFold (uint32_t lineNumber);
   void openFoldOnly (uint32_t lineNumber);
   void closeFold (uint32_t lineNumber);
-  int skipFold (uint32_t lineNumber);
+  uint32_t skipFold (uint32_t lineNumber);
 
   // mouse
   void selectText (uint32_t lineNumber, float posX, bool selectWord);

@@ -2166,7 +2166,7 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
     else {
       // search back for this fold's foldBegin and close it
       // - skip foldEnd foldBegin pairs
-      int skipFoldPairs = 0;
+      uint32_t skipFoldPairs = 0;
       while (lineNumber > 0) {
         lineNumber--;
         cLine& line = getLine (lineNumber);
@@ -2198,7 +2198,7 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
   }
 //}}}
 //{{{
-int cTextEdit::skipFold (uint32_t lineNumber) {
+uint32_t cTextEdit::skipFold (uint32_t lineNumber) {
 // recursively skip fold lines until matching foldEnd
 
   while (lineNumber < getNumLines())
