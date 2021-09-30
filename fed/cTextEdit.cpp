@@ -920,7 +920,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
   undo.mBefore = mEdit.mCursor;
 
   if (hasSelect()) {
-    if ((ch == '\t') && 
+    if ((ch == '\t') &&
         (mEdit.mCursor.mSelectBegin.mLineNumber != mEdit.mCursor.mSelectEnd.mLineNumber)) {
       //{{{  tab all select lines
       sPosition selectBegin = mEdit.mCursor.mSelectBegin;
@@ -2917,13 +2917,13 @@ void cTextEdit::handleKeyboard() {
   bool shift = ImGui::GetIO().KeyShift;
 
   for (auto& actionKey : kActionKeys)
-    //{{{  dispatch any actionKey
+    //{{{  dispatch actionKey
     if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
          ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
-        (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
+        (actionKey.mAlt == alt) &&
         (actionKey.mCtrl == ctrl) &&
         (actionKey.mShift == shift) &&
-        (actionKey.mAlt == alt)) {
+        (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly()))) {
 
       actionKey.mActionFunc();
       break;
@@ -2931,16 +2931,13 @@ void cTextEdit::handleKeyboard() {
     //}}}
 
   if (!isReadOnly()) {
-    // handle character keys
-    if (!ImGui::GetIO().InputQueueCharacters.empty()) {
-      for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
-        auto ch = ImGui::GetIO().InputQueueCharacters[i];
-        if (ch != 0 && (ch == '\n' || ch >= 32))
-          enterCharacter (ch);
-        }
-      ImGui::GetIO().InputQueueCharacters.resize (0);
-     }
-   }
+    for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
+      ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
+      if ((ch != 0) && ((ch == '\n') || (ch >= 32)))
+        enterCharacter (ch);
+      }
+    ImGui::GetIO().InputQueueCharacters.resize (0);
+    }
   }
 //}}}
 
