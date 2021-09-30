@@ -19,7 +19,7 @@ class cApp;
 //}}}
 class cTextEdit {
 public:
-  enum class eSelection { eNormal, eWord, eLine };
+  enum class eSelect { eNormal, eWord, eLine };
   //{{{
   struct sPosition {
     sPosition() : mLineNumber(0), mColumn(0) {}
@@ -185,9 +185,9 @@ public:
   // has
   bool hasCR() const { return mDoc.mHasCR; }
   bool hasTabs() const { return mDoc.mHasTabs; }
-  bool hasSelect() const { return mEdit.mCursor.mSelectionEnd > mEdit.mCursor.mSelectionBegin; }
-  bool hasUndo() const { return !mOptions.mReadOnly && mUndoList.mIndex > 0; }
-  bool hasRedo() const { return !mOptions.mReadOnly && mUndoList.mIndex < (int)mUndoList.mBuffer.size(); }
+  bool hasSelect() const { return mEdit.mCursor.mSelectEnd > mEdit.mCursor.mSelectBegin; }
+  bool hasUndo() const { return !mOptions.mReadOnly && (mUndoList.mIndex > 0); }
+  bool hasRedo() const { return !mOptions.mReadOnly && (mUndoList.mIndex < mUndoList.mBuffer.size()); }
   bool hasClipboardText();
 
   // get
@@ -241,7 +241,7 @@ public:
   // delete
   void deleteIt();
   void backspace();
-  void deleteSelection();
+  void deleteSelect();
 
   // insert
   void enterCharacter (ImWchar ch, bool shift);
@@ -338,13 +338,13 @@ private:
   public:
     struct sCursor {
       sPosition mPosition;
-      sPosition mSelectionBegin;
-      sPosition mSelectionEnd;
+      sPosition mSelectBegin;
+      sPosition mSelectEnd;
       };
 
     sCursor mCursor;
 
-    eSelection mSelection = eSelection::eNormal;
+    eSelect mSelect = eSelect::eNormal;
     sPosition mInteractiveBegin;
     sPosition mInteractiveEnd;
 
@@ -361,11 +361,11 @@ private:
   class cUndo {
   public:
     cUndo() = default;
-    cUndo (const std::string& added, const sPosition addedBegin, const sPosition addedEnd,
-           const std::string& removed, const sPosition removedBegin, const sPosition removedEnd,
+    cUndo (const std::string& add, const sPosition addBegin, const sPosition addEnd,
+           const std::string& remove, const sPosition removeBegin, const sPosition removeEnd,
            cEdit::sCursor& before, cEdit::sCursor& after)
-        : mAdded(added), mAddedBegin(addedBegin), mAddedEnd(addedEnd),
-          mRemoved(removed), mRemovedBegin(removedBegin), mRemovedEnd(removedEnd),
+        : mAdd(add), mAddBegin(addBegin), mAddEnd(addEnd),
+          mRemove(remove), mRemoveBegin(removeBegin), mRemoveEnd(removeEnd),
           mBefore(before), mAfter(after) {}
     ~cUndo() = default;
 
@@ -373,13 +373,13 @@ private:
     void redo (cTextEdit* textEdit);
 
     // vars
-    std::string mAdded;
-    sPosition mAddedBegin;
-    sPosition mAddedEnd;
+    std::string mAdd;
+    sPosition mAddBegin;
+    sPosition mAddEnd;
 
-    std::string mRemoved;
-    sPosition mRemovedBegin;
-    sPosition mRemovedEnd;
+    std::string mRemove;
+    sPosition mRemoveBegin;
+    sPosition mRemoveEnd;
 
     cEdit::sCursor mBefore;
     cEdit::sCursor mAfter;
@@ -405,9 +405,9 @@ private:
   uint32_t getNumPageLines() const;
 
   // text
-  float getTextWidth (sPosition position);
   std::string getText (sPosition beginPosition, sPosition endPosition);
-  std::string getSelectedText() { return getText (mEdit.mCursor.mSelectionBegin, mEdit.mCursor.mSelectionEnd); }
+  std::string getSelectedText() { return getText (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd); }
+  float getTextWidth (sPosition position);
 
   // lines
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
@@ -438,10 +438,10 @@ private:
   //{{{  sets
   void setCursorPosition (sPosition position);
 
-  void setSelectionBegin (sPosition position);
-  void setSelectionEnd (sPosition position);
+  void setSelectBegin (sPosition position);
+  void setSelectEnd (sPosition position);
 
-  void setSelection (sPosition beginPosition, sPosition endPosition, eSelection mode);
+  void setSelect (sPosition beginPosition, sPosition endPosition, eSelect select);
   //}}}
   //{{{  utils
   void scrollCursorVisible();
