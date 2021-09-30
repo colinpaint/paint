@@ -1128,7 +1128,7 @@ void cTextEdit::drawWindow (const string& title, cApp& app) {
 //}}}
 //{{{
 void cTextEdit::drawContents (cApp& app) {
-// main ui io,draw 
+// main ui io,draw
 
   // top line buttons
   //{{{  lineNumber buttons
@@ -2911,6 +2911,7 @@ void cTextEdit::cContext::update (const cOptions& options) {
 // update draw context
 
   mDrawList = ImGui::GetWindowDrawList();
+
   mFont = ImGui::GetFont();
   mFontAtlasSize = ImGui::GetFontSize();
   mFontSize = static_cast<float>(options.mFontSize);
@@ -2918,10 +2919,10 @@ void cTextEdit::cContext::update (const cOptions& options) {
   mFontSmallOffset = ((mFontSize - mFontSmallSize) * 2.f) / 3.f;
 
   float scale = mFontSize / mFontAtlasSize;
-  mGlyphWidth = measureText (" ", nullptr) * scale;
   mLineHeight = ImGui::GetTextLineHeight() * scale;
+  mGlyphWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, " ").x;
 
-  mLeftPad = mGlyphWidth/2.f;
+  mLeftPad = mGlyphWidth / 2.f;
   mLineNumberWidth = 0.f;
   }
 //}}}
