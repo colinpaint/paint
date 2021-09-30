@@ -2408,6 +2408,12 @@ void cTextEdit::drawTop (cApp& app) {
   ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
                                            getNumLines(), getLanguage().mName).c_str());
   //}}}
+
+  //{{{  fullScreen button
+  ImGui::SameLine();
+  if (toggleButton ("full", app.getPlatform().getFullScreen()))
+    app.getPlatform().toggleFullScreen();
+  //}}}
   }
 //}}}
 //{{{

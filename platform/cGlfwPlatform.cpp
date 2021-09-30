@@ -42,27 +42,8 @@ namespace {
 
     (void)scancode;
     (void)mode;
-    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS))
-      // exit
+    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS)) // exit
       glfwSetWindowShouldClose (window, true);
-
-    else if ((key == GLFW_KEY_F) && (action == GLFW_PRESS)) {
-      // toggle fullscreen
-      if (glfwGetWindowMonitor (window) == nullptr) {
-        // save windowPos and windowSize
-        glfwGetWindowPos (window, &gWindowPos.x, &gWindowPos.y);
-        glfwGetWindowSize (window, &gWindowSize.x, &gWindowSize.y);
-
-        // get resolution of monitor
-        const GLFWvidmode* vidMode = glfwGetVideoMode (glfwGetPrimaryMonitor());
-
-        // switch to full screen
-        glfwSetWindowMonitor  (window, gMonitor, 0, 0, vidMode->width, vidMode->height, vidMode->refreshRate);
-        }
-      else
-        // restore last window size and position
-        glfwSetWindowMonitor (window, nullptr, gWindowPos.x, gWindowPos.y, gWindowSize.x, gWindowSize.y, 0);
-      }
     }
   //}}}
   //{{{
@@ -100,15 +81,18 @@ public:
   void* getSwapChain() final;
   cPoint getWindowSize() final;
   bool getVsync() final { return mVsync; }
+  bool getFullScreen() final { return mFullScreen; }
 
   // sets
   void setVsync (bool vsync) final;
   void toggleVsync() final;
+  void toggleFullScreen() final;
 
   // actions
   bool pollEvents() final;
   void newFrame() final;
   void present() final;
+  void close() final;
 
 protected:
   bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
@@ -117,7 +101,11 @@ private:
   // static register
   static cPlatform* create (const std::string& className);
   inline static const bool mRegistered = registerClass ("glfw", &create);
+
   bool mVsync = true;
+  bool mFullScreen = false;
+
+  bool mActionFullScreen = false;
   };
 //}}}
 
@@ -165,9 +153,38 @@ void cGlfwPlatform::toggleVsync() {
   }
 //}}}
 
+//{{{
+void cGlfwPlatform::toggleFullScreen() {
+
+  mFullScreen = !mFullScreen;
+  mActionFullScreen = true;
+  }
+//}}}
+
 // actions
 //{{{
 bool cGlfwPlatform::pollEvents() {
+
+  if (mActionFullScreen) {
+    //{{{  toggle fullscreen
+    if (mFullScreen) {
+      // save windowPos and windowSize
+      glfwGetWindowPos (gWindow, &gWindowPos.x, &gWindowPos.y);
+      glfwGetWindowSize (gWindow, &gWindowSize.x, &gWindowSize.y);
+
+      // get resolution of monitor
+      const GLFWvidmode* vidMode = glfwGetVideoMode (glfwGetPrimaryMonitor());
+
+      // switch to full screen
+      glfwSetWindowMonitor  (gWindow, gMonitor, 0, 0, vidMode->width, vidMode->height, vidMode->refreshRate);
+      }
+    else
+      // restore last window size and position
+      glfwSetWindowMonitor (gWindow, nullptr, gWindowPos.x, gWindowPos.y, gWindowSize.x, gWindowSize.y, 0);
+
+    mActionFullScreen = false;
+    }
+    //}}}
 
   if (glfwWindowShouldClose (gWindow))
     return false;
@@ -193,6 +210,10 @@ void cGlfwPlatform::present() {
     }
 
   glfwSwapBuffers (gWindow);
+  }
+//}}}
+//{{{
+void cGlfwPlatform::close() {
   }
 //}}}
 

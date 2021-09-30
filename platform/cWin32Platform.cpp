@@ -32,7 +32,9 @@ namespace {
   cPlatform* gPlatform = nullptr;
   WNDCLASSEX gWndClass;
   HWND gHWnd;
+
   bool gVsync = true;
+  bool gFullScreen = false;
 
   cPoint gWindowSize;
   ID3D11Device* gD3dDevice = NULL;
@@ -97,15 +99,18 @@ public:
   cPoint getWindowSize() final;
 
   bool getVsync() final { return gVsync; }
+  bool getFullScreen() final { return gFullScreen; }
 
   // sets
   void setVsync (bool vsync) final { gVsync = vsync; }
   void toggleVsync() final { gVsync = !gVsync; }
+  void toggleFullScreen() final { gFullScreen = !gFullScreen; }
 
   // actions
   bool pollEvents() final;
   void newFrame() final;
   void present() final;
+  void close() final;
 
 protected:
   bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
@@ -178,6 +183,10 @@ void cWin32Platform::present() {
     }
 
   gSwapChain->Present (gVsync ? 1 : 0, 0);
+  }
+//}}}
+//{{{
+void cWin32Platform::close() {
   }
 //}}}
 

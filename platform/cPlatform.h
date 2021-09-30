@@ -29,15 +29,18 @@ public:
   virtual void* getSwapChain() = 0;
 
   virtual bool getVsync() = 0;
+  virtual bool getFullScreen() = 0;
 
   // sets
   virtual void setVsync (bool vsync) = 0;
   virtual void toggleVsync() = 0;
+  virtual void toggleFullScreen() = 0;
 
   // actions
   virtual bool pollEvents() = 0;
   virtual void newFrame() = 0;
   virtual void present() = 0;
+  virtual void close() = 0;
 
   // callback
   void setResizeCallback (std::function<void (int width, int height)> callback) { mResizeCallback = callback; }
