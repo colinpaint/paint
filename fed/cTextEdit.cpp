@@ -941,8 +941,8 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
       undo.mRemove = getText (selectBegin, selectEnd);
 
       bool modified = false;
-      for (uint32_t i = selectBegin.mLineNumber; i <= selectEnd.mLineNumber; i++) {
-        auto& glyphs = getGlyphs (i);
+      for (uint32_t lineNumber = selectBegin.mLineNumber; lineNumber <= selectEnd.mLineNumber; lineNumber++) {
+        auto& glyphs = getGlyphs (lineNumber);
         if (shift) {
           if (!glyphs.empty()) {
             if (glyphs.front().mChar == '\t') {
@@ -1018,7 +1018,7 @@ void cTextEdit::enterCharacter (ImWchar ch, bool shift) {
 
     if (mOptions.mLanguage.mAutoIndentation)
       for (uint32_t glyphIndex = 0;
-           (glyphIndex < line.getNumGlyphs()) && 
+           (glyphIndex < line.getNumGlyphs()) &&
            isascii (line.mGlyphs[glyphIndex].mChar) && isblank (line.mGlyphs[glyphIndex].mChar); glyphIndex++)
         newLine.mGlyphs.push_back (line.mGlyphs[glyphIndex]);
     uint32_t indentSize = newLine.getNumGlyphs();
