@@ -508,7 +508,6 @@ string cTextEdit::getTextString() {
   return getText ({0,0}, {getNumLines(),0});
   }
 //}}}
-
 //{{{
 vector<string> cTextEdit::getTextStrings() const {
 // get text as vector of string
@@ -516,7 +515,7 @@ vector<string> cTextEdit::getTextStrings() const {
   vector<string> result;
   result.reserve (getNumLines());
 
-  for (auto& line : mDoc.mLines) {
+  for (const auto& line : mDoc.mLines) {
     string lineString;
     lineString.resize (line.getNumGlyphs());
     for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++)
@@ -537,7 +536,7 @@ void cTextEdit::setTextString (const string& text) {
   mDoc.mLines.clear();
   mDoc.mLines.emplace_back (cLine::tGlyphs());
 
-  for (auto ch : text) {
+  for (const auto ch : text) {
     if (ch == '\r') // ignored but flag set
       mDoc.mHasCR = true;
     else if (ch == '\n') {
@@ -721,7 +720,7 @@ void cTextEdit::copy() {
     ImGui::SetClipboardText (getSelectedText().c_str());
 
   string copyString;
-  for (auto& glyph : getGlyphs (getCursorPosition().mLineNumber))
+  for (const auto& glyph : getGlyphs (getCursorPosition().mLineNumber))
     copyString.push_back (glyph.mChar);
 
   // copy as text to clipBoard
@@ -1887,7 +1886,7 @@ void cTextEdit::parseTokens (cLine& line, const string& textString) {
 
     if (!tokenFound) {
       // slower regex search
-      for (auto& p : mOptions.mLanguage.mRegexList) {
+      for (const auto& p : mOptions.mLanguage.mRegexList) {
         cmatch results;
         if (regex_search (strPtr, strEnd, results, p.first, regex_constants::match_continuous)) {
           auto& v = *results.begin();
@@ -2900,7 +2899,7 @@ void cTextEdit::handleKeyboard() {
   bool altKeyPressed = ImGui::GetIO().KeyAlt;
   bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
   bool shiftKeyPressed = ImGui::GetIO().KeyShift;
-  for (auto& actionKey : kActionKeys)
+  for (const auto& actionKey : kActionKeys)
     //{{{  dispatch actionKey
     if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
          ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
@@ -3048,7 +3047,7 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
 
     language.mAutoIndentation = true;
 
-    for (auto& keyWord : kKeyWords)
+    for (const auto& keyWord : kKeyWords)
       language.mKeyWords.insert (keyWord);
     for (auto& knownWord : kKnownWords)
       language.mKnownWords.insert (knownWord);
@@ -3106,9 +3105,9 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
 
     language.mAutoIndentation = true;
 
-    for (auto& keyWord : kHlslKeyWords)
+    for (const auto& keyWord : kHlslKeyWords)
       language.mKeyWords.insert (keyWord);
-    for (auto& knownWord : kHlslKnownWords)
+    for (const auto& knownWord : kHlslKnownWords)
       language.mKnownWords.insert (knownWord);
 
     language.mTokenSearch = nullptr;
@@ -3158,9 +3157,9 @@ const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
 
     language.mAutoIndentation = true;
 
-    for (auto& keyWord : kGlslKeyWords)
+    for (const auto& keyWord : kGlslKeyWords)
       language.mKeyWords.insert (keyWord);
-    for (auto& knownWord : kGlslKnownWords)
+    for (const auto& knownWord : kGlslKnownWords)
       language.mKnownWords.insert (knownWord);
 
     language.mTokenSearch = nullptr;
