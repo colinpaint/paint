@@ -1289,11 +1289,6 @@ uint32_t cTextEdit::getLineIndexFromNumber (uint32_t lineNumber) const {
 //{{{
 uint32_t cTextEdit::getCharacterIndex (sPosition position) {
 
-  if (position.mLineNumber >= getNumLines()) {
-    cLog::log (LOGERROR, "cTextEdit::getCharacterIndex - lineNumber past end");
-    return 0;
-    }
-
   uint32_t index = 0;
   uint32_t column = 0;
   const auto& glyphs = getGlyphs (position.mLineNumber);
@@ -1311,9 +1306,6 @@ uint32_t cTextEdit::getCharacterIndex (sPosition position) {
 //{{{
 uint32_t cTextEdit::getCharacterColumn (uint32_t lineNumber, uint32_t characterIndex) {
 // handle tabs
-
-  if (lineNumber >= getNumLines())
-    return 0;
 
   uint32_t column = 0;
   uint32_t glyphIndex = 0;
@@ -1333,9 +1325,6 @@ uint32_t cTextEdit::getCharacterColumn (uint32_t lineNumber, uint32_t characterI
 //{{{
 uint32_t cTextEdit::getLineNumChars (uint32_t lineNumber) {
 
-  if (lineNumber >= getNumLines())
-    return 0;
-
   uint32_t numChars = 0;
   const auto& glyphs = getGlyphs (lineNumber);
   for (uint32_t glyphIndex = 0; glyphIndex < glyphs.size(); numChars++)
@@ -1346,9 +1335,6 @@ uint32_t cTextEdit::getLineNumChars (uint32_t lineNumber) {
 //}}}
 //{{{
 uint32_t cTextEdit::getLineMaxColumn (uint32_t lineNumber) {
-
-  if (lineNumber >= getNumLines())
-    return 0;
 
   uint32_t column = 0;
   const auto& glyphs = getGlyphs (lineNumber);
@@ -1367,44 +1353,41 @@ uint32_t cTextEdit::getLineMaxColumn (uint32_t lineNumber) {
 //{{{
 cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float posX) {
 
+  float columnX = 0.f;
+
   uint32_t column = 0;
+  uint32_t glyphIndex = 0;
+  const auto& glyphs = getGlyphs (lineNumber);
+  while (glyphIndex < glyphs.size()) {
+    float columnWidth = 0.f;
+    if (glyphs[glyphIndex].mChar == '\t') {
+      // tab
+      float oldX = columnX;
+      float endTabX = getTabEndPosX (columnX);
+      columnWidth = endTabX - oldX;
+      if (columnX + (columnWidth/2.f) > posX)
+        break;
+      columnX = endTabX;
+      column = getTabColumn (column);
+      glyphIndex++;
+      }
 
-  if (lineNumber < getNumLines()) {
-    float columnX = 0.f;
-
-    uint32_t glyphIndex = 0;
-    const auto& glyphs = getGlyphs (lineNumber);
-    while (glyphIndex < glyphs.size()) {
-      float columnWidth = 0.f;
-      if (glyphs[glyphIndex].mChar == '\t') {
-        // tab
-        float oldX = columnX;
-        float endTabX = getTabEndPosX (columnX);
-        columnWidth = endTabX - oldX;
-        if (columnX + (columnWidth/2.f) > posX)
-          break;
-        columnX = endTabX;
-        column = getTabColumn (column);
-        glyphIndex++;
+    else {
+      // not tab
+      array <char,7> str;
+      uint32_t strIndex = 0;
+      uint32_t length = utf8CharLength (glyphs[glyphIndex].mChar);
+      while ((strIndex < str.max_size()-1) && (length > 0)) {
+        str[strIndex++] = glyphs[glyphIndex++].mChar;
+        length--;
         }
 
-      else {
-        // not tab
-        array <char,7> str;
-        uint32_t strIndex = 0;
-        uint32_t length = utf8CharLength (glyphs[glyphIndex].mChar);
-        while ((strIndex < str.max_size()-1) && (length > 0)) {
-          str[strIndex++] = glyphs[glyphIndex++].mChar;
-          length--;
-          }
+      columnWidth = mContext.measureText (str.data(), str.data() + strIndex);
+      if (columnX + (columnWidth/2.f) > posX)
+        break;
 
-        columnWidth = mContext.measureText (str.data(), str.data() + strIndex);
-        if (columnX + (columnWidth/2.f) > posX)
-          break;
-
-        columnX += columnWidth;
-        column++;
-        }
+      columnX += columnWidth;
+      column++;
       }
     }
 
@@ -1416,7 +1399,7 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
 //{{{
 bool cTextEdit::isOnWordBoundary (sPosition position) {
 
-  if ((position.mLineNumber >= getNumLines()) || (position.mColumn == 0))
+  if (position.mColumn == 0)
     return true;
 
   const auto& glyphs = getGlyphs (position.mLineNumber);
@@ -1593,9 +1576,6 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
 //{{{
 cTextEdit::sPosition cTextEdit::findWordBegin (sPosition fromPosition) {
 
-  if (fromPosition.mLineNumber >= getNumLines())
-    return fromPosition;
-
   const auto& glyphs = getGlyphs (fromPosition.mLineNumber);
   uint32_t characterIndex = getCharacterIndex (fromPosition);
   if (characterIndex >= glyphs.size())
@@ -1624,9 +1604,6 @@ cTextEdit::sPosition cTextEdit::findWordBegin (sPosition fromPosition) {
 //{{{
 cTextEdit::sPosition cTextEdit::findWordEnd (sPosition fromPosition) {
 
-  if (fromPosition.mLineNumber >= getNumLines())
-    return fromPosition;
-
   const auto& glyphs = getGlyphs (fromPosition.mLineNumber);
   uint32_t characterIndex = getCharacterIndex (fromPosition);
   if (characterIndex >= glyphs.size())
@@ -1654,9 +1631,6 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition fromPosition) {
 //}}}
 //{{{
 cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) {
-
-  if (fromPosition.mLineNumber >= getNumLines())
-    return fromPosition;
 
   // skip to the next non-word character
   bool skip = false;
