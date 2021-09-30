@@ -2339,18 +2339,23 @@ void cTextEdit::drawTop (cApp& app) {
     }
     //}}}
 
+  //{{{  insert button
+  ImGui::SameLine();
+  if (toggleButton ("insert", !mOptions.mOverWrite))
+    toggleOverWrite();
+  //}}}
   //{{{  readOnly button
   ImGui::SameLine();
   if (toggleButton ("readOnly", isReadOnly()))
     toggleReadOnly();
   //}}}
-  //{{{  overwrite button
-  ImGui::SameLine();
-  if (toggleButton ("insert", !mOptions.mOverWrite))
-    toggleOverWrite();
-  //}}}
 
-  //{{{  fontSize button, vert,triangle debug text
+  //{{{  info 
+  ImGui::SameLine();
+  ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
+                                           getNumLines(), getLanguage().mName).c_str());
+  //}}}
+  //{{{  fontSize button
   ImGui::SameLine();
   ImGui::SetNextItemWidth (3 * ImGui::GetFontSize());
   ImGui::DragInt ("##fs", &mOptions.mFontSize, 0.2f, mOptions.mmDocntSize, mOptions.mMaxFontSize, "%d");
@@ -2359,13 +2364,13 @@ void cTextEdit::drawTop (cApp& app) {
     int fontSize = mOptions.mFontSize + static_cast<int>(ImGui::GetIO().MouseWheel);
     mOptions.mFontSize = max (mOptions.mmDocntSize, min (mOptions.mMaxFontSize, fontSize));
     }
-
-  // debug text
+  //}}}
+  //{{{  vertice debug
   ImGui::SameLine();
   ImGui::Text (fmt::format ("{}:{}:vert:triangle",
                ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
   //}}}
-  //{{{  vsync button, fps text
+  //{{{  vsync button,fps 
   if (app.getPlatform().hasVsync()) {
     // vsync button
     ImGui::SameLine();
@@ -2376,12 +2381,6 @@ void cTextEdit::drawTop (cApp& app) {
     ImGui::SameLine();
     ImGui::Text (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
     }
-  //}}}
-
-  //{{{  info text
-  ImGui::SameLine();
-  ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
-                                           getNumLines(), getLanguage().mName).c_str());
   //}}}
 
   //{{{  fullScreen button
