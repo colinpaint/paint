@@ -2245,8 +2245,7 @@ void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
   int numDragLines = static_cast<int>(posY / mContext.mLineHeight);
 
   if (isFolded()) {
-    uint32_t lineIndex = getLineIndexFromNumber (lineNumber);
-    lineIndex = max (0u, min (getNumFoldLines()-1, lineIndex + numDragLines));
+    uint32_t lineIndex = max (0u, min (getNumFoldLines()-1, getLineIndexFromNumber (lineNumber) + numDragLines));
     lineNumber = mDoc.mFoldLines[lineIndex];
     }
   else // simple add to lineNumber
@@ -2268,7 +2267,6 @@ void cTextEdit::drawTop (cApp& app) {
   //{{{  lineNumber buttons
   if (toggleButton ("line", mOptions.mShowLineNumber))
     toggleShowLineNumber();
-  mOptions.mHoverLineNumber = ImGui::IsItemHovered();
 
   if (mOptions.mShowLineNumber)
     // debug button
@@ -2284,7 +2282,6 @@ void cTextEdit::drawTop (cApp& app) {
     ImGui::SameLine();
     if (toggleButton ("folded", isShowFolds()))
       toggleShowFolded();
-    //mOptions.mHoverFolded = ImGui::IsItemHovered();
     }
     //}}}
 
@@ -2292,13 +2289,11 @@ void cTextEdit::drawTop (cApp& app) {
   ImGui::SameLine();
   if (toggleButton ("mono", mOptions.mShowMonoSpaced))
     toggleShowMonoSpaced();
-  // mOptions.mHoverMonoSpaced = ImGui::IsItemHovered();
   //}}}
   //{{{  whiteSpace button
   ImGui::SameLine();
   if (toggleButton ("space", mOptions.mShowWhiteSpace))
     toggleShowWhiteSpace();
-  //mOptions.mHoverWhiteSpace = ImGui::IsItemHovered();
   //}}}
 
   if (hasClipboardText() && !isReadOnly()) {
@@ -2350,7 +2345,7 @@ void cTextEdit::drawTop (cApp& app) {
     toggleReadOnly();
   //}}}
 
-  //{{{  info 
+  //{{{  info
   ImGui::SameLine();
   ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
                                            getNumLines(), getLanguage().mName).c_str());
@@ -2370,7 +2365,8 @@ void cTextEdit::drawTop (cApp& app) {
   ImGui::Text (fmt::format ("{}:{}:vert:triangle",
                ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
   //}}}
-  //{{{  vsync button,fps 
+
+  //{{{  vsync button,fps
   if (app.getPlatform().hasVsync()) {
     // vsync button
     ImGui::SameLine();
@@ -2382,7 +2378,6 @@ void cTextEdit::drawTop (cApp& app) {
     ImGui::Text (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
     }
   //}}}
-
   //{{{  fullScreen button
   if (app.getPlatform().hasFullScreen()) {
     ImGui::SameLine();

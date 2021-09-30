@@ -296,11 +296,6 @@ private:
     bool mShowWhiteSpace = false;
     bool mShowMonoSpaced = true;
 
-    bool mHoverFolded = false;
-    bool mHoverLineNumber = false;
-    bool mHoverWhiteSpace = false;
-    bool mHoverMonoSpaced = false;
-
     cLanguage mLanguage;
     };
   //}}}
@@ -396,10 +391,10 @@ private:
   //}}}
 
   //{{{  gets
-  bool isFolded() const { return mOptions.mShowFolded || mOptions.mHoverFolded; }
-  bool isDrawLineNumber() const { return mOptions.mShowLineNumber || mOptions.mHoverLineNumber; }
-  bool isDrawWhiteSpace() const { return mOptions.mShowWhiteSpace || mOptions.mHoverWhiteSpace; }
-  bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced ^ mOptions.mHoverMonoSpaced; }
+  bool isFolded() const { return mOptions.mShowFolded; }
+  bool isDrawLineNumber() const { return mOptions.mShowLineNumber; }
+  bool isDrawWhiteSpace() const { return mOptions.mShowWhiteSpace; }
+  bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced; }
 
   // nums
   uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
