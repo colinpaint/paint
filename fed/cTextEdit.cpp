@@ -2912,17 +2912,17 @@ void cTextEdit::handleKeyboard() {
 
   ImGui::GetIO().WantTextInput = true;
   ImGui::GetIO().WantCaptureKeyboard = false;
-  bool alt = ImGui::GetIO().ConfigMacOSXBehaviors ? ImGui::GetIO().KeyCtrl : ImGui::GetIO().KeyAlt;
-  bool ctrl = ImGui::GetIO().ConfigMacOSXBehaviors ? ImGui::GetIO().KeySuper : ImGui::GetIO().KeyCtrl;
-  bool shift = ImGui::GetIO().KeyShift;
 
+  bool altKeyPressed = ImGui::GetIO().KeyAlt;
+  bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
+  bool shiftKeyPressed = ImGui::GetIO().KeyShift;
   for (auto& actionKey : kActionKeys)
     //{{{  dispatch actionKey
     if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
          ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
-        (actionKey.mAlt == alt) &&
-        (actionKey.mCtrl == ctrl) &&
-        (actionKey.mShift == shift) &&
+        (actionKey.mAlt == altKeyPressed) &&
+        (actionKey.mCtrl == ctrlKeyPressed) &&
+        (actionKey.mShift == shiftKeyPressed) &&
         (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly()))) {
 
       actionKey.mActionFunc();
