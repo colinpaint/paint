@@ -9,7 +9,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <streambuf>
 
 #include "../platform/cPlatform.h"
 #include "../imgui/myImguiWidgets.h"
@@ -1020,7 +1019,7 @@ void cTextEdit::loadFile (const string& filename) {
   uint32_t lineNumber = 0;
 
   // read filename as stream
-  ifstream stream (filename);
+  ifstream stream (filename, ifstream::in);
   while (getline (stream, lineString)) {
     // create empty line, reserve glyphs for line
     mDoc.mLines.emplace_back (cLine::tGlyphs());
@@ -1273,12 +1272,14 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
   uint32_t beginLineNumber = beginPosition.mLineNumber;
   uint32_t endLineNumber = endPosition.mLineNumber;
 
-  // reserve approx num chars
+  // count approx numChars
   uint32_t numChars = 0;
   for (uint32_t lineNumber = beginLineNumber; lineNumber < endLineNumber; lineNumber++)
     numChars += getNumGlyphs (lineNumber);
-  string textString;
-  textString.reserve (numChars + (numChars / 8));
+
+  // reserve text size
+  string text;
+  text.reserve (numChars + (numChars / 8));
 
   uint32_t beginCharacterIndex = getCharacterIndex (beginPosition);
   uint32_t endCharacterIndex = getCharacterIndex (endPosition);
@@ -1287,17 +1288,17 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
       break;
 
     if (beginCharacterIndex < getGlyphs (beginLineNumber).size()) {
-      textString += getGlyphs (beginLineNumber)[beginCharacterIndex].mChar;
+      text += getGlyphs (beginLineNumber)[beginCharacterIndex].mChar;
       beginCharacterIndex++;
       }
     else {
       beginLineNumber++;
       beginCharacterIndex = 0;
-      textString += '\n';
+      text += '\n';
       }
     }
-
-  return textString;
+  cLog::log (LOGINFO, text);
+  return text;
   }
 //}}}
 //{{{
