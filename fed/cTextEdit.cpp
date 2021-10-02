@@ -869,7 +869,6 @@ void cTextEdit::enterCharacter (ImWchar ch) {
       undo.mRemove = getSelectedText();
       undo.mRemoveBegin = mEdit.mCursor.mSelectBegin;
       undo.mRemoveEnd = mEdit.mCursor.mSelectEnd;
-
       deleteSelect();
       }
       //}}}
@@ -1539,10 +1538,10 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
     swap (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
 
   switch (select) {
-    case cTextEdit::eSelect::eNormal:
+    case eSelect::eNormal:
       break;
 
-    case cTextEdit::eSelect::eWord: {
+    case eSelect::eWord: {
       // set word columns
       mEdit.mCursor.mSelectBegin = findWordBegin (mEdit.mCursor.mSelectBegin);
       if (!isOnWordBoundary (mEdit.mCursor.mSelectEnd))
@@ -1550,15 +1549,12 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
       break;
       }
 
-    case cTextEdit::eSelect::eLine: {
+    case eSelect::eLine: {
       // set whole line columns
       mEdit.mCursor.mSelectBegin.mColumn = 0;
       mEdit.mCursor.mSelectEnd.mColumn = getLineMaxColumn (mEdit.mCursor.mSelectEnd.mLineNumber);
       break;
       }
-
-    default:
-      break;
     }
   }
 //}}}
