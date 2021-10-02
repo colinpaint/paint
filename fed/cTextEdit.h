@@ -216,6 +216,7 @@ public:
   // move
   void moveLeft();
   void moveRight();
+  void moveRightWord();
 
   void moveLineUp()   { moveUp (1); }
   void moveLineDown() { moveDown (1); }
@@ -496,9 +497,9 @@ private:
   sPosition sanitizePosition (sPosition position);
 
   // find
-  sPosition findWordBegin (sPosition fromPosition);
-  sPosition findWordEnd (sPosition fromPosition);
-  sPosition findNextWord (sPosition fromPosition);
+  sPosition findWordBegin (sPosition position);
+  sPosition findWordEnd (sPosition position);
+  sPosition findNextWord (sPosition position);
 
   // move
   void moveUp (uint32_t amount);

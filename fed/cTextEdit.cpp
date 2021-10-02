@@ -564,43 +564,38 @@ void cTextEdit::moveLeft() {
   else // move to previous column on same line
     while ((--column > 0) && isUtfSequence (getGlyphs (lineNumber)[column].mChar)) {}
 
-  mEdit.mCursor.mPosition = {lineNumber, getCharacterColumn (lineNumber, column)};
-  if (mEdit.mCursor.mPosition != position) {
-    // cursor changed
-    setSelect (eSelect::eNormal, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
-    mEdit.mScrollVisible = true;
-    }
+  setCursorPosition ({lineNumber, getCharacterColumn (lineNumber, column)});
   }
 //}}}
 //{{{
 void cTextEdit::moveRight() {
 
-  // lineNumber
   sPosition position = mEdit.mCursor.mPosition;
-  uint32_t lineNumber = position.mLineNumber;
 
   // column
-  uint32_t column = getCharacterIndex (mEdit.mCursor.mPosition);
-  if (column >= getNumGlyphs (lineNumber)) {
-    // move to start of next line
-    if (mEdit.mCursor.mPosition.mLineNumber < getNumLines()-1) {
-      mEdit.mCursor.mPosition.mLineNumber =
-        max (0u, min (getNumLines()-1, mEdit.mCursor.mPosition.mLineNumber+1));
-      mEdit.mCursor.mPosition.mColumn = 0;
-      }
-    else
-      return;
-    }
-  else {
+  uint32_t characterIndex = getCharacterIndex (position);
+  if (characterIndex < getNumGlyphs (position.mLineNumber)) {
     // move to next columm on same line
-    column += utf8CharLength (getGlyphs (lineNumber)[column].mChar);
-    mEdit.mCursor.mPosition = {lineNumber, getCharacterColumn (lineNumber, column)};
+    characterIndex += utf8CharLength (getGlyphs (position.mLineNumber)[characterIndex].mChar);
+    uint32_t column = getCharacterColumn (position.mLineNumber, characterIndex);
+    setCursorPosition ({position.mLineNumber, column});
     }
+  else if (position.mLineNumber + 1 < getNumLines())
+    // move to start of next line what about folded???
+    setCursorPosition ({position.mLineNumber + 1, 0});
+  }
+//}}}
+//{{{
+void cTextEdit::moveRightWord() {
 
-  if (mEdit.mCursor.mPosition != position) {
-    // cursor changed
-    setSelect (eSelect::eNormal, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
-    mEdit.mScrollVisible = true;
+  sPosition position = mEdit.mCursor.mPosition;
+
+  if (getCharacterIndex (position) < getNumGlyphs (position.mLineNumber)) {
+    // move to next word, may jump to next line, what about folded???
+    position = findNextWord (position);
+    uint32_t characterIndex = getCharacterIndex (position);
+    uint32_t column = getCharacterColumn (position.mLineNumber, characterIndex);
+    setCursorPosition ({position.mLineNumber, column});
     }
   }
 //}}}
@@ -1633,12 +1628,12 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
 
 // find
 //{{{
-cTextEdit::sPosition cTextEdit::findWordBegin (sPosition fromPosition) {
+cTextEdit::sPosition cTextEdit::findWordBegin (sPosition position) {
 
-  const auto& glyphs = getGlyphs (fromPosition.mLineNumber);
-  uint32_t characterIndex = getCharacterIndex (fromPosition);
+  const auto& glyphs = getGlyphs (position.mLineNumber);
+  uint32_t characterIndex = getCharacterIndex (position);
   if (characterIndex >= glyphs.size())
-    return fromPosition;
+    return position;
 
   while ((characterIndex > 0) && isspace (glyphs[characterIndex].mChar))
     --characterIndex;
@@ -1657,16 +1652,16 @@ cTextEdit::sPosition cTextEdit::findWordBegin (sPosition fromPosition) {
     --characterIndex;
     }
 
-  return sPosition (fromPosition.mLineNumber, getCharacterColumn (fromPosition.mLineNumber, characterIndex));
+  return sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex));
   }
 //}}}
 //{{{
-cTextEdit::sPosition cTextEdit::findWordEnd (sPosition fromPosition) {
+cTextEdit::sPosition cTextEdit::findWordEnd (sPosition position) {
 
-  const auto& glyphs = getGlyphs (fromPosition.mLineNumber);
-  uint32_t characterIndex = getCharacterIndex (fromPosition);
+  const auto& glyphs = getGlyphs (position.mLineNumber);
+  uint32_t characterIndex = getCharacterIndex (position);
   if (characterIndex >= glyphs.size())
-    return fromPosition;
+    return position;
 
   bool prevSpace = (bool)isspace (glyphs[characterIndex].mChar);
   uint8_t color = glyphs[characterIndex].mColor;
@@ -1685,34 +1680,34 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition fromPosition) {
     characterIndex += length;
     }
 
-  return sPosition (fromPosition.mLineNumber, getCharacterColumn (fromPosition.mLineNumber, characterIndex));
+  return sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex));
   }
 //}}}
 //{{{
-cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) {
+cTextEdit::sPosition cTextEdit::findNextWord (sPosition position) {
 
   // skip to the next non-word character
   bool skip = false;
   bool isWord = false;
 
-  uint32_t characterIndex = getCharacterIndex (fromPosition);
-  if (characterIndex < getNumGlyphs (fromPosition.mLineNumber)) {
-    const auto& glyphs = getGlyphs (fromPosition.mLineNumber);
+  uint32_t characterIndex = getCharacterIndex (position);
+  if (characterIndex < getNumGlyphs (position.mLineNumber)) {
+    const auto& glyphs = getGlyphs (position.mLineNumber);
     isWord = isalnum (glyphs[characterIndex].mChar);
     skip = isWord;
     }
 
   while (!isWord || skip) {
-    if (fromPosition.mLineNumber >= getNumLines()) {
+    if (position.mLineNumber >= getNumLines()) {
       uint32_t lineNumber = max (0u, getNumLines()-1);
       return sPosition (lineNumber, getLineMaxColumn (lineNumber));
       }
 
-    const auto& glyphs = getGlyphs (fromPosition.mLineNumber);
+    const auto& glyphs = getGlyphs (position.mLineNumber);
     if (characterIndex < glyphs.size()) {
       isWord = isalnum (glyphs[characterIndex].mChar);
       if (isWord && !skip)
-        return sPosition (fromPosition.mLineNumber, getCharacterColumn (fromPosition.mLineNumber, characterIndex));
+        return sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex));
       if (!isWord)
         skip = false;
       characterIndex++;
@@ -1720,13 +1715,13 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) {
 
     else {
       characterIndex = 0;
-      ++fromPosition.mLineNumber;
+      position.mLineNumber++;
       skip = false;
       isWord = false;
       }
     }
 
-  return fromPosition;
+  return position;
   }
 //}}}
 
@@ -1734,43 +1729,26 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition fromPosition) {
 //{{{
 void cTextEdit::moveUp (uint32_t amount) {
 
-  // lineNumber
   sPosition position = mEdit.mCursor.mPosition;
-  int lineNumber = position.mLineNumber;
-  if (lineNumber == 0)
+
+  if (position.mLineNumber == 0)
     return;
 
-  // lineIndex
-  uint32_t lineIndex = getLineIndexFromNumber (lineNumber);
+  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
   lineIndex = (amount < lineIndex) ? lineIndex - amount : 0;
 
-  // cursorPosition
-  mEdit.mCursor.mPosition.mLineNumber = getLineNumberFromIndex (lineIndex);
-  if (mEdit.mCursor.mPosition != position) {
-    // cursor changed
-    setSelect (eSelect::eNormal, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
-    mEdit.mScrollVisible = true;
-    }
+  setCursorPosition ({getLineNumberFromIndex (lineIndex), position.mColumn});
   }
 //}}}
 //{{{
 void cTextEdit::moveDown (uint32_t amount) {
 
-  // lineNumber
   sPosition position = mEdit.mCursor.mPosition;
-  int lineNumber = position.mLineNumber;
 
-  // lineIndex
-  uint32_t lineIndex = getLineIndexFromNumber (lineNumber);
+  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
   lineIndex = min (getMaxLineIndex(), lineIndex + amount);
 
-  // cursorPosition
-  mEdit.mCursor.mPosition.mLineNumber = getLineNumberFromIndex (lineIndex);
-  if (mEdit.mCursor.mPosition != position) {
-    // cursor changed
-    setSelect (eSelect::eNormal, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
-    mEdit.mScrollVisible = true;
-    }
+  setCursorPosition ({getLineNumberFromIndex (lineIndex), position.mColumn});
   }
 //}}}
 
@@ -2763,6 +2741,7 @@ void cTextEdit::handleKeyboard() {
      // move
      {false, false, false, ImGuiKey_LeftArrow,  false, [this]{moveLeft();}},
      {false, false, false, ImGuiKey_RightArrow, false, [this]{moveRight();}},
+     {false, true,  false, ImGuiKey_RightArrow, false, [this]{moveRightWord();}},
      {false, false, false, ImGuiKey_UpArrow,    false, [this]{moveLineUp();}},
      {false, false, false, ImGuiKey_DownArrow,  false, [this]{moveLineDown();}},
      {false, false, false, ImGuiKey_PageUp,     false, [this]{movePageUp();}},
