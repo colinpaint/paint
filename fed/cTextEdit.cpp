@@ -545,26 +545,26 @@ void cTextEdit::toggleShowFolded() {
 //{{{
 void cTextEdit::moveLeft() {
 
-  // lineNumber
   sPosition position = mEdit.mCursor.mPosition;
-  uint32_t lineNumber = position.mLineNumber;
 
-  // column
-  uint32_t column = getCharacterIndex (mEdit.mCursor.mPosition);
-  if (column == 0) {
-    // move to end of prevous line
-    if (lineNumber > 0) {
-      --lineNumber;
-      if (lineNumber < getNumLines())
-        column = getNumGlyphs (lineNumber);
-      else
-        column = 0;
+  uint32_t characterIndex = getCharacterIndex (position);
+  if (characterIndex == 0) {
+    // beginning of line
+    if (position.mLineNumber > 0) {
+      // move to end of prevous line, what about folded ????
+      position.mLineNumber--;
+      characterIndex = getNumGlyphs (position.mLineNumber);
       }
     }
-  else // move to previous column on same line
-    while ((--column > 0) && isUtfSequence (getGlyphs (lineNumber)[column].mChar)) {}
+  else {
+    // move to previous column on same line
+    characterIndex--;
+    while ((characterIndex > 0) &&
+           isUtfSequence (getGlyphs (position.mLineNumber)[characterIndex].mChar)) 
+      characterIndex--;
+    }
 
-  setCursorPosition ({lineNumber, getCharacterColumn (lineNumber, column)});
+  setCursorPosition ({position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex)});
   }
 //}}}
 //{{{
