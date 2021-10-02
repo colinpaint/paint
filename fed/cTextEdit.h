@@ -187,8 +187,8 @@ public:
   bool hasCR() const { return mDoc.mHasCR; }
   bool hasTabs() const { return mDoc.mHasTabs; }
   bool hasSelect() const { return mEdit.mCursor.mSelectEnd > mEdit.mCursor.mSelectBegin; }
-  bool hasUndo() const { return !mOptions.mReadOnly && (mUndoList.mIndex > 0); }
-  bool hasRedo() const { return !mOptions.mReadOnly && (mUndoList.mIndex < mUndoList.mBuffer.size()); }
+  bool hasUndo() const { return !mOptions.mReadOnly && (mEdit.mUndoIndex > 0); }
+  bool hasRedo() const { return !mOptions.mReadOnly && (mEdit.mUndoIndex < mEdit.mUndoVector.size()); }
   bool hasClipboardText();
 
   // get
@@ -259,24 +259,41 @@ public:
   void drawWindow (const std::string& title, cApp& app);
   void drawContents (cApp& app);
 
+
 private:
   //{{{
-  class cDoc {
+  struct sCursor {
+    sPosition mPosition;
+    sPosition mSelectBegin;
+    sPosition mSelectEnd;
+    };
+  //}}}
+  //{{{
+  class cUndo {
   public:
-    std::string mFilePath;
-    std::string mParentPath;
-    std::string mFileStem;
-    std::string mFileExtension;
-    uint32_t mVersion = 1;
+    cUndo() = default;
+    cUndo (const std::string& add, const sPosition addBegin, const sPosition addEnd,
+           const std::string& remove, const sPosition removeBegin, const sPosition removeEnd,
+           sCursor& before, sCursor& after)
+        : mAdd(add), mAddBegin(addBegin), mAddEnd(addEnd),
+          mRemove(remove), mRemoveBegin(removeBegin), mRemoveEnd(removeEnd),
+          mBefore(before), mAfter(after) {}
+    ~cUndo() = default;
 
-    std::vector <cLine> mLines;
-    std::vector <uint32_t> mFoldLines;
+    void undo (cTextEdit* textEdit);
+    void redo (cTextEdit* textEdit);
 
-    bool mEdited = false;
-    bool mHasFolds = false;
-    bool mHasCR = false;
-    bool mHasTabs = false;
-    uint32_t mTabSize = 4;
+    // vars
+    std::string mAdd;
+    sPosition mAddBegin;
+    sPosition mAddEnd;
+
+    std::string mRemove;
+    sPosition mRemoveBegin;
+    sPosition mRemoveEnd;
+
+    sCursor mBefore;
+    sCursor mAfter;
     };
   //}}}
   //{{{
@@ -332,13 +349,36 @@ private:
     };
   //}}}
   //{{{
+  class cDoc {
+  public:
+    std::string mFilePath;
+    std::string mParentPath;
+    std::string mFileStem;
+    std::string mFileExtension;
+    uint32_t mVersion = 1;
+
+    std::vector <cLine> mLines;
+    std::vector <uint32_t> mFoldLines;
+
+    bool mEdited = false;
+    bool mHasFolds = false;
+    bool mHasCR = false;
+    bool mHasTabs = false;
+    uint32_t mTabSize = 4;
+    };
+  //}}}
+  //{{{
   class cEdit {
   public:
-    struct sCursor {
-      sPosition mPosition;
-      sPosition mSelectBegin;
-      sPosition mSelectEnd;
-      };
+    //{{{
+    void cTextEdit::addUndo (cUndo& undo) {
+
+      // trim undo list to mUndoIndex, add undo
+      mUndoVector.resize (mUndoIndex+1);
+      mUndoVector.back() = undo;
+      mUndoIndex++;
+      }
+    //}}}
 
     sCursor mCursor;
 
@@ -353,41 +393,9 @@ private:
     // parse comments flag
     bool mCheckComments = true;
     bool mScrollVisible = false;
-    };
-  //}}}
-  //{{{
-  class cUndo {
-  public:
-    cUndo() = default;
-    cUndo (const std::string& add, const sPosition addBegin, const sPosition addEnd,
-           const std::string& remove, const sPosition removeBegin, const sPosition removeEnd,
-           cEdit::sCursor& before, cEdit::sCursor& after)
-        : mAdd(add), mAddBegin(addBegin), mAddEnd(addEnd),
-          mRemove(remove), mRemoveBegin(removeBegin), mRemoveEnd(removeEnd),
-          mBefore(before), mAfter(after) {}
-    ~cUndo() = default;
 
-    void undo (cTextEdit* textEdit);
-    void redo (cTextEdit* textEdit);
-
-    // vars
-    std::string mAdd;
-    sPosition mAddBegin;
-    sPosition mAddEnd;
-
-    std::string mRemove;
-    sPosition mRemoveBegin;
-    sPosition mRemoveEnd;
-
-    cEdit::sCursor mBefore;
-    cEdit::sCursor mAfter;
-    };
-  //}}}
-  //{{{
-  class cUndoList {
-  public:
-    uint32_t mIndex = 0;
-    std::vector <cUndo> mBuffer;
+    uint32_t mUndoIndex = 0;
+    std::vector <cUndo> mUndoVector;
     };
   //}}}
 
@@ -501,7 +509,6 @@ private:
   cDoc mDoc;
   cContext mContext;
   cEdit mEdit;
-  cUndoList mUndoList;
 
   std::chrono::system_clock::time_point mCursorFlashTimePoint;
   //}}}

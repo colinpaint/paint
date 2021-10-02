@@ -685,7 +685,7 @@ void cTextEdit::cut() {
     deleteSelect();
 
     undo.mAfter = mEdit.mCursor;
-    addUndo (undo);
+    mEdit.addUndo (undo);
     }
   }
 //}}}
@@ -715,7 +715,7 @@ void cTextEdit::paste() {
 
     undo.mAddEnd = getCursorPosition();
     undo.mAfter = mEdit.mCursor;
-    addUndo (undo);
+    mEdit.addUndo (undo);
     }
   }
 //}}}
@@ -772,7 +772,7 @@ void cTextEdit::deleteIt() {
     }
 
   undo.mAfter = mEdit.mCursor;
-  addUndo (undo);
+  mEdit.addUndo (undo);
   }
 //}}}
 //{{{
@@ -836,7 +836,7 @@ void cTextEdit::backspace() {
     }
 
   undo.mAfter = mEdit.mCursor;
-  addUndo (undo);
+  mEdit.addUndo (undo);
   }
 //}}}
 //{{{
@@ -909,7 +909,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
 
         mEdit.mCursor.mSelectBegin = selectBegin;
         mEdit.mCursor.mSelectEnd = selectEnd;
-        addUndo (undo);
+        mEdit.addUndo (undo);
 
         mDoc.mEdited = true;
         mEdit.mScrollVisible = true;
@@ -998,7 +998,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
 
   undo.mAddEnd = getCursorPosition();
   undo.mAfter = mEdit.mCursor;
-  addUndo (undo);
+  mEdit.addUndo (undo);
 
   mEdit.mScrollVisible = true;
   }
@@ -1025,7 +1025,7 @@ void cTextEdit::createFold() {
 
   undo.mAddEnd = getCursorPosition();
   undo.mAfter = mEdit.mCursor;
-  addUndo (undo);
+  mEdit.addUndo (undo);
   }
 //}}}
 
@@ -1034,7 +1034,7 @@ void cTextEdit::createFold() {
 void cTextEdit::undo (uint32_t steps) {
 
   while (hasUndo() && steps > 0) {
-    mUndoList.mBuffer[--mUndoList.mIndex].undo (this);
+    mEdit.mUndoVector[--mEdit.mUndoIndex].undo (this);
     steps--;
     }
 
@@ -1045,7 +1045,7 @@ void cTextEdit::undo (uint32_t steps) {
 void cTextEdit::redo (uint32_t steps) {
 
   while (hasRedo() && steps > 0) {
-    mUndoList.mBuffer[mUndoList.mIndex++].redo (this);
+    mEdit.mUndoVector[mEdit.mUndoIndex++].redo (this);
     steps--;
     }
 
@@ -1055,7 +1055,6 @@ void cTextEdit::redo (uint32_t steps) {
 //}}}
 //{{{
 void cTextEdit::loadFile (const string& filename) {
-// read filename
 
   // parse filename path
   filesystem::path filePath (filename);
@@ -1070,7 +1069,7 @@ void cTextEdit::loadFile (const string& filename) {
   cLog::log (LOGINFO, fmt::format ("- stem   {}", mDoc.mFileStem));
   cLog::log (LOGINFO, fmt::format ("- ext    {}", mDoc.mFileExtension));
 
-  // clear doc, start emptyLine
+  // clear doc
   mDoc.mLines.clear();
 
   string lineString;
@@ -1106,8 +1105,8 @@ void cTextEdit::loadFile (const string& filename) {
 
   mDoc.mEdited = false;
 
-  mUndoList.mBuffer.clear();
-  mUndoList.mIndex = 0;
+  mEdit.mUndoVector.clear();
+  mEdit.mUndoIndex = 0;
   }
 //}}}
 //{{{
@@ -1997,16 +1996,6 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
     }
 
   mDoc.mEdited = true;
-  }
-//}}}
-
-// undo
-//{{{
-void cTextEdit::addUndo (cUndo& undo) {
-
-  mUndoList.mBuffer.resize (mUndoList.mIndex+1);
-  mUndoList.mBuffer.back() = undo;
-  ++mUndoList.mIndex;
   }
 //}}}
 //}}}
