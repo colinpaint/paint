@@ -221,12 +221,11 @@ public:
   void moveLineDown() { moveDown (1); }
   void movePageUp()   { moveUp (getNumPageLines() - 4); }
   void movePageDown() { moveDown (getNumPageLines() - 4); }
-  void moveHome();
-  void moveEnd();
+  void moveHome() { setCursorPosition ({0,0}); }
+  void moveEnd() { setCursorPosition ({getNumLines()-1, 0}); }
 
   // select
   void selectAll();
-  void selectWordUnderCursor();
 
   // cut and paste
   void copy();
@@ -264,6 +263,8 @@ private:
   //{{{
   struct sCursor {
     sPosition mPosition;
+
+    eSelect mSelect;
     sPosition mSelectBegin;
     sPosition mSelectEnd;
     };
@@ -271,15 +272,6 @@ private:
   //{{{
   class cUndo {
   public:
-    cUndo() = default;
-    cUndo (const std::string& add, const sPosition addBegin, const sPosition addEnd,
-           const std::string& remove, const sPosition removeBegin, const sPosition removeEnd,
-           sCursor& before, sCursor& after)
-        : mAdd(add), mAddBegin(addBegin), mAddEnd(addEnd),
-          mRemove(remove), mRemoveBegin(removeBegin), mRemoveEnd(removeEnd),
-          mBefore(before), mAfter(after) {}
-    ~cUndo() = default;
-
     //{{{
     void undo (cTextEdit* textEdit) {
 
@@ -310,6 +302,9 @@ private:
     //}}}
 
     // vars
+    sCursor mBefore;
+    sCursor mAfter;
+
     std::string mAdd;
     sPosition mAddBegin;
     sPosition mAddEnd;
@@ -317,9 +312,6 @@ private:
     std::string mRemove;
     sPosition mRemoveBegin;
     sPosition mRemoveEnd;
-
-    sCursor mBefore;
-    sCursor mAfter;
     };
   //}}}
   //{{{
@@ -400,6 +392,12 @@ private:
     bool hasRedo() const { return mUndoIndex < mUndoVector.size(); }
 
     //{{{
+    void clearUndo() {
+      mUndoVector.clear();
+      mUndoIndex = 0;
+      }
+    //}}}
+    //{{{
     void addUndo (cUndo& undo) {
 
       // trim undo list to mUndoIndex, add undo
@@ -430,18 +428,18 @@ private:
 
     sCursor mCursor;
 
-    eSelect mSelect = eSelect::eNormal;
-    sPosition mInteractiveBegin;
-    sPosition mInteractiveEnd;
+    // drag state
+    sPosition mDragFirstPosition;
 
     // foldOnly state
     bool mFoldOnly = false;
     uint32_t mFoldOnlyBeginLineNumber = 0;
 
-    // parse comments flag
+    // delayed action flags
     bool mCheckComments = true;
     bool mScrollVisible = false;
 
+  private:
     uint32_t mUndoIndex = 0;
     std::vector <cUndo> mUndoVector;
     };
@@ -491,11 +489,7 @@ private:
   //}}}
   //{{{  sets
   void setCursorPosition (sPosition position);
-
-  void setSelectBegin (sPosition position);
-  void setSelectEnd (sPosition position);
-
-  void setSelect (sPosition beginPosition, sPosition endPosition, eSelect select);
+  void setSelect (eSelect select, sPosition beginPosition, sPosition endPosition);
   //}}}
   //{{{  utils
   void scrollCursorVisible();
