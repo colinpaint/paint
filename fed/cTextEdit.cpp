@@ -621,14 +621,15 @@ void cTextEdit::selectAll() {
 void cTextEdit::copy() {
 
   if (hasSelect())
+    // copy selected text to clipboard
     ImGui::SetClipboardText (getSelectedText().c_str());
-
-  string copyString;
-  for (const auto& glyph : getGlyphs (getCursorPosition().mLineNumber))
-    copyString.push_back (glyph.mChar);
-
-  // copy as text to clipBoard
-  ImGui::SetClipboardText (copyString.c_str());
+  else {
+    // copy current line to clipboard
+    string text;
+    for (const auto& glyph : getGlyphs (getCursorPosition().mLineNumber))
+      text.push_back (glyph.mChar);
+    ImGui::SetClipboardText (text.c_str());
+    }
   }
 //}}}
 //{{{
@@ -644,7 +645,10 @@ void cTextEdit::cut() {
     undo.mRemoveBegin = mEdit.mCursor.mSelectBegin;
     undo.mRemoveEnd = mEdit.mCursor.mSelectEnd;
 
+    // copy selected text
     copy();
+
+    // delete selected text
     deleteSelect();
 
     undo.mAfter = mEdit.mCursor;
@@ -670,12 +674,10 @@ void cTextEdit::paste() {
       deleteSelect();
       }
 
-    string clipboardString = ImGui::GetClipboardText();
-    undo.mAdd = clipboardString;
+    string clipboardText = ImGui::GetClipboardText();
+    undo.mAdd = clipboardText;
     undo.mAddBegin = getCursorPosition();
-
-    insertText (clipboardString);
-
+    insertText (clipboardText);
     undo.mAddEnd = getCursorPosition();
     undo.mAfter = mEdit.mCursor;
     mEdit.addUndo (undo);
@@ -959,16 +961,16 @@ void cTextEdit::createFold() {
     return;
 
   // !!!! temp string for now !!!!
-  string insertString = mOptions.mLanguage.mFoldBeginMarker +
-                        "  new fold - loads of detail to implement\n\n" +
-                        mOptions.mLanguage.mFoldEndMarker +
-                        "\n";
+  string text = mOptions.mLanguage.mFoldBeginMarker +
+                 "  new fold - loads of detail to implement\n\n" +
+                 mOptions.mLanguage.mFoldEndMarker +
+                 "\n";
   cUndo undo;
   undo.mBefore = mEdit.mCursor;
-  undo.mAdd = insertString;
+  undo.mAdd = text;
   undo.mAddBegin = getCursorPosition();
 
-  insertText (insertString);
+  insertText (text);
 
   undo.mAddEnd = getCursorPosition();
   undo.mAfter = mEdit.mCursor;
@@ -1267,7 +1269,7 @@ uint32_t cTextEdit::getNumPageLines() const {
 // text
 //{{{
 string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
-// get text as string with lineFeed line breaks
+// get psotion range as string with lineFeed line breaks
 
   uint32_t beginLineNumber = beginPosition.mLineNumber;
   uint32_t endLineNumber = endPosition.mLineNumber;
@@ -1297,7 +1299,7 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
       text += '\n';
       }
     }
-  cLog::log (LOGINFO, text);
+
   return text;
   }
 //}}}
@@ -1779,17 +1781,15 @@ cTextEdit::cLine& cTextEdit::insertLine (uint32_t index) {
   }
 //}}}
 //{{{
-uint32_t cTextEdit::insertTextAt (sPosition& position, const string& insertString) {
-
-  uint32_t totalLines = 0;
+cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
 
   uint32_t characterIndex = getCharacterIndex (position);
-
-  const char* text = insertString.c_str();
-  while (*text != '\0') {
-    if (*text == '\r') // skip
-      ++text;
-    else if (*text == '\n') {
+  const char* textPtr = text.c_str();
+  while (*textPtr != '\0') {
+    if (*textPtr == '\r') // skip
+      textPtr++;
+    else if (*textPtr == '\n') {
+      // insert new line
       if (characterIndex < getNumGlyphs (position.mLineNumber)) {
         cLine& line = getLine (position.mLineNumber);
         cLine& newLine = insertLine (position.mLineNumber+1);
@@ -1806,42 +1806,37 @@ uint32_t cTextEdit::insertTextAt (sPosition& position, const string& insertStrin
       position.mLineNumber++;
       position.mColumn = 0;
       characterIndex = 0;
-      totalLines++;
-      text++;
+      textPtr++;
       }
 
     else {
+      // within line
       cLine& line = getLine (position.mLineNumber);
-      auto length = utf8CharLength (*text);
-      while ((length > 0) && (*text != '\0')) {
-        line.mGlyphs.insert (line.mGlyphs.begin() + characterIndex++, cGlyph (*text++, eText));
+      auto length = utf8CharLength (*textPtr);
+      while ((length > 0) && (*textPtr != '\0')) {
+        line.mGlyphs.insert (line.mGlyphs.begin() + characterIndex++, cGlyph (*textPtr++, eText));
         length--;
         }
       position.mColumn++;
-
       parseLine (line);
       }
 
     mDoc.mEdited = true;
     }
 
-  return totalLines;
+  return position;
   }
 //}}}
 //{{{
-void cTextEdit::insertText (const string& insertString) {
-
-  if (insertString.empty())
-    return;
+cTextEdit::sPosition cTextEdit::insertText (const string& text) {
 
   sPosition position = getCursorPosition();
-  sPosition beginPosition = min (position, mEdit.mCursor.mSelectBegin);
+  if (!text.empty()) {
+    position = insertTextAt (position, text);
+    setCursorPosition (position);
+    }
 
-  int totalLines = position.mLineNumber - beginPosition.mLineNumber;
-  totalLines += insertTextAt (position, insertString);
-
-  setCursorPosition (position);
-  setDeselect();
+  return position;
   }
 //}}}
 //}}}

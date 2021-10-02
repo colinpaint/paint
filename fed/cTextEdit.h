@@ -506,8 +506,8 @@ private:
   //}}}
   //{{{  insert
   cLine& insertLine (uint32_t index);
-  void insertText (const std::string& insertString);
-  uint32_t insertTextAt (sPosition& position, const std::string& insertString);
+  sPosition insertTextAt (sPosition position, const std::string& text);
+  sPosition insertText (const std::string& text);
   //}}}
   //{{{  delete
   void removeLine (uint32_t beginPosition, uint32_t endPosition);
