@@ -551,8 +551,9 @@ void cTextEdit::moveLeft() {
   if (characterIndex == 0) {
     // beginning of line
     if (position.mLineNumber > 0) {
-      // move to end of prevous line, what about folded ????
-      position.mLineNumber--;
+      // move to end of prevous line
+      uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber) - 1;
+      position.mLineNumber = getLineNumberFromIndex (lineIndex);
       characterIndex = getNumGlyphs (position.mLineNumber);
       }
     }
@@ -560,11 +561,12 @@ void cTextEdit::moveLeft() {
     // move to previous column on same line
     characterIndex--;
     while ((characterIndex > 0) &&
-           isUtfSequence (getGlyphs (position.mLineNumber)[characterIndex].mChar)) 
+           isUtfSequence (getGlyphs (position.mLineNumber)[characterIndex].mChar))
       characterIndex--;
     }
 
   setCursorPosition ({position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex)});
+  setDeselect();
   }
 //}}}
 //{{{
@@ -578,11 +580,18 @@ void cTextEdit::moveRight() {
     // move to next columm on same line
     characterIndex += utf8CharLength (getGlyphs (position.mLineNumber)[characterIndex].mChar);
     uint32_t column = getCharacterColumn (position.mLineNumber, characterIndex);
+
     setCursorPosition ({position.mLineNumber, column});
+    setDeselect();
     }
-  else if (position.mLineNumber + 1 < getNumLines())
-    // move to start of next line what about folded???
-    setCursorPosition ({position.mLineNumber + 1, 0});
+  else {
+    // move to start of next line
+    uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
+    if (lineIndex + 1 < getNumLines()) {
+      setCursorPosition ({getLineNumberFromIndex (lineIndex + 1), 0});
+      setDeselect();
+      }
+    }
   }
 //}}}
 //{{{
@@ -596,6 +605,7 @@ void cTextEdit::moveRightWord() {
     uint32_t characterIndex = getCharacterIndex (position);
     uint32_t column = getCharacterColumn (position.mLineNumber, characterIndex);
     setCursorPosition ({position.mLineNumber, column});
+    setDeselect();
     }
   }
 //}}}
@@ -691,8 +701,8 @@ void cTextEdit::deleteIt() {
   else {
     sPosition position = getCursorPosition();
     setCursorPosition (position);
-    cLine& line = getLine (position.mLineNumber);
 
+    cLine& line = getLine (position.mLineNumber);
     if (position.mColumn == getLineMaxColumn (position.mLineNumber)) {
       if (position.mLineNumber == getNumLines()-1)
         return;
@@ -745,7 +755,6 @@ void cTextEdit::backspace() {
 
   else {
     sPosition position = getCursorPosition();
-    setCursorPosition (position);
     if (mEdit.mCursor.mPosition.mColumn == 0) {
       if (mEdit.mCursor.mPosition.mLineNumber == 0)
         return;
@@ -1515,8 +1524,9 @@ float cTextEdit::getTabEndPosX (float xPos) {
 //{{{  sets
 //{{{
 void cTextEdit::setCursorPosition (sPosition position) {
+// set cursorPosition, if changed check scrollVisible
 
-  if (mEdit.mCursor.mPosition != position) {
+  if (position != mEdit.mCursor.mPosition) {
     mEdit.mCursor.mPosition = position;
     mEdit.mScrollVisible = true;
     }
@@ -1553,8 +1563,45 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
     }
   }
 //}}}
+//{{{
+void cTextEdit::setDeselect() {
+
+  mEdit.mCursor.mSelect = eSelect::eNormal;
+  mEdit.mCursor.mSelectBegin = mEdit.mCursor.mPosition;
+  mEdit.mCursor.mSelectEnd = mEdit.mCursor.mPosition;
+  }
 //}}}
-//{{{  utils
+//}}}
+//{{{  move
+//{{{
+void cTextEdit::moveUp (uint32_t amount) {
+
+  sPosition position = mEdit.mCursor.mPosition;
+
+  if (position.mLineNumber == 0)
+    return;
+
+  // unsigned arithmetic to decrement lineIndex
+  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
+  lineIndex = (amount < lineIndex) ? lineIndex - amount : 0;
+
+  setCursorPosition ({getLineNumberFromIndex (lineIndex), position.mColumn});
+  setDeselect();
+  }
+//}}}
+//{{{
+void cTextEdit::moveDown (uint32_t amount) {
+
+  sPosition position = mEdit.mCursor.mPosition;
+
+  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
+  lineIndex = min (getMaxLineIndex(), lineIndex + amount);
+
+  setCursorPosition ({getLineNumberFromIndex (lineIndex), position.mColumn});
+  setDeselect();
+  }
+//}}}
+
 //{{{
 void cTextEdit::scrollCursorVisible() {
 
@@ -1626,7 +1673,6 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
   }
 //}}}
 
-// find
 //{{{
 cTextEdit::sPosition cTextEdit::findWordBegin (sPosition position) {
 
@@ -1686,7 +1732,7 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition position) {
 //{{{
 cTextEdit::sPosition cTextEdit::findNextWord (sPosition position) {
 
-  // skip to the next non-word character
+  // skip position to the next non-word character
   bool skip = false;
   bool isWord = false;
 
@@ -1698,11 +1744,6 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition position) {
     }
 
   while (!isWord || skip) {
-    if (position.mLineNumber >= getNumLines()) {
-      uint32_t lineNumber = max (0u, getNumLines()-1);
-      return sPosition (lineNumber, getLineMaxColumn (lineNumber));
-      }
-
     const auto& glyphs = getGlyphs (position.mLineNumber);
     if (characterIndex < glyphs.size()) {
       isWord = isalnum (glyphs[characterIndex].mChar);
@@ -1714,8 +1755,13 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition position) {
       }
 
     else {
+      // start of next line
       characterIndex = 0;
-      position.mLineNumber++;
+      uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
+      if (lineIndex + 1 < getNumLines())
+        return {getLineNumberFromIndex (lineIndex + 1), 0};
+      else
+        return {getNumLines() - 1, getLineMaxColumn (getNumLines() - 1)};
       skip = false;
       isWord = false;
       }
@@ -1724,35 +1770,8 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition position) {
   return position;
   }
 //}}}
-
-// move
-//{{{
-void cTextEdit::moveUp (uint32_t amount) {
-
-  sPosition position = mEdit.mCursor.mPosition;
-
-  if (position.mLineNumber == 0)
-    return;
-
-  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  lineIndex = (amount < lineIndex) ? lineIndex - amount : 0;
-
-  setCursorPosition ({getLineNumberFromIndex (lineIndex), position.mColumn});
-  }
 //}}}
-//{{{
-void cTextEdit::moveDown (uint32_t amount) {
-
-  sPosition position = mEdit.mCursor.mPosition;
-
-  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  lineIndex = min (getMaxLineIndex(), lineIndex + amount);
-
-  setCursorPosition ({getLineNumberFromIndex (lineIndex), position.mColumn});
-  }
-//}}}
-
-// insert
+//{{{  insert
 //{{{
 cTextEdit::cLine& cTextEdit::insertLine (uint32_t index) {
   return *mDoc.mLines.insert (mDoc.mLines.begin() + index, cLine::tGlyphs());
@@ -1820,12 +1839,12 @@ void cTextEdit::insertText (const string& insertString) {
   int totalLines = position.mLineNumber - beginPosition.mLineNumber;
   totalLines += insertTextAt (position, insertString);
 
-  setSelect (eSelect::eNormal, position, position);
   setCursorPosition (position);
+  setDeselect();
   }
 //}}}
-
-// delete
+//}}}
+//{{{  delete
 //{{{
 void cTextEdit::removeLine (uint32_t beginPosition, uint32_t endPosition) {
 
@@ -1892,13 +1911,12 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
 void cTextEdit::deleteSelect() {
 
   deleteRange (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
-  setSelect (eSelect::eNormal, mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectBegin);
   setCursorPosition (mEdit.mCursor.mSelectBegin);
+  setDeselect();
   }
 //}}}
 //}}}
-
-// parse
+//{{{  parse
 //{{{
 void cTextEdit::parseTokens (cLine& line, const string& textString) {
 // parse and color tokens, recognise and color keyWords and knownWords
@@ -2115,6 +2133,7 @@ void cTextEdit::parseComments() {
       }
     }
   }
+//}}}
 //}}}
 
 // fold
