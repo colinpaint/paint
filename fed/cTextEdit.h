@@ -235,7 +235,6 @@ public:
   // delete
   void deleteIt();
   void backspace();
-  void deleteSelect();
 
   // insert
   void enterCharacter (ImWchar ch);
@@ -514,6 +513,7 @@ private:
   void removeLine (uint32_t beginPosition, uint32_t endPosition);
   void removeLine (uint32_t index);
   void deleteRange (sPosition beginPosition, sPosition endPosition);
+  void deleteSelect();
 
   // undo
   void addUndo (cUndo& undo);

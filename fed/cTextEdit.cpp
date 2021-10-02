@@ -796,14 +796,6 @@ void cTextEdit::backspace() {
   mEdit.addUndo (undo);
   }
 //}}}
-//{{{
-void cTextEdit::deleteSelect() {
-
-  deleteRange (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
-  setSelect (eSelect::eNormal, mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectBegin);
-  setCursorPosition (mEdit.mCursor.mSelectBegin);
-  }
-//}}}
 
 // insert
 //{{{
@@ -1920,6 +1912,14 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
     }
 
   mDoc.mEdited = true;
+  }
+//}}}
+//{{{
+void cTextEdit::deleteSelect() {
+
+  deleteRange (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
+  setSelect (eSelect::eNormal, mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectBegin);
+  setCursorPosition (mEdit.mCursor.mSelectBegin);
   }
 //}}}
 //}}}
