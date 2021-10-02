@@ -741,14 +741,12 @@ void cTextEdit::backspace() {
   undo.mBefore = mEdit.mCursor;
 
   if (hasSelect()) {
-    //{{{  backspace delete select
+    // delete select
     undo.mRemove = getSelectedText();
     undo.mRemoveBegin = mEdit.mCursor.mSelectBegin;
     undo.mRemoveEnd = mEdit.mCursor.mSelectEnd;
-
     deleteSelect();
     }
-    //}}}
 
   else {
     sPosition position = getCursorPosition();
@@ -801,11 +799,7 @@ void cTextEdit::backspace() {
 //{{{
 void cTextEdit::deleteSelect() {
 
-  if (mEdit.mCursor.mSelectEnd == mEdit.mCursor.mSelectBegin)
-    return;
-
   deleteRange (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
-
   setSelect (eSelect::eNormal, mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectBegin);
   setCursorPosition (mEdit.mCursor.mSelectBegin);
   }
