@@ -3,10 +3,6 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include <filesystem>
-
-#include <fstream>
-#include <streambuf>
 
 // imgui
 #include "../imgui/imgui.h"
@@ -73,37 +69,9 @@ public:
       }
       //}}}
     if (!mTextEdit) {
-      //{{{  create cTextEdit for app name
       mTextEdit = new cTextEdit();
-
-      filesystem::path filePath (app.getName());
-      //filesystem::path filePath = filesystem::current_path();
-      cLog::log (LOGINFO, fmt::format ("rootNme   - {}", filePath.root_name().string()));
-      cLog::log (LOGINFO, fmt::format ("rootDir   - {}", filePath.root_directory().string()));
-      cLog::log (LOGINFO, fmt::format ("relative  - {}", filePath.relative_path().string()));
-      cLog::log (LOGINFO, fmt::format ("parent    - {}", filePath.parent_path().string()));
-      cLog::log (LOGINFO, fmt::format ("fileName  - {}", filePath.filename().string()));
-      cLog::log (LOGINFO, fmt::format ("stem      - {}", filePath.stem().string()));
-      cLog::log (LOGINFO, fmt::format ("extension - {}", filePath.extension().string()));
-
-      int i = 0;
-      for (const auto& part : filePath)
-        cLog::log (LOGINFO, fmt::format ("part {}  - {}", i++, part.string()));
-
-       if (filesystem::exists (filePath) && filesystem::is_regular_file (filePath)) {
-         std::error_code err = std::error_code{};
-         uint64_t fileSize = filesystem::file_size (filePath, err);
-         if (fileSize != static_cast<uintmax_t>(-1))
-           cLog::log (LOGINFO, fmt::format ("filesize:{} {}", fileSize, err.value()));
-         }
-
-      // set file
-      ifstream fileStream (app.getName());
-
-      string str ((istreambuf_iterator<char>(fileStream)), istreambuf_iterator<char>());
-      mTextEdit->setTextString (str);
+      mTextEdit->loadFile (app.getName());
       }
-      //}}}
 
     // full screen window
     mTextEdit->drawWindow ("fed", app);

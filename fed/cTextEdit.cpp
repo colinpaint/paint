@@ -7,6 +7,10 @@
 #include <functional>
 #include <chrono>
 
+#include <filesystem>
+#include <fstream>
+#include <streambuf>
+
 #include "../platform/cPlatform.h"
 #include "../imgui/myImguiWidgets.h"
 #include "../ui/cApp.h"
@@ -486,12 +490,12 @@ namespace {
 //{{{
 cTextEdit::cTextEdit() {
 
-  setLanguage (cLanguage::c());
-
+  mOptions.mLanguage = cLanguage::c();
   mDoc.mLines.push_back (cLine::tGlyphs());
   mCursorFlashTimePoint = system_clock::now();
   }
 //}}}
+
 //{{{  gets
 //{{{
 bool cTextEdit::hasClipboardText() {
@@ -525,69 +529,6 @@ vector<string> cTextEdit::getTextStrings() const {
     }
 
   return result;
-  }
-//}}}
-//}}}
-//{{{  sets
-//{{{
-void cTextEdit::setTextString (const string& text) {
-// break text string into lines, save in mLines
-
-  mDoc.mLines.clear();
-  mDoc.mLines.emplace_back (cLine::tGlyphs());
-
-  for (const auto ch : text) {
-    if (ch == '\r') // ignored but flag set
-      mDoc.mHasCR = true;
-    else if (ch == '\n') {
-      parseLine (mDoc.mLines.back());
-      mDoc.mLines.emplace_back (cLine::tGlyphs());
-      }
-    else {
-      if (ch ==  '\t')
-        mDoc.mHasTabs = true;
-      mDoc.mLines.back().mGlyphs.emplace_back (cGlyph (ch, eText));
-      }
-    }
-
-  mDoc.mEdited = false;
-
-  mUndoList.mBuffer.clear();
-  mUndoList.mIndex = 0;
-  }
-//}}}
-//{{{
-void cTextEdit::setTextStrings (const vector<string>& lines) {
-// save vector of lines in mLines
-
-  mDoc.mLines.clear();
-
-  if (lines.empty())
-    mDoc.mLines.emplace_back (cLine::tGlyphs());
-  else {
-    mDoc.mLines.resize (lines.size());
-    for (uint32_t srcIndex = 0; srcIndex < lines.size(); srcIndex++) {
-      const string& line = lines[srcIndex];
-      for (uint32_t dstIndex = 0; dstIndex < line.size(); dstIndex++) {
-        if (line[dstIndex] ==  '\t')
-          mDoc.mHasTabs = true;
-        mDoc.mLines[srcIndex].mGlyphs.emplace_back (cGlyph (line[dstIndex], eText));
-        }
-      parseLine (mDoc.mLines[srcIndex]);
-      }
-    }
-
-  mDoc.mEdited = false;
-
-  mUndoList.mBuffer.clear();
-  mUndoList.mIndex = 0;
-  }
-//}}}
-
-//{{{
-void cTextEdit::setLanguage (const cLanguage& language) {
-
-  mOptions.mLanguage = language;
   }
 //}}}
 //}}}
@@ -1112,6 +1053,90 @@ void cTextEdit::redo (uint32_t steps) {
   }
 //}}}
 //}}}
+//{{{
+void cTextEdit::loadFile (const string& filename) {
+// read filename
+
+  // parse filename path
+  filesystem::path filePath (filename);
+  mDoc.mFilePath = filePath.string();
+  mDoc.mParentPath = filePath.parent_path().string();
+  mDoc.mFileStem = filePath.stem().string();
+  mDoc.mFileExtension = filePath.extension().string();
+
+  cLog::log (LOGINFO, fmt::format ("setFile  {}", filename));
+  cLog::log (LOGINFO, fmt::format ("- path   {}", mDoc.mFilePath));
+  cLog::log (LOGINFO, fmt::format ("- parent {}", mDoc.mParentPath));
+  cLog::log (LOGINFO, fmt::format ("- stem   {}", mDoc.mFileStem));
+  cLog::log (LOGINFO, fmt::format ("- ext    {}", mDoc.mFileExtension));
+
+  // clear doc, start emptyLine
+  mDoc.mLines.clear();
+
+  string lineString;
+  uint32_t lineNumber = 0;
+
+  // read filename as stream
+  ifstream stream (filename);
+  while (getline (stream, lineString)) {
+    // create empty line, reserve glyphs for line
+    mDoc.mLines.emplace_back (cLine::tGlyphs());
+    mDoc.mLines.back().mGlyphs.reserve (lineString.size());
+
+    // iterate char
+    for (const auto ch : lineString) {
+      if (ch == '\r') // CR ignored, but set flag
+        mDoc.mHasCR = true;
+      else {
+        if (ch ==  '\t')
+          mDoc.mHasTabs = true;
+        mDoc.mLines.back().mGlyphs.emplace_back (cGlyph (ch, eText));
+        }
+      }
+
+    // parse
+    parseLine (mDoc.mLines.back());
+    lineNumber++;
+    }
+
+  // add empty lastLine
+  mDoc.mLines.emplace_back (cLine::tGlyphs());
+
+  cLog::log (LOGINFO, fmt::format ("read {} lines {}", lineNumber, mDoc.mHasCR ? "hasCR" : ""));
+
+  mDoc.mEdited = false;
+
+  mUndoList.mBuffer.clear();
+  mUndoList.mIndex = 0;
+  }
+//}}}
+//{{{
+void cTextEdit::saveFile() {
+
+  filesystem::path saveFilePath (mDoc.mFilePath);
+  saveFilePath.replace_extension (fmt::format ("{};{}", mDoc.mFileExtension, mDoc.mVersion++));
+
+  while (filesystem::exists (saveFilePath)) {
+    // version exits, increment version number
+    cLog::log (LOGINFO,fmt::format ("skipping {}", saveFilePath.string()));
+    saveFilePath.replace_extension (fmt::format ("{};{}", mDoc.mFileExtension, mDoc.mVersion++));
+    }
+  cLog::log (LOGINFO,fmt::format ("saving {} {} lines", saveFilePath.string(), mDoc.mLines.size()));
+
+  // save ofstream
+  ofstream stream (saveFilePath);
+  for (const auto& line : mDoc.mLines) {
+    string lineString;
+    for (auto& glyph : line.mGlyphs)
+      lineString += glyph.mChar;
+    stream.write (lineString.data(), lineString.size());
+    stream.put ('\n');
+    }
+
+  // done
+  cLog::log (LOGINFO,fmt::format ("saved {}", saveFilePath.string()));
+  }
+//}}}
 
 // draws
 //{{{
@@ -1244,6 +1269,11 @@ void cTextEdit::drawContents (cApp& app) {
     if (toggleButton ("full", app.getPlatform().getFullScreen()))
       app.getPlatform().toggleFullScreen();
     }
+  //}}}
+  //{{{  save button
+  ImGui::SameLine();
+  if (ImGui::Button ("save"))
+    saveFile();
   //}}}
 
   parseComments();

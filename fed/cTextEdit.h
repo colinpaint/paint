@@ -177,6 +177,7 @@ public:
 
   cTextEdit();
   ~cTextEdit() = default;
+
   //{{{  gets
   bool isEdited() const { return mDoc.mEdited; }
   bool isReadOnly() const { return mOptions.mReadOnly; }
@@ -200,12 +201,6 @@ public:
   const cLanguage& getLanguage() const { return mOptions.mLanguage; }
   //}}}
   //{{{  sets
-  void setTextString (const std::string& text);
-  void setTextStrings (const std::vector<std::string>& lines);
-
-  void setPalette (bool lightPalette);
-  void setLanguage (const cLanguage& language);
-
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
   void setTabSize (uint32_t tabSize) { mDoc.mTabSize = tabSize; }
 
@@ -258,6 +253,8 @@ public:
   void undo (uint32_t steps = 1);
   void redo (uint32_t steps = 1);
   //}}}
+  void loadFile (const std::string& filename);
+  void saveFile();
 
   void drawWindow (const std::string& title, cApp& app);
   void drawContents (cApp& app);
@@ -266,7 +263,11 @@ private:
   //{{{
   class cDoc {
   public:
-    std::string mFilename;
+    std::string mFilePath;
+    std::string mParentPath;
+    std::string mFileStem;
+    std::string mFileExtension;
+    uint32_t mVersion = 1;
 
     std::vector <cLine> mLines;
     std::vector <uint32_t> mFoldLines;
