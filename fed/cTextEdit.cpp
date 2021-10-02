@@ -1033,23 +1033,19 @@ void cTextEdit::createFold() {
 //{{{
 void cTextEdit::undo (uint32_t steps) {
 
-  while (hasUndo() && steps > 0) {
-    mEdit.mUndoVector[--mEdit.mUndoIndex].undo (this);
-    steps--;
+  if (hasUndo()) {
+    mEdit.undo (this, steps);
+    scrollCursorVisible();
     }
-
-  scrollCursorVisible();
   }
 //}}}
 //{{{
 void cTextEdit::redo (uint32_t steps) {
 
-  while (hasRedo() && steps > 0) {
-    mEdit.mUndoVector[mEdit.mUndoIndex++].redo (this);
-    steps--;
+  if (hasRedo()) {
+    mEdit.redo (this, steps);
+    scrollCursorVisible();
     }
-
-  scrollCursorVisible();
   }
 //}}}
 //}}}
@@ -2990,36 +2986,6 @@ void cTextEdit::cContext::drawRect (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
 //{{{
 void cTextEdit::cContext::drawRectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
   mDrawList->AddRect (pos1, pos2, kPalette[color], 1.f);
-  }
-//}}}
-//}}}
-//{{{  cTextEdit::cUndo
-//{{{
-void cTextEdit::cUndo::undo (cTextEdit* textEdit) {
-
-  if (!mAdd.empty())
-    textEdit->deleteRange (mAddBegin, mAddEnd);
-
-  if (!mRemove.empty()) {
-    sPosition begin = mRemoveBegin;
-    textEdit->insertTextAt (begin, mRemove);
-    }
-
-  textEdit->mEdit.mCursor = mBefore;
-  }
-//}}}
-//{{{
-void cTextEdit::cUndo::redo (cTextEdit* textEdit) {
-
-  if (!mRemove.empty())
-    textEdit->deleteRange (mRemoveBegin, mRemoveEnd);
-
-  if (!mAdd.empty()) {
-    sPosition begin = mAddBegin;
-    textEdit->insertTextAt (begin, mAdd);
-    }
-
-  textEdit->mEdit.mCursor = mAfter;
   }
 //}}}
 //}}}

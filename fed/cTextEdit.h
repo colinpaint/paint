@@ -187,8 +187,8 @@ public:
   bool hasCR() const { return mDoc.mHasCR; }
   bool hasTabs() const { return mDoc.mHasTabs; }
   bool hasSelect() const { return mEdit.mCursor.mSelectEnd > mEdit.mCursor.mSelectBegin; }
-  bool hasUndo() const { return !mOptions.mReadOnly && (mEdit.mUndoIndex > 0); }
-  bool hasRedo() const { return !mOptions.mReadOnly && (mEdit.mUndoIndex < mEdit.mUndoVector.size()); }
+  bool hasUndo() const { return !mOptions.mReadOnly && mEdit.hasUndo(); }
+  bool hasRedo() const { return !mOptions.mReadOnly && mEdit.hasRedo(); }
   bool hasClipboardText();
 
   // get
@@ -280,8 +280,34 @@ private:
           mBefore(before), mAfter(after) {}
     ~cUndo() = default;
 
-    void undo (cTextEdit* textEdit);
-    void redo (cTextEdit* textEdit);
+    //{{{
+    void undo (cTextEdit* textEdit) {
+
+      if (!mAdd.empty())
+        textEdit->deleteRange (mAddBegin, mAddEnd);
+
+      if (!mRemove.empty()) {
+        sPosition begin = mRemoveBegin;
+        textEdit->insertTextAt (begin, mRemove);
+        }
+
+      textEdit->mEdit.mCursor = mBefore;
+      }
+    //}}}
+    //{{{
+    void redo (cTextEdit* textEdit) {
+
+      if (!mRemove.empty())
+        textEdit->deleteRange (mRemoveBegin, mRemoveEnd);
+
+      if (!mAdd.empty()) {
+        sPosition begin = mAddBegin;
+        textEdit->insertTextAt (begin, mAdd);
+        }
+
+      textEdit->mEdit.mCursor = mAfter;
+      }
+    //}}}
 
     // vars
     std::string mAdd;
@@ -370,13 +396,35 @@ private:
   //{{{
   class cEdit {
   public:
+    bool hasUndo() const { return mUndoIndex > 0; }
+    bool hasRedo() const { return mUndoIndex < mUndoVector.size(); }
+
     //{{{
-    void cTextEdit::addUndo (cUndo& undo) {
+    void addUndo (cUndo& undo) {
 
       // trim undo list to mUndoIndex, add undo
       mUndoVector.resize (mUndoIndex+1);
       mUndoVector.back() = undo;
       mUndoIndex++;
+      }
+    //}}}
+
+    //{{{
+    void undo (cTextEdit* textEdit, uint32_t steps) {
+
+      while (hasUndo() && (steps > 0)) {
+        mUndoVector [--mUndoIndex].undo (textEdit);
+        steps--;
+        }
+      }
+    //}}}
+    //{{{
+    void redo (cTextEdit* textEdit, uint32_t steps) {
+
+      while (hasRedo() && steps > 0) {
+        mUndoVector [mUndoIndex++].redo (textEdit);
+        steps--;
+        }
       }
     //}}}
 
