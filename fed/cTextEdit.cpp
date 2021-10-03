@@ -1043,6 +1043,8 @@ void cTextEdit::loadFile (const string& filename) {
     lineNumber++;
     }
 
+  trimTrailingSpace();
+
   // add empty lastLine
   mDoc.mLines.emplace_back (cLine::tGlyphs());
 
@@ -1056,28 +1058,34 @@ void cTextEdit::loadFile (const string& filename) {
 //{{{
 void cTextEdit::saveFile() {
 
+  if (!mDoc.mEdited) {
+    cLog::log (LOGINFO,fmt::format ("{} unchanged, no save", mDoc.mFilePath));
+    return;
+    }
+
+  // identify filePath for previous version
   filesystem::path saveFilePath (mDoc.mFilePath);
   saveFilePath.replace_extension (fmt::format ("{};{}", mDoc.mFileExtension, mDoc.mVersion++));
-
   while (filesystem::exists (saveFilePath)) {
     // version exits, increment version number
     cLog::log (LOGINFO,fmt::format ("skipping {}", saveFilePath.string()));
     saveFilePath.replace_extension (fmt::format ("{};{}", mDoc.mFileExtension, mDoc.mVersion++));
     }
-  cLog::log (LOGINFO,fmt::format ("saving {} {} lines", saveFilePath.string(), mDoc.mLines.size()));
+
+  uint32_t highestLineNumber = trimTrailingSpace();
 
   // save ofstream
   ofstream stream (saveFilePath);
-  for (const auto& line : mDoc.mLines) {
+  for (uint32_t lineNumber = 0; lineNumber < highestLineNumber; lineNumber++) {
     string lineString;
-    for (auto& glyph : line.mGlyphs)
+    for (auto& glyph : mDoc.mLines[lineNumber].mGlyphs)
       lineString += glyph.mChar;
     stream.write (lineString.data(), lineString.size());
     stream.put ('\n');
     }
 
   // done
-  cLog::log (LOGINFO,fmt::format ("saved {}", saveFilePath.string()));
+  cLog::log (LOGINFO,fmt::format ("{} saved", saveFilePath.string()));
   }
 //}}}
 
@@ -1214,9 +1222,11 @@ void cTextEdit::drawContents (cApp& app) {
     }
   //}}}
   //{{{  save button
-  ImGui::SameLine();
-  if (ImGui::Button ("save"))
-    saveFile();
+  if (isEdited()) {
+    ImGui::SameLine();
+    if (ImGui::Button ("save"))
+      saveFile();
+    }
   //}}}
 
   parseComments();
@@ -2128,6 +2138,36 @@ void cTextEdit::parseComments() {
         }
       }
     }
+  }
+//}}}
+
+//{{{
+uint32_t cTextEdit::trimTrailingSpace() {
+// trim trailing space
+// - return highest nonEmpty lineNumber
+
+  uint32_t nonEmptyWaterMark = 0;
+
+  uint32_t lineNumber = 0;
+  uint32_t trimmedSpaces = 0;
+  for (auto& line : mDoc.mLines) {
+    size_t column = line.mGlyphs.size();
+    while ((column > 0) && (line.mGlyphs[--column].mChar == ' ')) {
+      // trailingSpace, trim it
+      line.mGlyphs.pop_back();
+      trimmedSpaces++;
+      //cLog::log (LOGINFO, fmt::format ("trim space {}:{}", lineNumber, column));
+      }
+
+    if (!line.mGlyphs.empty()) // nonEmpty line, raise waterMark
+      nonEmptyWaterMark = lineNumber;
+
+    lineNumber++;
+    }
+
+  cLog::log (LOGINFO, fmt::format ("highest {}:{} trimmedSpaces:{}",
+                                   nonEmptyWaterMark+1, mDoc.mLines.size(), trimmedSpaces));
+  return nonEmptyWaterMark;
   }
 //}}}
 //}}}

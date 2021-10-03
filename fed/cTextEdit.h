@@ -519,6 +519,8 @@ private:
   void parseTokens (cLine& line, const std::string& textString);
   void parseLine (cLine& line);
   void parseComments();
+
+  uint32_t trimTrailingSpace();
   //}}}
 
   //  fold
