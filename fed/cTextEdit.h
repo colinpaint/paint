@@ -281,9 +281,9 @@ private:
       if (!mAdd.empty())
         textEdit->deletePositionRange (mAddBegin, mAddEnd);
 
-      if (!mRemove.empty()) {
-        sPosition begin = mRemoveBegin;
-        textEdit->insertTextAt (begin, mRemove);
+      if (!mDelete.empty()) {
+        sPosition begin = mDeleteBegin;
+        textEdit->insertTextAt (begin, mDelete);
         }
 
       textEdit->mEdit.mCursor = mBefore;
@@ -292,8 +292,8 @@ private:
     //{{{
     void redo (cTextEdit* textEdit) {
 
-      if (!mRemove.empty())
-        textEdit->deletePositionRange (mRemoveBegin, mRemoveEnd);
+      if (!mDelete.empty())
+        textEdit->deletePositionRange (mDeleteBegin, mDeleteEnd);
 
       if (!mAdd.empty()) {
         sPosition begin = mAddBegin;
@@ -312,9 +312,9 @@ private:
     sPosition mAddBegin;
     sPosition mAddEnd;
 
-    std::string mRemove;
-    sPosition mRemoveBegin;
-    sPosition mRemoveEnd;
+    std::string mDelete;
+    sPosition mDeleteBegin;
+    sPosition mDeleteEnd;
     };
   //}}}
   //{{{

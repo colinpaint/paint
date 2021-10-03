@@ -651,9 +651,9 @@ void cTextEdit::cut() {
     // cut selected range
     cUndo undo;
     undo.mBefore = mEdit.mCursor;
-    undo.mRemove = getSelectedText();
-    undo.mRemoveBegin = mEdit.mCursor.mSelectBegin;
-    undo.mRemoveEnd = mEdit.mCursor.mSelectEnd;
+    undo.mDelete = getSelectedText();
+    undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
+    undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
 
     // copy selected text to clipboard
     ImGui::SetClipboardText (getSelectedText().c_str());
@@ -673,9 +673,9 @@ void cTextEdit::cut() {
 
     cUndo undo;
     undo.mBefore = mEdit.mCursor;
-    undo.mRemove = text;
-    undo.mRemoveBegin = position;
-    undo.mRemoveEnd = nextLinePosition;
+    undo.mDelete = text;
+    undo.mDeleteBegin = position;
+    undo.mDeleteEnd = nextLinePosition;
 
     // copy text to clipboard
     ImGui::SetClipboardText (text.c_str());
@@ -701,9 +701,9 @@ void cTextEdit::paste() {
 
     if (hasSelect()) {
       // save and delete select
-      undo.mRemove = getSelectedText();
-      undo.mRemoveBegin = mEdit.mCursor.mSelectBegin;
-      undo.mRemoveEnd = mEdit.mCursor.mSelectEnd;
+      undo.mDelete = getSelectedText();
+      undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
+      undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
       deleteSelect();
       }
 
@@ -728,9 +728,9 @@ void cTextEdit::deleteIt() {
   undo.mBefore = mEdit.mCursor;
 
   if (hasSelect()) {
-    undo.mRemove = getSelectedText();
-    undo.mRemoveBegin = mEdit.mCursor.mSelectBegin;
-    undo.mRemoveEnd = mEdit.mCursor.mSelectEnd;
+    undo.mDelete = getSelectedText();
+    undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
+    undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
     deleteSelect();
     }
 
@@ -743,9 +743,9 @@ void cTextEdit::deleteIt() {
       if (position.mLineNumber == getNumLines()-1)
         return;
 
-      undo.mRemove = '\n';
-      undo.mRemoveBegin = undo.mRemoveEnd = getCursorPosition();
-      advance (undo.mRemoveEnd);
+      undo.mDelete = '\n';
+      undo.mDeleteBegin = undo.mDeleteEnd = getCursorPosition();
+      advance (undo.mDeleteEnd);
 
       cLine& nextLine = getLine (position.mLineNumber+1);
       line.mGlyphs.insert (line.mGlyphs.end(), nextLine.mGlyphs.begin(), nextLine.mGlyphs.end());
@@ -755,9 +755,9 @@ void cTextEdit::deleteIt() {
       }
 
     else {
-      undo.mRemoveBegin = undo.mRemoveEnd = getCursorPosition();
-      undo.mRemoveEnd.mColumn++;
-      undo.mRemove = getText (undo.mRemoveBegin, undo.mRemoveEnd);
+      undo.mDeleteBegin = undo.mDeleteEnd = getCursorPosition();
+      undo.mDeleteEnd.mColumn++;
+      undo.mDelete = getText (undo.mDeleteBegin, undo.mDeleteEnd);
 
       uint32_t characterIndex = getCharacterIndex (position);
       uint32_t length = utf8CharLength (line.mGlyphs[characterIndex].mChar);
@@ -783,9 +783,9 @@ void cTextEdit::backspace() {
 
   if (hasSelect()) {
     // delete select
-    undo.mRemove = getSelectedText();
-    undo.mRemoveBegin = mEdit.mCursor.mSelectBegin;
-    undo.mRemoveEnd = mEdit.mCursor.mSelectEnd;
+    undo.mDelete = getSelectedText();
+    undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
+    undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
     deleteSelect();
     }
 
@@ -795,10 +795,10 @@ void cTextEdit::backspace() {
       if (mEdit.mCursor.mPosition.mLineNumber == 0)
         return;
 
-      undo.mRemove = '\n';
-      undo.mRemoveBegin = {position.mLineNumber - 1, getLineMaxColumn (position.mLineNumber - 1)};
-      undo.mRemoveEnd = undo.mRemoveBegin;
-      advance (undo.mRemoveEnd);
+      undo.mDelete = '\n';
+      undo.mDeleteBegin = {position.mLineNumber - 1, getLineMaxColumn (position.mLineNumber - 1)};
+      undo.mDeleteEnd = undo.mDeleteBegin;
+      advance (undo.mDeleteEnd);
 
       cLine& line = getLine (mEdit.mCursor.mPosition.mLineNumber);
       cLine& prevLine = getLine (mEdit.mCursor.mPosition.mLineNumber-1);
@@ -817,12 +817,12 @@ void cTextEdit::backspace() {
       while ((characterIndex > 0) && isUtfSequence (line.mGlyphs[characterIndex].mChar))
         --characterIndex;
 
-      undo.mRemoveBegin = undo.mRemoveEnd = getCursorPosition();
-      --undo.mRemoveBegin.mColumn;
+      undo.mDeleteBegin = undo.mDeleteEnd = getCursorPosition();
+      --undo.mDeleteBegin.mColumn;
       --mEdit.mCursor.mPosition.mColumn;
 
       while ((characterIndex < line.getNumGlyphs()) && (characterIndexEnd-- > characterIndex)) {
-        undo.mRemove += line.mGlyphs[characterIndex].mChar;
+        undo.mDelete += line.mGlyphs[characterIndex].mChar;
         line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex);
         }
       parseLine (line);
@@ -862,9 +862,9 @@ void cTextEdit::enterCharacter (ImWchar ch) {
         selectEnd.mLineNumber = getNumLines()-1;
       selectEnd.mColumn = getLineMaxColumn (selectEnd.mLineNumber);
 
-      undo.mRemoveBegin = selectBegin;
-      undo.mRemoveEnd = selectEnd;
-      undo.mRemove = getText (selectBegin, selectEnd);
+      undo.mDeleteBegin = selectBegin;
+      undo.mDeleteEnd = selectEnd;
+      undo.mDelete = getText (selectBegin, selectEnd);
 
       bool modified = false;
       for (uint32_t lineNumber = selectBegin.mLineNumber; lineNumber <= selectEnd.mLineNumber; lineNumber++) {
@@ -906,9 +906,9 @@ void cTextEdit::enterCharacter (ImWchar ch) {
       //}}}
     else {
       //{{{  delete select line
-      undo.mRemove = getSelectedText();
-      undo.mRemoveBegin = mEdit.mCursor.mSelectBegin;
-      undo.mRemoveEnd = mEdit.mCursor.mSelectEnd;
+      undo.mDelete = getSelectedText();
+      undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
+      undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
       deleteSelect();
       }
       //}}}
@@ -957,10 +957,10 @@ void cTextEdit::enterCharacter (ImWchar ch) {
       uint32_t characterIndex = getCharacterIndex (position);
       if (mOptions.mOverWrite && (characterIndex < line.getNumGlyphs())) {
         uint32_t length = utf8CharLength(line.mGlyphs[characterIndex].mChar);
-        undo.mRemoveBegin = mEdit.mCursor.mPosition;
-        undo.mRemoveEnd = {position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex + length)};
+        undo.mDeleteBegin = mEdit.mCursor.mPosition;
+        undo.mDeleteEnd = {position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex + length)};
         while ((length > 0) && (characterIndex < line.getNumGlyphs())) {
-          undo.mRemove += line.mGlyphs[characterIndex].mChar;
+          undo.mDelete += line.mGlyphs[characterIndex].mChar;
           line.mGlyphs.erase (line.mGlyphs.begin() + characterIndex);
           length--;
           }
@@ -2595,7 +2595,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     // add invisibleButton
     ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                             {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
-    if (ImGui::IsItemActive()) // closeFold at foldEnd, action on press, button is remove while still pressed
+    if (ImGui::IsItemActive()) // closeFold at foldEnd, action on press
       closeFold (lineNumber);
 
     textPos.x = curPos.x;
