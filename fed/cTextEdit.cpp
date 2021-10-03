@@ -492,18 +492,15 @@ cTextEdit::cTextEdit() {
   mOptions.mLanguage = cLanguage::c();
   mDoc.mLines.push_back (cLine::tGlyphs());
   mCursorFlashTimePoint = system_clock::now();
+
+  // push any clipboard text to pasteStack
+  const char* clipText = ImGui::GetClipboardText();
+  if (clipText && (strlen (clipText)) > 0)
+    mEdit.pushPasteText (clipText);
   }
 //}}}
 
 //{{{  gets
-//{{{
-bool cTextEdit::hasClipboardText() {
-
-  const char* clipText = ImGui::GetClipboardText();
-  return clipText && (strlen (clipText) > 0);
-  }
-//}}}
-
 //{{{
 string cTextEdit::getTextString() {
 // get text as single string
@@ -621,20 +618,19 @@ void cTextEdit::selectAll() {
 void cTextEdit::copy() {
 
   if (hasSelect()) {
-    // copy selected text to clipboard
-    ImGui::SetClipboardText (getSelectedText().c_str());
+    // push selectedText to pasteStack
+    mEdit.pushPasteText (getSelectedText());
     setDeselect();
     }
 
   else {
-    // copy current line, including LF, to clipboard
+    // push currentLine text to pasteStack
     sPosition position = {getCursorPosition().mLineNumber, 0};
     sPosition nextLinePosition = getNextLinePosition (position);
-    string text = getText (position, nextLinePosition);
+    string text = getText (position, nextLinePosition);;
+    mEdit.pushPasteText (text);
 
-    ImGui::SetClipboardText (text.c_str());
-
-    // move to nextLine, !!!! maybe to copy nextLine, need append !!!!
+    // moveLineDown for any multiple copy
     moveLineDown();
     }
   }
@@ -648,15 +644,16 @@ void cTextEdit::cut() {
     }
 
   else if (hasSelect()) {
+    // push selectedText to pasteStack
+    string text = getSelectedText();
+    mEdit.pushPasteText (text);
+
     // cut selected range
     cUndo undo;
     undo.mBefore = mEdit.mCursor;
-    undo.mDelete = getSelectedText();
+    undo.mDelete = text;
     undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
     undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
-
-    // copy selected text to clipboard
-    ImGui::SetClipboardText (getSelectedText().c_str());
 
     // delete selected text
     deleteSelect();
@@ -666,10 +663,11 @@ void cTextEdit::cut() {
     }
 
   else {
-    // cut current line, copy to clipboard
+    // push currentLine text to pasteStack
     sPosition position = {getCursorPosition().mLineNumber,0};
     sPosition nextLinePosition = getNextLinePosition (position);
     string text = getText (position, nextLinePosition);
+    mEdit.pushPasteText (text);
 
     cUndo undo;
     undo.mBefore = mEdit.mCursor;
@@ -677,45 +675,41 @@ void cTextEdit::cut() {
     undo.mDeleteBegin = position;
     undo.mDeleteEnd = nextLinePosition;
 
-    // copy text to clipboard
-    ImGui::SetClipboardText (text.c_str());
-
-    // delete text
+    // delete currentLine, handling folds
     deleteLineRange (position.mLineNumber, nextLinePosition.mLineNumber);
 
     undo.mAfter = mEdit.mCursor;
     mEdit.addUndo (undo);
     }
-
   }
 //}}}
 //{{{
 void cTextEdit::paste() {
 
-  if (isReadOnly())
-    return;
-
-  if (hasClipboardText()) {
+  if (hasPaste()) {
     cUndo undo;
     undo.mBefore = mEdit.mCursor;
 
     if (hasSelect()) {
-      // save and delete select
+      // delete selectedText
       undo.mDelete = getSelectedText();
       undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
       undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
       deleteSelect();
       }
 
-    string clipboardText = ImGui::GetClipboardText();
-    undo.mAdd = clipboardText;
+    string text = mEdit.popPasteText();
+    undo.mAdd = text;
     undo.mAddBegin = getCursorPosition();
 
-    insertText (clipboardText);
+    insertText (text);
 
     undo.mAddEnd = getCursorPosition();
     undo.mAfter = mEdit.mCursor;
     mEdit.addUndo (undo);
+
+    // moveLineUp for any multiple paste
+    moveLineUp();
     }
   }
 //}}}
@@ -1171,7 +1165,7 @@ void cTextEdit::drawContents (cApp& app) {
   if (toggleButton ("space", mOptions.mShowWhiteSpace))
     toggleShowWhiteSpace();
   //}}}
-  if (hasClipboardText() && !isReadOnly()) {
+  if (hasPaste()) {
     //{{{  paste button
     ImGui::SameLine();
     if (ImGui::Button ("paste"))

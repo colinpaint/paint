@@ -192,7 +192,7 @@ public:
   bool hasSelect() const { return mEdit.mCursor.mSelectEnd > mEdit.mCursor.mSelectBegin; }
   bool hasUndo() const { return !mOptions.mReadOnly && mEdit.hasUndo(); }
   bool hasRedo() const { return !mOptions.mReadOnly && mEdit.hasRedo(); }
-  bool hasClipboardText();
+  bool hasPaste() const { return !mOptions.mReadOnly && mEdit.hasPaste(); }
 
   // get
   std::string getTextString();
@@ -391,25 +391,15 @@ private:
   //{{{
   class cEdit {
   public:
+    // undo
     bool hasUndo() const { return mUndoIndex > 0; }
     bool hasRedo() const { return mUndoIndex < mUndoVector.size(); }
-
     //{{{
     void clearUndo() {
       mUndoVector.clear();
       mUndoIndex = 0;
       }
     //}}}
-    //{{{
-    void addUndo (cUndo& undo) {
-
-      // trim undo list to mUndoIndex, add undo
-      mUndoVector.resize (mUndoIndex+1);
-      mUndoVector.back() = undo;
-      mUndoIndex++;
-      }
-    //}}}
-
     //{{{
     void undo (cTextEdit* textEdit, uint32_t steps) {
 
@@ -428,7 +418,38 @@ private:
         }
       }
     //}}}
+    //{{{
+    void addUndo (cUndo& undo) {
 
+      // trim undo list to mUndoIndex, add undo
+      mUndoVector.resize (mUndoIndex+1);
+      mUndoVector.back() = undo;
+      mUndoIndex++;
+      }
+    //}}}
+
+    // paste
+    bool hasPaste() const { return !mPasteVector.empty(); }
+    //{{{
+    std::string popPasteText () {
+
+      if (mPasteVector.empty())
+        return "";
+      else {
+        std::string text = mPasteVector.back();
+        mPasteVector.pop_back();
+        return text;
+        }
+      }
+    //}}}
+    //{{{
+    void pushPasteText (std::string text) {
+      ImGui::SetClipboardText (text.c_str());
+      mPasteVector.push_back (text);
+      }
+    //}}}
+
+    // vars
     sCursor mCursor;
 
     // drag state
@@ -443,8 +464,12 @@ private:
     bool mScrollVisible = false;
 
   private:
-    uint32_t mUndoIndex = 0;
+    // undo
+    size_t mUndoIndex = 0;
     std::vector <cUndo> mUndoVector;
+
+    // paste
+    std::vector <std::string> mPasteVector;
     };
   //}}}
 
