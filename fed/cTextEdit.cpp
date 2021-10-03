@@ -627,12 +627,14 @@ void cTextEdit::copy() {
     }
 
   else {
-    // copy current line to clipboard
+    // copy current line, including LF, to clipboard
     sPosition position = {getCursorPosition().mLineNumber, 0};
     sPosition nextLinePosition = getNextLinePosition (position);
     string text = getText (position, nextLinePosition);
 
     ImGui::SetClipboardText (text.c_str());
+
+    // move to nextLine, !!!! maybe to copy nextLine, need append !!!!
     moveLineDown();
     }
   }
@@ -656,8 +658,6 @@ void cTextEdit::cut() {
     // copy selected text to clipboard
     ImGui::SetClipboardText (getSelectedText().c_str());
 
-    copy();
-
     // delete selected text
     deleteSelect();
 
@@ -676,9 +676,12 @@ void cTextEdit::cut() {
     undo.mRemove = text;
     undo.mRemoveBegin = position;
     undo.mRemoveEnd = nextLinePosition;
+
+    // copy text to clipboard
     ImGui::SetClipboardText (text.c_str());
 
-    removeLine (position.mLineNumber);
+    // delete text
+    deleteLineRange (position.mLineNumber, nextLinePosition.mLineNumber);
 
     undo.mAfter = mEdit.mCursor;
     mEdit.addUndo (undo);
@@ -748,7 +751,7 @@ void cTextEdit::deleteIt() {
       line.mGlyphs.insert (line.mGlyphs.end(), nextLine.mGlyphs.begin(), nextLine.mGlyphs.end());
       parseLine (line);
 
-      removeLine (position.mLineNumber + 1);
+      deleteLine (position.mLineNumber + 1);
       }
 
     else {
@@ -802,7 +805,7 @@ void cTextEdit::backspace() {
 
       uint32_t prevSize = getLineMaxColumn (mEdit.mCursor.mPosition.mLineNumber - 1);
       prevLine.mGlyphs.insert (prevLine.mGlyphs.end(), line.mGlyphs.begin(), line.mGlyphs.end());
-      removeLine (mEdit.mCursor.mPosition.mLineNumber);
+      deleteLine (mEdit.mCursor.mPosition.mLineNumber);
       --mEdit.mCursor.mPosition.mLineNumber;
       mEdit.mCursor.mPosition.mColumn = prevSize;
       }
@@ -1894,15 +1897,15 @@ cTextEdit::sPosition cTextEdit::insertText (const string& text) {
 //}}}
 //{{{  delete
 //{{{
-void cTextEdit::removeLine (uint32_t beginPosition, uint32_t endPosition) {
+void cTextEdit::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
 
-  mDoc.mLines.erase (mDoc.mLines.begin() + beginPosition, mDoc.mLines.begin() + endPosition);
+  mDoc.mLines.erase (mDoc.mLines.begin() + beginLineNumber, mDoc.mLines.begin() + endLineNumber);
   mEdit.mCheckComments = true;
   mDoc.mEdited = true;
   }
 //}}}
 //{{{
-void cTextEdit::removeLine (uint32_t lineNumber) {
+void cTextEdit::deleteLine (uint32_t lineNumber) {
 
   mDoc.mLines.erase (mDoc.mLines.begin() + lineNumber);
   mEdit.mCheckComments = true;
@@ -1911,7 +1914,7 @@ void cTextEdit::removeLine (uint32_t lineNumber) {
 //}}}
 
 //{{{
-void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
+void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosition) {
 
   if (endPosition == beginPosition)
     return;
@@ -1947,7 +1950,7 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
 
     // delete totally unused lines
     if (beginPosition.mLineNumber < endPosition.mLineNumber)
-      removeLine (beginPosition.mLineNumber + 1, endPosition.mLineNumber + 1);
+      deleteLineRange (beginPosition.mLineNumber + 1, endPosition.mLineNumber + 1);
 
     parseLine (firstLine);
     parseLine (lastLine);
@@ -1959,7 +1962,7 @@ void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
 //{{{
 void cTextEdit::deleteSelect() {
 
-  deleteRange (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
+  deletePositionRange (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
   setCursorPosition (mEdit.mCursor.mSelectBegin);
   setDeselect();
   }

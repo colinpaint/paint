@@ -279,7 +279,7 @@ private:
     void undo (cTextEdit* textEdit) {
 
       if (!mAdd.empty())
-        textEdit->deleteRange (mAddBegin, mAddEnd);
+        textEdit->deletePositionRange (mAddBegin, mAddEnd);
 
       if (!mRemove.empty()) {
         sPosition begin = mRemoveBegin;
@@ -293,7 +293,7 @@ private:
     void redo (cTextEdit* textEdit) {
 
       if (!mRemove.empty())
-        textEdit->deleteRange (mRemoveBegin, mRemoveEnd);
+        textEdit->deletePositionRange (mRemoveBegin, mRemoveEnd);
 
       if (!mAdd.empty()) {
         sPosition begin = mAddBegin;
@@ -514,10 +514,10 @@ private:
   sPosition insertText (const std::string& text);
   //}}}
   //{{{  delete
-  void removeLine (uint32_t beginPosition, uint32_t endPosition);
-  void removeLine (uint32_t lineNumber);
+  void deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber);
+  void deleteLine (uint32_t lineNumber);
 
-  void deleteRange (sPosition beginPosition, sPosition endPosition);
+  void deletePositionRange (sPosition beginPosition, sPosition endPosition);
   void deleteSelect();
   //}}}
   //{{{  parse
