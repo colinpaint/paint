@@ -109,10 +109,10 @@ public:
   //{{{
   class cGlyph {
   public:
-    cGlyph() : mChar(' '), mColor(0), 
+    cGlyph() : mChar(' '), mColor(0),
                mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
 
-    cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color), 
+    cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
                                          mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
 
     // vars
