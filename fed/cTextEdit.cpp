@@ -1137,7 +1137,7 @@ void cTextEdit::drawWindow (const string& title, cApp& app) {
 void cTextEdit::drawContents (cApp& app) {
 // main ui io,draw
 
-  // top line buttons
+  //{{{  draw top line buttons
   //{{{  lineNumber buttons
   if (toggleButton ("line", mOptions.mShowLineNumber))
     toggleShowLineNumber();
@@ -1157,6 +1157,7 @@ void cTextEdit::drawContents (cApp& app) {
       toggleShowFolded();
     }
     //}}}
+
   //{{{  monoSpaced buttom
   ImGui::SameLine();
   if (toggleButton ("mono", mOptions.mShowMonoSpaced))
@@ -1167,6 +1168,7 @@ void cTextEdit::drawContents (cApp& app) {
   if (toggleButton ("space", mOptions.mShowWhiteSpace))
     toggleShowWhiteSpace();
   //}}}
+
   if (hasPaste()) {
     //{{{  paste button
     ImGui::SameLine();
@@ -1189,6 +1191,7 @@ void cTextEdit::drawContents (cApp& app) {
       }
     }
     //}}}
+
   if (!isReadOnly() && hasUndo()) {
     //{{{  undo button
     ImGui::SameLine();
@@ -1203,6 +1206,7 @@ void cTextEdit::drawContents (cApp& app) {
       redo();
     }
     //}}}
+
   //{{{  insert button
   ImGui::SameLine();
   if (toggleButton ("insert", !mOptions.mOverWrite))
@@ -1213,6 +1217,7 @@ void cTextEdit::drawContents (cApp& app) {
   if (toggleButton ("readOnly", isReadOnly()))
     toggleReadOnly();
   //}}}
+
   //{{{  fontSize button
   ImGui::SameLine();
   ImGui::SetNextItemWidth (3 * ImGui::GetFontSize());
@@ -1235,6 +1240,7 @@ void cTextEdit::drawContents (cApp& app) {
     ImGui::Text (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
     }
   //}}}
+
   //{{{  fullScreen button
   if (app.getPlatform().hasFullScreen()) {
     ImGui::SameLine();
@@ -1249,6 +1255,7 @@ void cTextEdit::drawContents (cApp& app) {
       saveFile();
     }
   //}}}
+
   //{{{  info
   ImGui::SameLine();
   ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
@@ -1258,6 +1265,7 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::SameLine();
   ImGui::Text (fmt::format ("{}:{}",
                ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
+  //}}}
   //}}}
 
   parseComments();
@@ -1290,6 +1298,7 @@ void cTextEdit::drawContents (cApp& app) {
   if (mEdit.mScrollVisible)
     scrollCursorVisible();
 
+  // end childWindow
   ImGui::EndChild();
   ImGui::PopStyleVar (4);
   ImGui::PopStyleColor (6);
@@ -1297,6 +1306,7 @@ void cTextEdit::drawContents (cApp& app) {
     ImGui::PopFont();
   }
 //}}}
+
 
 // private:
 //{{{  gets

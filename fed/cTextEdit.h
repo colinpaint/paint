@@ -76,7 +76,6 @@ public:
     using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
     using tTokenSearch = bool(*)(const char* srcBegin, const char* srcEnd,
                                  const char*& dstBegin, const char*& dstEnd, uint8_t& color);
-
     // static const
     static const cLanguage c();
     static const cLanguage hlsl();
@@ -110,19 +109,17 @@ public:
   //{{{
   class cGlyph {
   public:
-    //{{{
-    cGlyph() : mChar(' '), mColor(0),
+    cGlyph() : mChar(' '), mColor(0), 
                mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
-    //}}}
-    //{{{
-    cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
-                                         mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
-    //}}}
 
+    cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color), 
+                                         mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
+
+    // vars
     uint8_t mChar;
     uint8_t mColor;
 
-    // comment toen flags to speed up whole text comment parsing
+    // commentFlags, speeds up wholeText comment parsing
     bool mCommentSingle:1;
     bool mCommentBegin:1;
     bool mCommentEnd:1;
