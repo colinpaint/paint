@@ -339,17 +339,18 @@ private:
     };
   //}}}
   //{{{
-  class cContext {
+  class cDrawContext {
   public:
     void update (const cOptions& options);
 
-    float measureText (const char* str, const char* strEnd) const;
-    float drawText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd = nullptr);
-    float drawSmallText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd = nullptr);
-    void drawLine (ImVec2 pos1, ImVec2 pos2, uint8_t color);
-    void drawCircle (ImVec2 centre, float radius, uint8_t color);
-    void drawRect (ImVec2 pos1, ImVec2 pos2, uint8_t color);
-    void drawRectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color);
+    float measure (const char* str, const char* strEnd) const;
+    float text (ImVec2 pos, uint8_t color, const char* str, const char* strEnd = nullptr);
+    float smallText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd = nullptr);
+
+    void line (ImVec2 pos1, ImVec2 pos2, uint8_t color);
+    void circle (ImVec2 centre, float radius, uint8_t color);
+    void rect (ImVec2 pos1, ImVec2 pos2, uint8_t color);
+    void rectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color);
 
     float mFontSize = 0.f;
     float mGlyphWidth = 0.f;
@@ -358,10 +359,9 @@ private:
     float mLeftPad = 0.f;
     float mLineNumberWidth = 0.f;
 
-    std::vector <ImU32> mPalette;
-
   private:
     ImDrawList* mDrawList = nullptr;
+
     ImFont* mFont = nullptr;
 
     float mFontAtlasSize = 0.f;
@@ -578,7 +578,7 @@ private:
 
   cOptions mOptions;
   cDoc mDoc;
-  cContext mContext;
+  cDrawContext mDrawContext;
   cEdit mEdit;
 
   std::chrono::system_clock::time_point mCursorFlashTimePoint;

@@ -1270,13 +1270,13 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::PushStyleColor (ImGuiCol_ScrollbarGrabActive, kPalette[eScrollActive]);
   ImGui::PushStyleColor (ImGuiCol_Text, kPalette[eText]);
   ImGui::PushStyleColor (ImGuiCol_ChildBg, kPalette[eBackground]);
-  ImGui::PushStyleVar (ImGuiStyleVar_ScrollbarSize, mContext.mGlyphWidth*2.f);
+  ImGui::PushStyleVar (ImGuiStyleVar_ScrollbarSize, mDrawContext.mGlyphWidth*2.f);
   ImGui::PushStyleVar (ImGuiStyleVar_ScrollbarRounding, 2.f);
   ImGui::PushStyleVar (ImGuiStyleVar_FramePadding, {0.f,0.f});
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, {0.f,0.f});
   ImGui::BeginChild ("##s", {0.f,0.f}, false,
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-  mContext.update (mOptions);
+  mDrawContext.update (mOptions);
 
   handleKeyboard();
 
@@ -1301,7 +1301,7 @@ void cTextEdit::drawContents (cApp& app) {
 //{{{
 uint32_t cTextEdit::getNumPageLines() const {
   float height = ImGui::GetWindowHeight() - 20.f;
-  return static_cast<uint32_t>(floor (height / mContext.mLineHeight));
+  return static_cast<uint32_t>(floor (height / mDrawContext.mLineHeight));
   }
 //}}}
 
@@ -1366,7 +1366,7 @@ float cTextEdit::getTextWidth (sPosition position) {
         length--;
         }
 
-      distance += mContext.measureText (str.data(), str.data() + j);
+      distance += mDrawContext.measure (str.data(), str.data() + j);
       }
     }
 
@@ -1518,7 +1518,7 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
         length--;
         }
 
-      columnWidth = mContext.measureText (str.data(), str.data() + strIndex);
+      columnWidth = mDrawContext.measure (str.data(), str.data() + strIndex);
       if (columnX + (columnWidth/2.f) > posX)
         break;
 
@@ -1568,7 +1568,7 @@ uint32_t cTextEdit::getTabColumn (uint32_t column) {
 float cTextEdit::getTabEndPosX (float xPos) {
 // return tabEnd xPos of tab containing xPos
 
-  float tabWidthPixels = mDoc.mTabSize * mContext.mGlyphWidth;
+  float tabWidthPixels = mDoc.mTabSize * mDrawContext.mGlyphWidth;
   return (1.f + floor ((1.f + xPos) / tabWidthPixels)) * tabWidthPixels;
   }
 //}}}
@@ -1664,24 +1664,24 @@ void cTextEdit::scrollCursorVisible() {
   // up,down scroll
   uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
   uint32_t minIndex =
-    min (getMaxLineIndex(), static_cast<uint32_t>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mContext.mLineHeight)));
+    min (getMaxLineIndex(), static_cast<uint32_t>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mDrawContext.mLineHeight)));
   if (lineIndex >= minIndex - 3)
-    ImGui::SetScrollY (max (0.f, (lineIndex + 3) * mContext.mLineHeight) - ImGui::GetWindowHeight());
+    ImGui::SetScrollY (max (0.f, (lineIndex + 3) * mDrawContext.mLineHeight) - ImGui::GetWindowHeight());
   else {
-    uint32_t maxIndex = static_cast<uint32_t>(floor (ImGui::GetScrollY() / mContext.mLineHeight));
+    uint32_t maxIndex = static_cast<uint32_t>(floor (ImGui::GetScrollY() / mDrawContext.mLineHeight));
     if (lineIndex < maxIndex + 2)
-      ImGui::SetScrollY (max (0.f, (lineIndex - 2) * mContext.mLineHeight));
+      ImGui::SetScrollY (max (0.f, (lineIndex - 2) * mDrawContext.mLineHeight));
     }
 
   // left,right scroll
-  float textWidth = mContext.mLineNumberWidth + getTextWidth (position);
+  float textWidth = mDrawContext.mLineNumberWidth + getTextWidth (position);
   uint32_t minWidth = static_cast<uint32_t>(floor (ImGui::GetScrollX()));
-  if (textWidth - (3 * mContext.mGlyphWidth) < minWidth)
-    ImGui::SetScrollX (max (0.f, textWidth - (3 * mContext.mGlyphWidth)));
+  if (textWidth - (3 * mDrawContext.mGlyphWidth) < minWidth)
+    ImGui::SetScrollX (max (0.f, textWidth - (3 * mDrawContext.mGlyphWidth)));
   else {
     uint32_t maxWidth = static_cast<uint32_t>(ceil (ImGui::GetScrollX() + ImGui::GetWindowWidth()));
-    if (textWidth + (3 * mContext.mGlyphWidth) > maxWidth)
-      ImGui::SetScrollX (max (0.f, textWidth + (3 * mContext.mGlyphWidth) - ImGui::GetWindowWidth()));
+    if (textWidth + (3 * mDrawContext.mGlyphWidth) > maxWidth)
+      ImGui::SetScrollX (max (0.f, textWidth + (3 * mDrawContext.mGlyphWidth) - ImGui::GetWindowWidth()));
     }
 
   mCursorFlashTimePoint = system_clock::now();
@@ -2205,8 +2205,9 @@ uint32_t cTextEdit::trimTrailingSpace() {
     lineNumber++;
     }
 
-  cLog::log (LOGINFO, fmt::format ("highest {}:{} trimmedSpaces:{}",
-                                   nonEmptyWaterMark+1, mDoc.mLines.size(), trimmedSpaces));
+  if ((nonEmptyWaterMark != mDoc.mLines.size()-1) || (trimmedSpaces > 0))
+    cLog::log (LOGINFO, fmt::format ("highest {}:{} trimmedSpaces:{}",
+                                     nonEmptyWaterMark+1, mDoc.mLines.size(), trimmedSpaces));
   return nonEmptyWaterMark;
   }
 //}}}
@@ -2315,7 +2316,7 @@ void cTextEdit::selectText (uint32_t lineNumber, float posX, bool selectWord) {
 //{{{
 void cTextEdit::dragSelectText (uint32_t lineNumber, ImVec2 pos) {
 
-  int numDragLines = static_cast<int>(pos.y / mContext.mLineHeight);
+  int numDragLines = static_cast<int>(pos.y / mDrawContext.mLineHeight);
   if (isFolded()) {
     if (numDragLines) {
       // check multiline drag across folds
@@ -2347,7 +2348,7 @@ void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
 //   - works because dragging does not change vector
 // - otherwise we would have to delay it to after the whole draw
 
-  int numDragLines = static_cast<int>(posY / mContext.mLineHeight);
+  int numDragLines = static_cast<int>(posY / mDrawContext.mLineHeight);
 
   if (isFolded()) {
     uint32_t lineIndex = max (0u, min (getNumFoldLines()-1, getLineIndexFromNumber (lineNumber) + numDragLines));
@@ -2381,13 +2382,13 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
     if ((strIndex > 0) && (strIndex < str.max_size()) &&
         ((color != prevColor) || (glyphs[glyphIndex].mChar == '\t') || (glyphs[glyphIndex].mChar == ' '))) {
       // draw colored glyphs, seperated by colorChange,tab,space
-      pos.x += mContext.drawText (pos, prevColor, str.data(), str.data() + strIndex);
+      pos.x += mDrawContext.text (pos, prevColor, str.data(), str.data() + strIndex);
       strIndex = 0;
       }
 
     if (glyphs[glyphIndex].mChar == '\t') {
       //{{{  tab
-      ImVec2 arrowLeftPos = {pos.x + 1.f, pos.y + mContext.mFontSize/2.f};
+      ImVec2 arrowLeftPos = {pos.x + 1.f, pos.y + mDrawContext.mFontSize/2.f};
 
       // apply tab
       pos.x = getTabEndPosX (pos.x);
@@ -2395,15 +2396,15 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
       if (isDrawWhiteSpace()) {
         // draw tab arrow
         ImVec2 arrowRightPos = {pos.x - 1.f, arrowLeftPos.y};
-        mContext.drawLine (arrowLeftPos, arrowRightPos, eTab);
+        mDrawContext.line (arrowLeftPos, arrowRightPos, eTab);
 
-        ImVec2 arrowTopPos = {arrowRightPos.x - (mContext.mFontSize/4.f) - 1.f,
-                              arrowRightPos.y - (mContext.mFontSize/4.f)};
-        mContext.drawLine (arrowRightPos, arrowTopPos, eTab);
+        ImVec2 arrowTopPos = {arrowRightPos.x - (mDrawContext.mFontSize/4.f) - 1.f,
+                              arrowRightPos.y - (mDrawContext.mFontSize/4.f)};
+        mDrawContext.line (arrowRightPos, arrowTopPos, eTab);
 
-        ImVec2 arrowBotPos = {arrowRightPos.x - (mContext.mFontSize/4.f) - 1.f,
-                              arrowRightPos.y + (mContext.mFontSize/4.f)};
-        mContext.drawLine (arrowRightPos, arrowBotPos, eTab);
+        ImVec2 arrowBotPos = {arrowRightPos.x - (mDrawContext.mFontSize/4.f) - 1.f,
+                              arrowRightPos.y + (mDrawContext.mFontSize/4.f)};
+        mDrawContext.line (arrowRightPos, arrowBotPos, eTab);
         }
       }
       //}}}
@@ -2411,11 +2412,11 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
       //{{{  space
       if (isDrawWhiteSpace()) {
         // draw circle
-        ImVec2 centre = {pos.x  + mContext.mGlyphWidth/2.f, pos.y + mContext.mFontSize/2.f};
-        mContext.drawCircle (centre, 2.f, eWhiteSpace);
+        ImVec2 centre = {pos.x  + mDrawContext.mGlyphWidth/2.f, pos.y + mDrawContext.mFontSize/2.f};
+        mDrawContext.circle (centre, 2.f, eWhiteSpace);
         }
 
-      pos.x += mContext.mGlyphWidth;
+      pos.x += mDrawContext.mGlyphWidth;
       }
       //}}}
     else {
@@ -2429,7 +2430,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
     }
 
   if (strIndex > 0) // draw any remaining glyphs
-    pos.x += mContext.drawText (pos, prevColor, str.data(), str.data() + strIndex);
+    pos.x += mDrawContext.text (pos, prevColor, str.data(), str.data() + strIndex);
 
   return pos.x - firstPosX;
   }
@@ -2450,14 +2451,14 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
   ImVec2 leftPos = ImGui::GetCursorScreenPos();
   ImVec2 curPos = leftPos;
 
-  float leftPadWidth = mContext.mLeftPad;
+  float leftPadWidth = mDrawContext.mLeftPad;
   cLine& line = getLine (lineNumber);
   if (isDrawLineNumber()) {
     //{{{  draw lineNumber
     curPos.x += leftPadWidth;
 
     if (mOptions.mShowLineDebug)
-      mContext.mLineNumberWidth = mContext.drawText (curPos, eLineNumber,
+      mDrawContext.mLineNumberWidth = mDrawContext.text (curPos, eLineNumber,
         fmt::format ("{:4d}{}{}{}{}{}{}{}{}{:4d}{:2d}{:2d}{:2d} ",
           lineNumber,
           line.mCommentSingle? 'c' : ' ',
@@ -2473,12 +2474,12 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
           line.mFirstGlyph,
           line.mFirstColumn).c_str());
     else
-      mContext.mLineNumberWidth = mContext.drawSmallText (curPos, eLineNumber,
+      mDrawContext.mLineNumberWidth = mDrawContext.smallText (curPos, eLineNumber,
                                                           fmt::format ("{:4d} ", lineNumber+1).c_str());
 
     // add invisibleButton, gobble up leftPad
     ImGui::InvisibleButton (fmt::format ("##l{}", lineNumber).c_str(),
-                            {leftPadWidth + mContext.mLineNumberWidth, mContext.mLineHeight});
+                            {leftPadWidth + mDrawContext.mLineNumberWidth, mDrawContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
         dragSelectLine (lineNumber, ImGui::GetMousePos().y - curPos.y);
@@ -2487,12 +2488,12 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       }
 
     leftPadWidth = 0.f;
-    curPos.x += mContext.mLineNumberWidth;
+    curPos.x += mDrawContext.mLineNumberWidth;
     ImGui::SameLine();
     }
     //}}}
   else
-    mContext.mLineNumberWidth = 0.f;
+    mDrawContext.mLineNumberWidth = 0.f;
 
   // draw text
   ImVec2 textPos = curPos;
@@ -2504,15 +2505,15 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       curPos.x += leftPadWidth;
 
       // add the indent
-      float indentWidth = line.mIndent * mContext.mGlyphWidth;
+      float indentWidth = line.mIndent * mDrawContext.mGlyphWidth;
       curPos.x += indentWidth;
 
-      float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen.c_str());
+      float prefixWidth = mDrawContext.text (curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen.c_str());
       curPos.x += prefixWidth;
 
       // add foldPrefix invisibleButton, action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
-                              {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
+                              {leftPadWidth + indentWidth + prefixWidth, mDrawContext.mLineHeight});
       if (ImGui::IsItemActive() && !line.mFoldPressed) {
         // close fold
         line.mFoldPressed = true;
@@ -2524,12 +2525,12 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       // draw glyphs
       textPos.x = curPos.x;
       float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
-      if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
-        glyphsWidth = mContext.mGlyphWidth;
+      if (glyphsWidth < mDrawContext.mGlyphWidth) // widen to scroll something to pick
+        glyphsWidth = mDrawContext.mGlyphWidth;
 
       // add invisibleButton
       ImGui::SameLine();
-      ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
+      ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(), {glyphsWidth, mDrawContext.mLineHeight});
       if (ImGui::IsItemActive())
         selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
 
@@ -2542,16 +2543,16 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       curPos.x += leftPadWidth;
 
       // add the indent
-      float indentWidth = line.mIndent * mContext.mGlyphWidth;
+      float indentWidth = line.mIndent * mDrawContext.mGlyphWidth;
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth = mContext.drawText (curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed.c_str());
+      float prefixWidth = mDrawContext.text (curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed.c_str());
       curPos.x += prefixWidth;
 
       // add invisibleButton, indent + prefix wide, action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
-                              {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
+                              {leftPadWidth + indentWidth + prefixWidth, mDrawContext.mLineHeight});
       if (ImGui::IsItemActive() && !line.mFoldPressed) {
         // open fold only
         line.mFoldPressed = true;
@@ -2563,12 +2564,12 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       // draw glyphs
       textPos.x = curPos.x;
       float glyphsWidth = drawGlyphs (curPos, getGlyphs (line.mFoldCommentLineNumber), line.mFirstGlyph, eFoldClosed);
-      if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
-        glyphsWidth = mContext.mGlyphWidth;
+      if (glyphsWidth < mDrawContext.mGlyphWidth) // widen to scroll something to pick
+        glyphsWidth = mDrawContext.mGlyphWidth;
 
       // add invisible button
       ImGui::SameLine();
-      ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {glyphsWidth, mContext.mLineHeight});
+      ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {glyphsWidth, mDrawContext.mLineHeight});
       if (ImGui::IsItemActive())
         selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
 
@@ -2581,14 +2582,14 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     curPos.x += leftPadWidth;
 
     // add the indent
-    float indentWidth = line.mIndent * mContext.mGlyphWidth;
+    float indentWidth = line.mIndent * mDrawContext.mGlyphWidth;
     curPos.x += indentWidth;
 
-    float prefixWidth = mContext.drawText (curPos, eFoldOpen, mOptions.mLanguage.mFoldEnd.c_str());
+    float prefixWidth = mDrawContext.text (curPos, eFoldOpen, mOptions.mLanguage.mFoldEnd.c_str());
 
     // add invisibleButton
     ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
-                            {leftPadWidth + indentWidth + prefixWidth, mContext.mLineHeight});
+                            {leftPadWidth + indentWidth + prefixWidth, mDrawContext.mLineHeight});
     if (ImGui::IsItemActive()) // closeFold at foldEnd, action on press
       closeFold (lineNumber);
 
@@ -2602,11 +2603,11 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     // drawGlyphs
     textPos.x = curPos.x;
     float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
-    if (glyphsWidth < mContext.mGlyphWidth) // widen to scroll something to pick
-      glyphsWidth = mContext.mGlyphWidth;
+    if (glyphsWidth < mDrawContext.mGlyphWidth) // widen to scroll something to pick
+      glyphsWidth = mDrawContext.mGlyphWidth;
 
     // add invisibleButton
-    ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {leftPadWidth + glyphsWidth, mContext.mLineHeight});
+    ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {leftPadWidth + glyphsWidth, mDrawContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
         dragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - curPos.y});
@@ -2631,19 +2632,19 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     xEnd = getTextWidth ((mEdit.mCursor.mSelectEnd < lineEndPosition) ? mEdit.mCursor.mSelectEnd : lineEndPosition);
 
   if (mEdit.mCursor.mSelectEnd.mLineNumber > lineNumber)
-    xEnd += mContext.mGlyphWidth;
+    xEnd += mDrawContext.mGlyphWidth;
 
   if ((xBegin != -1) && (xEnd != -1) && (xBegin < xEnd))
-    mContext.drawRect ({textPos.x + xBegin, textPos.y}, {textPos.x + xEnd, textPos.y + mContext.mLineHeight}, eSelectHighlight);
+    mDrawContext.rect ({textPos.x + xBegin, textPos.y}, {textPos.x + xEnd, textPos.y + mDrawContext.mLineHeight}, eSelectHighlight);
   //}}}
 
   if (lineNumber == mEdit.mCursor.mPosition.mLineNumber) {
     // line has cursor
     if (!hasSelect()) {
       //{{{  draw cursor highlight
-      ImVec2 brPos = {curPos.x, curPos.y + mContext.mLineHeight};
-      mContext.drawRect (leftPos, brPos, eCursorLineFill);
-      mContext.drawRectLine (leftPos, brPos, eCursorLineEdge);
+      ImVec2 brPos = {curPos.x, curPos.y + mDrawContext.mLineHeight};
+      mDrawContext.rect (leftPos, brPos, eCursorLineFill);
+      mDrawContext.rectLine (leftPos, brPos, eCursorLineEdge);
       }
       //}}}
     //{{{  draw flashing cursor
@@ -2662,7 +2663,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
           // widen overwrite char cursor
           array <char,2> str;
           str[0] = glyphs[characterIndex].mChar;
-          cursorWidth = mContext.measureText (str.data(), str.data()+1);
+          cursorWidth = mDrawContext.measure (str.data(), str.data()+1);
           }
         }
       else // insert cursor
@@ -2670,8 +2671,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
       // draw cursor
       ImVec2 tlPos = {textPos.x + cursorPosX - 1.f, textPos.y};
-      ImVec2 brPos = {tlPos.x + cursorWidth, curPos.y + mContext.mLineHeight};
-      mContext.drawRect (tlPos, brPos, eCursor);
+      ImVec2 brPos = {tlPos.x + cursorWidth, curPos.y + mDrawContext.mLineHeight};
+      mDrawContext.rect (tlPos, brPos, eCursor);
       }
 
     if (elapsed > 800ms)
@@ -2745,7 +2746,7 @@ void cTextEdit::drawUnfolded() {
 
   // clipper begin
   ImGuiListClipper clipper;
-  clipper.Begin (getNumLines(), mContext.mLineHeight);
+  clipper.Begin (getNumLines(), mDrawContext.mLineHeight);
   clipper.Step();
 
   // clipper iterate
@@ -2895,9 +2896,9 @@ void cTextEdit::handleKeyboard() {
   }
 //}}}
 
-//{{{  cTextEdit::cContext
+//{{{  cTextEdit::cDrawContext
 //{{{
-void cTextEdit::cContext::update (const cOptions& options) {
+void cTextEdit::cDrawContext::update (const cOptions& options) {
 // update draw context
 
   mDrawList = ImGui::GetWindowDrawList();
@@ -2918,7 +2919,7 @@ void cTextEdit::cContext::update (const cOptions& options) {
 //}}}
 
 //{{{
-float cTextEdit::cContext::measureText (const char* str, const char* strEnd) const {
+float cTextEdit::cDrawContext::measure (const char* str, const char* strEnd) const {
 // return width of text
 
   return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
@@ -2926,7 +2927,7 @@ float cTextEdit::cContext::measureText (const char* str, const char* strEnd) con
 //}}}
 
 //{{{
-float cTextEdit::cContext::drawText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
+float cTextEdit::cDrawContext::text (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
  // draw and return width of text
 
   mDrawList->AddText (mFont, mFontSize, pos, kPalette[color], str, strEnd);
@@ -2934,7 +2935,7 @@ float cTextEdit::cContext::drawText (ImVec2 pos, uint8_t color, const char* str,
   }
 //}}}
 //{{{
-float cTextEdit::cContext::drawSmallText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
+float cTextEdit::cDrawContext::smallText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
  // draw and return width of small text
 
   pos.y += mFontSmallOffset;
@@ -2944,22 +2945,22 @@ float cTextEdit::cContext::drawSmallText (ImVec2 pos, uint8_t color, const char*
 //}}}
 
 //{{{
-void cTextEdit::cContext::drawLine (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+void cTextEdit::cDrawContext::line (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
   mDrawList->AddLine (pos1, pos2, kPalette[color]);
   }
 //}}}
 //{{{
-void cTextEdit::cContext::drawCircle (ImVec2 centre, float radius, uint8_t color) {
+void cTextEdit::cDrawContext::circle (ImVec2 centre, float radius, uint8_t color) {
   mDrawList->AddCircleFilled (centre, radius, kPalette[color], 4);
   }
 //}}}
 //{{{
-void cTextEdit::cContext::drawRect (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+void cTextEdit::cDrawContext::rect (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
   mDrawList->AddRectFilled (pos1, pos2, kPalette[color]);
   }
 //}}}
 //{{{
-void cTextEdit::cContext::drawRectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+void cTextEdit::cDrawContext::rectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
   mDrawList->AddRect (pos1, pos2, kPalette[color], 1.f);
   }
 //}}}
