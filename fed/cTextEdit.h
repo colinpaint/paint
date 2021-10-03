@@ -473,6 +473,7 @@ private:
   cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
   cLine::tGlyphs& getGlyphs (uint32_t lineNumber) { return getLine (lineNumber).mGlyphs; }
   uint32_t getNumGlyphs (uint32_t lineNumber) { return static_cast<uint32_t>(getLine (lineNumber).mGlyphs.size()); }
+  sPosition getNextLinePosition (sPosition position);
 
   // column
   uint32_t getCharacterIndex (sPosition position);
@@ -514,7 +515,8 @@ private:
   //}}}
   //{{{  delete
   void removeLine (uint32_t beginPosition, uint32_t endPosition);
-  void removeLine (uint32_t index);
+  void removeLine (uint32_t lineNumber);
+
   void deleteRange (sPosition beginPosition, sPosition endPosition);
   void deleteSelect();
   //}}}

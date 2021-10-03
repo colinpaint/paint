@@ -620,32 +620,42 @@ void cTextEdit::selectAll() {
 //{{{
 void cTextEdit::copy() {
 
-  if (hasSelect())
+  if (hasSelect()) {
     // copy selected text to clipboard
     ImGui::SetClipboardText (getSelectedText().c_str());
+    setDeselect();
+    }
+
   else {
     // copy current line to clipboard
-    string text;
-    for (const auto& glyph : getGlyphs (getCursorPosition().mLineNumber))
-      text.push_back (glyph.mChar);
+    sPosition position = {getCursorPosition().mLineNumber, 0};
+    sPosition nextLinePosition = getNextLinePosition (position);
+    string text = getText (position, nextLinePosition);
+
     ImGui::SetClipboardText (text.c_str());
+    moveLineDown();
     }
   }
 //}}}
 //{{{
 void cTextEdit::cut() {
 
-  if (isReadOnly())
+  if (isReadOnly()) {
+    // just copy
     copy();
+    }
 
   else if (hasSelect()) {
+    // cut selected range
     cUndo undo;
     undo.mBefore = mEdit.mCursor;
     undo.mRemove = getSelectedText();
     undo.mRemoveBegin = mEdit.mCursor.mSelectBegin;
     undo.mRemoveEnd = mEdit.mCursor.mSelectEnd;
 
-    // copy selected text
+    // copy selected text to clipboard
+    ImGui::SetClipboardText (getSelectedText().c_str());
+
     copy();
 
     // delete selected text
@@ -654,6 +664,26 @@ void cTextEdit::cut() {
     undo.mAfter = mEdit.mCursor;
     mEdit.addUndo (undo);
     }
+
+  else {
+    // cut current line, copy to clipboard
+    sPosition position = {getCursorPosition().mLineNumber,0};
+    sPosition nextLinePosition = getNextLinePosition (position);
+    string text = getText (position, nextLinePosition);
+
+    cUndo undo;
+    undo.mBefore = mEdit.mCursor;
+    undo.mRemove = text;
+    undo.mRemoveBegin = position;
+    undo.mRemoveEnd = nextLinePosition;
+    ImGui::SetClipboardText (text.c_str());
+
+    removeLine (position.mLineNumber);
+
+    undo.mAfter = mEdit.mCursor;
+    mEdit.addUndo (undo);
+    }
+
   }
 //}}}
 //{{{
@@ -677,7 +707,9 @@ void cTextEdit::paste() {
     string clipboardText = ImGui::GetClipboardText();
     undo.mAdd = clipboardText;
     undo.mAddBegin = getCursorPosition();
+
     insertText (clipboardText);
+
     undo.mAddEnd = getCursorPosition();
     undo.mAfter = mEdit.mCursor;
     mEdit.addUndo (undo);
@@ -1279,7 +1311,7 @@ uint32_t cTextEdit::getNumPageLines() const {
 // text
 //{{{
 string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
-// get psotion range as string with lineFeed line breaks
+// get position range as string with lineFeed line breaks
 
   uint32_t beginLineNumber = beginPosition.mLineNumber;
   uint32_t endLineNumber = endPosition.mLineNumber;
@@ -1379,6 +1411,16 @@ uint32_t cTextEdit::getLineIndexFromNumber (uint32_t lineNumber) const {
     }
   else
     return uint32_t(it - mDoc.mFoldLines.begin());
+  }
+//}}}
+
+// line
+//{{{
+cTextEdit::sPosition cTextEdit::getNextLinePosition (sPosition position) {
+
+  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
+  uint32_t toLineNumber = getLineNumberFromIndex (lineIndex + 1);
+  return {toLineNumber, 0};
   }
 //}}}
 
@@ -1860,13 +1902,14 @@ void cTextEdit::removeLine (uint32_t beginPosition, uint32_t endPosition) {
   }
 //}}}
 //{{{
-void cTextEdit::removeLine (uint32_t index) {
+void cTextEdit::removeLine (uint32_t lineNumber) {
 
-  mDoc.mLines.erase (mDoc.mLines.begin() + index);
+  mDoc.mLines.erase (mDoc.mLines.begin() + lineNumber);
   mEdit.mCheckComments = true;
   mDoc.mEdited = true;
   }
 //}}}
+
 //{{{
 void cTextEdit::deleteRange (sPosition beginPosition, sPosition endPosition) {
 
@@ -2782,14 +2825,14 @@ void cTextEdit::handleKeyboard() {
   //}}}
   const vector <sActionKey> kActionKeys = {
   //  alt    ctrl   shift  guiKey               writable      function
-     {false, true,  false, ImGuiKey_X,          true,  [this]{cut();}},
-     {false, true,  false, ImGuiKey_V,          true,  [this]{paste();}},
      {false, false, false, ImGuiKey_Delete,     true,  [this]{deleteIt();}},
      {false, false, false, ImGuiKey_Backspace,  true,  [this]{backspace();}},
-     {false, true,  false, ImGuiKey_Z,          true,  [this]{undo();}},
-     {false, true,  false, ImGuiKey_Y,          true,  [this]{redo();}},
      {false, false, false, ImGuiKey_Enter,      true,  [this]{enterKey();}},
      {false, false, false, ImGuiKey_Tab,        true,  [this]{tabKey();}},
+     {false, true,  false, ImGuiKey_X,          true,  [this]{cut();}},
+     {false, true,  false, ImGuiKey_V,          true,  [this]{paste();}},
+     {false, true,  false, ImGuiKey_Z,          true,  [this]{undo();}},
+     {false, true,  false, ImGuiKey_Y,          true,  [this]{redo();}},
      // edit without change
      {false, true,  false, ImGuiKey_C,          false, [this]{copy();}},
      {false, true,  false, ImGuiKey_A,          false, [this]{selectAll();}},
@@ -2947,9 +2990,10 @@ const cTextEdit::cLanguage cTextEdit::cLanguage::c() {
   for (auto& knownWord : kKnownWords)
     language.mKnownWords.insert (knownWord);
 
+  // faster token search
   language.mTokenSearch = [](const char* srcBegin, const char* srcEnd,
                              const char*& tokenBegin, const char*& tokenEnd, uint8_t& color) -> bool {
-    // tokenSearch  lambda
+    // tokenSearch lambda
     color = eUndefined;
     while ((srcBegin < srcEnd) && isascii (*srcBegin) && isblank (*srcBegin))
       srcBegin++;
@@ -2971,6 +3015,7 @@ const cTextEdit::cLanguage cTextEdit::cLanguage::c() {
     return (color != eUndefined);
     };
 
+  // regex for preProc
   language.mRegexList.push_back (
     make_pair (regex ("[ \\t]*#[ \\t]*[a-zA-Z_]+", regex_constants::optimize), (uint8_t)ePreProc));
 
