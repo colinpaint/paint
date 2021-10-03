@@ -1666,7 +1666,8 @@ void cTextEdit::scrollCursorVisible() {
   // up,down scroll
   uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
   uint32_t minIndex =
-    min (getMaxLineIndex(), static_cast<uint32_t>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mDrawContext.mLineHeight)));
+    min (getMaxLineIndex(), static_cast<uint32_t>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) /
+                                                          mDrawContext.mLineHeight)));
   if (lineIndex >= minIndex - 3)
     ImGui::SetScrollY (max (0.f, (lineIndex + 3) * mDrawContext.mLineHeight) - ImGui::GetWindowHeight());
   else {
@@ -2476,8 +2477,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
           line.mFirstGlyph,
           line.mFirstColumn).c_str());
     else
-      mDrawContext.mLineNumberWidth = mDrawContext.smallText (curPos, eLineNumber,
-                                                          fmt::format ("{:4d} ", lineNumber+1).c_str());
+      mDrawContext.mLineNumberWidth = mDrawContext.smallText (
+        curPos, eLineNumber, fmt::format ("{:4d} ", lineNumber+1).c_str());
 
     // add invisibleButton, gobble up leftPad
     ImGui::InvisibleButton (fmt::format ("##l{}", lineNumber).c_str(),
@@ -2526,17 +2527,14 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
       // draw glyphs
       textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
-      if (glyphsWidth < mDrawContext.mGlyphWidth) // widen to scroll something to pick
-        glyphsWidth = mDrawContext.mGlyphWidth;
+      curPos.x += drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
 
-      // add invisibleButton
+      // add invisibleButton, fills rest of line for easy picking
       ImGui::SameLine();
-      ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(), {glyphsWidth, mDrawContext.mLineHeight});
+      ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(),
+                              {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
       if (ImGui::IsItemActive())
         selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
-
-      curPos.x += glyphsWidth;
       }
       //}}}
     else {
@@ -2565,17 +2563,14 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
       // draw glyphs
       textPos.x = curPos.x;
-      float glyphsWidth = drawGlyphs (curPos, getGlyphs (line.mFoldCommentLineNumber), line.mFirstGlyph, eFoldClosed);
-      if (glyphsWidth < mDrawContext.mGlyphWidth) // widen to scroll something to pick
-        glyphsWidth = mDrawContext.mGlyphWidth;
+      curPos.x += drawGlyphs (curPos, getGlyphs (line.mFoldCommentLineNumber), line.mFirstGlyph, eFoldClosed);
 
-      // add invisible button
+      // add invisibleButton, fills rest of line for easy picking
       ImGui::SameLine();
-      ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {glyphsWidth, mDrawContext.mLineHeight});
+      ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(),
+                              {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
       if (ImGui::IsItemActive())
         selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
-
-      curPos.x += glyphsWidth;
       }
       //}}}
     }
@@ -2604,20 +2599,17 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
     // drawGlyphs
     textPos.x = curPos.x;
-    float glyphsWidth = drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
-    if (glyphsWidth < mDrawContext.mGlyphWidth) // widen to scroll something to pick
-      glyphsWidth = mDrawContext.mGlyphWidth;
+    curPos.x += drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
 
-    // add invisibleButton
-    ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {leftPadWidth + glyphsWidth, mDrawContext.mLineHeight});
+    // add invisibleButton, fills rest of line for easy picking
+    ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(),
+                            {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
-        dragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - curPos.y});
+        dragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
       else if (ImGui::IsMouseClicked (0))
         selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
       }
-
-    curPos.x += glyphsWidth;
     }
     //}}}
 

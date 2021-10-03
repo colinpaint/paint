@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.16)
 cmake_policy (SET CMP0072 NEW)
 
 set (BUILD_FED ON)
+set (BUILD_FILESYSTEM ON)
 set (BUILD_CAPTURE OFF)
 set (BUILD_PAINTBOX OFF)
 set (BUILD_AV OFF)
@@ -80,6 +81,20 @@ if (BUILD_PAINTBOX OR BUILD_FED)
     target_include_directories (implot PUBLIC implot imgui utils)
   endif()
 endif()
+
+if (BUILD_FILESYSTEM)
+  project (filesystem)
+    file (GLOB HEADER_FILES *.h utils/*.h)
+    file (GLOB SOURCE_FILES ../filesystem/main.cpp)
+
+    add_executable (filesystem ${SOURCE_FILES} ${HEADER_FILES})
+    target_link_libraries (filesystem PRIVATE utils)
+
+    if (NOT MSVC)
+      target_link_libraries (filesystem PRIVATE stdc++fs)
+      target_link_options (filesystem PRIVATE -no-pie)
+    endif()
+  endif()
 
 if (BUILD_FED)
   project (fed VERSION 1.0.0)
