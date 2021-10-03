@@ -78,29 +78,32 @@ public:
                                  const char*& dstBegin, const char*& dstEnd, uint8_t& color);
 
     // static const
-    static const cLanguage& c();
-    static const cLanguage& hlsl();
-    static const cLanguage& glsl();
+    static const cLanguage c();
+    static const cLanguage hlsl();
+    static const cLanguage glsl();
 
     // vars
     std::string mName;
+    bool mAutoIndentation = true;
 
+    // comment tokens
     std::string mCommentSingle;
     std::string mCommentBegin;
     std::string mCommentEnd;
-    std::string mFoldBeginMarker;
-    std::string mFoldEndMarker;
 
-    std::string mFoldBeginOpen;
-    std::string mFoldBeginClosed;
-    std::string mFoldEnd;
+    // fold tokens
+    std::string mFoldBeginToken;
+    std::string mFoldEndToken;
 
-    bool mAutoIndentation;
+    // fold indicators
+    std::string mFoldBeginOpen = "{{{ ";
+    std::string mFoldBeginClosed = "... ";
+    std::string mFoldEnd = "}}}";
 
     std::unordered_set <std::string> mKeyWords;
     std::unordered_set <std::string> mKnownWords;
 
-    tTokenSearch mTokenSearch;
+    tTokenSearch mTokenSearch = nullptr;
     cLanguage::tRegex mRegexList;
     };
   //}}}

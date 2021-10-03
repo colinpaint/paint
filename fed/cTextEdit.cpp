@@ -961,9 +961,9 @@ void cTextEdit::createFold() {
     return;
 
   // !!!! temp string for now !!!!
-  string text = mOptions.mLanguage.mFoldBeginMarker +
+  string text = mOptions.mLanguage.mFoldBeginToken +
                  "  new fold - loads of detail to implement\n\n" +
-                 mOptions.mLanguage.mFoldEndMarker +
+                 mOptions.mLanguage.mFoldEndToken +
                  "\n";
   cUndo undo;
   undo.mBefore = mEdit.mCursor;
@@ -2046,16 +2046,16 @@ void cTextEdit::parseLine (cLine& line) {
     } while (pos != string::npos);
   //}}}
   //{{{  find foldBegin token
-  size_t foldBeginPos = glyphString.find (mOptions.mLanguage.mFoldBeginMarker, indentPos);
+  size_t foldBeginPos = glyphString.find (mOptions.mLanguage.mFoldBeginToken, indentPos);
   line.mFoldBegin = (foldBeginPos != string::npos);
   //}}}
   //{{{  find foldEnd token
-  size_t foldEndPos = glyphString.find (mOptions.mLanguage.mFoldEndMarker, indentPos);
+  size_t foldEndPos = glyphString.find (mOptions.mLanguage.mFoldEndToken, indentPos);
   line.mFoldEnd = (foldEndPos != string::npos);
   //}}}
   if (line.mFoldBegin) {
     // does foldBegin have a comment?
-    line.mCommentFold = glyphString.size() != (foldBeginPos + mOptions.mLanguage.mFoldBeginMarker.size());
+    line.mCommentFold = glyphString.size() != (foldBeginPos + mOptions.mLanguage.mFoldBeginToken.size());
     mDoc.mHasFolds = true;
     }
 
@@ -2652,14 +2652,14 @@ uint32_t cTextEdit::drawFolded() {
       if (line.mFoldOpen) {
         // draw openFold line
         line.mFoldCommentLineNumber = lineNumber;
-        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
+        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
         line.mFirstColumn = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginOpen.size());
         drawLine (lineNumber++, lineIndex++);
         }
       else if (line.mCommentFold) {
         // draw closedFold with comment line
         line.mFoldCommentLineNumber = lineNumber;
-        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginMarker.size() + 2);
+        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
         line.mFirstColumn = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginOpen.size());
         drawLine (lineNumber++, lineIndex++);
 
@@ -2927,164 +2927,138 @@ void cTextEdit::cContext::drawRectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color)
 
 // cTextEdit::cLanguage
 //{{{
-const cTextEdit::cLanguage& cTextEdit::cLanguage::c() {
+const cTextEdit::cLanguage cTextEdit::cLanguage::c() {
 
-  static cLanguage language;
+  cLanguage language;
 
-  static bool inited = false;
-  if (!inited) {
-    inited = true;
-    language.mName = "C++";
+  language.mName = "C++";
 
-    language.mCommentBegin = "/*";
-    language.mCommentEnd = "*/";
-    language.mCommentSingle = "//";
+  // comment tokens
+  language.mCommentBegin = "/*";
+  language.mCommentEnd = "*/";
+  language.mCommentSingle = "//";
 
-    language.mFoldBeginMarker = "//{{{";
-    language.mFoldEndMarker = "//}}}";
+  // fold tokens
+  language.mFoldBeginToken = "//{{{";
+  language.mFoldEndToken = "//}}}";
 
-    language.mFoldBeginOpen = "{{{ ";
-    language.mFoldBeginClosed = "... ";
-    language.mFoldEnd = "}}}";
+  for (const auto& keyWord : kKeyWords)
+    language.mKeyWords.insert (keyWord);
+  for (auto& knownWord : kKnownWords)
+    language.mKnownWords.insert (knownWord);
 
-    language.mAutoIndentation = true;
+  language.mTokenSearch = [](const char* srcBegin, const char* srcEnd,
+                             const char*& tokenBegin, const char*& tokenEnd, uint8_t& color) -> bool {
+    // tokenSearch  lambda
+    color = eUndefined;
+    while ((srcBegin < srcEnd) && isascii (*srcBegin) && isblank (*srcBegin))
+      srcBegin++;
+    if (srcBegin == srcEnd) {
+      tokenBegin = srcEnd;
+      tokenEnd = srcEnd;
+      color = eText;
+      }
+    if (findIdentifier (srcBegin, srcEnd, tokenBegin, tokenEnd))
+      color = eIdentifier;
+    else if (findNumber (srcBegin, srcEnd, tokenBegin, tokenEnd))
+      color = eNumber;
+    else if (findPunctuation (srcBegin, tokenBegin, tokenEnd))
+      color = ePunctuation;
+    else if (findString (srcBegin, srcEnd, tokenBegin, tokenEnd))
+      color = eString;
+    else if (findLiteral (srcBegin, srcEnd, tokenBegin, tokenEnd))
+      color = eLiteral;
+    return (color != eUndefined);
+    };
 
-    for (const auto& keyWord : kKeyWords)
-      language.mKeyWords.insert (keyWord);
-    for (auto& knownWord : kKnownWords)
-      language.mKnownWords.insert (knownWord);
-
-    language.mTokenSearch = [](const char* srcBegin, const char* srcEnd,
-                               const char*& tokenBegin, const char*& tokenEnd, uint8_t& color) -> bool {
-      // tokenSearch  lambda
-      color = eUndefined;
-      while ((srcBegin < srcEnd) && isascii (*srcBegin) && isblank (*srcBegin))
-        srcBegin++;
-      if (srcBegin == srcEnd) {
-        tokenBegin = srcEnd;
-        tokenEnd = srcEnd;
-        color = eText;
-        }
-      if (findIdentifier (srcBegin, srcEnd, tokenBegin, tokenEnd))
-        color = eIdentifier;
-      else if (findNumber (srcBegin, srcEnd, tokenBegin, tokenEnd))
-        color = eNumber;
-      else if (findPunctuation (srcBegin, tokenBegin, tokenEnd))
-        color = ePunctuation;
-      else if (findString (srcBegin, srcEnd, tokenBegin, tokenEnd))
-        color = eString;
-      else if (findLiteral (srcBegin, srcEnd, tokenBegin, tokenEnd))
-        color = eLiteral;
-      return (color != eUndefined);
-      };
-
-    language.mRegexList.push_back (
-      make_pair (regex ("[ \\t]*#[ \\t]*[a-zA-Z_]+", regex_constants::optimize), (uint8_t)ePreProc));
-    }
+  language.mRegexList.push_back (
+    make_pair (regex ("[ \\t]*#[ \\t]*[a-zA-Z_]+", regex_constants::optimize), (uint8_t)ePreProc));
 
   return language;
   }
 //}}}
 //{{{
-const cTextEdit::cLanguage& cTextEdit::cLanguage::hlsl() {
+const cTextEdit::cLanguage cTextEdit::cLanguage::hlsl() {
 
-  static bool inited = false;
-  static cLanguage language;
-  if (!inited) {
-    inited = true;
-    language.mName = "HLSL";
+  cLanguage language;
 
-    language.mCommentBegin = "/*";
-    language.mCommentEnd = "*/";
-    language.mCommentSingle = "//";
+  language.mName = "HLSL";
 
-    language.mFoldBeginMarker = "#{{{";
-    language.mFoldEndMarker = "#}}}";
+  // comment tokens
+  language.mCommentBegin = "/*";
+  language.mCommentEnd = "*/";
+  language.mCommentSingle = "//";
 
-    language.mFoldBeginOpen = "{{{ ";
-    language.mFoldBeginClosed = "... ";
-    language.mFoldEnd = "}}}";
+  // fold tokens
+  language.mFoldBeginToken = "#{{{";
+  language.mFoldEndToken = "#}}}";
 
-    language.mAutoIndentation = true;
+  for (const auto& keyWord : kHlslKeyWords)
+    language.mKeyWords.insert (keyWord);
+  for (const auto& knownWord : kHlslKnownWords)
+    language.mKnownWords.insert (knownWord);
 
-    for (const auto& keyWord : kHlslKeyWords)
-      language.mKeyWords.insert (keyWord);
-    for (const auto& knownWord : kHlslKnownWords)
-      language.mKnownWords.insert (knownWord);
-
-    language.mTokenSearch = nullptr;
-
-    language.mRegexList.push_back (
-      make_pair (regex ("[ \\t]*#[ \\t]*[a-zA-Z_]+", regex_constants::optimize), (uint8_t)ePreProc));
-    language.mRegexList.push_back (
-      make_pair (regex ("L?\\\"(\\\\.|[^\\\"])*\\\"", regex_constants::optimize), (uint8_t)eString));
-    language.mRegexList.push_back (
-      make_pair (regex ("\\'\\\\?[^\\']\\'", regex_constants::optimize), (uint8_t)eLiteral));
-    language.mRegexList.push_back (
-      make_pair (regex ("[a-zA-Z_][a-zA-Z0-9_]*", regex_constants::optimize), (uint8_t)eIdentifier));
-    language.mRegexList.push_back (
-      make_pair (regex ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", regex_constants::optimize), (uint8_t)eNumber));
-    language.mRegexList.push_back (
-      make_pair (regex ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
-    language.mRegexList.push_back (
-      make_pair (regex ("0[0-7]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
-    language.mRegexList.push_back (
-      make_pair (regex ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
-    language.mRegexList.push_back (
-      make_pair (regex ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", regex_constants::optimize), (uint8_t)ePunctuation));
-    }
+  language.mRegexList.push_back (
+    make_pair (regex ("[ \\t]*#[ \\t]*[a-zA-Z_]+", regex_constants::optimize), (uint8_t)ePreProc));
+  language.mRegexList.push_back (
+    make_pair (regex ("L?\\\"(\\\\.|[^\\\"])*\\\"", regex_constants::optimize), (uint8_t)eString));
+  language.mRegexList.push_back (
+    make_pair (regex ("\\'\\\\?[^\\']\\'", regex_constants::optimize), (uint8_t)eLiteral));
+  language.mRegexList.push_back (
+    make_pair (regex ("[a-zA-Z_][a-zA-Z0-9_]*", regex_constants::optimize), (uint8_t)eIdentifier));
+  language.mRegexList.push_back (
+    make_pair (regex ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", regex_constants::optimize), (uint8_t)eNumber));
+  language.mRegexList.push_back (
+    make_pair (regex ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+  language.mRegexList.push_back (
+    make_pair (regex ("0[0-7]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+  language.mRegexList.push_back (
+    make_pair (regex ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+  language.mRegexList.push_back (
+    make_pair (regex ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", regex_constants::optimize), (uint8_t)ePunctuation));
 
   return language;
   }
 //}}}
 //{{{
-const cTextEdit::cLanguage& cTextEdit::cLanguage::glsl() {
+const cTextEdit::cLanguage cTextEdit::cLanguage::glsl() {
 
-  static cLanguage language;
-  static bool inited = false;
-  if (!inited) {
-    inited = true;
-    language.mName = "GLSL";
+  cLanguage language;
 
-    language.mCommentBegin = "/*";
-    language.mCommentEnd = "*/";
-    language.mCommentSingle = "//";
+  language.mName = "GLSL";
 
-    language.mFoldBeginMarker = "#{{{";
-    language.mFoldEndMarker = "#}}}";
+  // comment tokens
+  language.mCommentBegin = "/*";
+  language.mCommentEnd = "*/";
+  language.mCommentSingle = "//";
 
-    language.mFoldBeginOpen = "{{{ ";
-    language.mFoldBeginClosed = "... ";
-    language.mFoldEnd = "}}}";
+  // fold tokens
+  language.mFoldBeginToken = "#{{{";
+  language.mFoldEndToken = "#}}}";
 
-    language.mAutoIndentation = true;
+  for (const auto& keyWord : kGlslKeyWords)
+    language.mKeyWords.insert (keyWord);
+  for (const auto& knownWord : kGlslKnownWords)
+    language.mKnownWords.insert (knownWord);
 
-    for (const auto& keyWord : kGlslKeyWords)
-      language.mKeyWords.insert (keyWord);
-    for (const auto& knownWord : kGlslKnownWords)
-      language.mKnownWords.insert (knownWord);
-
-    language.mTokenSearch = nullptr;
-
-    language.mRegexList.push_back (
-      make_pair (regex ("[ \\t]*#[ \\t]*[a-zA-Z_]+", regex_constants::optimize), (uint8_t)ePreProc));
-    language.mRegexList.push_back (
-      make_pair (regex ("L?\\\"(\\\\.|[^\\\"])*\\\"", regex_constants::optimize), (uint8_t)eString));
-    language.mRegexList.push_back (
-      make_pair (regex ("\\'\\\\?[^\\']\\'", regex_constants::optimize), (uint8_t)eLiteral));
-    language.mRegexList.push_back (
-      make_pair (regex ("[a-zA-Z_][a-zA-Z0-9_]*", regex_constants::optimize), (uint8_t)eIdentifier));
-    language.mRegexList.push_back (
-      make_pair (regex ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", regex_constants::optimize), (uint8_t)eNumber));
-    language.mRegexList.push_back (
-      make_pair (regex ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
-    language.mRegexList.push_back (
-      make_pair (regex ("0[0-7]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
-    language.mRegexList.push_back (
-      make_pair (regex ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
-    language.mRegexList.push_back (
-      make_pair (regex ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", regex_constants::optimize), (uint8_t)ePunctuation));
-    }
+  language.mRegexList.push_back (
+    make_pair (regex ("[ \\t]*#[ \\t]*[a-zA-Z_]+", regex_constants::optimize), (uint8_t)ePreProc));
+  language.mRegexList.push_back (
+    make_pair (regex ("L?\\\"(\\\\.|[^\\\"])*\\\"", regex_constants::optimize), (uint8_t)eString));
+  language.mRegexList.push_back (
+    make_pair (regex ("\\'\\\\?[^\\']\\'", regex_constants::optimize), (uint8_t)eLiteral));
+  language.mRegexList.push_back (
+    make_pair (regex ("[a-zA-Z_][a-zA-Z0-9_]*", regex_constants::optimize), (uint8_t)eIdentifier));
+  language.mRegexList.push_back (
+    make_pair (regex ("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", regex_constants::optimize), (uint8_t)eNumber));
+  language.mRegexList.push_back (
+    make_pair (regex ("[+-]?[0-9]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+  language.mRegexList.push_back (
+    make_pair (regex ("0[0-7]+[Uu]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+  language.mRegexList.push_back (
+    make_pair (regex ("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", regex_constants::optimize), (uint8_t)eNumber));
+  language.mRegexList.push_back (
+    make_pair (regex ("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", regex_constants::optimize), (uint8_t)ePunctuation));
 
   return language;
   }
