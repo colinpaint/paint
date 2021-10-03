@@ -1211,11 +1211,6 @@ void cTextEdit::drawContents (cApp& app) {
   if (toggleButton ("readOnly", isReadOnly()))
     toggleReadOnly();
   //}}}
-  //{{{  info
-  ImGui::SameLine();
-  ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
-                                           getNumLines(), getLanguage().mName).c_str());
-  //}}}
   //{{{  fontSize button
   ImGui::SameLine();
   ImGui::SetNextItemWidth (3 * ImGui::GetFontSize());
@@ -1225,11 +1220,6 @@ void cTextEdit::drawContents (cApp& app) {
     int fontSize = mOptions.mFontSize + static_cast<int>(ImGui::GetIO().MouseWheel);
     mOptions.mFontSize = max (mOptions.mmDocntSize, min (mOptions.mMaxFontSize, fontSize));
     }
-  //}}}
-  //{{{  vertice debug
-  ImGui::SameLine();
-  ImGui::Text (fmt::format ("{}:{}:vert:triangle",
-               ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
   //}}}
   //{{{  vsync button,fps
   if (app.getPlatform().hasVsync()) {
@@ -1256,6 +1246,16 @@ void cTextEdit::drawContents (cApp& app) {
     if (ImGui::Button ("save"))
       saveFile();
     }
+  //}}}
+  //{{{  info
+  ImGui::SameLine();
+  ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
+                                           getNumLines(), getLanguage().mName).c_str());
+  //}}}
+  //{{{  vertice debug
+  ImGui::SameLine();
+  ImGui::Text (fmt::format ("{}:{}",
+               ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
   //}}}
 
   parseComments();
