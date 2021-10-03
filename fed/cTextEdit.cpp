@@ -2511,8 +2511,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       float indentWidth = line.mIndent * mDrawContext.mGlyphWidth;
       curPos.x += indentWidth;
 
-      float prefixWidth = mDrawContext.text (curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen.c_str());
-      curPos.x += prefixWidth;
+      // draw foldPrefix
+      float prefixWidth = mDrawContext.text(curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen.c_str());
 
       // add foldPrefix invisibleButton, action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
@@ -2525,9 +2525,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       if (ImGui::IsItemDeactivated())
         line.mFoldPressed = false;
 
-      // draw glyphs
+      curPos.x += prefixWidth;
       textPos.x = curPos.x;
-      curPos.x += drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
 
       // add invisibleButton, fills rest of line for easy picking
       ImGui::SameLine();
@@ -2535,6 +2534,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                               {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
       if (ImGui::IsItemActive())
         selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
+
+      // draw glyphs
+      curPos.x += drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
       }
       //}}}
     else {
@@ -2547,10 +2549,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth = mDrawContext.text (curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed.c_str());
-      curPos.x += prefixWidth;
+      float prefixWidth = mDrawContext.text(curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed.c_str());
 
-      // add invisibleButton, indent + prefix wide, action on press
+      // add foldPrefix invisibleButton, indent + prefix wide, action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                               {leftPadWidth + indentWidth + prefixWidth, mDrawContext.mLineHeight});
       if (ImGui::IsItemActive() && !line.mFoldPressed) {
@@ -2561,9 +2562,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       if (ImGui::IsItemDeactivated())
         line.mFoldPressed = false;
 
-      // draw glyphs
+      curPos.x += prefixWidth;
       textPos.x = curPos.x;
-      curPos.x += drawGlyphs (curPos, getGlyphs (line.mFoldCommentLineNumber), line.mFirstGlyph, eFoldClosed);
 
       // add invisibleButton, fills rest of line for easy picking
       ImGui::SameLine();
@@ -2571,6 +2571,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                               {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
       if (ImGui::IsItemActive())
         selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
+
+      // draw glyphs
+      curPos.x += drawGlyphs (curPos, getGlyphs (line.mFoldCommentLineNumber), line.mFirstGlyph, eFoldClosed);
       }
       //}}}
     }
@@ -2582,34 +2585,34 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     float indentWidth = line.mIndent * mDrawContext.mGlyphWidth;
     curPos.x += indentWidth;
 
+    // draw foldPrefix
     float prefixWidth = mDrawContext.text (curPos, eFoldOpen, mOptions.mLanguage.mFoldEnd.c_str());
+    textPos.x = curPos.x;
 
-    // add invisibleButton
+    // add foldPrefix invisibleButton, only prefix wide, do not want to pick foldEnd line
     ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
                             {leftPadWidth + indentWidth + prefixWidth, mDrawContext.mLineHeight});
     if (ImGui::IsItemActive()) // closeFold at foldEnd, action on press
       closeFold (lineNumber);
-
-    textPos.x = curPos.x;
     }
     //}}}
   else {
     //{{{  draw glyphs
     curPos.x += leftPadWidth;
-
-    // drawGlyphs
     textPos.x = curPos.x;
-    curPos.x += drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
 
     // add invisibleButton, fills rest of line for easy picking
     ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(),
                             {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
-        dragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+        dragSelectText (lineNumber, {ImGui::GetMousePos().x - curPos.x, ImGui::GetMousePos().y - curPos.y});
       else if (ImGui::IsMouseClicked (0))
         selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
       }
+
+    // drawGlyphs
+    curPos.x += drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
     }
     //}}}
 
