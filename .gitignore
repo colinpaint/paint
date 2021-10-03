@@ -1,6 +1,10 @@
 build/*
 linuxBuild/*
+
 font/build/*
+
+filesystem/build/*
+filesystem/linuxBuild/*
 
 *.~*
 *.*~

@@ -254,9 +254,11 @@ public:
   // undo
   void undo (uint32_t steps = 1);
   void redo (uint32_t steps = 1);
-  //}}}
+
+  // file
   void loadFile (const std::string& filename);
   void saveFile();
+  //}}}
 
   void drawWindow (const std::string& title, cApp& app);
   void drawContents (cApp& app);

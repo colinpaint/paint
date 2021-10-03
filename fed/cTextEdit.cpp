@@ -1026,7 +1026,8 @@ void cTextEdit::redo (uint32_t steps) {
     }
   }
 //}}}
-//}}}
+
+// file
 //{{{
 void cTextEdit::loadFile (const string& filename) {
 
@@ -1116,6 +1117,7 @@ void cTextEdit::saveFile() {
   // done
   cLog::log (LOGINFO,fmt::format ("{} saved", saveFilePath.string()));
   }
+//}}}
 //}}}
 
 // draws
