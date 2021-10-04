@@ -32,11 +32,11 @@ namespace {
   constexpr uint8_t eKeyWord =           9;
   constexpr uint8_t eKnownWord =        10;
 
-  constexpr uint8_t eSelectHighlight =  11;
-  constexpr uint8_t eCursorEdit =       12;
-  constexpr uint8_t eCursor =           13;
-  constexpr uint8_t eCursorLineFill =   14;
-  constexpr uint8_t eCursorLineEdge =   15;
+  constexpr uint8_t eCursorPos     =    11;
+  constexpr uint8_t eCursorLineFill =   12;
+  constexpr uint8_t eCursorLineEdge =   13;
+  constexpr uint8_t eCursorUnEditable = 14;
+  constexpr uint8_t eSelectHighlight =  15;
   constexpr uint8_t eLineNumber =       16;
   constexpr uint8_t eWhiteSpace =       17;
   constexpr uint8_t eTab =              18;
@@ -64,11 +64,11 @@ namespace {
     0xff1010c0, // eKeyWord
     0xff800080, // eKnownWord
 
-    0x80600000, // eSelectHighlight
-    0xff000000, // eCursorEdit
-    0xff0000FF, // eCursor
+    0xff000000, // eCursorPos
     0x10000000, // eCursorLineFill
     0x40000000, // eCursorLineEdge
+    0xff0000FF, // eCursorUnEditable
+    0x80600000, // eSelectHighlight
     0xff505000, // eLineNumber
     0xff808080, // eWhiteSpace
     0xff404040, // eTab
@@ -2666,7 +2666,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       //{{{  draw cursor highlight
       ImVec2 brPos {curPos.x, curPos.y + mDrawContext.mLineHeight};
       mDrawContext.rect (leftPos, brPos, eCursorLineFill);
-      mDrawContext.rectLine (leftPos, brPos, eCursorLineEdge);
+      mDrawContext.rectLine (leftPos, brPos, canEditAtCursor() ? eCursorLineEdge : eCursorUnEditable);
       }
       //}}}
     //{{{  draw flashing cursor
@@ -2694,7 +2694,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       // draw cursor
       ImVec2 tlPos {textPos.x + cursorPosX - 1.f, textPos.y};
       ImVec2 brPos {tlPos.x + cursorWidth, curPos.y + mDrawContext.mLineHeight};
-      mDrawContext.rect (tlPos, brPos, canEditAtCursor() ? eCursorEdit : eCursor);
+      mDrawContext.rect (tlPos, brPos, canEditAtCursor() ? eCursorPos : eCursorUnEditable);
       }
 
     if (elapsed > 800ms)
