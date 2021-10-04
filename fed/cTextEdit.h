@@ -526,6 +526,7 @@ private:
   void moveUp (uint32_t amount);
   void moveDown (uint32_t amount);
 
+  void cursorFlashOn();
   void scrollCursorVisible();
   void advance (sPosition& position);
   sPosition sanitizePosition (sPosition position);

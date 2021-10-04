@@ -493,7 +493,7 @@ cTextEdit::cTextEdit() {
 
   mOptions.mLanguage = cLanguage::c();
   mDoc.mLines.push_back (cLine::tGlyphs());
-  mCursorFlashTimePoint = system_clock::now();
+  cursorFlashOn();
 
   // push any clipboard text to pasteStack
   const char* clipText = ImGui::GetClipboardText();
@@ -1626,17 +1626,17 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
       break;
 
     case eSelect::eWord:
-      mEdit.mCursor.mSelectBegin = findWordBegin (sanitizePosition (mEdit.mCursor.mSelectBegin));
+      mEdit.mCursor.mSelectBegin = findWordBegin (mEdit.mCursor.mSelectBegin);
       if (!isOnWordBoundary (mEdit.mCursor.mSelectEnd))
         mEdit.mCursor.mSelectEnd = findWordEnd (findWordBegin (mEdit.mCursor.mSelectEnd));
       break;
 
     case eSelect::eLine: {
-      mEdit.mCursor.mSelectBegin = { mEdit.mCursor.mSelectBegin.mLineNumber, 0};
+      mEdit.mCursor.mSelectBegin.mColumn = 0;
       cLine& line = getLine (mEdit.mCursor.mSelectBegin.mLineNumber);
-      if (!isFolded() || !line.mFoldBegin) // simple select line
+      if (!isFolded() || !line.mFoldBegin) // select line
         mEdit.mCursor.mSelectEnd = {mEdit.mCursor.mSelectEnd.mLineNumber + 1, 0};
-      else if (!line.mFoldOpen) // select fold
+      else if (!line.mFoldOpen) // select fold, !!! not quite right !!!
         mEdit.mCursor.mSelectEnd = {skipFold (mEdit.mCursor.mSelectEnd.mLineNumber + 1), 0};
       break;
       }
@@ -1683,6 +1683,11 @@ void cTextEdit::moveDown (uint32_t amount) {
 //}}}
 
 //{{{
+void cTextEdit::cursorFlashOn() {
+  mCursorFlashTimePoint = system_clock::now();
+  }
+//}}}
+//{{{
 void cTextEdit::scrollCursorVisible() {
 
   ImGui::SetWindowFocus();
@@ -1713,7 +1718,7 @@ void cTextEdit::scrollCursorVisible() {
       ImGui::SetScrollX (max (0.f, textWidth + (3 * mDrawContext.mGlyphWidth) - ImGui::GetWindowWidth()));
     }
 
-  mCursorFlashTimePoint = system_clock::now();
+  cursorFlashOn();
 
   mEdit.mScrollVisible = false;
   }
@@ -2337,6 +2342,7 @@ uint32_t cTextEdit::skipFold (uint32_t lineNumber) {
 //{{{
 void cTextEdit::selectLine (uint32_t lineNumber) {
 
+  cursorFlashOn();
   mEdit.mCursor.mPosition = {lineNumber, 0};
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
   setSelect (eSelect::eLine, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
@@ -2370,6 +2376,9 @@ void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
 //{{{
 void cTextEdit::selectText (bool selectWord, uint32_t lineNumber, ImVec2 pos) {
 
+  cLog::log (LOGINFO, fmt::format ("selectText {} {}", selectWord, lineNumber));
+
+  cursorFlashOn();
   mEdit.mCursor.mPosition = getPositionFromPosX (lineNumber, pos.x);
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
   setSelect (selectWord ? eSelect::eWord : eSelect::eNormal, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
@@ -2383,17 +2392,23 @@ void cTextEdit::dragSelectText (uint32_t lineNumber, ImVec2 pos) {
 
   int numDragLines = static_cast<int>((pos.y - (mDrawContext.mLineHeight/2.f)) / mDrawContext.mLineHeight);
   uint32_t toLineNumber = max (0u, min (getNumLines()-1, lineNumber + numDragLines));
+  cLog::log (LOGINFO, fmt::format ("dragSelectText {} {}", lineNumber, numDragLines));
 
   if (isFolded()) {
     // refuse to select cross fold
     if (lineNumber < toLineNumber)
       while (++lineNumber <= toLineNumber)
-        if (getLine (lineNumber).mFoldBegin || getLine (lineNumber).mFoldEnd)
+        if (getLine (lineNumber).mFoldBegin || getLine (lineNumber).mFoldEnd) {
+          cLog::log (LOGINFO, fmt::format ("dragSelectText exit 1"));
           return;
+          }
+
     else if (lineNumber > toLineNumber)
       while (--lineNumber >= toLineNumber)
-        if (getLine (lineNumber).mFoldBegin || getLine (lineNumber).mFoldEnd)
+        if (getLine (lineNumber).mFoldBegin || getLine (lineNumber).mFoldEnd) {
+          cLog::log (LOGINFO, fmt::format ("dragSelectText exit 2"));
           return;
+          }
     }
 
   // within fold drag
@@ -2567,14 +2582,16 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
       // add invisibleButton, fills rest of line for easy picking
       ImGui::SameLine();
-      ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(),
-                              {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
-      if (ImGui::IsItemActive())
-        selectText (ImGui::IsMouseDoubleClicked(0), lineNumber,
-                    {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - curPos.y });
-
+      ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(), {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
+      if (ImGui::IsItemActive()) {
+        if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
+          dragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+        else if (ImGui::IsMouseClicked (0))
+          selectText (ImGui::IsMouseDoubleClicked (0), lineNumber,
+                      {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+        }
       // draw glyphs
-      curPos.x += drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
+      curPos.x += drawGlyphs (textPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
       }
       //}}}
     else {
@@ -2605,14 +2622,17 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
       // add invisibleButton, fills rest of line for easy picking
       ImGui::SameLine();
-      ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(),
-                              {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
-      if (ImGui::IsItemActive())
-        selectText (ImGui::IsMouseDoubleClicked(0), lineNumber,
-                    {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+      ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
+      if (ImGui::IsItemActive()) {
+        if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
+          dragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+        else if (ImGui::IsMouseClicked (0))
+          selectText (ImGui::IsMouseDoubleClicked (0), lineNumber,
+                      {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+        }
 
       // draw glyphs
-      curPos.x += drawGlyphs (curPos, getGlyphs (line.mFoldCommentLineNumber), line.mFirstGlyph, eFoldClosed);
+      curPos.x += drawGlyphs (textPos, getGlyphs (line.mFoldCommentLineNumber), line.mFirstGlyph, eFoldClosed);
       }
       //}}}
     }
@@ -2646,14 +2666,14 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
         dragSelectText (lineNumber,
-                        {ImGui::GetMousePos().x - curPos.x, ImGui::GetMousePos().y - curPos.y});
+                        {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
       else if (ImGui::IsMouseClicked (0))
         selectText (ImGui::IsMouseDoubleClicked (0), lineNumber,
-                    {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - curPos.y});
+                    {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
       }
 
     // drawGlyphs
-    curPos.x += drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
+    curPos.x += drawGlyphs (textPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
     }
     //}}}
 
@@ -2713,8 +2733,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       mDrawContext.rect (tlPos, brPos, canEditAtCursor() ? eCursorPos : eCursorUnEditable);
       }
 
-    if (elapsed > 800ms)
-      mCursorFlashTimePoint = now;
+    else if (elapsed > 800ms)
+      cursorFlashOn();
     //}}}
     }
   }
