@@ -561,10 +561,10 @@ private:
   uint32_t skipFold (uint32_t lineNumber);
 
   // mouse
-  void selectText (bool selectWord, uint32_t lineNumber, float posX);
-  void dragSelectText (uint32_t lineNumber, ImVec2 pos);
   void selectLine (uint32_t lineNumber);
   void dragSelectLine (uint32_t lineNumber, float posY);
+  void selectText (bool selectWord, uint32_t lineNumber, ImVec2 pos);
+  void dragSelectText (uint32_t lineNumber, ImVec2 pos);
 
   // draw
   float drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
