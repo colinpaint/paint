@@ -33,20 +33,21 @@ namespace {
   constexpr uint8_t eKnownWord =        10;
 
   constexpr uint8_t eSelectHighlight =  11;
-  constexpr uint8_t eCursor =           12;
-  constexpr uint8_t eCursorLineFill =   13;
-  constexpr uint8_t eCursorLineEdge =   14;
-  constexpr uint8_t eLineNumber =       15;
-  constexpr uint8_t eWhiteSpace =       16;
-  constexpr uint8_t eTab =              17;
+  constexpr uint8_t eCursorEdit =       12;
+  constexpr uint8_t eCursor =           13;
+  constexpr uint8_t eCursorLineFill =   14;
+  constexpr uint8_t eCursorLineEdge =   15;
+  constexpr uint8_t eLineNumber =       16;
+  constexpr uint8_t eWhiteSpace =       17;
+  constexpr uint8_t eTab =              18;
 
-  constexpr uint8_t eFoldClosed =       18;
-  constexpr uint8_t eFoldOpen =         19;
+  constexpr uint8_t eFoldClosed =       19;
+  constexpr uint8_t eFoldOpen =         20;
 
-  constexpr uint8_t eScrollBackground = 20;
-  constexpr uint8_t eScrollGrab =       21;
-  constexpr uint8_t eScrollHover =      22;
-  constexpr uint8_t eScrollActive =     23;
+  constexpr uint8_t eScrollBackground = 21;
+  constexpr uint8_t eScrollGrab =       22;
+  constexpr uint8_t eScrollHover =      23;
+  constexpr uint8_t eScrollActive =     24;
   constexpr uint8_t eUndefined =      0xFF;
 
   // color to ImU32 lookup
@@ -64,7 +65,8 @@ namespace {
     0xff800080, // eKnownWord
 
     0x80600000, // eSelectHighlight
-    0xff000000, // eCursor
+    0xff000000, // eCursorEdit
+    0xff0000FF, // eCursor
     0x10000000, // eCursorLineFill
     0x40000000, // eCursorLineEdge
     0xff505000, // eLineNumber
@@ -617,6 +619,9 @@ void cTextEdit::selectAll() {
 //{{{
 void cTextEdit::copy() {
 
+  if (!canEditAtCursor())
+    return;
+
   if (hasSelect()) {
     // push selectedText to pasteStack
     mEdit.pushPasteText (getSelectedText());
@@ -625,7 +630,7 @@ void cTextEdit::copy() {
 
   else {
     // push currentLine text to pasteStack
-    sPosition position = {getCursorPosition().mLineNumber, 0};
+    sPosition position {getCursorPosition().mLineNumber, 0};
     sPosition nextLinePosition = getNextLinePosition (position);
     string text = getText (position, nextLinePosition);;
     mEdit.pushPasteText (text);
@@ -638,12 +643,7 @@ void cTextEdit::copy() {
 //{{{
 void cTextEdit::cut() {
 
-  if (isReadOnly()) {
-    // just copy
-    copy();
-    }
-
-  else if (hasSelect()) {
+  if (hasSelect()) {
     // push selectedText to pasteStack
     string text = getSelectedText();
     mEdit.pushPasteText (text);
@@ -664,7 +664,7 @@ void cTextEdit::cut() {
 
   else {
     // push currentLine text to pasteStack
-    sPosition position = {getCursorPosition().mLineNumber,0};
+    sPosition position {getCursorPosition().mLineNumber,0};
     sPosition nextLinePosition = getNextLinePosition (position);
     string text = getText (position, nextLinePosition);
     mEdit.pushPasteText (text);
@@ -835,6 +835,9 @@ void cTextEdit::backspace() {
 //{{{
 void cTextEdit::enterCharacter (ImWchar ch) {
 
+  if (!canEditAtCursor())
+    return;
+
   cUndo undo;
   undo.mBefore = mEdit.mCursor;
 
@@ -985,9 +988,6 @@ void cTextEdit::enterCharacter (ImWchar ch) {
 // fold
 //{{{
 void cTextEdit::createFold() {
-
-  if (isReadOnly())
-    return;
 
   // !!!! temp string for now !!!!
   string text = mOptions.mLanguage.mFoldBeginToken +
@@ -1307,11 +1307,20 @@ void cTextEdit::drawContents (cApp& app) {
   }
 //}}}
 
-
 // private:
 //{{{  gets
 //{{{
+bool cTextEdit::canEditAtCursor() {
+// can we edit at cursorPosition
+
+  sPosition position = getCursorPosition();
+  return !isFolded() || !getLine (position.mLineNumber).mFoldEnd;
+  }
+//}}}
+
+//{{{
 uint32_t cTextEdit::getNumPageLines() const {
+
   float height = ImGui::GetWindowHeight() - 20.f;
   return static_cast<uint32_t>(floor (height / mDrawContext.mLineHeight));
   }
@@ -2329,6 +2338,9 @@ void cTextEdit::selectText (uint32_t lineNumber, float posX, bool selectWord) {
 //{{{
 void cTextEdit::dragSelectText (uint32_t lineNumber, ImVec2 pos) {
 
+  if (!canEditAtCursor())
+    return;
+
   int numDragLines = static_cast<int>(pos.y / mDrawContext.mLineHeight);
   if (isFolded()) {
     if (numDragLines) {
@@ -2360,6 +2372,9 @@ void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
 // - we haven't drawn subsequent lines yet
 //   - works because dragging does not change vector
 // - otherwise we would have to delay it to after the whole draw
+
+  if (!canEditAtCursor())
+    return;
 
   int numDragLines = static_cast<int>(posY / mDrawContext.mLineHeight);
 
@@ -2401,22 +2416,22 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
 
     if (glyphs[glyphIndex].mChar == '\t') {
       //{{{  tab
-      ImVec2 arrowLeftPos = {pos.x + 1.f, pos.y + mDrawContext.mFontSize/2.f};
+      ImVec2 arrowLeftPos {pos.x + 1.f, pos.y + mDrawContext.mFontSize/2.f};
 
       // apply tab
       pos.x = getTabEndPosX (pos.x);
 
       if (isDrawWhiteSpace()) {
         // draw tab arrow
-        ImVec2 arrowRightPos = {pos.x - 1.f, arrowLeftPos.y};
+        ImVec2 arrowRightPos {pos.x - 1.f, arrowLeftPos.y};
         mDrawContext.line (arrowLeftPos, arrowRightPos, eTab);
 
-        ImVec2 arrowTopPos = {arrowRightPos.x - (mDrawContext.mFontSize/4.f) - 1.f,
-                              arrowRightPos.y - (mDrawContext.mFontSize/4.f)};
+        ImVec2 arrowTopPos {arrowRightPos.x - (mDrawContext.mFontSize/4.f) - 1.f,
+                            arrowRightPos.y - (mDrawContext.mFontSize/4.f)};
         mDrawContext.line (arrowRightPos, arrowTopPos, eTab);
 
-        ImVec2 arrowBotPos = {arrowRightPos.x - (mDrawContext.mFontSize/4.f) - 1.f,
-                              arrowRightPos.y + (mDrawContext.mFontSize/4.f)};
+        ImVec2 arrowBotPos {arrowRightPos.x - (mDrawContext.mFontSize/4.f) - 1.f,
+                            arrowRightPos.y + (mDrawContext.mFontSize/4.f)};
         mDrawContext.line (arrowRightPos, arrowBotPos, eTab);
         }
       }
@@ -2425,7 +2440,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
       //{{{  space
       if (isDrawWhiteSpace()) {
         // draw circle
-        ImVec2 centre = {pos.x  + mDrawContext.mGlyphWidth/2.f, pos.y + mDrawContext.mFontSize/2.f};
+        ImVec2 centre {pos.x  + mDrawContext.mGlyphWidth/2.f, pos.y + mDrawContext.mFontSize/2.f};
         mDrawContext.circle (centre, 2.f, eWhiteSpace);
         }
 
@@ -2649,7 +2664,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     // line has cursor
     if (!hasSelect()) {
       //{{{  draw cursor highlight
-      ImVec2 brPos = {curPos.x, curPos.y + mDrawContext.mLineHeight};
+      ImVec2 brPos {curPos.x, curPos.y + mDrawContext.mLineHeight};
       mDrawContext.rect (leftPos, brPos, eCursorLineFill);
       mDrawContext.rectLine (leftPos, brPos, eCursorLineEdge);
       }
@@ -2677,9 +2692,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
         cursorWidth = 2.f;
 
       // draw cursor
-      ImVec2 tlPos = {textPos.x + cursorPosX - 1.f, textPos.y};
-      ImVec2 brPos = {tlPos.x + cursorWidth, curPos.y + mDrawContext.mLineHeight};
-      mDrawContext.rect (tlPos, brPos, eCursor);
+      ImVec2 tlPos {textPos.x + cursorPosX - 1.f, textPos.y};
+      ImVec2 brPos {tlPos.x + cursorWidth, curPos.y + mDrawContext.mLineHeight};
+      mDrawContext.rect (tlPos, brPos, canEditAtCursor() ? eCursorEdit : eCursor);
       }
 
     if (elapsed > 800ms)
@@ -2829,7 +2844,7 @@ void cTextEdit::handleKeyboard() {
     };
   //}}}
   const vector <sActionKey> kActionKeys = {
-  //  alt    ctrl   shift  guiKey               writable      function
+  //  alt    ctrl   shift  guiKey             writable function
      {false, false, false, ImGuiKey_Delete,     true,  [this]{deleteIt();}},
      {false, false, false, ImGuiKey_Backspace,  true,  [this]{backspace();}},
      {false, false, false, ImGuiKey_Enter,      true,  [this]{enterKey();}},
@@ -2885,7 +2900,7 @@ void cTextEdit::handleKeyboard() {
         (actionKey.mAlt == altKeyPressed) &&
         (actionKey.mCtrl == ctrlKeyPressed) &&
         (actionKey.mShift == shiftKeyPressed) &&
-        (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly()))) {
+        (!actionKey.mWritable || (actionKey.mWritable && !(isReadOnly() && canEditAtCursor())))) {
 
       actionKey.mActionFunc();
       break;

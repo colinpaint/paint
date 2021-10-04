@@ -478,6 +478,8 @@ private:
   bool isDrawWhiteSpace() const { return mOptions.mShowWhiteSpace; }
   bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced; }
 
+  bool canEditAtCursor();
+
   // nums
   uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
   uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mDoc.mFoldLines.size()); }
