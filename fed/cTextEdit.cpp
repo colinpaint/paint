@@ -67,7 +67,7 @@ namespace {
     0xff000000, // eCursorPos
     0x10000000, // eCursorLineFill
     0x40000000, // eCursorLineEdge
-    0xff0000FF, // eCursorUnEditable
+    0x800000ff, // eCursorUnEditable
     0x80600000, // eSelectHighlight
     0xff505000, // eLineNumber
     0xff808080, // eWhiteSpace
@@ -624,7 +624,7 @@ void cTextEdit::copy() {
 
   if (hasSelect()) {
     // push selectedText to pasteStack
-    mEdit.pushPasteText (getSelectedText());
+    mEdit.pushPasteText (getSelectText());
     setDeselect();
     }
 
@@ -645,7 +645,7 @@ void cTextEdit::cut() {
 
   if (hasSelect()) {
     // push selectedText to pasteStack
-    string text = getSelectedText();
+    string text = getSelectText();
     mEdit.pushPasteText (text);
 
     // cut selected range
@@ -692,7 +692,7 @@ void cTextEdit::paste() {
 
     if (hasSelect()) {
       // delete selectedText
-      undo.mDelete = getSelectedText();
+      undo.mDelete = getSelectText();
       undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
       undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
       deleteSelect();
@@ -722,7 +722,7 @@ void cTextEdit::deleteIt() {
   undo.mBefore = mEdit.mCursor;
 
   if (hasSelect()) {
-    undo.mDelete = getSelectedText();
+    undo.mDelete = getSelectText();
     undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
     undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
     deleteSelect();
@@ -777,7 +777,7 @@ void cTextEdit::backspace() {
 
   if (hasSelect()) {
     // delete select
-    undo.mDelete = getSelectedText();
+    undo.mDelete = getSelectText();
     undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
     undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
     deleteSelect();
@@ -903,7 +903,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
       //}}}
     else {
       //{{{  delete select line
-      undo.mDelete = getSelectedText();
+      undo.mDelete = getSelectText();
       undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
       undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
       deleteSelect();
@@ -1364,6 +1364,12 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
   }
 //}}}
 //{{{
+string cTextEdit::getSelectText() {
+  return getText (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
+  }
+//}}}
+
+//{{{
 float cTextEdit::getTextWidth (sPosition position) {
 // get width of text in pixels, of position lineNumber, up to position column
 
@@ -1605,32 +1611,37 @@ void cTextEdit::setCursorPosition (sPosition position) {
     }
   }
 //}}}
+
 //{{{
 void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition endPosition) {
 
+  if (beginPosition > endPosition)
+    swap (beginPosition, endPosition);
+
   mEdit.mCursor.mSelect = select;
-  mEdit.mCursor.mSelectBegin = sanitizePosition (beginPosition);
-  mEdit.mCursor.mSelectEnd = sanitizePosition (endPosition);
-
-  if (mEdit.mCursor.mSelectBegin > mEdit.mCursor.mSelectEnd)
-    swap (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
-
   switch (select) {
     case eSelect::eNormal:
+      mEdit.mCursor.mSelectBegin = sanitizePosition (beginPosition);
+      mEdit.mCursor.mSelectEnd = sanitizePosition (endPosition);
       break;
 
     case eSelect::eWord: {
-      // set word columns
-      mEdit.mCursor.mSelectBegin = findWordBegin (mEdit.mCursor.mSelectBegin);
+      // select word range
+      mEdit.mCursor.mSelectBegin = findWordBegin (sanitizePosition (beginPosition));
+      mEdit.mCursor.mSelectEnd = sanitizePosition (endPosition);
       if (!isOnWordBoundary (mEdit.mCursor.mSelectEnd))
         mEdit.mCursor.mSelectEnd = findWordEnd (findWordBegin (mEdit.mCursor.mSelectEnd));
       break;
       }
 
     case eSelect::eLine: {
-      // set whole line columns
-      mEdit.mCursor.mSelectBegin.mColumn = 0;
-      mEdit.mCursor.mSelectEnd.mColumn = getLineMaxColumn (mEdit.mCursor.mSelectEnd.mLineNumber);
+      // select line range
+      mEdit.mCursor.mSelectBegin = {beginPosition.mLineNumber, 0};
+      cLine& line = getLine (beginPosition.mLineNumber);
+      if (!isFolded() || !line.mFoldBegin) // simple select line
+        mEdit.mCursor.mSelectEnd = {beginPosition.mLineNumber+1, 0};
+      else if (!line.mFoldOpen) // select fold
+        mEdit.mCursor.mSelectEnd = {skipFold (beginPosition.mLineNumber+1), 0};
       break;
       }
     }
@@ -2328,7 +2339,7 @@ uint32_t cTextEdit::skipFold (uint32_t lineNumber) {
 
 // mouse
 //{{{
-void cTextEdit::selectText (uint32_t lineNumber, float posX, bool selectWord) {
+void cTextEdit::selectText (bool selectWord, uint32_t lineNumber, float posX) {
 
   mEdit.mCursor.mPosition = getPositionFromPosX (lineNumber, posX);
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
@@ -2339,7 +2350,7 @@ void cTextEdit::selectText (uint32_t lineNumber, float posX, bool selectWord) {
 void cTextEdit::dragSelectText (uint32_t lineNumber, ImVec2 pos) {
 
   if (!canEditAtCursor())
-    return;
+    cLog::log (LOGINFO, fmt::format ("dragSelectText - restrict cross line"));
 
   int numDragLines = static_cast<int>(pos.y / mDrawContext.mLineHeight);
   if (isFolded()) {
@@ -2374,7 +2385,7 @@ void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
 // - otherwise we would have to delay it to after the whole draw
 
   if (!canEditAtCursor())
-    return;
+    cLog::log (LOGINFO, fmt::format ("dragSelectLine - restrict cross line"));
 
   int numDragLines = static_cast<int>(posY / mDrawContext.mLineHeight);
 
@@ -2558,7 +2569,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(),
                               {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
       if (ImGui::IsItemActive())
-        selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked(0));
+        selectText (ImGui::IsMouseDoubleClicked(0), lineNumber, ImGui::GetMousePos().x - textPos.x);
 
       // draw glyphs
       curPos.x += drawGlyphs (curPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
@@ -2595,7 +2606,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(),
                               {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
       if (ImGui::IsItemActive())
-        selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
+        selectText (ImGui::IsMouseDoubleClicked(0), lineNumber, ImGui::GetMousePos().x - textPos.x);
 
       // draw glyphs
       curPos.x += drawGlyphs (curPos, getGlyphs (line.mFoldCommentLineNumber), line.mFirstGlyph, eFoldClosed);
@@ -2633,7 +2644,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
         dragSelectText (lineNumber, {ImGui::GetMousePos().x - curPos.x, ImGui::GetMousePos().y - curPos.y});
       else if (ImGui::IsMouseClicked (0))
-        selectText (lineNumber, ImGui::GetMousePos().x - textPos.x, ImGui::IsMouseDoubleClicked (0));
+        selectText (ImGui::IsMouseDoubleClicked (0), lineNumber, ImGui::GetMousePos().x - textPos.x);
       }
 
     // drawGlyphs

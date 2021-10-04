@@ -487,7 +487,7 @@ private:
 
   // text
   std::string getText (sPosition beginPosition, sPosition endPosition);
-  std::string getSelectedText() { return getText (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd); }
+  std::string getSelectText();
   float getTextWidth (sPosition position);
 
   // lines
@@ -561,7 +561,7 @@ private:
   uint32_t skipFold (uint32_t lineNumber);
 
   // mouse
-  void selectText (uint32_t lineNumber, float posX, bool selectWord);
+  void selectText (bool selectWord, uint32_t lineNumber, float posX);
   void dragSelectText (uint32_t lineNumber, ImVec2 pos);
   void selectLine (uint32_t lineNumber);
   void dragSelectLine (uint32_t lineNumber, float posY);
