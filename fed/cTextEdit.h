@@ -562,19 +562,18 @@ private:
   void closeFold (uint32_t lineNumber);
   uint32_t skipFold (uint32_t lineNumber);
 
-  // mouse
-  void selectLine (uint32_t lineNumber);
-  void dragSelectLine (uint32_t lineNumber, float posY);
-  void selectText (bool selectWord, uint32_t lineNumber, ImVec2 pos);
-  void dragSelectText (uint32_t lineNumber, ImVec2 pos);
+  // keyboard,mouse
+  void handleKeyboard();
+  void mouseSelectLine (uint32_t lineNumber);
+  void mouseDragSelectLine (uint32_t lineNumber, float posY);
+  void mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 pos);
+  void mouseDragSelectText (uint32_t lineNumber, ImVec2 pos);
 
   // draw
   float drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);
   uint32_t drawFolded();
   void drawUnfolded();
-
-  void handleKeyboard();
 
   //{{{  vars
   bool mOpen = true;  // set false when DrawWindow() closed

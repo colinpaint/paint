@@ -2342,9 +2342,140 @@ uint32_t cTextEdit::skipFold (uint32_t lineNumber) {
   }
 //}}}
 
-// mouse
+// keyboard,mouse
 //{{{
-void cTextEdit::selectLine (uint32_t lineNumber) {
+void cTextEdit::handleKeyboard() {
+  //{{{  numpad codes
+  // -------------------------------------------------------------------------------------
+  // |    numlock       |        /           |        *             |        -            |
+  // |GLFW_KEY_NUM_LOCK | GLFW_KEY_KP_DIVIDE | GLFW_KEY_KP_MULTIPLY | GLFW_KEY_KP_SUBTRACT|
+  // |     0x11a        |      0x14b         |      0x14c           |      0x14d          |
+  // |------------------------------------------------------------------------------------|
+  // |        7         |        8           |        9             |         +           |
+  // |  GLFW_KEY_KP_7   |   GLFW_KEY_KP_8    |   GLFW_KEY_KP_9      |  GLFW_KEY_KP_ADD;   |
+  // |      0x147       |      0x148         |      0x149           |       0x14e         |
+  // | -------------------------------------------------------------|                     |
+  // |        4         |        5           |        6             |                     |
+  // |  GLFW_KEY_KP_4   |   GLFW_KEY_KP_5    |   GLFW_KEY_KP_6      |                     |
+  // |      0x144       |      0x145         |      0x146           |                     |
+  // | -----------------------------------------------------------------------------------|
+  // |        1         |        2           |        3             |       enter         |
+  // |  GLFW_KEY_KP_1   |   GLFW_KEY_KP_2    |   GLFW_KEY_KP_3      |  GLFW_KEY_KP_ENTER  |
+  // |      0x141       |      0x142         |      0x143           |       0x14f         |
+  // | -------------------------------------------------------------|                     |
+  // |        0                              |        .             |                     |
+  // |  GLFW_KEY_KP_0                        | GLFW_KEY_KP_DECIMAL  |                     |
+  // |      0x140                            |      0x14a           |                     |
+  // --------------------------------------------------------------------------------------
+
+  // glfw keycodes, they are platform specific
+  // - ImGuiKeys small subset of normal keyboard keys
+  // - have I misunderstood something here ?
+
+  //constexpr int kNumpadNumlock = 0x11a;
+  constexpr int kNumpad0 = 0x140;
+  constexpr int kNumpad1 = 0x141;
+  //constexpr int kNumpad2 = 0x142;
+  constexpr int kNumpad3 = 0x143;
+  //constexpr int kNumpad4 = 0x144;
+  //constexpr int kNumpad5 = 0x145;
+  //constexpr int kNumpad6 = 0x146;
+  constexpr int kNumpad7 = 0x147;
+  //constexpr int kNumpad8 = 0x148;
+  constexpr int kNumpad9 = 0x149;
+  //constexpr int kNumpadDecimal = 0x14a;
+  //constexpr int kNumpadDivide = 0x14b;
+  //constexpr int kNumpadMultiply = 0x14c;
+  //constexpr int kNumpadSubtract = 0x14d;
+  //constexpr int kNumpadAdd = 0x14e;
+  //constexpr int kNumpadEnter = 0x14f;
+  //}}}
+  //{{{
+  struct sActionKey {
+    bool mAlt;
+    bool mCtrl;
+    bool mShift;
+    int mGuiKey;
+    bool mWritable;
+    function <void()> mActionFunc;
+    };
+  //}}}
+  const vector <sActionKey> kActionKeys = {
+  //  alt    ctrl   shift  guiKey             writable function
+     {false, false, false, ImGuiKey_Delete,     true,  [this]{deleteIt();}},
+     {false, false, false, ImGuiKey_Backspace,  true,  [this]{backspace();}},
+     {false, false, false, ImGuiKey_Enter,      true,  [this]{enterKey();}},
+     {false, false, false, ImGuiKey_Tab,        true,  [this]{tabKey();}},
+     {false, true,  false, ImGuiKey_X,          true,  [this]{cut();}},
+     {false, true,  false, ImGuiKey_V,          true,  [this]{paste();}},
+     {false, true,  false, ImGuiKey_Z,          true,  [this]{undo();}},
+     {false, true,  false, ImGuiKey_Y,          true,  [this]{redo();}},
+     // edit without change
+     {false, true,  false, ImGuiKey_C,          false, [this]{copy();}},
+     {false, true,  false, ImGuiKey_A,          false, [this]{selectAll();}},
+     // move
+     {false, false, false, ImGuiKey_LeftArrow,  false, [this]{moveLeft();}},
+     {false, false, false, ImGuiKey_RightArrow, false, [this]{moveRight();}},
+     {false, true,  false, ImGuiKey_RightArrow, false, [this]{moveRightWord();}},
+     {false, false, false, ImGuiKey_UpArrow,    false, [this]{moveLineUp();}},
+     {false, false, false, ImGuiKey_DownArrow,  false, [this]{moveLineDown();}},
+     {false, false, false, ImGuiKey_PageUp,     false, [this]{movePageUp();}},
+     {false, false, false, ImGuiKey_PageDown,   false, [this]{movePageDown();}},
+     {false, false, false, ImGuiKey_Home,       false, [this]{moveHome();}},
+     {false, false, false, ImGuiKey_End,        false, [this]{moveEnd();}},
+     // toggle mode
+     {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverWrite();}},
+     {false, true,  false, ImGuiKey_Space,      false, [this]{toggleShowFolded();}},
+     // numpad
+     {false, false, false, kNumpad1,            false, [this]{openFold();}},
+     {false, false, false, kNumpad3,            false, [this]{closeFold();}},
+     {false, false, false, kNumpad7,            false, [this]{openFoldOnly();}},
+     {false, false, false, kNumpad9,            false, [this]{closeFold();}},
+     {false, false, false, kNumpad0,            true,  [this]{createFold();}},
+  // {false, false, false, kNumpad4,            false, [this]{prevFile();}},
+  // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
+  // {true,  false, false, kNumpadMulitply,     false, [this]{findDialog();}},
+  // {true,  false, false, kNumpadDivide,       false, [this]{replaceDialog();}},
+  // {false, false, false, F4                   false, [this]{copy();}},
+  // {false, true,  false, F                    false, [this]{findDialog();}},
+  // {false, true,  false, S                    false, [this]{saveFile();}},
+  // {false, true,  false, A                    false, [this]{saveAllFiles();}},
+  // {false, true,  false, Tab                  false, [this]{removeTabs();}},
+  // {true,  false, false, N                    false, [this]{gotoDialog();}},
+     };
+
+  ImGui::GetIO().WantTextInput = true;
+  ImGui::GetIO().WantCaptureKeyboard = false;
+
+  bool altKeyPressed = ImGui::GetIO().KeyAlt;
+  bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
+  bool shiftKeyPressed = ImGui::GetIO().KeyShift;
+  for (const auto& actionKey : kActionKeys)
+    //{{{  dispatch actionKey
+    if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
+         ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
+        (actionKey.mAlt == altKeyPressed) &&
+        (actionKey.mCtrl == ctrlKeyPressed) &&
+        (actionKey.mShift == shiftKeyPressed) &&
+        (!actionKey.mWritable || (actionKey.mWritable && !(isReadOnly() && canEditAtCursor())))) {
+
+      actionKey.mActionFunc();
+      break;
+      }
+    //}}}
+
+  if (!isReadOnly()) {
+    for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
+      ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
+      if ((ch != 0) && ((ch == '\n') || (ch >= 32)))
+        enterCharacter (ch);
+      }
+    ImGui::GetIO().InputQueueCharacters.resize (0);
+    }
+  }
+//}}}
+//{{{
+void cTextEdit::mouseSelectLine (uint32_t lineNumber) {
 
   cursorFlashOn();
   mEdit.mCursor.mPosition = {lineNumber, 0};
@@ -2353,7 +2484,7 @@ void cTextEdit::selectLine (uint32_t lineNumber) {
   }
 //}}}
 //{{{
-void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
+void cTextEdit::mouseDragSelectLine (uint32_t lineNumber, float posY) {
 // if folded this will use previous displays mFoldLine vector
 // - we haven't drawn subsequent lines yet
 //   - works because dragging does not change vector
@@ -2378,9 +2509,9 @@ void cTextEdit::dragSelectLine (uint32_t lineNumber, float posY) {
   }
 //}}}
 //{{{
-void cTextEdit::selectText (bool selectWord, uint32_t lineNumber, ImVec2 pos) {
+void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 pos) {
 
-  cLog::log (LOGINFO, fmt::format ("selectText {} {}", selectWord, lineNumber));
+  cLog::log (LOGINFO, fmt::format ("mouseSelectText {} {}", selectWord, lineNumber));
 
   cursorFlashOn();
   mEdit.mCursor.mPosition = getPositionFromPosX (lineNumber, pos.x);
@@ -2389,14 +2520,14 @@ void cTextEdit::selectText (bool selectWord, uint32_t lineNumber, ImVec2 pos) {
   }
 //}}}
 //{{{
-void cTextEdit::dragSelectText (uint32_t lineNumber, ImVec2 pos) {
+void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
 
   if (!canEditAtCursor())
     return;
 
   int numDragLines = static_cast<int>((pos.y - (mDrawContext.mLineHeight/2.f)) / mDrawContext.mLineHeight);
   uint32_t toLineNumber = max (0u, min (getNumLines()-1, lineNumber + numDragLines));
-  cLog::log (LOGINFO, fmt::format ("dragSelectText {} {}", lineNumber, numDragLines));
+  cLog::log (LOGINFO, fmt::format ("mouseDragSelectText {} {}", lineNumber, numDragLines));
 
   if (isFolded()) {
     // refuse to select cross fold
@@ -2541,9 +2672,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                             {leftPadWidth + mDrawContext.mLineNumberWidth, mDrawContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
-        dragSelectLine (lineNumber, ImGui::GetMousePos().y - curPos.y);
+        mouseDragSelectLine (lineNumber, ImGui::GetMousePos().y - curPos.y);
       else if (ImGui::IsMouseClicked (0))
-        selectLine (lineNumber);
+        mouseSelectLine (lineNumber);
       }
 
     leftPadWidth = 0.f;
@@ -2589,10 +2720,10 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       ImGui::InvisibleButton (fmt::format("##t{}", lineNumber).c_str(), {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
       if (ImGui::IsItemActive()) {
         if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
-          dragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+          mouseDragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
         else if (ImGui::IsMouseClicked (0))
-          selectText (ImGui::IsMouseDoubleClicked (0), lineNumber,
-                      {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+          mouseSelectText (ImGui::IsMouseDoubleClicked (0), lineNumber,
+                           {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
         }
       // draw glyphs
       curPos.x += drawGlyphs (textPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
@@ -2629,10 +2760,10 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       ImGui::InvisibleButton (fmt::format ("##t{}", lineNumber).c_str(), {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
       if (ImGui::IsItemActive()) {
         if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
-          dragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+          mouseDragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
         else if (ImGui::IsMouseClicked (0))
-          selectText (ImGui::IsMouseDoubleClicked (0), lineNumber,
-                      {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+          mouseSelectText (ImGui::IsMouseDoubleClicked (0), lineNumber,
+                           {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
         }
 
       // draw glyphs
@@ -2669,11 +2800,10 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                             {ImGui::GetWindowWidth(), mDrawContext.mLineHeight});
     if (ImGui::IsItemActive()) {
       if (ImGui::IsMouseDragging (0) && ImGui::IsMouseDown (0))
-        dragSelectText (lineNumber,
-                        {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+        mouseDragSelectText (lineNumber, {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
       else if (ImGui::IsMouseClicked (0))
-        selectText (ImGui::IsMouseDoubleClicked (0), lineNumber,
-                    {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
+        mouseSelectText (ImGui::IsMouseDoubleClicked (0), lineNumber,
+                         {ImGui::GetMousePos().x - textPos.x, ImGui::GetMousePos().y - textPos.y});
       }
 
     // drawGlyphs
@@ -2823,138 +2953,6 @@ void cTextEdit::drawUnfolded() {
   // clipper end
   clipper.Step();
   clipper.End();
-  }
-//}}}
-
-//{{{
-void cTextEdit::handleKeyboard() {
-  //{{{  numpad codes
-  // -------------------------------------------------------------------------------------
-  // |    numlock       |        /           |        *             |        -            |
-  // |GLFW_KEY_NUM_LOCK | GLFW_KEY_KP_DIVIDE | GLFW_KEY_KP_MULTIPLY | GLFW_KEY_KP_SUBTRACT|
-  // |     0x11a        |      0x14b         |      0x14c           |      0x14d          |
-  // |------------------------------------------------------------------------------------|
-  // |        7         |        8           |        9             |         +           |
-  // |  GLFW_KEY_KP_7   |   GLFW_KEY_KP_8    |   GLFW_KEY_KP_9      |  GLFW_KEY_KP_ADD;   |
-  // |      0x147       |      0x148         |      0x149           |       0x14e         |
-  // | -------------------------------------------------------------|                     |
-  // |        4         |        5           |        6             |                     |
-  // |  GLFW_KEY_KP_4   |   GLFW_KEY_KP_5    |   GLFW_KEY_KP_6      |                     |
-  // |      0x144       |      0x145         |      0x146           |                     |
-  // | -----------------------------------------------------------------------------------|
-  // |        1         |        2           |        3             |       enter         |
-  // |  GLFW_KEY_KP_1   |   GLFW_KEY_KP_2    |   GLFW_KEY_KP_3      |  GLFW_KEY_KP_ENTER  |
-  // |      0x141       |      0x142         |      0x143           |       0x14f         |
-  // | -------------------------------------------------------------|                     |
-  // |        0                              |        .             |                     |
-  // |  GLFW_KEY_KP_0                        | GLFW_KEY_KP_DECIMAL  |                     |
-  // |      0x140                            |      0x14a           |                     |
-  // --------------------------------------------------------------------------------------
-
-  // glfw keycodes, they are platform specific
-  // - ImGuiKeys small subset of normal keyboard keys
-  // - have I misunderstood something here ?
-
-  //constexpr int kNumpadNumlock = 0x11a;
-  constexpr int kNumpad0 = 0x140;
-  constexpr int kNumpad1 = 0x141;
-  //constexpr int kNumpad2 = 0x142;
-  constexpr int kNumpad3 = 0x143;
-  //constexpr int kNumpad4 = 0x144;
-  //constexpr int kNumpad5 = 0x145;
-  //constexpr int kNumpad6 = 0x146;
-  constexpr int kNumpad7 = 0x147;
-  //constexpr int kNumpad8 = 0x148;
-  constexpr int kNumpad9 = 0x149;
-  //constexpr int kNumpadDecimal = 0x14a;
-  //constexpr int kNumpadDivide = 0x14b;
-  //constexpr int kNumpadMultiply = 0x14c;
-  //constexpr int kNumpadSubtract = 0x14d;
-  //constexpr int kNumpadAdd = 0x14e;
-  //constexpr int kNumpadEnter = 0x14f;
-  //}}}
-  //{{{
-  struct sActionKey {
-    bool mAlt;
-    bool mCtrl;
-    bool mShift;
-    int mGuiKey;
-    bool mWritable;
-    function <void()> mActionFunc;
-    };
-  //}}}
-  const vector <sActionKey> kActionKeys = {
-  //  alt    ctrl   shift  guiKey             writable function
-     {false, false, false, ImGuiKey_Delete,     true,  [this]{deleteIt();}},
-     {false, false, false, ImGuiKey_Backspace,  true,  [this]{backspace();}},
-     {false, false, false, ImGuiKey_Enter,      true,  [this]{enterKey();}},
-     {false, false, false, ImGuiKey_Tab,        true,  [this]{tabKey();}},
-     {false, true,  false, ImGuiKey_X,          true,  [this]{cut();}},
-     {false, true,  false, ImGuiKey_V,          true,  [this]{paste();}},
-     {false, true,  false, ImGuiKey_Z,          true,  [this]{undo();}},
-     {false, true,  false, ImGuiKey_Y,          true,  [this]{redo();}},
-     // edit without change
-     {false, true,  false, ImGuiKey_C,          false, [this]{copy();}},
-     {false, true,  false, ImGuiKey_A,          false, [this]{selectAll();}},
-     // move
-     {false, false, false, ImGuiKey_LeftArrow,  false, [this]{moveLeft();}},
-     {false, false, false, ImGuiKey_RightArrow, false, [this]{moveRight();}},
-     {false, true,  false, ImGuiKey_RightArrow, false, [this]{moveRightWord();}},
-     {false, false, false, ImGuiKey_UpArrow,    false, [this]{moveLineUp();}},
-     {false, false, false, ImGuiKey_DownArrow,  false, [this]{moveLineDown();}},
-     {false, false, false, ImGuiKey_PageUp,     false, [this]{movePageUp();}},
-     {false, false, false, ImGuiKey_PageDown,   false, [this]{movePageDown();}},
-     {false, false, false, ImGuiKey_Home,       false, [this]{moveHome();}},
-     {false, false, false, ImGuiKey_End,        false, [this]{moveEnd();}},
-     // toggle mode
-     {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverWrite();}},
-     {false, true,  false, ImGuiKey_Space,      false, [this]{toggleShowFolded();}},
-     // numpad
-     {false, false, false, kNumpad1,            false, [this]{openFold();}},
-     {false, false, false, kNumpad3,            false, [this]{closeFold();}},
-     {false, false, false, kNumpad7,            false, [this]{openFoldOnly();}},
-     {false, false, false, kNumpad9,            false, [this]{closeFold();}},
-     {false, false, false, kNumpad0,            true,  [this]{createFold();}},
-  // {false, false, false, kNumpad4,            false, [this]{prevFile();}},
-  // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
-  // {true,  false, false, kNumpadMulitply,     false, [this]{findDialog();}},
-  // {true,  false, false, kNumpadDivide,       false, [this]{replaceDialog();}},
-  // {false, false, false, F4                   false, [this]{copy();}},
-  // {false, true,  false, F                    false, [this]{findDialog();}},
-  // {false, true,  false, S                    false, [this]{saveFile();}},
-  // {false, true,  false, A                    false, [this]{saveAllFiles();}},
-  // {false, true,  false, Tab                  false, [this]{removeTabs();}},
-  // {true,  false, false, N                    false, [this]{gotoDialog();}},
-     };
-
-  ImGui::GetIO().WantTextInput = true;
-  ImGui::GetIO().WantCaptureKeyboard = false;
-
-  bool altKeyPressed = ImGui::GetIO().KeyAlt;
-  bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
-  bool shiftKeyPressed = ImGui::GetIO().KeyShift;
-  for (const auto& actionKey : kActionKeys)
-    //{{{  dispatch actionKey
-    if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
-         ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
-        (actionKey.mAlt == altKeyPressed) &&
-        (actionKey.mCtrl == ctrlKeyPressed) &&
-        (actionKey.mShift == shiftKeyPressed) &&
-        (!actionKey.mWritable || (actionKey.mWritable && !(isReadOnly() && canEditAtCursor())))) {
-
-      actionKey.mActionFunc();
-      break;
-      }
-    //}}}
-
-  if (!isReadOnly()) {
-    for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
-      ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
-      if ((ch != 0) && ((ch == '\n') || (ch >= 32)))
-        enterCharacter (ch);
-      }
-    ImGui::GetIO().InputQueueCharacters.resize (0);
-    }
   }
 //}}}
 
