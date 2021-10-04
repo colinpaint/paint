@@ -738,8 +738,8 @@ void cTextEdit::deleteIt() {
         return;
 
       undo.mDelete = '\n';
-      undo.mDeleteBegin = undo.mDeleteEnd = getCursorPosition();
-      advance (undo.mDeleteEnd);
+      undo.mDeleteBegin = getCursorPosition();
+      undo.mDeleteEnd = advance (undo.mDeleteBegin);
 
       cLine& nextLine = getLine (position.mLineNumber+1);
       line.mGlyphs.insert (line.mGlyphs.end(), nextLine.mGlyphs.begin(), nextLine.mGlyphs.end());
@@ -791,8 +791,7 @@ void cTextEdit::backspace() {
 
       undo.mDelete = '\n';
       undo.mDeleteBegin = {position.mLineNumber - 1, getLineMaxColumn (position.mLineNumber - 1)};
-      undo.mDeleteEnd = undo.mDeleteBegin;
-      advance (undo.mDeleteEnd);
+      undo.mDeleteEnd = advance (undo.mDeleteBegin);
 
       cLine& line = getLine (mEdit.mCursor.mPosition.mLineNumber);
       cLine& prevLine = getLine (mEdit.mCursor.mPosition.mLineNumber-1);
@@ -1684,6 +1683,8 @@ void cTextEdit::moveDown (uint32_t amount) {
 
 //{{{
 void cTextEdit::cursorFlashOn() {
+// set cursor flash cycle to on, helps after any move
+
   mCursorFlashTimePoint = system_clock::now();
   }
 //}}}
@@ -1691,6 +1692,7 @@ void cTextEdit::cursorFlashOn() {
 void cTextEdit::scrollCursorVisible() {
 
   ImGui::SetWindowFocus();
+  cursorFlashOn();
 
   sPosition position = getCursorPosition();
 
@@ -1718,13 +1720,12 @@ void cTextEdit::scrollCursorVisible() {
       ImGui::SetScrollX (max (0.f, textWidth + (3 * mDrawContext.mGlyphWidth) - ImGui::GetWindowWidth()));
     }
 
-  cursorFlashOn();
-
+  // done
   mEdit.mScrollVisible = false;
   }
 //}}}
 //{{{
-void cTextEdit::advance (sPosition& position) {
+cTextEdit::sPosition cTextEdit::advance (sPosition position) {
 
   if (position.mLineNumber < getNumLines()) {
     uint32_t characterIndex = getCharacterIndex (position);
@@ -1740,8 +1741,11 @@ void cTextEdit::advance (sPosition& position) {
 
     position.mColumn = getCharacterColumn (position.mLineNumber, characterIndex);
     }
+
+  return position;
   }
 //}}}
+
 //{{{
 cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
 // return cursor position within glyphs

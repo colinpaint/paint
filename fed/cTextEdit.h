@@ -528,7 +528,8 @@ private:
 
   void cursorFlashOn();
   void scrollCursorVisible();
-  void advance (sPosition& position);
+
+  sPosition advance (sPosition position);
   sPosition sanitizePosition (sPosition position);
 
   sPosition findWordBegin (sPosition position);
