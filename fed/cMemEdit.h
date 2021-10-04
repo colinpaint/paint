@@ -153,7 +153,7 @@ private:
 
   void* copyEndian (void* dst, void* src, size_t size);
 
-  void handleKeyboard();
+  void keyboard();
 
   // draws
   void drawTop();

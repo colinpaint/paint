@@ -1287,7 +1287,7 @@ void cTextEdit::drawContents (cApp& app) {
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
   mDrawContext.update (mOptions);
 
-  handleKeyboard();
+  keyboard();
 
   if (isFolded())
     mDoc.mFoldLines.resize (drawFolded());
@@ -2344,7 +2344,7 @@ uint32_t cTextEdit::skipFold (uint32_t lineNumber) {
 
 // keyboard,mouse
 //{{{
-void cTextEdit::handleKeyboard() {
+void cTextEdit::keyboard() {
   //{{{  numpad codes
   // -------------------------------------------------------------------------------------
   // |    numlock       |        /           |        *             |        -            |
@@ -2478,6 +2478,7 @@ void cTextEdit::handleKeyboard() {
 void cTextEdit::mouseSelectLine (uint32_t lineNumber) {
 
   cursorFlashOn();
+
   mEdit.mCursor.mPosition = {lineNumber, 0};
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
   setSelect (eSelect::eLine, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
@@ -2514,6 +2515,7 @@ void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 po
   cLog::log (LOGINFO, fmt::format ("mouseSelectText {} {}", selectWord, lineNumber));
 
   cursorFlashOn();
+
   mEdit.mCursor.mPosition = getPositionFromPosX (lineNumber, pos.x);
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
   setSelect (selectWord ? eSelect::eWord : eSelect::eNormal, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
@@ -2530,14 +2532,13 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
   cLog::log (LOGINFO, fmt::format ("mouseDragSelectText {} {}", lineNumber, numDragLines));
 
   if (isFolded()) {
-    // refuse to select cross fold
+    // cannot cross fold
     if (lineNumber < toLineNumber)
       while (++lineNumber <= toLineNumber)
         if (getLine (lineNumber).mFoldBegin || getLine (lineNumber).mFoldEnd) {
           cLog::log (LOGINFO, fmt::format ("dragSelectText exit 1"));
           return;
           }
-
     else if (lineNumber > toLineNumber)
       while (--lineNumber >= toLineNumber)
         if (getLine (lineNumber).mFoldBegin || getLine (lineNumber).mFoldEnd) {
@@ -2546,7 +2547,7 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
           }
     }
 
-  // within fold drag
+  // drag select
   mEdit.mCursor.mPosition = getPositionFromPosX (toLineNumber, pos.x);
   setSelect (eSelect::eNormal, mEdit.mDragFirstPosition, mEdit.mCursor.mPosition);
   //mEdit.mScrollVisible = true;
@@ -2811,24 +2812,21 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     }
     //}}}
 
-  //{{{  draw select highlight
-  sPosition lineBeginPosition (lineNumber, 0);
-  sPosition lineEndPosition (lineNumber, getLineMaxColumn (lineNumber));
+  if ((lineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
+      (lineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber)) {
+    //{{{  draw select highlight
+    float xBegin = lineNumber == mEdit.mCursor.mSelectBegin.mLineNumber 
+                                  ? getTextWidth (mEdit.mCursor.mSelectBegin) 
+                                  : 0.f;
 
-  float xBegin = -1.f;
-  if (mEdit.mCursor.mSelectBegin <= lineEndPosition)
-    xBegin = (mEdit.mCursor.mSelectBegin > lineBeginPosition) ? getTextWidth (mEdit.mCursor.mSelectBegin) : 0.f;
+    float xEnd = getTextWidth ({lineNumber, lineNumber == mEdit.mCursor.mSelectEnd.mLineNumber
+                                              ? mEdit.mCursor.mSelectEnd.mColumn
+                                              : getLineMaxColumn (lineNumber)});
 
-  float xEnd = -1.f;
-  if (mEdit.mCursor.mSelectEnd > lineBeginPosition)
-    xEnd = getTextWidth ((mEdit.mCursor.mSelectEnd < lineEndPosition) ? mEdit.mCursor.mSelectEnd : lineEndPosition);
-
-  if (mEdit.mCursor.mSelectEnd.mLineNumber > lineNumber)
-    xEnd += mDrawContext.mGlyphWidth;
-
-  if ((xBegin != -1) && (xEnd != -1) && (xBegin < xEnd))
-    mDrawContext.rect ({textPos.x + xBegin, textPos.y}, {textPos.x + xEnd, textPos.y + mDrawContext.mLineHeight}, eSelectHighlight);
-  //}}}
+    mDrawContext.rect ({textPos.x + xBegin, textPos.y},
+                       {textPos.x + xEnd, textPos.y + mDrawContext.mLineHeight}, eSelectHighlight);
+    }
+    //}}}
 
   if (lineNumber == mEdit.mCursor.mPosition.mLineNumber) {
     // line has cursor

@@ -563,7 +563,7 @@ private:
   uint32_t skipFold (uint32_t lineNumber);
 
   // keyboard,mouse
-  void handleKeyboard();
+  void keyboard();
   void mouseSelectLine (uint32_t lineNumber);
   void mouseDragSelectLine (uint32_t lineNumber, float posY);
   void mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 pos);
