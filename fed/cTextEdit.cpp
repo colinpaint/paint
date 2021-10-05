@@ -2815,38 +2815,40 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     //}}}
 
   // select highlight ?
-  if ((lineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
-      (lineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber)) {
-    //{{{  draw select highlight
+  if (isFolded() && line.mFoldBegin && !line.mFoldOpen && line.mFoldLineNumber &&
+      (line.mFoldLineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
+      (line.mFoldLineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber)) {
+    //{{{  lineFoldComment in select range, draw highlight
     ImVec2 selectPos = textPos;
-    if (lineNumber == mEdit.mCursor.mSelectBegin.mLineNumber)
-      // partial line begin
+    bool wholeFoldBegin = sPosition (line.mFoldLineNumber, 0) >= mEdit.mCursor.mSelectBegin;
+    if (wholeFoldBegin)
+      selectPos.x -= leftPos.x;
+    else
       selectPos.x += getTextWidth (mEdit.mCursor.mSelectBegin);
 
     ImVec2 selectPosEnd = textPos;
-    selectPosEnd.x += getTextWidth ({lineNumber, lineNumber == mEdit.mCursor.mSelectEnd.mLineNumber
-                                      ? mEdit.mCursor.mSelectEnd.mColumn
-                                      : getLineMaxColumn (lineNumber)});
+    bool wholeFoldEnd = line.mFoldLineNumber < mEdit.mCursor.mSelectEnd.mLineNumber;
+    selectPosEnd.x += getTextWidth (
+      {line.mFoldLineNumber, wholeFoldEnd ? getLineMaxColumn (line.mFoldLineNumber) : mEdit.mCursor.mSelectEnd.mColumn});
     selectPosEnd.y += mDrawContext.mLineHeight;
 
     mDrawContext.rect (selectPos, selectPosEnd, eSelectHighlight);
     }
     //}}}
-  else if (isFolded() && line.mFoldBegin && !line.mFoldOpen && line.mFoldLineNumber &&
-           (line.mFoldLineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
-           (line.mFoldLineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber)) {
-    //{{{  draw foldComment select highlight
-    cLog::log (LOGINFO, "fold comment select");
-
+  else if ((lineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
+      (lineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber)) {
+    //{{{  in select range, draw highlight
     ImVec2 selectPos = textPos;
-    if (line.mFoldLineNumber == mEdit.mCursor.mSelectBegin.mLineNumber)
-      // partial line begin
+    bool wholeFoldBegin = sPosition(line.mFoldLineNumber, 0) >= mEdit.mCursor.mSelectBegin;
+    if (wholeFoldBegin)
+      selectPos.x = leftPos.x;
+    else
       selectPos.x += getTextWidth (mEdit.mCursor.mSelectBegin);
 
     ImVec2 selectPosEnd = textPos;
-    selectPosEnd.x += getTextWidth ({line.mFoldLineNumber, line.mFoldLineNumber == mEdit.mCursor.mSelectEnd.mLineNumber
-                                       ? mEdit.mCursor.mSelectEnd.mColumn
-                                       : getLineMaxColumn (line.mFoldLineNumber)});
+    bool wholeFoldEnd = lineNumber < mEdit.mCursor.mSelectEnd.mLineNumber;
+    selectPosEnd.x += getTextWidth (
+      {lineNumber, wholeFoldEnd ? getLineMaxColumn (line.mFoldLineNumber) : mEdit.mCursor.mSelectEnd.mColumn});
     selectPosEnd.y += mDrawContext.mLineHeight;
 
     mDrawContext.rect (selectPos, selectPosEnd, eSelectHighlight);
