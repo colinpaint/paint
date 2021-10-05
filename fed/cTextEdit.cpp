@@ -1806,7 +1806,7 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition position) {
 //}}}
 //{{{
 cTextEdit::sPosition cTextEdit::findNextWord (sPosition position) {
-
+// !! unreachable !!
   bool skip = false;
   bool isWord = false;
 
