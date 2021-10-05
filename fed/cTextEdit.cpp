@@ -1767,18 +1767,20 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
 cTextEdit::sPosition cTextEdit::findWordBegin (sPosition position) {
 
   const auto& glyphs = getGlyphs (position.mLineNumber);
+
   uint32_t characterIndex = getCharacterIndex (position);
   if (characterIndex >= glyphs.size())
     return position;
 
-  while ((characterIndex > 0) && isspace (glyphs[characterIndex].mChar))
-    --characterIndex;
+  while (characterIndex && isspace (glyphs[characterIndex].mChar))
+    characterIndex--;
 
   uint8_t color = glyphs[characterIndex].mColor;
   while (characterIndex > 0) {
     uint8_t ch = glyphs[characterIndex].mChar;
-    if ((ch & 0xC0) != 0x80) { // not UTF code sequence 10xxxxxx
-      if ((ch <= 32) && isspace(ch)) {
+    if ((ch & 0xC0) != 0x80) {
+      // not UTF code sequence 10xxxxxx
+      if ((ch <= 32) && isspace (ch)) {
         characterIndex++;
         break;
         }
@@ -1795,25 +1797,20 @@ cTextEdit::sPosition cTextEdit::findWordBegin (sPosition position) {
 cTextEdit::sPosition cTextEdit::findWordEnd (sPosition position) {
 
   const auto& glyphs = getGlyphs (position.mLineNumber);
+
   uint32_t characterIndex = getCharacterIndex (position);
   if (characterIndex >= glyphs.size())
     return position;
 
-  bool prevSpace = (bool)isspace (glyphs[characterIndex].mChar);
-  uint8_t color = glyphs[characterIndex].mColor;
+  uint8_t prevColor = glyphs[characterIndex].mColor;
+  bool prevSpace = isspace (glyphs[characterIndex].mChar);
   while (characterIndex < glyphs.size()) {
     uint8_t ch = glyphs[characterIndex].mChar;
-    uint32_t length = utf8CharLength (ch);
-    if (color != glyphs[characterIndex].mColor)
+    if (glyphs[characterIndex].mColor != prevColor)
       break;
-
-    if (prevSpace != !!isspace (ch)) {
-      if (isspace (ch))
-        while ((characterIndex < glyphs.size()) && isspace (glyphs[characterIndex].mChar))
-          characterIndex++;
+    if (static_cast<bool>(isspace (ch)) != prevSpace)
       break;
-      }
-    characterIndex += length;
+    characterIndex += utf8CharLength (ch);
     }
 
   return sPosition (position.mLineNumber, getCharacterColumn (position.mLineNumber, characterIndex));
@@ -1822,7 +1819,6 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition position) {
 //{{{
 cTextEdit::sPosition cTextEdit::findNextWord (sPosition position) {
 
-  // skip position to the next non-word character
   bool skip = false;
   bool isWord = false;
 
@@ -2512,7 +2508,7 @@ void cTextEdit::mouseDragSelectLine (uint32_t lineNumber, float posY) {
 //{{{
 void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 pos) {
 
-  cLog::log (LOGINFO, fmt::format ("mouseSelectText {} {}", selectWord, lineNumber));
+  //cLog::log (LOGINFO, fmt::format ("mouseSelectText {} {}", selectWord, lineNumber));
 
   cursorFlashOn();
 
@@ -2529,7 +2525,8 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
 
   int numDragLines = static_cast<int>((pos.y - (mDrawContext.mLineHeight/2.f)) / mDrawContext.mLineHeight);
   uint32_t toLineNumber = max (0u, min (getNumLines()-1, lineNumber + numDragLines));
-  cLog::log (LOGINFO, fmt::format ("mouseDragSelectText {} {}", lineNumber, numDragLines));
+
+  //cLog::log (LOGINFO, fmt::format ("mouseDragSelectText {} {}", lineNumber, numDragLines));
 
   if (isFolded()) {
     // cannot cross fold
