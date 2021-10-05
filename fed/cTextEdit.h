@@ -170,8 +170,8 @@ public:
     // offsets
     uint32_t mFoldLineNumber;  // line number of closed foldBegin comment
     uint8_t mIndent;           // leading space count
-    uint8_t mFirstGlyph;       // index of first visible glyph, past fold markers
-    uint8_t mFirstColumn;      // column of first visible glyph, past fold prefixes
+    uint8_t mFirstGlyph;       // index of first visible glyph, past fold marker
+    uint8_t mFirstColumn;      // column of first visible glyph, past fold prefix
     };
   //}}}
 
@@ -488,7 +488,7 @@ private:
   // text
   std::string getText (sPosition beginPosition, sPosition endPosition);
   std::string getSelectText();
-  float getTextWidth (sPosition position);
+  float getWidth (sPosition position);
 
   // lines
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
@@ -502,8 +502,8 @@ private:
   sPosition getNextLinePosition (sPosition position);
 
   // column
-  uint32_t getCharacterIndex (sPosition position);
-  uint32_t getCharacterColumn (uint32_t lineNumber, uint32_t characterIndex);
+  uint32_t getGlyphIndex (sPosition position);
+  uint32_t getColumn (uint32_t lineNumber, uint32_t glyphIndex);
   uint32_t getLineNumChars (uint32_t lineNumber);
   uint32_t getLineMaxColumn (uint32_t lineNumber);
   sPosition getPositionFromPosX (uint32_t lineNumber, float posX);
@@ -513,7 +513,6 @@ private:
   float getTabEndPosX (float columnX);
 
   // word
-  bool isOnWordBoundary (sPosition position);
   std::string getWordAt (sPosition position);
   std::string getWordUnderCursor() { return getWordAt (getCursorPosition()); }
   //}}}
