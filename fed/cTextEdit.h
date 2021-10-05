@@ -571,6 +571,7 @@ private:
 
   // draw
   float drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
+  void drawSelectHighlight (ImVec2 pos, uint32_t lineNumber);
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);
   uint32_t drawFolded();
   void drawUnfolded();
