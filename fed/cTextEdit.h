@@ -135,7 +135,7 @@ public:
       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
       mFoldBegin(false), mFoldEnd(false),
       mFoldOpen(false), mFoldPressed(false),
-      mFoldCommentLineNumber(0), mFirstGlyph(0), mFirstColumn(0) {}
+      mFoldLineNumber(0), mFirstGlyph(0), mFirstColumn(0) {}
     //}}}
     //{{{
     cLine (const std::vector<cGlyph>& line) :
@@ -143,7 +143,7 @@ public:
       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
       mFoldBegin(false), mFoldEnd(false),
       mFoldOpen(false), mFoldPressed(false),
-      mFoldCommentLineNumber(0), mFirstGlyph(0), mFirstColumn(0) {}
+      mFoldLineNumber(0), mFirstGlyph(0), mFirstColumn(0) {}
     //}}}
     //{{{
     ~cLine() {
@@ -168,10 +168,10 @@ public:
     bool mFoldPressed;
 
     // offsets
-    int mFoldCommentLineNumber; // line number of closed foldBegin comment
-    uint8_t mIndent;            // leading space count
-    uint8_t mFirstGlyph;        // index of first visible glyph, past fold markers
-    uint8_t mFirstColumn;       // column of first visible glyph, past fold prefixes
+    uint32_t mFoldLineNumber;  // line number of closed foldBegin comment
+    uint8_t mIndent;           // leading space count
+    uint8_t mFirstGlyph;       // index of first visible glyph, past fold markers
+    uint8_t mFirstColumn;      // column of first visible glyph, past fold prefixes
     };
   //}}}
 

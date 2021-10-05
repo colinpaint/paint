@@ -13,7 +13,7 @@
 #include <regex>
 #include <filesystem>
 
-#include "../paint/utils/cLog.h"
+#include "../utils/cLog.h"
 
 using namespace std;
 //}}}

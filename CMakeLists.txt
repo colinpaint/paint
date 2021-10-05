@@ -84,7 +84,7 @@ endif()
 if (BUILD_FILESYSTEM)
   project (filesystem)
     file (GLOB HEADER_FILES *.h utils/*.h)
-    file (GLOB SOURCE_FILES ../filesystem/main.cpp)
+    file (GLOB SOURCE_FILES filesystem/main.cpp)
 
     add_executable (filesystem ${SOURCE_FILES} ${HEADER_FILES})
     target_link_libraries (filesystem PRIVATE utils)
