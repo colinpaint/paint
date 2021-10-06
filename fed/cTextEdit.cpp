@@ -1520,7 +1520,10 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
 
   uint32_t column = 0;
   uint32_t glyphIndex = 0;
-  const auto& glyphs = getGlyphs (lineNumber);
+
+  const cLine& line = getLine (lineNumber);
+  const auto& glyphs = line.mGlyphs;
+
   while (glyphIndex < glyphs.size()) {
     float columnWidth = 0.f;
     if (glyphs[glyphIndex].mChar == '\t') {
@@ -1554,7 +1557,10 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
       }
     }
 
-  return sanitizePosition ({lineNumber, column});
+  cLog::log (LOGINFO, fmt::format ("getPositionFromPosX posX:{} firstGlyph:{} column:{} -> result:{}",
+                                   posX, line.mFirstGlyph, column, line.mFirstGlyph + column));
+
+  return sanitizePosition ({lineNumber, line.mFirstGlyph + column});
   }
 //}}}
 
@@ -2496,15 +2502,16 @@ void cTextEdit::mouseDragSelectLine (uint32_t lineNumber, float posY) {
 //{{{
 void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 pos) {
 
-  //cLog::log (LOGINFO, fmt::format ("mouseSelectText {} {}", selectWord, lineNumber));
+  cLog::log (LOGINFO, fmt::format ("mouseSelectText {} {}", selectWord, lineNumber));
 
   cursorFlashOn();
 
   cLine& line = getLine (lineNumber);
-  if (isFolded() && line.mFoldBegin && !line.mFoldOpen && line.mFoldLineNumber)
-    mEdit.mCursor.mPosition = getPositionFromPosX (line.mFoldLineNumber, pos.x);
-  else
-    mEdit.mCursor.mPosition = getPositionFromPosX (lineNumber, pos.x);
+  uint32_t visibleLineNumber = (isFolded() && line.mFoldBegin && !line.mFoldOpen && line.mFoldLineNumber)
+                                 ? line.mFoldLineNumber : lineNumber;
+
+  mEdit.mCursor.mPosition = getPositionFromPosX (visibleLineNumber, pos.x);
+  mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
 
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
   setSelect (selectWord ? eSelect::eWord : eSelect::eNormal, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
