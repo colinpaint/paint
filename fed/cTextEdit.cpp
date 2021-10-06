@@ -1516,14 +1516,13 @@ uint32_t cTextEdit::getLineMaxColumn (uint32_t lineNumber) {
 //{{{
 cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float posX) {
 
-  float columnX = 0.f;
-
   uint32_t column = 0;
-  uint32_t glyphIndex = 0;
 
   const cLine& line = getLine (lineNumber);
   const auto& glyphs = line.mGlyphs;
 
+  float columnX = 0.f;
+  uint32_t glyphIndex = 0;
   while (glyphIndex < glyphs.size()) {
     float columnWidth = 0.f;
     if (glyphs[glyphIndex].mChar == '\t') {
@@ -1557,8 +1556,8 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
       }
     }
 
-  cLog::log (LOGINFO, fmt::format ("getPositionFromPosX posX:{} firstGlyph:{} column:{} -> result:{}",
-                                   posX, line.mFirstGlyph, column, line.mFirstGlyph + column));
+  cLog::log (LOGINFO, fmt::format ("getPositionFromPosX line:{} posX:{} firstGlyph:{} column:{} -> result:{}",
+                                   lineNumber, posX, line.mFirstGlyph, column, line.mFirstGlyph + column));
 
   return sanitizePosition ({lineNumber, line.mFirstGlyph + column});
   }
@@ -1602,13 +1601,17 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
   mEdit.mCursor.mSelect = select;
   switch (select) {
     case eSelect::eNormal:
+      cLog::log (LOGINFO, fmt::format ("setSelect normal line{} begin:{} end:{}",
+                                       mEdit.mCursor.mSelectBegin.mLineNumber,
+                                       mEdit.mCursor.mSelectBegin.mColumn,
+                                       mEdit.mCursor.mSelectEnd.mColumn));
       break;
 
     case eSelect::eWord:
       mEdit.mCursor.mSelectBegin = findWordBegin (mEdit.mCursor.mSelectBegin);
       mEdit.mCursor.mSelectEnd = findWordEnd (mEdit.mCursor.mSelectEnd);
-      cLog::log (LOGINFO, fmt::format ("setSelect word col:{} begin:{} end:{}",
-                                       beginPosition.mColumn,
+      cLog::log (LOGINFO, fmt::format ("setSelect word line:{} begin:{} end:{}",
+                                       mEdit.mCursor.mSelectBegin.mLineNumber,
                                        mEdit.mCursor.mSelectBegin.mColumn,
                                        mEdit.mCursor.mSelectEnd.mColumn));
       break;
@@ -1618,10 +1621,16 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
       mEdit.mCursor.mSelectEnd = mEdit.mCursor.mSelectBegin;
 
       cLine& line = getLine (mEdit.mCursor.mSelectBegin.mLineNumber);
-      if (!isFolded() || !line.mFoldBegin) // select line
+      if (!isFolded() || !line.mFoldBegin)
+        // select line
         mEdit.mCursor.mSelectEnd = {mEdit.mCursor.mSelectEnd.mLineNumber + 1, 0};
-      else if (!line.mFoldOpen) // select fold, !!! not quite right !!!
+      else if (!line.mFoldOpen)
+        // select fold
         mEdit.mCursor.mSelectEnd = {skipFold (mEdit.mCursor.mSelectEnd.mLineNumber + 1), 0};
+      cLog::log (LOGINFO, fmt::format ("setSelect line line:{} begin:{} end:{}",
+                                       mEdit.mCursor.mSelectBegin.mLineNumber,
+                                       mEdit.mCursor.mSelectBegin.mColumn,
+                                       mEdit.mCursor.mSelectEnd.mColumn));
       break;
       }
     }
@@ -2049,7 +2058,7 @@ void cTextEdit::parseLine (cLine& line) {
   line.mFoldBegin = false;
   line.mFoldEnd = false;
   line.mFoldOpen = false;
-  line.mFoldLineNumber = 0;
+  line.mFoldTitle = 0;
   line.mIndent = 0;
   line.mFirstGlyph = 0;
   line.mFirstColumn = 0;
@@ -2493,15 +2502,14 @@ void cTextEdit::mouseDragSelectLine (uint32_t lineNumber, float posY) {
 //{{{
 void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 pos) {
 
-  cLog::log (LOGINFO, fmt::format ("mouseSelectText {} {}", selectWord, lineNumber));
-
   cursorFlashOn();
 
   cLine& line = getLine (lineNumber);
-  uint32_t visibleLineNumber = (isFolded() && line.mFoldBegin && !line.mFoldOpen && line.mFoldLineNumber)
-                                 ? line.mFoldLineNumber : lineNumber;
+  uint32_t drawLineNumber = (isFolded() && line.mFoldBegin && !line.mFoldOpen) ? line.mFoldTitle : lineNumber;
 
-  mEdit.mCursor.mPosition = getPositionFromPosX (visibleLineNumber, pos.x);
+  cLog::log (LOGINFO, fmt::format ("mouseSelectText {} line:{} visLine:{}", selectWord, lineNumber, drawLineNumber));
+
+  mEdit.mCursor.mPosition = getPositionFromPosX (drawLineNumber, pos.x);
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
 
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
@@ -2676,7 +2684,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
           line.mFoldEnd      ? 'e':' ',
           line.mFoldOpen     ? 'o' : ' ',
           line.mFoldPressed  ? 'p':' ',
-          line.mFoldLineNumber,
+          line.mFoldTitle,
           line.mIndent,
           line.mFirstGlyph,
           line.mFirstColumn).c_str());
@@ -2756,7 +2764,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth = mDrawContext.text(curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed.c_str());
+      float prefixWidth = mDrawContext.text (curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed.c_str());
 
       // add foldPrefix invisibleButton, indent + prefix wide, action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
@@ -2784,7 +2792,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
         }
 
       // draw glyphs
-      curPos.x += drawGlyphs (textPos, getGlyphs (line.mFoldLineNumber), line.mFirstGlyph, eFoldClosed);
+      curPos.x += drawGlyphs (textPos, getGlyphs (line.mFoldTitle), line.mFirstGlyph, eFoldClosed);
       }
       //}}}
     }
@@ -2829,16 +2837,13 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     //}}}
 
   // select highlight ?
-  if (isFolded() && line.mFoldBegin && !line.mFoldOpen && line.mFoldLineNumber &&
-      (line.mFoldLineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
-      (line.mFoldLineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber))
-    drawSelectHighlight (textPos, line.mFoldLineNumber);
-  else if ((lineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
-           (lineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber))
-    drawSelectHighlight (textPos, lineNumber);
+  uint32_t drawLineNumber = isFolded() && line.mFoldBegin && !line.mFoldOpen ? line.mFoldTitle : lineNumber;
+  if ((drawLineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
+      (drawLineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber))
+    drawSelectHighlight (textPos, drawLineNumber);
 
   // cursor ?
-  if (lineNumber == mEdit.mCursor.mPosition.mLineNumber) {
+  if (drawLineNumber == mEdit.mCursor.mPosition.mLineNumber) {
     if (!hasSelect()) {
       //{{{  draw cursor highlight
       ImVec2 brPos {curPos.x, curPos.y + mDrawContext.mLineHeight};
@@ -2891,14 +2896,14 @@ uint32_t cTextEdit::drawFolded() {
     if (line.mFoldBegin) {
       if (line.mFoldOpen) {
         // draw openFold line
-        line.mFoldLineNumber = lineNumber;
+        line.mFoldTitle = lineNumber;
         line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
         line.mFirstColumn = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginOpen.size());
         drawLine (lineNumber++, lineIndex++);
         }
       else if (line.mCommentFold) {
         // draw closedFold with comment line
-        line.mFoldLineNumber = lineNumber;
+        line.mFoldTitle = lineNumber;
         line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
         line.mFirstColumn = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginOpen.size());
         drawLine (lineNumber++, lineIndex++);
@@ -2908,9 +2913,9 @@ uint32_t cTextEdit::drawFolded() {
         }
       else {
         // draw closedFold without comment line
-        // - set mFoldLineNumber to first non comment line, !!!! just use +1 for now !!!!
-        line.mFoldLineNumber = lineNumber+1;
-        line.mFirstGlyph = getLine (line.mFoldLineNumber).mIndent;
+        // - set mFoldTitle to first non comment line, !!!! just use +1 for now !!!!
+        line.mFoldTitle = lineNumber+1;
+        line.mFirstGlyph = getLine (line.mFoldTitle).mIndent;
         line.mFirstColumn = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginClosed.size());
         drawLine (lineNumber++, lineIndex++);
 
@@ -2920,14 +2925,14 @@ uint32_t cTextEdit::drawFolded() {
       }
     else if (!line.mFoldEnd) {
       // draw fold middle line
-      line.mFoldLineNumber = 0;
+      line.mFoldTitle = 0;
       line.mFirstGlyph = 0;
       line.mFirstColumn = 0;
       drawLine (lineNumber++, lineIndex++);
       }
     else {
       // draw foldEnd line
-      line.mFoldLineNumber = 0;
+      line.mFoldTitle = 0;
       line.mFirstGlyph = 0;
       line.mFirstColumn = 0;
       drawLine (lineNumber++, lineIndex++);
@@ -2951,7 +2956,7 @@ void cTextEdit::drawUnfolded() {
   // clipper iterate
   for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
     // not folded, simple use of line glyphs
-    getLine (lineNumber).mFoldLineNumber = lineNumber;
+    getLine (lineNumber).mFoldTitle = lineNumber;
     getLine (lineNumber).mFirstGlyph = 0;
     getLine (lineNumber).mFirstColumn = 0;
     drawLine (lineNumber, 0);
