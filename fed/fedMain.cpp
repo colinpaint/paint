@@ -83,8 +83,7 @@ int main (int numArgs, char* args[]) {
     app.setName (params.empty() ? "C:/projects/paint/fed/cTextEdit.cpp" :
                                   cFileUtils::resolveShortcut (params[0]));
   #else
-    app.setName (params.empty() ? "/home/pi/paint/fed/cTextEdit.cpp" :
-                                  params[0]);
+    app.setName (params.empty() ? "../fed/cTextEdit.cpp" : params[0]);
   #endif
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 
