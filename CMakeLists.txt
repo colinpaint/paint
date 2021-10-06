@@ -10,7 +10,6 @@ set (BUILD_AV OFF)
 set (BUILD_IMPLOT OFF)
 set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
-#target_compile_features (project PRIVATE cxx_std_20)
 
 project (utils)
   file (GLOB UTILS_HEADER_FILES utils/*.h)
@@ -23,7 +22,8 @@ project (utils)
     target_compile_options (utils PUBLIC -Wall -Wextra
                                          -Wno-missing-field-initializers
                                          -Wno-format-security -Wno-format-overflow
-                                         -flax-vector-conversions -pedantic -Ofast -std=c++2a)
+                                         -flax-vector-conversions -pedantic -Ofast
+                                         -std=c++2a)
   endif()
 
 if (BUILD_PAINTBOX OR BUILD_FED)
