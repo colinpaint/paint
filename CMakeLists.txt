@@ -19,10 +19,13 @@ project (utils)
   if (MSVC)
     target_compile_options (utils PUBLIC /W4 /arch:AVX /fp:fast /std:c++20)
   else()
+    target_compile_definitions (utils PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
     target_compile_options (utils PUBLIC -Wall -Wextra
                                          -Wno-missing-field-initializers
-                                         -Wno-format-security -Wno-format-overflow
-                                         -flax-vector-conversions -pedantic -Ofast
+                                         -Wno-format-security -Wno-format-overflow 
+                                         -pedantic
+                                         -march=native -flax-vector-conversions -ftree-vectorize
+                                         -g -Ofast
                                          -std=c++2a)
   endif()
 
