@@ -1,10 +1,10 @@
 build/*
 linuxBuild/*
+windowsBuild/*
 
 font/build/*
-
 filesystem/build/*
-filesystem/linuxBuild/*
+filesystem/windowsBuild/*
 
 *.~*
 *.*~

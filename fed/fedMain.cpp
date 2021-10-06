@@ -80,8 +80,7 @@ int main (int numArgs, char* args[]) {
 
   // add monoSpaced font
   #ifdef _WIN32
-    app.setName (params.empty() ? "C:/projects/paint/fed/cTextEdit.cpp" :
-                                  cFileUtils::resolveShortcut (params[0]));
+    app.setName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolveShortcut (params[0]));
   #else
     app.setName (params.empty() ? "../fed/cTextEdit.cpp" : params[0]);
   #endif
