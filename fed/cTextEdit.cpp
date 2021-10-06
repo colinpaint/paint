@@ -1564,19 +1564,6 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
   }
 //}}}
 
-// word
-//{{{
-string cTextEdit::getWordAt (sPosition position) {
-
-  string result;
-  for (uint32_t glyphIndex = getGlyphIndex (findWordBegin (position));
-       glyphIndex < getGlyphIndex (findWordEnd (position)); glyphIndex++)
-    result.push_back (getGlyphs (position.mLineNumber)[glyphIndex].mChar);
-
-  return result;
-  }
-//}}}
-
 // tab
 //{{{
 uint32_t cTextEdit::getTabColumn (uint32_t column) {
@@ -1620,6 +1607,10 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
     case eSelect::eWord:
       mEdit.mCursor.mSelectBegin = findWordBegin (mEdit.mCursor.mSelectBegin);
       mEdit.mCursor.mSelectEnd = findWordEnd (mEdit.mCursor.mSelectEnd);
+      cLog::log (LOGINFO, fmt::format ("setSelect word col:{} begin:{} end:{}",
+                                       beginPosition.mColumn,
+                                       mEdit.mCursor.mSelectBegin.mColumn,
+                                       mEdit.mCursor.mSelectEnd.mColumn));
       break;
 
     case eSelect::eLine: {
@@ -2634,15 +2625,15 @@ void cTextEdit::drawSelectHighlight (ImVec2 pos, uint32_t lineNumber) {
     selectPosBegin.x = ImGui::GetCursorScreenPos().x;
   else
     // highlight from selectBegin column
-    selectPosBegin.x += getWidth ({lineNumber, mEdit.mCursor.mSelectBegin.mColumn - getLine (lineNumber).mFirstColumn});
+    selectPosBegin.x += getWidth ({lineNumber, mEdit.mCursor.mSelectBegin.mColumn});
 
   ImVec2 selectPosEnd = pos;
   if (lineNumber < mEdit.mCursor.mSelectEnd.mLineNumber)
     // highlight to end of line
-    selectPosEnd.x += getWidth ({lineNumber, getLineMaxColumn (lineNumber) - getLine (lineNumber).mFirstColumn});
+    selectPosEnd.x += getWidth ({lineNumber, getLineMaxColumn (lineNumber)});
   else if (mEdit.mCursor.mSelectEnd.mColumn)
     // hightlight to selectEnd column
-    selectPosEnd.x += getWidth ({lineNumber, mEdit.mCursor.mSelectEnd.mColumn - getLine (lineNumber).mFirstColumn});
+    selectPosEnd.x += getWidth ({lineNumber, mEdit.mCursor.mSelectEnd.mColumn});
   else
     // highlight pad + lineNumer
     selectPosEnd.x = mDrawContext.mLeftPad + mDrawContext.mLineNumberWidth;

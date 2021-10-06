@@ -511,10 +511,6 @@ private:
   // tab
   uint32_t getTabColumn (uint32_t column);
   float getTabEndPosX (float columnX);
-
-  // word
-  std::string getWordAt (sPosition position);
-  std::string getWordUnderCursor() { return getWordAt (getCursorPosition()); }
   //}}}
   //{{{  sets
   void setCursorPosition (sPosition position);
