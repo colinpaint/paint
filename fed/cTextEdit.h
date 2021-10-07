@@ -489,6 +489,8 @@ private:
   // text
   std::string getText (sPosition beginPosition, sPosition endPosition);
   std::string getSelectText();
+
+  // text widths
   float getWidth (sPosition position);
   float getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t& glyphIndex);
 
@@ -502,12 +504,11 @@ private:
   cLine::tGlyphs& getGlyphs (uint32_t lineNumber) { return getLine (lineNumber).mGlyphs; }
   uint32_t getNumGlyphs (uint32_t lineNumber) { return static_cast<uint32_t>(getLine (lineNumber).mGlyphs.size()); }
   sPosition getNextLinePosition (sPosition position);
+  uint32_t getLineNumColumns (uint32_t lineNumber);
 
   // column
-  uint32_t getGlyphIndex (sPosition position);
-  uint32_t getColumn (uint32_t lineNumber, uint32_t glyphIndex);
-  uint32_t getLineNumChars (uint32_t lineNumber);
-  uint32_t getLineMaxColumn (uint32_t lineNumber);
+  uint32_t getGlyphIndexFromPosition (sPosition position);
+  uint32_t getColumnFromGlyphIndex (uint32_t lineNumber, uint32_t toGlyphIndex);
   sPosition getPositionFromPosX (uint32_t lineNumber, float posX);
 
   // tab
