@@ -1314,7 +1314,11 @@ bool cTextEdit::canEditAtCursor() {
 // can we edit at cursorPosition
 
   sPosition position = getCursorPosition();
-  return !isFolded() || !getLine (position.mLineNumber).mFoldEnd;
+  cLine& line = getLine (position.mLineNumber);
+
+  // cannot edit foldBegin, foldEnd tokens
+  return !(line.mFoldBegin && (position.mColumn < line.mIndent + mOptions.mLanguage.mFoldBeginToken.size())) &&
+         !line.mFoldEnd;
   }
 //}}}
 
@@ -2120,11 +2124,11 @@ void cTextEdit::parseLine (cLine& line) {
   //}}}
   //{{{  find foldBegin token
   size_t foldBeginPos = glyphString.find (mOptions.mLanguage.mFoldBeginToken, indentPos);
-  line.mFoldBegin = (foldBeginPos != string::npos);
+  line.mFoldBegin = (foldBeginPos != string::npos) && (foldBeginPos == indentPos);
   //}}}
   //{{{  find foldEnd token
   size_t foldEndPos = glyphString.find (mOptions.mLanguage.mFoldEndToken, indentPos);
-  line.mFoldEnd = (foldEndPos != string::npos);
+  line.mFoldEnd = (foldEndPos != string::npos) && (foldEndPos == indentPos);
   //}}}
   if (line.mFoldBegin) {
     // does foldBegin have a comment?
@@ -2735,10 +2739,10 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
           line.mFoldTitle,
           line.mIndent,
           line.mFirstGlyph,
-          line.mFirstColumn).c_str());
+          line.mFirstColumn));
     else
       mDrawContext.mLineNumberWidth = mDrawContext.smallText (
-        curPos, eLineNumber, fmt::format ("{:4d} ", lineNumber+1).c_str());
+        curPos, eLineNumber, fmt::format ("{:4d} ", lineNumber+1));
 
     // add invisibleButton, gobble up leftPad
     ImGui::InvisibleButton (fmt::format ("##l{}", lineNumber).c_str(),
@@ -2771,7 +2775,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth = mDrawContext.text(curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen.c_str());
+      float prefixWidth = mDrawContext.text(curPos, eFoldOpen, mOptions.mLanguage.mFoldBeginOpen);
 
       // add foldPrefix invisibleButton, action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
@@ -2813,7 +2817,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth = mDrawContext.text (curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed.c_str());
+      float prefixWidth = mDrawContext.text (curPos, eFoldClosed, mOptions.mLanguage.mFoldBeginClosed);
 
       // add foldPrefix invisibleButton, indent + prefix wide, action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
@@ -2856,7 +2860,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     curPos.x += indentWidth;
 
     // draw foldPrefix
-    float prefixWidth = mDrawContext.text (curPos, eFoldOpen, mOptions.mLanguage.mFoldEnd.c_str());
+    float prefixWidth = mDrawContext.text (curPos, eFoldOpen, mOptions.mLanguage.mFoldEnd);
     glyphsPos.x = curPos.x;
 
     // add foldPrefix invisibleButton, only prefix wide, do not want to pick foldEnd line
@@ -2890,6 +2894,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
   // select
   uint32_t drawLineNumber = isFolded() && line.mFoldBegin && !line.mFoldOpen ? line.mFoldTitle : lineNumber;
+
   if ((drawLineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
       (drawLineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber))
     drawSelect (glyphsPos, drawLineNumber);
@@ -3021,6 +3026,14 @@ float cTextEdit::cDrawContext::measure (const char* str, const char* strEnd) con
 //}}}
 
 //{{{
+float cTextEdit::cDrawContext::text (ImVec2 pos, uint8_t color, const string& text) {
+ // draw and return width of text
+
+  mDrawList->AddText (mFont, mFontSize, pos, kPalette[color], text.c_str(), nullptr);
+  return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, text.c_str(), nullptr).x;
+  }
+//}}}
+//{{{
 float cTextEdit::cDrawContext::text (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
  // draw and return width of text
 
@@ -3029,12 +3042,12 @@ float cTextEdit::cDrawContext::text (ImVec2 pos, uint8_t color, const char* str,
   }
 //}}}
 //{{{
-float cTextEdit::cDrawContext::smallText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
+float cTextEdit::cDrawContext::smallText (ImVec2 pos, uint8_t color, const string& text) {
  // draw and return width of small text
 
   pos.y += mFontSmallOffset;
-  mDrawList->AddText (mFont, mFontSmallSize, pos, kPalette[color], str, strEnd);
-  return mFont->CalcTextSizeA (mFontSmallSize, FLT_MAX, -1.f, str, strEnd).x;
+  mDrawList->AddText (mFont, mFontSmallSize, pos, kPalette[color], text.c_str(), nullptr);
+  return mFont->CalcTextSizeA (mFontSmallSize, FLT_MAX, -1.f, text.c_str(), nullptr).x;
   }
 //}}}
 
