@@ -339,7 +339,7 @@ private:
     void update (const cOptions& options);
 
     float measureChar (char ch) const;
-    float measure (const char* str, const char* strEnd) const;
+    float measureText (const char* str, const char* strEnd) const;
     float text (ImVec2 pos, uint8_t color, const std::string& text);
     float text (ImVec2 pos, uint8_t color, const char* str, const char* strEnd = nullptr);
     float smallText (ImVec2 pos, uint8_t color, const std::string& text);

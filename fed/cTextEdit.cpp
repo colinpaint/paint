@@ -279,7 +279,7 @@ namespace {
     }
   //}}}
 
-  // faster parsers
+  // fast parsers
   //{{{
   bool findIdentifier (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
 
@@ -1420,7 +1420,7 @@ float cTextEdit::getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t&
     length--;
     }
 
-  return mDrawContext.measure (str.data(), str.data() + strIndex);
+  return mDrawContext.measureText (str.data(), str.data() + strIndex);
   }
 //}}}
 
@@ -1728,6 +1728,7 @@ void cTextEdit::scrollCursorVisible() {
   mEdit.mScrollVisible = false;
   }
 //}}}
+
 //{{{
 cTextEdit::sPosition cTextEdit::advance (sPosition position) {
 
@@ -1749,7 +1750,6 @@ cTextEdit::sPosition cTextEdit::advance (sPosition position) {
   return position;
   }
 //}}}
-
 //{{{
 cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
 // return cursor position within glyphs
@@ -2618,9 +2618,9 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
       pos.x += mDrawContext.mGlyphWidth;
       }
       //}}}
-    else 
+    else
       // character
-      for (uint32_t i = 0; (i < utf8CharLength (glyphs[glyphIndex].mChar)) && (strIndex < str.max_size()); i++) 
+      for (uint32_t i = 0; (i < utf8CharLength (glyphs[glyphIndex].mChar)) && (strIndex < str.max_size()); i++)
         str[strIndex++] = glyphs[glyphIndex].mChar;
 
     prevColor = color;
@@ -3017,7 +3017,7 @@ float cTextEdit::cDrawContext::measureChar (char ch) const {
   }
 //}}}
 //{{{
-float cTextEdit::cDrawContext::measure (const char* str, const char* strEnd) const {
+float cTextEdit::cDrawContext::measureText (const char* str, const char* strEnd) const {
 // return width of text
 
   return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
