@@ -2618,13 +2618,11 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
       pos.x += mDrawContext.mGlyphWidth;
       }
       //}}}
-    else {
-      uint32_t length = utf8CharLength (glyphs[glyphIndex].mChar);
-      while ((length > 0) && (strIndex < str.max_size())) {
+    else 
+      // character
+      for (uint32_t i = 0; (i < utf8CharLength (glyphs[glyphIndex].mChar)) && (strIndex < str.max_size()); i++) 
         str[strIndex++] = glyphs[glyphIndex].mChar;
-        length--;
-        }
-      }
+
     prevColor = color;
     }
 
@@ -2906,6 +2904,29 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
   }
 //}}}
 //{{{
+void cTextEdit::drawUnfolded() {
+//  draw unfolded with clipper
+
+  // clipper begin
+  ImGuiListClipper clipper;
+  clipper.Begin (getNumLines(), mDrawContext.mLineHeight);
+  clipper.Step();
+
+  // clipper iterate
+  for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
+    // not folded, simple use of line glyphs
+    getLine (lineNumber).mFoldTitle = lineNumber;
+    getLine (lineNumber).mFirstGlyph = 0;
+    getLine (lineNumber).mFirstColumn = 0;
+    drawLine (lineNumber, 0);
+    }
+
+  // clipper end
+  clipper.Step();
+  clipper.End();
+  }
+//}}}
+//{{{
 uint32_t cTextEdit::drawFolded() {
 
   uint32_t lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
@@ -2962,29 +2983,6 @@ uint32_t cTextEdit::drawFolded() {
     }
 
   return lineIndex;
-  }
-//}}}
-//{{{
-void cTextEdit::drawUnfolded() {
-//  draw unfolded with clipper
-
-  // clipper begin
-  ImGuiListClipper clipper;
-  clipper.Begin (getNumLines(), mDrawContext.mLineHeight);
-  clipper.Step();
-
-  // clipper iterate
-  for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
-    // not folded, simple use of line glyphs
-    getLine (lineNumber).mFoldTitle = lineNumber;
-    getLine (lineNumber).mFirstGlyph = 0;
-    getLine (lineNumber).mFirstColumn = 0;
-    drawLine (lineNumber, 0);
-    }
-
-  // clipper end
-  clipper.Step();
-  clipper.End();
   }
 //}}}
 
