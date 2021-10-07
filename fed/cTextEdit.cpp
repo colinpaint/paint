@@ -1394,10 +1394,17 @@ float cTextEdit::getWidth (sPosition position) {
 float cTextEdit::getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t& glyphIndex) {
 
   uint32_t length = utf8CharLength (glyphs[glyphIndex].mChar);
+  if (length == 1) // simple case
+    return mDrawContext.measureChar (glyphs[glyphIndex++].mChar);
 
+  // unicode case
   array <char, 7> str;
-  if (length > str.max_size()-1)
-    cLog::log (LOGERROR, fmt::format ("getGlyphCharacterWidth utf length error"));
+  if ((length == 0) || (length > str.max_size() - 1)) {
+    // length out of expected range
+    cLog::log (LOGERROR, fmt::format ("getGlyphCharacterWidth utf length error index::{} length:{} ",
+                                      glyphIndex, length));
+    return 0.f;
+    }
 
   uint32_t strIndex = 0;
   while ((length > 0) && (glyphIndex < glyphs.size())) {
@@ -2658,7 +2665,7 @@ void cTextEdit::drawSelect (ImVec2 pos, uint32_t lineNumber) {
 void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
 
   if (!hasSelect()) {
-    // draw cursor highlight
+    // draw cursor highlight on lineNumber, could be allText or wholeLine
     ImVec2 tlPos {0.f, pos.y};
     ImVec2 brPos {pos.x, pos.y + mDrawContext.mLineHeight};
     mDrawContext.rect (tlPos, brPos, eCursorLineFill);
@@ -2674,20 +2681,16 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
     float cursorPosX = getWidth (mEdit.mCursor.mPosition);
     uint32_t glyphIndex = getGlyphIndex (mEdit.mCursor.mPosition);
 
-    float cursorWidth;
+    float cursorWidth = 2.f;
     if (mOptions.mOverWrite && (glyphIndex < glyphs.size())) {
       // overwrite
-      if (glyphs[glyphIndex].mChar == '\t') // widen overwrite tab cursor
+      if (glyphs[glyphIndex].mChar == '\t') 
+        // widen tab cursor
         cursorWidth = getTabEndPosX (cursorPosX) - cursorPosX;
-      else {
-        // widen overwrite char cursor
-        array <char,2> str;
-        str[0] = glyphs[glyphIndex].mChar;
-        cursorWidth = mDrawContext.measure (str.data(), str.data()+1);
-        }
+      else
+        // widen character cursor
+        cursorWidth = mDrawContext.measureChar (glyphs[glyphIndex].mChar);
       }
-    else // insert cursor
-      cursorWidth = 2.f;
 
     // draw cursor
     ImVec2 tlPos {pos.x + cursorPosX - 1.f, pos.y};
@@ -2997,13 +3000,21 @@ void cTextEdit::cDrawContext::update (const cOptions& options) {
 
   float scale = mFontSize / mFontAtlasSize;
   mLineHeight = ImGui::GetTextLineHeight() * scale;
-  mGlyphWidth = mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, " ").x;
+  mGlyphWidth = measureChar (' ');
 
   mLeftPad = mGlyphWidth / 2.f;
   mLineNumberWidth = 0.f;
   }
 //}}}
 
+//{{{
+float cTextEdit::cDrawContext::measureChar (char ch) const {
+// return width of text
+
+  char str[2] = {ch,0};
+  return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, str+1).x;
+  }
+//}}}
 //{{{
 float cTextEdit::cDrawContext::measure (const char* str, const char* strEnd) const {
 // return width of text
