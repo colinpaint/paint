@@ -36,7 +36,7 @@ namespace {
   constexpr uint8_t eCursorLineFill =   12;
   constexpr uint8_t eCursorLineEdge =   13;
   constexpr uint8_t eCursorUnEditable = 14;
-  constexpr uint8_t eSelectHighlight =  15;
+  constexpr uint8_t eSelectCursor    =  15;
   constexpr uint8_t eLineNumber =       16;
   constexpr uint8_t eWhiteSpace =       17;
   constexpr uint8_t eTab =              18;
@@ -68,7 +68,7 @@ namespace {
     0x10000000, // eCursorLineFill
     0x40000000, // eCursorLineEdge
     0x800000ff, // eCursorUnEditable
-    0x80600000, // eSelectHighlight
+    0x80600000, // eSelectCursor
     0xff505000, // eLineNumber
     0xff808080, // eWhiteSpace
     0xff404040, // eTab
@@ -2625,29 +2625,77 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
   }
 //}}}
 //{{{
-void cTextEdit::drawSelectHighlight (ImVec2 pos, uint32_t lineNumber) {
+void cTextEdit::drawSelect (ImVec2 pos, uint32_t lineNumber) {
 
-  ImVec2 selectPosBegin = pos;
+  // posBegin
+  ImVec2 posBegin = pos;
   if (sPosition (lineNumber, 0) >= mEdit.mCursor.mSelectBegin)
-    // highlight from left edge
-    selectPosBegin.x = ImGui::GetCursorScreenPos().x;
+    // from left edge
+    posBegin.x = 0.f;
   else
-    // highlight from selectBegin column
-    selectPosBegin.x += getWidth ({lineNumber, mEdit.mCursor.mSelectBegin.mColumn});
+    // from selectBegin column
+    posBegin.x += getWidth ({lineNumber, mEdit.mCursor.mSelectBegin.mColumn});
 
-  ImVec2 selectPosEnd = pos;
+  // posEnd
+  ImVec2 posEnd = pos;
   if (lineNumber < mEdit.mCursor.mSelectEnd.mLineNumber)
-    // highlight to end of line
-    selectPosEnd.x += getWidth ({lineNumber, getLineMaxColumn (lineNumber)});
+    // to end of line
+    posEnd.x += getWidth ({lineNumber, getLineMaxColumn (lineNumber)});
   else if (mEdit.mCursor.mSelectEnd.mColumn)
-    // hightlight to selectEnd column
-    selectPosEnd.x += getWidth ({lineNumber, mEdit.mCursor.mSelectEnd.mColumn});
+    // to selectEnd column
+    posEnd.x += getWidth ({lineNumber, mEdit.mCursor.mSelectEnd.mColumn});
   else
-    // highlight pad + lineNumer
-    selectPosEnd.x = mDrawContext.mLeftPad + mDrawContext.mLineNumberWidth;
-  selectPosEnd.y += mDrawContext.mLineHeight;
+    // to lefPad + lineNumer
+    posEnd.x = mDrawContext.mLeftPad + mDrawContext.mLineNumberWidth;
+  posEnd.y += mDrawContext.mLineHeight;
 
-  mDrawContext.rect (selectPosBegin, selectPosEnd, eSelectHighlight);
+  // draw select rect
+  mDrawContext.rect (posBegin, posEnd, eSelectCursor);
+  }
+//}}}
+//{{{
+void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
+
+  if (!hasSelect()) {
+    // draw cursor highlight
+    ImVec2 tlPos {0.f, pos.y};
+    ImVec2 brPos {pos.x, pos.y + mDrawContext.mLineHeight};
+    mDrawContext.rect (tlPos, brPos, eCursorLineFill);
+    mDrawContext.rectLine (tlPos, brPos, canEditAtCursor() ? eCursorLineEdge : eCursorUnEditable);
+    }
+
+  //  draw flashing cursor
+  auto now = system_clock::now();
+  auto elapsed = now - mCursorFlashTimePoint;
+  if (elapsed < 400ms) {
+    const auto& glyphs = getGlyphs (lineNumber);
+
+    float cursorPosX = getWidth (mEdit.mCursor.mPosition);
+    uint32_t glyphIndex = getGlyphIndex (mEdit.mCursor.mPosition);
+
+    float cursorWidth;
+    if (mOptions.mOverWrite && (glyphIndex < glyphs.size())) {
+      // overwrite
+      if (glyphs[glyphIndex].mChar == '\t') // widen overwrite tab cursor
+        cursorWidth = getTabEndPosX (cursorPosX) - cursorPosX;
+      else {
+        // widen overwrite char cursor
+        array <char,2> str;
+        str[0] = glyphs[glyphIndex].mChar;
+        cursorWidth = mDrawContext.measure (str.data(), str.data()+1);
+        }
+      }
+    else // insert cursor
+      cursorWidth = 2.f;
+
+    // draw cursor
+    ImVec2 tlPos {pos.x + cursorPosX - 1.f, pos.y};
+    ImVec2 brPos {tlPos.x + cursorWidth, pos.y + mDrawContext.mLineHeight};
+    mDrawContext.rect (tlPos, brPos, canEditAtCursor() ? eCursorPos : eCursorUnEditable);
+    }
+
+  else if (elapsed > 800ms)
+    cursorFlashOn();
   }
 //}}}
 //{{{
@@ -2663,8 +2711,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     }
     //}}}
 
-  ImVec2 leftPos = ImGui::GetCursorScreenPos();
-  ImVec2 curPos = leftPos;
+  ImVec2 curPos = ImGui::GetCursorScreenPos();
 
   float leftPadWidth = mDrawContext.mLeftPad;
   cLine& line = getLine (lineNumber);
@@ -2712,7 +2759,6 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
   // draw text
   ImVec2 textPos = curPos;
-  const auto& glyphs = line.mGlyphs;
   if (isFolded() && line.mFoldBegin) {
     if (line.mFoldOpen) {
       //{{{  draw foldBegin open
@@ -2836,53 +2882,15 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     }
     //}}}
 
-  // select highlight ?
+  // select
   uint32_t drawLineNumber = isFolded() && line.mFoldBegin && !line.mFoldOpen ? line.mFoldTitle : lineNumber;
   if ((drawLineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
       (drawLineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber))
-    drawSelectHighlight (textPos, drawLineNumber);
+    drawSelect (textPos, drawLineNumber);
 
-  // cursor ?
-  if (drawLineNumber == mEdit.mCursor.mPosition.mLineNumber) {
-    if (!hasSelect()) {
-      //{{{  draw cursor highlight
-      ImVec2 brPos {curPos.x, curPos.y + mDrawContext.mLineHeight};
-      mDrawContext.rect (leftPos, brPos, eCursorLineFill);
-      mDrawContext.rectLine (leftPos, brPos, canEditAtCursor() ? eCursorLineEdge : eCursorUnEditable);
-      }
-      //}}}
-    //{{{  draw flashing cursor
-    auto now = system_clock::now();
-    auto elapsed = now - mCursorFlashTimePoint;
-    if (elapsed < 400ms) {
-      float cursorPosX = getWidth (mEdit.mCursor.mPosition);
-      uint32_t glyphIndex = getGlyphIndex (mEdit.mCursor.mPosition);
-
-      float cursorWidth;
-      if (mOptions.mOverWrite && (glyphIndex < glyphs.size())) {
-        // overwrite
-        if (glyphs[glyphIndex].mChar == '\t') // widen overwrite tab cursor
-          cursorWidth = getTabEndPosX (cursorPosX) - cursorPosX;
-        else {
-          // widen overwrite char cursor
-          array <char,2> str;
-          str[0] = glyphs[glyphIndex].mChar;
-          cursorWidth = mDrawContext.measure (str.data(), str.data()+1);
-          }
-        }
-      else // insert cursor
-        cursorWidth = 2.f;
-
-      // draw cursor
-      ImVec2 tlPos {textPos.x + cursorPosX - 1.f, textPos.y};
-      ImVec2 brPos {tlPos.x + cursorWidth, curPos.y + mDrawContext.mLineHeight};
-      mDrawContext.rect (tlPos, brPos, canEditAtCursor() ? eCursorPos : eCursorUnEditable);
-      }
-
-    else if (elapsed > 800ms)
-      cursorFlashOn();
-    //}}}
-    }
+  // cursor
+  if (drawLineNumber == mEdit.mCursor.mPosition.mLineNumber)
+    drawCursor (textPos, drawLineNumber);
   }
 //}}}
 //{{{
