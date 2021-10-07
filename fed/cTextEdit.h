@@ -256,7 +256,6 @@ public:
   void drawWindow (const std::string& title, cApp& app);
   void drawContents (cApp& app);
 
-
 private:
   //{{{
   struct sCursor {
@@ -388,6 +387,18 @@ private:
   //{{{
   class cEdit {
   public:
+    //{{{
+    bool isSelectLine (uint32_t lineNumber) {
+      return (lineNumber >= mCursor.mSelectBegin.mLineNumber) &&
+             (lineNumber <= mCursor.mSelectEnd.mLineNumber);
+      }
+    //}}}
+    //{{{
+    bool isCursorLine (uint32_t lineNumber) {
+      return lineNumber == mCursor.mPosition.mLineNumber;
+      }
+    //}}}
+
     // undo
     bool hasUndo() const { return mUndoIndex > 0; }
     bool hasRedo() const { return mUndoIndex < mUndoVector.size(); }
@@ -470,7 +481,7 @@ private:
     };
   //}}}
 
-  //{{{  gets
+  //{{{  get
   bool isFolded() const { return mOptions.mShowFolded; }
   bool isDrawLineNumber() const { return mOptions.mShowLineNumber; }
   bool isDrawWhiteSpace() const { return mOptions.mShowWhiteSpace; }
@@ -492,6 +503,7 @@ private:
   float getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t& glyphIndex);
 
   // lines
+  uint32_t getDrawLineNumber (uint32_t lineNumber);
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
   uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
   uint32_t getMaxLineIndex() const { return isFolded() ? getNumFoldLines()-1 : getNumLines()-1; }
@@ -512,7 +524,7 @@ private:
   uint32_t getTabColumn (uint32_t column);
   float getTabEndPosX (float columnX);
   //}}}
-  //{{{  sets
+  //{{{  set
   void setCursorPosition (sPosition position);
   void setSelect (eSelect select, sPosition beginPosition, sPosition endPosition);
   void setDeselect();

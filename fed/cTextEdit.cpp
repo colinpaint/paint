@@ -1309,7 +1309,7 @@ void cTextEdit::drawContents (cApp& app) {
 //}}}
 
 // private:
-//{{{  gets
+//{{{  get
 //{{{
 bool cTextEdit::canEditAtCursor() {
 // can we edit at cursorPosition
@@ -1425,6 +1425,13 @@ float cTextEdit::getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t&
 //}}}
 
 // lines
+//{{{
+uint32_t cTextEdit::getDrawLineNumber (uint32_t lineNumber) {
+
+  const cLine& line = getLine (lineNumber);
+  return isFolded() && line.mFoldBegin && !line.mFoldOpen ? line.mFoldTitle : lineNumber;
+  }
+//}}}
 //{{{
 uint32_t cTextEdit::getLineNumberFromIndex (uint32_t lineIndex) const {
 
@@ -1588,7 +1595,7 @@ float cTextEdit::getTabEndPosX (float xPos) {
   }
 //}}}
 //}}}
-//{{{  sets
+//{{{  set
 //{{{
 void cTextEdit::setCursorPosition (sPosition position) {
 // set cursorPosition, if changed check scrollVisible
@@ -2514,9 +2521,7 @@ void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 po
 
   cursorFlashOn();
 
-  cLine& line = getLine (lineNumber);
-  uint32_t drawLineNumber = (isFolded() && line.mFoldBegin && !line.mFoldOpen) ? line.mFoldTitle : lineNumber;
-
+  uint32_t drawLineNumber = getDrawLineNumber (lineNumber);
   cLog::log (LOGINFO, fmt::format ("mouseSelectText {} line:{} visLine:{}", selectWord, lineNumber, drawLineNumber));
 
   mEdit.mCursor.mPosition = getPositionFromPosX (drawLineNumber, pos.x);
@@ -2676,12 +2681,11 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
   auto now = system_clock::now();
   auto elapsed = now - mCursorFlashTimePoint;
   if (elapsed < 400ms) {
-    const auto& glyphs = getGlyphs (lineNumber);
-
     float cursorPosX = getWidth (mEdit.mCursor.mPosition);
-    uint32_t glyphIndex = getGlyphIndexFromPosition (mEdit.mCursor.mPosition);
-
     float cursorWidth = 2.f;
+
+    const auto& glyphs = getGlyphs (lineNumber);
+    uint32_t glyphIndex = getGlyphIndexFromPosition (mEdit.mCursor.mPosition);
     if (mOptions.mOverWrite && (glyphIndex < glyphs.size())) {
       // overwrite
       if (glyphs[glyphIndex].mChar == '\t')
@@ -2717,6 +2721,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
   ImVec2 curPos = ImGui::GetCursorScreenPos();
 
+  // lineNumber
   float leftPadWidth = mDrawContext.mLeftPad;
   cLine& line = getLine (lineNumber);
   if (isDrawLineNumber()) {
@@ -2724,6 +2729,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     curPos.x += leftPadWidth;
 
     if (mOptions.mShowLineDebug)
+      // debug
       mDrawContext.mLineNumberWidth = mDrawContext.text (curPos, eLineNumber,
         fmt::format ("{:4d}{}{}{}{}{}{}{}{}{:4d}{:2d}{:2d}{:2d} ",
           lineNumber,
@@ -2740,6 +2746,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
           line.mFirstGlyph,
           line.mFirstColumn));
     else
+      // normal
       mDrawContext.mLineNumberWidth = mDrawContext.smallText (
         curPos, eLineNumber, fmt::format ("{:4d} ", lineNumber+1));
 
@@ -2761,11 +2768,11 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
   else
     mDrawContext.mLineNumberWidth = 0.f;
 
-  // draw text
+  // text
   ImVec2 glyphsPos = curPos;
   if (isFolded() && line.mFoldBegin) {
     if (line.mFoldOpen) {
-      //{{{  draw foldBegin open
+      //{{{  draw foldBegin open + glyphs
       // draw foldPrefix
       curPos.x += leftPadWidth;
 
@@ -2807,7 +2814,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       }
       //}}}
     else {
-      //{{{  draw foldBegin closed
+      //{{{  draw foldBegin closed + glyphs
       // add indent
       curPos.x += leftPadWidth;
 
@@ -2891,15 +2898,14 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     }
     //}}}
 
-  // select
-  uint32_t drawLineNumber = isFolded() && line.mFoldBegin && !line.mFoldOpen ? line.mFoldTitle : lineNumber;
+  uint32_t drawLineNumber = getDrawLineNumber (lineNumber);
 
-  if ((drawLineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
-      (drawLineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber))
+  // select
+  if (mEdit.isSelectLine (drawLineNumber))
     drawSelect (glyphsPos, drawLineNumber);
 
   // cursor
-  if (drawLineNumber == mEdit.mCursor.mPosition.mLineNumber)
+  if (mEdit.isCursorLine (drawLineNumber))
     drawCursor (glyphsPos, drawLineNumber);
   }
 //}}}
