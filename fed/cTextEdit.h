@@ -3,14 +3,10 @@
 //{{{  includes
 #include <cstdint>
 #include <string>
-#include <memory>
-#include <regex>
 #include <chrono>
+#include <regex>
 
 #include <vector>
-#include <array>
-#include <map>
-#include <unordered_map>
 #include <unordered_set>
 
 #include "../imgui/imgui.h"
