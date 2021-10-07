@@ -342,6 +342,7 @@ private:
   public:
     void update (const cOptions& options);
 
+    float measureChar (char ch) const;
     float measure (const char* str, const char* strEnd) const;
     float text (ImVec2 pos, uint8_t color, const char* str, const char* strEnd = nullptr);
     float smallText (ImVec2 pos, uint8_t color, const char* str, const char* strEnd = nullptr);
@@ -489,6 +490,7 @@ private:
   std::string getText (sPosition beginPosition, sPosition endPosition);
   std::string getSelectText();
   float getWidth (sPosition position);
+  float getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t& glyphIndex);
 
   // lines
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
