@@ -14,7 +14,7 @@
 #include "cUI.h"
 
 // canvas
-#include "../canvas/cCanvas.h"
+#include "../paint/cCanvas.h"
 
 // brush
 #include "../brush/cBrush.h"

@@ -22,7 +22,7 @@ project (utils)
     target_compile_definitions (utils PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
     target_compile_options (utils PUBLIC -Wall -Wextra
                                          -Wno-missing-field-initializers
-                                         -Wno-format-security -Wno-format-overflow 
+                                         -Wno-format-security -Wno-format-overflow
                                          -pedantic
                                          -march=native -flax-vector-conversions -ftree-vectorize
                                          -g -Ofast
@@ -155,20 +155,13 @@ if (BUILD_AV)
 endif()
 
 if (BUILD_PAINTBOX)
-  project (canvas)
-  file (GLOB CANVAS_HEADER_FILES canvas/*.h)
-  file (GLOB CANVAS_SRCFILES canvas/*.cpp)
-  add_library (canvas ${CANVAS_HEADER_FILES} ${CANVAS_SRCFILES})
-  target_include_directories (canvas PUBLIC stb)
-  target_link_libraries (canvas PUBLIC utils)
-
   ### paintbox main project
   project (paintbox VERSION 1.0.0)
   find_package (OpenGL REQUIRED)
 
   # executable - main + static registered .cpp
-  file (GLOB HEADER_FILES utils/*.h platform/*.h graphics/*.h brush/*.h ui/*.h)
-  file (GLOB SOURCE_FILES paintMain.cpp platform/*.cpp graphics/*.cpp brush/*.cpp
+  file (GLOB HEADER_FILES paint/*.h utils/*.h platform/*.h graphics/*.h brush/*.h ui/*.h)
+  file (GLOB SOURCE_FILES paint/*.cpp platform/*.cpp graphics/*.cpp brush/*.cpp
                           ui/cUI.cpp ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp)
   add_executable (paintbox ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -181,7 +174,7 @@ if (BUILD_PAINTBOX)
     add_subdirectory (glad4.5core)
   endif()
 
-  target_link_libraries (paintbox PRIVATE canvas imgui utils glfw glad)
+  target_link_libraries (paintbox PRIVATE imgui utils glfw glad)
 
   if (BUILD_IMPLOT)
     target_compile_definitions (paintbox PRIVATE BUILD_IMPLOT)

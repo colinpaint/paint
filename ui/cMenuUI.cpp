@@ -17,8 +17,9 @@
 #include "cUI.h"
 
 #include "../brush/cBrush.h"
-#include "../canvas/cLayer.h"
-#include "../canvas/cCanvas.h"
+#include "../paint/cLayer.h"
+#include "../paint/cCanvas.h"
+
 #include "../utils/tinyfiledialogs.h"
 #include "../utils/cLog.h"
 

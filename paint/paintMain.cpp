@@ -20,24 +20,24 @@
 #endif
 
 // UI font
-#include "font/itcSymbolBold.h"
-#include "font/droidSansMono.h"
+#include "../font/itcSymbolBold.h"
+#include "../font/droidSansMono.h"
 
 // self registered classes using static var init idiom
-#include "platform/cPlatform.h"
-#include "graphics/cGraphics.h"
-#include "brush/cBrush.h"
+#include "../platform/cPlatform.h"
+#include "../graphics/cGraphics.h"
+#include "../brush/cBrush.h"
 
-#include "ui/cApp.h"
-#include "ui/cUI.h"
+#include "../ui/cApp.h"
+#include "../ui/cUI.h"
 
 // canvas
-#include "canvas/cLayer.h"
-#include "canvas/cCanvas.h"
+#include "cLayer.h"
+#include "cCanvas.h"
 
 // utils
 #include "../utils/cFileUtils.h"
-#include "utils/cLog.h"
+#include "../utils/cLog.h"
 
 using namespace std;
 //}}}

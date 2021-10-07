@@ -13,8 +13,8 @@
 #include "../utils/tinyfiledialogs.h"
 
 #include "cUI.h"
-#include "../canvas/cLayer.h"
-#include "../canvas/cCanvas.h"
+#include "../paint/cLayer.h"
+#include "../paint/cCanvas.h"
 #include "../utils/cLog.h"
 
 using namespace std;
