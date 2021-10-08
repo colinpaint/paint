@@ -519,11 +519,7 @@ vector<string> cTextEdit::getTextStrings() const {
   result.reserve (getNumLines());
 
   for (const auto& line : mDoc.mLines) {
-    string lineString;
-    lineString.resize (line.getNumGlyphs());
-    for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++)
-      lineString[glyphIndex] = line.mGlyphs[glyphIndex].mChar;
-
+    string lineString = line.getString();
     result.emplace_back (move (lineString));
     }
 
@@ -742,10 +738,11 @@ void cTextEdit::deleteIt() {
       undo.mDeleteBegin = getCursorPosition();
       undo.mDeleteEnd = advance (undo.mDeleteBegin);
 
-      cLine& nextLine = getLine (position.mLineNumber+1);
-      line.mGlyphs.insert (line.mGlyphs.end(), nextLine.mGlyphs.begin(), nextLine.mGlyphs.end());
+      // insert nextLine at end of line
+      line.insertLineAtEnd (getLine (position.mLineNumber+1));
       parseLine (line);
 
+      // delete nextLine
       deleteLine (position.mLineNumber + 1);
       }
 
@@ -755,9 +752,9 @@ void cTextEdit::deleteIt() {
       undo.mDelete = getText (undo.mDeleteBegin, undo.mDeleteEnd);
 
       uint32_t glyphIndex = getGlyphIndexFromPosition (position);
-      uint32_t length = utf8CharLength (line.mGlyphs[glyphIndex].mChar);
+      uint32_t length = utf8CharLength (line.getChar (glyphIndex));
       while ((length > 0) && (glyphIndex < line.getNumGlyphs())) {
-        line.mGlyphs.erase (line.mGlyphs.begin() + glyphIndex);
+        line.erase (glyphIndex);
         length--;
         }
       parseLine (line);
@@ -798,8 +795,10 @@ void cTextEdit::backspace() {
       cLine& prevLine = getLine (mEdit.mCursor.mPosition.mLineNumber-1);
 
       uint32_t prevSize = getLineNumColumns (mEdit.mCursor.mPosition.mLineNumber - 1);
-      prevLine.mGlyphs.insert (prevLine.mGlyphs.end(), line.mGlyphs.begin(), line.mGlyphs.end());
+
+      prevLine.insertLineAtEnd (line);
       deleteLine (mEdit.mCursor.mPosition.mLineNumber);
+
       --mEdit.mCursor.mPosition.mLineNumber;
       mEdit.mCursor.mPosition.mColumn = prevSize;
       }
@@ -808,7 +807,7 @@ void cTextEdit::backspace() {
       uint32_t glyphIndex = getGlyphIndexFromPosition (position) - 1;
       uint32_t glyphIndexEnd = glyphIndex + 1;
       cLine& line = getLine (mEdit.mCursor.mPosition.mLineNumber);
-      while ((glyphIndex > 0) && isUtfSequence (line.mGlyphs[glyphIndex].mChar))
+      while ((glyphIndex > 0) && isUtfSequence (line.getChar (glyphIndex)))
         glyphIndex--;
 
       undo.mDeleteBegin = undo.mDeleteEnd = getCursorPosition();
@@ -816,8 +815,8 @@ void cTextEdit::backspace() {
       --mEdit.mCursor.mPosition.mColumn;
 
       while ((glyphIndex < line.getNumGlyphs()) && (glyphIndexEnd-- > glyphIndex)) {
-        undo.mDelete += line.mGlyphs[glyphIndex].mChar;
-        line.mGlyphs.erase (line.mGlyphs.begin() + glyphIndex);
+        undo.mDelete += line.getChar (glyphIndex);
+        line.erase (glyphIndex);
         }
       parseLine (line);
       }
@@ -865,8 +864,8 @@ void cTextEdit::enterCharacter (ImWchar ch) {
 
       bool modified = false;
       for (uint32_t lineNumber = selectBegin.mLineNumber; lineNumber <= selectEnd.mLineNumber; lineNumber++) {
-        auto& glyphs = getGlyphs (lineNumber);
-        glyphs.insert (glyphs.begin(), cGlyph ('\t', eTab));
+        cLine& line = getLine (lineNumber);
+        line.insert (0, cGlyph ('\t', eTab));
         modified = true;
         }
 
@@ -925,17 +924,17 @@ void cTextEdit::enterCharacter (ImWchar ch) {
     if (mOptions.mLanguage.mAutoIndentation)
       for (uint32_t glyphIndex = 0;
            (glyphIndex < line.getNumGlyphs()) &&
-           isascii (line.mGlyphs[glyphIndex].mChar) && isblank (line.mGlyphs[glyphIndex].mChar); glyphIndex++)
-        newLine.mGlyphs.push_back (line.mGlyphs[glyphIndex]);
+           isascii (line.getChar (glyphIndex)) && isblank (line.getChar (glyphIndex)); glyphIndex++)
+        newLine.pushBack (line.getGlyph (glyphIndex));
     uint32_t indentSize = newLine.getNumGlyphs();
 
     // insert indent and rest of old line
     uint32_t glyphIndex = getGlyphIndexFromPosition (position);
-    newLine.mGlyphs.insert (newLine.mGlyphs.end(), line.mGlyphs.begin() + glyphIndex, line.mGlyphs.end());
+    newLine.insertRestOfLineAtEnd (line, glyphIndex);
     parseLine (newLine);
 
     // erase rest of old line
-    line.mGlyphs.erase (line.mGlyphs.begin() + glyphIndex, line.mGlyphs.begin() + line.getNumGlyphs());
+    line.erase (glyphIndex, line.getNumGlyphs());
     parseLine (line);
 
     // set cursor
@@ -953,12 +952,12 @@ void cTextEdit::enterCharacter (ImWchar ch) {
       cLine& line = getLine (position.mLineNumber);
       uint32_t glyphIndex = getGlyphIndexFromPosition (position);
       if (mOptions.mOverWrite && (glyphIndex < line.getNumGlyphs())) {
-        uint32_t length = utf8CharLength(line.mGlyphs[glyphIndex].mChar);
+        uint32_t length = utf8CharLength(line.getChar (glyphIndex));
         undo.mDeleteBegin = mEdit.mCursor.mPosition;
         undo.mDeleteEnd = {position.mLineNumber,
                            getColumnFromGlyphIndex (position.mLineNumber, glyphIndex + length)};
         while ((length > 0) && (glyphIndex < line.getNumGlyphs())) {
-          undo.mDelete += line.mGlyphs[glyphIndex].mChar;
+          undo.mDelete += line.getChar(glyphIndex);
           line.erase (glyphIndex);
           length--;
           }
@@ -1056,7 +1055,7 @@ void cTextEdit::loadFile (const string& filename) {
   while (getline (stream, lineString)) {
     // create empty line, reserve glyphs for line
     mDoc.mLines.emplace_back (cLine::tGlyphs());
-    mDoc.mLines.back().mGlyphs.reserve (lineString.size());
+    mDoc.mLines.back().reserve (lineString.size());
 
     // iterate char
     for (const auto ch : lineString) {
@@ -1065,7 +1064,7 @@ void cTextEdit::loadFile (const string& filename) {
       else {
         if (ch ==  '\t')
           mDoc.mHasTabs = true;
-        mDoc.mLines.back().mGlyphs.emplace_back (cGlyph (ch, eText));
+        mDoc.mLines.back().emplaceBack (cGlyph (ch, eText));
         }
       }
 
@@ -1108,9 +1107,7 @@ void cTextEdit::saveFile() {
   // save ofstream
   ofstream stream (saveFilePath);
   for (uint32_t lineNumber = 0; lineNumber < highestLineNumber; lineNumber++) {
-    string lineString;
-    for (auto& glyph : mDoc.mLines[lineNumber].mGlyphs)
-      lineString += glyph.mChar;
+    string lineString = mDoc.mLines[lineNumber].getString();
     stream.write (lineString.data(), lineString.size());
     stream.put ('\n');
     }
@@ -1372,30 +1369,29 @@ float cTextEdit::getWidth (sPosition position) {
 // get width in pixels of drawn glyphs up to and including position
 
   const cLine& line = getLine (position.mLineNumber);
-  const auto& glyphs = line.mGlyphs;
 
   float width = 0.f;
   uint32_t toGlyphIndex = getGlyphIndexFromPosition (position);
-  for (uint32_t glyphIndex = line.mFirstGlyph; (glyphIndex < glyphs.size()) && (glyphIndex < toGlyphIndex);) {
-    if (glyphs[glyphIndex].mChar == '\t') {
+  for (uint32_t glyphIndex = line.mFirstGlyph; (glyphIndex < line.getNumGlyphs()) && (glyphIndex < toGlyphIndex);) {
+    if (line.getChar (glyphIndex) == '\t') {
       // tab width
       width = getTabEndPosX (width);
       glyphIndex++;
       }
     else
       // character width
-      width += getGlyphCharacterWidth (glyphs, glyphIndex);
+      width += getGlyphCharacterWidth (line, glyphIndex);
     }
 
   return width;
   }
 //}}}
 //{{{
-float cTextEdit::getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t& glyphIndex) {
+float cTextEdit::getGlyphCharacterWidth (const cLine& line, uint32_t& glyphIndex) {
 
-  uint32_t length = utf8CharLength (glyphs[glyphIndex].mChar);
+  uint32_t length = utf8CharLength (line.getChar (glyphIndex));
   if (length == 1) // simple case
-    return mDrawContext.measureChar (glyphs[glyphIndex++].mChar);
+    return mDrawContext.measureChar (line.getChar (glyphIndex++));
 
   // unicode case
   array <char,7> str;
@@ -1407,8 +1403,8 @@ float cTextEdit::getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t&
     }
 
   uint32_t strIndex = 0;
-  while ((length > 0) && (glyphIndex < glyphs.size())) {
-    str[strIndex++] = glyphs[glyphIndex++].mChar;
+  while ((length > 0) && (glyphIndex < line.getNumGlyphs())) {
+    str[strIndex++] = line.getChar (glyphIndex++);
     length--;
     }
 
@@ -1525,12 +1521,11 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
   uint32_t column = 0;
 
   const cLine& line = getLine (lineNumber);
-  const auto& glyphs = line.mGlyphs;
 
   float columnPosX = 0.f;
   uint32_t glyphIndex = 0;
-  while (glyphIndex < glyphs.size()) {
-    if (glyphs[glyphIndex].mChar == '\t') {
+  while (glyphIndex < line.getNumGlyphs()) {
+    if (line.getChar (glyphIndex) == '\t') {
       // tab
       glyphIndex++;
 
@@ -1545,7 +1540,7 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
       }
 
     else {
-      float width = getGlyphCharacterWidth (glyphs, glyphIndex);
+      float width = getGlyphCharacterWidth (line, glyphIndex);
       if (columnPosX + (width/2.f) > posX)
         break;
 
@@ -1888,12 +1883,12 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
       // insert new line
       if (glyphIndex < getNumGlyphs (position.mLineNumber)) {
         cLine& line = getLine (position.mLineNumber);
-        cLine& newLine = insertLine (position.mLineNumber+1);
 
-        newLine.mGlyphs.insert (newLine.mGlyphs.begin(), line.mGlyphs.begin() + glyphIndex, line.mGlyphs.end());
+        cLine& newLine = insertLine (position.mLineNumber+1);
+        newLine.insertRestOfLineAtEnd (line, glyphIndex);
         parseLine (newLine);
 
-        line.mGlyphs.erase (line.mGlyphs.begin() + glyphIndex, line.mGlyphs.end());
+        line.eraseToEnd (glyphIndex);
         parseLine (line);
         }
       else
@@ -1910,7 +1905,7 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
       cLine& line = getLine (position.mLineNumber);
       auto length = utf8CharLength (*textPtr);
       while ((length > 0) && (*textPtr != '\0')) {
-        line.mGlyphs.insert (line.mGlyphs.begin() + glyphIndex++, cGlyph (*textPtr++, eText));
+        line.insert (glyphIndex++, cGlyph (*textPtr++, eText));
         length--;
         }
       position.mColumn++;
@@ -1968,33 +1963,33 @@ void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosit
     cLine& line = getLine (beginPosition.mLineNumber);
     uint32_t maxColumn = getLineNumColumns (beginPosition.mLineNumber);
     if (endPosition.mColumn >= maxColumn)
-      line.mGlyphs.erase (line.mGlyphs.begin() + beginGlyphIndex, line.mGlyphs.end());
+      line.eraseToEnd (beginGlyphIndex);
     else
-      line.mGlyphs.erase (line.mGlyphs.begin() + beginGlyphIndex, line.mGlyphs.begin() + endGlyphIndex);
+      line.erase (beginGlyphIndex, endGlyphIndex);
 
     parseLine (line);
     }
 
   else {
     // delete over multiple lines
-    // firstLine
-    cLine& firstLine = getLine (beginPosition.mLineNumber);
-    firstLine.mGlyphs.erase (firstLine.mGlyphs.begin() + beginGlyphIndex, firstLine.mGlyphs.end());
+    // - delete backend of beginLine
+    cLine& beginLine = getLine (beginPosition.mLineNumber);
+    beginLine.eraseToEnd (beginGlyphIndex);
 
-    // lastLine
-    cLine& lastLine = getLine (endPosition.mLineNumber);
-    lastLine.mGlyphs.erase (lastLine.mGlyphs.begin(), lastLine.mGlyphs.begin() + endGlyphIndex);
+    // delete frontend of endLine
+    cLine& endLine = getLine (endPosition.mLineNumber);
+    endLine.erase (0, endGlyphIndex);
 
-    // insert partial lastLine into end of firstLine
+    // insert remainder of endLine after end of remainder of beginLine
     if (beginPosition.mLineNumber < endPosition.mLineNumber)
-      firstLine.mGlyphs.insert (firstLine.mGlyphs.end(), lastLine.mGlyphs.begin(), lastLine.mGlyphs.end());
+      beginLine.insertLineAtEnd (endLine);
 
-    // delete totally unused lines
+    // delete middle whole lines
     if (beginPosition.mLineNumber < endPosition.mLineNumber)
       deleteLineRange (beginPosition.mLineNumber + 1, endPosition.mLineNumber + 1);
 
-    parseLine (firstLine);
-    parseLine (lastLine);
+    parseLine (beginLine);
+    parseLine (endLine);
     }
 
   mDoc.mEdited = true;
@@ -2081,7 +2076,7 @@ void cTextEdit::parseLine (cLine& line) {
   line.mIndent = 0;
   line.mFirstGlyph = 0;
 
-  if (line.mGlyphs.empty())
+  if (line.empty())
     return;
 
   // create glyphs string
@@ -2237,15 +2232,15 @@ uint32_t cTextEdit::trimTrailingSpace() {
   uint32_t lineNumber = 0;
   uint32_t trimmedSpaces = 0;
   for (auto& line : mDoc.mLines) {
-    size_t column = line.mGlyphs.size();
-    while ((column > 0) && (line.mGlyphs[--column].mChar == ' ')) {
+    uint32_t column = line.getNumGlyphs();
+    while ((column > 0) && (line.getChar (--column) == ' ')) {
       // trailingSpace, trim it
       line.mGlyphs.pop_back();
       trimmedSpaces++;
       //cLog::log (LOGINFO, fmt::format ("trim space {}:{}", lineNumber, column));
       }
 
-    if (!line.mGlyphs.empty()) // nonEmpty line, raise waterMark
+    if (!line.empty()) // nonEmpty line, raise waterMark
       nonEmptyWaterMark = lineNumber;
 
     lineNumber++;

@@ -147,15 +147,84 @@ public:
       }
     //}}}
 
+    //{{{
+    bool empty() {
+      return mGlyphs.empty();
+      }
+    //}}}
+    //{{{
+    uint8_t getChar (const uint32_t glyphIndex) const {
+      return mGlyphs[glyphIndex].mChar;
+      }
+    //}}}
+    //{{{
+    cGlyph getGlyph (const uint32_t glyphIndex) const {
+      return mGlyphs[glyphIndex];
+      }
+    //}}}
+    //{{{
+    std::string getString() const {
+
+       std::string lineString;
+       lineString.reserve (mGlyphs.size());
+
+       for (auto& glyph : mGlyphs)
+         lineString += glyph.mChar;
+
+       return lineString;
+       }
+    //}}}
     uint32_t getNumGlyphs() const { return static_cast<uint32_t>(mGlyphs.size()); }
+
+    //{{{
+    void reserve (size_t size) {
+      mGlyphs.reserve (size);
+      }
+    //}}}
+    //{{{
+    void pushBack (cGlyph glyph) {
+      mGlyphs.push_back (glyph);
+      }
+    //}}}
+    //{{{
+    void emplaceBack (cGlyph glyph) {
+      mGlyphs.emplace_back (glyph);
+      }
+    //}}}
+
     //{{{
     void insert (uint32_t glyphIndex, const cGlyph& glyph) {
       mGlyphs.insert (mGlyphs.begin() + glyphIndex, glyph);
       }
     //}}}
     //{{{
+    void insertLineAtEnd (const cLine& lineToInsert) {
+    // insert lineToInsert to end of line
+
+      mGlyphs.insert (mGlyphs.end(), lineToInsert.mGlyphs.begin(), lineToInsert.mGlyphs.end());
+      }
+    //}}}
+    //{{{
+    void insertRestOfLineAtEnd (const cLine& lineToInsert, uint32_t glyphIndex) {
+    // insert from glyphIndex of lineToInsert to end of line
+
+      mGlyphs.insert (mGlyphs.end(), lineToInsert.mGlyphs.begin() + glyphIndex, lineToInsert.mGlyphs.end());
+      }
+    //}}}
+
+    //{{{
     void erase (uint32_t glyphIndex) {
       mGlyphs.erase (mGlyphs.begin() + glyphIndex);
+      }
+    //}}}
+    //{{{
+    void eraseToEnd (uint32_t glyphIndex) {
+      mGlyphs.erase (mGlyphs.begin() + glyphIndex, mGlyphs.end());
+      }
+    //}}}
+    //{{{
+    void erase (uint32_t glyphIndex, uint32_t toGlyphIndex) {
+      mGlyphs.erase (mGlyphs.begin() + glyphIndex, mGlyphs.begin() + toGlyphIndex);
       }
     //}}}
 
@@ -504,7 +573,7 @@ private:
 
   // text widths
   float getWidth (sPosition position);
-  float getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t& glyphIndex);
+  float getGlyphCharacterWidth (const cLine& line, uint32_t& glyphIndex);
 
   // lines
   uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
