@@ -18,11 +18,11 @@ class cApp;
 //{{{
 class cGlyph {
 public:
-  cGlyph() : mChar(' '), mColor(0),
-             mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
+  cGlyph() 
+    : mChar(' '), mColor(0), mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
 
-  cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
-                                       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
+  cGlyph (uint8_t ch, uint8_t color) 
+    : mChar(ch), mColor(color), mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
 
   // vars
   uint8_t mChar;
