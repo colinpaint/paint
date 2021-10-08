@@ -281,7 +281,7 @@ namespace {
 
   // fast parsers
   //{{{
-  bool findIdentifier (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
+  bool parseIdentifier (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
 
     const char* srcPtr = srcBegin;
 
@@ -306,7 +306,7 @@ namespace {
     }
   //}}}
   //{{{
-  bool findNumber (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
+  bool parseNumber (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
 
     const char* srcPtr = srcBegin;
 
@@ -398,7 +398,7 @@ namespace {
     }
   //}}}
   //{{{
-  bool findPunctuation (const char* srcBegin, const char*& tokenBegin, const char*& tokenEnd) {
+  bool parsePunctuation (const char* srcBegin, const char*& tokenBegin, const char*& tokenEnd) {
 
     switch (*srcBegin) {
       case '[':
@@ -434,7 +434,7 @@ namespace {
     }
   //}}}
   //{{{
-  bool findString (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
+  bool parseString (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
 
     const char* srcPtr = srcBegin;
 
@@ -461,7 +461,7 @@ namespace {
     }
   //}}}
   //{{{
-  bool findLiteral (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
+  bool parseLiteral (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
 
     const char* srcPtr = srcBegin;
 
@@ -3108,15 +3108,15 @@ const cTextEdit::cLanguage cTextEdit::cLanguage::c() {
       tokenEnd = srcEnd;
       color = eText;
       }
-    if (findIdentifier (srcBegin, srcEnd, tokenBegin, tokenEnd))
+    if (parseIdentifier (srcBegin, srcEnd, tokenBegin, tokenEnd))
       color = eIdentifier;
-    else if (findNumber (srcBegin, srcEnd, tokenBegin, tokenEnd))
+    else if (parseNumber (srcBegin, srcEnd, tokenBegin, tokenEnd))
       color = eNumber;
-    else if (findPunctuation (srcBegin, tokenBegin, tokenEnd))
+    else if (parsePunctuation (srcBegin, tokenBegin, tokenEnd))
       color = ePunctuation;
-    else if (findString (srcBegin, srcEnd, tokenBegin, tokenEnd))
+    else if (parseString (srcBegin, srcEnd, tokenBegin, tokenEnd))
       color = eString;
-    else if (findLiteral (srcBegin, srcEnd, tokenBegin, tokenEnd))
+    else if (parseLiteral (srcBegin, srcEnd, tokenBegin, tokenEnd))
       color = eLiteral;
     return (color != eUndefined);
     };
