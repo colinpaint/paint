@@ -311,7 +311,7 @@ namespace {
     const char* srcPtr = srcBegin;
 
     // skip leading sign +-
-    if ((*srcPtr == '+') && (*srcPtr == '-'))
+    if ((*srcPtr == '+') || (*srcPtr == '-'))
       srcPtr++;
 
     // skip digits 0..9
@@ -1332,13 +1332,13 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
   uint32_t endLineNumber = endPosition.mLineNumber;
 
   // count approx numChars
-  uint32_t numChars = 0;
+  size_t numChars = 0;
   for (uint32_t lineNumber = beginLineNumber; lineNumber < endLineNumber; lineNumber++)
     numChars += getNumGlyphs (lineNumber);
 
   // reserve text size
   string text;
-  text.reserve (numChars + (numChars / 8));
+  text.reserve (numChars);
 
   uint32_t beginGlyphIndex = getGlyphIndexFromPosition (beginPosition);
   uint32_t endGlyphIndex = getGlyphIndexFromPosition (endPosition);
