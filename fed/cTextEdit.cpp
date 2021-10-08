@@ -1323,14 +1323,6 @@ bool cTextEdit::canEditAtCursor() {
   }
 //}}}
 
-//{{{
-uint32_t cTextEdit::getNumPageLines() const {
-
-  float height = ImGui::GetWindowHeight() - 20.f;
-  return static_cast<uint32_t>(floor (height / mDrawContext.mLineHeight));
-  }
-//}}}
-
 // text
 //{{{
 string cTextEdit::getSelectText() {
@@ -1426,13 +1418,30 @@ float cTextEdit::getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t&
 
 // lines
 //{{{
-uint32_t cTextEdit::getDrawLineNumber (uint32_t lineNumber) {
+uint32_t cTextEdit::getNumPageLines() const {
 
-  const cLine& line = getLine (lineNumber);
-  if (isFolded() && line.mFoldBegin && !line.mFoldOpen)
-    return lineNumber + line.mFoldOffset;
-  else return
-    lineNumber;
+  float height = ImGui::GetWindowHeight() - 20.f;
+  return static_cast<uint32_t>(floor (height / mDrawContext.mLineHeight));
+  }
+//}}}
+
+// line
+//{{{
+uint32_t cTextEdit::getLineNumColumns (uint32_t lineNumber) {
+
+  uint32_t column = 0;
+
+  const auto& glyphs = getGlyphs (lineNumber);
+  for (uint32_t glyphIndex = 0; glyphIndex < glyphs.size(); ) {
+    uint8_t ch = glyphs[glyphIndex].mChar;
+    if (ch == '\t')
+      column = getTabColumn (column);
+    else
+      column++;
+    glyphIndex += utf8CharLength (ch);
+    }
+
+  return column;
   }
 //}}}
 //{{{
@@ -1470,24 +1479,14 @@ uint32_t cTextEdit::getLineIndexFromNumber (uint32_t lineNumber) const {
     return uint32_t(it - mDoc.mFoldLines.begin());
   }
 //}}}
-
-// line
 //{{{
-uint32_t cTextEdit::getLineNumColumns (uint32_t lineNumber) {
+uint32_t cTextEdit::getDrawLineNumber (uint32_t lineNumber) {
 
-  uint32_t column = 0;
-
-  const auto& glyphs = getGlyphs (lineNumber);
-  for (uint32_t glyphIndex = 0; glyphIndex < glyphs.size(); ) {
-    uint8_t ch = glyphs[glyphIndex].mChar;
-    if (ch == '\t')
-      column = getTabColumn (column);
-    else
-      column++;
-    glyphIndex += utf8CharLength (ch);
-    }
-
-  return column;
+  const cLine& line = getLine (lineNumber);
+  if (isFolded() && line.mFoldBegin && !line.mFoldOpen)
+    return lineNumber + line.mFoldOffset;
+  else return
+    lineNumber;
   }
 //}}}
 //{{{
@@ -2680,9 +2679,9 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
     }
 
   //  draw flashing cursor
-  auto now = system_clock::now();
-  auto elapsed = now - mCursorFlashTimePoint;
+  auto elapsed = system_clock::now() - mCursorFlashTimePoint;
   if (elapsed < 400ms) {
+    // draw cursor
     float cursorPosX = getWidth (mEdit.mCursor.mPosition);
     float cursorWidth = 2.f;
 
@@ -2698,13 +2697,13 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
         cursorWidth = mDrawContext.measureChar (glyphs[glyphIndex].mChar);
       }
 
-    // draw cursor
     ImVec2 tlPos {pos.x + cursorPosX - 1.f, pos.y};
     ImVec2 brPos {tlPos.x + cursorWidth, pos.y + mDrawContext.mLineHeight};
     mDrawContext.rect (tlPos, brPos, canEditAtCursor() ? eCursorPos : eCursorUnEditable);
+    return;
     }
 
-  else if (elapsed > 800ms)
+  if (elapsed > 800ms) // reset flashTimer
     cursorFlashOn();
   }
 //}}}
@@ -2733,7 +2732,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     if (mOptions.mShowLineDebug)
       // debug
       mDrawContext.mLineNumberWidth = mDrawContext.text (curPos, eLineNumber,
-        fmt::format ("{:4d}{}{}{}{}{}{}{}{}{:4d}{:2d}{:2d}{:2d} ",
+        fmt::format ("{:4d}{}{}{}{}{}{}{}{}{:2d}{:2d}{:2d} ",
           lineNumber,
           line.mCommentSingle? 'c' : ' ',
           line.mCommentBegin ? '{' : ' ',

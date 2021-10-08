@@ -488,11 +488,6 @@ private:
 
   bool canEditAtCursor();
 
-  // nums
-  uint32_t getNumPageLines() const;
-  uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
-  uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mDoc.mFoldLines.size()); }
-
   // text
   std::string getSelectText();
   std::string getText (sPosition beginPosition, sPosition endPosition);
@@ -502,17 +497,22 @@ private:
   float getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t& glyphIndex);
 
   // lines
-  uint32_t getDrawLineNumber (uint32_t lineNumber);
-  uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
-  uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
+  uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
+  uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mDoc.mFoldLines.size()); }
   uint32_t getMaxLineIndex() const { return isFolded() ? getNumFoldLines()-1 : getNumLines()-1; }
+  uint32_t getNumPageLines() const;
 
   // line
   cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
   cLine::tGlyphs& getGlyphs (uint32_t lineNumber) { return getLine (lineNumber).mGlyphs; }
-  uint32_t getNumGlyphs (uint32_t lineNumber) { return static_cast<uint32_t>(getLine (lineNumber).mGlyphs.size()); }
 
+  uint32_t getNumGlyphs (uint32_t lineNumber) { return static_cast<uint32_t>(getLine (lineNumber).mGlyphs.size()); }
   uint32_t getLineNumColumns (uint32_t lineNumber);
+
+  uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
+  uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
+
+  uint32_t getDrawLineNumber (uint32_t lineNumber);
   sPosition getNextLinePosition (sPosition position);
 
   // column
