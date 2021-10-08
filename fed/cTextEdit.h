@@ -146,7 +146,7 @@ public:
     //}}}
 
     //{{{
-    bool empty() {
+    bool empty() const {
       return mGlyphs.empty();
       }
     //}}}
@@ -158,6 +158,21 @@ public:
     //{{{
     uint8_t getColor (const uint32_t glyphIndex) const {
       return mGlyphs[glyphIndex].mColor;
+      }
+    //}}}
+    //{{{
+    bool getCommentSingle (const uint32_t glyphIndex) const {
+      return mGlyphs[glyphIndex].mCommentSingle;
+      }
+    //}}}
+    //{{{
+    bool getCommentBegin (const uint32_t glyphIndex) const {
+      return mGlyphs[glyphIndex].mCommentBegin;
+      }
+    //}}}
+    //{{{
+    bool getCommentEnd (const uint32_t glyphIndex) const {
+      return mGlyphs[glyphIndex].mCommentEnd;
       }
     //}}}
     //{{{
@@ -186,7 +201,7 @@ public:
       }
     //}}}
     //{{{
-    void setColor (size_t glyphIndex, uint8_t color) {
+    void setColor (uint32_t glyphIndex, uint8_t color) {
       mGlyphs[glyphIndex].mColor = color;
       }
     //}}}
@@ -272,8 +287,6 @@ public:
       }
     //}}}
 
-    tGlyphs mGlyphs;
-
     // offsets
     uint8_t mIndent;     // leading space count
     uint8_t mFirstGlyph; // index of first visible glyph, past fold marker
@@ -290,6 +303,9 @@ public:
     // fold state
     bool mFoldOpen;
     bool mFoldPressed;
+
+  private:
+    tGlyphs mGlyphs;
     };
   //}}}
 
@@ -627,9 +643,8 @@ private:
 
   // line
   cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
-  cLine::tGlyphs& getGlyphs (uint32_t lineNumber) { return getLine (lineNumber).mGlyphs; }
 
-  uint32_t getNumGlyphs (uint32_t lineNumber) { return static_cast<uint32_t>(getLine (lineNumber).mGlyphs.size()); }
+  uint32_t getNumGlyphs (uint32_t lineNumber) { return getLine (lineNumber).getNumGlyphs(); }
   uint32_t getLineNumColumns (uint32_t lineNumber);
 
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
@@ -700,7 +715,7 @@ private:
   void mouseDragSelectText (uint32_t lineNumber, ImVec2 pos);
 
   // draw
-  float drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor);
+  float drawGlyphs (ImVec2 pos, const cLine& line, uint8_t firstGlyph, uint8_t forceColor);
   void drawSelect (ImVec2 pos, uint32_t lineNumber);
   void drawCursor (ImVec2 curPos, uint32_t lineNumber);
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);

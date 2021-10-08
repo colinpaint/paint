@@ -1808,14 +1808,13 @@ cTextEdit::sPosition cTextEdit::findWordBegin (sPosition position) {
 cTextEdit::sPosition cTextEdit::findWordEnd (sPosition position) {
 
   cLine& line = getLine (position.mLineNumber);
-  const auto& glyphs = getGlyphs (position.mLineNumber);
 
   uint32_t glyphIndex = getGlyphIndexFromPosition (position);
-  if (glyphIndex >= glyphs.size())
+  if (glyphIndex >= line.getNumGlyphs())
     return position;
 
-  uint8_t prevColor = glyphs[glyphIndex].mColor;
-  bool prevSpace = isspace (glyphs[glyphIndex].mChar);
+  uint8_t prevColor = line.getColor (glyphIndex);
+  bool prevSpace = isspace (line.getChar (glyphIndex));
   while (glyphIndex < line.getNumGlyphs()) {
     uint8_t ch = line.getChar (glyphIndex);
     if (line.getColor (glyphIndex) != prevColor)
@@ -2051,8 +2050,8 @@ void cTextEdit::parseTokens (cLine& line, const string& textString) {
         }
 
       // color token glyphs
-      size_t glyphIndex = tokenBegin - strBegin;
-      size_t glyphIndexEnd = tokenEnd - strBegin;
+      uint32_t glyphIndex = static_cast<uint32_t>(tokenBegin - strBegin);
+      uint32_t glyphIndexEnd = static_cast<uint32_t>(tokenEnd - strBegin);
       while (glyphIndex < glyphIndexEnd)
         line.setColor (glyphIndex++, tokenColor);
 
@@ -2153,14 +2152,12 @@ void cTextEdit::parseComments() {
 
     bool inString = false;
     bool inSingleComment = false;
-    bool srcBegsrcEndComment = false;
+    bool inBeginEndComment = false;
 
     uint32_t glyphIndex = 0;
     uint32_t lineNumber = 0;
     while (lineNumber < getNumLines()) {
       cLine& line = getLine (lineNumber);
-      auto& glyphs = getGlyphs (lineNumber);
-
       uint32_t numGlyphs = line.getNumGlyphs();
       if (numGlyphs > 0) {
         // parse ch
@@ -2168,14 +2165,14 @@ void cTextEdit::parseComments() {
         if (ch == '\"') {
           //{{{  start of string
           inString = true;
-          if (inSingleComment || srcBegsrcEndComment)
-            glyphs[glyphIndex].mColor = eComment;
+          if (inSingleComment || inBeginEndComment)
+            line.setColor (glyphIndex, eComment);
           }
           //}}}
         else if (inString) {
           //{{{  in string
-          if (inSingleComment || srcBegsrcEndComment)
-            glyphs[glyphIndex].mColor = eComment;
+          if (inSingleComment || inBeginEndComment)
+            line.setColor (glyphIndex, eComment);
 
           if (ch == '\"') // end of string
             inString = false;
@@ -2184,33 +2181,33 @@ void cTextEdit::parseComments() {
             // \ escapeChar in " " quotes, skip nextChar if any
             if (glyphIndex+1 < numGlyphs) {
               glyphIndex++;
-              if (inSingleComment || srcBegsrcEndComment)
-                glyphs[glyphIndex].mColor = eComment;
+              if (inSingleComment || inBeginEndComment)
+                line.setColor (glyphIndex, eComment);
               }
             }
           }
           //}}}
         else {
           // comment begin?
-          if (glyphs[glyphIndex].mCommentSingle)
+          if (line.getCommentSingle (glyphIndex))
             inSingleComment = true;
-          else if (glyphs[glyphIndex].mCommentBegin)
-            srcBegsrcEndComment = true;
+          else if (line.getCommentBegin (glyphIndex))
+            inBeginEndComment = true;
 
           // in comment
-          if (inSingleComment || srcBegsrcEndComment)
-            glyphs[glyphIndex].mColor = eComment;
+          if (inSingleComment || inBeginEndComment)
+            line.setColor (glyphIndex, eComment);
 
           // comment end ?
-          if (glyphs[glyphIndex].mCommentEnd)
-            srcBegsrcEndComment = false;
+          if (line.getCommentEnd (glyphIndex))
+            inBeginEndComment = false;
           }
         glyphIndex += utf8CharLength (ch);
         }
 
       if (glyphIndex >= numGlyphs) {
         // end of line, check for trailing concatenate '\' char
-        if ((numGlyphs == 0) || (glyphs[numGlyphs-1].mChar != '\\')) {
+        if ((numGlyphs == 0) || (line.getChar (numGlyphs-1) != '\\')) {
           // no trailing concatenate, reset line flags
           inString = false;
           inSingleComment = false;
@@ -2560,9 +2557,9 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
 
 // draw
 //{{{
-float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t firstGlyph, uint8_t forceColor) {
+float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t firstGlyph, uint8_t forceColor) {
 
-  if (glyphs.empty())
+  if (line.empty())
     return 0.f;
 
   // initial pos to measure textWidth on return
@@ -2570,18 +2567,18 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
 
   array <char,256> str;
   uint32_t strIndex = 0;
-  uint8_t prevColor = (forceColor == eUndefined) ? glyphs[firstGlyph].mColor : forceColor;
+  uint8_t prevColor = (forceColor == eUndefined) ? line.getColor (firstGlyph) : forceColor;
 
-  for (uint32_t glyphIndex = firstGlyph; glyphIndex < glyphs.size(); glyphIndex++) {
-    uint8_t color = (forceColor == eUndefined) ? glyphs[glyphIndex].mColor : forceColor;
+  for (uint32_t glyphIndex = firstGlyph; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
+    uint8_t color = (forceColor == eUndefined) ? line.getColor (glyphIndex) : forceColor;
     if ((strIndex > 0) && (strIndex < str.max_size()) &&
-        ((color != prevColor) || (glyphs[glyphIndex].mChar == '\t') || (glyphs[glyphIndex].mChar == ' '))) {
+        ((color != prevColor) || (line.getChar (glyphIndex) == '\t') || (line.getChar (glyphIndex) == ' '))) {
       // draw colored glyphs, seperated by colorChange,tab,space
       pos.x += mDrawContext.text (pos, prevColor, str.data(), str.data() + strIndex);
       strIndex = 0;
       }
 
-    if (glyphs[glyphIndex].mChar == '\t') {
+    if (line.getChar (glyphIndex) == '\t') {
       //{{{  tab
       ImVec2 arrowLeftPos {pos.x + 1.f, pos.y + mDrawContext.mFontSize/2.f};
 
@@ -2603,7 +2600,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
         }
       }
       //}}}
-    else if (glyphs[glyphIndex].mChar == ' ') {
+    else if (line.getChar (glyphIndex) == ' ') {
       //{{{  space
       if (isDrawWhiteSpace()) {
         // draw circle
@@ -2616,8 +2613,8 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine::tGlyphs& glyphs, uint8_t f
       //}}}
     else
       // character
-      for (uint32_t i = 0; (i < utf8CharLength (glyphs[glyphIndex].mChar)) && (strIndex < str.max_size()); i++)
-        str[strIndex++] = glyphs[glyphIndex].mChar;
+      for (uint32_t i = 0; (i < utf8CharLength (line.getChar (glyphIndex))) && (strIndex < str.max_size()); i++)
+        str[strIndex++] = line.getChar (glyphIndex);
 
     prevColor = color;
     }
@@ -2676,16 +2673,15 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
     float cursorWidth = 2.f;
 
     cLine& line = getLine (lineNumber);
-    const auto& glyphs = getGlyphs (lineNumber);
     uint32_t glyphIndex = getGlyphIndexFromPosition (mEdit.mCursor.mPosition);
-    if (mOptions.mOverWrite && (glyphIndex < glyphs.size())) {
+    if (mOptions.mOverWrite && (glyphIndex < line.getNumGlyphs())) {
       // overwrite
-      if (glyphs[glyphIndex].mChar == '\t')
+      if (line.getChar (glyphIndex) == '\t')
         // widen tab cursor
         cursorWidth = getTabEndPosX (cursorPosX) - cursorPosX;
       else
         // widen character cursor
-        cursorWidth = mDrawContext.measureChar (glyphs[glyphIndex].mChar);
+        cursorWidth = mDrawContext.measureChar (line.getChar (glyphIndex));
       }
 
     ImVec2 tlPos {pos.x + cursorPosX - 1.f, pos.y};
@@ -2802,7 +2798,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                            {ImGui::GetMousePos().x - glyphsPos.x, ImGui::GetMousePos().y - glyphsPos.y});
         }
       // draw glyphs
-      curPos.x += drawGlyphs (glyphsPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
+      curPos.x += drawGlyphs (glyphsPos, line, line.mFirstGlyph, eUndefined);
       }
       //}}}
     else {
@@ -2845,7 +2841,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
         }
 
       // draw glyphs
-      curPos.x += drawGlyphs (glyphsPos, getGlyphs (lineNumber + line.mFoldOffset), line.mFirstGlyph, eFoldClosed);
+      cLine& drawLine = getLine (lineNumber + line.mFoldOffset);
+      curPos.x += drawGlyphs (glyphsPos, drawLine, line.mFirstGlyph, eFoldClosed);
       }
       //}}}
     }
@@ -2886,7 +2883,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       }
 
     // drawGlyphs
-    curPos.x += drawGlyphs (glyphsPos, line.mGlyphs, line.mFirstGlyph, eUndefined);
+    curPos.x += drawGlyphs (glyphsPos, line, line.mFirstGlyph, eUndefined);
     }
     //}}}
 
