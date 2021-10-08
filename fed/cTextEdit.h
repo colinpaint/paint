@@ -128,18 +128,16 @@ public:
     //{{{
     cLine() :
       mGlyphs(),
+      mIndent(0), mFirstGlyph(0), mFoldOffset(0),
       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
-      mFoldBegin(false), mFoldEnd(false),
-      mFoldOpen(false), mFoldPressed(false),
-      mFoldOffset(0), mFirstGlyph(0) {}
+      mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mFoldPressed(false) {}
     //}}}
     //{{{
     cLine (const std::vector<cGlyph>& line) :
       mGlyphs(line),
+      mIndent(0), mFirstGlyph(0), mFoldOffset(0),
       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
-      mFoldBegin(false), mFoldEnd(false),
-      mFoldOpen(false), mFoldPressed(false),
-      mFoldOffset(0), mFirstGlyph(0) {}
+      mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mFoldPressed(false) {}
     //}}}
     //{{{
     ~cLine() {
@@ -155,6 +153,11 @@ public:
     //{{{
     uint8_t getChar (const uint32_t glyphIndex) const {
       return mGlyphs[glyphIndex].mChar;
+      }
+    //}}}
+    //{{{
+    uint8_t getColor (const uint32_t glyphIndex) const {
+      return mGlyphs[glyphIndex].mColor;
       }
     //}}}
     //{{{
@@ -271,6 +274,11 @@ public:
 
     tGlyphs mGlyphs;
 
+    // offsets
+    uint8_t mIndent;     // leading space count
+    uint8_t mFirstGlyph; // index of first visible glyph, past fold marker
+    uint8_t mFoldOffset; // closed fold title line offset
+
     // parsed tokens
     bool mCommentSingle;
     bool mCommentBegin;
@@ -282,11 +290,6 @@ public:
     // fold state
     bool mFoldOpen;
     bool mFoldPressed;
-
-    // offsets
-    uint32_t mFoldOffset; // closed fold title line offset
-    uint8_t mIndent;      // leading space count
-    uint8_t mFirstGlyph;  // index of first visible glyph, past fold marker
     };
   //}}}
 
