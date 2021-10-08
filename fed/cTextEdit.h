@@ -148,6 +148,16 @@ public:
     //}}}
 
     uint32_t getNumGlyphs() const { return static_cast<uint32_t>(mGlyphs.size()); }
+    //{{{
+    void insert (uint32_t glyphIndex, const cGlyph& glyph) {
+      mGlyphs.insert (mGlyphs.begin() + glyphIndex, glyph);
+      }
+    //}}}
+    //{{{
+    void erase (uint32_t glyphIndex) {
+      mGlyphs.erase (mGlyphs.begin() + glyphIndex);
+      }
+    //}}}
 
     tGlyphs mGlyphs;
 

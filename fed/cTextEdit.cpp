@@ -959,13 +959,13 @@ void cTextEdit::enterCharacter (ImWchar ch) {
                            getColumnFromGlyphIndex (position.mLineNumber, glyphIndex + length)};
         while ((length > 0) && (glyphIndex < line.getNumGlyphs())) {
           undo.mDelete += line.mGlyphs[glyphIndex].mChar;
-          line.mGlyphs.erase (line.mGlyphs.begin() + glyphIndex);
+          line.erase (glyphIndex);
           length--;
           }
         }
 
       for (char* bufPtr = utf8buf.data(); *bufPtr != '\0'; bufPtr++, glyphIndex++)
-        line.mGlyphs.insert (line.mGlyphs.begin() + glyphIndex, cGlyph (*bufPtr, eText));
+        line.insert (glyphIndex, cGlyph (*bufPtr, eText));
 
       parseLine (line);
 
@@ -1398,7 +1398,7 @@ float cTextEdit::getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t&
     return mDrawContext.measureChar (glyphs[glyphIndex++].mChar);
 
   // unicode case
-  array <char, 7> str;
+  array <char,7> str;
   if ((length == 0) || (length > str.max_size() - 1)) {
     // length out of expected range
     cLog::log (LOGERROR, fmt::format ("getGlyphCharacterWidth utf length error index::{} length:{} ",
