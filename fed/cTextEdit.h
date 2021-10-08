@@ -489,13 +489,13 @@ private:
   bool canEditAtCursor();
 
   // nums
+  uint32_t getNumPageLines() const;
   uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
   uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mDoc.mFoldLines.size()); }
-  uint32_t getNumPageLines() const;
 
   // text
-  std::string getText (sPosition beginPosition, sPosition endPosition);
   std::string getSelectText();
+  std::string getText (sPosition beginPosition, sPosition endPosition);
 
   // text widths
   float getWidth (sPosition position);
@@ -511,17 +511,18 @@ private:
   cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
   cLine::tGlyphs& getGlyphs (uint32_t lineNumber) { return getLine (lineNumber).mGlyphs; }
   uint32_t getNumGlyphs (uint32_t lineNumber) { return static_cast<uint32_t>(getLine (lineNumber).mGlyphs.size()); }
-  sPosition getNextLinePosition (sPosition position);
+
   uint32_t getLineNumColumns (uint32_t lineNumber);
+  sPosition getNextLinePosition (sPosition position);
 
   // column
   uint32_t getGlyphIndexFromPosition (sPosition position);
-  uint32_t getColumnFromGlyphIndex (uint32_t lineNumber, uint32_t toGlyphIndex);
   sPosition getPositionFromPosX (uint32_t lineNumber, float posX);
+  uint32_t getColumnFromGlyphIndex (uint32_t lineNumber, uint32_t toGlyphIndex);
 
   // tab
-  uint32_t getTabColumn (uint32_t column);
   float getTabEndPosX (float columnX);
+  uint32_t getTabColumn (uint32_t column);
   //}}}
   //{{{  set
   void setCursorPosition (sPosition position);

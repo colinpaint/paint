@@ -1333,6 +1333,11 @@ uint32_t cTextEdit::getNumPageLines() const {
 
 // text
 //{{{
+string cTextEdit::getSelectText() {
+  return getText (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
+  }
+//}}}
+//{{{
 string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
 // get position range as string with lineFeed line breaks
 
@@ -1366,11 +1371,6 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
     }
 
   return text;
-  }
-//}}}
-//{{{
-string cTextEdit::getSelectText() {
-  return getText (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
   }
 //}}}
 
@@ -1473,14 +1473,6 @@ uint32_t cTextEdit::getLineIndexFromNumber (uint32_t lineNumber) const {
 
 // line
 //{{{
-cTextEdit::sPosition cTextEdit::getNextLinePosition (sPosition position) {
-
-  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  uint32_t toLineNumber = getLineNumberFromIndex (lineIndex + 1);
-  return {toLineNumber, 0};
-  }
-//}}}
-//{{{
 uint32_t cTextEdit::getLineNumColumns (uint32_t lineNumber) {
 
   uint32_t column = 0;
@@ -1496,6 +1488,14 @@ uint32_t cTextEdit::getLineNumColumns (uint32_t lineNumber) {
     }
 
   return column;
+  }
+//}}}
+//{{{
+cTextEdit::sPosition cTextEdit::getNextLinePosition (sPosition position) {
+
+  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
+  uint32_t toLineNumber = getLineNumberFromIndex (lineIndex + 1);
+  return {toLineNumber, 0};
   }
 //}}}
 
@@ -1518,27 +1518,6 @@ uint32_t cTextEdit::getGlyphIndexFromPosition (sPosition position) {
     }
 
   return glyphIndex;
-  }
-//}}}
-//{{{
-uint32_t cTextEdit::getColumnFromGlyphIndex (uint32_t lineNumber, uint32_t toGlyphIndex) {
-// return column of glyphIndex, hande tabs
-
-  uint32_t column = 0;
-  const auto& glyphs = getGlyphs (lineNumber);
-
-  uint32_t glyphIndex = 0;
-  while ((glyphIndex < toGlyphIndex) && (glyphIndex < glyphs.size())) {
-    uint8_t ch = glyphs[glyphIndex].mChar;
-    if (ch == '\t')
-      column = getTabColumn (column);
-    else
-      column++;
-
-    glyphIndex += utf8CharLength (ch);
-    }
-
-  return column;
   }
 //}}}
 //{{{
@@ -1582,19 +1561,40 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
   return sanitizePosition ({lineNumber, line.mFirstGlyph + column});
   }
 //}}}
-
-// tab
 //{{{
-uint32_t cTextEdit::getTabColumn (uint32_t column) {
-  return ((column / mDoc.mTabSize) * mDoc.mTabSize) + mDoc.mTabSize;
+uint32_t cTextEdit::getColumnFromGlyphIndex (uint32_t lineNumber, uint32_t toGlyphIndex) {
+// return column of glyphIndex, hande tabs
+
+  uint32_t column = 0;
+  const auto& glyphs = getGlyphs (lineNumber);
+
+  uint32_t glyphIndex = 0;
+  while ((glyphIndex < toGlyphIndex) && (glyphIndex < glyphs.size())) {
+    uint8_t ch = glyphs[glyphIndex].mChar;
+    if (ch == '\t')
+      column = getTabColumn (column);
+    else
+      column++;
+
+    glyphIndex += utf8CharLength (ch);
+    }
+
+  return column;
   }
 //}}}
+
+// tab
 //{{{
 float cTextEdit::getTabEndPosX (float xPos) {
 // return tabEnd xPos of tab containing xPos
 
   float tabWidthPixels = mDoc.mTabSize * mDrawContext.mGlyphWidth;
   return (1.f + floor ((1.f + xPos) / tabWidthPixels)) * tabWidthPixels;
+  }
+//}}}
+//{{{
+uint32_t cTextEdit::getTabColumn (uint32_t column) {
+  return ((column / mDoc.mTabSize) * mDoc.mTabSize) + mDoc.mTabSize;
   }
 //}}}
 //}}}
