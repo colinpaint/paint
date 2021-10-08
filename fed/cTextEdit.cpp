@@ -1429,7 +1429,10 @@ float cTextEdit::getGlyphCharacterWidth (const cLine::tGlyphs& glyphs, uint32_t&
 uint32_t cTextEdit::getDrawLineNumber (uint32_t lineNumber) {
 
   const cLine& line = getLine (lineNumber);
-  return isFolded() && line.mFoldBegin && !line.mFoldOpen ? line.mFoldTitle : lineNumber;
+  if (isFolded() && line.mFoldBegin && !line.mFoldOpen)
+    return lineNumber + line.mFoldOffset;
+  else return
+    lineNumber;
   }
 //}}}
 //{{{
@@ -2075,10 +2078,9 @@ void cTextEdit::parseLine (cLine& line) {
   line.mFoldBegin = false;
   line.mFoldEnd = false;
   line.mFoldOpen = false;
-  line.mFoldTitle = 0;
+  line.mFoldOffset = 0;
   line.mIndent = 0;
   line.mFirstGlyph = 0;
-  line.mFirstColumn = 0;
 
   if (line.mGlyphs.empty())
     return;
@@ -2741,10 +2743,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
           line.mFoldEnd      ? 'e':' ',
           line.mFoldOpen     ? 'o' : ' ',
           line.mFoldPressed  ? 'p':' ',
-          line.mFoldTitle,
+          line.mFoldOffset,
           line.mIndent,
-          line.mFirstGlyph,
-          line.mFirstColumn));
+          line.mFirstGlyph));
     else
       // normal
       mDrawContext.mLineNumberWidth = mDrawContext.smallText (
@@ -2762,6 +2763,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
     leftPadWidth = 0.f;
     curPos.x += mDrawContext.mLineNumberWidth;
+
     ImGui::SameLine();
     }
     //}}}
@@ -2853,7 +2855,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
         }
 
       // draw glyphs
-      curPos.x += drawGlyphs (glyphsPos, getGlyphs (line.mFoldTitle), line.mFirstGlyph, eFoldClosed);
+      curPos.x += drawGlyphs (glyphsPos, getGlyphs (lineNumber + line.mFoldOffset), line.mFirstGlyph, eFoldClosed);
       }
       //}}}
     }
@@ -2921,9 +2923,8 @@ void cTextEdit::drawUnfolded() {
   // clipper iterate
   for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
     // not folded, simple use of line glyphs
-    getLine (lineNumber).mFoldTitle = lineNumber;
+    getLine (lineNumber).mFoldOffset = 0;
     getLine (lineNumber).mFirstGlyph = 0;
-    getLine (lineNumber).mFirstColumn = 0;
     drawLine (lineNumber, 0);
     }
 
@@ -2943,16 +2944,14 @@ uint32_t cTextEdit::drawFolded() {
     if (line.mFoldBegin) {
       if (line.mFoldOpen) {
         // draw openFold line
-        line.mFoldTitle = lineNumber;
+        line.mFoldOffset = 0;
         line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
-        line.mFirstColumn = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginOpen.size());
         drawLine (lineNumber++, lineIndex++);
         }
       else if (line.mCommentFold) {
         // draw closedFold with comment line
-        line.mFoldTitle = lineNumber;
+        line.mFoldOffset = 0;
         line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
-        line.mFirstColumn = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginOpen.size());
         drawLine (lineNumber++, lineIndex++);
 
         // skip closed fold
@@ -2960,10 +2959,9 @@ uint32_t cTextEdit::drawFolded() {
         }
       else {
         // draw closedFold without comment line
-        // - set mFoldTitle to first non comment line, !!!! just use +1 for now !!!!
-        line.mFoldTitle = lineNumber+1;
-        line.mFirstGlyph = getLine (line.mFoldTitle).mIndent;
-        line.mFirstColumn = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginClosed.size());
+        // - set mFoldOffset, !!!  just use +1 for now !!!!
+        line.mFoldOffset = 1;
+        line.mFirstGlyph = getLine (lineNumber + line.mFoldOffset).mIndent;
         drawLine (lineNumber++, lineIndex++);
 
         // skip closed fold
@@ -2972,16 +2970,14 @@ uint32_t cTextEdit::drawFolded() {
       }
     else if (!line.mFoldEnd) {
       // draw fold middle line
-      line.mFoldTitle = 0;
+      line.mFoldOffset = 0;
       line.mFirstGlyph = 0;
-      line.mFirstColumn = 0;
       drawLine (lineNumber++, lineIndex++);
       }
     else {
       // draw foldEnd line
-      line.mFoldTitle = 0;
+      line.mFoldOffset = 0;
       line.mFirstGlyph = 0;
-      line.mFirstColumn = 0;
       drawLine (lineNumber++, lineIndex++);
       if (mEdit.mFoldOnly)
         return lineIndex;
