@@ -493,13 +493,14 @@ namespace {
 cTextEdit::cTextEdit() {
 
   mOptions.mLanguage = cLanguage::c();
-  mDoc.mLines.push_back (cLine::tGlyphs());
-  cursorFlashOn();
+  mDoc.mLines.push_back (cLine());
 
   // push any clipboard text to pasteStack
   const char* clipText = ImGui::GetClipboardText();
   if (clipText && (strlen (clipText)) > 0)
     mEdit.pushPasteText (clipText);
+
+  cursorFlashOn();
   }
 //}}}
 
@@ -754,10 +755,8 @@ void cTextEdit::deleteIt() {
 
       uint32_t glyphIndex = getGlyphIndexFromPosition (position);
       uint32_t length = utf8CharLength (line.getChar (glyphIndex));
-      while ((length > 0) && (glyphIndex < line.getNumGlyphs())) {
+      for (uint32_t i = 0; (i < length) && (glyphIndex < line.getNumGlyphs()); i++) 
         line.erase (glyphIndex);
-        length--;
-        }
       parseLine (line);
       }
 
@@ -955,12 +954,10 @@ void cTextEdit::enterCharacter (ImWchar ch) {
       if (mOptions.mOverWrite && (glyphIndex < line.getNumGlyphs())) {
         uint32_t length = utf8CharLength(line.getChar (glyphIndex));
         undo.mDeleteBegin = mEdit.mCursor.mPosition;
-        undo.mDeleteEnd = {position.mLineNumber,
-                           getColumnFromGlyphIndex (position.mLineNumber, glyphIndex + length)};
-        while ((length > 0) && (glyphIndex < line.getNumGlyphs())) {
-          undo.mDelete += line.getChar(glyphIndex);
+        undo.mDeleteEnd = {position.mLineNumber, getColumnFromGlyphIndex (position.mLineNumber, glyphIndex + length)};
+        for (uint32_t i = 0; (i < length) && (glyphIndex < line.getNumGlyphs()); length++) {
+          undo.mDelete += line.getChar (glyphIndex);
           line.erase (glyphIndex);
-          length--;
           }
         }
 
@@ -1055,7 +1052,7 @@ void cTextEdit::loadFile (const string& filename) {
   ifstream stream (filename, ifstream::in);
   while (getline (stream, lineString)) {
     // create empty line, reserve glyphs for line
-    mDoc.mLines.emplace_back (cLine::tGlyphs());
+    mDoc.mLines.emplace_back (cLine());
     mDoc.mLines.back().reserve (lineString.size());
 
     // iterate char
@@ -1077,7 +1074,7 @@ void cTextEdit::loadFile (const string& filename) {
   trimTrailingSpace();
 
   // add empty lastLine
-  mDoc.mLines.emplace_back (cLine::tGlyphs());
+  mDoc.mLines.emplace_back (cLine());
 
   cLog::log (LOGINFO, fmt::format ("read {} lines {}", lineNumber, mDoc.mHasCR ? "hasCR" : ""));
 
@@ -1396,19 +1393,9 @@ float cTextEdit::getGlyphCharacterWidth (const cLine& line, uint32_t& glyphIndex
 
   // unicode case
   array <char,7> str;
-  if ((length == 0) || (length > str.max_size() - 1)) {
-    // length out of expected range
-    cLog::log (LOGERROR, fmt::format ("getGlyphCharacterWidth utf length error index::{} length:{} ",
-                                      glyphIndex, length));
-    return 0.f;
-    }
-
   uint32_t strIndex = 0;
-  while ((length > 0) && (glyphIndex < line.getNumGlyphs())) {
+  for (uint32_t i = 0; (i < length) && (glyphIndex < line.getNumGlyphs()); i++) 
     str[strIndex++] = line.getChar (glyphIndex++);
-    length--;
-    }
-
   return mDrawContext.measureText (str.data(), str.data() + strIndex);
   }
 //}}}
@@ -1870,8 +1857,8 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition position) {
 //}}}
 //{{{  insert
 //{{{
-cTextEdit::cLine& cTextEdit::insertLine (uint32_t index) {
-  return *mDoc.mLines.insert (mDoc.mLines.begin() + index, cLine::tGlyphs());
+cLine& cTextEdit::insertLine (uint32_t index) {
+  return *mDoc.mLines.insert (mDoc.mLines.begin() + index, cLine());
   }
 //}}}
 //{{{
@@ -1906,11 +1893,9 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
     else {
       // within line
       cLine& line = getLine (position.mLineNumber);
-      auto length = utf8CharLength (*textPtr);
-      while ((length > 0) && (*textPtr != '\0')) {
+      uint32_t length = utf8CharLength (*textPtr);
+      for (uint32_t i = 0; (i < length) && (*textPtr != '\0'); i++) 
         line.insert (glyphIndex++, cGlyph (*textPtr++, eText));
-        length--;
-        }
       position.mColumn++;
       parseLine (line);
       }
@@ -2069,16 +2054,7 @@ void cTextEdit::parseLine (cLine& line) {
   // check whole text for comments later
   mEdit.mCheckComments = true;
 
-  line.mCommentBegin = false;
-  line.mCommentEnd = false;
-  line.mCommentSingle = false;
-  line.mFoldBegin = false;
-  line.mFoldEnd = false;
-  line.mFoldOpen = false;
-  line.mFoldOffset = 0;
-  line.mIndent = 0;
-  line.mFirstGlyph = 0;
-
+  line.parseReset();
   if (line.empty())
     return;
 
@@ -2095,11 +2071,9 @@ void cTextEdit::parseLine (cLine& line) {
 
   do {
     pos = glyphString.find (mOptions.mLanguage.mCommentSingle, pos);
-    if (pos != string::npos) {
-      line.mCommentSingle = true;
+    if (pos != string::npos)
       for (size_t i = 0; i < mOptions.mLanguage.mCommentSingle.size(); i++)
-        line.setCommentSingle (pos++, true);
-      }
+        line.setCommentSingle (pos++);
     } while (pos != string::npos);
   //}}}
   //{{{  find commentBegin token
@@ -2107,11 +2081,9 @@ void cTextEdit::parseLine (cLine& line) {
 
   do {
     pos = glyphString.find (mOptions.mLanguage.mCommentBegin, pos);
-    if (pos != string::npos) {
-      line.mCommentBegin = true;
+    if (pos != string::npos)
       for (size_t i = 0; i < mOptions.mLanguage.mCommentBegin.size(); i++)
-        line.setCommentBegin (pos++, true);
-      }
+        line.setCommentBegin (pos++);
     } while (pos != string::npos);
   //}}}
   //{{{  find commentEnd token
@@ -2119,11 +2091,9 @@ void cTextEdit::parseLine (cLine& line) {
 
   do {
     pos = glyphString.find (mOptions.mLanguage.mCommentEnd, pos);
-    if (pos != string::npos) {
-      line.mCommentEnd = true;
+    if (pos != string::npos)
       for (size_t i = 0; i < mOptions.mLanguage.mCommentEnd.size(); i++)
-        line.setCommentEnd (pos++, true);
-      }
+        line.setCommentEnd (pos++);
     } while (pos != string::npos);
   //}}}
   //{{{  find foldBegin token
@@ -2721,14 +2691,14 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       mDrawContext.mLineNumberWidth = mDrawContext.text (curPos, eLineNumber,
         fmt::format ("{:4d}{}{}{}{}{}{}{}{}{:2d}{:2d}{:2d} ",
           lineNumber,
-          line.mCommentSingle? 'c' : ' ',
-          line.mCommentBegin ? '{' : ' ',
-          line.mCommentEnd   ? '}' : ' ',
-          line.mCommentFold  ? 'C' : ' ',
-          line.mFoldBegin    ? 'b':' ',
-          line.mFoldEnd      ? 'e':' ',
-          line.mFoldOpen     ? 'o' : ' ',
-          line.mFoldPressed  ? 'p':' ',
+          line.getCommentSingle()? 'c' : ' ',
+          line.getCommentBegin() ? '{' : ' ',
+          line.getCommentEnd()   ? '}' : ' ',
+          line.mCommentFold      ? 'C' : ' ',
+          line.mFoldBegin        ? 'b':' ',
+          line.mFoldEnd          ? 'e':' ',
+          line.mFoldOpen         ? 'o' : ' ',
+          line.mFoldPressed      ? 'p':' ',
           line.mFoldOffset,
           line.mIndent,
           line.mFirstGlyph));

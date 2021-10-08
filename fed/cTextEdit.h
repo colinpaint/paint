@@ -13,6 +13,262 @@
 
 class cApp;
 //}}}
+
+// only used by cTextEdit
+//{{{
+class cGlyph {
+public:
+  cGlyph() : mChar(' '), mColor(0),
+             mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
+
+  cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
+                                       mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
+
+  // vars
+  uint8_t mChar;
+  uint8_t mColor;
+
+  // commentFlags, speeds up wholeText comment parsing
+  bool mCommentSingle:1;
+  bool mCommentBegin:1;
+  bool mCommentEnd:1;
+  };
+//}}}
+//{{{
+class cLine {
+public:
+  //{{{
+  cLine() :
+    mGlyphs(),
+    mIndent(0), mFirstGlyph(0), mFoldOffset(0),
+    mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
+    mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mFoldPressed(false) {}
+  //}}}
+  //{{{
+  cLine (const std::vector<cGlyph>& line) :
+    mGlyphs(line),
+    mIndent(0), mFirstGlyph(0), mFoldOffset(0),
+    mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
+    mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mFoldPressed(false) {}
+  //}}}
+  //{{{
+  ~cLine() {
+    mGlyphs.clear();
+    }
+  //}}}
+
+  // gets
+  //{{{
+  bool empty() const {
+    return mGlyphs.empty();
+    }
+  //}}}
+  //{{{
+  uint32_t getNumGlyphs() const { 
+    return static_cast<uint32_t>(mGlyphs.size()); 
+    }
+  //}}}
+
+  //{{{
+  std::string getString() const {
+
+     std::string lineString;
+     lineString.reserve (mGlyphs.size());
+
+     for (auto& glyph : mGlyphs)
+       lineString += glyph.mChar;
+
+     return lineString;
+     }
+  //}}}
+
+  //{{{
+  uint8_t getChar (const uint32_t glyphIndex) const {
+    return mGlyphs[glyphIndex].mChar;
+    }
+  //}}}
+  //{{{
+  uint8_t getColor (const uint32_t glyphIndex) const {
+    return mGlyphs[glyphIndex].mColor;
+    }
+  //}}}
+
+  //{{{
+  bool getCommentSingle() const {
+    return mCommentSingle;
+    }
+  //}}}
+  //{{{
+  bool getCommentSingle (const uint32_t glyphIndex) const {
+    return mGlyphs[glyphIndex].mCommentSingle;
+    }
+  //}}}
+  //{{{
+  bool getCommentBegin() const {
+    return mCommentBegin;
+    }
+  //}}}
+  //{{{
+  bool getCommentBegin (const uint32_t glyphIndex) const {
+    return mGlyphs[glyphIndex].mCommentBegin;
+    }
+  //}}}
+  //{{{
+  bool getCommentEnd() const {
+    return mCommentEnd;
+    }
+  //}}}
+  //{{{
+  bool getCommentEnd (const uint32_t glyphIndex) const {
+    return mGlyphs[glyphIndex].mCommentEnd;
+    }
+  //}}}
+
+  //{{{
+  cGlyph getGlyph (const uint32_t glyphIndex) const {
+    return mGlyphs[glyphIndex];
+    }
+  //}}}
+
+  // sets
+  //{{{
+  void setColor (uint8_t color) {
+    for (auto& glyph : mGlyphs)
+      glyph.mColor = color;
+    }
+  //}}}
+  //{{{
+  void setColor (uint32_t glyphIndex, uint8_t color) {
+    mGlyphs[glyphIndex].mColor = color;
+    }
+  //}}}
+  //{{{
+  void setCommentSingle (size_t glyphIndex) {
+    mCommentSingle = true;
+    mGlyphs[glyphIndex].mCommentSingle = true;
+    }
+  //}}}
+  //{{{
+  void setCommentBegin (size_t glyphIndex) {
+    mCommentBegin = true;
+    mGlyphs[glyphIndex].mCommentBegin = true;
+    }
+  //}}}
+  //{{{
+  void setCommentEnd (size_t glyphIndex) {
+    mCommentEnd = true;
+    mGlyphs[glyphIndex].mCommentEnd = true;
+    }
+  //}}}
+
+  // ops
+  //{{{
+  void parseReset() {
+
+    mIndent = 0;
+    mFirstGlyph = 0;
+    mFoldOffset = 0;
+
+    mCommentBegin = false;
+    mCommentEnd = false;
+    mCommentSingle = false;
+
+    mFoldBegin = false;
+    mFoldEnd = false;
+    mFoldOpen = false;
+    }
+  //}}}
+  //{{{
+  void reserve (size_t size) {
+    mGlyphs.reserve (size);
+    }
+  //}}}
+  //{{{
+  void pushBack (cGlyph glyph) {
+    mGlyphs.push_back (glyph);
+    }
+  //}}}
+  //{{{
+  void emplaceBack (cGlyph glyph) {
+    mGlyphs.emplace_back (glyph);
+    }
+  //}}}
+  //{{{
+  uint32_t trimTrailingSpace() {
+
+    uint32_t trimmedSpaces = 0;
+    uint32_t column = getNumGlyphs();
+    while ((column > 0) && (mGlyphs[--column].mChar == ' ')) {
+      // trailingSpace, trim it
+      mGlyphs.pop_back();
+      trimmedSpaces++;
+      }
+
+    return trimmedSpaces;
+    }
+  //}}}
+
+  // insert
+  //{{{
+  void insert (uint32_t glyphIndex, const cGlyph& glyph) {
+    mGlyphs.insert (mGlyphs.begin() + glyphIndex, glyph);
+    }
+  //}}}
+  //{{{
+  void insertLineAtEnd (const cLine& lineToInsert) {
+  // insert lineToInsert to end of line
+
+    mGlyphs.insert (mGlyphs.end(), lineToInsert.mGlyphs.begin(), lineToInsert.mGlyphs.end());
+    }
+  //}}}
+  //{{{
+  void insertRestOfLineAtEnd (const cLine& lineToInsert, uint32_t glyphIndex) {
+  // insert from glyphIndex of lineToInsert to end of line
+
+    mGlyphs.insert (mGlyphs.end(), lineToInsert.mGlyphs.begin() + glyphIndex, lineToInsert.mGlyphs.end());
+    }
+  //}}}
+
+  // erase
+  //{{{
+  void erase (uint32_t glyphIndex) {
+    mGlyphs.erase (mGlyphs.begin() + glyphIndex);
+    }
+  //}}}
+  //{{{
+  void eraseToEnd (uint32_t glyphIndex) {
+    mGlyphs.erase (mGlyphs.begin() + glyphIndex, mGlyphs.end());
+    }
+  //}}}
+  //{{{
+  void erase (uint32_t glyphIndex, uint32_t toGlyphIndex) {
+    mGlyphs.erase (mGlyphs.begin() + glyphIndex, mGlyphs.begin() + toGlyphIndex);
+    }
+  //}}}
+
+  // offsets
+  uint8_t mIndent;     // leading space count
+  uint8_t mFirstGlyph; // index of first visible glyph, past fold marker
+  uint8_t mFoldOffset; // closed fold title line offset
+
+  // parsed tokens
+  bool mCommentFold;
+  bool mFoldBegin;
+  bool mFoldEnd;
+
+  // fold state
+  bool mFoldOpen;
+  bool mFoldPressed;
+
+private:
+  std::vector <cGlyph> mGlyphs;
+
+  bool mCommentSingle;
+  bool mCommentBegin;
+  bool mCommentEnd;
+  };
+//}}}
+
 class cTextEdit {
 public:
   enum class eSelect { eNormal, eWord, eLine };
@@ -100,212 +356,6 @@ public:
 
     tTokenSearch mTokenSearch = nullptr;
     cLanguage::tRegex mRegexList;
-    };
-  //}}}
-  //{{{
-  class cGlyph {
-  public:
-    cGlyph() : mChar(' '), mColor(0),
-               mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
-
-    cGlyph (uint8_t ch, uint8_t color) : mChar(ch), mColor(color),
-                                         mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
-
-    // vars
-    uint8_t mChar;
-    uint8_t mColor;
-
-    // commentFlags, speeds up wholeText comment parsing
-    bool mCommentSingle:1;
-    bool mCommentBegin:1;
-    bool mCommentEnd:1;
-    };
-  //}}}
-  //{{{
-  class cLine {
-  public:
-    using tGlyphs = std::vector <cGlyph>;
-    //{{{
-    cLine() :
-      mGlyphs(),
-      mIndent(0), mFirstGlyph(0), mFoldOffset(0),
-      mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
-      mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mFoldPressed(false) {}
-    //}}}
-    //{{{
-    cLine (const std::vector<cGlyph>& line) :
-      mGlyphs(line),
-      mIndent(0), mFirstGlyph(0), mFoldOffset(0),
-      mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
-      mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mFoldPressed(false) {}
-    //}}}
-    //{{{
-    ~cLine() {
-      mGlyphs.clear();
-      }
-    //}}}
-
-    //{{{
-    bool empty() const {
-      return mGlyphs.empty();
-      }
-    //}}}
-    //{{{
-    uint8_t getChar (const uint32_t glyphIndex) const {
-      return mGlyphs[glyphIndex].mChar;
-      }
-    //}}}
-    //{{{
-    uint8_t getColor (const uint32_t glyphIndex) const {
-      return mGlyphs[glyphIndex].mColor;
-      }
-    //}}}
-    //{{{
-    bool getCommentSingle (const uint32_t glyphIndex) const {
-      return mGlyphs[glyphIndex].mCommentSingle;
-      }
-    //}}}
-    //{{{
-    bool getCommentBegin (const uint32_t glyphIndex) const {
-      return mGlyphs[glyphIndex].mCommentBegin;
-      }
-    //}}}
-    //{{{
-    bool getCommentEnd (const uint32_t glyphIndex) const {
-      return mGlyphs[glyphIndex].mCommentEnd;
-      }
-    //}}}
-    //{{{
-    cGlyph getGlyph (const uint32_t glyphIndex) const {
-      return mGlyphs[glyphIndex];
-      }
-    //}}}
-    //{{{
-    std::string getString() const {
-
-       std::string lineString;
-       lineString.reserve (mGlyphs.size());
-
-       for (auto& glyph : mGlyphs)
-         lineString += glyph.mChar;
-
-       return lineString;
-       }
-    //}}}
-    uint32_t getNumGlyphs() const { return static_cast<uint32_t>(mGlyphs.size()); }
-
-    //{{{
-    void setColor (uint8_t color) {
-      for (auto& glyph : mGlyphs)
-        glyph.mColor = color;
-      }
-    //}}}
-    //{{{
-    void setColor (uint32_t glyphIndex, uint8_t color) {
-      mGlyphs[glyphIndex].mColor = color;
-      }
-    //}}}
-    //{{{
-    void setCommentSingle (size_t glyphIndex, bool on) {
-      mGlyphs[glyphIndex].mCommentSingle = on;
-      }
-    //}}}
-    //{{{
-    void setCommentBegin (size_t glyphIndex, bool on) {
-      mGlyphs[glyphIndex].mCommentBegin = on;
-      }
-    //}}}
-    //{{{
-    void setCommentEnd (size_t glyphIndex, bool on) {
-      mGlyphs[glyphIndex].mCommentEnd = on;
-      }
-    //}}}
-
-    //{{{
-    uint32_t trimTrailingSpace() {
-
-      uint32_t trimmedSpaces = 0;
-      uint32_t column = getNumGlyphs();
-      while ((column > 0) && (mGlyphs[--column].mChar == ' ')) {
-        // trailingSpace, trim it
-        mGlyphs.pop_back();
-        trimmedSpaces++;
-        }
-
-      return trimmedSpaces;
-      }
-    //}}}
-    //{{{
-    void reserve (size_t size) {
-      mGlyphs.reserve (size);
-      }
-    //}}}
-    //{{{
-    void pushBack (cGlyph glyph) {
-      mGlyphs.push_back (glyph);
-      }
-    //}}}
-    //{{{
-    void emplaceBack (cGlyph glyph) {
-      mGlyphs.emplace_back (glyph);
-      }
-    //}}}
-
-    //{{{
-    void insert (uint32_t glyphIndex, const cGlyph& glyph) {
-      mGlyphs.insert (mGlyphs.begin() + glyphIndex, glyph);
-      }
-    //}}}
-    //{{{
-    void insertLineAtEnd (const cLine& lineToInsert) {
-    // insert lineToInsert to end of line
-
-      mGlyphs.insert (mGlyphs.end(), lineToInsert.mGlyphs.begin(), lineToInsert.mGlyphs.end());
-      }
-    //}}}
-    //{{{
-    void insertRestOfLineAtEnd (const cLine& lineToInsert, uint32_t glyphIndex) {
-    // insert from glyphIndex of lineToInsert to end of line
-
-      mGlyphs.insert (mGlyphs.end(), lineToInsert.mGlyphs.begin() + glyphIndex, lineToInsert.mGlyphs.end());
-      }
-    //}}}
-
-    //{{{
-    void erase (uint32_t glyphIndex) {
-      mGlyphs.erase (mGlyphs.begin() + glyphIndex);
-      }
-    //}}}
-    //{{{
-    void eraseToEnd (uint32_t glyphIndex) {
-      mGlyphs.erase (mGlyphs.begin() + glyphIndex, mGlyphs.end());
-      }
-    //}}}
-    //{{{
-    void erase (uint32_t glyphIndex, uint32_t toGlyphIndex) {
-      mGlyphs.erase (mGlyphs.begin() + glyphIndex, mGlyphs.begin() + toGlyphIndex);
-      }
-    //}}}
-
-    // offsets
-    uint8_t mIndent;     // leading space count
-    uint8_t mFirstGlyph; // index of first visible glyph, past fold marker
-    uint8_t mFoldOffset; // closed fold title line offset
-
-    // parsed tokens
-    bool mCommentSingle;
-    bool mCommentBegin;
-    bool mCommentEnd;
-    bool mCommentFold;
-    bool mFoldBegin;
-    bool mFoldEnd;
-
-    // fold state
-    bool mFoldOpen;
-    bool mFoldPressed;
-
-  private:
-    tGlyphs mGlyphs;
     };
   //}}}
 
