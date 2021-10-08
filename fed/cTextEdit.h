@@ -177,6 +177,47 @@ public:
     uint32_t getNumGlyphs() const { return static_cast<uint32_t>(mGlyphs.size()); }
 
     //{{{
+    void setColor (uint8_t color) {
+      for (auto& glyph : mGlyphs)
+        glyph.mColor = color;
+      }
+    //}}}
+    //{{{
+    void setColor (size_t glyphIndex, uint8_t color) {
+      mGlyphs[glyphIndex].mColor = color;
+      }
+    //}}}
+    //{{{
+    void setCommentSingle (size_t glyphIndex, bool on) {
+      mGlyphs[glyphIndex].mCommentSingle = on;
+      }
+    //}}}
+    //{{{
+    void setCommentBegin (size_t glyphIndex, bool on) {
+      mGlyphs[glyphIndex].mCommentBegin = on;
+      }
+    //}}}
+    //{{{
+    void setCommentEnd (size_t glyphIndex, bool on) {
+      mGlyphs[glyphIndex].mCommentEnd = on;
+      }
+    //}}}
+
+    //{{{
+    uint32_t trimTrailingSpace() {
+
+      uint32_t trimmedSpaces = 0;
+      uint32_t column = getNumGlyphs();
+      while ((column > 0) && (mGlyphs[--column].mChar == ' ')) {
+        // trailingSpace, trim it
+        mGlyphs.pop_back();
+        trimmedSpaces++;
+        }
+
+      return trimmedSpaces;
+      }
+    //}}}
+    //{{{
     void reserve (size_t size) {
       mGlyphs.reserve (size);
       }

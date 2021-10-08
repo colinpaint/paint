@@ -556,7 +556,7 @@ void cTextEdit::moveLeft() {
     // move to previous column on same line
     glyphIndex--;
     while ((glyphIndex > 0) &&
-           isUtfSequence (getGlyphs (position.mLineNumber)[glyphIndex].mChar))
+           isUtfSequence (getLine (position.mLineNumber).getChar (glyphIndex)))
       glyphIndex--;
     }
 
@@ -568,12 +568,13 @@ void cTextEdit::moveLeft() {
 void cTextEdit::moveRight() {
 
   sPosition position = mEdit.mCursor.mPosition;
+  cLine& line = getLine(position.mLineNumber);
 
   // column
-  uint32_t glyphIndex = getGlyphIndexFromPosition (position);
-  if (glyphIndex < getNumGlyphs (position.mLineNumber)) {
+  uint32_t glyphIndex = getGlyphIndexFromPosition(position);
+  if (glyphIndex < line.getNumGlyphs()) {
     // move to next columm on same line
-    glyphIndex += utf8CharLength (getGlyphs (position.mLineNumber)[glyphIndex].mChar);
+    glyphIndex += utf8CharLength (line.getChar (glyphIndex));
     uint32_t column = getColumnFromGlyphIndex (position.mLineNumber, glyphIndex);
 
     setCursorPosition ({position.mLineNumber, column});
@@ -1348,8 +1349,8 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
     if (beginLineNumber >= getNumLines())
       break;
 
-    if (beginGlyphIndex < getGlyphs (beginLineNumber).size()) {
-      text += getGlyphs (beginLineNumber)[beginGlyphIndex].mChar;
+    if (beginGlyphIndex < getLine (beginLineNumber).getNumGlyphs ()) {
+      text += getLine (beginLineNumber).getChar (beginGlyphIndex);
       beginGlyphIndex++;
       }
     else {
@@ -1427,9 +1428,9 @@ uint32_t cTextEdit::getLineNumColumns (uint32_t lineNumber) {
 
   uint32_t column = 0;
 
-  const auto& glyphs = getGlyphs (lineNumber);
-  for (uint32_t glyphIndex = 0; glyphIndex < glyphs.size(); ) {
-    uint8_t ch = glyphs[glyphIndex].mChar;
+  const cLine& line = getLine (lineNumber);
+  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); ) {
+    uint8_t ch = line.getChar (glyphIndex);
     if (ch == '\t')
       column = getTabColumn (column);
     else
@@ -2050,7 +2051,7 @@ void cTextEdit::parseTokens (cLine& line, const string& textString) {
       size_t glyphIndex = tokenBegin - strBegin;
       size_t glyphIndexEnd = tokenEnd - strBegin;
       while (glyphIndex < glyphIndexEnd)
-        line.mGlyphs[glyphIndex++].mColor = tokenColor;
+        line.setColor (glyphIndex++, tokenColor);
 
       strPtr = tokenEnd;
       }
@@ -2080,12 +2081,9 @@ void cTextEdit::parseLine (cLine& line) {
     return;
 
   // create glyphs string
-  string glyphString;
-  for (auto& glyph : line.mGlyphs) {
-    glyph.mColor = eText;
-    glyphString += glyph.mChar;
-    }
+  string glyphString = line.getString();
 
+  line.setColor (eText);
   //{{{  find indent
   size_t indentPos = glyphString.find_first_not_of (' ');
   line.mIndent = (indentPos == string::npos) ? 0 : static_cast<uint8_t>(indentPos);
@@ -2098,7 +2096,7 @@ void cTextEdit::parseLine (cLine& line) {
     if (pos != string::npos) {
       line.mCommentSingle = true;
       for (size_t i = 0; i < mOptions.mLanguage.mCommentSingle.size(); i++)
-        line.mGlyphs[pos++].mCommentSingle = true;
+        line.setCommentSingle (pos++, true);
       }
     } while (pos != string::npos);
   //}}}
@@ -2110,7 +2108,7 @@ void cTextEdit::parseLine (cLine& line) {
     if (pos != string::npos) {
       line.mCommentBegin = true;
       for (size_t i = 0; i < mOptions.mLanguage.mCommentBegin.size(); i++)
-        line.mGlyphs[pos++].mCommentBegin = true;
+        line.setCommentBegin (pos++, true);
       }
     } while (pos != string::npos);
   //}}}
@@ -2122,7 +2120,7 @@ void cTextEdit::parseLine (cLine& line) {
     if (pos != string::npos) {
       line.mCommentEnd = true;
       for (size_t i = 0; i < mOptions.mLanguage.mCommentEnd.size(); i++)
-        line.mGlyphs[pos++].mCommentEnd = true;
+        line.setCommentEnd (pos++, true);
       }
     } while (pos != string::npos);
   //}}}
@@ -2232,17 +2230,9 @@ uint32_t cTextEdit::trimTrailingSpace() {
   uint32_t lineNumber = 0;
   uint32_t trimmedSpaces = 0;
   for (auto& line : mDoc.mLines) {
-    uint32_t column = line.getNumGlyphs();
-    while ((column > 0) && (line.getChar (--column) == ' ')) {
-      // trailingSpace, trim it
-      line.mGlyphs.pop_back();
-      trimmedSpaces++;
-      //cLog::log (LOGINFO, fmt::format ("trim space {}:{}", lineNumber, column));
-      }
-
+    trimmedSpaces += line.trimTrailingSpace();
     if (!line.empty()) // nonEmpty line, raise waterMark
       nonEmptyWaterMark = lineNumber;
-
     lineNumber++;
     }
 
