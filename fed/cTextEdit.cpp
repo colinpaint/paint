@@ -755,7 +755,7 @@ void cTextEdit::deleteIt() {
 
       uint32_t glyphIndex = getGlyphIndexFromPosition (position);
       uint32_t length = utf8CharLength (line.getChar (glyphIndex));
-      for (uint32_t i = 0; (i < length) && (glyphIndex < line.getNumGlyphs()); i++) 
+      for (uint32_t i = 0; (i < length) && (glyphIndex < line.getNumGlyphs()); i++)
         line.erase (glyphIndex);
       parseLine (line);
       }
@@ -1289,7 +1289,7 @@ void cTextEdit::drawContents (cApp& app) {
   if (isFolded())
     mDoc.mFoldLines.resize (drawFolded());
   else
-    drawUnfolded();
+    drawLines();
 
   if (mEdit.mScrollVisible)
     scrollCursorVisible();
@@ -1394,7 +1394,7 @@ float cTextEdit::getGlyphCharacterWidth (const cLine& line, uint32_t& glyphIndex
   // unicode case
   array <char,7> str;
   uint32_t strIndex = 0;
-  for (uint32_t i = 0; (i < length) && (glyphIndex < line.getNumGlyphs()); i++) 
+  for (uint32_t i = 0; (i < length) && (glyphIndex < line.getNumGlyphs()); i++)
     str[strIndex++] = line.getChar (glyphIndex++);
   return mDrawContext.measureText (str.data(), str.data() + strIndex);
   }
@@ -1894,7 +1894,7 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
       // within line
       cLine& line = getLine (position.mLineNumber);
       uint32_t length = utf8CharLength (*textPtr);
-      for (uint32_t i = 0; (i < length) && (*textPtr != '\0'); i++) 
+      for (uint32_t i = 0; (i < length) && (*textPtr != '\0'); i++)
         line.insert (glyphIndex++, cGlyph (*textPtr++, eText));
       position.mColumn++;
       parseLine (line);
@@ -2304,6 +2304,60 @@ uint32_t cTextEdit::skipFold (uint32_t lineNumber) {
   // error if you run off end. begin/end mismatch
   cLog::log (LOGERROR, "skipToFoldEnd - unexpected end reached with mathching fold");
   return lineNumber;
+  }
+//}}}
+//{{{
+uint32_t cTextEdit::drawFolded() {
+
+  uint32_t lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
+
+  uint32_t lineIndex = 0;
+  while (lineNumber < getNumLines()) {
+    cLine& line = getLine (lineNumber);
+    if (line.mFoldBegin) {
+      if (line.mFoldOpen) {
+        // draw openFold line
+        line.mFoldOffset = 0;
+        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
+        drawLine (lineNumber++, lineIndex++);
+        }
+
+      else {
+        // closed fold
+        if (line.mCommentFold) {
+          // draw closedFold with comment line
+          line.mFoldOffset = 0;
+          line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
+          }
+        else {
+          // draw closedFold without comment line
+          // - set mFoldOffset, !!!  just use +1 for now !!!!
+          line.mFoldOffset = 1;
+          line.mFirstGlyph = getLine (lineNumber + line.mFoldOffset).mIndent;
+          }
+        drawLine (lineNumber++, lineIndex++);
+        lineNumber = skipFold (lineNumber);
+        }
+      }
+
+    else if (!line.mFoldEnd) {
+      // draw fold middle line
+      line.mFoldOffset = 0;
+      line.mFirstGlyph = 0;
+      drawLine (lineNumber++, lineIndex++);
+      }
+
+    else {
+      // draw foldEnd line
+      line.mFoldOffset = 0;
+      line.mFirstGlyph = 0;
+      drawLine (lineNumber++, lineIndex++);
+      if (mEdit.mFoldOnly)
+        return lineIndex;
+      }
+    }
+
+  return lineIndex;
   }
 //}}}
 
@@ -2869,7 +2923,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
   }
 //}}}
 //{{{
-void cTextEdit::drawUnfolded() {
+void cTextEdit::drawLines() {
 //  draw unfolded with clipper
 
   // clipper begin
@@ -2888,60 +2942,6 @@ void cTextEdit::drawUnfolded() {
   // clipper end
   clipper.Step();
   clipper.End();
-  }
-//}}}
-//{{{
-uint32_t cTextEdit::drawFolded() {
-
-  uint32_t lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
-
-  uint32_t lineIndex = 0;
-  while (lineNumber < getNumLines()) {
-    cLine& line = getLine (lineNumber);
-    if (line.mFoldBegin) {
-      if (line.mFoldOpen) {
-        // draw openFold line
-        line.mFoldOffset = 0;
-        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
-        drawLine (lineNumber++, lineIndex++);
-        }
-      else if (line.mCommentFold) {
-        // draw closedFold with comment line
-        line.mFoldOffset = 0;
-        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
-        drawLine (lineNumber++, lineIndex++);
-
-        // skip closed fold
-        lineNumber = skipFold (lineNumber);
-        }
-      else {
-        // draw closedFold without comment line
-        // - set mFoldOffset, !!!  just use +1 for now !!!!
-        line.mFoldOffset = 1;
-        line.mFirstGlyph = getLine (lineNumber + line.mFoldOffset).mIndent;
-        drawLine (lineNumber++, lineIndex++);
-
-        // skip closed fold
-        lineNumber = skipFold (lineNumber+1);
-        }
-      }
-    else if (!line.mFoldEnd) {
-      // draw fold middle line
-      line.mFoldOffset = 0;
-      line.mFirstGlyph = 0;
-      drawLine (lineNumber++, lineIndex++);
-      }
-    else {
-      // draw foldEnd line
-      line.mFoldOffset = 0;
-      line.mFirstGlyph = 0;
-      drawLine (lineNumber++, lineIndex++);
-      if (mEdit.mFoldOnly)
-        return lineIndex;
-      }
-    }
-
-  return lineIndex;
   }
 //}}}
 

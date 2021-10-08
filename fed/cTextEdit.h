@@ -64,8 +64,8 @@ public:
     }
   //}}}
   //{{{
-  uint32_t getNumGlyphs() const { 
-    return static_cast<uint32_t>(mGlyphs.size()); 
+  uint32_t getNumGlyphs() const {
+    return static_cast<uint32_t>(mGlyphs.size());
     }
   //}}}
 
@@ -756,6 +756,7 @@ private:
   void openFoldOnly (uint32_t lineNumber);
   void closeFold (uint32_t lineNumber);
   uint32_t skipFold (uint32_t lineNumber);
+  uint32_t drawFolded();
 
   // keyboard,mouse
   void keyboard();
@@ -769,8 +770,7 @@ private:
   void drawSelect (ImVec2 pos, uint32_t lineNumber);
   void drawCursor (ImVec2 curPos, uint32_t lineNumber);
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);
-  void drawUnfolded();
-  uint32_t drawFolded();
+  void drawLines();
 
   //{{{  vars
   bool mOpen = true;  // set false when DrawWindow() closed
