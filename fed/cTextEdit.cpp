@@ -1030,7 +1030,7 @@ void cTextEdit::loadFile (const string& filename) {
   // add empty lastLine
   mDoc.mLines.emplace_back (cLine());
 
-  cLog::log (LOGINFO, fmt::format ("read {} lines {} utf8 {}", 
+  cLog::log (LOGINFO, fmt::format ("read {} lines {} utf8 {}",
                                    lineNumber, mDoc.mHasCR ? "hasCR" : "", utf8chars));
 
   mDoc.mEdited = false;
@@ -1325,12 +1325,11 @@ float cTextEdit::getWidth (sPosition position) {
 
   float width = 0.f;
   uint32_t toGlyphIndex = getGlyphIndexFromPosition (position);
-  for (uint32_t glyphIndex = line.mFirstGlyph; (glyphIndex < line.getNumGlyphs()) && (glyphIndex < toGlyphIndex);) {
-    if (line.getChar (glyphIndex) == '\t') {
+  for (uint32_t glyphIndex = line.mFirstGlyph; 
+       (glyphIndex < line.getNumGlyphs()) && (glyphIndex < toGlyphIndex); glyphIndex++) {
+    if (line.getChar (glyphIndex) == '\t') 
       // tab width
       width = getTabEndPosX (width);
-      glyphIndex++;
-      }
     else
       // character width
       width += getGlyphCharacterWidth (line, glyphIndex);
@@ -1340,8 +1339,8 @@ float cTextEdit::getWidth (sPosition position) {
   }
 //}}}
 //{{{
-float cTextEdit::getGlyphCharacterWidth (const cLine& line, uint32_t& glyphIndex) {
-  return mDrawContext.measureChar (line.getChar (glyphIndex++));
+float cTextEdit::getGlyphCharacterWidth (const cLine& line, uint32_t glyphIndex) {
+  return mDrawContext.measureChar (line.getChar (glyphIndex));
   }
 //}}}
 
@@ -1355,24 +1354,6 @@ uint32_t cTextEdit::getNumPageLines() const {
 //}}}
 
 // line
-//{{{
-uint32_t cTextEdit::getLineNumColumns (uint32_t lineNumber) {
-
-  uint32_t column = 0;
-
-  const cLine& line = getLine (lineNumber);
-  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); ) {
-    uint8_t ch = line.getChar (glyphIndex);
-    if (ch == '\t')
-      column = getTabColumn (column);
-    else
-      column++;
-    glyphIndex++;
-    }
-
-  return column;
-  }
-//}}}
 //{{{
 uint32_t cTextEdit::getLineNumberFromIndex (uint32_t lineIndex) const {
 
@@ -1429,8 +1410,44 @@ cTextEdit::sPosition cTextEdit::getNextLinePosition (sPosition position) {
 
 // column
 //{{{
+uint32_t cTextEdit::getLineNumColumns (uint32_t lineNumber) {
+
+  uint32_t column = 0;
+
+  const cLine& line = getLine (lineNumber);
+
+  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++) 
+    if (line.getChar (glyphIndex) == '\t')
+      column = getTabColumn (column);
+    else
+      column++;
+
+  return column;
+  }
+//}}}
+//{{{
+uint32_t cTextEdit::getColumnFromGlyphIndex (uint32_t lineNumber, uint32_t toGlyphIndex) {
+// return glyphIndex column using any tabs
+
+  uint32_t column = 0;
+
+  const cLine& line = getLine (lineNumber);
+
+  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
+    if (glyphIndex >= toGlyphIndex) 
+      return column;
+    if (line.getChar (glyphIndex) == '\t')
+      column = getTabColumn (column);
+    else
+      column++;
+    }
+
+  return column;
+  }
+//}}}
+//{{{
 uint32_t cTextEdit::getGlyphIndexFromPosition (sPosition position) {
-// return glyphIndex from position line,column
+// return glyphIndex from position line,column, using tabs
 
   uint32_t glyphIndex = 0;
 
@@ -1450,18 +1467,16 @@ uint32_t cTextEdit::getGlyphIndexFromPosition (sPosition position) {
 //}}}
 //{{{
 cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float posX) {
+// get position.mColumn for posX, using glyphWidths and tabs
 
   uint32_t column = 0;
 
   const cLine& line = getLine (lineNumber);
 
   float columnPosX = 0.f;
-  uint32_t glyphIndex = 0;
-  while (glyphIndex < line.getNumGlyphs()) {
+  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++)
     if (line.getChar (glyphIndex) == '\t') {
       // tab
-      glyphIndex++;
-
       float lastColumnPosX = columnPosX;
       float tabEndPosX = getTabEndPosX (columnPosX);
       float width = tabEndPosX - lastColumnPosX;
@@ -1480,7 +1495,6 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
       columnPosX += width;
       column++;
       }
-    }
 
   cLog::log (LOGINFO, fmt::format ("getPositionFromPosX line:{} posX:{} firstGlyph:{} column:{} -> result:{}",
                                    lineNumber, posX, line.mFirstGlyph, column, line.mFirstGlyph + column));
@@ -1488,33 +1502,11 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
   return sanitizePosition ({lineNumber, line.mFirstGlyph + column});
   }
 //}}}
-//{{{
-uint32_t cTextEdit::getColumnFromGlyphIndex (uint32_t lineNumber, uint32_t toGlyphIndex) {
-// return column of glyphIndex, hande tabs
-
-  uint32_t column = 0;
-
-  const cLine& line = getLine (lineNumber);
-
-  uint32_t glyphIndex = 0;
-  while ((glyphIndex < toGlyphIndex) && (glyphIndex < line.getNumGlyphs())) {
-    uint8_t ch = line.getChar (glyphIndex);
-    if (ch == '\t')
-      column = getTabColumn (column);
-    else
-      column++;
-
-    glyphIndex++;
-    }
-
-  return column;
-  }
-//}}}
 
 // tab
 //{{{
 float cTextEdit::getTabEndPosX (float xPos) {
-// return tabEnd xPos of tab containing xPos
+// return tabEndPosx of tab containing xPos
 
   float tabWidthPixels = mDoc.mTabSize * mDrawContext.mGlyphWidth;
   return (1.f + floor ((1.f + xPos) / tabWidthPixels)) * tabWidthPixels;
@@ -1522,6 +1514,7 @@ float cTextEdit::getTabEndPosX (float xPos) {
 //}}}
 //{{{
 uint32_t cTextEdit::getTabColumn (uint32_t column) {
+// return column of after tab at column
   return ((column / mDoc.mTabSize) * mDoc.mTabSize) + mDoc.mTabSize;
   }
 //}}}

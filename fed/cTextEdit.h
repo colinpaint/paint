@@ -746,7 +746,7 @@ private:
 
   // text widths
   float getWidth (sPosition position);
-  float getGlyphCharacterWidth (const cLine& line, uint32_t& glyphIndex);
+  float getGlyphCharacterWidth (const cLine& line, uint32_t glyphIndex);
 
   // lines
   uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
