@@ -163,7 +163,8 @@ public:
      lineString.reserve (mGlyphs.size());
 
      for (auto& glyph : mGlyphs)
-       lineString += glyph.mChar[0];
+       for (uint32_t utf8index = 0; utf8index < glyph.mSize; utf8index++)
+         lineString += glyph.mChar[utf8index];
 
      return lineString;
      }
