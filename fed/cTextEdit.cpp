@@ -1238,7 +1238,7 @@ void cTextEdit::drawContents (cApp& app) {
 // private:
 //{{{  get
 //{{{
-bool cTextEdit::canEditAtCursor() { 
+bool cTextEdit::canEditAtCursor() {
 // cannot edit readOnly, foldBegin token, foldEnd token
 
   sPosition position = getCursorPosition();
@@ -1252,11 +1252,6 @@ bool cTextEdit::canEditAtCursor() {
 //}}}
 
 // text
-//{{{
-string cTextEdit::getSelectText() {
-  return getText (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
-  }
-//}}}
 //{{{
 string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
 // get position range as string with lineFeed line breaks
@@ -1306,7 +1301,7 @@ float cTextEdit::getWidth (sPosition position) {
   for (uint32_t glyphIndex = line.mFirstGlyph;
        (glyphIndex < line.getNumGlyphs()) && (glyphIndex < toGlyphIndex); glyphIndex++) {
     if (line.getChar (glyphIndex) == '\t')
-      // set width to end of tab 
+      // set width to end of tab
       width = getTabEndPosX (width);
     else
       // add glyphWidth
@@ -1319,17 +1314,16 @@ float cTextEdit::getWidth (sPosition position) {
 //{{{
 float cTextEdit::getGlyphWidth (const cLine& line, uint32_t glyphIndex) {
 
-  uint32_t size = line.getCharBytes (glyphIndex);
-
-  if (size == 1) // simple common case
+  uint32_t numCharBytes = line.getNumCharBytes(glyphIndex);
+  if (numCharBytes == 1) // simple common case
     return mDrawContext.measureChar (line.getChar (glyphIndex));
 
   array <char,6> str;
   uint32_t strIndex = 0;
-  for (uint32_t i = 0; i < size; i++)
+  for (uint32_t i = 0; i < numCharBytes; i++)
     str[strIndex++] = line.getChar (glyphIndex, i);
 
-  return mDrawContext.measureText (str.data(), str.data() + size);
+  return mDrawContext.measureText (str.data(), str.data() + numCharBytes);
   }
 //}}}
 
@@ -2563,7 +2557,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t firstGlyph, 
       //}}}
     else {
       // character
-      for (uint32_t i = 0; i < line.getCharBytes (glyphIndex); i++)
+      for (uint32_t i = 0; i < line.getNumCharBytes (glyphIndex); i++)
         str[strIndex++] = line.getChar (glyphIndex, i);
       }
 

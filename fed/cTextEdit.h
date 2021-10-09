@@ -157,7 +157,7 @@ public:
   //}}}
 
   //{{{
-  uint8_t getCharBytes (uint32_t glyphIndex) const {
+  uint8_t getNumCharBytes (uint32_t glyphIndex) const {
     return mGlyphs[glyphIndex].mNumUtf8Bytes;
     }
   //}}}
@@ -778,8 +778,8 @@ private:
   bool canEditAtCursor();
 
   // text
-  std::string getSelectText();
   std::string getText (sPosition beginPosition, sPosition endPosition);
+  std::string getSelectText() { return getText (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd); }
 
   // text widths
   float getWidth (sPosition position);
