@@ -18,14 +18,75 @@ class cApp;
 //{{{
 class cGlyph {
 public:
-  cGlyph() 
-    : mChar(' '), mColor(0), mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
+  //{{{
+  cGlyph()
+      : mSize(1), mColor(0),
+        mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {
 
-  cGlyph (uint8_t ch, uint8_t color) 
-    : mChar(ch), mColor(color), mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {}
+    mChar[0] =  ' ';
+    }
+  //}}}
+  //{{{
+  cGlyph (ImWchar ch, uint8_t color)
+      : mColor(color), mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {
+  // maximum size 4
+
+    if (ch < 0x80) {
+      mChar[0] = static_cast<uint8_t> (ch);
+      mSize = 1;
+      return;
+      }
+
+    if (ch < 0x800) {
+      mChar[0] = static_cast<uint8_t> (0xc0 + (ch >> 6));
+      mChar[1] = static_cast<uint8_t> (0x80 + (ch & 0x3f));
+      mSize = 2;
+      return;
+      }
+
+    if ((ch >= 0xdc00) && (ch < 0xe000)) {
+      // unknown; mChar[0] = '?';
+      mSize = 1;
+      return;
+      }
+
+    if ((ch >= 0xd800) && (ch < 0xdc00)) {
+      //mChar[0] = static_cast<uint8_t> (0xf0 + (ch >> 18));
+      mChar[0] = static_cast<uint8_t> (0xf0);
+      mChar[1] = static_cast<uint8_t> (0x80 + ((ch >> 12) & 0x3f));
+      mChar[2] = static_cast<uint8_t> (0x80 + ((ch >> 6) & 0x3f));
+      mChar[3] = static_cast<uint8_t> (0x80 + ((ch) & 0x3f));
+      mSize = 4;
+      return;
+      }
+
+    if (ch < 0x10000) {
+      mChar[0] = static_cast<uint8_t> (0xe0 + (ch >> 12));
+      mChar[1] = static_cast<uint8_t> (0x80 + ((ch >> 6) & 0x3f));
+      mChar[2] = static_cast<uint8_t> (0x80 + ((ch) & 0x3f));
+      mSize = 3;
+      return;
+      }
+
+    // unknown
+    mChar[0] = '?';
+    mSize = 1;
+    }
+  //}}}
+  //{{{
+  cGlyph (const uint8_t* utf8, uint8_t size, uint8_t color)
+      : mSize(size), mColor(color), mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {
+
+    // maximum size 6
+    if (size <= 6)
+      for (uint32_t i = 0; i < mSize; i++)
+        mChar[i] = *utf8++;
+    }
+  //}}}
 
   // vars
-  uint8_t mChar;
+  uint8_t mChar[6];
+  uint8_t mSize;
   uint8_t mColor;
 
   // commentFlags, speeds up wholeText comment parsing
@@ -76,7 +137,7 @@ public:
      lineString.reserve (mGlyphs.size());
 
      for (auto& glyph : mGlyphs)
-       lineString += glyph.mChar;
+       lineString += glyph.mChar[0];
 
      return lineString;
      }
@@ -84,7 +145,7 @@ public:
 
   //{{{
   uint8_t getChar (const uint32_t glyphIndex) const {
-    return mGlyphs[glyphIndex].mChar;
+    return mGlyphs[glyphIndex].mChar[0];
     }
   //}}}
   //{{{
@@ -198,7 +259,7 @@ public:
 
     uint32_t trimmedSpaces = 0;
     uint32_t column = getNumGlyphs();
-    while ((column > 0) && (mGlyphs[--column].mChar == ' ')) {
+    while ((column > 0) && (mGlyphs[--column].mChar[0] == ' ')) {
       // trailingSpace, trim it
       mGlyphs.pop_back();
       trimmedSpaces++;
@@ -390,10 +451,12 @@ public:
 
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverWrite() { mOptions.mOverWrite = !mOptions.mOverWrite; }
+
   void toggleShowLineNumber() { mOptions.mShowLineNumber = !mOptions.mShowLineNumber; }
   void toggleShowLineDebug() { mOptions.mShowLineDebug = !mOptions.mShowLineDebug; }
   void toggleShowWhiteSpace() { mOptions.mShowWhiteSpace = !mOptions.mShowWhiteSpace; }
   void toggleShowMonoSpaced() { mOptions.mShowMonoSpaced = !mOptions.mShowMonoSpaced; }
+
   void toggleShowFolded();
   //}}}
   //{{{  actions
