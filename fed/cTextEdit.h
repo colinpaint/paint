@@ -84,6 +84,32 @@ public:
     }
   //}}}
 
+  // utf
+  //{{{
+  static uint8_t utf8CharSize (uint8_t ch) {
+  // https://en.wikipedia.org/wiki/UTF-8
+  // We assume that the char is a standalone character ( < 128)
+  // or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
+
+    if ((ch & 0xFE) == 0xFC)
+      return 6;
+
+    if ((ch & 0xFC) == 0xF8)
+      return 5;
+
+    if ((ch & 0xF8) == 0xF0)
+      return 4;
+
+    else if ((ch & 0xF0) == 0xE0)
+      return 3;
+
+    else if ((ch & 0xE0) == 0xC0)
+      return 2;
+
+    return 1;
+    }
+  //}}}
+
   // vars
   uint8_t mChar[6];
   uint8_t mSize;

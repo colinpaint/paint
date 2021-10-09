@@ -213,32 +213,6 @@ namespace {
   //}}}
   //}}}
 
-  // utf
-  //{{{
-  uint8_t utf8CharLength (uint8_t ch) {
-  // https://en.wikipedia.org/wiki/UTF-8
-  // We assume that the char is a standalone character ( < 128)
-  // or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
-
-    if ((ch & 0xFE) == 0xFC)
-      return 6;
-
-    if ((ch & 0xFC) == 0xF8)
-      return 5;
-
-    if ((ch & 0xF8) == 0xF0)
-      return 4;
-
-    else if ((ch & 0xF0) == 0xE0)
-      return 3;
-
-    else if ((ch & 0xE0) == 0xC0)
-      return 2;
-
-    return 1;
-    }
-  //}}}
-
   // fast parsers
   //{{{
   bool parseIdentifier (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
@@ -1008,20 +982,20 @@ void cTextEdit::loadFile (const string& filename) {
         if (ch ==  '\t')
           mDoc.mHasTabs = true;
 
-        uint8_t length = utf8CharLength (ch);
-        if (length == 1)
+        uint8_t size = cGlyph::utf8CharSize (ch);
+        if (size == 1)
           mDoc.mLines.back().emplaceBack (cGlyph (ch, eText));
         else {
           string utf8String;
           array <uint8_t,7> utf8 = {0};
-          for (uint32_t i = 0; i < length; i++) {
+          for (uint32_t i = 0; i < size; i++) {
             utf8[i] = *it;
             utf8String += fmt::format ("{:2x} ", (uint8_t)(*it));
             ++it;
             }
           utf8chars++;
-          //cLog::log (LOGINFO, fmt::format ("loading utf8 {} {}", length, utf8String));
-          mDoc.mLines.back().emplaceBack (cGlyph (utf8.data(), length, eText));
+          //cLog::log (LOGINFO, fmt::format ("loading utf8 {} {}", size, utf8String));
+          mDoc.mLines.back().emplaceBack (cGlyph (utf8.data(), size, eText));
           }
         }
       }
