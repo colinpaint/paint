@@ -36,7 +36,7 @@ namespace {
   constexpr uint8_t eCursorPos     =    11;
   constexpr uint8_t eCursorLineFill =   12;
   constexpr uint8_t eCursorLineEdge =   13;
-  constexpr uint8_t eCursorUnEditable = 14;
+  constexpr uint8_t eCursorReadOnly = 14;
   constexpr uint8_t eSelectCursor    =  15;
   constexpr uint8_t eLineNumber =       16;
   constexpr uint8_t eWhiteSpace =       17;
@@ -68,7 +68,7 @@ namespace {
     0xff000000, // eCursorPos
     0x10000000, // eCursorLineFill
     0x40000000, // eCursorLineEdge
-    0x800000ff, // eCursorUnEditable
+    0x800000ff, // eCursorReadOnly
     0x80600000, // eSelectCursor
     0xff505000, // eLineNumber
     0xff808080, // eWhiteSpace
@@ -1239,13 +1239,14 @@ void cTextEdit::drawContents (cApp& app) {
 //{{{  get
 //{{{
 bool cTextEdit::canEditAtCursor() {
-// can we edit at cursorPosition
+// cannot edit readOnly, foldBegin, foldEnd tokens
 
   sPosition position = getCursorPosition();
 
-  // cannot edit foldBegin, foldEnd tokens
   const cLine& line = getLine (position.mLineNumber);
-  return !(line.mFoldBegin && (position.mColumn < line.mIndent + mOptions.mLanguage.mFoldBeginToken.size())) &&
+
+  return !isReadOnly() &&
+         !(line.mFoldBegin && (position.mColumn < line.mIndent + mOptions.mLanguage.mFoldBeginToken.size())) &&
          !line.mFoldEnd;
   }
 //}}}
@@ -2612,7 +2613,7 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
     ImVec2 tlPos {0.f, pos.y};
     ImVec2 brPos {pos.x, pos.y + mDrawContext.mLineHeight};
     mDrawContext.rect (tlPos, brPos, eCursorLineFill);
-    mDrawContext.rectLine (tlPos, brPos, canEditAtCursor() ? eCursorLineEdge : eCursorUnEditable);
+    mDrawContext.rectLine (tlPos, brPos, canEditAtCursor() ? eCursorLineEdge : eCursorReadOnly);
     }
 
   //  draw flashing cursor
@@ -2636,7 +2637,7 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
 
     ImVec2 tlPos {pos.x + cursorPosX - 1.f, pos.y};
     ImVec2 brPos {tlPos.x + cursorWidth, pos.y + mDrawContext.mLineHeight};
-    mDrawContext.rect (tlPos, brPos, canEditAtCursor() ? eCursorPos : eCursorUnEditable);
+    mDrawContext.rect (tlPos, brPos, canEditAtCursor() ? eCursorPos : eCursorReadOnly);
     return;
     }
 
