@@ -982,19 +982,19 @@ void cTextEdit::loadFile (const string& filename) {
         if (ch ==  '\t')
           mDoc.mHasTabs = true;
 
-        uint8_t size = cGlyph::utf8CharSize (ch);
-        if (size == 1)
+        uint8_t numUtf8Bytes = cGlyph::numUtf8Bytes(ch);
+        if (numUtf8Bytes == 1)
           mDoc.mLines.back().emplaceBack (cGlyph (ch, eText));
         else {
-          array <uint8_t,7> utf8 = {0};
+          array <uint8_t,7> utf8Bytes = {0};
           string utf8String;
-          for (uint32_t i = 0; i < size; i++) {
-            utf8[i] = (i == 0) ? ch : *it++;
-            utf8String += fmt::format ("{:2x} ", utf8[i]);
+          for (uint32_t i = 0; i < numUtf8Bytes; i++) {
+            utf8Bytes[i] = (i == 0) ? ch : *it++;
+            utf8String += fmt::format ("{:2x} ", utf8Bytes[i]);
             }
           utf8chars++;
           //cLog::log (LOGINFO, fmt::format ("loading utf8 {} {}", size, utf8String));
-          mDoc.mLines.back().emplaceBack (cGlyph (utf8.data(), size, eText));
+          mDoc.mLines.back().emplaceBack (cGlyph (utf8Bytes.data(), numUtf8Bytes, eText));
           }
         }
       }

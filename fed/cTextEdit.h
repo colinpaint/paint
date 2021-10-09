@@ -86,7 +86,7 @@ public:
 
   // utf
   //{{{
-  static uint8_t utf8CharSize (uint8_t ch) {
+  static uint8_t numUtf8Bytes (uint8_t ch) {
   // https://en.wikipedia.org/wiki/UTF-8
   // We assume that the char is a standalone character ( < 128)
   // or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
