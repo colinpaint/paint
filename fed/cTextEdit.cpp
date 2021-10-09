@@ -1214,7 +1214,7 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, {0.f,0.f});
   ImGui::BeginChild ("##s", {0.f,0.f}, false,
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-  mDrawContext.update (mOptions);
+  mDrawContext.update (mOptions, isDrawMonoSpaced());
 
   keyboard();
 
@@ -2234,21 +2234,20 @@ uint32_t cTextEdit::drawFolded() {
   uint32_t lineIndex = 0;
   while (lineNumber < getNumLines()) {
     cLine& line = getLine (lineNumber);
+    line.mFoldOffset = 0;
+
     if (line.mFoldBegin) {
       if (line.mFoldOpen) {
         // draw openFold line
-        line.mFoldOffset = 0;
         line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
         drawLine (lineNumber++, lineIndex++);
         }
 
       else {
         // closed fold
-        if (line.mCommentFold) {
+        if (line.mCommentFold)
           // draw closedFold with comment line
-          line.mFoldOffset = 0;
           line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
-          }
         else {
           // draw closedFold without comment line
           // - set mFoldOffset, !!!  just use +1 for now !!!!
@@ -2260,20 +2259,18 @@ uint32_t cTextEdit::drawFolded() {
         }
       }
 
-    else if (!line.mFoldEnd) {
-      // draw fold middle line
-      line.mFoldOffset = 0;
-      line.mFirstGlyph = 0;
-      drawLine (lineNumber++, lineIndex++);
-      }
-
-    else {
+    else if (line.mFoldEnd) {
       // draw foldEnd line
-      line.mFoldOffset = 0;
       line.mFirstGlyph = 0;
       drawLine (lineNumber++, lineIndex++);
       if (mEdit.mFoldOnly)
         return lineIndex;
+      }
+
+    else {
+      // draw fold middle line
+      line.mFirstGlyph = 0;
+      drawLine (lineNumber++, lineIndex++);
       }
     }
 
@@ -2868,12 +2865,14 @@ void cTextEdit::drawLines() {
 
 //{{{  cTextEdit::cDrawContext
 //{{{
-void cTextEdit::cDrawContext::update (const cOptions& options) {
+void cTextEdit::cDrawContext::update (const cOptions& options, bool monoSpaced) {
 // update draw context
 
   mDrawList = ImGui::GetWindowDrawList();
 
   mFont = ImGui::GetFont();
+  mMonoSpaced = monoSpaced;
+
   mFontAtlasSize = ImGui::GetFontSize();
   mFontSize = static_cast<float>(options.mFontSize);
   mFontSmallSize = mFontSize > ((mFontAtlasSize * 2.f) / 3.f) ? ((mFontAtlasSize * 2.f) / 3.f) : mFontSize;
@@ -2881,7 +2880,7 @@ void cTextEdit::cDrawContext::update (const cOptions& options) {
 
   float scale = mFontSize / mFontAtlasSize;
   mLineHeight = ImGui::GetTextLineHeight() * scale;
-  mGlyphWidth = measureChar (' ');
+  mGlyphWidth = measureSpace();
 
   mLeftPad = mGlyphWidth / 2.f;
   mLineNumberWidth = 0.f;
@@ -2889,17 +2888,27 @@ void cTextEdit::cDrawContext::update (const cOptions& options) {
 //}}}
 
 //{{{
-float cTextEdit::cDrawContext::measureChar (char ch) const {
-// return width of text
+float cTextEdit::cDrawContext::measureSpace() const {
+// return width of space
 
-  char str[2] = {ch,0};
+  char str[2] = {' ', 0};
   return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, str+1).x;
   }
 //}}}
 //{{{
-float cTextEdit::cDrawContext::measureText (const char* str, const char* strEnd) const {
+float cTextEdit::cDrawContext::measureChar (char ch) const {
 // return width of text
 
+  if (mMonoSpaced)
+    return mGlyphWidth;
+  else {
+    char str[2] = {ch,0};
+    return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, str+1).x;
+    }
+  }
+//}}}
+//{{{
+float cTextEdit::cDrawContext::measureText (const char* str, const char* strEnd) const {
   return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
   }
 //}}}

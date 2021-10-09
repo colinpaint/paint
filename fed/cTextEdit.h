@@ -623,8 +623,9 @@ private:
   //{{{
   class cDrawContext {
   public:
-    void update (const cOptions& options);
+    void update (const cOptions& options, bool monoSpaced);
 
+    float measureSpace() const;
     float measureChar (char ch) const;
     float measureText (const char* str, const char* strEnd) const;
     float text (ImVec2 pos, uint8_t color, const std::string& text);
@@ -647,6 +648,7 @@ private:
     ImDrawList* mDrawList = nullptr;
 
     ImFont* mFont = nullptr;
+    bool mMonoSpaced = false;
 
     float mFontAtlasSize = 0.f;
     float mFontSmallSize = 0.f;
