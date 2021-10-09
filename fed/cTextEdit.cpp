@@ -986,12 +986,11 @@ void cTextEdit::loadFile (const string& filename) {
         if (size == 1)
           mDoc.mLines.back().emplaceBack (cGlyph (ch, eText));
         else {
-          string utf8String;
           array <uint8_t,7> utf8 = {0};
+          string utf8String;
           for (uint32_t i = 0; i < size; i++) {
-            utf8[i] = *it;
-            utf8String += fmt::format ("{:2x} ", (uint8_t)(*it));
-            ++it;
+            utf8[i] = (i == 0) ? ch : *it++;
+            utf8String += fmt::format ("{:2x} ", utf8[i]);
             }
           utf8chars++;
           //cLog::log (LOGINFO, fmt::format ("loading utf8 {} {}", size, utf8String));

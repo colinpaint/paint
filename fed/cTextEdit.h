@@ -111,8 +111,8 @@ public:
   //}}}
 
   // vars
-  uint8_t mChar[6];
-  uint8_t mSize;
+  uint8_t mChar[6];  // expensive
+  uint8_t mSize;     // expensive
   uint8_t mColor;
 
   // commentFlags, speeds up wholeText comment parsing
