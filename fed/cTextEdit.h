@@ -20,10 +20,10 @@ class cGlyph {
 public:
   //{{{
   cGlyph()
-      : mSize(1), mColor(0),
+      : mNumUtf8Bytes(1), mColor(0),
         mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {
 
-    mChar[0] =  ' ';
+    mUtfChar[0] =  ' ';
     }
   //}}}
   //{{{
@@ -32,55 +32,55 @@ public:
   // maximum size 4
 
     if (ch < 0x80) {
-      mChar[0] = static_cast<uint8_t> (ch);
-      mSize = 1;
+      mUtfChar[0] = static_cast<uint8_t> (ch);
+      mNumUtf8Bytes = 1;
       return;
       }
 
     if (ch < 0x800) {
-      mChar[0] = static_cast<uint8_t> (0xc0 + (ch >> 6));
-      mChar[1] = static_cast<uint8_t> (0x80 + (ch & 0x3f));
-      mSize = 2;
+      mUtfChar[0] = static_cast<uint8_t> (0xc0 + (ch >> 6));
+      mUtfChar[1] = static_cast<uint8_t> (0x80 + (ch & 0x3f));
+      mNumUtf8Bytes = 2;
       return;
       }
 
     if ((ch >= 0xdc00) && (ch < 0xe000)) {
-      // unknown; mChar[0] = '?';
-      mSize = 1;
+      // unknown; mUtfChar[0] = '?';
+      mNumUtf8Bytes = 1;
       return;
       }
 
     if ((ch >= 0xd800) && (ch < 0xdc00)) {
-      //mChar[0] = static_cast<uint8_t> (0xf0 + (ch >> 18));
-      mChar[0] = static_cast<uint8_t> (0xf0);
-      mChar[1] = static_cast<uint8_t> (0x80 + ((ch >> 12) & 0x3f));
-      mChar[2] = static_cast<uint8_t> (0x80 + ((ch >> 6) & 0x3f));
-      mChar[3] = static_cast<uint8_t> (0x80 + ((ch) & 0x3f));
-      mSize = 4;
+      //mUtfChar[0] = static_cast<uint8_t> (0xf0 + (ch >> 18));
+      mUtfChar[0] = static_cast<uint8_t> (0xf0);
+      mUtfChar[1] = static_cast<uint8_t> (0x80 + ((ch >> 12) & 0x3f));
+      mUtfChar[2] = static_cast<uint8_t> (0x80 + ((ch >> 6) & 0x3f));
+      mUtfChar[3] = static_cast<uint8_t> (0x80 + ((ch) & 0x3f));
+      mNumUtf8Bytes = 4;
       return;
       }
 
     if (ch < 0x10000) {
-      mChar[0] = static_cast<uint8_t> (0xe0 + (ch >> 12));
-      mChar[1] = static_cast<uint8_t> (0x80 + ((ch >> 6) & 0x3f));
-      mChar[2] = static_cast<uint8_t> (0x80 + ((ch) & 0x3f));
-      mSize = 3;
+      mUtfChar[0] = static_cast<uint8_t> (0xe0 + (ch >> 12));
+      mUtfChar[1] = static_cast<uint8_t> (0x80 + ((ch >> 6) & 0x3f));
+      mUtfChar[2] = static_cast<uint8_t> (0x80 + ((ch) & 0x3f));
+      mNumUtf8Bytes = 3;
       return;
       }
 
     // unknown
-    mChar[0] = '?';
-    mSize = 1;
+    mUtfChar[0] = '?';
+    mNumUtf8Bytes = 1;
     }
   //}}}
   //{{{
   cGlyph (const uint8_t* utf8, uint8_t size, uint8_t color)
-      : mSize(size), mColor(color), mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {
+      : mNumUtf8Bytes(size), mColor(color), mCommentSingle(false), mCommentBegin(false), mCommentEnd(false) {
 
     // maximum size 6
     if (size <= 6)
-      for (uint32_t i = 0; i < mSize; i++)
-        mChar[i] = *utf8++;
+      for (uint32_t i = 0; i < mNumUtf8Bytes; i++)
+        mUtfChar[i] = *utf8++;
     }
   //}}}
 
@@ -111,8 +111,8 @@ public:
   //}}}
 
   // vars
-  uint8_t mChar[6];  // expensive
-  uint8_t mSize;     // expensive
+  uint8_t mUtfChar[6];       // expensive
+  uint8_t mNumUtf8Bytes;  // expensive
   uint8_t mColor;
 
   // commentFlags, speeds up wholeText comment parsing
@@ -157,33 +157,33 @@ public:
   //}}}
 
   //{{{
+  uint8_t getCharBytes (uint32_t glyphIndex) const {
+    return mGlyphs[glyphIndex].mNumUtf8Bytes;
+    }
+  //}}}
+  //{{{
+  uint8_t getChar (uint32_t glyphIndex, uint32_t utf8Index) const {
+    return mGlyphs[glyphIndex].mUtfChar[utf8Index];
+    }
+  //}}}
+  //{{{
+  uint8_t getChar (uint32_t glyphIndex) const {
+    return getChar (glyphIndex, 0);
+    }
+  //}}}
+
+  //{{{
   std::string getString() const {
 
      std::string lineString;
      lineString.reserve (mGlyphs.size());
 
      for (auto& glyph : mGlyphs)
-       for (uint32_t utf8index = 0; utf8index < glyph.mSize; utf8index++)
-         lineString += glyph.mChar[utf8index];
+       for (uint32_t utf8index = 0; utf8index < glyph.mNumUtf8Bytes; utf8index++)
+         lineString += glyph.mUtfChar[utf8index];
 
      return lineString;
      }
-  //}}}
-
-  //{{{
-  uint8_t getChar (uint32_t glyphIndex) const {
-    return mGlyphs[glyphIndex].mChar[0];
-    }
-  //}}}
-  //{{{
-  uint8_t getChar (uint32_t glyphIndex, uint32_t utf8Index) const {
-    return mGlyphs[glyphIndex].mChar[utf8Index];
-    }
-  //}}}
-  //{{{
-  uint8_t getCharSize (uint32_t glyphIndex) const {
-    return mGlyphs[glyphIndex].mSize;
-    }
   //}}}
   //{{{
   uint8_t getColor (uint32_t glyphIndex) const {
@@ -296,7 +296,7 @@ public:
 
     uint32_t trimmedSpaces = 0;
     uint32_t column = getNumGlyphs();
-    while ((column > 0) && (mGlyphs[--column].mChar[0] == ' ')) {
+    while ((column > 0) && (mGlyphs[--column].mUtfChar[0] == ' ')) {
       // trailingSpace, trim it
       mGlyphs.pop_back();
       trimmedSpaces++;

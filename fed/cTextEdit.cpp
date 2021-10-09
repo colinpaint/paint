@@ -1319,7 +1319,7 @@ float cTextEdit::getWidth (sPosition position) {
 //{{{
 float cTextEdit::getGlyphWidth (const cLine& line, uint32_t glyphIndex) {
 
-  uint32_t size = line.getCharSize (glyphIndex);
+  uint32_t size = line.getCharBytes (glyphIndex);
 
   if (size == 1) // simple common case
     return mDrawContext.measureChar (line.getChar (glyphIndex));
@@ -2563,7 +2563,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t firstGlyph, 
       //}}}
     else {
       // character
-      for (uint32_t i = 0; i < line.getCharSize (glyphIndex); i++)
+      for (uint32_t i = 0; i < line.getCharBytes (glyphIndex); i++)
         str[strIndex++] = line.getChar (glyphIndex, i);
       }
 
