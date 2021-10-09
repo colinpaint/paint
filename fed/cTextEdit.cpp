@@ -1380,16 +1380,6 @@ uint32_t cTextEdit::getLineIndexFromNumber (uint32_t lineNumber) const {
   }
 //}}}
 //{{{
-uint32_t cTextEdit::getDrawLineNumber (uint32_t lineNumber) {
-
-  const cLine& line = getLine (lineNumber);
-  if (isFolded() && line.mFoldBegin && !line.mFoldOpen)
-    return lineNumber + (line.mFoldComment ? 0 : 1);
-  else return
-    lineNumber;
-  }
-//}}}
-//{{{
 cTextEdit::sPosition cTextEdit::getNextLinePosition (sPosition position) {
 
   uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
@@ -2035,19 +2025,20 @@ void cTextEdit::parseLine (cLine& line) {
         line.setCommentEnd (pos++);
     } while (pos != string::npos);
   //}}}
-  //{{{  find foldBegin token
+  //{{{  find foldBegin token, foldComment
   size_t foldBeginPos = glyphString.find (mOptions.mLanguage.mFoldBeginToken, indentPos);
   line.mFoldBegin = (foldBeginPos != string::npos) && (foldBeginPos == indentPos);
-  //}}}
-  //{{{  find foldEnd token
-  size_t foldEndPos = glyphString.find (mOptions.mLanguage.mFoldEndToken, indentPos);
-  line.mFoldEnd = (foldEndPos != string::npos) && (foldEndPos == indentPos);
-  //}}}
+
   if (line.mFoldBegin) {
     // does foldBegin have a comment?
     line.mFoldComment = glyphString.size() != (foldBeginPos + mOptions.mLanguage.mFoldBeginToken.size());
     mDoc.mHasFolds = true;
     }
+  //}}}
+  //{{{  find foldEnd token
+  size_t foldEndPos = glyphString.find (mOptions.mLanguage.mFoldEndToken, indentPos);
+  line.mFoldEnd = (foldEndPos != string::npos) && (foldEndPos == indentPos);
+  //}}}
 
   parseTokens (line, glyphString);
   }
@@ -2462,10 +2453,14 @@ void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 po
 
   cursorFlashOn();
 
-  uint32_t drawLineNumber = getDrawLineNumber (lineNumber);
-  cLog::log (LOGINFO, fmt::format ("mouseSelectText {} line:{} visLine:{}", selectWord, lineNumber, drawLineNumber));
+  const cLine& line = getLine (lineNumber);
+  if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
+    // foldBegin, closed, without comment, seeThru to next line
+    lineNumber++;
 
-  mEdit.mCursor.mPosition = getPositionFromPosX (drawLineNumber, pos.x);
+  cLog::log (LOGINFO, fmt::format ("mouseSelectText {} line:{} visLine:{}", selectWord, lineNumber, lineNumber));
+
+  mEdit.mCursor.mPosition = getPositionFromPosX (lineNumber, pos.x);
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
 
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
@@ -2678,8 +2673,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
           line.getCommentSingle() ? '/' : ' ',
           line.getCommentBegin()  ? '{' : ' ',
           line.getCommentEnd()    ? '}' : ' ',
-          line.mFoldComment       ? 'c' : ' ',
           line.mFoldBegin         ? 'b' : ' ',
+          line.mFoldComment       ? 'c' : ' ',
           line.mFoldEnd           ? 'e' : ' ',
           line.mFoldOpen          ? 'o' : ' ',
           line.mFoldPressed       ? 'p' : ' ',
@@ -2793,8 +2788,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                            {ImGui::GetMousePos().x - glyphsPos.x, ImGui::GetMousePos().y - glyphsPos.y});
         }
 
-      // draw glyphs
-      const cLine& drawLine = getLine (lineNumber + (line.mFoldComment ? 0 : 1));
+      // draw glyphs with possible seeThru
+      const cLine& drawLine = getLine (line.mFoldComment ? lineNumber : lineNumber + 1);
       curPos.x += drawGlyphs (glyphsPos, drawLine, line.mFirstGlyph, eFoldClosed);
       }
       //}}}
@@ -2840,15 +2835,17 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     }
     //}}}
 
-  uint32_t drawLineNumber = getDrawLineNumber (lineNumber);
+  line = getLine (lineNumber);
+  if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
+    lineNumber++;
 
   // select
-  if (mEdit.isSelectLine (drawLineNumber))
-    drawSelect (glyphsPos, drawLineNumber);
+  if (mEdit.isSelectLine (lineNumber))
+    drawSelect (glyphsPos, lineNumber);
 
   // cursor
-  if (mEdit.isCursorLine (drawLineNumber))
-    drawCursor (glyphsPos, drawLineNumber);
+  if (mEdit.isCursorLine (lineNumber))
+    drawCursor (glyphsPos, lineNumber);
   }
 //}}}
 //{{{

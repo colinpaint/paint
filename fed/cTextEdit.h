@@ -781,7 +781,6 @@ private:
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
   uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
 
-  uint32_t getDrawLineNumber (uint32_t lineNumber);
   sPosition getNextLinePosition (sPosition position);
 
   // column
