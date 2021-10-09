@@ -983,6 +983,8 @@ void cTextEdit::loadFile (const string& filename) {
   // clear doc
   mDoc.mLines.clear();
 
+  uint32_t utf8chars = 0;
+
   string lineString;
   uint32_t lineNumber = 0;
 
@@ -995,15 +997,16 @@ void cTextEdit::loadFile (const string& filename) {
 
     // iterate char
     for (auto it = lineString.begin(); it < lineString.end(); ++it) {
-      if (*it == '\r') // CR ignored, but set flag
+      char ch = *it;
+      if (ch == '\r') // CR ignored, but set flag
         mDoc.mHasCR = true;
       else {
-        if (*it ==  '\t')
+        if (ch ==  '\t')
           mDoc.mHasTabs = true;
 
-        uint8_t length = utf8CharLength (*it);
+        uint8_t length = utf8CharLength (ch);
         if (length == 1)
-          mDoc.mLines.back().emplaceBack (cGlyph (*it, eText));
+          mDoc.mLines.back().emplaceBack (cGlyph (ch, eText));
         else {
           string utf8String;
           array <uint8_t,7> utf8 = {0};
@@ -1012,8 +1015,8 @@ void cTextEdit::loadFile (const string& filename) {
             utf8String += fmt::format ("{:2x} ", (uint8_t)(*it));
             ++it;
             }
-
-          cLog::log (LOGINFO, fmt::format ("loading utf8 {} {}", length, utf8String));
+          utf8chars++;
+          //cLog::log (LOGINFO, fmt::format ("loading utf8 {} {}", length, utf8String));
           mDoc.mLines.back().emplaceBack (cGlyph (utf8.data(), length, eText));
           }
         }
@@ -1027,7 +1030,8 @@ void cTextEdit::loadFile (const string& filename) {
   // add empty lastLine
   mDoc.mLines.emplace_back (cLine());
 
-  cLog::log (LOGINFO, fmt::format ("read {} lines {}", lineNumber, mDoc.mHasCR ? "hasCR" : ""));
+  cLog::log (LOGINFO, fmt::format ("read {} lines {} utf8 {}", 
+                                   lineNumber, mDoc.mHasCR ? "hasCR" : "", utf8chars));
 
   mDoc.mEdited = false;
 
