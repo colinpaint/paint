@@ -244,7 +244,6 @@ public:
 
     mIndent = 0;
     mFirstGlyph = 0;
-    mFoldOffset = 0;
 
     mCommentBegin = false;
     mCommentEnd = false;
@@ -252,6 +251,7 @@ public:
 
     mFoldBegin = false;
     mFoldEnd = false;
+
     mFoldOpen = false;
     }
   //}}}
@@ -326,10 +326,9 @@ public:
   // offsets
   uint8_t mIndent = 0;     // leading space count
   uint8_t mFirstGlyph = 0; // index of first visible glyph, past fold marker
-  uint8_t mFoldOffset= 0;  // closed fold title line offset
 
   // parsed tokens
-  bool mCommentFold = false;
+  bool mFoldComment = false;
   bool mFoldBegin = false;
   bool mFoldEnd = false;
 
