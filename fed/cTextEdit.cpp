@@ -2253,10 +2253,10 @@ uint32_t cTextEdit::drawFolded() {
 
       else {
         // closed fold
-        if (line.mFoldComment) // draw closedFold with comment line
-          line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
-        else // draw closedFold with seethru to nextLine
-          line.mFirstGlyph = getLine (lineNumber + 1).mIndent;
+        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
+        if (!line.mFoldComment) // will use seeThru line
+          getLine (lineNumber + 1).mFirstGlyph = getLine (lineNumber + 1).mIndent;
+
         drawLine (lineNumber++, lineIndex++);
         lineNumber = skipFold (lineNumber);
         }
@@ -2505,7 +2505,7 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
 
 // draw
 //{{{
-float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t firstGlyph, uint8_t forceColor) {
+float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t forceColor) {
 
   if (line.empty())
     return 0.f;
@@ -2515,9 +2515,9 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t firstGlyph, 
 
   array <char,256> str;
   uint32_t strIndex = 0;
-  uint8_t prevColor = (forceColor == eUndefined) ? line.getColor (firstGlyph) : forceColor;
+  uint8_t prevColor = (forceColor == eUndefined) ? line.getColor (line.mFirstGlyph) : forceColor;
 
-  for (uint32_t glyphIndex = firstGlyph; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
+  for (uint32_t glyphIndex = line.mFirstGlyph; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
     uint8_t color = (forceColor == eUndefined) ? line.getColor (glyphIndex) : forceColor;
     if ((strIndex > 0) && (strIndex < str.max_size()) &&
         ((color != prevColor) || (line.getChar (glyphIndex) == '\t') || (line.getChar (glyphIndex) == ' '))) {
@@ -2746,7 +2746,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                            {ImGui::GetMousePos().x - glyphsPos.x, ImGui::GetMousePos().y - glyphsPos.y});
         }
       // draw glyphs
-      curPos.x += drawGlyphs (glyphsPos, line, line.mFirstGlyph, eUndefined);
+      curPos.x += drawGlyphs (glyphsPos, line, eUndefined);
       }
       //}}}
     else {
@@ -2790,7 +2790,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
       // draw glyphs with possible seeThru
       const cLine& drawLine = getLine (line.mFoldComment ? lineNumber : lineNumber + 1);
-      curPos.x += drawGlyphs (glyphsPos, drawLine, line.mFirstGlyph, eFoldClosed);
+      curPos.x += drawGlyphs (glyphsPos, drawLine, eFoldClosed);
       }
       //}}}
     }
@@ -2831,7 +2831,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       }
 
     // drawGlyphs
-    curPos.x += drawGlyphs (glyphsPos, line, line.mFirstGlyph, eUndefined);
+    curPos.x += drawGlyphs (glyphsPos, line, eUndefined);
     }
     //}}}
 
