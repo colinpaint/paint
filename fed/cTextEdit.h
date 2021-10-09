@@ -144,12 +144,22 @@ public:
   //}}}
 
   //{{{
-  uint8_t getChar (const uint32_t glyphIndex) const {
+  uint8_t getChar (uint32_t glyphIndex) const {
     return mGlyphs[glyphIndex].mChar[0];
     }
   //}}}
   //{{{
-  uint8_t getColor (const uint32_t glyphIndex) const {
+  uint8_t getChar (uint32_t glyphIndex, uint32_t utf8Index) const {
+    return mGlyphs[glyphIndex].mChar[utf8Index];
+    }
+  //}}}
+  //{{{
+  uint8_t getCharSize (uint32_t glyphIndex) const {
+    return mGlyphs[glyphIndex].mSize;
+    }
+  //}}}
+  //{{{
+  uint8_t getColor (uint32_t glyphIndex) const {
     return mGlyphs[glyphIndex].mColor;
     }
   //}}}
@@ -746,7 +756,7 @@ private:
 
   // text widths
   float getWidth (sPosition position);
-  float getGlyphCharacterWidth (const cLine& line, uint32_t glyphIndex);
+  float getGlyphWidth (const cLine& line, uint32_t glyphIndex);
 
   // lines
   uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
