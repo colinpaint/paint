@@ -111,7 +111,7 @@ public:
   //}}}
 
   // vars
-  uint8_t mUtfChar[6];       // expensive
+  uint8_t mUtfChar[6];    // expensive
   uint8_t mNumUtf8Bytes;  // expensive
   uint8_t mColor;
 

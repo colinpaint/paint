@@ -6,10 +6,10 @@
 #include <algorithm>
 #include <functional>
 
-#include <array>
-
-#include <filesystem>
 #include <fstream>
+#include <filesystem>
+
+#include <array>
 
 #include "../platform/cPlatform.h"
 #include "../imgui/myImguiWidgets.h"
@@ -1238,8 +1238,8 @@ void cTextEdit::drawContents (cApp& app) {
 // private:
 //{{{  get
 //{{{
-bool cTextEdit::canEditAtCursor() {
-// cannot edit readOnly, foldBegin, foldEnd tokens
+bool cTextEdit::canEditAtCursor() { 
+// cannot edit readOnly, foldBegin token, foldEnd token
 
   sPosition position = getCursorPosition();
 
@@ -1306,10 +1306,10 @@ float cTextEdit::getWidth (sPosition position) {
   for (uint32_t glyphIndex = line.mFirstGlyph;
        (glyphIndex < line.getNumGlyphs()) && (glyphIndex < toGlyphIndex); glyphIndex++) {
     if (line.getChar (glyphIndex) == '\t')
-      // tab width
+      // set width to end of tab 
       width = getTabEndPosX (width);
     else
-      // glyph width
+      // add glyphWidth
       width += getGlyphWidth (line, glyphIndex);
     }
 
@@ -1415,26 +1415,6 @@ uint32_t cTextEdit::getLineNumColumns (uint32_t lineNumber) {
   }
 //}}}
 //{{{
-uint32_t cTextEdit::getColumnFromGlyphIndex (uint32_t lineNumber, uint32_t toGlyphIndex) {
-// return glyphIndex column using any tabs
-
-  uint32_t column = 0;
-
-  const cLine& line = getLine (lineNumber);
-
-  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
-    if (glyphIndex >= toGlyphIndex)
-      return column;
-    if (line.getChar (glyphIndex) == '\t')
-      column = getTabColumn (column);
-    else
-      column++;
-    }
-
-  return column;
-  }
-//}}}
-//{{{
 uint32_t cTextEdit::getGlyphIndexFromPosition (sPosition position) {
 // return glyphIndex from position line,column, using tabs
 
@@ -1489,6 +1469,26 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
                                    lineNumber, posX, line.mFirstGlyph, column, line.mFirstGlyph + column));
 
   return sanitizePosition ({lineNumber, line.mFirstGlyph + column});
+  }
+//}}}
+//{{{
+uint32_t cTextEdit::getColumnFromGlyphIndex (uint32_t lineNumber, uint32_t toGlyphIndex) {
+// return glyphIndex column using any tabs
+
+  uint32_t column = 0;
+
+  const cLine& line = getLine (lineNumber);
+
+  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
+    if (glyphIndex >= toGlyphIndex)
+      return column;
+    if (line.getChar (glyphIndex) == '\t')
+      column = getTabColumn (column);
+    else
+      column++;
+    }
+
+  return column;
   }
 //}}}
 
