@@ -1595,10 +1595,22 @@ void cTextEdit::moveDown (uint32_t amount) {
 
   sPosition position = mEdit.mCursor.mPosition;
 
-  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  lineIndex = min (getMaxLineIndex(), lineIndex + amount);
+  // !!!! need some extra fiddle to maintain column !!!!
+  cLine& line = getLine (position.mLineNumber);
+  uint32_t lineFirstGlyph = isFolded() && line.mFoldBegin ?  line.mFirstGlyph : 0;
 
-  setCursorPosition ({getLineNumberFromIndex (lineIndex), position.mColumn});
+  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
+  if (lineIndex + amount > getMaxLineIndex())
+    lineIndex = getMaxLineIndex();
+  else
+    lineIndex += amount;
+
+  uint32_t moveLineNumber = getLineNumberFromIndex (lineIndex);
+  cLine& moveLine = getLine (moveLineNumber);
+  uint32_t moveFirstGlyph = isFolded() && moveLine.mFoldBegin ?  moveLine.mFirstGlyph : 0;
+
+  uint32_t moveColumn = position.mColumn - lineFirstGlyph + moveFirstGlyph;
+  setCursorPosition ({moveLineNumber, moveColumn});
   setDeselect();
   }
 //}}}
@@ -2145,11 +2157,12 @@ uint32_t cTextEdit::trimTrailingSpace() {
 void cTextEdit::openFold (uint32_t lineNumber) {
 
   if (isFolded()) {
-    // position cursor to lineNumber, first column
-    mEdit.mCursor.mPosition = {lineNumber,0};
     cLine& line = getLine (lineNumber);
     if (line.mFoldBegin)
       line.mFoldOpen = true;
+
+    // position cursor to lineNumber, first glyph column
+    setCursorPosition (sPosition (lineNumber, line.mFirstGlyph));
     }
   }
 //}}}
@@ -2157,14 +2170,15 @@ void cTextEdit::openFold (uint32_t lineNumber) {
 void cTextEdit::openFoldOnly (uint32_t lineNumber) {
 
   if (isFolded()) {
-    // position cursor to lineNumber, first column,
-    mEdit.mCursor.mPosition = {lineNumber,0};
     cLine& line = getLine (lineNumber);
     if (line.mFoldBegin) {
       line.mFoldOpen = true;
       mEdit.mFoldOnly = true;
       mEdit.mFoldOnlyBeginLineNumber = lineNumber;
       }
+
+    // position cursor to lineNumber, first glyph column
+    setCursorPosition (sPosition (lineNumber, line.mFirstGlyph));
     }
   }
 //}}}
@@ -2175,10 +2189,11 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
     // close fold containing lineNumber
     cLog::log (LOGINFO, fmt::format ("closeFold line:{}", lineNumber));
 
-    if (getLine (lineNumber).mFoldBegin) {
-      // position cursor to lineNumber, first column
-      mEdit.mCursor.mPosition = {lineNumber,0};
-      getLine (lineNumber).mFoldOpen = false;
+    cLine& line = getLine (lineNumber);
+    if (line.mFoldBegin) {
+      // position cursor to lineNumber, first glyph column
+      line.mFoldOpen = false;
+      setCursorPosition (sPosition (lineNumber, line.mFirstGlyph));
       }
 
     else {
@@ -2186,8 +2201,7 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
       // - skip foldEnd foldBegin pairs
       uint32_t skipFoldPairs = 0;
       while (lineNumber > 0) {
-        lineNumber--;
-        cLine& line = getLine (lineNumber);
+        line = getLine (--lineNumber);
         if (line.mFoldEnd) {
           skipFoldPairs++;
           cLog::log (LOGINFO, fmt::format ("- skip foldEnd:{} {}", lineNumber,skipFoldPairs));
@@ -2198,10 +2212,8 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
           }
         else if (line.mFoldBegin && line.mFoldOpen) {
           // position cursor to lineNumber, first column
-          mEdit.mCursor.mPosition = {lineNumber,0};
           line.mFoldOpen = false;
-
-          // possible scroll???
+          setCursorPosition (sPosition (lineNumber, line.mFirstGlyph));
           break;
           }
         }
