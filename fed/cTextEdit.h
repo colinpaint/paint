@@ -671,6 +671,7 @@ private:
     bool mHasFolds = false;
     bool mHasCR = false;
     bool mHasTabs = false;
+    bool mHasUtf8 = false;
     uint32_t mTabSize = 4;
     };
   //}}}

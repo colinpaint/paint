@@ -995,6 +995,7 @@ void cTextEdit::loadFile (const string& filename) {
           utf8chars++;
           //cLog::log (LOGINFO, fmt::format ("loading utf8 {} {}", size, utf8String));
           mDoc.mLines.back().emplaceBack (cGlyph (utf8Bytes.data(), numUtf8Bytes, eText));
+          mDoc.mHasUtf8 = true;
           }
         }
       }
@@ -1007,8 +1008,11 @@ void cTextEdit::loadFile (const string& filename) {
   // add empty lastLine
   mDoc.mLines.emplace_back (cLine());
 
-  cLog::log (LOGINFO, fmt::format ("read {} lines {} utf8 {}",
-                                   lineNumber, mDoc.mHasCR ? "hasCR" : "", utf8chars));
+  cLog::log (LOGINFO, fmt::format ("read {} lines {}{} utf8 {}",
+                                   lineNumber,
+                                   mDoc.mHasCR ? "hasCR " : "",
+                                   mDoc.mHasUtf8 ? "hasUtf8 " : "",
+                                   utf8chars));
 
   mDoc.mEdited = false;
 
@@ -1214,7 +1218,7 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, {0.f,0.f});
   ImGui::BeginChild ("##s", {0.f,0.f}, false,
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-  mDrawContext.update (mOptions, isDrawMonoSpaced());
+  mDrawContext.update (mOptions, isDrawMonoSpaced() && !mDoc.mHasUtf8);
 
   keyboard();
 
@@ -2909,7 +2913,10 @@ float cTextEdit::cDrawContext::measureChar (char ch) const {
 //}}}
 //{{{
 float cTextEdit::cDrawContext::measureText (const char* str, const char* strEnd) const {
-  return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
+  if (mMonoSpaced)
+    return mGlyphWidth * static_cast<uint32_t>(strEnd - str);
+  else
+    return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
   }
 //}}}
 
@@ -2918,7 +2925,11 @@ float cTextEdit::cDrawContext::text (ImVec2 pos, uint8_t color, const string& te
  // draw and return width of text
 
   mDrawList->AddText (mFont, mFontSize, pos, kPalette[color], text.c_str(), nullptr);
-  return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, text.c_str(), nullptr).x;
+
+  if (mMonoSpaced)
+    return text.size() * mGlyphWidth;
+  else
+    return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, text.c_str(), nullptr).x;
   }
 //}}}
 //{{{
@@ -2926,7 +2937,11 @@ float cTextEdit::cDrawContext::text (ImVec2 pos, uint8_t color, const char* str,
  // draw and return width of text
 
   mDrawList->AddText (mFont, mFontSize, pos, kPalette[color], str, strEnd);
-  return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
+
+  if (mMonoSpaced)
+    return measureText (str, strEnd);
+  else
+    return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
   }
 //}}}
 //{{{
@@ -2935,6 +2950,7 @@ float cTextEdit::cDrawContext::smallText (ImVec2 pos, uint8_t color, const strin
 
   pos.y += mFontSmallOffset;
   mDrawList->AddText (mFont, mFontSmallSize, pos, kPalette[color], text.c_str(), nullptr);
+
   return mFont->CalcTextSizeA (mFontSmallSize, FLT_MAX, -1.f, text.c_str(), nullptr).x;
   }
 //}}}
