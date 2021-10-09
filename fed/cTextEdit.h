@@ -60,17 +60,10 @@ public:
       return;
       }
 
-    if (ch < 0x10000) {
-      mUtfChar[0] = static_cast<uint8_t> (0xe0 + (ch >> 12));
-      mUtfChar[1] = static_cast<uint8_t> (0x80 + ((ch >> 6) & 0x3f));
-      mUtfChar[2] = static_cast<uint8_t> (0x80 + ((ch) & 0x3f));
-      mNumUtf8Bytes = 3;
-      return;
-      }
-
-    // unknown
-    mUtfChar[0] = '?';
-    mNumUtf8Bytes = 1;
+    mUtfChar[0] = static_cast<uint8_t> (0xe0 + (ch >> 12));
+    mUtfChar[1] = static_cast<uint8_t> (0x80 + ((ch >> 6) & 0x3f));
+    mUtfChar[2] = static_cast<uint8_t> (0x80 + ((ch) & 0x3f));
+    mNumUtf8Bytes = 3;
     }
   //}}}
   //{{{
@@ -124,20 +117,6 @@ public:
 //{{{
 class cLine {
 public:
-  //{{{
-  cLine() :
-    mGlyphs(),
-    mIndent(0), mFirstGlyph(0), mFoldOffset(0),
-    mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
-    mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mFoldPressed(false) {}
-  //}}}
-  //{{{
-  cLine (const std::vector<cGlyph>& line) :
-    mGlyphs(line),
-    mIndent(0), mFirstGlyph(0), mFoldOffset(0),
-    mCommentSingle(false), mCommentBegin(false), mCommentEnd(false),  mCommentFold(false),
-    mFoldBegin(false), mFoldEnd(false), mFoldOpen(false), mFoldPressed(false) {}
-  //}}}
   //{{{
   ~cLine() {
     mGlyphs.clear();
@@ -345,25 +324,25 @@ public:
   //}}}
 
   // offsets
-  uint8_t mIndent;     // leading space count
-  uint8_t mFirstGlyph; // index of first visible glyph, past fold marker
-  uint8_t mFoldOffset; // closed fold title line offset
+  uint8_t mIndent = 0;     // leading space count
+  uint8_t mFirstGlyph = 0; // index of first visible glyph, past fold marker
+  uint8_t mFoldOffset= 0;  // closed fold title line offset
 
   // parsed tokens
-  bool mCommentFold;
-  bool mFoldBegin;
-  bool mFoldEnd;
+  bool mCommentFold = false;
+  bool mFoldBegin = false;
+  bool mFoldEnd = false;
 
   // fold state
-  bool mFoldOpen;
-  bool mFoldPressed;
+  bool mFoldOpen = false;
+  bool mFoldPressed = false;
 
 private:
   std::vector <cGlyph> mGlyphs;
 
-  bool mCommentSingle;
-  bool mCommentBegin;
-  bool mCommentEnd;
+  bool mCommentSingle = false;
+  bool mCommentBegin = false;
+  bool mCommentEnd = false;
   };
 //}}}
 
