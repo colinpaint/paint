@@ -2264,18 +2264,12 @@ uint32_t cTextEdit::drawFolded() {
       // foldBegin
       line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size());
       if (line.mFoldOpen)
-        // draw foldBegin open line
+        // draw foldBegin open fold line
         drawLine (lineNumber++, lineIndex++);
       else {
-        // closed fold
-        //cLog::log (LOGINFO, fmt::format ("drawFolded closed {}", lineNumber));
-
-        // draw foldBegin closed line
+        // draw foldBegin closed fold line, skip rest
         drawLine (lineNumber++, lineIndex++);
-
-        // skip rest of fold
         lineNumber = skipFold (lineNumber);
-        //cLog::log (LOGINFO, fmt::format ("drawFolded skipped {}", lineNumber));
         }
       }
 
@@ -2519,35 +2513,33 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
 // draw
 //{{{
 float cTextEdit::drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor) {
+// check for seeThru of open empty fold comment to next line
+// !!! should check for not another foldBegin !!!
 
   cLine& line = mDoc.mLines[lineNumber];
-  if (line.empty())
-    return 0.f;
-
-  if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs())) {
-    //cLog::log (LOGINFO, fmt::format ("drawGlyphs seethru {}", lineNumber));
+  if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs()))
     lineNumber++;
-    }
-
-  cLine& drawLine = mDoc.mLines[lineNumber];
+  cLine& useLine = mDoc.mLines[lineNumber];
+  if (useLine.empty())
+    return 0.f;
 
   // initial pos to measure textWidth on return
   float firstPosX = pos.x;
 
   array <char,256> str;
   uint32_t strIndex = 0;
-  uint8_t prevColor = (forceColor == eUndefined) ? drawLine.getColor (drawLine.mFirstGlyph) : forceColor;
+  uint8_t prevColor = (forceColor == eUndefined) ? useLine.getColor (useLine.mFirstGlyph) : forceColor;
 
-  for (uint32_t glyphIndex = drawLine.mFirstGlyph; glyphIndex < drawLine.getNumGlyphs(); glyphIndex++) {
-    uint8_t color = (forceColor == eUndefined) ? drawLine.getColor (glyphIndex) : forceColor;
+  for (uint32_t glyphIndex = useLine.mFirstGlyph; glyphIndex < useLine.getNumGlyphs(); glyphIndex++) {
+    uint8_t color = (forceColor == eUndefined) ? useLine.getColor (glyphIndex) : forceColor;
     if ((strIndex > 0) && (strIndex < str.max_size()) &&
-        ((color != prevColor) || (drawLine.getChar (glyphIndex) == '\t') || (drawLine.getChar (glyphIndex) == ' '))) {
+        ((color != prevColor) || (useLine.getChar (glyphIndex) == '\t') || (useLine.getChar (glyphIndex) == ' '))) {
       // draw colored glyphs, seperated by colorChange,tab,space
       pos.x += mDrawContext.text (pos, prevColor, str.data(), str.data() + strIndex);
       strIndex = 0;
       }
 
-    if (drawLine.getChar (glyphIndex) == '\t') {
+    if (useLine.getChar (glyphIndex) == '\t') {
       //{{{  tab
       ImVec2 arrowLeftPos {pos.x + 1.f, pos.y + mDrawContext.mFontSize/2.f};
 
@@ -2569,7 +2561,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor
         }
       }
       //}}}
-    else if (drawLine.getChar (glyphIndex) == ' ') {
+    else if (useLine.getChar (glyphIndex) == ' ') {
       //{{{  space
       if (isDrawWhiteSpace()) {
         // draw circle
@@ -2582,8 +2574,8 @@ float cTextEdit::drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor
       //}}}
     else {
       // character
-      for (uint32_t i = 0; i < drawLine.getNumCharBytes (glyphIndex); i++)
-        str[strIndex++] = drawLine.getChar (glyphIndex, i);
+      for (uint32_t i = 0; i < useLine.getNumCharBytes (glyphIndex); i++)
+        str[strIndex++] = useLine.getChar (glyphIndex, i);
       }
 
     prevColor = color;
