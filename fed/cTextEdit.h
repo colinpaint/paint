@@ -171,28 +171,13 @@ public:
   //}}}
 
   //{{{
-  bool getCommentSingle() const {
-    return mCommentSingle;
-    }
-  //}}}
-  //{{{
   bool getCommentSingle (const uint32_t glyphIndex) const {
     return mGlyphs[glyphIndex].mCommentSingle;
     }
   //}}}
   //{{{
-  bool getCommentBegin() const {
-    return mCommentBegin;
-    }
-  //}}}
-  //{{{
   bool getCommentBegin (const uint32_t glyphIndex) const {
     return mGlyphs[glyphIndex].mCommentBegin;
-    }
-  //}}}
-  //{{{
-  bool getCommentEnd() const {
-    return mCommentEnd;
     }
   //}}}
   //{{{
@@ -331,16 +316,16 @@ public:
   bool mFoldBegin = false;
   bool mFoldEnd = false;
 
+  bool mCommentSingle = false;
+  bool mCommentBegin = false;
+  bool mCommentEnd = false;
+
   // fold state
   bool mFoldOpen = false;
   bool mFoldPressed = false;
 
 private:
   std::vector <cGlyph> mGlyphs;
-
-  bool mCommentSingle = false;
-  bool mCommentBegin = false;
-  bool mCommentEnd = false;
   };
 //}}}
 
@@ -655,18 +640,6 @@ private:
   //{{{
   class cEdit {
   public:
-    //{{{
-    bool isSelectLine (uint32_t lineNumber) {
-      return (lineNumber >= mCursor.mSelectBegin.mLineNumber) &&
-             (lineNumber <= mCursor.mSelectEnd.mLineNumber);
-      }
-    //}}}
-    //{{{
-    bool isCursorLine (uint32_t lineNumber) {
-      return lineNumber == mCursor.mPosition.mLineNumber;
-      }
-    //}}}
-
     // undo
     bool hasUndo() const { return mUndoIndex > 0; }
     bool hasRedo() const { return mUndoIndex < mUndoVector.size(); }
@@ -755,6 +728,12 @@ private:
   bool isDrawWhiteSpace() const { return mOptions.mShowWhiteSpace; }
   bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced; }
 
+  //{{{
+  bool isLineSeeThru (uint32_t lineNumber) const {
+    const cLine& line = mDoc.mLines[lineNumber];
+    return isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs());
+    }
+  //}}}
   bool canEditAtCursor();
 
   // text

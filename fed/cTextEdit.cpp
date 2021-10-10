@@ -2458,18 +2458,16 @@ void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 po
 
   cursorFlashOn();
 
-  //const cLine& line = mDoc.mLines[lineNumber];
+  // possible seeThru to nextLine
+  uint32_t useLineNumber = lineNumber;
+  if (isLineSeeThru (lineNumber))
+    useLineNumber++;
 
-  //cLog::log (LOGINFO, fmt::format ("mouseSelectText {} line:{}", selectWord, lineNumber));
+  uint32_t column = getColumnFromPosX (lineNumber, pos.x);
+  cLog::log (LOGINFO, fmt::format ("mouseSelectText line:{}:{} column:{}",
+                                   lineNumber, useLineNumber, column));
 
-  //if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
-    // folded, foldBegin, closed, without comment, seeThru to nextLine
-  //  mEdit.mCursor.mPosition = sPosition (lineNumber, getColumnFromPosX (lineNumber + 1, pos.x));
-  //else
-    mEdit.mCursor.mPosition = sPosition (lineNumber, getColumnFromPosX (lineNumber, pos.x));
-
-  mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
-
+  mEdit.mCursor.mPosition = {lineNumber, column};
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
   setSelect (selectWord ? eSelect::eWord : eSelect::eNormal, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
   }
@@ -2516,11 +2514,11 @@ float cTextEdit::drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor
 // check for seeThru of open empty fold comment to next line
 // !!! should check for not another foldBegin !!!
 
-  cLine& line = mDoc.mLines[lineNumber];
-  if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs()))
+  if (isLineSeeThru (lineNumber))
     lineNumber++;
-  cLine& useLine = mDoc.mLines[lineNumber];
-  if (useLine.empty())
+
+  cLine& line = mDoc.mLines[lineNumber];
+  if (line.empty())
     return 0.f;
 
   // initial pos to measure textWidth on return
@@ -2528,18 +2526,18 @@ float cTextEdit::drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor
 
   array <char,256> str;
   uint32_t strIndex = 0;
-  uint8_t prevColor = (forceColor == eUndefined) ? useLine.getColor (useLine.mFirstGlyph) : forceColor;
+  uint8_t prevColor = (forceColor == eUndefined) ? line.getColor (line.mFirstGlyph) : forceColor;
 
-  for (uint32_t glyphIndex = useLine.mFirstGlyph; glyphIndex < useLine.getNumGlyphs(); glyphIndex++) {
-    uint8_t color = (forceColor == eUndefined) ? useLine.getColor (glyphIndex) : forceColor;
+  for (uint32_t glyphIndex = line.mFirstGlyph; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
+    uint8_t color = (forceColor == eUndefined) ? line.getColor (glyphIndex) : forceColor;
     if ((strIndex > 0) && (strIndex < str.max_size()) &&
-        ((color != prevColor) || (useLine.getChar (glyphIndex) == '\t') || (useLine.getChar (glyphIndex) == ' '))) {
+        ((color != prevColor) || (line.getChar (glyphIndex) == '\t') || (line.getChar (glyphIndex) == ' '))) {
       // draw colored glyphs, seperated by colorChange,tab,space
       pos.x += mDrawContext.text (pos, prevColor, str.data(), str.data() + strIndex);
       strIndex = 0;
       }
 
-    if (useLine.getChar (glyphIndex) == '\t') {
+    if (line.getChar (glyphIndex) == '\t') {
       //{{{  tab
       ImVec2 arrowLeftPos {pos.x + 1.f, pos.y + mDrawContext.mFontSize/2.f};
 
@@ -2561,7 +2559,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor
         }
       }
       //}}}
-    else if (useLine.getChar (glyphIndex) == ' ') {
+    else if (line.getChar (glyphIndex) == ' ') {
       //{{{  space
       if (isDrawWhiteSpace()) {
         // draw circle
@@ -2574,8 +2572,8 @@ float cTextEdit::drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor
       //}}}
     else {
       // character
-      for (uint32_t i = 0; i < useLine.getNumCharBytes (glyphIndex); i++)
-        str[strIndex++] = useLine.getChar (glyphIndex, i);
+      for (uint32_t i = 0; i < line.getNumCharBytes (glyphIndex); i++)
+        str[strIndex++] = line.getChar (glyphIndex, i);
       }
 
     prevColor = color;
@@ -2589,10 +2587,6 @@ float cTextEdit::drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor
 //}}}
 //{{{
 void cTextEdit::drawSelect (ImVec2 pos, uint32_t lineNumber) {
-
-  //cLine& line = getLine (lineNumber);
-  //if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
-  //  line = getLine (++lineNumber);
 
   // posBegin
   ImVec2 posBegin = pos;
@@ -2638,11 +2632,7 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
     float cursorPosX = getWidth (mEdit.mCursor.mPosition);
     float cursorWidth = 2.f;
 
-    // get line with comment seeThru
     cLine& line = mDoc.mLines[lineNumber];
-    //if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
-    //  line = mDoc.mLines[lineNumber+1];
-
     uint32_t glyphIndex = getGlyphIndexFromPosition (mEdit.mCursor.mPosition);
     if (mOptions.mOverWrite && (glyphIndex < line.getNumGlyphs())) {
       // overwrite
@@ -2693,13 +2683,13 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       mDrawContext.mLineNumberWidth = mDrawContext.text (curPos, eLineNumber,
         fmt::format ("{:4d}{}{}{}{}{}{}{}{:2d}{:2d}{:3d} ",
           lineNumber,
-          line.getCommentSingle() ? '/' : ' ',
-          line.getCommentBegin()  ? '{' : ' ',
-          line.getCommentEnd()    ? '}' : ' ',
-          line.mFoldBegin         ? 'b' : ' ',
-          line.mFoldEnd           ? 'e' : ' ',
-          line.mFoldOpen          ? 'o' : ' ',
-          line.mFoldPressed       ? 'p' : ' ',
+          line.mCommentSingle ? '/' : ' ',
+          line.mCommentBegin  ? '{' : ' ',
+          line.mCommentEnd    ? '}' : ' ',
+          line.mFoldBegin     ? 'b' : ' ',
+          line.mFoldEnd       ? 'e' : ' ',
+          line.mFoldOpen      ? 'o' : ' ',
+          line.mFoldPressed   ? 'p' : ' ',
           line.mIndent,
           line.mFirstGlyph,
           line.getNumGlyphs()
@@ -2857,12 +2847,16 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     }
     //}}}
 
+  if (isLineSeeThru (lineNumber))
+    lineNumber++;
+
   // select
-  if (mEdit.isSelectLine (lineNumber))
+  if ((lineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
+      (lineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber))
     drawSelect (glyphsPos, lineNumber);
 
   // cursor
-  if (mEdit.isCursorLine (lineNumber))
+  if (lineNumber == mEdit.mCursor.mPosition.mLineNumber)
     drawCursor (glyphsPos, lineNumber);
   }
 //}}}
