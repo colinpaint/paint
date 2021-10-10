@@ -495,7 +495,7 @@ void cTextEdit::moveLeft() {
     uint32_t moveLineNumber = getLineNumberFromIndex (moveLineIndex);
     uint32_t moveGlyphsLineNumber = getGlyphsLineNumber (moveLineNumber);
     //cLine& moveGlyphsLine = mDoc.mLines[moveGlyphsLineNumber];
-    setCursorPosition ({moveLineNumber, 
+    setCursorPosition ({moveLineNumber,
                         getColumnFromGlyphIndex (moveGlyphsLineNumber, getNumGlyphs (moveGlyphsLineNumber))});
     }
   }
@@ -547,6 +547,7 @@ void cTextEdit::moveRightWord() {
     uint32_t moveGlyphIndex = getGlyphIndexFromPosition (movePosition);
     setCursorPosition ({lineNumber, getColumnFromGlyphIndex (glyphsLineNumber, moveGlyphIndex)});
     }
+  // !!!! implement inc to next line !!!!!
   }
 //}}}
 
@@ -1534,7 +1535,7 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
   mEdit.mCursor.mSelect = select;
   switch (select) {
     case eSelect::eNormal:
-      cLog::log (LOGINFO, fmt::format ("setSelect normal line{} begin:{} end:{}",
+      cLog::log (LOGINFO, fmt::format ("setSelect eNormal - line:{} begin:{} end:{}",
                                        mEdit.mCursor.mSelectBegin.mLineNumber,
                                        mEdit.mCursor.mSelectBegin.mColumn,
                                        mEdit.mCursor.mSelectEnd.mColumn));
@@ -1543,7 +1544,7 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
     case eSelect::eWord:
       mEdit.mCursor.mSelectBegin = findWordBegin (mEdit.mCursor.mSelectBegin);
       mEdit.mCursor.mSelectEnd = findWordEnd (mEdit.mCursor.mSelectEnd);
-      cLog::log (LOGINFO, fmt::format ("setSelect word line:{} begin:{} end:{}",
+      cLog::log (LOGINFO, fmt::format ("setSelect eWord - line:{} begin:{} end:{}",
                                        mEdit.mCursor.mSelectBegin.mLineNumber,
                                        mEdit.mCursor.mSelectBegin.mColumn,
                                        mEdit.mCursor.mSelectEnd.mColumn));
@@ -1560,7 +1561,7 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
       else if (!line.mFoldOpen)
         // select fold
         mEdit.mCursor.mSelectEnd = {skipFold (mEdit.mCursor.mSelectEnd.mLineNumber + 1), 0};
-      cLog::log (LOGINFO, fmt::format ("setSelect line line:{} begin:{} end:{}",
+      cLog::log (LOGINFO, fmt::format ("setSelect eLine - line:{} begin:{} end:{}",
                                        mEdit.mCursor.mSelectBegin.mLineNumber,
                                        mEdit.mCursor.mSelectBegin.mColumn,
                                        mEdit.mCursor.mSelectEnd.mColumn));
@@ -1700,18 +1701,30 @@ cTextEdit::sPosition cTextEdit::advance (sPosition position) {
 //}}}
 //{{{
 cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
-// return cursor position within glyphs
-// - else
-//    end of non empty line
-// - else
-//    begin of empty line
-// - else
-//    or begin of empty lines
+// return position to be within glyphs
 
-  if (position.mLineNumber < getNumLines())
-    return sPosition (position.mLineNumber, min (position.mColumn, getLineNumColumns (position.mLineNumber)));
-  else
+  if (position.mLineNumber >= getNumLines()) {
+    // past end, position at end of last line
+    cLog::log (LOGINFO, fmt::format ("sanitizePosition - limiting lineNumber:{} to max:{}",
+                                     position.mLineNumber, getNumLines()-1));
     return sPosition (getNumLines()-1, getLineNumColumns (getNumLines()-1));
+    }
+
+  // ensure column is in range of position.mLineNumber glyphsLine
+  cLine& glyphsLine = mDoc.mLines[getGlyphsLineNumber (position.mLineNumber)];
+
+  if (position.mColumn < glyphsLine.mFirstGlyph) {
+    cLog::log (LOGINFO, fmt::format ("sanitizePosition - limiting lineNumber:{} column:{} to min:{}",
+                                     position.mLineNumber, position.mColumn, glyphsLine.mFirstGlyph));
+    position.mColumn = glyphsLine.mFirstGlyph;
+    }
+  else if (position.mColumn > glyphsLine.getNumGlyphs()) {
+    cLog::log (LOGINFO, fmt::format ("sanitizePosition - limiting lineNumber:{}c olumn:{} to max:{}",
+                                     position.mLineNumber, position.mColumn, glyphsLine.getNumGlyphs()));
+    position.mColumn = glyphsLine.getNumGlyphs();
+    }
+
+  return position;
   }
 //}}}
 
@@ -2469,13 +2482,9 @@ void cTextEdit::mouseDragSelectLine (uint32_t lineNumber, float posY) {
 void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 pos) {
 
   cursorFlashOn();
+  cLog::log (LOGINFO, fmt::format ("mouseSelectText line:{}", lineNumber));
 
-  uint32_t glyphsLineNumber = getGlyphsLineNumber (lineNumber);
-  uint32_t column = getColumnFromPosX (glyphsLineNumber, pos.x);
-  cLog::log (LOGINFO, fmt::format ("mouseSelectText line:{}:{} column:{}",
-                                   lineNumber, glyphsLineNumber, column));
-
-  mEdit.mCursor.mPosition = {lineNumber, column};
+  mEdit.mCursor.mPosition = {lineNumber, getColumnFromPosX (getGlyphsLineNumber (lineNumber), pos.x)};
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
   setSelect (selectWord ? eSelect::eWord : eSelect::eNormal, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
   }
