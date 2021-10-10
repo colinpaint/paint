@@ -329,7 +329,6 @@ public:
 
   // parsed tokens
   bool mFoldBegin = false;
-  bool mFoldComment = false;
   bool mFoldEnd = false;
 
   // fold state
@@ -844,7 +843,7 @@ private:
   void mouseDragSelectText (uint32_t lineNumber, ImVec2 pos);
 
   // draw
-  float drawGlyphs (ImVec2 pos, const cLine& line, uint8_t forceColor);
+  float drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor);
   void drawSelect (ImVec2 pos, uint32_t lineNumber);
   void drawCursor (ImVec2 curPos, uint32_t lineNumber);
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);

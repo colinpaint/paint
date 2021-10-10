@@ -1612,12 +1612,10 @@ void cTextEdit::moveDown (uint32_t amount) {
     //}}}
 
   // folded moveDown
-  //cLine& line = mDoc.mLines[lineNumber];
   uint32_t lineIndex = getLineIndexFromNumber (lineNumber);
 
   uint32_t moveLineIndex = min (lineIndex + amount, getNumFoldLines() - 1);
   uint32_t moveLineNumber = getLineNumberFromIndex (moveLineIndex);
-  //cLine& moveLine = getLine (moveLineNumber);
   uint32_t moveColumn = position.mColumn;
 
   setCursorPosition ({moveLineNumber, moveColumn});
@@ -1996,6 +1994,8 @@ void cTextEdit::parseTokens (cLine& line, const string& textString) {
 void cTextEdit::parseLine (cLine& line) {
 // parse for fold stuff, tokenize and look for keyWords, Known
 
+  //cLog::log (LOGINFO, fmt::format ("parseLine {}", lineNumber));
+
   // check whole text for comments later
   mEdit.mCheckComments = true;
 
@@ -2041,15 +2041,11 @@ void cTextEdit::parseLine (cLine& line) {
         line.setCommentEnd (pos++);
     } while (pos != string::npos);
   //}}}
-  //{{{  find foldBegin token, foldComment
+  //{{{  find foldBegin token
   size_t foldBeginPos = glyphString.find (mOptions.mLanguage.mFoldBeginToken, indentPos);
   line.mFoldBegin = (foldBeginPos != string::npos) && (foldBeginPos == indentPos);
-
-  if (line.mFoldBegin) {
-    // does foldBegin have a comment?
-    line.mFoldComment = glyphString.size() != (foldBeginPos + mOptions.mLanguage.mFoldBeginToken.size());
+  if (line.mFoldBegin)
     mDoc.mHasFolds = true;
-    }
   //}}}
   //{{{  find foldEnd token
   size_t foldEndPos = glyphString.find (mOptions.mLanguage.mFoldEndToken, indentPos);
@@ -2259,34 +2255,27 @@ uint32_t cTextEdit::drawFolded() {
 
   uint32_t lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
 
-  cLog::log (LOGINFO, fmt::format ("drawFolded {}", lineNumber));
+  //cLog::log (LOGINFO, fmt::format ("drawFolded {}", lineNumber));
 
   while (lineNumber < getNumLines()) {
     cLine& line = mDoc.mLines[lineNumber];
 
     if (line.mFoldBegin) {
       // foldBegin
-      line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
+      line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size());
       if (line.mFoldOpen)
         // draw foldBegin open line
         drawLine (lineNumber++, lineIndex++);
       else {
         // closed fold
-        if (!line.mFoldComment) {
-          // use nextLine as seeThru title, set firstGlyph
-          cLine& nextLine = mDoc.mLines[lineNumber + 1];
-          nextLine.mFirstGlyph = nextLine.mIndent;
-          }
-
-
-        cLog::log (LOGINFO, fmt::format ("drawFolded closed {}", lineNumber));
+        //cLog::log (LOGINFO, fmt::format ("drawFolded closed {}", lineNumber));
 
         // draw foldBegin closed line
         drawLine (lineNumber++, lineIndex++);
 
         // skip rest of fold
         lineNumber = skipFold (lineNumber);
-        cLog::log (LOGINFO, fmt::format ("drawFolded skipped {}", lineNumber));
+        //cLog::log (LOGINFO, fmt::format ("drawFolded skipped {}", lineNumber));
         }
       }
 
@@ -2475,14 +2464,14 @@ void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 po
 
   cursorFlashOn();
 
-  const cLine& line = mDoc.mLines[lineNumber];
+  //const cLine& line = mDoc.mLines[lineNumber];
 
-  cLog::log (LOGINFO, fmt::format ("mouseSelectText {} line:{}", selectWord, lineNumber));
+  //cLog::log (LOGINFO, fmt::format ("mouseSelectText {} line:{}", selectWord, lineNumber));
 
-  if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
+  //if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
     // folded, foldBegin, closed, without comment, seeThru to nextLine
-    mEdit.mCursor.mPosition = sPosition (lineNumber, getColumnFromPosX (lineNumber + 1, pos.x));
-  else
+  //  mEdit.mCursor.mPosition = sPosition (lineNumber, getColumnFromPosX (lineNumber + 1, pos.x));
+  //else
     mEdit.mCursor.mPosition = sPosition (lineNumber, getColumnFromPosX (lineNumber, pos.x));
 
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
@@ -2529,10 +2518,16 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
 
 // draw
 //{{{
-float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t forceColor) {
+float cTextEdit::drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor) {
 
+  cLine& line = mDoc.mLines[lineNumber];
   if (line.empty())
     return 0.f;
+
+  if (line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs())) {
+    cLog::log (LOGINFO, fmt::format ("drawGlyphs seethru {}", lineNumber));
+    lineNumber++;                                             
+    }
 
   // initial pos to measure textWidth on return
   float firstPosX = pos.x;
@@ -2651,8 +2646,8 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
 
     // get line with comment seeThru
     cLine& line = mDoc.mLines[lineNumber];
-    if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
-      line = mDoc.mLines[lineNumber+1];
+    //if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
+    //  line = mDoc.mLines[lineNumber+1];
 
     uint32_t glyphIndex = getGlyphIndexFromPosition (mEdit.mCursor.mPosition);
     if (mOptions.mOverWrite && (glyphIndex < line.getNumGlyphs())) {
@@ -2679,7 +2674,7 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
 void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 // draw Line and return incremented lineIndex
 
-  cLog::log (LOGINFO, fmt::format ("drawLine {}", lineNumber));
+  //cLog::log (LOGINFO, fmt::format ("drawLine {}", lineNumber));
 
   if (isFolded()) {
     //{{{  update mFoldLines vector
@@ -2702,18 +2697,19 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     if (mOptions.mShowLineDebug)
       // debug
       mDrawContext.mLineNumberWidth = mDrawContext.text (curPos, eLineNumber,
-        fmt::format ("{:4d}{}{}{}{}{}{}{}{}{:2d}{:2d} ",
+        fmt::format ("{:4d}{}{}{}{}{}{}{}{:2d}{:2d}{:3d} ",
           lineNumber,
           line.getCommentSingle() ? '/' : ' ',
           line.getCommentBegin()  ? '{' : ' ',
           line.getCommentEnd()    ? '}' : ' ',
           line.mFoldBegin         ? 'b' : ' ',
-          line.mFoldComment       ? 'c' : ' ',
           line.mFoldEnd           ? 'e' : ' ',
           line.mFoldOpen          ? 'o' : ' ',
           line.mFoldPressed       ? 'p' : ' ',
           line.mIndent,
-          line.mFirstGlyph));
+          line.mFirstGlyph,
+          line.getNumGlyphs()
+          ));
     else
       // normal
       mDrawContext.mLineNumberWidth = mDrawContext.smallText (
@@ -2780,7 +2776,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                            {ImGui::GetMousePos().x - glyphsPos.x, ImGui::GetMousePos().y - glyphsPos.y});
         }
       // draw glyphs
-      curPos.x += drawGlyphs (glyphsPos, line, eUndefined);
+      curPos.x += drawGlyphs (glyphsPos, lineNumber, eUndefined);
       }
       //}}}
     else {
@@ -2822,9 +2818,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                            {ImGui::GetMousePos().x - glyphsPos.x, ImGui::GetMousePos().y - glyphsPos.y});
         }
 
-      // draw glyphs with possible seeThru
-      const cLine& drawLine = mDoc.mLines[line.mFoldComment ? lineNumber : lineNumber + 1];
-      curPos.x += drawGlyphs (glyphsPos, drawLine, eFoldClosed);
+      curPos.x += drawGlyphs (glyphsPos, lineNumber, eFoldClosed);
       }
       //}}}
     }
@@ -2865,7 +2859,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       }
 
     // drawGlyphs
-    curPos.x += drawGlyphs (glyphsPos, line, eUndefined);
+    curPos.x += drawGlyphs (glyphsPos, lineNumber, eUndefined);
     }
     //}}}
 
