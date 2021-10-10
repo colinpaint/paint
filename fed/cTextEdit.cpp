@@ -1426,7 +1426,7 @@ uint32_t cTextEdit::getGlyphIndexFromPosition (sPosition position) {
   }
 //}}}
 //{{{
-cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float posX) {
+uint32_t cTextEdit::getColumnFromPosX (uint32_t lineNumber, float posX) {
 // get position.mColumn for posX, using glyphWidths and tabs
 
   uint32_t column = 0;
@@ -1456,10 +1456,10 @@ cTextEdit::sPosition cTextEdit::getPositionFromPosX (uint32_t lineNumber, float 
       column++;
       }
 
-  cLog::log (LOGINFO, fmt::format ("getPositionFromPosX line:{} posX:{} firstGlyph:{} column:{} -> result:{}",
+  cLog::log (LOGINFO, fmt::format ("getColumnFromPosX line:{} posX:{} firstGlyph:{} column:{} -> result:{}",
                                    lineNumber, posX, line.mFirstGlyph, column, line.mFirstGlyph + column));
 
-  return sanitizePosition ({lineNumber, line.mFirstGlyph + column});
+  return line.mFirstGlyph + column;
   }
 //}}}
 //{{{
@@ -1570,17 +1570,29 @@ void cTextEdit::setDeselect() {
 //{{{
 void cTextEdit::moveUp (uint32_t amount) {
 
-  sPosition position = mEdit.mCursor.mPosition;
-
-  if (position.mLineNumber == 0)
-    return;
-
-  // unsigned arithmetic to decrement lineIndex
-  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  lineIndex = (amount < lineIndex) ? lineIndex - amount : 0;
-
-  setCursorPosition ({getLineNumberFromIndex (lineIndex), position.mColumn});
   setDeselect();
+
+  sPosition position = mEdit.mCursor.mPosition;
+  uint32_t lineNumber = position.mLineNumber;
+
+  if (!isFolded()) {
+    //{{{  unfolded simple moveUp
+    lineNumber = (amount < lineNumber) ? lineNumber - amount : 0;
+    setCursorPosition ({lineNumber, position.mColumn});
+    return;
+    }
+    //}}}
+
+  // folded moveDown
+  //cLine& line = getLine (lineNumber);
+  uint32_t lineIndex = getLineIndexFromNumber (lineNumber);
+
+  uint32_t moveLineIndex = (amount < lineIndex) ? lineIndex - amount : 0;
+  uint32_t moveLineNumber = getLineNumberFromIndex (moveLineIndex);
+  //cLine& moveLine = getLine (moveLineNumber);
+  uint32_t moveColumn = position.mColumn;
+
+  setCursorPosition ({moveLineNumber, moveColumn});
   }
 //}}}
 //{{{
@@ -1592,27 +1604,22 @@ void cTextEdit::moveDown (uint32_t amount) {
   uint32_t lineNumber = position.mLineNumber;
 
   if (!isFolded()) {
-    //{{{
+    //{{{  unfolded simple moveDown
     lineNumber = min (lineNumber + amount, getNumLines()-1);
     setCursorPosition ({lineNumber, position.mColumn});
     return;
     }
     //}}}
 
-  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  cLine& line = getLine (lineNumber);
-  uint32_t lineFirstGlyph = line.mFoldBegin ?  line.mFirstGlyph : 0;
+  // folded moveDown
+  //cLine& line = getLine (lineNumber);
+  uint32_t lineIndex = getLineIndexFromNumber (lineNumber);
 
-  if (lineIndex + amount > getMaxLineIndex())
-    lineIndex = getMaxLineIndex();
-  else
-    lineIndex += amount;
+  uint32_t moveLineIndex = min (lineIndex + amount, getNumFoldLines() - 1);
+  uint32_t moveLineNumber = getLineNumberFromIndex (moveLineIndex);
+  //cLine& moveLine = getLine (moveLineNumber);
+  uint32_t moveColumn = position.mColumn;
 
-  uint32_t moveLineNumber = getLineNumberFromIndex (lineIndex);
-  cLine& moveLine = getLine (moveLineNumber);
-  uint32_t moveFirstGlyph = isFolded() && moveLine.mFoldBegin ?  moveLine.mFirstGlyph : 0;
-
-  uint32_t moveColumn = position.mColumn - lineFirstGlyph + moveFirstGlyph;
   setCursorPosition ({moveLineNumber, moveColumn});
   }
 //}}}
@@ -2253,25 +2260,29 @@ uint32_t cTextEdit::drawFolded() {
   uint32_t lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
   while (lineNumber < getNumLines()) {
     cLine& line = getLine (lineNumber);
+
     if (line.mFoldBegin) {
       // foldBegin
       line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
       if (line.mFoldOpen)
-        // draw openFold line
+        // draw foldBegin open line
         drawLine (lineNumber++, lineIndex++);
       else {
         // closed fold
         if (!line.mFoldComment) {
-          // use next line as seeThru comment
+          // use nextLine as seeThru title, set firstGlyph
           cLine& nextLine = getLine (lineNumber + 1);
           nextLine.mFirstGlyph = nextLine.mIndent;
           }
 
-        // draw closed fold line
+        // draw foldBegin closed line
         drawLine (lineNumber++, lineIndex++);
+
+        // skip rest of fold
         lineNumber = skipFold (lineNumber);
         }
       }
+
     else {
       // draw foldMiddle, foldEnd
       line.mFirstGlyph = 0;
@@ -2458,13 +2469,15 @@ void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 po
   cursorFlashOn();
 
   const cLine& line = getLine (lineNumber);
+
+  cLog::log (LOGINFO, fmt::format ("mouseSelectText {} line:{}", selectWord, lineNumber));
+
   if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
-    // foldBegin, closed, without comment, seeThru to next line
-    lineNumber++;
+    // folded, foldBegin, closed, without comment, seeThru to nextLine
+    mEdit.mCursor.mPosition = sPosition (lineNumber, getColumnFromPosX (lineNumber + 1, pos.x));
+  else
+    mEdit.mCursor.mPosition = sPosition (lineNumber, getColumnFromPosX (lineNumber, pos.x));
 
-  cLog::log (LOGINFO, fmt::format ("mouseSelectText {} line:{} visLine:{}", selectWord, lineNumber, lineNumber));
-
-  mEdit.mCursor.mPosition = getPositionFromPosX (lineNumber, pos.x);
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
 
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
@@ -2501,7 +2514,7 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
     }
 
   // drag select
-  mEdit.mCursor.mPosition = getPositionFromPosX (toLineNumber, pos.x);
+  mEdit.mCursor.mPosition = sPosition (toLineNumber, getColumnFromPosX (toLineNumber, pos.x));
   setSelect (eSelect::eNormal, mEdit.mDragFirstPosition, mEdit.mCursor.mPosition);
   //mEdit.mScrollVisible = true;
   }
@@ -2581,6 +2594,10 @@ float cTextEdit::drawGlyphs (ImVec2 pos, const cLine& line, uint8_t forceColor) 
 //{{{
 void cTextEdit::drawSelect (ImVec2 pos, uint32_t lineNumber) {
 
+  //cLine& line = getLine (lineNumber);
+  //if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
+  //  line = getLine (++lineNumber);
+
   // posBegin
   ImVec2 posBegin = pos;
   if (sPosition (lineNumber, 0) >= mEdit.mCursor.mSelectBegin)
@@ -2625,7 +2642,11 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
     float cursorPosX = getWidth (mEdit.mCursor.mPosition);
     float cursorWidth = 2.f;
 
-    const cLine& line = getLine (lineNumber);
+    // get line with comment seeThru
+    cLine& line = getLine (lineNumber);
+    if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
+      line = getLine (++lineNumber);
+
     uint32_t glyphIndex = getGlyphIndexFromPosition (mEdit.mCursor.mPosition);
     if (mOptions.mOverWrite && (glyphIndex < line.getNumGlyphs())) {
       // overwrite
@@ -2838,10 +2859,6 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     curPos.x += drawGlyphs (glyphsPos, line, eUndefined);
     }
     //}}}
-
-  line = getLine (lineNumber);
-  if (isFolded() && line.mFoldBegin && !line.mFoldOpen && !line.mFoldComment)
-    lineNumber++;
 
   // select
   if (mEdit.isSelectLine (lineNumber))
