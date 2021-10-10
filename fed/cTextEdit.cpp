@@ -1719,7 +1719,7 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
     position.mColumn = glyphsLine.mFirstGlyph;
     }
   else if (position.mColumn > glyphsLine.getNumGlyphs()) {
-    cLog::log (LOGINFO, fmt::format ("sanitizePosition - limiting lineNumber:{}c olumn:{} to max:{}",
+    cLog::log (LOGINFO, fmt::format ("sanitizePosition - limiting lineNumber:{} column:{} to max:{}",
                                      position.mLineNumber, position.mColumn, glyphsLine.getNumGlyphs()));
     position.mColumn = glyphsLine.getNumGlyphs();
     }
@@ -2293,6 +2293,9 @@ uint32_t cTextEdit::drawFolded() {
         drawLine (lineNumber++, lineIndex++);
       else {
         // draw foldBegin closed fold line, skip rest
+        uint32_t glyphsLineNumber = getGlyphsLineNumber (lineNumber);
+        if (glyphsLineNumber != lineNumber)
+          mDoc.mLines[glyphsLineNumber].mFirstGlyph = static_cast<uint8_t>(line.mIndent);
         drawLine (lineNumber++, lineIndex++);
         lineNumber = skipFold (lineNumber);
         }
@@ -2814,8 +2817,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                            {ImGui::GetMousePos().x - glyphsPos.x, ImGui::GetMousePos().y - glyphsPos.y});
         }
 
-      uint32_t glyphsLineNumber = getGlyphsLineNumber (lineNumber);
-      curPos.x += drawGlyphs (glyphsPos, glyphsLineNumber, eFoldClosed);
+      // draw glyphs, from foldComment or seeThru line
+      curPos.x += drawGlyphs (glyphsPos, getGlyphsLineNumber (lineNumber), eFoldClosed);
       }
       //}}}
     }
@@ -2883,7 +2886,6 @@ void cTextEdit::drawLines() {
 
   // clipper iterate
   for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
-    // not folded, simple use of line glyphs
     mDoc.mLines[lineNumber].mFirstGlyph = 0;
     drawLine (lineNumber, 0);
     }
