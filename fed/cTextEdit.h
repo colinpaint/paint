@@ -729,9 +729,12 @@ private:
   bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced; }
 
   //{{{
-  bool isLineSeeThru (uint32_t lineNumber) const {
+  uint32_t getGlyphsLineNumber (uint32_t lineNumber) const {
     const cLine& line = mDoc.mLines[lineNumber];
-    return isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs());
+    if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs()))
+      return lineNumber + 1;
+    else
+      return lineNumber;
     }
   //}}}
   bool canEditAtCursor();
@@ -823,7 +826,7 @@ private:
 
   // draw
   float drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor);
-  void drawSelect (ImVec2 pos, uint32_t lineNumber);
+  void drawSelect (ImVec2 pos, uint32_t lineNumber, uint32_t glyphsLineNumber);
   void drawCursor (ImVec2 curPos, uint32_t lineNumber);
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);
   void drawLines();

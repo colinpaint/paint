@@ -2458,14 +2458,10 @@ void cTextEdit::mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 po
 
   cursorFlashOn();
 
-  // possible seeThru to nextLine
-  uint32_t useLineNumber = lineNumber;
-  if (isLineSeeThru (lineNumber))
-    useLineNumber++;
-
-  uint32_t column = getColumnFromPosX (lineNumber, pos.x);
+  uint32_t glyphsLineNumber = getGlyphsLineNumber (lineNumber);
+  uint32_t column = getColumnFromPosX (glyphsLineNumber, pos.x);
   cLog::log (LOGINFO, fmt::format ("mouseSelectText line:{}:{} column:{}",
-                                   lineNumber, useLineNumber, column));
+                                   lineNumber, glyphsLineNumber, column));
 
   mEdit.mCursor.mPosition = {lineNumber, column};
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
@@ -2511,11 +2507,6 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
 // draw
 //{{{
 float cTextEdit::drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor) {
-// check for seeThru of open empty fold comment to next line
-// !!! should check for not another foldBegin !!!
-
-  if (isLineSeeThru (lineNumber))
-    lineNumber++;
 
   cLine& line = mDoc.mLines[lineNumber];
   if (line.empty())
@@ -2586,7 +2577,7 @@ float cTextEdit::drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor
   }
 //}}}
 //{{{
-void cTextEdit::drawSelect (ImVec2 pos, uint32_t lineNumber) {
+void cTextEdit::drawSelect (ImVec2 pos, uint32_t lineNumber, uint32_t glyphsLineNumber) {
 
   // posBegin
   ImVec2 posBegin = pos;
@@ -2595,7 +2586,7 @@ void cTextEdit::drawSelect (ImVec2 pos, uint32_t lineNumber) {
     posBegin.x = 0.f;
   else
     // from selectBegin column
-    posBegin.x += getWidth ({lineNumber, mEdit.mCursor.mSelectBegin.mColumn});
+    posBegin.x += getWidth ({glyphsLineNumber, mEdit.mCursor.mSelectBegin.mColumn});
 
   // posEnd
   ImVec2 posEnd = pos;
@@ -2604,7 +2595,7 @@ void cTextEdit::drawSelect (ImVec2 pos, uint32_t lineNumber) {
     posEnd.x += getWidth ({lineNumber, getLineNumColumns (lineNumber)});
   else if (mEdit.mCursor.mSelectEnd.mColumn)
     // to selectEnd column
-    posEnd.x += getWidth ({lineNumber, mEdit.mCursor.mSelectEnd.mColumn});
+    posEnd.x += getWidth ({glyphsLineNumber, mEdit.mCursor.mSelectEnd.mColumn});
   else
     // to lefPad + lineNumer
     posEnd.x = mDrawContext.mLeftPad + mDrawContext.mLineNumberWidth;
@@ -2802,7 +2793,8 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
                            {ImGui::GetMousePos().x - glyphsPos.x, ImGui::GetMousePos().y - glyphsPos.y});
         }
 
-      curPos.x += drawGlyphs (glyphsPos, lineNumber, eFoldClosed);
+      uint32_t glyphsLineNumber = getGlyphsLineNumber (lineNumber);
+      curPos.x += drawGlyphs (glyphsPos, glyphsLineNumber, eFoldClosed);
       }
       //}}}
     }
@@ -2847,17 +2839,16 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     }
     //}}}
 
-  if (isLineSeeThru (lineNumber))
-    lineNumber++;
+  uint32_t glyphsLineNumber = getGlyphsLineNumber (lineNumber);
 
   // select
   if ((lineNumber >= mEdit.mCursor.mSelectBegin.mLineNumber) &&
       (lineNumber <= mEdit.mCursor.mSelectEnd.mLineNumber))
-    drawSelect (glyphsPos, lineNumber);
+    drawSelect (glyphsPos, lineNumber, glyphsLineNumber);
 
   // cursor
   if (lineNumber == mEdit.mCursor.mPosition.mLineNumber)
-    drawCursor (glyphsPos, lineNumber);
+    drawCursor (glyphsPos, glyphsLineNumber);
   }
 //}}}
 //{{{
