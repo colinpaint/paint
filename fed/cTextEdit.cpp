@@ -1586,13 +1586,23 @@ void cTextEdit::moveUp (uint32_t amount) {
 //{{{
 void cTextEdit::moveDown (uint32_t amount) {
 
-  sPosition position = mEdit.mCursor.mPosition;
+  setDeselect();
 
-  // !!!! need some extra fiddle to maintain column !!!!
-  cLine& line = getLine (position.mLineNumber);
-  uint32_t lineFirstGlyph = isFolded() && line.mFoldBegin ?  line.mFirstGlyph : 0;
+  sPosition position = mEdit.mCursor.mPosition;
+  uint32_t lineNumber = position.mLineNumber;
+
+  if (!isFolded()) {
+    //{{{
+    lineNumber = min (lineNumber + amount, getNumLines()-1);
+    setCursorPosition ({lineNumber, position.mColumn});
+    return;
+    }
+    //}}}
 
   uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
+  cLine& line = getLine (lineNumber);
+  uint32_t lineFirstGlyph = line.mFoldBegin ?  line.mFirstGlyph : 0;
+
   if (lineIndex + amount > getMaxLineIndex())
     lineIndex = getMaxLineIndex();
   else
@@ -1604,7 +1614,6 @@ void cTextEdit::moveDown (uint32_t amount) {
 
   uint32_t moveColumn = position.mColumn - lineFirstGlyph + moveFirstGlyph;
   setCursorPosition ({moveLineNumber, moveColumn});
-  setDeselect();
   }
 //}}}
 
@@ -2256,7 +2265,6 @@ uint32_t cTextEdit::drawFolded() {
           // use next line as seeThru comment
           cLine& nextLine = getLine (lineNumber + 1);
           nextLine.mFirstGlyph = nextLine.mIndent;
-          nextLine.mFoldComment = true;
           }
 
         // draw closed fold line
