@@ -827,7 +827,7 @@ private:
   // draw
   float drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor);
   void drawSelect (ImVec2 pos, uint32_t lineNumber, uint32_t glyphsLineNumber);
-  void drawCursor (ImVec2 curPos, uint32_t lineNumber);
+  void drawCursor (ImVec2 pos, uint32_t lineNumber);
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);
   void drawLines();
 
