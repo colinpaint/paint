@@ -2239,41 +2239,37 @@ uint32_t cTextEdit::skipFold (uint32_t lineNumber) {
 //{{{
 uint32_t cTextEdit::drawFolded() {
 
-  uint32_t lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
-
   uint32_t lineIndex = 0;
+
+  uint32_t lineNumber = mEdit.mFoldOnly ? mEdit.mFoldOnlyBeginLineNumber : 0;
   while (lineNumber < getNumLines()) {
     cLine& line = getLine (lineNumber);
     if (line.mFoldBegin) {
-      if (line.mFoldOpen) {
+      // foldBegin
+      line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
+      if (line.mFoldOpen)
         // draw openFold line
-        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
         drawLine (lineNumber++, lineIndex++);
-        }
-
       else {
         // closed fold
-        line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mOptions.mLanguage.mFoldBeginToken.size() + 2);
-        if (!line.mFoldComment) // will use seeThru line
-          getLine (lineNumber + 1).mFirstGlyph = getLine (lineNumber + 1).mIndent;
+        if (!line.mFoldComment) {
+          // use next line as seeThru comment
+          cLine& nextLine = getLine (lineNumber + 1);
+          nextLine.mFirstGlyph = nextLine.mIndent;
+          nextLine.mFoldComment = true;
+          }
 
+        // draw closed fold line
         drawLine (lineNumber++, lineIndex++);
         lineNumber = skipFold (lineNumber);
         }
       }
-
-    else if (line.mFoldEnd) {
-      // draw foldEnd line
-      line.mFirstGlyph = 0;
-      drawLine (lineNumber++, lineIndex++);
-      if (mEdit.mFoldOnly)
-        return lineIndex;
-      }
-
     else {
-      // draw fold middle line
+      // draw foldMiddle, foldEnd
       line.mFirstGlyph = 0;
       drawLine (lineNumber++, lineIndex++);
+      if (line.mFoldEnd && mEdit.mFoldOnly)
+        return lineIndex;
       }
     }
 
