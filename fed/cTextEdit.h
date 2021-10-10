@@ -773,9 +773,7 @@ private:
   uint32_t getNumPageLines() const;
 
   // line
-  cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
-
-  uint32_t getNumGlyphs (uint32_t lineNumber) { return getLine (lineNumber).getNumGlyphs(); }
+  uint32_t getNumGlyphs (uint32_t lineNumber) { return mDoc.mLines[lineNumber].getNumGlyphs(); }
   uint32_t getLineNumColumns (uint32_t lineNumber);
 
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
