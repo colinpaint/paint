@@ -469,7 +469,7 @@ public:
   void movePageUp()   { moveUp (getNumPageLines() - 4); }
   void movePageDown() { moveDown (getNumPageLines() - 4); }
   void moveHome() { setCursorPosition ({0,0}); }
-  void moveEnd() { setCursorPosition ({getNumLines()-1, 0}); }
+  void moveEnd() { setCursorPosition ({getMaxLineNumber(), 0}); }
 
   // select
   void selectAll();
@@ -728,15 +728,6 @@ private:
   bool isDrawWhiteSpace() const { return mOptions.mShowWhiteSpace; }
   bool isDrawMonoSpaced() const { return mOptions.mShowMonoSpaced; }
 
-  //{{{
-  uint32_t getGlyphsLineNumber (uint32_t lineNumber) const {
-    const cLine& line = mDoc.mLines[lineNumber];
-    if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs()))
-      return lineNumber + 1;
-    else
-      return lineNumber;
-    }
-  //}}}
   bool canEditAtCursor();
 
   // text
@@ -750,22 +741,37 @@ private:
   // lines
   uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
   uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mDoc.mFoldLines.size()); }
-  uint32_t getMaxLineIndex() const { return isFolded() ? getNumFoldLines()-1 : getNumLines()-1; }
+  uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
+  uint32_t getMaxFoldLineNumber() const { return getNumFoldLines() - 1; }
   uint32_t getNumPageLines() const;
 
   // line
   uint32_t getNumGlyphs (uint32_t lineNumber) { return mDoc.mLines[lineNumber].getNumGlyphs(); }
-  uint32_t getLineNumColumns (uint32_t lineNumber);
+  uint32_t getNumColumns (uint32_t lineNumber);
 
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
   uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
+  //{{{
+  uint32_t getGlyphsLineNumber (uint32_t lineNumber) const {
+  // return lineNumber of glyphs for lineNumber, foldBegin closedFold seeThru into next line
 
+    const cLine& line = mDoc.mLines[lineNumber];
+    if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs()))
+      return lineNumber + 1;
+    else
+      return lineNumber;
+    }
+  //}}}
+
+  cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
+  cLine& getGlyphsLine (uint32_t lineNumber) { return getLine (getGlyphsLineNumber (lineNumber)); }
   sPosition getNextLinePosition (sPosition position);
 
   // column
   uint32_t getGlyphIndexFromPosition (sPosition position);
   uint32_t getColumnFromPosX (uint32_t lineNumber, float posX);
   uint32_t getColumnFromGlyphIndex (uint32_t lineNumber, uint32_t toGlyphIndex);
+  uint32_t getColumnFromGlyphIndex (const cLine& line, uint32_t toGlyphIndex);
 
   // tab
   float getTabEndPosX (float columnX);
@@ -825,7 +831,7 @@ private:
   void mouseDragSelectText (uint32_t lineNumber, ImVec2 pos);
 
   // draw
-  float drawGlyphs (ImVec2 pos, uint32_t lineNumber, uint8_t forceColor);
+  float drawGlyphs (ImVec2 pos, const cLine& line, uint8_t forceColor);
   void drawSelect (ImVec2 pos, uint32_t lineNumber, uint32_t glyphsLineNumber);
   void drawCursor (ImVec2 pos, uint32_t lineNumber);
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);
