@@ -770,7 +770,6 @@ private:
   // column
   uint32_t getGlyphIndexFromPosition (sPosition position);
   uint32_t getColumnFromPosX (uint32_t lineNumber, float posX);
-  uint32_t getColumnFromGlyphIndex (uint32_t lineNumber, uint32_t toGlyphIndex);
   uint32_t getColumnFromGlyphIndex (const cLine& line, uint32_t toGlyphIndex);
 
   // tab
