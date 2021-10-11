@@ -492,10 +492,8 @@ void cTextEdit::moveLeft() {
     // at begining of line, move to end of prevLine
     uint32_t moveLineIndex = getLineIndexFromNumber (lineNumber) - 1;
     uint32_t moveLineNumber = getLineNumberFromIndex (moveLineIndex);
-    uint32_t moveGlyphsLineNumber = getGlyphsLineNumber (moveLineNumber);
-    //cLine& moveGlyphsLine = getLine (moveGlyphsLineNumber];
-    setCursorPosition ({moveLineNumber,
-                        getColumnFromGlyphIndex (moveGlyphsLineNumber, getNumGlyphs (moveGlyphsLineNumber))});
+    cLine& moveGlyphsLine = getGlyphsLine (moveLineNumber);
+    setCursorPosition ({moveLineNumber, getColumnFromGlyphIndex (moveGlyphsLine, moveGlyphsLine.getNumGlyphs())});
     }
   }
 //}}}
@@ -536,7 +534,7 @@ void cTextEdit::moveRightWord() {
 
   // line
   uint32_t glyphsLineNumber = getGlyphsLineNumber (lineNumber);
-  cLine& glyphsLine = mDoc.mLines[glyphsLineNumber];
+  cLine& glyphsLine = getLine (glyphsLineNumber);
 
   // column
   uint32_t glyphIndex = getGlyphIndexFromPosition ({glyphsLineNumber, position.mColumn});
@@ -1711,7 +1709,7 @@ cTextEdit::sPosition cTextEdit::advance (sPosition position) {
       glyphIndex = 0;
       }
 
-    position.mColumn = getColumnFromGlyphIndex (position.mLineNumber, glyphIndex);
+    position.mColumn = getColumnFromGlyphIndex (line, glyphIndex);
     }
 
   return position;
@@ -1773,7 +1771,7 @@ cTextEdit::sPosition cTextEdit::findWordBegin (sPosition position) {
     glyphIndex--;
     }
 
-  return sPosition (position.mLineNumber, getColumnFromGlyphIndex (position.mLineNumber, glyphIndex));
+  return sPosition (position.mLineNumber, getColumnFromGlyphIndex (line, glyphIndex));
   }
 //}}}
 //{{{
@@ -1796,7 +1794,7 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition position) {
     glyphIndex++;
     }
 
-  return sPosition (position.mLineNumber, getColumnFromGlyphIndex (position.mLineNumber, glyphIndex));
+  return sPosition (position.mLineNumber, getColumnFromGlyphIndex (line, glyphIndex));
   }
 //}}}
 //{{{
@@ -1817,7 +1815,7 @@ cTextEdit::sPosition cTextEdit::findNextWord (sPosition position) {
     if (glyphIndex < line.getNumGlyphs()) {
       isWord = isalnum (line.getChar (glyphIndex));
       if (isWord && !skip)
-        return sPosition (position.mLineNumber, getColumnFromGlyphIndex (position.mLineNumber, glyphIndex));
+        return sPosition (position.mLineNumber, getColumnFromGlyphIndex (line, glyphIndex));
       if (!isWord)
         skip = false;
       glyphIndex++;
