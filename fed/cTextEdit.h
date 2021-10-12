@@ -524,11 +524,8 @@ private:
 
       if (!mAdd.empty())
         textEdit->deletePositionRange (mAddBegin, mAddEnd);
-
-      if (!mDelete.empty()) {
-        sPosition begin = mDeleteBegin;
-        textEdit->insertTextAt (begin, mDelete);
-        }
+      if (!mDelete.empty())
+        textEdit->insertTextAt (mDeleteBegin, mDelete);
 
       textEdit->mEdit.mCursor = mBefore;
       }
@@ -538,11 +535,8 @@ private:
 
       if (!mDelete.empty())
         textEdit->deletePositionRange (mDeleteBegin, mDeleteEnd);
-
-      if (!mAdd.empty()) {
-        sPosition begin = mAddBegin;
-        textEdit->insertTextAt (begin, mAdd);
-        }
+      if (!mAdd.empty())
+        textEdit->insertTextAt (mAddBegin, mAdd);
 
       textEdit->mEdit.mCursor = mAfter;
       }
@@ -749,9 +743,12 @@ private:
   uint32_t getNumColumns (const cLine& line);
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
   uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
+
+  cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
+
   //{{{
   uint32_t getGlyphsLineNumber (uint32_t lineNumber) const {
-  // return lineNumber of glyphs for lineNumber, foldBegin closedFold seeThru into next line
+  // return glyphs lineNumber for lineNumber - folded foldBegin closedFold seeThru into next line
 
     const cLine& line = mDoc.mLines[lineNumber];
     if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs()))
@@ -760,30 +757,30 @@ private:
       return lineNumber;
     }
   //}}}
-
-  cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
   cLine& getGlyphsLine (uint32_t lineNumber) { return getLine (getGlyphsLineNumber (lineNumber)); }
 
   sPosition getNextLinePosition (const sPosition& position);
 
-  // column
+  // glyphIndex
   uint32_t getGlyphIndex (const cLine& line, uint32_t column);
   //{{{
   uint32_t getGlyphIndex (const sPosition& position) {
     return getGlyphIndex (getLine (position.mLineNumber), position.mColumn);
     }
   //}}}
-  uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex);
-  uint32_t getColumnFromPosX (const cLine& line, float posX);
 
-  // tab
-  float getTabEndPosX (float columnX);
+  // column - glyphIndex + tabs
   uint32_t getTabColumn (uint32_t column);
+  uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex);
+
+  float getTabEndPosX (float columnX);
+  uint32_t getColumnFromPosX (const cLine& line, float posX);
   //}}}
   //{{{  set
   void setCursorPosition (sPosition position);
-  void setSelect (eSelect select, sPosition beginPosition, sPosition endPosition);
+
   void setDeselect();
+  void setSelect (eSelect select, sPosition beginPosition, sPosition endPosition);
   //}}}
   //{{{  move
   void moveUp (uint32_t amount);
@@ -800,13 +797,13 @@ private:
   //}}}
   //{{{  insert
   sPosition insertTextAt (sPosition position, const std::string& text);
-  sPosition insertText (const std::string& text);
+  void insertText (const std::string& text) { setCursorPosition (insertTextAt (getCursorPosition(), text)); }
   //}}}
   //{{{  delete
-  void deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber);
   void deleteLine (uint32_t lineNumber);
-
+  void deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber);
   void deletePositionRange (sPosition beginPosition, sPosition endPosition);
+
   void deleteSelect();
   //}}}
   //{{{  parse

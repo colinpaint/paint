@@ -1,4 +1,3 @@
-# cmake config
 cmake_minimum_required (VERSION 3.16)
 cmake_policy (SET CMP0072 NEW)
 

@@ -1431,7 +1431,7 @@ cTextEdit::sPosition cTextEdit::getNextLinePosition (const sPosition& position) 
   }
 //}}}
 
-// column
+// glyphIndex
 //{{{
 uint32_t cTextEdit::getGlyphIndex (const cLine& line, uint32_t toColumn) {
 // return glyphIndex from line,column, inserting tabs
@@ -1450,6 +1450,14 @@ uint32_t cTextEdit::getGlyphIndex (const cLine& line, uint32_t toColumn) {
   return glyphIndex;
   }
 //}}}
+
+// column - glypIndex + tabs
+//{{{
+uint32_t cTextEdit::getTabColumn (uint32_t column) {
+// return column of after tab at column
+  return ((column / mDoc.mTabSize) * mDoc.mTabSize) + mDoc.mTabSize;
+  }
+//}}}
 //{{{
 uint32_t cTextEdit::getColumn (const cLine& line, uint32_t toGlyphIndex) {
 // return glyphIndex column using any tabs
@@ -1466,6 +1474,15 @@ uint32_t cTextEdit::getColumn (const cLine& line, uint32_t toGlyphIndex) {
     }
 
   return column;
+  }
+//}}}
+
+//{{{
+float cTextEdit::getTabEndPosX (float xPos) {
+// return tabEndPosx of tab containing xPos
+
+  float tabWidthPixels = mDoc.mTabSize * mDrawContext.mGlyphWidth;
+  return (1.f + floor ((1.f + xPos) / tabWidthPixels)) * tabWidthPixels;
   }
 //}}}
 //{{{
@@ -1503,22 +1520,6 @@ uint32_t cTextEdit::getColumnFromPosX (const cLine& line, float posX) {
   return line.mFirstGlyph + column;
   }
 //}}}
-
-// tab
-//{{{
-float cTextEdit::getTabEndPosX (float xPos) {
-// return tabEndPosx of tab containing xPos
-
-  float tabWidthPixels = mDoc.mTabSize * mDrawContext.mGlyphWidth;
-  return (1.f + floor ((1.f + xPos) / tabWidthPixels)) * tabWidthPixels;
-  }
-//}}}
-//{{{
-uint32_t cTextEdit::getTabColumn (uint32_t column) {
-// return column of after tab at column
-  return ((column / mDoc.mTabSize) * mDoc.mTabSize) + mDoc.mTabSize;
-  }
-//}}}
 //}}}
 //{{{  set
 //{{{
@@ -1532,6 +1533,14 @@ void cTextEdit::setCursorPosition (sPosition position) {
   }
 //}}}
 
+//{{{
+void cTextEdit::setDeselect() {
+
+  mEdit.mCursor.mSelect = eSelect::eNormal;
+  mEdit.mCursor.mSelectBegin = mEdit.mCursor.mPosition;
+  mEdit.mCursor.mSelectEnd = mEdit.mCursor.mPosition;
+  }
+//}}}
 //{{{
 void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition endPosition) {
 
@@ -1573,14 +1582,6 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
       break;
       }
     }
-  }
-//}}}
-//{{{
-void cTextEdit::setDeselect() {
-
-  mEdit.mCursor.mSelect = eSelect::eNormal;
-  mEdit.mCursor.mSelectBegin = mEdit.mCursor.mPosition;
-  mEdit.mCursor.mSelectEnd = mEdit.mCursor.mPosition;
   }
 //}}}
 //}}}
@@ -1789,41 +1790,49 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition position) {
 //{{{  insert
 //{{{
 cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
-// !!! needs utf8 handling !!!!
+// insert helper - !!! needs utf8 handling !!!!
 
-  uint32_t glyphIndex = getGlyphIndex (position);
+  if (text.empty())
+    return position;
+
+  bool onFoldBegin = getLine (position.mLineNumber).mFoldBegin;
+
+  uint32_t glyphIndex = getGlyphIndex (getGlyphsLine (position.mLineNumber), position.mColumn);
   for (auto it = text.begin(); it < text.end(); ++it) {
     char ch = *it;
     if (ch == '\r') // skip
       break;
 
+    cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
     if (ch == '\n') {
+      if (onFoldBegin) // no lineFeed in allowed in foldBegin, return
+        return position;
+
       // insert new line
-      cLine& line = getLine (position.mLineNumber);
-      if (glyphIndex < line.getNumGlyphs()) {
-        cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber+1, cLine());
-        newLine.insertRestOfLineAtEnd (line, glyphIndex);
-        parseLine (newLine);
+      cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber+1, cLine());
 
-        line.eraseToEnd (glyphIndex);
-        parseLine (line);
-        }
-      else {
-        cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber+1, cLine());
-        parseLine (newLine);
-        }
+      if (glyphIndex < glyphsLine.getNumGlyphs()) {
+        // not end of line, splitting line, copy rest of line to newLine
+        newLine.insertRestOfLineAtEnd (glyphsLine, glyphIndex);
 
+        // remove rest of line just copied to newLine
+        glyphsLine.eraseToEnd (glyphIndex);
+        parseLine (glyphsLine);
+        }
+      parseLine (newLine);
+      glyphIndex = 0;
+
+      // !!! should convert glyph back to column in case of tabs !!!
       position.mLineNumber++;
       position.mColumn = 0;
-      glyphIndex = 0;
       }
 
     else {
-      // within line
-      cLine& line = getLine (position.mLineNumber);
-      line.insert (glyphIndex, cGlyph (ch, eText));
-      parseLine (line);
+      // insert char within line
+      glyphsLine.insert (glyphIndex++, cGlyph (ch, eText));
+      parseLine (glyphsLine);
 
+      // !!! should convert glyph back to column in case of tabs !!!
       position.mColumn++;
       }
 
@@ -1833,29 +1842,8 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
   return position;
   }
 //}}}
-//{{{
-cTextEdit::sPosition cTextEdit::insertText (const string& text) {
-
-  sPosition position = getCursorPosition();
-
-  if (!text.empty()) {
-    position = insertTextAt (position, text);
-    setCursorPosition (position);
-    }
-
-  return position;
-  }
-//}}}
 //}}}
 //{{{  delete
-//{{{
-void cTextEdit::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
-
-  mDoc.mLines.erase (mDoc.mLines.begin() + beginLineNumber, mDoc.mLines.begin() + endLineNumber);
-  mEdit.mCheckComments = true;
-  mDoc.mEdited = true;
-  }
-//}}}
 //{{{
 void cTextEdit::deleteLine (uint32_t lineNumber) {
 
@@ -1864,7 +1852,14 @@ void cTextEdit::deleteLine (uint32_t lineNumber) {
   mDoc.mEdited = true;
   }
 //}}}
+//{{{
+void cTextEdit::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
 
+  mDoc.mLines.erase (mDoc.mLines.begin() + beginLineNumber, mDoc.mLines.begin() + endLineNumber);
+  mEdit.mCheckComments = true;
+  mDoc.mEdited = true;
+  }
+//}}}
 //{{{
 void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosition) {
 
@@ -1917,6 +1912,7 @@ void cTextEdit::deleteSelect() {
 
   deletePositionRange (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd);
   setCursorPosition (mEdit.mCursor.mSelectBegin);
+
   setDeselect();
   }
 //}}}
