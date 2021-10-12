@@ -1285,11 +1285,8 @@ bool cTextEdit::canEditAtCursor() {
   // line for cursor
   const cLine& line = getLine (position.mLineNumber);
 
-  // glyphsLine, is differnet for closed foldBegin with seeeThru
-  const cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
-
   return !isReadOnly() &&
-         !(line.mFoldBegin && (position.mColumn < glyphsLine.mIndent + mOptions.mLanguage.mFoldBeginToken.size())) &&
+         !(line.mFoldBegin && (position.mColumn < getGlyphsLine (position.mLineNumber).mFirstGlyph)) &&
          !line.mFoldEnd;
   }
 //}}}
