@@ -769,12 +769,12 @@ private:
   // column
   uint32_t getGlyphIndex (const cLine& line, uint32_t column);
   //{{{
-  uint32_t getGlyphIndexFromPosition (sPosition position) {
+  uint32_t getGlyphIndex (sPosition position) {
     return getGlyphIndex (getLine (position.mLineNumber), position.mColumn);
     }
   //}}}
+  uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex);
   uint32_t getColumnFromPosX (const cLine& line, float posX);
-  uint32_t getColumnFromGlyphIndex (const cLine& line, uint32_t toGlyphIndex);
 
   // tab
   float getTabEndPosX (float columnX);
