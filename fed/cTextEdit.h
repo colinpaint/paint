@@ -795,11 +795,10 @@ private:
   sPosition findWordBegin (sPosition position);
   sPosition findWordEnd (sPosition position);
   //}}}
-  //{{{  insert
+  //{{{  insert, delete
   sPosition insertTextAt (sPosition position, const std::string& text);
   void insertText (const std::string& text) { setCursorPosition (insertTextAt (getCursorPosition(), text)); }
-  //}}}
-  //{{{  delete
+
   void deleteLine (uint32_t lineNumber);
   void deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber);
   void deletePositionRange (sPosition beginPosition, sPosition endPosition);

@@ -1787,7 +1787,7 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition position) {
   }
 //}}}
 //}}}
-//{{{  insert
+//{{{  insert, delete
 //{{{
 cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
 // insert helper - !!! needs utf8 handling !!!!
@@ -1842,8 +1842,7 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
   return position;
   }
 //}}}
-//}}}
-//{{{  delete
+
 //{{{
 void cTextEdit::deleteLine (uint32_t lineNumber) {
 
