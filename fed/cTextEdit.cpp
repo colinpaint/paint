@@ -794,6 +794,7 @@ void cTextEdit::backspace() {
 // insert
 //{{{
 void cTextEdit::enterCharacter (ImWchar ch) {
+// !!!! more utf8 handling !!!
 
   if (!canEditAtCursor())
     return;
@@ -874,29 +875,32 @@ void cTextEdit::enterCharacter (ImWchar ch) {
   sPosition position = getCursorPosition();
   undo.mAddBegin = position;
 
+  cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
+  uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
+
   if (ch == '\n') {
     //{{{  enter lineFeed
-    cLine& line = getLine (position.mLineNumber);
+    if (isFolded() && getLine (position.mLineNumber).mFoldBegin) // noe newLine in folded foldBegin
+      return;
 
     // insert newLine
     cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber + 1, cLine());
 
     if (mOptions.mLanguage.mAutoIndentation)
-      for (uint32_t glyphIndex = 0;
-           (glyphIndex < line.getNumGlyphs()) &&
-           isascii (line.getChar (glyphIndex)) && isblank (line.getChar (glyphIndex)); glyphIndex++)
-        newLine.pushBack (line.getGlyph (glyphIndex));
+      for (uint32_t indent = 0;
+           (indent < glyphsLine.getNumGlyphs()) &&
+           isascii (glyphsLine.getChar (indent)) && isblank (glyphsLine.getChar (indent)); indent++)
+        newLine.pushBack (glyphsLine.getGlyph (indent));
 
     uint32_t indentSize = newLine.getNumGlyphs();
 
     // insert indent and rest of old line
-    uint32_t glyphIndex = getGlyphIndex (position);
-    newLine.insertRestOfLineAtEnd (line, glyphIndex);
+    newLine.insertRestOfLineAtEnd (glyphsLine, glyphIndex);
     parseLine (newLine);
 
     // erase rest of old line
-    line.erase (glyphIndex, line.getNumGlyphs());
-    parseLine (line);
+    glyphsLine.erase (glyphIndex, glyphsLine.getNumGlyphs());
+    parseLine (glyphsLine);
 
     // set cursor
     setCursorPosition ({position.mLineNumber+1, getColumn (newLine, indentSize)});
@@ -905,31 +909,27 @@ void cTextEdit::enterCharacter (ImWchar ch) {
     //}}}
   else {
     // enter char
-    cLine& line = getLine (position.mLineNumber);
-    uint32_t glyphIndex = getGlyphIndex (position);
-    if (mOptions.mOverWrite && (glyphIndex < line.getNumGlyphs())) {
+    if (mOptions.mOverWrite && (glyphIndex < glyphsLine.getNumGlyphs())) {
       // overwrite, delete char
       undo.mDeleteBegin = mEdit.mCursor.mPosition;
-      undo.mDeleteEnd = {position.mLineNumber, getColumn (line, glyphIndex+1)};
-      undo.mDelete += line.getChar (glyphIndex);
-      line.erase (glyphIndex);
+      undo.mDeleteEnd = {position.mLineNumber, getColumn (glyphsLine, glyphIndex+1)};
+      undo.mDelete += glyphsLine.getChar (glyphIndex);
+      glyphsLine.erase (glyphIndex);
       }
 
     // insert newChar
-    line.insert (glyphIndex, cGlyph (ch, eText));
-    parseLine (line);
+    glyphsLine.insert (glyphIndex, cGlyph (ch, eText));
+    parseLine (glyphsLine);
 
     // undo.mAdd = utf8buf.data(); // utf8 handling needed
     undo.mAdd = static_cast<char>(ch);
-    setCursorPosition ({position.mLineNumber, getColumn (line, glyphIndex + 1)});
+    setCursorPosition ({position.mLineNumber, getColumn (glyphsLine, glyphIndex + 1)});
     }
   mDoc.mEdited = true;
 
   undo.mAddEnd = getCursorPosition();
   undo.mAfter = mEdit.mCursor;
   mEdit.addUndo (undo);
-
-  mEdit.mScrollVisible = true;
   }
 //}}}
 
