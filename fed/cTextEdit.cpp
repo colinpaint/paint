@@ -545,7 +545,7 @@ void cTextEdit::moveRightWord() {
       skip = isWord;
       }
 
-    while (!isWord || skip && (glyphIndex < glyphsLine.getNumGlyphs())) {
+    while ((!isWord || skip) && (glyphIndex < glyphsLine.getNumGlyphs())) {
       isWord = isalnum (glyphsLine.getChar (glyphIndex));
       if (isWord && !skip) {
         setCursorPosition ({position.mLineNumber, getColumn (glyphsLine, glyphIndex)});
