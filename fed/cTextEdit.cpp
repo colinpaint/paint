@@ -1687,18 +1687,16 @@ void cTextEdit::scrollCursorVisible() {
 //{{{
 cTextEdit::sPosition cTextEdit::advance (sPosition position) {
 
-  if (position.mLineNumber < getNumLines()) {
-    uint32_t glyphIndex = getGlyphIndex (position);
+  if (position.mLineNumber >= getNumLines())
+    return position;
 
-    const cLine& line = getLine (position.mLineNumber);
-    if (glyphIndex + 1 < line.getNumGlyphs())
-      glyphIndex++;
-    else {
-      position.mLineNumber++;
-      glyphIndex = 0;
-      }
-
-    position.mColumn = getColumn (line, glyphIndex);
+  uint32_t glyphIndex = getGlyphIndex (position);
+  const cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
+  if (glyphIndex + 1 < glyphsLine.getNumGlyphs())
+    position.mColumn = getColumn (glyphsLine, glyphIndex + 1);
+  else {
+    position.mLineNumber++;
+    position.mColumn = 0;
     }
 
   return position;
@@ -1736,54 +1734,54 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
 //{{{
 cTextEdit::sPosition cTextEdit::findWordBegin (sPosition position) {
 
-  const cLine& line = getLine (position.mLineNumber);
-
-  uint32_t glyphIndex = getGlyphIndex (position);
-  if (glyphIndex >= line.getNumGlyphs())
+  const cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
+  uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
+  if (glyphIndex >= glyphsLine.getNumGlyphs()) // already at lineEnd
     return position;
 
-  while (glyphIndex && isspace (line.getChar (glyphIndex)))
+  while (glyphIndex && isspace (glyphsLine.getChar (glyphIndex)))
     glyphIndex--;
 
-  uint8_t color = line.getColor (glyphIndex);
+  uint8_t color = glyphsLine.getColor (glyphIndex);
   while (glyphIndex > 0) {
-    uint8_t ch = line.getChar (glyphIndex);
+    uint8_t ch = glyphsLine.getChar (glyphIndex);
     if ((ch & 0xC0) != 0x80) {
       // not UTF code sequence 10xxxxxx
       if ((ch <= 32) && isspace (ch)) {
         glyphIndex++;
         break;
         }
-      if (color != line.getColor (glyphIndex-1))
+      if (color != glyphsLine.getColor (glyphIndex - 1))
         break;
       }
     glyphIndex--;
     }
 
-  return sPosition (position.mLineNumber, getColumn (line, glyphIndex));
+  position.mColumn = getColumn (glyphsLine, glyphIndex);
+  return position;
   }
 //}}}
 //{{{
 cTextEdit::sPosition cTextEdit::findWordEnd (sPosition position) {
 
-  const cLine& line = getLine (position.mLineNumber);
-
+  const cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
   uint32_t glyphIndex = getGlyphIndex (position);
-  if (glyphIndex >= line.getNumGlyphs())
+  if (glyphIndex >= glyphsLine.getNumGlyphs()) // already at lineEnd
     return position;
 
-  uint8_t prevColor = line.getColor (glyphIndex);
-  bool prevSpace = isspace (line.getChar (glyphIndex));
-  while (glyphIndex < line.getNumGlyphs()) {
-    uint8_t ch = line.getChar (glyphIndex);
-    if (line.getColor (glyphIndex) != prevColor)
+  uint8_t prevColor = glyphsLine.getColor (glyphIndex);
+  bool prevSpace = isspace (glyphsLine.getChar (glyphIndex));
+  while (glyphIndex < glyphsLine.getNumGlyphs()) {
+    uint8_t ch = glyphsLine.getChar (glyphIndex);
+    if (glyphsLine.getColor (glyphIndex) != prevColor)
       break;
     if (static_cast<bool>(isspace (ch)) != prevSpace)
       break;
     glyphIndex++;
     }
 
-  return sPosition (position.mLineNumber, getColumn (line, glyphIndex));
+  position.mColumn = getColumn (glyphsLine, glyphIndex);
+  return position;
   }
 //}}}
 //}}}
