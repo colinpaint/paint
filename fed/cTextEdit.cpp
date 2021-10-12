@@ -791,149 +791,6 @@ void cTextEdit::backspace() {
   }
 //}}}
 
-// insert
-//{{{
-void cTextEdit::enterCharacter (ImWchar ch) {
-// !!!! more utf8 handling !!!
-
-  if (!canEditAtCursor())
-    return;
-
-  cUndo undo;
-  undo.mBeforeCursor = mEdit.mCursor;
-
-  if (hasSelect()) {
-    if ((ch == '\t') &&
-        (mEdit.mCursor.mSelectBeginPosition.mLineNumber != mEdit.mCursor.mSelectEndPosition.mLineNumber)) {
-      //{{{  tab select lines
-      sPosition selectBeginPosition = mEdit.mCursor.mSelectBeginPosition;
-      sPosition selectEndPosition = mEdit.mCursor.mSelectEndPosition;
-      sPosition originalEndPosition = selectEndPosition;
-
-      if (selectBeginPosition > selectEndPosition)
-        swap (selectBeginPosition, selectEndPosition);
-
-      selectBeginPosition.mColumn = 0;
-      if ((selectEndPosition.mColumn == 0) && (selectEndPosition.mLineNumber > 0))
-        --selectEndPosition.mLineNumber;
-      if (selectEndPosition.mLineNumber >= getNumLines())
-        selectEndPosition.mLineNumber = getMaxLineNumber();
-      selectEndPosition.mColumn = getNumColumns (getLine (selectEndPosition.mLineNumber));
-
-      undo.mDeleteBeginPosition = selectBeginPosition;
-      undo.mDeleteEndPosition = selectEndPosition;
-      undo.mDeleteText = getText (selectBeginPosition, selectEndPosition);
-
-      bool modified = false;
-      for (uint32_t lineNumber = selectBeginPosition.mLineNumber; 
-           lineNumber <= selectEndPosition.mLineNumber; lineNumber++) {
-        getLine (lineNumber).insert (0, cGlyph ('\t', eTab));
-        modified = true;
-        }
-
-      if (modified) {
-        //  not sure what this does yet
-        cLine& selectBeginLine = getLine (selectBeginPosition.mLineNumber);
-        selectBeginPosition = { selectBeginPosition.mLineNumber, getColumn (selectBeginLine, 0)};
-        sPosition rangeEnd;
-        if (originalEndPosition.mColumn != 0) {
-          selectEndPosition = {selectEndPosition.mLineNumber, getNumColumns (getLine (selectEndPosition.mLineNumber))};
-          rangeEnd = selectEndPosition;
-          undo.mAddText = getText (selectBeginPosition, selectEndPosition);
-          }
-        else {
-          selectEndPosition = {originalEndPosition.mLineNumber, 0};
-          rangeEnd = {selectEndPosition.mLineNumber - 1, getNumColumns (getLine (selectEndPosition.mLineNumber - 1))};
-          undo.mAddText = getText (selectBeginPosition, rangeEnd);
-          }
-
-        undo.mAddBeginPosition = selectBeginPosition;
-        undo.mAddEndPosition = rangeEnd;
-        undo.mAfterCursor = mEdit.mCursor;
-
-        mEdit.mCursor.mSelectBeginPosition = selectBeginPosition;
-        mEdit.mCursor.mSelectEndPosition = selectEndPosition;
-        mEdit.addUndo (undo);
-
-        mDoc.mEdited = true;
-        mEdit.mScrollVisible = true;
-        }
-
-      return;
-      }
-      //}}}
-    else {
-      //{{{  delete select lines
-      undo.mDeleteText = getSelectText();
-      undo.mDeleteBeginPosition = mEdit.mCursor.mSelectBeginPosition;
-      undo.mDeleteEndPosition = mEdit.mCursor.mSelectEndPosition;
-
-      deleteSelect();
-      }
-      //}}}
-    }
-
-  sPosition position = getCursorPosition();
-  undo.mAddBeginPosition = position;
-
-  cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
-  uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
-
-  if (ch == '\n') {
-    //{{{  enter lineFeed
-    if (isFolded() && getLine (position.mLineNumber).mFoldBegin) // noe newLine in folded foldBegin
-      return;
-
-    // insert newLine
-    cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber + 1, cLine());
-
-    if (mOptions.mLanguage.mAutoIndentation)
-      for (uint32_t indent = 0;
-           (indent < glyphsLine.getNumGlyphs()) &&
-           isascii (glyphsLine.getChar (indent)) && isblank (glyphsLine.getChar (indent)); indent++)
-        newLine.pushBack (glyphsLine.getGlyph (indent));
-
-    uint32_t indentSize = newLine.getNumGlyphs();
-
-    // insert indent and rest of old line
-    newLine.insertRestOfLineAtEnd (glyphsLine, glyphIndex);
-    parseLine (newLine);
-
-    // erase rest of old line
-    glyphsLine.erase (glyphIndex, glyphsLine.getNumGlyphs());
-    parseLine (glyphsLine);
-
-    // set cursor
-    setCursorPosition ({position.mLineNumber+1, getColumn (newLine, indentSize)});
-    undo.mAddText = (char)ch;
-    }
-    //}}}
-  else {
-    // enter char
-    if (mOptions.mOverWrite && (glyphIndex < glyphsLine.getNumGlyphs())) {
-      // overwrite, delete char
-      undo.mDeleteBeginPosition = mEdit.mCursor.mPosition;
-      undo.mDeleteEndPosition = {position.mLineNumber, getColumn (glyphsLine, glyphIndex+1)};
-      undo.mDeleteText += glyphsLine.getChar (glyphIndex);
-      glyphsLine.erase (glyphIndex);
-      }
-
-    // insert newChar
-    glyphsLine.insert (glyphIndex, cGlyph (ch, eText));
-    parseLine (glyphsLine);
-
-    // undo.mAdd = utf8buf.data(); // utf8 handling needed
-    undo.mAddText = static_cast<char>(ch);
-    setCursorPosition ({position.mLineNumber, getColumn (glyphsLine, glyphIndex + 1)});
-    }
-  mDoc.mEdited = true;
-
-  undo.mAddEndPosition = getCursorPosition();
-  undo.mAfterCursor = mEdit.mCursor;
-  mEdit.addUndo (undo);
-  }
-//}}}
-
 // fold
 //{{{
 void cTextEdit::createFold() {
@@ -1083,6 +940,149 @@ void cTextEdit::saveFile() {
 
   // done
   cLog::log (LOGINFO,fmt::format ("{} saved", saveFilePath.string()));
+  }
+//}}}
+
+// enter
+//{{{
+void cTextEdit::enterCharacter (ImWchar ch) {
+// !!!! more utf8 handling !!!
+
+  if (!canEditAtCursor())
+    return;
+
+  cUndo undo;
+  undo.mBeforeCursor = mEdit.mCursor;
+
+  if (hasSelect()) {
+    if ((ch == '\t') &&
+        (mEdit.mCursor.mSelectBeginPosition.mLineNumber != mEdit.mCursor.mSelectEndPosition.mLineNumber)) {
+      //{{{  tab select lines
+      sPosition selectBeginPosition = mEdit.mCursor.mSelectBeginPosition;
+      sPosition selectEndPosition = mEdit.mCursor.mSelectEndPosition;
+      sPosition originalEndPosition = selectEndPosition;
+
+      if (selectBeginPosition > selectEndPosition)
+        swap (selectBeginPosition, selectEndPosition);
+
+      selectBeginPosition.mColumn = 0;
+      if ((selectEndPosition.mColumn == 0) && (selectEndPosition.mLineNumber > 0))
+        --selectEndPosition.mLineNumber;
+      if (selectEndPosition.mLineNumber >= getNumLines())
+        selectEndPosition.mLineNumber = getMaxLineNumber();
+      selectEndPosition.mColumn = getNumColumns (getLine (selectEndPosition.mLineNumber));
+
+      undo.mDeleteBeginPosition = selectBeginPosition;
+      undo.mDeleteEndPosition = selectEndPosition;
+      undo.mDeleteText = getText (selectBeginPosition, selectEndPosition);
+
+      bool modified = false;
+      for (uint32_t lineNumber = selectBeginPosition.mLineNumber;
+           lineNumber <= selectEndPosition.mLineNumber; lineNumber++) {
+        getLine (lineNumber).insert (0, cGlyph ('\t', eTab));
+        modified = true;
+        }
+
+      if (modified) {
+        //  not sure what this does yet
+        cLine& selectBeginLine = getLine (selectBeginPosition.mLineNumber);
+        selectBeginPosition = { selectBeginPosition.mLineNumber, getColumn (selectBeginLine, 0)};
+        sPosition rangeEnd;
+        if (originalEndPosition.mColumn != 0) {
+          selectEndPosition = {selectEndPosition.mLineNumber, getNumColumns (getLine (selectEndPosition.mLineNumber))};
+          rangeEnd = selectEndPosition;
+          undo.mAddText = getText (selectBeginPosition, selectEndPosition);
+          }
+        else {
+          selectEndPosition = {originalEndPosition.mLineNumber, 0};
+          rangeEnd = {selectEndPosition.mLineNumber - 1, getNumColumns (getLine (selectEndPosition.mLineNumber - 1))};
+          undo.mAddText = getText (selectBeginPosition, rangeEnd);
+          }
+
+        undo.mAddBeginPosition = selectBeginPosition;
+        undo.mAddEndPosition = rangeEnd;
+        undo.mAfterCursor = mEdit.mCursor;
+
+        mEdit.mCursor.mSelectBeginPosition = selectBeginPosition;
+        mEdit.mCursor.mSelectEndPosition = selectEndPosition;
+        mEdit.addUndo (undo);
+
+        mDoc.mEdited = true;
+        mEdit.mScrollVisible = true;
+        }
+
+      return;
+      }
+      //}}}
+    else {
+      //{{{  delete select lines
+      undo.mDeleteText = getSelectText();
+      undo.mDeleteBeginPosition = mEdit.mCursor.mSelectBeginPosition;
+      undo.mDeleteEndPosition = mEdit.mCursor.mSelectEndPosition;
+
+      deleteSelect();
+      }
+      //}}}
+    }
+
+  sPosition position = getCursorPosition();
+  undo.mAddBeginPosition = position;
+
+  cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
+  uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
+
+  if (ch == '\n') {
+    //{{{  enter lineFeed
+    if (isFolded() && getLine (position.mLineNumber).mFoldBegin) // noe newLine in folded foldBegin
+      return;
+
+    // insert newLine
+    cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber + 1, cLine());
+
+    if (mOptions.mLanguage.mAutoIndentation)
+      for (uint32_t indent = 0;
+           (indent < glyphsLine.getNumGlyphs()) &&
+           isascii (glyphsLine.getChar (indent)) && isblank (glyphsLine.getChar (indent)); indent++)
+        newLine.pushBack (glyphsLine.getGlyph (indent));
+
+    uint32_t indentSize = newLine.getNumGlyphs();
+
+    // insert indent and rest of old line
+    newLine.insertRestOfLineAtEnd (glyphsLine, glyphIndex);
+    parseLine (newLine);
+
+    // erase rest of old line
+    glyphsLine.erase (glyphIndex, glyphsLine.getNumGlyphs());
+    parseLine (glyphsLine);
+
+    // set cursor
+    setCursorPosition ({position.mLineNumber+1, getColumn (newLine, indentSize)});
+    undo.mAddText = (char)ch;
+    }
+    //}}}
+  else {
+    // enter char
+    if (mOptions.mOverWrite && (glyphIndex < glyphsLine.getNumGlyphs())) {
+      // overwrite, delete char
+      undo.mDeleteBeginPosition = mEdit.mCursor.mPosition;
+      undo.mDeleteEndPosition = {position.mLineNumber, getColumn (glyphsLine, glyphIndex+1)};
+      undo.mDeleteText += glyphsLine.getChar (glyphIndex);
+      glyphsLine.erase (glyphIndex);
+      }
+
+    // insert newChar
+    glyphsLine.insert (glyphIndex, cGlyph (ch, eText));
+    parseLine (glyphsLine);
+
+    // undo.mAdd = utf8buf.data(); // utf8 handling needed
+    undo.mAddText = static_cast<char>(ch);
+    setCursorPosition ({position.mLineNumber, getColumn (glyphsLine, glyphIndex + 1)});
+    }
+  mDoc.mEdited = true;
+
+  undo.mAddEndPosition = getCursorPosition();
+  undo.mAfterCursor = mEdit.mCursor;
+  mEdit.addUndo (undo);
   }
 //}}}
 //}}}
@@ -1554,9 +1554,9 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
   switch (select) {
     case eSelect::eNormal:
       cLog::log (LOGINFO, fmt::format ("setSelect eNormal {}:{} to {}:{}",
-                                       mEdit.mCursor.mSelectBeginPosition.mLineNumber, 
+                                       mEdit.mCursor.mSelectBeginPosition.mLineNumber,
                                        mEdit.mCursor.mSelectBeginPosition.mColumn,
-                                       mEdit.mCursor.mSelectEndPosition.mLineNumber, 
+                                       mEdit.mCursor.mSelectEndPosition.mLineNumber,
                                        mEdit.mCursor.mSelectEndPosition.mColumn));
       break;
 
@@ -1581,9 +1581,9 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
         // select fold
         mEdit.mCursor.mSelectEndPosition = {skipFold (mEdit.mCursor.mSelectEndPosition.mLineNumber + 1), 0};
       cLog::log (LOGINFO, fmt::format ("setSelect eLine {}:{} to {}:{}",
-                                       mEdit.mCursor.mSelectBeginPosition.mLineNumber, 
+                                       mEdit.mCursor.mSelectBeginPosition.mLineNumber,
                                        mEdit.mCursor.mSelectBeginPosition.mColumn,
-                                       mEdit.mCursor.mSelectEndPosition.mLineNumber, 
+                                       mEdit.mCursor.mSelectEndPosition.mLineNumber,
                                        mEdit.mCursor.mSelectEndPosition.mColumn));
       break;
       }
@@ -1745,21 +1745,20 @@ cTextEdit::sPosition cTextEdit::findWordBeginPosition (sPosition position) {
   if (glyphIndex >= glyphsLine.getNumGlyphs()) // already at lineEnd
     return position;
 
+  // searck back for nonSpace
   while (glyphIndex && isspace (glyphsLine.getChar (glyphIndex)))
     glyphIndex--;
 
+  // search back for nonSpace and of same parse color
   uint8_t color = glyphsLine.getColor (glyphIndex);
   while (glyphIndex > 0) {
     uint8_t ch = glyphsLine.getChar (glyphIndex);
-    if ((ch & 0xC0) != 0x80) {
-      // not UTF code sequence 10xxxxxx
-      if ((ch <= 32) && isspace (ch)) {
-        glyphIndex++;
-        break;
-        }
-      if (color != glyphsLine.getColor (glyphIndex - 1))
-        break;
+    if (isspace (ch)) {
+      glyphIndex++;
+      break;
       }
+    if (color != glyphsLine.getColor (glyphIndex - 1))
+      break;
     glyphIndex--;
     }
 
@@ -1775,6 +1774,7 @@ cTextEdit::sPosition cTextEdit::findWordEndPosition (sPosition position) {
   if (glyphIndex >= glyphsLine.getNumGlyphs()) // already at lineEnd
     return position;
 
+  // serach forward for space, or not same parse color
   uint8_t prevColor = glyphsLine.getColor (glyphIndex);
   bool prevSpace = isspace (glyphsLine.getChar (glyphIndex));
   while (glyphIndex < glyphsLine.getNumGlyphs()) {

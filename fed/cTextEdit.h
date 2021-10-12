@@ -483,11 +483,6 @@ public:
   void deleteIt();
   void backspace();
 
-  // insert
-  void enterCharacter (ImWchar ch);
-  void enterKey()    { enterCharacter ('\n'); }
-  void tabKey()      { enterCharacter ('\t'); }
-
   // fold
   void createFold();
   void openFold() { openFold (mEdit.mCursor.mPosition.mLineNumber); }
@@ -501,6 +496,11 @@ public:
   // file
   void loadFile (const std::string& filename);
   void saveFile();
+
+  // enter
+  void enterCharacter (ImWchar ch);
+  void enterKey() { enterCharacter ('\n'); }
+  void tabKey() { enterCharacter ('\t'); }
   //}}}
 
   void drawWindow (const std::string& title, cApp& app);
