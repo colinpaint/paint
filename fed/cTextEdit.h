@@ -430,7 +430,7 @@ public:
   // has
   bool hasCR() const { return mDoc.mHasCR; }
   bool hasTabs() const { return mDoc.mHasTabs; }
-  bool hasSelect() const { return mEdit.mCursor.mSelectEnd > mEdit.mCursor.mSelectBegin; }
+  bool hasSelect() const { return mEdit.mCursor.mSelectEndPosition > mEdit.mCursor.mSelectBeginPosition; }
   bool hasUndo() const { return !mOptions.mReadOnly && mEdit.hasUndo(); }
   bool hasRedo() const { return !mOptions.mReadOnly && mEdit.hasRedo(); }
   bool hasPaste() const { return !mOptions.mReadOnly && mEdit.hasPaste(); }
@@ -512,8 +512,8 @@ private:
     sPosition mPosition;
 
     eSelect mSelect;
-    sPosition mSelectBegin;
-    sPosition mSelectEnd;
+    sPosition mSelectBeginPosition;
+    sPosition mSelectEndPosition;
     };
   //}}}
   //{{{
@@ -522,37 +522,37 @@ private:
     //{{{
     void undo (cTextEdit* textEdit) {
 
-      if (!mAdd.empty())
-        textEdit->deletePositionRange (mAddBegin, mAddEnd);
-      if (!mDelete.empty())
-        textEdit->insertTextAt (mDeleteBegin, mDelete);
+      if (!mAddText.empty())
+        textEdit->deletePositionRange (mAddBeginPosition, mAddEndPosition);
+      if (!mDeleteText.empty())
+        textEdit->insertTextAt (mDeleteBeginPosition, mDeleteText);
 
-      textEdit->mEdit.mCursor = mBefore;
+      textEdit->mEdit.mCursor = mBeforeCursor;
       }
     //}}}
     //{{{
     void redo (cTextEdit* textEdit) {
 
-      if (!mDelete.empty())
-        textEdit->deletePositionRange (mDeleteBegin, mDeleteEnd);
-      if (!mAdd.empty())
-        textEdit->insertTextAt (mAddBegin, mAdd);
+      if (!mDeleteText.empty())
+        textEdit->deletePositionRange (mDeleteBeginPosition, mDeleteEndPosition);
+      if (!mAddText.empty())
+        textEdit->insertTextAt (mAddBeginPosition, mAddText);
 
-      textEdit->mEdit.mCursor = mAfter;
+      textEdit->mEdit.mCursor = mAfterCursor;
       }
     //}}}
 
     // vars
-    sCursor mBefore;
-    sCursor mAfter;
+    sCursor mBeforeCursor;
+    sCursor mAfterCursor;
 
-    std::string mAdd;
-    sPosition mAddBegin;
-    sPosition mAddEnd;
+    std::string mAddText;
+    sPosition mAddBeginPosition;
+    sPosition mAddEndPosition;
 
-    std::string mDelete;
-    sPosition mDeleteBegin;
-    sPosition mDeleteEnd;
+    std::string mDeleteText;
+    sPosition mDeleteBeginPosition;
+    sPosition mDeleteEndPosition;
     };
   //}}}
   //{{{
@@ -726,7 +726,7 @@ private:
 
   // text
   std::string getText (sPosition beginPosition, sPosition endPosition);
-  std::string getSelectText() { return getText (mEdit.mCursor.mSelectBegin, mEdit.mCursor.mSelectEnd); }
+  std::string getSelectText() { return getText (mEdit.mCursor.mSelectBeginPosition, mEdit.mCursor.mSelectEndPosition); }
 
   // text widths
   float getWidth (sPosition position);
@@ -789,11 +789,11 @@ private:
   void cursorFlashOn();
   void scrollCursorVisible();
 
-  sPosition advance (sPosition position);
+  sPosition advancePosition (sPosition position);
   sPosition sanitizePosition (sPosition position);
 
-  sPosition findWordBegin (sPosition position);
-  sPosition findWordEnd (sPosition position);
+  sPosition findWordBeginPosition (sPosition position);
+  sPosition findWordEndPosition (sPosition position);
   //}}}
   //{{{  insert, delete
   sPosition insertTextAt (sPosition position, const std::string& text);
