@@ -742,14 +742,11 @@ private:
   uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
   uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mDoc.mFoldLines.size()); }
   uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
-  uint32_t getMaxFoldLineNumber() const { return getNumFoldLines() - 1; }
+  uint32_t getMaxFoldLineIndex() const { return getNumFoldLines() - 1; }
   uint32_t getNumPageLines() const;
 
   // line
-  uint32_t getNumGlyphs (uint32_t lineNumber) { return getLine (lineNumber).getNumGlyphs(); }
   uint32_t getNumColumns (const cLine& line);
-  uint32_t getNumColumns (uint32_t lineNumber) { return getNumColumns (getLine (lineNumber)); }
-
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
   uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
   //{{{
@@ -766,6 +763,7 @@ private:
 
   cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
   cLine& getGlyphsLine (uint32_t lineNumber) { return getLine (getGlyphsLineNumber (lineNumber)); }
+
   sPosition getNextLinePosition (sPosition position);
 
   // column
