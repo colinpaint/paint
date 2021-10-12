@@ -1366,9 +1366,7 @@ float cTextEdit::getGlyphWidth (const cLine& line, uint32_t glyphIndex) {
 // lines
 //{{{
 uint32_t cTextEdit::getNumPageLines() const {
-
-  float height = ImGui::GetWindowHeight() - 20.f;
-  return static_cast<uint32_t>(floor (height / mDrawContext.mLineHeight));
+  return static_cast<uint32_t>(floor ((ImGui::GetWindowHeight() - 20.f) / mDrawContext.mLineHeight));
   }
 //}}}
 
@@ -1387,7 +1385,6 @@ uint32_t cTextEdit::getNumColumns (const cLine& line) {
   return column;
   }
 //}}}
-
 //{{{
 uint32_t cTextEdit::getLineNumberFromIndex (uint32_t lineIndex) const {
 
@@ -1426,15 +1423,51 @@ uint32_t cTextEdit::getLineIndexFromNumber (uint32_t lineNumber) const {
   }
 //}}}
 //{{{
-cTextEdit::sPosition cTextEdit::getNextLinePosition (sPosition position) {
+cTextEdit::sPosition cTextEdit::getNextLinePosition (const sPosition& position) {
 
-  uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  uint32_t toLineNumber = getLineNumberFromIndex (lineIndex + 1);
-  return {toLineNumber, 0};
+  uint32_t nextLineIndex = getLineIndexFromNumber (position.mLineNumber) + 1;
+  uint32_t nextLineNumber = getLineNumberFromIndex (nextLineIndex);
+  return {nextLineNumber, getGlyphsLine (nextLineNumber).mFirstGlyph};
   }
 //}}}
 
 // column
+//{{{
+uint32_t cTextEdit::getGlyphIndex (const cLine& line, uint32_t toColumn) {
+// return glyphIndex from line,column, inserting tabs
+
+  uint32_t glyphIndex = 0;
+
+  uint32_t column = 0;
+  while ((glyphIndex < line.getNumGlyphs()) && (column < toColumn)) {
+    if (line.getChar (glyphIndex) == '\t')
+      column = getTabColumn (column);
+    else
+      column++;
+    glyphIndex++;
+    }
+
+  return glyphIndex;
+  }
+//}}}
+//{{{
+uint32_t cTextEdit::getColumn (const cLine& line, uint32_t toGlyphIndex) {
+// return glyphIndex column using any tabs
+
+  uint32_t column = 0;
+
+  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
+    if (glyphIndex >= toGlyphIndex)
+      return column;
+    if (line.getChar (glyphIndex) == '\t')
+      column = getTabColumn (column);
+    else
+      column++;
+    }
+
+  return column;
+  }
+//}}}
 //{{{
 uint32_t cTextEdit::getColumnFromPosX (const cLine& line, float posX) {
 // get position.mColumn for posX, using glyphWidths and tabs
@@ -1468,42 +1501,6 @@ uint32_t cTextEdit::getColumnFromPosX (const cLine& line, float posX) {
                                    posX, line.mFirstGlyph, column, line.mFirstGlyph + column));
 
   return line.mFirstGlyph + column;
-  }
-//}}}
-//{{{
-uint32_t cTextEdit::getColumn (const cLine& line, uint32_t toGlyphIndex) {
-// return glyphIndex column using any tabs
-
-  uint32_t column = 0;
-
-  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
-    if (glyphIndex >= toGlyphIndex)
-      return column;
-    if (line.getChar (glyphIndex) == '\t')
-      column = getTabColumn (column);
-    else
-      column++;
-    }
-
-  return column;
-  }
-//}}}
-//{{{
-uint32_t cTextEdit::getGlyphIndex (const cLine& line, uint32_t toColumn) {
-// return glyphIndex from line,column, inserting tabs
-
-  uint32_t glyphIndex = 0;
-
-  uint32_t column = 0;
-  while ((glyphIndex < line.getNumGlyphs()) && (column < toColumn)) {
-    if (line.getChar (glyphIndex) == '\t')
-      column = getTabColumn (column);
-    else
-      column++;
-    glyphIndex++;
-    }
-
-  return glyphIndex;
   }
 //}}}
 

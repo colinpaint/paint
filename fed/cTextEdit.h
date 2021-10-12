@@ -764,12 +764,12 @@ private:
   cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
   cLine& getGlyphsLine (uint32_t lineNumber) { return getLine (getGlyphsLineNumber (lineNumber)); }
 
-  sPosition getNextLinePosition (sPosition position);
+  sPosition getNextLinePosition (const sPosition& position);
 
   // column
   uint32_t getGlyphIndex (const cLine& line, uint32_t column);
   //{{{
-  uint32_t getGlyphIndex (sPosition position) {
+  uint32_t getGlyphIndex (const sPosition& position) {
     return getGlyphIndex (getLine (position.mLineNumber), position.mColumn);
     }
   //}}}
