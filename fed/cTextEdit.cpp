@@ -804,7 +804,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
   if (hasSelect()) {
     if ((ch == '\t') &&
         (mEdit.mCursor.mSelectBegin.mLineNumber != mEdit.mCursor.mSelectEnd.mLineNumber)) {
-      //{{{  tab all select lines
+      //{{{  tab select lines
       sPosition selectBegin = mEdit.mCursor.mSelectBegin;
       sPosition selectEnd = mEdit.mCursor.mSelectEnd;
       sPosition originalEnd = selectEnd;
@@ -830,7 +830,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
         }
 
       if (modified) {
-        //{{{  not sure what this does yet
+        //  not sure what this does yet
         cLine& selectBeginLine = getLine (selectBegin.mLineNumber);
         selectBegin = { selectBegin.mLineNumber, getColumn (selectBeginLine, 0)};
         sPosition rangeEnd;
@@ -856,16 +856,16 @@ void cTextEdit::enterCharacter (ImWchar ch) {
         mDoc.mEdited = true;
         mEdit.mScrollVisible = true;
         }
-        //}}}
 
       return;
       }
       //}}}
     else {
-      //{{{  delete select line
+      //{{{  delete select lines
       undo.mDelete = getSelectText();
       undo.mDeleteBegin = mEdit.mCursor.mSelectBegin;
       undo.mDeleteEnd = mEdit.mCursor.mSelectEnd;
+
       deleteSelect();
       }
       //}}}
@@ -879,14 +879,14 @@ void cTextEdit::enterCharacter (ImWchar ch) {
     cLine& line = getLine (position.mLineNumber);
 
     // insert newLine
-    insertLine (position.mLineNumber+1);
-    cLine& newLine = getLine (position.mLineNumber+1);
+    cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber + 1, cLine());
 
     if (mOptions.mLanguage.mAutoIndentation)
       for (uint32_t glyphIndex = 0;
            (glyphIndex < line.getNumGlyphs()) &&
            isascii (line.getChar (glyphIndex)) && isblank (line.getChar (glyphIndex)); glyphIndex++)
         newLine.pushBack (line.getGlyph (glyphIndex));
+
     uint32_t indentSize = newLine.getNumGlyphs();
 
     // insert indent and rest of old line
@@ -908,20 +908,20 @@ void cTextEdit::enterCharacter (ImWchar ch) {
     cLine& line = getLine (position.mLineNumber);
     uint32_t glyphIndex = getGlyphIndex (position);
     if (mOptions.mOverWrite && (glyphIndex < line.getNumGlyphs())) {
-      // overwrite
+      // overwrite, delete char
       undo.mDeleteBegin = mEdit.mCursor.mPosition;
       undo.mDeleteEnd = {position.mLineNumber, getColumn (line, glyphIndex+1)};
       undo.mDelete += line.getChar (glyphIndex);
       line.erase (glyphIndex);
       }
 
-    cGlyph glyph (ch, eText);
-    line.insert (glyphIndex, glyph);
+    // insert newChar
+    line.insert (glyphIndex, cGlyph (ch, eText));
     parseLine (line);
 
     // undo.mAdd = utf8buf.data(); // utf8 handling needed
     undo.mAdd = static_cast<char>(ch);
-    setCursorPosition ({position.mLineNumber, getColumn (line, glyphIndex+1)});
+    setCursorPosition ({position.mLineNumber, getColumn (line, glyphIndex + 1)});
     }
   mDoc.mEdited = true;
 
@@ -1788,12 +1788,6 @@ cTextEdit::sPosition cTextEdit::findWordEnd (sPosition position) {
 //}}}
 //{{{  insert
 //{{{
-cLine& cTextEdit::insertLine (uint32_t index) {
-  return *mDoc.mLines.insert (mDoc.mLines.begin() + index, cLine());
-  }
-//}}}
-
-//{{{
 cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
 // !!! needs utf8 handling !!!!
 
@@ -1807,15 +1801,17 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
       // insert new line
       cLine& line = getLine (position.mLineNumber);
       if (glyphIndex < line.getNumGlyphs()) {
-        cLine& newLine = insertLine (position.mLineNumber+1);
+        cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber+1, cLine());
         newLine.insertRestOfLineAtEnd (line, glyphIndex);
         parseLine (newLine);
 
         line.eraseToEnd (glyphIndex);
         parseLine (line);
         }
-      else
-        insertLine (position.mLineNumber+1);
+      else {
+        cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber+1, cLine());
+        parseLine (newLine);
+        }
 
       position.mLineNumber++;
       position.mColumn = 0;
@@ -1826,8 +1822,9 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
       // within line
       cLine& line = getLine (position.mLineNumber);
       line.insert (glyphIndex, cGlyph (ch, eText));
-      position.mColumn++;
       parseLine (line);
+
+      position.mColumn++;
       }
 
     mDoc.mEdited = true;

@@ -799,7 +799,6 @@ private:
   sPosition findWordEnd (sPosition position);
   //}}}
   //{{{  insert
-  cLine& insertLine (uint32_t index);
   sPosition insertTextAt (sPosition position, const std::string& text);
   sPosition insertText (const std::string& text);
   //}}}
