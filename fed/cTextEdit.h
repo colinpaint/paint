@@ -746,8 +746,9 @@ private:
   uint32_t getNumPageLines() const;
 
   // line
-  uint32_t getNumGlyphs (uint32_t lineNumber) { return mDoc.mLines[lineNumber].getNumGlyphs(); }
-  uint32_t getNumColumns (uint32_t lineNumber);
+  uint32_t getNumGlyphs (uint32_t lineNumber) { return getLine (lineNumber).getNumGlyphs(); }
+  uint32_t getNumColumns (const cLine& line);
+  uint32_t getNumColumns (uint32_t lineNumber) { return getNumColumns (getLine (lineNumber)); }
 
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
   uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
@@ -768,8 +769,13 @@ private:
   sPosition getNextLinePosition (sPosition position);
 
   // column
-  uint32_t getGlyphIndexFromPosition (sPosition position);
-  uint32_t getColumnFromPosX (uint32_t lineNumber, float posX);
+  uint32_t getGlyphIndex (const cLine& line, uint32_t column);
+  //{{{
+  uint32_t getGlyphIndexFromPosition (sPosition position) {
+    return getGlyphIndex (getLine (position.mLineNumber), position.mColumn);
+    }
+  //}}}
+  uint32_t getColumnFromPosX (const cLine& line, float posX);
   uint32_t getColumnFromGlyphIndex (const cLine& line, uint32_t toGlyphIndex);
 
   // tab
@@ -793,7 +799,6 @@ private:
 
   sPosition findWordBegin (sPosition position);
   sPosition findWordEnd (sPosition position);
-  sPosition findNextWord (sPosition position);
   //}}}
   //{{{  insert
   cLine& insertLine (uint32_t index);
