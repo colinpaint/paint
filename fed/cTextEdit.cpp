@@ -1865,6 +1865,7 @@ void cTextEdit::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumbe
 //}}}
 //{{{
 void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosition) {
+/// !!! need more glyphsLine !!!!
 
   if (endPosition == beginPosition)
     return;
