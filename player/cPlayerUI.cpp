@@ -11,6 +11,9 @@
 // ui
 #include "../ui/cUI.h"
 
+#include "../platform/cPlatform.h"
+#include "../graphics/cGraphics.h"
+
 // decoder
 #include "../utils/cFileView.h"
 
@@ -791,6 +794,39 @@ public:
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
+    bool mOpen;
+    ImGui::Begin ("player", &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
+    //{{{  draw top line buttons
+    // monoSpaced buttom
+    bool mShowMonoSpaced = true;
+    if (toggleButton("mono",  mShowMonoSpaced)) {}
+    //  toggleShowMonoSpaced();
+
+    // vsync button,fps
+    if (app.getPlatform().hasVsync()) {
+      // vsync button
+      ImGui::SameLine();
+      if (toggleButton ("vSync", app.getPlatform().getVsync()))
+        app.getPlatform().toggleVsync();
+
+      // fps text
+      ImGui::SameLine();
+      ImGui::Text (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+      }
+
+    // fullScreen button
+    if (app.getPlatform().hasFullScreen()) {
+      ImGui::SameLine();
+      if (toggleButton ("full", app.getPlatform().getFullScreen()))
+        app.getPlatform().toggleFullScreen();
+      }
+
+    // vertice debug
+    ImGui::SameLine();
+    ImGui::Text (fmt::format ("{}:{}",
+                 ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
+    //}}}
+
     if (!mFileLoaded) {
       //{{{  load file
       const vector <string>& strings = { app.getName() };
@@ -818,6 +854,8 @@ public:
       mSongLoader.launchLoad (kWqxr);
     ImGui::End();
     //}}}
+
+    ImGui::End();
     }
 
 private:
