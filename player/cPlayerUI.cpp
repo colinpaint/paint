@@ -1,16 +1,25 @@
-// cRadioUI.cpp
+// cPlayerUI.cpp - will extend to deal with many file types invoking best editUI
 //{{{  includes
 #include <cstdint>
 #include <vector>
 #include <string>
 
 // imgui
-#include <imgui.h>
+#include "../imgui/imgui.h"
+#include "../imgui/myImguiWidgets.h"
 
+// ui
+#include "../ui/cUI.h"
+
+// decoder
+#include "../utils/cFileView.h"
+
+// song
 #include "../song/cSongLoader.h"
 
-#include "cUI.h"
+// utils
 #include "../utils/cLog.h"
+#include "../utils/date.h"
 
 using namespace std;
 //}}}
@@ -38,16 +47,31 @@ static const vector<string> kRtp4  = {"rtp 4"};
 static const vector<string> kRtp5  = {"rtp 5"};
 //}}}
 
-class cRadioUI : public cUI {
+class cPlayerUI : public cUI {
 public:
-  cRadioUI (const std::string& name) : cUI(name) {}
-  virtual ~cRadioUI() = default;
+  //{{{
+  cPlayerUI (const string& name) : cUI(name) {
+    }
+  //}}}
+  //{{{
+  virtual ~cPlayerUI() {
+    // close the file mapping object
+    }
+  //}}}
 
   void addToDrawList (cApp& app) final {
 
-    //{{{  unused param
-    (void)app;
-    //}}}
+    ImGui::SetNextWindowPos (ImVec2(0,0));
+    ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
+
+    if (!mFileLoaded) {
+       const vector <string>& strings = { app.getName() };
+      if (!app.getName().empty()) {
+        mSongLoader.launchLoad (strings);
+        mFileLoaded = true;
+        }
+      }
+
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     if (ImGui::Button ("radio1"))
       mSongLoader.launchLoad (kRadio1);
@@ -68,11 +92,12 @@ public:
 
 private:
   cSongLoader mSongLoader;
+  bool mFileLoaded = false;
 
   //{{{
   static cUI* create (const string& className) {
-    return new cRadioUI (className);
+    return new cPlayerUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("radio", &create);
+  inline static const bool mRegistered = registerClass ("player", &create);
   };
