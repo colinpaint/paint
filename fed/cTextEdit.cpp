@@ -1563,7 +1563,7 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
     case eSelect::eWord:
       mEdit.mCursor.mSelectBeginPosition = findWordBeginPosition (mEdit.mCursor.mSelectBeginPosition);
       mEdit.mCursor.mSelectEndPosition = findWordEndPosition (mEdit.mCursor.mSelectEndPosition);
-      cLog::log (LOGINFO, fmt::format ("setSelect eWord {}:{}:{}",
+      cLog::log (LOGINFO, fmt::format ("setSelect eWord line:{} col:{} to:{}",
                                        mEdit.mCursor.mSelectBeginPosition.mLineNumber,
                                        mEdit.mCursor.mSelectBeginPosition.mColumn,
                                        mEdit.mCursor.mSelectEndPosition.mColumn));
@@ -1770,7 +1770,7 @@ cTextEdit::sPosition cTextEdit::findWordBeginPosition (sPosition position) {
 cTextEdit::sPosition cTextEdit::findWordEndPosition (sPosition position) {
 
   const cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
-  uint32_t glyphIndex = getGlyphIndex (position);
+  uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
   if (glyphIndex >= glyphsLine.getNumGlyphs()) // already at lineEnd
     return position;
 
