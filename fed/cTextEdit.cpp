@@ -1571,9 +1571,6 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
       break;
 
     case eSelect::eLine: {
-      mEdit.mCursor.mSelectBeginPosition.mColumn = 0;
-      mEdit.mCursor.mSelectEndPosition = mEdit.mCursor.mSelectBeginPosition;
-
       const cLine& line = getLine (mEdit.mCursor.mSelectBeginPosition.mLineNumber);
       if (!isFolded() || !line.mFoldBegin)
         // select line
@@ -1581,11 +1578,12 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
       else if (!line.mFoldOpen)
         // select fold
         mEdit.mCursor.mSelectEndPosition = {skipFold (mEdit.mCursor.mSelectEndPosition.mLineNumber + 1), 0};
-      //cLog::log (LOGINFO, fmt::format ("setSelect eLine {}:{} to {}:{}",
-      //                                 mEdit.mCursor.mSelectBeginPosition.mLineNumber,
-      //                                 mEdit.mCursor.mSelectBeginPosition.mColumn,
-      //                                mEdit.mCursor.mSelectEndPosition.mLineNumber,
-      //                                 mEdit.mCursor.mSelectEndPosition.mColumn));
+
+      cLog::log (LOGINFO, fmt::format ("setSelect eLine {}:{} to {}:{}",
+                                       mEdit.mCursor.mSelectBeginPosition.mLineNumber,
+                                       mEdit.mCursor.mSelectBeginPosition.mColumn,
+                                       mEdit.mCursor.mSelectEndPosition.mLineNumber,
+                                       mEdit.mCursor.mSelectEndPosition.mColumn));
       break;
       }
     }
@@ -2413,6 +2411,8 @@ void cTextEdit::mouseSelectLine (uint32_t lineNumber) {
 
   cursorFlashOn();
 
+  cLog::log (LOGINFO, fmt::format ("mouseSelectLine line:{}", lineNumber));
+
   mEdit.mCursor.mPosition = {lineNumber, 0};
   mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
   setSelect (eSelect::eLine, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
@@ -2430,6 +2430,8 @@ void cTextEdit::mouseDragSelectLine (uint32_t lineNumber, float posY) {
 
   int numDragLines = static_cast<int>((posY - (mDrawContext.mLineHeight/2.f)) / mDrawContext.mLineHeight);
 
+  cLog::log (LOGINFO, fmt::format ("mouseDragSelectLine line:{} dragLines:{}", lineNumber, numDragLines));
+
   if (isFolded()) {
     uint32_t lineIndex = max (0u, min (getMaxFoldLineIndex(), getLineIndexFromNumber (lineNumber) + numDragLines));
     lineNumber = mDoc.mFoldLines[lineIndex];
@@ -2437,10 +2439,9 @@ void cTextEdit::mouseDragSelectLine (uint32_t lineNumber, float posY) {
   else // simple add to lineNumber
     lineNumber = max (0u, min (getMaxLineNumber(), lineNumber + numDragLines));
 
-  mEdit.mCursor.mPosition.mLineNumber = lineNumber;
-  setSelect (eSelect::eLine, mEdit.mDragFirstPosition, mEdit.mCursor.mPosition);
+  setCursorPosition ({lineNumber, 0});
 
-  mEdit.mScrollVisible = true;
+  setSelect (eSelect::eLine, mEdit.mDragFirstPosition, getCursorPosition());
   }
 //}}}
 //{{{
@@ -2485,7 +2486,8 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
 
   // select drag range
   uint32_t dragColumn = getColumnFromPosX (getGlyphsLine (dragLineNumber), pos.x);
-  setSelect (eSelect::eNormal, mEdit.mDragFirstPosition, {dragLineNumber, dragColumn});
+  setCursorPosition ({dragLineNumber, dragColumn});
+  setSelect (eSelect::eNormal, mEdit.mDragFirstPosition, getCursorPosition());
   }
 //}}}
 
