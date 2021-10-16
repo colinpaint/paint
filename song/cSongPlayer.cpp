@@ -90,8 +90,8 @@ using namespace std;
     thread playerThread = thread ([=, this]() {
       // player lambda
       cLog::setThreadName ("play");
-      float silence [2048*2] = { 0.f };
-      float samples [2048*2] = { 0.f };
+      array <float,2048*2> silence = { 0.f };
+      array <float,2048*2> samples = { 0.f };
 
       song->togglePlaying();
       //{{{  audio16 player thread, video follows playPts
@@ -99,15 +99,15 @@ using namespace std;
 
       cSong::cFrame* frame;
       while (!mExit) {
-        float* playSamples = silence;
+        float* playSamples = silence.data();
           {
           // scoped song mutex
           shared_lock<shared_mutex> lock (song->getSharedMutex());
           frame = song->findPlayFrame();
           bool gotSamples = song->getPlaying() && frame && frame->getSamples();
           if (gotSamples) {
-            memcpy (samples, frame->getSamples(), song->getSamplesPerFrame() * 8);
-            playSamples = samples;
+            memcpy (samples.data(), frame->getSamples(), song->getSamplesPerFrame() * 8);
+            playSamples = samples.data();
             }
           }
         audio.play (2, playSamples, song->getSamplesPerFrame(), 1.f);
