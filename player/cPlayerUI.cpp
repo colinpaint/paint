@@ -390,24 +390,7 @@ private:
     //}}}
     }
   //}}}
-  //{{{
-  void drawFreq (int64_t playFrame) {
 
-    float valueScale = 100.f / 255.f;
-
-    float xorg = 0.f;
-    cSong::cFrame* framePtr = mSong->findFrameByFrameNum (playFrame);
-    if (framePtr && framePtr->getFreqValues()) {
-      uint8_t* freqValues = framePtr->getFreqValues();
-      for (size_t i = 0; (i < mSong->getNumFreqBytes()) && ((i*2) < int(mSize.x)); i++) {
-        float value =  freqValues[i] * valueScale;
-        if (value > 1.f)
-          rect ({xorg, mSize.y - value}, {xorg + 2.f, 0 + mSize.y}, eFreq);
-        xorg += 2.f;
-        }
-      }
-    }
-  //}}}
   //{{{
   void drawOverviewWave (int64_t firstFrame, int64_t playFrame, float playFrameX, float valueScale, bool mono) {
   // simple overview cache, invalidate if anything changed
@@ -623,6 +606,25 @@ private:
       }
     }
   //}}}
+
+  //{{{
+  void drawFreq (int64_t playFrame) {
+
+    float valueScale = 100.f / 255.f;
+
+    float xorg = 0.f;
+    cSong::cFrame* framePtr = mSong->findFrameByFrameNum (playFrame);
+    if (framePtr && framePtr->getFreqValues()) {
+      uint8_t* freqValues = framePtr->getFreqValues();
+      for (size_t i = 0; (i < mSong->getNumFreqBytes()) && ((i*2) < int(mSize.x)); i++) {
+        float value =  freqValues[i] * valueScale;
+        if (value > 1.f)
+          rect ({xorg, mSize.y - value}, {xorg + 2.f, 0 + mSize.y}, eFreq);
+        xorg += 2.f;
+        }
+      }
+    }
+  //}}}
   //{{{
   void drawRange (int64_t playFrame, int64_t leftFrame, int64_t rightFrame) {
 
@@ -777,6 +779,10 @@ public:
       mSongLoader.launchLoad (kRadio6);
     if (ImGui::Button ("wqxr"))
       mSongLoader.launchLoad (kWqxr);
+    //}}}
+    //{{{  draw clockButton
+    ImGui::SetCursorPos ({ImGui::GetWindowWidth() - 130.f, 0.f});
+    clockButton ("clock", app.getPlatform().now(), {110.f,150.f});
     //}}}
 
     // draw song

@@ -82,7 +82,7 @@ public:
 
   // text
   //{{{
-  float text (ImVec2 pos, uint8_t color, const std::string& text) {
+  float text (const ImVec2& pos, uint8_t color, const std::string& text) {
    // draw and return width of text
 
     mDrawList->AddText (mFont, mFontSize, pos, mPalette[color], text.c_str(), nullptr);
@@ -94,7 +94,7 @@ public:
     }
   //}}}
   //{{{
-  float text (ImVec2 pos, uint8_t color, const char* str, const char* strEnd) {
+  float text (const ImVec2& pos, uint8_t color, const char* str, const char* strEnd) {
    // draw and return width of text
 
     mDrawList->AddText (mFont, mFontSize, pos, mPalette[color], str, strEnd);
@@ -106,11 +106,12 @@ public:
     }
   //}}}
   //{{{
-  float smallText (ImVec2 pos, uint8_t color, const std::string& text) {
+  float smallText (const ImVec2& pos, uint8_t color, const std::string& text) {
    // draw and return width of small text
 
-    pos.y += mFontSmallOffset;
-    mDrawList->AddText (mFont, mFontSmallSize, pos, mPalette[color], text.c_str(), nullptr);
+    ImVec2 offsetPos = pos;
+    offsetPos.y += mFontSmallOffset;
+    mDrawList->AddText (mFont, mFontSmallSize, offsetPos, mPalette[color], text.c_str(), nullptr);
 
     return mFont->CalcTextSizeA (mFontSmallSize, FLT_MAX, -1.f, text.c_str(), nullptr).x;
     }
@@ -118,22 +119,22 @@ public:
 
   // graphics
   //{{{
-  void line (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+  void line (const ImVec2& pos1, const ImVec2& pos2, uint8_t color) {
     mDrawList->AddLine (pos1, pos2, mPalette[color]);
     }
   //}}}
   //{{{
-  void circle (ImVec2 centre, float radius, uint8_t color) {
+  void circle (const ImVec2& centre, float radius, uint8_t color) {
     mDrawList->AddCircleFilled (centre, radius, mPalette[color], 4);
     }
   //}}}
   //{{{
-  void rect (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+  void rect (const ImVec2& pos1, const ImVec2& pos2, uint8_t color) {
     mDrawList->AddRectFilled (pos1, pos2, mPalette[color]);
     }
   //}}}
   //{{{
-  void rectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
+  void rectLine (const ImVec2& pos1, const ImVec2& pos2, uint8_t color) {
     mDrawList->AddRect (pos1, pos2, mPalette[color], 1.f);
     }
   //}}}
