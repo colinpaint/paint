@@ -340,7 +340,9 @@ private:
   //{{{
   void layout () {
 
-    mSize = ImGui::GetWindowSize();
+    ImVec2 size = ImGui::GetWindowSize();
+    mChanged |= (size.x != mSize.x) || (size.y != mSize.y);
+    mSize = size;
 
     mWaveHeight = 100.f;
     mOverviewHeight = mShowOverview ? 100.f : 0.f;
@@ -559,14 +561,15 @@ private:
     int64_t lastFrame = mSong->getLastFrameNum();
     int64_t totalFrames = mSong->getTotalFrames();
 
-    bool changed = (mOverviewTotalFrames != totalFrames) ||
-                   (mOverviewLastFrame != lastFrame) ||
+    bool changed = mChanged ||
+                   (mOverviewTotalFrames != totalFrames) ||
                    (mOverviewFirstFrame != firstFrame) ||
+                   (mOverviewLastFrame != lastFrame) ||
                    (mOverviewValueScale != valueScale);
 
     array <float,2> values = { 0.f };
 
-    float xorg = 0;
+    float xorg = 0.f;
     float xlen = 1.f;
     for (size_t x = 0; x < int(mSize.x); x++) {
       // iterate widget width
@@ -768,11 +771,13 @@ private:
   //{{{  vars
   cSong* mSong = nullptr;
 
+  bool mShowOverview = true;
+
+  bool mChanged = false;
   ImVec2 mSize = {0.f,0.f};
+
   int64_t mImagePts = 0;
   int mImageId = -1;
-
-  bool mShowOverview = true;
 
   float mMove = 0;
   bool mMoved = false;

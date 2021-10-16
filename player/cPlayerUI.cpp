@@ -1,7 +1,6 @@
 // cPlayerUI.cpp
 //{{{  includes
 #include <cstdint>
-#include <array>
 #include <vector>
 #include <string>
 
@@ -20,9 +19,8 @@
 
 // song
 #include "../song/cSongLoader.h"
-#include "../song/cSong.h"
 
-#include "cDrawSong.h"
+#include "../player/cDrawSong.h"
 
 // utils
 #include "../utils/cLog.h"
@@ -69,12 +67,12 @@ public:
   //{{{
   void addToDrawList (cApp& app) final {
 
-    if (!mFileLoaded) {
-      //{{{  load file
+    if (!mSongLoaded) {
+      //{{{  load song
       const vector <string>& strings = { app.getName() };
       if (!app.getName().empty()) {
         mSongLoader.launchLoad (strings);
-        mFileLoaded = true;
+        mSongLoaded = true;
         }
       }
       //}}}
@@ -148,12 +146,12 @@ private:
   void toggleShowMonoSpaced() { mShowMonoSpaced = ! mShowMonoSpaced; }
 
   // vars
-  bool mFileLoaded = false;
-  cSongLoader mSongLoader;
-  cDrawSong mDrawSong;
-
   bool mOpen = true;
   bool mShowMonoSpaced = false;
+
+  bool mSongLoaded = false;
+  cSongLoader mSongLoader;
+  cDrawSong mDrawSong;
 
   //{{{
   static cUI* create (const string& className) {
