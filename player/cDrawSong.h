@@ -91,26 +91,20 @@ public:
   //}}}
   //{{{
   float measureText (const string& text) const {
-    if (mMonoSpaced)
-      return mGlyphWidth * static_cast<uint32_t>(text.size());
-    else
-      return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, text.c_str()).x;
+    return mMonoSpaced ? mGlyphWidth * static_cast<uint32_t>(text.size())
+                       : mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, text.c_str()).x;
     }
   //}}}
   //{{{
   float measureText (const char* str, const char* strEnd) const {
-    if (mMonoSpaced)
-      return mGlyphWidth * static_cast<uint32_t>(strEnd - str);
-    else
-      return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
+    return mMonoSpaced ? mGlyphWidth * static_cast<uint32_t>(strEnd - str)
+                       : mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
     }
   //}}}
   //{{{
   float measureSmallText (const string& text) const {
-    if (mMonoSpaced)
-      return mGlyphWidth * mFontSmallSize * static_cast<uint32_t>(text.size());
-    else
-      return mFont->CalcTextSizeA (mFontSmallSize, FLT_MAX, -1.f, text.c_str()).x;
+    return mMonoSpaced ? mGlyphWidth * (mFontSmallSize / mFontSize) * static_cast<uint32_t>(text.size())
+                       : mFont->CalcTextSizeA (mFontSmallSize, FLT_MAX, -1.f, text.c_str()).x;
     }
   //}}}
 
@@ -515,7 +509,7 @@ private:
     float xorg = 0.f;
     cSong::cFrame* framePtr = mSong->findFrameByFrameNum (playFrame);
     if (framePtr && framePtr->getFreqValues()) {
-      float* freqValues = framePtr->getFreqValues();
+      uint8_t* freqValues = framePtr->getFreqValues();
       for (size_t i = 0; (i < mSong->getNumFreqBytes()) && ((i*2) < int(mSize.x)); i++) {
         float value =  freqValues[i] * valueScale;
         if (value > 1.f)
