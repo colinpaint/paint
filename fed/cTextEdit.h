@@ -10,6 +10,7 @@
 #include <unordered_set>
 
 #include "../imgui/imgui.h"
+#include "../imgui/myImguiWidgets.h"
 
 class cApp;
 //}}}
@@ -507,6 +508,69 @@ public:
   void drawContents (cApp& app);
 
 private:
+  //{{{  palette const
+  static const uint8_t eBackground =        0;
+  static const uint8_t eText =              1;
+  static const uint8_t eIdentifier =        2;
+  static const uint8_t eNumber =            3;
+  static const uint8_t ePunctuation =       4;
+  static const uint8_t eString =            5;
+  static const uint8_t eLiteral =           6;
+  static const uint8_t ePreProc =           7;
+  static const uint8_t eComment =           8;
+  static const uint8_t eKeyWord =           9;
+  static const uint8_t eKnownWord =        10;
+
+  static const uint8_t eCursorPos     =    11;
+  static const uint8_t eCursorLineFill =   12;
+  static const uint8_t eCursorLineEdge =   13;
+  static const uint8_t eCursorReadOnly   = 14;
+  static const uint8_t eSelectCursor    =  15;
+  static const uint8_t eLineNumber =       16;
+  static const uint8_t eWhiteSpace =       17;
+  static const uint8_t eTab =              18;
+
+  static const uint8_t eFoldClosed =       19;
+  static const uint8_t eFoldOpen =         20;
+
+  static const uint8_t eScrollBackground = 21;
+  static const uint8_t eScrollGrab =       22;
+  static const uint8_t eScrollHover =      23;
+  static const uint8_t eScrollActive =     24;
+  static const uint8_t eUndefined =      0xFF;
+
+  // color to ImU32 lookup
+  inline static const std::vector <ImU32> kPalette = {
+    0xffefefef, // eBackground
+    0xff808080, // eText
+    0xff202020, // eIdentifier
+    0xff606000, // eNumber
+    0xff404040, // ePunctuation
+    0xff2020a0, // eString
+    0xff304070, // eLiteral
+    0xff008080, // ePreProc
+    0xff008000, // eComment
+    0xff1010c0, // eKeyWord
+    0xff800080, // eKnownWord
+
+    0xff000000, // eCursorPos
+    0x10000000, // eCursorLineFill
+    0x40000000, // eCursorLineEdge
+    0x800000ff, // eCursorReadOnly
+    0x80600000, // eSelectCursor
+    0xff505000, // eLineNumber
+    0xff808080, // eWhiteSpace
+    0xff404040, // eTab
+
+    0xffff0000, // eFoldClosed,
+    0xff0000ff, // eFoldOpen,
+
+    0x80404040, // eScrollBackground
+    0x80ffffff, // eScrollGrab
+    0xA000ffff, // eScrollHover
+    0xff00ffff, // eScrollActive
+    };
+  //}}}
   //{{{
   struct sCursor {
     sPosition mPosition;
@@ -577,38 +641,19 @@ private:
     };
   //}}}
   //{{{
-  class cDrawContext {
+  class cFedDrawContext : public cDrawContext {
   public:
-    void update (const cOptions& options, bool monoSpaced);
-
-    float measureSpace() const;
-    float measureChar (char ch) const;
-    float measureText (const char* str, const char* strEnd) const;
-    float text (ImVec2 pos, uint8_t color, const std::string& text);
-    float text (ImVec2 pos, uint8_t color, const char* str, const char* strEnd = nullptr);
-    float smallText (ImVec2 pos, uint8_t color, const std::string& text);
-
-    void line (ImVec2 pos1, ImVec2 pos2, uint8_t color);
-    void circle (ImVec2 centre, float radius, uint8_t color);
-    void rect (ImVec2 pos1, ImVec2 pos2, uint8_t color);
-    void rectLine (ImVec2 pos1, ImVec2 pos2, uint8_t color);
-
-    float mFontSize = 0.f;
-    float mGlyphWidth = 0.f;
-    float mLineHeight = 0.f;
+    cFedDrawContext() : cDrawContext (kPalette) {}
+    //{{{
+    void update (const cOptions& options, bool monoSpaced) {
+      cDrawContext::update (static_cast<float>(options.mFontSize), monoSpaced);
+      mLeftPad = getGlyphWidth() / 2.f;
+      mLineNumberWidth = 0.f;
+      }
+    //}}}
 
     float mLeftPad = 0.f;
     float mLineNumberWidth = 0.f;
-
-  private:
-    ImDrawList* mDrawList = nullptr;
-
-    ImFont* mFont = nullptr;
-    bool mMonoSpaced = false;
-
-    float mFontAtlasSize = 0.f;
-    float mFontSmallSize = 0.f;
-    float mFontSmallOffset = 0.f;
     };
   //}}}
   //{{{
@@ -839,7 +884,7 @@ private:
 
   cOptions mOptions;
   cDoc mDoc;
-  cDrawContext mDrawContext;
+  cFedDrawContext mDrawContext;
   cEdit mEdit;
 
   std::chrono::system_clock::time_point mCursorFlashTimePoint;
