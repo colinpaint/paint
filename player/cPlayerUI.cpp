@@ -51,33 +51,30 @@ static const vector<string> kRtp3  = {"rtp 3"};
 static const vector<string> kRtp4  = {"rtp 4"};
 static const vector<string> kRtp5  = {"rtp 5"};
 //}}}
-//{{{  palette const
-constexpr uint8_t eBackground =  0;
-constexpr uint8_t eText =        1;
-constexpr uint8_t eFreq =        2;
-constexpr uint8_t ePeak =        3;
-constexpr uint8_t ePowerPlayed = 4;
-constexpr uint8_t ePowerPlay =   5;
-constexpr uint8_t ePowerToPlay = 6;
 
-constexpr uint8_t eUndefined = 0xFF;
-
-// color to ImU32 lookup
-const vector <ImU32> kPalette = {
-//  aabbggrr
-  0xff000000, // eBackground
-  0xffffffff, // eText
-  0xff00ffff, // eFreq
-  0xff606060, // ePeak
-  0xffc00000, // ePowerPlayed
-  0xffffffff, // ePowerPlay
-  0xff808080, // ePowerToPlay
-  };
-//}}}
-
+namespace {
   //{{{
   class cDrawContext {
   public:
+    //{{{  palette const
+    static const uint8_t eBackground =  0;
+    static const uint8_t eText =        1;
+    static const uint8_t eFreq =        2;
+    static const uint8_t ePeak =        3;
+    static const uint8_t ePowerPlayed = 4;
+    static const uint8_t ePowerPlay =   5;
+    static const uint8_t ePowerToPlay = 6;
+    static const uint8_t eRange       = 7;
+    static const uint8_t eOverview    = 8;
+    static const uint8_t eLensOutline = 9;
+    static const uint8_t eLensPower  = 10;
+    static const uint8_t eLensPlay   = 11;
+    //}}}
+
+    float getFontSize() const { return mFontSize; }
+    float getGlyphWidth() const { return mGlyphWidth; }
+    float getLineHeight() const { return mLineHeight; }
+
     //{{{
     void update (float fontSize, bool monoSpaced) {
     // update draw context
@@ -98,6 +95,7 @@ const vector <ImU32> kPalette = {
       }
     //}}}
 
+    // measure text
     //{{{
     float measureSpace() const {
     // return width of space
@@ -119,19 +117,19 @@ const vector <ImU32> kPalette = {
       }
     //}}}
     //{{{
-    float measureText (const char* str, const char* strEnd) const {
-      if (mMonoSpaced)
-        return mGlyphWidth * static_cast<uint32_t>(strEnd - str);
-      else
-        return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
-      }
-    //}}}
-    //{{{
     float measureText (const string& text) const {
       if (mMonoSpaced)
         return mGlyphWidth * static_cast<uint32_t>(text.size());
       else
         return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, text.c_str()).x;
+      }
+    //}}}
+    //{{{
+    float measureText (const char* str, const char* strEnd) const {
+      if (mMonoSpaced)
+        return mGlyphWidth * static_cast<uint32_t>(strEnd - str);
+      else
+        return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, str, strEnd).x;
       }
     //}}}
     //{{{
@@ -143,6 +141,7 @@ const vector <ImU32> kPalette = {
       }
     //}}}
 
+    // text
     //{{{
     float text (ImVec2 pos, uint8_t color, const string& text) {
      // draw and return width of text
@@ -178,6 +177,7 @@ const vector <ImU32> kPalette = {
       }
     //}}}
 
+    // graphics
     //{{{
     void line (ImVec2 pos1, ImVec2 pos2, uint8_t color) {
       mDrawList->AddLine (pos1, pos2, kPalette[color]);
@@ -199,11 +199,25 @@ const vector <ImU32> kPalette = {
       }
     //}}}
 
-    float mFontSize = 0.f;
-    float mGlyphWidth = 0.f;
-    float mLineHeight = 0.f;
-
   private:
+    //{{{
+    const vector <ImU32> kPalette = {
+    //  aabbggrr
+      0xff000000, // eBackground
+      0xffffffff, // eText
+      0xff00ffff, // eFreq
+      0xff606060, // ePeak
+      0xffc00000, // ePowerPlayed
+      0xffffffff, // ePowerPlay
+      0xff808080, // ePowerToPlay
+      0xff800080, // eRange
+      0xffa0a0a0, // eOverView
+      0xffa000a0, // eLensOutline
+      0xffa040a0, // eLensPower
+      0xffa04060, // eLensPlay
+      };
+    //}}}
+
     ImDrawList* mDrawList = nullptr;
 
     ImFont* mFont = nullptr;
@@ -212,11 +226,101 @@ const vector <ImU32> kPalette = {
     float mFontAtlasSize = 0.f;
     float mFontSmallSize = 0.f;
     float mFontSmallOffset = 0.f;
+
+    float mFontSize = 0.f;
+    float mGlyphWidth = 0.f;
+    float mLineHeight = 0.f;
     };
   //}}}
   //{{{
   class cDrawSong : public cDrawContext {
   public:
+    //{{{
+    //void onDown (cPointF point) {
+
+      //cWidget::onDown (point);
+
+      //cSong* song = mLoader->getSong();
+
+      //if (song) {
+        ////std::shared_lock<std::shared_mutex> lock (song->getSharedMutex());
+        //if (point.y > mDstOverviewTop) {
+          //int64_t frameNum = song->getFirstFrameNum() + int((point.x * song->getTotalFrames()) / getWidth());
+          //song->setPlayPts (song->getPtsFromFrameNum (frameNum));
+          //mOverviewPressed = true;
+          //}
+
+        //else if (point.y > mDstRangeTop) {
+          //mPressedFrameNum = song->getPlayFrameNum() + ((point.x - (getWidth()/2.f)) * mFrameStep / mFrameWidth);
+          //song->getSelect().start (int64_t(mPressedFrameNum));
+          //mRangePressed = true;
+          ////mWindow->changed();
+          //}
+
+        //else
+          //mPressedFrameNum = double(song->getFrameNumFromPts (int64_t(song->getPlayPts())));
+        //}
+      //}
+    //}}}
+    //{{{
+    //void onMove (cPointF point, cPointF inc) {
+
+      //cWidget::onMove (point, inc);
+
+      //cSong* song = mLoader->getSong();
+      //if (song) {
+        ////std::shared_lock<std::shared_mutex> lock (song.getSharedMutex());
+        //if (mOverviewPressed)
+          //song->setPlayPts (
+            //song->getPtsFromFrameNum (
+              //song->getFirstFrameNum() + int64_t(point.x * song->getTotalFrames() / getWidth())));
+
+        //else if (mRangePressed) {
+          //mPressedFrameNum += (inc.x / mFrameWidth) * mFrameStep;
+          //song->getSelect().move (int64_t(mPressedFrameNum));
+          ////mWindow->changed();
+          //}
+
+        //else {
+          //mPressedFrameNum -= (inc.x / mFrameWidth) * mFrameStep;
+          //song->setPlayPts (song->getPtsFromFrameNum (int64_t(mPressedFrameNum)));
+          //}
+        //}
+      //}
+    //}}}
+    //{{{
+    //void onUp() {
+
+      //cWidget::onUp();
+
+      //cSong* song = mLoader->getSong();
+      //if (song)
+        //song->getSelect().end();
+
+      //mOverviewPressed = false;
+      //mRangePressed = false;
+      //}
+    //}}}
+    //{{{
+    //void onWheel (float delta) {
+
+      ////if (getShow())
+      //setZoom (mZoom - (int)delta);
+      //}
+    //}}}
+    //{{{
+    //void setZoom (int zoom) {
+
+      //mZoom = std::min (std::max (zoom, mMinZoom), mMaxZoom);
+
+      //// zoomIn expanding frame to mFrameWidth pix
+      //mFrameWidth = (mZoom < 0) ? -mZoom+1 : 1;
+
+      //// zoomOut summing mFrameStep frames per pix
+      //mFrameStep = (mZoom > 0) ? mZoom+1 : 1;
+      //}
+    //}}}
+
     //{{{
     void draw (cSong* song, bool monoSpaced) {
 
@@ -247,14 +351,14 @@ const vector <ImU32> kPalette = {
       }
 
       // draw firstTime left
-      smallText ({0.f, mSize.y - mLineHeight}, eText, mSong->getFirstTimeString (0));
+      smallText ({0.f, mSize.y - getLineHeight()}, eText, mSong->getFirstTimeString(0));
 
       // draw playTime entre
-      text ({mSize.x/2.f, mSize.y - mLineHeight}, eText, mSong->getPlayTimeString (0));
+      text ({mSize.x/2.f, mSize.y - getLineHeight()}, eText, mSong->getPlayTimeString(0));
 
       // draw lastTime right
       float width = measureSmallText (mSong->getLastTimeString (0));
-      smallText ({mSize.x - width, mSize.y - mLineHeight}, eText, mSong->getLastTimeString (0));
+      smallText ({mSize.x - width, mSize.y - getLineHeight()}, eText, mSong->getLastTimeString(0));
       }
     //}}}
 
@@ -282,12 +386,12 @@ const vector <ImU32> kPalette = {
     //{{{
     void drawRange (int64_t playFrame, int64_t leftFrame, int64_t rightFrame) {
 
-      //vg->beginPath();
-      //vg->rect (cPointF(0.f, mDstRangeTop), cPointF(mSize.x, mRangeHeight));
-      //vg->setFillColour (kDarkGreyF);
-      //vg->triangleFill();
+      (void)playFrame;
+      (void)leftFrame;
+      (void)rightFrame;
 
-      //vg->beginPath();
+      rect ({0.f, mDstRangeTop}, {mSize.x, mDstRangeTop + mRangeHeight}, eRange);
+
       //for (auto &item : mSong->getSelect().getItems()) {
       //  auto firstx = (mSize.y/ 2.f) + (item.getFirstFrame() - playFrame) * mFrameWidth / mFrameStep;
       //  float lastx = item.getMark() ? firstx + 1.f :
@@ -302,14 +406,12 @@ const vector <ImU32> kPalette = {
           //              dstRect, mWindow->getWhiteBrush(), D2D1_DRAW_TEXT_OPTIONS_CLIP);
        //   }
         //}
-
-      //vg->setFillColour (kWhiteF);
-      //vg->triangleFill();
       }
     //}}}
     //{{{
     void drawWave (int64_t playFrame, int64_t leftFrame, int64_t rightFrame, bool mono) {
 
+      (void)mono;
       array <float,2> values = { 0.f };
 
       float peakValueScale = mWaveHeight / mSong->getMaxPeakValue() / 2.f;
@@ -356,10 +458,10 @@ const vector <ImU32> kPalette = {
             int64_t alignedFrame = frame - (frame % mFrameStep);
             int64_t toSumFrame = min (alignedFrame + mFrameStep, rightFrame);
             for (int64_t sumFrame = alignedFrame; sumFrame < toSumFrame; sumFrame++) {
-              cSong::cFrame* framePtr = mSong->findFrameByFrameNum (sumFrame);
-              if (framePtr) {
-                if (framePtr->getPowerValues()) {
-                  float* powerValuesPtr = framePtr->getPowerValues();
+              cSong::cFrame* sumFramePtr = mSong->findFrameByFrameNum (sumFrame);
+              if (sumFramePtr) {
+                if (sumFramePtr->getPowerValues()) {
+                  float* powerValuesPtr = sumFramePtr->getPowerValues();
                   for (size_t i = 0; i < 2; i++)
                     values[i] += *powerValuesPtr++ * powerValueScale;
                   }
@@ -396,12 +498,12 @@ const vector <ImU32> kPalette = {
       //}}}
       //{{{  draw powerValues after playFrame, summed if zoomed out
       for (int64_t frame = playFrame+mFrameStep; frame < rightFrame; frame += mFrameStep) {
-        cSong::cFrame* framePtr = mSong->findFrameByFrameNum (frame);
-        if (framePtr) {
+        cSong::cFrame* sumFramePtr = mSong->findFrameByFrameNum (frame);
+        if (sumFramePtr) {
           if (mFrameStep == 1) {
             // power scaled to maxPeak
-            if (framePtr->getPowerValues()) {
-              float* powerValuesPtr = framePtr->getPowerValues();
+            if (sumFramePtr->getPowerValues()) {
+              float* powerValuesPtr = sumFramePtr->getPowerValues();
               for (size_t i = 0; i < 2; i++)
                 values[i] = *powerValuesPtr++ * peakValueScale;
               }
@@ -414,10 +516,10 @@ const vector <ImU32> kPalette = {
             int64_t alignedFrame = frame - (frame % mFrameStep);
             int64_t toSumFrame = min (alignedFrame + mFrameStep, rightFrame);
             for (int64_t sumFrame = alignedFrame; sumFrame < toSumFrame; sumFrame++) {
-              cSong::cFrame* framePtr = mSong->findFrameByFrameNum (sumFrame);
-              if (framePtr) {
-                if (framePtr->getPowerValues()) {
-                  float* powerValuesPtr = framePtr->getPowerValues();
+              cSong::cFrame* toSumFramePtr = mSong->findFrameByFrameNum (sumFrame);
+              if (toSumFramePtr) {
+                if (toSumFramePtr->getPowerValues()) {
+                  float* powerValuesPtr = toSumFramePtr->getPowerValues();
                   for (size_t i = 0; i < 2; i++)
                     values[i] += *powerValuesPtr++ * powerValueScale;
                   }
@@ -477,7 +579,8 @@ const vector <ImU32> kPalette = {
     //{{{
     void drawOverviewWave (int64_t firstFrame, int64_t playFrame, float playFrameX, float valueScale, bool mono) {
     // simple overview cache, invalidate if anything changed
-
+      (void)playFrame;
+      (void)playFrameX;
       int64_t lastFrame = mSong->getLastFrameNum();
       int64_t totalFrames = mSong->getTotalFrames();
 
@@ -488,7 +591,6 @@ const vector <ImU32> kPalette = {
 
       float values[2] = { 0.f };
 
-      //vg->beginPath();
       float xorg = 0;
       float xlen = 1.f;
       for (auto x = 0; x < int(mSize.x); x++) {
@@ -513,9 +615,9 @@ const vector <ImU32> kPalette = {
                 framePtr = mSong->findFrameByFrameNum (frame);
                 if (framePtr) {
                   if (framePtr->getPowerValues()) {
-                    auto powerValues = framePtr->getPowerValues();
-                    values[0] += powerValues[0];
-                    values[1] += mono ? 0 : powerValues[1];
+                    float* sumPowerValues = framePtr->getPowerValues();
+                    values[0] += sumPowerValues[0];
+                    values[1] += mono ? 0 : sumPowerValues[1];
                     numSummedFrames++;
                     }
                   }
@@ -531,11 +633,10 @@ const vector <ImU32> kPalette = {
             }
           }
 
-        //vg->rect (cPointF(xorg, 0 + mDstOverviewCentre - mOverviewValuesL[x]), cPointF(xlen,  mOverviewValuesR[x]));
+        rect ({xorg, mDstOverviewCentre - mOverviewValuesL[x]},
+              {xorg + xlen, mDstOverviewCentre - mOverviewValuesL[x] + mOverviewValuesR[x]}, eOverview);
         xorg += 1.f;
         }
-      //vg->setFillColour (kGreyF);
-      //vg->triangleFill();
 
       // possible cache to stop recalc
       mOverviewTotalFrames = totalFrames;
@@ -551,11 +652,10 @@ const vector <ImU32> kPalette = {
       cLog::log (LOGINFO, "drawOverviewLens %d %f %f", playFrame, centreX, width);
 
       // cut hole and frame it
-      //vg->beginPath();
-      //vg->rect (0 + cPointF(centreX - width, mDstOverviewTop), cPointF(width * 2.f, mOverviewHeight));
-      //vg->setFillColour (kBlackF);
-      //vg->triangleFill();
-      // frame in yellow
+      rect ({centreX - width, mDstOverviewTop},
+            {centreX - width + (width * 2.f), mDstOverviewTop + mOverviewHeight}, eBackground);
+      rectLine ({centreX - width, mDstOverviewTop},
+                {centreX - width + (width * 2.f), mDstOverviewTop + mOverviewHeight}, eLensOutline);
 
       // calc leftmost frame, clip to valid frame, adjust firstX which may overlap left up to mFrameWidth
       float leftFrame = playFrame - width;
@@ -581,7 +681,6 @@ const vector <ImU32> kPalette = {
         }
 
       // draw unzoomed waveform, start before playFrame
-      //vg->beginPath();
       float xorg = firstX;
       float valueScale = mOverviewHeight / 2.f / maxPowerValue;
       for (auto frame = int(leftFrame); frame <= rightFrame; frame++) {
@@ -619,7 +718,7 @@ const vector <ImU32> kPalette = {
                               mDstOverviewCentre - (powerValues[0] * valueScale);
           float ylen = mono ? powerValues[0] * valueScale * 2.f  :
                               (powerValues[0] + powerValues[1]) * valueScale;
-          //vg->rect (cPointF(xorg, 0 + yorg), cPointF(1.f, ylen));
+          rect ({xorg, yorg}, {xorg + 1.f, yorg + ylen}, eLensPower);
 
           if (frame == playFrame) {
             //{{{  finish playFrame, start after playFrame
@@ -632,9 +731,6 @@ const vector <ImU32> kPalette = {
 
         xorg += 1.f;
         }
-      // finish after playFrame
-      //vg->setFillColour (kGreyF);
-      //vg->triangleFill();
       }
     //}}}
     //{{{
@@ -684,14 +780,11 @@ const vector <ImU32> kPalette = {
         //  draw playFrame
         auto framePtr = mSong->findFrameByFrameNum (playFrame);
         if (framePtr && framePtr->getPowerValues()) {
-          //vg->beginPath();
           auto powerValues = framePtr->getPowerValues();
           float yorg = mono ? (mDstOverviewTop + mOverviewHeight - (powerValues[0] * valueScale * 2.f)) :
                               (mDstOverviewCentre - (powerValues[0] * valueScale));
           float ylen = mono ? (powerValues[0] * valueScale * 2.f) : ((powerValues[0] + powerValues[1]) * valueScale);
-          //vg->rect (cPointF(playFrameX, yorg), cPointF(1.f, ylen));
-          //vg->setFillColour (kWhiteF);
-          //vg->triangleFill();
+          rect ({playFrameX, yorg}, {playFrameX + 1.f, yorg + ylen}, eLensPlay);
           }
         }
       }
@@ -704,7 +797,7 @@ const vector <ImU32> kPalette = {
     int64_t mImagePts = 0;
     int mImageId = -1;
 
-    bool mShowGraphics = true;
+    bool mShowOverview = true;
 
     float mMove = 0;
     bool mMoved = false;
@@ -721,7 +814,6 @@ const vector <ImU32> kPalette = {
     bool mOverviewPressed = false;
     bool mRangePressed = false;
 
-    bool mShowOverview = false;
     float mOverviewLens = 0.f;
 
     // vertical layout
@@ -749,92 +841,7 @@ const vector <ImU32> kPalette = {
     //}}}
     };
   //}}}
-
-  //{{{
-  //void onDown (cPointF point) {
-
-    //cWidget::onDown (point);
-
-    //cSong* song = mLoader->getSong();
-
-    //if (song) {
-      ////std::shared_lock<std::shared_mutex> lock (song->getSharedMutex());
-      //if (point.y > mDstOverviewTop) {
-        //int64_t frameNum = song->getFirstFrameNum() + int((point.x * song->getTotalFrames()) / getWidth());
-        //song->setPlayPts (song->getPtsFromFrameNum (frameNum));
-        //mOverviewPressed = true;
-        //}
-
-      //else if (point.y > mDstRangeTop) {
-        //mPressedFrameNum = song->getPlayFrameNum() + ((point.x - (getWidth()/2.f)) * mFrameStep / mFrameWidth);
-        //song->getSelect().start (int64_t(mPressedFrameNum));
-        //mRangePressed = true;
-        ////mWindow->changed();
-        //}
-
-      //else
-        //mPressedFrameNum = double(song->getFrameNumFromPts (int64_t(song->getPlayPts())));
-      //}
-    //}
-  //}}}
-  //{{{
-  //void onMove (cPointF point, cPointF inc) {
-
-    //cWidget::onMove (point, inc);
-
-    //cSong* song = mLoader->getSong();
-    //if (song) {
-      ////std::shared_lock<std::shared_mutex> lock (song.getSharedMutex());
-      //if (mOverviewPressed)
-        //song->setPlayPts (
-          //song->getPtsFromFrameNum (
-            //song->getFirstFrameNum() + int64_t(point.x * song->getTotalFrames() / getWidth())));
-
-      //else if (mRangePressed) {
-        //mPressedFrameNum += (inc.x / mFrameWidth) * mFrameStep;
-        //song->getSelect().move (int64_t(mPressedFrameNum));
-        ////mWindow->changed();
-        //}
-
-      //else {
-        //mPressedFrameNum -= (inc.x / mFrameWidth) * mFrameStep;
-        //song->setPlayPts (song->getPtsFromFrameNum (int64_t(mPressedFrameNum)));
-        //}
-      //}
-    //}
-  //}}}
-  //{{{
-  //void onUp() {
-
-    //cWidget::onUp();
-
-    //cSong* song = mLoader->getSong();
-    //if (song)
-      //song->getSelect().end();
-
-    //mOverviewPressed = false;
-    //mRangePressed = false;
-    //}
-  //}}}
-  //{{{
-  //void onWheel (float delta) {
-
-    ////if (getShow())
-    //setZoom (mZoom - (int)delta);
-    //}
-  //}}}
-  //{{{
-  //void setZoom (int zoom) {
-
-    //mZoom = std::min (std::max (zoom, mMinZoom), mMaxZoom);
-
-    //// zoomIn expanding frame to mFrameWidth pix
-    //mFrameWidth = (mZoom < 0) ? -mZoom+1 : 1;
-
-    //// zoomOut summing mFrameStep frames per pix
-    //mFrameStep = (mZoom > 0) ? mZoom+1 : 1;
-    //}
-  //}}}
+  }
 
 class cPlayerUI : public cUI {
 public:
@@ -912,6 +919,7 @@ public:
       mSongLoader.launchLoad (kWqxr);
     //}}}
 
+    // draw song
     if (isDrawMonoSpaced())
       ImGui::PushFont (app.getMonoFont());
 
@@ -933,7 +941,7 @@ private:
   cSongLoader mSongLoader;
   cDrawSong mDrawSong;
 
-  bool mOpen;
+  bool mOpen = true;
   bool mShowMonoSpaced = false;
 
   //{{{
