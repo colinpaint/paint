@@ -186,23 +186,22 @@ public:
 
 private:
   //{{{  palette const
-  static const uint8_t eBackground =  0;
-  static const uint8_t eText =        1;
-  static const uint8_t eFreq =        2;
+  inline static const uint8_t eBackground =  0;
+  inline static const uint8_t eText =        1;
+  inline static const uint8_t eFreq =        2;
 
-  static const uint8_t ePeak =        3;
-  static const uint8_t ePowerPlayed = 4;
-  static const uint8_t ePowerPlay =   5;
-  static const uint8_t ePowerToPlay = 6;
+  inline static const uint8_t ePeak =        3;
+  inline static const uint8_t ePowerPlayed = 4;
+  inline static const uint8_t ePowerPlay =   5;
+  inline static const uint8_t ePowerToPlay = 6;
 
-  static const uint8_t eRange       = 7;
-  static const uint8_t eOverview    = 8;
+  inline static const uint8_t eRange       = 7;
+  inline static const uint8_t eOverview    = 8;
 
-  static const uint8_t eLensOutline = 9;
-  static const uint8_t eLensPower  = 10;
-  static const uint8_t eLensPlay   = 11;
-  //}}}
-  //{{{
+  inline static const uint8_t eLensOutline = 9;
+  inline static const uint8_t eLensPower  = 10;
+  inline static const uint8_t eLensPlay   = 11;
+
   inline static const vector <ImU32> kPalette = {
   //  aabbggrr
     0xff000000, // eBackground
