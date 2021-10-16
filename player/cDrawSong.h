@@ -3,7 +3,6 @@
 //{{{  includes
 #include <cstdint>
 #include <array>
-#include <vector>
 #include <string>
 
 // imgui
@@ -314,7 +313,6 @@ public:
     int64_t rightWaveFrame = playFrame + (((int(mSize.x)+mFrameWidth)/2) * mFrameStep) / mFrameWidth;
     rightWaveFrame = min (rightWaveFrame, mSong->getLastFrameNum());
 
-    drawRange (playFrame, leftWaveFrame, rightWaveFrame);
     if (mSong->getNumFrames()) {
       bool mono = (mSong->getNumChannels() == 1);
       drawWave (playFrame, leftWaveFrame, rightWaveFrame, mono);
@@ -322,6 +320,7 @@ public:
         drawOverview (playFrame, mono);
       drawFreq (playFrame);
       }
+    drawRange (playFrame, leftWaveFrame, rightWaveFrame);
     }
 
     // draw firstTime left
@@ -359,31 +358,6 @@ private:
     }
   //}}}
 
-  //{{{
-  void drawRange (int64_t playFrame, int64_t leftFrame, int64_t rightFrame) {
-
-    (void)playFrame;
-    (void)leftFrame;
-    (void)rightFrame;
-
-    rect ({0.f, mDstRangeTop}, {mSize.x, mDstRangeTop + mRangeHeight}, eRange);
-
-    //for (auto &item : mSong->getSelect().getItems()) {
-    //  auto firstx = (mSize.y/ 2.f) + (item.getFirstFrame() - playFrame) * mFrameWidth / mFrameStep;
-    //  float lastx = item.getMark() ? firstx + 1.f :
-    //                                 (getWidth()/2.f) + (item.getLastFrame() - playFrame) * mFrameWidth / mFrameStep;
-    //  vg->rect (cPointF(firstx, mDstRangeTop), cPointF(lastx - firstx, mRangeHeight));
-
-    //  auto title = item.getTitle();
-    //  if (!title.empty()) {
-        //dstRect = { mRect.left + firstx + 2.f, mDstRangeTop + mRangeHeight - mWindow->getTextFormat()->GetFontSize(),
-        //            mRect.right, mDstRangeTop + mRangeHeight + 4.f };
-        //dc->DrawText (std::wstring (title.begin(), title.end()).data(), (uint32_t)title.size(), mWindow->getTextFormat(),
-        //              dstRect, mWindow->getWhiteBrush(), D2D1_DRAW_TEXT_OPTIONS_CLIP);
-     //   }
-      //}
-    }
-  //}}}
   //{{{
   void drawWave (int64_t playFrame, int64_t leftFrame, int64_t rightFrame, bool mono) {
 
@@ -539,9 +513,9 @@ private:
     float valueScale = 100.f / 255.f;
 
     float xorg = 0.f;
-    auto framePtr = mSong->findFrameByFrameNum (playFrame);
+    cSong::cFrame* framePtr = mSong->findFrameByFrameNum (playFrame);
     if (framePtr && framePtr->getFreqValues()) {
-      auto freqValues = framePtr->getFreqValues();
+      float* freqValues = framePtr->getFreqValues();
       for (size_t i = 0; (i < mSong->getNumFreqBytes()) && ((i*2) < int(mSize.x)); i++) {
         float value =  freqValues[i] * valueScale;
         if (value > 1.f)
@@ -551,7 +525,6 @@ private:
       }
     }
   //}}}
-
   //{{{
   void drawOverviewWave (int64_t firstFrame, int64_t playFrame, float playFrameX, float valueScale, bool mono) {
   // simple overview cache, invalidate if anything changed
@@ -765,6 +738,31 @@ private:
         rect ({playFrameX, yorg}, {playFrameX + 1.f, yorg + ylen}, eLensPlay);
         }
       }
+    }
+  //}}}
+  //{{{
+  void drawRange (int64_t playFrame, int64_t leftFrame, int64_t rightFrame) {
+
+    (void)playFrame;
+    (void)leftFrame;
+    (void)rightFrame;
+
+    rect ({0.f, mDstRangeTop}, {mSize.x, mDstRangeTop + mRangeHeight}, eRange);
+
+    //for (auto &item : mSong->getSelect().getItems()) {
+    //  auto firstx = (mSize.y/ 2.f) + (item.getFirstFrame() - playFrame) * mFrameWidth / mFrameStep;
+    //  float lastx = item.getMark() ? firstx + 1.f :
+    //                                 (getWidth()/2.f) + (item.getLastFrame() - playFrame) * mFrameWidth / mFrameStep;
+    //  vg->rect (cPointF(firstx, mDstRangeTop), cPointF(lastx - firstx, mRangeHeight));
+
+    //  auto title = item.getTitle();
+    //  if (!title.empty()) {
+        //dstRect = { mRect.left + firstx + 2.f, mDstRangeTop + mRangeHeight - mWindow->getTextFormat()->GetFontSize(),
+        //            mRect.right, mDstRangeTop + mRangeHeight + 4.f };
+        //dc->DrawText (std::wstring (title.begin(), title.end()).data(), (uint32_t)title.size(), mWindow->getTextFormat(),
+        //              dstRect, mWindow->getWhiteBrush(), D2D1_DRAW_TEXT_OPTIONS_CLIP);
+     //   }
+      //}
     }
   //}}}
 
