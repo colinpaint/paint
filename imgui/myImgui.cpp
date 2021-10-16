@@ -1,6 +1,6 @@
-// myImguiWidgets - my imgui widgets
+// myImgui - my imgui stuff
 //{{{  includes
-#include "myImguiWidgets.h"
+#include "myImgui.h"
 
 #include <cstdint>
 #include <cmath>

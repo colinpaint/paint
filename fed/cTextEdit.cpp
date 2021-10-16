@@ -12,7 +12,7 @@
 #include <array>
 
 #include "../platform/cPlatform.h"
-#include "../imgui/myImguiWidgets.h"
+#include "../imgui/myImgui.h"
 
 #include "../ui/cApp.h"
 #include "../utils/cLog.h"

@@ -7,7 +7,7 @@
 
 // imgui
 #include "../imgui/imgui.h"
-#include "../imgui/myImguiWidgets.h"
+#include "../imgui/myImgui.h"
 
 // ui
 #include "../ui/cUI.h"
@@ -28,29 +28,32 @@
 
 using namespace std;
 //}}}
-//{{{  const
-static const vector<string> kRadio1 = {"r1", "a128"};
-static const vector<string> kRadio2 = {"r2", "a128"};
-static const vector<string> kRadio3 = {"r3", "a320"};
-static const vector<string> kRadio4 = {"r4", "a64"};
-static const vector<string> kRadio5 = {"r5", "a128"};
-static const vector<string> kRadio6 = {"r6", "a128"};
 
-static const vector<string> kBbc1   = {"bbc1", "a128"};
-static const vector<string> kBbc2   = {"bbc2", "a128"};
-static const vector<string> kBbc4   = {"bbc4", "a128"};
-static const vector<string> kNews   = {"news", "a128"};
-static const vector<string> kBbcSw  = {"sw", "a128"};
+namespace {
+  //{{{  channels const
+  const vector<string> kRadio1 = {"r1", "a128"};
+  const vector<string> kRadio2 = {"r2", "a128"};
+  const vector<string> kRadio3 = {"r3", "a320"};
+  const vector<string> kRadio4 = {"r4", "a64"};
+  const vector<string> kRadio5 = {"r5", "a128"};
+  const vector<string> kRadio6 = {"r6", "a128"};
 
-static const vector<string> kWqxr  = {"http://stream.wqxr.org/js-stream.aac"};
-static const vector<string> kDvb  = {"dvb"};
+  const vector<string> kBbc1   = {"bbc1", "a128"};
+  const vector<string> kBbc2   = {"bbc2", "a128"};
+  const vector<string> kBbc4   = {"bbc4", "a128"};
+  const vector<string> kNews   = {"news", "a128"};
+  const vector<string> kBbcSw  = {"sw", "a128"};
 
-static const vector<string> kRtp1  = {"rtp 1"};
-static const vector<string> kRtp2  = {"rtp 2"};
-static const vector<string> kRtp3  = {"rtp 3"};
-static const vector<string> kRtp4  = {"rtp 4"};
-static const vector<string> kRtp5  = {"rtp 5"};
-//}}}
+  const vector<string> kWqxr  = {"http://stream.wqxr.org/js-stream.aac"};
+  const vector<string> kDvb  = {"dvb"};
+
+  const vector<string> kRtp1  = {"rtp 1"};
+  const vector<string> kRtp2  = {"rtp 2"};
+  const vector<string> kRtp3  = {"rtp 3"};
+  const vector<string> kRtp4  = {"rtp 4"};
+  const vector<string> kRtp5  = {"rtp 5"};
+  //}}}
+  }
 
 //{{{
 class cDrawSong : public cDrawContext {
@@ -222,6 +225,7 @@ private:
   //{{{
   void layout () {
 
+    // check for window size change, refresh any caches dependent on size
     ImVec2 size = ImGui::GetWindowSize();
     mChanged |= (size.x != mSize.x) || (size.y != mSize.y);
     mSize = size;
@@ -260,7 +264,7 @@ private:
           // draw frame peak values scaled to maxPeak
           if (framePtr->getPowerValues()) {
             float* peakValuesPtr = framePtr->getPeakValues();
-            for (size_t i = 0; i < 2; i++)
+            for (uint32_t i = 0; i < 2; i++)
               values[i] = *peakValuesPtr++ * peakValueScale;
             }
           rect ({xorg, mDstWaveCentre - values[0]}, {xorg + xlen, mDstWaveCentre + values[1]}, ePeak);
@@ -279,13 +283,13 @@ private:
           // power scaled to maxPeak
           if (framePtr->getPowerValues()) {
            float* powerValuesPtr = framePtr->getPowerValues();
-            for (size_t i = 0; i < 2; i++)
+            for (uint32_t i = 0; i < 2; i++)
               values[i] = *powerValuesPtr++ * peakValueScale;
             }
           }
         else {
           // sum mFrameStep frames, mFrameStep aligned, scaled to maxPower
-          for (size_t i = 0; i < 2; i++)
+          for (uint32_t i = 0; i < 2; i++)
             values[i] = 0.f;
 
           int64_t alignedFrame = frame - (frame % mFrameStep);
@@ -295,13 +299,13 @@ private:
             if (sumFramePtr) {
               if (sumFramePtr->getPowerValues()) {
                 float* powerValuesPtr = sumFramePtr->getPowerValues();
-                for (size_t i = 0; i < 2; i++)
+                for (uint32_t i = 0; i < 2; i++)
                   values[i] += *powerValuesPtr++ * powerValueScale;
                 }
               }
             }
 
-          for (size_t i = 0; i < 2; i++)
+          for (uint32_t i = 0; i < 2; i++)
             values[i] /= toSumFrame - alignedFrame + 1;
           }
 
@@ -319,7 +323,7 @@ private:
       //  draw play frame power scaled to maxPeak
       if (framePtr->getPowerValues()) {
         float* powerValuesPtr = framePtr->getPowerValues();
-        for (size_t i = 0; i < 2; i++)
+        for (uint32_t i = 0; i < 2; i++)
           values[i] = *powerValuesPtr++ * peakValueScale;
         }
 
@@ -330,20 +334,20 @@ private:
     xorg += xlen;
     //}}}
     //{{{  draw powerValues after playFrame, summed if zoomed out
-    for (int64_t frame = playFrame+mFrameStep; frame < rightFrame; frame += mFrameStep) {
+    for (int64_t frame = playFrame + mFrameStep; frame < rightFrame; frame += mFrameStep) {
       cSong::cFrame* sumFramePtr = mSong->findFrameByFrameNum (frame);
       if (sumFramePtr) {
         if (mFrameStep == 1) {
           // power scaled to maxPeak
           if (sumFramePtr->getPowerValues()) {
             float* powerValuesPtr = sumFramePtr->getPowerValues();
-            for (size_t i = 0; i < 2; i++)
+            for (uint32_t i = 0; i < 2; i++)
               values[i] = *powerValuesPtr++ * peakValueScale;
             }
           }
         else {
           // sum mFrameStep frames, mFrameStep aligned, scaled to maxPower
-          for (size_t i = 0; i < 2; i++)
+          for (uint32_t i = 0; i < 2; i++)
             values[i] = 0.f;
 
           int64_t alignedFrame = frame - (frame % mFrameStep);
@@ -353,13 +357,13 @@ private:
             if (toSumFramePtr) {
               if (toSumFramePtr->getPowerValues()) {
                 float* powerValuesPtr = toSumFramePtr->getPowerValues();
-                for (size_t i = 0; i < 2; i++)
+                for (uint32_t i = 0; i < 2; i++)
                   values[i] += *powerValuesPtr++ * powerValueScale;
                 }
               }
             }
 
-          for (size_t i = 0; i < 2; i++)
+          for (uint32_t i = 0; i < 2; i++)
             values[i] /= toSumFrame - alignedFrame + 1;
           }
 
@@ -410,11 +414,11 @@ private:
 
     float xorg = 0.f;
     float xlen = 1.f;
-    for (size_t x = 0; x < int(mSize.x); x++) {
+    for (uint32_t x = 0; x < static_cast<uint32_t>(mSize.x); x++) {
       // iterate widget width
       if (changed) {
-        int64_t frame = firstFrame + ((x * totalFrames) / int(mSize.x));
-        int64_t toFrame = firstFrame + (((x+1) * totalFrames) / int(mSize.x));
+        int64_t frame = firstFrame + ((x * totalFrames) / static_cast<uint32_t>(mSize.x));
+        int64_t toFrame = firstFrame + (((x+1) * totalFrames) / static_cast<uint32_t>(mSize.x));
         if (toFrame > lastFrame)
           toFrame = lastFrame+1;
 
@@ -482,7 +486,7 @@ private:
       leftFrame = 0;
       }
 
-    int64_t rightFrame = playFrame + (int64_t)width;
+    int64_t rightFrame = playFrame + static_cast<int64_t>(width);
     rightFrame = min (rightFrame, mSong->getLastFrameNum());
 
     // calc lens max power
@@ -616,7 +620,7 @@ private:
     cSong::cFrame* framePtr = mSong->findFrameByFrameNum (playFrame);
     if (framePtr && framePtr->getFreqValues()) {
       uint8_t* freqValues = framePtr->getFreqValues();
-      for (size_t i = 0; (i < mSong->getNumFreqBytes()) && ((i*2) < int(mSize.x)); i++) {
+      for (uint32_t i = 0; (i < mSong->getNumFreqBytes()) && ((i*2) < static_cast<uint32_t>(mSize.x)); i++) {
         float value =  freqValues[i] * valueScale;
         if (value > 1.f)
           rect ({xorg, mSize.y - value}, {xorg + 2.f, 0 + mSize.y}, eFreq);
@@ -694,13 +698,13 @@ private:
   float mDstOverviewCentre = 0.f;
 
   // mOverview cache
+  array <float,1920> mOverviewValuesL = { 0.f };
+  array <float, 1920> mOverviewValuesR = { 0.f };
+
   int64_t mOverviewTotalFrames = 0;
   int64_t mOverviewLastFrame = 0;
   int64_t mOverviewFirstFrame = 0;
   float mOverviewValueScale = 0.f;
-
-  array <float,1920> mOverviewValuesL = { 0.f };
-  array <float, 1920> mOverviewValuesR = { 0.f };
   //}}}
   };
 //}}}
@@ -810,10 +814,6 @@ private:
   cSongLoader mSongLoader;
   cDrawSong mDrawSong;
 
-  //{{{
-  static cUI* create (const string& className) {
-    return new cPlayerUI (className);
-    }
-  //}}}
+  static cUI* create (const string& className) { return new cPlayerUI (className); }
   inline static const bool mRegistered = registerClass ("player", &create);
   };

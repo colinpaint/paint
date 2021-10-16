@@ -210,17 +210,15 @@ protected:
   //}}}
 
 private:
-  //{{{  static constexpr
-  static constexpr int kMaxNumChannels = 2;           // arbitrary chan max
-  static constexpr int kMaxNumSamplesPerFrame = 2048; // arbitrary frame max
-  static constexpr int kMaxFreq = (kMaxNumSamplesPerFrame / 2) + 1; // fft max
-  static constexpr int kMaxFreqBytes = 512; // arbitrary graphics max
+  //{{{  static const
+  inline static const int kMaxNumChannels = 2;                         // arbitrary chan max
+  inline static const int kMaxNumSamplesPerFrame = 2048;               // arbitrary frame max
+  inline static const int kMaxFreq = (kMaxNumSamplesPerFrame / 2) + 1; // fft max
+  inline static const int kMaxFreqBytes = 512;                         // arbitrary graphics max
   //}}}
-  //{{{  members
   int64_t skipPrev (int64_t fromPts, bool silence);
   int64_t skipNext (int64_t fromPts, bool silence);
   void checkSilenceWindow (int64_t pts);
-  //}}}
   //{{{  vars
   const eAudioFrameType mFrameType;
   const int mNumChannels;
