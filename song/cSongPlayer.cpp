@@ -5,6 +5,7 @@
 
 #include "cSongPlayer.h"
 
+#include <array>
 #include <thread>
 
 // utils
@@ -31,8 +32,8 @@ using namespace std;
       // player lambda
       cLog::setThreadName ("play");
       SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-      float silence [2048*2] = { 0.f };
-      float samples [2048*2] = { 0.f };
+      array <float,2048*2> silence = { 0.f };
+      array <float,2048*2> samples = { 0.f };
 
       song->togglePlaying();
       //{{{  WSAPI player thread, video follows playPts
@@ -52,19 +53,19 @@ using namespace std;
             if (song->getPlaying() && frame && frame->getSamples()) {
               if (song->getNumChannels() == 1) {
                 // mono to stereo
-                auto src = frame->getSamples();
-                auto dst = samples;
-                for (int i = 0; i < song->getSamplesPerFrame(); i++) {
+                float* src = frame->getSamples();
+                float* dst = samples.data();
+                for (uint32_t i = 0; i < song->getSamplesPerFrame(); i++) {
                   *dst++ = *src;
                   *dst++ = *src++;
                   }
                 }
               else
-                memcpy (samples, frame->getSamples(), song->getSamplesPerFrame() * song->getNumChannels() * sizeof(float));
-              srcSamples = samples;
+                memcpy (samples.data(), frame->getSamples(), song->getSamplesPerFrame() * song->getNumChannels() * sizeof(float));
+              srcSamples = samples.data();
               }
             else
-              srcSamples = silence;
+              srcSamples = silence.data();
             numSrcSamples = song->getSamplesPerFrame();
 
             if (frame && song->getPlaying())

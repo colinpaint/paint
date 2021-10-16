@@ -15,8 +15,8 @@ class iSongLoad {
 public:
   virtual ~iSongLoad() {}
 
-  virtual cSong* getSong() = 0;
-  virtual iVideoPool* getVideoPool() = 0;
+  virtual cSong* getSong() const = 0;
+  virtual iVideoPool* getVideoPool() const = 0;
   virtual std::string getInfoString() = 0;
   virtual float getFracs (float& audioFrac, float& videoFrac) = 0;
 
@@ -35,8 +35,8 @@ public:
   virtual ~cSongLoader();
 
   // iLoad gets
-  virtual cSong* getSong() override;
-  virtual iVideoPool* getVideoPool() override;
+  virtual cSong* getSong() const override;
+  virtual iVideoPool* getVideoPool() const override;
   virtual std::string getInfoString() override;
   virtual float getFracs (float& audioFrac, float& videoFrac) override;
 

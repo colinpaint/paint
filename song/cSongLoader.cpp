@@ -914,8 +914,8 @@ public:
   virtual ~cLoadSource() = default;
 
   // iLoad gets
-  virtual cSong* getSong() = 0;
-  virtual iVideoPool* getVideoPool() = 0;
+  virtual cSong* getSong() const = 0;
+  virtual iVideoPool* getVideoPool() const = 0;
   virtual string getInfoString() { return ""; }
   //{{{
   virtual float getFracs (float& audioFrac, float& videoFrac) {
@@ -1020,8 +1020,8 @@ public:
   cLoadIdle() : cLoadSource("idle") {}
   virtual ~cLoadIdle() = default;
 
-  virtual cSong* getSong() final { return nullptr; }
-  virtual iVideoPool* getVideoPool() final { return nullptr; }
+  virtual cSong* getSong() const final { return nullptr; }
+  virtual iVideoPool* getVideoPool() const final { return nullptr; }
 
   virtual bool recognise (const vector<string>& params) final { (void)params; return true; }
   virtual void load() final {}
@@ -1045,8 +1045,8 @@ public:
   //}}}
   virtual ~cLoadDvb() = default;
 
-  virtual cSong* getSong() final { return mPtsSong; }
-  virtual iVideoPool* getVideoPool() final { return mVideoPool; }
+  virtual cSong* getSong() const final { return mPtsSong; }
+  virtual iVideoPool* getVideoPool() const final { return mVideoPool; }
   //{{{
   virtual string getInfoString() final {
   // return sizes
@@ -1319,8 +1319,8 @@ public:
   cLoadIcyCast() : cLoadSource("icyCast") {}
   virtual ~cLoadIcyCast() = default;
 
-  virtual cSong* getSong() final { return mSong; }
-  virtual iVideoPool* getVideoPool() final { return mVideoPool; }
+  virtual cSong* getSong() const final { return mSong; }
+  virtual iVideoPool* getVideoPool() const final { return mVideoPool; }
   //{{{
   virtual string getInfoString() {
     return fmt::format ("{} - {}", mUrl, mLastTitleString);
@@ -1493,8 +1493,8 @@ public:
   cLoadStream (const string& name) : cLoadSource(name) {}
   virtual ~cLoadStream() = default;
 
-  virtual cSong* getSong() override { return mPtsSong; }
-  virtual iVideoPool* getVideoPool() override { return mVideoPool; }
+  virtual cSong* getSong() const override { return mPtsSong; }
+  virtual iVideoPool* getVideoPool() const override { return mVideoPool; }
 
   //{{{
   virtual string getInfoString() override {
@@ -1553,8 +1553,8 @@ public:
   //}}}
   virtual ~cLoadHls() = default;
 
-  virtual cSong* getSong() final { return mHlsSong; }
-  virtual iVideoPool* getVideoPool() final { return mVideoPool; }
+  virtual cSong* getSong() const final { return mHlsSong; }
+  virtual iVideoPool* getVideoPool() const final { return mVideoPool; }
   //{{{
   virtual string getInfoString() final {
 
@@ -2210,8 +2210,8 @@ public:
   //}}}
   virtual ~cLoadTsFile() = default;
 
-  virtual cSong* getSong() final { return mPtsSong; }
-  virtual iVideoPool* getVideoPool() final { return mVideoPool; }
+  virtual cSong* getSong() const final { return mPtsSong; }
+  virtual iVideoPool* getVideoPool() const final { return mVideoPool; }
   //{{{
   virtual string getInfoString() final {
   // return sizes
@@ -2565,8 +2565,8 @@ public:
   cLoadWavFile() : cLoadFile("wav") {}
   virtual ~cLoadWavFile() = default;
 
-  virtual cSong* getSong() final { return mSong; }
-  virtual iVideoPool* getVideoPool() final { return nullptr; }
+  virtual cSong* getSong() const final { return mSong; }
+  virtual iVideoPool* getVideoPool() const final { return nullptr; }
   //{{{
   virtual string getInfoString() final {
     return fmt::format ("{} {}k", mFilename, mStreamPos / 1024);
@@ -2669,8 +2669,8 @@ public:
   cLoadMp3AacFile() : cLoadFile("mp3Aac") {}
   virtual ~cLoadMp3AacFile() = default;
 
-  virtual cSong* getSong() final { return mSong; }
-  virtual iVideoPool* getVideoPool() final { return nullptr; }
+  virtual cSong* getSong() const final { return mSong; }
+  virtual iVideoPool* getVideoPool() const final { return nullptr; }
   //{{{
   virtual string getInfoString() final {
     return fmt::format("{} {}x{}hz {}k", mFilename, mNumChannels, mSampleRate, mStreamPos/1024);
@@ -2813,10 +2813,11 @@ cSongLoader::~cSongLoader() {
 //}}}
 
 // cSongLoader iLoad gets
-cSong* cSongLoader::getSong() { return mLoadSource->getSong(); }
-iVideoPool* cSongLoader::getVideoPool() { return mLoadSource->getVideoPool(); }
+cSong* cSongLoader::getSong()  const{ return mLoadSource->getSong(); }
+iVideoPool* cSongLoader::getVideoPool() const { return mLoadSource->getVideoPool(); }
 string cSongLoader::getInfoString() { return mLoadSource->getInfoString(); }
-float cSongLoader::getFracs (float& audioFrac, float& videoFrac) { return mLoadSource->getFracs (audioFrac, videoFrac); }
+float cSongLoader::getFracs (float& audioFrac, float& videoFrac) {
+  return mLoadSource->getFracs (audioFrac, videoFrac); }
 
 // cSongLoader iLoad actions
 bool cSongLoader::togglePlaying() { return mLoadSource->togglePlaying(); }

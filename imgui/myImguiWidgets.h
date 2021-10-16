@@ -11,8 +11,9 @@
 
 //{{{
 class cDrawContext {
+// helper class for drawing text, rect, circle with palette color
 public:
-  cDrawContext (const std::vector <ImU32>& palette) : mPalette (palette) {}
+  cDrawContext (const std::vector <ImU32>& palette) : mPalette(palette) {}
 
   // gets
   float getFontSize() const { return mFontSize; }
@@ -151,7 +152,7 @@ private:
   float mGlyphWidth = 0.f;
   float mLineHeight = 0.f;
 
-  std::vector <ImU32> mPalette;
+  const std::vector <ImU32> mPalette;
   };
 //}}}
 

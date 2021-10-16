@@ -189,12 +189,12 @@ cSong::~cSong() {
 
 // cSong - gets
 //{{{
-bool cSong::getPlayFinished() {
+bool cSong::getPlayFinished() const {
   return mPlayPts > getLastFrameNum();
   }
 //}}}
 //{{{
-string cSong::getFirstTimeString (int daylightSeconds) {
+string cSong::getFirstTimeString (int daylightSeconds) const {
 
   (void)daylightSeconds;
 
@@ -207,14 +207,14 @@ string cSong::getFirstTimeString (int daylightSeconds) {
   }
 //}}}
 //{{{
-string cSong::getPlayTimeString (int daylightSeconds) {
+string cSong::getPlayTimeString (int daylightSeconds) const {
 // scale pts = frameNum as seconds*100
 
   return getTimeString (getSecondsFromFrames (getPlayPts() * 100), daylightSeconds);
   }
 //}}}
 //{{{
-string cSong::getLastTimeString (int daylightSeconds) {
+string cSong::getLastTimeString (int daylightSeconds) const {
 
   (void)daylightSeconds;
 
@@ -429,23 +429,23 @@ void cSong::checkSilenceWindow (int64_t pts) {
 
 // cPtsSong
 //{{{
-bool cPtsSong::getPlayFinished() {
+bool cPtsSong::getPlayFinished() const {
 
   return mPlayPts > getLastPts();
   }
 //}}}
 //{{{
-string cPtsSong::getFirstTimeString (int daylightSeconds) {
+string cPtsSong::getFirstTimeString (int daylightSeconds) const {
   return getTimeString ((mBaseSinceMidnightMs + ((getFirstPts() - mBasePts) / 90)) / 10, daylightSeconds);
   }
 //}}}
 //{{{
-string cPtsSong::getPlayTimeString (int daylightSeconds) {
+string cPtsSong::getPlayTimeString (int daylightSeconds) const {
   return getTimeString ((mBaseSinceMidnightMs + ((getPlayPts() - mBasePts)) / 90) / 10, daylightSeconds);
   }
 //}}}
 //{{{
-string cPtsSong::getLastTimeString (int daylightSeconds) {
+string cPtsSong::getLastTimeString (int daylightSeconds) const {
   return getTimeString ((mBaseSinceMidnightMs + ((getLastPts() - mBasePts)) / 90) / 10, daylightSeconds);
   }
 //}}}
@@ -486,7 +486,7 @@ cHlsSong::cHlsSong (eAudioFrameType frameType, int numChannels,
 //}}}
 
 //{{{
-int cHlsSong::getLoadChunkNum (int64_t& loadPts, bool& reuseFromFront) {
+int cHlsSong::getLoadChunkNum (int64_t& loadPts, bool& reuseFromFront) const {
 // return chunkNum needed to play or preload playPts
 
   // get frameNumOffset of playPts from basePts

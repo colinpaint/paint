@@ -24,22 +24,22 @@ public:
     virtual ~cFrame();
 
     // gets
-    float* getSamples() { return mSamples; }
-    int64_t getPts() { return mPts; }
+    float* getSamples() const { return mSamples; }
+    int64_t getPts() const { return mPts; }
 
-    float* getPowerValues() { return mPowerValues;  }
-    float* getPeakValues() { return mPeakValues;  }
-    uint8_t* getFreqValues() { return mFreqValues; }
-    uint8_t* getFreqLuma() { return mFreqLuma; }
+    float* getPowerValues() const { return mPowerValues;  }
+    float* getPeakValues() const { return mPeakValues;  }
+    uint8_t* getFreqValues() const { return mFreqValues; }
+    uint8_t* getFreqLuma() const { return mFreqLuma; }
 
-    bool isQuiet() { return mPeakValues[0] + mPeakValues[1] < kQuietThreshold; }
+    bool isQuiet() const { return mPeakValues[0] + mPeakValues[1] < kQuietThreshold; }
 
-    bool isMuted() { return mMuted; }
-    bool isSilence() { return mSilence; }
+    bool isMuted() const { return mMuted; }
+    bool isSilence() const { return mSilence; }
     void setSilence (bool silence) { mSilence = silence; }
 
-    bool hasTitle() { return !mTitle.empty(); }
-    std::string getTitle() { return mTitle; }
+    bool hasTitle() const { return !mTitle.empty(); }
+    std::string getTitle() const { return mTitle; }
 
     // vars
     float* mSamples;
@@ -128,58 +128,58 @@ public:
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
 
   eAudioFrameType getFrameType() { return mFrameType; }
-  int getNumChannels() { return mNumChannels; }
-  int getNumSampleBytes() { return mNumChannels * sizeof(float); }
-  int getSampleRate() { return mSampleRate; }
-  int getSamplesPerFrame() { return mSamplesPerFrame; }
-  int64_t getFramesFromSeconds (int64_t seconds) { return (seconds * mSampleRate) / mSamplesPerFrame; }
-  int64_t getSecondsFromFrames (int64_t frames) { return (frames * mSamplesPerFrame) / mSampleRate; }
+  uint32_t getNumChannels() const { return mNumChannels; }
+  uint32_t getNumSampleBytes() const { return mNumChannels * sizeof(float); }
+  uint32_t getSampleRate() const { return mSampleRate; }
+  uint32_t getSamplesPerFrame() const { return mSamplesPerFrame; }
+  int64_t getFramesFromSeconds (int64_t seconds) const { return (seconds * mSampleRate) / mSamplesPerFrame; }
+  int64_t getSecondsFromFrames (int64_t frames) const { return (frames * mSamplesPerFrame) / mSampleRate; }
 
-  virtual int64_t getFramePtsDuration() { return 1; }
-  virtual int64_t getFrameNumFromPts (int64_t pts) { return pts; }
-  virtual int64_t getPtsFromFrameNum (int64_t frameNum) { return frameNum; }
+  virtual int64_t getFramePtsDuration() const { return 1; }
+  virtual int64_t getFrameNumFromPts (int64_t pts) const { return pts; }
+  virtual int64_t getPtsFromFrameNum (int64_t frameNum) const { return frameNum; }
   //}}}
   cSelect& getSelect() { return mSelect; }
 
-  int64_t getPlayPts() { return mPlayPts; }
-  bool getPlaying() { return mPlaying; }
+  int64_t getPlayPts() const { return mPlayPts; }
+  bool getPlaying() const { return mPlaying; }
 
   // get frameNum
-  int64_t getPlayFrameNum() { return getFrameNumFromPts (mPlayPts); }
-  int64_t getFirstFrameNum() { return mFrameMap.empty() ? 0 : mFrameMap.begin()->first; }
-  int64_t getLastFrameNum() { return mFrameMap.empty() ? 0 : mFrameMap.rbegin()->first;  }
+  int64_t getPlayFrameNum() const { return getFrameNumFromPts (mPlayPts); }
+  int64_t getFirstFrameNum() const { return mFrameMap.empty() ? 0 : mFrameMap.begin()->first; }
+  int64_t getLastFrameNum() const { return mFrameMap.empty() ? 0 : mFrameMap.rbegin()->first;  }
   //{{{
-  int64_t getNumFrames() {
+  int64_t getNumFrames() const {
     return mFrameMap.empty() ? 0 : (mFrameMap.rbegin()->first - mFrameMap.begin()->first+1);
     }
   //}}}
-  int64_t getTotalFrames() { return mTotalFrames; }
+  int64_t getTotalFrames() const { return mTotalFrames; }
 
-  virtual bool getPlayFinished();
-  virtual std::string getFirstTimeString (int daylightSeconds);
-  virtual std::string getPlayTimeString (int daylightSeconds);
-  virtual std::string getLastTimeString (int daylightSeconds);
+  virtual bool getPlayFinished() const;
+  virtual std::string getFirstTimeString (int daylightSeconds) const;
+  virtual std::string getPlayTimeString (int daylightSeconds) const;
+  virtual std::string getLastTimeString (int daylightSeconds) const;
 
   //{{{  get max nums for early allocations
-  int getMaxNumSamplesPerFrame() { return kMaxNumSamplesPerFrame; }
-  int getMaxNumSampleBytes() { return kMaxNumChannels * sizeof(float); }
-  int getMaxNumFrameSamplesBytes() { return getMaxNumSamplesPerFrame() * getMaxNumSampleBytes(); }
+  int getMaxNumSamplesPerFrame() const { return kMaxNumSamplesPerFrame; }
+  int getMaxNumSampleBytes() const { return kMaxNumChannels * sizeof(float); }
+  int getMaxNumFrameSamplesBytes()const { return getMaxNumSamplesPerFrame() * getMaxNumSampleBytes(); }
   //}}}
   //{{{  get max values for ui
-  float getMaxPowerValue() { return mMaxPowerValue; }
-  float getMaxPeakValue() { return mMaxPeakValue; }
-  float getMaxFreqValue() { return mMaxFreqValue; }
-  int getNumFreqBytes() { return kMaxFreqBytes; }
+  float getMaxPowerValue()  const{ return mMaxPowerValue; }
+  float getMaxPeakValue() const { return mMaxPeakValue; }
+  float getMaxFreqValue() const { return mMaxFreqValue; }
+  int getNumFreqBytes() const { return kMaxFreqBytes; }
   //}}}
 
   //{{{
-  cFrame* findFrameByFrameNum (int64_t frameNum) {
+  cFrame* findFrameByFrameNum (int64_t frameNum) const {
     auto it = mFrameMap.find (frameNum);
     return (it == mFrameMap.end()) ? nullptr : it->second;
     }
   //}}}
-  virtual cFrame* findFrameByPts (int64_t pts) { return findFrameByFrameNum (pts); }
-  virtual cFrame* findPlayFrame() { return findFrameByFrameNum (mPlayPts); }
+  virtual cFrame* findFrameByPts (int64_t pts) const { return findFrameByFrameNum (pts); }
+  virtual cFrame* findPlayFrame() const { return findFrameByFrameNum (mPlayPts); }
 
   //{{{  play
   void togglePlaying() { mPlaying = !mPlaying; }
@@ -254,20 +254,20 @@ public:
   //}}}
   virtual ~cPtsSong() = default;
 
-  virtual int64_t getFramePtsDuration() final { return mFramePtsDuration; }
-  virtual int64_t getFrameNumFromPts (int64_t pts) final { return pts / mFramePtsDuration; }
-  virtual int64_t getPtsFromFrameNum (int64_t frameNum) final { return frameNum * mFramePtsDuration; }
+  virtual int64_t getFramePtsDuration() const final { return mFramePtsDuration; }
+  virtual int64_t getFrameNumFromPts (int64_t pts) const final { return pts / mFramePtsDuration; }
+  virtual int64_t getPtsFromFrameNum (int64_t frameNum) const final { return frameNum * mFramePtsDuration; }
 
-  virtual int64_t getFirstPts() final { return mFrameMap.empty() ? 0 : mFrameMap.begin()->second->getPts(); }
-  virtual int64_t getLastPts() final { return mFrameMap.empty() ? 0 : mFrameMap.rbegin()->second->getPts();  }
+  virtual int64_t getFirstPts() const final { return mFrameMap.empty() ? 0 : mFrameMap.begin()->second->getPts(); }
+  virtual int64_t getLastPts() const final { return mFrameMap.empty() ? 0 : mFrameMap.rbegin()->second->getPts();  }
 
-  virtual bool getPlayFinished() final;
-  virtual std::string getFirstTimeString (int daylightSeconds) final;
-  virtual std::string getPlayTimeString (int daylightSeconds) final;
-  virtual std::string getLastTimeString (int daylightSeconds) final;
+  virtual bool getPlayFinished()const final;
+  virtual std::string getFirstTimeString (int daylightSeconds) const final;
+  virtual std::string getPlayTimeString (int daylightSeconds) const final;
+  virtual std::string getLastTimeString (int daylightSeconds) const final;
 
-  virtual cFrame* findFrameByPts (int64_t pts) final { return findFrameByFrameNum (getFrameNumFromPts(pts)); }
-  virtual cFrame* findPlayFrame() final { return findFrameByPts (mPlayPts); }
+  virtual cFrame* findFrameByPts (int64_t pts) const final { return findFrameByFrameNum (getFrameNumFromPts(pts)); }
+  virtual cFrame* findPlayFrame() const final { return findFrameByPts (mPlayPts); }
 
   void setBasePts (int64_t pts);
 
@@ -292,9 +292,9 @@ public:
   virtual ~cHlsSong() = default;
 
   // gets
-  int64_t getBasePlayPts() { return mPlayPts - mBasePts; }
-  int getLoadChunkNum (int64_t& loadPts, bool& reuseFromFront);
-  int64_t getLengthPts() { return getLastPts(); }
+  int64_t getBasePlayPts() const { return mPlayPts - mBasePts; }
+  int getLoadChunkNum (int64_t& loadPts, bool& reuseFromFront) const;
+  int64_t getLengthPts() const { return getLastPts(); }
 
   // sets
   void setBaseHls (int64_t pts,
