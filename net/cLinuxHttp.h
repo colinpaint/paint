@@ -48,10 +48,10 @@ protected:
       if (server == NULL)
         cLog::log (LOGINFO, "connectToHost - gethostbyname() failed");
       else {
-        cLog::log (LOGINFO, "connectToHost - %s ", server->h_name);
+        cLog::log (LOGINFO, fmt::format ("connectToHost - {}", server->h_name));
         unsigned int j = 0;
         while (server->h_addr_list[j] != NULL) {
-          cLog::log (LOGINFO, "- %s", inet_ntoa(*(struct in_addr*)(server->h_addr_list[j])));
+          cLog::log (LOGINFO, fmt::format ("- {}", inet_ntoa(*(struct in_addr*)(server->h_addr_list[j]))));
           j++;
           }
         }
@@ -64,7 +64,7 @@ protected:
       int port = 80;
       serveraddr.sin_port = htons (port);
       if (connect (mSocket, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) >= 0)
-        cLog::log (LOGINFO, "connectToHost - connected socket:%d", mSocket);
+        cLog::log (LOGINFO, fmt::format ("connectToHost - connected socket:{}", mSocket));
       else
         cLog::log (LOGINFO, "connectToHost - Error Connecting");
 

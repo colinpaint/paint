@@ -1,5 +1,6 @@
 // cHttp.cpp - http base class based on tinyHttp parser
 #include "cHttp.h"
+
 #include "../utils/cLog.h"
 
 using namespace std;
@@ -97,7 +98,7 @@ string cHttp::getRedirect (const string& host, const string& path) {
 
   auto response = get (host, path);
   if (response == 302) {
-    cLog::log (LOGINFO, "getRedirect host " +  mRedirectUrl.getHost());
+    cLog::log (LOGINFO, fmt::format ("getRedirect host{}", mRedirectUrl.getHost()));
     response = get (mRedirectUrl.getHost(), path);
     if (response == 200)
       return mRedirectUrl.getHost();
@@ -253,7 +254,8 @@ bool cHttp::parseData (const uint8_t* data, int length, int& bytesParsed,
             if (mKeyLen >= mHeaderBufferAllocSize) {
               mHeaderBufferAllocSize *= 2;
               mHeaderBuffer = (char*)realloc (mHeaderBuffer, mHeaderBufferAllocSize);
-              cLog::log (LOGINFO, "mHeaderBuffer key realloc %d %d", mKeyLen, mHeaderBufferAllocSize);
+              cLog::log (LOGINFO, fmt::format ("mHeaderBuffer key realloc {} {}", 
+                                               mKeyLen, mHeaderBufferAllocSize));
               }
 
             mHeaderBuffer [mKeyLen] = (char)tolower (*data);
@@ -266,7 +268,8 @@ bool cHttp::parseData (const uint8_t* data, int length, int& bytesParsed,
             if (mKeyLen + mValueLen >= mHeaderBufferAllocSize) {
               mHeaderBufferAllocSize *= 2;
               mHeaderBuffer = (char*)realloc (mHeaderBuffer, mHeaderBufferAllocSize);
-              cLog::log (LOGINFO, "mHeaderBuffer value realloc %d %d", mKeyLen + mValueLen, mHeaderBufferAllocSize);
+              cLog::log (LOGINFO, fmt::format ("mHeaderBuffer value realloc {} {}", 
+                                               mKeyLen + mValueLen, mHeaderBufferAllocSize));
               }
 
             mHeaderBuffer [mKeyLen + mValueLen] = *data;
@@ -342,7 +345,8 @@ bool cHttp::parseData (const uint8_t* data, int length, int& bytesParsed,
         //cLog::log (LOGINFO, "eExpectedData - length:%d mHeaderContentLength:%d left:%d mContentReceivedSize:%d",
         //                    length, mHeaderContentLength, mContentLengthLeft, mContentReceivedSize);
         if (length > mContentLengthLeft) {
-          cLog::log (LOGERROR, "eExpectedData - too much data - got:%d expected:%d", length, mContentLengthLeft);
+          cLog::log (LOGERROR, fmt::format ("eExpectedData - too much data - got:{} expected:{}", 
+                                            length, mContentLengthLeft));
           mState = eClose;
           }
 
@@ -363,7 +367,7 @@ bool cHttp::parseData (const uint8_t* data, int length, int& bytesParsed,
 
         else {
           // data not expected, bomb out
-          cLog::log (LOGERROR, "eExpectedData - data not expected - got:%d", length);
+          cLog::log (LOGERROR, fmt::format ("eExpectedData - data not expected - got:{}", length));
           mState = eClose;
           }
 

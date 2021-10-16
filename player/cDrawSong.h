@@ -318,14 +318,15 @@ public:
     }
 
     // draw firstTime left
-    smallText ({0.f, mSize.y - getLineHeight()}, eText, mSong->getFirstTimeString(0));
+    smallText ({0.f, mSize.y - getLineHeight()}, eText, mSong->getFirstTimeString (0));
 
     // draw playTime entre
-    text ({mSize.x/2.f, mSize.y - getLineHeight()}, eText, mSong->getPlayTimeString(0));
+    float width = measureSmallText (mSong->getPlayTimeString (0));
+    text ({mSize.x/2.f - width/2.f, mSize.y - getLineHeight()}, eText, mSong->getPlayTimeString (0));
 
     // draw lastTime right
-    float width = measureSmallText (mSong->getLastTimeString (0));
-    smallText ({mSize.x - width, mSize.y - getLineHeight()}, eText, mSong->getLastTimeString(0));
+    width = measureSmallText (mSong->getLastTimeString (0));
+    smallText ({mSize.x - width, mSize.y - getLineHeight()}, eText, mSong->getLastTimeString (0));
     }
   //}}}
 
@@ -775,16 +776,16 @@ private:
   bool mMoved = false;
   float mPressInc = 0;
 
+  double mPressedFrameNum = 0;
+  bool mOverviewPressed = false;
+  bool mRangePressed = false;
+
   // zoom - 0 unity, > 0 zoomOut framesPerPix, < 0 zoomIn pixPerFrame
   int mZoom = 0;
   int mMinZoom = -8;
   int mMaxZoom = 8;
   int mFrameWidth = 1;
   int mFrameStep = 1;
-
-  double mPressedFrameNum = 0;
-  bool mOverviewPressed = false;
-  bool mRangePressed = false;
 
   float mOverviewLens = 0.f;
 
@@ -808,7 +809,7 @@ private:
   int64_t mOverviewFirstFrame = 0;
   float mOverviewValueScale = 0.f;
 
-  float mOverviewValuesL [1920] = { 0.f };
-  float mOverviewValuesR [1920] = { 0.f };
+  array <float,1920> mOverviewValuesL = { 0.f };
+  array <float, 1920> mOverviewValuesR = { 0.f };
   //}}}
   };
