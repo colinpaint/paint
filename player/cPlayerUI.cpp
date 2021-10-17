@@ -252,37 +252,36 @@ private:
     if (mFrameStep == 1) {
       //{{{  draw all peak values
       float xorg = 0;
-      for (int64_t frame = leftFrame; frame < rightFrame; frame += mFrameStep) {
+      for (int64_t frame = leftFrame; frame < rightFrame; frame += mFrameStep, xorg += xlen) {
         cSong::cFrame* framePtr = mSong->findFrameByFrameNum (frame);
         if (framePtr && framePtr->getPowerValues()) {
           // draw frame peak values scaled to maxPeak
           float* peakValuesPtr = framePtr->getPeakValues();
-          for (uint32_t i = 0; i < 2; i++)
-            values[i] = *peakValuesPtr++ * peakValueScale;
+          values[0] = *peakValuesPtr++ * peakValueScale;
+          values[1] = *peakValuesPtr * peakValueScale;
           rect ({xorg, mDstWaveCentre - values[0]}, {xorg + xlen, mDstWaveCentre + values[1]}, ePeak);
           }
-        xorg += xlen;
         }
       }
       //}}}
 
     float xorg = 0;
     //{{{  draw powerValues before playFrame, summed if zoomed out
-    for (int64_t frame = leftFrame; frame < playFrame; frame += mFrameStep) {
+    for (int64_t frame = leftFrame; frame < playFrame; frame += mFrameStep, xorg += xlen) {
       cSong::cFrame* framePtr = mSong->findFrameByFrameNum (frame);
       if (framePtr) {
         if (mFrameStep == 1) {
           // power scaled to maxPeak
           if (framePtr->getPowerValues()) {
            float* powerValuesPtr = framePtr->getPowerValues();
-            for (uint32_t i = 0; i < 2; i++)
-              values[i] = *powerValuesPtr++ * peakValueScale;
+            values[0] = *powerValuesPtr++ * peakValueScale;
+            values[1] = *powerValuesPtr * peakValueScale;
             }
           }
         else {
           // sum mFrameStep frames, mFrameStep aligned, scaled to maxPower
-          for (uint32_t i = 0; i < 2; i++)
-            values[i] = 0.f;
+          values[0] = 0.f;
+          values[1] = 0.f;
 
           int64_t alignedFrame = frame - (frame % mFrameStep);
           int64_t toSumFrame = min (alignedFrame + mFrameStep, rightFrame);
@@ -290,19 +289,17 @@ private:
             cSong::cFrame* sumFramePtr = mSong->findFrameByFrameNum (sumFrame);
             if (sumFramePtr && sumFramePtr->getPowerValues()) {
               float* powerValuesPtr = sumFramePtr->getPowerValues();
-              for (uint32_t i = 0; i < 2; i++)
-                values[i] += *powerValuesPtr++ * powerValueScale;
+              values[0] += *powerValuesPtr++ * powerValueScale;
+              values[1] += *powerValuesPtr * powerValueScale;
               }
             }
 
-          for (uint32_t i = 0; i < 2; i++)
-            values[i] /= toSumFrame - alignedFrame + 1;
+          values[0] /= toSumFrame - alignedFrame + 1;
+          values[1] /= toSumFrame - alignedFrame + 1;
           }
 
         rect ({xorg, mDstWaveCentre - values[0]}, {xorg + xlen, mDstWaveCentre + values[1]}, ePowerPlayed);
         }
-
-      xorg += xlen;
       }
     //}}}
     //{{{  draw powerValues playFrame, no sum
@@ -311,8 +308,8 @@ private:
     if (framePtr && framePtr->getPowerValues()) {
       // draw play frame power scaled to maxPeak
       float* powerValuesPtr = framePtr->getPowerValues();
-      for (uint32_t i = 0; i < 2; i++)
-        values[i] = *powerValuesPtr++ * peakValueScale;
+      values[0] = *powerValuesPtr++ * peakValueScale;
+      values[1] = *powerValuesPtr * peakValueScale;
 
       rect ({xorg, mDstWaveCentre - values[0]}, {xorg + xlen, mDstWaveCentre + values[1]}, ePowerPlay);
       }
@@ -320,19 +317,19 @@ private:
     xorg += xlen;
     //}}}
     //{{{  draw powerValues after playFrame, summed if zoomed out
-    for (int64_t frame = playFrame + mFrameStep; frame < rightFrame; frame += mFrameStep) {
+    for (int64_t frame = playFrame + mFrameStep; frame < rightFrame; frame += mFrameStep, xorg += xlen) {
       cSong::cFrame* sumFramePtr = mSong->findFrameByFrameNum (frame);
       if (sumFramePtr && sumFramePtr->getPowerValues()) {
         if (mFrameStep == 1) {
           // power scaled to maxPeak
           float* powerValuesPtr = sumFramePtr->getPowerValues();
-          for (uint32_t i = 0; i < 2; i++)
-            values[i] = *powerValuesPtr++ * peakValueScale;
+          values[0] = *powerValuesPtr++ * peakValueScale;
+          values[1] = *powerValuesPtr * peakValueScale;
           }
         else {
           // sum mFrameStep frames, mFrameStep aligned, scaled to maxPower
-          for (uint32_t i = 0; i < 2; i++)
-            values[i] = 0.f;
+          values[0] = 0.f;
+          values[1] = 0.f;
 
           int64_t alignedFrame = frame - (frame % mFrameStep);
           int64_t toSumFrame = min (alignedFrame + mFrameStep, rightFrame);
@@ -340,19 +337,17 @@ private:
             cSong::cFrame* toSumFramePtr = mSong->findFrameByFrameNum (sumFrame);
             if (toSumFramePtr && toSumFramePtr->getPowerValues()) {
               float* powerValuesPtr = toSumFramePtr->getPowerValues();
-              for (uint32_t i = 0; i < 2; i++)
-                values[i] += *powerValuesPtr++ * powerValueScale;
+              values[0] += *powerValuesPtr++ * powerValueScale;
+              values[1] += *powerValuesPtr * powerValueScale;
               }
             }
 
-          for (uint32_t i = 0; i < 2; i++)
-            values[i] /= toSumFrame - alignedFrame + 1;
+          values[0] /= toSumFrame - alignedFrame + 1;
+          values[1] /= toSumFrame - alignedFrame + 1;
           }
 
         rect ({xorg, mDstWaveCentre - values[0]}, {xorg + xlen, mDstWaveCentre + values[1]}, ePowerToPlay);
         }
-
-      xorg += xlen;
       }
     //}}}
 
