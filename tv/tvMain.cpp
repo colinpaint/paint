@@ -151,8 +151,10 @@ int main (int numArgs, char* args[]) {
 
   #ifdef _WIN32
     app.setName (params.empty() ? "" : cFileUtils::resolveShortcut (params[0]));
+    string fileName = params.empty() ? "" : cFileUtils::resolveShortcut(params[0]);
   #else
     app.setName (params.empty() ? "" : params[0]);
+    string fileName = params.empty() ? "" : params[0];
   #endif
 
   // add monoSpaced font
