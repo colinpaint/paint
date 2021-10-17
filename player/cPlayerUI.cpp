@@ -598,12 +598,9 @@ private:
     cSong::cFrame* framePtr = mSong->findFrameByFrameNum (playFrame);
     if (framePtr && framePtr->getFreqValues()) {
       uint8_t* freqValues = framePtr->getFreqValues();
-      for (uint32_t i = 0; (i < mSong->getNumFreqBytes()) && ((i*2) < static_cast<uint32_t>(mSize.x)); i++) {
-        float value =  freqValues[i] * valueScale;
-        if (value > 1.f)
-          rect ({xorg, mSize.y - value}, {xorg + 2.f, 0 + mSize.y}, eFreq);
-        xorg += 2.f;
-        }
+      for (uint32_t i = 0; 
+           (i < mSong->getNumFreqBytes()) && ((i*2) < static_cast<uint32_t>(mSize.x)); i++, xorg += 2.f)
+        rect ({xorg, mSize.y - freqValues[i] * valueScale}, {xorg + 2.f, 0 + mSize.y}, eFreq);
       }
     }
   //}}}
