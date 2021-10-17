@@ -184,7 +184,6 @@ int main (int numArgs, char* args[]) {
   // create dvb
   auto mDvb = new cTsDvb (multiplex.mFrequency, kRootName, multiplex.mSelectedChannels, multiplex.mSaveNames,
                           decodeSubtitle);
-  string fileName = params.empty() ? "" : cFileUtils::resolveShortcut(params[0]);
   if (fileName.empty()) {
     //{{{  grab from dvb card
     if (gui)
