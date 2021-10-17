@@ -71,13 +71,14 @@ public:
       int pid = pidInfo.mPid;
 
       if ((pidInfo.mSid != lastSid) && (pidInfo.mStreamType != 5) && (pidInfo.mStreamType != 11))
-        rect ({x, y}, {mSize.x, y + 1.f}, eServiceLine);
+        rect ({x,y}, {mSize.x, y + 1.f}, eServiceLine);
 
-      //mContDigits
-      string pidString = fmt::format ("{:7d} {:3d} {:3d} {:4d} {} {}",
-                                      pidInfo.mPackets, mPacketDigits, pidInfo.mErrors,
-                                      pid, getFullPtsString (pidInfo.mPts), pidInfo.getTypeString());
-      float textWidth = text ({x,y}, eText, pidString);
+      float textWidth = text ({x,y}, eText, fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
+                                                         pidInfo.mPackets, mPacketDigits,
+                                                         pidInfo.mErrors, mContDigits,
+                                                         pid, 
+                                                         getFullPtsString (pidInfo.mPts),
+                                                         pidInfo.getTypeString()));
       float visx = x + textWidth + getLineHeight()/2.f;
 
       if (pidInfo.mStreamType == 6) {
@@ -151,10 +152,9 @@ public:
       float frac = pidInfo.mPackets / mMaxPidPackets;
       rect ({visx, y}, {visx + (frac * (mSize.x - textWidth)), y + getLineHeight() - 1.f}, eBar);
 
-      string streamString;
+      string streamString = pidInfo.getInfoString();
       if ((pidInfo.mStreamType == 0) && (pidInfo.mSid > 0))
-        streamString += fmt::format("{} ", pidInfo.mSid);
-      streamString += pidInfo.getInfoString();
+        streamString = fmt::format("{} ", pidInfo.mSid) + streamString;
       text ({visx,  y}, eText, streamString);
 
       if (pidInfo.mPackets > pow (10, mPacketDigits))

@@ -73,7 +73,7 @@ inline std::string getFullPtsString (int64_t pts) {
     pts /= 60;
     uint32_t hours = pts % 60;
 
-    return fmt::format ("{:02d} {:02d} {:02d} {:02d}", hours,mins,secs,hs);
+    return fmt::format ("{:02d}:{:02d}:{:02d}:{:02d}", hours, mins, secs, hs);
     }
   }
 //}}}
