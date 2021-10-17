@@ -385,19 +385,26 @@ private:
                    (mOverviewLastFrame != lastFrame) ||
                    (mOverviewValueScale != valueScale);
 
+    mOverviewTotalFrames = totalFrames;
+    mOverviewLastFrame = lastFrame;
+    mOverviewFirstFrame = firstFrame;
+    mOverviewValueScale = valueScale;
+
     float xorg = 0.f;
     float xlen = 1.f;
 
     if (!changed) {
+      //{{{  draw overview cache, return
       for (uint32_t x = 0; x < static_cast<uint32_t>(mSize.x); x++, xorg += 1.f)
         rect ({xorg, mDstOverviewCentre - mOverviewValuesL[x]},
               {xorg + xlen, mDstOverviewCentre - mOverviewValuesL[x] + mOverviewValuesR[x]}, eOverview);
       return;
       }
+      //}}}
 
     array <float,2> values;
     for (uint32_t x = 0; x < static_cast<uint32_t>(mSize.x); x++, xorg += 1.f) {
-      // iterate widget width
+      // iterate window width
       int64_t frame = firstFrame + ((x * totalFrames) / static_cast<uint32_t>(mSize.x));
       int64_t toFrame = firstFrame + (((x+1) * totalFrames) / static_cast<uint32_t>(mSize.x));
       if (toFrame > lastFrame)
@@ -405,7 +412,7 @@ private:
 
       cSong::cFrame* framePtr = mSong->findFrameByFrameNum (frame);
       if (framePtr && framePtr->getPowerValues()) {
-        // accumulate frame, handle silence better
+        //{{{  accumulate frame
         float* powerValues = framePtr->getPowerValues();
         values[0] = powerValues[0];
         values[1] = mono ? 0 : powerValues[1];
@@ -425,24 +432,22 @@ private:
               }
             frame++;
             }
+
           values[0] /= numSummedFrames;
           values[1] /= numSummedFrames;
           }
+
         values[0] *= valueScale;
         values[1] *= valueScale;
+
         mOverviewValuesL[x] = values[0];
         mOverviewValuesR[x] = values[0] + values[1];
         }
+        //}}}
 
       rect ({xorg, mDstOverviewCentre - mOverviewValuesL[x]},
             {xorg + xlen, mDstOverviewCentre - mOverviewValuesL[x] + mOverviewValuesR[x]}, eOverview);
       }
-
-    // possible cache to stop recalc
-    mOverviewTotalFrames = totalFrames;
-    mOverviewLastFrame = lastFrame;
-    mOverviewFirstFrame = firstFrame;
-    mOverviewValueScale = valueScale;
     }
   //}}}
   //{{{
@@ -598,7 +603,7 @@ private:
     cSong::cFrame* framePtr = mSong->findFrameByFrameNum (playFrame);
     if (framePtr && framePtr->getFreqValues()) {
       uint8_t* freqValues = framePtr->getFreqValues();
-      for (uint32_t i = 0; 
+      for (uint32_t i = 0;
            (i < mSong->getNumFreqBytes()) && ((i*2) < static_cast<uint32_t>(mSize.x)); i++, xorg += 2.f)
         rect ({xorg, mSize.y - freqValues[i] * valueScale}, {xorg + 2.f, 0 + mSize.y}, eFreq);
       }

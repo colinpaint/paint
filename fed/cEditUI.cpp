@@ -6,7 +6,7 @@
 
 // imgui
 #include "../imgui/imgui.h"
-#include "../imgui/myImguiWidgets.h"
+#include "../imgui/myImgui.h"
 
 // fed
 #include "../fed/cTextEdit.h"

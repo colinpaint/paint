@@ -1,4 +1,4 @@
-// myImguiWidgets.h - my imgui widgets - freestanding routines like ImGui::Button but with string and other stuff
+// myImgui.h - my imgui widgets - freestanding routines like ImGui::Button but with string and other stuff
 #pragma once
 //{{{  includes
 #include <cstdint>

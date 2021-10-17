@@ -125,7 +125,7 @@ int main (int numArgs, char* args[]) {
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
     else if (*it == "full") { fullScreen = true; params.erase (it); }
     else if (*it == "free") { vsync = false; params.erase (it); }
-    else if (*it == "gui") { gui = true; params.erase (it); }
+    else if (*it == "gui") { gui = false; params.erase (it); }
     else if (*it == "sub") { decodeSubtitle = true; params.erase (it); }
     else if (*it == "all") { all = true; params.erase (it); }
     else ++it;
@@ -200,13 +200,20 @@ int main (int numArgs, char* args[]) {
     }
     //}}}
 
-  // main UI loop
-  while (platform.pollEvents()) {
-    platform.newFrame();
-    graphics.newFrame();
-    cUI::draw (app);
-    graphics.drawUI (platform.getWindowSize());
-    platform.present();
+  if (gui) {
+    // main UI loop
+    while (platform.pollEvents()) {
+      platform.newFrame();
+      graphics.newFrame();
+      cUI::draw (app);
+      graphics.drawUI (platform.getWindowSize());
+      platform.present();
+      }
+    }
+  else {
+    while (platform.pollEvents()) {
+      this_thread::sleep_for (40ms);
+      }
     }
 
   delete mDvb;
