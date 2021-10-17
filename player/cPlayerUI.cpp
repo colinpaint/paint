@@ -28,32 +28,29 @@
 
 using namespace std;
 //}}}
+//{{{  channels const
+const vector<string> kRadio1 = {"r1", "a128"};
+const vector<string> kRadio2 = {"r2", "a128"};
+const vector<string> kRadio3 = {"r3", "a320"};
+const vector<string> kRadio4 = {"r4", "a64"};
+const vector<string> kRadio5 = {"r5", "a128"};
+const vector<string> kRadio6 = {"r6", "a128"};
 
-namespace {
-  //{{{  channels const
-  const vector<string> kRadio1 = {"r1", "a128"};
-  const vector<string> kRadio2 = {"r2", "a128"};
-  const vector<string> kRadio3 = {"r3", "a320"};
-  const vector<string> kRadio4 = {"r4", "a64"};
-  const vector<string> kRadio5 = {"r5", "a128"};
-  const vector<string> kRadio6 = {"r6", "a128"};
+const vector<string> kBbc1   = {"bbc1", "a128"};
+const vector<string> kBbc2   = {"bbc2", "a128"};
+const vector<string> kBbc4   = {"bbc4", "a128"};
+const vector<string> kNews   = {"news", "a128"};
+const vector<string> kBbcSw  = {"sw", "a128"};
 
-  const vector<string> kBbc1   = {"bbc1", "a128"};
-  const vector<string> kBbc2   = {"bbc2", "a128"};
-  const vector<string> kBbc4   = {"bbc4", "a128"};
-  const vector<string> kNews   = {"news", "a128"};
-  const vector<string> kBbcSw  = {"sw", "a128"};
+const vector<string> kWqxr  = {"http://stream.wqxr.org/js-stream.aac"};
+const vector<string> kDvb  = {"dvb"};
 
-  const vector<string> kWqxr  = {"http://stream.wqxr.org/js-stream.aac"};
-  const vector<string> kDvb  = {"dvb"};
-
-  const vector<string> kRtp1  = {"rtp 1"};
-  const vector<string> kRtp2  = {"rtp 2"};
-  const vector<string> kRtp3  = {"rtp 3"};
-  const vector<string> kRtp4  = {"rtp 4"};
-  const vector<string> kRtp5  = {"rtp 5"};
-  //}}}
-  }
+const vector<string> kRtp1  = {"rtp 1"};
+const vector<string> kRtp2  = {"rtp 2"};
+const vector<string> kRtp3  = {"rtp 3"};
+const vector<string> kRtp4  = {"rtp 4"};
+const vector<string> kRtp5  = {"rtp 5"};
+//}}}
 
 //{{{
 class cDrawSong : public cDrawContext {
@@ -144,13 +141,12 @@ public:
     //mFrameStep = (mZoom > 0) ? mZoom+1 : 1;
     //}
   //}}}
-
   //{{{
   void draw (cSong* song, bool monoSpaced) {
 
-    mSong = song;
     if (!song)
       return;
+    mSong = song;
 
     update (24.f, monoSpaced);
     layout();
@@ -221,7 +217,6 @@ private:
     0xffa04060, // eLensPlay
     };
   //}}}
-
   //{{{
   void layout () {
 
@@ -244,7 +239,6 @@ private:
     mDstOverviewCentre = mDstOverviewTop + (mOverviewHeight/2.f);
     }
   //}}}
-
   //{{{
   void drawWave (int64_t playFrame, int64_t leftFrame, int64_t rightFrame, bool mono) {
 
@@ -381,10 +375,9 @@ private:
     //}}}
     }
   //}}}
-
   //{{{
   void drawOverviewWave (int64_t firstFrame, int64_t playFrame, float playFrameX, float valueScale, bool mono) {
-  // simple overview cache, invalidate if anything changed
+  // use simple overview cache, invalidate if anything changed
 
     (void)playFrame;
     (void)playFrameX;
@@ -397,53 +390,57 @@ private:
                    (mOverviewLastFrame != lastFrame) ||
                    (mOverviewValueScale != valueScale);
 
-    array <float,2> values = { 0.f };
-
     float xorg = 0.f;
     float xlen = 1.f;
-    for (uint32_t x = 0; x < static_cast<uint32_t>(mSize.x); x++) {
+
+    if (!changed) {
+      for (uint32_t x = 0; x < static_cast<uint32_t>(mSize.x); x++, xorg += 1.f)
+        rect ({xorg, mDstOverviewCentre - mOverviewValuesL[x]},
+              {xorg + xlen, mDstOverviewCentre - mOverviewValuesL[x] + mOverviewValuesR[x]}, eOverview);
+      return;
+      }
+
+    array <float,2> values;
+    for (uint32_t x = 0; x < static_cast<uint32_t>(mSize.x); x++, xorg += 1.f) {
       // iterate widget width
-      if (changed) {
-        int64_t frame = firstFrame + ((x * totalFrames) / static_cast<uint32_t>(mSize.x));
-        int64_t toFrame = firstFrame + (((x+1) * totalFrames) / static_cast<uint32_t>(mSize.x));
-        if (toFrame > lastFrame)
-          toFrame = lastFrame+1;
+      int64_t frame = firstFrame + ((x * totalFrames) / static_cast<uint32_t>(mSize.x));
+      int64_t toFrame = firstFrame + (((x+1) * totalFrames) / static_cast<uint32_t>(mSize.x));
+      if (toFrame > lastFrame)
+        toFrame = lastFrame+1;
 
-        cSong::cFrame* framePtr = mSong->findFrameByFrameNum (frame);
-        if (framePtr && framePtr->getPowerValues()) {
-          // accumulate frame, handle silence better
-          float* powerValues = framePtr->getPowerValues();
-          values[0] = powerValues[0];
-          values[1] = mono ? 0 : powerValues[1];
+      cSong::cFrame* framePtr = mSong->findFrameByFrameNum (frame);
+      if (framePtr && framePtr->getPowerValues()) {
+        // accumulate frame, handle silence better
+        float* powerValues = framePtr->getPowerValues();
+        values[0] = powerValues[0];
+        values[1] = mono ? 0 : powerValues[1];
 
-          if (frame < toFrame) {
-            int numSummedFrames = 1;
-            frame++;
-            while (frame < toFrame) {
-              framePtr = mSong->findFrameByFrameNum (frame);
-              if (framePtr) {
-                if (framePtr->getPowerValues()) {
-                  float* sumPowerValues = framePtr->getPowerValues();
-                  values[0] += sumPowerValues[0];
-                  values[1] += mono ? 0 : sumPowerValues[1];
-                  numSummedFrames++;
-                  }
+        if (frame < toFrame) {
+          int numSummedFrames = 1;
+          frame++;
+          while (frame < toFrame) {
+            framePtr = mSong->findFrameByFrameNum (frame);
+            if (framePtr) {
+              if (framePtr->getPowerValues()) {
+                float* sumPowerValues = framePtr->getPowerValues();
+                values[0] += sumPowerValues[0];
+                values[1] += mono ? 0 : sumPowerValues[1];
+                numSummedFrames++;
                 }
-              frame++;
               }
-            values[0] /= numSummedFrames;
-            values[1] /= numSummedFrames;
+            frame++;
             }
-          values[0] *= valueScale;
-          values[1] *= valueScale;
-          mOverviewValuesL[x] = values[0];
-          mOverviewValuesR[x] = values[0] + values[1];
+          values[0] /= numSummedFrames;
+          values[1] /= numSummedFrames;
           }
+        values[0] *= valueScale;
+        values[1] *= valueScale;
+        mOverviewValuesL[x] = values[0];
+        mOverviewValuesR[x] = values[0] + values[1];
         }
 
       rect ({xorg, mDstOverviewCentre - mOverviewValuesL[x]},
             {xorg + xlen, mDstOverviewCentre - mOverviewValuesL[x] + mOverviewValuesR[x]}, eOverview);
-      xorg += 1.f;
       }
 
     // possible cache to stop recalc
@@ -597,7 +594,6 @@ private:
       }
     }
   //}}}
-
   //{{{
   void drawFreq (int64_t playFrame) {
 
@@ -641,7 +637,6 @@ private:
       //}
     }
   //}}}
-
   //{{{  vars
   cSong* mSong = nullptr;
 
