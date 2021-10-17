@@ -169,7 +169,7 @@ public:
   float getMaxPowerValue()  const{ return mMaxPowerValue; }
   float getMaxPeakValue() const { return mMaxPeakValue; }
   float getMaxFreqValue() const { return mMaxFreqValue; }
-  int getNumFreqBytes() const { return kMaxFreqBytes; }
+  uint32_t getNumFreqBytes() const { return kMaxFreqBytes; }
   //}}}
 
   //{{{
@@ -211,10 +211,10 @@ protected:
 
 private:
   //{{{  static const
-  inline static const int kMaxNumChannels = 2;                         // arbitrary chan max
-  inline static const int kMaxNumSamplesPerFrame = 2048;               // arbitrary frame max
-  inline static const int kMaxFreq = (kMaxNumSamplesPerFrame / 2) + 1; // fft max
-  inline static const int kMaxFreqBytes = 512;                         // arbitrary graphics max
+  inline static const uint32_t kMaxNumChannels = 2;                         // arbitrary chan max
+  inline static const uint32_t kMaxNumSamplesPerFrame = 2048;               // arbitrary frame max
+  inline static const uint32_t kMaxFreq = (kMaxNumSamplesPerFrame / 2) + 1; // fft max
+  inline static const uint32_t kMaxFreqBytes = 512;                         // arbitrary graphics max
   //}}}
   int64_t skipPrev (int64_t fromPts, bool silence);
   int64_t skipNext (int64_t fromPts, bool silence);

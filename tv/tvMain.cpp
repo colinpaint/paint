@@ -86,36 +86,6 @@ const sMultiplexes kMultiplexes = { { kHdMultiplex, kItvMultiplex, kBbcMultiplex
 #endif
 //}}}
 
-//{{{
-void run (bool gui, bool all, bool decodeSubtitle, sMultiplex multiplex, const string& fileName) {
-
-  auto mDvb = new cTsDvb (multiplex.mFrequency, kRootName,
-                          multiplex.mSelectedChannels, multiplex.mSaveNames,
-                          decodeSubtitle);
-
-  if (gui) {
-    //initialiseGui (title, width, height, (unsigned char*)droidSansMono, sizeof(droidSansMono));
-    //add (new cTextBox (mDvb->mErrorStr, 15.f * cWidget::kBox));
-    //add (new cTextBox (mDvb->mTuneStr, 12.f * cWidget::kBox));
-    //add (new cTextBox (mDvb->mSignalStr, 12.f * cWidget::kBox));
-    //addBelowLeft (new cDvbWidget(mDvb, 0.f, -cWidget::kBox));
-    if (fileName.empty())
-      thread ([=](){ mDvb->grabThread (all ? kRootName : "", multiplex.mName); } ).detach();
-    else
-      thread ([=](){ mDvb->readThread (fileName); } ).detach();
-    //runGui (true);
-    }
-  else if (fileName.empty()) // run dvbGrab in this main thread
-    mDvb->grabThread (all ? kRootName : "", multiplex.mName);
-  else // run readFile in this main thread
-    mDvb->readThread (fileName);
-
-  delete mDvb;
-
-  cLog::log (LOGINFO, "run exit");
-  }
-//}}}
-
 int main (int numArgs, char* args[]) {
 
   // default params
@@ -126,7 +96,7 @@ int main (int numArgs, char* args[]) {
   bool vsync = true;
   bool all = false;
   bool decodeSubtitle = false;
-  bool gui = false;
+  bool gui = true;
   sMultiplex multiplex = kHdMultiplex;
   //{{{  parse command line args to params
   // args to params
@@ -177,15 +147,16 @@ int main (int numArgs, char* args[]) {
 
   // create app to tie stuff together
   cApp app (platform, graphics);
-  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 24.f));
+  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
 
-  // add monoSpaced font
   #ifdef _WIN32
     app.setName (params.empty() ? "" : cFileUtils::resolveShortcut (params[0]));
   #else
     app.setName (params.empty() ? "" : params[0]);
   #endif
-  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 24.f));
+
+  // add monoSpaced font
+  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
 
   platform.setResizeCallback (
     //{{{  resize lambda
@@ -208,8 +179,26 @@ int main (int numArgs, char* args[]) {
     );
     //}}}
 
-  run (false, all, decodeSubtitle, multiplex, 
-       params.empty() ? "" : cFileUtils::resolveShortcut(params[0]));
+  // create dvb
+  auto mDvb = new cTsDvb (multiplex.mFrequency, kRootName, multiplex.mSelectedChannels, multiplex.mSaveNames,
+                          decodeSubtitle);
+  string fileName = params.empty() ? "" : cFileUtils::resolveShortcut(params[0]);
+  if (fileName.empty()) {
+    //{{{  grab from dvb card
+    if (gui)
+      thread ([=](){ mDvb->grabThread (all ? kRootName : "", multiplex.mName); } ).detach();
+    else
+      mDvb->grabThread (all ? kRootName : "", multiplex.mName);
+    }
+    //}}}
+  else {
+    //{{{  read from file
+    if (gui)
+      thread ([=](){ mDvb->readThread (fileName); } ).detach();
+    else
+      mDvb->readThread (fileName);
+    }
+    //}}}
 
   // main UI loop
   while (platform.pollEvents()) {
@@ -219,6 +208,8 @@ int main (int numArgs, char* args[]) {
     graphics.drawUI (platform.getWindowSize());
     platform.present();
     }
+
+  delete mDvb;
 
   // cleanup
   graphics.shutdown();

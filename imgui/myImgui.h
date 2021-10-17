@@ -13,6 +13,8 @@
 class cDrawContext {
 // helper class for drawing text, rect, circle with palette color
 public:
+  cDrawContext() = default;
+  ~cDrawContext() = default;
   cDrawContext (const std::vector <ImU32>& palette) : mPalette(palette) {}
 
   // gets

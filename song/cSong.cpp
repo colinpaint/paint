@@ -340,7 +340,7 @@ void cSong::addFrame (bool reuseFront, int64_t pts, float* samples, int64_t tota
   auto freqBufPtr = mFreqBuf;
   auto freqValuesPtr = frame->mFreqValues;
   auto lumaValuesPtr = frame->mFreqLuma + getNumFreqBytes() - 1;
-  for (auto i = 0; i < getNumFreqBytes(); i++) {
+  for (uint32_t i = 0; i < getNumFreqBytes(); i++) {
     float value = sqrtf (((*freqBufPtr).r * (*freqBufPtr).r) + ((*freqBufPtr).i * (*freqBufPtr).i));
     mMaxFreqValue = max (mMaxFreqValue, value);
 
