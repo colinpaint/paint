@@ -60,7 +60,7 @@ namespace {
   void drawPids (cTsDvb& tsDvb) {
 
     // width of error field
-    int errorDigits = 2;
+    int errorDigits = 1;
     while (tsDvb.getTransportStream()->getNumErrors() > pow (10, errorDigits))
       errorDigits++;
 

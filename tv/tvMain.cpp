@@ -1,4 +1,4 @@
-// tvMain.cpp - imgui player main
+// tvMain.cpp - imgui tv dvb analyser,splitter main
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -48,6 +48,10 @@ struct sMultiplex {
   vector <string> mSaveNames;
   };
 
+struct sMultiplexes {
+  vector <sMultiplex> mMultiplexes;
+  };
+
 const sMultiplex kHdMultiplex = {
   "hd",
   626000000,
@@ -76,9 +80,6 @@ const sMultiplex kAllMultiplex = {
   { "" }
   };
 
-struct sMultiplexes {
-  vector <sMultiplex> mMultiplexes;
-  };
 const sMultiplexes kMultiplexes = { { kHdMultiplex, kItvMultiplex, kBbcMultiplex } };
 
 #ifdef _WIN32
@@ -161,6 +162,11 @@ int main (int numArgs, char* args[]) {
     string fileName = params.empty() ? "" : params[0];
   #endif
 
+  if (fileName.empty())
+    tsDvb.grab (gui, all ? kRootName : "", multiplex.mName);
+  else
+    tsDvb.readFile (gui, fileName);
+
   platform.setResizeCallback (
     //{{{  resize lambda
     [&](int width, int height) noexcept {
@@ -181,11 +187,6 @@ int main (int numArgs, char* args[]) {
       }
     );
     //}}}
-
-  if (fileName.empty())
-    tsDvb.grab (gui, all ? kRootName : "", multiplex.mName);
-  else
-    tsDvb.readFile (gui, fileName);
 
   if (gui) {
     // main UI loop
