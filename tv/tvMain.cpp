@@ -72,7 +72,6 @@ int main (int numArgs, char* args[]) {
   string graphicsName = "opengl";
   bool fullScreen = false;
   bool vsync = true;
-  sMultiplex multiplex = kMultiplexes[0];
   bool subtitles = false;
   //{{{  parse command line args to params
   // args to params
@@ -81,20 +80,21 @@ int main (int numArgs, char* args[]) {
     params.push_back (args[i]);
 
   // parse and remove recognised params
-  for (auto it = params.begin(); it < params.end();) {
-    // look for named multiplex
-    bool multiplexFound = false;
-    for (size_t j = 0; j < kMultiplexes.size() && !multiplexFound; j++) {
-      if (*it == kMultiplexes[j].mName) {
-        multiplex = kMultiplexes[j];
-        multiplexFound = true;
+  bool found = false;
+  sMultiplex foundMultiplex = kMultiplexes[0];
+  for (auto it = params.begin(); it < params.end() && !found;) {
+    for (auto& multiplex : kMultiplexes) {
+      if (*it == multiplex.mName) {
+        foundMultiplex = multiplex;
+        params.erase (it);
+        found = true;
+        break;
         }
       }
-    if (multiplexFound) {
-      ++it;
-      continue;
-      }
+    ++it;
+    }
 
+  for (auto it = params.begin(); it < params.end();) {
     if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
@@ -109,6 +109,8 @@ int main (int numArgs, char* args[]) {
   // start log
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, fmt::format ("tv {} {}", platformName, graphicsName));
+  if (params.empty())
+    cLog::log (LOGINFO, fmt::format ("using multiplex {}", foundMultiplex.mName));
 
   // list static registered classes
   cPlatform::listRegisteredClasses();
@@ -120,7 +122,7 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
 
   // create tvApp to tie everything together
-  cTvApp app (platform, graphics, multiplex, subtitles);
+  cTvApp app (platform, graphics, foundMultiplex, subtitles);
   app.setName (params.empty() ? "" : cFileUtils::resolve (params[0]));
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
