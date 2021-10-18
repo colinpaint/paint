@@ -186,19 +186,29 @@ public:
   virtual ~cTvUI() = default;
 
   //{{{
+  bool createDvbSource (const string& filename, const sMultiplex& multiplex, bool subtitles) {
+  // create dvb source
+
+    mTsDvb = new cTsDvb (multiplex.mFrequency, kRootName,
+                         multiplex.mSelectedChannels, multiplex.mSaveNames,
+                         subtitles);
+    if (!mTsDvb)
+      return false;
+
+    if (filename.empty())
+      mTsDvb->grab (true, kRootName, multiplex.mName);
+    else
+      mTsDvb->readFile (true, filename);
+    return true;
+    }
+  //}}}
+  //{{{
   void addToDrawList (cApp& app) final {
 
     cTvApp& tvApp = (cTvApp&)app;
 
-    if (!mTsDvb) {
-      mTsDvb = new cTsDvb (tvApp.getMultiplex().mFrequency, kRootName,
-                           tvApp.getMultiplex().mSelectedChannels, tvApp.getMultiplex().mSaveNames,
-                           tvApp.getSubtitles());
-      if (tvApp.getName().empty())
-        mTsDvb->grab (true, "", tvApp.getMultiplex().mName);
-      else
-        mTsDvb->readFile (true, tvApp.getName());
-      }
+    if (!mTsDvb)
+      createDvbSource (tvApp.getName(), tvApp.getMultiplex(), tvApp.getSubtitles());
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
@@ -235,9 +245,11 @@ public:
                  mTsDvb->getTransportStream()->getNumErrors()).c_str());
     //}}}
 
-    ImGui::PushFont (app.getMonoFont());
-    drawPids (mTsDvb);
-    ImGui::PopFont();
+    if (mTsDvb) {
+      ImGui::PushFont (app.getMonoFont());
+      drawPids (mTsDvb);
+      ImGui::PopFont();
+      }
 
     ImGui::End();
     }
