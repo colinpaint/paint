@@ -76,7 +76,7 @@ int main (int numArgs, char* args[]) {
 
   // create app to tie stuff together
   cApp app (platform, graphics);
-  app.setName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolveShortcut (params[0]));
+  app.setName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolve (params[0]));
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 

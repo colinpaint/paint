@@ -118,7 +118,7 @@ int main (int numArgs, char* args[]) {
 
   // create app to tie stuff together
   cTvApp app (platform, graphics, multiplex, subtitles);
-  app.setName (params.empty() ? "" : cFileUtils::resolveShortcut (params[0]));
+  app.setName (params.empty() ? "" : cFileUtils::resolve (params[0]));
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 

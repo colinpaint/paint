@@ -76,7 +76,7 @@ int main (int numArgs, char* args[]) {
 
   // create app to tie stuff together
   cApp app (platform, graphics);
-  app.setName (params.empty() ? "" : cFileUtils::resolveShortcut (params[0]));
+  app.setName (params.empty() ? "" : cFileUtils::resolve (params[0]));
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 24.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 24.f));
 

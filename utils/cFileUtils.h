@@ -1,4 +1,4 @@
-// cFileUtils.h - windows only for now
+// cFileUtils.h - file utilities
 #pragma once
 #include <string>
 
@@ -14,7 +14,7 @@
 
   class cFileUtils {
   public:
-    static std::string resolveShortcut (const std::string& shortcut) {
+    static std::string resolve (const std::string& shortcut) {
     // resolve windows shprtcut .lnk fileName
 
       // get IShellLink interface
@@ -51,8 +51,9 @@
 #endif
 
 #ifdef __linux__
-class cFileUtils {
-public:
-  static std::string resolveShortcut (const std::string& shortcut) { return shortcut; }
-  };
+  class cFileUtils {
+  public:
+    static std::string resolve (const std::string& shortcut) { return shortcut; }
+    };
+
 #endif
