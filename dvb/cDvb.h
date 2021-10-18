@@ -5,10 +5,7 @@
 #ifdef _WIN32
   #include <wrl.h>
   #include <initguid.h>
-  #include <DShow.h>
-  #include <bdaiface.h>
-  #include <ks.h>
-  #include <ksmedia.h>
+  #include <control.h>
   #include <bdatif.h>
 #endif
 
@@ -16,19 +13,18 @@
   #include <poll.h>
   #include <linux/dvb/frontend.h>
 #endif
-
-#include "cDvbUtils.h"
 //}}}
 
 class cDvb {
 public:
   cDvb (int frequency, int adapter);
-  virtual ~cDvb();
+  ~cDvb();
 
   std::string getStatusString();
 
   void tune (int frequency);
   void reset();
+
   int setFilter (uint16_t pid);
   void unsetFilter (int fd, uint16_t pid);
 
@@ -38,22 +34,26 @@ public:
   std::string mTuneStr = "untuned";
   std::string mSignalStr = "no signal";
 
+  //{{{
   #ifdef _WIN32
     uint8_t* getBlockBDA (int& len);
     void releaseBlock (int len);
     inline static Microsoft::WRL::ComPtr<IMediaControl> mMediaControl;
     inline static Microsoft::WRL::ComPtr<IScanningTuner> mScanningTuner;
   #endif
-
+  //}}}
+  //{{{
   #ifdef __linux__
     int mDvr = 0;
     cTsBlock* getBlocks (cTsBlockPool* blockPool);
   #endif
+  //}}}
 
 private:
   int mFrequency;
   int mAdapter;
 
+  //{{{
   #ifdef __linux__
     fe_hierarchy_t getHierarchy();
     fe_guard_interval_t getGuard();
@@ -78,4 +78,5 @@ private:
     int mTransmission = -1;
     int mHierarchy = -1;
   #endif
+  //}}}
   };

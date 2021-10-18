@@ -3,28 +3,28 @@
 #ifdef _WIN32
   //{{{  windows only includes
   #define _CRT_SECURE_NO_WARNINGS
-  #define NOMINMAX
   #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
-
-  #include <wrl.h>
-  #include <initguid.h>
-  #include <DShow.h>
-  #include <bdaiface.h>
-  #include <ks.h>
-  #include <ksmedia.h>
-  #include <bdatif.h>
 
   #include <locale>
   #include <codecvt>
 
+  #include <DShow.h>
+  #include <bdaiface.h>
+  #include <ks.h>
+  #include <ksmedia.h>
+  #include <bdamedia.h>
+
   MIDL_INTERFACE ("0579154A-2B53-4994-B0D0-E773148EFF85")
+  //{{{
   ISampleGrabberCB : public IUnknown {
   public:
     virtual HRESULT STDMETHODCALLTYPE SampleCB (double SampleTime, IMediaSample* pSample) = 0;
     virtual HRESULT STDMETHODCALLTYPE BufferCB (double SampleTime, BYTE* pBuffer, long BufferLen) = 0;
     };
+  //}}}
 
   MIDL_INTERFACE ("6B652FFF-11FE-4fce-92AD-0266B5D7C78F")
+  //{{{
   ISampleGrabber : public IUnknown {
   public:
     virtual HRESULT STDMETHODCALLTYPE SetOneShot (BOOL OneShot) = 0;
@@ -35,9 +35,9 @@
     virtual HRESULT STDMETHODCALLTYPE GetCurrentSample (IMediaSample** ppSample) = 0;
     virtual HRESULT STDMETHODCALLTYPE SetCallback (ISampleGrabberCB* pCallback, long WhichMethodToCallback) = 0;
     };
+  //}}}
   EXTERN_C const CLSID CLSID_SampleGrabber;
 
-  #include <bdamedia.h>
   DEFINE_GUID (CLSID_DVBTLocator, 0x9CD64701, 0xBDF3, 0x4d14, 0x8E,0x03, 0xF1,0x29,0x83,0xD8,0x66,0x64);
   DEFINE_GUID (CLSID_BDAtif, 0xFC772ab0, 0x0c7f, 0x11d3, 0x8F,0xf2, 0x00,0xa0,0xc9,0x22,0x4c,0xf4);
   DEFINE_GUID (CLSID_Dump, 0x36a5f770, 0xfe4c, 0x11ce, 0xa8, 0xed, 0x00, 0xaa, 0x00, 0x2f, 0xea, 0xb5);
@@ -64,23 +64,18 @@
   //}}}
 #endif
 
-// common includes
-#include <cstdlib>
-#include <cstring>
+#include <cstdint>
 #include <string>
-#include <vector>
 #include <thread>
 
 #include "cDvb.h"
+#include "cDvbUtils.h"
 
-#include "../utils/date.h"
 #include "../utils/cLog.h"
 
 using namespace std;
-using namespace fmt;
 //}}}
-
-namespace { // anonymous
+namespace {
   #ifdef _WIN32
     //{{{
     class cGrabberCB : public ISampleGrabberCB {
@@ -720,9 +715,9 @@ cDvb::cDvb (int frequency, int adapter) : mFrequency(frequency), mAdapter(adapte
     #ifdef _WIN32
       // windows create and tune
       if (createGraph (frequency * 1000))
-        mTuneStr = format ("tuned {}Mhz", frequency);
+        mTuneStr = fmt::format ("tuned {}Mhz", frequency);
       else
-        mTuneStr = format ("not tuned {}Mhz", frequency);
+        mTuneStr = fmt::format ("not tuned {}Mhz", frequency);
     #endif
 
     #ifdef __linux__
@@ -915,6 +910,7 @@ int cDvb::getBlock (uint8_t*& block, int& blockSize) {
   #endif
   }
 //}}}
+
 #ifdef _WIN32
   //{{{
   uint8_t* cDvb::getBlockBDA (int& len) {

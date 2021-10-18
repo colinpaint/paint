@@ -71,7 +71,7 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI font
-  cPlatform& platform = cPlatform::createByName (platformName, cPoint(800, 600), false, vsync, fullScreen);
+  cPlatform& platform = cPlatform::createByName (platformName, cPoint(800, 480), false, vsync, fullScreen);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
 
   // create app to tie stuff together
