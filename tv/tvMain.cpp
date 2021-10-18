@@ -37,7 +37,7 @@
 using namespace std;
 //}}}
 //{{{  const multiplexes
-const vector <sMultiplex> kMultiplexes = {
+static const vector <sMultiplex> kMultiplexes = {
   { "hd",
     626000000,
     { "BBC ONE HD", "BBC TWO HD", "ITV HD", "Channel 4 HD", "Channel 5 HD" },
@@ -119,7 +119,7 @@ int main (int numArgs, char* args[]) {
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(800, 600), false, vsync, fullScreen);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
 
-  // create app to tie stuff together
+  // create tvApp to tie everything together
   cTvApp app (platform, graphics, multiplex, subtitles);
   app.setName (params.empty() ? "" : cFileUtils::resolve (params[0]));
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));

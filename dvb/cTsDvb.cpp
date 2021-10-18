@@ -1,4 +1,4 @@
-// cTsDvb.cpp
+// cTsDvb.cpp - dvb source + dvb transport stream demux
 //{{{  windows includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -96,7 +96,7 @@ public:
   //}}}
 
   //{{{
-  cSubtitle* getSubtitleBySid (int sid) {
+  cSubtitle* getSubtitleBySid (uint16_t sid) {
 
     auto it = mSubtitleMap.find (sid);
     return (it == mSubtitleMap.end()) ? nullptr : (*it).second;
@@ -197,7 +197,8 @@ protected:
       // find or create sid service cSubtitleContext
       auto it = mSubtitleMap.find (pidInfo->mSid);
       if (it == mSubtitleMap.end()) {
-        auto insertPair = mSubtitleMap.insert (map <int, cSubtitle*>::value_type (pidInfo->mSid, new cSubtitle()));
+        auto insertPair = mSubtitleMap.insert (
+          map <uint16_t, cSubtitle*>::value_type (pidInfo->mSid, new cSubtitle()));
         it = insertPair.first;
         cLog::log (LOGINFO1, fmt::format ("cDvb::subDecodePes - create serviceStuff sid:{}",pidInfo->mSid));
         }
@@ -222,7 +223,7 @@ private:
 
   mutex mFileMutex;
 
-  map <int, cSubtitle*> mSubtitleMap; // indexed by sid
+  map <uint16_t, cSubtitle*> mSubtitleMap; // indexed by sid
   };
 //}}}
 

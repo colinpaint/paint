@@ -53,7 +53,7 @@ public:
   uint16_t mStreamType = 0;
 
   int mPackets = 0;
-  int mContinuity = 0xFFFF;
+  int mContinuity = -1;
   int mErrors = 0;
   int mRepeatContinuity = 0;
 
