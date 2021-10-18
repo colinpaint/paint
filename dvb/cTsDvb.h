@@ -10,6 +10,7 @@
 
 class cSubtitle;
 class cTransportStream;
+class cDvbTransportStream;
 //}}}
 
 class cTsDvb : public cDvb {
@@ -20,6 +21,7 @@ public:
   virtual ~cTsDvb();
 
   cTransportStream* getTransportStream();
+
   cSubtitle* getSubtitleBySid (int sid);
 
   void readFile (bool ownThread, const std::string& fileName);
@@ -31,4 +33,7 @@ public:
 private:
   void readFileInternal (bool ownThread, const std::string& fileName);
   void grabInternal (bool ownThread, const std::string& root, const std::string& multiplexName);
+
+  cDvbTransportStream* mDvbTransportStream;
+  uint64_t mLastErrors = 0;
   };

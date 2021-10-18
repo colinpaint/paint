@@ -54,8 +54,8 @@ const vector<string> kRtp5  = {"rtp 5"};
 //}}}
 
 namespace {
-  uint32_t gPacketDigits = 0;
-  int64_t gMaxPidPackets = 0;
+  int gPacketDigits = 0;
+  int gMaxPidPackets = 0;
   //{{{
   void drawPids (cTsDvb& tsDvb) {
 
@@ -66,11 +66,14 @@ namespace {
 
     int prevSid = 0;
     for (auto& pidInfoItem : tsDvb.getTransportStream()->mPidInfoMap) {
-      // iterate pidInfo
+      // iterate for pidInfo
       cPidInfo& pidInfo = pidInfoItem.second;
+
+      // draw separator
       if ((pidInfo.mSid != prevSid) && (pidInfo.mStreamType != 5) && (pidInfo.mStreamType != 11))
         ImGui::Separator();
 
+      // draw pic text
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
                               pidInfo.mPackets, gPacketDigits, pidInfo.mErrors, errorDigits, pidInfo.mPid,
                               getFullPtsString (pidInfo.mPts), pidInfo.getTypeString()).c_str());
@@ -150,7 +153,8 @@ namespace {
       // draw stream bar
       gMaxPidPackets = max (gMaxPidPackets, pidInfo.mPackets);
       float frac = pidInfo.mPackets / float(gMaxPidPackets);
-      ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x)), pos.y + ImGui::GetTextLineHeight() - 1.f};
+      ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x)),
+                      pos.y + ImGui::GetTextLineHeight()};
       ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
 
       // draw stream text
@@ -171,10 +175,7 @@ namespace {
 
 class cTvUI : public cUI {
 public:
-  //{{{
-    cTvUI (const string& name) : cUI(name) {
-    }
-  //}}}
+  cTvUI (const string& name) : cUI(name) {}
   virtual ~cTvUI() = default;
 
   //{{{
@@ -209,8 +210,10 @@ public:
     // vertice debug
     ImGui::Text (fmt::format ("{}:{}",
                  ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
+
+    // tsDvb totals
     ImGui::SameLine();
-    ImGui::Text (fmt::format ("{}:{}",
+    ImGui::Text (fmt::format ("packets:{} errors:{}",
                  tvApp.getTsDvb().getTransportStream()->getNumPackets(),
                  tvApp.getTsDvb().getTransportStream()->getNumErrors()).c_str());
     //}}}

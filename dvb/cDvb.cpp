@@ -722,7 +722,7 @@ cDvb::cDvb (int frequency, int adapter) : mFrequency(frequency), mAdapter(adapte
 
     #ifdef __linux__
       // open frontend nonBlocking rw
-      string frontend = format ("/dev/dvb/adapter{}/frontend{}", mAdapter, 0);
+      string frontend = fmt::format ("/dev/dvb/adapter{}/frontend{}", mAdapter, 0);
       mFrontEnd = open (frontend.c_str(), O_RDWR | O_NONBLOCK);
       if (mFrontEnd < 0){
         cLog::log (LOGERROR, "cDvb open frontend failed");
@@ -732,7 +732,7 @@ cDvb::cDvb (int frequency, int adapter) : mFrequency(frequency), mAdapter(adapte
       frontendSetup();
 
       // open demux nonBlocking rw
-      string demux = format ("/dev/dvb/adapter{}/demux{}", mAdapter, 0);
+      string demux = fmt::format ("/dev/dvb/adapter{}/demux{}", mAdapter, 0);
       mDemux = open (demux.c_str(), O_RDWR | O_NONBLOCK);
       if (mDemux < 0) {
         cLog::log (LOGERROR, "cDvb open demux failed");
@@ -742,7 +742,7 @@ cDvb::cDvb (int frequency, int adapter) : mFrequency(frequency), mAdapter(adapte
       setFilter (8192);
 
       // open dvr blocking reads, big buffer 50m
-      string dvr = format ("/dev/dvb/adapter{}/dvr{}", mAdapter, 0);
+      string dvr = fmt::format ("/dev/dvb/adapter{}/dvr{}", mAdapter, 0);
       mDvr = open (dvr.c_str(), O_RDONLY);
       fds[0].fd = mDvr;
       fds[0].events = POLLIN;
@@ -797,15 +797,15 @@ string cDvb::getStatusString() const {
     if ((ioctl (mFrontEnd, FE_GET_PROPERTY, &cmdProperty)) < 0)
       return "no status";
 
-    return format ("{:5.2f}% {:5.2f}db b:{:x},{:x}, pre:{:x},{:x} post:{:x},{:x}",
-                   100.f * ((props[0].u.st.stat[0].uvalue & 0xFFFF) / float(0xFFFF)),
-                   props[1].u.st.stat[0].svalue / 1000.f,
-                   (__u64)props[2].u.st.stat[0].uvalue,
-                   (__u64)props[3].u.st.stat[0].uvalue,
-                   (__u64)props[4].u.st.stat[0].uvalue,
-                   (__u64)props[5].u.st.stat[0].uvalue,
-                   (__u64)props[6].u.st.stat[0].uvalue,
-                   (__u64)props[7].u.st.stat[0].uvalue);
+    return fmt::format ("{:5.2f}% {:5.2f}db b:{:x},{:x}, pre:{:x},{:x} post:{:x},{:x}",
+                        100.f * ((props[0].u.st.stat[0].uvalue & 0xFFFF) / float(0xFFFF)),
+                        props[1].u.st.stat[0].svalue / 1000.f,
+                        (__u64)props[2].u.st.stat[0].uvalue,
+                        (__u64)props[3].u.st.stat[0].uvalue,
+                        (__u64)props[4].u.st.stat[0].uvalue,
+                        (__u64)props[5].u.st.stat[0].uvalue,
+                        (__u64)props[6].u.st.stat[0].uvalue,
+                        (__u64)props[7].u.st.stat[0].uvalue);
   #endif
   }
 //}}}
@@ -835,12 +835,12 @@ int cDvb::setFilter (uint16_t pid) {
   #ifdef __linux__
     int mAdapter = 0;
     int mFeNum = 0;
-    string filter = format ("/dev/dvb/adapter{}/demux{}", mAdapter, mFeNum);
+    string filter = fmt::format ("/dev/dvb/adapter{}/demux{}", mAdapter, mFeNum);
 
     int fd = open (filter.c_str(), O_RDWR);
     if (fd < 0) {
       // error return
-      cLog::log (LOGERROR, format ("dvbSetFilter - open failed pid:{}", pid));
+      cLog::log (LOGERROR, fmt::format ("dvbSetFilter - open failed pid:{}", pid));
       return -1;
       }
 
@@ -852,12 +852,12 @@ int cDvb::setFilter (uint16_t pid) {
     s_filter_params.pes_type = DMX_PES_OTHER;
     if (ioctl (fd, DMX_SET_PES_FILTER, &s_filter_params) < 0) {
       // error return
-      cLog::log (LOGERROR, format ("dvbSetFilter - set_pesFilter failed pid:{} {}", pid, strerror (errno)));
+      cLog::log (LOGERROR, fmt::format ("dvbSetFilter - set_pesFilter failed pid:{} {}", pid, strerror (errno)));
       close (fd);
       return -1;
       }
 
-    cLog::log (LOGINFO1, format ("dvbSetFilter pid:{}", pid));
+    cLog::log (LOGINFO1, fmt::format ("dvbSetFilter pid:{}", pid));
     return fd;
   #endif
   }
@@ -868,9 +868,9 @@ void cDvb::unsetFilter (int fd, uint16_t pid) {
   (void)pid;
 #ifdef __linux__
   if (ioctl (fd, DMX_STOP) < 0)
-    cLog::log (LOGERROR, format("dvbUnsetFilter - stop failed {}", strerror (errno)));
+    cLog::log (LOGERROR, fmt::format("dvbUnsetFilter - stop failed {}", strerror (errno)));
   else
-    cLog::log (LOGINFO1, format ("dvbUnsetFilter - unsetting pid:{}", pid));
+    cLog::log (LOGINFO1, fmt::format ("dvbUnsetFilter - unsetting pid:{}", pid));
   close (fd);
 #endif
   }
@@ -959,13 +959,13 @@ void cDvb::tune (int frequency) {
     // read iovecs
     int size = readv (fds[0].fd, iovecs, kMaxRead);
     if (size < 0) {
-      cLog::log (LOGERROR, format ("readv DVR failed {}", strerror(errno)));
+      cLog::log (LOGERROR, fmt::format ("readv DVR failed {}", strerror(errno)));
       size = 0;
       }
     size /= 188;
 
     if (size != kMaxRead)
-      cLog::log (LOGERROR, format ("size {}", size));
+      cLog::log (LOGERROR, fmt::format ("size {}", size));
 
     return firstBlock;
     }
@@ -1067,9 +1067,9 @@ void cDvb::tune (int frequency) {
   void cDvb::frontendInfo (struct dvb_frontend_info& info, uint32_t version,
                            fe_delivery_system_t* systems, int numSystems) {
 
-    cLog::log (LOGINFO, format ("frontend - version {} min {} max {} stepSize {} tolerance {}",
-                                version, info.frequency_min, info.frequency_max,
-                                info.frequency_stepsize, info.frequency_tolerance));
+    cLog::log (LOGINFO, fmt::format ("frontend - version {} min {} max {} stepSize {} tolerance {}",
+                                     version, info.frequency_min, info.frequency_max,
+                                     info.frequency_stepsize, info.frequency_tolerance));
 
     // info
     string infoString = "has - ";
@@ -1308,13 +1308,13 @@ void cDvb::tune (int frequency) {
         cLog::log (LOGERROR, "FE_READ_STATUS status failed");
       if (feStatus & FE_HAS_LOCK)
         break;
-      cLog::log (LOGINFO, format ("waiting for lock {}{}{}{}{} {}",
-                                  feStatus & FE_TIMEDOUT ? "timeout " : "",
-                                  feStatus & FE_HAS_SIGNAL ? "s" : "",
-                                  feStatus & FE_HAS_CARRIER ? "c": "",
-                                  feStatus & FE_HAS_VITERBI ? "v": " ",
-                                  feStatus & FE_HAS_SYNC ? "s" : "",
-                                  getStatusString()));
+      cLog::log (LOGINFO, fmt::format ("waiting for lock {}{}{}{}{} {}",
+                                       feStatus & FE_TIMEDOUT ? "timeout " : "",
+                                       feStatus & FE_HAS_SIGNAL ? "s" : "",
+                                       feStatus & FE_HAS_CARRIER ? "c": "",
+                                       feStatus & FE_HAS_VITERBI ? "v": " ",
+                                       feStatus & FE_HAS_SYNC ? "s" : "",
+                                       getStatusString()));
       this_thread::sleep_for (200ms);
       }
     }

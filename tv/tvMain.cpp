@@ -36,7 +36,7 @@
 // dvb
 #include "../dvb/cTsDvb.h"
 
-#include "cTvApp.h"
+#include "../tv/cTvApp.h"
 
 using namespace std;
 //}}}

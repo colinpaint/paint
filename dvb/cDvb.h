@@ -12,6 +12,9 @@
 #ifdef __linux__
   #include <poll.h>
   #include <linux/dvb/frontend.h>
+
+  class cTsBlock;
+  class cTsBlockPool;
 #endif
 //}}}
 
