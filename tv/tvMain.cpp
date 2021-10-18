@@ -36,6 +36,8 @@
 // dvb
 #include "../dvb/cTsDvb.h"
 
+#include "cTvApp.h"
+
 using namespace std;
 //}}}
 //{{{  const multiplexes
@@ -146,7 +148,9 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
 
   // create app to tie stuff together
-  cApp app (platform, graphics);
+  cTsDvb tsDvb (multiplex.mFrequency, kRootName, multiplex.mSelectedChannels, multiplex.mSaveNames,
+                decodeSubtitle);
+  cTvApp app (platform, graphics, tsDvb);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
 
   #ifdef _WIN32
@@ -181,25 +185,10 @@ int main (int numArgs, char* args[]) {
     );
     //}}}
 
-  // create dvb
-  auto mDvb = new cTsDvb (multiplex.mFrequency, kRootName, multiplex.mSelectedChannels, multiplex.mSaveNames,
-                          decodeSubtitle);
-  if (fileName.empty()) {
-    //{{{  grab from dvb card
-    if (gui)
-      thread ([=](){ mDvb->grabThread (all ? kRootName : "", multiplex.mName); } ).detach();
-    else
-      mDvb->grabThread (all ? kRootName : "", multiplex.mName);
-    }
-    //}}}
-  else {
-    //{{{  read from file
-    if (gui)
-      thread ([=](){ mDvb->readThread (fileName); } ).detach();
-    else
-      mDvb->readThread (fileName);
-    }
-    //}}}
+  if (fileName.empty())
+    tsDvb.grab (gui, all ? kRootName : "", multiplex.mName);
+  else
+    tsDvb.readFile (gui, fileName);
 
   if (gui) {
     // main UI loop
@@ -216,8 +205,6 @@ int main (int numArgs, char* args[]) {
       this_thread::sleep_for (40ms);
       }
     }
-
-  delete mDvb;
 
   // cleanup
   graphics.shutdown();

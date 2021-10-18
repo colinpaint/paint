@@ -1,9 +1,13 @@
 // cSubtitle.h
+//{{{  includes
 #pragma once
+
 #include <cstdint>
 #include <string>
 #include <vector>
+
 #include "../utils/cLog.h"
+//}}}
 
 class cSubtitle {
 public:
@@ -204,10 +208,10 @@ public:
     if (mRects.empty())
       cLog::log (LOGINFO, "subtitle empty");
     else
-      for (unsigned int i = 0; i < mRects.size(); i++) 
-        cLog::log (LOGINFO, fmt::format ("{} rect:{} x:{} y:{} w:{} h:{}", 
+      for (unsigned int i = 0; i < mRects.size(); i++)
+        cLog::log (LOGINFO, fmt::format ("{} rect:{} x:{} y:{} w:{} h:{}",
                                          prefix, i,
-                                         mRects[i]->mX, mRects[i]->mY, 
+                                         mRects[i]->mX, mRects[i]->mY,
                                          mRects[i]->mWidth, mRects[i]->mHeight));
     }
   //}}}

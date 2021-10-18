@@ -22,9 +22,13 @@ public:
   cTransportStream* getTransportStream();
   cSubtitle* getSubtitleBySid (int sid);
 
-  void grabThread (const std::string& root, const std::string& multiplexName);
-  void readThread (const std::string& fileName);
+  void readFile (bool ownThread, const std::string& fileName);
+  void grab (bool ownThread, const std::string& root, const std::string& multiplexName);
 
   // public for widget observe
   bool mDecodeSubtitle = false;
+
+private:
+  void readFileInternal (bool ownThread, const std::string& fileName);
+  void grabInternal (bool ownThread, const std::string& root, const std::string& multiplexName);
   };

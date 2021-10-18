@@ -25,6 +25,8 @@
 #include "../dvb/cTransportStream.h"
 #include "../dvb/cSubtitle.h"
 
+#include "../tv/cTvApp.h"
+
 using namespace std;
 //}}}
 //{{{  channels const
@@ -51,35 +53,23 @@ const vector<string> kRtp4  = {"rtp 4"};
 const vector<string> kRtp5  = {"rtp 5"};
 //}}}
 
-//{{{
-class cDrawTv : public cDrawContext {
-public:
-  cDrawTv() : cDrawContext (kPalette) {}
+namespace {
+  uint32_t gErrorDigits = 0;
+  uint32_t gPacketDigits = 0;
+  int64_t gMaxPidPackets = 0;
   //{{{
-  void draw() {
+  void drawPids (cTsDvb& tsDvb) {
 
-    update (18.f, true);
-    layout();
-
-    int lastSid = 0;
-    //int imageIndex = 0;
-    float x = 2.f;
-    float y = getLineHeight() * 2;
-    for (auto& pidInfoItem : mDvb->getTransportStream()->mPidInfoMap) {
+    int prevSid = 0;
+    for (auto& pidInfoItem : tsDvb.getTransportStream()->mPidInfoMap) {
       // iterate pidInfo
       cPidInfo& pidInfo = pidInfoItem.second;
-      int pid = pidInfo.mPid;
+      if ((pidInfo.mSid != prevSid) && (pidInfo.mStreamType != 5) && (pidInfo.mStreamType != 11))
+        ImGui::Separator();
 
-      if ((pidInfo.mSid != lastSid) && (pidInfo.mStreamType != 5) && (pidInfo.mStreamType != 11))
-        rect ({x,y}, {mSize.x, y + 1.f}, eServiceLine);
-
-      float textWidth = text ({x,y}, eText, fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
-                                                         pidInfo.mPackets, mPacketDigits,
-                                                         pidInfo.mErrors, mContDigits,
-                                                         pid, 
-                                                         getFullPtsString (pidInfo.mPts),
-                                                         pidInfo.getTypeString()));
-      float visx = x + textWidth + getLineHeight()/2.f;
+      ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
+                                    pidInfo.mPackets, gPacketDigits, pidInfo.mErrors, gErrorDigits, pidInfo.mPid,
+                                    getFullPtsString (pidInfo.mPts), pidInfo.getTypeString()).c_str());
 
       if (pidInfo.mStreamType == 6) {
         //{{{  draw subtitle
@@ -148,70 +138,34 @@ public:
         //}}}
         }
 
-      mMaxPidPackets = max (mMaxPidPackets, (float)pidInfo.mPackets);
-      float frac = pidInfo.mPackets / mMaxPidPackets;
-      rect ({visx, y}, {visx + (frac * (mSize.x - textWidth)), y + getLineHeight() - 1.f}, eBar);
+      gMaxPidPackets = max (gMaxPidPackets, pidInfo.mPackets);
+      float frac = pidInfo.mPackets / float(gMaxPidPackets);
 
-      string streamString = pidInfo.getInfoString();
+      ImGui::SameLine();
+      ImVec2 pos = ImGui::GetCursorPos();
+      pos.y -= ImGui::GetScrollY();
+
+      ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x)), pos.y + ImGui::GetTextLineHeight() - 1.f};
+      ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
+
+      string streamText = pidInfo.getInfoString();
       if ((pidInfo.mStreamType == 0) && (pidInfo.mSid > 0))
-        streamString = fmt::format("{} ", pidInfo.mSid) + streamString;
-      text ({visx,  y}, eText, streamString);
+        streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
+      ImGui::TextUnformatted (streamText.c_str());
 
-      if (pidInfo.mPackets > pow (10, mPacketDigits))
-        mPacketDigits++;
+      // set packetCount width for next time
+      if (pidInfo.mPackets > pow (10, gPacketDigits))
+        gPacketDigits++;
 
-      lastSid = pidInfo.mSid;
-      y += getLineHeight();
+      prevSid = pidInfo.mSid;
       }
-    mLastHeight = y;
 
-    if (mDvb->getTransportStream()->getErrors() > pow (10, mContDigits))
-      mContDigits++;
+    // set errorCount width for next time
+    if (tsDvb.getTransportStream()->getErrors() > pow (10, gErrorDigits))
+      gErrorDigits++;
     }
   //}}}
-
-private:
-  //{{{  palette const
-  inline static const uint8_t eBackground =  0;
-  inline static const uint8_t eText =        1;
-  inline static const uint8_t eBar =         2;
-  inline static const uint8_t eServiceLine = 3;
-
-  inline static const vector <ImU32> kPalette = {
-  //  aabbggrr
-    0xff000000, // eBackground
-    0xffffffff, // eText
-    0xff00ffff, // eBar
-    0xff606060, // eServiceLine
-    };
-  //}}}
-  //{{{
-  void layout() {
-
-    // check for window size change, refresh any caches dependent on size
-    ImVec2 size = ImGui::GetWindowSize();
-    mChanged |= (size.x != mSize.x) || (size.y != mSize.y);
-    mSize = size;
-    }
-  //}}}
-
-  // vars
-  bool mChanged = false;
-  ImVec2 mSize = {0.f,0.f};
-
-  cTsDvb* mDvb;
-  int mContDigits = 0;
-  int mPacketDigits = 1;
-  float mMaxPidPackets = 0;
-
-  float mZoom  = 0.f;
-  float mLastHeight = 0.f;
-
-  int mImage[20] =  { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1 };
-
-  };
-//}}}
+  }
 
 class cTvUI : public cUI {
 public:
@@ -227,7 +181,7 @@ public:
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
-    ImGui::Begin ("player", &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
+    ImGui::Begin ("player", &mOpen, ImGuiWindowFlags_NoTitleBar);
     //{{{  draw top buttons
     // vsync button,fps
     if (app.getPlatform().hasVsync()) {
@@ -254,7 +208,8 @@ public:
     //}}}
 
     ImGui::PushFont (app.getMonoFont());
-    mDrawTv.draw();
+    cTvApp& tvApp = (cTvApp&)app;
+    drawPids (tvApp.getTsDvb());
     ImGui::PopFont();
 
     ImGui::End();
@@ -264,7 +219,6 @@ public:
 private:
   // vars
   bool mOpen = true;
-  cDrawTv mDrawTv;
 
   static cUI* create (const string& className) { return new cTvUI (className); }
   inline static const bool mRegistered = registerClass ("tv", &create);

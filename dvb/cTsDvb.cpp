@@ -42,6 +42,8 @@
   DEFINE_GUID (CLSID_Dump, 0x36a5f770, 0xfe4c, 0x11ce, 0xa8, 0xed, 0x00, 0xaa, 0x00, 0x2f, 0xea, 0xb5);
 
   #pragma comment (lib,"strmiids")
+
+  #include <thread>
   //}}}
 #endif
 
@@ -258,9 +260,70 @@ cTransportStream* cTsDvb::getTransportStream() {
 //}}}
 
 //{{{
-void cTsDvb::grabThread (const string& root, const string& multiplexName) {
+void cTsDvb::readFile (bool ownThread, const string& fileName) {
 
-  cLog::setThreadName ("grab");
+  if (ownThread)
+    thread ([=](){ readFileInternal (true, fileName); } ).detach();
+  else
+    readFileInternal (false, fileName);
+  }
+//}}}
+//{{{
+void cTsDvb::grab (bool ownThread, const string& root, const string& multiplexName) {
+
+  if (ownThread)
+    thread([=]() { grabInternal (true, root, multiplexName); }).detach();
+  else
+    grabInternal (false, root, multiplexName);
+  }
+//}}}
+
+// private
+//{{{
+void cTsDvb::readFileInternal (bool ownThread, const string& fileName) {
+
+  if (ownThread)
+    cLog::setThreadName ("read");
+
+  auto file = fopen (fileName.c_str(), "rb");
+  if (!file) {
+    //{{{  error, return
+    cLog::log (LOGERROR, "no file " + fileName);
+    return;
+    }
+    //}}}
+
+  uint64_t streamPos = 0;
+  auto blockSize = 188 * 8;
+  auto buffer = (uint8_t*)malloc (blockSize);
+
+  int i = 0;
+  bool run = true;
+  while (run) {
+    i++;
+    if (!(i % 200)) // throttle read rate
+      this_thread::sleep_for (20ms);
+
+    size_t bytesRead = fread (buffer, 1, blockSize, file);
+    if (bytesRead > 0)
+      streamPos += mDvbTransportStream->demux ({}, buffer, bytesRead, streamPos, false);
+    else
+      break;
+    mErrorStr = fmt::format ("{}", mDvbTransportStream->getErrors());
+    }
+
+  fclose (file);
+  free (buffer);
+
+  if (ownThread)
+    cLog::log (LOGERROR, "exit");
+  }
+//}}}
+//{{{
+void cTsDvb::grabInternal (bool ownThread, const string& root, const string& multiplexName) {
+
+  if (ownThread)
+    cLog::setThreadName ("grab");
 
   string allName = root + "/all" + multiplexName + ".ts";
   FILE* mFile = root.empty() ? nullptr : fopen (allName.c_str(), "wb");
@@ -334,44 +397,7 @@ void cTsDvb::grabThread (const string& root, const string& multiplexName) {
   if (mFile)
     fclose (mFile);
 
-  cLog::log (LOGINFO, "exit");
-  }
-//}}}
-//{{{
-void cTsDvb::readThread (const string& fileName) {
-
-  cLog::setThreadName ("read");
-
-  auto file = fopen (fileName.c_str(), "rb");
-  if (!file) {
-    //{{{  error, return
-    cLog::log (LOGERROR, "no file " + fileName);
-    return;
-    }
-    //}}}
-
-  uint64_t streamPos = 0;
-  auto blockSize = 188 * 8;
-  auto buffer = (uint8_t*)malloc (blockSize);
-
-  int i = 0;
-  bool run = true;
-  while (run) {
-    i++;
-    if (!(i % 200)) // throttle read rate
-      this_thread::sleep_for (20ms);
-
-    size_t bytesRead = fread (buffer, 1, blockSize, file);
-    if (bytesRead > 0)
-      streamPos += mDvbTransportStream->demux ({}, buffer, bytesRead, streamPos, false);
-    else
-      break;
-    mErrorStr = fmt::format ("{}", mDvbTransportStream->getErrors());
-    }
-
-  fclose (file);
-  free (buffer);
-
-  cLog::log (LOGERROR, "exit");
+  if (ownThread)
+    cLog::log (LOGINFO, "exit");
   }
 //}}}
