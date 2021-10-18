@@ -54,15 +54,15 @@ const vector<string> kRtp5  = {"rtp 5"};
 //}}}
 
 namespace {
-  uint32_t gErrorDigits = 0;
   uint32_t gPacketDigits = 0;
   int64_t gMaxPidPackets = 0;
   //{{{
   void drawPids (cTsDvb& tsDvb) {
 
     // width of error field
-    if (tsDvb.getTransportStream()->getErrors() > pow (10, gErrorDigits)) 
-      gErrorDigits++;
+    int errorDigits = 2;
+    while (tsDvb.getTransportStream()->getErrors() > pow (10, errorDigits))
+      errorDigits++;
 
     int prevSid = 0;
     for (auto& pidInfoItem : tsDvb.getTransportStream()->mPidInfoMap) {
@@ -72,7 +72,7 @@ namespace {
         ImGui::Separator();
 
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
-                              pidInfo.mPackets, gPacketDigits, pidInfo.mErrors, gErrorDigits, pidInfo.mPid,
+                              pidInfo.mPackets, gPacketDigits, pidInfo.mErrors, errorDigits, pidInfo.mPid,
                               getFullPtsString (pidInfo.mPts), pidInfo.getTypeString()).c_str());
 
       if (pidInfo.mStreamType == 6) {
@@ -160,7 +160,7 @@ namespace {
       ImGui::TextUnformatted (streamText.c_str());
 
       // width of packet field
-      if (pidInfo.mPackets > pow (10, gPacketDigits)) 
+      if (pidInfo.mPackets > pow (10, gPacketDigits))
         gPacketDigits++;
 
       prevSid = pidInfo.mSid;
