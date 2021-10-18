@@ -51,13 +51,6 @@ const vector<string> kRtp2  = {"rtp 2"};
 const vector<string> kRtp3  = {"rtp 3"};
 const vector<string> kRtp4  = {"rtp 4"};
 const vector<string> kRtp5  = {"rtp 5"};
-
-#ifdef _WIN32
-  const string kRootName = "/tv";
-#else
-  const string kRootName = "/home/pi/tv";
-#endif
-
 //}}}
 
 namespace {
@@ -189,15 +182,22 @@ public:
   bool createDvbSource (const string& filename, const sMultiplex& multiplex, bool subtitles) {
   // create dvb source
 
-    bool recordAll = multiplex.mSelectedChannels.empty();
+    #ifdef _WIN32
+      const string kRecordRoot = "/tv/";
+      const string kRecordAllRoot = "/tv/all";
+    #else
+      const string kRecordRoot = "/home/pi/tv/";
+      const string kRecordAllRoot = "/home/pi/tv/all";
+    #endif
 
+    bool recordAll = multiplex.mSelectedChannels.empty();
     mTsDvb = new cTsDvb (multiplex.mFrequency, multiplex.mSelectedChannels, multiplex.mSaveNames,
-                         kRootName, recordAll, subtitles);
+                         kRecordRoot, recordAll ? kRecordAllRoot : "", subtitles);
     if (!mTsDvb)
       return false;
 
     if (filename.empty())
-      mTsDvb->grab (true, kRootName, multiplex.mName);
+      mTsDvb->grab (true, multiplex.mName);
     else
       mTsDvb->readFile (true, filename);
     return true;
