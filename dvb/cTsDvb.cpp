@@ -77,13 +77,11 @@ constexpr bool kDebug = false;
 class cDvbTransportStream : public cTransportStream {
 public:
   //{{{
-  cDvbTransportStream (const string& rootName,
-                       const vector <string>& channelStrings, const vector <string>& saveStrings,
-                       bool decodeSubtitle)
-    : mRootName(rootName),
+  cDvbTransportStream (const vector <string>& channelStrings, const vector <string>& saveStrings,
+                       const string& recordRoot, bool recordAll, bool decodeSubtitle)
+    : mRecordRoot(recordRoot),
       mChannelStrings(channelStrings), mSaveStrings(saveStrings),
-      mRecordAll ((channelStrings.size() == 1) && (channelStrings[0] == "all")),
-      mDecodeSubtitle(decodeSubtitle) {}
+      mRecordAll (recordAll), mDecodeSubtitle(decodeSubtitle) {}
   //}}}
   //{{{
   virtual ~cDvbTransportStream() {
@@ -139,7 +137,7 @@ protected:
           (service->getAudPid() > 0) &&
           (service->getSubPid() > 0)) {
         auto validName = validFileString (name, "<>:/|?*\"\'\\");
-        auto fileNameStr = mRootName + "/" + saveName + validName + ".ts";
+        auto fileNameStr = mRecordRoot + "/" + saveName + validName + ".ts";
         service->openFile (fileNameStr, 0x1234);
         cLog::log (LOGINFO, fileNameStr);
         }
@@ -214,10 +212,10 @@ protected:
   //}}}
 
 private:
-  string mRootName;
-
   vector<string> mChannelStrings;
   vector<string> mSaveStrings;
+
+  string mRecordRoot;
   bool mRecordAll;
   bool mDecodeSubtitle;
 
@@ -229,12 +227,12 @@ private:
 
 // public:
 //{{{
-cTsDvb::cTsDvb (int frequency, const string& root,
+cTsDvb::cTsDvb (int frequency, 
                 const vector <string>& channelNames, const vector <string>& recordNames,
-                bool decodeSubtitle)
+                const string& recordRoot, bool recordAll, bool decodeSubtitle)
     : cDvb(frequency, 0), mDecodeSubtitle(decodeSubtitle) {
 
-  mDvbTransportStream = new cDvbTransportStream (root, channelNames, recordNames, decodeSubtitle);
+  mDvbTransportStream = new cDvbTransportStream (channelNames, recordNames, recordRoot, recordAll, decodeSubtitle);
   }
 //}}}
 //{{{

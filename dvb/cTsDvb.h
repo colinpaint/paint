@@ -15,8 +15,11 @@ class cDvbTransportStream;
 
 class cTsDvb : public cDvb {
 public:
-  cTsDvb (int frequency, const std::string& root,
-          const std::vector<std::string>& channelNames, const std::vector<std::string>& recordNames,
+  cTsDvb (int frequency,
+          const std::vector<std::string>& channelNames,
+          const std::vector<std::string>& recordNames,
+          const std::string& recordRoot,
+          bool recordAll,
           bool decodeSubtitle);
   virtual ~cTsDvb();
 

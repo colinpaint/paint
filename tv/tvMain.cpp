@@ -58,8 +58,8 @@ static const vector <sMultiplex> kMultiplexes = {
 
   { "allHd",
     626000000,
-    { "allHd" },
-    { "" }
+    { "" },
+    { "all" }
   }
   };
 //}}}

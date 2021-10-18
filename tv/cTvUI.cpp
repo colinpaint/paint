@@ -189,9 +189,10 @@ public:
   bool createDvbSource (const string& filename, const sMultiplex& multiplex, bool subtitles) {
   // create dvb source
 
-    mTsDvb = new cTsDvb (multiplex.mFrequency, kRootName,
-                         multiplex.mSelectedChannels, multiplex.mSaveNames,
-                         subtitles);
+    bool recordAll = multiplex.mSelectedChannels.empty();
+
+    mTsDvb = new cTsDvb (multiplex.mFrequency, multiplex.mSelectedChannels, multiplex.mSaveNames,
+                         kRootName, recordAll, subtitles);
     if (!mTsDvb)
       return false;
 

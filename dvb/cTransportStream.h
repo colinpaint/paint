@@ -222,7 +222,7 @@ protected:
    (void)selected;
    }
   //}}}
-  virtual void pesPacket (int sid, int pid, uint8_t* ts) { (void)sid; (void)pid; (void)ts; }
+  virtual void pesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) { (void)sid; (void)pid; (void)ts; }
   virtual void stop (cService* service) { (void)service; }
 
   virtual bool audDecodePes (cPidInfo* pidInfo, bool skip) { (void)pidInfo; (void)skip; return false; }
