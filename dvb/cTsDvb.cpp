@@ -1,6 +1,6 @@
 // cTsDvb.cpp
+//{{{  windows includes
 #ifdef _WIN32
-  //{{{  windows includes
   #define _CRT_SECURE_NO_WARNINGS
   #define NOMINMAX
   #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
@@ -44,13 +44,14 @@
   #pragma comment (lib,"strmiids")
 
   #include <thread>
-  //}}}
 #endif
-
+//}}}
+//{{{  linux includes
 #ifdef __linux__
   #include <unistd.h>
   #include <sys/poll.h>
 #endif
+//}}}
 //{{{  common includes
 #include "cTsDvb.h"
 
@@ -146,7 +147,7 @@ protected:
     }
   //}}}
   //{{{
-  virtual void pesPacket (int sid, int pid, uint8_t* ts) {
+  virtual void pesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) {
   // look up service and write it
 
     lock_guard<mutex> lockGuard (mFileMutex);
@@ -247,7 +248,7 @@ cTransportStream* cTsDvb::getTransportStream() {
   }
 //}}}
 //{{{
-cSubtitle* cTsDvb::getSubtitleBySid (int sid) {
+cSubtitle* cTsDvb::getSubtitleBySid (uint16_t sid) {
   return mDvbTransportStream->getSubtitleBySid (sid);
   }
 //}}}

@@ -22,7 +22,7 @@ public:
 
   cTransportStream* getTransportStream();
 
-  cSubtitle* getSubtitleBySid (int sid);
+  cSubtitle* getSubtitleBySid (uint16_t sid);
 
   void readFile (bool ownThread, const std::string& fileName);
   void grab (bool ownThread, const std::string& root, const std::string& multiplexName);

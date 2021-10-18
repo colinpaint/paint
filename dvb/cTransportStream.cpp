@@ -402,7 +402,7 @@ string cPidInfo::getTypeString() {
     case PID_SYN: return "SYN";
     }
 
-  if (mSid != -1) {
+  if (mSid != 0xFFFF) {
     // service - pgm or es
     switch (mStreamType) {
       case   0: return "pgm";
@@ -454,7 +454,7 @@ cService::~cService() {
 
   delete mNowEpgItem;
 
-  for (auto &epgItem : mEpgItemMap)
+  for (auto& epgItem : mEpgItemMap)
     delete epgItem.second;
 
   mEpgItemMap.clear();
@@ -478,15 +478,15 @@ bool cService::isEpgRecord (const string& title, system_clock::time_point startT
 
 //  sets
 //{{{
-void cService::setAudPid (int pid, int streamType) {
+void cService::setAudPid (uint16_t pid, uint16_t streamType) {
 
   if ((pid != mAudPid) && (pid != mAudOtherPid)) {
     // use first aud pid, may be many
-    if (mAudPid == -1) {
+    if (mAudPid == 0xFFFF) {
       mAudPid = pid;
       mAudStreamType = streamType;
       }
-    else if (mAudOtherPid == -1)
+    else if (mAudOtherPid == 0xFFFF)
       mAudOtherPid = pid;
     }
   }
@@ -515,7 +515,7 @@ bool cService::setEpg (bool record,
   auto epgItemIt = mEpgItemMap.find (startTime);
   if (epgItemIt == mEpgItemMap.end()) {
     mEpgItemMap.insert (
-      map<system_clock::time_point, cEpgItem*>::value_type (
+      map <system_clock::time_point, cEpgItem*>::value_type (
         startTime, new cEpgItem (false, record, startTime, duration, titleString, infoString)));
     }
   else
@@ -527,7 +527,7 @@ bool cService::setEpg (bool record,
 
 // file, probably wrong here but saves duplicating file elsewhere
 //{{{
-bool cService::openFile (const string& fileName, int tsid) {
+bool cService::openFile (const string& fileName, uint16_t tsid) {
 
   mFile = fopen (fileName.c_str(), "wb");
   if (mFile) {
@@ -541,7 +541,7 @@ bool cService::openFile (const string& fileName, int tsid) {
   }
 //}}}
 //{{{
-void cService::writePacket (uint8_t* ts, int pid) {
+void cService::writePacket (uint8_t* ts, uint16_t pid) {
 
   if (mFile &&
       ((pid == mVidPid) || (pid == mAudPid) || (pid == mSubPid)))
@@ -560,7 +560,7 @@ void cService::closeFile() {
 
 // private:
 //{{{
-uint8_t* cService::tsHeader (uint8_t* ts, int pid, uint8_t continuityCount) {
+uint8_t* cService::tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount) {
 
   memset (ts, 0xFF, 188);
 
@@ -575,13 +575,13 @@ uint8_t* cService::tsHeader (uint8_t* ts, int pid, uint8_t continuityCount) {
 //}}}
 
 //{{{
-void cService::writePat (int tsid) {
+void cService::writePat (uint16_t tsid) {
 
   uint8_t ts[188];
   uint8_t* tsSectionStart = tsHeader (ts, PID_PAT, 0);
   uint8_t* tsPtr = tsSectionStart;
 
-  auto sectionLength = 5+4 + 4;
+  uint32_t sectionLength = 5+4 + 4;
   *tsPtr++ = TID_PAT;                                // PAT tid
   *tsPtr++ = 0xb0 | ((sectionLength & 0x0F00) >> 8); // PAT sectionLength upper
   *tsPtr++ = sectionLength & 0x0FF;                  // PAT sectionLength lower
@@ -654,7 +654,7 @@ void cService::writePmt() {
 void cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr) {
 
   // tsSection crc, calc from tsSection start to here
-  auto crc = cDvbUtils::getCrc32 (tsSectionStart, int(tsPtr - tsSectionStart));
+  uint32_t crc = cDvbUtils::getCrc32 (tsSectionStart, int(tsPtr - tsSectionStart));
   *tsPtr++ = (crc & 0xff000000) >> 24;
   *tsPtr++ = static_cast<uint8_t>((crc & 0x00ff0000) >> 16);
   *tsPtr++ = (crc & 0x0000ff00) >>  8;
@@ -667,7 +667,7 @@ void cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPt
 
 // public
 //{{{
-string cTransportStream::getChannelStringBySid (int sid) {
+string cTransportStream::getChannelStringBySid (uint16_t sid) {
 
   auto it = mServiceMap.find (sid);
   if (it == mServiceMap.end())
@@ -677,13 +677,13 @@ string cTransportStream::getChannelStringBySid (int sid) {
   }
 //}}}
 //{{{
-cService* cTransportStream::getService (int index, int64_t& firstPts, int64_t& lastPts) {
+cService* cTransportStream::getService (uint16_t index, int64_t& firstPts, int64_t& lastPts) {
 
   firstPts = -1;
   lastPts = -1;
 
   int i = 0;
-  for (auto &service : mServiceMap) {
+  for (auto& service : mServiceMap) {
     if (i == index) {
       auto pidInfoIt = mPidInfoMap.find (service.second.getAudPid());
       if (pidInfoIt != mPidInfoMap.end()) {
@@ -931,7 +931,7 @@ char cTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int st
     };
   //}}}
 
-  auto pesEnd = pesBuf + pesBufSize;
+  uint8_t* pesEnd = pesBuf + pesBufSize;
   if (streamType == 2) {
     //{{{  mpeg2 minimal parser
     while (pesBuf + 6 < pesEnd) {
@@ -953,8 +953,8 @@ char cTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int st
     // h264 minimal parser
     while (pesBuf < pesEnd) {
       //{{{  skip past startcode, find next startcode
-      auto buf = pesBuf;
-      auto bufSize = pesBufSize;
+      uint8_t* buf = pesBuf;
+      int64_t bufSize = pesBufSize;
 
       uint32_t startOffset = 0;
       if (!buf[0] && !buf[1]) {
@@ -969,7 +969,7 @@ char cTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int st
         }
 
       // find next start code
-      auto offset = startOffset;
+      uint32_t offset = startOffset;
       uint32_t nalSize = offset;
       uint32_t val = 0xffffffff;
       while (offset++ < bufSize - 3) {
@@ -1034,7 +1034,8 @@ void cTransportStream::clear() {
   }
 //}}}
 //{{{
-int64_t cTransportStream::demux (const vector<int>& pids, uint8_t* tsBuf, int64_t tsBufSize,
+int64_t cTransportStream::demux (const vector<uint16_t>& pids,
+                                 uint8_t* tsBuf, int64_t tsBufSize,
                                  int64_t streamPos, bool skip) {
 // demux from tsBuffer to tsBuffer + tsBufferSize, streamPos is offset into full stream of first packet
 // decodePid1 = -1 use all
@@ -1043,25 +1044,25 @@ int64_t cTransportStream::demux (const vector<int>& pids, uint8_t* tsBuf, int64_
   if (skip)
     clearPidContinuity();
 
-  auto ts = tsBuf;
-  auto tsEnd = tsBuf + tsBufSize;
+  uint8_t* ts = tsBuf;
+  uint8_t* tsEnd = tsBuf + tsBufSize;
 
   bool decoded = false;
-  auto nextPacket = ts + 188;
+  uint8_t* nextPacket = ts + 188;
   while (!decoded && (nextPacket <= tsEnd)) {
     if (*ts == 0x47) {
       if ((ts+188 >= tsEnd) || (*(ts+188) == 0x47)) {
         ts++;
         int tsBytesLeft = 188-1;
 
-        int pid = ((ts[0] & 0x1F) << 8) | ts[1];
+        uint16_t pid = ((ts[0] & 0x1F) << 8) | ts[1];
         if (pid != 0x1FFF) {
           bool payloadStart =   ts[0] & 0x40;
           int continuityCount = ts[2] & 0x0F;
           int headerBytes =    (ts[2] & 0x20) ? (4 + ts[3]) : 3; // adaption field
 
           lock_guard<mutex> lockGuard (mMutex);
-          auto pidInfo = getPidInfo (pid, true);
+          cPidInfo* pidInfo = getPidInfo (pid, true);
           if (pidInfo) {
             if ((pidInfo->mContinuity >= 0) &&
                 (continuityCount != ((pidInfo->mContinuity+1) & 0x0F))) {
@@ -1085,7 +1086,7 @@ int64_t cTransportStream::demux (const vector<int>& pids, uint8_t* tsBuf, int64_
 
               if (payloadStart) {
                 // handle the very odd pointerField
-                auto pointerField = *ts++;
+                uint8_t pointerField = *ts++;
                 tsBytesLeft--;
                 if ((pointerField > 0) && pidInfo->mBufPtr)
                   pidInfo->addToBuffer (ts, pointerField);
@@ -1094,7 +1095,7 @@ int64_t cTransportStream::demux (const vector<int>& pids, uint8_t* tsBuf, int64_
 
                 // parse any outstanding buffer
                 if (pidInfo->mBufPtr) {
-                  auto bufPtr = pidInfo->mBuffer;
+                  uint8_t* bufPtr = pidInfo->mBuffer;
                   while ((bufPtr+3) <= pidInfo->mBufPtr) // enough for tid,sectionLength
                     if (bufPtr[0] == 0xFF) // invalid tid, end of psi sections
                       break;
@@ -1105,7 +1106,7 @@ int64_t cTransportStream::demux (const vector<int>& pids, uint8_t* tsBuf, int64_
                 while ((tsBytesLeft >= 3) &&
                        (ts[0] != 0xFF) && (tsBytesLeft >= (((ts[1] & 0x0F) << 8) + ts[2] + 3))) {
                   // parse section without buffering
-                  auto sectionLength = parsePsi (pidInfo, ts);
+                  uint32_t sectionLength = parsePsi (pidInfo, ts);
                   ts += sectionLength;
                   tsBytesLeft -= sectionLength;
                   }
@@ -1246,14 +1247,14 @@ int64_t cTransportStream::demux (const vector<int>& pids, uint8_t* tsBuf, int64_
 //{{{
 void cTransportStream::clearPidCounts() {
 
-  for (auto &pidInfo : mPidInfoMap)
+  for (auto& pidInfo : mPidInfoMap)
     pidInfo.second.clearCounts();
   }
 //}}}
 //{{{
 void cTransportStream::clearPidContinuity() {
 
-  for (auto &pidInfo : mPidInfoMap)
+  for (auto& pidInfo : mPidInfoMap)
     pidInfo.second.clearContinuity();
   }
 //}}}
@@ -1279,7 +1280,7 @@ int64_t cTransportStream::getPts (uint8_t* tsPtr) {
   }
 //}}}
 //{{{
-cPidInfo* cTransportStream::getPidInfo (int pid, bool createPsiOnly) {
+cPidInfo* cTransportStream::getPidInfo (uint16_t pid, bool createPsiOnly) {
 // find or create pidInfo by pid
 
   auto pidInfoIt = mPidInfoMap.find (pid);
@@ -1290,7 +1291,8 @@ cPidInfo* cTransportStream::getPidInfo (int pid, bool createPsiOnly) {
         (mProgramMap.find (pid) != mProgramMap.end())) {
 
       // create new psi cPidInfo, insert
-      pidInfoIt = mPidInfoMap.insert (map <int, cPidInfo>::value_type (pid, cPidInfo (pid, createPsiOnly))).first;
+      pidInfoIt = mPidInfoMap.insert (
+        map <uint16_t, cPidInfo>::value_type (pid, cPidInfo (pid, createPsiOnly))).first;
 
       // allocate buffer
       pidInfoIt->second.mBufSize = kInitBufSize;
@@ -1308,8 +1310,8 @@ cPidInfo* cTransportStream::getPidInfo (int pid, bool createPsiOnly) {
 void cTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
 // PAT declares programPid,sid to mProgramMap to recognise programPid PMT to declare service streams
   (void)pidInfo;
-  auto pat = (sPat*)buf;
-  auto sectionLength = HILO(pat->section_length) + 3;
+  sPat* pat = (sPat*)buf;
+  uint16_t sectionLength = HILO(pat->section_length) + 3;
   if (cDvbUtils::getCrc32(buf, sectionLength) != 0) {
     //{{{  bad crc error, return
     cLog::log (LOGERROR, fmt::format("parsePAT - bad crc - sectionLength:{}",sectionLength));
@@ -1322,10 +1324,10 @@ void cTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
     sectionLength -= sizeof(sPat) + 4;
     while (sectionLength > 0) {
       auto patProgram = (sPatProg*)buf;
-      auto sid = HILO (patProgram->program_number);
-      auto pid = HILO (patProgram->network_pid);
+      uint16_t sid = HILO (patProgram->program_number);
+      uint16_t pid = HILO (patProgram->network_pid);
       if (mProgramMap.find (pid) == mProgramMap.end())
-        mProgramMap.insert (map<int,int>::value_type (pid, sid));
+        mProgramMap.insert (map <uint16_t, uint16_t>::value_type (pid, sid));
 
       sectionLength -= sizeof(sPatProg);
       buf += sizeof(sPatProg);
@@ -1337,8 +1339,8 @@ void cTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
 void cTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
 
   (void)pidInfo;
-  auto nit = (sNit*)buf;
-  auto sectionLength = HILO(nit->section_length) + 3;
+  sNit* nit = (sNit*)buf;
+  uint16_t sectionLength = HILO(nit->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
     //{{{  bad crc, error, return
     cLog::log (LOGERROR, fmt::format("parseNIT - bad crc {}",sectionLength));
@@ -1356,7 +1358,7 @@ void cTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
 
   //auto networkId = HILO (nit->network_id);
   buf += sizeof(sNit);
-  auto loopLength = HILO (nit->network_descr_length);
+  uint16_t loopLength = HILO (nit->network_descr_length);
 
   sectionLength -= sizeof(sNit) + 4;
   if (loopLength <= sectionLength) {
@@ -1373,7 +1375,7 @@ void cTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
       while (loopLength > 0) {
         auto TSDesc = (sNitTs*)buf;
         //auto tsid = HILO (TSDesc->transport_stream_id);
-        auto loopLength2 = HILO (TSDesc->transport_descrs_length);
+        uint16_t loopLength2 = HILO (TSDesc->transport_descrs_length);
         buf += sizeof(sNitTs);
         loopLength -= loopLength2 + sizeof(sNitTs);
         sectionLength -= loopLength2 + sizeof(sNitTs);
@@ -1388,8 +1390,8 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
 // SDT name services in mServiceMap
 
   (void)pidInfo;
-  auto sdt = (sSdt*)buf;
-  auto sectionLength = HILO(sdt->section_length) + 3;
+  sSdt* sdt = (sSdt*)buf;
+  uint16_t sectionLength = HILO(sdt->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
     //{{{  wrong crc, error, return
     cLog::log (LOGERROR, fmt::format("parseSDT - bad crc {}",sectionLength));
@@ -1402,12 +1404,12 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
     buf += sizeof(sSdt);
     sectionLength -= sizeof(sSdt) + 4;
     while (sectionLength > 0) {
-      auto sdtDescr = (sSdtDescriptor*)buf;
+      sSdtDescriptor* sdtDescr = (sSdtDescriptor*)buf;
       buf += sizeof(sSdtDescriptor);
 
-      auto sid = HILO (sdtDescr->service_id);
+      uint16_t sid = HILO (sdtDescr->service_id);
       //auto freeChannel = sdtDescr->free_ca_mode == 0;
-      auto loopLength = HILO (sdtDescr->descrs_loop_length);
+      uint16_t loopLength = HILO (sdtDescr->descrs_loop_length);
 
       auto descrLength = 0;
       while ((descrLength < loopLength) &&
@@ -1459,8 +1461,8 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
 //{{{
 void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
   (void)pidInfo;
-  auto eit = (sEit*)buf;
-  auto sectionLength = HILO(eit->section_length) + 3;
+  sEit* eit = (sEit*)buf;
+  uint16_t sectionLength = HILO(eit->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
     //{{{  bad crc, error, return
     cLog::log (LOGERROR, fmt::format("parseEit - bad CRC {}",sectionLength));
@@ -1468,7 +1470,7 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
     }
     //}}}
 
-  auto tid = eit->table_id;
+  uint16_t tid = eit->table_id;
 
   auto now = (tid == TID_EIT_ACT);
   auto next = (tid == TID_EIT_OTH);
@@ -1476,12 +1478,12 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
              (tid == TID_EIT_ACT_SCH+1) || (tid == TID_EIT_OTH_SCH+1);
 
   if (now || epg) {
-    auto sid = HILO (eit->service_id);
+    uint16_t sid = HILO (eit->service_id);
     buf += sizeof(sEit);
     sectionLength -= sizeof(sEit) + 4;
     while (sectionLength > 0) {
-      auto eitEvent = (sEitEvent*)buf;
-      auto loopLength = HILO (eitEvent->descrs_loop_length);
+      sEitEvent* eitEvent = (sEitEvent*)buf;
+      uint16_t loopLength = HILO (eitEvent->descrs_loop_length);
       buf += sizeof(sEitEvent);
       sectionLength -= sizeof(sEitEvent);
 
@@ -1509,10 +1511,10 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
               auto running = (eitEvent->running_status == 0x04);
               if (running &&
                   !serviceIt->second.getChannelString().empty() &&
-                  (serviceIt->second.getProgramPid() != -1) &&
-                  (serviceIt->second.getVidPid() != -1) &&
-                  (serviceIt->second.getAudPid() != -1) &&
-                  (serviceIt->second.getSubPid() != -1)) {
+                  (serviceIt->second.getProgramPid() != 0xFFFF) &&
+                  (serviceIt->second.getVidPid() != 0xFFFF) &&
+                  (serviceIt->second.getAudPid() != 0xFFFF) &&
+                  (serviceIt->second.getSubPid() != 0xFFFF)) {
                 // now event for named service with valid pgmPid, vidPid, audPid, subPid
                 if (serviceIt->second.setNow (serviceIt->second.isEpgRecord (titleString, startTime),
                                               startTime, duration, titleString, infoString)) {
@@ -1548,7 +1550,7 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
 //{{{
 void cTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
 
-  auto tdt = (sTdt*)buf;
+  sTdt* tdt = (sTdt*)buf;
   if (tdt->table_id == TID_TDT) {
     mTime = system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) + BcdTimeToSeconds (tdt->utc_time));
     if (!mTimeDefined) {
@@ -1565,8 +1567,8 @@ void cTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
 void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
 // PMT declares pgmPid and streams for a service
 
-  auto pmt = (sPmt*)buf;
-  auto sectionLength = HILO(pmt->section_length) + 3;
+  sPmt* pmt = (sPmt*)buf;
+  uint16_t sectionLength = HILO(pmt->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
     //{{{  bad crc, error, return
     cLog::log (LOGERROR, "parsePMT - pid:%d bad crc %d", pidInfo->mPid, sectionLength);
@@ -1575,14 +1577,14 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
     //}}}
 
   if (pmt->table_id == TID_PMT) {
-    auto sid = HILO (pmt->program_number);
+    uint16_t sid = HILO (pmt->program_number);
 
     auto serviceIt = mServiceMap.find (sid);
     if (serviceIt == mServiceMap.end()) {
       // service not found, create one
-      auto insertPair = mServiceMap.insert (map<int,cService>::value_type (sid, cService(sid)));
+      auto insertPair = mServiceMap.insert (map <uint16_t,cService>::value_type (sid, cService(sid)));
       serviceIt = insertPair.first;
-      cLog::log (LOGINFO, fmt::format("create service {}", sid));
+      cLog::log (LOGINFO, fmt::format ("create service {}", sid));
       }
     auto service = &serviceIt->second;
     service->setProgramPid (pidInfo->mPid);
@@ -1592,15 +1594,15 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
 
     buf += sizeof(sPmt);
     sectionLength -= 4;
-    auto programInfoLength = HILO (pmt->program_info_length);
-    auto streamLength = sectionLength - programInfoLength - sizeof(sPmt);
+    uint16_t programInfoLength = HILO (pmt->program_info_length);
+    uint16_t streamLength = sectionLength - programInfoLength - sizeof(sPmt);
 
     buf += programInfoLength;
     while (streamLength > 0) {
-      auto pmtInfo = (sPmtInfo*)buf;
+      sPmtInfo* pmtInfo = (sPmtInfo*)buf;
 
-      auto esPid = HILO (pmtInfo->elementary_PID);
-      auto esPidInfo = getPidInfo (esPid, false);
+      uint16_t esPid = HILO (pmtInfo->elementary_PID);
+      cPidInfo* esPidInfo = getPidInfo (esPid, false);
       //{{{  set service esPids
       esPidInfo->mSid = sid;
       esPidInfo->mStreamType = pmtInfo->stream_type;
@@ -1636,7 +1638,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         }
       //}}}
 
-      auto loopLength = HILO (pmtInfo->ES_info_length);
+      uint16_t loopLength = HILO (pmtInfo->ES_info_length);
       buf += sizeof(sPmtInfo);
       streamLength -= loopLength + sizeof(sPmtInfo);
       buf += loopLength;
@@ -1659,7 +1661,7 @@ int cTransportStream::parsePsi (cPidInfo* pidInfo, uint8_t* buf) {
     case PID_RST:
     case PID_SYN: break;
 
-    default:      parsePmt (pidInfo, buf); break;
+    default: parsePmt (pidInfo, buf); break;
     }
 
   return ((buf[1] & 0x0F) << 8) + buf[2] + 3;

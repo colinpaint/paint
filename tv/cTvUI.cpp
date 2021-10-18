@@ -159,7 +159,7 @@ namespace {
 
       // draw stream text
       string streamText = pidInfo.getInfoString();
-      if ((pidInfo.mStreamType == 0) && (pidInfo.mSid > 0))
+      if ((pidInfo.mStreamType == 0) && (pidInfo.mSid != 0xFFFF))
         streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
       ImGui::TextUnformatted (streamText.c_str());
 
