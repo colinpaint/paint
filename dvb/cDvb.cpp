@@ -809,40 +809,22 @@ string cDvb::getStatusString() {
   #endif
   }
 //}}}
-
 //{{{
-void cDvb::tune (int frequency) {
-
-  mFrequency = frequency;
+int cDvb::getBlock (uint8_t*& block, int& blockSize) {
+  (void)blockSize;
+  (void)block;
 
   #ifdef _WIN32
-    // windows tune
-    if (mDvbLocator->put_CarrierFrequency (frequency) != S_OK)
-      cLog::log (LOGERROR, "tune - put_CarrierFrequency");
-    if (mDvbLocator->put_Bandwidth (8) != S_OK)
-      cLog::log (LOGERROR, "tune - put_Bandwidth");
-    if (mDvbTuningSpace2->put_DefaultLocator (mDvbLocator.Get()) != S_OK)
-      cLog::log (LOGERROR, "tune - put_DefaultLocator");
-    if (mTuneRequest->put_Locator (mDvbLocator.Get()) != S_OK)
-      cLog::log (LOGERROR, "tune - put_Locator");
-    if (mScanningTuner->Validate (mTuneRequest.Get()) != S_OK)
-      cLog::log (LOGERROR, "tune - Validate");
-    if (mScanningTuner->put_TuneRequest (mTuneRequest.Get()) != S_OK)
-      cLog::log (LOGERROR, "tune - put_TuneRequest");
-    if (mMediaControl->Run() != S_OK)
-      cLog::log (LOGERROR, "tune - run");
+    cLog::log (LOGERROR, "getBlock not implemented");
+    return 0;
   #endif
 
   #ifdef __linux__
-    frontendSetup();
+    return read (mDvr, block, blockSize);
   #endif
   }
 //}}}
-//{{{
-void cDvb::reset() {
-  cLog::log (LOGERROR, "cDvb reset not implemneted");
-  }
-//}}}
+
 //{{{
 int cDvb::setFilter (uint16_t pid) {
   (void)pid;
@@ -894,19 +876,36 @@ void cDvb::unsetFilter (int fd, uint16_t pid) {
   }
 //}}}
 
-// get block
 //{{{
-int cDvb::getBlock (uint8_t*& block, int& blockSize) {
-  (void)blockSize;
-  (void)block;
+void cDvb::reset() {
+  cLog::log (LOGERROR, "cDvb reset not implemneted");
+  }
+//}}}
+//{{{
+void cDvb::tune (int frequency) {
+
+  mFrequency = frequency;
 
   #ifdef _WIN32
-    cLog::log (LOGERROR, "getBlock not implemented");
-    return 0;
+    // windows tune
+    if (mDvbLocator->put_CarrierFrequency (frequency) != S_OK)
+      cLog::log (LOGERROR, "tune - put_CarrierFrequency");
+    if (mDvbLocator->put_Bandwidth (8) != S_OK)
+      cLog::log (LOGERROR, "tune - put_Bandwidth");
+    if (mDvbTuningSpace2->put_DefaultLocator (mDvbLocator.Get()) != S_OK)
+      cLog::log (LOGERROR, "tune - put_DefaultLocator");
+    if (mTuneRequest->put_Locator (mDvbLocator.Get()) != S_OK)
+      cLog::log (LOGERROR, "tune - put_Locator");
+    if (mScanningTuner->Validate (mTuneRequest.Get()) != S_OK)
+      cLog::log (LOGERROR, "tune - Validate");
+    if (mScanningTuner->put_TuneRequest (mTuneRequest.Get()) != S_OK)
+      cLog::log (LOGERROR, "tune - put_TuneRequest");
+    if (mMediaControl->Run() != S_OK)
+      cLog::log (LOGERROR, "tune - run");
   #endif
 
   #ifdef __linux__
-    return read (mDvr, block, blockSize);
+    frontendSetup();
   #endif
   }
 //}}}

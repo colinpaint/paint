@@ -21,14 +21,13 @@ public:
   ~cDvb();
 
   std::string getStatusString();
-
-  void tune (int frequency);
-  void reset();
+  int getBlock (uint8_t*& block, int& blockSize);
 
   int setFilter (uint16_t pid);
   void unsetFilter (int fd, uint16_t pid);
 
-  int getBlock (uint8_t*& block, int& blockSize);
+  void reset();
+  void tune (int frequency);
 
   std::string mErrorStr = "waiting";
   std::string mTuneStr = "untuned";
@@ -38,6 +37,7 @@ public:
   #ifdef _WIN32
     uint8_t* getBlockBDA (int& len);
     void releaseBlock (int len);
+
     inline static Microsoft::WRL::ComPtr<IMediaControl> mMediaControl;
     inline static Microsoft::WRL::ComPtr<IScanningTuner> mScanningTuner;
   #endif
@@ -45,6 +45,7 @@ public:
   //{{{
   #ifdef __linux__
     int mDvr = 0;
+
     cTsBlock* getBlocks (cTsBlockPool* blockPool);
   #endif
   //}}}

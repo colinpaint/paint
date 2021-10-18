@@ -159,7 +159,7 @@ public:
   void closeFile();
 
 private:
-  uint8_t* tsHeader (uint8_t* ts, int pid, int continuityCount);
+  uint8_t* tsHeader (uint8_t* ts, int pid, uint8_t continuityCount);
   void writePat (int tsid);
   void writePmt();
   void writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr);

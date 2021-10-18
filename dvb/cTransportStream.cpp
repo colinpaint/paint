@@ -560,7 +560,7 @@ void cService::closeFile() {
 
 // private:
 //{{{
-uint8_t* cService::tsHeader (uint8_t* ts, int pid, int continuityCount) {
+uint8_t* cService::tsHeader (uint8_t* ts, int pid, uint8_t continuityCount) {
 
   memset (ts, 0xFF, 188);
 
@@ -627,21 +627,21 @@ void cService::writePmt() {
   *tsPtr++ = 0; // program_info_length;
 
   // video es
-  *tsPtr++ = mVidStreamType;                   // elementary stream_type
+  *tsPtr++ = static_cast<uint8_t>(mVidStreamType); // elementary stream_type
   *tsPtr++ = 0xE0 | ((mVidPid & 0x1F00) >> 8); // elementary_PID
   *tsPtr++ = mVidPid & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // audio es
-  *tsPtr++ = mAudStreamType;                   // elementary stream_type
+  *tsPtr++ = static_cast<uint8_t>(mAudStreamType); // elementary stream_type
   *tsPtr++ = 0xE0 | ((mAudPid & 0x1F00) >> 8); // elementary_PID
   *tsPtr++ = mAudPid & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // subtitle es
-  *tsPtr++ = mSubStreamType;                   // elementary stream_type
+  *tsPtr++ = static_cast<uint8_t>(mSubStreamType); // elementary stream_type
   *tsPtr++ = 0xE0 | ((mSubPid & 0x1F00) >> 8); // elementary_PID
   *tsPtr++ = mSubPid & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
@@ -656,7 +656,7 @@ void cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPt
   // tsSection crc, calc from tsSection start to here
   auto crc = cDvbUtils::getCrc32 (tsSectionStart, int(tsPtr - tsSectionStart));
   *tsPtr++ = (crc & 0xff000000) >> 24;
-  *tsPtr++ = (crc & 0x00ff0000) >> 16;
+  *tsPtr++ = static_cast<uint8_t>((crc & 0x00ff0000) >> 16);
   *tsPtr++ = (crc & 0x0000ff00) >>  8;
   *tsPtr++ =  crc & 0x000000ff;
 
@@ -796,7 +796,7 @@ char cTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int st
     uint32_t getUe() {
 
       uint32_t bits;
-      uint32_t read;
+      uint32_t read = 0;
       int bits_left;
       bool done = false;
       bits = 0;
@@ -864,9 +864,9 @@ char cTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int st
       else {
         // if we are byte aligned, check for 0x7f value - this will indicate
         // we need to skip those bits
-        uint8_t readval = peekBits (8);
+        uint8_t readval = static_cast<uint8_t>(peekBits (8));
         if (readval == 0x7f)
-          readval = getBits (8);
+          readval = static_cast<uint8_t>(getBits (8));
         }
 
       return temp;
