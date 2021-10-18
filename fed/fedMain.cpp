@@ -76,14 +76,8 @@ int main (int numArgs, char* args[]) {
 
   // create app to tie stuff together
   cApp app (platform, graphics);
+  app.setName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolveShortcut (params[0]));
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
-
-  // add monoSpaced font
-  #ifdef _WIN32
-    app.setName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolveShortcut (params[0]));
-  #else
-    app.setName (params.empty() ? "../fed/cTextEdit.cpp" : params[0]);
-  #endif
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 
   platform.setResizeCallback (

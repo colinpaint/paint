@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 #include <functional>
-#include <thread>
 
 // stb - invoke header only library implementation here
 #define STB_IMAGE_IMPLEMENTATION
@@ -33,25 +32,11 @@
 #include "../utils/cFileUtils.h"
 #include "../utils/cLog.h"
 
-// dvb
-#include "../dvb/cTsDvb.h"
-
 #include "../tv/cTvApp.h"
 
 using namespace std;
 //}}}
 //{{{  const multiplexes
-struct sMultiplex {
-  string mName;
-  int mFrequency;
-  vector <string> mSelectedChannels;
-  vector <string> mSaveNames;
-  };
-
-struct sMultiplexes {
-  vector <sMultiplex> mMultiplexes;
-  };
-
 const sMultiplex kHdMultiplex = {
   "hd",
   626000000,
@@ -73,20 +58,7 @@ const sMultiplex kBbcMultiplex = {
   { "bbc1",           "bbc2",    "bbc4" }
   };
 
-const sMultiplex kAllMultiplex = {
-  "all",
-  0,
-  { "all" },
-  { "" }
-  };
-
 const sMultiplexes kMultiplexes = { { kHdMultiplex, kItvMultiplex, kBbcMultiplex } };
-
-#ifdef _WIN32
-  const string kRootName = "/tv";
-#else
-  const string kRootName = "/home/pi/tv";
-#endif
 //}}}
 
 int main (int numArgs, char* args[]) {
@@ -97,10 +69,8 @@ int main (int numArgs, char* args[]) {
   string graphicsName = "opengl";
   bool fullScreen = false;
   bool vsync = true;
-  bool all = false;
-  bool decodeSubtitle = false;
-  bool gui = true;
   sMultiplex multiplex = kHdMultiplex;
+  bool subtitles = false;
   //{{{  parse command line args to params
   // args to params
   vector <string> params;
@@ -128,9 +98,7 @@ int main (int numArgs, char* args[]) {
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
     else if (*it == "full") { fullScreen = true; params.erase (it); }
     else if (*it == "free") { vsync = false; params.erase (it); }
-    else if (*it == "gui") { gui = false; params.erase (it); }
-    else if (*it == "sub") { decodeSubtitle = true; params.erase (it); }
-    else if (*it == "all") { all = true; params.erase (it); }
+    else if (*it == "sub") { subtitles = true; params.erase (it); }
     else ++it;
     };
   //}}}
@@ -149,23 +117,10 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
 
   // create app to tie stuff together
-  cTsDvb tsDvb (multiplex.mFrequency, kRootName, multiplex.mSelectedChannels, multiplex.mSaveNames, decodeSubtitle);
-  cTvApp app (platform, graphics, tsDvb);
+  cTvApp app (platform, graphics, multiplex, subtitles);
+  app.setName (params.empty() ? "" : cFileUtils::resolveShortcut (params[0]));
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
-
-  #ifdef _WIN32
-    app.setName (params.empty() ? "" : cFileUtils::resolveShortcut (params[0]));
-    string fileName = params.empty() ? "" : cFileUtils::resolveShortcut(params[0]);
-  #else
-    app.setName (params.empty() ? "" : params[0]);
-    string fileName = params.empty() ? "" : params[0];
-  #endif
-
-  if (fileName.empty())
-    tsDvb.grab (gui, all ? kRootName : "", multiplex.mName);
-  else
-    tsDvb.readFile (gui, fileName);
 
   platform.setResizeCallback (
     //{{{  resize lambda
@@ -188,20 +143,13 @@ int main (int numArgs, char* args[]) {
     );
     //}}}
 
-  if (gui) {
-    // main UI loop
-    while (platform.pollEvents()) {
-      platform.newFrame();
-      graphics.newFrame();
-      cUI::draw (app);
-      graphics.drawUI (platform.getWindowSize());
-      platform.present();
-      }
-    }
-  else {
-    while (platform.pollEvents()) {
-      this_thread::sleep_for (40ms);
-      }
+  // main UI loop
+  while (platform.pollEvents()) {
+    platform.newFrame();
+    graphics.newFrame();
+    cUI::draw (app);
+    graphics.drawUI (platform.getWindowSize());
+    platform.present();
     }
 
   // cleanup

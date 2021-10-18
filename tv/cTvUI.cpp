@@ -51,21 +51,28 @@ const vector<string> kRtp2  = {"rtp 2"};
 const vector<string> kRtp3  = {"rtp 3"};
 const vector<string> kRtp4  = {"rtp 4"};
 const vector<string> kRtp5  = {"rtp 5"};
+
+#ifdef _WIN32
+  const string kRootName = "/tv";
+#else
+  const string kRootName = "/home/pi/tv";
+#endif
+
 //}}}
 
 namespace {
   int gPacketDigits = 0;
   int gMaxPidPackets = 0;
   //{{{
-  void drawPids (cTsDvb& tsDvb) {
+  void drawPids (cTsDvb* tsDvb) {
 
     // width of error field
     int errorDigits = 1;
-    while (tsDvb.getTransportStream()->getNumErrors() > pow (10, errorDigits))
+    while (tsDvb->getTransportStream()->getNumErrors() > pow (10, errorDigits))
       errorDigits++;
 
     int prevSid = 0;
-    for (auto& pidInfoItem : tsDvb.getTransportStream()->mPidInfoMap) {
+    for (auto& pidInfoItem : tsDvb->getTransportStream()->mPidInfoMap) {
       // iterate for pidInfo
       cPidInfo& pidInfo = pidInfoItem.second;
 
@@ -183,6 +190,16 @@ public:
 
     cTvApp& tvApp = (cTvApp&)app;
 
+    if (!mTsDvb) {
+      mTsDvb = new cTsDvb (tvApp.getMultiplex().mFrequency, kRootName,
+                           tvApp.getMultiplex().mSelectedChannels, tvApp.getMultiplex().mSaveNames,
+                           tvApp.getSubtitles());
+      if (tvApp.getName().empty())
+        mTsDvb->grab (true, "", tvApp.getMultiplex().mName);
+      else
+        mTsDvb->readFile (true, tvApp.getName());
+      }
+
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
@@ -214,12 +231,12 @@ public:
     // tsDvb totals
     ImGui::SameLine();
     ImGui::Text (fmt::format ("packets:{} errors:{}",
-                 tvApp.getTsDvb().getTransportStream()->getNumPackets(),
-                 tvApp.getTsDvb().getTransportStream()->getNumErrors()).c_str());
+                 mTsDvb->getTransportStream()->getNumPackets(),
+                 mTsDvb->getTransportStream()->getNumErrors()).c_str());
     //}}}
 
     ImGui::PushFont (app.getMonoFont());
-    drawPids (tvApp.getTsDvb());
+    drawPids (mTsDvb);
     ImGui::PopFont();
 
     ImGui::End();
@@ -229,6 +246,7 @@ public:
 private:
   // vars
   bool mOpen = true;
+  cTsDvb* mTsDvb = nullptr;
 
   static cUI* create (const string& className) { return new cTvUI (className); }
   inline static const bool mRegistered = registerClass ("tv", &create);

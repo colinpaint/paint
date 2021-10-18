@@ -13,14 +13,27 @@ class cGraphics;
 class cTsDvb;
 //}}}
 
+struct sMultiplex {
+  std::string mName;
+  int mFrequency;
+  std::vector <std::string> mSelectedChannels;
+  std::vector <std::string> mSaveNames;
+  };
+
+struct sMultiplexes {
+  std::vector <sMultiplex> mMultiplexes;
+  };
+
 class cTvApp : public cApp {
 public:
-  cTvApp (cPlatform& platform, cGraphics& graphics, cTsDvb& tsDvb)
-    : cApp (platform, graphics), mTsDvb(tsDvb) {}
+  cTvApp (cPlatform& platform, cGraphics& graphics, sMultiplex& multiplex, bool subtitles)
+    : cApp (platform, graphics), mMultiplex(multiplex), mSubtitles(subtitles) {}
   ~cTvApp() = default;
 
-  cTsDvb& getTsDvb() { return mTsDvb; }
+  sMultiplex getMultiplex() { return mMultiplex; }
+  bool getSubtitles() { return mSubtitles; }
 
 private:
-  cTsDvb& mTsDvb;
+  sMultiplex mMultiplex;
+  bool mSubtitles = false;
   };
