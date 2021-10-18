@@ -58,7 +58,14 @@ const sMultiplex kBbcMultiplex = {
   { "bbc1",           "bbc2",    "bbc4" }
   };
 
-const sMultiplexes kMultiplexes = { { kHdMultiplex, kItvMultiplex, kBbcMultiplex } };
+const sMultiplex kAllHdMultiplex = {
+  "allHd",
+  626000000,
+  { "allHd" },
+  { "" }
+  };
+
+const sMultiplexes kMultiplexes = { { kHdMultiplex, kItvMultiplex, kBbcMultiplex, kAllHdMultiplex } };
 //}}}
 
 int main (int numArgs, char* args[]) {
