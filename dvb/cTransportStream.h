@@ -192,7 +192,8 @@ public:
   virtual ~cTransportStream() { clear(); }
 
   //  gets
-  uint64_t getErrors() const { return mErrors; }
+  uint64_t getNumPackets() const { return mNumPackets; }
+  uint64_t getNumErrors() const { return mNumErrors; }
   std::chrono::system_clock::time_point getTime() const { return mTime; }
 
   std::string getChannelStringBySid (int sid);
@@ -244,7 +245,8 @@ private:
   int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
 
   // vars
-  uint64_t mErrors = 0;
+  uint64_t mNumPackets = 0;
+  uint64_t mNumErrors = 0;
 
   std::map <int, int> mProgramMap;
 

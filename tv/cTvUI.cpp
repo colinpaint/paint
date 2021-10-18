@@ -61,7 +61,7 @@ namespace {
 
     // width of error field
     int errorDigits = 2;
-    while (tsDvb.getTransportStream()->getErrors() > pow (10, errorDigits))
+    while (tsDvb.getTransportStream()->getNumErrors() > pow (10, errorDigits))
       errorDigits++;
 
     int prevSid = 0;
@@ -172,13 +172,15 @@ namespace {
 class cTvUI : public cUI {
 public:
   //{{{
-    cTvUI(const string& name) : cUI(name) {
+    cTvUI (const string& name) : cUI(name) {
     }
   //}}}
   virtual ~cTvUI() = default;
 
   //{{{
   void addToDrawList (cApp& app) final {
+
+    cTvApp& tvApp = (cTvApp&)app;
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
@@ -207,10 +209,13 @@ public:
     // vertice debug
     ImGui::Text (fmt::format ("{}:{}",
                  ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
+    ImGui::SameLine();
+    ImGui::Text (fmt::format ("{}:{}",
+                 tvApp.getTsDvb().getTransportStream()->getNumPackets(),
+                 tvApp.getTsDvb().getTransportStream()->getNumErrors()).c_str());
     //}}}
 
     ImGui::PushFont (app.getMonoFont());
-    cTvApp& tvApp = (cTvApp&)app;
     drawPids (tvApp.getTsDvb());
     ImGui::PopFont();
 

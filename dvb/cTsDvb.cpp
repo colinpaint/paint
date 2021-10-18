@@ -309,7 +309,7 @@ void cTsDvb::readFileInternal (bool ownThread, const string& fileName) {
       streamPos += mDvbTransportStream->demux ({}, buffer, bytesRead, streamPos, false);
     else
       break;
-    mErrorStr = fmt::format ("{}", mDvbTransportStream->getErrors());
+    mErrorStr = fmt::format ("{}", mDvbTransportStream->getNumErrors());
     }
 
   fclose (file);
@@ -344,8 +344,8 @@ void cTsDvb::grabInternal (bool ownThread, const string& root, const string& mul
           releaseBlock (blockSize);
 
           mErrorStr.clear();
-          if (mDvbTransportStream->getErrors())
-            mErrorStr += fmt::format ("{}err", mDvbTransportStream->getErrors());
+          if (mDvbTransportStream->getNumErrors())
+            mErrorStr += fmt::format ("{}err", mDvbTransportStream->getNumErrors());
           if (streamPos < 1000000)
             mErrorStr = fmt::format ("{}k", streamPos / 1000);
           else

@@ -1028,7 +1028,7 @@ void cTransportStream::clear() {
   mProgramMap.clear();
   mPidInfoMap.clear();
 
-  mErrors = 0;
+  mNumErrors = 0;
 
   mTimeDefined = false;
   }
@@ -1069,7 +1069,7 @@ int64_t cTransportStream::demux (const vector<int>& pids, uint8_t* tsBuf, int64_
               if (pidInfo->mContinuity == continuityCount) // strange case of bbc subtitles
                 pidInfo->mRepeatContinuity++;
               else {
-                mErrors++;
+                mNumErrors++;
                 // abandon any buffered pes or section
                 pidInfo->mBufPtr = nullptr;
                 }
@@ -1227,6 +1227,7 @@ int64_t cTransportStream::demux (const vector<int>& pids, uint8_t* tsBuf, int64_
         ts = nextPacket;
         nextPacket += 188;
         streamPos += 188;
+        mNumPackets++;
         }
       }
     else {
