@@ -20,13 +20,9 @@ struct sMultiplex {
   std::vector <std::string> mSaveNames;
   };
 
-struct sMultiplexes {
-  std::vector <sMultiplex> mMultiplexes;
-  };
-
 class cTvApp : public cApp {
 public:
-  cTvApp (cPlatform& platform, cGraphics& graphics, sMultiplex& multiplex, bool subtitles)
+  cTvApp (cPlatform& platform, cGraphics& graphics, const sMultiplex& multiplex, bool subtitles)
     : cApp (platform, graphics), mMultiplex(multiplex), mSubtitles(subtitles) {}
   ~cTvApp() = default;
 
@@ -34,6 +30,6 @@ public:
   bool getSubtitles() { return mSubtitles; }
 
 private:
-  sMultiplex mMultiplex;
+  const sMultiplex mMultiplex;
   bool mSubtitles = false;
   };

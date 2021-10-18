@@ -37,35 +37,31 @@
 using namespace std;
 //}}}
 //{{{  const multiplexes
-const sMultiplex kHdMultiplex = {
-  "hd",
-  626000000,
-  { "BBC ONE HD", "BBC TWO HD", "ITV HD", "Channel 4 HD", "Channel 5 HD" },
-  { "bbc1hd",     "bbc2hd",     "itv1hd", "chn4hd",       "chn5hd" }
-  };
+const vector <sMultiplex> kMultiplexes = {
+  { "hd",
+    626000000,
+    { "BBC ONE HD", "BBC TWO HD", "ITV HD", "Channel 4 HD", "Channel 5 HD" },
+    { "bbc1hd",     "bbc2hd",     "itv1hd", "chn4hd",       "chn5hd" }
+  },
 
-const sMultiplex kItvMultiplex = {
-  "itv",
-  650000000,
-  { "ITV",  "ITV2", "ITV3", "ITV4", "Channel 4", "Channel 4+1", "More 4", "Film4" , "E4", "Channel 5" },
-  { "itv1", "itv2", "itv3", "itv4", "chn4"     , "c4+1",        "more4",  "film4",  "e4", "chn5" }
-  };
+  { "itv",
+    650000000,
+    { "ITV",  "ITV2", "ITV3", "ITV4", "Channel 4", "Channel 4+1", "More 4", "Film4" , "E4", "Channel 5" },
+    { "itv1", "itv2", "itv3", "itv4", "chn4"     , "c4+1",        "more4",  "film4",  "e4", "chn5" }
+  },
 
-const sMultiplex kBbcMultiplex = {
-  "bbc",
-  674000000,
-  { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
-  { "bbc1",           "bbc2",    "bbc4" }
-  };
+  { "bbc",
+    674000000,
+    { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
+    { "bbc1",           "bbc2",    "bbc4" }
+  },
 
-const sMultiplex kAllHdMultiplex = {
-  "allHd",
-  626000000,
-  { "allHd" },
-  { "" }
+  { "allHd",
+    626000000,
+    { "allHd" },
+    { "" }
+  }
   };
-
-const sMultiplexes kMultiplexes = { { kHdMultiplex, kItvMultiplex, kBbcMultiplex, kAllHdMultiplex } };
 //}}}
 
 int main (int numArgs, char* args[]) {
@@ -76,7 +72,7 @@ int main (int numArgs, char* args[]) {
   string graphicsName = "opengl";
   bool fullScreen = false;
   bool vsync = true;
-  sMultiplex multiplex = kHdMultiplex;
+  sMultiplex multiplex = kMultiplexes[0];
   bool subtitles = false;
   //{{{  parse command line args to params
   // args to params
@@ -88,9 +84,9 @@ int main (int numArgs, char* args[]) {
   for (auto it = params.begin(); it < params.end();) {
     // look for named multiplex
     bool multiplexFound = false;
-    for (size_t j = 0; j < kMultiplexes.mMultiplexes.size() && !multiplexFound; j++) {
-      if (*it == kMultiplexes.mMultiplexes[j].mName) {
-        multiplex = kMultiplexes.mMultiplexes[j];
+    for (size_t j = 0; j < kMultiplexes.size() && !multiplexFound; j++) {
+      if (*it == kMultiplexes[j].mName) {
+        multiplex = kMultiplexes[j];
         multiplexFound = true;
         }
       }
