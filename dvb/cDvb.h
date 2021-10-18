@@ -18,7 +18,7 @@
 class cDvb {
 public:
   cDvb (int frequency, int adapter);
-  ~cDvb();
+  virtual ~cDvb();
 
   std::string getStatusString();
   int getBlock (uint8_t*& block, int& blockSize);
