@@ -148,10 +148,10 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
 
   // create app to tie stuff together
-  cTsDvb tsDvb (multiplex.mFrequency, kRootName, multiplex.mSelectedChannels, multiplex.mSaveNames,
-                decodeSubtitle);
+  cTsDvb tsDvb (multiplex.mFrequency, kRootName, multiplex.mSelectedChannels, multiplex.mSaveNames, decodeSubtitle);
   cTvApp app (platform, graphics, tsDvb);
-  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
+  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
+  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 
   #ifdef _WIN32
     app.setName (params.empty() ? "" : cFileUtils::resolveShortcut (params[0]));
@@ -160,9 +160,6 @@ int main (int numArgs, char* args[]) {
     app.setName (params.empty() ? "" : params[0]);
     string fileName = params.empty() ? "" : params[0];
   #endif
-
-  // add monoSpaced font
-  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
 
   platform.setResizeCallback (
     //{{{  resize lambda

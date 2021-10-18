@@ -192,8 +192,8 @@ public:
   virtual ~cTransportStream() { clear(); }
 
   //  gets
-  uint64_t getErrors() { return mErrors; }
-  std::chrono::system_clock::time_point getTime() { return mTime; }
+  uint64_t getErrors() const { return mErrors; }
+  std::chrono::system_clock::time_point getTime() const { return mTime; }
 
   std::string getChannelStringBySid (int sid);
   cService* getService (int index, int64_t& firstPts, int64_t& lastPts);

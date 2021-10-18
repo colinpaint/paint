@@ -60,6 +60,10 @@ namespace {
   //{{{
   void drawPids (cTsDvb& tsDvb) {
 
+    // width of error field
+    if (tsDvb.getTransportStream()->getErrors() > pow (10, gErrorDigits)) 
+      gErrorDigits++;
+
     int prevSid = 0;
     for (auto& pidInfoItem : tsDvb.getTransportStream()->mPidInfoMap) {
       // iterate pidInfo
@@ -68,8 +72,8 @@ namespace {
         ImGui::Separator();
 
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
-                                    pidInfo.mPackets, gPacketDigits, pidInfo.mErrors, gErrorDigits, pidInfo.mPid,
-                                    getFullPtsString (pidInfo.mPts), pidInfo.getTypeString()).c_str());
+                              pidInfo.mPackets, gPacketDigits, pidInfo.mErrors, gErrorDigits, pidInfo.mPid,
+                              getFullPtsString (pidInfo.mPts), pidInfo.getTypeString()).c_str());
 
       if (pidInfo.mStreamType == 6) {
         //{{{  draw subtitle
@@ -138,31 +142,29 @@ namespace {
         //}}}
         }
 
-      gMaxPidPackets = max (gMaxPidPackets, pidInfo.mPackets);
-      float frac = pidInfo.mPackets / float(gMaxPidPackets);
-
+      // get pos for stream info
       ImGui::SameLine();
       ImVec2 pos = ImGui::GetCursorPos();
       pos.y -= ImGui::GetScrollY();
 
+      // draw stream bar
+      gMaxPidPackets = max (gMaxPidPackets, pidInfo.mPackets);
+      float frac = pidInfo.mPackets / float(gMaxPidPackets);
       ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x)), pos.y + ImGui::GetTextLineHeight() - 1.f};
       ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
 
+      // draw stream text
       string streamText = pidInfo.getInfoString();
       if ((pidInfo.mStreamType == 0) && (pidInfo.mSid > 0))
         streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
       ImGui::TextUnformatted (streamText.c_str());
 
-      // set packetCount width for next time
-      if (pidInfo.mPackets > pow (10, gPacketDigits))
+      // width of packet field
+      if (pidInfo.mPackets > pow (10, gPacketDigits)) 
         gPacketDigits++;
 
       prevSid = pidInfo.mSid;
       }
-
-    // set errorCount width for next time
-    if (tsDvb.getTransportStream()->getErrors() > pow (10, gErrorDigits))
-      gErrorDigits++;
     }
   //}}}
   }

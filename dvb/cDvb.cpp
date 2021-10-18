@@ -771,7 +771,7 @@ cDvb::~cDvb() {
 //}}}
 
 //{{{
-string cDvb::getStatusString() {
+string cDvb::getStatusString() const {
 
   #ifdef _WIN32
     return "";

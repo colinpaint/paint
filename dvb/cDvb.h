@@ -20,7 +20,7 @@ public:
   cDvb (int frequency, int adapter);
   virtual ~cDvb();
 
-  std::string getStatusString();
+  std::string getStatusString() const;
   int getBlock (uint8_t*& block, int& blockSize);
 
   int setFilter (uint16_t pid);
