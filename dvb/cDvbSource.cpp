@@ -8,10 +8,13 @@
   #include <locale>
   #include <codecvt>
 
+  #include <wrl.h>
+  #include <initguid.h>
   #include <DShow.h>
   #include <bdaiface.h>
   #include <ks.h>
   #include <ksmedia.h>
+  #include <bdatif.h>
   #include <bdamedia.h>
 
   MIDL_INTERFACE ("0579154A-2B53-4994-B0D0-E773148EFF85")

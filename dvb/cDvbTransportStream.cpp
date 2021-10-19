@@ -1,25 +1,6 @@
 // cDvbTransportStream.cpp - file or dvbSource -> transportStream demux
-//{{{  windows includes
-#ifdef _WIN32
-  #define _CRT_SECURE_NO_WARNINGS
-  #define NOMINMAX
-
-  // !!!! no idea why this is still here !!!!
-  #include <locale>
-  #include <codecvt>
-
-  #include <wrl.h>
-  #include <initguid.h>
-  #include <DShow.h>
-  #include <bdaiface.h>
-  #include <ks.h>
-  #include <ksmedia.h>
-  #include <bdatif.h>
-  #include <bdamedia.h>
-  DEFINE_GUID (CLSID_DVBTLocator, 0x9CD64701, 0xBDF3, 0x4d14, 0x8E,0x03, 0xF1,0x29,0x83,0xD8,0x66,0x64);
-  DEFINE_GUID (CLSID_BDAtif, 0xFC772ab0, 0x0c7f, 0x11d3, 0x8F,0xf2, 0x00,0xa0,0xc9,0x22,0x4c,0xf4);
-#endif
-//}}}
+#define _CRT_SECURE_NO_WARNINGS
+#define NOMINMAX
 //{{{  linux includes
 #ifdef __linux__
   #include <unistd.h>

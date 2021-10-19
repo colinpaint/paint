@@ -2,22 +2,16 @@
 //{{{  includes
 #pragma once
 
-#ifdef _WIN32
-  #include <wrl.h>
-  #include <initguid.h>
-  #include <control.h>
-  #include <bdatif.h>
-#endif
+#include <cstdint>
+#include <string>
 
 #ifdef __linux__
   #include <poll.h>
   #include <linux/dvb/frontend.h>
-
-  class cTsBlock;
-  class cTsBlockPool;
 #endif
 
-#include <string>
+class cTsBlock;
+class cTsBlockPool;
 //}}}
 
 class cDvbSource {
