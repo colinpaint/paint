@@ -36,7 +36,7 @@
 
 using namespace std;
 //}}}
-//{{{  const multiplexes
+//{{{
 static const vector <cDvbMultiplex> kDvbMultiplexes = {
   { "hd",
     626000000,
@@ -83,10 +83,10 @@ int main (int numArgs, char* args[]) {
   for (int i = 1; i < numArgs; i++)
     params.push_back (args[i]);
 
-  // parse and remove recognised params
+  // parse and remove recognised mulitplex
   bool found = false;
   cDvbMultiplex foundMultiplex = kDvbMultiplexes[0];
-  for (auto it = params.begin(); it < params.end() && !found;) {
+  for (auto it = params.begin(); it < params.end();) {
     for (auto& multiplex : kDvbMultiplexes) {
       if (*it == multiplex.mName) {
         foundMultiplex = multiplex;
@@ -95,9 +95,11 @@ int main (int numArgs, char* args[]) {
         break;
         }
       }
-    ++it;
+    if (!found)
+      ++it;
     }
 
+  // parse and remove recognised params
   for (auto it = params.begin(); it < params.end();) {
     if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }

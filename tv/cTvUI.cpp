@@ -56,7 +56,7 @@ namespace {
   int gPacketDigits = 0;
   int gMaxPidPackets = 0;
   //{{{
-  void drawPids (cDvbTransportStream* dvbTransportStream) {
+  void drawTransportStream (cDvbTransportStream* dvbTransportStream) {
 
     // list recorded items
     for (auto& recordItem : dvbTransportStream->getRecordItems())
@@ -89,13 +89,13 @@ namespace {
       if (pidInfo.mStreamType == 6) {
         //{{{  draw subtitle
         cSubtitle* subtitle = dvbTransportStream->getSubtitleBySid (pidInfo.mSid);
+
         if (subtitle && !subtitle->mRects.empty()) {
-          // subtitle with some lines
-          float clutX = ImGui::GetWindowWidth() - ImGui::GetTextLineHeight() * 5.f;
-          float cellSize = ImGui::GetTextLineHeight()/2.f;
-          ImVec2 subPos = pos;
+          float clutPotX = ImGui::GetWindowWidth() - ImGui::GetTextLineHeight() * 5.f;
+          float clutPotSize = ImGui::GetTextLineHeight()/2.f;
+
+          ImVec2 subtitlePos = pos;
           for (int line = (int)subtitle->mRects.size()-1; line >= 0; line--) {
-            // iterate rects
             float dstWidth = ImGui::GetWindowWidth() - pos.x;
             float dstHeight = float(subtitle->mRects[line]->mHeight * dstWidth) / subtitle->mRects[line]->mWidth;
             if (dstHeight > ImGui::GetTextLineHeight()) {
@@ -116,23 +116,25 @@ namespace {
             //else if (subtitle->mChanged)  // !!! assumes image is same size as before !!!
             //  vg->updateImage (mImage[imageIndex], (uint8_t*)subtitle->mRects[line]->mPixData);
             //auto imagePaint = vg->setImagePattern (cPointF(visx, ySub), cPointF(dstWidth, dstHeight), 0.f, mImage[imageIndex], 1.f);
-            ImGui::GetWindowDrawList()->AddRect (subPos, {subPos.x + dstWidth, subPos.y + dstHeight}, 0xff00ffff);
+            ImGui::GetWindowDrawList()->AddRect (
+              subtitlePos, {subtitlePos.x + dstWidth, subtitlePos.y + dstHeight}, 0xff00ffff);
             //imageIndex++;
 
             // draw subtitle position
             string text = fmt::format ("{},{}", subtitle->mRects[line]->mX, subtitle->mRects[line]->mY);
-            ImGui::GetWindowDrawList()->AddText (ImGui::GetFont(), ImGui::GetFontSize(), subPos, 0xffffffff, text.c_str());
+            ImGui::GetWindowDrawList()->AddText (
+              ImGui::GetFont(), ImGui::GetFontSize(), subtitlePos, 0xffffffff, text.c_str());
 
-            // draw clut
-            for (int cell = 0; cell < subtitle->mRects[line]->mClutSize; cell++) {
-              ImVec2 cellPos = {clutX + (cell % 8) * cellSize, subPos.y + (cell / 8) * cellSize};
-              uint32_t color = subtitle->mRects[line]->mClut[cell];
+            // draw clut color pots
+            for (int pot = 0; pot < subtitle->mRects[line]->mClutSize; pot++) {
+              ImVec2 clutPotPos {clutPotX + (pot % 8) * clutPotSize, subtitlePos.y + (pot / 8) * clutPotSize};
+              uint32_t color = subtitle->mRects[line]->mClut[pot]; // possible swizzle
               ImGui::GetWindowDrawList()->AddRectFilled (
-                cellPos, {cellPos.x + cellSize - 1.f, cellPos.y + cellSize - 1.f}, color);
+                clutPotPos, {clutPotPos.x + clutPotSize - 1.f, clutPotPos.y + clutPotSize - 1.f}, color);
               }
 
-            // next subtitle rect
-            subPos.y += ImGui::GetTextLineHeight();
+            // next subtitle line
+            subtitlePos.y += ImGui::GetTextLineHeight();
             }
 
           // reset changed flag
@@ -220,7 +222,7 @@ public:
       ImGui::TextUnformatted (dvbTransportStream->getErrorString().c_str());
 
       ImGui::PushFont (app.getMonoFont());
-      drawPids (dvbTransportStream);
+      drawTransportStream (dvbTransportStream);
       ImGui::PopFont();
       }
 
