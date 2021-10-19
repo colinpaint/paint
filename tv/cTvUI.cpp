@@ -223,7 +223,7 @@ public:
 
       // fps text
       ImGui::SameLine();
-      ImGui::Text (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+      ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
       ImGui::SameLine();
       }
 
@@ -235,16 +235,23 @@ public:
       }
 
     // vertice debug
-    ImGui::Text (fmt::format ("{}:{}",
-                 ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
+    ImGui::TextUnformatted (fmt::format ("{}:{}",
+                            ImGui::GetIO().MetricsRenderVertices,
+                            ImGui::GetIO().MetricsRenderIndices/3).c_str());
 
     // tsDvb totals
     ImGui::SameLine();
-    ImGui::Text (fmt::format ("packets:{} errors:{}",
-                 mDvbTransportStream->getNumPackets(), mDvbTransportStream->getNumErrors()).c_str());
+    ImGui::TextUnformatted (fmt::format ("packets:{} errors:{}",
+                            mDvbTransportStream->getNumPackets(), 
+                            mDvbTransportStream->getNumErrors()).c_str());
     //}}}
 
     if (mDvbTransportStream) {
+      ImGui::SameLine();
+      ImGui::TextUnformatted (mDvbTransportStream->getSignalString().c_str());
+      ImGui::SameLine();
+      ImGui::TextUnformatted (mDvbTransportStream->getErrorString().c_str());
+
       ImGui::PushFont (app.getMonoFont());
       drawPids (mDvbTransportStream);
       ImGui::PopFont();

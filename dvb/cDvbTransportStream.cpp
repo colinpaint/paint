@@ -288,16 +288,16 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
     while (true) {
       int bytesRead = read (mDvr, buffer, kDvrReadBufferSize);
       if (bytesRead > 0) {
-        streamPos += mDvbTransportStream->demux ({}, buffer, bytesRead, 0, false);
+        streamPos += demux ({}, buffer, bytesRead, 0, false);
         if (mFile)
           fwrite (buffer, 1, bytesRead, mFile);
 
-        bool show = mDvbTransportStream->getNumErrors() != mLastErrors;
-        mLastErrors = mDvbTransportStream->getNumErrors();
+        bool show = getNumErrors() != mLastErrors;
+        mLastErrors = getNumErrors();
 
-        mSignalStr = getStatusString();
+        mSignalString = getStatusString();
         if (show) {
-          mErrorStr = fmt::format ("err:{}", mDvbTransportStream->getNumErrors());
+          mErrorString = fmt::format ("err:{}", getNumErrors());
           cLog::log (LOGINFO, mErrorStr + " " + mSignalStr);
           }
         }

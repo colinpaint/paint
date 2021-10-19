@@ -29,8 +29,10 @@ public:
   cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool subtitle);
   virtual ~cDvbTransportStream();
 
-  cSubtitle* getSubtitleBySid (uint16_t sid);
   std::vector <std::string>& getRecordItems() { return mRecordItems; }
+  std::string getErrorString() { return mErrorString; }
+  std::string getSignalString() { return mSignalString; }
+  cSubtitle* getSubtitleBySid (uint16_t sid);
 
   void dvbSource (bool ownThread);
   void fileSource (bool ownThread, const std::string& fileName);
