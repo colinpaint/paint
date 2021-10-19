@@ -245,22 +245,23 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
       uint64_t streamPos = 0;
       while (true) {
         int bytesRead = read (mDvbSource->mDvr, buffer, kDvrReadBufferSize);
-        if (bytesRead > 0) {
+        if (bytesRead == 0) 
+          cLog::log (LOGINFO, "cDvb grabThread no bytes read");
+        else {
+          // demux
           streamPos += demux ({}, buffer, bytesRead, 0, false);
           if (mFile)
             fwrite (buffer, 1, bytesRead, mFile);
 
+          // get status
+          mSignalString = mDvbSource->getStatusString();
+
+          // log if more errors
           bool show = getNumErrors() != mLastErrors;
           mLastErrors = getNumErrors();
-
-          mSignalString = mDvbSource->getStatusString();
-          if (show) {
-            mErrorString = fmt::format ("err:{}", getNumErrors());
-            cLog::log (LOGINFO, mErrorString + " " + mSignalString);
-            }
+          if (show) 
+            cLog::log (LOGINFO, fmt::format ("err:{} {}", getNumErrors(), mSignalString));
           }
-        else
-          cLog::log (LOGINFO, "cDvb grabThread no bytes read");
         }
       free (buffer);
       }

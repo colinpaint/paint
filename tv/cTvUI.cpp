@@ -90,9 +90,11 @@ namespace {
         //{{{  draw subtitle
         cSubtitle* subtitle = dvbTransportStream->getSubtitleBySid (pidInfo.mSid);
         if (subtitle && !subtitle->mRects.empty()) {
-          // subttitle with some rects
-          float ySub = pos.y - ImGui::GetTextLineHeight();
+          float clutX = ImGui::GetWindowWidth() - ImGui::GetTextLineHeight() * 5.f;
+          float cellSize = ImGui::GetTextLineHeight()/2.f;
 
+          // subttitle with some rects
+          ImVec2 subPos = pos;
           for (int line = (int)subtitle->mRects.size()-1; line >= 0; line--) {
             // iterate rects
             float dstWidth = ImGui::GetWindowWidth() - pos.x;
@@ -104,9 +106,6 @@ namespace {
               dstWidth *= scaleh;
               }
 
-            // draw bgnd
-            //draw->drawRect (kDarkGreyF, cPointF(visx, ySub), cPointF(dstWidth, dstHeight));
-
             // create or update rect image
             //if (mImage[imageIndex] == -1) {
             //  if (imageIndex < 20)
@@ -117,39 +116,23 @@ namespace {
             //  }
             //else if (subtitle->mChanged)  // !!! assumes image is same size as before !!!
             //  vg->updateImage (mImage[imageIndex], (uint8_t*)subtitle->mRects[line]->mPixData);
-
-            // draw rect image
             //auto imagePaint = vg->setImagePattern (cPointF(visx, ySub), cPointF(dstWidth, dstHeight), 0.f, mImage[imageIndex], 1.f);
-            ImVec2 subPos = pos;
-            subPos.y += ySub;
-            ImVec2 subPosTo = subPos;
-            subPosTo.x += dstWidth;
-            subPosTo.y += dstHeight;
-            ImGui::GetWindowDrawList()->AddRect (subPos, subPosTo, 0xff00ffff);
-
+            ImGui::GetWindowDrawList()->AddRect (subPos, {subPos.x + dstWidth, subPos.y + dstHeight}, 0xff00ffff);
             //imageIndex++;
-
             // draw rect position
-            //std::string text = dec(subtitle->mRects[line]->mX) + "," + dec(subtitle->mRects[line]->mY,3);
-            //float posWidth = draw->drawTextRight (kWhiteF, getLineHeight(), text, cPointF(mOrg.x + mSize.x,  ySub), cPointF(mSize.x - mOrg.x, dstHeight));
-            float posWidth = 10.f;
-
-            //{{{  draw clut
-            float clutX = ImGui::GetWindowWidth() - posWidth - ImGui::GetTextLineHeight() * 4.f;
+            string text = fmt::format ("{},{}", subtitle->mRects[line]->mX, subtitle->mRects[line]->mY);
+            ImGui::GetWindowDrawList()->AddText (ImGui::GetFont(), ImGui::GetFontSize(), subPos, 0xffffffff, text.c_str());
+            // draw clut
             for (int i = 0; i < subtitle->mRects[line]->mClutSize; i++) {
-              float cx = clutX + (i % 8) * ImGui::GetTextLineHeight() / 2.f;
-              float cy = ySub + (i / 8) * ImGui::GetTextLineHeight() / 2.f;
-              //draw->drawRect (sColourF(subtitle->mRects[line]->mClut[i]), cPointF(cx, cy), cPointF((getLineHeight()/2.f)-1.f, (getLineHeight() / 2.f) - 1.f));
-              subPos.x = pos.x + cx;
-              subPos.y = pos.y + cy;
-              subPosTo.x = subPos.y + (ImGui::GetTextLineHeight()/2.f)-1.f;
-              subPosTo.x = subPos.y + (ImGui::GetTextLineHeight()/2.f)-1.f;
-              ImGui::GetWindowDrawList()->AddRect (subPos, subPosTo, 0xff00ffff);
+              float cellX = clutX + (i % 8) * cellSize;
+              float cellY = subPos.y + (i / 8) * cellSize;
+              uint32_t color = subtitle->mRects[line]->mClut[i];
+              ImGui::GetWindowDrawList()->AddRectFilled (
+                {cellX, cellY}, {cellX + cellSize - 1.f, cellY + cellSize - 1.f}, color);
               }
-            //}}}
 
-            // next subtitle line
-            ySub += ImGui::GetTextLineHeight();
+            // next subtitle rect
+            subPos.y += ImGui::GetTextLineHeight();
             }
 
           // reset changed flag
