@@ -20,26 +20,24 @@ public:
   int mFrequency;
   std::vector <std::string> mChannels;
   std::vector <std::string> mChannelRecordNames;
+  bool mRecordAllChannels;
   };
 //}}}
 
-class cGraphics;
-
 class cDvbTransportStream : public cTransportStream {
 public:
-  cDvbTransportStream (const cDvbMultiplex& dvbMultiplex,
-                       const std::string& recordRootName, const std::string& recordAllRootName,
-                       bool recordAll, bool subtitle);
+  cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool subtitle);
   virtual ~cDvbTransportStream();
 
   cSubtitle* getSubtitleBySid (uint16_t sid);
 
-  void readFile (bool ownThread, const std::string& fileName);
-  void dvbSource (bool ownThread, const std::string& multiplexName);
+  void dvbSource (bool ownThread);
+  void fileSource (bool ownThread, const std::string& fileName);
 
 protected:
   virtual void start (cService* service, const std::string& name,
-                      std::chrono::system_clock::time_point time, std::chrono::system_clock::time_point starttime,
+                      std::chrono::system_clock::time_point time, 
+                      std::chrono::system_clock::time_point starttime,
                       bool selected) final;
   virtual void pesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) final;
   virtual void stop (cService* service) final;
@@ -49,22 +47,20 @@ protected:
   virtual bool subDecodePes (cPidInfo* pidInfo) final;
 
 private:
-  void readFileInternal (bool ownThread, const std::string& fileName);
-  void dvbSourceInternal (bool ownThread, const std::string& multiplexName);
+  void dvbSourceInternal (bool ownThread);
+  void fileSourceInternal (bool ownThread, const std::string& fileName);
 
   // vars
   std::mutex mFileMutex;
 
   cDvbMultiplex mDvbMultiplex;
   std::string mRecordRootName;
-  std::string mRecordAllRootName;
-  bool mRecordAll;
-  bool mSubtitle;
 
+  cDvbSource* mDvbSource = nullptr;
   uint64_t mLastErrors = 0;
   std::string mErrorString;
   std::string mSignalString;
-  cDvbSource* mDvbSource = nullptr;
 
+  bool mSubtitle;
   std::map <uint16_t, cSubtitle*> mSubtitleMap; // indexed by sid
   };

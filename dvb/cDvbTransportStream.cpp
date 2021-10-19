@@ -75,11 +75,8 @@ constexpr bool kDebug = false;
 // public:
 //{{{
 cDvbTransportStream::cDvbTransportStream (const cDvbMultiplex& dvbMultiplex,
-                                          const string& recordRootName, const string& recordAllRootName,
-                                          bool recordAll, bool subtitle)
-    : mDvbMultiplex(dvbMultiplex),
-      mRecordRootName(recordRootName), mRecordAllRootName(recordAllRootName),
-      mRecordAll(recordAll), mSubtitle(subtitle) {
+                                          const std::string& recordRootName, bool subtitle)
+    : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName), mSubtitle(subtitle) {
 
   mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
   }
@@ -102,21 +99,21 @@ cSubtitle* cDvbTransportStream::getSubtitleBySid (uint16_t sid) {
 //}}}
 
 //{{{
-void cDvbTransportStream::readFile (bool ownThread, const string& fileName) {
+void cDvbTransportStream::dvbSource (bool ownThread) {
 
   if (ownThread)
-    thread ([=, this](){ readFileInternal (true, fileName); } ).detach();
+    thread([=, this]() { dvbSourceInternal (true); }).detach();
   else
-    readFileInternal (false, fileName);
+    dvbSourceInternal (false);
   }
 //}}}
 //{{{
-void cDvbTransportStream::dvbSource (bool ownThread, const string& multiplexName) {
+void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
 
   if (ownThread)
-    thread([=, this]() { dvbSourceInternal (true, multiplexName); }).detach();
+    thread ([=, this](){ fileSourceInternal (true, fileName); } ).detach();
   else
-    dvbSourceInternal (false, multiplexName);
+    fileSourceInternal (false, fileName);
   }
 //}}}
 
@@ -134,9 +131,9 @@ void cDvbTransportStream::dvbSource (bool ownThread, const string& multiplexName
 
     service->closeFile();
 
-    bool recordItem = selected || mRecordAll;
+    bool recordItem = selected || mDvbMultiplex.mRecordAllChannels;
     string channelRecordName;
-    if (!mRecordAll) {
+    if (!mDvbMultiplex.mRecordAllChannels) {
       // filter and rename channel prefix
       size_t i = 0;
       for (auto& channelName : mDvbMultiplex.mChannels) {
@@ -235,53 +232,13 @@ void cDvbTransportStream::dvbSource (bool ownThread, const string& multiplexName
 
 // private:
 //{{{
-void cDvbTransportStream::readFileInternal (bool ownThread, const string& fileName) {
-
-  if (ownThread)
-    cLog::setThreadName ("read");
-
-  auto file = fopen (fileName.c_str(), "rb");
-  if (!file) {
-    //{{{  error, return
-    cLog::log (LOGERROR, "no file " + fileName);
-    return;
-    }
-    //}}}
-
-  uint64_t streamPos = 0;
-  auto blockSize = 188 * 8;
-  auto buffer = (uint8_t*)malloc (blockSize);
-
-  int i = 0;
-  bool run = true;
-  while (run) {
-    i++;
-    if (!(i % 200)) // throttle read rate
-      this_thread::sleep_for (20ms);
-
-    size_t bytesRead = fread (buffer, 1, blockSize, file);
-    if (bytesRead > 0)
-      streamPos += demux ({}, buffer, bytesRead, streamPos, false);
-    else
-      break;
-    //mErrorStr = fmt::format ("{}", getNumErrors());
-    }
-
-  fclose (file);
-  free (buffer);
-
-  if (ownThread)
-    cLog::log (LOGERROR, "exit");
-  }
-//}}}
-//{{{
-void cDvbTransportStream::dvbSourceInternal (bool ownThread, const string& multiplexName) {
+void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
 
   if (ownThread)
     cLog::setThreadName ("grab");
 
-  FILE* mFile = mRecordAllRootName.empty() ? nullptr
-                                       : fopen ((mRecordAllRootName + multiplexName + ".ts").c_str(), "wb");
+  FILE* mFile = mDvbMultiplex.mRecordAllChannels ?
+    fopen ((mRecordRootName + mDvbMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
 
   #ifdef _WIN32
     auto hr = mDvbSource->mMediaControl->Run();
@@ -354,5 +311,45 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread, const string& multi
 
   if (ownThread)
     cLog::log (LOGINFO, "exit");
+  }
+//}}}
+//{{{
+void cDvbTransportStream::fileSourceInternal (bool ownThread, const string& fileName) {
+
+  if (ownThread)
+    cLog::setThreadName ("read");
+
+  auto file = fopen (fileName.c_str(), "rb");
+  if (!file) {
+    //{{{  error, return
+    cLog::log (LOGERROR, "no file " + fileName);
+    return;
+    }
+    //}}}
+
+  uint64_t streamPos = 0;
+  auto blockSize = 188 * 8;
+  auto buffer = (uint8_t*)malloc (blockSize);
+
+  int i = 0;
+  bool run = true;
+  while (run) {
+    i++;
+    if (!(i % 200)) // throttle read rate
+      this_thread::sleep_for (20ms);
+
+    size_t bytesRead = fread (buffer, 1, blockSize, file);
+    if (bytesRead > 0)
+      streamPos += demux ({}, buffer, bytesRead, streamPos, false);
+    else
+      break;
+    //mErrorStr = fmt::format ("{}", getNumErrors());
+    }
+
+  fclose (file);
+  free (buffer);
+
+  if (ownThread)
+    cLog::log (LOGERROR, "exit");
   }
 //}}}

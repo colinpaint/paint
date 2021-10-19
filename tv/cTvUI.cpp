@@ -183,24 +183,18 @@ public:
 
     #ifdef _WIN32
       const string kRecordRoot = "/tv/";
-      const string kRecordAllRoot = "/tv/all";
     #else
       const string kRecordRoot = "/home/pi/tv/";
-      const string kRecordAllRoot = "/home/pi/tv/all";
     #endif
 
-    bool recordAll = dvbMultiplex.mChannels.empty();
-    mDvbTransportStream = new cDvbTransportStream (dvbMultiplex,
-                                                   kRecordRoot, 
-                                                   recordAll ? kRecordAllRoot : "",
-                                                   recordAll, subtitles);
+    mDvbTransportStream = new cDvbTransportStream (dvbMultiplex, kRecordRoot, subtitles);
     if (!mDvbTransportStream)
       return false;
 
     if (filename.empty())
-        mDvbTransportStream->dvbSource (true, dvbMultiplex.mName);
+        mDvbTransportStream->dvbSource (true);
     else
-        mDvbTransportStream->readFile (true, filename);
+        mDvbTransportStream->fileSource (true, filename);
     return true;
     }
   //}}}

@@ -41,25 +41,29 @@ static const vector <cDvbMultiplex> kDvbMultiplexes = {
   { "hd",
     626000000,
     { "BBC ONE HD", "BBC TWO HD", "ITV HD", "Channel 4 HD", "Channel 5 HD" },
-    { "bbc1hd",     "bbc2hd",     "itv1hd", "chn4hd",       "chn5hd" }
+    { "bbc1hd",     "bbc2hd",     "itv1hd", "chn4hd",       "chn5hd" },
+    false,
   },
 
   { "itv",
     650000000,
     { "ITV",  "ITV2", "ITV3", "ITV4", "Channel 4", "Channel 4+1", "More 4", "Film4" , "E4", "Channel 5" },
-    { "itv1", "itv2", "itv3", "itv4", "chn4"     , "c4+1",        "more4",  "film4",  "e4", "chn5" }
+    { "itv1", "itv2", "itv3", "itv4", "chn4"     , "c4+1",        "more4",  "film4",  "e4", "chn5" },
+    false,
   },
 
   { "bbc",
     674000000,
     { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
-    { "bbc1",           "bbc2",    "bbc4" }
+    { "bbc1",           "bbc2",    "bbc4" },
+    false,
   },
 
   { "allHd",
     626000000,
     { "" },
-    { "all" }
+    { "" },
+    true,
   }
   };
 //}}}
