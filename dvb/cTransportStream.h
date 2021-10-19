@@ -212,19 +212,19 @@ public:
 
 protected:
   //{{{
-  virtual void start (cService* service, const std::string& name,
+  virtual void startServiceItem (cService* service, const std::string& itemName,
                       std::chrono::system_clock::time_point time,
-                      std::chrono::system_clock::time_point startTime,
-                      bool selected) {
+                      std::chrono::system_clock::time_point itemStartTime,
+                      bool itemSelected) {
    (void)service;
-   (void)name;
+   (void)itemName;
    (void)time;
-   (void)startTime;
-   (void)selected;
+   (void)itemStartTime;
+   (void)itemSelected;
    }
   //}}}
   virtual void pesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) { (void)sid; (void)pid; (void)ts; }
-  virtual void stop (cService* service) { (void)service; }
+  virtual void stopServiceItem (cService* service) { (void)service; }
 
   virtual bool audDecodePes (cPidInfo* pidInfo, bool skip) { (void)pidInfo; (void)skip; return false; }
   virtual bool audAltDecodePes (cPidInfo* pidInfo, bool skip) { (void)pidInfo; (void)skip; return false; }

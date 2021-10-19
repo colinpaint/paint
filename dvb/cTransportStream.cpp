@@ -1525,9 +1525,10 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                     pidInfoIt->second.mInfoString = serviceIt->second.getChannelString() + " " +
                                                     serviceIt->second.getNowTitleString();
 
-                  // callback to override to start new program
-                  start (&serviceIt->second, titleString,
-                         mTime, startTime, serviceIt->second.isEpgRecord (titleString, startTime));
+                  // callback to override to start new serviceItem program
+                  startServiceItem (&serviceIt->second, 
+                                    titleString, mTime, startTime, 
+                                    serviceIt->second.isEpgRecord (titleString, startTime));
                   }
                 }
               }

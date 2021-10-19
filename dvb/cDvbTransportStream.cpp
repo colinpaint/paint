@@ -119,18 +119,18 @@ void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
 
 // protected:
   //{{{
-  void cDvbTransportStream::start (cService* service, const string& name,
-                                   chrono::system_clock::time_point time,
-                                   chrono::system_clock::time_point starttime,
-                                   bool selected) {
+  void cDvbTransportStream::startServiceItem (cService* service, const string& itemName,
+                                              chrono::system_clock::time_point time,
+                                              chrono::system_clock::time_point itemStarttime,
+                                              bool itemSelected) {
   // start recording service item
 
-    (void)starttime;
+    (void)itemStarttime;
 
     lock_guard<mutex> lockGuard (mRecordFileMutex);
     service->closeFile();
 
-    bool recordItem = selected || mDvbMultiplex.mRecordAllChannels;
+    bool recordItem = itemSelected || mDvbMultiplex.mRecordAllChannels;
     string channelRecordName;
     if (!mDvbMultiplex.mRecordAllChannels) {
       // filter and rename channel prefix
@@ -154,7 +154,7 @@ void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
         string recordFilePath = mRecordRootName +
                                 channelRecordName +
                                 date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(time)) +
-                                validFileString (name, "<>:/|?*\"\'\\") +
+                                validFileString (itemName, "<>:/|?*\"\'\\") +
                                 ".ts";
         service->openFile (recordFilePath, 0x1234);
 
@@ -176,8 +176,8 @@ void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
     }
   //}}}
   //{{{
-  void cDvbTransportStream::stop (cService* service) {
-  // stop recording service
+  void cDvbTransportStream::stopServiceItem (cService* service) {
+  // stop recording service, never called
 
     lock_guard<mutex> lockGuard (mRecordFileMutex);
     service->closeFile();
