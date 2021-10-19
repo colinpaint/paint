@@ -30,13 +30,14 @@ public:
   virtual ~cDvbTransportStream();
 
   cSubtitle* getSubtitleBySid (uint16_t sid);
+  std::vector <std::string>& getRecordItems() { return mRecordItems; }
 
   void dvbSource (bool ownThread);
   void fileSource (bool ownThread, const std::string& fileName);
 
 protected:
   virtual void start (cService* service, const std::string& name,
-                      std::chrono::system_clock::time_point time, 
+                      std::chrono::system_clock::time_point time,
                       std::chrono::system_clock::time_point starttime,
                       bool selected) final;
   virtual void pesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) final;
@@ -51,10 +52,11 @@ private:
   void fileSourceInternal (bool ownThread, const std::string& fileName);
 
   // vars
-  std::mutex mFileMutex;
-
   cDvbMultiplex mDvbMultiplex;
+
+  std::mutex mRecordFileMutex;
   std::string mRecordRootName;
+  std::vector <std::string> mRecordItems;
 
   cDvbSource* mDvbSource = nullptr;
   uint64_t mLastErrors = 0;

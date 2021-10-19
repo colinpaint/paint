@@ -127,8 +127,7 @@ void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
 
     (void)starttime;
 
-    lock_guard<mutex> lockGuard (mFileMutex);
-
+    lock_guard<mutex> lockGuard (mRecordFileMutex);
     service->closeFile();
 
     bool recordItem = selected || mDvbMultiplex.mRecordAllChannels;
@@ -158,6 +157,8 @@ void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
                                 validFileString (name, "<>:/|?*\"\'\\") +
                                 ".ts";
         service->openFile (recordFilePath, 0x1234);
+
+        mRecordItems.push_back (recordFilePath);
         cLog::log (LOGINFO, recordFilePath);
         }
       }
@@ -167,7 +168,7 @@ void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
   void cDvbTransportStream::pesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) {
   // look up service and write it
 
-    lock_guard<mutex> lockGuard (mFileMutex);
+    lock_guard<mutex> lockGuard (mRecordFileMutex);
 
     auto serviceIt = getServiceMap().find (sid);
     if (serviceIt != getServiceMap().end())
@@ -178,7 +179,7 @@ void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
   void cDvbTransportStream::stop (cService* service) {
   // stop recording service
 
-    lock_guard<mutex> lockGuard (mFileMutex);
+    lock_guard<mutex> lockGuard (mRecordFileMutex);
     service->closeFile();
     }
   //}}}

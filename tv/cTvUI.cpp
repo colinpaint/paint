@@ -58,6 +58,10 @@ namespace {
   //{{{
   void drawPids (cDvbTransportStream* dvbTransportStream) {
 
+    // list recorded items
+    for (auto& recordItem : dvbTransportStream->getRecordItems())
+      ImGui::TextUnformatted (recordItem.c_str());
+
     // width of error field
     int errorDigits = 1;
     while (dvbTransportStream->getNumErrors() > pow (10, errorDigits))
