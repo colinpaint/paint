@@ -65,7 +65,7 @@ namespace {
       errorDigits++;
 
     int prevSid = 0;
-    for (auto& pidInfoItem : tsDvb->getTransportStream()->mPidInfoMap) {
+    for (auto& pidInfoItem : tsDvb->getTransportStream()->getPidInfoMap()) {
       // iterate for pidInfo
       cPidInfo& pidInfo = pidInfoItem.second;
 

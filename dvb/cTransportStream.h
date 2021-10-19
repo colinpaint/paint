@@ -201,13 +201,14 @@ public:
   cService* getService (uint16_t index, int64_t& firstPts, int64_t& lastPts);
   static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
 
+  std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
+  std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
+
   virtual void clear();
   int64_t demux (const std::vector<uint16_t>& pids, uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
 
-  // vars, public for widget
+  // vars
   std::mutex mMutex;
-  std::map <uint16_t, cPidInfo> mPidInfoMap;
-  std::map <uint16_t, cService> mServiceMap;
 
 protected:
   //{{{
@@ -250,6 +251,8 @@ private:
   uint64_t mNumErrors = 0;
 
   std::map <uint16_t, uint16_t> mProgramMap;
+  std::map <uint16_t, cPidInfo> mPidInfoMap;
+  std::map <uint16_t, cService> mServiceMap;
 
   bool mTimeDefined = false;
   std::chrono::system_clock::time_point mTime;

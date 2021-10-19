@@ -152,8 +152,8 @@ protected:
 
     lock_guard<mutex> lockGuard (mFileMutex);
 
-    auto serviceIt = mServiceMap.find (sid);
-    if (serviceIt != mServiceMap.end())
+    auto serviceIt = getServiceMap().find (sid);
+    if (serviceIt != getServiceMap().end())
       serviceIt->second.writePacket (ts, pid);
     }
   //}}}
