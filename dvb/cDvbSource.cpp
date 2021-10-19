@@ -382,6 +382,9 @@ namespace {
 
     Microsoft::WRL::ComPtr<IBaseFilter> mDumpFilter;
     Microsoft::WRL::ComPtr<IFileSinkFilter> mFileSinkFilter;
+
+    Microsoft::WRL::ComPtr<IMediaControl> mMediaControl;
+    Microsoft::WRL::ComPtr<IScanningTuner> mScanningTuner;
     //}}}
     //{{{
     string wstrToStr (const wstring& wstr) {
@@ -532,10 +535,10 @@ namespace {
         return false;
         }
         //}}}
-      mDvbNetworkProvider.As (&cDvbSource::mScanningTuner);
+      mDvbNetworkProvider.As (&mScanningTuner);
 
       //{{{  setup dvbTuningSpace2 interface
-      if (cDvbSource::mScanningTuner->get_TuningSpace (mTuningSpace.GetAddressOf()) != S_OK)
+      if (mScanningTuner->get_TuningSpace (mTuningSpace.GetAddressOf()) != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - get_TuningSpace failed");
 
       mTuningSpace.As (&mDvbTuningSpace2);
@@ -572,16 +575,16 @@ namespace {
         cLog::log (LOGERROR, "createGraphDvbT - put_DefaultLocator failed");
       //}}}
       //{{{  tuneRequest from scanningTuner
-      if (cDvbSource::mScanningTuner->get_TuneRequest (mTuneRequest.GetAddressOf()) != S_OK)
+      if (mScanningTuner->get_TuneRequest (mTuneRequest.GetAddressOf()) != S_OK)
         mTuningSpace->CreateTuneRequest (mTuneRequest.GetAddressOf());
 
       if (mTuneRequest->put_Locator (mDvbLocator.Get()) != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - put_Locator failed");
 
-      if (cDvbSource::mScanningTuner->Validate (mTuneRequest.Get()) != S_OK)
+      if (mScanningTuner->Validate (mTuneRequest.Get()) != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - Validate failed");
 
-      if (cDvbSource::mScanningTuner->put_TuneRequest (mTuneRequest.Get()) != S_OK)
+      if (mScanningTuner->put_TuneRequest (mTuneRequest.Get()) != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - put_TuneRequest failed");
       //}}}
 
@@ -618,7 +621,7 @@ namespace {
 
         createFilter (mMpeg2Demux, CLSID_MPEG2Demultiplexer, L"MPEG2demux", mGrabberFilter);
         createFilter (mBdaTif, CLSID_BDAtif, L"BDAtif", mMpeg2Demux);
-        mGraphBuilder.As (&cDvbSource::mMediaControl);
+        mGraphBuilder.As (&mMediaControl);
 
         return true;
         }
@@ -920,6 +923,22 @@ void cDvbSource::tune (int frequency) {
   //{{{
   void cDvbSource::releaseBlock (int len) {
     mGrabberCB.releaseBlock (len);
+    }
+  //}}}
+
+  //{{{
+  void cDvbSource::run() {
+    mMediaControl->Run();
+    }
+  //}}}
+  //{{{
+  string cDvbSource::getSignalStrengthString() {
+    if (mScanningTuner) {
+      long signal = 0;
+      mScanningTuner->get_SignalStrength (&signal);
+      return fmt::format ("signal {}", signal / 0x10000);
+      }
+    return "no signal strength";
     }
   //}}}
 #endif

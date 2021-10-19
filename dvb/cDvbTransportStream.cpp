@@ -3,7 +3,9 @@
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
   #define NOMINMAX
-  #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
+
+  #include <locale>
+  #include <codecvt>
 
   #include <wrl.h>
   #include <initguid.h>
@@ -12,38 +14,10 @@
   #include <ks.h>
   #include <ksmedia.h>
   #include <bdatif.h>
-
-  #include <locale>
-  #include <codecvt>
-
-  MIDL_INTERFACE ("0579154A-2B53-4994-B0D0-E773148EFF85")
-  ISampleGrabberCB : public IUnknown {
-  public:
-    virtual HRESULT STDMETHODCALLTYPE SampleCB (double SampleTime, IMediaSample* pSample) = 0;
-    virtual HRESULT STDMETHODCALLTYPE BufferCB (double SampleTime, BYTE* pBuffer, long BufferLen) = 0;
-    };
-
-  MIDL_INTERFACE ("6B652FFF-11FE-4fce-92AD-0266B5D7C78F")
-  ISampleGrabber : public IUnknown {
-  public:
-    virtual HRESULT STDMETHODCALLTYPE SetOneShot (BOOL OneShot) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetMediaType (const AM_MEDIA_TYPE* pType) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetConnectedMediaType (AM_MEDIA_TYPE* pType) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetBufferSamples (BOOL BufferThem) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetCurrentBuffer (long* pBufferSize, long* pBuffer) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetCurrentSample (IMediaSample** ppSample) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetCallback (ISampleGrabberCB* pCallback, long WhichMethodToCallback) = 0;
-    };
-  EXTERN_C const CLSID CLSID_SampleGrabber;
-
   #include <bdamedia.h>
   DEFINE_GUID (CLSID_DVBTLocator, 0x9CD64701, 0xBDF3, 0x4d14, 0x8E,0x03, 0xF1,0x29,0x83,0xD8,0x66,0x64);
   DEFINE_GUID (CLSID_BDAtif, 0xFC772ab0, 0x0c7f, 0x11d3, 0x8F,0xf2, 0x00,0xa0,0xc9,0x22,0x4c,0xf4);
   DEFINE_GUID (CLSID_Dump, 0x36a5f770, 0xfe4c, 0x11ce, 0xa8, 0xed, 0x00, 0xaa, 0x00, 0x2f, 0xea, 0xb5);
-
-  #pragma comment (lib,"strmiids")
-
-  #include <thread>
 #endif
 //}}}
 //{{{  linux includes
@@ -252,45 +226,31 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
     fopen ((mRecordRootName + mDvbMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
 
   #ifdef _WIN32
-    if (!mDvbSource->mMediaControl)
-      cLog::log (LOGERROR, "no dvbSource");
-    else {
-      auto hr = mDvbSource->mMediaControl->Run();
-      if (hr == S_OK) {
-        int64_t streamPos = 0;
-        auto blockSize = 0;
-        while (true) {
-          auto ptr = mDvbSource->getBlockBDA (blockSize);
-          if (blockSize) {
-            //{{{  read and demux block
-            if (mFile)
-              fwrite (ptr, 1, blockSize, mFile);
+    mDvbSource->run();
+    int64_t streamPos = 0;
+    auto blockSize = 0;
+    while (true) {
+      auto ptr = mDvbSource->getBlockBDA (blockSize);
+      if (blockSize) {
+        //{{{  read and demux block
+        if (mFile)
+          fwrite (ptr, 1, blockSize, mFile);
 
-            streamPos += demux ({}, ptr, blockSize, streamPos, false);
-            mDvbSource->releaseBlock (blockSize);
+        streamPos += demux ({}, ptr, blockSize, streamPos, false);
+        mDvbSource->releaseBlock (blockSize);
 
-            mErrorString.clear();
-            if (getNumErrors())
-              mErrorString += fmt::format ("{}err", getNumErrors());
-            if (streamPos < 1000000)
-              mErrorString = fmt::format ("{}k", streamPos / 1000);
-            else
-              mErrorString = fmt::format ("{}m", streamPos / 1000000);
-            }
-            //}}}
-          else
-            this_thread::sleep_for (1ms);
-          if (mDvbSource->mScanningTuner) {
-            //{{{  update mSignalString
-            long signal = 0;
-            mDvbSource->mScanningTuner->get_SignalStrength (&signal);
-            mSignalString = fmt::format ("signal {}", signal / 0x10000);
-            }
-            //}}}
-          }
+        mErrorString.clear();
+        if (getNumErrors())
+          mErrorString += fmt::format ("{}err", getNumErrors());
+        if (streamPos < 1000000)
+          mErrorString = fmt::format ("{}k", streamPos / 1000);
+        else
+          mErrorString = fmt::format ("{}m", streamPos / 1000000);
         }
+        //}}}
       else
-        cLog::log (LOGERROR, fmt::format ("run graph failed {}", hr));
+        this_thread::sleep_for (1ms);
+      mSignalString = mDvbSource->getSignalStrengthString();
       }
   #endif
 

@@ -16,6 +16,8 @@
   class cTsBlock;
   class cTsBlockPool;
 #endif
+
+#include <string>
 //}}}
 
 class cDvbSource {
@@ -41,8 +43,8 @@ public:
     uint8_t* getBlockBDA (int& len);
     void releaseBlock (int len);
 
-    inline static Microsoft::WRL::ComPtr<IMediaControl> mMediaControl;
-    inline static Microsoft::WRL::ComPtr<IScanningTuner> mScanningTuner;
+    void run();
+    std::string getSignalStrengthString();
   #endif
   //}}}
   //{{{
