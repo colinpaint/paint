@@ -87,12 +87,12 @@ public:
   float text (const ImVec2& pos, uint8_t color, const std::string& text) {
    // draw and return width of text
 
-    mDrawList->AddText (mFont, mFontSize, pos, mPalette[color], text.c_str(), nullptr);
+    mDrawList->AddText (mFont, mFontSize, pos, mPalette[color], text.c_str());
 
     if (mMonoSpaced)
       return text.size() * mGlyphWidth;
     else
-      return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, text.c_str(), nullptr).x;
+      return mFont->CalcTextSizeA (mFontSize, FLT_MAX, -1.f, text.c_str()).x;
     }
   //}}}
   //{{{

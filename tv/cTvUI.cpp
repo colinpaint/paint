@@ -90,17 +90,16 @@ namespace {
         //{{{  draw subtitle
         cSubtitle* subtitle = dvbTransportStream->getSubtitleBySid (pidInfo.mSid);
         if (subtitle && !subtitle->mRects.empty()) {
+          // subtitle with some lines
           float clutX = ImGui::GetWindowWidth() - ImGui::GetTextLineHeight() * 5.f;
           float cellSize = ImGui::GetTextLineHeight()/2.f;
-
-          // subttitle with some rects
           ImVec2 subPos = pos;
           for (int line = (int)subtitle->mRects.size()-1; line >= 0; line--) {
             // iterate rects
             float dstWidth = ImGui::GetWindowWidth() - pos.x;
             float dstHeight = float(subtitle->mRects[line]->mHeight * dstWidth) / subtitle->mRects[line]->mWidth;
             if (dstHeight > ImGui::GetTextLineHeight()) {
-              // scale to fit line
+              // scale to fit window
               float scaleh = ImGui::GetTextLineHeight() / dstHeight;
               dstHeight = ImGui::GetTextLineHeight();
               dstWidth *= scaleh;
@@ -119,16 +118,17 @@ namespace {
             //auto imagePaint = vg->setImagePattern (cPointF(visx, ySub), cPointF(dstWidth, dstHeight), 0.f, mImage[imageIndex], 1.f);
             ImGui::GetWindowDrawList()->AddRect (subPos, {subPos.x + dstWidth, subPos.y + dstHeight}, 0xff00ffff);
             //imageIndex++;
-            // draw rect position
+
+            // draw subtitle position
             string text = fmt::format ("{},{}", subtitle->mRects[line]->mX, subtitle->mRects[line]->mY);
             ImGui::GetWindowDrawList()->AddText (ImGui::GetFont(), ImGui::GetFontSize(), subPos, 0xffffffff, text.c_str());
+
             // draw clut
-            for (int i = 0; i < subtitle->mRects[line]->mClutSize; i++) {
-              float cellX = clutX + (i % 8) * cellSize;
-              float cellY = subPos.y + (i / 8) * cellSize;
-              uint32_t color = subtitle->mRects[line]->mClut[i];
+            for (int cell = 0; cell < subtitle->mRects[line]->mClutSize; cell++) {
+              ImVec2 cellPos = {clutX + (cell % 8) * cellSize, subPos.y + (cell / 8) * cellSize};
+              uint32_t color = subtitle->mRects[line]->mClut[cell];
               ImGui::GetWindowDrawList()->AddRectFilled (
-                {cellX, cellY}, {cellX + cellSize - 1.f, cellY + cellSize - 1.f}, color);
+                cellPos, {cellPos.x + cellSize - 1.f, cellPos.y + cellSize - 1.f}, color);
               }
 
             // next subtitle rect
