@@ -718,9 +718,9 @@ cDvbSource::cDvbSource (int frequency, int adapter) : mFrequency(frequency), mAd
     #ifdef _WIN32
       // windows create and tune
       if (createGraph (frequency * 1000))
-        mTuneStr = fmt::format ("tuned {}Mhz", frequency);
+        mTuneString = fmt::format ("tuned {}Mhz", frequency);
       else
-        mTuneStr = fmt::format ("not tuned {}Mhz", frequency);
+        mTuneString = fmt::format ("not tuned {}Mhz", frequency);
     #endif
 
     #ifdef __linux__

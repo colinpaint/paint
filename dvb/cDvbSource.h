@@ -25,7 +25,9 @@ public:
   cDvbSource (int frequency, int adapter);
   virtual ~cDvbSource();
 
+  std::string getTuneString() const { return mTuneString; }
   std::string getStatusString() const;
+
   int getBlock (uint8_t*& block, int& blockSize);
 
   int setFilter (uint16_t pid);
@@ -34,30 +36,24 @@ public:
   void reset();
   void tune (int frequency);
 
-  std::string mErrorStr = "waiting";
-  std::string mTuneStr = "untuned";
-  std::string mSignalStr = "no signal";
-
-  //{{{
   #ifdef _WIN32
     uint8_t* getBlockBDA (int& len);
     void releaseBlock (int len);
 
-    void run();
     std::string getSignalStrengthString();
+    void run();
   #endif
-  //}}}
-  //{{{
+
   #ifdef __linux__
     int mDvr = 0;
-
     cTsBlock* getBlocks (cTsBlockPool* blockPool);
   #endif
-  //}}}
 
 private:
   int mFrequency;
   int mAdapter;
+
+  std::string mTuneString = "untuned";
 
   //{{{
   #ifdef __linux__
