@@ -24,6 +24,8 @@ public:
   cSubtitle* getSubtitleBySid (uint16_t sid);
   std::vector <std::string>& getRecordItems() { return mRecordItems; }
 
+  void setSubtitle (bool subtitle);
+
   void dvbSource (bool ownThread);
   void fileSource (bool ownThread, const std::string& fileName);
 

@@ -84,9 +84,9 @@ cDvbTransportStream::cDvbTransportStream (const cDvbMultiplex& dvbMultiplex,
 //}}}
 //{{{
 cDvbTransportStream::~cDvbTransportStream() {
+
   for (auto& subtitle : mSubtitleMap)
     delete (subtitle.second);
-
   mSubtitleMap.clear();
   }
 //}}}
@@ -96,6 +96,15 @@ cSubtitle* cDvbTransportStream::getSubtitleBySid (uint16_t sid) {
 
   auto it = mSubtitleMap.find (sid);
   return (it == mSubtitleMap.end()) ? nullptr : (*it).second;
+  }
+//}}}
+
+//{{{
+void cDvbTransportStream::setSubtitle (bool subtitle) { 
+
+  mSubtitle = subtitle; 
+  if (!mSubtitle)
+    mSubtitleMap.clear();
   }
 //}}}
 

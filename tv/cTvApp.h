@@ -19,14 +19,14 @@ public:
   cTvApp (cPlatform& platform, cGraphics& graphics) : cApp (platform, graphics) {}
   ~cTvApp() = default;
 
-  cDvbMultiplex getDvbMultiplex() { return mDvbMultiplex; }
   cDvbTransportStream* getDvbTransportStream() { return mDvbTransportStream; }
+  bool getSubtitle() const { return mSubtitle; }
 
   bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex, bool subtitle);
+  void toggleSubtitle();
 
 private:
   cDvbTransportStream* mDvbTransportStream = nullptr;
 
-  cDvbMultiplex mDvbMultiplex;
   bool mSubtitle = false;
   };

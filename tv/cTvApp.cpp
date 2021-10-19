@@ -19,7 +19,6 @@ using namespace std;
 bool cTvApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMultiplex, bool subtitle) {
 // create dvb source
 
-  mDvbMultiplex = dvbMultiplex;
   mSubtitle = subtitle;
 
   #ifdef _WIN32
@@ -33,9 +32,14 @@ bool cTvApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMulti
     return false;
 
   if (filename.empty())
-      mDvbTransportStream->dvbSource (true);
+    mDvbTransportStream->dvbSource (true);
   else
-      mDvbTransportStream->fileSource (true, filename);
+    mDvbTransportStream->fileSource (true, filename);
 
   return true;
+  }
+
+void cTvApp::toggleSubtitle() { 
+  mSubtitle = !mSubtitle; 
+  mDvbTransportStream->setSubtitle (mSubtitle);
   }

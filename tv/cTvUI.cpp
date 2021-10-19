@@ -219,6 +219,10 @@ public:
     cDvbTransportStream* dvbTransportStream = tvApp.getDvbTransportStream();
     if (dvbTransportStream) {
       ImGui::SameLine();
+      if (toggleButton ("sub", tvApp.getSubtitle()))
+        tvApp.toggleSubtitle();
+
+      ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{} ", dvbTransportStream->getNumPackets()).c_str());
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format("{} ", dvbTransportStream->getNumErrors()).c_str());
