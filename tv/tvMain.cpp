@@ -76,7 +76,7 @@ int main (int numArgs, char* args[]) {
   string graphicsName = "opengl";
   bool fullScreen = false;
   bool vsync = true;
-  bool subtitles = false;
+  bool subtitle = false;
   //{{{  parse command line args to params
   // args to params
   vector <string> params;
@@ -105,7 +105,7 @@ int main (int numArgs, char* args[]) {
     else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
     else if (*it == "full") { fullScreen = true; params.erase (it); }
     else if (*it == "free") { vsync = false; params.erase (it); }
-    else if (*it == "sub") { subtitles = true; params.erase (it); }
+    else if (*it == "sub") { subtitle = true; params.erase (it); }
     else ++it;
     };
   //}}}
@@ -126,10 +126,11 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
 
   // create tvApp to tie everything together
-  cTvApp app (platform, graphics, foundMultiplex, subtitles);
-  app.setName (params.empty() ? "" : cFileUtils::resolve (params[0]));
-  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
-  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
+  cTvApp app (platform, graphics);
+  app.setName ("dvb");
+  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
+  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
+  app.setDvbSource (params.empty() ? "" : cFileUtils::resolve (params[0]), foundMultiplex, subtitle);
 
   platform.setResizeCallback (
     //{{{  resize lambda

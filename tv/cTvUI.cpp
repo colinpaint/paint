@@ -182,33 +182,7 @@ public:
   virtual ~cTvUI() = default;
 
   //{{{
-  bool createDvbSource (const string& filename, const cDvbMultiplex& dvbMultiplex, bool subtitles) {
-  // create dvb source
-
-    #ifdef _WIN32
-      const string kRecordRoot = "/tv/";
-    #else
-      const string kRecordRoot = "/home/pi/tv/";
-    #endif
-
-    mDvbTransportStream = new cDvbTransportStream (dvbMultiplex, kRecordRoot, subtitles);
-    if (!mDvbTransportStream)
-      return false;
-
-    if (filename.empty())
-        mDvbTransportStream->dvbSource (true);
-    else
-        mDvbTransportStream->fileSource (true, filename);
-    return true;
-    }
-  //}}}
-  //{{{
   void addToDrawList (cApp& app) final {
-
-    cTvApp& tvApp = (cTvApp&)app;
-
-    if (!mDvbTransportStream)
-      createDvbSource (tvApp.getName(), tvApp.getDvbMultiplex(), tvApp.getSubtitles());
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
@@ -239,21 +213,22 @@ public:
                             ImGui::GetIO().MetricsRenderVertices,
                             ImGui::GetIO().MetricsRenderIndices/3).c_str());
 
-    // tsDvb totals
-    ImGui::SameLine();
-    ImGui::TextUnformatted (fmt::format ("packets:{} errors:{}",
-                            mDvbTransportStream->getNumPackets(), 
-                            mDvbTransportStream->getNumErrors()).c_str());
     //}}}
 
-    if (mDvbTransportStream) {
+    cTvApp& tvApp = (cTvApp&)app;
+    cDvbTransportStream* dvbTransportStream = tvApp.getDvbTransportStream();
+    if (dvbTransportStream) {
       ImGui::SameLine();
-      ImGui::TextUnformatted (mDvbTransportStream->getSignalString().c_str());
+      ImGui::TextUnformatted (fmt::format ("{} ", dvbTransportStream->getNumPackets()).c_str());
       ImGui::SameLine();
-      ImGui::TextUnformatted (mDvbTransportStream->getErrorString().c_str());
+      ImGui::TextUnformatted (fmt::format("{} ", dvbTransportStream->getNumErrors()).c_str());
+      ImGui::SameLine();
+      ImGui::TextUnformatted (dvbTransportStream->getSignalString().c_str());
+      ImGui::SameLine();
+      ImGui::TextUnformatted (dvbTransportStream->getErrorString().c_str());
 
       ImGui::PushFont (app.getMonoFont());
-      drawPids (mDvbTransportStream);
+      drawPids (dvbTransportStream);
       ImGui::PopFont();
       }
 
@@ -264,7 +239,6 @@ public:
 private:
   // vars
   bool mOpen = true;
-  cDvbTransportStream* mDvbTransportStream = nullptr;
 
   static cUI* create (const string& className) { return new cTvUI (className); }
   inline static const bool mRegistered = registerClass ("tv", &create);

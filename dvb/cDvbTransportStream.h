@@ -7,21 +7,11 @@
 #include <vector>
 #include <chrono>
 
+#include "cDvbMultiplex.h"
 #include "cDvbSource.h"
 #include "cTransportStream.h"
 
 class cSubtitle;
-//}}}
-
-//{{{
-class cDvbMultiplex {
-public:
-  std::string mName;
-  int mFrequency;
-  std::vector <std::string> mChannels;
-  std::vector <std::string> mChannelRecordNames;
-  bool mRecordAllChannels;
-  };
 //}}}
 
 class cDvbTransportStream : public cTransportStream {

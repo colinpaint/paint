@@ -116,7 +116,9 @@ endif()
 if (BUILD_TV)
   project (tv VERSION 1.0.0)
     file (GLOB PLAYER_HEADER_FILES player/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
-    file (GLOB PLAYER_SOURCE_FILES tv/tvMain.cpp tv/cTvUI.cpp ui/cUI.cpp platform/*.cpp graphics/*.cpp)
+    file (GLOB PLAYER_SOURCE_FILES tv/tvMain.cpp tv/cTvApp.cpp tv/cTvUI.cpp
+                                   ui/cUI.cpp
+                                   platform/*.cpp graphics/*.cpp)
 
     add_executable (tv ${PLAYER_SOURCE_FILES} ${PLAYER_HEADER_FILES})
     target_include_directories (tv PRIVATE imgui stb)

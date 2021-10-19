@@ -8,8 +8,9 @@
 
 #include "cTransportStream.h"
 
-#include "../utils/utils.h"
+#include "../utils/date.h"
 #include "../utils/cLog.h"
+#include "../utils/utils.h"
 
 #include "cDvbUtils.h"
 
@@ -1526,8 +1527,8 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                                                     serviceIt->second.getNowTitleString();
 
                   // callback to override to start new serviceItem program
-                  startServiceItem (&serviceIt->second, 
-                                    titleString, mTime, startTime, 
+                  startServiceItem (&serviceIt->second,
+                                    titleString, mTime, startTime,
                                     serviceIt->second.isEpgRecord (titleString, startTime));
                   }
                 }

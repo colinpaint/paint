@@ -1,4 +1,4 @@
-// cTvApp - tvApp info holder from tvMain
+// cTvApp.h - tvApp info holder from tvMain
 //{{{  includes
 #pragma once
 
@@ -7,22 +7,26 @@
 #include <vector>
 
 #include "../ui/cApp.h"
-#include "../dvb/cDvbTransportStream.h"
+#include "../dvb/cDvbMultiplex.h"
 
 class cPlatform;
 class cGraphics;
+class cDvbTransportStream;
 //}}}
 
 class cTvApp : public cApp {
 public:
-  cTvApp (cPlatform& platform, cGraphics& graphics, const cDvbMultiplex& dvbMultiplex, bool subtitles)
-    : cApp (platform, graphics), mDvbMultiplex(dvbMultiplex), mSubtitles(subtitles) {}
+  cTvApp (cPlatform& platform, cGraphics& graphics) : cApp (platform, graphics) {}
   ~cTvApp() = default;
 
   cDvbMultiplex getDvbMultiplex() { return mDvbMultiplex; }
-  bool getSubtitles() { return mSubtitles; }
+  cDvbTransportStream* getDvbTransportStream() { return mDvbTransportStream; }
+
+  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex, bool subtitle);
 
 private:
-  const cDvbMultiplex mDvbMultiplex;
-  bool mSubtitles = false;
+  cDvbTransportStream* mDvbTransportStream = nullptr;
+
+  cDvbMultiplex mDvbMultiplex;
+  bool mSubtitle = false;
   };
