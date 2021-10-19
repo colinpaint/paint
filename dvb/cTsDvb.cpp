@@ -232,7 +232,7 @@ private:
 cTsDvb::cTsDvb (int frequency, const vector <string>& channelNames, const vector <string>& recordNames,
                 const string& recordRoot, const string& recordAllRoot,
                 bool decodeSubtitle)
-    : cDvb(frequency, 0), mRecordAllRoot(recordAllRoot) {
+    : cDvbSource(frequency, 0), mRecordAllRoot(recordAllRoot) {
 
   mDvbTransportStream = new cDvbTransportStream (channelNames, recordNames,
                                                  recordRoot, !recordAllRoot.empty(), decodeSubtitle);

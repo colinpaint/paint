@@ -1,4 +1,4 @@
-// cDvb.h
+// cDvbSource.h
 //{{{  includes
 #pragma once
 
@@ -18,10 +18,10 @@
 #endif
 //}}}
 
-class cDvb {
+class cDvbSource {
 public:
-  cDvb (int frequency, int adapter);
-  virtual ~cDvb();
+  cDvbSource (int frequency, int adapter);
+  virtual ~cDvbSource();
 
   std::string getStatusString() const;
   int getBlock (uint8_t*& block, int& blockSize);

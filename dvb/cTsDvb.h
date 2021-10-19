@@ -6,14 +6,14 @@
 #include <string>
 #include <vector>
 
-#include "cDvb.h"
+#include "cDvbSource.h"
 
 class cSubtitle;
 class cTransportStream;
 class cDvbTransportStream;
 //}}}
 
-class cTsDvb : public cDvb {
+class cTsDvb : public cDvbSource {
 public:
   cTsDvb (int frequency,
           const std::vector<std::string>& channelNames,

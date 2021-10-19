@@ -41,7 +41,7 @@
 #endif
 
 // dvb
-#include "../dvb/cDvb.h"
+#include "../dvb/cDvbSource.h"
 #include "../dvb/cDvbUtils.h"
 
 using namespace std;
@@ -1115,7 +1115,7 @@ public:
     mLoadFrac = 0.f;
 
     cLog::log (LOGINFO, fmt::format ("cDvbSource {}", mFrequency));
-    auto dvb = new cDvb (mFrequency, 0);
+    auto dvb = new cDvbSource (mFrequency, 0);
 
     mPtsSong = new cPtsSong (eAudioFrameType::eAacAdts, mNumChannels, mSampleRate, 1024, 1920, 0);
     iAudioDecoder* audioDecoder = nullptr;

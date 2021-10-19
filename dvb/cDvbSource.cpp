@@ -1,4 +1,4 @@
-// cDvb.cpp
+// cDvbSource.cpp
 //{{{  includes
 #ifdef _WIN32
   //{{{  windows only includes
@@ -68,7 +68,7 @@
 #include <string>
 #include <thread>
 
-#include "cDvb.h"
+#include "cDvbSource.h"
 #include "cDvbUtils.h"
 
 #include "../utils/cLog.h"
@@ -532,10 +532,10 @@ namespace {
         return false;
         }
         //}}}
-      mDvbNetworkProvider.As (&cDvb::mScanningTuner);
+      mDvbNetworkProvider.As (&cDvbSource::mScanningTuner);
 
       //{{{  setup dvbTuningSpace2 interface
-      if (cDvb::mScanningTuner->get_TuningSpace (mTuningSpace.GetAddressOf()) != S_OK)
+      if (cDvbSource::mScanningTuner->get_TuningSpace (mTuningSpace.GetAddressOf()) != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - get_TuningSpace failed");
 
       mTuningSpace.As (&mDvbTuningSpace2);
@@ -572,16 +572,16 @@ namespace {
         cLog::log (LOGERROR, "createGraphDvbT - put_DefaultLocator failed");
       //}}}
       //{{{  tuneRequest from scanningTuner
-      if (cDvb::mScanningTuner->get_TuneRequest (mTuneRequest.GetAddressOf()) != S_OK)
+      if (cDvbSource::mScanningTuner->get_TuneRequest (mTuneRequest.GetAddressOf()) != S_OK)
         mTuningSpace->CreateTuneRequest (mTuneRequest.GetAddressOf());
 
       if (mTuneRequest->put_Locator (mDvbLocator.Get()) != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - put_Locator failed");
 
-      if (cDvb::mScanningTuner->Validate (mTuneRequest.Get()) != S_OK)
+      if (cDvbSource::mScanningTuner->Validate (mTuneRequest.Get()) != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - Validate failed");
 
-      if (cDvb::mScanningTuner->put_TuneRequest (mTuneRequest.Get()) != S_OK)
+      if (cDvbSource::mScanningTuner->put_TuneRequest (mTuneRequest.Get()) != S_OK)
         cLog::log (LOGERROR, "createGraphDvbT - put_TuneRequest failed");
       //}}}
 
@@ -618,7 +618,7 @@ namespace {
 
         createFilter (mMpeg2Demux, CLSID_MPEG2Demultiplexer, L"MPEG2demux", mGrabberFilter);
         createFilter (mBdaTif, CLSID_BDAtif, L"BDAtif", mMpeg2Demux);
-        mGraphBuilder.As (&cDvb::mMediaControl);
+        mGraphBuilder.As (&cDvbSource::mMediaControl);
 
         return true;
         }
@@ -709,7 +709,7 @@ namespace {
 
 // public:
 //{{{
-cDvb::cDvb (int frequency, int adapter) : mFrequency(frequency), mAdapter(adapter) {
+cDvbSource::cDvbSource (int frequency, int adapter) : mFrequency(frequency), mAdapter(adapter) {
 
   if (frequency) {
     #ifdef _WIN32
@@ -757,7 +757,7 @@ cDvb::cDvb (int frequency, int adapter) : mFrequency(frequency), mAdapter(adapte
   }
 //}}}
 //{{{
-cDvb::~cDvb() {
+cDvbSource::~cDvbSource() {
 
   #ifdef __linux__
     if (mDvr)
@@ -771,7 +771,7 @@ cDvb::~cDvb() {
 //}}}
 
 //{{{
-string cDvb::getStatusString() const {
+string cDvbSource::getStatusString() const {
 
   #ifdef _WIN32
     return "";
@@ -810,7 +810,7 @@ string cDvb::getStatusString() const {
   }
 //}}}
 //{{{
-int cDvb::getBlock (uint8_t*& block, int& blockSize) {
+int cDvbSource::getBlock (uint8_t*& block, int& blockSize) {
   (void)blockSize;
   (void)block;
 
@@ -826,7 +826,7 @@ int cDvb::getBlock (uint8_t*& block, int& blockSize) {
 //}}}
 
 //{{{
-int cDvb::setFilter (uint16_t pid) {
+int cDvbSource::setFilter (uint16_t pid) {
   (void)pid;
   #ifdef _WIN32
     return 0;
@@ -863,7 +863,7 @@ int cDvb::setFilter (uint16_t pid) {
   }
 //}}}
 //{{{
-void cDvb::unsetFilter (int fd, uint16_t pid) {
+void cDvbSource::unsetFilter (int fd, uint16_t pid) {
   (void)fd;
   (void)pid;
 #ifdef __linux__
@@ -877,12 +877,12 @@ void cDvb::unsetFilter (int fd, uint16_t pid) {
 //}}}
 
 //{{{
-void cDvb::reset() {
+void cDvbSource::reset() {
   cLog::log (LOGERROR, "cDvb reset not implemneted");
   }
 //}}}
 //{{{
-void cDvb::tune (int frequency) {
+void cDvbSource::tune (int frequency) {
 
   mFrequency = frequency;
 
@@ -912,13 +912,13 @@ void cDvb::tune (int frequency) {
 
 #ifdef _WIN32
   //{{{
-  uint8_t* cDvb::getBlockBDA (int& len) {
+  uint8_t* cDvbSource::getBlockBDA (int& len) {
 
     return mGrabberCB.getBlock (len);
     }
   //}}}
   //{{{
-  void cDvb::releaseBlock (int len) {
+  void cDvbSource::releaseBlock (int len) {
     mGrabberCB.releaseBlock (len);
     }
   //}}}
@@ -926,7 +926,7 @@ void cDvb::tune (int frequency) {
 
 #ifdef __linux__
   //{{{
-  cTsBlock* cDvb::getBlocks (cTsBlockPool* blockPool) {
+  cTsBlock* cDvbSource::getBlocks (cTsBlockPool* blockPool) {
 
     cTsBlock* firstBlock = NULL;
     cTsBlock* lastBlock = NULL;
