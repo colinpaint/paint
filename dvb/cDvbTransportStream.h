@@ -29,10 +29,10 @@ public:
   cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool subtitle);
   virtual ~cDvbTransportStream();
 
-  std::vector <std::string>& getRecordItems() { return mRecordItems; }
   std::string getErrorString() { return mErrorString; }
   std::string getSignalString() { return mSignalString; }
   cSubtitle* getSubtitleBySid (uint16_t sid);
+  std::vector <std::string>& getRecordItems() { return mRecordItems; }
 
   void dvbSource (bool ownThread);
   void fileSource (bool ownThread, const std::string& fileName);
@@ -54,16 +54,16 @@ private:
   void fileSourceInternal (bool ownThread, const std::string& fileName);
 
   // vars
+  cDvbSource* mDvbSource = nullptr;
+  uint64_t mLastErrors = 0;
+  std::string mErrorString;
+  std::string mSignalString;
+
   cDvbMultiplex mDvbMultiplex;
 
   std::mutex mRecordFileMutex;
   std::string mRecordRootName;
   std::vector <std::string> mRecordItems;
-
-  cDvbSource* mDvbSource = nullptr;
-  uint64_t mLastErrors = 0;
-  std::string mErrorString;
-  std::string mSignalString;
 
   bool mSubtitle;
   std::map <uint16_t, cSubtitle*> mSubtitleMap; // indexed by sid

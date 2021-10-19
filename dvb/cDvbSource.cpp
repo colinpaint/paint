@@ -973,7 +973,7 @@ void cDvbSource::tune (int frequency) {
 
   // private - dvblast frontend
   //{{{
-  fe_hierarchy_t cDvb::getHierarchy() {
+  fe_hierarchy_t cDvbSource::getHierarchy() {
 
     switch (mHierarchy) {
       case -1: return HIERARCHY_AUTO;
@@ -988,7 +988,7 @@ void cDvbSource::tune (int frequency) {
     }
   //}}}
   //{{{
-  fe_guard_interval_t cDvb::getGuard() {
+  fe_guard_interval_t cDvbSource::getGuard() {
 
     switch (mGuard) {
       case -1:
@@ -1004,7 +1004,7 @@ void cDvbSource::tune (int frequency) {
     }
   //}}}
   //{{{
-  fe_transmit_mode_t cDvb::getTransmission() {
+  fe_transmit_mode_t cDvbSource::getTransmission() {
 
     switch (mTransmission) {
       case -1:
@@ -1024,7 +1024,7 @@ void cDvbSource::tune (int frequency) {
     }
   //}}}
   //{{{
-  fe_spectral_inversion_t cDvb::getInversion() {
+  fe_spectral_inversion_t cDvbSource::getInversion() {
 
     switch (mInversion) {
       case -1: return INVERSION_AUTO;
@@ -1037,7 +1037,7 @@ void cDvbSource::tune (int frequency) {
     }
   //}}}
   //{{{
-  fe_code_rate_t cDvb::getFEC (fe_caps_t fe_caps, int fecValue) {
+  fe_code_rate_t cDvbSource::getFEC (fe_caps_t fe_caps, int fecValue) {
 
     GET_FEC_INNER(FEC_AUTO, 999);
     GET_FEC_INNER(FEC_AUTO, -1);
@@ -1064,7 +1064,7 @@ void cDvbSource::tune (int frequency) {
   //}}}
 
   //{{{
-  void cDvb::frontendInfo (struct dvb_frontend_info& info, uint32_t version,
+  void cDvbSource::frontendInfo (struct dvb_frontend_info& info, uint32_t version,
                            fe_delivery_system_t* systems, int numSystems) {
 
     cLog::log (LOGINFO, fmt::format ("frontend - version {} min {} max {} stepSize {} tolerance {}",
@@ -1194,7 +1194,7 @@ void cDvbSource::tune (int frequency) {
     }
   //}}}
   //{{{
-  void cDvb::frontendSetup() {
+  void cDvbSource::frontendSetup() {
 
     struct dvb_frontend_info info;
     if (ioctl (mFrontEnd, FE_GET_INFO, &info) < 0) {
