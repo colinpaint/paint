@@ -13,18 +13,29 @@
 class cSubtitle;
 //}}}
 
+//{{{
+class cDvbMultiplex {
+public:
+  std::string mName;
+  int mFrequency;
+  std::vector <std::string> mChannels;
+  std::vector <std::string> mChannelRecordNames;
+  };
+//}}}
+
+class cGraphics;
+
 class cDvbTransportStream : public cTransportStream {
 public:
-  cDvbTransportStream (int frequency,
-          const std::vector <std::string>& channelNames, const std::vector <std::string>& recordFileNames,
-          const std::string& recordRoot, const std::string& recordAllRoot,
-          bool recordAll, bool decodeSubtitle);
+  cDvbTransportStream (const cDvbMultiplex& dvbMultiplex,
+                       const std::string& recordRootName, const std::string& recordAllRootName,
+                       bool recordAll, bool subtitle);
   virtual ~cDvbTransportStream();
 
   cSubtitle* getSubtitleBySid (uint16_t sid);
 
   void readFile (bool ownThread, const std::string& fileName);
-  void grab (bool ownThread, const std::string& multiplexName);
+  void dvbSource (bool ownThread, const std::string& multiplexName);
 
 protected:
   virtual void start (cService* service, const std::string& name,
@@ -39,17 +50,16 @@ protected:
 
 private:
   void readFileInternal (bool ownThread, const std::string& fileName);
-  void grabInternal (bool ownThread, const std::string& multiplexName);
+  void dvbSourceInternal (bool ownThread, const std::string& multiplexName);
 
   // vars
   std::mutex mFileMutex;
 
-  std::vector <std::string> mChannelNames;
-  std::vector <std::string> mRecordFileNames;
-  std::string mRecordRoot;
-  std::string mRecordAllRoot;
+  cDvbMultiplex mDvbMultiplex;
+  std::string mRecordRootName;
+  std::string mRecordAllRootName;
   bool mRecordAll;
-  bool mDecodeSubtitle;
+  bool mSubtitle;
 
   uint64_t mLastErrors = 0;
   std::string mErrorString;

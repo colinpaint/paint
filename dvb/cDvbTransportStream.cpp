@@ -1,4 +1,4 @@
-// cDvbTransportStream.cpp - dvbSource -> transport stream demux
+// cDvbTransportStream.cpp - file or dvbSource -> transportStream demux
 //{{{  windows includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -74,15 +74,14 @@ constexpr bool kDebug = false;
 
 // public:
 //{{{
-cDvbTransportStream::cDvbTransportStream (int frequency,
-                const vector <string>& channelNames, const vector <string>& recordFileNames,
-                const string& recordRoot, const string& recordAllRoot,
-                bool recordAll, bool decodeSubtitle)
-    : mChannelNames(channelNames), mRecordFileNames(recordFileNames),
-      mRecordRoot(recordRoot), mRecordAllRoot(recordAllRoot),
-      mRecordAll(recordAll), mDecodeSubtitle(decodeSubtitle) {
+cDvbTransportStream::cDvbTransportStream (const cDvbMultiplex& dvbMultiplex,
+                                          const string& recordRootName, const string& recordAllRootName,
+                                          bool recordAll, bool subtitle)
+    : mDvbMultiplex(dvbMultiplex),
+      mRecordRootName(recordRootName), mRecordAllRootName(recordAllRootName),
+      mRecordAll(recordAll), mSubtitle(subtitle) {
 
-  mDvbSource = new cDvbSource (frequency, 0);
+  mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
   }
 //}}}
 //{{{
@@ -112,53 +111,57 @@ void cDvbTransportStream::readFile (bool ownThread, const string& fileName) {
   }
 //}}}
 //{{{
-void cDvbTransportStream::grab (bool ownThread, const string& multiplexName) {
+void cDvbTransportStream::dvbSource (bool ownThread, const string& multiplexName) {
 
   if (ownThread)
-    thread([=, this]() { grabInternal (true, multiplexName); }).detach();
+    thread([=, this]() { dvbSourceInternal (true, multiplexName); }).detach();
   else
-    grabInternal (false, multiplexName);
+    dvbSourceInternal (false, multiplexName);
   }
 //}}}
 
 // protected:
   //{{{
   void cDvbTransportStream::start (cService* service, const string& name,
-                      chrono::system_clock::time_point time, chrono::system_clock::time_point starttime,
-                      bool selected) {
+                                   chrono::system_clock::time_point time,
+                                   chrono::system_clock::time_point starttime,
+                                   bool selected) {
+  // start recording service item
 
     (void)starttime;
+
     lock_guard<mutex> lockGuard (mFileMutex);
 
     service->closeFile();
 
-    bool record = selected || mRecordAll;
-    string recordFileName;
-
+    bool recordItem = selected || mRecordAll;
+    string channelRecordName;
     if (!mRecordAll) {
       // filter and rename channel prefix
       size_t i = 0;
-      for (auto& channelName : mChannelNames) {
+      for (auto& channelName : mDvbMultiplex.mChannels) {
         if (channelName == service->getChannelString()) {
-          record = true;
-          if (i < mRecordFileNames.size())
-            recordFileName = mRecordFileNames[i] +  " ";
+          // if channelName recognised, record every item for that channel using channelRootName
+          recordItem = true;
+          if (i < mDvbMultiplex.mChannelRecordNames.size())
+            channelRecordName = mDvbMultiplex.mChannelRecordNames[i] +  " ";
           break;
           }
         i++;
         }
       }
 
-    recordFileName += date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(time));
-
-    if (record) {
+    if (recordItem) {
       if ((service->getVidPid() > 0) &&
           (service->getAudPid() > 0) &&
           (service->getSubPid() > 0)) {
-        auto validName = validFileString (name, "<>:/|?*\"\'\\");
-        auto fileNameStr = mRecordRoot + recordFileName + validName + ".ts";
-        service->openFile (fileNameStr, 0x1234);
-        cLog::log (LOGINFO, fileNameStr);
+        string recordFilePath = mRecordRootName +
+                                channelRecordName +
+                                date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(time)) +
+                                validFileString (name, "<>:/|?*\"\'\\") +
+                                ".ts";
+        service->openFile (recordFilePath, 0x1234);
+        cLog::log (LOGINFO, recordFilePath);
         }
       }
     }
@@ -176,9 +179,9 @@ void cDvbTransportStream::grab (bool ownThread, const string& multiplexName) {
   //}}}
   //{{{
   void cDvbTransportStream::stop (cService* service) {
+  // stop recording service
 
     lock_guard<mutex> lockGuard (mFileMutex);
-
     service->closeFile();
     }
   //}}}
@@ -210,7 +213,7 @@ void cDvbTransportStream::grab (bool ownThread, const string& multiplexName) {
                                         getFullPtsString (pidInfo->mPts),
                                         getChannelStringBySid (pidInfo->mSid)));
 
-    if (mDecodeSubtitle) {
+    if (mSubtitle) {
       // find or create sid service cSubtitleContext
       auto it = mSubtitleMap.find (pidInfo->mSid);
       if (it == mSubtitleMap.end()) {
@@ -272,13 +275,13 @@ void cDvbTransportStream::readFileInternal (bool ownThread, const string& fileNa
   }
 //}}}
 //{{{
-void cDvbTransportStream::grabInternal (bool ownThread, const string& multiplexName) {
+void cDvbTransportStream::dvbSourceInternal (bool ownThread, const string& multiplexName) {
 
   if (ownThread)
     cLog::setThreadName ("grab");
 
-  FILE* mFile = mRecordAllRoot.empty() ? nullptr
-                                       : fopen ((mRecordAllRoot + multiplexName + ".ts").c_str(), "wb");
+  FILE* mFile = mRecordAllRootName.empty() ? nullptr
+                                       : fopen ((mRecordAllRootName + multiplexName + ".ts").c_str(), "wb");
 
   #ifdef _WIN32
     auto hr = mDvbSource->mMediaControl->Run();

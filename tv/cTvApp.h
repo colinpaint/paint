@@ -7,29 +7,22 @@
 #include <vector>
 
 #include "../ui/cApp.h"
+#include "../dvb/cDvbTransportStream.h"
 
 class cPlatform;
 class cGraphics;
-class cTsDvb;
 //}}}
-
-struct sMultiplex {
-  std::string mName;
-  int mFrequency;
-  std::vector <std::string> mSelectedChannels;
-  std::vector <std::string> mSaveNames;
-  };
 
 class cTvApp : public cApp {
 public:
-  cTvApp (cPlatform& platform, cGraphics& graphics, const sMultiplex& multiplex, bool subtitles)
-    : cApp (platform, graphics), mMultiplex(multiplex), mSubtitles(subtitles) {}
+  cTvApp (cPlatform& platform, cGraphics& graphics, const cDvbMultiplex& dvbMultiplex, bool subtitles)
+    : cApp (platform, graphics), mDvbMultiplex(dvbMultiplex), mSubtitles(subtitles) {}
   ~cTvApp() = default;
 
-  sMultiplex getMultiplex() { return mMultiplex; }
+  cDvbMultiplex getDvbMultiplex() { return mDvbMultiplex; }
   bool getSubtitles() { return mSubtitles; }
 
 private:
-  const sMultiplex mMultiplex;
+  const cDvbMultiplex mDvbMultiplex;
   bool mSubtitles = false;
   };

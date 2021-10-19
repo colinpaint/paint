@@ -178,7 +178,7 @@ public:
   virtual ~cTvUI() = default;
 
   //{{{
-  bool createDvbSource (const string& filename, const sMultiplex& multiplex, bool subtitles) {
+  bool createDvbSource (const string& filename, const cDvbMultiplex& dvbMultiplex, bool subtitles) {
   // create dvb source
 
     #ifdef _WIN32
@@ -189,15 +189,16 @@ public:
       const string kRecordAllRoot = "/home/pi/tv/all";
     #endif
 
-    bool recordAll = multiplex.mSelectedChannels.empty();
-    mDvbTransportStream = new cDvbTransportStream (multiplex.mFrequency, multiplex.mSelectedChannels, multiplex.mSaveNames,
-                                                   kRecordRoot, recordAll ? kRecordAllRoot : "",
+    bool recordAll = dvbMultiplex.mChannels.empty();
+    mDvbTransportStream = new cDvbTransportStream (dvbMultiplex,
+                                                   kRecordRoot, 
+                                                   recordAll ? kRecordAllRoot : "",
                                                    recordAll, subtitles);
     if (!mDvbTransportStream)
       return false;
 
     if (filename.empty())
-        mDvbTransportStream->grab (true, multiplex.mName);
+        mDvbTransportStream->dvbSource (true, dvbMultiplex.mName);
     else
         mDvbTransportStream->readFile (true, filename);
     return true;
@@ -209,7 +210,7 @@ public:
     cTvApp& tvApp = (cTvApp&)app;
 
     if (!mDvbTransportStream)
-      createDvbSource (tvApp.getName(), tvApp.getMultiplex(), tvApp.getSubtitles());
+      createDvbSource (tvApp.getName(), tvApp.getDvbMultiplex(), tvApp.getSubtitles());
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
@@ -241,7 +242,7 @@ public:
 
     // tsDvb totals
     ImGui::SameLine();
-    ImGui::Text (fmt::format ("packets:{} errors:{}", 
+    ImGui::Text (fmt::format ("packets:{} errors:{}",
                  mDvbTransportStream->getNumPackets(), mDvbTransportStream->getNumErrors()).c_str());
     //}}}
 

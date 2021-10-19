@@ -37,7 +37,7 @@
 using namespace std;
 //}}}
 //{{{  const multiplexes
-static const vector <sMultiplex> kMultiplexes = {
+static const vector <cDvbMultiplex> kDvbMultiplexes = {
   { "hd",
     626000000,
     { "BBC ONE HD", "BBC TWO HD", "ITV HD", "Channel 4 HD", "Channel 5 HD" },
@@ -81,9 +81,9 @@ int main (int numArgs, char* args[]) {
 
   // parse and remove recognised params
   bool found = false;
-  sMultiplex foundMultiplex = kMultiplexes[0];
+  cDvbMultiplex foundMultiplex = kDvbMultiplexes[0];
   for (auto it = params.begin(); it < params.end() && !found;) {
-    for (auto& multiplex : kMultiplexes) {
+    for (auto& multiplex : kDvbMultiplexes) {
       if (*it == multiplex.mName) {
         foundMultiplex = multiplex;
         params.erase (it);
