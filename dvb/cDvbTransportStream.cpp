@@ -1,4 +1,4 @@
-// cTsDvb.cpp - dvb source -> dvb transport stream demux
+// cDvbTransportStream.cpp - dvbSource -> transport stream demux
 //{{{  windows includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -53,7 +53,7 @@
 #endif
 //}}}
 //{{{  common includes
-#include "cTsDvb.h"
+#include "cDvbTransportStream.h"
 
 #include <cstdint>
 #include <string>
@@ -65,7 +65,6 @@
 #include "../utils/utils.h"
 
 #include "cDvbUtils.h"
-#include "cTransportStream.h"
 #include "cSubtitle.h"
 
 using namespace std;
@@ -73,42 +72,60 @@ using namespace std;
 
 constexpr bool kDebug = false;
 
+// public:
 //{{{
-class cDvbTransportStream : public cTransportStream {
-public:
+cDvbTransportStream::cDvbTransportStream (int frequency,
+                const vector <string>& channelNames, const vector <string>& recordFileNames,
+                const string& recordRoot, const string& recordAllRoot,
+                bool recordAll, bool decodeSubtitle)
+    : mChannelNames(channelNames), mRecordFileNames(recordFileNames),
+      mRecordRoot(recordRoot), mRecordAllRoot(recordAllRoot),
+      mRecordAll(recordAll), mDecodeSubtitle(decodeSubtitle) {
+
+  mDvbSource = new cDvbSource (frequency, 0);
+  }
+//}}}
+//{{{
+cDvbTransportStream::~cDvbTransportStream() {
+  for (auto& subtitle : mSubtitleMap)
+    delete (subtitle.second);
+
+  mSubtitleMap.clear();
+  }
+//}}}
+
+//{{{
+cSubtitle* cDvbTransportStream::getSubtitleBySid (uint16_t sid) {
+
+  auto it = mSubtitleMap.find (sid);
+  return (it == mSubtitleMap.end()) ? nullptr : (*it).second;
+  }
+//}}}
+
+//{{{
+void cDvbTransportStream::readFile (bool ownThread, const string& fileName) {
+
+  if (ownThread)
+    thread ([=, this](){ readFileInternal (true, fileName); } ).detach();
+  else
+    readFileInternal (false, fileName);
+  }
+//}}}
+//{{{
+void cDvbTransportStream::grab (bool ownThread, const string& multiplexName) {
+
+  if (ownThread)
+    thread([=, this]() { grabInternal (true, multiplexName); }).detach();
+  else
+    grabInternal (false, multiplexName);
+  }
+//}}}
+
+// protected:
   //{{{
-  cDvbTransportStream (const vector <string>& channelStrings, const vector <string>& saveStrings,
-                       const string& recordRoot, bool recordAll, bool decodeSubtitle)
-    : mChannelStrings(channelStrings), mSaveStrings(saveStrings),
-      mRecordRoot(recordRoot), mRecordAll(recordAll), mDecodeSubtitle(decodeSubtitle) {}
-  //}}}
-  //{{{
-  virtual ~cDvbTransportStream() {
-
-    for (auto& subtitle : mSubtitleMap)
-      delete (subtitle.second);
-
-    mSubtitleMap.clear();
-    }
-  //}}}
-
-  //{{{
-  cSubtitle* getSubtitleBySid (uint16_t sid) {
-
-    auto it = mSubtitleMap.find (sid);
-    return (it == mSubtitleMap.end()) ? nullptr : (*it).second;
-    }
-  //}}}
-
-  string getRecordRoot() const { return mRecordRoot; }
-  bool getRecordAll() const { return mRecordAll; }
-  bool getDecodeSubtitle() const { return mDecodeSubtitle; }
-
-protected:
-  //{{{
-  virtual void start (cService* service, const string& name,
+  void cDvbTransportStream::start (cService* service, const string& name,
                       chrono::system_clock::time_point time, chrono::system_clock::time_point starttime,
-                      bool selected) final {
+                      bool selected) {
 
     (void)starttime;
     lock_guard<mutex> lockGuard (mFileMutex);
@@ -116,30 +133,30 @@ protected:
     service->closeFile();
 
     bool record = selected || mRecordAll;
-    string saveName;
+    string recordFileName;
 
     if (!mRecordAll) {
       // filter and rename channel prefix
       size_t i = 0;
-      for (auto& channelString : mChannelStrings) {
-        if (channelString == service->getChannelString()) {
+      for (auto& channelName : mChannelNames) {
+        if (channelName == service->getChannelString()) {
           record = true;
-          if (i < mSaveStrings.size())
-            saveName = mSaveStrings[i] +  " ";
+          if (i < mRecordFileNames.size())
+            recordFileName = mRecordFileNames[i] +  " ";
           break;
           }
         i++;
         }
       }
 
-    saveName += date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(time));
+    recordFileName += date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(time));
 
     if (record) {
       if ((service->getVidPid() > 0) &&
           (service->getAudPid() > 0) &&
           (service->getSubPid() > 0)) {
         auto validName = validFileString (name, "<>:/|?*\"\'\\");
-        auto fileNameStr = mRecordRoot + saveName + validName + ".ts";
+        auto fileNameStr = mRecordRoot + recordFileName + validName + ".ts";
         service->openFile (fileNameStr, 0x1234);
         cLog::log (LOGINFO, fileNameStr);
         }
@@ -147,7 +164,7 @@ protected:
     }
   //}}}
   //{{{
-  virtual void pesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) final {
+  void cDvbTransportStream::pesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) {
   // look up service and write it
 
     lock_guard<mutex> lockGuard (mFileMutex);
@@ -158,7 +175,7 @@ protected:
     }
   //}}}
   //{{{
-  virtual void stop (cService* service) final {
+  void cDvbTransportStream::stop (cService* service) {
 
     lock_guard<mutex> lockGuard (mFileMutex);
 
@@ -167,7 +184,7 @@ protected:
   //}}}
 
   //{{{
-  virtual bool audDecodePes (cPidInfo* pidInfo, bool skip) final {
+  bool cDvbTransportStream::audDecodePes (cPidInfo* pidInfo, bool skip) {
     (void)pidInfo;
     (void)skip;
     //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " a - " + dec(pidInfo->getBufUsed());
@@ -175,7 +192,7 @@ protected:
     }
   //}}}
   //{{{
-  virtual bool vidDecodePes (cPidInfo* pidInfo, bool skip) final {
+  bool cDvbTransportStream::vidDecodePes (cPidInfo* pidInfo, bool skip) {
     (void)pidInfo;
     (void)skip;
     //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
@@ -183,7 +200,7 @@ protected:
     }
   //}}}
   //{{{
-  virtual bool subDecodePes (cPidInfo* pidInfo) final {
+  bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
 
     if (kDebug)
       cLog::log (LOGINFO1, fmt::format ("subtitle pid:{} sid:{} size:{} {} {} ",
@@ -213,74 +230,9 @@ protected:
     }
   //}}}
 
-private:
-  vector<string> mChannelStrings;
-  vector<string> mSaveStrings;
-
-  string mRecordRoot;
-  bool mRecordAll;
-  bool mDecodeSubtitle;
-
-  mutex mFileMutex;
-
-  map <uint16_t, cSubtitle*> mSubtitleMap; // indexed by sid
-  };
-//}}}
-
-// public:
+// private:
 //{{{
-cTsDvb::cTsDvb (int frequency, const vector <string>& channelNames, const vector <string>& recordNames,
-                const string& recordRoot, const string& recordAllRoot,
-                bool decodeSubtitle)
-    : cDvbSource(frequency, 0), mRecordAllRoot(recordAllRoot) {
-
-  mDvbTransportStream = new cDvbTransportStream (channelNames, recordNames,
-                                                 recordRoot, !recordAllRoot.empty(), decodeSubtitle);
-  }
-//}}}
-//{{{
-cTsDvb::~cTsDvb() {
-  delete mDvbTransportStream;
-  }
-//}}}
-
-//{{{
-cTransportStream* cTsDvb::getTransportStream() {
-  return mDvbTransportStream;
-  }
-//}}}
-//{{{
-cSubtitle* cTsDvb::getSubtitleBySid (uint16_t sid) {
-  return mDvbTransportStream->getSubtitleBySid (sid);
-  }
-//}}}
-
-string cTsDvb::getRecordRoot() const { return mDvbTransportStream->getRecordRoot(); }
-bool cTsDvb::getRecordAll() const { return mDvbTransportStream->getRecordAll(); }
-bool cTsDvb:: getDecodeSubtitle() const { return mDvbTransportStream->getDecodeSubtitle(); }
-
-//{{{
-void cTsDvb::readFile (bool ownThread, const string& fileName) {
-
-  if (ownThread)
-    thread ([=, this](){ readFileInternal (true, fileName); } ).detach();
-  else
-    readFileInternal (false, fileName);
-  }
-//}}}
-//{{{
-void cTsDvb::grab (bool ownThread, const string& multiplexName) {
-
-  if (ownThread)
-    thread([=, this]() { grabInternal (true, multiplexName); }).detach();
-  else
-    grabInternal (false, multiplexName);
-  }
-//}}}
-
-// private
-//{{{
-void cTsDvb::readFileInternal (bool ownThread, const string& fileName) {
+void cDvbTransportStream::readFileInternal (bool ownThread, const string& fileName) {
 
   if (ownThread)
     cLog::setThreadName ("read");
@@ -306,10 +258,10 @@ void cTsDvb::readFileInternal (bool ownThread, const string& fileName) {
 
     size_t bytesRead = fread (buffer, 1, blockSize, file);
     if (bytesRead > 0)
-      streamPos += mDvbTransportStream->demux ({}, buffer, bytesRead, streamPos, false);
+      streamPos += demux ({}, buffer, bytesRead, streamPos, false);
     else
       break;
-    mErrorStr = fmt::format ("{}", mDvbTransportStream->getNumErrors());
+    //mErrorStr = fmt::format ("{}", getNumErrors());
     }
 
   fclose (file);
@@ -320,7 +272,7 @@ void cTsDvb::readFileInternal (bool ownThread, const string& fileName) {
   }
 //}}}
 //{{{
-void cTsDvb::grabInternal (bool ownThread, const string& multiplexName) {
+void cDvbTransportStream::grabInternal (bool ownThread, const string& multiplexName) {
 
   if (ownThread)
     cLog::setThreadName ("grab");
@@ -329,36 +281,36 @@ void cTsDvb::grabInternal (bool ownThread, const string& multiplexName) {
                                        : fopen ((mRecordAllRoot + multiplexName + ".ts").c_str(), "wb");
 
   #ifdef _WIN32
-    auto hr = mMediaControl->Run();
+    auto hr = mDvbSource->mMediaControl->Run();
     if (hr == S_OK) {
       int64_t streamPos = 0;
       auto blockSize = 0;
       while (true) {
-        auto ptr = getBlockBDA (blockSize);
+        auto ptr = mDvbSource->getBlockBDA (blockSize);
         if (blockSize) {
           //{{{  read and demux block
           if (mFile)
             fwrite (ptr, 1, blockSize, mFile);
 
-          streamPos += mDvbTransportStream->demux ({}, ptr, blockSize, streamPos, false);
-          releaseBlock (blockSize);
+          streamPos += demux ({}, ptr, blockSize, streamPos, false);
+          mDvbSource->releaseBlock (blockSize);
 
-          mErrorStr.clear();
-          if (mDvbTransportStream->getNumErrors())
-            mErrorStr += fmt::format ("{}err", mDvbTransportStream->getNumErrors());
+          mErrorString.clear();
+          if (getNumErrors())
+            mErrorString += fmt::format ("{}err", getNumErrors());
           if (streamPos < 1000000)
-            mErrorStr = fmt::format ("{}k", streamPos / 1000);
+            mErrorString = fmt::format ("{}k", streamPos / 1000);
           else
-            mErrorStr = fmt::format ("{}m", streamPos / 1000000);
+            mErrorString = fmt::format ("{}m", streamPos / 1000000);
           }
           //}}}
         else
           this_thread::sleep_for (1ms);
-        if (mScanningTuner) {
-          //{{{  update mSignalStr
+        if (mDvbSource->mScanningTuner) {
+          //{{{  update mSignalString
           long signal = 0;
-          mScanningTuner->get_SignalStrength (&signal);
-          mSignalStr = fmt::format ("signal {}", signal / 0x10000);
+          mDvbSource->mScanningTuner->get_SignalStrength (&signal);
+          mSignalString = fmt::format ("signal {}", signal / 0x10000);
           }
           //}}}
         }

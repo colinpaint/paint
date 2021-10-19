@@ -21,8 +21,7 @@
 #include "../utils/utils.h"
 
 // dvb
-#include "../dvb/cTsDvb.h"
-#include "../dvb/cTransportStream.h"
+#include "../dvb/cDvbTransportStream.h"
 #include "../dvb/cSubtitle.h"
 
 #include "../tv/cTvApp.h"
@@ -57,15 +56,15 @@ namespace {
   int gPacketDigits = 0;
   int gMaxPidPackets = 0;
   //{{{
-  void drawPids (cTsDvb* tsDvb) {
+  void drawPids (cDvbTransportStream* dvbTransportStream) {
 
     // width of error field
     int errorDigits = 1;
-    while (tsDvb->getTransportStream()->getNumErrors() > pow (10, errorDigits))
+    while (dvbTransportStream->getNumErrors() > pow (10, errorDigits))
       errorDigits++;
 
     int prevSid = 0;
-    for (auto& pidInfoItem : tsDvb->getTransportStream()->getPidInfoMap()) {
+    for (auto& pidInfoItem : dvbTransportStream->getPidInfoMap()) {
       // iterate for pidInfo
       cPidInfo& pidInfo = pidInfoItem.second;
 
@@ -191,15 +190,16 @@ public:
     #endif
 
     bool recordAll = multiplex.mSelectedChannels.empty();
-    mTsDvb = new cTsDvb (multiplex.mFrequency, multiplex.mSelectedChannels, multiplex.mSaveNames,
-                         kRecordRoot, recordAll ? kRecordAllRoot : "", subtitles);
-    if (!mTsDvb)
+    mDvbTransportStream = new cDvbTransportStream (multiplex.mFrequency, multiplex.mSelectedChannels, multiplex.mSaveNames,
+                                                   kRecordRoot, recordAll ? kRecordAllRoot : "",
+                                                   recordAll, subtitles);
+    if (!mDvbTransportStream)
       return false;
 
     if (filename.empty())
-      mTsDvb->grab (true, multiplex.mName);
+        mDvbTransportStream->grab (true, multiplex.mName);
     else
-      mTsDvb->readFile (true, filename);
+        mDvbTransportStream->readFile (true, filename);
     return true;
     }
   //}}}
@@ -208,7 +208,7 @@ public:
 
     cTvApp& tvApp = (cTvApp&)app;
 
-    if (!mTsDvb)
+    if (!mDvbTransportStream)
       createDvbSource (tvApp.getName(), tvApp.getMultiplex(), tvApp.getSubtitles());
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
@@ -241,14 +241,13 @@ public:
 
     // tsDvb totals
     ImGui::SameLine();
-    ImGui::Text (fmt::format ("packets:{} errors:{}",
-                 mTsDvb->getTransportStream()->getNumPackets(),
-                 mTsDvb->getTransportStream()->getNumErrors()).c_str());
+    ImGui::Text (fmt::format ("packets:{} errors:{}", 
+                 mDvbTransportStream->getNumPackets(), mDvbTransportStream->getNumErrors()).c_str());
     //}}}
 
-    if (mTsDvb) {
+    if (mDvbTransportStream) {
       ImGui::PushFont (app.getMonoFont());
-      drawPids (mTsDvb);
+      drawPids (mDvbTransportStream);
       ImGui::PopFont();
       }
 
@@ -259,7 +258,7 @@ public:
 private:
   // vars
   bool mOpen = true;
-  cTsDvb* mTsDvb = nullptr;
+  cDvbTransportStream* mDvbTransportStream = nullptr;
 
   static cUI* create (const string& className) { return new cTvUI (className); }
   inline static const bool mRegistered = registerClass ("tv", &create);
