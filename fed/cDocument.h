@@ -44,6 +44,42 @@ constexpr uint8_t eUndefined =      0xFF;
 //}}}
 
 //{{{
+class cLanguage {
+public:
+  using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
+  using tTokenSearch = bool(*)(const char* srcBegin, const char* srcEnd,
+                               const char*& dstBegin, const char*& dstEnd, uint8_t& color);
+  // static const
+  static const cLanguage c();
+  static const cLanguage hlsl();
+  static const cLanguage glsl();
+
+  // vars
+  std::string mName;
+  bool mAutoIndentation = true;
+
+  // comment tokens
+  std::string mCommentSingle;
+  std::string mCommentBegin;
+  std::string mCommentEnd;
+
+  // fold tokens
+  std::string mFoldBeginToken;
+  std::string mFoldEndToken;
+
+  // fold indicators
+  std::string mFoldBeginOpen = "{{{ ";
+  std::string mFoldBeginClosed = "... ";
+  std::string mFoldEnd = "}}}";
+
+  std::unordered_set <std::string> mKeyWords;
+  std::unordered_set <std::string> mKnownWords;
+
+  tTokenSearch mTokenSearch = nullptr;
+  cLanguage::tRegex mRegexList;
+  };
+//}}}
+//{{{
 class cGlyph {
 public:
   //{{{
@@ -143,42 +179,6 @@ public:
   };
 //}}}
 //{{{
-class cLanguage {
-public:
-  using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
-  using tTokenSearch = bool(*)(const char* srcBegin, const char* srcEnd,
-                               const char*& dstBegin, const char*& dstEnd, uint8_t& color);
-  // static const
-  static const cLanguage c();
-  static const cLanguage hlsl();
-  static const cLanguage glsl();
-
-  // vars
-  std::string mName;
-  bool mAutoIndentation = true;
-
-  // comment tokens
-  std::string mCommentSingle;
-  std::string mCommentBegin;
-  std::string mCommentEnd;
-
-  // fold tokens
-  std::string mFoldBeginToken;
-  std::string mFoldEndToken;
-
-  // fold indicators
-  std::string mFoldBeginOpen = "{{{ ";
-  std::string mFoldBeginClosed = "... ";
-  std::string mFoldEnd = "}}}";
-
-  std::unordered_set <std::string> mKeyWords;
-  std::unordered_set <std::string> mKnownWords;
-
-  tTokenSearch mTokenSearch = nullptr;
-  cLanguage::tRegex mRegexList;
-  };
-//}}}
-//{{{
 class cLine {
 public:
   //{{{
@@ -188,86 +188,25 @@ public:
   //}}}
 
   // gets
-  //{{{
-  bool empty() const {
-    return mGlyphs.empty();
-    }
-  //}}}
-  //{{{
-  uint32_t getNumGlyphs() const {
-    return static_cast<uint32_t>(mGlyphs.size());
-    }
-  //}}}
+  bool empty() const { return mGlyphs.empty(); }
+  uint32_t getNumGlyphs() const { return static_cast<uint32_t>(mGlyphs.size()); }
 
-  //{{{
-  uint8_t getNumCharBytes (uint32_t glyphIndex) const {
-    return mGlyphs[glyphIndex].mNumUtf8Bytes;
-    }
-  //}}}
-  //{{{
-  uint8_t getChar (uint32_t glyphIndex, uint32_t utf8Index) const {
-    return mGlyphs[glyphIndex].mUtfChar[utf8Index];
-    }
-  //}}}
-  //{{{
-  uint8_t getChar (uint32_t glyphIndex) const {
-    return getChar (glyphIndex, 0);
-    }
-  //}}}
+  uint8_t getNumCharBytes (uint32_t glyphIndex) const { return mGlyphs[glyphIndex].mNumUtf8Bytes; }
+  uint8_t getChar (uint32_t glyphIndex, uint32_t utf8Index) const { return mGlyphs[glyphIndex].mUtfChar[utf8Index]; }
+  uint8_t getChar (uint32_t glyphIndex) const { return getChar (glyphIndex, 0); }
 
-  //{{{
-  std::string getString() const {
+  std::string getString() const;
+  uint8_t getColor (uint32_t glyphIndex) const { return mGlyphs[glyphIndex].mColor; }
 
-     std::string lineString;
-     lineString.reserve (mGlyphs.size());
+  bool getCommentSingle (const uint32_t glyphIndex) const { return mGlyphs[glyphIndex].mCommentSingle; }
+  bool getCommentBegin (const uint32_t glyphIndex) const { return mGlyphs[glyphIndex].mCommentBegin; }
+  bool getCommentEnd (const uint32_t glyphIndex) const { return mGlyphs[glyphIndex].mCommentEnd; }
 
-     for (auto& glyph : mGlyphs)
-       for (uint32_t utf8index = 0; utf8index < glyph.mNumUtf8Bytes; utf8index++)
-         lineString += glyph.mUtfChar[utf8index];
-
-     return lineString;
-     }
-  //}}}
-  //{{{
-  uint8_t getColor (uint32_t glyphIndex) const {
-    return mGlyphs[glyphIndex].mColor;
-    }
-  //}}}
-
-  //{{{
-  bool getCommentSingle (const uint32_t glyphIndex) const {
-    return mGlyphs[glyphIndex].mCommentSingle;
-    }
-  //}}}
-  //{{{
-  bool getCommentBegin (const uint32_t glyphIndex) const {
-    return mGlyphs[glyphIndex].mCommentBegin;
-    }
-  //}}}
-  //{{{
-  bool getCommentEnd (const uint32_t glyphIndex) const {
-    return mGlyphs[glyphIndex].mCommentEnd;
-    }
-  //}}}
-
-  //{{{
-  cGlyph getGlyph (const uint32_t glyphIndex) const {
-    return mGlyphs[glyphIndex];
-    }
-  //}}}
+  cGlyph getGlyph (const uint32_t glyphIndex) const { return mGlyphs[glyphIndex]; }
 
   // sets
-  //{{{
-  void setColor (uint8_t color) {
-    for (auto& glyph : mGlyphs)
-      glyph.mColor = color;
-    }
-  //}}}
-  //{{{
-  void setColor (uint32_t glyphIndex, uint8_t color) {
-    mGlyphs[glyphIndex].mColor = color;
-    }
-  //}}}
+  void setColor (uint8_t color) { for (auto& glyph : mGlyphs) glyph.mColor = color; }
+  void setColor (uint32_t glyphIndex, uint8_t color) { mGlyphs[glyphIndex].mColor = color; }
   //{{{
   void setCommentSingle (size_t glyphIndex) {
     mCommentSingle = true;
@@ -287,8 +226,9 @@ public:
     }
   //}}}
 
-  void parseTokens (const cLanguage& language, const std::string& textString);
+  uint32_t trimTrailingSpace();
   bool parse (const cLanguage& language);
+  void parseTokens (const cLanguage& language, const std::string& textString);
 
   // ops
   //{{{
@@ -307,42 +247,12 @@ public:
     mFoldOpen = false;
     }
   //}}}
-  //{{{
-  void reserve (size_t size) {
-    mGlyphs.reserve (size);
-    }
-  //}}}
-  //{{{
-  void pushBack (cGlyph glyph) {
-    mGlyphs.push_back (glyph);
-    }
-  //}}}
-  //{{{
-  void emplaceBack (cGlyph glyph) {
-    mGlyphs.emplace_back (glyph);
-    }
-  //}}}
-  //{{{
-  uint32_t trimTrailingSpace() {
-
-    uint32_t trimmedSpaces = 0;
-    uint32_t column = getNumGlyphs();
-    while ((column > 0) && (mGlyphs[--column].mUtfChar[0] == ' ')) {
-      // trailingSpace, trim it
-      mGlyphs.pop_back();
-      trimmedSpaces++;
-      }
-
-    return trimmedSpaces;
-    }
-  //}}}
+  void reserve (size_t size) { mGlyphs.reserve (size); }
+  void pushBack (cGlyph glyph) { mGlyphs.push_back (glyph); }
+  void emplaceBack (cGlyph glyph) { mGlyphs.emplace_back (glyph); }
 
   // insert
-  //{{{
-  void insert (uint32_t glyphIndex, const cGlyph& glyph) {
-    mGlyphs.insert (mGlyphs.begin() + glyphIndex, glyph);
-    }
-  //}}}
+  void insert (uint32_t glyphIndex, const cGlyph& glyph) { mGlyphs.insert (mGlyphs.begin() + glyphIndex, glyph); }
   //{{{
   void insertLineAtEnd (const cLine& lineToInsert) {
   // insert lineToInsert to end of line
@@ -359,16 +269,8 @@ public:
   //}}}
 
   // erase
-  //{{{
-  void erase (uint32_t glyphIndex) {
-    mGlyphs.erase (mGlyphs.begin() + glyphIndex);
-    }
-  //}}}
-  //{{{
-  void eraseToEnd (uint32_t glyphIndex) {
-    mGlyphs.erase (mGlyphs.begin() + glyphIndex, mGlyphs.end());
-    }
-  //}}}
+  void erase (uint32_t glyphIndex) { mGlyphs.erase (mGlyphs.begin() + glyphIndex); }
+  void eraseToEnd (uint32_t glyphIndex) { mGlyphs.erase (mGlyphs.begin() + glyphIndex, mGlyphs.end()); }
   //{{{
   void erase (uint32_t glyphIndex, uint32_t toGlyphIndex) {
     mGlyphs.erase (mGlyphs.begin() + glyphIndex, mGlyphs.begin() + toGlyphIndex);
@@ -455,77 +357,18 @@ public:
   std::string getText (sPosition beginPosition, sPosition endPosition);
   //{{{
   std::string getTextString() {
-  // get text as single string
-
     return getText ({0,0}, { getNumLines(),0});
     }
   //}}}
-  //{{{
-  std::vector<std::string> getTextStrings() const {
-  // get text as vector of string
-
-    std::vector<std::string> result;
-    result.reserve (getNumLines());
-
-    for (const auto& line : mLines) {
-      std::string lineString = line.getString();
-      result.emplace_back (move (lineString));
-      }
-
-    return result;
-    }
-  //}}}
+  std::vector<std::string> getTextStrings() const;
 
   cLine& getLine (uint32_t lineNumber) { return mLines[lineNumber]; }
   uint32_t getNumColumns (const cLine& line);
 
-  //{{{
-  uint32_t getGlyphIndex (const cLine& line, uint32_t toColumn) {
-  // return glyphIndex from line,column, inserting tabs
-
-    uint32_t glyphIndex = 0;
-
-    uint32_t column = 0;
-    while ((glyphIndex < line.getNumGlyphs()) && (column < toColumn)) {
-      if (line.getChar (glyphIndex) == '\t')
-        column = getTabColumn (column);
-      else
-        column++;
-      glyphIndex++;
-      }
-
-    return glyphIndex;
-    }
-  //}}}
-  //{{{
-  uint32_t getGlyphIndex (const sPosition& position) {
-    return getGlyphIndex (getLine (position.mLineNumber), position.mColumn);
-    }
-  //}}}
-  //{{{
-  uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex) {
-  // return glyphIndex column using any tabs
-
-    uint32_t column = 0;
-
-    for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
-      if (glyphIndex >= toGlyphIndex)
-        return column;
-      if (line.getChar (glyphIndex) == '\t')
-        column = getTabColumn (column);
-      else
-        column++;
-      }
-
-    return column;
-    }
-  //}}}
-  //{{{
-  uint32_t getTabColumn (uint32_t column) {
-  // return column of after tab at column
-    return ((column / mTabSize) * mTabSize) + mTabSize;
-    }
-  //}}}
+  uint32_t getGlyphIndex (const cLine& line, uint32_t toColumn);
+  uint32_t getGlyphIndex (const sPosition& position);
+  uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex);
+  uint32_t getTabColumn (uint32_t column);
 
   void parseComments();
 

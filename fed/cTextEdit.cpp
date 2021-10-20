@@ -6,10 +6,10 @@
 #include <algorithm>
 #include <functional>
 
+#include <array>
+
 #include <fstream>
 #include <filesystem>
-
-#include <array>
 
 #include "../platform/cPlatform.h"
 #include "../imgui/myImgui.h"
@@ -37,7 +37,7 @@ cTextEdit::cTextEdit() {
   }
 //}}}
 
-//{{{  actions
+//actions
 //{{{
 void cTextEdit::toggleShowFolded() {
 
@@ -46,7 +46,7 @@ void cTextEdit::toggleShowFolded() {
   }
 //}}}
 
-// move
+//{{{  move
 //{{{
 void cTextEdit::moveLeft() {
 
@@ -140,15 +140,15 @@ void cTextEdit::moveRightWord() {
     }
   }
 //}}}
-
-// select
+//}}}
+//{{{  select
 //{{{
 void cTextEdit::selectAll() {
   setSelect (eSelect::eNormal, {0,0}, { mDoc.getNumLines(),0});
   }
 //}}}
-
-// cut and paste
+//}}}
+//{{{  cut and paste
 //{{{
 void cTextEdit::copy() {
 
@@ -246,8 +246,8 @@ void cTextEdit::paste() {
     }
   }
 //}}}
-
-// delete
+//}}}
+//{{{  delete
 //{{{
 void cTextEdit::deleteIt() {
 
@@ -369,8 +369,8 @@ void cTextEdit::backspace() {
   mEdit.addUndo (undo);
   }
 //}}}
-
-// fold
+//}}}
+//{{{  fold
 //{{{
 void cTextEdit::createFold() {
 
@@ -391,8 +391,8 @@ void cTextEdit::createFold() {
   mEdit.addUndo (undo);
   }
 //}}}
-
-// undo
+//}}}
+//{{{  undo
 //{{{
 void cTextEdit::undo (uint32_t steps) {
 
@@ -411,8 +411,8 @@ void cTextEdit::redo (uint32_t steps) {
     }
   }
 //}}}
-
-// file
+//}}}
+//{{{  file
 //{{{
 void cTextEdit::loadFile (const string& filename) {
 
@@ -430,8 +430,8 @@ void cTextEdit::saveFile() {
   mDoc.save();
   }
 //}}}
-
-// enter
+//}}}
+//{{{  enter
 //{{{
 void cTextEdit::enterCharacter (ImWchar ch) {
 // !!!! more utf8 handling !!!
@@ -576,8 +576,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
   }
 //}}}
 //}}}
-
-// draws
+//{{{  draws
 //{{{
 void cTextEdit::drawWindow (const string& title, cApp& app) {
 // standalone Memory Editor window
@@ -765,6 +764,7 @@ void cTextEdit::drawContents (cApp& app) {
   if (isDrawMonoSpaced())
     ImGui::PopFont();
   }
+//}}}
 //}}}
 
 // private:

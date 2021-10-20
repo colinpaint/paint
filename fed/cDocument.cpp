@@ -453,7 +453,7 @@ const cLanguage cLanguage::hlsl() {
   }
 //}}}
 //{{{
-const cLanguage cLanguage::glsl(){
+const cLanguage cLanguage::glsl() {
 
   cLanguage language;
 
@@ -498,57 +498,31 @@ const cLanguage cLanguage::glsl(){
 
 // cLine
 //{{{
-void cLine::parseTokens (const cLanguage& language, const string& textString) {
-// parse and color tokens, recognise and color keyWords and knownWords
+string cLine::getString() const {
 
-  const char* strBegin = &textString.front();
-  const char* strEnd = strBegin + textString.size();
-  const char* strPtr = strBegin;
-  while (strPtr < strEnd) {
-    // faster tokenize search
-    const char* tokenBegin = nullptr;
-    const char* tokenEnd = nullptr;
-    uint8_t tokenColor = eText;
-    bool tokenFound = language.mTokenSearch &&
-        language.mTokenSearch (strPtr, strEnd, tokenBegin, tokenEnd, tokenColor);
+   string lineString;
+   lineString.reserve (mGlyphs.size());
 
-    if (!tokenFound) {
-      // slower regex search
-      for (const auto& p : language.mRegexList) {
-        cmatch results;
-        if (regex_search (strPtr, strEnd, results, p.first, regex_constants::match_continuous)) {
-          auto& v = *results.begin();
-          tokenBegin = v.first;
-          tokenEnd = v.second;
-          tokenColor = p.second;
-          tokenFound = true;
-          break;
-          }
-        }
-      }
+   for (auto& glyph : mGlyphs)
+     for (uint32_t utf8index = 0; utf8index < glyph.mNumUtf8Bytes; utf8index++)
+       lineString += glyph.mUtfChar[utf8index];
 
-    if (tokenFound) {
-      // token to color
-      if (tokenColor == eIdentifier) {
-        // extra search for keyWords, knownWords
-        string tokenString (tokenBegin, tokenEnd);
-        if (language.mKeyWords.count (tokenString) != 0)
-          tokenColor = eKeyWord;
-        else if (language.mKnownWords.count (tokenString) != 0)
-          tokenColor = eKnownWord;
-        }
+   return lineString;
+   }
+//}}}
 
-      // color token glyphs
-      uint32_t glyphIndex = static_cast<uint32_t>(tokenBegin - strBegin);
-      uint32_t glyphIndexEnd = static_cast<uint32_t>(tokenEnd - strBegin);
-      while (glyphIndex < glyphIndexEnd)
-        setColor (glyphIndex++, tokenColor);
+//{{{
+uint32_t cLine::trimTrailingSpace() {
 
-      strPtr = tokenEnd;
-      }
-    else
-      strPtr++;
+  uint32_t trimmedSpaces = 0;
+  uint32_t column = getNumGlyphs();
+  while ((column > 0) && (mGlyphs[--column].mUtfChar[0] == ' ')) {
+    // trailingSpace, trim it
+    mGlyphs.pop_back();
+    trimmedSpaces++;
     }
+
+  return trimmedSpaces;
   }
 //}}}
 //{{{
@@ -616,22 +590,62 @@ bool cLine::parse (const cLanguage& language) {
   return result;
   }
 //}}}
-
-// cDocument
 //{{{
-uint32_t cDocument::getNumColumns (const cLine& line) {
+void cLine::parseTokens (const cLanguage& language, const string& textString) {
+// parse and color tokens, recognise and color keyWords and knownWords
 
-  uint32_t column = 0;
+  const char* strBegin = &textString.front();
+  const char* strEnd = strBegin + textString.size();
+  const char* strPtr = strBegin;
+  while (strPtr < strEnd) {
+    // faster tokenize search
+    const char* tokenBegin = nullptr;
+    const char* tokenEnd = nullptr;
+    uint8_t tokenColor = eText;
+    bool tokenFound = language.mTokenSearch &&
+        language.mTokenSearch (strPtr, strEnd, tokenBegin, tokenEnd, tokenColor);
 
-  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++)
-    if (line.getChar (glyphIndex) == '\t')
-      column = getTabColumn (column);
+    if (!tokenFound) {
+      // slower regex search
+      for (const auto& p : language.mRegexList) {
+        cmatch results;
+        if (regex_search (strPtr, strEnd, results, p.first, regex_constants::match_continuous)) {
+          auto& v = *results.begin();
+          tokenBegin = v.first;
+          tokenEnd = v.second;
+          tokenColor = p.second;
+          tokenFound = true;
+          break;
+          }
+        }
+      }
+
+    if (tokenFound) {
+      // token to color
+      if (tokenColor == eIdentifier) {
+        // extra search for keyWords, knownWords
+        string tokenString (tokenBegin, tokenEnd);
+        if (language.mKeyWords.count (tokenString) != 0)
+          tokenColor = eKeyWord;
+        else if (language.mKnownWords.count (tokenString) != 0)
+          tokenColor = eKnownWord;
+        }
+
+      // color token glyphs
+      uint32_t glyphIndex = static_cast<uint32_t>(tokenBegin - strBegin);
+      uint32_t glyphIndexEnd = static_cast<uint32_t>(tokenEnd - strBegin);
+      while (glyphIndex < glyphIndexEnd)
+        setColor (glyphIndex++, tokenColor);
+
+      strPtr = tokenEnd;
+      }
     else
-      column++;
-
-  return column;
+      strPtr++;
+    }
   }
 //}}}
+
+// cDocument
 //{{{
 string cDocument::getText (sPosition beginPosition, sPosition endPosition) {
 // get position range as string with lineFeed line breaks
@@ -665,7 +679,86 @@ string cDocument::getText (sPosition beginPosition, sPosition endPosition) {
   return text;
   }
 //}}}
+//{{{
+vector<string> cDocument::getTextStrings() const {
+// get text as vector of string
 
+  std::vector<std::string> result;
+  result.reserve (getNumLines());
+
+  for (const auto& line : mLines) {
+    std::string lineString = line.getString();
+    result.emplace_back (move (lineString));
+    }
+
+  return result;
+  }
+//}}}
+
+//{{{
+uint32_t cDocument::getGlyphIndex (const cLine& line, uint32_t toColumn) {
+// return glyphIndex from line,column, inserting tabs
+
+  uint32_t glyphIndex = 0;
+
+  uint32_t column = 0;
+  while ((glyphIndex < line.getNumGlyphs()) && (column < toColumn)) {
+    if (line.getChar (glyphIndex) == '\t')
+      column = getTabColumn (column);
+    else
+      column++;
+    glyphIndex++;
+    }
+
+  return glyphIndex;
+  }
+//}}}
+//{{{
+uint32_t cDocument::getGlyphIndex (const sPosition& position) {
+  return getGlyphIndex (getLine (position.mLineNumber), position.mColumn);
+  }
+//}}}
+
+//{{{
+uint32_t cDocument::getColumn (const cLine& line, uint32_t toGlyphIndex) {
+// return glyphIndex column using any tabs
+
+  uint32_t column = 0;
+
+  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
+    if (glyphIndex >= toGlyphIndex)
+      return column;
+    if (line.getChar (glyphIndex) == '\t')
+      column = getTabColumn (column);
+    else
+      column++;
+    }
+
+  return column;
+  }
+//}}}
+//{{{
+uint32_t cDocument::getTabColumn (uint32_t column) {
+// return column of after tab at column
+  return ((column / mTabSize) * mTabSize) + mTabSize;
+  }
+//}}}
+//{{{
+uint32_t cDocument::getNumColumns (const cLine& line) {
+
+  uint32_t column = 0;
+
+  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++)
+    if (line.getChar (glyphIndex) == '\t')
+      column = getTabColumn (column);
+    else
+      column++;
+
+  return column;
+  }
+//}}}
+
+// actions
 //{{{
 void cDocument::load (const string& filename) {
 
