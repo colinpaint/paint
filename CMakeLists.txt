@@ -162,7 +162,8 @@ if (BUILD_PLAYER)
 
   project (player VERSION 1.0.0)
     file (GLOB PLAYER_HEADER_FILES player/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
-    file (GLOB PLAYER_SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp ui/cUI.cpp
+    file (GLOB PLAYER_SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp
+                                   ui/cUI.cpp
                                    platform/*.cpp graphics/*.cpp)
 
     add_executable (player ${PLAYER_SOURCE_FILES} ${PLAYER_HEADER_FILES})

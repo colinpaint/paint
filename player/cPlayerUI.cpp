@@ -10,6 +10,7 @@
 #include "../imgui/myImgui.h"
 
 // ui
+#include "cPlayerApp.h"
 #include "../ui/cUI.h"
 
 #include "../platform/cPlatform.h"
@@ -703,10 +704,12 @@ public:
   //{{{
   void addToDrawList (cApp& app) final {
 
+    cPlayerApp& playerApp = (cPlayerApp&)app;
+
     if (!mSongLoaded) {
       //{{{  load song
-      const vector <string>& strings = { app.getName() };
-      if (!app.getName().empty()) {
+      const vector <string>& strings = { playerApp.getSourceName() };
+      if (!playerApp.getSourceName().empty()) {
         mSongLoader.launchLoad (strings);
         mSongLoaded = true;
         }
