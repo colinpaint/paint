@@ -70,7 +70,7 @@ public:
       //}}}
     if (!mTextEdit) {
       mTextEdit = new cTextEdit();
-      mTextEdit->loadFile (app.getName());
+      mTextEdit->getDocument().load (app.getName());
       }
 
     // full screen window

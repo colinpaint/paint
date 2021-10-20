@@ -140,14 +140,11 @@ void cTextEdit::moveRightWord() {
   }
 //}}}
 //}}}
-//{{{  select
 //{{{
 void cTextEdit::selectAll() {
   setSelect (eSelect::eNormal, {0,0}, { mDoc.getNumLines(),0});
   }
 //}}}
-//}}}
-//{{{  cut and paste
 //{{{
 void cTextEdit::copy() {
 
@@ -245,8 +242,6 @@ void cTextEdit::paste() {
     }
   }
 //}}}
-//}}}
-//{{{  delete
 //{{{
 void cTextEdit::deleteIt() {
 
@@ -364,50 +359,6 @@ void cTextEdit::backspace() {
   mEdit.addUndo (undo);
   }
 //}}}
-//}}}
-//{{{  fold
-//{{{
-void cTextEdit::createFold() {
-
-  // !!!! temp string for now !!!!
-  string text = getLanguage().mFoldBeginToken +
-                 "  new fold - loads of detail to implement\n\n" +
-                getLanguage().mFoldEndToken +
-                 "\n";
-  cUndo undo;
-  undo.mBeforeCursor = mEdit.mCursor;
-  undo.mAddText = text;
-  undo.mAddBeginPosition = getCursorPosition();
-
-  insertText (text);
-
-  undo.mAddEndPosition = getCursorPosition();
-  undo.mAfterCursor = mEdit.mCursor;
-  mEdit.addUndo (undo);
-  }
-//}}}
-//}}}
-//{{{  undo
-//{{{
-void cTextEdit::undo (uint32_t steps) {
-
-  if (hasUndo()) {
-    mEdit.undo (this, steps);
-    scrollCursorVisible();
-    }
-  }
-//}}}
-//{{{
-void cTextEdit::redo (uint32_t steps) {
-
-  if (hasRedo()) {
-    mEdit.redo (this, steps);
-    scrollCursorVisible();
-    }
-  }
-//}}}
-//}}}
-//{{{  enter
 //{{{
 void cTextEdit::enterCharacter (ImWchar ch) {
 // !!!! more utf8 handling !!!
@@ -549,18 +500,47 @@ void cTextEdit::enterCharacter (ImWchar ch) {
   mEdit.addUndo (undo);
   }
 //}}}
-//}}}
+//{{{  fold
+//{{{
+void cTextEdit::createFold() {
 
+  // !!!! temp string for now !!!!
+  string text = getLanguage().mFoldBeginToken +
+                 "  new fold - loads of detail to implement\n\n" +
+                getLanguage().mFoldEndToken +
+                 "\n";
+  cUndo undo;
+  undo.mBeforeCursor = mEdit.mCursor;
+  undo.mAddText = text;
+  undo.mAddBeginPosition = getCursorPosition();
+
+  insertText (text);
+
+  undo.mAddEndPosition = getCursorPosition();
+  undo.mAfterCursor = mEdit.mCursor;
+  mEdit.addUndo (undo);
+  }
+//}}}
+//}}}
+//{{{  undo
 //{{{
-void cTextEdit::loadFile (const string& filename) {
-  mDoc.load (filename);
-  mEdit.clearUndo();
+void cTextEdit::undo (uint32_t steps) {
+
+  if (hasUndo()) {
+    mEdit.undo (this, steps);
+    scrollCursorVisible();
+    }
   }
 //}}}
 //{{{
-void cTextEdit::saveFile() {
-  mDoc.save();
+void cTextEdit::redo (uint32_t steps) {
+
+  if (hasRedo()) {
+    mEdit.redo (this, steps);
+    scrollCursorVisible();
+    }
   }
+//}}}
 //}}}
 
 // draws
@@ -701,7 +681,7 @@ void cTextEdit::drawContents (cApp& app) {
   if (mDoc.getEdited()) {
     ImGui::SameLine();
     if (ImGui::Button ("save"))
-      saveFile();
+      mDoc.save();
     }
   //}}}
 

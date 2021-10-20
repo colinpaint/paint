@@ -91,10 +91,6 @@ public:
   void undo (uint32_t steps = 1);
   void redo (uint32_t steps = 1);
 
-  // file
-  void loadFile (const std::string& filename);
-  void saveFile();
-
   // enter
   void enterCharacter (ImWchar ch);
   void enterKey() { enterCharacter ('\n'); }

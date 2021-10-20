@@ -336,8 +336,8 @@ struct sPosition {
 class cDocument {
 public:
   cDocument();
-
-  // gets
+  virtual ~cDocument() = default;
+  //{{{  gets
   cLanguage& getLanguage() { return mLanguage; }
 
   bool getEdited() const { return mEdited; }
@@ -359,6 +359,7 @@ public:
 
   uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex);
   uint32_t getTabColumn (uint32_t column);
+  //}}}
 
   //{{{
   void deleteLine (uint32_t lineNumber) {
@@ -368,20 +369,20 @@ public:
   //}}}
   //{{{
   void deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
-
     mLines.erase (mLines.begin() + beginLineNumber, mLines.begin() + endLineNumber);
     edited();
     }
   //}}}
   void deletePositionRange (sPosition beginPosition, sPosition endPosition);
 
-  void parse (cLine& line) { line.parse (mLanguage); };
-  void parseAll();
-  void edited();
-
   // actions
   void load (const std::string& filename);
   void save();
+
+  // changes
+  void parse (cLine& line) { line.parse (mLanguage); };
+  void parseAll();
+  void edited();
 
   // vars
   std::string mFilePath;
@@ -395,6 +396,7 @@ public:
   bool mHasCR = false;
   bool mHasUtf8 = false;
   bool mHasTabs = false;
+
   uint32_t mTabSize = 4;
 
 private:
