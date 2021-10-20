@@ -15,7 +15,144 @@
 class cApp;
 //}}}
 
-// only used by cTextEdit
+//{{{  palette colors
+constexpr uint8_t eText =              0;
+constexpr uint8_t eBackground =        1;
+constexpr uint8_t eIdentifier =        2;
+constexpr uint8_t eNumber =            3;
+constexpr uint8_t ePunctuation =       4;
+constexpr uint8_t eString =            5;
+constexpr uint8_t eLiteral =           6;
+constexpr uint8_t ePreProc =           7;
+constexpr uint8_t eComment =           8;
+constexpr uint8_t eKeyWord =           9;
+constexpr uint8_t eKnownWord =        10;
+
+constexpr uint8_t eCursorPos     =    11;
+constexpr uint8_t eCursorLineFill =   12;
+constexpr uint8_t eCursorLineEdge =   13;
+constexpr uint8_t eCursorReadOnly   = 14;
+constexpr uint8_t eSelectCursor    =  15;
+constexpr uint8_t eLineNumber =       16;
+constexpr uint8_t eWhiteSpace =       17;
+constexpr uint8_t eTab =              18;
+
+constexpr uint8_t eFoldClosed =       19;
+constexpr uint8_t eFoldOpen =         20;
+
+constexpr uint8_t eScrollBackground = 21;
+constexpr uint8_t eScrollGrab =       22;
+constexpr uint8_t eScrollHover =      23;
+constexpr uint8_t eScrollActive =     24;
+constexpr uint8_t eUndefined =      0xFF;
+//}}}
+//{{{
+class cLanguage {
+public:
+  using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
+  using tTokenSearch = bool(*)(const char* srcBegin, const char* srcEnd,
+                               const char*& dstBegin, const char*& dstEnd, uint8_t& color);
+  // static const
+  static const cLanguage c();
+  static const cLanguage hlsl();
+  static const cLanguage glsl();
+
+  // vars
+  std::string mName;
+  bool mAutoIndentation = true;
+
+  // comment tokens
+  std::string mCommentSingle;
+  std::string mCommentBegin;
+  std::string mCommentEnd;
+
+  // fold tokens
+  std::string mFoldBeginToken;
+  std::string mFoldEndToken;
+
+  // fold indicators
+  std::string mFoldBeginOpen = "{{{ ";
+  std::string mFoldBeginClosed = "... ";
+  std::string mFoldEnd = "}}}";
+
+  std::unordered_set <std::string> mKeyWords;
+  std::unordered_set <std::string> mKnownWords;
+
+  tTokenSearch mTokenSearch = nullptr;
+  cLanguage::tRegex mRegexList;
+  };
+//}}}
+//{{{
+class cOptions {
+public:
+  int mFontSize = 16;
+  int mMinFontSize = 4;
+  int mMaxFontSize = 24;
+
+  // modes
+  bool mOverWrite = false;
+  bool mReadOnly = false;
+
+  // shows
+  bool mShowFolded = true;
+  bool mShowLineNumber = true;
+  bool mShowLineDebug = false;
+  bool mShowWhiteSpace = false;
+  bool mShowMonoSpaced = true;
+
+  cLanguage mLanguage;
+  };
+//}}}
+//{{{
+class cTextEditDrawContext : public cDrawContext {
+public:
+  cTextEditDrawContext() : cDrawContext (kPalette) {}
+  //{{{
+  void update (const cOptions& options, bool monoSpaced) {
+    cDrawContext::update (static_cast<float>(options.mFontSize), monoSpaced);
+    mLeftPad = getGlyphWidth() / 2.f;
+    mLineNumberWidth = 0.f;
+    }
+  //}}}
+
+  float mLeftPad = 0.f;
+  float mLineNumberWidth = 0.f;
+
+private:
+  // color to ImU32 lookup
+  inline static const std::vector <ImU32> kPalette = {
+    0xff808080, // eText
+    0xffefefef, // eBackground
+    0xff202020, // eIdentifier
+    0xff606000, // eNumber
+    0xff404040, // ePunctuation
+    0xff2020a0, // eString
+    0xff304070, // eLiteral
+    0xff008080, // ePreProc
+    0xff008000, // eComment
+    0xff1010c0, // eKeyWord
+    0xff800080, // eKnownWord
+
+    0xff000000, // eCursorPos
+    0x10000000, // eCursorLineFill
+    0x40000000, // eCursorLineEdge
+    0x800000ff, // eCursorReadOnly
+    0x80600000, // eSelectCursor
+    0xff505000, // eLineNumber
+    0xff808080, // eWhiteSpace
+    0xff404040, // eTab
+
+    0xffff0000, // eFoldClosed,
+    0xff0000ff, // eFoldOpen,
+
+    0x80404040, // eScrollBackground
+    0x80ffffff, // eScrollGrab
+    0xA000ffff, // eScrollHover
+    0xff00ffff, // eScrollActive
+    };
+  };
+//}}}
+
 //{{{
 struct sPosition {
   sPosition() : mLineNumber(0), mColumn(0) {}
@@ -382,10 +519,37 @@ private:
 //{{{
 class cDocument {
 public:
+  // gets
   uint32_t getNumLines() const { return static_cast<uint32_t>(mLines.size()); }
   uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
 
+  std::string getText (sPosition beginPosition, sPosition endPosition);
+  //{{{
+  std::string getTextString() {
+  // get text as single string
+
+    return getText ({0,0}, { getNumLines(),0});
+    }
+  //}}}
+  //{{{
+  std::vector<std::string> getTextStrings() const {
+  // get text as vector of string
+
+    std::vector<std::string> result;
+    result.reserve (getNumLines());
+
+    for (const auto& line : mLines) {
+      std::string lineString = line.getString();
+      result.emplace_back (move (lineString));
+      }
+
+    return result;
+    }
+  //}}}
+
   cLine& getLine (uint32_t lineNumber) { return mLines[lineNumber]; }
+  uint32_t getNumColumns (const cLine& line);
+
   //{{{
   uint32_t getGlyphIndex (const cLine& line, uint32_t toColumn) {
   // return glyphIndex from line,column, inserting tabs
@@ -409,15 +573,32 @@ public:
     return getGlyphIndex (getLine (position.mLineNumber), position.mColumn);
     }
   //}}}
+  //{{{
+  uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex) {
+  // return glyphIndex column using any tabs
 
+    uint32_t column = 0;
+
+    for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
+      if (glyphIndex >= toGlyphIndex)
+        return column;
+      if (line.getChar (glyphIndex) == '\t')
+        column = getTabColumn (column);
+      else
+        column++;
+      }
+
+    return column;
+    }
+  //}}}
   //{{{
   uint32_t getTabColumn (uint32_t column) {
   // return column of after tab at column
     return ((column / mTabSize) * mTabSize) + mTabSize;
     }
   //}}}
-  uint32_t getNumColumns (const cLine& line);
 
+  // actions
   void load (const std::string& filename);
   void save();
 
@@ -447,42 +628,6 @@ private:
 class cTextEdit {
 public:
   enum class eSelect { eNormal, eWord, eLine };
-  //{{{
-  class cLanguage {
-  public:
-    using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
-    using tTokenSearch = bool(*)(const char* srcBegin, const char* srcEnd,
-                                 const char*& dstBegin, const char*& dstEnd, uint8_t& color);
-    // static const
-    static const cLanguage c();
-    static const cLanguage hlsl();
-    static const cLanguage glsl();
-
-    // vars
-    std::string mName;
-    bool mAutoIndentation = true;
-
-    // comment tokens
-    std::string mCommentSingle;
-    std::string mCommentBegin;
-    std::string mCommentEnd;
-
-    // fold tokens
-    std::string mFoldBeginToken;
-    std::string mFoldEndToken;
-
-    // fold indicators
-    std::string mFoldBeginOpen = "{{{ ";
-    std::string mFoldBeginClosed = "... ";
-    std::string mFoldEnd = "}}}";
-
-    std::unordered_set <std::string> mKeyWords;
-    std::unordered_set <std::string> mKnownWords;
-
-    tTokenSearch mTokenSearch = nullptr;
-    cLanguage::tRegex mRegexList;
-    };
-  //}}}
 
   cTextEdit();
   ~cTextEdit() = default;
@@ -572,69 +717,6 @@ public:
   void drawContents (cApp& app);
 
 private:
-  //{{{  palette const
-  static const uint8_t eText =              0;
-  static const uint8_t eBackground =        1;
-  static const uint8_t eIdentifier =        2;
-  static const uint8_t eNumber =            3;
-  static const uint8_t ePunctuation =       4;
-  static const uint8_t eString =            5;
-  static const uint8_t eLiteral =           6;
-  static const uint8_t ePreProc =           7;
-  static const uint8_t eComment =           8;
-  static const uint8_t eKeyWord =           9;
-  static const uint8_t eKnownWord =        10;
-
-  static const uint8_t eCursorPos     =    11;
-  static const uint8_t eCursorLineFill =   12;
-  static const uint8_t eCursorLineEdge =   13;
-  static const uint8_t eCursorReadOnly   = 14;
-  static const uint8_t eSelectCursor    =  15;
-  static const uint8_t eLineNumber =       16;
-  static const uint8_t eWhiteSpace =       17;
-  static const uint8_t eTab =              18;
-
-  static const uint8_t eFoldClosed =       19;
-  static const uint8_t eFoldOpen =         20;
-
-  static const uint8_t eScrollBackground = 21;
-  static const uint8_t eScrollGrab =       22;
-  static const uint8_t eScrollHover =      23;
-  static const uint8_t eScrollActive =     24;
-  static const uint8_t eUndefined =      0xFF;
-
-  // color to ImU32 lookup
-  inline static const std::vector <ImU32> kPalette = {
-    0xff808080, // eText
-    0xffefefef, // eBackground
-    0xff202020, // eIdentifier
-    0xff606000, // eNumber
-    0xff404040, // ePunctuation
-    0xff2020a0, // eString
-    0xff304070, // eLiteral
-    0xff008080, // ePreProc
-    0xff008000, // eComment
-    0xff1010c0, // eKeyWord
-    0xff800080, // eKnownWord
-
-    0xff000000, // eCursorPos
-    0x10000000, // eCursorLineFill
-    0x40000000, // eCursorLineEdge
-    0x800000ff, // eCursorReadOnly
-    0x80600000, // eSelectCursor
-    0xff505000, // eLineNumber
-    0xff808080, // eWhiteSpace
-    0xff404040, // eTab
-
-    0xffff0000, // eFoldClosed,
-    0xff0000ff, // eFoldOpen,
-
-    0x80404040, // eScrollBackground
-    0x80ffffff, // eScrollGrab
-    0xA000ffff, // eScrollHover
-    0xff00ffff, // eScrollActive
-    };
-  //}}}
   //{{{
   struct sCursor {
     sPosition mPosition;
@@ -681,43 +763,6 @@ private:
     std::string mDeleteText;
     sPosition mDeleteBeginPosition;
     sPosition mDeleteEndPosition;
-    };
-  //}}}
-  //{{{
-  class cOptions {
-  public:
-    int mFontSize = 16;
-    int mMinFontSize = 4;
-    int mMaxFontSize = 24;
-
-    // modes
-    bool mOverWrite = false;
-    bool mReadOnly = false;
-
-    // shows
-    bool mShowFolded = true;
-    bool mShowLineNumber = true;
-    bool mShowLineDebug = false;
-    bool mShowWhiteSpace = false;
-    bool mShowMonoSpaced = true;
-
-    cLanguage mLanguage;
-    };
-  //}}}
-  //{{{
-  class cFedDrawContext : public cDrawContext {
-  public:
-    cFedDrawContext() : cDrawContext (kPalette) {}
-    //{{{
-    void update (const cOptions& options, bool monoSpaced) {
-      cDrawContext::update (static_cast<float>(options.mFontSize), monoSpaced);
-      mLeftPad = getGlyphWidth() / 2.f;
-      mLineNumberWidth = 0.f;
-      }
-    //}}}
-
-    float mLeftPad = 0.f;
-    float mLineNumberWidth = 0.f;
     };
   //}}}
   //{{{
@@ -814,8 +859,7 @@ private:
   bool canEditAtCursor();
 
   // text
-  std::string getText (sPosition beginPosition, sPosition endPosition);
-  std::string getSelectText() { return getText (mEdit.mCursor.mSelectBeginPosition, mEdit.mCursor.mSelectEndPosition); }
+  std::string getSelectText() { return mDoc.getText (mEdit.mCursor.mSelectBeginPosition, mEdit.mCursor.mSelectEndPosition); }
 
   // text widths
   float getWidth (sPosition position);
@@ -845,9 +889,7 @@ private:
 
   sPosition getNextLinePosition (const sPosition& position);
 
-  // column - glyphIndex + tabs
-  uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex);
-
+  // column pos
   float getTabEndPosX (float columnX);
   uint32_t getColumnFromPosX (const cLine& line, float posX);
   //}}}
@@ -915,7 +957,7 @@ private:
 
   cEdit mEdit;
   cOptions mOptions;
-  cFedDrawContext mDrawContext;
+  cTextEditDrawContext mDrawContext;
 
   std::chrono::system_clock::time_point mCursorFlashTimePoint;
   //}}}

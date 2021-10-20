@@ -21,6 +21,7 @@ public:
   float getFontSize() const { return mFontSize; }
   float getGlyphWidth() const { return mGlyphWidth; }
   float getLineHeight() const { return mLineHeight; }
+  ImU32 getColor (uint8_t color) const { return mPalette[color]; }
 
   //{{{
   void update (float fontSize, bool monoSpaced) {
