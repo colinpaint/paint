@@ -23,7 +23,7 @@ using namespace chrono;
 
 // cTextEdit
 //{{{
-cTextEdit::cTextEdit() {
+cTextEdit::cTextEdit (cDocument& document) : mDoc(document) {
 
   mDoc.mLines.push_back (cLine());
 
@@ -546,11 +546,10 @@ void cTextEdit::redo (uint32_t steps) {
 // draws
 //{{{
 void cTextEdit::drawWindow (const string& title, cApp& app) {
-// standalone Memory Editor window
+// standalone textEdit window
 
-  mOpen = true;
-
-  ImGui::Begin (title.c_str(), &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
+  bool open = true;
+  ImGui::Begin (title.c_str(), &open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
 
   drawContents (app);
   ImGui::End();

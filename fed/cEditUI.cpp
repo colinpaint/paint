@@ -33,8 +33,12 @@ public:
   //}}}
   //{{{
   virtual ~cEditUI() {
-    // close the file mapping object
+
+    delete mDocument;
+    delete mTextEdit;
+
     delete mFileView;
+    delete mMemEdit;
     }
   //}}}
 
@@ -68,19 +72,26 @@ public:
       return;
       }
       //}}}
-    if (!mTextEdit) {
-      mTextEdit = new cTextEdit();
-      mTextEdit->getDocument().load (app.getName());
+
+    if (!mDocument) {
+      // create and load document
+      mDocument = new cDocument();
+      mDocument->load (app.getName());
+
+      // create document editor
+      mTextEdit = new cTextEdit (*mDocument);
       }
 
-    // full screen window
-    mTextEdit->drawWindow ("fed", app);
+    if (mTextEdit)
+      mTextEdit->drawWindow ("fed", app);
     }
 
 private:
   cFileView* mFileView = nullptr;
-  cTextEdit* mTextEdit = nullptr;
   cMemEdit* mMemEdit = nullptr;
+
+  cDocument* mDocument = nullptr;
+  cTextEdit* mTextEdit = nullptr;
 
   //{{{
   static cUI* create (const string& className) {

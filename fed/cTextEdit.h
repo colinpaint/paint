@@ -18,7 +18,7 @@ class cApp;
 
 class cTextEdit {
 public:
-  cTextEdit();
+  cTextEdit (cDocument& document);
   ~cTextEdit() = default;
 
   enum class eSelect { eNormal, eWord, eLine };
@@ -396,14 +396,13 @@ private:
   void drawLines();
 
   //{{{  vars
-  bool mOpen = true;  // set false when DrawWindow() closed
-
-  cDocument mDoc;
-  std::vector <uint32_t> mFoldLines;
+  cDocument& mDoc;
 
   cEdit mEdit;
   cOptions mOptions;
   cTextEditDrawContext mDrawContext;
+
+  std::vector <uint32_t> mFoldLines;
 
   std::chrono::system_clock::time_point mCursorFlashTimePoint;
   //}}}
