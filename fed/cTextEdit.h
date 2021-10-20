@@ -23,8 +23,8 @@ public:
 
   enum class eSelect { eNormal, eWord, eLine };
   //{{{  gets
-  const cDocument& getDocument() const { return mDoc; }
-  const cLanguage& getLanguage() const { return mDoc.getLanguage(); }
+  cDocument& getDocument() { return mDoc; }
+  cLanguage& getLanguage() { return mDoc.getLanguage(); }
 
   bool isReadOnly() const { return mOptions.mReadOnly; }
   bool isShowFolds() const { return mOptions.mShowFolded; }
@@ -121,7 +121,7 @@ private:
     void undo (cTextEdit* textEdit) {
 
       if (!mAddText.empty())
-        textEdit->deletePositionRange (mAddBeginPosition, mAddEndPosition);
+        textEdit->getDocument().deletePositionRange (mAddBeginPosition, mAddEndPosition);
       if (!mDeleteText.empty())
         textEdit->insertTextAt (mDeleteBeginPosition, mDeleteText);
 
@@ -132,7 +132,7 @@ private:
     void redo (cTextEdit* textEdit) {
 
       if (!mDeleteText.empty())
-        textEdit->deletePositionRange (mDeleteBeginPosition, mDeleteEndPosition);
+        textEdit->getDocument().deletePositionRange (mDeleteBeginPosition, mDeleteEndPosition);
       if (!mAddText.empty())
         textEdit->insertTextAt (mAddBeginPosition, mAddText);
 
@@ -374,10 +374,6 @@ private:
   //{{{  insert, delete
   sPosition insertTextAt (sPosition position, const std::string& text);
   void insertText (const std::string& text) { setCursorPosition (insertTextAt (getCursorPosition(), text)); }
-
-  void deleteLine (uint32_t lineNumber);
-  void deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber);
-  void deletePositionRange (sPosition beginPosition, sPosition endPosition);
 
   void deleteSelect();
   //}}}

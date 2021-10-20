@@ -783,6 +783,54 @@ uint32_t cDocument::getNumColumns (const cLine& line) {
   }
 //}}}
 
+//{{{
+void cDocument::deletePositionRange (sPosition beginPosition, sPosition endPosition) {
+/// !!! need more glyphsLine !!!!
+
+  if (endPosition == beginPosition)
+    return;
+
+  uint32_t beginGlyphIndex = getGlyphIndex (beginPosition);
+  uint32_t endGlyphIndex = getGlyphIndex (endPosition);
+
+  if (beginPosition.mLineNumber == endPosition.mLineNumber) {
+    // delete in same line
+    cLine& line = getLine (beginPosition.mLineNumber);
+    uint32_t maxColumn = getNumColumns (line);
+    if (endPosition.mColumn >= maxColumn)
+      line.eraseToEnd (beginGlyphIndex);
+    else
+      line.erase (beginGlyphIndex, endGlyphIndex);
+
+    parse (line);
+    }
+
+  else {
+    // delete over multiple lines
+    // - delete backend of beginLine
+    cLine& beginLine = getLine (beginPosition.mLineNumber);
+    beginLine.eraseToEnd (beginGlyphIndex);
+
+    // delete frontend of endLine
+    cLine& endLine = getLine (endPosition.mLineNumber);
+    endLine.erase (0, endGlyphIndex);
+
+    // insert remainder of endLine after end of remainder of beginLine
+    if (beginPosition.mLineNumber < endPosition.mLineNumber)
+      beginLine.insertLineAtEnd (endLine);
+
+    // delete middle whole lines
+    if (beginPosition.mLineNumber < endPosition.mLineNumber)
+      deleteLineRange (beginPosition.mLineNumber + 1, endPosition.mLineNumber + 1);
+
+    parse (beginLine);
+    parse (endLine);
+    }
+
+  edited();
+  }
+//}}}
+
 // - actions
 //{{{
 void cDocument::load (const string& filename) {

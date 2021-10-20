@@ -208,7 +208,7 @@ void cTextEdit::cut() {
     undo.mDeleteEndPosition = nextLinePosition;
 
     // delete currentLine, handling folds
-    deleteLineRange (position.mLineNumber, nextLinePosition.mLineNumber);
+    mDoc.deleteLineRange (position.mLineNumber, nextLinePosition.mLineNumber);
 
     undo.mAfterCursor = mEdit.mCursor;
     mEdit.addUndo (undo);
@@ -278,7 +278,7 @@ void cTextEdit::deleteIt() {
       mDoc.parse (line);
 
       // delete nextLine
-      deleteLine (position.mLineNumber + 1);
+      mDoc.deleteLine (position.mLineNumber + 1);
       }
 
     else {
@@ -332,7 +332,7 @@ void cTextEdit::backspace() {
 
       // append this line to prevLine
       prevLine.insertLineAtEnd (line);
-      deleteLine (mEdit.mCursor.mPosition.mLineNumber);
+      mDoc.deleteLine (mEdit.mCursor.mPosition.mLineNumber);
       mDoc.parse (prevLine);
 
       // position to end of prevLine
@@ -1174,7 +1174,6 @@ sPosition cTextEdit::findWordEndPosition (sPosition position) {
   }
 //}}}
 //}}}
-//{{{  insert, delete
 //{{{
 sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
 // insert helper - !!! needs utf8 handling !!!!
@@ -1228,78 +1227,13 @@ sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
   return position;
   }
 //}}}
-
-//{{{
-void cTextEdit::deleteLine (uint32_t lineNumber) {
-
-  mDoc.mLines.erase (mDoc.mLines.begin() + lineNumber);
-  mDoc.edited();
-  }
-//}}}
-//{{{
-void cTextEdit::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
-
-  mDoc.mLines.erase (mDoc.mLines.begin() + beginLineNumber, mDoc.mLines.begin() + endLineNumber);
-  mDoc.edited();
-  }
-//}}}
-//{{{
-void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosition) {
-/// !!! need more glyphsLine !!!!
-
-  if (endPosition == beginPosition)
-    return;
-
-  uint32_t beginGlyphIndex = mDoc.getGlyphIndex (beginPosition);
-  uint32_t endGlyphIndex = mDoc.getGlyphIndex (endPosition);
-
-  if (beginPosition.mLineNumber == endPosition.mLineNumber) {
-    // delete in same line
-    cLine& line = mDoc.getLine (beginPosition.mLineNumber);
-    uint32_t maxColumn = mDoc.getNumColumns (line);
-    if (endPosition.mColumn >= maxColumn)
-      line.eraseToEnd (beginGlyphIndex);
-    else
-      line.erase (beginGlyphIndex, endGlyphIndex);
-
-    mDoc.parse (line);
-    }
-
-  else {
-    // delete over multiple lines
-    // - delete backend of beginLine
-    cLine& beginLine = mDoc.getLine (beginPosition.mLineNumber);
-    beginLine.eraseToEnd (beginGlyphIndex);
-
-    // delete frontend of endLine
-    cLine& endLine = mDoc.getLine (endPosition.mLineNumber);
-    endLine.erase (0, endGlyphIndex);
-
-    // insert remainder of endLine after end of remainder of beginLine
-    if (beginPosition.mLineNumber < endPosition.mLineNumber)
-      beginLine.insertLineAtEnd (endLine);
-
-    // delete middle whole lines
-    if (beginPosition.mLineNumber < endPosition.mLineNumber)
-      deleteLineRange (beginPosition.mLineNumber + 1, endPosition.mLineNumber + 1);
-
-    mDoc.parse (beginLine);
-    mDoc.parse (endLine);
-    }
-
-  mDoc.edited();
-  }
-//}}}
-
 //{{{
 void cTextEdit::deleteSelect() {
 
-  deletePositionRange (mEdit.mCursor.mSelectBeginPosition, mEdit.mCursor.mSelectEndPosition);
+  mDoc.deletePositionRange (mEdit.mCursor.mSelectBeginPosition, mEdit.mCursor.mSelectEndPosition);
   setCursorPosition (mEdit.mCursor.mSelectBeginPosition);
-
   setDeselect();
   }
-//}}}
 //}}}
 
 // fold

@@ -338,7 +338,7 @@ public:
   cDocument();
 
   // gets
-  const cLanguage& getLanguage() const { return mLanguage; }
+  cLanguage& getLanguage() { return mLanguage; }
 
   bool getEdited() const { return mEdited; }
   bool getHasFolds() const { return mHasFolds; }
@@ -359,6 +359,21 @@ public:
 
   uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex);
   uint32_t getTabColumn (uint32_t column);
+
+  //{{{
+  void deleteLine (uint32_t lineNumber) {
+    mLines.erase (mLines.begin() + lineNumber);
+    edited();
+    }
+  //}}}
+  //{{{
+  void deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
+
+    mLines.erase (mLines.begin() + beginLineNumber, mLines.begin() + endLineNumber);
+    edited();
+    }
+  //}}}
+  void deletePositionRange (sPosition beginPosition, sPosition endPosition);
 
   void parse (cLine& line) { line.parse (mLanguage); };
   void parseAll();
