@@ -23,6 +23,9 @@ public:
 
   enum class eSelect { eNormal, eWord, eLine };
   //{{{  gets
+  const cDocument& getDocument() const { return mDoc; }
+  const cLanguage& getLanguage() const { return mDoc.getLanguage(); }
+
   bool isReadOnly() const { return mOptions.mReadOnly; }
   bool isShowFolds() const { return mOptions.mShowFolded; }
 
@@ -38,8 +41,6 @@ public:
 
   uint32_t getTabSize() const { return mDoc.mTabSize; }
   sPosition getCursorPosition() { return sanitizePosition (mEdit.mCursor.mPosition); }
-
-  const cLanguage& getLanguage() const { return mLanguage; }
   //}}}
   //{{{  sets
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
@@ -406,7 +407,6 @@ private:
   bool mOpen = true;  // set false when DrawWindow() closed
 
   cDocument mDoc;
-  cLanguage mLanguage;
   std::vector <uint32_t> mFoldLines;
 
   cEdit mEdit;

@@ -510,7 +510,6 @@ string cLine::getString() const {
    return lineString;
    }
 //}}}
-
 //{{{
 uint32_t cLine::trimTrailingSpace() {
 
@@ -594,8 +593,90 @@ void cLine::parse (const cLanguage& language) {
   parseTokens (language, glyphString);
   }
 //}}}
+// - private:
+//{{{
+uint32_t cDocument::trimTrailingSpace() {
+// trim trailing space
+// - return highest nonEmpty lineNumber
+
+  uint32_t nonEmptyHighWaterMark = 0;
+
+  uint32_t lineNumber = 0;
+  uint32_t trimmedSpaces = 0;
+  for (auto& line : mLines) {
+    trimmedSpaces += line.trimTrailingSpace();
+    if (!line.empty()) // nonEmpty line, raise waterMark
+      nonEmptyHighWaterMark = lineNumber;
+    lineNumber++;
+    }
+
+  if ((nonEmptyHighWaterMark != mLines.size()-1) || (trimmedSpaces > 0))
+    cLog::log (LOGINFO, fmt::format ("highest {}:{} trimmedSpaces:{}",
+                                     nonEmptyHighWaterMark+1, mLines.size(), trimmedSpaces));
+  return nonEmptyHighWaterMark;
+  }
+//}}}
+//{{{
+void cLine::parseTokens (const cLanguage& language, const string& textString) {
+// parse and color tokens, recognise and color keyWords and knownWords
+
+  const char* strBegin = &textString.front();
+  const char* strEnd = strBegin + textString.size();
+  const char* strPtr = strBegin;
+  while (strPtr < strEnd) {
+    // faster tokenize search
+    const char* tokenBegin = nullptr;
+    const char* tokenEnd = nullptr;
+    uint8_t tokenColor = eText;
+    bool tokenFound = language.mTokenSearch &&
+        language.mTokenSearch (strPtr, strEnd, tokenBegin, tokenEnd, tokenColor);
+
+    if (!tokenFound) {
+      // slower regex search
+      for (const auto& p : language.mRegexList) {
+        cmatch results;
+        if (regex_search (strPtr, strEnd, results, p.first, regex_constants::match_continuous)) {
+          auto& v = *results.begin();
+          tokenBegin = v.first;
+          tokenEnd = v.second;
+          tokenColor = p.second;
+          tokenFound = true;
+          break;
+          }
+        }
+      }
+
+    if (tokenFound) {
+      // token to color
+      if (tokenColor == eIdentifier) {
+        // extra search for keyWords, knownWords
+        string tokenString (tokenBegin, tokenEnd);
+        if (language.mKeyWords.count (tokenString) != 0)
+          tokenColor = eKeyWord;
+        else if (language.mKnownWords.count (tokenString) != 0)
+          tokenColor = eKnownWord;
+        }
+
+      // color token glyphs
+      uint32_t glyphIndex = static_cast<uint32_t>(tokenBegin - strBegin);
+      uint32_t glyphIndexEnd = static_cast<uint32_t>(tokenEnd - strBegin);
+      while (glyphIndex < glyphIndexEnd)
+        setColor (glyphIndex++, tokenColor);
+
+      strPtr = tokenEnd;
+      }
+    else
+      strPtr++;
+    }
+  }
+//}}}
 
 // cDocument
+//{{{
+cDocument::cDocument() {
+  mLanguage = cLanguage::c();
+  }
+//}}}
 //{{{
 string cDocument::getText (sPosition beginPosition, sPosition endPosition) {
 // get position range as string with lineFeed line breaks
@@ -702,7 +783,7 @@ uint32_t cDocument::getNumColumns (const cLine& line) {
   }
 //}}}
 
-// actions
+// - actions
 //{{{
 void cDocument::load (const string& filename) {
 
@@ -773,6 +854,9 @@ void cDocument::load (const string& filename) {
                                    mHasCR ? "hasCR " : "",
                                    mHasUtf8 ? "hasUtf8 " : "",
                                    utf8chars));
+  for (auto& line : mLines)
+    parse (line);
+
   mParseFlag = true;
   mEdited = false;
   }
@@ -810,7 +894,7 @@ void cDocument::save() {
 //}}}
 
 //{{{
-void cDocument::parse() {
+void cDocument::parseAll() {
 // simple parse whole document for comments, folds
 // - assumes lines have already been parsed
 
@@ -897,83 +981,5 @@ void cDocument::edited() {
 
   mParseFlag = true;
   mEdited |= true;
-  }
-//}}}
-
-// private:
-//{{{
-uint32_t cDocument::trimTrailingSpace() {
-// trim trailing space
-// - return highest nonEmpty lineNumber
-
-  uint32_t nonEmptyHighWaterMark = 0;
-
-  uint32_t lineNumber = 0;
-  uint32_t trimmedSpaces = 0;
-  for (auto& line : mLines) {
-    trimmedSpaces += line.trimTrailingSpace();
-    if (!line.empty()) // nonEmpty line, raise waterMark
-      nonEmptyHighWaterMark = lineNumber;
-    lineNumber++;
-    }
-
-  if ((nonEmptyHighWaterMark != mLines.size()-1) || (trimmedSpaces > 0))
-    cLog::log (LOGINFO, fmt::format ("highest {}:{} trimmedSpaces:{}",
-                                     nonEmptyHighWaterMark+1, mLines.size(), trimmedSpaces));
-  return nonEmptyHighWaterMark;
-  }
-//}}}
-//{{{
-void cLine::parseTokens (const cLanguage& language, const string& textString) {
-// parse and color tokens, recognise and color keyWords and knownWords
-
-  const char* strBegin = &textString.front();
-  const char* strEnd = strBegin + textString.size();
-  const char* strPtr = strBegin;
-  while (strPtr < strEnd) {
-    // faster tokenize search
-    const char* tokenBegin = nullptr;
-    const char* tokenEnd = nullptr;
-    uint8_t tokenColor = eText;
-    bool tokenFound = language.mTokenSearch &&
-        language.mTokenSearch (strPtr, strEnd, tokenBegin, tokenEnd, tokenColor);
-
-    if (!tokenFound) {
-      // slower regex search
-      for (const auto& p : language.mRegexList) {
-        cmatch results;
-        if (regex_search (strPtr, strEnd, results, p.first, regex_constants::match_continuous)) {
-          auto& v = *results.begin();
-          tokenBegin = v.first;
-          tokenEnd = v.second;
-          tokenColor = p.second;
-          tokenFound = true;
-          break;
-          }
-        }
-      }
-
-    if (tokenFound) {
-      // token to color
-      if (tokenColor == eIdentifier) {
-        // extra search for keyWords, knownWords
-        string tokenString (tokenBegin, tokenEnd);
-        if (language.mKeyWords.count (tokenString) != 0)
-          tokenColor = eKeyWord;
-        else if (language.mKnownWords.count (tokenString) != 0)
-          tokenColor = eKnownWord;
-        }
-
-      // color token glyphs
-      uint32_t glyphIndex = static_cast<uint32_t>(tokenBegin - strBegin);
-      uint32_t glyphIndexEnd = static_cast<uint32_t>(tokenEnd - strBegin);
-      while (glyphIndex < glyphIndexEnd)
-        setColor (glyphIndex++, tokenColor);
-
-      strPtr = tokenEnd;
-      }
-    else
-      strPtr++;
-    }
   }
 //}}}

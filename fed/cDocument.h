@@ -335,7 +335,11 @@ struct sPosition {
 
 class cDocument {
 public:
+  cDocument();
+
   // gets
+  const cLanguage& getLanguage() const { return mLanguage; }
+
   bool getEdited() const { return mEdited; }
   bool getHasFolds() const { return mHasFolds; }
 
@@ -356,7 +360,8 @@ public:
   uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex);
   uint32_t getTabColumn (uint32_t column);
 
-  void parse();
+  void parse (cLine& line) { line.parse (mLanguage); };
+  void parseAll();
   void edited();
 
   // actions
@@ -384,4 +389,6 @@ private:
   bool mHasFolds = false;
   bool mParseFlag = false;
   bool mEdited = false;
+
+  cLanguage mLanguage;
   };

@@ -25,7 +25,6 @@ using namespace chrono;
 //{{{
 cTextEdit::cTextEdit() {
 
-  mLanguage = cLanguage::c();
   mDoc.mLines.push_back (cLine());
 
   // push any clipboardText to pasteStack
@@ -276,7 +275,7 @@ void cTextEdit::deleteIt() {
 
       // insert nextLine at end of line
       line.insertLineAtEnd (mDoc.getLine (position.mLineNumber+1));
-      line.parse (mLanguage);
+      mDoc.parse (line);
 
       // delete nextLine
       deleteLine (position.mLineNumber + 1);
@@ -289,7 +288,7 @@ void cTextEdit::deleteIt() {
 
       uint32_t glyphIndex = mDoc.getGlyphIndex (position);
       line.erase (glyphIndex);
-      line.parse (mLanguage);
+      mDoc.parse (line);
       }
     mDoc.edited();
     }
@@ -334,7 +333,7 @@ void cTextEdit::backspace() {
       // append this line to prevLine
       prevLine.insertLineAtEnd (line);
       deleteLine (mEdit.mCursor.mPosition.mLineNumber);
-      prevLine.parse (mLanguage);
+      mDoc.parse (prevLine);
 
       // position to end of prevLine
       setCursorPosition ({position.mLineNumber - 1, mDoc.getNumColumns (prevLine)});
@@ -353,7 +352,7 @@ void cTextEdit::backspace() {
 
       // delete prevGlyph
       glyphsLine.erase (glyphIndex - 1);
-      glyphsLine.parse (mLanguage);
+      mDoc.parse (glyphsLine);
 
       // position to prevGlyph
       setCursorPosition ({position.mLineNumber, position.mColumn - 1});
@@ -371,9 +370,9 @@ void cTextEdit::backspace() {
 void cTextEdit::createFold() {
 
   // !!!! temp string for now !!!!
-  string text = mLanguage.mFoldBeginToken +
+  string text = getLanguage().mFoldBeginToken +
                  "  new fold - loads of detail to implement\n\n" +
-                 mLanguage.mFoldEndToken +
+                getLanguage().mFoldEndToken +
                  "\n";
   cUndo undo;
   undo.mBeforeCursor = mEdit.mCursor;
@@ -405,24 +404,6 @@ void cTextEdit::redo (uint32_t steps) {
     mEdit.redo (this, steps);
     scrollCursorVisible();
     }
-  }
-//}}}
-//}}}
-//{{{  file
-//{{{
-void cTextEdit::loadFile (const string& filename) {
-
-  mDoc.load (filename);
-
-  for (auto& line : mDoc.mLines)
-    line.parse (mLanguage);
-
-  mEdit.clearUndo();
-  }
-//}}}
-//{{{
-void cTextEdit::saveFile() {
-  mDoc.save();
   }
 //}}}
 //}}}
@@ -522,7 +503,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
     // insert newLine
     cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber + 1, cLine());
 
-    if (mLanguage.mAutoIndentation)
+    if (getLanguage().mAutoIndentation)
       for (uint32_t indent = 0;
            (indent < glyphsLine.getNumGlyphs()) &&
            isascii (glyphsLine.getChar (indent)) && isblank (glyphsLine.getChar (indent)); indent++)
@@ -532,11 +513,11 @@ void cTextEdit::enterCharacter (ImWchar ch) {
 
     // insert indent and rest of old line
     newLine.insertRestOfLineAtEnd (glyphsLine, glyphIndex);
-    newLine.parse (mLanguage);
+    mDoc.parse (newLine);
 
     // erase rest of old line
     glyphsLine.erase (glyphIndex, glyphsLine.getNumGlyphs());
-    glyphsLine.parse (mLanguage);
+    mDoc.parse (glyphsLine);
 
     // set cursor
     setCursorPosition ({position.mLineNumber+1, mDoc.getColumn (newLine, indentSize)});
@@ -555,7 +536,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
 
     // insert newChar
     glyphsLine.insert (glyphIndex, cGlyph (ch, eText));
-    glyphsLine.parse (mLanguage);
+    mDoc.parse (glyphsLine);
 
     // undo.mAdd = utf8buf.data(); // utf8 handling needed
     undo.mAddText = static_cast<char>(ch);
@@ -568,6 +549,18 @@ void cTextEdit::enterCharacter (ImWchar ch) {
   mEdit.addUndo (undo);
   }
 //}}}
+//}}}
+
+//{{{
+void cTextEdit::loadFile (const string& filename) {
+  mDoc.load (filename);
+  mEdit.clearUndo();
+  }
+//}}}
+//{{{
+void cTextEdit::saveFile() {
+  mDoc.save();
+  }
 //}}}
 
 // draws
@@ -587,8 +580,8 @@ void cTextEdit::drawWindow (const string& title, cApp& app) {
 void cTextEdit::drawContents (cApp& app) {
 // main ui io,draw
 
-  // check for delayed full document parse
-  mDoc.parse();
+  // check for delayed all document parse
+  mDoc.parseAll();
 
   //{{{  draw top line buttons
   //{{{  lineNumber buttons
@@ -1211,9 +1204,9 @@ sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
 
         // remove rest of line just copied to newLine
         glyphsLine.eraseToEnd (glyphIndex);
-        glyphsLine.parse (mLanguage);
+        mDoc.parse (glyphsLine);
         }
-      newLine.parse (mLanguage);
+      mDoc.parse (newLine);
       glyphIndex = 0;
 
       // !!! should convert glyph back to column in case of tabs !!!
@@ -1224,7 +1217,7 @@ sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
     else {
       // insert char within line
       glyphsLine.insert (glyphIndex++, cGlyph (ch, eText));
-      glyphsLine.parse (mLanguage);
+      mDoc.parse (glyphsLine);
 
       // !!! should convert glyph back to column in case of tabs !!!
       position.mColumn++;
@@ -1269,7 +1262,7 @@ void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosit
     else
       line.erase (beginGlyphIndex, endGlyphIndex);
 
-    line.parse (mLanguage);
+    mDoc.parse (line);
     }
 
   else {
@@ -1290,8 +1283,8 @@ void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosit
     if (beginPosition.mLineNumber < endPosition.mLineNumber)
       deleteLineRange (beginPosition.mLineNumber + 1, endPosition.mLineNumber + 1);
 
-    beginLine.parse (mLanguage);
-    endLine.parse (mLanguage);
+    mDoc.parse (beginLine);
+    mDoc.parse (endLine);
     }
 
   mDoc.edited();
@@ -1413,7 +1406,7 @@ uint32_t cTextEdit::drawFolded() {
 
     if (line.mFoldBegin) {
       // foldBegin
-      line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + mLanguage.mFoldBeginToken.size());
+      line.mFirstGlyph = static_cast<uint8_t>(line.mIndent + getLanguage().mFoldBeginToken.size());
       if (line.mFoldOpen)
         // draw foldBegin open fold line
         drawLine (lineNumber++, lineIndex++);
@@ -1878,7 +1871,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth = mDrawContext.text(curPos, eFoldOpen, mLanguage.mFoldBeginOpen);
+      float prefixWidth = mDrawContext.text(curPos, eFoldOpen, getLanguage().mFoldBeginOpen);
 
       // add foldPrefix invisibleButton, action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
@@ -1920,7 +1913,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
       curPos.x += indentWidth;
 
       // draw foldPrefix
-      float prefixWidth = mDrawContext.text (curPos, eFoldClosed, mLanguage.mFoldBeginClosed);
+      float prefixWidth = mDrawContext.text (curPos, eFoldClosed, getLanguage().mFoldBeginClosed);
 
       // add foldPrefix invisibleButton, indent + prefix wide, action on press
       ImGui::InvisibleButton (fmt::format ("##f{}", lineNumber).c_str(),
@@ -1963,7 +1956,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
     curPos.x += indentWidth;
 
     // draw foldPrefix
-    float prefixWidth = mDrawContext.text (curPos, eFoldOpen, mLanguage.mFoldEnd);
+    float prefixWidth = mDrawContext.text (curPos, eFoldOpen, getLanguage().mFoldEnd);
     glyphsPos.x = curPos.x;
 
     // add foldPrefix invisibleButton, only prefix wide, do not want to pick foldEnd line
