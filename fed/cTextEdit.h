@@ -13,7 +13,6 @@
 #include "../imgui/myImgui.h"
 
 #include "cDocument.h"
-
 class cApp;
 //}}}
 
@@ -28,8 +27,6 @@ public:
   bool isShowFolds() const { return mOptions.mShowFolded; }
 
   // has
-  bool hasCR() const { return mDoc.mHasCR; }
-  bool hasTabs() const { return mDoc.mHasTabs; }
   bool hasSelect() const { return mEdit.mCursor.mSelectEndPosition > mEdit.mCursor.mSelectBeginPosition; }
   bool hasUndo() const { return !mOptions.mReadOnly && mEdit.hasUndo(); }
   bool hasRedo() const { return !mOptions.mReadOnly && mEdit.hasRedo(); }
@@ -260,11 +257,14 @@ private:
   //}}}
   //{{{
   class cTextEditDrawContext : public cDrawContext {
+  // drawContext with our palette and a couple of layout vars
   public:
     cTextEditDrawContext() : cDrawContext (kPalette) {}
     //{{{
     void update (float fontSize, bool monoSpaced) {
+
       cDrawContext::update (fontSize, monoSpaced);
+
       mLeftPad = getGlyphWidth() / 2.f;
       mLineNumberWidth = 0.f;
       }

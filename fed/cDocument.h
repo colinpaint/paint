@@ -227,32 +227,14 @@ public:
     }
   //}}}
 
+  // ops
   uint32_t trimTrailingSpace();
   void parse (const cLanguage& language);
-  void parseTokens (const cLanguage& language, const std::string& textString);
-
-  // ops
-  //{{{
-  void parseReset() {
-
-    mIndent = 0;
-    mFirstGlyph = 0;
-
-    mCommentBegin = false;
-    mCommentEnd = false;
-    mCommentSingle = false;
-
-    mFoldBegin = false;
-    mFoldEnd = false;
-
-    mFoldOpen = false;
-    }
-  //}}}
   void reserve (size_t size) { mGlyphs.reserve (size); }
-  void pushBack (cGlyph glyph) { mGlyphs.push_back (glyph); }
-  void emplaceBack (cGlyph glyph) { mGlyphs.emplace_back (glyph); }
 
   // insert
+  void pushBack (cGlyph glyph) { mGlyphs.push_back (glyph); }
+  void emplaceBack (cGlyph glyph) { mGlyphs.emplace_back (glyph); }
   void insert (uint32_t glyphIndex, const cGlyph& glyph) { mGlyphs.insert (mGlyphs.begin() + glyphIndex, glyph); }
   //{{{
   void insertLineAtEnd (const cLine& lineToInsert) {
@@ -296,6 +278,8 @@ public:
 
 private:
   std::vector <cGlyph> mGlyphs;
+
+  void parseTokens (const cLanguage& language, const std::string& textString);
   };
 //}}}
 //{{{

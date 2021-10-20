@@ -530,7 +530,17 @@ void cLine::parse (const cLanguage& language) {
 // parse for fold stuff, tokenize and look for keyWords, Known
 
   //cLog::log (LOGINFO, fmt::format ("parseLine {}", lineNumber));
-  parseReset();
+  mIndent = 0;
+  mFirstGlyph = 0;
+  mCommentBegin = false;
+  mCommentEnd = false;
+  mCommentSingle = false;
+  mFoldBegin = false;
+  mFoldEnd = false;
+
+  // ????????????? is this right ????????
+  mFoldOpen = false;
+
   if (empty())
     return;
 
@@ -582,60 +592,6 @@ void cLine::parse (const cLanguage& language) {
   //}}}
 
   parseTokens (language, glyphString);
-  }
-//}}}
-//{{{
-void cLine::parseTokens (const cLanguage& language, const string& textString) {
-// parse and color tokens, recognise and color keyWords and knownWords
-
-  const char* strBegin = &textString.front();
-  const char* strEnd = strBegin + textString.size();
-  const char* strPtr = strBegin;
-  while (strPtr < strEnd) {
-    // faster tokenize search
-    const char* tokenBegin = nullptr;
-    const char* tokenEnd = nullptr;
-    uint8_t tokenColor = eText;
-    bool tokenFound = language.mTokenSearch &&
-        language.mTokenSearch (strPtr, strEnd, tokenBegin, tokenEnd, tokenColor);
-
-    if (!tokenFound) {
-      // slower regex search
-      for (const auto& p : language.mRegexList) {
-        cmatch results;
-        if (regex_search (strPtr, strEnd, results, p.first, regex_constants::match_continuous)) {
-          auto& v = *results.begin();
-          tokenBegin = v.first;
-          tokenEnd = v.second;
-          tokenColor = p.second;
-          tokenFound = true;
-          break;
-          }
-        }
-      }
-
-    if (tokenFound) {
-      // token to color
-      if (tokenColor == eIdentifier) {
-        // extra search for keyWords, knownWords
-        string tokenString (tokenBegin, tokenEnd);
-        if (language.mKeyWords.count (tokenString) != 0)
-          tokenColor = eKeyWord;
-        else if (language.mKnownWords.count (tokenString) != 0)
-          tokenColor = eKnownWord;
-        }
-
-      // color token glyphs
-      uint32_t glyphIndex = static_cast<uint32_t>(tokenBegin - strBegin);
-      uint32_t glyphIndexEnd = static_cast<uint32_t>(tokenEnd - strBegin);
-      while (glyphIndex < glyphIndexEnd)
-        setColor (glyphIndex++, tokenColor);
-
-      strPtr = tokenEnd;
-      }
-    else
-      strPtr++;
-    }
   }
 //}}}
 
@@ -860,8 +816,8 @@ void cDocument::parse() {
 
   if (!mParseFlag)
     return;
-
   mParseFlag = false;
+
   mHasFolds = false;
 
   bool inString = false;
@@ -965,5 +921,59 @@ uint32_t cDocument::trimTrailingSpace() {
     cLog::log (LOGINFO, fmt::format ("highest {}:{} trimmedSpaces:{}",
                                      nonEmptyHighWaterMark+1, mLines.size(), trimmedSpaces));
   return nonEmptyHighWaterMark;
+  }
+//}}}
+//{{{
+void cLine::parseTokens (const cLanguage& language, const string& textString) {
+// parse and color tokens, recognise and color keyWords and knownWords
+
+  const char* strBegin = &textString.front();
+  const char* strEnd = strBegin + textString.size();
+  const char* strPtr = strBegin;
+  while (strPtr < strEnd) {
+    // faster tokenize search
+    const char* tokenBegin = nullptr;
+    const char* tokenEnd = nullptr;
+    uint8_t tokenColor = eText;
+    bool tokenFound = language.mTokenSearch &&
+        language.mTokenSearch (strPtr, strEnd, tokenBegin, tokenEnd, tokenColor);
+
+    if (!tokenFound) {
+      // slower regex search
+      for (const auto& p : language.mRegexList) {
+        cmatch results;
+        if (regex_search (strPtr, strEnd, results, p.first, regex_constants::match_continuous)) {
+          auto& v = *results.begin();
+          tokenBegin = v.first;
+          tokenEnd = v.second;
+          tokenColor = p.second;
+          tokenFound = true;
+          break;
+          }
+        }
+      }
+
+    if (tokenFound) {
+      // token to color
+      if (tokenColor == eIdentifier) {
+        // extra search for keyWords, knownWords
+        string tokenString (tokenBegin, tokenEnd);
+        if (language.mKeyWords.count (tokenString) != 0)
+          tokenColor = eKeyWord;
+        else if (language.mKnownWords.count (tokenString) != 0)
+          tokenColor = eKnownWord;
+        }
+
+      // color token glyphs
+      uint32_t glyphIndex = static_cast<uint32_t>(tokenBegin - strBegin);
+      uint32_t glyphIndexEnd = static_cast<uint32_t>(tokenEnd - strBegin);
+      while (glyphIndex < glyphIndexEnd)
+        setColor (glyphIndex++, tokenColor);
+
+      strPtr = tokenEnd;
+      }
+    else
+      strPtr++;
+    }
   }
 //}}}

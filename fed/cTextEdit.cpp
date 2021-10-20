@@ -569,7 +569,8 @@ void cTextEdit::enterCharacter (ImWchar ch) {
   }
 //}}}
 //}}}
-//{{{  draws
+
+// draws
 //{{{
 void cTextEdit::drawWindow (const string& title, cApp& app) {
 // standalone Memory Editor window
@@ -586,6 +587,9 @@ void cTextEdit::drawWindow (const string& title, cApp& app) {
 void cTextEdit::drawContents (cApp& app) {
 // main ui io,draw
 
+  // check for delayed full document parse
+  mDoc.parse();
+
   //{{{  draw top line buttons
   //{{{  lineNumber buttons
   if (toggleButton ("line", mOptions.mShowLineNumber))
@@ -599,6 +603,7 @@ void cTextEdit::drawContents (cApp& app) {
         toggleShowLineDebug();
       }
   //}}}
+
   if (mDoc.getHasFolds()) {
     //{{{  folded button
     ImGui::SameLine();
@@ -625,6 +630,7 @@ void cTextEdit::drawContents (cApp& app) {
       paste();
     }
     //}}}
+
   if (hasSelect()) {
     //{{{  copy, cut, delete buttons
     ImGui::SameLine();
@@ -648,6 +654,7 @@ void cTextEdit::drawContents (cApp& app) {
       undo();
     }
     //}}}
+
   if (!isReadOnly() && hasRedo()) {
     //{{{  redo button
     ImGui::SameLine();
@@ -717,7 +724,6 @@ void cTextEdit::drawContents (cApp& app) {
   //}}}
   //}}}
 
-
   // begin childWindow, new font, new colors
   if (isDrawMonoSpaced())
     ImGui::PushFont (app.getMonoFont());
@@ -753,7 +759,6 @@ void cTextEdit::drawContents (cApp& app) {
   if (isDrawMonoSpaced())
     ImGui::PopFont();
   }
-//}}}
 //}}}
 
 // private:
@@ -1224,9 +1229,9 @@ sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
       // !!! should convert glyph back to column in case of tabs !!!
       position.mColumn++;
       }
-
     mDoc.edited();
     }
+
   return position;
   }
 //}}}
