@@ -360,6 +360,136 @@ namespace {
   //}}}
   }
 
+// cDocument
+//{{{
+void cDocument::load (const string& filename) {
+
+  // parse filename path
+  filesystem::path filePath (filename);
+  mFilePath = filePath.string();
+  mParentPath = filePath.parent_path().string();
+  mFileStem = filePath.stem().string();
+  mFileExtension = filePath.extension().string();
+
+  cLog::log (LOGINFO, fmt::format ("setFile  {}", filename));
+  cLog::log (LOGINFO, fmt::format ("- path   {}", mFilePath));
+  cLog::log (LOGINFO, fmt::format ("- parent {}", mParentPath));
+  cLog::log (LOGINFO, fmt::format ("- stem   {}", mFileStem));
+  cLog::log (LOGINFO, fmt::format ("- ext    {}", mFileExtension));
+
+  // clear doc
+  mLines.clear();
+
+  uint32_t utf8chars = 0;
+
+  string lineString;
+  uint32_t lineNumber = 0;
+
+  // read filename as stream
+  ifstream stream (filename, ifstream::in);
+  while (getline (stream, lineString)) {
+    // create empty line, reserve enough glyphs for line
+    mLines.emplace_back (cLine());
+    mLines.back().reserve (lineString.size());
+
+    // iterate char
+    for (auto it = lineString.begin(); it < lineString.end(); ++it) {
+      char ch = *it;
+      if (ch == '\r') // CR ignored, but set flag
+          mHasCR = true;
+      else {
+        if (ch ==  '\t')
+            mHasTabs = true;
+
+        uint8_t numUtf8Bytes = cGlyph::numUtf8Bytes(ch);
+        if (numUtf8Bytes == 1)
+          mLines.back().emplaceBack (cGlyph (ch, 0)); // eText
+        else {
+          array <uint8_t,7> utf8Bytes = {0};
+          string utf8String;
+          for (uint32_t i = 0; i < numUtf8Bytes; i++) {
+            utf8Bytes[i] = (i == 0) ? ch : *it++;
+            utf8String += fmt::format ("{:2x} ", utf8Bytes[i]);
+            }
+          utf8chars++;
+          //cLog::log (LOGINFO, fmt::format ("loading utf8 {} {}", size, utf8String));
+          mLines.back().emplaceBack (cGlyph (utf8Bytes.data(), numUtf8Bytes, 0)); //eText
+          mHasUtf8 = true;
+          }
+        }
+      }
+    lineNumber++;
+    }
+
+  trimTrailingSpace();
+
+  // add empty lastLine
+  mLines.emplace_back (cLine());
+
+  cLog::log (LOGINFO, fmt::format ("read {}:lines {}{}{}",
+                                   lineNumber,
+                                   mHasCR ? "hasCR " : "",
+                                   mHasUtf8 ? "hasUtf8 " : "",
+                                   utf8chars));
+
+  mEdited = false;
+  }
+
+//}}}
+//{{{
+void cDocument::save() {
+
+  if (!mEdited) {
+    cLog::log (LOGINFO,fmt::format ("{} unchanged, no save", mFilePath));
+    return;
+    }
+
+  // identify filePath for previous version
+  filesystem::path saveFilePath (mFilePath);
+  saveFilePath.replace_extension (fmt::format ("{};{}", mFileExtension, mVersion++));
+  while (filesystem::exists (saveFilePath)) {
+    // version exits, increment version number
+    cLog::log (LOGINFO,fmt::format ("skipping {}", saveFilePath.string()));
+    saveFilePath.replace_extension (fmt::format ("{};{}", mFileExtension, mVersion++));
+    }
+
+  uint32_t highestLineNumber = trimTrailingSpace();
+
+  // save ofstream
+  ofstream stream (saveFilePath);
+  for (uint32_t lineNumber = 0; lineNumber < highestLineNumber; lineNumber++) {
+    string lineString = mLines[lineNumber].getString();
+    stream.write (lineString.data(), lineString.size());
+    stream.put ('\n');
+    }
+
+  // done
+  cLog::log (LOGINFO,fmt::format ("{} saved", saveFilePath.string()));
+  }
+//}}}
+//{{{
+uint32_t cDocument::trimTrailingSpace() {
+// trim trailing space
+// - return highest nonEmpty lineNumber
+
+  uint32_t nonEmptyHighWaterMark = 0;
+
+  uint32_t lineNumber = 0;
+  uint32_t trimmedSpaces = 0;
+  for (auto& line : mLines) {
+    trimmedSpaces += line.trimTrailingSpace();
+    if (!line.empty()) // nonEmpty line, raise waterMark
+      nonEmptyHighWaterMark = lineNumber;
+    lineNumber++;
+    }
+
+  if ((nonEmptyHighWaterMark != mLines.size()-1) || (trimmedSpaces > 0))
+    cLog::log (LOGINFO, fmt::format ("highest {}:{} trimmedSpaces:{}",
+                                     nonEmptyHighWaterMark+1, mLines.size(), trimmedSpaces));
+  return nonEmptyHighWaterMark;
+  }
+//}}}
+
 // cTextEdit
 //{{{
 cTextEdit::cTextEdit() {
@@ -655,7 +785,7 @@ void cTextEdit::deleteIt() {
       parseLine (line);
       }
 
-    mView.mEdited = true;
+    mDocument.mEdited = true;
     }
 
   undo.mAfterCursor = mEdit.mCursor;
@@ -723,7 +853,7 @@ void cTextEdit::backspace() {
       setCursorPosition ({position.mLineNumber, position.mColumn - 1});
       }
 
-    mView.mEdited = true;
+    mDocument.mEdited = true;
     }
 
   undo.mAfterCursor = mEdit.mCursor;
@@ -777,109 +907,17 @@ void cTextEdit::redo (uint32_t steps) {
 //{{{
 void cTextEdit::loadFile (const string& filename) {
 
-  // parse filename path
-  filesystem::path filePath (filename);
-  mDocument.mFilePath = filePath.string();
-  mDocument.mParentPath = filePath.parent_path().string();
-  mDocument.mFileStem = filePath.stem().string();
-  mDocument.mFileExtension = filePath.extension().string();
+  mDocument.load (filename);
 
-  cLog::log (LOGINFO, fmt::format ("setFile  {}", filename));
-  cLog::log (LOGINFO, fmt::format ("- path   {}", mDocument.mFilePath));
-  cLog::log (LOGINFO, fmt::format ("- parent {}", mDocument.mParentPath));
-  cLog::log (LOGINFO, fmt::format ("- stem   {}", mDocument.mFileStem));
-  cLog::log (LOGINFO, fmt::format ("- ext    {}", mDocument.mFileExtension));
-
-  // clear doc
-  mDocument.mLines.clear();
-
-  uint32_t utf8chars = 0;
-
-  string lineString;
-  uint32_t lineNumber = 0;
-
-  // read filename as stream
-  ifstream stream (filename, ifstream::in);
-  while (getline (stream, lineString)) {
-    // create empty line, reserve enough glyphs for line
-    mDocument.mLines.emplace_back (cLine());
-    mDocument.mLines.back().reserve (lineString.size());
-
-    // iterate char
-    for (auto it = lineString.begin(); it < lineString.end(); ++it) {
-      char ch = *it;
-      if (ch == '\r') // CR ignored, but set flag
-          mDocument.mHasCR = true;
-      else {
-        if (ch ==  '\t')
-            mDocument.mHasTabs = true;
-
-        uint8_t numUtf8Bytes = cGlyph::numUtf8Bytes(ch);
-        if (numUtf8Bytes == 1)
-          mDocument.mLines.back().emplaceBack (cGlyph (ch, eText));
-        else {
-          array <uint8_t,7> utf8Bytes = {0};
-          string utf8String;
-          for (uint32_t i = 0; i < numUtf8Bytes; i++) {
-            utf8Bytes[i] = (i == 0) ? ch : *it++;
-            utf8String += fmt::format ("{:2x} ", utf8Bytes[i]);
-            }
-          utf8chars++;
-          //cLog::log (LOGINFO, fmt::format ("loading utf8 {} {}", size, utf8String));
-          mDocument.mLines.back().emplaceBack (cGlyph (utf8Bytes.data(), numUtf8Bytes, eText));
-          mDocument.mHasUtf8 = true;
-          }
-        }
-      }
-    parseLine (mDocument.mLines.back());
-    lineNumber++;
-    }
-
-  trimTrailingSpace();
-
-  // add empty lastLine
-  mDocument.mLines.emplace_back (cLine());
-
-  cLog::log (LOGINFO, fmt::format ("read {}:lines {}{}{}",
-                                   lineNumber,
-                                   mDocument.mHasCR ? "hasCR " : "",
-                                   mDocument.mHasUtf8 ? "hasUtf8 " : "",
-                                   utf8chars));
-
-  mView.mEdited = false;
+  for (auto& line : mDocument.mLines)
+    parseLine (line);
 
   mEdit.clearUndo();
   }
 //}}}
 //{{{
 void cTextEdit::saveFile() {
-
-  if (!mView.mEdited) {
-    cLog::log (LOGINFO,fmt::format ("{} unchanged, no save", mDocument.mFilePath));
-    return;
-    }
-
-  // identify filePath for previous version
-  filesystem::path saveFilePath (mDocument.mFilePath);
-  saveFilePath.replace_extension (fmt::format ("{};{}", mDocument.mFileExtension, mDocument.mVersion++));
-  while (filesystem::exists (saveFilePath)) {
-    // version exits, increment version number
-    cLog::log (LOGINFO,fmt::format ("skipping {}", saveFilePath.string()));
-    saveFilePath.replace_extension (fmt::format ("{};{}", mDocument.mFileExtension, mDocument.mVersion++));
-    }
-
-  uint32_t highestLineNumber = trimTrailingSpace();
-
-  // save ofstream
-  ofstream stream (saveFilePath);
-  for (uint32_t lineNumber = 0; lineNumber < highestLineNumber; lineNumber++) {
-    string lineString = getLine (lineNumber).getString();
-    stream.write (lineString.data(), lineString.size());
-    stream.put ('\n');
-    }
-
-  // done
-  cLog::log (LOGINFO,fmt::format ("{} saved", saveFilePath.string()));
+  mDocument.save();
   }
 //}}}
 
@@ -947,7 +985,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
         mEdit.mCursor.mSelectEndPosition = selectEndPosition;
         mEdit.addUndo (undo);
 
-        mView.mEdited = true;
+        mDocument.mEdited = true;
         mEdit.mScrollVisible = true;
         }
 
@@ -1018,7 +1056,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
     undo.mAddText = static_cast<char>(ch);
     setCursorPosition ({position.mLineNumber, getColumn (glyphsLine, glyphIndex + 1)});
     }
-  mView.mEdited = true;
+  mDocument.mEdited = true;
 
   undo.mAddEndPosition = getCursorPosition();
   undo.mAfterCursor = mEdit.mCursor;
@@ -1057,7 +1095,7 @@ void cTextEdit::drawContents (cApp& app) {
         toggleShowLineDebug();
       }
   //}}}
-  if (mView.mHasFolds) {
+  if (mDocument.mHasFolds) {
     //{{{  folded button
     ImGui::SameLine();
     if (toggleButton ("folded", isShowFolds()))
@@ -1198,7 +1236,7 @@ void cTextEdit::drawContents (cApp& app) {
   keyboard();
 
   if (isFolded())
-    mView.mFoldLines.resize (drawFolded());
+    mFoldLines.resize (drawFolded());
   else
     drawLines();
 
@@ -1333,7 +1371,7 @@ uint32_t cTextEdit::getLineNumberFromIndex (uint32_t lineIndex) const {
     return lineIndex;
 
   if (lineIndex < getNumFoldLines())
-    return mView.mFoldLines[lineIndex];
+    return mFoldLines[lineIndex];
 
   cLog::log (LOGERROR, fmt::format ("getLineNumberFromIndex {} no line for that index", lineIndex));
   return 0;
@@ -1345,22 +1383,22 @@ uint32_t cTextEdit::getLineIndexFromNumber (uint32_t lineNumber) const {
   if (!isFolded()) // simple case, lineIndex is lineNumber
     return lineNumber;
 
-  if (mView.mFoldLines.empty()) {
+  if (mFoldLines.empty()) {
     // no lineIndex vector
     cLog::log (LOGERROR, fmt::format ("getLineIndexFromNumber {} lineIndex empty", lineNumber));
     return 0;
     }
 
   // find lineNumber in lineIndex vector
-  auto it = find (mView.mFoldLines.begin(), mView.mFoldLines.end(), lineNumber);
-  if (it == mView.mFoldLines.end()) {
+  auto it = find (mFoldLines.begin(), mFoldLines.end(), lineNumber);
+  if (it == mFoldLines.end()) {
     // lineNumber notFound, error
     cLog::log (LOGERROR, fmt::format ("getLineIndexFromNumber lineNumber:{} not found", lineNumber));
     return 0xFFFFFFFF;
     }
 
   // lineNUmber found, return lineIndex
-  return uint32_t(it - mView.mFoldLines.begin());
+  return uint32_t(it - mFoldLines.begin());
   }
 //}}}
 //{{{
@@ -1777,7 +1815,7 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
       position.mColumn++;
       }
 
-    mView.mEdited = true;
+    mDocument.mEdited = true;
     }
 
   return position;
@@ -1789,7 +1827,7 @@ void cTextEdit::deleteLine (uint32_t lineNumber) {
 
   mDocument.mLines.erase (mDocument.mLines.begin() + lineNumber);
   mEdit.mCheckComments = true;
-  mView.mEdited = true;
+  mDocument.mEdited = true;
   }
 //}}}
 //{{{
@@ -1797,7 +1835,7 @@ void cTextEdit::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumbe
 
   mDocument.mLines.erase (mDocument.mLines.begin() + beginLineNumber, mDocument.mLines.begin() + endLineNumber);
   mEdit.mCheckComments = true;
-  mView.mEdited = true;
+  mDocument.mEdited = true;
   }
 //}}}
 //{{{
@@ -1844,7 +1882,7 @@ void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosit
     parseLine (endLine);
     }
 
-  mView.mEdited = true;
+  mDocument.mEdited = true;
   }
 //}}}
 
@@ -1968,7 +2006,7 @@ void cTextEdit::parseLine (cLine& line) {
   size_t foldBeginPos = glyphString.find (mOptions.mLanguage.mFoldBeginToken, indentPos);
   line.mFoldBegin = (foldBeginPos != string::npos) && (foldBeginPos == indentPos);
   if (line.mFoldBegin)
-      mView.mHasFolds = true;
+      mDocument.mHasFolds = true;
   //}}}
   //{{{  find foldEnd token
   size_t foldEndPos = glyphString.find (mOptions.mLanguage.mFoldEndToken, indentPos);
@@ -2054,29 +2092,6 @@ void cTextEdit::parseComments() {
         }
       }
     }
-  }
-//}}}
-
-//{{{
-uint32_t cTextEdit::trimTrailingSpace() {
-// trim trailing space
-// - return highest nonEmpty lineNumber
-
-  uint32_t nonEmptyHighWaterMark = 0;
-
-  uint32_t lineNumber = 0;
-  uint32_t trimmedSpaces = 0;
-  for (auto& line : mDocument.mLines) {
-    trimmedSpaces += line.trimTrailingSpace();
-    if (!line.empty()) // nonEmpty line, raise waterMark
-      nonEmptyHighWaterMark = lineNumber;
-    lineNumber++;
-    }
-
-  if ((nonEmptyHighWaterMark != mDocument.mLines.size()-1) || (trimmedSpaces > 0))
-    cLog::log (LOGINFO, fmt::format ("highest {}:{} trimmedSpaces:{}",
-                                     nonEmptyHighWaterMark+1, mDocument.mLines.size(), trimmedSpaces));
-  return nonEmptyHighWaterMark;
   }
 //}}}
 //}}}
@@ -2372,7 +2387,7 @@ void cTextEdit::mouseDragSelectLine (uint32_t lineNumber, float posY) {
 
   if (isFolded()) {
     uint32_t lineIndex = max (0u, min (getMaxFoldLineIndex(), getLineIndexFromNumber (lineNumber) + numDragLines));
-    lineNumber = mView.mFoldLines[lineIndex];
+    lineNumber = mFoldLines[lineIndex];
     }
   else // simple add to lineNumber
     lineNumber = max (0u, min (getMaxLineNumber(), lineNumber + numDragLines));
@@ -2582,9 +2597,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
   if (isFolded()) {
     //{{{  update mFoldLines vector
     if (lineIndex >= getNumFoldLines())
-      mView.mFoldLines.push_back (lineNumber);
+      mFoldLines.push_back (lineNumber);
     else
-      mView.mFoldLines[lineIndex] = lineNumber;
+      mFoldLines[lineIndex] = lineNumber;
     }
     //}}}
 

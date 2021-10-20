@@ -332,6 +332,10 @@ private:
 //{{{
 class cDocument {
 public:
+  void load (const std::string& filename);
+  void save();
+
+  // vars
   std::string mFilePath;
   std::string mParentPath;
   std::string mFileStem;
@@ -340,10 +344,17 @@ public:
 
   std::vector <cLine> mLines;
 
+  bool mHasFolds = false;
   bool mHasCR = false;
-  bool mHasTabs = false;
   bool mHasUtf8 = false;
+
+  bool mHasTabs = false;
   uint32_t mTabSize = 4;
+
+  bool mEdited = false;
+
+private:
+  uint32_t trimTrailingSpace();
   };
 //}}}
 
@@ -441,7 +452,7 @@ public:
   ~cTextEdit() = default;
 
   //{{{  gets
-  bool isEdited() const { return mView.mEdited; }
+  bool isEdited() const { return mDocument.mEdited; }
   bool isReadOnly() const { return mOptions.mReadOnly; }
   bool isShowFolds() const { return mOptions.mShowFolded; }
 
@@ -526,8 +537,8 @@ public:
 
 private:
   //{{{  palette const
-  static const uint8_t eBackground =        0;
-  static const uint8_t eText =              1;
+  static const uint8_t eText =              0;
+  static const uint8_t eBackground =        1;
   static const uint8_t eIdentifier =        2;
   static const uint8_t eNumber =            3;
   static const uint8_t ePunctuation =       4;
@@ -558,8 +569,8 @@ private:
 
   // color to ImU32 lookup
   inline static const std::vector <ImU32> kPalette = {
-    0xffefefef, // eBackground
     0xff808080, // eText
+    0xffefefef, // eBackground
     0xff202020, // eIdentifier
     0xff606000, // eNumber
     0xff404040, // ePunctuation
@@ -674,15 +685,6 @@ private:
     };
   //}}}
   //{{{
-  class cView {
-  public:
-    std::vector <uint32_t> mFoldLines;
-
-    bool mEdited = false;
-    bool mHasFolds = false;
-    };
-  //}}}
-  //{{{
   class cEdit {
   public:
     // undo
@@ -785,7 +787,7 @@ private:
 
   // lines
   uint32_t getNumLines() const { return static_cast<uint32_t>(mDocument.mLines.size()); }
-  uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mView.mFoldLines.size()); }
+  uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mFoldLines.size()); }
   uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
   uint32_t getMaxFoldLineIndex() const { return getNumFoldLines() - 1; }
   uint32_t getNumPageLines() const;
@@ -860,8 +862,6 @@ private:
   void parseTokens (cLine& line, const std::string& textString);
   void parseLine (cLine& line);
   void parseComments();
-
-  uint32_t trimTrailingSpace();
   //}}}
 
   //  fold
@@ -889,10 +889,9 @@ private:
   bool mOpen = true;  // set false when DrawWindow() closed
 
   cDocument mDocument;
+  std::vector <uint32_t> mFoldLines;
 
-  cView mView;
   cEdit mEdit;
-
   cOptions mOptions;
   cFedDrawContext mDrawContext;
 
