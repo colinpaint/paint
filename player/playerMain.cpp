@@ -29,8 +29,8 @@
 #include "../ui/cUI.h"
 
 // utils
-#include "../utils/cFileUtils.h"
 #include "../utils/cLog.h"
+#include "../utils/cFileUtils.h"
 
 using namespace std;
 //}}}

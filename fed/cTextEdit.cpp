@@ -365,7 +365,7 @@ namespace {
 cTextEdit::cTextEdit() {
 
   mOptions.mLanguage = cLanguage::c();
-  mDoc.mLines.push_back (cLine());
+  mDocument.mLines.push_back (cLine());
 
   // push any clipboardText to pasteStack
   const char* clipText = ImGui::GetClipboardText();
@@ -391,7 +391,7 @@ vector<string> cTextEdit::getTextStrings() const {
   vector<string> result;
   result.reserve (getNumLines());
 
-  for (const auto& line : mDoc.mLines) {
+  for (const auto& line : mDocument.mLines) {
     string lineString = line.getString();
     result.emplace_back (move (lineString));
     }
@@ -655,7 +655,7 @@ void cTextEdit::deleteIt() {
       parseLine (line);
       }
 
-    mDoc.mEdited = true;
+    mView.mEdited = true;
     }
 
   undo.mAfterCursor = mEdit.mCursor;
@@ -723,7 +723,7 @@ void cTextEdit::backspace() {
       setCursorPosition ({position.mLineNumber, position.mColumn - 1});
       }
 
-    mDoc.mEdited = true;
+    mView.mEdited = true;
     }
 
   undo.mAfterCursor = mEdit.mCursor;
@@ -779,19 +779,19 @@ void cTextEdit::loadFile (const string& filename) {
 
   // parse filename path
   filesystem::path filePath (filename);
-  mDoc.mFilePath = filePath.string();
-  mDoc.mParentPath = filePath.parent_path().string();
-  mDoc.mFileStem = filePath.stem().string();
-  mDoc.mFileExtension = filePath.extension().string();
+  mDocument.mFilePath = filePath.string();
+  mDocument.mParentPath = filePath.parent_path().string();
+  mDocument.mFileStem = filePath.stem().string();
+  mDocument.mFileExtension = filePath.extension().string();
 
   cLog::log (LOGINFO, fmt::format ("setFile  {}", filename));
-  cLog::log (LOGINFO, fmt::format ("- path   {}", mDoc.mFilePath));
-  cLog::log (LOGINFO, fmt::format ("- parent {}", mDoc.mParentPath));
-  cLog::log (LOGINFO, fmt::format ("- stem   {}", mDoc.mFileStem));
-  cLog::log (LOGINFO, fmt::format ("- ext    {}", mDoc.mFileExtension));
+  cLog::log (LOGINFO, fmt::format ("- path   {}", mDocument.mFilePath));
+  cLog::log (LOGINFO, fmt::format ("- parent {}", mDocument.mParentPath));
+  cLog::log (LOGINFO, fmt::format ("- stem   {}", mDocument.mFileStem));
+  cLog::log (LOGINFO, fmt::format ("- ext    {}", mDocument.mFileExtension));
 
   // clear doc
-  mDoc.mLines.clear();
+  mDocument.mLines.clear();
 
   uint32_t utf8chars = 0;
 
@@ -802,21 +802,21 @@ void cTextEdit::loadFile (const string& filename) {
   ifstream stream (filename, ifstream::in);
   while (getline (stream, lineString)) {
     // create empty line, reserve enough glyphs for line
-    mDoc.mLines.emplace_back (cLine());
-    mDoc.mLines.back().reserve (lineString.size());
+    mDocument.mLines.emplace_back (cLine());
+    mDocument.mLines.back().reserve (lineString.size());
 
     // iterate char
     for (auto it = lineString.begin(); it < lineString.end(); ++it) {
       char ch = *it;
       if (ch == '\r') // CR ignored, but set flag
-        mDoc.mHasCR = true;
+          mDocument.mHasCR = true;
       else {
         if (ch ==  '\t')
-          mDoc.mHasTabs = true;
+            mDocument.mHasTabs = true;
 
         uint8_t numUtf8Bytes = cGlyph::numUtf8Bytes(ch);
         if (numUtf8Bytes == 1)
-          mDoc.mLines.back().emplaceBack (cGlyph (ch, eText));
+          mDocument.mLines.back().emplaceBack (cGlyph (ch, eText));
         else {
           array <uint8_t,7> utf8Bytes = {0};
           string utf8String;
@@ -826,27 +826,27 @@ void cTextEdit::loadFile (const string& filename) {
             }
           utf8chars++;
           //cLog::log (LOGINFO, fmt::format ("loading utf8 {} {}", size, utf8String));
-          mDoc.mLines.back().emplaceBack (cGlyph (utf8Bytes.data(), numUtf8Bytes, eText));
-          mDoc.mHasUtf8 = true;
+          mDocument.mLines.back().emplaceBack (cGlyph (utf8Bytes.data(), numUtf8Bytes, eText));
+          mDocument.mHasUtf8 = true;
           }
         }
       }
-    parseLine (mDoc.mLines.back());
+    parseLine (mDocument.mLines.back());
     lineNumber++;
     }
 
   trimTrailingSpace();
 
   // add empty lastLine
-  mDoc.mLines.emplace_back (cLine());
+  mDocument.mLines.emplace_back (cLine());
 
   cLog::log (LOGINFO, fmt::format ("read {}:lines {}{}{}",
                                    lineNumber,
-                                   mDoc.mHasCR ? "hasCR " : "",
-                                   mDoc.mHasUtf8 ? "hasUtf8 " : "",
+                                   mDocument.mHasCR ? "hasCR " : "",
+                                   mDocument.mHasUtf8 ? "hasUtf8 " : "",
                                    utf8chars));
 
-  mDoc.mEdited = false;
+  mView.mEdited = false;
 
   mEdit.clearUndo();
   }
@@ -854,18 +854,18 @@ void cTextEdit::loadFile (const string& filename) {
 //{{{
 void cTextEdit::saveFile() {
 
-  if (!mDoc.mEdited) {
-    cLog::log (LOGINFO,fmt::format ("{} unchanged, no save", mDoc.mFilePath));
+  if (!mView.mEdited) {
+    cLog::log (LOGINFO,fmt::format ("{} unchanged, no save", mDocument.mFilePath));
     return;
     }
 
   // identify filePath for previous version
-  filesystem::path saveFilePath (mDoc.mFilePath);
-  saveFilePath.replace_extension (fmt::format ("{};{}", mDoc.mFileExtension, mDoc.mVersion++));
+  filesystem::path saveFilePath (mDocument.mFilePath);
+  saveFilePath.replace_extension (fmt::format ("{};{}", mDocument.mFileExtension, mDocument.mVersion++));
   while (filesystem::exists (saveFilePath)) {
     // version exits, increment version number
     cLog::log (LOGINFO,fmt::format ("skipping {}", saveFilePath.string()));
-    saveFilePath.replace_extension (fmt::format ("{};{}", mDoc.mFileExtension, mDoc.mVersion++));
+    saveFilePath.replace_extension (fmt::format ("{};{}", mDocument.mFileExtension, mDocument.mVersion++));
     }
 
   uint32_t highestLineNumber = trimTrailingSpace();
@@ -947,7 +947,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
         mEdit.mCursor.mSelectEndPosition = selectEndPosition;
         mEdit.addUndo (undo);
 
-        mDoc.mEdited = true;
+        mView.mEdited = true;
         mEdit.mScrollVisible = true;
         }
 
@@ -977,7 +977,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
       return;
 
     // insert newLine
-    cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber + 1, cLine());
+    cLine& newLine = *mDocument.mLines.insert (mDocument.mLines.begin() + position.mLineNumber + 1, cLine());
 
     if (mOptions.mLanguage.mAutoIndentation)
       for (uint32_t indent = 0;
@@ -1018,7 +1018,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
     undo.mAddText = static_cast<char>(ch);
     setCursorPosition ({position.mLineNumber, getColumn (glyphsLine, glyphIndex + 1)});
     }
-  mDoc.mEdited = true;
+  mView.mEdited = true;
 
   undo.mAddEndPosition = getCursorPosition();
   undo.mAfterCursor = mEdit.mCursor;
@@ -1057,7 +1057,7 @@ void cTextEdit::drawContents (cApp& app) {
         toggleShowLineDebug();
       }
   //}}}
-  if (mDoc.mHasFolds) {
+  if (mView.mHasFolds) {
     //{{{  folded button
     ImGui::SameLine();
     if (toggleButton ("folded", isShowFolds()))
@@ -1128,11 +1128,11 @@ void cTextEdit::drawContents (cApp& app) {
   //{{{  fontSize button
   ImGui::SameLine();
   ImGui::SetNextItemWidth (3 * ImGui::GetFontSize());
-  ImGui::DragInt ("##fs", &mOptions.mFontSize, 0.2f, mOptions.mmDocntSize, mOptions.mMaxFontSize, "%d");
+  ImGui::DragInt ("##fs", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
 
   if (ImGui::IsItemHovered()) {
     int fontSize = mOptions.mFontSize + static_cast<int>(ImGui::GetIO().MouseWheel);
-    mOptions.mFontSize = max (mOptions.mmDocntSize, min (mOptions.mMaxFontSize, fontSize));
+    mOptions.mFontSize = max (mOptions.mMinFontSize, min (mOptions.mMaxFontSize, fontSize));
     }
   //}}}
   //{{{  vsync button,fps
@@ -1193,12 +1193,12 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, {0.f,0.f});
   ImGui::BeginChild ("##s", {0.f,0.f}, false,
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-  mDrawContext.update (mOptions, isDrawMonoSpaced() && !mDoc.mHasUtf8);
+  mDrawContext.update (mOptions, isDrawMonoSpaced() && !mDocument.mHasUtf8);
 
   keyboard();
 
   if (isFolded())
-    mDoc.mFoldLines.resize (drawFolded());
+    mView.mFoldLines.resize (drawFolded());
   else
     drawLines();
 
@@ -1333,7 +1333,7 @@ uint32_t cTextEdit::getLineNumberFromIndex (uint32_t lineIndex) const {
     return lineIndex;
 
   if (lineIndex < getNumFoldLines())
-    return mDoc.mFoldLines[lineIndex];
+    return mView.mFoldLines[lineIndex];
 
   cLog::log (LOGERROR, fmt::format ("getLineNumberFromIndex {} no line for that index", lineIndex));
   return 0;
@@ -1345,22 +1345,22 @@ uint32_t cTextEdit::getLineIndexFromNumber (uint32_t lineNumber) const {
   if (!isFolded()) // simple case, lineIndex is lineNumber
     return lineNumber;
 
-  if (mDoc.mFoldLines.empty()) {
+  if (mView.mFoldLines.empty()) {
     // no lineIndex vector
     cLog::log (LOGERROR, fmt::format ("getLineIndexFromNumber {} lineIndex empty", lineNumber));
     return 0;
     }
 
   // find lineNumber in lineIndex vector
-  auto it = find (mDoc.mFoldLines.begin(), mDoc.mFoldLines.end(), lineNumber);
-  if (it == mDoc.mFoldLines.end()) {
+  auto it = find (mView.mFoldLines.begin(), mView.mFoldLines.end(), lineNumber);
+  if (it == mView.mFoldLines.end()) {
     // lineNumber notFound, error
     cLog::log (LOGERROR, fmt::format ("getLineIndexFromNumber lineNumber:{} not found", lineNumber));
     return 0xFFFFFFFF;
     }
 
   // lineNUmber found, return lineIndex
-  return uint32_t(it - mDoc.mFoldLines.begin());
+  return uint32_t(it - mView.mFoldLines.begin());
   }
 //}}}
 //{{{
@@ -1396,7 +1396,7 @@ uint32_t cTextEdit::getGlyphIndex (const cLine& line, uint32_t toColumn) {
 //{{{
 uint32_t cTextEdit::getTabColumn (uint32_t column) {
 // return column of after tab at column
-  return ((column / mDoc.mTabSize) * mDoc.mTabSize) + mDoc.mTabSize;
+  return ((column / mDocument.mTabSize) * mDocument.mTabSize) + mDocument.mTabSize;
   }
 //}}}
 //{{{
@@ -1422,7 +1422,7 @@ uint32_t cTextEdit::getColumn (const cLine& line, uint32_t toGlyphIndex) {
 float cTextEdit::getTabEndPosX (float xPos) {
 // return tabEndPosx of tab containing xPos
 
-  float tabWidthPixels = mDoc.mTabSize * mDrawContext.getGlyphWidth();
+  float tabWidthPixels = mDocument.mTabSize * mDrawContext.getGlyphWidth();
   return (1.f + floor ((1.f + xPos) / tabWidthPixels)) * tabWidthPixels;
   }
 //}}}
@@ -1750,7 +1750,7 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
         return position;
 
       // insert new line
-      cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber+1, cLine());
+      cLine& newLine = *mDocument.mLines.insert (mDocument.mLines.begin() + position.mLineNumber+1, cLine());
 
       if (glyphIndex < glyphsLine.getNumGlyphs()) {
         // not end of line, splitting line, copy rest of line to newLine
@@ -1777,7 +1777,7 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
       position.mColumn++;
       }
 
-    mDoc.mEdited = true;
+    mView.mEdited = true;
     }
 
   return position;
@@ -1787,17 +1787,17 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
 //{{{
 void cTextEdit::deleteLine (uint32_t lineNumber) {
 
-  mDoc.mLines.erase (mDoc.mLines.begin() + lineNumber);
+  mDocument.mLines.erase (mDocument.mLines.begin() + lineNumber);
   mEdit.mCheckComments = true;
-  mDoc.mEdited = true;
+  mView.mEdited = true;
   }
 //}}}
 //{{{
 void cTextEdit::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
 
-  mDoc.mLines.erase (mDoc.mLines.begin() + beginLineNumber, mDoc.mLines.begin() + endLineNumber);
+  mDocument.mLines.erase (mDocument.mLines.begin() + beginLineNumber, mDocument.mLines.begin() + endLineNumber);
   mEdit.mCheckComments = true;
-  mDoc.mEdited = true;
+  mView.mEdited = true;
   }
 //}}}
 //{{{
@@ -1844,7 +1844,7 @@ void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosit
     parseLine (endLine);
     }
 
-  mDoc.mEdited = true;
+  mView.mEdited = true;
   }
 //}}}
 
@@ -1968,7 +1968,7 @@ void cTextEdit::parseLine (cLine& line) {
   size_t foldBeginPos = glyphString.find (mOptions.mLanguage.mFoldBeginToken, indentPos);
   line.mFoldBegin = (foldBeginPos != string::npos) && (foldBeginPos == indentPos);
   if (line.mFoldBegin)
-    mDoc.mHasFolds = true;
+      mView.mHasFolds = true;
   //}}}
   //{{{  find foldEnd token
   size_t foldEndPos = glyphString.find (mOptions.mLanguage.mFoldEndToken, indentPos);
@@ -2066,16 +2066,16 @@ uint32_t cTextEdit::trimTrailingSpace() {
 
   uint32_t lineNumber = 0;
   uint32_t trimmedSpaces = 0;
-  for (auto& line : mDoc.mLines) {
+  for (auto& line : mDocument.mLines) {
     trimmedSpaces += line.trimTrailingSpace();
     if (!line.empty()) // nonEmpty line, raise waterMark
       nonEmptyHighWaterMark = lineNumber;
     lineNumber++;
     }
 
-  if ((nonEmptyHighWaterMark != mDoc.mLines.size()-1) || (trimmedSpaces > 0))
+  if ((nonEmptyHighWaterMark != mDocument.mLines.size()-1) || (trimmedSpaces > 0))
     cLog::log (LOGINFO, fmt::format ("highest {}:{} trimmedSpaces:{}",
-                                     nonEmptyHighWaterMark+1, mDoc.mLines.size(), trimmedSpaces));
+                                     nonEmptyHighWaterMark+1, mDocument.mLines.size(), trimmedSpaces));
   return nonEmptyHighWaterMark;
   }
 //}}}
@@ -2372,7 +2372,7 @@ void cTextEdit::mouseDragSelectLine (uint32_t lineNumber, float posY) {
 
   if (isFolded()) {
     uint32_t lineIndex = max (0u, min (getMaxFoldLineIndex(), getLineIndexFromNumber (lineNumber) + numDragLines));
-    lineNumber = mDoc.mFoldLines[lineIndex];
+    lineNumber = mView.mFoldLines[lineIndex];
     }
   else // simple add to lineNumber
     lineNumber = max (0u, min (getMaxLineNumber(), lineNumber + numDragLines));
@@ -2582,9 +2582,9 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
   if (isFolded()) {
     //{{{  update mFoldLines vector
     if (lineIndex >= getNumFoldLines())
-      mDoc.mFoldLines.push_back (lineNumber);
+      mView.mFoldLines.push_back (lineNumber);
     else
-      mDoc.mFoldLines[lineIndex] = lineNumber;
+      mView.mFoldLines[lineIndex] = lineNumber;
     }
     //}}}
 

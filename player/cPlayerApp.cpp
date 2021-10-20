@@ -11,6 +11,7 @@
 #include "../utils/date.h"
 #include "../utils/cLog.h"
 
+#include "../song/cSong.h"
 #include "../song/cSongLoader.h"
 
 using namespace std;

@@ -329,6 +329,23 @@ private:
   std::vector <cGlyph> mGlyphs;
   };
 //}}}
+//{{{
+class cDocument {
+public:
+  std::string mFilePath;
+  std::string mParentPath;
+  std::string mFileStem;
+  std::string mFileExtension;
+  uint32_t mVersion = 1;
+
+  std::vector <cLine> mLines;
+
+  bool mHasCR = false;
+  bool mHasTabs = false;
+  bool mHasUtf8 = false;
+  uint32_t mTabSize = 4;
+  };
+//}}}
 
 class cTextEdit {
 public:
@@ -424,13 +441,13 @@ public:
   ~cTextEdit() = default;
 
   //{{{  gets
-  bool isEdited() const { return mDoc.mEdited; }
+  bool isEdited() const { return mView.mEdited; }
   bool isReadOnly() const { return mOptions.mReadOnly; }
   bool isShowFolds() const { return mOptions.mShowFolded; }
 
   // has
-  bool hasCR() const { return mDoc.mHasCR; }
-  bool hasTabs() const { return mDoc.mHasTabs; }
+  bool hasCR() const { return mDocument.mHasCR; }
+  bool hasTabs() const { return mDocument.mHasTabs; }
   bool hasSelect() const { return mEdit.mCursor.mSelectEndPosition > mEdit.mCursor.mSelectBeginPosition; }
   bool hasUndo() const { return !mOptions.mReadOnly && mEdit.hasUndo(); }
   bool hasRedo() const { return !mOptions.mReadOnly && mEdit.hasRedo(); }
@@ -440,14 +457,14 @@ public:
   std::string getTextString();
   std::vector<std::string> getTextStrings() const;
 
-  uint32_t getTabSize() const { return mDoc.mTabSize; }
+  uint32_t getTabSize() const { return mDocument.mTabSize; }
   sPosition getCursorPosition() { return sanitizePosition (mEdit.mCursor.mPosition); }
 
   const cLanguage& getLanguage() const { return mOptions.mLanguage; }
   //}}}
   //{{{  sets
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
-  void setTabSize (uint32_t tabSize) { mDoc.mTabSize = tabSize; }
+  void setTabSize (uint32_t tabSize) { mDocument.mTabSize = tabSize; }
 
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverWrite() { mOptions.mOverWrite = !mOptions.mOverWrite; }
@@ -623,7 +640,7 @@ private:
   class cOptions {
   public:
     int mFontSize = 16;
-    int mmDocntSize = 4;
+    int mMinFontSize = 4;
     int mMaxFontSize = 24;
 
     // modes
@@ -657,23 +674,12 @@ private:
     };
   //}}}
   //{{{
-  class cDoc {
+  class cView {
   public:
-    std::string mFilePath;
-    std::string mParentPath;
-    std::string mFileStem;
-    std::string mFileExtension;
-    uint32_t mVersion = 1;
-
-    std::vector <cLine> mLines;
     std::vector <uint32_t> mFoldLines;
 
     bool mEdited = false;
     bool mHasFolds = false;
-    bool mHasCR = false;
-    bool mHasTabs = false;
-    bool mHasUtf8 = false;
-    uint32_t mTabSize = 4;
     };
   //}}}
   //{{{
@@ -778,8 +784,8 @@ private:
   float getGlyphWidth (const cLine& line, uint32_t glyphIndex);
 
   // lines
-  uint32_t getNumLines() const { return static_cast<uint32_t>(mDoc.mLines.size()); }
-  uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mDoc.mFoldLines.size()); }
+  uint32_t getNumLines() const { return static_cast<uint32_t>(mDocument.mLines.size()); }
+  uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mView.mFoldLines.size()); }
   uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
   uint32_t getMaxFoldLineIndex() const { return getNumFoldLines() - 1; }
   uint32_t getNumPageLines() const;
@@ -789,13 +795,13 @@ private:
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
   uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
 
-  cLine& getLine (uint32_t lineNumber) { return mDoc.mLines[lineNumber]; }
+  cLine& getLine (uint32_t lineNumber) { return mDocument.mLines[lineNumber]; }
 
   //{{{
   uint32_t getGlyphsLineNumber (uint32_t lineNumber) const {
   // return glyphs lineNumber for lineNumber - folded foldBegin closedFold seeThru into next line
 
-    const cLine& line = mDoc.mLines[lineNumber];
+    const cLine& line = mDocument.mLines[lineNumber];
     if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs()))
       return lineNumber + 1;
     else
@@ -882,10 +888,13 @@ private:
   //{{{  vars
   bool mOpen = true;  // set false when DrawWindow() closed
 
-  cOptions mOptions;
-  cDoc mDoc;
-  cFedDrawContext mDrawContext;
+  cDocument mDocument;
+
+  cView mView;
   cEdit mEdit;
+
+  cOptions mOptions;
+  cFedDrawContext mDrawContext;
 
   std::chrono::system_clock::time_point mCursorFlashTimePoint;
   //}}}
