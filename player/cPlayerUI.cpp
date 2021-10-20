@@ -20,7 +20,6 @@
 #include "../utils/cFileView.h"
 
 // song
-#include "../song/cSongLoader.h"
 #include "../song/cSong.h"
 
 // utils
@@ -706,16 +705,6 @@ public:
 
     cPlayerApp& playerApp = (cPlayerApp&)app;
 
-    if (!mSongLoaded) {
-      //{{{  load song
-      const vector <string>& strings = { playerApp.getSourceName() };
-      if (!playerApp.getSourceName().empty()) {
-        mSongLoader.launchLoad (strings);
-        mSongLoaded = true;
-        }
-      }
-      //}}}
-
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
@@ -752,19 +741,19 @@ public:
     //}}}
     //{{{  draw radio buttons
     if (ImGui::Button ("radio1"))
-      mSongLoader.launchLoad (kRadio1);
+      playerApp.setSongSpec (kRadio1);
     if (ImGui::Button ("radio2"))
-      mSongLoader.launchLoad (kRadio2);
+      playerApp.setSongSpec (kRadio2);
     if (ImGui::Button ("radio3"))
-      mSongLoader.launchLoad (kRadio3);
+      playerApp.setSongSpec (kRadio3);
     if (ImGui::Button ("radio4"))
-      mSongLoader.launchLoad (kRadio4);
+      playerApp.setSongSpec (kRadio4);
     if (ImGui::Button ("radio5"))
-      mSongLoader.launchLoad (kRadio5);
+      playerApp.setSongSpec (kRadio5);
     if (ImGui::Button ("radio6"))
-      mSongLoader.launchLoad (kRadio6);
+      playerApp.setSongSpec (kRadio6);
     if (ImGui::Button ("wqxr"))
-      mSongLoader.launchLoad (kWqxr);
+      playerApp.setSongSpec (kWqxr);
     //}}}
     //{{{  draw clockButton
     ImGui::SetCursorPos ({ImGui::GetWindowWidth() - 130.f, 0.f});
@@ -775,7 +764,7 @@ public:
     if (isDrawMonoSpaced())
       ImGui::PushFont (app.getMonoFont());
 
-    mDrawSong.draw (mSongLoader.getSong(), isDrawMonoSpaced());
+    mDrawSong.draw (playerApp.getSong(), isDrawMonoSpaced());
 
     if (isDrawMonoSpaced())
       ImGui::PopFont();
@@ -792,8 +781,6 @@ private:
   bool mOpen = true;
   bool mShowMonoSpaced = false;
 
-  bool mSongLoaded = false;
-  cSongLoader mSongLoader;
   cDrawSong mDrawSong;
 
   static cUI* create (const string& className) { return new cPlayerUI (className); }

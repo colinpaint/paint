@@ -79,7 +79,7 @@ int main (int numArgs, char* args[]) {
   app.setName ("player");
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 24.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 24.f));
-  app.setSource (params.empty() ? "" : cFileUtils::resolve (params[0]));
+  app.setSongName (params.empty() ? "" : cFileUtils::resolve (params[0]));
 
   platform.setResizeCallback (
     //{{{  resize lambda
@@ -96,8 +96,10 @@ int main (int numArgs, char* args[]) {
   platform.setDropCallback (
     //{{{  drop lambda
     [&](vector<string> dropItems) noexcept {
-      for (auto& item : dropItems)
+      for (auto& item : dropItems) {
         cLog::log (LOGINFO, item);
+        app.setSongName (item);
+        }
       }
     );
     //}}}

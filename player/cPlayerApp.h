@@ -7,19 +7,27 @@
 #include <vector>
 
 #include "../ui/cApp.h"
+
 class cPlatform;
 class cGraphics;
+
+class cSong;
+class cSongLoader;
 //}}}
 
 class cPlayerApp : public cApp {
 public:
-  cPlayerApp (cPlatform& platform, cGraphics& graphics) : cApp (platform, graphics) {}
+  cPlayerApp (cPlatform& platform, cGraphics& graphics);
   ~cPlayerApp() = default;
 
-  std::string getSourceName() const { return mSourceName; }
+  std::string getSongName() const { return mSongName; }
+  cSong* getSong() const;
 
-  bool setSource (const std::string& sourceName);
+  bool setSongName (const std::string& songName);
+  bool setSongSpec (const std::vector <std::string>& songSpec);
 
 private:
-  std::string mSourceName;
+  cSongLoader* mSongLoader;
+
+  std::string mSongName;
   };

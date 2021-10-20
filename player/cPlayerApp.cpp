@@ -11,15 +11,34 @@
 #include "../utils/date.h"
 #include "../utils/cLog.h"
 
-#include "../dvb/cDvbTransportStream.h"
+#include "../song/cSongLoader.h"
 
 using namespace std;
 //}}}
 
-bool cPlayerApp::setSource (const string& sourceName) {
-// create dvb source
+cPlayerApp::cPlayerApp (cPlatform& platform, cGraphics& graphics) : cApp (platform, graphics) {
+  mSongLoader = new cSongLoader();
+  }
 
-  mSourceName = sourceName;
+cSong* cPlayerApp::getSong() const {
+  return mSongLoader->getSong();
+  }
 
+
+bool cPlayerApp::setSongName (const std::string& songName) {
+
+  mSongName = songName;
+
+  // load song
+  const vector <string>& strings = { songName };
+  mSongLoader->launchLoad (strings);
+
+  return true;
+  }
+
+bool cPlayerApp::setSongSpec (const vector <string>& songSpec) {
+
+  mSongName = songSpec[0];
+  mSongLoader->launchLoad (songSpec);
   return true;
   }
