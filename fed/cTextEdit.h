@@ -395,15 +395,13 @@ private:
   void drawLine (uint32_t lineNumber, uint32_t lineIndex);
   void drawLines();
 
-  //{{{  vars
+  // vars
   cDocument& mDoc;
 
+  // edit state
   cEdit mEdit;
   cOptions mOptions;
   cTextEditDrawContext mDrawContext;
-
   std::vector <uint32_t> mFoldLines;
-
   std::chrono::system_clock::time_point mCursorFlashTimePoint;
-  //}}}
   };
