@@ -15,194 +15,6 @@
 class cApp;
 //}}}
 
-//{{{  palette colors
-constexpr uint8_t eText =              0;
-constexpr uint8_t eBackground =        1;
-constexpr uint8_t eIdentifier =        2;
-constexpr uint8_t eNumber =            3;
-constexpr uint8_t ePunctuation =       4;
-constexpr uint8_t eString =            5;
-constexpr uint8_t eLiteral =           6;
-constexpr uint8_t ePreProc =           7;
-constexpr uint8_t eComment =           8;
-constexpr uint8_t eKeyWord =           9;
-constexpr uint8_t eKnownWord =        10;
-
-constexpr uint8_t eCursorPos     =    11;
-constexpr uint8_t eCursorLineFill =   12;
-constexpr uint8_t eCursorLineEdge =   13;
-constexpr uint8_t eCursorReadOnly   = 14;
-constexpr uint8_t eSelectCursor    =  15;
-constexpr uint8_t eLineNumber =       16;
-constexpr uint8_t eWhiteSpace =       17;
-constexpr uint8_t eTab =              18;
-
-constexpr uint8_t eFoldClosed =       19;
-constexpr uint8_t eFoldOpen =         20;
-
-constexpr uint8_t eScrollBackground = 21;
-constexpr uint8_t eScrollGrab =       22;
-constexpr uint8_t eScrollHover =      23;
-constexpr uint8_t eScrollActive =     24;
-constexpr uint8_t eUndefined =      0xFF;
-//}}}
-//{{{
-class cLanguage {
-public:
-  using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
-  using tTokenSearch = bool(*)(const char* srcBegin, const char* srcEnd,
-                               const char*& dstBegin, const char*& dstEnd, uint8_t& color);
-  // static const
-  static const cLanguage c();
-  static const cLanguage hlsl();
-  static const cLanguage glsl();
-
-  // vars
-  std::string mName;
-  bool mAutoIndentation = true;
-
-  // comment tokens
-  std::string mCommentSingle;
-  std::string mCommentBegin;
-  std::string mCommentEnd;
-
-  // fold tokens
-  std::string mFoldBeginToken;
-  std::string mFoldEndToken;
-
-  // fold indicators
-  std::string mFoldBeginOpen = "{{{ ";
-  std::string mFoldBeginClosed = "... ";
-  std::string mFoldEnd = "}}}";
-
-  std::unordered_set <std::string> mKeyWords;
-  std::unordered_set <std::string> mKnownWords;
-
-  tTokenSearch mTokenSearch = nullptr;
-  cLanguage::tRegex mRegexList;
-  };
-//}}}
-//{{{
-class cOptions {
-public:
-  int mFontSize = 16;
-  int mMinFontSize = 4;
-  int mMaxFontSize = 24;
-
-  // modes
-  bool mOverWrite = false;
-  bool mReadOnly = false;
-
-  // shows
-  bool mShowFolded = true;
-  bool mShowLineNumber = true;
-  bool mShowLineDebug = false;
-  bool mShowWhiteSpace = false;
-  bool mShowMonoSpaced = true;
-
-  cLanguage mLanguage;
-  };
-//}}}
-//{{{
-class cTextEditDrawContext : public cDrawContext {
-public:
-  cTextEditDrawContext() : cDrawContext (kPalette) {}
-  //{{{
-  void update (const cOptions& options, bool monoSpaced) {
-    cDrawContext::update (static_cast<float>(options.mFontSize), monoSpaced);
-    mLeftPad = getGlyphWidth() / 2.f;
-    mLineNumberWidth = 0.f;
-    }
-  //}}}
-
-  float mLeftPad = 0.f;
-  float mLineNumberWidth = 0.f;
-
-private:
-  // color to ImU32 lookup
-  inline static const std::vector <ImU32> kPalette = {
-    0xff808080, // eText
-    0xffefefef, // eBackground
-    0xff202020, // eIdentifier
-    0xff606000, // eNumber
-    0xff404040, // ePunctuation
-    0xff2020a0, // eString
-    0xff304070, // eLiteral
-    0xff008080, // ePreProc
-    0xff008000, // eComment
-    0xff1010c0, // eKeyWord
-    0xff800080, // eKnownWord
-
-    0xff000000, // eCursorPos
-    0x10000000, // eCursorLineFill
-    0x40000000, // eCursorLineEdge
-    0x800000ff, // eCursorReadOnly
-    0x80600000, // eSelectCursor
-    0xff505000, // eLineNumber
-    0xff808080, // eWhiteSpace
-    0xff404040, // eTab
-
-    0xffff0000, // eFoldClosed,
-    0xff0000ff, // eFoldOpen,
-
-    0x80404040, // eScrollBackground
-    0x80ffffff, // eScrollGrab
-    0xA000ffff, // eScrollHover
-    0xff00ffff, // eScrollActive
-    };
-  };
-//}}}
-
-//{{{
-struct sPosition {
-  sPosition() : mLineNumber(0), mColumn(0) {}
-  sPosition (uint32_t lineNumber, uint32_t column) : mLineNumber(lineNumber), mColumn(column) {}
-
-  //{{{
-  bool operator == (const sPosition& o) const {
-    return mLineNumber == o.mLineNumber && mColumn == o.mColumn;
-    }
-  //}}}
-  //{{{
-  bool operator != (const sPosition& o) const {
-    return mLineNumber != o.mLineNumber || mColumn != o.mColumn; }
-  //}}}
-  //{{{
-  bool operator < (const sPosition& o) const {
-
-    if (mLineNumber != o.mLineNumber)
-      return mLineNumber < o.mLineNumber;
-
-    return mColumn < o.mColumn;
-    }
-  //}}}
-  //{{{
-  bool operator > (const sPosition& o) const {
-    if (mLineNumber != o.mLineNumber)
-      return mLineNumber > o.mLineNumber;
-    return mColumn > o.mColumn;
-    }
-  //}}}
-  //{{{
-  bool operator <= (const sPosition& o) const {
-    if (mLineNumber != o.mLineNumber)
-      return mLineNumber < o.mLineNumber;
-
-    return mColumn <= o.mColumn;
-    }
-  //}}}
-  //{{{
-  bool operator >= (const sPosition& o) const {
-    if (mLineNumber != o.mLineNumber)
-      return mLineNumber > o.mLineNumber;
-    return mColumn >= o.mColumn;
-    }
-  //}}}
-
-  uint32_t mLineNumber;
-  uint32_t mColumn;
-  };
-//}}}
 //{{{
 class cGlyph {
 public:
@@ -517,6 +329,56 @@ private:
   };
 //}}}
 //{{{
+struct sPosition {
+  sPosition() : mLineNumber(0), mColumn(0) {}
+  sPosition (uint32_t lineNumber, uint32_t column) : mLineNumber(lineNumber), mColumn(column) {}
+
+  //{{{
+  bool operator == (const sPosition& o) const {
+    return mLineNumber == o.mLineNumber && mColumn == o.mColumn;
+    }
+  //}}}
+  //{{{
+  bool operator != (const sPosition& o) const {
+    return mLineNumber != o.mLineNumber || mColumn != o.mColumn; }
+  //}}}
+  //{{{
+  bool operator < (const sPosition& o) const {
+
+    if (mLineNumber != o.mLineNumber)
+      return mLineNumber < o.mLineNumber;
+
+    return mColumn < o.mColumn;
+    }
+  //}}}
+  //{{{
+  bool operator > (const sPosition& o) const {
+    if (mLineNumber != o.mLineNumber)
+      return mLineNumber > o.mLineNumber;
+    return mColumn > o.mColumn;
+    }
+  //}}}
+  //{{{
+  bool operator <= (const sPosition& o) const {
+    if (mLineNumber != o.mLineNumber)
+      return mLineNumber < o.mLineNumber;
+
+    return mColumn <= o.mColumn;
+    }
+  //}}}
+  //{{{
+  bool operator >= (const sPosition& o) const {
+    if (mLineNumber != o.mLineNumber)
+      return mLineNumber > o.mLineNumber;
+    return mColumn >= o.mColumn;
+    }
+  //}}}
+
+  uint32_t mLineNumber;
+  uint32_t mColumn;
+  };
+//}}}
+//{{{
 class cDocument {
 public:
   // gets
@@ -622,6 +484,145 @@ public:
 
 private:
   uint32_t trimTrailingSpace();
+  };
+//}}}
+
+//{{{
+class cLanguage {
+public:
+  using tRegex = std::vector <std::pair <std::regex,uint8_t>>;
+  using tTokenSearch = bool(*)(const char* srcBegin, const char* srcEnd,
+                               const char*& dstBegin, const char*& dstEnd, uint8_t& color);
+  // static const
+  static const cLanguage c();
+  static const cLanguage hlsl();
+  static const cLanguage glsl();
+
+  // vars
+  std::string mName;
+  bool mAutoIndentation = true;
+
+  // comment tokens
+  std::string mCommentSingle;
+  std::string mCommentBegin;
+  std::string mCommentEnd;
+
+  // fold tokens
+  std::string mFoldBeginToken;
+  std::string mFoldEndToken;
+
+  // fold indicators
+  std::string mFoldBeginOpen = "{{{ ";
+  std::string mFoldBeginClosed = "... ";
+  std::string mFoldEnd = "}}}";
+
+  std::unordered_set <std::string> mKeyWords;
+  std::unordered_set <std::string> mKnownWords;
+
+  tTokenSearch mTokenSearch = nullptr;
+  cLanguage::tRegex mRegexList;
+  };
+//}}}
+//{{{
+class cOptions {
+public:
+  int mFontSize = 16;
+  int mMinFontSize = 4;
+  int mMaxFontSize = 24;
+
+  // modes
+  bool mOverWrite = false;
+  bool mReadOnly = false;
+
+  // shows
+  bool mShowFolded = true;
+  bool mShowLineNumber = true;
+  bool mShowLineDebug = false;
+  bool mShowWhiteSpace = false;
+  bool mShowMonoSpaced = true;
+
+  cLanguage mLanguage;
+  };
+//}}}
+
+//{{{  palette colors
+constexpr uint8_t eText =              0;
+constexpr uint8_t eBackground =        1;
+constexpr uint8_t eIdentifier =        2;
+constexpr uint8_t eNumber =            3;
+constexpr uint8_t ePunctuation =       4;
+constexpr uint8_t eString =            5;
+constexpr uint8_t eLiteral =           6;
+constexpr uint8_t ePreProc =           7;
+constexpr uint8_t eComment =           8;
+constexpr uint8_t eKeyWord =           9;
+constexpr uint8_t eKnownWord =        10;
+
+constexpr uint8_t eCursorPos     =    11;
+constexpr uint8_t eCursorLineFill =   12;
+constexpr uint8_t eCursorLineEdge =   13;
+constexpr uint8_t eCursorReadOnly   = 14;
+constexpr uint8_t eSelectCursor    =  15;
+constexpr uint8_t eLineNumber =       16;
+constexpr uint8_t eWhiteSpace =       17;
+constexpr uint8_t eTab =              18;
+
+constexpr uint8_t eFoldClosed =       19;
+constexpr uint8_t eFoldOpen =         20;
+
+constexpr uint8_t eScrollBackground = 21;
+constexpr uint8_t eScrollGrab =       22;
+constexpr uint8_t eScrollHover =      23;
+constexpr uint8_t eScrollActive =     24;
+constexpr uint8_t eUndefined =      0xFF;
+//}}}
+//{{{
+class cTextEditDrawContext : public cDrawContext {
+public:
+  cTextEditDrawContext() : cDrawContext (kPalette) {}
+  //{{{
+  void update (const cOptions& options, bool monoSpaced) {
+    cDrawContext::update (static_cast<float>(options.mFontSize), monoSpaced);
+    mLeftPad = getGlyphWidth() / 2.f;
+    mLineNumberWidth = 0.f;
+    }
+  //}}}
+
+  float mLeftPad = 0.f;
+  float mLineNumberWidth = 0.f;
+
+private:
+  // color to ImU32 lookup
+  inline static const std::vector <ImU32> kPalette = {
+    0xff808080, // eText
+    0xffefefef, // eBackground
+    0xff202020, // eIdentifier
+    0xff606000, // eNumber
+    0xff404040, // ePunctuation
+    0xff2020a0, // eString
+    0xff304070, // eLiteral
+    0xff008080, // ePreProc
+    0xff008000, // eComment
+    0xff1010c0, // eKeyWord
+    0xff800080, // eKnownWord
+
+    0xff000000, // eCursorPos
+    0x10000000, // eCursorLineFill
+    0x40000000, // eCursorLineEdge
+    0x800000ff, // eCursorReadOnly
+    0x80600000, // eSelectCursor
+    0xff505000, // eLineNumber
+    0xff808080, // eWhiteSpace
+    0xff404040, // eTab
+
+    0xffff0000, // eFoldClosed,
+    0xff0000ff, // eFoldOpen,
+
+    0x80404040, // eScrollBackground
+    0x80ffffff, // eScrollGrab
+    0xA000ffff, // eScrollHover
+    0xff00ffff, // eScrollActive
+    };
   };
 //}}}
 
