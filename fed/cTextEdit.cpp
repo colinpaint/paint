@@ -1343,7 +1343,7 @@ float cTextEdit::getWidth (sPosition position) {
 //{{{
 float cTextEdit::getGlyphWidth (const cLine& line, uint32_t glyphIndex) {
 
-  uint32_t numCharBytes = line.getNumCharBytes(glyphIndex);
+  uint32_t numCharBytes = line.getNumCharBytes (glyphIndex);
   if (numCharBytes == 1) // simple common case
     return mDrawContext.measureChar (line.getChar (glyphIndex));
 
