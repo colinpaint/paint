@@ -362,6 +362,20 @@ namespace {
 
 // cDocument
 //{{{
+uint32_t cDocument::getNumColumns (const cLine& line) {
+
+  uint32_t column = 0;
+
+  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++)
+    if (line.getChar (glyphIndex) == '\t')
+      column = getTabColumn (column);
+    else
+      column++;
+
+  return column;
+  }
+//}}}
+//{{{
 void cDocument::load (const string& filename) {
 
   // parse filename path
@@ -495,7 +509,7 @@ uint32_t cDocument::trimTrailingSpace() {
 cTextEdit::cTextEdit() {
 
   mOptions.mLanguage = cLanguage::c();
-  mDocument.mLines.push_back (cLine());
+  mDoc.mLines.push_back (cLine());
 
   // push any clipboardText to pasteStack
   const char* clipText = ImGui::GetClipboardText();
@@ -511,7 +525,7 @@ cTextEdit::cTextEdit() {
 string cTextEdit::getTextString() {
 // get text as single string
 
-  return getText ({0,0}, {getNumLines(),0});
+  return getText ({0,0}, { mDoc.getNumLines(),0});
   }
 //}}}
 //{{{
@@ -519,9 +533,9 @@ vector<string> cTextEdit::getTextStrings() const {
 // get text as vector of string
 
   vector<string> result;
-  result.reserve (getNumLines());
+  result.reserve (mDoc.getNumLines());
 
-  for (const auto& line : mDocument.mLines) {
+  for (const auto& line : mDoc.mLines) {
     string lineString = line.getString();
     result.emplace_back (move (lineString));
     }
@@ -551,7 +565,7 @@ void cTextEdit::moveLeft() {
   cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
 
   // column
-  uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
+  uint32_t glyphIndex = mDoc.getGlyphIndex (glyphsLine, position.mColumn);
   if (glyphIndex > glyphsLine.mFirstGlyph)
     // move to prevColumn on sameLine
     setCursorPosition ({position.mLineNumber, getColumn (glyphsLine, glyphIndex - 1)});
@@ -576,7 +590,7 @@ void cTextEdit::moveRight() {
   cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
 
   // column
-  uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
+  uint32_t glyphIndex = mDoc.getGlyphIndex (glyphsLine, position.mColumn);
   if (glyphIndex < glyphsLine.getNumGlyphs())
     // move to nextColumm on sameLine
     setCursorPosition ({position.mLineNumber, getColumn (glyphsLine, glyphIndex + 1)});
@@ -601,11 +615,11 @@ void cTextEdit::moveRightWord() {
 
   // line
   uint32_t glyphsLineNumber = getGlyphsLineNumber (position.mLineNumber);
-  cLine& glyphsLine = getLine (glyphsLineNumber);
+  cLine& glyphsLine = mDoc.getLine (glyphsLineNumber);
 
   // find nextWord
   sPosition movePosition;
-  uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
+  uint32_t glyphIndex = mDoc.getGlyphIndex (glyphsLine, position.mColumn);
   if (glyphIndex < glyphsLine.getNumGlyphs()) {
     // middle of line, find next word
     bool skip = false;
@@ -637,7 +651,7 @@ void cTextEdit::moveRightWord() {
 // select
 //{{{
 void cTextEdit::selectAll() {
-  setSelect (eSelect::eNormal, {0,0}, {getNumLines(),0});
+  setSelect (eSelect::eNormal, {0,0}, { mDoc.getNumLines(),0});
   }
 //}}}
 
@@ -758,9 +772,9 @@ void cTextEdit::deleteIt() {
     sPosition position = getCursorPosition();
     setCursorPosition (position);
 
-    cLine& line = getLine (position.mLineNumber);
-    if (position.mColumn == getNumColumns (line)) {
-      if (position.mLineNumber == getMaxLineNumber())
+    cLine& line = mDoc.getLine (position.mLineNumber);
+    if (position.mColumn == mDoc.getNumColumns (line)) {
+      if (position.mLineNumber == mDoc.getMaxLineNumber())
         return;
 
       undo.mDeleteText = '\n';
@@ -768,7 +782,7 @@ void cTextEdit::deleteIt() {
       undo.mDeleteEndPosition = advancePosition (undo.mDeleteBeginPosition);
 
       // insert nextLine at end of line
-      line.insertLineAtEnd (getLine (position.mLineNumber+1));
+      line.insertLineAtEnd (mDoc.getLine (position.mLineNumber+1));
       parseLine (line);
 
       // delete nextLine
@@ -780,12 +794,12 @@ void cTextEdit::deleteIt() {
       undo.mDeleteEndPosition.mColumn++;
       undo.mDeleteText = getText (undo.mDeleteBeginPosition, undo.mDeleteEndPosition);
 
-      uint32_t glyphIndex = getGlyphIndex (position);
+      uint32_t glyphIndex = mDoc.getGlyphIndex (position);
       line.erase (glyphIndex);
       parseLine (line);
       }
 
-    mDocument.mEdited = true;
+    mDoc.mEdited = true;
     }
 
   undo.mAfterCursor = mEdit.mCursor;
@@ -808,7 +822,7 @@ void cTextEdit::backspace() {
 
   else {
     sPosition position = getCursorPosition();
-    cLine& line = getLine (position.mLineNumber);
+    cLine& line = mDoc.getLine (position.mLineNumber);
 
     if (position.mColumn <= line.mFirstGlyph) {
       // at beginning of line
@@ -818,8 +832,8 @@ void cTextEdit::backspace() {
         return;
 
       // prevLine
-      cLine& prevLine = getLine (position.mLineNumber - 1);
-      uint32_t prevSize = getNumColumns (prevLine);
+      cLine& prevLine = mDoc.getLine (position.mLineNumber - 1);
+      uint32_t prevSize = mDoc.getNumColumns (prevLine);
 
       undo.mDeleteText = '\n';
       undo.mDeleteBeginPosition = {position.mLineNumber - 1, prevSize};
@@ -831,13 +845,13 @@ void cTextEdit::backspace() {
       parseLine (prevLine);
 
       // position to end of prevLine
-      setCursorPosition ({position.mLineNumber - 1, getNumColumns (prevLine)});
+      setCursorPosition ({position.mLineNumber - 1, mDoc.getNumColumns (prevLine)});
       }
 
     else {
       // at middle of line
       cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
-      uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
+      uint32_t glyphIndex = mDoc.getGlyphIndex (glyphsLine, position.mColumn);
 
       // set undo to prevChar
       undo.mDeleteEndPosition = getCursorPosition();
@@ -853,7 +867,7 @@ void cTextEdit::backspace() {
       setCursorPosition ({position.mLineNumber, position.mColumn - 1});
       }
 
-    mDocument.mEdited = true;
+    mDoc.mEdited = true;
     }
 
   undo.mAfterCursor = mEdit.mCursor;
@@ -907,9 +921,9 @@ void cTextEdit::redo (uint32_t steps) {
 //{{{
 void cTextEdit::loadFile (const string& filename) {
 
-  mDocument.load (filename);
+  mDoc.load (filename);
 
-  for (auto& line : mDocument.mLines)
+  for (auto& line : mDoc.mLines)
     parseLine (line);
 
   mEdit.clearUndo();
@@ -917,7 +931,7 @@ void cTextEdit::loadFile (const string& filename) {
 //}}}
 //{{{
 void cTextEdit::saveFile() {
-  mDocument.save();
+  mDoc.save();
   }
 //}}}
 
@@ -946,9 +960,9 @@ void cTextEdit::enterCharacter (ImWchar ch) {
       selectBeginPosition.mColumn = 0;
       if ((selectEndPosition.mColumn == 0) && (selectEndPosition.mLineNumber > 0))
         --selectEndPosition.mLineNumber;
-      if (selectEndPosition.mLineNumber >= getNumLines())
-        selectEndPosition.mLineNumber = getMaxLineNumber();
-      selectEndPosition.mColumn = getNumColumns (getLine (selectEndPosition.mLineNumber));
+      if (selectEndPosition.mLineNumber >= mDoc.getNumLines())
+        selectEndPosition.mLineNumber = mDoc.getMaxLineNumber();
+      selectEndPosition.mColumn = mDoc.getNumColumns (mDoc.getLine (selectEndPosition.mLineNumber));
 
       undo.mDeleteBeginPosition = selectBeginPosition;
       undo.mDeleteEndPosition = selectEndPosition;
@@ -957,23 +971,23 @@ void cTextEdit::enterCharacter (ImWchar ch) {
       bool modified = false;
       for (uint32_t lineNumber = selectBeginPosition.mLineNumber;
            lineNumber <= selectEndPosition.mLineNumber; lineNumber++) {
-        getLine (lineNumber).insert (0, cGlyph ('\t', eTab));
+          mDoc.getLine (lineNumber).insert (0, cGlyph ('\t', eTab));
         modified = true;
         }
 
       if (modified) {
         //  not sure what this does yet
-        cLine& selectBeginLine = getLine (selectBeginPosition.mLineNumber);
+        cLine& selectBeginLine = mDoc.getLine (selectBeginPosition.mLineNumber);
         selectBeginPosition = { selectBeginPosition.mLineNumber, getColumn (selectBeginLine, 0)};
         sPosition rangeEnd;
         if (originalEndPosition.mColumn != 0) {
-          selectEndPosition = {selectEndPosition.mLineNumber, getNumColumns (getLine (selectEndPosition.mLineNumber))};
+          selectEndPosition = {selectEndPosition.mLineNumber, mDoc.getNumColumns (mDoc.getLine (selectEndPosition.mLineNumber))};
           rangeEnd = selectEndPosition;
           undo.mAddText = getText (selectBeginPosition, selectEndPosition);
           }
         else {
           selectEndPosition = {originalEndPosition.mLineNumber, 0};
-          rangeEnd = {selectEndPosition.mLineNumber - 1, getNumColumns (getLine (selectEndPosition.mLineNumber - 1))};
+          rangeEnd = {selectEndPosition.mLineNumber - 1, mDoc.getNumColumns (mDoc.getLine (selectEndPosition.mLineNumber - 1))};
           undo.mAddText = getText (selectBeginPosition, rangeEnd);
           }
 
@@ -985,7 +999,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
         mEdit.mCursor.mSelectEndPosition = selectEndPosition;
         mEdit.addUndo (undo);
 
-        mDocument.mEdited = true;
+        mDoc.mEdited = true;
         mEdit.mScrollVisible = true;
         }
 
@@ -1007,15 +1021,15 @@ void cTextEdit::enterCharacter (ImWchar ch) {
   undo.mAddBeginPosition = position;
 
   cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
-  uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
+  uint32_t glyphIndex = mDoc.getGlyphIndex (glyphsLine, position.mColumn);
 
   if (ch == '\n') {
     //{{{  enter lineFeed
-    if (isFolded() && getLine (position.mLineNumber).mFoldBegin) // noe newLine in folded foldBegin
+    if (isFolded() && mDoc.getLine (position.mLineNumber).mFoldBegin) // noe newLine in folded foldBegin
       return;
 
     // insert newLine
-    cLine& newLine = *mDocument.mLines.insert (mDocument.mLines.begin() + position.mLineNumber + 1, cLine());
+    cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber + 1, cLine());
 
     if (mOptions.mLanguage.mAutoIndentation)
       for (uint32_t indent = 0;
@@ -1056,7 +1070,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
     undo.mAddText = static_cast<char>(ch);
     setCursorPosition ({position.mLineNumber, getColumn (glyphsLine, glyphIndex + 1)});
     }
-  mDocument.mEdited = true;
+  mDoc.mEdited = true;
 
   undo.mAddEndPosition = getCursorPosition();
   undo.mAfterCursor = mEdit.mCursor;
@@ -1095,7 +1109,7 @@ void cTextEdit::drawContents (cApp& app) {
         toggleShowLineDebug();
       }
   //}}}
-  if (mDocument.mHasFolds) {
+  if (mDoc.mHasFolds) {
     //{{{  folded button
     ImGui::SameLine();
     if (toggleButton ("folded", isShowFolds()))
@@ -1204,7 +1218,7 @@ void cTextEdit::drawContents (cApp& app) {
   //{{{  info
   ImGui::SameLine();
   ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
-                                           getNumLines(), getLanguage().mName).c_str());
+      mDoc.getNumLines(), getLanguage().mName).c_str());
   //}}}
   //{{{  vertice debug
   ImGui::SameLine();
@@ -1231,7 +1245,7 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, {0.f,0.f});
   ImGui::BeginChild ("##s", {0.f,0.f}, false,
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-  mDrawContext.update (mOptions, isDrawMonoSpaced() && !mDocument.mHasUtf8);
+  mDrawContext.update (mOptions, isDrawMonoSpaced() && !mDoc.mHasUtf8);
 
   keyboard();
 
@@ -1261,7 +1275,7 @@ bool cTextEdit::canEditAtCursor() {
   sPosition position = getCursorPosition();
 
   // line for cursor
-  const cLine& line = getLine (position.mLineNumber);
+  const cLine& line = mDoc.getLine (position.mLineNumber);
 
   return !isReadOnly() &&
          !(line.mFoldBegin && (position.mColumn < getGlyphsLine (position.mLineNumber).mFirstGlyph)) &&
@@ -1277,20 +1291,20 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
   // count approx numChars
   size_t numChars = 0;
   for (uint32_t lineNumber = beginPosition.mLineNumber; lineNumber < endPosition.mLineNumber; lineNumber++)
-    numChars += getLine (lineNumber).getNumGlyphs();
+    numChars += mDoc.getLine (lineNumber).getNumGlyphs();
 
   // reserve text size
   string text;
   text.reserve (numChars);
 
-  uint32_t beginGlyphIndex = getGlyphIndex (beginPosition);
-  uint32_t endGlyphIndex = getGlyphIndex (endPosition);
+  uint32_t beginGlyphIndex = mDoc.getGlyphIndex (beginPosition);
+  uint32_t endGlyphIndex = mDoc.getGlyphIndex (endPosition);
   while ((beginGlyphIndex < endGlyphIndex) || (beginPosition.mLineNumber < endPosition.mLineNumber)) {
-    if (beginPosition.mLineNumber >= getNumLines())
+    if (beginPosition.mLineNumber >= mDoc.getNumLines())
       break;
 
-    if (beginGlyphIndex < getLine (beginPosition.mLineNumber).getNumGlyphs()) {
-      text += getLine (beginPosition.mLineNumber).getChar (beginGlyphIndex);
+    if (beginGlyphIndex < mDoc.getLine (beginPosition.mLineNumber).getNumGlyphs()) {
+      text += mDoc.getLine (beginPosition.mLineNumber).getChar (beginGlyphIndex);
       beginGlyphIndex++;
       }
     else {
@@ -1309,10 +1323,10 @@ string cTextEdit::getText (sPosition beginPosition, sPosition endPosition) {
 float cTextEdit::getWidth (sPosition position) {
 // get width in pixels of drawn glyphs up to and including position
 
-  const cLine& line = getLine (position.mLineNumber);
+  const cLine& line = mDoc.getLine (position.mLineNumber);
 
   float width = 0.f;
-  uint32_t toGlyphIndex = getGlyphIndex (position);
+  uint32_t toGlyphIndex = mDoc.getGlyphIndex (position);
   for (uint32_t glyphIndex = line.mFirstGlyph;
        (glyphIndex < line.getNumGlyphs()) && (glyphIndex < toGlyphIndex); glyphIndex++) {
     if (line.getChar (glyphIndex) == '\t')
@@ -1351,20 +1365,6 @@ uint32_t cTextEdit::getNumPageLines() const {
 
 // line
 //{{{
-uint32_t cTextEdit::getNumColumns (const cLine& line) {
-
-  uint32_t column = 0;
-
-  for (uint32_t glyphIndex = 0; glyphIndex < line.getNumGlyphs(); glyphIndex++)
-    if (line.getChar (glyphIndex) == '\t')
-      column = getTabColumn (column);
-    else
-      column++;
-
-  return column;
-  }
-//}}}
-//{{{
 uint32_t cTextEdit::getLineNumberFromIndex (uint32_t lineIndex) const {
 
   if (!isFolded()) // lineNumber is lineIndex
@@ -1402,7 +1402,7 @@ uint32_t cTextEdit::getLineIndexFromNumber (uint32_t lineNumber) const {
   }
 //}}}
 //{{{
-cTextEdit::sPosition cTextEdit::getNextLinePosition (const sPosition& position) {
+sPosition cTextEdit::getNextLinePosition (const sPosition& position) {
 
   uint32_t nextLineIndex = getLineIndexFromNumber (position.mLineNumber) + 1;
   uint32_t nextLineNumber = getLineNumberFromIndex (nextLineIndex);
@@ -1410,33 +1410,7 @@ cTextEdit::sPosition cTextEdit::getNextLinePosition (const sPosition& position) 
   }
 //}}}
 
-// glyphIndex
-//{{{
-uint32_t cTextEdit::getGlyphIndex (const cLine& line, uint32_t toColumn) {
-// return glyphIndex from line,column, inserting tabs
-
-  uint32_t glyphIndex = 0;
-
-  uint32_t column = 0;
-  while ((glyphIndex < line.getNumGlyphs()) && (column < toColumn)) {
-    if (line.getChar (glyphIndex) == '\t')
-      column = getTabColumn (column);
-    else
-      column++;
-    glyphIndex++;
-    }
-
-  return glyphIndex;
-  }
-//}}}
-
 // column - glypIndex + tabs
-//{{{
-uint32_t cTextEdit::getTabColumn (uint32_t column) {
-// return column of after tab at column
-  return ((column / mDocument.mTabSize) * mDocument.mTabSize) + mDocument.mTabSize;
-  }
-//}}}
 //{{{
 uint32_t cTextEdit::getColumn (const cLine& line, uint32_t toGlyphIndex) {
 // return glyphIndex column using any tabs
@@ -1447,7 +1421,7 @@ uint32_t cTextEdit::getColumn (const cLine& line, uint32_t toGlyphIndex) {
     if (glyphIndex >= toGlyphIndex)
       return column;
     if (line.getChar (glyphIndex) == '\t')
-      column = getTabColumn (column);
+      column = mDoc.getTabColumn (column);
     else
       column++;
     }
@@ -1460,7 +1434,7 @@ uint32_t cTextEdit::getColumn (const cLine& line, uint32_t toGlyphIndex) {
 float cTextEdit::getTabEndPosX (float xPos) {
 // return tabEndPosx of tab containing xPos
 
-  float tabWidthPixels = mDocument.mTabSize * mDrawContext.getGlyphWidth();
+  float tabWidthPixels = mDoc.mTabSize * mDrawContext.getGlyphWidth();
   return (1.f + floor ((1.f + xPos) / tabWidthPixels)) * tabWidthPixels;
   }
 //}}}
@@ -1481,7 +1455,7 @@ uint32_t cTextEdit::getColumnFromPosX (const cLine& line, float posX) {
         break;
 
       columnPosX = tabEndPosX;
-      column = getTabColumn (column);
+      column = mDoc.getTabColumn (column);
       }
 
     else {
@@ -1547,7 +1521,7 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
       break;
 
     case eSelect::eLine: {
-      const cLine& line = getLine (mEdit.mCursor.mSelectBeginPosition.mLineNumber);
+      const cLine& line = mDoc.getLine (mEdit.mCursor.mSelectBeginPosition.mLineNumber);
       if (!isFolded() || !line.mFoldBegin)
         // select line
         mEdit.mCursor.mSelectEndPosition = {mEdit.mCursor.mSelectEndPosition.mLineNumber + 1, 0};
@@ -1603,7 +1577,7 @@ void cTextEdit::moveDown (uint32_t amount) {
 
   if (!isFolded()) {
     //{{{  unfolded simple moveDown
-    position.mLineNumber = min (position.mLineNumber + amount, getMaxLineNumber());
+    position.mLineNumber = min (position.mLineNumber + amount, mDoc.getMaxLineNumber());
     setCursorPosition (position);
     return;
     }
@@ -1637,7 +1611,7 @@ void cTextEdit::scrollCursorVisible() {
 
   // up,down scroll
   uint32_t lineIndex = getLineIndexFromNumber (position.mLineNumber);
-  uint32_t maxLineIndex = isFolded() ? getMaxFoldLineIndex() : getMaxLineNumber();
+  uint32_t maxLineIndex = isFolded() ? getMaxFoldLineIndex() : mDoc.getMaxLineNumber();
 
   uint32_t minIndex = min (maxLineIndex,
      static_cast<uint32_t>(floor ((ImGui::GetScrollY() + ImGui::GetWindowHeight()) / mDrawContext.getLineHeight())));
@@ -1666,12 +1640,12 @@ void cTextEdit::scrollCursorVisible() {
 //}}}
 
 //{{{
-cTextEdit::sPosition cTextEdit::advancePosition (sPosition position) {
+sPosition cTextEdit::advancePosition (sPosition position) {
 
-  if (position.mLineNumber >= getNumLines())
+  if (position.mLineNumber >= mDoc.getNumLines())
     return position;
 
-  uint32_t glyphIndex = getGlyphIndex (position);
+  uint32_t glyphIndex = mDoc.getGlyphIndex (position);
   const cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
   if (glyphIndex + 1 < glyphsLine.getNumGlyphs())
     position.mColumn = getColumn (glyphsLine, glyphIndex + 1);
@@ -1684,14 +1658,14 @@ cTextEdit::sPosition cTextEdit::advancePosition (sPosition position) {
   }
 //}}}
 //{{{
-cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
+sPosition cTextEdit::sanitizePosition (sPosition position) {
 // return position to be within glyphs
 
-  if (position.mLineNumber >= getNumLines()) {
+  if (position.mLineNumber >= mDoc.getNumLines()) {
     // past end, position at end of last line
     //cLog::log (LOGINFO, fmt::format ("sanitizePosition - limiting lineNumber:{} to max:{}",
     //                                 position.mLineNumber, getMaxLineNumber()));
-    return sPosition (getMaxLineNumber(), getNumColumns (getLine (getMaxLineNumber())));
+    return sPosition (mDoc.getMaxLineNumber(), mDoc.getNumColumns (mDoc.getLine (mDoc.getMaxLineNumber())));
     }
 
   // ensure column is in range of position.mLineNumber glyphsLine
@@ -1713,10 +1687,10 @@ cTextEdit::sPosition cTextEdit::sanitizePosition (sPosition position) {
 //}}}
 
 //{{{
-cTextEdit::sPosition cTextEdit::findWordBeginPosition (sPosition position) {
+sPosition cTextEdit::findWordBeginPosition (sPosition position) {
 
   const cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
-  uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
+  uint32_t glyphIndex = mDoc.getGlyphIndex (glyphsLine, position.mColumn);
   if (glyphIndex >= glyphsLine.getNumGlyphs()) // already at lineEnd
     return position;
 
@@ -1742,10 +1716,10 @@ cTextEdit::sPosition cTextEdit::findWordBeginPosition (sPosition position) {
   }
 //}}}
 //{{{
-cTextEdit::sPosition cTextEdit::findWordEndPosition (sPosition position) {
+sPosition cTextEdit::findWordEndPosition (sPosition position) {
 
   const cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
-  uint32_t glyphIndex = getGlyphIndex (glyphsLine, position.mColumn);
+  uint32_t glyphIndex = mDoc.getGlyphIndex (glyphsLine, position.mColumn);
   if (glyphIndex >= glyphsLine.getNumGlyphs()) // already at lineEnd
     return position;
 
@@ -1768,15 +1742,15 @@ cTextEdit::sPosition cTextEdit::findWordEndPosition (sPosition position) {
 //}}}
 //{{{  insert, delete
 //{{{
-cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
+sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
 // insert helper - !!! needs utf8 handling !!!!
 
   if (text.empty())
     return position;
 
-  bool onFoldBegin = getLine (position.mLineNumber).mFoldBegin;
+  bool onFoldBegin = mDoc.getLine (position.mLineNumber).mFoldBegin;
 
-  uint32_t glyphIndex = getGlyphIndex (getGlyphsLine (position.mLineNumber), position.mColumn);
+  uint32_t glyphIndex = mDoc.getGlyphIndex (getGlyphsLine (position.mLineNumber), position.mColumn);
   for (auto it = text.begin(); it < text.end(); ++it) {
     char ch = *it;
     if (ch == '\r') // skip
@@ -1788,7 +1762,7 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
         return position;
 
       // insert new line
-      cLine& newLine = *mDocument.mLines.insert (mDocument.mLines.begin() + position.mLineNumber+1, cLine());
+      cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber+1, cLine());
 
       if (glyphIndex < glyphsLine.getNumGlyphs()) {
         // not end of line, splitting line, copy rest of line to newLine
@@ -1815,7 +1789,7 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
       position.mColumn++;
       }
 
-    mDocument.mEdited = true;
+    mDoc.mEdited = true;
     }
 
   return position;
@@ -1825,17 +1799,17 @@ cTextEdit::sPosition cTextEdit::insertTextAt (sPosition position, const string& 
 //{{{
 void cTextEdit::deleteLine (uint32_t lineNumber) {
 
-  mDocument.mLines.erase (mDocument.mLines.begin() + lineNumber);
+  mDoc.mLines.erase (mDoc.mLines.begin() + lineNumber);
   mEdit.mCheckComments = true;
-  mDocument.mEdited = true;
+  mDoc.mEdited = true;
   }
 //}}}
 //{{{
 void cTextEdit::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
 
-  mDocument.mLines.erase (mDocument.mLines.begin() + beginLineNumber, mDocument.mLines.begin() + endLineNumber);
+  mDoc.mLines.erase (mDoc.mLines.begin() + beginLineNumber, mDoc.mLines.begin() + endLineNumber);
   mEdit.mCheckComments = true;
-  mDocument.mEdited = true;
+  mDoc.mEdited = true;
   }
 //}}}
 //{{{
@@ -1845,13 +1819,13 @@ void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosit
   if (endPosition == beginPosition)
     return;
 
-  uint32_t beginGlyphIndex = getGlyphIndex (beginPosition);
-  uint32_t endGlyphIndex = getGlyphIndex (endPosition);
+  uint32_t beginGlyphIndex = mDoc.getGlyphIndex (beginPosition);
+  uint32_t endGlyphIndex = mDoc.getGlyphIndex (endPosition);
 
   if (beginPosition.mLineNumber == endPosition.mLineNumber) {
     // delete in same line
-    cLine& line = getLine (beginPosition.mLineNumber);
-    uint32_t maxColumn = getNumColumns (line);
+    cLine& line = mDoc.getLine (beginPosition.mLineNumber);
+    uint32_t maxColumn = mDoc.getNumColumns (line);
     if (endPosition.mColumn >= maxColumn)
       line.eraseToEnd (beginGlyphIndex);
     else
@@ -1863,11 +1837,11 @@ void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosit
   else {
     // delete over multiple lines
     // - delete backend of beginLine
-    cLine& beginLine = getLine (beginPosition.mLineNumber);
+    cLine& beginLine = mDoc.getLine (beginPosition.mLineNumber);
     beginLine.eraseToEnd (beginGlyphIndex);
 
     // delete frontend of endLine
-    cLine& endLine = getLine (endPosition.mLineNumber);
+    cLine& endLine = mDoc.getLine (endPosition.mLineNumber);
     endLine.erase (0, endGlyphIndex);
 
     // insert remainder of endLine after end of remainder of beginLine
@@ -1882,7 +1856,7 @@ void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosit
     parseLine (endLine);
     }
 
-  mDocument.mEdited = true;
+  mDoc.mEdited = true;
   }
 //}}}
 
@@ -2006,7 +1980,7 @@ void cTextEdit::parseLine (cLine& line) {
   size_t foldBeginPos = glyphString.find (mOptions.mLanguage.mFoldBeginToken, indentPos);
   line.mFoldBegin = (foldBeginPos != string::npos) && (foldBeginPos == indentPos);
   if (line.mFoldBegin)
-      mDocument.mHasFolds = true;
+      mDoc.mHasFolds = true;
   //}}}
   //{{{  find foldEnd token
   size_t foldEndPos = glyphString.find (mOptions.mLanguage.mFoldEndToken, indentPos);
@@ -2029,8 +2003,8 @@ void cTextEdit::parseComments() {
 
     uint32_t glyphIndex = 0;
     uint32_t lineNumber = 0;
-    while (lineNumber < getNumLines()) {
-      cLine& line = getLine (lineNumber);
+    while (lineNumber < mDoc.getNumLines()) {
+      cLine& line = mDoc.getLine (lineNumber);
       uint32_t numGlyphs = line.getNumGlyphs();
       if (numGlyphs > 0) {
         // parse ch
@@ -2101,7 +2075,7 @@ void cTextEdit::parseComments() {
 void cTextEdit::openFold (uint32_t lineNumber) {
 
   if (isFolded()) {
-    cLine& line = getLine (lineNumber);
+    cLine& line = mDoc.getLine (lineNumber);
     if (line.mFoldBegin)
       line.mFoldOpen = true;
 
@@ -2114,7 +2088,7 @@ void cTextEdit::openFold (uint32_t lineNumber) {
 void cTextEdit::openFoldOnly (uint32_t lineNumber) {
 
   if (isFolded()) {
-    cLine& line = getLine (lineNumber);
+    cLine& line = mDoc.getLine (lineNumber);
     if (line.mFoldBegin) {
       line.mFoldOpen = true;
       mEdit.mFoldOnly = true;
@@ -2133,7 +2107,7 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
     // close fold containing lineNumber
     cLog::log (LOGINFO, fmt::format ("closeFold line:{}", lineNumber));
 
-    cLine& line = getLine (lineNumber);
+    cLine& line = mDoc.getLine (lineNumber);
     if (line.mFoldBegin) {
       // position cursor to lineNumber, first glyph column
       line.mFoldOpen = false;
@@ -2145,7 +2119,7 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
       // - skip foldEnd foldBegin pairs
       uint32_t skipFoldPairs = 0;
       while (lineNumber > 0) {
-        line = getLine (--lineNumber);
+        line = mDoc.getLine (--lineNumber);
         if (line.mFoldEnd) {
           skipFoldPairs++;
           cLog::log (LOGINFO, fmt::format ("- skip foldEnd:{} {}", lineNumber,skipFoldPairs));
@@ -2173,10 +2147,10 @@ void cTextEdit::closeFold (uint32_t lineNumber) {
 uint32_t cTextEdit::skipFold (uint32_t lineNumber) {
 // recursively skip fold lines until matching foldEnd
 
-  while (lineNumber < getNumLines())
-    if (getLine (lineNumber).mFoldBegin)
+  while (lineNumber < mDoc.getNumLines())
+    if (mDoc.getLine (lineNumber).mFoldBegin)
       lineNumber = skipFold (lineNumber+1);
-    else if (getLine (lineNumber).mFoldEnd)
+    else if (mDoc.getLine (lineNumber).mFoldEnd)
       return lineNumber+1;
     else
       lineNumber++;
@@ -2195,8 +2169,8 @@ uint32_t cTextEdit::drawFolded() {
 
   //cLog::log (LOGINFO, fmt::format ("drawFolded {}", lineNumber));
 
-  while (lineNumber < getNumLines()) {
-    cLine& line = getLine (lineNumber);
+  while (lineNumber < mDoc.getNumLines()) {
+    cLine& line = mDoc.getLine (lineNumber);
 
     if (line.mFoldBegin) {
       // foldBegin
@@ -2208,7 +2182,7 @@ uint32_t cTextEdit::drawFolded() {
         // draw foldBegin closed fold line, skip rest
         uint32_t glyphsLineNumber = getGlyphsLineNumber (lineNumber);
         if (glyphsLineNumber != lineNumber)
-          getLine (glyphsLineNumber).mFirstGlyph = static_cast<uint8_t>(line.mIndent);
+            mDoc.getLine (glyphsLineNumber).mFirstGlyph = static_cast<uint8_t>(line.mIndent);
         drawLine (lineNumber++, lineIndex++);
         lineNumber = skipFold (lineNumber);
         }
@@ -2390,7 +2364,7 @@ void cTextEdit::mouseDragSelectLine (uint32_t lineNumber, float posY) {
     lineNumber = mFoldLines[lineIndex];
     }
   else // simple add to lineNumber
-    lineNumber = max (0u, min (getMaxLineNumber(), lineNumber + numDragLines));
+    lineNumber = max (0u, min (mDoc.getMaxLineNumber(), lineNumber + numDragLines));
 
   setCursorPosition ({lineNumber, 0});
 
@@ -2415,7 +2389,7 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
     return;
 
   int numDragLines = static_cast<int>((pos.y - (mDrawContext.getLineHeight()/2.f)) / mDrawContext.getLineHeight());
-  uint32_t dragLineNumber = max (0u, min (getMaxLineNumber(), lineNumber + numDragLines));
+  uint32_t dragLineNumber = max (0u, min (mDoc.getMaxLineNumber(), lineNumber + numDragLines));
 
   //cLog::log (LOGINFO, fmt::format ("mouseDragSelectText {} {}", lineNumber, numDragLines));
 
@@ -2423,14 +2397,14 @@ void cTextEdit::mouseDragSelectText (uint32_t lineNumber, ImVec2 pos) {
     // cannot cross fold
     if (lineNumber < dragLineNumber) {
       while (++lineNumber <= dragLineNumber)
-        if (getLine (lineNumber).mFoldBegin || getLine (lineNumber).mFoldEnd) {
+        if (mDoc.getLine (lineNumber).mFoldBegin || mDoc.getLine (lineNumber).mFoldEnd) {
           cLog::log (LOGINFO, fmt::format ("dragSelectText exit 1"));
           return;
           }
       }
     else if (lineNumber > dragLineNumber) {
       while (--lineNumber >= dragLineNumber)
-        if (getLine (lineNumber).mFoldBegin || getLine (lineNumber).mFoldEnd) {
+        if (mDoc.getLine (lineNumber).mFoldBegin || mDoc.getLine (lineNumber).mFoldEnd) {
           cLog::log (LOGINFO, fmt::format ("dragSelectText exit 2"));
           return;
           }
@@ -2531,7 +2505,7 @@ void cTextEdit::drawSelect (ImVec2 pos, uint32_t lineNumber, uint32_t glyphsLine
   ImVec2 posEnd = pos;
   if (lineNumber < mEdit.mCursor.mSelectEndPosition.mLineNumber)
     // to end of line
-    posEnd.x += getWidth ({lineNumber, getNumColumns (getLine (lineNumber))});
+    posEnd.x += getWidth ({lineNumber, mDoc.getNumColumns (mDoc.getLine (lineNumber))});
   else if (mEdit.mCursor.mSelectEndPosition.mColumn)
     // to selectEnd column
     posEnd.x += getWidth ({glyphsLineNumber, mEdit.mCursor.mSelectEndPosition.mColumn});
@@ -2566,8 +2540,8 @@ void cTextEdit::drawCursor (ImVec2 pos, uint32_t lineNumber) {
     float cursorPosX = getWidth (position);
     float cursorWidth = 2.f;
 
-    cLine& line = getLine (lineNumber);
-    uint32_t glyphIndex = getGlyphIndex (position);
+    cLine& line = mDoc.getLine (lineNumber);
+    uint32_t glyphIndex = mDoc.getGlyphIndex (position);
     if (mOptions.mOverWrite && (glyphIndex < line.getNumGlyphs())) {
       // overwrite
       if (line.getChar (glyphIndex) == '\t')
@@ -2607,7 +2581,7 @@ void cTextEdit::drawLine (uint32_t lineNumber, uint32_t lineIndex) {
 
   // lineNumber
   float leftPadWidth = mDrawContext.mLeftPad;
-  cLine& line = getLine (lineNumber);
+  cLine& line = mDoc.getLine (lineNumber);
   if (isDrawLineNumber()) {
     //{{{  draw lineNumber
     curPos.x += leftPadWidth;
@@ -2800,12 +2774,12 @@ void cTextEdit::drawLines() {
 
   // clipper begin
   ImGuiListClipper clipper;
-  clipper.Begin (getNumLines(), mDrawContext.getLineHeight());
+  clipper.Begin (mDoc.getNumLines(), mDrawContext.getLineHeight());
   clipper.Step();
 
   // clipper iterate
   for (int lineNumber = clipper.DisplayStart; lineNumber < clipper.DisplayEnd; lineNumber++) {
-    getLine (lineNumber).mFirstGlyph = 0;
+    mDoc.getLine (lineNumber).mFirstGlyph = 0;
     drawLine (lineNumber, 0);
     }
 

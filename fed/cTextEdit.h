@@ -17,6 +17,56 @@ class cApp;
 
 // only used by cTextEdit
 //{{{
+struct sPosition {
+  sPosition() : mLineNumber(0), mColumn(0) {}
+  sPosition (uint32_t lineNumber, uint32_t column) : mLineNumber(lineNumber), mColumn(column) {}
+
+  //{{{
+  bool operator == (const sPosition& o) const {
+    return mLineNumber == o.mLineNumber && mColumn == o.mColumn;
+    }
+  //}}}
+  //{{{
+  bool operator != (const sPosition& o) const {
+    return mLineNumber != o.mLineNumber || mColumn != o.mColumn; }
+  //}}}
+  //{{{
+  bool operator < (const sPosition& o) const {
+
+    if (mLineNumber != o.mLineNumber)
+      return mLineNumber < o.mLineNumber;
+
+    return mColumn < o.mColumn;
+    }
+  //}}}
+  //{{{
+  bool operator > (const sPosition& o) const {
+    if (mLineNumber != o.mLineNumber)
+      return mLineNumber > o.mLineNumber;
+    return mColumn > o.mColumn;
+    }
+  //}}}
+  //{{{
+  bool operator <= (const sPosition& o) const {
+    if (mLineNumber != o.mLineNumber)
+      return mLineNumber < o.mLineNumber;
+
+    return mColumn <= o.mColumn;
+    }
+  //}}}
+  //{{{
+  bool operator >= (const sPosition& o) const {
+    if (mLineNumber != o.mLineNumber)
+      return mLineNumber > o.mLineNumber;
+    return mColumn >= o.mColumn;
+    }
+  //}}}
+
+  uint32_t mLineNumber;
+  uint32_t mColumn;
+  };
+//}}}
+//{{{
 class cGlyph {
 public:
   //{{{
@@ -332,6 +382,42 @@ private:
 //{{{
 class cDocument {
 public:
+  uint32_t getNumLines() const { return static_cast<uint32_t>(mLines.size()); }
+  uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
+
+  cLine& getLine (uint32_t lineNumber) { return mLines[lineNumber]; }
+  //{{{
+  uint32_t getGlyphIndex (const cLine& line, uint32_t toColumn) {
+  // return glyphIndex from line,column, inserting tabs
+
+    uint32_t glyphIndex = 0;
+
+    uint32_t column = 0;
+    while ((glyphIndex < line.getNumGlyphs()) && (column < toColumn)) {
+      if (line.getChar (glyphIndex) == '\t')
+        column = getTabColumn (column);
+      else
+        column++;
+      glyphIndex++;
+      }
+
+    return glyphIndex;
+    }
+  //}}}
+  //{{{
+  uint32_t getGlyphIndex (const sPosition& position) {
+    return getGlyphIndex (getLine (position.mLineNumber), position.mColumn);
+    }
+  //}}}
+
+  //{{{
+  uint32_t getTabColumn (uint32_t column) {
+  // return column of after tab at column
+    return ((column / mTabSize) * mTabSize) + mTabSize;
+    }
+  //}}}
+  uint32_t getNumColumns (const cLine& line);
+
   void load (const std::string& filename);
   void save();
 
@@ -361,56 +447,6 @@ private:
 class cTextEdit {
 public:
   enum class eSelect { eNormal, eWord, eLine };
-  //{{{
-  struct sPosition {
-    sPosition() : mLineNumber(0), mColumn(0) {}
-    sPosition (uint32_t lineNumber, uint32_t column) : mLineNumber(lineNumber), mColumn(column) {}
-
-    //{{{
-    bool operator == (const sPosition& o) const {
-      return mLineNumber == o.mLineNumber && mColumn == o.mColumn;
-      }
-    //}}}
-    //{{{
-    bool operator != (const sPosition& o) const {
-      return mLineNumber != o.mLineNumber || mColumn != o.mColumn; }
-    //}}}
-    //{{{
-    bool operator < (const sPosition& o) const {
-
-      if (mLineNumber != o.mLineNumber)
-        return mLineNumber < o.mLineNumber;
-
-      return mColumn < o.mColumn;
-      }
-    //}}}
-    //{{{
-    bool operator > (const sPosition& o) const {
-      if (mLineNumber != o.mLineNumber)
-        return mLineNumber > o.mLineNumber;
-      return mColumn > o.mColumn;
-      }
-    //}}}
-    //{{{
-    bool operator <= (const sPosition& o) const {
-      if (mLineNumber != o.mLineNumber)
-        return mLineNumber < o.mLineNumber;
-
-      return mColumn <= o.mColumn;
-      }
-    //}}}
-    //{{{
-    bool operator >= (const sPosition& o) const {
-      if (mLineNumber != o.mLineNumber)
-        return mLineNumber > o.mLineNumber;
-      return mColumn >= o.mColumn;
-      }
-    //}}}
-
-    uint32_t mLineNumber;
-    uint32_t mColumn;
-    };
-  //}}}
   //{{{
   class cLanguage {
   public:
@@ -452,13 +488,13 @@ public:
   ~cTextEdit() = default;
 
   //{{{  gets
-  bool isEdited() const { return mDocument.mEdited; }
+  bool isEdited() const { return mDoc.mEdited; }
   bool isReadOnly() const { return mOptions.mReadOnly; }
   bool isShowFolds() const { return mOptions.mShowFolded; }
 
   // has
-  bool hasCR() const { return mDocument.mHasCR; }
-  bool hasTabs() const { return mDocument.mHasTabs; }
+  bool hasCR() const { return mDoc.mHasCR; }
+  bool hasTabs() const { return mDoc.mHasTabs; }
   bool hasSelect() const { return mEdit.mCursor.mSelectEndPosition > mEdit.mCursor.mSelectBeginPosition; }
   bool hasUndo() const { return !mOptions.mReadOnly && mEdit.hasUndo(); }
   bool hasRedo() const { return !mOptions.mReadOnly && mEdit.hasRedo(); }
@@ -468,14 +504,14 @@ public:
   std::string getTextString();
   std::vector<std::string> getTextStrings() const;
 
-  uint32_t getTabSize() const { return mDocument.mTabSize; }
+  uint32_t getTabSize() const { return mDoc.mTabSize; }
   sPosition getCursorPosition() { return sanitizePosition (mEdit.mCursor.mPosition); }
 
   const cLanguage& getLanguage() const { return mOptions.mLanguage; }
   //}}}
   //{{{  sets
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
-  void setTabSize (uint32_t tabSize) { mDocument.mTabSize = tabSize; }
+  void setTabSize (uint32_t tabSize) { mDoc.mTabSize = tabSize; }
 
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverWrite() { mOptions.mOverWrite = !mOptions.mOverWrite; }
@@ -498,7 +534,7 @@ public:
   void movePageUp()   { moveUp (getNumPageLines() - 4); }
   void movePageDown() { moveDown (getNumPageLines() - 4); }
   void moveHome() { setCursorPosition ({0,0}); }
-  void moveEnd() { setCursorPosition ({getMaxLineNumber(), 0}); }
+  void moveEnd() { setCursorPosition ({mDoc.getMaxLineNumber(), 0}); }
 
   // select
   void selectAll();
@@ -786,44 +822,30 @@ private:
   float getGlyphWidth (const cLine& line, uint32_t glyphIndex);
 
   // lines
-  uint32_t getNumLines() const { return static_cast<uint32_t>(mDocument.mLines.size()); }
   uint32_t getNumFoldLines() const { return static_cast<uint32_t>(mFoldLines.size()); }
-  uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
   uint32_t getMaxFoldLineIndex() const { return getNumFoldLines() - 1; }
   uint32_t getNumPageLines() const;
 
   // line
-  uint32_t getNumColumns (const cLine& line);
   uint32_t getLineNumberFromIndex (uint32_t lineIndex) const;
   uint32_t getLineIndexFromNumber (uint32_t lineNumber) const;
-
-  cLine& getLine (uint32_t lineNumber) { return mDocument.mLines[lineNumber]; }
 
   //{{{
   uint32_t getGlyphsLineNumber (uint32_t lineNumber) const {
   // return glyphs lineNumber for lineNumber - folded foldBegin closedFold seeThru into next line
 
-    const cLine& line = mDocument.mLines[lineNumber];
+    const cLine& line = mDoc.mLines[lineNumber];
     if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs()))
       return lineNumber + 1;
     else
       return lineNumber;
     }
   //}}}
-  cLine& getGlyphsLine (uint32_t lineNumber) { return getLine (getGlyphsLineNumber (lineNumber)); }
+  cLine& getGlyphsLine (uint32_t lineNumber) { return mDoc.getLine (getGlyphsLineNumber (lineNumber)); }
 
   sPosition getNextLinePosition (const sPosition& position);
 
-  // glyphIndex
-  uint32_t getGlyphIndex (const cLine& line, uint32_t column);
-  //{{{
-  uint32_t getGlyphIndex (const sPosition& position) {
-    return getGlyphIndex (getLine (position.mLineNumber), position.mColumn);
-    }
-  //}}}
-
   // column - glyphIndex + tabs
-  uint32_t getTabColumn (uint32_t column);
   uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex);
 
   float getTabEndPosX (float columnX);
@@ -888,7 +910,7 @@ private:
   //{{{  vars
   bool mOpen = true;  // set false when DrawWindow() closed
 
-  cDocument mDocument;
+  cDocument mDoc;
   std::vector <uint32_t> mFoldLines;
 
   cEdit mEdit;
