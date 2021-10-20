@@ -526,15 +526,13 @@ uint32_t cLine::trimTrailingSpace() {
   }
 //}}}
 //{{{
-bool cLine::parse (const cLanguage& language) {
+void cLine::parse (const cLanguage& language) {
 // parse for fold stuff, tokenize and look for keyWords, Known
-// return true if fold
-  bool result = false;
 
   //cLog::log (LOGINFO, fmt::format ("parseLine {}", lineNumber));
   parseReset();
   if (empty())
-    return false;
+    return;
 
   // create glyphs string
   string glyphString = getString();
@@ -577,8 +575,6 @@ bool cLine::parse (const cLanguage& language) {
   //{{{  find foldBegin token
   size_t foldBeginPos = glyphString.find (language.mFoldBeginToken, indentPos);
   mFoldBegin = (foldBeginPos != string::npos) && (foldBeginPos == indentPos);
-  if (mFoldBegin)
-    result = true;
   //}}}
   //{{{  find foldEnd token
   size_t foldEndPos = glyphString.find (language.mFoldEndToken, indentPos);
@@ -586,8 +582,6 @@ bool cLine::parse (const cLanguage& language) {
   //}}}
 
   parseTokens (language, glyphString);
-
-  return result;
   }
 //}}}
 //{{{
@@ -697,7 +691,7 @@ vector<string> cDocument::getTextStrings() const {
 
 //{{{
 uint32_t cDocument::getGlyphIndex (const cLine& line, uint32_t toColumn) {
-// return glyphIndex from line,column, inserting tabs
+// return glyphIndex from line,column, inserting tabs whose width is owned by cDocument
 
   uint32_t glyphIndex = 0;
 
@@ -713,12 +707,6 @@ uint32_t cDocument::getGlyphIndex (const cLine& line, uint32_t toColumn) {
   return glyphIndex;
   }
 //}}}
-//{{{
-uint32_t cDocument::getGlyphIndex (const sPosition& position) {
-  return getGlyphIndex (getLine (position.mLineNumber), position.mColumn);
-  }
-//}}}
-
 //{{{
 uint32_t cDocument::getColumn (const cLine& line, uint32_t toGlyphIndex) {
 // return glyphIndex column using any tabs
@@ -829,10 +817,9 @@ void cDocument::load (const string& filename) {
                                    mHasCR ? "hasCR " : "",
                                    mHasUtf8 ? "hasUtf8 " : "",
                                    utf8chars));
-
+  mParseFlag = true;
   mEdited = false;
   }
-
 //}}}
 //{{{
 void cDocument::save() {
@@ -867,8 +854,15 @@ void cDocument::save() {
 //}}}
 
 //{{{
-void cDocument::parseComments() {
-// simple parse all lines for comments
+void cDocument::parse() {
+// simple parse whole document for comments, folds
+// - assumes lines have already been parsed
+
+  if (!mParseFlag)
+    return;
+
+  mParseFlag = false;
+  mHasFolds = false;
 
   bool inString = false;
   bool inSingleComment = false;
@@ -878,6 +872,8 @@ void cDocument::parseComments() {
   uint32_t lineNumber = 0;
   while (lineNumber < getNumLines()) {
     cLine& line = getLine (lineNumber);
+    mHasFolds |= line.mFoldBegin;
+
     uint32_t numGlyphs = line.getNumGlyphs();
     if (numGlyphs > 0) {
       // parse ch
@@ -938,6 +934,13 @@ void cDocument::parseComments() {
       glyphIndex = 0;
       }
     }
+  }
+//}}}
+//{{{
+void cDocument::edited() {
+
+  mParseFlag = true;
+  mEdited |= true;
   }
 //}}}
 

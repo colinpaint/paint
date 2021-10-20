@@ -276,7 +276,7 @@ void cTextEdit::deleteIt() {
 
       // insert nextLine at end of line
       line.insertLineAtEnd (mDoc.getLine (position.mLineNumber+1));
-      mDoc.mHasFolds |= line.parse (mLanguage);
+      line.parse (mLanguage);
 
       // delete nextLine
       deleteLine (position.mLineNumber + 1);
@@ -289,11 +289,9 @@ void cTextEdit::deleteIt() {
 
       uint32_t glyphIndex = mDoc.getGlyphIndex (position);
       line.erase (glyphIndex);
-      mDoc.mHasFolds |= line.parse (mLanguage);
+      line.parse (mLanguage);
       }
-
-    mDoc.mEdited = true;
-    mEdit.mCheckComments = true;
+    mDoc.edited();
     }
 
   undo.mAfterCursor = mEdit.mCursor;
@@ -336,7 +334,7 @@ void cTextEdit::backspace() {
       // append this line to prevLine
       prevLine.insertLineAtEnd (line);
       deleteLine (mEdit.mCursor.mPosition.mLineNumber);
-      mDoc.mHasFolds |= prevLine.parse (mLanguage);
+      prevLine.parse (mLanguage);
 
       // position to end of prevLine
       setCursorPosition ({position.mLineNumber - 1, mDoc.getNumColumns (prevLine)});
@@ -355,14 +353,12 @@ void cTextEdit::backspace() {
 
       // delete prevGlyph
       glyphsLine.erase (glyphIndex - 1);
-      mDoc.mHasFolds |= glyphsLine.parse (mLanguage);
+      glyphsLine.parse (mLanguage);
 
       // position to prevGlyph
       setCursorPosition ({position.mLineNumber, position.mColumn - 1});
       }
-
-    mDoc.mEdited = true;
-    mEdit.mCheckComments = true;
+    mDoc.edited();
     }
 
   undo.mAfterCursor = mEdit.mCursor;
@@ -419,9 +415,8 @@ void cTextEdit::loadFile (const string& filename) {
   mDoc.load (filename);
 
   for (auto& line : mDoc.mLines)
-    mDoc.mHasFolds |= line.parse (mLanguage);
+    line.parse (mLanguage);
 
-  mEdit.mCheckComments = true;
   mEdit.clearUndo();
   }
 //}}}
@@ -495,7 +490,7 @@ void cTextEdit::enterCharacter (ImWchar ch) {
         mEdit.mCursor.mSelectEndPosition = selectEndPosition;
         mEdit.addUndo (undo);
 
-        mDoc.mEdited = true;
+        mDoc.edited();
         mEdit.mScrollVisible = true;
         }
 
@@ -537,11 +532,11 @@ void cTextEdit::enterCharacter (ImWchar ch) {
 
     // insert indent and rest of old line
     newLine.insertRestOfLineAtEnd (glyphsLine, glyphIndex);
-    mDoc.mHasFolds |= newLine.parse (mLanguage);
+    newLine.parse (mLanguage);
 
     // erase rest of old line
     glyphsLine.erase (glyphIndex, glyphsLine.getNumGlyphs());
-    mDoc.mHasFolds |= glyphsLine.parse (mLanguage);
+    glyphsLine.parse (mLanguage);
 
     // set cursor
     setCursorPosition ({position.mLineNumber+1, mDoc.getColumn (newLine, indentSize)});
@@ -560,15 +555,13 @@ void cTextEdit::enterCharacter (ImWchar ch) {
 
     // insert newChar
     glyphsLine.insert (glyphIndex, cGlyph (ch, eText));
-    mDoc.mHasFolds |= glyphsLine.parse (mLanguage);
+    glyphsLine.parse (mLanguage);
 
     // undo.mAdd = utf8buf.data(); // utf8 handling needed
     undo.mAddText = static_cast<char>(ch);
     setCursorPosition ({position.mLineNumber, mDoc.getColumn (glyphsLine, glyphIndex + 1)});
     }
-
-  mEdit.mCheckComments = true;
-  mDoc.mEdited = true;
+  mDoc.edited();
 
   undo.mAddEndPosition = getCursorPosition();
   undo.mAfterCursor = mEdit.mCursor;
@@ -606,7 +599,7 @@ void cTextEdit::drawContents (cApp& app) {
         toggleShowLineDebug();
       }
   //}}}
-  if (mDoc.mHasFolds) {
+  if (mDoc.getHasFolds()) {
     //{{{  folded button
     ImGui::SameLine();
     if (toggleButton ("folded", isShowFolds()))
@@ -705,7 +698,7 @@ void cTextEdit::drawContents (cApp& app) {
     }
   //}}}
   //{{{  save button
-  if (isEdited()) {
+  if (mDoc.getEdited()) {
     ImGui::SameLine();
     if (ImGui::Button ("save"))
       saveFile();
@@ -724,10 +717,6 @@ void cTextEdit::drawContents (cApp& app) {
   //}}}
   //}}}
 
-  if (mEdit.mCheckComments) {
-    mEdit.mCheckComments = false;
-    mDoc.parseComments();
-    }
 
   // begin childWindow, new font, new colors
   if (isDrawMonoSpaced())
@@ -1217,9 +1206,9 @@ sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
 
         // remove rest of line just copied to newLine
         glyphsLine.eraseToEnd (glyphIndex);
-        mDoc.mHasFolds |= glyphsLine.parse (mLanguage);
+        glyphsLine.parse (mLanguage);
         }
-      mDoc.mHasFolds |= newLine.parse (mLanguage);
+      newLine.parse (mLanguage);
       glyphIndex = 0;
 
       // !!! should convert glyph back to column in case of tabs !!!
@@ -1230,16 +1219,14 @@ sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
     else {
       // insert char within line
       glyphsLine.insert (glyphIndex++, cGlyph (ch, eText));
-      mDoc.mHasFolds |= glyphsLine.parse (mLanguage);
+      glyphsLine.parse (mLanguage);
 
       // !!! should convert glyph back to column in case of tabs !!!
       position.mColumn++;
       }
 
-    mEdit.mCheckComments = true;
-    mDoc.mEdited = true;
+    mDoc.edited();
     }
-
   return position;
   }
 //}}}
@@ -1248,16 +1235,14 @@ sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
 void cTextEdit::deleteLine (uint32_t lineNumber) {
 
   mDoc.mLines.erase (mDoc.mLines.begin() + lineNumber);
-  mEdit.mCheckComments = true;
-  mDoc.mEdited = true;
+  mDoc.edited();
   }
 //}}}
 //{{{
 void cTextEdit::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
 
   mDoc.mLines.erase (mDoc.mLines.begin() + beginLineNumber, mDoc.mLines.begin() + endLineNumber);
-  mEdit.mCheckComments = true;
-  mDoc.mEdited = true;
+  mDoc.edited();
   }
 //}}}
 //{{{
@@ -1279,7 +1264,7 @@ void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosit
     else
       line.erase (beginGlyphIndex, endGlyphIndex);
 
-    mDoc.mHasFolds |= line.parse (mLanguage);
+    line.parse (mLanguage);
     }
 
   else {
@@ -1300,12 +1285,11 @@ void cTextEdit::deletePositionRange (sPosition beginPosition, sPosition endPosit
     if (beginPosition.mLineNumber < endPosition.mLineNumber)
       deleteLineRange (beginPosition.mLineNumber + 1, endPosition.mLineNumber + 1);
 
-    mDoc.mHasFolds |= beginLine.parse (mLanguage);
-    mDoc.mHasFolds |= endLine.parse (mLanguage);
+    beginLine.parse (mLanguage);
+    endLine.parse (mLanguage);
     }
 
-  mEdit.mCheckComments = true;
-  mDoc.mEdited = true;
+  mDoc.edited();
   }
 //}}}
 

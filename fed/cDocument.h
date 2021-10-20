@@ -1,4 +1,4 @@
-// cDocument.h
+// cDocument.h - loaded text file, parsed for tokens, comments and folds
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -11,6 +11,7 @@
 #include "../imgui/imgui.h"
 //}}}
 
+// tricksy use of color to mark token type
 //{{{  palette colors
 constexpr uint8_t eText =              0;
 constexpr uint8_t eBackground =        1;
@@ -227,7 +228,7 @@ public:
   //}}}
 
   uint32_t trimTrailingSpace();
-  bool parse (const cLanguage& language);
+  void parse (const cLanguage& language);
   void parseTokens (const cLanguage& language, const std::string& textString);
 
   // ops
@@ -351,26 +352,28 @@ struct sPosition {
 class cDocument {
 public:
   // gets
+  bool getEdited() const { return mEdited; }
+  bool getHasFolds() const { return mHasFolds; }
+
   uint32_t getNumLines() const { return static_cast<uint32_t>(mLines.size()); }
   uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
 
   std::string getText (sPosition beginPosition, sPosition endPosition);
-  //{{{
-  std::string getTextString() {
-    return getText ({0,0}, { getNumLines(),0});
-    }
-  //}}}
+  std::string getText() { return getText ({0,0}, { getNumLines(),0}); }
+
   std::vector<std::string> getTextStrings() const;
 
   cLine& getLine (uint32_t lineNumber) { return mLines[lineNumber]; }
   uint32_t getNumColumns (const cLine& line);
 
   uint32_t getGlyphIndex (const cLine& line, uint32_t toColumn);
-  uint32_t getGlyphIndex (const sPosition& position);
+  uint32_t getGlyphIndex (const sPosition& position) { return getGlyphIndex (getLine (position.mLineNumber), position.mColumn); }
+
   uint32_t getColumn (const cLine& line, uint32_t toGlyphIndex);
   uint32_t getTabColumn (uint32_t column);
 
-  void parseComments();
+  void parse();
+  void edited();
 
   // actions
   void load (const std::string& filename);
@@ -383,17 +386,18 @@ public:
   std::string mFileExtension;
   uint32_t mVersion = 1;
 
-  std::vector <cLine> mLines;
+  std::vector<cLine> mLines;
 
-  bool mHasFolds = false;
   bool mHasCR = false;
   bool mHasUtf8 = false;
-
   bool mHasTabs = false;
   uint32_t mTabSize = 4;
 
-  bool mEdited = false;
-
 private:
   uint32_t trimTrailingSpace();
+
+  // temporary state
+  bool mHasFolds = false;
+  bool mParseFlag = false;
+  bool mEdited = false;
   };

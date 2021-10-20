@@ -24,7 +24,6 @@ public:
 
   enum class eSelect { eNormal, eWord, eLine };
   //{{{  gets
-  bool isEdited() const { return mDoc.mEdited; }
   bool isReadOnly() const { return mOptions.mReadOnly; }
   bool isShowFolds() const { return mOptions.mShowFolded; }
 
@@ -228,7 +227,7 @@ private:
     uint32_t mFoldOnlyBeginLineNumber = 0;
 
     // delayed action flags
-    bool mCheckComments = true;
+    bool mParseDocument = true;
     bool mScrollVisible = false;
 
   private:
