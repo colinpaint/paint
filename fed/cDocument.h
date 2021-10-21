@@ -57,7 +57,6 @@ public:
 
   // vars
   std::string mName;
-  bool mAutoIndent = true;
 
   // comment tokens
   std::string mCommentSingle;

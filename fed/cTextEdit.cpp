@@ -359,75 +359,14 @@ void cTextEdit::enterCharacter (ImWchar ch) {
   undo.mBeforeCursor = mEdit.mCursor;
 
   if (hasSelect()) {
-    if ((ch == '\t') &&
-        (mEdit.mCursor.mSelectBeginPosition.mLineNumber != mEdit.mCursor.mSelectEndPosition.mLineNumber)) {
-      //{{{  tab select lines
-      sPosition selectBeginPosition = mEdit.mCursor.mSelectBeginPosition;
-      sPosition selectEndPosition = mEdit.mCursor.mSelectEndPosition;
-      sPosition originalEndPosition = selectEndPosition;
+    //{{{  delete selected range
+    undo.mDeleteText = getSelectText();
+    undo.mDeleteBeginPosition = mEdit.mCursor.mSelectBeginPosition;
+    undo.mDeleteEndPosition = mEdit.mCursor.mSelectEndPosition;
 
-      if (selectBeginPosition > selectEndPosition)
-        swap (selectBeginPosition, selectEndPosition);
-
-      selectBeginPosition.mColumn = 0;
-      if ((selectEndPosition.mColumn == 0) && (selectEndPosition.mLineNumber > 0))
-        --selectEndPosition.mLineNumber;
-      if (selectEndPosition.mLineNumber >= mDoc.getNumLines())
-        selectEndPosition.mLineNumber = mDoc.getMaxLineNumber();
-      selectEndPosition.mColumn = mDoc.getNumColumns (mDoc.getLine (selectEndPosition.mLineNumber));
-
-      undo.mDeleteBeginPosition = selectBeginPosition;
-      undo.mDeleteEndPosition = selectEndPosition;
-      undo.mDeleteText = mDoc.getText (selectBeginPosition, selectEndPosition);
-
-      bool modified = false;
-      for (uint32_t lineNumber = selectBeginPosition.mLineNumber;
-           lineNumber <= selectEndPosition.mLineNumber; lineNumber++) {
-        mDoc.getLine (lineNumber).insert (0, cGlyph ('\t', eTab));
-        modified = true;
-        }
-
-      if (modified) {
-        //  not sure what this does yet
-        cLine& selectBeginLine = mDoc.getLine (selectBeginPosition.mLineNumber);
-        selectBeginPosition = { selectBeginPosition.mLineNumber, mDoc.getColumn (selectBeginLine, 0)};
-        sPosition rangeEnd;
-        if (originalEndPosition.mColumn != 0) {
-          selectEndPosition = {selectEndPosition.mLineNumber, mDoc.getNumColumns (mDoc.getLine (selectEndPosition.mLineNumber))};
-          rangeEnd = selectEndPosition;
-          undo.mAddText = mDoc.getText (selectBeginPosition, selectEndPosition);
-          }
-        else {
-          selectEndPosition = {originalEndPosition.mLineNumber, 0};
-          rangeEnd = {selectEndPosition.mLineNumber - 1, mDoc.getNumColumns (mDoc.getLine (selectEndPosition.mLineNumber - 1))};
-          undo.mAddText = mDoc.getText (selectBeginPosition, rangeEnd);
-          }
-
-        undo.mAddBeginPosition = selectBeginPosition;
-        undo.mAddEndPosition = rangeEnd;
-        undo.mAfterCursor = mEdit.mCursor;
-
-        mEdit.mCursor.mSelectBeginPosition = selectBeginPosition;
-        mEdit.mCursor.mSelectEndPosition = selectEndPosition;
-        mEdit.addUndo (undo);
-
-        mEdit.mScrollVisible = true;
-        }
-      mDoc.edited();
-
-      return;
-      }
-      //}}}
-    else {
-      //{{{  delete select lines
-      undo.mDeleteText = getSelectText();
-      undo.mDeleteBeginPosition = mEdit.mCursor.mSelectBeginPosition;
-      undo.mDeleteEndPosition = mEdit.mCursor.mSelectEndPosition;
-
-      deleteSelect();
-      }
-      //}}}
+    deleteSelect();
     }
+    //}}}
 
   sPosition position = getCursorPosition();
   undo.mAddBeginPosition = position;
@@ -437,16 +376,15 @@ void cTextEdit::enterCharacter (ImWchar ch) {
 
   if (ch == '\n') {
     // newLine
-    // no newLine in folded foldBegin - !!!! could allow with no cursor move, still odd !!!
-    if (isFolded() && mDoc.getLine (position.mLineNumber).mFoldBegin) 
+    if (isFolded() && mDoc.getLine (position.mLineNumber).mFoldBegin)
+      // no newLine in folded foldBegin - !!!! could allow with no cursor move, still odd !!!
       return;
 
     // insert newLine with autoIndent at glyphIndex of glyphsLine
     cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber + 1, cLine());
     uint32_t indent = glyphsLine.mIndent;
-    if (getLanguage().mAutoIndent)
-      for (uint32_t i = 0; i < indent; i++)
-        newLine.pushBack (cGlyph (' ', eText));
+    for (uint32_t i = 0; i < indent; i++)
+      newLine.pushBack (cGlyph (' ', eText));
     mDoc.insertLine (glyphsLine, newLine, glyphIndex);
 
     // set cursor to newLine, start of indent
