@@ -331,7 +331,7 @@ private:
   uint32_t getGlyphsLineNumber (uint32_t lineNumber) const {
   // return glyphs lineNumber for lineNumber - folded foldBegin closedFold seeThru into next line
 
-    const cLine& line = mDoc.mLines[lineNumber];
+    const cLine& line = mDoc.getLine (lineNumber);
     if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs()))
       return lineNumber + 1;
     else

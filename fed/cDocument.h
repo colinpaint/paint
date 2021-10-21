@@ -336,6 +336,7 @@ class cDocument {
 public:
   cDocument();
   virtual ~cDocument() = default;
+
   //{{{  gets
   cLanguage& getLanguage() { return mLanguage; }
 
@@ -362,8 +363,9 @@ public:
   uint32_t getTabColumn (uint32_t column);
   //}}}
 
-  void insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch);
+  void addEmptyLine();
   void appendLineToPrev (uint32_t lineNumber);
+  void insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch);
   void breakLine (cLine& line, uint32_t glyphIndex, uint32_t newLineNumber, uint32_t indent);
   void joinLine (cLine& joinToLine, uint32_t joinFromLineNumber);
 
@@ -373,19 +375,17 @@ public:
   void deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber);
   void deletePositionRange (const sPosition& beginPosition, const sPosition& endPosition);
 
-  // actions
-  void load (const std::string& filename);
-  void save();
-
-  // changes
   void parse (cLine& line) { line.parse (mLanguage); };
   void parseAll();
   void edited();
 
-  // vars
-  std::vector<cLine> mLines;
+  void load (const std::string& filename);
+  void save();
+
 private:
   uint32_t trimTrailingSpace();
+  //{{{  vars
+  std::vector<cLine> mLines;
 
   std::string mFilePath;
   std::string mParentPath;
@@ -405,4 +405,5 @@ private:
   bool mEdited = false;
 
   cLanguage mLanguage;
+  //}}}
   };

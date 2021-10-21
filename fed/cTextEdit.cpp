@@ -25,7 +25,7 @@ using namespace chrono;
 //{{{
 cTextEdit::cTextEdit (cDocument& document) : mDoc(document) {
 
-  mDoc.mLines.push_back (cLine());
+  mDoc.addEmptyLine();
 
   // push any clipboardText to pasteStack
   const char* clipText = ImGui::GetClipboardText();

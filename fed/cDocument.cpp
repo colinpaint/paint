@@ -784,11 +784,8 @@ uint32_t cDocument::getNumColumns (const cLine& line) {
 //}}}
 
 //{{{
-void cDocument::insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch) {
-
-  line.insert (glyphIndex, cGlyph (ch, eText));
-  parse (line);
-  edited();
+void cDocument::addEmptyLine() {
+  mLines.push_back (cLine());
   }
 //}}}
 //{{{
@@ -802,6 +799,14 @@ void cDocument::appendLineToPrev (uint32_t lineNumber) {
   mLines.erase (mLines.begin() + lineNumber);
 
   parse (prevLine);
+  }
+//}}}
+//{{{
+void cDocument::insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch) {
+
+  line.insert (glyphIndex, cGlyph (ch, eText));
+  parse (line);
+  edited();
   }
 //}}}
 //{{{
@@ -910,7 +915,96 @@ void cDocument::deletePositionRange (const sPosition& beginPosition, const sPosi
   }
 //}}}
 
-// - actions
+//{{{
+void cDocument::parseAll() {
+// simple parse whole document for comments, folds
+// - assumes lines have already been parsed
+
+  if (!mParseFlag)
+    return;
+  mParseFlag = false;
+
+  mHasFolds = false;
+  bool inString = false;
+  bool inSingleComment = false;
+  bool inBeginEndComment = false;
+
+  uint32_t glyphIndex = 0;
+  uint32_t lineNumber = 0;
+  while (lineNumber < getNumLines()) {
+    cLine& line = getLine (lineNumber);
+    mHasFolds |= line.mFoldBegin;
+
+    uint32_t numGlyphs = line.getNumGlyphs();
+    if (numGlyphs > 0) {
+      // parse ch
+      uint8_t ch = line.getChar (glyphIndex);
+      if (ch == '\"') {
+        //{{{  start of string
+        inString = true;
+        if (inSingleComment || inBeginEndComment)
+          line.setColor (glyphIndex, eComment);
+        }
+        //}}}
+      else if (inString) {
+        //{{{  in string
+        if (inSingleComment || inBeginEndComment)
+          line.setColor (glyphIndex, eComment);
+
+        if (ch == '\"') // end of string
+          inString = false;
+
+        else if (ch == '\\') {
+          // \ escapeChar in " " quotes, skip nextChar if any
+          if (glyphIndex+1 < numGlyphs) {
+            glyphIndex++;
+            if (inSingleComment || inBeginEndComment)
+              line.setColor (glyphIndex, eComment);
+            }
+          }
+        }
+        //}}}
+      else {
+        // comment begin?
+        if (line.getCommentSingle (glyphIndex))
+          inSingleComment = true;
+        else if (line.getCommentBegin (glyphIndex))
+          inBeginEndComment = true;
+
+        // in comment
+        if (inSingleComment || inBeginEndComment)
+          line.setColor (glyphIndex, eComment);
+
+        // comment end ?
+        if (line.getCommentEnd (glyphIndex))
+          inBeginEndComment = false;
+        }
+      glyphIndex++;
+      }
+
+    if (glyphIndex >= numGlyphs) {
+      // end of line, check for trailing concatenate '\' char
+      if ((numGlyphs == 0) || (line.getChar (numGlyphs-1) != '\\')) {
+        // no trailing concatenate, reset line flags
+        inString = false;
+        inSingleComment = false;
+        }
+
+      // next line
+      lineNumber++;
+      glyphIndex = 0;
+      }
+    }
+  }
+//}}}
+//{{{
+void cDocument::edited() {
+
+  mParseFlag = true;
+  mEdited |= true;
+  }
+//}}}
+
 //{{{
 void cDocument::load (const string& filename) {
 
@@ -1017,95 +1111,5 @@ void cDocument::save() {
 
   // done
   cLog::log (LOGINFO,fmt::format ("{} saved", saveFilePath.string()));
-  }
-//}}}
-
-//{{{
-void cDocument::parseAll() {
-// simple parse whole document for comments, folds
-// - assumes lines have already been parsed
-
-  if (!mParseFlag)
-    return;
-  mParseFlag = false;
-
-  mHasFolds = false;
-  bool inString = false;
-  bool inSingleComment = false;
-  bool inBeginEndComment = false;
-
-  uint32_t glyphIndex = 0;
-  uint32_t lineNumber = 0;
-  while (lineNumber < getNumLines()) {
-    cLine& line = getLine (lineNumber);
-    mHasFolds |= line.mFoldBegin;
-
-    uint32_t numGlyphs = line.getNumGlyphs();
-    if (numGlyphs > 0) {
-      // parse ch
-      uint8_t ch = line.getChar (glyphIndex);
-      if (ch == '\"') {
-        //{{{  start of string
-        inString = true;
-        if (inSingleComment || inBeginEndComment)
-          line.setColor (glyphIndex, eComment);
-        }
-        //}}}
-      else if (inString) {
-        //{{{  in string
-        if (inSingleComment || inBeginEndComment)
-          line.setColor (glyphIndex, eComment);
-
-        if (ch == '\"') // end of string
-          inString = false;
-
-        else if (ch == '\\') {
-          // \ escapeChar in " " quotes, skip nextChar if any
-          if (glyphIndex+1 < numGlyphs) {
-            glyphIndex++;
-            if (inSingleComment || inBeginEndComment)
-              line.setColor (glyphIndex, eComment);
-            }
-          }
-        }
-        //}}}
-      else {
-        // comment begin?
-        if (line.getCommentSingle (glyphIndex))
-          inSingleComment = true;
-        else if (line.getCommentBegin (glyphIndex))
-          inBeginEndComment = true;
-
-        // in comment
-        if (inSingleComment || inBeginEndComment)
-          line.setColor (glyphIndex, eComment);
-
-        // comment end ?
-        if (line.getCommentEnd (glyphIndex))
-          inBeginEndComment = false;
-        }
-      glyphIndex++;
-      }
-
-    if (glyphIndex >= numGlyphs) {
-      // end of line, check for trailing concatenate '\' char
-      if ((numGlyphs == 0) || (line.getChar (numGlyphs-1) != '\\')) {
-        // no trailing concatenate, reset line flags
-        inString = false;
-        inSingleComment = false;
-        }
-
-      // next line
-      lineNumber++;
-      glyphIndex = 0;
-      }
-    }
-  }
-//}}}
-//{{{
-void cDocument::edited() {
-
-  mParseFlag = true;
-  mEdited |= true;
   }
 //}}}
