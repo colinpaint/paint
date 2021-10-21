@@ -200,6 +200,11 @@ void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
 //{{{
 void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
 
+  if (!mDvbSource->ok()) {
+    cLog::log (LOGERROR, "dvbSource - no dvbSource");
+    return;
+    }
+
   if (ownThread)
     cLog::setThreadName ("grab");
 
@@ -236,36 +241,31 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
   #endif
 
   #ifdef __linux__
-    if (!mDvbSource->getDvr())
-      cLog::log (LOGERROR, "no dvbSource");
-    else {
-      constexpr int kDvrReadBufferSize = 50 * 188;
-      auto buffer = (uint8_t*)malloc (kDvrReadBufferSize);
+    constexpr int kDvrReadBufferSize = 50 * 188;
+    auto buffer = (uint8_t*)malloc (kDvrReadBufferSize);
 
-      uint64_t streamPos = 0;
-      while (true) {
-        //int bytesRead = read (mDvbSource->getDvr(), buffer, kDvrReadBufferSize);
-        int bytesRead = mDvbSource->read (buffer, kDvrReadBufferSize);
-        if (bytesRead == 0)
-          cLog::log (LOGINFO, "cDvb grabThread no bytes read");
-        else {
-          // demux
-          streamPos += demux ({}, buffer, bytesRead, 0, false);
-          if (mFile)
-            fwrite (buffer, 1, bytesRead, mFile);
+    uint64_t streamPos = 0;
+    while (true) {
+      int bytesRead = mDvbSource->getBlock (buffer, kDvrReadBufferSize);
+      if (bytesRead == 0)
+        cLog::log (LOGINFO, "cDvb grabThread no bytes read");
+      else {
+        // demux
+        streamPos += demux ({}, buffer, bytesRead, 0, false);
+        if (mFile)
+          fwrite (buffer, 1, bytesRead, mFile);
 
-          // get status
-          mSignalString = mDvbSource->getStatusString();
+        // get status
+        mSignalString = mDvbSource->getStatusString();
 
-          // log if more errors
-          bool show = getNumErrors() != mLastErrors;
-          mLastErrors = getNumErrors();
-          if (show)
-            cLog::log (LOGINFO, fmt::format ("err:{} {}", getNumErrors(), mSignalString));
-          }
+        // log if more errors
+        bool show = getNumErrors() != mLastErrors;
+        mLastErrors = getNumErrors();
+        if (show)
+          cLog::log (LOGINFO, fmt::format ("err:{} {}", getNumErrors(), mSignalString));
         }
-      free (buffer);
       }
+    free (buffer);
   #endif
 
   if (mFile)

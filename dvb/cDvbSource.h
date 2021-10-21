@@ -19,11 +19,12 @@ public:
   cDvbSource (int frequency, int adapter);
   virtual ~cDvbSource();
 
-  int getDvr() const;
+  bool ok() const;
+
   std::string getTuneString() const { return mTuneString; }
   std::string getStatusString() const;
 
-  int getBlock (uint8_t*& block, int& blockSize);
+  int getBlock (uint8_t* block, int blockSize);
 
   int setFilter (uint16_t pid);
   void unsetFilter (int fd, uint16_t pid);

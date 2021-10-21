@@ -787,14 +787,14 @@ cDvbSource::~cDvbSource() {
 //}}}
 
 //{{{
-int cDvbSource::getDvr() const {
+bool cDvbSource::ok() const {
 
   #ifdef _WIN32
-    return 0;
+    return true;
   #endif
 
   #ifdef __linux__
-    return mDvr;
+    return mDvr != 0;
   #endif
   }
 //}}}
@@ -838,7 +838,7 @@ string cDvbSource::getStatusString() const {
   }
 //}}}
 //{{{
-int cDvbSource::getBlock (uint8_t*& block, int& blockSize) {
+int cDvbSource::getBlock (uint8_t* block, int blockSize) {
   (void)blockSize;
   (void)block;
 
