@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "../ui/cApp.h"
+#include "../utils/cApp.h"
 #include "../graphics/cGraphics.h"
 
 class cPlatform;

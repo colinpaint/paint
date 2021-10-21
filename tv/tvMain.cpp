@@ -25,7 +25,7 @@
 #include "../graphics/cGraphics.h"
 
 // ui
-#include "../ui/cApp.h"
+#include "../utils/cApp.h"
 #include "../ui/cUI.h"
 
 // utils
@@ -123,15 +123,12 @@ int main (int numArgs, char* args[]) {
   cGraphics::listRegisteredClasses();
   cUI::listRegisteredClasses();
 
-  // create platform, graphics, UI font
+  // create platform, graphics, UI fonts
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(800, 600), false, vsync, fullScreen);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
-
-  // create tvApp to tie everything together
-  cTvApp app (platform, graphics);
-  app.setName ("dvb");
-  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
-  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
+  ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
+  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f);
+  cTvApp app (platform, graphics, mainFont, monoFont);
   app.setDvbSource (params.empty() ? "" : cFileUtils::resolve (params[0]), foundMultiplex, subtitle);
 
   platform.setResizeCallback (

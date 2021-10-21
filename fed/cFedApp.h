@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "../ui/cApp.h"
+#include "../utils/cApp.h"
 
 class cPlatform;
 class cGraphics;
@@ -15,7 +15,7 @@ class cDocument;
 
 class cFedApp : public cApp {
 public:
-  cFedApp (cPlatform& platform, cGraphics& graphics);
+  cFedApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont);
   ~cFedApp() = default;
 
   cDocument* getDocument() const;

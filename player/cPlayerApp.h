@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "../ui/cApp.h"
+#include "../utils/cApp.h"
 
 class cPlatform;
 class cGraphics;
@@ -17,7 +17,7 @@ class cSongLoader;
 
 class cPlayerApp : public cApp {
 public:
-  cPlayerApp (cPlatform& platform, cGraphics& graphics);
+  cPlayerApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont);
   ~cPlayerApp() = default;
 
   std::string getSongName() const { return mSongName; }

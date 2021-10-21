@@ -16,19 +16,16 @@
 using namespace std;
 //}}}
 
-cFedApp::cFedApp (cPlatform& platform, cGraphics& graphics) : cApp (platform, graphics) {
-  }
+cFedApp::cFedApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont) 
+   : cApp (platform, graphics, mainFont, monoFont) {}
 
 cDocument* cFedApp::getDocument() const {
   return mDocuments.back();
   }
 
 bool cFedApp::setDocumentName (const std::string& filename) {
-
   cDocument* document = new cDocument();
   document->load (filename);
-
   mDocuments.push_back (document);
-
   return true;
   }

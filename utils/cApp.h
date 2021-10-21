@@ -2,6 +2,7 @@
 #pragma once
 //{{{  includes
 #include <string>
+
 class cPlatform;
 class cGraphics;
 struct ImFont;
@@ -9,24 +10,18 @@ struct ImFont;
 
 class cApp {
 public:
-  cApp (cPlatform& platform, cGraphics& graphics) : mPlatform(platform), mGraphics(graphics) {}
+  cApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont)
+    : mPlatform(platform), mGraphics(graphics), mMainFont(mainFont), mMonoFont(monoFont) {}
   virtual ~cApp() = default;
 
   // gets
-  std::string getName() const { return mName; }
   cPlatform& getPlatform() const { return mPlatform; }
   cGraphics& getGraphics() const { return mGraphics; }
 
   ImFont* getMainFont() const { return mMainFont; }
   ImFont* getMonoFont() const { return mMonoFont; }
 
-  // sets
-  void setName (const std::string name) { mName = name; }
-  void setMainFont (ImFont* font) { mMainFont = font; }
-  void setMonoFont (ImFont* font) { mMonoFont = font; }
-
 private:
-  std::string mName;
   cPlatform& mPlatform;
   cGraphics& mGraphics;
 

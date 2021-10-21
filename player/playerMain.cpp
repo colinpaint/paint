@@ -73,12 +73,9 @@ int main (int numArgs, char* args[]) {
   // create platform, graphics, UI font
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(800, 480), false, vsync, fullScreen);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
-
-  // create app to tie stuff together
-  cPlayerApp app (platform, graphics);
-  app.setName ("player");
-  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 24.f));
-  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 24.f));
+  ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f);
+  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f);
+  cPlayerApp app (platform, graphics, mainFont, monoFont);
   app.setSongName (params.empty() ? "" : cFileUtils::resolve (params[0]));
 
   platform.setResizeCallback (
@@ -98,7 +95,7 @@ int main (int numArgs, char* args[]) {
     [&](vector<string> dropItems) noexcept {
       for (auto& item : dropItems) {
         cLog::log (LOGINFO, item);
-        app.setSongName (item);
+        app.setSongName (cFileUtils::resolve (item));
         }
       }
     );

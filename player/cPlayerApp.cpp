@@ -17,7 +17,8 @@
 using namespace std;
 //}}}
 
-cPlayerApp::cPlayerApp (cPlatform& platform, cGraphics& graphics) : cApp (platform, graphics) {
+cPlayerApp::cPlayerApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont) 
+    : cApp (platform, graphics, mainFont, monoFont) {
   mSongLoader = new cSongLoader();
   }
 

@@ -74,12 +74,9 @@ int main (int numArgs, char* args[]) {
   // create platform, graphics, UI font
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(1000, 900), false, vsync, fullScreen);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
-
-  // create app to tie stuff together
-  cFedApp app (platform, graphics);
-  app.setName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolve (params[0]));
-  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
-  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
+  ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f);
+  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f);
+  cFedApp app (platform, graphics, mainFont, monoFont);
   app.setDocumentName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolve (params[0]));
 
   platform.setResizeCallback (

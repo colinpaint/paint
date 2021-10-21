@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "../ui/cApp.h"
+#include "../utils/cApp.h"
 #include "../dvb/cDvbMultiplex.h"
 
 class cPlatform;
@@ -16,7 +16,8 @@ class cDvbTransportStream;
 
 class cTvApp : public cApp {
 public:
-  cTvApp (cPlatform& platform, cGraphics& graphics) : cApp (platform, graphics) {}
+  cTvApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont) 
+    : cApp (platform, graphics, mainFont, monoFont) {}
   ~cTvApp() = default;
 
   cDvbTransportStream* getDvbTransportStream() { return mDvbTransportStream; }
