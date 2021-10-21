@@ -678,7 +678,7 @@ cDocument::cDocument() {
   }
 //}}}
 //{{{
-string cDocument::getText (sPosition beginPosition, sPosition endPosition) {
+string cDocument::getText (const sPosition& beginPosition, const sPosition& endPosition) {
 // get position range as string with lineFeed line breaks
 
   // count approx numChars
@@ -690,19 +690,20 @@ string cDocument::getText (sPosition beginPosition, sPosition endPosition) {
   string text;
   text.reserve (numChars);
 
-  uint32_t beginGlyphIndex = getGlyphIndex (beginPosition);
+  uint32_t lineNumber = beginPosition.mLineNumber;
+  uint32_t glyphIndex = getGlyphIndex (beginPosition);
   uint32_t endGlyphIndex = getGlyphIndex (endPosition);
-  while ((beginGlyphIndex < endGlyphIndex) || (beginPosition.mLineNumber < endPosition.mLineNumber)) {
-    if (beginPosition.mLineNumber >= getNumLines())
+  while ((glyphIndex < endGlyphIndex) || (lineNumber < endPosition.mLineNumber)) {
+    if (lineNumber >= getNumLines())
       break;
 
-    if (beginGlyphIndex < getLine (beginPosition.mLineNumber).getNumGlyphs()) {
-      text += getLine (beginPosition.mLineNumber).getChar (beginGlyphIndex);
-      beginGlyphIndex++;
+    if (glyphIndex < getLine (lineNumber).getNumGlyphs()) {
+      text += getLine (lineNumber).getChar (glyphIndex);
+      glyphIndex++;
       }
     else {
-      beginPosition.mLineNumber++;
-      beginGlyphIndex = 0;
+      lineNumber++;
+      glyphIndex = 0;
       text += '\n';
       }
     }
@@ -784,7 +785,70 @@ uint32_t cDocument::getNumColumns (const cLine& line) {
 //}}}
 
 //{{{
-void cDocument::deletePositionRange (sPosition beginPosition, sPosition endPosition) {
+void cDocument::insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch) {
+
+  line.insert (glyphIndex, cGlyph (ch, eText));
+  parse (line);
+  edited();
+  }
+//}}}
+//{{{
+void cDocument::insertLine (cLine& line, cLine& newLine, uint32_t glyphIndex) {
+
+  // append from glyphIndex of line to newLine
+  newLine.appendLine (line, glyphIndex);
+  parse (newLine);
+
+  // erase from glyphIndex of line
+  line.erase (glyphIndex, line.getNumGlyphs());
+  parse (line);
+
+  edited();
+  }
+//}}}
+//{{{
+void cDocument::appendLineToPrev (uint32_t lineNumber) {
+// append line to prev
+
+  cLine& line = getLine (lineNumber);
+  cLine& prevLine = getLine (lineNumber-1);
+
+  prevLine.appendLine (line, 0);
+  mLines.erase (mLines.begin() + lineNumber);
+
+  parse (prevLine);
+  }
+//}}}
+
+//{{{
+void cDocument::deleteChar (cLine& line, uint32_t glyphIndex) {
+
+  line.erase (glyphIndex);
+  parse (line);
+  edited();
+  }
+//}}}
+//{{{
+void cDocument::deleteChar (cLine& line, const sPosition& position) {
+  deleteChar (line, getGlyphIndex (line, position.mColumn));
+  }
+//}}}
+//{{{
+void cDocument::deleteLine (uint32_t lineNumber) {
+
+  mLines.erase (mLines.begin() + lineNumber);
+  edited();
+  }
+//}}}
+//{{{
+void cDocument::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
+
+  mLines.erase (mLines.begin() + beginLineNumber, mLines.begin() + endLineNumber);
+  edited();
+  }
+//}}}
+//{{{
+void cDocument::deletePositionRange (const sPosition& beginPosition, const sPosition& endPosition) {
 /// !!! need more glyphsLine !!!!
 
   if (endPosition == beginPosition)
@@ -815,9 +879,9 @@ void cDocument::deletePositionRange (sPosition beginPosition, sPosition endPosit
     cLine& endLine = getLine (endPosition.mLineNumber);
     endLine.erase (0, endGlyphIndex);
 
-    // insert remainder of endLine after end of remainder of beginLine
+    // append endLine remainder to beginLine
     if (beginPosition.mLineNumber < endPosition.mLineNumber)
-      beginLine.insertLineAtEnd (endLine);
+      beginLine.appendLine (endLine, 0);
 
     // delete middle whole lines
     if (beginPosition.mLineNumber < endPosition.mLineNumber)

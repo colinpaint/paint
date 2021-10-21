@@ -57,7 +57,7 @@ public:
 
   // vars
   std::string mName;
-  bool mAutoIndentation = true;
+  bool mAutoIndent = true;
 
   // comment tokens
   std::string mCommentSingle;
@@ -237,17 +237,9 @@ public:
   void emplaceBack (cGlyph glyph) { mGlyphs.emplace_back (glyph); }
   void insert (uint32_t glyphIndex, const cGlyph& glyph) { mGlyphs.insert (mGlyphs.begin() + glyphIndex, glyph); }
   //{{{
-  void insertLineAtEnd (const cLine& lineToInsert) {
-  // insert lineToInsert to end of line
-
-    mGlyphs.insert (mGlyphs.end(), lineToInsert.mGlyphs.begin(), lineToInsert.mGlyphs.end());
-    }
-  //}}}
-  //{{{
-  void insertRestOfLineAtEnd (const cLine& lineToInsert, uint32_t glyphIndex) {
-  // insert from glyphIndex of lineToInsert to end of line
-
-    mGlyphs.insert (mGlyphs.end(), lineToInsert.mGlyphs.begin() + glyphIndex, lineToInsert.mGlyphs.end());
+  void appendLine (const cLine& line, uint32_t glyphIndex) {
+  // append line from glyphIndex
+    mGlyphs.insert (mGlyphs.end(), line.mGlyphs.begin() + glyphIndex, line.mGlyphs.end());
     }
   //}}}
 
@@ -346,7 +338,7 @@ public:
   uint32_t getNumLines() const { return static_cast<uint32_t>(mLines.size()); }
   uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
 
-  std::string getText (sPosition beginPosition, sPosition endPosition);
+  std::string getText (const sPosition& beginPosition, const sPosition& endPosition);
   std::string getText() { return getText ({0,0}, { getNumLines(),0}); }
 
   std::vector<std::string> getTextStrings() const;
@@ -361,19 +353,15 @@ public:
   uint32_t getTabColumn (uint32_t column);
   //}}}
 
-  //{{{
-  void deleteLine (uint32_t lineNumber) {
-    mLines.erase (mLines.begin() + lineNumber);
-    edited();
-    }
-  //}}}
-  //{{{
-  void deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
-    mLines.erase (mLines.begin() + beginLineNumber, mLines.begin() + endLineNumber);
-    edited();
-    }
-  //}}}
-  void deletePositionRange (sPosition beginPosition, sPosition endPosition);
+  void insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch);
+  void insertLine (cLine& line, cLine& newLine, uint32_t glyphIndex);
+  void appendLineToPrev (uint32_t lineNumber);
+
+  void deleteChar (cLine& line, uint32_t glyphIndex);
+  void deleteChar (cLine& line, const sPosition& position);
+  void deleteLine (uint32_t lineNumber);
+  void deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber);
+  void deletePositionRange (const sPosition& beginPosition, const sPosition& endPosition);
 
   // actions
   void load (const std::string& filename);
