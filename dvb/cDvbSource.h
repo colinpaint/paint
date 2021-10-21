@@ -19,6 +19,7 @@ public:
   cDvbSource (int frequency, int adapter);
   virtual ~cDvbSource();
 
+  int getDvr() const;
   std::string getTuneString() const { return mTuneString; }
   std::string getStatusString() const;
 
@@ -33,19 +34,16 @@ public:
   #ifdef _WIN32
     uint8_t* getBlockBDA (int& len);
     void releaseBlock (int len);
-
-    std::string getSignalStrengthString();
     void run();
   #endif
 
   #ifdef __linux__
-    int mDvr = 0;
     cTsBlock* getBlocks (cTsBlockPool* blockPool);
   #endif
 
 private:
-  int mFrequency;
-  int mAdapter;
+  int mFrequency = 0;
+  int mAdapter = 0;
 
   std::string mTuneString = "untuned";
 
@@ -73,6 +71,8 @@ private:
     int mGuard = -1;
     int mTransmission = -1;
     int mHierarchy = -1;
+
+    int mDvr = 0;
   #endif
   //}}}
   };

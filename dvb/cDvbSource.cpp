@@ -787,10 +787,27 @@ cDvbSource::~cDvbSource() {
 //}}}
 
 //{{{
+int cDvbSource::getDvr() const {
+
+  #ifdef _WIN32
+    return 0;
+  #endif
+
+  #ifdef __linux__
+    return mDvr;
+  #endif
+  }
+//}}}
+//{{{
 string cDvbSource::getStatusString() const {
 
   #ifdef _WIN32
-    return "";
+    if (mScanningTuner) {
+      long signal = 0;
+      mScanningTuner->get_SignalStrength (&signal);
+      return fmt::format ("signal {}", signal / 0x10000);
+      }
+    return "no signal strength";
   #endif
 
   #ifdef __linux__
@@ -925,18 +942,6 @@ void cDvbSource::tune (int frequency) {
   uint8_t* cDvbSource::getBlockBDA (int& len) { return mGrabberCB.getBlock (len); }
   void cDvbSource::releaseBlock (int len) { mGrabberCB.releaseBlock (len); }
   void cDvbSource::run() { mMediaControl->Run(); }
-  //{{{
-  string cDvbSource::getSignalStrengthString() {
-
-    if (mScanningTuner) {
-      long signal = 0;
-      mScanningTuner->get_SignalStrength (&signal);
-      return fmt::format ("signal {}", signal / 0x10000);
-      }
-
-    return "no signal strength";
-    }
-  //}}}
 #endif
 
 #ifdef __linux__

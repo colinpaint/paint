@@ -231,7 +231,7 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
         //}}}
       else
         this_thread::sleep_for (1ms);
-      mSignalString = mDvbSource->getSignalStrengthString();
+      mSignalString = mDvbSource->getStatusString();
       }
   #endif
 
@@ -244,8 +244,8 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
 
       uint64_t streamPos = 0;
       while (true) {
-        int bytesRead = read (mDvbSource->mDvr, buffer, kDvrReadBufferSize);
-        if (bytesRead == 0) 
+        int bytesRead = read (mDvbSource->getDvr(), buffer, kDvrReadBufferSize);
+        if (bytesRead == 0)
           cLog::log (LOGINFO, "cDvb grabThread no bytes read");
         else {
           // demux
@@ -259,7 +259,7 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
           // log if more errors
           bool show = getNumErrors() != mLastErrors;
           mLastErrors = getNumErrors();
-          if (show) 
+          if (show)
             cLog::log (LOGINFO, fmt::format ("err:{} {}", getNumErrors(), mSignalString));
           }
         }
