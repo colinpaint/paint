@@ -236,7 +236,7 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
   #endif
 
   #ifdef __linux__
-    if (!mDvbSource->mDvr)
+    if (!mDvbSource->getDvr())
       cLog::log (LOGERROR, "no dvbSource");
     else {
       constexpr int kDvrReadBufferSize = 50 * 188;
@@ -244,7 +244,8 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
 
       uint64_t streamPos = 0;
       while (true) {
-        int bytesRead = read (mDvbSource->getDvr(), buffer, kDvrReadBufferSize);
+        //int bytesRead = read (mDvbSource->getDvr(), buffer, kDvrReadBufferSize);
+        int bytesRead = mDvbSource->read (buffer, kDvrReadBufferSize);
         if (bytesRead == 0)
           cLog::log (LOGINFO, "cDvb grabThread no bytes read");
         else {
