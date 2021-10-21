@@ -788,23 +788,36 @@ void cDocument::addEmptyLine() {
   }
 //}}}
 //{{{
-void cDocument::appendLineToPrev (uint32_t lineNumber) {
-// append line to prev
-
-  cLine& line = getLine (lineNumber);
-  cLine& prevLine = getLine (lineNumber-1);
-
-  prevLine.appendLine (line, 0);
-  mLines.erase (mLines.begin() + lineNumber);
-
-  parse (prevLine);
-  }
-//}}}
-//{{{
 void cDocument::insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch) {
 
   line.insert (glyphIndex, cGlyph (ch, eText));
   parse (line);
+  edited();
+  }
+//}}}
+
+//{{{
+void cDocument::appendLineToPrev (uint32_t lineNumber) {
+// append lineNumber to prev line
+
+  cLine& line = getLine (lineNumber-1);
+  line.appendLine (getLine (lineNumber), 0);
+  mLines.erase (mLines.begin() + lineNumber);
+  parse (line);
+
+  edited();
+  }
+//}}}
+//{{{
+void cDocument::joinLine (cLine& line, uint32_t lineNumber) {
+// join lineNumber to line
+
+  // append lineNumber to joinToLine
+  line.appendLine (getLine (lineNumber), 0);
+  parse (line);
+
+  // delete lineNumber
+  mLines.erase (mLines.begin() + lineNumber);
   edited();
   }
 //}}}
@@ -822,19 +835,6 @@ void cDocument::breakLine (cLine& line, uint32_t glyphIndex, uint32_t newLineNum
   line.eraseToEnd (glyphIndex);
   parse (line);
 
-  edited();
-  }
-//}}}
-//{{{
-void cDocument::joinLine (cLine& joinToLine, uint32_t joinFromLineNumber) {
-// join lineNumber to line
-
-  // append joinFromLineNumber to joinToLine
-  joinToLine.appendLine (getLine (joinFromLineNumber), 0);
-  parse (joinToLine);
-
-  // delete joinFromLineNumber
-  mLines.erase (mLines.begin() + joinFromLineNumber);
   edited();
   }
 //}}}

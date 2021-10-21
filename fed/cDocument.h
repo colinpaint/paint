@@ -365,22 +365,28 @@ public:
   uint32_t getTabColumn (uint32_t column);
   //}}}
 
+  // insert
   void addEmptyLine();
-  void appendLineToPrev (uint32_t lineNumber);
   void insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch);
-  void breakLine (cLine& line, uint32_t glyphIndex, uint32_t newLineNumber, uint32_t indent);
-  void joinLine (cLine& joinToLine, uint32_t joinFromLineNumber);
 
+  // line
+  void appendLineToPrev (uint32_t lineNumber);
+  void joinLine (cLine& line, uint32_t lineNumber);
+  void breakLine (cLine& line, uint32_t glyphIndex, uint32_t newLineNumber, uint32_t indent);
+
+  // delete
   void deleteChar (cLine& line, uint32_t glyphIndex);
   void deleteChar (cLine& line, const sPosition& position);
   void deleteLine (uint32_t lineNumber);
   void deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber);
   void deletePositionRange (const sPosition& beginPosition, const sPosition& endPosition);
 
+  // parse
   void parse (cLine& line) { line.parse (mLanguage); };
   void parseAll();
   void edited();
 
+  // file
   void load (const std::string& filename);
   void save();
 
