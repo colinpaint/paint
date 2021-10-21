@@ -36,20 +36,11 @@ cTextEdit::cTextEdit (cDocument& document) : mDoc(document) {
   }
 //}}}
 
-//actions
-//{{{
-void cTextEdit::toggleShowFolded() {
-
-  mOptions.mShowFolded = !mOptions.mShowFolded;
-  mEdit.mScrollVisible = true;
-  }
-//}}}
-
-//{{{  move
+// actions
 //{{{
 void cTextEdit::moveLeft() {
 
-  setDeselect();
+  deselect();
 
   sPosition position = mEdit.mCursor.mPosition;
 
@@ -74,7 +65,7 @@ void cTextEdit::moveLeft() {
 //{{{
 void cTextEdit::moveRight() {
 
-  setDeselect();
+  deselect();
 
   sPosition position = mEdit.mCursor.mPosition;
 
@@ -101,7 +92,7 @@ void cTextEdit::moveRight() {
 //{{{
 void cTextEdit::moveRightWord() {
 
-  setDeselect();
+  deselect();
 
   sPosition position = mEdit.mCursor.mPosition;
 
@@ -139,7 +130,6 @@ void cTextEdit::moveRightWord() {
     }
   }
 //}}}
-//}}}
 //{{{
 void cTextEdit::selectAll() {
   setSelect (eSelect::eNormal, {0,0}, { mDoc.getNumLines(),0});
@@ -154,7 +144,7 @@ void cTextEdit::copy() {
   if (hasSelect()) {
     // push selectedText to pasteStack
     mEdit.pushPasteText (getSelectText());
-    setDeselect();
+    deselect();
     }
 
   else {
@@ -240,6 +230,10 @@ void cTextEdit::deleteIt() {
   cUndo undo;
   undo.mBeforeCursor = mEdit.mCursor;
 
+  sPosition position = getCursorPosition();
+  setCursorPosition (position);
+  cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
+
   if (hasSelect()) {
     // delete selected range
     undo.mDeleteText = getSelectText();
@@ -248,38 +242,27 @@ void cTextEdit::deleteIt() {
     deleteSelect();
     }
 
+  else if (position.mColumn == mDoc.getNumColumns (glyphsLine)) {
+    if (position.mLineNumber >= mDoc.getMaxLineNumber())
+      // no next line to join
+      return;
+
+    undo.mDeleteText = '\n';
+    undo.mDeleteBeginPosition = getCursorPosition();
+    undo.mDeleteEndPosition = advancePosition (undo.mDeleteBeginPosition);
+
+    // join next line to this line
+    mDoc.joinLine (glyphsLine, position.mLineNumber + 1);
+    }
+
   else {
-    // delete char at cursor position
-    sPosition position = getCursorPosition();
-    setCursorPosition (position);
+    // delete character
+    undo.mDeleteBeginPosition = getCursorPosition();
+    undo.mDeleteEndPosition = undo.mDeleteBeginPosition;
+    undo.mDeleteEndPosition.mColumn++;
+    undo.mDeleteText = mDoc.getText (undo.mDeleteBeginPosition, undo.mDeleteEndPosition);
 
-    cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
-    if (position.mColumn == mDoc.getNumColumns (glyphsLine)) {
-      // delete lineFeed at end of line
-      if (position.mLineNumber >= mDoc.getMaxLineNumber()) // prohibit delete of last line lineFeed
-        return;
-
-      undo.mDeleteText = '\n';
-      undo.mDeleteBeginPosition = getCursorPosition();
-      undo.mDeleteEndPosition = advancePosition (undo.mDeleteBeginPosition);
-
-      // append nextLine to glyphLine
-      glyphsLine.appendLine (mDoc.getLine (position.mLineNumber + 1), 0);
-      mDoc.parse (glyphsLine);
-
-      // delete nextLine
-      mDoc.deleteLine (position.mLineNumber + 1);
-      }
-
-    else {
-      // delete character midLine
-      undo.mDeleteBeginPosition = getCursorPosition();
-      undo.mDeleteEndPosition = undo.mDeleteBeginPosition;
-      undo.mDeleteEndPosition.mColumn++;
-      undo.mDeleteText = mDoc.getText (undo.mDeleteBeginPosition, undo.mDeleteEndPosition);
-
-      mDoc.deleteChar (glyphsLine, position);
-      }
+    mDoc.deleteChar (glyphsLine, position);
     }
 
   undo.mAfterCursor = mEdit.mCursor;
@@ -380,15 +363,11 @@ void cTextEdit::enterCharacter (ImWchar ch) {
       // no newLine in folded foldBegin - !!!! could allow with no cursor move, still odd !!!
       return;
 
-    // insert newLine with autoIndent at glyphIndex of glyphsLine
-    cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber + 1, cLine());
-    uint32_t indent = glyphsLine.mIndent;
-    for (uint32_t i = 0; i < indent; i++)
-      newLine.pushBack (cGlyph (' ', eText));
-    mDoc.insertLine (glyphsLine, newLine, glyphIndex);
+    // break glyphsLine at glyphIndex, with new line indent
+    mDoc.breakLine (glyphsLine, glyphIndex, position.mLineNumber + 1, glyphsLine.mIndent);
 
     // set cursor to newLine, start of indent
-    setCursorPosition ({position.mLineNumber+1, mDoc.getColumn (newLine, indent)});
+    setCursorPosition ({position.mLineNumber+1, glyphsLine.mIndent});
     }
   else {
     // char
@@ -411,7 +390,31 @@ void cTextEdit::enterCharacter (ImWchar ch) {
   mEdit.addUndo (undo);
   }
 //}}}
-//{{{  fold
+//{{{
+void cTextEdit::undo (uint32_t steps) {
+
+  if (hasUndo()) {
+    mEdit.undo (this, steps);
+    scrollCursorVisible();
+    }
+  }
+//}}}
+//{{{
+void cTextEdit::redo (uint32_t steps) {
+
+  if (hasRedo()) {
+    mEdit.redo (this, steps);
+    scrollCursorVisible();
+    }
+  }
+//}}}
+//{{{
+void cTextEdit::toggleShowFolded() {
+
+  mOptions.mShowFolded = !mOptions.mShowFolded;
+  mEdit.mScrollVisible = true;
+  }
+//}}}
 //{{{
 void cTextEdit::createFold() {
 
@@ -431,27 +434,6 @@ void cTextEdit::createFold() {
   undo.mAfterCursor = mEdit.mCursor;
   mEdit.addUndo (undo);
   }
-//}}}
-//}}}
-//{{{  undo
-//{{{
-void cTextEdit::undo (uint32_t steps) {
-
-  if (hasUndo()) {
-    mEdit.undo (this, steps);
-    scrollCursorVisible();
-    }
-  }
-//}}}
-//{{{
-void cTextEdit::redo (uint32_t steps) {
-
-  if (hasRedo()) {
-    mEdit.redo (this, steps);
-    scrollCursorVisible();
-    }
-  }
-//}}}
 //}}}
 
 // draws
@@ -810,7 +792,7 @@ void cTextEdit::setCursorPosition (sPosition position) {
 //}}}
 
 //{{{
-void cTextEdit::setDeselect() {
+void cTextEdit::deselect() {
 
   mEdit.mCursor.mSelect = eSelect::eNormal;
   mEdit.mCursor.mSelectBeginPosition = mEdit.mCursor.mPosition;
@@ -868,7 +850,7 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
 //{{{
 void cTextEdit::moveUp (uint32_t amount) {
 
-  setDeselect();
+  deselect();
 
   sPosition position = mEdit.mCursor.mPosition;
 
@@ -895,7 +877,7 @@ void cTextEdit::moveUp (uint32_t amount) {
 //{{{
 void cTextEdit::moveDown (uint32_t amount) {
 
-  setDeselect();
+  deselect();
 
   sPosition position = mEdit.mCursor.mPosition;
 
@@ -1065,8 +1047,8 @@ sPosition cTextEdit::findWordEndPosition (sPosition position) {
 //}}}
 //}}}
 //{{{
-sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
-// insert helper - !!! needs utf8 handling !!!!
+sPosition cTextEdit::insertText (const string& text, sPosition position) {
+// insert helper - !!! needs more utf8 handling !!!!
 
   if (text.empty())
     return position;
@@ -1081,37 +1063,27 @@ sPosition cTextEdit::insertTextAt (sPosition position, const string& text) {
 
     cLine& glyphsLine = getGlyphsLine (position.mLineNumber);
     if (ch == '\n') {
+      // insert new line
       if (onFoldBegin) // no lineFeed in allowed in foldBegin, return
         return position;
 
-      // insert new line
-      cLine& newLine = *mDoc.mLines.insert (mDoc.mLines.begin() + position.mLineNumber+1, cLine());
+      // break glyphsLine at glyphIndex, no autoIndent ????
+      mDoc.breakLine (glyphsLine, glyphIndex, position.mLineNumber+1, 0);
 
-      if (glyphIndex < glyphsLine.getNumGlyphs()) {
-        // not end of line, splitting line, append rest of line to newLine
-        newLine.appendLine (glyphsLine, glyphIndex);
-
-        // remove rest of line just copied to newLine
-        glyphsLine.eraseToEnd (glyphIndex);
-        mDoc.parse (glyphsLine);
-        }
-      mDoc.parse (newLine);
+      // point to beginning of new line
       glyphIndex = 0;
-
-      // !!! should convert glyph back to column in case of tabs !!!
-      position.mLineNumber++;
       position.mColumn = 0;
+      position.mLineNumber++;
       }
 
     else {
-      // insert char within line
-      glyphsLine.insert (glyphIndex++, cGlyph (ch, eText));
-      mDoc.parse (glyphsLine);
+      // insert char
+      mDoc.insertChar (glyphsLine, glyphIndex, ch);
 
-      // !!! should convert glyph back to column in case of tabs !!!
-      position.mColumn++;
+      // point to next char
+      glyphIndex++;
+      position.mColumn++; // !!! should convert glyphIndex back to column !!!
       }
-    mDoc.edited();
     }
 
   return position;
@@ -1122,7 +1094,7 @@ void cTextEdit::deleteSelect() {
 
   mDoc.deletePositionRange (mEdit.mCursor.mSelectBeginPosition, mEdit.mCursor.mSelectEndPosition);
   setCursorPosition (mEdit.mCursor.mSelectBeginPosition);
-  setDeselect();
+  deselect();
   }
 //}}}
 

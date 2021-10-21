@@ -81,20 +81,20 @@ public:
   void deleteIt();
   void backspace();
 
-  // fold
-  void createFold();
-  void openFold() { openFold (mEdit.mCursor.mPosition.mLineNumber); }
-  void openFoldOnly() { openFoldOnly (mEdit.mCursor.mPosition.mLineNumber); }
-  void closeFold() { closeFold (mEdit.mCursor.mPosition.mLineNumber); }
+  // enter
+  void enterCharacter (ImWchar ch);
+  void enterKey() { enterCharacter ('\n'); }
+  void tabKey() { enterCharacter ('\t'); }
 
   // undo
   void undo (uint32_t steps = 1);
   void redo (uint32_t steps = 1);
 
-  // enter
-  void enterCharacter (ImWchar ch);
-  void enterKey() { enterCharacter ('\n'); }
-  void tabKey() { enterCharacter ('\t'); }
+  // fold
+  void createFold();
+  void openFold() { openFold (mEdit.mCursor.mPosition.mLineNumber); }
+  void openFoldOnly() { openFoldOnly (mEdit.mCursor.mPosition.mLineNumber); }
+  void closeFold() { closeFold (mEdit.mCursor.mPosition.mLineNumber); }
   //}}}
 
   void drawWindow (const std::string& title, cApp& app);
@@ -119,7 +119,7 @@ private:
       if (!mAddText.empty())
         textEdit->getDocument().deletePositionRange (mAddBeginPosition, mAddEndPosition);
       if (!mDeleteText.empty())
-        textEdit->insertTextAt (mDeleteBeginPosition, mDeleteText);
+        textEdit->insertText (mDeleteText, mDeleteBeginPosition);
 
       textEdit->mEdit.mCursor = mBeforeCursor;
       }
@@ -130,7 +130,7 @@ private:
       if (!mDeleteText.empty())
         textEdit->getDocument().deletePositionRange (mDeleteBeginPosition, mDeleteEndPosition);
       if (!mAddText.empty())
-        textEdit->insertTextAt (mAddBeginPosition, mAddText);
+        textEdit->insertText (mAddText, mAddBeginPosition);
 
       textEdit->mEdit.mCursor = mAfterCursor;
       }
@@ -351,7 +351,7 @@ private:
   //{{{  set
   void setCursorPosition (sPosition position);
 
-  void setDeselect();
+  void deselect();
   void setSelect (eSelect select, sPosition beginPosition, sPosition endPosition);
   //}}}
   //{{{  move
@@ -367,12 +367,10 @@ private:
   sPosition findWordBeginPosition (sPosition position);
   sPosition findWordEndPosition (sPosition position);
   //}}}
-  //{{{  insert, delete
-  sPosition insertTextAt (sPosition position, const std::string& text);
-  void insertText (const std::string& text) { setCursorPosition (insertTextAt (getCursorPosition(), text)); }
 
+  sPosition insertText (const std::string& text, sPosition position);
+  void insertText (const std::string& text) { setCursorPosition (insertText (text, getCursorPosition())); }
   void deleteSelect();
-  //}}}
 
   //  fold
   void openFold (uint32_t lineNumber);
@@ -402,6 +400,8 @@ private:
   cEdit mEdit;
   cOptions mOptions;
   cTextEditDrawContext mDrawContext;
+
   std::vector <uint32_t> mFoldLines;
+
   std::chrono::system_clock::time_point mCursorFlashTimePoint;
   };

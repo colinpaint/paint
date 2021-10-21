@@ -181,6 +181,13 @@ public:
 //{{{
 class cLine {
 public:
+  cLine() = default;
+  //{{{
+  cLine (uint32_t indent) {
+    for (uint32_t i = 0; i < indent; i++)
+      pushBack (cGlyph (' ', eText));
+    }
+  //}}}
   //{{{
   ~cLine() {
     mGlyphs.clear();
@@ -238,6 +245,7 @@ public:
   //{{{
   void appendLine (const cLine& line, uint32_t glyphIndex) {
   // append line from glyphIndex
+
     mGlyphs.insert (mGlyphs.end(), line.mGlyphs.begin() + glyphIndex, line.mGlyphs.end());
     }
   //}}}
@@ -353,8 +361,9 @@ public:
   //}}}
 
   void insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch);
-  void insertLine (cLine& line, cLine& newLine, uint32_t glyphIndex);
   void appendLineToPrev (uint32_t lineNumber);
+  void breakLine (cLine& line, uint32_t glyphIndex, uint32_t newLineNumber, uint32_t indent);
+  void joinLine (cLine& joinToLine, uint32_t joinFromLineNumber);
 
   void deleteChar (cLine& line, uint32_t glyphIndex);
   void deleteChar (cLine& line, const sPosition& position);
