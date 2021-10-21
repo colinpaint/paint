@@ -78,8 +78,97 @@
 
 using namespace std;
 //}}}
-namespace {
-  #ifdef _WIN32
+//{{{  linux defines
+#ifdef __linux__
+  // defines
+  #define MAX_DELIVERY_SYSTEMS 2
+
+  #define DELSYS 0
+  #define FREQUENCY 1
+  #define MODULATION 2
+  #define INVERSION 3
+  #define SYMBOL_RATE 4
+  #define BANDWIDTH 4
+  #define FEC_INNER 5
+  #define FEC_LP 6
+  #define GUARD 7
+  #define TRANSMISSION 8
+  #define HIERARCHY 9
+  #define PLP_ID 10
+
+  //{{{  dtv properties info
+  struct dtv_property info_cmdargs[] = { DTV_API_VERSION, 0,0,0, 0,0 };
+  struct dtv_properties info_cmdseq = {
+    .num = 1,
+    .props = info_cmdargs
+    };
+  //}}}
+  //{{{  dtv properties
+  struct dtv_property enum_cmdargs[] = { DTV_ENUM_DELSYS, 0,0,0, 0,0 };
+
+  struct dtv_properties enum_cmdseq = {
+    .num = 1,
+    .props = enum_cmdargs
+    };
+  //}}}
+  //{{{  dvbt properties
+  struct dtv_property dvbt_cmdargs[] = {
+    { DTV_DELIVERY_SYSTEM,   0,0,0, SYS_DVBT,0 },
+    { DTV_FREQUENCY,         0,0,0, 0,0 },
+    { DTV_MODULATION,        0,0,0, QAM_AUTO,0 },
+    { DTV_INVERSION,         0,0,0, INVERSION_AUTO,0 },
+    { DTV_BANDWIDTH_HZ,      0,0,0, 8000000,0 },
+    { DTV_CODE_RATE_HP,      0,0,0, FEC_AUTO,0 },
+    { DTV_CODE_RATE_LP,      0,0,0, FEC_AUTO,0 },
+    { DTV_GUARD_INTERVAL,    0,0,0, 0,0 },
+    { DTV_TRANSMISSION_MODE, 0,0,0, TRANSMISSION_MODE_AUTO,0 },
+    { DTV_HIERARCHY,         0,0,0, HIERARCHY_AUTO,0 },
+    { DTV_TUNE,              0,0,0, 0,0 }
+    };
+
+  struct dtv_properties dvbt_cmdseq = {
+    .num = 11,
+    .props = dvbt_cmdargs
+    };
+  //}}}
+  //{{{  dvbt2 properties
+  struct dtv_property dvbt2_cmdargs[] = {
+    { DTV_DELIVERY_SYSTEM,   0,0,0, SYS_DVBT2,0 },
+    { DTV_FREQUENCY,         0,0,0, 0,0 },
+    { DTV_MODULATION,        0,0,0, QAM_AUTO,0 },
+    { DTV_INVERSION,         0,0,0, INVERSION_AUTO,0 },
+    { DTV_BANDWIDTH_HZ,      0,0,0, 8000000,0 },
+    { DTV_CODE_RATE_HP,      0,0,0, FEC_AUTO,0 },
+    { DTV_CODE_RATE_LP,      0,0,0, FEC_AUTO,0 },
+    { DTV_GUARD_INTERVAL,    0,0,0, 0,0 },
+    { DTV_TRANSMISSION_MODE, 0,0,0, TRANSMISSION_MODE_AUTO,0 },
+    { DTV_HIERARCHY,         0,0,0, HIERARCHY_AUTO,0 },
+    { DTV_TUNE,              0,0,0, 0,0 }
+    };
+
+  struct dtv_properties dvbt2_cmdseq = {
+    .num = 11,
+    .props = dvbt2_cmdargs
+    };
+  //}}}
+  //{{{  dtv clear
+  struct dtv_property pclear[] = { DTV_CLEAR, 0,0,0, 0,0 };
+
+  struct dtv_properties cmdclear = {
+    .num = 1,
+    .props = pclear
+    };
+  //}}}
+
+  #define GET_FEC_INNER(fec, val)                         \
+    if ((fe_caps & FE_CAN_##fec) && (fecValue == val)) \
+      return fec;
+
+#endif
+//}}}
+//{{{  windows namespace statics
+#ifdef _WIN32
+  namespace {
     //{{{
     class cGrabberCB : public ISampleGrabberCB {
     public:
@@ -632,86 +721,9 @@ namespace {
         return false;
       }
     //}}}
-  #endif
-
-  #ifdef __linux__
-    //{{{  defines
-    #define MAX_DELIVERY_SYSTEMS 2
-
-    #define DELSYS 0
-    #define FREQUENCY 1
-    #define MODULATION 2
-    #define INVERSION 3
-    #define SYMBOL_RATE 4
-    #define BANDWIDTH 4
-    #define FEC_INNER 5
-    #define FEC_LP 6
-    #define GUARD 7
-    #define TRANSMISSION 8
-    #define HIERARCHY 9
-    #define PLP_ID 10
-    //}}}
-    //{{{  dtv_properties
-    struct dtv_property info_cmdargs[] = { DTV_API_VERSION, 0,0,0, 0,0 };
-    struct dtv_properties info_cmdseq = {
-      .num = 1,
-      .props = info_cmdargs
-      };
-
-    struct dtv_property enum_cmdargs[] = { DTV_ENUM_DELSYS, 0,0,0, 0,0 };
-    struct dtv_properties enum_cmdseq = {
-      .num = 1,
-      .props = enum_cmdargs
-      };
-
-    struct dtv_property dvbt_cmdargs[] = {
-      { DTV_DELIVERY_SYSTEM,   0,0,0, SYS_DVBT,0 },
-      { DTV_FREQUENCY,         0,0,0, 0,0 },
-      { DTV_MODULATION,        0,0,0, QAM_AUTO,0 },
-      { DTV_INVERSION,         0,0,0, INVERSION_AUTO,0 },
-      { DTV_BANDWIDTH_HZ,      0,0,0, 8000000,0 },
-      { DTV_CODE_RATE_HP,      0,0,0, FEC_AUTO,0 },
-      { DTV_CODE_RATE_LP,      0,0,0, FEC_AUTO,0 },
-      { DTV_GUARD_INTERVAL,    0,0,0, 0,0 },
-      { DTV_TRANSMISSION_MODE, 0,0,0, TRANSMISSION_MODE_AUTO,0 },
-      { DTV_HIERARCHY,         0,0,0, HIERARCHY_AUTO,0 },
-      { DTV_TUNE,              0,0,0, 0,0 }
-      };
-    struct dtv_properties dvbt_cmdseq = {
-      .num = 11,
-      .props = dvbt_cmdargs
-      };
-
-    struct dtv_property dvbt2_cmdargs[] = {
-      { DTV_DELIVERY_SYSTEM,   0,0,0, SYS_DVBT2,0 },
-      { DTV_FREQUENCY,         0,0,0, 0,0 },
-      { DTV_MODULATION,        0,0,0, QAM_AUTO,0 },
-      { DTV_INVERSION,         0,0,0, INVERSION_AUTO,0 },
-      { DTV_BANDWIDTH_HZ,      0,0,0, 8000000,0 },
-      { DTV_CODE_RATE_HP,      0,0,0, FEC_AUTO,0 },
-      { DTV_CODE_RATE_LP,      0,0,0, FEC_AUTO,0 },
-      { DTV_GUARD_INTERVAL,    0,0,0, 0,0 },
-      { DTV_TRANSMISSION_MODE, 0,0,0, TRANSMISSION_MODE_AUTO,0 },
-      { DTV_HIERARCHY,         0,0,0, HIERARCHY_AUTO,0 },
-      { DTV_TUNE,              0,0,0, 0,0 }
-      };
-    struct dtv_properties dvbt2_cmdseq = {
-      .num = 11,
-      .props = dvbt2_cmdargs
-      };
-
-    struct dtv_property pclear[] = { DTV_CLEAR, 0,0,0, 0,0 };
-    struct dtv_properties cmdclear = {
-      .num = 1,
-      .props = pclear
-      };
-
-    #define GET_FEC_INNER(fec, val)                         \
-      if ((fe_caps & FE_CAN_##fec) && (fecValue == val)) \
-        return fec;
-    //}}}
-  #endif
-  }
+    }
+#endif
+//}}}
 
 // public:
 //{{{
@@ -734,7 +746,6 @@ cDvbSource::cDvbSource (int frequency, int adapter) : mFrequency(frequency), mAd
         cLog::log (LOGERROR, "cDvb open frontend failed");
         return;
         }
-
       frontendSetup();
 
       // open demux nonBlocking rw
@@ -744,7 +755,6 @@ cDvbSource::cDvbSource (int frequency, int adapter) : mFrequency(frequency), mAd
         cLog::log (LOGERROR, "cDvb open demux failed");
         return;
         }
-
       setFilter (8192);
 
       // open dvr blocking reads, big buffer 50m
@@ -803,15 +813,10 @@ string cDvbSource::getStatusString() const {
     if ((ioctl (mFrontEnd, FE_GET_PROPERTY, &cmdProperty)) < 0)
       return "no status";
 
-    return fmt::format ("{:5.2f}% {:5.2f}db b:{:x},{:x}, pre:{:x},{:x} post:{:x},{:x}",
+    // only report a few numbers
+    return fmt::format ("{:5.2f}% {:5.2f}db",
                         100.f * ((props[0].u.st.stat[0].uvalue & 0xFFFF) / float(0xFFFF)),
-                        props[1].u.st.stat[0].svalue / 1000.f,
-                        (__u64)props[2].u.st.stat[0].uvalue,
-                        (__u64)props[3].u.st.stat[0].uvalue,
-                        (__u64)props[4].u.st.stat[0].uvalue,
-                        (__u64)props[5].u.st.stat[0].uvalue,
-                        (__u64)props[6].u.st.stat[0].uvalue,
-                        (__u64)props[7].u.st.stat[0].uvalue);
+                        props[1].u.st.stat[0].svalue / 1000.f);
   #endif
   }
 //}}}
@@ -917,30 +922,18 @@ void cDvbSource::tune (int frequency) {
 //}}}
 
 #ifdef _WIN32
-  //{{{
-  uint8_t* cDvbSource::getBlockBDA (int& len) {
-
-    return mGrabberCB.getBlock (len);
-    }
-  //}}}
-  //{{{
-  void cDvbSource::releaseBlock (int len) {
-    mGrabberCB.releaseBlock (len);
-    }
-  //}}}
-
-  //{{{
-  void cDvbSource::run() {
-    mMediaControl->Run();
-    }
-  //}}}
+  uint8_t* cDvbSource::getBlockBDA (int& len) { return mGrabberCB.getBlock (len); }
+  void cDvbSource::releaseBlock (int len) { mGrabberCB.releaseBlock (len); }
+  void cDvbSource::run() { mMediaControl->Run(); }
   //{{{
   string cDvbSource::getSignalStrengthString() {
+
     if (mScanningTuner) {
       long signal = 0;
       mScanningTuner->get_SignalStrength (&signal);
       return fmt::format ("signal {}", signal / 0x10000);
       }
+
     return "no signal strength";
     }
   //}}}

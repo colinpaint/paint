@@ -25,8 +25,6 @@ using namespace chrono;
 //{{{
 cTextEdit::cTextEdit (cDocument& document) : mDoc(document) {
 
-  mDoc.addEmptyLine();
-
   // push any clipboardText to pasteStack
   const char* clipText = ImGui::GetClipboardText();
   if (clipText && (strlen (clipText)) > 0)
@@ -41,7 +39,6 @@ cTextEdit::cTextEdit (cDocument& document) : mDoc(document) {
 void cTextEdit::moveLeft() {
 
   deselect();
-
   sPosition position = mEdit.mCursor.mPosition;
 
   // line
@@ -66,7 +63,6 @@ void cTextEdit::moveLeft() {
 void cTextEdit::moveRight() {
 
   deselect();
-
   sPosition position = mEdit.mCursor.mPosition;
 
   // line
@@ -93,7 +89,6 @@ void cTextEdit::moveRight() {
 void cTextEdit::moveRightWord() {
 
   deselect();
-
   sPosition position = mEdit.mCursor.mPosition;
 
   // line
@@ -851,7 +846,6 @@ void cTextEdit::setSelect (eSelect select, sPosition beginPosition, sPosition en
 void cTextEdit::moveUp (uint32_t amount) {
 
   deselect();
-
   sPosition position = mEdit.mCursor.mPosition;
 
   if (!isFolded()) {
@@ -878,7 +872,6 @@ void cTextEdit::moveUp (uint32_t amount) {
 void cTextEdit::moveDown (uint32_t amount) {
 
   deselect();
-
   sPosition position = mEdit.mCursor.mPosition;
 
   if (!isFolded()) {

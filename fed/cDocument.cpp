@@ -145,8 +145,6 @@ namespace {
     };
   //}}}
   //}}}
-
-  // fast parsers
   //{{{
   bool parseIdentifier (const char* srcBegin, const char* srcEnd, const char*& tokenBegin, const char*& tokenEnd) {
 
@@ -674,6 +672,7 @@ void cLine::parseTokens (const cLanguage& language, const string& textString) {
 //{{{
 cDocument::cDocument() {
   mLanguage = cLanguage::c();
+  addEmptyLine();
   }
 //}}}
 //{{{
@@ -845,6 +844,7 @@ void cDocument::deleteChar (cLine& line, uint32_t glyphIndex) {
 
   line.erase (glyphIndex);
   parse (line);
+
   edited();
   }
 //}}}

@@ -52,11 +52,11 @@ const vector<string> kRtp4  = {"rtp 4"};
 const vector<string> kRtp5  = {"rtp 5"};
 //}}}
 
-namespace {
-  int gPacketDigits = 0;
-  int gMaxPidPackets = 0;
+//{{{
+class cDrawTransportStream {
+public:
   //{{{
-  void drawTransportStream (cDvbTransportStream* dvbTransportStream) {
+  void draw (cDvbTransportStream* dvbTransportStream) {
 
     // list recorded items
     for (auto& recordItem : dvbTransportStream->getRecordItems())
@@ -78,7 +78,7 @@ namespace {
 
       // draw pic text
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
-                              pidInfo.mPackets, gPacketDigits, pidInfo.mErrors, errorDigits, pidInfo.mPid,
+                              pidInfo.mPackets, mPacketDigits, pidInfo.mErrors, errorDigits, pidInfo.mPid,
                               getFullPtsString (pidInfo.mPts), pidInfo.getTypeString()).c_str());
 
       // get pos for stream info
@@ -144,8 +144,8 @@ namespace {
         //}}}
 
       // draw stream bar
-      gMaxPidPackets = max (gMaxPidPackets, pidInfo.mPackets);
-      float frac = pidInfo.mPackets / float(gMaxPidPackets);
+      mMaxPidPackets = max (mMaxPidPackets, pidInfo.mPackets);
+      float frac = pidInfo.mPackets / float(mMaxPidPackets);
       ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x)),
                       pos.y + ImGui::GetTextLineHeight()};
       ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
@@ -157,14 +157,19 @@ namespace {
       ImGui::TextUnformatted (streamText.c_str());
 
       // width of packet field
-      if (pidInfo.mPackets > pow (10, gPacketDigits))
-        gPacketDigits++;
+      if (pidInfo.mPackets > pow (10, mPacketDigits))
+        mPacketDigits++;
 
       prevSid = pidInfo.mSid;
       }
     }
   //}}}
-  }
+
+private:
+  int mPacketDigits = 0;
+  int mMaxPidPackets = 0;
+  };
+//}}}
 
 class cTvUI : public cUI {
 public:
@@ -222,7 +227,7 @@ public:
       ImGui::TextUnformatted (dvbTransportStream->getErrorString().c_str());
 
       ImGui::PushFont (app.getMonoFont());
-      drawTransportStream (dvbTransportStream);
+      mDrawTransportStream.draw (dvbTransportStream);
       ImGui::PopFont();
       }
 
@@ -233,6 +238,7 @@ public:
 private:
   // vars
   bool mOpen = true;
+  cDrawTransportStream mDrawTransportStream;
 
   static cUI* create (const string& className) { return new cTvUI (className); }
   inline static const bool mRegistered = registerClass ("tv", &create);
