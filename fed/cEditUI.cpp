@@ -11,6 +11,7 @@
 // fed
 #include "../fed/cTextEdit.h"
 #include "../fed/cMemEdit.h"
+#include "../fed/cFedApp.h"
 
 // ui
 #include "../ui/cUI.h"
@@ -33,9 +34,6 @@ public:
   //}}}
   //{{{
   virtual ~cEditUI() {
-
-    delete mDocument;
-    delete mTextEdit;
 
     delete mFileView;
     delete mMemEdit;
@@ -73,25 +71,16 @@ public:
       }
       //}}}
 
-    if (!mDocument) {
-      // create and load document
-      mDocument = new cDocument();
-      mDocument->load (app.getName());
-
-      // create document editor
-      mTextEdit = new cTextEdit (*mDocument);
-      }
-
-    if (mTextEdit)
-      mTextEdit->drawWindow ("fed", app);
+    // wrong??
+    mTextEdit.init();
+    mTextEdit.draw ("fed", app);
     }
 
 private:
   cFileView* mFileView = nullptr;
   cMemEdit* mMemEdit = nullptr;
 
-  cDocument* mDocument = nullptr;
-  cTextEdit* mTextEdit = nullptr;
+  cTextEdit mTextEdit;
 
   //{{{
   static cUI* create (const string& className) {

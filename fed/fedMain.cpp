@@ -25,7 +25,7 @@
 #include "../graphics/cGraphics.h"
 
 // ui
-#include "../ui/cApp.h"
+#include "../fed/cFedApp.h"
 #include "../ui/cUI.h"
 
 // utils
@@ -75,10 +75,11 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
 
   // create app to tie stuff together
-  cApp app (platform, graphics);
+  cFedApp app (platform, graphics);
   app.setName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolve (params[0]));
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
+  app.setDocumentName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolve (params[0]));
 
   platform.setResizeCallback (
     //{{{  resize lambda
@@ -95,8 +96,11 @@ int main (int numArgs, char* args[]) {
   platform.setDropCallback (
     //{{{  drop lambda
     [&](vector<string> dropItems) noexcept {
-      for (auto& item : dropItems)
-        cLog::log (LOGINFO, item);
+      for (auto& item : dropItems) {
+        string filename = cFileUtils::resolve (item);
+        app.setDocumentName (filename);
+        cLog::log (LOGINFO, filename);
+        }
       }
     );
     //}}}

@@ -711,7 +711,7 @@ string cDocument::getText (const sPosition& beginPosition, const sPosition& endP
 //}}}
 //{{{
 vector<string> cDocument::getTextStrings() const {
-// get text as vector of string
+// simple get text as vector of string
 
   std::vector<std::string> result;
   result.reserve (getNumLines());

@@ -338,19 +338,18 @@ public:
   virtual ~cDocument() = default;
 
   //{{{  gets
-  cLanguage& getLanguage() { return mLanguage; }
-
   bool isEdited() const { return mEdited; }
   bool hasFolds() const { return mHasFolds; }
   bool hasUtf8() const { return mHasUtf8; }
+
+  cLanguage& getLanguage() { return mLanguage; }
   uint32_t getTabSize() const { return mTabSize; }
 
   uint32_t getNumLines() const { return static_cast<uint32_t>(mLines.size()); }
   uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
 
   std::string getText (const sPosition& beginPosition, const sPosition& endPosition);
-  std::string getText() { return getText ({0,0}, { getNumLines(),0}); }
-
+  std::string getTextAll() { return getText ({0,0}, { getNumLines(),0}); }
   std::vector<std::string> getTextStrings() const;
 
   cLine& getLine (uint32_t lineNumber) { return mLines[lineNumber]; }

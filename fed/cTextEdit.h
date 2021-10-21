@@ -18,13 +18,14 @@ class cApp;
 
 class cTextEdit {
 public:
-  cTextEdit (cDocument& document);
+  cTextEdit();
   ~cTextEdit() = default;
+  void init();
 
   enum class eSelect { eNormal, eWord, eLine };
   //{{{  gets
-  cDocument& getDocument() { return mDoc; }
-  cLanguage& getLanguage() { return mDoc.getLanguage(); }
+  cDocument* getDocument() { return mDoc; }
+  cLanguage& getLanguage() { return mDoc->getLanguage(); }
 
   bool isReadOnly() const { return mOptions.mReadOnly; }
   bool isShowFolds() const { return mOptions.mShowFolded; }
@@ -65,7 +66,7 @@ public:
   void movePageUp()   { moveUp (getNumPageLines() - 4); }
   void movePageDown() { moveDown (getNumPageLines() - 4); }
   void moveHome() { setCursorPosition ({0,0}); }
-  void moveEnd() { setCursorPosition ({mDoc.getMaxLineNumber(), 0}); }
+  void moveEnd() { setCursorPosition ({mDoc->getMaxLineNumber(), 0}); }
 
   // select
   void selectAll();
@@ -95,7 +96,7 @@ public:
   void closeFold() { closeFold (mEdit.mCursor.mPosition.mLineNumber); }
   //}}}
 
-  void drawWindow (const std::string& title, cApp& app);
+  void draw (const std::string& title, cApp& app);
   void drawContents (cApp& app);
 
 private:
@@ -115,7 +116,7 @@ private:
     void undo (cTextEdit* textEdit) {
 
       if (!mAddText.empty())
-        textEdit->getDocument().deletePositionRange (mAddBeginPosition, mAddEndPosition);
+        textEdit->getDocument()->deletePositionRange (mAddBeginPosition, mAddEndPosition);
       if (!mDeleteText.empty())
         textEdit->insertText (mDeleteText, mDeleteBeginPosition);
 
@@ -126,7 +127,7 @@ private:
     void redo (cTextEdit* textEdit) {
 
       if (!mDeleteText.empty())
-        textEdit->getDocument().deletePositionRange (mDeleteBeginPosition, mDeleteEndPosition);
+        textEdit->getDocument()->deletePositionRange (mDeleteBeginPosition, mDeleteEndPosition);
       if (!mAddText.empty())
         textEdit->insertText (mAddText, mAddBeginPosition);
 
@@ -312,7 +313,7 @@ private:
   bool canEditAtCursor();
 
   // text
-  std::string getSelectText() { return mDoc.getText (mEdit.mCursor.mSelectBeginPosition, mEdit.mCursor.mSelectEndPosition); }
+  std::string getSelectText() { return mDoc->getText (mEdit.mCursor.mSelectBeginPosition, mEdit.mCursor.mSelectEndPosition); }
 
   // text widths
   float getWidth (sPosition position);
@@ -331,14 +332,14 @@ private:
   uint32_t getGlyphsLineNumber (uint32_t lineNumber) const {
   // return glyphs lineNumber for lineNumber - folded foldBegin closedFold seeThru into next line
 
-    const cLine& line = mDoc.getLine (lineNumber);
+    const cLine& line = mDoc->getLine (lineNumber);
     if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs()))
       return lineNumber + 1;
     else
       return lineNumber;
     }
   //}}}
-  cLine& getGlyphsLine (uint32_t lineNumber) { return mDoc.getLine (getGlyphsLineNumber (lineNumber)); }
+  cLine& getGlyphsLine (uint32_t lineNumber) { return mDoc->getLine (getGlyphsLineNumber (lineNumber)); }
 
   sPosition getNextLinePosition (const sPosition& position);
 
@@ -392,7 +393,8 @@ private:
   void drawLines();
 
   // vars
-  cDocument& mDoc;
+  cDocument* mDoc = nullptr;
+  bool mInited = false;
 
   // edit state
   cEdit mEdit;
