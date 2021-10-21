@@ -339,8 +339,10 @@ public:
   //{{{  gets
   cLanguage& getLanguage() { return mLanguage; }
 
-  bool getEdited() const { return mEdited; }
-  bool getHasFolds() const { return mHasFolds; }
+  bool isEdited() const { return mEdited; }
+  bool hasFolds() const { return mHasFolds; }
+  bool hasUtf8() const { return mHasUtf8; }
+  uint32_t getTabSize() const { return mTabSize; }
 
   uint32_t getNumLines() const { return static_cast<uint32_t>(mLines.size()); }
   uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
@@ -381,22 +383,21 @@ public:
   void edited();
 
   // vars
+  std::vector<cLine> mLines;
+private:
+  uint32_t trimTrailingSpace();
+
   std::string mFilePath;
   std::string mParentPath;
   std::string mFileStem;
   std::string mFileExtension;
   uint32_t mVersion = 1;
 
-  std::vector<cLine> mLines;
-
   bool mHasCR = false;
   bool mHasUtf8 = false;
   bool mHasTabs = false;
 
   uint32_t mTabSize = 4;
-
-private:
-  uint32_t trimTrailingSpace();
 
   // temporary state
   bool mHasFolds = false;

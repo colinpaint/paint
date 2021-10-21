@@ -39,12 +39,10 @@ public:
   std::string getTextString();
   std::vector<std::string> getTextStrings() const;
 
-  uint32_t getTabSize() const { return mDoc.mTabSize; }
   sPosition getCursorPosition() { return sanitizePosition (mEdit.mCursor.mPosition); }
   //}}}
   //{{{  sets
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
-  void setTabSize (uint32_t tabSize) { mDoc.mTabSize = tabSize; }
 
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   void toggleOverWrite() { mOptions.mOverWrite = !mOptions.mOverWrite; }

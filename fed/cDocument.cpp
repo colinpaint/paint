@@ -593,7 +593,6 @@ void cLine::parse (const cLanguage& language) {
   parseTokens (language, glyphString);
   }
 //}}}
-// - private:
 //{{{
 uint32_t cDocument::trimTrailingSpace() {
 // trim trailing space
@@ -1031,7 +1030,6 @@ void cDocument::parseAll() {
   mParseFlag = false;
 
   mHasFolds = false;
-
   bool inString = false;
   bool inSingleComment = false;
   bool inBeginEndComment = false;

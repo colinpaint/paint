@@ -469,7 +469,7 @@ void cTextEdit::drawContents (cApp& app) {
       }
   //}}}
 
-  if (mDoc.getHasFolds()) {
+  if (mDoc.hasFolds()) {
     //{{{  folded button
     ImGui::SameLine();
     if (toggleButton ("folded", isShowFolds()))
@@ -570,7 +570,7 @@ void cTextEdit::drawContents (cApp& app) {
     }
   //}}}
   //{{{  save button
-  if (mDoc.getEdited()) {
+  if (mDoc.isEdited()) {
     ImGui::SameLine();
     if (ImGui::Button ("save"))
       mDoc.save();
@@ -605,7 +605,7 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, {0.f,0.f});
   ImGui::BeginChild ("##s", {0.f,0.f}, false,
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-  mDrawContext.update (static_cast<float>(mOptions.mFontSize), isDrawMonoSpaced() && !mDoc.mHasUtf8);
+  mDrawContext.update (static_cast<float>(mOptions.mFontSize), isDrawMonoSpaced() && !mDoc.hasUtf8());
 
   keyboard();
 
@@ -740,7 +740,7 @@ sPosition cTextEdit::getNextLinePosition (const sPosition& position) {
 float cTextEdit::getTabEndPosX (float xPos) {
 // return tabEndPosx of tab containing xPos
 
-  float tabWidthPixels = mDoc.mTabSize * mDrawContext.getGlyphWidth();
+  float tabWidthPixels = mDoc.getTabSize() * mDrawContext.getGlyphWidth();
   return (1.f + floor ((1.f + xPos) / tabWidthPixels)) * tabWidthPixels;
   }
 //}}}
