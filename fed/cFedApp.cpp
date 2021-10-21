@@ -20,12 +20,15 @@ cFedApp::cFedApp (cPlatform& platform, cGraphics& graphics) : cApp (platform, gr
   }
 
 cDocument* cFedApp::getDocument() const {
-  return mDocument;
+  return mDocuments.back();
   }
 
 bool cFedApp::setDocumentName (const std::string& filename) {
 
-  mDocument = new cDocument();
-  mDocument->load (filename);
+  cDocument* document = new cDocument();
+  document->load (filename);
+
+  mDocuments.push_back (document);
+
   return true;
   }

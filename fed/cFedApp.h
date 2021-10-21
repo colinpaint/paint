@@ -10,7 +10,6 @@
 
 class cPlatform;
 class cGraphics;
-
 class cDocument;
 //}}}
 
@@ -23,5 +22,5 @@ public:
   bool setDocumentName (const std::string& filename);
 
 private:
-  cDocument* mDocument;
+  std::vector<cDocument*> mDocuments;
   };

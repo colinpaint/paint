@@ -71,9 +71,7 @@ public:
       }
       //}}}
 
-    // wrong??
-    mTextEdit.init();
-    mTextEdit.draw ("fed", app);
+    mTextEdit.draw (app);
     }
 
 private:

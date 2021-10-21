@@ -345,6 +345,9 @@ public:
   cLanguage& getLanguage() { return mLanguage; }
   uint32_t getTabSize() const { return mTabSize; }
 
+  std::string getFileName() const { return mFileStem + mFileExtension; }
+  std::string getFilePath() const { return mFilePath; }
+
   uint32_t getNumLines() const { return static_cast<uint32_t>(mLines.size()); }
   uint32_t getMaxLineNumber() const { return getNumLines() - 1; }
 
@@ -383,6 +386,7 @@ public:
 
 private:
   uint32_t trimTrailingSpace();
+
   //{{{  vars
   std::vector<cLine> mLines;
 

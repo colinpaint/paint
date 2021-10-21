@@ -20,7 +20,6 @@ class cTextEdit {
 public:
   cTextEdit();
   ~cTextEdit() = default;
-  void init();
 
   enum class eSelect { eNormal, eWord, eLine };
   //{{{  gets
@@ -96,7 +95,7 @@ public:
   void closeFold() { closeFold (mEdit.mCursor.mPosition.mLineNumber); }
   //}}}
 
-  void draw (const std::string& title, cApp& app);
+  void draw (cApp& app);
   void drawContents (cApp& app);
 
 private:

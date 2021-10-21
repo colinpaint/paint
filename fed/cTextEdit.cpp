@@ -29,18 +29,6 @@ cTextEdit::cTextEdit() {
   cursorFlashOn();
   }
 //}}}
-//{{{
-void cTextEdit::init() {
-
-  if (!mInited) {
-    // push any clipboardText to pasteStack
-    const char* clipText = ImGui::GetClipboardText();
-    if (clipText && (strlen (clipText)) > 0)
-      mEdit.pushPasteText (clipText);
-    mInited = true;
-    }
-  }
-//}}}
 
 // actions
 //{{{
@@ -441,15 +429,23 @@ void cTextEdit::createFold() {
 
 // draws
 //{{{
-void cTextEdit::draw (const string& title, cApp& app) {
+void cTextEdit::draw (cApp& app) {
 // standalone textEdit window
+
+   if (!mInited) {
+     // push any clipboardText to pasteStack
+     const char* clipText = ImGui::GetClipboardText();
+     if (clipText && (strlen (clipText)) > 0)
+       mEdit.pushPasteText (clipText);
+     mInited = true;
+     }
 
    // create document editor
   cFedApp& fedApp = (cFedApp&)app;
   mDoc = fedApp.getDocument();
   if (mDoc) {
     bool open = true;
-    ImGui::Begin (title.c_str(), &open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
+    ImGui::Begin ("textEdit", &open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
     drawContents (app);
     ImGui::End();
     }
@@ -461,7 +457,6 @@ void cTextEdit::drawContents (cApp& app) {
 
   // check for delayed all document parse
   mDoc->parseAll();
-
   //{{{  draw top line buttons
   //{{{  lineNumber buttons
   if (toggleButton ("line", mOptions.mShowLineNumber))
@@ -561,7 +556,7 @@ void cTextEdit::drawContents (cApp& app) {
     // vsync button
     ImGui::SameLine();
     if (toggleButton ("vSync", app.getPlatform().getVsync()))
-      app.getPlatform().toggleVsync();
+        app.getPlatform().toggleVsync();
 
     // fps text
     ImGui::SameLine();
@@ -594,6 +589,9 @@ void cTextEdit::drawContents (cApp& app) {
   ImGui::Text (fmt::format ("{}:{}",
                ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
   //}}}
+
+  ImGui::SameLine();
+  ImGui::TextUnformatted (mDoc->getFileName().c_str());
   //}}}
 
   // begin childWindow, new font, new colors

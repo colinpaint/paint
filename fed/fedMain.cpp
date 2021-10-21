@@ -25,12 +25,13 @@
 #include "../graphics/cGraphics.h"
 
 // ui
-#include "../fed/cFedApp.h"
 #include "../ui/cUI.h"
 
 // utils
 #include "../utils/cFileUtils.h"
 #include "../utils/cLog.h"
+
+#include "../fed/cFedApp.h"
 
 using namespace std;
 //}}}
