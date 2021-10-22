@@ -28,7 +28,6 @@ protected:
   uint32_t mTextureId = 0;
   };
 //}}}
-
 //{{{
 class cQuad {
 public:
