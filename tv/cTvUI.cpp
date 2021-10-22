@@ -168,34 +168,25 @@ private:
           }
         //}}}
 
-        // create or update rect image
         if (mImages[imageIndex] == nullptr) {
-          if (imageIndex < mImages.max_size()) {
-            mImages[imageIndex] = graphics.createFrameBuffer();
-            //mImages[imageIndex] = graphics.createFrameBuffer (
-            //  {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight}, cFrameBuffer::eRGBA);
-            //{{{  full create
-            //mImages[imageIndex] = graphics.createFrameBuffer (
-            //  (uint8_t*)subtitle->mRects[line]->mPixData,
-            //  {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight},
-            //  cFrameBuffer::eRGBA);
-            //}}}
-            cLog::log (LOGINFO, fmt::format ("pid:{} creatingimage:{}:{}x{}",
-              pidInfo.mPid,
-              imageIndex, subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight));
-            }
-          else
-            cLog::log (LOGERROR, "too many cDvbWidget images, fixit");
+          // createFrameBuffer
+          mImages[imageIndex] = graphics.createFrameBuffer();
+          //mImages[imageIndex] = graphics.createFrameBuffer (
+          //  {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight}, cFrameBuffer::eRGBA);
+          //mImages[imageIndex] = graphics.createFrameBuffer (
+          //  (uint8_t*)subtitle->mRects[line]->mPixData,
+          //  {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight},
+          //  cFrameBuffer::eRGBA);
+          cLog::log (LOGINFO, fmt::format ("pid:{} creatingimage:{}:{}x{}",
+                     pidInfo.mPid, imageIndex,
+                     subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight));
           }
         else if (subtitle->mChanged) {
+          // update frameBuffer. assumes same size
           cLog::log (LOGINFO, fmt::format ("updating pid:{} image:{}", pidInfo.mPid, imageIndex));
-          // !!! assumes image is same size as before !!!
-          //vg->updateImage (mImage[imageIndex], (uint8_t*)subtitle->mRects[line]->mPixData);
           }
 
-        // draw image
-        //auto imagePaint = vg->setImagePattern (
-        //  cPointF(visx, ySub), cPointF(dstWidth, dstHeight), 0.f, mImage[imageIndex], 1.f);
+        ImGui::Image ((void*)(intptr_t)mImages[imageIndex]->getTextureId(), {dstWidth, dstHeight});
         imageIndex++;
 
         // draw subtitle image outline
