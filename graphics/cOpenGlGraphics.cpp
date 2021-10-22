@@ -1,6 +1,5 @@
 // cOpenGlGraphics.cpp
-//{{{
-//includes
+//{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <cstdint>
