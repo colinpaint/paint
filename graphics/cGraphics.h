@@ -20,10 +20,7 @@ public:
   /// gets
   const cPoint getSize() const { return mSize; }
   unsigned getTextureId() { return mTextureId; }
-  unsigned getNumPixels() { return mSize.x * mSize.y; }
-  unsigned getNumPixelBytes() { return  mSize.x * mSize.y * 4; }
 
-  virtual uint8_t* getPixels() = 0;
   virtual void setPixels (uint8_t* pixels) = 0;
 
 protected:

@@ -21,7 +21,7 @@
 #include "../utils/utils.h"
 
 #include "cDvbUtils.h"
-#include "cSubtitle.h"
+#include "cDvbSubtitle.h"
 
 using namespace std;
 //}}}
@@ -47,7 +47,7 @@ cDvbTransportStream::~cDvbTransportStream() {
 //}}}
 
 //{{{
-cSubtitle* cDvbTransportStream::getSubtitleBySid (uint16_t sid) {
+cDvbSubtitle* cDvbTransportStream::getSubtitleBySid (uint16_t sid) {
 
   auto it = mSubtitleMap.find (sid);
   return (it == mSubtitleMap.end()) ? nullptr : (*it).second;
@@ -181,7 +181,7 @@ void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
       auto it = mSubtitleMap.find (pidInfo->mSid);
       if (it == mSubtitleMap.end()) {
         auto insertPair = mSubtitleMap.insert (
-          map <uint16_t, cSubtitle*>::value_type (pidInfo->mSid, new cSubtitle()));
+          map <uint16_t, cDvbSubtitle*>::value_type (pidInfo->mSid, new cDvbSubtitle()));
         it = insertPair.first;
         cLog::log (LOGINFO1, fmt::format ("cDvb::subDecodePes - create serviceStuff sid:{}",pidInfo->mSid));
         }

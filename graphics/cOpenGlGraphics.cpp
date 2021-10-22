@@ -56,11 +56,6 @@ namespace {
     //}}}
 
     //{{{
-    uint8_t* getPixels() final {
-      return nullptr;
-      }
-    //}}}
-    //{{{
     void setPixels (uint8_t* pixels) final {
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);

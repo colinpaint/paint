@@ -5,11 +5,14 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <array>
 
 #include "../utils/cLog.h"
+
+class cTexture;
 //}}}
 
-class cSubtitle {
+class cDvbSubtitle {
 public:
   //{{{  defines
   #define AVRB16(p) ((*(p) << 8) | *(p+1))
@@ -26,7 +29,7 @@ public:
                                    (((g) <<  8) & 0x0000FF00) |  ((r)        & 0x000000FF)))
   //}}}
   //{{{
-  cSubtitle() {
+  cDvbSubtitle() {
     mVersion = -1;
     mDefaultClut.mId = -1;
 
@@ -105,7 +108,7 @@ public:
     }
   //}}}
   //{{{
-  ~cSubtitle() {
+  ~cDvbSubtitle() {
 
     deleteRegions();
     deleteObjects();
@@ -224,7 +227,6 @@ public:
       free (mPixData);
       }
 
-
     int mX = 0;
     int mY = 0;
     int mWidth = 0;
@@ -235,7 +237,11 @@ public:
     uint32_t mClut[16];
     };
   //}}}
+
   std::vector <cSubRect*> mRects;
+  std::array <cTexture*, 4> mTextures = {nullptr};
+  size_t mMaxLines = 0;
+
   bool mChanged = false;
 
 private:
@@ -1326,7 +1332,7 @@ private:
         continue;
 
       if (i >= mRects.size())
-        mRects.push_back (new cSubtitle::cSubRect());
+        mRects.push_back (new cDvbSubtitle::cSubRect());
 
       mRects[i]->mX = regionDisplay->xPos + offsetX;
       mRects[i]->mY = regionDisplay->yPos + offsetY;

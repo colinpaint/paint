@@ -17,7 +17,7 @@
 #include "../tv/cTvApp.h"
 
 // dvb
-#include "../dvb/cSubtitle.h"
+#include "../dvb/cDvbSubtitle.h"
 #include "../dvb/cDvbTransportStream.h"
 
 // utils
@@ -104,7 +104,6 @@ private:
     while (dvbTransportStream->getNumErrors() > pow (10, errorDigits))
       errorDigits++;
 
-    mImageIndex = 0;
     int prevSid = 0;
     for (auto& pidInfoItem : dvbTransportStream->getPidInfoMap()) {
       // iterate for pidInfo
@@ -152,52 +151,58 @@ private:
 
     float clutPotSize = ImGui::GetTextLineHeight()/2.f;
 
-    cSubtitle* subtitle = dvbTransportStream->getSubtitleBySid (pidInfo.mSid);
-    if (subtitle && !subtitle->mRects.empty()) {
-      for (int line = (int)subtitle->mRects.size()-1; line >= 0; line--) {
-        ImVec2 pos = ImGui::GetCursorScreenPos();
-        float clutPotX = pos.x + ImGui::GetWindowWidth() - ImGui::GetTextLineHeight() * 5.f;
+    cDvbSubtitle* subtitle = dvbTransportStream->getSubtitleBySid (pidInfo.mSid);
+    if (subtitle) {
+      // highWaterMark numLines
+      if (subtitle->mRects.size() > subtitle->mMaxLines)
+        subtitle->mMaxLines = subtitle->mRects.size();
 
-        //  scale dst to fit lineHeight
-        float width = ImGui::GetWindowWidth() - ImGui::GetTextLineHeight() * 5.f;
-        ImVec2 dstSize {width, subtitle->mRects[line]->mHeight * width / subtitle->mRects[line]->mWidth};
-        if (dstSize.y > ImGui::GetTextLineHeight()) {
-          float scaleh = ImGui::GetTextLineHeight() / dstSize.y;
-          dstSize.y = ImGui::GetTextLineHeight();
-          dstSize.x *= scaleh;
-          }
-
-        if (mImages[mImageIndex] == nullptr)
-          mImages[mImageIndex] = graphics.createTexture (
-            {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight},
-            (uint8_t*)subtitle->mRects[line]->mPixData);
-        else if (subtitle->mChanged)
-          mImages[mImageIndex]->setPixels ((uint8_t*)subtitle->mRects[line]->mPixData);
-
-        ImGui::Image ((void*)(intptr_t)mImages[mImageIndex]->getTextureId(), dstSize);
-        mImageIndex++;
-
-        // draw subtitle position
-        string text = fmt::format ("{},{}", subtitle->mRects[line]->mX, subtitle->mRects[line]->mY);
-        ImGui::GetWindowDrawList()->AddText (ImGui::GetFont(), ImGui::GetFontSize(), pos, 0xffffffff, text.c_str());
+      size_t line = 0;
+      for (; line < subtitle->mRects.size(); line++) {
+        // line order is reverse y order
+        size_t lineIndex = subtitle->mRects.size() - 1 - line;
 
         // draw clut color pots
-        for (int pot = 0; pot < subtitle->mRects[line]->mClutSize; pot++) {
-          ImVec2 clutPotPos {clutPotX + (pot % 8) * clutPotSize, pos.y + (pot / 8) * clutPotSize};
-          uint32_t color = subtitle->mRects[line]->mClut[pot]; // possible swizzle
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        for (int pot = 0; pot < subtitle->mRects[lineIndex]->mClutSize; pot++) {
+          ImVec2 clutPotPos {pos.x + (pot % 8) * clutPotSize, pos.y + (pot / 8) * clutPotSize};
+          uint32_t color = subtitle->mRects[lineIndex]->mClut[pot]; // possible swizzle
           ImGui::GetWindowDrawList()->AddRectFilled (
             clutPotPos, {clutPotPos.x + clutPotSize - 1.f, clutPotPos.y + clutPotSize - 1.f}, color);
           }
+        ImGui::InvisibleButton (fmt::format ("##pot{}.{}", pidInfo.mPid, line).c_str(),
+                                {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()});
+
+        // draw position
+        ImGui::SameLine();
+        ImGui::TextUnformatted (fmt::format ("{},{:3d}",
+                                subtitle->mRects[lineIndex]->mX, subtitle->mRects[lineIndex]->mY).c_str());
+
+        // subtitle image
+        if (subtitle->mTextures[lineIndex] == nullptr) // create
+          subtitle->mTextures[lineIndex] = graphics.createTexture (
+            {subtitle->mRects[lineIndex]->mWidth, subtitle->mRects[lineIndex]->mHeight},
+            (uint8_t*)subtitle->mRects[lineIndex]->mPixData);
+        else if (subtitle->mChanged) // update
+          subtitle->mTextures[lineIndex]->setPixels ((uint8_t*)subtitle->mRects[lineIndex]->mPixData);
+
+        // draw image, scaled to fit
+        ImGui::SameLine();
+        float scale = ImGui::GetTextLineHeight() / subtitle->mRects[lineIndex]->mHeight;
+        ImGui::Image ((void*)(intptr_t)subtitle->mTextures[lineIndex]->getTextureId(),
+                      {subtitle->mRects[lineIndex]->mWidth * scale, ImGui::GetTextLineHeight()});
         }
+
+      // pad out to maxLines, stops jumping about
+      for (; line < subtitle->mMaxLines; line++)
+        ImGui::InvisibleButton (fmt::format ("##empty{}.{}", pidInfo.mPid, line).c_str(),
+                                {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
 
       // reset changed flag
       subtitle->mChanged = false;
       }
     }
   //}}}
-
-  array <cTexture*, 20> mImages = { nullptr };
-  size_t mImageIndex = 0;
 
   int mPacketDigits = 0;
   int mMaxPidPackets = 0;

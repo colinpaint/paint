@@ -11,7 +11,7 @@
 #include "cDvbSource.h"
 #include "cTransportStream.h"
 
-class cSubtitle;
+class cDvbSubtitle;
 //}}}
 
 class cDvbTransportStream : public cTransportStream {
@@ -21,7 +21,7 @@ public:
 
   std::string getErrorString() { return mErrorString; }
   std::string getSignalString() { return mSignalString; }
-  cSubtitle* getSubtitleBySid (uint16_t sid);
+  cDvbSubtitle* getSubtitleBySid (uint16_t sid);
   std::vector <std::string>& getRecordItems() { return mRecordItems; }
 
   void setSubtitle (bool subtitle);
@@ -58,5 +58,5 @@ private:
   std::vector <std::string> mRecordItems;
 
   bool mSubtitle;
-  std::map <uint16_t, cSubtitle*> mSubtitleMap; // indexed by sid
+  std::map <uint16_t, cDvbSubtitle*> mSubtitleMap; // indexed by sid
   };
