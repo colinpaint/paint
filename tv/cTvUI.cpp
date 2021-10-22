@@ -77,12 +77,12 @@ public:
       ImGui::SameLine();
       ImGui::TextUnformatted (dvbTransportStream->getErrorString().c_str());
 
-      // scrollable contents
+      // draw scrollable contents
       ImGui::PushFont (app.getMonoFont());
       ImGui::BeginChild ("##tv", {0.f,0.f}, false,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
 
-      drawContents (dvbTransportStream);
+      drawContents (dvbTransportStream, app.getGraphics());
 
       ImGui::EndChild();
       ImGui::PopFont();
@@ -92,7 +92,7 @@ public:
   //}}}
 private:
   //{{{
-  void drawContents (cDvbTransportStream* dvbTransportStream) {
+  void drawContents (cDvbTransportStream* dvbTransportStream, cGraphics& graphics) {
   // simple enough to use ImGui interface directly
 
     // list recorded items
@@ -122,62 +122,8 @@ private:
       ImGui::SameLine();
       ImVec2 pos = ImGui::GetCursorScreenPos();
 
-      if (pidInfo.mStreamType == 6) {
-        //{{{  draw subtitle
-        cSubtitle* subtitle = dvbTransportStream->getSubtitleBySid (pidInfo.mSid);
-
-        if (subtitle && !subtitle->mRects.empty()) {
-          float clutPotX = ImGui::GetWindowWidth() - ImGui::GetTextLineHeight() * 5.f;
-          float clutPotSize = ImGui::GetTextLineHeight()/2.f;
-
-          ImVec2 subtitlePos = pos;
-          for (int line = (int)subtitle->mRects.size()-1; line >= 0; line--) {
-            float dstWidth = ImGui::GetWindowWidth() - pos.x;
-            float dstHeight = float(subtitle->mRects[line]->mHeight * dstWidth) / subtitle->mRects[line]->mWidth;
-            if (dstHeight > ImGui::GetTextLineHeight()) {
-              // scale to fit window
-              float scaleh = ImGui::GetTextLineHeight() / dstHeight;
-              dstHeight = ImGui::GetTextLineHeight();
-              dstWidth *= scaleh;
-              }
-
-            // create or update rect image
-            //if (mImage[imageIndex] == -1) {
-            //  if (imageIndex < 20)
-            //    mImage[imageIndex] = vg->createImageRGBA (
-            //      subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight, 0, (uint8_t*)subtitle->mRects[line]->mPixData);
-            //  else
-            //    cLog::log (LOGERROR, "too many cDvbWidget images, fixit");
-            //  }
-            //else if (subtitle->mChanged)  // !!! assumes image is same size as before !!!
-            //  vg->updateImage (mImage[imageIndex], (uint8_t*)subtitle->mRects[line]->mPixData);
-            //auto imagePaint = vg->setImagePattern (cPointF(visx, ySub), cPointF(dstWidth, dstHeight), 0.f, mImage[imageIndex], 1.f);
-            ImGui::GetWindowDrawList()->AddRect (
-              subtitlePos, {subtitlePos.x + dstWidth, subtitlePos.y + dstHeight}, 0xff00ffff);
-            //imageIndex++;
-
-            // draw subtitle position
-            string text = fmt::format ("{},{}", subtitle->mRects[line]->mX, subtitle->mRects[line]->mY);
-            ImGui::GetWindowDrawList()->AddText (
-              ImGui::GetFont(), ImGui::GetFontSize(), subtitlePos, 0xffffffff, text.c_str());
-
-            // draw clut color pots
-            for (int pot = 0; pot < subtitle->mRects[line]->mClutSize; pot++) {
-              ImVec2 clutPotPos {clutPotX + (pot % 8) * clutPotSize, subtitlePos.y + (pot / 8) * clutPotSize};
-              uint32_t color = subtitle->mRects[line]->mClut[pot]; // possible swizzle
-              ImGui::GetWindowDrawList()->AddRectFilled (
-                clutPotPos, {clutPotPos.x + clutPotSize - 1.f, clutPotPos.y + clutPotSize - 1.f}, color);
-              }
-
-            // next subtitle line
-            subtitlePos.y += ImGui::GetTextLineHeight();
-            }
-
-          // reset changed flag
-          subtitle->mChanged = false;
-          }
-        }
-        //}}}
+      if (pidInfo.mStreamType == 6)
+        drawSubtitle (pidInfo, pos, dvbTransportStream, graphics);
 
       // draw stream bar
       mMaxPidPackets = max (mMaxPidPackets, pidInfo.mPackets);
@@ -200,6 +146,84 @@ private:
       }
     }
   //}}}
+  //{{{
+  void drawSubtitle (const cPidInfo& pidInfo, ImVec2 pos, cDvbTransportStream* dvbTransportStream, cGraphics& graphics) {
+
+    size_t imageIndex = 0;
+    cSubtitle* subtitle = dvbTransportStream->getSubtitleBySid (pidInfo.mSid);
+    if (subtitle && !subtitle->mRects.empty()) {
+      float clutPotX = ImGui::GetWindowWidth() - ImGui::GetTextLineHeight() * 5.f;
+      float clutPotSize = ImGui::GetTextLineHeight()/2.f;
+
+      ImVec2 subtitlePos = pos;
+      for (int line = (int)subtitle->mRects.size()-1; line >= 0; line--) {
+        //{{{  scale dst to fit
+        float dstWidth = ImGui::GetWindowWidth() - pos.x;
+        float dstHeight = float(subtitle->mRects[line]->mHeight * dstWidth) / subtitle->mRects[line]->mWidth;
+        if (dstHeight > ImGui::GetTextLineHeight()) {
+          // scale to fit window
+          float scaleh = ImGui::GetTextLineHeight() / dstHeight;
+          dstHeight = ImGui::GetTextLineHeight();
+          dstWidth *= scaleh;
+          }
+        //}}}
+
+        // create or update rect image
+        if (mImages[imageIndex] == nullptr) {
+          if (imageIndex < mImages.max_size()) {
+            //mImages[imageIndex] = graphics.createFrameBuffer();
+            mImages[imageIndex] = graphics.createFrameBuffer (
+              {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight}, cFrameBuffer::eRGBA);
+            //{{{  full create
+            //mImages[imageIndex] = graphics.createFrameBuffer (
+            //  (uint8_t*)subtitle->mRects[line]->mPixData,
+            //  {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight},
+            //  cFrameBuffer::eRGBA);
+            //}}}
+            cLog::log (LOGINFO, fmt::format ("pid:{} creatingimage:{}:{}x{}",
+              pidInfo.mPid,
+              imageIndex, subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight));
+            }
+          else
+            cLog::log (LOGERROR, "too many cDvbWidget images, fixit");
+          }
+        else if (subtitle->mChanged) {
+          cLog::log (LOGINFO, fmt::format ("updating pid:{} image:{}", pidInfo.mPid, imageIndex));
+          // !!! assumes image is same size as before !!!
+          //vg->updateImage (mImage[imageIndex], (uint8_t*)subtitle->mRects[line]->mPixData);
+          }
+
+        // draw image
+        //auto imagePaint = vg->setImagePattern (
+        //  cPointF(visx, ySub), cPointF(dstWidth, dstHeight), 0.f, mImage[imageIndex], 1.f);
+        imageIndex++;
+
+        // draw subtitle image outline
+        ImGui::GetWindowDrawList()->AddRect (subtitlePos, {subtitlePos.x + dstWidth, subtitlePos.y + dstHeight}, 0xff00ffff);
+        //{{{  draw subtitle position
+        string text = fmt::format ("{},{}", subtitle->mRects[line]->mX, subtitle->mRects[line]->mY);
+        ImGui::GetWindowDrawList()->AddText (
+          ImGui::GetFont(), ImGui::GetFontSize(), subtitlePos, 0xffffffff, text.c_str());
+        //}}}
+        //{{{  draw clut color pots
+        for (int pot = 0; pot < subtitle->mRects[line]->mClutSize; pot++) {
+          ImVec2 clutPotPos {clutPotX + (pot % 8) * clutPotSize, subtitlePos.y + (pot / 8) * clutPotSize};
+          uint32_t color = subtitle->mRects[line]->mClut[pot]; // possible swizzle
+          ImGui::GetWindowDrawList()->AddRectFilled (
+            clutPotPos, {clutPotPos.x + clutPotSize - 1.f, clutPotPos.y + clutPotSize - 1.f}, color);
+          }
+        //}}}
+
+        // next subtitle line
+        subtitlePos.y += ImGui::GetTextLineHeight();
+        }
+
+      // reset changed flag
+      subtitle->mChanged = false;
+      }
+    }
+  //}}}
+  array <cFrameBuffer*, 20> mImages = { nullptr};
   int mPacketDigits = 0;
   int mMaxPidPackets = 0;
   };

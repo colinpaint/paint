@@ -83,40 +83,38 @@ int main (int numArgs, char* args[]) {
   for (int i = 1; i < numArgs; i++)
     params.push_back (args[i]);
 
-  // parse and remove recognised mulitplex
-  bool found = false;
-  cDvbMultiplex foundMultiplex = kDvbMultiplexes[0];
-  for (auto it = params.begin(); it < params.end();) {
-    for (auto& multiplex : kDvbMultiplexes) {
-      if (*it == multiplex.mName) {
-        foundMultiplex = multiplex;
-        params.erase (it);
-        found = true;
-        break;
-        }
-      }
-    if (!found)
-      ++it;
-    }
+  cDvbMultiplex useMultiplex = kDvbMultiplexes[0];
+  string filename;
 
-  // parse and remove recognised params
-  for (auto it = params.begin(); it < params.end();) {
-    if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
-    else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
-    else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
-    else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
-    else if (*it == "full") { fullScreen = true; params.erase (it); }
-    else if (*it == "free") { vsync = false; params.erase (it); }
-    else if (*it == "sub") { subtitle = true; params.erase (it); }
-    else ++it;
-    };
+  // parse params
+  for (auto& param : params) {
+    if (param == "log1") { logLevel = LOGINFO1; }
+    else if (param == "log2") { logLevel = LOGINFO2; }
+    else if (param == "log3") { logLevel = LOGINFO3; }
+    else if (param == "dx11") { platformName = "win32"; graphicsName = "dx11"; }
+    else if (param == "full") { fullScreen = true; }
+    else if (param == "free") { vsync = false; }
+    else if (param == "sub") { subtitle = true; }
+    else {
+      // assume param is filename unless it matches multiplex name
+      filename = param;
+      bool found = false;
+      for (auto& multiplex : kDvbMultiplexes)
+        if (param == multiplex.mName) {
+          useMultiplex = multiplex;
+          found = true;
+          filename = "";
+          break;
+          }
+      }
+    }
   //}}}
 
   // start log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, fmt::format ("tv {} {}", platformName, graphicsName));
-  if (params.empty())
-    cLog::log (LOGINFO, fmt::format ("using multiplex {}", foundMultiplex.mName));
+  cLog::log (LOGNOTICE, fmt::format ("telly {} {}", platformName, graphicsName));
+  if (filename.empty())
+    cLog::log (LOGINFO, fmt::format ("using multiplex {}", useMultiplex.mName));
 
   // list static registered classes
   cPlatform::listRegisteredClasses();
@@ -129,7 +127,7 @@ int main (int numArgs, char* args[]) {
   ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
   ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f);
   cTvApp app (platform, graphics, mainFont, monoFont);
-  app.setDvbSource (params.empty() ? "" : cFileUtils::resolve (params[0]), foundMultiplex, subtitle);
+  app.setDvbSource (cFileUtils::resolve (filename), useMultiplex, subtitle);
 
   platform.setResizeCallback (
     //{{{  resize lambda
@@ -147,8 +145,8 @@ int main (int numArgs, char* args[]) {
     //{{{  drop lambda
     [&](vector<string> dropItems) noexcept {
       for (auto& item : dropItems) {
-        cLog::log (LOGINFO, item);
-        app.setDvbSource (item, foundMultiplex, subtitle);
+        app.setDvbSource (item, useMultiplex, subtitle);
+        cLog::log(LOGINFO, item);
         }
       }
     );

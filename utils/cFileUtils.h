@@ -17,6 +17,10 @@
     static std::string resolve (const std::string& shortcut) {
     // resolve windows shprtcut .lnk fileName
 
+      // passthru empty string
+      if (shortcut.empty())
+        return shortcut;
+
       // get IShellLink interface
       IShellLinkA* iShellLink;
       if (CoCreateInstance (CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&iShellLink) == S_OK) {
