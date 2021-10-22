@@ -170,13 +170,11 @@ private:
 
         if (mImages[imageIndex] == nullptr) {
           // createFrameBuffer
-          mImages[imageIndex] = graphics.createFrameBuffer();
-          //mImages[imageIndex] = graphics.createFrameBuffer (
-          //  {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight}, cFrameBuffer::eRGBA);
-          //mImages[imageIndex] = graphics.createFrameBuffer (
-          //  (uint8_t*)subtitle->mRects[line]->mPixData,
-          //  {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight},
-          //  cFrameBuffer::eRGBA);
+          //mImages[imageIndex] = graphics.createFrameBuffer();
+          mImages[imageIndex] = graphics.createFrameBuffer (
+            (uint8_t*)subtitle->mRects[line]->mPixData,
+            {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight},
+            cFrameBuffer::eRGBA);
           cLog::log (LOGINFO, fmt::format ("pid:{} creatingimage:{}:{}x{}",
                      pidInfo.mPid, imageIndex,
                      subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight));

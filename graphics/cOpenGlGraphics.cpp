@@ -1050,13 +1050,12 @@ namespace {
     //}}}
     };
   //}}}
-
   // versions
   int gGlVersion = 0;   // major.minor * 100
   int gGlslVersion = 0; // major.minor * 100
 
   #ifndef USE_IMPL
-    // local implementation of backend impl
+    //{{{  local implementation of backend impl
     bool gDrawBase = false;
     bool gClipOriginBottomLeft = true;
 
@@ -1420,6 +1419,7 @@ namespace {
 
       renderDrawData (viewport->DrawData);
       }
+    //}}}
     //}}}
   #endif
   }
