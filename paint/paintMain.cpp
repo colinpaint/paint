@@ -14,9 +14,9 @@
 #include <stb_image_write.h>
 
 // imGui
-#include "imgui/imgui.h"
+#include "../imgui/imgui.h"
 #ifdef BUILD_IMPLOT
-  #include "implot/implot.h"
+  #include "../implot/implot.h"
 #endif
 
 // UI font
@@ -28,7 +28,6 @@
 #include "../graphics/cGraphics.h"
 #include "../brush/cBrush.h"
 
-#include "../ui/cApp.h"
 #include "../ui/cUI.h"
 
 // canvas
@@ -38,6 +37,7 @@
 // utils
 #include "../utils/cFileUtils.h"
 #include "../utils/cLog.h"
+#include "../utils/cApp.h"
 
 using namespace std;
 //}}}
@@ -52,24 +52,22 @@ int main (int numArgs, char* args[]) {
   bool fullScreen = false;
   bool vsync = true;
   bool showPlotWindow = false;
-  //{{{  parse command line args to params
-  // args to params
-  vector <string> params;
-  for (int i = 1; i < numArgs; i++)
-    params.push_back (args[i]);
+  string filename;
+  //{{{  parse args
 
-  // parse and remove recognised params
-  for (auto it = params.begin(); it < params.end();) {
-    if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
-    else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
-    else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
-    else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
-    else if (*it == "demo") { showDemoWindow = true; params.erase (it); }
-    else if (*it == "full") { fullScreen = true; params.erase (it); }
-    else if (*it == "free") { vsync = false; params.erase (it); }
-    else if (*it == "plot") { showPlotWindow = true; params.erase (it); }
-    else ++it;
-    };
+  for (int i = 1; i < numArgs; i++) {
+    string param = args[i];
+
+    if (param == "log1") { logLevel = LOGINFO1; }
+    else if (param == "log2") { logLevel = LOGINFO2; }
+    else if (param == "log3") { logLevel = LOGINFO3;  }
+    else if (param == "dx11") { platformName = "win32"; graphicsName = "dx11"; }
+    else if (param == "demo") { showDemoWindow = true;  }
+    else if (param == "full") { fullScreen = true;  }
+    else if (param == "free") { vsync = false; }
+    else if (param == "plot") { showPlotWindow = true; }
+    else filename = param;
+    }
   //}}}
 
   // start log
@@ -82,22 +80,12 @@ int main (int numArgs, char* args[]) {
   cBrush::listRegisteredClasses();
   cUI::listRegisteredClasses();
 
-  // create platform, graphics, UI font
   cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync, fullScreen);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
-  //{{{  create canvas and our fonts
-  #ifdef _WIN32
-    cCanvas canvas (platform, graphics,
-      params.empty() ? "../piccies/tv.jpg" : cFileUtils::resolveShortcut (params[0]));
-  #else
-    cCanvas canvas (platform, graphics, params.empty() ? "../piccies/tv.jpg" : params[0]);
-  #endif
-
-  canvas.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
-  canvas.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(&droidSansMono, droidSansMonoSize, 16.f));
-  //}}}
-  if (params.size() > 1)
-    canvas.newLayer (params[1]);
+  ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
+  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(&droidSansMono, droidSansMonoSize, 16.f);
+  cCanvas canvas (platform, graphics, mainFont, monoFont,
+                  filename.empty() ? "../piccies/tv.jpg" : cFileUtils::resolve (filename));
 
   platform.setResizeCallback (
     //{{{  resize lambda
@@ -119,7 +107,7 @@ int main (int numArgs, char* args[]) {
 
       for (auto& item : dropItems) {
         cLog::log (LOGINFO, item);
-        canvas.newLayer (item);
+        canvas.newLayer (cFileUtils::resolve (item));
         }
       }
     );

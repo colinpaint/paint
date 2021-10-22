@@ -7,14 +7,14 @@
 
 // imGui
 #include "../imgui/imgui.h"
-#include "../imgui/myImguiWidgets.h"
+#include "../imgui/myImgui.h"
 
 // stb
 #include <stb_image_write.h>
 
 #include "../platform/cPlatform.h"
 
-#include "cUI.h"
+#include "../ui/cUI.h"
 
 #include "../brush/cBrush.h"
 #include "../paint/cLayer.h"

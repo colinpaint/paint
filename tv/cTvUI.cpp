@@ -171,9 +171,9 @@ private:
         // create or update rect image
         if (mImages[imageIndex] == nullptr) {
           if (imageIndex < mImages.max_size()) {
-            //mImages[imageIndex] = graphics.createFrameBuffer();
-            mImages[imageIndex] = graphics.createFrameBuffer (
-              {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight}, cFrameBuffer::eRGBA);
+            mImages[imageIndex] = graphics.createFrameBuffer();
+            //mImages[imageIndex] = graphics.createFrameBuffer (
+            //  {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight}, cFrameBuffer::eRGBA);
             //{{{  full create
             //mImages[imageIndex] = graphics.createFrameBuffer (
             //  (uint8_t*)subtitle->mRects[line]->mPixData,

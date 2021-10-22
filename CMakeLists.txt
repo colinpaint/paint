@@ -220,7 +220,7 @@ if (BUILD_PAINTBOX)
     endif()
 
     if (MSVC)
-      target_link_libraries (paintbox PRIVATE 0pengl32 d3d11 d3dcompiler ws2_32)
+      target_link_libraries (paintbox PRIVATE Opengl32 d3d11 d3dcompiler ws2_32)
     else()
       target_link_libraries (paintbox PRIVATE GL)
       target_link_options (paintbox PRIVATE -no-pie)

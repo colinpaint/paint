@@ -21,8 +21,8 @@ using namespace std;
 //}}}
 
 //{{{
-cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, cPoint size)
-   : cApp (platform, graphics), mSize(size), mNumChannels(4) {
+cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, cPoint size)
+   : cApp (platform, graphics, mainFont, monoFont), mSize(size), mNumChannels(4) {
 
   // create empty layer
   mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, graphics));
@@ -30,20 +30,20 @@ cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, cPoint size)
   }
 //}}}
 //{{{
-cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, const string& fileName)
-    : cApp (platform, graphics) {
+cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, const std::string& filename)
+    : cApp (platform, graphics, mainFont, monoFont) {
 
-  setName (fileName);
+  mFilename = filename; 
 
   // load file image
-  uint8_t* pixels = stbi_load (fileName.c_str(), &mSize.x, &mSize.y, &mNumChannels, 4);
-  cLayer* layer = new cLayer (pixels, mSize, cFrameBuffer::eRGBA, graphics);
+  uint8_t* pixels = stbi_load (filename.c_str(), &mSize.x, &mSize.y, &mNumChannels, 4);
+  cLayer* layer = new cLayer (pixels, mSize, cFrameBuffer::eRGBA, getGraphics());
   free (pixels);
 
-  layer->setName (fileName);
+  layer->setName (filename);
   mLayers.push_back (layer);
 
-  cLog::log (LOGINFO, fmt::format ("new canvas - {} {} {} {}", fileName, mSize.x, mSize.y, mNumChannels));
+  cLog::log (LOGINFO, fmt::format ("new canvas - {} {} {} {}", filename, mSize.x, mSize.y, mNumChannels));
 
   createResources();
   }

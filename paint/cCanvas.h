@@ -15,11 +15,13 @@ class cBrush;
 
 class cCanvas : public cApp {
 public:
-  cCanvas (cPlatform& platform, cGraphics& graphics, cPoint size);
-  cCanvas (cPlatform& platform, cGraphics& graphics, const std::string& fileName);
+  cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, cPoint size);
+  cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, const std::string& filename);
   virtual ~cCanvas();
 
   // gets
+  std::string getName() const { return mFilename; };
+
   cPoint getSize() { return mSize; }
 
   size_t getNumLayers() { return mLayers.size(); }
@@ -32,6 +34,7 @@ public:
   cLayer* getCurLayer() { return getLayer (mCurLayerIndex); }
 
   uint8_t* getPixels (cPoint& size);
+
 
   // layers
   unsigned newLayer();
@@ -49,6 +52,7 @@ private:
   void createResources();
   cVec2 getLayerPos (cVec2 pos);
 
+  std::string mFilename;
   cPoint mSize;
   int mNumChannels = 0;
 
