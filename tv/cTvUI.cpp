@@ -56,7 +56,66 @@ const vector<string> kRtp5  = {"rtp 5"};
 class cDrawTransportStream {
 public:
   //{{{
-  void draw (cDvbTransportStream* dvbTransportStream) {
+  void draw (cApp& app) {
+
+    cTvApp& tvApp = (cTvApp&)app;
+    cDvbTransportStream* dvbTransportStream = tvApp.getDvbTransportStream();
+
+    // vsync button,fps
+    if (app.getPlatform().hasVsync()) {
+      // vsync button
+      if (toggleButton ("vSync", app.getPlatform().getVsync()))
+        app.getPlatform().toggleVsync();
+
+      // fps text
+      ImGui::SameLine();
+      ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+      ImGui::SameLine();
+      }
+
+    // fullScreen button
+    if (app.getPlatform().hasFullScreen()) {
+      if (toggleButton ("full", app.getPlatform().getFullScreen()))
+        app.getPlatform().toggleFullScreen();
+      ImGui::SameLine();
+      }
+
+    // vertice debug
+    ImGui::TextUnformatted (fmt::format ("{}:{}",
+                            ImGui::GetIO().MetricsRenderVertices,
+                            ImGui::GetIO().MetricsRenderIndices/3).c_str());
+
+
+    ImGui::SameLine();
+    if (toggleButton ("sub", tvApp.getSubtitle()))
+        tvApp.toggleSubtitle();
+
+    if (dvbTransportStream) {
+      ImGui::SameLine();
+      ImGui::TextUnformatted (fmt::format ("{} ", dvbTransportStream->getNumPackets()).c_str());
+      ImGui::SameLine();
+      ImGui::TextUnformatted (fmt::format("{} ", dvbTransportStream->getNumErrors()).c_str());
+      ImGui::SameLine();
+      ImGui::TextUnformatted (dvbTransportStream->getSignalString().c_str());
+      ImGui::SameLine();
+      ImGui::TextUnformatted (dvbTransportStream->getErrorString().c_str());
+
+      ImGui::PushFont (app.getMonoFont());
+      ImGui::BeginChild ("##tv", {0.f,0.f}, false,
+                         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
+
+      drawContents (dvbTransportStream);
+
+      ImGui::EndChild();
+      ImGui::PopFont();
+      }
+
+    }
+  //}}}
+
+private:
+  //{{{
+  void drawContents (cDvbTransportStream* dvbTransportStream) {
 
     // list recorded items
     for (auto& recordItem : dvbTransportStream->getRecordItems())
@@ -165,7 +224,6 @@ public:
     }
   //}}}
 
-private:
   int mPacketDigits = 0;
   int mMaxPidPackets = 0;
   };
@@ -183,53 +241,8 @@ public:
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
     ImGui::Begin ("player", &mOpen, ImGuiWindowFlags_NoTitleBar);
-    //{{{  draw top buttons
-    // vsync button,fps
-    if (app.getPlatform().hasVsync()) {
-      // vsync button
-      if (toggleButton ("vSync", app.getPlatform().getVsync()))
-        app.getPlatform().toggleVsync();
 
-      // fps text
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
-      ImGui::SameLine();
-      }
-
-    // fullScreen button
-    if (app.getPlatform().hasFullScreen()) {
-      if (toggleButton ("full", app.getPlatform().getFullScreen()))
-        app.getPlatform().toggleFullScreen();
-      ImGui::SameLine();
-      }
-
-    // vertice debug
-    ImGui::TextUnformatted (fmt::format ("{}:{}",
-                            ImGui::GetIO().MetricsRenderVertices,
-                            ImGui::GetIO().MetricsRenderIndices/3).c_str());
-
-    //}}}
-
-    cTvApp& tvApp = (cTvApp&)app;
-    cDvbTransportStream* dvbTransportStream = tvApp.getDvbTransportStream();
-    if (dvbTransportStream) {
-      ImGui::SameLine();
-      if (toggleButton ("sub", tvApp.getSubtitle()))
-        tvApp.toggleSubtitle();
-
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{} ", dvbTransportStream->getNumPackets()).c_str());
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format("{} ", dvbTransportStream->getNumErrors()).c_str());
-      ImGui::SameLine();
-      ImGui::TextUnformatted (dvbTransportStream->getSignalString().c_str());
-      ImGui::SameLine();
-      ImGui::TextUnformatted (dvbTransportStream->getErrorString().c_str());
-
-      ImGui::PushFont (app.getMonoFont());
-      mDrawTransportStream.draw (dvbTransportStream);
-      ImGui::PopFont();
-      }
+    mDrawTransportStream.draw (app);
 
     ImGui::End();
     }
