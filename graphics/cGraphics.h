@@ -12,6 +12,27 @@ class cPlatform;
 //}}}
 
 //{{{
+class cTexture {
+public:
+  cTexture (cPoint size) : mSize(size) {}
+  virtual ~cTexture() = default;
+
+  /// gets
+  const cPoint getSize() const { return mSize; }
+  unsigned getTextureId() { return mTextureId; }
+  unsigned getNumPixels() { return mSize.x * mSize.y; }
+  unsigned getNumPixelBytes() { return  mSize.x * mSize.y * 4; }
+
+  virtual uint8_t* getPixels() = 0;
+  virtual void setPixels (uint8_t* pixels) = 0;
+
+protected:
+  cPoint mSize;
+  uint32_t mTextureId = 0;
+  };
+//}}}
+
+//{{{
 class cQuad {
 public:
   cQuad (cPoint size) : mSize(size) {}
@@ -132,6 +153,8 @@ public:
   virtual void shutdown() = 0;
 
   // create graphics resources
+  virtual cTexture* createTexture (cPoint size, uint8_t* pixels) = 0;
+
   virtual cQuad* createQuad (cPoint size) = 0;
   virtual cQuad* createQuad (cPoint size, const cRect& rect) = 0;
 

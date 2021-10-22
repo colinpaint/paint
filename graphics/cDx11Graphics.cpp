@@ -28,6 +28,24 @@ using namespace std;
 constexpr bool kDebug = false;
 namespace {
   //{{{
+  class cDx11Texture : public cTexture {
+  public:
+    cDx11Texture (cPoint size, uint8_t* pixels) : cTexture(size) {
+      (void)pixels;
+      }
+
+    uint8_t* getPixels() final {
+      return nullptr;
+      }
+
+    void setPixels (uint8_t* pixels) final {
+        (void)pixels;
+      }
+
+    };
+  //}}}
+
+  //{{{
   class cDx11Quad : public cQuad {
   public:
     //{{{
@@ -915,6 +933,8 @@ public:
   void shutdown() final;
 
   // create resources
+  cTexture* createTexture (cPoint size, uint8_t* pixels) final;
+
   cQuad* createQuad (cPoint size) final;
   cQuad* createQuad (cPoint size, const cRect& rect) final;
 
@@ -978,6 +998,12 @@ void cDx11Graphics::shutdown() {
 //}}}
 
 // - resource creates
+//{{{
+cTexture* cDx11Graphics::createTexture (cPoint size, uint8_t* pixels) {
+  return new cDx11Texture (size, pixels);
+  }
+//}}}
+
 //{{{
 cQuad* cDx11Graphics::createQuad (cPoint size) {
   return new cDx11Quad (size);

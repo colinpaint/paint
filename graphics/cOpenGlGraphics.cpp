@@ -34,6 +34,36 @@ constexpr bool kDebug = false;
 
 namespace {
   //{{{
+  class cOpenGlTexture : public cTexture {
+  public:
+    //{{{
+    cOpenGlTexture (cPoint size, uint8_t* pixels) : cTexture(size) {
+
+      glGenTextures (1, &mTextureId);
+      glBindTexture (GL_TEXTURE_2D, mTextureId);
+      glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+      }
+    //}}}
+    //{{{
+    virtual ~cOpenGlTexture() {
+      glDeleteTextures (1, &mTextureId);
+      }
+    //}}}
+
+    //{{{
+    uint8_t* getPixels() final {
+      return nullptr;
+      }
+    //}}}
+    //{{{
+    void setPixels (uint8_t* pixels) final {
+      (void)pixels;
+      }
+    //}}}
+    };
+  //}}}
+  //{{{
   class cOpenGlQuad : public cQuad {
   public:
     //{{{
@@ -1431,6 +1461,8 @@ public:
   void shutdown() final;
 
   // create resources
+  cTexture* createTexture (cPoint size, uint8_t* pixels) final;
+
   cQuad* createQuad (cPoint size) final;
   cQuad* createQuad (cPoint size, const cRect& rect) final;
 
@@ -1485,6 +1517,12 @@ void cOpenGlGraphics::shutdown() {
 //}}}
 
 // - resource creates
+//{{{
+cTexture* cOpenGlGraphics::createTexture (cPoint size, uint8_t* pixels) {
+  return new cOpenGlTexture (size, pixels);
+  }
+//}}}
+
 //{{{
 cQuad* cOpenGlGraphics::createQuad (cPoint size) {
   return new cOpenGlQuad (size);
