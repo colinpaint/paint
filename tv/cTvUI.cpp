@@ -27,7 +27,7 @@
 using namespace std;
 //}}}
 
-//{{{
+// cTvView
 class cTvView {
 public:
   //{{{
@@ -90,16 +90,16 @@ public:
 
     }
   //}}}
-
 private:
   //{{{
   void drawContents (cDvbTransportStream* dvbTransportStream) {
+  // simple enough to use ImGui interface directly
 
     // list recorded items
     for (auto& recordItem : dvbTransportStream->getRecordItems())
       ImGui::TextUnformatted (recordItem.c_str());
 
-    // width of error field
+    // calc error number width
     int errorDigits = 1;
     while (dvbTransportStream->getNumErrors() > pow (10, errorDigits))
       errorDigits++;
@@ -109,11 +109,11 @@ private:
       // iterate for pidInfo
       cPidInfo& pidInfo = pidInfoItem.second;
 
-      // draw separator
+      // draw separator, crude test for new service, fails sometimes
       if ((pidInfo.mSid != prevSid) && (pidInfo.mStreamType != 5) && (pidInfo.mStreamType != 11))
         ImGui::Separator();
 
-      // draw pic text
+      // draw pid label
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
                               pidInfo.mPackets, mPacketDigits, pidInfo.mErrors, errorDigits, pidInfo.mPid,
                               getFullPtsString (pidInfo.mPts), pidInfo.getTypeString()).c_str());
@@ -186,13 +186,13 @@ private:
                       pos.y + ImGui::GetTextLineHeight()};
       ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
 
-      // draw stream text
+      // draw stream label
       string streamText = pidInfo.getInfoString();
       if ((pidInfo.mStreamType == 0) && (pidInfo.mSid != 0xFFFF))
         streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
       ImGui::TextUnformatted (streamText.c_str());
 
-      // width of packet field
+      // adjust packet number width
       if (pidInfo.mPackets > pow (10, mPacketDigits))
         mPacketDigits++;
 
@@ -200,12 +200,11 @@ private:
       }
     }
   //}}}
-
   int mPacketDigits = 0;
   int mMaxPidPackets = 0;
   };
-//}}}
 
+// cTvUI
 class cTvUI : public cUI {
 public:
   cTvUI (const string& name) : cUI(name) {}
