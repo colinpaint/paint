@@ -168,21 +168,12 @@ private:
           }
         //}}}
 
-        if (mImages[imageIndex] == nullptr) {
-          // createFrameBuffer
+        if (mImages[imageIndex] == nullptr)
           mImages[imageIndex] = graphics.createTexture (
             {subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight},
             (uint8_t*)subtitle->mRects[line]->mPixData);
-
-          cLog::log (LOGINFO, fmt::format ("pid:{} creatingimage:{}:{}x{}",
-                     pidInfo.mPid, imageIndex,
-                     subtitle->mRects[line]->mWidth, subtitle->mRects[line]->mHeight));
-          }
-        else if (subtitle->mChanged) {
-          // update frameBuffer. assumes same size
+        else if (subtitle->mChanged)
           mImages[imageIndex]->setPixels ((uint8_t*)subtitle->mRects[line]->mPixData);
-          cLog::log (LOGINFO, fmt::format ("updating pid:{} image:{}", pidInfo.mPid, imageIndex));
-          }
 
         ImGui::Image ((void*)(intptr_t)mImages[imageIndex]->getTextureId(), {dstWidth, dstHeight});
         imageIndex++;
@@ -212,6 +203,7 @@ private:
       }
     }
   //}}}
+
   array <cTexture*, 20> mImages = { nullptr };
   int mPacketDigits = 0;
   int mMaxPidPackets = 0;

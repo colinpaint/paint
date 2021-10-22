@@ -40,7 +40,11 @@ namespace {
     cOpenGlTexture (cPoint size, uint8_t* pixels) : cTexture(size) {
 
       glGenTextures (1, &mTextureId);
+
       glBindTexture (GL_TEXTURE_2D, mTextureId);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
       glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
       }
@@ -58,7 +62,10 @@ namespace {
     //}}}
     //{{{
     void setPixels (uint8_t* pixels) final {
-      (void)pixels;
+
+      glBindTexture (GL_TEXTURE_2D, mTextureId);
+      glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
       }
     //}}}
     };

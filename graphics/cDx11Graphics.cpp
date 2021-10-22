@@ -30,18 +30,9 @@ namespace {
   //{{{
   class cDx11Texture : public cTexture {
   public:
-    cDx11Texture (cPoint size, uint8_t* pixels) : cTexture(size) {
-      (void)pixels;
-      }
-
-    uint8_t* getPixels() final {
-      return nullptr;
-      }
-
-    void setPixels (uint8_t* pixels) final {
-        (void)pixels;
-      }
-
+    cDx11Texture (cPoint size, uint8_t* pixels) : cTexture(size) { (void)pixels; }
+    uint8_t* getPixels() final { return nullptr; }
+    void setPixels (uint8_t* pixels) final { (void)pixels; }
     };
   //}}}
 
