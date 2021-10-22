@@ -125,7 +125,7 @@ private:
       // draw stream bar
       mMaxPidPackets = max (mMaxPidPackets, pidInfo.mPackets);
       float frac = pidInfo.mPackets / float(mMaxPidPackets);
-      ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x)),
+      ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x - ImGui::GetTextLineHeight())),
                       pos.y + ImGui::GetTextLineHeight()};
       ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
 
