@@ -14,92 +14,70 @@
 
 #include "../platform/cPlatform.h"
 #include "../graphics/cGraphics.h"
+#include "../tv/cTvApp.h"
+
+// dvb
+#include "../dvb/cSubtitle.h"
+#include "../dvb/cDvbTransportStream.h"
 
 // utils
 #include "../utils/cLog.h"
-#include "../utils/date.h"
 #include "../utils/utils.h"
-
-// dvb
-#include "../dvb/cDvbTransportStream.h"
-#include "../dvb/cSubtitle.h"
-
-#include "../tv/cTvApp.h"
 
 using namespace std;
 //}}}
-//{{{  channels const
-const vector<string> kRadio1 = {"r1", "a128"};
-const vector<string> kRadio2 = {"r2", "a128"};
-const vector<string> kRadio3 = {"r3", "a320"};
-const vector<string> kRadio4 = {"r4", "a64"};
-const vector<string> kRadio5 = {"r5", "a128"};
-const vector<string> kRadio6 = {"r6", "a128"};
-
-const vector<string> kBbc1   = {"bbc1", "a128"};
-const vector<string> kBbc2   = {"bbc2", "a128"};
-const vector<string> kBbc4   = {"bbc4", "a128"};
-const vector<string> kNews   = {"news", "a128"};
-const vector<string> kBbcSw  = {"sw", "a128"};
-
-const vector<string> kWqxr  = {"http://stream.wqxr.org/js-stream.aac"};
-const vector<string> kDvb  = {"dvb"};
-
-const vector<string> kRtp1  = {"rtp 1"};
-const vector<string> kRtp2  = {"rtp 2"};
-const vector<string> kRtp3  = {"rtp 3"};
-const vector<string> kRtp4  = {"rtp 4"};
-const vector<string> kRtp5  = {"rtp 5"};
-//}}}
 
 //{{{
-class cDrawTransportStream {
+class cTvView {
 public:
   //{{{
-  void draw (cApp& app) {
+  void draw (cTvApp& app) {
 
-    cTvApp& tvApp = (cTvApp&)app;
-    cDvbTransportStream* dvbTransportStream = tvApp.getDvbTransportStream();
-
-    // vsync button,fps
     if (app.getPlatform().hasVsync()) {
-      // vsync button
+      //{{{  vsync button
       if (toggleButton ("vSync", app.getPlatform().getVsync()))
-        app.getPlatform().toggleVsync();
+          app.getPlatform().toggleVsync();
 
       // fps text
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
       ImGui::SameLine();
       }
+      //}}}
 
-    // fullScreen button
+    //{{{  fullScreen button
     if (app.getPlatform().hasFullScreen()) {
       if (toggleButton ("full", app.getPlatform().getFullScreen()))
         app.getPlatform().toggleFullScreen();
       ImGui::SameLine();
       }
-
-    // vertice debug
+    //}}}
+    //{{{  vertice debug
     ImGui::TextUnformatted (fmt::format ("{}:{}",
                             ImGui::GetIO().MetricsRenderVertices,
                             ImGui::GetIO().MetricsRenderIndices/3).c_str());
-
-
+    //}}}
+    //{{{  subtitle button
     ImGui::SameLine();
-    if (toggleButton ("sub", tvApp.getSubtitle()))
-        tvApp.toggleSubtitle();
+    if (toggleButton ("sub", app.getSubtitle()))
+      app.toggleSubtitle();
+    //}}}
 
+    cDvbTransportStream* dvbTransportStream = app.getDvbTransportStream();
     if (dvbTransportStream) {
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{} ", dvbTransportStream->getNumPackets()).c_str());
+
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format("{} ", dvbTransportStream->getNumErrors()).c_str());
+
       ImGui::SameLine();
       ImGui::TextUnformatted (dvbTransportStream->getSignalString().c_str());
+
       ImGui::SameLine();
       ImGui::TextUnformatted (dvbTransportStream->getErrorString().c_str());
 
+      // scrollable contents
       ImGui::PushFont (app.getMonoFont());
       ImGui::BeginChild ("##tv", {0.f,0.f}, false,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
@@ -142,8 +120,7 @@ private:
 
       // get pos for stream info
       ImGui::SameLine();
-      ImVec2 pos = ImGui::GetCursorPos();
-      pos.y -= ImGui::GetScrollY();
+      ImVec2 pos = ImGui::GetCursorScreenPos();
 
       if (pidInfo.mStreamType == 6) {
         //{{{  draw subtitle
@@ -236,13 +213,13 @@ public:
 
   //{{{
   void addToDrawList (cApp& app) final {
+  // draw into window
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-
     ImGui::Begin ("player", &mOpen, ImGuiWindowFlags_NoTitleBar);
 
-    mDrawTransportStream.draw (app);
+    mTvView.draw ((cTvApp&)app);
 
     ImGui::End();
     }
@@ -251,7 +228,7 @@ public:
 private:
   // vars
   bool mOpen = true;
-  cDrawTransportStream mDrawTransportStream;
+  cTvView mTvView;
 
   static cUI* create (const string& className) { return new cTvUI (className); }
   inline static const bool mRegistered = registerClass ("tv", &create);
