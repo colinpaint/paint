@@ -79,12 +79,12 @@ private:
     uint32_t getBit() { return getBits (1); }
 
     //{{{
-    int getBitsRead() {
+    uint32_t getBitsRead() {
       return mBitsRead;
       }
     //}}}
     //{{{
-    int getBytesRead() {
+    uint32_t getBytesRead() {
       return (mBitsRead + 7) / 8;
       }
     //}}}
@@ -94,7 +94,7 @@ private:
 
     uint32_t mCache = 0;
     int32_t mCacheBits = 0;
-    int mBitsRead = 0;
+    uint32_t mBitsRead = 0;
     };
   //}}}
 
@@ -221,13 +221,15 @@ private:
   sObject* getObject (int objectId);
   sRegion* getRegion (int regionId);
 
-  bool parseColorLut (const uint8_t* buf, int bufSize);
-  int parse4bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, int pixBufSize, int pixPos, int nonModifyColour);
-  void parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, int bufSize, bool bottom, int nonModifyColour);
-  bool parseObject (const uint8_t* buf, int bufSize);
-  bool parsePage (const uint8_t* buf, int bufSize);
-  bool parseRegion (const uint8_t* buf, int bufSize);
-  bool parseDisplayDefinition (const uint8_t* buf, int bufSize);
+  bool parseColorLut (const uint8_t* buf, uint32_t bufSize);
+  int parse4bit (const uint8_t** buf, uint32_t bufSize,
+                 uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour);
+  void parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, uint32_t bufSize,
+                         bool bottom, bool nonModifyColour);
+  bool parseObject (const uint8_t* buf, uint32_t bufSize);
+  bool parsePage (const uint8_t* buf, uint32_t bufSize);
+  bool parseRegion (const uint8_t* buf, uint32_t bufSize);
+  bool parseDisplayDefinition (const uint8_t* buf, uint32_t bufSize);
 
   bool updateRects();
 
@@ -237,10 +239,10 @@ private:
   void deleteRegionDisplayList (sRegion* region);
 
   // vars
-  int mVersion = 0;
-  int mTimeOut = 0;
-
   cDisplayDefinition mDisplayDefinition;
+
+  int mPageVersion = -1;
+  int mPageTimeOut = 0;
 
   std::vector <cColorLut> mColorLuts;
   sRegion* mRegionList = nullptr;
