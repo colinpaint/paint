@@ -37,19 +37,19 @@ cDvbTransportStream::cDvbTransportStream (const cDvbMultiplex& dvbMultiplex,
 //}}}
 //{{{
 cDvbTransportStream::~cDvbTransportStream() {
-  mSubtitleMap.clear();
+  mDvbSubtitleMap.clear();
   }
 //}}}
 
 //{{{
 bool cDvbTransportStream::hasSubtitle (uint16_t sid) {
-  return mSubtitleMap.find (sid) != mSubtitleMap.end();
+  return mDvbSubtitleMap.find (sid) != mDvbSubtitleMap.end();
   }
 //}}}
 //{{{
 cDvbSubtitle& cDvbTransportStream::getSubtitle (uint16_t sid) {
 
-  auto it = mSubtitleMap.find (sid);
+  auto it = mDvbSubtitleMap.find (sid);
   return (*it).second;
   }
 //}}}
@@ -60,7 +60,7 @@ void cDvbTransportStream::toggleDecodeSubtitle() {
   mDecodeSubtitle = !mDecodeSubtitle;
 
   if (!mDecodeSubtitle)
-    mSubtitleMap.clear();
+    mDvbSubtitleMap.clear();
   }
 //}}}
 
@@ -154,16 +154,20 @@ void cDvbTransportStream::stopServiceProgram (cService* service) {
 
 //{{{
 bool cDvbTransportStream::audDecodePes (cPidInfo* pidInfo, bool skip) {
+
   (void)pidInfo;
   (void)skip;
+
   //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " a - " + dec(pidInfo->getBufUsed());
   return false;
   }
 //}}}
 //{{{
 bool cDvbTransportStream::vidDecodePes (cPidInfo* pidInfo, bool skip) {
+
   (void)pidInfo;
   (void)skip;
+
   //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
   return false;
   }
@@ -173,18 +177,17 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
 
   //{{{
   //cLog::log (LOGINFO1, fmt::format ("subtitle pid:{} sid:{} size:{} {} {} ",
-                                    //pidInfo->mPid,
-                                    //pidInfo->mSid,
-                                    //pidInfo->getBufUsed(),
-                                    //getFullPtsString (pidInfo->mPts),
-                                    //getChannelStringBySid (pidInfo->mSid)));
+                                      //pidInfo->mPid,
+                                      //pidInfo->mSid,
+                                      //pidInfo->getBufUsed(),
+                                      //getFullPtsString (pidInfo->mPts),
+                                      //getChannelStringBySid (pidInfo->mSid)));
   //}}}
 
   if (mDecodeSubtitle) {
-    // find service dvbSubtitle
-    auto it = mSubtitleMap.find (pidInfo->mSid);
-    if (it == mSubtitleMap.end()) // create service dvbSubtitle
-      it = mSubtitleMap.insert (tSubtitleMap::value_type (pidInfo->mSid, cDvbSubtitle())).first;
+    auto it = mDvbSubtitleMap.find (pidInfo->mSid);
+    if (it == mDvbSubtitleMap.end()) // create service dvbSubtitle
+      it = mDvbSubtitleMap.insert (tDvbSubtitleMap::value_type (pidInfo->mSid, cDvbSubtitle())).first;
     it->second.decode (pidInfo->mBuffer, pidInfo->getBufUsed());
     }
 
