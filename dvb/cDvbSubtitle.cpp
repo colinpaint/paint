@@ -80,8 +80,11 @@ bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
 
   while ((bufEnd - bufPtr >= 6) && (*bufPtr++ == 0x0f)) {
     int segmentType = *bufPtr++;
-    int pageId = AVRB16(bufPtr); bufPtr += 2;
-    int segmentLength = AVRB16(bufPtr); bufPtr += 2;
+    int pageId = AVRB16(bufPtr); 
+    bufPtr += 2;
+    int segmentLength = AVRB16(bufPtr); 
+    bufPtr += 2;
+
     if (bufEnd - bufPtr < segmentLength) {
       //{{{  error return
       cLog::log (LOGERROR, "incomplete or broken packet");
@@ -489,9 +492,9 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, int bufSize) {
   region->mVersion = ((*buf) >> 4) & 0x0F;
 
   bool fill = ((*buf++) >> 3) & 1;
-  region->mWidth = AVRB16(buf); 
+  region->mWidth = AVRB16(buf);
   buf += 2;
-  region->mHeight = AVRB16(buf); 
+  region->mHeight = AVRB16(buf);
   buf += 2;
   if ((region->mWidth * region->mHeight) != region->mPixBufSize) {
     region->mPixBufSize = region->mWidth * region->mHeight;
@@ -526,7 +529,7 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, int bufSize) {
   deleteRegionDisplayList (region);
 
   while (buf + 5 < bufEnd) {
-    int objectId = AVRB16(buf); 
+    int objectId = AVRB16(buf);
     buf += 2;
     sObject* object = getObject (objectId);
     if (!object) {
@@ -542,9 +545,9 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, int bufSize) {
       }
     object->mType = (*buf) >> 6;
 
-    int xpos = AVRB16(buf) & 0xFFF; 
+    int xpos = AVRB16(buf) & 0xFFF;
     buf += 2;
-    int ypos = AVRB16(buf) & 0xFFF; 
+    int ypos = AVRB16(buf) & 0xFFF;
     buf += 2;
     auto display = (sObjectDisplay*)malloc (sizeof(sObjectDisplay));
     display->init (objectId, regionId, xpos, ypos);
