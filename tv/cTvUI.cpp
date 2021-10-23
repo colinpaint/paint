@@ -161,9 +161,9 @@ private:
 
       // draw clut color pots
       ImVec2 pos = ImGui::GetCursorScreenPos();
-      for (int pot = 0; pot < subtitle.mRects[lineIndex]->mClutSize; pot++) {
+      for (int pot = 0; pot < subtitle.mRects[lineIndex].mClutSize; pot++) {
         ImVec2 clutPotPos {pos.x + (pot % 8) * clutPotSize, pos.y + (pot / 8) * clutPotSize};
-        uint32_t color = subtitle.mRects[lineIndex]->mClut[pot]; // possible swizzle
+        uint32_t color = subtitle.mRects[lineIndex].mClut[pot]; // possible swizzle
         ImGui::GetWindowDrawList()->AddRectFilled (
           clutPotPos, {clutPotPos.x + clutPotSize - 1.f, clutPotPos.y + clutPotSize - 1.f}, color);
         }
@@ -173,21 +173,21 @@ private:
       // draw position
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{},{:3d}",
-                              subtitle.mRects[lineIndex]->mX, subtitle.mRects[lineIndex]->mY).c_str());
+                              subtitle.mRects[lineIndex].mX, subtitle.mRects[lineIndex].mY).c_str());
 
       // subtitle image
       if (subtitle.mTextures[lineIndex] == nullptr) // create
         subtitle.mTextures[lineIndex] = graphics.createTexture (
-          {subtitle.mRects[lineIndex]->mWidth, subtitle.mRects[lineIndex]->mHeight},
-          (uint8_t*)subtitle.mRects[lineIndex]->mPixData);
+          {subtitle.mRects[lineIndex].mWidth, subtitle.mRects[lineIndex].mHeight},
+          (uint8_t*)subtitle.mRects[lineIndex].mPixData);
       else if (subtitle.mChanged) // update
-        subtitle.mTextures[lineIndex]->setPixels ((uint8_t*)subtitle.mRects[lineIndex]->mPixData);
+        subtitle.mTextures[lineIndex]->setPixels ((uint8_t*)subtitle.mRects[lineIndex].mPixData);
 
       // draw image, scaled to fit
       ImGui::SameLine();
-      float scale = ImGui::GetTextLineHeight() / subtitle.mRects[lineIndex]->mHeight;
+      float scale = ImGui::GetTextLineHeight() / subtitle.mRects[lineIndex].mHeight;
       ImGui::Image ((void*)(intptr_t)subtitle.mTextures[lineIndex]->getTextureId(),
-                    {subtitle.mRects[lineIndex]->mWidth * scale, ImGui::GetTextLineHeight()});
+                    {subtitle.mRects[lineIndex].mWidth * scale, ImGui::GetTextLineHeight()});
       }
 
     // pad out to maxLines, stops jumping about
