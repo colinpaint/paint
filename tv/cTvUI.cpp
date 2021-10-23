@@ -95,8 +95,8 @@ private:
   // simple enough to use ImGui interface directly
 
     // list recorded items
-    for (auto& recordItem : dvbTransportStream->getRecordItems())
-      ImGui::TextUnformatted (recordItem.c_str());
+    for (auto& program : dvbTransportStream->getRecordPrograms())
+      ImGui::TextUnformatted (program.c_str());
 
     // calc error number width
     int errorDigits = 1;

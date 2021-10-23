@@ -124,7 +124,7 @@ void cDvbTransportStream::startServiceProgram (cService* service, tTimePoint tdt
     service->openFile (recordFilePath, 0x1234);
 
     // gui
-    mRecordItems.push_back (recordFilePath);
+    mRecordPrograms.push_back (recordFilePath);
 
     // log program start time,date filename
     string eitStartTime = date::format ("%H.%M.%S %a %d %b %y", date::floor<chrono::seconds>(programStartTime));
