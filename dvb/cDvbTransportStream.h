@@ -30,12 +30,10 @@ public:
   void fileSource (bool ownThread, const std::string& fileName);
 
 protected:
-  virtual void startServiceItem (cService* service, const std::string& itemName,
-                                 std::chrono::system_clock::time_point time,
-                                 std::chrono::system_clock::time_point itemStarttime,
-                                 bool itemSelected) final;
-  virtual void pesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) final;
-  virtual void stopServiceItem (cService* service) final;
+  virtual void startServiceProgram (cService* service, tTimePoint tdtTime,
+                                    const std::string& programName, tTimePoint programTime, bool selected) final;
+  virtual void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) final;
+  virtual void stopServiceProgram (cService* service) final;
 
   virtual bool audDecodePes (cPidInfo* pidInfo, bool skip) final;
   virtual bool vidDecodePes (cPidInfo* pidInfo, bool skip) final;
