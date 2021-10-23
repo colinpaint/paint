@@ -220,11 +220,12 @@ private:
   int mVersion = 0;
   int mTimeOut = 0;
 
+  sClut mDefaultClut;
+  sDisplayDefinition* mDisplayDefinition = nullptr;
+
+  // !!! change to vectors !!!!
+  sClut* mClutList = nullptr;
   sRegion* mRegionList = nullptr;
   sObject* mObjectList = nullptr;
   sRegionDisplay* mDisplayList = nullptr;
-  sDisplayDefinition* mDisplayDefinition = nullptr;
-
-  sClut mDefaultClut;
-  sClut* mClutList = nullptr;
   };

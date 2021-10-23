@@ -38,6 +38,7 @@ constexpr bool mDisplayDefinitionDebug = false;
 // public:
 //{{{
 cDvbSubtitle::cDvbSubtitle() {
+
   mVersion = -1;
   mDefaultClut.mId = -1;
 
@@ -238,6 +239,7 @@ void cDvbSubtitle::deleteCluts() {
 cDvbSubtitle::sClut* cDvbSubtitle::getClut (int clutId) {
 
   sClut* clut = mClutList;
+
   while (clut && (clut->mId != clutId))
     clut = clut->mNext;
 
@@ -248,6 +250,7 @@ cDvbSubtitle::sClut* cDvbSubtitle::getClut (int clutId) {
 cDvbSubtitle::sObject* cDvbSubtitle::getObject (int objectId) {
 
   sObject* object = mObjectList;
+
   while (object && (object->mId != objectId))
     object = object->mNext;
 
@@ -258,6 +261,7 @@ cDvbSubtitle::sObject* cDvbSubtitle::getObject (int objectId) {
 cDvbSubtitle::sRegion* cDvbSubtitle::getRegion (int regionId) {
 
   sRegion* region = mRegionList;
+
   while (region && (region->mId != regionId))
     region = region->mNext;
 
@@ -758,6 +762,7 @@ bool cDvbSubtitle::parseClut (const uint8_t* buf, int bufSize) {
   if (!clut) {
     clut = (sClut*)malloc (sizeof(sClut));
     memcpy (clut, &mDefaultClut, sizeof(*clut));
+
     clut->mId = clutId;
     clut->mVersion = -1;
     clut->mNext = mClutList;
