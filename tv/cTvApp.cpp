@@ -16,10 +16,8 @@
 using namespace std;
 //}}}
 
-bool cTvApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMultiplex, bool subtitle) {
+bool cTvApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMultiplex, bool enableSubtitle) {
 // create dvb source
-
-  mSubtitle = subtitle;
 
   #ifdef _WIN32
     const string kRecordRoot = "/tv/";
@@ -27,7 +25,7 @@ bool cTvApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMulti
     const string kRecordRoot = "/home/pi/tv/";
   #endif
 
-  mDvbTransportStream = new cDvbTransportStream (dvbMultiplex, kRecordRoot, subtitle);
+  mDvbTransportStream = new cDvbTransportStream (dvbMultiplex, kRecordRoot, enableSubtitle);
   if (!mDvbTransportStream)
     return false;
 
@@ -37,9 +35,4 @@ bool cTvApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMulti
     mDvbTransportStream->fileSource (true, filename);
 
   return true;
-  }
-
-void cTvApp::toggleSubtitle() { 
-  mSubtitle = !mSubtitle; 
-  mDvbTransportStream->setSubtitle (mSubtitle);
   }

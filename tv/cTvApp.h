@@ -16,18 +16,14 @@ class cDvbTransportStream;
 
 class cTvApp : public cApp {
 public:
-  cTvApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont) 
+  cTvApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont)
     : cApp (platform, graphics, mainFont, monoFont) {}
   ~cTvApp() = default;
 
   cDvbTransportStream* getDvbTransportStream() { return mDvbTransportStream; }
-  bool getSubtitle() const { return mSubtitle; }
 
-  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex, bool subtitle);
-  void toggleSubtitle();
+  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex, bool enableSubtitle);
 
 private:
   cDvbTransportStream* mDvbTransportStream = nullptr;
-
-  bool mSubtitle = false;
   };

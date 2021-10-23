@@ -16,16 +16,22 @@ class cDvbSubtitle;
 
 class cDvbTransportStream : public cTransportStream {
 public:
-  cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool subtitle);
+  cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool decodeSubtitle);
   virtual ~cDvbTransportStream();
 
+  // dvbSource strings
   std::string getErrorString() { return mErrorString; }
   std::string getSignalString() { return mSignalString; }
-  cDvbSubtitle* getSubtitleBySid (uint16_t sid);
+
   std::vector <std::string>& getRecordItems() { return mRecordItems; }
 
-  void setSubtitle (bool subtitle);
+  bool getDecodeSubtitle() const { return mDecodeSubtitle; }
+  bool hasSubtitle (uint16_t sid);
+  cDvbSubtitle& getSubtitle (uint16_t sid);
 
+  void toggleDecodeSubtitle();
+
+  // sources
   void dvbSource (bool ownThread);
   void fileSource (bool ownThread, const std::string& fileName);
 
@@ -55,6 +61,6 @@ private:
   std::string mRecordRootName;
   std::vector <std::string> mRecordItems;
 
-  bool mSubtitle;
-  std::map <uint16_t, cDvbSubtitle*> mSubtitleMap; // indexed by sid
+  bool mDecodeSubtitle = false;
+  std::map <uint16_t, cDvbSubtitle> mSubtitleMap; // indexed by sid
   };
