@@ -1162,7 +1162,7 @@ bool cDvbSubtitle::updateRects() {
       continue;
 
     if (i >= mRects.size())
-      mRects.push_back (new cDvbSubtitle::cSubRect());
+      mRects.push_back (new cSubtitleRect());
 
     mRects[i]->mX = regionDisplay->xPos + offsetX;
     mRects[i]->mY = regionDisplay->yPos + offsetY;

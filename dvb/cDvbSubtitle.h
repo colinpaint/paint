@@ -20,13 +20,10 @@ public:
 
   // public for widget access
   //{{{
-  class cSubRect {
+  class cSubtitleRect {
   public:
-    //{{{
-    ~cSubRect() {
-      free (mPixData);
-      }
-    //}}}
+    cSubtitleRect() {}
+    ~cSubtitleRect() { free (mPixData); }
 
     int mX = 0;
     int mY = 0;
@@ -41,7 +38,7 @@ public:
 
   // vars
   bool mChanged = false;
-  std::vector <cSubRect*> mRects;
+  std::vector <cSubtitleRect*> mRects;
 
   // holder for gui texture
   size_t mMaxLines = 0;
