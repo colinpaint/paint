@@ -9,9 +9,6 @@
 
 class cTexture;
 //}}}
-#define RGBA(r,g,b,a) (uint32_t ((((a) << 24) & 0xFF000000) | (((r) << 16) & 0x00FF0000) | \
-                                 (((g) <<  8) & 0x0000FF00) |  ((b)        & 0x000000FF)))
-
 #define BGRA(r,g,b,a) (uint32_t ((((a) << 24) & 0xFF000000) | (((b) << 16) & 0x00FF0000) | \
                                  (((g) <<  8) & 0x0000FF00) |  ((r)        & 0x000000FF)))
 
@@ -94,11 +91,13 @@ private:
 
   private:
     uint8_t* mBytePtr;
+
     uint32_t mCache = 0;
     int32_t mCacheBits = 0;
     int mBitsRead = 0;
     };
   //}}}
+
   //{{{
   class cDisplayDefinition {
   public:
@@ -117,40 +116,29 @@ private:
     //{{{
     cColorLut() {
 
-      m16rgba[0] = RGBA (0,0,0, 0xFF);
       m16bgra[0] = BGRA (0,0,0, 0xFF);
-
-      for (int i = 1; i <= 0x0F; i++) {
-        int r = (i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0);
-        int g = (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0);
-        int b = (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0);
-
-        m16rgba[i] = RGBA (r,g,b, 0xFF);
-        m16bgra[i] = BGRA (r,g,b, 0xFF);
-        }
+      for (int i = 1; i <= 0x0F; i++)
+        m16bgra[i] = BGRA ((i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0),
+                           (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0),
+                           (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0),
+                           0xFF);
       }
     //}}}
     //{{{
     cColorLut(uint8_t id) : mId(id) {
 
-      m16rgba[0] = RGBA (0,0,0, 0xFF);
       m16bgra[0] = BGRA (0,0,0, 0xFF);
-
-      for (int i = 1; i <= 0x0F; i++) {
-        int r = (i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0);
-        int g = (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0);
-        int b = (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0);
-
-        m16rgba[i] = RGBA (r, g, b, 0xFF);
-        m16bgra[i] = BGRA (r, g, b, 0xFF);
-        }
+      for (int i = 1; i <= 0x0F; i++)
+        m16bgra[i] = BGRA ((i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0),
+                           (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0),
+                           (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0),
+                           0xFF);
       }
     //}}}
 
     uint8_t mId = 0xFF;
     uint8_t mVersion = 0xFF;
 
-    std::array <uint32_t,16> m16rgba;
     std::array <uint32_t,16> m16bgra;
     };
   //}}}

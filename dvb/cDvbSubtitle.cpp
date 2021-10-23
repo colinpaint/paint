@@ -198,10 +198,8 @@ bool cDvbSubtitle::parseColorLut (const uint8_t* buf, int bufSize) {
       uint8_t g = ((y + gAdd) >> SCALEBITS) & 0xFF;
       uint8_t b = ((y + bAdd) >> SCALEBITS) & 0xFF;
 
-      if ((depth & 0x40) && (entryId < 16)) {
-        colorLut.m16rgba[entryId] = RGBA(r,g,b,alpha);
+      if ((depth & 0x40) && (entryId < 16)) 
         colorLut.m16bgra[entryId] = BGRA(r,g,b,alpha);
-        }
       else
         cLog::log (LOGERROR, fmt::format("colorLut depth:{} entryId:{}", depth, entryId));
       }
@@ -633,9 +631,9 @@ bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, int bufSize) {
   mDisplayDefinition.mVersion = ddsVersion;
   mDisplayDefinition.mX = 0;
   mDisplayDefinition.mY = 0;
-  mDisplayDefinition.mWidth = AVRB16(buf) + 1; 
+  mDisplayDefinition.mWidth = AVRB16(buf) + 1;
   buf += 2;
-  mDisplayDefinition.mHeight = AVRB16(buf) + 1; 
+  mDisplayDefinition.mHeight = AVRB16(buf) + 1;
   buf += 2;
 
   int displayWindow = infoByte & (1 << 3);
@@ -679,8 +677,8 @@ bool cDvbSubtitle::updateRects() {
     subtitleRect.mWidth = region->mWidth;
     subtitleRect.mHeight = region->mHeight;
     subtitleRect.mPixData = (uint32_t*)realloc (subtitleRect.mPixData, region->mPixBufSize * sizeof(uint32_t));
-    for (size_t i = 0; i < colorLut.m16rgba.max_size(); i++)
-      subtitleRect.mColorLut[i] = colorLut.m16rgba[i];
+    for (size_t i = 0; i < colorLut.m16bgra.max_size(); i++)
+      subtitleRect.mColorLut[i] = colorLut.m16bgra[i];
 
     if (region->mDepth == 4) {
       // set pixData with colorLut [pixBuf]
