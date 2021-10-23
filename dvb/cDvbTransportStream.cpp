@@ -47,7 +47,7 @@ bool cDvbTransportStream::hasSubtitle (uint16_t sid) {
   }
 //}}}
 //{{{
-cDvbSubtitle& cDvbTransportStream::getSubtitle (uint16_t sid) {
+cDvbSubtitleContext& cDvbTransportStream::getSubtitleContext (uint16_t sid) {
 
   auto it = mDvbSubtitleMap.find (sid);
   return (*it).second;
@@ -187,8 +187,8 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
   if (mDecodeSubtitle) {
     auto it = mDvbSubtitleMap.find (pidInfo->mSid);
     if (it == mDvbSubtitleMap.end()) // create service dvbSubtitle
-      it = mDvbSubtitleMap.insert (tDvbSubtitleMap::value_type (pidInfo->mSid, cDvbSubtitle())).first;
-    it->second.decode (pidInfo->mBuffer, pidInfo->getBufUsed());
+      it = mDvbSubtitleMap.insert (tDvbSubtitleMap::value_type (pidInfo->mSid, cDvbSubtitleContext(new cDvbSubtitle()))).first;
+    it->second.mDvbSubtitle->decode (pidInfo->mBuffer, pidInfo->getBufUsed());
     }
 
   return false;

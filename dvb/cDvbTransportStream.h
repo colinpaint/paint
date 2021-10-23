@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <array>
 #include <chrono>
 
 #include "cDvbMultiplex.h"
@@ -12,8 +13,17 @@
 #include "cTransportStream.h"
 
 class cDvbSubtitle;
+class cTexture;
 //}}}
-using tDvbSubtitleMap = std::map <uint16_t, cDvbSubtitle>;
+
+class cDvbSubtitleContext {
+public:
+  cDvbSubtitleContext (cDvbSubtitle* dvbSubtitle) : mDvbSubtitle(dvbSubtitle) {}
+  cDvbSubtitle* mDvbSubtitle = nullptr;
+  std::array <cTexture*,4> mTextures = {nullptr};
+  };
+
+using tDvbSubtitleMap = std::map <uint16_t, cDvbSubtitleContext>;
 
 class cDvbTransportStream : public cTransportStream {
 public:
@@ -25,7 +35,7 @@ public:
   // subtitle
   bool getDecodeSubtitle() const { return mDecodeSubtitle; }
   bool hasSubtitle (uint16_t sid);
-  cDvbSubtitle& getSubtitle (uint16_t sid);
+  cDvbSubtitleContext& getSubtitleContext (uint16_t sid);
 
   void toggleDecodeSubtitle();
 

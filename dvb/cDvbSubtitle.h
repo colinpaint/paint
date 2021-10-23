@@ -1,4 +1,4 @@
-// cSubtitle.h
+// cDvbSubtitle.h
 //{{{  includes
 #pragma once
 
@@ -6,8 +6,6 @@
 #include <string>
 #include <vector>
 #include <array>
-
-class cTexture;
 //}}}
 #define BGRA(r,g,b,a) (uint32_t ((((a) << 24) & 0xFF000000) | (((b) << 16) & 0x00FF0000) | \
                                  (((g) <<  8) & 0x0000FF00) |  ((r)        & 0x000000FF)))
@@ -36,7 +34,6 @@ public:
     };
   //}}}
   std::vector <cSubtitleRect*> mRects;
-  std::array <cTexture*,4> mTextures = {nullptr};
   bool mChanged = false;
 
 private:
