@@ -156,19 +156,6 @@ bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
   return false;
   }
 //}}}
-//{{{
-void cDvbSubtitle::debug (std::string prefix) {
-
-  if (mRects.empty())
-    cLog::log (LOGINFO, "subtitle empty");
-  else
-    for (unsigned int i = 0; i < mRects.size(); i++)
-      cLog::log (LOGINFO, fmt::format ("{} rect:{} x:{} y:{} w:{} h:{}",
-                                       prefix, i,
-                                       mRects[i]->mX, mRects[i]->mY,
-                                       mRects[i]->mWidth, mRects[i]->mHeight));
-  }
-//}}}
 
 // private:
 //{{{
@@ -969,7 +956,6 @@ bool cDvbSubtitle::updateRects() {
   return true;
   }
 //}}}
-
 //{{{  unused clut stuff
 //if ((depth & 0x80) && (entryId < 4))
 //  clut->mClut4[entryId] = RGBA(r, g, b, alpha);

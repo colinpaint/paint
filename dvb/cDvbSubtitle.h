@@ -16,9 +16,11 @@ public:
   ~cDvbSubtitle();
 
   bool decode (const uint8_t* buf, int bufSize);
-  void debug (std::string prefix);
 
-  // public for widget access
+  // vars
+  bool mChanged = false;
+  size_t mNumRegions = 0;
+
   //{{{
   class cSubtitleRect {
   public:
@@ -35,10 +37,6 @@ public:
     uint32_t mClut[16];
     };
   //}}}
-
-  // vars
-  bool mChanged = false;
-  size_t mNumRegions = 0;
   std::vector <cSubtitleRect*> mRects;
   std::array <cTexture*,4> mTextures = {nullptr};
 
