@@ -151,10 +151,10 @@ private:
     float potSize = ImGui::GetTextLineHeight()/2.f;
 
     size_t line = 0;
-    for (; line < subtitleContext.mDvbSubtitle->mNumRegions; line++) {
+    for (; line < subtitleContext.mDvbSubtitle.mNumRegions; line++) {
       // line order is reverse y order
-      size_t lineIndex = subtitleContext.mDvbSubtitle->mRects.size() - 1 - line;
-      cDvbSubtitle::cSubtitleRect& subtitleRect = *subtitleContext.mDvbSubtitle->mRects[lineIndex];
+      size_t lineIndex = subtitleContext.mDvbSubtitle.mRects.size() - 1 - line;
+      cDvbSubtitle::cSubtitleRect& subtitleRect = *subtitleContext.mDvbSubtitle.mRects[lineIndex];
 
       // draw clut color pots
       ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -176,7 +176,7 @@ private:
           subtitleContext.mTextures[lineIndex] = graphics.createTexture (
         {subtitleRect.mWidth, subtitleRect.mHeight},
         (uint8_t*)subtitleRect.mPixData);
-      else if (subtitleContext.mDvbSubtitle->mChanged) // update
+      else if (subtitleContext.mDvbSubtitle.mChanged) // update
         subtitleContext.mTextures[lineIndex]->setPixels ((uint8_t*)subtitleRect.mPixData);
 
       // draw image, scaled to fit
@@ -187,12 +187,12 @@ private:
       }
 
     // pad out to maxLines, stops jumping about
-    for (; line < subtitleContext.mDvbSubtitle->mRects.size(); line++)
+    for (; line < subtitleContext.mDvbSubtitle.mRects.size(); line++)
       ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
                               {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
 
     // reset changed flag
-    subtitleContext.mDvbSubtitle->mChanged = false;
+    subtitleContext.mDvbSubtitle.mChanged = false;
     }
   //}}}
 

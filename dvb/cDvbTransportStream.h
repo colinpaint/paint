@@ -10,20 +10,26 @@
 
 #include "cDvbMultiplex.h"
 #include "cDvbSource.h"
+#include "cDvbSubtitle.h"
 #include "cTransportStream.h"
 
 class cDvbSubtitle;
 class cTexture;
 //}}}
 
+//{{{
 class cDvbSubtitleContext {
 public:
-  cDvbSubtitleContext (cDvbSubtitle* dvbSubtitle) : mDvbSubtitle(dvbSubtitle) {}
-  cDvbSubtitle* mDvbSubtitle = nullptr;
+  cDvbSubtitleContext() = default;
+  ~cDvbSubtitleContext() {
+    // should delete textures
+    }
+
+  cDvbSubtitle mDvbSubtitle;
   std::array <cTexture*,4> mTextures = {nullptr};
   };
-
-using tDvbSubtitleMap = std::map <uint16_t, cDvbSubtitleContext>;
+//}}}
+using tDvbSubtitleContextMap = std::map <uint16_t, cDvbSubtitleContext>;
 
 class cDvbTransportStream : public cTransportStream {
 public:
@@ -75,5 +81,5 @@ private:
 
   // subtitle
   bool mDecodeSubtitle = false;
-  tDvbSubtitleMap mDvbSubtitleMap; // indexed by sid
+  tDvbSubtitleContextMap mDvbSubtitleContextMap; // indexed by sid
   };
