@@ -150,12 +150,8 @@ private:
 
     float clutPotSize = ImGui::GetTextLineHeight()/2.f;
 
-    // highWaterMark numLines
-    if (subtitle.mRects.size() > subtitle.mMaxLines)
-      subtitle.mMaxLines = subtitle.mRects.size();
-
     size_t line = 0;
-    for (; line < subtitle.mRects.size(); line++) {
+    for (; line < subtitle.mNumRegions; line++) {
       // line order is reverse y order
       size_t lineIndex = subtitle.mRects.size() - 1 - line;
       cDvbSubtitle::cSubtitleRect& subtitleRect = *subtitle.mRects[lineIndex];
@@ -192,7 +188,7 @@ private:
       }
 
     // pad out to maxLines, stops jumping about
-    for (; line < subtitle.mMaxLines; line++)
+    for (; line < subtitle.mRects.size(); line++)
       ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
                               {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
 

@@ -47,20 +47,6 @@ cDvbSubtitle::cDvbSubtitle() {
   //mDefaultClut.mClut4[2] = RGBA (  0,   0,   0, 255);
   //mDefaultClut.mClut4[3] = RGBA (127, 127, 127, 255);
   //}}}
-  //{{{  init 4bit clut - not very useful ?
-  mDefaultClut.mClut16[0] = RGBA (0, 0, 0, 0);
-  mDefaultClut.mClut16bgra[0] = BGRA (0, 0, 0, 0);
-
-  for (int i = 1; i <= 0x0F; i++) {
-    int r = (i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0);
-    int g = (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0);
-    int b = (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0);
-    int a = 0xFF;
-
-    mDefaultClut.mClut16[i] = RGBA (r, g, b, a);
-    mDefaultClut.mClut16bgra[i] = BGRA (r, g, b, a);
-    }
-  //}}}
   //{{{  init 8bit clut
   //mDefaultClut.mClut256[0] = RGBA (0, 0, 0, 0);
 
@@ -110,6 +96,20 @@ cDvbSubtitle::cDvbSubtitle() {
 
     //mDefaultClut.mClut256[i] = RGBA(r, g, b, a);
     //}
+  //}}}
+  //{{{  init 4bit clut
+  mDefaultClut.mClut16[0] = RGBA (0, 0, 0, 0);
+  mDefaultClut.mClut16bgra[0] = BGRA (0, 0, 0, 0);
+
+  for (int i = 1; i <= 0x0F; i++) {
+    int r = (i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0);
+    int g = (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0);
+    int b = (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0);
+    int a = 0xFF;
+
+    mDefaultClut.mClut16[i] = RGBA (r, g, b, a);
+    mDefaultClut.mClut16bgra[i] = BGRA (r, g, b, a);
+    }
   //}}}
 
   mDefaultClut.mNext = NULL;
@@ -450,6 +450,48 @@ cDvbSubtitle::sRegion* cDvbSubtitle::getRegion (int regionId) {
   //}
 //}}}
 //{{{
+//int parse8bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, int pixBufSize, int pixPos, int nonModifyColour) {
+
+  //pixBuf += pixPos;
+
+  //const uint8_t* bufEnd = *buf + bufSize;
+  //while ((*buf < bufEnd) && (pixPos < pixBufSize)) {
+    //int bits = *(*buf)++;
+    //if (bits) {
+      //if (nonModifyColour != 1 || bits != 1)
+        //*pixBuf++ = bits;
+      //pixPos++;
+      //}
+    //else {
+      //bits = *(*buf)++;
+      //int runLength = bits & 0x7f;
+      //if ((bits & 0x80) == 0) {
+        //if (runLength == 0)
+          //return pixPos;
+        //bits = 0;
+        //}
+      //else
+        //bits = *(*buf)++;
+
+      //if ((nonModifyColour == 1) && (bits == 1))
+        //pixPos += runLength;
+      //else {
+        //while (runLength-- > 0 && pixPos < pixBufSize) {
+          //*pixBuf++ = bits;
+          //pixPos++;
+          //}
+        //}
+      //}
+    //}
+
+  //if (*(*buf)++)
+    //cLog::log (LOGERROR, "line overflow");
+
+  //return pixPos;
+  //}
+//}}}
+
+//{{{
 int cDvbSubtitle::parse4bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, int pixBufSize, int pixPos, int nonModifyColour, uint8_t* mapTable) {
 
   pixBuf += pixPos;
@@ -602,47 +644,6 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, 
   *buf += bitStream.getBytesRead();
   return pixPos;
   }
-//}}}
-//{{{
-//int parse8bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, int pixBufSize, int pixPos, int nonModifyColour) {
-
-  //pixBuf += pixPos;
-
-  //const uint8_t* bufEnd = *buf + bufSize;
-  //while ((*buf < bufEnd) && (pixPos < pixBufSize)) {
-    //int bits = *(*buf)++;
-    //if (bits) {
-      //if (nonModifyColour != 1 || bits != 1)
-        //*pixBuf++ = bits;
-      //pixPos++;
-      //}
-    //else {
-      //bits = *(*buf)++;
-      //int runLength = bits & 0x7f;
-      //if ((bits & 0x80) == 0) {
-        //if (runLength == 0)
-          //return pixPos;
-        //bits = 0;
-        //}
-      //else
-        //bits = *(*buf)++;
-
-      //if ((nonModifyColour == 1) && (bits == 1))
-        //pixPos += runLength;
-      //else {
-        //while (runLength-- > 0 && pixPos < pixBufSize) {
-          //*pixBuf++ = bits;
-          //pixPos++;
-          //}
-        //}
-      //}
-    //}
-
-  //if (*(*buf)++)
-    //cLog::log (LOGERROR, "line overflow");
-
-  //return pixPos;
-  //}
 //}}}
 //{{{
 void cDvbSubtitle::parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, int bufSize,
@@ -814,7 +815,6 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, int bufSize) {
     sRegionDisplay* display = mDisplayList;
     while (display && (display->mRegionId != regionId))
       display = display->mNext;
-
     if (display) {
       cLog::log (LOGERROR, "duplicate region");
       break;
@@ -1044,6 +1044,7 @@ bool cDvbSubtitle::parseClut (const uint8_t* buf, int bufSize) {
       //  clut->mClut256[entryId] = RGBA(r, g, b, alpha);
       else{}
         //cLog::log (LOGERROR, "clut error depth:" + hex(depth) + " entryId:" + hex(entryId));
+
       //if (mClutDebug)
       //  cLog::log (LOGINFO, "- depth:" + hex(depth) +
       //                      " id:" + hex(entryId) +
@@ -1155,54 +1156,47 @@ bool cDvbSubtitle::updateRects() {
   int offsetX = mDisplayDefinition ? mDisplayDefinition->mX : 0;
   int offsetY = mDisplayDefinition ? mDisplayDefinition->mY : 0;
 
-  size_t i = 0;
+  size_t regionIndex = 0;
   for (sRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
     sRegion* region = getRegion (regionDisplay->mRegionId);
     if (!region || !region->mDirty)
       continue;
 
-    if (i >= mRects.size())
-      mRects.push_back (new cSubtitleRect());
-
-    mRects[i]->mX = regionDisplay->xPos + offsetX;
-    mRects[i]->mY = regionDisplay->yPos + offsetY;
-    mRects[i]->mWidth = region->mWidth;
-    mRects[i]->mHeight = region->mHeight;
-
     auto clut = getClut (region->mClut);
     if (!clut)
       clut = &mDefaultClut;
 
-    // write rect pixData from region pixBuf using clut
-    mRects[i]->mPixData = (uint32_t*)realloc (mRects[i]->mPixData, region->mPixBufSize * sizeof(uint32_t));
-    uint32_t* pixDataPtr = mRects[i]->mPixData;
-    for (int pix = 0; pix < region->mPixBufSize; pix++)
-      switch (region->mDepth) {
-        //case 2:
-        //  *pixDataPtr++ = clut->mClut4[region->mPixBuf[pix]];
-        //  break;
-        case 4:
-          *pixDataPtr++ = clut->mClut16bgra[region->mPixBuf[pix]];
-          break;
-        //case 8:
-        //  *pixDataPtr++ = clut->mClut256[region->mPixBuf[pix]];
-        //  break;
-        default:
-          cLog::log (LOGERROR, fmt::format ("unknown depth:{}", region->mDepth));
-        }
+    if (regionIndex >= mRects.size())
+      mRects.push_back (new cSubtitleRect());
 
-    // copy clut16 for widget debug
-    mRects[i]->mClutSize = 16;
-    memcpy (mRects[i]->mClut, clut->mClut16, sizeof(clut->mClut16));
+    cSubtitleRect& subtitleRect = *mRects[regionIndex];
+
+    subtitleRect.mX = regionDisplay->xPos + offsetX;
+    subtitleRect.mY = regionDisplay->yPos + offsetY;
+    subtitleRect.mWidth = region->mWidth;
+    subtitleRect.mHeight = region->mHeight;
+    subtitleRect.mPixData = (uint32_t*)realloc (subtitleRect.mPixData, region->mPixBufSize * sizeof(uint32_t));
+    subtitleRect.mClutSize = 16;
+    memcpy (subtitleRect.mClut, clut->mClut16, sizeof(clut->mClut16));
+
+    if (region->mDepth == 4) {
+      // set pixData with clut [pixBuf]
+      uint32_t* ptr = subtitleRect.mPixData;
+      for (int i = 0; i < region->mPixBufSize; i++)
+        *ptr++ = clut->mClut16bgra[region->mPixBuf[i]];
+      }
+    else {
+      //{{{  error unimplemented clut
+      cLog::log (LOGERROR, fmt::format ("unimplemented regionDepth:{}", region->mDepth));
+      // *pixDataPtr++ = clut->mClut4[region->mPixBuf[pix]]; break;
+      // *pixDataPtr++ = clut->mClut256[region->mPixBuf[pix]]; break;
+      }
+      //}}}
 
     mChanged = true;
-    i++;
+    regionIndex++;
     }
-
-  while (mRects.size() > i) {
-    mRects.pop_back();
-    cLog::log (LOGINFO1, fmt::format ("- updateSubtitle pop {} {}",i,mRects.size()));
-    }
+  mNumRegions = regionIndex;
 
   return true;
   }

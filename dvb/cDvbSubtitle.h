@@ -38,10 +38,8 @@ public:
 
   // vars
   bool mChanged = false;
+  size_t mNumRegions = 0;
   std::vector <cSubtitleRect*> mRects;
-
-  // holder for gui texture
-  size_t mMaxLines = 0;
   std::array <cTexture*,4> mTextures = {nullptr};
 
 private:
