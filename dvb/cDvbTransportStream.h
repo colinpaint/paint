@@ -13,6 +13,7 @@
 
 class cDvbSubtitle;
 //}}}
+using tSubtitleMap = std::map <uint16_t, cDvbSubtitle>;
 
 class cDvbTransportStream : public cTransportStream {
 public:
@@ -61,5 +62,5 @@ private:
   std::vector <std::string> mRecordPrograms;
 
   bool mDecodeSubtitle = false;
-  std::map <uint16_t, cDvbSubtitle> mSubtitleMap; // indexed by sid
+  tSubtitleMap mSubtitleMap; // indexed by sid
   };

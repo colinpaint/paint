@@ -22,9 +22,11 @@ public:
   //{{{
   class cSubRect {
   public:
+    //{{{
     ~cSubRect() {
       free (mPixData);
       }
+    //}}}
 
     int mX = 0;
     int mY = 0;
@@ -37,11 +39,13 @@ public:
     };
   //}}}
 
-  std::vector <cSubRect*> mRects;
-  std::array <cTexture*, 4> mTextures = {nullptr};
-  size_t mMaxLines = 0;
-
+  // vars
   bool mChanged = false;
+  std::vector <cSubRect*> mRects;
+
+  // holder for gui texture
+  size_t mMaxLines = 0;
+  std::array <cTexture*,4> mTextures = {nullptr};
 
 private:
   //{{{

@@ -181,15 +181,10 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
   //}}}
 
   if (mDecodeSubtitle) {
-    // find or create sid service cSubtitleContext
+    // find service dvbSubtitle
     auto it = mSubtitleMap.find (pidInfo->mSid);
-    if (it == mSubtitleMap.end()) {
-      auto insertPair = mSubtitleMap.insert (
-        map <uint16_t, cDvbSubtitle>::value_type (pidInfo->mSid, cDvbSubtitle()));
-      it = insertPair.first;
-      cLog::log (LOGINFO1, fmt::format ("cDvb::subDecodePes - create serviceStuff sid:{}",pidInfo->mSid));
-      }
-
+    if (it == mSubtitleMap.end()) // create service dvbSubtitle
+      it = mSubtitleMap.insert (tSubtitleMap::value_type (pidInfo->mSid, cDvbSubtitle())).first;
     it->second.decode (pidInfo->mBuffer, pidInfo->getBufUsed());
     }
 
