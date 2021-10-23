@@ -14,6 +14,8 @@
 
 #include <time.h>
 //}}}
+using tTimePoint = std::chrono::system_clock::time_point;
+using tDuration = std::chrono::seconds;
 
 //{{{
 class cPidInfo {
@@ -71,8 +73,7 @@ public:
 //{{{
 class cEpgItem {
 public:
-  cEpgItem (bool now, bool record,
-            std::chrono::system_clock::time_point time, std::chrono::seconds duration,
+  cEpgItem (bool now, bool record, tTimePoint time, tDuration duration,
             const std::string& titleString, const std::string& infoString)
     : mNow(now), mRecord(record), mTime(time), mDuration(duration), mTitleString(titleString), mInfoString(infoString) {}
   ~cEpgItem() {}
@@ -81,8 +82,8 @@ public:
   std::string getTitleString() { return mTitleString; }
   std::string getDesriptionString() { return mInfoString; }
 
-  std::chrono::seconds getDuration() { return mDuration; }
-  std::chrono::system_clock::time_point getTime() { return mTime; }
+  tDuration getDuration() { return mDuration; }
+  tTimePoint getTime() { return mTime; }
 
   //{{{
   bool toggleRecord() {
@@ -91,8 +92,7 @@ public:
     }
   //}}}
   //{{{
-  void set (std::chrono::system_clock::time_point time, std::chrono::seconds duration,
-            const std::string& titleString, const std::string& infoString) {
+  void set (tTimePoint time, tDuration duration, const std::string& titleString, const std::string& infoString) {
     mTime = time;
     mDuration = duration;
     mTitleString = titleString;
@@ -105,8 +105,8 @@ private:
 
   bool mRecord = false;
 
-  std::chrono::system_clock::time_point mTime;
-  std::chrono::seconds mDuration;
+  tTimePoint mTime;
+  tDuration mDuration;
 
   std::string mTitleString;
   std::string mInfoString;
@@ -203,26 +203,25 @@ public:
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
 
   virtual void clear();
-  int64_t demux (const std::vector<uint16_t>& pids, uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
+  int64_t demux (const std::vector<uint16_t>& pids, uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
+                 bool skip);
 
   // vars
   std::mutex mMutex;
 
 protected:
   //{{{
-  virtual void startServiceItem (cService* service, const std::string& itemName,
-                      std::chrono::system_clock::time_point time,
-                      std::chrono::system_clock::time_point itemStartTime,
-                      bool itemSelected) {
+  virtual void startServiceProgram (cService* service, tTimePoint tdtTime,
+                                    const std::string& programName, tTimePoint programStartTime, bool selected) {
    (void)service;
-   (void)itemName;
-   (void)time;
-   (void)itemStartTime;
-   (void)itemSelected;
+   (void)tdtTime;
+   (void)programName;
+   (void)programStartTime;
+   (void)selected;
    }
   //}}}
-  virtual void pesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) { (void)sid; (void)pid; (void)ts; }
-  virtual void stopServiceItem (cService* service) { (void)service; }
+  virtual void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) { (void)sid; (void)pid; (void)ts; }
+  virtual void stopServiceProgram (cService* service) { (void)service; }
 
   virtual bool audDecodePes (cPidInfo* pidInfo, bool skip) { (void)pidInfo; (void)skip; return false; }
   virtual bool audAltDecodePes (cPidInfo* pidInfo, bool skip) { (void)pidInfo; (void)skip; return false; }

@@ -464,7 +464,7 @@ cService::~cService() {
 
 // get
 //{{{
-bool cService::isEpgRecord (const string& title, system_clock::time_point startTime) {
+bool cService::isEpgRecord (const string& title, tTimePoint startTime) {
 // return true if startTime, title selected to record in epg
 
   auto epgItemIt = mEpgItemMap.find (startTime);
@@ -493,8 +493,7 @@ void cService::setAudPid (uint16_t pid, uint16_t streamType) {
   }
 //}}}
 //{{{
-bool cService::setNow (bool record,
-                       system_clock::time_point time, seconds duration,
+bool cService::setNow (bool record, tTimePoint time, tDuration duration,
                        const string& titleString, const string& infoString) {
 
   if (mNowEpgItem && (mNowEpgItem->getTime() == time))
@@ -508,16 +507,14 @@ bool cService::setNow (bool record,
   }
 //}}}
 //{{{
-bool cService::setEpg (bool record,
-                       system_clock::time_point startTime, seconds duration,
+bool cService::setEpg (bool record, tTimePoint startTime, tDuration duration,
                        const string& titleString, const string& infoString) {
 // could return true only if changed
 
   auto epgItemIt = mEpgItemMap.find (startTime);
   if (epgItemIt == mEpgItemMap.end()) {
-    mEpgItemMap.insert (
-      map <system_clock::time_point, cEpgItem*>::value_type (
-        startTime, new cEpgItem (false, record, startTime, duration, titleString, infoString)));
+    mEpgItemMap.insert (map <tTimePoint, cEpgItem*>::value_type (
+                        startTime, new cEpgItem (false, record, startTime, duration, titleString, infoString)));
     }
   else
     epgItemIt->second->set (startTime, duration, titleString, infoString);
@@ -1136,7 +1133,7 @@ int64_t cTransportStream::demux (const vector<uint16_t>& pids,
               //}}}
             else if (pids.empty() || (pid == pids[0]) || ((pids.size() > 1) && (pid == pids[1]))) {
               //{{{  pes
-              pesPacket (pidInfo->mSid, pidInfo->mPid, ts-1);
+              programPesPacket (pidInfo->mSid, pidInfo->mPid, ts-1);
 
               ts += headerBytes;
               tsBytesLeft -= headerBytes;
@@ -1497,7 +1494,7 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
             // known service
             auto startTime = system_clock::from_time_t (
               MjdToEpochTime (eitEvent->mjd) + BcdTimeToSeconds (eitEvent->start_time));
-            seconds duration (BcdTimeToSeconds (eitEvent->duration));
+            tDuration duration (BcdTimeToSeconds (eitEvent->duration));
 
             // get title
             auto bufPtr = buf + sizeof(descr_short_event_struct) - 1;
@@ -1527,9 +1524,9 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                                                     serviceIt->second.getNowTitleString();
 
                   // callback to override to start new serviceItem program
-                  startServiceItem (&serviceIt->second,
-                                    titleString, mTime, startTime,
-                                    serviceIt->second.isEpgRecord (titleString, startTime));
+                  startServiceProgram (&serviceIt->second, mTime,
+                                       titleString, startTime,
+                                       serviceIt->second.isEpgRecord (titleString, startTime));
                   }
                 }
               }
