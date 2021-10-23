@@ -226,7 +226,7 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, uint32_t bufSize,
       bits = (uint8_t)bitStream.getBit();
       if (bits == 0) {
         //{{{  simple runlength
-        uint8_t runLength = (uint8_t)bitStream.getBits (3);
+        int runLength = (uint8_t)bitStream.getBits (3);
         if (runLength == 0) {
           *buf += bitStream.getBytesRead();
           return pixPos;
@@ -245,7 +245,7 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, uint32_t bufSize,
         if (bits == 0) {
           //{{{  bits = 0
           uint8_t runBits = (uint8_t)bitStream.getBits (2);
-          uint8_t runLength = runBits + 4;
+          int runLength = runBits + 4;
 
           bits = (uint8_t)bitStream.getBits (4);
           if (nonModifyColour && (bits == 1))
@@ -280,9 +280,9 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, uint32_t bufSize,
           else if (bits == 2) {
             //{{{  2
             uint8_t runBits = (uint8_t)bitStream.getBits (4);
-            uint8_t runLength = runBits + 9;
-            bits = (uint8_t)bitStream.getBits (4);
+            int runLength = runBits + 9;
 
+            bits = (uint8_t)bitStream.getBits (4);
             if (nonModifyColour && (bits == 1))
               pixPos += runLength;
             else
@@ -295,9 +295,9 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, uint32_t bufSize,
           else if (bits == 3) {
             //{{{  3
             uint8_t runBits = (uint8_t)bitStream.getBits (8);
-            uint8_t runLength = runBits + 25;
-            bits = (uint8_t)bitStream.getBits (4);
+            int runLength = runBits + 25;
 
+            bits = (uint8_t)bitStream.getBits (4);
             if (nonModifyColour && (bits == 1))
               pixPos += runLength;
             else
