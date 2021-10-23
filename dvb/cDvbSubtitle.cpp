@@ -18,44 +18,17 @@ class cTexture;
 #define ONE_HALF  (1 << (SCALEBITS - 1))
 #define FIX(x)    ((int) ((x) * (1<<SCALEBITS) + 0.5))
 
-#define RGBA(r,g,b,a) (uint32_t ((((a) << 24) & 0xFF000000) | (((r) << 16) & 0x00FF0000) | \
-                                 (((g) <<  8) & 0x0000FF00) |  ((b)        & 0x000000FF)))
 
 // don't inderstand where the BGRA is introduced - something wrong somewhere
-#define BGRA(r,g,b,a) (uint32_t ((((a) << 24) & 0xFF000000) | (((b) << 16) & 0x00FF0000) | \
-                                 (((g) <<  8) & 0x0000FF00) |  ((r)        & 0x000000FF)))
 //}}}
 
 // public:
-//{{{
-cDvbSubtitle::cDvbSubtitle() {
-
-  mVersion = -1;
-  mDefaultClut.mId = -1;
-
-  //  init 4bit clut
-  mDefaultClut.mClut16[0] = RGBA (0, 0, 0, 0);
-  mDefaultClut.mClut16bgra[0] = BGRA (0, 0, 0, 0);
-
-  for (int i = 1; i <= 0x0F; i++) {
-    int r = (i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0);
-    int g = (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0);
-    int b = (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0);
-    int a = 0xFF;
-
-    mDefaultClut.mClut16[i] = RGBA (r, g, b, a);
-    mDefaultClut.mClut16bgra[i] = BGRA (r, g, b, a);
-    }
-
-  mDefaultClut.mNext = NULL;
-  }
-//}}}
 //{{{
 cDvbSubtitle::~cDvbSubtitle() {
 
   deleteRegions();
   deleteObjects();
-  deleteCluts();
+  deleteColorLuts();
 
   free (mDisplayDefinition);
 
@@ -80,9 +53,9 @@ bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
 
   while ((bufEnd - bufPtr >= 6) && (*bufPtr++ == 0x0f)) {
     int segmentType = *bufPtr++;
-    int pageId = AVRB16(bufPtr); 
+    int pageId = AVRB16(bufPtr);
     bufPtr += 2;
-    int segmentLength = AVRB16(bufPtr); 
+    int segmentLength = AVRB16(bufPtr);
     bufPtr += 2;
 
     if (bufEnd - bufPtr < segmentLength) {
@@ -104,7 +77,7 @@ bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
         break;
 
       case 0x12:
-        if (!parseClut (bufPtr, segmentLength))
+        if (!parseColorLut (bufPtr, segmentLength))
           return false;
         break;
 
@@ -136,14 +109,17 @@ bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
 
 // private:
 //{{{
-cDvbSubtitle::sClut* cDvbSubtitle::getClut (int clutId) {
+cDvbSubtitle::cColorLut& cDvbSubtitle::getColorLut (uint8_t id) {
 
-  sClut* clut = mClutList;
+  // look for id colorLut
+  for (auto& colorLut : mColorLuts)
+    if (colorLut.mId == id)
+      return colorLut;
 
-  while (clut && (clut->mId != clutId))
-    clut = clut->mNext;
+  // create id colorLut
+  mColorLuts.push_back (cColorLut(id));
 
-  return clut;
+  return mColorLuts.back();
   }
 //}}}
 //{{{
@@ -170,33 +146,23 @@ cDvbSubtitle::sRegion* cDvbSubtitle::getRegion (int regionId) {
 //}}}
 
 //{{{
-bool cDvbSubtitle::parseClut (const uint8_t* buf, int bufSize) {
+bool cDvbSubtitle::parseColorLut (const uint8_t* buf, int bufSize) {
 
-  //cLog::log (LOGINFO, "clut segment");
+  //cLog::log (LOGINFO, "colorLut segment");
   const uint8_t* bufEnd = buf + bufSize;
 
-  int clutId = *buf++;
-  int version = ((*buf++) >> 4) & 15;
+  uint8_t id = *buf++;
+  uint8_t version = ((*buf++) >> 4) & 15;
 
-  sClut* clut = getClut (clutId);
-  if (!clut) {
-    clut = (sClut*)malloc (sizeof(sClut));
-    memcpy (clut, &mDefaultClut, sizeof(*clut));
-
-    clut->mId = clutId;
-    clut->mVersion = -1;
-    clut->mNext = mClutList;
-    mClutList = clut;
-    }
-
-  if (clut->mVersion != version) {
-    clut->mVersion = version;
+  cColorLut& colorLut = getColorLut (id);
+  if (colorLut.mVersion != version) {
+    colorLut.mVersion = version;
     while (buf + 4 < bufEnd) {
       int entryId = *buf++;
       int depth = (*buf) & 0xe0;
       if (depth == 0) {
         //{{{  error return
-        cLog::log (LOGERROR, "Invalid clut depth 0x%x!n", *buf);
+        cLog::log (LOGERROR, "Invalid colorLut depth 0x%x!n", *buf);
         return false;
         }
         //}}}
@@ -235,11 +201,11 @@ bool cDvbSubtitle::parseClut (const uint8_t* buf, int bufSize) {
       uint8_t b = ((y + bAdd) >> SCALEBITS) & 0xFF;
 
       if ((depth & 0x40) && (entryId < 16)) {
-        clut->mClut16[entryId] = RGBA(r, g, b, alpha);
-        clut->mClut16bgra[entryId] = BGRA(r, g, b, alpha);
+        colorLut.m16rgba[entryId] = RGBA(r,g,b,alpha);
+        colorLut.m16bgra[entryId] = BGRA(r,g,b,alpha);
         }
       else
-        cLog::log(LOGERROR, fmt::format("clut depth:{} entryId:{}", depth, entryId));
+        cLog::log (LOGERROR, fmt::format("colorLut depth:{} entryId:{}", depth, entryId));
       }
     }
 
@@ -478,7 +444,7 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, int bufSize) {
     region->mWidth = 0;
     region->mHeight = 0;
     region->mDepth = 0;
-    region->mClut = 0;
+    region->mColorLut = 0;
     region->mBackgroundColour = 0;
 
     region->mDirty = false;
@@ -511,7 +477,7 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, int bufSize) {
     }
     //}}}
 
-  region->mClut = *buf++;
+  region->mColorLut = *buf++;
   if (region->mDepth == 8) {
     region->mBackgroundColour = *buf++;
     buf += 1;
@@ -597,10 +563,10 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, int bufSize) {
 
   //cLog::log (LOGINFO,  fmt::format ("- pageState:{} timeout {}", pageState, mTimeOut));
   if ((pageState == 1) || (pageState == 2)) {
-    //{{{  delete regions, objects, cluts
+    //{{{  delete regions, objects, colorLuts
     deleteRegions();
     deleteObjects();
-    deleteCluts();
+    deleteColorLuts();
     }
     //}}}
 
@@ -706,10 +672,7 @@ bool cDvbSubtitle::updateRects() {
     if (!region || !region->mDirty)
       continue;
 
-    auto clut = getClut (region->mClut);
-    if (!clut)
-      continue;
-
+    cColorLut& colorLut = getColorLut (region->mColorLut);
     if (regionIndex >= mRects.size())
       mRects.push_back (new cSubtitleRect());
 
@@ -720,14 +683,14 @@ bool cDvbSubtitle::updateRects() {
     subtitleRect.mWidth = region->mWidth;
     subtitleRect.mHeight = region->mHeight;
     subtitleRect.mPixData = (uint32_t*)realloc (subtitleRect.mPixData, region->mPixBufSize * sizeof(uint32_t));
-    subtitleRect.mClutSize = 16;
-    memcpy (subtitleRect.mClut, clut->mClut16, sizeof(clut->mClut16));
+    for (size_t i = 0; i < colorLut.m16rgba.max_size(); i++)
+      subtitleRect.mColorLut[i] = colorLut.m16rgba[i];
 
     if (region->mDepth == 4) {
-      // set pixData with clut [pixBuf]
+      // set pixData with colorLut [pixBuf]
       uint32_t* ptr = subtitleRect.mPixData;
       for (int i = 0; i < region->mPixBufSize; i++)
-        *ptr++ = clut->mClut16bgra[region->mPixBuf[i]];
+        *ptr++ = colorLut.m16bgra[region->mPixBuf[i]];
       }
     else
       cLog::log (LOGERROR, fmt::format ("unimplemented regionDepth:{}", region->mDepth));
@@ -743,18 +706,10 @@ bool cDvbSubtitle::updateRects() {
 //}}}
 
 //{{{
-void cDvbSubtitle::deleteCluts() {
+void cDvbSubtitle::deleteColorLuts() {
 
-  uint32_t num = 0;
-
-  while (mClutList) {
-    sClut* clut = mClutList;
-    mClutList = clut->mNext;
-    free (clut);
-    num++;
-    }
-
-  cLog::log (LOGINFO1, fmt::format ("deleteCluts {}", num));
+  cLog::log (LOGINFO1, fmt::format ("deleteColorLuts {}", mColorLuts.size()));
+  mColorLuts.clear();
   }
 //}}}
 //{{{

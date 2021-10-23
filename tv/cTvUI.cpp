@@ -148,7 +148,7 @@ private:
   //{{{
   void drawSubtitle (cDvbSubtitle& subtitle, cGraphics& graphics) {
 
-    float clutPotSize = ImGui::GetTextLineHeight()/2.f;
+    float potSize = ImGui::GetTextLineHeight()/2.f;
 
     size_t line = 0;
     for (; line < subtitle.mNumRegions; line++) {
@@ -158,11 +158,10 @@ private:
 
       // draw clut color pots
       ImVec2 pos = ImGui::GetCursorScreenPos();
-      for (int pot = 0; pot < subtitleRect.mClutSize; pot++) {
-        ImVec2 clutPotPos {pos.x + (pot % 8) * clutPotSize, pos.y + (pot / 8) * clutPotSize};
-        uint32_t color = subtitleRect.mClut[pot]; // possible swizzle
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          clutPotPos, {clutPotPos.x + clutPotSize - 1.f, clutPotPos.y + clutPotSize - 1.f}, color);
+      for (size_t pot = 0; pot < subtitleRect.mColorLut.max_size(); pot++) {
+        ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
+        uint32_t color = subtitleRect.mColorLut[pot]; // possible swizzle
+        ImGui::GetWindowDrawList()->AddRectFilled (potPos, { potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
         }
       ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),
                               {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()});

@@ -9,10 +9,15 @@
 
 class cTexture;
 //}}}
+#define RGBA(r,g,b,a) (uint32_t ((((a) << 24) & 0xFF000000) | (((r) << 16) & 0x00FF0000) | \
+                                 (((g) <<  8) & 0x0000FF00) |  ((b)        & 0x000000FF)))
+
+#define BGRA(r,g,b,a) (uint32_t ((((a) << 24) & 0xFF000000) | (((b) << 16) & 0x00FF0000) | \
+                                 (((g) <<  8) & 0x0000FF00) |  ((r)        & 0x000000FF)))
 
 class cDvbSubtitle {
 public:
-  cDvbSubtitle();
+  cDvbSubtitle() = default;
   ~cDvbSubtitle();
 
   bool decode (const uint8_t* buf, int bufSize);
@@ -30,9 +35,7 @@ public:
     int mWidth = 0;
     int mHeight = 0;
     uint32_t* mPixData = nullptr;
-
-    int mClutSize = 0;
-    uint32_t mClut[16];
+    std::array <uint32_t,16> mColorLut;
     };
   //}}}
   std::vector <cSubtitleRect*> mRects;
@@ -40,6 +43,49 @@ public:
   bool mChanged = false;
 
 private:
+  //{{{
+  class cColorLut {
+  public:
+    //{{{
+    cColorLut() {
+
+      m16rgba[0] = RGBA (0,0,0, 0xFF);
+      m16bgra[0] = BGRA (0,0,0, 0xFF);
+
+      for (int i = 1; i <= 0x0F; i++) {
+        int r = (i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0);
+        int g = (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0);
+        int b = (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0);
+
+        m16rgba[i] = RGBA (r,g,b, 0xFF);
+        m16bgra[i] = BGRA (r,g,b, 0xFF);
+        }
+      }
+    //}}}
+    //{{{
+    cColorLut(uint8_t id) : mId(id) {
+
+      m16rgba[0] = RGBA (0,0,0, 0xFF);
+      m16bgra[0] = BGRA (0,0,0, 0xFF);
+
+      for (int i = 1; i <= 0x0F; i++) {
+        int r = (i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0);
+        int g = (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0);
+        int b = (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0);
+
+        m16rgba[i] = RGBA (r, g, b, 0xFF);
+        m16bgra[i] = BGRA (r, g, b, 0xFF);
+        }
+      }
+    //}}}
+
+    uint8_t mId = 0xFF;
+    uint8_t mVersion = 0xFF;
+
+    std::array <uint32_t,16> m16rgba;
+    std::array <uint32_t,16> m16bgra;
+    };
+  //}}}
   //{{{
   struct sObjectDisplay {
     //{{{
@@ -102,7 +148,7 @@ private:
     int mWidth;
     int mHeight;
     int mDepth;
-    int mClut;
+    uint8_t mColorLut;
     int mBackgroundColour;
 
     bool mDirty;
@@ -120,20 +166,6 @@ private:
     int mY;
     int mWidth;
     int mHeight;
-    };
-  //}}}
-  //{{{
-  struct sClut {
-    sClut* mNext;
-
-    int mVersion = 0;
-    int mId = 0;
-
-    uint32_t mClut16[16];
-    uint32_t mClut16bgra[16];
-
-    //uint32_t mClut4[4];
-    //uint32_t mClut256[256];
     };
   //}}}
   //{{{
@@ -193,11 +225,11 @@ private:
     };
   //}}}
 
-  sClut* getClut (int clutId);
+  cColorLut& getColorLut (uint8_t id);
   sObject* getObject (int objectId);
   sRegion* getRegion (int regionId);
 
-  bool parseClut (const uint8_t* buf, int bufSize);
+  bool parseColorLut (const uint8_t* buf, int bufSize);
   int parse4bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, int pixBufSize, int pixPos, int nonModifyColour);
   void parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, int bufSize, bool bottom, int nonModifyColour);
   bool parseObject (const uint8_t* buf, int bufSize);
@@ -207,22 +239,19 @@ private:
 
   bool updateRects();
 
-  void deleteCluts();
+  void deleteColorLuts();
   void deleteObjects();
   void deleteRegions();
   void deleteRegionDisplayList (sRegion* region);
 
-  //{{{  vars
+  // vars
   int mVersion = 0;
   int mTimeOut = 0;
 
-  sClut mDefaultClut;
   sDisplayDefinition* mDisplayDefinition = nullptr;
 
-  // !!! change to vectors !!!!
-  sClut* mClutList = nullptr;
+  std::vector <cColorLut> mColorLuts;
   sRegion* mRegionList = nullptr;
   sObject* mObjectList = nullptr;
   sRegionDisplay* mDisplayList = nullptr;
-  //}}}
   };
