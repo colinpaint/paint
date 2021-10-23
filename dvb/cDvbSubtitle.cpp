@@ -17,9 +17,6 @@ class cTexture;
 #define SCALEBITS 10
 #define ONE_HALF  (1 << (SCALEBITS - 1))
 #define FIX(x)    ((int) ((x) * (1<<SCALEBITS) + 0.5))
-
-
-// don't inderstand where the BGRA is introduced - something wrong somewhere
 //}}}
 
 // public:
@@ -156,8 +153,8 @@ bool cDvbSubtitle::parseColorLut (const uint8_t* buf, int bufSize) {
   if (colorLut.mVersion != version) {
     colorLut.mVersion = version;
     while (buf + 4 < bufEnd) {
-      int entryId = *buf++;
-      int depth = (*buf) & 0xe0;
+      uint8_t entryId = *buf++;
+      uint8_t depth = (*buf) & 0xe0;
       if (depth == 0) {
         //{{{  error return
         cLog::log (LOGERROR, "Invalid colorLut depth 0x%x!n", *buf);
@@ -166,7 +163,7 @@ bool cDvbSubtitle::parseColorLut (const uint8_t* buf, int bufSize) {
         //}}}
 
       int y, cr, cb, alpha;
-      int fullRange = (*buf++) & 1;
+      bool fullRange = (*buf++) & 1;
       if (fullRange) {
         //{{{  full range
         y = *buf++;
@@ -176,30 +173,32 @@ bool cDvbSubtitle::parseColorLut (const uint8_t* buf, int bufSize) {
         }
         //}}}
       else {
-        //{{{  not full range, ??? should lsb's be extended into mask ???
+        //{{{  not full range
         y = buf[0] & 0xFC;
+
         cr = (((buf[0] & 3) << 2) | (((buf[1] >> 6) & 3)) << 4);
         cb = (buf[1] << 2) & 0xF0;
+
         alpha = (buf[1] << 6) & 0xC0;
 
         buf += 2;
         }
         //}}}
 
-      // fixup alpha
-      alpha = (y == 0) ? 0x0 : (0xFF - alpha);
+      if ((depth & 0x40) && (entryId < 16)) {
+        alpha = (y == 0) ? 0x0 : (0xFF - alpha);
 
-      int rAdd = FIX(1.40200 * 255.0 / 224.0) * (cr - 128) + ONE_HALF;
-      int gAdd = -FIX(0.34414 * 255.0 / 224.0) * (cb - 128) - FIX(0.71414 * 255.0 / 224.0) * (cr - 128) + ONE_HALF;
-      int bAdd = FIX(1.77200 * 255.0 / 224.0) * (cb - 128) + ONE_HALF;
-      y = (y - 16) * FIX(255.0 / 219.0);
+        int rAdd = FIX(1.40200 * 255.0 / 224.0) * (cr - 128) + ONE_HALF;
+        int gAdd = -FIX(0.34414 * 255.0 / 224.0) * (cb - 128) - FIX(0.71414 * 255.0 / 224.0) * (cr - 128) + ONE_HALF;
+        int bAdd = FIX(1.77200 * 255.0 / 224.0) * (cb - 128) + ONE_HALF;
+        y = (y - 16) * FIX(255.0 / 219.0);
 
-      uint8_t r = ((y + rAdd) >> SCALEBITS) & 0xFF;
-      uint8_t g = ((y + gAdd) >> SCALEBITS) & 0xFF;
-      uint8_t b = ((y + bAdd) >> SCALEBITS) & 0xFF;
+        uint8_t r = ((y + rAdd) >> SCALEBITS) & 0xFF;
+        uint8_t g = ((y + gAdd) >> SCALEBITS) & 0xFF;
+        uint8_t b = ((y + bAdd) >> SCALEBITS) & 0xFF;
 
-      if ((depth & 0x40) && (entryId < 16)) 
         colorLut.m16bgra[entryId] = BGRA(r,g,b,alpha);
+        }
       else
         cLog::log (LOGERROR, fmt::format("colorLut depth:{} entryId:{}", depth, entryId));
       }
@@ -213,11 +212,9 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, 
 
   pixBuf += pixPos;
 
-  std::string str;
-
   cBitStream bitStream (*buf);
   while ((bitStream.getBitsRead() < (bufSize * 8)) && (pixPos < pixBufSize)) {
-    int bits = bitStream.getBits (4);
+    uint8_t bits = (uint8_t)bitStream.getBits (4);
     if (bits) {
       if (nonModifyColour != 1 || bits != 1)
         *pixBuf++ = (uint8_t)bits;
@@ -225,10 +222,10 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, 
       }
 
     else {
-      bits = bitStream.getBit();
+      bits = (uint8_t)bitStream.getBit();
       if (bits == 0) {
         //{{{  simple runlength
-        int runLength = bitStream.getBits (3);
+        uint8_t runLength = (uint8_t)bitStream.getBits (3);
         if (runLength == 0) {
           *buf += bitStream.getBytesRead();
           return pixPos;
@@ -243,25 +240,24 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, 
         }
         //}}}
       else {
-        bits = bitStream.getBit();
+        bits = (uint8_t)bitStream.getBit();
         if (bits == 0) {
           //{{{  bits = 0
-          int runBits = bitStream.getBits (2);
-          int runLength = runBits + 4;
+          uint8_t runBits = (uint8_t)bitStream.getBits (2);
+          uint8_t runLength = runBits + 4;
 
-          bits = bitStream.getBits (4);
+          bits = (uint8_t)bitStream.getBits (4);
           if (nonModifyColour == 1 && bits == 1)
             pixPos += runLength;
-          else {
+          else 
             while ((runLength-- > 0) && (pixPos < pixBufSize)) {
               *pixBuf++ = (uint8_t)bits;
               pixPos++;
               }
-            }
           }
           //}}}
         else {
-          bits = bitStream.getBits (2);
+          bits = (uint8_t)bitStream.getBits (2);
           if (bits == 0) {
             //{{{  0
             bits = 0;
@@ -272,6 +268,7 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, 
           else if (bits == 1) {
             //{{{  1
             bits = 0;
+
             int runLength = 2;
             while ((runLength-- > 0) && (pixPos < pixBufSize)) {
               *pixBuf++ = (uint8_t)bits;
@@ -281,34 +278,32 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, 
             //}}}
           else if (bits == 2) {
             //{{{  2
-            int runBits = bitStream.getBits (4);
-            int runLength = runBits + 9;
-            bits = bitStream.getBits (4);
+            uint8_t runBits = (uint8_t)bitStream.getBits (4);
+            uint8_t runLength = runBits + 9;
+            bits = (uint8_t)bitStream.getBits (4);
 
-            if (nonModifyColour == 1 && bits == 1)
+            if ((nonModifyColour == 1) && (bits == 1))
               pixPos += runLength;
-            else {
+            else 
               while ((runLength-- > 0) && (pixPos < pixBufSize)) {
                 *pixBuf++ = (uint8_t)bits;
                 pixPos++;
                 }
-              }
             }
             //}}}
           else if (bits == 3) {
             //{{{  3
-            int runBits = bitStream.getBits (8);
-            int runLength = runBits + 25;
-            bits = bitStream.getBits (4);
+            uint8_t runBits = (uint8_t)bitStream.getBits (8);
+            uint8_t runLength = runBits + 25;
+            bits = (uint8_t)bitStream.getBits (4);
 
-            if (nonModifyColour == 1 && bits == 1)
+            if ((nonModifyColour == 1) && (bits == 1))
               pixPos += runLength;
-            else {
+            else 
               while ((runLength-- > 0) && (pixPos < pixBufSize)) {
                 *pixBuf++ = (uint8_t)bits;
                 pixPos++;
                 }
-              }
             }
             //}}}
           }
