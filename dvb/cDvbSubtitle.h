@@ -18,9 +18,7 @@ public:
   bool decode (const uint8_t* buf, int bufSize);
 
   // vars
-  bool mChanged = false;
   size_t mNumRegions = 0;
-
   //{{{
   class cSubtitleRect {
   public:
@@ -39,6 +37,7 @@ public:
   //}}}
   std::vector <cSubtitleRect*> mRects;
   std::array <cTexture*,4> mTextures = {nullptr};
+  bool mChanged = false;
 
 private:
   //{{{
@@ -194,29 +193,26 @@ private:
     };
   //}}}
 
-  void deleteRegionDisplayList (sRegion* region);
-  void deleteRegions();
-  void deleteObjects();
-  void deleteCluts();
-
   sClut* getClut (int clutId);
   sObject* getObject (int objectId);
   sRegion* getRegion (int regionId);
 
-  int parse4bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, int pixBufSize, int pixPos,
-                 int nonModifyColour, uint8_t* mapTable);
-  void parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, int bufSize,
-                         bool bottom, int nonModifyColour);
-
+  bool parseClut (const uint8_t* buf, int bufSize);
+  int parse4bit (const uint8_t** buf, int bufSize, uint8_t* pixBuf, int pixBufSize, int pixPos, int nonModifyColour);
+  void parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, int bufSize, bool bottom, int nonModifyColour);
+  bool parseObject (const uint8_t* buf, int bufSize);
   bool parsePage (const uint8_t* buf, int bufSize);
   bool parseRegion (const uint8_t* buf, int bufSize);
-  bool parseClut (const uint8_t* buf, int bufSize);
-  bool parseObject (const uint8_t* buf, int bufSize);
   bool parseDisplayDefinition (const uint8_t* buf, int bufSize);
 
   bool updateRects();
 
-  //  vars
+  void deleteCluts();
+  void deleteObjects();
+  void deleteRegions();
+  void deleteRegionDisplayList (sRegion* region);
+
+  //{{{  vars
   int mVersion = 0;
   int mTimeOut = 0;
 
@@ -228,4 +224,5 @@ private:
   sRegion* mRegionList = nullptr;
   sObject* mObjectList = nullptr;
   sRegionDisplay* mDisplayList = nullptr;
+  //}}}
   };

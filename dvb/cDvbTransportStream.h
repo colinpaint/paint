@@ -50,17 +50,20 @@ private:
   void fileSourceInternal (bool ownThread, const std::string& fileName);
 
   // vars
+  cDvbMultiplex mDvbMultiplex;
+
+  // dvbSource
   cDvbSource* mDvbSource = nullptr;
   uint64_t mLastErrors = 0;
   std::string mErrorString;
   std::string mSignalString;
 
-  cDvbMultiplex mDvbMultiplex;
-
+  // record
   std::mutex mRecordFileMutex;
   std::string mRecordRootName;
   std::vector <std::string> mRecordPrograms;
 
+  // subtitle
   bool mDecodeSubtitle = false;
   tDvbSubtitleMap mDvbSubtitleMap; // indexed by sid
   };
