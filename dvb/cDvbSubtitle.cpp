@@ -30,8 +30,6 @@ cDvbSubtitle::~cDvbSubtitle() {
   deleteObjects();
   deleteColorLuts();
 
-  free (mDisplayDefinition);
-
   while (mDisplayList) {
     sRegionDisplay* display = mDisplayList;
     mDisplayList = display->mNext;
@@ -629,28 +627,26 @@ bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, int bufSize) {
   int infoByte = *buf++;
   int ddsVersion = infoByte >> 4;
 
-  if (mDisplayDefinition &&
-      (mDisplayDefinition->mVersion == ddsVersion))
+  if (mDisplayDefinition.mVersion == ddsVersion)
     return true;
 
-  if (!mDisplayDefinition)
-    mDisplayDefinition = (sDisplayDefinition*)malloc (sizeof(sDisplayDefinition));
-
-  mDisplayDefinition->mVersion = ddsVersion;
-  mDisplayDefinition->mX = 0;
-  mDisplayDefinition->mY = 0;
-  mDisplayDefinition->mWidth = AVRB16(buf) + 1; buf += 2;
-  mDisplayDefinition->mHeight = AVRB16(buf) + 1; buf += 2;
+  mDisplayDefinition.mVersion = ddsVersion;
+  mDisplayDefinition.mX = 0;
+  mDisplayDefinition.mY = 0;
+  mDisplayDefinition.mWidth = AVRB16(buf) + 1; 
+  buf += 2;
+  mDisplayDefinition.mHeight = AVRB16(buf) + 1; 
+  buf += 2;
 
   int displayWindow = infoByte & (1 << 3);
   if (displayWindow) {
     if (bufSize < 13)
       return false;
 
-    mDisplayDefinition->mX = AVRB16(buf); buf += 2;
-    mDisplayDefinition->mWidth  = AVRB16(buf) - mDisplayDefinition->mX + 1; buf += 2;
-    mDisplayDefinition->mY = AVRB16(buf); buf += 2;
-    mDisplayDefinition->mHeight = AVRB16(buf) - mDisplayDefinition->mY + 1; buf += 2;
+    mDisplayDefinition.mX = AVRB16(buf); buf += 2;
+    mDisplayDefinition.mWidth  = AVRB16(buf) - mDisplayDefinition.mX + 1; buf += 2;
+    mDisplayDefinition.mY = AVRB16(buf); buf += 2;
+    mDisplayDefinition.mHeight = AVRB16(buf) - mDisplayDefinition.mY + 1; buf += 2;
     }
 
   //cLog::log (LOGINFO, fmt::format ("{} x:{} y:{} w:{} h:{}",
@@ -663,8 +659,8 @@ bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, int bufSize) {
 //{{{
 bool cDvbSubtitle::updateRects() {
 
-  int offsetX = mDisplayDefinition ? mDisplayDefinition->mX : 0;
-  int offsetY = mDisplayDefinition ? mDisplayDefinition->mY : 0;
+  int offsetX = mDisplayDefinition.mX;
+  int offsetY = mDisplayDefinition.mY;
 
   size_t regionIndex = 0;
   for (sRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {

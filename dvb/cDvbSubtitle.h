@@ -44,131 +44,6 @@ public:
 
 private:
   //{{{
-  class cColorLut {
-  public:
-    //{{{
-    cColorLut() {
-
-      m16rgba[0] = RGBA (0,0,0, 0xFF);
-      m16bgra[0] = BGRA (0,0,0, 0xFF);
-
-      for (int i = 1; i <= 0x0F; i++) {
-        int r = (i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0);
-        int g = (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0);
-        int b = (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0);
-
-        m16rgba[i] = RGBA (r,g,b, 0xFF);
-        m16bgra[i] = BGRA (r,g,b, 0xFF);
-        }
-      }
-    //}}}
-    //{{{
-    cColorLut(uint8_t id) : mId(id) {
-
-      m16rgba[0] = RGBA (0,0,0, 0xFF);
-      m16bgra[0] = BGRA (0,0,0, 0xFF);
-
-      for (int i = 1; i <= 0x0F; i++) {
-        int r = (i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0);
-        int g = (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0);
-        int b = (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0);
-
-        m16rgba[i] = RGBA (r, g, b, 0xFF);
-        m16bgra[i] = BGRA (r, g, b, 0xFF);
-        }
-      }
-    //}}}
-
-    uint8_t mId = 0xFF;
-    uint8_t mVersion = 0xFF;
-
-    std::array <uint32_t,16> m16rgba;
-    std::array <uint32_t,16> m16bgra;
-    };
-  //}}}
-  //{{{
-  struct sObjectDisplay {
-    //{{{
-    void init (int objectId, int regionId, int xpos, int ypos) {
-      mObjectListNext = nullptr;
-
-      mObjectId = objectId;
-      mRegionId = regionId;
-
-      xPos = xpos;
-      yPos = ypos;
-
-      mForegroundColour = 0;;
-      mBackgroundColour = 0;
-
-      mRegionListNext = nullptr;
-      }
-    //}}}
-
-    sObjectDisplay* mObjectListNext;
-
-    int mObjectId;
-    int mRegionId;
-
-    int xPos;
-    int yPos;
-
-    int mForegroundColour;
-    int mBackgroundColour;
-
-    sObjectDisplay* mRegionListNext;
-    };
-  //}}}
-  //{{{
-  struct sObject {
-    sObject* mNext;
-
-    int mId;
-    int mType;
-
-    sObjectDisplay* mDisplayList;
-    };
-  //}}}
-  //{{{
-  struct sRegionDisplay {
-    sRegionDisplay* mNext;
-
-    int mRegionId;
-    int xPos;
-    int yPos;
-    };
-  //}}}
-  //{{{
-  struct sRegion {
-    sRegion* mNext;
-
-    int mId;
-    int mVersion;
-
-    int mWidth;
-    int mHeight;
-    int mDepth;
-    uint8_t mColorLut;
-    int mBackgroundColour;
-
-    bool mDirty;
-    int mPixBufSize;
-    uint8_t* mPixBuf;
-
-    sObjectDisplay* mDisplayList;
-    };
-  //}}}
-  //{{{
-  struct sDisplayDefinition {
-    int mVersion;
-
-    int mX;
-    int mY;
-    int mWidth;
-    int mHeight;
-    };
-  //}}}
-  //{{{
   class cBitStream {
   // dodgy faster bitstream, no size chacking, assumes multiple of 4 bytes
   public:
@@ -224,6 +99,135 @@ private:
     int mBitsRead = 0;
     };
   //}}}
+  //{{{
+  class cDisplayDefinition {
+  public:
+    int mVersion = -1;
+
+    int mX = 0;
+    int mY = 0;
+
+    int mWidth = 0;
+    int mHeight = 0;
+    };
+  //}}}
+  //{{{
+  class cColorLut {
+  public:
+    //{{{
+    cColorLut() {
+
+      m16rgba[0] = RGBA (0,0,0, 0xFF);
+      m16bgra[0] = BGRA (0,0,0, 0xFF);
+
+      for (int i = 1; i <= 0x0F; i++) {
+        int r = (i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0);
+        int g = (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0);
+        int b = (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0);
+
+        m16rgba[i] = RGBA (r,g,b, 0xFF);
+        m16bgra[i] = BGRA (r,g,b, 0xFF);
+        }
+      }
+    //}}}
+    //{{{
+    cColorLut(uint8_t id) : mId(id) {
+
+      m16rgba[0] = RGBA (0,0,0, 0xFF);
+      m16bgra[0] = BGRA (0,0,0, 0xFF);
+
+      for (int i = 1; i <= 0x0F; i++) {
+        int r = (i < 8) ? ((i & 1) ? 0xFF : 0) : ((i & 1) ? 0x7F : 0);
+        int g = (i < 8) ? ((i & 2) ? 0xFF : 0) : ((i & 2) ? 0x7F : 0);
+        int b = (i < 8) ? ((i & 4) ? 0xFF : 0) : ((i & 4) ? 0x7F : 0);
+
+        m16rgba[i] = RGBA (r, g, b, 0xFF);
+        m16bgra[i] = BGRA (r, g, b, 0xFF);
+        }
+      }
+    //}}}
+
+    uint8_t mId = 0xFF;
+    uint8_t mVersion = 0xFF;
+
+    std::array <uint32_t,16> m16rgba;
+    std::array <uint32_t,16> m16bgra;
+    };
+  //}}}
+
+  //{{{
+  struct sObjectDisplay {
+    //{{{
+    void init (int objectId, int regionId, int xpos, int ypos) {
+      mObjectListNext = nullptr;
+
+      mObjectId = objectId;
+      mRegionId = regionId;
+
+      xPos = xpos;
+      yPos = ypos;
+
+      mForegroundColour = 0;;
+      mBackgroundColour = 0;
+
+      mRegionListNext = nullptr;
+      }
+    //}}}
+
+    sObjectDisplay* mObjectListNext;
+
+    int mObjectId;
+    int mRegionId;
+
+    int xPos;
+    int yPos;
+
+    int mForegroundColour;
+    int mBackgroundColour;
+
+    sObjectDisplay* mRegionListNext;
+    };
+  //}}}
+  //{{{
+  struct sObject {
+    sObject* mNext;
+
+    int mId;
+    int mType;
+
+    sObjectDisplay* mDisplayList;
+    };
+  //}}}
+
+  //{{{
+  struct sRegion {
+    sRegion* mNext;
+
+    int mId;
+    int mVersion;
+
+    int mWidth;
+    int mHeight;
+    int mDepth;
+    uint8_t mColorLut;
+    int mBackgroundColour;
+
+    bool mDirty;
+    int mPixBufSize;
+    uint8_t* mPixBuf;
+
+    sObjectDisplay* mDisplayList;
+    };
+  //}}}
+  //{{{
+  struct sRegionDisplay {
+    sRegionDisplay* mNext;
+
+    int mRegionId;
+    int xPos;
+    int yPos;
+    };
+  //}}}
 
   cColorLut& getColorLut (uint8_t id);
   sObject* getObject (int objectId);
@@ -248,7 +252,7 @@ private:
   int mVersion = 0;
   int mTimeOut = 0;
 
-  sDisplayDefinition* mDisplayDefinition = nullptr;
+  cDisplayDefinition mDisplayDefinition;
 
   std::vector <cColorLut> mColorLuts;
   sRegion* mRegionList = nullptr;
