@@ -533,9 +533,10 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
   mPageVersion = pageVersion;
   int pageState = ((*buf++) >> 2) & 3;
 
-  //cLog::log (LOGINFO,  fmt::format ("- pageState:{} timeout {}", pageState, mTimeOut));
   if ((pageState == 1) || (pageState == 2)) {
     //{{{  delete regions, objects, colorLuts
+    cLog::log (LOGINFO,  fmt::format ("sid:{} pageState:{} pageVersion::{} pageTimeout:{}", 
+                                      mSid, pageState, pageVersion, mPageTimeOut));
     mRegions.clear();
     deleteObjects();
     mColorLuts.clear();

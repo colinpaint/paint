@@ -31,7 +31,7 @@ public:
 
 class cDvbSubtitle {
 public:
-  cDvbSubtitle() = default;
+  cDvbSubtitle (uint16_t sid)  : mSid(sid) {}
   ~cDvbSubtitle();
 
   size_t getNumImages() const { return mNumImages; }
@@ -245,6 +245,7 @@ private:
   bool updateRects();
 
   // vars
+  const uint16_t mSid;
   cDisplayDefinition mDisplayDefinition;
 
   uint8_t mPageVersion = 0xFF;
