@@ -225,15 +225,15 @@ private:
   cRegion* getRegion (int regionId);
 
   // parse
-  bool parseColorLut (const uint8_t* buf, uint32_t bufSize);
-  int parse4bit (const uint8_t** buf, uint32_t bufSize,
+  bool parseColorLut (const uint8_t* buf, uint16_t bufSize);
+  int parse4bit (const uint8_t** buf, uint16_t bufSize,
                  uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour);
-  void parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, uint32_t bufSize,
+  void parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
                          bool bottom, bool nonModifyColour);
-  bool parseObject (const uint8_t* buf, uint32_t bufSize);
-  bool parsePage (const uint8_t* buf, uint32_t bufSize);
-  bool parseRegion (const uint8_t* buf, uint32_t bufSize);
-  bool parseDisplayDefinition (const uint8_t* buf, uint32_t bufSize);
+  bool parseObject (const uint8_t* buf, uint16_t bufSize);
+  bool parsePage (const uint8_t* buf, uint16_t bufSize);
+  bool parseRegion (const uint8_t* buf, uint16_t bufSize);
+  bool parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize);
 
   // delete
   void deleteColorLuts();

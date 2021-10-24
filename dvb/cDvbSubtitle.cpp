@@ -47,10 +47,10 @@ bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
   const uint8_t* bufPtr = buf + 2;
 
   while ((bufEnd - bufPtr >= 6) && (*bufPtr++ == 0x0f)) {
-    int segmentType = *bufPtr++;
-    int pageId = AVRB16(bufPtr);
+    uint8_t segmentType = *bufPtr++;
+    uint16_t pageId = AVRB16(bufPtr);
     bufPtr += 2;
-    int segmentLength = AVRB16(bufPtr);
+    uint16_t segmentLength = AVRB16(bufPtr);
     bufPtr += 2;
 
     if (bufEnd - bufPtr < segmentLength) {
@@ -141,7 +141,7 @@ cDvbSubtitle::cRegion* cDvbSubtitle::getRegion (int regionId) {
 //}}}
 
 //{{{
-bool cDvbSubtitle::parseColorLut (const uint8_t* buf, uint32_t bufSize) {
+bool cDvbSubtitle::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "colorLut segment");
   const uint8_t* bufEnd = buf + bufSize;
@@ -207,13 +207,13 @@ bool cDvbSubtitle::parseColorLut (const uint8_t* buf, uint32_t bufSize) {
   }
 //}}}
 //{{{
-int cDvbSubtitle::parse4bit (const uint8_t** buf, uint32_t bufSize,
+int cDvbSubtitle::parse4bit (const uint8_t** buf, uint16_t bufSize,
                              uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour) {
 
   pixBuf += pixPos;
 
   cBitStream bitStream (*buf);
-  while ((bitStream.getBitsRead() < (bufSize * 8)) && (pixPos < pixBufSize)) {
+  while ((bitStream.getBitsRead() < (uint32_t)(bufSize * 8)) && (pixPos < pixBufSize)) {
     uint8_t bits = (uint8_t)bitStream.getBits (4);
     if (bits) {
       //{{{  simple pixel value
@@ -323,7 +323,7 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, uint32_t bufSize,
   }
 //}}}
 //{{{
-void cDvbSubtitle::parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, uint32_t bufSize,
+void cDvbSubtitle::parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
                                      bool bottom, bool nonModifyColour) {
 
   const uint8_t* bufEnd = buf + bufSize;
@@ -348,7 +348,7 @@ void cDvbSubtitle::parseObjectBlock (sObjectDisplay* display, const uint8_t* buf
       //}}}
 
     uint8_t type = *buf++;
-    int bufLeft = int(bufEnd - buf);
+    uint16_t bufLeft = uint16_t(bufEnd - buf);
     uint8_t* pixPtr = pixBuf + (yPos * region->mWidth);
     switch (type) {
       //{{{
@@ -375,7 +375,7 @@ void cDvbSubtitle::parseObjectBlock (sObjectDisplay* display, const uint8_t* buf
   }
 //}}}
 //{{{
-bool cDvbSubtitle::parseObject (const uint8_t* buf, uint32_t bufSize) {
+bool cDvbSubtitle::parseObject (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "object segment");
   const uint8_t* bufEnd = buf + bufSize;
@@ -390,8 +390,10 @@ bool cDvbSubtitle::parseObject (const uint8_t* buf, uint32_t bufSize) {
   bool nonModifyColour = ((*buf++) >> 1) & 1;
 
   if (codingMethod == 0) {
-    int topFieldLen = AVRB16(buf); buf += 2;
-    int bottomFieldLen = AVRB16(buf); buf += 2;
+    uint16_t topFieldLen = AVRB16(buf);
+    buf += 2;
+    uint16_t bottomFieldLen = AVRB16(buf);
+    buf += 2;
 
     if ((buf + topFieldLen + bottomFieldLen) > bufEnd) {
       //{{{  error return
@@ -404,7 +406,7 @@ bool cDvbSubtitle::parseObject (const uint8_t* buf, uint32_t bufSize) {
       const uint8_t* block = buf;
       parseObjectBlock (display, block, topFieldLen, false, nonModifyColour);
 
-      int bfl = bottomFieldLen;
+      uint16_t bfl = bottomFieldLen;
       if (bottomFieldLen > 0)
         block = buf + topFieldLen;
       else
@@ -419,7 +421,7 @@ bool cDvbSubtitle::parseObject (const uint8_t* buf, uint32_t bufSize) {
   }
 //}}}
 //{{{
-bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint32_t bufSize) {
+bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "region segment");
   if (bufSize < 10)
@@ -518,7 +520,7 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint32_t bufSize) {
   }
 //}}}
 //{{{
-bool cDvbSubtitle::parsePage (const uint8_t* buf, uint32_t bufSize) {
+bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "page");
 
@@ -593,7 +595,7 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint32_t bufSize) {
   }
 //}}}
 //{{{
-bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, uint32_t bufSize) {
+bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "displayDefinition segment");
   if (bufSize < 5)
