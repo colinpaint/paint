@@ -59,8 +59,22 @@ static const vector <cDvbMultiplex> kDvbMultiplexes = {
     false,
   },
 
-  { "allHd",
+  { "allhd",
     626000000,
+    { "" },
+    { "" },
+    true,
+  }
+
+  { "allitv",
+    650000000,
+    { "" },
+    { "" },
+    true,
+  }
+
+  { "allbbc",
+    674000000,
     { "" },
     { "" },
     true,
