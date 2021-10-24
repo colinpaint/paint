@@ -325,18 +325,16 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, uint16_t bufSize,
 void cDvbSubtitle::parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
                                      bool bottom, bool nonModifyColour) {
 
-  const uint8_t* bufEnd = buf + bufSize;
-
   cRegion* region = getRegion (display->mRegionId);
   if (!region)
     return;
 
-  region->mDirty = true;
-
   int xPos = display->xPos;
   int yPos = display->yPos + (bottom ? 1 : 0);
 
+  region->mDirty = true;
   uint8_t* pixBuf = region->mPixBuf;
+  const uint8_t* bufEnd = buf + bufSize;
   while (buf < bufEnd) {
     if (((*buf != 0xF0) && (xPos >= region->mWidth)) || (yPos >= region->mHeight)) {
       //{{{  error return
