@@ -671,24 +671,6 @@ void cDvbSubtitle::deleteObjects() {
   }
 //}}}
 //{{{
-void cDvbSubtitle::deleteRegions() {
-
-  uint32_t num = 0;
-  while (mRegionList) {
-    sRegion* region = mRegionList;
-
-    mRegionList = region->mNext;
-    deleteRegionDisplayList (region);
-
-    free (region->mPixBuf);
-    free (region);
-    num++;
-    }
-
-  cLog::log (LOGINFO1, fmt::format ("deleteRegions {}", num));
-  }
-//}}}
-//{{{
 void cDvbSubtitle::deleteRegionDisplayList (sRegion* region) {
 
   uint32_t num = 0;
@@ -734,6 +716,24 @@ void cDvbSubtitle::deleteRegionDisplayList (sRegion* region) {
   cLog::log (LOGINFO1, fmt::format ("deleteRegionDisplayList {} {}", num, num1));
   }
 //}}}
+//{{{
+void cDvbSubtitle::deleteRegions() {
+
+  uint32_t num = 0;
+  while (mRegionList) {
+    sRegion* region = mRegionList;
+
+    mRegionList = region->mNext;
+    deleteRegionDisplayList (region);
+
+    free (region->mPixBuf);
+    free (region);
+    num++;
+    }
+
+  cLog::log (LOGINFO1, fmt::format ("deleteRegions {}", num));
+  }
+//}}}
 
 //{{{
 bool cDvbSubtitle::updateRects() {
@@ -741,16 +741,16 @@ bool cDvbSubtitle::updateRects() {
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;
 
-  mNumRegions = 0;
+  mNumImages = 0;
   for (sRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
     sRegion* region = getRegion (regionDisplay->mRegionId);
     if (!region || !region->mDirty)
       continue;
 
-    if (mNumRegions == mImages.size())
+    if (mNumImages == mImages.size())
       mImages.push_back (new cSubtitleImage());
 
-    cSubtitleImage& image = *mImages[mNumRegions];
+    cSubtitleImage& image = *mImages[mNumImages];
     image.mX = regionDisplay->xPos + offsetX;
     image.mY = regionDisplay->yPos + offsetY;
     image.mWidth = region->mWidth;
@@ -773,7 +773,7 @@ bool cDvbSubtitle::updateRects() {
     image.mPixelsChanged = true;
 
     // update num regions as they become valid
-    mNumRegions++;
+    mNumImages++;
     }
 
   return true;

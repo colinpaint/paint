@@ -34,10 +34,11 @@ public:
   cDvbSubtitle() = default;
   ~cDvbSubtitle();
 
-  size_t getNumRegions() const { return mNumRegions; }
+  size_t getNumImages() const { return mNumImages; }
   bool decode (const uint8_t* buf, int bufSize);
 
   // vars !!! can't get non pointer vector to work !!!
+  size_t mNumImages = 0;
   std::vector <cSubtitleImage*> mImages;
 
 private:
@@ -186,6 +187,15 @@ private:
     };
   //}}}
   //{{{
+  struct sRegionDisplay {
+    sRegionDisplay* mNext;
+
+    int mRegionId;
+    int xPos;
+    int yPos;
+    };
+  //}}}
+  //{{{
   struct sRegion {
     sRegion* mNext;
 
@@ -203,15 +213,6 @@ private:
     uint8_t* mPixBuf;
 
     sObjectDisplay* mDisplayList;
-    };
-  //}}}
-  //{{{
-  struct sRegionDisplay {
-    sRegionDisplay* mNext;
-
-    int mRegionId;
-    int xPos;
-    int yPos;
     };
   //}}}
 
@@ -234,8 +235,8 @@ private:
   // delete
   void deleteColorLuts();
   void deleteObjects();
-  void deleteRegions();
   void deleteRegionDisplayList (sRegion* region);
+  void deleteRegions();
 
   // update
   bool updateRects();
@@ -246,7 +247,6 @@ private:
   int mPageVersion = -1;
   int mPageTimeOut = 0;
 
-  size_t mNumRegions = 0;
   std::vector <cColorLut> mColorLuts;
   sRegion* mRegionList = nullptr;
   sObject* mObjectList = nullptr;

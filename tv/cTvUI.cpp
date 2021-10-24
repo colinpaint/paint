@@ -152,7 +152,7 @@ private:
     float potSize = ImGui::GetTextLineHeight() / 2.f;
 
     size_t line = 0;
-    while (line < subtitle.getNumRegions()) {
+    while (line < subtitle.getNumImages()) {
       // line order is reverse y order
       cSubtitleImage& image = *subtitle.mImages[subtitle.mImages.size() - 1 - line];
 
