@@ -17,29 +17,28 @@ public:
   cDvbSubtitle() = default;
   ~cDvbSubtitle();
 
+  size_t getNumRegions() const { return mNumRegions; }
   bool decode (const uint8_t* buf, int bufSize);
 
   // vars
-  size_t mNumRegions = 0;
   //{{{
   class cSubtitleRect {
   public:
     cSubtitleRect() {}
-    ~cSubtitleRect() { free (mPixData); }
+    ~cSubtitleRect() { free (mPixels); }
 
     int mX = 0;
     int mY = 0;
     int mWidth = 0;
     int mHeight = 0;
 
+    bool mChanged = false;
     std::array <uint32_t,16> mColorLut;
-
-    uint32_t* mPixData = nullptr;
+    uint8_t* mPixels = nullptr;
     cTexture* mTexture = nullptr;
     };
   //}}}
   std::vector <cSubtitleRect*> mRects;
-  bool mChanged = false;
 
 private:
   //{{{
@@ -246,6 +245,7 @@ private:
   int mPageVersion = -1;
   int mPageTimeOut = 0;
 
+  size_t mNumRegions = 0;
   std::vector <cColorLut> mColorLuts;
   sRegion* mRegionList = nullptr;
   sObject* mObjectList = nullptr;

@@ -146,12 +146,13 @@ private:
     }
   //}}}
   //{{{
+
   void drawSubtitle (cDvbSubtitle& subtitle, cGraphics& graphics) {
 
     float potSize = ImGui::GetTextLineHeight()/2.f;
 
     size_t line = 0;
-    for (; line < subtitle.mNumRegions; line++) {
+    for (; line < subtitle.getNumRegions(); line++) {
       // line order is reverse y order
       size_t lineIndex = subtitle.mRects.size() - 1 - line;
       cDvbSubtitle::cSubtitleRect& subtitleRect = *subtitle.mRects[lineIndex];
@@ -173,10 +174,10 @@ private:
 
       // subtitle image
       if (subtitleRect.mTexture == nullptr) // create
-          subtitleRect.mTexture = graphics.createTexture ({subtitleRect.mWidth, subtitleRect.mHeight},
-                                                          (uint8_t*)subtitleRect.mPixData);
-      else if (subtitle.mChanged) // update
-          subtitleRect.mTexture->setPixels ((uint8_t*)subtitleRect.mPixData);
+        subtitleRect.mTexture = graphics.createTexture ({subtitleRect.mWidth, subtitleRect.mHeight}, subtitleRect.mPixels);
+      else if (subtitleRect.mChanged) // update
+        subtitleRect.mTexture->setPixels (subtitleRect.mPixels);
+      subtitleRect.mChanged = false;
 
       // draw image, scaled to fit
       ImGui::SameLine();
@@ -189,9 +190,6 @@ private:
     for (; line < subtitle.mRects.size(); line++)
       ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
                               {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
-
-    // reset changed flag
-    subtitle.mChanged = false;
     }
   //}}}
 

@@ -656,40 +656,35 @@ bool cDvbSubtitle::updateRects() {
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;
 
-  size_t regionIndex = 0;
+  mNumRegions = 0;
   for (sRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
     sRegion* region = getRegion (regionDisplay->mRegionId);
     if (!region || !region->mDirty)
       continue;
 
-    cColorLut& colorLut = getColorLut (region->mColorLut);
-    if (regionIndex >= mRects.size())
+    if (mNumRegions >= mRects.size())
       mRects.push_back (new cSubtitleRect());
 
-    cSubtitleRect& subtitleRect = *mRects[regionIndex];
-
+    cSubtitleRect& subtitleRect = *mRects[mNumRegions];
     subtitleRect.mX = regionDisplay->xPos + offsetX;
     subtitleRect.mY = regionDisplay->yPos + offsetY;
     subtitleRect.mWidth = region->mWidth;
     subtitleRect.mHeight = region->mHeight;
-    subtitleRect.mPixData = (uint32_t*)realloc (subtitleRect.mPixData, region->mPixBufSize * sizeof(uint32_t));
+
+    cColorLut& colorLut = getColorLut (region->mColorLut);
     for (size_t i = 0; i < colorLut.m16bgra.max_size(); i++)
       subtitleRect.mColorLut[i] = colorLut.m16bgra[i];
 
-    if (region->mDepth == 4) {
-      // set pixData with colorLut [pixBuf]
-      uint32_t* ptr = subtitleRect.mPixData;
-      for (int i = 0; i < region->mPixBufSize; i++)
-        *ptr++ = colorLut.m16bgra[region->mPixBuf[i]];
-      }
-    else
-      cLog::log (LOGERROR, fmt::format ("unimplemented regionDepth:{}", region->mDepth));
+    subtitleRect.mPixels = (uint8_t*)realloc (subtitleRect.mPixels,
+                                               subtitleRect.mWidth * subtitleRect.mHeight * sizeof(uint32_t));
+    uint32_t* ptr = (uint32_t*)subtitleRect.mPixels;
+    for (int i = 0; i < subtitleRect.mWidth * subtitleRect.mHeight; i++)
+      *ptr++ = subtitleRect.mColorLut[region->mPixBuf[i]];
 
-    mChanged = true;
-    regionIndex++;
+    subtitleRect.mChanged = true;
+
+    mNumRegions++;
     }
-
-  mNumRegions = regionIndex;
 
   return true;
   }
