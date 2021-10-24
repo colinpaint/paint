@@ -17,19 +17,7 @@ class cDvbSubtitle;
 class cTexture;
 //}}}
 
-//{{{
-class cDvbSubtitleContext {
-public:
-  cDvbSubtitleContext() = default;
-  ~cDvbSubtitleContext() {
-    // should delete textures
-    }
-
-  cDvbSubtitle mDvbSubtitle;
-  std::array <cTexture*,4> mTextures = {nullptr};
-  };
-//}}}
-using tDvbSubtitleContextMap = std::map <uint16_t, cDvbSubtitleContext>;
+using tDvbSubtitleMap = std::map <uint16_t, cDvbSubtitle>;
 
 class cDvbTransportStream : public cTransportStream {
 public:
@@ -41,7 +29,7 @@ public:
   // subtitle
   bool getDecodeSubtitle() const { return mDecodeSubtitle; }
   bool hasSubtitle (uint16_t sid);
-  cDvbSubtitleContext& getSubtitleContext (uint16_t sid);
+  cDvbSubtitle& getSubtitle (uint16_t sid);
 
   void toggleDecodeSubtitle();
 
@@ -81,5 +69,5 @@ private:
 
   // subtitle
   bool mDecodeSubtitle = false;
-  tDvbSubtitleContextMap mDvbSubtitleContextMap; // indexed by sid
+  tDvbSubtitleMap mDvbSubtitleMap; // indexed by sid
   };

@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <array>
+
+class cTexture;
 //}}}
 #define BGRA(r,g,b,a) (uint32_t ((((a) << 24) & 0xFF000000) | (((b) << 16) & 0x00FF0000) | \
                                  (((g) <<  8) & 0x0000FF00) |  ((r)        & 0x000000FF)))
@@ -29,8 +31,11 @@ public:
     int mY = 0;
     int mWidth = 0;
     int mHeight = 0;
-    uint32_t* mPixData = nullptr;
+
     std::array <uint32_t,16> mColorLut;
+
+    uint32_t* mPixData = nullptr;
+    cTexture* mTexture = nullptr;
     };
   //}}}
   std::vector <cSubtitleRect*> mRects;
