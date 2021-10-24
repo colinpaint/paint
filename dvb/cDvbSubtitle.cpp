@@ -715,7 +715,7 @@ bool cDvbSubtitle::updateRects() {
       continue;
 
     if (mNumImages == mImages.size())
-      mImages.push_back (new cSubtitleImage());
+      mImages.emplace_back (new cSubtitleImage());
 
     cSubtitleImage& image = *mImages[mNumImages];
     image.mPageVersion = mPageVersion;

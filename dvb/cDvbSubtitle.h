@@ -151,7 +151,6 @@ private:
   struct sObjectDisplay {
     //{{{
     void init (uint16_t objectId, uint8_t regionId, int xpos, int ypos) {
-      mObjectListNext = nullptr;
 
       mObjectId = objectId;
       mRegionId = regionId;
@@ -162,11 +161,10 @@ private:
       mForegroundColour = 0;;
       mBackgroundColour = 0;
 
+      mObjectListNext = nullptr;
       mRegionListNext = nullptr;
       }
     //}}}
-
-    sObjectDisplay* mObjectListNext;
 
     uint16_t mObjectId;
     uint8_t mRegionId;
@@ -177,33 +175,33 @@ private:
     int mForegroundColour;
     int mBackgroundColour;
 
+    sObjectDisplay* mObjectListNext;
     sObjectDisplay* mRegionListNext;
     };
   //}}}
   //{{{
   struct sObject {
-    sObject* mNext;
-
     uint16_t mId;
     int mType;
-
     sObjectDisplay* mDisplayList;
+
+    sObject* mNext;
     };
   //}}}
   //{{{
   struct sRegionDisplay {
-    sRegionDisplay* mNext;
-
     uint8_t mRegionId;
     int xPos;
     int yPos;
+
+    sRegionDisplay* mNext;
     };
   //}}}
   //{{{
   class cRegion {
   public:
     cRegion (uint8_t id) : mId(id) {}
-    //~cRegion() { free (mPixBuf); }
+    //~cRegion() { free (mPixBuf); } // why can't I delete mPixBuf
     ~cRegion() { }
 
     uint8_t mId = 0;
@@ -251,14 +249,17 @@ private:
   // vars
   const uint16_t mSid;
   const std::string mName;
-  cDisplayDefinition mDisplayDefinition;
 
+  cDisplayDefinition mDisplayDefinition;
+  sRegionDisplay* mDisplayList = nullptr;
+
+  // page info
   uint8_t mPageVersion = 0xFF;
   uint8_t mPageState = 0;
   uint8_t mPageTimeout = 0;
 
+  // pools
   std::vector <cColorLut> mColorLuts;
   std::vector <cRegion> mRegions;
   sObject* mObjectList = nullptr;
-  sRegionDisplay* mDisplayList = nullptr;
   };
