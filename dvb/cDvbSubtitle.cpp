@@ -425,6 +425,7 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
   //cLog::log (LOGINFO, "region segment");
   if (bufSize < 10)
     return false;
+
   const uint8_t* bufEnd = buf + bufSize;
 
   uint8_t regionId = *buf++;
@@ -473,14 +474,13 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     buf += 2;
     sObject* object = getObject (objectId);
     if (!object) {
-      //{{{  allocate and init object
+      // allocate and init object
       object = (sObject*)malloc (sizeof(sObject));
 
       object->mId = objectId;
       object->mType = 0;
       object->mNext = mObjectList;
       object->mDisplayList = nullptr;
-      //}}}
       mObjectList = object;
       }
     object->mType = (*buf) >> 6;
@@ -528,7 +528,7 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
   const uint8_t* bufEnd = buf + bufSize;
 
   mPageTimeOut = *buf++;
-  int pageVersion = ((*buf) >> 4) & 15;
+  uint8_t pageVersion = ((*buf) >> 4) & 15;
   if (mPageVersion == pageVersion)
     return true;
 

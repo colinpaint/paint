@@ -247,7 +247,7 @@ private:
   // vars
   cDisplayDefinition mDisplayDefinition;
 
-  int mPageVersion = -1;
+  uint8_t mPageVersion = 0xFF;
   int mPageTimeOut = 0;
 
   std::vector <cColorLut> mColorLuts;
