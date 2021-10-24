@@ -112,30 +112,29 @@ cDvbSubtitle::cColorLut& cDvbSubtitle::getColorLut (uint8_t id) {
       return colorLut;
 
   // create id colorLut
-  mColorLuts.push_back (cColorLut(id));
-
+  mColorLuts.emplace_back (cColorLut (id));
   return mColorLuts.back();
   }
 //}}}
 //{{{
-cDvbSubtitle::sObject* cDvbSubtitle::getObject (int objectId) {
+cDvbSubtitle::sObject* cDvbSubtitle::getObject (uint16_t id) {
 
   sObject* object = mObjectList;
 
-  while (object && (object->mId != objectId))
+  while (object && (object->mId != id))
     object = object->mNext;
 
   return object;
   }
 //}}}
 //{{{
-cDvbSubtitle::cRegion* cDvbSubtitle::getRegion (int regionId) {
+cDvbSubtitle::cRegion* cDvbSubtitle::getRegion (uint8_t id) {
 
   for (auto& region : mRegions)
-    if (region.mId == regionId)
+    if (region.mId == id)
       return &region;
 
-  mRegions.emplace_back (cRegion (regionId));
+  mRegions.emplace_back (cRegion (id));
   return &mRegions.back();
   }
 //}}}
@@ -428,7 +427,7 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     return false;
   const uint8_t* bufEnd = buf + bufSize;
 
-  int regionId = *buf++;
+  uint8_t regionId = *buf++;
   cRegion* region = getRegion (regionId);
   region->mVersion = ((*buf) >> 4) & 0x0F;
 
@@ -470,7 +469,7 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
   deleteRegionDisplayList (region);
 
   while (buf + 5 < bufEnd) {
-    int objectId = AVRB16(buf);
+    uint16_t objectId = AVRB16(buf);
     buf += 2;
     sObject* object = getObject (objectId);
     if (!object) {
@@ -548,7 +547,7 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
   sRegionDisplay* tmpDisplayList = mDisplayList;
   mDisplayList = NULL;
   while (buf + 5 < bufEnd) {
-    int regionId = *buf++;
+    uint8_t regionId = *buf++;
     buf += 1;
 
     sRegionDisplay* display = mDisplayList;
@@ -655,7 +654,6 @@ void cDvbSubtitle::deleteRegionDisplayList (cRegion* region) {
 
   while (region->mDisplayList) {
     sObjectDisplay* display = region->mDisplayList;
-
     sObject* object = getObject (display->mObjectId);
     if (object) {
       sObjectDisplay** objDispPtr = &object->mDisplayList;

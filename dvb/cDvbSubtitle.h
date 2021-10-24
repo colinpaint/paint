@@ -146,7 +146,7 @@ private:
   //{{{
   struct sObjectDisplay {
     //{{{
-    void init (int objectId, int regionId, int xpos, int ypos) {
+    void init (uint16_t objectId, uint8_t regionId, int xpos, int ypos) {
       mObjectListNext = nullptr;
 
       mObjectId = objectId;
@@ -164,8 +164,8 @@ private:
 
     sObjectDisplay* mObjectListNext;
 
-    int mObjectId;
-    int mRegionId;
+    uint16_t mObjectId;
+    uint8_t mRegionId;
 
     int xPos;
     int yPos;
@@ -180,7 +180,7 @@ private:
   struct sObject {
     sObject* mNext;
 
-    int mId;
+    uint16_t mId;
     int mType;
 
     sObjectDisplay* mDisplayList;
@@ -190,7 +190,7 @@ private:
   struct sRegionDisplay {
     sRegionDisplay* mNext;
 
-    int mRegionId;
+    uint8_t mRegionId;
     int xPos;
     int yPos;
     };
@@ -198,11 +198,11 @@ private:
   //{{{
   class cRegion {
   public:
-    cRegion (int id) : mId(id) {}
+    cRegion (uint8_t id) : mId(id) {}
     //~cRegion() { free (mPixBuf); }
     ~cRegion() { }
 
-    int mId = 0;
+    uint8_t mId = 0;
     int mVersion = -1;
 
     int mWidth = 0;
@@ -221,8 +221,8 @@ private:
 
   // get
   cColorLut& getColorLut (uint8_t id);
-  sObject* getObject (int objectId);
-  cRegion* getRegion (int regionId);
+  sObject* getObject (uint16_t id);
+  cRegion* getRegion (uint8_t id);
 
   // parse
   bool parseColorLut (const uint8_t* buf, uint16_t bufSize);
