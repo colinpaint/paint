@@ -199,7 +199,7 @@ private:
   class cRegion {
   public:
     int mId = 0;
-    int mVersion = 0;
+    int mVersion = -1;
 
     int mWidth = 0;
     int mHeight = 0;
@@ -207,8 +207,8 @@ private:
     uint8_t mColorLut = 0;
     int mBackgroundColour = 0;
 
-    bool mDirty;
-    int mPixBufSize;
+    bool mDirty = false;
+    int mPixBufSize = 0;
     uint8_t* mPixBuf = nullptr;
 
     sObjectDisplay* mDisplayList = nullptr;

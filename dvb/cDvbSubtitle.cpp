@@ -429,19 +429,6 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint32_t bufSize) {
     mRegions.push_back (cRegion());
     region = &mRegions.back();
     region->mId = regionId;
-    region->mVersion = -1;
-
-    region->mWidth = 0;
-    region->mHeight = 0;
-    region->mDepth = 0;
-    region->mColorLut = 0;
-    region->mBackgroundColour = 0;
-
-    region->mDirty = false;
-    region->mPixBufSize = 0;
-    region->mPixBuf = nullptr;
-
-    region->mDisplayList = nullptr;
     }
   region->mVersion = ((*buf) >> 4) & 0x0F;
 
@@ -715,7 +702,7 @@ void cDvbSubtitle::deleteRegionDisplayList (cRegion* region) {
 //}}}
 //{{{
 void cDvbSubtitle::deleteRegions() {
-  
+
   mRegions.clear();
   }
 //}}}
