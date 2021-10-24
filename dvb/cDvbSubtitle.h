@@ -244,7 +244,7 @@ private:
   void deleteRegions();
 
   // update
-  bool updateRects();
+  bool updateImages();
 
   // vars
   const uint16_t mSid;

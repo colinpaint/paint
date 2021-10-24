@@ -87,7 +87,7 @@ bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
         break;
 
       case 0x80:
-        updateRects();
+        updateImages();
         return true;
 
       default:
@@ -703,7 +703,7 @@ void cDvbSubtitle::deleteRegionDisplayList (cRegion* region) {
 //}}}
 
 //{{{
-bool cDvbSubtitle::updateRects() {
+bool cDvbSubtitle::updateImages() {
 
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;
