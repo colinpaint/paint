@@ -426,7 +426,7 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint32_t bufSize) {
   cRegion* region = getRegion (regionId);
   if (!region) {
     // allocate and init region
-    mRegions.push_back (cRegion());
+    mRegions.emplace_back (cRegion());
     region = &mRegions.back();
     region->mId = regionId;
     }
