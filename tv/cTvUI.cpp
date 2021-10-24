@@ -161,7 +161,7 @@ private:
       for (size_t pot = 0; pot < image.mColorLut.max_size(); pot++) {
         ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
         uint32_t color = image.mColorLut[pot];
-        ImGui::GetWindowDrawList()->AddRectFilled (potPos, 
+        ImGui::GetWindowDrawList()->AddRectFilled (potPos,
                                                    {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
         }
       ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),

@@ -33,8 +33,8 @@ cDvbSubtitle::~cDvbSubtitle() {
     free (display);
     }
 
-  for (auto rect : mImages)
-    delete rect;
+  for (auto image : mImages)
+    delete image;
   mImages.clear();
   }
 //}}}
@@ -747,7 +747,7 @@ bool cDvbSubtitle::updateRects() {
     if (!region || !region->mDirty)
       continue;
 
-    if (mNumRegions >= mImages.size())
+    if (mNumRegions == mImages.size())
       mImages.push_back (new cSubtitleImage());
 
     cSubtitleImage& image = *mImages[mNumRegions];

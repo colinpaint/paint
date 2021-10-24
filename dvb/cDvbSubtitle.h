@@ -37,7 +37,7 @@ public:
   size_t getNumRegions() const { return mNumRegions; }
   bool decode (const uint8_t* buf, int bufSize);
 
-  // vars
+  // vars !!! can't get non pointer vector to work !!!
   std::vector <cSubtitleImage*> mImages;
 
 private:
