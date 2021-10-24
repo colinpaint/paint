@@ -196,30 +196,29 @@ private:
     };
   //}}}
   //{{{
-  struct sRegion {
-    sRegion* mNext;
+  class cRegion {
+  public:
+    int mId = 0;
+    int mVersion = 0;
 
-    int mId;
-    int mVersion;
-
-    int mWidth;
-    int mHeight;
-    int mDepth;
-    uint8_t mColorLut;
-    int mBackgroundColour;
+    int mWidth = 0;
+    int mHeight = 0;
+    int mDepth = 0;
+    uint8_t mColorLut = 0;
+    int mBackgroundColour = 0;
 
     bool mDirty;
     int mPixBufSize;
-    uint8_t* mPixBuf;
+    uint8_t* mPixBuf = nullptr;
 
-    sObjectDisplay* mDisplayList;
+    sObjectDisplay* mDisplayList = nullptr;
     };
   //}}}
 
   // get
   cColorLut& getColorLut (uint8_t id);
   sObject* getObject (int objectId);
-  sRegion* getRegion (int regionId);
+  cRegion* getRegion (int regionId);
 
   // parse
   bool parseColorLut (const uint8_t* buf, uint32_t bufSize);
@@ -235,7 +234,7 @@ private:
   // delete
   void deleteColorLuts();
   void deleteObjects();
-  void deleteRegionDisplayList (sRegion* region);
+  void deleteRegionDisplayList (cRegion* region);
   void deleteRegions();
 
   // update
@@ -248,7 +247,7 @@ private:
   int mPageTimeOut = 0;
 
   std::vector <cColorLut> mColorLuts;
-  sRegion* mRegionList = nullptr;
+  std::vector <cRegion> mRegions;
   sObject* mObjectList = nullptr;
   sRegionDisplay* mDisplayList = nullptr;
   };

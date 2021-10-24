@@ -129,14 +129,13 @@ cDvbSubtitle::sObject* cDvbSubtitle::getObject (int objectId) {
   }
 //}}}
 //{{{
-cDvbSubtitle::sRegion* cDvbSubtitle::getRegion (int regionId) {
+cDvbSubtitle::cRegion* cDvbSubtitle::getRegion (int regionId) {
 
-  sRegion* region = mRegionList;
+  for (auto& region : mRegions)
+    if (region.mId == regionId)
+      return &region;
 
-  while (region && (region->mId != regionId))
-    region = region->mNext;
-
-  return region;
+  return nullptr;
   }
 //}}}
 
@@ -325,7 +324,7 @@ void cDvbSubtitle::parseObjectBlock (sObjectDisplay* display, const uint8_t* buf
 
   const uint8_t* bufEnd = buf + bufSize;
 
-  sRegion* region = getRegion (display->mRegionId);
+  cRegion* region = getRegion (display->mRegionId);
   if (!region)
     return;
 
@@ -424,11 +423,11 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint32_t bufSize) {
   const uint8_t* bufEnd = buf + bufSize;
 
   int regionId = *buf++;
-  sRegion* region = getRegion (regionId);
+  cRegion* region = getRegion (regionId);
   if (!region) {
-    //{{{  allocate and init region
-    region = (sRegion*)malloc (sizeof(sRegion));
-    region->mNext = mRegionList;
+    // allocate and init region
+    mRegions.push_back (cRegion());
+    region = &mRegions.back();
     region->mId = regionId;
     region->mVersion = -1;
 
@@ -443,8 +442,6 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint32_t bufSize) {
     region->mPixBuf = nullptr;
 
     region->mDisplayList = nullptr;
-    //}}}
-    mRegionList = region;
     }
   region->mVersion = ((*buf) >> 4) & 0x0F;
 
@@ -671,7 +668,7 @@ void cDvbSubtitle::deleteObjects() {
   }
 //}}}
 //{{{
-void cDvbSubtitle::deleteRegionDisplayList (sRegion* region) {
+void cDvbSubtitle::deleteRegionDisplayList (cRegion* region) {
 
   uint32_t num = 0;
   uint32_t num1 = 0;
@@ -718,20 +715,8 @@ void cDvbSubtitle::deleteRegionDisplayList (sRegion* region) {
 //}}}
 //{{{
 void cDvbSubtitle::deleteRegions() {
-
-  uint32_t num = 0;
-  while (mRegionList) {
-    sRegion* region = mRegionList;
-
-    mRegionList = region->mNext;
-    deleteRegionDisplayList (region);
-
-    free (region->mPixBuf);
-    free (region);
-    num++;
-    }
-
-  cLog::log (LOGINFO1, fmt::format ("deleteRegions {}", num));
+  
+  mRegions.clear();
   }
 //}}}
 
@@ -743,7 +728,7 @@ bool cDvbSubtitle::updateRects() {
 
   mNumImages = 0;
   for (sRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
-    sRegion* region = getRegion (regionDisplay->mRegionId);
+    cRegion* region = getRegion (regionDisplay->mRegionId);
     if (!region || !region->mDirty)
       continue;
 
