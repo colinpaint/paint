@@ -33,9 +33,9 @@ cDvbSubtitle::~cDvbSubtitle() {
     free (display);
     }
 
-  for (auto rect : mRects)
+  for (auto rect : mImages)
     delete rect;
-  mRects.clear();
+  mImages.clear();
   }
 //}}}
 
@@ -196,7 +196,6 @@ bool cDvbSubtitle::parseColorLut (const uint8_t* buf, uint32_t bufSize) {
         uint8_t r = ((y + rAdd) >> SCALEBITS) & 0xFF;
         uint8_t g = ((y + gAdd) >> SCALEBITS) & 0xFF;
         uint8_t b = ((y + bAdd) >> SCALEBITS) & 0xFF;
-
         colorLut.m16bgra[entryId] = BGRA(r,g,b,alpha);
         }
       else
@@ -651,46 +650,6 @@ bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, uint32_t bufSize)
 //}}}
 
 //{{{
-bool cDvbSubtitle::updateRects() {
-
-  int offsetX = mDisplayDefinition.mX;
-  int offsetY = mDisplayDefinition.mY;
-
-  mNumRegions = 0;
-  for (sRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
-    sRegion* region = getRegion (regionDisplay->mRegionId);
-    if (!region || !region->mDirty)
-      continue;
-
-    if (mNumRegions >= mRects.size())
-      mRects.push_back (new cSubtitleRect());
-
-    cSubtitleRect& subtitleRect = *mRects[mNumRegions];
-    subtitleRect.mX = regionDisplay->xPos + offsetX;
-    subtitleRect.mY = regionDisplay->yPos + offsetY;
-    subtitleRect.mWidth = region->mWidth;
-    subtitleRect.mHeight = region->mHeight;
-
-    cColorLut& colorLut = getColorLut (region->mColorLut);
-    for (size_t i = 0; i < colorLut.m16bgra.max_size(); i++)
-      subtitleRect.mColorLut[i] = colorLut.m16bgra[i];
-
-    subtitleRect.mPixels = (uint8_t*)realloc (subtitleRect.mPixels,
-                                               subtitleRect.mWidth * subtitleRect.mHeight * sizeof(uint32_t));
-    uint32_t* ptr = (uint32_t*)subtitleRect.mPixels;
-    for (int i = 0; i < subtitleRect.mWidth * subtitleRect.mHeight; i++)
-      *ptr++ = subtitleRect.mColorLut[region->mPixBuf[i]];
-
-    subtitleRect.mChanged = true;
-
-    mNumRegions++;
-    }
-
-  return true;
-  }
-//}}}
-
-//{{{
 void cDvbSubtitle::deleteColorLuts() {
 
   cLog::log (LOGINFO1, fmt::format ("deleteColorLuts {}", mColorLuts.size()));
@@ -773,5 +732,50 @@ void cDvbSubtitle::deleteRegionDisplayList (sRegion* region) {
     }
 
   cLog::log (LOGINFO1, fmt::format ("deleteRegionDisplayList {} {}", num, num1));
+  }
+//}}}
+
+//{{{
+bool cDvbSubtitle::updateRects() {
+
+  int offsetX = mDisplayDefinition.mX;
+  int offsetY = mDisplayDefinition.mY;
+
+  mNumRegions = 0;
+  for (sRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
+    sRegion* region = getRegion (regionDisplay->mRegionId);
+    if (!region || !region->mDirty)
+      continue;
+
+    if (mNumRegions >= mImages.size())
+      mImages.push_back (new cSubtitleImage());
+
+    cSubtitleImage& image = *mImages[mNumRegions];
+    image.mX = regionDisplay->xPos + offsetX;
+    image.mY = regionDisplay->yPos + offsetY;
+    image.mWidth = region->mWidth;
+    image.mHeight = region->mHeight;
+
+    // copy lut
+    cColorLut& colorLut = getColorLut (region->mColorLut);
+    for (size_t i = 0; i < colorLut.m16bgra.max_size(); i++)
+      image.mColorLut[i] = colorLut.m16bgra[i];
+
+    // allocate pixels
+    image.mPixels = (uint8_t*)realloc (image.mPixels, image.mWidth * image.mHeight * sizeof(uint32_t));
+
+    // region->mPixBuf -> lut -> mPixels
+    uint32_t* ptr = (uint32_t*)image.mPixels;
+    for (int i = 0; i < image.mWidth * image.mHeight; i++)
+      *ptr++ = image.mColorLut[region->mPixBuf[i]];
+
+    // set changed flag, to update texture in gui
+    image.mPixelsChanged = true;
+
+    // update num regions as they become valid
+    mNumRegions++;
+    }
+
+  return true;
   }
 //}}}

@@ -9,8 +9,25 @@
 
 class cTexture;
 //}}}
-#define BGRA(r,g,b,a) (uint32_t ((((a) << 24) & 0xFF000000) | (((b) << 16) & 0x00FF0000) | \
-                                 (((g) <<  8) & 0x0000FF00) |  ((r)        & 0x000000FF)))
+
+#define BGRA(r,g,b,a) static_cast<uint32_t>(((a << 24) ) | (b << 16) | (g <<  8) | r)
+//{{{
+class cSubtitleImage {
+public:
+  cSubtitleImage() {}
+  ~cSubtitleImage() { free (mPixels); }
+
+  int mX = 0;
+  int mY = 0;
+  int mWidth = 0;
+  int mHeight = 0;
+
+  bool mPixelsChanged = false;
+  std::array <uint32_t,16> mColorLut;
+  uint8_t* mPixels = nullptr;
+  cTexture* mTexture = nullptr;
+  };
+//}}}
 
 class cDvbSubtitle {
 public:
@@ -21,24 +38,7 @@ public:
   bool decode (const uint8_t* buf, int bufSize);
 
   // vars
-  //{{{
-  class cSubtitleRect {
-  public:
-    cSubtitleRect() {}
-    ~cSubtitleRect() { free (mPixels); }
-
-    int mX = 0;
-    int mY = 0;
-    int mWidth = 0;
-    int mHeight = 0;
-
-    bool mChanged = false;
-    std::array <uint32_t,16> mColorLut;
-    uint8_t* mPixels = nullptr;
-    cTexture* mTexture = nullptr;
-    };
-  //}}}
-  std::vector <cSubtitleRect*> mRects;
+  std::vector <cSubtitleImage*> mImages;
 
 private:
   //{{{
@@ -98,7 +98,6 @@ private:
     uint32_t mBitsRead = 0;
     };
   //}}}
-
   //{{{
   class cDisplayDefinition {
   public:
@@ -143,7 +142,6 @@ private:
     std::array <uint32_t,16> m16bgra;
     };
   //}}}
-
   //{{{
   struct sObjectDisplay {
     //{{{
@@ -187,7 +185,6 @@ private:
     sObjectDisplay* mDisplayList;
     };
   //}}}
-
   //{{{
   struct sRegion {
     sRegion* mNext;
@@ -218,10 +215,12 @@ private:
     };
   //}}}
 
+  // get
   cColorLut& getColorLut (uint8_t id);
   sObject* getObject (int objectId);
   sRegion* getRegion (int regionId);
 
+  // parse
   bool parseColorLut (const uint8_t* buf, uint32_t bufSize);
   int parse4bit (const uint8_t** buf, uint32_t bufSize,
                  uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour);
@@ -232,12 +231,14 @@ private:
   bool parseRegion (const uint8_t* buf, uint32_t bufSize);
   bool parseDisplayDefinition (const uint8_t* buf, uint32_t bufSize);
 
-  bool updateRects();
-
+  // delete
   void deleteColorLuts();
   void deleteObjects();
   void deleteRegions();
   void deleteRegionDisplayList (sRegion* region);
+
+  // update
+  bool updateRects();
 
   // vars
   cDisplayDefinition mDisplayDefinition;

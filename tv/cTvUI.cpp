@@ -149,47 +149,49 @@ private:
 
   void drawSubtitle (cDvbSubtitle& subtitle, cGraphics& graphics) {
 
-    float potSize = ImGui::GetTextLineHeight()/2.f;
+    float potSize = ImGui::GetTextLineHeight() / 2.f;
 
     size_t line = 0;
-    for (; line < subtitle.getNumRegions(); line++) {
+    while (line < subtitle.getNumRegions()) {
       // line order is reverse y order
-      size_t lineIndex = subtitle.mRects.size() - 1 - line;
-      cDvbSubtitle::cSubtitleRect& subtitleRect = *subtitle.mRects[lineIndex];
+      cSubtitleImage& image = *subtitle.mImages[subtitle.mImages.size() - 1 - line];
 
       // draw clut color pots
       ImVec2 pos = ImGui::GetCursorScreenPos();
-      for (size_t pot = 0; pot < subtitleRect.mColorLut.max_size(); pot++) {
+      for (size_t pot = 0; pot < image.mColorLut.max_size(); pot++) {
         ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
-        uint32_t color = subtitleRect.mColorLut[pot];
-        ImGui::GetWindowDrawList()->AddRectFilled (potPos, { potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
+        uint32_t color = image.mColorLut[pot];
+        ImGui::GetWindowDrawList()->AddRectFilled (potPos, 
+                                                   {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
         }
       ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),
                               {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()});
 
       // draw position
       ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{},{:3d}",
-                              subtitleRect.mX, subtitleRect.mY).c_str());
+      ImGui::TextUnformatted (fmt::format ("{},{:3d}", image.mX, image.mY).c_str());
 
-      // subtitle image
-      if (subtitleRect.mTexture == nullptr) // create
-        subtitleRect.mTexture = graphics.createTexture ({subtitleRect.mWidth, subtitleRect.mHeight}, subtitleRect.mPixels);
-      else if (subtitleRect.mChanged) // update
-        subtitleRect.mTexture->setPixels (subtitleRect.mPixels);
-      subtitleRect.mChanged = false;
+      // create/update image texture
+      if (image.mTexture == nullptr) // create
+        image.mTexture = graphics.createTexture ({image.mWidth, image.mHeight}, image.mPixels);
+      else if (image.mPixelsChanged) // update
+        image.mTexture->setPixels (image.mPixels);
+      image.mPixelsChanged = false;
 
       // draw image, scaled to fit
       ImGui::SameLine();
-      float scale = ImGui::GetTextLineHeight() / subtitleRect.mHeight;
-      ImGui::Image ((void*)(intptr_t)subtitleRect.mTexture->getTextureId(),
-                    {subtitleRect.mWidth * scale, ImGui::GetTextLineHeight()});
+      float scale = ImGui::GetTextLineHeight() / image.mHeight;
+      ImGui::Image ((void*)(intptr_t)image.mTexture->getTextureId(),
+                    { image.mWidth * scale, ImGui::GetTextLineHeight()});
+      line++;
       }
 
-    // pad out to maxLines, stops jumping about
-    for (; line < subtitle.mRects.size(); line++)
+    // pad lines to highwater mark, stops jumping about
+    while (line < subtitle.mImages.size()) {
       ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
                               {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
+      line++;
+      }
     }
   //}}}
 
