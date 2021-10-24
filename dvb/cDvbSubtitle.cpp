@@ -23,9 +23,9 @@ class cTexture;
 //{{{
 cDvbSubtitle::~cDvbSubtitle() {
 
-  deleteRegions();
+  mRegions.clear();
   deleteObjects();
-  deleteColorLuts();
+  mColorLuts.clear();
 
   while (mDisplayList) {
     sRegionDisplay* display = mDisplayList;
@@ -135,7 +135,8 @@ cDvbSubtitle::cRegion* cDvbSubtitle::getRegion (int regionId) {
     if (region.mId == regionId)
       return &region;
 
-  return nullptr;
+  mRegions.emplace_back (cRegion (regionId));
+  return &mRegions.back();
   }
 //}}}
 
@@ -215,11 +216,13 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, uint32_t bufSize,
   while ((bitStream.getBitsRead() < (bufSize * 8)) && (pixPos < pixBufSize)) {
     uint8_t bits = (uint8_t)bitStream.getBits (4);
     if (bits) {
+      //{{{  simple pixel value
       if (!nonModifyColour || (bits != 1))
         *pixBuf++ = (uint8_t)bits;
+
       pixPos++;
       }
-
+      //}}}
     else {
       bits = (uint8_t)bitStream.getBit();
       if (bits == 0) {
@@ -310,6 +313,7 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, uint32_t bufSize,
       }
     }
 
+  // trailing zero
   int bits = bitStream.getBits (8);
   if (bits)
     cLog::log (LOGERROR, "line overflow");
@@ -328,12 +332,12 @@ void cDvbSubtitle::parseObjectBlock (sObjectDisplay* display, const uint8_t* buf
   if (!region)
     return;
 
-  uint8_t* pixBuf = region->mPixBuf;
   region->mDirty = true;
 
   int xPos = display->xPos;
   int yPos = display->yPos + (bottom ? 1 : 0);
 
+  uint8_t* pixBuf = region->mPixBuf;
   while (buf < bufEnd) {
     if (((*buf != 0xF0) && (xPos >= region->mWidth)) || (yPos >= region->mHeight)) {
       //{{{  error return
@@ -424,12 +428,6 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint32_t bufSize) {
 
   int regionId = *buf++;
   cRegion* region = getRegion (regionId);
-  if (!region) {
-    // allocate and init region
-    mRegions.emplace_back (cRegion());
-    region = &mRegions.back();
-    region->mId = regionId;
-    }
   region->mVersion = ((*buf) >> 4) & 0x0F;
 
   bool fill = ((*buf++) >> 3) & 1;
@@ -539,9 +537,9 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint32_t bufSize) {
   //cLog::log (LOGINFO,  fmt::format ("- pageState:{} timeout {}", pageState, mTimeOut));
   if ((pageState == 1) || (pageState == 2)) {
     //{{{  delete regions, objects, colorLuts
-    deleteRegions();
+    mRegions.clear();
     deleteObjects();
-    deleteColorLuts();
+    mColorLuts.clear();
     }
     //}}}
 
@@ -634,13 +632,6 @@ bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, uint32_t bufSize)
 //}}}
 
 //{{{
-void cDvbSubtitle::deleteColorLuts() {
-
-  cLog::log (LOGINFO1, fmt::format ("deleteColorLuts {}", mColorLuts.size()));
-  mColorLuts.clear();
-  }
-//}}}
-//{{{
 void cDvbSubtitle::deleteObjects() {
 
   uint32_t num = 0;
@@ -698,12 +689,6 @@ void cDvbSubtitle::deleteRegionDisplayList (cRegion* region) {
     }
 
   cLog::log (LOGINFO1, fmt::format ("deleteRegionDisplayList {} {}", num, num1));
-  }
-//}}}
-//{{{
-void cDvbSubtitle::deleteRegions() {
-
-  mRegions.clear();
   }
 //}}}
 

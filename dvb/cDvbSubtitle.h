@@ -198,6 +198,10 @@ private:
   //{{{
   class cRegion {
   public:
+    cRegion (int id) : mId(id) {}
+    //~cRegion() { free (mPixBuf); }
+    ~cRegion() { }
+
     int mId = 0;
     int mVersion = -1;
 
