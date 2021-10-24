@@ -17,12 +17,16 @@ public:
   cSubtitleImage() {}
   ~cSubtitleImage() { free (mPixels); }
 
+  uint8_t mPageVersion = 0;
+  uint8_t mPageState = 0;
+  uint8_t mPageTimeout = 0;
+
   int mX = 0;
   int mY = 0;
   int mWidth = 0;
   int mHeight = 0;
 
-  bool mPixelsChanged = false;
+  bool mDirty = false;
   std::array <uint32_t,16> mColorLut;
   uint8_t* mPixels = nullptr;
   cTexture* mTexture = nullptr;
@@ -31,7 +35,7 @@ public:
 
 class cDvbSubtitle {
 public:
-  cDvbSubtitle (uint16_t sid)  : mSid(sid) {}
+  cDvbSubtitle (uint16_t sid, const std::string name)  : mSid(sid), mName(name) {}
   ~cDvbSubtitle();
 
   size_t getNumImages() const { return mNumImages; }
@@ -102,7 +106,7 @@ private:
   //{{{
   class cDisplayDefinition {
   public:
-    int mVersion = -1;
+    uint8_t mVersion = 0xFF;
 
     int mX = 0;
     int mY = 0;
@@ -246,10 +250,12 @@ private:
 
   // vars
   const uint16_t mSid;
+  const std::string mName;
   cDisplayDefinition mDisplayDefinition;
 
   uint8_t mPageVersion = 0xFF;
-  int mPageTimeOut = 0;
+  uint8_t mPageState = 0;
+  uint8_t mPageTimeout = 0;
 
   std::vector <cColorLut> mColorLuts;
   std::vector <cRegion> mRegions;

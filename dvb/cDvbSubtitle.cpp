@@ -23,9 +23,9 @@ class cTexture;
 //{{{
 cDvbSubtitle::~cDvbSubtitle() {
 
+  mColorLuts.clear();
   mRegions.clear();
   deleteObjects();
-  mColorLuts.clear();
 
   while (mDisplayList) {
     sRegionDisplay* display = mDisplayList;
@@ -520,23 +520,23 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
 bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "page");
-
   if (bufSize < 1)
     return false;
+
   const uint8_t* bufEnd = buf + bufSize;
 
-  mPageTimeOut = *buf++;
+  mPageTimeout = *buf++;
   uint8_t pageVersion = ((*buf) >> 4) & 15;
   if (mPageVersion == pageVersion)
     return true;
-
   mPageVersion = pageVersion;
-  int pageState = ((*buf++) >> 2) & 3;
+  mPageState = ((*buf++) >> 2) & 3;
 
-  if ((pageState == 1) || (pageState == 2)) {
+  if ((mPageState == 1) || (mPageState == 2)) {
     //{{{  delete regions, objects, colorLuts
-    cLog::log (LOGINFO,  fmt::format ("sid:{} pageState:{} pageVersion::{} pageTimeout:{}", 
-                                      mSid, pageState, pageVersion, mPageTimeOut));
+    cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} - page:{:1d} version::{:2d} timeout:{}",
+                                      mSid, mName,
+                                      mPageState, mPageVersion, mPageTimeout));
     mRegions.clear();
     deleteObjects();
     mColorLuts.clear();
@@ -599,34 +599,45 @@ bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize)
   if (bufSize < 5)
     return false;
 
-  int infoByte = *buf++;
-  int ddsVersion = infoByte >> 4;
+  uint8_t infoByte = *buf++;
+  uint8_t ddsVersion = infoByte >> 4;
 
   if (mDisplayDefinition.mVersion == ddsVersion)
     return true;
-
   mDisplayDefinition.mVersion = ddsVersion;
+
   mDisplayDefinition.mX = 0;
   mDisplayDefinition.mY = 0;
+
   mDisplayDefinition.mWidth = AVRB16(buf) + 1;
   buf += 2;
+
   mDisplayDefinition.mHeight = AVRB16(buf) + 1;
   buf += 2;
 
-  int displayWindow = infoByte & (1 << 3);
+  uint8_t displayWindow = infoByte & (1 << 3);
   if (displayWindow) {
     if (bufSize < 13)
       return false;
 
-    mDisplayDefinition.mX = AVRB16(buf); buf += 2;
-    mDisplayDefinition.mWidth  = AVRB16(buf) - mDisplayDefinition.mX + 1; buf += 2;
-    mDisplayDefinition.mY = AVRB16(buf); buf += 2;
-    mDisplayDefinition.mHeight = AVRB16(buf) - mDisplayDefinition.mY + 1; buf += 2;
+    mDisplayDefinition.mX = AVRB16(buf);
+    buf += 2;
+
+    mDisplayDefinition.mWidth  = AVRB16(buf) - mDisplayDefinition.mX + 1;
+    buf += 2;
+
+    mDisplayDefinition.mY = AVRB16(buf);
+    buf += 2;
+
+    mDisplayDefinition.mHeight = AVRB16(buf) - mDisplayDefinition.mY + 1;
+    buf += 2;
     }
 
-  //cLog::log (LOGINFO, fmt::format ("{} x:{} y:{} w:{} h:{}",
-  //                    displayWindow != 0 ? "window" : "",mDisplayDefinition->mX,mDisplayDefinition->mY,
-  //                    mDisplayDefinition->mWidth, mDisplayDefinition->mHeight));
+  cLog::log (LOGINFO, fmt::format ("{:5d} {:12s} - display{} x:{} y:{} w:{} h:{}",
+                                   mSid, mName,
+                                   displayWindow != 0 ? " window" : "",
+                                   mDisplayDefinition.mX, mDisplayDefinition.mY,
+                                   mDisplayDefinition.mWidth, mDisplayDefinition.mHeight));
   return true;
   }
 //}}}
@@ -707,6 +718,10 @@ bool cDvbSubtitle::updateRects() {
       mImages.push_back (new cSubtitleImage());
 
     cSubtitleImage& image = *mImages[mNumImages];
+    image.mPageVersion = mPageVersion;
+    image.mPageState = mPageState;
+    image.mPageTimeout = mPageTimeout;
+
     image.mX = regionDisplay->xPos + offsetX;
     image.mY = regionDisplay->yPos + offsetY;
     image.mWidth = region->mWidth;
@@ -726,7 +741,7 @@ bool cDvbSubtitle::updateRects() {
       *ptr++ = image.mColorLut[region->mPixBuf[i]];
 
     // set changed flag, to update texture in gui
-    image.mPixelsChanged = true;
+    image.mDirty = true;
 
     // update num regions as they become valid
     mNumImages++;

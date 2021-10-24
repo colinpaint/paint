@@ -187,7 +187,9 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
   if (mDecodeSubtitle) {
     auto it = mDvbSubtitleMap.find (pidInfo->mSid);
     if (it == mDvbSubtitleMap.end()) // create service dvbSubtitle
-      it = mDvbSubtitleMap.insert (tDvbSubtitleMap::value_type (pidInfo->mSid, cDvbSubtitle (pidInfo->mSid))).first;
+      it = mDvbSubtitleMap.insert (
+        tDvbSubtitleMap::value_type (pidInfo->mSid, 
+                                     cDvbSubtitle (pidInfo->mSid, getChannelStringBySid (pidInfo->mSid)))).first;
     it->second.decode (pidInfo->mBuffer, pidInfo->getBufUsed());
     }
 

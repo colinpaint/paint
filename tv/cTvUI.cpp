@@ -169,14 +169,15 @@ private:
 
       // draw position
       ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{},{:3d}", image.mX, image.mY).c_str());
-
+      ImGui::TextUnformatted (fmt::format ("{:3d},{:3d} {:1d}:{:1x}",
+                                           image.mX, image.mY, 
+                                           image.mPageState, image.mPageVersion).c_str());
       // create/update image texture
       if (image.mTexture == nullptr) // create
         image.mTexture = graphics.createTexture ({image.mWidth, image.mHeight}, image.mPixels);
-      else if (image.mPixelsChanged) // update
+      else if (image.mDirty) // update
         image.mTexture->setPixels (image.mPixels);
-      image.mPixelsChanged = false;
+      image.mDirty = false;
 
       // draw image, scaled to fit
       ImGui::SameLine();
