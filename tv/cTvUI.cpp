@@ -61,8 +61,8 @@ public:
     cDvbTransportStream* dvbTransportStream = app.getDvbTransportStream();
     if (dvbTransportStream) {
       ImGui::SameLine();
-      if (toggleButton ("sub", dvbTransportStream->getDecodeSubtitle()))
-        dvbTransportStream->toggleDecodeSubtitle();
+      if (toggleButton ("sub", dvbTransportStream->getSubtitleEnable()))
+        dvbTransportStream->toggleSubtitleEnable();
 
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{} ", dvbTransportStream->getNumPackets()).c_str());
@@ -134,7 +134,7 @@ private:
         streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
       ImGui::TextUnformatted (streamText.c_str());
 
-      if (pidInfo.mStreamType == 6)
+      if (dvbTransportStream->getSubtitleEnable() && (pidInfo.mStreamType == 6))
         drawSubtitle (dvbTransportStream->getService (pidInfo.mSid), graphics);
 
       // adjust packet number width

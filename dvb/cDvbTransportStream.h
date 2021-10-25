@@ -130,20 +130,30 @@ public:
   //{{{  gets
   uint16_t getSid() const { return mSid; }
   uint16_t getProgramPid() const { return mProgramPid; }
+
   uint16_t getVidPid() const { return mVidPid; }
   uint16_t getVidStreamType() const { return mVidStreamType; }
+
   uint16_t getAudPid() const { return mAudPid; }
   uint16_t getAudStreamType() const { return mAudStreamType; }
   uint16_t getAudOtherPid() const { return mAudOtherPid; }
+
   uint16_t getSubPid() const { return mSubPid; }
   uint16_t getSubStreamType() const { return mSubStreamType; }
 
-  cEpgItem* getNowEpgItem() { return mNowEpgItem; }
   std::string getChannelString() { return mChannelString; }
+
+  // decoder
+  iDvbDecoder* getDvbDecoder() const { return mDvbDecoder; }
+
+  // epg
+  bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
+
+  bool getShowEpg() { return mShowEpg; }
+
+  cEpgItem* getNowEpgItem() { return mNowEpgItem; }
   std::string getNowTitleString() { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
   std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpgItemMap() { return mEpgItemMap; }
-
-  iDvbDecoder* getDvbDecoder() const { return mDvbDecoder; }
   //}}}
   //{{{  sets
   void setProgramPid (uint16_t pid) { mProgramPid = pid; }
@@ -152,20 +162,20 @@ public:
   void setSubPid (uint16_t pid, uint16_t streamType) { mSubPid = pid; mSubStreamType = streamType; }
   void setChannelString (const std::string& channelString) { mChannelString = channelString;}
 
+  // decoder
   void setDvbDecoder (iDvbDecoder* dvbDecoder) { mDvbDecoder = dvbDecoder; }
 
+  // epg
   bool setNow (bool record,
                std::chrono::system_clock::time_point time, std::chrono::seconds duration,
                const std::string& str1, const std::string& str2);
+
   bool setEpg (bool record,
                std::chrono::system_clock::time_point startTime, std::chrono::seconds duration,
                const std::string& titleString, const std::string& infoString);
-  //}}}
 
-  // epg
-  bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
-  bool getShowEpg() { return mShowEpg; }
   void toggleShowEpg() { mShowEpg = !mShowEpg; }
+  //}}}
 
   // record
   bool openFile (const std::string& fileName, uint16_t tsid);
@@ -224,10 +234,10 @@ public:
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
   // subtitle
-  bool getDecodeSubtitle() const { return mDecodeSubtitle; }
+  bool getSubtitleEnable() const { return mSubtitleEnable; }
   iDvbDecoder* getDecoder (uint16_t sid);
 
-  void toggleDecodeSubtitle();
+  void toggleSubtitleEnable();
 
   void dvbSource (bool ownThread);
   void fileSource (bool ownThread, const std::string& fileName);
@@ -270,6 +280,12 @@ private:
   // vars
   cDvbMultiplex mDvbMultiplex;
 
+  std::map <uint16_t, uint16_t> mProgramMap;
+  std::map <uint16_t, cPidInfo> mPidInfoMap;
+  std::map <uint16_t, cService> mServiceMap;
+  uint64_t mNumPackets = 0;
+  uint64_t mNumErrors = 0;
+
   // dvbSource
   cDvbSource* mDvbSource = nullptr;
   uint64_t mLastErrors = 0;
@@ -282,16 +298,11 @@ private:
   std::vector <std::string> mRecordPrograms;
 
   // subtitle
-  bool mDecodeSubtitle = false;
+  bool mSubtitleEnable = false;
 
-  uint64_t mNumPackets = 0;
-  uint64_t mNumErrors = 0;
-
-  std::map <uint16_t, uint16_t> mProgramMap;
-  std::map <uint16_t, cPidInfo> mPidInfoMap;
-  std::map <uint16_t, cService> mServiceMap;
+  // time
+  std::chrono::system_clock::time_point mTime; // tdt now time
 
   bool mTimeDefined = false;
-  std::chrono::system_clock::time_point mTime;
-  std::chrono::system_clock::time_point mFirstTime;
+  std::chrono::system_clock::time_point mFirstTime; // first tdt time seen
   };

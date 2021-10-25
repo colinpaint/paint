@@ -674,8 +674,8 @@ void cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPt
 // public
 //{{{
 cDvbTransportStream::cDvbTransportStream (const cDvbMultiplex& dvbMultiplex,
-                                          const std::string& recordRootName, bool decodeSubtitle)
-    : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName), mDecodeSubtitle(decodeSubtitle) {
+                                          const std::string& recordRootName, bool subtitleEnable)
+    : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName), mSubtitleEnable(subtitleEnable) {
 
   mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
   }
@@ -1044,8 +1044,11 @@ iDvbDecoder* cDvbTransportStream::getDecoder (uint16_t sid) {
   }
 //}}}
 //{{{
-void cDvbTransportStream::toggleDecodeSubtitle() {
-  mDecodeSubtitle = !mDecodeSubtitle;
+void cDvbTransportStream::toggleSubtitleEnable() {
+  mSubtitleEnable = !mSubtitleEnable;
+  if (!mSubtitleEnable) {
+    // !!!! should clear down the decoders !!!!
+    }
   }
 //}}}
 
@@ -1459,7 +1462,7 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
                                       //getChannelStringBySid (pidInfo->mSid)));
   //}}}
 
-  if (mDecodeSubtitle) {
+  if (mSubtitleEnable) {
     cService* service = getService (pidInfo->mSid);
     if (service && !service->getDvbDecoder())
       service->setDvbDecoder (new cDvbSubtitleDecoder(pidInfo->mSid, getChannelString(pidInfo->mSid)));
