@@ -218,11 +218,10 @@ private:
   //{{{
   class cRegionDisplay {
   public:
+    cRegionDisplay (uint8_t regionId, uint16_t xpos, uint16_t ypos) : mRegionId(regionId), mXpos(xpos), mYpos(ypos) {}
     uint8_t mRegionId;
-    int xPos;
-    int yPos;
-
-    cRegionDisplay* mNext;
+    int mXpos;
+    int mYpos;
     };
   //}}}
   //{{{
@@ -231,7 +230,7 @@ private:
     uint8_t mPageVersion = 0xFF;
     uint8_t mPageState = 0;
     uint8_t mPageTimeout = 0xFF;
-    cRegionDisplay* mDisplayList = nullptr;
+    std::vector <cRegionDisplay> mRegionDisplays;
     };
   //}}}
 

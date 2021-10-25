@@ -26,12 +26,7 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
   mColorLuts.clear();
   mRegions.clear();
   deleteObjects();
-
-  while (mPage.mDisplayList) {
-    cRegionDisplay* display = mPage.mDisplayList;
-    mPage.mDisplayList = display->mNext;
-    free (display);
-    }
+  mPage.mRegionDisplays.clear();
 
   for (auto image : mImages)
     delete image;
@@ -195,55 +190,18 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
                                     mSid, mName, mPage.mPageState, mPage.mPageVersion, mPage.mPageTimeout));
 
 
-  cRegionDisplay* tmpDisplayList = mPage.mDisplayList;
-  mPage.mDisplayList = NULL;
+  // !!! could reuse regionDisplays !!!
+  mPage.mRegionDisplays.clear();
   while (buf + 5 < bufEnd) {
-    uint8_t regionId = *buf++;
-    buf += 1;
-
-    cRegionDisplay* display = mPage.mDisplayList;
-    while (display && (display->mRegionId != regionId))
-      display = display->mNext;
-    if (display) {
-      //{{{  duplicate
-      cLog::log (LOGERROR, "duplicate region");
-      break;
-      }
-      //}}}
-
-    display = tmpDisplayList;
-    cRegionDisplay** tmpPtr = &tmpDisplayList;
-    while (display && (display->mRegionId != regionId)) {
-      tmpPtr = &display->mNext;
-      display = display->mNext;
-      }
-
-    if (!display) {
-      display = (cRegionDisplay*)malloc (sizeof(cRegionDisplay));
-      display->mNext = nullptr;
-      }
-    display->mRegionId = regionId;
-
-    display->xPos = AVRB16(buf);
+    uint8_t regionId = *buf;
+    buf += 2; // skip reserved
+    uint16_t xPos = AVRB16(buf);
     buf += 2;
-    display->yPos = AVRB16(buf);
+    uint16_t yPos = AVRB16(buf);
     buf += 2;
-
-    *tmpPtr = display->mNext;
-    display->mNext = mPage.mDisplayList;
-    mPage.mDisplayList = display;
-
-    cLog::log (LOGINFO, fmt::format ("                   - add region:{} {},{}",
-                                     regionId,display->xPos,display->yPos));
+    mPage.mRegionDisplays.push_back (cRegionDisplay (regionId, xPos, yPos));
+    cLog::log (LOGINFO, fmt::format ("                   - add region:{} {},{}", regionId,xPos,yPos));
     }
-
-  while (tmpDisplayList) {
-    //{{{  free tmpDisplayList
-    cRegionDisplay* display = tmpDisplayList;
-    tmpDisplayList = display->mNext;
-    free (display);
-    }
-    //}}}
 
   return true;
   }
@@ -683,8 +641,8 @@ bool cDvbSubtitleDecoder::endDisplaySet() {
   int offsetY = mDisplayDefinition.mY;
 
   mNumImages = 0;
-  for (cRegionDisplay* regionDisplay = mPage.mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
-    cRegion* region = getRegion (regionDisplay->mRegionId);
+  for (auto& regionDisplay : mPage.mRegionDisplays) {
+    cRegion* region = getRegion (regionDisplay.mRegionId);
     if (!region || !region->mDirty)
       continue;
 
@@ -695,8 +653,8 @@ bool cDvbSubtitleDecoder::endDisplaySet() {
     image.mPageState = mPage.mPageState;
     image.mPageVersion = mPage.mPageVersion;
 
-    image.mX = regionDisplay->xPos + offsetX;
-    image.mY = regionDisplay->yPos + offsetY;
+    image.mX = regionDisplay.mXpos + offsetX;
+    image.mY = regionDisplay.mYpos + offsetY;
     image.mWidth = region->mWidth;
     image.mHeight = region->mHeight;
 
