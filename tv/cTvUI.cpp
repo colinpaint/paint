@@ -163,8 +163,7 @@ private:
 
     size_t line = 0;
     while (line < subtitle->getNumImages()) {
-      // line order is reverse y order
-      cSubtitleImage& image = *subtitle->mImages[subtitle->mImages.size() - 1 - line];
+      cSubtitleImage& image = subtitle->getImage (line);
 
       // draw clut color pots
       ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -197,7 +196,7 @@ private:
       }
 
     // pad lines to highwater mark, stops jumping about
-    while (line < subtitle->mImages.size()) {
+    while (line < subtitle->getMaxImages()) {
       ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
                               {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
       line++;

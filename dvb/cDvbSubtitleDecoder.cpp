@@ -26,11 +26,11 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
   mColorLuts.clear();
   mRegions.clear();
   deleteObjects();
-  mPage.mRegionDisplays.clear();
+  mPage.mDisplayRegions.clear();
 
-  for (auto image : mImages)
+  for (auto image : mPage.mImages)
     delete image;
-  mImages.clear();
+  mPage.mImages.clear();
   }
 //}}}
 
@@ -191,8 +191,8 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
                                     mSid, mName, mPage.mPageState, mPage.mPageVersion, mPage.mPageTimeout));
 
 
-  // !!! could reuse regionDisplays !!!
-  mPage.mRegionDisplays.clear();
+  // !!! could reuse DisplayRegions !!!
+  mPage.mDisplayRegions.clear();
   while (buf + 5 < bufEnd) {
     uint8_t regionId = *buf;
     buf += 2; // skip reserved
@@ -200,7 +200,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     buf += 2;
     uint16_t yPos = AVRB16(buf);
     buf += 2;
-    mPage.mRegionDisplays.push_back (cRegionDisplay (regionId, xPos, yPos));
+    mPage.mDisplayRegions.push_back (cDisplayRegion (regionId, xPos, yPos));
     cLog::log (LOGINFO, fmt::format ("                   - add region:{} {},{}", regionId,xPos,yPos));
     }
 
@@ -239,15 +239,14 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     return false;
     }
     //}}}
-
   region.mColorLut = *buf++;
   buf += 1; // skip
-  region.mBackgroundColour = ((*buf++) >> 4) & 15;
 
+  region.mBackgroundColour = ((*buf++) >> 4) & 15;
   if (fill)
     memset (region.mPixBuf, region.mBackgroundColour, region.mPixBufSize);
 
-  deleteRegionDisplayList (region);
+  deleteDisplayRegionList (region);
 
   while (buf + 5 < bufEnd) {
     uint16_t objectId = AVRB16(buf);
@@ -272,7 +271,6 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
 
     auto display = (cObjectDisplay*)malloc (sizeof(cObjectDisplay));
     display->init (objectId, regionId, xpos, ypos);
-
     if (display->xPos >= region.mWidth ||
       //{{{  error return
       display->yPos >= region.mHeight) {
@@ -632,21 +630,21 @@ bool cDvbSubtitleDecoder::endDisplaySet() {
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;
 
-  mNumImages = 0;
-  for (auto& regionDisplay : mPage.mRegionDisplays) {
-    cRegion& region = getRegion (regionDisplay.mRegionId);
+  mPage.mNumImages = 0;
+  for (auto& displayRegion : mPage.mDisplayRegions) {
+    cRegion& region = getRegion (displayRegion.mRegionId);
     if (!region.mDirty)
       continue;
 
-    if (mNumImages == mImages.size())
-      mImages.emplace_back (new cSubtitleImage());
+    if (mPage.mNumImages == mPage.mImages.size())
+        mPage.mImages.emplace_back (new cSubtitleImage());
 
-    cSubtitleImage& image = *mImages[mNumImages];
+    cSubtitleImage& image = *mPage.mImages[mPage.mNumImages];
     image.mPageState = mPage.mPageState;
     image.mPageVersion = mPage.mPageVersion;
 
-    image.mX = regionDisplay.mXpos + offsetX;
-    image.mY = regionDisplay.mYpos + offsetY;
+    image.mX = displayRegion.mXpos + offsetX;
+    image.mY = displayRegion.mYpos + offsetY;
     image.mWidth = region.mWidth;
     image.mHeight = region.mHeight;
 
@@ -665,7 +663,7 @@ bool cDvbSubtitleDecoder::endDisplaySet() {
     image.mDirty = true;
 
     // update num regions as they become valid
-    mNumImages++;
+    mPage.mNumImages++;
     }
 
   return true;
@@ -688,7 +686,7 @@ void cDvbSubtitleDecoder::deleteObjects() {
   }
 //}}}
 //{{{
-void cDvbSubtitleDecoder::deleteRegionDisplayList (cRegion& region) {
+void cDvbSubtitleDecoder::deleteDisplayRegionList (cRegion& region) {
 
   uint32_t num = 0;
   uint32_t num1 = 0;
@@ -729,6 +727,6 @@ void cDvbSubtitleDecoder::deleteRegionDisplayList (cRegion& region) {
     num++;
     }
 
-  cLog::log (LOGINFO1, fmt::format ("deleteRegionDisplayList {} {}", num, num1));
+  cLog::log (LOGINFO1, fmt::format ("deleteDisplayRegionList {} {}", num, num1));
   }
 //}}}

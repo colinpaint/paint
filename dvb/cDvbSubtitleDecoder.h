@@ -39,13 +39,11 @@ public:
   cDvbSubtitleDecoder (uint16_t sid, const std::string name) : iDvbDecoder(), mSid(sid), mName(name) {}
   ~cDvbSubtitleDecoder();
 
-  size_t getNumImages() const { return mNumImages; }
+  size_t getNumImages() const { return mPage.mNumImages; }
+  size_t getMaxImages() const { return mPage.mImages.size(); }
+  cSubtitleImage& getImage (size_t line) { return *mPage.mImages[mPage.mNumImages - 1 - line]; }
 
   virtual bool decode (const uint8_t* buf, int bufSize) final;
-
-  // vars !!! can't get non pointer vector to work !!!
-  size_t mNumImages = 0;
-  std::vector <cSubtitleImage*> mImages;
 
 private:
   //{{{
@@ -219,9 +217,9 @@ private:
     };
   //}}}
   //{{{
-  class cRegionDisplay {
+  class cDisplayRegion {
   public:
-    cRegionDisplay (uint8_t regionId, uint16_t xpos, uint16_t ypos) : mRegionId(regionId), mXpos(xpos), mYpos(ypos) {}
+    cDisplayRegion (uint8_t regionId, uint16_t xpos, uint16_t ypos) : mRegionId(regionId), mXpos(xpos), mYpos(ypos) {}
 
     const uint8_t mRegionId;
 
@@ -236,7 +234,11 @@ private:
     uint8_t mPageState = 0;
     uint8_t mPageTimeout = 0xFF;
 
-    std::vector <cRegionDisplay> mRegionDisplays;
+    std::vector <cDisplayRegion> mDisplayRegions;
+
+    // vars !!! can't get non pointer vector to work !!!
+    size_t mNumImages = 0; // num images used, don't deallocate unused as they are switched off
+    std::vector <cSubtitleImage*> mImages;
     };
   //}}}
 
@@ -261,7 +263,7 @@ private:
 
   // delete
   void deleteObjects();
-  void deleteRegionDisplayList (cRegion& region);
+  void deleteDisplayRegionList (cRegion& region);
 
   // vars
   const uint16_t mSid;
