@@ -241,17 +241,9 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     //}}}
 
   region.mColorLut = *buf++;
-  if (region.mColorLutDepth == 8) {
-    region.mBackgroundColour = *buf++;
-    buf += 1;
-    }
-  else {
-    buf += 1;
-    if (region.mColorLutDepth == 4)
-      region.mBackgroundColour = ((*buf++) >> 4) & 15;
-    else
-      region.mBackgroundColour = ((*buf++) >> 2) & 3;
-    }
+  buf += 1; // skip
+  region.mBackgroundColour = ((*buf++) >> 4) & 15;
+
   if (fill)
     memset (region.mPixBuf, region.mBackgroundColour, region.mPixBufSize);
 
