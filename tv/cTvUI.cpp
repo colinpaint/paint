@@ -17,7 +17,7 @@
 #include "../tv/cTvApp.h"
 
 // dvb
-#include "../dvb/cDvbSubtitle.h"
+#include "../dvb/cDvbSubtitleDecoder.h"
 #include "../dvb/cDvbTransportStream.h"
 
 // utils
@@ -147,7 +147,7 @@ private:
   //}}}
   //{{{
 
-  void drawSubtitle (cDvbSubtitle& subtitle, cGraphics& graphics) {
+  void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
 
     float potSize = ImGui::GetTextLineHeight() / 2.f;
 

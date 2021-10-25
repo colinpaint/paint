@@ -1,6 +1,6 @@
-// cSubtitle.cpp
+// cDvbSubtitleDecoder.cpp
 //{{{  includes
-#include "cDvbSubtitle.h"
+#include "cDvbSubtitleDecoder.h"
 
 #include <cstdint>
 #include <string>
@@ -21,7 +21,7 @@ class cTexture;
 
 // public:
 //{{{
-cDvbSubtitle::~cDvbSubtitle() {
+cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 
   mColorLuts.clear();
   mRegions.clear();
@@ -40,7 +40,7 @@ cDvbSubtitle::~cDvbSubtitle() {
 //}}}
 
 //{{{
-bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
+bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
 
   const uint8_t* bufEnd = buf + bufSize;
   const uint8_t* bufPtr = buf + 2;
@@ -132,7 +132,7 @@ bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
 
 // private:
 //{{{
-cDvbSubtitle::cColorLut& cDvbSubtitle::getColorLut (uint8_t id) {
+cDvbSubtitleDecoder::cColorLut& cDvbSubtitleDecoder::getColorLut (uint8_t id) {
 
   // look for id colorLut
   for (auto& colorLut : mColorLuts)
@@ -145,7 +145,7 @@ cDvbSubtitle::cColorLut& cDvbSubtitle::getColorLut (uint8_t id) {
   }
 //}}}
 //{{{
-cDvbSubtitle::cObject* cDvbSubtitle::getObject (uint16_t id) {
+cDvbSubtitleDecoder::cObject* cDvbSubtitleDecoder::getObject (uint16_t id) {
 
   cObject* object = mObjectList;
 
@@ -156,7 +156,7 @@ cDvbSubtitle::cObject* cDvbSubtitle::getObject (uint16_t id) {
   }
 //}}}
 //{{{
-cDvbSubtitle::cRegion* cDvbSubtitle::getRegion (uint8_t id) {
+cDvbSubtitleDecoder::cRegion* cDvbSubtitleDecoder::getRegion (uint8_t id) {
 
   for (auto& region : mRegions)
     if (region.mId == id)
@@ -169,7 +169,7 @@ cDvbSubtitle::cRegion* cDvbSubtitle::getRegion (uint8_t id) {
 
 // parse
 //{{{
-bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
+bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "page");
   if (bufSize < 1)
@@ -182,7 +182,7 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
     return true;
   mPageVersion = pageVersion;
   mPageState = ((*buf++) >> 2) & 3;
-  cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} - page:{:1d} version::{:2d} timeout:{}",
+  cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} page state:{:1d} version::{:2d} timeout:{}",
                                     mSid, mName, mPageState, mPageVersion, pageTimeout));
   if ((mPageState == 1) || (mPageState == 2)) {
     //{{{  delete regions, objects, colorLuts
@@ -244,7 +244,7 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
   }
 //}}}
 //{{{
-bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
+bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "region segment");
   if (bufSize < 10)
@@ -343,7 +343,7 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
   }
 //}}}
 //{{{
-bool cDvbSubtitle::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
+bool cDvbSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "colorLut segment");
   const uint8_t* bufEnd = buf + bufSize;
@@ -410,7 +410,7 @@ bool cDvbSubtitle::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
 //}}}
 
 //{{{
-int cDvbSubtitle::parse4bit (const uint8_t** buf, uint16_t bufSize,
+int cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
                              uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour) {
 
   pixBuf += pixPos;
@@ -526,7 +526,7 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, uint16_t bufSize,
   }
 //}}}
 //{{{
-void cDvbSubtitle::parseObjectBlock (cObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
+void cDvbSubtitleDecoder::parseObjectBlock (cObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
                                      bool bottom, bool nonModifyColour) {
 
   cRegion* region = getRegion (display->mRegionId);
@@ -574,7 +574,7 @@ void cDvbSubtitle::parseObjectBlock (cObjectDisplay* display, const uint8_t* buf
   }
 //}}}
 //{{{
-bool cDvbSubtitle::parseObject (const uint8_t* buf, uint16_t bufSize) {
+bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "object segment");
   const uint8_t* bufEnd = buf + bufSize;
@@ -621,7 +621,7 @@ bool cDvbSubtitle::parseObject (const uint8_t* buf, uint16_t bufSize) {
 //}}}
 
 //{{{
-bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize) {
+bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "displayDefinition segment");
   if (bufSize < 5)
@@ -670,7 +670,7 @@ bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize)
   }
 //}}}
 //{{{
-bool cDvbSubtitle::endDisplaySet() {
+bool cDvbSubtitleDecoder::endDisplaySet() {
 
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;
@@ -717,7 +717,7 @@ bool cDvbSubtitle::endDisplaySet() {
 
 // delete
 //{{{
-void cDvbSubtitle::deleteObjects() {
+void cDvbSubtitleDecoder::deleteObjects() {
 
   uint32_t num = 0;
   while (mObjectList) {
@@ -731,7 +731,7 @@ void cDvbSubtitle::deleteObjects() {
   }
 //}}}
 //{{{
-void cDvbSubtitle::deleteRegionDisplayList (cRegion* region) {
+void cDvbSubtitleDecoder::deleteRegionDisplayList (cRegion* region) {
 
   uint32_t num = 0;
   uint32_t num1 = 0;

@@ -19,14 +19,14 @@
 
 #include "cDvbMultiplex.h"
 #include "cDvbSource.h"
-#include "cDvbSubtitle.h"
+#include "iDvbDecoder.h"
+#include "cDvbSubtitleDecoder.h"
 
-class cDvbSubtitle;
 class cTexture;
 //}}}
 using tTimePoint = std::chrono::system_clock::time_point;
 using tDuration = std::chrono::seconds;
-using tDvbSubtitleMap = std::map <uint16_t, cDvbSubtitle>;
+using tDvbSubtitleMap = std::map <uint16_t, cDvbSubtitleDecoder>;
 
 //{{{
 class cPidInfo {
@@ -188,6 +188,7 @@ private:
   uint16_t mSubStreamType = 0;
 
   std::string mChannelString;
+  iDvbDecoder* mDvbDecoder = nullptr;
 
   // epg
   cEpgItem* mNowEpgItem = nullptr;
@@ -214,12 +215,14 @@ public:
   std::string getErrorString() { return mErrorString; }
   std::string getSignalString() { return mSignalString; }
 
-  static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
+  cService* getService (uint16_t sid);
   cService* getService (uint16_t index, int64_t& firstPts, int64_t& lastPts);
+  static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
+  // subtitle
   bool hasSubtitle (uint16_t sid);
-  cDvbSubtitle& getSubtitle (uint16_t sid);
+  cDvbSubtitleDecoder& getSubtitle (uint16_t sid);
   bool getDecodeSubtitle() const { return mDecodeSubtitle; }
 
   void toggleDecodeSubtitle();

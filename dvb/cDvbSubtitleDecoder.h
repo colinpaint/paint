@@ -7,6 +7,8 @@
 #include <vector>
 #include <array>
 
+#include "iDvbDecoder.h"
+
 class cTexture;
 //}}}
 
@@ -32,13 +34,14 @@ public:
   };
 //}}}
 
-class cDvbSubtitle {
+class cDvbSubtitleDecoder : public iDvbDecoder {
 public:
-  cDvbSubtitle (uint16_t sid, const std::string name)  : mSid(sid), mName(name) {}
-  ~cDvbSubtitle();
+  cDvbSubtitleDecoder (uint16_t sid, const std::string name) : iDvbDecoder(), mSid(sid), mName(name) {}
+  ~cDvbSubtitleDecoder();
 
   size_t getNumImages() const { return mNumImages; }
-  bool decode (const uint8_t* buf, int bufSize);
+
+  virtual bool decode (const uint8_t* buf, int bufSize) final;
 
   // vars !!! can't get non pointer vector to work !!!
   size_t mNumImages = 0;

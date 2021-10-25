@@ -1,4 +1,4 @@
-// cDvbTransportStream.cpp - file or dvbSource -> transportStream demux
+// cDvbTransportStream.cpp - file or dvbSource demux
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
 //{{{  linux includes
@@ -21,7 +21,7 @@
 #include "../utils/utils.h"
 
 #include "cDvbUtils.h"
-#include "cDvbSubtitle.h"
+#include "cDvbSubtitleDecoder.h"
 
 using namespace std;
 //}}}
@@ -688,6 +688,37 @@ cDvbTransportStream::~cDvbTransportStream() {
 //}}}
 
 //{{{
+cService* cDvbTransportStream::getService (uint16_t sid) {
+
+  auto it = mServiceMap.find (sid);
+  return (it == mServiceMap.end()) ? nullptr : &it->second;
+  }
+//}}}
+//{{{
+cService* cDvbTransportStream::getService (uint16_t index, int64_t& firstPts, int64_t& lastPts) {
+
+  firstPts = -1;
+  lastPts = -1;
+
+  int i = 0;
+  for (auto& service : mServiceMap) {
+    if (i == index) {
+      auto pidInfoIt = mPidInfoMap.find (service.second.getAudPid());
+      if (pidInfoIt != mPidInfoMap.end()) {
+        firstPts = pidInfoIt->second.mFirstPts;
+        lastPts = pidInfoIt->second.mLastPts;
+        cLog::log (LOGINFO, fmt::format("getService {} firstPts:{} lastPts:{}",
+                            index,getFullPtsString (firstPts),getFullPtsString (lastPts)));
+        return &service.second;
+        }
+      }
+    i++;
+    }
+
+  return nullptr;
+  }
+//}}}
+//{{{
 char cDvbTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType) {
 // return frameType of video pes
 
@@ -1005,30 +1036,6 @@ char cDvbTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int
   return '?';
   }
 //}}}
-//{{{
-cService* cDvbTransportStream::getService (uint16_t index, int64_t& firstPts, int64_t& lastPts) {
-
-  firstPts = -1;
-  lastPts = -1;
-
-  int i = 0;
-  for (auto& service : mServiceMap) {
-    if (i == index) {
-      auto pidInfoIt = mPidInfoMap.find (service.second.getAudPid());
-      if (pidInfoIt != mPidInfoMap.end()) {
-        firstPts = pidInfoIt->second.mFirstPts;
-        lastPts = pidInfoIt->second.mLastPts;
-        cLog::log (LOGINFO, fmt::format("getService {} firstPts:{} lastPts:{}",
-                            index,getFullPtsString (firstPts),getFullPtsString (lastPts)));
-        return &service.second;
-        }
-      }
-    i++;
-    }
-
-  return nullptr;
-  }
-//}}}
 
 //{{{
 bool cDvbTransportStream::hasSubtitle (uint16_t sid) {
@@ -1036,13 +1043,12 @@ bool cDvbTransportStream::hasSubtitle (uint16_t sid) {
   }
 //}}}
 //{{{
-cDvbSubtitle& cDvbTransportStream::getSubtitle (uint16_t sid) {
+cDvbSubtitleDecoder& cDvbTransportStream::getSubtitle (uint16_t sid) {
 
   auto it = mDvbSubtitleMap.find (sid);
   return (*it).second;
   }
 //}}}
-
 //{{{
 void cDvbTransportStream::toggleDecodeSubtitle() {
 
@@ -1360,11 +1366,8 @@ cPidInfo* cDvbTransportStream::getPidInfo (uint16_t pid, bool createPsiOnly) {
 //{{{
 string cDvbTransportStream::getChannelString (uint16_t sid) {
 
-  auto it = mServiceMap.find (sid);
-  if (it == mServiceMap.end())
-    return "";
-  else
-    return it->second.getChannelString();
+  cService* service = getService (sid);
+  return service ? service->getChannelString() : "";
   }
 //}}}
 
@@ -1470,7 +1473,7 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
     auto it = mDvbSubtitleMap.find (pidInfo->mSid);
     if (it == mDvbSubtitleMap.end()) // create service dvbSubtitle
       it = mDvbSubtitleMap.insert (
-        tDvbSubtitleMap::value_type (pidInfo->mSid, cDvbSubtitle (pidInfo->mSid, getChannelString (pidInfo->mSid)))).first;
+        tDvbSubtitleMap::value_type (pidInfo->mSid, cDvbSubtitleDecoder (pidInfo->mSid, getChannelString (pidInfo->mSid)))).first;
     it->second.decode (pidInfo->mBuffer, pidInfo->getBufUsed());
     }
 
@@ -1592,15 +1595,13 @@ void cDvbTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
             auto name = cDvbUtils::getString (
               buf + sizeof(descr_service_t) + ((descr_service_t*)buf)->provider_name_length);
 
-            auto it = mServiceMap.find (sid);
-            if (it != mServiceMap.end()) {
-              if (it->second.getChannelString().empty()) {
-                cLog::log (LOGINFO, fmt::format("SDT named sid:{} {}",sid,name));
-                it->second.setChannelString (name);
-                }
+            cService* service = getService (sid);
+            if (service) {
+              cLog::log (LOGINFO, fmt::format ("SDT named sid:{} {}",sid,name));
+              service->setChannelString (name);
               }
             else
-              cLog::log (LOGINFO, fmt::format("SDT - before PMT - ignored {} {}",sid,name));
+              cLog::log (LOGINFO, fmt::format("SDT - before PMT - ignored {} {}", sid, name));
 
             break;
             }
@@ -1663,8 +1664,8 @@ void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
       while (loopLength > 0) {
         if (getDescrTag (buf) == DESCR_SHORT_EVENT)  {
           //{{{  shortEvent
-          auto serviceIt = mServiceMap.find (sid);
-          if (serviceIt != mServiceMap.end()) {
+          cService* service = getService (sid);
+          if (service) {
             // known service
             auto startTime = chrono::system_clock::from_time_t (
               MjdToEpochTime (eitEvent->mjd) + BcdTimeToSeconds (eitEvent->start_time));
@@ -1682,30 +1683,30 @@ void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
               // now event
               auto running = (eitEvent->running_status == 0x04);
               if (running &&
-                  !serviceIt->second.getChannelString().empty() &&
-                  (serviceIt->second.getProgramPid() != 0xFFFF) &&
-                  (serviceIt->second.getVidPid() != 0xFFFF) &&
-                  (serviceIt->second.getAudPid() != 0xFFFF) &&
-                  (serviceIt->second.getSubPid() != 0xFFFF)) {
+                  !service->getChannelString().empty() &&
+                  (service->getProgramPid() != 0xFFFF) &&
+                  (service->getVidPid() != 0xFFFF) &&
+                  (service->getAudPid() != 0xFFFF) &&
+                  (service->getSubPid() != 0xFFFF)) {
                 // now event for named service with valid pgmPid, vidPid, audPid, subPid
-                if (serviceIt->second.setNow (serviceIt->second.isEpgRecord (titleString, startTime),
-                                              startTime, duration, titleString, infoString)) {
+                if (service->setNow (service->isEpgRecord (titleString, startTime),
+                                     startTime, duration, titleString, infoString)) {
                   // new now event
-                  auto pidInfoIt = mPidInfoMap.find (serviceIt->second.getProgramPid());
+                  auto pidInfoIt = mPidInfoMap.find (service->getProgramPid());
                   if (pidInfoIt != mPidInfoMap.end())
                     // update service pgmPid infoStr with new now event
-                    pidInfoIt->second.mInfoString = serviceIt->second.getChannelString() + " " +
-                                                    serviceIt->second.getNowTitleString();
+                    pidInfoIt->second.mInfoString = service->getChannelString() + " " +
+                                                    service->getNowTitleString();
 
                   // callback to override to start new serviceItem program
-                  startServiceProgram (&serviceIt->second, mTime,
+                  startServiceProgram (service, mTime,
                                        titleString, startTime,
-                                       serviceIt->second.isEpgRecord (titleString, startTime));
+                                       service->isEpgRecord (titleString, startTime));
                   }
                 }
               }
             else // epg event, add it
-              serviceIt->second.setEpg (false, startTime, duration, titleString, infoString);
+              service->setEpg (false, startTime, duration, titleString, infoString);
             }
           }
           //}}}
@@ -1743,7 +1744,7 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
   sPmt* pmt = (sPmt*)buf;
   uint16_t sectionLength = HILO(pmt->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
-    //{{{  bad crc, error, return
+    //{{{  badCrc error, return
     cLog::log (LOGERROR, "parsePMT - pid:%d bad crc %d", pidInfo->mPid, sectionLength);
     return;
     }
@@ -1752,14 +1753,14 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
   if (pmt->table_id == TID_PMT) {
     uint16_t sid = HILO (pmt->program_number);
 
-    auto serviceIt = mServiceMap.find (sid);
-    if (serviceIt == mServiceMap.end()) {
+    cService* service = getService (sid);
+    if (!service) {
       // service not found, create one
-      auto insertPair = mServiceMap.insert (map <uint16_t,cService>::value_type (sid, cService(sid)));
-      serviceIt = insertPair.first;
+      auto insertPair = mServiceMap.insert (map <uint16_t, cService>::value_type (sid, cService (sid)));
+      auto it = insertPair.first;
       cLog::log (LOGINFO, fmt::format ("create service {}", sid));
+      service = &it->second;
       }
-    auto service = &serviceIt->second;
     service->setProgramPid (pidInfo->mPid);
 
     pidInfo->mSid = sid;
