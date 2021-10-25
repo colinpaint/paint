@@ -235,8 +235,10 @@ private:
     uint8_t mPageState = 0;
     uint8_t mPageTimeout = 0xFF;
 
+    // parser side
     std::vector <cDisplayRegion> mDisplayRegions;
 
+    // render side
     size_t mNumImages = 0;
     size_t mHighwaterMark = 0;
     std::array <cSubtitleImage,3> mImages;
