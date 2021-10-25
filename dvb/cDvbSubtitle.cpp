@@ -541,7 +541,7 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
   const uint8_t* bufEnd = buf + bufSize;
 
-  mPageTimeout = *buf++;
+  uint8_t pageTimeout = *buf++;
   uint8_t pageVersion = ((*buf) >> 4) & 15;
   if (mPageVersion == pageVersion)
     return true;
@@ -551,8 +551,7 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
   if ((mPageState == 1) || (mPageState == 2)) {
     //{{{  delete regions, objects, colorLuts
     cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} - page:{:1d} version::{:2d} timeout:{}",
-                                      mSid, mName,
-                                      mPageState, mPageVersion, mPageTimeout));
+                                      mSid, mName, mPageState, mPageVersion, pageTimeout));
     mRegions.clear();
     deleteObjects();
     mColorLuts.clear();

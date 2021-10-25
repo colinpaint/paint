@@ -113,7 +113,6 @@ public:
 
 private:
   const bool mNow = false;
-
   bool mRecord = false;
 
   tTimePoint mTime;
@@ -129,7 +128,7 @@ public:
   cService (uint16_t sid) : mSid(sid) {}
   ~cService();
 
-  // gets
+  //{{{  gets
   uint16_t getSid() const { return mSid; }
   uint16_t getProgramPid() const { return mProgramPid; }
   uint16_t getVidPid() const { return mVidPid; }
@@ -144,8 +143,8 @@ public:
   std::string getChannelString() { return mChannelString; }
   std::string getNowTitleString() { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
   std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpgItemMap() { return mEpgItemMap; }
-
-  //  sets
+  //}}}
+  //{{{  sets
   void setProgramPid (uint16_t pid) { mProgramPid = pid; }
   void setVidPid (uint16_t pid, uint16_t streamType) { mVidPid = pid; mVidStreamType = streamType; }
   void setAudPid (uint16_t pid, uint16_t streamType);
@@ -158,23 +157,26 @@ public:
   bool setEpg (bool record,
                std::chrono::system_clock::time_point startTime, std::chrono::seconds duration,
                const std::string& titleString, const std::string& infoString);
+  //}}}
 
-  // override info
-  bool getShowEpg() { return mShowEpg; }
+  // epg
   bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
+  bool getShowEpg() { return mShowEpg; }
   void toggleShowEpg() { mShowEpg = !mShowEpg; }
 
+  // record
   bool openFile (const std::string& fileName, uint16_t tsid);
   void writePacket (uint8_t* ts, uint16_t pid);
   void closeFile();
 
 private:
   uint8_t* tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount);
+
   void writePat (uint16_t tsid);
   void writePmt();
   void writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr);
 
-  // vars
+  // var
   const uint16_t mSid;
   uint16_t mProgramPid = 0xFFFF;
   uint16_t mVidPid = 0xFFFF;
@@ -186,11 +188,13 @@ private:
   uint16_t mSubStreamType = 0;
 
   std::string mChannelString;
+
+  // epg
   cEpgItem* mNowEpgItem = nullptr;
   std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpgItemMap;
-
-  // override info, simpler to hold it here for now
   bool mShowEpg = true;
+
+  // record
   FILE* mFile = nullptr;
   };
 //}}}

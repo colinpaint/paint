@@ -190,16 +190,6 @@ private:
     };
   //}}}
   //{{{
-  class cRegionDisplay {
-  public:
-    uint8_t mRegionId;
-    int xPos;
-    int yPos;
-
-    cRegionDisplay* mNext;
-    };
-  //}}}
-  //{{{
   class cRegion {
   public:
     cRegion (uint8_t id) : mId(id) {}
@@ -220,6 +210,16 @@ private:
     uint8_t* mPixBuf = nullptr;
 
     cObjectDisplay* mDisplayList = nullptr;
+    };
+  //}}}
+  //{{{
+  class cRegionDisplay {
+  public:
+    uint8_t mRegionId;
+    int xPos;
+    int yPos;
+
+    cRegionDisplay* mNext;
     };
   //}}}
 
@@ -252,16 +252,16 @@ private:
   const uint16_t mSid;
   const std::string mName;
 
-  cDisplayDefinition mDisplayDefinition;
-  cRegionDisplay* mDisplayList = nullptr;
-
   // page info
   uint8_t mPageVersion = 0xFF;
   uint8_t mPageState = 0;
-  uint8_t mPageTimeout = 0;
 
   // pools
   std::vector <cColorLut> mColorLuts;
   std::vector <cRegion> mRegions;
   cObject* mObjectList = nullptr;
+
+  cRegionDisplay* mDisplayList = nullptr;
+
+  cDisplayDefinition mDisplayDefinition;
   };
