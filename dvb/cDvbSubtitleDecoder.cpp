@@ -151,14 +151,14 @@ cDvbSubtitleDecoder::cObject* cDvbSubtitleDecoder::getObject (uint16_t id) {
   }
 //}}}
 //{{{
-cDvbSubtitleDecoder::cRegion* cDvbSubtitleDecoder::getRegion (uint8_t id) {
+cDvbSubtitleDecoder::cRegion& cDvbSubtitleDecoder::getRegion (uint8_t id) {
 
   for (auto& region : mRegions)
     if (region.mId == id)
-      return &region;
+      return region;
 
   mRegions.emplace_back (cRegion (id));
-  return &mRegions.back();
+  return mRegions.back();
   }
 //}}}
 
@@ -217,43 +217,43 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
   const uint8_t* bufEnd = buf + bufSize;
 
   uint8_t regionId = *buf++;
-  cRegion* region = getRegion (regionId);
-  region->mVersion = ((*buf) >> 4) & 0x0F;
+  cRegion& region = getRegion (regionId);
+  region.mVersion = ((*buf) >> 4) & 0x0F;
 
   bool fill = ((*buf++) >> 3) & 1;
-  region->mWidth = AVRB16(buf);
+  region.mWidth = AVRB16(buf);
   buf += 2;
-  region->mHeight = AVRB16(buf);
+  region.mHeight = AVRB16(buf);
   buf += 2;
-  if ((region->mWidth * region->mHeight) != region->mPixBufSize) {
-    region->mPixBufSize = region->mWidth * region->mHeight;
-    region->mPixBuf = (uint8_t*)realloc (region->mPixBuf, region->mPixBufSize);
-    region->mDirty = false;
+  if ((region.mWidth * region.mHeight) != region.mPixBufSize) {
+    region.mPixBufSize = region.mWidth * region.mHeight;
+    region.mPixBuf = (uint8_t*)realloc (region.mPixBuf, region.mPixBufSize);
+    region.mDirty = false;
     fill = true;
     }
 
-  region->mColorLutDepth = 1 << (((*buf++) >> 2) & 7);
-  if (region->mColorLutDepth != 4) {
+  region.mColorLutDepth = 1 << (((*buf++) >> 2) & 7);
+  if (region.mColorLutDepth != 4) {
     //{{{  error return, allow 2 and 8 when we see them
-    cLog::log (LOGERROR, fmt::format ("unknown region depth:{}", region->mColorLutDepth));
+    cLog::log (LOGERROR, fmt::format ("unknown region depth:{}", region.mColorLutDepth));
     return false;
     }
     //}}}
 
-  region->mColorLut = *buf++;
-  if (region->mColorLutDepth == 8) {
-    region->mBackgroundColour = *buf++;
+  region.mColorLut = *buf++;
+  if (region.mColorLutDepth == 8) {
+    region.mBackgroundColour = *buf++;
     buf += 1;
     }
   else {
     buf += 1;
-    if (region->mColorLutDepth == 4)
-      region->mBackgroundColour = ((*buf++) >> 4) & 15;
+    if (region.mColorLutDepth == 4)
+      region.mBackgroundColour = ((*buf++) >> 4) & 15;
     else
-      region->mBackgroundColour = ((*buf++) >> 2) & 3;
+      region.mBackgroundColour = ((*buf++) >> 2) & 3;
     }
   if (fill)
-    memset (region->mPixBuf, region->mBackgroundColour, region->mPixBufSize);
+    memset (region.mPixBuf, region.mBackgroundColour, region.mPixBufSize);
 
   deleteRegionDisplayList (region);
 
@@ -277,12 +277,13 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     buf += 2;
     int ypos = AVRB16(buf) & 0xFFF;
     buf += 2;
+
     auto display = (cObjectDisplay*)malloc (sizeof(cObjectDisplay));
     display->init (objectId, regionId, xpos, ypos);
 
-    if (display->xPos >= region->mWidth ||
+    if (display->xPos >= region.mWidth ||
       //{{{  error return
-      display->yPos >= region->mHeight) {
+      display->yPos >= region.mHeight) {
 
       cLog::log (LOGERROR, "Object outside region");
       free (display);
@@ -296,8 +297,8 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
       display->mBackgroundColour = *buf++;
       }
 
-    display->mRegionListNext = region->mDisplayList;
-    region->mDisplayList = display;
+    display->mRegionListNext = region.mDisplayList;
+    region.mDisplayList = display;
 
     display->mObjectListNext = object->mDisplayList;
     object->mDisplayList = display;
@@ -493,36 +494,34 @@ int cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
 void cDvbSubtitleDecoder::parseObjectBlock (cObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
                                             bool bottom, bool nonModifyColour) {
 
-  cRegion* region = getRegion (display->mRegionId);
-  if (!region)
-    return;
+  cRegion& region = getRegion (display->mRegionId);
 
   int xPos = display->xPos;
   int yPos = display->yPos + (bottom ? 1 : 0);
 
-  region->mDirty = true;
-  uint8_t* pixBuf = region->mPixBuf;
+  region.mDirty = true;
+  uint8_t* pixBuf = region.mPixBuf;
   const uint8_t* bufEnd = buf + bufSize;
   while (buf < bufEnd) {
-    if (((*buf != 0xF0) && (xPos >= region->mWidth)) || (yPos >= region->mHeight)) {
+    if (((*buf != 0xF0) && (xPos >= region.mWidth)) || (yPos >= region.mHeight)) {
       //{{{  error return
       cLog::log (LOGERROR, "invalid object location %d %d %d %d %02x",
-                            xPos, region->mWidth, yPos, region->mHeight, *buf);
+                            xPos, region.mWidth, yPos, region.mHeight, *buf);
       return;
       }
       //}}}
 
     uint8_t type = *buf++;
     uint16_t bufLeft = uint16_t(bufEnd - buf);
-    uint8_t* pixPtr = pixBuf + (yPos * region->mWidth);
+    uint8_t* pixPtr = pixBuf + (yPos * region.mWidth);
 
     switch (type) {
       case 0x11: // 4 bit
-        if (region->mColorLutDepth < 4) {
-          cLog::log (LOGERROR, "4-bit pix string in %d-bit region!", region->mColorLutDepth);
+        if (region.mColorLutDepth < 4) {
+          cLog::log (LOGERROR, "4-bit pix string in %d-bit region!", region.mColorLutDepth);
           return;
           }
-        xPos = parse4bit (&buf, bufLeft, pixPtr, region->mWidth, xPos, nonModifyColour);
+        xPos = parse4bit (&buf, bufLeft, pixPtr, region.mWidth, xPos, nonModifyColour);
         break;
 
       case 0xF0: // end of line
@@ -643,8 +642,8 @@ bool cDvbSubtitleDecoder::endDisplaySet() {
 
   mNumImages = 0;
   for (auto& regionDisplay : mPage.mRegionDisplays) {
-    cRegion* region = getRegion (regionDisplay.mRegionId);
-    if (!region || !region->mDirty)
+    cRegion& region = getRegion (regionDisplay.mRegionId);
+    if (!region.mDirty)
       continue;
 
     if (mNumImages == mImages.size())
@@ -656,11 +655,11 @@ bool cDvbSubtitleDecoder::endDisplaySet() {
 
     image.mX = regionDisplay.mXpos + offsetX;
     image.mY = regionDisplay.mYpos + offsetY;
-    image.mWidth = region->mWidth;
-    image.mHeight = region->mHeight;
+    image.mWidth = region.mWidth;
+    image.mHeight = region.mHeight;
 
     // copy lut
-    memcpy (&image.mColorLut, &getColorLut (region->mColorLut).m16bgra, sizeof (image.mColorLut));
+    memcpy (&image.mColorLut, &getColorLut (region.mColorLut).m16bgra, sizeof (image.mColorLut));
 
     // allocate pixels
     image.mPixels = (uint8_t*)realloc (image.mPixels, image.mWidth * image.mHeight * sizeof(uint32_t));
@@ -668,7 +667,7 @@ bool cDvbSubtitleDecoder::endDisplaySet() {
     // region->mPixBuf -> lut -> mPixels
     uint32_t* ptr = (uint32_t*)image.mPixels;
     for (int i = 0; i < image.mWidth * image.mHeight; i++)
-      *ptr++ = image.mColorLut[region->mPixBuf[i]];
+      *ptr++ = image.mColorLut[region.mPixBuf[i]];
 
     // set changed flag, to update texture in gui
     image.mDirty = true;
@@ -697,13 +696,13 @@ void cDvbSubtitleDecoder::deleteObjects() {
   }
 //}}}
 //{{{
-void cDvbSubtitleDecoder::deleteRegionDisplayList (cRegion* region) {
+void cDvbSubtitleDecoder::deleteRegionDisplayList (cRegion& region) {
 
   uint32_t num = 0;
   uint32_t num1 = 0;
 
-  while (region->mDisplayList) {
-    cObjectDisplay* display = region->mDisplayList;
+  while (region.mDisplayList) {
+    cObjectDisplay* display = region.mDisplayList;
     cObject* object = getObject (display->mObjectId);
     if (object) {
       cObjectDisplay** objDispPtr = &object->mDisplayList;
@@ -733,7 +732,7 @@ void cDvbSubtitleDecoder::deleteRegionDisplayList (cRegion* region) {
         }
       }
 
-    region->mDisplayList = display->mRegionListNext;
+    region.mDisplayList = display->mRegionListNext;
     free (display);
     num++;
     }

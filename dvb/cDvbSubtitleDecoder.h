@@ -186,6 +186,7 @@ private:
   class cObject {
   public:
     uint16_t mId;
+
     int mType;
     cObjectDisplay* mDisplayList;
 
@@ -196,8 +197,9 @@ private:
   class cRegion {
   public:
     cRegion (uint8_t id) : mId(id) {}
-    //~cRegion() { free (mPixBuf); } // why can't I delete mPixBuf
-    ~cRegion() { }
+    ~cRegion() {
+      // free (mPixBuf);  // why can't I delete mPixBuf
+      }
 
     uint8_t mId = 0;
     int mVersion = -1;
@@ -222,6 +224,7 @@ private:
     cRegionDisplay (uint8_t regionId, uint16_t xpos, uint16_t ypos) : mRegionId(regionId), mXpos(xpos), mYpos(ypos) {}
 
     const uint8_t mRegionId;
+
     const uint16_t mXpos;
     const uint16_t mYpos;
     };
@@ -240,7 +243,7 @@ private:
   // get
   cColorLut& getColorLut (uint8_t id);
   cObject* getObject (uint16_t id);
-  cRegion* getRegion (uint8_t id);
+  cRegion& getRegion (uint8_t id);
 
   // parse
   bool parsePage (const uint8_t* buf, uint16_t bufSize);
@@ -258,7 +261,7 @@ private:
 
   // delete
   void deleteObjects();
-  void deleteRegionDisplayList (cRegion* region);
+  void deleteRegionDisplayList (cRegion& region);
 
   // vars
   const uint16_t mSid;
