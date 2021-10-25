@@ -56,8 +56,10 @@ bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
       //}}}
 
     uint8_t segmentType = *bufPtr++;
+
     uint16_t pageId = AVRB16(bufPtr);
     bufPtr += 2;
+
     uint16_t segmentLength = AVRB16(bufPtr);
     bufPtr += 2;
 
@@ -69,46 +71,56 @@ bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
       //}}}
 
     switch (segmentType) {
+      //{{{
       case 0x10: // page composition segment
         if (!parsePage (bufPtr, segmentLength))
           return false;
         break;
-
+      //}}}
+      //{{{
       case 0x11: // region composition segment
         if (!parseRegion (bufPtr, segmentLength))
           return false;
         break;
-
+      //}}}
+      //{{{
       case 0x12: // CLUT definition segment
         if (!parseColorLut (bufPtr, segmentLength))
           return false;
         break;
-
+      //}}}
+      //{{{
       case 0x13: // object data segment
         if (!parseObject (bufPtr, segmentLength))
           return false;
         break;
-
+      //}}}
+      //{{{
       case 0x14: // display definition segment
         if (!parseDisplayDefinition (bufPtr, segmentLength))
           return false;
         break;
-
+      //}}}
+      //{{{
       case 0x80: // end of display set segment
         endDisplaySet();
         return true;
-
+      //}}}
+      //{{{
       case 0x15: // disparity signalling segment
         cLog::log (LOGERROR, "disparity signalling segment");
         break;
-
+      //}}}
+      //{{{
       case 0x16: // alternative_CLUT_segment
         cLog::log (LOGERROR, "alternative_CLUT_segment");
         break;
-
+      //}}}
+      //{{{
       default:
         cLog::log (LOGERROR, "unknown seg:%x, pageId:%d, size:%d", segmentType, pageId, segmentLength);
         break;
+      //}}}
       }
 
     bufPtr += segmentLength;
@@ -538,7 +550,6 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
   //cLog::log (LOGINFO, "page");
   if (bufSize < 1)
     return false;
-
   const uint8_t* bufEnd = buf + bufSize;
 
   uint8_t pageTimeout = *buf++;
@@ -547,11 +558,10 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
     return true;
   mPageVersion = pageVersion;
   mPageState = ((*buf++) >> 2) & 3;
-
+  cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} - page:{:1d} version::{:2d} timeout:{}",
+                                    mSid, mName, mPageState, mPageVersion, pageTimeout));
   if ((mPageState == 1) || (mPageState == 2)) {
     //{{{  delete regions, objects, colorLuts
-    cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} - page:{:1d} version::{:2d} timeout:{}",
-                                      mSid, mName, mPageState, mPageVersion, pageTimeout));
     mRegions.clear();
     deleteObjects();
     mColorLuts.clear();
@@ -568,9 +578,11 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
     while (display && (display->mRegionId != regionId))
       display = display->mNext;
     if (display) {
+      //{{{  duplicate
       cLog::log (LOGERROR, "duplicate region");
       break;
       }
+      //}}}
 
     display = tmpDisplayList;
     cRegionDisplay** tmpPtr = &tmpDisplayList;
@@ -584,15 +596,15 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
       display->mNext = nullptr;
       }
     display->mRegionId = regionId;
+
     display->xPos = AVRB16(buf);
     buf += 2;
     display->yPos = AVRB16(buf);
     buf += 2;
+
     *tmpPtr = display->mNext;
     display->mNext = mDisplayList;
-
     mDisplayList = display;
-
     //cLog::log (LOGINFO, fmt::format ("- regionId:{} {} {}",regionId,display->xPos,display->yPos));
     }
 
