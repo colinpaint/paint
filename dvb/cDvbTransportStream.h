@@ -26,7 +26,6 @@ class cTexture;
 //}}}
 using tTimePoint = std::chrono::system_clock::time_point;
 using tDuration = std::chrono::seconds;
-using tDvbSubtitleMap = std::map <uint16_t, cDvbSubtitleDecoder>;
 
 //{{{
 class cPidInfo {
@@ -143,6 +142,8 @@ public:
   std::string getChannelString() { return mChannelString; }
   std::string getNowTitleString() { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
   std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpgItemMap() { return mEpgItemMap; }
+
+  iDvbDecoder* getDvbDecoder() const { return mDvbDecoder; }
   //}}}
   //{{{  sets
   void setProgramPid (uint16_t pid) { mProgramPid = pid; }
@@ -150,6 +151,8 @@ public:
   void setAudPid (uint16_t pid, uint16_t streamType);
   void setSubPid (uint16_t pid, uint16_t streamType) { mSubPid = pid; mSubStreamType = streamType; }
   void setChannelString (const std::string& channelString) { mChannelString = channelString;}
+
+  void setDvbDecoder (iDvbDecoder* dvbDecoder) { mDvbDecoder = dvbDecoder; }
 
   bool setNow (bool record,
                std::chrono::system_clock::time_point time, std::chrono::seconds duration,
@@ -221,9 +224,8 @@ public:
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
   // subtitle
-  bool hasSubtitle (uint16_t sid);
-  cDvbSubtitleDecoder& getSubtitle (uint16_t sid);
   bool getDecodeSubtitle() const { return mDecodeSubtitle; }
+  iDvbDecoder* getDecoder (uint16_t sid);
 
   void toggleDecodeSubtitle();
 
@@ -281,7 +283,6 @@ private:
 
   // subtitle
   bool mDecodeSubtitle = false;
-  tDvbSubtitleMap mDvbSubtitleMap; // indexed by sid
 
   uint64_t mNumPackets = 0;
   uint64_t mNumErrors = 0;

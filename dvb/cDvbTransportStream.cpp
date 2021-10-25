@@ -683,7 +683,6 @@ cDvbTransportStream::cDvbTransportStream (const cDvbMultiplex& dvbMultiplex,
 //{{{
 cDvbTransportStream::~cDvbTransportStream() {
   clear();
-  mDvbSubtitleMap.clear();
   }
 //}}}
 
@@ -1038,24 +1037,15 @@ char cDvbTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int
 //}}}
 
 //{{{
-bool cDvbTransportStream::hasSubtitle (uint16_t sid) {
-  return mDvbSubtitleMap.find (sid) != mDvbSubtitleMap.end();
-  }
-//}}}
-//{{{
-cDvbSubtitleDecoder& cDvbTransportStream::getSubtitle (uint16_t sid) {
+iDvbDecoder* cDvbTransportStream::getDecoder (uint16_t sid) {
 
-  auto it = mDvbSubtitleMap.find (sid);
-  return (*it).second;
+  cService* service = getService (sid);
+  return service ? service->getDvbDecoder() : nullptr;
   }
 //}}}
 //{{{
 void cDvbTransportStream::toggleDecodeSubtitle() {
-
   mDecodeSubtitle = !mDecodeSubtitle;
-
-  if (!mDecodeSubtitle)
-      mDvbSubtitleMap.clear();
   }
 //}}}
 
@@ -1470,11 +1460,10 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
   //}}}
 
   if (mDecodeSubtitle) {
-    auto it = mDvbSubtitleMap.find (pidInfo->mSid);
-    if (it == mDvbSubtitleMap.end()) // create service dvbSubtitle
-      it = mDvbSubtitleMap.insert (
-        tDvbSubtitleMap::value_type (pidInfo->mSid, cDvbSubtitleDecoder (pidInfo->mSid, getChannelString (pidInfo->mSid)))).first;
-    it->second.decode (pidInfo->mBuffer, pidInfo->getBufUsed());
+    cService* service = getService (pidInfo->mSid);
+    if (service && !service->getDvbDecoder())
+      service->setDvbDecoder (new cDvbSubtitleDecoder(pidInfo->mSid, getChannelString(pidInfo->mSid)));
+    service->getDvbDecoder()->decode (pidInfo->mBuffer, pidInfo->getBufUsed());
     }
 
   return false;

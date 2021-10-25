@@ -134,8 +134,8 @@ private:
         streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
       ImGui::TextUnformatted (streamText.c_str());
 
-      if ((pidInfo.mStreamType == 6) && (dvbTransportStream->hasSubtitle (pidInfo.mSid)))
-        drawSubtitle (dvbTransportStream->getSubtitle (pidInfo.mSid), graphics);
+      if (pidInfo.mStreamType == 6)
+        drawSubtitle (dvbTransportStream->getService (pidInfo.mSid), graphics);
 
       // adjust packet number width
       if (pidInfo.mPackets > pow (10, mPacketDigits))
@@ -146,15 +146,25 @@ private:
     }
   //}}}
   //{{{
+  void drawSubtitle (cService* service, cGraphics& graphics) {
 
-  void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
+    if (!service)
+      return;
+
+    iDvbDecoder* dvbDecoder = service->getDvbDecoder();
+    if (!dvbDecoder)
+      return;
+
+    cDvbSubtitleDecoder* subtitle = dynamic_cast<cDvbSubtitleDecoder*>(dvbDecoder);
+    if (!subtitle)
+      return;
 
     float potSize = ImGui::GetTextLineHeight() / 2.f;
 
     size_t line = 0;
-    while (line < subtitle.getNumImages()) {
+    while (line < subtitle->getNumImages()) {
       // line order is reverse y order
-      cSubtitleImage& image = *subtitle.mImages[subtitle.mImages.size() - 1 - line];
+      cSubtitleImage& image = *subtitle->mImages[subtitle->mImages.size() - 1 - line];
 
       // draw clut color pots
       ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -187,7 +197,7 @@ private:
       }
 
     // pad lines to highwater mark, stops jumping about
-    while (line < subtitle.mImages.size()) {
+    while (line < subtitle->mImages.size()) {
       ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
                               {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
       line++;
