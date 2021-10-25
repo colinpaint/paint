@@ -169,6 +169,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
   //cLog::log (LOGINFO, "page");
   if (bufSize < 1)
     return false;
+
   const uint8_t* bufEnd = buf + bufSize;
 
   mPage.mPageTimeout = *buf++;
@@ -231,22 +232,22 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     fill = true;
     }
 
-  region->mDepth = 1 << (((*buf++) >> 2) & 7);
-  if (region->mDepth != 4) {
+  region->mColorLutDepth = 1 << (((*buf++) >> 2) & 7);
+  if (region->mColorLutDepth != 4) {
     //{{{  error return, allow 2 and 8 when we see them
-    cLog::log (LOGERROR, fmt::format ("unknown region depth:{}", region->mDepth));
+    cLog::log (LOGERROR, fmt::format ("unknown region depth:{}", region->mColorLutDepth));
     return false;
     }
     //}}}
 
   region->mColorLut = *buf++;
-  if (region->mDepth == 8) {
+  if (region->mColorLutDepth == 8) {
     region->mBackgroundColour = *buf++;
     buf += 1;
     }
   else {
     buf += 1;
-    if (region->mDepth == 4)
+    if (region->mColorLutDepth == 4)
       region->mBackgroundColour = ((*buf++) >> 4) & 15;
     else
       region->mBackgroundColour = ((*buf++) >> 2) & 3;
@@ -374,7 +375,7 @@ bool cDvbSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
 
 //{{{
 int cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
-                             uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour) {
+                                    uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour) {
 
   pixBuf += pixPos;
 
@@ -490,7 +491,7 @@ int cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
 //}}}
 //{{{
 void cDvbSubtitleDecoder::parseObjectBlock (cObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
-                                     bool bottom, bool nonModifyColour) {
+                                            bool bottom, bool nonModifyColour) {
 
   cRegion* region = getRegion (display->mRegionId);
   if (!region)
@@ -517,8 +518,8 @@ void cDvbSubtitleDecoder::parseObjectBlock (cObjectDisplay* display, const uint8
 
     switch (type) {
       case 0x11: // 4 bit
-        if (region->mDepth < 4) {
-          cLog::log (LOGERROR, "4-bit pix string in %d-bit region!", region->mDepth);
+        if (region->mColorLutDepth < 4) {
+          cLog::log (LOGERROR, "4-bit pix string in %d-bit region!", region->mColorLutDepth);
           return;
           }
         xPos = parse4bit (&buf, bufLeft, pixPtr, region->mWidth, xPos, nonModifyColour);

@@ -204,8 +204,9 @@ private:
 
     int mWidth = 0;
     int mHeight = 0;
-    int mDepth = 0;
+
     uint8_t mColorLut = 0;
+    uint8_t mColorLutDepth = 0;
     int mBackgroundColour = 0;
 
     bool mDirty = false;
@@ -219,9 +220,10 @@ private:
   class cRegionDisplay {
   public:
     cRegionDisplay (uint8_t regionId, uint16_t xpos, uint16_t ypos) : mRegionId(regionId), mXpos(xpos), mYpos(ypos) {}
-    uint8_t mRegionId;
-    int mXpos;
-    int mYpos;
+
+    const uint8_t mRegionId;
+    const uint16_t mXpos;
+    const uint16_t mYpos;
     };
   //}}}
   //{{{
@@ -230,6 +232,7 @@ private:
     uint8_t mPageVersion = 0xFF;
     uint8_t mPageState = 0;
     uint8_t mPageTimeout = 0xFF;
+
     std::vector <cRegionDisplay> mRegionDisplays;
     };
   //}}}
