@@ -203,6 +203,8 @@ public:
   //  gets
   uint64_t getNumPackets() const { return mNumPackets; }
   std::chrono::system_clock::time_point getTime() const { return mTime; }
+  std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
+  std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
 
   uint64_t getNumErrors() const { return mNumErrors; }
   std::string getErrorString() { return mErrorString; }
@@ -226,8 +228,6 @@ public:
 
   // vars
   std::mutex mMutex;
-  std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
-  std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
 
 private:
   void clear();
@@ -237,10 +237,8 @@ private:
   int64_t getPts (uint8_t* tsPtr);
   cPidInfo* getPidInfo (uint16_t pid, bool createPsiOnly);
 
-  //{{{
   void startServiceProgram (cService* service, tTimePoint tdtTime,
-                                    const std::string& programName, tTimePoint programStartTime, bool selected);
-  //}}}
+                            const std::string& programName, tTimePoint programStartTime, bool selected);
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService* service);
 

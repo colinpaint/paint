@@ -147,7 +147,8 @@ private:
     };
   //}}}
   //{{{
-  struct sObjectDisplay {
+  class cObjectDisplay {
+  public:
     //{{{
     void init (uint16_t objectId, uint8_t regionId, int xpos, int ypos) {
 
@@ -174,26 +175,28 @@ private:
     int mForegroundColour;
     int mBackgroundColour;
 
-    sObjectDisplay* mObjectListNext;
-    sObjectDisplay* mRegionListNext;
+    cObjectDisplay* mObjectListNext;
+    cObjectDisplay* mRegionListNext;
     };
   //}}}
   //{{{
-  struct sObject {
+  class cObject {
+  public:
     uint16_t mId;
     int mType;
-    sObjectDisplay* mDisplayList;
+    cObjectDisplay* mDisplayList;
 
-    sObject* mNext;
+    cObject* mNext;
     };
   //}}}
   //{{{
-  struct sRegionDisplay {
+  class cRegionDisplay {
+  public:
     uint8_t mRegionId;
     int xPos;
     int yPos;
 
-    sRegionDisplay* mNext;
+    cRegionDisplay* mNext;
     };
   //}}}
   //{{{
@@ -216,20 +219,20 @@ private:
     int mPixBufSize = 0;
     uint8_t* mPixBuf = nullptr;
 
-    sObjectDisplay* mDisplayList = nullptr;
+    cObjectDisplay* mDisplayList = nullptr;
     };
   //}}}
 
   // get
   cColorLut& getColorLut (uint8_t id);
-  sObject* getObject (uint16_t id);
+  cObject* getObject (uint16_t id);
   cRegion* getRegion (uint8_t id);
 
   // parse
   bool parseColorLut (const uint8_t* buf, uint16_t bufSize);
   int parse4bit (const uint8_t** buf, uint16_t bufSize,
                  uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour);
-  void parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
+  void parseObjectBlock (cObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
                          bool bottom, bool nonModifyColour);
   bool parseObject (const uint8_t* buf, uint16_t bufSize);
   bool parsePage (const uint8_t* buf, uint16_t bufSize);
@@ -250,7 +253,7 @@ private:
   const std::string mName;
 
   cDisplayDefinition mDisplayDefinition;
-  sRegionDisplay* mDisplayList = nullptr;
+  cRegionDisplay* mDisplayList = nullptr;
 
   // page info
   uint8_t mPageVersion = 0xFF;
@@ -260,5 +263,5 @@ private:
   // pools
   std::vector <cColorLut> mColorLuts;
   std::vector <cRegion> mRegions;
-  sObject* mObjectList = nullptr;
+  cObject* mObjectList = nullptr;
   };

@@ -28,7 +28,7 @@ cDvbSubtitle::~cDvbSubtitle() {
   deleteObjects();
 
   while (mDisplayList) {
-    sRegionDisplay* display = mDisplayList;
+    cRegionDisplay* display = mDisplayList;
     mDisplayList = display->mNext;
     free (display);
     }
@@ -133,9 +133,9 @@ cDvbSubtitle::cColorLut& cDvbSubtitle::getColorLut (uint8_t id) {
   }
 //}}}
 //{{{
-cDvbSubtitle::sObject* cDvbSubtitle::getObject (uint16_t id) {
+cDvbSubtitle::cObject* cDvbSubtitle::getObject (uint16_t id) {
 
-  sObject* object = mObjectList;
+  cObject* object = mObjectList;
 
   while (object && (object->mId != id))
     object = object->mNext;
@@ -338,7 +338,7 @@ int cDvbSubtitle::parse4bit (const uint8_t** buf, uint16_t bufSize,
   }
 //}}}
 //{{{
-void cDvbSubtitle::parseObjectBlock (sObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
+void cDvbSubtitle::parseObjectBlock (cObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
                                      bool bottom, bool nonModifyColour) {
 
   cRegion* region = getRegion (display->mRegionId);
@@ -395,7 +395,7 @@ bool cDvbSubtitle::parseObject (const uint8_t* buf, uint16_t bufSize) {
 
   uint16_t objectId = AVRB16(buf);
   buf += 2;
-  sObject* object = getObject (objectId);
+  cObject* object = getObject (objectId);
   if (!object)
     return false;
 
@@ -486,10 +486,10 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
   while (buf + 5 < bufEnd) {
     uint16_t objectId = AVRB16(buf);
     buf += 2;
-    sObject* object = getObject (objectId);
+    cObject* object = getObject (objectId);
     if (!object) {
       // allocate and init object
-      object = (sObject*)malloc (sizeof(sObject));
+      object = (cObject*)malloc (sizeof(cObject));
 
       object->mId = objectId;
       object->mType = 0;
@@ -503,7 +503,7 @@ bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     buf += 2;
     int ypos = AVRB16(buf) & 0xFFF;
     buf += 2;
-    auto display = (sObjectDisplay*)malloc (sizeof(sObjectDisplay));
+    auto display = (cObjectDisplay*)malloc (sizeof(cObjectDisplay));
     display->init (objectId, regionId, xpos, ypos);
 
     if (display->xPos >= region->mWidth ||
@@ -559,13 +559,13 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
     }
     //}}}
 
-  sRegionDisplay* tmpDisplayList = mDisplayList;
+  cRegionDisplay* tmpDisplayList = mDisplayList;
   mDisplayList = NULL;
   while (buf + 5 < bufEnd) {
     uint8_t regionId = *buf++;
     buf += 1;
 
-    sRegionDisplay* display = mDisplayList;
+    cRegionDisplay* display = mDisplayList;
     while (display && (display->mRegionId != regionId))
       display = display->mNext;
     if (display) {
@@ -574,14 +574,14 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
       }
 
     display = tmpDisplayList;
-    sRegionDisplay** tmpPtr = &tmpDisplayList;
+    cRegionDisplay** tmpPtr = &tmpDisplayList;
     while (display && (display->mRegionId != regionId)) {
       tmpPtr = &display->mNext;
       display = display->mNext;
       }
 
     if (!display) {
-      display = (sRegionDisplay*)malloc (sizeof(sRegionDisplay));
+      display = (cRegionDisplay*)malloc (sizeof(cRegionDisplay));
       display->mNext = nullptr;
       }
     display->mRegionId = regionId;
@@ -599,7 +599,7 @@ bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
   while (tmpDisplayList) {
     //{{{  free tmpDisplayList
-    sRegionDisplay* display = tmpDisplayList;
+    cRegionDisplay* display = tmpDisplayList;
     tmpDisplayList = display->mNext;
     free (display);
     }
@@ -663,7 +663,7 @@ void cDvbSubtitle::deleteObjects() {
 
   uint32_t num = 0;
   while (mObjectList) {
-    sObject* object = mObjectList;
+    cObject* object = mObjectList;
     mObjectList = object->mNext;
     free (object);
     num++;
@@ -679,11 +679,11 @@ void cDvbSubtitle::deleteRegionDisplayList (cRegion* region) {
   uint32_t num1 = 0;
 
   while (region->mDisplayList) {
-    sObjectDisplay* display = region->mDisplayList;
-    sObject* object = getObject (display->mObjectId);
+    cObjectDisplay* display = region->mDisplayList;
+    cObject* object = getObject (display->mObjectId);
     if (object) {
-      sObjectDisplay** objDispPtr = &object->mDisplayList;
-      sObjectDisplay* objDisp = *objDispPtr;
+      cObjectDisplay** objDispPtr = &object->mDisplayList;
+      cObjectDisplay* objDisp = *objDispPtr;
 
       while (objDisp && (objDisp != display)) {
         objDispPtr = &objDisp->mObjectListNext;
@@ -694,8 +694,8 @@ void cDvbSubtitle::deleteRegionDisplayList (cRegion* region) {
         *objDispPtr = objDisp->mObjectListNext;
 
         if (!object->mDisplayList) {
-          sObject** object2Ptr = &mObjectList;
-          sObject* object2 = *object2Ptr;
+          cObject** object2Ptr = &mObjectList;
+          cObject* object2 = *object2Ptr;
 
           while (object2 != object) {
             object2Ptr = &object2->mNext;
@@ -725,7 +725,7 @@ bool cDvbSubtitle::endDisplaySet() {
   int offsetY = mDisplayDefinition.mY;
 
   mNumImages = 0;
-  for (sRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
+  for (cRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
     cRegion* region = getRegion (regionDisplay->mRegionId);
     if (!region || !region->mDirty)
       continue;
