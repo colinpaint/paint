@@ -27,10 +27,6 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
   mRegions.clear();
   deleteObjects();
   mPage.mDisplayRegions.clear();
-
-  for (auto image : mPage.mImages)
-    delete image;
-  mPage.mImages.clear();
   }
 //}}}
 
@@ -630,41 +626,38 @@ bool cDvbSubtitleDecoder::endDisplaySet() {
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;
 
-  mPage.mNumImages = 0;
+  size_t line = 0;
   for (auto& displayRegion : mPage.mDisplayRegions) {
     cRegion& region = getRegion (displayRegion.mRegionId);
-    if (!region.mDirty)
-      continue;
+    if (region.mDirty) {
+      cSubtitleImage& image = mPage.mImages[line];
+      image.mPageState = mPage.mPageState;
+      image.mPageVersion = mPage.mPageVersion;
 
-    if (mPage.mNumImages == mPage.mImages.size())
-        mPage.mImages.emplace_back (new cSubtitleImage());
+      image.mX = displayRegion.mXpos + offsetX;
+      image.mY = displayRegion.mYpos + offsetY;
+      image.mWidth = region.mWidth;
+      image.mHeight = region.mHeight;
 
-    cSubtitleImage& image = *mPage.mImages[mPage.mNumImages];
-    image.mPageState = mPage.mPageState;
-    image.mPageVersion = mPage.mPageVersion;
+      // copy lut
+      memcpy (&image.mColorLut, &getColorLut (region.mColorLut).m16bgra, sizeof (image.mColorLut));
 
-    image.mX = displayRegion.mXpos + offsetX;
-    image.mY = displayRegion.mYpos + offsetY;
-    image.mWidth = region.mWidth;
-    image.mHeight = region.mHeight;
+      // allocate pixels
+      image.mPixels = (uint8_t*)realloc (image.mPixels, image.mWidth * image.mHeight * sizeof(uint32_t));
 
-    // copy lut
-    memcpy (&image.mColorLut, &getColorLut (region.mColorLut).m16bgra, sizeof (image.mColorLut));
+      // region->mPixBuf -> lut -> mPixels
+      uint32_t* ptr = (uint32_t*)image.mPixels;
+      for (int i = 0; i < image.mWidth * image.mHeight; i++)
+        *ptr++ = image.mColorLut[region.mPixBuf[i]];
 
-    // allocate pixels
-    image.mPixels = (uint8_t*)realloc (image.mPixels, image.mWidth * image.mHeight * sizeof(uint32_t));
-
-    // region->mPixBuf -> lut -> mPixels
-    uint32_t* ptr = (uint32_t*)image.mPixels;
-    for (int i = 0; i < image.mWidth * image.mHeight; i++)
-      *ptr++ = image.mColorLut[region.mPixBuf[i]];
-
-    // set changed flag, to update texture in gui
-    image.mDirty = true;
-
-    // update num regions as they become valid
-    mPage.mNumImages++;
+      // set changed flag, to update texture in gui
+      image.mDirty = true;
+      }
+    line++;
     }
+  mPage.mNumImages = line;
+  if (line > mPage.mHighwaterMark)
+    mPage.mHighwaterMark = line;
 
   return true;
   }

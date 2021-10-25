@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <algorithm>
 
 #include "iDvbDecoder.h"
 
@@ -28,7 +29,7 @@ public:
   int mHeight = 0;
 
   bool mDirty = false;
-  std::array <uint32_t,16> mColorLut;
+  std::array <uint32_t,16> mColorLut = {0};
   uint8_t* mPixels = nullptr;
   cTexture* mTexture = nullptr;
   };
@@ -40,8 +41,8 @@ public:
   ~cDvbSubtitleDecoder();
 
   size_t getNumImages() const { return mPage.mNumImages; }
-  size_t getHighWatermarkImages() const { return mPage.mImages.size(); }
-  cSubtitleImage& getImage (size_t line) const { return *mPage.mImages[line]; }
+  size_t getHighWatermarkImages() const { return mPage.mHighwaterMark; }
+  cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
   virtual bool decode (const uint8_t* buf, int bufSize) final;
 
@@ -236,9 +237,9 @@ private:
 
     std::vector <cDisplayRegion> mDisplayRegions;
 
-    // vars !!! can't get non pointer vector to work !!!
-    size_t mNumImages = 0; // num images used, don't deallocate unused as they are switched off
-    std::vector <cSubtitleImage*> mImages;
+    size_t mNumImages = 0;
+    size_t mHighwaterMark = 0;
+    std::array <cSubtitleImage,3> mImages;
     };
   //}}}
 
