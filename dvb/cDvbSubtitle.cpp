@@ -167,6 +167,181 @@ cDvbSubtitle::cRegion* cDvbSubtitle::getRegion (uint8_t id) {
   }
 //}}}
 
+// parse
+//{{{
+bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
+
+  //cLog::log (LOGINFO, "page");
+  if (bufSize < 1)
+    return false;
+  const uint8_t* bufEnd = buf + bufSize;
+
+  uint8_t pageTimeout = *buf++;
+  uint8_t pageVersion = ((*buf) >> 4) & 15;
+  if (mPageVersion == pageVersion)
+    return true;
+  mPageVersion = pageVersion;
+  mPageState = ((*buf++) >> 2) & 3;
+  cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} - page:{:1d} version::{:2d} timeout:{}",
+                                    mSid, mName, mPageState, mPageVersion, pageTimeout));
+  if ((mPageState == 1) || (mPageState == 2)) {
+    //{{{  delete regions, objects, colorLuts
+    mRegions.clear();
+    deleteObjects();
+    mColorLuts.clear();
+    }
+    //}}}
+
+  cRegionDisplay* tmpDisplayList = mDisplayList;
+  mDisplayList = NULL;
+  while (buf + 5 < bufEnd) {
+    uint8_t regionId = *buf++;
+    buf += 1;
+
+    cRegionDisplay* display = mDisplayList;
+    while (display && (display->mRegionId != regionId))
+      display = display->mNext;
+    if (display) {
+      //{{{  duplicate
+      cLog::log (LOGERROR, "duplicate region");
+      break;
+      }
+      //}}}
+
+    display = tmpDisplayList;
+    cRegionDisplay** tmpPtr = &tmpDisplayList;
+    while (display && (display->mRegionId != regionId)) {
+      tmpPtr = &display->mNext;
+      display = display->mNext;
+      }
+
+    if (!display) {
+      display = (cRegionDisplay*)malloc (sizeof(cRegionDisplay));
+      display->mNext = nullptr;
+      }
+    display->mRegionId = regionId;
+
+    display->xPos = AVRB16(buf);
+    buf += 2;
+    display->yPos = AVRB16(buf);
+    buf += 2;
+
+    *tmpPtr = display->mNext;
+    display->mNext = mDisplayList;
+    mDisplayList = display;
+    //cLog::log (LOGINFO, fmt::format ("- regionId:{} {} {}",regionId,display->xPos,display->yPos));
+    }
+
+  while (tmpDisplayList) {
+    //{{{  free tmpDisplayList
+    cRegionDisplay* display = tmpDisplayList;
+    tmpDisplayList = display->mNext;
+    free (display);
+    }
+    //}}}
+
+  return true;
+  }
+//}}}
+//{{{
+bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
+
+  //cLog::log (LOGINFO, "region segment");
+  if (bufSize < 10)
+    return false;
+
+  const uint8_t* bufEnd = buf + bufSize;
+
+  uint8_t regionId = *buf++;
+  cRegion* region = getRegion (regionId);
+  region->mVersion = ((*buf) >> 4) & 0x0F;
+
+  bool fill = ((*buf++) >> 3) & 1;
+  region->mWidth = AVRB16(buf);
+  buf += 2;
+  region->mHeight = AVRB16(buf);
+  buf += 2;
+  if ((region->mWidth * region->mHeight) != region->mPixBufSize) {
+    region->mPixBufSize = region->mWidth * region->mHeight;
+    region->mPixBuf = (uint8_t*)realloc (region->mPixBuf, region->mPixBufSize);
+    region->mDirty = false;
+    fill = true;
+    }
+
+  region->mDepth = 1 << (((*buf++) >> 2) & 7);
+  if (region->mDepth != 4) {
+    //{{{  error return, allow 2 and 8 when we see them
+    cLog::log (LOGERROR, fmt::format ("unknown region depth:{}", region->mDepth));
+    return false;
+    }
+    //}}}
+
+  region->mColorLut = *buf++;
+  if (region->mDepth == 8) {
+    region->mBackgroundColour = *buf++;
+    buf += 1;
+    }
+  else {
+    buf += 1;
+    if (region->mDepth == 4)
+      region->mBackgroundColour = ((*buf++) >> 4) & 15;
+    else
+      region->mBackgroundColour = ((*buf++) >> 2) & 3;
+    }
+  if (fill)
+    memset (region->mPixBuf, region->mBackgroundColour, region->mPixBufSize);
+
+  deleteRegionDisplayList (region);
+
+  while (buf + 5 < bufEnd) {
+    uint16_t objectId = AVRB16(buf);
+    buf += 2;
+    cObject* object = getObject (objectId);
+    if (!object) {
+      // allocate and init object
+      object = (cObject*)malloc (sizeof(cObject));
+
+      object->mId = objectId;
+      object->mType = 0;
+      object->mNext = mObjectList;
+      object->mDisplayList = nullptr;
+      mObjectList = object;
+      }
+    object->mType = (*buf) >> 6;
+
+    int xpos = AVRB16(buf) & 0xFFF;
+    buf += 2;
+    int ypos = AVRB16(buf) & 0xFFF;
+    buf += 2;
+    auto display = (cObjectDisplay*)malloc (sizeof(cObjectDisplay));
+    display->init (objectId, regionId, xpos, ypos);
+
+    if (display->xPos >= region->mWidth ||
+      //{{{  error return
+      display->yPos >= region->mHeight) {
+
+      cLog::log (LOGERROR, "Object outside region");
+      free (display);
+
+      return false;
+      }
+      //}}}
+
+    if (((object->mType == 1) || (object->mType == 2)) && (buf+1 < bufEnd)) {
+      display->mForegroundColour = *buf++;
+      display->mBackgroundColour = *buf++;
+      }
+
+    display->mRegionListNext = region->mDisplayList;
+    region->mDisplayList = display;
+
+    display->mObjectListNext = object->mDisplayList;
+    object->mDisplayList = display;
+    }
+
+  return true;
+  }
+//}}}
 //{{{
 bool cDvbSubtitle::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
 
@@ -233,6 +408,7 @@ bool cDvbSubtitle::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
   return true;
   }
 //}}}
+
 //{{{
 int cDvbSubtitle::parse4bit (const uint8_t** buf, uint16_t bufSize,
                              uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour) {
@@ -375,23 +551,21 @@ void cDvbSubtitle::parseObjectBlock (cObjectDisplay* display, const uint8_t* buf
     uint8_t type = *buf++;
     uint16_t bufLeft = uint16_t(bufEnd - buf);
     uint8_t* pixPtr = pixBuf + (yPos * region->mWidth);
+
     switch (type) {
-      //{{{
       case 0x11: // 4 bit
         if (region->mDepth < 4) {
           cLog::log (LOGERROR, "4-bit pix string in %d-bit region!", region->mDepth);
           return;
           }
-
         xPos = parse4bit (&buf, bufLeft, pixPtr, region->mWidth, xPos, nonModifyColour);
         break;
-      //}}}
-      //{{{
+
       case 0xF0: // end of line
         xPos = display->xPos;
         yPos += 2;
         break;
-      //}}}
+
       default:
         cLog::log (LOGINFO, "unimplemented objectBlock %x", type);
         break;
@@ -445,180 +619,7 @@ bool cDvbSubtitle::parseObject (const uint8_t* buf, uint16_t bufSize) {
   return true;
   }
 //}}}
-//{{{
-bool cDvbSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
 
-  //cLog::log (LOGINFO, "region segment");
-  if (bufSize < 10)
-    return false;
-
-  const uint8_t* bufEnd = buf + bufSize;
-
-  uint8_t regionId = *buf++;
-  cRegion* region = getRegion (regionId);
-  region->mVersion = ((*buf) >> 4) & 0x0F;
-
-  bool fill = ((*buf++) >> 3) & 1;
-  region->mWidth = AVRB16(buf);
-  buf += 2;
-  region->mHeight = AVRB16(buf);
-  buf += 2;
-  if ((region->mWidth * region->mHeight) != region->mPixBufSize) {
-    region->mPixBufSize = region->mWidth * region->mHeight;
-    region->mPixBuf = (uint8_t*)realloc (region->mPixBuf, region->mPixBufSize);
-    region->mDirty = false;
-    fill = true;
-    }
-
-  region->mDepth = 1 << (((*buf++) >> 2) & 7);
-  if (region->mDepth != 4) {
-    //{{{  error return, allow 2 and 8 when we see them
-    cLog::log (LOGERROR, fmt::format ("unknown region depth:{}", region->mDepth));
-    return false;
-    }
-    //}}}
-
-  region->mColorLut = *buf++;
-  if (region->mDepth == 8) {
-    region->mBackgroundColour = *buf++;
-    buf += 1;
-    }
-  else {
-    buf += 1;
-    if (region->mDepth == 4)
-      region->mBackgroundColour = ((*buf++) >> 4) & 15;
-    else
-      region->mBackgroundColour = ((*buf++) >> 2) & 3;
-    }
-  if (fill)
-    memset (region->mPixBuf, region->mBackgroundColour, region->mPixBufSize);
-
-  deleteRegionDisplayList (region);
-
-  while (buf + 5 < bufEnd) {
-    uint16_t objectId = AVRB16(buf);
-    buf += 2;
-    cObject* object = getObject (objectId);
-    if (!object) {
-      // allocate and init object
-      object = (cObject*)malloc (sizeof(cObject));
-
-      object->mId = objectId;
-      object->mType = 0;
-      object->mNext = mObjectList;
-      object->mDisplayList = nullptr;
-      mObjectList = object;
-      }
-    object->mType = (*buf) >> 6;
-
-    int xpos = AVRB16(buf) & 0xFFF;
-    buf += 2;
-    int ypos = AVRB16(buf) & 0xFFF;
-    buf += 2;
-    auto display = (cObjectDisplay*)malloc (sizeof(cObjectDisplay));
-    display->init (objectId, regionId, xpos, ypos);
-
-    if (display->xPos >= region->mWidth ||
-      //{{{  error return
-      display->yPos >= region->mHeight) {
-
-      cLog::log (LOGERROR, "Object outside region");
-      free (display);
-
-      return false;
-      }
-      //}}}
-
-    if (((object->mType == 1) || (object->mType == 2)) && (buf+1 < bufEnd)) {
-      display->mForegroundColour = *buf++;
-      display->mBackgroundColour = *buf++;
-      }
-
-    display->mRegionListNext = region->mDisplayList;
-    region->mDisplayList = display;
-
-    display->mObjectListNext = object->mDisplayList;
-    object->mDisplayList = display;
-    }
-
-  return true;
-  }
-//}}}
-//{{{
-bool cDvbSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
-
-  //cLog::log (LOGINFO, "page");
-  if (bufSize < 1)
-    return false;
-  const uint8_t* bufEnd = buf + bufSize;
-
-  uint8_t pageTimeout = *buf++;
-  uint8_t pageVersion = ((*buf) >> 4) & 15;
-  if (mPageVersion == pageVersion)
-    return true;
-  mPageVersion = pageVersion;
-  mPageState = ((*buf++) >> 2) & 3;
-  cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} - page:{:1d} version::{:2d} timeout:{}",
-                                    mSid, mName, mPageState, mPageVersion, pageTimeout));
-  if ((mPageState == 1) || (mPageState == 2)) {
-    //{{{  delete regions, objects, colorLuts
-    mRegions.clear();
-    deleteObjects();
-    mColorLuts.clear();
-    }
-    //}}}
-
-  cRegionDisplay* tmpDisplayList = mDisplayList;
-  mDisplayList = NULL;
-  while (buf + 5 < bufEnd) {
-    uint8_t regionId = *buf++;
-    buf += 1;
-
-    cRegionDisplay* display = mDisplayList;
-    while (display && (display->mRegionId != regionId))
-      display = display->mNext;
-    if (display) {
-      //{{{  duplicate
-      cLog::log (LOGERROR, "duplicate region");
-      break;
-      }
-      //}}}
-
-    display = tmpDisplayList;
-    cRegionDisplay** tmpPtr = &tmpDisplayList;
-    while (display && (display->mRegionId != regionId)) {
-      tmpPtr = &display->mNext;
-      display = display->mNext;
-      }
-
-    if (!display) {
-      display = (cRegionDisplay*)malloc (sizeof(cRegionDisplay));
-      display->mNext = nullptr;
-      }
-    display->mRegionId = regionId;
-
-    display->xPos = AVRB16(buf);
-    buf += 2;
-    display->yPos = AVRB16(buf);
-    buf += 2;
-
-    *tmpPtr = display->mNext;
-    display->mNext = mDisplayList;
-    mDisplayList = display;
-    //cLog::log (LOGINFO, fmt::format ("- regionId:{} {} {}",regionId,display->xPos,display->yPos));
-    }
-
-  while (tmpDisplayList) {
-    //{{{  free tmpDisplayList
-    cRegionDisplay* display = tmpDisplayList;
-    tmpDisplayList = display->mNext;
-    free (display);
-    }
-    //}}}
-
-  return true;
-  }
-//}}}
 //{{{
 bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize) {
 
@@ -668,7 +669,53 @@ bool cDvbSubtitle::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize)
   return true;
   }
 //}}}
+//{{{
+bool cDvbSubtitle::endDisplaySet() {
 
+  int offsetX = mDisplayDefinition.mX;
+  int offsetY = mDisplayDefinition.mY;
+
+  mNumImages = 0;
+  for (cRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
+    cRegion* region = getRegion (regionDisplay->mRegionId);
+    if (!region || !region->mDirty)
+      continue;
+
+    if (mNumImages == mImages.size())
+      mImages.emplace_back (new cSubtitleImage());
+
+    cSubtitleImage& image = *mImages[mNumImages];
+    image.mPageState = mPageState;
+    image.mPageVersion = mPageVersion;
+
+    image.mX = regionDisplay->xPos + offsetX;
+    image.mY = regionDisplay->yPos + offsetY;
+    image.mWidth = region->mWidth;
+    image.mHeight = region->mHeight;
+
+    // copy lut
+    memcpy (&image.mColorLut, &getColorLut (region->mColorLut).m16bgra, sizeof (image.mColorLut));
+
+    // allocate pixels
+    image.mPixels = (uint8_t*)realloc (image.mPixels, image.mWidth * image.mHeight * sizeof(uint32_t));
+
+    // region->mPixBuf -> lut -> mPixels
+    uint32_t* ptr = (uint32_t*)image.mPixels;
+    for (int i = 0; i < image.mWidth * image.mHeight; i++)
+      *ptr++ = image.mColorLut[region->mPixBuf[i]];
+
+    // set changed flag, to update texture in gui
+    image.mDirty = true;
+
+    // update num regions as they become valid
+    mNumImages++;
+    }
+
+  return true;
+  }
+//}}}
+
+// delete
 //{{{
 void cDvbSubtitle::deleteObjects() {
 
@@ -726,51 +773,5 @@ void cDvbSubtitle::deleteRegionDisplayList (cRegion* region) {
     }
 
   cLog::log (LOGINFO1, fmt::format ("deleteRegionDisplayList {} {}", num, num1));
-  }
-//}}}
-
-//{{{
-bool cDvbSubtitle::endDisplaySet() {
-
-  int offsetX = mDisplayDefinition.mX;
-  int offsetY = mDisplayDefinition.mY;
-
-  mNumImages = 0;
-  for (cRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
-    cRegion* region = getRegion (regionDisplay->mRegionId);
-    if (!region || !region->mDirty)
-      continue;
-
-    if (mNumImages == mImages.size())
-      mImages.emplace_back (new cSubtitleImage());
-
-    cSubtitleImage& image = *mImages[mNumImages];
-    image.mPageState = mPageState;
-    image.mPageVersion = mPageVersion;
-
-    image.mX = regionDisplay->xPos + offsetX;
-    image.mY = regionDisplay->yPos + offsetY;
-    image.mWidth = region->mWidth;
-    image.mHeight = region->mHeight;
-
-    // copy lut
-    memcpy (&image.mColorLut, &getColorLut (region->mColorLut).m16bgra, sizeof (image.mColorLut));
-
-    // allocate pixels
-    image.mPixels = (uint8_t*)realloc (image.mPixels, image.mWidth * image.mHeight * sizeof(uint32_t));
-
-    // region->mPixBuf -> lut -> mPixels
-    uint32_t* ptr = (uint32_t*)image.mPixels;
-    for (int i = 0; i < image.mWidth * image.mHeight; i++)
-      *ptr++ = image.mColorLut[region->mPixBuf[i]];
-
-    // set changed flag, to update texture in gui
-    image.mDirty = true;
-
-    // update num regions as they become valid
-    mNumImages++;
-    }
-
-  return true;
   }
 //}}}

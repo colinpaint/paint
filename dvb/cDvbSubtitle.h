@@ -229,24 +229,22 @@ private:
   cRegion* getRegion (uint8_t id);
 
   // parse
+  bool parsePage (const uint8_t* buf, uint16_t bufSize);
+  bool parseRegion (const uint8_t* buf, uint16_t bufSize);
   bool parseColorLut (const uint8_t* buf, uint16_t bufSize);
+
   int parse4bit (const uint8_t** buf, uint16_t bufSize,
                  uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour);
   void parseObjectBlock (cObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
                          bool bottom, bool nonModifyColour);
   bool parseObject (const uint8_t* buf, uint16_t bufSize);
-  bool parsePage (const uint8_t* buf, uint16_t bufSize);
-  bool parseRegion (const uint8_t* buf, uint16_t bufSize);
+
   bool parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize);
+  bool endDisplaySet();
 
   // delete
-  void deleteColorLuts();
   void deleteObjects();
   void deleteRegionDisplayList (cRegion* region);
-  void deleteRegions();
-
-  // update
-  bool endDisplaySet();
 
   // vars
   const uint16_t mSid;

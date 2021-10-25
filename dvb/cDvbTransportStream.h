@@ -214,7 +214,6 @@ public:
   std::string getErrorString() { return mErrorString; }
   std::string getSignalString() { return mSignalString; }
 
-  std::string getChannelStringBySid (uint16_t sid);
   static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
   cService* getService (uint16_t index, int64_t& firstPts, int64_t& lastPts);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
@@ -240,6 +239,7 @@ private:
 
   int64_t getPts (uint8_t* tsPtr);
   cPidInfo* getPidInfo (uint16_t pid, bool createPsiOnly);
+  std::string getChannelString (uint16_t sid);
 
   void startServiceProgram (cService* service, tTimePoint tdtTime,
                             const std::string& programName, tTimePoint programStartTime, bool selected);

@@ -531,7 +531,7 @@ bool cService::setEpg (bool record, tTimePoint startTime, tDuration duration,
   }
 //}}}
 
-// file, probably wrong here but saves duplicating file elsewhere
+// record
 //{{{
 bool cService::openFile (const string& fileName, uint16_t tsid) {
 
@@ -687,16 +687,6 @@ cDvbTransportStream::~cDvbTransportStream() {
   }
 //}}}
 
-//{{{
-string cDvbTransportStream::getChannelStringBySid (uint16_t sid) {
-
-  auto it = mServiceMap.find (sid);
-  if (it == mServiceMap.end())
-    return "";
-  else
-    return it->second.getChannelString();
-  }
-//}}}
 //{{{
 char cDvbTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType) {
 // return frameType of video pes
@@ -1367,14 +1357,22 @@ cPidInfo* cDvbTransportStream::getPidInfo (uint16_t pid, bool createPsiOnly) {
   return &pidInfoIt->second;
   }
 //}}}
+//{{{
+string cDvbTransportStream::getChannelString (uint16_t sid) {
+
+  auto it = mServiceMap.find (sid);
+  if (it == mServiceMap.end())
+    return "";
+  else
+    return it->second.getChannelString();
+  }
+//}}}
 
 //{{{
 void cDvbTransportStream::startServiceProgram (cService* service, tTimePoint tdtTime,
                                                const string& programName,
                                                tTimePoint programStartTime, bool selected) {
 // start recording service item
-
-  (void)programStartTime;
 
   // cloase prev program on this service
   lock_guard<mutex> lockGuard (mRecordFileMutex);
@@ -1472,8 +1470,7 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
     auto it = mDvbSubtitleMap.find (pidInfo->mSid);
     if (it == mDvbSubtitleMap.end()) // create service dvbSubtitle
       it = mDvbSubtitleMap.insert (
-        tDvbSubtitleMap::value_type (pidInfo->mSid,
-                                     cDvbSubtitle (pidInfo->mSid, getChannelStringBySid (pidInfo->mSid)))).first;
+        tDvbSubtitleMap::value_type (pidInfo->mSid, cDvbSubtitle (pidInfo->mSid, getChannelString (pidInfo->mSid)))).first;
     it->second.decode (pidInfo->mBuffer, pidInfo->getBufUsed());
     }
 
