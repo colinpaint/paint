@@ -41,7 +41,7 @@ public:
 
   size_t getNumImages() const { return mPage.mNumImages; }
   size_t getHighWatermarkImages() const { return mPage.mImages.size(); }
-  cSubtitleImage& getImage (size_t line) { return *mPage.mImages[line]; }
+  cSubtitleImage& getImage (size_t line) const { return *mPage.mImages[line]; }
 
   virtual bool decode (const uint8_t* buf, int bufSize) final;
 
