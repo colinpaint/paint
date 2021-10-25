@@ -24,7 +24,6 @@
 #include "cDvbSubtitle.h"
 
 using namespace std;
-using namespace chrono;
 //}}}
 //{{{  macros
 #define HILO(x) (x##_hi << 8 | x##_lo)
@@ -688,7 +687,6 @@ cDvbTransportStream::~cDvbTransportStream() {
   }
 //}}}
 
-
 //{{{
 string cDvbTransportStream::getChannelStringBySid (uint16_t sid) {
 
@@ -697,30 +695,6 @@ string cDvbTransportStream::getChannelStringBySid (uint16_t sid) {
     return "";
   else
     return it->second.getChannelString();
-  }
-//}}}
-//{{{
-cService* cDvbTransportStream::getService (uint16_t index, int64_t& firstPts, int64_t& lastPts) {
-
-  firstPts = -1;
-  lastPts = -1;
-
-  int i = 0;
-  for (auto& service : mServiceMap) {
-    if (i == index) {
-      auto pidInfoIt = mPidInfoMap.find (service.second.getAudPid());
-      if (pidInfoIt != mPidInfoMap.end()) {
-        firstPts = pidInfoIt->second.mFirstPts;
-        lastPts = pidInfoIt->second.mLastPts;
-        cLog::log (LOGINFO, fmt::format("getService {} firstPts:{} lastPts:{}",
-                            index,getFullPtsString (firstPts),getFullPtsString (lastPts)));
-        return &service.second;
-        }
-      }
-    i++;
-    }
-
-  return nullptr;
   }
 //}}}
 //{{{
@@ -1039,6 +1013,30 @@ char cDvbTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int
     }
 
   return '?';
+  }
+//}}}
+//{{{
+cService* cDvbTransportStream::getService (uint16_t index, int64_t& firstPts, int64_t& lastPts) {
+
+  firstPts = -1;
+  lastPts = -1;
+
+  int i = 0;
+  for (auto& service : mServiceMap) {
+    if (i == index) {
+      auto pidInfoIt = mPidInfoMap.find (service.second.getAudPid());
+      if (pidInfoIt != mPidInfoMap.end()) {
+        firstPts = pidInfoIt->second.mFirstPts;
+        lastPts = pidInfoIt->second.mLastPts;
+        cLog::log (LOGINFO, fmt::format("getService {} firstPts:{} lastPts:{}",
+                            index,getFullPtsString (firstPts),getFullPtsString (lastPts)));
+        return &service.second;
+        }
+      }
+    i++;
+    }
+
+  return nullptr;
   }
 //}}}
 
@@ -1671,7 +1669,7 @@ void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
           auto serviceIt = mServiceMap.find (sid);
           if (serviceIt != mServiceMap.end()) {
             // known service
-            auto startTime = system_clock::from_time_t (
+            auto startTime = chrono::system_clock::from_time_t (
               MjdToEpochTime (eitEvent->mjd) + BcdTimeToSeconds (eitEvent->start_time));
             tDuration duration (BcdTimeToSeconds (eitEvent->duration));
 
@@ -1730,14 +1728,14 @@ void cDvbTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
 
   sTdt* tdt = (sTdt*)buf;
   if (tdt->table_id == TID_TDT) {
-    mTime = system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) + BcdTimeToSeconds (tdt->utc_time));
+    mTime = chrono::system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) + BcdTimeToSeconds (tdt->utc_time));
     if (!mTimeDefined) {
       mFirstTime = mTime;
       mTimeDefined = true;
       }
 
-    pidInfo->mInfoString = date::format ("%T", date::floor<seconds>(mFirstTime)) +
-                           " to " + date::format ("%T", date::floor<seconds>(mTime));
+    pidInfo->mInfoString = date::format ("%T", date::floor<chrono::seconds>(mFirstTime)) +
+                           " to " + date::format ("%T", date::floor<chrono::seconds>(mTime));
     }
   }
 //}}}

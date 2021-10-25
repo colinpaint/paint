@@ -170,8 +170,7 @@ private:
       // draw position
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{:3d},{:3d} {:1d}:{:1x}",
-                                           image.mX, image.mY, 
-                                           image.mPageState, image.mPageVersion).c_str());
+                                           image.mX, image.mY, image.mPageState, image.mPageVersion).c_str());
       // create/update image texture
       if (image.mTexture == nullptr) // create
         image.mTexture = graphics.createTexture ({image.mWidth, image.mHeight}, image.mPixels);

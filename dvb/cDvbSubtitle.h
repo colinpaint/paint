@@ -17,9 +17,8 @@ public:
   cSubtitleImage() {}
   ~cSubtitleImage() { free (mPixels); }
 
-  uint8_t mPageVersion = 0;
   uint8_t mPageState = 0;
-  uint8_t mPageTimeout = 0;
+  uint8_t mPageVersion = 0;
 
   int mX = 0;
   int mY = 0;
@@ -244,7 +243,7 @@ private:
   void deleteRegions();
 
   // update
-  bool updateImages();
+  bool endDisplaySet();
 
   // vars
   const uint16_t mSid;

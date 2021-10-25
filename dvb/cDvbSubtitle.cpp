@@ -42,53 +42,69 @@ cDvbSubtitle::~cDvbSubtitle() {
 //{{{
 bool cDvbSubtitle::decode (const uint8_t* buf, int bufSize) {
 
-  // skip past first 2 bytes
   const uint8_t* bufEnd = buf + bufSize;
   const uint8_t* bufPtr = buf + 2;
 
-  while ((bufEnd - bufPtr >= 6) && (*bufPtr++ == 0x0f)) {
+  while (bufEnd - bufPtr >= 6) {
+    // check for syncByte
+    uint8_t syncByte = *bufPtr++;
+    if (syncByte != 0x0f) {
+      //{{{  syncByte error return
+      cLog::log (LOGERROR, fmt::format ("cDvbSubtitle decode missing syncByte:{}", syncByte));
+      return false;
+      }
+      //}}}
+
     uint8_t segmentType = *bufPtr++;
     uint16_t pageId = AVRB16(bufPtr);
     bufPtr += 2;
     uint16_t segmentLength = AVRB16(bufPtr);
     bufPtr += 2;
 
-    if (bufEnd - bufPtr < segmentLength) {
-      //{{{  error return
+    if (segmentLength > bufEnd - bufPtr) {
+      //{{{  segmentLength error return
       cLog::log (LOGERROR, "incomplete or broken packet");
       return false;
       }
       //}}}
 
     switch (segmentType) {
-      case 0x10:
+      case 0x10: // page composition segment
         if (!parsePage (bufPtr, segmentLength))
           return false;
         break;
 
-      case 0x11:
+      case 0x11: // region composition segment
         if (!parseRegion (bufPtr, segmentLength))
           return false;
         break;
 
-      case 0x12:
+      case 0x12: // CLUT definition segment
         if (!parseColorLut (bufPtr, segmentLength))
           return false;
         break;
 
-      case 0x13:
+      case 0x13: // object data segment
         if (!parseObject (bufPtr, segmentLength))
           return false;
         break;
 
-      case 0x14:
+      case 0x14: // display definition segment
         if (!parseDisplayDefinition (bufPtr, segmentLength))
           return false;
         break;
 
-      case 0x80:
-        updateImages();
+      case 0x80: // end of display set segment
+        endDisplaySet();
         return true;
+
+      case 0x15: // disparity signalling segment
+        cLog::log (LOGERROR, "disparity signalling segment");
+        break;
+
+      case 0x16: // alternative_CLUT_segment
+        cLog::log (LOGERROR, "alternative_CLUT_segment");
+        break;
 
       default:
         cLog::log (LOGERROR, "unknown seg:%x, pageId:%d, size:%d", segmentType, pageId, segmentLength);
@@ -703,7 +719,7 @@ void cDvbSubtitle::deleteRegionDisplayList (cRegion* region) {
 //}}}
 
 //{{{
-bool cDvbSubtitle::updateImages() {
+bool cDvbSubtitle::endDisplaySet() {
 
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;
@@ -718,9 +734,8 @@ bool cDvbSubtitle::updateImages() {
       mImages.emplace_back (new cSubtitleImage());
 
     cSubtitleImage& image = *mImages[mNumImages];
-    image.mPageVersion = mPageVersion;
     image.mPageState = mPageState;
-    image.mPageTimeout = mPageTimeout;
+    image.mPageVersion = mPageVersion;
 
     image.mX = regionDisplay->xPos + offsetX;
     image.mY = regionDisplay->yPos + offsetY;
@@ -728,9 +743,7 @@ bool cDvbSubtitle::updateImages() {
     image.mHeight = region->mHeight;
 
     // copy lut
-    cColorLut& colorLut = getColorLut (region->mColorLut);
-    for (size_t i = 0; i < colorLut.m16bgra.max_size(); i++)
-      image.mColorLut[i] = colorLut.m16bgra[i];
+    memcpy (&image.mColorLut, &getColorLut (region->mColorLut).m16bgra, sizeof (image.mColorLut));
 
     // allocate pixels
     image.mPixels = (uint8_t*)realloc (image.mPixels, image.mWidth * image.mHeight * sizeof(uint32_t));

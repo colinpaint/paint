@@ -24,7 +24,6 @@
 class cDvbSubtitle;
 class cTexture;
 //}}}
-
 using tTimePoint = std::chrono::system_clock::time_point;
 using tDuration = std::chrono::seconds;
 using tDvbSubtitleMap = std::map <uint16_t, cDvbSubtitle>;
@@ -201,29 +200,27 @@ public:
   cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool decodeSubtitle);
   virtual ~cDvbTransportStream();
 
+  //  gets
+  uint64_t getNumPackets() const { return mNumPackets; }
+  std::chrono::system_clock::time_point getTime() const { return mTime; }
+
+  uint64_t getNumErrors() const { return mNumErrors; }
+  std::string getErrorString() { return mErrorString; }
+  std::string getSignalString() { return mSignalString; }
+
+  std::string getChannelStringBySid (uint16_t sid);
+  static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
+  cService* getService (uint16_t index, int64_t& firstPts, int64_t& lastPts);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
-  // subtitle
-  bool getDecodeSubtitle() const { return mDecodeSubtitle; }
   bool hasSubtitle (uint16_t sid);
   cDvbSubtitle& getSubtitle (uint16_t sid);
+  bool getDecodeSubtitle() const { return mDecodeSubtitle; }
 
   void toggleDecodeSubtitle();
 
-  // sources
-  std::string getErrorString() { return mErrorString; }
-  std::string getSignalString() { return mSignalString; }
   void dvbSource (bool ownThread);
   void fileSource (bool ownThread, const std::string& fileName);
-
-  //  gets
-  uint64_t getNumPackets() const { return mNumPackets; }
-  uint64_t getNumErrors() const { return mNumErrors; }
-  std::chrono::system_clock::time_point getTime() const { return mTime; }
-
-  std::string getChannelStringBySid (uint16_t sid);
-  cService* getService (uint16_t index, int64_t& firstPts, int64_t& lastPts);
-  static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
 
   int64_t demux (const std::vector<uint16_t>& pids, uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
 
