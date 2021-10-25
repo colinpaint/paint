@@ -225,6 +225,15 @@ private:
     cRegionDisplay* mNext;
     };
   //}}}
+  //{{{
+  class cPage {
+  public:
+    uint8_t mPageVersion = 0xFF;
+    uint8_t mPageState = 0;
+    uint8_t mPageTimeout = 0xFF;
+    cRegionDisplay* mDisplayList = nullptr;
+    };
+  //}}}
 
   // get
   cColorLut& getColorLut (uint8_t id);
@@ -253,16 +262,12 @@ private:
   const uint16_t mSid;
   const std::string mName;
 
-  // page info
-  uint8_t mPageVersion = 0xFF;
-  uint8_t mPageState = 0;
-
   // pools
   std::vector <cColorLut> mColorLuts;
   std::vector <cRegion> mRegions;
   cObject* mObjectList = nullptr;
 
-  cRegionDisplay* mDisplayList = nullptr;
+  cPage mPage;
 
   cDisplayDefinition mDisplayDefinition;
   };

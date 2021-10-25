@@ -27,9 +27,9 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
   mRegions.clear();
   deleteObjects();
 
-  while (mDisplayList) {
-    cRegionDisplay* display = mDisplayList;
-    mDisplayList = display->mNext;
+  while (mPage.mDisplayList) {
+    cRegionDisplay* display = mPage.mDisplayList;
+    mPage.mDisplayList = display->mNext;
     free (display);
     }
 
@@ -176,15 +176,14 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     return false;
   const uint8_t* bufEnd = buf + bufSize;
 
-  uint8_t pageTimeout = *buf++;
+  mPage.mPageTimeout = *buf++;
   uint8_t pageVersion = ((*buf) >> 4) & 15;
-  if (mPageVersion == pageVersion)
+  if (mPage.mPageVersion == pageVersion)
     return true;
-  mPageVersion = pageVersion;
-  mPageState = ((*buf++) >> 2) & 3;
-  cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} page state:{:1d} version::{:2d} timeout:{}",
-                                    mSid, mName, mPageState, mPageVersion, pageTimeout));
-  if ((mPageState == 1) || (mPageState == 2)) {
+  mPage.mPageVersion = pageVersion;
+  mPage.mPageState = ((*buf++) >> 2) & 3;
+
+  if ((mPage.mPageState == 1) || (mPage.mPageState == 2)) {
     //{{{  delete regions, objects, colorLuts
     mRegions.clear();
     deleteObjects();
@@ -192,13 +191,17 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     }
     //}}}
 
-  cRegionDisplay* tmpDisplayList = mDisplayList;
-  mDisplayList = NULL;
+  cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} page state:{:1d} version::{:2d} timeout:{}",
+                                    mSid, mName, mPage.mPageState, mPage.mPageVersion, mPage.mPageTimeout));
+
+
+  cRegionDisplay* tmpDisplayList = mPage.mDisplayList;
+  mPage.mDisplayList = NULL;
   while (buf + 5 < bufEnd) {
     uint8_t regionId = *buf++;
     buf += 1;
 
-    cRegionDisplay* display = mDisplayList;
+    cRegionDisplay* display = mPage.mDisplayList;
     while (display && (display->mRegionId != regionId))
       display = display->mNext;
     if (display) {
@@ -227,9 +230,11 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     buf += 2;
 
     *tmpPtr = display->mNext;
-    display->mNext = mDisplayList;
-    mDisplayList = display;
-    //cLog::log (LOGINFO, fmt::format ("- regionId:{} {} {}",regionId,display->xPos,display->yPos));
+    display->mNext = mPage.mDisplayList;
+    mPage.mDisplayList = display;
+
+    cLog::log (LOGINFO, fmt::format ("                   - add region:{} {},{}",
+                                     regionId,display->xPos,display->yPos));
     }
 
   while (tmpDisplayList) {
@@ -672,11 +677,13 @@ bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t b
 //{{{
 bool cDvbSubtitleDecoder::endDisplaySet() {
 
+  cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} endDisplay", mSid, mName));
+
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;
 
   mNumImages = 0;
-  for (cRegionDisplay* regionDisplay = mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
+  for (cRegionDisplay* regionDisplay = mPage.mDisplayList; regionDisplay; regionDisplay = regionDisplay->mNext) {
     cRegion* region = getRegion (regionDisplay->mRegionId);
     if (!region || !region->mDirty)
       continue;
@@ -685,8 +692,8 @@ bool cDvbSubtitleDecoder::endDisplaySet() {
       mImages.emplace_back (new cSubtitleImage());
 
     cSubtitleImage& image = *mImages[mNumImages];
-    image.mPageState = mPageState;
-    image.mPageVersion = mPageVersion;
+    image.mPageState = mPage.mPageState;
+    image.mPageVersion = mPage.mPageVersion;
 
     image.mX = regionDisplay->xPos + offsetX;
     image.mY = regionDisplay->yPos + offsetY;
