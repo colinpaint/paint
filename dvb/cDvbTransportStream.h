@@ -218,7 +218,7 @@ public:
   cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool decodeSubtitle);
   virtual ~cDvbTransportStream();
 
-  //  gets
+  //{{{  gets
   uint64_t getNumPackets() const { return mNumPackets; }
   std::chrono::system_clock::time_point getTime() const { return mTime; }
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
@@ -232,14 +232,13 @@ public:
   cService* getService (uint16_t index, int64_t& firstPts, int64_t& lastPts);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
-  // subtitle
   bool getSubtitleEnable() const { return mSubtitleEnable; }
   iDvbDecoder* getDecoder (uint16_t sid);
-
+  //}}}
   void toggleSubtitleEnable();
 
-  void dvbSource (bool ownThread);
-  void fileSource (bool ownThread, const std::string& fileName);
+  void dvbSource (bool launchThread);
+  void fileSource (bool launchThread, const std::string& fileName);
 
   // static
   static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
@@ -248,9 +247,11 @@ public:
   std::mutex mMutex;
 
 private:
+  //{{{  clears
   void clear();
   void clearPidCounts();
   void clearPidContinuity();
+  //}}}
 
   int64_t getPts (uint8_t* tsPtr);
   cPidInfo* getPidInfo (uint16_t pid, bool createPsiOnly);
@@ -265,6 +266,7 @@ private:
   bool vidDecodePes (cPidInfo* pidInfo, bool skip);
   bool subDecodePes (cPidInfo* pidInfo);
 
+  //{{{  parse
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);
   void parseNit (cPidInfo* pidInfo, uint8_t* buf);
   void parseSdt (cPidInfo* pidInfo, uint8_t* buf);
@@ -272,11 +274,10 @@ private:
   void parseTdt (cPidInfo* pidInfo, uint8_t* buf);
   void parsePmt (cPidInfo* pidInfo, uint8_t* buf);
   int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
-
+  //}}}
   int64_t demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
-
-  void dvbSourceInternal (bool ownThread);
-  void fileSourceInternal (bool ownThread, const std::string& fileName);
+  void dvbSourceInternal (bool launchThread);
+  void fileSourceInternal (bool launchThread, const std::string& fileName);
 
   // vars
   cDvbMultiplex mDvbMultiplex;

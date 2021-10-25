@@ -1,13 +1,8 @@
 // cDvbTransportStream.cpp - file or dvbSource demux
+//{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
-//{{{  linux includes
-#ifdef __linux__
-  #include <unistd.h>
-  #include <sys/poll.h>
-#endif
-//}}}
-//{{{  common includes
+
 #include "cDvbTransportStream.h"
 
 #include <cstdint>
@@ -15,6 +10,11 @@
 #include <vector>
 #include <map>
 #include <thread>
+
+#ifdef __linux__
+  #include <unistd.h>
+  #include <sys/poll.h>
+#endif
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"
@@ -25,7 +25,8 @@
 
 using namespace std;
 //}}}
-//{{{  macros
+//{{{  defines, const, struct
+// macros
 #define HILO(x) (x##_hi << 8 | x##_lo)
 
 #define MjdToEpochTime(x) (unsigned int)((((x##_hi << 8) | x##_lo) - 40587) * 86400)
@@ -33,8 +34,7 @@ using namespace std;
 #define BcdTimeToSeconds(x) ((3600 * ((10*((x##_h & 0xF0)>>4)) + (x##_h & 0xF))) + \
                                (60 * ((10*((x##_m & 0xF0)>>4)) + (x##_m & 0xF))) + \
                                      ((10*((x##_s & 0xF0)>>4)) + (x##_s & 0xF)))
-//}}}
-//{{{  const, struct
+
 const int kInitBufSize = 512;
 
 //{{{  pid defines
@@ -475,10 +475,10 @@ cService::~cService() {
 bool cService::isEpgRecord (const string& title, tTimePoint startTime) {
 // return true if startTime, title selected to record in epg
 
-  auto epgItemIt = mEpgItemMap.find (startTime);
-  if (epgItemIt != mEpgItemMap.end())
-    if (title == epgItemIt->second->getTitleString())
-      if (epgItemIt->second->getRecord())
+  auto it = mEpgItemMap.find (startTime);
+  if (it != mEpgItemMap.end())
+    if (title == it->second->getTitleString())
+      if (it->second->getRecord())
         return true;
 
   return false;
@@ -519,13 +519,12 @@ bool cService::setEpg (bool record, tTimePoint startTime, tDuration duration,
                        const string& titleString, const string& infoString) {
 // could return true only if changed
 
-  auto epgItemIt = mEpgItemMap.find (startTime);
-  if (epgItemIt == mEpgItemMap.end()) {
+  auto it = mEpgItemMap.find (startTime);
+  if (it == mEpgItemMap.end())
     mEpgItemMap.insert (map <tTimePoint, cEpgItem*>::value_type (
-                        startTime, new cEpgItem (false, record, startTime, duration, titleString, infoString)));
-    }
+                          startTime, new cEpgItem (false, record, startTime, duration, titleString, infoString)));
   else
-    epgItemIt->second->set (startTime, duration, titleString, infoString);
+    it->second->set (startTime, duration, titleString, infoString);
 
   return true;
   }
@@ -549,8 +548,7 @@ bool cService::openFile (const string& fileName, uint16_t tsid) {
 //{{{
 void cService::writePacket (uint8_t* ts, uint16_t pid) {
 
-  if (mFile &&
-      ((pid == mVidPid) || (pid == mAudPid) || (pid == mSubPid)))
+  if (mFile && ((pid == mVidPid) || (pid == mAudPid) || (pid == mSubPid)))
     fwrite (ts, 1, 188, mFile);
   }
 //}}}
@@ -1053,18 +1051,18 @@ void cDvbTransportStream::toggleSubtitleEnable() {
 //}}}
 
 //{{{
-void cDvbTransportStream::dvbSource (bool ownThread) {
+void cDvbTransportStream::dvbSource (bool launchThread) {
 
-  if (ownThread)
+  if (launchThread)
     thread([=, this]() { dvbSourceInternal (true); }).detach();
   else
     dvbSourceInternal (false);
   }
 //}}}
 //{{{
-void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
+void cDvbTransportStream::fileSource (bool launchThread, const string& fileName) {
 
-  if (ownThread)
+  if (launchThread)
     thread ([=, this](){ fileSourceInternal (true, fileName); } ).detach();
   else
     fileSourceInternal (false, fileName);
@@ -1833,7 +1831,7 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
 //}}}
 
 //{{{
-void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
+void cDvbTransportStream::dvbSourceInternal (bool launchThread) {
 
   if (!mDvbSource->ok()) {
     //{{{  error, return
@@ -1842,7 +1840,7 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
     }
     //}}}
 
-  if (ownThread)
+  if (launchThread)
     cLog::setThreadName ("grab");
 
   FILE* mFile = mDvbMultiplex.mRecordAllChannels ?
@@ -1908,14 +1906,14 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
   if (mFile)
     fclose (mFile);
 
-  if (ownThread)
+  if (launchThread)
     cLog::log (LOGINFO, "exit");
   }
 //}}}
 //{{{
-void cDvbTransportStream::fileSourceInternal (bool ownThread, const string& fileName) {
+void cDvbTransportStream::fileSourceInternal (bool launchThread, const string& fileName) {
 
-  if (ownThread)
+  if (launchThread)
     cLog::setThreadName ("read");
 
   auto file = fopen (fileName.c_str(), "rb");
@@ -1948,7 +1946,7 @@ void cDvbTransportStream::fileSourceInternal (bool ownThread, const string& file
   fclose (file);
   free (buffer);
 
-  if (ownThread)
+  if (launchThread)
     cLog::log (LOGERROR, "exit");
   }
 //}}}
