@@ -31,6 +31,7 @@ public:
   bool mDirty = false;
   std::array <uint32_t,16> mColorLut = {0};
   uint8_t* mPixels = nullptr;
+
   cTexture* mTexture = nullptr;
   };
 //}}}
@@ -151,14 +152,14 @@ private:
   //{{{
   class cObjectDisplay {
   public:
-    cObjectDisplay (uint16_t objectId, uint8_t regionId, int xpos, int ypos) 
-      : mObjectId(objectId), mRegionId(regionId), xPos(xpos), yPos(ypos) {}
+    cObjectDisplay (uint16_t objectId, uint8_t regionId, int xpos, int ypos)
+      : mObjectId(objectId), mRegionId(regionId), mXpos(xpos), mYpos(ypos) {}
 
     uint16_t mObjectId;
     uint8_t mRegionId;
 
-    int xPos;
-    int yPos;
+    int mXpos;
+    int mYpos;
 
     int mForegroundColour = 0;
     int mBackgroundColour = 0;
@@ -170,10 +171,12 @@ private:
   //{{{
   class cObject {
   public:
-    uint16_t mId;
+    cObject (uint16_t id) : mId(id) {}
 
-    int mType;
-    cObjectDisplay* mDisplayList;
+    const uint16_t mId;
+
+    int mType = 0;
+    cObjectDisplay* mDisplayList = nullptr;
 
     cObject* mNext;
     };
@@ -224,10 +227,10 @@ private:
     // parser side
     std::vector <cDisplayRegion> mDisplayRegions;
 
-    // render side
+    // render side, max 4 !!! should check !!!
     size_t mNumImages = 0;
     size_t mHighwaterMark = 0;
-    std::array <cSubtitleImage,3> mImages;
+    std::array <cSubtitleImage,4> mImages;
     };
   //}}}
 
@@ -248,7 +251,7 @@ private:
   bool parseObject (const uint8_t* buf, uint16_t bufSize);
 
   bool parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize);
-  bool endDisplaySet();
+  void endDisplaySet();
 
   // delete
   void deleteObjects();

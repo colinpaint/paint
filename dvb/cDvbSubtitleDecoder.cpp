@@ -37,7 +37,7 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
   const uint8_t* bufPtr = buf + 2;
 
   while (bufEnd - bufPtr >= 6) {
-    // check for syncByte
+    // check syncByte
     uint8_t syncByte = *bufPtr++;
     if (syncByte != 0x0f) {
       //{{{  syncByte error return
@@ -249,13 +249,9 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     buf += 2;
     cObject* object = getObject (objectId);
     if (!object) {
-      // allocate and init object
-      object = (cObject*)malloc (sizeof(cObject));
-
-      object->mId = objectId;
-      object->mType = 0;
+      // allocate and add to objectList
+      object = new cObject (objectId);
       object->mNext = mObjectList;
-      object->mDisplayList = nullptr;
       mObjectList = object;
       }
     object->mType = (*buf) >> 6;
@@ -266,9 +262,9 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     buf += 2;
 
     cObjectDisplay* display = new cObjectDisplay (objectId, regionId, xpos, ypos);
-    if (display->xPos >= region.mWidth ||
+    if (display->mXpos >= region.mWidth ||
       //{{{  error return
-      display->yPos >= region.mHeight) {
+      display->mYpos >= region.mHeight) {
       cLog::log (LOGERROR, "Object outside region");
       delete display;
       return false;
@@ -479,8 +475,8 @@ void cDvbSubtitleDecoder::parseObjectBlock (cObjectDisplay* display, const uint8
 
   cRegion& region = getRegion (display->mRegionId);
 
-  int xPos = display->xPos;
-  int yPos = display->yPos + (bottom ? 1 : 0);
+  int xPos = display->mXpos;
+  int yPos = display->mYpos + (bottom ? 1 : 0);
 
   region.mDirty = true;
   uint8_t* pixBuf = region.mPixBuf;
@@ -508,7 +504,7 @@ void cDvbSubtitleDecoder::parseObjectBlock (cObjectDisplay* display, const uint8
         break;
 
       case 0xF0: // end of line
-        xPos = display->xPos;
+        xPos = display->mXpos;
         yPos += 2;
         break;
 
@@ -616,7 +612,7 @@ bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t b
   }
 //}}}
 //{{{
-bool cDvbSubtitleDecoder::endDisplaySet() {
+void cDvbSubtitleDecoder::endDisplaySet() {
 
   cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} endDisplay", mSid, mName));
 
@@ -652,11 +648,10 @@ bool cDvbSubtitleDecoder::endDisplaySet() {
       }
     line++;
     }
+
   mPage.mNumImages = line;
   if (line > mPage.mHighwaterMark)
     mPage.mHighwaterMark = line;
-
-  return true;
   }
 //}}}
 
@@ -668,7 +663,7 @@ void cDvbSubtitleDecoder::deleteObjects() {
   while (mObjectList) {
     cObject* object = mObjectList;
     mObjectList = object->mNext;
-    free (object);
+    delete object;
     num++;
     }
 
@@ -706,7 +701,7 @@ void cDvbSubtitleDecoder::deleteDisplayRegionList (cRegion& region) {
             }
 
           *object2Ptr = object2->mNext;
-          free (object2);
+          delete object2;
           num1++;
           }
         }
