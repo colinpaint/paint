@@ -196,7 +196,7 @@ private:
       }
 
     // pad lines to highwater mark, stops jumping about
-    while (line < subtitle->getMaxImages()) {
+    while (line < subtitle->getHighWatermarkImages()) {
       ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
                               {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
       line++;
