@@ -265,15 +265,12 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     int ypos = AVRB16(buf) & 0xFFF;
     buf += 2;
 
-    auto display = (cObjectDisplay*)malloc (sizeof(cObjectDisplay));
-    display->init (objectId, regionId, xpos, ypos);
+    cObjectDisplay* display = new cObjectDisplay (objectId, regionId, xpos, ypos);
     if (display->xPos >= region.mWidth ||
       //{{{  error return
       display->yPos >= region.mHeight) {
-
       cLog::log (LOGERROR, "Object outside region");
-      free (display);
-
+      delete display;
       return false;
       }
       //}}}
@@ -716,7 +713,7 @@ void cDvbSubtitleDecoder::deleteDisplayRegionList (cRegion& region) {
       }
 
     region.mDisplayList = display->mRegionListNext;
-    free (display);
+    delete display;
     num++;
     }
 

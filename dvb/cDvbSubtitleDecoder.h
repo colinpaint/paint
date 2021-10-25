@@ -151,22 +151,8 @@ private:
   //{{{
   class cObjectDisplay {
   public:
-    //{{{
-    void init (uint16_t objectId, uint8_t regionId, int xpos, int ypos) {
-
-      mObjectId = objectId;
-      mRegionId = regionId;
-
-      xPos = xpos;
-      yPos = ypos;
-
-      mForegroundColour = 0;;
-      mBackgroundColour = 0;
-
-      mObjectListNext = nullptr;
-      mRegionListNext = nullptr;
-      }
-    //}}}
+    cObjectDisplay (uint16_t objectId, uint8_t regionId, int xpos, int ypos) 
+      : mObjectId(objectId), mRegionId(regionId), xPos(xpos), yPos(ypos) {}
 
     uint16_t mObjectId;
     uint8_t mRegionId;
@@ -174,11 +160,11 @@ private:
     int xPos;
     int yPos;
 
-    int mForegroundColour;
-    int mBackgroundColour;
+    int mForegroundColour = 0;
+    int mBackgroundColour = 0;
 
-    cObjectDisplay* mObjectListNext;
-    cObjectDisplay* mRegionListNext;
+    cObjectDisplay* mObjectListNext = nullptr;
+    cObjectDisplay* mRegionListNext = nullptr;
     };
   //}}}
   //{{{
