@@ -230,7 +230,6 @@ public:
 
   cService* getService (uint16_t sid);
   cService* getService (uint16_t index, int64_t& firstPts, int64_t& lastPts);
-  static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
   // subtitle
@@ -242,7 +241,8 @@ public:
   void dvbSource (bool ownThread);
   void fileSource (bool ownThread, const std::string& fileName);
 
-  int64_t demux (const std::vector<uint16_t>& pids, uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
+  // static
+  static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
 
   // vars
   std::mutex mMutex;
@@ -254,7 +254,6 @@ private:
 
   int64_t getPts (uint8_t* tsPtr);
   cPidInfo* getPidInfo (uint16_t pid, bool createPsiOnly);
-  std::string getChannelString (uint16_t sid);
 
   void startServiceProgram (cService* service, tTimePoint tdtTime,
                             const std::string& programName, tTimePoint programStartTime, bool selected);
@@ -273,6 +272,8 @@ private:
   void parseTdt (cPidInfo* pidInfo, uint8_t* buf);
   void parsePmt (cPidInfo* pidInfo, uint8_t* buf);
   int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
+
+  int64_t demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
 
   void dvbSourceInternal (bool ownThread);
   void fileSourceInternal (bool ownThread, const std::string& fileName);

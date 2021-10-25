@@ -1071,216 +1071,6 @@ void cDvbTransportStream::fileSource (bool ownThread, const string& fileName) {
   }
 //}}}
 
-//{{{
-int64_t cDvbTransportStream::demux (const vector<uint16_t>& pids,
-                                 uint8_t* tsBuf, int64_t tsBufSize,
-                                 int64_t streamPos, bool skip) {
-// demux from tsBuffer to tsBuffer + tsBufferSize, streamPos is offset into full stream of first packet
-// decodePid1 = -1 use all
-// - return bytes decoded
-
-  if (skip)
-    clearPidContinuity();
-
-  uint8_t* ts = tsBuf;
-  uint8_t* tsEnd = tsBuf + tsBufSize;
-
-  bool decoded = false;
-  uint8_t* nextPacket = ts + 188;
-  while (!decoded && (nextPacket <= tsEnd)) {
-    if (*ts == 0x47) {
-      if ((ts+188 >= tsEnd) || (*(ts+188) == 0x47)) {
-        ts++;
-        int tsBytesLeft = 188-1;
-
-        uint16_t pid = ((ts[0] & 0x1F) << 8) | ts[1];
-        if (pid != 0x1FFF) {
-          bool payloadStart =   ts[0] & 0x40;
-          int continuityCount = ts[2] & 0x0F;
-          int headerBytes =    (ts[2] & 0x20) ? (4 + ts[3]) : 3; // adaption field
-
-          lock_guard<mutex> lockGuard (mMutex);
-          cPidInfo* pidInfo = getPidInfo (pid, true);
-          if (pidInfo) {
-            if ((pidInfo->mContinuity >= 0) &&
-                (continuityCount != ((pidInfo->mContinuity+1) & 0x0F))) {
-              //{{{  continuity error
-              if (pidInfo->mContinuity == continuityCount) // strange case of bbc subtitles
-                pidInfo->mRepeatContinuity++;
-              else {
-                mNumErrors++;
-                // abandon any buffered pes or section
-                pidInfo->mBufPtr = nullptr;
-                }
-              }
-              //}}}
-            pidInfo->mContinuity = continuityCount;
-            pidInfo->mPackets++;
-
-            if (pidInfo->mPsi) {
-              //{{{  psi
-              ts += headerBytes;
-              tsBytesLeft -= headerBytes;
-
-              if (payloadStart) {
-                // handle the very odd pointerField
-                uint8_t pointerField = *ts++;
-                tsBytesLeft--;
-                if ((pointerField > 0) && pidInfo->mBufPtr)
-                  pidInfo->addToBuffer (ts, pointerField);
-                ts += pointerField;
-                tsBytesLeft -= pointerField;
-
-                // parse any outstanding buffer
-                if (pidInfo->mBufPtr) {
-                  uint8_t* bufPtr = pidInfo->mBuffer;
-                  while ((bufPtr+3) <= pidInfo->mBufPtr) // enough for tid,sectionLength
-                    if (bufPtr[0] == 0xFF) // invalid tid, end of psi sections
-                      break;
-                    else // valid tid, parse psi section
-                      bufPtr += parsePsi (pidInfo, bufPtr);
-                  }
-
-                while ((tsBytesLeft >= 3) &&
-                       (ts[0] != 0xFF) && (tsBytesLeft >= (((ts[1] & 0x0F) << 8) + ts[2] + 3))) {
-                  // parse section without buffering
-                  uint32_t sectionLength = parsePsi (pidInfo, ts);
-                  ts += sectionLength;
-                  tsBytesLeft -= sectionLength;
-                  }
-
-                if (tsBytesLeft > 0 && (ts[0] != 0xFF)) {
-                  // buffer rest of psi packet in new buffer
-                  pidInfo->mBufPtr = pidInfo->mBuffer;
-                  pidInfo->addToBuffer (ts, tsBytesLeft);
-                  }
-                }
-              else if (pidInfo->mBufPtr)
-                pidInfo->addToBuffer (ts, tsBytesLeft);
-              }
-              //}}}
-            else if (pidInfo->mStreamType == 5) {
-              //{{{  mtd - do nothing
-              }
-              //}}}
-            else if (pidInfo->mStreamType == 11) {
-              //{{{  dsm - do nothing
-              }
-              //}}}
-            else if (pidInfo->mStreamType == 134) {
-              //{{{  ??? - do nothing
-              }
-              //}}}
-            else if (pids.empty() || (pid == pids[0]) || ((pids.size() > 1) && (pid == pids[1]))) {
-              //{{{  pes
-              programPesPacket (pidInfo->mSid, pidInfo->mPid, ts-1);
-
-              ts += headerBytes;
-              tsBytesLeft -= headerBytes;
-
-              if (payloadStart) {
-                // start of payload for new pes buffer
-                if ((*(uint32_t*)ts == 0xBD010000) ||
-                    (*(uint32_t*)ts == 0xBE010000) ||
-                    (*(uint32_t*)ts == 0xC0010000) ||
-                    (*(uint32_t*)ts == 0xC1010000) ||
-                    (*(uint32_t*)ts == 0xC2010000) ||
-                    (*(uint32_t*)ts == 0xC4010000) ||
-                    (*(uint32_t*)ts == 0xC6010000) ||
-                    (*(uint32_t*)ts == 0xC8010000) ||
-                    (*(uint32_t*)ts == 0xCA010000) ||
-                    (*(uint32_t*)ts == 0xCC010000) ||
-                    (*(uint32_t*)ts == 0xCE010000) ||
-                    (*(uint32_t*)ts == 0xD0010000) ||
-                    (*(uint32_t*)ts == 0xD2010000) ||
-                    (*(uint32_t*)ts == 0xD4010000) ||
-                    (*(uint32_t*)ts == 0xD6010000) ||
-                    (*(uint32_t*)ts == 0xD8010000) ||
-                    (*(uint32_t*)ts == 0xDA010000) ||
-                    (*(uint32_t*)ts == 0xE0010000)) {
-                  if (pidInfo->mBufPtr && pidInfo->mStreamType) {
-                    switch (pidInfo->mStreamType) {
-                      case 2:   // ISO 13818-2 video
-                      case 27:  // HD vid
-                        //{{{  send last video pes
-                        decoded = vidDecodePes (pidInfo, skip);
-
-                        skip = false;
-                        break;
-                        //}}}
-                      case 3:   // ISO 11172-3 audio
-                      case 4:   // ISO 13818-3 audio
-                      case 15:  // aac adts
-                      case 17:  // aac latm
-                      case 129: // ac3
-                        //{{{  send last audio pes
-                        if (*(uint32_t*)ts == 0xC1010000)
-                          decoded = audAltDecodePes (pidInfo, skip);
-                        else
-                          decoded = audDecodePes (pidInfo, skip);
-
-                        break;
-                        //}}}
-                      case 6:   // subtitle
-                        //{{{  send last subtitle pes
-                        decoded = subDecodePes (pidInfo);
-                        break;
-                        //}}}
-                      default:
-                        cLog::log (LOGINFO, fmt::format("unknown pid:{} streamType:{}",pid,pidInfo->mStreamType));
-                      }
-                    }
-
-                  // save ts streamPos for start of new pes buffer
-                  pidInfo->mStreamPos = streamPos;
-
-                  // form pts, firstPts, lastPts
-                  pidInfo->mPts = (ts[7] & 0x80) ? getPts (ts+9) : -1;
-                  if (pidInfo->mFirstPts == -1)
-                    pidInfo->mFirstPts = pidInfo->mPts;
-                  if (pidInfo->mPts > pidInfo->mLastPts)
-                    pidInfo->mLastPts = pidInfo->mPts;
-
-                  // skip past pesHeader
-                  int pesHeaderBytes = 9 + ts[8];
-                  ts += pesHeaderBytes;
-                  tsBytesLeft -= pesHeaderBytes;
-
-                  // reset new payload buffer
-                  pidInfo->mBufPtr = pidInfo->mBuffer;
-                  }
-                else {
-                  uint32_t nn = *(uint32_t*)ts;
-                  cLog::log (LOGINFO, fmt::format("unrecognised pes header {} {:8x}",pid,nn));
-                  }
-                }
-
-              // add payload to buffer
-              if (pidInfo->mBufPtr && (tsBytesLeft > 0))
-                pidInfo->addToBuffer (ts, tsBytesLeft);
-              }
-              //}}}
-            }
-          }
-
-        ts = nextPacket;
-        nextPacket += 188;
-        streamPos += 188;
-        mNumPackets++;
-        }
-      }
-    else {
-      //{{{  sync error, return
-      cLog::log (LOGERROR, "demux - lostSync");
-      return tsEnd - tsBuf;
-      }
-      //}}}
-    }
-
-  return ts - tsBuf;
-  }
-//}}}
-
 // private:
 //{{{
 void cDvbTransportStream::clear() {
@@ -1354,13 +1144,6 @@ cPidInfo* cDvbTransportStream::getPidInfo (uint16_t pid, bool createPsiOnly) {
     }
 
   return &pidInfoIt->second;
-  }
-//}}}
-//{{{
-string cDvbTransportStream::getChannelString (uint16_t sid) {
-
-  cService* service = getService (sid);
-  return service ? service->getChannelString() : "";
   }
 //}}}
 
@@ -1453,19 +1236,18 @@ bool cDvbTransportStream::vidDecodePes (cPidInfo* pidInfo, bool skip) {
 //{{{
 bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
 
-  //{{{
-  //cLog::log (LOGINFO1, fmt::format ("subtitle pid:{} sid:{} size:{} {} {} ",
-                                      //pidInfo->mPid,
-                                      //pidInfo->mSid,
-                                      //pidInfo->getBufUsed(),
-                                      //getFullPtsString (pidInfo->mPts),
-                                      //getChannelStringBySid (pidInfo->mSid)));
-  //}}}
-
   if (mSubtitleEnable) {
+    //{{{
+    //cLog::log (LOGINFO1, fmt::format ("subtitle pid:{} sid:{} size:{} {} {} ",
+                                        //pidInfo->mPid,
+                                        //pidInfo->mSid,
+                                        //pidInfo->getBufUsed(),
+                                        //getFullPtsString (pidInfo->mPts),
+                                        //getChannelStringBySid (pidInfo->mSid)));
+    //}}}
     cService* service = getService (pidInfo->mSid);
     if (service && !service->getDvbDecoder())
-      service->setDvbDecoder (new cDvbSubtitleDecoder(pidInfo->mSid, getChannelString(pidInfo->mSid)));
+      service->setDvbDecoder (new cDvbSubtitleDecoder (pidInfo->mSid, service->getChannelString()));
     service->getDvbDecoder()->decode (pidInfo->mBuffer, pidInfo->getBufUsed());
     }
 
@@ -1589,8 +1371,10 @@ void cDvbTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
 
             cService* service = getService (sid);
             if (service) {
-              cLog::log (LOGINFO, fmt::format ("SDT named sid:{} {}",sid,name));
-              service->setChannelString (name);
+              if (service->getChannelString().empty()) {
+                cLog::log (LOGINFO, fmt::format ("SDT named sid:{} {}",sid,name));
+                service->setChannelString (name);
+                }
               }
             else
               cLog::log (LOGINFO, fmt::format("SDT - before PMT - ignored {} {}", sid, name));
@@ -1835,6 +1619,214 @@ int cDvbTransportStream::parsePsi (cPidInfo* pidInfo, uint8_t* buf) {
 //}}}
 
 //{{{
+int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip) {
+// demux from tsBuffer to tsBuffer + tsBufferSize, streamPos is offset into full stream of first packet
+// decodePid1 = -1 use all
+// - return bytes decoded
+
+  if (skip)
+    clearPidContinuity();
+
+  uint8_t* ts = tsBuf;
+  uint8_t* tsEnd = tsBuf + tsBufSize;
+
+  bool decoded = false;
+  uint8_t* nextPacket = ts + 188;
+  while (!decoded && (nextPacket <= tsEnd)) {
+    if (*ts == 0x47) {
+      if ((ts+188 >= tsEnd) || (*(ts+188) == 0x47)) {
+        ts++;
+        int tsBytesLeft = 188-1;
+
+        uint16_t pid = ((ts[0] & 0x1F) << 8) | ts[1];
+        if (pid != 0x1FFF) {
+          bool payloadStart =   ts[0] & 0x40;
+          int continuityCount = ts[2] & 0x0F;
+          int headerBytes =    (ts[2] & 0x20) ? (4 + ts[3]) : 3; // adaption field
+
+          lock_guard<mutex> lockGuard (mMutex);
+          cPidInfo* pidInfo = getPidInfo (pid, true);
+          if (pidInfo) {
+            if ((pidInfo->mContinuity >= 0) &&
+                (continuityCount != ((pidInfo->mContinuity+1) & 0x0F))) {
+              //{{{  continuity error
+              if (pidInfo->mContinuity == continuityCount) // strange case of bbc subtitles
+                pidInfo->mRepeatContinuity++;
+              else {
+                mNumErrors++;
+                // abandon any buffered pes or section
+                pidInfo->mBufPtr = nullptr;
+                }
+              }
+              //}}}
+            pidInfo->mContinuity = continuityCount;
+            pidInfo->mPackets++;
+
+            if (pidInfo->mPsi) {
+              //{{{  psi
+              ts += headerBytes;
+              tsBytesLeft -= headerBytes;
+
+              if (payloadStart) {
+                // handle the very odd pointerField
+                uint8_t pointerField = *ts++;
+                tsBytesLeft--;
+                if ((pointerField > 0) && pidInfo->mBufPtr)
+                  pidInfo->addToBuffer (ts, pointerField);
+                ts += pointerField;
+                tsBytesLeft -= pointerField;
+
+                // parse any outstanding buffer
+                if (pidInfo->mBufPtr) {
+                  uint8_t* bufPtr = pidInfo->mBuffer;
+                  while ((bufPtr+3) <= pidInfo->mBufPtr) // enough for tid,sectionLength
+                    if (bufPtr[0] == 0xFF) // invalid tid, end of psi sections
+                      break;
+                    else // valid tid, parse psi section
+                      bufPtr += parsePsi (pidInfo, bufPtr);
+                  }
+
+                while ((tsBytesLeft >= 3) &&
+                       (ts[0] != 0xFF) && (tsBytesLeft >= (((ts[1] & 0x0F) << 8) + ts[2] + 3))) {
+                  // parse section without buffering
+                  uint32_t sectionLength = parsePsi (pidInfo, ts);
+                  ts += sectionLength;
+                  tsBytesLeft -= sectionLength;
+                  }
+
+                if (tsBytesLeft > 0 && (ts[0] != 0xFF)) {
+                  // buffer rest of psi packet in new buffer
+                  pidInfo->mBufPtr = pidInfo->mBuffer;
+                  pidInfo->addToBuffer (ts, tsBytesLeft);
+                  }
+                }
+              else if (pidInfo->mBufPtr)
+                pidInfo->addToBuffer (ts, tsBytesLeft);
+              }
+              //}}}
+            else if (pidInfo->mStreamType == 5) {
+              //{{{  mtd - do nothing
+              }
+              //}}}
+            else if (pidInfo->mStreamType == 11) {
+              //{{{  dsm - do nothing
+              }
+              //}}}
+            else if (pidInfo->mStreamType == 134) {
+              //{{{  ??? - do nothing
+              }
+              //}}}
+            else {
+              //{{{  pes
+              programPesPacket (pidInfo->mSid, pidInfo->mPid, ts-1);
+
+              ts += headerBytes;
+              tsBytesLeft -= headerBytes;
+
+              if (payloadStart) {
+                // start of payload for new pes buffer
+                if ((*(uint32_t*)ts == 0xBD010000) ||
+                    (*(uint32_t*)ts == 0xBE010000) ||
+                    (*(uint32_t*)ts == 0xC0010000) ||
+                    (*(uint32_t*)ts == 0xC1010000) ||
+                    (*(uint32_t*)ts == 0xC2010000) ||
+                    (*(uint32_t*)ts == 0xC4010000) ||
+                    (*(uint32_t*)ts == 0xC6010000) ||
+                    (*(uint32_t*)ts == 0xC8010000) ||
+                    (*(uint32_t*)ts == 0xCA010000) ||
+                    (*(uint32_t*)ts == 0xCC010000) ||
+                    (*(uint32_t*)ts == 0xCE010000) ||
+                    (*(uint32_t*)ts == 0xD0010000) ||
+                    (*(uint32_t*)ts == 0xD2010000) ||
+                    (*(uint32_t*)ts == 0xD4010000) ||
+                    (*(uint32_t*)ts == 0xD6010000) ||
+                    (*(uint32_t*)ts == 0xD8010000) ||
+                    (*(uint32_t*)ts == 0xDA010000) ||
+                    (*(uint32_t*)ts == 0xE0010000)) {
+                  if (pidInfo->mBufPtr && pidInfo->mStreamType) {
+                    switch (pidInfo->mStreamType) {
+                      case 2:   // ISO 13818-2 video
+                      case 27:  // HD vid
+                        //{{{  send last video pes
+                        decoded = vidDecodePes (pidInfo, skip);
+
+                        skip = false;
+                        break;
+                        //}}}
+                      case 3:   // ISO 11172-3 audio
+                      case 4:   // ISO 13818-3 audio
+                      case 15:  // aac adts
+                      case 17:  // aac latm
+                      case 129: // ac3
+                        //{{{  send last audio pes
+                        if (*(uint32_t*)ts == 0xC1010000)
+                          decoded = audAltDecodePes (pidInfo, skip);
+                        else
+                          decoded = audDecodePes (pidInfo, skip);
+
+                        break;
+                        //}}}
+                      case 6:   // subtitle
+                        //{{{  send last subtitle pes
+                        decoded = subDecodePes (pidInfo);
+                        break;
+                        //}}}
+                      default:
+                        cLog::log (LOGINFO, fmt::format("unknown pid:{} streamType:{}",pid,pidInfo->mStreamType));
+                      }
+                    }
+
+                  // save ts streamPos for start of new pes buffer
+                  pidInfo->mStreamPos = streamPos;
+
+                  // form pts, firstPts, lastPts
+                  pidInfo->mPts = (ts[7] & 0x80) ? getPts (ts+9) : -1;
+                  if (pidInfo->mFirstPts == -1)
+                    pidInfo->mFirstPts = pidInfo->mPts;
+                  if (pidInfo->mPts > pidInfo->mLastPts)
+                    pidInfo->mLastPts = pidInfo->mPts;
+
+                  // skip past pesHeader
+                  int pesHeaderBytes = 9 + ts[8];
+                  ts += pesHeaderBytes;
+                  tsBytesLeft -= pesHeaderBytes;
+
+                  // reset new payload buffer
+                  pidInfo->mBufPtr = pidInfo->mBuffer;
+                  }
+                else {
+                  uint32_t nn = *(uint32_t*)ts;
+                  cLog::log (LOGINFO, fmt::format("unrecognised pes header {} {:8x}",pid,nn));
+                  }
+                }
+
+              // add payload to buffer
+              if (pidInfo->mBufPtr && (tsBytesLeft > 0))
+                pidInfo->addToBuffer (ts, tsBytesLeft);
+              }
+              //}}}
+            }
+          }
+
+        ts = nextPacket;
+        nextPacket += 188;
+        streamPos += 188;
+        mNumPackets++;
+        }
+      }
+    else {
+      //{{{  sync error, return
+      cLog::log (LOGERROR, "demux - lostSync");
+      return tsEnd - tsBuf;
+      }
+      //}}}
+    }
+
+  return ts - tsBuf;
+  }
+//}}}
+
+//{{{
 void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
 
   if (!mDvbSource->ok()) {
@@ -1859,7 +1851,7 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
         if (mFile)
           fwrite (ptr, 1, blockSize, mFile);
 
-        streamPos += demux ({}, ptr, blockSize, streamPos, false);
+        streamPos += demux (ptr, blockSize, streamPos, false);
         mDvbSource->releaseBlock (blockSize);
 
         mErrorString.clear();
@@ -1888,7 +1880,7 @@ void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
         cLog::log (LOGINFO, "cDvb grabThread no bytes read");
       else {
         // demux
-        streamPos += demux ({}, buffer, bytesRead, 0, false);
+        streamPos += demux (buffer, bytesRead, 0, false);
         if (mFile)
           fwrite (buffer, 1, bytesRead, mFile);
 
@@ -1939,7 +1931,7 @@ void cDvbTransportStream::fileSourceInternal (bool ownThread, const string& file
 
     size_t bytesRead = fread (buffer, 1, blockSize, file);
     if (bytesRead > 0)
-      streamPos += demux ({}, buffer, bytesRead, streamPos, false);
+      streamPos += demux (buffer, bytesRead, streamPos, false);
     else
       break;
     //mErrorStr = fmt::format ("{}", getNumErrors());
