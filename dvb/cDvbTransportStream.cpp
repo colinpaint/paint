@@ -674,7 +674,7 @@ void cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPt
 // public
 //{{{
 cDvbTransportStream::cDvbTransportStream (const cDvbMultiplex& dvbMultiplex,
-                                          const std::string& recordRootName, bool subtitleEnable)
+                                          const string& recordRootName, bool subtitleEnable)
     : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName), mSubtitleEnable(subtitleEnable) {
 
   mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
@@ -1258,7 +1258,9 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
 //{{{
 void cDvbTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
 // PAT declares programPid,sid to mProgramMap to recognise programPid PMT to declare service streams
+
   (void)pidInfo;
+
   sPat* pat = (sPat*)buf;
   uint16_t sectionLength = HILO(pat->section_length) + 3;
   if (cDvbUtils::getCrc32(buf, sectionLength) != 0) {
@@ -1288,6 +1290,7 @@ void cDvbTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
 void cDvbTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
 
   (void)pidInfo;
+
   sNit* nit = (sNit*)buf;
   uint16_t sectionLength = HILO(nit->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
@@ -1339,6 +1342,7 @@ void cDvbTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
 // SDT name services in mServiceMap
 
   (void)pidInfo;
+
   sSdt* sdt = (sSdt*)buf;
   uint16_t sectionLength = HILO(sdt->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
@@ -1409,7 +1413,9 @@ void cDvbTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
 //}}}
 //{{{
 void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
+
   (void)pidInfo;
+
   sEit* eit = (sEit*)buf;
   uint16_t sectionLength = HILO(eit->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
@@ -1830,9 +1836,11 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
 void cDvbTransportStream::dvbSourceInternal (bool ownThread) {
 
   if (!mDvbSource->ok()) {
+    //{{{  error, return
     cLog::log (LOGERROR, "dvbSource - no dvbSource");
     return;
     }
+    //}}}
 
   if (ownThread)
     cLog::setThreadName ("grab");
