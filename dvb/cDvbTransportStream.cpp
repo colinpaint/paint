@@ -1145,29 +1145,29 @@ cPidInfo* cDvbTransportStream::getPidInfo (uint16_t pid, bool createPsiOnly) {
 void cDvbTransportStream::startServiceProgram (cService* service, tTimePoint tdtTime,
                                                const string& programName,
                                                tTimePoint programStartTime, bool selected) {
-// start recording service item
+// start recording service program
 
-  // cloase prev program on this service
+  // close prev program on this service
   lock_guard<mutex> lockGuard (mRecordFileMutex);
   service->closeFile();
 
-  bool recordProgram = mDvbMultiplex.mRecordAllChannels || selected || service->getChannelRecord();
-  if (recordProgram & (service->getVidPid() > 0) && (service->getAudPid() > 0)) {
-    string recordFilePath = mRecordRootName +
-                            service->getChannelRecordName() +
-                            date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
-                            validFileString (programName, "<>:/|?*\"\'\\") +
-                            ".ts";
+  if ((selected || service->getChannelRecord() || mDvbMultiplex.mRecordAllChannels) &&
+      (service->getVidPid() > 0) && (service->getAudPid() > 0)) {
+    string filePath = mRecordRootName +
+                      service->getChannelRecordName() +
+                      date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
+                      validFileString (programName, "<>:/|?*\"\'\\") +
+                      ".ts";
 
     // record
-    service->openFile (recordFilePath, 0x1234);
+    service->openFile (filePath, 0x1234);
 
     // gui
-    mRecordPrograms.push_back (recordFilePath);
+    mRecordPrograms.push_back (filePath);
 
     // log program start time,date filename
     string eitStartTime = date::format ("%H.%M.%S %a %d %b %y", date::floor<chrono::seconds>(programStartTime));
-    cLog::log (LOGINFO, fmt::format ("{} {}", eitStartTime, recordFilePath));
+    cLog::log (LOGINFO, fmt::format ("{} {}", eitStartTime, filePath));
     }
   }
 //}}}
