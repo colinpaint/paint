@@ -155,11 +155,11 @@ private:
 
     const uint16_t mId;
 
-    uint8_t mRegionId;
+    uint8_t mRegionId = 0;
     uint8_t mType = 0;
 
-    uint16_t mXpos;
-    uint16_t mYpos;
+    uint16_t mXpos = 0;
+    uint16_t mYpos = 0;
 
     uint8_t mForegroundColour = 0;
     uint8_t mBackgroundColour = 0;
