@@ -8,7 +8,6 @@
 #include <array>
 #include <algorithm>
 
-#include "iDvbDecoder.h"
 class cTexture;
 //}}}
 
@@ -35,16 +34,16 @@ public:
   };
 //}}}
 
-class cDvbSubtitleDecoder : public iDvbDecoder {
+class cDvbSubtitleDecoder {
 public:
-  cDvbSubtitleDecoder (uint16_t sid, const std::string name) : iDvbDecoder(), mSid(sid), mName(name) {}
+  cDvbSubtitleDecoder (uint16_t sid, const std::string name) : mSid(sid), mName(name) {}
   ~cDvbSubtitleDecoder();
 
   size_t getNumImages() const { return mPage.mNumImages; }
   size_t getHighWatermarkImages() const { return mPage.mHighwaterMark; }
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
-  virtual bool decode (const uint8_t* buf, int bufSize) final;
+  bool decode (const uint8_t* buf, int bufSize);
 
 private:
   //{{{
@@ -196,7 +195,7 @@ private:
 
     // render side, max 4 !!! should check !!!
     size_t mNumImages = 0;
-    size_t mHighwaterMark = 0;
+    size_t mHighwaterMark = 1;
     std::array <cSubtitleImage,4> mImages;
     };
   //}}}
@@ -239,7 +238,7 @@ private:
   // pools
   std::vector <cColorLut> mColorLuts;
   std::vector <cObject> mObjects;
-  std::vector <cRegion*> mRegions; 
+  std::vector <cRegion*> mRegions;
 
   cPage mPage;
 

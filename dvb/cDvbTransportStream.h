@@ -19,7 +19,6 @@
 
 #include "cDvbMultiplex.h"
 #include "cDvbSource.h"
-#include "iDvbDecoder.h"
 #include "cDvbSubtitleDecoder.h"
 
 class cTexture;
@@ -144,7 +143,7 @@ public:
   std::string getChannelString() { return mChannelString; }
 
   // decoder
-  iDvbDecoder* getDvbDecoder() const { return mDvbDecoder; }
+  cDvbSubtitleDecoder* getDvbSubtitleDecoder() const { return mDvbSubtitleDecoder; }
 
   // epg
   bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
@@ -163,7 +162,7 @@ public:
   void setChannelString (const std::string& channelString) { mChannelString = channelString;}
 
   // decoder
-  void setDvbDecoder (iDvbDecoder* dvbDecoder) { mDvbDecoder = dvbDecoder; }
+  void setDvbSubtitleDecoder (cDvbSubtitleDecoder* dvbSubtitleDecoder) { mDvbSubtitleDecoder = dvbSubtitleDecoder; }
 
   // epg
   bool setNow (bool record,
@@ -175,6 +174,18 @@ public:
                const std::string& titleString, const std::string& infoString);
 
   void toggleShowEpg() { mShowEpg = !mShowEpg; }
+  //}}}
+
+  //{{{
+  void toggleDvbSubtitleDecode() {
+
+    if (mDvbSubtitleDecoder) {
+      delete mDvbSubtitleDecoder;
+      mDvbSubtitleDecoder = nullptr;
+      }
+    else
+      mDvbSubtitleDecoder = new cDvbSubtitleDecoder (mSid, mChannelString);
+    }
   //}}}
 
   // record
@@ -201,7 +212,7 @@ private:
   uint16_t mSubStreamType = 0;
 
   std::string mChannelString;
-  iDvbDecoder* mDvbDecoder = nullptr;
+  cDvbSubtitleDecoder* mDvbSubtitleDecoder = nullptr;
 
   // epg
   cEpgItem* mNowEpgItem = nullptr;
@@ -215,7 +226,7 @@ private:
 
 class cDvbTransportStream {
 public:
-  cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool decodeSubtitle);
+  cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName);
   virtual ~cDvbTransportStream();
 
   //{{{  gets
@@ -232,10 +243,8 @@ public:
   cService* getService (uint16_t index, int64_t& firstPts, int64_t& lastPts);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
-  bool getSubtitleEnable() const { return mSubtitleEnable; }
-  iDvbDecoder* getDecoder (uint16_t sid);
+  cDvbSubtitleDecoder* getDvbSubtitleDecoder (uint16_t sid);
   //}}}
-  void toggleSubtitleEnable();
 
   void dvbSource (bool launchThread);
   void fileSource (bool launchThread, const std::string& fileName);
@@ -298,9 +307,6 @@ private:
   std::mutex mRecordFileMutex;
   std::string mRecordRootName;
   std::vector <std::string> mRecordPrograms;
-
-  // subtitle
-  bool mSubtitleEnable = false;
 
   // time
   std::chrono::system_clock::time_point mTime; // tdt now time

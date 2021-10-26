@@ -61,10 +61,6 @@ public:
     cDvbTransportStream* dvbTransportStream = app.getDvbTransportStream();
     if (dvbTransportStream) {
       ImGui::SameLine();
-      if (toggleButton ("sub", dvbTransportStream->getSubtitleEnable()))
-        dvbTransportStream->toggleSubtitleEnable();
-
-      ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{} ", dvbTransportStream->getNumPackets()).c_str());
 
       ImGui::SameLine();
@@ -113,11 +109,10 @@ private:
         ImGui::Separator();
 
       // draw pid label
+      ImVec2 cursorPos = ImGui::GetCursorPos();
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
                               pidInfo.mPackets, mPacketDigits, pidInfo.mErrors, errorDigits, pidInfo.mPid,
                               getFullPtsString (pidInfo.mPts), pidInfo.getTypeString()).c_str());
-
-      // get pos for stream info
       ImGui::SameLine();
       ImVec2 pos = ImGui::GetCursorScreenPos();
 
@@ -134,8 +129,20 @@ private:
         streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
       ImGui::TextUnformatted (streamText.c_str());
 
-      if (dvbTransportStream->getSubtitleEnable() && (pidInfo.mStreamType == 6))
-        drawSubtitle (dvbTransportStream->getService (pidInfo.mSid), graphics);
+      cService* service = dvbTransportStream->getService (pidInfo.mSid);
+      if (service) {
+        ImGui::SetCursorPos (cursorPos);
+        if (ImGui::InvisibleButton (fmt::format ("##pid{}", pidInfo.mPid).c_str(),
+                                    {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
+          if (pidInfo.mPid == service->getSubPid())
+            service->toggleDvbSubtitleDecode();
+
+        if (pidInfo.mPid == service->getSubPid()) {
+          cDvbSubtitleDecoder* dvbSubtitleDecoder = service->getDvbSubtitleDecoder();
+          if (dvbSubtitleDecoder)
+            drawSubtitle (dvbSubtitleDecoder, graphics);
+          }
+        }
 
       // adjust packet number width
       if (pidInfo.mPackets > pow (10, mPacketDigits))
@@ -146,18 +153,7 @@ private:
     }
   //}}}
   //{{{
-  void drawSubtitle (cService* service, cGraphics& graphics) {
-
-    if (!service)
-      return;
-
-    iDvbDecoder* dvbDecoder = service->getDvbDecoder();
-    if (!dvbDecoder)
-      return;
-
-    cDvbSubtitleDecoder* subtitle = dynamic_cast<cDvbSubtitleDecoder*>(dvbDecoder);
-    if (!subtitle)
-      return;
+  void drawSubtitle (cDvbSubtitleDecoder* subtitle, cGraphics& graphics) {
 
     float potSize = ImGui::GetTextLineHeight() / 2.f;
 

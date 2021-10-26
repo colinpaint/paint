@@ -22,7 +22,7 @@ public:
 
   cDvbTransportStream* getDvbTransportStream() { return mDvbTransportStream; }
 
-  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex, bool enableSubtitle);
+  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex);
 
 private:
   cDvbTransportStream* mDvbTransportStream = nullptr;

@@ -90,7 +90,6 @@ int main (int numArgs, char* args[]) {
   string graphicsName = "opengl";
   bool fullScreen = false;
   bool vsync = true;
-  bool subtitle = false;
   //{{{  parse command line args to params
   // args to params
   vector <string> params;
@@ -108,7 +107,6 @@ int main (int numArgs, char* args[]) {
     else if (param == "dx11") { platformName = "win32"; graphicsName = "dx11"; }
     else if (param == "full") { fullScreen = true; }
     else if (param == "free") { vsync = false; }
-    else if (param == "sub") { subtitle = true; }
     else {
       // assume param is filename unless it matches multiplex name
       filename = param;
@@ -141,7 +139,7 @@ int main (int numArgs, char* args[]) {
   ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
   ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f);
   cTvApp app (platform, graphics, mainFont, monoFont);
-  app.setDvbSource (cFileUtils::resolve (filename), useMultiplex, subtitle);
+  app.setDvbSource (cFileUtils::resolve (filename), useMultiplex);
 
   platform.setResizeCallback (
     //{{{  resize lambda
@@ -159,7 +157,7 @@ int main (int numArgs, char* args[]) {
     //{{{  drop lambda
     [&](vector<string> dropItems) noexcept {
       for (auto& item : dropItems) {
-        app.setDvbSource (item, useMultiplex, subtitle);
+        app.setDvbSource (item, useMultiplex);
         cLog::log(LOGINFO, item);
         }
       }

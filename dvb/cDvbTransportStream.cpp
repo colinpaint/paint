@@ -467,8 +467,13 @@ cService::~cService() {
     delete epgItem.second;
 
   mEpgItemMap.clear();
+
+  delete mDvbSubtitleDecoder;
+
+  closeFile();
   }
 //}}}
+
 
 // get
 //{{{
@@ -671,9 +676,8 @@ void cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPt
 
 // public
 //{{{
-cDvbTransportStream::cDvbTransportStream (const cDvbMultiplex& dvbMultiplex,
-                                          const string& recordRootName, bool subtitleEnable)
-    : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName), mSubtitleEnable(subtitleEnable) {
+cDvbTransportStream::cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName)
+    : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName) {
 
   mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
   }
@@ -1035,18 +1039,10 @@ char cDvbTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int
 //}}}
 
 //{{{
-iDvbDecoder* cDvbTransportStream::getDecoder (uint16_t sid) {
+cDvbSubtitleDecoder* cDvbTransportStream::getDvbSubtitleDecoder (uint16_t sid) {
 
   cService* service = getService (sid);
-  return service ? service->getDvbDecoder() : nullptr;
-  }
-//}}}
-//{{{
-void cDvbTransportStream::toggleSubtitleEnable() {
-  mSubtitleEnable = !mSubtitleEnable;
-  if (!mSubtitleEnable) {
-    // !!!! should clear down the decoders !!!!
-    }
+  return service ? service->getDvbSubtitleDecoder() : nullptr;
   }
 //}}}
 
@@ -1234,21 +1230,23 @@ bool cDvbTransportStream::vidDecodePes (cPidInfo* pidInfo, bool skip) {
 //{{{
 bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
 
-  if (mSubtitleEnable) {
-    //{{{
-    //cLog::log (LOGINFO1, fmt::format ("subtitle pid:{} sid:{} size:{} {} {} ",
-                                        //pidInfo->mPid,
-                                        //pidInfo->mSid,
-                                        //pidInfo->getBufUsed(),
-                                        //getFullPtsString (pidInfo->mPts),
-                                        //getChannelStringBySid (pidInfo->mSid)));
-    //}}}
-    cService* service = getService (pidInfo->mSid);
-    if (service && !service->getDvbDecoder())
-      service->setDvbDecoder (new cDvbSubtitleDecoder (pidInfo->mSid, service->getChannelString()));
-    service->getDvbDecoder()->decode (pidInfo->mBuffer, pidInfo->getBufUsed());
-    }
+  //{{{
+  //cLog::log (LOGINFO1, fmt::format ("subtitle pid:{} sid:{} size:{} {} {} ",
+                                      //pidInfo->mPid,
+                                      //pidInfo->mSid,
+                                      //pidInfo->getBufUsed(),
+                                      //getFullPtsString (pidInfo->mPts),
+                                      //getChannelStringBySid (pidInfo->mSid)));
+  //}}}
+  cService* service = getService (pidInfo->mSid);
+  if (!service)
+    return false;
+  
+  cDvbSubtitleDecoder* dvbSubtitleDecoder = service->getDvbSubtitleDecoder();
+  if (!dvbSubtitleDecoder)
+    return false;
 
+  dvbSubtitleDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed());
   return false;
   }
 //}}}
