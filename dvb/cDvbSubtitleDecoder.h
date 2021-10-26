@@ -202,9 +202,9 @@ private:
   //{{{
   class cPage {
   public:
-    uint8_t mPageVersion = 0xFF;
-    uint8_t mPageState = 0;
-    uint8_t mPageTimeout = 0xFF;
+    uint8_t mVersion = 0xFF;
+    uint8_t mState = 0;
+    uint8_t mTimeout = 0xFF;
 
     // parser side
     std::vector <cDisplayRegion> mDisplayRegions;

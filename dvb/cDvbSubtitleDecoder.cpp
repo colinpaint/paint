@@ -227,14 +227,14 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
   const uint8_t* bufEnd = buf + bufSize;
 
-  mPage.mPageTimeout = *buf++;
+  mPage.mTimeout = *buf++;
   uint8_t pageVersion = ((*buf) >> 4) & 15;
-  if (mPage.mPageVersion == pageVersion)
+  if (mPage.mVersion == pageVersion)
     return true;
-  mPage.mPageVersion = pageVersion;
-  mPage.mPageState = ((*buf++) >> 2) & 3;
+  mPage.mVersion = pageVersion;
+  mPage.mState = ((*buf++) >> 2) & 3;
 
-  if ((mPage.mPageState == 1) || (mPage.mPageState == 2)) {
+  if ((mPage.mState == 1) || (mPage.mState == 2)) {
     // delete regions, objects, colorLuts
     mRegions.clear();
     mObjects.clear();
@@ -258,7 +258,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
   cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} page state:{:1d} ver::{:2d} time:{} regions {}",
                                     mSid, mName,
-                                    mPage.mPageState, mPage.mPageVersion, mPage.mPageTimeout,
+                                    mPage.mState, mPage.mVersion, mPage.mTimeout,
                                     regionList));
 
   return true;
@@ -632,8 +632,8 @@ void cDvbSubtitleDecoder::endDisplay() {
     cRegion& region = getRegion (displayRegion.mRegionId);
     if (region.mDirty) {
       cSubtitleImage& image = mPage.mImages[line];
-      image.mPageState = mPage.mPageState;
-      image.mPageVersion = mPage.mPageVersion;
+      image.mPageState = mPage.mState;
+      image.mPageVersion = mPage.mVersion;
 
       image.mX = displayRegion.mXpos + offsetX;
       image.mY = displayRegion.mYpos + offsetY;
