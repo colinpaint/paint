@@ -203,11 +203,14 @@ private:
   // var
   const uint16_t mSid;
   uint16_t mProgramPid = 0xFFFF;
+
   uint16_t mVidPid = 0xFFFF;
   uint16_t mVidStreamType = 0;
+
   uint16_t mAudPid = 0xFFFF;
   uint16_t mAudOtherPid = 0xFFFF;
   uint16_t mAudStreamType = 0;
+
   uint16_t mSubPid = 0xFFFF;
   uint16_t mSubStreamType = 0;
 

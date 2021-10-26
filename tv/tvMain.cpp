@@ -91,16 +91,13 @@ int main (int numArgs, char* args[]) {
   bool fullScreen = false;
   bool vsync = true;
   //{{{  parse command line args to params
-  // args to params
-  vector <string> params;
-  for (int i = 1; i < numArgs; i++)
-    params.push_back (args[i]);
-
   cDvbMultiplex useMultiplex = kDvbMultiplexes[0];
   string filename;
 
   // parse params
-  for (auto& param : params) {
+  for (int i = 1; i < numArgs; i++) {
+    string param = args[i];
+
     if (param == "log1") { logLevel = LOGINFO1; }
     else if (param == "log2") { logLevel = LOGINFO2; }
     else if (param == "log3") { logLevel = LOGINFO3; }
@@ -110,11 +107,9 @@ int main (int numArgs, char* args[]) {
     else {
       // assume param is filename unless it matches multiplex name
       filename = param;
-      bool found = false;
       for (auto& multiplex : kDvbMultiplexes)
         if (param == multiplex.mName) {
           useMultiplex = multiplex;
-          found = true;
           filename = "";
           break;
           }
@@ -157,8 +152,9 @@ int main (int numArgs, char* args[]) {
     //{{{  drop lambda
     [&](vector<string> dropItems) noexcept {
       for (auto& item : dropItems) {
-        app.setDvbSource (item, useMultiplex);
-        cLog::log(LOGINFO, item);
+        string filename = cFileUtils::resolve(item);
+        app.setDvbSource (filename, useMultiplex);
+        cLog::log (LOGINFO, filename);
         }
       }
     );
