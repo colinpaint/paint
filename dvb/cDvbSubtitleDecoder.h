@@ -166,20 +166,18 @@ private:
 
     int mWidth = 0;
     int mHeight = 0;
+    uint8_t* mPixBuf = nullptr;
+    bool mDirty = false;
 
     uint8_t mColorLut = 0;
     uint8_t mColorLutDepth = 0;
-    int mBackgroundColour = 0;
-
-    bool mDirty = false;
-    int mPixBufSize = 0;
-    uint8_t* mPixBuf = nullptr;
+    uint8_t mBackgroundColour = 0;
     };
   //}}}
   //{{{
-  class cDisplayRegion {
+  class cRegionDisplay {
   public:
-    cDisplayRegion (uint8_t regionId, uint16_t xpos, uint16_t ypos)
+    cRegionDisplay (uint8_t regionId, uint16_t xpos, uint16_t ypos)
       : mRegionId(regionId), mXpos(xpos), mYpos(ypos) {}
 
     const uint8_t mRegionId;
@@ -196,7 +194,7 @@ private:
     uint8_t mTimeout = 0xFF;
 
     // parser side
-    std::vector <cDisplayRegion> mDisplayRegions;
+    std::vector <cRegionDisplay> mRegionDisplays;
 
     // render side, max 4 !!! should check !!!
     size_t mNumImages = 0;

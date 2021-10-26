@@ -26,7 +26,7 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
   mColorLuts.clear();
   mRegions.clear();
   mObjects.clear();
-  mPage.mDisplayRegions.clear();
+  mPage.mRegionDisplays.clear();
   }
 //}}}
 
@@ -242,7 +242,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     }
 
   string regionList;
-  mPage.mDisplayRegions.clear();
+  mPage.mRegionDisplays.clear();
   while (buf + 5 < bufEnd) {
     uint8_t regionId = *buf;
     buf += 2; // skip reserved
@@ -252,7 +252,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     uint16_t yPos = AVRB16(buf);
     buf += 2;
 
-    mPage.mDisplayRegions.push_back (cDisplayRegion (regionId, xPos, yPos));
+    mPage.mRegionDisplays.push_back (cRegionDisplay (regionId, xPos, yPos));
     regionList += fmt::format ("{}:{},{} ", regionId, xPos, yPos);
     }
 
@@ -277,15 +277,18 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
   region.mVersion = ((*buf) >> 4) & 0x0F;
 
   bool fill = ((*buf++) >> 3) & 1;
-  region.mWidth = AVRB16(buf);
+  uint16_t width = AVRB16(buf);
   buf += 2;
-  region.mHeight = AVRB16(buf);
+  uint16_t height = AVRB16(buf);
   buf += 2;
-  if ((region.mWidth * region.mHeight) != region.mPixBufSize) {
+  if ((width != region.mWidth) || (height != region.mHeight)) {
     //{{{  region size changed, resize mPixBuf
-    region.mPixBufSize = region.mWidth * region.mHeight;
-    region.mPixBuf = (uint8_t*)realloc (region.mPixBuf, region.mPixBufSize);
+    region.mWidth = width;
+    region.mHeight = height;
+    region.mPixBuf = (uint8_t*)realloc (region.mPixBuf, width * height);
+
     region.mDirty = false;
+
     fill = true;
     }
     //}}}
@@ -304,7 +307,7 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
   // background fill
   region.mBackgroundColour = ((*buf++) >> 4) & 15;
   if (fill)
-    memset (region.mPixBuf, region.mBackgroundColour, region.mPixBufSize);
+    memset (region.mPixBuf, region.mBackgroundColour, region.mWidth * region.mHeight);
 
   string objectList;
   while (buf + 5 < bufEnd) {
@@ -628,15 +631,15 @@ void cDvbSubtitleDecoder::endDisplay() {
   int offsetY = mDisplayDefinition.mY;
 
   size_t line = 0;
-  for (auto& displayRegion : mPage.mDisplayRegions) {
-    cRegion& region = getRegion (displayRegion.mRegionId);
+  for (auto& regionDisplay : mPage.mRegionDisplays) {
+    cRegion& region = getRegion (regionDisplay.mRegionId);
     if (region.mDirty) {
       cSubtitleImage& image = mPage.mImages[line];
       image.mPageState = mPage.mState;
       image.mPageVersion = mPage.mVersion;
 
-      image.mX = displayRegion.mXpos + offsetX;
-      image.mY = displayRegion.mYpos + offsetY;
+      image.mX = regionDisplay.mXpos + offsetX;
+      image.mY = regionDisplay.mYpos + offsetY;
       image.mWidth = region.mWidth;
       image.mHeight = region.mHeight;
 
