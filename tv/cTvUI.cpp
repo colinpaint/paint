@@ -140,7 +140,7 @@ private:
         if (pidInfo.mPid == service->getSubPid()) {
           cDvbSubtitleDecoder* dvbSubtitleDecoder = service->getDvbSubtitleDecoder();
           if (dvbSubtitleDecoder)
-            drawSubtitle (dvbSubtitleDecoder, graphics);
+            drawSubtitle (*dvbSubtitleDecoder, graphics);
           }
         }
 
@@ -153,13 +153,15 @@ private:
     }
   //}}}
   //{{{
-  void drawSubtitle (cDvbSubtitleDecoder* subtitle, cGraphics& graphics) {
+  void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
+
+    ImGui::TextUnformatted (subtitle.getInfo().c_str());
 
     float potSize = ImGui::GetTextLineHeight() / 2.f;
 
     size_t line = 0;
-    while (line < subtitle->getNumImages()) {
-      cSubtitleImage& image = subtitle->getImage (line);
+    while (line < subtitle.getNumImages()) {
+      cSubtitleImage& image = subtitle.getImage (line);
 
       // draw clut color pots
       ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -191,13 +193,8 @@ private:
       line++;
       }
 
-    if (line == 0) {
-      ImGui::TextUnformatted ("           none");
-      line++;
-      }
-
     // pad lines to highwater mark, stops jumping about
-    while (line < subtitle->getHighWatermarkImages()) {
+    while (line < subtitle.getHighWatermarkImages()) {
       ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
                               {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
       line++;

@@ -37,6 +37,14 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 //}}}
 
 //{{{
+string cDvbSubtitleDecoder::getInfo() const {
+
+  return fmt::format ("regions:{} objects:{} colorLuts:{}",
+                      mRegions.size(), mObjects.size(), mColorLuts.size());
+  }
+//}}}
+
+//{{{
 bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
 
   const uint8_t* bufEnd = buf + bufSize;
@@ -115,7 +123,7 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
       //}}}
       //{{{
       default:
-        cLog::log (LOGERROR, "cDvbSubtitle decode unknown seg:%x, pageId:%d, size:%d", 
+        cLog::log (LOGERROR, "cDvbSubtitle decode unknown seg:%x, pageId:%d, size:%d",
                               segmentType, pageId, segmentLength);
         break;
       //}}}
@@ -568,7 +576,7 @@ void cDvbSubtitleDecoder::parseObjectBlock (cObject* object, const uint8_t* buf,
     switch (type) {
       case 0x11: // 4 bit
         if (region.mColorLutDepth < 4) {
-          cLog::log (LOGERROR, fmt::format ("parseObjectBlock - 4bit pix string in {}:bit region", 
+          cLog::log (LOGERROR, fmt::format ("parseObjectBlock - 4bit pix string in {}:bit region",
                                             region.mColorLutDepth));
           return;
           }

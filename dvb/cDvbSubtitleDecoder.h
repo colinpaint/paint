@@ -43,6 +43,8 @@ public:
   size_t getHighWatermarkImages() const { return mPage.mHighwaterMark; }
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
+  std::string getInfo() const;
+
   bool decode (const uint8_t* buf, int bufSize);
 
 private:
