@@ -44,13 +44,28 @@ public:
       ImGui::SameLine();
       }
       //}}}
-
     //{{{  fullScreen button
     if (app.getPlatform().hasFullScreen()) {
       if (toggleButton ("full", app.getPlatform().getFullScreen()))
         app.getPlatform().toggleFullScreen();
       ImGui::SameLine();
       }
+    //}}}
+    //{{{  recorded button
+    if (toggleButton ("recorded", mRecorded))
+      toggleRecorded();
+    ImGui::SameLine();
+    //}}}
+    //{{{  services button
+    if (toggleButton ("services", mServices))
+      toggleServices();
+    ImGui::SameLine();
+    //}}}
+    //{{{  pids button
+    if (toggleButton ("pids", mPids))
+      togglePids();
+    ImGui::SameLine();
+
     //}}}
     //{{{  vertice debug
     ImGui::TextUnformatted (fmt::format ("{}:{}",
@@ -62,13 +77,11 @@ public:
     if (dvbTransportStream) {
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{} ", dvbTransportStream->getNumPackets()).c_str());
-
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format("{} ", dvbTransportStream->getNumErrors()).c_str());
 
       ImGui::SameLine();
       ImGui::TextUnformatted (dvbTransportStream->getSignalString().c_str());
-
       ImGui::SameLine();
       ImGui::TextUnformatted (dvbTransportStream->getErrorString().c_str());
 
@@ -77,7 +90,12 @@ public:
       ImGui::BeginChild ("##tv", {0.f,0.f}, false,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
 
-      drawContents (dvbTransportStream, app.getGraphics());
+      if (mRecorded)
+        drawRecorded (*dvbTransportStream);
+      if (mServices)
+        drawServices (*dvbTransportStream, app.getGraphics());
+      if (mPids)
+        drawPids (*dvbTransportStream, app.getGraphics());
 
       ImGui::EndChild();
       ImGui::PopFont();
@@ -87,20 +105,101 @@ public:
   //}}}
 private:
   //{{{
-  void drawContents (cDvbTransportStream* dvbTransportStream, cGraphics& graphics) {
-  // simple enough to use ImGui interface directly
+  void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
 
+    ImGui::TextUnformatted (subtitle.getInfo().c_str());
+
+    float potSize = ImGui::GetTextLineHeight() / 2.f;
+
+    size_t line = 0;
+    while (line < subtitle.getNumImages()) {
+      cSubtitleImage& image = subtitle.getImage (line);
+
+      // draw clut color pots
+      ImVec2 pos = ImGui::GetCursorScreenPos();
+      for (size_t pot = 0; pot < image.mColorLut.max_size(); pot++) {
+        ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
+        uint32_t color = image.mColorLut[pot];
+        ImGui::GetWindowDrawList()->AddRectFilled (potPos,
+                                                   {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
+        }
+      ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),
+                              {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()});
+
+      // draw position
+      ImGui::SameLine();
+      ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", image.mX, image.mY).c_str());
+      // create/update image texture
+      if (image.mTexture == nullptr) // create
+        image.mTexture = graphics.createTexture ({image.mWidth, image.mHeight}, image.mPixels);
+      else if (image.mDirty) // update
+        image.mTexture->setPixels (image.mPixels);
+      image.mDirty = false;
+
+      // draw image, scaled to fit
+      ImGui::SameLine();
+      float scale = ImGui::GetTextLineHeight() / image.mHeight;
+      ImGui::Image ((void*)(intptr_t)image.mTexture->getTextureId(),
+                    { image.mWidth * scale, ImGui::GetTextLineHeight()});
+      line++;
+      }
+
+    // pad lines to highwater mark, stops jumping about
+    while (line < subtitle.getHighWatermarkImages()) {
+      ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
+                              {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
+      line++;
+      }
+    }
+  //}}}
+
+  //{{{
+  void drawRecorded (cDvbTransportStream& dvbTransportStream) {
     // list recorded items
-    for (auto& program : dvbTransportStream->getRecordPrograms())
+    for (auto& program : dvbTransportStream.getRecordPrograms())
       ImGui::TextUnformatted (program.c_str());
+    }
+  //}}}
+  //{{{
+  void drawServices (cDvbTransportStream& dvbTransportStream, cGraphics& graphics) {
+    // list recorded items
+
+    for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
+      cService& service =  serviceItem.second;
+
+      ImVec2 cursorPos = ImGui::GetCursorPos();
+      ImGui::TextUnformatted (fmt::format (
+        "pgm:{:5d} {:12s} sid:{:5d} vid:{:5d}:{:2d} aud:{:5d}:{:2d}:{:5d} sub:{:5d}:{:2d}",
+        service.getSid(), service.getChannelString(),
+        service.getProgramPid(),
+        service.getVidPid(), service.getVidStreamType(),
+        service.getAudPid(), service.getAudStreamType(), service.getAudOtherPid(),
+        service.getSubPid(), service.getSubStreamType()).c_str());
+
+      ImGui::SetCursorPos (cursorPos);
+      if (ImGui::InvisibleButton (fmt::format ("##sid{}", service.getSid()).c_str(),
+                                  {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
+        service.toggleDvbSubtitleDecode();
+
+      cDvbSubtitleDecoder* dvbSubtitleDecoder = service.getDvbSubtitleDecoder();
+      if (dvbSubtitleDecoder)
+        drawSubtitle (*dvbSubtitleDecoder, graphics);
+
+      ImGui::Separator();
+      }
+    }
+  //}}}
+  //{{{
+  void drawPids (cDvbTransportStream& dvbTransportStream, cGraphics& graphics) {
+  // simple enough to use ImGui interface directly
 
     // calc error number width
     int errorDigits = 1;
-    while (dvbTransportStream->getNumErrors() > pow (10, errorDigits))
+    while (dvbTransportStream.getNumErrors() > pow (10, errorDigits))
       errorDigits++;
 
     int prevSid = 0;
-    for (auto& pidInfoItem : dvbTransportStream->getPidInfoMap()) {
+    for (auto& pidInfoItem : dvbTransportStream.getPidInfoMap()) {
       // iterate for pidInfo
       cPidInfo& pidInfo = pidInfoItem.second;
 
@@ -129,7 +228,7 @@ private:
         streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
       ImGui::TextUnformatted (streamText.c_str());
 
-      cService* service = dvbTransportStream->getService (pidInfo.mSid);
+      cService* service = dvbTransportStream.getService (pidInfo.mSid);
       if (service) {
         ImGui::SetCursorPos (cursorPos);
         if (ImGui::InvisibleButton (fmt::format ("##pid{}", pidInfo.mPid).c_str(),
@@ -152,55 +251,14 @@ private:
       }
     }
   //}}}
-  //{{{
-  void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
 
-    ImGui::TextUnformatted (subtitle.getInfo().c_str());
+  void toggleRecorded() { mRecorded = !mRecorded; }
+  void toggleServices() { mServices = !mServices; }
+  void togglePids() { mPids = !mPids; }
 
-    float potSize = ImGui::GetTextLineHeight() / 2.f;
-
-    size_t line = 0;
-    while (line < subtitle.getNumImages()) {
-      cSubtitleImage& image = subtitle.getImage (line);
-
-      // draw clut color pots
-      ImVec2 pos = ImGui::GetCursorScreenPos();
-      for (size_t pot = 0; pot < image.mColorLut.max_size(); pot++) {
-        ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
-        uint32_t color = image.mColorLut[pot];
-        ImGui::GetWindowDrawList()->AddRectFilled (potPos,
-                                                   {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
-        }
-      ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),
-                              {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()});
-
-      // draw position
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{:3d},{:3d} {:1d}:{:1x}",
-                                           image.mX, image.mY, image.mPageState, image.mPageVersion).c_str());
-      // create/update image texture
-      if (image.mTexture == nullptr) // create
-        image.mTexture = graphics.createTexture ({image.mWidth, image.mHeight}, image.mPixels);
-      else if (image.mDirty) // update
-        image.mTexture->setPixels (image.mPixels);
-      image.mDirty = false;
-
-      // draw image, scaled to fit
-      ImGui::SameLine();
-      float scale = ImGui::GetTextLineHeight() / image.mHeight;
-      ImGui::Image ((void*)(intptr_t)image.mTexture->getTextureId(),
-                    { image.mWidth * scale, ImGui::GetTextLineHeight()});
-      line++;
-      }
-
-    // pad lines to highwater mark, stops jumping about
-    while (line < subtitle.getHighWatermarkImages()) {
-      ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
-                              {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
-      line++;
-      }
-    }
-  //}}}
+  bool mRecorded = false;
+  bool mServices = true;
+  bool mPids = false;
 
   int mPacketDigits = 0;
   int mMaxPidPackets = 0;
@@ -229,6 +287,7 @@ public:
 private:
   // vars
   bool mOpen = true;
+
   cTvView mTvView;
 
   static cUI* create (const string& className) { return new cTvUI (className); }

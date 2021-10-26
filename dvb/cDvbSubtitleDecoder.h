@@ -237,12 +237,9 @@ private:
   const uint16_t mSid;
   const std::string mName;
 
-  // pools
-  std::vector <cColorLut> mColorLuts;
-  std::vector <cObject> mObjects;
-  std::vector <cRegion*> mRegions;
-
-  cPage mPage;
-
   cDisplayDefinition mDisplayDefinition;
+  cPage mPage;
+  std::vector <cRegion*> mRegions;
+  std::vector <cObject> mObjects;
+  std::vector <cColorLut> mColorLuts;
   };

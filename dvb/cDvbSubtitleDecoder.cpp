@@ -26,12 +26,12 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 
   mColorLuts.clear();
 
-  // missing
-  for (auto region : mRegions)
+  mObjects.clear();
+
+  for (auto& region : mRegions)
     delete region;
   mRegions.clear();
 
-  mObjects.clear();
   mPage.mRegionDisplays.clear();
   }
 //}}}
@@ -39,7 +39,8 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 //{{{
 string cDvbSubtitleDecoder::getInfo() const {
 
-  return fmt::format ("regions:{} objects:{} colorLuts:{}",
+  return fmt::format ("page state:{} ver:{:2d} lines:{} - reg:{} obj:{} lut:{}",
+                      mPage.mState, mPage.mVersion, mPage.mRegionDisplays.size(),
                       mRegions.size(), mObjects.size(), mColorLuts.size());
   }
 //}}}
@@ -252,7 +253,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
   if ((mPage.mState == 1) || (mPage.mState == 2)) {
     // delete regions, objects, colorLuts
-    for (auto region : mRegions)
+    for (auto& region : mRegions)
       delete region;
     mRegions.clear();
     mObjects.clear();
