@@ -164,7 +164,7 @@ private:
     uint8_t mId = 0;
     uint8_t mVersion = 0xFF;
 
-    uint32_t mWidth = 0;
+    uint32_t mWidth = 0;  // uint32_t to ensure width * height ok
     uint32_t mHeight = 0;
     uint8_t* mPixBuf = nullptr;
     bool mDirty = false;
