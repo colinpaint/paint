@@ -27,7 +27,7 @@
 using namespace std;
 //}}}
 
-// cTvView
+//{{{
 class cTvView {
 public:
   //{{{
@@ -103,66 +103,19 @@ public:
 
     }
   //}}}
+
 private:
   //{{{
-  void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
-
-    ImGui::TextUnformatted (subtitle.getInfo().c_str());
-
-    float potSize = ImGui::GetTextLineHeight() / 2.f;
-
-    size_t line = 0;
-    while (line < subtitle.getNumImages()) {
-      cSubtitleImage& image = subtitle.getImage (line);
-
-      // draw clut color pots
-      ImVec2 pos = ImGui::GetCursorScreenPos();
-      for (size_t pot = 0; pot < image.mColorLut.max_size(); pot++) {
-        ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
-        uint32_t color = image.mColorLut[pot];
-        ImGui::GetWindowDrawList()->AddRectFilled (potPos,
-                                                   {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
-        }
-      ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),
-                              {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()});
-
-      // draw position
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", image.mX, image.mY).c_str());
-      // create/update image texture
-      if (image.mTexture == nullptr) // create
-        image.mTexture = graphics.createTexture ({image.mWidth, image.mHeight}, image.mPixels);
-      else if (image.mDirty) // update
-        image.mTexture->setPixels (image.mPixels);
-      image.mDirty = false;
-
-      // draw image, scaled to fit
-      ImGui::SameLine();
-      float scale = ImGui::GetTextLineHeight() / image.mHeight;
-      ImGui::Image ((void*)(intptr_t)image.mTexture->getTextureId(),
-                    { image.mWidth * scale, ImGui::GetTextLineHeight()});
-      line++;
-      }
-
-    // pad lines to highwater mark, stops jumping about
-    while (line < subtitle.getHighWatermarkImages()) {
-      ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
-                              {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
-      line++;
-      }
-    }
-  //}}}
-
-  //{{{
   void drawRecorded (cDvbTransportStream& dvbTransportStream) {
-    // list recorded items
+  // list recorded items
+
     for (auto& program : dvbTransportStream.getRecordPrograms())
       ImGui::TextUnformatted (program.c_str());
     }
   //}}}
   //{{{
   void drawServices (cDvbTransportStream& dvbTransportStream, cGraphics& graphics) {
-    // list recorded items
+  // draw service map
 
     for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
       cService& service =  serviceItem.second;
@@ -191,7 +144,7 @@ private:
   //}}}
   //{{{
   void drawPids (cDvbTransportStream& dvbTransportStream, cGraphics& graphics) {
-  // simple enough to use ImGui interface directly
+  // draw pidInfoMap
 
     // calc error number width
     int errorDigits = 1;
@@ -252,6 +205,56 @@ private:
     }
   //}}}
 
+  //{{{
+  void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
+
+    ImGui::TextUnformatted (subtitle.getInfo().c_str());
+
+    float potSize = ImGui::GetTextLineHeight() / 2.f;
+
+    size_t line = 0;
+    while (line < subtitle.getNumImages()) {
+      cSubtitleImage& image = subtitle.getImage (line);
+
+      // draw clut color pots
+      ImVec2 pos = ImGui::GetCursorScreenPos();
+      for (size_t pot = 0; pot < image.mColorLut.max_size(); pot++) {
+        ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
+        uint32_t color = image.mColorLut[pot];
+        ImGui::GetWindowDrawList()->AddRectFilled (potPos,
+                                                   {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
+        }
+      ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),
+                              {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()});
+
+      // draw position
+      ImGui::SameLine();
+      ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", image.mX, image.mY).c_str());
+      // create/update image texture
+      if (image.mTexture == nullptr) // create
+        image.mTexture = graphics.createTexture ({image.mWidth, image.mHeight}, image.mPixels);
+      else if (image.mDirty) // update
+        image.mTexture->setPixels (image.mPixels);
+      image.mDirty = false;
+
+      // draw image, scaled to fit
+      ImGui::SameLine();
+      float scale = ImGui::GetTextLineHeight() / image.mHeight;
+      ImGui::Image ((void*)(intptr_t)image.mTexture->getTextureId(),
+                    { image.mWidth * scale, ImGui::GetTextLineHeight()});
+      line++;
+      }
+
+    // pad lines to highwater mark, stops jumping about
+    while (line < subtitle.getHighWatermarkImages()) {
+      ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
+                              {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
+      line++;
+      }
+    }
+  //}}}
+
+  // vars
   void toggleRecorded() { mRecorded = !mRecorded; }
   void toggleServices() { mServices = !mServices; }
   void togglePids() { mPids = !mPids; }
@@ -263,6 +266,7 @@ private:
   int mPacketDigits = 0;
   int mMaxPidPackets = 0;
   };
+//}}}
 
 // cTvUI
 class cTvUI : public cUI {
