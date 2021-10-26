@@ -162,10 +162,10 @@ private:
       }
 
     uint8_t mId = 0;
-    int mVersion = -1;
+    uint8_t mVersion = 0xFF;
 
-    int mWidth = 0;
-    int mHeight = 0;
+    uint32_t mWidth = 0;
+    uint32_t mHeight = 0;
     uint8_t* mPixBuf = nullptr;
     bool mDirty = false;
 

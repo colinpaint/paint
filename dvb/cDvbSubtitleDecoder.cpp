@@ -633,6 +633,7 @@ void cDvbSubtitleDecoder::endDisplay() {
   for (auto& regionDisplay : mPage.mRegionDisplays) {
     cRegion& region = getRegion (regionDisplay.mRegionId);
     if (region.mDirty) {
+      // region pixels changed
       cSubtitleImage& image = mPage.mImages[line];
       image.mPageState = mPage.mState;
       image.mPageVersion = mPage.mVersion;
@@ -653,8 +654,10 @@ void cDvbSubtitleDecoder::endDisplay() {
       for (uint32_t i = 0; i < region.mWidth * region.mHeight; i++)
         *ptr++ = image.mColorLut[region.mPixBuf[i]];
 
-      // set changed flag, to update texture in gui
+      // set image dirty flag to update texture in gui
       image.mDirty = true;
+
+      // reset region dirty flag
       region.mDirty = false;
       }
     line++;
