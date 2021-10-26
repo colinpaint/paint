@@ -105,18 +105,6 @@ private:
     };
   //}}}
   //{{{
-  class cDisplayDefinition {
-  public:
-    uint8_t mVersion = 0xFF;
-
-    int mX = 0;
-    int mY = 0;
-
-    int mWidth = 0;
-    int mHeight = 0;
-    };
-  //}}}
-  //{{{
   class cColorLut {
   public:
     //{{{
@@ -191,7 +179,8 @@ private:
   //{{{
   class cDisplayRegion {
   public:
-    cDisplayRegion (uint8_t regionId, uint16_t xpos, uint16_t ypos) : mRegionId(regionId), mXpos(xpos), mYpos(ypos) {}
+    cDisplayRegion (uint8_t regionId, uint16_t xpos, uint16_t ypos)
+      : mRegionId(regionId), mXpos(xpos), mYpos(ypos) {}
 
     const uint8_t mRegionId;
 
@@ -213,6 +202,18 @@ private:
     size_t mNumImages = 0;
     size_t mHighwaterMark = 0;
     std::array <cSubtitleImage,4> mImages;
+    };
+  //}}}
+  //{{{
+  class cDisplayDefinition {
+  public:
+    uint8_t mVersion = 0xFF;
+
+    uint16_t mX = 0;
+    uint16_t mY = 0;
+
+    uint16_t mWidth = 0;
+    uint16_t mHeight = 0;
     };
   //}}}
 
