@@ -191,6 +191,11 @@ private:
       line++;
       }
 
+    if (line == 0) {
+      ImGui::TextUnformatted ("           none");
+      line++;
+      }
+
     // pad lines to highwater mark, stops jumping about
     while (line < subtitle->getHighWatermarkImages()) {
       ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
