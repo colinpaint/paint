@@ -9,7 +9,7 @@
 
 #include "../utils/cLog.h"
 
-class cTexture;
+using namespace std;
 //}}}
 //{{{  defines
 #define AVRB16(p) ((*(p) << 8) | *(p+1))
@@ -25,7 +25,7 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 
   mColorLuts.clear();
   mRegions.clear();
-  deleteObjects();
+  mObjects.clear();
   mPage.mDisplayRegions.clear();
   }
 //}}}
@@ -94,7 +94,7 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
       //}}}
       //{{{
       case 0x80: // end of display set segment
-        endDisplaySet();
+        endDisplay();
         return true;
       //}}}
       //{{{
@@ -123,11 +123,33 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
 
 // private:
 //{{{
+cDvbSubtitleDecoder::cObject* cDvbSubtitleDecoder::findObject (uint16_t id) {
+
+  for (auto& object : mObjects)
+    if (id == object.mId)
+      return &object;
+
+  return nullptr;
+  }
+//}}}
+//{{{
+cDvbSubtitleDecoder::cObject& cDvbSubtitleDecoder::getObject (uint16_t id) {
+
+  cObject* object = findObject (id);
+  if (object) // found
+    return *object;
+
+  // not found, allocate
+  mObjects.push_back (cObject(id));
+  return mObjects.back();
+  }
+//}}}
+//{{{
 cDvbSubtitleDecoder::cColorLut& cDvbSubtitleDecoder::getColorLut (uint8_t id) {
 
   // look for id colorLut
   for (auto& colorLut : mColorLuts)
-    if (colorLut.mId == id)
+    if (id == colorLut.mId)
       return colorLut;
 
   // create id colorLut
@@ -136,21 +158,10 @@ cDvbSubtitleDecoder::cColorLut& cDvbSubtitleDecoder::getColorLut (uint8_t id) {
   }
 //}}}
 //{{{
-cDvbSubtitleDecoder::cObject* cDvbSubtitleDecoder::getObject (uint16_t id) {
-
-  cObject* object = mObjectList;
-
-  while (object && (object->mId != id))
-    object = object->mNext;
-
-  return object;
-  }
-//}}}
-//{{{
 cDvbSubtitleDecoder::cRegion& cDvbSubtitleDecoder::getRegion (uint8_t id) {
 
   for (auto& region : mRegions)
-    if (region.mId == id)
+    if (id == region.mId)
       return region;
 
   mRegions.emplace_back (cRegion (id));
@@ -176,40 +187,41 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
   mPage.mPageState = ((*buf++) >> 2) & 3;
 
   if ((mPage.mPageState == 1) || (mPage.mPageState == 2)) {
-    //{{{  delete regions, objects, colorLuts
+    // delete regions, objects, colorLuts
     mRegions.clear();
-    deleteObjects();
+    mObjects.clear();
     mColorLuts.clear();
     }
-    //}}}
 
-  cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} page state:{:1d} version::{:2d} timeout:{}",
-                                    mSid, mName, mPage.mPageState, mPage.mPageVersion, mPage.mPageTimeout));
-
-
-  // !!! could reuse DisplayRegions !!!
+  string regionList;
   mPage.mDisplayRegions.clear();
   while (buf + 5 < bufEnd) {
     uint8_t regionId = *buf;
     buf += 2; // skip reserved
+
     uint16_t xPos = AVRB16(buf);
     buf += 2;
     uint16_t yPos = AVRB16(buf);
     buf += 2;
+
     mPage.mDisplayRegions.push_back (cDisplayRegion (regionId, xPos, yPos));
-    cLog::log (LOGINFO, fmt::format ("                   - add region:{} {},{}", regionId,xPos,yPos));
+    regionList += fmt::format ("{}:{},{} ", regionId, xPos, yPos);
     }
+
+  cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} page state:{:1d} ver::{:2d} time:{} regions {}",
+                                    mSid, mName,
+                                    mPage.mPageState, mPage.mPageVersion, mPage.mPageTimeout,
+                                    regionList));
 
   return true;
   }
 //}}}
 //{{{
 bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
+// assumes all objects used by region are defined after region
 
-  //cLog::log (LOGINFO, "region segment");
   if (bufSize < 10)
     return false;
-
   const uint8_t* bufEnd = buf + bufSize;
 
   uint8_t regionId = *buf++;
@@ -222,12 +234,15 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
   region.mHeight = AVRB16(buf);
   buf += 2;
   if ((region.mWidth * region.mHeight) != region.mPixBufSize) {
+    //{{{  region size changed, resize mPixBuf
     region.mPixBufSize = region.mWidth * region.mHeight;
     region.mPixBuf = (uint8_t*)realloc (region.mPixBuf, region.mPixBufSize);
     region.mDirty = false;
     fill = true;
     }
+    //}}}
 
+  // check and choose colorLut, 4bit only expected in UK
   region.mColorLutDepth = 1 << (((*buf++) >> 2) & 7);
   if (region.mColorLutDepth != 4) {
     //{{{  error return, allow 2 and 8 when we see them
@@ -238,50 +253,38 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
   region.mColorLut = *buf++;
   buf += 1; // skip
 
+  // background fill
   region.mBackgroundColour = ((*buf++) >> 4) & 15;
   if (fill)
     memset (region.mPixBuf, region.mBackgroundColour, region.mPixBufSize);
 
-  deleteDisplayRegionList (region);
-
+  string objectList;
   while (buf + 5 < bufEnd) {
     uint16_t objectId = AVRB16(buf);
     buf += 2;
-    cObject* object = getObject (objectId);
-    if (!object) {
-      // allocate and add to objectList
-      object = new cObject (objectId);
-      object->mNext = mObjectList;
-      mObjectList = object;
-      }
-    object->mType = (*buf) >> 6;
+    objectList += fmt::format ("{} ", objectId);
 
-    int xpos = AVRB16(buf) & 0xFFF;
+    // find object, reuse or allocate
+    cObject& object = getObject (objectId);
+    object.mRegionId = regionId;
+    object.mType = (*buf) >> 6; // tighly packed into word type:xpos
+    object.mXpos = AVRB16(buf) & 0xFFF;
     buf += 2;
-    int ypos = AVRB16(buf) & 0xFFF;
+    object.mYpos = AVRB16(buf) & 0xFFF;
     buf += 2;
-
-    cObjectDisplay* display = new cObjectDisplay (objectId, regionId, xpos, ypos);
-    if (display->mXpos >= region.mWidth ||
+    if ((object.mXpos >= region.mWidth) || (object.mYpos >= region.mHeight)) {
       //{{{  error return
-      display->mYpos >= region.mHeight) {
       cLog::log (LOGERROR, "Object outside region");
-      delete display;
       return false;
       }
       //}}}
-
-    if (((object->mType == 1) || (object->mType == 2)) && (buf+1 < bufEnd)) {
-      display->mForegroundColour = *buf++;
-      display->mBackgroundColour = *buf++;
+    if (((object.mType == 1) || (object.mType == 2)) && (buf+1 < bufEnd)) {
+      object.mForegroundColour = *buf++;
+      object.mBackgroundColour = *buf++;
       }
-
-    display->mRegionListNext = region.mDisplayList;
-    region.mDisplayList = display;
-
-    display->mObjectListNext = object->mDisplayList;
-    object->mDisplayList = display;
     }
+
+  cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} region:{} {}", mSid, mName, regionId, objectList));
 
   return true;
   }
@@ -354,8 +357,9 @@ bool cDvbSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
 //}}}
 
 //{{{
-int cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
-                                    uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour) {
+uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
+                                         uint8_t* pixBuf, uint32_t pixBufSize, uint16_t pixPos,
+                                         bool nonModifyColour) {
 
   pixBuf += pixPos;
 
@@ -397,7 +401,7 @@ int cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
 
           bits = (uint8_t)bitStream.getBits (4);
           if (nonModifyColour && (bits == 1))
-            pixPos += runLength;
+            pixPos += (uint8_t)runLength;
           else
             while ((runLength-- > 0) && (pixPos < pixBufSize)) {
               *pixBuf++ = (uint8_t)bits;
@@ -432,7 +436,7 @@ int cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
 
             bits = (uint8_t)bitStream.getBits (4);
             if (nonModifyColour && (bits == 1))
-              pixPos += runLength;
+              pixPos += (uint8_t)runLength;
             else
               while ((runLength-- > 0) && (pixPos < pixBufSize)) {
                 *pixBuf++ = (uint8_t)bits;
@@ -447,7 +451,7 @@ int cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
 
             bits = (uint8_t)bitStream.getBits (4);
             if (nonModifyColour && (bits == 1))
-              pixPos += runLength;
+              pixPos += (uint8_t)runLength;
             else
               while ((runLength-- > 0) && (pixPos < pixBufSize)) {
                 *pixBuf++ = (uint8_t)bits;
@@ -470,42 +474,41 @@ int cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
   }
 //}}}
 //{{{
-void cDvbSubtitleDecoder::parseObjectBlock (cObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
+void cDvbSubtitleDecoder::parseObjectBlock (cObject* object, const uint8_t* buf, uint16_t bufSize,
                                             bool bottom, bool nonModifyColour) {
 
-  cRegion& region = getRegion (display->mRegionId);
+  uint16_t xpos = object->mXpos;
+  uint16_t ypos = object->mYpos + (bottom ? 1 : 0);
 
-  int xPos = display->mXpos;
-  int yPos = display->mYpos + (bottom ? 1 : 0);
-
+  cRegion& region = getRegion (object->mRegionId);
   region.mDirty = true;
   uint8_t* pixBuf = region.mPixBuf;
+
   const uint8_t* bufEnd = buf + bufSize;
   while (buf < bufEnd) {
-    if (((*buf != 0xF0) && (xPos >= region.mWidth)) || (yPos >= region.mHeight)) {
+    if (((*buf != 0xF0) && (xpos >= region.mWidth)) || (ypos >= region.mHeight)) {
       //{{{  error return
       cLog::log (LOGERROR, "invalid object location %d %d %d %d %02x",
-                            xPos, region.mWidth, yPos, region.mHeight, *buf);
+                            xpos, region.mWidth, ypos, region.mHeight, *buf);
       return;
       }
       //}}}
 
     uint8_t type = *buf++;
-    uint16_t bufLeft = uint16_t(bufEnd - buf);
-    uint8_t* pixPtr = pixBuf + (yPos * region.mWidth);
-
     switch (type) {
       case 0x11: // 4 bit
         if (region.mColorLutDepth < 4) {
-          cLog::log (LOGERROR, "4-bit pix string in %d-bit region!", region.mColorLutDepth);
+          cLog::log (LOGERROR, fmt::format ("4-bit pix string in {}:bit region", region.mColorLutDepth));
           return;
           }
-        xPos = parse4bit (&buf, bufLeft, pixPtr, region.mWidth, xPos, nonModifyColour);
+
+        xpos = parse4bit (&buf, uint16_t(bufEnd - buf),
+                          pixBuf + (ypos * region.mWidth), region.mWidth, xpos, nonModifyColour);
         break;
 
       case 0xF0: // end of line
-        xPos = display->mXpos;
-        yPos += 2;
+        xpos = object->mXpos;
+        ypos += 2;
         break;
 
       default:
@@ -518,13 +521,14 @@ void cDvbSubtitleDecoder::parseObjectBlock (cObjectDisplay* display, const uint8
 //{{{
 bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
 
-  //cLog::log (LOGINFO, "object segment");
   const uint8_t* bufEnd = buf + bufSize;
 
   uint16_t objectId = AVRB16(buf);
   buf += 2;
-  cObject* object = getObject (objectId);
-  if (!object)
+
+  cLog::log (LOGINFO, fmt::format ("{:5d} {:12s} object:{}", mSid, mName, objectId));
+  cObject* object = findObject (objectId);
+  if (!object) // not declared by region, ignore
     return false;
 
   uint8_t codingMethod = ((*buf) >> 2) & 3;
@@ -543,17 +547,15 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
       }
       //}}}
 
-    for (auto display = object->mDisplayList; display; display = display->mObjectListNext) {
-      const uint8_t* block = buf;
-      parseObjectBlock (display, block, topFieldLen, false, nonModifyColour);
-
-      uint16_t bfl = bottomFieldLen;
-      if (bottomFieldLen > 0)
-        block = buf + topFieldLen;
-      else
-        bfl = topFieldLen;
-      parseObjectBlock (display, block, bfl, true, nonModifyColour);
-      }
+    // decode object pixel data, rendered into object->mRegion->mPixBuf
+    const uint8_t* block = buf;
+    parseObjectBlock (object, block, topFieldLen, false, nonModifyColour);
+    uint16_t bfl = bottomFieldLen;
+    if (bottomFieldLen > 0)
+      block = buf + topFieldLen;
+    else
+      bfl = topFieldLen;
+    parseObjectBlock (object, block, bfl, true, nonModifyColour);
     }
   else
     cLog::log (LOGERROR, "unknown object coding %d", codingMethod);
@@ -612,7 +614,7 @@ bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t b
   }
 //}}}
 //{{{
-void cDvbSubtitleDecoder::endDisplaySet() {
+void cDvbSubtitleDecoder::endDisplay() {
 
   cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} endDisplay", mSid, mName));
 
@@ -652,66 +654,5 @@ void cDvbSubtitleDecoder::endDisplaySet() {
   mPage.mNumImages = line;
   if (line > mPage.mHighwaterMark)
     mPage.mHighwaterMark = line;
-  }
-//}}}
-
-// delete
-//{{{
-void cDvbSubtitleDecoder::deleteObjects() {
-
-  uint32_t num = 0;
-  while (mObjectList) {
-    cObject* object = mObjectList;
-    mObjectList = object->mNext;
-    delete object;
-    num++;
-    }
-
-  cLog::log (LOGINFO1, fmt::format ("deleteObjects {}", num));
-  }
-//}}}
-//{{{
-void cDvbSubtitleDecoder::deleteDisplayRegionList (cRegion& region) {
-
-  uint32_t num = 0;
-  uint32_t num1 = 0;
-
-  while (region.mDisplayList) {
-    cObjectDisplay* display = region.mDisplayList;
-    cObject* object = getObject (display->mObjectId);
-    if (object) {
-      cObjectDisplay** objDispPtr = &object->mDisplayList;
-      cObjectDisplay* objDisp = *objDispPtr;
-
-      while (objDisp && (objDisp != display)) {
-        objDispPtr = &objDisp->mObjectListNext;
-        objDisp = *objDispPtr;
-        }
-
-      if (objDisp) {
-        *objDispPtr = objDisp->mObjectListNext;
-
-        if (!object->mDisplayList) {
-          cObject** object2Ptr = &mObjectList;
-          cObject* object2 = *object2Ptr;
-
-          while (object2 != object) {
-            object2Ptr = &object2->mNext;
-            object2 = *object2Ptr;
-            }
-
-          *object2Ptr = object2->mNext;
-          delete object2;
-          num1++;
-          }
-        }
-      }
-
-    region.mDisplayList = display->mRegionListNext;
-    delete display;
-    num++;
-    }
-
-  cLog::log (LOGINFO1, fmt::format ("deleteDisplayRegionList {} {}", num, num1));
   }
 //}}}
