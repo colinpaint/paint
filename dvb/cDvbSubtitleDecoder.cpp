@@ -286,9 +286,7 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     region.mWidth = width;
     region.mHeight = height;
     region.mPixBuf = (uint8_t*)realloc (region.mPixBuf, width * height);
-
     region.mDirty = false;
-
     fill = true;
     }
     //}}}
@@ -306,8 +304,10 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
 
   // background fill
   region.mBackgroundColour = ((*buf++) >> 4) & 15;
-  if (fill)
+  if (fill) {
     memset (region.mPixBuf, region.mBackgroundColour, region.mWidth * region.mHeight);
+    region.mDirty = true;
+    }
 
   string objectList;
   while (buf + 5 < bufEnd) {
@@ -539,8 +539,6 @@ void cDvbSubtitleDecoder::parseObjectBlock (cObject* object, const uint8_t* buf,
   uint16_t ypos = object->mYpos + (bottom ? 1 : 0);
 
   cRegion& region = getRegion (object->mRegionId);
-  region.mDirty = true;
-  uint8_t* pixBuf = region.mPixBuf;
 
   const uint8_t* bufEnd = buf + bufSize;
   while (buf < bufEnd) {
@@ -561,7 +559,8 @@ void cDvbSubtitleDecoder::parseObjectBlock (cObject* object, const uint8_t* buf,
           }
 
         xpos = parse4bit (buf, uint16_t(bufEnd - buf),
-                          pixBuf + (ypos * region.mWidth), region.mWidth, xpos, nonModifyColour);
+                          region.mPixBuf + (ypos * region.mWidth), region.mWidth, xpos, nonModifyColour);
+        region.mDirty = true;
         break;
 
       case 0xF0: // end of line
@@ -570,7 +569,7 @@ void cDvbSubtitleDecoder::parseObjectBlock (cObject* object, const uint8_t* buf,
         break;
 
       default:
-        cLog::log (LOGINFO, "unimplemented objectBlock %x", type);
+        cLog::log (LOGINFO, fmt::format ("parseObjectBlock - unimplemented objectBlock {}", type));
         break;
       }
     }
@@ -605,7 +604,7 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
       }
       //}}}
 
-    // decode object pixel data, rendered into object->mRegion->mPixBuf
+    // decode object pixel data, rendered into object.mRegion.mPixBuf
     const uint8_t* block = buf;
     parseObjectBlock (object, block, topFieldLen, false, nonModifyColour);
     uint16_t bfl = bottomFieldLen;
@@ -651,11 +650,12 @@ void cDvbSubtitleDecoder::endDisplay() {
 
       // region->mPixBuf -> lut -> mPixels
       uint32_t* ptr = (uint32_t*)image.mPixels;
-      for (int i = 0; i < image.mWidth * image.mHeight; i++)
+      for (uint32_t i = 0; i < region.mWidth * region.mHeight; i++)
         *ptr++ = image.mColorLut[region.mPixBuf[i]];
 
       // set changed flag, to update texture in gui
       image.mDirty = true;
+      region.mDirty = false;
       }
     line++;
     }
