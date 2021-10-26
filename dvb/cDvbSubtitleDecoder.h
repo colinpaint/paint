@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include "iDvbDecoder.h"
-
 class cTexture;
 //}}}
 
@@ -150,35 +149,20 @@ private:
     };
   //}}}
   //{{{
-  class cObjectDisplay {
-  public:
-    cObjectDisplay (uint16_t objectId, uint8_t regionId, int xpos, int ypos)
-      : mObjectId(objectId), mRegionId(regionId), mXpos(xpos), mYpos(ypos) {}
-
-    uint16_t mObjectId;
-    uint8_t mRegionId;
-
-    int mXpos;
-    int mYpos;
-
-    int mForegroundColour = 0;
-    int mBackgroundColour = 0;
-
-    cObjectDisplay* mObjectListNext = nullptr;
-    cObjectDisplay* mRegionListNext = nullptr;
-    };
-  //}}}
-  //{{{
   class cObject {
   public:
     cObject (uint16_t id) : mId(id) {}
 
     const uint16_t mId;
 
-    int mType = 0;
-    cObjectDisplay* mDisplayList = nullptr;
+    uint8_t mRegionId;
+    uint8_t mType = 0;
 
-    cObject* mNext;
+    uint16_t mXpos;
+    uint16_t mYpos;
+
+    uint8_t mForegroundColour = 0;
+    uint8_t mBackgroundColour = 0;
     };
   //}}}
   //{{{
@@ -186,7 +170,7 @@ private:
   public:
     cRegion (uint8_t id) : mId(id) {}
     ~cRegion() {
-      // free (mPixBuf);  // why can't I delete mPixBuf
+      //free (mPixBuf);  // why can't I delete mPixBuf
       }
 
     uint8_t mId = 0;
@@ -202,8 +186,6 @@ private:
     bool mDirty = false;
     int mPixBufSize = 0;
     uint8_t* mPixBuf = nullptr;
-
-    cObjectDisplay* mDisplayList = nullptr;
     };
   //}}}
   //{{{
@@ -235,8 +217,9 @@ private:
   //}}}
 
   // get
+  cObject* findObject (uint16_t id);
+  cObject& getObject (uint16_t id);
   cColorLut& getColorLut (uint8_t id);
-  cObject* getObject (uint16_t id);
   cRegion& getRegion (uint8_t id);
 
   // parse
@@ -244,18 +227,15 @@ private:
   bool parseRegion (const uint8_t* buf, uint16_t bufSize);
   bool parseColorLut (const uint8_t* buf, uint16_t bufSize);
 
-  int parse4bit (const uint8_t** buf, uint16_t bufSize,
-                 uint8_t* pixBuf, uint32_t pixBufSize, uint32_t pixPos, bool nonModifyColour);
-  void parseObjectBlock (cObjectDisplay* display, const uint8_t* buf, uint16_t bufSize,
+  uint16_t parse4bit (const uint8_t** buf, uint16_t bufSize,
+                      uint8_t* pixBuf, uint32_t pixBufSize, uint16_t pixPos,
+                      bool nonModifyColour);
+  void parseObjectBlock (cObject* objuect, const uint8_t* buf, uint16_t bufSize,
                          bool bottom, bool nonModifyColour);
   bool parseObject (const uint8_t* buf, uint16_t bufSize);
 
   bool parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize);
-  void endDisplaySet();
-
-  // delete
-  void deleteObjects();
-  void deleteDisplayRegionList (cRegion& region);
+  void endDisplay();
 
   // vars
   const uint16_t mSid;
@@ -263,8 +243,8 @@ private:
 
   // pools
   std::vector <cColorLut> mColorLuts;
+  std::vector <cObject> mObjects;
   std::vector <cRegion> mRegions;
-  cObject* mObjectList = nullptr;
 
   cPage mPage;
 
