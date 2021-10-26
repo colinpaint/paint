@@ -456,7 +456,7 @@ uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
               *pixBuf++ = (uint8_t)bits;
               pixPos++;
               runLength--;
-              }  
+              }
           }
           //}}}
         else {
@@ -499,15 +499,18 @@ uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
           else if (bits == 3) {
             //{{{  3
             uint8_t runBits = (uint8_t)bitStream.getBits (8);
-            int runLength = runBits + 25;
+
+            // !!! ouch - runLength wider than runBits
+            uint16_t runLength = runBits + 25;
 
             bits = (uint8_t)bitStream.getBits (4);
             if (nonModifyColour && (bits == 1))
               pixPos += (uint8_t)runLength;
             else
-              while ((runLength-- > 0) && (pixPos < pixBufSize)) {
-                *pixBuf++ = (uint8_t)bits;
+              while (runLength && (pixPos < pixBufSize)) {
+                *pixBuf++ = bits;
                 pixPos++;
+                runLength--;
                 }
             }
             //}}}
