@@ -1151,26 +1151,10 @@ void cDvbTransportStream::startServiceProgram (cService* service, tTimePoint tdt
   lock_guard<mutex> lockGuard (mRecordFileMutex);
   service->closeFile();
 
-  string channelRecordName;
-  bool recordProgram = mDvbMultiplex.mRecordAllChannels || selected;
-  if (!recordProgram) {
-    // filter and rename channel prefix
-    size_t i = 0;
-    for (auto& channelName : mDvbMultiplex.mChannels) {
-      if (channelName == service->getChannelString()) {
-        // if channelName recognised, record every item for that channel using channelRootName
-        recordProgram = true;
-        if (i < mDvbMultiplex.mChannelRecordNames.size())
-          channelRecordName = mDvbMultiplex.mChannelRecordNames[i] +  " ";
-        break;
-        }
-      i++;
-      }
-    }
-
+  bool recordProgram = mDvbMultiplex.mRecordAllChannels || selected || service->getChannelRecord();
   if (recordProgram & (service->getVidPid() > 0) && (service->getAudPid() > 0)) {
     string recordFilePath = mRecordRootName +
-                            channelRecordName +
+                            service->getChannelRecordName() +
                             date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
                             validFileString (programName, "<>:/|?*\"\'\\") +
                             ".ts";
@@ -1241,7 +1225,7 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
   cService* service = getService (pidInfo->mSid);
   if (!service)
     return false;
-  
+
   cDvbSubtitleDecoder* dvbSubtitleDecoder = service->getDvbSubtitleDecoder();
   if (!dvbSubtitleDecoder)
     return false;
@@ -1371,13 +1355,27 @@ void cDvbTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
 
             cService* service = getService (sid);
             if (service) {
-              if (service->getChannelString().empty()) {
-                cLog::log (LOGINFO, fmt::format ("SDT named sid:{} {}",sid,name));
-                service->setChannelString (name);
+              if (service->getChannelName().empty()) {
+                bool channelRecognised = false;
+                string channelRecordName;
+                size_t i = 0;
+                for (auto& channelName : mDvbMultiplex.mChannels) {
+                  if (name == channelName) {
+                    channelRecognised = true;
+                    if (i < mDvbMultiplex.mChannelRecordNames.size())
+                      channelRecordName = mDvbMultiplex.mChannelRecordNames[i] +  " ";
+                    break;
+                    }
+                  i++;
+                  }
+                service->setChannelName (name, channelRecognised, channelRecordName);
+
+                cLog::log (LOGINFO, fmt::format ("SDT named sid:{} {} {} {}",
+                                                 sid, name, channelRecognised ? "record" : "", channelRecordName));
                 }
               }
             else
-              cLog::log (LOGINFO, fmt::format("SDT - before PMT - ignored {} {}", sid, name));
+              cLog::log (LOGINFO, fmt::format ("SDT - before PMT - ignored {} {}", sid, name));
 
             break;
             }
@@ -1461,7 +1459,7 @@ void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
               // now event
               auto running = (eitEvent->running_status == 0x04);
               if (running &&
-                  !service->getChannelString().empty() &&
+                  !service->getChannelName().empty() &&
                   (service->getProgramPid() != 0xFFFF) &&
                   (service->getVidPid() != 0xFFFF) &&
                   (service->getAudPid() != 0xFFFF) &&
@@ -1473,7 +1471,7 @@ void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                   auto pidInfoIt = mPidInfoMap.find (service->getProgramPid());
                   if (pidInfoIt != mPidInfoMap.end())
                     // update service pgmPid infoStr with new now event
-                    pidInfoIt->second.mInfoString = service->getChannelString() + " " +
+                    pidInfoIt->second.mInfoString = service->getChannelName() + " " +
                                                     service->getNowTitleString();
 
                   // callback to override to start new serviceItem program
@@ -1542,7 +1540,7 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
     service->setProgramPid (pidInfo->mPid);
 
     pidInfo->mSid = sid;
-    pidInfo->mInfoString = service->getChannelString() + " " + service->getNowTitleString();
+    pidInfo->mInfoString = service->getChannelName() + " " + service->getNowTitleString();
 
     buf += sizeof(sPmt);
     sectionLength -= 4;

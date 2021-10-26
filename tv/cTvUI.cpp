@@ -122,12 +122,17 @@ private:
 
       ImVec2 cursorPos = ImGui::GetCursorPos();
       ImGui::TextUnformatted (fmt::format (
-        "pgm:{:5d} {:12s} sid:{:5d} vid:{:5d}:{:2d} aud:{:5d}:{:2d}:{:5d} sub:{:5d}:{:2d}",
-        service.getSid(), service.getChannelString(),
-        service.getProgramPid(),
+        "{:12s} sid:{:5d} pgm:{:5d} v:{:5d}:{:2d} a:{:5d}:{:2d}:{:5d} s:{:5d}:{:2d}",
+        service.getChannelName(), service.getSid(), service.getProgramPid(),
         service.getVidPid(), service.getVidStreamType(),
         service.getAudPid(), service.getAudStreamType(), service.getAudOtherPid(),
         service.getSubPid(), service.getSubStreamType()).c_str());
+
+
+      if (service.getChannelRecord()) {
+        ImGui::SameLine();
+        ImGui::TextUnformatted (fmt::format ("rec:{}", service.getChannelRecordName()).c_str());
+        }
 
       ImGui::SetCursorPos (cursorPos);
       if (ImGui::InvisibleButton (fmt::format ("##sid{}", service.getSid()).c_str(),

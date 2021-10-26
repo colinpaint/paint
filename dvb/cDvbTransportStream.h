@@ -140,7 +140,9 @@ public:
   uint16_t getSubPid() const { return mSubPid; }
   uint16_t getSubStreamType() const { return mSubStreamType; }
 
-  std::string getChannelString() { return mChannelString; }
+  std::string getChannelName() const { return mChannelName; }
+  bool getChannelRecord() const { return mChannelRecord; }
+  std::string getChannelRecordName() const { return mChannelRecordName; }
 
   // decoder
   cDvbSubtitleDecoder* getDvbSubtitleDecoder() const { return mDvbSubtitleDecoder; }
@@ -159,7 +161,13 @@ public:
   void setVidPid (uint16_t pid, uint16_t streamType) { mVidPid = pid; mVidStreamType = streamType; }
   void setAudPid (uint16_t pid, uint16_t streamType);
   void setSubPid (uint16_t pid, uint16_t streamType) { mSubPid = pid; mSubStreamType = streamType; }
-  void setChannelString (const std::string& channelString) { mChannelString = channelString;}
+  //{{{
+  void setChannelName (const std::string& name, bool record, const std::string& recordName) {
+    mChannelName = name;
+    mChannelRecord = record;
+    mChannelRecordName = recordName;
+    }
+  //}}}
 
   // decoder
   void setDvbSubtitleDecoder (cDvbSubtitleDecoder* dvbSubtitleDecoder) { mDvbSubtitleDecoder = dvbSubtitleDecoder; }
@@ -184,7 +192,7 @@ public:
       mDvbSubtitleDecoder = nullptr;
       }
     else
-      mDvbSubtitleDecoder = new cDvbSubtitleDecoder (mSid, mChannelString);
+      mDvbSubtitleDecoder = new cDvbSubtitleDecoder (mSid, mChannelName);
     }
   //}}}
 
@@ -214,7 +222,10 @@ private:
   uint16_t mSubPid = 0xFFFF;
   uint16_t mSubStreamType = 0;
 
-  std::string mChannelString;
+  std::string mChannelName;
+  bool mChannelRecord = false;
+  std::string mChannelRecordName;
+
   cDvbSubtitleDecoder* mDvbSubtitleDecoder = nullptr;
 
   // epg
