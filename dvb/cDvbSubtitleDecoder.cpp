@@ -171,9 +171,57 @@ cDvbSubtitleDecoder::cRegion& cDvbSubtitleDecoder::getRegion (uint8_t id) {
 
 // parse
 //{{{
+bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize) {
+
+  //cLog::log (LOGINFO, "displayDefinition segment");
+  if (bufSize < 5)
+    return false;
+
+  uint8_t infoByte = *buf++;
+  uint8_t ddsVersion = infoByte >> 4;
+
+  if (mDisplayDefinition.mVersion == ddsVersion)
+    return true;
+  mDisplayDefinition.mVersion = ddsVersion;
+
+  mDisplayDefinition.mX = 0;
+  mDisplayDefinition.mY = 0;
+
+  mDisplayDefinition.mWidth = AVRB16(buf) + 1;
+  buf += 2;
+
+  mDisplayDefinition.mHeight = AVRB16(buf) + 1;
+  buf += 2;
+
+  uint8_t displayWindow = infoByte & (1 << 3);
+  if (displayWindow) {
+    if (bufSize < 13)
+      return false;
+
+    mDisplayDefinition.mX = AVRB16(buf);
+    buf += 2;
+
+    mDisplayDefinition.mWidth  = AVRB16(buf) - mDisplayDefinition.mX + 1;
+    buf += 2;
+
+    mDisplayDefinition.mY = AVRB16(buf);
+    buf += 2;
+
+    mDisplayDefinition.mHeight = AVRB16(buf) - mDisplayDefinition.mY + 1;
+    buf += 2;
+    }
+
+  cLog::log (LOGINFO, fmt::format ("{:5d} {:12s} - display{} x:{} y:{} w:{} h:{}",
+                                   mSid, mName,
+                                   displayWindow != 0 ? " window" : "",
+                                   mDisplayDefinition.mX, mDisplayDefinition.mY,
+                                   mDisplayDefinition.mWidth, mDisplayDefinition.mHeight));
+  return true;
+  }
+//}}}
+//{{{
 bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
-  //cLog::log (LOGINFO, "page");
   if (bufSize < 1)
     return false;
 
@@ -357,13 +405,13 @@ bool cDvbSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
 //}}}
 
 //{{{
-uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
+uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
                                          uint8_t* pixBuf, uint32_t pixBufSize, uint16_t pixPos,
                                          bool nonModifyColour) {
 
   pixBuf += pixPos;
 
-  cBitStream bitStream (*buf);
+  cBitStream bitStream (buf);
   while ((bitStream.getBitsRead() < (uint32_t)(bufSize * 8)) && (pixPos < pixBufSize)) {
     uint8_t bits = (uint8_t)bitStream.getBits (4);
     if (bits) {
@@ -380,7 +428,7 @@ uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
         //{{{  simple runlength
         int runLength = (uint8_t)bitStream.getBits (3);
         if (runLength == 0) {
-          *buf += bitStream.getBytesRead();
+          buf += bitStream.getBytesRead();
           return pixPos;
           }
 
@@ -469,7 +517,7 @@ uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t** buf, uint16_t bufSize,
   if (bits)
     cLog::log (LOGERROR, "line overflow");
 
-  *buf += bitStream.getBytesRead();
+  buf += bitStream.getBytesRead();
   return pixPos;
   }
 //}}}
@@ -502,7 +550,7 @@ void cDvbSubtitleDecoder::parseObjectBlock (cObject* object, const uint8_t* buf,
           return;
           }
 
-        xpos = parse4bit (&buf, uint16_t(bufEnd - buf),
+        xpos = parse4bit (buf, uint16_t(bufEnd - buf),
                           pixBuf + (ypos * region.mWidth), region.mWidth, xpos, nonModifyColour);
         break;
 
@@ -558,61 +606,12 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
     parseObjectBlock (object, block, bfl, true, nonModifyColour);
     }
   else
-    cLog::log (LOGERROR, "unknown object coding %d", codingMethod);
+    cLog::log (LOGERROR, fmt::format ("parseObject - unknown object coding {}", codingMethod));
 
   return true;
   }
 //}}}
 
-//{{{
-bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize) {
-
-  //cLog::log (LOGINFO, "displayDefinition segment");
-  if (bufSize < 5)
-    return false;
-
-  uint8_t infoByte = *buf++;
-  uint8_t ddsVersion = infoByte >> 4;
-
-  if (mDisplayDefinition.mVersion == ddsVersion)
-    return true;
-  mDisplayDefinition.mVersion = ddsVersion;
-
-  mDisplayDefinition.mX = 0;
-  mDisplayDefinition.mY = 0;
-
-  mDisplayDefinition.mWidth = AVRB16(buf) + 1;
-  buf += 2;
-
-  mDisplayDefinition.mHeight = AVRB16(buf) + 1;
-  buf += 2;
-
-  uint8_t displayWindow = infoByte & (1 << 3);
-  if (displayWindow) {
-    if (bufSize < 13)
-      return false;
-
-    mDisplayDefinition.mX = AVRB16(buf);
-    buf += 2;
-
-    mDisplayDefinition.mWidth  = AVRB16(buf) - mDisplayDefinition.mX + 1;
-    buf += 2;
-
-    mDisplayDefinition.mY = AVRB16(buf);
-    buf += 2;
-
-    mDisplayDefinition.mHeight = AVRB16(buf) - mDisplayDefinition.mY + 1;
-    buf += 2;
-    }
-
-  cLog::log (LOGINFO, fmt::format ("{:5d} {:12s} - display{} x:{} y:{} w:{} h:{}",
-                                   mSid, mName,
-                                   displayWindow != 0 ? " window" : "",
-                                   mDisplayDefinition.mX, mDisplayDefinition.mY,
-                                   mDisplayDefinition.mWidth, mDisplayDefinition.mHeight));
-  return true;
-  }
-//}}}
 //{{{
 void cDvbSubtitleDecoder::endDisplay() {
 
