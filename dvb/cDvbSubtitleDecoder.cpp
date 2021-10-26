@@ -426,7 +426,7 @@ uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
       bits = (uint8_t)bitStream.getBit();
       if (bits == 0) {
         //{{{  simple runlength
-        int runLength = (uint8_t)bitStream.getBits (3);
+        uint8_t runLength = (uint8_t)bitStream.getBits (3);
         if (runLength == 0) {
           buf += bitStream.getBytesRead();
           return pixPos;
@@ -434,9 +434,10 @@ uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
 
         runLength += 2;
         bits = 0;
-        while ((runLength-- > 0) && (pixPos < pixBufSize)) {
-          *pixBuf++ = (uint8_t)bits;
+        while (runLength && (pixPos < pixBufSize)) {
+          *pixBuf++ = bits;
           pixPos++;
+          runLength--;
           }
         }
         //}}}
@@ -445,16 +446,17 @@ uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
         if (bits == 0) {
           //{{{  bits = 0
           uint8_t runBits = (uint8_t)bitStream.getBits (2);
-          int runLength = runBits + 4;
+          uint8_t runLength = runBits + 4;
 
           bits = (uint8_t)bitStream.getBits (4);
           if (nonModifyColour && (bits == 1))
-            pixPos += (uint8_t)runLength;
+            pixPos += runLength;
           else
-            while ((runLength-- > 0) && (pixPos < pixBufSize)) {
+            while (runLength && (pixPos < pixBufSize)) {
               *pixBuf++ = (uint8_t)bits;
               pixPos++;
-              }
+              runLength--;
+              }  
           }
           //}}}
         else {
@@ -470,25 +472,27 @@ uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
             //{{{  1
             bits = 0;
 
-            int runLength = 2;
-            while ((runLength-- > 0) && (pixPos < pixBufSize)) {
-              *pixBuf++ = (uint8_t)bits;
+            uint8_t runLength = 2;
+            while (runLength && (pixPos < pixBufSize)) {
+              *pixBuf++ = bits;
               pixPos++;
+              runLength--;
               }
             }
             //}}}
           else if (bits == 2) {
             //{{{  2
             uint8_t runBits = (uint8_t)bitStream.getBits (4);
-            int runLength = runBits + 9;
+            uint8_t runLength = runBits + 9;
 
             bits = (uint8_t)bitStream.getBits (4);
             if (nonModifyColour && (bits == 1))
-              pixPos += (uint8_t)runLength;
+              pixPos += runLength;
             else
-              while ((runLength-- > 0) && (pixPos < pixBufSize)) {
-                *pixBuf++ = (uint8_t)bits;
+              while (runLength && (pixPos < pixBufSize)) {
+                *pixBuf++ = bits;
                 pixPos++;
+                runLength--;
                 }
             }
             //}}}
