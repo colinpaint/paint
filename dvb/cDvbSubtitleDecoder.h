@@ -157,9 +157,7 @@ private:
   class cRegion {
   public:
     cRegion (uint8_t id) : mId(id) {}
-    ~cRegion() {
-      //free (mPixBuf);  // why can't I delete mPixBuf
-      }
+    ~cRegion() { free (mPixBuf); }
 
     uint8_t mId = 0;
     uint8_t mVersion = 0xFF;
@@ -241,7 +239,7 @@ private:
   // pools
   std::vector <cColorLut> mColorLuts;
   std::vector <cObject> mObjects;
-  std::vector <cRegion> mRegions;
+  std::vector <cRegion*> mRegions; 
 
   cPage mPage;
 
