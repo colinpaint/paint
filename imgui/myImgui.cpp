@@ -26,7 +26,7 @@ void cMiniLog::setEnable (bool enable) {
 
   mLog.clear();
 
-  if (enable) 
+  if (enable)
     mLog.push_back (fmt::format("{} subtitle log", mName));
 
   mEnabled = enable;
@@ -49,8 +49,9 @@ void cMiniLog::draw() {
 
   if (mEnabled) {
     // draw log
-    ImGui::BeginChild("##log", { ImGui::GetWindowWidth(), 12 * ImGui::GetTextLineHeight() }, true,
-      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::BeginChild (fmt::format ("##log{}", mName).c_str(),
+                       {ImGui::GetWindowWidth(), 12 * ImGui::GetTextLineHeight() }, true,
+                       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
 
     for (auto& logLine : mLog)
       ImGui::TextUnformatted(logLine.c_str());
