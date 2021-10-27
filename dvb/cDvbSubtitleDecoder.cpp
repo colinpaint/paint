@@ -7,6 +7,9 @@
 #include <vector>
 #include <array>
 
+#include "../imgui/imgui.h"
+#include "../imgui/myImgui.h"
+
 #include "../utils/date.h"
 #include "../utils/cLog.h"
 
@@ -22,10 +25,10 @@ using namespace std;
 
 // public:
 //{{{
-cDvbSubtitleDecoder::cDvbSubtitleDecoder (const std::string name) : mName(name) {
+cDvbSubtitleDecoder::cDvbSubtitleDecoder (const std::string name) {
+  mMiniLog = new cMiniLog (name);
   }
 //}}}
-
 //{{{
 cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 
@@ -38,7 +41,7 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 
   mPage.mRegionDisplays.clear();
 
-  mLog.clear();
+  delete mMiniLog;
   }
 //}}}
 
@@ -50,16 +53,19 @@ string cDvbSubtitleDecoder::getInfo() const {
                       mRegions.size(), mObjects.size(), mColorLuts.size());
   }
 //}}}
-
 //{{{
-void cDvbSubtitleDecoder::toggleDebug() {
-
-  mDebug = !mDebug;
-
-  if (mDebug)
-    mLog.push_back (fmt::format ("{} subtitle log", mName));
-  else
-    mLog.clear();
+bool cDvbSubtitleDecoder::isLogEnabled() const {
+  return mMiniLog->getEnabled();
+  }
+//}}}
+//{{{
+void cDvbSubtitleDecoder::cDvbSubtitleDecoder::toggleDebug() {
+  mMiniLog->toggleEnable();;
+  }
+//}}}
+//{{{
+void cDvbSubtitleDecoder::drawMiniLog() {
+  mMiniLog->draw();
   }
 //}}}
 
@@ -158,12 +164,7 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
 // private:
 //{{{
 void cDvbSubtitleDecoder::log (const std::string& text) {
-
-  // prepend service name for console log
-  cLog::log (LOGINFO, fmt::format ("{:12s} {}", mName, text));
-
-  // prepend time for gui window log
-  mLog.push_back (date::format ("%T ", chrono::floor<chrono::microseconds>(chrono::system_clock::now())) + text);
+  mMiniLog->log (text);
   }
 //}}}
 
@@ -256,7 +257,7 @@ bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t b
     buf += 2;
     }
 
-  if (mDebug)
+  if (isLogEnabled())
     //{{{  log
     log (fmt::format ("display{} x:{} y:{} w:{} h:{}",
                       displayWindow != 0 ? " window" : "",
@@ -307,7 +308,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     regionDebug += fmt::format ("{}:{},{} ", regionId, xPos, yPos);
     }
 
-  if (mDebug)
+  if (isLogEnabled())
     //{{{  log
     log (fmt::format ("page state:{:1d} ver::{:2d} time:{} {} {}",
                       mPage.mState, mPage.mVersion, mPage.mTimeout,
@@ -388,7 +389,7 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     objectDebug += fmt::format ("{}:{},{} ", objectId, object.mXpos, object.mYpos);
     }
 
-  if (mDebug)
+  if (isLogEnabled())
     //{{{  log
     log (fmt::format ("region:{}:{:2d} {}x{} lut:{} bgnd:{} {} {}",
                       region.mId, region.mVersion,
@@ -644,7 +645,7 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
   uint16_t objectId = AVRB16(buf);
   buf += 2;
 
-  if (mDebug)
+  if (isLogEnabled())
     log (fmt::format ("object:{}", objectId));
 
   cObject* object = findObject (objectId);
@@ -687,7 +688,7 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
 //{{{
 void cDvbSubtitleDecoder::endDisplay() {
 
-  if (mDebug)
+  if (isLogEnabled())
     log ("endDisplay ------------------------");
 
   int offsetX = mDisplayDefinition.mX;

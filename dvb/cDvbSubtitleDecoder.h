@@ -10,6 +10,7 @@
 #include <algorithm>
 
 class cTexture;
+class cMiniLog;
 //}}}
 
 #define BGRA(r,g,b,a) static_cast<uint32_t>(((a << 24) ) | (b << 16) | (g <<  8) | r)
@@ -45,8 +46,9 @@ public:
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
   std::string getInfo() const;
-  bool getDebug() const { return mDebug; }
-  std::deque <std::string>& getLog() { return mLog; }
+
+  bool isLogEnabled() const;
+  void drawMiniLog();
 
   void toggleDebug();
 
@@ -240,12 +242,10 @@ private:
 
   void endDisplay();
 
-
   // vars
   const std::string mName;
 
-  bool mDebug = false;
-  std::deque <std::string> mLog;
+  cMiniLog* mMiniLog;
 
   cDisplayDefinition mDisplayDefinition;
   cPage mPage;

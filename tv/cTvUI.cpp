@@ -271,20 +271,11 @@ private:
       }
     //}}}
     //{{{  draw subtitle info button
-    if (toggleButton (subtitle.getInfo(), subtitle.getDebug(),
+    if (toggleButton (subtitle.getInfo(), subtitle.isLogEnabled(),
                       {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
       subtitle.toggleDebug();
     //}}}
-    //{{{  draw subtitle log
-    if (subtitle.getDebug()) {
-      // draw log
-      ImGui::BeginChild ("##log", {ImGui::GetWindowWidth(), 12*ImGui::GetTextLineHeight()}, true,
-                         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-      for (auto& logLine : subtitle.getLog())
-        ImGui::TextUnformatted (logLine.c_str());
-      ImGui::EndChild();
-      }
-    //}}}
+    subtitle.drawMiniLog();
     }
   //}}}
 
