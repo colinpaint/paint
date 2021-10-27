@@ -44,13 +44,13 @@ public:
       ImGui::SameLine();
       }
       //}}}
-    //{{{  fullScreen button
     if (app.getPlatform().hasFullScreen()) {
+      //{{{  fullScreen button
       if (toggleButton ("full", app.getPlatform().getFullScreen()))
         app.getPlatform().toggleFullScreen();
       ImGui::SameLine();
       }
-    //}}}
+      //}}}
     //{{{  recorded button
     if (toggleButton ("recorded", mRecorded))
       toggleRecorded();
@@ -65,7 +65,6 @@ public:
     if (toggleButton ("pids", mPids))
       togglePids();
     ImGui::SameLine();
-
     //}}}
     //{{{  vertice debug
     ImGui::TextUnformatted (fmt::format ("{}:{}",
