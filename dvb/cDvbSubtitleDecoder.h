@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <string>
+#include <deque>
 #include <vector>
 #include <array>
 #include <algorithm>
@@ -36,7 +37,7 @@ public:
 
 class cDvbSubtitleDecoder {
 public:
-  cDvbSubtitleDecoder (uint16_t sid, const std::string name) : mSid(sid), mName(name) {}
+  cDvbSubtitleDecoder (const std::string name);
   ~cDvbSubtitleDecoder();
 
   size_t getNumImages() const { return mPage.mNumImages; }
@@ -44,6 +45,10 @@ public:
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
   std::string getInfo() const;
+  bool getDebug() const { return mDebug; }
+  std::deque <std::string>& getLog() { return mLog; }
+
+  void toggleDebug();
 
   bool decode (const uint8_t* buf, int bufSize);
 
@@ -214,6 +219,8 @@ private:
     };
   //}}}
 
+  void log (const std::string& text);
+
   // get
   cObject* findObject (uint16_t id);
   cObject& getObject (uint16_t id);
@@ -233,9 +240,12 @@ private:
 
   void endDisplay();
 
+
   // vars
-  const uint16_t mSid;
   const std::string mName;
+
+  bool mDebug = false;
+  std::deque <std::string> mLog;
 
   cDisplayDefinition mDisplayDefinition;
   cPage mPage;

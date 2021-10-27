@@ -16,12 +16,12 @@
   #include <sys/poll.h>
 #endif
 
+#include "cDvbUtils.h"
+#include "cDvbSubtitleDecoder.h"
+
 #include "../utils/date.h"
 #include "../utils/cLog.h"
 #include "../utils/utils.h"
-
-#include "cDvbUtils.h"
-#include "cDvbSubtitleDecoder.h"
 
 using namespace std;
 //}}}
@@ -552,8 +552,10 @@ bool cService::openFile (const string& fileName, uint16_t tsid) {
 //}}}
 //{{{
 void cService::writePacket (uint8_t* ts, uint16_t pid) {
+//  pes ts packet, save only recognised pids
 
-  if (mFile && ((pid == mVidPid) || (pid == mAudPid) || (pid == mSubPid)))
+  if (mFile &&
+      ((pid == mVidPid) || (pid == mAudPid) || (pid == mSubPid)))
     fwrite (ts, 1, 188, mFile);
   }
 //}}}
@@ -674,7 +676,7 @@ void cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPt
 //}}}
 //}}}
 
-// public
+// public:
 //{{{
 cDvbTransportStream::cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName)
     : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName) {
@@ -1173,13 +1175,13 @@ void cDvbTransportStream::startServiceProgram (cService* service, tTimePoint tdt
 //}}}
 //{{{
 void cDvbTransportStream::programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) {
-// look up service and write it
+// send pes ts packet to sid service
 
   lock_guard<mutex> lockGuard (mRecordFileMutex);
 
-  auto serviceIt = getServiceMap().find (sid);
-  if (serviceIt != getServiceMap().end())
-    serviceIt->second.writePacket (ts, pid);
+  cService* service = getService (sid);
+  if (service)
+    service->writePacket (ts, pid);
   }
 //}}}
 //{{{
@@ -1214,23 +1216,13 @@ bool cDvbTransportStream::vidDecodePes (cPidInfo* pidInfo, bool skip) {
 //{{{
 bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
 
-  //{{{
-  //cLog::log (LOGINFO1, fmt::format ("subtitle pid:{} sid:{} size:{} {} {} ",
-                                      //pidInfo->mPid,
-                                      //pidInfo->mSid,
-                                      //pidInfo->getBufUsed(),
-                                      //getFullPtsString (pidInfo->mPts),
-                                      //getChannelStringBySid (pidInfo->mSid)));
-  //}}}
   cService* service = getService (pidInfo->mSid);
-  if (!service)
-    return false;
+  if (service) {
+    cDvbSubtitleDecoder* dvbSubtitleDecoder = service->getDvbSubtitleDecoder();
+    if (dvbSubtitleDecoder)
+      dvbSubtitleDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed());
+    }
 
-  cDvbSubtitleDecoder* dvbSubtitleDecoder = service->getDvbSubtitleDecoder();
-  if (!dvbSubtitleDecoder)
-    return false;
-
-  dvbSubtitleDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed());
   return false;
   }
 //}}}

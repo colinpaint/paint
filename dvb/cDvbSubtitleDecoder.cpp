@@ -7,6 +7,7 @@
 #include <vector>
 #include <array>
 
+#include "../utils/date.h"
 #include "../utils/cLog.h"
 
 using namespace std;
@@ -18,14 +19,17 @@ using namespace std;
 #define ONE_HALF  (1 << (SCALEBITS - 1))
 #define FIX(x)    ((int) ((x) * (1<<SCALEBITS) + 0.5))
 //}}}
-constexpr bool kDebug = false;
 
 // public:
+//{{{
+cDvbSubtitleDecoder::cDvbSubtitleDecoder (const std::string name) : mName(name) {
+  }
+//}}}
+
 //{{{
 cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 
   mColorLuts.clear();
-
   mObjects.clear();
 
   for (auto& region : mRegions)
@@ -33,15 +37,29 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
   mRegions.clear();
 
   mPage.mRegionDisplays.clear();
+
+  mLog.clear();
   }
 //}}}
 
 //{{{
 string cDvbSubtitleDecoder::getInfo() const {
 
-  return fmt::format ("page state:{} ver:{:2d} lines:{} - reg:{} obj:{} lut:{}",
+  return fmt::format ("page state:{} ver:{:2d} lines:{} reg:{} obj:{} lut:{}",
                       mPage.mState, mPage.mVersion, mPage.mRegionDisplays.size(),
                       mRegions.size(), mObjects.size(), mColorLuts.size());
+  }
+//}}}
+
+//{{{
+void cDvbSubtitleDecoder::toggleDebug() {
+
+  mDebug = !mDebug;
+
+  if (mDebug) 
+    mLog.push_back (fmt::format ("{} log", mName));
+  else
+    mLog.clear();
   }
 //}}}
 
@@ -139,6 +157,17 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
 
 // private:
 //{{{
+void cDvbSubtitleDecoder::log (const std::string& text) {
+
+  // prepend service name
+  //cLog::log (LOGINFO, fmt::format ({:12s} {}" mName, text));
+
+  // prepend time
+  mLog.push_back (date::format ("%T ", chrono::floor<chrono::milliseconds>(chrono::system_clock::now())) + text);
+  }
+//}}}
+
+//{{{
 cDvbSubtitleDecoder::cObject* cDvbSubtitleDecoder::findObject (uint16_t id) {
 
   for (auto& object : mObjects)
@@ -227,12 +256,14 @@ bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t b
     buf += 2;
     }
 
-  if (kDebug)
-    cLog::log (LOGINFO, fmt::format ("{:5d} {:12s} - display{} x:{} y:{} w:{} h:{}",
-                                     mSid, mName,
-                                     displayWindow != 0 ? " window" : "",
-                                     mDisplayDefinition.mX, mDisplayDefinition.mY,
-                                     mDisplayDefinition.mWidth, mDisplayDefinition.mHeight));
+  if (mDebug)
+    //{{{  log
+    log (fmt::format ("display{} x:{} y:{} w:{} h:{}",
+                      displayWindow != 0 ? " window" : "",
+                      mDisplayDefinition.mX, mDisplayDefinition.mY,
+                      mDisplayDefinition.mWidth, mDisplayDefinition.mHeight));
+    //}}}
+
   return true;
   }
 //}}}
@@ -260,7 +291,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     mColorLuts.clear();
     }
 
-  string regionList;
+  string regionDebug;
   mPage.mRegionDisplays.clear();
   while (buf + 5 < bufEnd) {
     uint8_t regionId = *buf;
@@ -273,15 +304,15 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
     mPage.mRegionDisplays.push_back (cRegionDisplay (regionId, xPos, yPos));
 
-    if (kDebug)
-      regionList += fmt::format ("{}:{},{} ", regionId, xPos, yPos);
+    regionDebug += fmt::format ("{}:{},{} ", regionId, xPos, yPos);
     }
 
-  if (kDebug)
-    cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} page state:{:1d} ver::{:2d} time:{} regions {}",
-                                      mSid, mName,
-                                      mPage.mState, mPage.mVersion, mPage.mTimeout,
-                                      regionList));
+  if (mDebug)
+    //{{{  log
+    log (fmt::format ("page state:{:1d} ver::{:2d} time:{} {} {}",
+                      mPage.mState, mPage.mVersion, mPage.mTimeout,
+                      regionDebug.empty() ? "no regions" : " regionIds", regionDebug));
+    //}}}
 
   return true;
   }
@@ -331,13 +362,10 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     region.mDirty = true;
     }
 
-  string objectList;
+  string objectDebug;
   while (buf + 5 < bufEnd) {
     uint16_t objectId = AVRB16(buf);
     buf += 2;
-
-    if (kDebug)
-      objectList += fmt::format ("{} ", objectId);
 
     cObject& object = getObject (objectId);
     object.mRegionId = regionId;
@@ -356,10 +384,19 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
       object.mForegroundColour = *buf++;
       object.mBackgroundColour = *buf++;
       }
+
+    objectDebug += fmt::format ("{}:{},{} ", objectId, object.mXpos, object.mYpos);
     }
 
-  if (kDebug)
-    cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} region:{} {}", mSid, mName, regionId, objectList));
+  if (mDebug)
+    //{{{  log
+    log (fmt::format ("region:{}:{:2d} {}x{} lut:{} bgnd:{} {} {}",
+                      region.mId, region.mVersion,
+                      region.mWidth, region.mHeight,
+                      region.mColorLutDepth, region.mBackgroundColour,
+                      objectDebug.empty() ? "no objects" : "objectIds", objectDebug));
+    //}}}
+
   return true;
   }
 //}}}
@@ -607,8 +644,8 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
   uint16_t objectId = AVRB16(buf);
   buf += 2;
 
-  if (kDebug)
-    cLog::log (LOGINFO, fmt::format ("{:5d} {:12s} object:{}", mSid, mName, objectId));
+  if (mDebug)
+    log (fmt::format ("object:{}", objectId));
 
   cObject* object = findObject (objectId);
   if (!object) // not declared by region, ignore
@@ -650,8 +687,8 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
 //{{{
 void cDvbSubtitleDecoder::endDisplay() {
 
-  if (kDebug)
-    cLog::log (LOGINFO,  fmt::format ("{:5d} {:12s} endDisplay", mSid, mName));
+  if (mDebug)
+    log ("endDisplay ------------------------");
 
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;

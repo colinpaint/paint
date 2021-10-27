@@ -122,12 +122,11 @@ private:
 
       ImVec2 cursorPos = ImGui::GetCursorPos();
       ImGui::TextUnformatted (fmt::format (
-        "{:12s} sid:{:5d} pgm:{:5d} v:{:5d}:{:2d} a:{:5d}:{:2d}:{:5d} s:{:5d}:{:2d}",
+        "{:12s} sid:{:5d} pgm:{:5d} vid:{:5d}:{:2d} aud:{:5d}:{:2d}:{:5d} sub:{:5d}:{:2d}",
         service.getChannelName(), service.getSid(), service.getProgramPid(),
         service.getVidPid(), service.getVidStreamType(),
         service.getAudPid(), service.getAudStreamType(), service.getAudOtherPid(),
         service.getSubPid(), service.getSubStreamType()).c_str());
-
 
       if (service.getChannelRecord()) {
         ImGui::SameLine();
@@ -213,21 +212,27 @@ private:
   //{{{
   void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
 
+    // draw subtitle info
+    ImVec2 pos = ImGui::GetCursorPos();
     ImGui::TextUnformatted (subtitle.getInfo().c_str());
+    ImGui::SetCursorPos (pos);
+    if (ImGui::InvisibleButton (fmt::format ("##info").c_str(),
+                                {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
+      subtitle.toggleDebug();
 
     float potSize = ImGui::GetTextLineHeight() / 2.f;
-
     size_t line = 0;
     while (line < subtitle.getNumImages()) {
+      // draw subtitle line
       cSubtitleImage& image = subtitle.getImage (line);
 
       // draw clut color pots
-      ImVec2 pos = ImGui::GetCursorScreenPos();
+      pos = ImGui::GetCursorScreenPos();
       for (size_t pot = 0; pot < image.mColorLut.max_size(); pot++) {
         ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
         uint32_t color = image.mColorLut[pot];
-        ImGui::GetWindowDrawList()->AddRectFilled (potPos,
-                                                   {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          potPos, {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
         }
       ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),
                               {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()});
@@ -250,12 +255,22 @@ private:
       line++;
       }
 
-    // pad lines to highwater mark, stops jumping about
     while (line < subtitle.getHighWatermarkImages()) {
+      //{{{  pad lines to highwater mark, stops jumping about
       ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
                               {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
       line++;
       }
+      //}}}
+    if (subtitle.getDebug()) {
+      //{{{  draw log
+      ImGui::BeginChild ("##log", {ImGui::GetWindowWidth(), 12*ImGui::GetTextLineHeight()}, true,
+                         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
+      for (auto& logLine : subtitle.getLog())
+        ImGui::TextUnformatted (logLine.c_str());
+      ImGui::EndChild();
+      }
+      //}}}
     }
   //}}}
 

@@ -192,7 +192,7 @@ public:
       mDvbSubtitleDecoder = nullptr;
       }
     else
-      mDvbSubtitleDecoder = new cDvbSubtitleDecoder (mSid, mChannelName);
+      mDvbSubtitleDecoder = new cDvbSubtitleDecoder (getChannelName());
     }
   //}}}
 
