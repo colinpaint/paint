@@ -56,7 +56,7 @@ void cDvbSubtitleDecoder::toggleDebug() {
 
   mDebug = !mDebug;
 
-  if (mDebug) 
+  if (mDebug)
     mLog.push_back (fmt::format ("{} log", mName));
   else
     mLog.clear();
@@ -159,11 +159,11 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
 //{{{
 void cDvbSubtitleDecoder::log (const std::string& text) {
 
-  // prepend service name
-  //cLog::log (LOGINFO, fmt::format ({:12s} {}" mName, text));
+  // prepend service name for console log
+  cLog::log (LOGINFO, fmt::format ("{:12s} {}", mName, text));
 
-  // prepend time
-  mLog.push_back (date::format ("%T ", chrono::floor<chrono::milliseconds>(chrono::system_clock::now())) + text);
+  // prepend time for gui window log
+  mLog.push_back (date::format ("%T ", chrono::floor<chrono::microseconds>(chrono::system_clock::now())) + text);
   }
 //}}}
 

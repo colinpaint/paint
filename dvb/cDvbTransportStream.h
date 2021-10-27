@@ -26,220 +26,229 @@ class cTexture;
 using tTimePoint = std::chrono::system_clock::time_point;
 using tDuration = std::chrono::seconds;
 
-//{{{
-class cPidInfo {
-public:
-  cPidInfo (uint16_t pid, bool isPsi) : mPid(pid), mPsi(isPsi) {}
-  ~cPidInfo() { free (mBuffer); }
-
-  std::string getTypeString();
-  std::string getInfoString() { return mInfoString; }
-
-  int getBufUsed() { return int(mBufPtr - mBuffer); }
-
-  int addToBuffer (uint8_t* buf, int bufSize);
-
-  //{{{
-  void clearCounts() {
-    mPackets = 0;
-    mErrors = 0;
-    mRepeatContinuity = 0;
-    }
-  //}}}
-  //{{{
-  void clearContinuity() {
-    mBufPtr = nullptr;
-    mStreamPos = -1;
-    mContinuity = -1;
-    }
-  //}}}
-
-  // vars
-  const uint16_t mPid;
-  const bool mPsi;
-
-  uint16_t mSid = 0xFFFF;
-  uint16_t mStreamType = 0;
-
-  int mPackets = 0;
-  int mContinuity = -1;
-  int mErrors = 0;
-  int mRepeatContinuity = 0;
-
-  int64_t mPts = -1;
-  int64_t mFirstPts = -1;
-  int64_t mLastPts = -1;
-
-  int mBufSize = 0;
-  uint8_t* mBuffer = nullptr;
-  uint8_t* mBufPtr = nullptr;
-
-  int64_t mStreamPos = -1;
-
-  std::string mInfoString;
-  };
-//}}}
-//{{{
-class cEpgItem {
-public:
-  cEpgItem (bool now, bool record, tTimePoint time, tDuration duration,
-            const std::string& titleString, const std::string& infoString)
-    : mNow(now), mRecord(record), mTime(time), mDuration(duration), mTitleString(titleString), mInfoString(infoString) {}
-  ~cEpgItem() {}
-
-  bool getRecord() { return mRecord; }
-  std::string getTitleString() { return mTitleString; }
-  std::string getDesriptionString() { return mInfoString; }
-
-  tDuration getDuration() { return mDuration; }
-  tTimePoint getTime() { return mTime; }
-
-  //{{{
-  bool toggleRecord() {
-    mRecord = !mRecord;
-    return mRecord;
-    }
-  //}}}
-  //{{{
-  void set (tTimePoint time, tDuration duration, const std::string& titleString, const std::string& infoString) {
-    mTime = time;
-    mDuration = duration;
-    mTitleString = titleString;
-    mInfoString = infoString;
-    }
-  //}}}
-
-private:
-  const bool mNow = false;
-  bool mRecord = false;
-
-  tTimePoint mTime;
-  tDuration mDuration;
-
-  std::string mTitleString;
-  std::string mInfoString;
-  };
-//}}}
-//{{{
-class cService {
-public:
-  cService (uint16_t sid) : mSid(sid) {}
-  ~cService();
-
-  //{{{  gets
-  uint16_t getSid() const { return mSid; }
-  uint16_t getProgramPid() const { return mProgramPid; }
-
-  uint16_t getVidPid() const { return mVidPid; }
-  uint16_t getVidStreamType() const { return mVidStreamType; }
-
-  uint16_t getAudPid() const { return mAudPid; }
-  uint16_t getAudStreamType() const { return mAudStreamType; }
-  uint16_t getAudOtherPid() const { return mAudOtherPid; }
-
-  uint16_t getSubPid() const { return mSubPid; }
-  uint16_t getSubStreamType() const { return mSubStreamType; }
-
-  std::string getChannelName() const { return mChannelName; }
-  bool getChannelRecord() const { return mChannelRecord; }
-  std::string getChannelRecordName() const { return mChannelRecordName; }
-
-  // decoder
-  cDvbSubtitleDecoder* getDvbSubtitleDecoder() const { return mDvbSubtitleDecoder; }
-
-  // epg
-  bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
-
-  bool getShowEpg() { return mShowEpg; }
-
-  cEpgItem* getNowEpgItem() { return mNowEpgItem; }
-  std::string getNowTitleString() { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
-  std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpgItemMap() { return mEpgItemMap; }
-  //}}}
-  //{{{  sets
-  void setProgramPid (uint16_t pid) { mProgramPid = pid; }
-  void setVidPid (uint16_t pid, uint16_t streamType) { mVidPid = pid; mVidStreamType = streamType; }
-  void setAudPid (uint16_t pid, uint16_t streamType);
-  void setSubPid (uint16_t pid, uint16_t streamType) { mSubPid = pid; mSubStreamType = streamType; }
-  //{{{
-  void setChannelName (const std::string& name, bool record, const std::string& recordName) {
-    mChannelName = name;
-    mChannelRecord = record;
-    mChannelRecordName = recordName;
-    }
-  //}}}
-
-  // decoder
-  void setDvbSubtitleDecoder (cDvbSubtitleDecoder* dvbSubtitleDecoder) { mDvbSubtitleDecoder = dvbSubtitleDecoder; }
-
-  // epg
-  bool setNow (bool record,
-               std::chrono::system_clock::time_point time, std::chrono::seconds duration,
-               const std::string& str1, const std::string& str2);
-
-  bool setEpg (bool record,
-               std::chrono::system_clock::time_point startTime, std::chrono::seconds duration,
-               const std::string& titleString, const std::string& infoString);
-
-  void toggleShowEpg() { mShowEpg = !mShowEpg; }
-  //}}}
-
-  //{{{
-  void toggleDvbSubtitleDecode() {
-
-    if (mDvbSubtitleDecoder) {
-      delete mDvbSubtitleDecoder;
-      mDvbSubtitleDecoder = nullptr;
-      }
-    else
-      mDvbSubtitleDecoder = new cDvbSubtitleDecoder (getChannelName());
-    }
-  //}}}
-
-  // record
-  bool openFile (const std::string& fileName, uint16_t tsid);
-  void writePacket (uint8_t* ts, uint16_t pid);
-  void closeFile();
-
-private:
-  uint8_t* tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount);
-
-  void writePat (uint16_t tsid);
-  void writePmt();
-  void writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr);
-
-  // var
-  const uint16_t mSid;
-  uint16_t mProgramPid = 0xFFFF;
-
-  uint16_t mVidPid = 0xFFFF;
-  uint16_t mVidStreamType = 0;
-
-  uint16_t mAudPid = 0xFFFF;
-  uint16_t mAudOtherPid = 0xFFFF;
-  uint16_t mAudStreamType = 0;
-
-  uint16_t mSubPid = 0xFFFF;
-  uint16_t mSubStreamType = 0;
-
-  std::string mChannelName;
-  bool mChannelRecord = false;
-  std::string mChannelRecordName;
-
-  cDvbSubtitleDecoder* mDvbSubtitleDecoder = nullptr;
-
-  // epg
-  cEpgItem* mNowEpgItem = nullptr;
-  std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpgItemMap;
-  bool mShowEpg = true;
-
-  // record
-  FILE* mFile = nullptr;
-  };
-//}}}
-
 class cDvbTransportStream {
 public:
+  //{{{
+  class cPidInfo {
+  public:
+    cPidInfo (uint16_t pid, bool isPsi) : mPid(pid), mPsi(isPsi) {}
+    ~cPidInfo() { free (mBuffer); }
+
+    std::string getTypeName();
+    std::string getInfoString() { return mInfoString; }
+
+    int getBufUsed() { return int(mBufPtr - mBuffer); }
+
+    int addToBuffer (uint8_t* buf, int bufSize);
+
+    //{{{
+    void clearCounts() {
+      mPackets = 0;
+      mErrors = 0;
+      mRepeatContinuity = 0;
+      }
+    //}}}
+    //{{{
+    void clearContinuity() {
+      mBufPtr = nullptr;
+      mStreamPos = -1;
+      mContinuity = -1;
+      }
+    //}}}
+
+    // vars
+    const uint16_t mPid;
+    const bool mPsi;
+
+    uint16_t mSid = 0;
+    uint16_t mStreamType = 0;
+
+    int mPackets = 0;
+    int mContinuity = -1;
+    int mErrors = 0;
+    int mRepeatContinuity = 0;
+
+    int64_t mPts = -1;
+    int64_t mFirstPts = -1;
+    int64_t mLastPts = -1;
+
+    int mBufSize = 0;
+    uint8_t* mBuffer = nullptr;
+    uint8_t* mBufPtr = nullptr;
+
+    int64_t mStreamPos = -1;
+
+    std::string mInfoString;
+    };
+  //}}}
+  //{{{
+  class cEpgItem {
+  public:
+    cEpgItem (bool now, bool record, tTimePoint time, tDuration duration,
+              const std::string& titleString, const std::string& infoString)
+      : mNow(now), mRecord(record), mTime(time), mDuration(duration), mTitleString(titleString), mInfoString(infoString) {}
+    ~cEpgItem() {}
+
+    bool getRecord() { return mRecord; }
+    std::string getTitleString() { return mTitleString; }
+    std::string getDesriptionString() { return mInfoString; }
+
+    tDuration getDuration() { return mDuration; }
+    tTimePoint getTime() { return mTime; }
+
+    //{{{
+    bool toggleRecord() {
+      mRecord = !mRecord;
+      return mRecord;
+      }
+    //}}}
+    //{{{
+    void set (tTimePoint time, tDuration duration, const std::string& titleString, const std::string& infoString) {
+      mTime = time;
+      mDuration = duration;
+      mTitleString = titleString;
+      mInfoString = infoString;
+      }
+    //}}}
+
+  private:
+    const bool mNow = false;
+    bool mRecord = false;
+
+    tTimePoint mTime;
+    tDuration mDuration;
+
+    std::string mTitleString;
+    std::string mInfoString;
+    };
+  //}}}
+  //{{{
+  class cService {
+  public:
+    cService (uint16_t sid);
+    ~cService();
+
+    //{{{  gets
+    uint16_t getSid() const { return mSid; }
+    uint16_t getProgramPid() const { return mProgramPid; }
+
+    uint16_t getVidPid() const { return mVidPid; }
+    uint16_t getVidStreamType() const { return mVidStreamType; }
+    std::string getVidStreamTypeName() const { return mVidStreamTypeName; }
+
+    uint16_t getAudPid() const { return mAudPid; }
+    uint16_t getAudStreamType() const { return mAudStreamType; }
+    std::string getAudStreamTypeName() const { return mAudStreamTypeName; }
+    uint16_t getAudOtherPid() const { return mAudOtherPid; }
+
+    uint16_t getSubPid() const { return mSubPid; }
+    uint16_t getSubStreamType() const { return mSubStreamType; }
+    std::string getSubStreamTypeName() const { return mSubStreamTypeName; }
+
+    std::string getChannelName() const { return mChannelName; }
+    bool getChannelRecord() const { return mChannelRecord; }
+    std::string getChannelRecordName() const { return mChannelRecordName; }
+
+    // decoder
+    cDvbSubtitleDecoder* getDvbSubtitleDecoder() const { return mDvbSubtitleDecoder; }
+
+    // epg
+    bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
+
+    bool getShowEpg() { return mShowEpg; }
+
+    cEpgItem* getNowEpgItem() { return mNowEpgItem; }
+    std::string getNowTitleString() { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
+    std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpgItemMap() { return mEpgItemMap; }
+    //}}}
+    //{{{  sets
+    void setProgramPid (uint16_t pid) { mProgramPid = pid; }
+
+    void setVidPid (uint16_t pid, uint16_t streamType);
+    void setAudPid (uint16_t pid, uint16_t streamType);
+    void setSubPid (uint16_t pid, uint16_t streamType);
+
+    //{{{
+    void setChannelName (const std::string& name, bool record, const std::string& recordName) {
+      mChannelName = name;
+      mChannelRecord = record;
+      mChannelRecordName = recordName;
+      }
+    //}}}
+
+
+    // decoder
+    void setDvbSubtitleDecoder (cDvbSubtitleDecoder* dvbSubtitleDecoder) { mDvbSubtitleDecoder = dvbSubtitleDecoder; }
+
+    // epg
+    bool setNow (bool record,
+                 std::chrono::system_clock::time_point time, std::chrono::seconds duration,
+                 const std::string& str1, const std::string& str2);
+
+    bool setEpg (bool record,
+                 std::chrono::system_clock::time_point startTime, std::chrono::seconds duration,
+                 const std::string& titleString, const std::string& infoString);
+
+    void toggleShowEpg() { mShowEpg = !mShowEpg; }
+    //}}}
+
+    //{{{
+    void toggleDvbSubtitleDecode() {
+
+      if (mDvbSubtitleDecoder) {
+        delete mDvbSubtitleDecoder;
+        mDvbSubtitleDecoder = nullptr;
+        }
+      else
+        mDvbSubtitleDecoder = new cDvbSubtitleDecoder (getChannelName());
+      }
+    //}}}
+
+    // record
+    bool openFile (const std::string& fileName, uint16_t tsid);
+    void writePacket (uint8_t* ts, uint16_t pid);
+    void closeFile();
+
+  private:
+    uint8_t* tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount);
+
+    void writePat (uint16_t tsid);
+    void writePmt();
+    void writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr);
+
+    // var
+    const uint16_t mSid;
+    uint16_t mProgramPid = 0;
+
+    uint16_t mVidPid = 0;
+    uint16_t mVidStreamType = 0;
+    std::string mVidStreamTypeName;
+
+    uint16_t mAudPid = 0;
+    uint16_t mAudOtherPid = 0;
+    uint16_t mAudStreamType = 0;
+    std::string mAudStreamTypeName;
+
+    uint16_t mSubPid = 0;
+    uint16_t mSubStreamType = 0;
+    std::string mSubStreamTypeName;
+
+    std::string mChannelName;
+    bool mChannelRecord = false;
+    std::string mChannelRecordName;
+
+    cDvbSubtitleDecoder* mDvbSubtitleDecoder = nullptr;
+
+    // epg
+    cEpgItem* mNowEpgItem = nullptr;
+    std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpgItemMap;
+    bool mShowEpg = true;
+
+    // record
+    FILE* mFile = nullptr;
+    };
+  //}}}
+
   cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName);
   virtual ~cDvbTransportStream();
 
@@ -264,6 +273,7 @@ public:
   void fileSource (bool launchThread, const std::string& fileName);
 
   // static
+  static std::string getStreamTypeName (uint16_t streamType);
   static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
 
   // vars

@@ -118,15 +118,15 @@ private:
   // draw service map
 
     for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
-      cService& service =  serviceItem.second;
+      cDvbTransportStream::cService& service =  serviceItem.second;
 
       ImVec2 cursorPos = ImGui::GetCursorPos();
       ImGui::TextUnformatted (fmt::format (
-        "{:12s} sid:{:5d} pgm:{:5d} vid:{:5d}:{:2d} aud:{:5d}:{:2d}:{:5d} sub:{:5d}:{:2d}",
-        service.getChannelName(), service.getSid(), service.getProgramPid(),
-        service.getVidPid(), service.getVidStreamType(),
-        service.getAudPid(), service.getAudStreamType(), service.getAudOtherPid(),
-        service.getSubPid(), service.getSubStreamType()).c_str());
+        "{:12s} {:5d}:{:5d} vid{:5d}:{} aud{:5d}:{}:{:5d} sub{:5d}:{}",
+        service.getChannelName(), service.getProgramPid(), service.getSid(),
+        service.getVidPid(), service.getVidStreamTypeName(),
+        service.getAudPid(), service.getAudStreamTypeName(), service.getAudOtherPid(),
+        service.getSubPid(), service.getSubStreamTypeName()).c_str());
 
       if (service.getChannelRecord()) {
         ImGui::SameLine();
@@ -158,7 +158,7 @@ private:
     int prevSid = 0;
     for (auto& pidInfoItem : dvbTransportStream.getPidInfoMap()) {
       // iterate for pidInfo
-      cPidInfo& pidInfo = pidInfoItem.second;
+      cDvbTransportStream::cPidInfo& pidInfo = pidInfoItem.second;
 
       // draw separator, crude test for new service, fails sometimes
       if ((pidInfo.mSid != prevSid) && (pidInfo.mStreamType != 5) && (pidInfo.mStreamType != 11))
@@ -168,7 +168,7 @@ private:
       ImVec2 cursorPos = ImGui::GetCursorPos();
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
                               pidInfo.mPackets, mPacketDigits, pidInfo.mErrors, errorDigits, pidInfo.mPid,
-                              getFullPtsString (pidInfo.mPts), pidInfo.getTypeString()).c_str());
+                              getFullPtsString (pidInfo.mPts), pidInfo.getTypeName()).c_str());
       ImGui::SameLine();
       ImVec2 pos = ImGui::GetCursorScreenPos();
 
@@ -185,7 +185,7 @@ private:
         streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
       ImGui::TextUnformatted (streamText.c_str());
 
-      cService* service = dvbTransportStream.getService (pidInfo.mSid);
+      cDvbTransportStream::cService* service = dvbTransportStream.getService (pidInfo.mSid);
       if (service) {
         ImGui::SetCursorPos (cursorPos);
         if (ImGui::InvisibleButton (fmt::format ("##pid{}", pidInfo.mPid).c_str(),
@@ -212,14 +212,7 @@ private:
   //{{{
   void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
 
-    // draw subtitle info
-    ImVec2 pos = ImGui::GetCursorPos();
-    ImGui::TextUnformatted (subtitle.getInfo().c_str());
-    ImGui::SetCursorPos (pos);
-    if (ImGui::InvisibleButton (fmt::format ("##info").c_str(),
-                                {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
-      subtitle.toggleDebug();
-
+    // draw subtitles
     float potSize = ImGui::GetTextLineHeight() / 2.f;
     size_t line = 0;
     while (line < subtitle.getNumImages()) {
@@ -227,7 +220,7 @@ private:
       cSubtitleImage& image = subtitle.getImage (line);
 
       // draw clut color pots
-      pos = ImGui::GetCursorScreenPos();
+      ImVec2 pos = ImGui::GetCursorScreenPos();
       for (size_t pot = 0; pot < image.mColorLut.max_size(); pot++) {
         ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
         uint32_t color = image.mColorLut[pot];
@@ -255,22 +248,28 @@ private:
       line++;
       }
 
+    //{{{  pad lines to highwaterMark
     while (line < subtitle.getHighWatermarkImages()) {
-      //{{{  pad lines to highwater mark, stops jumping about
       ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
                               {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
       line++;
       }
-      //}}}
+    //}}}
+    //{{{  draw subtitle info button
+    if (toggleButton (subtitle.getInfo(), subtitle.getDebug(),
+                      {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
+      subtitle.toggleDebug();
+    //}}}
+    //{{{  draw subtitle log
     if (subtitle.getDebug()) {
-      //{{{  draw log
+      // draw log
       ImGui::BeginChild ("##log", {ImGui::GetWindowWidth(), 12*ImGui::GetTextLineHeight()}, true,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
       for (auto& logLine : subtitle.getLog())
         ImGui::TextUnformatted (logLine.c_str());
       ImGui::EndChild();
       }
-      //}}}
+    //}}}
     }
   //}}}
 
