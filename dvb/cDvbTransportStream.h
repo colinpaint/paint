@@ -28,6 +28,9 @@ using tDuration = std::chrono::seconds;
 
 class cDvbTransportStream {
 public:
+  cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName);
+  virtual ~cDvbTransportStream();
+
   //{{{
   class cPidInfo {
   public:
@@ -249,9 +252,6 @@ public:
     };
   //}}}
 
-  cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName);
-  virtual ~cDvbTransportStream();
-
   //{{{  gets
   uint64_t getNumPackets() const { return mNumPackets; }
   std::chrono::system_clock::time_point getTime() const { return mTime; }
@@ -268,13 +268,13 @@ public:
 
   cDvbSubtitleDecoder* getDvbSubtitleDecoder (uint16_t sid);
   //}}}
+  //{{{  static gets
+  static std::string getStreamTypeName (uint16_t streamType);
+  static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
+  //}}}
 
   void dvbSource (bool launchThread);
   void fileSource (bool launchThread, const std::string& fileName);
-
-  // static
-  static std::string getStreamTypeName (uint16_t streamType);
-  static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
 
   // vars
   std::mutex mMutex;

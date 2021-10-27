@@ -689,6 +689,7 @@ cDvbTransportStream::~cDvbTransportStream() {
   }
 //}}}
 
+// gets
 //{{{
 cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
 
@@ -720,7 +721,6 @@ cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t index, 
   return nullptr;
   }
 //}}}
-
 //{{{
 cDvbSubtitleDecoder* cDvbTransportStream::getDvbSubtitleDecoder (uint16_t sid) {
 
@@ -729,25 +729,7 @@ cDvbSubtitleDecoder* cDvbTransportStream::getDvbSubtitleDecoder (uint16_t sid) {
   }
 //}}}
 
-//{{{
-void cDvbTransportStream::dvbSource (bool launchThread) {
-
-  if (launchThread)
-    thread([=, this]() { dvbSourceInternal (true); }).detach();
-  else
-    dvbSourceInternal (false);
-  }
-//}}}
-//{{{
-void cDvbTransportStream::fileSource (bool launchThread, const string& fileName) {
-
-  if (launchThread)
-    thread ([=, this](){ fileSourceInternal (true, fileName); } ).detach();
-  else
-    fileSourceInternal (false, fileName);
-  }
-//}}}
-
+// static gets
 //{{{
 std::string cDvbTransportStream::getStreamTypeName (uint16_t streamType) {
 
@@ -1088,6 +1070,26 @@ char cDvbTransportStream::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int
   }
 //}}}
 
+// sources
+//{{{
+void cDvbTransportStream::dvbSource (bool launchThread) {
+
+  if (launchThread)
+    thread([=, this]() { dvbSourceInternal (true); }).detach();
+  else
+    dvbSourceInternal (false);
+  }
+//}}}
+//{{{
+void cDvbTransportStream::fileSource (bool launchThread, const string& fileName) {
+
+  if (launchThread)
+    thread ([=, this](){ fileSourceInternal (true, fileName); } ).detach();
+  else
+    fileSourceInternal (false, fileName);
+  }
+//}}}
+
 // private:
 //{{{
 void cDvbTransportStream::clear() {
@@ -1248,6 +1250,7 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
   }
 //}}}
 
+// parse
 //{{{
 void cDvbTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
 // PAT declares programPid,sid to mProgramMap to recognise programPid PMT to declare service streams
@@ -1839,6 +1842,7 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
   }
 //}}}
 
+// sources
 //{{{
 void cDvbTransportStream::dvbSourceInternal (bool launchThread) {
 
