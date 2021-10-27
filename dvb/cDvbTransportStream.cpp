@@ -747,7 +747,7 @@ std::string cDvbTransportStream::getStreamTypeName (uint16_t streamType) {
      case  27: return "264"; // HD vid
      case 129: return "ac3"; // aud AC3
      case 134: return "???"; // ???
-     default : return fmt::format ("{:3}", streamType);
+     default : return fmt::format ("{:3d}", streamType);
      }
   }
 //}}}

@@ -120,13 +120,29 @@ private:
     for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
       cDvbTransportStream::cService& service =  serviceItem.second;
 
+      if (service.getChannelName().size() > mMaxNameSize)
+        mMaxNameSize = service.getChannelName().size();
+      if (service.getSid() > pow (10, mMaxSidSize))
+        mMaxSidSize++;
+      if (service.getProgramPid() > pow (10, mMaxPgmSize))
+        mMaxPgmSize++;
+      if (service.getVidPid() > pow (10, mMaxVidSize))
+        mMaxVidSize++;
+      if (service.getAudPid() > pow (10, mMaxAudSize))
+        mMaxAudSize++;
+      if (service.getSubPid() > pow (10, mMaxSubSize))
+        mMaxSubSize++;
+
       ImVec2 cursorPos = ImGui::GetCursorPos();
       ImGui::TextUnformatted (fmt::format (
-        "{:12s} {:5d}:{:5d} vid{:5d}:{} aud{:5d}:{}:{:5d} sub{:5d}:{}",
-        service.getChannelName(), service.getProgramPid(), service.getSid(),
-        service.getVidPid(), service.getVidStreamTypeName(),
-        service.getAudPid(), service.getAudStreamTypeName(), service.getAudOtherPid(),
-        service.getSubPid(), service.getSubStreamTypeName()).c_str());
+        "{:{}s} {:{}d}:{:{}d} vid:{:{}d}:{} aud:{:{}d}:{:{}d}:{} {}:{:{}d}",
+        service.getChannelName(), mMaxNameSize,
+        service.getProgramPid(), mMaxPgmSize,
+        service.getSid(), mMaxSidSize,
+        service.getVidPid(), mMaxVidSize, service.getVidStreamTypeName(),
+        service.getAudPid(), mMaxAudSize, service.getAudOtherPid(), mMaxAudSize, service.getAudStreamTypeName(),
+        service.getSubStreamTypeName(), service.getSubPid(), mMaxSubSize).c_str()
+        );
 
       if (service.getChannelRecord()) {
         ImGui::SameLine();
@@ -282,8 +298,15 @@ private:
   bool mServices = true;
   bool mPids = false;
 
-  int mPacketDigits = 0;
-  int mMaxPidPackets = 0;
+  int mPacketDigits = 3;
+  int mMaxPidPackets = 3;
+
+  size_t mMaxNameSize = 3;
+  size_t mMaxSidSize = 3;
+  size_t mMaxPgmSize = 3;
+  size_t mMaxVidSize = 3;
+  size_t mMaxAudSize = 3;
+  size_t mMaxSubSize = 3;
   };
 //}}}
 
