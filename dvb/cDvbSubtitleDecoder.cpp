@@ -57,7 +57,7 @@ void cDvbSubtitleDecoder::toggleDebug() {
   mDebug = !mDebug;
 
   if (mDebug)
-    mLog.push_back (fmt::format ("{} log", mName));
+    mLog.push_back (fmt::format ("{} subtitle log", mName));
   else
     mLog.clear();
   }
