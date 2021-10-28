@@ -13,8 +13,22 @@
 
 class cMiniLog {
 public:
-	cMiniLog(const std::string& name);
-	~cMiniLog() = default;
+	class cTag {
+	public:
+		cTag (const std::string& name) : mName(name) {}
+		std::string mName;
+		bool mEnable = false;;
+		};
+
+	class cLine {
+	public:
+		cLine(const std::string& text) : mText(text) {}
+		std::string mText;
+		std::chrono::system_clock::time_point mTimePoint;
+		uint8_t mTagIndex = 0;
+		};
+
+	cMiniLog (const std::string& name);
 
 	bool getEnable() const { return mEnable; }
 
@@ -39,13 +53,13 @@ public:
 	void log (const std::string& text);
 
 private:
-	const std::string mName;
-	const std::chrono::system_clock::time_point mFirstTimePoint;
+	bool mEnable = false;
 
+	const std::string mName;
 	std::string mHeader;
 	std::string mFooter;
 
-	bool mEnable = false;
+	const std::chrono::system_clock::time_point mFirstTimePoint;
 
 	std::deque <std::string> mLog;
 	std::vector <std::string> mTags;
