@@ -221,7 +221,7 @@ private:
   //}}}
 
   void header();
-  void log (const std::string& text);
+  void log (const std::string& tag, const std::string& text);
 
   // get
   cObject* findObject (uint16_t id);

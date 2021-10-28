@@ -53,7 +53,7 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) 
   mPage.mPts = pts;
   mPage.mPesSize = bufSize;
 
-  log (fmt::format ("pes pts:{} size:{}", getFullPtsString (mPage.mPts), mPage.mPesSize));
+  log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (mPage.mPts), mPage.mPesSize));
 
   const uint8_t* bufEnd = buf + bufSize;
   const uint8_t* bufPtr = buf + 2;
@@ -153,8 +153,8 @@ void cDvbSubtitleDecoder::header() {
   }
 //}}}
 //{{{
-void cDvbSubtitleDecoder::log (const std::string& text) {
-  mMiniLog.log (text);
+void cDvbSubtitleDecoder::log (const string& tag, const string& text) {
+  mMiniLog.log (tag, text);
   }
 //}}}
 
@@ -248,7 +248,7 @@ bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t b
     }
 
   header();
-  log (fmt::format ("display {} x:{} y:{} w:{} h:{}",
+  log ("display", fmt::format ("{} x: {} y: {} w: {} h: {}",
                     displayWindow != 0 ? " window" : "",
                     mDisplayDefinition.mX, mDisplayDefinition.mY,
                     mDisplayDefinition.mWidth, mDisplayDefinition.mHeight));
@@ -296,7 +296,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     }
 
   header();
-  log (fmt::format ("page v:{:2d} s:{:1d} t:{} {} {}",
+  log ("page", fmt::format ("v:{:2d} s: {:1d} t: {} {} {}",
                     mPage.mVersion, mPage.mState, mPage.mTimeout,
                     regionDebug.empty() ? "noRegions" : "regionIds", regionDebug));
   return true;
@@ -374,7 +374,7 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     }
 
   header();
-  log (fmt::format ("region id:{}:{:2d} {}x{} lut:{} bgnd:{} {} {}",
+  log ("region", fmt::format ("id:{}:{:2d} {}x{} lut:{} bgnd:{} {} {}",
                     region.mId, region.mVersion,
                     region.mWidth, region.mHeight,
                     region.mColorLutDepth, region.mBackgroundColour,
@@ -446,7 +446,7 @@ bool cDvbSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
     }
 
   header();
-  log (fmt::format ("lut id:{} version:{}", colorLut.mId, colorLut.mVersion));
+  log ("lut", fmt::format ("id:{} version:{}", colorLut.mId, colorLut.mVersion));
   return true;
   }
 //}}}
@@ -628,7 +628,7 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
   uint16_t objectId = AVRB16(buf);
   buf += 2;
 
-  log (fmt::format ("object id:{}", objectId));
+  log ("object", fmt::format ("id:{}", objectId));
 
   cObject* object = findObject (objectId);
   if (!object) // not declared by region, ignore
@@ -713,10 +713,8 @@ void cDvbSubtitleDecoder::endDisplay() {
 
   header();
   if (mPage.mRegionDisplays.size())
-    log (fmt::format ("end {} - {} lines",
-         getFullPtsString (mPage.mPts), mPage.mRegionDisplays.size()));
+    log ("end", fmt::format("{} - {} lines", getFullPtsString (mPage.mPts), mPage.mRegionDisplays.size()));
   else
-    log (fmt::format ("end {} - noLines",
-         getFullPtsString (mPage.mPts)));
+    log ("end", fmt::format("{} - noLines", getFullPtsString (mPage.mPts)));
   }
 //}}}

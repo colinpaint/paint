@@ -42,27 +42,20 @@ void cMiniLog::clear() {
 //}}}
 
 //{{{
-void cMiniLog::log (const string& text) {
+void cMiniLog::log (const string& tag, const string& text) {
 
   if (mEnable) {
-    // look for tag
-    string tag;
-    size_t pos = text.find (' ');
-    if ((pos != 0) && (pos != string::npos)) {
-      // use first word as tag
-      tag = text.substr (0, pos);
-
-      bool found = false;
-      for (auto& curTag : mTags)
-        if (tag == curTag.mName) {
-          found = true;
-          break;
-          }
-      if (!found) 
-        mTags.push_back (cTag (tag));
+    uint8_t tagIndex = 0;
+    for (auto& curTag : mTags) {
+      if (tag == curTag.mName)
+        break;
+      tagIndex++;
       }
 
-    mLines.push_back (cLine (tag, text, chrono::system_clock::now() - mFirstTimePoint));
+    if (tagIndex == mTags.size())
+      mTags.push_back (cTag (tag));
+
+    mLines.push_back (cLine (text, tagIndex, chrono::system_clock::now() - mFirstTimePoint));
 
     // prepend name for console log
     cLog::log (LOGINFO, mName + " " + text);

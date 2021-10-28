@@ -89,21 +89,17 @@ void drawMiniLog (cMiniLog& miniLog) {
                        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
 
     if (filtered) {
-      for (auto& line : miniLog.getLines()) {
-        for (auto& tag : miniLog.getTags()) {
-          if (tag.mEnable) {
-            if (line.mTag == tag.mName) {
-              ImGui::TextUnformatted ((line.mTag + " " + line.mText).c_str());
-              break;
-              }
-            }
-          }
-        }
+      // tag filtered draw
+      for (auto& line : miniLog.getLines())
+        if (miniLog.getTags()[line.mTagIndex].mEnable)
+          ImGui::TextUnformatted ((date::format ("%M.%S ", line.mTimeStamp) +
+                                  miniLog.getTags()[line.mTagIndex].mName + " " + line.mText).c_str());
       }
     else {
-      // simple unfiltered draw
+      // simple unfiltered draw, can use imgui ImGuiListClipper
       for (auto& line : miniLog.getLines())
-        ImGui::TextUnformatted ((line.mTag + " " + line.mText).c_str());
+        ImGui::TextUnformatted ((date::format ("%M.%S ", line.mTimeStamp) +
+                                miniLog.getTags()[line.mTagIndex].mName + " " + line.mText).c_str());
       }
 
     // autoScroll child

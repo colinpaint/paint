@@ -26,12 +26,12 @@ public:
   //{{{
   class cLine {
   public:
-    cLine (const std::string& tag, const std::string& text, std::chrono::system_clock::duration time)
-      : mTag(tag), mText(text), mTime(time) {}
+    cLine (const std::string& text, uint8_t tagIndex, std::chrono::system_clock::duration timeStamp)
+      : mText(text), mTagIndex(tagIndex), mTimeStamp(timeStamp) {}
 
-    std::string mTag;
     std::string mText;
-    std::chrono::system_clock::duration mTime;
+    uint8_t mTagIndex;
+    std::chrono::system_clock::duration mTimeStamp;
     };
   //}}}
 
@@ -45,14 +45,14 @@ public:
   std::vector<cTag>& getTags() { return mTags; }
 
   void setEnable (bool enable);
+  void toggleEnable();
+
   void setHeader (const std::string& header) { mHeader = header; }
   void setFooter (const std::string& footer) { mFooter = footer; }
 
-  void toggleEnable();
-
   void clear();
 
-  void log (const std::string& text);
+  void log (const std::string& tag, const std::string& text);
 
 private:
   bool mEnable = false;
