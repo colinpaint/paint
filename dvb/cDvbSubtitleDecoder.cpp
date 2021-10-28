@@ -25,7 +25,7 @@ using namespace std;
 //}}}
 
 // public:
-cDvbSubtitleDecoder::cDvbSubtitleDecoder (const std::string name) : mMiniLog ("subLog") {}
+cDvbSubtitleDecoder::cDvbSubtitleDecoder (const std::string name) : mName(name), mMiniLog ("subLog") {}
 //{{{
 cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 

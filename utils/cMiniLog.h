@@ -20,7 +20,7 @@ public:
     cTag (const std::string& name) : mName(name) {}
 
     std::string mName;
-    bool mEnable = false;;
+    bool mEnable = false;
     };
   //}}}
   //{{{
