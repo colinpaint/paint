@@ -87,9 +87,13 @@ public:
   //{{{
   class cEpgItem {
   public:
+    //{{{
     cEpgItem (bool now, bool record, tTimePoint time, tDuration duration,
               const std::string& titleString, const std::string& infoString)
-      : mNow(now), mRecord(record), mTime(time), mDuration(duration), mTitleString(titleString), mInfoString(infoString) {}
+      : mNow(now), mRecord(record),
+        mTime(time), mDuration(duration),
+        mTitleString(titleString), mInfoString(infoString) {}
+    //}}}
     ~cEpgItem() {}
 
     bool getRecord() { return mRecord; }
@@ -256,7 +260,9 @@ public:
   uint64_t getNumPackets() const { return mNumPackets; }
   uint64_t getNumErrors() const { return mNumErrors; }
 
-  std::chrono::system_clock::time_point getTdtTime() const { return mTime; }
+  bool hasTdtTime() const { return mFirstTimeDefined; }
+  tTimePoint getTdtTime() const { return mTdtTime; }
+  std::string getTdtTimeString() const;
 
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
@@ -336,8 +342,8 @@ private:
   std::vector <std::string> mRecordPrograms;
 
   // time
-  std::chrono::system_clock::time_point mTime; // tdt now time
+  tTimePoint mTdtTime; // tdt now time
 
-  bool mTimeDefined = false;
-  std::chrono::system_clock::time_point mFirstTime; // first tdt time seen
+  bool mFirstTimeDefined = false;
+  tTimePoint mFirstTime; // first tdt time seen
   };

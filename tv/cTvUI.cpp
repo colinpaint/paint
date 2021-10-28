@@ -60,6 +60,12 @@ public:
 
     cDvbTransportStream* dvbTransportStream = app.getDvbTransportStream();
     if (dvbTransportStream) {
+      if (dvbTransportStream.hasTdtTime()) {
+        //{{{  draw tdtTime
+        ImGui::SameLine();
+        ImGui::TextUnformatted (dvbTransportStream->getTdtTimeString().c_str());
+        }
+        //}}}
       //{{{  draw packet,errors
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{}:{} ",

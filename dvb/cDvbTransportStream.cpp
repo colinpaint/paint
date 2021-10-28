@@ -691,6 +691,11 @@ cDvbTransportStream::~cDvbTransportStream() {
 
 // gets
 //{{{
+string cDvbTransportStream::getTdtTimeString() const {
+  return date::format ("%T", date::floor<chrono::seconds>(mTdtTime));
+  }
+//}}}
+//{{{
 cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
 
   auto it = mServiceMap.find (sid);
@@ -1078,7 +1083,7 @@ void cDvbTransportStream::clear() {
 
   mNumErrors = 0;
 
-  mTimeDefined = false;
+  mFirstTimeDefined = false;
   }
 //}}}
 //{{{
@@ -1467,7 +1472,7 @@ void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                                                     service->getNowTitleString();
 
                   // callback to override to start new serviceItem program
-                  startServiceProgram (service, mTime,
+                  startServiceProgram (service, mTdtTime,
                                        titleString, startTime,
                                        service->isEpgRecord (titleString, startTime));
                   }
@@ -1494,14 +1499,15 @@ void cDvbTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
 
   sTdt* tdt = (sTdt*)buf;
   if (tdt->table_id == TID_TDT) {
-    mTime = chrono::system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) + BcdTimeToSeconds (tdt->utc_time));
-    if (!mTimeDefined) {
-      mFirstTime = mTime;
-      mTimeDefined = true;
+    mTdtTime = chrono::system_clock::from_time_t (
+                 MjdToEpochTime (tdt->utc_mjd) + BcdTimeToSeconds (tdt->utc_time));
+    if (!mFirstTimeDefined) {
+      mFirstTime = mTdtTime;
+      mFirstTimeDefined = true;
       }
 
-    pidInfo->mInfoString = date::format ("%T", date::floor<chrono::seconds>(mFirstTime)) +
-                           " to " + date::format ("%T", date::floor<chrono::seconds>(mTime));
+    pidInfo->mInfoString = 
+      date::format ("%T", date::floor<chrono::seconds>(mFirstTime)) + " to " + getTdtTimeString();
     }
   }
 //}}}
