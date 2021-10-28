@@ -72,16 +72,50 @@ void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t
 void drawMiniLog (cMiniLog& miniLog) {
 
   if (miniLog.getEnable()) {
-    if (!miniLog.getHeader().empty())
-      ImGui::TextUnformatted (miniLog.getHeader().c_str());
+    if (ImGui::Button (miniLog.getHeader().c_str()))
+      miniLog.clear();
+
+    bool filtered = false;
+    vector <bool>& filters = miniLog.getFilters();
+    if (!miniLog.getTags().empty()) {
+      uint8_t i = 0;
+      for (auto& tag : miniLog.getTags()) {
+        ImGui::SameLine();
+        if (toggleButton (tag.c_str(), filters[i]))
+          filters[i] = !filters[i];
+        filtered |= filters[i];
+        i++;
+        }
+      }
 
     // draw log
     ImGui::BeginChild (fmt::format ("##log{}", miniLog.getName()).c_str(),
                        {ImGui::GetWindowWidth(), 12 * ImGui::GetTextLineHeight() }, true,
                        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
 
-    for (auto& logLine : miniLog.getLog())
-      ImGui::TextUnformatted(logLine.c_str());
+    if (filtered) {
+      for (auto& logLine : miniLog.getLog()) {
+        uint8_t i = 0;
+        bool found = false;
+        for (auto filter : miniLog.getFilters()) {
+          if (filter) {
+            size_t pos = logLine.find (miniLog.getTags()[i]);
+            if (pos == miniLog.getTagPos()) {
+              found = true;
+              break;
+              }
+            }
+          i++;
+          }
+        if (found)
+          ImGui::TextUnformatted (logLine.c_str());
+        }
+      }
+    else {
+      // simple unfiltered draw
+      for (auto& logLine : miniLog.getLog())
+        ImGui::TextUnformatted (logLine.c_str());
+      }
 
     // autoScroll child
     if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
@@ -206,7 +240,7 @@ bool toggleButton (const string& label, bool toggleOn, const ImVec2& size_arg) {
   }
 //}}}
 //{{{
-uint8_t interlockedButtons (const vector<string>& buttonVector, uint8_t index, 
+uint8_t interlockedButtons (const vector<string>& buttonVector, uint8_t index,
                             const ImVec2& size_arg, bool tabbed) {
 // interlockedButtons helper
 // draw buttonVector as toggleButtons with index toggled on

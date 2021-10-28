@@ -222,7 +222,6 @@ private:
 
   void header();
   void log (const std::string& text);
-  void log (const std::string& text, uint8_t level);
 
   // get
   cObject* findObject (uint16_t id);

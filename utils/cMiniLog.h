@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include <deque>
-
 #include <chrono>
 
 #include "../utils/formatCore.h"
@@ -18,13 +17,15 @@ public:
 	~cMiniLog() = default;
 
 	bool getEnable() const { return mEnable; }
-	bool getLevel() const { return mLevel; }
 
 	std::string getName() const { return mName; }
-	std::string getHeader() const { return mHeader; }
+	std::string getHeader() const;
 	std::string getFooter() const { return mFooter; }
 
 	std::deque<std::string>& getLog() { return mLog; }
+	std::vector<std::string>& getTags() { return mTags; }
+	std::vector<bool>& getFilters() { return mFilters; }
+	uint8_t getTagPos() const { return 14; }
 
 	void setEnable (bool enable);
 	void setLevel (uint8_t level);
@@ -33,7 +34,9 @@ public:
 
 	void toggleEnable();
 
-	void log (const std::string& text, uint8_t level = 0);
+	void clear();
+
+	void log (const std::string& text);
 
 private:
 	const std::string mName;
@@ -43,7 +46,8 @@ private:
 	std::string mFooter;
 
 	bool mEnable = false;
-	uint8_t mLevel = 0;
 
 	std::deque <std::string> mLog;
+	std::vector <std::string> mTags;
+	std::vector <bool> mFilters;
 	};

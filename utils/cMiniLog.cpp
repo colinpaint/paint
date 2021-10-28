@@ -15,27 +15,17 @@
 using namespace std;
 //}}}
 
-cMiniLog::cMiniLog(const string& name) : mName(name), mFirstTimePoint (chrono::system_clock::now()) {}
+// !!!! crude tag scheme - needs working up !!!
+cMiniLog::cMiniLog (const string& name) : mName(name), mFirstTimePoint (chrono::system_clock::now()) {}
+
+string cMiniLog::getHeader() const { return mName + " " + mHeader; }
 
 //{{{
 void cMiniLog::setEnable (bool enable) {
 
   if (enable != mEnable) {
-    if (enable)
-      mLog.push_back (fmt::format("{} log level:{}", mName, mLevel));
-    else
-      mLog.clear();
-
+    mLog.clear();
     mEnable = enable;
-    }
-  }
-//}}}
-//{{{
-void cMiniLog::setLevel (uint8_t level) {
-
-  if (level != mLevel) {
-    mLevel = level;
-    mLog.push_back (fmt::format("{} subtitle log level:{}", mName, mLevel));
     }
   }
 //}}}
@@ -46,15 +36,39 @@ void cMiniLog::toggleEnable() {
 //}}}
 
 //{{{
-void cMiniLog::log (const string& text, uint8_t level) {
+void cMiniLog::clear() {
+  mLog.clear();
+  }
+//}}}
 
-  if (mEnable && (level <= mLevel)) {
-    // prepend name for console log
-    cLog::log (LOGINFO, mName + " " + text);
+//{{{
+void cMiniLog::log (const string& text) {
+
+  if (mEnable) {
+    // look for tag
+    size_t pos = text.find (' ');
+    if ((pos != 0) && (pos != string::npos)) {
+      // use first word as tag
+      string tag = text.substr (0, pos);
+
+      bool found = false;
+      for (auto& curTag : mTags)
+        if (tag == curTag) {
+          found = true;
+          break;
+          }
+      if (!found) {
+        mTags.push_back (tag);
+        mFilters.push_back (false);
+        }
+      }
 
     // prepend time for gui window log
     chrono::system_clock::time_point now = chrono::system_clock::now();
     mLog.push_back (date::format ("%M.%S ", now - mFirstTimePoint) + text);
+
+    // prepend name for console log
+    cLog::log (LOGINFO, mName + " " + text);
     }
   }
 //}}}
