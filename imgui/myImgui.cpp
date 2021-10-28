@@ -76,16 +76,11 @@ void drawMiniLog (cMiniLog& miniLog) {
       miniLog.clear();
 
     bool filtered = false;
-    vector <bool>& filters = miniLog.getFilters();
-    if (!miniLog.getTags().empty()) {
-      uint8_t i = 0;
-      for (auto& tag : miniLog.getTags()) {
-        ImGui::SameLine();
-        if (toggleButton (tag.c_str(), filters[i]))
-          filters[i] = !filters[i];
-        filtered |= filters[i];
-        i++;
-        }
+    for (auto& tag : miniLog.getTags()) {
+      ImGui::SameLine();
+      if (toggleButton (tag.mName.c_str(), tag.mEnable))
+        tag.mEnable = !tag.mEnable;
+      filtered |= tag.mEnable;
       }
 
     // draw log
@@ -94,27 +89,21 @@ void drawMiniLog (cMiniLog& miniLog) {
                        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
 
     if (filtered) {
-      for (auto& logLine : miniLog.getLog()) {
-        uint8_t i = 0;
-        bool found = false;
-        for (auto filter : miniLog.getFilters()) {
-          if (filter) {
-            size_t pos = logLine.find (miniLog.getTags()[i]);
-            if (pos == miniLog.getTagPos()) {
-              found = true;
+      for (auto& line : miniLog.getLines()) {
+        for (auto& tag : miniLog.getTags()) {
+          if (tag.mEnable) {
+            if (line.mTag == tag.mName) {
+              ImGui::TextUnformatted ((line.mTag + " " + line.mText).c_str());
               break;
               }
             }
-          i++;
           }
-        if (found)
-          ImGui::TextUnformatted (logLine.c_str());
         }
       }
     else {
       // simple unfiltered draw
-      for (auto& logLine : miniLog.getLog())
-        ImGui::TextUnformatted (logLine.c_str());
+      for (auto& line : miniLog.getLines())
+        ImGui::TextUnformatted ((line.mTag + " " + line.mText).c_str());
       }
 
     // autoScroll child

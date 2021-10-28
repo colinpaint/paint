@@ -13,55 +13,56 @@
 
 class cMiniLog {
 public:
-	class cTag {
-	public:
-		cTag (const std::string& name) : mName(name) {}
-		std::string mName;
-		bool mEnable = false;;
-		};
+  cMiniLog (const std::string& name);
+  //{{{
+  class cTag {
+  public:
+    cTag (const std::string& name) : mName(name) {}
 
-	class cLine {
-	public:
-		cLine(const std::string& text) : mText(text) {}
-		std::string mText;
-		std::chrono::system_clock::time_point mTimePoint;
-		uint8_t mTagIndex = 0;
-		};
+    std::string mName;
+    bool mEnable = false;;
+    };
+  //}}}
+  //{{{
+  class cLine {
+  public:
+    cLine (const std::string& tag, const std::string& text, std::chrono::system_clock::duration time)
+      : mTag(tag), mText(text), mTime(time) {}
 
-	cMiniLog (const std::string& name);
+    std::string mTag;
+    std::string mText;
+    std::chrono::system_clock::duration mTime;
+    };
+  //}}}
 
-	bool getEnable() const { return mEnable; }
+  bool getEnable() const { return mEnable; }
 
-	std::string getName() const { return mName; }
-	std::string getHeader() const;
-	std::string getFooter() const { return mFooter; }
+  std::string getName() const { return mName; }
+  std::string getHeader() const;
+  std::string getFooter() const { return mFooter; }
 
-	std::deque<std::string>& getLog() { return mLog; }
-	std::vector<std::string>& getTags() { return mTags; }
-	std::vector<bool>& getFilters() { return mFilters; }
-	uint8_t getTagPos() const { return 14; }
+  std::deque<cLine>& getLines() { return mLines; }
+  std::vector<cTag>& getTags() { return mTags; }
 
-	void setEnable (bool enable);
-	void setLevel (uint8_t level);
-	void setHeader (const std::string& header) { mHeader = header; }
-	void setFooter (const std::string& footer) { mFooter = footer; }
+  void setEnable (bool enable);
+  void setHeader (const std::string& header) { mHeader = header; }
+  void setFooter (const std::string& footer) { mFooter = footer; }
 
-	void toggleEnable();
+  void toggleEnable();
 
-	void clear();
+  void clear();
 
-	void log (const std::string& text);
+  void log (const std::string& text);
 
 private:
-	bool mEnable = false;
+  bool mEnable = false;
 
-	const std::string mName;
-	std::string mHeader;
-	std::string mFooter;
+  const std::string mName;
+  std::string mHeader;
+  std::string mFooter;
 
-	const std::chrono::system_clock::time_point mFirstTimePoint;
+  const std::chrono::system_clock::time_point mFirstTimePoint;
 
-	std::deque <std::string> mLog;
-	std::vector <std::string> mTags;
-	std::vector <bool> mFilters;
-	};
+  std::deque <cLine> mLines;
+  std::vector <cTag> mTags;
+  };

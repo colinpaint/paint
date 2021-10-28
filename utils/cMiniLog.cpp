@@ -24,7 +24,7 @@ string cMiniLog::getHeader() const { return mName + " " + mHeader; }
 void cMiniLog::setEnable (bool enable) {
 
   if (enable != mEnable) {
-    mLog.clear();
+    mLines.clear();
     mEnable = enable;
     }
   }
@@ -37,7 +37,7 @@ void cMiniLog::toggleEnable() {
 
 //{{{
 void cMiniLog::clear() {
-  mLog.clear();
+  mLines.clear();
   }
 //}}}
 
@@ -46,26 +46,23 @@ void cMiniLog::log (const string& text) {
 
   if (mEnable) {
     // look for tag
+    string tag;
     size_t pos = text.find (' ');
     if ((pos != 0) && (pos != string::npos)) {
       // use first word as tag
-      string tag = text.substr (0, pos);
+      tag = text.substr (0, pos);
 
       bool found = false;
       for (auto& curTag : mTags)
-        if (tag == curTag) {
+        if (tag == curTag.mName) {
           found = true;
           break;
           }
-      if (!found) {
-        mTags.push_back (tag);
-        mFilters.push_back (false);
-        }
+      if (!found) 
+        mTags.push_back (cTag (tag));
       }
 
-    // prepend time for gui window log
-    chrono::system_clock::time_point now = chrono::system_clock::now();
-    mLog.push_back (date::format ("%M.%S ", now - mFirstTimePoint) + text);
+    mLines.push_back (cLine (tag, text, chrono::system_clock::now() - mFirstTimePoint));
 
     // prepend name for console log
     cLog::log (LOGINFO, mName + " " + text);
