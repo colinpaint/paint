@@ -174,7 +174,7 @@ private:
         ImGui::SameLine();
         if (ImGui::Button (fmt::format ("{}:{:{}d}",
                            service.getSubStreamTypeName(), service.getSubPid(), mMaxSubSize).c_str()))
-          service.toggleDvbSubtitleDecode();
+          service.toggleSubtitleDecode();
         }
         //}}}
       if (service.getChannelRecord()) {
@@ -184,8 +184,8 @@ private:
         }
         //}}}
 
-      if (service.getDvbSubtitleDecoder())
-        drawSubtitle (*service.getDvbSubtitleDecoder(), graphics);
+      if (service.getSubtitleDecoder())
+        drawSubtitle (*service.getSubtitleDecoder(), graphics);
       }
     }
   //}}}
@@ -234,10 +234,10 @@ private:
         if (ImGui::InvisibleButton (fmt::format ("##pid{}", pidInfo.mPid).c_str(),
                                     {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
           if (pidInfo.mPid == service->getSubPid())
-            service->toggleDvbSubtitleDecode();
+            service->toggleSubtitleDecode();
 
         if (pidInfo.mPid == service->getSubPid()) {
-          cDvbSubtitleDecoder* dvbSubtitleDecoder = service->getDvbSubtitleDecoder();
+          cDvbSubtitleDecoder* dvbSubtitleDecoder = service->getSubtitleDecoder();
           if (dvbSubtitleDecoder)
             drawSubtitle (*dvbSubtitleDecoder, graphics);
           }

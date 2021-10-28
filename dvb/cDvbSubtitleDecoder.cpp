@@ -721,10 +721,10 @@ void cDvbSubtitleDecoder::endDisplay() {
 
   header();
   if (mPage.mRegionDisplays.size())
-    log (fmt::format ("{} ------ endDisplay - {} lines", 
+    log (fmt::format ("{} endDisplay - {} lines",
          getFullPtsString (mPage.mPts), mPage.mRegionDisplays.size()));
   else
-    log (fmt::format ("{} ------ endDisplay - noLines", 
+    log (fmt::format ("{} endDisplay - noLines",
          getFullPtsString (mPage.mPts)));
   }
 //}}}

@@ -9,18 +9,14 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <array>
 #include <map>
-
 #include <mutex>
 #include <chrono>
 
-#include <time.h>
-
 #include "cDvbMultiplex.h"
-#include "cDvbSource.h"
-#include "cDvbSubtitleDecoder.h"
 
+class cDvbSource;
+class cDvbSubtitleDecoder;
 class cTexture;
 //}}}
 using tTimePoint = std::chrono::system_clock::time_point;
@@ -110,8 +106,9 @@ public:
       }
     //}}}
     //{{{
-    void set (tTimePoint time, tDurationSeconds duration, 
+    void set (tTimePoint time, tDurationSeconds duration,
               const std::string& titleString, const std::string& infoString) {
+
       mTime = time;
       mDuration = duration;
       mTitleString = titleString;
@@ -158,7 +155,7 @@ public:
     std::string getChannelRecordName() const { return mChannelRecordName; }
 
     // decoder
-    cDvbSubtitleDecoder* getDvbSubtitleDecoder() const { return mDvbSubtitleDecoder; }
+    cDvbSubtitleDecoder* getSubtitleDecoder() const { return mSubtitleDecoder; }
 
     // epg
     bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
@@ -184,9 +181,9 @@ public:
       }
     //}}}
 
-
     // decoder
-    void setDvbSubtitleDecoder (cDvbSubtitleDecoder* dvbSubtitleDecoder) { mDvbSubtitleDecoder = dvbSubtitleDecoder; }
+    void setSubtitleDecoder (cDvbSubtitleDecoder* subtitleDecoder) { mSubtitleDecoder = subtitleDecoder; }
+    void toggleSubtitleDecode();
 
     // epg
     bool setNow (bool record,
@@ -198,18 +195,6 @@ public:
                  const std::string& titleString, const std::string& infoString);
 
     void toggleShowEpg() { mShowEpg = !mShowEpg; }
-    //}}}
-
-    //{{{
-    void toggleDvbSubtitleDecode() {
-
-      if (mDvbSubtitleDecoder) {
-        delete mDvbSubtitleDecoder;
-        mDvbSubtitleDecoder = nullptr;
-        }
-      else
-        mDvbSubtitleDecoder = new cDvbSubtitleDecoder (getChannelName());
-      }
     //}}}
 
     // record
@@ -245,7 +230,7 @@ public:
     bool mChannelRecord = false;
     std::string mChannelRecordName;
 
-    cDvbSubtitleDecoder* mDvbSubtitleDecoder = nullptr;
+    cDvbSubtitleDecoder* mSubtitleDecoder = nullptr;
 
     // epg
     cEpgItem* mNowEpgItem = nullptr;
@@ -261,19 +246,21 @@ public:
   uint64_t getNumPackets() const { return mNumPackets; }
   uint64_t getNumErrors() const { return mNumErrors; }
 
+  // tdtTime
   bool hasTdtTime() const { return mFirstTimeDefined; }
   tTimePoint getTdtTime() const { return mTdtTime; }
   std::string getTdtTimeString() const;
 
+  // maps
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
 
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
-  cDvbSubtitleDecoder* getDvbSubtitleDecoder (uint16_t sid);
+  cDvbSubtitleDecoder* getSubtitleDecoder (uint16_t sid);
 
-  // cDVbSOurce
+  // dvbSource
   bool hasDvbSource() const { return mDvbSource; }
   std::string getErrorString() { return mErrorString; }
   std::string getSignalString() { return mSignalString; }
@@ -283,6 +270,7 @@ public:
   static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
   //}}}
 
+  // source
   void dvbSource (bool launchThread);
   void fileSource (bool launchThread, const std::string& fileName);
 
@@ -325,17 +313,18 @@ private:
   // vars
   cDvbMultiplex mDvbMultiplex;
 
-  std::map <uint16_t, uint16_t> mProgramMap;
-  std::map <uint16_t, cPidInfo> mPidInfoMap;
-  std::map <uint16_t, cService> mServiceMap;
   uint64_t mNumPackets = 0;
   uint64_t mNumErrors = 0;
 
+  std::map <uint16_t, uint16_t> mProgramMap;
+  std::map <uint16_t, cPidInfo> mPidInfoMap;
+  std::map <uint16_t, cService> mServiceMap;
+
   // dvbSource
   cDvbSource* mDvbSource = nullptr;
-  uint64_t mLastErrors = 0;
   std::string mErrorString;
   std::string mSignalString;
+  uint64_t mLastErrors = 0;
 
   // record
   std::mutex mRecordFileMutex;
@@ -343,8 +332,7 @@ private:
   std::vector <std::string> mRecordPrograms;
 
   // time
-  tTimePoint mTdtTime; // tdt now time
-
   bool mFirstTimeDefined = false;
-  tTimePoint mFirstTime; // first tdt time seen
+  tTimePoint mFirstTime; // first tdtTime seen
+  tTimePoint mTdtTime;   // now tdtTime
   };

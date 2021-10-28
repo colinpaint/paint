@@ -16,8 +16,9 @@
   #include <sys/poll.h>
 #endif
 
-#include "cDvbUtils.h"
+#include "cDvbSource.h"
 #include "cDvbSubtitleDecoder.h"
+#include "cDvbUtils.h"
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"
@@ -452,7 +453,7 @@ cDvbTransportStream::cService::~cService() {
 
   mEpgItemMap.clear();
 
-  delete mDvbSubtitleDecoder;
+  delete mSubtitleDecoder;
 
   closeFile();
   }
@@ -531,6 +532,18 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
     it->second->set (startTime, duration, titleString, infoString);
 
   return true;
+  }
+//}}}
+
+//{{{
+void cDvbTransportStream::cService::toggleSubtitleDecode() {
+
+  if (mSubtitleDecoder) {
+    delete mSubtitleDecoder;
+    mSubtitleDecoder = nullptr;
+    }
+  else
+    mSubtitleDecoder = new cDvbSubtitleDecoder (getChannelName());
   }
 //}}}
 
@@ -703,10 +716,10 @@ cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
   }
 //}}}
 //{{{
-cDvbSubtitleDecoder* cDvbTransportStream::getDvbSubtitleDecoder (uint16_t sid) {
+cDvbSubtitleDecoder* cDvbTransportStream::getSubtitleDecoder (uint16_t sid) {
 
   cService* service = getService (sid);
-  return service ? service->getDvbSubtitleDecoder() : nullptr;
+  return service ? service->getSubtitleDecoder() : nullptr;
   }
 //}}}
 
@@ -1222,9 +1235,9 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
 
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cDvbSubtitleDecoder* dvbSubtitleDecoder = service->getDvbSubtitleDecoder();
-    if (dvbSubtitleDecoder)
-      dvbSubtitleDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+    cDvbSubtitleDecoder* subtitleDecoder = service->getSubtitleDecoder();
+    if (subtitleDecoder)
+      subtitleDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
     }
 
   return false;
@@ -1506,7 +1519,7 @@ void cDvbTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
       mFirstTimeDefined = true;
       }
 
-    pidInfo->mInfoString = 
+    pidInfo->mInfoString =
       date::format ("%T", date::floor<chrono::seconds>(mFirstTime)) + " to " + getTdtTimeString();
     }
   }
