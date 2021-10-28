@@ -698,30 +698,6 @@ cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
   }
 //}}}
 //{{{
-cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t index, int64_t& firstPts, int64_t& lastPts) {
-
-  firstPts = -1;
-  lastPts = -1;
-
-  int i = 0;
-  for (auto& service : mServiceMap) {
-    if (i == index) {
-      auto pidInfoIt = mPidInfoMap.find (service.second.getAudPid());
-      if (pidInfoIt != mPidInfoMap.end()) {
-        firstPts = pidInfoIt->second.mFirstPts;
-        lastPts = pidInfoIt->second.mLastPts;
-        cLog::log (LOGINFO, fmt::format("getService {} firstPts:{} lastPts:{}",
-                            index,getFullPtsString (firstPts),getFullPtsString (lastPts)));
-        return &service.second;
-        }
-      }
-    i++;
-    }
-
-  return nullptr;
-  }
-//}}}
-//{{{
 cDvbSubtitleDecoder* cDvbTransportStream::getDvbSubtitleDecoder (uint16_t sid) {
 
   cService* service = getService (sid);

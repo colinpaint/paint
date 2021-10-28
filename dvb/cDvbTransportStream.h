@@ -253,22 +253,23 @@ public:
   //}}}
 
   //{{{  gets
-  bool hasDvbSource() const { return mDvbSource; }
-
   uint64_t getNumPackets() const { return mNumPackets; }
-  std::chrono::system_clock::time_point getTime() const { return mTime; }
+  uint64_t getNumErrors() const { return mNumErrors; }
+
+  std::chrono::system_clock::time_point getTdtTime() const { return mTime; }
+
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
 
-  uint64_t getNumErrors() const { return mNumErrors; }
-  std::string getErrorString() { return mErrorString; }
-  std::string getSignalString() { return mSignalString; }
-
   cService* getService (uint16_t sid);
-  cService* getService (uint16_t index, int64_t& firstPts, int64_t& lastPts);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
   cDvbSubtitleDecoder* getDvbSubtitleDecoder (uint16_t sid);
+
+  // cDVbSOurce
+  bool hasDvbSource() const { return mDvbSource; }
+  std::string getErrorString() { return mErrorString; }
+  std::string getSignalString() { return mSignalString; }
   //}}}
   //{{{  static gets
   static std::string getStreamTypeName (uint16_t streamType);
