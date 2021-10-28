@@ -51,22 +51,10 @@ public:
       ImGui::SameLine();
       }
       //}}}
-    //{{{  recorded button
-    if (toggleButton ("recorded", mRecorded))
-      toggleRecorded();
-    ImGui::SameLine();
-    //}}}
-    //{{{  services button
-    if (toggleButton ("services", mServices))
-      toggleServices();
-    ImGui::SameLine();
-    //}}}
-    //{{{  pids button
-    if (toggleButton ("pids", mPids))
-      togglePids();
-    ImGui::SameLine();
-    //}}}
+
+    mTabIndex = interlockedButtons ({"services", "pids", "recorded"}, mTabIndex, {0.f,0.f}, true);
     //{{{  vertice debug
+    ImGui::SameLine();
     ImGui::TextUnformatted (fmt::format ("{}:{}",
                             ImGui::GetIO().MetricsRenderVertices,
                             ImGui::GetIO().MetricsRenderIndices/3).c_str());
@@ -89,12 +77,22 @@ public:
       ImGui::BeginChild ("##tv", {0.f,0.f}, false,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
 
-      if (mRecorded)
-        drawRecorded (*dvbTransportStream);
-      if (mServices)
-        drawServices (*dvbTransportStream, app.getGraphics());
-      if (mPids)
-        drawPids (*dvbTransportStream, app.getGraphics());
+      //{{{
+      switch (mTabIndex) {
+        case 0: { // services
+          drawServices (*dvbTransportStream, app.getGraphics());
+          break;
+          }
+        case 1: { // pids
+          drawPids (*dvbTransportStream, app.getGraphics());
+          break;
+          }
+        case 2: { // recorded
+          drawRecorded (*dvbTransportStream);
+          break;
+          }
+        }
+      //}}}
 
       ImGui::EndChild();
       ImGui::PopFont();
@@ -227,8 +225,6 @@ private:
   //{{{
   void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
 
-    ImVec2 cursorPos = ImGui::GetCursorPos();
-
     // draw subtitles
     float potSize = ImGui::GetTextLineHeight() / 2.f;
     size_t line = 0;
@@ -244,8 +240,9 @@ private:
         ImGui::GetWindowDrawList()->AddRectFilled (
           potPos, {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
         }
-      ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),
-                              {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()});
+      if (ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),
+                                  {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
+        subtitle.toggleLog();
 
       // draw position
       ImGui::SameLine();
@@ -261,35 +258,25 @@ private:
       ImGui::SameLine();
       float scale = ImGui::GetTextLineHeight() / image.mHeight;
       ImGui::Image ((void*)(intptr_t)image.mTexture->getTextureId(),
-                    { image.mWidth * scale, ImGui::GetTextLineHeight()});
+                        { image.mWidth * scale, ImGui::GetTextLineHeight() });
       line++;
       }
 
     //{{{  pad lines to highwaterMark
     while (line < subtitle.getHighWatermarkImages()) {
-      ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
-                              {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()});
+      if (ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
+                                 {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()}))
+          subtitle.toggleLog();
       line++;
       }
     //}}}
 
-    ImVec2 cursorPos = ImGui::SetCursorPos (cursorPos);
-    if (ImGui::InvisibleButton (fmt::format ("##sub{}", line).c_str(),
-                                {ImGui::GetWindowWidth(), line * ImGui::GetTextLineHeight()}))
-      subtitle.toggleDebug();
-
-    drawMiniLog (subtitle.getMiniLog());
+    drawMiniLog (subtitle.getLog());
     }
   //}}}
 
   // vars
-  void toggleRecorded() { mRecorded = !mRecorded; }
-  void toggleServices() { mServices = !mServices; }
-  void togglePids() { mPids = !mPids; }
-
-  bool mRecorded = false;
-  bool mServices = true;
-  bool mPids = false;
+  uint8_t mTabIndex = 0;
 
   int mPacketDigits = 3;
   int mMaxPidPackets = 3;

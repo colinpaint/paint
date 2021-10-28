@@ -40,10 +40,11 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 //}}}
 
 //{{{
-void cDvbSubtitleDecoder::cDvbSubtitleDecoder::toggleDebug() {
-  mMiniLog.toggleEnable();;
+void cDvbSubtitleDecoder::toggleLog() {
+  mMiniLog.toggleEnable();
   }
 //}}}
+
 //{{{
 bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
 

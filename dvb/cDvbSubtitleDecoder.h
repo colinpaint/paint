@@ -45,9 +45,8 @@ public:
   size_t getHighWatermarkImages() const { return mPage.mHighwaterMark; }
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
-  cMiniLog& getMiniLog() { return mMiniLog; }
-
-  void toggleDebug();
+  cMiniLog& getLog() { return mMiniLog; }
+  void toggleLog();
 
   bool decode (const uint8_t* buf, int bufSize);
 

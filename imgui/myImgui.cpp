@@ -69,6 +69,33 @@ void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t
 //}}}
 
 //{{{
+void drawMiniLog (cMiniLog& miniLog) {
+
+  if (miniLog.getEnable()) {
+    if (!miniLog.getHeader().empty())
+      ImGui::TextUnformatted (miniLog.getHeader().c_str());
+
+    // draw log
+    ImGui::BeginChild (fmt::format ("##log{}", miniLog.getName()).c_str(),
+                       {ImGui::GetWindowWidth(), 12 * ImGui::GetTextLineHeight() }, true,
+                       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
+
+    for (auto& logLine : miniLog.getLog())
+      ImGui::TextUnformatted(logLine.c_str());
+
+    // autoScroll child
+    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+      ImGui::SetScrollHereY(1.0f);
+
+    ImGui::EndChild();
+
+    if (!miniLog.getFooter().empty())
+      ImGui::TextUnformatted (miniLog.getFooter().c_str());
+    }
+  }
+//}}}
+
+//{{{
 bool clockButton (const string& label, chrono::system_clock::time_point timePoint, const ImVec2& size_arg) {
 
   ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -179,44 +206,23 @@ bool toggleButton (const string& label, bool toggleOn, const ImVec2& size_arg) {
   }
 //}}}
 //{{{
-uint8_t interlockedButtons (const vector<string>& buttonVector, uint8_t index, const ImVec2& size_arg) {
+uint8_t interlockedButtons (const vector<string>& buttonVector, uint8_t index, 
+                            const ImVec2& size_arg, bool tabbed) {
 // interlockedButtons helper
 // draw buttonVector as toggleButtons with index toggled on
 // return index of last or pressed menu button
 
   ImGui::BeginGroup();
 
-  for (auto it = buttonVector.begin(); it != buttonVector.end(); ++it)
+  for (auto it = buttonVector.begin(); it != buttonVector.end(); ++it) {
     if (toggleButton (*it, index == static_cast<uint8_t>(it - buttonVector.begin()), size_arg))
       index = static_cast<uint8_t>(it - buttonVector.begin());
+    if (tabbed)
+      ImGui::SameLine();
+    }
 
   ImGui::EndGroup();
 
   return index;
-  }
-//}}}
-
-//{{{
-void drawMiniLog (cMiniLog& miniLog) {
-
-  if (miniLog.getEnable()) {
-    if (!miniLog.getHeader().empty())
-      ImGui::TextUnformatted (miniLog.getHeader().c_str());
-
-    // draw log
-    ImGui::BeginChild (fmt::format ("##log{}", miniLog.getName()).c_str(),
-                       {ImGui::GetWindowWidth(), 12 * ImGui::GetTextLineHeight() }, true,
-                       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-
-    for (auto& logLine : miniLog.getLog())
-      ImGui::TextUnformatted(logLine.c_str());
-    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-      ImGui::SetScrollHereY(1.0f);
-
-    ImGui::EndChild();
-
-    if (!miniLog.getFooter().empty())
-      ImGui::TextUnformatted (miniLog.getFooter().c_str());
-    }
   }
 //}}}

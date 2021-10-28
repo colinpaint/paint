@@ -174,4 +174,4 @@ bool toggleButton (const std::string& label, bool toggleOn,
                    const ImVec2& size_arg = ImVec2(0,0));
 
 uint8_t interlockedButtons (const std::vector<std::string>& buttonVector, uint8_t index,
-                            const ImVec2& size_arg = ImVec2(0,0));
+                            const ImVec2& size_arg = ImVec2(0,0), bool tabbed = false);
