@@ -27,8 +27,7 @@
 using namespace std;
 //}}}
 
-//{{{
-class cTvView {
+class cTellyView {
 public:
   //{{{
   void draw (cTvApp& app) {
@@ -51,8 +50,7 @@ public:
       ImGui::SameLine();
       }
       //}}}
-
-    mTabIndex = interlockedButtons ({"services", "pids", "recorded"}, mTabIndex, {0.f,0.f}, true);
+    mMainTabIndex = interlockedButtons ({"services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
     //{{{  vertice debug
     ImGui::SameLine();
     ImGui::TextUnformatted (fmt::format ("{}:{}",
@@ -62,37 +60,46 @@ public:
 
     cDvbTransportStream* dvbTransportStream = app.getDvbTransportStream();
     if (dvbTransportStream) {
+      //{{{  draw packet,errors
       ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{} ", dvbTransportStream->getNumPackets()).c_str());
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format("{} ", dvbTransportStream->getNumErrors()).c_str());
+      ImGui::TextUnformatted (fmt::format ("{}:{} ", 
+                              dvbTransportStream->getNumPackets(), dvbTransportStream->getNumErrors()).c_str());
+      //}}}
+      if (dvbTransportStream->hasDvbSource()) {
+        //{{{  draw dvbSource signal,errors
+        ImGui::SameLine();
+        ImGui::TextUnformatted (dvbTransportStream->getSignalString().c_str());
 
-      ImGui::SameLine();
-      ImGui::TextUnformatted (dvbTransportStream->getSignalString().c_str());
-      ImGui::SameLine();
-      ImGui::TextUnformatted (dvbTransportStream->getErrorString().c_str());
+        ImGui::SameLine();
+        ImGui::TextUnformatted (dvbTransportStream->getErrorString().c_str());
+        }
+        //}}}
 
       // draw scrollable contents
       ImGui::PushFont (app.getMonoFont());
-      ImGui::BeginChild ("##tv", {0.f,0.f}, false,
+      ImGui::BeginChild ("##telly", {0.f,0.f}, false,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
 
-      //{{{
-      switch (mTabIndex) {
+      switch (mMainTabIndex) {
+        //{{{
         case 0: { // services
           drawServices (*dvbTransportStream, app.getGraphics());
           break;
           }
+        //}}}
+        //{{{
         case 1: { // pids
           drawPids (*dvbTransportStream, app.getGraphics());
           break;
           }
+        //}}}
+        //{{{
         case 2: { // recorded
           drawRecorded (*dvbTransportStream);
           break;
           }
+        //}}}
         }
-      //}}}
 
       ImGui::EndChild();
       ImGui::PopFont();
@@ -100,7 +107,6 @@ public:
 
     }
   //}}}
-
 private:
   //{{{
   void drawRecorded (cDvbTransportStream& dvbTransportStream) {
@@ -145,9 +151,16 @@ private:
       if (service.getAudPid()) {
         //{{{  got aud
         ImGui::SameLine();
-        if (ImGui::Button(fmt::format ("aud:{:{}d}:{:{}d}:{}",
-            service.getAudPid(), mMaxAudSize, service.getAudOtherPid(), mMaxAudSize,
-            service.getAudStreamTypeName()).c_str())) {
+        if (ImGui::Button(fmt::format ("aud:{:{}d}:{}",
+            service.getAudPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str())) {
+          }
+        }
+        //}}}
+      if (service.getAudOtherPid()) {
+        //{{{  got aud
+        ImGui::SameLine();
+        if (ImGui::Button(fmt::format ("desc:{:{}d}:{}",
+            service.getAudOtherPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str())) {
           }
         }
         //}}}
@@ -232,7 +245,6 @@ private:
       }
     }
   //}}}
-
   //{{{
   void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
 
@@ -285,9 +297,8 @@ private:
     drawMiniLog (subtitle.getLog());
     }
   //}}}
-
-  // vars
-  uint8_t mTabIndex = 0;
+  //{{{  vars
+  uint8_t mMainTabIndex = 0;
 
   int mPacketDigits = 3;
   int mMaxPidPackets = 3;
@@ -298,8 +309,8 @@ private:
   size_t mMaxVidSize = 3;
   size_t mMaxAudSize = 3;
   size_t mMaxSubSize = 3;
+  //}}}
   };
-//}}}
 
 // cTvUI
 class cTvUI : public cUI {
@@ -315,7 +326,7 @@ public:
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
     ImGui::Begin ("player", &mOpen, ImGuiWindowFlags_NoTitleBar);
 
-    mTvView.draw ((cTvApp&)app);
+    mTellyView.draw ((cTvApp&)app);
 
     ImGui::End();
     }
@@ -325,7 +336,7 @@ private:
   // vars
   bool mOpen = true;
 
-  cTvView mTvView;
+  cTellyView mTellyView;
 
   static cUI* create (const string& className) { return new cTvUI (className); }
   inline static const bool mRegistered = registerClass ("tv", &create);

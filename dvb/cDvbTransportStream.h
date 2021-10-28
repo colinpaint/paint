@@ -253,6 +253,8 @@ public:
   //}}}
 
   //{{{  gets
+  bool hasDvbSource() const { return mDvbSource; }
+
   uint64_t getNumPackets() const { return mNumPackets; }
   std::chrono::system_clock::time_point getTime() const { return mTime; }
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
