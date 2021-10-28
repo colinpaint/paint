@@ -40,14 +40,6 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 //}}}
 
 //{{{
-string cDvbSubtitleDecoder::getInfo() const {
-
-  return fmt::format ("page state:{} ver:{:2d} lines:{} reg:{} obj:{} lut:{}",
-                      mPage.mState, mPage.mVersion, mPage.mRegionDisplays.size(),
-                      mRegions.size(), mObjects.size(), mColorLuts.size());
-  }
-//}}}
-//{{{
 void cDvbSubtitleDecoder::cDvbSubtitleDecoder::toggleDebug() {
   mMiniLog.toggleEnable();;
   }
@@ -146,6 +138,15 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
 
 // private:
 //{{{
+void cDvbSubtitleDecoder::header() {
+
+  mMiniLog.setHeader (fmt::format ("page state:{} ver:{:2d} lines:{} reg:{} obj:{} lut:{}",
+                                   mPage.mState, mPage.mVersion, mPage.mRegionDisplays.size(),
+                                   mRegions.size(), mObjects.size(), mColorLuts.size())
+                      );
+  }
+//}}}
+//{{{
 void cDvbSubtitleDecoder::log (const std::string& text) {
   mMiniLog.log (text);
   }
@@ -240,6 +241,7 @@ bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t b
     buf += 2;
     }
 
+  header();
   log (fmt::format ("display{} x:{} y:{} w:{} h:{}",
                     displayWindow != 0 ? " window" : "",
                     mDisplayDefinition.mX, mDisplayDefinition.mY,
@@ -287,6 +289,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     regionDebug += fmt::format ("{}:{},{} ", regionId, xPos, yPos);
     }
 
+  header();
   log (fmt::format ("page state:{:1d} ver::{:2d} time:{} {} {}",
                     mPage.mState, mPage.mVersion, mPage.mTimeout,
                     regionDebug.empty() ? "no regions" : " regionIds", regionDebug));
@@ -364,6 +367,7 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     objectDebug += fmt::format ("{}:{},{} ", objectId, object.mXpos, object.mYpos);
     }
 
+  header();
   log (fmt::format ("region:{}:{:2d} {}x{} lut:{} bgnd:{} {} {}",
                     region.mId, region.mVersion,
                     region.mWidth, region.mHeight,
@@ -435,6 +439,7 @@ bool cDvbSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
       }
     }
 
+  header();
   return true;
   }
 //}}}
@@ -700,5 +705,7 @@ void cDvbSubtitleDecoder::endDisplay() {
   mPage.mNumImages = line;
   if (line > mPage.mHighwaterMark)
     mPage.mHighwaterMark = line;
+
+  header();
   }
 //}}}

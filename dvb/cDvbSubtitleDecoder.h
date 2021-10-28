@@ -45,8 +45,6 @@ public:
   size_t getHighWatermarkImages() const { return mPage.mHighwaterMark; }
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
-  std::string getInfo() const;
-
   cMiniLog& getMiniLog() { return mMiniLog; }
 
   void toggleDebug();
@@ -220,6 +218,7 @@ private:
     };
   //}}}
 
+  void header();
   void log (const std::string& text);
 
   // get

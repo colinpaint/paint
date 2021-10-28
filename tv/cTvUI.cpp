@@ -227,6 +227,8 @@ private:
   //{{{
   void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
 
+    ImVec2 cursorPos = ImGui::GetCursorPos();
+
     // draw subtitles
     float potSize = ImGui::GetTextLineHeight() / 2.f;
     size_t line = 0;
@@ -270,11 +272,12 @@ private:
       line++;
       }
     //}}}
-    //{{{  draw subtitle info button
-    if (toggleButton (subtitle.getInfo(), subtitle.getMiniLog().getEnable(),
-                      {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
+
+    ImVec2 cursorPos = ImGui::SetCursorPos (cursorPos);
+    if (ImGui::InvisibleButton (fmt::format ("##sub{}", line).c_str(),
+                                {ImGui::GetWindowWidth(), line * ImGui::GetTextLineHeight()}))
       subtitle.toggleDebug();
-    //}}}
+
     drawMiniLog (subtitle.getMiniLog());
     }
   //}}}

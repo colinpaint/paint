@@ -200,6 +200,9 @@ uint8_t interlockedButtons (const vector<string>& buttonVector, uint8_t index, c
 void drawMiniLog (cMiniLog& miniLog) {
 
   if (miniLog.getEnable()) {
+    if (!miniLog.getHeader().empty())
+      ImGui::TextUnformatted (miniLog.getHeader().c_str());
+
     // draw log
     ImGui::BeginChild (fmt::format ("##log{}", miniLog.getName()).c_str(),
                        {ImGui::GetWindowWidth(), 12 * ImGui::GetTextLineHeight() }, true,
@@ -211,6 +214,9 @@ void drawMiniLog (cMiniLog& miniLog) {
       ImGui::SetScrollHereY(1.0f);
 
     ImGui::EndChild();
+
+    if (!miniLog.getFooter().empty())
+      ImGui::TextUnformatted (miniLog.getFooter().c_str());
     }
   }
 //}}}
