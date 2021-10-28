@@ -265,7 +265,7 @@ private:
     const float potSize = ImGui::GetTextLineHeight() / 2.f;
 
     size_t line = 0;
-    while (line < subtitle.getNumImages()) {
+    while (line < subtitle.getNumLines()) {
       // draw subtitle line
       cSubtitleImage& image = subtitle.getImage (line);
 
@@ -294,18 +294,16 @@ private:
 
       // draw image, scaled to fit line
       ImGui::SameLine();
-      float scale = ImGui::GetTextLineHeight() / image.mHeight;
       ImGui::Image ((void*)(intptr_t)image.mTexture->getTextureId(),
-                    {image.mWidth * scale, ImGui::GetTextLineHeight()});
+                    {image.mWidth * ImGui::GetTextLineHeight()/image.mHeight, ImGui::GetTextLineHeight()});
       line++;
       }
 
     //{{{  add dummy lines to highwaterMark to stop jiggling
-    while (line < subtitle.getHighWatermarkImages()) {
-      if (ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
+    while (line < subtitle.getHighWatermark()) {
+      if (ImGui::InvisibleButton (fmt::format ("##line{}", line).c_str(),
                                   {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
         subtitle.toggleLog();
-
       line++;
       }
     //}}}

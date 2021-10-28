@@ -41,8 +41,8 @@ public:
   cDvbSubtitleDecoder (const std::string name);
   ~cDvbSubtitleDecoder();
 
-  size_t getNumImages() const { return mPage.mNumImages; }
-  size_t getHighWatermarkImages() const { return mPage.mHighwaterMark; }
+  size_t getNumLines() const { return mPage.mNumLines; }
+  size_t getHighWatermark() const { return mPage.mHighwaterMark; }
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
   cMiniLog& getLog() { return mMiniLog; }
@@ -202,7 +202,7 @@ private:
     std::vector <cRegionDisplay> mRegionDisplays;
 
     // render side, max 4 !!! should check !!!
-    size_t mNumImages = 0;
+    size_t mNumLines = 0;
     size_t mHighwaterMark = 1;
     std::array <cSubtitleImage,4> mImages;
     };

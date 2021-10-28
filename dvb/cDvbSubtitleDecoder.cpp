@@ -715,7 +715,7 @@ void cDvbSubtitleDecoder::endDisplay() {
     line++;
     }
 
-  mPage.mNumImages = line;
+  mPage.mNumLines = line;
   if (line > mPage.mHighwaterMark)
     mPage.mHighwaterMark = line;
 
