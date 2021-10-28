@@ -24,7 +24,7 @@
 class cTexture;
 //}}}
 using tTimePoint = std::chrono::system_clock::time_point;
-using tDuration = std::chrono::seconds;
+using tDurationSeconds = std::chrono::seconds;
 
 class cDvbTransportStream {
 public:
@@ -88,7 +88,7 @@ public:
   class cEpgItem {
   public:
     //{{{
-    cEpgItem (bool now, bool record, tTimePoint time, tDuration duration,
+    cEpgItem (bool now, bool record, tTimePoint time, tDurationSeconds duration,
               const std::string& titleString, const std::string& infoString)
       : mNow(now), mRecord(record),
         mTime(time), mDuration(duration),
@@ -100,7 +100,7 @@ public:
     std::string getTitleString() { return mTitleString; }
     std::string getDesriptionString() { return mInfoString; }
 
-    tDuration getDuration() { return mDuration; }
+    tDurationSeconds getDuration() { return mDuration; }
     tTimePoint getTime() { return mTime; }
 
     //{{{
@@ -110,7 +110,8 @@ public:
       }
     //}}}
     //{{{
-    void set (tTimePoint time, tDuration duration, const std::string& titleString, const std::string& infoString) {
+    void set (tTimePoint time, tDurationSeconds duration, 
+              const std::string& titleString, const std::string& infoString) {
       mTime = time;
       mDuration = duration;
       mTitleString = titleString;
@@ -123,7 +124,7 @@ public:
     bool mRecord = false;
 
     tTimePoint mTime;
-    tDuration mDuration;
+    tDurationSeconds mDuration;
 
     std::string mTitleString;
     std::string mInfoString;

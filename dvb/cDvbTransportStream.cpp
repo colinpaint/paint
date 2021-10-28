@@ -505,8 +505,8 @@ void cDvbTransportStream::cService::setSubPid (uint16_t pid, uint16_t streamType
 //}}}
 
 //{{{
-bool cDvbTransportStream::cService::setNow (bool record, tTimePoint time, tDuration duration,
-                       const string& titleString, const string& infoString) {
+bool cDvbTransportStream::cService::setNow (bool record, tTimePoint time, tDurationSeconds duration,
+                                            const string& titleString, const string& infoString) {
 
   if (mNowEpgItem && (mNowEpgItem->getTime() == time))
     return false;
@@ -519,7 +519,7 @@ bool cDvbTransportStream::cService::setNow (bool record, tTimePoint time, tDurat
   }
 //}}}
 //{{{
-bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, tDuration duration,
+bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, tDurationSeconds duration,
                        const string& titleString, const string& infoString) {
 // could return true only if changed
 
@@ -1442,7 +1442,7 @@ void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
             // known service
             auto startTime = chrono::system_clock::from_time_t (
               MjdToEpochTime (eitEvent->mjd) + BcdTimeToSeconds (eitEvent->start_time));
-            tDuration duration (BcdTimeToSeconds (eitEvent->duration));
+            tDurationSeconds duration (BcdTimeToSeconds (eitEvent->duration));
 
             // get title
             auto bufPtr = buf + sizeof(descr_short_event_struct) - 1;

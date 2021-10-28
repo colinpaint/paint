@@ -15,6 +15,8 @@
 using namespace std;
 //}}}
 
+cMiniLog::cMiniLog(const string& name) : mName(name), mFirstTimePoint (chrono::system_clock::now()) {}
+
 //{{{
 void cMiniLog::setEnable (bool enable) {
 
@@ -51,7 +53,8 @@ void cMiniLog::log (const string& text, uint8_t level) {
     cLog::log (LOGINFO, mName + " " + text);
 
     // prepend time for gui window log
-    mLog.push_back (date::format ("%T ", chrono::floor<chrono::microseconds>(chrono::system_clock::now())) + text);
+    chrono::system_clock::time_point now = chrono::system_clock::now();
+    mLog.push_back (date::format ("%M.%S ", now - mFirstTimePoint) + text);
     }
   }
 //}}}

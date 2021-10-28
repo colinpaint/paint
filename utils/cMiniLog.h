@@ -14,7 +14,7 @@
 
 class cMiniLog {
 public:
-	cMiniLog(const std::string& name) : mName(name) {}
+	cMiniLog(const std::string& name);
 	~cMiniLog() = default;
 
 	bool getEnable() const { return mEnable; }
@@ -36,7 +36,8 @@ public:
 	void log (const std::string& text, uint8_t level = 0);
 
 private:
-	std::string mName;
+	const std::string mName;
+	const std::chrono::system_clock::time_point mFirstTimePoint;
 
 	std::string mHeader;
 	std::string mFooter;
