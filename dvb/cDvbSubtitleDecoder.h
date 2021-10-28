@@ -4,13 +4,13 @@
 
 #include <cstdint>
 #include <string>
-#include <deque>
 #include <vector>
 #include <array>
 #include <algorithm>
 
+#include "../utils/cMiniLog.h"
+
 class cTexture;
-class cMiniLog;
 //}}}
 
 #define BGRA(r,g,b,a) static_cast<uint32_t>(((a << 24) ) | (b << 16) | (g <<  8) | r)
@@ -47,8 +47,7 @@ public:
 
   std::string getInfo() const;
 
-  bool isLogEnabled() const;
-  void drawMiniLog();
+  cMiniLog& getMiniLog() { return mMiniLog; }
 
   void toggleDebug();
 
@@ -245,7 +244,7 @@ private:
   // vars
   const std::string mName;
 
-  cMiniLog* mMiniLog;
+  cMiniLog mMiniLog;
 
   cDisplayDefinition mDisplayDefinition;
   cPage mPage;

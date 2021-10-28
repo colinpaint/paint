@@ -24,11 +24,7 @@ using namespace std;
 //}}}
 
 // public:
-//{{{
-cDvbSubtitleDecoder::cDvbSubtitleDecoder (const std::string name) {
-  mMiniLog = new cMiniLog (name);
-  }
-//}}}
+cDvbSubtitleDecoder::cDvbSubtitleDecoder (const std::string name) : mMiniLog(name) {}
 //{{{
 cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 
@@ -40,8 +36,6 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
   mRegions.clear();
 
   mPage.mRegionDisplays.clear();
-
-  delete mMiniLog;
   }
 //}}}
 
@@ -54,21 +48,10 @@ string cDvbSubtitleDecoder::getInfo() const {
   }
 //}}}
 //{{{
-bool cDvbSubtitleDecoder::isLogEnabled() const {
-  return mMiniLog->getEnabled();
-  }
-//}}}
-//{{{
 void cDvbSubtitleDecoder::cDvbSubtitleDecoder::toggleDebug() {
-  mMiniLog->toggleEnable();;
+  mMiniLog.toggleEnable();;
   }
 //}}}
-//{{{
-void cDvbSubtitleDecoder::drawMiniLog() {
-  mMiniLog->draw();
-  }
-//}}}
-
 //{{{
 bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
 
@@ -164,7 +147,7 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
 // private:
 //{{{
 void cDvbSubtitleDecoder::log (const std::string& text) {
-  mMiniLog->log (text);
+  mMiniLog.log (text);
   }
 //}}}
 
@@ -257,14 +240,10 @@ bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t b
     buf += 2;
     }
 
-  if (isLogEnabled())
-    //{{{  log
-    log (fmt::format ("display{} x:{} y:{} w:{} h:{}",
-                      displayWindow != 0 ? " window" : "",
-                      mDisplayDefinition.mX, mDisplayDefinition.mY,
-                      mDisplayDefinition.mWidth, mDisplayDefinition.mHeight));
-    //}}}
-
+  log (fmt::format ("display{} x:{} y:{} w:{} h:{}",
+                    displayWindow != 0 ? " window" : "",
+                    mDisplayDefinition.mX, mDisplayDefinition.mY,
+                    mDisplayDefinition.mWidth, mDisplayDefinition.mHeight));
   return true;
   }
 //}}}
@@ -308,13 +287,9 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     regionDebug += fmt::format ("{}:{},{} ", regionId, xPos, yPos);
     }
 
-  if (isLogEnabled())
-    //{{{  log
-    log (fmt::format ("page state:{:1d} ver::{:2d} time:{} {} {}",
-                      mPage.mState, mPage.mVersion, mPage.mTimeout,
-                      regionDebug.empty() ? "no regions" : " regionIds", regionDebug));
-    //}}}
-
+  log (fmt::format ("page state:{:1d} ver::{:2d} time:{} {} {}",
+                    mPage.mState, mPage.mVersion, mPage.mTimeout,
+                    regionDebug.empty() ? "no regions" : " regionIds", regionDebug));
   return true;
   }
 //}}}
@@ -389,15 +364,11 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
     objectDebug += fmt::format ("{}:{},{} ", objectId, object.mXpos, object.mYpos);
     }
 
-  if (isLogEnabled())
-    //{{{  log
-    log (fmt::format ("region:{}:{:2d} {}x{} lut:{} bgnd:{} {} {}",
-                      region.mId, region.mVersion,
-                      region.mWidth, region.mHeight,
-                      region.mColorLutDepth, region.mBackgroundColour,
-                      objectDebug.empty() ? "no objects" : "objectIds", objectDebug));
-    //}}}
-
+  log (fmt::format ("region:{}:{:2d} {}x{} lut:{} bgnd:{} {} {}",
+                    region.mId, region.mVersion,
+                    region.mWidth, region.mHeight,
+                    region.mColorLutDepth, region.mBackgroundColour,
+                    objectDebug.empty() ? "no objects" : "objectIds", objectDebug));
   return true;
   }
 //}}}
@@ -645,8 +616,7 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
   uint16_t objectId = AVRB16(buf);
   buf += 2;
 
-  if (isLogEnabled())
-    log (fmt::format ("object:{}", objectId));
+  log (fmt::format ("object:{}", objectId));
 
   cObject* object = findObject (objectId);
   if (!object) // not declared by region, ignore
@@ -688,8 +658,7 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
 //{{{
 void cDvbSubtitleDecoder::endDisplay() {
 
-  if (isLogEnabled())
-    log ("endDisplay ------------------------");
+  log ("endDisplay ------------------------");
 
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;

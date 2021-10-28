@@ -17,50 +17,9 @@
 #include "../utils/formatCore.h" //  fmt::format core, used by a lot of logging
 #include "../utils/date.h"
 #include "../utils/cLog.h"
+#include "../utils/cMiniLog.h"
 
 using namespace std;
-//}}}
-
-//{{{
-void cMiniLog::setEnable (bool enable) {
-
-  mLog.clear();
-
-  if (enable)
-    mLog.push_back (fmt::format("{} subtitle log", mName));
-
-  mEnabled = enable;
-  }
-//}}}
-//{{{
-void cMiniLog::log (const string& text) {
-
-  if (mEnabled) {
-    // prepend service name for console log
-    cLog::log(LOGINFO, fmt::format("{:12s} {}", mName, text));
-
-    // prepend time for gui window log
-    mLog.push_back (date::format("%T ", chrono::floor<chrono::microseconds>(chrono::system_clock::now())) + text);
-    }
-  }
-//}}}
-//{{{
-void cMiniLog::draw() {
-
-  if (mEnabled) {
-    // draw log
-    ImGui::BeginChild (fmt::format ("##log{}", mName).c_str(),
-                       {ImGui::GetWindowWidth(), 12 * ImGui::GetTextLineHeight() }, true,
-                       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-
-    for (auto& logLine : mLog)
-      ImGui::TextUnformatted(logLine.c_str());
-    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-      ImGui::SetScrollHereY(1.0f);
-
-    ImGui::EndChild();
-    }
-  }
 //}}}
 
 //{{{
@@ -234,5 +193,24 @@ uint8_t interlockedButtons (const vector<string>& buttonVector, uint8_t index, c
   ImGui::EndGroup();
 
   return index;
+  }
+//}}}
+
+//{{{
+void drawMiniLog (cMiniLog& miniLog) {
+
+  if (miniLog.getEnable()) {
+    // draw log
+    ImGui::BeginChild (fmt::format ("##log{}", miniLog.getName()).c_str(),
+                       {ImGui::GetWindowWidth(), 12 * ImGui::GetTextLineHeight() }, true,
+                       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
+
+    for (auto& logLine : miniLog.getLog())
+      ImGui::TextUnformatted(logLine.c_str());
+    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+      ImGui::SetScrollHereY(1.0f);
+
+    ImGui::EndChild();
+    }
   }
 //}}}

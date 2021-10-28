@@ -8,27 +8,10 @@
 #include <chrono>
 
 #include "imgui.h"
+
+class cMiniLog;
 //}}}
 
-//{{{
-class cMiniLog {
-public:
-  cMiniLog (const std::string& name) : mName(name) {}
-
-  bool getEnabled() const { return mEnabled; }
-
-  void setEnable (bool enable);
-  void toggleEnable() { setEnable (!mEnabled); }
-
-  void log (const std::string& text);
-  void draw();
-
-private:
-  std::string mName;
-  bool mEnabled = false;
-  std::deque <std::string> mLog;
-  };
-//}}}
 //{{{
 class cDrawContext {
 // helper class for drawing text, rect, circle with palette color
@@ -179,6 +162,8 @@ private:
   const std::vector <ImU32> mPalette;
   };
 //}}}
+
+void drawMiniLog (cMiniLog& miniLog);
 
 void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t address, bool full);
 

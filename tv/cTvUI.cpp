@@ -271,11 +271,11 @@ private:
       }
     //}}}
     //{{{  draw subtitle info button
-    if (toggleButton (subtitle.getInfo(), subtitle.isLogEnabled(),
+    if (toggleButton (subtitle.getInfo(), subtitle.getMiniLog().getEnable(),
                       {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
       subtitle.toggleDebug();
     //}}}
-    subtitle.drawMiniLog();
+    drawMiniLog (subtitle.getMiniLog());
     }
   //}}}
 
