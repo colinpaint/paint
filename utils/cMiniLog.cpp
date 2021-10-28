@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 #include <deque>
-
 #include <chrono>
 
 #include "formatCore.h"
@@ -21,7 +20,7 @@ void cMiniLog::setEnable (bool enable) {
 
   if (enable != mEnable) {
     if (enable)
-      mLog.push_back (fmt::format("{} subtitle log level:{}", mName, mLevel));
+      mLog.push_back (fmt::format("{} log level:{}", mName, mLevel));
     else
       mLog.clear();
 
@@ -45,11 +44,11 @@ void cMiniLog::toggleEnable() {
 //}}}
 
 //{{{
-void cMiniLog::log (const std::string& text, uint8_t level) {
+void cMiniLog::log (const string& text, uint8_t level) {
 
   if (mEnable && (level <= mLevel)) {
     // prepend name for console log
-    cLog::log (LOGINFO, mName + text);
+    cLog::log (LOGINFO, mName + " " + text);
 
     // prepend time for gui window log
     mLog.push_back (date::format ("%T ", chrono::floor<chrono::microseconds>(chrono::system_clock::now())) + text);

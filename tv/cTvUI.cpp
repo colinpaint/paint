@@ -62,7 +62,7 @@ public:
     if (dvbTransportStream) {
       //{{{  draw packet,errors
       ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{}:{} ", 
+      ImGui::TextUnformatted (fmt::format ("{}:{} ",
                               dvbTransportStream->getNumPackets(), dvbTransportStream->getNumErrors()).c_str());
       //}}}
       if (dvbTransportStream->hasDvbSource()) {
@@ -109,14 +109,6 @@ public:
   //}}}
 private:
   //{{{
-  void drawRecorded (cDvbTransportStream& dvbTransportStream) {
-  // list recorded items
-
-    for (auto& program : dvbTransportStream.getRecordPrograms())
-      ImGui::TextUnformatted (program.c_str());
-    }
-  //}}}
-  //{{{
   void drawServices (cDvbTransportStream& dvbTransportStream, cGraphics& graphics) {
   // draw service map
 
@@ -125,21 +117,28 @@ private:
       //{{{  calc max field sizes, may jiggle for a couple of draws
       while (service.getChannelName().size() > mMaxNameSize)
         mMaxNameSize = service.getChannelName().size();
+
       while (service.getSid() > pow (10, mMaxSidSize))
         mMaxSidSize++;
+
       while (service.getProgramPid() > pow (10, mMaxPgmSize))
         mMaxPgmSize++;
+
       while (service.getVidPid() > pow (10, mMaxVidSize))
         mMaxVidSize++;
+
       while (service.getAudPid() > pow (10, mMaxAudSize))
         mMaxAudSize++;
+
       while (service.getSubPid() > pow (10, mMaxSubSize))
         mMaxSubSize++;
       //}}}
 
+      // draw channel name pgm,sid
       ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
                      service.getChannelName(), mMaxNameSize,
                      service.getProgramPid(), mMaxPgmSize, service.getSid(), mMaxSidSize).c_str());
+
       if (service.getVidPid()) {
         //{{{  got vid
         ImGui::SameLine();
@@ -159,7 +158,7 @@ private:
       if (service.getAudOtherPid()) {
         //{{{  got aud
         ImGui::SameLine();
-        if (ImGui::Button(fmt::format ("desc:{:{}d}:{}",
+        if (ImGui::Button(fmt::format ("{:{}d}:{}",
             service.getAudOtherPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str())) {
           }
         }
@@ -178,6 +177,7 @@ private:
         ImGui::TextUnformatted (fmt::format ("rec:{}", service.getChannelRecordName()).c_str());
         }
         //}}}
+
       if (service.getDvbSubtitleDecoder())
         drawSubtitle (*service.getDvbSubtitleDecoder(), graphics);
       }
@@ -246,10 +246,18 @@ private:
     }
   //}}}
   //{{{
+  void drawRecorded (cDvbTransportStream& dvbTransportStream) {
+  // list recorded items
+
+    for (auto& program : dvbTransportStream.getRecordPrograms())
+      ImGui::TextUnformatted (program.c_str());
+    }
+  //}}}
+  //{{{
   void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
 
-    // draw subtitles
-    float potSize = ImGui::GetTextLineHeight() / 2.f;
+    const float potSize = ImGui::GetTextLineHeight() / 2.f;
+
     size_t line = 0;
     while (line < subtitle.getNumImages()) {
       // draw subtitle line
@@ -270,6 +278,7 @@ private:
       // draw position
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", image.mX, image.mY).c_str());
+
       // create/update image texture
       if (image.mTexture == nullptr) // create
         image.mTexture = graphics.createTexture ({image.mWidth, image.mHeight}, image.mPixels);
@@ -277,19 +286,20 @@ private:
         image.mTexture->setPixels (image.mPixels);
       image.mDirty = false;
 
-      // draw image, scaled to fit
+      // draw image, scaled to fit line
       ImGui::SameLine();
       float scale = ImGui::GetTextLineHeight() / image.mHeight;
       ImGui::Image ((void*)(intptr_t)image.mTexture->getTextureId(),
-                        { image.mWidth * scale, ImGui::GetTextLineHeight() });
+                    {image.mWidth * scale, ImGui::GetTextLineHeight()});
       line++;
       }
 
-    //{{{  pad lines to highwaterMark
+    //{{{  add dummy lines to highwaterMark to stop jiggling
     while (line < subtitle.getHighWatermarkImages()) {
       if (ImGui::InvisibleButton (fmt::format ("##empty{}", line).c_str(),
-                                 {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),ImGui::GetTextLineHeight()}))
-          subtitle.toggleLog();
+                                  {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
+        subtitle.toggleLog();
+
       line++;
       }
     //}}}

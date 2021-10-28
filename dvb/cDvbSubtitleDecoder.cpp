@@ -25,7 +25,8 @@ using namespace std;
 //}}}
 
 // public:
-cDvbSubtitleDecoder::cDvbSubtitleDecoder (const std::string name) : mMiniLog(name) {}
+cDvbSubtitleDecoder::cDvbSubtitleDecoder (const std::string name)
+  : mMiniLog(name + " subtitle") {}
 //{{{
 cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 
@@ -147,7 +148,7 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) 
 void cDvbSubtitleDecoder::header() {
 
   mMiniLog.setHeader (fmt::format ("{} size:{} page state:{} ver:{:2d} lines:{} reg:{} obj:{} lut:{}",
-                                   getPtsString(mPage.mPts), mPage.mPesSize,
+                                   getFullPtsString(mPage.mPts), mPage.mPesSize,
                                    mPage.mState, mPage.mVersion, mPage.mRegionDisplays.size(),
                                    mRegions.size(), mObjects.size(), mColorLuts.size())
                       );
@@ -303,7 +304,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
   header();
   log (fmt::format ("{} page - state:{:1d} ver::{:2d} time:{} {} {}",
-                    getPtsString (mPage.mPts),
+                    getFullPtsString (mPage.mPts),
                     mPage.mState, mPage.mVersion, mPage.mTimeout,
                     regionDebug.empty() ? "noRegions" : " regionIds", regionDebug));
   return true;
@@ -720,8 +721,10 @@ void cDvbSubtitleDecoder::endDisplay() {
 
   header();
   if (mPage.mRegionDisplays.size())
-    log (fmt::format ("{} ------ endDisplay - {} lines", getPtsString (mPage.mPts), mPage.mRegionDisplays.size()));
+    log (fmt::format ("{} ------ endDisplay - {} lines", 
+         getFullPtsString (mPage.mPts), mPage.mRegionDisplays.size()));
   else
-    log (fmt::format ("{} ------ endDisplay - noLines", getPtsString (mPage.mPts)));
+    log (fmt::format ("{} ------ endDisplay - noLines", 
+         getFullPtsString (mPage.mPts)));
   }
 //}}}
