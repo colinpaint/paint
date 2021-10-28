@@ -116,46 +116,57 @@ private:
 
     for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
       cDvbTransportStream::cService& service =  serviceItem.second;
-
-      if (service.getChannelName().size() > mMaxNameSize)
+      //{{{  calc max field sizes, may jiggle for a couple of draws
+      while (service.getChannelName().size() > mMaxNameSize)
         mMaxNameSize = service.getChannelName().size();
-      if (service.getSid() > pow (10, mMaxSidSize))
+      while (service.getSid() > pow (10, mMaxSidSize))
         mMaxSidSize++;
-      if (service.getProgramPid() > pow (10, mMaxPgmSize))
+      while (service.getProgramPid() > pow (10, mMaxPgmSize))
         mMaxPgmSize++;
-      if (service.getVidPid() > pow (10, mMaxVidSize))
+      while (service.getVidPid() > pow (10, mMaxVidSize))
         mMaxVidSize++;
-      if (service.getAudPid() > pow (10, mMaxAudSize))
+      while (service.getAudPid() > pow (10, mMaxAudSize))
         mMaxAudSize++;
-      if (service.getSubPid() > pow (10, mMaxSubSize))
+      while (service.getSubPid() > pow (10, mMaxSubSize))
         mMaxSubSize++;
+      //}}}
 
-      ImVec2 cursorPos = ImGui::GetCursorPos();
-      ImGui::TextUnformatted (fmt::format (
-        "{:{}s} {:{}d}:{:{}d} vid:{:{}d}:{} aud:{:{}d}:{:{}d}:{} {}:{:{}d}",
-        service.getChannelName(), mMaxNameSize,
-        service.getProgramPid(), mMaxPgmSize,
-        service.getSid(), mMaxSidSize,
-        service.getVidPid(), mMaxVidSize, service.getVidStreamTypeName(),
-        service.getAudPid(), mMaxAudSize, service.getAudOtherPid(), mMaxAudSize, service.getAudStreamTypeName(),
-        service.getSubStreamTypeName(), service.getSubPid(), mMaxSubSize).c_str()
-        );
-
+      ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
+                     service.getChannelName(), mMaxNameSize,
+                     service.getProgramPid(), mMaxPgmSize, service.getSid(), mMaxSidSize).c_str());
+      if (service.getVidPid()) {
+        //{{{  got vid
+        ImGui::SameLine();
+        if (ImGui::Button (fmt::format ("vid:{:{}d}:{}",
+                           service.getVidPid(), mMaxVidSize, service.getVidStreamTypeName()).c_str())) {
+          }
+        }
+        //}}}
+      if (service.getAudPid()) {
+        //{{{  got aud
+        ImGui::SameLine();
+        if (ImGui::Button(fmt::format ("aud:{:{}d}:{:{}d}:{}",
+            service.getAudPid(), mMaxAudSize, service.getAudOtherPid(), mMaxAudSize,
+            service.getAudStreamTypeName()).c_str())) {
+          }
+        }
+        //}}}
+      if (service.getSubPid()) {
+        //{{{  got sub
+        ImGui::SameLine();
+        if (ImGui::Button (fmt::format ("{}:{:{}d}",
+                           service.getSubStreamTypeName(), service.getSubPid(), mMaxSubSize).c_str()))
+          service.toggleDvbSubtitleDecode();
+        }
+        //}}}
       if (service.getChannelRecord()) {
+        //{{{  got record
         ImGui::SameLine();
         ImGui::TextUnformatted (fmt::format ("rec:{}", service.getChannelRecordName()).c_str());
         }
-
-      ImGui::SetCursorPos (cursorPos);
-      if (ImGui::InvisibleButton (fmt::format ("##sid{}", service.getSid()).c_str(),
-                                  {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
-        service.toggleDvbSubtitleDecode();
-
-      cDvbSubtitleDecoder* dvbSubtitleDecoder = service.getDvbSubtitleDecoder();
-      if (dvbSubtitleDecoder)
-        drawSubtitle (*dvbSubtitleDecoder, graphics);
-
-      ImGui::Separator();
+        //}}}
+      if (service.getDvbSubtitleDecoder())
+        drawSubtitle (*service.getDvbSubtitleDecoder(), graphics);
       }
     }
   //}}}
