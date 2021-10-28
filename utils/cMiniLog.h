@@ -18,6 +18,7 @@ public:
 	~cMiniLog() = default;
 
 	bool getEnable() const { return mEnable; }
+	bool getLevel() const { return mLevel; }
 
 	std::string getName() const { return mName; }
 	std::string getHeader() const { return mHeader; }
@@ -25,12 +26,14 @@ public:
 
 	std::deque<std::string>& getLog() { return mLog; }
 
+	void setEnable (bool enable);
+	void setLevel (uint8_t level);
 	void setHeader (const std::string& header) { mHeader = header; }
 	void setFooter (const std::string& footer) { mFooter = footer; }
-	void setEnable (bool enable);
-	void toggleEnable() { setEnable (!mEnable); }
 
-	void log (const std::string& text);
+	void toggleEnable();
+
+	void log (const std::string& text, uint8_t level = 0);
 
 private:
 	std::string mName;
@@ -39,5 +42,7 @@ private:
 	std::string mFooter;
 
 	bool mEnable = false;
+	uint8_t mLevel = 0;
+
 	std::deque <std::string> mLog;
 	};

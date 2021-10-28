@@ -12,6 +12,7 @@
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"
+#include "../utils/utils.h"
 
 using namespace std;
 //}}}
@@ -46,7 +47,11 @@ void cDvbSubtitleDecoder::toggleLog() {
 //}}}
 
 //{{{
-bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
+bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) {
+
+
+  mPage.mPts = pts;
+  mPage.mPesSize = bufSize;
 
   const uint8_t* bufEnd = buf + bufSize;
   const uint8_t* bufPtr = buf + 2;
@@ -141,7 +146,8 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize) {
 //{{{
 void cDvbSubtitleDecoder::header() {
 
-  mMiniLog.setHeader (fmt::format ("page state:{} ver:{:2d} lines:{} reg:{} obj:{} lut:{}",
+  mMiniLog.setHeader (fmt::format ("{} size:{} page state:{} ver:{:2d} lines:{} reg:{} obj:{} lut:{}",
+                                   getPtsString(mPage.mPts), mPage.mPesSize,
                                    mPage.mState, mPage.mVersion, mPage.mRegionDisplays.size(),
                                    mRegions.size(), mObjects.size(), mColorLuts.size())
                       );
@@ -150,6 +156,11 @@ void cDvbSubtitleDecoder::header() {
 //{{{
 void cDvbSubtitleDecoder::log (const std::string& text) {
   mMiniLog.log (text);
+  }
+//}}}
+//{{{
+void cDvbSubtitleDecoder::log (const std::string& text, uint8_t level) {
+  mMiniLog.log (text, level);
   }
 //}}}
 
@@ -246,7 +257,7 @@ bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t b
   log (fmt::format ("display{} x:{} y:{} w:{} h:{}",
                     displayWindow != 0 ? " window" : "",
                     mDisplayDefinition.mX, mDisplayDefinition.mY,
-                    mDisplayDefinition.mWidth, mDisplayDefinition.mHeight));
+                    mDisplayDefinition.mWidth, mDisplayDefinition.mHeight),1);
   return true;
   }
 //}}}
@@ -291,9 +302,10 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
     }
 
   header();
-  log (fmt::format ("page state:{:1d} ver::{:2d} time:{} {} {}",
+  log (fmt::format ("{} page - state:{:1d} ver::{:2d} time:{} {} {}",
+                    getPtsString (mPage.mPts),
                     mPage.mState, mPage.mVersion, mPage.mTimeout,
-                    regionDebug.empty() ? "no regions" : " regionIds", regionDebug));
+                    regionDebug.empty() ? "noRegions" : " regionIds", regionDebug));
   return true;
   }
 //}}}
@@ -373,7 +385,7 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
                     region.mId, region.mVersion,
                     region.mWidth, region.mHeight,
                     region.mColorLutDepth, region.mBackgroundColour,
-                    objectDebug.empty() ? "no objects" : "objectIds", objectDebug));
+                    objectDebug.empty() ? "noObjects" : "objectIds", objectDebug), 2);
   return true;
   }
 //}}}
@@ -441,6 +453,7 @@ bool cDvbSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
     }
 
   header();
+  log (fmt::format ("colorLut:{} version:{}", colorLut.mId, colorLut.mVersion), 3);
   return true;
   }
 //}}}
@@ -622,7 +635,7 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
   uint16_t objectId = AVRB16(buf);
   buf += 2;
 
-  log (fmt::format ("object:{}", objectId));
+  log (fmt::format ("object:{}", objectId),2);
 
   cObject* object = findObject (objectId);
   if (!object) // not declared by region, ignore
@@ -663,8 +676,6 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
 
 //{{{
 void cDvbSubtitleDecoder::endDisplay() {
-
-  log ("endDisplay ------------------------");
 
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;
@@ -708,5 +719,9 @@ void cDvbSubtitleDecoder::endDisplay() {
     mPage.mHighwaterMark = line;
 
   header();
+  if (mPage.mRegionDisplays.size())
+    log (fmt::format ("{} ------ endDisplay - {} lines", getPtsString (mPage.mPts), mPage.mRegionDisplays.size()));
+  else
+    log (fmt::format ("{} ------ endDisplay - noLines", getPtsString (mPage.mPts)));
   }
 //}}}

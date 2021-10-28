@@ -48,7 +48,7 @@ public:
   cMiniLog& getLog() { return mMiniLog; }
   void toggleLog();
 
-  bool decode (const uint8_t* buf, int bufSize);
+  bool decode (const uint8_t* buf, int bufSize, int64_t pts);
 
 private:
   //{{{
@@ -191,6 +191,9 @@ private:
   //{{{
   class cPage {
   public:
+    int64_t mPts = 0;
+    int64_t mPesSize = 0;
+
     uint8_t mVersion = 0xFF;
     uint8_t mState = 0;
     uint8_t mTimeout = 0xFF;
@@ -219,6 +222,7 @@ private:
 
   void header();
   void log (const std::string& text);
+  void log (const std::string& text, uint8_t level);
 
   // get
   cObject* findObject (uint16_t id);

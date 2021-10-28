@@ -1243,7 +1243,7 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
   if (service) {
     cDvbSubtitleDecoder* dvbSubtitleDecoder = service->getDvbSubtitleDecoder();
     if (dvbSubtitleDecoder)
-      dvbSubtitleDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed());
+      dvbSubtitleDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
     }
 
   return false;
