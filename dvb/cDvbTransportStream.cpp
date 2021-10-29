@@ -17,7 +17,9 @@
 #endif
 
 #include "cDvbSource.h"
-#include "cDvbSubtitleDecoder.h"
+#include "cVideoDecoder.h"
+#include "cAudioDecoder.h"
+#include "cSubtitleDecoder.h"
 #include "cDvbUtils.h"
 
 #include "../utils/date.h"
@@ -453,6 +455,8 @@ cDvbTransportStream::cService::~cService() {
 
   mEpgItemMap.clear();
 
+  delete mVideoDecoder;
+  delete mAudioDecoder;
   delete mSubtitleDecoder;
 
   closeFile();
@@ -536,6 +540,28 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
 //}}}
 
 //{{{
+void cDvbTransportStream::cService::toggleVideoDecode() {
+
+  if (mVideoDecoder) {
+    delete mVideoDecoder;
+    mVideoDecoder = nullptr;
+    }
+  else
+    mVideoDecoder = new cVideoDecoder (getChannelName());
+  }
+//}}}
+//{{{
+void cDvbTransportStream::cService::toggleAudioDecode() {
+
+  if (mAudioDecoder) {
+    delete mAudioDecoder;
+    mAudioDecoder = nullptr;
+    }
+  else
+    mAudioDecoder = new cAudioDecoder (getChannelName());
+  }
+//}}}
+//{{{
 void cDvbTransportStream::cService::toggleSubtitleDecode() {
 
   if (mSubtitleDecoder) {
@@ -543,7 +569,7 @@ void cDvbTransportStream::cService::toggleSubtitleDecode() {
     mSubtitleDecoder = nullptr;
     }
   else
-    mSubtitleDecoder = new cDvbSubtitleDecoder (getChannelName());
+    mSubtitleDecoder = new cSubtitleDecoder (getChannelName());
   }
 //}}}
 
@@ -716,7 +742,21 @@ cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
   }
 //}}}
 //{{{
-cDvbSubtitleDecoder* cDvbTransportStream::getSubtitleDecoder (uint16_t sid) {
+cVideoDecoder* cDvbTransportStream::getVideoDecoder (uint16_t sid) {
+
+  cService* service = getService (sid);
+  return service ? service->getVideoDecoder() : nullptr;
+  }
+//}}}
+//{{{
+cAudioDecoder* cDvbTransportStream::getAudioDecoder (uint16_t sid) {
+
+  cService* service = getService (sid);
+  return service ? service->getAudioDecoder() : nullptr;
+  }
+//}}}
+//{{{
+cSubtitleDecoder* cDvbTransportStream::getSubtitleDecoder (uint16_t sid) {
 
   cService* service = getService (sid);
   return service ? service->getSubtitleDecoder() : nullptr;
@@ -1211,22 +1251,31 @@ void cDvbTransportStream::stopServiceProgram (cService* service) {
 //}}}
 
 //{{{
-bool cDvbTransportStream::audDecodePes (cPidInfo* pidInfo, bool skip) {
+bool cDvbTransportStream::vidDecodePes (cPidInfo* pidInfo, bool skip) {
 
-  (void)pidInfo;
   (void)skip;
+  cService* service = getService (pidInfo->mSid);
+  if (service) {
+    cVideoDecoder* videoDecoder = service->getVideoDecoder();
+    if (videoDecoder)
+      videoDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+    }
 
-  //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " a - " + dec(pidInfo->getBufUsed());
+  //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
   return false;
   }
 //}}}
 //{{{
-bool cDvbTransportStream::vidDecodePes (cPidInfo* pidInfo, bool skip) {
+bool cDvbTransportStream::audDecodePes (cPidInfo* pidInfo, bool skip) {
 
-  (void)pidInfo;
   (void)skip;
+  cService* service = getService (pidInfo->mSid);
+  if (service) {
+    cAudioDecoder* audioDecoder = service->getAudioDecoder();
+    if (audioDecoder)
+      audioDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+    }
 
-  //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
   return false;
   }
 //}}}
@@ -1235,7 +1284,7 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
 
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cDvbSubtitleDecoder* subtitleDecoder = service->getSubtitleDecoder();
+    cSubtitleDecoder* subtitleDecoder = service->getSubtitleDecoder();
     if (subtitleDecoder)
       subtitleDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
     }

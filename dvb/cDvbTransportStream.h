@@ -16,7 +16,9 @@
 #include "cDvbMultiplex.h"
 
 class cDvbSource;
-class cDvbSubtitleDecoder;
+class cVideoDecoder;
+class cAudioDecoder;
+class cSubtitleDecoder;
 class cTexture;
 //}}}
 using tTimePoint = std::chrono::system_clock::time_point;
@@ -155,7 +157,9 @@ public:
     std::string getChannelRecordName() const { return mChannelRecordName; }
 
     // decoder
-    cDvbSubtitleDecoder* getSubtitleDecoder() const { return mSubtitleDecoder; }
+    cVideoDecoder* getVideoDecoder() const { return mVideoDecoder; }
+    cAudioDecoder* getAudioDecoder() const { return mAudioDecoder; }
+    cSubtitleDecoder* getSubtitleDecoder() const { return mSubtitleDecoder; }
 
     // epg
     bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
@@ -182,7 +186,11 @@ public:
     //}}}
 
     // decoder
-    void setSubtitleDecoder (cDvbSubtitleDecoder* subtitleDecoder) { mSubtitleDecoder = subtitleDecoder; }
+    void setVideoDecoder (cVideoDecoder* videoDecoder) { mVideoDecoder = videoDecoder; }
+    void toggleVideoDecode();
+    void setAudioDecoder (cAudioDecoder* audioDecoder) { mAudioDecoder = audioDecoder; }
+    void toggleAudioDecode();
+    void setSubtitleDecoder (cSubtitleDecoder* subtitleDecoder) { mSubtitleDecoder = subtitleDecoder; }
     void toggleSubtitleDecode();
 
     // epg
@@ -230,7 +238,9 @@ public:
     bool mChannelRecord = false;
     std::string mChannelRecordName;
 
-    cDvbSubtitleDecoder* mSubtitleDecoder = nullptr;
+    cVideoDecoder* mVideoDecoder = nullptr;
+    cAudioDecoder* mAudioDecoder = nullptr;
+    cSubtitleDecoder* mSubtitleDecoder = nullptr;
 
     // epg
     cEpgItem* mNowEpgItem = nullptr;
@@ -258,7 +268,9 @@ public:
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
-  cDvbSubtitleDecoder* getSubtitleDecoder (uint16_t sid);
+  cVideoDecoder* getVideoDecoder (uint16_t sid);
+  cAudioDecoder* getAudioDecoder (uint16_t sid);
+  cSubtitleDecoder* getSubtitleDecoder (uint16_t sid);
 
   // dvbSource
   bool hasDvbSource() const { return mDvbSource; }

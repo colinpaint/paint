@@ -1,4 +1,4 @@
-// cDvbSubtitle.h
+// cSubtitle.h
 //{{{  includes
 #pragma once
 
@@ -36,10 +36,10 @@ public:
   };
 //}}}
 
-class cDvbSubtitleDecoder {
+class cSubtitleDecoder {
 public:
-  cDvbSubtitleDecoder (const std::string name);
-  ~cDvbSubtitleDecoder();
+  cSubtitleDecoder (const std::string name);
+  ~cSubtitleDecoder();
 
   size_t getNumLines() const { return mPage.mNumLines; }
   size_t getHighWatermark() const { return mPage.mHighwaterMark; }

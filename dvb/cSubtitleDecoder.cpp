@@ -1,6 +1,6 @@
-// cDvbSubtitleDecoder.cpp
+// cSubtitleDecoder.cpp
 //{{{  includes
-#include "cDvbSubtitleDecoder.h"
+#include "cSubtitleDecoder.h"
 
 #include <cstdint>
 #include <string>
@@ -25,9 +25,9 @@ using namespace std;
 //}}}
 
 // public:
-cDvbSubtitleDecoder::cDvbSubtitleDecoder (const std::string name) : mName(name), mMiniLog ("subLog") {}
+cSubtitleDecoder::cSubtitleDecoder (const std::string name) : mName(name), mMiniLog ("subLog") {}
 //{{{
-cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
+cSubtitleDecoder::~cSubtitleDecoder() {
 
   mColorLuts.clear();
   mObjects.clear();
@@ -41,13 +41,13 @@ cDvbSubtitleDecoder::~cDvbSubtitleDecoder() {
 //}}}
 
 //{{{
-void cDvbSubtitleDecoder::toggleLog() {
+void cSubtitleDecoder::toggleLog() {
   mMiniLog.toggleEnable();
   }
 //}}}
 
 //{{{
-bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) {
+bool cSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) {
 
 
   mPage.mPts = pts;
@@ -63,7 +63,7 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) 
     uint8_t syncByte = *bufPtr++;
     if (syncByte != 0x0f) {
       //{{{  syncByte error return
-      cLog::log (LOGERROR, fmt::format ("cDvbSubtitle decode missing syncByte:{}", syncByte));
+      cLog::log (LOGERROR, fmt::format ("cSubtitle decode missing syncByte:{}", syncByte));
       return false;
       }
       //}}}
@@ -78,7 +78,7 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) 
 
     if (segmentLength > bufEnd - bufPtr) {
       //{{{  segmentLength error return
-      cLog::log (LOGERROR, "cDvbSubtitle decode incomplete or broken packet");
+      cLog::log (LOGERROR, "cSubtitle decode incomplete or broken packet");
       return false;
       }
       //}}}
@@ -121,17 +121,17 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) 
       //}}}
       //{{{
       case 0x15: // disparity signalling segment
-        cLog::log (LOGERROR, "cDvbSubtitle decode disparity signalling segment");
+        cLog::log (LOGERROR, "cSubtitle decode disparity signalling segment");
         break;
       //}}}
       //{{{
       case 0x16: // alternative_CLUT_segment
-        cLog::log (LOGERROR, "cDvbSubtitle decode alternative_CLUT_segment");
+        cLog::log (LOGERROR, "cSubtitle decode alternative_CLUT_segment");
         break;
       //}}}
       //{{{
       default:
-        cLog::log (LOGERROR, "cDvbSubtitle decode unknown seg:%x, pageId:%d, size:%d",
+        cLog::log (LOGERROR, "cSubtitle decode unknown seg:%x, pageId:%d, size:%d",
                               segmentType, pageId, segmentLength);
         break;
       //}}}
@@ -146,20 +146,20 @@ bool cDvbSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) 
 
 // private:
 //{{{
-void cDvbSubtitleDecoder::header() {
+void cSubtitleDecoder::header() {
 
   mMiniLog.setHeader (fmt::format ("lines:{} reg:{} obj:{} lut:{}",
                       mPage.mRegionDisplays.size(), mRegions.size(), mObjects.size(), mColorLuts.size()));
   }
 //}}}
 //{{{
-void cDvbSubtitleDecoder::log (const string& tag, const string& text) {
+void cSubtitleDecoder::log (const string& tag, const string& text) {
   mMiniLog.log (tag, text);
   }
 //}}}
 
 //{{{
-cDvbSubtitleDecoder::cObject* cDvbSubtitleDecoder::findObject (uint16_t id) {
+cSubtitleDecoder::cObject* cSubtitleDecoder::findObject (uint16_t id) {
 
   for (auto& object : mObjects)
     if (id == object.mId)
@@ -169,7 +169,7 @@ cDvbSubtitleDecoder::cObject* cDvbSubtitleDecoder::findObject (uint16_t id) {
   }
 //}}}
 //{{{
-cDvbSubtitleDecoder::cObject& cDvbSubtitleDecoder::getObject (uint16_t id) {
+cSubtitleDecoder::cObject& cSubtitleDecoder::getObject (uint16_t id) {
 
   cObject* object = findObject (id);
   if (object) // found
@@ -181,7 +181,7 @@ cDvbSubtitleDecoder::cObject& cDvbSubtitleDecoder::getObject (uint16_t id) {
   }
 //}}}
 //{{{
-cDvbSubtitleDecoder::cColorLut& cDvbSubtitleDecoder::getColorLut (uint8_t id) {
+cSubtitleDecoder::cColorLut& cSubtitleDecoder::getColorLut (uint8_t id) {
 
   // look for id colorLut
   for (auto& colorLut : mColorLuts)
@@ -194,7 +194,7 @@ cDvbSubtitleDecoder::cColorLut& cDvbSubtitleDecoder::getColorLut (uint8_t id) {
   }
 //}}}
 //{{{
-cDvbSubtitleDecoder::cRegion& cDvbSubtitleDecoder::getRegion (uint8_t id) {
+cSubtitleDecoder::cRegion& cSubtitleDecoder::getRegion (uint8_t id) {
 
   for (auto region : mRegions)
     if (id == region->mId)
@@ -207,7 +207,7 @@ cDvbSubtitleDecoder::cRegion& cDvbSubtitleDecoder::getRegion (uint8_t id) {
 
 // parse
 //{{{
-bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize) {
+bool cSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "displayDefinition segment");
   if (bufSize < 5)
@@ -256,7 +256,7 @@ bool cDvbSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t b
   }
 //}}}
 //{{{
-bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
+bool cSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
   if (bufSize < 1)
     return false;
@@ -303,7 +303,7 @@ bool cDvbSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
   }
 //}}}
 //{{{
-bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
+bool cSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
 // assumes all objects used by region are defined after region
 
   if (bufSize < 10)
@@ -383,7 +383,7 @@ bool cDvbSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
   }
 //}}}
 //{{{
-bool cDvbSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
+bool cSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "colorLut segment");
   const uint8_t* bufEnd = buf + bufSize;
@@ -452,7 +452,7 @@ bool cDvbSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
 //}}}
 
 //{{{
-uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
+uint16_t cSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
                                          uint8_t* pixBuf, uint32_t pixBufSize, uint16_t pixPos,
                                          bool nonModifyColour) {
 
@@ -576,7 +576,7 @@ uint16_t cDvbSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
   }
 //}}}
 //{{{
-void cDvbSubtitleDecoder::parseObjectBlock (cObject* object, const uint8_t* buf, uint16_t bufSize,
+void cSubtitleDecoder::parseObjectBlock (cObject* object, const uint8_t* buf, uint16_t bufSize,
                                             bool bottom, bool nonModifyColour) {
 
   uint16_t xpos = object->mXpos;
@@ -621,7 +621,7 @@ void cDvbSubtitleDecoder::parseObjectBlock (cObject* object, const uint8_t* buf,
   }
 //}}}
 //{{{
-bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
+bool cSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
 
   const uint8_t* bufEnd = buf + bufSize;
 
@@ -668,7 +668,7 @@ bool cDvbSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
 //}}}
 
 //{{{
-void cDvbSubtitleDecoder::endDisplay() {
+void cSubtitleDecoder::endDisplay() {
 
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;

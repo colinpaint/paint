@@ -17,7 +17,9 @@
 #include "../tv/cTvApp.h"
 
 // dvb
-#include "../dvb/cDvbSubtitleDecoder.h"
+#include "../dvb/cVideoDecoder.h"
+#include "../dvb/cAudioDecoder.h"
+#include "../dvb/cSubtitleDecoder.h"
 #include "../dvb/cDvbTransportStream.h"
 
 // utils
@@ -149,24 +151,24 @@ private:
         //{{{  got vid
         ImGui::SameLine();
         if (ImGui::Button (fmt::format ("vid:{:{}d}:{}",
-                           service.getVidPid(), mMaxVidSize, service.getVidStreamTypeName()).c_str())) {
-          }
+                           service.getVidPid(), mMaxVidSize, service.getVidStreamTypeName()).c_str()))
+          service.toggleVideoDecode();
         }
         //}}}
       if (service.getAudPid()) {
         //{{{  got aud
         ImGui::SameLine();
         if (ImGui::Button(fmt::format ("aud:{:{}d}:{}",
-            service.getAudPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str())) {
-          }
+            service.getAudPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str()))
+              service.toggleAudioDecode();
         }
         //}}}
       if (service.getAudOtherPid()) {
         //{{{  got aud
         ImGui::SameLine();
         if (ImGui::Button(fmt::format ("{:{}d}:{}",
-            service.getAudOtherPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str())) {
-          }
+            service.getAudOtherPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str()))
+              service.toggleAudioDecode();
         }
         //}}}
       if (service.getSubPid()) {
@@ -184,6 +186,10 @@ private:
         }
         //}}}
 
+      if (service.getVideoDecoder())
+        drawVideo (*service.getVideoDecoder(), graphics);
+      if (service.getAudioDecoder())
+        drawAudio (*service.getAudioDecoder(), graphics);
       if (service.getSubtitleDecoder())
         drawSubtitle (*service.getSubtitleDecoder(), graphics);
       }
@@ -237,9 +243,9 @@ private:
             service->toggleSubtitleDecode();
 
         if (pidInfo.mPid == service->getSubPid()) {
-          cDvbSubtitleDecoder* dvbSubtitleDecoder = service->getSubtitleDecoder();
-          if (dvbSubtitleDecoder)
-            drawSubtitle (*dvbSubtitleDecoder, graphics);
+          cSubtitleDecoder* subtitleDecoder = service->getSubtitleDecoder();
+          if (subtitleDecoder)
+            drawSubtitle (*subtitleDecoder, graphics);
           }
         }
 
@@ -260,7 +266,26 @@ private:
     }
   //}}}
   //{{{
-  void drawSubtitle (cDvbSubtitleDecoder& subtitle, cGraphics& graphics) {
+  void drawVideo (cVideoDecoder& video, cGraphics& graphics) {
+
+    (void)graphics;
+    if (ImGui::Button ("video"))
+      video.toggleLog();
+
+    drawMiniLog (video.getLog());
+    }
+  //}}}
+  //{{{
+  void drawAudio (cAudioDecoder& audio, cGraphics& graphics) {
+
+    (void)graphics;
+    if (ImGui::Button ("audio"))
+      audio.toggleLog();
+    drawMiniLog (audio.getLog());
+    }
+  //}}}
+  //{{{
+  void drawSubtitle (cSubtitleDecoder& subtitle, cGraphics& graphics) {
 
     const float potSize = ImGui::GetTextLineHeight() / 2.f;
 
