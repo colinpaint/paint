@@ -159,6 +159,7 @@ public:
     // decoder
     cVideoDecoder* getVideoDecoder() const { return mVideoDecoder; }
     cAudioDecoder* getAudioDecoder() const { return mAudioDecoder; }
+    cAudioDecoder* getAudioOtherDecoder() const { return mAudioOtherDecoder; }
     cSubtitleDecoder* getSubtitleDecoder() const { return mSubtitleDecoder; }
 
     // epg
@@ -190,6 +191,8 @@ public:
     void toggleVideoDecode();
     void setAudioDecoder (cAudioDecoder* audioDecoder) { mAudioDecoder = audioDecoder; }
     void toggleAudioDecode();
+    void setAudioOtherDecoder (cAudioDecoder* audioDecoder) { mAudioOtherDecoder = audioDecoder; }
+    void toggleAudioOtherDecode();
     void setSubtitleDecoder (cSubtitleDecoder* subtitleDecoder) { mSubtitleDecoder = subtitleDecoder; }
     void toggleSubtitleDecode();
 
@@ -240,6 +243,7 @@ public:
 
     cVideoDecoder* mVideoDecoder = nullptr;
     cAudioDecoder* mAudioDecoder = nullptr;
+    cAudioDecoder* mAudioOtherDecoder = nullptr;
     cSubtitleDecoder* mSubtitleDecoder = nullptr;
 
     // epg
@@ -270,6 +274,7 @@ public:
 
   cVideoDecoder* getVideoDecoder (uint16_t sid);
   cAudioDecoder* getAudioDecoder (uint16_t sid);
+  cAudioDecoder* getAudioOtherDecoder (uint16_t sid);
   cSubtitleDecoder* getSubtitleDecoder (uint16_t sid);
 
   // dvbSource

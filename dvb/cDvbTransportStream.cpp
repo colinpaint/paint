@@ -457,6 +457,7 @@ cDvbTransportStream::cService::~cService() {
 
   delete mVideoDecoder;
   delete mAudioDecoder;
+  delete mAudioOtherDecoder;
   delete mSubtitleDecoder;
 
   closeFile();
@@ -559,6 +560,17 @@ void cDvbTransportStream::cService::toggleAudioDecode() {
     }
   else
     mAudioDecoder = new cAudioDecoder (getChannelName());
+  }
+//}}}
+//{{{
+void cDvbTransportStream::cService::toggleAudioOtherDecode() {
+
+  if (mAudioOtherDecoder) {
+    delete mAudioOtherDecoder;
+    mAudioOtherDecoder = nullptr;
+    }
+  else
+    mAudioOtherDecoder = new cAudioDecoder (getChannelName());
   }
 //}}}
 //{{{
@@ -753,6 +765,13 @@ cAudioDecoder* cDvbTransportStream::getAudioDecoder (uint16_t sid) {
 
   cService* service = getService (sid);
   return service ? service->getAudioDecoder() : nullptr;
+  }
+//}}}
+//{{{
+cAudioDecoder* cDvbTransportStream::getAudioOtherDecoder (uint16_t sid) {
+
+  cService* service = getService (sid);
+  return service ? service->getAudioOtherDecoder() : nullptr;
   }
 //}}}
 //{{{

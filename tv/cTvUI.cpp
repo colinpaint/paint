@@ -168,7 +168,7 @@ private:
         ImGui::SameLine();
         if (ImGui::Button(fmt::format ("{:{}d}:{}",
             service.getAudOtherPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str()))
-              service.toggleAudioDecode();
+              service.toggleAudioOtherDecode();
         }
         //}}}
       if (service.getSubPid()) {
@@ -189,6 +189,8 @@ private:
       int64_t lastPts = 0;
       if (service.getAudioDecoder())
         lastPts = drawAudio (*service.getAudioDecoder(), lastPts, graphics);
+      if (service.getAudioOtherDecoder())
+        lastPts = drawAudio (*service.getAudioOtherDecoder(), lastPts, graphics);
       if (service.getVideoDecoder())
         lastPts = drawVideo (*service.getVideoDecoder(), lastPts, graphics);
       if (service.getSubtitleDecoder())
@@ -290,6 +292,7 @@ private:
 
     if (ImGui::Button ("audio"))
       audio.toggleLog();
+
     drawMiniLog (audio.getLog());
     return lastPts;
     }
