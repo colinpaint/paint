@@ -15,6 +15,7 @@
 
 // imGui
 #include "../imgui/imgui.h"
+#include "../implot/implot.h"
 
 // UI font
 #include "../font/itcSymbolBold.h"
@@ -90,6 +91,7 @@ int main (int numArgs, char* args[]) {
   string graphicsName = "opengl";
   bool fullScreen = false;
   bool vsync = true;
+
   //{{{  parse command line args to params
   cDvbMultiplex useMultiplex = kDvbMultiplexes[0];
   string filename;
@@ -161,13 +163,16 @@ int main (int numArgs, char* args[]) {
     //}}}
 
   // main UI loop
+  ImPlot::CreateContext();
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
     cUI::draw (app);
+    ImPlot::ShowDemoWindow();
     graphics.drawUI (platform.getWindowSize());
     platform.present();
     }
+  ImPlot::DestroyContext();
 
   // cleanup
   graphics.shutdown();
