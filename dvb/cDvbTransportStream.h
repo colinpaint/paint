@@ -282,10 +282,10 @@ public:
   std::string getErrorString() { return mErrorString; }
   std::string getSignalString() { return mSignalString; }
   //}}}
-  //{{{  static gets
+
+  // static gets
   static std::string getStreamTypeName (uint16_t streamType);
   static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
-  //}}}
 
   // source
   void dvbSource (bool launchThread);

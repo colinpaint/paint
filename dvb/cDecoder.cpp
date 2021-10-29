@@ -32,7 +32,7 @@ void cDecoder::toggleLog() {
 //{{{
 float cDecoder::getValue (int64_t pts) const {
   auto it = mValuesMap.find (pts / kPtsPerFrame);
-  return (it == mValuesMap.end()) ? 0.f : (it->second / mMaxValue);
+  return it == mValuesMap.end() ? 0.f : (it->second / mMaxValue);
   }
 //}}}
 

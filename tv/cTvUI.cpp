@@ -143,39 +143,46 @@ private:
       //}}}
 
       // draw channel name pgm,sid
-      ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
-                     service.getChannelName(), mMaxNameSize,
-                     service.getProgramPid(), mMaxPgmSize, service.getSid(), mMaxSidSize).c_str());
+      if (toggleButton (fmt::format ("{:{}s} {:{}d}:{:{}d}",
+                                     service.getChannelName(), mMaxNameSize,
+                                     service.getProgramPid(), mMaxPgmSize,
+                                     service.getSid(), mMaxSidSize).c_str(), false)) {
+        // hit channel title,pgm,sid
+        }
 
       if (service.getVidPid()) {
         //{{{  got vid
         ImGui::SameLine();
-        if (ImGui::Button (fmt::format ("vid:{:{}d}:{}",
-                           service.getVidPid(), mMaxVidSize, service.getVidStreamTypeName()).c_str()))
+        if (toggleButton (fmt::format ("vid:{:{}d}:{}",
+                                       service.getVidPid(), mMaxVidSize, service.getVidStreamTypeName()).c_str(),
+                          service.getVideoDecoder()))
           service.toggleVideoDecode();
         }
         //}}}
       if (service.getAudPid()) {
         //{{{  got aud
         ImGui::SameLine();
-        if (ImGui::Button(fmt::format ("aud:{:{}d}:{}",
-            service.getAudPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str()))
-              service.toggleAudioDecode();
+        if (toggleButton (fmt::format ("aud:{:{}d}:{}",
+                                       service.getAudPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str(),
+                          service.getAudioDecoder()))
+          service.toggleAudioDecode();
         }
         //}}}
       if (service.getAudOtherPid()) {
         //{{{  got aud
         ImGui::SameLine();
-        if (ImGui::Button(fmt::format ("{:{}d}:{}",
-            service.getAudOtherPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str()))
-              service.toggleAudioOtherDecode();
+        if (toggleButton (fmt::format ("{:{}d}:{}",
+                                       service.getAudOtherPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str(),
+                          service.getAudioOtherDecoder()))
+          service.toggleAudioOtherDecode();
         }
         //}}}
       if (service.getSubPid()) {
         //{{{  got sub
         ImGui::SameLine();
-        if (ImGui::Button (fmt::format ("{}:{:{}d}",
-                           service.getSubStreamTypeName(), service.getSubPid(), mMaxSubSize).c_str()))
+        if (toggleButton (fmt::format ("{}:{:{}d}",
+                                       service.getSubStreamTypeName(), service.getSubPid(), mMaxSubSize).c_str(),
+                          service.getSubtitleDecoder()))
           service.toggleSubtitleDecode();
         }
         //}}}
@@ -273,13 +280,8 @@ private:
   int64_t drawVideo (cVideoDecoder& video, int64_t pts, cGraphics& graphics) {
 
     (void)graphics;
-
-    int64_t lastPts = drawValues (pts, video);
-
-    if (ImGui::Button ("video"))
-      video.toggleLog();
+    int64_t lastPts = drawValues (pts, video, 0xffffffff);
     drawMiniLog (video.getLog());
-
     return lastPts;
     }
   //}}}
@@ -287,12 +289,7 @@ private:
   int64_t drawAudio (cAudioDecoder& audio, int64_t pts, cGraphics& graphics) {
 
     (void)graphics;
-
-    int64_t lastPts = drawValues (pts, audio);
-
-    if (ImGui::Button ("audio"))
-      audio.toggleLog();
-
+    int64_t lastPts = drawValues (pts, audio, 0xff00ffff);
     drawMiniLog (audio.getLog());
     return lastPts;
     }
@@ -300,10 +297,9 @@ private:
   //{{{
   int64_t drawSubtitle (cSubtitleDecoder& subtitle, int64_t pts, cGraphics& graphics) {
 
-    int64_t lastPts = drawValues (pts, subtitle);
+    int64_t lastPts = drawValues (pts, subtitle, 0xff00ff00);
 
     const float potSize = ImGui::GetTextLineHeight() / 2.f;
-
     size_t line = 0;
     while (line < subtitle.getNumLines()) {
       // draw subtitle line
@@ -349,12 +345,11 @@ private:
     //}}}
 
     drawMiniLog (subtitle.getLog());
-
     return lastPts;
     }
   //}}}
   //{{{
-  int64_t drawValues (int64_t lastPts, cDecoder& decoder) {
+  int64_t drawValues (int64_t lastPts, cDecoder& decoder, uint32_t color) {
 
     decoder.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth() / 4));
 
@@ -367,13 +362,15 @@ private:
     while (pos.x < ImGui::GetWindowWidth()) {
       float height = decoder.getValue (pts) * ImGui::GetTextLineHeight();
       if (height >= 1.f)
-        ImGui::GetWindowDrawList()->AddRectFilled ({pos.x, bottom - height}, {pos.x+4.f, bottom}, 0xff00ffff);
+        ImGui::GetWindowDrawList()->AddRectFilled ({pos.x, bottom - height}, {pos.x+4.f, bottom}, color);
       pos.x += 4.f;
       pts -= 90000/25;
       }
 
-    ImGui::InvisibleButton ("plot", {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()});
-    return decoder.getLastPts();
+    if (ImGui::InvisibleButton ("plot", {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
+      decoder.toggleLog();
+
+    return lastPts;
     }
   //}}}
   //{{{  vars
