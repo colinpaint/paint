@@ -25,46 +25,19 @@ using namespace std;
 //}}}
 
 // public:
-cVideoDecoder::cVideoDecoder (const std::string name) : mName(name), mMiniLog ("subLog") {}
+cVideoDecoder::cVideoDecoder (const std::string name) : cDecoder(name) {}
 //{{{
 cVideoDecoder::~cVideoDecoder() {
   }
 //}}}
 
 //{{{
-void cVideoDecoder::toggleLog() {
-  mMiniLog.toggleEnable();
-  }
-//}}}
-
-//{{{
 bool cVideoDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) {
 
-  //mPage.mPts = pts;
-  //mPage.mPesSize = bufSize;
+  (void)buf;
+  log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), bufSize));
 
-  log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), bufSize));
-
-  const uint8_t* bufEnd = buf + bufSize;
-  const uint8_t* bufPtr = buf + 2;
-
-  while (bufEnd - bufPtr >= 6) {
-    bufPtr++;
-    }
-
+  logValue (pts, (float)bufSize);
   return false;
-  }
-//}}}
-
-// private:
-//{{{
-void cVideoDecoder::header() {
-
-  mMiniLog.setHeader (fmt::format ("header"));
-  }
-//}}}
-//{{{
-void cVideoDecoder::log (const string& tag, const string& text) {
-  mMiniLog.log (tag, text);
   }
 //}}}

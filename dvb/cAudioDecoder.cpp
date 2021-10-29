@@ -25,46 +25,16 @@ using namespace std;
 //}}}
 
 // public:
-cAudioDecoder::cAudioDecoder (const std::string name) : mName(name), mMiniLog ("subLog") {}
-//{{{
-cAudioDecoder::~cAudioDecoder() {
-  }
-//}}}
-
-//{{{
-void cAudioDecoder::toggleLog() {
-  mMiniLog.toggleEnable();
-  }
-//}}}
+cAudioDecoder::cAudioDecoder (const std::string name) : cDecoder(name) {}
+cAudioDecoder::~cAudioDecoder() {}
 
 //{{{
 bool cAudioDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) {
 
-  //mPage.mPts = pts;
-  //mPage.mPesSize = bufSize;
-
+  (void)buf;
   log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), bufSize));
 
-  const uint8_t* bufEnd = buf + bufSize;
-  const uint8_t* bufPtr = buf + 2;
-
-  while (bufEnd - bufPtr >= 6) {
-    bufPtr++;
-    }
-
+  logValue (pts, (float)bufSize);
   return false;
-  }
-//}}}
-
-// private:
-//{{{
-void cAudioDecoder::header() {
-
-  mMiniLog.setHeader (fmt::format ("header"));
-  }
-//}}}
-//{{{
-void cAudioDecoder::log (const string& tag, const string& text) {
-  mMiniLog.log (tag, text);
   }
 //}}}

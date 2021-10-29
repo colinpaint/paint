@@ -25,7 +25,7 @@ using namespace std;
 //}}}
 
 // public:
-cSubtitleDecoder::cSubtitleDecoder (const std::string name) : mName(name), mMiniLog ("subLog") {}
+cSubtitleDecoder::cSubtitleDecoder (const std::string name) : cDecoder(name) {}
 //{{{
 cSubtitleDecoder::~cSubtitleDecoder() {
 
@@ -41,12 +41,6 @@ cSubtitleDecoder::~cSubtitleDecoder() {
 //}}}
 
 //{{{
-void cSubtitleDecoder::toggleLog() {
-  mMiniLog.toggleEnable();
-  }
-//}}}
-
-//{{{
 bool cSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) {
 
 
@@ -54,6 +48,7 @@ bool cSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) {
   mPage.mPesSize = bufSize;
 
   log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (mPage.mPts), mPage.mPesSize));
+  logValue (pts, (float)bufSize);
 
   const uint8_t* bufEnd = buf + bufSize;
   const uint8_t* bufPtr = buf + 2;
@@ -145,19 +140,6 @@ bool cSubtitleDecoder::decode (const uint8_t* buf, int bufSize, int64_t pts) {
 //}}}
 
 // private:
-//{{{
-void cSubtitleDecoder::header() {
-
-  mMiniLog.setHeader (fmt::format ("lines:{} reg:{} obj:{} lut:{}",
-                      mPage.mRegionDisplays.size(), mRegions.size(), mObjects.size(), mColorLuts.size()));
-  }
-//}}}
-//{{{
-void cSubtitleDecoder::log (const string& tag, const string& text) {
-  mMiniLog.log (tag, text);
-  }
-//}}}
-
 //{{{
 cSubtitleDecoder::cObject* cSubtitleDecoder::findObject (uint16_t id) {
 

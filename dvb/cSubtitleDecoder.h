@@ -1,12 +1,12 @@
 // cSubtitle.h
 //{{{  includes
 #pragma once
+#include "cDecoder.h"
 
 #include <cstdint>
 #include <string>
 #include <vector>
 #include <array>
-#include <algorithm>
 
 #include "../utils/cMiniLog.h"
 
@@ -36,7 +36,7 @@ public:
   };
 //}}}
 
-class cSubtitleDecoder {
+class cSubtitleDecoder : public cDecoder {
 public:
   cSubtitleDecoder (const std::string name);
   ~cSubtitleDecoder();
@@ -44,9 +44,6 @@ public:
   size_t getNumLines() const { return mPage.mNumLines; }
   size_t getHighWatermark() const { return mPage.mHighwaterMark; }
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
-
-  cMiniLog& getLog() { return mMiniLog; }
-  void toggleLog();
 
   bool decode (const uint8_t* buf, int bufSize, int64_t pts);
 
@@ -220,9 +217,6 @@ private:
     };
   //}}}
 
-  void header();
-  void log (const std::string& tag, const std::string& text);
-
   // get
   cObject* findObject (uint16_t id);
   cObject& getObject (uint16_t id);
@@ -243,10 +237,6 @@ private:
   void endDisplay();
 
   // vars
-  const std::string mName;
-
-  cMiniLog mMiniLog;
-
   cDisplayDefinition mDisplayDefinition;
   cPage mPage;
   std::vector <cRegion*> mRegions;

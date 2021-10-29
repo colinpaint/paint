@@ -1288,7 +1288,6 @@ bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
     if (subtitleDecoder)
       subtitleDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
     }
-
   return false;
   }
 //}}}

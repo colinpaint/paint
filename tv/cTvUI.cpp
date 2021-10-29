@@ -186,12 +186,13 @@ private:
         }
         //}}}
 
-      if (service.getVideoDecoder())
-        drawVideo (*service.getVideoDecoder(), graphics);
+      int64_t lastPts = 0;
       if (service.getAudioDecoder())
-        drawAudio (*service.getAudioDecoder(), graphics);
+        lastPts = drawAudio (*service.getAudioDecoder(), lastPts, graphics);
+      if (service.getVideoDecoder())
+        lastPts = drawVideo (*service.getVideoDecoder(), lastPts, graphics);
       if (service.getSubtitleDecoder())
-        drawSubtitle (*service.getSubtitleDecoder(), graphics);
+        lastPts = drawSubtitle (*service.getSubtitleDecoder(), lastPts, graphics);
       }
     }
   //}}}
@@ -218,10 +219,10 @@ private:
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
                               pidInfo.mPackets, mPacketDigits, pidInfo.mErrors, errorDigits, pidInfo.mPid,
                               getFullPtsString (pidInfo.mPts), pidInfo.getTypeName()).c_str());
-      ImGui::SameLine();
-      ImVec2 pos = ImGui::GetCursorScreenPos();
 
       // draw stream bar
+      ImGui::SameLine();
+      ImVec2 pos = ImGui::GetCursorScreenPos();
       mMaxPidPackets = max (mMaxPidPackets, pidInfo.mPackets);
       float frac = pidInfo.mPackets / float(mMaxPidPackets);
       ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x - ImGui::GetTextLineHeight())),
@@ -245,7 +246,7 @@ private:
         if (pidInfo.mPid == service->getSubPid()) {
           cSubtitleDecoder* subtitleDecoder = service->getSubtitleDecoder();
           if (subtitleDecoder)
-            drawSubtitle (*subtitleDecoder, graphics);
+            drawSubtitle (*subtitleDecoder, 0, graphics);
           }
         }
 
@@ -265,27 +266,38 @@ private:
       ImGui::TextUnformatted (program.c_str());
     }
   //}}}
+
   //{{{
-  void drawVideo (cVideoDecoder& video, cGraphics& graphics) {
+  int64_t drawVideo (cVideoDecoder& video, int64_t pts, cGraphics& graphics) {
 
     (void)graphics;
+
+    int64_t lastPts = drawValues (pts, video);
+
     if (ImGui::Button ("video"))
       video.toggleLog();
-
     drawMiniLog (video.getLog());
+
+    return lastPts;
     }
   //}}}
   //{{{
-  void drawAudio (cAudioDecoder& audio, cGraphics& graphics) {
+  int64_t drawAudio (cAudioDecoder& audio, int64_t pts, cGraphics& graphics) {
 
     (void)graphics;
+
+    int64_t lastPts = drawValues (pts, audio);
+
     if (ImGui::Button ("audio"))
       audio.toggleLog();
     drawMiniLog (audio.getLog());
+    return lastPts;
     }
   //}}}
   //{{{
-  void drawSubtitle (cSubtitleDecoder& subtitle, cGraphics& graphics) {
+  int64_t drawSubtitle (cSubtitleDecoder& subtitle, int64_t pts, cGraphics& graphics) {
+
+    int64_t lastPts = drawValues (pts, subtitle);
 
     const float potSize = ImGui::GetTextLineHeight() / 2.f;
 
@@ -334,6 +346,31 @@ private:
     //}}}
 
     drawMiniLog (subtitle.getLog());
+
+    return lastPts;
+    }
+  //}}}
+  //{{{
+  int64_t drawValues (int64_t lastPts, cDecoder& decoder) {
+
+    decoder.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth() / 4));
+
+    if (!lastPts)
+      lastPts = decoder.getLastPts();
+    int64_t pts = lastPts;
+
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+    const float bottom = pos.y + ImGui::GetTextLineHeight();
+    while (pos.x < ImGui::GetWindowWidth()) {
+      float height = decoder.getValue (pts) * ImGui::GetTextLineHeight();
+      if (height >= 1.f)
+        ImGui::GetWindowDrawList()->AddRectFilled ({pos.x, bottom - height}, {pos.x+4.f, bottom}, 0xff00ffff);
+      pos.x += 4.f;
+      pts -= 90000/25;
+      }
+
+    ImGui::InvisibleButton ("plot", {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()});
+    return decoder.getLastPts();
     }
   //}}}
   //{{{  vars
