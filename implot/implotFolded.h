@@ -481,7 +481,7 @@ namespace ImPlot {
   //}}}
 
   //{{{  Plot Items
-
+  //{{{  description
   // The template functions below are explicitly instantiated in implot_items.cpp.
   // They are not intended to be used generically with custom types. You will get
   // a linker error if you try! All functions support the following scalar types:
@@ -525,6 +525,7 @@ namespace ImPlot {
   //
   // NB: All types are converted to double before plotting. You may lose information
   // if you try plotting extremely large 64-bit integral types. Proceed with caution!
+  //}}}
 
   // Plots a standard 2D line plot.
   template <typename T> IMPLOT_API void PlotLine(const char* label_id, const T* values, int count, double xscale=1, double x0=0, int offset=0, int stride=sizeof(T));

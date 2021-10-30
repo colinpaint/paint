@@ -497,8 +497,11 @@ void cDvbTransportStream::cService::setAudPid (uint16_t pid, uint16_t streamType
       mAudStreamType = streamType;
       mAudStreamTypeName = cDvbTransportStream::getStreamTypeName (streamType);
       }
-    else if (!mAudOtherPid)
+    else if (!mAudOtherPid) {
       mAudOtherPid = pid;
+      mAudOtherStreamType = streamType;
+      mAudOtherStreamTypeName = cDvbTransportStream::getStreamTypeName (streamType);
+      }
     }
   }
 //}}}
@@ -1299,6 +1302,19 @@ bool cDvbTransportStream::audDecodePes (cPidInfo* pidInfo, bool skip) {
   }
 //}}}
 //{{{
+bool cDvbTransportStream::audOtherDecodePes (cPidInfo* pidInfo, bool skip) {
+
+  (void)skip;
+  cService* service = getService (pidInfo->mSid);
+  if (service) {
+    cAudioDecoder* audioDecoder = service->getAudioOtherDecoder();
+    if (audioDecoder)
+      audioDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+    }
+  return false;
+  }
+//}}}
+//{{{
 bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
 
   cService* service = getService (pidInfo->mSid);
@@ -1838,10 +1854,9 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
                       case 129: // ac3
                         //{{{  send last audio pes
                         if (*(uint32_t*)ts == 0xC1010000)
-                          decoded = audAltDecodePes (pidInfo, skip);
+                          decoded = audOtherDecodePes (pidInfo, skip);
                         else
                           decoded = audDecodePes (pidInfo, skip);
-
                         break;
                         //}}}
                       case 6:   // subtitle

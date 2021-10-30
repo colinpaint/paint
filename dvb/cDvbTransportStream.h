@@ -147,6 +147,8 @@ public:
     uint16_t getAudStreamType() const { return mAudStreamType; }
     std::string getAudStreamTypeName() const { return mAudStreamTypeName; }
     uint16_t getAudOtherPid() const { return mAudOtherPid; }
+    uint16_t getAudOtherStreamType() const { return mAudOtherStreamType; }
+    std::string getAudOtherStreamTypeName() const { return mAudOtherStreamTypeName; }
 
     uint16_t getSubPid() const { return mSubPid; }
     uint16_t getSubStreamType() const { return mSubStreamType; }
@@ -229,9 +231,12 @@ public:
     std::string mVidStreamTypeName;
 
     uint16_t mAudPid = 0;
-    uint16_t mAudOtherPid = 0;
     uint16_t mAudStreamType = 0;
     std::string mAudStreamTypeName;
+
+    uint16_t mAudOtherPid = 0;
+    uint16_t mAudOtherStreamType = 0;
+    std::string mAudOtherStreamTypeName;
 
     uint16_t mSubPid = 0;
     uint16_t mSubStreamType = 0;
@@ -310,7 +315,7 @@ private:
   void stopServiceProgram (cService* service);
 
   bool audDecodePes (cPidInfo* pidInfo, bool skip);
-  bool audAltDecodePes (cPidInfo* pidInfo, bool skip) { (void)pidInfo; (void)skip; return false; }
+  bool audOtherDecodePes (cPidInfo* pidInfo, bool skip);
   bool vidDecodePes (cPidInfo* pidInfo, bool skip);
   bool subDecodePes (cPidInfo* pidInfo);
 

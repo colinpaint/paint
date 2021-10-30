@@ -29,27 +29,25 @@ void cDecoder::toggleLog() { mMiniLog.toggleEnable(); }
 float cDecoder::getValue (int64_t pts) const {
 
   auto it = mValuesMap.find (pts / kPtsPerFrame);
-  return it == mValuesMap.end() ? 0.f : (it->second / mMaxValue);
+  return it == mValuesMap.end() ? 0.f : it->second;
   }
 //}}}
 //{{{
-float cDecoder::getOffsetValue (int64_t ptsOffset) const {
+float cDecoder::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
 
-  auto it = mValuesMap.find ((mRefPts - ptsOffset) / kPtsPerFrame);
-  return it == mValuesMap.end() ? 0.f : (it->second / mMaxValue);
+  pts = mRefPts - ptsOffset;
+  auto it = mValuesMap.find (pts / kPtsPerFrame);
+  return it == mValuesMap.end() ? 0.f : it->second;
   }
 //}}}
 
 //{{{
 void cDecoder::logValue (int64_t pts, float value) {
 
-  if (mValuesMap.size() > mMapSize)
+  while (mValuesMap.size() >= mMapSize)
     mValuesMap.erase (mValuesMap.begin());
 
   mValuesMap.insert (map<int64_t,float>::value_type (pts / kPtsPerFrame, value));
-
-  if (value > mMaxValue)
-    mMaxValue = value;
 
   if (pts > mLastPts)
     mLastPts = pts;

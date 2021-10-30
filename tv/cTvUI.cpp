@@ -175,7 +175,7 @@ private:
         //{{{  got aud
         ImGui::SameLine();
         if (toggleButton (fmt::format ("{:{}d}:{}",
-                                       service.getAudOtherPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str(),
+                                       service.getAudOtherPid(), mMaxAudSize, service.getAudOtherStreamTypeName()).c_str(),
                           service.getAudioOtherDecoder()))
           service.toggleAudioOtherDecode();
         }
@@ -300,7 +300,7 @@ private:
   //{{{
   int64_t drawSubtitle (cSubtitleDecoder& subtitle, int64_t pts, cGraphics& graphics) {
 
-    int64_t lastPts = drawValues (pts, subtitle, 0xff00ff00);
+    int64_t lastPts = plotValues (pts, subtitle, 0xff00ff00);
 
     const float potSize = ImGui::GetTextLineHeight() / 2.f;
     size_t line = 0;
@@ -352,31 +352,6 @@ private:
     }
   //}}}
   //{{{
-  int64_t drawValues (int64_t lastPts, cDecoder& decoder, uint32_t color) {
-
-    decoder.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth() / 4));
-
-    if (!lastPts)
-      lastPts = decoder.getLastPts();
-    int64_t pts = lastPts;
-
-    ImVec2 pos = ImGui::GetCursorScreenPos();
-    const float bottom = pos.y + ImGui::GetTextLineHeight();
-    while (pos.x < ImGui::GetWindowWidth()) {
-      float height = decoder.getValue (pts) * ImGui::GetTextLineHeight();
-      if (height >= 1.f)
-        ImGui::GetWindowDrawList()->AddRectFilled ({pos.x, bottom - height}, {pos.x+4.f, bottom}, color);
-      pos.x += 4.f;
-      pts -= 90000/25;
-      }
-
-    if (ImGui::InvisibleButton ("plot", {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
-      decoder.toggleLog();
-
-    return lastPts;
-    }
-  //}}}
-  //{{{
   int64_t plotValues (int64_t lastPts, cDecoder& decoder, uint32_t color) {
 
     (void)color;
@@ -388,22 +363,24 @@ private:
     decoder.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth()));
 
     auto lamda = [](void* data, int idx) {
-      return ImPlotPoint (idx, ((cDecoder*)data)->getOffsetValue (idx * (90000/25)));
+      int64_t pts = 0;
+      return ImPlotPoint (-idx, ((cDecoder*)data)->getOffsetValue (idx * (90000/25), pts));
       };
 
     ImPlot::BeginPlot (fmt::format ("##plot{}", mPlotIndex++).c_str(), NULL, NULL,
                        {ImGui::GetWindowWidth(), 4*ImGui::GetTextLineHeight()},
                        ImPlotFlags_NoLegend,
-                       ImPlotAxisFlags_NoTickLabels,
+                       ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit,
                        ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit);
-    //ImPlot::PlotBarsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth(), 1.0);
     ImPlot::PlotStairsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
+    //ImPlot::PlotBarsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth(), 2.0);
+    //ImPlot::PlotLineG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
+    //ImPlot::PlotScatterG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
     ImPlot::EndPlot();
 
     return lastPts;
     }
   //}}}
-
   //{{{  vars
   uint8_t mMainTabIndex = 0;
 

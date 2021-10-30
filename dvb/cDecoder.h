@@ -22,7 +22,8 @@ public:
 
   // value log
   float getValue (int64_t pts) const;
-  float getOffsetValue (int64_t pts) const;
+  float getOffsetValue (int64_t ptsOffset, int64_t& pts) const;
+
   int64_t getLastPts() const { return mLastPts; }
   size_t getNumValues() const { return mValuesMap.size(); }
 
@@ -43,7 +44,6 @@ private:
 
   // plot
   std::map <int64_t,float> mValuesMap;
-  float mMaxValue = 0.f;
   int64_t mLastPts = 0;
   int64_t mRefPts = 0;
   size_t mMapSize = 64;
