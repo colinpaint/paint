@@ -1873,11 +1873,16 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
                   pidInfo->mStreamPos = streamPos;
 
                   // form pts, firstPts, lastPts
-                  pidInfo->mPts = (ts[7] & 0x80) ? getPts (ts+9) : -1;
+                  if (ts[7] & 0x80)
+                    pidInfo->mPts = (ts[7] & 0x80) ? getPts (ts+9) : -1;
                   if (pidInfo->mFirstPts == -1)
                     pidInfo->mFirstPts = pidInfo->mPts;
                   if (pidInfo->mPts > pidInfo->mLastPts)
                     pidInfo->mLastPts = pidInfo->mPts;
+
+                  // save mDts
+                  if (ts[7] & 0x40)
+                    pidInfo->mDts = (ts[7] & 0x80) ? getPts (ts+14) : -1;
 
                   // skip past pesHeader
                   int pesHeaderBytes = 9 + ts[8];

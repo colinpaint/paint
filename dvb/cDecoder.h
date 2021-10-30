@@ -32,7 +32,7 @@ public:
   void logValue (int64_t pts, float value);
 
   // decode
-  virtual bool decode (const uint8_t* buf, int bufSize, int64_t pts) = 0;
+  virtual bool decode (uint8_t* buf, int bufSize, int64_t pts) = 0;
 
 protected:
   void header();

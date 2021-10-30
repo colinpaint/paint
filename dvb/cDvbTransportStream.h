@@ -72,6 +72,7 @@ public:
     int64_t mPts = -1;
     int64_t mFirstPts = -1;
     int64_t mLastPts = -1;
+    int64_t mDts = -1;
 
     int mBufSize = 0;
     uint8_t* mBuffer = nullptr;

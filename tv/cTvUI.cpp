@@ -370,16 +370,17 @@ private:
       return ImPlotPoint (-idx, ((cDecoder*)data)->getOffsetValue (idx * (90000/25), pts));
       };
 
-    ImPlot::BeginPlot (fmt::format ("##plot{}", mPlotIndex++).c_str(), NULL, NULL,
-                       {ImGui::GetWindowWidth(), 4*ImGui::GetTextLineHeight()},
-                       ImPlotFlags_NoLegend,
-                       ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit,
-                       ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit);
-    ImPlot::PlotStairsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
-    //ImPlot::PlotBarsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth(), 2.0);
-    //ImPlot::PlotLineG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
-    //ImPlot::PlotScatterG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
-    ImPlot::EndPlot();
+    if (ImPlot::BeginPlot (fmt::format ("##plot{}", mPlotIndex++).c_str(), NULL, NULL,
+                           {ImGui::GetWindowWidth(), 4*ImGui::GetTextLineHeight()},
+                           ImPlotFlags_NoLegend,
+                           ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit,
+                           ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit)) {
+      ImPlot::PlotStairsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
+      //ImPlot::PlotBarsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth(), 2.0);
+      //ImPlot::PlotLineG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
+      //ImPlot::PlotScatterG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
+      ImPlot::EndPlot();
+      }
 
     return lastPts;
     }

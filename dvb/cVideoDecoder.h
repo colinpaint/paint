@@ -14,5 +14,5 @@ public:
   cVideoDecoder (const std::string name);
   virtual ~cVideoDecoder();
 
-  bool decode (const uint8_t* buf, int bufSize, int64_t pts);
+  bool decode (uint8_t* buf, int bufSize, int64_t pts);
   };

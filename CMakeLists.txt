@@ -40,7 +40,7 @@ if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
   add_subdirectory (glfw)
 endif()
 
-if (BUILD_PLAYER OR BUILD_CAPTURE)
+if (BUILD_PLAYER OR BUILD_CAPTURE OR BUILD_TELLY)
   project (decoder)
     file (GLOB DECODER_HEADER_FILES decoder/*.h ffmpeg/*.h)
     file (GLOB DECODER_SOURCE_FILES decoder/*.cpp)
@@ -128,7 +128,7 @@ if (BUILD_TELLY)
       target_link_libraries (telly PRIVATE implot)
     endif()
 
-    target_link_libraries (telly PRIVATE imgui utils glfw glad)
+    target_link_libraries (telly PRIVATE decoder imgui utils glfw glad)
     target_link_libraries (telly PRIVATE dvb)
 
     if (MSVC)
