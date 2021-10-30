@@ -8,6 +8,7 @@
 // imgui
 #include "../imgui/imgui.h"
 #include "../imgui/myImgui.h"
+#include "../implot/implot.h"
 
 // ui
 #include "../ui/cUI.h"
@@ -119,6 +120,8 @@ private:
   //{{{
   void drawServices (cDvbTransportStream& dvbTransportStream, cGraphics& graphics) {
   // draw service map
+
+    mPlotIndex = 0;
 
     for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
       cDvbTransportStream::cService& service =  serviceItem.second;
@@ -280,7 +283,7 @@ private:
   int64_t drawVideo (cVideoDecoder& video, int64_t pts, cGraphics& graphics) {
 
     (void)graphics;
-    int64_t lastPts = drawValues (pts, video, 0xffffffff);
+    int64_t lastPts = plotValues (pts, video, 0xffffffff);
     drawMiniLog (video.getLog());
     return lastPts;
     }
@@ -289,7 +292,7 @@ private:
   int64_t drawAudio (cAudioDecoder& audio, int64_t pts, cGraphics& graphics) {
 
     (void)graphics;
-    int64_t lastPts = drawValues (pts, audio, 0xff00ffff);
+    int64_t lastPts = plotValues (pts, audio, 0xff00ffff);
     drawMiniLog (audio.getLog());
     return lastPts;
     }
@@ -373,6 +376,35 @@ private:
     return lastPts;
     }
   //}}}
+  //{{{
+  int64_t plotValues (int64_t lastPts, cDecoder& decoder, uint32_t color) {
+
+    (void)color;
+    decoder.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth()));
+
+    if (!lastPts)
+      lastPts = decoder.getLastPts();
+    int64_t pts = lastPts;
+
+    auto lamda = [](void* data, int idx) {
+      cDecoder* decoder = (cDecoder*)data;
+      return ImPlotPoint (idx, decoder->getValue (decoder->getLastPts() - (idx *(90000/25))));
+      };
+
+    mPlotIndex++;
+    ImPlot::BeginPlot (fmt::format ("##plot{}", mPlotIndex).c_str(), NULL, NULL,
+                       {ImGui::GetWindowWidth(), 4*ImGui::GetTextLineHeight()},
+                       ImPlotFlags_NoLegend,
+                       ImPlotAxisFlags_NoTickLabels,
+                       ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit);
+    //ImPlot::PlotBarsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth(), 1.0);
+    ImPlot::PlotLineG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
+    ImPlot::EndPlot();
+
+    return lastPts;
+    }
+  //}}}
+
   //{{{  vars
   uint8_t mMainTabIndex = 0;
 
@@ -385,6 +417,8 @@ private:
   size_t mMaxVidSize = 3;
   size_t mMaxAudSize = 3;
   size_t mMaxSubSize = 3;
+
+  int mPlotIndex = 0;
   //}}}
   };
 

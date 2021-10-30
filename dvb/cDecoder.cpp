@@ -23,11 +23,7 @@ constexpr int64_t kPtsPerFrame = 90000 / 25;
 cDecoder::cDecoder (const std::string name) : mName(name), mMiniLog ("log") {}
 cDecoder::~cDecoder() {}
 
-//{{{
-void cDecoder::toggleLog() {
-  mMiniLog.toggleEnable();
-  }
-//}}}
+void cDecoder::toggleLog() { mMiniLog.toggleEnable(); }
 
 //{{{
 float cDecoder::getValue (int64_t pts) const {
@@ -53,14 +49,5 @@ void cDecoder::logValue (int64_t pts, float value) {
 //}}}
 
 // protected:
-//{{{
-void cDecoder::header() {
-  mMiniLog.setHeader (fmt::format ("header"));
-  }
-
-//}}}
-//{{{
-void cDecoder::log (const string& tag, const string& text) {
-  mMiniLog.log (tag, text);
-  }
-//}}}
+void cDecoder::header() { mMiniLog.setHeader (fmt::format ("header")); }
+void cDecoder::log (const string& tag, const string& text) { mMiniLog.log (tag, text); }

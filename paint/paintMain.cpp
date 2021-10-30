@@ -51,7 +51,6 @@ int main (int numArgs, char* args[]) {
   bool showDemoWindow = false;
   bool fullScreen = false;
   bool vsync = true;
-  bool showPlotWindow = false;
   string filename;
   //{{{  parse args
 
@@ -65,7 +64,6 @@ int main (int numArgs, char* args[]) {
     else if (param == "demo") { showDemoWindow = true;  }
     else if (param == "full") { fullScreen = true;  }
     else if (param == "free") { vsync = false; }
-    else if (param == "plot") { showPlotWindow = true; }
     else filename = param;
     }
   //}}}
@@ -118,16 +116,7 @@ int main (int numArgs, char* args[]) {
     platform.newFrame();
     graphics.newFrame();
     cUI::draw (canvas);
-    if (showDemoWindow)
-      ImGui::ShowDemoWindow (&showDemoWindow);
-    if (showPlotWindow) {
-      //{{{  optional implot
-      #ifdef BUILD_IMPLOT
-        ImPlot::ShowDemoWindow();
-      #endif
-      }
-      //}}}
-
+    //ImGui::ShowDemoWindow (&showDemoWindow);
     graphics.drawUI (platform.getWindowSize());
     platform.present();
     }

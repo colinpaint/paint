@@ -168,7 +168,7 @@ int main (int numArgs, char* args[]) {
     platform.newFrame();
     graphics.newFrame();
     cUI::draw (app);
-    ImPlot::ShowDemoWindow();
+    //ImPlot::ShowDemoWindow();
     graphics.drawUI (platform.getWindowSize());
     platform.present();
     }
