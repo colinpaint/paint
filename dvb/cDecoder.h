@@ -21,8 +21,12 @@ public:
   void toggleLog();
 
   // value log
-  int64_t getLastPts() const { return mLastPts; }
   float getValue (int64_t pts) const;
+  float getOffsetValue (int64_t pts) const;
+  int64_t getLastPts() const { return mLastPts; }
+  size_t getNumValues() const { return mValuesMap.size(); }
+
+  void setRefPts (int64_t pts) { mRefPts = pts; }
   void setMapSize (size_t size) { mMapSize = size; }
   void logValue (int64_t pts, float value);
 
@@ -41,5 +45,6 @@ private:
   std::map <int64_t,float> mValuesMap;
   float mMaxValue = 0.f;
   int64_t mLastPts = 0;
+  int64_t mRefPts = 0;
   size_t mMapSize = 64;
   };

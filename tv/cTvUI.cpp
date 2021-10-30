@@ -380,25 +380,24 @@ private:
   int64_t plotValues (int64_t lastPts, cDecoder& decoder, uint32_t color) {
 
     (void)color;
-    decoder.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth()));
 
     if (!lastPts)
       lastPts = decoder.getLastPts();
-    int64_t pts = lastPts;
+
+    decoder.setRefPts (lastPts);
+    decoder.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth()));
 
     auto lamda = [](void* data, int idx) {
-      cDecoder* decoder = (cDecoder*)data;
-      return ImPlotPoint (idx, decoder->getValue (decoder->getLastPts() - (idx *(90000/25))));
+      return ImPlotPoint (idx, ((cDecoder*)data)->getOffsetValue (idx * (90000/25)));
       };
 
-    mPlotIndex++;
-    ImPlot::BeginPlot (fmt::format ("##plot{}", mPlotIndex).c_str(), NULL, NULL,
+    ImPlot::BeginPlot (fmt::format ("##plot{}", mPlotIndex++).c_str(), NULL, NULL,
                        {ImGui::GetWindowWidth(), 4*ImGui::GetTextLineHeight()},
                        ImPlotFlags_NoLegend,
                        ImPlotAxisFlags_NoTickLabels,
                        ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit);
     //ImPlot::PlotBarsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth(), 1.0);
-    ImPlot::PlotLineG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
+    ImPlot::PlotStairsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
     ImPlot::EndPlot();
 
     return lastPts;

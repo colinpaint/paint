@@ -27,7 +27,15 @@ void cDecoder::toggleLog() { mMiniLog.toggleEnable(); }
 
 //{{{
 float cDecoder::getValue (int64_t pts) const {
+
   auto it = mValuesMap.find (pts / kPtsPerFrame);
+  return it == mValuesMap.end() ? 0.f : (it->second / mMaxValue);
+  }
+//}}}
+//{{{
+float cDecoder::getOffsetValue (int64_t ptsOffset) const {
+
+  auto it = mValuesMap.find ((mRefPts - ptsOffset) / kPtsPerFrame);
   return it == mValuesMap.end() ? 0.f : (it->second / mMaxValue);
   }
 //}}}

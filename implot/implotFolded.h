@@ -364,10 +364,13 @@ namespace ImPlot {
   //{{{  ImPlot Context
   // Creates a new ImPlot context. Call this after ImGui::CreateContext.
   IMPLOT_API ImPlotContext* CreateContext();
+
   // Destroys an ImPlot context. Call this before ImGui::DestroyContext. NULL = destroy current context.
   IMPLOT_API void DestroyContext(ImPlotContext* ctx = NULL);
+
   // Returns the current ImPlot context. NULL if no context has ben set.
   IMPLOT_API ImPlotContext* GetCurrentContext();
+
   // Sets the current ImPlot context.
   IMPLOT_API void SetCurrentContext(ImPlotContext* ctx);
 
@@ -377,6 +380,7 @@ namespace ImPlot {
   // See GImGui documentation in imgui.cpp for more details.
   IMPLOT_API void SetImGuiContext(ImGuiContext* ctx);
   //}}}
+
   //{{{  Begin/End Plot
 
   // Starts a 2D plotting context. If this function returns true, EndPlot() MUST
