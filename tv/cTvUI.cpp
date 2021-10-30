@@ -146,13 +146,16 @@ private:
       //}}}
 
       // draw channel name pgm,sid
-      if (toggleButton (fmt::format ("{:{}s} {:{}d}:{:{}d}",
-                                     service.getChannelName(), mMaxNameSize,
-                                     service.getProgramPid(), mMaxPgmSize,
-                                     service.getSid(), mMaxSidSize).c_str(), false)) {
-        // hit channel title,pgm,sid
+      if (ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
+                         service.getChannelName(), mMaxNameSize,
+                         service.getProgramPid(), mMaxPgmSize,
+                         service.getSid(), mMaxSidSize).c_str())) {
+        //{{{  toggle all
+        service.toggleVideoDecode();
+        service.toggleAudioDecode();
+        service.toggleSubtitleDecode();
         }
-
+        //}}}
       if (service.getVidPid()) {
         //{{{  got vid
         ImGui::SameLine();
