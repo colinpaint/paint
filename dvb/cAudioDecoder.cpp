@@ -1,4 +1,4 @@
-// cAudioDecoder.cpp
+// cAudioDecoder.cpp - simple decoder player
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
@@ -312,42 +312,60 @@ namespace {
 class cAudioFrame {
 public:
   //{{{
-  cAudioFrame (int numChannels, int64_t pts, float* samples) : mSamples(samples), mPts(pts) {
+  cAudioFrame (size_t numChannels, size_t samplesPerFrame, int64_t pts, float* samples)
+      : mNumChannels(numChannels), mSamplesPerFrame(samplesPerFrame), mPts(pts), mSamples(samples) {
 
-    mPowerValues = (float*)malloc (numChannels * 4);
-    memset (mPowerValues, 0, numChannels * 4);
+    mPeakValues = (float*)malloc (numChannels * sizeof(float));
+    memset (mPeakValues, 0, numChannels * sizeof(float));
 
-    mPeakValues = (float*)malloc (numChannels * 4);
-    memset (mPeakValues, 0, numChannels * 4);
+    mPowerValues = (float*)malloc (numChannels * sizeof(float));
+    memset (mPowerValues, 0, numChannels * sizeof(float));
+
+    for (size_t channel = 0; channel < mNumChannels; channel++) {
+      // init
+      mPeakValues[channel] = 0.f;
+      mPowerValues[channel] = 0.f;
+      }
+
+    float* samplePtr = samples;
+    for (int sample = 0; sample < mSamplesPerFrame; sample++) {
+      // acumulate
+      for (size_t channel = 0; channel < mNumChannels; channel++) {
+        auto value = *samplePtr++;
+        mPeakValues[channel] = max (abs(mPeakValues[channel]), value);
+        mPowerValues[channel] += value * value;
+        }
+      }
+
+    for (size_t channel = 0; channel < mNumChannels; channel++)
+      mPowerValues[channel] = sqrtf (mPowerValues[channel] / mSamplesPerFrame);
     }
   //}}}
   //{{{
-  virtual ~cAudioFrame() {
+  ~cAudioFrame() {
     free (mSamples);
-    free (mPowerValues);
     free (mPeakValues);
+    free (mPowerValues);
     }
   //}}}
 
   // gets
   int64_t getPts() const { return mPts; }
   float* getSamples() const { return mSamples; }
-  float* getPowerValues() const { return mPowerValues;  }
   float* getPeakValues() const { return mPeakValues;  }
+  float* getPowerValues() const { return mPowerValues;  }
 
-  // vars
-  int64_t mPts;
-  float* mSamples;
-  float* mPowerValues;
-  float* mPeakValues;
+private:
+  size_t mNumChannels = 0;
+  size_t mSamplesPerFrame = 0;
+
+  int64_t mPts = 0;
+  float* mSamples = nullptr;
+  float* mPeakValues = nullptr;
+  float* mPowerValues = nullptr;
   };
 //}}}
-//{{{  class cAudioFrames
-constexpr float kMinPowerValue = 0.25f;
-constexpr float kMinPeakValue = 0.25f;
-constexpr uint32_t kMaxNumChannels = 2;             // arbitrary chan max
-constexpr uint32_t kMaxNumSamplesPerFrame = 2048;   // arbitrary frame max
-
+//{{{
 class cAudioFrames {
 public:
   //{{{
@@ -367,70 +385,37 @@ public:
     }
   //}}}
 
-  //{{{  get
+  // get
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
 
   eAudioFrameType getFrameType() { return mFrameType; }
   uint32_t getNumChannels() const { return mNumChannels; }
-  uint32_t getNumSampleBytes() const { return mNumChannels * sizeof(float); }
   uint32_t getSampleRate() const { return mSampleRate; }
   uint32_t getSamplesPerFrame() const { return mSamplesPerFrame; }
-  int64_t getFramesFromSeconds (int64_t seconds) const { return (seconds * mSampleRate) / mSamplesPerFrame; }
-  int64_t getSecondsFromFrames (int64_t frames) const { return (frames * mSamplesPerFrame) / mSampleRate; }
+  int64_t getFramePtsDuration() const { return (mSamplesPerFrame * 90000) / 48000; }
 
-  virtual int64_t getFramePtsDuration() const { return 1; }
-  virtual int64_t getFrameNumFromPts (int64_t pts) const { return pts; }
-  virtual int64_t getPtsFromFrameNum (int64_t frameNum) const { return frameNum; }
-  int64_t getPlayPts() const { return mPlayPts; }
   bool getPlaying() const { return mPlaying; }
+  int64_t getPlayPts() const { return mPlayPts; }
 
-  // get frameNum
-  int64_t getPlayFrameNum() const { return getFrameNumFromPts (mPlayPts); }
-  int64_t getFirstFrameNum() const { return mFrameMap.empty() ? 0 : mFrameMap.begin()->first; }
-  int64_t getLastFrameNum() const { return mFrameMap.empty() ? 0 : mFrameMap.rbegin()->first;  }
-  //{{{
-  int64_t getNumFrames() const {
-    return mFrameMap.empty() ? 0 : (mFrameMap.rbegin()->first - mFrameMap.begin()->first+1);
-    }
-  //}}}
+  // find
+  cAudioFrame* findPlayFrame() const { return findFrame (mPlayPts); }
 
-  bool getPlayFinished() const;
-  std::string getFirstTimeString (int daylightSeconds) const;
-  std::string getPlayTimeString (int daylightSeconds) const;
-  std::string getLastTimeString (int daylightSeconds) const;
-
-  // get max nums for early allocations
-  int getMaxNumSamplesPerFrame() const { return kMaxNumSamplesPerFrame; }
-  int getMaxNumSampleBytes() const { return kMaxNumChannels * sizeof(float); }
-  int getMaxNumFrameSamplesBytes()const { return getMaxNumSamplesPerFrame() * getMaxNumSampleBytes(); }
-
-  // get max values for ui
-  float getMaxPowerValue()  const{ return mMaxPowerValue; }
-  float getMaxPeakValue() const { return mMaxPeakValue; }
-  //}}}
-  //{{{  find
-  cAudioFrame* findFrameByFrameNum (int64_t frameNum) const {
-    auto it = mFrameMap.find (frameNum);
-    return (it == mFrameMap.end()) ? nullptr : it->second;
-    }
-
-  cAudioFrame* findFrameByPts (int64_t pts) const { return findFrameByFrameNum (pts); }
-  cAudioFrame* findPlayFrame() const { return findFrameByFrameNum (mPlayPts); }
-  //}}}
-  //{{{  play
+  // play
+  void setPlayPts (int64_t pts);
+  void nextPlayFrame();
   void togglePlaying() { mPlaying = !mPlaying; }
 
-  void setPlayPts (int64_t pts);
-  void setPlayFirstFrame();
-  void setPlayLastFrame();
-
-  void nextPlayFrame();
-  void incPlaySec (int seconds);
-  //}}}
-
+  // add
   cAudioFrame& addFrame (int64_t pts, float* samples);
 
-  // vars
+private:
+  //{{{
+  cAudioFrame* findFrame (int64_t pts) const {
+    auto it = mFrameMap.find (pts);
+    return (it == mFrameMap.end()) ? nullptr : it->second;
+    }
+  //}}}
+
   const eAudioFrameType mFrameType;
   const int mNumChannels;
   const int mSampleRate = 0;
@@ -440,131 +425,36 @@ public:
   std::shared_mutex mSharedMutex;
   std::map <int64_t, cAudioFrame*> mFrameMap;
 
-  int64_t mPlayPts = 0;
-
-private:
   bool mPlaying = false;
-
-  float mMaxPowerValue = 0.f;
-  float mMaxPeakValue = 0.f;
-  float mMaxFreqValue = 0.f;
+  int64_t mPlayPts = 0;
   };
 
 // cAudioFrames members
 //{{{
-bool cAudioFrames::getPlayFinished() const {
-  return mPlayPts > getLastFrameNum();
-  }
-//}}}
-//{{{
-string cAudioFrames::getFirstTimeString (int daylightSeconds) const {
-
-  (void)daylightSeconds;
-
-  // scale firstFrameNum as seconds*100
-  int64_t value = getSecondsFromFrames (getFirstFrameNum() * 100);
-  if (!value)
-    return "";
-
-  return getTimeString (getSecondsFromFrames (value), 0);
-  }
-//}}}
-//{{{
-string cAudioFrames::getPlayTimeString (int daylightSeconds) const {
-// scale pts = frameNum as seconds*100
-
-  return getTimeString (getSecondsFromFrames (getPlayPts() * 100), daylightSeconds);
-  }
-//}}}
-//{{{
-string cAudioFrames::getLastTimeString (int daylightSeconds) const {
-
-  (void)daylightSeconds;
-
-  // scale frameNum as seconds*100
-  return getTimeString (getSecondsFromFrames (getLastFrameNum() * 100), 0);
-  }
-//}}}
-
-//{{{
 void cAudioFrames::setPlayPts (int64_t pts) {
-  mPlayPts = min (pts, getLastFrameNum() + 1);
-  }
-//}}}
-//{{{
-void cAudioFrames::setPlayFirstFrame() {
-  setPlayPts (getFirstFrameNum());
-  }
-//}}}
-//{{{
-void cAudioFrames::setPlayLastFrame() {
-  setPlayPts (getLastFrameNum());
+  mPlayPts = pts;
   }
 //}}}
 //{{{
 void cAudioFrames::nextPlayFrame() {
 
   int64_t playPts = mPlayPts + getFramePtsDuration();
-
   setPlayPts (playPts);
-  }
-//}}}
-//{{{
-void cAudioFrames::incPlaySec (int seconds) {
-  setPlayPts (max (int64_t(0), mPlayPts + (getFramesFromSeconds (seconds) * getFramePtsDuration())));
   }
 //}}}
 
 //{{{
 cAudioFrame& cAudioFrames::addFrame (int64_t pts, float* samples) {
 
-  cAudioFrame* frame;
   if (mMaxMapSize && (int(mFrameMap.size()) > mMaxMapSize)) {
-    // reuse cAudioFrame
-
-      { // remove frame from map begin with lock
-      unique_lock<shared_mutex> lock (mSharedMutex);
-      auto it = mFrameMap.begin();
-      frame = (*it).second;
-      mFrameMap.erase (it);
-      }
-
-    //  reuse power,peak,fft buffers, but free samples if we own them
-    free (frame->mSamples);
-    frame->mSamples = samples;
-    frame->mPts = pts;
+    // remove frame from map begin with lock
+    unique_lock<shared_mutex> lock (mSharedMutex);
+    mFrameMap.erase (mFrameMap.begin());
     }
 
-  else
-    // allocate new cAudioFrame
-    frame = new cAudioFrame (mNumChannels, pts, samples);
+  cAudioFrame* frame = new cAudioFrame (mNumChannels, mSamplesPerFrame, pts, samples);
 
-  // calc power,peak
-  for (auto channel = 0; channel < mNumChannels; channel++) {
-    //{{{  init
-    frame->mPowerValues[channel] = 0.f;
-    frame->mPeakValues[channel] = 0.f;
-    }
-    //}}}
-  auto samplePtr = samples;
-  for (int sample = 0; sample < mSamplesPerFrame; sample++) {
-    //{{{  acumulate
-    for (auto channel = 0; channel < mNumChannels; channel++) {
-      auto value = *samplePtr++;
-      frame->mPowerValues[channel] += value * value;
-      frame->mPeakValues[channel] = max (abs(frame->mPeakValues[channel]), value);
-      }
-    }
-    //}}}
-  for (auto channel = 0; channel < mNumChannels; channel++) {
-    //{{{  scale
-    frame->mPowerValues[channel] = sqrtf (frame->mPowerValues[channel] / mSamplesPerFrame);
-    mMaxPowerValue = max (mMaxPowerValue, frame->mPowerValues[channel]);
-    mMaxPeakValue = max (mMaxPeakValue, frame->mPeakValues[channel]);
-    }
-    //}}}
-
-    { // insert cAudioFrame with lock
+    { // insert frame with lock
     unique_lock<shared_mutex> lock (mSharedMutex);
     mFrameMap.insert (map<int64_t,cAudioFrame*>::value_type (pts / getFramePtsDuration(), frame));
     }
@@ -573,12 +463,11 @@ cAudioFrame& cAudioFrames::addFrame (int64_t pts, float* samples) {
   }
 //}}}
 //}}}
-
 //{{{
-class cFFmpegAudioDecoder {
+class cAudioFFmpegDecoder {
 public:
-  cFFmpegAudioDecoder (eAudioFrameType frameType);
-  ~cFFmpegAudioDecoder();
+  cAudioFFmpegDecoder (eAudioFrameType frameType);
+  ~cAudioFFmpegDecoder();
 
   int32_t getNumChannels() { return mChannels; }
   int32_t getSampleRate() { return mSampleRate; }
@@ -598,9 +487,9 @@ private:
   int64_t mLastPts = -1;
   };
 
-// cFFmpegAudioDecoder members
+// cAudioFFmpegDecoder members
 //{{{
-cFFmpegAudioDecoder::cFFmpegAudioDecoder (eAudioFrameType frameType) {
+cAudioFFmpegDecoder::cAudioFFmpegDecoder (eAudioFrameType frameType) {
 
   AVCodecID streamType;
 
@@ -629,7 +518,7 @@ cFFmpegAudioDecoder::cFFmpegAudioDecoder (eAudioFrameType frameType) {
   }
 //}}}
 //{{{
-cFFmpegAudioDecoder::~cFFmpegAudioDecoder() {
+cAudioFFmpegDecoder::~cAudioFFmpegDecoder() {
 
   if (mAvContext)
     avcodec_close (mAvContext);
@@ -639,7 +528,7 @@ cFFmpegAudioDecoder::~cFFmpegAudioDecoder() {
 //}}}
 
 //{{{
-float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, int64_t pts) {
+float* cAudioFFmpegDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, int64_t pts) {
 
   float* outBuffer = nullptr;
 
@@ -732,28 +621,30 @@ float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
 //{{{
 class cAudioPlayer {
 public:
-  cAudioPlayer (cAudioFrames* audioFrames, bool streaming);
+  cAudioPlayer (cAudioFrames* audioFrames);
   ~cAudioPlayer() {}
 
   void exit() { mExit = true; }
   void wait();
 
 private:
-  bool mExit = false;
   bool mRunning = true;
+  bool mExit = false;
   };
 
 #ifdef _WIN32
-  cAudioPlayer::cAudioPlayer (cAudioFrames* audioFrames, bool streaming) {
+  //{{{
+  cAudioPlayer::cAudioPlayer (cAudioFrames* audioFrames) {
     thread playerThread = thread ([=]() {
-      // player lambda
+      // lambda
       cLog::setThreadName ("play");
       SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
       array <float,2048*2> silence = { 0.f };
       array <float,2048*2> samples = { 0.f };
 
       audioFrames->togglePlaying();
-      //{{{  WSAPI player thread, video follows playPts
+
+      // WSAPI player thread, video follows playPts
       auto device = getDefaultAudioOutputDevice();
       if (device) {
         cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", audioFrames->getSampleRate());
@@ -765,7 +656,6 @@ private:
           device->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
             // loadSrcSamples callback lambda
             shared_lock<shared_mutex> lock (audioFrames->getSharedMutex());
-
             frame = audioFrames->findPlayFrame();
             if (audioFrames->getPlaying() && frame && frame->getSamples()) {
               if (audioFrames->getNumChannels() == 1) {
@@ -778,7 +668,9 @@ private:
                   }
                 }
               else
-                memcpy (samples.data(), frame->getSamples(), audioFrames->getSamplesPerFrame() * audioFrames->getNumChannels() * sizeof(float));
+                memcpy (samples.data(),
+                        frame->getSamples(),
+                        audioFrames->getSamplesPerFrame() * audioFrames->getNumChannels() * sizeof(float));
               srcSamples = samples.data();
               }
             else
@@ -788,32 +680,31 @@ private:
             if (frame && audioFrames->getPlaying())
               audioFrames->nextPlayFrame();
             });
-
-          if (!streaming && audioFrames->getPlayFinished())
-            break;
           }
 
         device->stop();
         }
-      //}}}
+
       mRunning = false;
       cLog::log (LOGINFO, "exit");
       });
+
     playerThread.detach();
     }
-
+  //}}}
 #else
-  cAudioPlayer::cAudioPlayer (cAudioFrames* audioFrames, bool streaming) {
+  //{{{
+  cAudioPlayer::cAudioPlayer (cAudioFrames* audioFrames) {
     thread playerThread = thread ([=, this]() {
-      // player lambda
+      // lambda
       cLog::setThreadName ("play");
       array <float,2048*2> silence = { 0.f };
       array <float,2048*2> samples = { 0.f };
 
       audioFrames->togglePlaying();
-      //{{{  audio16 player thread, video follows playPts
-      cAudio audio (2, audioFrames->getSampleRate(), 40000, false);
 
+      // audio16 player thread, video follows playPts
+      cAudio audio (2, audioFrames->getSampleRate(), 40000, false);
       cAudioFrame* frame;
       while (!mExit) {
         float* playSamples = silence.data();
@@ -831,11 +722,8 @@ private:
 
         if (frame && audioFrames->getPlaying())
           audioFrames->nextPlayFrame (true);
-
-        if (!streaming && audioFrames->getPlayFinished())
-          break;
         }
-      //}}}
+
       mRunning = false;
       cLog::log (LOGINFO, "exit");
       });
@@ -846,12 +734,15 @@ private:
     pthread_setschedparam (playerThread.native_handle(), SCHED_RR, &sch_params);
     playerThread.detach();
     }
+  //}}}
 #endif
 
+//{{{
 void cAudioPlayer::wait() {
   while (mRunning)
     this_thread::sleep_for (100ms);
   }
+//}}}
 //}}}
 
 // cAudioDecoder
@@ -861,24 +752,29 @@ cAudioDecoder::cAudioDecoder (const std::string name) : cDecoder(name) {
   eAudioFrameType frameType = eAudioFrameType::eAacLatm;
 
   switch (frameType) {
+    //{{{
     case eAudioFrameType::eMp3:
       cLog::log (LOGINFO, "createAudioDecoder ffmpeg mp3");
-      mAudioDecoder = new cFFmpegAudioDecoder (frameType);
+      mAudioFFmpegDecoder = new cAudioFFmpegDecoder (frameType);
       break;
-
+    //}}}
+    //{{{
     case eAudioFrameType::eAacAdts:
       cLog::log (LOGINFO, "createAudioDecoder ffmpeg aacAdts");
-      mAudioDecoder =  new cFFmpegAudioDecoder (frameType);
+      mAudioFFmpegDecoder =  new cAudioFFmpegDecoder (frameType);
       break;
-
+    //}}}
+    //{{{
     case eAudioFrameType::eAacLatm:
       cLog::log (LOGINFO, "createAudioDecoder ffmpeg aacLatm");
-      mAudioDecoder =  new cFFmpegAudioDecoder (frameType);
+      mAudioFFmpegDecoder =  new cAudioFFmpegDecoder (frameType);
       break;
-
+    //}}}
+    //{{{
     default:
       cLog::log (LOGERROR, "createAudioDecoder frameType:%d", frameType);
       break;
+    //}}}
     }
 
   mAudioFrames = new cAudioFrames (frameType, 2, 48000, 1024, 100);
@@ -887,8 +783,9 @@ cAudioDecoder::cAudioDecoder (const std::string name) : cDecoder(name) {
 //{{{
 cAudioDecoder::~cAudioDecoder() {
 
-  delete mAudioDecoder;
+  delete mAudioFFmpegDecoder;
   delete mAudioFrames;
+  delete mAudioPlayer;
   }
 //}}}
 
@@ -905,13 +802,16 @@ bool cAudioDecoder::decode (uint8_t* buf, int bufSize, int64_t pts) {
   int frameSize;
   while (parseFrame (framePes, framePesEnd, frameSize)) {
     // decode a single frame from pes
-    float* samples = mAudioDecoder->decodeFrame (framePes, frameSize, pts);
+    float* samples = mAudioFFmpegDecoder->decodeFrame (framePes, frameSize, pts);
     if (samples) {
       cAudioFrame& audioFrame = mAudioFrames->addFrame (pts, samples);
-
       logValue (framePts, audioFrame.getPowerValues()[0]);
 
-      framePts += (mAudioDecoder->getNumSamplesPerFrame() * 90) / 48;
+      framePts += (mAudioFFmpegDecoder->getNumSamplesPerFrame() * 90000) / 48000;
+      if (!mAudioPlayer) {
+        mAudioFrames->setPlayPts (pts);
+        mAudioPlayer = new cAudioPlayer (mAudioFrames);
+        }
       }
 
     // point to next frame in pes

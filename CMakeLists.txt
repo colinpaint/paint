@@ -119,7 +119,7 @@ if (BUILD_PLAYER OR BUILD_TELLY)
     file (GLOB AUDIO_HEADER_FILES audio/*.h decoder/*.h)
     file (GLOB AUDIO_SOURCE_FILES audio/*.cpp)
     add_library (audio ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
-    target_link_libraries (audio PUBLIC utils decoder)
+    target_link_libraries (audio PUBLIC utils)
 endif()
 
 # dvb
@@ -153,7 +153,7 @@ if (BUILD_TELLY)
       target_link_libraries (telly PRIVATE implot)
     endif()
 
-    target_link_libraries (telly PRIVATE dvb imgui utils glfw glad)
+    target_link_libraries (telly PRIVATE dvb audio imgui utils glfw glad)
     if (MSVC)
       target_link_directories (telly PUBLIC ffmpeg/x64)
       target_link_libraries (telly PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
