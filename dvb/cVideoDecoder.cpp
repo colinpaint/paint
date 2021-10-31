@@ -425,9 +425,13 @@ public:
   char getFrameType() { return mFrameType; }
   uint32_t* getBuffer8888() { return mBuffer8888; }
 
-  void setFree (bool free, int64_t pts) { (void)pts; mFree = free; }
-
   // sets
+  //{{{
+  void setFree (bool free, int64_t pts) { 
+    (void)pts; 
+    mFree = free; 
+    }
+  //}}}
   //{{{
   void set (int64_t pts, int pesSize, int width, int height, char frameType) {
 
@@ -449,14 +453,8 @@ public:
     #endif
     }
   //}}}
-  //{{{
-  virtual void setYuv420 (void* context, uint8_t** data, int* linesize) {
-    (void)context;
-    (void)data;
-    (void)linesize;
-    cLog::log (LOGERROR, "setYuv420 planar not implemented");
-    }
-  //}}}
+
+  virtual void setYuv420 (void* context, uint8_t** data, int* linesize)  = 0;
 
 protected:
   int mWidth = 0;
@@ -1885,7 +1883,8 @@ public:
   // decode
   //{{{
   void decode (uint8_t* pes, unsigned int pesSize, int64_t pts, int64_t dts) {
-
+    
+    (void)pts;
     chrono::system_clock::time_point timePoint = chrono::system_clock::now();
 
     // ffmpeg doesn't maintain correct avFrame.pts, decode frames in presentation order and pts correct on I frames
