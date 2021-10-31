@@ -305,7 +305,7 @@ public:
       }
 
     float* samplePtr = samples;
-    for (int sample = 0; sample < mSamplesPerFrame; sample++) {
+    for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
       // acumulate
       for (size_t channel = 0; channel < mNumChannels; channel++) {
         auto value = *samplePtr++;
@@ -354,7 +354,7 @@ public:
 
     unique_lock<shared_mutex> lock (mSharedMutex);
 
-    for (auto frame : mFrameMap)
+    for (auto& frame : mFrameMap)
       delete (frame.second);
     mFrameMap.clear();
     }
@@ -408,7 +408,7 @@ private:
 cAudioFrame& cAudioFrames::addFrame (int64_t pts, float* samples) {
 
   if (mFrameMap.size() > mMaxMapSize) {
-    // remove frame from map begin with lock
+    // too many frames, remove frame from map begin with lock
     unique_lock<shared_mutex> lock (mSharedMutex);
     mFrameMap.erase (mFrameMap.begin());
     }
@@ -430,16 +430,16 @@ public:
   cAudioFFmpegDecoder (eAudioFrameType frameType);
   ~cAudioFFmpegDecoder();
 
-  int32_t getNumChannels() { return mChannels; }
-  int32_t getSampleRate() { return mSampleRate; }
-  int32_t getNumSamplesPerFrame() { return mSamplesPerFrame; }
+  size_t getNumChannels() { return mChannels; }
+  size_t getSampleRate() { return mSampleRate; }
+  size_t getNumSamplesPerFrame() { return mSamplesPerFrame; }
 
   float* decodeFrame (const uint8_t* frame, uint32_t frameSize, int64_t pts);
 
 private:
-  int32_t mChannels = 0;
-  int32_t mSampleRate = 0;
-  int32_t mSamplesPerFrame = 0;
+  size_t mChannels = 0;
+  size_t mSampleRate = 0;
+  size_t mSamplesPerFrame = 0;
 
   AVCodecParserContext* mAvParser = nullptr;
   AVCodec* mAvCodec = nullptr;
@@ -557,10 +557,10 @@ float* cAudioFFmpegDecoder::decodeFrame (const uint8_t* frame, uint32_t frameSiz
 
               outBuffer = (float*)malloc (avFrame->channels * avFrame->nb_samples * sizeof(float));
 
-              for (auto channel = 0; channel < avFrame->channels; channel++) {
+              for (int channel = 0; channel < avFrame->channels; channel++) {
                 auto dstPtr = outBuffer + channel;
                 auto srcPtr = (short*)avFrame->data[channel];
-                for (auto sample = 0; sample < mSamplesPerFrame; sample++) {
+                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
                   *dstPtr = *srcPtr++ / (float)0x8000;
                   dstPtr += mChannels;
                   }
@@ -686,7 +686,7 @@ private:
         audio.play (2, playSamples, audioFrames->getSamplesPerFrame(), 1.f);
 
         if (frame && audioFrames->getPlaying())
-          audioFrames->nextPlayFrame (true);
+          audioFrames->nextPlayFrame();
         }
 
       mRunning = false;
@@ -766,15 +766,15 @@ void cAudioDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
   //logValue (pts, (float)bufSize);
 
   uint8_t* frame = pes;
-  uint8_t* frameEnd = pes + pesSize;
+  uint8_t* pesEnd = pes + pesSize;
   int64_t framePts = pts;
 
-  // parse pesFrame, pes may contain many frames
+  // parse pesFrame, pes may have more than one frame
   eAudioFrameType frameType = eAudioFrameType::eUnknown;
   int numChannels = 0;
   int sampleRate = 0;
   int frameSize = 0;
-  while (audioParseFrame (frame, frameEnd, frameType, numChannels, sampleRate, frameSize)) {
+  while (audioParseFrame (frame, pesEnd, frameType, numChannels, sampleRate, frameSize)) {
     // decode single frame from pes
     float* samples = mAudioFFmpegDecoder->decodeFrame (frame, frameSize, framePts);
     if (samples) {
@@ -788,7 +788,7 @@ void cAudioDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
         }
 
       // inc pts for nextFrame
-      framePts += (mAudioFFmpegDecoder->getNumSamplesPerFrame() * 90000) / 48000;
+      framePts += mAudioFrames->getFramePtsDuration();
       }
 
     // point to nextFrame
