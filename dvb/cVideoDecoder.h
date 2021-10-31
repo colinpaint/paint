@@ -14,5 +14,5 @@ public:
   cVideoDecoder (const std::string name);
   virtual ~cVideoDecoder();
 
-  bool decode (uint8_t* pes, uint32_t pesSize, int64_t pts);
+  void decode (uint8_t* pes, uint32_t pesSize, int64_t pts);
   };

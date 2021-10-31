@@ -45,7 +45,7 @@ public:
   size_t getHighWatermark() const { return mPage.mHighwaterMark; }
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
-  bool decode (uint8_t* pes, uint32_t pesSize, int64_t pts);
+  void decode (uint8_t* pes, uint32_t pesSize, int64_t pts);
 
 private:
   //{{{

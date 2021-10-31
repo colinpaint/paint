@@ -38,7 +38,7 @@ using namespace std;
 enum class eAudioFrameType { eUnknown, eId3Tag, eWav, eMp3, eAacAdts, eAacLatm } ;
 namespace {
   //{{{
-  uint8_t* parseFrame (uint8_t* framePtr, uint8_t* frameLast,
+  uint8_t* audioParseFrame (uint8_t* framePtr, uint8_t* frameLast,
                        eAudioFrameType& frameType, int& numChannels, int& sampleRate, int& frameSize) {
   // simple mp3 / aacAdts / aacLatm / wav / id3Tag frame parser
 
@@ -344,7 +344,7 @@ private:
 class cAudioFrames {
 public:
   //{{{
-  cAudioFrames(eAudioFrameType frameType, int numChannels, int sampleRate, int samplesPerFrame, int maxMapSize)
+  cAudioFrames(eAudioFrameType frameType, int numChannels, int sampleRate, int samplesPerFrame, size_t maxMapSize)
     : mFrameType(frameType), mNumChannels(numChannels),
       mSampleRate(sampleRate), mSamplesPerFrame(samplesPerFrame),
       mMaxMapSize(maxMapSize) {}
@@ -360,14 +360,14 @@ public:
     }
   //}}}
 
-  // get
+  // gets
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
 
-  eAudioFrameType getFrameType() { return mFrameType; }
+  eAudioFrameType getFrameType() const { return mFrameType; }
   uint32_t getNumChannels() const { return mNumChannels; }
   uint32_t getSampleRate() const { return mSampleRate; }
   uint32_t getSamplesPerFrame() const { return mSamplesPerFrame; }
-  int64_t getFramePtsDuration() const { return (mSamplesPerFrame * 90000) / 48000; }
+  int64_t getFramePtsDuration() const { return (mSamplesPerFrame * 90000) / mSampleRate; }
 
   bool getPlaying() const { return mPlaying; }
   int64_t getPlayPts() const { return mPlayPts; }
@@ -376,9 +376,9 @@ public:
   cAudioFrame* findPlayFrame() const { return findFrame (mPlayPts); }
 
   // play
-  void setPlayPts (int64_t pts);
-  void nextPlayFrame();
   void togglePlaying() { mPlaying = !mPlaying; }
+  void setPlayPts (int64_t pts) { mPlayPts = pts; }
+  void nextPlayFrame() { setPlayPts (mPlayPts + getFramePtsDuration()); }
 
   // add
   cAudioFrame& addFrame (int64_t pts, float* samples);
@@ -395,7 +395,7 @@ private:
   const int mNumChannels;
   const int mSampleRate = 0;
   const int mSamplesPerFrame = 0;
-  const int mMaxMapSize;
+  const size_t mMaxMapSize;
 
   std::shared_mutex mSharedMutex;
   std::map <int64_t, cAudioFrame*> mFrameMap;
@@ -404,22 +404,10 @@ private:
   int64_t mPlayPts = 0;
   };
 
-// cAudioFrames members
-//{{{
-void cAudioFrames::setPlayPts (int64_t pts) {
-  mPlayPts = pts;
-  }
-//}}}
-//{{{
-void cAudioFrames::nextPlayFrame() {
-  setPlayPts (mPlayPts + getFramePtsDuration());
-  }
-//}}}
-
 //{{{
 cAudioFrame& cAudioFrames::addFrame (int64_t pts, float* samples) {
 
-  if (mMaxMapSize && (int(mFrameMap.size()) > mMaxMapSize)) {
+  if (mFrameMap.size() > mMaxMapSize) {
     // remove frame from map begin with lock
     unique_lock<shared_mutex> lock (mSharedMutex);
     mFrameMap.erase (mFrameMap.begin());
@@ -446,7 +434,7 @@ public:
   int32_t getSampleRate() { return mSampleRate; }
   int32_t getNumSamplesPerFrame() { return mSamplesPerFrame; }
 
-  float* decodeFrame (const uint8_t* framePtr, int frameLen, int64_t pts);
+  float* decodeFrame (const uint8_t* frame, uint32_t frameSize, int64_t pts);
 
 private:
   int32_t mChannels = 0;
@@ -501,26 +489,24 @@ cAudioFFmpegDecoder::~cAudioFFmpegDecoder() {
 //}}}
 
 //{{{
-float* cAudioFFmpegDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, int64_t pts) {
+float* cAudioFFmpegDecoder::decodeFrame (const uint8_t* frame, uint32_t frameSize, int64_t pts) {
 
   float* outBuffer = nullptr;
-
-  //if (pts != mLastPts + duration) // skip
 
   AVPacket avPacket;
   av_init_packet (&avPacket);
   auto avFrame = av_frame_alloc();
 
-  auto pesPtr = framePtr;
-  auto pesSize = frameLen;
-  while (pesSize) {
-    auto bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket.data, &avPacket.size,
-                                       pesPtr, (int)pesSize, pts, AV_NOPTS_VALUE, 0);
+  while (frameSize) {
+    int bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
+                                      &avPacket.data, &avPacket.size,
+                                      frame, frameSize, pts, AV_NOPTS_VALUE, 0);
+    frame += bytesUsed;
+    frameSize -= bytesUsed;
+
     avPacket.pts = pts;
-    pesPtr += bytesUsed;
-    pesSize -= bytesUsed;
     if (avPacket.size) {
-      auto ret = avcodec_send_packet (mAvContext, &avPacket);
+      int ret = avcodec_send_packet (mAvContext, &avPacket);
       while (ret >= 0) {
         ret = avcodec_receive_frame (mAvContext, avFrame);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
@@ -540,29 +526,35 @@ float* cAudioFFmpegDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
 
               float* srcPtr0 = (float*)avFrame->data[0];
               float* srcPtr1 = (float*)avFrame->data[1];
-              if (avFrame->channels == 6) { // 5.1
+              if (avFrame->channels == 6) {
+                // 5.1 mix down
                 float* srcPtr2 = (float*)avFrame->data[2];
                 float* srcPtr3 = (float*)avFrame->data[3];
                 float* srcPtr4 = (float*)avFrame->data[4];
                 float* srcPtr5 = (float*)avFrame->data[5];
-                for (auto sample = 0; sample < mSamplesPerFrame; sample++) {
+                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
                   *dstPtr++ = *srcPtr0++ + *srcPtr2++ + *srcPtr4 + *srcPtr5; // left loud
                   *dstPtr++ = *srcPtr1++ + *srcPtr3++ + *srcPtr4++ + *srcPtr5++; // right loud
                   }
                 }
-              else // stereo
-                for (auto sample = 0; sample < mSamplesPerFrame; sample++) {
+              else {
+                // stereo
+                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
                   *dstPtr++ = *srcPtr0++;
                   *dstPtr++ = *srcPtr1++;
                   }
                 }
+
               break;
+              }
             //}}}
             //{{{
-            case AV_SAMPLE_FMT_S16P: // 16bit signed planar, copy scale and copy to interleaved
+            case AV_SAMPLE_FMT_S16P: { // 16bit signed planar, copy scale and copy to interleaved
+
               mChannels =  avFrame->channels;
               mSampleRate = avFrame->sample_rate;
               mSamplesPerFrame = avFrame->nb_samples;
+
               outBuffer = (float*)malloc (avFrame->channels * avFrame->nb_samples * sizeof(float));
 
               for (auto channel = 0; channel < avFrame->channels; channel++) {
@@ -574,6 +566,7 @@ float* cAudioFFmpegDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
                   }
                 }
               break;
+              }
             //}}}
             default:;
             }
@@ -617,7 +610,6 @@ private:
 
       audioFrames->togglePlaying();
 
-      // WSAPI player thread, video follows playPts
       auto device = getDefaultAudioOutputDevice();
       if (device) {
         cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", audioFrames->getSampleRate());
@@ -629,7 +621,6 @@ private:
           device->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
             // loadSrcSamples callback lambda
             shared_lock<shared_mutex> lock (audioFrames->getSharedMutex());
-
             frame = audioFrames->findPlayFrame();
             if (audioFrames->getPlaying() && frame && frame->getSamples()) {
               if (audioFrames->getNumChannels() == 1) {
@@ -764,7 +755,7 @@ cAudioDecoder::~cAudioDecoder() {
 //}}}
 
 //{{{
-bool cAudioDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
+void cAudioDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
   log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);
@@ -778,7 +769,7 @@ bool cAudioDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
   int numChannels = 0;
   int sampleRate = 0;
   int frameSize = 0;
-  while (parseFrame (frame, frameEnd, frameType, numChannels, sampleRate, frameSize)) {
+  while (audioParseFrame (frame, frameEnd, frameType, numChannels, sampleRate, frameSize)) {
     // decode single frame from pes
     float* samples = mAudioFFmpegDecoder->decodeFrame (frame, frameSize, framePts);
     if (samples) {
@@ -798,7 +789,5 @@ bool cAudioDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
     // point to nextFrame
     frame += frameSize;
     }
-
-  return false;
   }
 //}}}

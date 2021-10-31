@@ -32,7 +32,7 @@ public:
   void logValue (int64_t pts, float value);
 
   // decode
-  virtual bool decode (uint8_t* pes, uint32_t pesSize, int64_t pts) = 0;
+  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts) = 0;
 
 protected:
   void header();

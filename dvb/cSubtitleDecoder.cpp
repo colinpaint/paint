@@ -41,8 +41,7 @@ cSubtitleDecoder::~cSubtitleDecoder() {
 //}}}
 
 //{{{
-bool cSubtitleDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
-
+void cSubtitleDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
   mPage.mPts = pts;
   mPage.mPesSize = pesSize;
@@ -59,7 +58,7 @@ bool cSubtitleDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
     if (syncByte != 0x0f) {
       //{{{  syncByte error return
       cLog::log (LOGERROR, fmt::format ("cSubtitle decode missing syncByte:{}", syncByte));
-      return false;
+      return;
       }
       //}}}
 
@@ -74,7 +73,7 @@ bool cSubtitleDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
     if (segmentLength > pesEnd - pesPtr) {
       //{{{  segmentLength error return
       cLog::log (LOGERROR, "cSubtitle decode incomplete or broken packet");
-      return false;
+      return;
       }
       //}}}
 
@@ -82,37 +81,37 @@ bool cSubtitleDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
       //{{{
       case 0x10: // page composition segment
         if (!parsePage (pesPtr, segmentLength))
-          return false;
+          return;
         break;
       //}}}
       //{{{
       case 0x11: // region composition segment
         if (!parseRegion (pesPtr, segmentLength))
-          return false;
+          return;
         break;
       //}}}
       //{{{
       case 0x12: // CLUT definition segment
         if (!parseColorLut (pesPtr, segmentLength))
-          return false;
+          return;
         break;
       //}}}
       //{{{
       case 0x13: // object data segment
         if (!parseObject (pesPtr, segmentLength))
-          return false;
+          return;
         break;
       //}}}
       //{{{
       case 0x14: // display definition segment
         if (!parseDisplayDefinition (pesPtr, segmentLength))
-          return false;
+          return;
         break;
       //}}}
       //{{{
       case 0x80: // end of display set segment
         endDisplay();
-        return true;
+        return;
       //}}}
       //{{{
       case 0x15: // disparity signalling segment
@@ -134,8 +133,6 @@ bool cSubtitleDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
     pesPtr += segmentLength;
     }
-
-  return false;
   }
 //}}}
 
