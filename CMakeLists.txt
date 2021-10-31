@@ -30,6 +30,7 @@ project (utils)
                                          -std=c++2a)
   endif()
 
+# glfw lib
 if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
   ### glfw project
   set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -38,27 +39,19 @@ if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
   set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
   set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
   add_subdirectory (glfw)
-endif()
+  endif()
 
-if (BUILD_PLAYER OR BUILD_CAPTURE OR BUILD_TELLY)
-  project (decoder)
-    file (GLOB DECODER_HEADER_FILES decoder/*.h ffmpeg/*.h)
-    file (GLOB DECODER_SOURCE_FILES decoder/*.cpp)
-    add_library (decoder ${DECODER_HEADER_FILES} ${DECODER_SOURCE_FILES})
-    target_include_directories (decoder PUBLIC ffmpeg/inc)
-    if (MSVC)
-      target_link_directories (decoder PUBLIC ffmpeg/x64)
-    endif()
-    target_link_libraries (decoder PUBLIC utils avutil avcodec avformat swresample swscale)
-endif()
-
+# glad lib
 if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
   if (OPENGL_VERSION STREQUAL "OPENGL_21")
     add_subdirectory (glad2.1+fbo+vao)
   elseif (OPENGL_VERSION STREQUAL "OPENGL_45")
     add_subdirectory (glad4.5core)
   endif()
+endif()
 
+# imgui,implot lib
+if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
   project (imgui)
     file (GLOB IMGUI_HEADER_FILES imgui/*.h)
     file (GLOB IMGUI_SOURCE_FILES imgui/*.cpp)
@@ -76,12 +69,26 @@ if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
     if (BUILD_IMPLOT)
       project (implot)
         file (GLOB HEADER_FILES implot/*.h)
-        file (GLOB SOURCE_FILES implot/implot.cpp implot/implot_items.cpp)
+        file (GLOB SOURCE_FILES implot/*.cpp)
         add_library (implot ${HEADER_FILES} ${SOURCE_FILES})
         target_include_directories (implot PUBLIC implot imgui utils)
     endif()
 endif()
 
+# decoder lib
+if (BUILD_PLAYER OR BUILD_CAPTURE)
+  project (decoder)
+    file (GLOB DECODER_HEADER_FILES decoder/*.h ffmpeg/*.h)
+    file (GLOB DECODER_SOURCE_FILES decoder/*.cpp)
+    add_library (decoder ${DECODER_HEADER_FILES} ${DECODER_SOURCE_FILES})
+    target_include_directories (decoder PUBLIC ffmpeg/inc)
+    if (MSVC)
+      target_link_directories (decoder PUBLIC ffmpeg/x64)
+    endif()
+    target_link_libraries (decoder PUBLIC utils avutil avcodec avformat swresample swscale)
+endif()
+
+# capture app
 if (BUILD_CAPTURE AND MSVC)
   ## WIN32 audio wsapi capture main project
   project (captureAudio VERSION 1.0.0)
@@ -91,6 +98,7 @@ if (BUILD_CAPTURE AND MSVC)
     target_link_libraries (captureAudio PRIVATE decoder winmm avrt audio)
 endif()
 
+# filesystem app
 if (BUILD_FILESYSTEM)
   project (filesystem)
     file (GLOB HEADER_FILES *.h utils/*.h)
@@ -105,22 +113,39 @@ if (BUILD_FILESYSTEM)
     endif()
 endif()
 
+# audio
 if (BUILD_PLAYER OR BUILD_TELLY)
-  project (dvb)
-    file (GLOB DVB_HEADER_FILES dvb/*.h)
-    file (GLOB DVB_SOURCE_FILES dvb/*.cpp)
-    add_library (dvb ${DVB_HEADER_FILES} ${DVB_SOURCE_FILES})
-    target_link_libraries (dvb PUBLIC utils)
+  project (audio)
+    file (GLOB AUDIO_HEADER_FILES audio/*.h decoder/*.h)
+    file (GLOB AUDIO_SOURCE_FILES audio/*.cpp)
+    add_library (audio ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
+    target_link_libraries (audio PUBLIC utils decoder)
 endif()
 
+# dvb
+if (BUILD_PLAYER OR BUILD_TELLY)
+  project (dvb)
+    file (GLOB DVB_HEADER_FILES dvb/*.h ffmpeg/*.h)
+    file (GLOB DVB_SOURCE_FILES dvb/*.cpp)
+    add_library (dvb ${DVB_HEADER_FILES} ${DVB_SOURCE_FILES})
+
+    target_include_directories (dvb PRIVATE ffmpeg/inc)
+
+    target_link_libraries (dvb PUBLIC utils avutil avcodec avformat swresample swscale)
+    if (MSVC)
+      target_link_directories (dvb PUBLIC ffmpeg/x64)
+    endif()
+endif()
+
+# telly
 if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
-    file (GLOB PLAYER_HEADER_FILES player/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
-    file (GLOB PLAYER_SOURCE_FILES tv/tvMain.cpp tv/cTvApp.cpp tv/cTvUI.cpp
-                                   ui/cUI.cpp
-                                   platform/*.cpp graphics/*.cpp)
+    file (GLOB TELLY_HEADER_FILES telly/*.h implot/implot.h imgui/*.h ui/*.h utils/*.h
+                                  platform/*.h graphics/*.h)
+    file (GLOB TELLY_SOURCE_FILES tv/tvMain.cpp tv/cTvApp.cpp tv/cTvUI.cpp
+                                  ui/cUI.cpp platform/*.cpp graphics/*.cpp)
+    add_executable (telly ${TELLY_SOURCE_FILES} ${TELLY_HEADER_FILES})
 
-    add_executable (telly ${PLAYER_SOURCE_FILES} ${PLAYER_HEADER_FILES})
     target_include_directories (telly PRIVATE imgui stb)
 
     if (BUILD_IMPLOT)
@@ -128,10 +153,9 @@ if (BUILD_TELLY)
       target_link_libraries (telly PRIVATE implot)
     endif()
 
-    target_link_libraries (telly PRIVATE decoder imgui utils glfw glad)
-    target_link_libraries (telly PRIVATE dvb)
-
+    target_link_libraries (telly PRIVATE dvb imgui utils glfw glad)
     if (MSVC)
+      target_link_directories (telly PUBLIC ffmpeg/x64)
       target_link_libraries (telly PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
     else()
       target_link_libraries (telly PRIVATE GL)
@@ -140,19 +164,8 @@ if (BUILD_TELLY)
     endif()
 endif()
 
+# player app
 if (BUILD_PLAYER)
-  project (audio)
-    file (GLOB AUDIO_HEADER_FILES audio/*.h decoder/*.h)
-    file (GLOB AUDIO_SOURCE_FILES audio/*.cpp)
-    add_library (audio ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
-    target_link_libraries (audio PUBLIC utils decoder)
-
-  project (net)
-    file (GLOB NET_HEADER_FILES net/*.h)
-    file (GLOB NET_SOURCE_FILES net/*.cpp)
-    add_library (net ${NET_HEADER_FILES} ${NET_SOURCE_FILES})
-    target_link_libraries (net PUBLIC utils)
-
   project (kiss)
     file (GLOB KISS_HEADER_FILES kiss/*.h)
     file (GLOB KISS_SOURCE_FILES kiss/*.c)
@@ -164,6 +177,12 @@ if (BUILD_PLAYER)
     file (GLOB SONG_SOURCE_FILES song/*.cpp)
     add_library (song ${SONG_HEADER_FILES} ${SONG_SOURCE_FILES})
     target_link_libraries (song PUBLIC utils decoder kiss)
+
+  project (net)
+    file (GLOB NET_HEADER_FILES net/*.h)
+    file (GLOB NET_SOURCE_FILES net/*.cpp)
+    add_library (net ${NET_HEADER_FILES} ${NET_SOURCE_FILES})
+    target_link_libraries (net PUBLIC utils)
 
   project (player VERSION 1.0.0)
     file (GLOB PLAYER_HEADER_FILES player/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
@@ -186,6 +205,7 @@ if (BUILD_PLAYER)
     endif()
 endif()
 
+# fed app
 if (BUILD_FED)
   project (fed VERSION 1.0.0)
     file (GLOB FED_HEADER_FILES fed/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
@@ -205,6 +225,7 @@ if (BUILD_FED)
     endif()
 endif()
 
+# paintbox app
 if (BUILD_PAINTBOX)
   project (paintbox VERSION 1.0.0)
     find_package (OpenGL REQUIRED)

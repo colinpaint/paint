@@ -8,7 +8,8 @@
 #include "cDecoder.h"
 #include "../utils/cMiniLog.h"
 
-class iAudioDecoder;
+class cFFmpegAudioDecoder;
+class cAudioFrames;
 //}}}
 
 class cAudioDecoder : public cDecoder {
@@ -19,5 +20,6 @@ public:
   bool decode (uint8_t* buf, int bufSize, int64_t pts);
 
 private:
-  iAudioDecoder* mAudioDecoder;
+  cFFmpegAudioDecoder* mAudioDecoder;
+  cAudioFrames* mAudioFrames = nullptr;
   };
