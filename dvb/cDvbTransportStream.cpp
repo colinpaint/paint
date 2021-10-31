@@ -534,8 +534,7 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
 
   auto it = mEpgItemMap.find (startTime);
   if (it == mEpgItemMap.end())
-    mEpgItemMap.insert (map <tTimePoint, cEpgItem*>::value_type (
-                          startTime, new cEpgItem (false, record, startTime, duration, titleString, infoString)));
+    mEpgItemMap.emplace (startTime, new cEpgItem (false, record, startTime, duration, titleString, infoString));
   else
     it->second->set (startTime, duration, titleString, infoString);
 
@@ -1206,9 +1205,8 @@ cDvbTransportStream::cPidInfo* cDvbTransportStream::getPidInfo (uint16_t pid, bo
         (pid == PID_EIT) || (pid == PID_RST) || (pid == PID_TDT) || (pid == PID_SYN) ||
         (mProgramMap.find (pid) != mProgramMap.end())) {
 
-      // create new psi cPidInfo, insert
-      pidInfoIt = mPidInfoMap.insert (
-        map <uint16_t, cPidInfo>::value_type (pid, cPidInfo (pid, createPsiOnly))).first;
+      // create new psi cPidInfo
+      pidInfoIt = mPidInfoMap.emplace (pid, cPidInfo (pid, createPsiOnly)).first;
 
       // allocate buffer
       pidInfoIt->second.mBufSize = kInitBufSize;
@@ -1351,7 +1349,7 @@ void cDvbTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
       uint16_t sid = HILO (patProgram->program_number);
       uint16_t pid = HILO (patProgram->network_pid);
       if (mProgramMap.find (pid) == mProgramMap.end())
-        mProgramMap.insert (map <uint16_t, uint16_t>::value_type (pid, sid));
+        mProgramMap.emplace (pid, sid);
 
       sectionLength -= sizeof(sPatProg);
       buf += sizeof(sPatProg);
@@ -1622,14 +1620,11 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
 
   if (pmt->table_id == TID_PMT) {
     uint16_t sid = HILO (pmt->program_number);
-
     cService* service = getService (sid);
     if (!service) {
       // service not found, create one
-      auto insertPair = mServiceMap.insert (map <uint16_t, cService>::value_type (sid, cService (sid)));
-      auto it = insertPair.first;
       cLog::log (LOGINFO, fmt::format ("create service {}", sid));
-      service = &it->second;
+      service = &((mServiceMap.emplace (sid, cService(sid)).first)->second);
       }
     service->setProgramPid (pidInfo->mPid);
 
