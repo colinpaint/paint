@@ -801,17 +801,18 @@ bool cAudioDecoder::decode (uint8_t* buf, int bufSize, int64_t pts) {
 
   int frameSize;
   while (parseFrame (framePes, framePesEnd, frameSize)) {
-    // decode a single frame from pes
-    float* samples = mAudioFFmpegDecoder->decodeFrame (framePes, frameSize, pts);
+    // decode single frame from pes
+    float* samples = mAudioFFmpegDecoder->decodeFrame (framePes, frameSize, framePts);
     if (samples) {
-      cAudioFrame& audioFrame = mAudioFrames->addFrame (pts, samples);
+      cAudioFrame& audioFrame = mAudioFrames->addFrame (framePts, samples);
       logValue (framePts, audioFrame.getPowerValues()[0]);
 
-      framePts += (mAudioFFmpegDecoder->getNumSamplesPerFrame() * 90000) / 48000;
       if (!mAudioPlayer) {
-        mAudioFrames->setPlayPts (pts);
+        mAudioFrames->setPlayPts (framePts);
         mAudioPlayer = new cAudioPlayer (mAudioFrames);
         }
+
+      framePts += (mAudioFFmpegDecoder->getNumSamplesPerFrame() * 90000) / 48000;
       }
 
     // point to next frame in pes
