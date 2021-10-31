@@ -32,7 +32,7 @@ cVideoDecoder::~cVideoDecoder() {
 //}}}
 
 //{{{
-bool cVideoDecoder::decode (uint8_t* pes, int pesSize, int64_t pts) {
+bool cVideoDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
   (void)pes;
   log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));

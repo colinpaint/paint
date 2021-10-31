@@ -298,12 +298,6 @@ public:
   cAudioFrame (size_t numChannels, size_t samplesPerFrame, int64_t pts, float* samples)
       : mNumChannels(numChannels), mSamplesPerFrame(samplesPerFrame), mPts(pts), mSamples(samples) {
 
-    mPeakValues = (float*)malloc (numChannels * sizeof(float));
-    memset (mPeakValues, 0, numChannels * sizeof(float));
-
-    mPowerValues = (float*)malloc (numChannels * sizeof(float));
-    memset (mPowerValues, 0, numChannels * sizeof(float));
-
     for (size_t channel = 0; channel < mNumChannels; channel++) {
       // init
       mPeakValues[channel] = 0.f;
@@ -327,25 +321,23 @@ public:
   //{{{
   ~cAudioFrame() {
     free (mSamples);
-    free (mPeakValues);
-    free (mPowerValues);
     }
   //}}}
 
   // gets
   int64_t getPts() const { return mPts; }
   float* getSamples() const { return mSamples; }
-  float* getPeakValues() const { return mPeakValues;  }
-  float* getPowerValues() const { return mPowerValues;  }
+  std::array<float,6>& getPeakValues() { return mPeakValues; }
+  std::array<float,6>& getPowerValues() { return mPowerValues; }
 
 private:
-  size_t mNumChannels = 0;
-  size_t mSamplesPerFrame = 0;
-
+  const size_t mNumChannels = 0;
+  const size_t mSamplesPerFrame = 0;
   const int64_t mPts = 0;
   float* mSamples = nullptr;
-  float* mPeakValues = nullptr;
-  float* mPowerValues = nullptr;
+
+  std::array <float, 6> mPeakValues = {0.f};
+  std::array <float, 6> mPowerValues = {0.f};
   };
 //}}}
 //{{{
@@ -420,9 +412,7 @@ void cAudioFrames::setPlayPts (int64_t pts) {
 //}}}
 //{{{
 void cAudioFrames::nextPlayFrame() {
-
-  int64_t playPts = mPlayPts + getFramePtsDuration();
-  setPlayPts (playPts);
+  setPlayPts (mPlayPts + getFramePtsDuration());
   }
 //}}}
 
@@ -774,7 +764,7 @@ cAudioDecoder::~cAudioDecoder() {
 //}}}
 
 //{{{
-bool cAudioDecoder::decode (uint8_t* pes, int pesSize, int64_t pts) {
+bool cAudioDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
   log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);

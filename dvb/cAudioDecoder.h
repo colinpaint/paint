@@ -18,7 +18,7 @@ public:
   cAudioDecoder (const std::string name);
   virtual ~cAudioDecoder();
 
-  bool decode (uint8_t* pes, int pesSize, int64_t pts);
+  bool decode (uint8_t* pes, uint32_t pesSize, int64_t pts);
 
 private:
   cAudioFFmpegDecoder* mAudioFFmpegDecoder;

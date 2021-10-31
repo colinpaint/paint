@@ -41,7 +41,7 @@ cSubtitleDecoder::~cSubtitleDecoder() {
 //}}}
 
 //{{{
-bool cSubtitleDecoder::decode (uint8_t* pes, int pesSize, int64_t pts) {
+bool cSubtitleDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
 
   mPage.mPts = pts;
