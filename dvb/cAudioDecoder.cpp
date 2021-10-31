@@ -344,21 +344,22 @@ private:
 class cAudioFrames {
 public:
   //{{{
-  cAudioFrames(eAudioFrameType frameType, int numChannels, int sampleRate, int samplesPerFrame, size_t maxMapSize)
+  cAudioFrames (eAudioFrameType frameType, int numChannels,
+                int sampleRate, int samplesPerFrame, size_t maxMapSize)
     : mFrameType(frameType), mNumChannels(numChannels),
       mSampleRate(sampleRate), mSamplesPerFrame(samplesPerFrame),
       mMaxMapSize(maxMapSize) {}
   //}}}
-  //{{{
-  ~cAudioFrames() {
+   //{{{
+   ~cAudioFrames() {
 
-    unique_lock<shared_mutex> lock (mSharedMutex);
+     unique_lock<shared_mutex> lock (mSharedMutex);
 
-    for (auto& frame : mFrameMap)
-      delete (frame.second);
-    mFrameMap.clear();
-    }
-  //}}}
+     for (auto& frame : mFrameMap)
+       delete (frame.second);
+     mFrameMap.clear();
+     }
+   //}}}
 
   // gets
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
@@ -407,17 +408,17 @@ private:
 //{{{
 cAudioFrame& cAudioFrames::addFrame (int64_t pts, float* samples) {
 
-  if (mFrameMap.size() > mMaxMapSize) {
-    // too many frames, remove frame from map begin with lock
-    unique_lock<shared_mutex> lock (mSharedMutex);
-    mFrameMap.erase (mFrameMap.begin());
-    }
-
+  // create new frame
   cAudioFrame* frame = new cAudioFrame (mNumChannels, mSamplesPerFrame, pts, samples);
 
-    { // insert frame with lock
+    { // locked
     unique_lock<shared_mutex> lock (mSharedMutex);
-    mFrameMap.insert (map<int64_t,cAudioFrame*>::value_type (pts, frame));
+
+    if (mFrameMap.size() > mMaxMapSize) // too many, remeove earliest
+      mFrameMap.erase (mFrameMap.begin());
+
+    //mFrameMap.emplace (map<int64_t,cAudioFrame*>::value_type (pts, frame));
+    mFrameMap.emplace (pts, frame);
     }
 
   return *frame;
