@@ -2018,12 +2018,12 @@ void cDvbTransportStream::fileSourceInternal (bool launchThread, const string& f
   auto blockSize = 188 * 8;
   auto buffer = (uint8_t*)malloc (blockSize);
 
-  int i = 0;
+  //int i = 0;
   bool run = true;
   while (run) {
-    i++;
-    if (!(i % 200)) // throttle read rate
-      this_thread::sleep_for (20ms);
+    //i++;
+    //if (!(i % 200)) // throttle read rate
+    //  this_thread::sleep_for (20ms);
 
     size_t bytesRead = fread (buffer, 1, blockSize, file);
     if (bytesRead > 0)

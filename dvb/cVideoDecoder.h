@@ -7,6 +7,8 @@
 
 #include "cDecoder.h"
 #include "../utils/cMiniLog.h"
+
+class cVideoPool;
 //}}}
 
 class cVideoDecoder : public cDecoder {
@@ -15,4 +17,7 @@ public:
   virtual ~cVideoDecoder();
 
   void decode (uint8_t* pes, uint32_t pesSize, int64_t pts);
+
+private:
+  cVideoPool* mVideoPool;
   };
