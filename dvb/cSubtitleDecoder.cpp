@@ -41,21 +41,21 @@ cSubtitleDecoder::~cSubtitleDecoder() {
 //}}}
 
 //{{{
-bool cSubtitleDecoder::decode (uint8_t* buf, int bufSize, int64_t pts) {
+bool cSubtitleDecoder::decode (uint8_t* pes, int pesSize, int64_t pts) {
 
 
   mPage.mPts = pts;
-  mPage.mPesSize = bufSize;
+  mPage.mPesSize = pesSize;
 
   log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (mPage.mPts), mPage.mPesSize));
-  logValue (pts, (float)bufSize);
+  logValue (pts, (float)pesSize);
 
-  const uint8_t* bufEnd = buf + bufSize;
-  const uint8_t* bufPtr = buf + 2;
+  const uint8_t* pesEnd = pes + pesSize;
+  const uint8_t* pesPtr = pes + 2;
 
-  while (bufEnd - bufPtr >= 6) {
+  while (pesEnd - pesPtr >= 6) {
     // check syncByte
-    uint8_t syncByte = *bufPtr++;
+    uint8_t syncByte = *pesPtr++;
     if (syncByte != 0x0f) {
       //{{{  syncByte error return
       cLog::log (LOGERROR, fmt::format ("cSubtitle decode missing syncByte:{}", syncByte));
@@ -63,15 +63,15 @@ bool cSubtitleDecoder::decode (uint8_t* buf, int bufSize, int64_t pts) {
       }
       //}}}
 
-    uint8_t segmentType = *bufPtr++;
+    uint8_t segmentType = *pesPtr++;
 
-    uint16_t pageId = AVRB16(bufPtr);
-    bufPtr += 2;
+    uint16_t pageId = AVRB16(pesPtr);
+    pesPtr += 2;
 
-    uint16_t segmentLength = AVRB16(bufPtr);
-    bufPtr += 2;
+    uint16_t segmentLength = AVRB16(pesPtr);
+    pesPtr += 2;
 
-    if (segmentLength > bufEnd - bufPtr) {
+    if (segmentLength > pesEnd - pesPtr) {
       //{{{  segmentLength error return
       cLog::log (LOGERROR, "cSubtitle decode incomplete or broken packet");
       return false;
@@ -81,31 +81,31 @@ bool cSubtitleDecoder::decode (uint8_t* buf, int bufSize, int64_t pts) {
     switch (segmentType) {
       //{{{
       case 0x10: // page composition segment
-        if (!parsePage (bufPtr, segmentLength))
+        if (!parsePage (pesPtr, segmentLength))
           return false;
         break;
       //}}}
       //{{{
       case 0x11: // region composition segment
-        if (!parseRegion (bufPtr, segmentLength))
+        if (!parseRegion (pesPtr, segmentLength))
           return false;
         break;
       //}}}
       //{{{
       case 0x12: // CLUT definition segment
-        if (!parseColorLut (bufPtr, segmentLength))
+        if (!parseColorLut (pesPtr, segmentLength))
           return false;
         break;
       //}}}
       //{{{
       case 0x13: // object data segment
-        if (!parseObject (bufPtr, segmentLength))
+        if (!parseObject (pesPtr, segmentLength))
           return false;
         break;
       //}}}
       //{{{
       case 0x14: // display definition segment
-        if (!parseDisplayDefinition (bufPtr, segmentLength))
+        if (!parseDisplayDefinition (pesPtr, segmentLength))
           return false;
         break;
       //}}}
@@ -132,7 +132,7 @@ bool cSubtitleDecoder::decode (uint8_t* buf, int bufSize, int64_t pts) {
       //}}}
       }
 
-    bufPtr += segmentLength;
+    pesPtr += segmentLength;
     }
 
   return false;

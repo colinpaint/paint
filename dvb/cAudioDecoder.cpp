@@ -39,15 +39,16 @@ enum class eAudioFrameType { eUnknown, eId3Tag, eWav, eMp3, eAacAdts, eAacLatm }
 namespace {
   //{{{
   uint8_t* parseFrame (uint8_t* framePtr, uint8_t* frameLast,
-                       eAudioFrameType& frameType, int& numChannels, int& sampleRate, int& frameLength) {
+                       eAudioFrameType& frameType, int& numChannels, int& sampleRate, int& frameSize) {
   // simple mp3 / aacAdts / aacLatm / wav / id3Tag frame parser
 
     frameType = eAudioFrameType::eUnknown;
     numChannels = 0;
     sampleRate = 0;
-    frameLength = 0;
+    frameSize = 0;
 
-    while (framePtr + 10 < frameLast) { // enough for largest header start - id3 tagSize
+    while (framePtr + 10 < frameLast) {
+      // got enough for largest header start - id3 tagSize
       if ((framePtr[0] == 0x56) && ((framePtr[1] & 0xE0) == 0xE0)) {
         //{{{  aacLatm syncWord (0x02b7 << 5) found
         frameType = eAudioFrameType::eAacLatm;
@@ -56,10 +57,10 @@ namespace {
         sampleRate = 48000;
         numChannels = 2;
 
-        frameLength = 3 + (((framePtr[1] & 0x1F) << 8) | framePtr[2]);
+        frameSize = 3 + (((framePtr[1] & 0x1F) << 8) | framePtr[2]);
 
         // check for enough bytes for frame body
-        return (framePtr + frameLength <= frameLast) ? framePtr : nullptr;
+        return (framePtr + frameSize <= frameLast) ? framePtr : nullptr;
         }
         //}}}
       else if ((framePtr[0] == 0xFF) && ((framePtr[1] & 0xF0) == 0xF0)) {
@@ -81,7 +82,7 @@ namespace {
           // J  1  home, set to 0 when encoding, ignore when decoding
           // K  1  copyrighted id bit, the next bit of a centrally registered copyright identifier, set to 0 when encoding, ignore when decoding
           // L  1  copyright id start, signals that this frame's copyright id bit is the first bit of the copyright id, set to 0 when encoding, ignore when decoding
-          // M 13  frame length, this value must include 7 or 9 bytes of header length: FrameLength = (ProtectionAbsent == 1 ? 7 : 9) + size(AACFrame)
+          // M 13  frame length, this value must include 7 or 9 bytes of header length: frameSize = (ProtectionAbsent == 1 ? 7 : 9) + size(AACFrame)
           // O 11  buffer fullness
           // P  2  Number of AAC frames (RDBs) in ADTS frame minus 1, for maximum compatibility always use 1 AAC frame per ADTS frame
           // Q 16  CRC if protection absent is 0
@@ -95,10 +96,10 @@ namespace {
           numChannels = 2;
 
           // return aacFrame & size
-          frameLength = ((framePtr[3] & 0x3) << 11) | (framePtr[4] << 3) | (framePtr[5] >> 5);
+          frameSize = ((framePtr[3] & 0x3) << 11) | (framePtr[4] << 3) | (framePtr[5] >> 5);
 
           // check for enough bytes for frame body
-          return (framePtr + frameLength <= frameLast) ? framePtr : nullptr;
+          return (framePtr + frameSize <= frameLast) ? framePtr : nullptr;
           }
           //}}}
         else {
@@ -208,9 +209,9 @@ namespace {
 
           uint8_t pad = (framePtr[2] & 0x02) >> 1;
 
-          frameLength = (bitrate * scale) / sampleRate;
+          frameSize = (bitrate * scale) / sampleRate;
           if (pad)
-            frameLength++;
+            frameSize++;
 
           //uint8_t priv = (framePtr[2] & 0x01);
           //uint8_t mode = (framePtr[3] & 0xc0) >> 6;
@@ -221,7 +222,7 @@ namespace {
           //uint8_t emphasis = (framePtr[3] & 0x03);
 
           // check for enough bytes for frame body
-          return (framePtr + frameLength <= frameLast) ? framePtr : nullptr;
+          return (framePtr + frameSize <= frameLast) ? framePtr : nullptr;
           }
           //}}}
         }
@@ -259,7 +260,7 @@ namespace {
             framePtr += 4;
 
             frameType = eAudioFrameType::eWav;
-            frameLength = int(frameLast - framePtr);
+            frameSize = int(frameLast - framePtr);
 
             // check for some bytes for frame body
             return framePtr < frameLast ? framePtr : nullptr;
@@ -275,10 +276,10 @@ namespace {
 
         // return tag & size
         auto tagSize = (framePtr[6] << 21) | (framePtr[7] << 14) | (framePtr[8] << 7) | framePtr[9];
-        frameLength = 10 + tagSize;
+        frameSize = 10 + tagSize;
 
         // check for enough bytes for frame body
-        return (framePtr + frameLength <= frameLast) ? framePtr : nullptr;
+        return (framePtr + frameSize <= frameLast) ? framePtr : nullptr;
         }
         //}}}
       else
@@ -286,24 +287,6 @@ namespace {
       }
 
     return nullptr;
-    }
-  //}}}
-  //{{{
-  uint8_t* parseFrame (uint8_t* framePtr, uint8_t* frameLast, int& frameLength) {
-
-    eAudioFrameType frameType = eAudioFrameType::eUnknown;
-    int sampleRate = 0;
-    int numChannels = 0;
-    frameLength = 0;
-    framePtr = parseFrame (framePtr, frameLast, frameType, numChannels, sampleRate, frameLength);
-
-    while (framePtr && (frameType == eAudioFrameType::eId3Tag)) {
-      // skip id3 frames
-      framePtr += frameLength;
-      framePtr = parseFrame (framePtr, frameLast, frameType, numChannels, sampleRate, frameLength);
-      }
-
-    return framePtr;
     }
   //}}}
   }
@@ -791,33 +774,39 @@ cAudioDecoder::~cAudioDecoder() {
 //}}}
 
 //{{{
-bool cAudioDecoder::decode (uint8_t* buf, int bufSize, int64_t pts) {
+bool cAudioDecoder::decode (uint8_t* pes, int pesSize, int64_t pts) {
 
-  log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), bufSize));
+  log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);
 
-  uint8_t* framePes = buf;
-  uint8_t* framePesEnd = buf + bufSize;
+  uint8_t* frame = pes;
+  uint8_t* frameEnd = pes + pesSize;
   int64_t framePts = pts;
 
-  int frameSize;
-  while (parseFrame (framePes, framePesEnd, frameSize)) {
+  // parse pesFrame, pes may contain many frames
+  eAudioFrameType frameType = eAudioFrameType::eUnknown;
+  int numChannels = 0;
+  int sampleRate = 0;
+  int frameSize = 0;
+  while (parseFrame (frame, frameEnd, frameType, numChannels, sampleRate, frameSize)) {
     // decode single frame from pes
-    float* samples = mAudioFFmpegDecoder->decodeFrame (framePes, frameSize, framePts);
+    float* samples = mAudioFFmpegDecoder->decodeFrame (frame, frameSize, framePts);
     if (samples) {
       cAudioFrame& audioFrame = mAudioFrames->addFrame (framePts, samples);
       logValue (framePts, audioFrame.getPowerValues()[0]);
 
       if (!mAudioPlayer) {
+        /// start player
         mAudioFrames->setPlayPts (framePts);
         mAudioPlayer = new cAudioPlayer (mAudioFrames);
         }
 
+      // inc pts for nextFrame
       framePts += (mAudioFFmpegDecoder->getNumSamplesPerFrame() * 90000) / 48000;
       }
 
-    // point to next frame in pes
-    framePes += frameSize;
+    // point to nextFrame
+    frame += frameSize;
     }
 
   return false;

@@ -32,12 +32,12 @@ cVideoDecoder::~cVideoDecoder() {
 //}}}
 
 //{{{
-bool cVideoDecoder::decode (uint8_t* buf, int bufSize, int64_t pts) {
+bool cVideoDecoder::decode (uint8_t* pes, int pesSize, int64_t pts) {
 
-  (void)buf;
-  log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), bufSize));
+  (void)pes;
+  log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
 
-  logValue (pts, (float)bufSize);
+  logValue (pts, (float)pesSize);
   return false;
   }
 //}}}
