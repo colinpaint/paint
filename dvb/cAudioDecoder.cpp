@@ -748,6 +748,11 @@ cAudioDecoder::cAudioDecoder (const std::string name) : cDecoder(name) {
 //{{{
 cAudioDecoder::~cAudioDecoder() {
 
+  if (mAudioPlayer) {
+    mAudioPlayer->exit();
+    mAudioPlayer->wait();
+    }
+
   delete mAudioFFmpegDecoder;
   delete mAudioFrames;
   delete mAudioPlayer;
