@@ -359,7 +359,7 @@ private:
   size_t mNumChannels = 0;
   size_t mSamplesPerFrame = 0;
 
-  int64_t mPts = 0;
+  const int64_t mPts = 0;
   float* mSamples = nullptr;
   float* mPeakValues = nullptr;
   float* mPowerValues = nullptr;
@@ -456,7 +456,7 @@ cAudioFrame& cAudioFrames::addFrame (int64_t pts, float* samples) {
 
     { // insert frame with lock
     unique_lock<shared_mutex> lock (mSharedMutex);
-    mFrameMap.insert (map<int64_t,cAudioFrame*>::value_type (pts / getFramePtsDuration(), frame));
+    mFrameMap.insert (map<int64_t,cAudioFrame*>::value_type (pts, frame));
     }
 
   return *frame;
@@ -656,6 +656,7 @@ private:
           device->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
             // loadSrcSamples callback lambda
             shared_lock<shared_mutex> lock (audioFrames->getSharedMutex());
+
             frame = audioFrames->findPlayFrame();
             if (audioFrames->getPlaying() && frame && frame->getSamples()) {
               if (audioFrames->getNumChannels() == 1) {
@@ -777,7 +778,7 @@ cAudioDecoder::cAudioDecoder (const std::string name) : cDecoder(name) {
     //}}}
     }
 
-  mAudioFrames = new cAudioFrames (frameType, 2, 48000, 1024, 100);
+  mAudioFrames = new cAudioFrames (frameType, 2, 48000, 1024, 1000);
   }
 //}}}
 //{{{
