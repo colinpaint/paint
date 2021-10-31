@@ -47,7 +47,7 @@ void cDecoder::logValue (int64_t pts, float value) {
   while (mValuesMap.size() >= mMapSize)
     mValuesMap.erase (mValuesMap.begin());
 
-  mValuesMap.insert (map<int64_t,float>::value_type (pts / kPtsPerFrame, value));
+  mValuesMap.emplace (pts / kPtsPerFrame, value);
 
   if (pts > mLastPts)
     mLastPts = pts;

@@ -417,7 +417,6 @@ cAudioFrame& cAudioFrames::addFrame (int64_t pts, float* samples) {
     if (mFrameMap.size() > mMaxMapSize) // too many, remeove earliest
       mFrameMap.erase (mFrameMap.begin());
 
-    //mFrameMap.emplace (map<int64_t,cAudioFrame*>::value_type (pts, frame));
     mFrameMap.emplace (pts, frame);
     }
 
