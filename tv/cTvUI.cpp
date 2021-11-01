@@ -292,12 +292,13 @@ private:
     int64_t lastPts = plotValues (pts, video, 0xffffffff);
 
     if (playPts != video.mPts) {
-      uint32_t* pixels = video.getFramePixels (playPts);
+      // new pts to display
+      uint8_t* pixels = video.getFramePixels (playPts);
       if (pixels) {
         if (video.mTexture == nullptr) // create
-          video.mTexture = graphics.createTexture ({video.getWidth(), video.getHeight()}, (uint8_t*)pixels);
+          video.mTexture = graphics.createTexture ({video.getWidth(), video.getHeight()}, pixels);
         else
-          video.mTexture->setPixels ((uint8_t*)pixels);
+          video.mTexture->setPixels (pixels);
         video.mPts = playPts;
         }
       }
@@ -425,7 +426,6 @@ class cTvUI : public cUI {
 public:
   cTvUI (const string& name) : cUI(name) {}
   virtual ~cTvUI() = default;
-
   //{{{
   void addToDrawList (cApp& app) final {
   // draw into window
@@ -443,7 +443,6 @@ public:
 private:
   // vars
   bool mOpen = true;
-
   cTellyView mTellyView;
 
   static cUI* create (const string& className) { return new cTvUI (className); }

@@ -19,7 +19,7 @@ public:
 
   uint16_t getWidth() const;
   uint16_t getHeight() const ;
-  uint32_t* getFramePixels (int64_t pts) const;
+  uint8_t* getFramePixels (int64_t pts) const;
 
   void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts);
 

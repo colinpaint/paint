@@ -414,10 +414,10 @@ public:
   // gets
   bool isFree() { return mFree; }
 
-  int64_t getPts() { return mPts; }
-  uint32_t getPesSize() { return mPesSize; }
-  char getFrameType() { return mFrameType; }
-  uint32_t* getPixels() { return mPixels; }
+  int64_t getPts() const { return mPts; }
+  uint32_t getPesSize() const { return mPesSize; }
+  char getFrameType() const { return mFrameType; }
+  uint8_t* getPixels() const { return (uint8_t*)mPixels; }
 
   // sets
   //{{{
@@ -2011,7 +2011,7 @@ uint16_t cVideoRender::getHeight() const {
   }
 //}}}
 //{{{
-uint32_t* cVideoRender::getFramePixels (int64_t pts)  const {
+uint8_t* cVideoRender::getFramePixels (int64_t pts)  const {
 
   cVideoFrame* frame = mVideoPool->findFrame (pts);
   return frame ? frame->getPixels() : nullptr;
