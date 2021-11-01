@@ -34,6 +34,7 @@ extern "C" {
 
 using namespace std;
 //}}}
+constexpr uint32_t kAudioPoolSize = 400;
 
 enum class eAudioFrameType { eUnknown, eId3Tag, eWav, eMp3, eAacAdts, eAacLatm } ;
 namespace {
@@ -341,17 +342,17 @@ private:
   };
 //}}}
 //{{{
-class cAudioFrames {
+class cAudioPool {
 public:
   //{{{
-  cAudioFrames (eAudioFrameType frameType, int numChannels,
+  cAudioPool (eAudioFrameType frameType, int numChannels,
                 int sampleRate, int samplesPerFrame, size_t maxMapSize)
     : mFrameType(frameType), mNumChannels(numChannels),
       mSampleRate(sampleRate), mSamplesPerFrame(samplesPerFrame),
       mMaxMapSize(maxMapSize) {}
   //}}}
    //{{{
-   ~cAudioFrames() {
+   ~cAudioPool() {
 
      unique_lock<shared_mutex> lock (mSharedMutex);
 
@@ -406,7 +407,7 @@ private:
   };
 
 //{{{
-cAudioFrame& cAudioFrames::addFrame (int64_t pts, float* samples) {
+cAudioFrame& cAudioPool::addFrame (int64_t pts, float* samples) {
 
   // create new frame
   cAudioFrame* frame = new cAudioFrame (mNumChannels, mSamplesPerFrame, pts, samples);
@@ -587,7 +588,7 @@ float* cAudioFFmpegDecoder::decodeFrame (const uint8_t* frame, uint32_t frameSiz
 //{{{
 class cAudioPlayer {
 public:
-  cAudioPlayer (cAudioFrames* audioFrames);
+  cAudioPlayer (cAudioPool* audioFrames);
   ~cAudioPlayer() {}
 
   void exit() { mExit = true; }
@@ -600,7 +601,7 @@ private:
 
 #ifdef _WIN32
   //{{{
-  cAudioPlayer::cAudioPlayer (cAudioFrames* audioFrames) {
+  cAudioPlayer::cAudioPlayer (cAudioPool* audioFrames) {
     thread playerThread = thread ([=]() {
       // lambda
       cLog::setThreadName ("play");
@@ -659,7 +660,7 @@ private:
   //}}}
 #else
   //{{{
-  cAudioPlayer::cAudioPlayer (cAudioFrames* audioFrames) {
+  cAudioPlayer::cAudioPlayer (cAudioPool* audioFrames) {
     thread playerThread = thread ([=, this]() {
       // lambda
       cLog::setThreadName ("play");
@@ -742,7 +743,7 @@ cAudioDecoder::cAudioDecoder (const std::string name) : cDecoder(name) {
     //}}}
     }
 
-  mAudioFrames = new cAudioFrames (frameType, 2, 48000, 1024, 1000);
+  mAudioPool = new cAudioPool (frameType, 2, 48000, 1024, kAudioPoolSize);
   }
 //}}}
 //{{{
@@ -754,14 +755,14 @@ cAudioDecoder::~cAudioDecoder() {
     }
 
   delete mAudioFFmpegDecoder;
-  delete mAudioFrames;
+  delete mAudioPool;
   delete mAudioPlayer;
   }
 //}}}
 
 //{{{
-int64_t cAudioDecoder::getPlayPts() const {  
-  return mAudioFrames->getPlayPts();
+int64_t cAudioDecoder::getPlayPts() const {
+  return mAudioPool->getPlayPts();
   }
 //}}}
 
@@ -784,17 +785,17 @@ void cAudioDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
     // decode single frame from pes
     float* samples = mAudioFFmpegDecoder->decodeFrame (frame, frameSize, framePts);
     if (samples) {
-      cAudioFrame& audioFrame = mAudioFrames->addFrame (framePts, samples);
+      cAudioFrame& audioFrame = mAudioPool->addFrame (framePts, samples);
       logValue (framePts, audioFrame.getPowerValues()[0]);
 
       if (!mAudioPlayer) {
         /// start player
-        mAudioFrames->setPlayPts (framePts);
-        mAudioPlayer = new cAudioPlayer (mAudioFrames);
+        mAudioPool->setPlayPts (framePts);
+        mAudioPlayer = new cAudioPlayer (mAudioPool);
         }
 
       // inc pts for nextFrame
-      framePts += mAudioFrames->getFramePtsDuration();
+      framePts += mAudioPool->getFramePtsDuration();
       }
 
     // point to nextFrame

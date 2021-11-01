@@ -9,7 +9,7 @@
 #include "../utils/cMiniLog.h"
 
 class cAudioFFmpegDecoder;
-class cAudioFrames;
+class cAudioPool;
 class cAudioPlayer;
 //}}}
 
@@ -24,6 +24,6 @@ public:
 
 private:
   cAudioFFmpegDecoder* mAudioFFmpegDecoder;
-  cAudioFrames* mAudioFrames = nullptr;
+  cAudioPool* mAudioPool = nullptr;
   cAudioPlayer* mAudioPlayer = nullptr;
   };

@@ -100,13 +100,7 @@ extern "C" {
 
 using namespace std;
 //}}}
-//{{{  defines
-#define AVRB16(p) ((*(p) << 8) | *(p+1))
-
-#define SCALEBITS 10
-#define ONE_HALF  (1 << (SCALEBITS - 1))
-#define FIX(x)    ((int) ((x) * (1<<SCALEBITS) + 0.5))
-//}}}
+constexpr uint32_t kVideoPoolSize = 50;
 
 constexpr int kPtsPerSecond = 90000;
 namespace {
@@ -411,9 +405,9 @@ public:
   virtual ~cVideoFrame() {
 
     #ifdef _WIN32
-      _aligned_free (mBuffer8888);
+      _aligned_free (mPixels);
     #else
-      free (mBuffer8888);
+      free (mPixels);
     #endif
     }
   //}}}
@@ -421,9 +415,9 @@ public:
   // gets
   bool isFree() { return mFree; }
   int64_t getPts() { return mPts; }
-  int getPesSize() { return mPesSize; }
+  uint32_t getPesSize() { return mPesSize; }
   char getFrameType() { return mFrameType; }
-  uint32_t* getBuffer8888() { return mBuffer8888; }
+  uint32_t* getPixels() { return mPixels; }
 
   // sets
   //{{{
@@ -433,7 +427,7 @@ public:
     }
   //}}}
   //{{{
-  void set (int64_t pts, int pesSize, int width, int height, char frameType) {
+  void set (int64_t pts, uint32_t pesSize, uint16_t width, uint16_t height, char frameType) {
 
     mPts = pts;
     mWidth = width;
@@ -443,13 +437,13 @@ public:
     mPesSize = pesSize;
 
     #ifdef _WIN32
-      if (!mBuffer8888)
+      if (!mPixels)
         // allocate aligned buffer
-        mBuffer8888 = (uint32_t*)_aligned_malloc (width * height * 4, 128);
+        mPixels = (uint32_t*)_aligned_malloc (width * height * 4, 128);
     #else
-      if (!mBuffer8888)
+      if (!mPixels)
         // allocate aligned buffer
-        mBuffer8888 = (uint32_t*)aligned_alloc (128, width * height * 4);
+        mPixels = (uint32_t*)aligned_alloc (128, width * height * 4);
     #endif
     }
   //}}}
@@ -457,9 +451,9 @@ public:
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize)  = 0;
 
 protected:
-  int mWidth = 0;
-  int mHeight = 0;
-  uint32_t* mBuffer8888 = nullptr;
+  uint16_t mWidth = 0;
+  uint16_t mHeight = 0;
+  uint32_t* mPixels = nullptr;
 
 private:
   bool mFree = false;
@@ -471,9 +465,9 @@ private:
 //}}}
 #ifdef _WIN32
   //{{{
-  class cFrameRgba : public cVideoFrame {
+  class cVideoFrameRgba : public cVideoFrame {
   public:
-    virtual ~cFrameRgba() {}
+    virtual ~cVideoFrameRgba() {}
 
     #if defined(INTEL_SSSE3)
       virtual void setYuv420 (void* context, uint8_t** data, int* linesize) final {
@@ -499,8 +493,8 @@ private:
         __m128i alpha = _mm_set1_epi32 (0xFFFFFFFF);
 
         // buffer pointers
-        __m128i* dstrgb128r0 = (__m128i*)mBuffer8888;
-        __m128i* dstrgb128r1 = (__m128i*)(mBuffer8888 + mWidth);
+        __m128i* dstrgb128r0 = (__m128i*)mPixels;
+        __m128i* dstrgb128r1 = (__m128i*)(mPixels + mWidth);
         __m128i* srcY128r0 = (__m128i*)data[0];
         __m128i* srcY128r1 = (__m128i*)(data[0] + linesize[0]);
         __m128* srcUv128 = (__m128*)(data[1]);
@@ -601,9 +595,9 @@ private:
     };
   //}}}
   //{{{
-  class cFramePlanarRgba : public cVideoFrame {
+  class cVideoFramePlanarRgba : public cVideoFrame {
   public:
-    virtual ~cFramePlanarRgba() {}
+    virtual ~cVideoFramePlanarRgba() {}
 
     #if defined(INTEL_SSE2)
       //{{{
@@ -629,8 +623,8 @@ private:
         __m128i alpha = _mm_set1_epi32 (0xFFFFFFFF);
 
         // dst row pointers
-        __m128i* dstrgb128r0 = (__m128i*)mBuffer8888;
-        __m128i* dstrgb128r1 = (__m128i*)(mBuffer8888 + mWidth);
+        __m128i* dstrgb128r0 = (__m128i*)mPixels;
+        __m128i* dstrgb128r1 = (__m128i*)(mPixels + mWidth);
 
         for (int y = 0; y < mHeight; y += 2) {
           // calc src row pointers
@@ -819,23 +813,23 @@ private:
   //}}}
 #endif
 //{{{
-class cFramePlanarRgbaSws : public cVideoFrame {
+class cVideoFramePlanarRgbaSws : public cVideoFrame {
 public:
-  virtual ~cFramePlanarRgbaSws() {}
+  virtual ~cVideoFramePlanarRgbaSws() {}
 
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize) final {
 
-    // ffmpeg libswscale convert data to mBuffer8888 using swsContext
-    uint8_t* dstData[1] = { (uint8_t*)mBuffer8888 };
+    // ffmpeg libswscale convert data to mPixels using swsContext
+    uint8_t* dstData[1] = { (uint8_t*)mPixels };
     int dstStride[1] = { mWidth * 4 };
     sws_scale ((SwsContext*)context, data, linesize, 0, mHeight, dstData, dstStride);
     }
   };
 //}}}
 //{{{
-class cFramePlanarRgbaTable : cVideoFrame {
+class cVideoFramePlanarRgbaTable : cVideoFrame {
 public:
-  virtual ~cFramePlanarRgbaTable() {}
+  virtual ~cVideoFramePlanarRgbaTable() {}
 
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize) final {
   // table lookup convert, bug in first pix pos stride != width
@@ -1625,7 +1619,7 @@ public:
     uint8_t* yPtr = (uint8_t*)data[0];
     uint8_t* uPtr = (uint8_t*)data[1];
     uint8_t* vPtr = (uint8_t*)data[2];
-    uint8_t* dstPtr = (uint8_t*)mBuffer8888;
+    uint8_t* dstPtr = (uint8_t*)mPixels;
     const int stride = linesize[0];
 
     uint8_t const* yPtr1 = yPtr + stride;
@@ -1712,9 +1706,9 @@ public:
   };
 //}}}
 //{{{
-class cFramePlanarRgbaSimple : public cVideoFrame {
+class cVideoFramePlanarRgbaSimple : public cVideoFrame {
 public:
-  virtual ~cFramePlanarRgbaSimple() {}
+  virtual ~cVideoFramePlanarRgbaSimple() {}
 
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize) final {
     (void)context;
@@ -1722,7 +1716,7 @@ public:
     uint8_t* y = (uint8_t*)data[0];
     uint8_t* u = (uint8_t*)data[1];
     uint8_t* v = (uint8_t*)data[2];
-    uint8_t* dst = (uint8_t*)mBuffer8888;
+    uint8_t* dst = (uint8_t*)mPixels;
 
     int const halfWidth = mWidth >> 1;
     int const halfHeight = mHeight >> 1;
@@ -1783,7 +1777,7 @@ public:
 class cVideoPool {
 public:
   //{{{
-  cVideoPool (int poolSize) : mPlanar(true), mMaxPoolSize(poolSize) {
+  cVideoPool (size_t poolSize) : mPlanar(true), mMaxPoolSize(poolSize) {
 
     mAvParser = av_parser_init (AV_CODEC_ID_H264);
     mAvCodec = avcodec_find_decoder (AV_CODEC_ID_H264);
@@ -1796,7 +1790,6 @@ public:
 
     for (auto frame : mFramePool)
       delete frame.second;
-
     mFramePool.clear();
 
     if (mAvContext)
@@ -1810,54 +1803,10 @@ public:
   //}}}
 
   // gets
-  int getWidth() { return mWidth; }
-  int getHeight() { return mHeight; }
+  uint16_t getWidth() const { return mWidth; }
+  uint16_t getHeight() const { return mHeight; }
   //{{{
-  cVideoFrame* getFreeFrame (int64_t pts) {
-  // return youngest frame in pool if older than playPts - (halfPoolSize * duration)
-
-    while (true) {
-      if ((int)mFramePool.size() < mMaxPoolSize) {
-        // create and insert new videoFrame
-        cVideoFrame* videoFrame;
-        #ifdef _WIN32
-          if (!mPlanar)
-            videoFrame = new cFrameRgba();
-          else
-            #if defined(INTEL_SSE2)
-              videoFrame = new cFramePlanarRgba();
-            #else
-              videoFrame = new cFramePlanarRgbaSws();
-            #endif
-          #else
-            videoFrame = new cFramePlanarRgbaSws();
-          #endif
-        return videoFrame;
-        }
-
-      { // start of lock
-      unique_lock<shared_mutex> lock (mSharedMutex);
-
-      // use youngest frame in pool
-      auto it = mFramePool.begin();
-      //if ((*it).second->isFree()) {
-      //    ((*it).first < ((mSong->getPlayPts() / mPtsDuration) - (int)mFramePool.size()/2))) {
-      // old enough to be reused, remove from map and reuse videoFrame,
-      cVideoFrame* videoFrame = (*it).second;
-      mFramePool.erase (it);
-      videoFrame->setFree (false, pts);
-      return videoFrame;
-      } // end of lock
-
-      // one should come along in a frame in while playing
-      // - !!!! should be ptsduration!!!
-      //this_thread::sleep_for (20ms);
-      }
-    }
-  //}}}
-
-  //{{{
-  string getInfoString() {
+  string getInfoString() const {
     return fmt::format ("{}x{} {:5d}:{:4d}", mWidth, mHeight, mDecodeTime, mYuv420Time);
     }
   //}}}
@@ -1892,6 +1841,41 @@ public:
     //if (!found)
     //  cLog::log (LOGINFO,fmt::format ("{} not found", getPtsString (pts)));
     return frame;
+    }
+  //}}}
+  //{{{
+  cVideoFrame* findFreeFrame (int64_t pts) {
+  // return youngest frame in pool if older than playPts - (halfPoolSize * duration)
+
+    if (mFramePool.size() < mMaxPoolSize) {
+      // create and insert new videoFrame
+      cVideoFrame* videoFrame;
+      #ifdef _WIN32
+        if (!mPlanar)
+          videoFrame = new cVideoFrameRgba();
+        else
+          #if defined(INTEL_SSE2)
+            videoFrame = new cVideoFramePlanarRgba();
+          #else
+            videoFrame = new cVideoFramePlanarRgbaSws();
+          #endif
+        #else
+          videoFrame = new cVideoFramePlanarRgbaSws();
+        #endif
+      return videoFrame;
+      }
+
+      { // start of lock
+      unique_lock<shared_mutex> lock (mSharedMutex);
+
+      // reuse youngest frame in pool
+      auto it = mFramePool.begin();
+      cVideoFrame* videoFrame = (*it).second;
+      videoFrame->setFree (false, pts);
+
+      mFramePool.erase (it);
+      return videoFrame;
+      } // end of lock
     }
   //}}}
 
@@ -1947,14 +1931,13 @@ public:
           mDecodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
           // extract frame info from decode
-          mWidth = avFrame->width;
-          mHeight = avFrame->height;
+          mWidth = static_cast<uint16_t>(avFrame->width);
+          mHeight = static_cast<uint16_t>(avFrame->height);
           mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
           if (mSeenIFrame) {
             //{{{  set new frame
             // blocks on waiting for freeFrame most of the time
-            auto frame = getFreeFrame (mGuessPts);
-
+            cVideoFrame* frame = findFreeFrame (mGuessPts);
             frame->set (mGuessPts, pesSize, mWidth, mHeight, frameType);
             timePoint = chrono::system_clock::now();
             if (!mSwsContext)
@@ -1983,13 +1966,13 @@ public:
 
 private:
   const bool mPlanar;
-  const int mMaxPoolSize;
+  const size_t mMaxPoolSize;
 
   shared_mutex mSharedMutex;
   map <int64_t, cVideoFrame*> mFramePool;
 
-  int mWidth = 0;
-  int mHeight = 0;
+  uint16_t mWidth = 0;
+  uint16_t mHeight = 0;
   int64_t mPtsDuration = 0;
 
   int64_t mDecodeTime = 0;
@@ -2008,7 +1991,7 @@ private:
 // public:
 //{{{
 cVideoDecoder::cVideoDecoder (const std::string name) : cDecoder(name) {
-  mVideoPool = new cVideoPool (50);
+  mVideoPool = new cVideoPool (kVideoPoolSize);
   }
 //}}}
 //{{{
@@ -2018,20 +2001,20 @@ cVideoDecoder::~cVideoDecoder() {
 //}}}
 
 //{{{
-int cVideoDecoder::getWidth() {
+uint16_t cVideoDecoder::getWidth() const {
   return mVideoPool->getWidth();
   }
 //}}}
 //{{{
-int cVideoDecoder::getHeight() {
+uint16_t cVideoDecoder::getHeight() const {
   return mVideoPool->getHeight();
   }
 //}}}
 //{{{
-uint32_t* cVideoDecoder::getFrame (int64_t pts) {
+uint32_t* cVideoDecoder::getFramePixels (int64_t pts)  const {
 
   cVideoFrame* frame = mVideoPool->findFrame (pts);
-  return frame ? frame->getBuffer8888() : nullptr;
+  return frame ? frame->getPixels() : nullptr;
   }
 //}}}
 

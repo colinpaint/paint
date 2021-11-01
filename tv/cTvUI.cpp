@@ -291,14 +291,14 @@ private:
 
     int64_t lastPts = plotValues (pts, video, 0xffffffff);
 
-    uint32_t* buf = video.getFrame (playPts);
-    if (buf) {
-      if (mTexture == nullptr) // create
-        mTexture = graphics.createTexture ({video.getWidth(), video.getHeight()}, (uint8_t*)buf);
+    uint32_t* pixels = video.getFramePixels (playPts);
+    if (pixels) {
+      if (video.mTexture == nullptr) // create
+        video.mTexture = graphics.createTexture ({video.getWidth(), video.getHeight()}, (uint8_t*)pixels);
       else
-        mTexture->setPixels ((uint8_t*)buf);
+        video.mTexture->setPixels ((uint8_t*)pixels);
 
-      ImGui::Image ((void*)(intptr_t)mTexture->getTextureId(), {video.getWidth()/4.f,video.getHeight()/4.f});
+      ImGui::Image ((void*)(intptr_t)video.mTexture->getTextureId(), {video.getWidth()/4.f,video.getHeight()/4.f});
       }
 
     drawMiniLog (video.getLog());
