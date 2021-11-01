@@ -303,6 +303,7 @@ private:
         }
       }
 
+    ImGui::TextUnformatted(video.getInfoString().c_str());
     if (video.mTexture)
       ImGui::Image ((void*)(intptr_t)video.mTexture->getTextureId(), {video.getWidth()/4.f,video.getHeight()/4.f});
 

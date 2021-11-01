@@ -1773,240 +1773,44 @@ public:
   };
 //}}}
 
+// cVideoRender
 //{{{
-class cVideoPool {
-public:
-  //{{{
-  cVideoPool (size_t poolSize) : mPlanar(true), mMaxPoolSize(poolSize) {
+cVideoRender::cVideoRender (const std::string name) : cRender(name), mPlanar(true), mMaxPoolSize(kVideoPoolSize) {
 
-    mAvParser = av_parser_init (AV_CODEC_ID_H264);
-    mAvCodec = avcodec_find_decoder (AV_CODEC_ID_H264);
-    mAvContext = avcodec_alloc_context3 (mAvCodec);
-    avcodec_open2 (mAvContext, mAvCodec, NULL);
-    }
-  //}}}
-  //{{{
-  ~cVideoPool() {
-
-    for (auto frame : mFramesMap)
-      delete frame.second;
-    mFramesMap.clear();
-
-    if (mAvContext)
-      avcodec_close (mAvContext);
-
-    if (mAvParser)
-      av_parser_close (mAvParser);
-
-    sws_freeContext (mSwsContext);
-    }
-  //}}}
-
-  // gets
-  uint16_t getWidth() const { return mWidth; }
-  uint16_t getHeight() const { return mHeight; }
-  //{{{
-  string getInfoString() const {
-    return fmt::format ("videoPool {}x{} {:5d}:{:4d} {}",
-                        mWidth, mHeight, mDecodeTime, mYuv420Time, mFramesMap.size());
-    }
-  //}}}
-
-  // find
-  //{{{
-  cVideoFrame* findFrame (int64_t pts) {
-
-    unique_lock<shared_mutex> lock (mSharedMutex);
-
-    cVideoFrame* frame = nullptr;
-    if (mPtsDuration > 0) {
-      auto it = mFramesMap.find (pts / mPtsDuration);
-      if (it != mFramesMap.end())
-        if (!(*it).second->isFree()) 
-          frame = (*it).second;
-      }
-
-    if (!frame) {
-      // match not found return latest
-      auto it = mFramesMap.rbegin();
-      if (it != mFramesMap.rend())
-        frame = (*it).second;
-      }
-
-    return frame;
-    }
-  //}}}
-  //{{{
-  cVideoFrame* findFreeFrame (int64_t pts) {
-  // return youngest frame in pool if older than playPts - (halfPoolSize * duration)
-
-    if (mFramesMap.size() < mMaxPoolSize) {
-      // create new videoFrame
-      cVideoFrame* videoFrame;
-      #ifdef _WIN32
-        if (!mPlanar)
-          videoFrame = new cVideoFrameRgba();
-        else
-          #if defined(INTEL_SSE2)
-            videoFrame = new cVideoFramePlanarRgba();
-          #else
-            videoFrame = new cVideoFramePlanarRgbaSws();
-          #endif
-        #else
-          videoFrame = new cVideoFramePlanarRgbaSws();
-        #endif
-      return videoFrame;
-      }
-
-      { // start of lock
-      unique_lock<shared_mutex> lock (mSharedMutex);
-
-      // reuse youngest frame in pool
-      auto it = mFramesMap.begin();
-      cVideoFrame* videoFrame = (*it).second;
-      videoFrame->setFree (false, pts);
-
-      mFramesMap.erase (it);
-      return videoFrame;
-      } // end of lock
-    }
-  //}}}
-
-  // decode
-  //{{{
-  void decode (uint8_t* pes, unsigned int pesSize, int64_t pts, int64_t dts) {
-
-    (void)pts;
-    chrono::system_clock::time_point timePoint = chrono::system_clock::now();
-
-    // ffmpeg doesn't maintain correct avFrame.pts, decode frames in presentation order and pts correct on I frames
-    char frameType = getH264FrameType (pes, pesSize);
-    if (frameType == 'I') {
-      if ((mGuessPts >= 0) && (mGuessPts != dts))
-        //{{{  debug
-        cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
-                                          getPtsFramesString (mGuessPts, 1800),
-                                          getPtsFramesString (dts, 1800),frameType,pesSize));
-        //}}}
-      mGuessPts = dts;
-      mSeenIFrame = true;
-      }
-    if (!mSeenIFrame) {
-      //{{{  debug
-      cLog::log (LOGINFO, fmt::format("waiting for Iframe {} to:{} type:{} size:{}",
-                          getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),frameType,pesSize));
-      //}}}
-      return;
-      }
-
-    //cLog::log (LOGINFO, fmt::format("ffmpeg decode guessPts:{}.{} pts:{}.{} dts:{}.{} - {} size:{}",
-    //                    mGuessPts/1800, mGuessPts%1800, pts/1800, pts%1800, dts/1800, dts%1800,
-    //                    frameType, pesSize));
-
-    AVPacket avPacket;
-    av_init_packet (&avPacket);
-    auto avFrame = av_frame_alloc();
-
-    auto pesPtr = pes;
-    auto pesLeft = pesSize;
-    while (pesLeft) {
-      auto bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
-                                         &avPacket.data, &avPacket.size,
-                                         pesPtr, (int)pesLeft, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
-      pesPtr += bytesUsed;
-      pesLeft -= bytesUsed;
-      if (avPacket.size) {
-        auto ret = avcodec_send_packet (mAvContext, &avPacket);
-        while (ret >= 0) {
-          ret = avcodec_receive_frame (mAvContext, avFrame);
-          if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
-            break;
-          mDecodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
-
-          // extract frame info from decode
-          mWidth = static_cast<uint16_t>(avFrame->width);
-          mHeight = static_cast<uint16_t>(avFrame->height);
-          mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
-          if (mSeenIFrame) {
-            //{{{  set new frame
-            // blocks on waiting for freeFrame most of the time
-            cVideoFrame* frame = findFreeFrame (mGuessPts);
-            frame->set (mGuessPts, pesSize, mWidth, mHeight, frameType);
-            timePoint = chrono::system_clock::now();
-            if (!mSwsContext)
-              mSwsContext = sws_getContext (mWidth, mHeight, AV_PIX_FMT_YUV420P,
-                                            mWidth, mHeight, AV_PIX_FMT_RGBA,
-                                            SWS_BILINEAR, NULL, NULL, NULL);
-            frame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
-            mYuv420Time = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
-
-              {
-              unique_lock<shared_mutex> lock (mSharedMutex);
-              mFramesMap.emplace (mGuessPts / mPtsDuration, frame);
-              }
-
-            av_frame_unref (avFrame);
-            }
-            //}}}
-          mGuessPts += mPtsDuration;
-          }
-        }
-      }
-
-    av_frame_free (&avFrame);
-    }
-  //}}}
-
-private:
-  const bool mPlanar;
-  const size_t mMaxPoolSize;
-
-  shared_mutex mSharedMutex;
-  map <int64_t, cVideoFrame*> mFramesMap;
-
-  uint16_t mWidth = 0;
-  uint16_t mHeight = 0;
-  int64_t mPtsDuration = 0;
-
-  AVCodecParserContext* mAvParser = nullptr;
-  AVCodec* mAvCodec = nullptr;
-  AVCodecContext* mAvContext = nullptr;
-  SwsContext* mSwsContext = nullptr;
-
-  int64_t mGuessPts = -1;
-  bool mSeenIFrame = false;
-
-  int64_t mDecodeTime = 0;
-  int64_t mYuv420Time = 0;
-  };
-//}}}
-
-// public:
-//{{{
-cVideoRender::cVideoRender (const std::string name) : cRender(name) {
-  mVideoPool = new cVideoPool (kVideoPoolSize);
+  mAvParser = av_parser_init (AV_CODEC_ID_H264);
+  mAvCodec = avcodec_find_decoder (AV_CODEC_ID_H264);
+  mAvContext = avcodec_alloc_context3 (mAvCodec);
+  avcodec_open2 (mAvContext, mAvCodec, NULL);
   }
 //}}}
 //{{{
 cVideoRender::~cVideoRender() {
-  delete mVideoPool;
+
+  for (auto frame : mFramesMap)
+    delete frame.second;
+  mFramesMap.clear();
+
+  if (mAvContext)
+    avcodec_close (mAvContext);
+
+  if (mAvParser)
+    av_parser_close (mAvParser);
+
+  sws_freeContext (mSwsContext);
   }
 //}}}
 
 //{{{
-uint16_t cVideoRender::getWidth() const {
-  return mVideoPool->getWidth();
+string cVideoRender::getInfoString() const {
+  return fmt::format ("videoPool {}x{} {:5d}:{:4d} {}",
+                      mWidth, mHeight, mDecodeTime, mYuv420Time, mFramesMap.size());
   }
 //}}}
-//{{{
-uint16_t cVideoRender::getHeight() const {
-  return mVideoPool->getHeight();
-  }
-//}}}
-//{{{
-uint8_t* cVideoRender::getFramePixels (int64_t pts)  const {
 
-  cVideoFrame* frame = mVideoPool->findFrame (pts);
+//{{{
+uint8_t* cVideoRender::getFramePixels (int64_t pts) {
+
+  cVideoFrame* frame = findFrame (pts);
   return frame ? frame->getPixels() : nullptr;
   }
 //}}}
@@ -2017,7 +1821,151 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   logValue (pts, (float)pesSize);
 
-  mVideoPool->decode  (pes, pesSize, pts, dts);
+  decode  (pes, pesSize, pts, dts);
   //cLog::log (LOGINFO, fmt::format ("decode {}", mVideoPool->getInfoString()));
+  }
+//}}}
+
+// private:
+//{{{
+cVideoFrame* cVideoRender::findFrame (int64_t pts) {
+
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  if (mPtsDuration > 0) {
+    auto it = mFramesMap.find (pts / mPtsDuration);
+    if (it != mFramesMap.end())
+      if (!(*it).second->isFree())
+        return (*it).second;
+    }
+
+  // match notFound. return latest
+  auto it = mFramesMap.rbegin();
+  if (it != mFramesMap.rend())
+    return (*it).second;
+
+  // no latest, return nillptr
+  return nullptr;
+  }
+//}}}
+//{{{
+cVideoFrame* cVideoRender::findFreeFrame (int64_t pts) {
+// return youngest frame in pool if older than playPts - (halfPoolSize * duration)
+
+  if (mFramesMap.size() < mMaxPoolSize) {
+    // create new videoFrame
+    cVideoFrame* videoFrame;
+    #ifdef _WIN32
+      if (!mPlanar)
+        videoFrame = new cVideoFrameRgba();
+      else
+        #if defined(INTEL_SSE2)
+          videoFrame = new cVideoFramePlanarRgba();
+        #else
+          videoFrame = new cVideoFramePlanarRgbaSws();
+        #endif
+      #else
+        videoFrame = new cVideoFramePlanarRgbaSws();
+      #endif
+    return videoFrame;
+    }
+
+    { // start of lock
+    unique_lock<shared_mutex> lock (mSharedMutex);
+
+    // reuse youngest frame in pool
+    auto it = mFramesMap.begin();
+    cVideoFrame* videoFrame = (*it).second;
+    videoFrame->setFree (false, pts);
+
+    mFramesMap.erase (it);
+    return videoFrame;
+    } // end of lock
+  }
+//}}}
+
+//{{{
+void cVideoRender::decode (uint8_t* pes, unsigned int pesSize, int64_t pts, int64_t dts) {
+
+  (void)pts;
+  chrono::system_clock::time_point timePoint = chrono::system_clock::now();
+
+  // ffmpeg doesn't maintain correct avFrame.pts, decode frames in presentation order and pts correct on I frames
+  char frameType = getH264FrameType (pes, pesSize);
+  if (frameType == 'I') {
+    if ((mGuessPts >= 0) && (mGuessPts != dts))
+      //{{{  debug
+      cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
+                                        getPtsFramesString (mGuessPts, 1800),
+                                        getPtsFramesString (dts, 1800),frameType,pesSize));
+      //}}}
+    mGuessPts = dts;
+    mSeenIFrame = true;
+    }
+  if (!mSeenIFrame) {
+    //{{{  debug
+    cLog::log (LOGINFO, fmt::format("waiting for Iframe {} to:{} type:{} size:{}",
+                        getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),frameType,pesSize));
+    //}}}
+    return;
+    }
+
+  //cLog::log (LOGINFO, fmt::format("ffmpeg decode guessPts:{}.{} pts:{}.{} dts:{}.{} - {} size:{}",
+  //                    mGuessPts/1800, mGuessPts%1800, pts/1800, pts%1800, dts/1800, dts%1800,
+  //                    frameType, pesSize));
+
+  AVPacket avPacket;
+  av_init_packet (&avPacket);
+  auto avFrame = av_frame_alloc();
+
+  auto pesPtr = pes;
+  auto pesLeft = pesSize;
+  while (pesLeft) {
+    int bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
+                                      &avPacket.data, &avPacket.size,
+                                      pesPtr, (int)pesLeft, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
+    pesPtr += bytesUsed;
+    pesLeft -= bytesUsed;
+    if (avPacket.size) {
+      int ret = avcodec_send_packet (mAvContext, &avPacket);
+      while (ret >= 0) {
+        ret = avcodec_receive_frame (mAvContext, avFrame);
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
+          break;
+        mDecodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+
+        // extract frame info from decode
+        mWidth = static_cast<uint16_t>(avFrame->width);
+        mHeight = static_cast<uint16_t>(avFrame->height);
+        mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
+        if (mSeenIFrame) {
+          //{{{  set new frame
+          // blocks on waiting for freeFrame most of the time
+          cVideoFrame* frame = findFreeFrame (mGuessPts);
+          frame->set (mGuessPts, pesSize, mWidth, mHeight, frameType);
+
+          if (!mSwsContext)
+            mSwsContext = sws_getContext (mWidth, mHeight, AV_PIX_FMT_YUV420P,
+                                          mWidth, mHeight, AV_PIX_FMT_RGBA,
+                                          SWS_BILINEAR, NULL, NULL, NULL);
+
+          timePoint = chrono::system_clock::now();
+          frame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
+          mYuv420Time = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+
+            {
+            unique_lock<shared_mutex> lock (mSharedMutex);
+            mFramesMap.emplace (mGuessPts / mPtsDuration, frame);
+            }
+
+          av_frame_unref (avFrame);
+          }
+          //}}}
+        mGuessPts += mPtsDuration;
+        }
+      }
+    }
+
+  av_frame_free (&avFrame);
   }
 //}}}
