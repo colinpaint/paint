@@ -1,6 +1,6 @@
-// cVideoDecoder.cpp
+// cVideo.cpp
 //{{{  includes
-#include "cVideoDecoder.h"
+#include "cVideo.h"
 
 #include <cstdint>
 #include <string>
@@ -1990,28 +1990,28 @@ private:
 
 // public:
 //{{{
-cVideoDecoder::cVideoDecoder (const std::string name) : cDecoder(name) {
+cVideo::cVideo (const std::string name) : cRender(name) {
   mVideoPool = new cVideoPool (kVideoPoolSize);
   }
 //}}}
 //{{{
-cVideoDecoder::~cVideoDecoder() {
+cVideo::~cVideo() {
   delete mVideoPool;
   }
 //}}}
 
 //{{{
-uint16_t cVideoDecoder::getWidth() const {
+uint16_t cVideo::getWidth() const {
   return mVideoPool->getWidth();
   }
 //}}}
 //{{{
-uint16_t cVideoDecoder::getHeight() const {
+uint16_t cVideo::getHeight() const {
   return mVideoPool->getHeight();
   }
 //}}}
 //{{{
-uint32_t* cVideoDecoder::getFramePixels (int64_t pts)  const {
+uint32_t* cVideo::getFramePixels (int64_t pts)  const {
 
   cVideoFrame* frame = mVideoPool->findFrame (pts);
   return frame ? frame->getPixels() : nullptr;
@@ -2019,7 +2019,7 @@ uint32_t* cVideoDecoder::getFramePixels (int64_t pts)  const {
 //}}}
 
 //{{{
-void cVideoDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
+void cVideo::process (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
   log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   logValue (pts, (float)pesSize);

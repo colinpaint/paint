@@ -1,7 +1,7 @@
 // cSubtitle.h
 //{{{  includes
 #pragma once
-#include "cDecoder.h"
+#include "cRender.h"
 
 #include <cstdint>
 #include <string>
@@ -36,16 +36,16 @@ public:
   };
 //}}}
 
-class cSubtitleDecoder : public cDecoder {
+class cSubtitle : public cRender {
 public:
-  cSubtitleDecoder (const std::string name);
-  ~cSubtitleDecoder();
+  cSubtitle (const std::string& name);
+  ~cSubtitle();
 
   size_t getNumLines() const { return mPage.mNumLines; }
   size_t getHighWatermark() const { return mPage.mHighwaterMark; }
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
-  void decode (uint8_t* pes, uint32_t pesSize, int64_t pts);
+  void process (uint8_t* pes, uint32_t pesSize, int64_t pts);
 
 private:
   //{{{

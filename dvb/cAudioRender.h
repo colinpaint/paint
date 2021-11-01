@@ -1,11 +1,11 @@
-// cAudioDecoder.h
+// cAudioRender.h
 //{{{  includes
 #pragma once
 
 #include <cstdint>
 #include <string>
 
-#include "cDecoder.h"
+#include "cRender.h"
 #include "../utils/cMiniLog.h"
 
 class cAudioFFmpegDecoder;
@@ -13,14 +13,14 @@ class cAudioPool;
 class cAudioPlayer;
 //}}}
 
-class cAudioDecoder : public cDecoder {
+class cAudioRender : public cRender {
 public:
-  cAudioDecoder (const std::string name);
-  virtual ~cAudioDecoder();
+  cAudioRender (const std::string name);
+  virtual ~cAudioRender();
 
   int64_t getPlayPts() const;
 
-  void decode (uint8_t* pes, uint32_t pesSize, int64_t pts);
+  void process (uint8_t* pes, uint32_t pesSize, int64_t pts);
 
 private:
   cAudioFFmpegDecoder* mAudioFFmpegDecoder;

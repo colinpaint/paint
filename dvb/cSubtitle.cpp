@@ -1,6 +1,6 @@
-// cSubtitleDecoder.cpp
+// cSubtitle.cpp
 //{{{  includes
-#include "cSubtitleDecoder.h"
+#include "cSubtitle.h"
 
 #include <cstdint>
 #include <string>
@@ -25,9 +25,9 @@ using namespace std;
 //}}}
 
 // public:
-cSubtitleDecoder::cSubtitleDecoder (const std::string name) : cDecoder(name) {}
+cSubtitle::cSubtitle (const std::string& name) : cRender(name) {}
 //{{{
-cSubtitleDecoder::~cSubtitleDecoder() {
+cSubtitle::~cSubtitle() {
 
   mColorLuts.clear();
   mObjects.clear();
@@ -41,7 +41,7 @@ cSubtitleDecoder::~cSubtitleDecoder() {
 //}}}
 
 //{{{
-void cSubtitleDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
+void cSubtitle::process (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
   mPage.mPts = pts;
   mPage.mPesSize = pesSize;
@@ -138,7 +138,7 @@ void cSubtitleDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
 // private:
 //{{{
-cSubtitleDecoder::cObject* cSubtitleDecoder::findObject (uint16_t id) {
+cSubtitle::cObject* cSubtitle::findObject (uint16_t id) {
 
   for (auto& object : mObjects)
     if (id == object.mId)
@@ -148,7 +148,7 @@ cSubtitleDecoder::cObject* cSubtitleDecoder::findObject (uint16_t id) {
   }
 //}}}
 //{{{
-cSubtitleDecoder::cObject& cSubtitleDecoder::getObject (uint16_t id) {
+cSubtitle::cObject& cSubtitle::getObject (uint16_t id) {
 
   cObject* object = findObject (id);
   if (object) // found
@@ -160,7 +160,7 @@ cSubtitleDecoder::cObject& cSubtitleDecoder::getObject (uint16_t id) {
   }
 //}}}
 //{{{
-cSubtitleDecoder::cColorLut& cSubtitleDecoder::getColorLut (uint8_t id) {
+cSubtitle::cColorLut& cSubtitle::getColorLut (uint8_t id) {
 
   // look for id colorLut
   for (auto& colorLut : mColorLuts)
@@ -173,7 +173,7 @@ cSubtitleDecoder::cColorLut& cSubtitleDecoder::getColorLut (uint8_t id) {
   }
 //}}}
 //{{{
-cSubtitleDecoder::cRegion& cSubtitleDecoder::getRegion (uint8_t id) {
+cSubtitle::cRegion& cSubtitle::getRegion (uint8_t id) {
 
   for (auto region : mRegions)
     if (id == region->mId)
@@ -186,7 +186,7 @@ cSubtitleDecoder::cRegion& cSubtitleDecoder::getRegion (uint8_t id) {
 
 // parse
 //{{{
-bool cSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize) {
+bool cSubtitle::parseDisplayDefinition (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "displayDefinition segment");
   if (bufSize < 5)
@@ -235,7 +235,7 @@ bool cSubtitleDecoder::parseDisplayDefinition (const uint8_t* buf, uint16_t bufS
   }
 //}}}
 //{{{
-bool cSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
+bool cSubtitle::parsePage (const uint8_t* buf, uint16_t bufSize) {
 
   if (bufSize < 1)
     return false;
@@ -282,7 +282,7 @@ bool cSubtitleDecoder::parsePage (const uint8_t* buf, uint16_t bufSize) {
   }
 //}}}
 //{{{
-bool cSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
+bool cSubtitle::parseRegion (const uint8_t* buf, uint16_t bufSize) {
 // assumes all objects used by region are defined after region
 
   if (bufSize < 10)
@@ -362,7 +362,7 @@ bool cSubtitleDecoder::parseRegion (const uint8_t* buf, uint16_t bufSize) {
   }
 //}}}
 //{{{
-bool cSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
+bool cSubtitle::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
 
   //cLog::log (LOGINFO, "colorLut segment");
   const uint8_t* bufEnd = buf + bufSize;
@@ -431,7 +431,7 @@ bool cSubtitleDecoder::parseColorLut (const uint8_t* buf, uint16_t bufSize) {
 //}}}
 
 //{{{
-uint16_t cSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
+uint16_t cSubtitle::parse4bit (const uint8_t*& buf, uint16_t bufSize,
                                          uint8_t* pixBuf, uint32_t pixBufSize, uint16_t pixPos,
                                          bool nonModifyColour) {
 
@@ -555,7 +555,7 @@ uint16_t cSubtitleDecoder::parse4bit (const uint8_t*& buf, uint16_t bufSize,
   }
 //}}}
 //{{{
-void cSubtitleDecoder::parseObjectBlock (cObject* object, const uint8_t* buf, uint16_t bufSize,
+void cSubtitle::parseObjectBlock (cObject* object, const uint8_t* buf, uint16_t bufSize,
                                             bool bottom, bool nonModifyColour) {
 
   uint16_t xpos = object->mXpos;
@@ -600,7 +600,7 @@ void cSubtitleDecoder::parseObjectBlock (cObject* object, const uint8_t* buf, ui
   }
 //}}}
 //{{{
-bool cSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
+bool cSubtitle::parseObject (const uint8_t* buf, uint16_t bufSize) {
 
   const uint8_t* bufEnd = buf + bufSize;
 
@@ -647,7 +647,7 @@ bool cSubtitleDecoder::parseObject (const uint8_t* buf, uint16_t bufSize) {
 //}}}
 
 //{{{
-void cSubtitleDecoder::endDisplay() {
+void cSubtitle::endDisplay() {
 
   int offsetX = mDisplayDefinition.mX;
   int offsetY = mDisplayDefinition.mY;

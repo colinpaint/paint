@@ -1,4 +1,4 @@
-// cAudioDecoder.cpp - simple decoder player
+// cAudioRender.cpp - simple decoder player
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
@@ -10,7 +10,7 @@
   #include "../audio/cLinuxAudio.h"
 #endif
 
-#include "cAudioDecoder.h"
+#include "cAudioRender.h"
 
 #include <cstdint>
 #include <string>
@@ -711,9 +711,9 @@ void cAudioPlayer::wait() {
 //}}}
 //}}}
 
-// cAudioDecoder
+// cAudio
 //{{{
-cAudioDecoder::cAudioDecoder (const std::string name) : cDecoder(name) {
+cAudioRender::cAudioRender (const std::string name) : cRender(name) {
 
   eAudioFrameType frameType = eAudioFrameType::eAacLatm;
 
@@ -747,7 +747,7 @@ cAudioDecoder::cAudioDecoder (const std::string name) : cDecoder(name) {
   }
 //}}}
 //{{{
-cAudioDecoder::~cAudioDecoder() {
+cAudioRender::~cAudioRender() {
 
   if (mAudioPlayer) {
     mAudioPlayer->exit();
@@ -761,13 +761,13 @@ cAudioDecoder::~cAudioDecoder() {
 //}}}
 
 //{{{
-int64_t cAudioDecoder::getPlayPts() const {
+int64_t cAudioRender::getPlayPts() const {
   return mAudioPool->getPlayPts();
   }
 //}}}
 
 //{{{
-void cAudioDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
+void cAudioRender::process (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
   log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);

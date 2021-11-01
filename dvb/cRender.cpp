@@ -1,6 +1,6 @@
-// cDecoder.cpp - dvb stream decoder base class
+// cRender.cpp - dvb stream render base class
 //{{{  includes
-#include "cDecoder.h"
+#include "cRender.h"
 
 #include <cstdint>
 #include <string>
@@ -20,20 +20,20 @@ using namespace std;
 constexpr int64_t kPtsPerFrame = 90000 / 25;
 
 // public:
-cDecoder::cDecoder (const std::string name) : mName(name), mMiniLog ("log") {}
-cDecoder::~cDecoder() {}
+cRender::cRender (const std::string name) : mName(name), mMiniLog ("log") {}
+cRender::~cRender() {}
 
-void cDecoder::toggleLog() { mMiniLog.toggleEnable(); }
+void cRender::toggleLog() { mMiniLog.toggleEnable(); }
 
 //{{{
-float cDecoder::getValue (int64_t pts) const {
+float cRender::getValue (int64_t pts) const {
 
   auto it = mValuesMap.find (pts / kPtsPerFrame);
   return it == mValuesMap.end() ? 0.f : it->second;
   }
 //}}}
 //{{{
-float cDecoder::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
+float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
 
   pts = mRefPts - ptsOffset;
   auto it = mValuesMap.find (pts / kPtsPerFrame);
@@ -42,7 +42,7 @@ float cDecoder::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
 //}}}
 
 //{{{
-void cDecoder::logValue (int64_t pts, float value) {
+void cRender::logValue (int64_t pts, float value) {
 
   while (mValuesMap.size() >= mMapSize)
     mValuesMap.erase (mValuesMap.begin());
@@ -55,5 +55,5 @@ void cDecoder::logValue (int64_t pts, float value) {
 //}}}
 
 // protected:
-void cDecoder::header() { mMiniLog.setHeader (fmt::format ("header")); }
-void cDecoder::log (const string& tag, const string& text) { mMiniLog.log (tag, text); }
+void cRender::header() { mMiniLog.setHeader (fmt::format ("header")); }
+void cRender::log (const string& tag, const string& text) { mMiniLog.log (tag, text); }

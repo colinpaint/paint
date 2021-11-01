@@ -2,7 +2,7 @@
 //{{{  includes
 #pragma once
 
-#include "cDecoder.h"
+#include "cRender.h"
 
 #include <cstdint>
 #include <string>
@@ -11,10 +11,10 @@
 #include "../utils/cMiniLog.h"
 //}}}
 
-class cDecoder {
+class cRender {
 public:
-  cDecoder (const std::string name);
-  virtual ~cDecoder();
+  cRender (const std::string name);
+  virtual ~cRender();
 
   // miniLog
   cMiniLog& getLog() { return mMiniLog; }
@@ -32,7 +32,7 @@ public:
   void logValue (int64_t pts, float value);
 
   // decode
-  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts) = 0;
+  virtual void process (uint8_t* pes, uint32_t pesSize, int64_t pts) = 0;
 
 protected:
   void header();

@@ -16,9 +16,9 @@
 #include "cDvbMultiplex.h"
 
 class cDvbSource;
-class cVideoDecoder;
-class cAudioDecoder;
-class cSubtitleDecoder;
+class cVideo;
+class cAudioRender;
+class cSubtitle;
 class cTexture;
 //}}}
 using tTimePoint = std::chrono::system_clock::time_point;
@@ -159,11 +159,11 @@ public:
     bool getChannelRecord() const { return mChannelRecord; }
     std::string getChannelRecordName() const { return mChannelRecordName; }
 
-    // decoder
-    cVideoDecoder* getVideoDecoder() const { return mVideoDecoder; }
-    cAudioDecoder* getAudioDecoder() const { return mAudioDecoder; }
-    cAudioDecoder* getAudioOtherDecoder() const { return mAudioOtherDecoder; }
-    cSubtitleDecoder* getSubtitleDecoder() const { return mSubtitleDecoder; }
+    // renders
+    cVideo* getVideo() const { return mVideo; }
+    cAudioRender* getAudio() const { return mAudio; }
+    cAudioRender* getAudioOther() const { return mAudioOther; }
+    cSubtitle* getSubtitle() const { return mSubtitle; }
 
     // epg
     bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
@@ -189,15 +189,15 @@ public:
       }
     //}}}
 
-    // decoder
-    void setVideoDecoder (cVideoDecoder* videoDecoder) { mVideoDecoder = videoDecoder; }
-    void toggleVideoDecode();
-    void setAudioDecoder (cAudioDecoder* audioDecoder) { mAudioDecoder = audioDecoder; }
-    void toggleAudioDecode();
-    void setAudioOtherDecoder (cAudioDecoder* audioDecoder) { mAudioOtherDecoder = audioDecoder; }
-    void toggleAudioOtherDecode();
-    void setSubtitleDecoder (cSubtitleDecoder* subtitleDecoder) { mSubtitleDecoder = subtitleDecoder; }
-    void toggleSubtitleDecode();
+    // render
+    void setVideo (cVideo* video) { mVideo = video; }
+    void toggleVideo();
+    void setAudio (cAudioRender* audio) { mAudio = audio; }
+    void toggleAudio();
+    void setAudioOther (cAudioRender* audio) { mAudioOther = audio; }
+    void toggleAudioOther();
+    void setSubtitle (cSubtitle* subtitle) { mSubtitle = subtitle; }
+    void toggleSubtitle();
 
     // epg
     bool setNow (bool record,
@@ -247,10 +247,10 @@ public:
     bool mChannelRecord = false;
     std::string mChannelRecordName;
 
-    cVideoDecoder* mVideoDecoder = nullptr;
-    cAudioDecoder* mAudioDecoder = nullptr;
-    cAudioDecoder* mAudioOtherDecoder = nullptr;
-    cSubtitleDecoder* mSubtitleDecoder = nullptr;
+    cVideo* mVideo = nullptr;
+    cAudioRender* mAudio = nullptr;
+    cAudioRender* mAudioOther = nullptr;
+    cSubtitle* mSubtitle = nullptr;
 
     // epg
     cEpgItem* mNowEpgItem = nullptr;
@@ -278,10 +278,10 @@ public:
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
-  cVideoDecoder* getVideoDecoder (uint16_t sid);
-  cAudioDecoder* getAudioDecoder (uint16_t sid);
-  cAudioDecoder* getAudioOtherDecoder (uint16_t sid);
-  cSubtitleDecoder* getSubtitleDecoder (uint16_t sid);
+  cVideo* getVideo (uint16_t sid);
+  cAudioRender* getAudio (uint16_t sid);
+  cAudioRender* getAudioOther (uint16_t sid);
+  cSubtitle* getSubtitle (uint16_t sid);
 
   // dvbSource
   bool hasDvbSource() const { return mDvbSource; }
@@ -315,10 +315,10 @@ private:
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService* service);
 
-  bool audDecodePes (cPidInfo* pidInfo, bool skip);
-  bool audOtherDecodePes (cPidInfo* pidInfo, bool skip);
-  bool vidDecodePes (cPidInfo* pidInfo, bool skip);
-  bool subDecodePes (cPidInfo* pidInfo);
+  bool audPes (cPidInfo* pidInfo, bool skip);
+  bool audOtherPes (cPidInfo* pidInfo, bool skip);
+  bool vidPes (cPidInfo* pidInfo, bool skip);
+  bool subPes (cPidInfo* pidInfo);
 
   //{{{  parse
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);

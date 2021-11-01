@@ -17,9 +17,9 @@
 #endif
 
 #include "cDvbSource.h"
-#include "cVideoDecoder.h"
-#include "cAudioDecoder.h"
-#include "cSubtitleDecoder.h"
+#include "cVideo.h"
+#include "cAudioRender.h"
+#include "cSubtitle.h"
 #include "cDvbUtils.h"
 
 #include "../utils/date.h"
@@ -455,10 +455,10 @@ cDvbTransportStream::cService::~cService() {
 
   mEpgItemMap.clear();
 
-  delete mVideoDecoder;
-  delete mAudioDecoder;
-  delete mAudioOtherDecoder;
-  delete mSubtitleDecoder;
+  delete mVideo;
+  delete mAudio;
+  delete mAudioOther;
+  delete mSubtitle;
 
   closeFile();
   }
@@ -543,47 +543,47 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
 //}}}
 
 //{{{
-void cDvbTransportStream::cService::toggleVideoDecode() {
+void cDvbTransportStream::cService::toggleVideo() {
 
-  if (mVideoDecoder) {
-    delete mVideoDecoder;
-    mVideoDecoder = nullptr;
+  if (mVideo) {
+    delete mVideo;
+    mVideo = nullptr;
     }
   else
-    mVideoDecoder = new cVideoDecoder (getChannelName());
+    mVideo = new cVideo (getChannelName());
   }
 //}}}
 //{{{
-void cDvbTransportStream::cService::toggleAudioDecode() {
+void cDvbTransportStream::cService::toggleAudio() {
 
-  if (mAudioDecoder) {
-    delete mAudioDecoder;
-    mAudioDecoder = nullptr;
+  if (mAudio) {
+    delete mAudio;
+    mAudio = nullptr;
     }
   else
-    mAudioDecoder = new cAudioDecoder (getChannelName());
+    mAudio = new cAudioRender(getChannelName());
   }
 //}}}
 //{{{
-void cDvbTransportStream::cService::toggleAudioOtherDecode() {
+void cDvbTransportStream::cService::toggleAudioOther() {
 
-  if (mAudioOtherDecoder) {
-    delete mAudioOtherDecoder;
-    mAudioOtherDecoder = nullptr;
+  if (mAudioOther) {
+    delete mAudioOther;
+    mAudioOther = nullptr;
     }
   else
-    mAudioOtherDecoder = new cAudioDecoder (getChannelName());
+    mAudioOther = new cAudioRender(getChannelName());
   }
 //}}}
 //{{{
-void cDvbTransportStream::cService::toggleSubtitleDecode() {
+void cDvbTransportStream::cService::toggleSubtitle() {
 
-  if (mSubtitleDecoder) {
-    delete mSubtitleDecoder;
-    mSubtitleDecoder = nullptr;
+  if (mSubtitle) {
+    delete mSubtitle;
+    mSubtitle = nullptr;
     }
   else
-    mSubtitleDecoder = new cSubtitleDecoder (getChannelName());
+    mSubtitle = new cSubtitle (getChannelName());
   }
 //}}}
 
@@ -756,31 +756,31 @@ cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
   }
 //}}}
 //{{{
-cVideoDecoder* cDvbTransportStream::getVideoDecoder (uint16_t sid) {
+cVideo* cDvbTransportStream::getVideo (uint16_t sid) {
 
   cService* service = getService (sid);
-  return service ? service->getVideoDecoder() : nullptr;
+  return service ? service->getVideo() : nullptr;
   }
 //}}}
 //{{{
-cAudioDecoder* cDvbTransportStream::getAudioDecoder (uint16_t sid) {
+cAudioRender* cDvbTransportStream::getAudio (uint16_t sid) {
 
   cService* service = getService (sid);
-  return service ? service->getAudioDecoder() : nullptr;
+  return service ? service->getAudio() : nullptr;
   }
 //}}}
 //{{{
-cAudioDecoder* cDvbTransportStream::getAudioOtherDecoder (uint16_t sid) {
+cAudioRender* cDvbTransportStream::getAudioOther (uint16_t sid) {
 
   cService* service = getService (sid);
-  return service ? service->getAudioOtherDecoder() : nullptr;
+  return service ? service->getAudioOther() : nullptr;
   }
 //}}}
 //{{{
-cSubtitleDecoder* cDvbTransportStream::getSubtitleDecoder (uint16_t sid) {
+cSubtitle* cDvbTransportStream::getSubtitle (uint16_t sid) {
 
   cService* service = getService (sid);
-  return service ? service->getSubtitleDecoder() : nullptr;
+  return service ? service->getSubtitle() : nullptr;
   }
 //}}}
 
@@ -1271,14 +1271,14 @@ void cDvbTransportStream::stopServiceProgram (cService* service) {
 //}}}
 
 //{{{
-bool cDvbTransportStream::vidDecodePes (cPidInfo* pidInfo, bool skip) {
+bool cDvbTransportStream::vidPes (cPidInfo* pidInfo, bool skip) {
 
   (void)skip;
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cVideoDecoder* videoDecoder = service->getVideoDecoder();
-    if (videoDecoder)
-      videoDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+    cVideo* video = service->getVideo();
+    if (video)
+      video->process (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
     }
 
   //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
@@ -1286,40 +1286,40 @@ bool cDvbTransportStream::vidDecodePes (cPidInfo* pidInfo, bool skip) {
   }
 //}}}
 //{{{
-bool cDvbTransportStream::audDecodePes (cPidInfo* pidInfo, bool skip) {
+bool cDvbTransportStream::audPes (cPidInfo* pidInfo, bool skip) {
 
   (void)skip;
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cAudioDecoder* audioDecoder = service->getAudioDecoder();
-    if (audioDecoder)
-      audioDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+    cAudioRender* audio = service->getAudio();
+    if (audio)
+      audio->process (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
     }
 
   return false;
   }
 //}}}
 //{{{
-bool cDvbTransportStream::audOtherDecodePes (cPidInfo* pidInfo, bool skip) {
+bool cDvbTransportStream::audOtherPes (cPidInfo* pidInfo, bool skip) {
 
   (void)skip;
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cAudioDecoder* audioDecoder = service->getAudioOtherDecoder();
-    if (audioDecoder)
-      audioDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+    cAudioRender* audio = service->getAudioOther();
+    if (audio)
+      audio->process (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
     }
   return false;
   }
 //}}}
 //{{{
-bool cDvbTransportStream::subDecodePes (cPidInfo* pidInfo) {
+bool cDvbTransportStream::subPes (cPidInfo* pidInfo) {
 
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cSubtitleDecoder* subtitleDecoder = service->getSubtitleDecoder();
-    if (subtitleDecoder)
-      subtitleDecoder->decode (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+    cSubtitle* subtitle = service->getSubtitle();
+    if (subtitle)
+      subtitle->process (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
     }
   return false;
   }
@@ -1711,7 +1711,7 @@ int cDvbTransportStream::parsePsi (cPidInfo* pidInfo, uint8_t* buf) {
 int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip) {
 // demux from tsBuffer to tsBuffer + tsBufferSize, streamPos is offset into full stream of first packet
 // decodePid1 = -1 use all
-// - return bytes decoded
+// - return bytes processed
 
   if (skip)
     clearPidContinuity();
@@ -1719,9 +1719,9 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
   uint8_t* ts = tsBuf;
   uint8_t* tsEnd = tsBuf + tsBufSize;
 
-  bool decoded = false;
+  bool processed = false;
   uint8_t* nextPacket = ts + 188;
-  while (!decoded && (nextPacket <= tsEnd)) {
+  while (!processed && (nextPacket <= tsEnd)) {
     if (*ts == 0x47) {
       if ((ts+188 >= tsEnd) || (*(ts+188) == 0x47)) {
         ts++;
@@ -1837,8 +1837,7 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
                       case 2:   // ISO 13818-2 video
                       case 27:  // HD vid
                         //{{{  send last video pes
-                        decoded = vidDecodePes (pidInfo, skip);
-
+                        processed = vidPes (pidInfo, skip);
                         skip = false;
                         break;
                         //}}}
@@ -1849,14 +1848,14 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
                       case 129: // ac3
                         //{{{  send last audio pes
                         if (*(uint32_t*)ts == 0xC1010000)
-                          decoded = audOtherDecodePes (pidInfo, skip);
+                          processed = audOtherPes (pidInfo, skip);
                         else
-                          decoded = audDecodePes (pidInfo, skip);
+                          processed = audPes (pidInfo, skip);
                         break;
                         //}}}
                       case 6:   // subtitle
                         //{{{  send last subtitle pes
-                        decoded = subDecodePes (pidInfo);
+                        processed = subPes (pidInfo);
                         break;
                         //}}}
                       default:

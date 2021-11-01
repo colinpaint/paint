@@ -1,27 +1,27 @@
-// cVideoDecoder.h
+// cVideo.h
 //{{{  includes
 #pragma once
 
 #include <cstdint>
 #include <string>
 
-#include "cDecoder.h"
+#include "cRender.h"
 #include "../utils/cMiniLog.h"
 
 class cVideoPool;
 class cTexture;
 //}}}
 
-class cVideoDecoder : public cDecoder {
+class cVideo : public cRender {
 public:
-  cVideoDecoder (const std::string name);
-  virtual ~cVideoDecoder();
+  cVideo (const std::string name);
+  virtual ~cVideo();
 
   uint16_t getWidth() const;
   uint16_t getHeight() const ;
   uint32_t* getFramePixels (int64_t pts) const;
 
-  void decode (uint8_t* pes, uint32_t pesSize, int64_t pts);
+  void process (uint8_t* pes, uint32_t pesSize, int64_t pts);
 
   cTexture* mTexture = nullptr;
 

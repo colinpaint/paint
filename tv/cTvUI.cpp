@@ -18,9 +18,9 @@
 #include "../tv/cTvApp.h"
 
 // dvb
-#include "../dvb/cVideoDecoder.h"
-#include "../dvb/cAudioDecoder.h"
-#include "../dvb/cSubtitleDecoder.h"
+#include "../dvb/cVideo.h"
+#include "../dvb/cAudioRender.h"
+#include "../dvb/cSubtitle.h"
 #include "../dvb/cDvbTransportStream.h"
 
 // utils
@@ -151,9 +151,9 @@ private:
                          service.getProgramPid(), mMaxPgmSize,
                          service.getSid(), mMaxSidSize).c_str())) {
         //{{{  toggle all
-        service.toggleVideoDecode();
-        service.toggleAudioDecode();
-        service.toggleSubtitleDecode();
+        service.toggleVideo();
+        service.toggleAudio();
+        service.toggleSubtitle();
         }
         //}}}
       if (service.getVidPid()) {
@@ -161,8 +161,8 @@ private:
         ImGui::SameLine();
         if (toggleButton (fmt::format ("vid:{:{}d}:{}",
                                        service.getVidPid(), mMaxVidSize, service.getVidStreamTypeName()).c_str(),
-                          service.getVideoDecoder()))
-          service.toggleVideoDecode();
+                          service.getVideo()))
+          service.toggleVideo();
         }
         //}}}
       if (service.getAudPid()) {
@@ -170,8 +170,8 @@ private:
         ImGui::SameLine();
         if (toggleButton (fmt::format ("aud:{:{}d}:{}",
                                        service.getAudPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str(),
-                          service.getAudioDecoder()))
-          service.toggleAudioDecode();
+                          service.getAudio()))
+          service.toggleAudio();
         }
         //}}}
       if (service.getAudOtherPid()) {
@@ -179,8 +179,8 @@ private:
         ImGui::SameLine();
         if (toggleButton (fmt::format ("{:{}d}:{}",
                                        service.getAudOtherPid(), mMaxAudSize, service.getAudOtherStreamTypeName()).c_str(),
-                          service.getAudioOtherDecoder()))
-          service.toggleAudioOtherDecode();
+                          service.getAudioOther()))
+          service.toggleAudioOther();
         }
         //}}}
       if (service.getSubPid()) {
@@ -188,8 +188,8 @@ private:
         ImGui::SameLine();
         if (toggleButton (fmt::format ("{}:{:{}d}",
                                        service.getSubStreamTypeName(), service.getSubPid(), mMaxSubSize).c_str(),
-                          service.getSubtitleDecoder()))
-          service.toggleSubtitleDecode();
+                          service.getSubtitle()))
+          service.toggleSubtitle();
         }
         //}}}
       if (service.getChannelRecord()) {
@@ -200,18 +200,18 @@ private:
         //}}}
 
       int64_t playPts = 0;
-      if (service.getAudioDecoder())
-        playPts = service.getAudioDecoder()->getPlayPts();
+      if (service.getAudio())
+        playPts = service.getAudio()->getPlayPts();
 
       int64_t lastPts = 0;
-      if (service.getAudioDecoder())
-        lastPts = drawAudio (*service.getAudioDecoder(), lastPts, graphics);
-      if (service.getAudioOtherDecoder())
-        lastPts = drawAudio (*service.getAudioOtherDecoder(), lastPts, graphics);
-      if (service.getVideoDecoder())
-        lastPts = drawVideo (*service.getVideoDecoder(), lastPts, playPts, graphics);
-      if (service.getSubtitleDecoder())
-        lastPts = drawSubtitle (*service.getSubtitleDecoder(), lastPts, graphics);
+      if (service.getAudio())
+        lastPts = drawAudio (*service.getAudio(), lastPts, graphics);
+      if (service.getAudioOther())
+        lastPts = drawAudio (*service.getAudioOther(), lastPts, graphics);
+      if (service.getVideo())
+        lastPts = drawVideo (*service.getVideo(), lastPts, playPts, graphics);
+      if (service.getSubtitle())
+        lastPts = drawSubtitle (*service.getSubtitle(), lastPts, graphics);
       }
     }
   //}}}
@@ -260,12 +260,12 @@ private:
         if (ImGui::InvisibleButton (fmt::format ("##pid{}", pidInfo.mPid).c_str(),
                                     {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
           if (pidInfo.mPid == service->getSubPid())
-            service->toggleSubtitleDecode();
+            service->toggleSubtitle();
 
         if (pidInfo.mPid == service->getSubPid()) {
-          cSubtitleDecoder* subtitleDecoder = service->getSubtitleDecoder();
-          if (subtitleDecoder)
-            drawSubtitle (*subtitleDecoder, 0, graphics);
+          cSubtitle* subtitle = service->getSubtitle();
+          if (subtitle)
+            drawSubtitle (*subtitle, 0, graphics);
           }
         }
 
@@ -287,7 +287,7 @@ private:
   //}}}
 
   //{{{
-  int64_t drawVideo (cVideoDecoder& video, int64_t pts, int64_t playPts, cGraphics& graphics) {
+  int64_t drawVideo (cVideo& video, int64_t pts, int64_t playPts, cGraphics& graphics) {
 
     int64_t lastPts = plotValues (pts, video, 0xffffffff);
 
@@ -306,7 +306,7 @@ private:
     }
   //}}}
   //{{{
-  int64_t drawAudio (cAudioDecoder& audio, int64_t pts, cGraphics& graphics) {
+  int64_t drawAudio (cAudioRender& audio, int64_t pts, cGraphics& graphics) {
 
     (void)graphics;
     int64_t lastPts = plotValues (pts, audio, 0xff00ffff);
@@ -315,7 +315,7 @@ private:
     }
   //}}}
   //{{{
-  int64_t drawSubtitle (cSubtitleDecoder& subtitle, int64_t pts, cGraphics& graphics) {
+  int64_t drawSubtitle (cSubtitle& subtitle, int64_t pts, cGraphics& graphics) {
 
     int64_t lastPts = plotValues (pts, subtitle, 0xff00ff00);
 
@@ -369,19 +369,19 @@ private:
     }
   //}}}
   //{{{
-  int64_t plotValues (int64_t lastPts, cDecoder& decoder, uint32_t color) {
+  int64_t plotValues (int64_t lastPts, cRender& render, uint32_t color) {
 
     (void)color;
 
     if (!lastPts)
-      lastPts = decoder.getLastPts();
+      lastPts = render.getLastPts();
 
-    decoder.setRefPts (lastPts);
-    decoder.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth()));
+    render.setRefPts (lastPts);
+    render.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth()));
 
     auto lamda = [](void* data, int idx) {
       int64_t pts = 0;
-      return ImPlotPoint (-idx, ((cDecoder*)data)->getOffsetValue (idx * (90000/25), pts));
+      return ImPlotPoint (-idx, ((cRender*)data)->getOffsetValue (idx * (90000/25), pts));
       };
 
     if (ImPlot::BeginPlot (fmt::format ("##plot{}", mPlotIndex++).c_str(), NULL, NULL,
@@ -389,10 +389,10 @@ private:
                            ImPlotFlags_NoLegend,
                            ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit,
                            ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit)) {
-      ImPlot::PlotStairsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
-      //ImPlot::PlotBarsG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth(), 2.0);
-      //ImPlot::PlotLineG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
-      //ImPlot::PlotScatterG ("line", lamda, &decoder, (int)ImGui::GetWindowWidth());
+      ImPlot::PlotStairsG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
+      //ImPlot::PlotBarsG ("line", lamda, &render, (int)ImGui::GetWindowWidth(), 2.0);
+      //ImPlot::PlotLineG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
+      //ImPlot::PlotScatterG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
       ImPlot::EndPlot();
       }
 
