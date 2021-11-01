@@ -18,7 +18,7 @@
 #include "../tv/cTvApp.h"
 
 // dvb
-#include "../dvb/cVideo.h"
+#include "../dvb/cVideoRender.h"
 #include "../dvb/cAudioRender.h"
 #include "../dvb/cSubtitle.h"
 #include "../dvb/cDvbTransportStream.h"
@@ -287,7 +287,7 @@ private:
   //}}}
 
   //{{{
-  int64_t drawVideo (cVideo& video, int64_t pts, int64_t playPts, cGraphics& graphics) {
+  int64_t drawVideo (cVideoRender& video, int64_t pts, int64_t playPts, cGraphics& graphics) {
 
     int64_t lastPts = plotValues (pts, video, 0xffffffff);
 

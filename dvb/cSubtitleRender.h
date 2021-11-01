@@ -1,4 +1,4 @@
-// cSubtitle.h
+// cSubtitleRender.h
 //{{{  includes
 #pragma once
 #include "cRender.h"
@@ -36,10 +36,10 @@ public:
   };
 //}}}
 
-class cSubtitle : public cRender {
+class cSubtitleRender : public cRender {
 public:
-  cSubtitle (const std::string& name);
-  ~cSubtitle();
+  cSubtitleRender (const std::string& name);
+  ~cSubtitleRender();
 
   size_t getNumLines() const { return mPage.mNumLines; }
   size_t getHighWatermark() const { return mPage.mHighwaterMark; }

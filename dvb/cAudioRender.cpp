@@ -426,10 +426,10 @@ cAudioFrame& cAudioPool::addFrame (int64_t pts, float* samples) {
 //}}}
 //}}}
 //{{{
-class cAudioFFmpegDecoder {
+class cAudioDecoder {
 public:
-  cAudioFFmpegDecoder (eAudioFrameType frameType);
-  ~cAudioFFmpegDecoder();
+  cAudioDecoder (eAudioFrameType frameType);
+  ~cAudioDecoder();
 
   size_t getNumChannels() { return mChannels; }
   size_t getSampleRate() { return mSampleRate; }
@@ -449,9 +449,9 @@ private:
   int64_t mLastPts = -1;
   };
 
-// cAudioFFmpegDecoder members
+// cAudioDecoder members
 //{{{
-cAudioFFmpegDecoder::cAudioFFmpegDecoder (eAudioFrameType frameType) {
+cAudioDecoder::cAudioDecoder (eAudioFrameType frameType) {
 
   AVCodecID streamType;
 
@@ -469,7 +469,7 @@ cAudioFFmpegDecoder::cAudioFFmpegDecoder (eAudioFrameType frameType) {
       break;
 
     default:
-      cLog::log (LOGERROR, "unknown cFFmpegAacDecoder frameType %d", frameType);
+      cLog::log (LOGERROR, "unknown cAacDecoder frameType %d", frameType);
       return;
     }
 
@@ -480,7 +480,7 @@ cAudioFFmpegDecoder::cAudioFFmpegDecoder (eAudioFrameType frameType) {
   }
 //}}}
 //{{{
-cAudioFFmpegDecoder::~cAudioFFmpegDecoder() {
+cAudioDecoder::~cAudioDecoder() {
 
   if (mAvContext)
     avcodec_close (mAvContext);
@@ -490,7 +490,7 @@ cAudioFFmpegDecoder::~cAudioFFmpegDecoder() {
 //}}}
 
 //{{{
-float* cAudioFFmpegDecoder::decodeFrame (const uint8_t* frame, uint32_t frameSize, int64_t pts) {
+float* cAudioDecoder::decodeFrame (const uint8_t* frame, uint32_t frameSize, int64_t pts) {
 
   float* outBuffer = nullptr;
 
@@ -720,20 +720,20 @@ cAudioRender::cAudioRender (const std::string name) : cRender(name) {
   switch (frameType) {
     //{{{
     case eAudioFrameType::eMp3:
-      cLog::log (LOGINFO, "createAudioDecoder ffmpeg mp3");
-      mAudioFFmpegDecoder = new cAudioFFmpegDecoder (frameType);
+      cLog::log (LOGINFO, "createAudioDecoder mp3");
+      mAudioDecoder = new cAudioDecoder (frameType);
       break;
     //}}}
     //{{{
     case eAudioFrameType::eAacAdts:
-      cLog::log (LOGINFO, "createAudioDecoder ffmpeg aacAdts");
-      mAudioFFmpegDecoder =  new cAudioFFmpegDecoder (frameType);
+      cLog::log (LOGINFO, "createAudioDecoder aacAdts");
+      mAudioDecoder =  new cAudioDecoder (frameType);
       break;
     //}}}
     //{{{
     case eAudioFrameType::eAacLatm:
-      cLog::log (LOGINFO, "createAudioDecoder ffmpeg aacLatm");
-      mAudioFFmpegDecoder =  new cAudioFFmpegDecoder (frameType);
+      cLog::log (LOGINFO, "createAudioDecoder aacLatm");
+      mAudioDecoder =  new cAudioDecoder (frameType);
       break;
     //}}}
     //{{{
@@ -754,7 +754,7 @@ cAudioRender::~cAudioRender() {
     mAudioPlayer->wait();
     }
 
-  delete mAudioFFmpegDecoder;
+  delete mAudioDecoder;
   delete mAudioPool;
   delete mAudioPlayer;
   }
@@ -783,7 +783,7 @@ void cAudioRender::process (uint8_t* pes, uint32_t pesSize, int64_t pts) {
   int frameSize = 0;
   while (audioParseFrame (frame, pesEnd, frameType, numChannels, sampleRate, frameSize)) {
     // decode single frame from pes
-    float* samples = mAudioFFmpegDecoder->decodeFrame (frame, frameSize, framePts);
+    float* samples = mAudioDecoder->decodeFrame (frame, frameSize, framePts);
     if (samples) {
       cAudioFrame& audioFrame = mAudioPool->addFrame (framePts, samples);
       logValue (framePts, audioFrame.getPowerValues()[0]);

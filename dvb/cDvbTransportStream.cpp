@@ -17,9 +17,9 @@
 #endif
 
 #include "cDvbSource.h"
-#include "cVideo.h"
+#include "cVideoRender.h"
 #include "cAudioRender.h"
-#include "cSubtitle.h"
+#include "cSubtitleRender.h"
 #include "cDvbUtils.h"
 
 #include "../utils/date.h"
@@ -550,7 +550,7 @@ void cDvbTransportStream::cService::toggleVideo() {
     mVideo = nullptr;
     }
   else
-    mVideo = new cVideo (getChannelName());
+    mVideo = new cVideoRender(getChannelName());
   }
 //}}}
 //{{{
@@ -583,7 +583,7 @@ void cDvbTransportStream::cService::toggleSubtitle() {
     mSubtitle = nullptr;
     }
   else
-    mSubtitle = new cSubtitle (getChannelName());
+    mSubtitle = new cSubtitleRender(getChannelName());
   }
 //}}}
 
@@ -756,7 +756,7 @@ cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
   }
 //}}}
 //{{{
-cVideo* cDvbTransportStream::getVideo (uint16_t sid) {
+cVideoRender* cDvbTransportStream::getVideo (uint16_t sid) {
 
   cService* service = getService (sid);
   return service ? service->getVideo() : nullptr;
@@ -777,7 +777,7 @@ cAudioRender* cDvbTransportStream::getAudioOther (uint16_t sid) {
   }
 //}}}
 //{{{
-cSubtitle* cDvbTransportStream::getSubtitle (uint16_t sid) {
+cSubtitleRender* cDvbTransportStream::getSubtitle (uint16_t sid) {
 
   cService* service = getService (sid);
   return service ? service->getSubtitle() : nullptr;
@@ -1276,7 +1276,7 @@ bool cDvbTransportStream::vidPes (cPidInfo* pidInfo, bool skip) {
   (void)skip;
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cVideo* video = service->getVideo();
+    cVideoRender* video = service->getVideo();
     if (video)
       video->process (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
     }
@@ -1317,7 +1317,7 @@ bool cDvbTransportStream::subPes (cPidInfo* pidInfo) {
 
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cSubtitle* subtitle = service->getSubtitle();
+    cSubtitleRender* subtitle = service->getSubtitle();
     if (subtitle)
       subtitle->process (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
     }

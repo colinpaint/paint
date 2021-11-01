@@ -16,9 +16,9 @@
 #include "cDvbMultiplex.h"
 
 class cDvbSource;
-class cVideo;
+class cVideoRender;
 class cAudioRender;
-class cSubtitle;
+class cSubtitleRender;
 class cTexture;
 //}}}
 using tTimePoint = std::chrono::system_clock::time_point;
@@ -160,10 +160,10 @@ public:
     std::string getChannelRecordName() const { return mChannelRecordName; }
 
     // renders
-    cVideo* getVideo() const { return mVideo; }
+    cVideoRender* getVideo() const { return mVideo; }
     cAudioRender* getAudio() const { return mAudio; }
     cAudioRender* getAudioOther() const { return mAudioOther; }
-    cSubtitle* getSubtitle() const { return mSubtitle; }
+    cSubtitleRender* getSubtitle() const { return mSubtitle; }
 
     // epg
     bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
@@ -190,13 +190,13 @@ public:
     //}}}
 
     // render
-    void setVideo (cVideo* video) { mVideo = video; }
+    void setVideo (cVideoRender* video) { mVideo = video; }
     void toggleVideo();
     void setAudio (cAudioRender* audio) { mAudio = audio; }
     void toggleAudio();
     void setAudioOther (cAudioRender* audio) { mAudioOther = audio; }
     void toggleAudioOther();
-    void setSubtitle (cSubtitle* subtitle) { mSubtitle = subtitle; }
+    void setSubtitle (cSubtitleRender* subtitle) { mSubtitle = subtitle; }
     void toggleSubtitle();
 
     // epg
@@ -247,10 +247,10 @@ public:
     bool mChannelRecord = false;
     std::string mChannelRecordName;
 
-    cVideo* mVideo = nullptr;
+    cVideoRender* mVideo = nullptr;
     cAudioRender* mAudio = nullptr;
     cAudioRender* mAudioOther = nullptr;
-    cSubtitle* mSubtitle = nullptr;
+    cSubtitleRender* mSubtitle = nullptr;
 
     // epg
     cEpgItem* mNowEpgItem = nullptr;
@@ -278,10 +278,10 @@ public:
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
-  cVideo* getVideo (uint16_t sid);
+  cVideoRender* getVideo (uint16_t sid);
   cAudioRender* getAudio (uint16_t sid);
   cAudioRender* getAudioOther (uint16_t sid);
-  cSubtitle* getSubtitle (uint16_t sid);
+  cSubtitleRender* getSubtitle (uint16_t sid);
 
   // dvbSource
   bool hasDvbSource() const { return mDvbSource; }

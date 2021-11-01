@@ -1,4 +1,4 @@
-// cVideo.h
+// cVideoRender.h
 //{{{  includes
 #pragma once
 
@@ -12,10 +12,10 @@ class cVideoPool;
 class cTexture;
 //}}}
 
-class cVideo : public cRender {
+class cVideoRender : public cRender {
 public:
-  cVideo (const std::string name);
-  virtual ~cVideo();
+  cVideoRender (const std::string name);
+  virtual ~cVideoRender();
 
   uint16_t getWidth() const;
   uint16_t getHeight() const ;

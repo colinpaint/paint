@@ -8,7 +8,7 @@
 #include "cRender.h"
 #include "../utils/cMiniLog.h"
 
-class cAudioFFmpegDecoder;
+class cAudioDecoder;
 class cAudioPool;
 class cAudioPlayer;
 //}}}
@@ -23,7 +23,7 @@ public:
   void process (uint8_t* pes, uint32_t pesSize, int64_t pts);
 
 private:
-  cAudioFFmpegDecoder* mAudioFFmpegDecoder;
+  cAudioDecoder* mAudioDecoder;
   cAudioPool* mAudioPool = nullptr;
   cAudioPlayer* mAudioPlayer = nullptr;
   };
