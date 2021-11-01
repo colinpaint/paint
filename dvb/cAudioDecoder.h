@@ -18,6 +18,8 @@ public:
   cAudioDecoder (const std::string name);
   virtual ~cAudioDecoder();
 
+  int64_t getPlayPts() const;
+
   void decode (uint8_t* pes, uint32_t pesSize, int64_t pts);
 
 private:

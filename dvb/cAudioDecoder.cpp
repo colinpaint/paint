@@ -760,6 +760,12 @@ cAudioDecoder::~cAudioDecoder() {
 //}}}
 
 //{{{
+int64_t cAudioDecoder::getPlayPts() const {  
+  return mAudioFrames->getPlayPts();
+  }
+//}}}
+
+//{{{
 void cAudioDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
   log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));

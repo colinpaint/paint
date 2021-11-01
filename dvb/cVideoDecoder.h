@@ -16,9 +16,9 @@ public:
   cVideoDecoder (const std::string name);
   virtual ~cVideoDecoder();
 
-  uint32_t* getLastFrame();
   int getWidth();
   int getHeight();
+  uint32_t* getFrame (int64_t pts);
 
   void decode (uint8_t* pes, uint32_t pesSize, int64_t pts);
 

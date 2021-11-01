@@ -1855,39 +1855,43 @@ public:
       }
     }
   //}}}
-  //{{{
-  uint32_t* getLastFrame() {
-  // return youngest frame in pool if older than playPts - (halfPoolSize * duration)
-
-    auto it = mFramePool.rbegin();
-    if (it == mFramePool.rend())
-      return nullptr;
-    else
-      return (*it).second->getBuffer8888();
-    }
-  //}}}
 
   //{{{
   string getInfoString() {
-    return fmt::format ("{}x{} {:5d}:{:4d}", mWidth, mHeight, mDecodeUs, mYuv420Us);
+    return fmt::format ("{}x{} {:5d}:{:4d}", mWidth, mHeight, mDecodeTime, mYuv420Time);
     }
   //}}}
-  map <int64_t, cVideoFrame*>& getFramePool() { return mFramePool; }
+  //map <int64_t, cVideoFrame*>& getFramePool() { return mFramePool; }
 
   // find
   //{{{
   cVideoFrame* findFrame (int64_t pts) {
 
-    unique_lock<shared_mutex> lock (mSharedMutex);
+    bool found = false;
+    cVideoFrame* frame = nullptr;
 
-    if (mPtsDuration > 0) {
-      auto it = mFramePool.find (pts / mPtsDuration);
-      if (it != mFramePool.end())
-        if (!(*it).second->isFree())
-          return (*it).second;
+      {
+      unique_lock<shared_mutex> lock (mSharedMutex);
+
+      if (mPtsDuration > 0) {
+        auto it = mFramePool.find (pts / mPtsDuration);
+        if (it != mFramePool.end())
+          if (!(*it).second->isFree()) {
+            frame = (*it).second;
+            found = true;
+            }
+        }
+
+      if (!frame) {
+        auto it = mFramePool.rbegin();
+        if (it != mFramePool.rend())
+          frame = (*it).second;
+        }
       }
 
-    return nullptr;
+    //if (!found)
+    //  cLog::log (LOGINFO,fmt::format ("{} not found", getPtsString (pts)));
+    return frame;
     }
   //}}}
 
@@ -1940,7 +1944,7 @@ public:
           ret = avcodec_receive_frame (mAvContext, avFrame);
           if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
             break;
-          mDecodeUs = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+          mDecodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
           // extract frame info from decode
           mWidth = avFrame->width;
@@ -1958,7 +1962,7 @@ public:
                                             mWidth, mHeight, AV_PIX_FMT_RGBA,
                                             SWS_BILINEAR, NULL, NULL, NULL);
             frame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
-            mYuv420Us = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+            mYuv420Time = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
               {
               unique_lock<shared_mutex> lock (mSharedMutex);
@@ -1988,8 +1992,8 @@ private:
   int mHeight = 0;
   int64_t mPtsDuration = 0;
 
-  int64_t mDecodeUs = 0;
-  int64_t mYuv420Us = 0;
+  int64_t mDecodeTime = 0;
+  int64_t mYuv420Time = 0;
 
   AVCodecParserContext* mAvParser = nullptr;
   AVCodec* mAvCodec = nullptr;
@@ -2014,11 +2018,6 @@ cVideoDecoder::~cVideoDecoder() {
 //}}}
 
 //{{{
-uint32_t* cVideoDecoder::getLastFrame() {
-  return mVideoPool->getLastFrame();
-  }
-//}}}
-//{{{
 int cVideoDecoder::getWidth() {
   return mVideoPool->getWidth();
   }
@@ -2026,6 +2025,13 @@ int cVideoDecoder::getWidth() {
 //{{{
 int cVideoDecoder::getHeight() {
   return mVideoPool->getHeight();
+  }
+//}}}
+//{{{
+uint32_t* cVideoDecoder::getFrame (int64_t pts) {
+
+  cVideoFrame* frame = mVideoPool->findFrame (pts);
+  return frame ? frame->getBuffer8888() : nullptr;
   }
 //}}}
 

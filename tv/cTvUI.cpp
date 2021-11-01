@@ -199,13 +199,17 @@ private:
         }
         //}}}
 
+      int64_t playPts = 0;
+      if (service.getAudioDecoder())
+        playPts = service.getAudioDecoder()->getPlayPts();
+
       int64_t lastPts = 0;
       if (service.getAudioDecoder())
         lastPts = drawAudio (*service.getAudioDecoder(), lastPts, graphics);
       if (service.getAudioOtherDecoder())
         lastPts = drawAudio (*service.getAudioOtherDecoder(), lastPts, graphics);
       if (service.getVideoDecoder())
-        lastPts = drawVideo (*service.getVideoDecoder(), lastPts, graphics);
+        lastPts = drawVideo (*service.getVideoDecoder(), lastPts, playPts, graphics);
       if (service.getSubtitleDecoder())
         lastPts = drawSubtitle (*service.getSubtitleDecoder(), lastPts, graphics);
       }
@@ -283,19 +287,18 @@ private:
   //}}}
 
   //{{{
-  int64_t drawVideo (cVideoDecoder& video, int64_t pts, cGraphics& graphics) {
+  int64_t drawVideo (cVideoDecoder& video, int64_t pts, int64_t playPts, cGraphics& graphics) {
 
-    (void)graphics;
     int64_t lastPts = plotValues (pts, video, 0xffffffff);
 
-    uint32_t* buf = video.getLastFrame();
+    uint32_t* buf = video.getFrame (playPts);
     if (buf) {
       if (mTexture == nullptr) // create
         mTexture = graphics.createTexture ({video.getWidth(), video.getHeight()}, (uint8_t*)buf);
       else
         mTexture->setPixels ((uint8_t*)buf);
 
-      ImGui::Image ((void*)(intptr_t)mTexture->getTextureId(), {video.getWidth()/6.f,video.getHeight()/6.f});
+      ImGui::Image ((void*)(intptr_t)mTexture->getTextureId(), {video.getWidth()/4.f,video.getHeight()/4.f});
       }
 
     drawMiniLog (video.getLog());
