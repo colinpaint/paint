@@ -10,6 +10,7 @@
 
 #include "../utils/cMiniLog.h"
 //}}}
+constexpr int kPtsPerSecond = 90000;
 
 class cRender {
 public:

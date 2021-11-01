@@ -24,6 +24,7 @@ public:
   void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts);
 
   cTexture* mTexture = nullptr;
+  int64_t mPts = 0;
 
 private:
   cVideoPool* mVideoPool;

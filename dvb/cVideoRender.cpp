@@ -102,7 +102,6 @@ using namespace std;
 //}}}
 constexpr uint32_t kVideoPoolSize = 50;
 
-constexpr int kPtsPerSecond = 90000;
 namespace {
   //{{{
   const uint8_t kExpGolombBits[256] = {

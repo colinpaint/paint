@@ -369,7 +369,7 @@ public:
   uint32_t getNumChannels() const { return mNumChannels; }
   uint32_t getSampleRate() const { return mSampleRate; }
   uint32_t getSamplesPerFrame() const { return mSamplesPerFrame; }
-  int64_t getFramePtsDuration() const { return (mSamplesPerFrame * 90000) / mSampleRate; }
+  int64_t getFramePtsDuration() const { return (mSamplesPerFrame * kPtsPerSecond) / mSampleRate; }
 
   bool getPlaying() const { return mPlaying; }
   int64_t getPlayPts() const { return mPlayPts; }
