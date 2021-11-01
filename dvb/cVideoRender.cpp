@@ -1816,30 +1816,23 @@ public:
   //{{{
   cVideoFrame* findFrame (int64_t pts) {
 
-    bool found = false;
+    unique_lock<shared_mutex> lock (mSharedMutex);
+
     cVideoFrame* frame = nullptr;
-
-      {
-      unique_lock<shared_mutex> lock (mSharedMutex);
-
-      if (mPtsDuration > 0) {
-        auto it = mFramesMap.find (pts / mPtsDuration);
-        if (it != mFramesMap.end())
-          if (!(*it).second->isFree()) {
-            frame = (*it).second;
-            found = true;
-            }
-        }
-
-      if (!frame) {
-        auto it = mFramesMap.rbegin();
-        if (it != mFramesMap.rend())
+    if (mPtsDuration > 0) {
+      auto it = mFramesMap.find (pts / mPtsDuration);
+      if (it != mFramesMap.end())
+        if (!(*it).second->isFree()) 
           frame = (*it).second;
-        }
       }
 
-    //if (!found)
-    //  cLog::log (LOGINFO,fmt::format ("{} not found", getPtsString (pts)));
+    if (!frame) {
+      // match not found return latest
+      auto it = mFramesMap.rbegin();
+      if (it != mFramesMap.rend())
+        frame = (*it).second;
+      }
+
     return frame;
     }
   //}}}
