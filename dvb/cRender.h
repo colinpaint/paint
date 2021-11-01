@@ -33,7 +33,7 @@ public:
   void logValue (int64_t pts, float value);
 
   // process
-  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts) = 0;
+  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) = 0;
 
 protected:
   void header();

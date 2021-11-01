@@ -1807,7 +1807,7 @@ public:
   uint16_t getHeight() const { return mHeight; }
   //{{{
   string getInfoString() const {
-    return fmt::format ("videoPool {}x{} {:5d}:{:4d} {}", 
+    return fmt::format ("videoPool {}x{} {:5d}:{:4d} {}",
                         mWidth, mHeight, mDecodeTime, mYuv420Time, mFramesMap.size());
     }
   //}}}
@@ -2019,12 +2019,12 @@ uint8_t* cVideoRender::getFramePixels (int64_t pts)  const {
 //}}}
 
 //{{{
-void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts) {
+void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
   log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   logValue (pts, (float)pesSize);
 
-  mVideoPool->decode  (pes, pesSize, pts, pts);
+  mVideoPool->decode  (pes, pesSize, pts, dts);
   //cLog::log (LOGINFO, fmt::format ("decode {}", mVideoPool->getInfoString()));
   }
 //}}}

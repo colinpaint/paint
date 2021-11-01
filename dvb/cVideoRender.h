@@ -21,7 +21,7 @@ public:
   uint16_t getHeight() const ;
   uint8_t* getFramePixels (int64_t pts) const;
 
-  void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts);
+  void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 
   int64_t mPts = 0;
   cTexture* mTexture = nullptr;

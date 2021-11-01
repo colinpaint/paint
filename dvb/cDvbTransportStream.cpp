@@ -1278,7 +1278,7 @@ bool cDvbTransportStream::vidPes (cPidInfo* pidInfo, bool skip) {
   if (service) {
     cVideoRender* video = service->getVideo();
     if (video)
-      video->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+      video->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
 
   //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
@@ -1293,7 +1293,7 @@ bool cDvbTransportStream::audPes (cPidInfo* pidInfo, bool skip) {
   if (service) {
     cAudioRender* audio = service->getAudio();
     if (audio)
-      audio->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+      audio->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
 
   return false;
@@ -1307,7 +1307,7 @@ bool cDvbTransportStream::audOtherPes (cPidInfo* pidInfo, bool skip) {
   if (service) {
     cAudioRender* audio = service->getAudioOther();
     if (audio)
-      audio->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+      audio->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
   return false;
   }
@@ -1319,7 +1319,7 @@ bool cDvbTransportStream::subPes (cPidInfo* pidInfo) {
   if (service) {
     cSubtitleRender* subtitle = service->getSubtitle();
     if (subtitle)
-      subtitle->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts);
+      subtitle->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
   return false;
   }
