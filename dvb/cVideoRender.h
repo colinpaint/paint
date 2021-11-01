@@ -35,13 +35,12 @@ public:
 private:
   cVideoFrame* findFrame (int64_t pts);
   cVideoFrame* findFreeFrame (int64_t pts);
-  void decode (uint8_t* pes, unsigned int pesSize, int64_t pts, int64_t dts);
 
   const bool mPlanar;
   const size_t mMaxPoolSize;
 
   std::shared_mutex mSharedMutex;
-  std::map <int64_t, cVideoFrame*> mFramesMap;
+  std::map <int64_t, cVideoFrame*> mFrameMap;
 
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;

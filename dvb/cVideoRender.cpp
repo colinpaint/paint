@@ -14,6 +14,8 @@
 #include "../imgui/imgui.h"
 #include "../imgui/myImgui.h"
 
+#include "../dvb/cDvbUtils.h"
+
 #include "../utils/date.h"
 #include "../utils/cLog.h"
 #include "../utils/utils.h"
@@ -100,302 +102,7 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr uint32_t kVideoPoolSize = 50;
-
-namespace {
-  //{{{
-  const uint8_t kExpGolombBits[256] = {
-    8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3,
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0,
-    };
-  //}}}
-  //{{{
-  class cBitstream {
-  // used to parse H264 stream to find I frames
-  public:
-    cBitstream (const uint8_t* buffer, uint32_t bit_len)
-      : mDecBuffer(buffer), mDecBufferSize(bit_len), mNumOfBitsInBuffer(0), mBookmarkOn(false) {}
-
-    //{{{
-    uint32_t peekBits (uint32_t bits) {
-
-      bookmark (true);
-      uint32_t ret = getBits (bits);
-      bookmark (false);
-      return ret;
-      }
-    //}}}
-    //{{{
-    uint32_t getBits (uint32_t numBits) {
-
-      //{{{
-      static const uint32_t msk[33] = {
-        0x00000000, 0x00000001, 0x00000003, 0x00000007,
-        0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f,
-        0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff,
-        0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff,
-        0x0000ffff, 0x0001ffff, 0x0003ffff, 0x0007ffff,
-        0x000fffff, 0x001fffff, 0x003fffff, 0x007fffff,
-        0x00ffffff, 0x01ffffff, 0x03ffffff, 0x07ffffff,
-        0x0fffffff, 0x1fffffff, 0x3fffffff, 0x7fffffff,
-        0xffffffff
-        };
-      //}}}
-
-      if (numBits == 0)
-        return 0;
-
-      uint32_t retData;
-      if (mNumOfBitsInBuffer >= numBits) {  // don't need to read from FILE
-        mNumOfBitsInBuffer -= numBits;
-        retData = mDecData >> mNumOfBitsInBuffer;
-        // wmay - this gets done below...retData &= msk[numBits];
-        }
-      else {
-        uint32_t nbits;
-        nbits = numBits - mNumOfBitsInBuffer;
-        if (nbits == 32)
-          retData = 0;
-        else
-          retData = mDecData << nbits;
-
-        switch ((nbits - 1) / 8) {
-          case 3:
-            nbits -= 8;
-            if (mDecBufferSize < 8)
-              return 0;
-            retData |= *mDecBuffer++ << nbits;
-            mDecBufferSize -= 8;
-            // fall through
-          case 2:
-            nbits -= 8;
-            if (mDecBufferSize < 8)
-              return 0;
-            retData |= *mDecBuffer++ << nbits;
-            mDecBufferSize -= 8;
-            // fall through
-          case 1:
-            nbits -= 8;
-            if (mDecBufferSize < 8)
-              return 0;
-            retData |= *mDecBuffer++ << nbits;
-            mDecBufferSize -= 8;
-            // fall through
-          case 0:
-            break;
-          }
-        if (mDecBufferSize < nbits)
-          return 0;
-
-        mDecData = *mDecBuffer++;
-        mNumOfBitsInBuffer = min(8u, mDecBufferSize) - nbits;
-        mDecBufferSize -= min(8u, mDecBufferSize);
-        retData |= (mDecData >> mNumOfBitsInBuffer) & msk[nbits];
-        }
-
-      return (retData & msk[numBits]);
-      };
-    //}}}
-
-    //{{{
-    uint32_t getUe() {
-
-      uint32_t bits  = 0;
-      uint32_t read = 0;
-      int bits_left;
-      bool done = false;
-
-      // we want to read 8 bits at a time - if we don't have 8 bits,
-      // read what's left, and shift.  The exp_golomb_bits calc remains the same.
-      while (!done) {
-        bits_left = bitsRemain();
-        if (bits_left < 8) {
-          read = peekBits (bits_left) << (8 - bits_left);
-          done = true;
-          }
-        else {
-          read = peekBits (8);
-          if (read == 0) {
-            getBits (8);
-            bits += 8;
-            }
-          else
-           done = true;
-          }
-        }
-
-      uint8_t coded = kExpGolombBits[read];
-      getBits (coded);
-      bits += coded;
-
-      return getBits (bits + 1) - 1;
-      }
-    //}}}
-    //{{{
-    int32_t getSe() {
-
-      uint32_t ret;
-      ret = getUe();
-      if ((ret & 0x1) == 0) {
-        ret >>= 1;
-        int32_t temp = 0 - ret;
-        return temp;
-        }
-
-      return (ret + 1) >> 1;
-      }
-    //}}}
-
-    //{{{
-    void check0s (int count) {
-
-      uint32_t val = getBits (count);
-      if (val != 0)
-        cLog::log (LOGERROR, "field error - %d bits should be 0 is %x", count, val);
-      }
-    //}}}
-    //{{{
-    int bitsRemain() {
-      return mDecBufferSize + mNumOfBitsInBuffer;
-      };
-    //}}}
-    //{{{
-    int byteAlign() {
-
-      int temp = 0;
-      if (mNumOfBitsInBuffer != 0)
-        temp = getBits (mNumOfBitsInBuffer);
-      else {
-        // if we are byte aligned, check for 0x7f value - this will indicate
-        // we need to skip those bits
-        uint8_t readval = (uint8_t)peekBits (8);
-        if (readval == 0x7f)
-          readval = (uint8_t)getBits (8);
-        }
-
-      return temp;
-      };
-    //}}}
-
-  private:
-    //{{{
-    void bookmark (bool on) {
-
-      if (on) {
-        mNumOfBitsInBuffer_bookmark = mNumOfBitsInBuffer;
-        mDecBuffer_bookmark = mDecBuffer;
-        mDecBufferSize_bookmark = mDecBufferSize;
-        mBookmarkOn = true;
-        mDecData_bookmark = mDecData;
-        }
-
-      else {
-        mNumOfBitsInBuffer = mNumOfBitsInBuffer_bookmark;
-        mDecBuffer = mDecBuffer_bookmark;
-        mDecBufferSize = mDecBufferSize_bookmark;
-        mDecData = mDecData_bookmark;
-        mBookmarkOn = false;
-        }
-      };
-    //}}}
-
-    const uint8_t* mDecBuffer;
-    uint32_t mDecBufferSize;
-    uint32_t mNumOfBitsInBuffer;
-    bool mBookmarkOn;
-
-    uint8_t mDecData = 0;
-    uint8_t mDecData_bookmark = 0;
-    uint32_t mNumOfBitsInBuffer_bookmark = 0;
-    uint32_t mDecBufferSize_bookmark = 0;
-    const uint8_t* mDecBuffer_bookmark = nullptr;
-    };
-  //}}}
-  //{{{
-  char getH264FrameType (uint8_t* pes, int pesSize) {
-  // minimal h264 parser - returns frameType of video pes
-
-    uint8_t* pesEnd = pes + pesSize;
-    while (pes < pesEnd) {
-      uint8_t* buf = pes;
-      uint32_t bufSize = (uint32_t)pesSize;
-      uint32_t startOffset = 0;
-      //{{{  skip past startcode
-      if (!buf[0] && !buf[1]) {
-        if (!buf[2] && buf[3] == 1) {
-          buf += 4;
-          startOffset = 4;
-          }
-        else if (buf[2] == 1) {
-          buf += 3;
-          startOffset = 3;
-          }
-        }
-      //}}}
-
-      uint32_t offset = startOffset;
-      uint32_t nalSize = offset;
-      //{{{  find next startcode
-      uint32_t val = 0xffffffff;
-      while (offset++ < bufSize - 3) {
-        val = (val << 8) | *buf++;
-        if (val == 0x0000001) {
-          nalSize = offset - 4;
-          break;
-          }
-        if ((val & 0x00ffffff) == 0x0000001) {
-          nalSize = offset - 3;
-          break;
-          }
-        nalSize = (uint32_t)bufSize;
-        }
-      //}}}
-
-      if (nalSize > 3) {
-        // parse NAL bitStream
-        cBitstream bitstream (buf, (nalSize - startOffset) * 8);
-        bitstream.check0s (1);
-        bitstream.getBits (2);
-        switch (bitstream.getBits (5)) {
-          case 1:
-          case 5:
-            bitstream.getUe();
-            switch (bitstream.getUe()) {
-              case 5:  return 'P';
-              case 6:  return 'B';
-              case 7:  return 'I';
-              default: return '?';
-              }
-            break;
-          //case 6: cLog::log(LOGINFO, ("SEI"); break;
-          //case 7: cLog::log(LOGINFO, ("SPS"); break;
-          //case 8: cLog::log(LOGINFO, ("PPS"); break;
-          //case 9: cLog::log(LOGINFO,  ("AUD"); break;
-          //case 0x0d: cLog::log(LOGINFO, ("SEQEXT"); break;
-          }
-        }
-
-      pes += nalSize;
-      }
-
-    return '?';
-    }
-  //}}}
-  }
+constexpr uint32_t kVideoPoolSize = 100;
 
 //{{{
 class cVideoFrame {
@@ -1786,9 +1493,9 @@ cVideoRender::cVideoRender (const std::string name) : cRender(name), mPlanar(tru
 //{{{
 cVideoRender::~cVideoRender() {
 
-  for (auto frame : mFramesMap)
+  for (auto frame : mFrameMap)
     delete frame.second;
-  mFramesMap.clear();
+  mFrameMap.clear();
 
   if (mAvContext)
     avcodec_close (mAvContext);
@@ -1801,17 +1508,16 @@ cVideoRender::~cVideoRender() {
 //}}}
 
 //{{{
-string cVideoRender::getInfoString() const {
-  return fmt::format ("videoPool {}x{} {:5d}:{:4d} {}",
-                      mWidth, mHeight, mDecodeTime, mYuv420Time, mFramesMap.size());
-  }
-//}}}
-
-//{{{
 uint8_t* cVideoRender::getFramePixels (int64_t pts) {
 
   cVideoFrame* frame = findFrame (pts);
   return frame ? frame->getPixels() : nullptr;
+  }
+//}}}
+//{{{
+string cVideoRender::getInfoString() const {
+  return fmt::format ("videoPool {}x{} {:5d}:{:4d} {}",
+                      mWidth, mHeight, mDecodeTime, mYuv420Time, mFrameMap.size());
   }
 //}}}
 
@@ -1821,77 +1527,11 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   logValue (pts, (float)pesSize);
 
-  decode  (pes, pesSize, pts, dts);
-  //cLog::log (LOGINFO, fmt::format ("decode {}", mVideoPool->getInfoString()));
-  }
-//}}}
-
-// private:
-//{{{
-cVideoFrame* cVideoRender::findFrame (int64_t pts) {
-
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  if (mPtsDuration > 0) {
-    auto it = mFramesMap.find (pts / mPtsDuration);
-    if (it != mFramesMap.end())
-      if (!(*it).second->isFree())
-        return (*it).second;
-    }
-
-  // match notFound. return latest
-  auto it = mFramesMap.rbegin();
-  if (it != mFramesMap.rend())
-    return (*it).second;
-
-  // no latest, return nillptr
-  return nullptr;
-  }
-//}}}
-//{{{
-cVideoFrame* cVideoRender::findFreeFrame (int64_t pts) {
-// return youngest frame in pool if older than playPts - (halfPoolSize * duration)
-
-  if (mFramesMap.size() < mMaxPoolSize) {
-    // create new videoFrame
-    cVideoFrame* videoFrame;
-    #ifdef _WIN32
-      if (!mPlanar)
-        videoFrame = new cVideoFrameRgba();
-      else
-        #if defined(INTEL_SSE2)
-          videoFrame = new cVideoFramePlanarRgba();
-        #else
-          videoFrame = new cVideoFramePlanarRgbaSws();
-        #endif
-      #else
-        videoFrame = new cVideoFramePlanarRgbaSws();
-      #endif
-    return videoFrame;
-    }
-
-    { // start of lock
-    unique_lock<shared_mutex> lock (mSharedMutex);
-
-    // reuse youngest frame in pool
-    auto it = mFramesMap.begin();
-    cVideoFrame* videoFrame = (*it).second;
-    videoFrame->setFree (false, pts);
-
-    mFramesMap.erase (it);
-    return videoFrame;
-    } // end of lock
-  }
-//}}}
-
-//{{{
-void cVideoRender::decode (uint8_t* pes, unsigned int pesSize, int64_t pts, int64_t dts) {
-
-  (void)pts;
   chrono::system_clock::time_point timePoint = chrono::system_clock::now();
 
   // ffmpeg doesn't maintain correct avFrame.pts, decode frames in presentation order and pts correct on I frames
-  char frameType = getH264FrameType (pes, pesSize);
+  char frameType = cDvbUtils::getFrameType (pes, pesSize, 27);
+  //char frameType = getH264FrameType (pes, pesSize);
   if (frameType == 'I') {
     if ((mGuessPts >= 0) && (mGuessPts != dts))
       //{{{  debug
@@ -1909,10 +1549,6 @@ void cVideoRender::decode (uint8_t* pes, unsigned int pesSize, int64_t pts, int6
     //}}}
     return;
     }
-
-  //cLog::log (LOGINFO, fmt::format("ffmpeg decode guessPts:{}.{} pts:{}.{} dts:{}.{} - {} size:{}",
-  //                    mGuessPts/1800, mGuessPts%1800, pts/1800, pts%1800, dts/1800, dts%1800,
-  //                    frameType, pesSize));
 
   AVPacket avPacket;
   av_init_packet (&avPacket);
@@ -1955,7 +1591,7 @@ void cVideoRender::decode (uint8_t* pes, unsigned int pesSize, int64_t pts, int6
 
             {
             unique_lock<shared_mutex> lock (mSharedMutex);
-            mFramesMap.emplace (mGuessPts / mPtsDuration, frame);
+            mFrameMap.emplace (mGuessPts / mPtsDuration, frame);
             }
 
           av_frame_unref (avFrame);
@@ -1967,5 +1603,63 @@ void cVideoRender::decode (uint8_t* pes, unsigned int pesSize, int64_t pts, int6
     }
 
   av_frame_free (&avFrame);
+  }
+//}}}
+
+// private:
+//{{{
+cVideoFrame* cVideoRender::findFrame (int64_t pts) {
+
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  if (mPtsDuration > 0) {
+    auto it = mFrameMap.find (pts / mPtsDuration);
+    if (it != mFrameMap.end())
+      if (!(*it).second->isFree())
+        return (*it).second;
+    }
+
+  // match notFound. return latest
+  auto it = mFrameMap.rbegin();
+  if (it != mFrameMap.rend())
+    return (*it).second;
+
+  // no latest, return nillptr
+  return nullptr;
+  }
+//}}}
+//{{{
+cVideoFrame* cVideoRender::findFreeFrame (int64_t pts) {
+// return youngest frame in pool if older than playPts - (halfPoolSize * duration)
+
+  if (mFrameMap.size() < mMaxPoolSize) {
+    // create new videoFrame
+    cVideoFrame* videoFrame;
+    #ifdef _WIN32
+      if (!mPlanar)
+        videoFrame = new cVideoFrameRgba();
+      else
+        #if defined(INTEL_SSE2)
+          videoFrame = new cVideoFramePlanarRgba();
+        #else
+          videoFrame = new cVideoFramePlanarRgbaSws();
+        #endif
+      #else
+        videoFrame = new cVideoFramePlanarRgbaSws();
+      #endif
+    return videoFrame;
+    }
+
+    { // start of lock
+    unique_lock<shared_mutex> lock (mSharedMutex);
+
+    // reuse youngest frame in pool
+    auto it = mFrameMap.begin();
+    cVideoFrame* videoFrame = (*it).second;
+    videoFrame->setFree (false, pts);
+
+    mFrameMap.erase (it);
+    return videoFrame;
+    } // end of lock
   }
 //}}}

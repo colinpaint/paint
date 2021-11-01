@@ -316,6 +316,7 @@ private:
 
     (void)graphics;
     int64_t lastPts = plotValues (pts, audio, 0xff00ffff);
+    ImGui::TextUnformatted (audio.getInfoString().c_str());
     drawMiniLog (audio.getLog());
     return lastPts;
     }
