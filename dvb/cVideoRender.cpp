@@ -1788,9 +1788,9 @@ public:
   //{{{
   ~cVideoPool() {
 
-    for (auto frame : mFramePool)
+    for (auto frame : mFramesMap)
       delete frame.second;
-    mFramePool.clear();
+    mFramesMap.clear();
 
     if (mAvContext)
       avcodec_close (mAvContext);
@@ -1807,10 +1807,10 @@ public:
   uint16_t getHeight() const { return mHeight; }
   //{{{
   string getInfoString() const {
-    return fmt::format ("{}x{} {:5d}:{:4d}", mWidth, mHeight, mDecodeTime, mYuv420Time);
+    return fmt::format ("videoPool {}x{} {:5d}:{:4d} {}", 
+                        mWidth, mHeight, mDecodeTime, mYuv420Time, mFramesMap.size());
     }
   //}}}
-  //map <int64_t, cVideoFrame*>& getFramePool() { return mFramePool; }
 
   // find
   //{{{
@@ -1823,8 +1823,8 @@ public:
       unique_lock<shared_mutex> lock (mSharedMutex);
 
       if (mPtsDuration > 0) {
-        auto it = mFramePool.find (pts / mPtsDuration);
-        if (it != mFramePool.end())
+        auto it = mFramesMap.find (pts / mPtsDuration);
+        if (it != mFramesMap.end())
           if (!(*it).second->isFree()) {
             frame = (*it).second;
             found = true;
@@ -1832,8 +1832,8 @@ public:
         }
 
       if (!frame) {
-        auto it = mFramePool.rbegin();
-        if (it != mFramePool.rend())
+        auto it = mFramesMap.rbegin();
+        if (it != mFramesMap.rend())
           frame = (*it).second;
         }
       }
@@ -1847,8 +1847,8 @@ public:
   cVideoFrame* findFreeFrame (int64_t pts) {
   // return youngest frame in pool if older than playPts - (halfPoolSize * duration)
 
-    if (mFramePool.size() < mMaxPoolSize) {
-      // create and insert new videoFrame
+    if (mFramesMap.size() < mMaxPoolSize) {
+      // create new videoFrame
       cVideoFrame* videoFrame;
       #ifdef _WIN32
         if (!mPlanar)
@@ -1869,11 +1869,11 @@ public:
       unique_lock<shared_mutex> lock (mSharedMutex);
 
       // reuse youngest frame in pool
-      auto it = mFramePool.begin();
+      auto it = mFramesMap.begin();
       cVideoFrame* videoFrame = (*it).second;
       videoFrame->setFree (false, pts);
 
-      mFramePool.erase (it);
+      mFramesMap.erase (it);
       return videoFrame;
       } // end of lock
     }
@@ -1949,7 +1949,7 @@ public:
 
               {
               unique_lock<shared_mutex> lock (mSharedMutex);
-              mFramePool.emplace (mGuessPts / mPtsDuration, frame);
+              mFramesMap.emplace (mGuessPts / mPtsDuration, frame);
               }
 
             av_frame_unref (avFrame);
@@ -1969,14 +1969,11 @@ private:
   const size_t mMaxPoolSize;
 
   shared_mutex mSharedMutex;
-  map <int64_t, cVideoFrame*> mFramePool;
+  map <int64_t, cVideoFrame*> mFramesMap;
 
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
   int64_t mPtsDuration = 0;
-
-  int64_t mDecodeTime = 0;
-  int64_t mYuv420Time = 0;
 
   AVCodecParserContext* mAvParser = nullptr;
   AVCodec* mAvCodec = nullptr;
@@ -1985,6 +1982,9 @@ private:
 
   int64_t mGuessPts = -1;
   bool mSeenIFrame = false;
+
+  int64_t mDecodeTime = 0;
+  int64_t mYuv420Time = 0;
   };
 //}}}
 
