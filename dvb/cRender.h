@@ -31,8 +31,8 @@ public:
   void setMapSize (size_t size) { mMapSize = size; }
   void logValue (int64_t pts, float value);
 
-  // decode
-  virtual void process (uint8_t* pes, uint32_t pesSize, int64_t pts) = 0;
+  // process
+  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts) = 0;
 
 protected:
   void header();

@@ -414,18 +414,13 @@ public:
 
   // gets
   bool isFree() { return mFree; }
+
   int64_t getPts() { return mPts; }
   uint32_t getPesSize() { return mPesSize; }
   char getFrameType() { return mFrameType; }
   uint32_t* getPixels() { return mPixels; }
 
   // sets
-  //{{{
-  void setFree (bool free, int64_t pts) {
-    (void)pts;
-    mFree = free;
-    }
-  //}}}
   //{{{
   void set (int64_t pts, uint32_t pesSize, uint16_t width, uint16_t height, char frameType) {
 
@@ -445,6 +440,12 @@ public:
         // allocate aligned buffer
         mPixels = (uint32_t*)aligned_alloc (128, width * height * 4);
     #endif
+    }
+  //}}}
+  //{{{
+  void setFree (bool free, int64_t pts) {
+    (void)pts;
+    mFree = free;
     }
   //}}}
 
@@ -2019,7 +2020,7 @@ uint32_t* cVideoRender::getFramePixels (int64_t pts)  const {
 //}}}
 
 //{{{
-void cVideoRender::process (uint8_t* pes, uint32_t pesSize, int64_t pts) {
+void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
   log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   logValue (pts, (float)pesSize);

@@ -20,7 +20,7 @@
 // dvb
 #include "../dvb/cVideoRender.h"
 #include "../dvb/cAudioRender.h"
-#include "../dvb/cSubtitle.h"
+#include "../dvb/cSubtitleRender.h"
 #include "../dvb/cDvbTransportStream.h"
 
 // utils
@@ -263,7 +263,7 @@ private:
             service->toggleSubtitle();
 
         if (pidInfo.mPid == service->getSubPid()) {
-          cSubtitle* subtitle = service->getSubtitle();
+          cSubtitleRender* subtitle = service->getSubtitle();
           if (subtitle)
             drawSubtitle (*subtitle, 0, graphics);
           }
@@ -315,7 +315,7 @@ private:
     }
   //}}}
   //{{{
-  int64_t drawSubtitle (cSubtitle& subtitle, int64_t pts, cGraphics& graphics) {
+  int64_t drawSubtitle (cSubtitleRender& subtitle, int64_t pts, cGraphics& graphics) {
 
     int64_t lastPts = plotValues (pts, subtitle, 0xff00ff00);
 

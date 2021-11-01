@@ -767,7 +767,7 @@ int64_t cAudioRender::getPlayPts() const {
 //}}}
 
 //{{{
-void cAudioRender::process (uint8_t* pes, uint32_t pesSize, int64_t pts) {
+void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
   log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);

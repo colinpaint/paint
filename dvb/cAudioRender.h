@@ -20,7 +20,7 @@ public:
 
   int64_t getPlayPts() const;
 
-  void process (uint8_t* pes, uint32_t pesSize, int64_t pts);
+  void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts);
 
 private:
   cAudioDecoder* mAudioDecoder;
