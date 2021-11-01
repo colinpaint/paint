@@ -427,9 +427,9 @@ public:
 
   // sets
   //{{{
-  void setFree (bool free, int64_t pts) { 
-    (void)pts; 
-    mFree = free; 
+  void setFree (bool free, int64_t pts) {
+    (void)pts;
+    mFree = free;
     }
   //}}}
   //{{{
@@ -1855,6 +1855,17 @@ public:
       }
     }
   //}}}
+  //{{{
+  uint32_t* getLastFrame() {
+  // return youngest frame in pool if older than playPts - (halfPoolSize * duration)
+
+    auto it = mFramePool.rbegin();
+    if (it == mFramePool.rend())
+      return nullptr;
+    else
+      return (*it).second->getBuffer8888();
+    }
+  //}}}
 
   //{{{
   string getInfoString() {
@@ -1883,7 +1894,7 @@ public:
   // decode
   //{{{
   void decode (uint8_t* pes, unsigned int pesSize, int64_t pts, int64_t dts) {
-    
+
     (void)pts;
     chrono::system_clock::time_point timePoint = chrono::system_clock::now();
 
@@ -1951,7 +1962,7 @@ public:
 
               {
               unique_lock<shared_mutex> lock (mSharedMutex);
-              mFramePool.insert (map<int64_t, cVideoFrame*>::value_type (mGuessPts / mPtsDuration, frame));
+              mFramePool.emplace (mGuessPts / mPtsDuration, frame);
               }
 
             av_frame_unref (avFrame);
@@ -2003,11 +2014,28 @@ cVideoDecoder::~cVideoDecoder() {
 //}}}
 
 //{{{
+uint32_t* cVideoDecoder::getLastFrame() {
+  return mVideoPool->getLastFrame();
+  }
+//}}}
+//{{{
+int cVideoDecoder::getWidth() {
+  return mVideoPool->getWidth();
+  }
+//}}}
+//{{{
+int cVideoDecoder::getHeight() {
+  return mVideoPool->getHeight();
+  }
+//}}}
+
+//{{{
 void cVideoDecoder::decode (uint8_t* pes, uint32_t pesSize, int64_t pts) {
 
   log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   logValue (pts, (float)pesSize);
 
   mVideoPool->decode  (pes, pesSize, pts, pts);
+  //cLog::log (LOGINFO, fmt::format ("decode {}", mVideoPool->getInfoString()));
   }
 //}}}

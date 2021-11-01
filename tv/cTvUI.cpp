@@ -287,6 +287,17 @@ private:
 
     (void)graphics;
     int64_t lastPts = plotValues (pts, video, 0xffffffff);
+
+    uint32_t* buf = video.getLastFrame();
+    if (buf) {
+      if (mTexture == nullptr) // create
+        mTexture = graphics.createTexture ({video.getWidth(), video.getHeight()}, (uint8_t*)buf);
+      else
+        mTexture->setPixels ((uint8_t*)buf);
+
+      ImGui::Image ((void*)(intptr_t)mTexture->getTextureId(), {video.getWidth()/6.f,video.getHeight()/6.f});
+      }
+
     drawMiniLog (video.getLog());
     return lastPts;
     }
@@ -400,6 +411,7 @@ private:
 
   int mPlotIndex = 0;
   //}}}
+  cTexture* mTexture = nullptr;
   };
 
 // cTvUI
