@@ -343,14 +343,144 @@ private:
 //{{{
 class cAudioDecoder {
 public:
-  cAudioDecoder (eAudioFrameType frameType);
-  ~cAudioDecoder();
+  //{{{
+  cAudioDecoder (eAudioFrameType frameType) {
+
+    AVCodecID streamType;
+
+    switch (frameType) {
+      case eAudioFrameType::eMp3:
+        streamType =  AV_CODEC_ID_MP3;
+        break;
+
+      case eAudioFrameType::eAacAdts:
+        streamType =  AV_CODEC_ID_AAC;
+        break;
+
+      case eAudioFrameType::eAacLatm:
+        streamType =  AV_CODEC_ID_AAC_LATM;
+        break;
+
+      default:
+        cLog::log (LOGERROR, "unknown cAacDecoder frameType %d", frameType);
+        return;
+      }
+
+    mAvParser = av_parser_init (streamType);
+    mAvCodec = avcodec_find_decoder (streamType);
+    mAvContext = avcodec_alloc_context3 (mAvCodec);
+    avcodec_open2 (mAvContext, mAvCodec, NULL);
+    }
+  //}}}
+  //{{{
+  ~cAudioDecoder() {
+
+    if (mAvContext)
+      avcodec_close (mAvContext);
+    if (mAvParser)
+      av_parser_close (mAvParser);
+    }
+  //}}}
 
   size_t getNumChannels() { return mChannels; }
   size_t getSampleRate() { return mSampleRate; }
   size_t getNumSamplesPerFrame() { return mSamplesPerFrame; }
 
-  float* decodeFrame (const uint8_t* frame, uint32_t frameSize, int64_t pts);
+  //{{{
+  float* decodeFrame (const uint8_t* frame, uint32_t frameSize, int64_t pts) {
+
+    float* outBuffer = nullptr;
+
+    AVPacket avPacket;
+    av_init_packet (&avPacket);
+    auto avFrame = av_frame_alloc();
+
+    while (frameSize) {
+      int bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
+                                        &avPacket.data, &avPacket.size,
+                                        frame, frameSize, pts, AV_NOPTS_VALUE, 0);
+      frame += bytesUsed;
+      frameSize -= bytesUsed;
+
+      avPacket.pts = pts;
+      if (avPacket.size) {
+        int ret = avcodec_send_packet (mAvContext, &avPacket);
+        while (ret >= 0) {
+          ret = avcodec_receive_frame (mAvContext, avFrame);
+          if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
+            break;
+
+          if (avFrame->nb_samples > 0) {
+            switch (mAvContext->sample_fmt) {
+              //{{{
+              case AV_SAMPLE_FMT_FLTP: { // 32bit float planar, copy to interleaved, mix down 5.1
+
+                mChannels = 2;
+                mSampleRate = avFrame->sample_rate;
+                mSamplesPerFrame = avFrame->nb_samples;
+
+                outBuffer = (float*)malloc (mChannels * mSamplesPerFrame * sizeof(float));
+                float* dstPtr = outBuffer;
+
+                float* srcPtr0 = (float*)avFrame->data[0];
+                float* srcPtr1 = (float*)avFrame->data[1];
+                if (avFrame->channels == 6) {
+                  // 5.1 mix down
+                  float* srcPtr2 = (float*)avFrame->data[2];
+                  float* srcPtr3 = (float*)avFrame->data[3];
+                  float* srcPtr4 = (float*)avFrame->data[4];
+                  float* srcPtr5 = (float*)avFrame->data[5];
+                  for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+                    *dstPtr++ = *srcPtr0++ + *srcPtr2++ + *srcPtr4 + *srcPtr5; // left loud
+                    *dstPtr++ = *srcPtr1++ + *srcPtr3++ + *srcPtr4++ + *srcPtr5++; // right loud
+                    }
+                  }
+                else {
+                  // stereo
+                  for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+                    *dstPtr++ = *srcPtr0++;
+                    *dstPtr++ = *srcPtr1++;
+                    }
+                  }
+
+                break;
+                }
+              //}}}
+              //{{{
+              case AV_SAMPLE_FMT_S16P: { // 16bit signed planar, copy scale and copy to interleaved
+
+                mChannels =  avFrame->channels;
+                mSampleRate = avFrame->sample_rate;
+                mSamplesPerFrame = avFrame->nb_samples;
+
+                outBuffer = (float*)malloc (avFrame->channels * avFrame->nb_samples * sizeof(float));
+
+                for (int channel = 0; channel < avFrame->channels; channel++) {
+                  auto dstPtr = outBuffer + channel;
+                  auto srcPtr = (short*)avFrame->data[channel];
+                  for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+                    *dstPtr = *srcPtr++ / (float)0x8000;
+                    dstPtr += mChannels;
+                    }
+                  }
+                break;
+                }
+              //}}}
+              default:;
+              }
+
+            }
+          av_frame_unref (avFrame);
+          }
+        }
+      }
+
+    mLastPts = pts;
+
+    av_frame_free (&avFrame);
+    return outBuffer;
+    }
+  //}}}
 
 private:
   size_t mChannels = 0;
@@ -363,142 +493,6 @@ private:
 
   int64_t mLastPts = -1;
   };
-
-// cAudioDecoder members
-//{{{
-cAudioDecoder::cAudioDecoder (eAudioFrameType frameType) {
-
-  AVCodecID streamType;
-
-  switch (frameType) {
-    case eAudioFrameType::eMp3:
-      streamType =  AV_CODEC_ID_MP3;
-      break;
-
-    case eAudioFrameType::eAacAdts:
-      streamType =  AV_CODEC_ID_AAC;
-      break;
-
-    case eAudioFrameType::eAacLatm:
-      streamType =  AV_CODEC_ID_AAC_LATM;
-      break;
-
-    default:
-      cLog::log (LOGERROR, "unknown cAacDecoder frameType %d", frameType);
-      return;
-    }
-
-  mAvParser = av_parser_init (streamType);
-  mAvCodec = avcodec_find_decoder (streamType);
-  mAvContext = avcodec_alloc_context3 (mAvCodec);
-  avcodec_open2 (mAvContext, mAvCodec, NULL);
-  }
-//}}}
-//{{{
-cAudioDecoder::~cAudioDecoder() {
-
-  if (mAvContext)
-    avcodec_close (mAvContext);
-  if (mAvParser)
-    av_parser_close (mAvParser);
-  }
-//}}}
-
-//{{{
-float* cAudioDecoder::decodeFrame (const uint8_t* frame, uint32_t frameSize, int64_t pts) {
-
-  float* outBuffer = nullptr;
-
-  AVPacket avPacket;
-  av_init_packet (&avPacket);
-  auto avFrame = av_frame_alloc();
-
-  while (frameSize) {
-    int bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
-                                      &avPacket.data, &avPacket.size,
-                                      frame, frameSize, pts, AV_NOPTS_VALUE, 0);
-    frame += bytesUsed;
-    frameSize -= bytesUsed;
-
-    avPacket.pts = pts;
-    if (avPacket.size) {
-      int ret = avcodec_send_packet (mAvContext, &avPacket);
-      while (ret >= 0) {
-        ret = avcodec_receive_frame (mAvContext, avFrame);
-        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
-          break;
-
-        if (avFrame->nb_samples > 0) {
-          switch (mAvContext->sample_fmt) {
-            //{{{
-            case AV_SAMPLE_FMT_FLTP: { // 32bit float planar, copy to interleaved, mix down 5.1
-
-              mChannels = 2;
-              mSampleRate = avFrame->sample_rate;
-              mSamplesPerFrame = avFrame->nb_samples;
-
-              outBuffer = (float*)malloc (mChannels * mSamplesPerFrame * sizeof(float));
-              float* dstPtr = outBuffer;
-
-              float* srcPtr0 = (float*)avFrame->data[0];
-              float* srcPtr1 = (float*)avFrame->data[1];
-              if (avFrame->channels == 6) {
-                // 5.1 mix down
-                float* srcPtr2 = (float*)avFrame->data[2];
-                float* srcPtr3 = (float*)avFrame->data[3];
-                float* srcPtr4 = (float*)avFrame->data[4];
-                float* srcPtr5 = (float*)avFrame->data[5];
-                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
-                  *dstPtr++ = *srcPtr0++ + *srcPtr2++ + *srcPtr4 + *srcPtr5; // left loud
-                  *dstPtr++ = *srcPtr1++ + *srcPtr3++ + *srcPtr4++ + *srcPtr5++; // right loud
-                  }
-                }
-              else {
-                // stereo
-                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
-                  *dstPtr++ = *srcPtr0++;
-                  *dstPtr++ = *srcPtr1++;
-                  }
-                }
-
-              break;
-              }
-            //}}}
-            //{{{
-            case AV_SAMPLE_FMT_S16P: { // 16bit signed planar, copy scale and copy to interleaved
-
-              mChannels =  avFrame->channels;
-              mSampleRate = avFrame->sample_rate;
-              mSamplesPerFrame = avFrame->nb_samples;
-
-              outBuffer = (float*)malloc (avFrame->channels * avFrame->nb_samples * sizeof(float));
-
-              for (int channel = 0; channel < avFrame->channels; channel++) {
-                auto dstPtr = outBuffer + channel;
-                auto srcPtr = (short*)avFrame->data[channel];
-                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
-                  *dstPtr = *srcPtr++ / (float)0x8000;
-                  dstPtr += mChannels;
-                  }
-                }
-              break;
-              }
-            //}}}
-            default:;
-            }
-
-          }
-        av_frame_unref (avFrame);
-        }
-      }
-    }
-
-  mLastPts = pts;
-
-  av_frame_free (&avFrame);
-  return outBuffer;
-  }
-//}}}
 //}}}
 //{{{
 class cAudioPlayer {

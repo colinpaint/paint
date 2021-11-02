@@ -291,7 +291,7 @@ private:
 
     int64_t lastPts = plotValues (pts, video, 0xffffffff);
 
-    if (playPts != video.mPts) {
+    if (playPts != video.mTexturePts) {
       // new pts to display
       uint8_t* pixels = video.getFramePixels (playPts);
       if (pixels) {
@@ -299,7 +299,7 @@ private:
           video.mTexture = graphics.createTexture ({video.getWidth(), video.getHeight()}, pixels);
         else
           video.mTexture->setPixels (pixels);
-        video.mPts = playPts;
+        video.mTexturePts = playPts;
         }
       }
 
