@@ -35,7 +35,7 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr uint32_t kAudioPoolSize = 50;
+constexpr uint32_t kAudioPoolSize = 100;
 
 namespace {
   //{{{
