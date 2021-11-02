@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <shared_mutex>
 #include <thread>
+#include <functional>
 
 #include "../imgui/imgui.h"
 #include "../imgui/myImgui.h"
@@ -39,7 +40,8 @@ constexpr uint32_t kAudioPoolSize = 40;
 namespace {
   //{{{
   uint8_t* audioParseFrame (uint8_t* framePtr, uint8_t* frameLast,
-                       eAudioFrameType& frameType, int& numChannels, int& sampleRate, int& frameSize) {
+                            eAudioFrameType& frameType, size_t& numChannels,
+                            uint32_t& sampleRate, uint32_t& frameSize) {
   // simple mp3 / aacAdts / aacLatm / wav / id3Tag frame parser
 
     frameType = eAudioFrameType::eUnknown;
@@ -89,7 +91,7 @@ namespace {
 
           frameType = eAudioFrameType::eAacAdts;
 
-          const int sampleRates[16] = { 96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350, 0,0,0};
+          const uint32_t sampleRates[16] = { 96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350, 0,0,0};
           sampleRate = sampleRates [(framePtr[2] & 0x3c) >> 2];
 
           // guess numChannels
@@ -203,7 +205,7 @@ namespace {
           uint8_t bitrateIndex = (framePtr[2] & 0xf0) >> 4;
           uint32_t bitrate = bitRates[bitrateIndex];
 
-          const int sampleRates[4] = { 44100, 48000, 32000, 0};
+          const uint32_t sampleRates[4] = { 44100, 48000, 32000, 0};
           uint8_t sampleRateIndex = (framePtr[2] & 0x0c) >> 2;
           sampleRate = sampleRates[sampleRateIndex];
 
@@ -295,8 +297,9 @@ namespace {
 class cAudioFrame {
 public:
   //{{{
-  cAudioFrame (size_t numChannels, size_t samplesPerFrame, int64_t pts, float* samples)
-      : mNumChannels(numChannels), mSamplesPerFrame(samplesPerFrame), mPts(pts), mSamples(samples) {
+  cAudioFrame (size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, int64_t pts, float* samples)
+      : mNumChannels(numChannels), mSamplesPerFrame(samplesPerFrame), mSampleRate(sampleRate),
+        mPts(pts), mPtsDuration(samplesPerFrame * 90000 / sampleRate), mSamples(samples) {
 
     for (size_t channel = 0; channel < mNumChannels; channel++) {
       // init
@@ -325,15 +328,25 @@ public:
   //}}}
 
   // gets
+  size_t getNumChannels() const { return mNumChannels; }
+  size_t getSamplesPerFrame () const { return mSamplesPerFrame; }
+  uint32_t getSampleRate() const { return mSampleRate; }
+
   int64_t getPts() const { return mPts; }
+  int64_t getPtsDuration() const { return mPtsDuration; }
+
   float* getSamples() const { return mSamples; }
+
   std::array<float,6>& getPeakValues() { return mPeakValues; }
   std::array<float,6>& getPowerValues() { return mPowerValues; }
 
 private:
-  const size_t mNumChannels = 0;
-  const size_t mSamplesPerFrame = 0;
-  const int64_t mPts = 0;
+  const size_t mNumChannels;
+  const size_t mSamplesPerFrame;
+  const uint32_t mSampleRate;
+
+  const int64_t mPts;
+  const int64_t mPtsDuration;
   float* mSamples = nullptr;
 
   std::array <float, 6> mPeakValues = {0.f};
@@ -382,62 +395,62 @@ public:
     }
   //}}}
 
-  size_t getNumChannels() { return mChannels; }
-  size_t getSampleRate() { return mSampleRate; }
-  size_t getNumSamplesPerFrame() { return mSamplesPerFrame; }
+  int64_t decodeFrame (uint8_t* pes, uint32_t pesSize, int64_t pts,
+                       function<void (cAudioFrame* audioFrame)> addFrameCallback) {
 
-  //{{{
-  float* decodeFrame (const uint8_t* frame, uint32_t frameSize, int64_t pts) {
+    uint8_t* frame = pes;
+    uint8_t* pesEnd = pes + pesSize;
 
-    float* outBuffer = nullptr;
-
-    AVPacket avPacket;
-    av_init_packet (&avPacket);
-    auto avFrame = av_frame_alloc();
-
-    while (frameSize) {
+    // parse pesFrame, pes may have more than one frame
+    eAudioFrameType frameType = eAudioFrameType::eUnknown;
+    size_t numChannels = 0;
+    size_t samplesPerFrame = 0;
+    uint32_t sampleRate = 0;
+    uint32_t frameSize = 0;
+    while (audioParseFrame (frame, pesEnd, frameType, numChannels, sampleRate, frameSize)) {
+      AVPacket avPacket;
+      av_init_packet (&avPacket);
+      auto avFrame = av_frame_alloc();
       int bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
                                         &avPacket.data, &avPacket.size,
                                         frame, frameSize, pts, AV_NOPTS_VALUE, 0);
-      frame += bytesUsed;
-      frameSize -= bytesUsed;
-
       avPacket.pts = pts;
       if (avPacket.size) {
         int ret = avcodec_send_packet (mAvContext, &avPacket);
         while (ret >= 0) {
           ret = avcodec_receive_frame (mAvContext, avFrame);
-          if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
+          if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
-
           if (avFrame->nb_samples > 0) {
+            samplesPerFrame = avFrame->nb_samples;
+            sampleRate = avFrame->sample_rate;
+            float* samples = nullptr;
             switch (mAvContext->sample_fmt) {
               //{{{
               case AV_SAMPLE_FMT_FLTP: { // 32bit float planar, copy to interleaved, mix down 5.1
 
-                mChannels = 2;
-                mSampleRate = avFrame->sample_rate;
-                mSamplesPerFrame = avFrame->nb_samples;
+                size_t srcNumChannels = avFrame->channels;
 
-                outBuffer = (float*)malloc (mChannels * mSamplesPerFrame * sizeof(float));
-                float* dstPtr = outBuffer;
+                numChannels = 2;
+                samples = (float*)malloc (numChannels * samplesPerFrame * sizeof(float));
+                float* dstPtr = samples;
 
                 float* srcPtr0 = (float*)avFrame->data[0];
                 float* srcPtr1 = (float*)avFrame->data[1];
-                if (avFrame->channels == 6) {
+                if (srcNumChannels == 6) {
                   // 5.1 mix down
                   float* srcPtr2 = (float*)avFrame->data[2];
                   float* srcPtr3 = (float*)avFrame->data[3];
                   float* srcPtr4 = (float*)avFrame->data[4];
                   float* srcPtr5 = (float*)avFrame->data[5];
-                  for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+                  for (size_t sample = 0; sample < samplesPerFrame; sample++) {
                     *dstPtr++ = *srcPtr0++ + *srcPtr2++ + *srcPtr4 + *srcPtr5; // left loud
                     *dstPtr++ = *srcPtr1++ + *srcPtr3++ + *srcPtr4++ + *srcPtr5++; // right loud
                     }
                   }
                 else {
                   // stereo
-                  for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+                  for (size_t sample = 0; sample < samplesPerFrame; sample++) {
                     *dstPtr++ = *srcPtr0++;
                     *dstPtr++ = *srcPtr1++;
                     }
@@ -449,18 +462,15 @@ public:
               //{{{
               case AV_SAMPLE_FMT_S16P: { // 16bit signed planar, copy scale and copy to interleaved
 
-                mChannels =  avFrame->channels;
-                mSampleRate = avFrame->sample_rate;
-                mSamplesPerFrame = avFrame->nb_samples;
+                numChannels = avFrame->channels;
+                samples = (float*)malloc (numChannels * samplesPerFrame * sizeof(float));
 
-                outBuffer = (float*)malloc (avFrame->channels * avFrame->nb_samples * sizeof(float));
-
-                for (int channel = 0; channel < avFrame->channels; channel++) {
-                  auto dstPtr = outBuffer + channel;
+                for (size_t channel = 0; channel < numChannels; channel++) {
+                  auto dstPtr = samples + channel;
                   auto srcPtr = (short*)avFrame->data[channel];
-                  for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+                  for (size_t sample = 0; sample < samplesPerFrame; sample++) {
                     *dstPtr = *srcPtr++ / (float)0x8000;
-                    dstPtr += mChannels;
+                    dstPtr += numChannels;
                     }
                   }
                 break;
@@ -469,18 +479,20 @@ public:
               default:;
               }
 
+            cAudioFrame* audioFrame = new cAudioFrame (numChannels, samplesPerFrame, sampleRate, pts, samples);
+            addFrameCallback (audioFrame);
+            av_frame_unref (avFrame);
+            pts += audioFrame->getPtsDuration();
             }
-          av_frame_unref (avFrame);
           }
         }
+      av_frame_free (&avFrame);
+
+      frame += bytesUsed;
       }
 
-    mLastPts = pts;
-
-    av_frame_free (&avFrame);
-    return outBuffer;
+    return pts;
     }
-  //}}}
 
 private:
   size_t mChannels = 0;
@@ -511,8 +523,8 @@ private:
 #ifdef _WIN32
   //{{{
   cAudioPlayer::cAudioPlayer (cAudioRender* audioRender) {
+
     thread playerThread = thread ([=]() {
-      // lambda
       cLog::setThreadName ("play");
       SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
       array <float,2048*2> silence = { 0.f };
@@ -526,34 +538,33 @@ private:
         device->setSampleRate (audioRender->getSampleRate());
         device->start();
 
-        cAudioFrame* frame;
+        cAudioFrame* audioFrame;
         while (!mExit) {
           device->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
             // loadSrcSamples callback lambda
             shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-            frame = audioRender->findPlayFrame();
-            if (audioRender->getPlaying() && frame && frame->getSamples()) {
-              if (audioRender->getNumChannels() == 1) {
+            audioFrame = audioRender->findPlayFrame();
+            if (audioRender->getPlaying() && audioFrame && audioFrame->getSamples()) {
+              if (audioFrame->getNumChannels() == 1) {
                 // audioRender to stereo
-                float* src = frame->getSamples();
+                float* src = audioFrame->getSamples();
                 float* dst = samples.data();
-                for (uint32_t i = 0; i < audioRender->getSamplesPerFrame(); i++) {
+                for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
                   *dst++ = *src;
                   *dst++ = *src++;
                   }
                 }
               else
-                memcpy (samples.data(),
-                        frame->getSamples(),
-                        audioRender->getSamplesPerFrame() * audioRender->getNumChannels() * sizeof(float));
+                memcpy (samples.data(), audioFrame->getSamples(),
+                        audioFrame->getSamplesPerFrame() * audioFrame->getNumChannels() * sizeof(float));
               srcSamples = samples.data();
               }
             else
               srcSamples = silence.data();
-            numSrcSamples = audioRender->getSamplesPerFrame();
+            numSrcSamples = audioFrame ? audioFrame->getSamplesPerFrame() : 1024;
 
-            if (frame && audioRender->getPlaying())
-              audioRender->nextPlayFrame();
+            if (audioRender->getPlaying() && audioFrame)
+              audioRender->setPlayPts (audioRender->getPlayPts() + audioFrame->getPtsDuration());
             });
           }
 
@@ -580,23 +591,22 @@ private:
 
       // audio16 player thread, video follows playPts
       cAudio audioOutputDevice (2, audioRender->getSampleRate(), 40000, false);
-      cAudioFrame* frame;
+      cAudioFrame* audioFrame;
       while (!mExit) {
         float* playSamples = silence.data();
           {
           // scoped song mutex
           shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-          frame = audioRender->findPlayFrame();
-          bool gotSamples = audioRender->getPlaying() && frame && frame->getSamples();
-          if (gotSamples) {
-            memcpy (samples.data(), frame->getSamples(), audioRender->getSamplesPerFrame() * 8);
+          audioFrame = audioRender->findPlayFrame();
+          if (audioRender->getPlaying() && audioFrame && audioFrame->getSamples()) {
+            memcpy (samples.data(), audioFrame->getSamples(), audioFrame->getSamplesPerFrame() * 8);
             playSamples = samples.data();
             }
           }
-        audioOutputDevice.play (2, playSamples, audioRender->getSamplesPerFrame(), 1.f);
+        audioOutputDevice.play (2, playSamples, audioFrame ? audioFrame->getSamplesPerFrame() : 1024, 1.f);
 
-        if (frame && audioRender->getPlaying())
-          audioRender->nextPlayFrame();
+        if (audioRender->getPlaying() && audioFrame)
+          audioRender->setPlayPts (audioRender->getPlayPts() + audioFrame->getPtsDuration());
         }
 
       mRunning = false;
@@ -683,6 +693,34 @@ string cAudioRender::getInfoString() const {
 //}}}
 
 //{{{
+void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
+
+  (void)dts;
+  log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
+  //logValue (pts, (float)bufSize);
+
+  mAudioDecoder->decodeFrame (pes, pesSize, pts,
+    [&](cAudioFrame* audioFrame) noexcept {
+      mNumChannels = audioFrame->getNumChannels();
+      mSampleRate = audioFrame->getSampleRate();
+      mSamplesPerFrame = audioFrame->getSamplesPerFrame();
+
+      logValue (audioFrame->getPts(), audioFrame->getPowerValues()[0]);
+      addFrame (audioFrame);
+
+      if (!mAudioPlayer) {
+        // start player
+        setPlayPts (audioFrame->getPts());
+        mAudioPlayer = new cAudioPlayer (this);
+        }
+      }
+    );
+
+  }
+//}}}
+
+// private
+//{{{
 cAudioFrame* cAudioRender::findFrame (int64_t pts) const {
 
   auto it = mFrames.find (pts);
@@ -690,67 +728,16 @@ cAudioFrame* cAudioRender::findFrame (int64_t pts) const {
   }
 //}}}
 //{{{
-cAudioFrame& cAudioRender::addFrame (int64_t pts, float* samples) {
+void cAudioRender::addFrame (cAudioFrame* frame) {
 
-  // create new frame
-  cAudioFrame* frame = new cAudioFrame (mNumChannels, mSamplesPerFrame, pts, samples);
   unique_lock<shared_mutex> lock (mSharedMutex);
-  mFrames.emplace (pts, frame);
-  return *frame;
-  }
-//}}}
 
-//{{{
-void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
-
-  (void)dts;
-  log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
-  //logValue (pts, (float)bufSize);
-
-  uint8_t* frame = pes;
-  uint8_t* pesEnd = pes + pesSize;
-  int64_t framePts = pts;
-
-  // parse pesFrame, pes may have more than one frame
-  eAudioFrameType frameType = eAudioFrameType::eUnknown;
-  int numChannels = 0;
-  int sampleRate = 0;
-  int frameSize = 0;
-  while (audioParseFrame (frame, pesEnd, frameType, numChannels, sampleRate, frameSize)) {
-    // decode single frame from pes
-    float* samples = mAudioDecoder->decodeFrame (frame, frameSize, framePts);
-    if (samples) {
-      cAudioFrame& audioFrame = addFrame (framePts, samples);
-      logValue (framePts, audioFrame.getPowerValues()[0]);
-
-      if (!mAudioPlayer) {
-        /// start player
-        setPlayPts (framePts);
-        mAudioPlayer = new cAudioPlayer (this);
-        }
-
-      // inc pts for nextFrame
-      framePts += getFramePtsDuration();
-      }
-
-    // point to nextFrame
-    frame += frameSize;
+  if (mFrames.size() >= mMaxMapSize) {
+    //while (mPlayPts > (*mFrames.begin()).first)
+    //this_thread::sleep_for (10ms);
+    mFrames.erase (mFrames.begin());
     }
 
-  int  i = 0;
-  {
-  unique_lock<shared_mutex> lock (mSharedMutex);
-  auto it = mFrames.begin();
-  if (it != mFrames.end()) {
-    while (it->first < mPlayPts) {
-      it = mFrames.erase (it);
-      i++;
-      }
-    }
-  }
-  if (i > 0)
-     cLog::log (LOGINFO, fmt::format ("delete {} {}", i, mFrames.size()));
-  if (mFrames.size() > mMaxMapSize)
-    this_thread::sleep_for (1ms);
+  mFrames.emplace (frame->getPts(), frame);
   }
 //}}}

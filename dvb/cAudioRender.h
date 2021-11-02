@@ -25,10 +25,9 @@ public:
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
 
   eAudioFrameType getFrameType() const { return mFrameType; }
-  uint32_t getNumChannels() const { return mNumChannels; }
+  size_t getNumChannels() const { return mNumChannels; }
+  size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
   uint32_t getSampleRate() const { return mSampleRate; }
-  uint32_t getSamplesPerFrame() const { return mSamplesPerFrame; }
-  int64_t getFramePtsDuration() const { return (mSamplesPerFrame * kPtsPerSecond) / mSampleRate; }
 
   bool getPlaying() const { return mPlaying; }
   int64_t getPlayPts() const { return mPlayPts; }
@@ -40,25 +39,24 @@ public:
   // play
   void togglePlaying() { mPlaying = !mPlaying; }
   void setPlayPts (int64_t pts) { mPlayPts = pts; }
-  void nextPlayFrame() { setPlayPts (mPlayPts + getFramePtsDuration()); }
 
   void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 
 private:
   cAudioFrame* findFrame (int64_t pts) const;
-  cAudioFrame& addFrame (int64_t pts, float* samples);
+  void addFrame (cAudioFrame* frame);
 
   // vars
-  eAudioFrameType mFrameType;
-  int mNumChannels;
-  int mSampleRate = 0;
-  int mSamplesPerFrame = 0;
-  size_t mMaxMapSize;
-
   std::shared_mutex mSharedMutex;
-  std::map <int64_t, cAudioFrame*> mFrames;
+  cAudioDecoder* mAudioDecoder = nullptr;
 
-  cAudioDecoder* mAudioDecoder;
+  eAudioFrameType mFrameType;
+  size_t mNumChannels;
+  size_t mSamplesPerFrame = 0;
+  uint32_t mSampleRate = 0;
+
+  size_t mMaxMapSize;
+  std::map <int64_t, cAudioFrame*> mFrames;
 
   bool mPlaying = false;
   int64_t mPlayPts = 0;

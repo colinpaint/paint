@@ -28,13 +28,15 @@ public:
   void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 
   // vars
-  cVideoDecoder* mVideoDecoder = nullptr;
-
   int64_t mTexturePts = 0;
   cTexture* mTexture = nullptr;
 
 private:
+  void addFrame (cVideoFrame* frame);
+
   std::shared_mutex mSharedMutex;
+
+  cVideoDecoder* mVideoDecoder = nullptr;
   std::map <int64_t, cVideoFrame*> mFrames;
 
   uint16_t mWidth = 0;
