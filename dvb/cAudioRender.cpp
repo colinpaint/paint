@@ -35,7 +35,7 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr uint32_t kAudioPoolSize = 40;
+constexpr uint32_t kAudioPoolSize = 50;
 
 namespace {
   //{{{
@@ -410,6 +410,7 @@ public:
     while (audioParseFrame (frame, pesEnd, frameType, numChannels, sampleRate, frameSize)) {
       AVPacket avPacket;
       av_init_packet (&avPacket);
+
       auto avFrame = av_frame_alloc();
       int bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
                                         &avPacket.data, &avPacket.size,
@@ -730,14 +731,27 @@ cAudioFrame* cAudioRender::findFrame (int64_t pts) const {
 //{{{
 void cAudioRender::addFrame (cAudioFrame* frame) {
 
-  unique_lock<shared_mutex> lock (mSharedMutex);
+  if (mFrames.size() >= mMaxMapSize)
+    cLog::log (LOGINFO, fmt::format (" audio addFrame firstPts:{} playPts:{}",
+                                     getPtsString ((*mFrames.begin()).first), getPtsString (mPlayPts)));
 
-  if (mFrames.size() >= mMaxMapSize) {
-    //while (mPlayPts > (*mFrames.begin()).first)
-    //this_thread::sleep_for (10ms);
-    mFrames.erase (mFrames.begin());
+    {
+    unique_lock<shared_mutex> lock (mSharedMutex);
+
+    if (mFrames.size() >= mMaxMapSize) {
+      auto it = mFrames.begin();
+      while ((*it).first < mPlayPts) {
+        // delete any frame before mPlayPts
+        cAudioFrame* audioFrame = (*it).second;
+        it = mFrames.erase (it);
+        delete audioFrame;
+        }
+      }
+
+    mFrames.emplace (frame->getPts(), frame);
     }
 
-  mFrames.emplace (frame->getPts(), frame);
+  if (mFrames.size() >= mMaxMapSize)
+    this_thread::sleep_for (20ms);
   }
 //}}}

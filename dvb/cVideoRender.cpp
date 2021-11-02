@@ -184,7 +184,7 @@ private:
 class cVideoFramePlanarRgbaSws : public cVideoFrame {
 public:
   cVideoFramePlanarRgbaSws() : cVideoFrame(true) {}
-  virtual ~cVideoFramePlanarRgbaSws() {}
+  virtual ~cVideoFramePlanarRgbaSws() = default;
 
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize) final {
 
@@ -200,7 +200,7 @@ public:
   class cVideoFrameRgba : public cVideoFrame {
   public:
     cVideoFrameRgba() : cVideoFrame(false) {}
-    virtual ~cVideoFrameRgba() {}
+    virtual ~cVideoFrameRgba()= default;
 
     #if defined(INTEL_SSSE3)
       virtual void setYuv420 (void* context, uint8_t** data, int* linesize) final {
@@ -331,7 +331,7 @@ public:
   class cVideoFramePlanarRgba : public cVideoFrame {
   public:
     cVideoFramePlanarRgba() : cVideoFrame(true) {}
-    virtual ~cVideoFramePlanarRgba() {}
+    virtual ~cVideoFramePlanarRgba() = default;
 
     #if defined(INTEL_SSE2)
       //{{{
@@ -561,6 +561,7 @@ cVideoFrame* cVideoFrame::createVideoFrame (bool planar) {
       return new cVideoFrameRgba();
 
   #else
+    (void)planar;
     return new cVideoFramePlanarRgbaSws();
 
   #endif
@@ -578,14 +579,10 @@ public:
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
 
-    av_init_packet (&mAvPacket);
-    mAvFrame = av_frame_alloc();
     }
   //}}}
   //{{{
   ~cVideoDecoder() {
-
-    av_frame_free (&mAvFrame);
 
     if (mAvContext)
       avcodec_close (mAvContext);
@@ -599,6 +596,12 @@ public:
 
   int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
                   function<void (cVideoFrame* videoFrame)> addFrameCallback) {
+
+    AVPacket mAvPacket;
+    av_init_packet (&mAvPacket);
+
+    AVFrame* mAvFrame = nullptr;
+    mAvFrame = av_frame_alloc();
 
     uint8_t* frame = pes;
     uint32_t frameSize = pesSize;
@@ -643,6 +646,8 @@ public:
       frame += bytesUsed;
       frameSize -= bytesUsed;
       }
+
+    av_frame_free (&mAvFrame);
     return pts;
     }
 
@@ -651,9 +656,6 @@ private:
   AVCodec* mAvCodec = nullptr;
   AVCodecContext* mAvContext = nullptr;
   SwsContext* mSwsContext = nullptr;
-
-  AVPacket mAvPacket;
-  AVFrame* mAvFrame = nullptr;
   };
 //}}}
 
@@ -745,8 +747,12 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
 void cVideoRender::addFrame (cVideoFrame* frame) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
-  if (mFrames.size() >= mMaxPoolSize) // delete youngest videoFrame
-    mFrames.erase (mFrames.begin());
+  if (mFrames.size() >= mMaxPoolSize) {
+    // delete youngest frame
+    auto it = mFrames.begin();
+    mFrames.erase (it);
+    delete (*it).second;
+    }
 
   // add videoFrame
   mFrames.emplace (frame->getPts() / frame->getPtsDuration(), frame);
