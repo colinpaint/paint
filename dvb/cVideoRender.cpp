@@ -610,7 +610,7 @@ public:
         ret = avcodec_receive_frame (mAvContext, mAvFrame);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
           break;
-        int64_t decodeTime = 
+        int64_t decodeTime =
           chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
         // create new videoFrame
@@ -699,7 +699,7 @@ string cVideoRender::getInfoString() const {
 void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
   log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
-  logValue (pts, (float)pesSize);
+  //logValue (pts, (float)pesSize);
 
   // ffmpeg doesn't maintain correct avFrame.pts
   // - decode frames in presentation order, pts is correct on I frames
