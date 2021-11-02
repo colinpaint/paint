@@ -56,7 +56,7 @@ private:
   size_t mMaxMapSize;
 
   std::shared_mutex mSharedMutex;
-  std::map <int64_t, cAudioFrame*> mFrameMap;
+  std::map <int64_t, cAudioFrame*> mFrames;
 
   cAudioDecoder* mAudioDecoder;
 

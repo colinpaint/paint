@@ -35,7 +35,7 @@ public:
 
 private:
   std::shared_mutex mSharedMutex;
-  std::map <int64_t, cVideoFrame*> mFrameMap;
+  std::map <int64_t, cVideoFrame*> mFrames;
 
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;

@@ -670,23 +670,23 @@ cAudioRender::~cAudioRender() {
   delete mAudioDecoder;
 
   unique_lock<shared_mutex> lock (mSharedMutex);
-  for (auto& frame : mFrameMap)
+  for (auto& frame : mFrames)
     delete (frame.second);
-  mFrameMap.clear();
+  mFrames.clear();
   }
 //}}}
 
 //{{{
 string cAudioRender::getInfoString() const {
-  return fmt::format ("audioPool {}", mFrameMap.size());
+  return fmt::format ("audioPool {}", mFrames.size());
   }
 //}}}
 
 //{{{
 cAudioFrame* cAudioRender::findFrame (int64_t pts) const {
 
-  auto it = mFrameMap.find (pts);
-  return (it == mFrameMap.end()) ? nullptr : it->second;
+  auto it = mFrames.find (pts);
+  return (it == mFrames.end()) ? nullptr : it->second;
   }
 //}}}
 //{{{
@@ -695,7 +695,7 @@ cAudioFrame& cAudioRender::addFrame (int64_t pts, float* samples) {
   // create new frame
   cAudioFrame* frame = new cAudioFrame (mNumChannels, mSamplesPerFrame, pts, samples);
   unique_lock<shared_mutex> lock (mSharedMutex);
-  mFrameMap.emplace (pts, frame);
+  mFrames.emplace (pts, frame);
   return *frame;
   }
 //}}}
@@ -740,17 +740,17 @@ void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   int  i = 0;
   {
   unique_lock<shared_mutex> lock (mSharedMutex);
-  auto it = mFrameMap.begin();
-  if (it != mFrameMap.end()) {
+  auto it = mFrames.begin();
+  if (it != mFrames.end()) {
     while (it->first < mPlayPts) {
-      it = mFrameMap.erase (it);
+      it = mFrames.erase (it);
       i++;
       }
     }
   }
   if (i > 0)
-     cLog::log (LOGINFO, fmt::format ("delete {} {}", i, mFrameMap.size()));
-  if (mFrameMap.size() > mMaxMapSize)
+     cLog::log (LOGINFO, fmt::format ("delete {} {}", i, mFrames.size()));
+  if (mFrames.size() > mMaxMapSize)
     this_thread::sleep_for (1ms);
   }
 //}}}

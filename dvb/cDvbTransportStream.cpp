@@ -546,8 +546,9 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
 void cDvbTransportStream::cService::toggleVideo() {
 
   if (mVideo) {
-    delete mVideo;
+    auto mTemp = mVideo;
     mVideo = nullptr;
+    delete mTemp;
     }
   else
     mVideo = new cVideoRender(getChannelName());
@@ -557,8 +558,9 @@ void cDvbTransportStream::cService::toggleVideo() {
 void cDvbTransportStream::cService::toggleAudio() {
 
   if (mAudio) {
-    delete mAudio;
-    mAudio = nullptr;
+    auto mTemp = mAudio;
+    mVideo = nullptr;
+    delete mTemp;
     }
   else
     mAudio = new cAudioRender(getChannelName());
@@ -568,8 +570,9 @@ void cDvbTransportStream::cService::toggleAudio() {
 void cDvbTransportStream::cService::toggleAudioOther() {
 
   if (mAudioOther) {
-    delete mAudioOther;
-    mAudioOther = nullptr;
+    auto mTemp = mAudioOther;
+    mVideo = nullptr;
+    delete mTemp;
     }
   else
     mAudioOther = new cAudioRender(getChannelName());
@@ -579,8 +582,9 @@ void cDvbTransportStream::cService::toggleAudioOther() {
 void cDvbTransportStream::cService::toggleSubtitle() {
 
   if (mSubtitle) {
-    delete mSubtitle;
-    mSubtitle = nullptr;
+    auto mTemp = mSubtitle;
+    mVideo = nullptr;
+    delete mTemp;
     }
   else
     mSubtitle = new cSubtitleRender(getChannelName());
