@@ -123,31 +123,17 @@ public:
     }
   //}}}
 
-  // gets
-  int64_t getPts() const { return mPts; }
-  int64_t getPtsDuration() const { return mPtsDuration; }
-  char getFrameType() const { return mFrameType; }
-
-  uint16_t getWidth() const {return mWidth; }
-  uint16_t getHeight() const {return mHeight; }
-  uint8_t* getPixels() const { return (uint8_t*)mPixels; }
-
-  uint32_t getPesSize() const { return mPesSize; }
-  int64_t getDecodeTime() const { return mDecodeTime; }
-  int64_t getYuv420Time() const { return mYuv420Time; }
-
-  // sets
   //{{{
-  void set (int64_t pts, int64_t ptsDuration, char frameType, uint16_t width, uint16_t height,
-            uint32_t pesSize, int64_t decodeTime) {
+  void init (int64_t pts, int64_t ptsDuration, uint16_t width, uint16_t height,
+             char frameType, uint32_t pesSize, int64_t decodeTime) {
 
     mPts = pts;
     mPtsDuration = ptsDuration;
 
     mWidth = width;
     mHeight = height;
-    mFrameType = frameType;
 
+    mFrameType = frameType;
     mPesSize = pesSize;
     mDecodeTime = decodeTime;
 
@@ -162,6 +148,21 @@ public:
     #endif
     }
   //}}}
+
+  // gets
+  int64_t getPts() const { return mPts; }
+  int64_t getPtsDuration() const { return mPtsDuration; }
+  char getFrameType() const { return mFrameType; }
+
+  uint16_t getWidth() const {return mWidth; }
+  uint16_t getHeight() const {return mHeight; }
+  uint8_t* getPixels() const { return (uint8_t*)mPixels; }
+
+  uint32_t getPesSize() const { return mPesSize; }
+  int64_t getDecodeTime() const { return mDecodeTime; }
+  int64_t getYuv420Time() const { return mYuv420Time; }
+
+  // sets
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize)  = 0;
   void setYuv420Time (int64_t time) { mYuv420Time = time; }
 
@@ -576,10 +577,15 @@ public:
     mAvCodec = avcodec_find_decoder (AV_CODEC_ID_H264);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
+
+    av_init_packet (&mAvPacket);
+    mAvFrame = av_frame_alloc();
     }
   //}}}
   //{{{
   ~cVideoDecoder() {
+
+    av_frame_free (&mAvFrame);
 
     if (mAvContext)
       avcodec_close (mAvContext);
@@ -596,45 +602,41 @@ public:
 
     auto timePoint = chrono::system_clock::now();
 
-    AVPacket avPacket;
-    av_init_packet (&avPacket);
-    auto avFrame = av_frame_alloc();
-    int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket.data, &avPacket.size,
+    int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &mAvPacket.data, &mAvPacket.size,
                                       frame, (int)frameSize, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
-    if (avPacket.size) {
-      int ret = avcodec_send_packet (mAvContext, &avPacket);
+    if (mAvPacket.size) {
+      int ret = avcodec_send_packet (mAvContext, &mAvPacket);
       while (ret >= 0) {
-        ret = avcodec_receive_frame (mAvContext, avFrame);
+        ret = avcodec_receive_frame (mAvContext, mAvFrame);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
           break;
         int64_t decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
-        // extract frame info from decode
-        uint16_t width = static_cast<uint16_t>(avFrame->width);
-        uint16_t height = static_cast<uint16_t>(avFrame->height);
-        int64_t ptsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
-        if (!mSwsContext)
-          //{{{  init swsContext now we know the width,height
-          mSwsContext = sws_getContext (width, height, AV_PIX_FMT_YUV420P,
-                                        width, height, AV_PIX_FMT_RGBA,
-                                        SWS_BILINEAR, NULL, NULL, NULL);
-          //}}}
-
         // create new videoFrame
         cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (true);
-        videoFrame->set (pts, ptsDuration, frameType, width, height, frameSize, decodeTime);
-        timePoint = chrono::system_clock::now();
-        videoFrame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
-        videoFrame->setYuv420Time (
-          chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
-        addFrameCallback (videoFrame);
+        videoFrame->init (pts, (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
+                          static_cast<uint16_t>(mAvFrame->width), static_cast<uint16_t>(mAvFrame->height),
+                          frameType, frameSize, decodeTime);
+        pts += videoFrame->getPtsDuration();
 
-        av_frame_unref (avFrame);
-        pts += ptsDuration;
+        // yuv420 -> rgba
+        timePoint = chrono::system_clock::now();
+        if (!mSwsContext)
+          //{{{  init swsContext now we know the width,height
+          mSwsContext = sws_getContext (videoFrame->getWidth(), videoFrame->getHeight(), AV_PIX_FMT_YUV420P,
+                                        videoFrame->getWidth(), videoFrame->getHeight(), AV_PIX_FMT_RGBA,
+                                        SWS_BILINEAR, NULL, NULL, NULL);
+          //}}}
+        videoFrame->setYuv420 (mSwsContext, mAvFrame->data, mAvFrame->linesize);
+        videoFrame->setYuv420Time(
+          chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
+        av_frame_unref (mAvFrame);
+
+        // add videoFrame
+        addFrameCallback (videoFrame);
         }
       }
 
-    av_frame_free (&avFrame);
     return bytesUsed;
     }
 
@@ -643,6 +645,9 @@ private:
   AVCodec* mAvCodec = nullptr;
   AVCodecContext* mAvContext = nullptr;
   SwsContext* mSwsContext = nullptr;
+
+  AVPacket mAvPacket;
+  AVFrame* mAvFrame = nullptr;
   };
 //}}}
 
