@@ -296,31 +296,27 @@ string cVideoRender::getInfoString() const {
 //}}}
 
 //{{{
-uint8_t* cVideoRender::getFramePixels (int64_t pts) {
-
-  if (mPtsDuration > 0) {
-    auto it = mFrames.find (pts / mPtsDuration);
-    if (it != mFrames.end()) // match found
-      return (*it).second->getPixels();
-    }
-
-  // match notFound
-  auto it = mFrames.begin();
-  if (it != mFrames.end())
-    return (*it).second->getPixels();
-
-  // no latest, return nillptr
-  return nullptr;
-  }
-//}}}
-//{{{
 cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
 
   shared_lock<shared_mutex> lock (mSharedMutex);
 
   if (playPts != mTexturePts) {
     // new pts to display
-    uint8_t* pixels = getFramePixels (playPts);
+    uint8_t* pixels = nullptr;
+
+    if (mPtsDuration > 0) {
+      auto it = mFrames.find (playPts / mPtsDuration);
+      if (it != mFrames.end()) // match found
+        pixels =  (*it).second->getPixels();
+      }
+
+    if (!pixels) {
+     // match notFound, try first
+     auto it = mFrames.begin();
+      if (it != mFrames.end())
+        pixels = (*it).second->getPixels();
+      }
+
     if (pixels) {
       if (mTexture == nullptr) // create
         mTexture = graphics.createTexture ({getWidth(), getHeight()}, pixels);
