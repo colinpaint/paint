@@ -11,7 +11,7 @@
 
 class cVideoFrame;
 class cVideoDecoder;
-
+class cGraphics;
 class cTexture;
 //}}}
 
@@ -22,20 +22,20 @@ public:
 
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
-  uint8_t* getFramePixels (int64_t pts);
   std::string getInfoString() const;
 
-  void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
+  uint8_t* getFramePixels (int64_t pts);
+  cTexture* getTexture (int64_t playPts, cGraphics& graphics);
 
-  // vars
-  int64_t mTexturePts = 0;
-  cTexture* mTexture = nullptr;
+  void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 
 private:
   void addFrame (cVideoFrame* frame);
 
   // vars
   cVideoDecoder* mVideoDecoder = nullptr;
+
+  const size_t mMaxPoolSize;
   std::map <int64_t, cVideoFrame*> mFrames;
 
   uint16_t mWidth = 0;
@@ -44,8 +44,10 @@ private:
 
   int64_t mGuessPts = -1;
   bool mSeenIFrame = false;
+
   int64_t mDecodeTime = 0;
   int64_t mYuv420Time = 0;
 
-  const size_t mMaxPoolSize;
+  int64_t mTexturePts = 0;
+  cTexture* mTexture = nullptr;
   };

@@ -301,23 +301,9 @@ private:
         if (service.getVideo()) {
           cVideoRender& video = *service.getVideo();
 
-          { // locked
-          shared_lock<shared_mutex> lock (video.getSharedMutex());
-          if (playPts != video.mTexturePts) {
-            // new pts to display
-            uint8_t* pixels = video.getFramePixels (playPts);
-            if (pixels) {
-              if (video.mTexture == nullptr) // create
-                video.mTexture = graphics.createTexture ({video.getWidth(), video.getHeight()}, pixels);
-              else
-                video.mTexture->setPixels (pixels);
-              video.mTexturePts = playPts;
-              }
-            }
-          }
-
-          if (video.mTexture)
-            ImGui::Image ((void*)(intptr_t)video.mTexture->getTextureId(),
+          cTexture* texture = video.getTexture (playPts, graphics);
+          if (texture)
+            ImGui::Image ((void*)(intptr_t)texture->getTextureId(),
                           //{(float)video.getWidth(),(float)video.getHeight()});
                           {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()});
 
@@ -350,24 +336,11 @@ private:
 
     int64_t lastPts = plotValues (pts, video, 0xffffffff);
 
-    { // locked
-    shared_lock<shared_mutex> lock (video.getSharedMutex());
-    if (playPts != video.mTexturePts) {
-      // new pts to display
-      uint8_t* pixels = video.getFramePixels (playPts);
-      if (pixels) {
-        if (video.mTexture == nullptr) // create
-          video.mTexture = graphics.createTexture ({video.getWidth(), video.getHeight()}, pixels);
-        else
-          video.mTexture->setPixels (pixels);
-        video.mTexturePts = playPts;
-        }
-      }
-    }
+    ImGui::TextUnformatted (video.getInfoString().c_str());
 
-    ImGui::TextUnformatted(video.getInfoString().c_str());
-    if (video.mTexture)
-      ImGui::Image ((void*)(intptr_t)video.mTexture->getTextureId(), {video.getWidth()/4.f,video.getHeight()/4.f});
+    cTexture* texture = video.getTexture (playPts, graphics);
+    if (texture)
+      ImGui::Image ((void*)(intptr_t)texture->getTextureId(), {video.getWidth()/4.f,video.getHeight()/4.f});
 
     drawMiniLog (video.getLog());
     return lastPts;

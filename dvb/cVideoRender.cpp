@@ -16,6 +16,7 @@
 #include "../imgui/myImgui.h"
 
 #include "../dvb/cDvbUtils.h"
+#include "../graphics/cGraphics.h"
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"
@@ -288,6 +289,13 @@ cVideoRender::~cVideoRender() {
   }
 //}}}
 //{{{
+string cVideoRender::getInfoString() const {
+  return fmt::format ("videoPool {}x{} decode:{:5d} yuv:{:4d} size:{}",
+                      mWidth, mHeight, mDecodeTime, mYuv420Time, mFrames.size());
+  }
+//}}}
+
+//{{{
 uint8_t* cVideoRender::getFramePixels (int64_t pts) {
 
   if (mPtsDuration > 0) {
@@ -306,11 +314,26 @@ uint8_t* cVideoRender::getFramePixels (int64_t pts) {
   }
 //}}}
 //{{{
-string cVideoRender::getInfoString() const {
-  return fmt::format ("videoPool {}x{} decode:{:5d} yuv:{:4d} size:{}",
-                      mWidth, mHeight, mDecodeTime, mYuv420Time, mFrames.size());
+cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
+
+  shared_lock<shared_mutex> lock (mSharedMutex);
+
+  if (playPts != mTexturePts) {
+    // new pts to display
+    uint8_t* pixels = getFramePixels (playPts);
+    if (pixels) {
+      if (mTexture == nullptr) // create
+        mTexture = graphics.createTexture ({getWidth(), getHeight()}, pixels);
+      else
+        mTexture->setPixels (pixels);
+      mTexturePts = playPts;
+      }
+    }
+
+  return mTexture;
   }
 //}}}
+
 //{{{
 void cVideoRender::addFrame (cVideoFrame* frame) {
 
