@@ -748,6 +748,8 @@ void cVideoRender::addFrame (cVideoFrame* frame) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
+  mFrames.emplace(frame->getPts() / frame->getPtsDuration(), frame);
+
   if (mFrames.size() >= mMaxPoolSize) {
     // delete youngest frame
     auto it = mFrames.begin();
@@ -755,8 +757,5 @@ void cVideoRender::addFrame (cVideoFrame* frame) {
     it = mFrames.erase (it);
     delete frameToDelete;
     }
-
-  // add videoFrame
-  mFrames.emplace (frame->getPts() / frame->getPtsDuration(), frame);
   }
 //}}}
