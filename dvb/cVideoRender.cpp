@@ -755,6 +755,7 @@ public:
 #endif
 //{{{
 cVideoFrame* cVideoFrame::createVideoFrame (bool planar) {
+  return new cVideoFramePlanarRgbaSws();
 
   #ifdef _WIN32
     if (planar) {
