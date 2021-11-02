@@ -128,14 +128,21 @@ public:
 
   // sets
   //{{{
-  void set (int64_t pts, uint32_t pesSize, uint16_t width, uint16_t height, char frameType) {
+  void setFree (bool free, int64_t pts) {
+    (void)pts;
+    mFree = free;
+    }
+  //}}}
+  //{{{
+  void set (int64_t pts, uint16_t width, uint16_t height, char frameType, uint32_t pesSize, int64_t decodeTime) {
 
     mPts = pts;
     mWidth = width;
     mHeight = height;
-
     mFrameType = frameType;
+
     mPesSize = pesSize;
+    mDecodeTime = decodeTime;
 
     #ifdef _WIN32
       if (!mPixels)
@@ -148,12 +155,7 @@ public:
     #endif
     }
   //}}}
-  //{{{
-  void setFree (bool free, int64_t pts) {
-    (void)pts;
-    mFree = free;
-    }
-  //}}}
+  void setYuv420Time (int64_t time) { mYuv420Time = time; }
 
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize)  = 0;
 
@@ -167,7 +169,10 @@ private:
 
   int64_t mPts = 0;
   char mFrameType = '?';
-  int mPesSize = 0;   // only used debug widget info
+
+  uint32_t mPesSize = 0;
+  int64_t mDecodeTime = 0;
+  int64_t mYuv420Time = 0;
   };
 //}}}
 #ifdef _WIN32
@@ -1480,6 +1485,41 @@ public:
   };
 //}}}
 
+//{{{
+class cVideoDecoder {
+public:
+  //{{{
+  cVideoDecoder() {
+    mAvParser = av_parser_init (AV_CODEC_ID_H264);
+    mAvCodec = avcodec_find_decoder (AV_CODEC_ID_H264);
+    mAvContext = avcodec_alloc_context3 (mAvCodec);
+    avcodec_open2 (mAvContext, mAvCodec, NULL);
+    }
+  //}}}
+  //{{{
+  ~cVideoDecoder() {
+    //{{{
+    if (mAvContext)
+      avcodec_close (mAvContext);
+
+    if (mAvParser)
+      av_parser_close (mAvParser);
+
+    sws_freeContext (mSwsContext);
+    //}}}
+    }
+  //}}}
+
+  float* decodeFrame (const uint8_t* frame, uint32_t frameSize, int64_t pts);
+
+private:
+  AVCodecParserContext* mAvParser = nullptr;
+  AVCodec* mAvCodec = nullptr;
+  AVCodecContext* mAvContext = nullptr;
+  SwsContext* mSwsContext = nullptr;
+  };
+//}}}
+
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const std::string name) : cRender(name), mPlanar(true), mMaxPoolSize(kVideoPoolSize) {
@@ -1525,13 +1565,10 @@ string cVideoRender::getInfoString() const {
 void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
   log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
-  logValue (pts, (float)pesSize);
-
-  chrono::system_clock::time_point timePoint = chrono::system_clock::now();
+  //logValue (pts, (float)pesSize);
 
   // ffmpeg doesn't maintain correct avFrame.pts, decode frames in presentation order and pts correct on I frames
   char frameType = cDvbUtils::getFrameType (pes, pesSize, 27);
-  //char frameType = getH264FrameType (pes, pesSize);
   if (frameType == 'I') {
     if ((mGuessPts >= 0) && (mGuessPts != dts))
       //{{{  debug
@@ -1557,8 +1594,8 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   auto pesPtr = pes;
   auto pesLeft = pesSize;
   while (pesLeft) {
-    int bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
-                                      &avPacket.data, &avPacket.size,
+    auto timePoint = chrono::system_clock::now();
+    int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket.data, &avPacket.size,
                                       pesPtr, (int)pesLeft, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
     pesPtr += bytesUsed;
     pesLeft -= bytesUsed;
@@ -1574,20 +1611,22 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
         mWidth = static_cast<uint16_t>(avFrame->width);
         mHeight = static_cast<uint16_t>(avFrame->height);
         mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
+        if (!mSwsContext)
+          //{{{  init sws context
+          mSwsContext = sws_getContext (mWidth, mHeight, AV_PIX_FMT_YUV420P,
+                                        mWidth, mHeight, AV_PIX_FMT_RGBA,
+                                        SWS_BILINEAR, NULL, NULL, NULL);
+          //}}}
         if (mSeenIFrame) {
           //{{{  set new frame
-          // blocks on waiting for freeFrame most of the time
           cVideoFrame* frame = findFreeFrame (mGuessPts);
-          frame->set (mGuessPts, pesSize, mWidth, mHeight, frameType);
-
-          if (!mSwsContext)
-            mSwsContext = sws_getContext (mWidth, mHeight, AV_PIX_FMT_YUV420P,
-                                          mWidth, mHeight, AV_PIX_FMT_RGBA,
-                                          SWS_BILINEAR, NULL, NULL, NULL);
+          frame->set (mGuessPts, mWidth, mHeight, frameType, pesSize, mDecodeTime);
+          logValue (mGuessPts, (float)mDecodeTime);
 
           timePoint = chrono::system_clock::now();
           frame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
           mYuv420Time = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+          frame->setYuv420Time (mYuv420Time);
 
             {
             unique_lock<shared_mutex> lock (mSharedMutex);
