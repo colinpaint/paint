@@ -1,4 +1,4 @@
-// cAudioRender.cpp - simple decoder player
+// cAudioRender.cpp
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
@@ -35,11 +35,44 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr uint32_t kAudioPoolSize = 100;
 
-namespace {
+constexpr uint32_t kAudioPoolSize = 100;
+//{{{
+class cAudioFrame {
+public:
   //{{{
-  uint8_t* audioParseFrame (uint8_t* framePtr, uint8_t* frameLast,
+  cAudioFrame (size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, int64_t pts, float* samples)
+      : mNumChannels(numChannels), mSamplesPerFrame(samplesPerFrame), mSampleRate(sampleRate),
+        mPts(pts), mPtsDuration(samplesPerFrame * 90000 / sampleRate), mSamples(samples) {
+
+    for (size_t channel = 0; channel < mNumChannels; channel++) {
+      // init
+      mPeakValues[channel] = 0.f;
+      mPowerValues[channel] = 0.f;
+      }
+
+    float* samplePtr = samples;
+    for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+      // acumulate
+      for (size_t channel = 0; channel < mNumChannels; channel++) {
+        auto value = *samplePtr++;
+        mPeakValues[channel] = max (abs(mPeakValues[channel]), value);
+        mPowerValues[channel] += value * value;
+        }
+      }
+
+    for (size_t channel = 0; channel < mNumChannels; channel++)
+      mPowerValues[channel] = sqrtf (mPowerValues[channel] / mSamplesPerFrame);
+    }
+  //}}}
+  //{{{
+  ~cAudioFrame() {
+    free (mSamples);
+    }
+  //}}}
+
+  //{{{
+  static uint8_t* audioParseFrame (uint8_t* framePtr, uint8_t* frameLast,
                             eAudioFrameType& frameType, size_t& numChannels,
                             uint32_t& sampleRate, uint32_t& frameSize) {
   // simple mp3 / aacAdts / aacLatm / wav / id3Tag frame parser
@@ -291,41 +324,6 @@ namespace {
     return nullptr;
     }
   //}}}
-  }
-
-//{{{
-class cAudioFrame {
-public:
-  //{{{
-  cAudioFrame (size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, int64_t pts, float* samples)
-      : mNumChannels(numChannels), mSamplesPerFrame(samplesPerFrame), mSampleRate(sampleRate),
-        mPts(pts), mPtsDuration(samplesPerFrame * 90000 / sampleRate), mSamples(samples) {
-
-    for (size_t channel = 0; channel < mNumChannels; channel++) {
-      // init
-      mPeakValues[channel] = 0.f;
-      mPowerValues[channel] = 0.f;
-      }
-
-    float* samplePtr = samples;
-    for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
-      // acumulate
-      for (size_t channel = 0; channel < mNumChannels; channel++) {
-        auto value = *samplePtr++;
-        mPeakValues[channel] = max (abs(mPeakValues[channel]), value);
-        mPowerValues[channel] += value * value;
-        }
-      }
-
-    for (size_t channel = 0; channel < mNumChannels; channel++)
-      mPowerValues[channel] = sqrtf (mPowerValues[channel] / mSamplesPerFrame);
-    }
-  //}}}
-  //{{{
-  ~cAudioFrame() {
-    free (mSamples);
-    }
-  //}}}
 
   // gets
   size_t getNumChannels() const { return mNumChannels; }
@@ -407,7 +405,7 @@ public:
     size_t samplesPerFrame = 0;
     uint32_t sampleRate = 0;
     uint32_t frameSize = 0;
-    while (audioParseFrame (frame, pesEnd, frameType, numChannels, sampleRate, frameSize)) {
+    while (cAudioFrame::audioParseFrame (frame, pesEnd, frameType, numChannels, sampleRate, frameSize)) {
       AVPacket avPacket;
       av_init_packet (&avPacket);
 
@@ -631,7 +629,7 @@ void cAudioPlayer::wait() {
 //}}}
 //}}}
 
-// cAudio
+// cAudioRender
 //{{{
 cAudioRender::cAudioRender (const std::string name) : cRender(name) {
 
@@ -686,13 +684,18 @@ cAudioRender::~cAudioRender() {
   mFrames.clear();
   }
 //}}}
-
 //{{{
 string cAudioRender::getInfoString() const {
   return fmt::format ("audioPool {}", mFrames.size());
   }
 //}}}
+//{{{
+cAudioFrame* cAudioRender::findFrame (int64_t pts) const {
 
+  auto it = mFrames.find (pts);
+  return (it == mFrames.end()) ? nullptr : it->second;
+  }
+//}}}
 //{{{
 void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
@@ -717,15 +720,6 @@ void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
       }
     );
 
-  }
-//}}}
-
-// private
-//{{{
-cAudioFrame* cAudioRender::findFrame (int64_t pts) const {
-
-  auto it = mFrames.find (pts);
-  return (it == mFrames.end()) ? nullptr : it->second;
   }
 //}}}
 //{{{
