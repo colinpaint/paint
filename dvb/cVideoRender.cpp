@@ -610,7 +610,8 @@ public:
         ret = avcodec_receive_frame (mAvContext, mAvFrame);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
           break;
-        int64_t decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+        int64_t decodeTime = 
+          chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
         // create new videoFrame
         cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (true);
@@ -628,7 +629,7 @@ public:
                                         SWS_BILINEAR, NULL, NULL, NULL);
           //}}}
         videoFrame->setYuv420 (mSwsContext, mAvFrame->data, mAvFrame->linesize);
-        videoFrame->setYuv420Time(
+        videoFrame->setYuv420Time (
           chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
         av_frame_unref (mAvFrame);
 
@@ -700,24 +701,22 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   logValue (pts, (float)pesSize);
 
-  // ffmpeg doesn't maintain correct avFrame.pts, decode frames in presentation order and pts correct on I frames
+  // ffmpeg doesn't maintain correct avFrame.pts
+  // - decode frames in presentation order, pts is correct on I frames
   char frameType = cDvbUtils::getFrameType (pes, pesSize, 27);
   if (frameType == 'I') {
     if ((mGuessPts >= 0) && (mGuessPts != dts))
-      //{{{  debug
       cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
-                                        getPtsFramesString (mGuessPts, 1800),
-                                        getPtsFramesString (dts, 1800),frameType,pesSize));
-      //}}}
+                                        getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
+                                        frameType,pesSize));
     mGuessPts = dts;
     mSeenIFrame = true;
     }
 
   if (!mSeenIFrame) {
-    //{{{  debug
-    cLog::log (LOGINFO, fmt::format("waiting for Iframe {} to:{} type:{} size:{}",
-                        getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),frameType,pesSize));
-    //}}}
+    cLog::log (LOGINFO, fmt::format ("waiting for Iframe {} to:{} type:{} size:{}",
+                                     getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
+                                     frameType, pesSize));
     return;
     }
 
@@ -725,12 +724,6 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
     int bytesUsed = mVideoDecoder->decode (pes, pesSize, frameType, mGuessPts,
       [&](cVideoFrame* videoFrame) noexcept {
         // add videoFrame lambda
-        if (!mSeenIFrame) {
-          //{{{  no Iframe yet, delete and return
-          delete videoFrame;
-          return;
-          }
-          //}}}
         mWidth = videoFrame->getWidth();
         mHeight = videoFrame->getHeight();
         mPtsDuration = videoFrame->getPtsDuration();
@@ -738,9 +731,9 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
         mYuv420Time = videoFrame->getYuv420Time();
         logValue (videoFrame->getPts(), (float)mDecodeTime);
 
+        // locked
         unique_lock<shared_mutex> lock (mSharedMutex);
-        // delete youngest
-        if (mFrames.size() >= mMaxPoolSize)
+        if (mFrames.size() >= mMaxPoolSize) // delete youngest videoFrame
           mFrames.erase (mFrames.begin());
 
         // add videoFrame
