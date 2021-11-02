@@ -183,6 +183,21 @@ private:
   int64_t mYuv420Time = 0;
   };
 //}}}
+//{{{
+class cVideoFramePlanarRgbaSws : public cVideoFrame {
+public:
+  cVideoFramePlanarRgbaSws() : cVideoFrame(true) {}
+  virtual ~cVideoFramePlanarRgbaSws() {}
+
+  virtual void setYuv420 (void* context, uint8_t** data, int* linesize) final {
+
+    // ffmpeg libswscale convert data to mPixels using swsContext
+    uint8_t* dstData[1] = { (uint8_t*)mPixels };
+    int dstStride[1] = { mWidth * 4 };
+    sws_scale ((SwsContext*)context, data, linesize, 0, mHeight, dstData, dstStride);
+    }
+  };
+//}}}
 #ifdef _WIN32
   //{{{
   class cVideoFrameRgba : public cVideoFrame {
@@ -535,21 +550,6 @@ private:
   //}}}
 #endif
 //{{{
-class cVideoFramePlanarRgbaSws : public cVideoFrame {
-public:
-  cVideoFramePlanarRgbaSws() : cVideoFrame(true) {}
-  virtual ~cVideoFramePlanarRgbaSws() {}
-
-  virtual void setYuv420 (void* context, uint8_t** data, int* linesize) final {
-
-    // ffmpeg libswscale convert data to mPixels using swsContext
-    uint8_t* dstData[1] = { (uint8_t*)mPixels };
-    int dstStride[1] = { mWidth * 4 };
-    sws_scale ((SwsContext*)context, data, linesize, 0, mHeight, dstData, dstStride);
-    }
-  };
-//}}}
-//{{{
 cVideoFrame* cVideoFrame::createVideoFrame (bool planar) {
 
   #ifdef _WIN32
@@ -608,7 +608,7 @@ public:
       int ret = avcodec_send_packet (mAvContext, &mAvPacket);
       while (ret >= 0) {
         ret = avcodec_receive_frame (mAvContext, mAvFrame);
-        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
+        if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
           break;
         int64_t decodeTime =
           chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();

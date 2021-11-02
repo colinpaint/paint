@@ -53,7 +53,7 @@ public:
       ImGui::SameLine();
       }
       //}}}
-    mMainTabIndex = interlockedButtons ({"services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
+    mMainTabIndex = interlockedButtons ({"services", "pids", "recorded", "tv"}, mMainTabIndex, {0.f,0.f}, true);
     //{{{  vertice debug
     ImGui::SameLine();
     ImGui::TextUnformatted (fmt::format ("{}:{}",
@@ -105,6 +105,12 @@ public:
         //{{{
         case 2: { // recorded
           drawRecorded (*dvbTransportStream);
+          break;
+          }
+        //}}}
+        //{{{
+        case 3: { // tv
+          drawTv (*dvbTransportStream, app.getGraphics());
           break;
           }
         //}}}
@@ -283,6 +289,54 @@ private:
 
     for (auto& program : dvbTransportStream.getRecordPrograms())
       ImGui::TextUnformatted (program.c_str());
+    }
+  //}}}
+  //{{{
+  void drawTv (cDvbTransportStream& dvbTransportStream, cGraphics& graphics) {
+
+    for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
+      cDvbTransportStream::cService& service =  serviceItem.second;
+      if (service.getAudio()) {
+        int64_t playPts = service.getAudio()->getPlayPts();
+        if (service.getVideo()) {
+          cVideoRender& video = *service.getVideo();
+          if (playPts != video.mTexturePts) {
+            // new pts to display
+            uint8_t* pixels = video.getFramePixels (playPts);
+            if (pixels) {
+              if (video.mTexture == nullptr) // create
+                video.mTexture = graphics.createTexture ({video.getWidth(), video.getHeight()}, pixels);
+              else
+                video.mTexture->setPixels (pixels);
+              video.mTexturePts = playPts;
+              }
+            }
+          if (video.mTexture)
+            ImGui::Image ((void*)(intptr_t)video.mTexture->getTextureId(),
+                          //{(float)video.getWidth(),(float)video.getHeight()});
+                          {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()});
+
+          ImGui::SetCursorPos ({0.f,ImGui::GetTextLineHeight()});
+          ImGui::TextUnformatted (video.getInfoString().c_str());
+          ImGui::TextUnformatted (service.getAudio()->getInfoString().c_str());
+          break;
+          }
+        }
+      }
+
+    // overlay channel buttons
+    ImGui::SetCursorPos ({0.f,0.f});
+    for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
+      cDvbTransportStream::cService& service =  serviceItem.second;
+      if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameSize).c_str())) {
+        //{{{  toggle all
+        service.toggleVideo();
+        service.toggleAudio();
+        service.toggleSubtitle();
+        }
+        //}}}
+      ImGui::SameLine();
+      }
     }
   //}}}
 
