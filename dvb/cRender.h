@@ -1,12 +1,11 @@
-// cDecoder.h
+// cRender.h
 //{{{  includes
 #pragma once
-
-#include "cRender.h"
 
 #include <cstdint>
 #include <string>
 #include <map>
+#include <shared_mutex>
 
 #include "../utils/cMiniLog.h"
 //}}}
@@ -16,6 +15,8 @@ class cRender {
 public:
   cRender (const std::string name);
   virtual ~cRender();
+
+  std::shared_mutex& getSharedMutex() { return mSharedMutex; }
 
   // miniLog
   cMiniLog& getLog() { return mMiniLog; }
@@ -38,6 +39,8 @@ public:
 protected:
   void header();
   void log (const std::string& tag, const std::string& text);
+
+  std::shared_mutex mSharedMutex;
 
 private:
   const std::string mName;

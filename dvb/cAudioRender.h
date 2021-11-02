@@ -22,8 +22,6 @@ public:
   virtual ~cAudioRender();
 
   // gets
-  std::shared_mutex& getSharedMutex() { return mSharedMutex; }
-
   eAudioFrameType getFrameType() const { return mFrameType; }
   size_t getNumChannels() const { return mNumChannels; }
   size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
@@ -47,7 +45,6 @@ private:
   void addFrame (cAudioFrame* frame);
 
   // vars
-  std::shared_mutex mSharedMutex;
   cAudioDecoder* mAudioDecoder = nullptr;
 
   eAudioFrameType mFrameType;

@@ -34,8 +34,7 @@ public:
 private:
   void addFrame (cVideoFrame* frame);
 
-  std::shared_mutex mSharedMutex;
-
+  // vars
   cVideoDecoder* mVideoDecoder = nullptr;
   std::map <int64_t, cVideoFrame*> mFrames;
 

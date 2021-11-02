@@ -300,6 +300,9 @@ private:
         int64_t playPts = service.getAudio()->getPlayPts();
         if (service.getVideo()) {
           cVideoRender& video = *service.getVideo();
+
+          { // locked
+          shared_lock<shared_mutex> lock (video.getSharedMutex());
           if (playPts != video.mTexturePts) {
             // new pts to display
             uint8_t* pixels = video.getFramePixels (playPts);
@@ -311,6 +314,8 @@ private:
               video.mTexturePts = playPts;
               }
             }
+          }
+
           if (video.mTexture)
             ImGui::Image ((void*)(intptr_t)video.mTexture->getTextureId(),
                           //{(float)video.getWidth(),(float)video.getHeight()});
@@ -345,6 +350,8 @@ private:
 
     int64_t lastPts = plotValues (pts, video, 0xffffffff);
 
+    { // locked
+    shared_lock<shared_mutex> lock (video.getSharedMutex());
     if (playPts != video.mTexturePts) {
       // new pts to display
       uint8_t* pixels = video.getFramePixels (playPts);
@@ -356,6 +363,7 @@ private:
         video.mTexturePts = playPts;
         }
       }
+    }
 
     ImGui::TextUnformatted(video.getInfoString().c_str());
     if (video.mTexture)
