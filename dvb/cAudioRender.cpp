@@ -731,24 +731,19 @@ cAudioFrame* cAudioRender::findFrame (int64_t pts) const {
 //{{{
 void cAudioRender::addFrame (cAudioFrame* frame) {
 
-  if (mFrames.size() >= mMaxMapSize)
-    cLog::log (LOGINFO, fmt::format (" audio addFrame firstPts:{} playPts:{}",
-                                     getPtsString ((*mFrames.begin()).first), getPtsString (mPlayPts)));
-
     {
     unique_lock<shared_mutex> lock (mSharedMutex);
+    mFrames.emplace (frame->getPts(), frame);
 
     if (mFrames.size() >= mMaxMapSize) {
       auto it = mFrames.begin();
       while ((*it).first < mPlayPts) {
         // delete any frame before mPlayPts
-        cAudioFrame* audioFrame = (*it).second;
+        auto frameToDelete = (*it).second;
         it = mFrames.erase (it);
-        delete audioFrame;
+        delete frameToDelete;
         }
       }
-
-    mFrames.emplace (frame->getPts(), frame);
     }
 
   if (mFrames.size() >= mMaxMapSize)

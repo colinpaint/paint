@@ -747,11 +747,13 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
 void cVideoRender::addFrame (cVideoFrame* frame) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
+
   if (mFrames.size() >= mMaxPoolSize) {
     // delete youngest frame
     auto it = mFrames.begin();
-    mFrames.erase (it);
-    delete (*it).second;
+    auto frameToDelete = (*it).second;
+    it = mFrames.erase (it);
+    delete frameToDelete;
     }
 
   // add videoFrame
