@@ -9,7 +9,6 @@
 #include <array>
 #include <algorithm>
 #include <thread>
-#include <shared_mutex>
 #include <functional>
 
 #include "../imgui/imgui.h"
@@ -288,16 +287,17 @@ cVideoRender::~cVideoRender() {
   delete mVideoDecoder;
   }
 //}}}
+
 //{{{
 string cVideoRender::getInfoString() const {
   return fmt::format ("videoPool {}x{} decode:{:5d} yuv:{:4d} size:{}",
                       mWidth, mHeight, mDecodeTime, mYuv420Time, mFrames.size());
   }
 //}}}
-
 //{{{
 cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
 
+  // locked
   shared_lock<shared_mutex> lock (mSharedMutex);
 
   if (playPts != mTexturePts) {
@@ -333,6 +333,7 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
 //{{{
 void cVideoRender::addFrame (cVideoFrame* frame) {
 
+  // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
 
   mFrames.emplace(frame->getPts() / frame->getPtsDuration(), frame);
@@ -385,7 +386,7 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   }
 //}}}
 
-// videoFrame classes
+// cVideoFrame factory classes
 //{{{
 class cVideoFramePlanarRgbaSws : public cVideoFrame {
 public:

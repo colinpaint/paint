@@ -4,15 +4,14 @@
 
 #include <cstdint>
 #include <string>
-#include <shared_mutex>
 
 #include "cRender.h"
 #include "../utils/cMiniLog.h"
 
 class cVideoFrame;
 class cVideoDecoder;
-class cGraphics;
 class cTexture;
+class cGraphics;
 //}}}
 
 class cVideoRender : public cRender {
@@ -26,12 +25,10 @@ public:
 
   cTexture* getTexture (int64_t playPts, cGraphics& graphics);
 
+  void addFrame (cVideoFrame* frame);
   void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 
 private:
-  void addFrame (cVideoFrame* frame);
-
-  // vars
   cVideoDecoder* mVideoDecoder = nullptr;
 
   const size_t mMaxPoolSize;

@@ -4,7 +4,6 @@
 
 #include <cstdint>
 #include <string>
-#include <shared_mutex>
 
 #include "cRender.h"
 #include "../utils/cMiniLog.h"
