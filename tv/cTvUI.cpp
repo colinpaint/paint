@@ -207,7 +207,7 @@ private:
 
       int64_t playPts = 0;
       if (service.getAudio())
-        playPts = service.getAudio()->getPlayPts();
+        playPts = dynamic_cast<cAudioRender*>(service.getAudio())->getPlayPts();
 
       int64_t lastPts = 0;
       if (service.getAudio())
@@ -269,7 +269,7 @@ private:
             service->toggleSubtitle();
 
         if (pidInfo.mPid == service->getSubPid()) {
-          cSubtitleRender* subtitle = service->getSubtitle();
+          cRender* subtitle = service->getSubtitle();
           if (subtitle)
             drawSubtitle (*subtitle, 0, graphics);
           }
@@ -297,7 +297,8 @@ private:
     for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
       cDvbTransportStream::cService& service =  serviceItem.second;
       if (service.getAudio()) {
-        int64_t playPts = service.getAudio()->getPlayPts();
+        cAudioRender& audio = *dynamic_cast<cAudioRender*>(service.getAudio());
+        int64_t playPts = audio.getPlayPts();
         if (service.getVideo()) {
           cVideoRender& video = *dynamic_cast<cVideoRender*>(service.getVideo());
 
@@ -309,7 +310,7 @@ private:
 
           ImGui::SetCursorPos ({0.f,ImGui::GetTextLineHeight()});
           ImGui::TextUnformatted (video.getInfoString().c_str());
-          ImGui::TextUnformatted (service.getAudio()->getInfoString().c_str());
+          ImGui::TextUnformatted (audio.getInfoString().c_str());
           break;
           }
         }

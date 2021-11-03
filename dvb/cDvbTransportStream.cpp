@@ -462,9 +462,9 @@ cDvbTransportStream::cService::~cService() {
   mEpgItemMap.clear();
 
   delete mVidStream.mRender;
-  delete mAudio;
-  delete mAudioOther;
-  delete mSubtitle;
+  delete mAudStream.mRender;
+  delete mAudOtherStream.mRender;
+  delete mSubStream.mRender;
 
   closeFile();
   }
@@ -563,37 +563,37 @@ void cDvbTransportStream::cService::toggleVideo() {
 //{{{
 void cDvbTransportStream::cService::toggleAudio() {
 
-  if (mAudio) {
-    auto mTemp = mAudio;
-    mAudio = nullptr;
+  if (mAudStream.mRender) {
+    auto mTemp = mAudStream.mRender;
+    mAudStream.mRender = nullptr;
     delete mTemp;
     }
   else
-    mAudio = new cAudioRender(getChannelName());
+    mAudStream.mRender = new cAudioRender (getChannelName());
   }
 //}}}
 //{{{
 void cDvbTransportStream::cService::toggleAudioOther() {
 
-  if (mAudioOther) {
-    auto mTemp = mAudioOther;
-    mAudioOther = nullptr;
+  if (mAudOtherStream.mRender) {
+    auto mTemp = mAudOtherStream.mRender;
+    mAudOtherStream.mRender = nullptr;
     delete mTemp;
     }
   else
-    mAudioOther = new cAudioRender(getChannelName());
+    mAudOtherStream.mRender = new cAudioRender (getChannelName());
   }
 //}}}
 //{{{
 void cDvbTransportStream::cService::toggleSubtitle() {
 
-  if (mSubtitle) {
-    auto mTemp = mSubtitle;
-    mSubtitle = nullptr;
+  if (mSubStream.mRender) {
+    auto mTemp = mSubStream.mRender;
+    mSubStream.mRender = nullptr;
     delete mTemp;
     }
   else
-    mSubtitle = new cSubtitleRender(getChannelName());
+    mSubStream.mRender = new cSubtitleRender (getChannelName());
   }
 //}}}
 
@@ -773,21 +773,21 @@ cRender* cDvbTransportStream::getVideo (uint16_t sid) {
   }
 //}}}
 //{{{
-cAudioRender* cDvbTransportStream::getAudio (uint16_t sid) {
+cRender* cDvbTransportStream::getAudio (uint16_t sid) {
 
   cService* service = getService (sid);
   return service ? service->getAudio() : nullptr;
   }
 //}}}
 //{{{
-cAudioRender* cDvbTransportStream::getAudioOther (uint16_t sid) {
+cRender* cDvbTransportStream::getAudioOther (uint16_t sid) {
 
   cService* service = getService (sid);
   return service ? service->getAudioOther() : nullptr;
   }
 //}}}
 //{{{
-cSubtitleRender* cDvbTransportStream::getSubtitle (uint16_t sid) {
+cRender* cDvbTransportStream::getSubtitle (uint16_t sid) {
 
   cService* service = getService (sid);
   return service ? service->getSubtitle() : nullptr;
@@ -960,7 +960,7 @@ bool cDvbTransportStream::audPes (cPidInfo* pidInfo, bool skip) {
   (void)skip;
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cAudioRender* audio = service->getAudio();
+    cRender* audio = service->getAudio();
     if (audio)
       audio->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
@@ -974,7 +974,7 @@ bool cDvbTransportStream::audOtherPes (cPidInfo* pidInfo, bool skip) {
   (void)skip;
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cAudioRender* audio = service->getAudioOther();
+    cRender* audio = service->getAudioOther();
     if (audio)
       audio->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
@@ -986,7 +986,7 @@ bool cDvbTransportStream::subPes (cPidInfo* pidInfo) {
 
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cSubtitleRender* subtitle = service->getSubtitle();
+    cRender* subtitle = service->getSubtitle();
     if (subtitle)
       subtitle->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
