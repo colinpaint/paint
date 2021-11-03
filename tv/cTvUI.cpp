@@ -38,7 +38,7 @@ public:
     if (app.getPlatform().hasVsync()) {
       //{{{  vsync button
       if (toggleButton ("vSync", app.getPlatform().getVsync()))
-          app.getPlatform().toggleVsync();
+        app.getPlatform().toggleVsync();
 
       // fps text
       ImGui::SameLine();
@@ -134,79 +134,71 @@ private:
       //{{{  calc max field sizes, may jiggle for a couple of draws
       while (service.getChannelName().size() > mMaxNameSize)
         mMaxNameSize = service.getChannelName().size();
-
       while (service.getSid() > pow (10, mMaxSidSize))
         mMaxSidSize++;
-
       while (service.getProgramPid() > pow (10, mMaxPgmSize))
         mMaxPgmSize++;
-
-      while (service.getVidPid() > pow (10, mMaxVidSize))
+      while (service.getVidStream().getPid() > pow (10, mMaxVidSize))
         mMaxVidSize++;
-
-      while (service.getAudPid() > pow (10, mMaxAudSize))
+      while (service.getAudStream().getPid() > pow (10, mMaxAudSize))
         mMaxAudSize++;
-
-      while (service.getSubPid() > pow (10, mMaxSubSize))
+      while (service.getSubStream().getPid() > pow (10, mMaxSubSize))
         mMaxSubSize++;
       //}}}
 
-      // draw channel name pgm,sid
+      //{{{  draw channel name pgm,sid
       if (ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
                          service.getChannelName(), mMaxNameSize,
                          service.getProgramPid(), mMaxPgmSize,
-                         service.getSid(), mMaxSidSize).c_str())) {
-        //{{{  toggle all
-        service.toggleVideo();
-        service.toggleAudio();
-        service.toggleSubtitle();
-        }
-        //}}}
+                         service.getSid(), mMaxSidSize).c_str()))
+        service.toggle();
+      //}}}
       if (service.getVidStream().isDefined()) {
-        //{{{  got vid
+        //{{{  draw vid
         ImGui::SameLine();
-        if (toggleButton (fmt::format ("vid:{:{}d}:{}",
-                                       service.getVidPid(), mMaxVidSize, service.getVidStreamTypeName()).c_str(),
-                          service.getVidStream().getRender()))
+        if (toggleButton (
+              fmt::format ("vid:{:{}d}:{}",
+                           service.getVidStream().getPid(), mMaxVidSize, service.getVidStream().getType()).c_str(),
+            service.getVidStream().isEnabled()))
           service.toggleVideo();
         }
         //}}}
       if (service.getAudStream().isDefined()) {
-        //{{{  got aud
+        //{{{  draw aud
         ImGui::SameLine();
         if (toggleButton (fmt::format ("aud:{:{}d}:{}",
-                                       service.getAudPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str(),
-                          service.getAudStream().getRender()))
+                          service.getAudStream().getPid(), mMaxAudSize, service.getAudStream().getType()).c_str(),
+            service.getAudStream().isEnabled()))
           service.toggleAudio();
         }
         //}}}
       if (service.getAudOtherStream().isDefined()) {
-        //{{{  got aud
+        //{{{  draw audOther
         ImGui::SameLine();
         if (toggleButton (fmt::format ("{:{}d}:{}",
-                                       service.getAudOtherPid(), mMaxAudSize, service.getAudOtherStreamTypeName()).c_str(),
-                          service.getAudOtherStream().getRender()))
+                          service.getAudOtherStream().getPid(), mMaxAudSize, service.getAudOtherStream().getType()).c_str(),
+            service.getAudOtherStream().isEnabled()))
           service.toggleAudioOther();
         }
         //}}}
       if (service.getSubStream().isDefined()) {
-        //{{{  got sub
+        //{{{  draw sub
         ImGui::SameLine();
         if (toggleButton (fmt::format ("{}:{:{}d}",
-                                       service.getSubStreamTypeName(), service.getSubPid(), mMaxSubSize).c_str(),
-                          service.getSubStream().getRender()))
+                          service.getSubStream().getType(), service.getSubStream().getPid(), mMaxSubSize).c_str(),
+            service.getSubStream().isEnabled()))
           service.toggleSubtitle();
         }
         //}}}
       if (service.getChannelRecord()) {
-        //{{{  got record
+        //{{{  draw record
         ImGui::SameLine();
         ImGui::TextUnformatted (fmt::format ("rec:{}", service.getChannelRecordName()).c_str());
         }
         //}}}
 
       int64_t playPts = 0;
-      if (service.getAudStream().getRender())
+      if (service.getAudStream().isEnabled())
         playPts = dynamic_cast<cAudioRender*>(service.getAudStream().getRender())->getPlayPts();
 
       int64_t lastPts = 0;
@@ -265,10 +257,10 @@ private:
         ImGui::SetCursorPos (cursorPos);
         if (ImGui::InvisibleButton (fmt::format ("##pid{}", pidInfo.mPid).c_str(),
                                     {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
-          if (pidInfo.mPid == service->getSubPid())
+          if (pidInfo.mPid == service->getSubStream().getPid())
             service->toggleSubtitle();
 
-        if (pidInfo.mPid == service->getSubPid()) {
+        if (pidInfo.mPid == service->getSubStream().getPid()) {
           cRender* subtitle = service->getSubStream().getRender();
           if (subtitle)
             drawSubtitle (*subtitle, 0, graphics);
@@ -296,10 +288,10 @@ private:
 
     for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
       cDvbTransportStream::cService& service =  serviceItem.second;
-      if (service.getAudStream().getRender()) {
+      if (service.getAudStream().isEnabled()) {
         cAudioRender& audio = *dynamic_cast<cAudioRender*>(service.getAudStream().getRender());
         int64_t playPts = audio.getPlayPts();
-        if (service.getVidStream().getRender()) {
+        if (service.getVidStream().isEnabled()) {
           cVideoRender& video = *dynamic_cast<cVideoRender*>(service.getVidStream().getRender());
 
           cTexture* texture = video.getTexture (playPts, graphics);
@@ -320,14 +312,8 @@ private:
     ImGui::SetCursorPos ({0.f,0.f});
     for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
       cDvbTransportStream::cService& service =  serviceItem.second;
-      if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameSize).c_str())) {
-        //{{{  toggle all
-        service.toggleVideo();
-        service.toggleAudio();
-        service.toggleSubtitle();
-        }
-        //}}}
-      ImGui::SameLine();
+      if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameSize).c_str()))
+        service.toggle();
       }
     }
   //}}}

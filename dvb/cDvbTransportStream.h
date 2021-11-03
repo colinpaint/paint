@@ -84,7 +84,6 @@ public:
   //{{{
   class cStream {
   public:
-    cStream() {}
     ~cStream();
 
     bool isDefined() const { return mDefined; }
@@ -98,10 +97,12 @@ public:
 
     void set (uint16_t pid, uint16_t streamType);
     void setRender (cRender* render) { mRender = render; }
+
     bool toggle();
 
   private:
     bool mDefined = false;
+
     uint16_t mPid = 0;
     uint16_t mType = 0;
     std::string mName;
@@ -171,17 +172,18 @@ public:
     cStream& getAudOtherStream() { return mAudOtherStream; }
     cStream& getSubStream() { return mSubStream; }
 
-    std::string getChannelName() const { return mChannelName; }
     bool getChannelRecord() const { return mChannelRecord; }
+    std::string getChannelName() const { return mChannelName; }
     std::string getChannelRecordName() const { return mChannelRecordName; }
 
     // epg
     bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
 
-    bool getShowEpg() { return mShowEpg; }
+    bool getShowEpg() const { return mShowEpg; }
 
     cEpgItem* getNowEpgItem() { return mNowEpgItem; }
-    std::string getNowTitleString() { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
+    std::string getNowTitleString() const { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
+
     std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpgItemMap() { return mEpgItemMap; }
     //}}}
     //{{{  sets
@@ -190,21 +192,12 @@ public:
 
     //{{{
     void setChannelName (const std::string& name, bool record, const std::string& recordName) {
+
       mChannelName = name;
       mChannelRecord = record;
       mChannelRecordName = recordName;
       }
     //}}}
-
-    // render
-    void setVideo (cRender* render) { mVidStream.setRender (render); }
-    void toggleVideo();
-    void setAudio (cRender* render) { mAudStream.setRender(render); }
-    void toggleAudio();
-    void setAudioOther (cRender* render) { mAudOtherStream.setRender(render); }
-    void toggleAudioOther();
-    void setSubtitle (cRender* render) { mSubStream.setRender (render); }
-    void toggleSubtitle();
 
     // epg
     bool setNow (bool record,
@@ -217,6 +210,11 @@ public:
 
     void toggleShowEpg() { mShowEpg = !mShowEpg; }
     //}}}
+    void toggle();
+    void toggleVideo();
+    void toggleAudio();
+    void toggleAudioOther();
+    void toggleSubtitle();
 
     // record
     bool openFile (const std::string& fileName, uint16_t tsid);

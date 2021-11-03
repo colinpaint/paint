@@ -517,10 +517,15 @@ bool cDvbTransportStream::cService::isEpgRecord (const string& title, tTimePoint
 //{{{
 void cDvbTransportStream::cService::setAudStream (uint16_t pid, uint16_t streamType) {
 
-  if (!mAudStream.isDefined()) 
+  if (mAudStream.isDefined()) {
+    if (pid != mAudStream.getPid()) {
+      // main aud stream defined, new aud pid, try other
+      if (!mAudOtherStream.isDefined())
+        mAudOtherStream.set (pid, streamType);
+      }
+    }
+  else
     mAudStream.set (pid, streamType);
-  else if (!mAudOtherStream.isDefined()) 
-    mAudOtherStream.set (pid, streamType);
   }
 //}}}
 
@@ -553,6 +558,15 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
   }
 //}}}
 
+//{{{
+void cDvbTransportStream::cService::toggle() {
+
+  // improve to one on all off , if all off all on
+  toggleVideo();
+  toggleAudio();
+  toggleSubtitle();
+  }
+//}}}
 //{{{
 void cDvbTransportStream::cService::toggleVideo() {
 
