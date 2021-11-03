@@ -158,7 +158,7 @@ private:
         ImGui::SameLine();
         if (toggleButton (
               fmt::format ("vid:{:{}d}:{}",
-                           service.getStream (cDvbTransportStream::eStream::eVid).getPid(), mMaxVidSize, 
+                           service.getStream (cDvbTransportStream::eStream::eVid).getPid(), mMaxVidSize,
                            service.getStream (cDvbTransportStream::eStream::eVid).getType()).c_str(),
             service.getStream (cDvbTransportStream::eStream::eVid).isEnabled()))
           service.toggleVideo();
@@ -168,7 +168,7 @@ private:
         //{{{  draw aud
         ImGui::SameLine();
         if (toggleButton (fmt::format ("aud:{:{}d}:{}",
-                          service.getStream (cDvbTransportStream::eStream::eAud).getPid(), mMaxAudSize, 
+                          service.getStream (cDvbTransportStream::eStream::eAud).getPid(), mMaxAudSize,
                           service.getStream (cDvbTransportStream::eStream::eAud).getType()).c_str(),
             service.getStream (cDvbTransportStream::eStream::eAud).isEnabled()))
           service.toggleAudio();
@@ -178,7 +178,7 @@ private:
         //{{{  draw audOther
         ImGui::SameLine();
         if (toggleButton (fmt::format ("{:{}d}:{}",
-                          service.getStream (cDvbTransportStream::eStream::eAudOther).getPid(), mMaxAudSize, 
+                          service.getStream (cDvbTransportStream::eStream::eAudOther).getPid(), mMaxAudSize,
                           service.getStream (cDvbTransportStream::eStream::eAudOther).getType()).c_str(),
             service.getStream (cDvbTransportStream::eStream::eAudOther).isEnabled()))
           service.toggleAudioOther();
@@ -188,7 +188,7 @@ private:
         //{{{  draw sub
         ImGui::SameLine();
         if (toggleButton (fmt::format ("{}:{:{}d}",
-                          service.getStream (cDvbTransportStream::eStream::eSub).getType(), 
+                          service.getStream (cDvbTransportStream::eStream::eSub).getType(),
                           service.getStream (cDvbTransportStream::eStream::eSub).getPid(), mMaxSubSize).c_str(),
             service.getStream (cDvbTransportStream::eStream::eSub).isEnabled()))
           service.toggleSubtitle();
@@ -291,12 +291,15 @@ private:
   void drawTv (cDvbTransportStream& dvbTransportStream, cGraphics& graphics) {
 
     for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
-      cDvbTransportStream::cService& service =  serviceItem.second;
+      cDvbTransportStream::cService& service = serviceItem.second;
       if (service.getStream (cDvbTransportStream::eStream::eAud).isEnabled()) {
-        cAudioRender& audio = *dynamic_cast<cAudioRender*>(service.getStream (cDvbTransportStream::eStream::eAud).getRender());
+        cAudioRender& audio = 
+          *dynamic_cast<cAudioRender*>(service.getStream (cDvbTransportStream::eStream::eAud).getRender());
         int64_t playPts = audio.getPlayPts();
+
         if (service.getStream(cDvbTransportStream::eStream::eVid).isEnabled()) {
-          cVideoRender& video = *dynamic_cast<cVideoRender*>(service.getStream (cDvbTransportStream::eStream::eVid).getRender());
+          cVideoRender& video = 
+            *dynamic_cast<cVideoRender*>(service.getStream (cDvbTransportStream::eStream::eVid).getRender());
 
           cTexture* texture = video.getTexture (playPts, graphics);
           if (texture)
@@ -314,11 +317,9 @@ private:
 
     // overlay channel buttons
     ImGui::SetCursorPos ({0.f,0.f});
-    for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
-      cDvbTransportStream::cService& service =  serviceItem.second;
-      if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameSize).c_str()))
-        service.toggle();
-      }
+    for (auto& serviceItem : dvbTransportStream.getServiceMap()) 
+      if (ImGui::Button (fmt::format ("{:{}s}", serviceItem.second.getChannelName(), mMaxNameSize).c_str()))
+        serviceItem.second.toggle();
     }
   //}}}
 

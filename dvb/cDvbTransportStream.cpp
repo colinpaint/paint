@@ -518,15 +518,15 @@ bool cDvbTransportStream::cService::isEpgRecord (const string& title, tTimePoint
 //{{{
 void cDvbTransportStream::cService::setAudStream (uint16_t pid, uint16_t streamType) {
 
-  if (mAudStream.isDefined()) {
-    if (pid != mAudStream.getPid()) {
+  if (getStream (eStream::eAud).isDefined()) {
+    if (pid != getStream (eStream::eAud).getPid()) {
       // main aud stream defined, new aud pid, try other
-      if (!mAudOtherStream.isDefined())
-        mAudOtherStream.set (pid, streamType);
+      if (!getStream(eStream::eAudOther).isDefined())
+        getStream(eStream::eAudOther).set (pid, streamType);
       }
     }
   else
-    mAudStream.set (pid, streamType);
+    getStream (eStream::eAud).set (pid, streamType);
   }
 //}}}
 
@@ -571,29 +571,29 @@ void cDvbTransportStream::cService::toggle() {
 //{{{
 void cDvbTransportStream::cService::toggleVideo() {
 
-  if (mVidStream.toggle())
-    mVidStream.setRender (new cVideoRender(getChannelName()));
+  if (getStream (eStream::eVid).toggle())
+    getStream (eStream::eVid).setRender (new cVideoRender(getChannelName()));
   }
 //}}}
 //{{{
 void cDvbTransportStream::cService::toggleAudio() {
 
-  if (mAudStream.toggle())
-    mAudStream.setRender (new cAudioRender (getChannelName()));
+  if (getStream (eStream::eAud).toggle())
+    getStream (eStream::eAud).setRender (new cAudioRender (getChannelName()));
   }
 //}}}
 //{{{
 void cDvbTransportStream::cService::toggleAudioOther() {
 
-  if (mAudOtherStream.toggle())
-    mAudOtherStream.setRender (new cAudioRender (getChannelName()));
+  if (getStream (eStream::eAudOther).toggle())
+    getStream (eStream::eAudOther).setRender (new cAudioRender (getChannelName()));
   }
 //}}}
 //{{{
 void cDvbTransportStream::cService::toggleSubtitle() {
 
-  if (mSubStream.toggle())
-    mSubStream.setRender (new cSubtitleRender (getChannelName()));
+  if (getStream (eStream::eSub).toggle())
+    getStream (eStream::eSub).setRender (new cSubtitleRender (getChannelName()));
   }
 //}}}
 
@@ -617,7 +617,7 @@ void cDvbTransportStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
 //  pes ts packet, save only recognised pids
 
   if (mFile &&
-      ((pid == mVidStream.getPid()) || (pid == mAudStream.getPid()) || (pid == mSubStream.getPid())))
+      ((pid == getStream(eStream::eVid).getPid()) || (pid == getStream(eStream::eAud).getPid()) || (pid == getStream(eStream::eSub).getPid())))
     fwrite (ts, 1, 188, mFile);
   }
 //}}}
@@ -693,30 +693,30 @@ void cDvbTransportStream::cService::writePmt() {
   *tsPtr++ = 0x00; // first section number = 0
   *tsPtr++ = 0x00; // last section number = 0
 
-  *tsPtr++ = 0xE0 | ((mVidStream.getPid() & 0x1F00) >> 8);
-  *tsPtr++ = mVidStream.getPid() & 0x00FF;
+  *tsPtr++ = 0xE0 | ((getStream(eStream::eVid).getPid() & 0x1F00) >> 8);
+  *tsPtr++ = getStream(eStream::eVid).getPid() & 0x00FF;
 
   *tsPtr++ = 0xF0;
   *tsPtr++ = 0; // program_info_length;
 
   // video es
-  *tsPtr++ = static_cast<uint8_t>(mVidStream.getType()); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mVidStream.getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mVidStream.getPid() & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(getStream(eStream::eVid).getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((getStream(eStream::eVid).getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = getStream(eStream::eVid).getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // audio es
-  *tsPtr++ = static_cast<uint8_t>(mAudStream.getType()); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mAudStream.getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mAudStream.getPid() & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(getStream(eStream::eAud).getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((getStream(eStream::eAud).getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = getStream(eStream::eAud).getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // subtitle es
-  *tsPtr++ = static_cast<uint8_t>(mSubStream.getType()); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mSubStream.getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mSubStream.getPid() & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(getStream(eStream::eSub).getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((getStream(eStream::eSub).getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = getStream(eStream::eSub).getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 

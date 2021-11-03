@@ -9,9 +9,10 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <array>
 #include <map>
-#include <mutex>
 #include <chrono>
+#include <mutex>
 
 #include "cDvbMultiplex.h"
 
@@ -169,17 +170,7 @@ public:
     uint16_t getSid() const { return mSid; }
     uint16_t getProgramPid() const { return mProgramPid; }
 
-    //{{{
-    cStream& getStream (eStream stream) {
-      switch (stream) {
-        case eStream::eVid: return mVidStream;
-        case eStream::eAud: return mAudStream;
-        case eStream::eAudOther: return mAudOtherStream;
-        case eStream::eSub: return mSubStream;
-        default: return mVidStream;
-        }
-      }
-    //}}}
+    cStream& getStream (eStream stream) { return mStreams[(size_t)stream]; }
 
     bool getChannelRecord() const { return mChannelRecord; }
     std::string getChannelName() const { return mChannelName; }
@@ -219,6 +210,7 @@ public:
 
     void toggleShowEpg() { mShowEpg = !mShowEpg; }
     //}}}
+
     void toggle();
     void toggleVideo();
     void toggleAudio();
@@ -241,10 +233,8 @@ public:
     const uint16_t mSid;
     uint16_t mProgramPid = 0;
 
-    cStream mVidStream;
-    cStream mAudStream;
-    cStream mAudOtherStream;
-    cStream mSubStream;
+    // match sizeof eStream
+    std::array <cStream,4> mStreams;
 
     std::string mChannelName;
     bool mChannelRecord = false;
