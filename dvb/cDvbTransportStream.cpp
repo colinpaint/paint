@@ -567,16 +567,7 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
 //}}}
 
 //{{{
-void cDvbTransportStream::cService::toggle() {
-
-  // improve to one on all off , if all off all on
-  toggle (eVid);
-  toggle (eAud);
-  toggle (eSub);
-  }
-//}}}
-//{{{
-void cDvbTransportStream::cService::toggle (eStream streamType) {
+void cDvbTransportStream::cService::toggleStream (eStream streamType) {
 
   cStream& stream = getStream (streamType);
   if (stream.toggle()) {
@@ -598,6 +589,15 @@ void cDvbTransportStream::cService::toggle (eStream streamType) {
         return;
       }
     }
+  }
+//}}}
+//{{{
+void cDvbTransportStream::cService::toggleAll() {
+
+  // improve to one on all off , if all off all on
+  toggleStream (eVid);
+  toggleStream (eAud);
+  toggleStream (eSub);
   }
 //}}}
 

@@ -222,8 +222,8 @@ public:
     void toggleShowEpg() { mShowEpg = !mShowEpg; }
     //}}}
 
-    void toggle();
-    void toggle (eStream streamType);
+    void toggleStream (eStream streamType);
+    void toggleAll();
 
     // record
     bool openFile (const std::string& fileName, uint16_t tsid);
