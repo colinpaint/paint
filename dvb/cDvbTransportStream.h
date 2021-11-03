@@ -180,10 +180,6 @@ public:
         }
       }
     //}}}
-    cStream& getVidStream() { return mVidStream; }
-    cStream& getAudStream() { return mAudStream; }
-    cStream& getAudOtherStream() { return mAudOtherStream; }
-    cStream& getSubStream() { return mSubStream; }
 
     bool getChannelRecord() const { return mChannelRecord; }
     std::string getChannelName() const { return mChannelName; }

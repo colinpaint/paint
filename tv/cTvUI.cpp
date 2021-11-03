@@ -138,11 +138,11 @@ private:
         mMaxSidSize++;
       while (service.getProgramPid() > pow (10, mMaxPgmSize))
         mMaxPgmSize++;
-      while (service.getVidStream().getPid() > pow (10, mMaxVidSize))
+      while (service.getStream (cDvbTransportStream::eStream::eVid).getPid() > pow (10, mMaxVidSize))
         mMaxVidSize++;
-      while (service.getAudStream().getPid() > pow (10, mMaxAudSize))
+      while (service.getStream (cDvbTransportStream::eStream::eAud).getPid() > pow (10, mMaxAudSize))
         mMaxAudSize++;
-      while (service.getSubStream().getPid() > pow (10, mMaxSubSize))
+      while (service.getStream (cDvbTransportStream::eStream::eSub).getPid() > pow (10, mMaxSubSize))
         mMaxSubSize++;
       //}}}
 
@@ -153,40 +153,44 @@ private:
                          service.getSid(), mMaxSidSize).c_str()))
         service.toggle();
       //}}}
-      if (service.getVidStream().isDefined()) {
+      if (service.getStream (cDvbTransportStream::eStream::eVid).isDefined()) {
         //{{{  draw vid
         ImGui::SameLine();
         if (toggleButton (
               fmt::format ("vid:{:{}d}:{}",
-                           service.getVidStream().getPid(), mMaxVidSize, service.getVidStream().getType()).c_str(),
-            service.getVidStream().isEnabled()))
+                           service.getStream (cDvbTransportStream::eStream::eVid).getPid(), mMaxVidSize, 
+                           service.getStream (cDvbTransportStream::eStream::eVid).getType()).c_str(),
+            service.getStream (cDvbTransportStream::eStream::eVid).isEnabled()))
           service.toggleVideo();
         }
         //}}}
-      if (service.getAudStream().isDefined()) {
+      if (service.getStream (cDvbTransportStream::eStream::eAud).isDefined()) {
         //{{{  draw aud
         ImGui::SameLine();
         if (toggleButton (fmt::format ("aud:{:{}d}:{}",
-                          service.getAudStream().getPid(), mMaxAudSize, service.getAudStream().getType()).c_str(),
-            service.getAudStream().isEnabled()))
+                          service.getStream (cDvbTransportStream::eStream::eAud).getPid(), mMaxAudSize, 
+                          service.getStream (cDvbTransportStream::eStream::eAud).getType()).c_str(),
+            service.getStream (cDvbTransportStream::eStream::eAud).isEnabled()))
           service.toggleAudio();
         }
         //}}}
-      if (service.getAudOtherStream().isDefined()) {
+      if (service.getStream (cDvbTransportStream::eStream::eAudOther).isDefined()) {
         //{{{  draw audOther
         ImGui::SameLine();
         if (toggleButton (fmt::format ("{:{}d}:{}",
-                          service.getAudOtherStream().getPid(), mMaxAudSize, service.getAudOtherStream().getType()).c_str(),
-            service.getAudOtherStream().isEnabled()))
+                          service.getStream (cDvbTransportStream::eStream::eAudOther).getPid(), mMaxAudSize, 
+                          service.getStream (cDvbTransportStream::eStream::eAudOther).getType()).c_str(),
+            service.getStream (cDvbTransportStream::eStream::eAudOther).isEnabled()))
           service.toggleAudioOther();
         }
         //}}}
-      if (service.getSubStream().isDefined()) {
+      if (service.getStream (cDvbTransportStream::eStream::eSub).isDefined()) {
         //{{{  draw sub
         ImGui::SameLine();
         if (toggleButton (fmt::format ("{}:{:{}d}",
-                          service.getSubStream().getType(), service.getSubStream().getPid(), mMaxSubSize).c_str(),
-            service.getSubStream().isEnabled()))
+                          service.getStream (cDvbTransportStream::eStream::eSub).getType(), 
+                          service.getStream (cDvbTransportStream::eStream::eSub).getPid(), mMaxSubSize).c_str(),
+            service.getStream (cDvbTransportStream::eStream::eSub).isEnabled()))
           service.toggleSubtitle();
         }
         //}}}
@@ -198,18 +202,18 @@ private:
         //}}}
 
       int64_t playPts = 0;
-      if (service.getAudStream().isEnabled())
-        playPts = dynamic_cast<cAudioRender*>(service.getAudStream().getRender())->getPlayPts();
+      if (service.getStream (cDvbTransportStream::eStream::eAud).isEnabled())
+        playPts = dynamic_cast<cAudioRender*>(service.getStream (cDvbTransportStream::eStream::eAud).getRender())->getPlayPts();
 
       int64_t lastPts = 0;
-      if (service.getAudStream().isEnabled())
-        lastPts = drawAudio (*service.getAudStream().getRender(), lastPts, graphics);
-      if (service.getAudOtherStream().isEnabled())
-        lastPts = drawAudio (*service.getAudOtherStream().getRender(), lastPts, graphics);
-      if (service.getVidStream().isEnabled())
-        lastPts = drawVideo (*service.getVidStream().getRender(), lastPts, playPts, graphics);
-      if (service.getSubStream().isEnabled())
-        lastPts = drawSubtitle (*service.getSubStream().getRender(), lastPts, graphics);
+      if (service.getStream (cDvbTransportStream::eStream::eAud).isEnabled())
+        lastPts = drawAudio (*service.getStream (cDvbTransportStream::eStream::eAud).getRender(), lastPts, graphics);
+      if (service.getStream (cDvbTransportStream::eStream::eAudOther).isEnabled())
+        lastPts = drawAudio (*service.getStream (cDvbTransportStream::eStream::eAudOther).getRender(), lastPts, graphics);
+      if (service.getStream (cDvbTransportStream::eStream::eVid).isEnabled())
+        lastPts = drawVideo (*service.getStream (cDvbTransportStream::eStream::eVid).getRender(), lastPts, playPts, graphics);
+      if (service.getStream (cDvbTransportStream::eStream::eSub).isEnabled())
+        lastPts = drawSubtitle (*service.getStream (cDvbTransportStream::eStream::eSub).getRender(), lastPts, graphics);
       }
     }
   //}}}
@@ -257,11 +261,11 @@ private:
         ImGui::SetCursorPos (cursorPos);
         if (ImGui::InvisibleButton (fmt::format ("##pid{}", pidInfo.mPid).c_str(),
                                     {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
-          if (pidInfo.mPid == service->getSubStream().getPid())
+          if (pidInfo.mPid == service->getStream (cDvbTransportStream::eStream::eSub).getPid())
             service->toggleSubtitle();
 
-        if (pidInfo.mPid == service->getSubStream().getPid()) {
-          cRender* subtitle = service->getSubStream().getRender();
+        if (pidInfo.mPid == service->getStream (cDvbTransportStream::eStream::eSub).getPid()) {
+          cRender* subtitle = service->getStream (cDvbTransportStream::eStream::eSub).getRender();
           if (subtitle)
             drawSubtitle (*subtitle, 0, graphics);
           }
@@ -288,11 +292,11 @@ private:
 
     for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
       cDvbTransportStream::cService& service =  serviceItem.second;
-      if (service.getAudStream().isEnabled()) {
-        cAudioRender& audio = *dynamic_cast<cAudioRender*>(service.getAudStream().getRender());
+      if (service.getStream (cDvbTransportStream::eStream::eAud).isEnabled()) {
+        cAudioRender& audio = *dynamic_cast<cAudioRender*>(service.getStream (cDvbTransportStream::eStream::eAud).getRender());
         int64_t playPts = audio.getPlayPts();
-        if (service.getVidStream().isEnabled()) {
-          cVideoRender& video = *dynamic_cast<cVideoRender*>(service.getVidStream().getRender());
+        if (service.getStream(cDvbTransportStream::eStream::eVid).isEnabled()) {
+          cVideoRender& video = *dynamic_cast<cVideoRender*>(service.getStream (cDvbTransportStream::eStream::eVid).getRender());
 
           cTexture* texture = video.getTexture (playPts, graphics);
           if (texture)

@@ -872,7 +872,7 @@ void cDvbTransportStream::startServiceProgram (cService* service, tTimePoint tdt
   service->closeFile();
 
   if ((selected || service->getChannelRecord() || mDvbMultiplex.mRecordAllChannels) &&
-      service->getStream (eStream::eVid).isDefined() && (service->getAudStream().isDefined())) {
+      service->getStream (eStream::eVid).isDefined() && (service->getStream(eStream::eVid).isDefined())) {
     string filePath = mRecordRootName +
                       service->getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
@@ -1153,8 +1153,8 @@ void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
               if (running &&
                   !service->getChannelName().empty() &&
                   service->getProgramPid() &&
-                  service->getVidStream().isDefined() &&
-                  service->getAudStream().isDefined()) {
+                  service->getStream (eStream::eVid).isDefined() &&
+                  service->getStream (eStream::eAud).isDefined()) {
                   //(service->getSubPid())) {
                 // now event for named service with valid pgmPid, vidPid, audPid, subPid
                 if (service->setNow (service->isEpgRecord (titleString, startTime),
@@ -1250,7 +1250,7 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
       switch (esPidInfo->mStreamType) {
         case   2: // ISO 13818-2 video
         case  27: // HD vid
-          service->getVidStream().set (esPid, esPidInfo->mStreamType);
+          service->getStream (eStream::eVid).set (esPid, esPidInfo->mStreamType);
           break;
 
         case   3: // ISO 11172-3 audio
@@ -1262,7 +1262,7 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
           break;
 
         case   6: // subtitle
-          service->getSubStream().set (esPid, esPidInfo->mStreamType);
+          service->getStream (eStream::eSub).set (esPid, esPidInfo->mStreamType);
           break;
 
         case   5: // private mpeg2 tabled data - private
