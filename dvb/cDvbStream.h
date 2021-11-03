@@ -96,7 +96,7 @@ public:
     uint16_t getType() const { return mType; }
     std::string getTypeName() const { return mTypeName; }
     std::string getLabel() const { return mLabel; }
-    cRender* getRender() const { return mRender; }
+    cRender& getRender() const { return *mRender; }
 
     void set (uint16_t pid, uint16_t streamType);
     void setLabel (const std::string& label) { mLabel = label; }

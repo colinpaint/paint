@@ -139,9 +139,11 @@ private:
       while (service.getProgramPid() > pow (10, mMaxPgmSize))
         mMaxPgmSize++;
 
-      for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++)
-        while (service.getStream (streamType).getPid() > pow (10, mMaxDigits[streamType]))
+      for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
+        uint16_t pid = service.getStream (streamType).getPid();
+        while (pid > pow (10, mMaxDigits[streamType]))
           mMaxDigits[streamType]++;
+        }
       //}}}
 
       //{{{  draw channel name pgm,sid
@@ -156,10 +158,10 @@ private:
         cDvbStream::cStream& stream = service.getStream (streamType);
         if (stream.isDefined()) {
           ImGui::SameLine();
-          if (toggleButton (fmt::format ("{}{:{}d}:{}",
+          if (toggleButton (fmt::format ("{}{:{}d}:{}##{}",
                                          stream.getLabel(),
                                          stream.getPid(), mMaxDigits[streamType],
-                                         stream.getTypeName()).c_str(), stream.isEnabled()))
+                                         stream.getTypeName(), streamType).c_str(), stream.isEnabled()))
             service.toggleStream (streamType);
           }
         }
@@ -173,24 +175,23 @@ private:
 
       int64_t playPts = 0;
       if (service.getStream (cDvbStream::eAud).isEnabled())
-        playPts = dynamic_cast<cAudioRender*>(service.getStream (cDvbStream::eAud).getRender())->getPlayPts();
+        playPts = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender()).getPlayPts();
 
-      int64_t lastPts = 0;
       cDvbStream::cStream& stream = service.getStream (cDvbStream::eVid);
       if (stream.isEnabled())
-        lastPts = drawVideo (*stream.getRender(), lastPts, playPts, graphics);
+        drawVideo (stream.getRender(), graphics, playPts);
 
       stream = service.getStream (cDvbStream::eAud);
       if (stream.isEnabled())
-        lastPts = drawAudio (*stream.getRender(), lastPts, graphics);
+        drawAudio (stream.getRender(), graphics);
 
       stream = service.getStream (cDvbStream::eAudOther);
       if (stream.isEnabled())
-        lastPts = drawAudio (*stream.getRender(), lastPts, graphics);
+        drawAudio (stream.getRender(), graphics);
 
       stream = service.getStream (cDvbStream::eSub);
       if (stream.isEnabled())
-        lastPts = drawSubtitle (*stream.getRender(), lastPts, graphics);
+        drawSubtitle (stream.getRender(), graphics);
       }
     }
   //}}}
@@ -241,11 +242,9 @@ private:
           if (pidInfo.mPid == service->getStream (cDvbStream::eSub).getPid())
             service->toggleStream (cDvbStream::eSub);
 
-        if (pidInfo.mPid == service->getStream (cDvbStream::eSub).getPid()) {
-          cRender* subtitle = service->getStream (cDvbStream::eSub).getRender();
-          if (subtitle)
-            drawSubtitle (*subtitle, 0, graphics);
-          }
+        if (pidInfo.mPid == service->getStream (cDvbStream::eSub).getPid())
+          if (service->getStream (cDvbStream::eSub).isEnabled()) 
+            drawSubtitle (service->getStream (cDvbStream::eSub).getRender(), graphics);
         }
 
       // adjust packet number width
@@ -271,12 +270,12 @@ private:
       cDvbStream::cService& service = serviceItem.second;
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
         cAudioRender& audio =
-          *dynamic_cast<cAudioRender*>(service.getStream (cDvbStream::eAud).getRender());
+          dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
         int64_t playPts = audio.getPlayPts();
 
         if (service.getStream(cDvbStream::eVid).isEnabled()) {
           cVideoRender& video =
-            *dynamic_cast<cVideoRender*>(service.getStream (cDvbStream::eVid).getRender());
+            dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
 
           cTexture* texture = video.getTexture (playPts, graphics);
           if (texture)
@@ -301,10 +300,11 @@ private:
   //}}}
 
   //{{{
-  int64_t drawVideo (cRender& render, int64_t pts, int64_t playPts, cGraphics& graphics) {
+  void drawVideo (cRender& render, cGraphics& graphics, int64_t playPts) {
 
     cVideoRender& video = dynamic_cast<cVideoRender&>(render);
-    int64_t lastPts = plotValues (video, pts, 0xffffffff);
+
+    plotValues (video, 0xffffffff);
 
     ImGui::TextUnformatted (video.getInfoString().c_str());
 
@@ -313,27 +313,26 @@ private:
       ImGui::Image ((void*)(intptr_t)texture->getTextureId(), {video.getWidth()/4.f,video.getHeight()/4.f});
 
     drawMiniLog (video.getLog());
-    return lastPts;
     }
   //}}}
   //{{{
-  int64_t drawAudio (cRender& render, int64_t pts, cGraphics& graphics) {
+  void drawAudio (cRender& render, cGraphics& graphics) {
 
     (void)graphics;
     cAudioRender& audio = dynamic_cast<cAudioRender&>(render);
 
-    int64_t lastPts = plotValues (audio, pts, 0xff00ffff);
+    plotValues (audio, 0xff00ffff);
     ImGui::TextUnformatted (audio.getInfoString().c_str());
+
     drawMiniLog (audio.getLog());
-    return lastPts;
     }
   //}}}
   //{{{
-  int64_t drawSubtitle (cRender& render, int64_t pts, cGraphics& graphics) {
+  void drawSubtitle (cRender& render, cGraphics& graphics) {
 
     cSubtitleRender& subtitle = dynamic_cast<cSubtitleRender&>(render);
 
-    int64_t lastPts = plotValues (subtitle, pts, 0xff00ff00);
+    plotValues (subtitle, 0xff00ff00);
 
     const float potSize = ImGui::GetTextLineHeight() / 2.f;
     size_t line = 0;
@@ -381,16 +380,14 @@ private:
     //}}}
 
     drawMiniLog (subtitle.getLog());
-    return lastPts;
     }
   //}}}
   //{{{
-  int64_t plotValues (cRender& render, int64_t lastPts, uint32_t color) {
+  void plotValues (cRender& render, uint32_t color) {
 
     (void)color;
 
-    if (!lastPts)
-      lastPts = render.getLastPts();
+    int64_t lastPts = render.getLastPts();
 
     render.setRefPts (lastPts);
     render.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth()));
@@ -411,8 +408,6 @@ private:
       //ImPlot::PlotScatterG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
       ImPlot::EndPlot();
       }
-
-    return lastPts;
     }
   //}}}
   //{{{  vars
