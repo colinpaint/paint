@@ -463,7 +463,7 @@ void cDvbTransportStream::cStream::set (uint16_t pid, uint16_t streamType) {
   mDefined = true;
   mPid = pid;
   mType = streamType;
-  mName = cDvbUtils::getStreamTypeName (streamType);
+  mTypeName = cDvbUtils::getStreamTypeName (streamType);
   }
 //}}}
 
@@ -486,10 +486,10 @@ bool cDvbTransportStream::cStream::toggle() {
 //{{{  class cDvbTransportStream::cService
 //{{{
 cDvbTransportStream::cService::cService (uint16_t sid) : mSid(sid) {
-  getStream (eStream::eVid).setName ("vid");
-  getStream (eStream::eAud).setName ("aud");
-  getStream (eStream::eAudOther).setName ("ad");
-  getStream (eStream::eSub).setName ("sub");
+  getStream (eStream::eVid).setLabel ("vid");
+  getStream (eStream::eAud).setLabel ("aud");
+  getStream (eStream::eAudOther).setLabel ("ad");
+  getStream (eStream::eSub).setLabel ("sub");
   }
 //}}}
 //{{{
@@ -570,9 +570,9 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
 void cDvbTransportStream::cService::toggle() {
 
   // improve to one on all off , if all off all on
-  toggleVideo();
-  toggleAudio();
-  toggleSubtitle();
+  toggle (eVid);
+  toggle (eAud);
+  toggle (eSub);
   }
 //}}}
 //{{{
@@ -598,34 +598,6 @@ void cDvbTransportStream::cService::toggle (eStream streamType) {
         return;
       }
     }
-  }
-//}}}
-//{{{
-void cDvbTransportStream::cService::toggleVideo() {
-
-  if (getStream (eStream::eVid).toggle())
-    getStream (eStream::eVid).setRender (new cVideoRender(getChannelName()));
-  }
-//}}}
-//{{{
-void cDvbTransportStream::cService::toggleAudio() {
-
-  if (getStream (eStream::eAud).toggle())
-    getStream (eStream::eAud).setRender (new cAudioRender (getChannelName()));
-  }
-//}}}
-//{{{
-void cDvbTransportStream::cService::toggleAudioOther() {
-
-  if (getStream (eStream::eAudOther).toggle())
-    getStream (eStream::eAudOther).setRender (new cAudioRender (getChannelName()));
-  }
-//}}}
-//{{{
-void cDvbTransportStream::cService::toggleSubtitle() {
-
-  if (getStream (eStream::eSub).toggle())
-    getStream (eStream::eSub).setRender (new cSubtitleRender (getChannelName()));
   }
 //}}}
 

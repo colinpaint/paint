@@ -25,7 +25,7 @@ using tDurationSeconds = std::chrono::seconds;
 
 class cDvbTransportStream {
 public:
-  enum class eStream { eVid, eAud, eAudOther, eSub };
+  enum eStream { eVid, eAud, eAudOther, eSub, eLast };
 
   cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName);
   virtual ~cDvbTransportStream();
@@ -94,12 +94,12 @@ public:
 
     uint16_t getPid() const { return mPid; }
     uint16_t getType() const { return mType; }
-    std::string getName() const { return mName; }
-
+    std::string getTypeName() const { return mTypeName; }
+    std::string getLabel() const { return mLabel; }
     cRender* getRender() const { return mRender; }
 
     void set (uint16_t pid, uint16_t streamType);
-    void setName (const std::string& name) { mName = name; }
+    void setLabel (const std::string& label) { mLabel = label; }
     //{{{
     void setRender (cRender* render) {
       mRender = render;
@@ -118,7 +118,8 @@ public:
 
     uint16_t mPid = 0;
     uint16_t mType = 0;
-    std::string mName;
+    std::string mTypeName;
+    std::string mLabel;
 
     cRender* mRender = nullptr;
     };
@@ -223,10 +224,6 @@ public:
 
     void toggle();
     void toggle (eStream streamType);
-    void toggleVideo();
-    void toggleAudio();
-    void toggleAudioOther();
-    void toggleSubtitle();
 
     // record
     bool openFile (const std::string& fileName, uint16_t tsid);
