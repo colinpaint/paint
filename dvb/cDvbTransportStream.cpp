@@ -398,7 +398,14 @@ typedef struct item_extended_event_struct {
 //}}}
 //}}}
 
-//{{{  cPidInfo
+//{{{
+cDvbTransportStream::cPidInfo::cPidInfo (uint16_t pid, bool isPsi) : mPid(pid), mPsi(isPsi) {}
+//{{{
+cDvbTransportStream::cPidInfo::~cPidInfo() {
+  free (mBuffer);
+  }
+//}}}
+
 //{{{
 string cDvbTransportStream::cPidInfo::getTypeName() {
 
@@ -442,8 +449,7 @@ int cDvbTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
   }
 //}}}
 //}}}
-//{{{  cService
-// public:
+//{{{
 cDvbTransportStream::cService::cService (uint16_t sid) : mSid(sid) {}
 //{{{
 cDvbTransportStream::cService::~cService() {
@@ -482,34 +488,34 @@ bool cDvbTransportStream::cService::isEpgRecord (const string& title, tTimePoint
 //  sets
 //{{{
 void cDvbTransportStream::cService::setVidPid (uint16_t pid, uint16_t streamType) {
-  mVidPid = pid;
-  mVidStreamType = streamType;
-  mVidStreamTypeName = cDvbUtils::getStreamTypeName (streamType);
+  mVidStream.mPid = pid;
+  mVidStream.mType = streamType;
+  mVidStream.mName = cDvbUtils::getStreamTypeName (streamType);
   }
 //}}}
 //{{{
 void cDvbTransportStream::cService::setAudPid (uint16_t pid, uint16_t streamType) {
 
-  if ((pid != mAudPid) && (pid != mAudOtherPid)) {
+  if ((pid != mAudStream.mPid) && (pid != mAudOtherStream.mPid)) {
     // use first aud pid, may be many
-    if (!mAudPid) {
-      mAudPid = pid;
-      mAudStreamType = streamType;
-      mAudStreamTypeName = cDvbUtils::getStreamTypeName (streamType);
+    if (!mAudStream.mPid) {
+      mAudStream.mPid = pid;
+      mAudStream.mType = streamType;
+      mAudStream.mName = cDvbUtils::getStreamTypeName (streamType);
       }
-    else if (!mAudOtherPid) {
-      mAudOtherPid = pid;
-      mAudOtherStreamType = streamType;
-      mAudOtherStreamTypeName = cDvbUtils::getStreamTypeName (streamType);
+    else if (!mAudOtherStream.mPid) {
+      mAudOtherStream.mPid = pid;
+      mAudOtherStream.mType = streamType;
+      mAudOtherStream.mName = cDvbUtils::getStreamTypeName (streamType);
       }
     }
   }
 //}}}
 //{{{
 void cDvbTransportStream::cService::setSubPid (uint16_t pid, uint16_t streamType) {
-  mSubPid = pid;
-  mSubStreamType = streamType;
-  mSubStreamTypeName = cDvbUtils::getStreamTypeName (streamType);
+  mSubStream.mPid = pid;
+  mSubStream.mType = streamType;
+  mSubStream.mName = cDvbUtils::getStreamTypeName (streamType);
   }
 //}}}
 
@@ -611,7 +617,7 @@ void cDvbTransportStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
 //  pes ts packet, save only recognised pids
 
   if (mFile &&
-      ((pid == mVidPid) || (pid == mAudPid) || (pid == mSubPid)))
+      ((pid == mVidStream.mPid) || (pid == mAudStream.mPid) || (pid == mSubStream.mPid)))
     fwrite (ts, 1, 188, mFile);
   }
 //}}}
@@ -687,30 +693,30 @@ void cDvbTransportStream::cService::writePmt() {
   *tsPtr++ = 0x00; // first section number = 0
   *tsPtr++ = 0x00; // last section number = 0
 
-  *tsPtr++ = 0xE0 | ((mVidPid & 0x1F00) >> 8);
-  *tsPtr++ = mVidPid & 0x00FF;
+  *tsPtr++ = 0xE0 | ((mVidStream.mPid & 0x1F00) >> 8);
+  *tsPtr++ = mVidStream.mPid & 0x00FF;
 
   *tsPtr++ = 0xF0;
   *tsPtr++ = 0; // program_info_length;
 
   // video es
-  *tsPtr++ = static_cast<uint8_t>(mVidStreamType); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mVidPid & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mVidPid & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(mVidStream.mType); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mVidStream.mPid & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mVidStream.mPid & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // audio es
-  *tsPtr++ = static_cast<uint8_t>(mAudStreamType); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mAudPid & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mAudPid & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(mAudStream.mType); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mAudStream.mPid & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mAudStream.mPid & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // subtitle es
-  *tsPtr++ = static_cast<uint8_t>(mSubStreamType); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mSubPid & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mSubPid & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(mSubStream.mType); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mSubStream.mPid & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mSubStream.mPid & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 

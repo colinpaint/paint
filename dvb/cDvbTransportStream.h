@@ -32,8 +32,8 @@ public:
   //{{{
   class cPidInfo {
   public:
-    cPidInfo (uint16_t pid, bool isPsi) : mPid(pid), mPsi(isPsi) {}
-    ~cPidInfo() { free (mBuffer); }
+    cPidInfo (uint16_t pid, bool isPsi);
+    ~cPidInfo();
 
     std::string getTypeName();
     std::string getInfoString() { return mInfoString; }
@@ -131,6 +131,17 @@ public:
     };
   //}}}
   //{{{
+  class cStream {
+  public:
+    cStream() {}
+    ~cStream() = default;
+
+    uint16_t mPid = 0;
+    uint16_t mType = 0;
+    std::string mName;
+    };
+  //}}}
+  //{{{
   class cService {
   public:
     cService (uint16_t sid);
@@ -140,20 +151,20 @@ public:
     uint16_t getSid() const { return mSid; }
     uint16_t getProgramPid() const { return mProgramPid; }
 
-    uint16_t getVidPid() const { return mVidPid; }
-    uint16_t getVidStreamType() const { return mVidStreamType; }
-    std::string getVidStreamTypeName() const { return mVidStreamTypeName; }
+    uint16_t getVidPid() const { return mVidStream.mPid; }
+    uint16_t getVidStreamType() const { return mVidStream.mType; }
+    std::string getVidStreamTypeName() const { return mVidStream.mName; }
 
-    uint16_t getAudPid() const { return mAudPid; }
-    uint16_t getAudStreamType() const { return mAudStreamType; }
-    std::string getAudStreamTypeName() const { return mAudStreamTypeName; }
-    uint16_t getAudOtherPid() const { return mAudOtherPid; }
-    uint16_t getAudOtherStreamType() const { return mAudOtherStreamType; }
-    std::string getAudOtherStreamTypeName() const { return mAudOtherStreamTypeName; }
+    uint16_t getAudPid() const { return mAudStream.mPid; }
+    uint16_t getAudStreamType() const { return mAudStream.mType; }
+    std::string getAudStreamTypeName() const { return mAudStream.mName; }
+    uint16_t getAudOtherPid() const { return mAudOtherStream.mPid; }
+    uint16_t getAudOtherStreamType() const { return mAudOtherStream.mType; }
+    std::string getAudOtherStreamTypeName() const { return mAudOtherStream.mName; }
 
-    uint16_t getSubPid() const { return mSubPid; }
-    uint16_t getSubStreamType() const { return mSubStreamType; }
-    std::string getSubStreamTypeName() const { return mSubStreamTypeName; }
+    uint16_t getSubPid() const { return mSubStream.mPid; }
+    uint16_t getSubStreamType() const { return mSubStream.mType; }
+    std::string getSubStreamTypeName() const { return mSubStream.mName; }
 
     std::string getChannelName() const { return mChannelName; }
     bool getChannelRecord() const { return mChannelRecord; }
@@ -227,21 +238,10 @@ public:
     const uint16_t mSid;
     uint16_t mProgramPid = 0;
 
-    uint16_t mVidPid = 0;
-    uint16_t mVidStreamType = 0;
-    std::string mVidStreamTypeName;
-
-    uint16_t mAudPid = 0;
-    uint16_t mAudStreamType = 0;
-    std::string mAudStreamTypeName;
-
-    uint16_t mAudOtherPid = 0;
-    uint16_t mAudOtherStreamType = 0;
-    std::string mAudOtherStreamTypeName;
-
-    uint16_t mSubPid = 0;
-    uint16_t mSubStreamType = 0;
-    std::string mSubStreamTypeName;
+    cStream mVidStream;
+    cStream mAudStream;
+    cStream mAudOtherStream;
+    cStream mSubStream;
 
     std::string mChannelName;
     bool mChannelRecord = false;
