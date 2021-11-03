@@ -17,10 +17,11 @@
 #endif
 
 #include "cDvbSource.h"
+#include "cDvbUtils.h"
+
 #include "cVideoRender.h"
 #include "cAudioRender.h"
 #include "cSubtitleRender.h"
-#include "cDvbUtils.h"
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"
