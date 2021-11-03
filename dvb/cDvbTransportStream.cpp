@@ -871,7 +871,7 @@ void cDvbTransportStream::startServiceProgram (cService* service, tTimePoint tdt
   service->closeFile();
 
   if ((selected || service->getChannelRecord() || mDvbMultiplex.mRecordAllChannels) &&
-      service->getVidStream().isDefined() && (service->getAudStream().isDefined())) {
+      service->getStream (eStream::eVid).isDefined() && (service->getAudStream().isDefined())) {
     string filePath = mRecordRootName +
                       service->getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
@@ -911,56 +911,16 @@ void cDvbTransportStream::stopServiceProgram (cService* service) {
 //}}}
 
 //{{{
-bool cDvbTransportStream::vidPes (cPidInfo* pidInfo, bool skip) {
+bool cDvbTransportStream::processPes (eStream stream, cPidInfo* pidInfo, bool skip) {
 
   (void)skip;
+
   cService* service = getService (pidInfo->mSid);
-  if (service) {
-    cRender* video = service->getVidStream().getRender();
-    if (video)
-      video->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
-    }
+  if (service && service->getStream (stream).isEnabled())
+    service->getStream (stream).getRender()->processPes (
+      pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
 
   //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
-  return false;
-  }
-//}}}
-//{{{
-bool cDvbTransportStream::audPes (cPidInfo* pidInfo, bool skip) {
-
-  (void)skip;
-  cService* service = getService (pidInfo->mSid);
-  if (service) {
-    cRender* audio = service->getAudStream().getRender();
-    if (audio)
-      audio->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
-    }
-
-  return false;
-  }
-//}}}
-//{{{
-bool cDvbTransportStream::audOtherPes (cPidInfo* pidInfo, bool skip) {
-
-  (void)skip;
-  cService* service = getService (pidInfo->mSid);
-  if (service) {
-    cRender* audio = service->getAudOtherStream().getRender();
-    if (audio)
-      audio->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
-    }
-  return false;
-  }
-//}}}
-//{{{
-bool cDvbTransportStream::subPes (cPidInfo* pidInfo) {
-
-  cService* service = getService (pidInfo->mSid);
-  if (service) {
-    cRender* subtitle = service->getSubStream().getRender();
-    if (subtitle)
-      subtitle->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
-    }
   return false;
   }
 //}}}
@@ -1477,7 +1437,7 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
                       case 2:   // ISO 13818-2 video
                       case 27:  // HD vid
                         //{{{  send last video pes
-                        processed = vidPes (pidInfo, skip);
+                        processed = processPes (eStream::eVid, pidInfo, skip);
                         skip = false;
                         break;
                         //}}}
@@ -1488,14 +1448,14 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
                       case 129: // ac3
                         //{{{  send last audio pes
                         if (*(uint32_t*)ts == 0xC1010000)
-                          processed = audOtherPes (pidInfo, skip);
+                          processed = processPes (eStream::eAudOther, pidInfo, skip);
                         else
-                          processed = audPes (pidInfo, skip);
+                          processed = processPes (eStream::eAud, pidInfo, skip);
                         break;
                         //}}}
                       case 6:   // subtitle
                         //{{{  send last subtitle pes
-                        processed = subPes (pidInfo);
+                        processed = processPes (eStream::eSub, pidInfo, skip);
                         break;
                         //}}}
                       default:

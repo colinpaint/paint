@@ -24,6 +24,8 @@ using tDurationSeconds = std::chrono::seconds;
 
 class cDvbTransportStream {
 public:
+  enum class eStream { eVid, eAud, eAudOther, eSub };
+
   cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName);
   virtual ~cDvbTransportStream();
 
@@ -167,6 +169,17 @@ public:
     uint16_t getSid() const { return mSid; }
     uint16_t getProgramPid() const { return mProgramPid; }
 
+    //{{{
+    cStream& getStream (eStream stream) {
+      switch (stream) {
+        case eStream::eVid: return mVidStream;
+        case eStream::eAud: return mAudStream;
+        case eStream::eAudOther: return mAudOtherStream;
+        case eStream::eSub: return mSubStream;
+        default: return mVidStream;
+        }
+      }
+    //}}}
     cStream& getVidStream() { return mVidStream; }
     cStream& getAudStream() { return mAudStream; }
     cStream& getAudOtherStream() { return mAudOtherStream; }
@@ -277,9 +290,6 @@ public:
   void dvbSource (bool launchThread);
   void fileSource (bool launchThread, const std::string& fileName);
 
-  // vars
-  std::mutex mMutex;
-
 private:
   //{{{  clears
   void clear();
@@ -295,10 +305,7 @@ private:
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService* service);
 
-  bool audPes (cPidInfo* pidInfo, bool skip);
-  bool audOtherPes (cPidInfo* pidInfo, bool skip);
-  bool vidPes (cPidInfo* pidInfo, bool skip);
-  bool subPes (cPidInfo* pidInfo);
+  bool processPes (eStream stream, cPidInfo* pidInfo, bool skip);
 
   //{{{  parse
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);
@@ -314,6 +321,8 @@ private:
   void fileSourceInternal (bool launchThread, const std::string& fileName);
 
   // vars
+  std::mutex mMutex;
+
   cDvbMultiplex mDvbMultiplex;
 
   uint64_t mNumPackets = 0;
