@@ -1,9 +1,9 @@
-// cDvbTransportStream.cpp - file or dvbSource demux
+// cDvbStream.cpp - file or dvbSource demux
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
 
-#include "cDvbTransportStream.h"
+#include "cDvbStream.h"
 
 #include <cstdint>
 #include <string>
@@ -399,16 +399,16 @@ typedef struct item_extended_event_struct {
 //}}}
 //}}}
 
-//{{{  class cDvbTransportStream::cPidInfo
-cDvbTransportStream::cPidInfo::cPidInfo (uint16_t pid, bool isPsi) : mPid(pid), mPsi(isPsi) {}
+//{{{  class cDvbStream::cPidInfo
+cDvbStream::cPidInfo::cPidInfo (uint16_t pid, bool isPsi) : mPid(pid), mPsi(isPsi) {}
 //{{{
-cDvbTransportStream::cPidInfo::~cPidInfo() {
+cDvbStream::cPidInfo::~cPidInfo() {
   free (mBuffer);
   }
 //}}}
 
 //{{{
-string cDvbTransportStream::cPidInfo::getTypeName() {
+string cDvbStream::cPidInfo::getTypeName() {
 
   // known pids
   switch (mPid) {
@@ -431,7 +431,7 @@ string cDvbTransportStream::cPidInfo::getTypeName() {
 //}}}
 
 //{{{
-int cDvbTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
+int cDvbStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 
   if (getBufUsed() + bufSize > mBufSize) {
     // realloc buffer to twice size
@@ -450,15 +450,15 @@ int cDvbTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
   }
 //}}}
 //}}}
-//{{{  class cDvbTransportStream::cStream
+//{{{  class cDvbStream::cStream
 //{{{
-cDvbTransportStream::cStream::~cStream() {
+cDvbStream::cStream::~cStream() {
   delete mRender;
   }
 //}}}
 
 //{{{
-void cDvbTransportStream::cStream::set (uint16_t pid, uint16_t streamType) {
+void cDvbStream::cStream::set (uint16_t pid, uint16_t streamType) {
 
   mDefined = true;
   mPid = pid;
@@ -468,7 +468,7 @@ void cDvbTransportStream::cStream::set (uint16_t pid, uint16_t streamType) {
 //}}}
 
 //{{{
-bool cDvbTransportStream::cStream::toggle() {
+bool cDvbStream::cStream::toggle() {
 // return true if enabling
 
   if (mRender) {
@@ -483,17 +483,17 @@ bool cDvbTransportStream::cStream::toggle() {
   }
 //}}}
 //}}}
-//{{{  class cDvbTransportStream::cService
+//{{{  class cDvbStream::cService
 //{{{
-cDvbTransportStream::cService::cService (uint16_t sid) : mSid(sid) {
-  getStream (eStream::eVid).setLabel ("vid:");
-  getStream (eStream::eAud).setLabel ("aud:");
-  getStream (eStream::eAudOther).setLabel ("ad:");
-  getStream (eStream::eSub).setLabel ("");
+cDvbStream::cService::cService (uint16_t sid) : mSid(sid) {
+  getStream (eVid).setLabel ("vid:");
+  getStream (eAud).setLabel ("aud:");
+  getStream (eAudOther).setLabel ("ad:");
+  getStream (eSub).setLabel ("");
   }
 //}}}
 //{{{
-cDvbTransportStream::cService::~cService() {
+cDvbStream::cService::~cService() {
 
   delete mNowEpgItem;
 
@@ -508,7 +508,7 @@ cDvbTransportStream::cService::~cService() {
 
 // get
 //{{{
-bool cDvbTransportStream::cService::isEpgRecord (const string& title, tTimePoint startTime) {
+bool cDvbStream::cService::isEpgRecord (const string& title, tTimePoint startTime) {
 // return true if startTime, title selected to record in epg
 
   auto it = mEpgItemMap.find (startTime);
@@ -523,22 +523,22 @@ bool cDvbTransportStream::cService::isEpgRecord (const string& title, tTimePoint
 
 //  sets
 //{{{
-void cDvbTransportStream::cService::setAudStream (uint16_t pid, uint16_t streamType) {
+void cDvbStream::cService::setAudStream (uint16_t pid, uint16_t streamType) {
 
-  if (getStream (eStream::eAud).isDefined()) {
-    if (pid != getStream (eStream::eAud).getPid()) {
+  if (getStream (eAud).isDefined()) {
+    if (pid != getStream (eAud).getPid()) {
       // main aud stream defined, new aud pid, try other
-      if (!getStream(eStream::eAudOther).isDefined())
-        getStream(eStream::eAudOther).set (pid, streamType);
+      if (!getStream(eAudOther).isDefined())
+        getStream(eAudOther).set (pid, streamType);
       }
     }
   else
-    getStream (eStream::eAud).set (pid, streamType);
+    getStream (eAud).set (pid, streamType);
   }
 //}}}
 
 //{{{
-bool cDvbTransportStream::cService::setNow (bool record, tTimePoint time, tDurationSeconds duration,
+bool cDvbStream::cService::setNow (bool record, tTimePoint time, tDurationSeconds duration,
                                             const string& titleString, const string& infoString) {
 
   if (mNowEpgItem && (mNowEpgItem->getTime() == time))
@@ -552,7 +552,7 @@ bool cDvbTransportStream::cService::setNow (bool record, tTimePoint time, tDurat
   }
 //}}}
 //{{{
-bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, tDurationSeconds duration,
+bool cDvbStream::cService::setEpg (bool record, tTimePoint startTime, tDurationSeconds duration,
                        const string& titleString, const string& infoString) {
 // could return true only if changed
 
@@ -567,24 +567,24 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
 //}}}
 
 //{{{
-void cDvbTransportStream::cService::toggleStream (size_t streamType) {
+void cDvbStream::cService::toggleStream (size_t streamType) {
 
   cStream& stream = getStream (streamType);
   if (stream.toggle()) {
     switch (streamType) {
-      case eStream::eVid :
+      case eVid :
         stream.setRender (new cVideoRender (getChannelName()));
         return;
 
-      case eStream::eAud :
+      case eAud :
         stream.setRender (new cAudioRender (getChannelName()));
         return;
 
-      case eStream::eAudOther :
+      case eAudOther :
         stream.setRender (new cAudioRender (getChannelName()));
         return;
 
-      case eStream::eSub :
+      case eSub :
         stream.setRender (new cSubtitleRender (getChannelName()));
         return;
       }
@@ -592,7 +592,7 @@ void cDvbTransportStream::cService::toggleStream (size_t streamType) {
   }
 //}}}
 //{{{
-void cDvbTransportStream::cService::toggleAll() {
+void cDvbStream::cService::toggleAll() {
 
   // improve to one on all off , if all off all on
   toggleStream (eVid);
@@ -603,7 +603,7 @@ void cDvbTransportStream::cService::toggleAll() {
 
 // record
 //{{{
-bool cDvbTransportStream::cService::openFile (const string& fileName, uint16_t tsid) {
+bool cDvbStream::cService::openFile (const string& fileName, uint16_t tsid) {
 
   mFile = fopen (fileName.c_str(), "wb");
   if (mFile) {
@@ -617,16 +617,16 @@ bool cDvbTransportStream::cService::openFile (const string& fileName, uint16_t t
   }
 //}}}
 //{{{
-void cDvbTransportStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
+void cDvbStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
 //  pes ts packet, save only recognised pids
 
   if (mFile &&
-      ((pid == getStream(eStream::eVid).getPid()) || (pid == getStream(eStream::eAud).getPid()) || (pid == getStream(eStream::eSub).getPid())))
+      ((pid == getStream(eVid).getPid()) || (pid == getStream(eAud).getPid()) || (pid == getStream(eSub).getPid())))
     fwrite (ts, 1, 188, mFile);
   }
 //}}}
 //{{{
-void cDvbTransportStream::cService::closeFile() {
+void cDvbStream::cService::closeFile() {
 
   if (mFile)
     fclose (mFile);
@@ -637,7 +637,7 @@ void cDvbTransportStream::cService::closeFile() {
 
 // private:
 //{{{
-uint8_t* cDvbTransportStream::cService::tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount) {
+uint8_t* cDvbStream::cService::tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount) {
 
   memset (ts, 0xFF, 188);
 
@@ -652,7 +652,7 @@ uint8_t* cDvbTransportStream::cService::tsHeader (uint8_t* ts, uint16_t pid, uin
 //}}}
 
 //{{{
-void cDvbTransportStream::cService::writePat (uint16_t tsid) {
+void cDvbStream::cService::writePat (uint16_t tsid) {
 
   uint8_t ts[188];
   uint8_t* tsSectionStart = tsHeader (ts, PID_PAT, 0);
@@ -679,7 +679,7 @@ void cDvbTransportStream::cService::writePat (uint16_t tsid) {
   }
 //}}}
 //{{{
-void cDvbTransportStream::cService::writePmt() {
+void cDvbStream::cService::writePmt() {
 
   uint8_t ts[188];
   uint8_t* tsSectionStart = tsHeader (ts, mProgramPid, 0);
@@ -697,30 +697,30 @@ void cDvbTransportStream::cService::writePmt() {
   *tsPtr++ = 0x00; // first section number = 0
   *tsPtr++ = 0x00; // last section number = 0
 
-  *tsPtr++ = 0xE0 | ((getStream(eStream::eVid).getPid() & 0x1F00) >> 8);
-  *tsPtr++ = getStream(eStream::eVid).getPid() & 0x00FF;
+  *tsPtr++ = 0xE0 | ((getStream(eVid).getPid() & 0x1F00) >> 8);
+  *tsPtr++ = getStream(eVid).getPid() & 0x00FF;
 
   *tsPtr++ = 0xF0;
   *tsPtr++ = 0; // program_info_length;
 
   // video es
-  *tsPtr++ = static_cast<uint8_t>(getStream(eStream::eVid).getType()); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((getStream(eStream::eVid).getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = getStream(eStream::eVid).getPid() & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(getStream(eVid).getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((getStream(eVid).getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = getStream(eVid).getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // audio es
-  *tsPtr++ = static_cast<uint8_t>(getStream(eStream::eAud).getType()); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((getStream(eStream::eAud).getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = getStream(eStream::eAud).getPid() & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(getStream(eAud).getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((getStream(eAud).getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = getStream(eAud).getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // subtitle es
-  *tsPtr++ = static_cast<uint8_t>(getStream(eStream::eSub).getType()); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((getStream(eStream::eSub).getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = getStream(eStream::eSub).getPid() & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(getStream(eSub).getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((getStream(eSub).getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = getStream(eSub).getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
@@ -728,7 +728,7 @@ void cDvbTransportStream::cService::writePmt() {
   }
 //}}}
 //{{{
-void cDvbTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr) {
+void cDvbStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr) {
 
   // tsSection crc, calc from tsSection start to here
   uint32_t crc = cDvbUtils::getCrc32 (tsSectionStart, int(tsPtr - tsSectionStart));
@@ -744,26 +744,26 @@ void cDvbTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectio
 
 // public:
 //{{{
-cDvbTransportStream::cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName)
+cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName)
     : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName) {
 
   mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
   }
 //}}}
 //{{{
-cDvbTransportStream::~cDvbTransportStream() {
+cDvbStream::~cDvbStream() {
   clear();
   }
 //}}}
 
 // gets
 //{{{
-string cDvbTransportStream::getTdtTimeString() const {
+string cDvbStream::getTdtTimeString() const {
   return date::format ("%T", date::floor<chrono::seconds>(mTdtTime));
   }
 //}}}
 //{{{
-cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
+cDvbStream::cService* cDvbStream::getService (uint16_t sid) {
 
   auto it = mServiceMap.find (sid);
   return (it == mServiceMap.end()) ? nullptr : &it->second;
@@ -772,7 +772,7 @@ cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
 
 // sources
 //{{{
-void cDvbTransportStream::dvbSource (bool launchThread) {
+void cDvbStream::dvbSource (bool launchThread) {
 
   if (launchThread)
     thread([=, this]() { dvbSourceInternal (true); }).detach();
@@ -781,7 +781,7 @@ void cDvbTransportStream::dvbSource (bool launchThread) {
   }
 //}}}
 //{{{
-void cDvbTransportStream::fileSource (bool launchThread, const string& fileName) {
+void cDvbStream::fileSource (bool launchThread, const string& fileName) {
 
   if (launchThread)
     thread ([=, this](){ fileSourceInternal (true, fileName); } ).detach();
@@ -792,7 +792,7 @@ void cDvbTransportStream::fileSource (bool launchThread, const string& fileName)
 
 // private:
 //{{{
-void cDvbTransportStream::clear() {
+void cDvbStream::clear() {
 
   lock_guard<mutex> lockGuard (mMutex);
 
@@ -806,14 +806,14 @@ void cDvbTransportStream::clear() {
   }
 //}}}
 //{{{
-void cDvbTransportStream::clearPidCounts() {
+void cDvbStream::clearPidCounts() {
 
   for (auto& pidInfo : mPidInfoMap)
     pidInfo.second.clearCounts();
   }
 //}}}
 //{{{
-void cDvbTransportStream::clearPidContinuity() {
+void cDvbStream::clearPidContinuity() {
 
   for (auto& pidInfo : mPidInfoMap)
     pidInfo.second.clearContinuity();
@@ -821,7 +821,7 @@ void cDvbTransportStream::clearPidContinuity() {
 //}}}
 
 //{{{
-int64_t cDvbTransportStream::getPts (uint8_t* tsPtr) {
+int64_t cDvbStream::getPts (uint8_t* tsPtr) {
 // return 33 bits of pts,dts
 
   if ((tsPtr[0] & 0x01) && (tsPtr[2] & 0x01) && (tsPtr[4] & 0x01)) {
@@ -840,7 +840,7 @@ int64_t cDvbTransportStream::getPts (uint8_t* tsPtr) {
   }
 //}}}
 //{{{
-cDvbTransportStream::cPidInfo* cDvbTransportStream::getPidInfo (uint16_t pid, bool createPsiOnly) {
+cDvbStream::cPidInfo* cDvbStream::getPidInfo (uint16_t pid, bool createPsiOnly) {
 // find or create pidInfo by pid
 
   auto pidInfoIt = mPidInfoMap.find (pid);
@@ -866,7 +866,7 @@ cDvbTransportStream::cPidInfo* cDvbTransportStream::getPidInfo (uint16_t pid, bo
 //}}}
 
 //{{{
-void cDvbTransportStream::startServiceProgram (cService* service, tTimePoint tdtTime,
+void cDvbStream::startServiceProgram (cService* service, tTimePoint tdtTime,
                                                const string& programName,
                                                tTimePoint programStartTime, bool selected) {
 // start recording service program
@@ -876,7 +876,7 @@ void cDvbTransportStream::startServiceProgram (cService* service, tTimePoint tdt
   service->closeFile();
 
   if ((selected || service->getChannelRecord() || mDvbMultiplex.mRecordAllChannels) &&
-      service->getStream (eStream::eVid).isDefined() && (service->getStream(eStream::eVid).isDefined())) {
+      service->getStream (eVid).isDefined() && (service->getStream(eVid).isDefined())) {
     string filePath = mRecordRootName +
                       service->getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
@@ -896,7 +896,7 @@ void cDvbTransportStream::startServiceProgram (cService* service, tTimePoint tdt
   }
 //}}}
 //{{{
-void cDvbTransportStream::programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) {
+void cDvbStream::programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) {
 // send pes ts packet to sid service
 
   lock_guard<mutex> lockGuard (mRecordFileMutex);
@@ -907,7 +907,7 @@ void cDvbTransportStream::programPesPacket (uint16_t sid, uint16_t pid, uint8_t*
   }
 //}}}
 //{{{
-void cDvbTransportStream::stopServiceProgram (cService* service) {
+void cDvbStream::stopServiceProgram (cService* service) {
 // stop recording service, never called
 
   lock_guard<mutex> lockGuard (mRecordFileMutex);
@@ -916,7 +916,7 @@ void cDvbTransportStream::stopServiceProgram (cService* service) {
 //}}}
 
 //{{{
-bool cDvbTransportStream::processPes (eStream stream, cPidInfo* pidInfo, bool skip) {
+bool cDvbStream::processPes (eStream stream, cPidInfo* pidInfo, bool skip) {
 
   (void)skip;
 
@@ -932,7 +932,7 @@ bool cDvbTransportStream::processPes (eStream stream, cPidInfo* pidInfo, bool sk
 
 // parse
 //{{{
-void cDvbTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
+void cDvbStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
 // PAT declares programPid,sid to mProgramMap to recognise programPid PMT to declare service streams
 
   (void)pidInfo;
@@ -963,7 +963,7 @@ void cDvbTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
   }
 //}}}
 //{{{
-void cDvbTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
+void cDvbStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
 
   (void)pidInfo;
 
@@ -1014,7 +1014,7 @@ void cDvbTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
   }
 //}}}
 //{{{
-void cDvbTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
+void cDvbStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
 // SDT name services in mServiceMap
 
   (void)pidInfo;
@@ -1102,7 +1102,7 @@ void cDvbTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
   }
 //}}}
 //{{{
-void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
+void cDvbStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
 
   (void)pidInfo;
 
@@ -1157,8 +1157,8 @@ void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
               if (running &&
                   !service->getChannelName().empty() &&
                   service->getProgramPid() &&
-                  service->getStream (eStream::eVid).isDefined() &&
-                  service->getStream (eStream::eAud).isDefined()) {
+                  service->getStream (eVid).isDefined() &&
+                  service->getStream (eAud).isDefined()) {
                   //(service->getSubPid())) {
                 // now event for named service with valid pgmPid, vidPid, audPid, subPid
                 if (service->setNow (service->isEpgRecord (titleString, startTime),
@@ -1194,7 +1194,7 @@ void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
   }
 //}}}
 //{{{
-void cDvbTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
+void cDvbStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
 
   sTdt* tdt = (sTdt*)buf;
   if (tdt->table_id == TID_TDT) {
@@ -1211,7 +1211,7 @@ void cDvbTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
   }
 //}}}
 //{{{
-void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
+void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
 // PMT declares pgmPid and streams for a service
 
   sPmt* pmt = (sPmt*)buf;
@@ -1254,7 +1254,7 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
       switch (esPidInfo->mStreamType) {
         case   2: // ISO 13818-2 video
         case  27: // HD vid
-          service->getStream (eStream::eVid).set (esPid, esPidInfo->mStreamType);
+          service->getStream (eVid).set (esPid, esPidInfo->mStreamType);
           break;
 
         case   3: // ISO 11172-3 audio
@@ -1266,7 +1266,7 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
           break;
 
         case   6: // subtitle
-          service->getStream (eStream::eSub).set (esPid, esPidInfo->mStreamType);
+          service->getStream (eSub).set (esPid, esPidInfo->mStreamType);
           break;
 
         case   5: // private mpeg2 tabled data - private
@@ -1291,7 +1291,7 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
   }
 //}}}
 //{{{
-int cDvbTransportStream::parsePsi (cPidInfo* pidInfo, uint8_t* buf) {
+int cDvbStream::parsePsi (cPidInfo* pidInfo, uint8_t* buf) {
 // return sectionLength
 
   switch (pidInfo->mPid) {
@@ -1313,7 +1313,7 @@ int cDvbTransportStream::parsePsi (cPidInfo* pidInfo, uint8_t* buf) {
 //}}}
 
 //{{{
-int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip) {
+int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip) {
 // demux from tsBuffer to tsBuffer + tsBufferSize, streamPos is offset into full stream of first packet
 // decodePid1 = -1 use all
 // - return bytes processed
@@ -1442,7 +1442,7 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
                       case 2:   // ISO 13818-2 video
                       case 27:  // HD vid
                         //{{{  send last video pes
-                        processed = processPes (eStream::eVid, pidInfo, skip);
+                        processed = processPes (eVid, pidInfo, skip);
                         skip = false;
                         break;
                         //}}}
@@ -1453,14 +1453,14 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
                       case 129: // ac3
                         //{{{  send last audio pes
                         if (*(uint32_t*)ts == 0xC1010000)
-                          processed = processPes (eStream::eAudOther, pidInfo, skip);
+                          processed = processPes (eAudOther, pidInfo, skip);
                         else
-                          processed = processPes (eStream::eAud, pidInfo, skip);
+                          processed = processPes (eAud, pidInfo, skip);
                         break;
                         //}}}
                       case 6:   // subtitle
                         //{{{  send last subtitle pes
-                        processed = processPes (eStream::eSub, pidInfo, skip);
+                        processed = processPes (eSub, pidInfo, skip);
                         break;
                         //}}}
                       default:
@@ -1525,7 +1525,7 @@ int64_t cDvbTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t s
 
 // sources
 //{{{
-void cDvbTransportStream::dvbSourceInternal (bool launchThread) {
+void cDvbStream::dvbSourceInternal (bool launchThread) {
 
   if (!mDvbSource->ok()) {
     //{{{  error, return
@@ -1605,7 +1605,7 @@ void cDvbTransportStream::dvbSourceInternal (bool launchThread) {
   }
 //}}}
 //{{{
-void cDvbTransportStream::fileSourceInternal (bool launchThread, const string& fileName) {
+void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) {
 
   if (launchThread)
     cLog::setThreadName ("read");

@@ -21,7 +21,7 @@
 #include "../dvb/cVideoRender.h"
 #include "../dvb/cAudioRender.h"
 #include "../dvb/cSubtitleRender.h"
-#include "../dvb/cDvbTransportStream.h"
+#include "../dvb/cDvbStream.h"
 
 // utils
 #include "../utils/cLog.h"
@@ -61,26 +61,26 @@ public:
                             ImGui::GetIO().MetricsRenderIndices/3).c_str());
     //}}}
 
-    cDvbTransportStream* transportStream = app.getDvbTransportStream();
-    if (transportStream) {
-      if (transportStream->hasTdtTime()) {
+    cDvbStream* dvbStream = app.getDvbStream();
+    if (dvbStream) {
+      if (dvbStream->hasTdtTime()) {
         //{{{  draw tdtTime
         ImGui::SameLine();
-        ImGui::TextUnformatted (transportStream->getTdtTimeString().c_str());
+        ImGui::TextUnformatted (dvbStream->getTdtTimeString().c_str());
         }
         //}}}
       //{{{  draw packet,errors
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{}:{} ",
-                              transportStream->getNumPackets(), transportStream->getNumErrors()).c_str());
+                              dvbStream->getNumPackets(), dvbStream->getNumErrors()).c_str());
       //}}}
-      if (transportStream->hasDvbSource()) {
+      if (dvbStream->hasDvbSource()) {
         //{{{  draw dvbSource signal,errors
         ImGui::SameLine();
-        ImGui::TextUnformatted (transportStream->getSignalString().c_str());
+        ImGui::TextUnformatted (dvbStream->getSignalString().c_str());
 
         ImGui::SameLine();
-        ImGui::TextUnformatted (transportStream->getErrorString().c_str());
+        ImGui::TextUnformatted (dvbStream->getErrorString().c_str());
         }
         //}}}
 
@@ -92,25 +92,25 @@ public:
       switch (mMainTabIndex) {
         //{{{
         case 0: { // services
-          drawServices (*transportStream, app.getGraphics());
+          drawServices (*dvbStream, app.getGraphics());
           break;
           }
         //}}}
         //{{{
         case 1: { // pids
-          drawPids (*transportStream, app.getGraphics());
+          drawPids (*dvbStream, app.getGraphics());
           break;
           }
         //}}}
         //{{{
         case 2: { // recorded
-          drawRecorded (*transportStream);
+          drawRecorded (*dvbStream);
           break;
           }
         //}}}
         //{{{
         case 3: { // tv
-          drawTv (*transportStream, app.getGraphics());
+          drawTv (*dvbStream, app.getGraphics());
           break;
           }
         //}}}
@@ -124,12 +124,12 @@ public:
   //}}}
 private:
   //{{{
-  void drawServices (cDvbTransportStream& transportStream, cGraphics& graphics) {
+  void drawServices (cDvbStream& dvbStream, cGraphics& graphics) {
   // draw service map
 
     mPlotIndex = 0;
-    for (auto& serviceItem : transportStream.getServiceMap()) {
-      cDvbTransportStream::cService& service =  serviceItem.second;
+    for (auto& serviceItem : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service =  serviceItem.second;
       //{{{  calc max field sizes, may jiggle for a couple of draws
       while (service.getChannelName().size() > mMaxNameSize)
         mMaxNameSize = service.getChannelName().size();
@@ -139,12 +139,9 @@ private:
       while (service.getProgramPid() > pow (10, mMaxPgmSize))
         mMaxPgmSize++;
 
-      while (service.getStream (cDvbTransportStream::eStream::eVid).getPid() > pow (10, mMaxVidSize))
-        mMaxVidSize++;
-      while (service.getStream (cDvbTransportStream::eStream::eAud).getPid() > pow (10, mMaxAudSize))
-        mMaxAudSize++;
-      while (service.getStream (cDvbTransportStream::eStream::eSub).getPid() > pow (10, mMaxSubSize))
-        mMaxSubSize++;
+      for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++)
+        while (service.getStream (streamType).getPid() > pow (10, mMaxDigits[streamType]))
+          mMaxDigits[streamType]++;
       //}}}
 
       //{{{  draw channel name pgm,sid
@@ -155,13 +152,13 @@ private:
         service.toggleAll();
       //}}}
 
-      for (size_t streamType = cDvbTransportStream::eVid; streamType < cDvbTransportStream::eLast; streamType++) {
-        cDvbTransportStream::cStream& stream = service.getStream (streamType);
+      for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
+        cDvbStream::cStream& stream = service.getStream (streamType);
         if (stream.isDefined()) {
           ImGui::SameLine();
           if (toggleButton (fmt::format ("{}{:{}d}:{}",
                                          stream.getLabel(),
-                                         stream.getPid(), mMaxVidSize,
+                                         stream.getPid(), mMaxDigits[streamType],
                                          stream.getTypeName()).c_str(), stream.isEnabled()))
             service.toggleStream (streamType);
           }
@@ -175,41 +172,41 @@ private:
         //}}}
 
       int64_t playPts = 0;
-      if (service.getStream (cDvbTransportStream::eStream::eAud).isEnabled())
-        playPts = dynamic_cast<cAudioRender*>(service.getStream (cDvbTransportStream::eStream::eAud).getRender())->getPlayPts();
+      if (service.getStream (cDvbStream::eAud).isEnabled())
+        playPts = dynamic_cast<cAudioRender*>(service.getStream (cDvbStream::eAud).getRender())->getPlayPts();
 
       int64_t lastPts = 0;
-      cDvbTransportStream::cStream& stream = service.getStream (cDvbTransportStream::eStream::eVid);
+      cDvbStream::cStream& stream = service.getStream (cDvbStream::eVid);
       if (stream.isEnabled())
         lastPts = drawVideo (*stream.getRender(), lastPts, playPts, graphics);
 
-      stream = service.getStream (cDvbTransportStream::eStream::eAud);
+      stream = service.getStream (cDvbStream::eAud);
       if (stream.isEnabled())
         lastPts = drawAudio (*stream.getRender(), lastPts, graphics);
 
-      stream = service.getStream (cDvbTransportStream::eStream::eAudOther);
+      stream = service.getStream (cDvbStream::eAudOther);
       if (stream.isEnabled())
         lastPts = drawAudio (*stream.getRender(), lastPts, graphics);
 
-      stream = service.getStream (cDvbTransportStream::eStream::eSub);
+      stream = service.getStream (cDvbStream::eSub);
       if (stream.isEnabled())
         lastPts = drawSubtitle (*stream.getRender(), lastPts, graphics);
       }
     }
   //}}}
   //{{{
-  void drawPids (cDvbTransportStream& transportStream, cGraphics& graphics) {
+  void drawPids (cDvbStream& dvbStream, cGraphics& graphics) {
   // draw pidInfoMap
 
     // calc error number width
     int errorDigits = 1;
-    while (transportStream.getNumErrors() > pow (10, errorDigits))
+    while (dvbStream.getNumErrors() > pow (10, errorDigits))
       errorDigits++;
 
     int prevSid = 0;
-    for (auto& pidInfoItem : transportStream.getPidInfoMap()) {
+    for (auto& pidInfoItem : dvbStream.getPidInfoMap()) {
       // iterate for pidInfo
-      cDvbTransportStream::cPidInfo& pidInfo = pidInfoItem.second;
+      cDvbStream::cPidInfo& pidInfo = pidInfoItem.second;
 
       // draw separator, crude test for new service, fails sometimes
       if ((pidInfo.mSid != prevSid) && (pidInfo.mStreamType != 5) && (pidInfo.mStreamType != 11))
@@ -236,16 +233,16 @@ private:
         streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
       ImGui::TextUnformatted (streamText.c_str());
 
-      cDvbTransportStream::cService* service = transportStream.getService (pidInfo.mSid);
+      cDvbStream::cService* service = dvbStream.getService (pidInfo.mSid);
       if (service) {
         ImGui::SetCursorPos (cursorPos);
         if (ImGui::InvisibleButton (fmt::format ("##pid{}", pidInfo.mPid).c_str(),
                                     {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
-          if (pidInfo.mPid == service->getStream (cDvbTransportStream::eStream::eSub).getPid())
-            service->toggleStream (cDvbTransportStream::eStream::eSub);
+          if (pidInfo.mPid == service->getStream (cDvbStream::eSub).getPid())
+            service->toggleStream (cDvbStream::eSub);
 
-        if (pidInfo.mPid == service->getStream (cDvbTransportStream::eStream::eSub).getPid()) {
-          cRender* subtitle = service->getStream (cDvbTransportStream::eStream::eSub).getRender();
+        if (pidInfo.mPid == service->getStream (cDvbStream::eSub).getPid()) {
+          cRender* subtitle = service->getStream (cDvbStream::eSub).getRender();
           if (subtitle)
             drawSubtitle (*subtitle, 0, graphics);
           }
@@ -260,26 +257,26 @@ private:
     }
   //}}}
   //{{{
-  void drawRecorded (cDvbTransportStream& transportStream) {
+  void drawRecorded (cDvbStream& dvbStream) {
   // list recorded items
 
-    for (auto& program : transportStream.getRecordPrograms())
+    for (auto& program : dvbStream.getRecordPrograms())
       ImGui::TextUnformatted (program.c_str());
     }
   //}}}
   //{{{
-  void drawTv (cDvbTransportStream& transportStream, cGraphics& graphics) {
+  void drawTv (cDvbStream& dvbStream, cGraphics& graphics) {
 
-    for (auto& serviceItem : transportStream.getServiceMap()) {
-      cDvbTransportStream::cService& service = serviceItem.second;
-      if (service.getStream (cDvbTransportStream::eStream::eAud).isEnabled()) {
+    for (auto& serviceItem : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service = serviceItem.second;
+      if (service.getStream (cDvbStream::eAud).isEnabled()) {
         cAudioRender& audio =
-          *dynamic_cast<cAudioRender*>(service.getStream (cDvbTransportStream::eStream::eAud).getRender());
+          *dynamic_cast<cAudioRender*>(service.getStream (cDvbStream::eAud).getRender());
         int64_t playPts = audio.getPlayPts();
 
-        if (service.getStream(cDvbTransportStream::eStream::eVid).isEnabled()) {
+        if (service.getStream(cDvbStream::eVid).isEnabled()) {
           cVideoRender& video =
-            *dynamic_cast<cVideoRender*>(service.getStream (cDvbTransportStream::eStream::eVid).getRender());
+            *dynamic_cast<cVideoRender*>(service.getStream (cDvbStream::eVid).getRender());
 
           cTexture* texture = video.getTexture (playPts, graphics);
           if (texture)
@@ -297,7 +294,7 @@ private:
 
     // overlay channel buttons
     ImGui::SetCursorPos ({0.f,0.f});
-    for (auto& serviceItem : transportStream.getServiceMap())
+    for (auto& serviceItem : dvbStream.getServiceMap())
       if (ImGui::Button (fmt::format ("{:{}s}", serviceItem.second.getChannelName(), mMaxNameSize).c_str()))
         serviceItem.second.toggleAll();
     }
@@ -421,15 +418,14 @@ private:
   //{{{  vars
   uint8_t mMainTabIndex = 0;
 
-  int mPacketDigits = 3;
-  int mMaxPidPackets = 3;
+  int64_t mMaxPidPackets = 0;
+  size_t mPacketDigits = 3;
 
   size_t mMaxNameSize = 3;
   size_t mMaxSidSize = 3;
   size_t mMaxPgmSize = 3;
-  size_t mMaxVidSize = 3;
-  size_t mMaxAudSize = 3;
-  size_t mMaxSubSize = 3;
+
+  std::array <size_t, 4> mMaxDigits = { 3 };
 
   int mPlotIndex = 0;
   //}}}
@@ -458,7 +454,6 @@ private:
   // vars
   bool mOpen = true;
   cTellyView mTellyView;
-
   static cUI* create (const string& className) { return new cTvUI (className); }
   inline static const bool mRegistered = registerClass ("tv", &create);
   };

@@ -1,4 +1,4 @@
-//{{{  cDvbTransportStream.h
+//{{{  cDvbStream.h
 // PAT inserts <pid,sid> into mProgramMap
 // PMT declares pgm and elementary stream pids, adds cService into mServiceMap
 // SDT names a service in mServiceMap
@@ -23,12 +23,12 @@ class cTexture;
 using tTimePoint = std::chrono::system_clock::time_point;
 using tDurationSeconds = std::chrono::seconds;
 
-class cDvbTransportStream {
+class cDvbStream {
 public:
   enum eStream { eVid, eAud, eAudOther, eSub, eLast };
 
-  cDvbTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName);
-  virtual ~cDvbTransportStream();
+  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName);
+  virtual ~cDvbStream();
 
   //{{{
   class cPidInfo {
@@ -65,7 +65,7 @@ public:
     uint16_t mSid = 0;
     uint16_t mStreamType = 0;
 
-    int mPackets = 0;
+    int64_t mPackets = 0;
     int mContinuity = -1;
     int mErrors = 0;
     int mRepeatContinuity = 0;

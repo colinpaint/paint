@@ -11,7 +11,7 @@
 
 class cPlatform;
 class cGraphics;
-class cDvbTransportStream;
+class cDvbStream;
 //}}}
 
 class cTvApp : public cApp {
@@ -20,10 +20,10 @@ public:
     : cApp (platform, graphics, mainFont, monoFont) {}
   ~cTvApp() = default;
 
-  cDvbTransportStream* getDvbTransportStream() { return mDvbTransportStream; }
+  cDvbStream* getDvbStream() { return mDvbStream; }
 
   bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex);
 
 private:
-  cDvbTransportStream* mDvbTransportStream = nullptr;
+  cDvbStream* mDvbStream = nullptr;
   };

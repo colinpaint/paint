@@ -11,7 +11,7 @@
 #include "../utils/date.h"
 #include "../utils/cLog.h"
 
-#include "../dvb/cDvbTransportStream.h"
+#include "../dvb/cDvbStream.h"
 
 using namespace std;
 //}}}
@@ -25,14 +25,14 @@ bool cTvApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMulti
     const string kRecordRoot = "/home/pi/tv/";
   #endif
 
-  mDvbTransportStream = new cDvbTransportStream (dvbMultiplex, kRecordRoot);
-  if (!mDvbTransportStream)
+  mDvbStream = new cDvbStream (dvbMultiplex, kRecordRoot);
+  if (!mDvbStream)
     return false;
 
   if (filename.empty())
-    mDvbTransportStream->dvbSource (true);
+    mDvbStream->dvbSource (true);
   else
-    mDvbTransportStream->fileSource (true, filename);
+    mDvbStream->fileSource (true, filename);
 
   return true;
   }
