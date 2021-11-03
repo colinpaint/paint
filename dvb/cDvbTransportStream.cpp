@@ -461,7 +461,7 @@ cDvbTransportStream::cService::~cService() {
 
   mEpgItemMap.clear();
 
-  delete mVideo;
+  delete mVidStream.mRender;
   delete mAudio;
   delete mAudioOther;
   delete mSubtitle;
@@ -487,14 +487,14 @@ bool cDvbTransportStream::cService::isEpgRecord (const string& title, tTimePoint
 
 //  sets
 //{{{
-void cDvbTransportStream::cService::setVidPid (uint16_t pid, uint16_t streamType) {
+void cDvbTransportStream::cService::setVidStream (uint16_t pid, uint16_t streamType) {
   mVidStream.mPid = pid;
   mVidStream.mType = streamType;
   mVidStream.mName = cDvbUtils::getStreamTypeName (streamType);
   }
 //}}}
 //{{{
-void cDvbTransportStream::cService::setAudPid (uint16_t pid, uint16_t streamType) {
+void cDvbTransportStream::cService::setAudStream (uint16_t pid, uint16_t streamType) {
 
   if ((pid != mAudStream.mPid) && (pid != mAudOtherStream.mPid)) {
     // use first aud pid, may be many
@@ -512,7 +512,7 @@ void cDvbTransportStream::cService::setAudPid (uint16_t pid, uint16_t streamType
   }
 //}}}
 //{{{
-void cDvbTransportStream::cService::setSubPid (uint16_t pid, uint16_t streamType) {
+void cDvbTransportStream::cService::setSubStream (uint16_t pid, uint16_t streamType) {
   mSubStream.mPid = pid;
   mSubStream.mType = streamType;
   mSubStream.mName = cDvbUtils::getStreamTypeName (streamType);
@@ -551,13 +551,13 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
 //{{{
 void cDvbTransportStream::cService::toggleVideo() {
 
-  if (mVideo) {
-    auto mTemp = mVideo;
-    mVideo = nullptr;
+  if (mVidStream.mRender) {
+    auto mTemp = mVidStream.mRender;
+    mVidStream.mRender = nullptr;
     delete mTemp;
     }
   else
-    mVideo = new cVideoRender(getChannelName());
+    mVidStream.mRender = new cVideoRender (getChannelName());
   }
 //}}}
 //{{{
@@ -565,7 +565,7 @@ void cDvbTransportStream::cService::toggleAudio() {
 
   if (mAudio) {
     auto mTemp = mAudio;
-    mVideo = nullptr;
+    mAudio = nullptr;
     delete mTemp;
     }
   else
@@ -577,7 +577,7 @@ void cDvbTransportStream::cService::toggleAudioOther() {
 
   if (mAudioOther) {
     auto mTemp = mAudioOther;
-    mVideo = nullptr;
+    mAudioOther = nullptr;
     delete mTemp;
     }
   else
@@ -589,7 +589,7 @@ void cDvbTransportStream::cService::toggleSubtitle() {
 
   if (mSubtitle) {
     auto mTemp = mSubtitle;
-    mVideo = nullptr;
+    mSubtitle = nullptr;
     delete mTemp;
     }
   else
@@ -766,7 +766,7 @@ cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
   }
 //}}}
 //{{{
-cVideoRender* cDvbTransportStream::getVideo (uint16_t sid) {
+cRender* cDvbTransportStream::getVideo (uint16_t sid) {
 
   cService* service = getService (sid);
   return service ? service->getVideo() : nullptr;
@@ -945,7 +945,7 @@ bool cDvbTransportStream::vidPes (cPidInfo* pidInfo, bool skip) {
   (void)skip;
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cVideoRender* video = service->getVideo();
+    cRender* video = service->getVideo();
     if (video)
       video->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
@@ -1318,7 +1318,7 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
       switch (esPidInfo->mStreamType) {
         case   2: // ISO 13818-2 video
         case  27: // HD vid
-          service->setVidPid (esPid, esPidInfo->mStreamType);
+          service->setVidStream (esPid, esPidInfo->mStreamType);
           break;
 
         case   3: // ISO 11172-3 audio
@@ -1326,11 +1326,11 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         case  15: // HD aud ADTS
         case  17: // HD aud LATM
         case 129: // aud AC3
-          service->setAudPid (esPid, esPidInfo->mStreamType);
+          service->setAudStream (esPid, esPidInfo->mStreamType);
           break;
 
         case   6: // subtitle
-          service->setSubPid (esPid, esPidInfo->mStreamType);
+          service->setSubStream (esPid, esPidInfo->mStreamType);
           break;
 
         case   5: // private mpeg2 tabled data - private

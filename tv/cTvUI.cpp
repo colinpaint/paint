@@ -299,7 +299,7 @@ private:
       if (service.getAudio()) {
         int64_t playPts = service.getAudio()->getPlayPts();
         if (service.getVideo()) {
-          cVideoRender& video = *service.getVideo();
+          cVideoRender& video = *dynamic_cast<cVideoRender*>(service.getVideo());
 
           cTexture* texture = video.getTexture (playPts, graphics);
           if (texture)
@@ -332,9 +332,10 @@ private:
   //}}}
 
   //{{{
-  int64_t drawVideo (cVideoRender& video, int64_t pts, int64_t playPts, cGraphics& graphics) {
+  int64_t drawVideo (cRender& render, int64_t pts, int64_t playPts, cGraphics& graphics) {
 
-    int64_t lastPts = plotValues (pts, video, 0xffffffff);
+    cVideoRender& video = dynamic_cast<cVideoRender&>(render);
+    int64_t lastPts = plotValues (video, pts, 0xffffffff);
 
     ImGui::TextUnformatted (video.getInfoString().c_str());
 
@@ -347,19 +348,23 @@ private:
     }
   //}}}
   //{{{
-  int64_t drawAudio (cAudioRender& audio, int64_t pts, cGraphics& graphics) {
+  int64_t drawAudio (cRender& render, int64_t pts, cGraphics& graphics) {
 
     (void)graphics;
-    int64_t lastPts = plotValues (pts, audio, 0xff00ffff);
+    cAudioRender& audio = dynamic_cast<cAudioRender&>(render);
+
+    int64_t lastPts = plotValues (audio, pts, 0xff00ffff);
     ImGui::TextUnformatted (audio.getInfoString().c_str());
     drawMiniLog (audio.getLog());
     return lastPts;
     }
   //}}}
   //{{{
-  int64_t drawSubtitle (cSubtitleRender& subtitle, int64_t pts, cGraphics& graphics) {
+  int64_t drawSubtitle (cRender& render, int64_t pts, cGraphics& graphics) {
 
-    int64_t lastPts = plotValues (pts, subtitle, 0xff00ff00);
+    cSubtitleRender& subtitle = dynamic_cast<cSubtitleRender&>(render);
+
+    int64_t lastPts = plotValues (subtitle, pts, 0xff00ff00);
 
     const float potSize = ImGui::GetTextLineHeight() / 2.f;
     size_t line = 0;
@@ -411,7 +416,7 @@ private:
     }
   //}}}
   //{{{
-  int64_t plotValues (int64_t lastPts, cRender& render, uint32_t color) {
+  int64_t plotValues (cRender& render, int64_t lastPts, uint32_t color) {
 
     (void)color;
 

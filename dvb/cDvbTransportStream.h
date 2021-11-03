@@ -16,9 +16,12 @@
 #include "cDvbMultiplex.h"
 
 class cDvbSource;
+
+class cRender;
 class cVideoRender;
 class cAudioRender;
 class cSubtitleRender;
+
 class cTexture;
 //}}}
 using tTimePoint = std::chrono::system_clock::time_point;
@@ -84,6 +87,19 @@ public:
     };
   //}}}
   //{{{
+  class cStream {
+  public:
+    cStream() {}
+    ~cStream() = default;
+
+    uint16_t mPid = 0;
+    uint16_t mType = 0;
+    std::string mName;
+
+    cRender* mRender = nullptr;
+    };
+  //}}}
+  //{{{
   class cEpgItem {
   public:
     //{{{
@@ -131,17 +147,6 @@ public:
     };
   //}}}
   //{{{
-  class cStream {
-  public:
-    cStream() {}
-    ~cStream() = default;
-
-    uint16_t mPid = 0;
-    uint16_t mType = 0;
-    std::string mName;
-    };
-  //}}}
-  //{{{
   class cService {
   public:
     cService (uint16_t sid);
@@ -150,6 +155,11 @@ public:
     //{{{  gets
     uint16_t getSid() const { return mSid; }
     uint16_t getProgramPid() const { return mProgramPid; }
+
+    cStream& getVidStream() { return mVidStream; }
+    cStream& getAudStream() { return mAudStream; }
+    cStream& getAudOtherStream() { return mAudOtherStream; }
+    cStream& getSubStream() { return mSubStream; }
 
     uint16_t getVidPid() const { return mVidStream.mPid; }
     uint16_t getVidStreamType() const { return mVidStream.mType; }
@@ -171,7 +181,7 @@ public:
     std::string getChannelRecordName() const { return mChannelRecordName; }
 
     // renders
-    cVideoRender* getVideo() const { return mVideo; }
+    cRender* getVideo() const { return mVidStream.mRender; }
     cAudioRender* getAudio() const { return mAudio; }
     cAudioRender* getAudioOther() const { return mAudioOther; }
     cSubtitleRender* getSubtitle() const { return mSubtitle; }
@@ -188,9 +198,9 @@ public:
     //{{{  sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
 
-    void setVidPid (uint16_t pid, uint16_t streamType);
-    void setAudPid (uint16_t pid, uint16_t streamType);
-    void setSubPid (uint16_t pid, uint16_t streamType);
+    void setVidStream (uint16_t pid, uint16_t streamType);
+    void setAudStream (uint16_t pid, uint16_t streamType);
+    void setSubStream (uint16_t pid, uint16_t streamType);
 
     //{{{
     void setChannelName (const std::string& name, bool record, const std::string& recordName) {
@@ -201,7 +211,7 @@ public:
     //}}}
 
     // render
-    void setVideo (cVideoRender* video) { mVideo = video; }
+    void setVideo (cRender* render) { mVidStream.mRender = render; }
     void toggleVideo();
     void setAudio (cAudioRender* audio) { mAudio = audio; }
     void toggleAudio();
@@ -242,15 +252,13 @@ public:
     cStream mAudStream;
     cStream mAudOtherStream;
     cStream mSubStream;
+    cAudioRender* mAudio = nullptr;
+    cAudioRender* mAudioOther = nullptr;
+    cSubtitleRender* mSubtitle = nullptr;
 
     std::string mChannelName;
     bool mChannelRecord = false;
     std::string mChannelRecordName;
-
-    cVideoRender* mVideo = nullptr;
-    cAudioRender* mAudio = nullptr;
-    cAudioRender* mAudioOther = nullptr;
-    cSubtitleRender* mSubtitle = nullptr;
 
     // epg
     cEpgItem* mNowEpgItem = nullptr;
@@ -278,7 +286,7 @@ public:
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
-  cVideoRender* getVideo (uint16_t sid);
+  cRender* getVideo (uint16_t sid);
   cAudioRender* getAudio (uint16_t sid);
   cAudioRender* getAudioOther (uint16_t sid);
   cSubtitleRender* getSubtitle (uint16_t sid);
