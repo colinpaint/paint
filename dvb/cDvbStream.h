@@ -26,10 +26,46 @@ using tDurationSeconds = std::chrono::seconds;
 class cDvbStream {
 public:
   enum eStream { eVid, eAud, eAudOther, eSub, eLast };
+  //{{{
+  class cStream {
+  public:
+    ~cStream();
 
-  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName);
-  virtual ~cDvbStream();
+    bool isDefined() const { return mDefined; }
+    bool isEnabled() const { return mDefined && mEnabled; }
 
+    uint16_t getPid() const { return mPid; }
+    uint16_t getType() const { return mType; }
+    std::string getTypeName() const { return mTypeName; }
+    std::string getLabel() const { return mLabel; }
+    cRender& getRender() const { return *mRender; }
+
+    void set (uint16_t pid, uint16_t streamType);
+    void setLabel (const std::string& label) { mLabel = label; }
+    //{{{
+    void setRender (cRender* render) {
+      mRender = render;
+      if (render)
+        mEnabled = true;
+      else
+        mEnabled = false;
+      }
+    //}}}
+
+    bool toggle();
+
+  private:
+    bool mDefined = false;
+    bool mEnabled = false;
+
+    uint16_t mPid = 0;
+    uint16_t mType = 0;
+    std::string mTypeName;
+    std::string mLabel;
+
+    cRender* mRender = nullptr;
+    };
+  //}}}
   //{{{
   class cPidInfo {
   public:
@@ -82,46 +118,6 @@ public:
     int64_t mStreamPos = -1;
 
     std::string mInfoString;
-    };
-  //}}}
-  //{{{
-  class cStream {
-  public:
-    ~cStream();
-
-    bool isDefined() const { return mDefined; }
-    bool isEnabled() const { return mEnabled; }
-
-    uint16_t getPid() const { return mPid; }
-    uint16_t getType() const { return mType; }
-    std::string getTypeName() const { return mTypeName; }
-    std::string getLabel() const { return mLabel; }
-    cRender& getRender() const { return *mRender; }
-
-    void set (uint16_t pid, uint16_t streamType);
-    void setLabel (const std::string& label) { mLabel = label; }
-    //{{{
-    void setRender (cRender* render) {
-      mRender = render;
-      if (render)
-        mEnabled = true;
-      else
-        mEnabled = false;
-      }
-    //}}}
-
-    bool toggle();
-
-  private:
-    bool mDefined = false;
-    bool mEnabled = false;
-
-    uint16_t mPid = 0;
-    uint16_t mType = 0;
-    std::string mTypeName;
-    std::string mLabel;
-
-    cRender* mRender = nullptr;
     };
   //}}}
   //{{{
@@ -258,6 +254,8 @@ public:
     };
   //}}}
 
+  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName);
+  virtual ~cDvbStream();
   //{{{  gets
   uint64_t getNumPackets() const { return mNumPackets; }
   uint64_t getNumErrors() const { return mNumErrors; }
@@ -291,7 +289,6 @@ private:
   void clearPidContinuity();
   //}}}
 
-  int64_t getPts (uint8_t* tsPtr);
   cPidInfo* getPidInfo (uint16_t pid, bool createPsiOnly);
 
   void startServiceProgram (cService* service, tTimePoint tdtTime,
@@ -311,14 +308,13 @@ private:
   int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
   //}}}
   int64_t demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
+
   void dvbSourceInternal (bool launchThread);
   void fileSourceInternal (bool launchThread, const std::string& fileName);
 
   // vars
   std::mutex mMutex;
-
-  cDvbMultiplex mDvbMultiplex;
-
+  const cDvbMultiplex mDvbMultiplex;
   uint64_t mNumPackets = 0;
   uint64_t mNumErrors = 0;
 

@@ -90,30 +90,10 @@ public:
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
 
       switch (mMainTabIndex) {
-        //{{{
-        case 0: { // services
-          drawServices (*dvbStream, app.getGraphics());
-          break;
-          }
-        //}}}
-        //{{{
-        case 1: { // pids
-          drawPids (*dvbStream, app.getGraphics());
-          break;
-          }
-        //}}}
-        //{{{
-        case 2: { // recorded
-          drawRecorded (*dvbStream);
-          break;
-          }
-        //}}}
-        //{{{
-        case 3: { // tv
-          drawTv (*dvbStream, app.getGraphics());
-          break;
-          }
-        //}}}
+        case 0: drawServices (*dvbStream, app.getGraphics()); break;
+        case 1: drawPids (*dvbStream, app.getGraphics()); break;
+        case 2: drawRecorded (*dvbStream); break;
+        case 3: drawTv (*dvbStream, app.getGraphics()); break;
         }
 
       ImGui::EndChild();
@@ -199,6 +179,8 @@ private:
   void drawPids (cDvbStream& dvbStream, cGraphics& graphics) {
   // draw pidInfoMap
 
+    (void)graphics;
+
     // calc error number width
     int errorDigits = 1;
     while (dvbStream.getNumErrors() > pow (10, errorDigits))
@@ -234,19 +216,6 @@ private:
         streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
       ImGui::TextUnformatted (streamText.c_str());
 
-      cDvbStream::cService* service = dvbStream.getService (pidInfo.mSid);
-      if (service) {
-        ImGui::SetCursorPos (cursorPos);
-        if (ImGui::InvisibleButton (fmt::format ("##pid{}", pidInfo.mPid).c_str(),
-                                    {ImGui::GetWindowWidth(), ImGui::GetTextLineHeight()}))
-          if (pidInfo.mPid == service->getStream (cDvbStream::eSub).getPid())
-            service->toggleStream (cDvbStream::eSub);
-
-        if (pidInfo.mPid == service->getStream (cDvbStream::eSub).getPid())
-          if (service->getStream (cDvbStream::eSub).isEnabled()) 
-            drawSubtitle (service->getStream (cDvbStream::eSub).getRender(), graphics);
-        }
-
       // adjust packet number width
       if (pidInfo.mPackets > pow (10, mPacketDigits))
         mPacketDigits++;
@@ -268,15 +237,16 @@ private:
 
     for (auto& serviceItem : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = serviceItem.second;
+
+      while (service.getChannelName().size() > mMaxNameSize)
+        mMaxNameSize = service.getChannelName().size();
+
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
-        cAudioRender& audio =
-          dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
+        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
         int64_t playPts = audio.getPlayPts();
 
-        if (service.getStream(cDvbStream::eVid).isEnabled()) {
-          cVideoRender& video =
-            dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
-
+        if (service.getStream (cDvbStream::eVid).isEnabled()) {
+          cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
           cTexture* texture = video.getTexture (playPts, graphics);
           if (texture)
             ImGui::Image ((void*)(intptr_t)texture->getTextureId(),
@@ -293,9 +263,9 @@ private:
 
     // overlay channel buttons
     ImGui::SetCursorPos ({0.f,0.f});
-    for (auto& serviceItem : dvbStream.getServiceMap())
-      if (ImGui::Button (fmt::format ("{:{}s}", serviceItem.second.getChannelName(), mMaxNameSize).c_str()))
-        serviceItem.second.toggleAll();
+    for (auto& servicePair : dvbStream.getServiceMap())
+      if (ImGui::Button (fmt::format ("{:{}s}", servicePair.second.getChannelName(), mMaxNameSize).c_str()))
+        servicePair.second.toggleAll();
     }
   //}}}
 

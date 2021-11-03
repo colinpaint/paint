@@ -353,14 +353,16 @@ typedef struct {
   } sTdt;
 //}}}
 
+//{{{
 typedef struct descr_gen_struct {
   uint8_t descr_tag        :8;
   uint8_t descr_length     :8;
   } sDescriptorGen;
+
 #define getDescrTag(x) (((sDescriptorGen*)x)->descr_tag)
 #define getDescrLength(x) (((sDescriptorGen*)x)->descr_length+2)
-
-//{{{  0x48 service_descr
+//}}}
+//{{{
 typedef struct descr_service_struct {
   uint8_t descr_tag             :8;
   uint8_t descr_length          :8;
@@ -368,7 +370,7 @@ typedef struct descr_service_struct {
   uint8_t provider_name_length  :8;
   } descr_service_t;
 //}}}
-//{{{  0x4D short_event_descr
+//{{{
 typedef struct descr_short_event_struct {
   uint8_t descr_tag         :8;
   uint8_t descr_length      :8;
@@ -378,7 +380,7 @@ typedef struct descr_short_event_struct {
   uint8_t event_name_length :8;
   } descr_short_event_t;
 //}}}
-//{{{  0x4E extended_event_descr
+//{{{
 typedef struct descr_extended_event_struct {
   uint8_t descr_tag          :8;
   uint8_t descr_length       :8;
@@ -392,13 +394,49 @@ typedef struct descr_extended_event_struct {
   } descr_extended_event_t;
 #define CastExtendedEventDescr(x) ((descr_extended_event_t *)(x))
 
+//}}}
+//{{{
 typedef struct item_extended_event_struct {
   uint8_t item_description_length               :8;
   } item_extended_event_t;
+
 #define CastExtendedEventItem(x) ((item_extended_event_t *)(x))
 //}}}
 //}}}
 
+//{{{  class cDvbStream::cStream
+//{{{
+cDvbStream::cStream::~cStream() {
+  delete mRender;
+  }
+//}}}
+
+//{{{
+void cDvbStream::cStream::set (uint16_t pid, uint16_t streamType) {
+
+  mDefined = true;
+  mPid = pid;
+  mType = streamType;
+  mTypeName = cDvbUtils::getStreamTypeName (streamType);
+  }
+//}}}
+
+//{{{
+bool cDvbStream::cStream::toggle() {
+// return true if enabling
+
+  if (mRender) {
+    // remove render
+    auto mTemp = mRender;
+    mRender = nullptr;
+    delete mTemp;
+    return false;
+    }
+
+  return true;
+  }
+//}}}
+//}}}
 //{{{  class cDvbStream::cPidInfo
 cDvbStream::cPidInfo::cPidInfo (uint16_t pid, bool isPsi) : mPid(pid), mPsi(isPsi) {}
 //{{{
@@ -447,39 +485,6 @@ int cDvbStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
   mBufPtr += bufSize;
 
   return getBufUsed();
-  }
-//}}}
-//}}}
-//{{{  class cDvbStream::cStream
-//{{{
-cDvbStream::cStream::~cStream() {
-  delete mRender;
-  }
-//}}}
-
-//{{{
-void cDvbStream::cStream::set (uint16_t pid, uint16_t streamType) {
-
-  mDefined = true;
-  mPid = pid;
-  mType = streamType;
-  mTypeName = cDvbUtils::getStreamTypeName (streamType);
-  }
-//}}}
-
-//{{{
-bool cDvbStream::cStream::toggle() {
-// return true if enabling
-
-  if (mRender) {
-    // remove render
-    auto mTemp = mRender;
-    mRender = nullptr;
-    delete mTemp;
-    return false;
-    }
-
-  return true;
   }
 //}}}
 //}}}
@@ -697,7 +702,7 @@ void cDvbStream::cService::writePmt() {
   *tsPtr++ = 0x00; // first section number = 0
   *tsPtr++ = 0x00; // last section number = 0
 
-  *tsPtr++ = 0xE0 | ((getStream(eVid).getPid() & 0x1F00) >> 8);
+  *tsPtr++ = 0xE0 | ((getStream (eVid).getPid() & 0x1F00) >> 8);
   *tsPtr++ = getStream(eVid).getPid() & 0x00FF;
 
   *tsPtr++ = 0xF0;
@@ -705,22 +710,22 @@ void cDvbStream::cService::writePmt() {
 
   // video es
   *tsPtr++ = static_cast<uint8_t>(getStream(eVid).getType()); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((getStream(eVid).getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = getStream(eVid).getPid() & 0x00FF;
+  *tsPtr++ = 0xE0 | ((getStream (eVid).getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = getStream (eVid).getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // audio es
   *tsPtr++ = static_cast<uint8_t>(getStream(eAud).getType()); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((getStream(eAud).getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = getStream(eAud).getPid() & 0x00FF;
+  *tsPtr++ = 0xE0 | ((getStream (eAud).getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = getStream (eAud).getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // subtitle es
   *tsPtr++ = static_cast<uint8_t>(getStream(eSub).getType()); // elementary stream_type
   *tsPtr++ = 0xE0 | ((getStream(eSub).getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = getStream(eSub).getPid() & 0x00FF;
+  *tsPtr++ = getStream (eSub).getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
@@ -821,25 +826,6 @@ void cDvbStream::clearPidContinuity() {
 //}}}
 
 //{{{
-int64_t cDvbStream::getPts (uint8_t* tsPtr) {
-// return 33 bits of pts,dts
-
-  if ((tsPtr[0] & 0x01) && (tsPtr[2] & 0x01) && (tsPtr[4] & 0x01)) {
-    // valid marker bits
-    int64_t pts = tsPtr[0] & 0x0E;
-    pts = (pts << 7) | tsPtr[1];
-    pts = (pts << 8) | (tsPtr[2] & 0xFE);
-    pts = (pts << 7) | tsPtr[3];
-    pts = (pts << 7) | (tsPtr[4] >> 1);
-    return pts;
-    }
-  else
-    cLog::log (LOGERROR, "getPts marker bits - %02x %02x %02x %02x 0x02",
-                         tsPtr[0], tsPtr[1],tsPtr[2],tsPtr[3],tsPtr[4]);
-  return -1;
-  }
-//}}}
-//{{{
 cDvbStream::cPidInfo* cDvbStream::getPidInfo (uint16_t pid, bool createPsiOnly) {
 // find or create pidInfo by pid
 
@@ -876,7 +862,7 @@ void cDvbStream::startServiceProgram (cService* service, tTimePoint tdtTime,
   service->closeFile();
 
   if ((selected || service->getChannelRecord() || mDvbMultiplex.mRecordAllChannels) &&
-      service->getStream (eVid).isDefined() && (service->getStream(eVid).isDefined())) {
+      service->getStream (eVid).isDefined() && (service->getStream (eVid).isDefined())) {
     string filePath = mRecordRootName +
                       service->getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
@@ -1473,7 +1459,7 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
 
                   // form pts, firstPts, lastPts
                   if (ts[7] & 0x80)
-                    pidInfo->mPts = (ts[7] & 0x80) ? getPts (ts+9) : -1;
+                    pidInfo->mPts = (ts[7] & 0x80) ? cDvbUtils::getPts (ts+9) : -1;
                   if (pidInfo->mFirstPts == -1)
                     pidInfo->mFirstPts = pidInfo->mPts;
                   if (pidInfo->mPts > pidInfo->mLastPts)
@@ -1481,7 +1467,7 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
 
                   // save mDts
                   if (ts[7] & 0x40)
-                    pidInfo->mDts = (ts[7] & 0x80) ? getPts (ts+14) : -1;
+                    pidInfo->mDts = (ts[7] & 0x80) ? cDvbUtils::getPts (ts+14) : -1;
 
                   // skip past pesHeader
                   int pesHeaderBytes = 9 + ts[8];
