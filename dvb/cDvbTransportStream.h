@@ -87,6 +87,7 @@ public:
     cStream() {}
     ~cStream() = default;
 
+    bool mValid = false;
     uint16_t mPid = 0;
     uint16_t mType = 0;
     std::string mName;

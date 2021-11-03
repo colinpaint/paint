@@ -488,6 +488,7 @@ bool cDvbTransportStream::cService::isEpgRecord (const string& title, tTimePoint
 //  sets
 //{{{
 void cDvbTransportStream::cService::setVidStream (uint16_t pid, uint16_t streamType) {
+  mVidStream.mValid = true;
   mVidStream.mPid = pid;
   mVidStream.mType = streamType;
   mVidStream.mName = cDvbUtils::getStreamTypeName (streamType);
@@ -496,23 +497,24 @@ void cDvbTransportStream::cService::setVidStream (uint16_t pid, uint16_t streamT
 //{{{
 void cDvbTransportStream::cService::setAudStream (uint16_t pid, uint16_t streamType) {
 
-  if ((pid != mAudStream.mPid) && (pid != mAudOtherStream.mPid)) {
-    // use first aud pid, may be many
-    if (!mAudStream.mPid) {
-      mAudStream.mPid = pid;
-      mAudStream.mType = streamType;
-      mAudStream.mName = cDvbUtils::getStreamTypeName (streamType);
-      }
-    else if (!mAudOtherStream.mPid) {
-      mAudOtherStream.mPid = pid;
-      mAudOtherStream.mType = streamType;
-      mAudOtherStream.mName = cDvbUtils::getStreamTypeName (streamType);
-      }
+  if (!mAudStream.mPid) {
+    mAudStream.mValid = true;
+    mAudStream.mPid = pid;
+    mAudStream.mType = streamType;
+    mAudStream.mName = cDvbUtils::getStreamTypeName (streamType);
+    }
+  else if (!mAudOtherStream.mValid) {
+    mAudOtherStream.mValid = true;
+    mAudOtherStream.mPid = pid;
+    mAudOtherStream.mType = streamType;
+    mAudOtherStream.mName = cDvbUtils::getStreamTypeName (streamType);
     }
   }
 //}}}
 //{{{
 void cDvbTransportStream::cService::setSubStream (uint16_t pid, uint16_t streamType) {
+
+  mSubStream.mValid = true;
   mSubStream.mPid = pid;
   mSubStream.mType = streamType;
   mSubStream.mName = cDvbUtils::getStreamTypeName (streamType);
