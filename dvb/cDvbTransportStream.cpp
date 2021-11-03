@@ -484,7 +484,14 @@ bool cDvbTransportStream::cStream::toggle() {
 //}}}
 //}}}
 //{{{  class cDvbTransportStream::cService
-cDvbTransportStream::cService::cService (uint16_t sid) : mSid(sid) {}
+//{{{
+cDvbTransportStream::cService::cService (uint16_t sid) : mSid(sid) {
+  getStream (eStream::eVid).setName ("vid");
+  getStream (eStream::eAud).setName ("aud");
+  getStream (eStream::eAudOther).setName ("ad");
+  getStream (eStream::eSub).setName ("sub");
+  }
+//}}}
 //{{{
 cDvbTransportStream::cService::~cService() {
 
@@ -566,6 +573,31 @@ void cDvbTransportStream::cService::toggle() {
   toggleVideo();
   toggleAudio();
   toggleSubtitle();
+  }
+//}}}
+//{{{
+void cDvbTransportStream::cService::toggle (eStream streamType) {
+
+  cStream& stream = getStream (streamType);
+  if (stream.toggle()) {
+    switch (streamType) {
+      case eStream::eVid :
+        stream.setRender (new cVideoRender (getChannelName()));
+        return;
+
+      case eStream::eAud :
+        stream.setRender (new cAudioRender (getChannelName()));
+        return;
+
+      case eStream::eAudOther :
+        stream.setRender (new cAudioRender (getChannelName()));
+        return;
+
+      case eStream::eSub :
+        stream.setRender (new cSubtitleRender (getChannelName()));
+        return;
+      }
+    }
   }
 //}}}
 //{{{

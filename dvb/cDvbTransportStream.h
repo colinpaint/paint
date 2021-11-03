@@ -90,7 +90,7 @@ public:
     ~cStream();
 
     bool isDefined() const { return mDefined; }
-    bool isEnabled() const { return mRender != nullptr; }
+    bool isEnabled() const { return mEnabled; }
 
     uint16_t getPid() const { return mPid; }
     uint16_t getType() const { return mType; }
@@ -99,12 +99,22 @@ public:
     cRender* getRender() const { return mRender; }
 
     void set (uint16_t pid, uint16_t streamType);
-    void setRender (cRender* render) { mRender = render; }
+    void setName (const std::string& name) { mName = name; }
+    //{{{
+    void setRender (cRender* render) {
+      mRender = render;
+      if (render)
+        mEnabled = true;
+      else
+        mEnabled = false;
+      }
+    //}}}
 
     bool toggle();
 
   private:
     bool mDefined = false;
+    bool mEnabled = false;
 
     uint16_t mPid = 0;
     uint16_t mType = 0;
@@ -212,6 +222,7 @@ public:
     //}}}
 
     void toggle();
+    void toggle (eStream streamType);
     void toggleVideo();
     void toggleAudio();
     void toggleAudioOther();
