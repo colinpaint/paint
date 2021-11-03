@@ -3,14 +3,14 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
 
+#include "cAudioRender.h"
+
 #ifdef _WIN32
   #include "../audio/audioWASAPI.h"
   #include "../audio/cWinAudio16.h"
 #else
   #include "../audio/cLinuxAudio.h"
 #endif
-
-#include "cAudioRender.h"
 
 #include <cstdint>
 #include <string>
@@ -23,6 +23,8 @@
 
 #include "../imgui/imgui.h"
 #include "../imgui/myImgui.h"
+
+#include "cFrame.h"
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"
@@ -38,12 +40,12 @@ using namespace std;
 
 constexpr uint32_t kAudioPoolSize = 100;
 //{{{
-class cAudioFrame {
+class cAudioFrame : public cFrame {
 public:
   //{{{
-  cAudioFrame (size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, int64_t pts, float* samples)
-      : mNumChannels(numChannels), mSamplesPerFrame(samplesPerFrame), mSampleRate(sampleRate),
-        mPts(pts), mPtsDuration(samplesPerFrame * 90000 / sampleRate), mSamples(samples) {
+  cAudioFrame (int64_t pts, size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, float* samples)
+     : cFrame (pts, samplesPerFrame * 90000 / sampleRate),
+       mNumChannels(numChannels), mSamplesPerFrame(samplesPerFrame), mSampleRate(sampleRate), mSamples(samples) {
 
     for (size_t channel = 0; channel < mNumChannels; channel++) {
       // init
@@ -343,8 +345,6 @@ private:
   const size_t mSamplesPerFrame;
   const uint32_t mSampleRate;
 
-  const int64_t mPts;
-  const int64_t mPtsDuration;
   float* mSamples = nullptr;
 
   std::array <float, 6> mPeakValues = {0.f};
@@ -478,7 +478,7 @@ public:
               default:;
               }
 
-            cAudioFrame* audioFrame = new cAudioFrame (numChannels, samplesPerFrame, sampleRate, pts, samples);
+            cAudioFrame* audioFrame = new cAudioFrame (pts, numChannels, samplesPerFrame, sampleRate, samples);
             addFrameCallback (audioFrame);
             av_frame_unref (avFrame);
             pts += audioFrame->getPtsDuration();
@@ -631,7 +631,8 @@ void cAudioPlayer::wait() {
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const std::string name) : cRender(name) {
+cAudioRender::cAudioRender (const std::string name) 
+    : cRender(name) {
 
   mFrameType = eAudioFrameType::eAacLatm;
 
