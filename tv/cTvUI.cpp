@@ -162,39 +162,39 @@ private:
         service.toggleSubtitle();
         }
         //}}}
-      if (service.getVidPid()) {
+      if (service.getVidStream().isDefined()) {
         //{{{  got vid
         ImGui::SameLine();
         if (toggleButton (fmt::format ("vid:{:{}d}:{}",
                                        service.getVidPid(), mMaxVidSize, service.getVidStreamTypeName()).c_str(),
-                          service.getVideo()))
+                          service.getVidStream().getRender()))
           service.toggleVideo();
         }
         //}}}
-      if (service.getAudPid()) {
+      if (service.getAudStream().isDefined()) {
         //{{{  got aud
         ImGui::SameLine();
         if (toggleButton (fmt::format ("aud:{:{}d}:{}",
                                        service.getAudPid(), mMaxAudSize, service.getAudStreamTypeName()).c_str(),
-                          service.getAudio()))
+                          service.getAudStream().getRender()))
           service.toggleAudio();
         }
         //}}}
-      if (service.getAudOtherPid()) {
+      if (service.getAudOtherStream().isDefined()) {
         //{{{  got aud
         ImGui::SameLine();
         if (toggleButton (fmt::format ("{:{}d}:{}",
                                        service.getAudOtherPid(), mMaxAudSize, service.getAudOtherStreamTypeName()).c_str(),
-                          service.getAudioOther()))
+                          service.getAudOtherStream().getRender()))
           service.toggleAudioOther();
         }
         //}}}
-      if (service.getSubPid()) {
+      if (service.getSubStream().isDefined()) {
         //{{{  got sub
         ImGui::SameLine();
         if (toggleButton (fmt::format ("{}:{:{}d}",
                                        service.getSubStreamTypeName(), service.getSubPid(), mMaxSubSize).c_str(),
-                          service.getSubtitle()))
+                          service.getSubStream().getRender()))
           service.toggleSubtitle();
         }
         //}}}
@@ -206,18 +206,18 @@ private:
         //}}}
 
       int64_t playPts = 0;
-      if (service.getAudio())
-        playPts = dynamic_cast<cAudioRender*>(service.getAudio())->getPlayPts();
+      if (service.getAudStream().getRender())
+        playPts = dynamic_cast<cAudioRender*>(service.getAudStream().getRender())->getPlayPts();
 
       int64_t lastPts = 0;
-      if (service.getAudio())
-        lastPts = drawAudio (*service.getAudio(), lastPts, graphics);
-      if (service.getAudioOther())
-        lastPts = drawAudio (*service.getAudioOther(), lastPts, graphics);
-      if (service.getVideo())
-        lastPts = drawVideo (*service.getVideo(), lastPts, playPts, graphics);
-      if (service.getSubtitle())
-        lastPts = drawSubtitle (*service.getSubtitle(), lastPts, graphics);
+      if (service.getAudStream().isEnabled())
+        lastPts = drawAudio (*service.getAudStream().getRender(), lastPts, graphics);
+      if (service.getAudOtherStream().isEnabled())
+        lastPts = drawAudio (*service.getAudOtherStream().getRender(), lastPts, graphics);
+      if (service.getVidStream().isEnabled())
+        lastPts = drawVideo (*service.getVidStream().getRender(), lastPts, playPts, graphics);
+      if (service.getSubStream().isEnabled())
+        lastPts = drawSubtitle (*service.getSubStream().getRender(), lastPts, graphics);
       }
     }
   //}}}
@@ -269,7 +269,7 @@ private:
             service->toggleSubtitle();
 
         if (pidInfo.mPid == service->getSubPid()) {
-          cRender* subtitle = service->getSubtitle();
+          cRender* subtitle = service->getSubStream().getRender();
           if (subtitle)
             drawSubtitle (*subtitle, 0, graphics);
           }
@@ -296,11 +296,11 @@ private:
 
     for (auto& serviceItem : dvbTransportStream.getServiceMap()) {
       cDvbTransportStream::cService& service =  serviceItem.second;
-      if (service.getAudio()) {
-        cAudioRender& audio = *dynamic_cast<cAudioRender*>(service.getAudio());
+      if (service.getAudStream().getRender()) {
+        cAudioRender& audio = *dynamic_cast<cAudioRender*>(service.getAudStream().getRender());
         int64_t playPts = audio.getPlayPts();
-        if (service.getVideo()) {
-          cVideoRender& video = *dynamic_cast<cVideoRender*>(service.getVideo());
+        if (service.getVidStream().getRender()) {
+          cVideoRender& video = *dynamic_cast<cVideoRender*>(service.getVidStream().getRender());
 
           cTexture* texture = video.getTexture (playPts, graphics);
           if (texture)

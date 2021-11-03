@@ -85,9 +85,23 @@ public:
   class cStream {
   public:
     cStream() {}
-    ~cStream() = default;
+    ~cStream();
 
-    bool mValid = false;
+    bool isDefined() const { return mDefined; }
+    bool isEnabled() const { return mRender != nullptr; }
+
+    uint16_t getPid() const { return mPid; }
+    uint16_t getType() const { return mType; }
+    std::string getName() const { return mName; }
+
+    cRender* getRender() const { return mRender; }
+
+    void set (uint16_t pid, uint16_t streamType);
+    void setRender (cRender* render) { mRender = render; }
+    bool toggle();
+
+  private:
+    bool mDefined = false;
     uint16_t mPid = 0;
     uint16_t mType = 0;
     std::string mName;
@@ -157,30 +171,9 @@ public:
     cStream& getAudOtherStream() { return mAudOtherStream; }
     cStream& getSubStream() { return mSubStream; }
 
-    uint16_t getVidPid() const { return mVidStream.mPid; }
-    uint16_t getVidStreamType() const { return mVidStream.mType; }
-    std::string getVidStreamTypeName() const { return mVidStream.mName; }
-
-    uint16_t getAudPid() const { return mAudStream.mPid; }
-    uint16_t getAudStreamType() const { return mAudStream.mType; }
-    std::string getAudStreamTypeName() const { return mAudStream.mName; }
-    uint16_t getAudOtherPid() const { return mAudOtherStream.mPid; }
-    uint16_t getAudOtherStreamType() const { return mAudOtherStream.mType; }
-    std::string getAudOtherStreamTypeName() const { return mAudOtherStream.mName; }
-
-    uint16_t getSubPid() const { return mSubStream.mPid; }
-    uint16_t getSubStreamType() const { return mSubStream.mType; }
-    std::string getSubStreamTypeName() const { return mSubStream.mName; }
-
     std::string getChannelName() const { return mChannelName; }
     bool getChannelRecord() const { return mChannelRecord; }
     std::string getChannelRecordName() const { return mChannelRecordName; }
-
-    // renders
-    cRender* getVideo() const { return mVidStream.mRender; }
-    cRender* getAudio() const { return mAudStream.mRender; }
-    cRender* getAudioOther() const { return mAudOtherStream.mRender; }
-    cRender* getSubtitle() const { return mSubStream.mRender; }
 
     // epg
     bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
@@ -193,10 +186,7 @@ public:
     //}}}
     //{{{  sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
-
-    void setVidStream (uint16_t pid, uint16_t streamType);
     void setAudStream (uint16_t pid, uint16_t streamType);
-    void setSubStream (uint16_t pid, uint16_t streamType);
 
     //{{{
     void setChannelName (const std::string& name, bool record, const std::string& recordName) {
@@ -207,13 +197,13 @@ public:
     //}}}
 
     // render
-    void setVideo (cRender* render) { mVidStream.mRender = render; }
+    void setVideo (cRender* render) { mVidStream.setRender (render); }
     void toggleVideo();
-    void setAudio (cRender* audio) { mAudStream.mRender = audio; }
+    void setAudio (cRender* render) { mAudStream.setRender(render); }
     void toggleAudio();
-    void setAudioOther (cRender* audio) { mAudOtherStream.mRender = audio; }
+    void setAudioOther (cRender* render) { mAudOtherStream.setRender(render); }
     void toggleAudioOther();
-    void setSubtitle (cRender* render) { mSubStream.mRender = render; }
+    void setSubtitle (cRender* render) { mSubStream.setRender (render); }
     void toggleSubtitle();
 
     // epg

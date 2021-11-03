@@ -398,7 +398,7 @@ typedef struct item_extended_event_struct {
 //}}}
 //}}}
 
-//{{{
+//{{{  class cDvbTransportStream::cPidInfo
 cDvbTransportStream::cPidInfo::cPidInfo (uint16_t pid, bool isPsi) : mPid(pid), mPsi(isPsi) {}
 //{{{
 cDvbTransportStream::cPidInfo::~cPidInfo() {
@@ -449,7 +449,40 @@ int cDvbTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
   }
 //}}}
 //}}}
+//{{{  class cDvbTransportStream::cStream
 //{{{
+cDvbTransportStream::cStream::~cStream() {
+  delete mRender;
+  }
+//}}}
+
+//{{{
+void cDvbTransportStream::cStream::set (uint16_t pid, uint16_t streamType) {
+
+  mDefined = true;
+  mPid = pid;
+  mType = streamType;
+  mName = cDvbUtils::getStreamTypeName (streamType);
+  }
+//}}}
+
+//{{{
+bool cDvbTransportStream::cStream::toggle() {
+// return true if enabling
+
+  if (mRender) {
+    // remove render
+    auto mTemp = mRender;
+    mRender = nullptr;
+    delete mTemp;
+    return false;
+    }
+
+  return true;
+  }
+//}}}
+//}}}
+//{{{  class cDvbTransportStream::cService
 cDvbTransportStream::cService::cService (uint16_t sid) : mSid(sid) {}
 //{{{
 cDvbTransportStream::cService::~cService() {
@@ -460,11 +493,6 @@ cDvbTransportStream::cService::~cService() {
     delete epgItem.second;
 
   mEpgItemMap.clear();
-
-  delete mVidStream.mRender;
-  delete mAudStream.mRender;
-  delete mAudOtherStream.mRender;
-  delete mSubStream.mRender;
 
   closeFile();
   }
@@ -487,37 +515,12 @@ bool cDvbTransportStream::cService::isEpgRecord (const string& title, tTimePoint
 
 //  sets
 //{{{
-void cDvbTransportStream::cService::setVidStream (uint16_t pid, uint16_t streamType) {
-  mVidStream.mValid = true;
-  mVidStream.mPid = pid;
-  mVidStream.mType = streamType;
-  mVidStream.mName = cDvbUtils::getStreamTypeName (streamType);
-  }
-//}}}
-//{{{
 void cDvbTransportStream::cService::setAudStream (uint16_t pid, uint16_t streamType) {
 
-  if (!mAudStream.mPid) {
-    mAudStream.mValid = true;
-    mAudStream.mPid = pid;
-    mAudStream.mType = streamType;
-    mAudStream.mName = cDvbUtils::getStreamTypeName (streamType);
-    }
-  else if (!mAudOtherStream.mValid) {
-    mAudOtherStream.mValid = true;
-    mAudOtherStream.mPid = pid;
-    mAudOtherStream.mType = streamType;
-    mAudOtherStream.mName = cDvbUtils::getStreamTypeName (streamType);
-    }
-  }
-//}}}
-//{{{
-void cDvbTransportStream::cService::setSubStream (uint16_t pid, uint16_t streamType) {
-
-  mSubStream.mValid = true;
-  mSubStream.mPid = pid;
-  mSubStream.mType = streamType;
-  mSubStream.mName = cDvbUtils::getStreamTypeName (streamType);
+  if (!mAudStream.isDefined()) 
+    mAudStream.set (pid, streamType);
+  else if (!mAudOtherStream.isDefined()) 
+    mAudOtherStream.set (pid, streamType);
   }
 //}}}
 
@@ -553,49 +556,29 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
 //{{{
 void cDvbTransportStream::cService::toggleVideo() {
 
-  if (mVidStream.mRender) {
-    auto mTemp = mVidStream.mRender;
-    mVidStream.mRender = nullptr;
-    delete mTemp;
-    }
-  else
-    mVidStream.mRender = new cVideoRender (getChannelName());
+  if (mVidStream.toggle())
+    mVidStream.setRender (new cVideoRender(getChannelName()));
   }
 //}}}
 //{{{
 void cDvbTransportStream::cService::toggleAudio() {
 
-  if (mAudStream.mRender) {
-    auto mTemp = mAudStream.mRender;
-    mAudStream.mRender = nullptr;
-    delete mTemp;
-    }
-  else
-    mAudStream.mRender = new cAudioRender (getChannelName());
+  if (mAudStream.toggle())
+    mAudStream.setRender (new cAudioRender (getChannelName()));
   }
 //}}}
 //{{{
 void cDvbTransportStream::cService::toggleAudioOther() {
 
-  if (mAudOtherStream.mRender) {
-    auto mTemp = mAudOtherStream.mRender;
-    mAudOtherStream.mRender = nullptr;
-    delete mTemp;
-    }
-  else
-    mAudOtherStream.mRender = new cAudioRender (getChannelName());
+  if (mAudOtherStream.toggle())
+    mAudOtherStream.setRender (new cAudioRender (getChannelName()));
   }
 //}}}
 //{{{
 void cDvbTransportStream::cService::toggleSubtitle() {
 
-  if (mSubStream.mRender) {
-    auto mTemp = mSubStream.mRender;
-    mSubStream.mRender = nullptr;
-    delete mTemp;
-    }
-  else
-    mSubStream.mRender = new cSubtitleRender (getChannelName());
+  if (mSubStream.toggle())
+    mSubStream.setRender (new cSubtitleRender (getChannelName()));
   }
 //}}}
 
@@ -619,7 +602,7 @@ void cDvbTransportStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
 //  pes ts packet, save only recognised pids
 
   if (mFile &&
-      ((pid == mVidStream.mPid) || (pid == mAudStream.mPid) || (pid == mSubStream.mPid)))
+      ((pid == mVidStream.getPid()) || (pid == mAudStream.getPid()) || (pid == mSubStream.getPid())))
     fwrite (ts, 1, 188, mFile);
   }
 //}}}
@@ -695,30 +678,30 @@ void cDvbTransportStream::cService::writePmt() {
   *tsPtr++ = 0x00; // first section number = 0
   *tsPtr++ = 0x00; // last section number = 0
 
-  *tsPtr++ = 0xE0 | ((mVidStream.mPid & 0x1F00) >> 8);
-  *tsPtr++ = mVidStream.mPid & 0x00FF;
+  *tsPtr++ = 0xE0 | ((mVidStream.getPid() & 0x1F00) >> 8);
+  *tsPtr++ = mVidStream.getPid() & 0x00FF;
 
   *tsPtr++ = 0xF0;
   *tsPtr++ = 0; // program_info_length;
 
   // video es
-  *tsPtr++ = static_cast<uint8_t>(mVidStream.mType); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mVidStream.mPid & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mVidStream.mPid & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(mVidStream.getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mVidStream.getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mVidStream.getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // audio es
-  *tsPtr++ = static_cast<uint8_t>(mAudStream.mType); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mAudStream.mPid & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mAudStream.mPid & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(mAudStream.getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mAudStream.getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mAudStream.getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // subtitle es
-  *tsPtr++ = static_cast<uint8_t>(mSubStream.mType); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mSubStream.mPid & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mSubStream.mPid & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(mSubStream.getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mSubStream.getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mSubStream.getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
@@ -767,32 +750,33 @@ cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
   return (it == mServiceMap.end()) ? nullptr : &it->second;
   }
 //}}}
+
 //{{{
 cRender* cDvbTransportStream::getVideo (uint16_t sid) {
 
   cService* service = getService (sid);
-  return service ? service->getVideo() : nullptr;
+  return service ? service->getVidStream().getRender() : nullptr;
   }
 //}}}
 //{{{
 cRender* cDvbTransportStream::getAudio (uint16_t sid) {
 
   cService* service = getService (sid);
-  return service ? service->getAudio() : nullptr;
+  return service ? service->getAudStream().getRender() : nullptr;
   }
 //}}}
 //{{{
 cRender* cDvbTransportStream::getAudioOther (uint16_t sid) {
 
   cService* service = getService (sid);
-  return service ? service->getAudioOther() : nullptr;
+  return service ? service->getAudOtherStream().getRender() : nullptr;
   }
 //}}}
 //{{{
 cRender* cDvbTransportStream::getSubtitle (uint16_t sid) {
 
   cService* service = getService (sid);
-  return service ? service->getSubtitle() : nullptr;
+  return service ? service->getSubStream().getRender() : nullptr;
   }
 //}}}
 
@@ -902,7 +886,7 @@ void cDvbTransportStream::startServiceProgram (cService* service, tTimePoint tdt
   service->closeFile();
 
   if ((selected || service->getChannelRecord() || mDvbMultiplex.mRecordAllChannels) &&
-      (service->getVidPid() > 0) && (service->getAudPid() > 0)) {
+      service->getVidStream().isDefined() && (service->getAudStream().isDefined())) {
     string filePath = mRecordRootName +
                       service->getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
@@ -947,7 +931,7 @@ bool cDvbTransportStream::vidPes (cPidInfo* pidInfo, bool skip) {
   (void)skip;
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cRender* video = service->getVideo();
+    cRender* video = service->getVidStream().getRender();
     if (video)
       video->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
@@ -962,7 +946,7 @@ bool cDvbTransportStream::audPes (cPidInfo* pidInfo, bool skip) {
   (void)skip;
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cRender* audio = service->getAudio();
+    cRender* audio = service->getAudStream().getRender();
     if (audio)
       audio->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
@@ -976,7 +960,7 @@ bool cDvbTransportStream::audOtherPes (cPidInfo* pidInfo, bool skip) {
   (void)skip;
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cRender* audio = service->getAudioOther();
+    cRender* audio = service->getAudOtherStream().getRender();
     if (audio)
       audio->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
@@ -988,7 +972,7 @@ bool cDvbTransportStream::subPes (cPidInfo* pidInfo) {
 
   cService* service = getService (pidInfo->mSid);
   if (service) {
-    cRender* subtitle = service->getSubtitle();
+    cRender* subtitle = service->getSubStream().getRender();
     if (subtitle)
       subtitle->processPes (pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
     }
@@ -1222,9 +1206,9 @@ void cDvbTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
               auto running = (eitEvent->running_status == 0x04);
               if (running &&
                   !service->getChannelName().empty() &&
-                  (service->getProgramPid()) &&
-                  (service->getVidPid()) &&
-                  (service->getAudPid())) {
+                  service->getProgramPid() &&
+                  service->getVidStream().isDefined() &&
+                  service->getAudStream().isDefined()) {
                   //(service->getSubPid())) {
                 // now event for named service with valid pgmPid, vidPid, audPid, subPid
                 if (service->setNow (service->isEpgRecord (titleString, startTime),
@@ -1320,7 +1304,7 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
       switch (esPidInfo->mStreamType) {
         case   2: // ISO 13818-2 video
         case  27: // HD vid
-          service->setVidStream (esPid, esPidInfo->mStreamType);
+          service->getVidStream().set (esPid, esPidInfo->mStreamType);
           break;
 
         case   3: // ISO 11172-3 audio
@@ -1332,7 +1316,7 @@ void cDvbTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
           break;
 
         case   6: // subtitle
-          service->setSubStream (esPid, esPidInfo->mStreamType);
+          service->getSubStream().set (esPid, esPidInfo->mStreamType);
           break;
 
         case   5: // private mpeg2 tabled data - private
