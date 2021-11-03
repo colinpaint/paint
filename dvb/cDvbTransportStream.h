@@ -181,7 +181,7 @@ public:
     uint16_t getSid() const { return mSid; }
     uint16_t getProgramPid() const { return mProgramPid; }
 
-    cStream& getStream (eStream stream) { return mStreams[(size_t)stream]; }
+    cStream& getStream (size_t stream) { return mStreams[stream]; }
 
     bool getChannelRecord() const { return mChannelRecord; }
     std::string getChannelName() const { return mChannelName; }
@@ -222,7 +222,7 @@ public:
     void toggleShowEpg() { mShowEpg = !mShowEpg; }
     //}}}
 
-    void toggleStream (eStream streamType);
+    void toggleStream (size_t streamType);
     void toggleAll();
 
     // record

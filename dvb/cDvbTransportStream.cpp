@@ -486,10 +486,10 @@ bool cDvbTransportStream::cStream::toggle() {
 //{{{  class cDvbTransportStream::cService
 //{{{
 cDvbTransportStream::cService::cService (uint16_t sid) : mSid(sid) {
-  getStream (eStream::eVid).setLabel ("vid");
-  getStream (eStream::eAud).setLabel ("aud");
-  getStream (eStream::eAudOther).setLabel ("ad");
-  getStream (eStream::eSub).setLabel ("sub");
+  getStream (eStream::eVid).setLabel ("vid:");
+  getStream (eStream::eAud).setLabel ("aud:");
+  getStream (eStream::eAudOther).setLabel ("ad:");
+  getStream (eStream::eSub).setLabel ("");
   }
 //}}}
 //{{{
@@ -567,7 +567,7 @@ bool cDvbTransportStream::cService::setEpg (bool record, tTimePoint startTime, t
 //}}}
 
 //{{{
-void cDvbTransportStream::cService::toggleStream (eStream streamType) {
+void cDvbTransportStream::cService::toggleStream (size_t streamType) {
 
   cStream& stream = getStream (streamType);
   if (stream.toggle()) {

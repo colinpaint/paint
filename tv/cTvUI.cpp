@@ -128,7 +128,6 @@ private:
   // draw service map
 
     mPlotIndex = 0;
-
     for (auto& serviceItem : transportStream.getServiceMap()) {
       cDvbTransportStream::cService& service =  serviceItem.second;
       //{{{  calc max field sizes, may jiggle for a couple of draws
@@ -156,14 +155,15 @@ private:
         service.toggleAll();
       //}}}
 
-      for (int i = cDvbTransportStream::eVid; i < cDvbTransportStream::eLast; i++) {
-        cDvbTransportStream::cStream& stream = service.getStream (static_cast<cDvbTransportStream::eStream>(i));
+      for (size_t streamType = cDvbTransportStream::eVid; streamType < cDvbTransportStream::eLast; streamType++) {
+        cDvbTransportStream::cStream& stream = service.getStream (streamType);
         if (stream.isDefined()) {
           ImGui::SameLine();
-          if (toggleButton (fmt::format ("{}:{:{}d}:{}",
-                                         stream.getLabel(), stream.getPid(), mMaxVidSize, stream.getTypeName()).c_str(),
-                            stream.isEnabled()))
-            service.toggleStream (static_cast<cDvbTransportStream::eStream>(i));
+          if (toggleButton (fmt::format ("{}{:{}d}:{}",
+                                         stream.getLabel(),
+                                         stream.getPid(), mMaxVidSize,
+                                         stream.getTypeName()).c_str(), stream.isEnabled()))
+            service.toggleStream (streamType);
           }
         }
 
