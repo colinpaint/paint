@@ -765,35 +765,6 @@ cDvbTransportStream::cService* cDvbTransportStream::getService (uint16_t sid) {
   }
 //}}}
 
-//{{{
-cRender* cDvbTransportStream::getVideo (uint16_t sid) {
-
-  cService* service = getService (sid);
-  return service ? service->getVidStream().getRender() : nullptr;
-  }
-//}}}
-//{{{
-cRender* cDvbTransportStream::getAudio (uint16_t sid) {
-
-  cService* service = getService (sid);
-  return service ? service->getAudStream().getRender() : nullptr;
-  }
-//}}}
-//{{{
-cRender* cDvbTransportStream::getAudioOther (uint16_t sid) {
-
-  cService* service = getService (sid);
-  return service ? service->getAudOtherStream().getRender() : nullptr;
-  }
-//}}}
-//{{{
-cRender* cDvbTransportStream::getSubtitle (uint16_t sid) {
-
-  cService* service = getService (sid);
-  return service ? service->getSubStream().getRender() : nullptr;
-  }
-//}}}
-
 // sources
 //{{{
 void cDvbTransportStream::dvbSource (bool launchThread) {

@@ -267,11 +267,6 @@ public:
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
-  cRender* getVideo (uint16_t sid);
-  cRender* getAudio (uint16_t sid);
-  cRender* getAudioOther (uint16_t sid);
-  cRender* getSubtitle (uint16_t sid);
-
   // dvbSource
   bool hasDvbSource() const { return mDvbSource; }
   std::string getErrorString() { return mErrorString; }
