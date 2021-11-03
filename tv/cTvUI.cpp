@@ -108,12 +108,11 @@ private:
   // draw service map
 
     mPlotIndex = 0;
-    for (auto& serviceItem : dvbStream.getServiceMap()) {
-      cDvbStream::cService& service =  serviceItem.second;
+    for (auto& servicePair : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service = servicePair.second;
       //{{{  calc max field sizes, may jiggle for a couple of draws
       while (service.getChannelName().size() > mMaxNameSize)
         mMaxNameSize = service.getChannelName().size();
-
       while (service.getSid() > pow (10, mMaxSidSize))
         mMaxSidSize++;
       while (service.getProgramPid() > pow (10, mMaxPgmSize))
@@ -133,8 +132,8 @@ private:
                          service.getSid(), mMaxSidSize).c_str()))
         service.toggleAll();
       //}}}
-
       for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
+        // iterate service streams
         cDvbStream::cStream& stream = service.getStream (streamType);
         if (stream.isDefined()) {
           ImGui::SameLine();
@@ -153,25 +152,27 @@ private:
         }
         //}}}
 
+      // audio provides playPts
       int64_t playPts = 0;
       if (service.getStream (cDvbStream::eAud).isEnabled())
         playPts = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender()).getPlayPts();
 
+      // render enabled streams
       cDvbStream::cStream& stream = service.getStream (cDvbStream::eVid);
       if (stream.isEnabled())
-        drawVideo (stream.getRender(), graphics, playPts);
+        drawVideo (dynamic_cast<cVideoRender&>(stream.getRender()), graphics, playPts);
 
       stream = service.getStream (cDvbStream::eAud);
       if (stream.isEnabled())
-        drawAudio (stream.getRender(), graphics);
+        drawAudio (dynamic_cast<cAudioRender&>(stream.getRender()), graphics);
 
       stream = service.getStream (cDvbStream::eAudOther);
       if (stream.isEnabled())
-        drawAudio (stream.getRender(), graphics);
+        drawAudio (dynamic_cast<cAudioRender&>(stream.getRender()), graphics);
 
       stream = service.getStream (cDvbStream::eSub);
       if (stream.isEnabled())
-        drawSubtitle (stream.getRender(), graphics);
+        drawSubtitle (dynamic_cast<cSubtitleRender&>(stream.getRender()), graphics);
       }
     }
   //}}}
@@ -196,7 +197,6 @@ private:
         ImGui::Separator();
 
       // draw pid label
-      ImVec2 cursorPos = ImGui::GetCursorPos();
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
                               pidInfo.mPackets, mPacketDigits, pidInfo.mErrors, errorDigits, pidInfo.mPid,
                               getFullPtsString (pidInfo.mPts), pidInfo.getTypeName()).c_str());
@@ -235,11 +235,8 @@ private:
   //{{{
   void drawTv (cDvbStream& dvbStream, cGraphics& graphics) {
 
-    for (auto& serviceItem : dvbStream.getServiceMap()) {
-      cDvbStream::cService& service = serviceItem.second;
-
-      while (service.getChannelName().size() > mMaxNameSize)
-        mMaxNameSize = service.getChannelName().size();
+    for (auto& servicePair : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service = servicePair.second;
 
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
@@ -259,6 +256,9 @@ private:
           break;
           }
         }
+
+      while (service.getChannelName().size() > mMaxNameSize)
+        mMaxNameSize = service.getChannelName().size();
       }
 
     // overlay channel buttons
@@ -270,9 +270,35 @@ private:
   //}}}
 
   //{{{
-  void drawVideo (cRender& render, cGraphics& graphics, int64_t playPts) {
+  void plotValues (cRender& render, uint32_t color) {
 
-    cVideoRender& video = dynamic_cast<cVideoRender&>(render);
+    (void)color;
+
+    int64_t lastPts = render.getLastPts();
+
+    render.setRefPts (lastPts);
+    render.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth()));
+
+    auto lamda = [](void* data, int idx) {
+      int64_t pts = 0;
+      return ImPlotPoint (-idx, ((cRender*)data)->getOffsetValue (idx * (90000/25), pts));
+      };
+
+    if (ImPlot::BeginPlot (fmt::format ("##plot{}", mPlotIndex++).c_str(), NULL, NULL,
+                           {ImGui::GetWindowWidth(), 4*ImGui::GetTextLineHeight()},
+                           ImPlotFlags_NoLegend,
+                           ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit,
+                           ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit)) {
+      ImPlot::PlotStairsG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
+      //ImPlot::PlotBarsG ("line", lamda, &render, (int)ImGui::GetWindowWidth(), 2.0);
+      //ImPlot::PlotLineG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
+      //ImPlot::PlotScatterG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
+      ImPlot::EndPlot();
+      }
+    }
+  //}}}
+  //{{{
+  void drawVideo (cVideoRender& video, cGraphics& graphics, int64_t playPts) {
 
     plotValues (video, 0xffffffff);
 
@@ -286,10 +312,9 @@ private:
     }
   //}}}
   //{{{
-  void drawAudio (cRender& render, cGraphics& graphics) {
+  void drawAudio (cAudioRender& audio, cGraphics& graphics) {
 
     (void)graphics;
-    cAudioRender& audio = dynamic_cast<cAudioRender&>(render);
 
     plotValues (audio, 0xff00ffff);
     ImGui::TextUnformatted (audio.getInfoString().c_str());
@@ -298,9 +323,7 @@ private:
     }
   //}}}
   //{{{
-  void drawSubtitle (cRender& render, cGraphics& graphics) {
-
-    cSubtitleRender& subtitle = dynamic_cast<cSubtitleRender&>(render);
+  void drawSubtitle (cSubtitleRender& subtitle, cGraphics& graphics) {
 
     plotValues (subtitle, 0xff00ff00);
 
@@ -350,34 +373,6 @@ private:
     //}}}
 
     drawMiniLog (subtitle.getLog());
-    }
-  //}}}
-  //{{{
-  void plotValues (cRender& render, uint32_t color) {
-
-    (void)color;
-
-    int64_t lastPts = render.getLastPts();
-
-    render.setRefPts (lastPts);
-    render.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth()));
-
-    auto lamda = [](void* data, int idx) {
-      int64_t pts = 0;
-      return ImPlotPoint (-idx, ((cRender*)data)->getOffsetValue (idx * (90000/25), pts));
-      };
-
-    if (ImPlot::BeginPlot (fmt::format ("##plot{}", mPlotIndex++).c_str(), NULL, NULL,
-                           {ImGui::GetWindowWidth(), 4*ImGui::GetTextLineHeight()},
-                           ImPlotFlags_NoLegend,
-                           ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit,
-                           ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit)) {
-      ImPlot::PlotStairsG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
-      //ImPlot::PlotBarsG ("line", lamda, &render, (int)ImGui::GetWindowWidth(), 2.0);
-      //ImPlot::PlotLineG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
-      //ImPlot::PlotScatterG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
-      ImPlot::EndPlot();
-      }
     }
   //}}}
   //{{{  vars
