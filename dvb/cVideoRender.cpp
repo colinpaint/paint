@@ -273,8 +273,7 @@ cVideoRender::~cVideoRender() {
 
 //{{{
 string cVideoRender::getInfoString() const {
-  return fmt::format ("{}x{} decode:{:5d} yuv:{:4d} size:{}",
-                      mWidth, mHeight, mDecodeTime, mYuv420Time, mFrames.size());
+  return fmt::format ("{} {}x{} {:5d}:{}", mFrames.size(), mWidth, mHeight, mDecodeTime, mYuv420Time);
   }
 //}}}
 //{{{

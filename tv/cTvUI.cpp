@@ -251,7 +251,7 @@ private:
                           //{(float)video.getWidth(),(float)video.getHeight()});
 
           ImGui::SetCursorPos ({0.f,0.f});
-          ImGui::TextUnformatted (fmt::format ("pts:{} aud:{} vid:{}",
+          ImGui::TextUnformatted (fmt::format ("pts:{} a:{} v:{}",
                                     getPtsString (playPts), audio.getInfoString(), video.getInfoString()).c_str());
           break;
           }
