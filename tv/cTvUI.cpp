@@ -65,7 +65,7 @@ public:
         //}}}
       //{{{  draw dvbStream packet,errors
       ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{}:{} ", dvbStream.getNumPackets(), dvbStream.getNumErrors()).c_str());
+      ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getNumPackets(), dvbStream.getNumErrors()).c_str());
       //}}}
       if (dvbStream.hasDvbSource()) {
         //{{{  draw dvbStream::dvbSource signal,errors
@@ -123,13 +123,13 @@ private:
           }
         }
 
-      while (service.getChannelName().size() > mMaxNameSize)
-        mMaxNameSize = service.getChannelName().size();
+      while (service.getChannelName().size() > mMaxNameChars)
+        mMaxNameChars = service.getChannelName().size();
       }
 
     // overlay channel buttons
     for (auto& pair : dvbStream.getServiceMap())
-      if (ImGui::Button (fmt::format ("{:{}s}", pair.second.getChannelName(), mMaxNameSize).c_str()))
+      if (ImGui::Button (fmt::format ("{:{}s}", pair.second.getChannelName(), mMaxNameChars).c_str()))
         pair.second.toggleAll();
     }
   //}}}
@@ -141,25 +141,25 @@ private:
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
       //{{{  calc max field sizes, may jiggle for a couple of draws
-      while (service.getChannelName().size() > mMaxNameSize)
-        mMaxNameSize = service.getChannelName().size();
-      while (service.getSid() > pow (10, mMaxSidSize))
-        mMaxSidSize++;
-      while (service.getProgramPid() > pow (10, mMaxPgmSize))
-        mMaxPgmSize++;
+      while (service.getChannelName().size() > mMaxNameChars)
+        mMaxNameChars = service.getChannelName().size();
+      while (service.getSid() > pow (10, mMaxSidChars))
+        mMaxSidChars++;
+      while (service.getProgramPid() > pow (10, mMaxPgmChars))
+        mMaxPgmChars++;
 
       for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
         uint16_t pid = service.getStream (streamType).getPid();
-        while (pid > pow (10, mMaxDigits[streamType]))
-          mMaxDigits[streamType]++;
+        while (pid > pow (10, mMaxChars[streamType]))
+          mMaxChars[streamType]++;
         }
       //}}}
 
       //{{{  draw channel name pgm,sid
       if (ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
-                         service.getChannelName(), mMaxNameSize,
-                         service.getProgramPid(), mMaxPgmSize,
-                         service.getSid(), mMaxSidSize).c_str()))
+                         service.getChannelName(), mMaxNameChars,
+                         service.getProgramPid(), mMaxPgmChars,
+                         service.getSid(), mMaxSidChars).c_str()))
         service.toggleAll();
       //}}}
       for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
@@ -169,7 +169,7 @@ private:
           ImGui::SameLine();
           if (toggleButton (fmt::format ("{}{:{}d}:{}##{}",
                                          stream.getLabel(),
-                                         stream.getPid(), mMaxDigits[streamType],
+                                         stream.getPid(), mMaxChars[streamType],
                                          stream.getTypeName(), streamType).c_str(), stream.isEnabled()))
             service.toggleStream (streamType);
           }
@@ -213,9 +213,9 @@ private:
     (void)graphics;
 
     // calc error number width
-    int errorDigits = 1;
-    while (dvbStream.getNumErrors() > pow (10, errorDigits))
-      errorDigits++;
+    int errorChars = 1;
+    while (dvbStream.getNumErrors() > pow (10, errorChars))
+      errorChars++;
 
     int prevSid = 0;
     for (auto& pidInfoItem : dvbStream.getPidInfoMap()) {
@@ -228,7 +228,7 @@ private:
 
       // draw pid label
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
-                              pidInfo.mPackets, mPacketDigits, pidInfo.mErrors, errorDigits, pidInfo.mPid,
+                              pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.mPid,
                               getFullPtsString (pidInfo.mPts), pidInfo.getTypeName()).c_str());
 
       // draw stream bar
@@ -247,8 +247,8 @@ private:
       ImGui::TextUnformatted (streamText.c_str());
 
       // adjust packet number width
-      if (pidInfo.mPackets > pow (10, mPacketDigits))
-        mPacketDigits++;
+      if (pidInfo.mPackets > pow (10, mPacketChars))
+        mPacketChars++;
 
       prevSid = pidInfo.mSid;
       }
@@ -374,13 +374,13 @@ private:
   uint8_t mMainTabIndex = 0;
 
   int64_t mMaxPidPackets = 0;
-  size_t mPacketDigits = 3;
+  size_t mPacketChars = 3;
 
-  size_t mMaxNameSize = 3;
-  size_t mMaxSidSize = 3;
-  size_t mMaxPgmSize = 3;
+  size_t mMaxNameChars = 3;
+  size_t mMaxSidChars = 3;
+  size_t mMaxPgmChars = 3;
 
-  std::array <size_t, 4> mMaxDigits = { 3 };
+  std::array <size_t, 4> mMaxChars = { 3 };
 
   int mPlotIndex = 0;
   //}}}
