@@ -492,8 +492,6 @@ private:
   size_t mChannels = 0;
   size_t mSampleRate = 0;
   size_t mSamplesPerFrame = 0;
-
-  int64_t mLastPts = -1;
   };
 //}}}
 //{{{
@@ -761,6 +759,7 @@ void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
 
   mDecoder->decode (pes, pesSize, pts,
     [&](cFrame* frame) noexcept {
+      // add frame lambda
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
       mNumChannels = audioFrame->getNumChannels();
       mSampleRate = audioFrame->getSampleRate();

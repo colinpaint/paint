@@ -359,7 +359,7 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
 
   mGuessPts = mDecoder->decode (pes, pesSize, mGuessPts,
     [&](cFrame* frame) noexcept {
-      // add videoFrame lambda
+      // add frame lambda
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
       mWidth = videoFrame->getWidth();
       mHeight = videoFrame->getHeight();

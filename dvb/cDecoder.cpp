@@ -16,7 +16,6 @@ using namespace std;
 //}}}
 
 cDecoder::cDecoder() {}
-
 //{{{
 cDecoder::~cDecoder() {
 

@@ -251,8 +251,8 @@ private:
                           {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()});
 
           ImGui::SetCursorPos ({0.f,0.f});
-          ImGui::TextUnformatted (fmt::format ("platPts:{} vid:{} aud:{}",
-                                    getPtsString (playPts), video.getInfoString(), audio.getInfoString()).c_str());
+          ImGui::TextUnformatted (fmt::format ("platPts:{} aud:{} vid:{}",
+                                    getPtsString (playPts), audio.getInfoString(), video.getInfoString()).c_str());
           break;
           }
         }
