@@ -8,6 +8,8 @@
 #include <shared_mutex>
 
 #include "../utils/cMiniLog.h"
+
+class cFrame;
 class cDecoder;
 //}}}
 constexpr int kPtsPerSecond = 90000;
@@ -36,6 +38,7 @@ public:
 
   // process
   virtual std::string getInfoString() const = 0;
+  virtual void addFrame (cFrame* frame) = 0;
   virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) = 0;
 
 protected:

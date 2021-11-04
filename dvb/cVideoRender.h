@@ -26,7 +26,8 @@ public:
   cTexture* getTexture (int64_t playPts, cGraphics& graphics);
 
   void addFrame (cVideoFrame* frame);
-  void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
+  virtual void addFrame (cFrame* frame) final { (void)frame; }
+  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) final;
 
 private:
   const size_t mMaxPoolSize;
