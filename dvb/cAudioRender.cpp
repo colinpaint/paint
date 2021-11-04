@@ -675,8 +675,6 @@ cAudioRender::~cAudioRender() {
     }
   delete mPlayer;
 
-  delete mDecoder;
-
   unique_lock<shared_mutex> lock (mSharedMutex);
   for (auto& frame : mFrames)
     delete (frame.second);
@@ -685,6 +683,11 @@ cAudioRender::~cAudioRender() {
 //}}}
 
 //{{{
+string cAudioRender::getInfoString() const {
+  return fmt::format ("{}", mFrames.size());
+  }
+//}}}
+//{{{
 bool cAudioRender::getPlaying() const {
   return mPlayer ? mPlayer->getPlaying() : false;
   }
@@ -692,11 +695,6 @@ bool cAudioRender::getPlaying() const {
 //{{{
 int64_t cAudioRender::getPlayPts() const {
   return mPlayer ? mPlayer->getPts() : 0;
-  }
-//}}}
-//{{{
-string cAudioRender::getInfoString() const {
-  return fmt::format ("{}", mFrames.size());
   }
 //}}}
 

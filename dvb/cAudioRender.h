@@ -28,7 +28,7 @@ public:
 
   bool getPlaying() const;
   int64_t getPlayPts() const;
-  std::string getInfoString() const;
+  virtual std::string getInfoString() const final;
 
   // play
   void togglePlaying();

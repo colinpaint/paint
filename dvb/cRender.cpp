@@ -6,6 +6,8 @@
 #include <string>
 #include <map>
 
+#include "cDecoder.h"
+
 #include "../utils/cLog.h"
 
 using namespace std;
@@ -21,7 +23,11 @@ constexpr int64_t kPtsPerFrame = 90000 / 25;
 
 // public:
 cRender::cRender (const std::string name) : mName(name), mMiniLog ("log") {}
-cRender::~cRender() {}
+//{{{
+cRender::~cRender() {
+  delete mDecoder;
+  }
+//}}}
 
 void cRender::toggleLog() { mMiniLog.toggleEnable(); }
 

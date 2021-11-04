@@ -21,7 +21,7 @@ public:
 
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
-  std::string getInfoString() const;
+  virtual std::string getInfoString() const final;
 
   cTexture* getTexture (int64_t playPts, cGraphics& graphics);
 

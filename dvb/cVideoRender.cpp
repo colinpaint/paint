@@ -268,8 +268,6 @@ cVideoRender::~cVideoRender() {
   for (auto frame : mFrames)
     delete frame.second;
   mFrames.clear();
-
-  delete mDecoder;
   }
 //}}}
 
