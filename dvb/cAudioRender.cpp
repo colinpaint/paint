@@ -386,8 +386,9 @@ public:
   //}}}
   virtual ~cAudioDecoder() {}
 
-  int64_t decodeFrame (uint8_t* pes, uint32_t pesSize, int64_t pts,
-                       function<void (cAudioFrame* audioFrame)> addFrameCallback) {
+  //{{{
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
+                          function<void (cFrame* frame)> addFrameCallback) final  {
 
     uint8_t* frame = pes;
     uint8_t* pesEnd = pes + pesSize;
@@ -485,6 +486,7 @@ public:
 
     return pts;
     }
+  //}}}
 
 private:
   size_t mChannels = 0;
@@ -757,10 +759,9 @@ void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);
 
-  cAudioDecoder* audioDecoder = dynamic_cast<cAudioDecoder*>(mDecoder);
-
-  audioDecoder->decodeFrame (pes, pesSize, pts,
-    [&](cAudioFrame* audioFrame) noexcept {
+  mDecoder->decode (pes, pesSize, pts,
+    [&](cFrame* frame) noexcept {
+      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
       mNumChannels = audioFrame->getNumChannels();
       mSampleRate = audioFrame->getSampleRate();
       mSamplesPerFrame = audioFrame->getSamplesPerFrame();

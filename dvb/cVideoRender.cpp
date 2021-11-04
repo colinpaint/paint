@@ -190,8 +190,9 @@ public:
     }
   //}}}
 
-  int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
-                  function<void (cVideoFrame* videoFrame)> addFrameCallback) {
+  //{{{
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
+                           function<void (cFrame* frame)> addFrameCallback) final {
 
     AVPacket mAvPacket;
     av_init_packet (&mAvPacket);
@@ -246,6 +247,7 @@ public:
     av_frame_free (&mAvFrame);
     return pts;
     }
+  //}}}
 
 private:
   SwsContext* mSwsContext = nullptr;
@@ -355,10 +357,10 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
     return;
     }
 
-  cVideoDecoder* videoDecoder = dynamic_cast<cVideoDecoder*>(mDecoder);
-  mGuessPts = videoDecoder->decode (pes, pesSize, mGuessPts,
-    [&](cVideoFrame* videoFrame) noexcept {
+  mGuessPts = mDecoder->decode (pes, pesSize, mGuessPts,
+    [&](cFrame* frame) noexcept {
       // add videoFrame lambda
+      cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
       mWidth = videoFrame->getWidth();
       mHeight = videoFrame->getHeight();
       mPtsDuration = videoFrame->getPtsDuration();
