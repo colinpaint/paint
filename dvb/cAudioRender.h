@@ -26,16 +26,16 @@ public:
   size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
   uint32_t getSampleRate() const { return mSampleRate; }
 
-  bool getPlaying() const { return mPlaying; }
-  int64_t getPlayPts() const { return mPlayPts; }
+  bool getPlaying() const;
+  int64_t getPlayPts() const;
   std::string getInfoString() const;
 
-  // find
-  cAudioFrame* findPlayFrame() const { return findFrame (mPlayPts); }
-
   // play
-  void togglePlaying() { mPlaying = !mPlaying; }
-  void setPlayPts (int64_t pts) { mPlayPts = pts; }
+  void togglePlaying();
+  void setPlayPts (int64_t pts);
+
+  // find
+  cAudioFrame* findPlayFrame() const;
 
   void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 
@@ -44,7 +44,7 @@ private:
   void addFrame (cAudioFrame* frame);
 
   // vars
-  cAudioDecoder* mAudioDecoder = nullptr;
+  cAudioDecoder* mDecoder = nullptr;
 
   eAudioFrameType mFrameType;
   size_t mNumChannels;
@@ -54,7 +54,5 @@ private:
   size_t mMaxMapSize;
   std::map <int64_t, cAudioFrame*> mFrames;
 
-  bool mPlaying = false;
-  int64_t mPlayPts = 0;
-  cAudioPlayer* mAudioPlayer = nullptr;
+  cAudioPlayer* mPlayer = nullptr;
   };
