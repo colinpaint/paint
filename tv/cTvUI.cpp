@@ -247,11 +247,11 @@ private:
           cTexture* texture = video.getTexture (playPts, graphics);
           if (texture)
             ImGui::Image ((void*)(intptr_t)texture->getTextureId(),
-                          //{(float)video.getWidth(),(float)video.getHeight()});
                           {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()});
+                          //{(float)video.getWidth(),(float)video.getHeight()});
 
           ImGui::SetCursorPos ({0.f,0.f});
-          ImGui::TextUnformatted (fmt::format ("platPts:{} aud:{} vid:{}",
+          ImGui::TextUnformatted (fmt::format ("pts:{} aud:{} vid:{}",
                                     getPtsString (playPts), audio.getInfoString(), video.getInfoString()).c_str());
           break;
           }
