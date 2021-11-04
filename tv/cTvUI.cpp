@@ -250,9 +250,9 @@ private:
                           //{(float)video.getWidth(),(float)video.getHeight()});
                           {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()});
 
-          ImGui::SetCursorPos ({0.f,ImGui::GetTextLineHeight()});
-          ImGui::TextUnformatted (video.getInfoString().c_str());
-          ImGui::TextUnformatted (audio.getInfoString().c_str());
+          ImGui::SetCursorPos ({0.f,0.f});
+          ImGui::TextUnformatted (fmt::format ("platPts:{} vid:{} aud:{}",
+                                    getPtsString (playPts), video.getInfoString(), audio.getInfoString()).c_str());
           break;
           }
         }
@@ -262,7 +262,6 @@ private:
       }
 
     // overlay channel buttons
-    ImGui::SetCursorPos ({0.f,0.f});
     for (auto& servicePair : dvbStream.getServiceMap())
       if (ImGui::Button (fmt::format ("{:{}s}", servicePair.second.getChannelName(), mMaxNameSize).c_str()))
         servicePair.second.toggleAll();

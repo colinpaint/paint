@@ -580,7 +580,7 @@ public:
         audio->togglePlaying();
 
         // audio16 player thread, video follows playPts
-        cAudio audioOutputDevice (2, audio->getSampleRate(), 40000, false);
+        cAudio audioDevice (2, audio->getSampleRate(), 40000, false);
         cAudioFrame* audioFrame;
         while (!mExit) {
           float* playSamples = silence.data();
@@ -593,7 +593,7 @@ public:
               playSamples = samples.data();
               }
             }
-          audioOutputDevice.play (2, playSamples, audioFrame ? audioFrame->getSamplesPerFrame() : 1024, 1.f);
+          audioDevice.play (2, playSamples, audioFrame ? audioFrame->getSamplesPerFrame() : 1024, 1.f);
 
           if (mPlaying && audioFrame)
             mPts += audioFrame->getPtsDuration());
@@ -707,7 +707,7 @@ int64_t cAudioRender::getPlayPts() const {
 //}}}
 //{{{
 string cAudioRender::getInfoString() const {
-  return fmt::format ("audioPool {}", mFrames.size());
+  return fmt::format ("{}", mFrames.size());
   }
 //}}}
 
