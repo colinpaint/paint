@@ -506,15 +506,14 @@ public:
         cLog::setThreadName ("play");
         SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 
-        array <float,2048*2> silence = { 0.f };
-        array <float,2048*2> samples = { 0.f };
-
         auto audioDevice = getDefaultAudioOutputDevice();
         if (audioDevice) {
           cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", audio->getSampleRate());
           audioDevice->setSampleRate (audio->getSampleRate());
           audioDevice->start();
 
+          array <float,2048*2> samples = { 0.f };
+          array <float,2048*2> silence = { 0.f };
           cAudioFrame* audioFrame;
           while (!mExit) {
             audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
@@ -538,7 +537,7 @@ public:
                 }
               else
                 srcSamples = silence.data();
-              numSrcSamples = audioFrame ? audioFrame->getSamplesPerFrame() : 1024;
+              numSrcSamples = audioFrame ? audioFrame->getSamplesPerFrame() : audio->getSamplesPerFrame();
 
               if (mPlaying && audioFrame)
                 mPts += audioFrame->getPtsDuration();
@@ -557,35 +556,36 @@ public:
     //}}}
   #else
     //{{{
-    cAudioPlayer (cAudioRender* audio int64_t pts) {
+    cAudioPlayer (cAudioRender* audio, int64_t pts) {
 
       mPts = pts;
       mThread = thread ([=, this]() {
         // lambda
         cLog::setThreadName ("play");
-        array <float,2048*2> silence = { 0.f };
-        array <float,2048*2> samples = { 0.f };
-
-        audio->togglePlaying();
 
         // audio16 player thread, video follows playPts
         cAudio audioDevice (2, audio->getSampleRate(), 40000, false);
+
+        array <float,2048*2> samples = { 0.f };
+        array <float,2048*2> silence = { 0.f };
         cAudioFrame* audioFrame;
         while (!mExit) {
-          float* playSamples = silence.data();
+          float* srcSamples = silence.data();
             {
             // scoped song mutex
             shared_lock<shared_mutex> lock (audio->getSharedMutex());
             audioFrame = audio->findPlayFrame();
             if (mPlaying && audioFrame && audioFrame->getSamples()) {
               memcpy (samples.data(), audioFrame->getSamples(), audioFrame->getSamplesPerFrame() * 8);
-              playSamples = samples.data();
+              srcSamples = samples.data();
               }
             }
-          audioDevice.play (2, playSamples, audioFrame ? audioFrame->getSamplesPerFrame() : 1024, 1.f);
+          audioDevice.play (2, srcSamples,
+                            audioFrame ? audioFrame->getSamplesPerFrame() : audio->getSamplesPerFrame(), 
+                            1.f);
 
           if (mPlaying && audioFrame)
-            mPts += audioFrame->getPtsDuration());
+            mPts += audioFrame->getPtsDuration();
           }
 
         mRunning = false;
