@@ -581,7 +581,7 @@ public:
               }
             }
           audioDevice.play (2, srcSamples,
-                            audioFrame ? audioFrame->getSamplesPerFrame() : audio->getSamplesPerFrame(), 
+                            audioFrame ? audioFrame->getSamplesPerFrame() : audio->getSamplesPerFrame(),
                             1.f);
 
           if (mPlaying && audioFrame)
@@ -752,22 +752,21 @@ void cAudioRender::addFrame (cAudioFrame* frame) {
 void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
   (void)dts;
-  log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
+  //log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);
 
-  mDecoder->decode (pes, pesSize, pts,
-    [&](cFrame* frame) noexcept {
-      // add frame lambda
-      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
-      mNumChannels = audioFrame->getNumChannels();
-      mSampleRate = audioFrame->getSampleRate();
-      mSamplesPerFrame = audioFrame->getSamplesPerFrame();
-      logValue (audioFrame->getPts(), audioFrame->getPowerValues()[0]);
-      addFrame (audioFrame);
-      if (!mPlayer)
-        mPlayer = new cAudioPlayer (this, audioFrame->getPts());
-      }
-    );
+  mDecoder->decode (pes, pesSize, pts, [&](cFrame* frame) noexcept {
+    // addFrame lambda
+    cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+    mNumChannels = audioFrame->getNumChannels();
+    mSampleRate = audioFrame->getSampleRate();
+    mSamplesPerFrame = audioFrame->getSamplesPerFrame();
 
+    addFrame (audioFrame);
+    logValue (audioFrame->getPts(), audioFrame->getPowerValues()[0]);
+
+    if (!mPlayer)
+      mPlayer = new cAudioPlayer (this, audioFrame->getPts());
+    });
   }
 //}}}

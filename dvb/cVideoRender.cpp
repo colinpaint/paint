@@ -332,12 +332,12 @@ void cVideoRender::addFrame (cVideoFrame* frame) {
 //{{{
 void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
-  log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
+  (void)pts;
+  //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)pesSize);
 
-  // ffmpeg doesn't maintain correct avFrame.pts
-  // - decode frames in presentation order, pts is correct on I frames
-  char frameType = cDvbUtils::getFrameType (pes, pesSize, 27);
+  // ffmpeg h264 pts wrong, decode frames in presentation order, pts is correct on I frames
+  char frameType = cDvbUtils::getFrameType (pes, pesSize, true);
   if (frameType == 'I') {
     if ((mGuessPts >= 0) && (mGuessPts != dts))
       cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
@@ -354,18 +354,18 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
     return;
     }
 
-  mGuessPts = mDecoder->decode (pes, pesSize, mGuessPts,
-    [&](cFrame* frame) noexcept {
-      // add frame lambda
-      cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-      mWidth = videoFrame->getWidth();
-      mHeight = videoFrame->getHeight();
-      mPtsDuration = videoFrame->getPtsDuration();
-      mDecodeTime = videoFrame->getDecodeTime();
-      mYuv420Time = videoFrame->getYuv420Time();
-      logValue (videoFrame->getPts(), (float)mDecodeTime);
-      addFrame (videoFrame);
-      });
+  mGuessPts = mDecoder->decode (pes, pesSize, mGuessPts, [&](cFrame* frame) noexcept {
+    // addFrame lambda
+    cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+    mWidth = videoFrame->getWidth();
+    mHeight = videoFrame->getHeight();
+    mPtsDuration = videoFrame->getPtsDuration();
+    mDecodeTime = videoFrame->getDecodeTime();
+    mYuv420Time = videoFrame->getYuv420Time();
+
+    addFrame (videoFrame);
+    logValue (videoFrame->getPts(), (float)mDecodeTime);
+    });
   }
 //}}}
 

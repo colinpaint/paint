@@ -63,5 +63,5 @@ public:
   static std::string getString (uint8_t* buf);
 
   static std::string getStreamTypeName (uint16_t streamType);
-  static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, int streamType);
+  static char getFrameType (uint8_t* pesBuf, int64_t pesBufSize, bool h264);
   };
