@@ -25,6 +25,7 @@
 #include "../imgui/myImgui.h"
 
 #include "cFrame.h"
+#include "cDecoder.h"
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"
@@ -352,10 +353,10 @@ private:
   };
 //}}}
 //{{{
-class cAudioDecoder {
+class cAudioDecoder : public cDecoder {
 public:
   //{{{
-  cAudioDecoder (eAudioFrameType frameType) {
+  cAudioDecoder (eAudioFrameType frameType) : cDecoder() {
 
     AVCodecID streamType;
 
@@ -383,15 +384,7 @@ public:
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }
   //}}}
-  //{{{
-  ~cAudioDecoder() {
-
-    if (mAvContext)
-      avcodec_close (mAvContext);
-    if (mAvParser)
-      av_parser_close (mAvParser);
-    }
-  //}}}
+  ~cAudioDecoder() {}
 
   int64_t decodeFrame (uint8_t* pes, uint32_t pesSize, int64_t pts,
                        function<void (cAudioFrame* audioFrame)> addFrameCallback) {
@@ -497,10 +490,6 @@ private:
   size_t mChannels = 0;
   size_t mSampleRate = 0;
   size_t mSamplesPerFrame = 0;
-
-  AVCodecParserContext* mAvParser = nullptr;
-  AVCodec* mAvCodec = nullptr;
-  AVCodecContext* mAvContext = nullptr;
 
   int64_t mLastPts = -1;
   };

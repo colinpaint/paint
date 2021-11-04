@@ -18,6 +18,7 @@
 #include "../graphics/cGraphics.h"
 
 #include "cFrame.h"
+#include "cDecoder.h"
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"
@@ -171,10 +172,10 @@ private:
   };
 //}}}
 //{{{
-class cVideoDecoder {
+class cVideoDecoder : public cDecoder {
 public:
   //{{{
-  cVideoDecoder() {
+  cVideoDecoder() : cDecoder() {
 
     mAvParser = av_parser_init (AV_CODEC_ID_H264);
     mAvCodec = avcodec_find_decoder (AV_CODEC_ID_H264);
@@ -185,15 +186,8 @@ public:
   //}}}
   //{{{
   ~cVideoDecoder() {
-
-    if (mAvContext)
-      avcodec_close (mAvContext);
-
-    if (mAvParser)
-      av_parser_close (mAvParser);
-
-    sws_freeContext (mSwsContext);
-    }
+     sws_freeContext (mSwsContext);
+     }
   //}}}
 
   int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
@@ -254,9 +248,6 @@ public:
     }
 
 private:
-  AVCodecParserContext* mAvParser = nullptr;
-  AVCodec* mAvCodec = nullptr;
-  AVCodecContext* mAvContext = nullptr;
   SwsContext* mSwsContext = nullptr;
   };
 //}}}
