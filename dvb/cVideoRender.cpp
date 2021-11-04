@@ -185,9 +185,9 @@ public:
     }
   //}}}
   //{{{
-  ~cVideoDecoder() {
-     sws_freeContext (mSwsContext);
-     }
+  virtual ~cVideoDecoder() {
+    sws_freeContext (mSwsContext);
+    }
   //}}}
 
   int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
@@ -257,7 +257,7 @@ private:
 cVideoRender::cVideoRender (const std::string name)
     : cRender(name), mMaxPoolSize(kVideoPoolSize) {
 
-  mVideoDecoder = new cVideoDecoder();
+  mDecoder = new cVideoDecoder();
   }
 //}}}
 //{{{
@@ -267,7 +267,7 @@ cVideoRender::~cVideoRender() {
     delete frame.second;
   mFrames.clear();
 
-  delete mVideoDecoder;
+  delete mDecoder;
   }
 //}}}
 
@@ -355,7 +355,8 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
     return;
     }
 
-  mGuessPts = mVideoDecoder->decode (pes, pesSize, mGuessPts,
+  cVideoDecoder* videoDecoder = dynamic_cast<cVideoDecoder*>(mDecoder);
+  mGuessPts = videoDecoder->decode (pes, pesSize, mGuessPts,
     [&](cVideoFrame* videoFrame) noexcept {
       // add videoFrame lambda
       mWidth = videoFrame->getWidth();

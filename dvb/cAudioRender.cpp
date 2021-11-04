@@ -384,7 +384,7 @@ public:
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }
   //}}}
-  ~cAudioDecoder() {}
+  virtual ~cAudioDecoder() {}
 
   int64_t decodeFrame (uint8_t* pes, uint32_t pesSize, int64_t pts,
                        function<void (cAudioFrame* audioFrame)> addFrameCallback) {
@@ -727,29 +727,6 @@ cAudioFrame* cAudioRender::findPlayFrame() const {
 //}}}
 
 //{{{
-void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
-
-  (void)dts;
-  log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
-  //logValue (pts, (float)bufSize);
-
-  mDecoder->decodeFrame (pes, pesSize, pts,
-    [&](cAudioFrame* audioFrame) noexcept {
-      mNumChannels = audioFrame->getNumChannels();
-      mSampleRate = audioFrame->getSampleRate();
-      mSamplesPerFrame = audioFrame->getSamplesPerFrame();
-
-      logValue (audioFrame->getPts(), audioFrame->getPowerValues()[0]);
-      addFrame (audioFrame);
-
-      if (!mPlayer)
-        mPlayer = new cAudioPlayer (this, audioFrame->getPts());
-      }
-    );
-
-  }
-//}}}
-//{{{
 void cAudioRender::addFrame (cAudioFrame* frame) {
 
     { // locked emplace and erase
@@ -771,5 +748,28 @@ void cAudioRender::addFrame (cAudioFrame* frame) {
 
   if (mFrames.size() >= mMaxMapSize)
     this_thread::sleep_for (20ms);
+  }
+//}}}
+//{{{
+void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
+
+  (void)dts;
+  log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
+  //logValue (pts, (float)bufSize);
+
+  cAudioDecoder* audioDecoder = dynamic_cast<cAudioDecoder*>(mDecoder);
+
+  audioDecoder->decodeFrame (pes, pesSize, pts,
+    [&](cAudioFrame* audioFrame) noexcept {
+      mNumChannels = audioFrame->getNumChannels();
+      mSampleRate = audioFrame->getSampleRate();
+      mSamplesPerFrame = audioFrame->getSamplesPerFrame();
+      logValue (audioFrame->getPts(), audioFrame->getPowerValues()[0]);
+      addFrame (audioFrame);
+      if (!mPlayer)
+        mPlayer = new cAudioPlayer (this, audioFrame->getPts());
+      }
+    );
+
   }
 //}}}

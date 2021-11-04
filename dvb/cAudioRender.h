@@ -35,17 +35,14 @@ public:
   void setPlayPts (int64_t pts);
 
   // find
+  cAudioFrame* findFrame (int64_t pts) const;
   cAudioFrame* findPlayFrame() const;
 
+  void addFrame (cAudioFrame* frame);
   void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 
 private:
-  cAudioFrame* findFrame (int64_t pts) const;
-  void addFrame (cAudioFrame* frame);
-
   // vars
-  cAudioDecoder* mDecoder = nullptr;
-
   eAudioFrameType mFrameType;
   size_t mNumChannels;
   size_t mSamplesPerFrame = 0;
