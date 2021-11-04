@@ -53,63 +53,93 @@ public:
       ImGui::SameLine();
       }
       //}}}
-    mMainTabIndex = interlockedButtons ({"services", "pids", "recorded", "tv"}, mMainTabIndex, {0.f,0.f}, true);
-    //{{{  vertice debug
-    ImGui::SameLine();
-    ImGui::TextUnformatted (fmt::format ("{}:{}",
-                            ImGui::GetIO().MetricsRenderVertices,
-                            ImGui::GetIO().MetricsRenderIndices/3).c_str());
-    //}}}
+    mMainTabIndex = interlockedButtons ({"tv","services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
 
-    cDvbStream* dvbStream = app.getDvbStream();
-    if (dvbStream) {
-      if (dvbStream->hasTdtTime()) {
+    if (app.getDvbStream()) {
+      cDvbStream& dvbStream = *app.getDvbStream();
+      if (dvbStream.hasTdtTime()) {
         //{{{  draw tdtTime
         ImGui::SameLine();
-        ImGui::TextUnformatted (dvbStream->getTdtTimeString().c_str());
+        ImGui::TextUnformatted (dvbStream.getTdtTimeString().c_str());
         }
         //}}}
-      //{{{  draw packet,errors
+      //{{{  draw dvbStream packet,errors
       ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{}:{} ",
-                              dvbStream->getNumPackets(), dvbStream->getNumErrors()).c_str());
+      ImGui::TextUnformatted (fmt::format ("{}:{} ", dvbStream.getNumPackets(), dvbStream.getNumErrors()).c_str());
       //}}}
-      if (dvbStream->hasDvbSource()) {
-        //{{{  draw dvbSource signal,errors
+      if (dvbStream.hasDvbSource()) {
+        //{{{  draw dvbStream::dvbSource signal,errors
         ImGui::SameLine();
-        ImGui::TextUnformatted (dvbStream->getSignalString().c_str());
-
-        ImGui::SameLine();
-        ImGui::TextUnformatted (dvbStream->getErrorString().c_str());
+        ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getSignalString(), dvbStream.getErrorString()).c_str());
         }
         //}}}
+      //{{{  vertex,index debug
+      ImGui::SameLine();
+      ImGui::TextUnformatted (fmt::format ("{}:{}",
+                              ImGui::GetIO().MetricsRenderVertices,
+                              ImGui::GetIO().MetricsRenderIndices/3).c_str());
+      //}}}
 
-      // draw scrollable contents
+      // draw tab in childWindow
       ImGui::PushFont (app.getMonoFont());
-      ImGui::BeginChild ("##telly", {0.f,0.f}, false,
+      ImGui::BeginChild ("telly", {0.f,0.f}, false,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
 
       switch (mMainTabIndex) {
-        case 0: drawServices (*dvbStream, app.getGraphics()); break;
-        case 1: drawPids (*dvbStream, app.getGraphics()); break;
-        case 2: drawRecorded (*dvbStream); break;
-        case 3: drawTv (*dvbStream, app.getGraphics()); break;
+        case 0: drawTv (dvbStream, app.getGraphics()); break;
+        case 1: drawServices (dvbStream, app.getGraphics()); break;
+        case 2: drawPids (dvbStream, app.getGraphics()); break;
+        case 3: drawRecorded (dvbStream, app.getGraphics()); break;
         }
 
       ImGui::EndChild();
       ImGui::PopFont();
       }
-
     }
   //}}}
 private:
+  //{{{
+  void drawTv (cDvbStream& dvbStream, cGraphics& graphics) {
+
+    for (auto& pair : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service = pair.second;
+
+      if (service.getStream (cDvbStream::eAud).isEnabled()) {
+        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
+        int64_t playPts = audio.getPlayPts();
+
+        if (service.getStream (cDvbStream::eVid).isEnabled()) {
+          cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
+          cTexture* texture = video.getTexture (playPts, graphics);
+          if (texture)
+            ImGui::Image ((void*)(intptr_t)texture->getTextureId(),
+                          {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()});
+                          //{(float)video.getWidth(),(float)video.getHeight()});
+
+          ImGui::SetCursorPos ({0.f,0.f});
+          ImGui::TextUnformatted (fmt::format ("pts:{} a:{} v:{}",
+                                    getPtsString (playPts), audio.getInfoString(), video.getInfoString()).c_str());
+          break;
+          }
+        }
+
+      while (service.getChannelName().size() > mMaxNameSize)
+        mMaxNameSize = service.getChannelName().size();
+      }
+
+    // overlay channel buttons
+    for (auto& pair : dvbStream.getServiceMap())
+      if (ImGui::Button (fmt::format ("{:{}s}", pair.second.getChannelName(), mMaxNameSize).c_str()))
+        pair.second.toggleAll();
+    }
+  //}}}
   //{{{
   void drawServices (cDvbStream& dvbStream, cGraphics& graphics) {
   // draw service map
 
     mPlotIndex = 0;
-    for (auto& servicePair : dvbStream.getServiceMap()) {
-      cDvbStream::cService& service = servicePair.second;
+    for (auto& pair : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service = pair.second;
       //{{{  calc max field sizes, may jiggle for a couple of draws
       while (service.getChannelName().size() > mMaxNameSize)
         mMaxNameSize = service.getChannelName().size();
@@ -225,46 +255,12 @@ private:
     }
   //}}}
   //{{{
-  void drawRecorded (cDvbStream& dvbStream) {
+  void drawRecorded (cDvbStream& dvbStream, cGraphics& graphics) {
   // list recorded items
 
+    (void)graphics;
     for (auto& program : dvbStream.getRecordPrograms())
       ImGui::TextUnformatted (program.c_str());
-    }
-  //}}}
-  //{{{
-  void drawTv (cDvbStream& dvbStream, cGraphics& graphics) {
-
-    for (auto& servicePair : dvbStream.getServiceMap()) {
-      cDvbStream::cService& service = servicePair.second;
-
-      if (service.getStream (cDvbStream::eAud).isEnabled()) {
-        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
-        int64_t playPts = audio.getPlayPts();
-
-        if (service.getStream (cDvbStream::eVid).isEnabled()) {
-          cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
-          cTexture* texture = video.getTexture (playPts, graphics);
-          if (texture)
-            ImGui::Image ((void*)(intptr_t)texture->getTextureId(),
-                          {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()});
-                          //{(float)video.getWidth(),(float)video.getHeight()});
-
-          ImGui::SetCursorPos ({0.f,0.f});
-          ImGui::TextUnformatted (fmt::format ("pts:{} a:{} v:{}",
-                                    getPtsString (playPts), audio.getInfoString(), video.getInfoString()).c_str());
-          break;
-          }
-        }
-
-      while (service.getChannelName().size() > mMaxNameSize)
-        mMaxNameSize = service.getChannelName().size();
-      }
-
-    // overlay channel buttons
-    for (auto& servicePair : dvbStream.getServiceMap())
-      if (ImGui::Button (fmt::format ("{:{}s}", servicePair.second.getChannelName(), mMaxNameSize).c_str()))
-        servicePair.second.toggleAll();
     }
   //}}}
 
