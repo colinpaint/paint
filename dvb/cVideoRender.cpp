@@ -330,9 +330,10 @@ void cVideoRender::addFrame (cVideoFrame* frame) {
   }
 //}}}
 //{{{
-void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
+void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
   (void)pts;
+  (void)skip;
   //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)pesSize);
 

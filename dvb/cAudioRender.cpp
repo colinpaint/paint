@@ -17,9 +17,8 @@
 #include <vector>
 #include <array>
 #include <algorithm>
-#include <shared_mutex>
-#include <thread>
 #include <functional>
+#include <thread>
 
 #include "../imgui/imgui.h"
 #include "../imgui/myImgui.h"
@@ -499,17 +498,18 @@ class cAudioPlayer {
 public:
   #ifdef _WIN32
     //{{{
-    cAudioPlayer (cAudioRender* audio, int64_t pts) {
+    cAudioPlayer (cAudioRender* audioRender, int64_t pts) {
 
       mPts = pts;
+
       mThread = thread ([=]() {
         cLog::setThreadName ("play");
         SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 
         auto audioDevice = getDefaultAudioOutputDevice();
         if (audioDevice) {
-          cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", audio->getSampleRate());
-          audioDevice->setSampleRate (audio->getSampleRate());
+          cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", audioRender->getSampleRate());
+          audioDevice->setSampleRate (audioRender->getSampleRate());
           audioDevice->start();
 
           array <float,2048*2> samples = { 0.f };
@@ -518,8 +518,8 @@ public:
           while (!mExit) {
             audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
               // loadSrcSamples callback lambda
-              shared_lock<shared_mutex> lock (audio->getSharedMutex());
-              audioFrame = audio->findPlayFrame();
+              shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
+              audioFrame = audioRender->findPlayFrame();
               if (mPlaying && audioFrame && audioFrame->getSamples()) {
                 if (audioFrame->getNumChannels() == 1) {
                   // convert mono to 2 channels
@@ -537,7 +537,7 @@ public:
                 }
               else
                 srcSamples = silence.data();
-              numSrcSamples = audioFrame ? audioFrame->getSamplesPerFrame() : audio->getSamplesPerFrame();
+              numSrcSamples = audioFrame ? audioFrame->getSamplesPerFrame() : audioRender->getSamplesPerFrame();
 
               if (mPlaying && audioFrame)
                 mPts += audioFrame->getPtsDuration();
@@ -556,15 +556,16 @@ public:
     //}}}
   #else
     //{{{
-    cAudioPlayer (cAudioRender* audio, int64_t pts) {
+    cAudioPlayer (cAudioRender* audioRender, int64_t pts) {
 
       mPts = pts;
-      mThread = thread ([=, this]() {
+
+      mThread = thread ([=]() { //,this
         // lambda
         cLog::setThreadName ("play");
 
-        // audio16 player thread, video follows playPts
-        cAudio audioDevice (2, audio->getSampleRate(), 40000, false);
+        // audio16 player thread
+        cAudio audioDevice (2, audioRender->getSampleRate(), 40000, false);
 
         array <float,2048*2> samples = { 0.f };
         array <float,2048*2> silence = { 0.f };
@@ -573,16 +574,16 @@ public:
           float* srcSamples = silence.data();
             {
             // scoped song mutex
-            shared_lock<shared_mutex> lock (audio->getSharedMutex());
-            audioFrame = audio->findPlayFrame();
+            shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
+            audioFrame = audioRender->findPlayFrame();
             if (mPlaying && audioFrame && audioFrame->getSamples()) {
               memcpy (samples.data(), audioFrame->getSamples(), audioFrame->getSamplesPerFrame() * 8);
               srcSamples = samples.data();
               }
             }
-          audioDevice.play (2, srcSamples,
-                            audioFrame ? audioFrame->getSamplesPerFrame() : audio->getSamplesPerFrame(),
-                            1.f);
+
+          audioDevice.play (
+            2, srcSamples, audioFrame ? audioFrame->getSamplesPerFrame() : audioRender->getSamplesPerFrame(), 1.f);
 
           if (mPlaying && audioFrame)
             mPts += audioFrame->getPtsDuration();
@@ -749,9 +750,10 @@ void cAudioRender::addFrame (cAudioFrame* frame) {
   }
 //}}}
 //{{{
-void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
+void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
   (void)dts;
+  (void)skip;
   //log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);
 

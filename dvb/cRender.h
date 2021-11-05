@@ -1,10 +1,11 @@
-// cRender.h
+// cRender.h - stream render base class
 //{{{  includes
 #pragma once
 
 #include <cstdint>
 #include <string>
 #include <map>
+#include <mutex>
 #include <shared_mutex>
 
 #include "../utils/cMiniLog.h"
@@ -39,7 +40,7 @@ public:
   // process
   virtual std::string getInfoString() const = 0;
   virtual void addFrame (cFrame* frame) = 0;
-  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) = 0;
+  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) = 0;
 
 protected:
   void header();

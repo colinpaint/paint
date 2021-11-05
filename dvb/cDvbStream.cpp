@@ -491,10 +491,10 @@ int cDvbStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 //{{{  class cDvbStream::cService
 //{{{
 cDvbStream::cService::cService (uint16_t sid) : mSid(sid) {
-  getStream (eVid).setLabel ("vid:");
-  getStream (eAud).setLabel ("aud:");
-  getStream (eAudOther).setLabel ("ad:");
-  getStream (eSub).setLabel ("");
+  mStreams[eVid].setLabel ("vid:");
+  mStreams[eAud].setLabel ("aud:");
+  mStreams[eAudOther].setLabel ("ad:");
+  mStreams[eSub].setLabel ("");
   }
 //}}}
 //{{{
@@ -530,15 +530,15 @@ bool cDvbStream::cService::isEpgRecord (const string& title, tTimePoint startTim
 //{{{
 void cDvbStream::cService::setAudStream (uint16_t pid, uint16_t streamType) {
 
-  if (getStream (eAud).isDefined()) {
-    if (pid != getStream (eAud).getPid()) {
+  if (mStreams[eAud].isDefined()) {
+    if (pid != mStreams[eAud].getPid()) {
       // main aud stream defined, new aud pid, try other
-      if (!getStream(eAudOther).isDefined())
-        getStream(eAudOther).set (pid, streamType);
+      if (!mStreams[eAudOther].isDefined())
+        mStreams[eAudOther].set (pid, streamType);
       }
     }
   else
-    getStream (eAud).set (pid, streamType);
+    mStreams[eAud].set (pid, streamType);
   }
 //}}}
 
@@ -626,7 +626,7 @@ void cDvbStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
 //  pes ts packet, save only recognised pids
 
   if (mFile &&
-      ((pid == getStream(eVid).getPid()) || (pid == getStream(eAud).getPid()) || (pid == getStream(eSub).getPid())))
+      ((pid == mStreams[eVid].getPid()) || (pid == mStreams[eAud].getPid()) || (pid == mStreams[eSub].getPid())))
     fwrite (ts, 1, 188, mFile);
   }
 //}}}
@@ -702,30 +702,30 @@ void cDvbStream::cService::writePmt() {
   *tsPtr++ = 0x00; // first section number = 0
   *tsPtr++ = 0x00; // last section number = 0
 
-  *tsPtr++ = 0xE0 | ((getStream (eVid).getPid() & 0x1F00) >> 8);
-  *tsPtr++ = getStream(eVid).getPid() & 0x00FF;
+  *tsPtr++ = 0xE0 | ((mStreams[eVid].getPid() & 0x1F00) >> 8);
+  *tsPtr++ = mStreams[eVid].getPid() & 0x00FF;
 
   *tsPtr++ = 0xF0;
   *tsPtr++ = 0; // program_info_length;
 
   // video es
-  *tsPtr++ = static_cast<uint8_t>(getStream(eVid).getType()); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((getStream (eVid).getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = getStream (eVid).getPid() & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(mStreams[eVid].getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mStreams[eVid].getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mStreams[eVid].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // audio es
-  *tsPtr++ = static_cast<uint8_t>(getStream(eAud).getType()); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((getStream (eAud).getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = getStream (eAud).getPid() & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(mStreams[eAud].getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mStreams[eAud].getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mStreams[eAud].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // subtitle es
-  *tsPtr++ = static_cast<uint8_t>(getStream(eSub).getType()); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((getStream(eSub).getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = getStream (eSub).getPid() & 0x00FF;
+  *tsPtr++ = static_cast<uint8_t>(mStreams[eSub].getType()); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mStreams[eSub].getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mStreams[eSub].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
@@ -780,7 +780,7 @@ cDvbStream::cService* cDvbStream::getService (uint16_t sid) {
 void cDvbStream::dvbSource (bool launchThread) {
 
   if (launchThread)
-    thread([=, this]() { dvbSourceInternal (true); }).detach();
+    thread([=]() { dvbSourceInternal (true); }).detach(); //,this
   else
     dvbSourceInternal (false);
   }
@@ -789,7 +789,7 @@ void cDvbStream::dvbSource (bool launchThread) {
 void cDvbStream::fileSource (bool launchThread, const string& fileName) {
 
   if (launchThread)
-    thread ([=, this](){ fileSourceInternal (true, fileName); } ).detach();
+    thread ([=](){ fileSourceInternal (true, fileName); } ).detach();// ,this
   else
     fileSourceInternal (false, fileName);
   }
@@ -902,14 +902,12 @@ void cDvbStream::stopServiceProgram (cService* service) {
 //}}}
 
 //{{{
-bool cDvbStream::processPes (eStream stream, cPidInfo* pidInfo, bool skip) {
-
-  (void)skip;
+bool cDvbStream::processPes (eStreamType streamType, cPidInfo* pidInfo, bool skip) {
 
   cService* service = getService (pidInfo->mSid);
-  if (service && service->getStream (stream).isEnabled())
-    service->getStream (stream).getRender().processPes (
-      pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts);
+  if (service && service->getStream (streamType).isEnabled())
+    service->getStream (streamType).getRender().processPes (
+      pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts, skip);
 
   //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
   return false;
@@ -1515,7 +1513,7 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
 
   if (!mDvbSource->ok()) {
     //{{{  error, return
-    cLog::log (LOGERROR, "dvbSource - no dvbSource");
+    cLog::log (LOGERROR, fmt::format ("dvbSource - no dvbSource"));
     return;
     }
     //}}}

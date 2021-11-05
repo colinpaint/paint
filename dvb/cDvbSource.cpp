@@ -416,7 +416,7 @@ using namespace std;
         (void)sampleTime;
         (void)samples;
         (void)sampleLen;
-        cLog::log (LOGERROR, "cSampleGrabberCB::BufferCB called");
+        cLog::log (LOGERROR, fmt::format ("cSampleGrabberCB::BufferCB called"));
         return S_OK;
         }
       //}}}
@@ -424,17 +424,17 @@ using namespace std;
       STDMETHODIMP SampleCB (double sampleTime, IMediaSample* mediaSample) {
         (void)sampleTime;
         if (mediaSample->IsDiscontinuity() == S_OK)
-          cLog::log (LOGERROR, "cSampleGrabCB::SampleCB sample isDiscontinuity");
+          cLog::log (LOGERROR, fmt::format ("cSampleGrabCB::SampleCB sample isDiscontinuity"));
 
         int actualDataLength = mediaSample->GetActualDataLength();
         if (actualDataLength != 240*188)
-         cLog::log (LOGERROR, "cSampleGrabCB::SampleCB - unexpected sampleLength");
+         cLog::log (LOGERROR, fmt::format ("cSampleGrabCB::SampleCB - unexpected sampleLength"));
 
         int bytesAllocated = 0;
         uint8_t* ptr = mBipBuffer.reserve (actualDataLength, bytesAllocated);
 
         if (!ptr || (bytesAllocated != actualDataLength))
-          cLog::log (LOGERROR, "failed to reserve buffer");
+          cLog::log (LOGERROR, fmt::format ("failed to reserve buffer"));
         else {
           uint8_t* samples;
           mediaSample->GetPointer (&samples);
@@ -520,24 +520,25 @@ using namespace std;
                     (!toPinName || !wcscmp (toPinInfo.achName, toPinName))) {
                   // found toPin
                   if (mGraphBuilder->Connect (fromPin.Get(), toPin.Get()) == S_OK) {
-                    cLog::log (LOGINFO3, "- connecting pin " + wstrToStr (fromPinInfo.achName) +
-                                         " to " + wstrToStr (toPinInfo.achName));
+                    cLog::log (LOGINFO3, fmt::format ("- connecting pin {} to {} ",
+                                                      wstrToStr (fromPinInfo.achName),
+                                                      wstrToStr (toPinInfo.achName)));
                     return true;
                     }
                   else {
-                    cLog::log (LOGINFO3, "- connectPins failed");
+                    cLog::log (LOGINFO3, fmt::format ("- connectPins failed"));
                     return false;
                     }
                   }
                 }
               }
-            cLog::log (LOGERROR, "connectPins - no toPin");
+            cLog::log (LOGERROR, fmt::format ("connectPins - no toPin"));
             return false;
             }
           }
         }
 
-      cLog::log (LOGERROR, "connectPins - no fromPin");
+      cLog::log (LOGERROR, fmt::format ("connectPins - no fromPin"));
       return false;
       }
     //}}}
@@ -547,7 +548,7 @@ using namespace std;
                      Microsoft::WRL::ComPtr<IBaseFilter> fromFilter) {
     // Find instance of filter of type CLSID by name, add to graphBuilder, connect fromFilter
 
-      cLog::log (LOGINFO, "findFilter " + wstrToStr (name));
+      cLog::log (LOGINFO, fmt::format ("findFilter {}", wstrToStr (name)));
 
       Microsoft::WRL::ComPtr<ICreateDevEnum> systemDevEnum;
       CoCreateInstance (CLSID_SystemDeviceEnum, nullptr,
@@ -567,7 +568,7 @@ using namespace std;
             propertyBag->Read (L"FriendlyName", &varName, 0);
             VariantClear (&varName);
 
-            cLog::log (LOGINFO, "- " + wstrToStr (varName.bstrVal));
+            cLog::log (LOGINFO, fmt::format ("- {} ", wstrToStr (varName.bstrVal)));
 
             // bind the filter
             moniker->BindToObject (NULL, NULL, IID_IBaseFilter, (void**)(&filter));
@@ -596,7 +597,7 @@ using namespace std;
                        Microsoft::WRL::ComPtr<IBaseFilter> fromFilter) {
     // createFilter type clsid, add to graphBuilder, connect fromFilter
 
-      cLog::log (LOGINFO, "createFilter " + wstrToStr (title));
+      cLog::log (LOGINFO, fmt::format ("createFilter {}", wstrToStr (title)));
       CoCreateInstance (clsid, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS (filter.GetAddressOf()));
       mGraphBuilder->AddFilter (filter.Get(), title);
       connectPins (fromFilter, filter);
@@ -608,7 +609,7 @@ using namespace std;
       if (CoCreateInstance (CLSID_FilterGraph, nullptr,
                             CLSCTX_INPROC_SERVER, IID_PPV_ARGS (mGraphBuilder.GetAddressOf())) != S_OK) {
         //{{{  error, exit
-        cLog::log (LOGERROR, "createGraphDvbT - CoCreateInstance graph failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - CoCreateInstance graph failed"));
         return false;
         }
         //}}}
@@ -616,14 +617,14 @@ using namespace std;
       if (CoCreateInstance (CLSID_DVBTNetworkProvider, nullptr,
                             CLSCTX_INPROC_SERVER, IID_PPV_ARGS (mDvbNetworkProvider.GetAddressOf())) != S_OK) {
         //{{{  error, exit
-        cLog::log (LOGERROR, "createGraphDvbT - CoCreateInstance dvbNetworkProvider failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - CoCreateInstance dvbNetworkProvider failed"));
         return false;
         }
         //}}}
 
       if (mGraphBuilder->AddFilter (mDvbNetworkProvider.Get(), L"dvbtNetworkProvider") != S_OK) {
         //{{{  error,exit
-        cLog::log (LOGERROR, "createGraphDvbT - AddFilter failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - AddFilter failed"));
         return false;
         }
         //}}}
@@ -631,40 +632,40 @@ using namespace std;
 
       //{{{  setup dvbTuningSpace2 interface
       if (mScanningTuner->get_TuningSpace (mTuningSpace.GetAddressOf()) != S_OK)
-        cLog::log (LOGERROR, "createGraphDvbT - get_TuningSpace failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - get_TuningSpace failed"));
 
       mTuningSpace.As (&mDvbTuningSpace2);
       if (mDvbTuningSpace2->put__NetworkType (CLSID_DVBTNetworkProvider) != S_OK)
-        cLog::log (LOGERROR, "createGraphDvbT - put__NetworkType failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - put__NetworkType failed"));
 
       if (mDvbTuningSpace2->put_SystemType (DVB_Terrestrial) != S_OK)
-        cLog::log (LOGERROR, "createGraphDvbT - put_SystemType failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - put_SystemType failed"));
 
       if (mDvbTuningSpace2->put_NetworkID (9018) != S_OK)
-        cLog::log (LOGERROR, "createGraphDvbT - put_NetworkID failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - put_NetworkID failed"));
 
       if (mDvbTuningSpace2->put_FrequencyMapping ((BSTR)L"") != S_OK)
-        cLog::log (LOGERROR, "createGraphDvbT - put_FrequencyMapping failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - put_FrequencyMapping failed"));
 
       if (mDvbTuningSpace2->put_UniqueName ((BSTR)L"DTV DVB-T") != S_OK)
-        cLog::log (LOGERROR, "createGraphDvbT - put_UniqueName failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - put_UniqueName failed"));
 
       if (mDvbTuningSpace2->put_FriendlyName ((BSTR)L"DTV DVB-T") != S_OK)
-        cLog::log (LOGERROR, "createGraphDvbT - put_FriendlyName failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - put_FriendlyName failed"));
       //}}}
       //{{{  create dvbtLocator and setup in dvbTuningSpace2 interface
       if (CoCreateInstance (CLSID_DVBTLocator, nullptr,
                             CLSCTX_INPROC_SERVER, IID_PPV_ARGS (mDvbLocator.GetAddressOf())) != S_OK)
-        cLog::log (LOGERROR, "createGraphDvbT - CoCreateInstance dvbLocator failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - CoCreateInstance dvbLocator failed"));
 
       if (mDvbLocator->put_CarrierFrequency (frequency) != S_OK)
-        cLog::log (LOGERROR, "createGraphDvbT - put_CarrierFrequency failed");
+        cLog::log (LOGERROR,fmt::format ( "createGraphDvbT - put_CarrierFrequency failed"));
 
       if (mDvbLocator->put_Bandwidth (8) != S_OK)
-        cLog::log (LOGERROR, "createGraphDvbT - put_Bandwidth failed");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - put_Bandwidth failed"));
 
       if (mDvbTuningSpace2->put_DefaultLocator (mDvbLocator.Get()) != S_OK)
-        cLog::log (LOGERROR, "createGraphDvbT - put_DefaultLocator failed");
+        cLog::log (LOGERROR, v"createGraphDvbT - put_DefaultLocator failed"));
       //}}}
       //{{{  tuneRequest from scanningTuner
       if (mScanningTuner->get_TuneRequest (mTuneRequest.GetAddressOf()) != S_OK)
@@ -684,7 +685,7 @@ using namespace std;
       findFilter (mDvbTuner, KSCATEGORY_BDA_NETWORK_TUNER, L"DVBTtuner", mDvbNetworkProvider);
       if (!mDvbTuner) {
         //{{{  error, exit
-        cLog::log (LOGERROR, "createGraphDvbT - unable to find dvbtuner filter");
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - unable to find dvbtuner filter"));
         return false;
         }
         //}}}
@@ -701,15 +702,15 @@ using namespace std;
         mGrabberFilter.As (&mGrabber);
 
         if (mGrabber->SetOneShot (false) != S_OK)
-          cLog::log (LOGERROR, "SetOneShot failed");
+          cLog::log (LOGERROR, fmt::format ("SetOneShot failed"));
 
         if (mGrabber->SetBufferSamples (true) != S_OK)
-          cLog::log (LOGERROR, "SetBufferSamples failed");
+          cLog::log (LOGERROR, fmt::format ("SetBufferSamples failed"));
 
         mGrabberCB.allocateBuffer (128*240*188);
 
         if (mGrabber->SetCallback (&mGrabberCB, 0) != S_OK)
-          cLog::log (LOGERROR, "SetCallback failed");
+          cLog::log (LOGERROR, fmt::format ("SetCallback failed"));
 
         createFilter (mMpeg2Demux, CLSID_MPEG2Demultiplexer, L"MPEG2demux", mGrabberFilter);
         createFilter (mBdaTif, CLSID_BDAtif, L"BDAtif", mMpeg2Demux);
@@ -743,7 +744,7 @@ cDvbSource::cDvbSource (int frequency, int adapter) : mFrequency(frequency), mAd
       string frontend = fmt::format ("/dev/dvb/adapter{}/frontend{}", mAdapter, 0);
       mFrontEnd = open (frontend.c_str(), O_RDWR | O_NONBLOCK);
       if (mFrontEnd < 0){
-        cLog::log (LOGERROR, "cDvb open frontend failed");
+        cLog::log (LOGERROR, fmt::format ("cDvb open frontend failed"));
         return;
         }
       frontendSetup();
@@ -752,7 +753,7 @@ cDvbSource::cDvbSource (int frequency, int adapter) : mFrequency(frequency), mAd
       string demux = fmt::format ("/dev/dvb/adapter{}/demux{}", mAdapter, 0);
       mDemux = open (demux.c_str(), O_RDWR | O_NONBLOCK);
       if (mDemux < 0) {
-        cLog::log (LOGERROR, "cDvb open demux failed");
+        cLog::log (LOGERROR, fmt::format ("cDvb open demux failed"));
         return;
         }
       setFilter (8192);
@@ -766,7 +767,7 @@ cDvbSource::cDvbSource (int frequency, int adapter) : mFrequency(frequency), mAd
       // set dvr to big 50m buffer
       constexpr int kDvrBufferSize = 256 * 1024 * 188;
       if (ioctl (mDvr, DMX_SET_BUFFER_SIZE, kDvrBufferSize) < 0)
-        cLog::log (LOGERROR, "cDvb dvr DMX_SET_BUFFER_SIZE failed");
+        cLog::log (LOGERROR, fmt::format ("cDvb dvr DMX_SET_BUFFER_SIZE failed"));
 
     #endif
     }
@@ -843,7 +844,7 @@ int cDvbSource::getBlock (uint8_t* block, int blockSize) {
   (void)block;
 
   #ifdef _WIN32
-    cLog::log (LOGERROR, "getBlock not implemented");
+    cLog::log (LOGERROR, fmt::format ("getBlock not implemented"));
     return 0;
   #endif
 
@@ -906,7 +907,7 @@ void cDvbSource::unsetFilter (int fd, uint16_t pid) {
 
 //{{{
 void cDvbSource::reset() {
-  cLog::log (LOGERROR, "cDvb reset not implemneted");
+  cLog::log (LOGERROR, fmt::format ("cDvb reset not implemneted"));
   }
 //}}}
 //{{{
@@ -917,19 +918,19 @@ void cDvbSource::tune (int frequency) {
   #ifdef _WIN32
     // windows tune
     if (mDvbLocator->put_CarrierFrequency (frequency) != S_OK)
-      cLog::log (LOGERROR, "tune - put_CarrierFrequency");
+      cLog::log (LOGERROR, fmt::format ("tune - put_CarrierFrequency"));
     if (mDvbLocator->put_Bandwidth (8) != S_OK)
-      cLog::log (LOGERROR, "tune - put_Bandwidth");
+      cLog::log (LOGERROR, fmt::format ("tune - put_Bandwidth"));
     if (mDvbTuningSpace2->put_DefaultLocator (mDvbLocator.Get()) != S_OK)
-      cLog::log (LOGERROR, "tune - put_DefaultLocator");
+      cLog::log (LOGERROR, fmt::format ("tune - put_DefaultLocator"));
     if (mTuneRequest->put_Locator (mDvbLocator.Get()) != S_OK)
-      cLog::log (LOGERROR, "tune - put_Locator");
+      cLog::log (LOGERROR, fmt::format ("tune - put_Locator"));
     if (mScanningTuner->Validate (mTuneRequest.Get()) != S_OK)
-      cLog::log (LOGERROR, "tune - Validate");
+      cLog::log (LOGERROR, fmt::format ("tune - Validate"));
     if (mScanningTuner->put_TuneRequest (mTuneRequest.Get()) != S_OK)
-      cLog::log (LOGERROR, "tune - put_TuneRequest");
+      cLog::log (LOGERROR, fmt::format ("tune - put_TuneRequest"));
     if (mMediaControl->Run() != S_OK)
-      cLog::log (LOGERROR, "tune - run");
+      cLog::log (LOGERROR, fmt::format ("tune - run"));
   #endif
 
   #ifdef __linux__
@@ -974,7 +975,7 @@ void cDvbSource::tune (int frequency) {
 
     // wait for iovecs ready to read
     while (poll (fds, 1, -1) <= 0)
-      cLog::log (LOGINFO, "poll waiting");
+      cLog::log (LOGINFO, fmt::format ("poll waiting"));
 
     // read iovecs
     int size = readv (fds[0].fd, iovecs, kMaxRead);
@@ -1002,7 +1003,7 @@ void cDvbSource::tune (int frequency) {
       case 2: return HIERARCHY_2;
       case 4: return HIERARCHY_4;
       default:
-        cLog::log (LOGERROR, "invalid intramission mode %d", mTransmission);
+        cLog::log (LOGERROR, fmt::format ("invalid intramission mode {}", mTransmission));
         return HIERARCHY_AUTO;
       }
     }
@@ -1018,7 +1019,7 @@ void cDvbSource::tune (int frequency) {
       case 16: return GUARD_INTERVAL_1_16;
       case 32: return GUARD_INTERVAL_1_32;
       default:
-        cLog::log (LOGERROR, "invalid guard interval %d", mGuard);
+        cLog::log (LOGERROR, fmt::format ("invalid guard interval {}", mGuard));
         return GUARD_INTERVAL_AUTO;
       }
     }
@@ -1038,7 +1039,7 @@ void cDvbSource::tune (int frequency) {
       case 8: return TRANSMISSION_MODE_8K;
 
       default:
-        cLog::log (LOGERROR, "invalid tranmission mode %d", mTransmission);
+        cLog::log (LOGERROR, fmt::format ("invalid tranmission mode {}", mTransmission));
         return TRANSMISSION_MODE_AUTO;
       }
     }
@@ -1051,7 +1052,7 @@ void cDvbSource::tune (int frequency) {
       case 0:  return INVERSION_OFF;
       case 1:  return INVERSION_ON;
       default:
-        cLog::log (LOGERROR, "invalid inversion %d", mInversion);
+        cLog::log (LOGERROR, fmt::format ("invalid inversion {}", mInversion));
         return INVERSION_AUTO;
       }
     }
@@ -1078,14 +1079,14 @@ void cDvbSource::tune (int frequency) {
     if (fecValue == 910)
       return FEC_9_10;
 
-    cLog::log (LOGERROR, "invalid FEC %d", fecValue);
+    cLog::log (LOGERROR, fmt::format ("invalid FEC {}", fecValue));
     return FEC_AUTO;
     }
   //}}}
 
   //{{{
   void cDvbSource::frontendInfo (struct dvb_frontend_info& info, uint32_t version,
-                           fe_delivery_system_t* systems, int numSystems) {
+                                 fe_delivery_system_t* systems, int numSystems) {
 
     cLog::log (LOGINFO, fmt::format ("frontend - version {} min {} max {} stepSize {} tolerance {}",
                                      version, info.frequency_min, info.frequency_max,
@@ -1127,7 +1128,7 @@ void cDvbSource::tune (int frequency) {
     if (info.caps & FE_CAN_FEC_8_9)
       infoString += "fec89 ";
 
-    cLog::log (LOGINFO, infoString);
+    cLog::log (LOGINFO, fmt::format ("{}", infoString));
     //}}}
     //{{{  report qam
     infoString = "has - ";
@@ -1153,7 +1154,7 @@ void cDvbSource::tune (int frequency) {
     if (info.caps & FE_CAN_QAM_256)
       infoString += "qam256 ";
 
-    cLog::log (LOGINFO, infoString);
+    cLog::log (LOGINFO, fmt::format ("{}", infoString));
     //}}}
     //{{{  report other
     infoString = "has - ";
@@ -1197,7 +1198,7 @@ void cDvbSource::tune (int frequency) {
     if (info.caps & FE_CAN_MUTE_TS)
       infoString += "canMute ";
 
-    cLog::log (LOGINFO, infoString);
+    cLog::log (LOGINFO, fmt::format ("{}", infoString));
     //}}}
     //{{{  report delivery systems
     infoString = "has - ";
@@ -1209,7 +1210,7 @@ void cDvbSource::tune (int frequency) {
         default: break;
         }
 
-    cLog::log (LOGINFO, infoString);
+    cLog::log (LOGINFO, fmt::format ("{}", infoString));
     //}}}
     }
   //}}}
@@ -1219,14 +1220,14 @@ void cDvbSource::tune (int frequency) {
     struct dvb_frontend_info info;
     if (ioctl (mFrontEnd, FE_GET_INFO, &info) < 0) {
       //{{{  error return
-      cLog::log (LOGERROR, "frontend FE_GET_INFO failed %s", strerror(errno));
+      cLog::log (LOGERROR, fmt::format ("frontend FE_GET_INFO failed {}", strerror(errno)));
       return;
       }
       //}}}
 
     if (ioctl (mFrontEnd, FE_GET_PROPERTY, &info_cmdseq) < 0) {
       //{{{  error return
-      cLog::log (LOGERROR, "frontend FE_GET_PROPERTY api version failed");
+      cLog::log (LOGERROR, fmt::format ("frontend FE_GET_PROPERTY api version failed"));
       return;
       }
       //}}}
@@ -1234,7 +1235,7 @@ void cDvbSource::tune (int frequency) {
 
     if (ioctl (mFrontEnd, FE_GET_PROPERTY, &enum_cmdseq) < 0) {
       //{{{  error return
-      cLog::log (LOGERROR, "frontend FE_GET_PROPERTY failed");
+      cLog::log (LOGERROR, fmt::format ("frontend FE_GET_PROPERTY failed"));
       return;
       }
       //}}}
@@ -1243,7 +1244,7 @@ void cDvbSource::tune (int frequency) {
     int numSystems = enum_cmdargs[0].u.buffer.len;
     if (numSystems < 1) {
       //{{{  error return
-      cLog::log (LOGERROR, "no available delivery system");
+      cLog::log (LOGERROR, fmt::format ("no available delivery system"));
       return;
       }
       //}}}
@@ -1255,7 +1256,7 @@ void cDvbSource::tune (int frequency) {
     // clear frontend commands
     if (ioctl (mFrontEnd, FE_SET_PROPERTY, &cmdclear) < 0) {
       //{{{  error return
-      cLog::log (LOGERROR, "Unable to clear frontend");
+      cLog::log (LOGERROR, fmt::format ("Unable to clear frontend"));
       return;
       }
       //}}}
@@ -1276,8 +1277,9 @@ void cDvbSource::tune (int frequency) {
         p->props[TRANSMISSION].u.data = getTransmission();
         p->props[HIERARCHY].u.data = getHierarchy();
 
-        cLog::log (LOGINFO, "DVB-T %d band:%d inv:%d fec:%d fecLp:%d hier:%d guard:%d trans:%d",
-                   mFrequency, mBandwidth, mInversion, mFec, mFecLp, mHierarchy, mGuard, mTransmission);
+        cLog::log (LOGINFO, fmt::format ("DVB-T {} band:{} inv:{} fec:{} fecLp:{} hier:{} guard:{} trans:{}",
+                                         mFrequency, mBandwidth, mInversion, mFec, mFecLp,
+                                         mHierarchy, mGuard, mTransmission));
         break;
       //}}}
       //{{{
@@ -1294,14 +1296,14 @@ void cDvbSource::tune (int frequency) {
         p->props[HIERARCHY].u.data = getHierarchy();
         p->props[PLP_ID].u.data = 0; //dvb_plp_id;
 
-        cLog::log (LOGINFO, "DVB-T2 %d band:%d inv:%d fec:%d fecLp:%d hier:%d mod:%s guard:%d trans:%d plpId:%d",
+        cLog::log (LOGINFO, fmt::format ("DVB-T2 {} band:{} inv:{} fec:{} fecLp:{} hier:{} mod:{} guard:{} trans:{}",
                    mFrequency, mBandwidth, mInversion, mFec, mFecLp,
-                   mHierarchy, "qam_auto", mGuard, mTransmission, p->props[PLP_ID].u.data);
+                   mHierarchy, "qam_auto", mGuard, mTransmission));
         break;
       //}}}
       //{{{
       default:
-        cLog::log (LOGERROR, "unknown frontend type %d", info.type);
+        cLog::log (LOGERROR, fmt::format ("unknown frontend type {}", info.type));
         exit(1);
       //}}}
       }
@@ -1316,7 +1318,7 @@ void cDvbSource::tune (int frequency) {
     // send properties to frontend device
     if (ioctl (mFrontEnd, FE_SET_PROPERTY, p) < 0) {
       //{{{  error return
-      cLog::log (LOGERROR, "setting frontend failed %s", strerror(errno));
+      cLog::log (LOGERROR, fmt::format ("setting frontend failed {}", strerror(errno)));
       return;
       }
       //}}}
@@ -1325,15 +1327,15 @@ void cDvbSource::tune (int frequency) {
     while (true) {
       fe_status_t feStatus;
       if (ioctl (mFrontEnd, FE_READ_STATUS, &feStatus) < 0)
-        cLog::log (LOGERROR, "FE_READ_STATUS status failed");
+        cLog::log (LOGERROR, fmt::format ("FE_READ_STATUS status failed"));
       if (feStatus & FE_HAS_LOCK)
         break;
       cLog::log (LOGINFO, fmt::format ("waiting for lock {}{}{}{}{} {}",
-                                       feStatus & FE_TIMEDOUT ? "timeout " : "",
-                                       feStatus & FE_HAS_SIGNAL ? "s" : "",
-                                       feStatus & FE_HAS_CARRIER ? "c": "",
-                                       feStatus & FE_HAS_VITERBI ? "v": " ",
-                                       feStatus & FE_HAS_SYNC ? "s" : "",
+                                       (feStatus & FE_TIMEDOUT) ? "timeout " : "",
+                                       (feStatus & FE_HAS_SIGNAL) ? "s" : "",
+                                       (feStatus & FE_HAS_CARRIER) ? "c": "",
+                                       (feStatus & FE_HAS_VITERBI) ? "v": " ",
+                                       (feStatus & FE_HAS_SYNC) ? "s" : "",
                                        getStatusString()));
       this_thread::sleep_for (200ms);
       }

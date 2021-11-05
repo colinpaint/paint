@@ -41,9 +41,10 @@ cSubtitleRender::~cSubtitleRender() {
 //}}}
 
 //{{{
-void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
+void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
   (void)dts;
+  (void)skip;
   mPage.mPts = pts;
   mPage.mPesSize = pesSize;
 

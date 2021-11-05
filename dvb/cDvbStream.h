@@ -25,7 +25,7 @@ using tDurationSeconds = std::chrono::seconds;
 
 class cDvbStream {
 public:
-  enum eStream { eVid, eAud, eAudOther, eSub, eLast };
+  enum eStreamType { eVid, eAud, eAudOther, eSub, eLast };
   //{{{
   class cStream {
   public:
@@ -237,7 +237,7 @@ public:
     const uint16_t mSid;
     uint16_t mProgramPid = 0;
 
-    // match sizeof eStream
+    // match sizeof eStreamType
     std::array <cStream,4> mStreams;
 
     std::string mChannelName;
@@ -296,7 +296,7 @@ private:
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService* service);
 
-  bool processPes (eStream stream, cPidInfo* pidInfo, bool skip);
+  bool processPes (eStreamType stream, cPidInfo* pidInfo, bool skip);
 
   //{{{  parse
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);

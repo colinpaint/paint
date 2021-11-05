@@ -47,7 +47,7 @@ public:
   virtual std::string getInfoString() const final { return ""; }
 
   virtual void addFrame (cFrame* frame) final { (void)frame; }
-  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) final;
+  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
 
 private:
   //{{{

@@ -18,7 +18,7 @@ project (utils)
   add_library (utils ${UTILS_HEADER_FILES} ${UTILS_SOURCE_FILES})
 
   if (MSVC)
-    target_compile_options (utils PUBLIC /W4 /arch:AVX /fp:fast /std:c++20)
+    target_compile_options (utils PUBLIC /W4 /arch:AVX /fp:fast /std:c++17)
   else()
     target_compile_definitions (utils PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
     target_compile_options (utils PUBLIC -Wall -Wextra
@@ -26,8 +26,9 @@ project (utils)
                                          -Wno-format-security -Wno-format-overflow
                                          -pedantic
                                          -march=native -flax-vector-conversions -ftree-vectorize
-                                         -g -Ofast
-                                         -std=c++2a)
+                                         -std=c++17
+                                         -g -O2
+                                         )
   endif()
 
 # glfw lib
@@ -75,17 +76,44 @@ if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
     endif()
 endif()
 
+# dvb
+if (BUILD_TELLY)
+  project (dvb)
+    file (GLOB DVB_HEADER_FILES dvb/*.h ffmpeg/*.h)
+    file (GLOB DVB_SOURCE_FILES dvb/*.cpp)
+    add_library (dvb ${DVB_HEADER_FILES} ${DVB_SOURCE_FILES})
+
+    target_include_directories (dvb PRIVATE ffmpeg/inc)
+
+    if (MSVC)
+      target_link_directories (dvb PUBLIC ffmpeg/x64)
+      target_link_libraries (dvb PUBLIC utils avutil avcodec avformat swresample swscale)
+    else()
+      find_package (PkgConfig REQUIRED)
+      pkg_check_modules (LIBAV REQUIRED IMPORTED_TARGET
+        libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
+      target_link_libraries (dvb PUBLIC utils PkgConfig::LIBAV)
+    endif()
+endif()
+
 # decoder lib
 if (BUILD_PLAYER OR BUILD_CAPTURE)
   project (decoder)
     file (GLOB DECODER_HEADER_FILES decoder/*.h ffmpeg/*.h)
     file (GLOB DECODER_SOURCE_FILES decoder/*.cpp)
     add_library (decoder ${DECODER_HEADER_FILES} ${DECODER_SOURCE_FILES})
+
     target_include_directories (decoder PUBLIC ffmpeg/inc)
+
     if (MSVC)
       target_link_directories (decoder PUBLIC ffmpeg/x64)
+      target_link_libraries (decoder PUBLIC utils avutil avcodec avformat swresample swscale)
+    else()
+      find_package (PkgConfig REQUIRED)
+      pkg_check_modules (LIBAV REQUIRED IMPORTED_TARGET
+        libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
+      target_link_libraries (decoder PUBLIC utils PkgConfig::LIBAV)
     endif()
-    target_link_libraries (decoder PUBLIC utils avutil avcodec avformat swresample swscale)
 endif()
 
 # capture app
@@ -122,20 +150,6 @@ if (BUILD_PLAYER OR BUILD_TELLY)
     target_link_libraries (audio PUBLIC utils)
 endif()
 
-# dvb
-if (BUILD_PLAYER OR BUILD_TELLY)
-  project (dvb)
-    file (GLOB DVB_HEADER_FILES dvb/*.h ffmpeg/*.h)
-    file (GLOB DVB_SOURCE_FILES dvb/*.cpp)
-    add_library (dvb ${DVB_HEADER_FILES} ${DVB_SOURCE_FILES})
-
-    target_include_directories (dvb PRIVATE ffmpeg/inc)
-
-    target_link_libraries (dvb PUBLIC utils avutil avcodec avformat swresample swscale)
-    if (MSVC)
-      target_link_directories (dvb PUBLIC ffmpeg/x64)
-    endif()
-endif()
 
 # telly
 if (BUILD_TELLY)

@@ -1,4 +1,4 @@
-// cFrame.h
+// cFrame.h - frame base class
 //{{{  includes
 #pragma once
 

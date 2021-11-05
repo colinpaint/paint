@@ -1,4 +1,4 @@
-// cDecoder.h
+// cDecoder.h - decoder base class
 //{{{  includes
 #pragma once
 
