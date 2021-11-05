@@ -178,7 +178,7 @@ public:
   cVideoDecoder() : cDecoder() {
 
     mAvParser = av_parser_init (AV_CODEC_ID_H264);
-    mAvCodec = avcodec_find_decoder (AV_CODEC_ID_H264);
+    mAvCodec = (AVCodec*)avcodec_find_decoder (AV_CODEC_ID_H264);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
 

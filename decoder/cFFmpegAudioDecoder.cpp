@@ -42,7 +42,7 @@ cFFmpegAudioDecoder::cFFmpegAudioDecoder (eAudioFrameType frameType) {
     }
 
   mAvParser = av_parser_init (streamType);
-  mAvCodec = avcodec_find_decoder (streamType);
+  mAvCodec = (AVCodec*)avcodec_find_decoder (streamType);
   mAvContext = avcodec_alloc_context3 (mAvCodec);
   avcodec_open2 (mAvContext, mAvCodec, NULL);
   }
@@ -99,13 +99,13 @@ float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
                 float* srcPtr3 = (float*)avFrame->data[3];
                 float* srcPtr4 = (float*)avFrame->data[4];
                 float* srcPtr5 = (float*)avFrame->data[5];
-                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+                for (int sample = 0; sample < mSamplesPerFrame; sample++) {
                   *dstPtr++ = *srcPtr0++ + *srcPtr2++ + *srcPtr4 + *srcPtr5; // left loud
                   *dstPtr++ = *srcPtr1++ + *srcPtr3++ + *srcPtr4++ + *srcPtr5++; // right loud
                   }
                 }
               else // stereo
-                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+                for (int sample = 0; sample < mSamplesPerFrame; sample++) {
                   *dstPtr++ = *srcPtr0++;
                   *dstPtr++ = *srcPtr1++;
                   }
@@ -119,10 +119,10 @@ float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
               mSamplesPerFrame = avFrame->nb_samples;
               samples = (float*)malloc (avFrame->channels * avFrame->nb_samples * sizeof(float));
 
-              for (size_t channel = 0; channel < avFrame->channels; channel++) {
+              for (int channel = 0; channel < avFrame->channels; channel++) {
                 float* dstPtr = samples + channel;
                 short* srcPtr = (short*)avFrame->data[channel];
-                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+                for (int sample = 0; sample < mSamplesPerFrame; sample++) {
                   *dstPtr = *srcPtr++ / (float)0x8000;
                   dstPtr += mChannels;
                   }

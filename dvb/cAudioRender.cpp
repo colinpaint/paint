@@ -379,7 +379,7 @@ public:
       }
 
     mAvParser = av_parser_init (streamType);
-    mAvCodec = avcodec_find_decoder (streamType);
+    mAvCodec = (AVCodec*)avcodec_find_decoder (streamType);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }

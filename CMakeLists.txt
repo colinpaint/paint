@@ -81,20 +81,20 @@ endif()
 # dvb lib
 if (BUILD_TELLY)
   project (dvb)
-    file (GLOB DVB_HEADER_FILES dvb/*.h ffmpeg/*.h)
+    file (GLOB DVB_HEADER_FILES dvb/*.h)
     file (GLOB DVB_SOURCE_FILES dvb/*.cpp)
     add_library (${PROJECT_NAME} ${DVB_HEADER_FILES} ${DVB_SOURCE_FILES})
 
-    target_include_directories (${PROJECT_NAME} PRIVATE ffmpeg/inc)
-
     if (MSVC)
+      target_include_directories (${PROJECT_NAME} PRIVATE ffmpeg/inc)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils avdevice avfilter avformat avcodec avutil 
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils avdevice avfilter avformat avcodec avutil
                                                           swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (FFmpeg REQUIRED IMPORTED_TARGET libavdevice libavfilter libavformat libavcodec libavutil
                                                          libswresample libswscale)
+      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFmpeg)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFmpeg)
     endif()
 endif()
@@ -102,20 +102,20 @@ endif()
 # decoder lib
 if (BUILD_PLAYER OR BUILD_CAPTURE)
   project (decoder)
-    file (GLOB DECODER_HEADER_FILES decoder/*.h ffmpeg/*.h)
+    file (GLOB DECODER_HEADER_FILES decoder/*.h)
     file (GLOB DECODER_SOURCE_FILES decoder/*.cpp)
     add_library (${PROJECT_NAME} ${DECODER_HEADER_FILES} ${DECODER_SOURCE_FILES})
 
-    target_include_directories (${PROJECT_NAME} PUBLIC ffmpeg/inc)
-
     if (MSVC)
+      target_include_directories (${PROJECT_NAME} PUBLIC ffmpeg/inc)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils avdevice avfilter avformat avcodec avutil 
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils avdevice avfilter avformat avcodec avutil
                                                           swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (FFmpeg REQUIRED IMPORTED_TARGET libavdevice libavfilter libavformat libavcodec libavutil
                                                          libswresample libswscale)
+      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFmpeg)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFmpeg)
     endif()
 endif()

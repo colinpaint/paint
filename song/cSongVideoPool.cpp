@@ -446,7 +446,7 @@ public:
   //{{{
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize) {
     (void)context;
-    (void)data; 
+    (void)data;
     (void)linesize;
     cLog::log (LOGERROR, "setYuv420 planar not implemented");
     }
@@ -1901,7 +1901,7 @@ public:
   cFFmpegVideoPool (int poolSize, cSong* song) : cVideoPool(true, poolSize, song) {
 
     mAvParser = av_parser_init (AV_CODEC_ID_H264);
-    mAvCodec = avcodec_find_decoder (AV_CODEC_ID_H264);
+    mAvCodec = (AVCodec*)avcodec_find_decoder (AV_CODEC_ID_H264);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }
@@ -1946,19 +1946,18 @@ public:
                          mGuessPts/1800, mGuessPts%1800, pts/1800, pts%1800, dts/1800, dts%1800,
                          frameType, pesSize));
 
-    AVPacket avPacket;
-    av_init_packet (&avPacket);
-    auto avFrame = av_frame_alloc();
+    AVPacket* avPacket = av_packet_alloc();
+    AVFrame* avFrame = av_frame_alloc();
 
     auto pesPtr = pes;
     auto pesLeft = pesSize;
     while (pesLeft) {
-      auto bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
-        &avPacket.data, &avPacket.size, pesPtr, (int)pesLeft, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
+      auto bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
+                                         pesPtr, (int)pesLeft, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
       pesPtr += bytesUsed;
       pesLeft -= bytesUsed;
-      if (avPacket.size) {
-        auto ret = avcodec_send_packet (mAvContext, &avPacket);
+      if (avPacket->size) {
+        auto ret = avcodec_send_packet (mAvContext, avPacket);
         while (ret >= 0) {
           ret = avcodec_receive_frame (mAvContext, avFrame);
           if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
@@ -1983,12 +1982,10 @@ public:
             frame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
             mYuv420MicroSeconds = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
-            {
-            unique_lock<shared_mutex> lock (mSharedMutex);
-            mFramePool.insert (map<int64_t, iVideoFrame*>::value_type (mGuessPts / mPtsDuration, frame));
-            }
-
-            av_frame_unref (avFrame);
+              { // locked
+              unique_lock<shared_mutex> lock (mSharedMutex);
+              mFramePool.insert (map<int64_t, iVideoFrame*>::value_type (mGuessPts / mPtsDuration, frame));
+              }
             }
           mGuessPts += mPtsDuration;
           }
@@ -1996,6 +1993,7 @@ public:
       }
 
     av_frame_free (&avFrame);
+    av_packet_free (&avPacket);
     }
   //}}}
 
