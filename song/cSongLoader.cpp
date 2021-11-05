@@ -56,7 +56,7 @@ public:
     : mProgramName(programName), mStartTime(startTime), mDuration(duration) {}
 
   // line2022 - don't trust this
-  /cDvbEpgItem (const cDvbEpgItem& epgItem)
+  //cDvbEpgItem (const cDvbEpgItem& epgItem)
   //  : mProgramName (epgItem.mProgramName), mStartTime (epgItem.mStartTime), mDuration (epgItem.mDuration) {}
 
   ~cDvbEpgItem() {}
