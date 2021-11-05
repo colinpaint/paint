@@ -60,9 +60,7 @@ cFFmpegAudioDecoder::~cFFmpegAudioDecoder() {
 //{{{
 float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, int64_t pts) {
 
-  float* outBuffer = nullptr;
-
-  //if (pts != mLastPts + duration) // skip
+  float* samples = nullptr;
 
   AVPacket* avPacket = av_packet_alloc();
   AVFrame* avFrame = av_frame_alloc();
@@ -91,8 +89,8 @@ float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
               mSampleRate = avFrame->sample_rate;
               mSamplesPerFrame = avFrame->nb_samples;
 
-              outBuffer = (float*)malloc (mChannels * mSamplesPerFrame * sizeof(float));
-              float* dstPtr = outBuffer;
+              samples = (float*)malloc (mChannels * mSamplesPerFrame * sizeof(float));
+              float* dstPtr = samples;
 
               float* srcPtr0 = (float*)avFrame->data[0];
               float* srcPtr1 = (float*)avFrame->data[1];
@@ -101,13 +99,13 @@ float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
                 float* srcPtr3 = (float*)avFrame->data[3];
                 float* srcPtr4 = (float*)avFrame->data[4];
                 float* srcPtr5 = (float*)avFrame->data[5];
-                for (auto sample = 0; sample < mSamplesPerFrame; sample++) {
+                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
                   *dstPtr++ = *srcPtr0++ + *srcPtr2++ + *srcPtr4 + *srcPtr5; // left loud
                   *dstPtr++ = *srcPtr1++ + *srcPtr3++ + *srcPtr4++ + *srcPtr5++; // right loud
                   }
                 }
               else // stereo
-                for (auto sample = 0; sample < mSamplesPerFrame; sample++) {
+                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
                   *dstPtr++ = *srcPtr0++;
                   *dstPtr++ = *srcPtr1++;
                   }
@@ -119,12 +117,12 @@ float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
               mChannels =  avFrame->channels;
               mSampleRate = avFrame->sample_rate;
               mSamplesPerFrame = avFrame->nb_samples;
-              outBuffer = (float*)malloc (avFrame->channels * avFrame->nb_samples * sizeof(float));
+              samples = (float*)malloc (avFrame->channels * avFrame->nb_samples * sizeof(float));
 
-              for (auto channel = 0; channel < avFrame->channels; channel++) {
-                auto dstPtr = outBuffer + channel;
-                auto srcPtr = (short*)avFrame->data[channel];
-                for (auto sample = 0; sample < mSamplesPerFrame; sample++) {
+              for (size_t channel = 0; channel < avFrame->channels; channel++) {
+                float* dstPtr = samples + channel;
+                short* srcPtr = (short*)avFrame->data[channel];
+                for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
                   *dstPtr = *srcPtr++ / (float)0x8000;
                   dstPtr += mChannels;
                   }
@@ -142,8 +140,8 @@ float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
 
   mLastPts = pts;
 
-  av_packet_free (&avPacket);
   av_frame_free (&avFrame);
-  return outBuffer;
+  av_packet_free (&avPacket);
+  return samples;
   }
 //}}}
