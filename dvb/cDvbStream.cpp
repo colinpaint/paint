@@ -1561,7 +1561,7 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
     while (true) {
       int bytesRead = mDvbSource->getBlock (buffer, kDvrReadBufferSize);
       if (bytesRead == 0)
-        cLog::log (LOGINFO, "cDvb grabThread no bytes read");
+        cLog::log (LOGINFO, fmt::format ("cDvb grabThread no bytes read"));
       else {
         // demux
         streamPos += demux (buffer, bytesRead, 0, false);

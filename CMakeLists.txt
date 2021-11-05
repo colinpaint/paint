@@ -90,7 +90,7 @@ if (BUILD_TELLY)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils avutil avcodec avformat swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
-      pkg_check_modules (LIBAV REQUIRED IMPORTED_TARGET libavdevice libavfilter libavformat libavcodec 
+      pkg_check_modules (LIBAV REQUIRED IMPORTED_TARGET libavdevice libavfilter libavformat libavcodec
                                                         libavutil libswresample libswscale)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::LIBAV)
     endif()
@@ -110,7 +110,7 @@ if (BUILD_PLAYER OR BUILD_CAPTURE)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils avutil avcodec avformat swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
-      pkg_check_modules (LIBAV REQUIRED IMPORTED_TARGET libavdevice libavfilter libavformat libavcodec 
+      pkg_check_modules (LIBAV REQUIRED IMPORTED_TARGET libavdevice libavfilter libavformat libavcodec
                                                         libavutil libswresample libswscale)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::LIBAV)
     endif()
