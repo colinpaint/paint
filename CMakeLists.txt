@@ -15,20 +15,20 @@ set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FO
 project (utils)
   file (GLOB UTILS_HEADER_FILES utils/*.h)
   file (GLOB UTILS_SOURCE_FILES utils/*.cpp utils/*.c)
-  add_library (utils ${UTILS_HEADER_FILES} ${UTILS_SOURCE_FILES})
+  add_library (${PROJECT_NAME} ${UTILS_HEADER_FILES} ${UTILS_SOURCE_FILES})
 
   if (MSVC)
-    target_compile_options (utils PUBLIC /W4 /arch:AVX /fp:fast /std:c++17)
+    target_compile_options (${PROJECT_NAME} PUBLIC /W4 /arch:AVX /fp:fast /std:c++17)
   else()
-    target_compile_definitions (utils PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
-    target_compile_options (utils PUBLIC -Wall -Wextra
-                                         -Wno-missing-field-initializers
-                                         -Wno-format-security -Wno-format-overflow
-                                         -pedantic
-                                         -march=native -flax-vector-conversions -ftree-vectorize
-                                         -std=c++17
-                                         -g -O2
-                                         )
+    target_compile_definitions (${PROJECT_NAME} PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
+    target_compile_options (${PROJECT_NAME} PUBLIC -Wall -Wextra
+                                                   -Wno-missing-field-initializers
+                                                   -Wno-format-security -Wno-format-overflow
+                                                   -pedantic
+                                                   -march=native -flax-vector-conversions -ftree-vectorize
+                                                   -std=c++17
+                                                   -g -Ofast
+                                                   )
   endif()
 
 # glfw lib
@@ -63,16 +63,16 @@ if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
       file (GLOB BACKEND_HEADER_FILES imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
       file (GLOB BACKEND_SOURCE_FILES imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
     endif()
-    add_library (imgui ${IMGUI_SOURCE_FILES} ${IMGUI_HEADER_FILES} ${BACKEND_SOURCE_FILES} ${BACKEND_HEADER_FILES})
-    target_include_directories (imgui PUBLIC imgui glfw/include)
-    target_link_libraries (imgui PUBLIC utils)
+    add_library (${PROJECT_NAME} ${IMGUI_SOURCE_FILES} ${IMGUI_HEADER_FILES} ${BACKEND_SOURCE_FILES} ${BACKEND_HEADER_FILES})
+    target_include_directories (${PROJECT_NAME} PUBLIC imgui glfw/include)
+    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
     if (BUILD_IMPLOT)
       project (implot)
         file (GLOB HEADER_FILES implot/*.h)
         file (GLOB SOURCE_FILES implot/*.cpp)
-        add_library (implot ${HEADER_FILES} ${SOURCE_FILES})
-        target_include_directories (implot PUBLIC implot imgui utils)
+        add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+        target_include_directories (${PROJECT_NAME} PUBLIC implot imgui utils)
     endif()
 endif()
 
@@ -81,18 +81,18 @@ if (BUILD_TELLY)
   project (dvb)
     file (GLOB DVB_HEADER_FILES dvb/*.h ffmpeg/*.h)
     file (GLOB DVB_SOURCE_FILES dvb/*.cpp)
-    add_library (dvb ${DVB_HEADER_FILES} ${DVB_SOURCE_FILES})
+    add_library (${PROJECT_NAME} ${DVB_HEADER_FILES} ${DVB_SOURCE_FILES})
 
-    target_include_directories (dvb PRIVATE ffmpeg/inc)
+    target_include_directories (${PROJECT_NAME} PRIVATE ffmpeg/inc)
 
     if (MSVC)
-      target_link_directories (dvb PUBLIC ffmpeg/x64)
-      target_link_libraries (dvb PUBLIC utils avutil avcodec avformat swresample swscale)
+      target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils avutil avcodec avformat swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
-      pkg_check_modules (LIBAV REQUIRED IMPORTED_TARGET
-        libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
-      target_link_libraries (dvb PUBLIC utils PkgConfig::LIBAV)
+      pkg_check_modules (LIBAV REQUIRED IMPORTED_TARGET libavdevice libavfilter libavformat libavcodec 
+                                                        libavutil libswresample libswscale)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::LIBAV)
     endif()
 endif()
 
@@ -101,18 +101,18 @@ if (BUILD_PLAYER OR BUILD_CAPTURE)
   project (decoder)
     file (GLOB DECODER_HEADER_FILES decoder/*.h ffmpeg/*.h)
     file (GLOB DECODER_SOURCE_FILES decoder/*.cpp)
-    add_library (decoder ${DECODER_HEADER_FILES} ${DECODER_SOURCE_FILES})
+    add_library (${PROJECT_NAME} ${DECODER_HEADER_FILES} ${DECODER_SOURCE_FILES})
 
-    target_include_directories (decoder PUBLIC ffmpeg/inc)
+    target_include_directories (${PROJECT_NAME} PUBLIC ffmpeg/inc)
 
     if (MSVC)
-      target_link_directories (decoder PUBLIC ffmpeg/x64)
-      target_link_libraries (decoder PUBLIC utils avutil avcodec avformat swresample swscale)
+      target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils avutil avcodec avformat swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
-      pkg_check_modules (LIBAV REQUIRED IMPORTED_TARGET
-        libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
-      target_link_libraries (decoder PUBLIC utils PkgConfig::LIBAV)
+      pkg_check_modules (LIBAV REQUIRED IMPORTED_TARGET libavdevice libavfilter libavformat libavcodec 
+                                                        libavutil libswresample libswscale)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::LIBAV)
     endif()
 endif()
 
@@ -122,8 +122,8 @@ if (BUILD_CAPTURE AND MSVC)
   project (captureAudio VERSION 1.0.0)
     file (GLOB CAPTURE_HEADER_FILES audio/*.h)
     file (GLOB CAPTURE_SOURCE_FILES captureAudio/capture.cpp)
-    add_executable (captureAudio ${CAPTURE_SOURCE_FILES} ${CAPTURE_HEADER_FILES})
-    target_link_libraries (captureAudio PRIVATE decoder winmm avrt audio)
+    add_executable (${PROJECT_NAME} ${CAPTURE_SOURCE_FILES} ${CAPTURE_HEADER_FILES})
+    target_link_libraries (${PROJECT_NAME} PRIVATE decoder winmm avrt audio)
 endif()
 
 # filesystem app
@@ -132,12 +132,12 @@ if (BUILD_FILESYSTEM)
     file (GLOB HEADER_FILES *.h utils/*.h)
     file (GLOB SOURCE_FILES filesystem/main.cpp)
 
-    add_executable (filesystem ${SOURCE_FILES} ${HEADER_FILES})
-    target_link_libraries (filesystem PRIVATE utils)
+    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
 
     if (NOT MSVC)
-      target_link_libraries (filesystem PRIVATE stdc++fs)
-      target_link_options (filesystem PRIVATE -no-pie)
+      target_link_libraries (${PROJECT_NAME} PRIVATE stdc++fs)
+      target_link_options (${PROJECT_NAME} PRIVATE -no-pie)
     endif()
 endif()
 
@@ -146,8 +146,8 @@ if (BUILD_PLAYER OR BUILD_TELLY)
   project (audio)
     file (GLOB AUDIO_HEADER_FILES audio/*.h decoder/*.h)
     file (GLOB AUDIO_SOURCE_FILES audio/*.cpp)
-    add_library (audio ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
-    target_link_libraries (audio PUBLIC utils)
+    add_library (${PROJECT_NAME} ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
+    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 endif()
 
 
@@ -158,23 +158,23 @@ if (BUILD_TELLY)
                                   platform/*.h graphics/*.h)
     file (GLOB TELLY_SOURCE_FILES tv/tvMain.cpp tv/cTvApp.cpp tv/cTvUI.cpp
                                   ui/cUI.cpp platform/*.cpp graphics/*.cpp)
-    add_executable (telly ${TELLY_SOURCE_FILES} ${TELLY_HEADER_FILES})
+    add_executable (${PROJECT_NAME} ${TELLY_SOURCE_FILES} ${TELLY_HEADER_FILES})
 
-    target_include_directories (telly PRIVATE imgui stb)
+    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
     if (BUILD_IMPLOT)
-      target_compile_definitions (telly PRIVATE BUILD_IMPLOT)
-      target_link_libraries (telly PRIVATE implot)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
+      target_link_libraries (${PROJECT_NAME} PRIVATE implot)
     endif()
 
-    target_link_libraries (telly PRIVATE dvb audio imgui utils glfw glad)
+    target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio imgui utils glfw glad)
     if (MSVC)
-      target_link_directories (telly PUBLIC ffmpeg/x64)
-      target_link_libraries (telly PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
+      target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
+      target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
     else()
-      target_link_libraries (telly PRIVATE GL)
-      target_link_libraries (telly PRIVATE pthread asound stdc++fs)
-      target_link_options (telly PRIVATE -no-pie)
+      target_link_libraries (${PROJECT_NAME} PRIVATE GL)
+      target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
+      target_link_options (${PROJECT_NAME} PRIVATE -no-pie)
     endif()
 endif()
 
@@ -183,20 +183,20 @@ if (BUILD_PLAYER)
   project (kiss)
     file (GLOB KISS_HEADER_FILES kiss/*.h)
     file (GLOB KISS_SOURCE_FILES kiss/*.c)
-    add_library (kiss ${KISS_HEADER_FILES} ${KISS_SOURCE_FILES})
-    target_link_libraries (kiss PUBLIC utils)
+    add_library (${PROJECT_NAME} ${KISS_HEADER_FILES} ${KISS_SOURCE_FILES})
+    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
   project (song)
     file (GLOB SONG_HEADER_FILES song/*.h)
     file (GLOB SONG_SOURCE_FILES song/*.cpp)
-    add_library (song ${SONG_HEADER_FILES} ${SONG_SOURCE_FILES})
-    target_link_libraries (song PUBLIC utils decoder kiss)
+    add_library (${PROJECT_NAME} ${SONG_HEADER_FILES} ${SONG_SOURCE_FILES})
+    target_link_libraries (${PROJECT_NAME} PUBLIC utils decoder kiss)
 
   project (net)
     file (GLOB NET_HEADER_FILES net/*.h)
     file (GLOB NET_SOURCE_FILES net/*.cpp)
-    add_library (net ${NET_HEADER_FILES} ${NET_SOURCE_FILES})
-    target_link_libraries (net PUBLIC utils)
+    add_library (${PROJECT_NAME} ${NET_HEADER_FILES} ${NET_SOURCE_FILES})
+    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
   project (player VERSION 1.0.0)
     file (GLOB PLAYER_HEADER_FILES player/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
@@ -205,17 +205,17 @@ if (BUILD_PLAYER)
                                    platform/*.cpp graphics/*.cpp)
 
     add_executable (player ${PLAYER_SOURCE_FILES} ${PLAYER_HEADER_FILES})
-    target_include_directories (player PRIVATE imgui stb)
+    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
-    target_link_libraries (player PRIVATE imgui utils glfw glad)
-    target_link_libraries (player PRIVATE song audio decoder dvb kiss net)
+    target_link_libraries (${PROJECT_NAME} PRIVATE imgui utils glfw glad)
+    target_link_libraries (${PROJECT_NAME} PRIVATE song audio decoder dvb kiss net)
 
     if (MSVC)
-      target_link_libraries (player PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
+      target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
     else()
-      target_link_libraries (player PRIVATE GL)
-      target_link_libraries (player PRIVATE pthread asound stdc++fs)
-      target_link_options (player PRIVATE -no-pie)
+      target_link_libraries (${PROJECT_NAME} PRIVATE GL)
+      target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
+      target_link_options (${PROJECT_NAME} PRIVATE -no-pie)
     endif()
 endif()
 
@@ -228,14 +228,14 @@ if (BUILD_FED)
                                 platform/*.cpp graphics/*.cpp ui/cUI.cpp)
 
     add_executable (fed ${FED_SOURCE_FILES} ${FED_HEADER_FILES})
-    target_include_directories (fed PRIVATE imgui stb)
+    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
-    target_link_libraries (fed PRIVATE imgui utils glfw glad)
+    target_link_libraries (${PROJECT_NAME} PRIVATE imgui utils glfw glad)
     if (MSVC)
-      target_link_libraries (fed PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
+      target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
     else()
-      target_link_libraries (fed PRIVATE GL stdc++fs)
-      target_link_options (fed PRIVATE -no-pie)
+      target_link_libraries (${PROJECT_NAME} PRIVATE GL stdc++fs)
+      target_link_options (${PROJECT_NAME} PRIVATE -no-pie)
     endif()
 endif()
 
@@ -248,21 +248,21 @@ if (BUILD_PAINTBOX)
     file (GLOB HEADER_FILES paint/*.h utils/*.h platform/*.h graphics/*.h brush/*.h ui/*.h)
     file (GLOB SOURCE_FILES paint/*.cpp platform/*.cpp graphics/*.cpp brush/*.cpp
                             ui/cUI.cpp ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp)
-    add_executable (paintbox ${SOURCE_FILES} ${HEADER_FILES})
+    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
-    target_compile_definitions (paintbox PRIVATE OPENGL_VERSION)
-    target_include_directories (paintbox PRIVATE glfw/include stb)
-    target_link_libraries (paintbox PRIVATE imgui utils glfw glad)
+    target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL_VERSION)
+    target_include_directories (${PROJECT_NAME} PRIVATE glfw/include stb)
+    target_link_libraries (${PROJECT_NAME} PRIVATE imgui utils glfw glad)
 
     if (BUILD_IMPLOT)
-      target_compile_definitions (paintbox PRIVATE BUILD_IMPLOT)
-      target_link_libraries (paintbox PRIVATE implot)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
+      target_link_libraries (${PROJECT_NAME} PRIVATE implot)
     endif()
 
     if (MSVC)
-      target_link_libraries (paintbox PRIVATE Opengl32 d3d11 d3dcompiler ws2_32)
+      target_link_libraries (${PROJECT_NAME} PRIVATE Opengl32 d3d11 d3dcompiler ws2_32)
     else()
-      target_link_libraries (paintbox PRIVATE GL)
-      target_link_options (paintbox PRIVATE -no-pie)
+      target_link_libraries (${PROJECT_NAME} PRIVATE GL)
+      target_link_options (${PROJECT_NAME} PRIVATE -no-pie)
     endif()
 endif()
