@@ -194,23 +194,20 @@ public:
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
                            function<void (cFrame* frame)> addFrameCallback) final {
 
-    AVPacket mAvPacket;
-    av_init_packet (&mAvPacket);
-
-    AVFrame* mAvFrame = nullptr;
-    mAvFrame = av_frame_alloc();
+    AVPacket* avPacket = av_packet_alloc();
+    AVFrame* avFrame = av_frame_alloc();
 
     uint8_t* frame = pes;
     uint32_t frameSize = pesSize;
     while (frameSize) {
       auto timePoint = chrono::system_clock::now();
 
-      int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &mAvPacket.data, &mAvPacket.size,
+      int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
                                         frame, (int)frameSize, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
-      if (mAvPacket.size) {
-        int ret = avcodec_send_packet (mAvContext, &mAvPacket);
+      if (avPacket->size) {
+        int ret = avcodec_send_packet (mAvContext, avPacket);
         while (ret >= 0) {
-          ret = avcodec_receive_frame (mAvContext, mAvFrame);
+          ret = avcodec_receive_frame (mAvContext, avFrame);
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
           int64_t decodeTime =
@@ -219,7 +216,7 @@ public:
           // create new videoFrame
           cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (pts,
             (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num);
-          videoFrame->init (static_cast<uint16_t>(mAvFrame->width), static_cast<uint16_t>(mAvFrame->height),
+          videoFrame->init (static_cast<uint16_t>(avFrame->width), static_cast<uint16_t>(avFrame->height),
                             frameSize, decodeTime);
           pts += videoFrame->getPtsDuration();
 
@@ -231,10 +228,10 @@ public:
                                           videoFrame->getWidth(), videoFrame->getHeight(), AV_PIX_FMT_RGBA,
                                           SWS_BILINEAR, NULL, NULL, NULL);
             //}}}
-          videoFrame->setYuv420 (mSwsContext, mAvFrame->data, mAvFrame->linesize);
+          videoFrame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
           videoFrame->setYuv420Time (
             chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
-          av_frame_unref (mAvFrame);
+          //av_frame_unref (mAvFrame);
 
           // add videoFrame
           addFrameCallback (videoFrame);
@@ -244,7 +241,8 @@ public:
       frameSize -= bytesUsed;
       }
 
-    av_frame_free (&mAvFrame);
+    av_frame_free (&avFrame);
+    av_packet_free (&avPacket);
     return pts;
     }
   //}}}

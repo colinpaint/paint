@@ -2019,7 +2019,7 @@ public:
       //cLog::log (LOGINFO, format ("eit callback sid {} {}", sid, name));
       //mSid = sid;
       if (now) // copy to now
-        mNowEpgItem = epgItem;
+        mNowEpgItem = cDvbEpgItem (epgItem);
 
       else {
         // add to epg if new, later than now today

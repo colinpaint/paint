@@ -45,7 +45,7 @@ public:
   //{{{
   cAudioFrame (int64_t pts, size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, float* samples)
      : cFrame (pts, sampleRate ? (samplesPerFrame * 90000 / sampleRate) : 48000),
-       mNumChannels(numChannels), 
+       mNumChannels(numChannels),
        mSamplesPerFrame(samplesPerFrame), mSampleRate(sampleRate), mSamples(samples) {
 
     for (size_t channel = 0; channel < mNumChannels; channel++) {
@@ -400,16 +400,13 @@ public:
     uint32_t sampleRate = 48000;
     uint32_t frameSize = 0;
     while (cAudioFrame::audioParseFrame (frame, pesEnd, frameType, numChannels, sampleRate, frameSize)) {
-      AVPacket avPacket;
-      av_init_packet (&avPacket);
-
-      auto avFrame = av_frame_alloc();
-      int bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
-                                        &avPacket.data, &avPacket.size,
+      AVPacket* avPacket = av_packet_alloc();
+      AVFrame* avFrame = av_frame_alloc();
+      int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
                                         frame, frameSize, pts, AV_NOPTS_VALUE, 0);
-      avPacket.pts = pts;
-      if (avPacket.size) {
-        int ret = avcodec_send_packet (mAvContext, &avPacket);
+      avPacket->pts = pts;
+      if (avPacket->size) {
+        int ret = avcodec_send_packet (mAvContext, avPacket);
         while (ret >= 0) {
           ret = avcodec_receive_frame (mAvContext, avFrame);
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
@@ -474,13 +471,13 @@ public:
 
             cAudioFrame* audioFrame = new cAudioFrame (pts, numChannels, samplesPerFrame, sampleRate, samples);
             addFrameCallback (audioFrame);
-            av_frame_unref (avFrame);
+            //av_frame_unref (avFrame);
             pts += audioFrame->getPtsDuration();
             }
           }
         }
       av_frame_free (&avFrame);
-
+      av_packet_free (&avPacket);
       frame += bytesUsed;
       }
 
