@@ -64,19 +64,21 @@ if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
       file (GLOB BACKEND_SOURCE_FILES imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
     endif()
     add_library (${PROJECT_NAME} ${IMGUI_SOURCE_FILES} ${IMGUI_HEADER_FILES} ${BACKEND_SOURCE_FILES} ${BACKEND_HEADER_FILES})
+
     target_include_directories (${PROJECT_NAME} PUBLIC imgui glfw/include)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
-
-    if (BUILD_IMPLOT)
-      project (implot)
-        file (GLOB HEADER_FILES implot/*.h)
-        file (GLOB SOURCE_FILES implot/*.cpp)
-        add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-        target_include_directories (${PROJECT_NAME} PUBLIC implot imgui utils)
-    endif()
 endif()
 
-# dvb
+# implot lib
+if (BUILD_IMPLOT)
+  project (implot)
+    file (GLOB HEADER_FILES implot/*.h)
+    file (GLOB SOURCE_FILES implot/*.cpp)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+    target_include_directories (${PROJECT_NAME} PUBLIC implot imgui utils)
+endif()
+
+# dvb lib
 if (BUILD_TELLY)
   project (dvb)
     file (GLOB DVB_HEADER_FILES dvb/*.h ffmpeg/*.h)
@@ -116,6 +118,15 @@ if (BUILD_PLAYER OR BUILD_CAPTURE)
     endif()
 endif()
 
+# audio lib
+if (BUILD_PLAYER OR BUILD_TELLY)
+  project (audio)
+    file (GLOB AUDIO_HEADER_FILES audio/*.h decoder/*.h)
+    file (GLOB AUDIO_SOURCE_FILES audio/*.cpp)
+    add_library (${PROJECT_NAME} ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
+    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
+endif()
+
 # capture app
 if (BUILD_CAPTURE AND MSVC)
   ## WIN32 audio wsapi capture main project
@@ -141,17 +152,7 @@ if (BUILD_FILESYSTEM)
     endif()
 endif()
 
-# audio
-if (BUILD_PLAYER OR BUILD_TELLY)
-  project (audio)
-    file (GLOB AUDIO_HEADER_FILES audio/*.h decoder/*.h)
-    file (GLOB AUDIO_SOURCE_FILES audio/*.cpp)
-    add_library (${PROJECT_NAME} ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
-    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
-endif()
-
-
-# telly
+# telly app
 if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
     file (GLOB TELLY_HEADER_FILES telly/*.h implot/implot.h imgui/*.h ui/*.h utils/*.h
