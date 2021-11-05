@@ -1,12 +1,12 @@
 cmake_minimum_required (VERSION 3.16)
 cmake_policy (SET CMP0072 NEW)
 
-option (BUILD_FED "Build fed" OFF)
+option (BUILD_FED "Build fed" ON)
 option (BUILD_TELLY "Build telly" ON)
-option (BUILD_PLAYER "Build player" OFF)
-option (BUILD_FILESYSTEM "Build filesystem" OFF)
-option (BUILD_CAPTURE "Build capture" OFF)
-option (BUILD_PAINTBOX "Build paintbox" OFF)
+option (BUILD_PLAYER "Build player" ON)
+option (BUILD_FILESYSTEM "Build filesystem" ON)
+option (BUILD_CAPTURE "Build capture" ON)
+option (BUILD_PAINTBOX "Build paintbox" ON)
 option (BUILD_IMPLOT "Build implot" ON)
 
 set (OPENGL_VERSION "OPENGL_45")
