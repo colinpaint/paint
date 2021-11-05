@@ -665,7 +665,7 @@ using namespace std;
         cLog::log (LOGERROR, fmt::format ("createGraphDvbT - put_Bandwidth failed"));
 
       if (mDvbTuningSpace2->put_DefaultLocator (mDvbLocator.Get()) != S_OK)
-        cLog::log (LOGERROR, v"createGraphDvbT - put_DefaultLocator failed"));
+        cLog::log (LOGERROR, fmt::format ("createGraphDvbT - put_DefaultLocator failed"));
       //}}}
       //{{{  tuneRequest from scanningTuner
       if (mScanningTuner->get_TuneRequest (mTuneRequest.GetAddressOf()) != S_OK)
