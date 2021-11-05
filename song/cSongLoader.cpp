@@ -55,8 +55,9 @@ public:
   cDvbEpgItem (const string& programName, chrono::system_clock::time_point startTime, chrono::seconds duration)
     : mProgramName(programName), mStartTime(startTime), mDuration(duration) {}
 
-  cDvbEpgItem (const cDvbEpgItem& epgItem)
-    : mProgramName (epgItem.mProgramName), mStartTime (epgItem.mStartTime), mDuration (epgItem.mDuration) {}
+  // line2022 - don't trust this
+  /cDvbEpgItem (const cDvbEpgItem& epgItem)
+  //  : mProgramName (epgItem.mProgramName), mStartTime (epgItem.mStartTime), mDuration (epgItem.mDuration) {}
 
   ~cDvbEpgItem() {}
 
@@ -2019,7 +2020,7 @@ public:
       //cLog::log (LOGINFO, format ("eit callback sid {} {}", sid, name));
       //mSid = sid;
       if (now) // copy to now
-        mNowEpgItem = cDvbEpgItem (epgItem);
+        mNowEpgItem = epgItem;
 
       else {
         // add to epg if new, later than now today

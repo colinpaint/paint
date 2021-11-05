@@ -64,20 +64,19 @@ float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
 
   //if (pts != mLastPts + duration) // skip
 
-  AVPacket avPacket;
-  av_init_packet (&avPacket);
-  auto avFrame = av_frame_alloc();
+  AVPacket* avPacket = av_packet_alloc();
+  AVFrame* avFrame = av_frame_alloc();
 
   auto pesPtr = framePtr;
   auto pesSize = frameLen;
   while (pesSize) {
-    auto bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket.data, &avPacket.size,
+    auto bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
                                        pesPtr, (int)pesSize, pts, AV_NOPTS_VALUE, 0);
-    avPacket.pts = pts;
+    avPacket->pts = pts;
     pesPtr += bytesUsed;
     pesSize -= bytesUsed;
-    if (avPacket.size) {
-      auto ret = avcodec_send_packet (mAvContext, &avPacket);
+    if (avPacket->size) {
+      auto ret = avcodec_send_packet (mAvContext, avPacket);
       while (ret >= 0) {
         ret = avcodec_receive_frame (mAvContext, avFrame);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
@@ -136,13 +135,14 @@ float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
             }
 
           }
-        av_frame_unref (avFrame);
+        //av_frame_unref (avFrame);
         }
       }
     }
 
   mLastPts = pts;
 
+  av_packet_free (&avPacket);
   av_frame_free (&avFrame);
   return outBuffer;
   }
