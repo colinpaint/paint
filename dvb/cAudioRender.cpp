@@ -44,8 +44,9 @@ class cAudioFrame : public cFrame {
 public:
   //{{{
   cAudioFrame (int64_t pts, size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, float* samples)
-     : cFrame (pts, samplesPerFrame * 90000 / sampleRate),
-       mNumChannels(numChannels), mSamplesPerFrame(samplesPerFrame), mSampleRate(sampleRate), mSamples(samples) {
+     : cFrame (pts, sampleRate ? (samplesPerFrame * 90000 / sampleRate) : 48000),
+       mNumChannels(numChannels), 
+       mSamplesPerFrame(samplesPerFrame), mSampleRate(sampleRate), mSamples(samples) {
 
     for (size_t channel = 0; channel < mNumChannels; channel++) {
       // init
@@ -396,7 +397,7 @@ public:
     eAudioFrameType frameType = eAudioFrameType::eUnknown;
     size_t numChannels = 0;
     size_t samplesPerFrame = 0;
-    uint32_t sampleRate = 0;
+    uint32_t sampleRate = 48000;
     uint32_t frameSize = 0;
     while (cAudioFrame::audioParseFrame (frame, pesEnd, frameType, numChannels, sampleRate, frameSize)) {
       AVPacket avPacket;
