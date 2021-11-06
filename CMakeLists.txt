@@ -13,9 +13,9 @@ set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 
 project (utils)
-  file (GLOB UTILS_HEADER_FILES utils/*.h)
-  file (GLOB UTILS_SOURCE_FILES utils/*.cpp utils/*.c)
-  add_library (${PROJECT_NAME} ${UTILS_HEADER_FILES} ${UTILS_SOURCE_FILES})
+  file (GLOB HEADER_FILES utils/*.h)
+  file (GLOB SOURCE_FILES utils/*.cpp utils/*.c)
+  add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
   if (MSVC)
     target_compile_options (${PROJECT_NAME} PUBLIC /W4 /arch:AVX /fp:fast /std:c++17)
@@ -54,16 +54,14 @@ endif()
 # imgui lib
 if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
   project (imgui)
-    file (GLOB IMGUI_HEADER_FILES imgui/*.h)
-    file (GLOB IMGUI_SOURCE_FILES imgui/*.cpp)
     if (MSVC)
-      file (GLOB BACKEND_HEADER_FILES imgui/backends/*.h)
-      file (GLOB BACKEND_SOURCE_FILES imgui/backends/*.cpp)
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/*.h)
+      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/*.cpp)
     else()
-      file (GLOB BACKEND_HEADER_FILES imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
-      file (GLOB BACKEND_SOURCE_FILES imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
+      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
     endif()
-    add_library (${PROJECT_NAME} ${IMGUI_SOURCE_FILES} ${IMGUI_HEADER_FILES} ${BACKEND_SOURCE_FILES} ${BACKEND_HEADER_FILES})
+    add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
     target_include_directories (${PROJECT_NAME} PUBLIC imgui glfw/include)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
@@ -75,25 +73,26 @@ if (BUILD_IMPLOT)
     file (GLOB HEADER_FILES implot/*.h)
     file (GLOB SOURCE_FILES implot/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+
     target_include_directories (${PROJECT_NAME} PUBLIC implot imgui utils)
 endif()
 
 # dvb lib
 if (BUILD_TELLY)
   project (dvb)
-    file (GLOB DVB_HEADER_FILES dvb/*.h)
-    file (GLOB DVB_SOURCE_FILES dvb/*.cpp)
-    add_library (${PROJECT_NAME} ${DVB_HEADER_FILES} ${DVB_SOURCE_FILES})
+    file (GLOB HEADER_FILES dvb/*.h)
+    file (GLOB SOURCE_FILES dvb/*.cpp)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
     if (MSVC)
       target_include_directories (${PROJECT_NAME} PRIVATE ffmpeg/inc)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils avdevice avfilter avformat avcodec avutil
-                                                          swresample swscale)
+      target_link_libraries (${PROJECT_NAME} PUBLIC 
+                             utils avdevice avfilter avformat avcodec avutil swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
-      pkg_check_modules (FFmpeg REQUIRED IMPORTED_TARGET libavdevice libavfilter libavformat libavcodec libavutil
-                                                         libswresample libswscale)
+      pkg_check_modules (FFmpeg REQUIRED IMPORTED_TARGET 
+                         libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
       target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFmpeg)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFmpeg)
     endif()
@@ -102,19 +101,19 @@ endif()
 # decoder lib
 if (BUILD_PLAYER OR BUILD_CAPTURE)
   project (decoder)
-    file (GLOB DECODER_HEADER_FILES decoder/*.h)
-    file (GLOB DECODER_SOURCE_FILES decoder/*.cpp)
-    add_library (${PROJECT_NAME} ${DECODER_HEADER_FILES} ${DECODER_SOURCE_FILES})
+    file (GLOB HEADER_FILES decoder/*.h)
+    file (GLOB SOURCE_FILES decoder/*.cpp)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
     if (MSVC)
       target_include_directories (${PROJECT_NAME} PUBLIC ffmpeg/inc)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils avdevice avfilter avformat avcodec avutil
-                                                          swresample swscale)
+      target_link_libraries (${PROJECT_NAME} PUBLIC 
+                             utils avdevice avfilter avformat avcodec avutil swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
-      pkg_check_modules (FFmpeg REQUIRED IMPORTED_TARGET libavdevice libavfilter libavformat libavcodec libavutil
-                                                         libswresample libswscale)
+      pkg_check_modules (FFmpeg REQUIRED IMPORTED_TARGET 
+                         libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
       target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFmpeg)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFmpeg)
     endif()
@@ -123,9 +122,10 @@ endif()
 # audio lib
 if (BUILD_PLAYER OR BUILD_TELLY)
   project (audio)
-    file (GLOB AUDIO_HEADER_FILES audio/*.h decoder/*.h)
-    file (GLOB AUDIO_SOURCE_FILES audio/*.cpp)
-    add_library (${PROJECT_NAME} ${AUDIO_HEADER_FILES} ${AUDIO_SOURCE_FILES})
+    file (GLOB HEADER_FILES audio/*.h decoder/*.h)
+    file (GLOB SOURCE_FILES audio/*.cpp)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 endif()
 
@@ -133,9 +133,10 @@ endif()
 if (BUILD_CAPTURE AND MSVC)
   ## WIN32 audio wsapi capture main project
   project (captureAudio VERSION 1.0.0)
-    file (GLOB CAPTURE_HEADER_FILES audio/*.h)
-    file (GLOB CAPTURE_SOURCE_FILES captureAudio/capture.cpp)
-    add_executable (${PROJECT_NAME} ${CAPTURE_SOURCE_FILES} ${CAPTURE_HEADER_FILES})
+    file (GLOB HEADER_FILES audio/*.h)
+    file (GLOB SOURCE_FILES captureAudio/capture.cpp)
+    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+
     target_link_libraries (${PROJECT_NAME} PRIVATE decoder winmm avrt audio)
 endif()
 
@@ -144,10 +145,9 @@ if (BUILD_FILESYSTEM)
   project (filesystem)
     file (GLOB HEADER_FILES *.h utils/*.h)
     file (GLOB SOURCE_FILES filesystem/main.cpp)
-
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
 
+    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
     if (NOT MSVC)
       target_link_libraries (${PROJECT_NAME} PRIVATE stdc++fs)
       #target_link_options (${PROJECT_NAME} PRIVATE -no-pie)
@@ -157,11 +157,11 @@ endif()
 # telly app
 if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
-    file (GLOB TELLY_HEADER_FILES telly/*.h implot/implot.h imgui/*.h ui/*.h utils/*.h
-                                  platform/*.h graphics/*.h)
-    file (GLOB TELLY_SOURCE_FILES tv/tvMain.cpp tv/cTvApp.cpp tv/cTvUI.cpp
-                                  ui/cUI.cpp platform/*.cpp graphics/*.cpp)
-    add_executable (${PROJECT_NAME} ${TELLY_SOURCE_FILES} ${TELLY_HEADER_FILES})
+    file (GLOB HEADER_FILES telly/*.h implot/implot.h imgui/*.h ui/*.h utils/*.h
+                            platform/*.h graphics/*.h)
+    file (GLOB SOURCE_FILES tv/tvMain.cpp tv/cTvApp.cpp tv/cTvUI.cpp
+                            ui/cUI.cpp platform/*.cpp graphics/*.cpp)
+    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
@@ -184,32 +184,30 @@ endif()
 # player app
 if (BUILD_PLAYER)
   project (kiss)
-    file (GLOB KISS_HEADER_FILES kiss/*.h)
-    file (GLOB KISS_SOURCE_FILES kiss/*.c)
-    add_library (${PROJECT_NAME} ${KISS_HEADER_FILES} ${KISS_SOURCE_FILES})
+    file (GLOB HEADER_FILES kiss/*.h)
+    file (GLOB SOURCE_FILES kiss/*.c)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
   project (song)
-    file (GLOB SONG_HEADER_FILES song/*.h)
-    file (GLOB SONG_SOURCE_FILES song/*.cpp)
-    add_library (${PROJECT_NAME} ${SONG_HEADER_FILES} ${SONG_SOURCE_FILES})
+    file (GLOB HEADER_FILES song/*.h)
+    file (GLOB SOURCE_FILES song/*.cpp)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_link_libraries (${PROJECT_NAME} PUBLIC utils decoder kiss)
 
   project (net)
-    file (GLOB NET_HEADER_FILES net/*.h)
-    file (GLOB NET_SOURCE_FILES net/*.cpp)
-    add_library (${PROJECT_NAME} ${NET_HEADER_FILES} ${NET_SOURCE_FILES})
+    file (GLOB HEADER_FILES net/*.h)
+    file (GLOB SOURCE_FILES net/*.cpp)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
   project (player VERSION 1.0.0)
-    file (GLOB PLAYER_HEADER_FILES player/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
-    file (GLOB PLAYER_SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp
-                                   ui/cUI.cpp
-                                   platform/*.cpp graphics/*.cpp)
+    file (GLOB HEADER_FILES player/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
+    file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp
+                            ui/cUI.cpp platform/*.cpp graphics/*.cpp)
+    add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
 
-    add_executable (player ${PLAYER_SOURCE_FILES} ${PLAYER_HEADER_FILES})
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
-
     target_link_libraries (${PROJECT_NAME} PRIVATE imgui utils glfw glad)
     target_link_libraries (${PROJECT_NAME} PRIVATE song audio decoder dvb kiss net)
 
@@ -225,12 +223,12 @@ endif()
 # fed app
 if (BUILD_FED)
   project (fed VERSION 1.0.0)
-    file (GLOB FED_HEADER_FILES fed/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
-    file (GLOB FED_SOURCE_FILES fed/fedMain.cpp fed/cFedApp.cpp fed/cDocument.cpp
-                                fed/cEditUI.cpp fed/cTextEdit.cpp fed/cMemEdit.cpp
-                                platform/*.cpp graphics/*.cpp ui/cUI.cpp)
+    file (GLOB HEADER_FILES fed/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
+    file (GLOB SOURCE_FILES fed/fedMain.cpp fed/cFedApp.cpp fed/cDocument.cpp
+                            fed/cEditUI.cpp fed/cTextEdit.cpp fed/cMemEdit.cpp
+                            platform/*.cpp graphics/*.cpp ui/cUI.cpp)
 
-    add_executable (fed ${FED_SOURCE_FILES} ${FED_HEADER_FILES})
+    add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
     target_link_libraries (${PROJECT_NAME} PRIVATE imgui utils glfw glad)
