@@ -87,7 +87,7 @@ using namespace std;
 
 #else
   cSongPlayer::cSongPlayer (cSong* song, bool streaming) {
-    thread playerThread = thread ([=, this]() {
+    thread playerThread = thread ([=]() { // ,this
       // player lambda
       cLog::setThreadName ("play");
       array <float,2048*2> silence = { 0.f };

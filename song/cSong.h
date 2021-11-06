@@ -3,10 +3,11 @@
 //{{{  includes
 #include <cstdint>
 #include <cstring>
-#include <algorithm>
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <mutex>
 #include <shared_mutex>
 
 #include "../decoder/cAudioParser.h"

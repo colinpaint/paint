@@ -98,18 +98,11 @@ using namespace std;
 
   //{{{  dtv properties info
   struct dtv_property info_cmdargs[] = { DTV_API_VERSION, 0,0,0, 0,0 };
-  struct dtv_properties info_cmdseq = {
-    .num = 1,
-    .props = info_cmdargs
-    };
+  struct dtv_properties info_cmdseq = { 1, info_cmdargs };
   //}}}
   //{{{  dtv properties
   struct dtv_property enum_cmdargs[] = { DTV_ENUM_DELSYS, 0,0,0, 0,0 };
-
-  struct dtv_properties enum_cmdseq = {
-    .num = 1,
-    .props = enum_cmdargs
-    };
+  struct dtv_properties enum_cmdseq = { 1, enum_cmdargs };
   //}}}
   //{{{  dvbt properties
   struct dtv_property dvbt_cmdargs[] = {
@@ -125,11 +118,7 @@ using namespace std;
     { DTV_HIERARCHY,         0,0,0, HIERARCHY_AUTO,0 },
     { DTV_TUNE,              0,0,0, 0,0 }
     };
-
-  struct dtv_properties dvbt_cmdseq = {
-    .num = 11,
-    .props = dvbt_cmdargs
-    };
+  struct dtv_properties dvbt_cmdseq = { 11, dvbt_cmdargs };
   //}}}
   //{{{  dvbt2 properties
   struct dtv_property dvbt2_cmdargs[] = {
@@ -145,19 +134,11 @@ using namespace std;
     { DTV_HIERARCHY,         0,0,0, HIERARCHY_AUTO,0 },
     { DTV_TUNE,              0,0,0, 0,0 }
     };
-
-  struct dtv_properties dvbt2_cmdseq = {
-    .num = 11,
-    .props = dvbt2_cmdargs
-    };
+  struct dtv_properties dvbt2_cmdseq = { 11, dvbt2_cmdargs };
   //}}}
   //{{{  dtv clear
   struct dtv_property pclear[] = { DTV_CLEAR, 0,0,0, 0,0 };
-
-  struct dtv_properties cmdclear = {
-    .num = 1,
-    .props = pclear
-    };
+  struct dtv_properties cmdclear = { 1, pclear };
   //}}}
 
   #define GET_FEC_INNER(fec, val)                         \
@@ -813,20 +794,16 @@ string cDvbSource::getStatusString() const {
 
   #ifdef __linux__
     struct dtv_property props[] = {
-      { .cmd = DTV_STAT_SIGNAL_STRENGTH },   // max 0xFFFF percentage
-      { .cmd = DTV_STAT_CNR },               // 0.001db
-      { .cmd = DTV_STAT_ERROR_BLOCK_COUNT },
-      { .cmd = DTV_STAT_TOTAL_BLOCK_COUNT }, // count
-      { .cmd = DTV_STAT_PRE_ERROR_BIT_COUNT },
-      { .cmd = DTV_STAT_PRE_TOTAL_BIT_COUNT },
-      { .cmd = DTV_STAT_POST_ERROR_BIT_COUNT },
-      { .cmd = DTV_STAT_POST_TOTAL_BIT_COUNT },
+      { DTV_STAT_SIGNAL_STRENGTH,      0,0,0, 0,0 }, // max 0xFFFF percentage
+      { DTV_STAT_CNR,                  0,0,0, 0,0 }, // 0.001db
+      { DTV_STAT_ERROR_BLOCK_COUNT,    0,0,0, 0,0 },
+      { DTV_STAT_TOTAL_BLOCK_COUNT,    0,0,0, 0,0 }, // count
+      { DTV_STAT_PRE_ERROR_BIT_COUNT,  0,0,0, 0,0 },
+      { DTV_STAT_PRE_TOTAL_BIT_COUNT,  0,0,0, 0,0 },
+      { DTV_STAT_POST_ERROR_BIT_COUNT, 0,0,0, 0,0 },
+      { DTV_STAT_POST_TOTAL_BIT_COUNT, 0,0,0, 0,0 },
       };
-
-    struct dtv_properties cmdProperty = {
-      .num = 8,
-      .props = props
-      };
+    struct dtv_properties cmdProperty = { 8, props };
 
     if ((ioctl (mFrontEnd, FE_GET_PROPERTY, &cmdProperty)) < 0)
       return "no status";

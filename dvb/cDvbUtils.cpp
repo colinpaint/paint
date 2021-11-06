@@ -5955,14 +5955,10 @@ string cDvbUtils::getString (uint8_t* buf) {
       if (*buf == 0)
         break;
 
-      if (((*buf >= ' ') && (*buf <= '~')) ||
-          (*buf == '\n') ||
-          ((*buf >= 0xa0) && (*buf <= 0xff)))
+      if (((*buf >= ' ') && (*buf <= '~')) || (*buf == '\n') || (*buf >= 0xa0)) //((*buf >= 0xa0) && (*buf <= 0xff)))
         str += *buf;
-
       if (*buf == 0x8A)
         str += '\n';
-
       if ((*buf == 0x86 || (*buf == 0x87)))
         str += ' ';
 
