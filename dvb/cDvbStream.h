@@ -25,43 +25,34 @@ using tDurationSeconds = std::chrono::seconds;
 
 class cDvbStream {
 public:
-  enum eStreamType { eVid, eAud, eAudOther, eSub, eLast };
+  enum eStreamType { eVid, eAud, eAds, eSub, eLast };
   //{{{
   class cStream {
   public:
     ~cStream();
 
     bool isDefined() const { return mDefined; }
-    bool isEnabled() const { return mDefined && mEnabled; }
+    bool isEnabled() const { return mRender; }
 
+    std::string getLabel() const { return mLabel; }
     uint16_t getPid() const { return mPid; }
     uint16_t getType() const { return mType; }
     std::string getTypeName() const { return mTypeName; }
-    std::string getLabel() const { return mLabel; }
     cRender& getRender() const { return *mRender; }
 
-    void set (uint16_t pid, uint16_t streamType);
     void setLabel (const std::string& label) { mLabel = label; }
-    //{{{
-    void setRender (cRender* render) {
-      mRender = render;
-      if (render)
-        mEnabled = true;
-      else
-        mEnabled = false;
-      }
-    //}}}
+    void setPidType (uint16_t pid, uint16_t streamType);
+    void setRender (cRender* render) { mRender = render; }
 
     bool toggle();
 
   private:
     bool mDefined = false;
-    bool mEnabled = false;
 
+    std::string mLabel;
     uint16_t mPid = 0;
     uint16_t mType = 0;
     std::string mTypeName;
-    std::string mLabel;
 
     cRender* mRender = nullptr;
     };

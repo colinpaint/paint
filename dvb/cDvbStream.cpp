@@ -412,9 +412,10 @@ cDvbStream::cStream::~cStream() {
 //}}}
 
 //{{{
-void cDvbStream::cStream::set (uint16_t pid, uint16_t streamType) {
+void cDvbStream::cStream::setPidType (uint16_t pid, uint16_t streamType) {
 
   mDefined = true;
+
   mPid = pid;
   mType = streamType;
   mTypeName = cDvbUtils::getStreamTypeName (streamType);
@@ -493,7 +494,7 @@ int cDvbStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 cDvbStream::cService::cService (uint16_t sid) : mSid(sid) {
   mStreams[eVid].setLabel ("vid:");
   mStreams[eAud].setLabel ("aud:");
-  mStreams[eAudOther].setLabel ("ad:");
+  mStreams[eAds].setLabel ("ad:");
   mStreams[eSub].setLabel ("");
   }
 //}}}
@@ -532,13 +533,13 @@ void cDvbStream::cService::setAudStream (uint16_t pid, uint16_t streamType) {
 
   if (mStreams[eAud].isDefined()) {
     if (pid != mStreams[eAud].getPid()) {
-      // main aud stream defined, new aud pid, try other
-      if (!mStreams[eAudOther].isDefined())
-        mStreams[eAudOther].set (pid, streamType);
+      // main audStream defined, new aud pid, try audio description eAds
+      if (!mStreams[eAds].isDefined())
+        mStreams[eAds].setPidType (pid, streamType);
       }
     }
   else
-    mStreams[eAud].set (pid, streamType);
+    mStreams[eAud].setPidType (pid, streamType);
   }
 //}}}
 
@@ -582,10 +583,7 @@ void cDvbStream::cService::toggleStream (size_t streamType) {
         return;
 
       case eAud :
-        stream.setRender (new cAudioRender (getChannelName()));
-        return;
-
-      case eAudOther :
+      case eAds :
         stream.setRender (new cAudioRender (getChannelName()));
         return;
 
@@ -1068,12 +1066,7 @@ void cDvbStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
           case 0x7e: // FTA_content_management
           case 0x7f: // extension
             break;
-
-          default:
-            //{{{  other
-            cLog::log (LOGINFO, fmt::format ("SDT - unexpected tag {}", (int)getDescrTag(buf)));
-            break;
-            //}}}
+          default: cLog::log (LOGINFO, fmt::format ("SDT - unexpected tag {}", (int)getDescrTag(buf)));
           }
 
         descrLength += getDescrLength (buf);
@@ -1238,7 +1231,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
       switch (esPidInfo->mStreamType) {
         case   2: // ISO 13818-2 video
         case  27: // HD vid
-          service->getStream (eVid).set (esPid, esPidInfo->mStreamType);
+          service->getStream (eVid).setPidType (esPid, esPidInfo->mStreamType);
           break;
 
         case   3: // ISO 11172-3 audio
@@ -1250,7 +1243,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
           break;
 
         case   6: // subtitle
-          service->getStream (eSub).set (esPid, esPidInfo->mStreamType);
+          service->getStream (eSub).setPidType (esPid, esPidInfo->mStreamType);
           break;
 
         case   5: // private mpeg2 tabled data - private
@@ -1260,8 +1253,8 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
           break;
 
         default:
-          cLog::log (LOGERROR, fmt::format ("parsePmt - unknown streamType {} {} {}",
-                               sid,esPid,esPidInfo->mStreamType));
+          cLog::log (LOGERROR, fmt::format ("parsePmt - unknown streamType sid:{} pid:{} type:{}",
+                                            sid, esPid, esPidInfo->mStreamType));
           break;
         }
       //}}}
@@ -1437,7 +1430,7 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                       case 129: // ac3
                         //{{{  send last audio pes
                         if (*(uint32_t*)ts == 0xC1010000)
-                          processed = processPes (eAudOther, pidInfo, skip);
+                          processed = processPes (eAds, pidInfo, skip);
                         else
                           processed = processPes (eAud, pidInfo, skip);
                         break;

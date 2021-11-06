@@ -35,27 +35,30 @@ public:
   //{{{
   void draw (cTvApp& app) {
 
+    // draw tabs
+    mMainTabIndex = interlockedButtons ({"tv","services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
+
     if (app.getPlatform().hasVsync()) {
       //{{{  vsync button
+      ImGui::SameLine();
       if (toggleButton ("vSync", app.getPlatform().getVsync()))
         app.getPlatform().toggleVsync();
 
       // fps text
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
-      ImGui::SameLine();
       }
       //}}}
     if (app.getPlatform().hasFullScreen()) {
       //{{{  fullScreen button
+      ImGui::SameLine();
       if (toggleButton ("full", app.getPlatform().getFullScreen()))
         app.getPlatform().toggleFullScreen();
-      ImGui::SameLine();
       }
       //}}}
-    mMainTabIndex = interlockedButtons ({"tv","services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
 
     if (app.getDvbStream()) {
+      // dvbStream info
       cDvbStream& dvbStream = *app.getDvbStream();
       if (dvbStream.hasTdtTime()) {
         //{{{  draw tdtTime
@@ -73,22 +76,23 @@ public:
         ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getSignalString(), dvbStream.getErrorString()).c_str());
         }
         //}}}
-      //{{{  vertex,index debug
+
+      //{{{  draw vertex,index info
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{}:{}",
                               ImGui::GetIO().MetricsRenderVertices,
                               ImGui::GetIO().MetricsRenderIndices/3).c_str());
       //}}}
 
-      // draw tab in childWindow
+      // draw tab childWindow, monospaced font
       ImGui::PushFont (app.getMonoFont());
-      ImGui::BeginChild ("telly", {0.f,0.f}, false,
+      ImGui::BeginChild ("tab", {0.f,0.f}, false,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
 
       switch (mMainTabIndex) {
-        case 0: drawTv (dvbStream, app.getGraphics()); break;
+        case 0: drawTelly (dvbStream, app.getGraphics()); break;
         case 1: drawServices (dvbStream, app.getGraphics()); break;
-        case 2: drawPids (dvbStream, app.getGraphics()); break;
+        case 2: drawPidMap (dvbStream, app.getGraphics()); break;
         case 3: drawRecorded (dvbStream, app.getGraphics()); break;
         }
 
@@ -99,7 +103,7 @@ public:
   //}}}
 private:
   //{{{
-  void drawTv (cDvbStream& dvbStream, cGraphics& graphics) {
+  void drawTelly (cDvbStream& dvbStream, cGraphics& graphics) {
 
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
@@ -135,12 +139,13 @@ private:
   //}}}
   //{{{
   void drawServices (cDvbStream& dvbStream, cGraphics& graphics) {
-  // draw service map
 
     mPlotIndex = 0;
+
     for (auto& pair : dvbStream.getServiceMap()) {
+      // iterate services
       cDvbStream::cService& service = pair.second;
-      //{{{  calc max field sizes, may jiggle for a couple of draws
+      //{{{  update button maxChars
       while (service.getChannelName().size() > mMaxNameChars)
         mMaxNameChars = service.getChannelName().size();
       while (service.getSid() > pow (10, mMaxSidChars))
@@ -150,35 +155,37 @@ private:
 
       for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
         uint16_t pid = service.getStream (streamType).getPid();
-        while (pid > pow (10, mMaxChars[streamType]))
-          mMaxChars[streamType]++;
+        while (pid > pow (10, mPidMaxChars[streamType]))
+          mPidMaxChars[streamType]++;
         }
       //}}}
 
-      //{{{  draw channel name pgm,sid
+      // draw channel name pgm,sid - sid ensures unique button name
       if (ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
                          service.getChannelName(), mMaxNameChars,
                          service.getProgramPid(), mMaxPgmChars,
                          service.getSid(), mMaxSidChars).c_str()))
         service.toggleAll();
-      //}}}
+
       for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
-        // iterate service streams
+       // iterate definedStreams
         cDvbStream::cStream& stream = service.getStream (streamType);
         if (stream.isDefined()) {
           ImGui::SameLine();
+          // draw definedStream button - sid ensuresd unique button name
           if (toggleButton (fmt::format ("{}{:{}d}:{}##{}",
                                          stream.getLabel(),
-                                         stream.getPid(), mMaxChars[streamType],
-                                         stream.getTypeName(), streamType).c_str(), stream.isEnabled()))
-            service.toggleStream (streamType);
+                                         stream.getPid(), mPidMaxChars[streamType], stream.getTypeName(),
+                                         service.getSid()).c_str(), stream.isEnabled()))
+           service.toggleStream (streamType);
           }
         }
 
       if (service.getChannelRecord()) {
-        //{{{  draw record
+        //{{{  draw record pathName
         ImGui::SameLine();
-        ImGui::TextUnformatted (fmt::format ("rec:{}", service.getChannelRecordName()).c_str());
+        ImGui::Button (fmt::format ("rec:{}##{}",
+                                    service.getChannelRecordName(), service.getSid()).c_str());
         }
         //}}}
 
@@ -187,27 +194,24 @@ private:
       if (service.getStream (cDvbStream::eAud).isEnabled())
         playPts = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender()).getPlayPts();
 
-      // render enabled streams
-      cDvbStream::cStream& stream = service.getStream (cDvbStream::eVid);
-      if (stream.isEnabled())
-        drawVideo (dynamic_cast<cVideoRender&>(stream.getRender()), graphics, playPts);
-
-      stream = service.getStream (cDvbStream::eAud);
-      if (stream.isEnabled())
-        drawAudio (dynamic_cast<cAudioRender&>(stream.getRender()), graphics);
-
-      stream = service.getStream (cDvbStream::eAudOther);
-      if (stream.isEnabled())
-        drawAudio (dynamic_cast<cAudioRender&>(stream.getRender()), graphics);
-
-      stream = service.getStream (cDvbStream::eSub);
-      if (stream.isEnabled())
-        drawSubtitle (dynamic_cast<cSubtitleRender&>(stream.getRender()), graphics);
+      for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
+        // iterate enabledStreams, drawing plots,logs,images
+        cDvbStream::cStream& stream = service.getStream (streamType);
+        if (stream.isEnabled()) {
+          switch (streamType) {
+            case cDvbStream::eVid: drawVideo (service.getSid(), stream.getRender(), graphics, playPts); break;
+            case cDvbStream::eAud:
+            case cDvbStream::eAds: drawAudio (service.getSid(), stream.getRender(), graphics);  break;
+            case cDvbStream::eSub: drawSubtitle (service.getSid(), stream.getRender(), graphics);  break;
+            default:;
+            }
+          }
+        }
       }
     }
   //}}}
   //{{{
-  void drawPids (cDvbStream& dvbStream, cGraphics& graphics) {
+  void drawPidMap (cDvbStream& dvbStream, cGraphics& graphics) {
   // draw pidInfoMap
 
     (void)graphics;
@@ -265,10 +269,9 @@ private:
   //}}}
 
   //{{{
-  void plotValues (cRender& render, uint32_t color) {
+  void plotValues (uint16_t sid, cRender& render, uint32_t color) {
 
     (void)color;
-
     int64_t lastPts = render.getLastPts();
 
     render.setRefPts (lastPts);
@@ -279,7 +282,8 @@ private:
       return ImPlotPoint (-idx, ((cRender*)data)->getOffsetValue (idx * (90000/25), pts));
       };
 
-    if (ImPlot::BeginPlot (fmt::format ("##plot{}", mPlotIndex++).c_str(), NULL, NULL,
+    // draw plot - sid ensures unique name
+    if (ImPlot::BeginPlot (fmt::format ("##plot{}", sid).c_str(), NULL, NULL,
                            {ImGui::GetWindowWidth(), 4*ImGui::GetTextLineHeight()},
                            ImPlotFlags_NoLegend,
                            ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit,
@@ -293,9 +297,11 @@ private:
     }
   //}}}
   //{{{
-  void drawVideo (cVideoRender& video, cGraphics& graphics, int64_t playPts) {
+  void drawVideo (uint16_t sid, cRender& render, cGraphics& graphics, int64_t playPts) {
 
-    plotValues (video, 0xffffffff);
+    cVideoRender& video = dynamic_cast<cVideoRender&>(render);
+
+    plotValues (sid, video, 0xffffffff);
 
     ImGui::TextUnformatted (video.getInfoString().c_str());
 
@@ -307,20 +313,22 @@ private:
     }
   //}}}
   //{{{
-  void drawAudio (cAudioRender& audio, cGraphics& graphics) {
+  void drawAudio (uint16_t sid, cRender& render, cGraphics& graphics) {
 
     (void)graphics;
+    cAudioRender& audio = dynamic_cast<cAudioRender&>(render);
 
-    plotValues (audio, 0xff00ffff);
+    plotValues (sid, audio, 0xff00ffff);
     ImGui::TextUnformatted (audio.getInfoString().c_str());
 
     drawMiniLog (audio.getLog());
     }
   //}}}
   //{{{
-  void drawSubtitle (cSubtitleRender& subtitle, cGraphics& graphics) {
+  void drawSubtitle (uint16_t sid, cRender& render, cGraphics& graphics) {
 
-    plotValues (subtitle, 0xff00ff00);
+    cSubtitleRender& subtitle = dynamic_cast<cSubtitleRender&>(render);
+    plotValues (sid, subtitle, 0xff00ff00);
 
     const float potSize = ImGui::GetTextLineHeight() / 2.f;
     size_t line = 0;
@@ -380,7 +388,7 @@ private:
   size_t mMaxSidChars = 3;
   size_t mMaxPgmChars = 3;
 
-  std::array <size_t, 4> mMaxChars = { 3 };
+  std::array <size_t, 4> mPidMaxChars = { 3 };
 
   int mPlotIndex = 0;
   //}}}
