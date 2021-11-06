@@ -53,8 +53,10 @@ if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/*.h)
       file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/*.cpp)
     else()
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
-      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
+      file (GLOB HEADER_FILES imgui/*.h 
+                              imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
+      file (GLOB SOURCE_FILES imgui/*.cpp 
+                              imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
     endif()
     add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
