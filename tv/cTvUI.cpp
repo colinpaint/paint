@@ -277,21 +277,26 @@ private:
     render.setRefPts (lastPts);
     render.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth()));
 
-    auto lamda = [](void* data, int idx) {
+    auto lambda = [](void* data, int idx) {
       int64_t pts = 0;
       return ImPlotPoint (-idx, ((cRender*)data)->getOffsetValue (idx * (90000/25), pts));
       };
 
     // draw plot - sid ensures unique name
-    if (ImPlot::BeginPlot (fmt::format ("##plot{}", sid).c_str(), NULL, NULL,
+    if (ImPlot::BeginPlot (fmt::format ("##plot{}", sid).c_str(),
                            {ImGui::GetWindowWidth(), 4*ImGui::GetTextLineHeight()},
-                           ImPlotFlags_NoLegend,
-                           ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit,
-                           ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit)) {
-      ImPlot::PlotStairsG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
-      //ImPlot::PlotBarsG ("line", lamda, &render, (int)ImGui::GetWindowWidth(), 2.0);
-      //ImPlot::PlotLineG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
-      //ImPlot::PlotScatterG ("line", lamda, &render, (int)ImGui::GetWindowWidth());
+                           ImPlotFlags_NoLegend)) {
+      ImPlot::SetupAxis (ImAxis_X1, "", ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit);
+      ImPlot::SetupAxis (ImAxis_Y1, "", ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit);
+      //ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1000);
+      //ImPlot::SetupAxisFormat(ImAxis_Y1, "$%.0f");
+      //ImPlot::SetupLegend(ImPlotLocation_North);
+      ImPlot::SetupFinish();
+
+      ImPlot::PlotStairsG ("line", lambda, &render, (int)ImGui::GetWindowWidth());
+      //ImPlot::PlotBarsG ("line", lambda, &render, (int)ImGui::GetWindowWidth(), 2.0);
+      //ImPlot::PlotLineG ("line", lambda, &render, (int)ImGui::GetWindowWidth());
+      //ImPlot::PlotScatterG ("line", lambda, &render, (int)ImGui::GetWindowWidth());
       ImPlot::EndPlot();
       }
     }
