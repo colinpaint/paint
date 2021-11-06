@@ -29,30 +29,25 @@ project (utils)
                                                    -std=c++17
                                                    -g -Ofast
                                                    )
-  endif()
+endif()
 
-# glfw lib
+# gui
 if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
-  ### glfw project
+  ### glfw
   set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
   set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
   set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
   set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
   set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
   add_subdirectory (glfw)
-  endif()
 
-# glad lib
-if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
+  # glad
   if (OPENGL_VERSION STREQUAL "OPENGL_21")
     add_subdirectory (glad2.1+fbo+vao)
   elseif (OPENGL_VERSION STREQUAL "OPENGL_45")
     add_subdirectory (glad4.5core)
-  endif()
-endif()
 
-# imgui lib
-if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
+  # imgui lib
   project (imgui)
     if (MSVC)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/*.h)
@@ -65,16 +60,16 @@ if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
 
     target_include_directories (${PROJECT_NAME} PUBLIC imgui glfw/include)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
-endif()
 
-# implot lib
-if (BUILD_IMPLOT)
-  project (implot)
-    file (GLOB HEADER_FILES implot/*.h)
-    file (GLOB SOURCE_FILES implot/*.cpp)
-    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-
-    target_include_directories (${PROJECT_NAME} PUBLIC implot imgui utils)
+  # implot lib
+  if (BUILD_IMPLOT)
+    project (implot)
+      file (GLOB HEADER_FILES implot/*.h)
+      file (GLOB SOURCE_FILES implot/*.cpp)
+      add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+      target_include_directories (${PROJECT_NAME} PUBLIC implot imgui utils)
+    endif()
+  endif()
 endif()
 
 # dvb lib
@@ -87,11 +82,11 @@ if (BUILD_TELLY)
     if (MSVC)
       target_include_directories (${PROJECT_NAME} PRIVATE ffmpeg/inc)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PUBLIC 
+      target_link_libraries (${PROJECT_NAME} PUBLIC
                              utils avdevice avfilter avformat avcodec avutil swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
-      pkg_check_modules (FFmpeg REQUIRED IMPORTED_TARGET 
+      pkg_check_modules (FFmpeg REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
       target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFmpeg)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFmpeg)
@@ -108,11 +103,11 @@ if (BUILD_PLAYER OR BUILD_CAPTURE)
     if (MSVC)
       target_include_directories (${PROJECT_NAME} PUBLIC ffmpeg/inc)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PUBLIC 
+      target_link_libraries (${PROJECT_NAME} PUBLIC
                              utils avdevice avfilter avformat avcodec avutil swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
-      pkg_check_modules (FFmpeg REQUIRED IMPORTED_TARGET 
+      pkg_check_modules (FFmpeg REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
       target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFmpeg)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFmpeg)
