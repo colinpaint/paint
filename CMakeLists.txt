@@ -39,6 +39,7 @@ if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
   set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
   set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
   set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
+  #set (GLFW_USE_WAYLAND ON CACHE BOOL "" FORCE)
   add_subdirectory (glfw)
 
   # glad
@@ -53,9 +54,9 @@ if (BUILD_PAINTBOX OR BUILD_FED OR BUILD_PLAYER OR BUILD_TELLY)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/*.h)
       file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/*.cpp)
     else()
-      file (GLOB HEADER_FILES imgui/*.h 
+      file (GLOB HEADER_FILES imgui/*.h
                               imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
-      file (GLOB SOURCE_FILES imgui/*.cpp 
+      file (GLOB SOURCE_FILES imgui/*.cpp
                               imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
     endif()
     add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
