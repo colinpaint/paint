@@ -632,12 +632,12 @@ public:
         b00 = _mm_packus_epi16 (b00, b01);  // bbbb.. saturated
 
         __m128i gbgb = _mm_unpacklo_epi8 (r00, g00);       // gbgb..
-        r01 = _mm_unpacklo_epi8 (b00, opaque);             // FFrFFr..
-        __m128i rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);  // FFrgbFFrgb..
-        __m128i rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);  // FFrgbFFrgb..
+        r01 = _mm_unpacklo_epi8 (b00, opaque);             // arar..
+        __m128i rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);  // argbargb..
+        __m128i rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);  // argbargb..
 
-        gbgb    = _mm_unpackhi_epi8 (r00, g00 );
-        r01     = _mm_unpackhi_epi8 (b00, opaque);
+        gbgb = _mm_unpackhi_epi8 (r00, g00 );
+        r01  = _mm_unpackhi_epi8 (b00, opaque);
         __m128i rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
         __m128i rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
 
@@ -658,13 +658,13 @@ public:
         g00 = _mm_packus_epi16 (g00, g01);  // gggg.. saturated
         b00 = _mm_packus_epi16 (b00, b01);  // bbbb.. saturated
 
-        gbgb    = _mm_unpacklo_epi8 (r00,  g00);    // gbgb..
-        r01     = _mm_unpacklo_epi8 (b00,  opaque); // FFrFFr..
-        rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);   // FFrgbFFrgb..
-        rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);   // FFrgbFFrgb..
+        gbgb = _mm_unpacklo_epi8 (r00,  g00);     // gbgb..
+        r01  = _mm_unpacklo_epi8 (b00,  opaque);  // arar..
+        rgb0123 = _mm_unpacklo_epi16 (gbgb, r01); // argbargb..
+        rgb4567 = _mm_unpackhi_epi16 (gbgb, r01); // argbargb..
 
-        gbgb    = _mm_unpackhi_epi8 (r00, g00);
-        r01     = _mm_unpackhi_epi8 (b00, opaque);
+        gbgb = _mm_unpackhi_epi8 (r00, g00);
+        r01  = _mm_unpackhi_epi8 (b00, opaque);
         rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
         rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
 
