@@ -130,11 +130,11 @@ endif()
 # libmfx lib
 if (BUILD_TELLY)
   project (libmfx)
-    file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/include/*.h)
-    file (GLOB SOURCE_FILES libmfx/mfx_dispatch/src/*.cpp)
+    file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/windows/include/*.h)
+    file (GLOB SOURCE_FILES libmfx/mfx_dispatch/windows/src/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
-    target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/include)
+    target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/windows/include)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 endif()
 
