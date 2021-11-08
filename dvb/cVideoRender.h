@@ -27,7 +27,7 @@ public:
 
   void addFrame (cVideoFrame* frame);
   virtual void addFrame (cFrame* frame) final { (void)frame; }
-  virtual void processPes (uint8_t* pes, uint32_t pesSize, 
+  virtual void processPes (uint8_t* pes, uint32_t pesSize,
                            int64_t pts, int64_t dts, uint8_t streamType, bool skip) final;
 
 private:
@@ -42,7 +42,7 @@ private:
   bool mSeenIFrame = false;
 
   int64_t mDecodeTime = 0;
-  int64_t mYuv420Time = 0;
+  int64_t mYuvRgbTime = 0;
 
   int64_t mTexturePts = 0;
   cTexture* mTexture = nullptr;

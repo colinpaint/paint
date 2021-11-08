@@ -159,11 +159,12 @@ public:
 
   uint32_t getPesSize() const { return mPesSize; }
   int64_t getDecodeTime() const { return mDecodeTime; }
-  int64_t getYuv420Time() const { return mYuv420Time; }
+  int64_t getYuvRgbTime() const { return mYuvRgbTime; }
 
   // sets
+  virtual void setNv12 (uint8_t* nv12, int stride) = 0;
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize)  = 0;
-  void setYuv420Time (int64_t time) { mYuv420Time = time; }
+  void setYuvRgbTime (int64_t time) { mYuvRgbTime = time; }
 
 protected:
   uint16_t mWidth = 0;
@@ -173,9 +174,10 @@ protected:
 private:
   uint32_t mPesSize = 0;
   int64_t mDecodeTime = 0;
-  int64_t mYuv420Time = 0;
+  int64_t mYuvRgbTime = 0;
   };
 //}}}
+
 //{{{
 class cVideoDecoder : public cDecoder {
 public:
@@ -235,7 +237,7 @@ public:
                                           SWS_BILINEAR, NULL, NULL, NULL);
             //}}}
           videoFrame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
-          videoFrame->setYuv420Time (
+          videoFrame->setYuvRgbTime (
             chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
           //av_frame_unref (mAvFrame);
 
@@ -303,65 +305,20 @@ public:
       // decode header
       mfxStatus status = MFXVideoDECODE_DecodeHeader (mSession, &mBitstream, &mVideoParams);
       if (status == MFX_ERR_NONE) {
-        //{{{  query surfaces
+        //  query surfaces
         mfxFrameAllocRequest frameAllocRequest;
         memset (&frameAllocRequest, 0, sizeof(frameAllocRequest));
         status =  MFXVideoDECODE_QueryIOSurf (mSession, &mVideoParams, &frameAllocRequest);
         mNumSurfaces = frameAllocRequest.NumFrameSuggested;
-        //}}}
+
         auto width = ((mfxU32)((frameAllocRequest.Info.Width)+31)) & (~(mfxU32)31);
         auto height = ((mfxU32)((frameAllocRequest.Info.Height)+31)) & (~(mfxU32)31);
-        //{{{
-        //if (kRgba) {
-          //memset (&mVppParams, 0, sizeof(mVppParams));
-          //{{{  VPP Input data
-          //mVppParams.vpp.In.FourCC = MFX_FOURCC_NV12;
-          //mVppParams.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-          //mVppParams.vpp.In.CropX = 0;
-          //mVppParams.vpp.In.CropY = 0;
-          //mVppParams.vpp.In.CropW = mVideoParams.mfx.FrameInfo.CropW;
-          //mVppParams.vpp.In.CropH = mVideoParams.mfx.FrameInfo.CropH;
-          //mVppParams.vpp.In.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
-          //mVppParams.vpp.In.FrameRateExtN = 30;
-          //mVppParams.vpp.In.FrameRateExtD = 1;
-          //mVppParams.vpp.In.Width = ((mVppParams.vpp.In.CropW + 15) >> 4) << 4;
-          //mVppParams.vpp.In.Height =
-            //(MFX_PICSTRUCT_PROGRESSIVE == mVppParams.vpp.In.PicStruct) ?
-              //((mVppParams.vpp.In.CropH + 15) >> 4) << 4 : ((mfxU32)((mVppParams.vpp.In.CropH)+31)) & (~(mfxU32)31);
-          //}}}
-          //{{{  VPP Output data
-          //mVppParams.vpp.Out.FourCC = MFX_FOURCC_RGB4;
-          //mVppParams.vpp.Out.ChromaFormat = 0;
-          //mVppParams.vpp.Out.CropX = 0;
-          //mVppParams.vpp.Out.CropY = 0;
-          //mVppParams.vpp.Out.CropW = mVideoParams.mfx.FrameInfo.CropW;
-          //mVppParams.vpp.Out.CropH = mVideoParams.mfx.FrameInfo.CropW;
-          //mVppParams.vpp.Out.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
-          //mVppParams.vpp.Out.FrameRateExtN = 30;
-          //mVppParams.vpp.Out.FrameRateExtD = 1;
-          //mVppParams.vpp.Out.Width = ((mVppParams.vpp.Out.CropW + 15) >> 4) << 4;
-          //mVppParams.vpp.Out.Height =
-            //(MFX_PICSTRUCT_PROGRESSIVE == mVppParams.vpp.Out.PicStruct) ?
-              //((mVppParams.vpp.Out.CropH + 15) >> 4) << 4 : ((mfxU32)((mVppParams.vpp.Out.CropH)+31)) & (~(mfxU32)31);
-          //}}}
-          //mVppParams.IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY | MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
-
-          //// Query number of required surfaces for VPP, [0] - in, [1] - out
-          //mfxFrameAllocRequest vppFrameAllocRequest[2];
-          //memset (&vppFrameAllocRequest, 0, sizeof (mfxFrameAllocRequest) * 2);
-          //status = MFXVideoVPP_QueryIOSurf (mSession, &mVppParams, vppFrameAllocRequest);
-          //mNumVPPInSurfaces = vppFrameAllocRequest[0].NumFrameSuggested;
-          //mNumVPPOutSurfaces = vppFrameAllocRequest[1].NumFrameSuggested;
-          //mOutWidth = (mfxU16)((mfxU32)((vppFrameAllocRequest[1].Info.Width)+31)) & (~(mfxU32)31);
-          //mOutHeight = (mfxU16)((mfxU32)((vppFrameAllocRequest[1].Info.Height)+31)) & (~(mfxU32)31);
-          //}
-        //}}}
-
         cLog::log (LOGINFO, fmt::format ("vidDecoder {}x{} {} {} {}",
-                                           width,height, mNumSurfaces, mNumVPPInSurfaces, mNumVPPOutSurfaces));
+                                         width,height, mNumSurfaces, mNumVPPInSurfaces, mNumVPPOutSurfaces));
         mNumSurfaces += mNumVPPInSurfaces;
         mSurfaces = new mfxFrameSurface1*[mNumSurfaces];
-        //{{{  alloc surfaces in system memory
+
+        // alloc surfaces in system memory
         for (int i = 0; i < mNumSurfaces; i++) {
           mSurfaces[i] = new mfxFrameSurface1;
           memset (mSurfaces[i], 0, sizeof (mfxFrameSurface1));
@@ -374,79 +331,42 @@ public:
           mSurfaces[i]->Data.Pitch = width;
           }
 
-        //{{{
-        //if (kRgba) {
-          //// Allocate surfaces for VPP Out
-          //// - Width and height of buffer must be aligned, a multiple of 32
-          //// - Frame surface array keeps pointers all surface planes and general frame info
-          //mSurfaces2 = new mfxFrameSurface1*[mNumVPPOutSurfaces];
-          //for (int i = 0; i < mNumVPPOutSurfaces; i++) {
-            //mSurfaces2[i] = new mfxFrameSurface1;
-            //memset (mSurfaces2[i], 0, sizeof(mfxFrameSurface1));
-            //memcpy (&mSurfaces2[i]->Info, &mVppParams.vpp.Out, sizeof(mfxFrameInfo));
-
-            //mSurfaces2[i]->Data.Y = new mfxU8[mOutWidth * mOutHeight * 32 / 8];
-            //mSurfaces2[i]->Data.U = mSurfaces2[i]->Data.Y;
-            //mSurfaces2[i]->Data.V = mSurfaces2[i]->Data.Y;
-            //mSurfaces2[i]->Data.Pitch = mOutWidth*4;
-            //}
-          //}
-        //}}}
-        //}}}
-
         status = MFXVideoDECODE_Init (mSession, &mVideoParams);
-        //if (kRgba)
-        //  status = MFXVideoVPP_Init (mSession, &mVppParams);
         }
       }
       //}}}
 
     if (mNumSurfaces) {
-      //if (skip)
-      //  mfxStatus status = MFXVideoDECODE_Reset (mSession, &mVideoParams);
       auto timePoint = chrono::system_clock::now();
 
       mfxStatus status = MFX_ERR_NONE;
-      while (status >= MFX_ERR_NONE || status == MFX_ERR_MORE_SURFACE) {
+      while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE)) {
         int index = getFreeSurfaceIndex (mSurfaces, mNumSurfaces);
         mfxFrameSurface1* surface = nullptr;
         mfxSyncPoint syncDecode = nullptr;
         cLog::log (LOGINFO, fmt::format ("vidFrame use surface {}", index));
         status = MFXVideoDECODE_DecodeFrameAsync (mSession, &mBitstream, mSurfaces[index], &surface, &syncDecode);
         if (status == MFX_ERR_NONE) {
-          //if (kRgba) {
-            //{{{  vpp rgba
-            //auto index2 = getFreeSurfaceIndex (mSurfaces2, mNumVPPOutSurfaces);
-            //mfxSyncPoint syncVpp = nullptr;
-            //status = MFXVideoVPP_RunFrameVPPAsync (mSession, surface, mSurfaces2[index2], NULL, &syncVpp);
-
-            //status = mSession.SyncOperation (syncDecode, 60000);
-            //status = mSession.SyncOperation (syncVpp, 60000);
-
-            //surface = mSurfaces2[index2];
-            //}
-            //}}}
-          //else
           status = mSession.SyncOperation (syncDecode, 60000);
+
+          cLog::log (LOGINFO, fmt::format ("mfx decode pitch:{} {}x{} {}",
+                                           //surface->Data.Y,
+                                           surface->Data.Pitch,
+                                           surface->Info.Width, surface->Info.Height,
+                                           getPtsString(surface->Data.TimeStamp)));
 
           cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (pts, 90000/25);
           int64_t decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
           videoFrame->init (static_cast<uint16_t>(mOutWidth), static_cast<uint16_t>(mOutHeight),
                             pesSize, decodeTime);
-          pts += videoFrame->getPtsDuration();
 
-          // got decoded frame, set video of vidFrame
-          //for (auto iframe : mFrames) {
-            //if (pts == surface->Data.TimeStamp) {
-           //videoFrame->setNv12 (surface->Data.Y, surface->Data.Pitch, surface->Info.Width, surface->Info.Height);
-           //videoFrame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
-           //videoFrame->setYuv420Time (
-           //  chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
+          timePoint = chrono::system_clock::now();
+          videoFrame->setNv12 (surface->Data.Y, surface->Data.Pitch);
+          videoFrame->setYuvRgbTime (
+            chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
           addFrameCallback (videoFrame);
-          cLog::log (LOGINFO, fmt::format ("vidFrame::set - pts:{}",getPtsString(surface->Data.TimeStamp)));
-            //  break;
-            //  }
-           // }
+
+          pts += videoFrame->getPtsDuration();
           }
         }
       }
@@ -511,7 +431,7 @@ cVideoRender::~cVideoRender() {
 
 //{{{
 string cVideoRender::getInfoString() const {
-  return fmt::format ("{} {}x{} {:5d}:{}", mFrames.size(), mWidth, mHeight, mDecodeTime, mYuv420Time);
+  return fmt::format ("{} {}x{} {:5d}:{}", mFrames.size(), mWidth, mHeight, mDecodeTime, mYuvRgbTime);
   }
 //}}}
 //{{{
@@ -607,7 +527,7 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize,
     mHeight = videoFrame->getHeight();
     mPtsDuration = videoFrame->getPtsDuration();
     mDecodeTime = videoFrame->getDecodeTime();
-    mYuv420Time = videoFrame->getYuv420Time();
+    mYuvRgbTime = videoFrame->getYuvRgbTime();
 
     addFrame (videoFrame);
     logValue (videoFrame->getPts(), (float)mDecodeTime);
@@ -620,8 +540,164 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize,
 class cVideoFramePlanarRgba : public cVideoFrame {
 public:
   cVideoFramePlanarRgba (int64_t pts, int64_t ptsDuration) : cVideoFrame(pts, ptsDuration) {}
-  virtual ~cVideoFramePlanarRgba() = default;
 
+  virtual ~cVideoFramePlanarRgba() {
+    #ifdef _WIN32
+    _aligned_free (mYbuf);
+    _aligned_free (mUbuf);
+    _aligned_free (mVbuf);
+    #endif
+    }
+
+  //{{{
+  virtual void setNv12 (uint8_t* nv12, int stride) final {
+
+    mYStride = stride;
+    mUVStride = stride/2;
+
+    // copy all of Nv12 to y buf
+    mYbuf = (uint8_t*)_aligned_realloc (mYbuf, mHeight * mYStride * 3 / 2, 128);
+    memcpy (mYbuf, nv12, mHeight * mYStride * 3 / 2);
+
+    // unpack NV12 to planar uv
+    mUbuf = (uint8_t*)_aligned_realloc (mUbuf, (mHeight/2) * mUVStride, 128);
+    mVbuf = (uint8_t*)_aligned_realloc (mVbuf, (mHeight/2) * mUVStride, 128);
+
+    auto uv = mYbuf + (mHeight * mYStride);
+    auto u = mUbuf;
+    auto v = mVbuf;
+    for (auto i = 0; i < mHeight/2 * mUVStride; i++) {
+      *u++ = *uv++;
+      *v++ = *uv++;
+      }
+
+    mPixels = (uint32_t*)_aligned_realloc (mPixels, mWidth * 4 * mHeight, 128);
+    auto argbStride = mWidth;
+
+    __m128i y0r0, y0r1, u0, v0;
+    __m128i y00r0, y01r0, y00r1, y01r1;
+    __m128i u00, u01, v00, v01;
+    __m128i rv00, rv01, gu00, gu01, gv00, gv01, bu00, bu01;
+    __m128i r00, r01, g00, g01, b00, b01;
+    __m128i rgb0123, rgb4567, rgb89ab, rgbcdef;
+    __m128i gbgb;
+    __m128i ysub, uvsub;
+    __m128i zero, facy, facrv, facgu, facgv, facbu;
+    __m128i *srcy128r0, *srcy128r1;
+    __m128i *dstrgb128r0, *dstrgb128r1;
+    __m64   *srcu64, *srcv64;
+
+    int x, y;
+
+    ysub  = _mm_set1_epi32 (0x00100010);
+    uvsub = _mm_set1_epi32 (0x00800080);
+
+    facy  = _mm_set1_epi32 (0x004a004a);
+    facrv = _mm_set1_epi32 (0x00660066);
+    facgu = _mm_set1_epi32 (0x00190019);
+    facgv = _mm_set1_epi32 (0x00340034);
+    facbu = _mm_set1_epi32 (0x00810081);
+
+    zero  = _mm_set1_epi32( 0x00000000 );
+
+    for (y = 0; y < mHeight; y += 2) {
+      srcy128r0 = (__m128i *)(mYbuf + mYStride*y);
+      srcy128r1 = (__m128i *)(mYbuf + mYStride*y + mYStride);
+      srcu64 = (__m64 *)(mUbuf + mUVStride*(y/2));
+      srcv64 = (__m64 *)(mVbuf + mUVStride*(y/2));
+
+      dstrgb128r0 = (__m128i *)(mPixels + argbStride*y);
+      dstrgb128r1 = (__m128i *)(mPixels + argbStride*y + argbStride);
+
+      for (x = 0; x < mWidth; x += 16) {
+        u0 = _mm_loadl_epi64 ((__m128i *)srcu64 ); srcu64++;
+        v0 = _mm_loadl_epi64 ((__m128i *)srcv64 ); srcv64++;
+
+        y0r0 = _mm_load_si128( srcy128r0++ );
+        y0r1 = _mm_load_si128( srcy128r1++ );
+
+        // constant y factors
+        y00r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y0r0, zero), ysub), facy);
+        y01r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y0r0, zero), ysub), facy);
+        y00r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y0r1, zero), ysub), facy);
+        y01r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y0r1, zero), ysub), facy);
+
+        // expand u and v so they're aligned with y values
+        u0  = _mm_unpacklo_epi8 (u0, zero);
+        u00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (u0, u0), uvsub);
+        u01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (u0, u0), uvsub);
+
+        v0  = _mm_unpacklo_epi8( v0,  zero );
+        v00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (v0, v0), uvsub);
+        v01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (v0, v0), uvsub);
+
+        // common factors on both rows.
+        rv00 = _mm_mullo_epi16 (facrv, v00);
+        rv01 = _mm_mullo_epi16 (facrv, v01);
+        gu00 = _mm_mullo_epi16 (facgu, u00);
+        gu01 = _mm_mullo_epi16 (facgu, u01);
+        gv00 = _mm_mullo_epi16 (facgv, v00);
+        gv01 = _mm_mullo_epi16 (facgv, v01);
+        bu00 = _mm_mullo_epi16 (facbu, u00);
+        bu01 = _mm_mullo_epi16 (facbu, u01);
+
+        // row 0
+        r00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, rv00), 6);
+        r01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, rv01), 6);
+        g00 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r0, gu00), gv00), 6);
+        g01 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r0, gu01), gv01), 6);
+        b00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, bu00), 6);
+        b01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, bu01), 6);
+
+        r00 = _mm_packus_epi16 (r00, r01);         // rrrr.. saturated
+        g00 = _mm_packus_epi16 (g00, g01);         // gggg.. saturated
+        b00 = _mm_packus_epi16 (b00, b01);         // bbbb.. saturated
+
+        r01     = _mm_unpacklo_epi8 (r00, zero); // 0r0r..
+        gbgb    = _mm_unpacklo_epi8 (b00, g00);  // gbgb..
+        rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);  // 0rgb0rgb..
+        rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);  // 0rgb0rgb..
+
+        r01     = _mm_unpackhi_epi8 (r00, zero);
+        gbgb    = _mm_unpackhi_epi8 (b00, g00 );
+        rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
+        rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
+
+        _mm_stream_si128 (dstrgb128r0++, rgb0123);
+        _mm_stream_si128 (dstrgb128r0++, rgb4567);
+        _mm_stream_si128 (dstrgb128r0++, rgb89ab);
+        _mm_stream_si128 (dstrgb128r0++, rgbcdef);
+
+        // row 1
+        r00 = _mm_srai_epi16 (_mm_add_epi16 (y00r1, rv00), 6);
+        r01 = _mm_srai_epi16 (_mm_add_epi16 (y01r1, rv01), 6);
+        g00 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r1, gu00), gv00), 6);
+        g01 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r1, gu01), gv01), 6);
+        b00 = _mm_srai_epi16 (_mm_add_epi16 (y00r1, bu00), 6);
+        b01 = _mm_srai_epi16 (_mm_add_epi16 (y01r1, bu01), 6);
+
+        r00 = _mm_packus_epi16 (r00, r01);         // rrrr.. saturated
+        g00 = _mm_packus_epi16 (g00, g01);         // gggg.. saturated
+        b00 = _mm_packus_epi16 (b00, b01);         // bbbb.. saturated
+
+        r01     = _mm_unpacklo_epi8 (r00,  zero); // 0r0r..
+        gbgb    = _mm_unpacklo_epi8 (b00,  g00);  // gbgb..
+        rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);  // 0rgb0rgb..
+        rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);  // 0rgb0rgb..
+
+        r01     = _mm_unpackhi_epi8 (r00, zero);
+        gbgb    = _mm_unpackhi_epi8 (b00, g00);
+        rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
+        rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
+
+        _mm_stream_si128 (dstrgb128r1++, rgb0123);
+        _mm_stream_si128 (dstrgb128r1++, rgb4567);
+        _mm_stream_si128 (dstrgb128r1++, rgb89ab);
+        _mm_stream_si128 (dstrgb128r1++, rgbcdef);
+        }
+      }
+    }
+  //}}}
   #if defined(INTEL_SSE2)
     //{{{
     virtual void setYuv420 (void* context, uint8_t** data, int* linesize) final {
@@ -832,6 +908,14 @@ public:
       }
     //}}}
   #endif
+
+private:
+  int mYStride = 0;
+  int mUVStride = 0;
+
+  uint8_t* mYbuf = nullptr;
+  uint8_t* mUbuf = nullptr;
+  uint8_t* mVbuf = nullptr;
   };
 //}}}
 //{{{
@@ -840,8 +924,13 @@ public:
   cVideoFramePlanarRgbaSws (int64_t pts, int64_t ptsDuration) : cVideoFrame(pts, ptsDuration) {}
   virtual ~cVideoFramePlanarRgbaSws() = default;
 
-  virtual void setYuv420 (void* context, uint8_t** data, int* linesize) final {
+  virtual void setNv12 (uint8_t* nv12, int stride) final {
+    (void)nv12;
+    (void)stride;
+    cLog::log (LOGERROR, "cVideoFramePlanarRgbaSws setNv12 unimplemented");
+    }
 
+  virtual void setYuv420 (void* context, uint8_t** data, int* linesize) final {
     // ffmpeg libswscale convert data to mPixels using swsContext
     uint8_t* dstData[1] = { (uint8_t*)mPixels };
     int dstStride[1] = { mWidth * 4 };
