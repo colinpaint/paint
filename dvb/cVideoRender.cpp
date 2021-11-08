@@ -245,9 +245,8 @@ private:
   public:
     //{{{
     cVideoDecoderMfx() : cDecoder() {
-
       mMfxVersion = { 0,1 };
-      mfxStatus status = mSession.Init (MFX_IMPL_AUTO, &mMfxVersion);
+      mfxStatus status = mSession.Init (MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11, &mMfxVersion);
       if (status != MFX_ERR_NONE)
         cLog::log (LOGINFO, fmt::format ("mSession.Init failed - status:{}", status));
       }
@@ -365,12 +364,10 @@ private:
     mfxVersion mMfxVersion;
     MFXVideoSession mSession;
     mfxVideoParam mVideoParams;
+    mfxBitstream mBitstream;
 
     mfxU16 mWidth;
     mfxU16 mHeight;
-
-    mfxBitstream mBitstream;
-
     mfxU16 mNumSurfaces = 0;
     mfxFrameSurface1** mSurfaces = nullptr;
     };
@@ -605,30 +602,30 @@ public:
         __m128i u00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (u0, u0), uvsub);
         __m128i u01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (u0, u0), uvsub);
 
-        v0 = _mm_unpacklo_epi8( v0,  zero );
+        v0 = _mm_unpacklo_epi8 (v0,  zero);
         __m128i v00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (v0, v0), uvsub);
-        __m128i v01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (v0, v0), uvsub);
-
-        // common factors on both rows.
         __m128i rv00 = _mm_mullo_epi16 (facrv, v00);
-        __m128i rv01 = _mm_mullo_epi16 (facrv, v01);
-        __m128i gu00 = _mm_mullo_epi16 (facgu, u00);
-        __m128i gu01 = _mm_mullo_epi16 (facgu, u01);
         __m128i gv00 = _mm_mullo_epi16 (facgv, v00);
-        __m128i gv01 = _mm_mullo_epi16 (facgv, v01);
+        __m128i gu00 = _mm_mullo_epi16 (facgu, u00);
         __m128i bu00 = _mm_mullo_epi16 (facbu, u00);
+
+        __m128i v01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (v0, v0), uvsub);
+        __m128i rv01 = _mm_mullo_epi16 (facrv, v01);
+        __m128i gv01 = _mm_mullo_epi16 (facgv, v01);
+        __m128i gu01 = _mm_mullo_epi16 (facgu, u01);
         __m128i bu01 = _mm_mullo_epi16 (facbu, u01);
 
         // row 0
         __m128i r00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, rv00), 6);
         __m128i r01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, rv01), 6);
+        r00 = _mm_packus_epi16 (r00, r01);  // rrrr.. saturated
+
         __m128i g00 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r0, gu00), gv00), 6);
         __m128i g01 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r0, gu01), gv01), 6);
+        g00 = _mm_packus_epi16 (g00, g01);  // gggg.. saturated
+
         __m128i b00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, bu00), 6);
         __m128i b01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, bu01), 6);
-
-        r00 = _mm_packus_epi16 (r00, r01);  // rrrr.. saturated
-        g00 = _mm_packus_epi16 (g00, g01);  // gggg.. saturated
         b00 = _mm_packus_epi16 (b00, b01);  // bbbb.. saturated
 
         __m128i gbgb = _mm_unpacklo_epi8 (r00, g00);       // gbgb..
