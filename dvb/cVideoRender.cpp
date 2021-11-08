@@ -30,9 +30,7 @@ extern "C" {
   #include <libswscale/swscale.h>
   }
 
-#ifdef _WIN32
   #include "../libmfx/include/mfxvideo++.h"
-#endif
 
 #if defined (__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
   #define INTEL_SSE2
@@ -268,18 +266,15 @@ private:
 
       mMfxVersion = { 0,1 };
       mfxStatus status = mSession.Init (MFX_IMPL_AUTO, &mMfxVersion);
-      cLog::log (LOGINFO, fmt::format ("mfx inite {}", status));
+      if (status != MFX_ERR_NONE)
+        cLog::log (LOGINFO, fmt::format ("mSession.Init failed - status:{}", status));
       }
     //}}}
     //{{{
     virtual ~cVideoDecoderMfx() {
 
-      // Clean up resources
-      // -  recommended to close Media SDK components first, before releasing allocated surfaces
-      //    since  some surfaces may still be locked by internal Media SDK resources.
       MFXVideoDECODE_Close (mSession);
 
-      // mSession closed automatically on destruction
       for (int i = 0; i < mNumSurfaces; i++)
         delete mSurfaces[i];
       }
@@ -297,26 +292,26 @@ private:
       mBitstream.MaxLength = pesSize;
       mBitstream.TimeStamp = pts;
 
-      cLog::log (LOGINFO, fmt::format ("mfx decode {} numSurfaces:{}", pesSize, mNumSurfaces));
       if (!mNumSurfaces) {
-        // allocate decoder surfaces, init decoder
+        //  read header, allocate surfaces, init decoder
         memset (&mVideoParams, 0, sizeof (mVideoParams));
         mVideoParams.mfx.CodecId = (streamType == 27) ? MFX_CODEC_AVC : MFX_CODEC_MPEG2;
         mVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
-
-        // decode header
         mfxStatus status = MFXVideoDECODE_DecodeHeader (mSession, &mBitstream, &mVideoParams);
-        cLog::log (LOGINFO, fmt::format ("mfx decode status {}", status));
-        if (status == MFX_ERR_NONE) {
-          // query surfaces
+        if (status != MFX_ERR_NONE)
+          cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_DecodeHeader failed - status:{}", status));
+        else {
+          //{{{  query surfaces
           mfxFrameAllocRequest frameAllocRequest;
           memset (&frameAllocRequest, 0, sizeof (frameAllocRequest));
           status =  MFXVideoDECODE_QueryIOSurf (mSession, &mVideoParams, &frameAllocRequest);
+          if (status != MFX_ERR_NONE)
+            cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_QueryIOSurf failed - status:{}", status));
+
           mNumSurfaces = frameAllocRequest.NumFrameSuggested;
 
           mWidth = (frameAllocRequest.Info.Width+31) & (~(mfxU16)31);
           mHeight = (frameAllocRequest.Info.Height+31) & (~(mfxU16)31);
-          cLog::log (LOGINFO, fmt::format ("vidDecoder {}x{} {}", mWidth, mHeight, mNumSurfaces));
           mSurfaces = new mfxFrameSurface1*[mNumSurfaces];
 
           // alloc surfaces in system memory
@@ -326,23 +321,26 @@ private:
             memcpy (&mSurfaces[i]->Info, &mVideoParams.mfx.FrameInfo, sizeof(mfxFrameInfo));
 
             // allocate NV12 followed by planar u, planar v
-            mSurfaces[i]->Data.Y = new mfxU8[(mWidth * mHeight) * 12 / 8];
-            mSurfaces[i]->Data.U = mSurfaces[i]->Data.Y + (mWidth * mHeight);
+            size_t nv12SizeLuma = mWidth * mHeight;
+            size_t nv12SizeAll = (nv12SizeLuma * 12) / 8;
+            mSurfaces[i]->Data.Y = new mfxU8[nv12SizeAll];
+            mSurfaces[i]->Data.U = mSurfaces[i]->Data.Y + nv12SizeLuma;
             mSurfaces[i]->Data.V = nullptr; // NV12 ignores V pointer
             mSurfaces[i]->Data.Pitch = mWidth;
             }
+          cLog::log (LOGINFO, fmt::format ("mfxDecode surfaces allocated {}x{} {}", mWidth, mHeight, mNumSurfaces));
 
-          cLog::log (LOGINFO, fmt::format ("mfx decode surfaces allocated", mNumSurfaces));
           status = MFXVideoDECODE_Init (mSession, &mVideoParams);
+          if (status != MFX_ERR_NONE)
+            cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_Init failed - status:{}", status));
           }
+          //}}}
         }
 
       if (mNumSurfaces) {
         mfxStatus status = MFX_ERR_NONE;
         while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE)) {
-
           auto timePoint = chrono::system_clock::now();
-
           int index = getFreeSurfaceIndex (mSurfaces, mNumSurfaces);
           mfxFrameSurface1* surface = nullptr;
           mfxSyncPoint syncDecode = nullptr;
@@ -351,13 +349,7 @@ private:
             status = mSession.SyncOperation (syncDecode, 60000);
             int64_t decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
-            cLog::log (LOGINFO, fmt::format ("mfx decode pitch:{} {}x{} {}x{} {}",
-                                             //surface->Data.Y,
-                                             surface->Data.Pitch,
-                                             surface->Info.Width, surface->Info.Height, mWidth, mHeight,
-                                             getPtsString(surface->Data.TimeStamp)));
-
-            cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (pts, 90000/25);
+            cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (surface->Data.TimeStamp, 90000/25);
             videoFrame->init (mWidth, mHeight, pesSize, decodeTime);
 
             timePoint = chrono::system_clock::now();
@@ -369,8 +361,6 @@ private:
 
             pts += videoFrame->getPtsDuration();
             }
-          else
-            cLog::log (LOGINFO, fmt::format ("vidFrame - no frame yet"));
           }
         }
 
@@ -561,16 +551,17 @@ public:
     mUbuf = (uint8_t*)_aligned_realloc (mUbuf, (mHeight/2) * mUVStride, 128);
     mVbuf = (uint8_t*)_aligned_realloc (mVbuf, (mHeight/2) * mUVStride, 128);
 
-    auto uv = mYbuf + (mHeight * mYStride);
-    auto u = mUbuf;
-    auto v = mVbuf;
-    for (auto i = 0; i < mHeight/2 * mUVStride; i++) {
+    uint8_t* uv = mYbuf + (mHeight * mYStride);
+    uint8_t* u = mUbuf;
+    uint8_t* v = mVbuf;
+    for (int i = 0; i < mHeight/2 * mUVStride; i++) {
       *u++ = *uv++;
       *v++ = *uv++;
       }
 
     mPixels = (uint32_t*)_aligned_realloc (mPixels, mWidth * 4 * mHeight, 128);
-    auto argbStride = mWidth;
+
+    uint16_t argbStride = mWidth;
 
     __m128i y0r0, y0r1, u0, v0;
     __m128i y00r0, y01r0, y00r1, y01r1;
@@ -580,7 +571,7 @@ public:
     __m128i rgb0123, rgb4567, rgb89ab, rgbcdef;
     __m128i gbgb;
     __m128i ysub, uvsub;
-    __m128i zero, facy, facrv, facgu, facgv, facbu;
+    __m128i zero, opaque, facy, facrv, facgu, facgv, facbu;
     __m128i *srcy128r0, *srcy128r1;
     __m128i *dstrgb128r0, *dstrgb128r1;
     __m64   *srcu64, *srcv64;
@@ -596,7 +587,8 @@ public:
     facgv = _mm_set1_epi32 (0x00340034);
     facbu = _mm_set1_epi32 (0x00810081);
 
-    zero  = _mm_set1_epi32( 0x00000000 );
+    zero  = _mm_set1_epi32 (0x00000000);
+    opaque = _mm_set1_epi32 (0xFFFFFFFF);
 
     for (y = 0; y < mHeight; y += 2) {
       srcy128r0 = (__m128i *)(mYbuf + mYStride*y);
@@ -651,13 +643,13 @@ public:
         g00 = _mm_packus_epi16 (g00, g01);         // gggg.. saturated
         b00 = _mm_packus_epi16 (b00, b01);         // bbbb.. saturated
 
-        r01     = _mm_unpacklo_epi8 (r00, zero); // 0r0r..
-        gbgb    = _mm_unpacklo_epi8 (b00, g00);  // gbgb..
+        r01     = _mm_unpacklo_epi8 (b00, opaque); // 0r0r..
+        gbgb    = _mm_unpacklo_epi8 (r00, g00);    // gbgb..
         rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);  // 0rgb0rgb..
         rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);  // 0rgb0rgb..
 
-        r01     = _mm_unpackhi_epi8 (r00, zero);
-        gbgb    = _mm_unpackhi_epi8 (b00, g00 );
+        r01     = _mm_unpackhi_epi8 (b00, opaque);
+        gbgb    = _mm_unpackhi_epi8 (r00, g00 );
         rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
         rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
 
@@ -674,17 +666,17 @@ public:
         b00 = _mm_srai_epi16 (_mm_add_epi16 (y00r1, bu00), 6);
         b01 = _mm_srai_epi16 (_mm_add_epi16 (y01r1, bu01), 6);
 
-        r00 = _mm_packus_epi16 (r00, r01);         // rrrr.. saturated
-        g00 = _mm_packus_epi16 (g00, g01);         // gggg.. saturated
-        b00 = _mm_packus_epi16 (b00, b01);         // bbbb.. saturated
+        r00 = _mm_packus_epi16 (r00, r01);          // rrrr.. saturated
+        g00 = _mm_packus_epi16 (g00, g01);          // gggg.. saturated
+        b00 = _mm_packus_epi16 (b00, b01);          // bbbb.. saturated
 
-        r01     = _mm_unpacklo_epi8 (r00,  zero); // 0r0r..
-        gbgb    = _mm_unpacklo_epi8 (b00,  g00);  // gbgb..
-        rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);  // 0rgb0rgb..
-        rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);  // 0rgb0rgb..
+        r01     = _mm_unpacklo_epi8 (b00,  opaque); // 0r0r..
+        gbgb    = _mm_unpacklo_epi8 (r00,  g00);    // gbgb..
+        rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);   // 0rgb0rgb..
+        rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);   // 0rgb0rgb..
 
-        r01     = _mm_unpackhi_epi8 (r00, zero);
-        gbgb    = _mm_unpackhi_epi8 (b00, g00);
+        r01     = _mm_unpackhi_epi8 (b00, opaque);
+        gbgb    = _mm_unpackhi_epi8 (r00, g00);
         rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
         rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
 
