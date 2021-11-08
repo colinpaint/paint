@@ -127,6 +127,18 @@ if (BUILD_PLAYER OR BUILD_TELLY)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 endif()
 
+# libmfx lib
+if (BUILD_TELLY)
+  project (libmfx)
+    file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/include/*.h)
+    file (GLOB SOURCE_FILES libmfx/mfx_dispatch/src/*.cpp)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+
+    target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/include)
+    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
+endif()
+
+
 # capture app
 if (BUILD_CAPTURE AND MSVC)
   ## WIN32 audio wsapi capture main project
@@ -171,6 +183,7 @@ if (BUILD_TELLY)
     target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio imgui utils glfw glad)
     if (MSVC)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
+      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx)
       target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
     else()
       target_link_libraries (${PROJECT_NAME} PRIVATE GL)

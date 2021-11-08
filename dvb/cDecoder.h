@@ -18,7 +18,7 @@ public:
   cDecoder();
   virtual ~cDecoder();
 
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, uint8_t streamType,
                           std::function<void (cFrame* frame)> addFrameCallback) = 0;
 
 protected:

@@ -90,7 +90,7 @@ public:
     const bool mPsi;
 
     uint16_t mSid = 0;
-    uint16_t mStreamType = 0;
+    uint8_t mStreamType = 0;
 
     int64_t mPackets = 0;
     int mContinuity = -1;

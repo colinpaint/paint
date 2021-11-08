@@ -30,6 +30,10 @@ extern "C" {
   #include <libswscale/swscale.h>
   }
 
+#ifdef _WIN32
+  #include "../libmfx/include/mfxvideo++.h"
+#endif
+
 #if defined (__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
   #define INTEL_SSE2
   #define INTEL_SSSE3 1
@@ -106,6 +110,7 @@ extern "C" {
 
 using namespace std;
 //}}}
+//#define FFMPEG_DECODER
 
 constexpr uint32_t kVideoPoolSize = 50;
 //{{{
@@ -191,9 +196,10 @@ public:
   //}}}
 
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, uint8_t streamType,
                            function<void (cFrame* frame)> addFrameCallback) final {
-
+    (void)dts;
+    (void)streamType;
     AVPacket* avPacket = av_packet_alloc();
     AVFrame* avFrame = av_frame_alloc();
 
@@ -251,13 +257,247 @@ private:
   SwsContext* mSwsContext = nullptr;
   };
 //}}}
+#ifdef _WIN32
+//{{{
+class cVideoDecoderMfx : public cDecoder {
+public:
+  //{{{
+  cVideoDecoderMfx() : cDecoder() {
+
+    mfxVersion version = { 0,1 };
+    mSession.Init (MFX_IMPL_AUTO, &kMfxVersion);
+    }
+  //}}}
+  //{{{
+  virtual ~cVideoDecoderMfx() {
+
+    // Clean up resources
+    // -  recommended to close Media SDK components first, before releasing allocated surfaces
+    //    since  some surfaces may still be locked by internal Media SDK resources.
+    MFXVideoDECODE_Close (mSession);
+
+    // mSession closed automatically on destruction
+    for (int i = 0; i < mNumSurfaces; i++)
+      delete mSurfaces[i];
+    }
+  //}}}
+
+  //{{{
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize,
+                          int64_t pts, int64_t dts, uint8_t streamType,
+                          function<void (cFrame* frame)> addFrameCallback) final {
+
+    (void)dts;
+    mBitstream.Data = pes;
+    mBitstream.DataOffset = 0;
+    mBitstream.DataLength = pesSize;
+    mBitstream.MaxLength = pesSize;
+    mBitstream.TimeStamp = pts;
+
+    if (!mNumSurfaces) {
+      //{{{  allocate decoder surfaces, init decoder
+      memset (&mVideoParams, 0, sizeof(mVideoParams));
+      mVideoParams.mfx.CodecId = (streamType == 27) ? MFX_CODEC_AVC : MFX_CODEC_MPEG2;
+      mVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
+
+      // decode header
+      mfxStatus status = MFXVideoDECODE_DecodeHeader (mSession, &mBitstream, &mVideoParams);
+      if (status == MFX_ERR_NONE) {
+        //{{{  query surfaces
+        mfxFrameAllocRequest frameAllocRequest;
+        memset (&frameAllocRequest, 0, sizeof(frameAllocRequest));
+        status =  MFXVideoDECODE_QueryIOSurf (mSession, &mVideoParams, &frameAllocRequest);
+        mNumSurfaces = frameAllocRequest.NumFrameSuggested;
+        //}}}
+        auto width = ((mfxU32)((frameAllocRequest.Info.Width)+31)) & (~(mfxU32)31);
+        auto height = ((mfxU32)((frameAllocRequest.Info.Height)+31)) & (~(mfxU32)31);
+        //{{{
+        //if (kRgba) {
+          //memset (&mVppParams, 0, sizeof(mVppParams));
+          //{{{  VPP Input data
+          //mVppParams.vpp.In.FourCC = MFX_FOURCC_NV12;
+          //mVppParams.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+          //mVppParams.vpp.In.CropX = 0;
+          //mVppParams.vpp.In.CropY = 0;
+          //mVppParams.vpp.In.CropW = mVideoParams.mfx.FrameInfo.CropW;
+          //mVppParams.vpp.In.CropH = mVideoParams.mfx.FrameInfo.CropH;
+          //mVppParams.vpp.In.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+          //mVppParams.vpp.In.FrameRateExtN = 30;
+          //mVppParams.vpp.In.FrameRateExtD = 1;
+          //mVppParams.vpp.In.Width = ((mVppParams.vpp.In.CropW + 15) >> 4) << 4;
+          //mVppParams.vpp.In.Height =
+            //(MFX_PICSTRUCT_PROGRESSIVE == mVppParams.vpp.In.PicStruct) ?
+              //((mVppParams.vpp.In.CropH + 15) >> 4) << 4 : ((mfxU32)((mVppParams.vpp.In.CropH)+31)) & (~(mfxU32)31);
+          //}}}
+          //{{{  VPP Output data
+          //mVppParams.vpp.Out.FourCC = MFX_FOURCC_RGB4;
+          //mVppParams.vpp.Out.ChromaFormat = 0;
+          //mVppParams.vpp.Out.CropX = 0;
+          //mVppParams.vpp.Out.CropY = 0;
+          //mVppParams.vpp.Out.CropW = mVideoParams.mfx.FrameInfo.CropW;
+          //mVppParams.vpp.Out.CropH = mVideoParams.mfx.FrameInfo.CropW;
+          //mVppParams.vpp.Out.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+          //mVppParams.vpp.Out.FrameRateExtN = 30;
+          //mVppParams.vpp.Out.FrameRateExtD = 1;
+          //mVppParams.vpp.Out.Width = ((mVppParams.vpp.Out.CropW + 15) >> 4) << 4;
+          //mVppParams.vpp.Out.Height =
+            //(MFX_PICSTRUCT_PROGRESSIVE == mVppParams.vpp.Out.PicStruct) ?
+              //((mVppParams.vpp.Out.CropH + 15) >> 4) << 4 : ((mfxU32)((mVppParams.vpp.Out.CropH)+31)) & (~(mfxU32)31);
+          //}}}
+          //mVppParams.IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY | MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
+
+          //// Query number of required surfaces for VPP, [0] - in, [1] - out
+          //mfxFrameAllocRequest vppFrameAllocRequest[2];
+          //memset (&vppFrameAllocRequest, 0, sizeof (mfxFrameAllocRequest) * 2);
+          //status = MFXVideoVPP_QueryIOSurf (mSession, &mVppParams, vppFrameAllocRequest);
+          //mNumVPPInSurfaces = vppFrameAllocRequest[0].NumFrameSuggested;
+          //mNumVPPOutSurfaces = vppFrameAllocRequest[1].NumFrameSuggested;
+          //mOutWidth = (mfxU16)((mfxU32)((vppFrameAllocRequest[1].Info.Width)+31)) & (~(mfxU32)31);
+          //mOutHeight = (mfxU16)((mfxU32)((vppFrameAllocRequest[1].Info.Height)+31)) & (~(mfxU32)31);
+          //}
+        //}}}
+
+        cLog::log (LOGINFO, fmt::format ("vidDecoder {}x{} {} {} {}",
+                                           width,height, mNumSurfaces, mNumVPPInSurfaces, mNumVPPOutSurfaces));
+        mNumSurfaces += mNumVPPInSurfaces;
+        mSurfaces = new mfxFrameSurface1*[mNumSurfaces];
+        //{{{  alloc surfaces in system memory
+        for (int i = 0; i < mNumSurfaces; i++) {
+          mSurfaces[i] = new mfxFrameSurface1;
+          memset (mSurfaces[i], 0, sizeof (mfxFrameSurface1));
+          memcpy (&mSurfaces[i]->Info, &mVideoParams.mfx.FrameInfo, sizeof(mfxFrameInfo));
+
+          // allocate NV12 followed by planar u, planar v
+          mSurfaces[i]->Data.Y = new mfxU8[width * height * 12 / 8];
+          mSurfaces[i]->Data.U = mSurfaces[i]->Data.Y + width * height;
+          mSurfaces[i]->Data.V = nullptr; // NV12 ignores V pointer
+          mSurfaces[i]->Data.Pitch = width;
+          }
+
+        //{{{
+        //if (kRgba) {
+          //// Allocate surfaces for VPP Out
+          //// - Width and height of buffer must be aligned, a multiple of 32
+          //// - Frame surface array keeps pointers all surface planes and general frame info
+          //mSurfaces2 = new mfxFrameSurface1*[mNumVPPOutSurfaces];
+          //for (int i = 0; i < mNumVPPOutSurfaces; i++) {
+            //mSurfaces2[i] = new mfxFrameSurface1;
+            //memset (mSurfaces2[i], 0, sizeof(mfxFrameSurface1));
+            //memcpy (&mSurfaces2[i]->Info, &mVppParams.vpp.Out, sizeof(mfxFrameInfo));
+
+            //mSurfaces2[i]->Data.Y = new mfxU8[mOutWidth * mOutHeight * 32 / 8];
+            //mSurfaces2[i]->Data.U = mSurfaces2[i]->Data.Y;
+            //mSurfaces2[i]->Data.V = mSurfaces2[i]->Data.Y;
+            //mSurfaces2[i]->Data.Pitch = mOutWidth*4;
+            //}
+          //}
+        //}}}
+        //}}}
+
+        status = MFXVideoDECODE_Init (mSession, &mVideoParams);
+        //if (kRgba)
+        //  status = MFXVideoVPP_Init (mSession, &mVppParams);
+        }
+      }
+      //}}}
+
+    if (mNumSurfaces) {
+      //if (skip)
+      //  mfxStatus status = MFXVideoDECODE_Reset (mSession, &mVideoParams);
+      auto timePoint = chrono::system_clock::now();
+
+      mfxStatus status = MFX_ERR_NONE;
+      while (status >= MFX_ERR_NONE || status == MFX_ERR_MORE_SURFACE) {
+        int index = getFreeSurfaceIndex (mSurfaces, mNumSurfaces);
+        mfxFrameSurface1* surface = nullptr;
+        mfxSyncPoint syncDecode = nullptr;
+        cLog::log (LOGINFO, fmt::format ("vidFrame use surface {}", index));
+        status = MFXVideoDECODE_DecodeFrameAsync (mSession, &mBitstream, mSurfaces[index], &surface, &syncDecode);
+        if (status == MFX_ERR_NONE) {
+          //if (kRgba) {
+            //{{{  vpp rgba
+            //auto index2 = getFreeSurfaceIndex (mSurfaces2, mNumVPPOutSurfaces);
+            //mfxSyncPoint syncVpp = nullptr;
+            //status = MFXVideoVPP_RunFrameVPPAsync (mSession, surface, mSurfaces2[index2], NULL, &syncVpp);
+
+            //status = mSession.SyncOperation (syncDecode, 60000);
+            //status = mSession.SyncOperation (syncVpp, 60000);
+
+            //surface = mSurfaces2[index2];
+            //}
+            //}}}
+          //else
+          status = mSession.SyncOperation (syncDecode, 60000);
+
+          cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (pts, 90000/25);
+          int64_t decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+          videoFrame->init (static_cast<uint16_t>(mOutWidth), static_cast<uint16_t>(mOutHeight),
+                            pesSize, decodeTime);
+          pts += videoFrame->getPtsDuration();
+
+          // got decoded frame, set video of vidFrame
+          //for (auto iframe : mFrames) {
+            //if (pts == surface->Data.TimeStamp) {
+           //videoFrame->setNv12 (surface->Data.Y, surface->Data.Pitch, surface->Info.Width, surface->Info.Height);
+           //videoFrame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
+           //videoFrame->setYuv420Time (
+           //  chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
+          addFrameCallback (videoFrame);
+          cLog::log (LOGINFO, fmt::format ("vidFrame::set - pts:{}",getPtsString(surface->Data.TimeStamp)));
+            //  break;
+            //  }
+           // }
+          }
+        }
+      }
+
+    return pts;
+    }
+  //}}}
+
+private:
+  //{{{
+  int getFreeSurfaceIndex (mfxFrameSurface1** surfaces, mfxU16 poolSize) {
+
+    if (surfaces)
+      for (mfxU16 i = 0; i < poolSize; i++)
+        if (0 == surfaces[i]->Data.Locked)
+          return i;
+
+    return MFX_ERR_NOT_FOUND;
+    }
+  //}}}
+
+  MFXVideoSession mSession;
+  mfxVersion kMfxVersion = {0,1};
+  mfxVideoParam mVideoParams;
+
+  mfxU16 mOutWidth;
+  mfxU16 mOutHeight;
+
+  mfxBitstream mBitstream;
+  mfxU16 mNumSurfaces = 0;
+
+  mfxVideoParam mVppParams;
+  mfxU16 mNumVPPInSurfaces = 0;
+  mfxU16 mNumVPPOutSurfaces = 0;
+
+  mfxFrameSurface1** mSurfaces;
+  mfxFrameSurface1** mSurfaces2;
+  };
+//}}}
+#endif
 
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const std::string name)
     : cRender(name), mMaxPoolSize(kVideoPoolSize) {
 
-  mDecoder = new cVideoDecoder();
+  #ifdef FFMPEG_DECODER
+    mDecoder = new cVideoDecoder();
+  #else
+    mDecoder = new cVideoDecoderMfx();
+  #endif
   }
 //}}}
 //{{{
@@ -328,32 +568,39 @@ void cVideoRender::addFrame (cVideoFrame* frame) {
   }
 //}}}
 //{{{
-void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
+void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize,
+                               int64_t pts, int64_t dts, uint8_t streamType, bool skip) {
 
   (void)pts;
   (void)skip;
   //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)pesSize);
 
-  // ffmpeg h264 pts wrong, decode frames in presentation order, pts is correct on I frames
-  char frameType = cDvbUtils::getFrameType (pes, pesSize, true);
-  if (frameType == 'I') {
-    if ((mGuessPts >= 0) && (mGuessPts != dts))
-      cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
-                                        getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
-                                        frameType,pesSize));
-    mGuessPts = dts;
+  #ifdef FFMPEG_DECODER
+    //{{{  ffmpeg h264 pts wrong, decode frames in presentation order, pts is correct on I frames
+    char frameType = cDvbUtils::getFrameType (pes, pesSize, true);
+    if (frameType == 'I') {
+      if ((mGuessPts >= 0) && (mGuessPts != dts))
+        cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
+                                          getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
+                                          frameType,pesSize));
+      mGuessPts = dts;
+      mSeenIFrame = true;
+      }
+
+    if (!mSeenIFrame) {
+      cLog::log (LOGINFO, fmt::format ("waiting for Iframe {} to:{} type:{} size:{}",
+                                       getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
+                                       frameType, pesSize));
+      return;
+      }
+    //}}}
+  #else
+    mGuessPts = pts;
     mSeenIFrame = true;
-    }
+  #endif
 
-  if (!mSeenIFrame) {
-    cLog::log (LOGINFO, fmt::format ("waiting for Iframe {} to:{} type:{} size:{}",
-                                     getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
-                                     frameType, pesSize));
-    return;
-    }
-
-  mGuessPts = mDecoder->decode (pes, pesSize, mGuessPts, [&](cFrame* frame) noexcept {
+  mGuessPts = mDecoder->decode (pes, pesSize, mGuessPts, dts, streamType, [&](cFrame* frame) noexcept {
     // addFrame lambda
     cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
     mWidth = videoFrame->getWidth();

@@ -40,7 +40,7 @@ public:
 
   void addFrame (cAudioFrame* frame);
   virtual void addFrame (cFrame* frame) final { (void)frame; }
-  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
+  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, uint8_t streamType, bool skip) final;
 
 private:
   // vars

@@ -387,9 +387,10 @@ public:
   virtual ~cAudioDecoder() {}
 
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, uint8_t streamType,
                           function<void (cFrame* frame)> addFrameCallback) final  {
-
+    (void)dts;
+    (void)streamType;
     uint8_t* frame = pes;
     uint8_t* pesEnd = pes + pesSize;
 
@@ -535,7 +536,7 @@ public:
                 }
               else
                 srcSamples = silence.data();
-              numSrcSamples = audioFrame ? audioFrame->getSamplesPerFrame() : audioRender->getSamplesPerFrame();
+              numSrcSamples = (int)(audioFrame ? audioFrame->getSamplesPerFrame() : audioRender->getSamplesPerFrame());
 
               if (mPlaying && audioFrame)
                 mPts += audioFrame->getPtsDuration();
@@ -748,14 +749,15 @@ void cAudioRender::addFrame (cAudioFrame* frame) {
   }
 //}}}
 //{{{
-void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
+void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, 
+                               int64_t pts, int64_t dts, uint8_t streamType, bool skip) {
 
   (void)dts;
   (void)skip;
   //log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);
 
-  mDecoder->decode (pes, pesSize, pts, [&](cFrame* frame) noexcept {
+  mDecoder->decode (pes, pesSize, pts, dts, streamType, [&](cFrame* frame) noexcept {
     // addFrame lambda
     cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
     mNumChannels = audioFrame->getNumChannels();
