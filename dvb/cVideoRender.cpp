@@ -239,7 +239,7 @@ private:
   SwsContext* mSwsContext = nullptr;
   };
 //}}}
-#ifdef _WIN32
+//#ifdef _WIN32
   //{{{
   class cVideoDecoderMfx : public cDecoder {
   public:
@@ -372,7 +372,7 @@ private:
     mfxFrameSurface1** mSurfaces = nullptr;
     };
   //}}}
-#endif
+//#endif
 
 // cVideoRender
 //{{{
@@ -513,6 +513,9 @@ public:
       _aligned_free (mUbuf);
       _aligned_free (mVbuf);
     #else
+      free (mYbuf);
+      free (mUbuf);
+      free (mVbuf);
     #endif
     }
   //}}}
@@ -543,8 +546,13 @@ public:
         mVbuf = (uint8_t*)_aligned_malloc ((mHeight/2) * mUVStride, 128);
     #else
       if (!mPixels)
-        // allocate aligned buffer
         mPixels = (uint32_t*)aligned_alloc (128, mWidth * mHeight * 4);
+      if (!mYbuf)
+        mYbuf = (uint8_t*)aligned_alloc (128, mHeight * mYStride * 3 / 2);
+      if (!mUbuf)
+        mUbuf = (uint8_t*)aligned_alloc (128, (mHeight/2) * mUVStride);
+      if (!mVbuf)
+        mVbuf = (uint8_t*)aligned_alloc (128, (mHeight/2) * mUVStride);
     #endif
     }
   //}}}
