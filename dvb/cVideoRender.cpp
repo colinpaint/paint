@@ -129,26 +129,7 @@ public:
     }
   //}}}
 
-  //{{{
-  void init (uint16_t width, uint16_t height, uint32_t pesSize, int64_t decodeTime) {
-
-    mWidth = width;
-    mHeight = height;
-
-    mPesSize = pesSize;
-    mDecodeTime = decodeTime;
-
-    #ifdef _WIN32
-      if (!mPixels)
-        // allocate aligned buffer
-        mPixels = (uint32_t*)_aligned_malloc (width * height * 4, 128);
-    #else
-      if (!mPixels)
-        // allocate aligned buffer
-        mPixels = (uint32_t*)aligned_alloc (128, width * height * 4);
-    #endif
-    }
-  //}}}
+  virtual void init (uint16_t width, uint16_t height, uint16_t stride, uint32_t pesSize, int64_t decodeTime) = 0;
 
   // gets
   uint16_t getWidth() const {return mWidth; }
@@ -160,16 +141,15 @@ public:
   int64_t getYuvRgbTime() const { return mYuvRgbTime; }
 
   // sets
-  virtual void setNv12 (uint8_t* nv12, int stride) = 0;
+  virtual void setNv12 (uint8_t* nv12) = 0;
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize)  = 0;
   void setYuvRgbTime (int64_t time) { mYuvRgbTime = time; }
 
 protected:
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
+  uint16_t mStride = 0;
   uint32_t* mPixels = nullptr;
-
-private:
   uint32_t mPesSize = 0;
   int64_t mDecodeTime = 0;
   int64_t mYuvRgbTime = 0;
@@ -222,7 +202,9 @@ public:
           // create new videoFrame
           cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (pts,
             (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num);
-          videoFrame->init (static_cast<uint16_t>(avFrame->width), static_cast<uint16_t>(avFrame->height),
+          videoFrame->init (static_cast<uint16_t>(avFrame->width),
+                            static_cast<uint16_t>(avFrame->height),
+                            static_cast<uint16_t>(avFrame->width),
                             frameSize, decodeTime);
           pts += videoFrame->getPtsDuration();
 
@@ -350,10 +332,9 @@ private:
             int64_t decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
             cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (surface->Data.TimeStamp, 90000/25);
-            videoFrame->init (mWidth, mHeight, pesSize, decodeTime);
-
+            videoFrame->init (mWidth, mHeight, surface->Data.Pitch, pesSize, decodeTime);
             timePoint = chrono::system_clock::now();
-            videoFrame->setNv12 (surface->Data.Y, surface->Data.Pitch);
+            videoFrame->setNv12 (surface->Data.Y);
             videoFrame->setYuvRgbTime (
               chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
 
@@ -528,130 +509,137 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize,
 class cVideoFramePlanarRgba : public cVideoFrame {
 public:
   cVideoFramePlanarRgba (int64_t pts, int64_t ptsDuration) : cVideoFrame(pts, ptsDuration) {}
-
+  //{{{
   virtual ~cVideoFramePlanarRgba() {
     #ifdef _WIN32
-    _aligned_free (mYbuf);
-    _aligned_free (mUbuf);
-    _aligned_free (mVbuf);
+      _aligned_free (mYbuf);
+      _aligned_free (mUbuf);
+      _aligned_free (mVbuf);
+    #else
     #endif
     }
+  //}}}
 
   //{{{
-  virtual void setNv12 (uint8_t* nv12, int stride) final {
+  virtual void init (uint16_t width, uint16_t height, uint16_t stride, uint32_t pesSize, int64_t decodeTime) final {
 
-    mYStride = stride;
-    mUVStride = stride/2;
+    mWidth = width;
+    mHeight = height;
+    mStride = stride;
 
-    // copy all of Nv12 to y buf
-    mYbuf = (uint8_t*)_aligned_realloc (mYbuf, mHeight * mYStride * 3 / 2, 128);
+    mPesSize = pesSize;
+    mDecodeTime = decodeTime;
+
+    mYStride = mStride;
+    mUVStride = mStride/2;
+
+    mArgbStride = mWidth;
+
+    #ifdef _WIN32
+      if (!mPixels)
+        mPixels = (uint32_t*)_aligned_malloc (mWidth * mHeight * 4, 128);
+      if (!mYbuf)
+        mYbuf = (uint8_t*)_aligned_malloc (mHeight * mYStride * 3 / 2, 128);
+      if (!mUbuf)
+        mUbuf = (uint8_t*)_aligned_malloc ((mHeight/2) * mUVStride, 128);
+      if (!mVbuf)
+        mVbuf = (uint8_t*)_aligned_malloc ((mHeight/2) * mUVStride, 128);
+    #else
+      if (!mPixels)
+        // allocate aligned buffer
+        mPixels = (uint32_t*)aligned_alloc (128, mWidth * mHeight * 4);
+    #endif
+    }
+  //}}}
+
+  //{{{
+  virtual void setNv12 (uint8_t* nv12) final {
+
+    // copy y of nv12 to y
     memcpy (mYbuf, nv12, mHeight * mYStride * 3 / 2);
 
-    // unpack NV12 to planar uv
-    mUbuf = (uint8_t*)_aligned_realloc (mUbuf, (mHeight/2) * mUVStride, 128);
-    mVbuf = (uint8_t*)_aligned_realloc (mVbuf, (mHeight/2) * mUVStride, 128);
-
+    // copy u and v of nv12 to planar uv
     uint8_t* uv = mYbuf + (mHeight * mYStride);
     uint8_t* u = mUbuf;
     uint8_t* v = mVbuf;
-    for (int i = 0; i < mHeight/2 * mUVStride; i++) {
+    for (int i = 0; i < (mHeight/2) * mUVStride; i++) {
       *u++ = *uv++;
       *v++ = *uv++;
       }
 
-    mPixels = (uint32_t*)_aligned_realloc (mPixels, mWidth * 4 * mHeight, 128);
+    // constants
+    __m128i ysub  = _mm_set1_epi32 (0x00100010);
+    __m128i uvsub = _mm_set1_epi32 (0x00800080);
+    __m128i facy  = _mm_set1_epi32 (0x004a004a);
+    __m128i facrv = _mm_set1_epi32 (0x00660066);
+    __m128i facgu = _mm_set1_epi32 (0x00190019);
+    __m128i facgv = _mm_set1_epi32 (0x00340034);
+    __m128i facbu = _mm_set1_epi32 (0x00810081);
+    __m128i zero  = _mm_set1_epi32 (0x00000000);
+    __m128i opaque = _mm_set1_epi32 (0xFFFFFFFF);
 
-    uint16_t argbStride = mWidth;
+    for (uint16_t y = 0; y < mHeight; y += 2) {
+      __m128i* srcy128r0 = (__m128i *)(mYbuf + (mYStride * y));
+      __m128i* srcy128r1 = (__m128i *)(mYbuf + (mYStride * y) + mYStride);
+      __m64* srcu64 = (__m64 *)(mUbuf + mUVStride * (y/2));
+      __m64* srcv64 = (__m64 *)(mVbuf + mUVStride * (y/2));
 
-    __m128i y0r0, y0r1, u0, v0;
-    __m128i y00r0, y01r0, y00r1, y01r1;
-    __m128i u00, u01, v00, v01;
-    __m128i rv00, rv01, gu00, gu01, gv00, gv01, bu00, bu01;
-    __m128i r00, r01, g00, g01, b00, b01;
-    __m128i rgb0123, rgb4567, rgb89ab, rgbcdef;
-    __m128i gbgb;
-    __m128i ysub, uvsub;
-    __m128i zero, opaque, facy, facrv, facgu, facgv, facbu;
-    __m128i *srcy128r0, *srcy128r1;
-    __m128i *dstrgb128r0, *dstrgb128r1;
-    __m64   *srcu64, *srcv64;
+      __m128i* dstrgb128r0 = (__m128i *)(mPixels + (mArgbStride * y));
+      __m128i* dstrgb128r1 = (__m128i *)(mPixels + (mArgbStride * y) + mArgbStride);
 
-    int x, y;
+      for (uint16_t x = 0; x < mWidth; x += 16) {
+        __m128i u0 = _mm_loadl_epi64 ((__m128i*)srcu64); srcu64++;
+        __m128i v0 = _mm_loadl_epi64 ((__m128i*)srcv64); srcv64++;
 
-    ysub  = _mm_set1_epi32 (0x00100010);
-    uvsub = _mm_set1_epi32 (0x00800080);
-
-    facy  = _mm_set1_epi32 (0x004a004a);
-    facrv = _mm_set1_epi32 (0x00660066);
-    facgu = _mm_set1_epi32 (0x00190019);
-    facgv = _mm_set1_epi32 (0x00340034);
-    facbu = _mm_set1_epi32 (0x00810081);
-
-    zero  = _mm_set1_epi32 (0x00000000);
-    opaque = _mm_set1_epi32 (0xFFFFFFFF);
-
-    for (y = 0; y < mHeight; y += 2) {
-      srcy128r0 = (__m128i *)(mYbuf + mYStride*y);
-      srcy128r1 = (__m128i *)(mYbuf + mYStride*y + mYStride);
-      srcu64 = (__m64 *)(mUbuf + mUVStride*(y/2));
-      srcv64 = (__m64 *)(mVbuf + mUVStride*(y/2));
-
-      dstrgb128r0 = (__m128i *)(mPixels + argbStride*y);
-      dstrgb128r1 = (__m128i *)(mPixels + argbStride*y + argbStride);
-
-      for (x = 0; x < mWidth; x += 16) {
-        u0 = _mm_loadl_epi64 ((__m128i *)srcu64 ); srcu64++;
-        v0 = _mm_loadl_epi64 ((__m128i *)srcv64 ); srcv64++;
-
-        y0r0 = _mm_load_si128( srcy128r0++ );
-        y0r1 = _mm_load_si128( srcy128r1++ );
+        __m128i y0r0 = _mm_load_si128( srcy128r0++ );
+        __m128i y0r1 = _mm_load_si128( srcy128r1++ );
 
         // constant y factors
-        y00r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y0r0, zero), ysub), facy);
-        y01r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y0r0, zero), ysub), facy);
-        y00r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y0r1, zero), ysub), facy);
-        y01r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y0r1, zero), ysub), facy);
+        __m128i y00r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y0r0, zero), ysub), facy);
+        __m128i y01r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y0r0, zero), ysub), facy);
+        __m128i y00r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y0r1, zero), ysub), facy);
+        __m128i y01r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y0r1, zero), ysub), facy);
 
         // expand u and v so they're aligned with y values
-        u0  = _mm_unpacklo_epi8 (u0, zero);
-        u00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (u0, u0), uvsub);
-        u01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (u0, u0), uvsub);
+        u0 = _mm_unpacklo_epi8 (u0, zero);
+        __m128i u00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (u0, u0), uvsub);
+        __m128i u01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (u0, u0), uvsub);
 
-        v0  = _mm_unpacklo_epi8( v0,  zero );
-        v00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (v0, v0), uvsub);
-        v01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (v0, v0), uvsub);
+        v0 = _mm_unpacklo_epi8( v0,  zero );
+        __m128i v00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (v0, v0), uvsub);
+        __m128i v01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (v0, v0), uvsub);
 
         // common factors on both rows.
-        rv00 = _mm_mullo_epi16 (facrv, v00);
-        rv01 = _mm_mullo_epi16 (facrv, v01);
-        gu00 = _mm_mullo_epi16 (facgu, u00);
-        gu01 = _mm_mullo_epi16 (facgu, u01);
-        gv00 = _mm_mullo_epi16 (facgv, v00);
-        gv01 = _mm_mullo_epi16 (facgv, v01);
-        bu00 = _mm_mullo_epi16 (facbu, u00);
-        bu01 = _mm_mullo_epi16 (facbu, u01);
+        __m128i rv00 = _mm_mullo_epi16 (facrv, v00);
+        __m128i rv01 = _mm_mullo_epi16 (facrv, v01);
+        __m128i gu00 = _mm_mullo_epi16 (facgu, u00);
+        __m128i gu01 = _mm_mullo_epi16 (facgu, u01);
+        __m128i gv00 = _mm_mullo_epi16 (facgv, v00);
+        __m128i gv01 = _mm_mullo_epi16 (facgv, v01);
+        __m128i bu00 = _mm_mullo_epi16 (facbu, u00);
+        __m128i bu01 = _mm_mullo_epi16 (facbu, u01);
 
         // row 0
-        r00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, rv00), 6);
-        r01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, rv01), 6);
-        g00 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r0, gu00), gv00), 6);
-        g01 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r0, gu01), gv01), 6);
-        b00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, bu00), 6);
-        b01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, bu01), 6);
+        __m128i r00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, rv00), 6);
+        __m128i r01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, rv01), 6);
+        __m128i g00 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r0, gu00), gv00), 6);
+        __m128i g01 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r0, gu01), gv01), 6);
+        __m128i b00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, bu00), 6);
+        __m128i b01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, bu01), 6);
 
-        r00 = _mm_packus_epi16 (r00, r01);         // rrrr.. saturated
-        g00 = _mm_packus_epi16 (g00, g01);         // gggg.. saturated
-        b00 = _mm_packus_epi16 (b00, b01);         // bbbb.. saturated
+        r00 = _mm_packus_epi16 (r00, r01);  // rrrr.. saturated
+        g00 = _mm_packus_epi16 (g00, g01);  // gggg.. saturated
+        b00 = _mm_packus_epi16 (b00, b01);  // bbbb.. saturated
 
-        r01     = _mm_unpacklo_epi8 (b00, opaque); // 0r0r..
-        gbgb    = _mm_unpacklo_epi8 (r00, g00);    // gbgb..
-        rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);  // 0rgb0rgb..
-        rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);  // 0rgb0rgb..
+        __m128i gbgb = _mm_unpacklo_epi8 (r00, g00);       // gbgb..
+        r01 = _mm_unpacklo_epi8 (b00, opaque);             // FFrFFr..
+        __m128i rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);  // FFrgbFFrgb..
+        __m128i rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);  // FFrgbFFrgb..
 
-        r01     = _mm_unpackhi_epi8 (b00, opaque);
         gbgb    = _mm_unpackhi_epi8 (r00, g00 );
-        rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
-        rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
+        r01     = _mm_unpackhi_epi8 (b00, opaque);
+        __m128i rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
+        __m128i rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
 
         _mm_stream_si128 (dstrgb128r0++, rgb0123);
         _mm_stream_si128 (dstrgb128r0++, rgb4567);
@@ -666,17 +654,17 @@ public:
         b00 = _mm_srai_epi16 (_mm_add_epi16 (y00r1, bu00), 6);
         b01 = _mm_srai_epi16 (_mm_add_epi16 (y01r1, bu01), 6);
 
-        r00 = _mm_packus_epi16 (r00, r01);          // rrrr.. saturated
-        g00 = _mm_packus_epi16 (g00, g01);          // gggg.. saturated
-        b00 = _mm_packus_epi16 (b00, b01);          // bbbb.. saturated
+        r00 = _mm_packus_epi16 (r00, r01);  // rrrr.. saturated
+        g00 = _mm_packus_epi16 (g00, g01);  // gggg.. saturated
+        b00 = _mm_packus_epi16 (b00, b01);  // bbbb.. saturated
 
-        r01     = _mm_unpacklo_epi8 (b00,  opaque); // 0r0r..
         gbgb    = _mm_unpacklo_epi8 (r00,  g00);    // gbgb..
-        rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);   // 0rgb0rgb..
-        rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);   // 0rgb0rgb..
+        r01     = _mm_unpacklo_epi8 (b00,  opaque); // FFrFFr..
+        rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);   // FFrgbFFrgb..
+        rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);   // FFrgbFFrgb..
 
-        r01     = _mm_unpackhi_epi8 (b00, opaque);
         gbgb    = _mm_unpackhi_epi8 (r00, g00);
+        r01     = _mm_unpackhi_epi8 (b00, opaque);
         rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
         rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
 
@@ -901,8 +889,9 @@ public:
   #endif
 
 private:
-  int mYStride = 0;
-  int mUVStride = 0;
+  uint16_t mYStride = 0;
+  uint16_t mUVStride = 0;
+  uint16_t mArgbStride = 0;
 
   uint8_t* mYbuf = nullptr;
   uint8_t* mUbuf = nullptr;
@@ -915,9 +904,31 @@ public:
   cVideoFramePlanarRgbaSws (int64_t pts, int64_t ptsDuration) : cVideoFrame(pts, ptsDuration) {}
   virtual ~cVideoFramePlanarRgbaSws() = default;
 
-  virtual void setNv12 (uint8_t* nv12, int stride) final {
+  //{{{
+  virtual void init (uint16_t width, uint16_t height, uint16_t stride,
+                     uint32_t pesSize, int64_t decodeTime) final {
+
+    mWidth = width;
+    mHeight = height;
+    mStride = stride;
+
+    mPesSize = pesSize;
+    mDecodeTime = decodeTime;
+
+    #ifdef _WIN32
+      if (!mPixels)
+        // allocate aligned buffer
+        mPixels = (uint32_t*)_aligned_malloc (width * height * 4, 128);
+    #else
+      if (!mPixels)
+        // allocate aligned buffer
+        mPixels = (uint32_t*)aligned_alloc (128, width * height * 4);
+    #endif
+    }
+  //}}}
+
+  virtual void setNv12 (uint8_t* nv12) final {
     (void)nv12;
-    (void)stride;
     cLog::log (LOGERROR, "cVideoFramePlanarRgbaSws setNv12 unimplemented");
     }
 
@@ -929,6 +940,7 @@ public:
     }
   };
 //}}}
+
 //{{{
 cVideoFrame* cVideoFrame::createVideoFrame (int64_t pts, int64_t ptsDuration) {
 
