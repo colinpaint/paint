@@ -1,4 +1,4 @@
-// session.cpp
+// decode.cpp
 //{{{  includes
 #include <vector>
 #include <string>
@@ -15,23 +15,20 @@ int main(int argc, char** argv) {
 
   (void)argc;
   (void)argv;
-
   cLog::init (LOGINFO);
-  cLog::log (LOGNOTICE, fmt::format ("mfxtest"));
+  cLog::log (LOGNOTICE, fmt::format ("mfxtest - decode"));
 
   mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY;
   mfxVersion mfxVersion = {{0,1}};
-
   MFXVideoSession mfxSession;
   mfxStatus mfxStatus = mfxSession.Init (mfxImpl, &mfxVersion);
   if (mfxStatus != MFX_ERR_NONE)
     cLog::log (LOGINFO, fmt::format ("session.Init failed {}", mfxStatus));
 
-  // Query selected implementation and version
+  //{{{  Query selected implementation and version
   mfxStatus = mfxSession.QueryIMPL (&mfxImpl);
   if (mfxStatus != MFX_ERR_NONE)
     cLog::log (LOGINFO, fmt::format ("QueryIMPL failed {}", mfxStatus));
-
   mfxStatus = mfxSession.QueryVersion (&mfxVersion);
   if (mfxStatus != MFX_ERR_NONE)
     cLog::log (LOGINFO, fmt::format ("QueryVersion failed {}", mfxStatus));
@@ -39,6 +36,7 @@ int main(int argc, char** argv) {
   cLog::log (LOGINFO, fmt::format ("mfxImpl:{} verMajor:{} verMinor:{}",
                                    (mfxImpl == MFX_IMPL_HARDWARE) ? "hw":"sw", mfxVersion.Major, mfxVersion.Minor));
 
+  //}}}
   mfxSession.Close();
 
   this_thread::sleep_for (2000ms);

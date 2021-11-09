@@ -22,6 +22,8 @@ public:
                           std::function<void (cFrame* frame)> addFrameCallback) = 0;
 
 protected:
+  bool mInited = false;
+
   AVCodecParserContext* mAvParser = nullptr;
   AVCodec* mAvCodec = nullptr;
   AVCodecContext* mAvContext = nullptr;
