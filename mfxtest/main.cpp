@@ -12,7 +12,7 @@ using namespace std;
 //}}}
 
 //{{{
-string errString (int mfxStatus) {
+string getMfxStatus (int mfxStatus) {
 
   switch (mfxStatus) {
     case   0: return "No error";
@@ -40,6 +40,18 @@ string errString (int mfxStatus) {
     }
   }
 //}}}
+//{{{
+string getMfxInfo (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
+
+  return fmt::format ("mfxImpl:{:x}{}{}{}{} verMajor:{} verMinor:{}",
+                      mfxImpl,
+                      (mfxImpl & MFX_IMPL_HARDWARE) ? " hw":"",
+                      (mfxImpl & MFX_IMPL_SOFTWARE) ? " sw":"",
+                      (mfxImpl & MFX_IMPL_VIA_D3D9) ? " d3d9":"",
+                      (mfxImpl & MFX_IMPL_VIA_D3D11) ? " d3d11":"",
+                      mfxVersion.Major, mfxVersion.Minor);
+  }
+//}}}
 
 int main(int argc, char** argv) {
 
@@ -61,23 +73,17 @@ int main(int argc, char** argv) {
   MFXVideoSession mfxSession;
   mfxStatus mfxStatus = mfxSession.Init (mfxImpl, &mfxVersion);
   if (mfxStatus != MFX_ERR_NONE)
-    cLog::log (LOGINFO, fmt::format ("session.Init failed - status:{}:{}", mfxStatus, errString(mfxStatus)));
+    cLog::log (LOGINFO, fmt::format ("session.Init failed - status:{}:{}", mfxStatus, getMfxStatus(mfxStatus)));
 
   //{{{  Query selected implementation and version
   mfxStatus = mfxSession.QueryIMPL (&mfxImpl);
   if (mfxStatus != MFX_ERR_NONE)
-    cLog::log (LOGINFO, fmt::format ("QueryIMPL failed - status:{}:{}", mfxStatus, errString(mfxStatus)));
+    cLog::log (LOGINFO, fmt::format ("QueryIMPL failed - status:{}:{}", mfxStatus, getMfxStatus (mfxStatus)));
   mfxStatus = mfxSession.QueryVersion (&mfxVersion);
   if (mfxStatus != MFX_ERR_NONE)
-    cLog::log (LOGINFO, fmt::format ("QueryVersion failed - status:{}:{}}", mfxStatus, errString(mfxStatus)));
+    cLog::log (LOGINFO, fmt::format ("QueryVersion failed - status:{}:{}}", mfxStatus, getMfxStatus (mfxStatus)));
 
-  cLog::log (LOGINFO, fmt::format ("mfxImpl:{:x}{}{}{}{} verMajor:{} verMinor:{}",
-                                   mfxImpl,
-                                   (mfxImpl & MFX_IMPL_HARDWARE) ? " hw":"",
-                                   (mfxImpl & MFX_IMPL_SOFTWARE) ? " sw":"",
-                                   (mfxImpl & MFX_IMPL_VIA_D3D9) ? " d3d9":"",
-                                   (mfxImpl & MFX_IMPL_VIA_D3D11) ? " d3d11":"",
-                                   mfxVersion.Major, mfxVersion.Minor));
+  cLog::log (LOGINFO, getMfxInfo (mfxImpl, mfxVersion));
   //}}}
   mfxSession.Close();
 

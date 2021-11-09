@@ -281,26 +281,21 @@ public:
       mfxStatus mfxStatus = mMfxSession.Init (mfxImpl, &mfxVersion);
       if (mfxStatus != MFX_ERR_NONE)
         cLog::log (LOGINFO, fmt::format ("session.Init failed - status:{}:{}",
-                                         mfxStatus, errString (mfxStatus)));
+                                         mfxStatus, getMfxStatus (mfxStatus)));
 
       // query selected implementation and version
       mfxStatus = mMfxSession.QueryIMPL (&mfxImpl);
       if (mfxStatus != MFX_ERR_NONE)
         cLog::log (LOGINFO, fmt::format ("QueryIMPL failed - status:{}:{}",
-                                         mfxStatus, errString (mfxStatus)));
+                                         mfxStatus, getMfxStatus (mfxStatus)));
 
       mfxStatus = mMfxSession.QueryVersion (&mfxVersion);
       if (mfxStatus != MFX_ERR_NONE)
         cLog::log (LOGINFO, fmt::format ("QueryVersion failed - status:{}:{}",
-                                         mfxStatus, errString (mfxStatus)));
+                                         mfxStatus, getMfxStatus(mfxStatus)));
 
-      cLog::log (LOGINFO, fmt::format ("mfxImpl:{:x}{}{}{}{} verMajor:{} verMinor:{}",
-                                       mfxImpl,
-                                       (mfxImpl & MFX_IMPL_HARDWARE) ? " hw":"",
-                                       (mfxImpl & MFX_IMPL_SOFTWARE) ? " sw":"",
-                                       (mfxImpl & MFX_IMPL_VIA_D3D9) ? " d3d9":"",
-                                       (mfxImpl & MFX_IMPL_VIA_D3D11) ? " d3d11":"",
-                                       mfxVersion.Major, mfxVersion.Minor));
+      cLog::log (LOGINFO, getMfxInfo (mfxImpl, mfxVersion));
+
       mSessionInited = true;
       }
       //}}}
@@ -316,7 +311,7 @@ public:
       mfxStatus mfxStatus = MFXVideoDECODE_DecodeHeader (mMfxSession, &mBitstream, &mVideoParams);
       if (mfxStatus != MFX_ERR_NONE)
         cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_DecodeHeader failed - status:{}:{}",
-                                         mfxStatus, errString (mfxStatus)));
+                                         mfxStatus, getMfxStatus (mfxStatus)));
       else {
         //{{{  query surfaces
         mfxFrameAllocRequest frameAllocRequest;
@@ -324,7 +319,7 @@ public:
         mfxStatus =  MFXVideoDECODE_QueryIOSurf (mMfxSession, &mVideoParams, &frameAllocRequest);
         if (mfxStatus != MFX_ERR_NONE)
           cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_QueryIOSurf failed - status:{}:{}",
-                                               mfxStatus, errString (mfxStatus)));
+                                               mfxStatus, getMfxStatus (mfxStatus)));
 
         mNumSurfaces = frameAllocRequest.NumFrameSuggested;
 
@@ -351,7 +346,7 @@ public:
         mfxStatus = MFXVideoDECODE_Init (mMfxSession, &mVideoParams);
         if (mfxStatus != MFX_ERR_NONE)
           cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_Init failed - status:{}:{}",
-                                           mfxStatus, errString (mfxStatus)));
+                                           mfxStatus, getMfxStatus (mfxStatus)));
         mInited = true;
         }
         //}}}
@@ -400,7 +395,7 @@ private:
     }
   //}}}
   //{{{
-  string errString (int mfxStatus) {
+  string getMfxStatus (int mfxStatus) {
 
     switch (mfxStatus) {
       case   0: return "No error";
@@ -426,6 +421,18 @@ private:
       case -20: return "Invalid audio parameters" ;
       default: return"Error code";
       }
+    }
+  //}}}
+  //{{{
+  string getMfxInfo (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
+
+    return fmt::format ("mfxImpl:{:x}{}{}{}{} verMajor:{} verMinor:{}",
+                        mfxImpl,
+                        (mfxImpl & MFX_IMPL_HARDWARE) ? " hw":"",
+                        (mfxImpl & MFX_IMPL_SOFTWARE) ? " sw":"",
+                        (mfxImpl & MFX_IMPL_VIA_D3D9) ? " d3d9":"",
+                        (mfxImpl & MFX_IMPL_VIA_D3D11) ? " d3d11":"",
+                        mfxVersion.Major, mfxVersion.Minor);
     }
   //}}}
 
