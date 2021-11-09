@@ -153,7 +153,7 @@ endif()
 if (BUILD_MFXTEST)
   project (mfxtest)
     file (GLOB HEADER_FILES mfxtest/*.h utils/*.h)
-    file (GLOB SOURCE_FILES mfxtest/decode.cpp)
+    file (GLOB SOURCE_FILES mfxtest/main.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
     target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)

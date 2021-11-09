@@ -1,3 +1,4 @@
+//{{{
 // Copyright (c) 2019-2020 Intel Corporation
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -17,17 +18,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//}}}
+
 
 #include <cmath>
 #include "common_utils.h"
 #include <algorithm>
 
 #if defined(_WIN32) || defined(_WIN64)
-#include <intrin.h>
-#include <array>
-#include <vector>
+  #include <intrin.h>
+  #include <array>
+  #include <vector>
 #endif
 
+//{{{
 // =================================================================
 // Utility functions, not directly tied to Intel Media SDK functionality
 //
@@ -102,20 +106,25 @@ void PrintErrString(int err,const char* filestr,int line)
         printf("\nError code %d,\t%s\t%d\n\n", err, filestr, line);
     }
 }
+//}}}
 
+//{{{
 FILE* OpenFile(const char* fileName, const char* mode)
 {
     FILE* openFile = nullptr;
     MSDK_FOPEN(openFile, fileName, mode);
     return openFile;
 }
-
+//}}}
+//{{{
 void CloseFile(FILE* fHdl)
 {
     if(fHdl)
         fclose(fHdl);
 }
+//}}}
 
+//{{{
 mfxStatus ReadPlaneData(mfxU16 w, mfxU16 h, mfxU8* buf, mfxU8* ptr,
                         mfxU16 pitch, mfxU16 offset, FILE* fSource)
 {
@@ -129,7 +138,8 @@ mfxStatus ReadPlaneData(mfxU16 w, mfxU16 h, mfxU8* buf, mfxU8* ptr,
     }
     return MFX_ERR_NONE;
 }
-
+//}}}
+//{{{
 mfxStatus LoadRawFrame(mfxFrameSurface1* pSurface, FILE* fSource)
 {
     if (!fSource) {
@@ -184,7 +194,9 @@ mfxStatus LoadRawFrame(mfxFrameSurface1* pSurface, FILE* fSource)
 
     return MFX_ERR_NONE;
 }
+//}}}
 
+//{{{
 mfxStatus ReadPlaneData10Bit(mfxU16 w, mfxU16 h, mfxU16* buf, mfxU8* ptr,
     mfxU16 pitch, mfxU16 shift, FILE* fSource)
 {
@@ -208,7 +220,8 @@ mfxStatus ReadPlaneData10Bit(mfxU16 w, mfxU16 h, mfxU16* buf, mfxU8* ptr,
     }
     return MFX_ERR_NONE;
 }
-
+//}}}
+//{{{
 mfxStatus LoadRaw10BitFrame(mfxFrameSurface1* pSurface, FILE* fSource)
 {
     if (!fSource) {
@@ -255,7 +268,8 @@ mfxStatus LoadRaw10BitFrame(mfxFrameSurface1* pSurface, FILE* fSource)
 
     return MFX_ERR_NONE;
 }
-
+//}}}
+//{{{
 mfxStatus LoadRawRGBFrame(mfxFrameSurface1* pSurface, FILE* fSource)
 {
     if (!fSource) {
@@ -288,7 +302,9 @@ mfxStatus LoadRawRGBFrame(mfxFrameSurface1* pSurface, FILE* fSource)
 
     return MFX_ERR_NONE;
 }
+//}}}
 
+//{{{
 mfxStatus WriteBitStreamFrame(mfxBitstream* pMfxBitstream, FILE* fSink)
 {
     if (!pMfxBitstream)
@@ -307,7 +323,8 @@ mfxStatus WriteBitStreamFrame(mfxBitstream* pMfxBitstream, FILE* fSink)
 
     return MFX_ERR_NONE;
 }
-
+//}}}
+//{{{
 mfxStatus ReadBitStreamData(mfxBitstream* pBS, FILE* fSource)
 {
     memmove(pBS->Data, pBS->Data + pBS->DataOffset, pBS->DataLength);
@@ -324,7 +341,9 @@ mfxStatus ReadBitStreamData(mfxBitstream* pBS, FILE* fSource)
 
     return MFX_ERR_NONE;
 }
+//}}}
 
+//{{{
 mfxStatus WriteSection(mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
                        mfxFrameInfo* pInfo, mfxFrameData* pData, mfxU32 i,
                        mfxU32 j, FILE* fSink)
@@ -336,7 +355,8 @@ mfxStatus WriteSection(mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
         return MFX_ERR_UNDEFINED_BEHAVIOR;
     return MFX_ERR_NONE;
 }
-
+//}}}
+//{{{
 mfxStatus WriteRawFrame(mfxFrameSurface1* pSurface, FILE* fSink)
 {
     mfxFrameInfo* pInfo = &pSurface->Info;
@@ -388,7 +408,8 @@ mfxStatus WriteRawFrame(mfxFrameSurface1* pSurface, FILE* fSink)
 
     return sts;
 }
-
+//}}}
+//{{{
 mfxStatus WriteSection10Bit(mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
     mfxFrameInfo* pInfo, mfxFrameData* pData, mfxU32 i,
     /*mfxU32 j,*/ FILE* fSink)
@@ -421,7 +442,8 @@ mfxStatus WriteSection10Bit(mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
 
     return MFX_ERR_NONE;
 }
-
+//}}}
+//{{{
 mfxStatus WriteRaw10BitFrame(mfxFrameSurface1* pSurface, FILE* fSink)
 {
     mfxFrameInfo* pInfo = &pSurface->Info;
@@ -439,7 +461,9 @@ mfxStatus WriteRaw10BitFrame(mfxFrameSurface1* pSurface, FILE* fSink)
 
     return sts;
 }
+//}}}
 
+//{{{
 int GetFreeTaskIndex(Task* pTaskPool, mfxU16 nPoolSize)
 {
     if (pTaskPool)
@@ -448,15 +472,17 @@ int GetFreeTaskIndex(Task* pTaskPool, mfxU16 nPoolSize)
                 return i;
     return MFX_ERR_NOT_FOUND;
 }
+//}}}
 
+//{{{
 void ClearYUVSurfaceSysMem(mfxFrameSurface1* pSfc, mfxU16 width, mfxU16 height)
 {
     // In case simulating direct access to frames we initialize the allocated surfaces with default pattern
     memset(pSfc->Data.Y, 100, width * height);  // Y plane
     memset(pSfc->Data.U, 50, (width * height)/2);  // UV plane
 }
-
-
+//}}}
+//{{{
 // Get free raw frame surface
 int GetFreeSurfaceIndex(mfxFrameSurface1** pSurfacesPool, mfxU16 nPoolSize)
 {
@@ -466,7 +492,8 @@ int GetFreeSurfaceIndex(mfxFrameSurface1** pSurfacesPool, mfxU16 nPoolSize)
                 return i;
     return MFX_ERR_NOT_FOUND;
 }
-
+//}}}
+//{{{
 int GetFreeSurfaceIndex(const std::vector<mfxFrameSurface1>& pSurfacesPool)
 {
     auto it = std::find_if(pSurfacesPool.begin(), pSurfacesPool.end(), [](const mfxFrameSurface1& surface) {
@@ -477,7 +504,9 @@ int GetFreeSurfaceIndex(const std::vector<mfxFrameSurface1>& pSurfacesPool)
         return MFX_ERR_NOT_FOUND;
     else return it - pSurfacesPool.begin();
 }
+//}}}
 
+//{{{
 char mfxFrameTypeString(mfxU16 FrameType)
 {
     mfxU8 FrameTmp = FrameType & 0xF;
@@ -497,10 +526,12 @@ char mfxFrameTypeString(mfxU16 FrameType)
     }
     return FrameTypeOut;
 }
+//}}}
 
 #if defined(_WIN32) || defined(_WIN64)
 //This function is modified according to the MSDN example at
 // https://msdn.microsoft.com/en-us/library/hskdteyh(v=vs.140).aspx#Example
+//{{{
 void showCPUInfo() {
     int nIds;
     int nExIds;
@@ -552,8 +583,10 @@ void showCPUInfo() {
     printf("Processor: %s\n", processor);
     printf("Please check http://ark.intel.com/ for the GPU info\n");
 }
+//}}}
 #endif
 
+//{{{
 const mfxPluginUID & msdkGetPluginUID(mfxIMPL impl, msdkComponentType type, mfxU32 uCodecid)
 {
     if (impl == MFX_IMPL_SOFTWARE)
@@ -608,7 +641,8 @@ const mfxPluginUID & msdkGetPluginUID(mfxIMPL impl, msdkComponentType type, mfxU
 
     return MSDK_PLUGINGUID_NULL;
 }
-
+//}}}
+//{{{
 bool AreGuidsEqual(const mfxPluginUID& guid1, const mfxPluginUID& guid2)
 {
     for (size_t i = 0; i != sizeof(mfxPluginUID); i++)
@@ -618,7 +652,8 @@ bool AreGuidsEqual(const mfxPluginUID& guid1, const mfxPluginUID& guid2)
     }
     return true;
 }
-
+//}}}
+//{{{
 char* ConvertGuidToString(const mfxPluginUID& guid)
 {
     static char szGuid[256] = { 0 };
@@ -630,7 +665,8 @@ char* ConvertGuidToString(const mfxPluginUID& guid)
 
     return szGuid;
 }
-
+//}}}
+//{{{
 mfxStatus ConvertFrameRate(mfxF64 dFrameRate, mfxU32* pnFrameRateExtN, mfxU32* pnFrameRateExtD)
 {
     MSDK_CHECK_POINTER(pnFrameRateExtN, MFX_ERR_NULL_PTR);
@@ -661,3 +697,4 @@ mfxStatus ConvertFrameRate(mfxF64 dFrameRate, mfxU32* pnFrameRateExtN, mfxU32* p
 
     return MFX_ERR_NONE;
 }
+//}}}

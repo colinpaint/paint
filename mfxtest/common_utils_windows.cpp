@@ -1,3 +1,4 @@
+//{{{
 // Copyright (c) 2019 Intel Corporation
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -17,21 +18,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
+//}}}
 #include "common_utils.h"
 
 // ATTENTION: If D3D surfaces are used, DX9_D3D or DX11_D3D must be set in project settings or hardcoded here
-
 #ifdef DX9_D3D
-#include "common_directx.h"
+  #include "common_directx.h"
 #elif DX11_D3D
-#include "common_directx11.h"
+  #include "common_directx11.h"
 #endif
 
-/* =======================================================
- * Windows implementation of OS-specific utility functions
- */
-
+//{{{
 mfxStatus Initialize(mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession, mfxFrameAllocator* pmfxAllocator, bool bCreateSharedHandles)
 {
     mfxStatus sts = MFX_ERR_NONE;
@@ -74,19 +71,23 @@ mfxStatus Initialize(mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession, mf
 
     return sts;
 }
-
+//}}}
+//{{{
 void Release()
 {
 #if defined(DX9_D3D) || defined(DX11_D3D)
     CleanupHWDevice();
 #endif
 }
+//}}}
 
+//{{{
 void mfxGetTime(mfxTime* timestamp)
 {
     QueryPerformanceCounter(timestamp);
 }
-
+//}}}
+//{{{
 double TimeDiffMsec(mfxTime tfinish, mfxTime tstart)
 {
     static LARGE_INTEGER tFreq = { 0 };
@@ -96,7 +97,9 @@ double TimeDiffMsec(mfxTime tfinish, mfxTime tstart)
     double freq = (double)tFreq.QuadPart;
     return 1000.0 * ((double)tfinish.QuadPart - (double)tstart.QuadPart) / freq;
 }
+//}}}
 
+//{{{
 void ClearYUVSurfaceVMem(mfxMemId memId)
 {
 #if defined(DX9_D3D) || defined(DX11_D3D)
@@ -105,7 +108,8 @@ void ClearYUVSurfaceVMem(mfxMemId memId)
     (void)memId;
 #endif
 }
-
+//}}}
+//{{{
 void ClearRGBSurfaceVMem(mfxMemId memId)
 {
 #if defined(DX9_D3D) || defined(DX11_D3D)
@@ -114,4 +118,4 @@ void ClearRGBSurfaceVMem(mfxMemId memId)
     (void)memId;
 #endif
 }
-
+//}}}
