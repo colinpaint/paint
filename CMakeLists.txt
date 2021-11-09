@@ -8,6 +8,7 @@ option (BUILD_CAPTURE "Build capture" ON)
 option (BUILD_PAINTBOX "Build paintbox" ON)
 option (BUILD_IMPLOT "Build implot" ON)
 option (BUILD_FILESYSTEM "Build filesystem" ON)
+SET (BUILD_MFXTEST OFF)
 
 set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
@@ -148,6 +149,20 @@ if (BUILD_TELLY)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 endif()
 
+# mfxtest app
+if (BUILD_MFXTEST)
+  project (mfxtest)
+    file (GLOB HEADER_FILES mfxtest/*.h utils/*.h)
+    file (GLOB SOURCE_FILES mfxtest/*.cpp)
+    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+
+    target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils)
+    if (MSVC)
+      target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/windows/include)
+    else()
+      target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/linux/include)
+    endif()
+endif()
 
 # capture app
 if (BUILD_CAPTURE AND MSVC)

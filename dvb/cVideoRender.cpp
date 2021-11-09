@@ -109,7 +109,7 @@ extern "C" {
 
 using namespace std;
 //}}}
-#define FFMPEG_DECODER
+//#define FFMPEG_DECODER
 
 constexpr uint32_t kVideoPoolSize = 50;
 //{{{
