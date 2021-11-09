@@ -11,7 +11,6 @@
 #include "../utils/cMiniLog.h"
 
 class cFrame;
-class cDecoder;
 //}}}
 constexpr int kPtsPerSecond = 90000;
 
@@ -48,7 +47,6 @@ protected:
   void log (const std::string& tag, const std::string& text);
 
   std::shared_mutex mSharedMutex;
-  cDecoder* mDecoder = nullptr;
 
 private:
   const std::string mName;

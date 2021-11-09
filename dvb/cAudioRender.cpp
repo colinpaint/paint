@@ -24,7 +24,6 @@
 #include "../imgui/myImgui.h"
 
 #include "cFrame.h"
-#include "cDecoder.h"
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"
@@ -353,24 +352,33 @@ private:
   };
 //}}}
 //{{{
-class cAudioDecoder : public cDecoder {
+class cAudioDecoder {
 public:
   //{{{
-  cAudioDecoder (uint8_t streamType) : cDecoder(streamType) {
+  cAudioDecoder (uint8_t streamType) :
+    mStreamType(streamType),
+    mAvCodec (avcodec_find_decoder ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
 
     cLog::log (LOGINFO, fmt::format ("cAudioDecoder - streamType:{}", streamType));
 
     // aacAdts AV_CODEC_ID_AAC;
     mAvParser = av_parser_init ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
-    mAvCodec = (AVCodec*)avcodec_find_decoder ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }
   //}}}
-  virtual ~cAudioDecoder() {}
+  //{{{
+  virtual ~cAudioDecoder() {
+
+    if (mAvContext)
+      avcodec_close (mAvContext);
+    if (mAvParser)
+      av_parser_close (mAvParser);
+    }
+  //}}}
 
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, 
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<void (cFrame* frame)> addFrameCallback) final  {
     (void)dts;
     uint8_t* frame = pes;
@@ -454,7 +462,6 @@ public:
 
             cAudioFrame* audioFrame = new cAudioFrame (pts, numChannels, samplesPerFrame, sampleRate, samples);
             addFrameCallback (audioFrame);
-            //av_frame_unref (avFrame);
             pts += audioFrame->getPtsDuration();
             }
           }
@@ -469,6 +476,11 @@ public:
   //}}}
 
 private:
+  const uint8_t mStreamType;
+  AVCodecParserContext* mAvParser = nullptr;
+  AVCodec* mAvCodec = nullptr;
+  AVCodecContext* mAvContext = nullptr;
+
   size_t mChannels = 0;
   size_t mSampleRate = 0;
   size_t mSamplesPerFrame = 0;
@@ -618,7 +630,7 @@ cAudioRender::cAudioRender (const std::string name, uint8_t streamType) : cRende
   mSamplesPerFrame = 1024;
   mMaxMapSize = kAudioPoolSize;
 
-  mDecoder = new cAudioDecoder (streamType);
+  mAudioDecoder = new cAudioDecoder (streamType);
   }
 //}}}
 //{{{
@@ -711,7 +723,7 @@ void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   //log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);
 
-  mDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
+  mAudioDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
     // addFrame lambda
     cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
     mNumChannels = audioFrame->getNumChannels();

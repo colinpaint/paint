@@ -30,6 +30,8 @@ public:
   virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,  bool skip) final;
 
 private:
+  cVideoDecoder* mVideoDecoder = nullptr;
+
   const size_t mMaxPoolSize;
   std::map <int64_t, cVideoFrame*> mFrames;
 

@@ -6,8 +6,6 @@
 #include <string>
 #include <map>
 
-#include "cDecoder.h"
-
 #include "../utils/cLog.h"
 
 using namespace std;
@@ -27,9 +25,7 @@ cRender::cRender (const std::string name, uint8_t streamType)
   : mName(name), mStreamType(streamType), mMiniLog ("log") {}
 //}}}
 //{{{
-cRender::~cRender() {
-  delete mDecoder;
-  }
+cRender::~cRender() {}
 //}}}
 
 void cRender::toggleLog() { mMiniLog.toggleEnable(); }
