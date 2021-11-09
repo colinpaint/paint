@@ -613,7 +613,6 @@ private:
 //{{{
 cAudioRender::cAudioRender (const std::string name) : cRender(name) {
 
-  mFrameType = eAudioFrameType::eAacLatm;
   mNumChannels = 2;
   mSampleRate = 48000;
   mSamplesPerFrame = 1024;

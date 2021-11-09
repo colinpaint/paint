@@ -559,6 +559,7 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize,
           cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
                                             getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
                                             frameType,pesSize));
+        mGuessPts = pts;
         mSeenIFrame = true;
         }
 

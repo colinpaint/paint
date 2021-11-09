@@ -21,7 +21,6 @@ public:
   virtual ~cAudioRender();
 
   // gets
-  eAudioFrameType getFrameType() const { return mFrameType; }
   size_t getNumChannels() const { return mNumChannels; }
   size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
   uint32_t getSampleRate() const { return mSampleRate; }
@@ -44,7 +43,6 @@ public:
 
 private:
   // vars
-  eAudioFrameType mFrameType;
   size_t mNumChannels;
   size_t mSamplesPerFrame = 0;
   uint32_t mSampleRate = 0;
