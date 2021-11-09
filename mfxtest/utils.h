@@ -1,3 +1,4 @@
+//{{{
 // Copyright (c) 2019 Intel Corporation
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -17,9 +18,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
+//}}}
 #pragma once
-
+//{{{
 #include <stdio.h>
 #include <memory>
 #include <vector>
@@ -29,19 +30,6 @@
 #include "mfxvp8.h"
 #include "mfxplugin.h"
 
-// =================================================================
-// OS-specific definitions of types, macro, etc...
-// The following should be defined:
-//  - mfxTime
-//  - MSDK_FOPEN
-//  - MSDK_SLEEP
-#if defined(_WIN32) || defined(_WIN64)
-#include "bits/windows_defs.h"
-#elif defined(__linux__)
-#include "bits/linux_defs.h"
-#endif
-
-// =================================================================
 // Helper macro definitions...
 #define MSDK_PRINT_RET_MSG(ERR)         {PrintErrString(ERR, __FILE__, __LINE__);}
 #define MSDK_CHECK_RESULT(P, X, ERR)    {if ((X) > (P)) {MSDK_PRINT_RET_MSG(ERR); return ERR;}}
@@ -58,16 +46,15 @@
 // Usage of the following two macros are only required for certain Windows DirectX11 use cases
 #define WILL_READ  0x1000
 #define WILL_WRITE 0x2000
+//}}}
 
-// =================================================================
-// Intel Media SDK memory allocator entrypoints....
-// Implementation of this functions is OS/Memory type specific.
 mfxStatus simple_alloc(mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response);
 mfxStatus simple_lock(mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr);
 mfxStatus simple_unlock(mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr);
 mfxStatus simple_gethdl(mfxHDL pthis, mfxMemId mid, mfxHDL* handle);
 mfxStatus simple_free(mfxHDL pthis, mfxFrameAllocResponse* response);
 
+//{{{
 typedef mfxI32 msdkComponentType;
 enum
 {
@@ -76,13 +63,9 @@ enum
     MSDK_VPP = 0x0004,
     MSDK_VENC = 0x0008,
 };
+//}}}
 
 static const mfxPluginUID MSDK_PLUGINGUID_NULL = { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
-
-
-// =================================================================
-// Utility functions, not directly tied to Media SDK functionality
-//
 
 void PrintErrString(int err,const char* filestr,int line);
 FILE* OpenFile(const char* fileName, const char* mode);
@@ -120,17 +103,18 @@ void ClearRGBSurfaceVMem(mfxMemId memId);
 int GetFreeSurfaceIndex(mfxFrameSurface1** pSurfacesPool, mfxU16 nPoolSize);
 int GetFreeSurfaceIndex(const std::vector<mfxFrameSurface1>& pSurfacesPool);
 
-// For use with asynchronous task management
+//{{{
 typedef struct {
-    mfxBitstream mfxBS;
-    mfxSyncPoint syncp;
-} Task;
+  mfxBitstream mfxBS;
+  mfxSyncPoint syncp;
+  } Task;
+//}}}
 
 // Get free task
 int GetFreeTaskIndex(Task* pTaskPool, mfxU16 nPoolSize);
 
 // Initialize Intel Media SDK Session, device/display and memory manager
-mfxStatus Initialize(mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession, mfxFrameAllocator* pmfxAllocator, bool bCreateSharedHandles = false);
+mfxStatus Initialize (mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession, mfxFrameAllocator* pmfxAllocator, bool bCreateSharedHandles = false);
 
 // Release resources (device/display)
 void Release();
@@ -138,14 +122,6 @@ void Release();
 // Convert frame type to string
 char mfxFrameTypeString(mfxU16 FrameType);
 
-void mfxGetTime(mfxTime* timestamp);
-
-//void mfxInitTime();  might need this for Windows
-double TimeDiffMsec(mfxTime tfinish, mfxTime tstart);
-#if defined(_WIN32) || defined(_WIN64)
-//This is the utility to show the current processor id of the platform.
-void showCPUInfo();
-#endif
 //This function is to check the UID return value after retrieving the UID for the current plugin
 bool AreGuidsEqual(const mfxPluginUID& guid1, const mfxPluginUID& guid2);
 
