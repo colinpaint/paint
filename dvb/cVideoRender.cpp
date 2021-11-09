@@ -175,8 +175,8 @@ public:
 
     if (!mInited) {
       //{{{  init decode with streamType codec
-      mAvParser = av_parser_init (AV_CODEC_ID_H264);
-      mAvCodec = (AVCodec*)avcodec_find_decoder (AV_CODEC_ID_H264);
+      mAvParser = av_parser_init ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
+      mAvCodec = (AVCodec*)avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
       mAvContext = avcodec_alloc_context3 (mAvCodec);
       avcodec_open2 (mAvContext, mAvCodec, NULL);
       mInited = true;
