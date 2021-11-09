@@ -171,20 +171,21 @@ public:
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, uint8_t streamType,
                            function<void (cFrame* frame)> addFrameCallback) final {
     (void)dts;
-    (void)streamType;
-
     if (!mInited) {
       //{{{  init decode with streamType codec
+      cLog::log (LOGINFO, fmt::format ("videoDecoder streamType {}", streamType));
+
       mAvParser = av_parser_init ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
       mAvCodec = (AVCodec*)avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
       mAvContext = avcodec_alloc_context3 (mAvCodec);
       avcodec_open2 (mAvContext, mAvCodec, NULL);
+
       mInited = true;
       }
       //}}}
+
     AVPacket* avPacket = av_packet_alloc();
     AVFrame* avFrame = av_frame_alloc();
-
     uint8_t* frame = pes;
     uint32_t frameSize = pesSize;
     while (frameSize) {
@@ -244,28 +245,7 @@ private:
 //{{{
 class cMfxVideoDecoder : public cDecoder {
 public:
-  //{{{
-  cMfxVideoDecoder() : cDecoder() {
-
-    mfxIMPL mfxImpl = MFX_IMPL_HARDWARE; // MFX_IMPL_AUTO_ANY MFX_IMPL_AUTO MFX_IMPL_SOFTWARE MFX_IMPL_VIA_D3D11
-    mfxVersion mfxVersion = {{0,1}};
-    mfxStatus mfxStatus = mMfxSession.Init (mfxImpl, &mfxVersion);
-    if (mfxStatus != MFX_ERR_NONE)
-      cLog::log (LOGINFO, fmt::format ("session.Init failed - status:{}", mfxStatus));
-
-    // query selected implementation and version
-    mfxStatus = mMfxSession.QueryIMPL (&mfxImpl);
-    if (mfxStatus != MFX_ERR_NONE)
-      cLog::log (LOGINFO, fmt::format ("QueryIMPL failed {}", mfxStatus));
-
-    mfxStatus = mMfxSession.QueryVersion (&mfxVersion);
-    if (mfxStatus != MFX_ERR_NONE)
-      cLog::log (LOGINFO, fmt::format ("QueryVersion failed {}", mfxStatus));
-
-    cLog::log (LOGINFO, fmt::format ("mfxImpl:{} verMajor:{} verMinor:{}",
-                                     mfxImpl, mfxVersion.Major, mfxVersion.Minor));
-    }
-  //}}}
+  cMfxVideoDecoder() : cDecoder() {}
   //{{{
   virtual ~cMfxVideoDecoder() {
 
@@ -289,22 +269,52 @@ public:
     mBitstream.MaxLength = pesSize;
     mBitstream.TimeStamp = pts;
 
+    if (!mSessionInited) {
+      //{{{  init session
+      // MFX_IMPL_AUTO
+      // MFX_IMPL_HARDWARE
+      // MFX_IMPL_SOFTWARE
+      // MFX_IMPL_AUTO_ANY
+      // MFX_IMPL_VIA_D3D11
+      mfxIMPL mfxImpl = MFX_IMPL_AUTO;
+      mfxVersion mfxVersion = {{0,1}};
+      mfxStatus mfxStatus = mMfxSession.Init (mfxImpl, &mfxVersion);
+      if (mfxStatus != MFX_ERR_NONE)
+        cLog::log (LOGINFO, fmt::format ("session.Init failed - status:{}", mfxStatus));
+
+      // query selected implementation and version
+      mfxStatus = mMfxSession.QueryIMPL (&mfxImpl);
+      if (mfxStatus != MFX_ERR_NONE)
+        cLog::log (LOGINFO, fmt::format ("QueryIMPL failed {}", mfxStatus));
+
+      mfxStatus = mMfxSession.QueryVersion (&mfxVersion);
+      if (mfxStatus != MFX_ERR_NONE)
+        cLog::log (LOGINFO, fmt::format ("QueryVersion failed {}", mfxStatus));
+
+      cLog::log (LOGINFO, fmt::format ("mfxImpl:{} verMajor:{} verMinor:{}",
+                                       mfxImpl, mfxVersion.Major, mfxVersion.Minor));
+      mSessionInited = true;
+      }
+      //}}}
+
     if (!mInited) {
+      cLog::log (LOGINFO, fmt::format ("cMfxVideoDecoder streamType {}", streamType));
+
       //  read header, allocate surfaces, init decoder
       mfxVideoParam mVideoParams;
       memset (&mVideoParams, 0, sizeof (mVideoParams));
       mVideoParams.mfx.CodecId = (streamType == 27) ? MFX_CODEC_AVC : MFX_CODEC_MPEG2;
       mVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
-      mfxStatus status = MFXVideoDECODE_DecodeHeader (mMfxSession, &mBitstream, &mVideoParams);
-      if (status != MFX_ERR_NONE)
-        cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_DecodeHeader failed - status:{}", status));
+      mfxStatus mfxStatus = MFXVideoDECODE_DecodeHeader (mMfxSession, &mBitstream, &mVideoParams);
+      if (mfxStatus != MFX_ERR_NONE)
+        cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_DecodeHeader failed - status:{}", mfxStatus));
       else {
         //{{{  query surfaces
         mfxFrameAllocRequest frameAllocRequest;
         memset (&frameAllocRequest, 0, sizeof (frameAllocRequest));
-        status =  MFXVideoDECODE_QueryIOSurf (mMfxSession, &mVideoParams, &frameAllocRequest);
-        if (status != MFX_ERR_NONE)
-          cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_QueryIOSurf failed - status:{}", status));
+        mfxStatus =  MFXVideoDECODE_QueryIOSurf (mMfxSession, &mVideoParams, &frameAllocRequest);
+        if (mfxStatus != MFX_ERR_NONE)
+          cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_QueryIOSurf failed - status:{}", mfxStatus));
 
         mNumSurfaces = frameAllocRequest.NumFrameSuggested;
 
@@ -328,9 +338,9 @@ public:
           }
         cLog::log (LOGINFO, fmt::format ("mfxDecode surfaces allocated {}x{} {}", mWidth, mHeight, mNumSurfaces));
 
-        status = MFXVideoDECODE_Init (mMfxSession, &mVideoParams);
-        if (status != MFX_ERR_NONE)
-          cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_Init failed - status:{}", status));
+        mfxStatus = MFXVideoDECODE_Init (mMfxSession, &mVideoParams);
+        if (mfxStatus != MFX_ERR_NONE)
+          cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_Init failed - status:{}", mfxStatus));
 
         mInited = true;
         }
@@ -338,15 +348,15 @@ public:
       }
 
     if (mInited) {
-      mfxStatus status = MFX_ERR_NONE;
-      while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE)) {
+      mfxStatus mfxStatus = MFX_ERR_NONE;
+      while ((mfxStatus >= MFX_ERR_NONE) || (mfxStatus == MFX_ERR_MORE_SURFACE)) {
         auto timePoint = chrono::system_clock::now();
         int index = getFreeSurfaceIndex (mSurfaces, mNumSurfaces);
         mfxFrameSurface1* surface = nullptr;
-        mfxSyncPoint syncDecode = nullptr;
-        status = MFXVideoDECODE_DecodeFrameAsync (mMfxSession, &mBitstream, mSurfaces[index], &surface, &syncDecode);
-        if (status == MFX_ERR_NONE) {
-          status = mMfxSession.SyncOperation (syncDecode, 60000);
+        mfxSyncPoint decodeSyncPoint = nullptr;
+        mfxStatus = MFXVideoDECODE_DecodeFrameAsync (mMfxSession, &mBitstream, mSurfaces[index], &surface, &decodeSyncPoint);
+        if (mfxStatus == MFX_ERR_NONE) {
+          mfxStatus = mMfxSession.SyncOperation (decodeSyncPoint, 60000);
           int64_t decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
           cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (surface->Data.TimeStamp, 90000/25);
@@ -380,6 +390,7 @@ private:
     }
   //}}}
 
+  bool mSessionInited = false;
   MFXVideoSession mMfxSession;
   mfxBitstream mBitstream;
 
