@@ -443,9 +443,9 @@ protected:
 
   private:
     const uint8_t mStreamType;
+    const AVCodec* mAvCodec = nullptr;
 
     AVCodecParserContext* mAvParser = nullptr;
-    const AVCodec* mAvCodec = nullptr;
     AVCodecContext* mAvContext = nullptr;
     SwsContext* mSwsContext = nullptr;
     };

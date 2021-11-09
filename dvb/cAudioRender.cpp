@@ -477,8 +477,9 @@ public:
 
 private:
   const uint8_t mStreamType;
+  const AVCodec* mAvCodec = nullptr;
+
   AVCodecParserContext* mAvParser = nullptr;
-  AVCodec* mAvCodec = nullptr;
   AVCodecContext* mAvContext = nullptr;
 
   size_t mChannels = 0;
