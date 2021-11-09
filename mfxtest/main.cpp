@@ -81,8 +81,8 @@ int main(int numArgs, char** args) {
   mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY | MFX_IMPL_VIA_D3D11;
   mfxVersion mfxVersion = {{0,1}};
   MFXVideoSession mfxSession;
-  //mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
-  mfxStatus status = Initialize (mfxImpl, mfxVersion, &mfxSession, NULL);
+  mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
+  //mfxStatus status = Initialize (mfxImpl, mfxVersion, &mfxSession, NULL);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, fmt::format ("session.Init failed - status:{}:{}", status, getMfxStatus (status)));
 
