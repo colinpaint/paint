@@ -36,7 +36,7 @@
 // Utility functions, not directly tied to Intel Media SDK functionality
 //
 
-void PrintErrString(int err,const char* filestr,int line)
+void PrintErrString (int err,const char* filestr,int line)
 {
     switch (err) {
     case   0:
@@ -109,7 +109,7 @@ void PrintErrString(int err,const char* filestr,int line)
 //}}}
 
 //{{{
-FILE* OpenFile(const char* fileName, const char* mode)
+FILE* OpenFil (const char* fileName, const char* mode)
 {
     FILE* openFile = nullptr;
     MSDK_FOPEN(openFile, fileName, mode);
@@ -117,7 +117,7 @@ FILE* OpenFile(const char* fileName, const char* mode)
 }
 //}}}
 //{{{
-void CloseFile(FILE* fHdl)
+void CloseFile (FILE* fHdl)
 {
     if(fHdl)
         fclose(fHdl);
@@ -125,7 +125,7 @@ void CloseFile(FILE* fHdl)
 //}}}
 
 //{{{
-mfxStatus ReadPlaneData(mfxU16 w, mfxU16 h, mfxU8* buf, mfxU8* ptr,
+mfxStatus ReadPlaneData (mfxU16 w, mfxU16 h, mfxU8* buf, mfxU8* ptr,
                         mfxU16 pitch, mfxU16 offset, FILE* fSource)
 {
     mfxU32 nBytesRead;
@@ -140,7 +140,7 @@ mfxStatus ReadPlaneData(mfxU16 w, mfxU16 h, mfxU8* buf, mfxU8* ptr,
 }
 //}}}
 //{{{
-mfxStatus LoadRawFrame(mfxFrameSurface1* pSurface, FILE* fSource)
+mfxStatus LoadRawFrame (mfxFrameSurface1* pSurface, FILE* fSource)
 {
     if (!fSource) {
         // Simulate instantaneous access to 1000 "empty" frames.
@@ -197,7 +197,7 @@ mfxStatus LoadRawFrame(mfxFrameSurface1* pSurface, FILE* fSource)
 //}}}
 
 //{{{
-mfxStatus ReadPlaneData10Bit(mfxU16 w, mfxU16 h, mfxU16* buf, mfxU8* ptr,
+mfxStatus ReadPlaneData10Bit (mfxU16 w, mfxU16 h, mfxU16* buf, mfxU8* ptr,
     mfxU16 pitch, mfxU16 shift, FILE* fSource)
 {
     mfxU32 nBytesRead;
@@ -222,7 +222,7 @@ mfxStatus ReadPlaneData10Bit(mfxU16 w, mfxU16 h, mfxU16* buf, mfxU8* ptr,
 }
 //}}}
 //{{{
-mfxStatus LoadRaw10BitFrame(mfxFrameSurface1* pSurface, FILE* fSource)
+mfxStatus LoadRaw10BitFrame (mfxFrameSurface1* pSurface, FILE* fSource)
 {
     if (!fSource) {
         // Simulate instantaneous access to 1000 "empty" frames.
@@ -270,7 +270,7 @@ mfxStatus LoadRaw10BitFrame(mfxFrameSurface1* pSurface, FILE* fSource)
 }
 //}}}
 //{{{
-mfxStatus LoadRawRGBFrame(mfxFrameSurface1* pSurface, FILE* fSource)
+mfxStatus LoadRawRGBFrame (mfxFrameSurface1* pSurface, FILE* fSource)
 {
     if (!fSource) {
         // Simulate instantaneous access to 1000 "empty" frames.
@@ -305,7 +305,7 @@ mfxStatus LoadRawRGBFrame(mfxFrameSurface1* pSurface, FILE* fSource)
 //}}}
 
 //{{{
-mfxStatus WriteBitStreamFrame(mfxBitstream* pMfxBitstream, FILE* fSink)
+mfxStatus WriteBitStreamFrame (mfxBitstream* pMfxBitstream, FILE* fSink)
 {
     if (!pMfxBitstream)
        return MFX_ERR_NULL_PTR;
@@ -325,7 +325,7 @@ mfxStatus WriteBitStreamFrame(mfxBitstream* pMfxBitstream, FILE* fSink)
 }
 //}}}
 //{{{
-mfxStatus ReadBitStreamData(mfxBitstream* pBS, FILE* fSource)
+mfxStatus ReadBitStreamData( mfxBitstream* pBS, FILE* fSource)
 {
     memmove(pBS->Data, pBS->Data + pBS->DataOffset, pBS->DataLength);
     pBS->DataOffset = 0;
@@ -344,7 +344,7 @@ mfxStatus ReadBitStreamData(mfxBitstream* pBS, FILE* fSource)
 //}}}
 
 //{{{
-mfxStatus WriteSection(mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
+mfxStatus WriteSection (mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
                        mfxFrameInfo* pInfo, mfxFrameData* pData, mfxU32 i,
                        mfxU32 j, FILE* fSink)
 {
@@ -357,7 +357,7 @@ mfxStatus WriteSection(mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
 }
 //}}}
 //{{{
-mfxStatus WriteRawFrame(mfxFrameSurface1* pSurface, FILE* fSink)
+mfxStatus WriteRawFrame (mfxFrameSurface1* pSurface, FILE* fSink)
 {
     mfxFrameInfo* pInfo = &pSurface->Info;
     mfxFrameData* pData = &pSurface->Data;
@@ -410,7 +410,7 @@ mfxStatus WriteRawFrame(mfxFrameSurface1* pSurface, FILE* fSink)
 }
 //}}}
 //{{{
-mfxStatus WriteSection10Bit(mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
+mfxStatus WriteSection10Bit (mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
     mfxFrameInfo* pInfo, mfxFrameData* pData, mfxU32 i,
     /*mfxU32 j,*/ FILE* fSink)
 {
@@ -444,7 +444,7 @@ mfxStatus WriteSection10Bit(mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
 }
 //}}}
 //{{{
-mfxStatus WriteRaw10BitFrame(mfxFrameSurface1* pSurface, FILE* fSink)
+mfxStatus WriteRaw10BitFrame (mfxFrameSurface1* pSurface, FILE* fSink)
 {
     mfxFrameInfo* pInfo = &pSurface->Info;
     mfxFrameData* pData = &pSurface->Data;
@@ -464,7 +464,7 @@ mfxStatus WriteRaw10BitFrame(mfxFrameSurface1* pSurface, FILE* fSink)
 //}}}
 
 //{{{
-int GetFreeTaskIndex(Task* pTaskPool, mfxU16 nPoolSize)
+int GetFreeTaskIndex (Task* pTaskPool, mfxU16 nPoolSize)
 {
     if (pTaskPool)
         for (int i = 0; i < nPoolSize; i++)
@@ -475,7 +475,7 @@ int GetFreeTaskIndex(Task* pTaskPool, mfxU16 nPoolSize)
 //}}}
 
 //{{{
-void ClearYUVSurfaceSysMem(mfxFrameSurface1* pSfc, mfxU16 width, mfxU16 height)
+void ClearYUVSurfaceSysMem (mfxFrameSurface1* pSfc, mfxU16 width, mfxU16 height)
 {
     // In case simulating direct access to frames we initialize the allocated surfaces with default pattern
     memset(pSfc->Data.Y, 100, width * height);  // Y plane
@@ -484,7 +484,7 @@ void ClearYUVSurfaceSysMem(mfxFrameSurface1* pSfc, mfxU16 width, mfxU16 height)
 //}}}
 //{{{
 // Get free raw frame surface
-int GetFreeSurfaceIndex(mfxFrameSurface1** pSurfacesPool, mfxU16 nPoolSize)
+int GetFreeSurfaceIndex (mfxFrameSurface1** pSurfacesPool, mfxU16 nPoolSize)
 {
     if (pSurfacesPool)
         for (mfxU16 i = 0; i < nPoolSize; i++)
@@ -494,7 +494,7 @@ int GetFreeSurfaceIndex(mfxFrameSurface1** pSurfacesPool, mfxU16 nPoolSize)
 }
 //}}}
 //{{{
-int GetFreeSurfaceIndex(const std::vector<mfxFrameSurface1>& pSurfacesPool)
+int GetFreeSurfaceIndex (const std::vector<mfxFrameSurface1>& pSurfacesPool)
 {
     auto it = std::find_if(pSurfacesPool.begin(), pSurfacesPool.end(), [](const mfxFrameSurface1& surface) {
                         return 0 == surface.Data.Locked;
@@ -507,7 +507,7 @@ int GetFreeSurfaceIndex(const std::vector<mfxFrameSurface1>& pSurfacesPool)
 //}}}
 
 //{{{
-char mfxFrameTypeString(mfxU16 FrameType)
+char mfxFrameTypeString (mfxU16 FrameType)
 {
     mfxU8 FrameTmp = FrameType & 0xF;
     char FrameTypeOut;
@@ -587,7 +587,7 @@ void showCPUInfo() {
 #endif
 
 //{{{
-const mfxPluginUID & msdkGetPluginUID(mfxIMPL impl, msdkComponentType type, mfxU32 uCodecid)
+const mfxPluginUID & msdkGetPluginUID (mfxIMPL impl, msdkComponentType type, mfxU32 uCodecid)
 {
     if (impl == MFX_IMPL_SOFTWARE)
     {
@@ -643,7 +643,7 @@ const mfxPluginUID & msdkGetPluginUID(mfxIMPL impl, msdkComponentType type, mfxU
 }
 //}}}
 //{{{
-bool AreGuidsEqual(const mfxPluginUID& guid1, const mfxPluginUID& guid2)
+bool AreGuidsEqual (const mfxPluginUID& guid1, const mfxPluginUID& guid2)
 {
     for (size_t i = 0; i != sizeof(mfxPluginUID); i++)
     {
@@ -654,7 +654,7 @@ bool AreGuidsEqual(const mfxPluginUID& guid1, const mfxPluginUID& guid2)
 }
 //}}}
 //{{{
-char* ConvertGuidToString(const mfxPluginUID& guid)
+char* ConvertGuidToString (const mfxPluginUID& guid)
 {
     static char szGuid[256] = { 0 };
 
@@ -666,8 +666,9 @@ char* ConvertGuidToString(const mfxPluginUID& guid)
     return szGuid;
 }
 //}}}
+
 //{{{
-mfxStatus ConvertFrameRate(mfxF64 dFrameRate, mfxU32* pnFrameRateExtN, mfxU32* pnFrameRateExtD)
+mfxStatus ConvertFrameRate (mfxF64 dFrameRate, mfxU32* pnFrameRateExtN, mfxU32* pnFrameRateExtD)
 {
     MSDK_CHECK_POINTER(pnFrameRateExtN, MFX_ERR_NULL_PTR);
     MSDK_CHECK_POINTER(pnFrameRateExtD, MFX_ERR_NULL_PTR);

@@ -537,10 +537,21 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize,
 
   #ifdef MFX_DECODER
     mGuessPts = pts;
-    mSeenIFrame = true;
+
+    if (!mSeenIFrame) {
+      char frameType = cDvbUtils::getFrameType (pes, pesSize, streamType == 27);
+      if (frameType == 'I')
+        mSeenIFrame = true;
+      else {
+        cLog::log (LOGINFO, fmt::format ("waiting for Iframe {} to:{} type:{} size:{}",
+                                         getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
+                                         frameType, pesSize));
+        return;
+        }
+      }
   #else
     //{{{  ffmpeg h264 pts wrong, decode frames in presentation order, pts is correct on I frames
-    char frameType = cDvbUtils::getFrameType (pes, pesSize, true);
+    char frameType = cDvbUtils::getFrameType (pes, pesSize, streamType == 27);
     if (frameType == 'I') {
       if ((mGuessPts >= 0) && (mGuessPts != dts))
         cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
@@ -549,6 +560,7 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize,
       mGuessPts = dts;
       mSeenIFrame = true;
       }
+
 
     if (!mSeenIFrame) {
       cLog::log (LOGINFO, fmt::format ("waiting for Iframe {} to:{} type:{} size:{}",

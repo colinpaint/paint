@@ -29,7 +29,7 @@
 #endif
 
 //{{{
-mfxStatus Initialize(mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession, mfxFrameAllocator* pmfxAllocator, bool bCreateSharedHandles)
+mfxStatus Initialize (mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession, mfxFrameAllocator* pmfxAllocator, bool bCreateSharedHandles)
 {
     mfxStatus sts = MFX_ERR_NONE;
 
@@ -61,7 +61,7 @@ mfxStatus Initialize(mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession, mf
         pmfxAllocator->GetHDL = simple_gethdl;
 
         // Since we are using video memory we must provide Media SDK with an external allocator
-        sts = pSession->SetFrameAllocator(pmfxAllocator);
+        sts = pSession->SetFrameAllocator (pmfxAllocator);
         MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
     }
 #else
@@ -82,13 +82,13 @@ void Release()
 //}}}
 
 //{{{
-void mfxGetTime(mfxTime* timestamp)
+void mfxGetTime (mfxTime* timestamp)
 {
     QueryPerformanceCounter(timestamp);
 }
 //}}}
 //{{{
-double TimeDiffMsec(mfxTime tfinish, mfxTime tstart)
+double TimeDiffMsec (mfxTime tfinish, mfxTime tstart)
 {
     static LARGE_INTEGER tFreq = { 0 };
 
@@ -100,7 +100,7 @@ double TimeDiffMsec(mfxTime tfinish, mfxTime tstart)
 //}}}
 
 //{{{
-void ClearYUVSurfaceVMem(mfxMemId memId)
+void ClearYUVSurfaceVMem (mfxMemId memId)
 {
 #if defined(DX9_D3D) || defined(DX11_D3D)
     ClearYUVSurfaceD3D(memId);
@@ -110,7 +110,7 @@ void ClearYUVSurfaceVMem(mfxMemId memId)
 }
 //}}}
 //{{{
-void ClearRGBSurfaceVMem(mfxMemId memId)
+void ClearRGBSurfaceVMem (mfxMemId memId)
 {
 #if defined(DX9_D3D) || defined(DX11_D3D)
     ClearRGBSurfaceD3D(memId);

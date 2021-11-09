@@ -87,6 +87,6 @@ int main(int argc, char** argv) {
   //}}}
   mfxSession.Close();
 
-  this_thread::sleep_for (2000ms);
+  this_thread::sleep_for (5000ms);
   return 0;
   }
