@@ -109,7 +109,7 @@ extern "C" {
 
 using namespace std;
 //}}}
-//#define MFX_DECODER
+#define MFX_DECODER
 
 constexpr uint32_t kVideoPoolSize = 100;
 //{{{
@@ -291,8 +291,12 @@ public:
       if (mfxStatus != MFX_ERR_NONE)
         cLog::log (LOGINFO, fmt::format ("QueryVersion failed {}", mfxStatus));
 
-      cLog::log (LOGINFO, fmt::format ("mfxImpl:{} verMajor:{} verMinor:{}",
-                                       mfxImpl, mfxVersion.Major, mfxVersion.Minor));
+      cLog::log (LOGINFO, fmt::format ("mfxImpl:{:x}{}{}{} verMajor:{} verMinor:{}",
+                                       mfxImpl,
+                                       (mfxImpl & MFX_IMPL_HARDWARE) ? " hw":"",
+                                       (mfxImpl & MFX_IMPL_SOFTWARE) ? " sw":"",
+                                       (mfxImpl & MFX_IMPL_VIA_D3D9) ? " d3d9":"",
+                                       mfxVersion.Major, mfxVersion.Minor));
       mSessionInited = true;
       }
       //}}}

@@ -156,11 +156,10 @@ if (BUILD_MFXTEST)
     file (GLOB SOURCE_FILES mfxtest/decode.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
+    target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
     target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils)
     if (MSVC)
-      target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/windows/include)
     else()
-      target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/linux/include)
     endif()
 endif()
 

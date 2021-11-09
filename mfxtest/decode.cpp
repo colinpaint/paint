@@ -33,8 +33,12 @@ int main(int argc, char** argv) {
   if (mfxStatus != MFX_ERR_NONE)
     cLog::log (LOGINFO, fmt::format ("QueryVersion failed {}", mfxStatus));
 
-  cLog::log (LOGINFO, fmt::format ("mfxImpl:{} verMajor:{} verMinor:{}",
-                                   (mfxImpl == MFX_IMPL_HARDWARE) ? "hw":"sw", mfxVersion.Major, mfxVersion.Minor));
+  cLog::log (LOGINFO, fmt::format ("mfxImpl:{:x}{}{}{} verMajor:{} verMinor:{}",
+                                   mfxImpl,
+                                   (mfxImpl & MFX_IMPL_HARDWARE) ? " hw":"",
+                                   (mfxImpl & MFX_IMPL_SOFTWARE) ? " sw":"",
+                                   (mfxImpl & MFX_IMPL_VIA_D3D9) ? " d3d9":"",
+                                   mfxVersion.Major, mfxVersion.Minor));
 
   //}}}
   mfxSession.Close();

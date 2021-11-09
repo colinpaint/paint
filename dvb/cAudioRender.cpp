@@ -363,7 +363,7 @@ public:
                           function<void (cFrame* frame)> addFrameCallback) final  {
     (void)dts;
     if (!mInited) {
-      cLog::log (LOGINFO, fmt::format ("streamType {}", streamType));
+      cLog::log (LOGINFO, fmt::format ("cAudioDecoder - streamType:{}", streamType));
       // aacAdts AV_CODEC_ID_AAC;
       //frameType = (streamType == 17)? eAudioFrameType::eAacLatm : eAudioFrameType::eMp3;
       mAvParser = av_parser_init ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
