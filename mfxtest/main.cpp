@@ -12,9 +12,9 @@ using namespace std;
 //}}}
 
 //{{{
-string getMfxStatus (int mfxStatus) {
+string getMfxStatus (mfxStatus status) {
 
-  switch (mfxStatus) {
+  switch (status) {
     case   0: return "No error";
     case  -1: return "Unknown error";
     case  -2: return "Null pointer";
@@ -53,12 +53,21 @@ string getMfxInfo (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
   }
 //}}}
 
-int main(int argc, char** argv) {
+int main(int numArgs, char** args) {
 
-  (void)argc;
-  (void)argv;
-  cLog::init (LOGINFO);
-  cLog::log (LOGNOTICE, fmt::format ("mfxtest - decode"));
+  eLogLevel logLevel = LOGINFO;
+  //{{{  parse command line args to params
+  // parse params
+  for (int i = 1; i < numArgs; i++) {
+    string param = args[i];
+
+    if (param == "log1") { logLevel = LOGINFO1; }
+    else if (param == "log2") { logLevel = LOGINFO2; }
+    else if (param == "log3") { logLevel = LOGINFO3; }
+    }
+  //}}}
+  cLog::init (logLevel);
+  cLog::log (LOGNOTICE, "mfxtest");
 
   //{{{  MFX_IMPL flags
   // MFX_IMPL_AUTO
@@ -71,20 +80,22 @@ int main(int argc, char** argv) {
   mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY | MFX_IMPL_VIA_D3D11;
   mfxVersion mfxVersion = {{0,1}};
   MFXVideoSession mfxSession;
-  mfxStatus mfxStatus = mfxSession.Init (mfxImpl, &mfxVersion);
-  if (mfxStatus != MFX_ERR_NONE)
-    cLog::log (LOGINFO, fmt::format ("session.Init failed - status:{}:{}", mfxStatus, getMfxStatus(mfxStatus)));
+  mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
+  if (status != MFX_ERR_NONE)
+    cLog::log (LOGINFO, fmt::format ("session.Init failed - status:{}:{}", status, getMfxStatus (status)));
 
-  //{{{  Query selected implementation and version
-  mfxStatus = mfxSession.QueryIMPL (&mfxImpl);
-  if (mfxStatus != MFX_ERR_NONE)
-    cLog::log (LOGINFO, fmt::format ("QueryIMPL failed - status:{}:{}", mfxStatus, getMfxStatus (mfxStatus)));
-  mfxStatus = mfxSession.QueryVersion (&mfxVersion);
-  if (mfxStatus != MFX_ERR_NONE)
-    cLog::log (LOGINFO, fmt::format ("QueryVersion failed - status:{}:{}}", mfxStatus, getMfxStatus (mfxStatus)));
+  // query implementation
+  status = mfxSession.QueryIMPL (&mfxImpl);
+  if (status != MFX_ERR_NONE)
+    cLog::log (LOGINFO, fmt::format ("QueryIMPL failed - status:{}:{}", status, getMfxStatus (status)));
+
+  // query version
+  status = mfxSession.QueryVersion (&mfxVersion);
+  if (status != MFX_ERR_NONE)
+    cLog::log (LOGINFO, fmt::format ("QueryVersion failed - status:{}:{}}", status, getMfxStatus (status)));
 
   cLog::log (LOGINFO, getMfxInfo (mfxImpl, mfxVersion));
-  //}}}
+
   mfxSession.Close();
 
   this_thread::sleep_for (5000ms);

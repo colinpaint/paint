@@ -109,7 +109,7 @@ extern "C" {
 
 using namespace std;
 //}}}
-#define MFX_DECODER
+//#define MFX_DECODER
 
 constexpr uint32_t kVideoPoolSize = 100;
 //{{{
@@ -308,21 +308,19 @@ public:
       memset (&mVideoParams, 0, sizeof (mVideoParams));
       mVideoParams.mfx.CodecId = (streamType == 27) ? MFX_CODEC_AVC : MFX_CODEC_MPEG2;
       mVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
-      mfxStatus mfxStatus = MFXVideoDECODE_DecodeHeader (mMfxSession, &mBitstream, &mVideoParams);
-      if (mfxStatus != MFX_ERR_NONE)
-        cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_DecodeHeader failed - status:{}:{}",
-                                         mfxStatus, getMfxStatus (mfxStatus)));
-      else {
-        //{{{  query surfaces
+      mfxStatus status = MFXVideoDECODE_DecodeHeader (mMfxSession, &mBitstream, &mVideoParams);
+      if (status == MFX_ERR_NONE) {
+        //{{{  alloc surfaces
         mfxFrameAllocRequest frameAllocRequest;
         memset (&frameAllocRequest, 0, sizeof (frameAllocRequest));
-        mfxStatus =  MFXVideoDECODE_QueryIOSurf (mMfxSession, &mVideoParams, &frameAllocRequest);
-        if (mfxStatus != MFX_ERR_NONE)
+        status =  MFXVideoDECODE_QueryIOSurf (mMfxSession, &mVideoParams, &frameAllocRequest);
+        if (status != MFX_ERR_NONE)
           cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_QueryIOSurf failed - status:{}:{}",
-                                               mfxStatus, getMfxStatus (mfxStatus)));
+                                           status, getMfxStatus (status)));
 
         mNumSurfaces = frameAllocRequest.NumFrameSuggested;
 
+        // align to 32 pixel boundaries
         mWidth = (frameAllocRequest.Info.Width+31) & (~(mfxU16)31);
         mHeight = (frameAllocRequest.Info.Height+31) & (~(mfxU16)31);
         mSurfaces = new mfxFrameSurface1*[mNumSurfaces];
@@ -343,25 +341,28 @@ public:
           }
         cLog::log (LOGINFO, fmt::format ("mfxDecode surfaces allocated {}x{} {}", mWidth, mHeight, mNumSurfaces));
 
-        mfxStatus = MFXVideoDECODE_Init (mMfxSession, &mVideoParams);
-        if (mfxStatus != MFX_ERR_NONE)
+        status = MFXVideoDECODE_Init (mMfxSession, &mVideoParams);
+        if (status != MFX_ERR_NONE)
           cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_Init failed - status:{}:{}",
-                                           mfxStatus, getMfxStatus (mfxStatus)));
+                                           status, getMfxStatus (status)));
         mInited = true;
         }
         //}}}
+      else
+        cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_DecodeHeader failed - status:{}:{}",
+                                         status, getMfxStatus (status)));
       }
 
     if (mInited) {
-      mfxStatus mfxStatus = MFX_ERR_NONE;
-      while ((mfxStatus >= MFX_ERR_NONE) || (mfxStatus == MFX_ERR_MORE_SURFACE)) {
+      mfxStatus status = MFX_ERR_NONE;
+      while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE)) {
         auto timePoint = chrono::system_clock::now();
         int index = getFreeSurfaceIndex (mSurfaces, mNumSurfaces);
         mfxFrameSurface1* surface = nullptr;
         mfxSyncPoint decodeSyncPoint = nullptr;
-        mfxStatus = MFXVideoDECODE_DecodeFrameAsync (mMfxSession, &mBitstream, mSurfaces[index], &surface, &decodeSyncPoint);
-        if (mfxStatus == MFX_ERR_NONE) {
-          mfxStatus = mMfxSession.SyncOperation (decodeSyncPoint, 60000);
+        status = MFXVideoDECODE_DecodeFrameAsync (mMfxSession, &mBitstream, mSurfaces[index], &surface, &decodeSyncPoint);
+        if (status == MFX_ERR_NONE) {
+          status = mMfxSession.SyncOperation (decodeSyncPoint, 60000);
           int64_t decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
           cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (surface->Data.TimeStamp, 90000/25);
@@ -395,9 +396,9 @@ private:
     }
   //}}}
   //{{{
-  string getMfxStatus (int mfxStatus) {
+  string getMfxStatus (mfxStatus status) {
 
-    switch (mfxStatus) {
+    switch (status) {
       case   0: return "No error";
       case  -1: return "Unknown error";
       case  -2: return "Null pointer";
@@ -419,7 +420,7 @@ private:
       case -18: return "More bitstream data expected";
       case -19: return "Incompatible audio parameters";
       case -20: return "Invalid audio parameters" ;
-      default: return"Error code";
+      default: return "Error code";
       }
     }
   //}}}
@@ -551,23 +552,26 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize,
       }
   #else
     //{{{  ffmpeg h264 pts wrong, decode frames in presentation order, pts is correct on I frames
-    char frameType = cDvbUtils::getFrameType (pes, pesSize, streamType == 27);
-    if (frameType == 'I') {
-      if ((mGuessPts >= 0) && (mGuessPts != dts))
-        cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
-                                          getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
-                                          frameType,pesSize));
-      mGuessPts = dts;
-      mSeenIFrame = true;
-      }
+    if (streamType == 27) {
+      char frameType = cDvbUtils::getFrameType (pes, pesSize, streamType == 27);
+      if (frameType == 'I') {
+        if ((mGuessPts >= 0) && (mGuessPts != dts))
+          cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
+                                            getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
+                                            frameType,pesSize));
+        mSeenIFrame = true;
+        }
 
 
-    if (!mSeenIFrame) {
-      cLog::log (LOGINFO, fmt::format ("waiting for Iframe {} to:{} type:{} size:{}",
-                                       getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
-                                       frameType, pesSize));
-      return;
+      if (!mSeenIFrame) {
+        cLog::log (LOGINFO, fmt::format ("waiting for Iframe {} to:{} type:{} size:{}",
+                                         getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
+                                         frameType, pesSize));
+        return;
+        }
       }
+    else
+      mGuessPts = pts;
     //}}}
   #endif
 
