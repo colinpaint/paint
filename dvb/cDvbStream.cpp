@@ -412,7 +412,7 @@ cDvbStream::cStream::~cStream() {
 //}}}
 
 //{{{
-void cDvbStream::cStream::setPidType (uint16_t pid, uint16_t streamType) {
+void cDvbStream::cStream::setPidType (uint16_t pid, uint8_t streamType) {
 
   mDefined = true;
 
@@ -529,7 +529,7 @@ bool cDvbStream::cService::isEpgRecord (const string& title, tTimePoint startTim
 
 //  sets
 //{{{
-void cDvbStream::cService::setAudStream (uint16_t pid, uint16_t streamType) {
+void cDvbStream::cService::setAudStream (uint16_t pid, uint8_t streamType) {
 
   if (mStreams[eAud].isDefined()) {
     if (pid != mStreams[eAud].getPid()) {
@@ -579,16 +579,16 @@ void cDvbStream::cService::toggleStream (size_t streamType) {
   if (stream.toggle()) {
     switch (streamType) {
       case eVid :
-        stream.setRender (new cVideoRender (getChannelName()));
+        stream.setRender (new cVideoRender (getChannelName(), stream.getType()));
         return;
 
       case eAud :
       case eAds :
-        stream.setRender (new cAudioRender (getChannelName()));
+        stream.setRender (new cAudioRender (getChannelName(), stream.getType()));
         return;
 
       case eSub :
-        stream.setRender (new cSubtitleRender (getChannelName()));
+        stream.setRender (new cSubtitleRender (getChannelName(), stream.getType()));
         return;
       }
     }
@@ -707,21 +707,21 @@ void cDvbStream::cService::writePmt() {
   *tsPtr++ = 0; // program_info_length;
 
   // video es
-  *tsPtr++ = static_cast<uint8_t>(mStreams[eVid].getType()); // elementary stream_type
+  *tsPtr++ = mStreams[eVid].getType(); // elementary stream_type
   *tsPtr++ = 0xE0 | ((mStreams[eVid].getPid() & 0x1F00) >> 8); // elementary_PID
   *tsPtr++ = mStreams[eVid].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // audio es
-  *tsPtr++ = static_cast<uint8_t>(mStreams[eAud].getType()); // elementary stream_type
+  *tsPtr++ = mStreams[eAud].getType(); // elementary stream_type
   *tsPtr++ = 0xE0 | ((mStreams[eAud].getPid() & 0x1F00) >> 8); // elementary_PID
   *tsPtr++ = mStreams[eAud].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // subtitle es
-  *tsPtr++ = static_cast<uint8_t>(mStreams[eSub].getType()); // elementary stream_type
+  *tsPtr++ = mStreams[eSub].getType(); // elementary stream_type
   *tsPtr++ = 0xE0 | ((mStreams[eSub].getPid() & 0x1F00) >> 8); // elementary_PID
   *tsPtr++ = mStreams[eSub].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
@@ -905,7 +905,7 @@ bool cDvbStream::processPes (eStreamType streamType, cPidInfo* pidInfo, bool ski
   cService* service = getService (pidInfo->mSid);
   if (service && service->getStream (streamType).isEnabled())
     service->getStream (streamType).getRender().processPes (
-      pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts, pidInfo->mStreamType, skip);
+      pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts, skip);
 
   //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
   return false;

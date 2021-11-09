@@ -160,7 +160,16 @@ protected:
 //{{{
 class cVideoDecoder : public cDecoder {
 public:
-  cVideoDecoder() : cDecoder() {}
+  //{{{
+  cVideoDecoder (uint8_t streamType) : cDecoder(streamType) {
+    cLog::log (LOGINFO, fmt::format ("videoDecoder streamType {}", streamType));
+
+    mAvParser = av_parser_init ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
+    mAvCodec = (AVCodec*)avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
+    mAvContext = avcodec_alloc_context3 (mAvCodec);
+    avcodec_open2 (mAvContext, mAvCodec, NULL);
+    }
+  //}}}
   //{{{
   virtual ~cVideoDecoder() {
     sws_freeContext (mSwsContext);
@@ -168,22 +177,9 @@ public:
   //}}}
 
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, uint8_t streamType,
-                           function<void (cFrame* frame)> addFrameCallback) final {
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
+                          function<void (cFrame* frame)> addFrameCallback) final {
     (void)dts;
-    if (!mInited) {
-      //{{{  init decode with streamType codec
-      cLog::log (LOGINFO, fmt::format ("videoDecoder streamType {}", streamType));
-
-      mAvParser = av_parser_init ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
-      mAvCodec = (AVCodec*)avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
-      mAvContext = avcodec_alloc_context3 (mAvCodec);
-      avcodec_open2 (mAvContext, mAvCodec, NULL);
-
-      mInited = true;
-      }
-      //}}}
-
     AVPacket* avPacket = av_packet_alloc();
     AVFrame* avFrame = av_frame_alloc();
     uint8_t* frame = pes;
@@ -245,7 +241,34 @@ private:
 //{{{
 class cMfxVideoDecoder : public cDecoder {
 public:
-  cMfxVideoDecoder() : cDecoder() {}
+  //{{{
+  cMfxVideoDecoder (uint8_t streamType) : cDecoder(streamType) {
+
+    // MFX_IMPL_AUTO
+    // MFX_IMPL_HARDWARE
+    // MFX_IMPL_SOFTWARE
+    // MFX_IMPL_AUTO_ANY
+    // MFX_IMPL_VIA_D3D11
+    mfxIMPL mfxImpl = MFX_IMPL_AUTO;
+    mfxVersion mfxVersion = {{0,1}};
+    mfxStatus mfxStatus = mMfxSession.Init (mfxImpl, &mfxVersion);
+    if (mfxStatus != MFX_ERR_NONE)
+      cLog::log (LOGINFO, fmt::format ("session.Init failed - status:{}:{}",
+                                       mfxStatus, getMfxStatus (mfxStatus)));
+
+    // query selected implementation and version
+    mfxStatus = mMfxSession.QueryIMPL (&mfxImpl);
+    if (mfxStatus != MFX_ERR_NONE)
+      cLog::log (LOGINFO, fmt::format ("QueryIMPL failed - status:{}:{}",
+                                       mfxStatus, getMfxStatus (mfxStatus)));
+
+    mfxStatus = mMfxSession.QueryVersion (&mfxVersion);
+    if (mfxStatus != MFX_ERR_NONE)
+      cLog::log (LOGINFO, fmt::format ("QueryVersion failed - status:{}:{}",
+                                       mfxStatus, getMfxStatus(mfxStatus)));
+    cLog::log (LOGINFO, getMfxInfo (mfxImpl, mfxVersion));
+    }
+  //}}}
   //{{{
   virtual ~cMfxVideoDecoder() {
 
@@ -269,38 +292,7 @@ public:
     mBitstream.MaxLength = pesSize;
     mBitstream.TimeStamp = pts;
 
-    if (!mSessionInited) {
-      //{{{  init session
-      // MFX_IMPL_AUTO
-      // MFX_IMPL_HARDWARE
-      // MFX_IMPL_SOFTWARE
-      // MFX_IMPL_AUTO_ANY
-      // MFX_IMPL_VIA_D3D11
-      mfxIMPL mfxImpl = MFX_IMPL_AUTO;
-      mfxVersion mfxVersion = {{0,1}};
-      mfxStatus mfxStatus = mMfxSession.Init (mfxImpl, &mfxVersion);
-      if (mfxStatus != MFX_ERR_NONE)
-        cLog::log (LOGINFO, fmt::format ("session.Init failed - status:{}:{}",
-                                         mfxStatus, getMfxStatus (mfxStatus)));
-
-      // query selected implementation and version
-      mfxStatus = mMfxSession.QueryIMPL (&mfxImpl);
-      if (mfxStatus != MFX_ERR_NONE)
-        cLog::log (LOGINFO, fmt::format ("QueryIMPL failed - status:{}:{}",
-                                         mfxStatus, getMfxStatus (mfxStatus)));
-
-      mfxStatus = mMfxSession.QueryVersion (&mfxVersion);
-      if (mfxStatus != MFX_ERR_NONE)
-        cLog::log (LOGINFO, fmt::format ("QueryVersion failed - status:{}:{}",
-                                         mfxStatus, getMfxStatus(mfxStatus)));
-
-      cLog::log (LOGINFO, getMfxInfo (mfxImpl, mfxVersion));
-
-      mSessionInited = true;
-      }
-      //}}}
-
-    if (!mInited) {
+    if (!mNumSurfaces) {
       cLog::log (LOGINFO, fmt::format ("cMfxVideoDecoder streamType {}", streamType));
 
       //  read header, allocate surfaces, init decoder
@@ -345,7 +337,6 @@ public:
         if (status != MFX_ERR_NONE)
           cLog::log (LOGINFO, fmt::format ("MFXVideoDECODE_Init failed - status:{}:{}",
                                            status, getMfxStatus (status)));
-        mInited = true;
         }
         //}}}
       else
@@ -353,7 +344,7 @@ public:
                                          status, getMfxStatus (status)));
       }
 
-    if (mInited) {
+    if (mNumSurfaces) {
       mfxStatus status = MFX_ERR_NONE;
       while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE)) {
         auto timePoint = chrono::system_clock::now();
@@ -450,13 +441,13 @@ private:
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const std::string name)
-    : cRender(name), mMaxPoolSize(kVideoPoolSize) {
+cVideoRender::cVideoRender (const std::string name, uint8_t streamType)
+    : cRender(name, streamType), mMaxPoolSize(kVideoPoolSize) {
 
   #ifdef MFX_DECODER
-    mDecoder = new cMfxVideoDecoder();
+    mDecoder = new cMfxVideoDecoder (streamType);
   #else
-    mDecoder = new cVideoDecoder();
+    mDecoder = new cVideoDecoder (streamType);
   #endif
   }
 //}}}
@@ -528,8 +519,7 @@ void cVideoRender::addFrame (cVideoFrame* frame) {
   }
 //}}}
 //{{{
-void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize,
-                               int64_t pts, int64_t dts, uint8_t streamType, bool skip) {
+void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,  bool skip) {
 
   (void)pts;
   (void)skip;
@@ -552,8 +542,8 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize,
       }
   #else
     //{{{  ffmpeg h264 pts wrong, decode frames in presentation order, pts is correct on I frames
-    if (streamType == 27) {
-      char frameType = cDvbUtils::getFrameType (pes, pesSize, streamType == 27);
+    if (getStreamType() == 27) {
+      char frameType = cDvbUtils::getFrameType (pes, pesSize, getStreamType() == 27);
       if (frameType == 'I') {
         if ((mGuessPts >= 0) && (mGuessPts != dts))
           cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
@@ -575,7 +565,7 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize,
     //}}}
   #endif
 
-  mGuessPts = mDecoder->decode (pes, pesSize, mGuessPts, dts, streamType, [&](cFrame* frame) noexcept {
+  mGuessPts = mDecoder->decode (pes, pesSize, mGuessPts, dts, [&](cFrame* frame) noexcept {
     // addFrame lambda
     cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
     mWidth = videoFrame->getWidth();

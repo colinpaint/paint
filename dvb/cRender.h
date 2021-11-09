@@ -17,10 +17,11 @@ constexpr int kPtsPerSecond = 90000;
 
 class cRender {
 public:
-  cRender (const std::string name);
+  cRender (const std::string name, uint8_t streamType);
   virtual ~cRender();
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
+  uint8_t getStreamType() const { return mStreamType; }
 
   // miniLog
   cMiniLog& getLog() { return mMiniLog; }
@@ -40,8 +41,7 @@ public:
   // process
   virtual std::string getInfoString() const = 0;
   virtual void addFrame (cFrame* frame) = 0;
-  virtual void processPes (uint8_t* pes, uint32_t pesSize, 
-                           int64_t pts, int64_t dts, uint8_t streamType, bool skip) = 0;
+  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) = 0;
 
 protected:
   void header();
@@ -52,6 +52,7 @@ protected:
 
 private:
   const std::string mName;
+  const uint8_t mStreamType;
   cMiniLog mMiniLog;
 
   // plot

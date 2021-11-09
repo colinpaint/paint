@@ -25,7 +25,7 @@ using namespace std;
 //}}}
 
 // public:
-cSubtitleRender::cSubtitleRender (const std::string& name) : cRender(name) {}
+cSubtitleRender::cSubtitleRender (const std::string& name, uint8_t streamType) : cRender(name, streamType) {}
 //{{{
 cSubtitleRender::~cSubtitleRender() {
 
@@ -41,8 +41,7 @@ cSubtitleRender::~cSubtitleRender() {
 //}}}
 
 //{{{
-void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, 
-                                  int64_t pts, int64_t dts, uint8_t streamType, bool skip) {
+void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
   (void)dts;
   (void)skip;

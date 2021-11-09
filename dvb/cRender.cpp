@@ -22,7 +22,10 @@ using namespace std;
 constexpr int64_t kPtsPerFrame = 90000 / 25;
 
 // public:
-cRender::cRender (const std::string name) : mName(name), mMiniLog ("log") {}
+//{{{
+cRender::cRender (const std::string name, uint8_t streamType) 
+  : mName(name), mStreamType(streamType), mMiniLog ("log") {}
+//}}}
 //{{{
 cRender::~cRender() {
   delete mDecoder;

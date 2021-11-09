@@ -15,7 +15,7 @@ extern "C" {
 using namespace std;
 //}}}
 
-cDecoder::cDecoder() {}
+cDecoder::cDecoder (uint8_t streamType) : mStreamType(streamType) {}
 //{{{
 cDecoder::~cDecoder() {
 

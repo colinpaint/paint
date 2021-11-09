@@ -36,12 +36,12 @@ public:
 
     std::string getLabel() const { return mLabel; }
     uint16_t getPid() const { return mPid; }
-    uint16_t getType() const { return mType; }
+    uint8_t getType() const { return mType; }
     std::string getTypeName() const { return mTypeName; }
     cRender& getRender() const { return *mRender; }
 
     void setLabel (const std::string& label) { mLabel = label; }
-    void setPidType (uint16_t pid, uint16_t streamType);
+    void setPidType (uint16_t pid, uint8_t streamType);
     void setRender (cRender* render) { mRender = render; }
 
     bool toggle();
@@ -51,7 +51,7 @@ public:
 
     std::string mLabel;
     uint16_t mPid = 0;
-    uint16_t mType = 0;
+    uint8_t mType = 0;
     std::string mTypeName;
 
     cRender* mRender = nullptr;
@@ -186,7 +186,7 @@ public:
     //}}}
     //{{{  sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
-    void setAudStream (uint16_t pid, uint16_t streamType);
+    void setAudStream (uint16_t pid, uint8_t stramType);
 
     //{{{
     void setChannelName (const std::string& name, bool record, const std::string& recordName) {

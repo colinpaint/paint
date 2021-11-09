@@ -16,7 +16,7 @@ class cGraphics;
 
 class cVideoRender : public cRender {
 public:
-  cVideoRender (const std::string name);
+  cVideoRender (const std::string name, uint8_t streamType);
   virtual ~cVideoRender();
 
   uint16_t getWidth() const { return mWidth; }
@@ -27,8 +27,7 @@ public:
 
   void addFrame (cVideoFrame* frame);
   virtual void addFrame (cFrame* frame) final { (void)frame; }
-  virtual void processPes (uint8_t* pes, uint32_t pesSize,
-                           int64_t pts, int64_t dts, uint8_t streamType, bool skip) final;
+  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,  bool skip) final;
 
 private:
   const size_t mMaxPoolSize;

@@ -355,24 +355,24 @@ private:
 //{{{
 class cAudioDecoder : public cDecoder {
 public:
-  cAudioDecoder() : cDecoder() {}
+  //{{{
+  cAudioDecoder (uint8_t streamType) : cDecoder(streamType) {
+
+    cLog::log (LOGINFO, fmt::format ("cAudioDecoder - streamType:{}", streamType));
+
+    // aacAdts AV_CODEC_ID_AAC;
+    mAvParser = av_parser_init ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
+    mAvCodec = (AVCodec*)avcodec_find_decoder ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
+    mAvContext = avcodec_alloc_context3 (mAvCodec);
+    avcodec_open2 (mAvContext, mAvCodec, NULL);
+    }
+  //}}}
   virtual ~cAudioDecoder() {}
 
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, uint8_t streamType,
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, 
                           function<void (cFrame* frame)> addFrameCallback) final  {
     (void)dts;
-    if (!mInited) {
-      cLog::log (LOGINFO, fmt::format ("cAudioDecoder - streamType:{}", streamType));
-      // aacAdts AV_CODEC_ID_AAC;
-      //frameType = (streamType == 17)? eAudioFrameType::eAacLatm : eAudioFrameType::eMp3;
-      mAvParser = av_parser_init ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
-      mAvCodec = (AVCodec*)avcodec_find_decoder ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
-      mAvContext = avcodec_alloc_context3 (mAvCodec);
-      avcodec_open2 (mAvContext, mAvCodec, NULL);
-      mInited = true;
-      }
-
     uint8_t* frame = pes;
     uint8_t* pesEnd = pes + pesSize;
 
@@ -611,14 +611,14 @@ private:
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const std::string name) : cRender(name) {
+cAudioRender::cAudioRender (const std::string name, uint8_t streamType) : cRender(name, streamType) {
 
   mNumChannels = 2;
   mSampleRate = 48000;
   mSamplesPerFrame = 1024;
   mMaxMapSize = kAudioPoolSize;
 
-  mDecoder = new cAudioDecoder();
+  mDecoder = new cAudioDecoder (streamType);
   }
 //}}}
 //{{{
@@ -704,15 +704,14 @@ void cAudioRender::addFrame (cAudioFrame* frame) {
   }
 //}}}
 //{{{
-void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize,
-                               int64_t pts, int64_t dts, uint8_t streamType, bool skip) {
+void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
   (void)dts;
   (void)skip;
   //log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);
 
-  mDecoder->decode (pes, pesSize, pts, dts, streamType, [&](cFrame* frame) noexcept {
+  mDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
     // addFrame lambda
     cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
     mNumChannels = audioFrame->getNumChannels();
