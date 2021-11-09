@@ -20,7 +20,6 @@
 // SOFTWARE.
 //}}}
 #pragma once
-
 #include "common_utils.h"
 #include <windows.h>
 #include <d3d11.h>
@@ -29,10 +28,7 @@
 
 #define DEVICE_MGR_TYPE MFX_HANDLE_D3D11_DEVICE
 
-// =================================================================
 // DirectX functionality required to manage D3D surfaces
-//
-
 // Create DirectX 11 device context
 // - Required when using D3D surfaces.
 // - D3D Device created and handed to Intel Media SDK
