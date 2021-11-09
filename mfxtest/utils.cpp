@@ -335,7 +335,7 @@
   //{{{
   mfxStatus simple_alloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
-    mfxStatus sts = MFX_ERR_NONE;
+    mfxStatus status = MFX_ERR_NONE;
 
     if (request->Type & MFX_MEMTYPE_SYSTEM_MEMORY)
       return MFX_ERR_UNSUPPORTED;
@@ -351,9 +351,9 @@
       allocDecodeRefCount[pthis]++;
       }
     else {
-      sts = _simple_alloc(request, response);
+      status = _simple_alloc(request, response);
 
-      if (MFX_ERR_NONE == sts) {
+      if (MFX_ERR_NONE == status) {
         if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
             MFX_MEMTYPE_FROM_DECODE & request->Type) {
           // Decode alloc response handling
@@ -367,7 +367,7 @@
         }
       }
 
-    return sts;
+    return status;
     }
   //}}}
   //{{{
@@ -524,6 +524,7 @@
   void ClearRGBSurfaceD3D (mfxMemId memId);
   //}}}
   //{{{  directx11 implementation
+  //{{{  vars
   #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
   #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
 
@@ -541,7 +542,8 @@
   std::map<mfxMemId*, mfxHDL> allocResponses;
   std::map<mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
   std::map<mfxHDL, int>  allocDecodeRefCount;
-
+  //}}}
+  //{{{
   const struct {
     mfxIMPL impl;       // actual implementation
     mfxU32  adapterID;  // device adapter number
@@ -551,7 +553,7 @@
       {MFX_IMPL_HARDWARE3, 2},
       {MFX_IMPL_HARDWARE4, 3}
     };
-
+  //}}}
   //{{{
   mfxU32 GetIntelDeviceAdapterNum (mfxSession session) {
 
@@ -573,7 +575,6 @@
     return adapterNum;
     }
   //}}}
-
   //{{{
   // Create HW device context
   mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND window, bool bCreateSharedHandles) {
@@ -586,7 +587,7 @@
 
     g_bCreateSharedHandles = bCreateSharedHandles;
 
-    HRESULT hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &pD3D9);
+    HRESULT hr = Direct3DCreate9Ex (D3D_SDK_VERSION, &pD3D9);
     if (!pD3D9 || FAILED(hr))
       return MFX_ERR_DEVICE_FAILED;
 
@@ -798,7 +799,7 @@
   //{{{
   mfxStatus simple_alloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
-    mfxStatus sts = MFX_ERR_NONE;
+    mfxStatus status = MFX_ERR_NONE;
 
     if (request->Type & MFX_MEMTYPE_SYSTEM_MEMORY)
       return MFX_ERR_UNSUPPORTED;
@@ -814,9 +815,9 @@
       allocDecodeRefCount[pthis]++;
       }
     else {
-      sts = _simple_alloc(request, response);
+      status = _simple_alloc(request, response);
 
-      if (MFX_ERR_NONE == sts) {
+      if (MFX_ERR_NONE == status) {
         if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
             MFX_MEMTYPE_FROM_DECODE & request->Type) {
           // Decode alloc response handling
@@ -830,7 +831,7 @@
         }
       }
 
-    return sts;
+    return status;
     }
   //}}}
   //{{{
@@ -1088,33 +1089,33 @@
   mfxStatus CreateVAEnvDRM (mfxHDL* displayHandle)
   {
       VAStatus va_res = VA_STATUS_SUCCESS;
-      mfxStatus sts = MFX_ERR_NONE;
+      mfxStatus status = MFX_ERR_NONE;
       int major_version = 0, minor_version = 0;
 
       m_fd = open_intel_adapter();
 
       if (m_fd < 0)
-          sts = MFX_ERR_NOT_INITIALIZED;
+          status = MFX_ERR_NOT_INITIALIZED;
 
-      if (MFX_ERR_NONE == sts) {
+      if (MFX_ERR_NONE == status) {
           m_va_dpy = vaGetDisplayDRM(m_fd);
 
           *displayHandle = m_va_dpy;
 
           if (!m_va_dpy) {
               close(m_fd);
-              sts = MFX_ERR_NULL_PTR;
+              status = MFX_ERR_NULL_PTR;
           }
       }
-      if (MFX_ERR_NONE == sts) {
+      if (MFX_ERR_NONE == status) {
           va_res = vaInitialize(m_va_dpy, &major_version, &minor_version);
-          sts = va_to_mfx_status(va_res);
-          if (MFX_ERR_NONE != sts) {
+          status = va_to_mfx_status(va_res);
+          if (MFX_ERR_NONE != status) {
               close(m_fd);
               m_fd = -1;
           }
       }
-      if (MFX_ERR_NONE != sts)
+      if (MFX_ERR_NONE != status)
           throw std::bad_alloc();
 
       return MFX_ERR_NONE;
@@ -1296,7 +1297,7 @@
   mfxStatus simple_alloc (mfxHDL pthis, mfxFrameAllocRequest* request,
                          mfxFrameAllocResponse* response)
   {
-      mfxStatus sts = MFX_ERR_NONE;
+      mfxStatus status = MFX_ERR_NONE;
 
       if (0 == request || 0 == response || 0 == request->NumFrameSuggested)
           return MFX_ERR_MEMORY_ALLOC;
@@ -1319,9 +1320,9 @@
           allocDecodeResponses[pthis].refCount++;
 
       } else {
-          sts = _simple_alloc(request, response);
+          status = _simple_alloc(request, response);
 
-          if (MFX_ERR_NONE == sts) {
+          if (MFX_ERR_NONE == status) {
               if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
                   MFX_MEMTYPE_FROM_DECODE & request->Type) {
                   // Decode alloc response handling
@@ -1335,7 +1336,7 @@
           }
       }
 
-      return sts;
+      return status;
   }
   //}}}
   //{{{
@@ -1557,20 +1558,20 @@
   mfxStatus Initialize (mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession,
                         mfxFrameAllocator* pmfxAllocator, bool bCreateSharedHandles) {
 
-    mfxStatus sts = MFX_ERR_NONE;
+    mfxStatus status = MFX_ERR_NONE;
 
     // Initialize Intel Media SDK Session
-    sts = pSession->Init(impl, &ver);
-    MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    status = pSession->Init (impl, &ver);
+    MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // Create VA display
     mfxHDL displayHandle = { 0 };
-    sts = CreateVAEnvDRM(&displayHandle);
-    MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    status = CreateVAEnvDRM (&displayHandle);
+    MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // Provide VA display handle to Media SDK
-    sts = pSession->SetHandle(static_cast < mfxHandleType >(MFX_HANDLE_VA_DISPLAY), displayHandle);
-    MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    status = pSession->SetHandle (static_cast < mfxHandleType >(MFX_HANDLE_VA_DISPLAY), displayHandle);
+    MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // If mfxFrameAllocator is provided it means we need to setup  memory allocator
     if (pmfxAllocator) {
@@ -1582,11 +1583,11 @@
       pmfxAllocator->GetHDL = simple_gethdl;
 
       // Since we are using video memory we must provide Media SDK with an external allocator
-      sts = pSession->SetFrameAllocator(pmfxAllocator);
-      MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+      status = pSession->SetFrameAllocator (pmfxAllocator);
+      MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
       }
 
-    return sts;
+    return status;
     }
   //}}}
   void Release() { CleanupVAEnvDRM(); }
@@ -1597,45 +1598,40 @@
   mfxStatus Initialize (mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession,
                         mfxFrameAllocator* pmfxAllocator, bool bCreateSharedHandles) {
 
-    mfxStatus sts = MFX_ERR_NONE;
+    mfxStatus status = MFX_ERR_NONE;
 
     #ifdef DX11_D3D
       impl |= MFX_IMPL_VIA_D3D11;
     #endif
 
     // Initialize Intel Media SDK Session
-    sts = pSession->Init (impl, &ver);
-    MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    status = pSession->Init (impl, &ver);
+    MSDK_CHECK_RESULT(status, MFX_ERR_NONE, status);
 
-    #if defined(DX9_D3D) || defined(DX11_D3D)
-      // If mfxFrameAllocator is provided it means we need to setup DirectX device and memory allocator
-      if (pmfxAllocator) {
-        // Create DirectX device context
-        mfxHDL deviceHandle;
-        sts = CreateHWDevice (*pSession, &deviceHandle, NULL, bCreateSharedHandles);
-        MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    // If mfxFrameAllocator is provided it means we need to setup DirectX device and memory allocator
+    if (pmfxAllocator) {
+      // Create DirectX device context
+      mfxHDL deviceHandle;
+      status = CreateHWDevice (*pSession, &deviceHandle, NULL, bCreateSharedHandles);
+      MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
-        // Provide device manager to Media SDK
-        sts = pSession->SetHandle (DEVICE_MGR_TYPE, deviceHandle);
-        MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+      // Provide device manager to Media SDK
+      status = pSession->SetHandle (DEVICE_MGR_TYPE, deviceHandle);
+      MSDK_CHECK_RESULT(status, MFX_ERR_NONE, status);
 
-        pmfxAllocator->pthis = *pSession; // We use Media SDK session ID as the allocation identifier
-        pmfxAllocator->Alloc = simple_alloc;
-        pmfxAllocator->Free = simple_free;
-        pmfxAllocator->Lock = simple_lock;
-        pmfxAllocator->Unlock = simple_unlock;
-        pmfxAllocator->GetHDL = simple_gethdl;
+      pmfxAllocator->pthis = *pSession; // We use Media SDK session ID as the allocation identifier
+      pmfxAllocator->Alloc = simple_alloc;
+      pmfxAllocator->Free = simple_free;
+      pmfxAllocator->Lock = simple_lock;
+      pmfxAllocator->Unlock = simple_unlock;
+      pmfxAllocator->GetHDL = simple_gethdl;
 
-        // Since we are using video memory we must provide Media SDK with an external allocator
-        sts = pSession->SetFrameAllocator (pmfxAllocator);
-        MSDK_CHECK_RESULT (sts, MFX_ERR_NONE, sts);
-        }
-    #else
-      (void)bCreateSharedHandles;
-      (void)pmfxAllocator;
-    #endif
+      // Since we are using video memory we must provide Media SDK with an external allocator
+      status = pSession->SetFrameAllocator (pmfxAllocator);
+      MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
+      }
 
-    return sts;
+    return status;
     }
   //}}}
   void Release() { CleanupHWDevice(); }
@@ -1768,7 +1764,7 @@ mfxStatus LoadRawFrame (mfxFrameSurface1* pSurface, FILE* fSource)
             return MFX_ERR_NONE;
     }
 
-    mfxStatus sts = MFX_ERR_NONE;
+    mfxStatus status = MFX_ERR_NONE;
     mfxU32 nBytesRead;
     mfxU16 w, h, i, pitch;
     mfxU8* ptr;
@@ -1801,13 +1797,13 @@ mfxStatus LoadRawFrame (mfxFrameSurface1* pSurface, FILE* fSource)
         return MFX_ERR_UNSUPPORTED;
 
     // load V
-    sts = ReadPlaneData(w, h, buf, ptr, pitch, 1, fSource);
-    if (MFX_ERR_NONE != sts)
-        return sts;
+    status = ReadPlaneData(w, h, buf, ptr, pitch, 1, fSource);
+    if (MFX_ERR_NONE != status)
+        return status;
     // load U
     ReadPlaneData(w, h, buf, ptr, pitch, 0, fSource);
-    if (MFX_ERR_NONE != sts)
-        return sts;
+    if (MFX_ERR_NONE != status)
+        return status;
 
     return MFX_ERR_NONE;
 }
@@ -1852,7 +1848,7 @@ mfxStatus LoadRaw10BitFrame (mfxFrameSurface1* pSurface, FILE* fSource) {
       return MFX_ERR_NONE;
     }
 
-  mfxStatus sts = MFX_ERR_NONE;
+  mfxStatus status = MFX_ERR_NONE;
   mfxU16 w, h,pitch;
   mfxU8* ptr;
   mfxFrameInfo* pInfo = &pSurface->Info;
@@ -1872,18 +1868,18 @@ mfxStatus LoadRaw10BitFrame (mfxFrameSurface1* pSurface, FILE* fSource) {
 
   // read luminance plane
   ptr = pData->Y + pInfo->CropX + pInfo->CropY * pData->Pitch;
-  sts = ReadPlaneData10Bit(w, h, buf, ptr, pitch, pInfo->Shift, fSource);
-  if (MFX_ERR_NONE != sts)
-    return sts;
+  status = ReadPlaneData10Bit(w, h, buf, ptr, pitch, pInfo->Shift, fSource);
+  if (MFX_ERR_NONE != status)
+    return status;
 
   // Load UV plan
   h /= 2;
   ptr = pData->UV + pInfo->CropX + (pInfo->CropY / 2) * pitch;
 
   // load U
-  sts = ReadPlaneData10Bit(w, h, buf, ptr, pitch, pInfo->Shift, fSource);
-  if (MFX_ERR_NONE != sts)
-    return sts;
+  status = ReadPlaneData10Bit(w, h, buf, ptr, pitch, pInfo->Shift, fSource);
+  if (MFX_ERR_NONE != status)
+    return status;
 
   return MFX_ERR_NONE;
   }
@@ -1982,7 +1978,7 @@ mfxStatus WriteRawFrame (mfxFrameSurface1* pSurface, FILE* fSink)
     mfxU32 nByteWrite;
     mfxU16 i, j, h, w, pitch;
     mfxU8* ptr;
-    mfxStatus sts = MFX_ERR_NONE;
+    mfxStatus status = MFX_ERR_NONE;
 
     if (pInfo->CropH > 0 && pInfo->CropW > 0)
     {
@@ -2012,19 +2008,19 @@ mfxStatus WriteRawFrame (mfxFrameSurface1* pSurface, FILE* fSink)
     else
     {
         for (i = 0; i < pInfo->CropH; i++)
-            sts = WriteSection(pData->Y, 1, pInfo->CropW, pInfo, pData, i, 0, fSink);
+            status = WriteSection(pData->Y, 1, pInfo->CropW, pInfo, pData, i, 0, fSink);
 
         h = pInfo->CropH / 2;
         w = pInfo->CropW;
         for (i = 0; i < h; i++)
             for (j = 0; j < w; j += 2)
-                sts = WriteSection(pData->UV, 2, 1, pInfo, pData, i, j, fSink);
+                status = WriteSection(pData->UV, 2, 1, pInfo, pData, i, j, fSink);
         for (i = 0; i < h; i++)
             for (j = 1; j < w; j += 2)
-                sts = WriteSection(pData->UV, 2, 1, pInfo, pData, i, j, fSink);
+                status = WriteSection(pData->UV, 2, 1, pInfo, pData, i, j, fSink);
     }
 
-    return sts;
+    return status;
 }
 //}}}
 //{{{
@@ -2066,18 +2062,18 @@ mfxStatus WriteRaw10BitFrame (mfxFrameSurface1* pSurface, FILE* fSink) {
 
   mfxFrameInfo* pInfo = &pSurface->Info;
   mfxFrameData* pData = &pSurface->Data;
-  mfxStatus sts = MFX_ERR_NONE;
+  mfxStatus status = MFX_ERR_NONE;
 
 
   for (mfxU16 i = 0; i < pInfo->CropH; i++) {
-    sts = WriteSection10Bit(pData->Y, 1, pInfo->CropW * 2, pInfo, pData, i, fSink);
+    status = WriteSection10Bit(pData->Y, 1, pInfo->CropW * 2, pInfo, pData, i, fSink);
     }
 
   for (mfxU16 i = 0; i < pInfo->CropH / 2; i++) {
-    sts = WriteSection10Bit(pData->UV, 2, pInfo->CropW * 2, pInfo, pData, i, fSink);
+    status = WriteSection10Bit(pData->UV, 2, pInfo->CropW * 2, pInfo, pData, i, fSink);
     }
 
-  return sts;
+  return status;
   }
 //}}}
 
