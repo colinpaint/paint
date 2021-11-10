@@ -47,12 +47,15 @@ string getMfxStatusString (mfxStatus status) {
 //{{{
 string getMfxInfoString (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
 
-  return fmt::format ("mfxImpl:{:x}{}{}{}{} verMajor:{} verMinor:{}",
+  return fmt::format ("mfxImpl:{:x}{}{}{}{}{}{}{} verMajor:{} verMinor:{}",
                       mfxImpl,
-                      (mfxImpl & MFX_IMPL_HARDWARE) ? " hw":"",
-                      (mfxImpl & MFX_IMPL_SOFTWARE) ? " sw":"",
-                      (mfxImpl & MFX_IMPL_VIA_D3D9) ? " d3d9":"",
-                      (mfxImpl & MFX_IMPL_VIA_D3D11) ? " d3d11":"",
+                      ((mfxImpl & 0x0007) == MFX_IMPL_HARDWARE) ? " hw":"",
+                      ((mfxImpl & 0x0007) == MFX_IMPL_SOFTWARE) ? " sw":"",
+                      ((mfxImpl & 0x0007) == MFX_IMPL_AUTO_ANY) ? " autoAny":"",
+                      ((mfxImpl & 0x0300) == MFX_IMPL_VIA_ANY) ? " any":"",
+                      ((mfxImpl & 0x0300) == MFX_IMPL_VIA_D3D9) ? " d3d9":"",
+                      ((mfxImpl & 0x0300) == MFX_IMPL_VIA_D3D11) ? " d3d11":"",
+                      ((mfxImpl & 0x0300) == MFX_IMPL_VIA_VAAPI) ? " vaapi":"",
                       mfxVersion.Major, mfxVersion.Minor);
   }
 //}}}
