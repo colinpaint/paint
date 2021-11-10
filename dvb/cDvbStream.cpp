@@ -924,7 +924,7 @@ bool cDvbStream::processPes (eStreamType streamType, cPidInfo* pidInfo, bool ski
   cService* service = getService (pidInfo->getSid());
   if (service && service->getStream (streamType).isEnabled())
     service->getStream (streamType).getRender().processPes (
-      pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts, skip);
+      pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->getPts(), pidInfo->getDts(), skip);
 
   //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
   return false;

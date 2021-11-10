@@ -117,9 +117,6 @@ public:
     int mErrors = 0;
     int mRepeatContinuity = 0;
 
-    int64_t mPts = -1;
-    int64_t mDts = -1;
-
     int mBufSize = 0;
     uint8_t* mBuffer = nullptr;
     uint8_t* mBufPtr = nullptr;
@@ -135,8 +132,10 @@ public:
 
     std::string mInfoString;
 
+    int64_t mPts = -1;
     int64_t mFirstPts = -1;
     int64_t mLastPts = -1;
+    int64_t mDts = -1;
     };
   //}}}
   //{{{
