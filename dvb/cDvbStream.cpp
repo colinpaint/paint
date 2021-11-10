@@ -747,8 +747,8 @@ void cDvbStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, u
 
 // public:
 //{{{
-cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName)
-    : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName) {
+cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName, bool renderFirstService)
+    : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName), mRenderFirstService(renderFirstService) {
 
   mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
   }
@@ -846,6 +846,16 @@ cDvbStream::cPidInfo* cDvbStream::getPidInfo (uint16_t pid, bool createPsiOnly) 
     }
 
   return &pidInfoIt->second;
+  }
+//}}}
+
+//{{{
+void cDvbStream::renderFirstService (cService& service) {
+
+  if (mRenderFirstService && !mRenderingFirstService) {
+    service.toggleAll (false);
+    mRenderingFirstService = true;
+    }
   }
 //}}}
 
@@ -1143,7 +1153,7 @@ void cDvbStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                   auto pidInfoIt = mPidInfoMap.find (service->getProgramPid());
                   if (pidInfoIt != mPidInfoMap.end())
                     // update service pgmPid infoStr with new now event
-                    pidInfoIt->second.mInfoString = 
+                    pidInfoIt->second.mInfoString =
                       service->getChannelName() + " " + service->getNowTitleString();
 
                   // callback to override to start new serviceItem program
@@ -1226,13 +1236,13 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         esPidInfo->mStreamType = pmtInfo->stream_type;
         switch (esPidInfo->mStreamType) {
           case   2: // ISO 13818-2 video
-          case  27: // HD vid
+          case  27: // H264 video
             service.getStream (eVid).setPidType (esPid, esPidInfo->mStreamType); break;
           case   3: // ISO 11172-3 audio
           case   4: // ISO 13818-3 audio
-          case  15: // HD aud ADTS
-          case  17: // HD aud LATM
-          case 129: // aud AC3
+          case  15: // ADTS AAC audio
+          case  17: // LATM AAC audio
+          case 129: // AC3 audio
             service.setAudStream (esPid, esPidInfo->mStreamType); break;
           case   6: // subtitle
             service.getStream (eSub).setPidType (esPid, esPidInfo->mStreamType); break;
@@ -1253,6 +1263,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         streamLength -= loopLength + sizeof(sPmtInfo);
         buf += loopLength;
         }
+      renderFirstService (service);
       }
     }
   }

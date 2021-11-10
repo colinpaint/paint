@@ -22,7 +22,7 @@ public:
 
   cDvbStream* getDvbStream() { return mDvbStream; }
 
-  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex);
+  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex, bool renderFirstService);
 
 private:
   cDvbStream* mDvbStream = nullptr;

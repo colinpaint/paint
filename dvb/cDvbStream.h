@@ -245,7 +245,7 @@ public:
     };
   //}}}
 
-  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName);
+  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool renderFirstService);
   virtual ~cDvbStream();
   //{{{  gets
   uint64_t getNumPackets() const { return mNumPackets; }
@@ -282,6 +282,8 @@ private:
 
   cPidInfo* getPidInfo (uint16_t pid, bool createPsiOnly);
 
+  void renderFirstService (cService& service);
+
   void startServiceProgram (cService* service, tTimePoint tdtTime,
                             const std::string& programName, tTimePoint programStartTime, bool selected);
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
@@ -304,8 +306,11 @@ private:
   void fileSourceInternal (bool launchThread, const std::string& fileName);
 
   // vars
-  std::mutex mMutex;
   const cDvbMultiplex mDvbMultiplex;
+  const bool mRenderFirstService;
+  bool mRenderingFirstService = false;
+
+  std::mutex mMutex;
   uint64_t mNumPackets = 0;
   uint64_t mNumErrors = 0;
 
