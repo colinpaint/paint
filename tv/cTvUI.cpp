@@ -231,9 +231,11 @@ private:
         ImGui::Separator();
 
       // draw pid label
-      ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
+      ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {} {}",
                               pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.getPid(),
-                              getFullPtsString (pidInfo.mPts), pidInfo.getTypeName()).c_str());
+                              getFullPtsString (pidInfo.getPts()), 
+                              getFullPtsString (pidInfo.getDts()),
+                              pidInfo.getTypeName()).c_str());
 
       // draw stream bar
       ImGui::SameLine();

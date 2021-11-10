@@ -61,17 +61,22 @@ public:
   class cPidInfo {
   public:
     cPidInfo (uint16_t pid, bool isPsi) : mPid(pid), mPsi(isPsi) {}
-    cPidInfo::~cPidInfo() { free (mBuffer); }
+    ~cPidInfo() { free (mBuffer); }
 
     bool isPsi() const { return mPsi; }
     uint16_t getPid() const { return mPid; }
+
+    int64_t getPts() const { return mPts; }
+    int64_t getFirstPts() const { return mFirstPts; }
+    int64_t getLastPts() const { return mLastPts; }
+    int64_t getDts() const { return mDts; }
 
     uint16_t getSid() const { return mSid; }
     uint8_t getStreamType() const { return mStreamType; }
     std::string getTypeName() const ;
     std::string getInfoString() const { return mInfoString; }
 
-    int getBufUsed() { return int(mBufPtr - mBuffer); }
+    int getBufUsed() const { return int(mBufPtr - mBuffer); }
 
     void setSid (uint16_t sid) { mSid = sid; }
     void setStreamType (uint8_t streamType) { mStreamType = streamType; }
@@ -293,7 +298,7 @@ private:
   cPidInfo& getPidInfo (uint16_t pid);
   cPidInfo* getPsiPidInfo (uint16_t pid);
 
-  void newService (cService& service);
+  void foundService (cService& service);
 
   void startServiceProgram (cService* service, tTimePoint tdtTime,
                             const std::string& programName, tTimePoint programStartTime, bool selected);

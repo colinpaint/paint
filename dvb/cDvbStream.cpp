@@ -858,7 +858,7 @@ cDvbStream::cPidInfo* cDvbStream::getPsiPidInfo (uint16_t pid) {
 //}}}
 
 //{{{
-void cDvbStream::newService (cService& service) {
+void cDvbStream::foundService (cService& service) {
 
   if (mRenderFirstService && !mRenderingFirstService) {
     cLog::log (LOGINFO, fmt::format ("play service {}:{}", service.getSid(), service.getProgramPid()));
@@ -1220,7 +1220,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
   if (pmt->table_id == TID_PMT) {
     uint16_t sid = HILO (pmt->program_number);
     if (!getService (sid)) {
-      // new service found, create it
+      // found new service, create cService 
       cLog::log (LOGINFO, fmt::format ("create service {}", sid));
       cService& service = mServiceMap.emplace (sid, cService(sid)).first->second;
 
@@ -1236,7 +1236,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
       while (streamLength > 0) {
         sPmtInfo* pmtInfo = (sPmtInfo*)buf;
 
-        // set service esPids
+        // set service elementary stream pids
         uint16_t esPid = HILO (pmtInfo->elementary_PID);
         cPidInfo& esPidInfo = getPidInfo (esPid);
         esPidInfo.setSid (sid);
@@ -1270,7 +1270,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         streamLength -= loopLength + sizeof(sPmtInfo);
         buf += loopLength;
         }
-      newService (service);
+      foundService (service);
       }
     }
   }
