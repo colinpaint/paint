@@ -114,7 +114,7 @@ public:
   cFFmpegAudioDecoder (uint8_t streamType) : cAudioDecoder(),
     mAvCodec (avcodec_find_decoder ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
 
-    cLog::log (LOGINFO, fmt::format ("cAudioDecoder - streamType:{}", streamType));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder stream:{}", streamType));
 
     // aacAdts AV_CODEC_ID_AAC;
     mAvParser = av_parser_init ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);

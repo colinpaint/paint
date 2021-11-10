@@ -573,13 +573,13 @@ bool cDvbStream::cService::setEpg (bool record, tTimePoint startTime, tDurationS
 //}}}
 
 //{{{
-void cDvbStream::cService::toggleStream (size_t streamType) {
+void cDvbStream::cService::toggleStream (size_t streamType, bool otherDecoder) {
 
   cStream& stream = getStream (streamType);
   if (stream.toggle()) {
     switch (streamType) {
       case eVid :
-        stream.setRender (new cVideoRender (getChannelName(), stream.getType()));
+        stream.setRender (new cVideoRender (getChannelName(), stream.getType(), otherDecoder));
         return;
 
       case eAud :
@@ -595,12 +595,12 @@ void cDvbStream::cService::toggleStream (size_t streamType) {
   }
 //}}}
 //{{{
-void cDvbStream::cService::toggleAll() {
+void cDvbStream::cService::toggleAll (bool otherDecoder) {
 
   // improve to one on all off , if all off all on
-  toggleStream (eVid);
-  toggleStream (eAud);
-  toggleStream (eSub);
+  toggleStream (eVid, otherDecoder);
+  toggleStream (eAud, false);
+  toggleStream (eSub, false);
   }
 //}}}
 

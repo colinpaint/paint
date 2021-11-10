@@ -85,7 +85,6 @@ protected:
   };
 //}}}
 
-//#define MFX_DECODER
 //{{{
 class cVideoDecoder {
 public:
@@ -107,6 +106,8 @@ public:
     // MFX_IMPL_SOFTWARE
     // MFX_IMPL_AUTO_ANY
     // MFX_IMPL_VIA_D3D11
+
+    cLog::log (LOGINFO, fmt::format ("cMfxVideoDecoder stream:{}", streamType));
 
     mfxIMPL mfxImpl = MFX_IMPL_AUTO;
     mfxVersion mfxVersion = {{0,1}};
@@ -306,7 +307,9 @@ public:
   cFFmpegVideoDecoder (uint8_t streamType) : cVideoDecoder(),
      mAvCodec (avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
-    cLog::log (LOGINFO, fmt::format ("videoDecoder streamType {}", streamType));
+
+    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder stream:{}", streamType));
+
     mAvParser = av_parser_init ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
@@ -393,14 +396,13 @@ private:
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const std::string name, uint8_t streamType)
+cVideoRender::cVideoRender (const std::string name, uint8_t streamType, bool mfxDecoder)
     : cRender(name, streamType), mMaxPoolSize(kVideoPoolSize) {
 
-  #ifdef MFX_DECODER
+  if (mfxDecoder)
     mVideoDecoder = new cMfxVideoDecoder (streamType);
-  #else
+  else
     mVideoDecoder = new cFFmpegVideoDecoder (streamType);
-  #endif
   }
 //}}}
 //{{{
