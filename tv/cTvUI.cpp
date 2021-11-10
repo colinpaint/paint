@@ -227,12 +227,12 @@ private:
       cDvbStream::cPidInfo& pidInfo = pidInfoItem.second;
 
       // draw separator, crude test for new service, fails sometimes
-      if ((pidInfo.mSid != prevSid) && (pidInfo.mStreamType != 5) && (pidInfo.mStreamType != 11))
+      if ((pidInfo.getSid() != prevSid) && (pidInfo.getStreamType() != 5) && (pidInfo.getStreamType() != 11))
         ImGui::Separator();
 
       // draw pid label
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {}",
-                              pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.mPid,
+                              pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.getPid(),
                               getFullPtsString (pidInfo.mPts), pidInfo.getTypeName()).c_str());
 
       // draw stream bar
@@ -246,15 +246,15 @@ private:
 
       // draw stream label
       string streamText = pidInfo.getInfoString();
-      if ((pidInfo.mStreamType == 0) && (pidInfo.mSid != 0xFFFF))
-        streamText = fmt::format ("{} ", pidInfo.mSid) + streamText;
+      if ((pidInfo.getStreamType() == 0) && (pidInfo.getSid() != 0xFFFF))
+        streamText = fmt::format ("{} ", pidInfo.getSid()) + streamText;
       ImGui::TextUnformatted (streamText.c_str());
 
       // adjust packet number width
       if (pidInfo.mPackets > pow (10, mPacketChars))
         mPacketChars++;
 
-      prevSid = pidInfo.mSid;
+      prevSid = pidInfo.getSid();
       }
     }
   //}}}

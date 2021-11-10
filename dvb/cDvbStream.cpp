@@ -447,7 +447,7 @@ cDvbStream::cPidInfo::~cPidInfo() {
 //}}}
 
 //{{{
-string cDvbStream::cPidInfo::getTypeName() {
+string cDvbStream::cPidInfo::getTypeName() const {
 
   // known pids
   switch (mPid) {
@@ -824,18 +824,34 @@ void cDvbStream::clearPidContinuity() {
 //}}}
 
 //{{{
-cDvbStream::cPidInfo* cDvbStream::getPidInfo (uint16_t pid, bool createPsiOnly) {
+cDvbStream::cPidInfo& cDvbStream::getPidInfo (uint16_t pid) {
 // find or create pidInfo by pid
 
   auto pidInfoIt = mPidInfoMap.find (pid);
   if (pidInfoIt == mPidInfoMap.end()) {
-    if (!createPsiOnly ||
-        (pid == PID_PAT) || (pid == PID_CAT) || (pid == PID_NIT) || (pid == PID_SDT) ||
+    // create new psi cPidInfo
+    pidInfoIt = mPidInfoMap.emplace (pid, cPidInfo (pid, false)).first;
+
+    // allocate buffer
+    pidInfoIt->second.mBufSize = kInitBufSize;
+    pidInfoIt->second.mBuffer = (uint8_t*)malloc (kInitBufSize);
+    }
+
+  return pidInfoIt->second;
+  }
+//}}}
+//{{{
+cDvbStream::cPidInfo* cDvbStream::getPsiPidInfo (uint16_t pid) {
+// find or create pidInfo by pid
+
+  auto pidInfoIt = mPidInfoMap.find (pid);
+  if (pidInfoIt == mPidInfoMap.end()) {
+    if ((pid == PID_PAT) || (pid == PID_CAT) || (pid == PID_NIT) || (pid == PID_SDT) ||
         (pid == PID_EIT) || (pid == PID_RST) || (pid == PID_TDT) || (pid == PID_SYN) ||
         (mProgramMap.find (pid) != mProgramMap.end())) {
 
       // create new psi cPidInfo
-      pidInfoIt = mPidInfoMap.emplace (pid, cPidInfo (pid, createPsiOnly)).first;
+      pidInfoIt = mPidInfoMap.emplace (pid, cPidInfo (pid, true)).first;
 
       // allocate buffer
       pidInfoIt->second.mBufSize = kInitBufSize;
@@ -913,7 +929,7 @@ void cDvbStream::stopServiceProgram (cService* service) {
 //{{{
 bool cDvbStream::processPes (eStreamType streamType, cPidInfo* pidInfo, bool skip) {
 
-  cService* service = getService (pidInfo->mSid);
+  cService* service = getService (pidInfo->getSid());
   if (service && service->getStream (streamType).isEnabled())
     service->getStream (streamType).getRender().processPes (
       pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->mPts, pidInfo->mDts, skip);
@@ -1154,8 +1170,7 @@ void cDvbStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                   auto pidInfoIt = mPidInfoMap.find (service->getProgramPid());
                   if (pidInfoIt != mPidInfoMap.end())
                     // update service pgmPid infoStr with new now event
-                    pidInfoIt->second.mInfoString =
-                      service->getChannelName() + " " + service->getNowTitleString();
+                    pidInfoIt->second.setInfoString (service->getChannelName() + " " + service->getNowTitleString());
 
                   // callback to override to start new serviceItem program
                   startServiceProgram (service, mTdtTime,
@@ -1192,8 +1207,8 @@ void cDvbStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
       mFirstTimeDefined = true;
       }
 
-    pidInfo->mInfoString =
-      date::format ("%T", date::floor<chrono::seconds>(mFirstTime)) + " to " + getTdtTimeString();
+    pidInfo->setInfoString (date::format ("%T", date::floor<chrono::seconds>(mFirstTime)) + 
+                            " to " + getTdtTimeString());
     }
   }
 //}}}
@@ -1205,7 +1220,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
   uint16_t sectionLength = HILO(pmt->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
     //{{{  badCrc error, return
-    cLog::log (LOGERROR, "parsePMT - pid:%d bad crc %d", pidInfo->mPid, sectionLength);
+    cLog::log (LOGERROR, "parsePMT - pid:%d bad crc %d", pidInfo->getPid(), sectionLength);
     return;
     }
     //}}}
@@ -1217,8 +1232,8 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
       cLog::log (LOGINFO, fmt::format ("create service {}", sid));
       cService& service = mServiceMap.emplace (sid, cService(sid)).first->second;
 
-      service.setProgramPid (pidInfo->mPid);
-      pidInfo->mSid = sid;
+      service.setProgramPid (pidInfo->getPid());
+      pidInfo->setSid (sid);
 
       buf += sizeof(sPmt);
       sectionLength -= 4;
@@ -1231,21 +1246,21 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
 
         // set service esPids
         uint16_t esPid = HILO (pmtInfo->elementary_PID);
-        cPidInfo* esPidInfo = getPidInfo (esPid, false);
-        esPidInfo->mSid = sid;
-        esPidInfo->mStreamType = pmtInfo->stream_type;
-        switch (esPidInfo->mStreamType) {
+        cPidInfo& esPidInfo = getPidInfo (esPid);
+        esPidInfo.setSid (sid);
+        esPidInfo.setStreamType (pmtInfo->stream_type);
+        switch (esPidInfo.getStreamType()) {
           case   2: // ISO 13818-2 video
           case  27: // H264 video
-            service.getStream (eVid).setPidType (esPid, esPidInfo->mStreamType); break;
+            service.getStream (eVid).setPidType (esPid, esPidInfo.getStreamType()); break;
           case   3: // ISO 11172-3 audio
           case   4: // ISO 13818-3 audio
           case  15: // ADTS AAC audio
           case  17: // LATM AAC audio
           case 129: // AC3 audio
-            service.setAudStream (esPid, esPidInfo->mStreamType); break;
+            service.setAudStream (esPid, esPidInfo.getStreamType()); break;
           case   6: // subtitle
-            service.getStream (eSub).setPidType (esPid, esPidInfo->mStreamType); break;
+            service.getStream (eSub).setPidType (esPid, esPidInfo.getStreamType()); break;
           case   5: // private mpeg2 tabled data - private
           case  11: // dsm cc u_n
           case  13: // dsm cc tabled data
@@ -1253,7 +1268,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
           //{{{
           default:
             cLog::log (LOGERROR, fmt::format ("parsePmt - unknown stream sid:{} pid:{} streamType:{}",
-                                              sid, esPid, esPidInfo->mStreamType));
+                                              sid, esPid, esPidInfo.getStreamType()));
             break;
           //}}}
           }
@@ -1272,7 +1287,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
 int cDvbStream::parsePsi (cPidInfo* pidInfo, uint8_t* buf) {
 // return sectionLength
 
-  switch (pidInfo->mPid) {
+  switch (pidInfo->getPid()) {
     case PID_PAT: parsePat (pidInfo, buf); break;
     case PID_NIT: parseNit (pidInfo, buf); break;
     case PID_SDT: parseSdt (pidInfo, buf); break;
@@ -1317,7 +1332,7 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
           int headerBytes =    (ts[2] & 0x20) ? (4 + ts[3]) : 3; // adaption field
 
           lock_guard<mutex> lockGuard (mMutex);
-          cPidInfo* pidInfo = getPidInfo (pid, true);
+          cPidInfo* pidInfo = getPsiPidInfo (pid);
           if (pidInfo) {
             if ((pidInfo->mContinuity >= 0) &&
                 (continuityCount != ((pidInfo->mContinuity+1) & 0x0F))) {
@@ -1334,7 +1349,7 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
             pidInfo->mContinuity = continuityCount;
             pidInfo->mPackets++;
 
-            if (pidInfo->mPsi) {
+            if (pidInfo->isPsi()) {
               //{{{  psi
               ts += headerBytes;
               tsBytesLeft -= headerBytes;
@@ -1376,21 +1391,21 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                 pidInfo->addToBuffer (ts, tsBytesLeft);
               }
               //}}}
-            else if (pidInfo->mStreamType == 5) {
+            else if (pidInfo->getStreamType() == 5) {
               //{{{  mtd - do nothing
               }
               //}}}
-            else if (pidInfo->mStreamType == 11) {
+            else if (pidInfo->getStreamType() == 11) {
               //{{{  dsm - do nothing
               }
               //}}}
-            else if (pidInfo->mStreamType == 134) {
+            else if (pidInfo->getStreamType() == 134) {
               //{{{  ??? - do nothing
               }
               //}}}
             else {
               //{{{  pes
-              programPesPacket (pidInfo->mSid, pidInfo->mPid, ts-1);
+              programPesPacket (pidInfo->getSid(), pidInfo->getPid(), ts - 1);
 
               ts += headerBytes;
               tsBytesLeft -= headerBytes;
@@ -1415,8 +1430,8 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                     (*(uint32_t*)ts == 0xD8010000) ||
                     (*(uint32_t*)ts == 0xDA010000) ||
                     (*(uint32_t*)ts == 0xE0010000)) {
-                  if (pidInfo->mBufPtr && pidInfo->mStreamType) {
-                    switch (pidInfo->mStreamType) {
+                  if (pidInfo->mBufPtr && pidInfo->getStreamType()) {
+                    switch (pidInfo->getStreamType()) {
                       case 2:   // ISO 13818-2 video
                       case 27:  // HD vid
                         //{{{  send last video pes
@@ -1442,7 +1457,7 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                         break;
                         //}}}
                       default:
-                        cLog::log (LOGINFO, fmt::format("unknown pid:{} streamType:{}",pid,pidInfo->mStreamType));
+                        cLog::log (LOGINFO, fmt::format("unknown pid:{} streamType:{}",pid,pidInfo->getStreamType()));
                       }
                     }
 
