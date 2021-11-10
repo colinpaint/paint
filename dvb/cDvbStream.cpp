@@ -1229,10 +1229,9 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
       while (streamLength > 0) {
         sPmtInfo* pmtInfo = (sPmtInfo*)buf;
 
+        // set service esPids
         uint16_t esPid = HILO (pmtInfo->elementary_PID);
         cPidInfo* esPidInfo = getPidInfo (esPid, false);
-
-        // set service esPids
         esPidInfo->mSid = sid;
         esPidInfo->mStreamType = pmtInfo->stream_type;
         switch (esPidInfo->mStreamType) {
