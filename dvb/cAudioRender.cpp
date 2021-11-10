@@ -97,6 +97,7 @@ private:
   std::array <float, 6> mPowerValues = {0.f};
   };
 //}}}
+
 //{{{
 class cAudioDecoder {
 public:
@@ -377,7 +378,7 @@ private:
 // cAudioRender
 //{{{
 cAudioRender::cAudioRender (const std::string name, uint8_t streamType, bool otherDecoder) : cRender(name, streamType) {
-  
+
   (void)otherDecoder;
   mNumChannels = 2;
   mSampleRate = 48000;
