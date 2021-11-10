@@ -85,7 +85,7 @@ protected:
   };
 //}}}
 
-#define MFX_DECODER
+//#define MFX_DECODER
 //{{{
 class cVideoDecoder {
 public:
