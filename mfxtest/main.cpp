@@ -4,7 +4,7 @@
 #include <string>
 #include <thread>
 
-#include "../libmfx/include/mfxvideo++.h"
+#include "../mfx/include/mfxvideo++.h"
 #include "utils.h"
 
 #include "../utils/cLog.h"
@@ -13,36 +13,39 @@ using namespace std;
 //}}}
 
 //{{{
-string getMfxStatus (mfxStatus status) {
+string getMfxStatusString (mfxStatus status) {
 
+  string statusString;
   switch (status) {
-    case   0: return "No error";
-    case  -1: return "Unknown error";
-    case  -2: return "Null pointer";
-    case  -3: return "Unsupported feature/library load error";
-    case  -4: return "Could not allocate memory" ;
-    case  -5: return "Insufficient IO buffers" ;
-    case  -6: return "Invalid handle";
-    case  -7: return "Memory lock failure" ;
-    case  -8: return "Function called before initialization" ;
-    case  -9: return "Specified object not found" ;
-    case -10: return "More input data expected";
-    case -11: return "More output surfaces expected";
-    case -12: return "Operation aborted" ;
-    case -13: return "HW device lost";
-    case -14: return "Incompatible video parameters" ;
-    case -15: return "Invalid video parameters";
-    case -16: return "Undefined behavior";
-    case -17: return "Device operation failure";
-    case -18: return "More bitstream data expected";
-    case -19: return "Incompatible audio parameters";
-    case -20: return "Invalid audio parameters" ;
-    default: return"Error code";
+    case   0: statusString = "No error";
+    case  -1: statusString = "Unknown error";
+    case  -2: statusString = "Null pointer";
+    case  -3: statusString = "Unsupported feature/library load error";
+    case  -4: statusString = "Could not allocate memory" ;
+    case  -5: statusString = "Insufficient IO buffers" ;
+    case  -6: statusString = "Invalid handle";
+    case  -7: statusString = "Memory lock failure" ;
+    case  -8: statusString = "Function called before initialization" ;
+    case  -9: statusString = "Specified object not found" ;
+    case -10: statusString = "More input data expected";
+    case -11: statusString = "More output surfaces expected";
+    case -12: statusString = "Operation aborted" ;
+    case -13: statusString = "HW device lost";
+    case -14: statusString = "Incompatible video parameters" ;
+    case -15: statusString = "Invalid video parameters";
+    case -16: statusString = "Undefined behavior";
+    case -17: statusString = "Device operation failure";
+    case -18: statusString = "More bitstream data expected";
+    case -19: statusString = "Incompatible audio parameters";
+    case -20: statusString = "Invalid audio parameters" ;
+    default: statusString = "Error code";
     }
+
+  return fmt::format ("status {} {}", status, statusString);
   }
 //}}}
 //{{{
-string getMfxInfo (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
+string getMfxInfoString (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
 
   return fmt::format ("mfxImpl:{:x}{}{}{}{} verMajor:{} verMinor:{}",
                       mfxImpl,
@@ -84,19 +87,19 @@ int main(int numArgs, char** args) {
   mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
   //mfxStatus status = Initialize (mfxImpl, mfxVersion, &mfxSession, NULL);
   if (status != MFX_ERR_NONE)
-    cLog::log (LOGINFO, fmt::format ("session.Init failed - status:{}:{}", status, getMfxStatus (status)));
+    cLog::log (LOGINFO, "init failed - " + getMfxStatusString (status));
 
   // query implementation
   status = mfxSession.QueryIMPL (&mfxImpl);
   if (status != MFX_ERR_NONE)
-    cLog::log (LOGINFO, fmt::format ("QueryIMPL failed - status:{}:{}", status, getMfxStatus (status)));
+    cLog::log (LOGINFO, "init failed - " + getMfxStatusString (status));
 
   // query version
   status = mfxSession.QueryVersion (&mfxVersion);
   if (status != MFX_ERR_NONE)
-    cLog::log (LOGINFO, fmt::format ("QueryVersion failed - status:{}:{}}", status, getMfxStatus (status)));
+    cLog::log (LOGINFO, "QueryVersion failed " + getMfxStatusString (status));
 
-  cLog::log (LOGINFO, getMfxInfo (mfxImpl, mfxVersion));
+  cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
 
   mfxSession.Close();
 
