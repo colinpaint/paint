@@ -60,8 +60,8 @@ public:
   //{{{
   class cPidInfo {
   public:
-    cPidInfo (uint16_t pid, bool isPsi);
-    ~cPidInfo();
+    cPidInfo (uint16_t pid, bool isPsi) : mPid(pid), mPsi(isPsi) {}
+    cPidInfo::~cPidInfo() { free (mBuffer); }
 
     bool isPsi() const { return mPsi; }
     uint16_t getPid() const { return mPid; }

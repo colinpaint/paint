@@ -439,13 +439,6 @@ bool cDvbStream::cStream::toggle() {
 //}}}
 //}}}
 //{{{  class cDvbStream::cPidInfo
-cDvbStream::cPidInfo::cPidInfo (uint16_t pid, bool isPsi) : mPid(pid), mPsi(isPsi) {}
-//{{{
-cDvbStream::cPidInfo::~cPidInfo() {
-  free (mBuffer);
-  }
-//}}}
-
 //{{{
 string cDvbStream::cPidInfo::getTypeName() const {
 
@@ -468,7 +461,6 @@ string cDvbStream::cPidInfo::getTypeName() const {
   return "---";
   }
 //}}}
-
 //{{{
 int cDvbStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 
@@ -1207,7 +1199,7 @@ void cDvbStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
       mFirstTimeDefined = true;
       }
 
-    pidInfo->setInfoString (date::format ("%T", date::floor<chrono::seconds>(mFirstTime)) + 
+    pidInfo->setInfoString (date::format ("%T", date::floor<chrono::seconds>(mFirstTime)) +
                             " to " + getTdtTimeString());
     }
   }
