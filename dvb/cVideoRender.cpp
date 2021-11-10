@@ -246,27 +246,27 @@ private:
 
     string statusString;
     switch (status) {
-      case   0: statusString = "No error";
-      case  -1: statusString = "Unknown error";
-      case  -2: statusString = "Null pointer";
-      case  -3: statusString = "Unsupported feature/library load error";
-      case  -4: statusString = "Could not allocate memory" ;
-      case  -5: statusString = "Insufficient IO buffers" ;
-      case  -6: statusString = "Invalid handle";
-      case  -7: statusString = "Memory lock failure" ;
-      case  -8: statusString = "Function called before initialization" ;
-      case  -9: statusString = "Specified object not found" ;
-      case -10: statusString = "More input data expected";
-      case -11: statusString = "More output surfaces expected";
-      case -12: statusString = "Operation aborted" ;
-      case -13: statusString = "HW device lost";
-      case -14: statusString = "Incompatible video parameters" ;
-      case -15: statusString = "Invalid video parameters";
-      case -16: statusString = "Undefined behavior";
-      case -17: statusString = "Device operation failure";
-      case -18: statusString = "More bitstream data expected";
-      case -19: statusString = "Incompatible audio parameters";
-      case -20: statusString = "Invalid audio parameters" ;
+      case   0: statusString = "No error"; break;
+      case  -1: statusString = "Unknown error"; break;
+      case  -2: statusString = "Null pointer"; break;
+      case  -3: statusString = "Unsupported feature/library load error"; break;
+      case  -4: statusString = "Could not allocate memory"; break;
+      case  -5: statusString = "Insufficient IO buffers"; break;
+      case  -6: statusString = "Invalid handle"; break;
+      case  -7: statusString = "Memory lock failure"; break;
+      case  -8: statusString = "Function called before initialization"; break;
+      case  -9: statusString = "Specified object not found"; break;
+      case -10: statusString = "More input data expected"; break;
+      case -11: statusString = "More output surfaces expected"; break;
+      case -12: statusString = "Operation aborted";  break;
+      case -13: statusString = "HW device lost";  break;
+      case -14: statusString = "Incompatible video parameters" ; break;
+      case -15: statusString = "Invalid video parameters";  break;
+      case -16: statusString = "Undefined behavior"; break;
+      case -17: statusString = "Device operation failure";  break;
+      case -18: statusString = "More bitstream data expected";  break;
+      case -19: statusString = "Incompatible audio parameters"; break;
+      case -20: statusString = "Invalid audio parameters"; break;
       default: statusString = "Error code";
       }
 

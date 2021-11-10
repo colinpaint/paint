@@ -26,8 +26,10 @@ using namespace std;
 
 // public:
 //{{{
-cSubtitleRender::cSubtitleRender (const std::string& name, uint8_t streamType)
-  : cRender(name, streamType) {}
+cSubtitleRender::cSubtitleRender (const std::string& name, uint8_t streamType, bool otherDecoder)
+    : cRender(name, streamType) {
+  (void)otherDecoder;
+  }
 //}}}
 //{{{
 cSubtitleRender::~cSubtitleRender() {

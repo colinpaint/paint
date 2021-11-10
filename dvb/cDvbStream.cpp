@@ -584,11 +584,11 @@ void cDvbStream::cService::toggleStream (size_t streamType, bool otherDecoder) {
 
       case eAud :
       case eAds :
-        stream.setRender (new cAudioRender (getChannelName(), stream.getType()));
+        stream.setRender (new cAudioRender (getChannelName(), stream.getType(), otherDecoder));
         return;
 
       case eSub :
-        stream.setRender (new cSubtitleRender (getChannelName(), stream.getType()));
+        stream.setRender (new cSubtitleRender (getChannelName(), stream.getType(), otherDecoder));
         return;
       }
     }
