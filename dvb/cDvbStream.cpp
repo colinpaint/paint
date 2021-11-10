@@ -1019,17 +1019,16 @@ void cDvbStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
       buf += sizeof(sSdtDescriptor);
 
       uint16_t sid = HILO (sdtDescr->service_id);
-      //auto freeChannel = sdtDescr->free_ca_mode == 0;
       uint16_t loopLength = HILO (sdtDescr->descrs_loop_length);
-
-      auto descrLength = 0;
+      uint16_t descrLength = 0;
       while ((descrLength < loopLength) &&
              (getDescrLength (buf) > 0) && (getDescrLength (buf) <= loopLength - descrLength)) {
         switch (getDescrTag (buf)) {
           case DESCR_SERVICE: {
             //{{{  service
-            auto name = cDvbUtils::getString (
-              buf + sizeof(descr_service_t) + ((descr_service_t*)buf)->provider_name_length);
+            string name = cDvbUtils::getString (buf +
+                                                sizeof(descr_service_t) +
+                                                ((descr_service_t*)buf)->provider_name_length);
 
             cService* service = getService (sid);
             if (service) {
@@ -1144,8 +1143,8 @@ void cDvbStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                   auto pidInfoIt = mPidInfoMap.find (service->getProgramPid());
                   if (pidInfoIt != mPidInfoMap.end())
                     // update service pgmPid infoStr with new now event
-                    pidInfoIt->second.mInfoString = service->getChannelName() + " " +
-                                                    service->getNowTitleString();
+                    pidInfoIt->second.mInfoString = 
+                      service->getChannelName() + " " + service->getNowTitleString();
 
                   // callback to override to start new serviceItem program
                   startServiceProgram (service, mTdtTime,
@@ -1202,67 +1201,58 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
 
   if (pmt->table_id == TID_PMT) {
     uint16_t sid = HILO (pmt->program_number);
-    cService* service = getService (sid);
-    if (!service) {
-      // service not found, create one
+    if (!getService (sid)) {
+      // new service found, create it
       cLog::log (LOGINFO, fmt::format ("create service {}", sid));
-      service = &((mServiceMap.emplace (sid, cService(sid)).first)->second);
-      }
-    service->setProgramPid (pidInfo->mPid);
+      cService& service = mServiceMap.emplace (sid, cService(sid)).first->second;
 
-    pidInfo->mSid = sid;
-    pidInfo->mInfoString = service->getChannelName() + " " + service->getNowTitleString();
+      service.setProgramPid (pidInfo->mPid);
+      pidInfo->mSid = sid;
 
-    buf += sizeof(sPmt);
-    sectionLength -= 4;
-    uint16_t programInfoLength = HILO (pmt->program_info_length);
-    uint16_t streamLength = sectionLength - programInfoLength - sizeof(sPmt);
+      buf += sizeof(sPmt);
+      sectionLength -= 4;
+      uint16_t programInfoLength = HILO (pmt->program_info_length);
+      uint16_t streamLength = sectionLength - programInfoLength - sizeof(sPmt);
 
-    buf += programInfoLength;
-    while (streamLength > 0) {
-      sPmtInfo* pmtInfo = (sPmtInfo*)buf;
+      buf += programInfoLength;
+      while (streamLength > 0) {
+        sPmtInfo* pmtInfo = (sPmtInfo*)buf;
 
-      uint16_t esPid = HILO (pmtInfo->elementary_PID);
-      cPidInfo* esPidInfo = getPidInfo (esPid, false);
-      //{{{  set service esPids
-      esPidInfo->mSid = sid;
-      esPidInfo->mStreamType = pmtInfo->stream_type;
+        uint16_t esPid = HILO (pmtInfo->elementary_PID);
+        cPidInfo* esPidInfo = getPidInfo (esPid, false);
 
-      switch (esPidInfo->mStreamType) {
-        case   2: // ISO 13818-2 video
-        case  27: // HD vid
-          service->getStream (eVid).setPidType (esPid, esPidInfo->mStreamType);
-          break;
+        // set service esPids
+        esPidInfo->mSid = sid;
+        esPidInfo->mStreamType = pmtInfo->stream_type;
+        switch (esPidInfo->mStreamType) {
+          case   2: // ISO 13818-2 video
+          case  27: // HD vid
+            service.getStream (eVid).setPidType (esPid, esPidInfo->mStreamType); break;
+          case   3: // ISO 11172-3 audio
+          case   4: // ISO 13818-3 audio
+          case  15: // HD aud ADTS
+          case  17: // HD aud LATM
+          case 129: // aud AC3
+            service.setAudStream (esPid, esPidInfo->mStreamType); break;
+          case   6: // subtitle
+            service.getStream (eSub).setPidType (esPid, esPidInfo->mStreamType); break;
+          case   5: // private mpeg2 tabled data - private
+          case  11: // dsm cc u_n
+          case  13: // dsm cc tabled data
+          case 134: break;
+          //{{{
+          default:
+            cLog::log (LOGERROR, fmt::format ("parsePmt - unknown stream sid:{} pid:{} streamType:{}",
+                                              sid, esPid, esPidInfo->mStreamType));
+            break;
+          //}}}
+          }
 
-        case   3: // ISO 11172-3 audio
-        case   4: // ISO 13818-3 audio
-        case  15: // HD aud ADTS
-        case  17: // HD aud LATM
-        case 129: // aud AC3
-          service->setAudStream (esPid, esPidInfo->mStreamType);
-          break;
-
-        case   6: // subtitle
-          service->getStream (eSub).setPidType (esPid, esPidInfo->mStreamType);
-          break;
-
-        case   5: // private mpeg2 tabled data - private
-        case  11: // dsm cc u_n
-        case  13: // dsm cc tabled data
-        case 134:
-          break;
-
-        default:
-          cLog::log (LOGERROR, fmt::format ("parsePmt - unknown streamType sid:{} pid:{} type:{}",
-                                            sid, esPid, esPidInfo->mStreamType));
-          break;
+        uint16_t loopLength = HILO (pmtInfo->ES_info_length);
+        buf += sizeof(sPmtInfo);
+        streamLength -= loopLength + sizeof(sPmtInfo);
+        buf += loopLength;
         }
-      //}}}
-
-      uint16_t loopLength = HILO (pmtInfo->ES_info_length);
-      buf += sizeof(sPmtInfo);
-      streamLength -= loopLength + sizeof(sPmtInfo);
-      buf += loopLength;
       }
     }
   }
