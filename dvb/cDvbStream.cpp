@@ -850,9 +850,10 @@ cDvbStream::cPidInfo* cDvbStream::getPidInfo (uint16_t pid, bool createPsiOnly) 
 //}}}
 
 //{{{
-void cDvbStream::renderFirstService (cService& service) {
+void cDvbStream::newService (cService& service) {
 
   if (mRenderFirstService && !mRenderingFirstService) {
+    cLog::log (LOGINFO, fmt::format ("play service {}:{}", service.getSid(), service.getProgramPid()));
     service.toggleAll (false);
     mRenderingFirstService = true;
     }
@@ -1263,7 +1264,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         streamLength -= loopLength + sizeof(sPmtInfo);
         buf += loopLength;
         }
-      renderFirstService (service);
+      newService (service);
       }
     }
   }

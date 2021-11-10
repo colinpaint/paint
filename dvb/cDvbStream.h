@@ -282,7 +282,7 @@ private:
 
   cPidInfo* getPidInfo (uint16_t pid, bool createPsiOnly);
 
-  void renderFirstService (cService& service);
+  void newService (cService& service);
 
   void startServiceProgram (cService* service, tTimePoint tdtTime,
                             const std::string& programName, tTimePoint programStartTime, bool selected);
