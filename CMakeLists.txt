@@ -75,6 +75,39 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
   endif()
 endif()
 
+# libmfx lib
+if (BUILD_TELLY OR BUILD_MFXTEST)
+  if (MSVC)
+    project (libmfx)
+      file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/windows/include/*.h)
+      file (GLOB SOURCE_FILES libmfx/mfx_dispatch/windows/src/*.cpp)
+      add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+      target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/windows/include)
+  endif()
+endif()
+
+# mfxTest app
+if (BUILD_MFXTEST)
+  project (mfxtest)
+    file (GLOB HEADER_FILES mfxtest/*.h utils/*.h)
+    if (MSVC)
+      file (GLOB SOURCE_FILES mfxtest/main.cpp mfxtest/utils.cpp)
+    else()
+      file (GLOB SOURCE_FILES mfxtest/main.cpp)
+    endif()
+    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+
+    if (MSVC)
+      target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
+      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils d3d9 Dxva2)
+    else()
+      find_package (PkgConfig REQUIRED)
+      pkg_check_modules (MFX REQUIRED IMPORTED_TARGET libmfx)
+      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::MFX)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::MFX)
+    endif()
+endif()
+
 # dvb lib
 if (BUILD_TELLY)
   project (dvb)
@@ -84,15 +117,19 @@ if (BUILD_TELLY)
 
     if (MSVC)
       target_include_directories (${PROJECT_NAME} PRIVATE ffmpeg/inc)
+      target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
       target_link_libraries (${PROJECT_NAME} PUBLIC
-                             utils avdevice avfilter avformat avcodec avutil swresample swscale)
+                             utils libmfx avdevice avfilter avformat avcodec avutil swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (FFmpeg REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
       target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFmpeg)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFmpeg)
+      pkg_check_modules (MFX REQUIRED IMPORTED_TARGET libmfx)
+      target_include_directories (${PROJECT_NAME} PUBLIC PkgConfig::MFX)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::MFX)
     endif()
 endif()
 
@@ -127,46 +164,6 @@ if (BUILD_PLAYER OR BUILD_TELLY)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 endif()
 
-# mfx lib
-if (BUILD_TELLY)
-  project (mfx)
-    if (MSVC)
-      file (GLOB HEADER_FILES mfx/include/*.h mfx/mfx_dispatch/windows/include/*.h)
-      file (GLOB SOURCE_FILES mfx/mfx_dispatch/windows/src/*.cpp)
-    else()
-      file (GLOB HEADER_FILES mfx/include/*.h mfx/mfx_dispatch/linux/include/*.h)
-      file (GLOB SOURCE_FILES mfx/mfx_dispatch/linux/src/*.cpp)
-    endif()
-    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-
-    if (MSVC)
-      target_include_directories (${PROJECT_NAME} PUBLIC mfx/include mfx/mfx_dispatch/windows/include)
-    else()
-      target_include_directories (${PROJECT_NAME} PUBLIC mfx/include mfx/mfx_dispatch/linux/include)
-    endif()
-
-    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
-endif()
-
-# mfxTest app
-if (BUILD_MFXTEST)
-  project (mfxtest)
-    file (GLOB HEADER_FILES mfxtest/*.h utils/*.h)
-    if (MSVC)
-      file (GLOB SOURCE_FILES mfxtest/main.cpp mfxtest/utils.cpp)
-    else()
-      file (GLOB SOURCE_FILES mfxtest/main.cpp)
-    endif()
-    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
-    #target_include_directories (${PROJECT_NAME} PRIVATE mfx/include)
-    if (MSVC)
-      target_link_libraries (${PROJECT_NAME} PRIVATE mfx utils d3d9 Dxva2)
-    else()
-    target_link_libraries (${PROJECT_NAME} PRIVATE mfx utils)
-    endif()
-endif()
-
 # telly app
 if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
@@ -185,11 +182,10 @@ if (BUILD_TELLY)
 
     if (MSVC)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PRIVATE mfx dvb audio imgui utils glfw glad)
+      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx dvb audio imgui utils glfw glad)
       target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
     else()
-      target_link_libraries (${PROJECT_NAME} PRIVATE GL)
-      target_link_libraries (${PROJECT_NAME} PRIVATE mfx dvb audio imgui utils glfw glad)
+      target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio imgui utils glfw glad)
       target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
     endif()
 endif()
@@ -251,6 +247,30 @@ if (BUILD_FED)
     endif()
 endif()
 
+# capture app
+if (BUILD_CAPTURE AND MSVC)
+  ## WIN32 audio wsapi capture main project
+  project (captureAudio VERSION 1.0.0)
+    file (GLOB HEADER_FILES audio/*.h)
+    file (GLOB SOURCE_FILES captureAudio/capture.cpp)
+    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+
+    target_link_libraries (${PROJECT_NAME} PRIVATE decoder winmm avrt audio)
+endif()
+
+# filesystem app
+if (BUILD_FILESYSTEM)
+  project (filesystem)
+    file (GLOB HEADER_FILES *.h utils/*.h)
+    file (GLOB SOURCE_FILES filesystem/main.cpp)
+    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+
+    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
+    if (NOT MSVC)
+      target_link_libraries (${PROJECT_NAME} PRIVATE stdc++fs)
+    endif()
+endif()
+
 # paintbox app
 if (BUILD_PAINTBOX)
   project (paintbox VERSION 1.0.0)
@@ -275,29 +295,5 @@ if (BUILD_PAINTBOX)
       target_link_libraries (${PROJECT_NAME} PRIVATE Opengl32 d3d11 d3dcompiler ws2_32)
     else()
       target_link_libraries (${PROJECT_NAME} PRIVATE GL)
-    endif()
-endif()
-
-# capture app
-if (BUILD_CAPTURE AND MSVC)
-  ## WIN32 audio wsapi capture main project
-  project (captureAudio VERSION 1.0.0)
-    file (GLOB HEADER_FILES audio/*.h)
-    file (GLOB SOURCE_FILES captureAudio/capture.cpp)
-    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
-    target_link_libraries (${PROJECT_NAME} PRIVATE decoder winmm avrt audio)
-endif()
-
-# filesystem app
-if (BUILD_FILESYSTEM)
-  project (filesystem)
-    file (GLOB HEADER_FILES *.h utils/*.h)
-    file (GLOB SOURCE_FILES filesystem/main.cpp)
-    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
-    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
-    if (NOT MSVC)
-      target_link_libraries (${PROJECT_NAME} PRIVATE stdc++fs)
     endif()
 endif()

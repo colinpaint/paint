@@ -19,7 +19,8 @@
 
 #include "cFrame.h"
 
-#include "../mfx/include/mfxvideo++.h"
+//#include "../libmfx/include/mfxvideo++.h"
+#include "mfxvideo++.h"
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"

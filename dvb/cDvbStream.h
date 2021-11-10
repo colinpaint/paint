@@ -273,7 +273,8 @@ public:
   //}}}
 
   cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool renderFirstService);
-  virtual ~cDvbStream();
+  virtual ~cDvbStream() { clear(); }
+
   //{{{  gets
   uint64_t getNumPackets() const { return mNumPackets; }
   uint64_t getNumErrors() const { return mNumErrors; }
@@ -335,7 +336,9 @@ private:
 
   // vars
   const cDvbMultiplex mDvbMultiplex;
+  const std::string mRecordRootName;
   const bool mRenderFirstService;
+
   bool mRenderingFirstService = false;
 
   std::mutex mMutex;
@@ -354,7 +357,6 @@ private:
 
   // record
   std::mutex mRecordFileMutex;
-  std::string mRecordRootName;
   std::vector <std::string> mRecordPrograms;
 
   // time

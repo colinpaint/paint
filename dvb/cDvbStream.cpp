@@ -745,11 +745,6 @@ cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordR
   mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
   }
 //}}}
-//{{{
-cDvbStream::~cDvbStream() {
-  clear();
-  }
-//}}}
 
 // gets
 //{{{

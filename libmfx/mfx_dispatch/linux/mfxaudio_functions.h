@@ -1,3 +1,4 @@
+//{{{
 // Copyright (c) 2017 Intel Corporation
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,14 +26,11 @@
 // That is why this header doesn't contain any include directive.
 // Please, do no try to fix it.
 //
+//}}}
 
-//
 // API version 1.8 functions
-//
-
 // Minor value should precedes the major value
 #define API_VERSION {{8, 1}}
-
 // CORE interface functions
 FUNCTION(mfxStatus, MFXAudioCORE_SyncOperation, (mfxSession session, mfxSyncPoint syncp, mfxU32 wait), (session, syncp, wait))
 
@@ -54,18 +52,11 @@ FUNCTION(mfxStatus, MFXAudioDECODE_Close, (mfxSession session), (session))
 FUNCTION(mfxStatus, MFXAudioDECODE_QueryIOSize, (mfxSession session, mfxAudioParam *par, mfxAudioAllocRequest *request), (session, par, request))
 FUNCTION(mfxStatus, MFXAudioDECODE_GetAudioParam, (mfxSession session, mfxAudioParam *par), (session, par))
 FUNCTION(mfxStatus, MFXAudioDECODE_DecodeFrameAsync, (mfxSession session, mfxBitstream *bs, mfxAudioFrame *frame_out, mfxSyncPoint *syncp), (session, bs, frame_out, syncp))
-
 #undef API_VERSION
 
-//
 // API version 1.9 functions
-//
-
 #define API_VERSION {{9, 1}}
-
 FUNCTION(mfxStatus, MFXAudioUSER_Register, (mfxSession session, mfxU32 type, const mfxPlugin *par), (session, type, par))
 FUNCTION(mfxStatus, MFXAudioUSER_Unregister, (mfxSession session, mfxU32 type), (session, type))
 FUNCTION(mfxStatus, MFXAudioUSER_ProcessFrameAsync, (mfxSession session, const mfxHDL *in, mfxU32 in_num, const mfxHDL *out, mfxU32 out_num, mfxSyncPoint *syncp), (session, in, in_num, out, out_num, syncp))
-
-
 #undef API_VERSION

@@ -4,7 +4,8 @@
 #include <string>
 #include <thread>
 
-#include "../mfx/include/mfxvideo++.h"
+#include "mfxvideo++.h"
+//#include "../libmfx/include/mfxvideo++.h"
 #include "utils.h"
 
 #include "../utils/cLog.h"
