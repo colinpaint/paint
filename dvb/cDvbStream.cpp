@@ -1220,7 +1220,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
   if (pmt->table_id == TID_PMT) {
     uint16_t sid = HILO (pmt->program_number);
     if (!getService (sid)) {
-      // found new service, create cService 
+      // found new service, create cService
       cLog::log (LOGINFO, fmt::format ("create service {}", sid));
       cService& service = mServiceMap.emplace (sid, cService(sid)).first->second;
 
@@ -1456,17 +1456,10 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                   // save ts streamPos for start of new pes buffer
                   pidInfo->mStreamPos = streamPos;
 
-                  // form pts, firstPts, lastPts
-                  if (ts[7] & 0x80)
-                    pidInfo->mPts = (ts[7] & 0x80) ? cDvbUtils::getPts (ts+9) : -1;
-                  if (pidInfo->mFirstPts == -1)
-                    pidInfo->mFirstPts = pidInfo->mPts;
-                  if (pidInfo->mPts > pidInfo->mLastPts)
-                    pidInfo->mLastPts = pidInfo->mPts;
-
-                  // save mDts
-                  if (ts[7] & 0x40)
-                    pidInfo->mDts = (ts[7] & 0x80) ? cDvbUtils::getPts (ts+14) : -1;
+                  if (ts[7] & 0x80) // pts
+                    pidInfo->setPts ((ts[7] & 0x80) ? cDvbUtils::getPts (ts+9) : -1);
+                  if (ts[7] & 0x40) // dts
+                    pidInfo->setDts ((ts[7] & 0x80) ? cDvbUtils::getPts (ts+14) : -1);
 
                   // skip past pesHeader
                   int pesHeaderBytes = 9 + ts[8];

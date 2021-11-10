@@ -81,6 +81,18 @@ public:
     void setSid (uint16_t sid) { mSid = sid; }
     void setStreamType (uint8_t streamType) { mStreamType = streamType; }
     void setInfoString (const std::string infoString) { mInfoString = infoString; }
+    //{{{
+    void setPts (int64_t pts) {
+
+      mPts = pts;
+
+      if ((pts != -1) && (mFirstPts != -1))
+        mFirstPts = pts;
+      if ((pts != -1) && (pts > mLastPts))
+        mLastPts = pts;
+      }
+    //}}}
+    void setDts (int64_t dts) { mDts = dts; }
 
     int addToBuffer (uint8_t* buf, int bufSize);
 
@@ -106,8 +118,6 @@ public:
     int mRepeatContinuity = 0;
 
     int64_t mPts = -1;
-    int64_t mFirstPts = -1;
-    int64_t mLastPts = -1;
     int64_t mDts = -1;
 
     int mBufSize = 0;
@@ -124,6 +134,9 @@ public:
     uint8_t mStreamType = 0;
 
     std::string mInfoString;
+
+    int64_t mFirstPts = -1;
+    int64_t mLastPts = -1;
     };
   //}}}
   //{{{
