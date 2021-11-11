@@ -5992,7 +5992,7 @@ std::string cDvbUtils::getStreamTypeName (uint16_t streamType) {
   }
 //}}}
 //{{{
-char cDvbUtils::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, bool h264) {
+char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
 // return frameType of video pes
 
   //{{{
@@ -6222,14 +6222,14 @@ char cDvbUtils::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, bool h264) {
     };
   //}}}
 
-  uint8_t* pesEnd = pesBuf + pesBufSize;
+  uint8_t* pesEnd = pes + pesSize;
 
   if (h264) {
     //{{{  h264 minimal parser
-    while (pesBuf < pesEnd) {
+    while (pes < pesEnd) {
       //{{{  skip past startcode, find next startcode
-      uint8_t* buf = pesBuf;
-      int64_t bufSize = pesBufSize;
+      uint8_t* buf = pes;
+      int64_t bufSize = pesSize;
 
       uint32_t startOffset = 0;
       if (!buf[0] && !buf[1]) {
@@ -6286,23 +6286,23 @@ char cDvbUtils::getFrameType (uint8_t* pesBuf, int64_t pesBufSize, bool h264) {
           }
         }
 
-      pesBuf += nalSize;
+      pes += nalSize;
       }
     }
     //}}}
   else {
     //{{{  mpeg2 minimal parser
-    while (pesBuf + 6 < pesEnd) {
+    while (pes + 6 < pesEnd) {
       // look for pictureHeader 00000100
-      if (!pesBuf[0] && !pesBuf[1] && (pesBuf[2] == 0x01) && !pesBuf[3])
+      if (!pes[0] && !pes[1] && (pes[2] == 0x01) && !pes[3])
         // extract frameType I,B,P
-        switch ((pesBuf[5] >> 3) & 0x03) {
+        switch ((pes[5] >> 3) & 0x03) {
           case 1: return 'I';
           case 2: return 'P';
           case 3: return 'B';
           default: return '?';
           }
-      pesBuf++;
+      pes++;
       }
     }
     //}}}

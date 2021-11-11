@@ -37,10 +37,9 @@ private:
 
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
-  int64_t mPtsDuration = 0;
 
-  int64_t mGuessPts = -1;
-  bool mSeenIFrame = false;
+  int64_t mLastPts = -1;
+  int64_t mPtsDuration = 0;
 
   int64_t mDecodeTime = 0;
   int64_t mYuvRgbTime = 0;

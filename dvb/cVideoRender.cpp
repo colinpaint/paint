@@ -102,16 +102,12 @@ public:
   //{{{
   cMfxVideoDecoder (uint8_t streamType) : cVideoDecoder() {
 
-    // MFX_IMPL_AUTO
-    // MFX_IMPL_HARDWARE
-    // MFX_IMPL_SOFTWARE
-    // MFX_IMPL_AUTO_ANY
-    // MFX_IMPL_VIA_D3D11
-
     cLog::log (LOGINFO, fmt::format ("cMfxVideoDecoder stream:{}", streamType));
 
+    // MFX_IMPL_AUTO MFX_IMPL_HARDWARE MFX_IMPL_SOFTWARE MFX_IMPL_AUTO_ANY MFX_IMPL_VIA_D3D11
     mfxIMPL mfxImpl = MFX_IMPL_AUTO;
     mfxVersion mfxVersion = {{0,1}};
+
     mfxStatus status = mMfxSession.Init (mfxImpl, &mfxVersion);
     if (status != MFX_ERR_NONE)
       cLog::log (LOGINFO, "session.Init failed " + getMfxStatusString (status));
@@ -126,7 +122,8 @@ public:
       cLog::log (LOGINFO, "QueryVersion failed " + getMfxStatusString (status));
     cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
 
-    mCodecId = (streamType == 27) ? MFX_CODEC_AVC : MFX_CODEC_MPEG2;
+    mH264 = (streamType == 27) ;
+    mCodecId = mH264 ? MFX_CODEC_AVC : MFX_CODEC_MPEG2;
     }
   //}}}
   //{{{
@@ -143,6 +140,19 @@ public:
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<void (cFrame* frame)> addFrameCallback) final {
+
+    if (!mGotIframe) {
+      //{{{  skip until first Iframe
+      char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
+      if (frameType == 'I')
+        mGotIframe = true;
+      else {
+        cLog::log (LOGINFO, fmt::format ("skip:{} {} {} size:{}", 
+                                         frameType, getPtsString (pts), getPtsString (dts), pesSize));
+        return pts;
+        }
+      }
+      //}}}
 
     (void)dts;
     mBitstream.Data = pes;
@@ -206,7 +216,7 @@ public:
     mfxStatus status = MFX_ERR_NONE;
     while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE)) {
       auto timePoint = chrono::system_clock::now();
-      int index = getFreeSurfaceIndex (mSurfaces, mNumSurfaces);
+      int index = getFreeSurfaceIndex();
       mfxFrameSurface1* surface = nullptr;
       mfxSyncPoint decodeSyncPoint = nullptr;
       status = MFXVideoDECODE_DecodeFrameAsync (mMfxSession, &mBitstream, mSurfaces[index], &surface, &decodeSyncPoint);
@@ -226,18 +236,19 @@ public:
         pts += videoFrame->getPtsDuration();
         }
       }
+
     return pts;
     }
   //}}}
 
 private:
   //{{{
-  int getFreeSurfaceIndex (mfxFrameSurface1** surfaces, mfxU16 poolSize) {
+  int getFreeSurfaceIndex() {
 
-    if (surfaces)
-      for (mfxU16 i = 0; i < poolSize; i++)
-        if (0 == surfaces[i]->Data.Locked)
-          return i;
+    if (mSurfaces)
+      for (mfxU16 surfaceIndex = 0; surfaceIndex < mNumSurfaces; surfaceIndex++)
+        if (mSurfaces[surfaceIndex]->Data.Locked == 0)
+          return surfaceIndex;
 
     return MFX_ERR_NOT_FOUND;
     }
@@ -299,21 +310,26 @@ private:
 
   mfxU16 mNumSurfaces = 0;
   mfxFrameSurface1** mSurfaces = nullptr;
+
+  bool mH264 = false;
+  bool mGotIframe = false;
   };
 //}}}
 //{{{
 class cFFmpegVideoDecoder : public cVideoDecoder {
 public:
   //{{{
-  cFFmpegVideoDecoder (uint8_t streamType) : cVideoDecoder(),
-     mAvCodec (avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
-
+  cFFmpegVideoDecoder (uint8_t streamType)
+     : cVideoDecoder(),
+       mAvCodec (avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
     cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder stream:{}", streamType));
 
     mAvParser = av_parser_init ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
+
+    mH264 = (streamType == 27) ;
     }
   //}}}
   //{{{
@@ -331,14 +347,31 @@ public:
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                   function<void (cFrame* frame)> addFrameCallback) final {
-    (void)dts;
+
+    char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
+    if (frameType == 'I') {
+      //{{{  h264 pts wrong, frames decode in presentation order, correct on Iframe
+      if ((mInterpolatedPts >= 0) && (pts != dts))
+        cLog::log (LOGERROR, fmt::format ("lost:{} pts:{} dts:{} size:{}",
+                                          frameType, getPtsString (pts), getPtsString (dts), pesSize));
+      mInterpolatedPts = dts;
+      mGotIframe = true;
+      }
+      //}}}
+    if (!mGotIframe) {
+      //{{{  skip until first Iframe
+      cLog::log (LOGINFO, fmt::format ("skip:{} pts:{} dts:{} size:{}",
+                                       frameType, getPtsString (pts), getPtsString (dts), pesSize));
+      return pts;
+      }
+      //}}}
+
     AVPacket* avPacket = av_packet_alloc();
     AVFrame* avFrame = av_frame_alloc();
     uint8_t* frame = pes;
     uint32_t frameSize = pesSize;
     while (frameSize) {
       auto timePoint = chrono::system_clock::now();
-
       int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
                                         frame, (int)frameSize, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
       if (avPacket->size) {
@@ -351,13 +384,13 @@ public:
             chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
           // create new videoFrame
-          cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (pts,
+          cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (mInterpolatedPts,
             (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num);
           videoFrame->init (static_cast<uint16_t>(avFrame->width),
                             static_cast<uint16_t>(avFrame->height),
                             static_cast<uint16_t>(avFrame->width),
                             frameSize, decodeTime);
-          pts += videoFrame->getPtsDuration();
+          mInterpolatedPts += videoFrame->getPtsDuration();
 
           // yuv420 -> rgba
           timePoint = chrono::system_clock::now();
@@ -382,7 +415,7 @@ public:
 
     av_frame_free (&avFrame);
     av_packet_free (&avPacket);
-    return pts;
+    return mInterpolatedPts;
     }
   //}}}
 
@@ -392,6 +425,10 @@ private:
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;
   SwsContext* mSwsContext = nullptr;
+
+  bool mH264 = false;
+  bool mGotIframe = false;
+  int64_t mInterpolatedPts = -1;
   };
 //}}}
 
@@ -481,50 +518,12 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)pesSize);
 
-  #ifdef MFX_DECODER
-    mGuessPts = pts;
-
-    if (!mSeenIFrame) {
-      char frameType = cDvbUtils::getFrameType (pes, pesSize, getStreamType() == 27);
-      if (frameType == 'I')
-        mSeenIFrame = true;
-      else {
-        cLog::log (LOGINFO, fmt::format ("waiting for Iframe {} to:{} type:{} size:{}",
-                                         getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
-                                         frameType, pesSize));
-        return;
-        }
-      }
-  #else
-    //{{{  ffmpeg h264 pts wrong, decode frames in presentation order, pts is correct on I frames
-    if (getStreamType() == 27) {
-      char frameType = cDvbUtils::getFrameType (pes, pesSize, getStreamType() == 27);
-      if (frameType == 'I') {
-        if ((mGuessPts >= 0) && (mGuessPts != dts))
-          cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
-                                            getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
-                                            frameType,pesSize));
-        mGuessPts = dts;
-        mSeenIFrame = true;
-        }
-
-      if (!mSeenIFrame) {
-        cLog::log (LOGINFO, fmt::format ("waiting for Iframe {} to:{} type:{} size:{}",
-                                         getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),
-                                         frameType, pesSize));
-        return;
-        }
-      }
-    else
-      mGuessPts = pts;
-    //}}}
-  #endif
-
-  mGuessPts = mVideoDecoder->decode (pes, pesSize, mGuessPts, dts, [&](cFrame* frame) noexcept {
+  mVideoDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
     // addFrame lambda
     cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
     mWidth = videoFrame->getWidth();
     mHeight = videoFrame->getHeight();
+    mLastPts = videoFrame->getPts();
     mPtsDuration = videoFrame->getPtsDuration();
     mDecodeTime = videoFrame->getDecodeTime();
     mYuvRgbTime = videoFrame->getYuvRgbTime();

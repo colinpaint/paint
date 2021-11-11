@@ -137,6 +137,7 @@ public:
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<void (cFrame* frame)> addFrameCallback) final  {
     (void)dts;
+    int64_t interpolatedPts = pts;
 
     // parse pesFrame, pes may have more than one frame
     size_t numChannels = 0;
@@ -215,9 +216,10 @@ public:
               default:;
               }
 
-            cAudioFrame* audioFrame = new cAudioFrame (pts, numChannels, samplesPerFrame, sampleRate, samples);
+            cAudioFrame* audioFrame = new cAudioFrame (interpolatedPts, numChannels,
+                                                       samplesPerFrame, sampleRate, samples);
             addFrameCallback (audioFrame);
-            pts += audioFrame->getPtsDuration();
+            interpolatedPts += audioFrame->getPtsDuration();
             }
           }
         }
@@ -225,7 +227,7 @@ public:
       av_packet_free (&avPacket);
       }
 
-    return pts;
+    return interpolatedPts;
     }
   //}}}
 
