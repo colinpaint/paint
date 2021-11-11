@@ -43,8 +43,6 @@ public:
 
 private:
   // vars
-  cAudioDecoder* mAudioDecoder = nullptr;
-
   size_t mNumChannels;
   size_t mSamplesPerFrame = 0;
   uint32_t mSampleRate = 0;

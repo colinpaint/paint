@@ -1,3 +1,4 @@
+//{{{
 // Copyright (c) 2013-2020 Intel Corporation
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -17,6 +18,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//}}}
 
 #pragma once
 #include "mfxdefs.h"
@@ -24,16 +26,16 @@
 #include <cstdio>
 
 #if defined(MFX_DISPATCHER_LOG)
-#include <string>
-#include <string.h>
+  #include <string>
+  #include <string.h>
 #endif
 
 #define MAX_PLUGIN_PATH MAX_PATH
 #define MAX_PLUGIN_NAME MAX_PATH
 
 #if _MSC_VER < 1400
-#define wcscpy_s(to,to_size, from) wcscpy(to, from)
-#define wcscat_s(to,to_size, from) wcscat(to, from)
+  #define wcscpy_s(to,to_size, from) wcscpy(to, from)
+  #define wcscat_s(to,to_size, from) wcscat(to, from)
 #endif
 
 // declare library module's handle

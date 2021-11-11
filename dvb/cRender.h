@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <map>
+#include <functional>
 #include <mutex>
 #include <shared_mutex>
 
@@ -13,6 +14,31 @@
 class cFrame;
 //}}}
 constexpr int kPtsPerSecond = 90000;
+
+//{{{
+class cFrame {
+public:
+  cFrame (int64_t pts, int64_t ptsDuration) : mPts(pts), mPtsDuration(ptsDuration) {}
+  virtual ~cFrame() = default;
+
+  int64_t getPts() const { return mPts; }
+  int64_t getPtsDuration() const { return mPtsDuration; }
+
+protected:
+  int64_t mPts;
+  int64_t mPtsDuration;
+  };
+//}}}
+//{{{
+class cDecoder {
+public:
+  cDecoder() = default;
+  virtual ~cDecoder() = default;
+
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
+                          std::function<void (cFrame* frame)> addFrameCallback) = 0;
+  };
+//}}}
 
 class cRender {
 public:
@@ -47,6 +73,7 @@ protected:
   void log (const std::string& tag, const std::string& text);
 
   std::shared_mutex mSharedMutex;
+  cDecoder* mDecoder = nullptr;
 
 private:
   const std::string mName;

@@ -1,3 +1,5 @@
+//{{{
+
 // Copyright (c) 2012-2019 Intel Corporation
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -17,10 +19,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
+//}}}
+//{{{  includes
 #include "mfx_critical_section.h"
 
 #include <windows.h>
+//}}}
+
 // SDK re-declares the following functions with different call declarator.
 // We don't need them. Just redefine them to nothing.
 #define _interlockedbittestandset fake_set
@@ -29,46 +34,45 @@
 #define _interlockedbittestandreset64 fake_reset64
 #include <intrin.h>
 
+
 #define MFX_WAIT() SwitchToThread()
 
 // static section of the file
-namespace
-{
-
-enum
-{
+namespace {
+  enum {
     MFX_SC_IS_FREE = 0,
     MFX_SC_IS_TAKEN = 1
-};
+    };
+  } 
 
-} // namespace
-
-namespace MFX
-{
-
-mfxU32 mfxInterlockedCas32(mfxCriticalSection *pCSection, mfxU32 value_to_exchange, mfxU32 value_to_compare)
-{
-    return _InterlockedCompareExchange(pCSection, value_to_exchange, value_to_compare);
-}
-
-mfxU32 mfxInterlockedXchg32(mfxCriticalSection *pCSection, mfxU32 value)  
-{ 
-    return _InterlockedExchange(pCSection, value);
-}
-
-void mfxEnterCriticalSection(mfxCriticalSection *pCSection)
-{
-    while (MFX_SC_IS_TAKEN == mfxInterlockedCas32(pCSection,
-                                                  MFX_SC_IS_TAKEN,
-                                                  MFX_SC_IS_FREE))
-    {
-        MFX_WAIT();
-    }
-} // void mfxEnterCriticalSection(mfxCriticalSection *pCSection)
-
-void mfxLeaveCriticalSection(mfxCriticalSection *pCSection)
-{
-    mfxInterlockedXchg32(pCSection, MFX_SC_IS_FREE);
-} // void mfxLeaveCriticalSection(mfxCriticalSection *pCSection)
-
-} // namespace MFX
+namespace MFX {
+  //{{{
+  mfxU32 mfxInterlockedCas32(mfxCriticalSection *pCSection, mfxU32 value_to_exchange, mfxU32 value_to_compare)
+  {
+      return _InterlockedCompareExchange(pCSection, value_to_exchange, value_to_compare);
+  }
+  //}}}
+  //{{{
+  mfxU32 mfxInterlockedXchg32(mfxCriticalSection *pCSection, mfxU32 value)
+  {
+      return _InterlockedExchange(pCSection, value);
+  }
+  //}}}
+  //{{{
+  void mfxEnterCriticalSection(mfxCriticalSection *pCSection)
+  {
+      while (MFX_SC_IS_TAKEN == mfxInterlockedCas32(pCSection,
+                                                    MFX_SC_IS_TAKEN,
+                                                    MFX_SC_IS_FREE))
+      {
+          MFX_WAIT();
+      }
+  } // void mfxEnterCriticalSection(mfxCriticalSection *pCSection)
+  //}}}
+  //{{{
+  void mfxLeaveCriticalSection(mfxCriticalSection *pCSection)
+  {
+      mfxInterlockedXchg32(pCSection, MFX_SC_IS_FREE);
+  } // void mfxLeaveCriticalSection(mfxCriticalSection *pCSection)
+  //}}}
+  } 

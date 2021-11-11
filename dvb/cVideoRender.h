@@ -1,11 +1,11 @@
 // cVideoRender.h
 //{{{  includes
 #pragma once
+#include "cRender.h"
 
 #include <cstdint>
 #include <string>
 
-#include "cRender.h"
 #include "../utils/cMiniLog.h"
 
 class cVideoFrame;
@@ -30,8 +30,6 @@ public:
   virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,  bool skip) final;
 
 private:
-  cVideoDecoder* mVideoDecoder = nullptr;
-
   const size_t mMaxPoolSize;
   std::map <int64_t, cVideoFrame*> mFrames;
 

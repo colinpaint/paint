@@ -1,3 +1,4 @@
+//{{{
 // Copyright (c) 2012-2019 Intel Corporation
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -17,50 +18,46 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
+//}}}
 #if !defined(__MFX_CRITICAL_SECTION_H)
 #define __MFX_CRITICAL_SECTION_H
 
 #include <mfxdefs.h>
 
-namespace MFX
-{
+namespace MFX {
+  // Just set "critical section" instance to zero for initialization.
+  typedef volatile mfxL32 mfxCriticalSection;
 
-// Just set "critical section" instance to zero for initialization.
-typedef volatile mfxL32 mfxCriticalSection;
+  // Enter the global critical section.
+  void mfxEnterCriticalSection(mfxCriticalSection *pCSection);
 
-// Enter the global critical section.
-void mfxEnterCriticalSection(mfxCriticalSection *pCSection);
+  // Leave the global critical section.
+  void mfxLeaveCriticalSection(mfxCriticalSection *pCSection);
 
-// Leave the global critical section.
-void mfxLeaveCriticalSection(mfxCriticalSection *pCSection);
-
-class MFXAutomaticCriticalSection
-{
-public:
+  //{{{
+  class MFXAutomaticCriticalSection {
+  public:
     // Constructor
-    explicit MFXAutomaticCriticalSection(mfxCriticalSection *pCSection)
-    {
-        m_pCSection = pCSection;
-        mfxEnterCriticalSection(m_pCSection);
-    }
+    explicit MFXAutomaticCriticalSection(mfxCriticalSection *pCSection) {
+      m_pCSection = pCSection;
+      mfxEnterCriticalSection(m_pCSection);
+      }
 
     // Destructor
-    ~MFXAutomaticCriticalSection()
-    {
-        mfxLeaveCriticalSection(m_pCSection);
-    }
+    ~MFXAutomaticCriticalSection() {
+      mfxLeaveCriticalSection(m_pCSection);
+      }
 
-protected:
+  protected:
     // Pointer to a critical section
     mfxCriticalSection *m_pCSection;
 
-private:
+  private:
     // unimplemented by intent to make this class non-copyable
     MFXAutomaticCriticalSection(const MFXAutomaticCriticalSection &);
     void operator=(const MFXAutomaticCriticalSection &);
-};
-
-} // namespace MFX
+    };
+  //}}}
+  } 
 
 #endif // __MFX_CRITICAL_SECTION_H

@@ -23,8 +23,6 @@
 #include "../imgui/imgui.h"
 #include "../imgui/myImgui.h"
 
-#include "cFrame.h"
-
 #include "../utils/date.h"
 #include "../utils/cLog.h"
 #include "../utils/utils.h"
@@ -109,10 +107,10 @@ public:
   };
 //}}}
 //{{{
-class cFFmpegAudioDecoder : public cAudioDecoder {
+class cFFmpegAudioDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegAudioDecoder (uint8_t streamType) : cAudioDecoder(),
+  cFFmpegAudioDecoder (uint8_t streamType) : cDecoder(),
     mAvCodec (avcodec_find_decoder ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
 
     cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder stream:{}", streamType));
@@ -387,7 +385,7 @@ cAudioRender::cAudioRender (const std::string name, uint8_t streamType, bool oth
   mSamplesPerFrame = 1024;
   mMaxMapSize = kAudioPoolSize;
 
-  mAudioDecoder = new cFFmpegAudioDecoder (streamType);
+  mDecoder = new cFFmpegAudioDecoder (streamType);
   }
 //}}}
 //{{{
@@ -480,7 +478,7 @@ void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   //log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);
 
-  mAudioDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
+  mDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
     // addFrame lambda
     cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
     mNumChannels = audioFrame->getNumChannels();

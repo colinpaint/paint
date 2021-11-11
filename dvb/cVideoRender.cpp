@@ -17,9 +17,6 @@
 #include "../dvb/cDvbUtils.h"
 #include "../graphics/cGraphics.h"
 
-#include "cFrame.h"
-
-//#include "../libmfx/include/mfxvideo++.h"
 #include "mfxvideo++.h"
 
 #include "../utils/date.h"
@@ -40,7 +37,7 @@ extern "C" {
 using namespace std;
 //}}}
 
-constexpr uint32_t kVideoPoolSize = 100;
+constexpr uint32_t kVideoPoolSize = 50;
 //{{{
 class cVideoFrame : public cFrame {
 public:
@@ -87,20 +84,10 @@ protected:
 //}}}
 
 //{{{
-class cVideoDecoder {
-public:
-  cVideoDecoder() = default;
-  virtual ~cVideoDecoder() = default;
-
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
-                          function<void (cFrame* frame)> addFrameCallback) = 0;
-  };
-//}}}
-//{{{
-class cMfxVideoDecoder : public cVideoDecoder {
+class cMfxVideoDecoder : public cDecoder {
 public:
   //{{{
-  cMfxVideoDecoder (uint8_t streamType) : cVideoDecoder() {
+  cMfxVideoDecoder (uint8_t streamType) : cDecoder() {
 
     cLog::log (LOGINFO, fmt::format ("cMfxVideoDecoder stream:{}", streamType));
 
@@ -316,11 +303,11 @@ private:
   };
 //}}}
 //{{{
-class cFFmpegVideoDecoder : public cVideoDecoder {
+class cFFmpegVideoDecoder : public cDecoder {
 public:
   //{{{
   cFFmpegVideoDecoder (uint8_t streamType)
-     : cVideoDecoder(),
+     : cDecoder(),
        mAvCodec (avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
     cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder stream:{}", streamType));
@@ -438,9 +425,9 @@ cVideoRender::cVideoRender (const std::string name, uint8_t streamType, bool mfx
     : cRender(name, streamType), mMaxPoolSize(kVideoPoolSize) {
 
   if (mfxDecoder)
-    mVideoDecoder = new cMfxVideoDecoder (streamType);
+    mDecoder = new cMfxVideoDecoder (streamType);
   else
-    mVideoDecoder = new cFFmpegVideoDecoder (streamType);
+    mDecoder = new cFFmpegVideoDecoder (streamType);
   }
 //}}}
 //{{{
@@ -518,7 +505,7 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)pesSize);
 
-  mVideoDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
+  mDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
     // addFrame lambda
     cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
     mWidth = videoFrame->getWidth();
