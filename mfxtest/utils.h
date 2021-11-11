@@ -68,6 +68,9 @@ enum
 
 static const mfxPluginUID MSDK_PLUGINGUID_NULL = { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
 
+FILE* OpenFile (const char* fileName, const char* mode);
+void CloseFile (FILE* fHdl);
+
 void PrintErrString (int err,const char* filestr,int line);
 char mfxFrameTypeString (mfxU16 FrameType);
 

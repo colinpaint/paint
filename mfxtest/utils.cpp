@@ -34,6 +34,10 @@
 //}}}
 
 #ifdef _WIN32
+  #define MSDK_FOPEN(FH, FN, M) { FH = fopen (FN,M); }
+  #define msdk_sscanf sscanf
+  #define msdk_strcopy strcpy
+
   #define DX9_D3D
   #include <intrin.h>
   #ifdef DX9_D3D
@@ -1007,6 +1011,8 @@
   void ClearYUVSurfaceVMem (mfxMemId memId) { ClearYUVSurfaceD3D (memId); }
   void ClearRGBSurfaceVMem (mfxMemId memId) { ClearRGBSurfaceD3D (memId); }
 #else
+  #define MSDK_FOPEN(FH, FN, M) { FH = fopen (FN,M); }
+
   //{{{  vaapi headers
   #include <stdio.h>
   #include <string.h>
@@ -1621,6 +1627,21 @@
 #endif
 
 // utils
+//{{{
+FILE* OpenFile(const char* fileName, const char* mode)
+{
+    FILE* openFile = nullptr;
+    MSDK_FOPEN(openFile, fileName, mode);
+    return openFile;
+}
+//}}}
+
+void CloseFile(FILE* fHdl)
+{
+    if(fHdl)
+        fclose(fHdl);
+}
+
 //{{{
 void PrintErrString (int err,const char* filestr,int line)
 {
