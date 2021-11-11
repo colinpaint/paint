@@ -1,4 +1,4 @@
-// decode.cpp
+// main.cpp - mfxtest
 //{{{  includes
 #include <vector>
 #include <string>
@@ -53,10 +53,10 @@ string getMfxInfoString (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
                       ((mfxImpl & 0x0007) == MFX_IMPL_HARDWARE) ? " hw":"",
                       ((mfxImpl & 0x0007) == MFX_IMPL_SOFTWARE) ? " sw":"",
                       ((mfxImpl & 0x0007) == MFX_IMPL_AUTO_ANY) ? " autoAny":"",
-                      ((mfxImpl & 0x0300) == MFX_IMPL_VIA_ANY) ? " any":"",
-                      ((mfxImpl & 0x0300) == MFX_IMPL_VIA_D3D9) ? " d3d9":"",
-                      ((mfxImpl & 0x0300) == MFX_IMPL_VIA_D3D11) ? " d3d11":"",
-                      ((mfxImpl & 0x0300) == MFX_IMPL_VIA_VAAPI) ? " vaapi":"",
+                      ((mfxImpl & 0x0700) == MFX_IMPL_VIA_ANY) ? " any":"",
+                      ((mfxImpl & 0x0700) == MFX_IMPL_VIA_D3D9) ? " d3d9":"",
+                      ((mfxImpl & 0x0700) == MFX_IMPL_VIA_D3D11) ? " d3d11":"",
+                      ((mfxImpl & 0x0700) == MFX_IMPL_VIA_VAAPI) ? " vaapi":"",
                       mfxVersion.Major, mfxVersion.Minor);
   }
 //}}}
@@ -87,6 +87,7 @@ int main(int numArgs, char** args) {
   //}}}
   mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY | MFX_IMPL_VIA_D3D11;
   mfxVersion mfxVersion = {{0,1}};
+
   MFXVideoSession mfxSession;
   mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
   //mfxStatus status = Initialize (mfxImpl, mfxVersion, &mfxSession, NULL);

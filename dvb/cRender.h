@@ -10,8 +10,6 @@
 #include <shared_mutex>
 
 #include "../utils/cMiniLog.h"
-
-class cFrame;
 //}}}
 constexpr int kPtsPerSecond = 90000;
 
