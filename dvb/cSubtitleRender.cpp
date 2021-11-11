@@ -56,62 +56,74 @@ void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, i
   log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (mPage.mPts), mPage.mPesSize));
   logValue (pts, (float)pesSize);
 
-  const uint8_t* pesEnd = pes + pesSize;
-  const uint8_t* pesPtr = pes + 2;
+  if (pesSize < 2) {
+    //{{{  too short error, return
+    cLog::log (LOGERROR, fmt::format ("cSubtitle no data_id, subStream size:{}", pesSize));
+    return;
+    }
+    //}}}
 
-  while (pesEnd - pesPtr >= 6) {
+  uint8_t* pesPtr = pes;
+  uint8_t data_identifier = *pesPtr++;
+  uint8_t subtitle_stream_id = *pesPtr++;
+  (void)data_identifier;
+  (void)subtitle_stream_id;
+  // cLog::log (LOGINFO, fmt::format ("subtitle pes {:x} {:x}", data_identifier, subtitle_stream_id));
+
+  uint8_t* pesEnd = pes + pesSize;
+  while ((pesEnd - pesPtr) >= 6) {
     // check syncByte
     uint8_t syncByte = *pesPtr++;
     if (syncByte != 0x0f) {
-      //{{{  syncByte error return
-      cLog::log (LOGERROR, fmt::format ("cSubtitle decode missing syncByte:{}", syncByte));
+      //{{{  syncByte error, return
+      cLog::log (LOGERROR, fmt::format ("cSubtitle decode missing syncByte:{:x} offset:{} size:{}",
+                                        syncByte, int(pesPtr - pes), pesSize));
       return;
       }
       //}}}
 
-    uint8_t segmentType = *pesPtr++;
-
-    uint16_t pageId = AVRB16(pesPtr);
+    // get segType, pageId, segLength
+    uint8_t segType = *pesPtr++;
+    uint16_t pageId = AVRB16 (pesPtr);
+    pesPtr += 2;
+    uint16_t segLength = AVRB16 (pesPtr);
     pesPtr += 2;
 
-    uint16_t segmentLength = AVRB16(pesPtr);
-    pesPtr += 2;
-
-    if (segmentLength > pesEnd - pesPtr) {
-      //{{{  segmentLength error return
+    if (segLength > pesEnd - pesPtr) {
+      //{{{  segLength error, return
       cLog::log (LOGERROR, "cSubtitle decode incomplete or broken packet");
       return;
       }
       //}}}
 
-    switch (segmentType) {
+    switch (segType) {
       //{{{
       case 0x10: // page composition segment
-        if (!parsePage (pesPtr, segmentLength))
+        if (!parsePage (pesPtr, segLength))
           return;
         break;
       //}}}
       //{{{
       case 0x11: // region composition segment
-        if (!parseRegion (pesPtr, segmentLength))
+        if (!parseRegion (pesPtr, segLength))
           return;
         break;
       //}}}
       //{{{
       case 0x12: // CLUT definition segment
-        if (!parseColorLut (pesPtr, segmentLength))
+        if (!parseColorLut (pesPtr, segLength))
           return;
         break;
       //}}}
       //{{{
       case 0x13: // object data segment
-        if (!parseObject (pesPtr, segmentLength))
+        if (!parseObject (pesPtr, segLength))
           return;
         break;
       //}}}
       //{{{
       case 0x14: // display definition segment
-        if (!parseDisplayDefinition (pesPtr, segmentLength))
+        if (!parseDisplayDefinition (pesPtr, segLength))
           return;
         break;
       //}}}
@@ -133,12 +145,12 @@ void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, i
       //{{{
       default:
         cLog::log (LOGERROR, "cSubtitle decode unknown seg:%x, pageId:%d, size:%d",
-                              segmentType, pageId, segmentLength);
+                              segType, pageId, segLength);
         break;
       //}}}
       }
 
-    pesPtr += segmentLength;
+    pesPtr += segLength;
     }
   }
 //}}}

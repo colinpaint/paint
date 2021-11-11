@@ -147,7 +147,7 @@ public:
       if (frameType == 'I')
         mGotIframe = true;
       else {
-        cLog::log (LOGINFO, fmt::format ("skip:{} {} {} size:{}", 
+        cLog::log (LOGINFO, fmt::format ("skip:{} {} {} size:{}",
                                          frameType, getPtsString (pts), getPtsString (dts), pesSize));
         return pts;
         }
@@ -350,7 +350,7 @@ public:
 
     char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
     if (frameType == 'I') {
-      //{{{  h264 pts wrong, frames decode in presentation order, correct on Iframe
+      //{{{  pts seems wrong, frames decode in presentation order, only correct on Iframe
       if ((mInterpolatedPts >= 0) && (pts != dts))
         cLog::log (LOGERROR, fmt::format ("lost:{} pts:{} dts:{} size:{}",
                                           frameType, getPtsString (pts), getPtsString (dts), pesSize));
