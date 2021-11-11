@@ -1628,19 +1628,20 @@
 
 // utils
 //{{{
-FILE* OpenFile(const char* fileName, const char* mode)
-{
-    FILE* openFile = nullptr;
-    MSDK_FOPEN(openFile, fileName, mode);
-    return openFile;
-}
-//}}}
+FILE* OpenFile (const char* fileName, const char* mode) {
 
-void CloseFile(FILE* fHdl)
-{
-    if(fHdl)
-        fclose(fHdl);
-}
+  FILE* openFile = nullptr;
+  MSDK_FOPEN(openFile, fileName, mode);
+  return openFile;
+  }
+//}}}
+//{{{
+void CloseFile(FILE* fHdl) {
+
+  if (fHdl)
+    fclose(fHdl);
+  }
+//}}}
 
 //{{{
 void PrintErrString (int err,const char* filestr,int line)
@@ -1739,6 +1740,59 @@ char mfxFrameTypeString (mfxU16 FrameType) {
 //}}}
 
 //{{{
+void ClearYUVSurfaceSysMem (mfxFrameSurface1* pSfc, mfxU16 width, mfxU16 height) {
+
+   // In case simulating direct access to frames we initialize the allocated surfaces with default pattern
+  memset (pSfc->Data.Y, 100, width * height);  // Y plane
+  memset (pSfc->Data.U, 50, (width * height)/2);  // UV plane
+  }
+//}}}
+//{{{
+// Get free raw frame surface
+int GetFreeSurfaceIndex (mfxFrameSurface1** pSurfacesPool, mfxU16 nPoolSize) {
+
+  if (pSurfacesPool)
+    for (mfxU16 i = 0; i < nPoolSize; i++)
+      if (0 == pSurfacesPool[i]->Data.Locked)
+        return i;
+
+  return MFX_ERR_NOT_FOUND;
+  }
+//}}}
+//{{{
+int GetFreeSurfaceIndex (const std::vector<mfxFrameSurface1>& pSurfacesPool) {
+
+  auto it = std::find_if (pSurfacesPool.begin(), pSurfacesPool.end(),
+                          [](const mfxFrameSurface1& surface) {
+                            return 0 == surface.Data.Locked;
+                            });
+
+  if (it == pSurfacesPool.end())
+    return MFX_ERR_NOT_FOUND;
+  else
+    return (int)(it - pSurfacesPool.begin());
+  }
+//}}}
+
+//{{{
+mfxStatus ReadBitStreamData (mfxBitstream* pBS, FILE* fSource) {
+
+  memmove (pBS->Data, pBS->Data + pBS->DataOffset, pBS->DataLength);
+  pBS->DataOffset = 0;
+
+  mfxU32 nBytesRead = (mfxU32)fread (pBS->Data + pBS->DataLength, 1, pBS->MaxLength - pBS->DataLength,
+                                     fSource);
+
+  if (0 == nBytesRead)
+    return MFX_ERR_MORE_DATA;
+
+  pBS->DataLength += nBytesRead;
+
+  return MFX_ERR_NONE;
+  }
+//}}}
+
+//{{{
 mfxStatus ReadPlaneData (mfxU16 w, mfxU16 h, mfxU8* buf, mfxU8* ptr,
                         mfxU16 pitch, mfxU16 offset, FILE* fSource) {
 
@@ -1754,6 +1808,34 @@ mfxStatus ReadPlaneData (mfxU16 w, mfxU16 h, mfxU8* buf, mfxU8* ptr,
   return MFX_ERR_NONE;
   }
 //}}}
+//{{{
+mfxStatus ReadPlaneData10Bit (mfxU16 w, mfxU16 h, mfxU16* buf, mfxU8* ptr,
+    mfxU16 pitch, mfxU16 shift, FILE* fSource) {
+
+  mfxU32 nBytesRead;
+  mfxU16* shortPtr;
+
+  for (mfxU16 i = 0; i < h; i++) {
+    nBytesRead = (mfxU32)fread(buf, 2, w, fSource); //Reading in 16bits per pixel.
+    if (w != nBytesRead)
+      return MFX_ERR_MORE_DATA;
+
+    // Read data with P010 and convert it to MS-P010
+    //Shifting left the data in a 16bits boundary
+    //Because each 10bit pixel channel takes 2 bytes with the LSB on the right side of the 16bits
+    //See this web page for the description of MS-P010 format
+    //https://msdn.microsoft.com/en-us/library/windows/desktop/bb970578(v=vs.85).aspx#overview
+    if (shift > 0) {
+      shortPtr = (mfxU16 *)(ptr + i * pitch);
+      for (mfxU16 j = 0; j < w; j++)
+        shortPtr[j] = buf[j] << 6;
+      }
+    }
+
+  return MFX_ERR_NONE;
+  }
+//}}}
+
 //{{{
 mfxStatus LoadRawFrame (mfxFrameSurface1* pSurface, FILE* fSource)
 {
@@ -1809,33 +1891,6 @@ mfxStatus LoadRawFrame (mfxFrameSurface1* pSurface, FILE* fSource)
 
     return MFX_ERR_NONE;
 }
-//}}}
-//{{{
-mfxStatus ReadPlaneData10Bit (mfxU16 w, mfxU16 h, mfxU16* buf, mfxU8* ptr,
-    mfxU16 pitch, mfxU16 shift, FILE* fSource) {
-
-  mfxU32 nBytesRead;
-  mfxU16* shortPtr;
-
-  for (mfxU16 i = 0; i < h; i++) {
-    nBytesRead = (mfxU32)fread(buf, 2, w, fSource); //Reading in 16bits per pixel.
-    if (w != nBytesRead)
-      return MFX_ERR_MORE_DATA;
-
-    // Read data with P010 and convert it to MS-P010
-    //Shifting left the data in a 16bits boundary
-    //Because each 10bit pixel channel takes 2 bytes with the LSB on the right side of the 16bits
-    //See this web page for the description of MS-P010 format
-    //https://msdn.microsoft.com/en-us/library/windows/desktop/bb970578(v=vs.85).aspx#overview
-    if (shift > 0) {
-      shortPtr = (mfxU16 *)(ptr + i * pitch);
-      for (mfxU16 j = 0; j < w; j++)
-        shortPtr[j] = buf[j] << 6;
-      }
-    }
-
-  return MFX_ERR_NONE;
-  }
 //}}}
 //{{{
 mfxStatus LoadRaw10BitFrame (mfxFrameSurface1* pSurface, FILE* fSource) {
@@ -1922,24 +1977,6 @@ mfxStatus LoadRawRGBFrame (mfxFrameSurface1* pSurface, FILE* fSource) {
 //}}}
 
 //{{{
-mfxStatus ReadBitStreamData (mfxBitstream* pBS, FILE* fSource) {
-
-  memmove (pBS->Data, pBS->Data + pBS->DataOffset, pBS->DataLength);
-  pBS->DataOffset = 0;
-
-  mfxU32 nBytesRead = (mfxU32) fread(pBS->Data + pBS->DataLength, 1,
-                       pBS->MaxLength - pBS->DataLength,
-                       fSource);
-
-  if (0 == nBytesRead)
-    return MFX_ERR_MORE_DATA;
-
-  pBS->DataLength += nBytesRead;
-
-  return MFX_ERR_NONE;
-  }
-//}}}
-//{{{
 mfxStatus WriteBitStreamFrame (mfxBitstream* pMfxBitstream, FILE* fSink) {
 
   if (!pMfxBitstream)
@@ -1958,7 +1995,6 @@ mfxStatus WriteBitStreamFrame (mfxBitstream* pMfxBitstream, FILE* fSink) {
   return MFX_ERR_NONE;
   }
 //}}}
-
 //{{{
 mfxStatus WriteSection (mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
                        mfxFrameInfo* pInfo, mfxFrameData* pData, mfxU32 i,
@@ -2087,41 +2123,6 @@ int GetFreeTaskIndex (Task* pTaskPool, mfxU16 nPoolSize) {
         return i;
 
   return MFX_ERR_NOT_FOUND;
-  }
-//}}}
-
-//{{{
-void ClearYUVSurfaceSysMem (mfxFrameSurface1* pSfc, mfxU16 width, mfxU16 height) {
-
-   // In case simulating direct access to frames we initialize the allocated surfaces with default pattern
-  memset (pSfc->Data.Y, 100, width * height);  // Y plane
-  memset (pSfc->Data.U, 50, (width * height)/2);  // UV plane
-  }
-//}}}
-//{{{
-// Get free raw frame surface
-int GetFreeSurfaceIndex (mfxFrameSurface1** pSurfacesPool, mfxU16 nPoolSize) {
-
-  if (pSurfacesPool)
-    for (mfxU16 i = 0; i < nPoolSize; i++)
-      if (0 == pSurfacesPool[i]->Data.Locked)
-        return i;
-
-  return MFX_ERR_NOT_FOUND;
-  }
-//}}}
-//{{{
-int GetFreeSurfaceIndex (const std::vector<mfxFrameSurface1>& pSurfacesPool) {
-
-  auto it = std::find_if (pSurfacesPool.begin(), pSurfacesPool.end(),
-                          [](const mfxFrameSurface1& surface) {
-                            return 0 == surface.Data.Locked;
-                            });
-
-  if (it == pSurfacesPool.end())
-    return MFX_ERR_NOT_FOUND;
-  else
-    return (int)(it - pSurfacesPool.begin());
   }
 //}}}
 
