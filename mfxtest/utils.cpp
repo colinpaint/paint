@@ -57,11 +57,12 @@
     // - D3D Device created and handed to Intel Media SDK
     // - Intel graphics device adapter id will be determined automatically (does not have to be primary),
     //   but with the following caveats:
-    //     - Device must be active. Normally means a monitor has to be physically attached to device
-    //     - Device must be enabled in BIOS. Required for the case when used together with a discrete graphics card
-    //     - For switchable graphics solutions (mobile) make sure that Intel device is the active device
+    //   - Device must be active. Normally means a monitor has to be physically attached to device
+    //   - Device must be enabled in BIOS. Required for the case when used together with a discrete graphics card
+    //   - For switchable graphics solutions (mobile) make sure that Intel device is the active device
     mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND hWnd, bool bCreateSharedHandles = false);
     void CleanupHWDevice();
+
     IDirect3DDevice9Ex* GetDevice();
 
     void ClearYUVSurfaceD3D (mfxMemId memId);
@@ -82,9 +83,9 @@
 
     bool g_bCreateSharedHandles = false;
 
-    std::map<mfxMemId*, mfxHDL> allocResponses;
-    std::map<mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
-    std::map<mfxHDL, int> allocDecodeRefCount;
+    std::map <mfxMemId*, mfxHDL> allocResponses;
+    std::map <mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
+    std::map <mfxHDL, int> allocDecodeRefCount;
 
     const struct {
       mfxIMPL impl;       // actual implementation
@@ -99,14 +100,12 @@
     //{{{
     mfxU32 GetIntelDeviceAdapterNum (mfxSession session) {
 
-      mfxU32  adapterNum = 0;
       mfxIMPL impl;
-
-      MFXQueryIMPL(session, &impl);
-
+      MFXQueryIMPL (session, &impl);
       mfxIMPL baseImpl = MFX_IMPL_BASETYPE(impl); // Extract Media SDK base implementation type
 
       // get corresponding adapter number
+      mfxU32  adapterNum = 0;
       for (mfxU8 i = 0; i < sizeof(implTypes)/sizeof(implTypes[0]); i++) {
         if (implTypes[i].impl == baseImpl) {
           adapterNum = implTypes[i].adapterID;
@@ -138,19 +137,18 @@
       GetClientRect(window, &rc);
 
       D3DPRESENT_PARAMETERS D3DPP;
-      memset(&D3DPP, 0, sizeof(D3DPP));
-      D3DPP.Windowed                   = true;
-      D3DPP.hDeviceWindow              = window;
-      D3DPP.Flags                      = D3DPRESENTFLAG_VIDEO;
+      memset (&D3DPP, 0, sizeof(D3DPP));
+      D3DPP.Windowed = true;
+      D3DPP.hDeviceWindow = window;
+      D3DPP.Flags = D3DPRESENTFLAG_VIDEO;
       D3DPP.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-      D3DPP.PresentationInterval       = D3DPRESENT_INTERVAL_ONE;
-      D3DPP.BackBufferCount            = 1;
-      D3DPP.BackBufferFormat           = D3DFMT_A8R8G8B8;
-      D3DPP.BackBufferWidth            = rc.right - rc.left;
-      D3DPP.BackBufferHeight           = rc.bottom - rc.top;
-      D3DPP.Flags                     |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-      D3DPP.SwapEffect                 = D3DSWAPEFFECT_DISCARD;
-
+      D3DPP.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+      D3DPP.BackBufferCount = 1;
+      D3DPP.BackBufferFormat = D3DFMT_A8R8G8B8;
+      D3DPP.BackBufferWidth = rc.right - rc.left;
+      D3DPP.BackBufferHeight = rc.bottom - rc.top;
+      D3DPP.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+      D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
       hr = pD3D9->CreateDeviceEx (GetIntelDeviceAdapterNum(session),
                                   D3DDEVTYPE_HAL,
                                   window,
@@ -238,9 +236,6 @@
     //{{{
     mfxStatus _simple_alloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
-      DWORD   DxvaType;
-      HRESULT hr = S_OK;
-
       // Determine surface format (current simple implementation only supports NV12 and RGB4(32))
       D3DFORMAT format;
       if (MFX_FOURCC_NV12 == request->Info.FourCC)
@@ -254,8 +249,8 @@
       else
         format = (D3DFORMAT)request->Info.FourCC;
 
-
       // Determine render target
+      DWORD DxvaType;
       if (MFX_MEMTYPE_DXVA2_PROCESSOR_TARGET & request->Type)
         DxvaType = DXVA2_VideoProcessorRenderTarget;
       else
@@ -279,6 +274,7 @@
         memset(mids, 0, sizeof(mfxMemId)*request->NumFrameSuggested*2);
         }
 
+      HRESULT hr = S_OK;
       if (!pDeviceHandle) {
         hr = pDeviceManager9->OpenDeviceHandle(&pDeviceHandle);
         if (FAILED(hr))
@@ -289,14 +285,12 @@
 
       if (DXVA2_VideoDecoderRenderTarget == DxvaType) { // for both decode and encode
         if (pDXVAServiceDec == NULL)
-          hr = pDeviceManager9->GetVideoService(pDeviceHandle, IID_IDirectXVideoDecoderService, (void**)&pDXVAServiceDec);
-
+          hr = pDeviceManager9->GetVideoService (pDeviceHandle, IID_IDirectXVideoDecoderService, (void**)&pDXVAServiceDec);
         pDXVAServiceTmp = pDXVAServiceDec;
         }
       else { // DXVA2_VideoProcessorRenderTarget ; for VPP
         if (pDXVAServiceVPP == NULL)
-          hr = pDeviceManager9->GetVideoService(pDeviceHandle, IID_IDirectXVideoProcessorService, (void**)&pDXVAServiceVPP);
-
+          hr = pDeviceManager9->GetVideoService (pDeviceHandle, IID_IDirectXVideoProcessorService, (void**)&pDXVAServiceVPP);
         pDXVAServiceTmp = pDXVAServiceVPP;
         }
       if (FAILED(hr))
@@ -305,23 +299,20 @@
       if (g_bCreateSharedHandles && !(MFX_MEMTYPE_INTERNAL_FRAME & request->Type)) {
         // Allocate surfaces with shared handles. Commonly used for OpenCL interoperability
         for (int i=0; i<request->NumFrameSuggested; ++i) {
-            mfxMemId* tmpptr = mids + i + request->NumFrameSuggested;
-
-            hr = pDXVAServiceTmp->CreateSurface(request->Info.Width,
-                                                request->Info.Height,
-                                                0,
-                                                format,
-                                                D3DPOOL_DEFAULT,
-                                                0,
-                                                DxvaType,
-                                                (IDirect3DSurface9**)mids+i,
-                                                (HANDLE*)(tmpptr));
+          mfxMemId* tmpptr = mids + i + request->NumFrameSuggested;
+          hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
+                                               0,
+                                               format,
+                                               D3DPOOL_DEFAULT,
+                                               0,
+                                               DxvaType,
+                                               (IDirect3DSurface9**)mids+i,
+                                               (HANDLE*)(tmpptr));
           }
         }
       else {
         // Allocate surfaces
-        hr = pDXVAServiceTmp->CreateSurface (request->Info.Width,
-                                             request->Info.Height,
+        hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
                                              request->NumFrameSuggested - 1,
                                              format,
                                              D3DPOOL_DEFAULT,
@@ -351,9 +342,9 @@
           MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
           MFX_MEMTYPE_FROM_DECODE & request->Type) {
         // Memory for this request was already allocated during manual allocation stage. Return saved response
-        //   When decode acceleration device (DXVA) is created it requires a list of D3D surfaces to be passed.
-        //   Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
-        //   (No such restriction applies to Encode or VPP)
+        // When decode acceleration device (DXVA) is created it requires a list of D3D surfaces to be passed.
+        // Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
+        // (No such restriction applies to Encode or VPP)
         *response = allocDecodeResponses[pthis];
         allocDecodeRefCount[pthis]++;
         }
@@ -375,91 +366,6 @@
         }
 
       return status;
-      }
-    //}}}
-    //{{{
-    mfxStatus simple_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr)
-    {
-        pthis; // To suppress warning for this unused parameter
-
-        IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
-
-        if (pSurface == 0) return MFX_ERR_INVALID_HANDLE;
-        if (ptr == 0) return MFX_ERR_LOCK_MEMORY;
-
-        D3DSURFACE_DESC desc;
-        HRESULT hr = pSurface->GetDesc(&desc);
-        if (FAILED(hr)) return MFX_ERR_LOCK_MEMORY;
-
-        D3DLOCKED_RECT locked;
-        hr = pSurface->LockRect(&locked, 0, D3DLOCK_NOSYSLOCK);
-        if (FAILED(hr)) return MFX_ERR_LOCK_MEMORY;
-
-        // In these simple set of samples we only illustrate usage of NV12 and RGB4(32)
-        if (D3DFMT_NV12 == desc.Format) {
-            ptr->Pitch  = (mfxU16)locked.Pitch;
-            ptr->Y      = (mfxU8*)locked.pBits;
-            ptr->U      = (mfxU8*)locked.pBits + desc.Height * locked.Pitch;
-            ptr->V      = ptr->U + 1;
-        } else if (D3DFMT_A8R8G8B8 == desc.Format) {
-            ptr->Pitch = (mfxU16)locked.Pitch;
-            ptr->B = (mfxU8*)locked.pBits;
-            ptr->G = ptr->B + 1;
-            ptr->R = ptr->B + 2;
-            ptr->A = ptr->B + 3;
-        } else if (D3DFMT_YUY2 == desc.Format) {
-            ptr->Pitch = (mfxU16)locked.Pitch;
-            ptr->Y = (mfxU8*)locked.pBits;
-            ptr->U = ptr->Y + 1;
-            ptr->V = ptr->Y + 3;
-        } else if (D3DFMT_YV12 == desc.Format) {
-            ptr->Pitch = (mfxU16)locked.Pitch;
-            ptr->Y = (mfxU8*)locked.pBits;
-            ptr->V = ptr->Y + desc.Height * locked.Pitch;
-            ptr->U = ptr->V + (desc.Height * locked.Pitch) / 4;
-        } else if (D3DFMT_P8 == desc.Format) {
-            ptr->Pitch = (mfxU16)locked.Pitch;
-            ptr->Y = (mfxU8*)locked.pBits;
-            ptr->U = 0;
-            ptr->V = 0;
-        }
-
-        return MFX_ERR_NONE;
-    }
-    //}}}
-    //{{{
-    mfxStatus simple_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
-
-      pthis; // To suppress warning for this unused parameter
-
-      IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
-      if (pSurface == 0)
-        return MFX_ERR_INVALID_HANDLE;
-
-      pSurface->UnlockRect();
-
-      if (NULL != ptr) {
-        ptr->Pitch = 0;
-        ptr->R     = 0;
-        ptr->G     = 0;
-        ptr->B     = 0;
-        ptr->A     = 0;
-        }
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-
-    //{{{
-    mfxStatus simple_gethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
-
-      pthis; // To suppress warning for this unused parameter
-
-      if (handle == 0)
-        return MFX_ERR_INVALID_HANDLE;
-
-      *handle = mid;
-      return MFX_ERR_NONE;
       }
     //}}}
     //{{{
@@ -498,6 +404,100 @@
         allocResponses.erase(response->mids);
         _simple_free(response);
         }
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+
+    //{{{
+    mfxStatus simple_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+
+      pthis; // To suppress warning for this unused parameter
+
+      IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
+
+      if (pSurface == 0)
+        return MFX_ERR_INVALID_HANDLE;
+      if (ptr == 0)
+        return MFX_ERR_LOCK_MEMORY;
+
+      D3DSURFACE_DESC desc;
+      HRESULT hr = pSurface->GetDesc (&desc);
+      if (FAILED(hr))
+        return MFX_ERR_LOCK_MEMORY;
+
+      D3DLOCKED_RECT locked;
+      hr = pSurface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
+      if (FAILED(hr))
+        return MFX_ERR_LOCK_MEMORY;
+
+      // In these simple set of samples we only illustrate usage of NV12 and RGB4(32)
+      if (D3DFMT_NV12 == desc.Format) {
+        ptr->Pitch  = (mfxU16)locked.Pitch;
+        ptr->Y      = (mfxU8*)locked.pBits;
+        ptr->U      = (mfxU8*)locked.pBits + desc.Height * locked.Pitch;
+        ptr->V      = ptr->U + 1;
+        }
+      else if (D3DFMT_A8R8G8B8 == desc.Format) {
+        ptr->Pitch = (mfxU16)locked.Pitch;
+        ptr->B = (mfxU8*)locked.pBits;
+        ptr->G = ptr->B + 1;
+        ptr->R = ptr->B + 2;
+        ptr->A = ptr->B + 3;
+        }
+      else if (D3DFMT_YUY2 == desc.Format) {
+        ptr->Pitch = (mfxU16)locked.Pitch;
+        ptr->Y = (mfxU8*)locked.pBits;
+        ptr->U = ptr->Y + 1;
+        ptr->V = ptr->Y + 3;
+        }
+      else if (D3DFMT_YV12 == desc.Format) {
+        ptr->Pitch = (mfxU16)locked.Pitch;
+        ptr->Y = (mfxU8*)locked.pBits;
+        ptr->V = ptr->Y + desc.Height * locked.Pitch;
+        ptr->U = ptr->V + (desc.Height * locked.Pitch) / 4;
+        }
+      else if (D3DFMT_P8 == desc.Format) {
+        ptr->Pitch = (mfxU16)locked.Pitch;
+        ptr->Y = (mfxU8*)locked.pBits;
+        ptr->U = 0;
+        ptr->V = 0;
+        }
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    mfxStatus simple_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+
+      pthis; // To suppress warning for this unused parameter
+
+      IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
+      if (pSurface == 0)
+        return MFX_ERR_INVALID_HANDLE;
+
+      pSurface->UnlockRect();
+
+      if (NULL != ptr) {
+        ptr->Pitch = 0;
+        ptr->R     = 0;
+        ptr->G     = 0;
+        ptr->B     = 0;
+        ptr->A     = 0;
+        }
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+
+    //{{{
+    mfxStatus simple_gethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
+
+      pthis; // To suppress warning for this unused parameter
+
+      if (handle == 0)
+        return MFX_ERR_INVALID_HANDLE;
+      *handle = mid;
 
       return MFX_ERR_NONE;
       }
@@ -562,6 +562,7 @@
         {MFX_IMPL_HARDWARE4, 3}
       };
     //}}}
+
     //{{{
     mfxU32 GetIntelDeviceAdapterNum (mfxSession session) {
 
@@ -569,11 +570,10 @@
       mfxIMPL impl;
 
       MFXQueryIMPL(session, &impl);
-
-      mfxIMPL baseImpl = MFX_IMPL_BASETYPE(impl); // Extract Media SDK base implementation type
+      mfxIMPL baseImpl = MFX_IMPL_BASETYPE (impl); // Extract Media SDK base implementation type
 
       // get corresponding adapter number
-      for (mfxU8 i = 0; i < sizeof(implTypes)/sizeof(implTypes[0]); i++) {
+      for (mfxU8 i = 0; i < sizeof(implTypes) / sizeof(implTypes[0]); i++) {
         if (implTypes[i].impl == baseImpl) {
           adapterNum = implTypes[i].adapterID;
           break;
@@ -590,7 +590,7 @@
       // If window handle is not supplied, get window handle from coordinate 0,0
       if (window == NULL) {
         POINT point = {0, 0};
-        window = WindowFromPoint(point);
+        window = WindowFromPoint (point);
         }
 
       g_bCreateSharedHandles = bCreateSharedHandles;
@@ -600,21 +600,21 @@
         return MFX_ERR_DEVICE_FAILED;
 
       RECT rc;
-      GetClientRect(window, &rc);
+      GetClientRect (window, &rc);
 
       D3DPRESENT_PARAMETERS D3DPP;
       memset(&D3DPP, 0, sizeof(D3DPP));
-      D3DPP.Windowed                   = true;
-      D3DPP.hDeviceWindow              = window;
-      D3DPP.Flags                      = D3DPRESENTFLAG_VIDEO;
+      D3DPP.Windowed = true;
+      D3DPP.hDeviceWindow = window;
+      D3DPP.Flags = D3DPRESENTFLAG_VIDEO;
       D3DPP.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-      D3DPP.PresentationInterval       = D3DPRESENT_INTERVAL_ONE;
-      D3DPP.BackBufferCount            = 1;
-      D3DPP.BackBufferFormat           = D3DFMT_A8R8G8B8;
-      D3DPP.BackBufferWidth            = rc.right - rc.left;
-      D3DPP.BackBufferHeight           = rc.bottom - rc.top;
-      D3DPP.Flags                     |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-      D3DPP.SwapEffect                 = D3DSWAPEFFECT_DISCARD;
+      D3DPP.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+      D3DPP.BackBufferCount = 1;
+      D3DPP.BackBufferFormat = D3DFMT_A8R8G8B8;
+      D3DPP.BackBufferWidth = rc.right - rc.left;
+      D3DPP.BackBufferHeight = rc.bottom - rc.top;
+      D3DPP.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+      D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
 
       hr = pD3D9->CreateDeviceEx (GetIntelDeviceAdapterNum(session),
                                   D3DDEVTYPE_HAL,
@@ -652,17 +652,17 @@
 
     IDirect3DDevice9Ex* GetDevice() { return pD3DD9; }
     //{{{
-    // Free HW device context
     void CleanupHWDevice() {
+    // Free HW device context
 
       if (pDeviceManager9)
-        pDeviceManager9->CloseDeviceHandle(pDeviceHandle);
+        pDeviceManager9->CloseDeviceHandle (pDeviceHandle);
 
-      MSDK_SAFE_RELEASE(pDXVAServiceDec);
-      MSDK_SAFE_RELEASE(pDXVAServiceVPP);
-      MSDK_SAFE_RELEASE(pDeviceManager9);
-      MSDK_SAFE_RELEASE(pD3DD9);
-      MSDK_SAFE_RELEASE(pD3D9);
+      MSDK_SAFE_RELEASE (pDXVAServiceDec);
+      MSDK_SAFE_RELEASE (pDXVAServiceVPP);
+      MSDK_SAFE_RELEASE (pDeviceManager9);
+      MSDK_SAFE_RELEASE (pD3DD9);
+      MSDK_SAFE_RELEASE (pD3D9);
       }
     //}}}
 
@@ -670,16 +670,15 @@
     void ClearYUVSurfaceD3D (mfxMemId memId) {
 
       IDirect3DSurface9* pSurface;
-
       D3DSURFACE_DESC desc;
       D3DLOCKED_RECT locked;
 
       pSurface = (IDirect3DSurface9*)memId;
-      pSurface->GetDesc(&desc);
-      pSurface->LockRect(&locked, 0, D3DLOCK_NOSYSLOCK);
+      pSurface->GetDesc (&desc);
+      pSurface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
 
-      memset((mfxU8*)locked.pBits, 100, desc.Height*locked.Pitch);   // Y plane
-      memset((mfxU8*)locked.pBits + desc.Height * locked.Pitch, 50, (desc.Height*locked.Pitch)/2);   // UV plane
+      memset ((mfxU8*)locked.pBits, 100, desc.Height*locked.Pitch);   // Y plane
+      memset ((mfxU8*)locked.pBits + desc.Height * locked.Pitch, 50, (desc.Height*locked.Pitch)/2);   // UV plane
 
       pSurface->UnlockRect();
       }
@@ -692,19 +691,16 @@
       D3DLOCKED_RECT locked;
 
       pSurface = (IDirect3DSurface9*)memId;
-      pSurface->GetDesc(&desc);
-      pSurface->LockRect(&locked, 0, D3DLOCK_NOSYSLOCK);
+      pSurface->GetDesc (&desc);
+      pSurface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
 
-      memset((mfxU8*)locked.pBits, 100, desc.Height*locked.Pitch);   // RGBA
+      memset ((mfxU8*)locked.pBits, 100, desc.Height*locked.Pitch);   // RGBA
       pSurface->UnlockRect();
       }
     //}}}
 
     //{{{
     mfxStatus _simple_alloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
-
-      DWORD   DxvaType;
-      HRESULT hr = S_OK;
 
       // Determine surface format (current simple implementation only supports NV12 and RGB4(32))
       D3DFORMAT format;
@@ -719,8 +715,8 @@
       else
         format = (D3DFORMAT)request->Info.FourCC;
 
-
       // Determine render target
+      DWORD DxvaType;
       if (MFX_MEMTYPE_DXVA2_PROCESSOR_TARGET & request->Type)
         DxvaType = DXVA2_VideoProcessorRenderTarget;
       else
@@ -740,10 +736,10 @@
         mids = new mfxMemId[request->NumFrameSuggested*2];
         if (!mids)
           return MFX_ERR_MEMORY_ALLOC;
-
         memset(mids, 0, sizeof(mfxMemId)*request->NumFrameSuggested*2);
         }
 
+      HRESULT hr = S_OK;
       if (!pDeviceHandle) {
         hr = pDeviceManager9->OpenDeviceHandle(&pDeviceHandle);
         if (FAILED(hr))
@@ -751,17 +747,16 @@
         }
 
       IDirectXVideoAccelerationService* pDXVAServiceTmp = NULL;
-
-      if (DXVA2_VideoDecoderRenderTarget == DxvaType) { // for both decode and encode
+      if (DXVA2_VideoDecoderRenderTarget == DxvaType) {
+        // for both decode and encode
         if (pDXVAServiceDec == NULL)
-          hr = pDeviceManager9->GetVideoService(pDeviceHandle, IID_IDirectXVideoDecoderService, (void**)&pDXVAServiceDec);
-
+          hr = pDeviceManager9->GetVideoService (pDeviceHandle, IID_IDirectXVideoDecoderService, (void**)&pDXVAServiceDec);
         pDXVAServiceTmp = pDXVAServiceDec;
         }
-      else { // DXVA2_VideoProcessorRenderTarget ; for VPP
+      else {
+        // DXVA2_VideoProcessorRenderTarget for VPP
         if (pDXVAServiceVPP == NULL)
-          hr = pDeviceManager9->GetVideoService(pDeviceHandle, IID_IDirectXVideoProcessorService, (void**)&pDXVAServiceVPP);
-
+          hr = pDeviceManager9->GetVideoService (pDeviceHandle, IID_IDirectXVideoProcessorService, (void**)&pDXVAServiceVPP);
         pDXVAServiceTmp = pDXVAServiceVPP;
         }
       if (FAILED(hr))
@@ -769,24 +764,21 @@
 
       if (g_bCreateSharedHandles && !(MFX_MEMTYPE_INTERNAL_FRAME & request->Type)) {
         // Allocate surfaces with shared handles. Commonly used for OpenCL interoperability
-        for (int i=0; i<request->NumFrameSuggested; ++i) {
-            mfxMemId* tmpptr = mids + i + request->NumFrameSuggested;
-
-            hr = pDXVAServiceTmp->CreateSurface(request->Info.Width,
-                                                request->Info.Height,
-                                                0,
-                                                format,
-                                                D3DPOOL_DEFAULT,
-                                                0,
-                                                DxvaType,
-                                                (IDirect3DSurface9**)mids+i,
-                                                (HANDLE*)(tmpptr));
+        for (int i = 0; i < request->NumFrameSuggested; ++i) {
+          mfxMemId* tmpptr = mids + i + request->NumFrameSuggested;
+          hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
+                                               0,
+                                               format,
+                                               D3DPOOL_DEFAULT,
+                                               0,
+                                               DxvaType,
+                                               (IDirect3DSurface9**)mids+i,
+                                               (HANDLE*)(tmpptr));
           }
         }
       else {
         // Allocate surfaces
-        hr = pDXVAServiceTmp->CreateSurface (request->Info.Width,
-                                             request->Info.Height,
+        hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
                                              request->NumFrameSuggested - 1,
                                              format,
                                              D3DPOOL_DEFAULT,
@@ -843,59 +835,108 @@
       }
     //}}}
     //{{{
-    mfxStatus simple_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr)
-    {
-        pthis; // To suppress warning for this unused parameter
+    mfxStatus _simple_free (mfxFrameAllocResponse* response) {
 
-        IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
-
-        if (pSurface == 0) return MFX_ERR_INVALID_HANDLE;
-        if (ptr == 0) return MFX_ERR_LOCK_MEMORY;
-
-        D3DSURFACE_DESC desc;
-        HRESULT hr = pSurface->GetDesc(&desc);
-        if (FAILED(hr)) return MFX_ERR_LOCK_MEMORY;
-
-        D3DLOCKED_RECT locked;
-        hr = pSurface->LockRect(&locked, 0, D3DLOCK_NOSYSLOCK);
-        if (FAILED(hr)) return MFX_ERR_LOCK_MEMORY;
-
-        // In these simple set of samples we only illustrate usage of NV12 and RGB4(32)
-        if (D3DFMT_NV12 == desc.Format) {
-            ptr->Pitch  = (mfxU16)locked.Pitch;
-            ptr->Y      = (mfxU8*)locked.pBits;
-            ptr->U      = (mfxU8*)locked.pBits + desc.Height * locked.Pitch;
-            ptr->V      = ptr->U + 1;
-        } else if (D3DFMT_A8R8G8B8 == desc.Format) {
-            ptr->Pitch = (mfxU16)locked.Pitch;
-            ptr->B = (mfxU8*)locked.pBits;
-            ptr->G = ptr->B + 1;
-            ptr->R = ptr->B + 2;
-            ptr->A = ptr->B + 3;
-        } else if (D3DFMT_YUY2 == desc.Format) {
-            ptr->Pitch = (mfxU16)locked.Pitch;
-            ptr->Y = (mfxU8*)locked.pBits;
-            ptr->U = ptr->Y + 1;
-            ptr->V = ptr->Y + 3;
-        } else if (D3DFMT_YV12 == desc.Format) {
-            ptr->Pitch = (mfxU16)locked.Pitch;
-            ptr->Y = (mfxU8*)locked.pBits;
-            ptr->V = ptr->Y + desc.Height * locked.Pitch;
-            ptr->U = ptr->V + (desc.Height * locked.Pitch) / 4;
-        } else if (D3DFMT_P8 == desc.Format) {
-            ptr->Pitch = (mfxU16)locked.Pitch;
-            ptr->Y = (mfxU8*)locked.pBits;
-            ptr->U = 0;
-            ptr->V = 0;
+      if (response->mids) {
+        for (mfxU32 i = 0; i < response->NumFrameActual; i++) {
+          if (response->mids[i]) {
+            IDirect3DSurface9* handle = (IDirect3DSurface9*)response->mids[i];
+            handle->Release();
+            }
+          }
         }
 
-        return MFX_ERR_NONE;
-    }
+      delete [] response->mids;
+      response->mids = 0;
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    mfxStatus simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
+
+      if (!response)
+        return MFX_ERR_NULL_PTR;
+
+      if (allocResponses.find(response->mids) == allocResponses.end()) {
+        // Decode free response handling
+        if (--allocDecodeRefCount[pthis] == 0) {
+          _simple_free(response);
+          allocDecodeResponses.erase(pthis);
+          allocDecodeRefCount.erase(pthis);
+          }
+        }
+      else {
+        // Encode and VPP free response handling
+        allocResponses.erase(response->mids);
+        _simple_free(response);
+        }
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+
+    //{{{
+    mfxStatus simple_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+
+      (void)pthis; // To suppress warning for this unused parameter
+
+      IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
+      if (pSurface == 0)
+        return MFX_ERR_INVALID_HANDLE;
+      if (ptr == 0)
+        return MFX_ERR_LOCK_MEMORY;
+
+      D3DSURFACE_DESC desc;
+      HRESULT hr = pSurface->GetDesc (&desc);
+      if (FAILED(hr))
+        return MFX_ERR_LOCK_MEMORY;
+
+      D3DLOCKED_RECT locked;
+      hr = pSurface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
+      if (FAILED(hr))
+        return MFX_ERR_LOCK_MEMORY;
+
+      // In these simple set of samples we only illustrate usage of NV12 and RGB4(32)
+      if (D3DFMT_NV12 == desc.Format) {
+        ptr->Pitch = (mfxU16)locked.Pitch;
+        ptr->Y = (mfxU8*)locked.pBits;
+        ptr->U = (mfxU8*)locked.pBits + desc.Height * locked.Pitch;
+        ptr->V = ptr->U + 1;
+        }
+      else if (D3DFMT_A8R8G8B8 == desc.Format) {
+        ptr->Pitch = (mfxU16)locked.Pitch;
+        ptr->B = (mfxU8*)locked.pBits;
+        ptr->G = ptr->B + 1;
+        ptr->R = ptr->B + 2;
+        ptr->A = ptr->B + 3;
+        }
+      else if (D3DFMT_YUY2 == desc.Format) {
+        ptr->Pitch = (mfxU16)locked.Pitch;
+        ptr->Y = (mfxU8*)locked.pBits;
+        ptr->U = ptr->Y + 1;
+        ptr->V = ptr->Y + 3;
+        }
+      else if (D3DFMT_YV12 == desc.Format) {
+        ptr->Pitch = (mfxU16)locked.Pitch;
+        ptr->Y = (mfxU8*)locked.pBits;
+        ptr->V = ptr->Y + desc.Height * locked.Pitch;
+        ptr->U = ptr->V + (desc.Height * locked.Pitch) / 4;
+        }
+      else if (D3DFMT_P8 == desc.Format) {
+        ptr->Pitch = (mfxU16)locked.Pitch;
+        ptr->Y = (mfxU8*)locked.pBits;
+        ptr->U = 0;
+        ptr->V = 0;
+        }
+
+      return MFX_ERR_NONE;
+      }
     //}}}
     //{{{
     mfxStatus simple_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
-      pthis; // To suppress warning for this unused parameter
+      (void)pthis;
 
       IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
       if (pSurface == 0)
@@ -918,7 +959,7 @@
     //{{{
     mfxStatus simple_gethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
 
-      pthis; // To suppress warning for this unused parameter
+      (void)pthis;
 
       if (handle == 0)
         return MFX_ERR_INVALID_HANDLE;
@@ -927,48 +968,9 @@
       return MFX_ERR_NONE;
       }
     //}}}
-    //{{{
-    mfxStatus _simple_free (mfxFrameAllocResponse* response) {
-
-      if (response->mids) {
-        for (mfxU32 i = 0; i < response->NumFrameActual; i++) {
-          if (response->mids[i]) {
-            IDirect3DSurface9* handle = (IDirect3DSurface9*)response->mids[i];
-            handle->Release();
-            }
-          }
-        }
-
-      delete [] response->mids;
-      response->mids = 0;
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    mfxStatus simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
-
-      if (!response) return MFX_ERR_NULL_PTR;
-
-      if (allocResponses.find(response->mids) == allocResponses.end()) {
-        // Decode free response handling
-        if (--allocDecodeRefCount[pthis] == 0) {
-          _simple_free(response);
-          allocDecodeResponses.erase(pthis);
-          allocDecodeRefCount.erase(pthis);
-          }
-        }
-      else {
-        // Encode and VPP free response handling
-        allocResponses.erase(response->mids);
-        _simple_free(response);
-        }
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
     //}}}
   #endif
+
   //{{{
   mfxStatus Initialize (mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession,
                         mfxFrameAllocator* pmfxAllocator, bool bCreateSharedHandles) {
@@ -1158,10 +1160,10 @@
       }
 
     if (MFX_ERR_NONE == status) {
-      va_res = vaInitialize(m_va_dpy, &major_version, &minor_version);
-      status = va_to_mfx_status(va_res);
+      va_res = vaInitialize (m_va_dpy, &major_version, &minor_version);
+      status = va_to_mfx_status (va_res);
       if (MFX_ERR_NONE != status) {
-        close(m_fd);
+        close (m_fd);
         m_fd = -1;
         }
       }
@@ -1208,9 +1210,6 @@
     }
   //}}}
 
-  void ClearYUVSurfaceVAAPI (mfxMemId memId) { (void)memId; } // todo: clear VAAPI surface
-  void ClearRGBSurfaceVAAPI (mfxMemId memId) { (void)memId; } // todo: clear VAAPI surface
-
   //{{{
   // VAAPI Allocator internal Mem ID
   struct vaapiMemId {
@@ -1223,6 +1222,7 @@
     mfxU8* m_va_buffer;
     };
   //}}}
+
   //{{{
   mfxStatus _simple_alloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
@@ -1234,11 +1234,10 @@
     vaapiMemId* vaapi_mids = NULL, *vaapi_mid = NULL;
     mfxMemId* mids = NULL;
     mfxU32 fourcc = request->Info.FourCC;
-    mfxU16 surfaces_num = request->NumFrameSuggested, numAllocated = 0, i =
-                              0;
+    mfxU16 surfaces_num = request->NumFrameSuggested, numAllocated = 0, i = 0;
     bool bCreateSrfSucceeded = false;
 
-    memset(response, 0, sizeof(mfxFrameAllocResponse));
+    memset (response, 0, sizeof(mfxFrameAllocResponse));
 
     va_fourcc = ConvertMfxFourccToVAFormat(fourcc);
     if (!va_fourcc || ((VA_FOURCC_NV12 != va_fourcc) &&
@@ -1253,9 +1252,9 @@
       }
 
     if (MFX_ERR_NONE == mfx_res) {
-      surfaces = (VASurfaceID*) calloc(surfaces_num, sizeof(VASurfaceID));
-      vaapi_mids = (vaapiMemId*) calloc(surfaces_num, sizeof(vaapiMemId));
-      mids = (mfxMemId*) calloc(surfaces_num, sizeof(mfxMemId));
+      surfaces = (VASurfaceID*)calloc (surfaces_num, sizeof(VASurfaceID));
+      vaapi_mids = (vaapiMemId*)calloc (surfaces_num, sizeof(vaapiMemId));
+      mids = (mfxMemId*)calloc (surfaces_num, sizeof(mfxMemId));
       if ((NULL == surfaces) || (NULL == vaapi_mids) || (NULL == mids))
         mfx_res = MFX_ERR_MEMORY_ALLOC;
       }
@@ -1267,13 +1266,13 @@
         attrib.value.value.i = va_fourcc;
         attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
 
-        va_res = vaCreateSurfaces(m_va_dpy,
-                                  VA_RT_FORMAT_YUV420,
-                                  request->Info.Width,
-                                  request->Info.Height,
-                                  surfaces, surfaces_num,
-                                  &attrib, 1);
-        mfx_res = va_to_mfx_status(va_res);
+        va_res = vaCreateSurfaces (m_va_dpy,
+                                   VA_RT_FORMAT_YUV420,
+                                   request->Info.Width,
+                                   request->Info.Height,
+                                   surfaces, surfaces_num,
+                                   &attrib, 1);
+        mfx_res = va_to_mfx_status (va_res);
         bCreateSrfSucceeded = (MFX_ERR_NONE == mfx_res);
         }
       else {
@@ -1282,10 +1281,9 @@
 
         for (numAllocated = 0; numAllocated < surfaces_num; numAllocated++) {
           VABufferID coded_buf;
-
-          va_res = vaCreateBuffer(m_va_dpy, context_id, VAEncCodedBufferType,
-                                  codedbuf_size, 1, NULL, &coded_buf);
-          mfx_res = va_to_mfx_status(va_res);
+          va_res = vaCreateBuffer (m_va_dpy, context_id, VAEncCodedBufferType,
+                                   codedbuf_size, 1, NULL, &coded_buf);
+          mfx_res = va_to_mfx_status (va_res);
           if (MFX_ERR_NONE != mfx_res)
             break;
           surfaces[numAllocated] = coded_buf;
@@ -1357,8 +1355,7 @@
       allocDecodeResponses[pthis].refCount++;
       }
     else {
-      status = _simple_alloc(request, response);
-
+      status = _simple_alloc (request, response);
       if (MFX_ERR_NONE == status) {
         if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
             MFX_MEMTYPE_FROM_DECODE & request->Type) {
@@ -1377,6 +1374,76 @@
     return status;
     }
   //}}}
+  //{{{
+  mfxStatus _simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
+
+    vaapiMemId* vaapi_mids = NULL;
+    VASurfaceID* surfaces = NULL;
+    mfxU32 i = 0;
+
+    bool isBitstreamMemory = false;
+    bool actualFreeMemory = false;
+
+    if (0 == memcmp(response, &(allocDecodeResponses[pthis].mfxResponse), sizeof(*response))) {
+      // Decode free response handling
+      allocDecodeResponses[pthis].refCount--;
+      if (0 == allocDecodeResponses[pthis].refCount)
+        actualFreeMemory = true;
+      }
+    else {
+      // Encode and VPP free response handling
+      actualFreeMemory = true;
+      }
+
+    if (actualFreeMemory) {
+      if (response->mids) {
+        vaapi_mids = (vaapiMemId*) (response->mids[0]);
+
+        isBitstreamMemory = (MFX_FOURCC_P8 == vaapi_mids->m_fourcc) ? true : false;
+        surfaces = vaapi_mids->m_surface;
+        for (i = 0; i < response->NumFrameActual; ++i) {
+          if (MFX_FOURCC_P8 == vaapi_mids[i].m_fourcc)
+            vaDestroyBuffer(m_va_dpy, surfaces[i]);
+          else if (vaapi_mids[i].m_sys_buffer)
+            free(vaapi_mids[i].m_sys_buffer);
+          }
+
+        free(vaapi_mids);
+        free(response->mids);
+        response->mids = NULL;
+        if (!isBitstreamMemory)
+          vaDestroySurfaces(m_va_dpy, surfaces, response->NumFrameActual);
+        free(surfaces);
+        }
+      response->NumFrameActual = 0;
+      }
+
+    return MFX_ERR_NONE;
+    }
+  //}}}
+  //{{{
+  mfxStatus simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
+
+    if (!response)
+      return MFX_ERR_NULL_PTR;
+
+    if (allocResponses.find(response->mids) == allocResponses.end()) {
+      // Decode free response handling
+      if (--allocDecodeResponses[pthis].refCount == 0) {
+        _simple_free(pthis,response);
+        allocDecodeResponses.erase(pthis);
+        }
+      }
+    else {
+      // Encode and VPP free response handling
+      allocResponses.erase(response->mids);
+      _simple_free(pthis,response);
+      }
+
+    return MFX_ERR_NONE;
+    }
+  //}}}
+
   //{{{
   mfxStatus simple_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
@@ -1502,6 +1569,7 @@
     return MFX_ERR_NONE;
     }
   //}}}
+
   //{{{
   mfxStatus simple_gethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
 
@@ -1515,74 +1583,9 @@
     return MFX_ERR_NONE;
     }
   //}}}
-  //{{{
-  mfxStatus _simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
 
-    vaapiMemId* vaapi_mids = NULL;
-    VASurfaceID* surfaces = NULL;
-    mfxU32 i = 0;
-
-    bool isBitstreamMemory = false;
-    bool actualFreeMemory = false;
-
-    if (0 == memcmp(response, &(allocDecodeResponses[pthis].mfxResponse), sizeof(*response))) {
-      // Decode free response handling
-      allocDecodeResponses[pthis].refCount--;
-      if (0 == allocDecodeResponses[pthis].refCount)
-        actualFreeMemory = true;
-      }
-    else {
-      // Encode and VPP free response handling
-      actualFreeMemory = true;
-      }
-
-    if (actualFreeMemory) {
-      if (response->mids) {
-        vaapi_mids = (vaapiMemId*) (response->mids[0]);
-
-        isBitstreamMemory = (MFX_FOURCC_P8 == vaapi_mids->m_fourcc) ? true : false;
-        surfaces = vaapi_mids->m_surface;
-        for (i = 0; i < response->NumFrameActual; ++i) {
-          if (MFX_FOURCC_P8 == vaapi_mids[i].m_fourcc)
-            vaDestroyBuffer(m_va_dpy, surfaces[i]);
-          else if (vaapi_mids[i].m_sys_buffer)
-            free(vaapi_mids[i].m_sys_buffer);
-          }
-
-        free(vaapi_mids);
-        free(response->mids);
-        response->mids = NULL;
-        if (!isBitstreamMemory)
-          vaDestroySurfaces(m_va_dpy, surfaces, response->NumFrameActual);
-        free(surfaces);
-        }
-      response->NumFrameActual = 0;
-      }
-
-    return MFX_ERR_NONE;
-    }
-  //}}}
-  //{{{
-  mfxStatus simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
-
-    if (!response)
-      return MFX_ERR_NULL_PTR;
-
-    if (allocResponses.find(response->mids) == allocResponses.end()) {
-      // Decode free response handling
-      if (--allocDecodeResponses[pthis].refCount == 0) {
-        _simple_free(pthis,response);
-        allocDecodeResponses.erase(pthis);
-        }
-      }
-    else {
-      // Encode and VPP free response handling
-      allocResponses.erase(response->mids);
-      _simple_free(pthis,response);
-      }
-
-    return MFX_ERR_NONE;
-    }
+  void ClearYUVSurfaceVAAPI (mfxMemId memId) { (void)memId; } // todo: clear VAAPI surface
+  void ClearRGBSurfaceVAAPI (mfxMemId memId) { (void)memId; } // todo: clear VAAPI surface
   //}}}
 
   //{{{
@@ -1602,15 +1605,15 @@
     MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // Provide VA display handle to Media SDK
-    status = pSession->SetHandle (static_cast < mfxHandleType >(MFX_HANDLE_VA_DISPLAY), displayHandle);
+    status = pSession->SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
     MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // If mfxFrameAllocator is provided it means we need to setup  memory allocator
     if (pmfxAllocator) {
-      pmfxAllocator->pthis  = *pSession; // We use Media SDK session ID as the allocation identifier
-      pmfxAllocator->Alloc  = simple_alloc;
-      pmfxAllocator->Free   = simple_free;
-      pmfxAllocator->Lock   = simple_lock;
+      pmfxAllocator->pthis = *pSession; // We use Media SDK session ID as the allocation identifier
+      pmfxAllocator->Alloc = simple_alloc;
+      pmfxAllocator->Free = simple_free;
+      pmfxAllocator->Lock = simple_lock;
       pmfxAllocator->Unlock = simple_unlock;
       pmfxAllocator->GetHDL = simple_gethdl;
 
@@ -1625,7 +1628,6 @@
   void Release() { CleanupVAEnvDRM(); }
   void ClearYUVSurfaceVMem (mfxMemId memId) { ClearYUVSurfaceVAAPI (memId); }
   void ClearRGBSurfaceVMem (mfxMemId memId) { ClearRGBSurfaceVAAPI (memId); }
-  //}}}
 #endif
 
 // utils
@@ -1650,6 +1652,15 @@ std::string getMfxStatusString (mfxStatus status) {
 
   std::string statusString;
   switch (status) {
+    //MFX_WRN_IN_EXECUTION                = 1,    /* the previous asynchronous operation is in execution */
+    //MFX_WRN_DEVICE_BUSY                 = 2,    /* the HW acceleration device is busy */
+    //MFX_WRN_VIDEO_PARAM_CHANGED         = 3,    /* the video parameters are changed during decoding */
+    //MFX_WRN_PARTIAL_ACCELERATION        = 4,    /* SW is used */
+    //MFX_WRN_INCOMPATIBLE_VIDEO_PARAM    = 5,    /* incompatible video parameters */
+    //MFX_WRN_VALUE_NOT_CHANGED           = 6,    /* the value is saturated based on its valid range */
+    //MFX_WRN_OUT_OF_RANGE                = 7,    /* the value is out of valid range */
+    //MFX_WRN_FILTER_SKIPPED              = 10,   /* one of requested filters has been skipped */
+    //MFX_WRN_INCOMPATIBLE_AUDIO_PARAM    = 11,   /* incompatible audio parameters */
     case   0: statusString = "No error"; break;
     case  -1: statusString = "Unknown error"; break;
     case  -2: statusString = "Null pointer"; break;
@@ -1694,9 +1705,9 @@ std::string getMfxInfoString (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
 //}}}
 
 //{{{
-void PrintErrString (int err,const char* filestr,int line)
-{
-    switch (err) {
+void PrintErrString (int err,const char* filestr,int line) {
+
+  switch (err) {
     case   0:
         printf("\n No error.\n");
         break;
@@ -1763,7 +1774,7 @@ void PrintErrString (int err,const char* filestr,int line)
     default:
         printf("\nError code %d,\t%s\t%d\n\n", err, filestr, line);
     }
-}
+  }
 //}}}
 //{{{
 char mfxFrameTypeString (mfxU16 FrameType) {

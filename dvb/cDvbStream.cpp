@@ -591,8 +591,8 @@ void cDvbStream::cService::toggleAll (bool otherDecoder) {
 
   // improve to one on all off , if all off all on
   toggleStream (eVid, otherDecoder);
-  toggleStream (eAud, false);
-  toggleStream (eSub, false);
+  toggleStream (eAud, otherDecoder);
+  toggleStream (eSub, otherDecoder);
   }
 //}}}
 
@@ -857,7 +857,7 @@ void cDvbStream::foundService (cService& service) {
 
   if (mRenderFirstService && !mRenderingFirstService) {
     cLog::log (LOGINFO, fmt::format ("play service {}:{}", service.getSid(), service.getProgramPid()));
-    service.toggleAll (false);
+    service.toggleAll (true);
     mRenderingFirstService = true;
     }
   }

@@ -128,6 +128,8 @@ public:
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<void (cFrame* frame)> addFrameCallback) final {
 
+    (void)dts;
+
     if (!mGotIframe) {
       //{{{  skip until first Iframe
       char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
@@ -141,9 +143,8 @@ public:
       }
       //}}}
 
-    (void)dts;
+    memset (&mBitstream, 0, sizeof(mBitstream));
     mBitstream.Data = pes;
-    mBitstream.DataOffset = 0;
     mBitstream.DataLength = pesSize;
     mBitstream.MaxLength = pesSize;
     mBitstream.TimeStamp = pts;
@@ -160,23 +161,27 @@ public:
         return pts;
         }
       //}}}
-      //{{{  query numSurfaces, return on error
+      //{{{  query surfaces
+      // query numSurfaces, return on error
       mfxFrameAllocRequest frameAllocRequest;
       memset (&frameAllocRequest, 0, sizeof (frameAllocRequest));
+
       status =  MFXVideoDECODE_QueryIOSurf (mMfxSession, &mVideoParams, &frameAllocRequest);
       if ((status != MFX_ERR_NONE) || !frameAllocRequest.NumFrameSuggested) {
         cLog::log (LOGINFO, "MFXVideoDECODE_QueryIOSurf failed " + getMfxStatusString (status));
         return pts;
         }
-      //}}}
-      //{{{  align to 32 pixel boundaries
+
+      // align to 32 pixel boundaries
       mWidth = (frameAllocRequest.Info.Width+31) & (~(mfxU16)31);
       mHeight = (frameAllocRequest.Info.Height+31) & (~(mfxU16)31);
+
       mNumSurfaces = frameAllocRequest.NumFrameSuggested;
+
       mSurfaces = new mfxFrameSurface1*[mNumSurfaces];
       cLog::log (LOGINFO, fmt::format ("mfxDecode surfaces allocated {}x{} {}", mWidth, mHeight, mNumSurfaces));
-      //}}}
-      //{{{  alloc surfaces in system memory
+
+      // alloc surfaces in system memory
       for (int i = 0; i < mNumSurfaces; i++) {
         mSurfaces[i] = new mfxFrameSurface1;
         memset (mSurfaces[i], 0, sizeof (mfxFrameSurface1));
@@ -200,10 +205,17 @@ public:
       //}}}
       }
 
+    int index = 0;
     mfxStatus status = MFX_ERR_NONE;
     while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE)) {
+      if (status == MFX_WRN_DEVICE_BUSY) {
+        cLog::log (LOGINFO, "MFX decode - MFX_WRN_DEVICE_BUSY ");
+        this_thread::sleep_for (1ms);
+        }
+      if ((status == MFX_ERR_MORE_SURFACE) || (status == MFX_ERR_NONE)) // Find free frame surface
+        index = getFreeSurfaceIndex();
+
       auto timePoint = chrono::system_clock::now();
-      int index = getFreeSurfaceIndex();
       mfxFrameSurface1* surface = nullptr;
       mfxSyncPoint decodeSyncPoint = nullptr;
       status = MFXVideoDECODE_DecodeFrameAsync (mMfxSession, &mBitstream, mSurfaces[index], &surface, &decodeSyncPoint);
@@ -245,6 +257,15 @@ private:
 
     string statusString;
     switch (status) {
+      //MFX_WRN_IN_EXECUTION                = 1,    /* the previous asynchronous operation is in execution */
+      //MFX_WRN_DEVICE_BUSY                 = 2,    /* the HW acceleration device is busy */
+      //MFX_WRN_VIDEO_PARAM_CHANGED         = 3,    /* the video parameters are changed during decoding */
+      //MFX_WRN_PARTIAL_ACCELERATION        = 4,    /* SW is used */
+      //MFX_WRN_INCOMPATIBLE_VIDEO_PARAM    = 5,    /* incompatible video parameters */
+      //MFX_WRN_VALUE_NOT_CHANGED           = 6,    /* the value is saturated based on its valid range */
+      //MFX_WRN_OUT_OF_RANGE                = 7,    /* the value is out of valid range */
+      //MFX_WRN_FILTER_SKIPPED              = 10,   /* one of requested filters has been skipped */
+      //MFX_WRN_INCOMPATIBLE_AUDIO_PARAM    = 11,   /* incompatible audio parameters */
       case   0: statusString = "No error"; break;
       case  -1: statusString = "Unknown error"; break;
       case  -2: statusString = "Null pointer"; break;
@@ -421,10 +442,10 @@ private:
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const std::string name, uint8_t streamType, bool mfxDecoder)
+cVideoRender::cVideoRender (const std::string name, uint8_t streamType, bool otherDecoder)
     : cRender(name, streamType), mMaxPoolSize(kVideoPoolSize) {
 
-  if (mfxDecoder)
+  if (otherDecoder)
     mDecoder = new cMfxVideoDecoder (streamType);
   else
     mDecoder = new cFFmpegVideoDecoder (streamType);

@@ -384,34 +384,31 @@ MFX_DISP_HANDLE_EX::MFX_DISP_HANDLE_EX(const mfxVersion requiredVersion)
   //}}}
 
   //{{{
-  static inline bool is_iGPU (const mfxAdapterInfo& adapter_info)
-  {
-      return adapter_info.Platform.MediaAdapterType == MFX_MEDIA_INTEGRATED;
-  }
-
+  static inline bool is_iGPU (const mfxAdapterInfo& adapter_info) {
+    return adapter_info.Platform.MediaAdapterType == MFX_MEDIA_INTEGRATED;
+    }
   //}}}
   //{{{
-  static inline bool is_dGPU (const mfxAdapterInfo& adapter_info)
-  {
-      return adapter_info.Platform.MediaAdapterType == MFX_MEDIA_DISCRETE;
-  }
+  static inline bool is_dGPU (const mfxAdapterInfo& adapter_info) {
+    return adapter_info.Platform.MediaAdapterType == MFX_MEDIA_DISCRETE;
+    }
   //}}}
   //{{{
+  static inline mfxI32 iGPU_priority (const void* ll, const void* rr) {
   // This function implies that iGPU has higher priority
-  static inline mfxI32 iGPU_priority (const void* ll, const void* rr)
-  {
-      const mfxAdapterInfo& l = *(reinterpret_cast<const mfxAdapterInfo*>(ll));
-      const mfxAdapterInfo& r = *(reinterpret_cast<const mfxAdapterInfo*>(rr));
 
-      if (is_iGPU(l) && is_iGPU(r) || is_dGPU(l) && is_dGPU(r))
-          return 0;
+    const mfxAdapterInfo& l = *(reinterpret_cast<const mfxAdapterInfo*>(ll));
+    const mfxAdapterInfo& r = *(reinterpret_cast<const mfxAdapterInfo*>(rr));
 
-      if (is_iGPU(l) && is_dGPU(r))
-          return -1;
+    if (is_iGPU(l) && is_iGPU(r) || is_dGPU(l) && is_dGPU(r))
+      return 0;
 
-      // The only combination left is_dGPU(l) && is_iGPU(r))
-      return 1;
-  }
+    if (is_iGPU(l) && is_dGPU(r))
+      return -1;
+
+    // The only combination left is_dGPU(l) && is_iGPU(r))
+    return 1;
+    }
   //}}}
 
   //{{{
@@ -477,89 +474,76 @@ MFX_DISP_HANDLE_EX::MFX_DISP_HANDLE_EX(const mfxVersion requiredVersion)
   }
   //}}}
   //{{{
-  mfxStatus MFXQueryAdaptersDecode (mfxBitstream* bitstream, mfxU32 codec_id, mfxAdaptersInfo* adapters)
-  {
-      if (!adapters || !bitstream)
-          return MFX_ERR_NULL_PTR;
+  mfxStatus MFXQueryAdaptersDecode (mfxBitstream* bitstream, mfxU32 codec_id, mfxAdaptersInfo* adapters) {
 
-      MFX::MFXVector<mfxAdapterInfo> obtained_info;
+    if (!adapters || !bitstream)
+      return MFX_ERR_NULL_PTR;
+    MFX::MFXVector<mfxAdapterInfo> obtained_info;
 
-      mfxU32 adapter_n = 0, VendorID, DeviceID;
+    mfxU32 adapter_n = 0, VendorID, DeviceID;
 
-      mfxComponentInfo input_info;
-      memset(&input_info, 0, sizeof(input_info));
-      input_info.Type                     = mfxComponentType::MFX_COMPONENT_DECODE;
-      input_info.Requirements.mfx.CodecId = codec_id;
+    mfxComponentInfo input_info;
+    memset(&input_info, 0, sizeof(input_info));
+    input_info.Type                     = mfxComponentType::MFX_COMPONENT_DECODE;
+    input_info.Requirements.mfx.CodecId = codec_id;
 
-      for(;;)
-      {
-          if (!QueryAdapterInfo(adapter_n, VendorID, DeviceID))
-              break;
+    for(;;) {
+      if (!QueryAdapterInfo(adapter_n, VendorID, DeviceID))
+        break;
+      ++adapter_n;
 
-          ++adapter_n;
+      if (VendorID != INTEL_VENDOR_ID)
+        continue;
 
-          if (VendorID != INTEL_VENDOR_ID)
-              continue;
+      // Check if requested capabilities are supported
+      MFXVideoSession dummy_session;
 
-          // Check if requested capabilities are supported
-          MFXVideoSession dummy_session;
+      mfxStatus sts = InitDummySession(adapter_n - 1, dummy_session);
+      if (sts != MFX_ERR_NONE) {
+        continue;
+        }
 
-          mfxStatus sts = InitDummySession(adapter_n - 1, dummy_session);
-          if (sts != MFX_ERR_NONE)
-          {
-              continue;
+      mfxVideoParam stream_params, out;
+      memset(&out, 0, sizeof(out));
+      memset(&stream_params, 0, sizeof(stream_params));
+      out.mfx.CodecId = stream_params.mfx.CodecId = codec_id;
+
+      sts = MFXVideoDECODE_DecodeHeader(dummy_session.operator mfxSession(), bitstream, &stream_params);
+      if (sts != MFX_ERR_NONE) {
+        continue;
+        }
+
+      sts = MFXVideoDECODE_Query(dummy_session.operator mfxSession(), &stream_params, &out);
+      if (sts != MFX_ERR_NONE) // skip MFX_ERR_UNSUPPORTED as well as MFX_WRN_INCOMPATIBLE_VIDEO_PARAM
+        continue;
+
+      mfxAdapterInfo info;
+      memset(&info, 0, sizeof(info));
+
+      //WA for initialization when application built w/ new API, but lib w/ old one.
+      mfxVersion apiVersion;
+      sts = dummy_session.QueryVersion(&apiVersion);
+      if (sts != MFX_ERR_NONE)
+        continue;
+
+      mfxU32 version = MakeVersion(apiVersion.Major, apiVersion.Minor);
+      if (version >= 1019) {
+        sts = MFXVideoCORE_QueryPlatform(dummy_session.operator mfxSession(), &info.Platform);
+        if (sts != MFX_ERR_NONE) {
+          continue;
           }
+        }
+      else {
+        // for API versions greater than 1.19 Device id is set inside QueryPlatform call
+        info.Platform.DeviceId = static_cast<mfxU16>(DeviceID);
+        }
 
-          mfxVideoParam stream_params, out;
-          memset(&out, 0, sizeof(out));
-          memset(&stream_params, 0, sizeof(stream_params));
-          out.mfx.CodecId = stream_params.mfx.CodecId = codec_id;
-
-          sts = MFXVideoDECODE_DecodeHeader(dummy_session.operator mfxSession(), bitstream, &stream_params);
-
-          if (sts != MFX_ERR_NONE)
-          {
-              continue;
-          }
-
-          sts = MFXVideoDECODE_Query(dummy_session.operator mfxSession(), &stream_params, &out);
-
-          if (sts != MFX_ERR_NONE) // skip MFX_ERR_UNSUPPORTED as well as MFX_WRN_INCOMPATIBLE_VIDEO_PARAM
-              continue;
-
-          mfxAdapterInfo info;
-          memset(&info, 0, sizeof(info));
-
-          //WA for initialization when application built w/ new API, but lib w/ old one.
-          mfxVersion apiVersion;
-          sts = dummy_session.QueryVersion(&apiVersion);
-          if (sts != MFX_ERR_NONE)
-              continue;
-
-          mfxU32 version = MakeVersion(apiVersion.Major, apiVersion.Minor);
-
-          if (version >= 1019)
-          {
-              sts = MFXVideoCORE_QueryPlatform(dummy_session.operator mfxSession(), &info.Platform);
-
-              if (sts != MFX_ERR_NONE)
-              {
-                  continue;
-              }
-          }
-          else
-          {
-              // for API versions greater than 1.19 Device id is set inside QueryPlatform call
-              info.Platform.DeviceId = static_cast<mfxU16>(DeviceID);
-          }
-
-          info.Number = adapter_n - 1;
-
-          obtained_info.push_back(info);
+      info.Number = adapter_n - 1;
+      obtained_info.push_back(info);
       }
 
-      return PrepareAdaptersInfo(&input_info, obtained_info, *adapters);
-  }
+    return PrepareAdaptersInfo(&input_info, obtained_info, *adapters);
+    }
   //}}}
   //{{{
   mfxStatus MFXQueryAdapters (mfxComponentInfo* input_info, mfxAdaptersInfo* adapters)
@@ -683,4 +667,4 @@ MFX_DISP_HANDLE_EX::MFX_DISP_HANDLE_EX(const mfxVersion requiredVersion)
   }
   //}}}
 
-#endif // (defined(_WIN64) || defined(_WIN32)) && (MFX_VERSION >= 1031)
+#endif 

@@ -134,7 +134,7 @@ private:
     // overlay channel buttons
     for (auto& pair : dvbStream.getServiceMap())
       if (ImGui::Button (fmt::format ("{:{}s}", pair.second.getChannelName(), mMaxNameChars).c_str()))
-        pair.second.toggleAll (false);
+        pair.second.toggleAll (true);
     }
   //}}}
   //{{{
@@ -165,7 +165,7 @@ private:
                          service.getChannelName(), mMaxNameChars,
                          service.getProgramPid(), mMaxPgmChars,
                          service.getSid(), mMaxSidChars).c_str()))
-        service.toggleAll (false);
+        service.toggleAll (true);
 
       for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
        // iterate definedStreams
@@ -233,7 +233,7 @@ private:
       // draw pid label
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {} {}",
                               pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.getPid(),
-                              getFullPtsString (pidInfo.getPts()), 
+                              getFullPtsString (pidInfo.getPts()),
                               getFullPtsString (pidInfo.getDts()),
                               pidInfo.getTypeName()).c_str());
 

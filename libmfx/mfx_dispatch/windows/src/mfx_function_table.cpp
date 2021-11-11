@@ -66,7 +66,7 @@ namespace {
   // declare pseudo-functions.
   // they are used as default values for call-tables.
   //{{{
-  mfxStatus pseudoMFXInit(mfxIMPL impl, mfxVersion *ver, mfxSession *session)
+  mfxStatus pseudoMFXInit (mfxIMPL impl, mfxVersion *ver, mfxSession *session)
   {
       // touch unreferenced parameters
       (void) impl;
@@ -78,7 +78,7 @@ namespace {
   } // mfxStatus pseudoMFXInit(mfxIMPL impl, mfxVersion *ver, mfxSession *session)
   //}}}
   //{{{
-  mfxStatus pseudoMFXClose(mfxSession session)
+  mfxStatus pseudoMFXClose (mfxSession session)
   {
       // touch unreferenced parameters
       (void) session;
@@ -88,7 +88,7 @@ namespace {
   } // mfxStatus pseudoMFXClose(mfxSession session)
   //}}}
   //{{{
-  mfxStatus pseudoMFXJoinSession(mfxSession session, mfxSession child_session)
+  mfxStatus pseudoMFXJoinSession (mfxSession session, mfxSession child_session)
   {
       // touch unreferenced parameters
       (void) session;
@@ -99,7 +99,7 @@ namespace {
   } // mfxStatus pseudoMFXJoinSession(mfxSession session, mfxSession child_session)
   //}}}
   //{{{
-  mfxStatus pseudoMFXCloneSession(mfxSession session, mfxSession *clone)
+  mfxStatus pseudoMFXCloneSession (mfxSession session, mfxSession *clone)
   {
       // touch unreferenced parameters
       (void) session;

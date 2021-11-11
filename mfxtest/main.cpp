@@ -45,8 +45,9 @@ int main(int numArgs, char** args) {
 
   //{{{  init mfxSession
   MFXVideoSession mfxSession;
-  mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
+
   //mfxStatus status = Initialize (mfxImpl, mfxVersion, &mfxSession, NULL);
+  mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "init failed - " + getMfxStatusString (status));
   //}}}
@@ -65,7 +66,6 @@ int main(int numArgs, char** args) {
   //{{{  prepare mfx bitStream buffer, Arbitrary buffer size
   mfxBitstream bitStream;
   memset (&bitStream, 0, sizeof(bitStream));
-
   bitStream.MaxLength = 1024 * 1024;
   std::vector<mfxU8> bstData (bitStream.MaxLength);
   bitStream.Data = bstData.data();
