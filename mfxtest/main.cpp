@@ -62,24 +62,25 @@ int main(int numArgs, char** args) {
   //}}}
   cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
 
-  //{{{  prepare Media SDK bit stream buffer, Arbitrary buffer size
+  //{{{  prepare mfx bitStream buffer, Arbitrary buffer size
   mfxBitstream bitStream;
   memset (&bitStream, 0, sizeof(bitStream));
-  bitStream.MaxLength = 1024 * 1024;
 
+  bitStream.MaxLength = 1024 * 1024;
   std::vector<mfxU8> bstData (bitStream.MaxLength);
   bitStream.Data = bstData.data();
-  //}}}
-  //{{{  read a chunk of data from stream file into bit stream buffer
-  // - Parse bit stream, searching for header and fill video parameters structure
-  // - Abort if bit stream header is not found in the first bit stream buffer chunk
+
+  // read a chunk of data from bitStream file into bitStream buffer
+  // - parse bitStream
+  //   - searching for header
+  //   - fill video parameters structure
+  // - abort if bit stream header is not found in the first bit stream buffer chunk
   FILE* srcFile = OpenFile (filename.c_str(), "rb");
   status = ReadBitStreamData (&bitStream, srcFile);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "ReadBitStreamData failed - " + getMfxStatusString (status));
   //}}}
-
-  //{{{  create mediaSDK decoderMFXVideoDECODE mfxDEC (mfxSession);
+  //{{{  create mfx decoder session;
   MFXVideoDECODE mfxDEC (mfxSession);
 
   mfxVideoParam mfxVideoParams;
@@ -91,7 +92,7 @@ int main(int numArgs, char** args) {
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "DecodeHeader failed - " + getMfxStatusString (status));
   //}}}
-  //{{{  validate video decode parameters (optional)
+  //{{{  validate video decode parameters
   status = mfxDEC.Query (&mfxVideoParams, &mfxVideoParams);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "Query failed - " + getMfxStatusString (status));
@@ -144,6 +145,7 @@ int main(int numArgs, char** args) {
     //{{{  decode loop
     if (status == MFX_WRN_DEVICE_BUSY)
       this_thread::sleep_for (1ms);
+
     if (status == MFX_ERR_MORE_DATA) {
       // Read more data into input bit stream
       status = ReadBitStreamData (&bitStream, srcFile);
@@ -152,6 +154,7 @@ int main(int numArgs, char** args) {
         break;
         }
       }
+
     if ((status == MFX_ERR_MORE_SURFACE) || (status == MFX_ERR_NONE)) // Find free frame surface
       surfaceIndex = GetFreeSurfaceIndex (mfxSurfaces);
 
@@ -171,19 +174,18 @@ int main(int numArgs, char** args) {
     //{{{  flush loop
     if (status == MFX_WRN_DEVICE_BUSY)
       this_thread::sleep_for (1ms);
-    surfaceIndex = GetFreeSurfaceIndex (mfxSurfaces);
 
     // decode frame asychronously
+    surfaceIndex = GetFreeSurfaceIndex (mfxSurfaces);
     status = mfxDEC.DecodeFrameAsync (NULL, &mfxSurfaces[surfaceIndex], &mfxOutSurface, &syncPoint);
     if ((status >= MFX_ERR_NONE) && syncPoint)
       status = MFX_ERR_NONE;
     if (status == MFX_ERR_NONE)
       status = mfxSession.SyncOperation (syncPoint, 60000);
 
-    if (status == MFX_ERR_NONE) {
+    if (status == MFX_ERR_NONE)
       if (!(++frameNumber % 1000))
         cLog::log (LOGINFO, fmt::format ("flush frame:{}", frameNumber));
-      }
     }
     //}}}
 
