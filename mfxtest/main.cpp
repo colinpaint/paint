@@ -62,15 +62,6 @@ int main(int numArgs, char** args) {
   //}}}
   cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
 
-  // create mediaSDK decoder
-  MFXVideoDECODE mfxDEC (mfxSession);
-  //{{{  Set required video parameters for decode
-  mfxVideoParam mfxVideoParams;
-  memset (&mfxVideoParams, 0, sizeof(mfxVideoParams));
-  mfxVideoParams.mfx.CodecId = MFX_CODEC_AVC;
-  mfxVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
-  //}}}
-
   //{{{  prepare Media SDK bit stream buffer, Arbitrary buffer size
   mfxBitstream bitStream;
   memset (&bitStream, 0, sizeof(bitStream));
@@ -87,9 +78,19 @@ int main(int numArgs, char** args) {
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "ReadBitStreamData failed - " + getMfxStatusString (status));
   //}}}
+
+  //{{{  create mediaSDK decoderMFXVideoDECODE mfxDEC (mfxSession);
+  MFXVideoDECODE mfxDEC (mfxSession);
+
+  mfxVideoParam mfxVideoParams;
+  memset (&mfxVideoParams, 0, sizeof(mfxVideoParams));
+  mfxVideoParams.mfx.CodecId = MFX_CODEC_AVC;
+  mfxVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
+
   status = mfxDEC.DecodeHeader (&bitStream, &mfxVideoParams);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "DecodeHeader failed - " + getMfxStatusString (status));
+  //}}}
   //{{{  validate video decode parameters (optional)
   status = mfxDEC.Query (&mfxVideoParams, &mfxVideoParams);
   if (status != MFX_ERR_NONE)
