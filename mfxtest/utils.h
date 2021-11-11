@@ -23,6 +23,7 @@
 //{{{  includes
 #include <stdio.h>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "mfxvideo++.h"
@@ -73,6 +74,9 @@ void CloseFile (FILE* fHdl);
 
 void PrintErrString (int err,const char* filestr,int line);
 char mfxFrameTypeString (mfxU16 FrameType);
+
+std::string getMfxStatusString (mfxStatus status);
+std::string getMfxInfoString (mfxIMPL mfxImpl, mfxVersion mfxVersion);
 
 // LoadRawFrame: Reads raw frame from YUV file (YV12) into NV12 surface
 // - YV12 is a more common format for for YUV files than NV12 (therefore the conversion during read and write)

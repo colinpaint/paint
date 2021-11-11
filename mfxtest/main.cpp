@@ -13,56 +13,6 @@
 using namespace std;
 //}}}
 
-namespace {
-  //{{{
-  string getMfxStatusString (mfxStatus status) {
-
-    string statusString;
-    switch (status) {
-      case   0: statusString = "No error"; break;
-      case  -1: statusString = "Unknown error"; break;
-      case  -2: statusString = "Null pointer"; break;
-      case  -3: statusString = "Unsupported feature/library load error"; break;
-      case  -4: statusString = "Could not allocate memory"; break;
-      case  -5: statusString = "Insufficient IO buffers"; break;
-      case  -6: statusString = "Invalid handle"; break;
-      case  -7: statusString = "Memory lock failure"; break;
-      case  -8: statusString = "Function called before initialization"; break;
-      case  -9: statusString = "Specified object not found"; break;
-      case -10: statusString = "More input data expected"; break;
-      case -11: statusString = "More output surfaces expected"; break;
-      case -12: statusString = "Operation aborted";  break;
-      case -13: statusString = "HW device lost";  break;
-      case -14: statusString = "Incompatible video parameters" ; break;
-      case -15: statusString = "Invalid video parameters";  break;
-      case -16: statusString = "Undefined behavior"; break;
-      case -17: statusString = "Device operation failure";  break;
-      case -18: statusString = "More bitstream data expected";  break;
-      case -19: statusString = "Incompatible audio parameters"; break;
-      case -20: statusString = "Invalid audio parameters"; break;
-      default: statusString = "Error code";
-      }
-
-    return fmt::format ("status {} {}", status, statusString);
-    }
-  //}}}
-  //{{{
-  string getMfxInfoString (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
-
-    return fmt::format ("mfxImpl:{:x}{}{}{}{}{}{}{} verMajor:{} verMinor:{}",
-                        mfxImpl,
-                        ((mfxImpl & 0x0007) == MFX_IMPL_HARDWARE) ? " hw":"",
-                        ((mfxImpl & 0x0007) == MFX_IMPL_SOFTWARE) ? " sw":"",
-                        ((mfxImpl & 0x0007) == MFX_IMPL_AUTO_ANY) ? " autoAny":"",
-                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_ANY) ? " any":"",
-                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_D3D9) ? " d3d9":"",
-                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_D3D11) ? " d3d11":"",
-                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_VAAPI) ? " vaapi":"",
-                        mfxVersion.Major, mfxVersion.Minor);
-    }
-  //}}}
-  }
-
 int main(int numArgs, char** args) {
 
   eLogLevel logLevel = LOGINFO;
@@ -112,7 +62,7 @@ int main(int numArgs, char** args) {
   //}}}
   cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
 
-  // Create Media SDK decoder
+  // create mediaSDK decoder
   MFXVideoDECODE mfxDEC (mfxSession);
   //{{{  Set required video parameters for decode
   mfxVideoParam mfxVideoParams;
@@ -121,10 +71,11 @@ int main(int numArgs, char** args) {
   mfxVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
   //}}}
 
-  //{{{  Prepare Media SDK bit stream buffer, Arbitrary buffer size
+  //{{{  prepare Media SDK bit stream buffer, Arbitrary buffer size
   mfxBitstream bitStream;
   memset (&bitStream, 0, sizeof(bitStream));
   bitStream.MaxLength = 1024 * 1024;
+
   std::vector<mfxU8> bstData (bitStream.MaxLength);
   bitStream.Data = bstData.data();
   //}}}
@@ -135,11 +86,10 @@ int main(int numArgs, char** args) {
   status = ReadBitStreamData (&bitStream, srcFile);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "ReadBitStreamData failed - " + getMfxStatusString (status));
-
+  //}}}
   status = mfxDEC.DecodeHeader (&bitStream, &mfxVideoParams);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "DecodeHeader failed - " + getMfxStatusString (status));
-  //}}}
   //{{{  validate video decode parameters (optional)
   status = mfxDEC.Query (&mfxVideoParams, &mfxVideoParams);
   if (status != MFX_ERR_NONE)
@@ -178,7 +128,7 @@ int main(int numArgs, char** args) {
   //}}}
   cLog::log (LOGINFO, fmt::format ("surfaces allocated ok {}x{} {}", width, height, numSurfaces));
 
-  //{{{  init Media SDK decoder
+  //{{{  init mediaSDK decoder
   status = mfxDEC.Init (&mfxVideoParams);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "Init failed - " + getMfxStatusString (status));
@@ -189,7 +139,7 @@ int main(int numArgs, char** args) {
 
   mfxSyncPoint syncPoint;
   mfxFrameSurface1* mfxOutSurface = NULL;
-  while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_DATA) || (status == MFX_ERR_MORE_SURFACE)) {
+  while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE) || (status == MFX_ERR_MORE_DATA)) {
     //{{{  decode loop
     if (status == MFX_WRN_DEVICE_BUSY)
       this_thread::sleep_for (1ms);

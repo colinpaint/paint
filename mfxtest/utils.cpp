@@ -31,6 +31,8 @@
 #include <array>
 #include <vector>
 #include <algorithm>
+
+#include "../utils/format.h"
 //}}}
 
 #ifdef _WIN32
@@ -1640,6 +1642,54 @@ void CloseFile(FILE* fHdl) {
 
   if (fHdl)
     fclose(fHdl);
+  }
+//}}}
+
+//{{{
+std::string getMfxStatusString (mfxStatus status) {
+
+  std::string statusString;
+  switch (status) {
+    case   0: statusString = "No error"; break;
+    case  -1: statusString = "Unknown error"; break;
+    case  -2: statusString = "Null pointer"; break;
+    case  -3: statusString = "Unsupported feature/library load error"; break;
+    case  -4: statusString = "Could not allocate memory"; break;
+    case  -5: statusString = "Insufficient IO buffers"; break;
+    case  -6: statusString = "Invalid handle"; break;
+    case  -7: statusString = "Memory lock failure"; break;
+    case  -8: statusString = "Function called before initialization"; break;
+    case  -9: statusString = "Specified object not found"; break;
+    case -10: statusString = "More input data expected"; break;
+    case -11: statusString = "More output surfaces expected"; break;
+    case -12: statusString = "Operation aborted";  break;
+    case -13: statusString = "HW device lost";  break;
+    case -14: statusString = "Incompatible video parameters" ; break;
+    case -15: statusString = "Invalid video parameters";  break;
+    case -16: statusString = "Undefined behavior"; break;
+    case -17: statusString = "Device operation failure";  break;
+    case -18: statusString = "More bitstream data expected";  break;
+    case -19: statusString = "Incompatible audio parameters"; break;
+    case -20: statusString = "Invalid audio parameters"; break;
+    default: statusString = "Error code";
+    }
+
+  return fmt::format ("status {} {}", status, statusString);
+  }
+//}}}
+//{{{
+std::string getMfxInfoString (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
+
+  return fmt::format ("mfxImpl:{:x}{}{}{}{}{}{}{} verMajor:{} verMinor:{}",
+                      mfxImpl,
+                      ((mfxImpl & 0x0007) == MFX_IMPL_HARDWARE) ? " hw":"",
+                      ((mfxImpl & 0x0007) == MFX_IMPL_SOFTWARE) ? " sw":"",
+                      ((mfxImpl & 0x0007) == MFX_IMPL_AUTO_ANY) ? " autoAny":"",
+                      ((mfxImpl & 0x0700) == MFX_IMPL_VIA_ANY) ? " any":"",
+                      ((mfxImpl & 0x0700) == MFX_IMPL_VIA_D3D9) ? " d3d9":"",
+                      ((mfxImpl & 0x0700) == MFX_IMPL_VIA_D3D11) ? " d3d11":"",
+                      ((mfxImpl & 0x0700) == MFX_IMPL_VIA_VAAPI) ? " vaapi":"",
+                      mfxVersion.Major, mfxVersion.Minor);
   }
 //}}}
 
