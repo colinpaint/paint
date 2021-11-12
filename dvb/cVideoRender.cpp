@@ -166,8 +166,6 @@ namespace {
     IDirectXVideoAccelerationService* pDXVAServiceDec = NULL;
     IDirectXVideoAccelerationService* pDXVAServiceVPP = NULL;
 
-    bool g_bCreateSharedHandles = false;
-
     std::map <mfxMemId*, mfxHDL> allocResponses;
     std::map <mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
     std::map <mfxHDL, int> allocDecodeRefCount;
@@ -176,8 +174,7 @@ namespace {
     //{{{
     mfxStatus _simple_alloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
-      //cLog::log (LOGINFO, fmt::format ("simple_alloc {} num:{} {}x{}",
-      //                                 g_bCreateSharedHandles ? " shared" : "",
+      //cLog::log (LOGINFO, fmt::format ("simple_alloc num:{} {}x{}",
       //                                 request->NumFrameSuggested, request->Info.Width, request->Info.Height));
 
       // Determine surface format (current simple implementation only supports NV12 and RGB4(32))
@@ -204,18 +201,9 @@ namespace {
       if (D3DFMT_A8R8G8B8 == format) // must use processor service
         DxvaType = DXVA2_VideoProcessorRenderTarget;
 
-      mfxMemId* mids = NULL;
-      if (!g_bCreateSharedHandles) {
-        mids = new mfxMemId[request->NumFrameSuggested];
-        if (!mids)
-          return MFX_ERR_MEMORY_ALLOC;
-        }
-      else {
-        mids = new mfxMemId[request->NumFrameSuggested*2];
-        if (!mids)
-          return MFX_ERR_MEMORY_ALLOC;
-        memset (mids, 0, sizeof(mfxMemId)*request->NumFrameSuggested*2);
-        }
+      mfxMemId* mids = new mfxMemId[request->NumFrameSuggested];
+      if (!mids)
+        return MFX_ERR_MEMORY_ALLOC;
 
       HRESULT hr = S_OK;
       if (!pDeviceHandle) {
@@ -238,31 +226,15 @@ namespace {
       if (FAILED(hr))
         return MFX_ERR_MEMORY_ALLOC;
 
-      if (g_bCreateSharedHandles && !(MFX_MEMTYPE_INTERNAL_FRAME & request->Type)) {
-        // Allocate surfaces with shared handles. Commonly used for OpenCL interoperability
-        for (int i=0; i < request->NumFrameSuggested; ++i) {
-          mfxMemId* tmpptr = mids + i + request->NumFrameSuggested;
-          hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
-                                               0,
-                                               format,
-                                               D3DPOOL_DEFAULT,
-                                               0,
-                                               DxvaType,
-                                               (IDirect3DSurface9**)mids+i,
-                                               (HANDLE*)(tmpptr));
-          }
-        }
-      else {
-        // Allocate surfaces
-        hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
-                                             request->NumFrameSuggested - 1,
-                                             format,
-                                             D3DPOOL_DEFAULT,
-                                             0,
-                                             DxvaType,
-                                             (IDirect3DSurface9**)mids,
-                                             NULL);
-        }
+      // Allocate surfaces
+      hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
+                                           request->NumFrameSuggested - 1,
+                                           format,
+                                           D3DPOOL_DEFAULT,
+                                           0,
+                                           DxvaType,
+                                           (IDirect3DSurface9**)mids,
+                                           NULL);
       if (FAILED(hr))
         return MFX_ERR_MEMORY_ALLOC;
 
@@ -466,15 +438,13 @@ namespace {
     //}}}
     //{{{
     // Create HW device context
-    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND window, bool bCreateSharedHandles) {
+    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND window) {
 
       // If window handle is not supplied, get window handle from coordinate 0,0
       if (window == NULL) {
         POINT point = {0, 0};
         window = WindowFromPoint(point);
         }
-
-      g_bCreateSharedHandles = bCreateSharedHandles;
 
       HRESULT hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &pD3D9);
       if (!pD3D9 || FAILED(hr))
@@ -573,7 +543,7 @@ namespace {
       surface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
 
       // Y plane
-      memset ((mfxU8*)locked.pBits, 100, desc.Height*locked.Pitch);
+      memset ((mfxU8*)locked.pBits, 100, desc.Height * locked.Pitch);
       // UV plane
       memset ((mfxU8*)locked.pBits + desc.Height * locked.Pitch, 50, (desc.Height * locked.Pitch) / 2);
 
@@ -598,14 +568,14 @@ namespace {
     //}}}
 
     //{{{
-    mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator, bool createSharedHandles) {
+    mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator) {
 
       mfxStatus status = MFX_ERR_NONE;
       // impl |= MFX_IMPL_VIA_D3D11;
 
       // Create DirectX device context
       mfxHDL deviceHandle;
-      status = CreateHWDevice (*session, &deviceHandle, NULL, createSharedHandles);
+      status = CreateHWDevice (*session, &deviceHandle, NULL);
       if (status != MFX_ERR_NONE)
         cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
 
@@ -1176,9 +1146,8 @@ namespace {
     //}}}
 
     //{{{
-    mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator, bool createSharedHandles) {
+    mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator) {
 
-      (void)createSharedHandles;
       mfxStatus status = MFX_ERR_NONE;
 
       // Create VA display
@@ -1298,7 +1267,7 @@ public:
       cLog::log (LOGERROR, "QueryVersion failed " + getMfxStatusString (status));
     cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
 
-    Initialize (&mMfxSession, &mMfxAllocator, false);
+    Initialize (&mMfxSession, &mMfxAllocator);
 
     mH264 = (streamType == 27);
     mMfxVideoParams.mfx.CodecId = mH264 ? MFX_CODEC_AVC : MFX_CODEC_MPEG2;
@@ -1439,7 +1408,6 @@ public:
 
         cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (mfxOutSurface->Data.TimeStamp, 90000/25);
         //videoFrame->init (mWidth, mHeight, mfxOutSurface->Data.Pitch, pesSize, decodeTime);
-        videoFrame->init (mWidth, mHeight, mWidth, pesSize, decodeTime);
 
         timePoint = chrono::system_clock::now();
         //{{{  lock surface
@@ -1449,6 +1417,7 @@ public:
             cLog::log (LOGERROR, "Unlock failed - " + getMfxStatusString (status));
         #endif
         //}}}
+        videoFrame->init (mWidth, mHeight, mfxOutSurface->Data.Pitch, pesSize, decodeTime);
         videoFrame->setNv12 (mfxOutSurface->Data.Y);
         //{{{  unlock surface
         #ifdef VID_MEM
