@@ -1,5 +1,5 @@
 // cVideoRender.cpp
-//#define VID_MEM
+#define VID_MEM
 #define DX9_D3D
 //{{{  includes
 #include "cVideoRender.h"
@@ -17,7 +17,7 @@
 
     #define DEVICE_MGR_TYPE MFX_HANDLE_DIRECT3D_DEVICE_MANAGER9
     //}}}
-  #elif DX11_D3D
+  #else
     //{{{  directx11 headers
     #include <windows.h>
 
