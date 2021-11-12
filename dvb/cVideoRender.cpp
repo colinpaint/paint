@@ -352,19 +352,19 @@ namespace {
 
       pthis; // To suppress warning for this unused parameter
 
-      IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
-      if (pSurface == 0)
+      IDirect3DSurface9* surface = (IDirect3DSurface9*)mid;
+      if (surface == 0)
         return MFX_ERR_INVALID_HANDLE;
       if (ptr == 0)
         return MFX_ERR_LOCK_MEMORY;
 
       D3DSURFACE_DESC desc;
-      HRESULT hr = pSurface->GetDesc (&desc);
+      HRESULT hr = surface->GetDesc (&desc);
       if (FAILED(hr))
         return MFX_ERR_LOCK_MEMORY;
 
       D3DLOCKED_RECT locked;
-      hr = pSurface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
+      hr = surface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
       if (FAILED(hr))
         return MFX_ERR_LOCK_MEMORY;
 
@@ -1341,30 +1341,32 @@ public:
       }
       //}}}
 
-    mBitstream = {0};
-    mBitstream.Data = pes;
-    mBitstream.DataLength = pesSize;
-    mBitstream.MaxLength = pesSize;
-    mBitstream.TimeStamp = pts;
+    // init bitstream
+    mfxBitstream bitstream = {0};
+    bitstream = {0};
+    bitstream.Data = pes;
+    bitstream.DataLength = pesSize;
+    bitstream.MaxLength = pesSize;
+    bitstream.TimeStamp = pts;
 
     if (!mNumSurfaces) {
-      //{{{  decodeHeader
-      mfxStatus status = MFXVideoDECODE_DecodeHeader (mMfxSession, &mBitstream, &mMfxVideoParams);
+      //{{{  decodeHeader, query surfaces, extract width,height,numSurfaces, allocate surfaces, initDecoder
+      mfxStatus status = MFXVideoDECODE_DecodeHeader (mMfxSession, &bitstream, &mMfxVideoParams);
       if (status != MFX_ERR_NONE) {
+        //{{{  return on error
         cLog::log (LOGERROR, "MFXVideoDECODE_DecodeHeader failed " + getMfxStatusString (status));
         return pts;
         }
-      //}}}
-      //{{{  query surfaces, extract width,height,nuSurfaces, allocate
-      // query numSurfaces, return on error
+        //}}}
+
       mfxFrameAllocRequest frameAllocRequest = {0};
       status =  MFXVideoDECODE_QueryIOSurf (mMfxSession, &mMfxVideoParams, &frameAllocRequest);
       if ((status < MFX_ERR_NONE) || !frameAllocRequest.NumFrameSuggested) {
+        //{{{  return on error
         cLog::log (LOGERROR, "MFXVideoDECODE_QueryIOSurf failed " + getMfxStatusString (status));
         return pts;
         }
-      else
-        cLog::log (LOGINFO, "MFXVideoDECODE_QueryIOSurf " + getMfxStatusString (status));
+        //}}}
 
       // align to 32 pixel boundaries
       mWidth = (frameAllocRequest.Info.Width+31) & (~(mfxU16)31);
@@ -1372,12 +1374,16 @@ public:
       mNumSurfaces = frameAllocRequest.NumFrameSuggested;
 
       #ifdef VID_MEM
-        // allocate vidMem surfaces
+        // call allocater to allocate vidMem surfaces, all surfaces in one call
         frameAllocRequest.Type |= 0x1000; // WILL_READ windows d3d11 only
         mfxFrameAllocResponse frameAllocResponse;
         status = mMfxAllocator.Alloc (mMfxAllocator.pthis, &frameAllocRequest, &frameAllocResponse);
-        if (status != MFX_ERR_NONE)
+        if (status != MFX_ERR_NONE) {
+          //{{{  return on error
           cLog::log (LOGERROR, "Alloc failed - " + getMfxStatusString (status));
+          return pts;
+          }
+          //}}}
       #endif
 
       for (size_t i = 0; i < mNumSurfaces; i++) {
@@ -1388,9 +1394,10 @@ public:
         #ifdef VID_MEM
           mMfxSurfaces[i].Data.MemId = frameAllocResponse.mids[i]; // use mId
         #else
-          // alloc sysMem surfaces, NV12, planar y followed by planar u, planar v
           size_t nv12SizeLuma = mWidth * mHeight;
           size_t nv12SizeAll = (nv12SizeLuma * 12) / 8;
+
+          // alloc sysMem surfaces, NV12, planar y followed by planar u, planar v
           mMfxSurfaces[i].Data.Y = new mfxU8[nv12SizeAll];
           mMfxSurfaces[i].Data.U = mMfxSurfaces[i].Data.Y + nv12SizeLuma;
           mMfxSurfaces[i].Data.V = mMfxSurfaces[i].Data.U + 1;
@@ -1399,17 +1406,19 @@ public:
         }
 
       cLog::log (LOGINFO, fmt::format ("sysMem surfaces allocated {}x{} {}", mWidth, mHeight, mNumSurfaces));
-      //}}}
-      //{{{  init decoder, return on error
+
+      // init decoder
       status = MFXVideoDECODE_Init (mMfxSession, &mMfxVideoParams);
       if (status != MFX_ERR_NONE) {
+        //{{{  return on error
         cLog::log (LOGERROR, "MFXVideoDECODE_Init failed " + getMfxStatusString (status));
         return pts;
         }
-      //}}}
+        //}}}
       }
+      //}}}
 
-    int index = 0;
+    int surfaceIndex = 0;
     mfxStatus status = MFX_ERR_NONE;
     while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE)) {
       if (status == MFX_WRN_DEVICE_BUSY) {
@@ -1417,12 +1426,13 @@ public:
         this_thread::sleep_for (1ms);
         }
       if ((status == MFX_ERR_MORE_SURFACE) || (status == MFX_ERR_NONE)) // Find free frame surface
-        index = getFreeSurfaceIndex();
+        surfaceIndex = getFreeSurfaceIndex();
 
       auto timePoint = chrono::system_clock::now();
       mfxFrameSurface1* mfxOutSurface = nullptr;
       mfxSyncPoint decodeSyncPoint = nullptr;
-      status = MFXVideoDECODE_DecodeFrameAsync (mMfxSession, &mBitstream, &mMfxSurfaces[index], &mfxOutSurface, &decodeSyncPoint);
+      status = MFXVideoDECODE_DecodeFrameAsync (
+        mMfxSession, &bitstream, &mMfxSurfaces[surfaceIndex], &mfxOutSurface, &decodeSyncPoint);
       if (status == MFX_ERR_NONE) {
         status = mMfxSession.SyncOperation (decodeSyncPoint, 60000);
         int64_t decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
@@ -1430,6 +1440,7 @@ public:
         cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (mfxOutSurface->Data.TimeStamp, 90000/25);
         //videoFrame->init (mWidth, mHeight, mfxOutSurface->Data.Pitch, pesSize, decodeTime);
         videoFrame->init (mWidth, mHeight, mWidth, pesSize, decodeTime);
+
         timePoint = chrono::system_clock::now();
         //{{{  lock surface
         #ifdef VID_MEM
@@ -1446,7 +1457,6 @@ public:
             cLog::log (LOGERROR, "Unlock failed - " + getMfxStatusString (status));
         #endif
         //}}}
-
         videoFrame->setYuvRgbTime (
           chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
 
@@ -1473,7 +1483,6 @@ private:
   //}}}
 
   MFXVideoSession mMfxSession;
-  mfxBitstream mBitstream = {0};
   mfxVideoParam mMfxVideoParams = {0};
   mfxFrameAllocator mMfxAllocator = {0};
 
