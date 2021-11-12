@@ -1731,7 +1731,7 @@ public:
       }
       //}}}
 
-    memset (&mBitstream, 0, sizeof(mBitstream));
+    mBitstream = {0};
     mBitstream.Data = pes;
     mBitstream.DataLength = pesSize;
     mBitstream.MaxLength = pesSize;
@@ -1739,8 +1739,7 @@ public:
 
     if (!mNumSurfaces) {
       //{{{  read header, allocate surfaces, init decoder, return on error
-      mfxVideoParam mVideoParams;
-      memset (&mVideoParams, 0, sizeof (mVideoParams));
+      mfxVideoParam mVideoParams = {0};
       mVideoParams.mfx.CodecId = mCodecId;
       mVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
       mfxStatus status = MFXVideoDECODE_DecodeHeader (mMfxSession, &mBitstream, &mVideoParams);
@@ -1751,9 +1750,7 @@ public:
       //}}}
       //{{{  query surfaces
       // query numSurfaces, return on error
-      mfxFrameAllocRequest frameAllocRequest;
-      memset (&frameAllocRequest, 0, sizeof (frameAllocRequest));
-
+      mfxFrameAllocRequest frameAllocRequest = {0};
       status =  MFXVideoDECODE_QueryIOSurf (mMfxSession, &mVideoParams, &frameAllocRequest);
       if ((status != MFX_ERR_NONE) || !frameAllocRequest.NumFrameSuggested) {
         cLog::log (LOGINFO, "MFXVideoDECODE_QueryIOSurf failed " + getMfxStatusString (status));
