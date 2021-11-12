@@ -1,5 +1,5 @@
 // cVideoRender.cpp
-#define VID_MEM
+//#define VID_MEM
 #define DX9_D3D
 //{{{  includes
 #include "cVideoRender.h"
@@ -499,7 +499,6 @@ namespace {
       return MFX_ERR_NONE;
       }
     //}}}
-    IDirect3DDevice9Ex* GetDevice() { return pD3DD9; }
     //{{{
     // Free HW device context
     void CleanupHWDevice() {
@@ -698,12 +697,16 @@ namespace {
       switch (fourcc) {
         case MFX_FOURCC_NV12:
           return VA_FOURCC_NV12;
+
         case MFX_FOURCC_YUY2:
           return VA_FOURCC_YUY2;
+
         case MFX_FOURCC_YV12:
           return VA_FOURCC_YV12;
+
         case MFX_FOURCC_RGB4:
           return VA_FOURCC_ARGB;
+
         case MFX_FOURCC_P8:
           return VA_FOURCC_P208;
 
@@ -849,17 +852,15 @@ namespace {
       else {
         status = _simple_alloc (request, response);
         if (MFX_ERR_NONE == status) {
-          if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
-              MFX_MEMTYPE_FROM_DECODE & request->Type) {
+          if ((MFX_MEMTYPE_EXTERNAL_FRAME & request->Type) && (MFX_MEMTYPE_FROM_DECODE & request->Type)) {
             // Decode alloc response handling
             allocDecodeResponses[pthis].mfxResponse = *response;
             allocDecodeResponses[pthis].refCount++;
             //allocDecodeRefCount[pthis]++;
             }
-          else {
+          else
             // Encode and VPP alloc response handling
             allocResponses[response->mids] = pthis;
-            }
           }
         }
 
@@ -882,10 +883,9 @@ namespace {
         if (0 == allocDecodeResponses[pthis].refCount)
           actualFreeMemory = true;
         }
-      else {
+      else
         // Encode and VPP free response handling
         actualFreeMemory = true;
-        }
 
       if (actualFreeMemory) {
         if (response->mids) {
@@ -941,7 +941,7 @@ namespace {
       (void) pthis;
       mfxStatus mfx_res = MFX_ERR_NONE;
       VAStatus va_res = VA_STATUS_SUCCESS;
-      vaapiMemId* vaapi_mid = (vaapiMemId*) mid;
+      vaapiMemId* vaapi_mid = (vaapiMemId*)mid;
       mfxU8* pBuffer = 0;
 
       if (!vaapi_mid || !(vaapi_mid->m_surface))
@@ -950,23 +950,24 @@ namespace {
       if (MFX_FOURCC_P8 == vaapi_mid->m_fourcc) {
         // bitstream processing
         VACodedBufferSegment* coded_buffer_segment;
-        va_res = vaMapBuffer(m_va_dpy, *(vaapi_mid->m_surface), (void**)(&coded_buffer_segment));
-        mfx_res = va_to_mfx_status(va_res);
-        ptr->Y = (mfxU8*) coded_buffer_segment->buf;
+        va_res = vaMapBuffer (m_va_dpy, *(vaapi_mid->m_surface), (void**)(&coded_buffer_segment));
+        mfx_res = va_to_mfx_status (va_res);
+        ptr->Y = (mfxU8*)coded_buffer_segment->buf;
         }
 
       else {
         // Image processing
-        va_res = vaSyncSurface(m_va_dpy, *(vaapi_mid->m_surface));
-        mfx_res = va_to_mfx_status(va_res);
+        va_res = vaSyncSurface (m_va_dpy, *(vaapi_mid->m_surface));
+        mfx_res = va_to_mfx_status (va_res);
 
         if (MFX_ERR_NONE == mfx_res) {
-          va_res = vaDeriveImage(m_va_dpy, *(vaapi_mid->m_surface), &(vaapi_mid->m_image));
-          mfx_res = va_to_mfx_status(va_res);
+          va_res = vaDeriveImage (m_va_dpy, *(vaapi_mid->m_surface), &(vaapi_mid->m_image));
+          mfx_res = va_to_mfx_status (va_res);
           }
+
         if (MFX_ERR_NONE == mfx_res) {
-          va_res = vaMapBuffer(m_va_dpy, vaapi_mid->m_image.buf, (void**)&pBuffer);
-          mfx_res = va_to_mfx_status(va_res);
+          va_res = vaMapBuffer (m_va_dpy, vaapi_mid->m_image.buf, (void**)&pBuffer);
+          mfx_res = va_to_mfx_status (va_res);
           }
 
         if (MFX_ERR_NONE == mfx_res) {
@@ -981,7 +982,7 @@ namespace {
                 }
               else
                 mfx_res = MFX_ERR_LOCK_MEMORY;
-               break;
+              break;
             //}}}
             //{{{
             case VA_FOURCC_YV12:
@@ -1035,18 +1036,19 @@ namespace {
     //{{{
     mfxStatus simple_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
-      (void) pthis;
-      vaapiMemId* vaapi_mid = (vaapiMemId*) mid;
+      (void)pthis;
+      vaapiMemId* vaapi_mid = (vaapiMemId*)mid;
 
       if (!vaapi_mid || !(vaapi_mid->m_surface))
         return MFX_ERR_INVALID_HANDLE;
 
-      if (MFX_FOURCC_P8 == vaapi_mid->m_fourcc) {     // bitstream processing
-        vaUnmapBuffer(m_va_dpy, *(vaapi_mid->m_surface));
-        }
-      else {                // Image processing
-        vaUnmapBuffer(m_va_dpy, vaapi_mid->m_image.buf);
-        vaDestroyImage(m_va_dpy, vaapi_mid->m_image.image_id);
+      if (MFX_FOURCC_P8 == vaapi_mid->m_fourcc)
+        // bitstream processing
+        vaUnmapBuffer (m_va_dpy, *(vaapi_mid->m_surface));
+      else {
+        // Image processing
+        vaUnmapBuffer (m_va_dpy, vaapi_mid->m_image.buf);
+        vaDestroyImage (m_va_dpy, vaapi_mid->m_image.image_id);
 
         if (NULL != ptr) {
           ptr->Pitch = 0;
@@ -1064,7 +1066,7 @@ namespace {
     mfxStatus simple_gethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
 
       (void) pthis;
-      vaapiMemId* vaapi_mid = (vaapiMemId*) mid;
+      vaapiMemId* vaapi_mid = (vaapiMemId*)mid;
 
       if (!handle || !vaapi_mid || !(vaapi_mid->m_surface))
         return MFX_ERR_INVALID_HANDLE;
@@ -1180,14 +1182,13 @@ namespace {
       }
     //}}}
     //{{{
-    //void Release() {
-      //if (m_va_dpy) {
-        //vaTerminate(m_va_dpy);
-        //}
-      //if (m_fd >= 0) {
-        //close(m_fd);
-        //}
-      //}
+    void Release() {
+
+      if (m_va_dpy)
+        vaTerminate (m_va_dpy);
+      if (m_fd >= 0)
+        close (m_fd);
+      }
     //}}}
     //void ClearYUVSurfaceVMem (mfxMemId memId) { (void)memId;} // todo: clear VAAPI surface
     //void ClearRGBSurfaceVMem (mfxMemId memId) { (void)memId;} // todo: clear VAAPI surface
@@ -1287,7 +1288,9 @@ public:
 
     for (auto& surface : mMfxSurfaces)
       delete surface.Data.Y;
+
     mMfxSurfaces.clear();
+    Release();
     }
   //}}}
 
@@ -1407,25 +1410,26 @@ public:
         int64_t decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
         cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (mfxOutSurface->Data.TimeStamp, 90000/25);
-        //videoFrame->init (mWidth, mHeight, mfxOutSurface->Data.Pitch, pesSize, decodeTime);
 
         timePoint = chrono::system_clock::now();
-        //{{{  lock surface
         #ifdef VID_MEM
+          //{{{  lock surface
           status = mMfxAllocator.Lock (mMfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
           if (status != MFX_ERR_NONE)
             cLog::log (LOGERROR, "Unlock failed - " + getMfxStatusString (status));
+          //}}}
         #endif
-        //}}}
+
         videoFrame->init (mWidth, mHeight, mfxOutSurface->Data.Pitch, pesSize, decodeTime);
         videoFrame->setNv12 (mfxOutSurface->Data.Y);
-        //{{{  unlock surface
+
         #ifdef VID_MEM
+          //{{{  unlock surface
           status = mMfxAllocator.Unlock (mMfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
           if (status != MFX_ERR_NONE)
             cLog::log (LOGERROR, "Unlock failed - " + getMfxStatusString (status));
+          //}}}
         #endif
-        //}}}
         videoFrame->setYuvRgbTime (
           chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
 
@@ -1444,7 +1448,7 @@ private:
   int getFreeSurfaceIndex() {
 
     for (mfxU16 surfaceIndex = 0; surfaceIndex < mNumSurfaces; surfaceIndex++)
-      if (mMfxSurfaces[surfaceIndex].Data.Locked == 0)
+      if (!mMfxSurfaces[surfaceIndex].Data.Locked)
         return surfaceIndex;
 
     return MFX_ERR_NOT_FOUND;
