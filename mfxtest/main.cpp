@@ -76,7 +76,7 @@ void decodeSysMem (const string& filename) {
   cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
 
   // init hw
-  Initialize ( &mfxSession, nullptr, false);
+  Initialize (&mfxSession, nullptr, false);
 
   //{{{  prepare mfx bitStream buffer, Arbitrary buffer size
   mfxBitstream bitStream = {0};
@@ -386,7 +386,7 @@ void decodeVidMem (const string& filename) {
 int main(int numArgs, char** args) {
 
   eLogLevel logLevel = LOGINFO;
-  string filename = "E:/h264/nnn.h264";
+  string filename; // "E:/h264/nnn.h264";
   //{{{  parse command line args to params
   // parse params
   for (int i = 1; i < numArgs; i++) {
@@ -403,8 +403,10 @@ int main(int numArgs, char** args) {
   cLog::log (LOGNOTICE, "mfxtest");
 
   sessionTest();
-  decodeSysMem (filename);
-  decodeVidMem (filename);
+  if (!filename.empty())
+    decodeVidMem (filename);
+  if (!filename.empty())
+    decodeSysMem (filename);
 
   this_thread::sleep_for (5000ms);
   return 0;

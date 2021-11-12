@@ -1630,16 +1630,8 @@ std::string getMfxStatusString (mfxStatus status) {
 
   std::string statusString;
   switch (status) {
-    //MFX_WRN_IN_EXECUTION                = 1,    /* the previous asynchronous operation is in execution */
-    //MFX_WRN_DEVICE_BUSY                 = 2,    /* the HW acceleration device is busy */
-    //MFX_WRN_VIDEO_PARAM_CHANGED         = 3,    /* the video parameters are changed during decoding */
-    //MFX_WRN_PARTIAL_ACCELERATION        = 4,    /* SW is used */
-    //MFX_WRN_INCOMPATIBLE_VIDEO_PARAM    = 5,    /* incompatible video parameters */
-    //MFX_WRN_VALUE_NOT_CHANGED           = 6,    /* the value is saturated based on its valid range */
-    //MFX_WRN_OUT_OF_RANGE                = 7,    /* the value is out of valid range */
-    //MFX_WRN_FILTER_SKIPPED              = 10,   /* one of requested filters has been skipped */
-    //MFX_WRN_INCOMPATIBLE_AUDIO_PARAM    = 11,   /* incompatible audio parameters */
     case   0: statusString = "No error"; break;
+
     case  -1: statusString = "Unknown error"; break;
     case  -2: statusString = "Null pointer"; break;
     case  -3: statusString = "Unsupported feature/library load error"; break;
@@ -1660,6 +1652,17 @@ std::string getMfxStatusString (mfxStatus status) {
     case -18: statusString = "More bitstream data expected";  break;
     case -19: statusString = "Incompatible audio parameters"; break;
     case -20: statusString = "Invalid audio parameters"; break;
+
+    case   1: statusString = "the previous asynchronous operation is in execution"; break; //MFX_WRN_IN_EXECUTION
+    case   2: statusString = "the HW acceleration device is busy"; break;                  //MFX_WRN_DEVICE_BUSY
+    case   3: statusString = "the video parameters are changed during decoding"; break;    //MFX_WRN_VIDEO_PARAM_CHANGED
+    case   4: statusString = "SW is used"; break;                                          //MFX_WRN_PARTIAL_ACCELERATION
+    case   5: statusString = "incompatible video parameters"; break;                       //MFX_WRN_INCOMPATIBLE_VIDEO_PARAM
+    case   6: statusString = "the value is saturated based on its valid range"; break;     //MFX_WRN_VALUE_NOT_CHANGED
+    case   7: statusString = "the value is out of valid range"; break;                     //MFX_WRN_OUT_OF_RANGE
+    case  10: statusString = "one of requested filters has been skipped"; break;           //MFX_WRN_FILTER_SKIPPED
+    case  11: statusString = "incompatible audio parameters"; break;                       //MFX_WRN_INCOMPATIBLE_AUDIO_PARAM
+
     default: statusString = "Error code";
     }
 
