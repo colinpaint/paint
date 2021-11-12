@@ -96,7 +96,7 @@ if (BUILD_MFXTEST)
     if (MSVC)
       # use project libmfx
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
-      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils d3d9 Dxva2)
+      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils d3d11 dxgi d3d9 Dxva2)
     else()
       # use installed libmfx,libv,libva-drm
       find_package (PkgConfig REQUIRED)

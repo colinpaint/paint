@@ -20,11 +20,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //}}}
+#define DX9_D3D
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
 
 #include "utils.h"
+
+#ifdef DX9_D3D
+  #include <initguid.h>
+  #pragma warning(disable : 4201) // Disable annoying DX warning
+  #include <d3d9.h>
+  #include <dxva2api.h>
+  #define DEVICE_MGR_TYPE MFX_HANDLE_DIRECT3D_DEVICE_MANAGER9
+#else
+  #include <d3d11.h>
+  #include <dxgi1_2.h>
+  #define DEVICE_MGR_TYPE MFX_HANDLE_D3D11_DEVICE
+#endif
 
 #include <string>
 #include <map>
@@ -36,62 +49,33 @@
 //}}}
 
 #ifdef _WIN32
-  #define DX9_D3D
   #include <intrin.h>
+  #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
+  #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
+  //{{{  implTypes
+  const struct {
+    mfxIMPL impl;       // actual implementation
+    mfxU32  adapterID;  // device adapter number
+    } implTypes[] = {
+      {MFX_IMPL_HARDWARE, 0},
+      {MFX_IMPL_HARDWARE2, 1},
+      {MFX_IMPL_HARDWARE3, 2},
+      {MFX_IMPL_HARDWARE4, 3}
+      };
+  //}}}
+
+  std::map <mfxMemId*, mfxHDL> allocResponses;
+  std::map <mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
+  std::map <mfxHDL, int> allocDecodeRefCount;
+
   #ifdef DX9_D3D
-    //{{{  directx9 headers
-    #include <initguid.h>
-    #pragma warning(disable : 4201) // Disable annoying DX warning
-
-    #include <d3d9.h>
-    #include <dxva2api.h>
-
-    #define DEVICE_MGR_TYPE MFX_HANDLE_DIRECT3D_DEVICE_MANAGER9
-    // DirectX functionality required to manage D3D surfaces
-    // Create DirectX 9 device context
-    // - Required when using D3D surfaces.
-    // - D3D Device created and handed to Intel Media SDK
-    // - Intel graphics device adapter id will be determined automatically (does not have to be primary),
-    //   but with the following caveats:
-    //   - Device must be active. Normally means a monitor has to be physically attached to device
-    //   - Device must be enabled in BIOS. Required for the case when used together with a discrete graphics card
-    //   - For switchable graphics solutions (mobile) make sure that Intel device is the active device
-    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND hWnd, bool bCreateSharedHandles = false);
-    void CleanupHWDevice();
-
-    IDirect3DDevice9Ex* GetDevice();
-
-    void ClearYUVSurfaceD3D (mfxMemId memId);
-    void ClearRGBSurfaceD3D (mfxMemId memId);
-    //}}}
     //{{{  directx9 implementation
-    #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
-    #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
-
     IDirect3DDeviceManager9* pDeviceManager9 = NULL;
     IDirect3DDevice9Ex* pD3DD9 = NULL;
     IDirect3D9Ex* pD3D9 = NULL;
-
-    HANDLE pDeviceHandle   = NULL;
-
+    HANDLE pDeviceHandle = NULL;
     IDirectXVideoAccelerationService* pDXVAServiceDec = NULL;
     IDirectXVideoAccelerationService* pDXVAServiceVPP = NULL;
-
-    bool g_bCreateSharedHandles = false;
-
-    std::map <mfxMemId*, mfxHDL> allocResponses;
-    std::map <mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
-    std::map <mfxHDL, int> allocDecodeRefCount;
-
-    const struct {
-      mfxIMPL impl;       // actual implementation
-      mfxU32  adapterID;  // device adapter number
-      } implTypes[] = {
-        {MFX_IMPL_HARDWARE, 0},
-        {MFX_IMPL_HARDWARE2, 1},
-        {MFX_IMPL_HARDWARE3, 2},
-        {MFX_IMPL_HARDWARE4, 3}
-      };
 
     //{{{
     mfxU32 GetIntelDeviceAdapterNum (mfxSession session) {
@@ -115,15 +99,13 @@
 
     //{{{
     // Create HW device context
-    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND window, bool bCreateSharedHandles) {
+    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND window) {
 
       // If window handle is not supplied, get window handle from coordinate 0,0
       if (window == NULL) {
         POINT point = {0, 0};
         window = WindowFromPoint(point);
         }
-
-      g_bCreateSharedHandles = bCreateSharedHandles;
 
       HRESULT hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &pD3D9);
       if (!pD3D9 || FAILED(hr))
@@ -257,18 +239,9 @@
         DxvaType = DXVA2_VideoProcessorRenderTarget;
 
       mfxMemId* mids = NULL;
-      if (!g_bCreateSharedHandles) {
-        mids = new mfxMemId[request->NumFrameSuggested];
-        if (!mids)
-          return MFX_ERR_MEMORY_ALLOC;
-        }
-      else {
-        mids = new mfxMemId[request->NumFrameSuggested*2];
-        if (!mids)
-          return MFX_ERR_MEMORY_ALLOC;
-
-        memset (mids, 0, sizeof(mfxMemId)*request->NumFrameSuggested*2);
-        }
+      mids = new mfxMemId[request->NumFrameSuggested];
+      if (!mids)
+        return MFX_ERR_MEMORY_ALLOC;
 
       HRESULT hr = S_OK;
       if (!pDeviceHandle) {
@@ -292,31 +265,15 @@
       if (FAILED(hr))
         return MFX_ERR_MEMORY_ALLOC;
 
-      if (g_bCreateSharedHandles && !(MFX_MEMTYPE_INTERNAL_FRAME & request->Type)) {
-        // Allocate surfaces with shared handles. Commonly used for OpenCL interoperability
-        for (int i=0; i<request->NumFrameSuggested; ++i) {
-          mfxMemId* tmpptr = mids + i + request->NumFrameSuggested;
-          hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
-                                               0,
-                                               format,
-                                               D3DPOOL_DEFAULT,
-                                               0,
-                                               DxvaType,
-                                               (IDirect3DSurface9**)mids+i,
-                                               (HANDLE*)(tmpptr));
-          }
-        }
-      else {
-        // Allocate surfaces
-        hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
-                                             request->NumFrameSuggested - 1,
-                                             format,
-                                             D3DPOOL_DEFAULT,
-                                             0,
-                                             DxvaType,
-                                             (IDirect3DSurface9**)mids,
-                                             NULL);
-        }
+      // Allocate surfaces
+      hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
+                                           request->NumFrameSuggested - 1,
+                                           format,
+                                           D3DPOOL_DEFAULT,
+                                           0,
+                                           DxvaType,
+                                           (IDirect3DSurface9**)mids,
+                                           NULL);
       if (FAILED(hr))
         return MFX_ERR_MEMORY_ALLOC;
 
@@ -499,323 +456,252 @@
       }
     //}}}
     //}}}
-  #elif DX11_D3D
-    //{{{  directx11 headers
-    #include <windows.h>
-
-    #include <d3d11.h>
-    #include <dxgi1_2.h>
-    #include <atlbase.h>
-
-    #define DEVICE_MGR_TYPE MFX_HANDLE_D3D11_DEVICE
-
-    // DirectX functionality required to manage D3D surfaces
-    // Create DirectX 11 device context
-    // - Required when using D3D surfaces.
-    // - D3D Device created and handed to Intel Media SDK
-    // - Intel graphics device adapter will be determined automatically (does not have to be primary),
-    //   but with the following caveats:
-    //     - Device must be active (but monitor does NOT have to be attached)
-    //     - Device must be enabled in BIOS. Required for the case when used together with a discrete graphics card
-    //     - For switchable graphics solutions (mobile) make sure that Intel device is the active device
-    mfxStatus CreateHWDevice(mfxSession session, mfxHDL* deviceHandle, HWND hWnd, bool bCreateSharedHandles);
-    void CleanupHWDevice();
-
-    void SetHWDeviceContext(CComPtr<ID3D11DeviceContext> devCtx);
-    CComPtr<ID3D11DeviceContext> GetHWDeviceContext();
-
-    void ClearYUVSurfaceD3D (mfxMemId memId);
-    void ClearRGBSurfaceD3D (mfxMemId memId);
-    //}}}
+  #else
     //{{{  directx11 implementation
-    //{{{  vars
-    #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
-    #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
-
-    IDirect3DDeviceManager9* pDeviceManager9 = NULL;
-    IDirect3DDevice9Ex* pD3DD9 = NULL;
-    IDirect3D9Ex* pD3D9 = NULL;
-
-    HANDLE pDeviceHandle   = NULL;
-
-    IDirectXVideoAccelerationService* pDXVAServiceDec = NULL;
-    IDirectXVideoAccelerationService* pDXVAServiceVPP = NULL;
-
-    bool g_bCreateSharedHandles = false;
-
-    std::map<mfxMemId*, mfxHDL> allocResponses;
-    std::map<mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
-    std::map<mfxHDL, int>  allocDecodeRefCount;
+    //{{{  CustomMemId
+    typedef struct {
+      mfxMemId    memId;
+      mfxMemId    memIdStage;
+      mfxU16      rw;
+      } CustomMemId;
     //}}}
-    //{{{
-    const struct {
-      mfxIMPL impl;       // actual implementation
-      mfxU32  adapterID;  // device adapter number
-      } implTypes[] = {
-        {MFX_IMPL_HARDWARE, 0},
-        {MFX_IMPL_HARDWARE2, 1},
-        {MFX_IMPL_HARDWARE3, 2},
-        {MFX_IMPL_HARDWARE4, 3}
-      };
-    //}}}
+    ID3D11Device* g_pD3D11Device;
+    ID3D11DeviceContext* g_pD3D11Ctx;
+    IDXGIFactory2* g_pDXGIFactory;
+    IDXGIAdapter* g_pAdapter;
 
     //{{{
-    mfxU32 GetIntelDeviceAdapterNum (mfxSession session) {
+    IDXGIAdapter* GetIntelDeviceAdapterHandle (mfxSession session) {
 
       mfxU32  adapterNum = 0;
       mfxIMPL impl;
-
       MFXQueryIMPL(session, &impl);
-      mfxIMPL baseImpl = MFX_IMPL_BASETYPE (impl); // Extract Media SDK base implementation type
+      mfxIMPL baseImpl = MFX_IMPL_BASETYPE(impl); // Extract Media SDK base implementation type
 
       // get corresponding adapter number
-      for (mfxU8 i = 0; i < sizeof(implTypes) / sizeof(implTypes[0]); i++) {
+      for (mfxU8 i = 0; i < sizeof(implTypes)/sizeof(implTypes[0]); i++) {
         if (implTypes[i].impl == baseImpl) {
           adapterNum = implTypes[i].adapterID;
           break;
           }
         }
 
-      return adapterNum;
+      HRESULT hres = CreateDXGIFactory(__uuidof(IDXGIFactory2), (void**)(&g_pDXGIFactory) );
+      if (FAILED(hres))
+        return NULL;
+
+      IDXGIAdapter* adapter;
+      hres = g_pDXGIFactory->EnumAdapters(adapterNum, &adapter);
+      if (FAILED(hres))
+        return NULL;
+
+      return adapter;
       }
     //}}}
     //{{{
-    // Create HW device context
-    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND window, bool bCreateSharedHandles) {
+    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND /*hWnd*/) {
 
-      // If window handle is not supplied, get window handle from coordinate 0,0
-      if (window == NULL) {
-        POINT point = {0, 0};
-        window = WindowFromPoint (point);
-        }
+      // Window handle not required by DX11 since we do not showcase rendering.
+      HRESULT hres = S_OK;
+      static D3D_FEATURE_LEVEL FeatureLevels[] = {
+        D3D_FEATURE_LEVEL_11_1,
+        D3D_FEATURE_LEVEL_11_0,
+        D3D_FEATURE_LEVEL_10_1,
+        D3D_FEATURE_LEVEL_10_0
+        };
+      D3D_FEATURE_LEVEL pFeatureLevelsOut;
 
-      g_bCreateSharedHandles = bCreateSharedHandles;
+      g_pAdapter = GetIntelDeviceAdapterHandle(session);
+      if (NULL == g_pAdapter)
+       return MFX_ERR_DEVICE_FAILED;
 
-      HRESULT hr = Direct3DCreate9Ex (D3D_SDK_VERSION, &pD3D9);
-      if (!pD3D9 || FAILED(hr))
-        return MFX_ERR_DEVICE_FAILED;
-
-      RECT rc;
-      GetClientRect (window, &rc);
-
-      D3DPRESENT_PARAMETERS D3DPP;
-      memset(&D3DPP, 0, sizeof(D3DPP));
-      D3DPP.Windowed = true;
-      D3DPP.hDeviceWindow = window;
-      D3DPP.Flags = D3DPRESENTFLAG_VIDEO;
-      D3DPP.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-      D3DPP.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
-      D3DPP.BackBufferCount = 1;
-      D3DPP.BackBufferFormat = D3DFMT_A8R8G8B8;
-      D3DPP.BackBufferWidth = rc.right - rc.left;
-      D3DPP.BackBufferHeight = rc.bottom - rc.top;
-      D3DPP.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-      D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
-
-      hr = pD3D9->CreateDeviceEx (GetIntelDeviceAdapterNum(session),
-                                  D3DDEVTYPE_HAL,
-                                  window,
-                                  D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
-                                  &D3DPP,
+      UINT dxFlags = 0;
+      //UINT dxFlags = D3D11_CREATE_DEVICE_DEBUG;
+      hres =  D3D11CreateDevice(  g_pAdapter,
+                                  D3D_DRIVER_TYPE_UNKNOWN,
                                   NULL,
-                                  &pD3DD9);
-      if (FAILED(hr))
-        return MFX_ERR_NULL_PTR;
+                                  dxFlags,
+                                  FeatureLevels,
+                                  (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
+                                  D3D11_SDK_VERSION,
+                                  &g_pD3D11Device,
+                                  &pFeatureLevelsOut,
+                                  &g_pD3D11Ctx);
+      if (FAILED(hres))
+          return MFX_ERR_DEVICE_FAILED;
 
-      hr = pD3DD9->ResetEx (&D3DPP, NULL);
-      if (FAILED(hr))
-        return MFX_ERR_UNDEFINED_BEHAVIOR;
+      // !!! must turn turn on multithreading for the DX11 context
+      //CComQIPtr<ID3D10Multithread> p_mt(g_pD3D11Ctx);
+      //ID3D10Multithread* p_mt = g_pD3D11Ctx;
+      //if (p_mt)
+      //  p_mt->SetMultithreadProtected (true);
+      //else
+      //  return MFX_ERR_DEVICE_FAILED;
 
-      hr = pD3DD9->Clear (0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-      if (FAILED(hr))
-        return MFX_ERR_UNDEFINED_BEHAVIOR;
-
-      UINT resetToken = 0;
-
-      hr = DXVA2CreateDirect3DDeviceManager9 (&resetToken, &pDeviceManager9);
-      if (FAILED(hr))
-        return MFX_ERR_NULL_PTR;
-
-      hr = pDeviceManager9->ResetDevice (pD3DD9, resetToken);
-      if (FAILED(hr))
-        return MFX_ERR_UNDEFINED_BEHAVIOR;
-
-      *deviceHandle = (mfxHDL)pDeviceManager9;
+      *deviceHandle = (mfxHDL)g_pD3D11Device;
 
       return MFX_ERR_NONE;
       }
     //}}}
-
-    IDirect3DDevice9Ex* GetDevice() { return pD3DD9; }
+    //{{{
+    void SetHWDeviceContext (ID3D11DeviceContext* devCtx) {
+      g_pD3D11Ctx = devCtx;
+      devCtx->GetDevice(&g_pD3D11Device);
+      }
+    //}}}
     //{{{
     void CleanupHWDevice() {
-    // Free HW device context
-
-      if (pDeviceManager9)
-        pDeviceManager9->CloseDeviceHandle (pDeviceHandle);
-
-      MSDK_SAFE_RELEASE (pDXVAServiceDec);
-      MSDK_SAFE_RELEASE (pDXVAServiceVPP);
-      MSDK_SAFE_RELEASE (pDeviceManager9);
-      MSDK_SAFE_RELEASE (pD3DD9);
-      MSDK_SAFE_RELEASE (pD3D9);
+      g_pAdapter->Release();
       }
     //}}}
 
     //{{{
-    void ClearYUVSurfaceD3D (mfxMemId memId) {
-
-      IDirect3DSurface9* pSurface;
-      D3DSURFACE_DESC desc;
-      D3DLOCKED_RECT locked;
-
-      pSurface = (IDirect3DSurface9*)memId;
-      pSurface->GetDesc (&desc);
-      pSurface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
-
-      memset ((mfxU8*)locked.pBits, 100, desc.Height*locked.Pitch);   // Y plane
-      memset ((mfxU8*)locked.pBits + desc.Height * locked.Pitch, 50, (desc.Height*locked.Pitch)/2);   // UV plane
-
-      pSurface->UnlockRect();
+    ID3D11DeviceContext* GetHWDeviceContext() {
+      return g_pD3D11Ctx;
       }
     //}}}
-    //{{{
-    void ClearRGBSurfaceD3D (mfxMemId memId) {
-
-      IDirect3DSurface9* pSurface;
-      D3DSURFACE_DESC desc;
-      D3DLOCKED_RECT locked;
-
-      pSurface = (IDirect3DSurface9*)memId;
-      pSurface->GetDesc (&desc);
-      pSurface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
-
-      memset ((mfxU8*)locked.pBits, 100, desc.Height*locked.Pitch);   // RGBA
-      pSurface->UnlockRect();
-      }
-    //}}}
+    void ClearYUVSurfaceD3D (mfxMemId /*memId*/) {}// TBD
+    void ClearRGBSurfaceD3D (mfxMemId /*memId*/) {} // TBD
 
     //{{{
     mfxStatus _simple_alloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
-      // Determine surface format (current simple implementation only supports NV12 and RGB4(32))
-      D3DFORMAT format;
+      HRESULT hRes;
+
+      // Determine surface format
+      DXGI_FORMAT format;
       if (MFX_FOURCC_NV12 == request->Info.FourCC)
-        format = D3DFMT_NV12;
+        format = DXGI_FORMAT_NV12;
       else if (MFX_FOURCC_RGB4 == request->Info.FourCC)
-        format = D3DFMT_A8R8G8B8;
-      else if (MFX_FOURCC_YUY2 == request->Info.FourCC)
-        format = D3DFMT_YUY2;
-      else if (MFX_FOURCC_YV12 == request->Info.FourCC)
-        format = D3DFMT_YV12;
+        format = DXGI_FORMAT_B8G8R8A8_UNORM;
+      else if (MFX_FOURCC_YUY2== request->Info.FourCC)
+        format = DXGI_FORMAT_YUY2;
+      else if (MFX_FOURCC_P8 == request->Info.FourCC ) //|| MFX_FOURCC_P8_TEXTURE == request->Info.FourCC
+        format = DXGI_FORMAT_P8;
       else
-        format = (D3DFORMAT)request->Info.FourCC;
+        format = DXGI_FORMAT_UNKNOWN;
 
-      // Determine render target
-      DWORD DxvaType;
-      if (MFX_MEMTYPE_DXVA2_PROCESSOR_TARGET & request->Type)
-        DxvaType = DXVA2_VideoProcessorRenderTarget;
-      else
-        DxvaType = DXVA2_VideoDecoderRenderTarget;
+      if (DXGI_FORMAT_UNKNOWN == format)
+        return MFX_ERR_UNSUPPORTED;
 
-      // Force use of video processor if color conversion is required (with this simple set of samples we only illustrate RGB4 color converison via VPP)
-      if (D3DFMT_A8R8G8B8 == format) // must use processor service
-        DxvaType = DXVA2_VideoProcessorRenderTarget;
-
-      mfxMemId* mids = NULL;
-      if (!g_bCreateSharedHandles) {
-        mids = new mfxMemId[request->NumFrameSuggested];
-        if (!mids)
-          return MFX_ERR_MEMORY_ALLOC;
-        }
-      else {
-        mids = new mfxMemId[request->NumFrameSuggested*2];
-        if (!mids)
-          return MFX_ERR_MEMORY_ALLOC;
-        memset(mids, 0, sizeof(mfxMemId)*request->NumFrameSuggested*2);
-        }
-
-      HRESULT hr = S_OK;
-      if (!pDeviceHandle) {
-        hr = pDeviceManager9->OpenDeviceHandle(&pDeviceHandle);
-        if (FAILED(hr))
-          return MFX_ERR_MEMORY_ALLOC;
-        }
-
-      IDirectXVideoAccelerationService* pDXVAServiceTmp = NULL;
-      if (DXVA2_VideoDecoderRenderTarget == DxvaType) {
-        // for both decode and encode
-        if (pDXVAServiceDec == NULL)
-          hr = pDeviceManager9->GetVideoService (pDeviceHandle, IID_IDirectXVideoDecoderService, (void**)&pDXVAServiceDec);
-        pDXVAServiceTmp = pDXVAServiceDec;
-        }
-      else {
-        // DXVA2_VideoProcessorRenderTarget for VPP
-        if (pDXVAServiceVPP == NULL)
-          hr = pDeviceManager9->GetVideoService (pDeviceHandle, IID_IDirectXVideoProcessorService, (void**)&pDXVAServiceVPP);
-        pDXVAServiceTmp = pDXVAServiceVPP;
-        }
-      if (FAILED(hr))
+      // Allocate custom container to keep texture and stage buffers for each surface
+      // Container also stores the intended read and/or write operation.
+      CustomMemId** mids = (CustomMemId**)calloc(request->NumFrameSuggested, sizeof(CustomMemId*));
+      if (!mids)
         return MFX_ERR_MEMORY_ALLOC;
 
-      if (g_bCreateSharedHandles && !(MFX_MEMTYPE_INTERNAL_FRAME & request->Type)) {
-        // Allocate surfaces with shared handles. Commonly used for OpenCL interoperability
-        for (int i = 0; i < request->NumFrameSuggested; ++i) {
-          mfxMemId* tmpptr = mids + i + request->NumFrameSuggested;
-          hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
-                                               0,
-                                               format,
-                                               D3DPOOL_DEFAULT,
-                                               0,
-                                               DxvaType,
-                                               (IDirect3DSurface9**)mids+i,
-                                               (HANDLE*)(tmpptr));
+      for (int i = 0; i < request->NumFrameSuggested; i++) {
+        mids[i] = (CustomMemId*)calloc (1, sizeof(CustomMemId));
+        if (!mids[i]) {
+          return MFX_ERR_MEMORY_ALLOC;
+          }
+        mids[i]->rw = request->Type & 0xF000; // Set intended read/write operation
+        }
+      request->Type = request->Type & 0x0FFF;
+
+      // because P8 data (bitstream) for h264 encoder should be allocated by CreateBuffer()
+      // but P8 data (MBData) for MPEG2 encoder should be allocated by CreateTexture2D()
+      if (request->Info.FourCC == MFX_FOURCC_P8) {
+        D3D11_BUFFER_DESC desc = {0};
+        if (!request->NumFrameSuggested)
+          return MFX_ERR_MEMORY_ALLOC;
+        desc.ByteWidth           = request->Info.Width * request->Info.Height;
+        desc.Usage               = D3D11_USAGE_STAGING;
+        desc.BindFlags           = 0;
+        desc.CPUAccessFlags      = D3D11_CPU_ACCESS_READ;
+        desc.MiscFlags           = 0;
+        desc.StructureByteStride = 0;
+
+        ID3D11Buffer* buffer = 0;
+        hRes = g_pD3D11Device->CreateBuffer(&desc, 0, &buffer);
+        if (FAILED (hRes))
+          return MFX_ERR_MEMORY_ALLOC;
+        mids[0]->memId = reinterpret_cast<ID3D11Texture2D*>(buffer);
+        }
+      else {
+        D3D11_TEXTURE2D_DESC desc = {0};
+        desc.Width              = request->Info.Width;
+        desc.Height             = request->Info.Height;
+        desc.MipLevels          = 1;
+        desc.ArraySize          = 1; // number of subresources is 1 in this case
+        desc.Format             = format;
+        desc.SampleDesc.Count   = 1;
+        desc.Usage              = D3D11_USAGE_DEFAULT;
+        desc.BindFlags          = D3D11_BIND_DECODER;
+        desc.MiscFlags          = 0;
+        //desc.MiscFlags            = D3D11_RESOURCE_MISC_SHARED;
+
+        if ((MFX_MEMTYPE_FROM_VPPIN & request->Type) &&
+            (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format) ) {
+          desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+          if (desc.ArraySize > 2)
+            return MFX_ERR_MEMORY_ALLOC;
+          }
+
+        if ((MFX_MEMTYPE_FROM_VPPOUT & request->Type) ||
+            (MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET & request->Type)) {
+          desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+          if (desc.ArraySize > 2)
+            return MFX_ERR_MEMORY_ALLOC;
+          }
+
+        if ( DXGI_FORMAT_P8 == desc.Format )
+          desc.BindFlags = 0;
+
+        ID3D11Texture2D* pTexture2D;
+
+        // Create surface textures
+        for (size_t i = 0; i < request->NumFrameSuggested / desc.ArraySize; i++) {
+          hRes = g_pD3D11Device->CreateTexture2D (&desc, NULL, &pTexture2D);
+          if (FAILED(hRes))
+            return MFX_ERR_MEMORY_ALLOC;
+          mids[i]->memId = pTexture2D;
+          }
+
+        desc.ArraySize      = 1;
+        desc.Usage          = D3D11_USAGE_STAGING;
+        desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // | D3D11_CPU_ACCESS_WRITE;
+        desc.BindFlags      = 0;
+        desc.MiscFlags      = 0;
+        //desc.MiscFlags        = D3D11_RESOURCE_MISC_SHARED;
+
+        // Create surface staging textures
+        for (size_t i = 0; i < request->NumFrameSuggested; i++) {
+          hRes = g_pD3D11Device->CreateTexture2D (&desc, NULL, &pTexture2D);
+          if (FAILED(hRes))
+            return MFX_ERR_MEMORY_ALLOC;
+          mids[i]->memIdStage = pTexture2D;
           }
         }
-      else {
-        // Allocate surfaces
-        hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
-                                             request->NumFrameSuggested - 1,
-                                             format,
-                                             D3DPOOL_DEFAULT,
-                                             0,
-                                             DxvaType,
-                                             (IDirect3DSurface9**)mids,
-                                             NULL);
-        }
-      if (FAILED(hr))
-        return MFX_ERR_MEMORY_ALLOC;
 
-      response->mids = mids;
+      response->mids = (mfxMemId*)mids;
       response->NumFrameActual = request->NumFrameSuggested;
-
       return MFX_ERR_NONE;
       }
     //}}}
     //{{{
     mfxStatus simple_alloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
-      mfxStatus status = MFX_ERR_NONE;
-
+      mfxStatus sts = MFX_ERR_NONE;
       if (request->Type & MFX_MEMTYPE_SYSTEM_MEMORY)
-        return MFX_ERR_UNSUPPORTED;
+         return MFX_ERR_UNSUPPORTED;
 
       if (allocDecodeResponses.find(pthis) != allocDecodeResponses.end() &&
           MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
-          MFX_MEMTYPE_FROM_DECODE & request->Type) {
-        // Memory for this request was already allocated during manual allocation stage. Return saved response
-        //   When decode acceleration device (DXVA) is created it requires a list of D3D surfaces to be passed.
-        //   Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
-        //   (No such restriction applies to Encode or VPP)
-        *response = allocDecodeResponses[pthis];
-        allocDecodeRefCount[pthis]++;
+         MFX_MEMTYPE_FROM_DECODE & request->Type) {
+          // Memory for this request was already allocated during manual allocation stage. Return saved response
+          //   When decode acceleration device (DXVA) is created it requires a list of d3d surfaces to be passed.
+          //   Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
+          //   (No such restriction applies to Encode or VPP)
+          *response = allocDecodeResponses[pthis];
+          allocDecodeRefCount[pthis]++;
         }
       else {
-        status = _simple_alloc(request, response);
+        sts = _simple_alloc(request, response);
 
-        if (MFX_ERR_NONE == status) {
-          if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
-              MFX_MEMTYPE_FROM_DECODE & request->Type) {
+        if (MFX_ERR_NONE == sts) {
+          if ( MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
+               MFX_MEMTYPE_FROM_DECODE & request->Type) {
             // Decode alloc response handling
             allocDecodeResponses[pthis] = *response;
             allocDecodeRefCount[pthis]++;
@@ -827,7 +713,7 @@
           }
         }
 
-      return status;
+      return sts;
       }
     //}}}
     //{{{
@@ -836,14 +722,19 @@
       if (response->mids) {
         for (mfxU32 i = 0; i < response->NumFrameActual; i++) {
           if (response->mids[i]) {
-            IDirect3DSurface9* handle = (IDirect3DSurface9*)response->mids[i];
-            handle->Release();
+            CustomMemId* mid = (CustomMemId*)response->mids[i];
+            ID3D11Texture2D* pSurface = (ID3D11Texture2D*)mid->memId;
+            ID3D11Texture2D* pStage = (ID3D11Texture2D*)mid->memIdStage;
+            if (pSurface)
+              pSurface->Release();
+            if (pStage)
+              pStage->Release();
+            free (mid);
             }
           }
+        free (response->mids);
+        response->mids = NULL;
         }
-
-      delete [] response->mids;
-      response->mids = 0;
 
       return MFX_ERR_NONE;
       }
@@ -851,7 +742,7 @@
     //{{{
     mfxStatus simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
 
-      if (!response)
+      if (NULL == response)
         return MFX_ERR_NULL_PTR;
 
       if (allocResponses.find(response->mids) == allocResponses.end()) {
@@ -871,59 +762,82 @@
       return MFX_ERR_NONE;
       }
     //}}}
-
     //{{{
     mfxStatus simple_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
-      (void)pthis; // To suppress warning for this unused parameter
+      pthis; // To suppress warning for this unused parameter
 
-      IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
-      if (pSurface == 0)
-        return MFX_ERR_INVALID_HANDLE;
-      if (ptr == 0)
-        return MFX_ERR_LOCK_MEMORY;
+      HRESULT hRes = S_OK;
 
-      D3DSURFACE_DESC desc;
-      HRESULT hr = pSurface->GetDesc (&desc);
-      if (FAILED(hr))
-        return MFX_ERR_LOCK_MEMORY;
+      D3D11_TEXTURE2D_DESC desc = {0};
+      D3D11_MAPPED_SUBRESOURCE lockedRect = {0};
 
-      D3DLOCKED_RECT locked;
-      hr = pSurface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
-      if (FAILED(hr))
-        return MFX_ERR_LOCK_MEMORY;
+      CustomMemId* memId = (CustomMemId*)mid;
+      ID3D11Texture2D* pSurface = (ID3D11Texture2D*)memId->memId;
+      ID3D11Texture2D* pStage = (ID3D11Texture2D*)memId->memIdStage;
 
-      // In these simple set of samples we only illustrate usage of NV12 and RGB4(32)
-      if (D3DFMT_NV12 == desc.Format) {
-        ptr->Pitch = (mfxU16)locked.Pitch;
-        ptr->Y = (mfxU8*)locked.pBits;
-        ptr->U = (mfxU8*)locked.pBits + desc.Height * locked.Pitch;
-        ptr->V = ptr->U + 1;
+      D3D11_MAP mapType  = D3D11_MAP_READ;
+      UINT mapFlags = D3D11_MAP_FLAG_DO_NOT_WAIT;
+
+      if (NULL == pStage) {
+        hRes = g_pD3D11Ctx->Map(pSurface, 0, mapType, mapFlags, &lockedRect);
+        desc.Format = DXGI_FORMAT_P8;
         }
-      else if (D3DFMT_A8R8G8B8 == desc.Format) {
-        ptr->Pitch = (mfxU16)locked.Pitch;
-        ptr->B = (mfxU8*)locked.pBits;
-        ptr->G = ptr->B + 1;
-        ptr->R = ptr->B + 2;
-        ptr->A = ptr->B + 3;
+      else {
+        pSurface->GetDesc(&desc);
+
+       // copy data only in case of user wants o read from stored surface
+        if (memId->rw & WILL_READ)
+          g_pD3D11Ctx->CopySubresourceRegion(pStage, 0, 0, 0, 0, pSurface, 0, NULL);
+
+        do {
+          hRes = g_pD3D11Ctx->Map(pStage, 0, mapType, mapFlags, &lockedRect);
+          if (S_OK != hRes && DXGI_ERROR_WAS_STILL_DRAWING != hRes)
+            return MFX_ERR_LOCK_MEMORY;
+          } while (DXGI_ERROR_WAS_STILL_DRAWING == hRes);
         }
-      else if (D3DFMT_YUY2 == desc.Format) {
-        ptr->Pitch = (mfxU16)locked.Pitch;
-        ptr->Y = (mfxU8*)locked.pBits;
-        ptr->U = ptr->Y + 1;
-        ptr->V = ptr->Y + 3;
-        }
-      else if (D3DFMT_YV12 == desc.Format) {
-        ptr->Pitch = (mfxU16)locked.Pitch;
-        ptr->Y = (mfxU8*)locked.pBits;
-        ptr->V = ptr->Y + desc.Height * locked.Pitch;
-        ptr->U = ptr->V + (desc.Height * locked.Pitch) / 4;
-        }
-      else if (D3DFMT_P8 == desc.Format) {
-        ptr->Pitch = (mfxU16)locked.Pitch;
-        ptr->Y = (mfxU8*)locked.pBits;
-        ptr->U = 0;
-        ptr->V = 0;
+
+      if (FAILED(hRes))
+          return MFX_ERR_LOCK_MEMORY;
+
+      switch (desc.Format) {
+        //{{{
+        case DXGI_FORMAT_NV12:
+          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
+          ptr->Y = (mfxU8*)lockedRect.pData;
+          ptr->U = (mfxU8*)lockedRect.pData + desc.Height * lockedRect.RowPitch;
+          ptr->V = ptr->U + 1;
+          break;
+        //}}}
+        //{{{
+        case DXGI_FORMAT_B8G8R8A8_UNORM :
+          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
+          ptr->B = (mfxU8*)lockedRect.pData;
+          ptr->G = ptr->B + 1;
+          ptr->R = ptr->B + 2;
+          ptr->A = ptr->B + 3;
+          break;
+        //}}}
+        //{{{
+        case DXGI_FORMAT_YUY2:
+          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
+          ptr->Y = (mfxU8*)lockedRect.pData;
+          ptr->U = ptr->Y + 1;
+          ptr->V = ptr->Y + 3;
+          break;
+        //}}}
+        //{{{
+        case DXGI_FORMAT_P8 :
+          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
+          ptr->Y = (mfxU8*)lockedRect.pData;
+          ptr->U = 0;
+          ptr->V = 0;
+          break;
+        //}}}
+        //{{{
+        default:
+          return MFX_ERR_LOCK_MEMORY;
+        //}}}
         }
 
       return MFX_ERR_NONE;
@@ -932,55 +846,65 @@
     //{{{
     mfxStatus simple_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
-      (void)pthis;
+      pthis; // To suppress warning for this unused parameter
 
-      IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
-      if (pSurface == 0)
-        return MFX_ERR_INVALID_HANDLE;
+      CustomMemId* memId = (CustomMemId*)mid;
+      ID3D11Texture2D* pSurface = (ID3D11Texture2D*)memId->memId;
+      ID3D11Texture2D* pStage = (ID3D11Texture2D*)memId->memIdStage;
 
-      pSurface->UnlockRect();
+      if (NULL == pStage)
+        g_pD3D11Ctx->Unmap (pSurface, 0);
 
-      if (NULL != ptr) {
-        ptr->Pitch = 0;
-        ptr->R     = 0;
-        ptr->G     = 0;
-        ptr->B     = 0;
-        ptr->A     = 0;
+      else {
+        g_pD3D11Ctx->Unmap (pStage, 0);
+        // copy data only in case of user wants to write to stored surface
+        if (memId->rw & WILL_WRITE)
+          g_pD3D11Ctx->CopySubresourceRegion (pSurface, 0, 0, 0, 0, pStage, 0, NULL);
+        }
+
+      if (ptr) {
+        ptr->Pitch=0;
+        ptr->U=ptr->V=ptr->Y=0;
+        ptr->A=ptr->R=ptr->G=ptr->B=0;
         }
 
       return MFX_ERR_NONE;
       }
     //}}}
-
     //{{{
     mfxStatus simple_gethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
 
-      (void)pthis;
-
-      if (handle == 0)
+      pthis; // To suppress warning for this unused parameter
+      if (NULL == handle)
         return MFX_ERR_INVALID_HANDLE;
 
-      *handle = mid;
+      mfxHDLPair* pPair = (mfxHDLPair*)handle;
+      CustomMemId* memId = (CustomMemId*)mid;
+
+      pPair->first  = memId->memId; // surface texture
+      pPair->second = 0;
+
       return MFX_ERR_NONE;
       }
+
     //}}}
     //}}}
   #endif
 
   //{{{
-  mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator, bool createSharedHandles) {
+  mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator) {
 
     mfxStatus status = MFX_ERR_NONE;
     // impl |= MFX_IMPL_VIA_D3D11;
 
     // Create DirectX device context
     mfxHDL deviceHandle;
-    status = CreateHWDevice (*session, &deviceHandle, NULL, createSharedHandles);
+    status = CreateHWDevice (*session, &deviceHandle, NULL);
     MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // Provide device manager to Media SDK
     status = session->SetHandle (DEVICE_MGR_TYPE, deviceHandle);
-    MSDK_CHECK_RESULT(status, MFX_ERR_NONE, status);
+    MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // If mfxFrameAllocator is provided it means we need to setup DirectX device and memory allocator
     if (mfxAllocator) {
@@ -1019,7 +943,7 @@
   #include "va/va.h"
   #include "va/va_drm.h"
   //}}}
-  //{{{  vaapi implemenation
+  //{{{  vaapi implementation
   //{{{
   struct sharedResponse {
     mfxFrameAllocResponse mfxResponse;
@@ -1575,9 +1499,8 @@
   //}}}
 
   //{{{
-  mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator, bool createSharedHandles) {
+  mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator) {
 
-    (void)createSharedHandles;
     mfxStatus status = MFX_ERR_NONE;
 
     // Create VA display

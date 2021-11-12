@@ -55,7 +55,7 @@ void decodeSysMem (const string& filename) {
 
   cLog::log (LOGINFO, "--- decodeSysMem ---- " + filename);
 
-  mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY;
+  mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY; // | MFX_IMPL_VIA_D3D11;
   mfxVersion mfxVersion = {{0,1}};
 
   // init mfxSession
@@ -76,7 +76,7 @@ void decodeSysMem (const string& filename) {
   cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
 
   // init hw
-  Initialize (&mfxSession, nullptr, false);
+  Initialize (&mfxSession, nullptr);
 
   //{{{  prepare mfx bitStream buffer, Arbitrary buffer size
   mfxBitstream bitStream = {0};
@@ -206,7 +206,7 @@ void decodeVidMem (const string& filename) {
 
   cLog::log (LOGINFO, "--- decodeVidMem ----" + filename);
 
-  mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY;
+  mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY; // | MFX_IMPL_VIA_D3D11;
   mfxVersion mfxVersion = {{0,1}};
 
   // init mfxSession
@@ -228,7 +228,7 @@ void decodeVidMem (const string& filename) {
 
   // init hw
   mfxFrameAllocator mfxAllocator = {0};
-  Initialize (&mfxSession, &mfxAllocator, false);
+  Initialize (&mfxSession, &mfxAllocator);
 
   //{{{  prepare mfx bitStream buffer, Arbitrary buffer size
   mfxBitstream bitStream = {0};
