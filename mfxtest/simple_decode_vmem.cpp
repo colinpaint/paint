@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     memset (&pmfxSurfaces[i], 0, sizeof(mfxFrameSurface1));
     pmfxSurfaces[i].Info = mfxVideoParams.mfx.FrameInfo;
     // MID (memory id) represents one video NV12 surface
-    pmfxSurfaces[i].Data.MemId = mfxResponse.mids[i];  
+    pmfxSurfaces[i].Data.MemId = mfxResponse.mids[i];
     }
 
   // Initialize the Media SDK decoder
@@ -154,50 +154,50 @@ int main(int argc, char** argv) {
   mfxU32 nFrame = 0;
 
   while (MFX_ERR_NONE <= sts || MFX_ERR_MORE_DATA == sts || MFX_ERR_MORE_SURFACE == sts) {
-      //{{{  main decode loop
-      if (MFX_WRN_DEVICE_BUSY == sts)
-          MSDK_SLEEP(1);  // Wait if device is busy, then repeat the same call to DecodeFrameAsync
+    //{{{  main decode loop
+    if (MFX_WRN_DEVICE_BUSY == sts)
+        MSDK_SLEEP(1);  // Wait if device is busy, then repeat the same call to DecodeFrameAsync
 
-      if (MFX_ERR_MORE_DATA == sts) {
-          sts = ReadBitStreamData(&mfxBS, fSource.get());       // Read more data into input bit stream
-          MSDK_BREAK_ON_ERROR(sts);
-      }
+    if (MFX_ERR_MORE_DATA == sts) {
+        sts = ReadBitStreamData(&mfxBS, fSource.get());       // Read more data into input bit stream
+        MSDK_BREAK_ON_ERROR(sts);
+    }
 
-      if (MFX_ERR_MORE_SURFACE == sts || MFX_ERR_NONE == sts) {
-          nIndex = GetFreeSurfaceIndex(pmfxSurfaces);        // Find free frame surface
-          MSDK_CHECK_ERROR(MFX_ERR_NOT_FOUND, nIndex, MFX_ERR_MEMORY_ALLOC);
-      }
-      // Decode a frame asychronously (returns immediately)
-      //  - If input bitstream contains multiple frames DecodeFrameAsync will start decoding multiple frames, and remove them from bitstream
-      sts = mfxDEC.DecodeFrameAsync(&mfxBS, &pmfxSurfaces[nIndex], &pmfxOutSurface, &syncp);
+    if (MFX_ERR_MORE_SURFACE == sts || MFX_ERR_NONE == sts) {
+        nIndex = GetFreeSurfaceIndex(pmfxSurfaces);        // Find free frame surface
+        MSDK_CHECK_ERROR(MFX_ERR_NOT_FOUND, nIndex, MFX_ERR_MEMORY_ALLOC);
+    }
+    // Decode a frame asychronously (returns immediately)
+    //  - If input bitstream contains multiple frames DecodeFrameAsync will start decoding multiple frames, and remove them from bitstream
+    sts = mfxDEC.DecodeFrameAsync(&mfxBS, &pmfxSurfaces[nIndex], &pmfxOutSurface, &syncp);
 
-      // Ignore warnings if output is available,
-      // if no output and no action required just repeat the DecodeFrameAsync call
-      if (MFX_ERR_NONE < sts && syncp)
-          sts = MFX_ERR_NONE;
+    // Ignore warnings if output is available,
+    // if no output and no action required just repeat the DecodeFrameAsync call
+    if (MFX_ERR_NONE < sts && syncp)
+        sts = MFX_ERR_NONE;
 
-      if (MFX_ERR_NONE == sts)
-          sts = session.SyncOperation(syncp, 60000);      // Synchronize. Wait until decoded frame is ready
+    if (MFX_ERR_NONE == sts)
+        sts = session.SyncOperation(syncp, 60000);      // Synchronize. Wait until decoded frame is ready
 
-      if (MFX_ERR_NONE == sts) {
-          ++nFrame;
-          if (bEnableOutput) {
-              // Surface locking required when read/write video surfaces
-              sts = mfxAllocator.Lock (mfxAllocator.pthis, pmfxOutSurface->Data.MemId, &(pmfxOutSurface->Data));
-              MSDK_BREAK_ON_ERROR (sts);
+    if (MFX_ERR_NONE == sts) {
+        ++nFrame;
+        if (bEnableOutput) {
+            // Surface locking required when read/write video surfaces
+            sts = mfxAllocator.Lock (mfxAllocator.pthis, pmfxOutSurface->Data.MemId, &(pmfxOutSurface->Data));
+            MSDK_BREAK_ON_ERROR (sts);
 
-              sts = WriteRawFrame (pmfxOutSurface, fSink.get());
-              MSDK_BREAK_ON_ERROR (sts);
+            sts = WriteRawFrame (pmfxOutSurface, fSink.get());
+            MSDK_BREAK_ON_ERROR (sts);
 
-              sts = mfxAllocator.Unlock(mfxAllocator.pthis, pmfxOutSurface->Data.MemId, &(pmfxOutSurface->Data));
-              MSDK_BREAK_ON_ERROR (sts);
+            sts = mfxAllocator.Unlock(mfxAllocator.pthis, pmfxOutSurface->Data.MemId, &(pmfxOutSurface->Data));
+            MSDK_BREAK_ON_ERROR (sts);
 
-              printf("Frame number: %d\r", nFrame);
-              fflush(stdout);
-          }
+            printf("Frame number: %d\r", nFrame);
+            fflush(stdout);
         }
       }
-      //}}}
+    }
+    //}}}
 
   // MFX_ERR_MORE_DATA means that file has ended, need to go to buffering loop, exit in case of other errors
   MSDK_IGNORE_MFX_STS (sts, MFX_ERR_MORE_DATA);

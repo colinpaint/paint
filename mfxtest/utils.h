@@ -70,7 +70,7 @@ enum
 static const mfxPluginUID MSDK_PLUGINGUID_NULL = { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
 
 FILE* OpenFile (const char* fileName, const char* mode);
-void CloseFile (FILE* fHdl);
+void CloseFile (FILE* file);
 
 void PrintErrString (int err,const char* filestr,int line);
 char mfxFrameTypeString (mfxU16 FrameType);
@@ -119,9 +119,7 @@ typedef struct {
 int GetFreeTaskIndex (Task* pTaskPool, mfxU16 nPoolSize);
 
 // Initialize Intel Media SDK Session, device/display and memory manager
-mfxStatus Initialize (mfxIMPL impl, mfxVersion ver, 
-                      MFXVideoSession* pSession, mfxFrameAllocator* pmfxAllocator, 
-                      bool bCreateSharedHandles = false);
+mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator, bool createSharedHandles);
 
 // Release resources (device/display)
 void Release();

@@ -36,10 +36,6 @@
 //}}}
 
 #ifdef _WIN32
-  #define MSDK_FOPEN(FH, FN, M) { FH = fopen (FN,M); }
-  #define msdk_sscanf sscanf
-  #define msdk_strcopy strcpy
-
   #define DX9_D3D
   #include <intrin.h>
   #ifdef DX9_D3D
@@ -271,7 +267,7 @@
         if (!mids)
           return MFX_ERR_MEMORY_ALLOC;
 
-        memset(mids, 0, sizeof(mfxMemId)*request->NumFrameSuggested*2);
+        memset (mids, 0, sizeof(mfxMemId)*request->NumFrameSuggested*2);
         }
 
       HRESULT hr = S_OK;
@@ -972,39 +968,31 @@
   #endif
 
   //{{{
-  mfxStatus Initialize (mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession,
-                        mfxFrameAllocator* pmfxAllocator, bool bCreateSharedHandles) {
+  mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator, bool createSharedHandles) {
 
     mfxStatus status = MFX_ERR_NONE;
-
-    #ifdef DX11_D3D
-      impl |= MFX_IMPL_VIA_D3D11;
-    #endif
-
-    // Initialize Intel Media SDK Session
-    //status = pSession->Init (impl, &ver);
-    //MSDK_CHECK_RESULT(status, MFX_ERR_NONE, status);
+    // impl |= MFX_IMPL_VIA_D3D11;
 
     // Create DirectX device context
     mfxHDL deviceHandle;
-    status = CreateHWDevice (*pSession, &deviceHandle, NULL, bCreateSharedHandles);
+    status = CreateHWDevice (*session, &deviceHandle, NULL, createSharedHandles);
     MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // Provide device manager to Media SDK
-    status = pSession->SetHandle (DEVICE_MGR_TYPE, deviceHandle);
+    status = session->SetHandle (DEVICE_MGR_TYPE, deviceHandle);
     MSDK_CHECK_RESULT(status, MFX_ERR_NONE, status);
 
     // If mfxFrameAllocator is provided it means we need to setup DirectX device and memory allocator
-    if (pmfxAllocator) {
-      pmfxAllocator->pthis = *pSession; // We use Media SDK session ID as the allocation identifier
-      pmfxAllocator->Alloc = simple_alloc;
-      pmfxAllocator->Free = simple_free;
-      pmfxAllocator->Lock = simple_lock;
-      pmfxAllocator->Unlock = simple_unlock;
-      pmfxAllocator->GetHDL = simple_gethdl;
+    if (mfxAllocator) {
+      mfxAllocator->pthis = *session; // We use Media SDK session ID as the allocation identifier
+      mfxAllocator->Alloc = simple_alloc;
+      mfxAllocator->Free = simple_free;
+      mfxAllocator->Lock = simple_lock;
+      mfxAllocator->Unlock = simple_unlock;
+      mfxAllocator->GetHDL = simple_gethdl;
 
       // Since we are using video memory we must provide Media SDK with an external allocator
-      status = pSession->SetFrameAllocator (pmfxAllocator);
+      status = session->SetFrameAllocator (mfxAllocator);
       MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
       }
 
@@ -1015,8 +1003,6 @@
   void ClearYUVSurfaceVMem (mfxMemId memId) { ClearYUVSurfaceD3D (memId); }
   void ClearRGBSurfaceVMem (mfxMemId memId) { ClearRGBSurfaceD3D (memId); }
 #else
-  #define MSDK_FOPEN(FH, FN, M) { FH = fopen (FN,M); }
-
   //{{{  vaapi headers
   #include <stdio.h>
   #include <string.h>
@@ -1589,15 +1575,10 @@
   //}}}
 
   //{{{
-  mfxStatus Initialize (mfxIMPL impl, mfxVersion ver, MFXVideoSession* pSession,
-                        mfxFrameAllocator* pmfxAllocator, bool bCreateSharedHandles) {
+  mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator, bool createSharedHandles) {
 
-    (void)bCreateSharedHandles;
+    (void)createSharedHandles;
     mfxStatus status = MFX_ERR_NONE;
-
-    // Initialize Intel Media SDK Session
-    //status = pSession->Init (impl, &ver);
-    //MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // Create VA display
     mfxHDL displayHandle = { 0 };
@@ -1605,20 +1586,20 @@
     MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // Provide VA display handle to Media SDK
-    status = pSession->SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
+    status = session->SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
     MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // If mfxFrameAllocator is provided it means we need to setup  memory allocator
-    if (pmfxAllocator) {
-      pmfxAllocator->pthis = *pSession; // We use Media SDK session ID as the allocation identifier
-      pmfxAllocator->Alloc = simple_alloc;
-      pmfxAllocator->Free = simple_free;
-      pmfxAllocator->Lock = simple_lock;
-      pmfxAllocator->Unlock = simple_unlock;
-      pmfxAllocator->GetHDL = simple_gethdl;
+    if (mfxAllocator) {
+      mfxAllocator->pthis = *session; // We use Media SDK session ID as the allocation identifier
+      mfxAllocator->Alloc = simple_alloc;
+      mfxAllocator->Free = simple_free;
+      mfxAllocator->Lock = simple_lock;
+      mfxAllocator->Unlock = simple_unlock;
+      mfxAllocator->GetHDL = simple_gethdl;
 
       // Since we are using video memory we must provide Media SDK with an external allocator
-      status = pSession->SetFrameAllocator (pmfxAllocator);
+      status = session->SetFrameAllocator (mfxAllocator);
       MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
       }
 
@@ -1633,17 +1614,14 @@
 // utils
 //{{{
 FILE* OpenFile (const char* fileName, const char* mode) {
-
-  FILE* openFile = nullptr;
-  MSDK_FOPEN(openFile, fileName, mode);
-  return openFile;
+  return fopen (fileName, mode);
   }
 //}}}
 //{{{
-void CloseFile(FILE* fHdl) {
+void CloseFile (FILE* file) {
 
-  if (fHdl)
-    fclose(fHdl);
+  if (file)
+    fclose (file);
   }
 //}}}
 
@@ -2069,57 +2047,47 @@ mfxStatus WriteSection (mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
   }
 //}}}
 //{{{
-mfxStatus WriteRawFrame (mfxFrameSurface1* pSurface, FILE* fSink)
-{
-    mfxFrameInfo* pInfo = &pSurface->Info;
-    mfxFrameData* pData = &pSurface->Data;
-    mfxU32 nByteWrite;
-    mfxU16 i, j, h, w, pitch;
-    mfxU8* ptr;
-    mfxStatus status = MFX_ERR_NONE;
+mfxStatus WriteRawFrame (mfxFrameSurface1* pSurface, FILE* fSink) {
 
-    if (pInfo->CropH > 0 && pInfo->CropW > 0)
-    {
-        w = pInfo->CropW;
-        h = pInfo->CropH;
+  mfxFrameInfo* pInfo = &pSurface->Info;
+  mfxU16 h, w;
+  if (pInfo->CropH > 0 && pInfo->CropW > 0) {
+    w = pInfo->CropW;
+    h = pInfo->CropH;
     }
-    else
-    {
-        w = pInfo->Width;
-        h = pInfo->Height;
+  else {
+    w = pInfo->Width;
+    h = pInfo->Height;
     }
 
-    if (pInfo->FourCC == MFX_FOURCC_RGB4 || pInfo->FourCC == MFX_FOURCC_A2RGB10)
-    {
-        pitch = pData->Pitch;
-        ptr = std::min(std::min(pData->R, pData->G), pData->B);
+  mfxStatus status = MFX_ERR_NONE;
+  mfxFrameData* pData = &pSurface->Data;
+  if ((pInfo->FourCC == MFX_FOURCC_RGB4) || (pInfo->FourCC == MFX_FOURCC_A2RGB10)) {
+    mfxU16 pitch = pData->Pitch;
+    mfxU8* ptr = std::min (std::min(pData->R, pData->G), pData->B);
 
-        for (i = 0; i < h; i++)
-        {
-            nByteWrite = (mfxU32)fwrite(ptr + i * pitch, 1, w * 4, fSink);
-            if ((mfxU32)(w * 4) != nByteWrite)
-            {
-                return MFX_ERR_MORE_DATA;
-            }
-        }
+    for (mfxU16 i = 0; i < h; i++) {
+      mfxU32 nByteWrite = (mfxU32)fwrite (ptr + i * pitch, 1, w * 4, fSink);
+      if ((mfxU32)(w * 4) != nByteWrite)
+        return MFX_ERR_MORE_DATA;
+      }
     }
-    else
-    {
-        for (i = 0; i < pInfo->CropH; i++)
-            status = WriteSection(pData->Y, 1, pInfo->CropW, pInfo, pData, i, 0, fSink);
+  else {
+    for (mfxU16 i = 0; i < pInfo->CropH; i++)
+      status = WriteSection (pData->Y, 1, pInfo->CropW, pInfo, pData, i, 0, fSink);
 
-        h = pInfo->CropH / 2;
-        w = pInfo->CropW;
-        for (i = 0; i < h; i++)
-            for (j = 0; j < w; j += 2)
-                status = WriteSection(pData->UV, 2, 1, pInfo, pData, i, j, fSink);
-        for (i = 0; i < h; i++)
-            for (j = 1; j < w; j += 2)
-                status = WriteSection(pData->UV, 2, 1, pInfo, pData, i, j, fSink);
+    h = pInfo->CropH / 2;
+    w = pInfo->CropW;
+    for (mfxU16 i = 0; i < h; i++)
+      for (mfxU16 j = 0; j < w; j += 2)
+        status = WriteSection (pData->UV, 2, 1, pInfo, pData, i, j, fSink);
+    for (mfxU16 i = 0; i < h; i++)
+      for (mfxU16 j = 1; j < w; j += 2)
+        status = WriteSection (pData->UV, 2, 1, pInfo, pData, i, j, fSink);
     }
 
-    return status;
-}
+  return status;
+  }
 //}}}
 //{{{
 mfxStatus WriteSection10Bit (mfxU8* plane, mfxU16 factor, mfxU16 chunksize,

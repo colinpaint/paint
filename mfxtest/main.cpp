@@ -55,14 +55,6 @@ void decodeSysMem (const string& filename) {
 
   cLog::log (LOGINFO, "--- decodeSysMem ---- " + filename);
 
-  //{{{  MFX_IMPL flags
-  // MFX_IMPL_AUTO
-  // MFX_IMPL_HARDWARE
-  // MFX_IMPL_SOFTWARE
-  // MFX_IMPL_AUTO_ANY
-  // MFX_IMPL_VIA_D3D9
-  // MFX_IMPL_VIA_D3D11
-  //}}}
   mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY;
   mfxVersion mfxVersion = {{0,1}};
 
@@ -84,7 +76,7 @@ void decodeSysMem (const string& filename) {
   cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
 
   // init hw
-  Initialize (mfxImpl, mfxVersion, &mfxSession, nullptr);
+  Initialize ( &mfxSession, nullptr, false);
 
   //{{{  prepare mfx bitStream buffer, Arbitrary buffer size
   mfxBitstream bitStream = {0};
@@ -100,7 +92,7 @@ void decodeSysMem (const string& filename) {
   //}}}
 
   MFXVideoDECODE mfxDEC (mfxSession);
-  //{{{  create mfx decoder session;
+  //{{{  decodeHeader, set codec,memModel
   mfxVideoParam mfxVideoParams = {0};
   mfxVideoParams.mfx.CodecId = MFX_CODEC_AVC;
   mfxVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
@@ -109,24 +101,24 @@ void decodeSysMem (const string& filename) {
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "DecodeHeader failed - " + getMfxStatusString (status));
   //}}}
-  //{{{  validate video decode parameters
+  //{{{  validate video parameters, for encode
   status = mfxDEC.Query (&mfxVideoParams, &mfxVideoParams);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "Query failed - " + getMfxStatusString (status));
   //}}}
-  //{{{  query decoder surface info
+  //{{{  query decoder frame surface alloc info
   mfxFrameAllocRequest frameAllocRequest = {0};
   status = mfxDEC.QueryIOSurf (&mfxVideoParams, &frameAllocRequest);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "QueryIOSurf failed - " + getMfxStatusString (status));
-  //}}}
 
   // extract width, height, numSurfaces
   mfxU16 width = (mfxU16)MSDK_ALIGN32 (frameAllocRequest.Info.Width);
   mfxU16 height = (mfxU16)MSDK_ALIGN32 (frameAllocRequest.Info.Height);
   mfxU16 numSurfaces = frameAllocRequest.NumFrameSuggested;
+  //}}}
 
-  //{{{  allocate decoder surfaces, NV12 format 12bits per pixel
+  //{{{  allocate sysMem surfaces, NV12 format 12bits per pixel
   mfxU8 bitsPerPixel = 12;
   mfxU32 surfaceSize = (width * height * bitsPerPixel) / 8;
 
@@ -214,14 +206,6 @@ void decodeVidMem (const string& filename) {
 
   cLog::log (LOGINFO, "--- decodeVidMem ----" + filename);
 
-  //{{{  MFX_IMPL flags
-  // MFX_IMPL_AUTO
-  // MFX_IMPL_HARDWARE
-  // MFX_IMPL_SOFTWARE
-  // MFX_IMPL_AUTO_ANY
-  // MFX_IMPL_VIA_D3D9
-  // MFX_IMPL_VIA_D3D11
-  //}}}
   mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY;
   mfxVersion mfxVersion = {{0,1}};
 
@@ -230,11 +214,6 @@ void decodeVidMem (const string& filename) {
   mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "init failed - " + getMfxStatusString (status));
-
-  // init hw
-  mfxFrameAllocator mfxAllocator = {0};
-  Initialize (mfxImpl, mfxVersion, &mfxSession, &mfxAllocator);
-
   //{{{  query implementation
   status = mfxSession.QueryIMPL (&mfxImpl);
   if (status != MFX_ERR_NONE)
@@ -246,6 +225,10 @@ void decodeVidMem (const string& filename) {
     cLog::log (LOGINFO, "QueryVersion failed " + getMfxStatusString (status));
   //}}}
   cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
+
+  // init hw
+  mfxFrameAllocator mfxAllocator = {0};
+  Initialize (&mfxSession, &mfxAllocator, false);
 
   //{{{  prepare mfx bitStream buffer, Arbitrary buffer size
   mfxBitstream bitStream = {0};
@@ -261,7 +244,7 @@ void decodeVidMem (const string& filename) {
   //}}}
 
   MFXVideoDECODE mfxDEC (mfxSession);
-  //{{{  create mfx decoder session;
+  //{{{  decodeHeader, set codec memModel
   mfxVideoParam mfxVideoParams = {0};
   mfxVideoParams.mfx.CodecId = MFX_CODEC_AVC;
   mfxVideoParams.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
@@ -270,42 +253,37 @@ void decodeVidMem (const string& filename) {
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "DecodeHeader failed - " + getMfxStatusString (status));
   //}}}
-  //{{{  validate video decode parameters
+  //{{{  validate video parameters, for encode
   status = mfxDEC.Query (&mfxVideoParams, &mfxVideoParams);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "Query failed - " + getMfxStatusString (status));
   //}}}
-  //{{{  query decoder surface info
+  //{{{  query decoder frame surface alloc info
   mfxFrameAllocRequest frameAllocRequest = {0};
   status = mfxDEC.QueryIOSurf (&mfxVideoParams, &frameAllocRequest);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "QueryIOSurf failed - " + getMfxStatusString (status));
-  //}}}
 
   // extract width, height, numSurfaces
   mfxU16 width = (mfxU16)MSDK_ALIGN32 (frameAllocRequest.Info.Width);
   mfxU16 height = (mfxU16)MSDK_ALIGN32 (frameAllocRequest.Info.Height);
   mfxU16 numSurfaces = frameAllocRequest.NumFrameSuggested;
-
-  //{{{  allocate decoder surfaces, NV12 format 12bits per pixel
-  mfxU8 bitsPerPixel = 12;
-  mfxU32 surfaceSize = (width * height * bitsPerPixel) / 8;
-
-  std::vector<mfxU8> surfaceBuffersData (surfaceSize * numSurfaces);
-  mfxU8* surfaceBuffers = surfaceBuffersData.data();
-
-  // allocate surface headers (mfxFrameSurface1) for decoder
-  std::vector<mfxFrameSurface1> mfxSurfaces (numSurfaces);
-  for (int i = 0; i < numSurfaces; i++) {
-    mfxSurfaces[i] = {0};
-    mfxSurfaces[i].Info = mfxVideoParams.mfx.FrameInfo;
-    mfxSurfaces[i].Data.Y = &surfaceBuffers[surfaceSize * i];
-    mfxSurfaces[i].Data.U = mfxSurfaces[i].Data.Y + width * height;
-    mfxSurfaces[i].Data.V = mfxSurfaces[i].Data.U + 1;
-    mfxSurfaces[i].Data.Pitch = width;
-    }
   //}}}
+  //{{{  allocate vidMem surfaces
+  frameAllocRequest.Type |= WILL_READ; // windows d3d11 only
+  mfxFrameAllocResponse frameAllocResponse;
+  status = mfxAllocator.Alloc (mfxAllocator.pthis, &frameAllocRequest, &frameAllocResponse);
+  if (status != MFX_ERR_NONE)
+    cLog::log (LOGINFO, "Alloc failed - " + getMfxStatusString (status));
+
+  std::vector <mfxFrameSurface1> mfxSurfaces(numSurfaces);
+  for (int i = 0; i < numSurfaces; i++) {
+    memset (&mfxSurfaces[i], 0, sizeof(mfxFrameSurface1));
+    mfxSurfaces[i].Info = mfxVideoParams.mfx.FrameInfo;
+    mfxSurfaces[i].Data.MemId = frameAllocResponse.mids[i]; // MID (memory id) represents one video NV12 surface
+    }
   cLog::log (LOGINFO, fmt::format ("surfaces allocated ok {}x{} {}", width, height, numSurfaces));
+  //}}}
 
   // init mediaSDK decoder
   status = mfxDEC.Init (&mfxVideoParams);
@@ -316,7 +294,7 @@ void decodeVidMem (const string& filename) {
   mfxU32 frameNumber = 0;
 
   mfxSyncPoint syncPoint;
-  mfxFrameSurface1* mfxOutSurface = NULL;
+  mfxFrameSurface1* mfxOutSurface = nullptr;
   while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE) || (status == MFX_ERR_MORE_DATA)) {
     //{{{  decode loop
     if (status == MFX_WRN_DEVICE_BUSY)
@@ -341,9 +319,26 @@ void decodeVidMem (const string& filename) {
     if (status == MFX_ERR_NONE)
       status = mfxSession.SyncOperation (syncPoint, 60000);
 
-    if (status == MFX_ERR_NONE)
+    if (status == MFX_ERR_NONE) {
       if (!(++frameNumber % 1000))
         cLog::log (LOGINFO, fmt::format ("decode frame:{}", frameNumber));
+
+      status = mfxAllocator.Lock (mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
+      if (status != MFX_ERR_NONE) {
+        //{{{  break on error
+        cLog::log (LOGINFO, "Lock failed - " + getMfxStatusString (status));
+        break;
+        }
+        //}}}
+      //status = WriteRawFrame (mfxOutSurface, fSink.get());
+      status = mfxAllocator.Unlock (mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
+      if (status != MFX_ERR_NONE) {
+        //{{{  break on error
+        cLog::log (LOGINFO, "Unlock failed - " + getMfxStatusString (status));
+        break;
+        }
+        //}}}
+      }
     }
     //}}}
   while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE)) {
@@ -359,9 +354,26 @@ void decodeVidMem (const string& filename) {
     if (status == MFX_ERR_NONE)
       status = mfxSession.SyncOperation (syncPoint, 60000);
 
-    if (status == MFX_ERR_NONE)
+    if (status == MFX_ERR_NONE) {
       if (!(++frameNumber % 1000))
         cLog::log (LOGINFO, fmt::format ("flush frame:{}", frameNumber));
+
+      status = mfxAllocator.Lock (mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
+      if (status != MFX_ERR_NONE) {
+        //{{{  break on error
+        cLog::log (LOGINFO, "Lock failed - " + getMfxStatusString (status));
+        break;
+        }
+        //}}}
+      //status = WriteRawFrame (mfxOutSurface, fSink.get());
+      status = mfxAllocator.Unlock(mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
+      if (status != MFX_ERR_NONE) {
+        //{{{  break on error
+        cLog::log (LOGINFO, "Unlock failed - " + getMfxStatusString (status));
+        break;
+        }
+        //}}}
+      }
     }
     //}}}
 
@@ -391,8 +403,8 @@ int main(int numArgs, char** args) {
   cLog::log (LOGNOTICE, "mfxtest");
 
   sessionTest();
-  decodeSysMem (filename);
   decodeVidMem (filename);
+  decodeSysMem (filename);
 
   this_thread::sleep_for (5000ms);
   return 0;
