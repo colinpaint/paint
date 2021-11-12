@@ -982,20 +982,20 @@
     #endif
 
     // Initialize Intel Media SDK Session
-    status = pSession->Init (impl, &ver);
+    //status = pSession->Init (impl, &ver);
+    //MSDK_CHECK_RESULT(status, MFX_ERR_NONE, status);
+
+    // Create DirectX device context
+    mfxHDL deviceHandle;
+    status = CreateHWDevice (*pSession, &deviceHandle, NULL, bCreateSharedHandles);
+    MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
+
+    // Provide device manager to Media SDK
+    status = pSession->SetHandle (DEVICE_MGR_TYPE, deviceHandle);
     MSDK_CHECK_RESULT(status, MFX_ERR_NONE, status);
 
     // If mfxFrameAllocator is provided it means we need to setup DirectX device and memory allocator
     if (pmfxAllocator) {
-      // Create DirectX device context
-      mfxHDL deviceHandle;
-      status = CreateHWDevice (*pSession, &deviceHandle, NULL, bCreateSharedHandles);
-      MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
-
-      // Provide device manager to Media SDK
-      status = pSession->SetHandle (DEVICE_MGR_TYPE, deviceHandle);
-      MSDK_CHECK_RESULT(status, MFX_ERR_NONE, status);
-
       pmfxAllocator->pthis = *pSession; // We use Media SDK session ID as the allocation identifier
       pmfxAllocator->Alloc = simple_alloc;
       pmfxAllocator->Free = simple_free;
@@ -1596,8 +1596,8 @@
     mfxStatus status = MFX_ERR_NONE;
 
     // Initialize Intel Media SDK Session
-    status = pSession->Init (impl, &ver);
-    MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
+    //status = pSession->Init (impl, &ver);
+    //MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
 
     // Create VA display
     mfxHDL displayHandle = { 0 };
