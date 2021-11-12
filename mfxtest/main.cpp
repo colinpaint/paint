@@ -403,8 +403,8 @@ int main(int numArgs, char** args) {
   cLog::log (LOGNOTICE, "mfxtest");
 
   sessionTest();
-  decodeVidMem (filename);
   decodeSysMem (filename);
+  decodeVidMem (filename);
 
   this_thread::sleep_for (5000ms);
   return 0;

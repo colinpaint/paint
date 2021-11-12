@@ -1594,11 +1594,13 @@ using namespace std;
     // Create VA display
     mfxHDL displayHandle = { 0 };
     status = CreateVAEnvDRM (&displayHandle);
-    MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
+    //if (status != MFX_ERR_NONE)
+    //  cLog::log (LOGINFO, "CreateHWDevice failed " + getMfxStatusString (status));
 
     // Provide VA display handle to Media SDK
     status = session->SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
-    MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
+    //if (status != MFX_ERR_NONE)
+    //  cLog::log (LOGINFO, "CreateHWDevice failed " + getMfxStatusString (status));
 
     // If mfxFrameAllocator is provided it means we need to setup  memory allocator
     if (mfxAllocator) {
@@ -1611,7 +1613,8 @@ using namespace std;
 
       // Since we are using video memory we must provide Media SDK with an external allocator
       status = session->SetFrameAllocator (mfxAllocator);
-      MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
+      //if (status != MFX_ERR_NONE)
+      //  cLog::log (LOGINFO, "CreateHWDevice failed " + getMfxStatusString (status));
       }
 
     return status;
