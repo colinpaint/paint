@@ -121,13 +121,18 @@ if (BUILD_TELLY)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
       target_link_libraries (${PROJECT_NAME} PUBLIC
                              utils libmfx avdevice avfilter avformat avcodec avutil swresample swscale)
+      target_link_libraries (${PROJECT_NAME} PRIVATE d3d9 Dxva2)
     else()
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (LIBMFX REQUIRED IMPORTED_TARGET libmfx)
+      pkg_check_modules (LIBVA REQUIRED IMPORTED_TARGET libva)
+      pkg_check_modules (LIBVADRM REQUIRED IMPORTED_TARGET libva-drm)
       pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
-      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG PkgConfig::LIBMFX)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG PkgConfig::LIBMFX)
+      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG 
+                                                          PkgConfig::LIBMFX PkgConfig::LIBVA)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG 
+                                                          PkgConfig::LIBMFX PkgConfig::LIBVA PkgConfig::LIBVADRM)
     endif()
 endif()
 
