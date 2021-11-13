@@ -5,18 +5,24 @@
 #include "cVideoRender.h"
 
 #ifdef _WIN32
+  //{{{  windows headers
   #define NOMINMAX
+
   #include <intrin.h>
+
   #ifdef D3D9
     #include <initguid.h>
     #include <d3d9.h>
     #include <dxva2api.h>
     #define DEVICE_MGR_TYPE MFX_HANDLE_DIRECT3D_DEVICE_MANAGER9
+
   #else
     #include <d3d11.h>
     #include <dxgi1_2.h>
     #define DEVICE_MGR_TYPE MFX_HANDLE_D3D11_DEVICE
+
   #endif
+  //}}}
 #else
   //{{{  vaapi headers
   #include <stdio.h>
@@ -24,10 +30,11 @@
   #include <unistd.h>
   #include <fcntl.h>
   #include <math.h>
-  #include <new>
   #include <stdlib.h>
   #include <assert.h>
   #include <sys/ioctl.h>
+  #include <new>
+
   #include <drm/drm.h>
   #include <drm/drm_fourcc.h>
 
@@ -51,7 +58,7 @@
 #include "../dvb/cDvbUtils.h"
 #include "../graphics/cGraphics.h"
 
-#include "mfxvideo++.h"
+#include <mfxvideo++.h>
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"

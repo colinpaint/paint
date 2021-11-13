@@ -5,7 +5,8 @@
 #include <string>
 #include <thread>
 
-#include "mfxvideo++.h"
+#include <mfxvideo++.h>
+
 #include "utils.h"
 
 #include "../utils/cLog.h"
