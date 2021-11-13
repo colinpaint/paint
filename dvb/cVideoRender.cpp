@@ -515,33 +515,33 @@ namespace {
         mfxU16      rw;
         } CustomMemId;
       //}}}
-      ID3D11Device* g_pD3D11Device;
-      ID3D11DeviceContext* g_pD3D11Ctx;
-      IDXGIFactory2* g_pDXGIFactory;
-      IDXGIAdapter* g_pAdapter;
+      ID3D11Device* D3D11Device;
+      ID3D11DeviceContext* D3D11Ctx;
+      IDXGIFactory2* DXGIFactory;
+      IDXGIAdapter* Adapter;
 
       //{{{
       IDXGIAdapter* GetIntelDeviceAdapterHandle (mfxSession session) {
 
-        mfxU32  adapterNum = 0;
         mfxIMPL impl;
-        MFXQueryIMPL(session, &impl);
-        mfxIMPL baseImpl = MFX_IMPL_BASETYPE(impl); // Extract Media SDK base implementation type
+        MFXQueryIMPL (session, &impl);
+        mfxIMPL baseImpl = MFX_IMPL_BASETYPE (impl); // Extract Media SDK base implementation type
 
         // get corresponding adapter number
-        for (mfxU8 i = 0; i < sizeof(implTypes)/sizeof(implTypes[0]); i++) {
+        mfxU32 adapterNum = 0;
+        for (mfxU8 i = 0; i < sizeof(implTypes) / sizeof(implTypes[0]); i++) {
           if (implTypes[i].impl == baseImpl) {
             adapterNum = implTypes[i].adapterID;
             break;
             }
           }
 
-        HRESULT hres = CreateDXGIFactory(__uuidof(IDXGIFactory2), (void**)(&g_pDXGIFactory) );
+        HRESULT hres = CreateDXGIFactory (__uuidof(IDXGIFactory2), (void**)(&DXGIFactory) );
         if (FAILED(hres))
           return NULL;
 
         IDXGIAdapter* adapter;
-        hres = g_pDXGIFactory->EnumAdapters(adapterNum, &adapter);
+        hres = DXGIFactory->EnumAdapters (adapterNum, &adapter);
         if (FAILED(hres))
           return NULL;
 
@@ -561,58 +561,52 @@ namespace {
           };
         D3D_FEATURE_LEVEL pFeatureLevelsOut;
 
-        g_pAdapter = GetIntelDeviceAdapterHandle(session);
-        if (NULL == g_pAdapter)
+        Adapter = GetIntelDeviceAdapterHandle(session);
+        if (!Adapter)
          return MFX_ERR_DEVICE_FAILED;
 
         UINT dxFlags = 0;
         //UINT dxFlags = D3D11_CREATE_DEVICE_DEBUG;
-
-        hres =  D3D11CreateDevice(  g_pAdapter,
-                                    D3D_DRIVER_TYPE_UNKNOWN,
-                                    NULL,
-                                    dxFlags,
-                                    FeatureLevels,
-                                    (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
-                                    D3D11_SDK_VERSION,
-                                    &g_pD3D11Device,
-                                    &pFeatureLevelsOut,
-                                    &g_pD3D11Ctx);
-        if (FAILED(hres))
+        hres = D3D11CreateDevice (Adapter,
+                                  D3D_DRIVER_TYPE_UNKNOWN, NULL, dxFlags,
+                                  FeatureLevels, (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
+                                  D3D11_SDK_VERSION,
+                                  &D3D11Device, &pFeatureLevelsOut, &D3D11Ctx);
+        if (FAILED (hres))
             return MFX_ERR_DEVICE_FAILED;
 
         // !!! must turn turn on multithreading for the DX11 context
-        //CComQIPtr<ID3D10Multithread> p_mt(g_pD3D11Ctx);
-        //ID3D10Multithread* p_mt = g_pD3D11Ctx;
+        //CComQIPtr<ID3D10Multithread> p_mt(D3D11Ctx);
+        //ID3D10Multithread* p_mt = D3D11Ctx;
         //if (p_mt)
         //  p_mt->SetMultithreadProtected(true);
         //else
         //  return MFX_ERR_DEVICE_FAILED;
 
-        *deviceHandle = (mfxHDL)g_pD3D11Device;
+        *deviceHandle = (mfxHDL)D3D11Device;
 
         return MFX_ERR_NONE;
         }
       //}}}
       //{{{
       void SetHWDeviceContext (ID3D11DeviceContext* devCtx) {
-        g_pD3D11Ctx = devCtx;
-        devCtx->GetDevice(&g_pD3D11Device);
+        D3D11Ctx = devCtx;
+        devCtx->GetDevice (&D3D11Device);
         }
       //}}}
       //{{{
       void CleanupHWDevice() {
-        g_pAdapter->Release();
+
+        D3D11Device->Release();
+        D3D11Ctx->Release();
+        DXGIFactory->Release();
+        Adapter->Release();
         }
       //}}}
 
-      //{{{
-      ID3D11DeviceContext* GetHWDeviceContext() {
-        return g_pD3D11Ctx;
-        }
-      //}}}
-      void ClearYUVSurfaceD3D (mfxMemId /*memId*/) {}// TBD
-      void ClearRGBSurfaceD3D (mfxMemId /*memId*/) {} // TBD
+      ID3D11DeviceContext* GetHWDeviceContext() { return D3D11Ctx; }
+      void ClearYUVSurfaceD3D (mfxMemId /*memId*/) {}
+      void ClearRGBSurfaceD3D (mfxMemId /*memId*/) {}
 
       //{{{
       mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
@@ -664,7 +658,7 @@ namespace {
           desc.StructureByteStride = 0;
           ID3D11Buffer* buffer = 0;
 
-          hRes = g_pD3D11Device->CreateBuffer(&desc, 0, &buffer);
+          hRes = D3D11Device->CreateBuffer(&desc, 0, &buffer);
           if (FAILED(hRes))
             return MFX_ERR_MEMORY_ALLOC;
           mids[0]->memId = reinterpret_cast<ID3D11Texture2D*>(buffer);
@@ -703,7 +697,7 @@ namespace {
 
           // Create surface textures
           for (size_t i = 0; i < request->NumFrameSuggested / desc.ArraySize; i++) {
-            hRes = g_pD3D11Device->CreateTexture2D (&desc, NULL, &pTexture2D);
+            hRes = D3D11Device->CreateTexture2D (&desc, NULL, &pTexture2D);
             if (FAILED (hRes))
               return MFX_ERR_MEMORY_ALLOC;
             mids[i]->memId = pTexture2D;
@@ -718,7 +712,7 @@ namespace {
 
           // Create surface staging textures
           for (size_t i = 0; i < request->NumFrameSuggested; i++) {
-            hRes = g_pD3D11Device->CreateTexture2D (&desc, NULL, &pTexture2D);
+            hRes = D3D11Device->CreateTexture2D (&desc, NULL, &pTexture2D);
             if (FAILED (hRes))
               return MFX_ERR_MEMORY_ALLOC;
             mids[i]->memIdStage = pTexture2D;
@@ -771,7 +765,7 @@ namespace {
         ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->memId;
         ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->memIdStage;
         if (!stage) {
-          hRes = g_pD3D11Ctx->Map (surface, 0, mapType, mapFlags, &lockedRect);
+          hRes = D3D11Ctx->Map (surface, 0, mapType, mapFlags, &lockedRect);
           desc.Format = DXGI_FORMAT_P8;
           }
         else {
@@ -779,10 +773,10 @@ namespace {
 
           // copy data only in case of user wants o read from stored surface
           if (memId->rw & WILL_READ)
-            g_pD3D11Ctx->CopySubresourceRegion (stage, 0, 0, 0, 0, surface, 0, NULL);
+            D3D11Ctx->CopySubresourceRegion (stage, 0, 0, 0, 0, surface, 0, NULL);
 
           do {
-            hRes = g_pD3D11Ctx->Map (stage, 0, mapType, mapFlags, &lockedRect);
+            hRes = D3D11Ctx->Map (stage, 0, mapType, mapFlags, &lockedRect);
             if (S_OK != hRes && DXGI_ERROR_WAS_STILL_DRAWING != hRes)
               return MFX_ERR_LOCK_MEMORY;
             } while (DXGI_ERROR_WAS_STILL_DRAWING == hRes);
@@ -843,12 +837,12 @@ namespace {
         ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->memId;
         ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->memIdStage;
         if (!stage)
-          g_pD3D11Ctx->Unmap (surface, 0);
+          D3D11Ctx->Unmap (surface, 0);
         else {
-          g_pD3D11Ctx->Unmap (stage, 0);
+          D3D11Ctx->Unmap (stage, 0);
           // copy data only in case of user wants to write to stored surface
           if (memId->rw & WILL_WRITE)
-            g_pD3D11Ctx->CopySubresourceRegion (surface, 0, 0, 0, 0, stage, 0, NULL);
+            D3D11Ctx->CopySubresourceRegion (surface, 0, 0, 0, 0, stage, 0, NULL);
           }
 
         if (ptr) {
