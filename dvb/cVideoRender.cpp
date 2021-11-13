@@ -1,27 +1,25 @@
 // cVideoRender.cpp
-#define D3D9
 //{{{  includes
 #include "cVideoRender.h"
 
 #ifdef _WIN32
-  //{{{  windows headers
   #define NOMINMAX
-
   #include <intrin.h>
-
+  #define D3D9
   #ifdef D3D9
+    //{{{  d3d9 headers
     #include <initguid.h>
     #include <d3d9.h>
     #include <dxva2api.h>
     #define DEVICE_MGR_TYPE MFX_HANDLE_DIRECT3D_DEVICE_MANAGER9
-
+    //}}}
   #else
+    //{{{  d3d11 headers
     #include <d3d11.h>
     #include <dxgi1_2.h>
     #define DEVICE_MGR_TYPE MFX_HANDLE_D3D11_DEVICE
-
+    //}}}
   #endif
-  //}}}
 #else
   //{{{  vaapi headers
   #include <stdio.h>
