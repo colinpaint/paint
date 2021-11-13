@@ -27,16 +27,18 @@
 
 #include "utils.h"
 
-#ifdef DX9_D3D
-  #include <initguid.h>
-  #pragma warning(disable : 4201) // Disable annoying DX warning
-  #include <d3d9.h>
-  #include <dxva2api.h>
-  #define DEVICE_MGR_TYPE MFX_HANDLE_DIRECT3D_DEVICE_MANAGER9
-#else
-  #include <d3d11.h>
-  #include <dxgi1_2.h>
-  #define DEVICE_MGR_TYPE MFX_HANDLE_D3D11_DEVICE
+#ifdef _WIN32
+  #ifdef DX9_D3D
+    #include <initguid.h>
+    #pragma warning(disable : 4201) // Disable annoying DX warning
+    #include <d3d9.h>
+    #include <dxva2api.h>
+    #define DEVICE_MGR_TYPE MFX_HANDLE_DIRECT3D_DEVICE_MANAGER9
+  #else
+    #include <d3d11.h>
+    #include <dxgi1_2.h>
+    #define DEVICE_MGR_TYPE MFX_HANDLE_D3D11_DEVICE
+  #endif
 #endif
 
 #include <string>
