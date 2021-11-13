@@ -939,20 +939,19 @@ namespace {
     mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator) {
 
       mfxStatus status = MFX_ERR_NONE;
-      // impl |= MFX_IMPL_VIA_D3D11;
-
-      // Create DirectX device context
-      mfxHDL deviceHandleOut;
-      status = CreateHWDevice (*session, &deviceHandleOut, NULL);
-      if (status != MFX_ERR_NONE)
-        cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
-
-      // Provide device manager to Media SDK
-      status = session->SetHandle (DEVICE_MGR_TYPE, deviceHandleOut);
-      if (status != MFX_ERR_NONE)
-        cLog::log (LOGERROR, "SetHandle failed " + getMfxStatusString (status));
 
       if (mfxAllocator) {
+        // Create DirectX device context
+        mfxHDL deviceHandleOut;
+        status = CreateHWDevice (*session, &deviceHandleOut, NULL);
+        if (status != MFX_ERR_NONE)
+          cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
+
+        // Provide device manager to Media SDK
+        status = session->SetHandle (DEVICE_MGR_TYPE, deviceHandleOut);
+        if (status != MFX_ERR_NONE)
+          cLog::log (LOGERROR, "SetHandle failed " + getMfxStatusString (status));
+
         // We use Media SDK session ID as the allocation identifier
         mfxAllocator->pthis = *session;
         mfxAllocator->Alloc = simpleAlloc;
@@ -1619,7 +1618,16 @@ public:
     cLog::log (LOGINFO, fmt::format ("cMfxVideoDecoder stream:{}", streamType));
 
     // MFX_IMPL_AUTO MFX_IMPL_HARDWARE MFX_IMPL_SOFTWARE MFX_IMPL_AUTO_ANY MFX_IMPL_VIA_D3D11
-    mfxIMPL mfxImpl = MFX_IMPL_AUTO;
+    #ifdef _WIN32
+      #ifdef D3d9
+        mfxIMPL mfxImpl = MFX_IMPL_AUTO;
+      #else
+        mfxIMPL mfxImpl = MFX_IMPL_AUTO | MFX_IMPL_VIA_D3D11;
+      #endif
+    #else
+      mfxIMPL mfxImpl = MFX_IMPL_AUTO;
+    #endif
+
     mfxVersion mfxVersion = {{0,1}};
 
     mfxStatus status = mMfxSession.Init (mfxImpl, &mfxVersion);
