@@ -2017,7 +2017,7 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
 
     if (pixels) {
       if (mTexture == nullptr) // create
-        mTexture = graphics.createTexture ({getWidth(), getHeight()}, pixels);
+        mTexture = graphics.createTexture (0, {getWidth(), getHeight()}, pixels);
       else
         mTexture->setPixels (pixels);
       mTexturePts = playPts;

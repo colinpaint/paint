@@ -36,7 +36,7 @@ namespace {
   class cOpenGlTexture : public cTexture {
   public:
     //{{{
-    cOpenGlTexture (cPoint size, uint8_t* pixels) : cTexture(size) {
+    cOpenGlTexture (uint8_t textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {
 
       glGenTextures (1, &mTextureId);
 
@@ -1466,7 +1466,7 @@ public:
   void shutdown() final;
 
   // create resources
-  cTexture* createTexture (cPoint size, uint8_t* pixels) final;
+  virtual cTexture* createTexture (uint8_t textureType, cPoint size, uint8_t* pixels) final;
 
   cQuad* createQuad (cPoint size) final;
   cQuad* createQuad (cPoint size, const cRect& rect) final;
@@ -1523,8 +1523,8 @@ void cOpenGlGraphics::shutdown() {
 
 // - resource creates
 //{{{
-cTexture* cOpenGlGraphics::createTexture (cPoint size, uint8_t* pixels) {
-  return new cOpenGlTexture (size, pixels);
+cTexture* cOpenGlGraphics::createTexture (uint8_t textureType, cPoint size, uint8_t* pixels) {
+  return new cOpenGlTexture (textureType, size, pixels);
   }
 //}}}
 
