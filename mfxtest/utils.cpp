@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //}}}
-#define DX9_D3D
+#define D3D9
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
@@ -28,8 +28,8 @@
 #include "utils.h"
 
 #ifdef _WIN32
-  #ifdef DX9_D3D
-    #include <initguid.h>
+  #include <initguid.h>
+  #ifdef D3D9
     #pragma warning(disable : 4201) // Disable annoying DX warning
     #include <d3d9.h>
     #include <dxva2api.h>
@@ -39,6 +39,23 @@
     #include <dxgi1_2.h>
     #define DEVICE_MGR_TYPE MFX_HANDLE_D3D11_DEVICE
   #endif
+#else
+  //{{{  vaapi headers
+  #include <stdio.h>
+  #include <string.h>
+  #include <unistd.h>
+  #include <fcntl.h>
+  #include <math.h>
+  #include <new>
+  #include <stdlib.h>
+  #include <assert.h>
+  #include <sys/ioctl.h>
+  #include <drm/drm.h>
+  #include <drm/drm_fourcc.h>
+
+  #include "va/va.h"
+  #include "va/va_drm.h"
+  //}}}
 #endif
 
 #include <string>
@@ -70,7 +87,7 @@
   std::map <mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
   std::map <mfxHDL, int> allocDecodeRefCount;
 
-  #ifdef DX9_D3D
+  #ifdef D3D9
     //{{{  directx9 implementation
     IDirect3DDeviceManager9* pDeviceManager9 = NULL;
     IDirect3DDevice9Ex* pD3DD9 = NULL;
@@ -98,7 +115,6 @@
       return adapterNum;
       }
     //}}}
-
     //{{{
     // Create HW device context
     mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND window) {
@@ -162,7 +178,6 @@
       return MFX_ERR_NONE;
       }
     //}}}
-
     IDirect3DDevice9Ex* GetDevice() { return pD3DD9; }
     //{{{
     // Free HW device context
@@ -286,44 +301,6 @@
       }
     //}}}
     //{{{
-    mfxStatus simple_alloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
-
-      mfxStatus status = MFX_ERR_NONE;
-
-      if (request->Type & MFX_MEMTYPE_SYSTEM_MEMORY)
-        return MFX_ERR_UNSUPPORTED;
-
-      if (allocDecodeResponses.find(pthis) != allocDecodeResponses.end() &&
-          MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
-          MFX_MEMTYPE_FROM_DECODE & request->Type) {
-        // Memory for this request was already allocated during manual allocation stage. Return saved response
-        // When decode acceleration device (DXVA) is created it requires a list of D3D surfaces to be passed.
-        // Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
-        // (No such restriction applies to Encode or VPP)
-        *response = allocDecodeResponses[pthis];
-        allocDecodeRefCount[pthis]++;
-        }
-      else {
-        status = _simple_alloc(request, response);
-
-        if (MFX_ERR_NONE == status) {
-          if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
-              MFX_MEMTYPE_FROM_DECODE & request->Type) {
-            // Decode alloc response handling
-            allocDecodeResponses[pthis] = *response;
-            allocDecodeRefCount[pthis]++;
-            }
-          else {
-            // Encode and VPP alloc response handling
-            allocResponses[response->mids] = pthis;
-            }
-          }
-        }
-
-      return status;
-      }
-    //}}}
-    //{{{
     mfxStatus _simple_free (mfxFrameAllocResponse* response) {
 
       if (response->mids) {
@@ -337,28 +314,6 @@
 
       delete [] response->mids;
       response->mids = 0;
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    mfxStatus simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
-
-      if (!response) return MFX_ERR_NULL_PTR;
-
-      if (allocResponses.find(response->mids) == allocResponses.end()) {
-        // Decode free response handling
-        if (--allocDecodeRefCount[pthis] == 0) {
-          _simple_free(response);
-          allocDecodeResponses.erase(pthis);
-          allocDecodeRefCount.erase(pthis);
-          }
-        }
-      else {
-        // Encode and VPP free response handling
-        allocResponses.erase(response->mids);
-        _simple_free(response);
-        }
 
       return MFX_ERR_NONE;
       }
@@ -519,16 +474,11 @@
 
       UINT dxFlags = 0;
       //UINT dxFlags = D3D11_CREATE_DEVICE_DEBUG;
-      hres =  D3D11CreateDevice(  g_pAdapter,
-                                  D3D_DRIVER_TYPE_UNKNOWN,
-                                  NULL,
-                                  dxFlags,
-                                  FeatureLevels,
-                                  (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
-                                  D3D11_SDK_VERSION,
-                                  &g_pD3D11Device,
-                                  &pFeatureLevelsOut,
-                                  &g_pD3D11Ctx);
+      hres = D3D11CreateDevice (g_pAdapter,
+                                D3D_DRIVER_TYPE_UNKNOWN, NULL, dxFlags,
+                                FeatureLevels, (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
+                                D3D11_SDK_VERSION,
+                                &g_pD3D11Device, &pFeatureLevelsOut, &g_pD3D11Ctx);
       if (FAILED(hres))
           return MFX_ERR_DEVICE_FAILED;
 
@@ -553,15 +503,14 @@
     //}}}
     //{{{
     void CleanupHWDevice() {
+      g_pD3D11Device->Release();
+      g_pD3D11Ctx->Release();
+      g_pDXGIFactory->Release();
       g_pAdapter->Release();
       }
     //}}}
+    ID3D11DeviceContext* GetHWDeviceContext() { return g_pD3D11Ctx; }
 
-    //{{{
-    ID3D11DeviceContext* GetHWDeviceContext() {
-      return g_pD3D11Ctx;
-      }
-    //}}}
     void ClearYUVSurfaceD3D (mfxMemId /*memId*/) {}// TBD
     void ClearRGBSurfaceD3D (mfxMemId /*memId*/) {} // TBD
 
@@ -682,43 +631,6 @@
       }
     //}}}
     //{{{
-    mfxStatus simple_alloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
-
-      mfxStatus sts = MFX_ERR_NONE;
-      if (request->Type & MFX_MEMTYPE_SYSTEM_MEMORY)
-         return MFX_ERR_UNSUPPORTED;
-
-      if (allocDecodeResponses.find(pthis) != allocDecodeResponses.end() &&
-          MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
-         MFX_MEMTYPE_FROM_DECODE & request->Type) {
-          // Memory for this request was already allocated during manual allocation stage. Return saved response
-          //   When decode acceleration device (DXVA) is created it requires a list of d3d surfaces to be passed.
-          //   Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
-          //   (No such restriction applies to Encode or VPP)
-          *response = allocDecodeResponses[pthis];
-          allocDecodeRefCount[pthis]++;
-        }
-      else {
-        sts = _simple_alloc(request, response);
-
-        if (MFX_ERR_NONE == sts) {
-          if ( MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
-               MFX_MEMTYPE_FROM_DECODE & request->Type) {
-            // Decode alloc response handling
-            allocDecodeResponses[pthis] = *response;
-            allocDecodeRefCount[pthis]++;
-            }
-          else {
-            // Encode and VPP alloc response handling
-            allocResponses[response->mids] = pthis;
-            }
-          }
-        }
-
-      return sts;
-      }
-    //}}}
-    //{{{
     mfxStatus _simple_free (mfxFrameAllocResponse* response) {
 
       if (response->mids) {
@@ -736,29 +648,6 @@
           }
         free (response->mids);
         response->mids = NULL;
-        }
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    mfxStatus simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
-
-      if (NULL == response)
-        return MFX_ERR_NULL_PTR;
-
-      if (allocResponses.find(response->mids) == allocResponses.end()) {
-        // Decode free response handling
-        if (--allocDecodeRefCount[pthis] == 0) {
-          _simple_free(response);
-          allocDecodeResponses.erase(pthis);
-          allocDecodeRefCount.erase(pthis);
-          }
-        }
-      else {
-        // Encode and VPP free response handling
-        allocResponses.erase(response->mids);
-        _simple_free(response);
         }
 
       return MFX_ERR_NONE;
@@ -894,6 +783,67 @@
   #endif
 
   //{{{
+  mfxStatus simple_alloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
+
+    mfxStatus status = MFX_ERR_NONE;
+
+    if (request->Type & MFX_MEMTYPE_SYSTEM_MEMORY)
+      return MFX_ERR_UNSUPPORTED;
+
+    if (allocDecodeResponses.find(pthis) != allocDecodeResponses.end() &&
+        MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
+        MFX_MEMTYPE_FROM_DECODE & request->Type) {
+      // Memory for this request was already allocated during manual allocation stage. Return saved response
+      // When decode acceleration device (DXVA) is created it requires a list of D3D surfaces to be passed.
+      // Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
+      // (No such restriction applies to Encode or VPP)
+      *response = allocDecodeResponses[pthis];
+      allocDecodeRefCount[pthis]++;
+      }
+    else {
+      status = _simple_alloc(request, response);
+
+      if (MFX_ERR_NONE == status) {
+        if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
+            MFX_MEMTYPE_FROM_DECODE & request->Type) {
+          // Decode alloc response handling
+          allocDecodeResponses[pthis] = *response;
+          allocDecodeRefCount[pthis]++;
+          }
+        else {
+          // Encode and VPP alloc response handling
+          allocResponses[response->mids] = pthis;
+          }
+        }
+      }
+
+    return status;
+    }
+  //}}}
+  //{{{
+  mfxStatus simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
+
+    if (!response) return MFX_ERR_NULL_PTR;
+
+    if (allocResponses.find(response->mids) == allocResponses.end()) {
+      // Decode free response handling
+      if (--allocDecodeRefCount[pthis] == 0) {
+        _simple_free(response);
+        allocDecodeResponses.erase(pthis);
+        allocDecodeRefCount.erase(pthis);
+        }
+      }
+    else {
+      // Encode and VPP free response handling
+      allocResponses.erase(response->mids);
+      _simple_free(response);
+      }
+
+    return MFX_ERR_NONE;
+    }
+  //}}}
+
+  //{{{
   mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator) {
 
     mfxStatus status = MFX_ERR_NONE;
@@ -929,27 +879,23 @@
   void ClearYUVSurfaceVMem (mfxMemId memId) { ClearYUVSurfaceD3D (memId); }
   void ClearRGBSurfaceVMem (mfxMemId memId) { ClearRGBSurfaceD3D (memId); }
 #else
-  //{{{  vaapi headers
-  #include <stdio.h>
-  #include <string.h>
-  #include <unistd.h>
-  #include <fcntl.h>
-  #include <math.h>
-  #include <new>
-  #include <stdlib.h>
-  #include <assert.h>
-  #include <sys/ioctl.h>
-  #include <drm/drm.h>
-  #include <drm/drm_fourcc.h>
-
-  #include "va/va.h"
-  #include "va/va_drm.h"
-  //}}}
   //{{{  vaapi implementation
   //{{{
   struct sharedResponse {
     mfxFrameAllocResponse mfxResponse;
     int refCount;
+    };
+  //}}}
+  //{{{
+  // VAAPI Allocator internal Mem ID
+  struct vaapiMemId {
+    VASurfaceID* m_surface;
+    VAImage m_image;
+
+    // variables for VAAPI Allocator inernal color convertion
+    unsigned int m_fourcc;
+    mfxU8* m_sys_buffer;
+    mfxU8* m_va_buffer;
     };
   //}}}
 
@@ -1013,6 +959,28 @@
       }
 
     return mfxRes;
+    }
+  //}}}
+  //{{{
+  //utiility function to convert MFX fourcc to VA format
+  unsigned int ConvertMfxFourccToVAFormat (mfxU32 fourcc) {
+
+    switch (fourcc) {
+      case MFX_FOURCC_NV12:
+        return VA_FOURCC_NV12;
+      case MFX_FOURCC_YUY2:
+        return VA_FOURCC_YUY2;
+      case MFX_FOURCC_YV12:
+        return VA_FOURCC_YV12;
+      case MFX_FOURCC_RGB4:
+        return VA_FOURCC_ARGB;
+      case MFX_FOURCC_P8:
+        return VA_FOURCC_P208;
+
+      default:
+        assert(!"unsupported fourcc");
+        return 0;
+      }
     }
   //}}}
 
@@ -1097,42 +1065,6 @@
       close(m_fd);
       }
     }
-  //}}}
-
-  //{{{
-  //utiility function to convert MFX fourcc to VA format
-  unsigned int ConvertMfxFourccToVAFormat (mfxU32 fourcc) {
-
-    switch (fourcc) {
-      case MFX_FOURCC_NV12:
-        return VA_FOURCC_NV12;
-      case MFX_FOURCC_YUY2:
-        return VA_FOURCC_YUY2;
-      case MFX_FOURCC_YV12:
-        return VA_FOURCC_YV12;
-      case MFX_FOURCC_RGB4:
-        return VA_FOURCC_ARGB;
-      case MFX_FOURCC_P8:
-        return VA_FOURCC_P208;
-
-      default:
-        assert(!"unsupported fourcc");
-        return 0;
-      }
-    }
-  //}}}
-
-  //{{{
-  // VAAPI Allocator internal Mem ID
-  struct vaapiMemId {
-    VASurfaceID* m_surface;
-    VAImage m_image;
-
-    // variables for VAAPI Allocator inernal color convertion
-    unsigned int m_fourcc;
-    mfxU8* m_sys_buffer;
-    mfxU8* m_va_buffer;
-    };
   //}}}
 
   //{{{
@@ -1244,49 +1176,6 @@
     }
   //}}}
   //{{{
-  mfxStatus simple_alloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
-
-    mfxStatus status = MFX_ERR_NONE;
-
-    if (0 == request || 0 == response || 0 == request->NumFrameSuggested)
-      return MFX_ERR_MEMORY_ALLOC;
-
-    if ((request->Type & (MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET |
-                          MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET)) == 0)
-      return MFX_ERR_UNSUPPORTED;
-
-    if (request->NumFrameSuggested <= allocDecodeResponses[pthis].mfxResponse.NumFrameActual
-        && MFX_MEMTYPE_EXTERNAL_FRAME & request->Type
-        && MFX_MEMTYPE_FROM_DECODE & request->Type
-        &&allocDecodeResponses[pthis].mfxResponse.NumFrameActual != 0) {
-      // Memory for this request was already allocated during manual allocation stage. Return saved response
-      //   When decode acceleration device (VAAPI) is created it requires a list of VAAPI surfaces to be passed.
-      //   Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
-      //   (No such restriction applies to Encode or VPP)
-      *response = allocDecodeResponses[pthis].mfxResponse;
-      allocDecodeResponses[pthis].refCount++;
-      }
-    else {
-      status = _simple_alloc (request, response);
-      if (MFX_ERR_NONE == status) {
-        if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
-            MFX_MEMTYPE_FROM_DECODE & request->Type) {
-          // Decode alloc response handling
-          allocDecodeResponses[pthis].mfxResponse = *response;
-          allocDecodeResponses[pthis].refCount++;
-          //allocDecodeRefCount[pthis]++;
-          }
-        else {
-          // Encode and VPP alloc response handling
-          allocResponses[response->mids] = pthis;
-          }
-        }
-      }
-
-    return status;
-    }
-  //}}}
-  //{{{
   mfxStatus _simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
 
     vaapiMemId* vaapi_mids = NULL;
@@ -1331,6 +1220,50 @@
       }
 
     return MFX_ERR_NONE;
+    }
+  //}}}
+
+  //{{{
+  mfxStatus simple_alloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
+
+    mfxStatus status = MFX_ERR_NONE;
+
+    if (0 == request || 0 == response || 0 == request->NumFrameSuggested)
+      return MFX_ERR_MEMORY_ALLOC;
+
+    if ((request->Type & (MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET |
+                          MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET)) == 0)
+      return MFX_ERR_UNSUPPORTED;
+
+    if (request->NumFrameSuggested <= allocDecodeResponses[pthis].mfxResponse.NumFrameActual
+        && MFX_MEMTYPE_EXTERNAL_FRAME & request->Type
+        && MFX_MEMTYPE_FROM_DECODE & request->Type
+        &&allocDecodeResponses[pthis].mfxResponse.NumFrameActual != 0) {
+      // Memory for this request was already allocated during manual allocation stage. Return saved response
+      //   When decode acceleration device (VAAPI) is created it requires a list of VAAPI surfaces to be passed.
+      //   Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
+      //   (No such restriction applies to Encode or VPP)
+      *response = allocDecodeResponses[pthis].mfxResponse;
+      allocDecodeResponses[pthis].refCount++;
+      }
+    else {
+      status = _simple_alloc (request, response);
+      if (MFX_ERR_NONE == status) {
+        if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
+            MFX_MEMTYPE_FROM_DECODE & request->Type) {
+          // Decode alloc response handling
+          allocDecodeResponses[pthis].mfxResponse = *response;
+          allocDecodeResponses[pthis].refCount++;
+          //allocDecodeRefCount[pthis]++;
+          }
+        else {
+          // Encode and VPP alloc response handling
+          allocResponses[response->mids] = pthis;
+          }
+        }
+      }
+
+    return status;
     }
   //}}}
   //{{{
@@ -1498,7 +1431,6 @@
 
   void ClearYUVSurfaceVAAPI (mfxMemId memId) { (void)memId; } // todo: clear VAAPI surface
   void ClearRGBSurfaceVAAPI (mfxMemId memId) { (void)memId; } // todo: clear VAAPI surface
-  //}}}
 
   //{{{
   mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator) {
@@ -1534,6 +1466,7 @@
   void Release() { CleanupVAEnvDRM(); }
   void ClearYUVSurfaceVMem (mfxMemId memId) { ClearYUVSurfaceVAAPI (memId); }
   void ClearRGBSurfaceVMem (mfxMemId memId) { ClearRGBSurfaceVAAPI (memId); }
+  //}}}
 #endif
 
 // utils

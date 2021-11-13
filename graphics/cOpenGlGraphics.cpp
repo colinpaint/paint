@@ -40,7 +40,6 @@ namespace {
 
       glGenTextures (1, &mTextureId);
       glBindTexture (GL_TEXTURE_2D, mTextureId);
-      glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
 
       if (textureType == 0) {
         glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
@@ -70,11 +69,10 @@ namespace {
     void setPixels (uint8_t* pixels) final {
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);
-      glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
 
       if (mTextureType == 0)
         glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-      else if (mTextureType == 1) 
+      else if (mTextureType == 1)
         glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
       else
         cLog::log (LOGINFO, fmt::format ("setPixels unknown textureType {} {}x{}", mTextureType, mSize.x, mSize.y));

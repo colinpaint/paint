@@ -1295,7 +1295,7 @@ namespace {
       else {
         // Encode and VPP free response handling
         allocResponses.erase (response->mids);
-        _simple_free (pthis,response);
+        _simpleFree (pthis,response);
         }
 
       return MFX_ERR_NONE;
@@ -1535,7 +1535,7 @@ namespace {
         mfxAllocator->Alloc = simpleAlloc;
         mfxAllocator->Free = simpleFree;
         mfxAllocator->Lock = simpleLock;
-        mfxAllocator->Unlock = simpleUunlock;
+        mfxAllocator->Unlock = simpleUnlock;
         mfxAllocator->GetHDL = simpleGethdl;
 
         // Since we are using video memory we must provide Media SDK with an external allocator
@@ -1955,8 +1955,8 @@ public:
 private:
   bool getShaderYuv() const { return mDecoderMask & cRender::kShaderYuv; }
 
-  const AVCodec* mAvCodec = nullptr;
   const uint16_t mDecoderMask;
+  const AVCodec* mAvCodec = nullptr;
 
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;
