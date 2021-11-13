@@ -1881,7 +1881,7 @@ public:
     char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
     if (frameType == 'I') {
       //{{{  pts seems wrong, frames decode in presentation order, only correct on Iframe
-      if ((mInterpolatedPts >= 0) && (pts != dts))
+      if ((mInterpolatedPts != -1) && (mInterpolatedPts != dts))
         cLog::log (LOGERROR, fmt::format ("lost:{} pts:{} dts:{} size:{}",
                                           frameType, getPtsString (pts), getPtsString (dts), pesSize));
       mInterpolatedPts = dts;

@@ -54,12 +54,12 @@ void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, i
   log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (mPage.mPts), mPage.mPesSize));
   logValue (pts, (float)pesSize);
 
-  if (pesSize < 2) {
-    //{{{  too short error, return
-    cLog::log (LOGERROR, fmt::format ("cSubtitle no data_id, subStream size:{}", pesSize));
+  //cLog::log (LOGERROR, fmt::format ("cSubtitle no data_id, subStream size:{}", pesSize));
+  if (pesSize < 8) { 
+    // strange empty pes, common on itv multiplex
+    log ("pes", "empty pes");
     return;
     }
-    //}}}
 
   uint8_t* pesPtr = pes;
   uint8_t data_identifier = *pesPtr++;
@@ -73,9 +73,10 @@ void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, i
     // check syncByte
     uint8_t syncByte = *pesPtr++;
     if (syncByte != 0x0f) {
-      //{{{  syncByte error, return
-      cLog::log (LOGERROR, fmt::format ("cSubtitle decode missing syncByte:{:x} offset:{} size:{}",
-                                        syncByte, int(pesPtr - pes), pesSize));
+      //{{{  syncByte error, return, common on bbc mulitplex
+      //cLog::log (LOGERROR, fmt::format ("cSubtitle decode missing syncByte:{:x} offset:{} size:{}",
+      //                                  syncByte, int(pesPtr - pes), pesSize));
+      log ("pes", fmt::format ("missing syncByte:{:x} offset:{} size:{}", syncByte, int(pesPtr - pes), pesSize));
       return;
       }
       //}}}
