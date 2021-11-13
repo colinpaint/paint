@@ -89,10 +89,9 @@ int main (int numArgs, char* args[]) {
   eLogLevel logLevel = LOGINFO;
   string platformName = "glfw";
   string graphicsName = "opengl";
-  bool renderFirstService = true;
+  bool renderFirstService = false;
   bool fullScreen = false;
   bool vsync = true;
-
   //{{{  parse command line args to params
   cDvbMultiplex useMultiplex = kDvbMultiplexes[0];
   string filename;
@@ -107,7 +106,7 @@ int main (int numArgs, char* args[]) {
     else if (param == "dx11") { platformName = "win32"; graphicsName = "dx11"; }
     else if (param == "full") { fullScreen = true; }
     else if (param == "free") { vsync = false; }
-    else if (param == "anal") { renderFirstService = false; }
+    else if (param == "first") { renderFirstService = true; }
     else {
       // assume param is filename unless it matches multiplex name
       filename = param;
@@ -138,7 +137,7 @@ int main (int numArgs, char* args[]) {
   ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
   ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f);
   cTvApp app (platform, graphics, mainFont, monoFont);
-  app.setDvbSource (cFileUtils::resolve (filename), useMultiplex, renderFirstService);
+  app.setDvbSource (cFileUtils::resolve (filename), useMultiplex, !filename.empty() || renderFirstService);
 
   platform.setResizeCallback (
     //{{{  resize lambda
