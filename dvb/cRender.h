@@ -40,11 +40,19 @@ public:
 
 class cRender {
 public:
-  cRender (const std::string name, uint8_t streamType);
+  static const uint16_t kFFmpeg = 0x0001;
+  static const uint16_t kMfx =    0x0002;
+  static const uint16_t kVidMem = 0x0004;
+
+  cRender (const std::string name, uint8_t streamType, uint16_t decoderMask);
   virtual ~cRender();
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   uint8_t getStreamType() const { return mStreamType; }
+
+  bool getFFmpeg() const { return mDecoderMask & kFFmpeg; }
+  bool getMfx() const { return mDecoderMask & kMfx; }
+  bool getVidMem() const { return mDecoderMask & kVidMem; }
 
   // miniLog
   cMiniLog& getLog() { return mMiniLog; }
@@ -76,6 +84,8 @@ protected:
 private:
   const std::string mName;
   const uint8_t mStreamType;
+  const uint16_t mDecoderMask;
+
   cMiniLog mMiniLog;
 
   // plot

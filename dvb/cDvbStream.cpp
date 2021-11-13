@@ -565,34 +565,34 @@ bool cDvbStream::cService::setEpg (bool record, tTimePoint startTime, tDurationS
 //}}}
 
 //{{{
-void cDvbStream::cService::toggleStream (size_t streamType, bool otherDecoder) {
+void cDvbStream::cService::toggleStream (size_t streamType, uint16_t decoderMask) {
 
   cStream& stream = getStream (streamType);
   if (stream.toggle()) {
     switch (streamType) {
       case eVid :
-        stream.setRender (new cVideoRender (getChannelName(), stream.getType(), otherDecoder));
+        stream.setRender (new cVideoRender (getChannelName(), stream.getType(), decoderMask));
         return;
 
       case eAud :
       case eAds :
-        stream.setRender (new cAudioRender (getChannelName(), stream.getType(), otherDecoder));
+        stream.setRender (new cAudioRender (getChannelName(), stream.getType(), decoderMask));
         return;
 
       case eSub :
-        stream.setRender (new cSubtitleRender (getChannelName(), stream.getType(), otherDecoder));
+        stream.setRender (new cSubtitleRender (getChannelName(), stream.getType(), decoderMask));
         return;
       }
     }
   }
 //}}}
 //{{{
-void cDvbStream::cService::toggleAll (bool otherDecoder) {
+void cDvbStream::cService::toggleAll (uint16_t decoderMask) {
 
   // improve to one on all off , if all off all on
-  toggleStream (eVid, otherDecoder);
-  toggleStream (eAud, otherDecoder);
-  toggleStream (eSub, otherDecoder);
+  toggleStream (eVid, decoderMask);
+  toggleStream (eAud, decoderMask);
+  toggleStream (eSub, decoderMask);
   }
 //}}}
 

@@ -236,8 +236,8 @@ public:
     void toggleShowEpg() { mShowEpg = !mShowEpg; }
     //}}}
 
-    void toggleStream (size_t streamType, bool otherDecoder);
-    void toggleAll (bool otherDecoder);
+    void toggleStream (size_t streamType, uint16_t decoderMask);
+    void toggleAll (uint16_t decoderMask);
 
     // record
     bool openFile (const std::string& fileName, uint16_t tsid);

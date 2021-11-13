@@ -1,6 +1,5 @@
 // cVideoRender.cpp
 #define D3D9
-#define VID_MEM
 //{{{  includes
 #include "cVideoRender.h"
 
@@ -1693,7 +1692,8 @@ protected:
 class cMfxVideoDecoder : public cDecoder {
 public:
   //{{{
-  cMfxVideoDecoder (uint8_t streamType) : cDecoder() {
+  cMfxVideoDecoder (uint8_t streamType, uint16_t decoderMask)
+     : cDecoder(), mDecoderMask(decoderMask) {
 
     cLog::log (LOGINFO, fmt::format ("cMfxVideoDecoder stream:{}", streamType));
 
@@ -1719,12 +1719,10 @@ public:
 
     mH264 = (streamType == 27);
     mMfxVideoParams.mfx.CodecId = mH264 ? MFX_CODEC_AVC : MFX_CODEC_MPEG2;
-
-    #ifdef VID_MEM
+    if (getVidMem())
       mMfxVideoParams.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
-    #else
+    else
       mMfxVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
-    #endif
     }
   //}}}
   //{{{
@@ -1792,10 +1790,10 @@ public:
       mHeight = (frameAllocRequest.Info.Height+31) & (~(mfxU16)31);
       mNumSurfaces = frameAllocRequest.NumFrameSuggested;
 
-      #ifdef VID_MEM
+      mfxFrameAllocResponse frameAllocResponse = {0};
+      if (getVidMem()) {
         // call allocater to allocate vidMem surfaces, all surfaces in one call
         frameAllocRequest.Type |= 0x1000; // WILL_READ windows d3d11 only
-        mfxFrameAllocResponse frameAllocResponse;
         status = mMfxAllocator.Alloc (mMfxAllocator.pthis, &frameAllocRequest, &frameAllocResponse);
         if (status != MFX_ERR_NONE) {
           //{{{  return on error
@@ -1803,16 +1801,16 @@ public:
           return pts;
           }
           //}}}
-      #endif
+        }
 
       for (size_t i = 0; i < mNumSurfaces; i++) {
         mMfxSurfaces.push_back (mfxFrameSurface1());
         memset (&mMfxSurfaces[i], 0, sizeof(mfxFrameSurface1));
         mMfxSurfaces[i].Info = mMfxVideoParams.mfx.FrameInfo;
 
-        #ifdef VID_MEM
+        if (getVidMem())
           mMfxSurfaces[i].Data.MemId = frameAllocResponse.mids[i]; // use mId
-        #else
+        else {
           size_t nv12SizeLuma = mWidth * mHeight;
           size_t nv12SizeAll = (nv12SizeLuma * 12) / 8;
 
@@ -1821,7 +1819,7 @@ public:
           mMfxSurfaces[i].Data.U = mMfxSurfaces[i].Data.Y + nv12SizeLuma;
           mMfxSurfaces[i].Data.V = mMfxSurfaces[i].Data.U + 1;
           mMfxSurfaces[i].Data.Pitch = mWidth;
-        #endif
+          }
         }
 
       cLog::log (LOGINFO, fmt::format ("sysMem surfaces allocated {}x{} {}", mWidth, mHeight, mNumSurfaces));
@@ -1859,24 +1857,24 @@ public:
         cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (mfxOutSurface->Data.TimeStamp, 90000/25);
 
         timePoint = chrono::system_clock::now();
-        #ifdef VID_MEM
+        if (getVidMem()) {
           //{{{  lock surface
           status = mMfxAllocator.Lock (mMfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
           if (status != MFX_ERR_NONE)
             cLog::log (LOGERROR, "Unlock failed - " + getMfxStatusString (status));
+          }
           //}}}
-        #endif
 
         videoFrame->init (mWidth, mHeight, mfxOutSurface->Data.Pitch, pesSize, decodeTime);
         videoFrame->setNv12 (mfxOutSurface->Data.Y);
 
-        #ifdef VID_MEM
+        if (getVidMem()) {
           //{{{  unlock surface
           status = mMfxAllocator.Unlock (mMfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
           if (status != MFX_ERR_NONE)
             cLog::log (LOGERROR, "Unlock failed - " + getMfxStatusString (status));
+          }
           //}}}
-        #endif
         videoFrame->setYuvRgbTime (
           chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
 
@@ -1891,6 +1889,7 @@ public:
   //}}}
 
 private:
+  bool getVidMem() const { return mDecoderMask & cRender::kVidMem; }
   //{{{
   int getFreeSurfaceIndex() {
 
@@ -1901,6 +1900,8 @@ private:
     return MFX_ERR_NOT_FOUND;
     }
   //}}}
+
+  const uint16_t mDecoderMask;
 
   MFXVideoSession mMfxSession;
   mfxVideoParam mMfxVideoParams = {0};
@@ -1921,8 +1922,8 @@ private:
 class cFFmpegVideoDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegVideoDecoder (uint8_t streamType)
-     : cDecoder(),
+  cFFmpegVideoDecoder (uint8_t streamType, uint16_t decoderMask)
+     : cDecoder(), mDecoderMask(decoderMask),
        mAvCodec (avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
     cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder stream:{}", streamType));
@@ -2023,6 +2024,7 @@ public:
 
 private:
   const AVCodec* mAvCodec = nullptr;
+  const uint16_t mDecoderMask;
 
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;
@@ -2036,13 +2038,15 @@ private:
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const std::string name, uint8_t streamType, bool otherDecoder)
-    : cRender(name, streamType), mMaxPoolSize(kVideoPoolSize) {
+cVideoRender::cVideoRender (const std::string name, uint8_t streamType, uint16_t decoderMask)
+    : cRender(name, streamType, decoderMask), mMaxPoolSize(kVideoPoolSize) {
 
-  if (otherDecoder)
-    mDecoder = new cMfxVideoDecoder (streamType);
+  if (getMfx())
+    mDecoder = new cMfxVideoDecoder (streamType, decoderMask);
+  else if (getFFmpeg())
+    mDecoder = new cFFmpegVideoDecoder (streamType, decoderMask);
   else
-    mDecoder = new cFFmpegVideoDecoder (streamType);
+    cLog::log (LOGERROR, fmt::format ("cVideoRender - no decoder {:x}", decoderMask));
   }
 //}}}
 //{{{

@@ -30,6 +30,7 @@
 using namespace std;
 //}}}
 
+const vector<string> kDecoderOptions = { "ffmpeg", "mfxSys", "mfxVid"};
 class cTellyView {
 public:
   //{{{
@@ -56,6 +57,15 @@ public:
         app.getPlatform().toggleFullScreen();
       }
       //}}}
+
+    ImGui::SameLine();
+    mDecoderOptions = interlockedButtons (kDecoderOptions, mDecoderOptions, {0.f,0.f}, true);
+    switch (mDecoderOptions) {
+      case 0 : mDecoderMask = cRender::kFFmpeg; break;
+      case 1 : mDecoderMask = cRender::kMfx; break;
+      case 2 : mDecoderMask = cRender::kMfx | cRender::kVidMem; break;
+      default:;
+      }
 
     if (app.getDvbStream()) {
       // dvbStream info
@@ -134,7 +144,7 @@ private:
     // overlay channel buttons
     for (auto& pair : dvbStream.getServiceMap())
       if (ImGui::Button (fmt::format ("{:{}s}", pair.second.getChannelName(), mMaxNameChars).c_str()))
-        pair.second.toggleAll (true);
+        pair.second.toggleAll (mDecoderMask);
     }
   //}}}
   //{{{
@@ -165,7 +175,7 @@ private:
                          service.getChannelName(), mMaxNameChars,
                          service.getProgramPid(), mMaxPgmChars,
                          service.getSid(), mMaxSidChars).c_str()))
-        service.toggleAll (true);
+        service.toggleAll (mDecoderMask);
 
       for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
        // iterate definedStreams
@@ -177,7 +187,7 @@ private:
                                          stream.getLabel(),
                                          stream.getPid(), mPidMaxChars[streamType], stream.getTypeName(),
                                          service.getSid()).c_str(), stream.isEnabled()))
-           service.toggleStream (streamType, true);
+           service.toggleStream (streamType, mDecoderMask);
           }
         }
 
@@ -398,6 +408,9 @@ private:
   std::array <size_t, 4> mPidMaxChars = { 3 };
 
   int mPlotIndex = 0;
+
+  uint8_t mDecoderOptions = 0;
+  uint16_t mDecoderMask = 0;
   //}}}
   };
 

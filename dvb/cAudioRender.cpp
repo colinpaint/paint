@@ -377,9 +377,9 @@ private:
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const std::string name, uint8_t streamType, bool otherDecoder) : cRender(name, streamType) {
+cAudioRender::cAudioRender (const std::string name, uint8_t streamType, uint16_t decoderMask) 
+    : cRender(name, streamType, decoderMask) {
 
-  (void)otherDecoder;
   mNumChannels = 2;
   mSampleRate = 48000;
   mSamplesPerFrame = 1024;

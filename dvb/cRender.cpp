@@ -21,8 +21,8 @@ constexpr int64_t kPtsPerFrame = 90000 / 25;
 
 // public:
 //{{{
-cRender::cRender (const std::string name, uint8_t streamType) 
-  : mName(name), mStreamType(streamType), mMiniLog ("log") {}
+cRender::cRender (const std::string name, uint8_t streamType, uint16_t decoderMask) 
+  : mName(name), mStreamType(streamType), mDecoderMask(decoderMask), mMiniLog ("log") {}
 //}}}
 //{{{
 cRender::~cRender() {}
