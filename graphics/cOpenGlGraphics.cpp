@@ -39,17 +39,25 @@ namespace {
     cOpenGlTexture (uint8_t textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {
 
       glGenTextures (1, &mTextureId);
-
       glBindTexture (GL_TEXTURE_2D, mTextureId);
-
       glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glGenerateMipmap (GL_TEXTURE_2D);
+      if (textureType == 0) {
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glGenerateMipmap (GL_TEXTURE_2D);
+        }
+      else if (mTextureType == 1) {
+        cLog::log (LOGINFO, fmt::format ("creating 8bit {} {}x{}", textureType, size.x, size.y));
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
+      else
+        cLog::log (LOGINFO, fmt::format ("creating unknown textureType {} {}x{}", textureType, size.x, size.y));
       }
     //}}}
     //{{{
@@ -63,7 +71,13 @@ namespace {
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);
       glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+      if (mTextureType == 0)
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+      else if (mTextureType == 1) 
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+      else
+        cLog::log (LOGINFO, fmt::format ("setPixels unknown textureType {} {}x{}", mTextureType, mSize.x, mSize.y));
       }
     //}}}
     };

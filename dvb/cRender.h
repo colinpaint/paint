@@ -40,9 +40,10 @@ public:
 
 class cRender {
 public:
-  static const uint16_t kFFmpeg = 0x0001;
-  static const uint16_t kMfx =    0x0002;
-  static const uint16_t kVidMem = 0x0004;
+  static const uint16_t kFFmpeg =    0x0001;
+  static const uint16_t kMfx =       0x0002;
+  static const uint16_t kVidMem =    0x0004;
+  static const uint16_t kShaderYuv = 0x0008;
 
   cRender (const std::string name, uint8_t streamType, uint16_t decoderMask);
   virtual ~cRender();
@@ -53,6 +54,7 @@ public:
   bool getFFmpeg() const { return mDecoderMask & kFFmpeg; }
   bool getMfx() const { return mDecoderMask & kMfx; }
   bool getVidMem() const { return mDecoderMask & kVidMem; }
+  bool getShaderYuv() const { return mDecoderMask & kShaderYuv; }
 
   // miniLog
   cMiniLog& getLog() { return mMiniLog; }

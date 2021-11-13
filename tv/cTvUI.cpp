@@ -30,7 +30,7 @@
 using namespace std;
 //}}}
 
-const vector<string> kDecoderOptions = { "ffmpeg", "mfxSys", "mfxVid"};
+const vector<string> kDecoderOptions = { "ffmpeg", "mfxSys", "mfxVid", "shadYuv"};
 class cTellyView {
 public:
   //{{{
@@ -64,6 +64,7 @@ public:
       case 0 : mDecoderMask = cRender::kFFmpeg; break;
       case 1 : mDecoderMask = cRender::kMfx; break;
       case 2 : mDecoderMask = cRender::kMfx | cRender::kVidMem; break;
+      case 3 : mDecoderMask = cRender::kFFmpeg | cRender::kShaderYuv; break;
       default:;
       }
 

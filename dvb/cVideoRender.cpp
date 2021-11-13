@@ -1594,6 +1594,7 @@ public:
 
   // sets
   virtual void setNv12 (uint8_t* nv12) = 0;
+  virtual void setY (void* context, uint8_t** data, int* linesize)  = 0;
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize)  = 0;
   void setYuvRgbTime (int64_t time) { mYuvRgbTime = time; }
 
@@ -1932,10 +1933,13 @@ public:
                                           videoFrame->getWidth(), videoFrame->getHeight(), AV_PIX_FMT_RGBA,
                                           SWS_BILINEAR, NULL, NULL, NULL);
             //}}}
-          videoFrame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
+          if (getShaderYuv())
+            videoFrame->setY (mSwsContext, avFrame->data, avFrame->linesize);
+          else
+            videoFrame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
           videoFrame->setYuvRgbTime (
             chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
-          //av_frame_unref (mAvFrame);
+          av_frame_unref (avFrame);  //???
 
           // add videoFrame
           addFrameCallback (videoFrame);
@@ -1952,6 +1956,8 @@ public:
   //}}}
 
 private:
+  bool getShaderYuv() const { return mDecoderMask & cRender::kShaderYuv; }
+
   const AVCodec* mAvCodec = nullptr;
   const uint16_t mDecoderMask;
 
@@ -2017,7 +2023,7 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
 
     if (pixels) {
       if (mTexture == nullptr) // create
-        mTexture = graphics.createTexture (0, {getWidth(), getHeight()}, pixels);
+        mTexture = graphics.createTexture (getShaderYuv() ? 1 : 0, {getWidth(), getHeight()}, pixels);
       else
         mTexture->setPixels (pixels);
       mTexturePts = playPts;
@@ -2249,6 +2255,16 @@ public:
       }
     }
   //}}}
+
+  virtual void setY (void* context, uint8_t** data, int* linesize) final {
+
+    (void)context;
+
+    // copy y of data to pixels
+    uint8_t* yBuffer = data[0];
+    int yStride = linesize[0];
+    memcpy (mPixels, yBuffer, mHeight * yStride);
+    }
 
   #if defined(INTEL_SSE2)
     //{{{
@@ -2499,6 +2515,12 @@ public:
     #endif
     }
   //}}}
+
+  virtual void setY (void* context, uint8_t** data, int* linesize) final {
+    (void)context;
+    (void)data;
+    (void)linesize;
+    }
 
   virtual void setNv12 (uint8_t* nv12) final {
     (void)nv12;
