@@ -1,11 +1,11 @@
 // cVideoRender.cpp
+#define D3D9
 //{{{  includes
 #include "cVideoRender.h"
 
 #ifdef _WIN32
   #define NOMINMAX
   #include <intrin.h>
-  #define D3D9
   #ifdef D3D9
     //{{{  d3d9 headers
     #include <initguid.h>
@@ -17,6 +17,9 @@
     //{{{  d3d11 headers
     #include <d3d11.h>
     #include <dxgi1_2.h>
+
+    #define WILL_READ  0x1000
+    #define WILL_WRITE 0x2000
     #define DEVICE_MGR_TYPE MFX_HANDLE_D3D11_DEVICE
     //}}}
   #endif
@@ -158,7 +161,6 @@ namespace {
 
     #ifdef D3D9
       //{{{  directx9
-      // vars
       IDirect3DDeviceManager9* deviceManager9 = NULL;
       IDirect3DDevice9Ex* d3DD9 = NULL;
       IDirect3D9Ex* d3D9 = NULL;
@@ -510,11 +512,12 @@ namespace {
       //{{{  directx11
       //{{{  CustomMemId
       typedef struct {
-        mfxMemId    memId;
-        mfxMemId    memIdStage;
-        mfxU16      rw;
+        mfxMemId  mMemId;
+        mfxMemId  mMemIdStage;
+        mfxU16    mRw;
         } CustomMemId;
       //}}}
+
       ID3D11Device* D3D11Device;
       ID3D11DeviceContext* D3D11Ctx;
       IDXGIFactory2* DXGIFactory;
@@ -638,7 +641,7 @@ namespace {
           mids[i] = (CustomMemId*)calloc(1, sizeof(CustomMemId));
           if (!mids[i])
             return MFX_ERR_MEMORY_ALLOC;
-          mids[i]->rw = request->Type & 0xF000; // Set intended read/write operation
+          mids[i]->mRw = request->Type & 0xF000; // Set intended read/write operation
           }
 
         request->Type = request->Type & 0x0FFF;
@@ -661,7 +664,7 @@ namespace {
           hRes = D3D11Device->CreateBuffer(&desc, 0, &buffer);
           if (FAILED(hRes))
             return MFX_ERR_MEMORY_ALLOC;
-          mids[0]->memId = reinterpret_cast<ID3D11Texture2D*>(buffer);
+          mids[0]->mMemId = reinterpret_cast<ID3D11Texture2D*>(buffer);
           }
 
         else {
@@ -700,7 +703,7 @@ namespace {
             hRes = D3D11Device->CreateTexture2D (&desc, NULL, &pTexture2D);
             if (FAILED (hRes))
               return MFX_ERR_MEMORY_ALLOC;
-            mids[i]->memId = pTexture2D;
+            mids[i]->mMemId = pTexture2D;
             }
 
           desc.ArraySize = 1;
@@ -715,7 +718,7 @@ namespace {
             hRes = D3D11Device->CreateTexture2D (&desc, NULL, &pTexture2D);
             if (FAILED (hRes))
               return MFX_ERR_MEMORY_ALLOC;
-            mids[i]->memIdStage = pTexture2D;
+            mids[i]->mMemIdStage = pTexture2D;
             }
           }
 
@@ -731,11 +734,11 @@ namespace {
           for (mfxU32 i = 0; i < response->NumFrameActual; i++) {
             if (response->mids[i]) {
               CustomMemId* mid = (CustomMemId*)response->mids[i];
-              ID3D11Texture2D* surface = (ID3D11Texture2D*)mid->memId;
+              ID3D11Texture2D* surface = (ID3D11Texture2D*)mid->mMemId;
               if (surface)
                 surface->Release();
 
-              ID3D11Texture2D* stage = (ID3D11Texture2D*)mid->memIdStage;
+              ID3D11Texture2D* stage = (ID3D11Texture2D*)mid->mMemIdStage;
               if (stage)
                 stage->Release();
 
@@ -762,8 +765,8 @@ namespace {
         D3D11_TEXTURE2D_DESC desc = {0};
         D3D11_MAPPED_SUBRESOURCE lockedRect = {0};
         CustomMemId* memId = (CustomMemId*)mid;
-        ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->memId;
-        ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->memIdStage;
+        ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
+        ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->mMemIdStage;
         if (!stage) {
           hRes = D3D11Ctx->Map (surface, 0, mapType, mapFlags, &lockedRect);
           desc.Format = DXGI_FORMAT_P8;
@@ -772,7 +775,7 @@ namespace {
           surface->GetDesc (&desc);
 
           // copy data only in case of user wants o read from stored surface
-          if (memId->rw & WILL_READ)
+          if (memId->mRw & WILL_READ)
             D3D11Ctx->CopySubresourceRegion (stage, 0, 0, 0, 0, surface, 0, NULL);
 
           do {
@@ -834,14 +837,14 @@ namespace {
         pthis;
 
         CustomMemId* memId = (CustomMemId*)mid;
-        ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->memId;
-        ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->memIdStage;
+        ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
+        ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->mMemIdStage;
         if (!stage)
           D3D11Ctx->Unmap (surface, 0);
         else {
           D3D11Ctx->Unmap (stage, 0);
           // copy data only in case of user wants to write to stored surface
-          if (memId->rw & WILL_WRITE)
+          if (memId->mRw & WILL_WRITE)
             D3D11Ctx->CopySubresourceRegion (surface, 0, 0, 0, 0, stage, 0, NULL);
           }
 
@@ -864,7 +867,7 @@ namespace {
         mfxHDLPair* pPair = (mfxHDLPair*)handle;
         CustomMemId* memId = (CustomMemId*)mid;
 
-        pPair->first  = memId->memId; // surface texture
+        pPair->first  = memId->mMemId; // surface texture
         pPair->second = 0;
 
         return MFX_ERR_NONE;
