@@ -96,7 +96,7 @@ if (BUILD_MFXTEST)
     if (MSVC)
       # use project libmfx
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
-      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils d3d11 dxgi d3d9 Dxva2)
+      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils d3d11 dxgi dxva2)
     else()
       # use installed libmfx,libv,libva-drm
       find_package (PkgConfig REQUIRED)
@@ -121,7 +121,7 @@ if (BUILD_TELLY)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
       target_link_libraries (${PROJECT_NAME} PUBLIC
                              utils libmfx avdevice avfilter avformat avcodec avutil swresample swscale)
-      target_link_libraries (${PROJECT_NAME} PRIVATE d3d9 dxva2)
+      target_link_libraries (${PROJECT_NAME} PRIVATE d3d11 dxgi dxva2)
     else()
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (LIBMFX REQUIRED IMPORTED_TARGET libmfx)
