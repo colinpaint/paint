@@ -265,7 +265,7 @@ void decodeVidMem (const string& filename, mfxIMPL mfxImpl) {
   mfxU16 numSurfaces = frameAllocRequest.NumFrameSuggested;
   //}}}
   //{{{  allocate vidMem surfaces
-  frameAllocRequest.Type |= WILL_READ; // windows d3d11 only
+  frameAllocRequest.Type |= WILL_READ; 
   mfxFrameAllocResponse frameAllocResponse;
   status = mfxAllocator.Alloc (mfxAllocator.pthis, &frameAllocRequest, &frameAllocResponse);
   if (status != MFX_ERR_NONE)

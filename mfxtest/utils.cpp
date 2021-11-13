@@ -29,6 +29,11 @@
 
 #ifdef _WIN32
   #include <initguid.h>
+  #include <intrin.h>
+
+  #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
+  #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
+
   #ifdef D3D9
     #pragma warning(disable : 4201) // Disable annoying DX warning
     #include <d3d9.h>
@@ -69,10 +74,6 @@
 
 #ifdef _WIN32
   //{{{  windows
-  #include <intrin.h>
-  #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
-  #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
-
   //{{{  implTypes
   const struct {
     mfxIMPL impl;       // actual implementation
@@ -199,34 +200,34 @@
     //{{{
     void ClearYUVSurfaceD3D (mfxMemId memId) {
 
-      IDirect3DSurface9* pSurface;
+      IDirect3DSurface9* surface;
 
       D3DSURFACE_DESC desc;
       D3DLOCKED_RECT locked;
 
-      pSurface = (IDirect3DSurface9*)memId;
-      pSurface->GetDesc(&desc);
-      pSurface->LockRect(&locked, 0, D3DLOCK_NOSYSLOCK);
+      surface = (IDirect3DSurface9*)memId;
+      surface->GetDesc(&desc);
+      surface->LockRect(&locked, 0, D3DLOCK_NOSYSLOCK);
 
       memset((mfxU8*)locked.pBits, 100, desc.Height*locked.Pitch);   // Y plane
       memset((mfxU8*)locked.pBits + desc.Height * locked.Pitch, 50, (desc.Height*locked.Pitch)/2);   // UV plane
 
-      pSurface->UnlockRect();
+      surface->UnlockRect();
       }
     //}}}
     //{{{
     void ClearRGBSurfaceD3D (mfxMemId memId) {
 
-      IDirect3DSurface9* pSurface;
+      IDirect3DSurface9* surface;
       D3DSURFACE_DESC desc;
       D3DLOCKED_RECT locked;
 
-      pSurface = (IDirect3DSurface9*)memId;
-      pSurface->GetDesc(&desc);
-      pSurface->LockRect(&locked, 0, D3DLOCK_NOSYSLOCK);
+      surface = (IDirect3DSurface9*)memId;
+      surface->GetDesc(&desc);
+      surface->LockRect(&locked, 0, D3DLOCK_NOSYSLOCK);
 
       memset((mfxU8*)locked.pBits, 100, desc.Height*locked.Pitch);   // RGBA
-      pSurface->UnlockRect();
+      surface->UnlockRect();
       }
     //}}}
 
@@ -326,20 +327,20 @@
 
       pthis; // To suppress warning for this unused parameter
 
-      IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
+      IDirect3DSurface9* surface = (IDirect3DSurface9*)mid;
 
-      if (pSurface == 0)
+      if (surface == 0)
         return MFX_ERR_INVALID_HANDLE;
       if (ptr == 0)
         return MFX_ERR_LOCK_MEMORY;
 
       D3DSURFACE_DESC desc;
-      HRESULT hr = pSurface->GetDesc (&desc);
+      HRESULT hr = surface->GetDesc (&desc);
       if (FAILED(hr))
         return MFX_ERR_LOCK_MEMORY;
 
       D3DLOCKED_RECT locked;
-      hr = pSurface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
+      hr = surface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
       if (FAILED(hr))
         return MFX_ERR_LOCK_MEMORY;
 
@@ -384,11 +385,11 @@
 
       pthis; // To suppress warning for this unused parameter
 
-      IDirect3DSurface9* pSurface = (IDirect3DSurface9*)mid;
-      if (pSurface == 0)
+      IDirect3DSurface9* surface = (IDirect3DSurface9*)mid;
+      if (surface == 0)
         return MFX_ERR_INVALID_HANDLE;
 
-      pSurface->UnlockRect();
+      surface->UnlockRect();
 
       if (NULL != ptr) {
         ptr->Pitch = 0;
@@ -424,78 +425,73 @@
       mfxU16      rw;
       } CustomMemId;
     //}}}
-    ID3D11Device* g_pD3D11Device;
-    ID3D11DeviceContext* g_pD3D11Ctx;
-    IDXGIFactory2* g_pDXGIFactory;
-    IDXGIAdapter* g_pAdapter;
+    ID3D11Device* D3D11Device;
+    ID3D11DeviceContext* D3D11Ctx;
 
     //{{{
     mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND /*hWnd*/) {
 
-      // get adapter 
-      mfxU32 adapterNum = 0;
+      // get adapter
       mfxIMPL impl;
-      MFXQueryIMPL(session, &impl);
-      mfxIMPL baseImpl = MFX_IMPL_BASETYPE(impl); // Extract Media SDK base implementation type
+      MFXQueryIMPL (session, &impl);
+      mfxIMPL baseImpl = MFX_IMPL_BASETYPE (impl); // Extract Media SDK base implementation type
 
       // get corresponding adapter number
+      mfxU32 adapterNum = 0;
       for (mfxU8 i = 0; i < sizeof(implTypes)/sizeof(implTypes[0]); i++) {
         if (implTypes[i].impl == baseImpl) {
           adapterNum = implTypes[i].adapterID;
           break;
           }
         }
-      if (FAILED (CreateDXGIFactory (__uuidof(IDXGIFactory2), (void**)(&g_pDXGIFactory))))
+
+      // get DXGI factory
+      IDXGIFactory2* DXGIFactory = nullptr;
+      if (FAILED (CreateDXGIFactory (__uuidof(IDXGIFactory2), (void**)(&DXGIFactory))))
         return MFX_ERR_DEVICE_FAILED;
-      if (FAILED (g_pDXGIFactory->EnumAdapters (adapterNum, &g_pAdapter)))
+
+      // get adapter
+      IDXGIAdapter* adapter = nullptr;
+      if (FAILED (DXGIFactory->EnumAdapters (adapterNum, &adapter)))
         return MFX_ERR_DEVICE_FAILED;
+      DXGIFactory->Release();
 
       // Window handle not required by DX11 since we do not showcase rendering.
       UINT dxFlags = 0; // D3D11_CREATE_DEVICE_DEBUG;
       static D3D_FEATURE_LEVEL FeatureLevels[] = {
         D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
       D3D_FEATURE_LEVEL featureLevelsOut;
-      if (FAILED (D3D11CreateDevice (g_pAdapter,
+      if (FAILED (D3D11CreateDevice (adapter,
                                      D3D_DRIVER_TYPE_UNKNOWN, NULL, dxFlags,
                                      FeatureLevels, (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
-                                     D3D11_SDK_VERSION,
-                                     &g_pD3D11Device, &featureLevelsOut, &g_pD3D11Ctx)))
+                                     D3D11_SDK_VERSION, &D3D11Device, &featureLevelsOut, &D3D11Ctx)))
         return MFX_ERR_DEVICE_FAILED;
+      adapter->Release();
 
       // set multiThreaded
       ID3D10Multithread* multithread = nullptr;
-      if (FAILED (g_pD3D11Device->QueryInterface (IID_PPV_ARGS (&multithread))))
+      if (FAILED (D3D11Device->QueryInterface (IID_PPV_ARGS (&multithread))))
         return MFX_ERR_DEVICE_FAILED;
       multithread->SetMultithreadProtected (true);
       multithread->Release();
 
-      *deviceHandle = (mfxHDL)g_pD3D11Device;
+      *deviceHandle = (mfxHDL)D3D11Device;
       return MFX_ERR_NONE;
       }
     //}}}
     //{{{
-    void SetHWDeviceContext (ID3D11DeviceContext* devCtx) {
-      g_pD3D11Ctx = devCtx;
-      devCtx->GetDevice(&g_pD3D11Device);
-      }
-    //}}}
-    //{{{
     void CleanupHWDevice() {
-      g_pD3D11Device->Release();
-      g_pD3D11Ctx->Release();
-      g_pDXGIFactory->Release();
-      g_pAdapter->Release();
+      D3D11Device->Release();
+      D3D11Ctx->Release();
       }
     //}}}
-    ID3D11DeviceContext* GetHWDeviceContext() { return g_pD3D11Ctx; }
+    ID3D11DeviceContext* GetHWDeviceContext() { return D3D11Ctx; }
 
     void ClearYUVSurfaceD3D (mfxMemId /*memId*/) {}// TBD
     void ClearRGBSurfaceD3D (mfxMemId /*memId*/) {} // TBD
 
     //{{{
     mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
-
-      HRESULT hRes;
 
       // Determine surface format
       DXGI_FORMAT format;
@@ -508,22 +504,18 @@
       else if (MFX_FOURCC_P8 == request->Info.FourCC ) //|| MFX_FOURCC_P8_TEXTURE == request->Info.FourCC
         format = DXGI_FORMAT_P8;
       else
-        format = DXGI_FORMAT_UNKNOWN;
-
-      if (DXGI_FORMAT_UNKNOWN == format)
         return MFX_ERR_UNSUPPORTED;
 
       // Allocate custom container to keep texture and stage buffers for each surface
       // Container also stores the intended read and/or write operation.
-      CustomMemId** mids = (CustomMemId**)calloc(request->NumFrameSuggested, sizeof(CustomMemId*));
+      CustomMemId** mids = (CustomMemId**)calloc (request->NumFrameSuggested, sizeof(CustomMemId*));
       if (!mids)
         return MFX_ERR_MEMORY_ALLOC;
 
       for (int i = 0; i < request->NumFrameSuggested; i++) {
         mids[i] = (CustomMemId*)calloc (1, sizeof(CustomMemId));
-        if (!mids[i]) {
+        if (!mids[i])
           return MFX_ERR_MEMORY_ALLOC;
-          }
         mids[i]->rw = request->Type & 0xF000; // Set intended read/write operation
         }
       request->Type = request->Type & 0x0FFF;
@@ -542,26 +534,25 @@
         desc.StructureByteStride = 0;
 
         ID3D11Buffer* buffer = 0;
-        hRes = g_pD3D11Device->CreateBuffer(&desc, 0, &buffer);
-        if (FAILED (hRes))
+        if (FAILED (D3D11Device->CreateBuffer(&desc, 0, &buffer)))
           return MFX_ERR_MEMORY_ALLOC;
         mids[0]->memId = reinterpret_cast<ID3D11Texture2D*>(buffer);
         }
       else {
         D3D11_TEXTURE2D_DESC desc = {0};
-        desc.Width              = request->Info.Width;
-        desc.Height             = request->Info.Height;
-        desc.MipLevels          = 1;
-        desc.ArraySize          = 1; // number of subresources is 1 in this case
-        desc.Format             = format;
-        desc.SampleDesc.Count   = 1;
-        desc.Usage              = D3D11_USAGE_DEFAULT;
-        desc.BindFlags          = D3D11_BIND_DECODER;
-        desc.MiscFlags          = 0;
-        //desc.MiscFlags            = D3D11_RESOURCE_MISC_SHARED;
+        desc.Width            = request->Info.Width;
+        desc.Height           = request->Info.Height;
+        desc.MipLevels        = 1;
+        desc.ArraySize        = 1; // number of subresources is 1 in this case
+        desc.Format           = format;
+        desc.SampleDesc.Count = 1;
+        desc.Usage            = D3D11_USAGE_DEFAULT;
+        desc.BindFlags        = D3D11_BIND_DECODER;
+        desc.MiscFlags        = 0;
+        //desc.MiscFlags        = D3D11_RESOURCE_MISC_SHARED;
 
         if ((MFX_MEMTYPE_FROM_VPPIN & request->Type) &&
-            (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format) ) {
+            (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format)) {
           desc.BindFlags = D3D11_BIND_RENDER_TARGET;
           if (desc.ArraySize > 2)
             return MFX_ERR_MEMORY_ALLOC;
@@ -574,32 +565,29 @@
             return MFX_ERR_MEMORY_ALLOC;
           }
 
-        if ( DXGI_FORMAT_P8 == desc.Format )
+        if (DXGI_FORMAT_P8 == desc.Format)
           desc.BindFlags = 0;
 
-        ID3D11Texture2D* pTexture2D;
-
         // Create surface textures
+        ID3D11Texture2D* texture2D;
         for (size_t i = 0; i < request->NumFrameSuggested / desc.ArraySize; i++) {
-          hRes = g_pD3D11Device->CreateTexture2D (&desc, NULL, &pTexture2D);
-          if (FAILED(hRes))
+          if (FAILED (D3D11Device->CreateTexture2D (&desc, NULL, &texture2D)))
             return MFX_ERR_MEMORY_ALLOC;
-          mids[i]->memId = pTexture2D;
+          mids[i]->memId = texture2D;
           }
 
-        desc.ArraySize      = 1;
-        desc.Usage          = D3D11_USAGE_STAGING;
+        desc.ArraySize = 1;
+        desc.Usage = D3D11_USAGE_STAGING;
         desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // | D3D11_CPU_ACCESS_WRITE;
-        desc.BindFlags      = 0;
-        desc.MiscFlags      = 0;
-        //desc.MiscFlags        = D3D11_RESOURCE_MISC_SHARED;
+        desc.BindFlags = 0;
+        desc.MiscFlags = 0;
+        //desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 
         // Create surface staging textures
         for (size_t i = 0; i < request->NumFrameSuggested; i++) {
-          hRes = g_pD3D11Device->CreateTexture2D (&desc, NULL, &pTexture2D);
-          if (FAILED(hRes))
+          if (FAILED (D3D11Device->CreateTexture2D (&desc, NULL, &texture2D)))
             return MFX_ERR_MEMORY_ALLOC;
-          mids[i]->memIdStage = pTexture2D;
+          mids[i]->memIdStage = texture2D;
           }
         }
 
@@ -615,15 +603,18 @@
         for (mfxU32 i = 0; i < response->NumFrameActual; i++) {
           if (response->mids[i]) {
             CustomMemId* mid = (CustomMemId*)response->mids[i];
-            ID3D11Texture2D* pSurface = (ID3D11Texture2D*)mid->memId;
-            ID3D11Texture2D* pStage = (ID3D11Texture2D*)mid->memIdStage;
-            if (pSurface)
-              pSurface->Release();
-            if (pStage)
-              pStage->Release();
+
+            ID3D11Texture2D* surface = (ID3D11Texture2D*)mid->memId;
+            if (surface)
+              surface->Release();
+
+            ID3D11Texture2D* stage = (ID3D11Texture2D*)mid->memIdStage;
+            if (stage)
+              stage->Release();
             free (mid);
             }
           }
+
         free (response->mids);
         response->mids = NULL;
         }
@@ -640,34 +631,31 @@
 
       D3D11_TEXTURE2D_DESC desc = {0};
       D3D11_MAPPED_SUBRESOURCE lockedRect = {0};
-
-      CustomMemId* memId = (CustomMemId*)mid;
-      ID3D11Texture2D* pSurface = (ID3D11Texture2D*)memId->memId;
-      ID3D11Texture2D* pStage = (ID3D11Texture2D*)memId->memIdStage;
-
       D3D11_MAP mapType  = D3D11_MAP_READ;
       UINT mapFlags = D3D11_MAP_FLAG_DO_NOT_WAIT;
-
-      if (NULL == pStage) {
-        hRes = g_pD3D11Ctx->Map(pSurface, 0, mapType, mapFlags, &lockedRect);
+      CustomMemId* memId = (CustomMemId*)mid;
+      ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->memId;
+      ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->memIdStage;
+      if (NULL == stage) {
+        hRes = D3D11Ctx->Map (surface, 0, mapType, mapFlags, &lockedRect);
         desc.Format = DXGI_FORMAT_P8;
         }
       else {
-        pSurface->GetDesc(&desc);
+        surface->GetDesc (&desc);
 
-       // copy data only in case of user wants o read from stored surface
+       // copy data only in case of user wants to read from stored surface
         if (memId->rw & WILL_READ)
-          g_pD3D11Ctx->CopySubresourceRegion(pStage, 0, 0, 0, 0, pSurface, 0, NULL);
+          D3D11Ctx->CopySubresourceRegion (stage, 0, 0, 0, 0, surface, 0, NULL);
 
         do {
-          hRes = g_pD3D11Ctx->Map(pStage, 0, mapType, mapFlags, &lockedRect);
+          hRes = D3D11Ctx->Map (stage, 0, mapType, mapFlags, &lockedRect);
           if (S_OK != hRes && DXGI_ERROR_WAS_STILL_DRAWING != hRes)
             return MFX_ERR_LOCK_MEMORY;
           } while (DXGI_ERROR_WAS_STILL_DRAWING == hRes);
         }
 
-      if (FAILED(hRes))
-          return MFX_ERR_LOCK_MEMORY;
+      if (FAILED (hRes))
+        return MFX_ERR_LOCK_MEMORY;
 
       switch (desc.Format) {
         //{{{
@@ -718,23 +706,26 @@
       pthis; // To suppress warning for this unused parameter
 
       CustomMemId* memId = (CustomMemId*)mid;
-      ID3D11Texture2D* pSurface = (ID3D11Texture2D*)memId->memId;
-      ID3D11Texture2D* pStage = (ID3D11Texture2D*)memId->memIdStage;
-
-      if (NULL == pStage)
-        g_pD3D11Ctx->Unmap (pSurface, 0);
-
+      ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->memId;
+      ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->memIdStage;
+      if (NULL == stage)
+        D3D11Ctx->Unmap (surface, 0);
       else {
-        g_pD3D11Ctx->Unmap (pStage, 0);
+        D3D11Ctx->Unmap (stage, 0);
         // copy data only in case of user wants to write to stored surface
         if (memId->rw & WILL_WRITE)
-          g_pD3D11Ctx->CopySubresourceRegion (pSurface, 0, 0, 0, 0, pStage, 0, NULL);
+          D3D11Ctx->CopySubresourceRegion (surface, 0, 0, 0, 0, stage, 0, NULL);
         }
 
       if (ptr) {
-        ptr->Pitch=0;
-        ptr->U=ptr->V=ptr->Y=0;
-        ptr->A=ptr->R=ptr->G=ptr->B=0;
+        ptr->Pitch = 0;
+        ptr->Y = 0;
+        ptr->U = 0;
+        ptr->V = 0;
+        ptr->A = 0;
+        ptr->R = 0;
+        ptr->G = 0;
+        ptr->B = 0;
         }
 
       return MFX_ERR_NONE;
@@ -744,18 +735,17 @@
     mfxStatus simpleGethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
 
       pthis; // To suppress warning for this unused parameter
+
       if (NULL == handle)
         return MFX_ERR_INVALID_HANDLE;
 
-      mfxHDLPair* pPair = (mfxHDLPair*)handle;
       CustomMemId* memId = (CustomMemId*)mid;
-
+      mfxHDLPair* pPair = (mfxHDLPair*)handle;
       pPair->first  = memId->memId; // surface texture
       pPair->second = 0;
 
       return MFX_ERR_NONE;
       }
-
     //}}}
     //}}}
   #endif
@@ -1616,37 +1606,37 @@ char mfxFrameTypeString (mfxU16 FrameType) {
 //}}}
 
 //{{{
-void ClearYUVSurfaceSysMem (mfxFrameSurface1* pSfc, mfxU16 width, mfxU16 height) {
+void ClearYUVSurfaceSysMem (mfxFrameSurface1* sfc, mfxU16 width, mfxU16 height) {
 
    // In case simulating direct access to frames we initialize the allocated surfaces with default pattern
-  memset (pSfc->Data.Y, 100, width * height);  // Y plane
-  memset (pSfc->Data.U, 50, (width * height)/2);  // UV plane
+  memset (sfc->Data.Y, 100, width * height);  // Y plane
+  memset (sfc->Data.U, 50, (width * height)/2);  // UV plane
   }
 //}}}
 //{{{
 // Get free raw frame surface
-int GetFreeSurfaceIndex (mfxFrameSurface1** pSurfacesPool, mfxU16 nPoolSize) {
+int GetFreeSurfaceIndex (mfxFrameSurface1** surfacesPool, mfxU16 nPoolSize) {
 
-  if (pSurfacesPool)
+  if (surfacesPool)
     for (mfxU16 i = 0; i < nPoolSize; i++)
-      if (0 == pSurfacesPool[i]->Data.Locked)
+      if (0 == surfacesPool[i]->Data.Locked)
         return i;
 
   return MFX_ERR_NOT_FOUND;
   }
 //}}}
 //{{{
-int GetFreeSurfaceIndex (const std::vector<mfxFrameSurface1>& pSurfacesPool) {
+int GetFreeSurfaceIndex (const std::vector<mfxFrameSurface1>& surfacesPool) {
 
-  auto it = std::find_if (pSurfacesPool.begin(), pSurfacesPool.end(),
+  auto it = std::find_if (surfacesPool.begin(), surfacesPool.end(),
                           [](const mfxFrameSurface1& surface) {
                             return 0 == surface.Data.Locked;
                             });
 
-  if (it == pSurfacesPool.end())
+  if (it == surfacesPool.end())
     return MFX_ERR_NOT_FOUND;
   else
-    return (int)(it - pSurfacesPool.begin());
+    return (int)(it - surfacesPool.begin());
   }
 //}}}
 
@@ -1713,7 +1703,7 @@ mfxStatus ReadPlaneData10Bit (mfxU16 w, mfxU16 h, mfxU16* buf, mfxU8* ptr,
 //}}}
 
 //{{{
-mfxStatus LoadRawFrame (mfxFrameSurface1* pSurface, FILE* fSource)
+mfxStatus LoadRawFrame (mfxFrameSurface1* surface, FILE* fSource)
 {
     if (!fSource) {
         // Simulate instantaneous access to 1000 "empty" frames.
@@ -1728,8 +1718,8 @@ mfxStatus LoadRawFrame (mfxFrameSurface1* pSurface, FILE* fSource)
     mfxU32 nBytesRead;
     mfxU16 w, h, i, pitch;
     mfxU8* ptr;
-    mfxFrameInfo* pInfo = &pSurface->Info;
-    mfxFrameData* pData = &pSurface->Data;
+    mfxFrameInfo* pInfo = &surface->Info;
+    mfxFrameData* pData = &surface->Data;
 
     if (pInfo->CropH > 0 && pInfo->CropW > 0) {
         w = pInfo->CropW;
@@ -1769,7 +1759,7 @@ mfxStatus LoadRawFrame (mfxFrameSurface1* pSurface, FILE* fSource)
 }
 //}}}
 //{{{
-mfxStatus LoadRaw10BitFrame (mfxFrameSurface1* pSurface, FILE* fSource) {
+mfxStatus LoadRaw10BitFrame (mfxFrameSurface1* surface, FILE* fSource) {
 
   if (!fSource) {
     // Simulate instantaneous access to 1000 "empty" frames.
@@ -1783,8 +1773,8 @@ mfxStatus LoadRaw10BitFrame (mfxFrameSurface1* pSurface, FILE* fSource) {
   mfxStatus status = MFX_ERR_NONE;
   mfxU16 w, h,pitch;
   mfxU8* ptr;
-  mfxFrameInfo* pInfo = &pSurface->Info;
-  mfxFrameData* pData = &pSurface->Data;
+  mfxFrameInfo* pInfo = &surface->Info;
+  mfxFrameData* pData = &surface->Data;
 
   if (pInfo->CropH > 0 && pInfo->CropW > 0) {
     w = pInfo->CropW;
@@ -1817,7 +1807,7 @@ mfxStatus LoadRaw10BitFrame (mfxFrameSurface1* pSurface, FILE* fSource) {
   }
 //}}}
 //{{{
-mfxStatus LoadRawRGBFrame (mfxFrameSurface1* pSurface, FILE* fSource) {
+mfxStatus LoadRawRGBFrame (mfxFrameSurface1* surface, FILE* fSource) {
 
   if (!fSource) {
     // Simulate instantaneous access to 1000 "empty" frames.
@@ -1830,7 +1820,7 @@ mfxStatus LoadRawRGBFrame (mfxFrameSurface1* pSurface, FILE* fSource) {
 
   mfxU32 nBytesRead;
   mfxU16 w, h;
-  mfxFrameInfo* pInfo = &pSurface->Info;
+  mfxFrameInfo* pInfo = &surface->Info;
 
   if (pInfo->CropH > 0 && pInfo->CropW > 0) {
     w = pInfo->CropW;
@@ -1842,7 +1832,7 @@ mfxStatus LoadRawRGBFrame (mfxFrameSurface1* pSurface, FILE* fSource) {
     }
 
   for (mfxU16 i = 0; i < h; i++) {
-    nBytesRead = (mfxU32)fread(pSurface->Data.B + i * pSurface->Data.Pitch,
+    nBytesRead = (mfxU32)fread(surface->Data.B + i * surface->Data.Pitch,
                            1, w * 4, fSource);
     if ((mfxU32)(w * 4) != nBytesRead)
       return MFX_ERR_MORE_DATA;
@@ -1884,9 +1874,9 @@ mfxStatus WriteSection (mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
   }
 //}}}
 //{{{
-mfxStatus WriteRawFrame (mfxFrameSurface1* pSurface, FILE* fSink) {
+mfxStatus WriteRawFrame (mfxFrameSurface1* surface, FILE* fSink) {
 
-  mfxFrameInfo* pInfo = &pSurface->Info;
+  mfxFrameInfo* pInfo = &surface->Info;
   mfxU16 h, w;
   if (pInfo->CropH > 0 && pInfo->CropW > 0) {
     w = pInfo->CropW;
@@ -1898,7 +1888,7 @@ mfxStatus WriteRawFrame (mfxFrameSurface1* pSurface, FILE* fSink) {
     }
 
   mfxStatus status = MFX_ERR_NONE;
-  mfxFrameData* pData = &pSurface->Data;
+  mfxFrameData* pData = &surface->Data;
   if ((pInfo->FourCC == MFX_FOURCC_RGB4) || (pInfo->FourCC == MFX_FOURCC_A2RGB10)) {
     mfxU16 pitch = pData->Pitch;
     mfxU8* ptr = std::min (std::min(pData->R, pData->G), pData->B);
@@ -1961,10 +1951,10 @@ mfxStatus WriteSection10Bit (mfxU8* plane, mfxU16 factor, mfxU16 chunksize,
 }
 //}}}
 //{{{
-mfxStatus WriteRaw10BitFrame (mfxFrameSurface1* pSurface, FILE* fSink) {
+mfxStatus WriteRaw10BitFrame (mfxFrameSurface1* surface, FILE* fSink) {
 
-  mfxFrameInfo* pInfo = &pSurface->Info;
-  mfxFrameData* pData = &pSurface->Data;
+  mfxFrameInfo* pInfo = &surface->Info;
+  mfxFrameData* pData = &surface->Data;
   mfxStatus status = MFX_ERR_NONE;
 
 
