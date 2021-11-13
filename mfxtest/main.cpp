@@ -15,7 +15,7 @@ using namespace std;
 //}}}
 
 //{{{
-void sessionTest() {
+void sessionTest (mfxIMPL mfxImpl) {
 
   cLog::log (LOGINFO, "--- sessionTest ----");
 
@@ -27,9 +27,7 @@ void sessionTest() {
   // MFX_IMPL_VIA_D3D9
   // MFX_IMPL_VIA_D3D11
   //}}}
-  mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY;
   mfxVersion mfxVersion = {{0,1}};
-
   MFXVideoSession mfxSession;
 
   //mfxStatus status = Initialize (mfxImpl, mfxVersion, &mfxSession, NULL);
@@ -52,14 +50,12 @@ void sessionTest() {
   }
 //}}}
 //{{{
-void decodeSysMem (const string& filename) {
+void decodeSysMem (const string& filename, mfxIMPL mfxImpl) {
 
   cLog::log (LOGINFO, "--- decodeSysMem ---- " + filename);
 
-  mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY; // | MFX_IMPL_VIA_D3D11;
-  mfxVersion mfxVersion = {{0,1}};
-
   // init mfxSession
+  mfxVersion mfxVersion = {{0,1}};
   MFXVideoSession mfxSession;
   mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
   if (status != MFX_ERR_NONE)
@@ -203,14 +199,12 @@ void decodeSysMem (const string& filename) {
   }
 //}}}
 //{{{
-void decodeVidMem (const string& filename) {
+void decodeVidMem (const string& filename, mfxIMPL mfxImpl) {
 
   cLog::log (LOGINFO, "--- decodeVidMem ----" + filename);
 
-  mfxIMPL mfxImpl = MFX_IMPL_AUTO_ANY; // | MFX_IMPL_VIA_D3D11;
-  mfxVersion mfxVersion = {{0,1}};
-
   // init mfxSession
+  mfxVersion mfxVersion = {{0,1}};
   MFXVideoSession mfxSession;
   mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
   if (status != MFX_ERR_NONE)
@@ -403,11 +397,11 @@ int main(int numArgs, char** args) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, "mfxtest");
 
-  sessionTest();
+  sessionTest (MFX_IMPL_AUTO_ANY| MFX_IMPL_VIA_D3D11);
   if (!filename.empty())
-    decodeVidMem (filename);
+    decodeVidMem (filename, MFX_IMPL_AUTO_ANY| MFX_IMPL_VIA_D3D11);
   if (!filename.empty())
-    decodeSysMem (filename);
+    decodeSysMem (filename, MFX_IMPL_AUTO_ANY| MFX_IMPL_VIA_D3D11);
 
   this_thread::sleep_for (5000ms);
   return 0;

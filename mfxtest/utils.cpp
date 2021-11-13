@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //}}}
-#define D3D9
+//#define D3D9
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
@@ -68,9 +68,11 @@
 //}}}
 
 #ifdef _WIN32
+  //{{{  windows
   #include <intrin.h>
   #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
   #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
+
   //{{{  implTypes
   const struct {
     mfxIMPL impl;       // actual implementation
@@ -88,7 +90,7 @@
   std::map <mfxHDL, int> allocDecodeRefCount;
 
   #ifdef D3D9
-    //{{{  directx9 implementation
+    //{{{  directx9
     IDirect3DDeviceManager9* pDeviceManager9 = NULL;
     IDirect3DDevice9Ex* pD3DD9 = NULL;
     IDirect3D9Ex* pD3D9 = NULL;
@@ -229,7 +231,7 @@
     //}}}
 
     //{{{
-    mfxStatus _simple_alloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
+    mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
       // Determine surface format (current simple implementation only supports NV12 and RGB4(32))
       D3DFORMAT format;
@@ -301,7 +303,7 @@
       }
     //}}}
     //{{{
-    mfxStatus _simple_free (mfxFrameAllocResponse* response) {
+    mfxStatus _simpleFree (mfxFrameAllocResponse* response) {
 
       if (response->mids) {
         for (mfxU32 i = 0; i < response->NumFrameActual; i++) {
@@ -320,7 +322,7 @@
     //}}}
 
     //{{{
-    mfxStatus simple_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+    mfxStatus simpleLock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
       pthis; // To suppress warning for this unused parameter
 
@@ -378,7 +380,7 @@
       }
     //}}}
     //{{{
-    mfxStatus simple_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+    mfxStatus simpleUnlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
       pthis; // To suppress warning for this unused parameter
 
@@ -401,7 +403,7 @@
     //}}}
 
     //{{{
-    mfxStatus simple_gethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
+    mfxStatus simpleGethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
 
       pthis; // To suppress warning for this unused parameter
 
@@ -414,7 +416,7 @@
     //}}}
     //}}}
   #else
-    //{{{  directx11 implementation
+    //{{{  directx11
     //{{{  CustomMemId
     typedef struct {
       mfxMemId    memId;
@@ -428,9 +430,10 @@
     IDXGIAdapter* g_pAdapter;
 
     //{{{
-    IDXGIAdapter* GetIntelDeviceAdapterHandle (mfxSession session) {
+    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND /*hWnd*/) {
 
-      mfxU32  adapterNum = 0;
+      // get adapter 
+      mfxU32 adapterNum = 0;
       mfxIMPL impl;
       MFXQueryIMPL(session, &impl);
       mfxIMPL baseImpl = MFX_IMPL_BASETYPE(impl); // Extract Media SDK base implementation type
@@ -442,56 +445,31 @@
           break;
           }
         }
-
-      HRESULT hres = CreateDXGIFactory(__uuidof(IDXGIFactory2), (void**)(&g_pDXGIFactory) );
-      if (FAILED(hres))
-        return NULL;
-
-      IDXGIAdapter* adapter;
-      hres = g_pDXGIFactory->EnumAdapters(adapterNum, &adapter);
-      if (FAILED(hres))
-        return NULL;
-
-      return adapter;
-      }
-    //}}}
-    //{{{
-    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND /*hWnd*/) {
+      if (FAILED (CreateDXGIFactory (__uuidof(IDXGIFactory2), (void**)(&g_pDXGIFactory))))
+        return MFX_ERR_DEVICE_FAILED;
+      if (FAILED (g_pDXGIFactory->EnumAdapters (adapterNum, &g_pAdapter)))
+        return MFX_ERR_DEVICE_FAILED;
 
       // Window handle not required by DX11 since we do not showcase rendering.
-      HRESULT hres = S_OK;
+      UINT dxFlags = 0; // D3D11_CREATE_DEVICE_DEBUG;
       static D3D_FEATURE_LEVEL FeatureLevels[] = {
-        D3D_FEATURE_LEVEL_11_1,
-        D3D_FEATURE_LEVEL_11_0,
-        D3D_FEATURE_LEVEL_10_1,
-        D3D_FEATURE_LEVEL_10_0
-        };
-      D3D_FEATURE_LEVEL pFeatureLevelsOut;
+        D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
+      D3D_FEATURE_LEVEL featureLevelsOut;
+      if (FAILED (D3D11CreateDevice (g_pAdapter,
+                                     D3D_DRIVER_TYPE_UNKNOWN, NULL, dxFlags,
+                                     FeatureLevels, (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
+                                     D3D11_SDK_VERSION,
+                                     &g_pD3D11Device, &featureLevelsOut, &g_pD3D11Ctx)))
+        return MFX_ERR_DEVICE_FAILED;
 
-      g_pAdapter = GetIntelDeviceAdapterHandle(session);
-      if (NULL == g_pAdapter)
-       return MFX_ERR_DEVICE_FAILED;
-
-      UINT dxFlags = 0;
-      //UINT dxFlags = D3D11_CREATE_DEVICE_DEBUG;
-      hres = D3D11CreateDevice (g_pAdapter,
-                                D3D_DRIVER_TYPE_UNKNOWN, NULL, dxFlags,
-                                FeatureLevels, (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
-                                D3D11_SDK_VERSION,
-                                &g_pD3D11Device, &pFeatureLevelsOut, &g_pD3D11Ctx);
-      if (FAILED(hres))
-          return MFX_ERR_DEVICE_FAILED;
-
-      // !!! must turn turn on multithreading for the DX11 context
-      //CComQIPtr<ID3D10Multithread> p_mt(g_pD3D11Ctx);
-      //ID3D10Multithread* p_mt = g_pD3D11Ctx;
-      //if (p_mt)
-      //  p_mt->SetMultithreadProtected (true);
-      //else
-      //  return MFX_ERR_DEVICE_FAILED;
+      // set multiThreaded
+      ID3D10Multithread* multithread = nullptr;
+      if (FAILED (g_pD3D11Device->QueryInterface (IID_PPV_ARGS (&multithread))))
+        return MFX_ERR_DEVICE_FAILED;
+      multithread->SetMultithreadProtected (true);
+      multithread->Release();
 
       *deviceHandle = (mfxHDL)g_pD3D11Device;
-
       return MFX_ERR_NONE;
       }
     //}}}
@@ -515,7 +493,7 @@
     void ClearRGBSurfaceD3D (mfxMemId /*memId*/) {} // TBD
 
     //{{{
-    mfxStatus _simple_alloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
+    mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
       HRESULT hRes;
 
@@ -631,7 +609,7 @@
       }
     //}}}
     //{{{
-    mfxStatus _simple_free (mfxFrameAllocResponse* response) {
+    mfxStatus _simpleFree (mfxFrameAllocResponse* response) {
 
       if (response->mids) {
         for (mfxU32 i = 0; i < response->NumFrameActual; i++) {
@@ -654,7 +632,7 @@
       }
     //}}}
     //{{{
-    mfxStatus simple_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+    mfxStatus simpleLock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
       pthis; // To suppress warning for this unused parameter
 
@@ -735,7 +713,7 @@
       }
     //}}}
     //{{{
-    mfxStatus simple_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+    mfxStatus simpleUnlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
       pthis; // To suppress warning for this unused parameter
 
@@ -763,7 +741,7 @@
       }
     //}}}
     //{{{
-    mfxStatus simple_gethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
+    mfxStatus simpleGethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
 
       pthis; // To suppress warning for this unused parameter
       if (NULL == handle)
@@ -783,7 +761,7 @@
   #endif
 
   //{{{
-  mfxStatus simple_alloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
+  mfxStatus simpleAlloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
     mfxStatus status = MFX_ERR_NONE;
 
@@ -791,8 +769,7 @@
       return MFX_ERR_UNSUPPORTED;
 
     if (allocDecodeResponses.find(pthis) != allocDecodeResponses.end() &&
-        MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
-        MFX_MEMTYPE_FROM_DECODE & request->Type) {
+        (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type) && (MFX_MEMTYPE_FROM_DECODE & request->Type)) {
       // Memory for this request was already allocated during manual allocation stage. Return saved response
       // When decode acceleration device (DXVA) is created it requires a list of D3D surfaces to be passed.
       // Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
@@ -801,19 +778,17 @@
       allocDecodeRefCount[pthis]++;
       }
     else {
-      status = _simple_alloc(request, response);
+      status = _simpleAlloc (request, response);
 
       if (MFX_ERR_NONE == status) {
-        if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
-            MFX_MEMTYPE_FROM_DECODE & request->Type) {
+        if ((MFX_MEMTYPE_EXTERNAL_FRAME & request->Type) && (MFX_MEMTYPE_FROM_DECODE & request->Type)) {
           // Decode alloc response handling
           allocDecodeResponses[pthis] = *response;
           allocDecodeRefCount[pthis]++;
           }
-        else {
+        else
           // Encode and VPP alloc response handling
           allocResponses[response->mids] = pthis;
-          }
         }
       }
 
@@ -821,22 +796,23 @@
     }
   //}}}
   //{{{
-  mfxStatus simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
+  mfxStatus simpleFree (mfxHDL pthis, mfxFrameAllocResponse* response) {
 
-    if (!response) return MFX_ERR_NULL_PTR;
+    if (!response)
+      return MFX_ERR_NULL_PTR;
 
     if (allocResponses.find(response->mids) == allocResponses.end()) {
       // Decode free response handling
       if (--allocDecodeRefCount[pthis] == 0) {
-        _simple_free(response);
-        allocDecodeResponses.erase(pthis);
-        allocDecodeRefCount.erase(pthis);
+        _simpleFree (response);
+        allocDecodeResponses.erase (pthis);
+        allocDecodeRefCount.erase (pthis);
         }
       }
     else {
       // Encode and VPP free response handling
-      allocResponses.erase(response->mids);
-      _simple_free(response);
+      allocResponses.erase (response->mids);
+      _simpleFree (response);
       }
 
     return MFX_ERR_NONE;
@@ -847,9 +823,8 @@
   mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator) {
 
     mfxStatus status = MFX_ERR_NONE;
-    // impl |= MFX_IMPL_VIA_D3D11;
 
-    // Create DirectX device context
+    // create DirectX device context
     mfxHDL deviceHandle;
     status = CreateHWDevice (*session, &deviceHandle, NULL);
     MSDK_CHECK_RESULT (status, MFX_ERR_NONE, status);
@@ -861,11 +836,11 @@
     // If mfxFrameAllocator is provided it means we need to setup DirectX device and memory allocator
     if (mfxAllocator) {
       mfxAllocator->pthis = *session; // We use Media SDK session ID as the allocation identifier
-      mfxAllocator->Alloc = simple_alloc;
-      mfxAllocator->Free = simple_free;
-      mfxAllocator->Lock = simple_lock;
-      mfxAllocator->Unlock = simple_unlock;
-      mfxAllocator->GetHDL = simple_gethdl;
+      mfxAllocator->Alloc = simpleAlloc;
+      mfxAllocator->Free = simpleFree;
+      mfxAllocator->Lock = simpleLock;
+      mfxAllocator->Unlock = simpleUnlock;
+      mfxAllocator->GetHDL = simpleGethdl;
 
       // Since we are using video memory we must provide Media SDK with an external allocator
       status = session->SetFrameAllocator (mfxAllocator);
@@ -878,8 +853,9 @@
   void Release() { CleanupHWDevice(); }
   void ClearYUVSurfaceVMem (mfxMemId memId) { ClearYUVSurfaceD3D (memId); }
   void ClearRGBSurfaceVMem (mfxMemId memId) { ClearRGBSurfaceD3D (memId); }
+  //}}}
 #else
-  //{{{  vaapi implementation
+  //{{{  vaapi
   //{{{
   struct sharedResponse {
     mfxFrameAllocResponse mfxResponse;
@@ -1068,7 +1044,7 @@
   //}}}
 
   //{{{
-  mfxStatus _simple_alloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
+  mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
     mfxStatus mfx_res = MFX_ERR_NONE;
     VAStatus va_res = VA_STATUS_SUCCESS;
@@ -1176,7 +1152,7 @@
     }
   //}}}
   //{{{
-  mfxStatus _simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
+  mfxStatus _simpleFree (mfxHDL pthis, mfxFrameAllocResponse* response) {
 
     vaapiMemId* vaapi_mids = NULL;
     VASurfaceID* surfaces = NULL;
@@ -1224,7 +1200,7 @@
   //}}}
 
   //{{{
-  mfxStatus simple_alloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
+  mfxStatus simpleAlloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
     mfxStatus status = MFX_ERR_NONE;
 
@@ -1247,7 +1223,7 @@
       allocDecodeResponses[pthis].refCount++;
       }
     else {
-      status = _simple_alloc (request, response);
+      status = _simpleAlloc (request, response);
       if (MFX_ERR_NONE == status) {
         if (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type &&
             MFX_MEMTYPE_FROM_DECODE & request->Type) {
@@ -1267,22 +1243,22 @@
     }
   //}}}
   //{{{
-  mfxStatus simple_free (mfxHDL pthis, mfxFrameAllocResponse* response) {
+  mfxStatus simpleFree (mfxHDL pthis, mfxFrameAllocResponse* response) {
 
     if (!response)
       return MFX_ERR_NULL_PTR;
 
-    if (allocResponses.find(response->mids) == allocResponses.end()) {
+    if (allocResponses.find (response->mids) == allocResponses.end()) {
       // Decode free response handling
       if (--allocDecodeResponses[pthis].refCount == 0) {
-        _simple_free(pthis,response);
-        allocDecodeResponses.erase(pthis);
+        _simpleFree (pthis,response);
+        allocDecodeResponses.erase (pthis);
         }
       }
     else {
       // Encode and VPP free response handling
-      allocResponses.erase(response->mids);
-      _simple_free(pthis,response);
+      allocResponses.erase (response->mids);
+      _simple_free (pthis, response);
       }
 
     return MFX_ERR_NONE;
@@ -1290,7 +1266,7 @@
   //}}}
 
   //{{{
-  mfxStatus simple_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+  mfxStatus simpleLock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
     (void) pthis;
     mfxStatus mfx_res = MFX_ERR_NONE;
@@ -1387,7 +1363,7 @@
     }
   //}}}
   //{{{
-  mfxStatus simple_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+  mfxStatus simpleUnlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
     (void) pthis;
     vaapiMemId* vaapi_mid = (vaapiMemId*) mid;
@@ -1416,7 +1392,7 @@
   //}}}
 
   //{{{
-  mfxStatus simple_gethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
+  mfxStatus simpleGethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
 
     (void) pthis;
     vaapiMemId* vaapi_mid = (vaapiMemId*) mid;
@@ -1449,11 +1425,11 @@
     // If mfxFrameAllocator is provided it means we need to setup  memory allocator
     if (mfxAllocator) {
       mfxAllocator->pthis = *session; // We use Media SDK session ID as the allocation identifier
-      mfxAllocator->Alloc = simple_alloc;
-      mfxAllocator->Free = simple_free;
-      mfxAllocator->Lock = simple_lock;
-      mfxAllocator->Unlock = simple_unlock;
-      mfxAllocator->GetHDL = simple_gethdl;
+      mfxAllocator->Alloc = simpleAlloc;
+      mfxAllocator->Free = simpleFree;
+      mfxAllocator->Lock = simpleLock;
+      mfxAllocator->Unlock = simpleUnlock;
+      mfxAllocator->GetHDL = simpleGethdl;
 
       // Since we are using video memory we must provide Media SDK with an external allocator
       status = session->SetFrameAllocator (mfxAllocator);
