@@ -1248,7 +1248,7 @@
     else {
       // Encode and VPP free response handling
       allocResponses.erase (response->mids);
-      _simple_free (pthis, response);
+      _simpleFree (pthis, response);
       }
 
     return MFX_ERR_NONE;
