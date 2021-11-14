@@ -478,7 +478,7 @@ namespace {
     //}}}
 
     //{{{
-    mfxStatus createHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND /*hWnd*/) {
+    mfxStatus createHWDevice (mfxSession session, mfxHDL* deviceHandle) {
 
       mfxIMPL impl;
       MFXQueryIMPL (session, &impl);
@@ -529,24 +529,27 @@ namespace {
     //}}}
 
     //{{{
-    mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator) {
+    mfxStatus mfxInitialize (mfxIMPL mfxImpl, mfxVersion mfxVersion, MFXVideoSession& session, mfxFrameAllocator* mfxAllocator) {
 
-      mfxStatus status = MFX_ERR_NONE;
+      mfxStatus status = session.Init (mfxImpl | MFX_IMPL_VIA_D3D11, &mfxVersion);
+      if (status != MFX_ERR_NONE)
+        return status;
 
-      // If mfxFrameAllocator is provided it means we need to setup DirectX device and memory allocator
+      // if mfxFrameAllocator, setup DirectX device and memory allocator
       if (mfxAllocator) {
         // create DirectX11 device,context
         mfxHDL deviceHandle;
-        status = createHWDevice (*session, &deviceHandle, NULL);
+        status = createHWDevice (session, &deviceHandle);
         if (status != MFX_ERR_NONE)
           return status;
 
         // set MediaSDK deviceManager
-        status = session->SetHandle (MFX_HANDLE_D3D11_DEVICE, deviceHandle);
+        status = session.SetHandle (MFX_HANDLE_D3D11_DEVICE, deviceHandle);
         if (status != MFX_ERR_NONE)
           return status;
 
-        mfxAllocator->pthis = *session; // We use Media SDK session ID as the allocation identifier
+        // use MediaSDK session ID as the allocation identifier
+        mfxAllocator->pthis = session;
         mfxAllocator->Alloc = simpleAlloc;
         mfxAllocator->Free = simpleFree;
         mfxAllocator->Lock = simpleLock;
@@ -554,20 +557,18 @@ namespace {
         mfxAllocator->GetHDL = simpleGethdl;
 
         // Since we are using video memory we must provide Media SDK with an external allocator
-        status = session->SetFrameAllocator (mfxAllocator);
+        status = session.SetFrameAllocator (mfxAllocator);
         }
 
       return status;
       }
     //}}}
     //{{{
-    void Release() {
+    void mfxRelease() {
       D3D11Device->Release();
       D3D11Ctx->Release();
       }
     //}}}
-    void ClearYUVSurfaceVMem (mfxMemId memId) { (void)memId; }
-    void ClearRGBSurfaceVMem (mfxMemId memId) { (void)memId; }
     //}}}
   #else
     //{{{  vaapi
@@ -733,7 +734,7 @@ namespace {
         else {
           VAContextID context_id = request->reserved[0];
           //from libva spec
-          int codedbuf_size = (request->Info.Width * request->Info.Height) * 400 / (16 * 16); 
+          int codedbuf_size = (request->Info.Width * request->Info.Height) * 400 / (16 * 16);
           for (numAllocated = 0; numAllocated < surfaces_num; numAllocated++) {
             VABufferID coded_buf;
             va_res = vaCreateBuffer (m_va_dpy, context_id, VAEncCodedBufferType,
@@ -1070,7 +1071,7 @@ namespace {
       }
     //}}}
     //{{{
-    mfxStatus CreateVAEnvDRM (mfxHDL* displayHandle) {
+    mfxStatus createVAEnvDRM (mfxHDL* displayHandle) {
 
       VAStatus va_res = VA_STATUS_SUCCESS;
       mfxStatus status = MFX_ERR_NONE;
@@ -1108,32 +1109,35 @@ namespace {
     //}}}
 
     //{{{
-    mfxStatus Initialize (MFXVideoSession* session, mfxFrameAllocator* mfxAllocator) {
+    mfxStatus mfxInitialize (mfxIMPL mfxImpl, mfxVersion mfxVersion, MFXVideoSession& session, mfxFrameAllocator* mfxAllocator) {
 
-      mfxStatus status = MFX_ERR_NONE;
+      mfxStatus status = session.Init (mfxImpl, &mfxVersion);
+      if (status != MFX_ERR_NONE)
+        return status;
 
       // Create VA display
-      mfxHDL displayHandle = { 0 };
-      status = CreateVAEnvDRM (&displayHandle);
+      mfxHDL displayHandle = {0};
+      status = createVAEnvDRM (&displayHandle);
       if (status != MFX_ERR_NONE)
         cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
 
-      // Provide VA display handle to Media SDK
-      status = session->SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
+      // provide VA display handle to MediaSDK
+      status = session.SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
       if (status != MFX_ERR_NONE)
         cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
 
       // If mfxFrameAllocator is provided it means we need to setup  memory allocator
       if (mfxAllocator) {
-        mfxAllocator->pthis = *session; // We use Media SDK session ID as the allocation identifier
+        // use MediaSDK session ID as the allocation identifier
+        mfxAllocator->pthis = session;
         mfxAllocator->Alloc = simpleAlloc;
         mfxAllocator->Free = simpleFree;
         mfxAllocator->Lock = simpleLock;
         mfxAllocator->Unlock = simpleUnlock;
         mfxAllocator->GetHDL = simpleGethdl;
 
-        // Since we are using video memory we must provide Media SDK with an external allocator
-        status = session->SetFrameAllocator (mfxAllocator);
+        // using vidMem, set MediaSDK external allocator
+        status = session.SetFrameAllocator (mfxAllocator);
         if (status != MFX_ERR_NONE)
           cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
         }
@@ -1142,7 +1146,7 @@ namespace {
       }
     //}}}
     //{{{
-    void Release() {
+    void mfxRelease() {
 
       if (m_va_dpy)
         vaTerminate (m_va_dpy);
@@ -1150,8 +1154,6 @@ namespace {
         close (m_fd);
       }
     //}}}
-    //void ClearYUVSurfaceVMem (mfxMemId memId) { (void)memId;} // todo: clear VAAPI surface
-    //void ClearRGBSurfaceVMem (mfxMemId memId) { (void)memId;} // todo: clear VAAPI surface
     //}}}
   #endif
   }
@@ -1212,19 +1214,18 @@ public:
 
     cLog::log (LOGINFO, fmt::format ("cMfxVideoDecoder stream:{}", streamType));
 
-    mfxIMPL mfxImpl = MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11;
-    mfxVersion mfxVersion = {{0,1}};
-
-    mfxStatus status = mMfxSession.Init (mfxImpl, &mfxVersion);
+    mfxStatus status = mfxInitialize (MFX_IMPL_HARDWARE, {{0,1}}, mMfxSession, &mMfxAllocator);
     if (status != MFX_ERR_NONE)
-      cLog::log (LOGERROR, "session.Init failed " + getMfxStatusString (status));
-    Initialize (&mMfxSession, &mMfxAllocator);
+      cLog::log (LOGERROR, fmt::format ("cMfxVideoDecoder Initialize failed {} {}",
+                                        streamType, getMfxStatusString (status)));
 
     // query selected implementation and version
+    mfxIMPL mfxImpl;
     status = mMfxSession.QueryIMPL (&mfxImpl);
     if (status != MFX_ERR_NONE)
       cLog::log (LOGERROR, "QueryIMPL failed " + getMfxStatusString (status));
 
+    mfxVersion mfxVersion;
     status = mMfxSession.QueryVersion (&mfxVersion);
     if (status != MFX_ERR_NONE)
       cLog::log (LOGERROR, "QueryVersion failed " + getMfxStatusString (status));
@@ -1249,7 +1250,7 @@ public:
       delete surface.Data.Y;
 
     mMfxSurfaces.clear();
-    Release();
+    mfxRelease();
     }
   //}}}
 
