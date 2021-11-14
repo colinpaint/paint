@@ -96,140 +96,9 @@
     IDirect3DDevice9Ex* pD3DD9 = NULL;
     IDirect3D9Ex* pD3D9 = NULL;
     HANDLE pDeviceHandle = NULL;
+
     IDirectXVideoAccelerationService* pDXVAServiceDec = NULL;
     IDirectXVideoAccelerationService* pDXVAServiceVPP = NULL;
-
-    //{{{
-    mfxU32 GetIntelDeviceAdapterNum (mfxSession session) {
-
-      mfxIMPL impl;
-      MFXQueryIMPL (session, &impl);
-      mfxIMPL baseImpl = MFX_IMPL_BASETYPE(impl); // Extract Media SDK base implementation type
-
-      // get corresponding adapter number
-      mfxU32  adapterNum = 0;
-      for (mfxU8 i = 0; i < sizeof(implTypes)/sizeof(implTypes[0]); i++) {
-        if (implTypes[i].impl == baseImpl) {
-          adapterNum = implTypes[i].adapterID;
-          break;
-          }
-        }
-
-      return adapterNum;
-      }
-    //}}}
-    //{{{
-    // Create HW device context
-    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND window) {
-
-      // If window handle is not supplied, get window handle from coordinate 0,0
-      if (window == NULL) {
-        POINT point = {0, 0};
-        window = WindowFromPoint(point);
-        }
-
-      HRESULT hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &pD3D9);
-      if (!pD3D9 || FAILED(hr))
-        return MFX_ERR_DEVICE_FAILED;
-
-      RECT rc;
-      GetClientRect(window, &rc);
-
-      D3DPRESENT_PARAMETERS D3DPP;
-      memset (&D3DPP, 0, sizeof(D3DPP));
-      D3DPP.Windowed = true;
-      D3DPP.hDeviceWindow = window;
-      D3DPP.Flags = D3DPRESENTFLAG_VIDEO;
-      D3DPP.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-      D3DPP.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
-      D3DPP.BackBufferCount = 1;
-      D3DPP.BackBufferFormat = D3DFMT_A8R8G8B8;
-      D3DPP.BackBufferWidth = rc.right - rc.left;
-      D3DPP.BackBufferHeight = rc.bottom - rc.top;
-      D3DPP.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-      D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
-      hr = pD3D9->CreateDeviceEx (GetIntelDeviceAdapterNum(session),
-                                  D3DDEVTYPE_HAL,
-                                  window,
-                                  D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
-                                  &D3DPP,
-                                  NULL,
-                                  &pD3DD9);
-      if (FAILED(hr))
-        return MFX_ERR_NULL_PTR;
-
-      hr = pD3DD9->ResetEx (&D3DPP, NULL);
-      if (FAILED(hr))
-        return MFX_ERR_UNDEFINED_BEHAVIOR;
-
-      hr = pD3DD9->Clear (0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-      if (FAILED(hr))
-        return MFX_ERR_UNDEFINED_BEHAVIOR;
-
-      UINT resetToken = 0;
-
-      hr = DXVA2CreateDirect3DDeviceManager9 (&resetToken, &pDeviceManager9);
-      if (FAILED(hr))
-        return MFX_ERR_NULL_PTR;
-
-      hr = pDeviceManager9->ResetDevice (pD3DD9, resetToken);
-      if (FAILED(hr))
-        return MFX_ERR_UNDEFINED_BEHAVIOR;
-
-      *deviceHandle = (mfxHDL)pDeviceManager9;
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    IDirect3DDevice9Ex* GetDevice() { return pD3DD9; }
-    //{{{
-    // Free HW device context
-    void CleanupHWDevice() {
-
-      if (pDeviceManager9)
-        pDeviceManager9->CloseDeviceHandle(pDeviceHandle);
-
-      MSDK_SAFE_RELEASE(pDXVAServiceDec);
-      MSDK_SAFE_RELEASE(pDXVAServiceVPP);
-      MSDK_SAFE_RELEASE(pDeviceManager9);
-      MSDK_SAFE_RELEASE(pD3DD9);
-      MSDK_SAFE_RELEASE(pD3D9);
-      }
-    //}}}
-
-    //{{{
-    void ClearYUVSurfaceD3D (mfxMemId memId) {
-
-      IDirect3DSurface9* surface;
-
-      D3DSURFACE_DESC desc;
-      D3DLOCKED_RECT locked;
-
-      surface = (IDirect3DSurface9*)memId;
-      surface->GetDesc(&desc);
-      surface->LockRect(&locked, 0, D3DLOCK_NOSYSLOCK);
-
-      memset((mfxU8*)locked.pBits, 100, desc.Height*locked.Pitch);   // Y plane
-      memset((mfxU8*)locked.pBits + desc.Height * locked.Pitch, 50, (desc.Height*locked.Pitch)/2);   // UV plane
-
-      surface->UnlockRect();
-      }
-    //}}}
-    //{{{
-    void ClearRGBSurfaceD3D (mfxMemId memId) {
-
-      IDirect3DSurface9* surface;
-      D3DSURFACE_DESC desc;
-      D3DLOCKED_RECT locked;
-
-      surface = (IDirect3DSurface9*)memId;
-      surface->GetDesc(&desc);
-      surface->LockRect(&locked, 0, D3DLOCK_NOSYSLOCK);
-
-      memset((mfxU8*)locked.pBits, 100, desc.Height*locked.Pitch);   // RGBA
-      surface->UnlockRect();
-      }
-    //}}}
 
     //{{{
     mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
@@ -321,7 +190,6 @@
       return MFX_ERR_NONE;
       }
     //}}}
-
     //{{{
     mfxStatus simpleLock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
@@ -402,7 +270,6 @@
       return MFX_ERR_NONE;
       }
     //}}}
-
     //{{{
     mfxStatus simpleGethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
 
@@ -415,6 +282,103 @@
       return MFX_ERR_NONE;
       }
     //}}}
+
+    //{{{
+    mfxU32 GetIntelDeviceAdapterNum (mfxSession session) {
+
+      mfxIMPL impl;
+      MFXQueryIMPL (session, &impl);
+      mfxIMPL baseImpl = MFX_IMPL_BASETYPE(impl); // Extract Media SDK base implementation type
+
+      // get corresponding adapter number
+      mfxU32  adapterNum = 0;
+      for (mfxU8 i = 0; i < sizeof(implTypes)/sizeof(implTypes[0]); i++) {
+        if (implTypes[i].impl == baseImpl) {
+          adapterNum = implTypes[i].adapterID;
+          break;
+          }
+        }
+
+      return adapterNum;
+      }
+    //}}}
+    //{{{
+    // Create HW device context
+    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND window) {
+
+      // If window handle is not supplied, get window handle from coordinate 0,0
+      if (window == NULL) {
+        POINT point = {0, 0};
+        window = WindowFromPoint(point);
+        }
+
+      HRESULT hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &pD3D9);
+      if (!pD3D9 || FAILED(hr))
+        return MFX_ERR_DEVICE_FAILED;
+
+      RECT rc;
+      GetClientRect(window, &rc);
+
+      D3DPRESENT_PARAMETERS D3DPP;
+      memset (&D3DPP, 0, sizeof(D3DPP));
+      D3DPP.Windowed = true;
+      D3DPP.hDeviceWindow = window;
+      D3DPP.Flags = D3DPRESENTFLAG_VIDEO;
+      D3DPP.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+      D3DPP.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+      D3DPP.BackBufferCount = 1;
+      D3DPP.BackBufferFormat = D3DFMT_A8R8G8B8;
+      D3DPP.BackBufferWidth = rc.right - rc.left;
+      D3DPP.BackBufferHeight = rc.bottom - rc.top;
+      D3DPP.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+      D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
+      hr = pD3D9->CreateDeviceEx (GetIntelDeviceAdapterNum(session),
+                                  D3DDEVTYPE_HAL,
+                                  window,
+                                  D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
+                                  &D3DPP,
+                                  NULL,
+                                  &pD3DD9);
+      if (FAILED(hr))
+        return MFX_ERR_NULL_PTR;
+
+      hr = pD3DD9->ResetEx (&D3DPP, NULL);
+      if (FAILED(hr))
+        return MFX_ERR_UNDEFINED_BEHAVIOR;
+
+      hr = pD3DD9->Clear (0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+      if (FAILED(hr))
+        return MFX_ERR_UNDEFINED_BEHAVIOR;
+
+      UINT resetToken = 0;
+
+      hr = DXVA2CreateDirect3DDeviceManager9 (&resetToken, &pDeviceManager9);
+      if (FAILED(hr))
+        return MFX_ERR_NULL_PTR;
+
+      hr = pDeviceManager9->ResetDevice (pD3DD9, resetToken);
+      if (FAILED(hr))
+        return MFX_ERR_UNDEFINED_BEHAVIOR;
+
+      *deviceHandle = (mfxHDL)pDeviceManager9;
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    // Free HW device context
+    void CleanupHWDevice() {
+
+      if (pDeviceManager9)
+        pDeviceManager9->CloseDeviceHandle(pDeviceHandle);
+
+      MSDK_SAFE_RELEASE(pDXVAServiceDec);
+      MSDK_SAFE_RELEASE(pDXVAServiceVPP);
+      MSDK_SAFE_RELEASE(pDeviceManager9);
+      MSDK_SAFE_RELEASE(pD3DD9);
+      MSDK_SAFE_RELEASE(pD3D9);
+      }
+    //}}}
     //}}}
   #else
     //{{{  directx11
@@ -425,70 +389,9 @@
       mfxU16      rw;
       } CustomMemId;
     //}}}
+
     ID3D11Device* D3D11Device;
     ID3D11DeviceContext* D3D11Ctx;
-
-    //{{{
-    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND /*hWnd*/) {
-
-      // get adapter
-      mfxIMPL impl;
-      MFXQueryIMPL (session, &impl);
-      mfxIMPL baseImpl = MFX_IMPL_BASETYPE (impl); // Extract Media SDK base implementation type
-
-      // get corresponding adapter number
-      mfxU32 adapterNum = 0;
-      for (mfxU8 i = 0; i < sizeof(implTypes)/sizeof(implTypes[0]); i++) {
-        if (implTypes[i].impl == baseImpl) {
-          adapterNum = implTypes[i].adapterID;
-          break;
-          }
-        }
-
-      // get DXGI factory
-      IDXGIFactory2* DXGIFactory = nullptr;
-      if (FAILED (CreateDXGIFactory (__uuidof(IDXGIFactory2), (void**)(&DXGIFactory))))
-        return MFX_ERR_DEVICE_FAILED;
-
-      // get adapter
-      IDXGIAdapter* adapter = nullptr;
-      if (FAILED (DXGIFactory->EnumAdapters (adapterNum, &adapter)))
-        return MFX_ERR_DEVICE_FAILED;
-      DXGIFactory->Release();
-
-      // Window handle not required by DX11 since we do not showcase rendering.
-      UINT dxFlags = 0; // D3D11_CREATE_DEVICE_DEBUG;
-      static D3D_FEATURE_LEVEL FeatureLevels[] = {
-        D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
-      D3D_FEATURE_LEVEL featureLevelsOut;
-      if (FAILED (D3D11CreateDevice (adapter,
-                                     D3D_DRIVER_TYPE_UNKNOWN, NULL, dxFlags,
-                                     FeatureLevels, (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
-                                     D3D11_SDK_VERSION, &D3D11Device, &featureLevelsOut, &D3D11Ctx)))
-        return MFX_ERR_DEVICE_FAILED;
-      adapter->Release();
-
-      // set multiThreaded
-      ID3D10Multithread* multithread = nullptr;
-      if (FAILED (D3D11Device->QueryInterface (IID_PPV_ARGS (&multithread))))
-        return MFX_ERR_DEVICE_FAILED;
-      multithread->SetMultithreadProtected (true);
-      multithread->Release();
-
-      *deviceHandle = (mfxHDL)D3D11Device;
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    void CleanupHWDevice() {
-      D3D11Device->Release();
-      D3D11Ctx->Release();
-      }
-    //}}}
-    ID3D11DeviceContext* GetHWDeviceContext() { return D3D11Ctx; }
-
-    void ClearYUVSurfaceD3D (mfxMemId /*memId*/) {}// TBD
-    void ClearRGBSurfaceD3D (mfxMemId /*memId*/) {} // TBD
 
     //{{{
     mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
@@ -747,6 +650,64 @@
       return MFX_ERR_NONE;
       }
     //}}}
+
+    //{{{
+    mfxStatus CreateHWDevice (mfxSession session, mfxHDL* deviceHandle, HWND /*hWnd*/) {
+
+      // get adapter
+      mfxIMPL impl;
+      MFXQueryIMPL (session, &impl);
+      mfxIMPL baseImpl = MFX_IMPL_BASETYPE (impl); // Extract Media SDK base implementation type
+
+      // get corresponding adapter number
+      mfxU32 adapterNum = 0;
+      for (mfxU8 i = 0; i < sizeof(implTypes)/sizeof(implTypes[0]); i++) {
+        if (implTypes[i].impl == baseImpl) {
+          adapterNum = implTypes[i].adapterID;
+          break;
+          }
+        }
+
+      // get DXGI factory
+      IDXGIFactory2* DXGIFactory = nullptr;
+      if (FAILED (CreateDXGIFactory (__uuidof(IDXGIFactory2), (void**)(&DXGIFactory))))
+        return MFX_ERR_DEVICE_FAILED;
+
+      // get adapter
+      IDXGIAdapter* adapter = nullptr;
+      if (FAILED (DXGIFactory->EnumAdapters (adapterNum, &adapter)))
+        return MFX_ERR_DEVICE_FAILED;
+      DXGIFactory->Release();
+
+      // Window handle not required by DX11 since we do not showcase rendering.
+      UINT dxFlags = 0; // D3D11_CREATE_DEVICE_DEBUG;
+      static D3D_FEATURE_LEVEL FeatureLevels[] = {
+        D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
+      D3D_FEATURE_LEVEL featureLevelsOut;
+      if (FAILED (D3D11CreateDevice (adapter,
+                                     D3D_DRIVER_TYPE_UNKNOWN, NULL, dxFlags,
+                                     FeatureLevels, (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
+                                     D3D11_SDK_VERSION, &D3D11Device, &featureLevelsOut, &D3D11Ctx)))
+        return MFX_ERR_DEVICE_FAILED;
+      adapter->Release();
+
+      // set multiThreaded
+      ID3D10Multithread* multithread = nullptr;
+      if (FAILED (D3D11Device->QueryInterface (IID_PPV_ARGS (&multithread))))
+        return MFX_ERR_DEVICE_FAILED;
+      multithread->SetMultithreadProtected (true);
+      multithread->Release();
+
+      *deviceHandle = (mfxHDL)D3D11Device;
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    void CleanupHWDevice() {
+      D3D11Device->Release();
+      D3D11Ctx->Release();
+      }
+    //}}}
     //}}}
   #endif
 
@@ -841,8 +802,6 @@
     }
   //}}}
   void Release() { CleanupHWDevice(); }
-  void ClearYUVSurfaceVMem (mfxMemId memId) { ClearYUVSurfaceD3D (memId); }
-  void ClearRGBSurfaceVMem (mfxMemId memId) { ClearRGBSurfaceD3D (memId); }
   //}}}
 #else
   //{{{  vaapi
@@ -1430,8 +1389,6 @@
     }
   //}}}
   void Release() { CleanupVAEnvDRM(); }
-  void ClearYUVSurfaceVMem (mfxMemId memId) { ClearYUVSurfaceVAAPI (memId); }
-  void ClearRGBSurfaceVMem (mfxMemId memId) { ClearRGBSurfaceVAAPI (memId); }
   //}}}
 #endif
 
@@ -1605,14 +1562,6 @@ char mfxFrameTypeString (mfxU16 FrameType) {
   }
 //}}}
 
-//{{{
-void ClearYUVSurfaceSysMem (mfxFrameSurface1* sfc, mfxU16 width, mfxU16 height) {
-
-   // In case simulating direct access to frames we initialize the allocated surfaces with default pattern
-  memset (sfc->Data.Y, 100, width * height);  // Y plane
-  memset (sfc->Data.U, 50, (width * height)/2);  // UV plane
-  }
-//}}}
 //{{{
 // Get free raw frame surface
 int GetFreeSurfaceIndex (mfxFrameSurface1** surfacesPool, mfxU16 nPoolSize) {

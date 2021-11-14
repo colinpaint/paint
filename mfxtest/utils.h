@@ -100,10 +100,6 @@ mfxStatus WriteBitStreamFrame (mfxBitstream* pMfxBitstream, FILE* fSink);
 // Read bit stream data from file. Stream is read as large chunks (= many frames)
 mfxStatus ReadBitStreamData (mfxBitstream* pBS, FILE* fSource);
 
-void ClearYUVSurfaceSysMem (mfxFrameSurface1* pSfc, mfxU16 width, mfxU16 height);
-void ClearYUVSurfaceVMem (mfxMemId memId);
-void ClearRGBSurfaceVMem (mfxMemId memId);
-
 // Get free raw frame surface
 int GetFreeSurfaceIndex (mfxFrameSurface1** pSurfacesPool, mfxU16 nPoolSize);
 int GetFreeSurfaceIndex (const std::vector<mfxFrameSurface1>& pSurfacesPool);

@@ -265,7 +265,7 @@ void decodeVidMem (const string& filename, mfxIMPL mfxImpl) {
   mfxU16 numSurfaces = frameAllocRequest.NumFrameSuggested;
   //}}}
   //{{{  allocate vidMem surfaces
-  frameAllocRequest.Type |= WILL_READ; 
+  frameAllocRequest.Type |= WILL_READ;
   mfxFrameAllocResponse frameAllocResponse;
   status = mfxAllocator.Alloc (mfxAllocator.pthis, &frameAllocRequest, &frameAllocResponse);
   if (status != MFX_ERR_NONE)
@@ -397,11 +397,19 @@ int main(int numArgs, char** args) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, "mfxtest");
 
-  sessionTest (MFX_IMPL_AUTO_ANY| MFX_IMPL_VIA_D3D11);
-  if (!filename.empty())
-    decodeVidMem (filename, MFX_IMPL_AUTO_ANY| MFX_IMPL_VIA_D3D11);
-  if (!filename.empty())
-    decodeSysMem (filename, MFX_IMPL_AUTO_ANY| MFX_IMPL_VIA_D3D11);
+  #ifdef _WIN32
+    sessionTest (MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11);
+    if (!filename.empty())
+      decodeSysMem (filename, MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11);
+    if (!filename.empty())
+      decodeVidMem (filename, MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11);
+  #else
+    sessionTest (MFX_IMPL_HARDWARE);
+    if (!filename.empty())
+      decodeSysMem (filename, MFX_IMPL_HARDWARE);
+    if (!filename.empty())
+      decodeVidMem (filename, MFX_IMPL_HARDWARE);
+  #endif
 
   this_thread::sleep_for (5000ms);
   return 0;
