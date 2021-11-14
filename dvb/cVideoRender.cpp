@@ -10,6 +10,12 @@
   // d3d11 headers
   #include <d3d11.h>
   #include <dxgi1_2.h>
+
+  #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
+  #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
+
+  #define WILL_READ 0x1000
+  #define WILL_WRITE 0x2000
   //}}}
 #else
   //{{{  vaapi headers
@@ -65,1108 +71,6 @@ extern "C" {
 
 using namespace std;
 //}}}
-
-namespace {
-  //{{{
-  string getMfxStatusString (mfxStatus status) {
-
-    string statusString;
-    switch (status) {
-      case   0: statusString = "No error"; break;
-
-      case  -1: statusString = "Unknown error"; break;
-      case  -2: statusString = "Null pointer"; break;
-      case  -3: statusString = "Unsupported feature/library load error"; break;
-      case  -4: statusString = "Could not allocate memory"; break;
-      case  -5: statusString = "Insufficient IO buffers"; break;
-      case  -6: statusString = "Invalid handle"; break;
-      case  -7: statusString = "Memory lock failure"; break;
-      case  -8: statusString = "Function called before initialization"; break;
-      case  -9: statusString = "Specified object not found"; break;
-      case -10: statusString = "More input data expected"; break;
-      case -11: statusString = "More output surfaces expected"; break;
-      case -12: statusString = "Operation aborted";  break;
-      case -13: statusString = "HW device lost";  break;
-      case -14: statusString = "Incompatible video parameters" ; break;
-      case -15: statusString = "Invalid video parameters";  break;
-      case -16: statusString = "Undefined behavior"; break;
-      case -17: statusString = "Device operation failure";  break;
-      case -18: statusString = "More bitstream data expected";  break;
-      case -19: statusString = "Incompatible audio parameters"; break;
-      case -20: statusString = "Invalid audio parameters"; break;
-
-      case   1: statusString = "the previous asynchronous operation is in execution"; break; //MFX_WRN_IN_EXECUTION
-      case   2: statusString = "the HW acceleration device is busy"; break;                  //MFX_WRN_DEVICE_BUSY
-      case   3: statusString = "the video parameters are changed during decoding"; break;    //MFX_WRN_VIDEO_PARAM_CHANGED
-      case   4: statusString = "SW is used"; break;                                          //MFX_WRN_PARTIAL_ACCELERATION
-      case   5: statusString = "incompatible video parameters"; break;                       //MFX_WRN_INCOMPATIBLE_VIDEO_PARAM
-      case   6: statusString = "the value is saturated based on its valid range"; break;     //MFX_WRN_VALUE_NOT_CHANGED
-      case   7: statusString = "the value is out of valid range"; break;                     //MFX_WRN_OUT_OF_RANGE
-      case  10: statusString = "one of requested filters has been skipped"; break;           //MFX_WRN_FILTER_SKIPPED
-      case  11: statusString = "incompatible audio parameters"; break;                       //MFX_WRN_INCOMPATIBLE_AUDIO_PARAM
-
-      default: statusString = "Error code";
-      }
-
-    return fmt::format ("status {} {}", status, statusString);
-    }
-  //}}}
-  //{{{
-  string getMfxInfoString (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
-
-    return fmt::format ("mfxImpl:{:x}{}{}{}{}{}{}{} verMajor:{} verMinor:{}",
-                        mfxImpl,
-                        ((mfxImpl & 0x0007) == MFX_IMPL_HARDWARE)  ? " hw":"",
-                        ((mfxImpl & 0x0007) == MFX_IMPL_SOFTWARE)  ? " sw":"",
-                        ((mfxImpl & 0x0007) == MFX_IMPL_AUTO_ANY)  ? " autoAny":"",
-                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_ANY)   ? " any":"",
-                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_D3D9)  ? " d3d9":"",
-                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_D3D11) ? " d3d11":"",
-                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_VAAPI) ? " vaapi":"",
-                        mfxVersion.Major, mfxVersion.Minor);
-    }
-  //}}}
-
-  #ifdef _WIN32
-    //{{{  windows directx11
-    #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
-    #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
-    #define WILL_READ 0x1000
-    #define WILL_WRITE 0x2000
-
-    //{{{  const struct implTypes
-    const struct {
-      mfxIMPL impl;       // actual implementation
-      mfxU32  adapterID;  // device adapter number
-      } implTypes[] = {
-        {MFX_IMPL_HARDWARE, 0},
-        {MFX_IMPL_HARDWARE2, 1},
-        {MFX_IMPL_HARDWARE3, 2},
-        {MFX_IMPL_HARDWARE4, 3}
-      };
-    //}}}
-    //{{{  struct sCustomMemId
-    typedef struct {
-      mfxMemId  mMemId;
-      mfxMemId  mMemIdStage;
-      mfxU16    mRw;
-      } sCustomMemId;
-    //}}}
-
-    // vars
-    ID3D11Device* D3D11Device;
-    ID3D11DeviceContext* D3D11Ctx;
-
-    map <mfxMemId*, mfxHDL> allocResponses;
-    map <mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
-    map <mfxHDL, int> allocDecodeRefCount;
-
-    // allocate
-    //{{{
-    mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
-
-      // Determine surface format
-      DXGI_FORMAT format;
-      if (MFX_FOURCC_NV12 == request->Info.FourCC)
-        format = DXGI_FORMAT_NV12;
-      else if (MFX_FOURCC_RGB4 == request->Info.FourCC)
-        format = DXGI_FORMAT_B8G8R8A8_UNORM;
-      else if (MFX_FOURCC_YUY2== request->Info.FourCC)
-        format = DXGI_FORMAT_YUY2;
-      else if (MFX_FOURCC_P8 == request->Info.FourCC ) //|| MFX_FOURCC_P8_TEXTURE == request->Info.FourCC
-        format = DXGI_FORMAT_P8;
-      else
-        return MFX_ERR_UNSUPPORTED;
-
-      // Allocate custom container to keep texture and stage buffers for each surface
-      // Container also stores the intended read and/or write operation.
-      sCustomMemId** memIds = (sCustomMemId**)calloc (request->NumFrameSuggested, sizeof(sCustomMemId*));
-      if (!memIds)
-        return MFX_ERR_MEMORY_ALLOC;
-
-      for (int i = 0; i < request->NumFrameSuggested; i++) {
-        memIds[i] = (sCustomMemId*)calloc (1, sizeof(sCustomMemId));
-        if (!memIds[i])
-          return MFX_ERR_MEMORY_ALLOC;
-        memIds[i]->mRw = request->Type & 0xF000; // Set intended read/write operation
-        }
-      request->Type = request->Type & 0x0FFF;
-
-      // because P8 data (bitstream) for h264 encoder should be allocated by CreateBuffer()
-      // - but P8 data (MBData) for MPEG2 encoder should be allocated by CreateTexture2D()
-      if (request->Info.FourCC == MFX_FOURCC_P8) {
-        D3D11_BUFFER_DESC desc = {0};
-        if (!request->NumFrameSuggested)
-          return MFX_ERR_MEMORY_ALLOC;
-        desc.ByteWidth = request->Info.Width * request->Info.Height;
-        desc.Usage = D3D11_USAGE_STAGING;
-        desc.BindFlags = 0;
-        desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-        desc.MiscFlags = 0;
-        desc.StructureByteStride = 0;
-
-        ID3D11Buffer* buffer = nullptr;
-        if (FAILED (D3D11Device->CreateBuffer(&desc, 0, &buffer)))
-          return MFX_ERR_MEMORY_ALLOC;
-        memIds[0]->mMemId = reinterpret_cast<ID3D11Texture2D*>(buffer);
-        }
-      else {
-        D3D11_TEXTURE2D_DESC desc = {0};
-        desc.Width = request->Info.Width;
-        desc.Height = request->Info.Height;
-        desc.MipLevels = 1;
-        desc.ArraySize = 1; // number of subresources is 1 in this case
-        desc.Format = format;
-        desc.SampleDesc.Count = 1;
-        desc.Usage = D3D11_USAGE_DEFAULT;
-        desc.BindFlags = D3D11_BIND_DECODER;
-        desc.MiscFlags = 0;
-        //desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
-
-        if ((MFX_MEMTYPE_FROM_VPPIN & request->Type) &&
-            (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format)) {
-          desc.BindFlags = D3D11_BIND_RENDER_TARGET;
-          if (desc.ArraySize > 2)
-            return MFX_ERR_MEMORY_ALLOC;
-          }
-
-        if ((MFX_MEMTYPE_FROM_VPPOUT & request->Type) ||
-            (MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET & request->Type)) {
-          desc.BindFlags = D3D11_BIND_RENDER_TARGET;
-          if (desc.ArraySize > 2)
-            return MFX_ERR_MEMORY_ALLOC;
-          }
-
-        if (DXGI_FORMAT_P8 == desc.Format)
-          desc.BindFlags = 0;
-
-        // create surface textures
-        ID3D11Texture2D* texture2D;
-        for (size_t i = 0; i < request->NumFrameSuggested / desc.ArraySize; i++) {
-          if (FAILED (D3D11Device->CreateTexture2D (&desc, NULL, &texture2D)))
-            return MFX_ERR_MEMORY_ALLOC;
-          memIds[i]->mMemId = texture2D;
-          }
-
-        desc.ArraySize = 1;
-        desc.Usage = D3D11_USAGE_STAGING;
-        desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // | D3D11_CPU_ACCESS_WRITE;
-        desc.BindFlags = 0;
-        desc.MiscFlags = 0;
-        //desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
-
-        // create surface staging textures
-        for (size_t i = 0; i < request->NumFrameSuggested; i++) {
-          if (FAILED (D3D11Device->CreateTexture2D (&desc, NULL, &texture2D)))
-            return MFX_ERR_MEMORY_ALLOC;
-          memIds[i]->mMemIdStage = texture2D;
-          }
-        }
-
-      response->mids = (mfxMemId*)memIds;
-      response->NumFrameActual = request->NumFrameSuggested;
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    mfxStatus _simpleFree (mfxFrameAllocResponse* response) {
-
-      if (response->mids) {
-        for (mfxU32 i = 0; i < response->NumFrameActual; i++) {
-          if (response->mids[i]) {
-            sCustomMemId* mid = (sCustomMemId*)response->mids[i];
-
-            ID3D11Texture2D* surface = (ID3D11Texture2D*)mid->mMemId;
-            if (surface)
-              surface->Release();
-
-            ID3D11Texture2D* stage = (ID3D11Texture2D*)mid->mMemIdStage;
-            if (stage)
-              stage->Release();
-
-            free (mid);
-            }
-          }
-
-        free (response->mids);
-        response->mids = NULL;
-        }
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    mfxStatus simpleAlloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
-
-      mfxStatus status = MFX_ERR_NONE;
-
-      if (request->Type & MFX_MEMTYPE_SYSTEM_MEMORY)
-        return MFX_ERR_UNSUPPORTED;
-
-      if (allocDecodeResponses.find (pthis) != allocDecodeResponses.end() &&
-          (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type) && (MFX_MEMTYPE_FROM_DECODE & request->Type)) {
-        // Memory for this request was already allocated during manual allocation stage. Return saved response
-        // When decode acceleration device (DXVA) is created it requires a list of D3D surfaces to be passed.
-        // Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
-        // (No such restriction applies to Encode or VPP)
-        *response = allocDecodeResponses[pthis];
-        allocDecodeRefCount[pthis]++;
-        }
-      else {
-        status = _simpleAlloc (request, response);
-
-        if (MFX_ERR_NONE == status) {
-          if ((MFX_MEMTYPE_EXTERNAL_FRAME & request->Type) && (MFX_MEMTYPE_FROM_DECODE & request->Type)) {
-            // Decode alloc response handling
-            allocDecodeResponses[pthis] = *response;
-            allocDecodeRefCount[pthis]++;
-            }
-          else
-            // Encode and VPP alloc response handling
-            allocResponses[response->mids] = pthis;
-          }
-        }
-
-      return status;
-      }
-    //}}}
-    //{{{
-    mfxStatus simpleFree (mfxHDL pthis, mfxFrameAllocResponse* response) {
-
-      if (!response)
-        return MFX_ERR_NULL_PTR;
-
-      if (allocResponses.find(response->mids) == allocResponses.end()) {
-        // Decode free response handling
-        if (--allocDecodeRefCount[pthis] == 0) {
-          _simpleFree (response);
-          allocDecodeResponses.erase (pthis);
-          allocDecodeRefCount.erase (pthis);
-          }
-        }
-      else {
-        // Encode and VPP free response handling
-        allocResponses.erase (response->mids);
-        _simpleFree (response);
-        }
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    mfxStatus simpleLock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
-
-      pthis;
-
-      HRESULT hRes = S_OK;
-
-      D3D11_TEXTURE2D_DESC desc = {0};
-      D3D11_MAPPED_SUBRESOURCE lockedRect = {0};
-      D3D11_MAP mapType  = D3D11_MAP_READ;
-      UINT mapFlags = D3D11_MAP_FLAG_DO_NOT_WAIT;
-      sCustomMemId* memId = (sCustomMemId*)mid;
-      ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
-      ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->mMemIdStage;
-      if (!stage) {
-        hRes = D3D11Ctx->Map (surface, 0, mapType, mapFlags, &lockedRect);
-        desc.Format = DXGI_FORMAT_P8;
-        }
-      else {
-        surface->GetDesc (&desc);
-
-       // copy data only in case of user wants to read from stored surface
-        if (memId->mRw & WILL_READ)
-          D3D11Ctx->CopySubresourceRegion (stage, 0, 0, 0, 0, surface, 0, NULL);
-
-        do {
-          hRes = D3D11Ctx->Map (stage, 0, mapType, mapFlags, &lockedRect);
-          if (S_OK != hRes && DXGI_ERROR_WAS_STILL_DRAWING != hRes)
-            return MFX_ERR_LOCK_MEMORY;
-          } while (DXGI_ERROR_WAS_STILL_DRAWING == hRes);
-        }
-
-      if (FAILED (hRes))
-        return MFX_ERR_LOCK_MEMORY;
-
-      switch (desc.Format) {
-        //{{{
-        case DXGI_FORMAT_NV12:
-          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
-          ptr->Y = (mfxU8*)lockedRect.pData;
-          ptr->U = (mfxU8*)lockedRect.pData + desc.Height * lockedRect.RowPitch;
-          ptr->V = ptr->U + 1;
-          break;
-        //}}}
-        //{{{
-        case DXGI_FORMAT_B8G8R8A8_UNORM :
-          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
-          ptr->B = (mfxU8*)lockedRect.pData;
-          ptr->G = ptr->B + 1;
-          ptr->R = ptr->B + 2;
-          ptr->A = ptr->B + 3;
-          break;
-        //}}}
-        //{{{
-        case DXGI_FORMAT_YUY2:
-          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
-          ptr->Y = (mfxU8*)lockedRect.pData;
-          ptr->U = ptr->Y + 1;
-          ptr->V = ptr->Y + 3;
-          break;
-        //}}}
-        //{{{
-        case DXGI_FORMAT_P8 :
-          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
-          ptr->Y = (mfxU8*)lockedRect.pData;
-          ptr->U = 0;
-          ptr->V = 0;
-          break;
-        //}}}
-        //{{{
-        default:
-          return MFX_ERR_LOCK_MEMORY;
-        //}}}
-        }
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    mfxStatus simpleUnlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
-
-      pthis;
-
-      sCustomMemId* memId = (sCustomMemId*)mid;
-      ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
-      ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->mMemIdStage;
-      if (!stage)
-        D3D11Ctx->Unmap (surface, 0);
-      else {
-        D3D11Ctx->Unmap (stage, 0);
-        // copy data only in case of user wants to write to stored surface
-        if (memId->mRw & WILL_WRITE)
-          D3D11Ctx->CopySubresourceRegion (surface, 0, 0, 0, 0, stage, 0, NULL);
-        }
-
-      if (ptr) {
-        ptr->Pitch = 0;
-        ptr->Y = 0;
-        ptr->U = 0;
-        ptr->V = 0;
-        ptr->A = 0;
-        ptr->R = 0;
-        ptr->G = 0;
-        ptr->B = 0;
-        }
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    mfxStatus simpleGethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
-
-      pthis;
-
-      if (!handle)
-        return MFX_ERR_INVALID_HANDLE;
-
-      sCustomMemId* memId = (sCustomMemId*)mid;
-      mfxHDLPair* pPair = (mfxHDLPair*)handle;
-      pPair->first  = memId->mMemId; // surface texture
-      pPair->second = 0;
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-
-    // create
-    //{{{
-    mfxStatus createHWDevice (mfxSession session, mfxHDL* deviceHandle) {
-
-      mfxIMPL impl;
-      MFXQueryIMPL (session, &impl);
-      mfxIMPL baseImpl = MFX_IMPL_BASETYPE (impl); // Extract Media SDK base implementation type
-
-      // get corresponding adapter number
-      mfxU32 adapterNum = 0;
-      for (mfxU8 i = 0; i < sizeof(implTypes) / sizeof(implTypes[0]); i++) {
-        if (implTypes[i].impl == baseImpl) {
-          adapterNum = implTypes[i].adapterID;
-          break;
-          }
-        }
-
-      // get DXGI factory
-      IDXGIFactory2* DXGIFactory = nullptr;
-      if (FAILED (CreateDXGIFactory (__uuidof(IDXGIFactory2), (void**)(&DXGIFactory))))
-        return MFX_ERR_DEVICE_FAILED;
-
-      // get adapter
-      IDXGIAdapter* adapter = nullptr;
-      if (FAILED (DXGIFactory->EnumAdapters (adapterNum, &adapter)))
-        return MFX_ERR_DEVICE_FAILED;
-      DXGIFactory->Release();
-
-      // Window handle not required by DX11 since we do not showcase rendering.
-      UINT dxFlags = 0; // D3D11_CREATE_DEVICE_DEBUG;
-      static D3D_FEATURE_LEVEL FeatureLevels[] = {
-        D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, 
-        D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
-      D3D_FEATURE_LEVEL featureLevelsOut;
-      if (FAILED (D3D11CreateDevice (adapter,
-                                     D3D_DRIVER_TYPE_UNKNOWN, NULL, dxFlags,
-                                     FeatureLevels, (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
-                                     D3D11_SDK_VERSION, &D3D11Device, &featureLevelsOut, &D3D11Ctx)))
-        return MFX_ERR_DEVICE_FAILED;
-      adapter->Release();
-
-      // set multiThreaded
-      ID3D10Multithread* multithread = nullptr;
-      if (FAILED (D3D11Device->QueryInterface (IID_PPV_ARGS (&multithread))))
-        return MFX_ERR_DEVICE_FAILED;
-      multithread->SetMultithreadProtected (true);
-      multithread->Release();
-
-      *deviceHandle = (mfxHDL)D3D11Device;
-      return MFX_ERR_NONE;
-      }
-    //}}}
-
-    // interface
-    //{{{
-    mfxStatus mfxInitialize (mfxIMPL mfxImpl, mfxVersion mfxVersion, MFXVideoSession& session, mfxFrameAllocator* mfxAllocator) {
-
-      mfxStatus status = session.Init (mfxImpl | MFX_IMPL_VIA_D3D11, &mfxVersion);
-      if (status != MFX_ERR_NONE)
-        return status;
-
-      // if mfxFrameAllocator, setup DirectX device and memory allocator
-      if (mfxAllocator) {
-        // create DirectX11 device,context
-        mfxHDL deviceHandle;
-        status = createHWDevice (session, &deviceHandle);
-        if (status != MFX_ERR_NONE)
-          return status;
-
-        // set MediaSDK deviceManager
-        status = session.SetHandle (MFX_HANDLE_D3D11_DEVICE, deviceHandle);
-        if (status != MFX_ERR_NONE)
-          return status;
-
-        // use MediaSDK session ID as the allocation identifier
-        mfxAllocator->pthis = session;
-        mfxAllocator->Alloc = simpleAlloc;
-        mfxAllocator->Free = simpleFree;
-        mfxAllocator->Lock = simpleLock;
-        mfxAllocator->Unlock = simpleUnlock;
-        mfxAllocator->GetHDL = simpleGethdl;
-
-        // Since we are using video memory we must provide Media SDK with an external allocator
-        status = session.SetFrameAllocator (mfxAllocator);
-        }
-
-      return status;
-      }
-    //}}}
-    //{{{
-    void mfxRelease() {
-      D3D11Device->Release();
-      D3D11Ctx->Release();
-      }
-    //}}}
-    //}}}
-  #else
-    //{{{  vaapi
-    //{{{
-    // VAAPI Allocator internal Mem ID
-    struct vaapiMemId {
-      VASurfaceID* mSurface;
-      VAImage mImage;
-
-      // variables for VAAPI Allocator inernal color conversion
-      unsigned int mFourcc;
-      mfxU8* mSysBuffer;
-      mfxU8* mVaBuffer;
-      };
-    //}}}
-    //{{{
-    struct sharedResponse {
-      mfxFrameAllocResponse mMfxResponse;
-      int mRefCount;
-      };
-    //}}}
-
-    // vars
-    int mFd = -1;
-    VADisplay mVaDisplayHandle = NULL;
-
-    map <mfxMemId*, mfxHDL> allocResponses;
-    map<mfxHDL, sharedResponse> allocDecodeResponses;
-
-    // utils
-    //{{{
-    mfxStatus vaToMfxStatus (VAStatus vaStatus) {
-
-      mfxStatus mfxRes = MFX_ERR_NONE;
-
-      switch (vaStatus) {
-        case VA_STATUS_SUCCESS:
-          mfxRes = MFX_ERR_NONE;
-          break;
-
-        case VA_STATUS_ERROR_ALLOCATION_FAILED:
-          mfxRes = MFX_ERR_MEMORY_ALLOC;
-          break;
-
-        case VA_STATUS_ERROR_ATTR_NOT_SUPPORTED:
-        case VA_STATUS_ERROR_UNSUPPORTED_PROFILE:
-        case VA_STATUS_ERROR_UNSUPPORTED_ENTRYPOINT:
-        case VA_STATUS_ERROR_UNSUPPORTED_RT_FORMAT:
-        case VA_STATUS_ERROR_UNSUPPORTED_BUFFERTYPE:
-        case VA_STATUS_ERROR_FLAG_NOT_SUPPORTED:
-        case VA_STATUS_ERROR_RESOLUTION_NOT_SUPPORTED:
-          mfxRes = MFX_ERR_UNSUPPORTED;
-          break;
-
-        case VA_STATUS_ERROR_INVALID_DISPLAY:
-        case VA_STATUS_ERROR_INVALID_CONFIG:
-        case VA_STATUS_ERROR_INVALID_CONTEXT:
-        case VA_STATUS_ERROR_INVALID_SURFACE:
-        case VA_STATUS_ERROR_INVALID_BUFFER:
-        case VA_STATUS_ERROR_INVALID_IMAGE:
-        case VA_STATUS_ERROR_INVALID_SUBPICTURE:
-          mfxRes = MFX_ERR_NOT_INITIALIZED;
-          break;
-
-        case VA_STATUS_ERROR_INVALID_PARAMETER:
-          mfxRes = MFX_ERR_INVALID_VIDEO_PARAM;
-          break; // ???? fell though ????
-
-        default:
-          mfxRes = MFX_ERR_UNKNOWN;
-          break;
-        }
-
-      return mfxRes;
-      }
-    //}}}
-    //{{{
-    unsigned int convertMfxFourccToVAFormat (mfxU32 fourcc) {
-
-      switch (fourcc) {
-        case MFX_FOURCC_NV12:
-          return VA_FOURCC_NV12;
-
-        case MFX_FOURCC_YUY2:
-          return VA_FOURCC_YUY2;
-
-        case MFX_FOURCC_YV12:
-          return VA_FOURCC_YV12;
-
-        case MFX_FOURCC_RGB4:
-          return VA_FOURCC_ARGB;
-
-        case MFX_FOURCC_P8:
-          return VA_FOURCC_P208;
-
-        default:
-          assert(!"unsupported fourcc");
-          return 0;
-        }
-      }
-    //}}}
-
-    // allocate
-    //{{{
-    mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
-
-      mfxStatus status = MFX_ERR_NONE;
-      bool createSrfSucceeded = false;
-
-      memset (response, 0, sizeof(mfxFrameAllocResponse));
-
-      mfxU16 numSurfaces = request->NumFrameSuggested;
-      if (!numSurfaces)
-        return MFX_ERR_MEMORY_ALLOC;
-
-      mfxU32 fourcc = request->Info.FourCC;
-      unsigned int vaFourcc = convertMfxFourccToVAFormat (fourcc);
-      if (!vaFourcc || ((VA_FOURCC_NV12 != vaFourcc) &&
-                        (VA_FOURCC_YV12 != vaFourcc) && (VA_FOURCC_YUY2 != vaFourcc) &&
-                        (VA_FOURCC_ARGB != vaFourcc) && (VA_FOURCC_P208 != vaFourcc)))
-        return MFX_ERR_MEMORY_ALLOC;
-
-      VASurfaceID* surfaces = NULL;
-      vaapiMemId* vaapiMids = NULL;
-      mfxMemId* mids = NULL;
-      if (MFX_ERR_NONE == status) {
-        //{{{  allocate surfaces, vaapiMids, mids
-        surfaces = (VASurfaceID*)calloc (numSurfaces, sizeof(VASurfaceID));
-        vaapiMids = (vaapiMemId*)calloc (numSurfaces, sizeof(vaapiMemId));
-        mids = (mfxMemId*)calloc (numSurfaces, sizeof(mfxMemId));
-        if ((!surfaces) || (!vaapiMids) || (!mids))
-          status = MFX_ERR_MEMORY_ALLOC;
-        }
-        //}}}
-
-      mfxU16 numAllocated = 0;
-      if (MFX_ERR_NONE == status) {
-        if (VA_FOURCC_P208 != vaFourcc) {
-          //{{{  create surfaces
-          VASurfaceAttrib attrib;
-          attrib.type = VASurfaceAttribPixelFormat;
-          attrib.value.type = VAGenericValueTypeInteger;
-          attrib.value.value.i = vaFourcc;
-          attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
-          status = vaToMfxStatus (
-            vaCreateSurfaces (mVaDisplayHandle, VA_RT_FORMAT_YUV420,
-                              request->Info.Width, request->Info.Height, surfaces, numSurfaces, &attrib, 1));
-          createSrfSucceeded = (MFX_ERR_NONE == status);
-          }
-          //}}}
-        else {
-          //{{{  create buffer
-          // from libva spec
-          VAContextID context_id = request->reserved[0];
-          int codedbuf_size = (request->Info.Width * request->Info.Height) * 400 / (16 * 16);
-          for (numAllocated = 0; numAllocated < numSurfaces; numAllocated++) {
-            VABufferID coded_buf;
-            status = vaToMfxStatus (
-              vaCreateBuffer (mVaDisplayHandle, context_id, VAEncCodedBufferType, codedbuf_size, 1, NULL, &coded_buf));
-            if (MFX_ERR_NONE != status)
-              break;
-            surfaces[numAllocated] = coded_buf;
-            }
-          }
-          //}}}
-        }
-
-      if (MFX_ERR_NONE == status) {
-        //{{{  set mids
-        for (mfxU16 i = 0; i < numSurfaces; ++i) {
-          vaapiMemId* vaapiMid = &(vaapiMids[i]);
-          vaapiMid->mFourcc = fourcc;
-          vaapiMid->mSurface = &(surfaces[i]);
-          mids[i] = vaapiMid;
-          }
-        }
-        //}}}
-
-      if (MFX_ERR_NONE == status) {
-        //{{{  successful, set response
-        response->mids = mids;
-        response->NumFrameActual = numSurfaces;
-        }
-        //}}}
-      else {
-        //{{{  unsuccessful, set response, cleanup
-        // i.e. MFX_ERR_NONE != status
-        response->mids = NULL;
-        response->NumFrameActual = 0;
-
-        if (VA_FOURCC_P208 != vaFourcc) {
-          if (createSrfSucceeded)
-            vaDestroySurfaces (mVaDisplayHandle, surfaces, numSurfaces);
-          }
-        else {
-          for (mfxU16 i = 0; i < numAllocated; i++)
-            vaDestroyBuffer (mVaDisplayHandle, surfaces[i]);
-          }
-
-        if (mids) {
-          free (mids);
-          mids = NULL;
-          }
-
-        if (vaapiMids) {
-          free (vaapiMids);
-          vaapiMids = NULL;
-          }
-
-        if (surfaces) {
-          free(surfaces);
-          surfaces = NULL;
-          }
-        }
-        //}}}
-
-      return status;
-      }
-    //}}}
-    //{{{
-    mfxStatus _simpleFree (mfxHDL pthis, mfxFrameAllocResponse* response) {
-
-      bool actualFreeMemory = false;
-      if (0 == memcmp (response, &(allocDecodeResponses[pthis].mMfxResponse), sizeof(*response))) {
-        // Decode free response handling
-        allocDecodeResponses[pthis].mRefCount--;
-        if (0 == allocDecodeResponses[pthis].mRefCount)
-          actualFreeMemory = true;
-        }
-      else
-        // Encode and VPP free response handling
-        actualFreeMemory = true;
-
-      if (actualFreeMemory) {
-        if (response->mids) {
-          vaapiMemId* vaapiMids = (vaapiMemId*)(response->mids[0]);
-          bool isBitstreamMemory = (MFX_FOURCC_P8 == vaapiMids->mFourcc) ? true : false;
-
-          VASurfaceID* surfaces = vaapiMids->mSurface;
-          for (mfxU32 i = 0; i < response->NumFrameActual; ++i) {
-            if (MFX_FOURCC_P8 == vaapiMids[i].mFourcc)
-              vaDestroyBuffer (mVaDisplayHandle, surfaces[i]);
-            else if (vaapiMids[i].mSysBuffer)
-              free (vaapiMids[i].mSysBuffer);
-            }
-
-          free (vaapiMids);
-          free (response->mids);
-          response->mids = NULL;
-          if (!isBitstreamMemory)
-            vaDestroySurfaces (mVaDisplayHandle, surfaces, response->NumFrameActual);
-          free (surfaces);
-          }
-
-        response->NumFrameActual = 0;
-        }
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    mfxStatus simpleAlloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
-
-      mfxStatus status = MFX_ERR_NONE;
-
-      if (0 == request || 0 == response || 0 == request->NumFrameSuggested)
-        return MFX_ERR_MEMORY_ALLOC;
-
-      if ((request->Type & (MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET |
-                            MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET)) == 0)
-        return MFX_ERR_UNSUPPORTED;
-
-      if (request->NumFrameSuggested <= allocDecodeResponses[pthis].mMfxResponse.NumFrameActual
-          && MFX_MEMTYPE_EXTERNAL_FRAME & request->Type
-          && MFX_MEMTYPE_FROM_DECODE & request->Type
-          &&allocDecodeResponses[pthis].mMfxResponse.NumFrameActual != 0) {
-        // Memory for this request was already allocated during manual allocation stage. Return saved response
-        //   When decode acceleration device (VAAPI) is created it requires a list of VAAPI surfaces to be passed.
-        //   Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
-        //   (No such restriction applies to Encode or VPP)
-        *response = allocDecodeResponses[pthis].mMfxResponse;
-        allocDecodeResponses[pthis].mRefCount++;
-        }
-      else {
-        status = _simpleAlloc (request, response);
-        if (MFX_ERR_NONE == status) {
-          if ((MFX_MEMTYPE_EXTERNAL_FRAME & request->Type) && (MFX_MEMTYPE_FROM_DECODE & request->Type)) {
-            // Decode alloc response handling
-            allocDecodeResponses[pthis].mMfxResponse = *response;
-            allocDecodeResponses[pthis].mRefCount++;
-            //allocDecodeRefCount[pthis]++;
-            }
-          else
-            // Encode and VPP alloc response handling
-            allocResponses[response->mids] = pthis;
-          }
-        }
-
-      return status;
-      }
-    //}}}
-    //{{{
-    mfxStatus simpleFree (mfxHDL pthis, mfxFrameAllocResponse* response) {
-
-      if (!response)
-        return MFX_ERR_NULL_PTR;
-
-      if (allocResponses.find (response->mids) == allocResponses.end()) {
-        // Decode free response handling
-        if (--allocDecodeResponses[pthis].mRefCount == 0) {
-          _simpleFree (pthis, response);
-          allocDecodeResponses.erase (pthis);
-          }
-        }
-      else {
-        // Encode and VPP free response handling
-        allocResponses.erase (response->mids);
-        _simpleFree (pthis,response);
-        }
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    mfxStatus simpleLock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
-
-      (void) pthis;
-      mfxStatus mfx_res = MFX_ERR_NONE;
-      VAStatus va_res = VA_STATUS_SUCCESS;
-      vaapiMemId* vaapi_mid = (vaapiMemId*)mid;
-      mfxU8* pBuffer = 0;
-
-      if (!vaapi_mid || !(vaapi_mid->mSurface))
-        return MFX_ERR_INVALID_HANDLE;
-
-      if (MFX_FOURCC_P8 == vaapi_mid->mFourcc) {
-        // bitstream processing
-        VACodedBufferSegment* coded_buffer_segment;
-        va_res = vaMapBuffer (mVaDisplayHandle, *(vaapi_mid->mSurface), (void**)(&coded_buffer_segment));
-        mfx_res = vaToMfxStatus (va_res);
-        ptr->Y = (mfxU8*)coded_buffer_segment->buf;
-        }
-
-      else {
-        // Image processing
-        va_res = vaSyncSurface (mVaDisplayHandle, *(vaapi_mid->mSurface));
-        mfx_res = vaToMfxStatus (va_res);
-
-        if (MFX_ERR_NONE == mfx_res) {
-          va_res = vaDeriveImage (mVaDisplayHandle, *(vaapi_mid->mSurface), &(vaapi_mid->mImage));
-          mfx_res = vaToMfxStatus (va_res);
-          }
-
-        if (MFX_ERR_NONE == mfx_res) {
-          va_res = vaMapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf, (void**)&pBuffer);
-          mfx_res = vaToMfxStatus (va_res);
-          }
-
-        if (MFX_ERR_NONE == mfx_res) {
-          switch (vaapi_mid->mImage.format.fourcc) {
-            //{{{
-            case VA_FOURCC_NV12:
-              if (vaapi_mid->mFourcc == MFX_FOURCC_NV12) {
-                ptr->Pitch = (mfxU16) vaapi_mid->mImage.pitches[0];
-                ptr->Y = pBuffer + vaapi_mid->mImage.offsets[0];
-                ptr->U = pBuffer + vaapi_mid->mImage.offsets[1];
-                ptr->V = ptr->U + 1;
-                }
-              else
-                mfx_res = MFX_ERR_LOCK_MEMORY;
-              break;
-            //}}}
-            //{{{
-            case VA_FOURCC_YV12:
-              if (vaapi_mid->mFourcc == MFX_FOURCC_YV12) {
-                ptr->Pitch = (mfxU16) vaapi_mid->mImage.pitches[0];
-                ptr->Y = pBuffer + vaapi_mid->mImage.offsets[0];
-                ptr->V = pBuffer + vaapi_mid->mImage.offsets[1];
-                ptr->U = pBuffer + vaapi_mid->mImage.offsets[2];
-                }
-              else
-                 mfx_res = MFX_ERR_LOCK_MEMORY;
-              break;
-            //}}}
-            //{{{
-            case VA_FOURCC_YUY2:
-              if (vaapi_mid->mFourcc == MFX_FOURCC_YUY2) {
-                ptr->Pitch = (mfxU16) vaapi_mid->mImage.pitches[0];
-                ptr->Y = pBuffer + vaapi_mid->mImage.offsets[0];
-                ptr->U = ptr->Y + 1;
-                ptr->V = ptr->Y + 3;
-                }
-              else
-                 mfx_res = MFX_ERR_LOCK_MEMORY;
-              break;
-            //}}}
-            //{{{
-            case VA_FOURCC_ARGB:
-              if (vaapi_mid->mFourcc == MFX_FOURCC_RGB4) {
-                ptr->Pitch = (mfxU16) vaapi_mid->mImage.pitches[0];
-                ptr->B = pBuffer + vaapi_mid->mImage.offsets[0];
-                ptr->G = ptr->B + 1;
-                ptr->R = ptr->B + 2;
-                ptr->A = ptr->B + 3;
-                }
-              else
-                mfx_res = MFX_ERR_LOCK_MEMORY;
-              break;
-            //}}}
-            //{{{
-            default:
-              mfx_res = MFX_ERR_LOCK_MEMORY;
-              break;
-            //}}}
-            }
-          }
-        }
-
-      return mfx_res;
-      }
-    //}}}
-    //{{{
-    mfxStatus simpleUnlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
-
-      (void)pthis;
-      vaapiMemId* vaapi_mid = (vaapiMemId*)mid;
-
-      if (!vaapi_mid || !(vaapi_mid->mSurface))
-        return MFX_ERR_INVALID_HANDLE;
-
-      if (MFX_FOURCC_P8 == vaapi_mid->mFourcc)
-        // bitstream processing
-        vaUnmapBuffer (mVaDisplayHandle, *(vaapi_mid->mSurface));
-      else {
-        // Image processing
-        vaUnmapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf);
-        vaDestroyImage (mVaDisplayHandle, vaapi_mid->mImage.image_id);
-
-        if (NULL != ptr) {
-          ptr->Pitch = 0;
-          ptr->Y = NULL;
-          ptr->U = NULL;
-          ptr->V = NULL;
-          ptr->A = NULL;
-          }
-        }
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-    //{{{
-    mfxStatus simpleGethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
-
-      (void) pthis;
-      vaapiMemId* vaapi_mid = (vaapiMemId*)mid;
-
-      if (!handle || !vaapi_mid || !(vaapi_mid->mSurface))
-        return MFX_ERR_INVALID_HANDLE;
-
-      *handle = vaapi_mid->mSurface; //VASurfaceID* <-> mfxHDL
-      return MFX_ERR_NONE;
-      }
-    //}}}
-
-    // create
-    //{{{
-    int getDrmDriverName (int fd, char* name, int name_size) {
-
-      drm_version_t version = {};
-      version.name_len = name_size;
-      version.name = name;
-      return ioctl (fd, DRM_IOWR (0, drm_version), &version);
-      }
-    //}}}
-    //{{{
-    int openIntelAdapter() {
-
-      constexpr uint32_t DRI_MAX_NODES_NUM = 16;
-      constexpr uint32_t DRI_RENDER_START_INDEX = 128;
-      constexpr  uint32_t DRM_DRIVER_NAME_LEN = 4;
-
-      const char* DRI_PATH = "/dev/dri/";
-      const char* DRI_NODE_RENDER = "renderD";
-      const char* DRM_INTEL_DRIVER_NAME = "i915";
-
-      string adapterPath = DRI_PATH;
-      adapterPath += DRI_NODE_RENDER;
-
-      char driverName[DRM_DRIVER_NAME_LEN + 1] = {};
-      mfxU32 nodeIndex = DRI_RENDER_START_INDEX;
-
-      for (mfxU32 i = 0; i < DRI_MAX_NODES_NUM; ++i) {
-        string curAdapterPath = adapterPath + to_string(nodeIndex + i);
-
-        int fd = open (curAdapterPath.c_str(), O_RDWR);
-        if (fd < 0)
-          continue;
-        if (!getDrmDriverName (fd, driverName, DRM_DRIVER_NAME_LEN) &&
-            !strcmp (driverName, DRM_INTEL_DRIVER_NAME)) {
-          return fd;
-          }
-        close(fd);
-        }
-
-      return -1;
-      }
-    //}}}
-    //{{{
-    mfxStatus createVAEnvDRM (mfxHDL* displayHandle) {
-
-      mfxStatus status = MFX_ERR_NONE;
-
-      mFd = openIntelAdapter();
-      if (mFd < 0)
-        status = MFX_ERR_NOT_INITIALIZED;
-
-      if (MFX_ERR_NONE == status) {
-        mVaDisplayHandle = vaGetDisplayDRM (mFd);
-        *displayHandle = mVaDisplayHandle;
-        if (!mVaDisplayHandle) {
-          close (mFd);
-          status = MFX_ERR_NULL_PTR;
-          }
-        }
-
-      if (MFX_ERR_NONE == status) {
-        int major_version = 0;
-        int minor_version = 0;
-        status = vaToMfxStatus (vaInitialize (mVaDisplayHandle, &major_version, &minor_version));
-        if (MFX_ERR_NONE != status) {
-          close (mFd);
-          mFd = -1;
-          }
-        }
-
-      if (MFX_ERR_NONE != status)
-        throw bad_alloc();
-
-      return MFX_ERR_NONE;
-      }
-    //}}}
-
-    // interface
-    //{{{
-    mfxStatus mfxInitialize (mfxIMPL mfxImpl, mfxVersion mfxVersion, MFXVideoSession& session, mfxFrameAllocator* mfxAllocator) {
-
-      mfxStatus status = session.Init (mfxImpl, &mfxVersion);
-      if (status != MFX_ERR_NONE)
-        return status;
-
-      // Create VA display
-      mfxHDL displayHandle = {0};
-      status = createVAEnvDRM (&displayHandle);
-      if (status != MFX_ERR_NONE)
-        cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
-
-      // provide VA display handle to MediaSDK
-      status = session.SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
-      if (status != MFX_ERR_NONE)
-        cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
-
-      // If mfxFrameAllocator is provided it means we need to setup  memory allocator
-      if (mfxAllocator) {
-        // use MediaSDK session ID as the allocation identifier
-        mfxAllocator->pthis = session;
-        mfxAllocator->Alloc = simpleAlloc;
-        mfxAllocator->Free = simpleFree;
-        mfxAllocator->Lock = simpleLock;
-        mfxAllocator->Unlock = simpleUnlock;
-        mfxAllocator->GetHDL = simpleGethdl;
-
-        // using vidMem, set MediaSDK external allocator
-        status = session.SetFrameAllocator (mfxAllocator);
-        if (status != MFX_ERR_NONE)
-          cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
-        }
-
-      return status;
-      }
-    //}}}
-    //{{{
-    void mfxRelease() {
-
-      if (mVaDisplayHandle)
-        vaTerminate (mVaDisplayHandle);
-
-      if (mFd >= 0)
-        close (mFd);
-      }
-    //}}}
-    //}}}
-  #endif
-  }
 
 constexpr uint32_t kVideoPoolSize = 50;
 //{{{
@@ -1258,8 +162,8 @@ public:
 
     for (auto& surface : mMfxSurfaces)
       delete surface.Data.Y;
-
     mMfxSurfaces.clear();
+
     mfxRelease();
     }
   //}}}
@@ -1425,6 +329,1110 @@ private:
     return MFX_ERR_NOT_FOUND;
     }
   //}}}
+
+  //{{{
+  static string getMfxStatusString (mfxStatus status) {
+
+    string statusString;
+    switch (status) {
+      case   0: statusString = "No error"; break;
+
+      case  -1: statusString = "Unknown error"; break;
+      case  -2: statusString = "Null pointer"; break;
+      case  -3: statusString = "Unsupported feature/library load error"; break;
+      case  -4: statusString = "Could not allocate memory"; break;
+      case  -5: statusString = "Insufficient IO buffers"; break;
+      case  -6: statusString = "Invalid handle"; break;
+      case  -7: statusString = "Memory lock failure"; break;
+      case  -8: statusString = "Function called before initialization"; break;
+      case  -9: statusString = "Specified object not found"; break;
+      case -10: statusString = "More input data expected"; break;
+      case -11: statusString = "More output surfaces expected"; break;
+      case -12: statusString = "Operation aborted";  break;
+      case -13: statusString = "HW device lost";  break;
+      case -14: statusString = "Incompatible video parameters" ; break;
+      case -15: statusString = "Invalid video parameters";  break;
+      case -16: statusString = "Undefined behavior"; break;
+      case -17: statusString = "Device operation failure";  break;
+      case -18: statusString = "More bitstream data expected";  break;
+      case -19: statusString = "Incompatible audio parameters"; break;
+      case -20: statusString = "Invalid audio parameters"; break;
+
+      case   1: statusString = "the previous asynchronous operation is in execution"; break; //MFX_WRN_IN_EXECUTION
+      case   2: statusString = "the HW acceleration device is busy"; break;                  //MFX_WRN_DEVICE_BUSY
+      case   3: statusString = "the video parameters are changed during decoding"; break;    //MFX_WRN_VIDEO_PARAM_CHANGED
+      case   4: statusString = "SW is used"; break;                                          //MFX_WRN_PARTIAL_ACCELERATION
+      case   5: statusString = "incompatible video parameters"; break;                       //MFX_WRN_INCOMPATIBLE_VIDEO_PARAM
+      case   6: statusString = "the value is saturated based on its valid range"; break;     //MFX_WRN_VALUE_NOT_CHANGED
+      case   7: statusString = "the value is out of valid range"; break;                     //MFX_WRN_OUT_OF_RANGE
+      case  10: statusString = "one of requested filters has been skipped"; break;           //MFX_WRN_FILTER_SKIPPED
+      case  11: statusString = "incompatible audio parameters"; break;                       //MFX_WRN_INCOMPATIBLE_AUDIO_PARAM
+
+      default: statusString = "Error code";
+      }
+
+    return fmt::format ("status {} {}", status, statusString);
+    }
+  //}}}
+  //{{{
+  static string getMfxInfoString (mfxIMPL mfxImpl, mfxVersion mfxVersion) {
+
+    return fmt::format ("mfxImpl:{:x}{}{}{}{}{}{}{} verMajor:{} verMinor:{}",
+                        mfxImpl,
+                        ((mfxImpl & 0x0007) == MFX_IMPL_HARDWARE)  ? " hw":"",
+                        ((mfxImpl & 0x0007) == MFX_IMPL_SOFTWARE)  ? " sw":"",
+                        ((mfxImpl & 0x0007) == MFX_IMPL_AUTO_ANY)  ? " autoAny":"",
+                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_ANY)   ? " any":"",
+                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_D3D9)  ? " d3d9":"",
+                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_D3D11) ? " d3d11":"",
+                        ((mfxImpl & 0x0700) == MFX_IMPL_VIA_VAAPI) ? " vaapi":"",
+                        mfxVersion.Major, mfxVersion.Minor);
+    }
+  //}}}
+
+  #ifdef _WIN32
+    //{{{  windows directx11
+    //{{{
+    struct sCustomMemId {
+      mfxMemId mMemId;
+      mfxMemId mMemIdStaged;
+      mfxU16   mRw;
+      };
+    //}}}
+
+    //{{{
+    struct sImplType {
+      mfxIMPL impl;       // actual implementation
+      mfxU32  adapterID;  // device adapter number
+      };
+    //}}}
+    //{{{
+    inline static const vector <sImplType> kImplTypes = {
+      {MFX_IMPL_HARDWARE, 0},
+      {MFX_IMPL_HARDWARE2, 1},
+      {MFX_IMPL_HARDWARE3, 2},
+      {MFX_IMPL_HARDWARE4, 3}
+      };
+    //}}}
+
+    // vars
+    inline static ID3D11Device* D3D11Device = nullptr;
+    inline static ID3D11DeviceContext* D3D11Ctx = nullptr;
+
+    inline static map <mfxMemId*, mfxHDL> allocResponses;
+    inline static map <mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
+    inline static map <mfxHDL, int> allocDecodeRefCount;
+
+    // allocate
+    //{{{
+    static mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
+
+      // Determine surface format
+      DXGI_FORMAT format;
+      if (MFX_FOURCC_NV12 == request->Info.FourCC)
+        format = DXGI_FORMAT_NV12;
+      else if (MFX_FOURCC_RGB4 == request->Info.FourCC)
+        format = DXGI_FORMAT_B8G8R8A8_UNORM;
+      else if (MFX_FOURCC_YUY2== request->Info.FourCC)
+        format = DXGI_FORMAT_YUY2;
+      else if (MFX_FOURCC_P8 == request->Info.FourCC ) //|| MFX_FOURCC_P8_TEXTURE == request->Info.FourCC
+        format = DXGI_FORMAT_P8;
+      else
+        return MFX_ERR_UNSUPPORTED;
+
+      // allocate customContainer for texture,staged buffers for each surface
+      // - also stores intended read and/or write operation.
+      sCustomMemId** memIds = (sCustomMemId**)calloc (request->NumFrameSuggested, sizeof(sCustomMemId*));
+      if (!memIds)
+        return MFX_ERR_MEMORY_ALLOC;
+
+      for (int i = 0; i < request->NumFrameSuggested; i++) {
+        memIds[i] = (sCustomMemId*)calloc (1, sizeof(sCustomMemId));
+        if (!memIds[i])
+          return MFX_ERR_MEMORY_ALLOC;
+        memIds[i]->mRw = request->Type & 0xF000; // Set intended read/write operation
+        }
+      request->Type = request->Type & 0x0FFF;
+
+      // because P8 data (bitstream) for h264 encoder should be allocated by CreateBuffer()
+      // - but P8 data (MBData) for MPEG2 encoder should be allocated by CreateTexture2D()
+      if (request->Info.FourCC == MFX_FOURCC_P8) {
+        D3D11_BUFFER_DESC desc = {0};
+        if (!request->NumFrameSuggested)
+          return MFX_ERR_MEMORY_ALLOC;
+        desc.ByteWidth = request->Info.Width * request->Info.Height;
+        desc.Usage = D3D11_USAGE_STAGING;
+        desc.BindFlags = 0;
+        desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+        desc.MiscFlags = 0;
+        desc.StructureByteStride = 0;
+
+        ID3D11Buffer* buffer = nullptr;
+        if (FAILED (D3D11Device->CreateBuffer(&desc, 0, &buffer)))
+          return MFX_ERR_MEMORY_ALLOC;
+        memIds[0]->mMemId = reinterpret_cast<ID3D11Texture2D*>(buffer);
+        }
+      else {
+        D3D11_TEXTURE2D_DESC desc = {0};
+        desc.Width = request->Info.Width;
+        desc.Height = request->Info.Height;
+        desc.MipLevels = 1;
+        desc.ArraySize = 1; // number of subresources is 1 in this case
+        desc.Format = format;
+        desc.SampleDesc.Count = 1;
+        desc.Usage = D3D11_USAGE_DEFAULT;
+        desc.BindFlags = D3D11_BIND_DECODER;
+        desc.MiscFlags = 0;
+        //desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+
+        if ((MFX_MEMTYPE_FROM_VPPIN & request->Type) &&
+            (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format)) {
+          desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+          if (desc.ArraySize > 2)
+            return MFX_ERR_MEMORY_ALLOC;
+          }
+
+        if ((MFX_MEMTYPE_FROM_VPPOUT & request->Type) ||
+            (MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET & request->Type)) {
+          desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+          if (desc.ArraySize > 2)
+            return MFX_ERR_MEMORY_ALLOC;
+          }
+
+        if (DXGI_FORMAT_P8 == desc.Format)
+          desc.BindFlags = 0;
+
+        // create surface textures
+        ID3D11Texture2D* texture2D;
+        for (size_t i = 0; i < request->NumFrameSuggested / desc.ArraySize; i++) {
+          if (FAILED (D3D11Device->CreateTexture2D (&desc, NULL, &texture2D)))
+            return MFX_ERR_MEMORY_ALLOC;
+          memIds[i]->mMemId = texture2D;
+          }
+
+        desc.ArraySize = 1;
+        desc.Usage = D3D11_USAGE_STAGING;
+        desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // | D3D11_CPU_ACCESS_WRITE;
+        desc.BindFlags = 0;
+        desc.MiscFlags = 0;
+        //desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+
+        // create surface staging textures
+        for (size_t i = 0; i < request->NumFrameSuggested; i++) {
+          if (FAILED (D3D11Device->CreateTexture2D (&desc, NULL, &texture2D)))
+            return MFX_ERR_MEMORY_ALLOC;
+          memIds[i]->mMemIdStaged = texture2D;
+          }
+        }
+
+      response->mids = (mfxMemId*)memIds;
+      response->NumFrameActual = request->NumFrameSuggested;
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    static mfxStatus _simpleFree (mfxFrameAllocResponse* response) {
+
+      if (response->mids) {
+        for (mfxU32 i = 0; i < response->NumFrameActual; i++) {
+          if (response->mids[i]) {
+            sCustomMemId* mid = (sCustomMemId*)response->mids[i];
+
+            ID3D11Texture2D* surface = (ID3D11Texture2D*)mid->mMemId;
+            if (surface)
+              surface->Release();
+
+            ID3D11Texture2D* staged = (ID3D11Texture2D*)mid->mMemIdStaged;
+            if (staged)
+              staged->Release();
+
+            free (mid);
+            }
+          }
+
+        free (response->mids);
+        response->mids = NULL;
+        }
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    static mfxStatus simpleAlloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
+
+      mfxStatus status = MFX_ERR_NONE;
+
+      if (request->Type & MFX_MEMTYPE_SYSTEM_MEMORY)
+        return MFX_ERR_UNSUPPORTED;
+
+      if (allocDecodeResponses.find (pthis) != allocDecodeResponses.end() &&
+          (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type) && (MFX_MEMTYPE_FROM_DECODE & request->Type)) {
+        // Memory for this request was already allocated during manual allocation stage. Return saved response
+        // When decode acceleration device (DXVA) is created it requires a list of D3D surfaces to be passed.
+        // Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
+        // (No such restriction applies to Encode or VPP)
+        *response = allocDecodeResponses[pthis];
+        allocDecodeRefCount[pthis]++;
+        }
+      else {
+        status = _simpleAlloc (request, response);
+
+        if (MFX_ERR_NONE == status) {
+          if ((MFX_MEMTYPE_EXTERNAL_FRAME & request->Type) && (MFX_MEMTYPE_FROM_DECODE & request->Type)) {
+            // Decode alloc response handling
+            allocDecodeResponses[pthis] = *response;
+            allocDecodeRefCount[pthis]++;
+            }
+          else
+            // Encode and VPP alloc response handling
+            allocResponses[response->mids] = pthis;
+          }
+        }
+
+      return status;
+      }
+    //}}}
+    //{{{
+    static mfxStatus simpleFree (mfxHDL pthis, mfxFrameAllocResponse* response) {
+
+      if (!response)
+        return MFX_ERR_NULL_PTR;
+
+      if (allocResponses.find (response->mids) == allocResponses.end()) {
+        // Decode free response handling
+        if (--allocDecodeRefCount[pthis] == 0) {
+          _simpleFree (response);
+          allocDecodeResponses.erase (pthis);
+          allocDecodeRefCount.erase (pthis);
+          }
+        }
+      else {
+        // Encode and VPP free response handling
+        allocResponses.erase (response->mids);
+        _simpleFree (response);
+        }
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    static mfxStatus simpleLock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+
+      pthis;
+
+      HRESULT hRes = S_OK;
+
+      sCustomMemId* memId = (sCustomMemId*)mid;
+      ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
+      ID3D11Texture2D* staged = (ID3D11Texture2D*)memId->mMemIdStaged;
+      D3D11_TEXTURE2D_DESC desc = {0};
+      D3D11_MAPPED_SUBRESOURCE lockedRect = {0};
+      if (staged) {
+        surface->GetDesc (&desc);
+
+        // surface to staged if read
+        if (memId->mRw & WILL_READ)
+          D3D11Ctx->CopySubresourceRegion (staged, 0, 0, 0, 0, surface, 0, NULL);
+
+        do {
+          hRes = D3D11Ctx->Map (staged, 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, &lockedRect);
+          if ((S_OK != hRes) && (DXGI_ERROR_WAS_STILL_DRAWING != hRes))
+            return MFX_ERR_LOCK_MEMORY;
+          } while (DXGI_ERROR_WAS_STILL_DRAWING == hRes);
+        }
+      else {
+        hRes = D3D11Ctx->Map (surface, 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, &lockedRect);
+        desc.Format = DXGI_FORMAT_P8;
+        }
+
+      if (FAILED (hRes))
+        return MFX_ERR_LOCK_MEMORY;
+
+      switch (desc.Format) {
+        //{{{
+        case DXGI_FORMAT_NV12:
+          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
+          ptr->Y = (mfxU8*)lockedRect.pData;
+          ptr->U = (mfxU8*)lockedRect.pData + desc.Height * lockedRect.RowPitch;
+          ptr->V = ptr->U + 1;
+          break;
+        //}}}
+        //{{{
+        case DXGI_FORMAT_B8G8R8A8_UNORM :
+          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
+          ptr->B = (mfxU8*)lockedRect.pData;
+          ptr->G = ptr->B + 1;
+          ptr->R = ptr->B + 2;
+          ptr->A = ptr->B + 3;
+          break;
+        //}}}
+        //{{{
+        case DXGI_FORMAT_YUY2:
+          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
+          ptr->Y = (mfxU8*)lockedRect.pData;
+          ptr->U = ptr->Y + 1;
+          ptr->V = ptr->Y + 3;
+          break;
+        //}}}
+        //{{{
+        case DXGI_FORMAT_P8 :
+          ptr->Pitch = (mfxU16)lockedRect.RowPitch;
+          ptr->Y = (mfxU8*)lockedRect.pData;
+          ptr->U = 0;
+          ptr->V = 0;
+          break;
+        //}}}
+        //{{{
+        default:
+          return MFX_ERR_LOCK_MEMORY;
+        //}}}
+        }
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    static mfxStatus simpleUnlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+
+      pthis;
+
+      sCustomMemId* memId = (sCustomMemId*)mid;
+      ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
+      ID3D11Texture2D* staged = (ID3D11Texture2D*)memId->mMemIdStaged;
+      if (staged) {
+        D3D11Ctx->Unmap (staged, 0);
+        // copy staged to surface if write
+        if (memId->mRw & WILL_WRITE)
+          D3D11Ctx->CopySubresourceRegion (surface, 0, 0, 0, 0, staged, 0, NULL);
+        }
+      else
+        D3D11Ctx->Unmap (surface, 0);
+
+      if (ptr) {
+        ptr->Pitch = 0;
+        ptr->Y = 0;
+        ptr->U = 0;
+        ptr->V = 0;
+        ptr->A = 0;
+        ptr->R = 0;
+        ptr->G = 0;
+        ptr->B = 0;
+        }
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    static mfxStatus simpleGethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
+
+      pthis;
+
+      if (!handle)
+        return MFX_ERR_INVALID_HANDLE;
+
+      sCustomMemId* memId = (sCustomMemId*)mid;
+      mfxHDLPair* pPair = (mfxHDLPair*)handle;
+
+      pPair->first  = memId->mMemId; // surface texture
+      pPair->second = 0;
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+
+    // create
+    //{{{
+    static mfxStatus createHWDevice (mfxSession session, mfxHDL* deviceHandle) {
+
+      if (!D3D11Device || D3D11Ctx) {
+        mfxIMPL impl;
+        MFXQueryIMPL (session, &impl);
+        mfxIMPL baseImpl = MFX_IMPL_BASETYPE (impl); // Extract Media SDK base implementation type
+
+        // get corresponding adapter number
+        mfxU32 adapterNum = 0;
+        for (auto& implType : kImplTypes) {
+          if (implType.impl == baseImpl) {
+            adapterNum = implType.adapterID;
+            break;
+            }
+          }
+
+        // get DXGI factory
+        IDXGIFactory2* DXGIFactory = nullptr;
+        if (FAILED (CreateDXGIFactory (__uuidof(IDXGIFactory2), (void**)(&DXGIFactory))))
+          return MFX_ERR_DEVICE_FAILED;
+
+        // get adapter
+        IDXGIAdapter* adapter = nullptr;
+        if (FAILED (DXGIFactory->EnumAdapters (adapterNum, &adapter)))
+          return MFX_ERR_DEVICE_FAILED;
+        DXGIFactory->Release();
+
+        // Window handle not required by DX11 since we do not showcase rendering.
+        UINT dxFlags = 0; // D3D11_CREATE_DEVICE_DEBUG;
+        static D3D_FEATURE_LEVEL FeatureLevels[] = {
+          D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0,
+          D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
+        D3D_FEATURE_LEVEL featureLevelsOut;
+        if (FAILED (D3D11CreateDevice (adapter,
+                                       D3D_DRIVER_TYPE_UNKNOWN, NULL, dxFlags,
+                                       FeatureLevels, (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
+                                       D3D11_SDK_VERSION, &D3D11Device, &featureLevelsOut, &D3D11Ctx)))
+          return MFX_ERR_DEVICE_FAILED;
+        adapter->Release();
+
+        // set multiThreaded
+        ID3D10Multithread* multithread = nullptr;
+        if (FAILED (D3D11Device->QueryInterface (IID_PPV_ARGS (&multithread))))
+          return MFX_ERR_DEVICE_FAILED;
+        multithread->SetMultithreadProtected (true);
+        multithread->Release();
+        }
+
+      *deviceHandle = (mfxHDL)D3D11Device;
+      return MFX_ERR_NONE;
+      }
+    //}}}
+
+    // interface
+    //{{{
+    static mfxStatus mfxInitialize (mfxIMPL mfxImpl, mfxVersion mfxVersion, MFXVideoSession& session, mfxFrameAllocator* mfxAllocator) {
+
+      mfxStatus status = session.Init (mfxImpl | MFX_IMPL_VIA_D3D11, &mfxVersion);
+      if (status != MFX_ERR_NONE)
+        return status;
+
+      // if mfxFrameAllocator, setup DirectX device and memory allocator
+      if (mfxAllocator) {
+        // create DirectX11 device,context
+        mfxHDL deviceHandle;
+        status = createHWDevice (session, &deviceHandle);
+        if (status != MFX_ERR_NONE)
+          return status;
+
+        // set MediaSDK deviceManager
+        status = session.SetHandle (MFX_HANDLE_D3D11_DEVICE, deviceHandle);
+        if (status != MFX_ERR_NONE)
+          return status;
+
+        // use MediaSDK session ID as the allocation identifier
+        mfxAllocator->pthis = session;
+        mfxAllocator->Alloc = simpleAlloc;
+        mfxAllocator->Free = simpleFree;
+        mfxAllocator->Lock = simpleLock;
+        mfxAllocator->Unlock = simpleUnlock;
+        mfxAllocator->GetHDL = simpleGethdl;
+
+        // Since we are using video memory we must provide Media SDK with an external allocator
+        status = session.SetFrameAllocator (mfxAllocator);
+        }
+
+      return status;
+      }
+    //}}}
+    //{{{
+    static void mfxRelease() {
+
+      D3D11Device->Release();
+      D3D11Device = nullptr;
+
+      D3D11Ctx->Release();
+      D3D11Ctx = nullptr;
+      }
+    //}}}
+    //}}}
+  #else
+    //{{{  vaapi
+    //{{{
+    // VAAPI Allocator internal Mem ID
+    struct vaapiMemId {
+      VASurfaceID* mSurface;
+      VAImage mImage;
+
+      // variables for VAAPI Allocator inernal color conversion
+      unsigned int mFourcc;
+      mfxU8* mSysBuffer;
+      mfxU8* mVaBuffer;
+      };
+    //}}}
+    //{{{
+    struct sharedResponse {
+      mfxFrameAllocResponse mMfxResponse;
+      int mRefCount;
+      };
+    //}}}
+
+    // vars
+    static int mFd = -1;
+    static VADisplay mVaDisplayHandle = NULL;
+
+    static map <mfxMemId*, mfxHDL> allocResponses;
+    static map <mfxHDL, sharedResponse> allocDecodeResponses;
+
+    // utils
+    //{{{
+    static mfxStatus vaToMfxStatus (VAStatus vaStatus) {
+
+      mfxStatus mfxRes = MFX_ERR_NONE;
+
+      switch (vaStatus) {
+        case VA_STATUS_SUCCESS:
+          mfxRes = MFX_ERR_NONE;
+          break;
+
+        case VA_STATUS_ERROR_ALLOCATION_FAILED:
+          mfxRes = MFX_ERR_MEMORY_ALLOC;
+          break;
+
+        case VA_STATUS_ERROR_ATTR_NOT_SUPPORTED:
+        case VA_STATUS_ERROR_UNSUPPORTED_PROFILE:
+        case VA_STATUS_ERROR_UNSUPPORTED_ENTRYPOINT:
+        case VA_STATUS_ERROR_UNSUPPORTED_RT_FORMAT:
+        case VA_STATUS_ERROR_UNSUPPORTED_BUFFERTYPE:
+        case VA_STATUS_ERROR_FLAG_NOT_SUPPORTED:
+        case VA_STATUS_ERROR_RESOLUTION_NOT_SUPPORTED:
+          mfxRes = MFX_ERR_UNSUPPORTED;
+          break;
+
+        case VA_STATUS_ERROR_INVALID_DISPLAY:
+        case VA_STATUS_ERROR_INVALID_CONFIG:
+        case VA_STATUS_ERROR_INVALID_CONTEXT:
+        case VA_STATUS_ERROR_INVALID_SURFACE:
+        case VA_STATUS_ERROR_INVALID_BUFFER:
+        case VA_STATUS_ERROR_INVALID_IMAGE:
+        case VA_STATUS_ERROR_INVALID_SUBPICTURE:
+          mfxRes = MFX_ERR_NOT_INITIALIZED;
+          break;
+
+        case VA_STATUS_ERROR_INVALID_PARAMETER:
+          mfxRes = MFX_ERR_INVALID_VIDEO_PARAM;
+          break; // ???? fell though ????
+
+        default:
+          mfxRes = MFX_ERR_UNKNOWN;
+          break;
+        }
+
+      return mfxRes;
+      }
+    //}}}
+    //{{{
+    static unsigned int convertMfxFourccToVAFormat (mfxU32 fourcc) {
+
+      switch (fourcc) {
+        case MFX_FOURCC_NV12:
+          return VA_FOURCC_NV12;
+
+        case MFX_FOURCC_YUY2:
+          return VA_FOURCC_YUY2;
+
+        case MFX_FOURCC_YV12:
+          return VA_FOURCC_YV12;
+
+        case MFX_FOURCC_RGB4:
+          return VA_FOURCC_ARGB;
+
+        case MFX_FOURCC_P8:
+          return VA_FOURCC_P208;
+
+        default:
+          assert(!"unsupported fourcc");
+          return 0;
+        }
+      }
+    //}}}
+
+    // allocate
+    //{{{
+    static mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
+
+      mfxStatus status = MFX_ERR_NONE;
+      bool createSrfSucceeded = false;
+
+      memset (response, 0, sizeof(mfxFrameAllocResponse));
+
+      mfxU16 numSurfaces = request->NumFrameSuggested;
+      if (!numSurfaces)
+        return MFX_ERR_MEMORY_ALLOC;
+
+      mfxU32 fourcc = request->Info.FourCC;
+      unsigned int vaFourcc = convertMfxFourccToVAFormat (fourcc);
+      if (!vaFourcc || ((VA_FOURCC_NV12 != vaFourcc) &&
+                        (VA_FOURCC_YV12 != vaFourcc) && (VA_FOURCC_YUY2 != vaFourcc) &&
+                        (VA_FOURCC_ARGB != vaFourcc) && (VA_FOURCC_P208 != vaFourcc)))
+        return MFX_ERR_MEMORY_ALLOC;
+
+      VASurfaceID* surfaces = NULL;
+      vaapiMemId* vaapiMids = NULL;
+      mfxMemId* mids = NULL;
+      if (MFX_ERR_NONE == status) {
+        //{{{  allocate surfaces, vaapiMids, mids
+        surfaces = (VASurfaceID*)calloc (numSurfaces, sizeof(VASurfaceID));
+        vaapiMids = (vaapiMemId*)calloc (numSurfaces, sizeof(vaapiMemId));
+        mids = (mfxMemId*)calloc (numSurfaces, sizeof(mfxMemId));
+        if ((!surfaces) || (!vaapiMids) || (!mids))
+          status = MFX_ERR_MEMORY_ALLOC;
+        }
+        //}}}
+
+      mfxU16 numAllocated = 0;
+      if (MFX_ERR_NONE == status) {
+        if (VA_FOURCC_P208 != vaFourcc) {
+          //{{{  create surfaces
+          VASurfaceAttrib attrib;
+          attrib.type = VASurfaceAttribPixelFormat;
+          attrib.value.type = VAGenericValueTypeInteger;
+          attrib.value.value.i = vaFourcc;
+          attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
+          status = vaToMfxStatus (
+            vaCreateSurfaces (mVaDisplayHandle, VA_RT_FORMAT_YUV420,
+                              request->Info.Width, request->Info.Height, surfaces, numSurfaces, &attrib, 1));
+          createSrfSucceeded = (MFX_ERR_NONE == status);
+          }
+          //}}}
+        else {
+          //{{{  create buffer
+          // from libva spec
+          VAContextID context_id = request->reserved[0];
+          int codedbuf_size = (request->Info.Width * request->Info.Height) * 400 / (16 * 16);
+          for (numAllocated = 0; numAllocated < numSurfaces; numAllocated++) {
+            VABufferID coded_buf;
+            status = vaToMfxStatus (
+              vaCreateBuffer (mVaDisplayHandle, context_id, VAEncCodedBufferType, codedbuf_size, 1, NULL, &coded_buf));
+            if (MFX_ERR_NONE != status)
+              break;
+            surfaces[numAllocated] = coded_buf;
+            }
+          }
+          //}}}
+        }
+
+      if (MFX_ERR_NONE == status) {
+        //{{{  set mids
+        for (mfxU16 i = 0; i < numSurfaces; ++i) {
+          vaapiMemId* vaapiMid = &(vaapiMids[i]);
+          vaapiMid->mFourcc = fourcc;
+          vaapiMid->mSurface = &(surfaces[i]);
+          mids[i] = vaapiMid;
+          }
+        }
+        //}}}
+
+      if (MFX_ERR_NONE == status) {
+        //{{{  successful, set response
+        response->mids = mids;
+        response->NumFrameActual = numSurfaces;
+        }
+        //}}}
+      else {
+        //{{{  unsuccessful, set response, cleanup
+        // i.e. MFX_ERR_NONE != status
+        response->mids = NULL;
+        response->NumFrameActual = 0;
+
+        if (VA_FOURCC_P208 != vaFourcc) {
+          if (createSrfSucceeded)
+            vaDestroySurfaces (mVaDisplayHandle, surfaces, numSurfaces);
+          }
+        else {
+          for (mfxU16 i = 0; i < numAllocated; i++)
+            vaDestroyBuffer (mVaDisplayHandle, surfaces[i]);
+          }
+
+        if (mids) {
+          free (mids);
+          mids = NULL;
+          }
+
+        if (vaapiMids) {
+          free (vaapiMids);
+          vaapiMids = NULL;
+          }
+
+        if (surfaces) {
+          free(surfaces);
+          surfaces = NULL;
+          }
+        }
+        //}}}
+
+      return status;
+      }
+    //}}}
+    //{{{
+    static mfxStatus _simpleFree (mfxHDL pthis, mfxFrameAllocResponse* response) {
+
+      bool actualFreeMemory = false;
+      if (0 == memcmp (response, &(allocDecodeResponses[pthis].mMfxResponse), sizeof(*response))) {
+        // Decode free response handling
+        allocDecodeResponses[pthis].mRefCount--;
+        if (0 == allocDecodeResponses[pthis].mRefCount)
+          actualFreeMemory = true;
+        }
+      else
+        // Encode and VPP free response handling
+        actualFreeMemory = true;
+
+      if (actualFreeMemory) {
+        if (response->mids) {
+          vaapiMemId* vaapiMids = (vaapiMemId*)(response->mids[0]);
+          bool isBitstreamMemory = (MFX_FOURCC_P8 == vaapiMids->mFourcc) ? true : false;
+
+          VASurfaceID* surfaces = vaapiMids->mSurface;
+          for (mfxU32 i = 0; i < response->NumFrameActual; ++i) {
+            if (MFX_FOURCC_P8 == vaapiMids[i].mFourcc)
+              vaDestroyBuffer (mVaDisplayHandle, surfaces[i]);
+            else if (vaapiMids[i].mSysBuffer)
+              free (vaapiMids[i].mSysBuffer);
+            }
+
+          free (vaapiMids);
+          free (response->mids);
+          response->mids = NULL;
+          if (!isBitstreamMemory)
+            vaDestroySurfaces (mVaDisplayHandle, surfaces, response->NumFrameActual);
+          free (surfaces);
+          }
+
+        response->NumFrameActual = 0;
+        }
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    static mfxStatus simpleAlloc (mfxHDL pthis, mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
+
+      mfxStatus status = MFX_ERR_NONE;
+
+      if (0 == request || 0 == response || 0 == request->NumFrameSuggested)
+        return MFX_ERR_MEMORY_ALLOC;
+
+      if ((request->Type & (MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET |
+                            MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET)) == 0)
+        return MFX_ERR_UNSUPPORTED;
+
+      if (request->NumFrameSuggested <= allocDecodeResponses[pthis].mMfxResponse.NumFrameActual
+          && MFX_MEMTYPE_EXTERNAL_FRAME & request->Type
+          && MFX_MEMTYPE_FROM_DECODE & request->Type
+          &&allocDecodeResponses[pthis].mMfxResponse.NumFrameActual != 0) {
+        // Memory for this request was already allocated during manual allocation stage. Return saved response
+        //   When decode acceleration device (VAAPI) is created it requires a list of VAAPI surfaces to be passed.
+        //   Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
+        //   (No such restriction applies to Encode or VPP)
+        *response = allocDecodeResponses[pthis].mMfxResponse;
+        allocDecodeResponses[pthis].mRefCount++;
+        }
+      else {
+        status = _simpleAlloc (request, response);
+        if (MFX_ERR_NONE == status) {
+          if ((MFX_MEMTYPE_EXTERNAL_FRAME & request->Type) && (MFX_MEMTYPE_FROM_DECODE & request->Type)) {
+            // Decode alloc response handling
+            allocDecodeResponses[pthis].mMfxResponse = *response;
+            allocDecodeResponses[pthis].mRefCount++;
+            //allocDecodeRefCount[pthis]++;
+            }
+          else
+            // Encode and VPP alloc response handling
+            allocResponses[response->mids] = pthis;
+          }
+        }
+
+      return status;
+      }
+    //}}}
+    //{{{
+    static mfxStatus simpleFree (mfxHDL pthis, mfxFrameAllocResponse* response) {
+
+      if (!response)
+        return MFX_ERR_NULL_PTR;
+
+      if (allocResponses.find (response->mids) == allocResponses.end()) {
+        // Decode free response handling
+        if (--allocDecodeResponses[pthis].mRefCount == 0) {
+          _simpleFree (pthis, response);
+          allocDecodeResponses.erase (pthis);
+          }
+        }
+      else {
+        // Encode and VPP free response handling
+        allocResponses.erase (response->mids);
+        _simpleFree (pthis,response);
+        }
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    static mfxStatus simpleLock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+
+      (void) pthis;
+      mfxStatus mfx_res = MFX_ERR_NONE;
+      VAStatus va_res = VA_STATUS_SUCCESS;
+      vaapiMemId* vaapi_mid = (vaapiMemId*)mid;
+      mfxU8* pBuffer = 0;
+
+      if (!vaapi_mid || !(vaapi_mid->mSurface))
+        return MFX_ERR_INVALID_HANDLE;
+
+      if (MFX_FOURCC_P8 == vaapi_mid->mFourcc) {
+        // bitstream processing
+        VACodedBufferSegment* coded_buffer_segment;
+        va_res = vaMapBuffer (mVaDisplayHandle, *(vaapi_mid->mSurface), (void**)(&coded_buffer_segment));
+        mfx_res = vaToMfxStatus (va_res);
+        ptr->Y = (mfxU8*)coded_buffer_segment->buf;
+        }
+
+      else {
+        // Image processing
+        va_res = vaSyncSurface (mVaDisplayHandle, *(vaapi_mid->mSurface));
+        mfx_res = vaToMfxStatus (va_res);
+
+        if (MFX_ERR_NONE == mfx_res) {
+          va_res = vaDeriveImage (mVaDisplayHandle, *(vaapi_mid->mSurface), &(vaapi_mid->mImage));
+          mfx_res = vaToMfxStatus (va_res);
+          }
+
+        if (MFX_ERR_NONE == mfx_res) {
+          va_res = vaMapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf, (void**)&pBuffer);
+          mfx_res = vaToMfxStatus (va_res);
+          }
+
+        if (MFX_ERR_NONE == mfx_res) {
+          switch (vaapi_mid->mImage.format.fourcc) {
+            //{{{
+            case VA_FOURCC_NV12:
+              if (vaapi_mid->mFourcc == MFX_FOURCC_NV12) {
+                ptr->Pitch = (mfxU16) vaapi_mid->mImage.pitches[0];
+                ptr->Y = pBuffer + vaapi_mid->mImage.offsets[0];
+                ptr->U = pBuffer + vaapi_mid->mImage.offsets[1];
+                ptr->V = ptr->U + 1;
+                }
+              else
+                mfx_res = MFX_ERR_LOCK_MEMORY;
+              break;
+            //}}}
+            //{{{
+            case VA_FOURCC_YV12:
+              if (vaapi_mid->mFourcc == MFX_FOURCC_YV12) {
+                ptr->Pitch = (mfxU16) vaapi_mid->mImage.pitches[0];
+                ptr->Y = pBuffer + vaapi_mid->mImage.offsets[0];
+                ptr->V = pBuffer + vaapi_mid->mImage.offsets[1];
+                ptr->U = pBuffer + vaapi_mid->mImage.offsets[2];
+                }
+              else
+                 mfx_res = MFX_ERR_LOCK_MEMORY;
+              break;
+            //}}}
+            //{{{
+            case VA_FOURCC_YUY2:
+              if (vaapi_mid->mFourcc == MFX_FOURCC_YUY2) {
+                ptr->Pitch = (mfxU16) vaapi_mid->mImage.pitches[0];
+                ptr->Y = pBuffer + vaapi_mid->mImage.offsets[0];
+                ptr->U = ptr->Y + 1;
+                ptr->V = ptr->Y + 3;
+                }
+              else
+                 mfx_res = MFX_ERR_LOCK_MEMORY;
+              break;
+            //}}}
+            //{{{
+            case VA_FOURCC_ARGB:
+              if (vaapi_mid->mFourcc == MFX_FOURCC_RGB4) {
+                ptr->Pitch = (mfxU16) vaapi_mid->mImage.pitches[0];
+                ptr->B = pBuffer + vaapi_mid->mImage.offsets[0];
+                ptr->G = ptr->B + 1;
+                ptr->R = ptr->B + 2;
+                ptr->A = ptr->B + 3;
+                }
+              else
+                mfx_res = MFX_ERR_LOCK_MEMORY;
+              break;
+            //}}}
+            //{{{
+            default:
+              mfx_res = MFX_ERR_LOCK_MEMORY;
+              break;
+            //}}}
+            }
+          }
+        }
+
+      return mfx_res;
+      }
+    //}}}
+    //{{{
+    static mfxStatus simpleUnlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
+
+      (void)pthis;
+      vaapiMemId* vaapi_mid = (vaapiMemId*)mid;
+
+      if (!vaapi_mid || !(vaapi_mid->mSurface))
+        return MFX_ERR_INVALID_HANDLE;
+
+      if (MFX_FOURCC_P8 == vaapi_mid->mFourcc)
+        // bitstream processing
+        vaUnmapBuffer (mVaDisplayHandle, *(vaapi_mid->mSurface));
+      else {
+        // Image processing
+        vaUnmapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf);
+        vaDestroyImage (mVaDisplayHandle, vaapi_mid->mImage.image_id);
+
+        if (NULL != ptr) {
+          ptr->Pitch = 0;
+          ptr->Y = NULL;
+          ptr->U = NULL;
+          ptr->V = NULL;
+          ptr->A = NULL;
+          }
+        }
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+    //{{{
+    static mfxStatus simpleGethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
+
+      (void) pthis;
+      vaapiMemId* vaapi_mid = (vaapiMemId*)mid;
+
+      if (!handle || !vaapi_mid || !(vaapi_mid->mSurface))
+        return MFX_ERR_INVALID_HANDLE;
+
+      *handle = vaapi_mid->mSurface; //VASurfaceID* <-> mfxHDL
+      return MFX_ERR_NONE;
+      }
+    //}}}
+
+    // create
+    //{{{
+    static int getDrmDriverName (int fd, char* name, int name_size) {
+
+      drm_version_t version = {};
+      version.name_len = name_size;
+      version.name = name;
+      return ioctl (fd, DRM_IOWR (0, drm_version), &version);
+      }
+    //}}}
+    //{{{
+    static int openIntelAdapter() {
+
+      constexpr uint32_t DRI_MAX_NODES_NUM = 16;
+      constexpr uint32_t DRI_RENDER_START_INDEX = 128;
+      constexpr  uint32_t DRM_DRIVER_NAME_LEN = 4;
+
+      const char* DRI_PATH = "/dev/dri/";
+      const char* DRI_NODE_RENDER = "renderD";
+      const char* DRM_INTEL_DRIVER_NAME = "i915";
+
+      string adapterPath = DRI_PATH;
+      adapterPath += DRI_NODE_RENDER;
+
+      char driverName[DRM_DRIVER_NAME_LEN + 1] = {};
+      mfxU32 nodeIndex = DRI_RENDER_START_INDEX;
+
+      for (mfxU32 i = 0; i < DRI_MAX_NODES_NUM; ++i) {
+        string curAdapterPath = adapterPath + to_string(nodeIndex + i);
+
+        int fd = open (curAdapterPath.c_str(), O_RDWR);
+        if (fd < 0)
+          continue;
+        if (!getDrmDriverName (fd, driverName, DRM_DRIVER_NAME_LEN) &&
+            !strcmp (driverName, DRM_INTEL_DRIVER_NAME)) {
+          return fd;
+          }
+        close(fd);
+        }
+
+      return -1;
+      }
+    //}}}
+    //{{{
+    static mfxStatus createVAEnvDRM (mfxHDL* displayHandle) {
+
+      mfxStatus status = MFX_ERR_NONE;
+
+      mFd = openIntelAdapter();
+      if (mFd < 0)
+        status = MFX_ERR_NOT_INITIALIZED;
+
+      if (MFX_ERR_NONE == status) {
+        mVaDisplayHandle = vaGetDisplayDRM (mFd);
+        *displayHandle = mVaDisplayHandle;
+        if (!mVaDisplayHandle) {
+          close (mFd);
+          status = MFX_ERR_NULL_PTR;
+          }
+        }
+
+      if (MFX_ERR_NONE == status) {
+        int major_version = 0;
+        int minor_version = 0;
+        status = vaToMfxStatus (vaInitialize (mVaDisplayHandle, &major_version, &minor_version));
+        if (MFX_ERR_NONE != status) {
+          close (mFd);
+          mFd = -1;
+          }
+        }
+
+      if (MFX_ERR_NONE != status)
+        throw bad_alloc();
+
+      return MFX_ERR_NONE;
+      }
+    //}}}
+
+    // interface
+    //{{{
+    static mfxStatus mfxInitialize (mfxIMPL mfxImpl, mfxVersion mfxVersion, MFXVideoSession& session, mfxFrameAllocator* mfxAllocator) {
+
+      mfxStatus status = session.Init (mfxImpl, &mfxVersion);
+      if (status != MFX_ERR_NONE)
+        return status;
+
+      // Create VA display
+      mfxHDL displayHandle = {0};
+      status = createVAEnvDRM (&displayHandle);
+      if (status != MFX_ERR_NONE)
+        cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
+
+      // provide VA display handle to MediaSDK
+      status = session.SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
+      if (status != MFX_ERR_NONE)
+        cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
+
+      // If mfxFrameAllocator is provided it means we need to setup  memory allocator
+      if (mfxAllocator) {
+        // use MediaSDK session ID as the allocation identifier
+        mfxAllocator->pthis = session;
+        mfxAllocator->Alloc = simpleAlloc;
+        mfxAllocator->Free = simpleFree;
+        mfxAllocator->Lock = simpleLock;
+        mfxAllocator->Unlock = simpleUnlock;
+        mfxAllocator->GetHDL = simpleGethdl;
+
+        // using vidMem, set MediaSDK external allocator
+        status = session.SetFrameAllocator (mfxAllocator);
+        if (status != MFX_ERR_NONE)
+          cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
+        }
+
+      return status;
+      }
+    //}}}
+    //{{{
+    static void mfxRelease() {
+
+      if (mVaDisplayHandle)
+        vaTerminate (mVaDisplayHandle);
+
+      if (mFd >= 0)
+        close (mFd);
+      }
+    //}}}
+    //}}}
+  #endif
 
   const uint16_t mDecoderMask;
 
