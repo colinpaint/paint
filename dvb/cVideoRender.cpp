@@ -489,7 +489,7 @@ namespace {
 
       // get corresponding adapter number
       mfxU32 adapterNum = 0;
-      for (mfxU8 i = 0; i < sizeof(implTypes)/sizeof(implTypes[0]); i++) {
+      for (mfxU8 i = 0; i < sizeof(implTypes) / sizeof(implTypes[0]); i++) {
         if (implTypes[i].impl == baseImpl) {
           adapterNum = implTypes[i].adapterID;
           break;
@@ -510,7 +510,8 @@ namespace {
       // Window handle not required by DX11 since we do not showcase rendering.
       UINT dxFlags = 0; // D3D11_CREATE_DEVICE_DEBUG;
       static D3D_FEATURE_LEVEL FeatureLevels[] = {
-        D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
+        D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, 
+        D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
       D3D_FEATURE_LEVEL featureLevelsOut;
       if (FAILED (D3D11CreateDevice (adapter,
                                      D3D_DRIVER_TYPE_UNKNOWN, NULL, dxFlags,
