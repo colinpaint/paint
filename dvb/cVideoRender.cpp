@@ -145,12 +145,12 @@ namespace {
         {MFX_IMPL_HARDWARE4, 3}
       };
     //}}}
-    //{{{  CustomMemId
+    //{{{  struct sCustomMemId
     typedef struct {
       mfxMemId  mMemId;
       mfxMemId  mMemIdStage;
       mfxU16    mRw;
-      } CustomMemId;
+      } sCustomMemId;
     //}}}
 
     // vars
@@ -180,12 +180,12 @@ namespace {
 
       // Allocate custom container to keep texture and stage buffers for each surface
       // Container also stores the intended read and/or write operation.
-      CustomMemId** memIds = (CustomMemId**)calloc (request->NumFrameSuggested, sizeof(CustomMemId*));
+      sCustomMemId** memIds = (sCustomMemId**)calloc (request->NumFrameSuggested, sizeof(sCustomMemId*));
       if (!memIds)
         return MFX_ERR_MEMORY_ALLOC;
 
       for (int i = 0; i < request->NumFrameSuggested; i++) {
-        memIds[i] = (CustomMemId*)calloc (1, sizeof(CustomMemId));
+        memIds[i] = (sCustomMemId*)calloc (1, sizeof(sCustomMemId));
         if (!memIds[i])
           return MFX_ERR_MEMORY_ALLOC;
         memIds[i]->mRw = request->Type & 0xF000; // Set intended read/write operation
@@ -274,7 +274,7 @@ namespace {
       if (response->mids) {
         for (mfxU32 i = 0; i < response->NumFrameActual; i++) {
           if (response->mids[i]) {
-            CustomMemId* mid = (CustomMemId*)response->mids[i];
+            sCustomMemId* mid = (sCustomMemId*)response->mids[i];
 
             ID3D11Texture2D* surface = (ID3D11Texture2D*)mid->mMemId;
             if (surface)
@@ -364,7 +364,7 @@ namespace {
       D3D11_MAPPED_SUBRESOURCE lockedRect = {0};
       D3D11_MAP mapType  = D3D11_MAP_READ;
       UINT mapFlags = D3D11_MAP_FLAG_DO_NOT_WAIT;
-      CustomMemId* memId = (CustomMemId*)mid;
+      sCustomMemId* memId = (sCustomMemId*)mid;
       ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
       ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->mMemIdStage;
       if (!stage) {
@@ -436,7 +436,7 @@ namespace {
 
       pthis;
 
-      CustomMemId* memId = (CustomMemId*)mid;
+      sCustomMemId* memId = (sCustomMemId*)mid;
       ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
       ID3D11Texture2D* stage = (ID3D11Texture2D*)memId->mMemIdStage;
       if (!stage)
@@ -470,7 +470,7 @@ namespace {
       if (!handle)
         return MFX_ERR_INVALID_HANDLE;
 
-      CustomMemId* memId = (CustomMemId*)mid;
+      sCustomMemId* memId = (sCustomMemId*)mid;
       mfxHDLPair* pPair = (mfxHDLPair*)handle;
       pPair->first  = memId->mMemId; // surface texture
       pPair->second = 0;
@@ -1533,7 +1533,7 @@ public:
             videoFrame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
           videoFrame->setYuvRgbTime (
             chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
-          av_frame_unref (avFrame);  // ??? nnn ??? 
+          av_frame_unref (avFrame);  // ??? nnn ???
 
           // add videoFrame
           addFrameCallback (videoFrame);

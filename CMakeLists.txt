@@ -9,6 +9,8 @@ option (BUILD_PAINTBOX "Build paintbox" ON)
 option (BUILD_IMPLOT "Build implot" ON)
 option (BUILD_FILESYSTEM "Build filesystem" ON)
 option (BUILD_MFXTEST "Build mfxtest" ON)
+option (BUILD_AVX "Build avx" ON)
+option (BUILD_OPTIMISED "Build optimised" ON)
 
 set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
@@ -20,6 +22,9 @@ project (utils)
 
   if (MSVC)
     target_compile_options (${PROJECT_NAME} PUBLIC /W4 /arch:AVX /fp:fast /std:c++17)
+    if (BUILD_AVX)
+      target_compile_options (${PROJECT_NAME} PUBLIC /asch:AVX)
+    endif()
   else()
     target_compile_definitions (${PROJECT_NAME} PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
     target_compile_options (${PROJECT_NAME} PUBLIC -Wall -Wextra
@@ -27,8 +32,12 @@ project (utils)
                                                    -Wno-format-security -Wno-format-overflow
                                                    -pedantic
                                                    -march=native -flax-vector-conversions -ftree-vectorize
-                                                   -g -Ofast
                                                    -std=c++17 )
+    if (BUILD_OPTIMISED)
+      target_compile_options (${PROJECT_NAME} PUBLIC -Ofast)
+    else()
+      target_compile_options (${PROJECT_NAME} PUBLIC -g -O0)
+    endif()
 endif()
 
 # gui
