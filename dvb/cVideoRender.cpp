@@ -127,10 +127,13 @@ namespace {
     }
   //}}}
 
-  map <mfxMemId*, mfxHDL> allocResponses;
-
   #ifdef _WIN32
     //{{{  windows directx11
+    #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
+    #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
+    #define WILL_READ 0x1000
+    #define WILL_WRITE 0x2000
+
     //{{{  const struct implTypes
     const struct {
       mfxIMPL impl;       // actual implementation
@@ -149,17 +152,16 @@ namespace {
       mfxU16    mRw;
       } CustomMemId;
     //}}}
-    #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
-    #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
-    #define WILL_READ 0x1000
-    #define WILL_WRITE 0x2000
 
+    // vars
     ID3D11Device* D3D11Device;
     ID3D11DeviceContext* D3D11Ctx;
 
+    map <mfxMemId*, mfxHDL> allocResponses;
     map <mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
     map <mfxHDL, int> allocDecodeRefCount;
 
+    // allocate
     //{{{
     mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
@@ -477,6 +479,7 @@ namespace {
       }
     //}}}
 
+    // create
     //{{{
     mfxStatus createHWDevice (mfxSession session, mfxHDL* deviceHandle) {
 
@@ -528,6 +531,7 @@ namespace {
       }
     //}}}
 
+    // interface
     //{{{
     mfxStatus mfxInitialize (mfxIMPL mfxImpl, mfxVersion mfxVersion, MFXVideoSession& session, mfxFrameAllocator* mfxAllocator) {
 
@@ -591,21 +595,20 @@ namespace {
       };
     //}}}
 
-    // VAAPI display handle
-    VADisplay mVaDpy = NULL;
-
-    // gfx card file descriptor
+    // vars
     int mFd = -1;
+    VADisplay mVaDisplayHandle = NULL;
 
+    map <mfxMemId*, mfxHDL> allocResponses;
     map<mfxHDL, sharedResponse> allocDecodeResponses;
 
     // utils
     //{{{
-    mfxStatus vaToMfxStatus (VAStatus vaRes) {
+    mfxStatus vaToMfxStatus (VAStatus vaStatus) {
 
       mfxStatus mfxRes = MFX_ERR_NONE;
 
-      switch (vaRes) {
+      switch (vaStatus) {
         case VA_STATUS_SUCCESS:
           mfxRes = MFX_ERR_NONE;
           break;
@@ -672,7 +675,7 @@ namespace {
       }
     //}}}
 
-    // allocator
+    // allocate
     //{{{
     mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
@@ -715,7 +718,7 @@ namespace {
           attrib.value.value.i = vaFourcc;
           attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
           status = vaToMfxStatus (
-            vaCreateSurfaces (mVaDpy, VA_RT_FORMAT_YUV420,
+            vaCreateSurfaces (mVaDisplayHandle, VA_RT_FORMAT_YUV420,
                               request->Info.Width, request->Info.Height, surfaces, numSurfaces, &attrib, 1));
           createSrfSucceeded = (MFX_ERR_NONE == status);
           }
@@ -728,7 +731,7 @@ namespace {
           for (numAllocated = 0; numAllocated < numSurfaces; numAllocated++) {
             VABufferID coded_buf;
             status = vaToMfxStatus (
-              vaCreateBuffer (mVaDpy, context_id, VAEncCodedBufferType, codedbuf_size, 1, NULL, &coded_buf));
+              vaCreateBuffer (mVaDisplayHandle, context_id, VAEncCodedBufferType, codedbuf_size, 1, NULL, &coded_buf));
             if (MFX_ERR_NONE != status)
               break;
             surfaces[numAllocated] = coded_buf;
@@ -762,11 +765,11 @@ namespace {
 
         if (VA_FOURCC_P208 != vaFourcc) {
           if (createSrfSucceeded)
-            vaDestroySurfaces (mVaDpy, surfaces, numSurfaces);
+            vaDestroySurfaces (mVaDisplayHandle, surfaces, numSurfaces);
           }
         else {
           for (mfxU16 i = 0; i < numAllocated; i++)
-            vaDestroyBuffer (mVaDpy, surfaces[i]);
+            vaDestroyBuffer (mVaDisplayHandle, surfaces[i]);
           }
 
         if (mids) {
@@ -811,7 +814,7 @@ namespace {
           VASurfaceID* surfaces = vaapiMids->mSurface;
           for (mfxU32 i = 0; i < response->NumFrameActual; ++i) {
             if (MFX_FOURCC_P8 == vaapiMids[i].mFourcc)
-              vaDestroyBuffer (mVaDpy, surfaces[i]);
+              vaDestroyBuffer (mVaDisplayHandle, surfaces[i]);
             else if (vaapiMids[i].mSysBuffer)
               free (vaapiMids[i].mSysBuffer);
             }
@@ -820,7 +823,7 @@ namespace {
           free (response->mids);
           response->mids = NULL;
           if (!isBitstreamMemory)
-            vaDestroySurfaces (mVaDpy, surfaces, response->NumFrameActual);
+            vaDestroySurfaces (mVaDisplayHandle, surfaces, response->NumFrameActual);
           free (surfaces);
           }
 
@@ -908,23 +911,23 @@ namespace {
       if (MFX_FOURCC_P8 == vaapi_mid->mFourcc) {
         // bitstream processing
         VACodedBufferSegment* coded_buffer_segment;
-        va_res = vaMapBuffer (mVaDpy, *(vaapi_mid->mSurface), (void**)(&coded_buffer_segment));
+        va_res = vaMapBuffer (mVaDisplayHandle, *(vaapi_mid->mSurface), (void**)(&coded_buffer_segment));
         mfx_res = vaToMfxStatus (va_res);
         ptr->Y = (mfxU8*)coded_buffer_segment->buf;
         }
 
       else {
         // Image processing
-        va_res = vaSyncSurface (mVaDpy, *(vaapi_mid->mSurface));
+        va_res = vaSyncSurface (mVaDisplayHandle, *(vaapi_mid->mSurface));
         mfx_res = vaToMfxStatus (va_res);
 
         if (MFX_ERR_NONE == mfx_res) {
-          va_res = vaDeriveImage (mVaDpy, *(vaapi_mid->mSurface), &(vaapi_mid->mImage));
+          va_res = vaDeriveImage (mVaDisplayHandle, *(vaapi_mid->mSurface), &(vaapi_mid->mImage));
           mfx_res = vaToMfxStatus (va_res);
           }
 
         if (MFX_ERR_NONE == mfx_res) {
-          va_res = vaMapBuffer (mVaDpy, vaapi_mid->mImage.buf, (void**)&pBuffer);
+          va_res = vaMapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf, (void**)&pBuffer);
           mfx_res = vaToMfxStatus (va_res);
           }
 
@@ -1002,11 +1005,11 @@ namespace {
 
       if (MFX_FOURCC_P8 == vaapi_mid->mFourcc)
         // bitstream processing
-        vaUnmapBuffer (mVaDpy, *(vaapi_mid->mSurface));
+        vaUnmapBuffer (mVaDisplayHandle, *(vaapi_mid->mSurface));
       else {
         // Image processing
-        vaUnmapBuffer (mVaDpy, vaapi_mid->mImage.buf);
-        vaDestroyImage (mVaDpy, vaapi_mid->mImage.image_id);
+        vaUnmapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf);
+        vaDestroyImage (mVaDisplayHandle, vaapi_mid->mImage.image_id);
 
         if (NULL != ptr) {
           ptr->Pitch = 0;
@@ -1034,6 +1037,7 @@ namespace {
       }
     //}}}
 
+    // create
     //{{{
     int getDrmDriverName (int fd, char* name, int name_size) {
 
@@ -1079,28 +1083,25 @@ namespace {
     //{{{
     mfxStatus createVAEnvDRM (mfxHDL* displayHandle) {
 
-      VAStatus vaRes = VA_STATUS_SUCCESS;
       mfxStatus status = MFX_ERR_NONE;
-      int major_version = 0, minor_version = 0;
 
       mFd = openIntelAdapter();
       if (mFd < 0)
         status = MFX_ERR_NOT_INITIALIZED;
 
       if (MFX_ERR_NONE == status) {
-        mVaDpy = vaGetDisplayDRM (mFd);
-
-        *displayHandle = mVaDpy;
-
-        if (!mVaDpy) {
-          close(mFd);
+        mVaDisplayHandle = vaGetDisplayDRM (mFd);
+        *displayHandle = mVaDisplayHandle;
+        if (!mVaDisplayHandle) {
+          close (mFd);
           status = MFX_ERR_NULL_PTR;
           }
         }
 
       if (MFX_ERR_NONE == status) {
-        vaRes = vaInitialize (mVaDpy, &major_version, &minor_version);
-        status = vaToMfxStatus (vaRes);
+        int major_version = 0;
+        int minor_version = 0;
+        status = vaToMfxStatus (vaInitialize (mVaDisplayHandle, &major_version, &minor_version));
         if (MFX_ERR_NONE != status) {
           close (mFd);
           mFd = -1;
@@ -1114,6 +1115,7 @@ namespace {
       }
     //}}}
 
+    // interface
     //{{{
     mfxStatus mfxInitialize (mfxIMPL mfxImpl, mfxVersion mfxVersion, MFXVideoSession& session, mfxFrameAllocator* mfxAllocator) {
 
@@ -1154,8 +1156,8 @@ namespace {
     //{{{
     void mfxRelease() {
 
-      if (mVaDpy)
-        vaTerminate (mVaDpy);
+      if (mVaDisplayHandle)
+        vaTerminate (mVaDisplayHandle);
 
       if (mFd >= 0)
         close (mFd);
@@ -1368,31 +1370,31 @@ public:
         surfaceIndex = getFreeSurfaceIndex();
 
       auto timePoint = chrono::system_clock::now();
-      mfxFrameSurface1* mfxOutSurface = nullptr;
+
+      mfxFrameSurface1* surface = nullptr;
       mfxSyncPoint decodeSyncPoint = nullptr;
       status = MFXVideoDECODE_DecodeFrameAsync (
-        mMfxSession, &bitstream, &mMfxSurfaces[surfaceIndex], &mfxOutSurface, &decodeSyncPoint);
+        mMfxSession, &bitstream, &mMfxSurfaces[surfaceIndex], &surface, &decodeSyncPoint);
       if (status == MFX_ERR_NONE) {
         status = mMfxSession.SyncOperation (decodeSyncPoint, 60000);
         int64_t decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
-        cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (mfxOutSurface->Data.TimeStamp, 90000/25);
+        cVideoFrame* videoFrame = cVideoFrame::createVideoFrame (surface->Data.TimeStamp, 90000/25);
 
+        // copy from output surface to videoFrame rgba pixels
         timePoint = chrono::system_clock::now();
         if (getVidMem()) {
           //{{{  lock surface
-          status = mMfxAllocator.Lock (mMfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
+          status = mMfxAllocator.Lock (mMfxAllocator.pthis, surface->Data.MemId, &(surface->Data));
           if (status != MFX_ERR_NONE)
             cLog::log (LOGERROR, "Unlock failed - " + getMfxStatusString (status));
           }
           //}}}
-
-        videoFrame->init (mWidth, mHeight, mfxOutSurface->Data.Pitch, pesSize, decodeTime);
-        videoFrame->setNv12 (mfxOutSurface->Data.Y);
-
+        videoFrame->init (mWidth, mHeight, surface->Data.Pitch, pesSize, decodeTime);
+        videoFrame->setNv12 (surface->Data.Y);
         if (getVidMem()) {
           //{{{  unlock surface
-          status = mMfxAllocator.Unlock (mMfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
+          status = mMfxAllocator.Unlock (mMfxAllocator.pthis, surface->Data.MemId, &(surface->Data));
           if (status != MFX_ERR_NONE)
             cLog::log (LOGERROR, "Unlock failed - " + getMfxStatusString (status));
           }
@@ -1531,7 +1533,7 @@ public:
             videoFrame->setYuv420 (mSwsContext, avFrame->data, avFrame->linesize);
           videoFrame->setYuvRgbTime (
             chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
-          av_frame_unref (avFrame);  //???
+          av_frame_unref (avFrame);  // ??? nnn ??? 
 
           // add videoFrame
           addFrameCallback (videoFrame);
