@@ -591,14 +591,6 @@ namespace {
       };
     //}}}
 
-    constexpr uint32_t DRI_MAX_NODES_NUM = 16;
-    constexpr uint32_t DRI_RENDER_START_INDEX = 128;
-    constexpr  uint32_t DRM_DRIVER_NAME_LEN = 4;
-
-    const char* DRM_INTEL_DRIVER_NAME = "i915";
-    const char* DRI_PATH = "/dev/dri/";
-    const char* DRI_NODE_RENDER = "renderD";
-
     // VAAPI display handle
     VADisplay mVaDpy = NULL;
 
@@ -1053,6 +1045,14 @@ namespace {
     //}}}
     //{{{
     int openIntelAdapter() {
+
+      constexpr uint32_t DRI_MAX_NODES_NUM = 16;
+      constexpr uint32_t DRI_RENDER_START_INDEX = 128;
+      constexpr  uint32_t DRM_DRIVER_NAME_LEN = 4;
+
+      const char* DRI_PATH = "/dev/dri/";
+      const char* DRI_NODE_RENDER = "renderD";
+      const char* DRM_INTEL_DRIVER_NAME = "i915";
 
       string adapterPath = DRI_PATH;
       adapterPath += DRI_NODE_RENDER;
