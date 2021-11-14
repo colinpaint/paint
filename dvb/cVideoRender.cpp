@@ -402,8 +402,8 @@ private:
 
     //{{{
     struct sImplType {
-      mfxIMPL impl;       // actual implementation
-      mfxU32  adapterID;  // device adapter number
+      mfxIMPL mImpl;       // actual implementation
+      mfxU32  mAdapterId;  // device adapter number
       };
     //}}}
     //{{{
@@ -414,14 +414,6 @@ private:
       {MFX_IMPL_HARDWARE4, 3}
       };
     //}}}
-
-    // vars
-    inline static ID3D11Device* D3D11Device = nullptr;
-    inline static ID3D11DeviceContext* D3D11Ctx = nullptr;
-
-    inline static map <mfxMemId*, mfxHDL> allocResponses;
-    inline static map <mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
-    inline static map <mfxHDL, int> allocDecodeRefCount;
 
     // allocate
     //{{{
@@ -752,8 +744,8 @@ private:
         // get corresponding adapter number
         mfxU32 adapterNum = 0;
         for (auto& implType : kImplTypes) {
-          if (implType.impl == baseImpl) {
-            adapterNum = implType.adapterID;
+          if (implType.mImpl == baseImpl) {
+            adapterNum = implType.mAdapterId;
             break;
             }
           }
@@ -841,6 +833,14 @@ private:
       D3D11Ctx = nullptr;
       }
     //}}}
+
+    // vars
+    inline static ID3D11Device* D3D11Device = nullptr;
+    inline static ID3D11DeviceContext* D3D11Ctx = nullptr;
+
+    inline static map <mfxMemId*, mfxHDL> allocResponses;
+    inline static map <mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
+    inline static map <mfxHDL, int> allocDecodeRefCount;
     //}}}
   #else
     //{{{  vaapi
@@ -862,13 +862,6 @@ private:
       int mRefCount;
       };
     //}}}
-
-    // vars
-    static int mFd = -1;
-    static VADisplay mVaDisplayHandle = NULL;
-
-    static map <mfxMemId*, mfxHDL> allocResponses;
-    static map <mfxHDL, sharedResponse> allocDecodeResponses;
 
     // utils
     //{{{
@@ -1431,6 +1424,13 @@ private:
         close (mFd);
       }
     //}}}
+
+    // vars
+    inline static int mFd = -1;
+    inline static VADisplay mVaDisplayHandle = NULL;
+
+    inline static map <mfxMemId*, mfxHDL> allocResponses;
+    inline static map <mfxHDL, sharedResponse> allocDecodeResponses;
     //}}}
   #endif
 
