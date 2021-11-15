@@ -4,14 +4,16 @@ cmake_policy (SET CMP0072 NEW)
 option (BUILD_FED "Build fed" ON)
 option (BUILD_TELLY "Build telly" ON)
 option (BUILD_PLAYER "Build player" ON)
-option (BUILD_CAPTURE "Build capture" ON)
 option (BUILD_PAINTBOX "Build paintbox" ON)
 option (BUILD_IMPLOT "Build implot" ON)
 option (BUILD_FILESYSTEM "Build filesystem" ON)
 option (BUILD_MFXTEST "Build mfxtest" ON)
+#
+option (BUILD_CAPTURE "Build capture" ON)
 option (BUILD_AVX "Build avx" ON)
+#
 option (BUILD_OPTIMISED "Build optimised" ON)
-
+#
 set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 
@@ -105,7 +107,7 @@ if (BUILD_MFXTEST)
     if (MSVC)
       # use project libmfx
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
-      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils d3d11 dxgi dxva2)
+      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils d3d9 d3d11 dxgi dxva2)
     else()
       # use installed libmfx,libv,libva-drm
       find_package (PkgConfig REQUIRED)
@@ -130,7 +132,7 @@ if (BUILD_TELLY)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
       target_link_libraries (${PROJECT_NAME} PUBLIC
                              utils libmfx avdevice avfilter avformat avcodec avutil swresample swscale)
-      target_link_libraries (${PROJECT_NAME} PRIVATE d3d11 dxgi dxva2)
+      target_link_libraries (${PROJECT_NAME} PRIVATE d3d9 d3d11 dxgi dxva2)
     else()
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (LIBMFX REQUIRED IMPORTED_TARGET libmfx)

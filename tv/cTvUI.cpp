@@ -30,7 +30,7 @@
 using namespace std;
 //}}}
 
-const vector<string> kDecoderOptions = { "ffmpeg", "mfxSys", "mfxVid", "shadYuv"};
+const vector<string> kDecoderOptions = { "ffmpeg", "ffYuv", "mfxSys", "mfxVid"};
 class cTellyView {
 public:
   //{{{
@@ -59,14 +59,7 @@ public:
       //}}}
 
     ImGui::SameLine();
-    mDecoderOptions = interlockedButtons (kDecoderOptions, mDecoderOptions, {0.f,0.f}, true);
-    switch (mDecoderOptions) {
-      case 0 : mDecoderMask = cRender::kFFmpeg; break;
-      case 1 : mDecoderMask = cRender::kMfx; break;
-      case 2 : mDecoderMask = cRender::kMfx | cRender::kVidMem; break;
-      case 3 : mDecoderMask = cRender::kFFmpeg | cRender::kShaderYuv; break;
-      default:;
-      }
+    mDecoderMask = interlockedButtons (kDecoderOptions, (uint8_t)mDecoderMask, {0.f,0.f}, true);
 
     if (app.getDvbStream()) {
       // dvbStream info
@@ -409,8 +402,6 @@ private:
   std::array <size_t, 4> mPidMaxChars = { 3 };
 
   int mPlotIndex = 0;
-
-  uint8_t mDecoderOptions = 0;
   uint16_t mDecoderMask = 0;
   //}}}
   };

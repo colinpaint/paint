@@ -30,12 +30,16 @@ namespace {
   //{{{
   class cDx11Texture : public cTexture {
   public:
-    cDx11Texture (uint8_t textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) { (void)pixels; }
+    cDx11Texture (uint8_t textureType, cPoint size, uint8_t* pixels)
+        : cTexture(textureType, size) { 
+      (void)pixels; 
+      }
 
-    void setPixels (uint8_t* pixels) final { (void)pixels; }
+    void setPixels (uint8_t* pixels) final { 
+      (void)pixels; 
+      }
     };
   //}}}
-
   //{{{
   class cDx11Quad : public cQuad {
   public:
@@ -213,7 +217,6 @@ namespace {
     //}}}
     };
   //}}}
-
   //{{{
   uint32_t compileShader (const string& vertShaderString, const string& fragShaderString) {
     (void)vertShaderString;
