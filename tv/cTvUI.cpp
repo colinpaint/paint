@@ -30,7 +30,7 @@
 using namespace std;
 //}}}
 
-const vector<string> kDecoderOptions = { "ffmpeg", "ffYuv", "mfxSys", "mfxVid"};
+const vector<string> kDecoderOptions = { "ffmpeg", "ffYuv", "mfxSys", "mfxVid9", "mfxVid11" };
 class cTellyView {
 public:
   //{{{

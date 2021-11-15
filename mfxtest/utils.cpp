@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //}}}
-//#define D3D9
+#define D3D9
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
@@ -34,14 +34,14 @@
   #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
   #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
 
+  #include <d3d9.h>
+  #include <dxva2api.h>
+  #include <d3d11.h>
+  #include <dxgi1_2.h>
+
   #ifdef D3D9
-    #pragma warning(disable : 4201) // Disable annoying DX warning
-    #include <d3d9.h>
-    #include <dxva2api.h>
     #define DEVICE_MGR_TYPE MFX_HANDLE_DIRECT3D_DEVICE_MANAGER9
   #else
-    #include <d3d11.h>
-    #include <dxgi1_2.h>
     #define DEVICE_MGR_TYPE MFX_HANDLE_D3D11_DEVICE
   #endif
 #else
