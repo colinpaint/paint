@@ -32,7 +32,7 @@
 #include <getopt.h>
 
 #include <va/va_str.h>
-#include "va_display.h"
+#include "vaDisplay.h"
 //}}}
 
 #ifdef ANDROID
@@ -525,7 +525,7 @@ int main(int argc, const char* argv[])
     CHECK_VASTATUS(va_status, "vaInitialize", 3);
 
     printf("%s: VA-API version: %d.%d (libva %s)\n",
-           name, major_version, minor_version, LIBVA_VERSION_S);
+           name, major_version, minor_version, "LIBVA_VERSION_S");
 
     driver = vaQueryVendorString(va_dpy);
     printf("%s: Driver version: %s\n", name, driver ? driver : "<unknown>");

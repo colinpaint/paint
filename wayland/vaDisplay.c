@@ -44,7 +44,7 @@ extern const VADisplayHooks va_display_hooks_drm;
 
 static const VADisplayHooks *g_display_hooks;
 static const VADisplayHooks *g_display_hooks_available[] = {
-   &va_display_hooks_wayland,
+   //&va_display_hooks_wayland,
    //&va_display_hooks_drm,
   NULL
   };
