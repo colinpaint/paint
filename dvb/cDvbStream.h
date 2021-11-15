@@ -297,6 +297,8 @@ public:
   std::string getSignalString() { return mSignalString; }
   //}}}
 
+  void toggleStream (cService& service, size_t streamType, uint16_t decoderMask);
+
   // source
   void dvbSource (bool launchThread);
   void fileSource (bool launchThread, const std::string& fileName);

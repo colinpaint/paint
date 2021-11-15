@@ -760,6 +760,15 @@ cDvbStream::cService* cDvbStream::getService (uint16_t sid) {
   }
 //}}}
 
+//{{{
+void cDvbStream::toggleStream (cService& service, size_t streamType, uint16_t decoderMask) {
+
+  lock_guard<mutex> lockGuard (mMutex);
+  service.toggleStream (streamType, decoderMask);
+  }
+//}}}
+
+
 // sources
 //{{{
 void cDvbStream::dvbSource (bool launchThread) {

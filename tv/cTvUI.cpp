@@ -181,7 +181,7 @@ private:
                                          stream.getLabel(),
                                          stream.getPid(), mPidMaxChars[streamType], stream.getTypeName(),
                                          service.getSid()).c_str(), stream.isEnabled()))
-           service.toggleStream (streamType, mDecoderMask);
+           dvbStream.toggleStream (service, streamType, mDecoderMask);
           }
         }
 

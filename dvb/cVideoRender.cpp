@@ -2329,19 +2329,20 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)pesSize);
 
-  mDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
-    // addFrame lambda
-    cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-    mWidth = videoFrame->getWidth();
-    mHeight = videoFrame->getHeight();
-    mLastPts = videoFrame->getPts();
-    mPtsDuration = videoFrame->getPtsDuration();
-    mDecodeTime = videoFrame->getDecodeTime();
-    mYuvRgbTime = videoFrame->getYuvRgbTime();
+  if (mDecoder)
+    mDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
+      // addFrame lambda
+      cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+      mWidth = videoFrame->getWidth();
+      mHeight = videoFrame->getHeight();
+      mLastPts = videoFrame->getPts();
+      mPtsDuration = videoFrame->getPtsDuration();
+      mDecodeTime = videoFrame->getDecodeTime();
+      mYuvRgbTime = videoFrame->getYuvRgbTime();
 
-    addFrame (videoFrame);
-    logValue (videoFrame->getPts(), (float)mDecodeTime);
-    });
+      addFrame (videoFrame);
+      logValue (videoFrame->getPts(), (float)mDecodeTime);
+      });
   }
 //}}}
 
