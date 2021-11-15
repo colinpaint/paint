@@ -506,18 +506,18 @@ protected:
 //}}}
 #ifdef _WIN32
   //{{{
-  class cMfxMemoryDecoder : public cMfxDecoder {
+  class cMfxSystemDecoder : public cMfxDecoder {
   public:
     //{{{
-    cMfxMemoryDecoder (uint8_t streamType)
+    cMfxSystemDecoder (uint8_t streamType)
        : cMfxDecoder(MFX_IMPL_HARDWARE, streamType) {
 
-      cLog::log (LOGINFO, fmt::format ("cMfxMemoryVideoDecoder stream:{}", streamType));
+      cLog::log (LOGINFO, fmt::format ("cMfxSystemVideoDecoder stream:{}", streamType));
       mVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
       }
     //}}}
     //{{{
-    virtual ~cMfxMemoryDecoder() {
+    virtual ~cMfxSystemDecoder() {
 
       for (auto& surface : mSurfaces)
         delete surface.Data.Y;
@@ -543,13 +543,13 @@ protected:
     };
   //}}}
   //{{{
-  class cMfxD3D9SurfaceDecoder : public cMfxDecoder {
+  class cMfxSurfaceDecoderD3D9 : public cMfxDecoder {
   public:
     //{{{
-    cMfxD3D9SurfaceDecoder (uint8_t streamType)
+    cMfxSurfaceDecoderD3D9 (uint8_t streamType)
        : cMfxDecoder(MFX_IMPL_HARDWARE, streamType) {
 
-      cLog::log (LOGINFO, fmt::format ("cMfxD3D9SurfaceDecoder stream:{}", streamType));
+      cLog::log (LOGINFO, fmt::format ("cMfxSurfaceDecoderD3D9 stream:{}", streamType));
       mVideoParams.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
 
       // create DirectX11 device,context
@@ -576,7 +576,7 @@ protected:
       }
     //}}}
     //{{{
-    virtual ~cMfxD3D9SurfaceDecoder() {
+    virtual ~cMfxSurfaceDecoderD3D9() {
       cleanupHWDevice();
       }
     //}}}
@@ -674,12 +674,8 @@ protected:
       // Allocate surfaces
       hr = pDXVAServiceTmp->CreateSurface (request->Info.Width, request->Info.Height,
                                            request->NumFrameSuggested - 1,
-                                           format,
-                                           D3DPOOL_DEFAULT,
-                                           0,
-                                           DxvaType,
-                                           (IDirect3DSurface9**)mids,
-                                           NULL);
+                                           format, D3DPOOL_DEFAULT, 0,
+                                           DxvaType, (IDirect3DSurface9**)mids, NULL);
       if (FAILED(hr))
         return MFX_ERR_MEMORY_ALLOC;
 
@@ -768,31 +764,28 @@ protected:
     //{{{
     static mfxStatus simpleLock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
-      pthis; // To suppress warning for this unused parameter
+      pthis;
 
       IDirect3DSurface9* surface = (IDirect3DSurface9*)mid;
-
-      if (surface == 0)
+      if (!surface)
         return MFX_ERR_INVALID_HANDLE;
-      if (ptr == 0)
+      if (!ptr)
         return MFX_ERR_LOCK_MEMORY;
 
       D3DSURFACE_DESC desc;
-      HRESULT hr = surface->GetDesc (&desc);
-      if (FAILED(hr))
+      if (FAILED (surface->GetDesc (&desc)))
         return MFX_ERR_LOCK_MEMORY;
 
       D3DLOCKED_RECT locked;
-      hr = surface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK);
-      if (FAILED(hr))
+      if (FAILED (surface->LockRect (&locked, 0, D3DLOCK_NOSYSLOCK)))
         return MFX_ERR_LOCK_MEMORY;
 
       // In these simple set of samples we only illustrate usage of NV12 and RGB4(32)
       if (D3DFMT_NV12 == desc.Format) {
         ptr->Pitch  = (mfxU16)locked.Pitch;
-        ptr->Y      = (mfxU8*)locked.pBits;
-        ptr->U      = (mfxU8*)locked.pBits + desc.Height * locked.Pitch;
-        ptr->V      = ptr->U + 1;
+        ptr->Y = (mfxU8*)locked.pBits;
+        ptr->U = (mfxU8*)locked.pBits + desc.Height * locked.Pitch;
+        ptr->V = ptr->U + 1;
         }
       else if (D3DFMT_A8R8G8B8 == desc.Format) {
         ptr->Pitch = (mfxU16)locked.Pitch;
@@ -826,20 +819,20 @@ protected:
     //{{{
     static mfxStatus simpleUnlock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
-      pthis; // To suppress warning for this unused parameter
+      pthis;
 
       IDirect3DSurface9* surface = (IDirect3DSurface9*)mid;
-      if (surface == 0)
+      if (!surface)
         return MFX_ERR_INVALID_HANDLE;
 
       surface->UnlockRect();
 
       if (NULL != ptr) {
         ptr->Pitch = 0;
-        ptr->R     = 0;
-        ptr->G     = 0;
-        ptr->B     = 0;
-        ptr->A     = 0;
+        ptr->R = 0;
+        ptr->G = 0;
+        ptr->B = 0;
+        ptr->A = 0;
         }
 
       return MFX_ERR_NONE;
@@ -848,7 +841,7 @@ protected:
     //{{{
     static mfxStatus simpleGethdl (mfxHDL pthis, mfxMemId mid, mfxHDL* handle) {
 
-      pthis; // To suppress warning for this unused parameter
+      pthis;
 
       if (handle == 0)
         return MFX_ERR_INVALID_HANDLE;
@@ -963,13 +956,13 @@ protected:
     };
   //}}}
   //{{{
-  class cMfxD3D11SurfaceDecoder : public cMfxDecoder {
+  class cMfxSurfaceDecoderD3D11 : public cMfxDecoder {
   public:
     //{{{
-    cMfxD3D11SurfaceDecoder (uint8_t streamType)
+    cMfxSurfaceDecoderD3D11 (uint8_t streamType)
        : cMfxDecoder(MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11, streamType) {
 
-      cLog::log (LOGINFO, fmt::format ("cMfxD3D11SurfaceDecoder stream:{}", streamType));
+      cLog::log (LOGINFO, fmt::format ("cMfxSurfaceDecoderD3D11 stream:{}", streamType));
       mVideoParams.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
 
       // create DirectX11 device,context
@@ -996,7 +989,7 @@ protected:
       }
     //}}}
     //{{{
-    virtual ~cMfxD3D11SurfaceDecoder() {
+    virtual ~cMfxSurfaceDecoderD3D11() {
       cleanupHWDevice();
       }
     //}}}
@@ -1433,13 +1426,13 @@ protected:
 
 #else // VAAPI
   //{{{
-  class cMfxMemoryDecoder : public cMfxDecoder {
+  class cMfxSystemDecoder : public cMfxDecoder {
   public:
     //{{{
-    cMfxMemoryDecoder (uint8_t streamType)
+    cMfxSystemDecoder (uint8_t streamType)
        : cMfxDecoder(MFX_IMPL_HARDWARE, streamType) {
 
-      cLog::log (LOGINFO, fmt::format ("cMfxMemoryDecoder VAAPI stream:{}", streamType));
+      cLog::log (LOGINFO, fmt::format ("cMfxSystemDecoder VAAPI stream:{}", streamType));
 
       mMfxVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
 
@@ -1454,7 +1447,7 @@ protected:
       }
     //}}}
     //{{{
-    virtual ~cMfxMemoryDecoder() {
+    virtual ~cMfxSystemDecoder() {
 
       for (auto& surface : mMfxSurfaces)
         delete surface.Data.Y;
@@ -2248,9 +2241,9 @@ cVideoRender::cVideoRender (const string name, uint8_t streamType, uint16_t deco
   switch (decoderMask) {
     case eFFmpegRGB: mDecoder = new cFFmpegDecoder (streamType, false); break;
     case eFFmpegYVV: mDecoder = new cFFmpegDecoder (streamType, true);  mYuv = true; break;
-    case eMfxSystem: mDecoder = new cMfxMemoryDecoder (streamType); break;
-    case eMfxVideo9:  mDecoder = new cMfxD3D9SurfaceDecoder (streamType); break;
-    case eMfxVideo11:  mDecoder = new cMfxD3D11SurfaceDecoder (streamType); break;
+    case eMfxSystem: mDecoder = new cMfxSystemDecoder (streamType); break;
+    case eMfxVideo9:  mDecoder = new cMfxSurfaceDecoderD3D9 (streamType); break;
+    case eMfxVideo11:  mDecoder = new cMfxSurfaceDecoderD3D11 (streamType); break;
     default: cLog::log (LOGERROR, fmt::format ("cVideoRender - no decoder {:x}", decoderMask));
     }
   }
