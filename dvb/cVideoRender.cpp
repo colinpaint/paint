@@ -3,6 +3,7 @@
 #include "cVideoRender.h"
 
 #ifdef _WIN32
+  //{{{  windows headers
   #define NOMINMAX
   #include <intrin.h>
 
@@ -17,6 +18,7 @@
 
   #define WILL_READ 0x1000
   #define WILL_WRITE 0x2000
+  //}}}
 #else
   //{{{  vaapi headers
   #include <stdio.h>
@@ -1423,7 +1425,6 @@ protected:
     inline static map <mfxHDL, int> allocDecodeRefCount;
     };
   //}}}
-
 #else // VAAPI
   //{{{
   class cMfxSystemDecoder : public cMfxDecoder {
@@ -1434,7 +1435,7 @@ protected:
 
       cLog::log (LOGINFO, fmt::format ("cMfxSystemDecoder VAAPI stream:{}", streamType));
 
-      mMfxVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
+      mVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
 
       // Create VA display
       mfxHDL displayHandle = {0};
@@ -1443,13 +1444,13 @@ protected:
         cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
 
       // provide VA display handle to MediaSDK
-      status = session.SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
+      status = mSession.SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
       }
     //}}}
     //{{{
     virtual ~cMfxSystemDecoder() {
 
-      for (auto& surface : mMfxSurfaces)
+      for (auto& surface : mSurfaces)
         delete surface.Data.Y;
 
       if (mVaDisplayHandle)
@@ -1616,7 +1617,7 @@ protected:
 
       cLog::log (LOGINFO, fmt::format ("cMfxSurfaceDecoder VAAPI stream:{}", streamType));
 
-      mMfxVideoParams.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
+      mVideoParams.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
 
       // Create VA display
       mfxHDL displayHandle = {0};
@@ -1625,33 +1626,33 @@ protected:
         cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
 
       // provide VA display handle to MediaSDK
-      status = session.SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
+      status = mSession.SetHandle (static_cast <mfxHandleType>(MFX_HANDLE_VA_DISPLAY), displayHandle);
 
       // use MediaSDK session ID as the allocation identifier
-      mAllocator.pthis = session;
+      mAllocator.pthis = mSession;
       mAllocator.Alloc = simpleAlloc;
       mAllocator.Free = simpleFree;
-      mAllocator.>Lock = simpleLock;
+      mAllocator.Lock = simpleLock;
       mAllocator.Unlock = simpleUnlock;
       mAllocator.GetHDL = simpleGethdl;
 
       // using vidMem, set MediaSDK external allocator
-      status = session.SetFrameAllocator (mfxAllocator);
+      status = mSession.SetFrameAllocator (&mAllocator);
       if (status != MFX_ERR_NONE)
         cLog::log (LOGERROR, "CreateHWDevice failed " + getMfxStatusString (status));
       }
     //}}}
     //{{{
-    virtual ~cMfxVideoDecoder() {
+    virtual ~cMfxSurfaceDecoder() {
 
-      MFXVideoDECODE_Close (mMfxSession);
-      mMfxSession.Close();
-
-      for (auto& surface : mMfxSurfaces)
+      for (auto& surface : mSurfaces)
         delete surface.Data.Y;
-      mMfxSurfaces.clear();
 
-      mfxRelease();
+      if (mVaDisplayHandle)
+        vaTerminate (mVaDisplayHandle);
+
+      if (mFd >= 0)
+        close (mFd);
       }
     //}}}
 
@@ -2242,8 +2243,13 @@ cVideoRender::cVideoRender (const string name, uint8_t streamType, uint16_t deco
     case eFFmpegRGB: mDecoder = new cFFmpegDecoder (streamType, false); break;
     case eFFmpegYVV: mDecoder = new cFFmpegDecoder (streamType, true);  mYuv = true; break;
     case eMfxSystem: mDecoder = new cMfxSystemDecoder (streamType); break;
-    case eMfxVideo9:  mDecoder = new cMfxSurfaceDecoderD3D9 (streamType); break;
-    case eMfxVideo11:  mDecoder = new cMfxSurfaceDecoderD3D11 (streamType); break;
+    #ifdef _WIN32
+      case eMfxVideo9:  mDecoder = new cMfxSurfaceDecoderD3D9 (streamType); break;
+      case eMfxVideo11:  mDecoder = new cMfxSurfaceDecoderD3D11 (streamType); break;
+    #else
+      case eMfxVideo9:
+      case eMfxVideo11:  mDecoder = new cMfxSurfaceDecoder (streamType); break;
+    #endif
     default: cLog::log (LOGERROR, fmt::format ("cVideoRender - no decoder {:x}", decoderMask));
     }
   }
