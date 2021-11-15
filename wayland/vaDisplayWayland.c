@@ -77,7 +77,7 @@ static const struct wl_registry_listener registry_listener = {
 //}}}
 
 //{{{
-static VADisplay va_open_display_wayland(void)
+static VADisplay va_open_display_wayland (void)
 {
     struct display *d;
 
@@ -108,7 +108,7 @@ static VADisplay va_open_display_wayland(void)
 }
 //}}}
 //{{{
-static void va_close_display_wayland(VADisplay va_dpy)
+static void va_close_display_wayland (VADisplay va_dpy)
 {
     struct display * const d = g_display;
 
@@ -149,7 +149,7 @@ static void va_close_display_wayland(VADisplay va_dpy)
 }
 //}}}
 //{{{
-static int ensure_window(VADisplay va_dpy, unsigned int width, unsigned int height)
+static int ensure_window (VADisplay va_dpy, unsigned int width, unsigned int height)
 {
     struct display * const d = g_display;
 
@@ -169,18 +169,15 @@ static int ensure_window(VADisplay va_dpy, unsigned int width, unsigned int heig
 }
 //}}}
 //{{{
-static VAStatus va_put_surface_wayland(
-    VADisplay          va_dpy,
-    VASurfaceID        surface,
-    const VARectangle *src_rect,
-    const VARectangle *dst_rect
+static VAStatus va_put_surface_wayland (VADisplay  va_dpy, VASurfaceID        surface,
+    const VARectangle *src_rect, const VARectangle *dst_rect
 )
 {
     struct display * const d = g_display;
     VAStatus va_status;
     struct wl_buffer *buffer;
 
-    if (!ensure_window(va_dpy, dst_rect->width, dst_rect->height))
+    if (!ensure_window (va_dpy, dst_rect->width, dst_rect->height))
         return VA_STATUS_ERROR_ALLOCATION_FAILED;
 
     va_status = vaGetSurfaceBufferWl(va_dpy, surface, VA_FRAME_PICTURE, &buffer);
@@ -205,5 +202,5 @@ const VADisplayHooks va_display_hooks_wayland = {
     va_open_display_wayland,
     va_close_display_wayland,
     va_put_surface_wayland,
-};
+  };
 //}}}

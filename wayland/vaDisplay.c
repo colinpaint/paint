@@ -23,7 +23,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //}}}
-//{{{
+//{{{  includes
 #ifdef HAVE_CONFIG_H
   #include "config.h"
 #endif
