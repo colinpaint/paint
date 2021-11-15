@@ -127,16 +127,14 @@ class cFFmpegDecoder : public cDecoder {
 public:
   //{{{
   cFFmpegDecoder (uint8_t streamType, bool yuv)
-     : cDecoder(), mYuv(yuv),
+     : cDecoder(), mH264 (streamType == 27),  mYuv(yuv),
        mAvCodec (avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder stream:{}", streamType));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder stream:{} {}", streamType, yuv ? "yuv" : ""));
 
     mAvParser = av_parser_init ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
-
-    mH264 = (streamType == 27) ;
     }
   //}}}
   //{{{
@@ -144,8 +142,10 @@ public:
 
     if (mAvContext)
       avcodec_close (mAvContext);
+
     if (mAvParser)
       av_parser_close (mAvParser);
+
     if (mSwsContext)
       sws_freeContext (mSwsContext);
     }
@@ -230,6 +230,7 @@ public:
   //}}}
 
 private:
+  const bool mH264 = false;
   const bool mYuv = false;
   const AVCodec* mAvCodec = nullptr;
 
@@ -237,7 +238,6 @@ private:
   AVCodecContext* mAvContext = nullptr;
   SwsContext* mSwsContext = nullptr;
 
-  bool mH264 = false;
   bool mGotIframe = false;
   int64_t mInterpolatedPts = -1;
   };
@@ -483,7 +483,6 @@ protected:
   bool mGotIframe = false;
   };
 //}}}
-
 #ifdef _WIN32
   //{{{
   class cMfxMemoryDecoder : public cMfxDecoder {
@@ -498,6 +497,7 @@ protected:
     //}}}
     //{{{
     virtual ~cMfxMemoryDecoder() {
+
       for (auto& surface : mSurfaces)
         delete surface.Data.Y;
       }
@@ -567,11 +567,13 @@ protected:
 
       frameAllocRequest.Type |= 0x1000; // WILL_READ windows d3d11 only
 
+      // allocate
       mfxFrameAllocResponse frameAllocResponse = {0};
       mfxStatus status = mAllocator.Alloc (mAllocator.pthis, &frameAllocRequest, &frameAllocResponse);
       if (status != MFX_ERR_NONE)
         cLog::log (LOGERROR, "Alloc failed - " + getMfxStatusString (status));
 
+      // set
       for (size_t i = 0; i < mNumSurfaces; i++)
         mSurfaces[i].Data.MemId = frameAllocResponse.mids[i]; // use mId
       }
@@ -582,7 +584,7 @@ protected:
       mfxStatus status = mAllocator.Lock (mAllocator.pthis, surface->Data.MemId, &(surface->Data));
       if (status != MFX_ERR_NONE)
         cLog::log (LOGERROR, "Unlock failed - " + getMfxStatusString (status));
-        };
+      };
     //}}}
     //{{{
     virtual void unlock (mfxFrameSurface1* surface) final {

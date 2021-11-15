@@ -857,7 +857,7 @@ void cDvbStream::foundService (cService& service) {
 
   if (mRenderFirstService && !mRenderingFirstService) {
     cLog::log (LOGINFO, fmt::format ("play service {}:{}", service.getSid(), service.getProgramPid()));
-    service.toggleAll (true);
+    service.toggleAll (cRender::eFFmpegRGB);
     mRenderingFirstService = true;
     }
   }
