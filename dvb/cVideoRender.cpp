@@ -115,6 +115,8 @@ protected:
   uint16_t mHeight = 0;
   uint16_t mStride = 0;
   uint32_t* mPixels = nullptr;
+
+  // debug
   uint32_t mPesSize = 0;
   int64_t mDecodeTime = 0;
   int64_t mYuvRgbTime = 0;
