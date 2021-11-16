@@ -1814,24 +1814,28 @@ protected:
         surfaces = (VASurfaceID*)calloc (numSurfaces, sizeof(VASurfaceID));
         vaapiMids = (vaapiMemId*)calloc (numSurfaces, sizeof(vaapiMemId));
         mids = (mfxMemId*)calloc (numSurfaces, sizeof(mfxMemId));
+
         if ((!surfaces) || (!vaapiMids) || (!mids))
           status = MFX_ERR_MEMORY_ALLOC;
         }
         //}}}
 
       mfxU16 numAllocated = 0;
-      if (status == MFX_ERR_NONE == status) {
+      if (status == MFX_ERR_NONE) {
         if (VA_FOURCC_P208 != vaFourcc) {
           //{{{  create surfaces
           VASurfaceAttrib attrib;
+
           attrib.type = VASurfaceAttribPixelFormat;
           attrib.value.type = VAGenericValueTypeInteger;
           attrib.value.value.i = vaFourcc;
           attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
+
           status = vaToMfxStatus (
             vaCreateSurfaces (mVaDisplayHandle, VA_RT_FORMAT_YUV420,
                               request->Info.Width, request->Info.Height, surfaces, numSurfaces, &attrib, 1));
-          createSrfSucceeded = (MFX_ERR_NONE == status);
+
+          createSrfSucceeded = (status == MFX_ERR_NONE);
           }
           //}}}
         else {
@@ -1839,11 +1843,12 @@ protected:
           // from libva spec
           VAContextID context_id = request->reserved[0];
           int codedbuf_size = (request->Info.Width * request->Info.Height) * 400 / (16 * 16);
+
           for (numAllocated = 0; numAllocated < numSurfaces; numAllocated++) {
             VABufferID coded_buf;
             status = vaToMfxStatus (
               vaCreateBuffer (mVaDisplayHandle, context_id, VAEncCodedBufferType, codedbuf_size, 1, NULL, &coded_buf));
-            if (MFX_ERR_NONE != status)
+            if (status != MFX_ERR_NONE)
               break;
             surfaces[numAllocated] = coded_buf;
             }
@@ -2029,13 +2034,10 @@ protected:
       else {
         // Image processing
         status = vaToMfxStatus (vaSyncSurface (mVaDisplayHandle, *(vaapi_mid->mSurface)));
-
-        if (Status == MFX_ERR_NONE)
+        if (status == MFX_ERR_NONE)
           status = vaToMfxStatus (vaDeriveImage (mVaDisplayHandle, *(vaapi_mid->mSurface), &(vaapi_mid->mImage)));
-
         if (status == MFX_ERR_NONE)
           status = vaToMfxStatus (vaMapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf, (void**)&pBuffer));
-
         if (status == MFX_ERR_NONE) {
           switch (vaapi_mid->mImage.format.fourcc) {
             //{{{
