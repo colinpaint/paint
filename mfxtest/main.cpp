@@ -30,21 +30,22 @@ void sessionTest (mfxIMPL mfxImpl) {
   mfxVersion mfxVersion = {{0,1}};
   MFXVideoSession mfxSession;
 
-  //mfxStatus status = Initialize (mfxImpl, mfxVersion, &mfxSession, NULL);
   mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "init failed - " + getMfxStatusString (status));
 
-  //  query implementation
+  //{{{  query implementation, version
   status = mfxSession.QueryIMPL (&mfxImpl);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "init failed - " + getMfxStatusString (status));
 
-  //  query version
+  // query version
   status = mfxSession.QueryVersion (&mfxVersion);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "QueryVersion failed " + getMfxStatusString (status));
+
   cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
+  //}}}
 
   mfxSession.Close();
   }
@@ -60,17 +61,19 @@ void decodeSysMem (const string& filename, mfxIMPL mfxImpl) {
   mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "init failed - " + getMfxStatusString (status));
-  //{{{  query implementation
+
+  //{{{  query implementation, version
   status = mfxSession.QueryIMPL (&mfxImpl);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "init failed - " + getMfxStatusString (status));
-  //}}}
-  //{{{  query version
+
+  // query version
   status = mfxSession.QueryVersion (&mfxVersion);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "QueryVersion failed " + getMfxStatusString (status));
-  //}}}
+
   cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
+  //}}}
 
   // init hw
   Initialize (&mfxSession, nullptr);
@@ -209,17 +212,19 @@ void decodeVidMem (const string& filename, mfxIMPL mfxImpl) {
   mfxStatus status = mfxSession.Init (mfxImpl, &mfxVersion);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "init failed - " + getMfxStatusString (status));
-  //{{{  query implementation
+
+  //{{{  query implementation, version
   status = mfxSession.QueryIMPL (&mfxImpl);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "init failed - " + getMfxStatusString (status));
-  //}}}
-  //{{{  query version
+
+  // query version
   status = mfxSession.QueryVersion (&mfxVersion);
   if (status != MFX_ERR_NONE)
     cLog::log (LOGINFO, "QueryVersion failed " + getMfxStatusString (status));
-  //}}}
+
   cLog::log (LOGINFO, getMfxInfoString (mfxImpl, mfxVersion));
+  //}}}
 
   // init hw
   mfxFrameAllocator mfxAllocator = {0};

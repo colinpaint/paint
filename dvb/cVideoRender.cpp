@@ -1562,7 +1562,7 @@ protected:
             !strcmp (driverName, DRM_INTEL_DRIVER_NAME)) {
           return fd;
           }
-        close(fd);
+        close (fd);
         }
 
       return -1;
@@ -1577,7 +1577,7 @@ protected:
       if (mFd < 0)
         status = MFX_ERR_NOT_INITIALIZED;
 
-      if (MFX_ERR_NONE == status) {
+      if (status == MFX_ERR_NONE) {
         mVaDisplayHandle = vaGetDisplayDRM (mFd);
         *displayHandle = mVaDisplayHandle;
         if (!mVaDisplayHandle) {
@@ -1586,7 +1586,7 @@ protected:
           }
         }
 
-      if (MFX_ERR_NONE == status) {
+      if (status == MFX_ERR_NONE) {
         int major_version = 0;
         int minor_version = 0;
         status = vaToMfxStatus (vaInitialize (mVaDisplayHandle, &major_version, &minor_version));
@@ -1807,7 +1807,7 @@ protected:
       VASurfaceID* surfaces = NULL;
       vaapiMemId* vaapiMids = NULL;
       mfxMemId* mids = NULL;
-      if (MFX_ERR_NONE == status) {
+      if (status == MFX_ERR_NONE) {
         //{{{  allocate surfaces, vaapiMids, mids
         surfaces = (VASurfaceID*)calloc (numSurfaces, sizeof(VASurfaceID));
         vaapiMids = (vaapiMemId*)calloc (numSurfaces, sizeof(vaapiMemId));
@@ -1818,7 +1818,7 @@ protected:
         //}}}
 
       mfxU16 numAllocated = 0;
-      if (MFX_ERR_NONE == status) {
+      if (status == MFX_ERR_NONE == status) {
         if (VA_FOURCC_P208 != vaFourcc) {
           //{{{  create surfaces
           VASurfaceAttrib attrib;
@@ -1849,7 +1849,7 @@ protected:
           //}}}
         }
 
-      if (MFX_ERR_NONE == status) {
+      if (status == MFX_ERR_NONE) {
         //{{{  set mids
         for (mfxU16 i = 0; i < numSurfaces; ++i) {
           vaapiMemId* vaapiMid = &(vaapiMids[i]);
@@ -1860,7 +1860,7 @@ protected:
         }
         //}}}
 
-      if (MFX_ERR_NONE == status) {
+      if (status == MFX_ERR_NONE) {
         //{{{  successful, set response
         response->mids = mids;
         response->NumFrameActual = numSurfaces;
@@ -1967,7 +1967,7 @@ protected:
         }
       else {
         status = _simpleAlloc (request, response);
-        if (MFX_ERR_NONE == status) {
+        if (status == MFX_ERR_NONE) {
           if ((MFX_MEMTYPE_EXTERNAL_FRAME & request->Type) && (MFX_MEMTYPE_FROM_DECODE & request->Type)) {
             // Decode alloc response handling
             allocDecodeResponses[pthis].mMfxResponse = *response;
@@ -2009,38 +2009,32 @@ protected:
     static mfxStatus simpleLock (mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) {
 
       (void) pthis;
-      mfxStatus mfx_res = MFX_ERR_NONE;
-      VAStatus va_res = VA_STATUS_SUCCESS;
-      vaapiMemId* vaapi_mid = (vaapiMemId*)mid;
-      mfxU8* pBuffer = 0;
 
+      mfxStatus status = MFX_ERR_NONE;
+
+      vaapiMemId* vaapi_mid = (vaapiMemId*)mid;
       if (!vaapi_mid || !(vaapi_mid->mSurface))
         return MFX_ERR_INVALID_HANDLE;
 
+      mfxU8* pBuffer = 0;
       if (MFX_FOURCC_P8 == vaapi_mid->mFourcc) {
         // bitstream processing
         VACodedBufferSegment* coded_buffer_segment;
-        va_res = vaMapBuffer (mVaDisplayHandle, *(vaapi_mid->mSurface), (void**)(&coded_buffer_segment));
-        mfx_res = vaToMfxStatus (va_res);
+        status = vaToMfxStatus (vaMapBuffer (mVaDisplayHandle, *(vaapi_mid->mSurface), (void**)(&coded_buffer_segment)));
         ptr->Y = (mfxU8*)coded_buffer_segment->buf;
         }
 
       else {
         // Image processing
-        va_res = vaSyncSurface (mVaDisplayHandle, *(vaapi_mid->mSurface));
-        mfx_res = vaToMfxStatus (va_res);
+        status = vaToMfxStatus (vaSyncSurface (mVaDisplayHandle, *(vaapi_mid->mSurface)));
 
-        if (MFX_ERR_NONE == mfx_res) {
-          va_res = vaDeriveImage (mVaDisplayHandle, *(vaapi_mid->mSurface), &(vaapi_mid->mImage));
-          mfx_res = vaToMfxStatus (va_res);
-          }
+        if (Status == MFX_ERR_NONE)
+          status = vaToMfxStatus (vaDeriveImage (mVaDisplayHandle, *(vaapi_mid->mSurface), &(vaapi_mid->mImage)));
 
-        if (MFX_ERR_NONE == mfx_res) {
-          va_res = vaMapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf, (void**)&pBuffer);
-          mfx_res = vaToMfxStatus (va_res);
-          }
+        if (status == MFX_ERR_NONE)
+          status = vaToMfxStatus (vaMapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf, (void**)&pBuffer));
 
-        if (MFX_ERR_NONE == mfx_res) {
+        if (status == MFX_ERR_NONE) {
           switch (vaapi_mid->mImage.format.fourcc) {
             //{{{
             case VA_FOURCC_NV12:
@@ -2051,7 +2045,7 @@ protected:
                 ptr->V = ptr->U + 1;
                 }
               else
-                mfx_res = MFX_ERR_LOCK_MEMORY;
+                status = MFX_ERR_LOCK_MEMORY;
               break;
             //}}}
             //{{{
@@ -2063,7 +2057,7 @@ protected:
                 ptr->U = pBuffer + vaapi_mid->mImage.offsets[2];
                 }
               else
-                 mfx_res = MFX_ERR_LOCK_MEMORY;
+                 status = MFX_ERR_LOCK_MEMORY;
               break;
             //}}}
             //{{{
@@ -2075,7 +2069,7 @@ protected:
                 ptr->V = ptr->Y + 3;
                 }
               else
-                 mfx_res = MFX_ERR_LOCK_MEMORY;
+                 status = MFX_ERR_LOCK_MEMORY;
               break;
             //}}}
             //{{{
@@ -2088,19 +2082,15 @@ protected:
                 ptr->A = ptr->B + 3;
                 }
               else
-                mfx_res = MFX_ERR_LOCK_MEMORY;
+                status = MFX_ERR_LOCK_MEMORY;
               break;
             //}}}
-            //{{{
-            default:
-              mfx_res = MFX_ERR_LOCK_MEMORY;
-              break;
-            //}}}
+            default: status = MFX_ERR_LOCK_MEMORY;
             }
           }
         }
 
-      return mfx_res;
+      return status;
       }
     //}}}
     //{{{
@@ -2217,7 +2207,7 @@ protected:
           }
         }
 
-      if (MFX_ERR_NONE != status)
+      if (status != MFX_ERR_NONE)
         throw bad_alloc();
 
       return MFX_ERR_NONE;

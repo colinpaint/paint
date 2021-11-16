@@ -768,7 +768,6 @@ void cDvbStream::toggleStream (cService& service, size_t streamType, uint16_t de
   }
 //}}}
 
-
 // sources
 //{{{
 void cDvbStream::dvbSource (bool launchThread) {
