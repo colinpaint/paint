@@ -9,8 +9,8 @@ option (BUILD_IMPLOT "Build implot" ON)
 option (BUILD_MFXTEST "Build mfxtest" ON)
 #
 option (BUILD_CAPTURE "Build capture" ON)
-option (BUILD_AVX "Build avx" ON)
 #
+option (BUILD_AVX "Build avx" ON)
 option (BUILD_OPTIMISED "Build optimised" ON)
 #
 set (OPENGL_VERSION "OPENGL_45")
