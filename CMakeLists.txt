@@ -6,12 +6,10 @@ option (BUILD_TELLY "Build telly" ON)
 option (BUILD_PLAYER "Build player" ON)
 option (BUILD_PAINTBOX "Build paintbox" ON)
 option (BUILD_IMPLOT "Build implot" ON)
-option (BUILD_FILESYSTEM "Build filesystem" ON)
 option (BUILD_MFXTEST "Build mfxtest" ON)
 #
 option (BUILD_CAPTURE "Build capture" ON)
 option (BUILD_AVX "Build avx" ON)
-option (BUILD_WAYLANDTEST "Build waylandtest" ON)
 #
 option (BUILD_OPTIMISED "Build optimised" ON)
 #
@@ -41,24 +39,6 @@ project (utils)
     else()
       target_compile_options (${PROJECT_NAME} PUBLIC -g -O0)
     endif()
-endif()
-
-
-# waylandtest app
-if (BUILD_WAYLANDTEST)
-  if (NOT MSVC)
-    project (wayland)
-      file (GLOB HEADER_FILES wayland/*.h utils/*.h)
-      #file (GLOB SOURCE_FILES wayland/putsurfaceWayland.c wayland/vaDisplay.c wayland/vaDisplayWayland.c)
-      file (GLOB SOURCE_FILES wayland/vainfo.c wayland/vaDisplay.c)
-      add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
-      find_package (PkgConfig REQUIRED)
-      pkg_check_modules (LIBVA REQUIRED IMPORTED_TARGET libva)
-      pkg_check_modules (WAYLAND REQUIRED IMPORTED_TARGET wayland-client)
-      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::LIBVA PkgConfig::WAYLAND)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::LIBVA PkgConfig::WAYLAND)
-  endif()
 endif()
 
 # gui
@@ -289,19 +269,6 @@ if (BUILD_CAPTURE AND MSVC)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
     target_link_libraries (${PROJECT_NAME} PRIVATE decoder winmm avrt audio)
-endif()
-
-# filesystem app
-if (BUILD_FILESYSTEM)
-  project (filesystem)
-    file (GLOB HEADER_FILES *.h utils/*.h)
-    file (GLOB SOURCE_FILES filesystem/main.cpp)
-    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
-    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
-    if (NOT MSVC)
-      target_link_libraries (${PROJECT_NAME} PRIVATE stdc++fs)
-    endif()
 endif()
 
 # paintbox app
