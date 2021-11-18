@@ -46,6 +46,12 @@
 #include <thread>
 #include <functional>
 
+#define INTEL_SSE2
+#define INTEL_SSSE3 1
+#include <intrin.h>
+#include <emmintrin.h>
+#include <tmmintrin.h>
+
 #include "../imgui/imgui.h"
 #include "../imgui/myImgui.h"
 
@@ -63,12 +69,6 @@ extern "C" {
   #include <libavformat/avformat.h>
   #include <libswscale/swscale.h>
   }
-
-#define INTEL_SSE2
-#define INTEL_SSSE3 1
-#include <intrin.h>
-#include <emmintrin.h>
-#include <tmmintrin.h>
 
 using namespace std;
 //}}}
