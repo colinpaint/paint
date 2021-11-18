@@ -107,13 +107,13 @@ public:
 
   uint32_t getPesSize() const { return mPesSize; }
   int64_t getDecodeTime() const { return mDecodeTime; }
-  int64_t getYuvRgbTime() const { return mYuvRgbTime; }
+  int64_t getConvertTime() const { return mConvertTime; }
 
   // sets
   virtual void setNv12 (uint8_t* nv12) = 0;
   virtual void setY (void* context, uint8_t** data, int* linesize)  = 0;
   virtual void setYuv420 (void* context, uint8_t** data, int* linesize)  = 0;
-  void setYuvRgbTime (int64_t time) { mYuvRgbTime = time; }
+  void setYuvRgbTime (int64_t time) { mConvertTime = time; }
 
 protected:
   uint16_t mWidth = 0;
@@ -124,7 +124,7 @@ protected:
   // debug
   uint32_t mPesSize = 0;
   int64_t mDecodeTime = 0;
-  int64_t mYuvRgbTime = 0;
+  int64_t mConvertTime = 0;
   };
 //}}}
 
@@ -2264,7 +2264,7 @@ cVideoRender::~cVideoRender() {
 
 //{{{
 string cVideoRender::getInfoString() const {
-  return fmt::format ("{} {}x{} {:5d}:{}", mFrames.size(), mWidth, mHeight, mDecodeTime, mYuvRgbTime);
+  return fmt::format ("{} {}x{} {:5d}:{}", mFrames.size(), mWidth, mHeight, mDecodeTime, mConvertTime);
   }
 //}}}
 //{{{
@@ -2337,7 +2337,7 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
       mLastPts = videoFrame->getPts();
       mPtsDuration = videoFrame->getPtsDuration();
       mDecodeTime = videoFrame->getDecodeTime();
-      mYuvRgbTime = videoFrame->getYuvRgbTime();
+      mConvertTime = videoFrame->getConvertTime();
 
       addFrame (videoFrame);
       logValue (videoFrame->getPts(), (float)mDecodeTime);

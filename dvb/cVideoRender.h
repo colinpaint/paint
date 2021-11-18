@@ -40,7 +40,7 @@ private:
   int64_t mPtsDuration = 0;
 
   int64_t mDecodeTime = 0;
-  int64_t mYuvRgbTime = 0;
+  int64_t mConvertTime = 0;
 
   bool mYuv = false;
   int64_t mTexturePts = 0;
