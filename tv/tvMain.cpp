@@ -155,7 +155,7 @@ int main (int numArgs, char* args[]) {
     //{{{  drop lambda
     [&](vector<string> dropItems) noexcept {
       for (auto& item : dropItems) {
-        string filename = cFileUtils::resolve(item);
+        string filename = cFileUtils::resolve (item);
         app.setDvbSource (filename, useMultiplex, true);
         cLog::log (LOGINFO, filename);
         }

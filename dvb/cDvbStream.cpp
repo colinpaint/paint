@@ -50,101 +50,6 @@ const int kInitBufSize = 512;
 #define PID_TDT   0x14   /* Time Date Table */
 #define PID_SYN   0x15   /* Network sync */
 //}}}
-//{{{  tids
-#define TID_PAT          0x00   /* Program Association Section */
-#define TID_CAT          0x01   /* Conditional Access Section */
-#define TID_PMT          0x02   /* Conditional Access Section */
-
-#define TID_EIT          0x12   /* Event Information Section */
-
-#define TID_NIT_ACT      0x40   /* Network Information Section - actual */
-#define TID_NIT_OTH      0x41   /* Network Information Section - other */
-#define TID_SDT_ACT      0x42   /* Service Description Section - actual */
-#define TID_SDT_OTH      0x46   /* Service Description Section - other */
-#define TID_BAT          0x4A   /* Bouquet Association Section */
-
-#define TID_EIT_ACT      0x4E   /* Event Information Section - actual */
-#define TID_EIT_OTH      0x4F   /* Event Information Section - other */
-#define TID_EIT_ACT_SCH  0x50   /* Event Information Section - actual, schedule  */
-#define TID_EIT_OTH_SCH  0x60   /* Event Information Section - other, schedule */
-
-#define TID_TDT          0x70   /* Time Date Section */
-#define TID_RST          0x71   /* Running Status Section */
-#define TID_ST           0x72   /* Stuffing Section */
-#define TID_TOT          0x73   /* Time Offset Section */
-//}}}
-//{{{  descr defines
-#define DESCR_VIDEO_STREAM          0x02
-#define DESCR_AUDIO_STREAM          0x03
-#define DESCR_HIERARCHY             0x04
-#define DESCR_REGISTRATION          0x05
-#define DESCR_DATA_STREAM_ALIGN     0x06
-#define DESCR_TARGET_BACKGRID       0x07
-#define DESCR_VIDEO_WINDOW          0x08
-#define DESCR_CA                    0x09
-#define DESCR_ISO_639_LANGUAGE      0x0A
-#define DESCR_SYSTEM_CLOCK          0x0B
-#define DESCR_MULTIPLEX_BUFFER_UTIL 0x0C
-#define DESCR_COPYRIGHT             0x0D
-#define DESCR_MAXIMUM_BITRATE       0x0E
-#define DESCR_PRIVATE_DATA_IND      0x0F
-
-#define DESCR_SMOOTHING_BUFFER      0x10
-#define DESCR_STD                   0x11
-#define DESCR_IBP                   0x12
-
-#define DESCR_NW_NAME               0x40
-#define DESCR_SERVICE_LIST          0x41
-#define DESCR_STUFFING              0x42
-#define DESCR_SAT_DEL_SYS           0x43
-#define DESCR_CABLE_DEL_SYS         0x44
-#define DESCR_VBI_DATA              0x45
-#define DESCR_VBI_TELETEXT          0x46
-#define DESCR_BOUQUET_NAME          0x47
-#define DESCR_SERVICE               0x48
-#define DESCR_COUNTRY_AVAIL         0x49
-#define DESCR_LINKAGE               0x4A
-#define DESCR_NVOD_REF              0x4B
-#define DESCR_TIME_SHIFTED_SERVICE  0x4C
-#define DESCR_SHORT_EVENT           0x4D
-#define DESCR_EXT_EVENT             0x4E
-#define DESCR_TIME_SHIFTED_EVENT    0x4F
-
-#define DESCR_COMPONENT             0x50
-#define DESCR_MOSAIC                0x51
-#define DESCR_STREAM_ID             0x52
-#define DESCR_CA_IDENT              0x53
-#define DESCR_CONTENT               0x54
-#define DESCR_PARENTAL_RATING       0x55
-#define DESCR_TELETEXT              0x56
-#define DESCR_TELEPHONE             0x57
-#define DESCR_LOCAL_TIME_OFF        0x58
-#define DESCR_SUBTITLING            0x59
-#define DESCR_TERR_DEL_SYS          0x5A
-#define DESCR_ML_NW_NAME            0x5B
-#define DESCR_ML_BQ_NAME            0x5C
-#define DESCR_ML_SERVICE_NAME       0x5D
-#define DESCR_ML_COMPONENT          0x5E
-#define DESCR_PRIV_DATA             0x5F
-
-#define DESCR_SERVICE_MOVE          0x60
-#define DESCR_SHORT_SMOOTH_BUF      0x61
-#define DESCR_FREQUENCY_LIST        0x62
-#define DESCR_PARTIAL_TP_STREAM     0x63
-#define DESCR_DATA_BROADCAST        0x64
-#define DESCR_CA_SYSTEM             0x65
-#define DESCR_DATA_BROADCAST_ID     0x66
-#define DESCR_TRANSPORT_STREAM      0x67
-#define DESCR_DSNG                  0x68
-#define DESCR_PDC                   0x69
-#define DESCR_AC3                   0x6A
-#define DESCR_ANCILLARY_DATA        0x6B
-#define DESCR_CELL_LIST             0x6C
-#define DESCR_CELL_FREQ_LINK        0x6D
-#define DESCR_ANNOUNCEMENT_SUPPORT  0x6E
-
-#define DESCR_CONTENT_ID            0x76
-//}}}
 
 //{{{
 struct sTdt {
@@ -257,7 +162,7 @@ struct sNit {
   } ;
 //}}}
 //{{{
-struct sNitMid {                                
+struct sNitMid {
   uint8_t transport_stream_loop_length_hi  :4;
   uint8_t                                  :4;
   uint8_t transport_stream_loop_length_lo  :8;
@@ -309,6 +214,29 @@ struct sSdtDescriptor {
   } ;
 //}}}
 
+//{{{  tids
+#define TID_PAT          0x00   /* Program Association Section */
+#define TID_CAT          0x01   /* Conditional Access Section */
+#define TID_PMT          0x02   /* Conditional Access Section */
+
+#define TID_EIT          0x12   /* Event Information Section */
+
+#define TID_NIT_ACT      0x40   /* Network Information Section - actual */
+#define TID_NIT_OTH      0x41   /* Network Information Section - other */
+#define TID_SDT_ACT      0x42   /* Service Description Section - actual */
+#define TID_SDT_OTH      0x46   /* Service Description Section - other */
+#define TID_BAT          0x4A   /* Bouquet Association Section */
+
+#define TID_EIT_ACT      0x4E   /* Event Information Section - actual */
+#define TID_EIT_OTH      0x4F   /* Event Information Section - other */
+#define TID_EIT_ACT_SCH  0x50   /* Event Information Section - actual, schedule  */
+#define TID_EIT_OTH_SCH  0x60   /* Event Information Section - other, schedule */
+
+#define TID_TDT          0x70   /* Time Date Section */
+#define TID_RST          0x71   /* Running Status Section */
+#define TID_ST           0x72   /* Stuffing Section */
+#define TID_TOT          0x73   /* Time Offset Section */
+//}}}
 //{{{
 struct sEit {
   uint8_t table_id                    :8;
@@ -352,6 +280,78 @@ struct sEitEvent {
   } ;
 //}}}
 
+//{{{  descr defines
+#define DESCR_VIDEO_STREAM          0x02
+#define DESCR_AUDIO_STREAM          0x03
+#define DESCR_HIERARCHY             0x04
+#define DESCR_REGISTRATION          0x05
+#define DESCR_DATA_STREAM_ALIGN     0x06
+#define DESCR_TARGET_BACKGRID       0x07
+#define DESCR_VIDEO_WINDOW          0x08
+#define DESCR_CA                    0x09
+#define DESCR_ISO_639_LANGUAGE      0x0A
+#define DESCR_SYSTEM_CLOCK          0x0B
+#define DESCR_MULTIPLEX_BUFFER_UTIL 0x0C
+#define DESCR_COPYRIGHT             0x0D
+#define DESCR_MAXIMUM_BITRATE       0x0E
+#define DESCR_PRIVATE_DATA_IND      0x0F
+
+#define DESCR_SMOOTHING_BUFFER      0x10
+#define DESCR_STD                   0x11
+#define DESCR_IBP                   0x12
+
+#define DESCR_NW_NAME               0x40
+#define DESCR_SERVICE_LIST          0x41
+#define DESCR_STUFFING              0x42
+#define DESCR_SAT_DEL_SYS           0x43
+#define DESCR_CABLE_DEL_SYS         0x44
+#define DESCR_VBI_DATA              0x45
+#define DESCR_VBI_TELETEXT          0x46
+#define DESCR_BOUQUET_NAME          0x47
+#define DESCR_SERVICE               0x48
+#define DESCR_COUNTRY_AVAIL         0x49
+#define DESCR_LINKAGE               0x4A
+#define DESCR_NVOD_REF              0x4B
+#define DESCR_TIME_SHIFTED_SERVICE  0x4C
+#define DESCR_SHORT_EVENT           0x4D
+#define DESCR_EXT_EVENT             0x4E
+#define DESCR_TIME_SHIFTED_EVENT    0x4F
+
+#define DESCR_COMPONENT             0x50
+#define DESCR_MOSAIC                0x51
+#define DESCR_STREAM_ID             0x52
+#define DESCR_CA_IDENT              0x53
+#define DESCR_CONTENT               0x54
+#define DESCR_PARENTAL_RATING       0x55
+#define DESCR_TELETEXT              0x56
+#define DESCR_TELEPHONE             0x57
+#define DESCR_LOCAL_TIME_OFF        0x58
+#define DESCR_SUBTITLING            0x59
+#define DESCR_TERR_DEL_SYS          0x5A
+#define DESCR_ML_NW_NAME            0x5B
+#define DESCR_ML_BQ_NAME            0x5C
+#define DESCR_ML_SERVICE_NAME       0x5D
+#define DESCR_ML_COMPONENT          0x5E
+#define DESCR_PRIV_DATA             0x5F
+
+#define DESCR_SERVICE_MOVE          0x60
+#define DESCR_SHORT_SMOOTH_BUF      0x61
+#define DESCR_FREQUENCY_LIST        0x62
+#define DESCR_PARTIAL_TP_STREAM     0x63
+#define DESCR_DATA_BROADCAST        0x64
+#define DESCR_CA_SYSTEM             0x65
+#define DESCR_DATA_BROADCAST_ID     0x66
+#define DESCR_TRANSPORT_STREAM      0x67
+#define DESCR_DSNG                  0x68
+#define DESCR_PDC                   0x69
+#define DESCR_AC3                   0x6A
+#define DESCR_ANCILLARY_DATA        0x6B
+#define DESCR_CELL_LIST             0x6C
+#define DESCR_CELL_FREQ_LINK        0x6D
+#define DESCR_ANNOUNCEMENT_SUPPORT  0x6E
+
+#define DESCR_CONTENT_ID            0x76
+//}}}
 //{{{
 struct sDescriptorGen {
   uint8_t descr_tag    :8;
@@ -1112,9 +1112,9 @@ void cDvbStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
 
   uint16_t tid = eit->table_id;
 
-  auto now = (tid == TID_EIT_ACT);
-  auto next = (tid == TID_EIT_OTH);
-  auto epg = (tid == TID_EIT_ACT_SCH) || (tid == TID_EIT_OTH_SCH) ||
+  bool now = (tid == TID_EIT_ACT);
+  bool next = (tid == TID_EIT_OTH);
+  bool epg = (tid == TID_EIT_ACT_SCH) || (tid == TID_EIT_OTH_SCH) ||
              (tid == TID_EIT_ACT_SCH+1) || (tid == TID_EIT_OTH_SCH+1);
 
   if (now || epg) {
@@ -1144,11 +1144,11 @@ void cDvbStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
 
             // get info
             bufPtr += ((descrShortEvent*)buf)->event_name_length;
-            auto infoString = cDvbUtils::getString (bufPtr);
+            string infoString = cDvbUtils::getString (bufPtr);
 
             if (now) {
               // now event
-              auto running = (eitEvent->running_status == 0x04);
+              bool running = (eitEvent->running_status == 0x04);
               if (running &&
                   !service->getChannelName().empty() &&
                   service->getProgramPid() &&
@@ -1245,14 +1245,17 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
           case   2: // ISO 13818-2 video
           case  27: // H264 video
             service.getStream (eVid).setPidType (esPid, esPidInfo.getStreamType()); break;
+
           case   3: // ISO 11172-3 audio
           case   4: // ISO 13818-3 audio
           case  15: // ADTS AAC audio
           case  17: // LATM AAC audio
           case 129: // AC3 audio
             service.setAudStream (esPid, esPidInfo.getStreamType()); break;
+
           case   6: // subtitle
             service.getStream (eSub).setPidType (esPid, esPidInfo.getStreamType()); break;
+
           case   5: // private mpeg2 tabled data - private
           case  11: // dsm cc u_n
           case  13: // dsm cc tabled data
