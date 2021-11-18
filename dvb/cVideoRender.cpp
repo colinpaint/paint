@@ -5,9 +5,13 @@
 #ifdef _WIN32
   //{{{  windows headers
   #define NOMINMAX
+
+  #include <intrin.h>
+
   #include <initguid.h>
   #include <d3d9.h>
   #include <dxva2api.h>
+
   #include <d3d11.h>
   #include <dxgi1_2.h>
 
@@ -27,13 +31,14 @@
   #include <stdlib.h>
   #include <assert.h>
   #include <sys/ioctl.h>
+
   #include <new>
 
   #include <drm/drm.h>
   #include <drm/drm_fourcc.h>
 
-  #include "va/va.h"
-  #include "va/va_drm.h"
+  #include <va/va.h>
+  #include <va/va_drm.h>
   //}}}
 #endif
 
@@ -48,7 +53,6 @@
 
 #define INTEL_SSE2
 #define INTEL_SSSE3 1
-#include <intrin.h>
 #include <emmintrin.h>
 #include <tmmintrin.h>
 
@@ -1559,6 +1563,7 @@ protected:
         int fd = open (curAdapterPath.c_str(), O_RDWR);
         if (fd < 0)
           continue;
+
         if (!getDrmDriverName (fd, driverName, DRM_DRIVER_NAME_LEN) &&
             !strcmp (driverName, DRM_INTEL_DRIVER_NAME)) {
           return fd;

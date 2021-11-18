@@ -6,8 +6,8 @@ option (BUILD_TELLY "Build telly" ON)
 option (BUILD_PLAYER "Build player" ON)
 option (BUILD_PAINTBOX "Build paintbox" ON)
 option (BUILD_IMPLOT "Build implot" ON)
-option (BUILD_MFXTEST "Build mfxtest" ON)
 #
+option (BUILD_MFXTEST "Build mfxtest" ON)
 option (BUILD_CAPTURE "Build capture" ON)
 #
 option (BUILD_AVX "Build avx" ON)
