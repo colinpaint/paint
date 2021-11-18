@@ -202,9 +202,9 @@ void decodeSysMem (const string& filename, mfxIMPL mfxImpl) {
   }
 //}}}
 //{{{
-void decodeVidMem (const string& filename, mfxIMPL mfxImpl) {
+void decodeVidMem (const string& filename, mfxIMPL mfxImpl, bool read) {
 
-  cLog::log (LOGINFO, "--- decodeVidMem ----" + filename);
+  cLog::log (LOGINFO, fmt::format ("--- decodeVidMem {} {} ----", filename, read ? "read" : ""));
 
   // init mfxSession
   mfxVersion mfxVersion = {{0,1}};
@@ -323,7 +323,8 @@ void decodeVidMem (const string& filename, mfxIMPL mfxImpl) {
       if (!(++frameNumber % 1000))
         cLog::log (LOGINFO, fmt::format ("decode frame:{}", frameNumber));
 
-      status = mfxAllocator.Lock (mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
+      if (read)
+        status = mfxAllocator.Lock (mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
       if (status != MFX_ERR_NONE) {
         //{{{  break on error
         cLog::log (LOGINFO, "Lock failed - " + getMfxStatusString (status));
@@ -331,7 +332,8 @@ void decodeVidMem (const string& filename, mfxIMPL mfxImpl) {
         }
         //}}}
       //status = WriteRawFrame (mfxOutSurface, fSink.get());
-      status = mfxAllocator.Unlock (mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
+      if (read)
+        status = mfxAllocator.Unlock (mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
       if (status != MFX_ERR_NONE) {
         //{{{  break on error
         cLog::log (LOGINFO, "Unlock failed - " + getMfxStatusString (status));
@@ -358,7 +360,8 @@ void decodeVidMem (const string& filename, mfxIMPL mfxImpl) {
       if (!(++frameNumber % 1000))
         cLog::log (LOGINFO, fmt::format ("flush frame:{}", frameNumber));
 
-      status = mfxAllocator.Lock (mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
+      if (read)
+        status = mfxAllocator.Lock (mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
       if (status != MFX_ERR_NONE) {
         //{{{  break on error
         cLog::log (LOGINFO, "Lock failed - " + getMfxStatusString (status));
@@ -366,7 +369,8 @@ void decodeVidMem (const string& filename, mfxIMPL mfxImpl) {
         }
         //}}}
       //status = WriteRawFrame (mfxOutSurface, fSink.get());
-      status = mfxAllocator.Unlock(mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
+      if (read)
+        status = mfxAllocator.Unlock(mfxAllocator.pthis, mfxOutSurface->Data.MemId, &(mfxOutSurface->Data));
       if (status != MFX_ERR_NONE) {
         //{{{  break on error
         cLog::log (LOGINFO, "Unlock failed - " + getMfxStatusString (status));
@@ -407,13 +411,17 @@ int main(int numArgs, char** args) {
     if (!filename.empty())
       decodeSysMem (filename, MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11);
     if (!filename.empty())
-      decodeVidMem (filename, MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11);
+      decodeVidMem (filename, MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11, false);
+    if (!filename.empty())
+      decodeVidMem (filename, MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11, true);
   #else
     sessionTest (MFX_IMPL_HARDWARE);
     if (!filename.empty())
       decodeSysMem (filename, MFX_IMPL_HARDWARE);
     if (!filename.empty())
-      decodeVidMem (filename, MFX_IMPL_HARDWARE);
+      decodeVidMem (filename, MFX_IMPL_HARDWARE, false);
+    if (!filename.empty())
+      decodeVidMem (filename, MFX_IMPL_HARDWARE, true);
   #endif
 
   this_thread::sleep_for (5000ms);
