@@ -1677,7 +1677,7 @@ protected:
 
       // set mSurface MemId
       for (size_t i = 0; i < mNumSurfaces; i++)
-        mSurfaces[i].Data.MemId = response.mids[i]; 
+        mSurfaces[i].Data.MemId = response.mids[i];
       }
     //}}}
     //{{{
@@ -1913,10 +1913,11 @@ protected:
     static mfxStatus _simpleFree (mfxHDL pthis, mfxFrameAllocResponse* response) {
 
       bool actualFreeMemory = false;
-      if (0 == memcmp (response, &(allocDecodeResponses[pthis].mMfxResponse), sizeof(*response))) {
-        // Decode free response handling
+
+      if (!memcmp (response, &(allocDecodeResponses[pthis].mMfxResponse), sizeof(*response))) {
+        // decode free response handling
         allocDecodeResponses[pthis].mRefCount--;
-        if (0 == allocDecodeResponses[pthis].mRefCount)
+        if (!allocDecodeResponses[pthis].mRefCount)
           actualFreeMemory = true;
         }
       else
@@ -1926,7 +1927,7 @@ protected:
       if (actualFreeMemory) {
         if (response->mids) {
           vaapiMemId* vaapiMids = (vaapiMemId*)(response->mids[0]);
-          bool isBitstreamMemory = (MFX_FOURCC_P8 == vaapiMids->mFourcc) ? true : false;
+          bool isBitstreamMemory = (MFX_FOURCC_P8 == vaapiMids->mFourcc);
 
           VASurfaceID* surfaces = vaapiMids->mSurface;
           for (mfxU32 i = 0; i < response->NumFrameActual; ++i) {
@@ -1939,6 +1940,7 @@ protected:
           free (vaapiMids);
           free (response->mids);
           response->mids = NULL;
+
           if (!isBitstreamMemory)
             vaDestroySurfaces (mVaDisplayHandle, surfaces, response->NumFrameActual);
           free (surfaces);
@@ -1955,7 +1957,7 @@ protected:
 
       mfxStatus status = MFX_ERR_NONE;
 
-      if (0 == request || 0 == response || 0 == request->NumFrameSuggested)
+      if (!request || !response || !request->NumFrameSuggested)
         return MFX_ERR_MEMORY_ALLOC;
 
       if ((request->Type & (MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET |
@@ -1965,7 +1967,7 @@ protected:
       if (request->NumFrameSuggested <= allocDecodeResponses[pthis].mMfxResponse.NumFrameActual
           && MFX_MEMTYPE_EXTERNAL_FRAME & request->Type
           && MFX_MEMTYPE_FROM_DECODE & request->Type
-          &&allocDecodeResponses[pthis].mMfxResponse.NumFrameActual != 0) {
+          && !allocDecodeResponses[pthis].mMfxResponse.NumFrameActual) {
         // Memory for this request was already allocated during manual allocation stage. Return saved response
         //   When decode acceleration device (VAAPI) is created it requires a list of VAAPI surfaces to be passed.
         //   Therefore Media SDK will ask for the surface info/mids again at Init() stage, thus requiring us to return the saved response
@@ -2206,7 +2208,7 @@ protected:
         int major_version = 0;
         int minor_version = 0;
         status = vaToMfxStatus (vaInitialize (mVaDisplayHandle, &major_version, &minor_version));
-        if (MFX_ERR_NONE != status) {
+        if (status != MFX_ERR_NONE) {
           close (mFd);
           mFd = -1;
           }
