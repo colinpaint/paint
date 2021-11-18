@@ -21,7 +21,9 @@
   #define WILL_READ 0x1000
   #define WILL_WRITE 0x2000
   //}}}
-#else
+#endif
+
+#ifdef __linux__
   //{{{  vaapi headers
   #include <stdio.h>
   #include <string.h>
@@ -511,6 +513,7 @@ protected:
   bool mGotIframe = false;
   };
 //}}}
+
 #ifdef _WIN32
   //{{{
   class cMfxSystemDecoder : public cMfxDecoder {
@@ -1427,7 +1430,9 @@ protected:
     inline static map <mfxHDL, int> allocDecodeRefCount;
     };
   //}}}
-#else // VAAPI
+#endif
+
+#ifdef __linux__
   //{{{
   class cMfxSystemDecoder : public cMfxDecoder {
   public:
