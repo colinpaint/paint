@@ -1673,11 +1673,11 @@ protected:
       mfxFrameAllocResponse response = {0};
       mfxStatus status = mAllocator.Alloc (mAllocator.pthis, &request, &response);
       if (status != MFX_ERR_NONE)
-        cLog::log (LOGERROR, "Alloc failed - " + getMfxStatusString (status));
+        cLog::log (LOGERROR, "allocateSurfaces failed - " + getMfxStatusString (status));
 
-      // set
+      // set mSurface MemId
       for (size_t i = 0; i < mNumSurfaces; i++)
-        mSurfaces[i].Data.MemId = response.mids[i]; // use mId
+        mSurfaces[i].Data.MemId = response.mids[i]; 
       }
     //}}}
     //{{{
@@ -1795,7 +1795,7 @@ protected:
     static mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
       mfxStatus status = MFX_ERR_NONE;
-      bool createSrfSucceeded = false;
+      bool created = false;
 
       memset (response, 0, sizeof(mfxFrameAllocResponse));
 
@@ -1839,7 +1839,7 @@ protected:
             vaCreateSurfaces (mVaDisplayHandle, VA_RT_FORMAT_YUV420,
                               request->Info.Width, request->Info.Height, surfaces, numSurfaces, &attrib, 1));
 
-          createSrfSucceeded = (status == MFX_ERR_NONE);
+          created = (status == MFX_ERR_NONE);
           }
           //}}}
         else {
@@ -1883,14 +1883,11 @@ protected:
         response->mids = NULL;
         response->NumFrameActual = 0;
 
-        if (VA_FOURCC_P208 != vaFourcc) {
-          if (createSrfSucceeded)
-            vaDestroySurfaces (mVaDisplayHandle, surfaces, numSurfaces);
-          }
-        else {
+        if (vaFourcc == VA_FOURCC_P208)
           for (mfxU16 i = 0; i < numAllocated; i++)
             vaDestroyBuffer (mVaDisplayHandle, surfaces[i]);
-          }
+        else if (created)
+          vaDestroySurfaces (mVaDisplayHandle, surfaces, numSurfaces);
 
         if (mids) {
           free (mids);
