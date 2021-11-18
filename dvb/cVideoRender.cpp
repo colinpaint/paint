@@ -1354,7 +1354,6 @@ protected:
       }
     //}}}
 
-    // create
     //{{{
     static mfxStatus createHWDevice (mfxSession session, mfxHDL* deviceHandle) {
 
@@ -1408,8 +1407,6 @@ protected:
       return MFX_ERR_NONE;
       }
     //}}}
-
-    // interface
     //{{{
     static void cleanupHWDevice() {
 

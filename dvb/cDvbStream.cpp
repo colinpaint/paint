@@ -30,7 +30,6 @@
 using namespace std;
 //}}}
 //{{{  defines, const, struct
-// macros
 #define HILO(x) (x##_hi << 8 | x##_lo)
 
 #define MjdToEpochTime(x) (unsigned int)((((x##_hi << 8) | x##_lo) - 40587) * 86400)
@@ -41,7 +40,7 @@ using namespace std;
 
 const int kInitBufSize = 512;
 
-//{{{  pid defines
+//{{{  pids
 #define PID_PAT   0x00   /* Program Association Table */
 #define PID_CAT   0x01   /* Conditional Access Table */
 #define PID_NIT   0x10   /* Network Information Table */
@@ -51,7 +50,7 @@ const int kInitBufSize = 512;
 #define PID_TDT   0x14   /* Time Date Table */
 #define PID_SYN   0x15   /* Network sync */
 //}}}
-//{{{  tid defines
+//{{{  tids
 #define TID_PAT          0x00   /* Program Association Section */
 #define TID_CAT          0x01   /* Conditional Access Section */
 #define TID_PMT          0x02   /* Conditional Access Section */
@@ -147,110 +146,125 @@ const int kInitBufSize = 512;
 #define DESCR_CONTENT_ID            0x76
 //}}}
 
-//{{{  sPat
-typedef struct {
-  uint8_t table_id                  :8;
-
-  uint8_t section_length_hi         :4;
-  uint8_t dummy1                    :2;
-  uint8_t dummy                     :1;
-  uint8_t section_syntax_indicator  :1;
-
-  uint8_t section_length_lo         :8;
-
-  uint8_t transport_stream_id_hi    :8;
-  uint8_t transport_stream_id_lo    :8;
-
-  uint8_t current_next_indicator    :1;
-  uint8_t version_number            :5;
-  uint8_t dummy2                    :2;
-
-  uint8_t section_number            :8;
-  uint8_t last_section_number       :8;
-  } sPat;
+//{{{
+struct sTdt {
+  uint8_t table_id                 :8;
+  uint8_t section_length_hi        :4;
+  uint8_t                          :3;
+  uint8_t section_syntax_indicator :1;
+  uint8_t section_length_lo        :8;
+  uint8_t utc_mjd_hi               :8;
+  uint8_t utc_mjd_lo               :8;
+  uint8_t utc_time_h               :8;
+  uint8_t utc_time_m               :8;
+  uint8_t utc_time_s               :8;
+  } ;
 //}}}
-//{{{  sPatProg
-typedef struct {
-  uint8_t program_number_hi         :8;
-  uint8_t program_number_lo         :8;
 
-  uint8_t network_pid_hi            :5;
-  uint8_t                           :3;
-  uint8_t network_pid_lo            :8;
+//{{{
+struct sPat {
+  uint8_t table_id                 :8;
+
+  uint8_t section_length_hi        :4;
+  uint8_t dummy1                   :2;
+  uint8_t dummy                    :1;
+  uint8_t section_syntax_indicator :1;
+
+  uint8_t section_length_lo        :8;
+
+  uint8_t transport_stream_id_hi   :8;
+  uint8_t transport_stream_id_lo   :8;
+
+  uint8_t current_next_indicator   :1;
+  uint8_t version_number           :5;
+  uint8_t dummy2                   :2;
+
+  uint8_t section_number           :8;
+  uint8_t last_section_number      :8;
+  } ;
+//}}}
+//{{{
+struct sPatProg {
+  uint8_t program_number_hi :8;
+  uint8_t program_number_lo :8;
+
+  uint8_t network_pid_hi    :5;
+  uint8_t                   :3;
+  uint8_t network_pid_lo    :8;
   /* or program_map_pid (if prog_num=0)*/
-  } sPatProg;
+  } ;
 //}}}
 
-//{{{  sPmt
-typedef struct {
-   unsigned char table_id            :8;
+//{{{
+struct sPmt {
+   unsigned char table_id           :8;
 
-   uint8_t section_length_hi         :4;
-   uint8_t                           :2;
-   uint8_t dummy                     :1; // has to be 0
-   uint8_t section_syntax_indicator  :1;
-   uint8_t section_length_lo         :8;
+   uint8_t section_length_hi        :4;
+   uint8_t                          :2;
+   uint8_t dummy                    :1; // has to be 0
+   uint8_t section_syntax_indicator :1;
+   uint8_t section_length_lo        :8;
 
-   uint8_t program_number_hi         :8;
-   uint8_t program_number_lo         :8;
-   uint8_t current_next_indicator    :1;
-   uint8_t version_number            :5;
-   uint8_t                           :2;
-   uint8_t section_number            :8;
-   uint8_t last_section_number       :8;
-   uint8_t PCR_PID_hi                :5;
-   uint8_t                           :3;
-   uint8_t PCR_PID_lo                :8;
-   uint8_t program_info_length_hi    :4;
-   uint8_t                           :4;
-   uint8_t program_info_length_lo    :8;
+   uint8_t program_number_hi        :8;
+   uint8_t program_number_lo        :8;
+   uint8_t current_next_indicator   :1;
+   uint8_t version_number           :5;
+   uint8_t                          :2;
+   uint8_t section_number           :8;
+   uint8_t last_section_number      :8;
+   uint8_t PCR_PID_hi               :5;
+   uint8_t                          :3;
+   uint8_t PCR_PID_lo               :8;
+   uint8_t program_info_length_hi   :4;
+   uint8_t                          :4;
+   uint8_t program_info_length_lo   :8;
    //descrs
-  } sPmt;
+  } ;
 //}}}
-//{{{  sPmtInfo
-typedef struct {
-   uint8_t stream_type        :8;
-   uint8_t elementary_PID_hi  :5;
-   uint8_t                    :3;
-   uint8_t elementary_PID_lo  :8;
-   uint8_t ES_info_length_hi  :4;
-   uint8_t                    :4;
-   uint8_t ES_info_length_lo  :8;
+//{{{
+struct sPmtInfo {
+   uint8_t stream_type       :8;
+   uint8_t elementary_PID_hi :5;
+   uint8_t                   :3;
+   uint8_t elementary_PID_lo :8;
+   uint8_t ES_info_length_hi :4;
+   uint8_t                   :4;
+   uint8_t ES_info_length_lo :8;
    // descrs
-  } sPmtInfo;
+  } ;
 //}}}
 
-//{{{  sNit
-typedef struct {
-  uint8_t table_id                     :8;
+//{{{
+struct sNit {
+  uint8_t table_id                 :8;
 
-  uint8_t section_length_hi         :4;
-  uint8_t                           :3;
-  uint8_t section_syntax_indicator  :1;
-  uint8_t section_length_lo         :8;
+  uint8_t section_length_hi        :4;
+  uint8_t                          :3;
+  uint8_t section_syntax_indicator :1;
+  uint8_t section_length_lo        :8;
 
-  uint8_t network_id_hi             :8;
-  uint8_t network_id_lo             :8;
-  uint8_t current_next_indicator    :1;
-  uint8_t version_number            :5;
-  uint8_t                           :2;
-  uint8_t section_number            :8;
-  uint8_t last_section_number       :8;
-  uint8_t network_descr_length_hi   :4;
-  uint8_t                           :4;
-  uint8_t network_descr_length_lo   :8;
+  uint8_t network_id_hi            :8;
+  uint8_t network_id_lo            :8;
+  uint8_t current_next_indicator   :1;
+  uint8_t version_number           :5;
+  uint8_t                          :2;
+  uint8_t section_number           :8;
+  uint8_t last_section_number      :8;
+  uint8_t network_descr_length_hi  :4;
+  uint8_t                          :4;
+  uint8_t network_descr_length_lo  :8;
   /* descrs */
-  } sNit;
+  } ;
 //}}}
-//{{{  sNitMid
-typedef struct {                                 // after descrs
+//{{{
+struct sNitMid {                                
   uint8_t transport_stream_loop_length_hi  :4;
   uint8_t                                  :4;
   uint8_t transport_stream_loop_length_lo  :8;
-  } sNitMid;
+  } ;
 //}}}
-//{{{  sNitTs
-typedef struct {
+//{{{
+struct sNitTs {
   uint8_t transport_stream_id_hi      :8;
   uint8_t transport_stream_id_lo      :8;
   uint8_t original_network_id_hi      :8;
@@ -259,11 +273,44 @@ typedef struct {
   uint8_t                             :4;
   uint8_t transport_descrs_length_lo  :8;
   /* descrs  */
-  } sNitTs;
+  } ;
 //}}}
 
-//{{{  sEit
-typedef struct {
+//{{{
+struct sSdt {
+  uint8_t table_id                 :8;
+  uint8_t section_length_hi        :4;
+  uint8_t                          :3;
+  uint8_t section_syntax_indicator :1;
+  uint8_t section_length_lo        :8;
+  uint8_t transport_stream_id_hi   :8;
+  uint8_t transport_stream_id_lo   :8;
+  uint8_t current_next_indicator   :1;
+  uint8_t version_number           :5;
+  uint8_t                          :2;
+  uint8_t section_number           :8;
+  uint8_t last_section_number      :8;
+  uint8_t original_network_id_hi   :8;
+  uint8_t original_network_id_lo   :8;
+  uint8_t                          :8;
+  } ;
+//}}}
+//{{{
+struct sSdtDescriptor {
+  uint8_t service_id_hi              :8;
+  uint8_t service_id_lo              :8;
+  uint8_t eit_present_following_flag :1;
+  uint8_t eit_schedule_flag          :1;
+  uint8_t                            :6;
+  uint8_t descrs_loop_length_hi      :4;
+  uint8_t free_ca_mode               :1;
+  uint8_t running_status             :3;
+  uint8_t descrs_loop_length_lo      :8;
+  } ;
+//}}}
+
+//{{{
+struct sEit {
   uint8_t table_id                    :8;
 
   uint8_t section_length_hi           :4;
@@ -284,123 +331,75 @@ typedef struct {
   uint8_t original_network_id_lo      :8;
   uint8_t segment_last_section_number :8;
   uint8_t segment_last_table_id       :8;
-  } sEit;
+  } ;
 //}}}
-//{{{  sEitEvent
-typedef struct {
-  uint8_t event_id_hi                 :8;
-  uint8_t event_id_lo                 :8;
-  uint8_t mjd_hi                      :8;
-  uint8_t mjd_lo                      :8;
-  uint8_t start_time_h                :8;
-  uint8_t start_time_m                :8;
-  uint8_t start_time_s                :8;
-  uint8_t duration_h                  :8;
-  uint8_t duration_m                  :8;
-  uint8_t duration_s                  :8;
-  uint8_t descrs_loop_length_hi       :4;
-  uint8_t free_ca_mode                :1;
-  uint8_t running_status              :3;
-  uint8_t descrs_loop_length_lo       :8;
-  } sEitEvent;
-//}}}
-
-//{{{  sSdt
-typedef struct {
-  uint8_t table_id                    :8;
-  uint8_t section_length_hi           :4;
-  uint8_t                             :3;
-  uint8_t section_syntax_indicator    :1;
-  uint8_t section_length_lo           :8;
-  uint8_t transport_stream_id_hi      :8;
-  uint8_t transport_stream_id_lo      :8;
-  uint8_t current_next_indicator      :1;
-  uint8_t version_number              :5;
-  uint8_t                             :2;
-  uint8_t section_number              :8;
-  uint8_t last_section_number         :8;
-  uint8_t original_network_id_hi      :8;
-  uint8_t original_network_id_lo      :8;
-  uint8_t                             :8;
-  } sSdt;
-//}}}
-//{{{  sSdtDescriptor
-typedef struct {
-  uint8_t service_id_hi                :8;
-  uint8_t service_id_lo                :8;
-  uint8_t eit_present_following_flag   :1;
-  uint8_t eit_schedule_flag            :1;
-  uint8_t                              :6;
-  uint8_t descrs_loop_length_hi        :4;
-  uint8_t free_ca_mode                 :1;
-  uint8_t running_status               :3;
-  uint8_t descrs_loop_length_lo        :8;
-  } sSdtDescriptor;
-//}}}
-
-//{{{  sTdt
-typedef struct {
-  uint8_t table_id                  :8;
-  uint8_t section_length_hi         :4;
-  uint8_t                           :3;
-  uint8_t section_syntax_indicator  :1;
-  uint8_t section_length_lo         :8;
-  uint8_t utc_mjd_hi                :8;
-  uint8_t utc_mjd_lo                :8;
-  uint8_t utc_time_h                :8;
-  uint8_t utc_time_m                :8;
-  uint8_t utc_time_s                :8;
-  } sTdt;
+//{{{
+struct sEitEvent {
+  uint8_t event_id_hi           :8;
+  uint8_t event_id_lo           :8;
+  uint8_t mjd_hi                :8;
+  uint8_t mjd_lo                :8;
+  uint8_t start_time_h          :8;
+  uint8_t start_time_m          :8;
+  uint8_t start_time_s          :8;
+  uint8_t duration_h            :8;
+  uint8_t duration_m            :8;
+  uint8_t duration_s            :8;
+  uint8_t descrs_loop_length_hi :4;
+  uint8_t free_ca_mode          :1;
+  uint8_t running_status        :3;
+  uint8_t descrs_loop_length_lo :8;
+  } ;
 //}}}
 
 //{{{
-typedef struct descr_gen_struct {
-  uint8_t descr_tag        :8;
-  uint8_t descr_length     :8;
-  } sDescriptorGen;
+struct sDescriptorGen {
+  uint8_t descr_tag    :8;
+  uint8_t descr_length :8;
+  };
 
 #define getDescrTag(x) (((sDescriptorGen*)x)->descr_tag)
 #define getDescrLength(x) (((sDescriptorGen*)x)->descr_length+2)
 //}}}
 //{{{
-typedef struct descr_service_struct {
-  uint8_t descr_tag             :8;
-  uint8_t descr_length          :8;
-  uint8_t service_type          :8;
-  uint8_t provider_name_length  :8;
-  } descr_service_t;
+struct descrService {
+  uint8_t descr_tag            :8;
+  uint8_t descr_length         :8;
+  uint8_t service_type         :8;
+  uint8_t provider_name_length :8;
+  } ;
 //}}}
 //{{{
-typedef struct descr_short_event_struct {
+struct descrShortEvent {
   uint8_t descr_tag         :8;
   uint8_t descr_length      :8;
   uint8_t lang_code1        :8;
   uint8_t lang_code2        :8;
   uint8_t lang_code3        :8;
   uint8_t event_name_length :8;
-  } descr_short_event_t;
+  } ;
 //}}}
 //{{{
-typedef struct descr_extended_event_struct {
-  uint8_t descr_tag          :8;
-  uint8_t descr_length       :8;
+struct descrExtendedEvent {
+  uint8_t descr_tag         :8;
+  uint8_t descr_length      :8;
   /* TBD */
-  uint8_t last_descr_number  :4;
-  uint8_t descr_number       :4;
-  uint8_t lang_code1         :8;
-  uint8_t lang_code2         :8;
-  uint8_t lang_code3         :8;
-  uint8_t length_of_items    :8;
-  } descr_extended_event_t;
-#define CastExtendedEventDescr(x) ((descr_extended_event_t *)(x))
+  uint8_t last_descr_number :4;
+  uint8_t descr_number      :4;
+  uint8_t lang_code1        :8;
+  uint8_t lang_code2        :8;
+  uint8_t lang_code3        :8;
+  uint8_t length_of_items   :8;
+  } ;
 
+#define CastExtendedEventDescr(x) ((descrExtendedEvent*)(x))
 //}}}
 //{{{
-typedef struct item_extended_event_struct {
-  uint8_t item_description_length               :8;
-  } item_extended_event_t;
+struct itemExtendedEvent {
+  uint8_t item_description_length:8;
+  } ;
 
-#define CastExtendedEventItem(x) ((item_extended_event_t *)(x))
+#define CastExtendedEventItem(x) ((itemExtendedEvent*)(x))
 //}}}
 //}}}
 
@@ -1048,10 +1047,8 @@ void cDvbStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
         switch (getDescrTag (buf)) {
           case DESCR_SERVICE: {
             //{{{  service
-            string name = cDvbUtils::getString (buf +
-                                                sizeof(descr_service_t) +
-                                                ((descr_service_t*)buf)->provider_name_length);
-
+            string name = cDvbUtils::getString (buf + sizeof(descrService) +
+                                                ((descrService*)buf)->provider_name_length);
             cService* service = getService (sid);
             if (service) {
               if (service->getChannelName().empty()) {
@@ -1142,11 +1139,11 @@ void cDvbStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
             tDurationSeconds duration (BcdTimeToSeconds (eitEvent->duration));
 
             // get title
-            auto bufPtr = buf + sizeof(descr_short_event_struct) - 1;
+            auto bufPtr = buf + sizeof(descrShortEvent) - 1;
             auto titleString = cDvbUtils::getString (bufPtr);
 
             // get info
-            bufPtr += ((descr_short_event_t*)buf)->event_name_length;
+            bufPtr += ((descrShortEvent*)buf)->event_name_length;
             auto infoString = cDvbUtils::getString (bufPtr);
 
             if (now) {
