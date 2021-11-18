@@ -5,8 +5,6 @@
 #ifdef _WIN32
   //{{{  windows headers
   #define NOMINMAX
-  #include <intrin.h>
-
   #include <initguid.h>
   #include <d3d9.h>
   #include <dxva2api.h>
@@ -68,6 +66,7 @@ extern "C" {
 
 #define INTEL_SSE2
 #define INTEL_SSSE3 1
+#include <intrin.h>
 #include <emmintrin.h>
 #include <tmmintrin.h>
 
