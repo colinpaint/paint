@@ -14,21 +14,27 @@ class cPlatform;
 //{{{
 class cTexture {
 public:
-  cTexture (uint8_t textureType, cPoint size) : mTextureType(textureType), mSize(size) {}
+  enum eTextureType { eRgba, eNv12, eYuv420 };
+
+  cTexture (eTextureType textureType, cPoint size) : mTextureType(textureType), mSize(size) {}
   virtual ~cTexture() = default;
 
   /// gets
-  uint8_t getTextureType() const { return mTextureType; }
+  eTextureType getTextureType() const { return mTextureType; }
   const cPoint getSize() const { return mSize; }
+
   unsigned getTextureId() { return mTextureId; }
 
   virtual void setPixels (uint8_t* pixels) = 0;
   virtual void setSource() = 0;
 
 protected:
-  uint8_t mTextureType;
+  const eTextureType mTextureType;
   cPoint mSize;
+
   uint32_t mTextureId = 0;
+  uint32_t mTextureId1 = 0;
+  uint32_t mTextureId2 = 0;
   };
 //}}}
 //{{{
@@ -159,7 +165,7 @@ public:
   virtual void shutdown() = 0;
 
   // create graphics resources
-  virtual cTexture* createTexture (uint8_t textureType, cPoint size, uint8_t* pixels) = 0;
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) = 0;
 
   virtual cQuad* createQuad (cPoint size) = 0;
   virtual cQuad* createQuad (cPoint size, const cRect& rect) = 0;

@@ -404,7 +404,7 @@ private:
 
       // create/update image texture
       if (image.mTexture == nullptr) // create
-        image.mTexture = graphics.createTexture (0, {image.mWidth, image.mHeight}, image.mPixels);
+        image.mTexture = graphics.createTexture (cTexture::eRgba, {image.mWidth, image.mHeight}, image.mPixels);
       else if (image.mDirty) // update
         image.mTexture->setPixels (image.mPixels);
       image.mDirty = false;

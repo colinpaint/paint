@@ -2582,7 +2582,7 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
 
     if (pixels) {
       if (mTexture == nullptr) // create
-        mTexture = graphics.createTexture (mYuv ? 1 : 0, {getWidth(), getHeight()}, pixels);
+        mTexture = graphics.createTexture (mYuv ? cTexture::eYuv420 : cTexture::eRgba, {getWidth(), getHeight()}, pixels);
       else
         mTexture->setPixels (pixels);
       mTexturePts = playPts;

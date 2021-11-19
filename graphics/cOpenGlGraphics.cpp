@@ -36,27 +36,41 @@ namespace {
   class cOpenGlTexture : public cTexture {
   public:
     //{{{
-    cOpenGlTexture (uint8_t textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {
+    cOpenGlTexture (eTextureType textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {
 
-      glGenTextures (1, &mTextureId);
-      glBindTexture (GL_TEXTURE_2D, mTextureId);
+      switch (mTextureType) {
+        case eRgba:
+          glGenTextures (1, &mTextureId);
+          glBindTexture (GL_TEXTURE_2D, mTextureId);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          glGenerateMipmap (GL_TEXTURE_2D);
+          break;
 
-      if (textureType == 0) {
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glGenerateMipmap (GL_TEXTURE_2D);
+        case eNv12:
+          glGenTextures (1, &mTextureId);
+          glBindTexture (GL_TEXTURE_2D, mTextureId);
+          cLog::log (LOGINFO, fmt::format ("creating 8bit eNv12 {} {}x{}", textureType, size.x, size.y));
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          break;
+
+        case eYuv420:
+          glGenTextures (1, &mTextureId);
+          glBindTexture (GL_TEXTURE_2D, mTextureId);
+          cLog::log (LOGINFO, fmt::format ("creating 8bit eYuv420 {} {}x{}", textureType, size.x, size.y));
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          break;
+
+        default:
+          cLog::log (LOGINFO, fmt::format ("creating unknown textureType {} {}x{}", textureType, size.x, size.y));
         }
-      else if (mTextureType == 1) {
-        cLog::log (LOGINFO, fmt::format ("creating 8bit {} {}x{}", textureType, size.x, size.y));
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        }
-      else
-        cLog::log (LOGINFO, fmt::format ("creating unknown textureType {} {}x{}", textureType, size.x, size.y));
       }
     //}}}
     //{{{
@@ -68,14 +82,22 @@ namespace {
     //{{{
     virtual void setPixels (uint8_t* pixels) final {
 
-      glBindTexture (GL_TEXTURE_2D, mTextureId);
-
-      if (mTextureType == 0)
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-      else if (mTextureType == 1)
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-      else
-        cLog::log (LOGINFO, fmt::format ("setPixels unknown textureType {} {}x{}", mTextureType, mSize.x, mSize.y));
+      switch (mTextureType) {
+        case eRgba:
+          glBindTexture (GL_TEXTURE_2D, mTextureId);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+          break;
+        case eNv12:
+          glBindTexture (GL_TEXTURE_2D, mTextureId);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+          break;
+        case eYuv420:
+          glBindTexture (GL_TEXTURE_2D, mTextureId);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+          break;
+        default:
+          cLog::log (LOGINFO, fmt::format ("setPixels unknown textureType {} {}x{}", mTextureType, mSize.x, mSize.y));
+        }
       }
     //}}}
     //{{{
@@ -1527,7 +1549,7 @@ public:
   void shutdown() final;
 
   // create resources
-  virtual cTexture* createTexture (uint8_t textureType, cPoint size, uint8_t* pixels) final;
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) final;
 
   virtual cQuad* createQuad (cPoint size) final;
   virtual cQuad* createQuad (cPoint size, const cRect& rect) final;
@@ -1587,7 +1609,7 @@ void cOpenGlGraphics::shutdown() {
 
 // - resource creates
 //{{{
-cTexture* cOpenGlGraphics::createTexture (uint8_t textureType, cPoint size, uint8_t* pixels) {
+cTexture* cOpenGlGraphics::createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) {
   return new cOpenGlTexture (textureType, size, pixels);
   }
 //}}}

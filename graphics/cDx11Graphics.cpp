@@ -30,7 +30,8 @@ namespace {
   //{{{
   class cDx11Texture : public cTexture {
   public:
-    cDx11Texture (uint8_t textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {(void)pixels;}
+    cDx11Texture (eTextureType textureType, cPoint size, uint8_t* pixels)
+      : cTexture(textureType, size) {(void)pixels;}
 
     virtual void setPixels (uint8_t* pixels) final { (void)pixels; }
     virtual void setSource() final {}
@@ -940,7 +941,7 @@ public:
   void shutdown() final;
 
   // create resources
-  virtual cTexture* createTexture (uint8_t textureType, cPoint size, uint8_t* pixels) final;
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) final;
 
   virtual cQuad* createQuad (cPoint size) final;
   virtual cQuad* createQuad (cPoint size, const cRect& rect) final;
@@ -1009,7 +1010,7 @@ void cDx11Graphics::shutdown() {
 
 // - resource creates
 //{{{
-cTexture* cDx11Graphics::createTexture (uint8_t textureType, cPoint size, uint8_t* pixels) {
+cTexture* cDx11Graphics::createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) {
   return new cDx11Texture (textureType, size, pixels);
   }
 //}}}
