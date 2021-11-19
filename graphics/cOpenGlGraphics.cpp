@@ -1217,7 +1217,7 @@ namespace {
           "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
           "float u = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
           "float v = texture (vSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
-          "y = 1.1643 * (y-0.0625);"
+          "y = (y - 0.0625) * 1.1643;"
           "outColor.r = y + (1.5958 * v);"
           "outColor.g = y - (0.39173 * u) - (0.81290 * v);"
           "outColor.b = y + (2.017 * u);"

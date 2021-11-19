@@ -38,6 +38,9 @@ public:
 
     cGraphics& graphics = app.getGraphics();
 
+    if (app.getDvbStream())
+      drawBgnd (*app.getDvbStream(), graphics);
+
     // draw tabs
     mMainTabIndex = interlockedButtons ({"tv","services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
 
@@ -108,7 +111,7 @@ public:
   //}}}
 private:
   //{{{
-  void drawTelly (cDvbStream& dvbStream, cGraphics& graphics) {
+  void drawBgnd (cDvbStream& dvbStream, cGraphics& graphics) {
 
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
@@ -142,8 +145,24 @@ private:
           mShader->setModelProjection (model, orthoProjection);
           mShader->setTextures();
           mQuad->draw();
+          break;
+          }
+        }
+      }
+    }
+  //}}}
+  //{{{
+  void drawTelly (cDvbStream& dvbStream, cGraphics& graphics) {
 
-          ImGui::SetCursorPos ({0.f,0.f});
+    (void)graphics;
+    for (auto& pair : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service = pair.second;
+
+      if (service.getStream (cDvbStream::eAud).isEnabled()) {
+        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
+        int64_t playPts = audio.getPlayPts();
+        if (service.getStream (cDvbStream::eVid).isEnabled()) {
+          cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
           ImGui::TextUnformatted (fmt::format ("pts:{} a:{} v:{}",
                                   getPtsString (playPts), audio.getInfoString(), video.getInfoString()).c_str());
           break;
@@ -329,16 +348,15 @@ private:
   //{{{
   void drawVideo (uint16_t sid, cRender& render, cGraphics& graphics, int64_t playPts) {
 
-    cVideoRender& video = dynamic_cast<cVideoRender&>(render);
+   (void)graphics;
+   (void)playPts;
+   cVideoRender& video = dynamic_cast<cVideoRender&>(render);
 
     plotValues (sid, video, 0xffffffff);
-
     ImGui::TextUnformatted (video.getInfoString().c_str());
-
-    cTexture* texture = video.getTexture (playPts, graphics);
-    if (texture)
-      ImGui::Image ((void*)(intptr_t)texture->getTextureId(), {video.getWidth()/4.f,video.getHeight()/4.f});
-
+    //cTexture* texture = video.getTexture (playPts, graphics);
+    //if (texture)
+    //  ImGui::Image ((void*)(intptr_t)texture->getTextureId(), {video.getWidth()/4.f,video.getHeight()/4.f});
     drawMiniLog (video.getLog());
     }
   //}}}
