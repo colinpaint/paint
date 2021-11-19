@@ -417,7 +417,7 @@ public:
   //}}}
 
 private:
-  cTexture::eTextureType mTextureType = cTexture::eRgba;
+  cTexture::eTextureType mTextureType = cTexture::eTextureNone;
 
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
@@ -507,9 +507,11 @@ public:
                             frameSize, decodeTime);
           mInterpolatedPts += videoFrame->getPtsDuration();
 
-          // yuv420 -> rgba
           timePoint = chrono::system_clock::now();
-          videoFrame->setYuv420 (avFrame->data, avFrame->linesize);
+          if (mYuv)
+            videoFrame->setYuv420 (avFrame->data, avFrame->linesize);
+          else
+            videoFrame->setYuv420Rgba (avFrame->data, avFrame->linesize);
           videoFrame->setYuvRgbTime (
             chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
           av_frame_unref (avFrame);  // ??? nnn ???
@@ -2572,23 +2574,29 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
   if (playPts != mTexturePts) {
     // new pts to display
     uint8_t* pixels = nullptr;
+    cTexture::eTextureType textureType = cTexture::eTextureNone;
 
     if (mPtsDuration > 0) {
       auto it = mFrames.find (playPts / mPtsDuration);
-      if (it != mFrames.end()) // match found
-        pixels =  (*it).second->getPixels();
+      if (it != mFrames.end()) {
+        // match found
+        pixels = (*it).second->getPixels();
+        textureType = (*it).second->getTextureType();
+        }
       }
 
     if (!pixels) {
      // match notFound, try first
      auto it = mFrames.begin();
-      if (it != mFrames.end())
+      if (it != mFrames.end()) {
         pixels = (*it).second->getPixels();
+        textureType = (*it).second->getTextureType();
+        }
       }
 
     if (pixels) {
       if (mTexture == nullptr) // create
-        mTexture = graphics.createTexture (cTexture::eYuv420, {getWidth(), getHeight()}, pixels);
+        mTexture = graphics.createTexture (textureType, {getWidth(), getHeight()}, pixels);
       else
         mTexture->setPixels (pixels);
       mTexturePts = playPts;

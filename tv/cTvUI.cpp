@@ -39,7 +39,7 @@ public:
     cGraphics& graphics = app.getGraphics();
 
     // draw tabs
-    mMainTabIndex = interlockedButtons ({"nnn", "tv","services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
+    mMainTabIndex = interlockedButtons ({"tv","services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
 
     if (app.getPlatform().hasVsync()) {
       //{{{  vsync button
@@ -95,11 +95,10 @@ public:
       ImGui::BeginChild ("tab", {0.f,0.f}, false,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
       switch (mMainTabIndex) {
-        case 0: drawTellyQuad (dvbStream, graphics); break;
-        case 1: drawTelly (dvbStream, graphics); break;
-        case 2: drawServices (dvbStream, graphics); break;
-        case 3: drawPidMap (dvbStream, graphics); break;
-        case 4: drawRecorded (dvbStream, graphics); break;
+        case 0: drawTelly (dvbStream, graphics); break;
+        case 1: drawServices (dvbStream, graphics); break;
+        case 2: drawPidMap (dvbStream, graphics); break;
+        case 3: drawRecorded (dvbStream, graphics); break;
         }
 
       ImGui::EndChild();
@@ -108,45 +107,6 @@ public:
     }
   //}}}
 private:
-  //{{{
-  void drawTellyQuad (cDvbStream& dvbStream, cGraphics& graphics) {
-
-    for (auto& pair : dvbStream.getServiceMap()) {
-      cDvbStream::cService& service = pair.second;
-      if (service.getStream (cDvbStream::eAud).isEnabled()) {
-        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
-        int64_t playPts = audio.getPlayPts();
-        if (service.getStream (cDvbStream::eVid).isEnabled()) {
-          cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
-          cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
-
-          cPoint windowSize = cPoint ((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight());
-
-          if (!mQuad)
-            mQuad = graphics.createQuad (windowSize);
-          if (!mShader)
-            mShader = graphics.createVideoShader();
-
-          graphics.background (windowSize.x, windowSize.y);
-          cTexture* texture = video.getTexture (playPts, graphics);
-          if (texture)
-            texture->setSource();
-          mShader->use();
-
-          cMat4x4 model;
-          //model.setTranslate (cVec3 ((windowSize.x - videoSize.x)/2.f, (windowSize.y - videoSize.y)/2.f, 0.f));
-          model.setTranslate (cVec3 (windowSize.x/4.f, windowSize.y/4.f, 0.f));
-          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-          mShader->setModelProjection (model, orthoProjection);
-          mQuad->draw();
-
-          ImGui::TextUnformatted (fmt::format ("pts:{} a:{} v:{}",
-                                  getPtsString (playPts), audio.getInfoString(), video.getInfoString()).c_str());
-          }
-        }
-      }
-    }
-  //}}}
   //{{{
   void drawTelly (cDvbStream& dvbStream, cGraphics& graphics) {
 
@@ -159,10 +119,30 @@ private:
 
         if (service.getStream (cDvbStream::eVid).isEnabled()) {
           cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
+
+          cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
+          cPoint windowSize = cPoint ((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight());
+
+          if (!mQuad)
+            mQuad = graphics.createQuad (windowSize);
+          if (!mShader)
+            mShader = graphics.createVideoShader();
+
+          graphics.background (windowSize.x, windowSize.y);
           cTexture* texture = video.getTexture (playPts, graphics);
+
           if (texture)
-            ImGui::Image ((void*)(intptr_t)texture->getTextureId(),
-                          {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()});
+            texture->setSource();
+          mShader->use();
+
+          cMat4x4 model;
+          //model.setTranslate (cVec3 ((windowSize.x - videoSize.x)/2.f, (windowSize.y - videoSize.y)/2.f, 0.f));
+          model.setTranslate (cVec3 (windowSize.x/4.f, windowSize.y/4.f, 0.f));
+          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
+          mShader->setModelProjection (model, orthoProjection);
+          mShader->setTextures();
+          mQuad->draw();
+
           ImGui::SetCursorPos ({0.f,0.f});
           ImGui::TextUnformatted (fmt::format ("pts:{} a:{} v:{}",
                                   getPtsString (playPts), audio.getInfoString(), video.getInfoString()).c_str());

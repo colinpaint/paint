@@ -14,7 +14,7 @@ class cPlatform;
 //{{{
 class cTexture {
 public:
-  enum eTextureType { eRgba, eNv12, eYuv420 };
+  enum eTextureType { eTextureNone, eRgba, eNv12, eYuv420 };
 
   cTexture (eTextureType textureType, cPoint size) : mTextureType(textureType), mSize(size) {}
   virtual ~cTexture() = default;
@@ -150,6 +150,8 @@ class cVideoShader : public cQuadShader {
 public:
   cVideoShader() : cQuadShader() {}
   virtual ~cVideoShader() = default;
+
+  virtual void setTextures() = 0;
   };
 //}}}
 

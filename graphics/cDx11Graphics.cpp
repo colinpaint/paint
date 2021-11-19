@@ -229,18 +229,18 @@ namespace {
     virtual ~cDx11PaintShader() = default;
 
     // sets
-    void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       (void)model;
       (void)projection;
       }
-    void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
+    virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
       (void)pos;
       (void)prevPos;
       (void)radius;
       (void)color;
       }
 
-    void use() final {
+    virtual void use() final {
       }
     };
   //}}}
@@ -252,17 +252,17 @@ namespace {
     virtual ~cDx11LayerShader() = default;
 
     // sets
-    void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       (void)model;
       (void)projection;
       }
-    void setHueSatVal (float hue, float sat, float val) final {
+    virtual void setHueSatVal (float hue, float sat, float val) final {
       (void)hue;
       (void)sat;
       (void)val;
       }
 
-    void use() final {
+    virtual void use() final {
       }
     };
   //}}}
@@ -274,12 +274,12 @@ namespace {
     virtual ~cDx11CanvasShader()  = default;
 
     // sets
-    void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       (void)model;
       (void)projection;
       }
 
-    void use() final {
+    virtual void use() final {
       }
     };
   //}}}
@@ -291,13 +291,14 @@ namespace {
     virtual ~cDx11VideoShader()  = default;
 
     // sets
-    void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       (void)model;
       (void)projection;
       }
 
-    void use() final {
-      }
+
+    virtual void setTextures() final {}
+    virtual void use() final {}
     };
   //}}}
 

@@ -907,13 +907,13 @@ namespace {
 
     // sets
     //{{{
-    void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
       glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
       }
     //}}}
     //{{{
-    void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
+    virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
 
       glUniform2fv (glGetUniformLocation (mId, "uPos"), 1, (float*)&pos);
       glUniform2fv (glGetUniformLocation (mId, "uPrevPos"), 1, (float*)&prevPos);
@@ -923,7 +923,7 @@ namespace {
     //}}}
 
     //{{{
-    void use() final {
+    virtual void use() final {
 
       glUseProgram (mId);
       }
@@ -1120,13 +1120,13 @@ namespace {
 
     // sets
     //{{{
-    void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
       glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
       }
     //}}}
     //{{{
-    void setHueSatVal (float hue, float sat, float val) final {
+    virtual void setHueSatVal (float hue, float sat, float val) final {
       glUniform1f (glGetUniformLocation (mId, "uHue"), hue);
       glUniform1f (glGetUniformLocation (mId, "uSat"), sat);
       glUniform1f (glGetUniformLocation (mId, "uVal"), val);
@@ -1134,7 +1134,7 @@ namespace {
     //}}}
 
     //{{{
-    void use() final {
+    virtual void use() final {
 
       glUseProgram (mId);
       }
@@ -1185,14 +1185,14 @@ namespace {
 
     // sets
     //{{{
-    void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
       glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
       }
     //}}}
 
     //{{{
-    void use() final {
+    virtual void use() final {
 
       glUseProgram (mId);
       }
@@ -1235,9 +1235,14 @@ namespace {
 
     // sets
     //{{{
-    void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
       glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
+      }
+    //}}}
+    //{{{
+    virtual void setTextures() final {
 
       glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
       glUniform1i (glGetUniformLocation (mId, "uSampler"), 1);
@@ -1246,8 +1251,9 @@ namespace {
     //}}}
 
     //{{{
-    void use() final {
+    virtual void use() final {
 
+      //cLog::log (LOGINFO, "video use");
       glUseProgram (mId);
       }
     //}}}
