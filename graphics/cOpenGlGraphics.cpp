@@ -40,8 +40,11 @@ namespace {
 
       switch (mTextureType) {
         case eRgba:
-          glGenTextures (1, &mTextureId);
-          glBindTexture (GL_TEXTURE_2D, mTextureId);
+          cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
+
+          glGenTextures (1, mTextureId);
+
+          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -51,31 +54,54 @@ namespace {
           break;
 
         case eNv12:
-          glGenTextures (1, &mTextureId);
-          glBindTexture (GL_TEXTURE_2D, mTextureId);
-          cLog::log (LOGINFO, fmt::format ("creating 8bit eNv12 {} {}x{}", textureType, size.x, size.y));
+          cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
+
+          glGenTextures (2, mTextureId);
+
+          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x/2, size.y/2, 0, GL_RED, GL_UNSIGNED_BYTE,
+                        pixels + (size.x * size.y));
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
           break;
 
-        case eYuv420:
-          glGenTextures (1, &mTextureId);
-          glBindTexture (GL_TEXTURE_2D, mTextureId);
-          cLog::log (LOGINFO, fmt::format ("creating 8bit eYuv420 {} {}x{}", textureType, size.x, size.y));
+        case eYuv420: {
+          cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
+
+          glGenTextures (3, mTextureId);
+
+          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+          uint8_t* u = pixels + (size.x * size.y);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x/2, size.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, u);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+          uint8_t* v = u + (size.x * size.y);
+          glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x/2, size.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, v);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
           break;
+          }
 
         default:
-          cLog::log (LOGINFO, fmt::format ("creating unknown textureType {} {}x{}", textureType, size.x, size.y));
+          cLog::log (LOGINFO, fmt::format ("creating unknown textureType:{} {}x{}", textureType, size.x, size.y));
         }
       }
     //}}}
     //{{{
     virtual ~cOpenGlTexture() {
-      glDeleteTextures (1, &mTextureId);
+      glDeleteTextures (1, mTextureId);
       }
     //}}}
 
@@ -84,17 +110,43 @@ namespace {
 
       switch (mTextureType) {
         case eRgba:
-          glBindTexture (GL_TEXTURE_2D, mTextureId);
+          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
           break;
+
         case eNv12:
-          glBindTexture (GL_TEXTURE_2D, mTextureId);
+          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE,
+                        pixels + (mSize.x * mSize.y));
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
           break;
-        case eYuv420:
-          glBindTexture (GL_TEXTURE_2D, mTextureId);
+
+        case eYuv420: {
+          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+          uint8_t* u = pixels + (mSize.x * mSize.y);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, u);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+          uint8_t* v = u + (mSize.x * mSize.y);
+          glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, v);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
           break;
+          }
+
         default:
           cLog::log (LOGINFO, fmt::format ("setPixels unknown textureType {} {}x{}", mTextureType, mSize.x, mSize.y));
         }
@@ -103,8 +155,33 @@ namespace {
     //{{{
     virtual void setSource() final {
 
+      switch (mTextureType) {
+        case eRgba:
+          glActiveTexture (GL_TEXTURE0);
+          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+          break;
+
+        case eNv12:
+          glActiveTexture (GL_TEXTURE0);
+          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+          glActiveTexture (GL_TEXTURE1);
+          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+          break;
+
+        case eYuv420: 
+          glActiveTexture (GL_TEXTURE0);
+          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+          glActiveTexture (GL_TEXTURE1);
+          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+          glActiveTexture (GL_TEXTURE2);
+          glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
+          break;
+
+        default:;
+        }
+
       glActiveTexture (GL_TEXTURE0);
-      glBindTexture (GL_TEXTURE_2D, mTextureId);
+      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
       }
     //}}}
     };
