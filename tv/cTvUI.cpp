@@ -139,6 +139,9 @@ private:
           cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
           mShader->setModelProjection (model, orthoProjection);
           mQuad->draw();
+
+          ImGui::TextUnformatted (fmt::format ("pts:{} a:{} v:{}",
+                                  getPtsString (playPts), audio.getInfoString(), video.getInfoString()).c_str());
           }
         }
       }

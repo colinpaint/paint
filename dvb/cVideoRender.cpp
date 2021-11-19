@@ -129,291 +129,283 @@ public:
 
   // sets
   //{{{
-  void setNv12 (uint8_t* nv12) {
+  void setNv12 (bool mYuv, uint8_t* nv12) {
 
-    mPixelType = eNv12;
-    memcpy (mPixels, nv12, mHeight * mStride * 3 /2);
-    }
-  //}}}
-  //{{{
-  void setNv12Rgba (uint8_t* nv12) {
-
-    mPixelType = eRgba;
-
-    uint8_t* mYbuf = nullptr;
-    uint8_t* mUbuf = nullptr;
-    uint8_t* mVbuf = nullptr;
-    uint16_t mYStride = mStride;
-    uint16_t mUVStride = mStride/2;
-    uint16_t mArgbStride = mWidth;
-
-    #ifdef _WIN32
-      if (!mYbuf)
-        mYbuf = (uint8_t*)_aligned_malloc (mHeight * mYStride * 3 / 2, 128);
-      if (!mUbuf)
-        mUbuf = (uint8_t*)_aligned_malloc ((mHeight/2) * mUVStride, 128);
-      if (!mVbuf)
-        mVbuf = (uint8_t*)_aligned_malloc ((mHeight/2) * mUVStride, 128);
-    #else
-      if (!mYbuf)
-        mYbuf = (uint8_t*)aligned_alloc (128, mHeight * mYStride * 3 / 2);
-      if (!mUbuf)
-        mUbuf = (uint8_t*)aligned_alloc (128, (mHeight/2) * mUVStride);
-      if (!mVbuf)
-        mVbuf = (uint8_t*)aligned_alloc (128, (mHeight/2) * mUVStride);
-    #endif
-
-    // copy y of nv12 to y
-    memcpy (mYbuf, nv12, mHeight * mYStride * 3 / 2);
-
-    // copy u and v of nv12 to planar uv
-    uint8_t* uv = mYbuf + (mHeight * mYStride);
-    uint8_t* u = mUbuf;
-    uint8_t* v = mVbuf;
-    for (int i = 0; i < (mHeight/2) * mUVStride; i++) {
-      *u++ = *uv++;
-      *v++ = *uv++;
+    if (mYuv) {
+      mPixelType = eNv12;
+      memcpy (mPixels, nv12, mHeight * mStride * 3 /2);
       }
 
-    // constants
-    __m128i ysub  = _mm_set1_epi32 (0x00100010);
-    __m128i uvsub = _mm_set1_epi32 (0x00800080);
-    __m128i facy  = _mm_set1_epi32 (0x004a004a);
-    __m128i facrv = _mm_set1_epi32 (0x00660066);
-    __m128i facgu = _mm_set1_epi32 (0x00190019);
-    __m128i facgv = _mm_set1_epi32 (0x00340034);
-    __m128i facbu = _mm_set1_epi32 (0x00810081);
-    __m128i zero  = _mm_set1_epi32 (0x00000000);
-    __m128i opaque = _mm_set1_epi32 (0xFFFFFFFF);
+    else {
+      mPixelType = eRgba;
 
-    for (uint16_t y = 0; y < mHeight; y += 2) {
-      __m128i* srcy128r0 = (__m128i *)(mYbuf + (mYStride * y));
-      __m128i* srcy128r1 = (__m128i *)(mYbuf + (mYStride * y) + mYStride);
-      __m64* srcu64 = (__m64 *)(mUbuf + mUVStride * (y/2));
-      __m64* srcv64 = (__m64 *)(mVbuf + mUVStride * (y/2));
+      uint16_t mYStride = mStride;
+      uint16_t mUVStride = mStride/2;
+      uint16_t mArgbStride = mWidth;
 
-      __m128i* dstrgb128r0 = (__m128i *)(mPixels + (mArgbStride * y));
-      __m128i* dstrgb128r1 = (__m128i *)(mPixels + (mArgbStride * y) + mArgbStride);
+      #ifdef _WIN32
+        uint8_t* mYbuf = (uint8_t*)_aligned_malloc (mHeight * mYStride * 3 / 2, 128);
+        uint8_t* mUbuf = (uint8_t*)_aligned_malloc ((mHeight/2) * mUVStride, 128);
+        uint8_t* mVbuf = (uint8_t*)_aligned_malloc ((mHeight/2) * mUVStride, 128);
+      #else
+        uint8_t* mYbuf = (uint8_t*)aligned_alloc (128, mHeight * mYStride * 3 / 2);
+        uint8_t* mUbuf = (uint8_t*)aligned_alloc (128, (mHeight/2) * mUVStride);
+        uint8_t* mVbuf = (uint8_t*)aligned_alloc (128, (mHeight/2) * mUVStride);
+      #endif
 
-      for (uint16_t x = 0; x < mWidth; x += 16) {
-        __m128i u0 = _mm_loadl_epi64 ((__m128i*)srcu64); srcu64++;
-        __m128i v0 = _mm_loadl_epi64 ((__m128i*)srcv64); srcv64++;
+      // copy y of nv12 to y
+      memcpy (mYbuf, nv12, mHeight * mYStride * 3 / 2);
 
-        __m128i y0r0 = _mm_load_si128( srcy128r0++ );
-        __m128i y0r1 = _mm_load_si128( srcy128r1++ );
-
-        // constant y factors
-        __m128i y00r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y0r0, zero), ysub), facy);
-        __m128i y01r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y0r0, zero), ysub), facy);
-        __m128i y00r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y0r1, zero), ysub), facy);
-        __m128i y01r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y0r1, zero), ysub), facy);
-
-        // expand u and v so they're aligned with y values
-        u0 = _mm_unpacklo_epi8 (u0, zero);
-        __m128i u00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (u0, u0), uvsub);
-        __m128i u01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (u0, u0), uvsub);
-
-        v0 = _mm_unpacklo_epi8 (v0,  zero);
-        __m128i v00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (v0, v0), uvsub);
-        __m128i rv00 = _mm_mullo_epi16 (facrv, v00);
-        __m128i gv00 = _mm_mullo_epi16 (facgv, v00);
-        __m128i gu00 = _mm_mullo_epi16 (facgu, u00);
-        __m128i bu00 = _mm_mullo_epi16 (facbu, u00);
-
-        __m128i v01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (v0, v0), uvsub);
-        __m128i rv01 = _mm_mullo_epi16 (facrv, v01);
-        __m128i gv01 = _mm_mullo_epi16 (facgv, v01);
-        __m128i gu01 = _mm_mullo_epi16 (facgu, u01);
-        __m128i bu01 = _mm_mullo_epi16 (facbu, u01);
-
-        // row 0
-        __m128i r00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, rv00), 6);
-        __m128i r01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, rv01), 6);
-        r00 = _mm_packus_epi16 (r00, r01);  // rrrr.. saturated
-
-        __m128i g00 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r0, gu00), gv00), 6);
-        __m128i g01 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r0, gu01), gv01), 6);
-        g00 = _mm_packus_epi16 (g00, g01);  // gggg.. saturated
-
-        __m128i b00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, bu00), 6);
-        __m128i b01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, bu01), 6);
-        b00 = _mm_packus_epi16 (b00, b01);  // bbbb.. saturated
-
-        __m128i gbgb = _mm_unpacklo_epi8 (r00, g00);       // gbgb..
-        r01 = _mm_unpacklo_epi8 (b00, opaque);             // arar..
-        __m128i rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);  // argbargb..
-        __m128i rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);  // argbargb..
-
-        gbgb = _mm_unpackhi_epi8 (r00, g00 );
-        r01  = _mm_unpackhi_epi8 (b00, opaque);
-        __m128i rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
-        __m128i rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
-
-        _mm_stream_si128 (dstrgb128r0++, rgb0123);
-        _mm_stream_si128 (dstrgb128r0++, rgb4567);
-        _mm_stream_si128 (dstrgb128r0++, rgb89ab);
-        _mm_stream_si128 (dstrgb128r0++, rgbcdef);
-
-        // row 1
-        r00 = _mm_srai_epi16 (_mm_add_epi16 (y00r1, rv00), 6);
-        r01 = _mm_srai_epi16 (_mm_add_epi16 (y01r1, rv01), 6);
-        g00 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r1, gu00), gv00), 6);
-        g01 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r1, gu01), gv01), 6);
-        b00 = _mm_srai_epi16 (_mm_add_epi16 (y00r1, bu00), 6);
-        b01 = _mm_srai_epi16 (_mm_add_epi16 (y01r1, bu01), 6);
-
-        r00 = _mm_packus_epi16 (r00, r01);  // rrrr.. saturated
-        g00 = _mm_packus_epi16 (g00, g01);  // gggg.. saturated
-        b00 = _mm_packus_epi16 (b00, b01);  // bbbb.. saturated
-
-        gbgb = _mm_unpacklo_epi8 (r00,  g00);     // gbgb..
-        r01  = _mm_unpacklo_epi8 (b00,  opaque);  // arar..
-        rgb0123 = _mm_unpacklo_epi16 (gbgb, r01); // argbargb..
-        rgb4567 = _mm_unpackhi_epi16 (gbgb, r01); // argbargb..
-
-        gbgb = _mm_unpackhi_epi8 (r00, g00);
-        r01  = _mm_unpackhi_epi8 (b00, opaque);
-        rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
-        rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
-
-        _mm_stream_si128 (dstrgb128r1++, rgb0123);
-        _mm_stream_si128 (dstrgb128r1++, rgb4567);
-        _mm_stream_si128 (dstrgb128r1++, rgb89ab);
-        _mm_stream_si128 (dstrgb128r1++, rgbcdef);
+      // copy u and v of nv12 to planar uv
+      uint8_t* uv = mYbuf + (mHeight * mYStride);
+      uint8_t* u = mUbuf;
+      uint8_t* v = mVbuf;
+      for (int i = 0; i < (mHeight/2) * mUVStride; i++) {
+        *u++ = *uv++;
+        *v++ = *uv++;
         }
+
+      //{{{  convert nv12 to rgba
+      // constants
+      __m128i ysub  = _mm_set1_epi32 (0x00100010);
+      __m128i uvsub = _mm_set1_epi32 (0x00800080);
+      __m128i facy  = _mm_set1_epi32 (0x004a004a);
+      __m128i facrv = _mm_set1_epi32 (0x00660066);
+      __m128i facgu = _mm_set1_epi32 (0x00190019);
+      __m128i facgv = _mm_set1_epi32 (0x00340034);
+      __m128i facbu = _mm_set1_epi32 (0x00810081);
+      __m128i zero  = _mm_set1_epi32 (0x00000000);
+      __m128i opaque = _mm_set1_epi32 (0xFFFFFFFF);
+
+      for (uint16_t y = 0; y < mHeight; y += 2) {
+        __m128i* srcy128r0 = (__m128i *)(mYbuf + (mYStride * y));
+        __m128i* srcy128r1 = (__m128i *)(mYbuf + (mYStride * y) + mYStride);
+        __m64* srcu64 = (__m64 *)(mUbuf + mUVStride * (y/2));
+        __m64* srcv64 = (__m64 *)(mVbuf + mUVStride * (y/2));
+
+        __m128i* dstrgb128r0 = (__m128i *)(mPixels + (mArgbStride * y));
+        __m128i* dstrgb128r1 = (__m128i *)(mPixels + (mArgbStride * y) + mArgbStride);
+
+        for (uint16_t x = 0; x < mWidth; x += 16) {
+          __m128i u0 = _mm_loadl_epi64 ((__m128i*)srcu64); srcu64++;
+          __m128i v0 = _mm_loadl_epi64 ((__m128i*)srcv64); srcv64++;
+
+          __m128i y0r0 = _mm_load_si128( srcy128r0++ );
+          __m128i y0r1 = _mm_load_si128( srcy128r1++ );
+
+          // constant y factors
+          __m128i y00r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y0r0, zero), ysub), facy);
+          __m128i y01r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y0r0, zero), ysub), facy);
+          __m128i y00r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (y0r1, zero), ysub), facy);
+          __m128i y01r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (y0r1, zero), ysub), facy);
+
+          // expand u and v so they're aligned with y values
+          u0 = _mm_unpacklo_epi8 (u0, zero);
+          __m128i u00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (u0, u0), uvsub);
+          __m128i u01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (u0, u0), uvsub);
+
+          v0 = _mm_unpacklo_epi8 (v0,  zero);
+          __m128i v00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (v0, v0), uvsub);
+          __m128i rv00 = _mm_mullo_epi16 (facrv, v00);
+          __m128i gv00 = _mm_mullo_epi16 (facgv, v00);
+          __m128i gu00 = _mm_mullo_epi16 (facgu, u00);
+          __m128i bu00 = _mm_mullo_epi16 (facbu, u00);
+
+          __m128i v01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (v0, v0), uvsub);
+          __m128i rv01 = _mm_mullo_epi16 (facrv, v01);
+          __m128i gv01 = _mm_mullo_epi16 (facgv, v01);
+          __m128i gu01 = _mm_mullo_epi16 (facgu, u01);
+          __m128i bu01 = _mm_mullo_epi16 (facbu, u01);
+
+          // row 0
+          __m128i r00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, rv00), 6);
+          __m128i r01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, rv01), 6);
+          r00 = _mm_packus_epi16 (r00, r01);  // rrrr.. saturated
+
+          __m128i g00 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r0, gu00), gv00), 6);
+          __m128i g01 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r0, gu01), gv01), 6);
+          g00 = _mm_packus_epi16 (g00, g01);  // gggg.. saturated
+
+          __m128i b00 = _mm_srai_epi16 (_mm_add_epi16 (y00r0, bu00), 6);
+          __m128i b01 = _mm_srai_epi16 (_mm_add_epi16 (y01r0, bu01), 6);
+          b00 = _mm_packus_epi16 (b00, b01);  // bbbb.. saturated
+
+          __m128i gbgb = _mm_unpacklo_epi8 (r00, g00);       // gbgb..
+          r01 = _mm_unpacklo_epi8 (b00, opaque);             // arar..
+          __m128i rgb0123 = _mm_unpacklo_epi16 (gbgb, r01);  // argbargb..
+          __m128i rgb4567 = _mm_unpackhi_epi16 (gbgb, r01);  // argbargb..
+
+          gbgb = _mm_unpackhi_epi8 (r00, g00 );
+          r01  = _mm_unpackhi_epi8 (b00, opaque);
+          __m128i rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
+          __m128i rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
+
+          _mm_stream_si128 (dstrgb128r0++, rgb0123);
+          _mm_stream_si128 (dstrgb128r0++, rgb4567);
+          _mm_stream_si128 (dstrgb128r0++, rgb89ab);
+          _mm_stream_si128 (dstrgb128r0++, rgbcdef);
+
+          // row 1
+          r00 = _mm_srai_epi16 (_mm_add_epi16 (y00r1, rv00), 6);
+          r01 = _mm_srai_epi16 (_mm_add_epi16 (y01r1, rv01), 6);
+          g00 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r1, gu00), gv00), 6);
+          g01 = _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r1, gu01), gv01), 6);
+          b00 = _mm_srai_epi16 (_mm_add_epi16 (y00r1, bu00), 6);
+          b01 = _mm_srai_epi16 (_mm_add_epi16 (y01r1, bu01), 6);
+
+          r00 = _mm_packus_epi16 (r00, r01);  // rrrr.. saturated
+          g00 = _mm_packus_epi16 (g00, g01);  // gggg.. saturated
+          b00 = _mm_packus_epi16 (b00, b01);  // bbbb.. saturated
+
+          gbgb = _mm_unpacklo_epi8 (r00,  g00);     // gbgb..
+          r01  = _mm_unpacklo_epi8 (b00,  opaque);  // arar..
+          rgb0123 = _mm_unpacklo_epi16 (gbgb, r01); // argbargb..
+          rgb4567 = _mm_unpackhi_epi16 (gbgb, r01); // argbargb..
+
+          gbgb = _mm_unpackhi_epi8 (r00, g00);
+          r01  = _mm_unpackhi_epi8 (b00, opaque);
+          rgb89ab = _mm_unpacklo_epi16 (gbgb, r01);
+          rgbcdef = _mm_unpackhi_epi16 (gbgb, r01);
+
+          _mm_stream_si128 (dstrgb128r1++, rgb0123);
+          _mm_stream_si128 (dstrgb128r1++, rgb4567);
+          _mm_stream_si128 (dstrgb128r1++, rgb89ab);
+          _mm_stream_si128 (dstrgb128r1++, rgbcdef);
+          }
+        }
+      //}}}
+
+      #ifdef _WIN32
+        _aligned_free (mYbuf);
+        _aligned_free (mUbuf);
+        _aligned_free (mVbuf);
+      #else
+        free (mYbuf);
+        free (mUbuf);
+        free (mVbuf);
+      #endif
+      }
+    }
+  //}}}
+  //{{{
+  void setYuv420 (bool mYuv, uint8_t** data, int* linesize) {
+  // copy planar YUV
+
+    if (mYuv) {
+      mPixelType = eYuv420;
+
+      uint8_t* mData = (uint8_t*)mPixels;
+      memcpy (mData, data[0], mHeight * linesize[0]);
+      memcpy (mData + (mHeight * linesize[0]), data[1], (mHeight/2) * linesize[1]);
+      memcpy (mData + (mHeight * linesize[0]) + (mHeight/2) * linesize[1], data[2], (mHeight/2) * linesize[2]);
       }
 
-    #ifdef _WIN32
-      _aligned_free (mYbuf);
-      _aligned_free (mUbuf);
-      _aligned_free (mVbuf);
-    #else
-      free (mYbuf);
-      free (mUbuf);
-      free (mVbuf);
-    #endif
-    }
-  //}}}
+    else {
+      // intel intrinsics sse2 Yuv420 to rgba 
+      mPixelType = eRgba;
 
-  //{{{
-  void setYuv420 (uint8_t** data, int* linesize) {
-  // copy planar to Y then U then V
+      uint8_t* yBuffer = data[0];
+      uint8_t* uBuffer = data[1];
+      uint8_t* vBuffer = data[2];
 
-    mPixelType = eYuv420;
-    uint8_t* mData = (uint8_t*)mPixels;
+      int yStride = linesize[0];
+      int uvStride = linesize[1];
 
-    memcpy (mData, data[0], mHeight * linesize[0]);
-    memcpy (mData + (mHeight * linesize[0]), data[1], (mHeight/2) * linesize[1]);
-    memcpy (mData + (mHeight * linesize[0]) + (mHeight/2) * linesize[1], data[2], (mHeight/2) * linesize[2]);
-    }
-  //}}}
-  //{{{
-  void setYuv420Rgba (uint8_t** data, int* linesize) {
-  // intel intrinsics sse2 convert, fast, but sws is same sort of thing may be a bit faster in the loops
+      __m128i ysub  = _mm_set1_epi32 (0x00100010);
+      __m128i uvsub = _mm_set1_epi32 (0x00800080);
+      __m128i facy  = _mm_set1_epi32 (0x004a004a);
+      __m128i facrv = _mm_set1_epi32 (0x00660066);
+      __m128i facgu = _mm_set1_epi32 (0x00190019);
+      __m128i facgv = _mm_set1_epi32 (0x00340034);
+      __m128i facbu = _mm_set1_epi32 (0x00810081);
+      __m128i zero  = _mm_set1_epi32 (0x00000000);
+      __m128i alpha = _mm_set1_epi32 (0xFFFFFFFF);
 
-    mPixelType = eRgba;
+      // dst row pointers
+      __m128i* dstrgb128r0 = (__m128i*)mPixels;
+      __m128i* dstrgb128r1 = (__m128i*)(mPixels + mWidth);
 
-    uint8_t* yBuffer = data[0];
-    uint8_t* uBuffer = data[1];
-    uint8_t* vBuffer = data[2];
+      for (int y = 0; y < mHeight; y += 2) {
+        // calc src row pointers
+        __m128i* srcY128r0 = (__m128i*)(yBuffer + yStride*y);
+        __m128i* srcY128r1 = (__m128i*)(yBuffer + yStride*y + yStride);
+        __m64* srcU64 = (__m64*)(uBuffer + uvStride * (y/2));
+        __m64* srcV64 = (__m64*)(vBuffer + uvStride * (y/2));
 
-    int yStride = linesize[0];
-    int uvStride = linesize[1];
+        for (int x = 0; x < mWidth; x += 16) {
+          //{{{  process row
+          // row01 u = 0.u0 0.u1 0.u2 0.u3 0.u4 0.u5 0.u6 0.u7
+          __m128i temp = _mm_unpacklo_epi8 (_mm_loadl_epi64 ((__m128i*)srcU64++), zero);
+          // row01 u00 = 0.u0 0.u0 0.u1 0.u1 0.u2 0.u2 0.u3 0.u3
+          __m128i u00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (temp, temp), uvsub);
+          // row01 u01 = 0.u4 0.u4 0.u5 0.u5 0.u6 0.u6 0.u7 0.u7
+          __m128i u01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (temp, temp), uvsub);
 
-    __m128i ysub  = _mm_set1_epi32 (0x00100010);
-    __m128i uvsub = _mm_set1_epi32 (0x00800080);
-    __m128i facy  = _mm_set1_epi32 (0x004a004a);
-    __m128i facrv = _mm_set1_epi32 (0x00660066);
-    __m128i facgu = _mm_set1_epi32 (0x00190019);
-    __m128i facgv = _mm_set1_epi32 (0x00340034);
-    __m128i facbu = _mm_set1_epi32 (0x00810081);
-    __m128i zero  = _mm_set1_epi32 (0x00000000);
-    __m128i alpha = _mm_set1_epi32 (0xFFFFFFFF);
+          // row01 v
+          temp = _mm_unpacklo_epi8 (_mm_loadl_epi64 ((__m128i*)srcV64++), zero); // 0.v0 0.v1 0.v2 0.v3 0.v4 0.v5 0.v6 0.v7
+          __m128i v00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (temp, temp), uvsub);
+          __m128i v01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (temp, temp), uvsub);
 
-    // dst row pointers
-    __m128i* dstrgb128r0 = (__m128i*)mPixels;
-    __m128i* dstrgb128r1 = (__m128i*)(mPixels + mWidth);
+          // row0
+          temp = _mm_load_si128 (srcY128r0++);
+          __m128i y00r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (temp, zero), ysub), facy);
+          __m128i y01r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (temp, zero), ysub), facy);
 
-    for (int y = 0; y < mHeight; y += 2) {
-      // calc src row pointers
-      __m128i* srcY128r0 = (__m128i*)(yBuffer + yStride*y);
-      __m128i* srcY128r1 = (__m128i*)(yBuffer + yStride*y + yStride);
-      __m64* srcU64 = (__m64*)(uBuffer + uvStride * (y/2));
-      __m64* srcV64 = (__m64*)(vBuffer + uvStride * (y/2));
+          __m128i rv00 = _mm_mullo_epi16 (facrv, v00);
+          __m128i rv01 = _mm_mullo_epi16 (facrv, v01);
+          __m128i r00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_add_epi16 (y00r0, rv00), 6),
+                                          _mm_srai_epi16 (_mm_add_epi16 (y01r0, rv01), 6)); // rrrr.. saturated
 
-      for (int x = 0; x < mWidth; x += 16) {
-        //{{{  process row
-        // row01 u = 0.u0 0.u1 0.u2 0.u3 0.u4 0.u5 0.u6 0.u7
-        __m128i temp = _mm_unpacklo_epi8 (_mm_loadl_epi64 ((__m128i*)srcU64++), zero);
-        // row01 u00 = 0.u0 0.u0 0.u1 0.u1 0.u2 0.u2 0.u3 0.u3
-        __m128i u00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (temp, temp), uvsub);
-        // row01 u01 = 0.u4 0.u4 0.u5 0.u5 0.u6 0.u6 0.u7 0.u7
-        __m128i u01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (temp, temp), uvsub);
+          __m128i gu00 = _mm_mullo_epi16 (facgu, u00);
+          __m128i gu01 = _mm_mullo_epi16 (facgu, u01);
+          __m128i gv00 = _mm_mullo_epi16 (facgv, v00);
+          __m128i gv01 = _mm_mullo_epi16 (facgv, v01);
+          __m128i g00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r0, gu00), gv00), 6),
+                                          _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r0, gu01), gv01), 6)); // gggg.. saturated
 
-        // row01 v
-        temp = _mm_unpacklo_epi8 (_mm_loadl_epi64 ((__m128i*)srcV64++), zero); // 0.v0 0.v1 0.v2 0.v3 0.v4 0.v5 0.v6 0.v7
-        __m128i v00 = _mm_sub_epi16 (_mm_unpacklo_epi16 (temp, temp), uvsub);
-        __m128i v01 = _mm_sub_epi16 (_mm_unpackhi_epi16 (temp, temp), uvsub);
+          __m128i bu00 = _mm_mullo_epi16 (facbu, u00);
+          __m128i bu01 = _mm_mullo_epi16 (facbu, u01);
+          __m128i b00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_add_epi16 (y00r0, bu00), 6),
+                                          _mm_srai_epi16 (_mm_add_epi16 (y01r0, bu01), 6)); // bbbb.. saturated
 
-        // row0
-        temp = _mm_load_si128 (srcY128r0++);
-        __m128i y00r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (temp, zero), ysub), facy);
-        __m128i y01r0 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (temp, zero), ysub), facy);
+          __m128i abab = _mm_unpacklo_epi8 (b00, alpha);
+          __m128i grgr = _mm_unpacklo_epi8 (r00, g00);
+          _mm_stream_si128 (dstrgb128r0++, _mm_unpacklo_epi16 (grgr, abab));
+          _mm_stream_si128 (dstrgb128r0++, _mm_unpackhi_epi16 (grgr, abab));
 
-        __m128i rv00 = _mm_mullo_epi16 (facrv, v00);
-        __m128i rv01 = _mm_mullo_epi16 (facrv, v01);
-        __m128i r00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_add_epi16 (y00r0, rv00), 6),
-                                        _mm_srai_epi16 (_mm_add_epi16 (y01r0, rv01), 6)); // rrrr.. saturated
+          abab = _mm_unpackhi_epi8 (b00, alpha);
+          grgr = _mm_unpackhi_epi8 (r00, g00);
+          _mm_stream_si128 (dstrgb128r0++, _mm_unpacklo_epi16 (grgr, abab));
+          _mm_stream_si128 (dstrgb128r0++, _mm_unpackhi_epi16 (grgr, abab));
 
-        __m128i gu00 = _mm_mullo_epi16 (facgu, u00);
-        __m128i gu01 = _mm_mullo_epi16 (facgu, u01);
-        __m128i gv00 = _mm_mullo_epi16 (facgv, v00);
-        __m128i gv01 = _mm_mullo_epi16 (facgv, v01);
-        __m128i g00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r0, gu00), gv00), 6),
-                                        _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r0, gu01), gv01), 6)); // gggg.. saturated
+          // row1
+          temp = _mm_load_si128 (srcY128r1++);
+          __m128i y00r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (temp, zero), ysub), facy);
+          __m128i y01r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (temp, zero), ysub), facy);
 
-        __m128i bu00 = _mm_mullo_epi16 (facbu, u00);
-        __m128i bu01 = _mm_mullo_epi16 (facbu, u01);
-        __m128i b00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_add_epi16 (y00r0, bu00), 6),
-                                        _mm_srai_epi16 (_mm_add_epi16 (y01r0, bu01), 6)); // bbbb.. saturated
+          r00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_add_epi16 (y00r1, rv00), 6),
+                                  _mm_srai_epi16 (_mm_add_epi16 (y01r1, rv01), 6)); // rrrr.. saturated
+          g00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r1, gu00), gv00), 6),
+                                  _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r1, gu01), gv01), 6)); // gggg.. saturated
+          b00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_add_epi16 (y00r1, bu00), 6),
+                                  _mm_srai_epi16 (_mm_add_epi16 (y01r1, bu01), 6)); // bbbb.. saturated
 
-        __m128i abab = _mm_unpacklo_epi8 (b00, alpha);
-        __m128i grgr = _mm_unpacklo_epi8 (r00, g00);
-        _mm_stream_si128 (dstrgb128r0++, _mm_unpacklo_epi16 (grgr, abab));
-        _mm_stream_si128 (dstrgb128r0++, _mm_unpackhi_epi16 (grgr, abab));
+          abab = _mm_unpacklo_epi8 (b00, alpha);
+          grgr = _mm_unpacklo_epi8 (r00, g00);
+          _mm_stream_si128 (dstrgb128r1++, _mm_unpacklo_epi16 (grgr, abab));
+          _mm_stream_si128 (dstrgb128r1++, _mm_unpackhi_epi16 (grgr, abab));
 
-        abab = _mm_unpackhi_epi8 (b00, alpha);
-        grgr = _mm_unpackhi_epi8 (r00, g00);
-        _mm_stream_si128 (dstrgb128r0++, _mm_unpacklo_epi16 (grgr, abab));
-        _mm_stream_si128 (dstrgb128r0++, _mm_unpackhi_epi16 (grgr, abab));
+          abab = _mm_unpackhi_epi8 (b00, alpha);
+          grgr = _mm_unpackhi_epi8 (r00, g00);
+          _mm_stream_si128 (dstrgb128r1++, _mm_unpacklo_epi16 (grgr, abab));
+          _mm_stream_si128 (dstrgb128r1++, _mm_unpackhi_epi16 (grgr, abab));
+          }
+          //}}}
 
-        // row1
-        temp = _mm_load_si128 (srcY128r1++);
-        __m128i y00r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpacklo_epi8 (temp, zero), ysub), facy);
-        __m128i y01r1 = _mm_mullo_epi16 (_mm_sub_epi16 (_mm_unpackhi_epi8 (temp, zero), ysub), facy);
-
-        r00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_add_epi16 (y00r1, rv00), 6),
-                                _mm_srai_epi16 (_mm_add_epi16 (y01r1, rv01), 6)); // rrrr.. saturated
-        g00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y00r1, gu00), gv00), 6),
-                                _mm_srai_epi16 (_mm_sub_epi16 (_mm_sub_epi16 (y01r1, gu01), gv01), 6)); // gggg.. saturated
-        b00 = _mm_packus_epi16 (_mm_srai_epi16 (_mm_add_epi16 (y00r1, bu00), 6),
-                                _mm_srai_epi16 (_mm_add_epi16 (y01r1, bu01), 6)); // bbbb.. saturated
-
-        abab = _mm_unpacklo_epi8 (b00, alpha);
-        grgr = _mm_unpacklo_epi8 (r00, g00);
-        _mm_stream_si128 (dstrgb128r1++, _mm_unpacklo_epi16 (grgr, abab));
-        _mm_stream_si128 (dstrgb128r1++, _mm_unpackhi_epi16 (grgr, abab));
-
-        abab = _mm_unpackhi_epi8 (b00, alpha);
-        grgr = _mm_unpackhi_epi8 (r00, g00);
-        _mm_stream_si128 (dstrgb128r1++, _mm_unpacklo_epi16 (grgr, abab));
-        _mm_stream_si128 (dstrgb128r1++, _mm_unpackhi_epi16 (grgr, abab));
+        // skip a dst row
+        dstrgb128r0 += mWidth / 4;
+        dstrgb128r1 += mWidth / 4;
         }
-        //}}}
-
-      // skip a dst row
-      dstrgb128r0 += mWidth / 4;
-      dstrgb128r1 += mWidth / 4;
       }
     }
   //}}}
@@ -511,10 +503,7 @@ public:
 
           // yuv420 -> rgba
           timePoint = chrono::system_clock::now();
-          if (mYuv)
-            videoFrame->setYuv420 (avFrame->data, avFrame->linesize);
-          else
-            videoFrame->setYuv420Rgba (avFrame->data, avFrame->linesize);
+          videoFrame->setYuv420 (mYuv, avFrame->data, avFrame->linesize);
           videoFrame->setYuvRgbTime (
             chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
           av_frame_unref (avFrame);  // ??? nnn ???
@@ -681,7 +670,7 @@ public:
         timePoint = chrono::system_clock::now();
         lock (surface);
         videoFrame->init (mWidth, mHeight, surface->Data.Pitch, pesSize, decodeTime);
-        videoFrame->setNv12 (surface->Data.Y);
+        videoFrame->setNv12 (false, surface->Data.Y);
         unlock (surface);
         videoFrame->setYuvRgbTime (
           chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
