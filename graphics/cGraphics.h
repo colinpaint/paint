@@ -23,6 +23,7 @@ public:
   unsigned getTextureId() { return mTextureId; }
 
   virtual void setPixels (uint8_t* pixels) = 0;
+  virtual void setSource() = 0;
 
 protected:
   uint8_t mTextureType;
@@ -140,6 +141,13 @@ public:
   virtual ~cCanvasShader() = default;
   };
 //}}}
+//{{{
+class cVideoShader : public cQuadShader {
+public:
+  cVideoShader() : cQuadShader() {}
+  virtual ~cVideoShader() = default;
+  };
+//}}}
 
 class cGraphics {
 public:
@@ -163,6 +171,9 @@ public:
   virtual cPaintShader* createPaintShader() = 0;
   virtual cLayerShader* createLayerShader() = 0;
   virtual cCanvasShader* createCanvasShader() = 0;
+  virtual cVideoShader* createVideoShader() = 0;
+
+  virtual void background (int width, int height) = 0;
 
   // actions
   virtual void windowResize (int width, int height) = 0;

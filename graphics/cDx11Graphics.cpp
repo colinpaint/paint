@@ -30,14 +30,10 @@ namespace {
   //{{{
   class cDx11Texture : public cTexture {
   public:
-    cDx11Texture (uint8_t textureType, cPoint size, uint8_t* pixels)
-        : cTexture(textureType, size) { 
-      (void)pixels; 
-      }
+    cDx11Texture (uint8_t textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {(void)pixels;}
 
-    void setPixels (uint8_t* pixels) final { 
-      (void)pixels; 
-      }
+    virtual void setPixels (uint8_t* pixels) final { (void)pixels; }
+    virtual void setSource() final {}
     };
   //}}}
   //{{{
@@ -275,6 +271,23 @@ namespace {
     cDx11CanvasShader() : cCanvasShader() {
       }
     virtual ~cDx11CanvasShader()  = default;
+
+    // sets
+    void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
+      }
+
+    void use() final {
+      }
+    };
+  //}}}
+  //{{{
+  class cDx11VideoShader : public cVideoShader {
+  public:
+    cDx11VideoShader() : cVideoShader() {
+      }
+    virtual ~cDx11VideoShader()  = default;
 
     // sets
     void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
@@ -929,24 +942,27 @@ public:
   // create resources
   virtual cTexture* createTexture (uint8_t textureType, cPoint size, uint8_t* pixels) final;
 
-  cQuad* createQuad (cPoint size) final;
-  cQuad* createQuad (cPoint size, const cRect& rect) final;
+  virtual cQuad* createQuad (cPoint size) final;
+  virtual cQuad* createQuad (cPoint size, const cRect& rect) final;
 
-  cFrameBuffer* createFrameBuffer() final;
-  cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
-  cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
+  virtual cFrameBuffer* createFrameBuffer() final;
+  virtual cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
+  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
 
-  cPaintShader* createPaintShader() final;
-  cLayerShader* createLayerShader() final;
-  cCanvasShader* createCanvasShader() final;
+  virtual cPaintShader* createPaintShader() final;
+  virtual cLayerShader* createLayerShader() final;
+  virtual cCanvasShader* createCanvasShader() final;
+  virtual cVideoShader* createVideoShader() final;
+
+  virtual void background (int width, int height) final;
 
   // actions
-  void newFrame() final;
-  void drawUI (cPoint windowSize) final;
-  void windowResize (int width, int height) final;
+  virtual void newFrame() final;
+  virtual void drawUI (cPoint windowSize) final;
+  virtual void windowResize (int width, int height) final;
 
 protected:
-  bool init (cPlatform& platform) final;
+  virtual bool init (cPlatform& platform) final;
 
 private:
   // static register
@@ -1026,8 +1042,8 @@ cFrameBuffer* cDx11Graphics::createFrameBuffer (uint8_t* pixels, cPoint size, cF
 //}}}
 
 //{{{
-cCanvasShader* cDx11Graphics::createCanvasShader() {
-  return new cDx11CanvasShader();
+cPaintShader* cDx11Graphics::createPaintShader() {
+  return new cDx11PaintShader();
   }
 //}}}
 //{{{
@@ -1036,10 +1052,17 @@ cLayerShader* cDx11Graphics::createLayerShader() {
   }
 //}}}
 //{{{
-cPaintShader* cDx11Graphics::createPaintShader() {
-  return new cDx11PaintShader();
+cCanvasShader* cDx11Graphics::createCanvasShader() {
+  return new cDx11CanvasShader();
   }
 //}}}
+//{{{
+cVideoShader* cDx11Graphics::createVideoShader() {
+  return new cDx11VideoShader();
+  }
+//}}}
+
+void cDx11Graphics::background (int width, int height) { (void)width; (void)height; }
 
 //{{{
 void cDx11Graphics::windowResize (int width, int height) {

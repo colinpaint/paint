@@ -66,7 +66,7 @@ namespace {
     //}}}
 
     //{{{
-    void setPixels (uint8_t* pixels) final {
+    virtual void setPixels (uint8_t* pixels) final {
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);
 
@@ -76,6 +76,13 @@ namespace {
         glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
       else
         cLog::log (LOGINFO, fmt::format ("setPixels unknown textureType {} {}x{}", mTextureType, mSize.x, mSize.y));
+      }
+    //}}}
+    //{{{
+    virtual void setSource() final {
+
+      glActiveTexture (GL_TEXTURE0);
+      glBindTexture (GL_TEXTURE_2D, mTextureId);
       }
     //}}}
     };
@@ -304,8 +311,8 @@ namespace {
       glViewport (0, 0, mSize.x, mSize.y);
 
       glDisable (GL_SCISSOR_TEST);
-      glDisable(GL_CULL_FACE);
-      glDisable(GL_DEPTH_TEST);
+      glDisable (GL_CULL_FACE);
+      glDisable (GL_DEPTH_TEST);
 
       // texture could be changed, add to dirtyPixelsRect
       mDirtyPixelsRect += rect;
@@ -1097,6 +1104,48 @@ namespace {
     //}}}
     };
   //}}}
+  //{{{
+  class cOpenGlVideoShader : public cVideoShader {
+  public:
+    cOpenGlVideoShader() : cVideoShader() {
+      const string kFragShader =
+        "#version 330 core\n"
+        "uniform sampler2D uSampler;"
+        "in vec2 textureCoord;"
+        "out vec4 outColor;"
+        "void main() {"
+        "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+        //"  outColor.r = 255;"
+        "  outColor.g = outColor.r;"
+        "  outColor.b = outColor.r;"
+        "  outColor.a = 255;"
+        "  }";
+      mId = compileShader (kQuadVertShader, kFragShader);
+      }
+
+    //{{{
+    virtual ~cOpenGlVideoShader() {
+      glDeleteProgram (mId);
+      }
+    //}}}
+
+    // sets
+    //{{{
+    void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
+      }
+    //}}}
+
+    //{{{
+    void use() final {
+
+      glUseProgram (mId);
+      }
+    //}}}
+    };
+  //}}}
+
   // versions
   int gGlVersion = 0;   // major.minor * 100
   int gGlslVersion = 0; // major.minor * 100
@@ -1480,24 +1529,27 @@ public:
   // create resources
   virtual cTexture* createTexture (uint8_t textureType, cPoint size, uint8_t* pixels) final;
 
-  cQuad* createQuad (cPoint size) final;
-  cQuad* createQuad (cPoint size, const cRect& rect) final;
+  virtual cQuad* createQuad (cPoint size) final;
+  virtual cQuad* createQuad (cPoint size, const cRect& rect) final;
 
-  cFrameBuffer* createFrameBuffer() final;
-  cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
-  cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
+  virtual cFrameBuffer* createFrameBuffer() final;
+  virtual cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
+  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
 
-  cPaintShader* createPaintShader() final;
-  cLayerShader* createLayerShader() final;
-  cCanvasShader* createCanvasShader() final;
+  virtual cPaintShader* createPaintShader() final;
+  virtual cLayerShader* createLayerShader() final;
+  virtual cCanvasShader* createCanvasShader() final;
+  virtual cVideoShader* createVideoShader() final;
+
+  virtual void background (int width, int height) final;
 
   // actions
-  void newFrame() final;
-  void drawUI (cPoint windowSize) final;
-  void windowResize (int width, int height) final;
+  virtual void newFrame() final;
+  virtual void drawUI (cPoint windowSize) final;
+  virtual void windowResize (int width, int height) final;
 
 protected:
-  bool init (cPlatform& platform) final;
+  virtual bool init (cPlatform& platform) final;
 
 private:
   // static register
@@ -1568,8 +1620,8 @@ cFrameBuffer* cOpenGlGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, 
 //}}}
 
 //{{{
-cCanvasShader* cOpenGlGraphics::createCanvasShader() {
-  return new cOpenGlCanvasShader();
+cPaintShader* cOpenGlGraphics::createPaintShader() {
+  return new cOpenGlPaintShader();
   }
 //}}}
 //{{{
@@ -1578,8 +1630,39 @@ cLayerShader* cOpenGlGraphics::createLayerShader() {
   }
 //}}}
 //{{{
-cPaintShader* cOpenGlGraphics::createPaintShader() {
-  return new cOpenGlPaintShader();
+cCanvasShader* cOpenGlGraphics::createCanvasShader() {
+  return new cOpenGlCanvasShader();
+  }
+//}}}
+//{{{
+cVideoShader* cOpenGlGraphics::createVideoShader() {
+  return new cOpenGlVideoShader();
+  }
+//}}}
+
+//{{{
+void cOpenGlGraphics::background (int width, int height) {
+
+  uint32_t modeRGB = GL_FUNC_ADD;
+  uint32_t modeAlpha = GL_FUNC_ADD;
+
+  uint32_t srcRgb = GL_SRC_ALPHA;
+  uint32_t dstRGB = GL_ONE_MINUS_SRC_ALPHA;
+  uint32_t srcAlpha = GL_ONE;
+  uint32_t dstAlpha = GL_ONE_MINUS_SRC_ALPHA;
+
+  glBlendEquationSeparate (modeRGB, modeAlpha);
+  glBlendFuncSeparate (srcRgb, dstRGB, srcAlpha, dstAlpha);
+  glEnable (GL_BLEND);
+
+  glViewport (0, 0, width, height);
+
+  glDisable (GL_SCISSOR_TEST);
+  glDisable (GL_CULL_FACE);
+  glDisable (GL_DEPTH_TEST);
+
+  glClearColor (0.25f,0.25f,0.0f, 0.f);
+  glClear (GL_COLOR_BUFFER_BIT);
   }
 //}}}
 
