@@ -41,7 +41,6 @@ namespace {
       switch (mTextureType) {
         case eRgba:
           cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
-
           glGenTextures (1, mTextureId);
 
           glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
@@ -55,8 +54,22 @@ namespace {
 
         case eNv12:
           cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
-
           glGenTextures (2, mTextureId);
+
+          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y/2, 0, GL_RED, GL_UNSIGNED_BYTE,
+                        pixels + (size.x * size.y));
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          break;
+
+        case eYuv420:
+          cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
+          glGenTextures (3, mTextureId);
 
           glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
@@ -68,31 +81,13 @@ namespace {
                         pixels + (size.x * size.y));
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          break;
 
-        case eYuv420: {
-          cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
-
-          glGenTextures (3, mTextureId);
-
-          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-          uint8_t* u = pixels + (size.x * size.y);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x/2, size.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, u);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-          uint8_t* v = u + (size.x * size.y);
           glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x/2, size.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, v);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x/2, size.y/2, 0, GL_RED, GL_UNSIGNED_BYTE,
+                        pixels + (size.x * size.y) + ((size.x/2) * (size.y/2)));
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
           break;
-          }
 
         default:
           cLog::log (LOGINFO, fmt::format ("creating unknown textureType:{} {}x{}", textureType, size.x, size.y));
@@ -110,11 +105,13 @@ namespace {
 
       switch (mTextureType) {
         case eRgba:
+          cLog::log (LOGINFO, fmt::format ("texture setPixels eRgba {}x{}", mSize.x, mSize.y));
           glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
           break;
 
         case eNv12:
+          cLog::log (LOGINFO, fmt::format ("texture setPixels eNv12 {}x{}", mSize.x, mSize.y));
           glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -127,25 +124,26 @@ namespace {
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
           break;
 
-        case eYuv420: {
+        case eYuv420:
+          cLog::log (LOGINFO, fmt::format ("texture setPixels eYuv420 {}x{}", mSize.x, mSize.y));
+
           glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
           glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-          uint8_t* u = pixels + (mSize.x * mSize.y);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, u);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE,
+                        pixels + (mSize.x * mSize.y));
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-          uint8_t* v = u + (mSize.x * mSize.y);
           glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, v);
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE,
+                        pixels + (mSize.x * mSize.y) + ((mSize.x/2) * (mSize.y/2)));
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
           break;
-          }
 
         default:
           cLog::log (LOGINFO, fmt::format ("setPixels unknown textureType {} {}x{}", mTextureType, mSize.x, mSize.y));
@@ -168,7 +166,7 @@ namespace {
           glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
           break;
 
-        case eYuv420: 
+        case eYuv420:
           glActiveTexture (GL_TEXTURE0);
           glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glActiveTexture (GL_TEXTURE1);
@@ -180,8 +178,6 @@ namespace {
         default:;
         }
 
-      glActiveTexture (GL_TEXTURE0);
-      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
       }
     //}}}
     };
@@ -1209,16 +1205,31 @@ namespace {
     cOpenGlVideoShader() : cVideoShader() {
       const string kFragShader =
         "#version 330 core\n"
+
+        "uniform sampler2D ySampler;"
         "uniform sampler2D uSampler;"
+        "uniform sampler2D vSampler;"
+
         "in vec2 textureCoord;"
         "out vec4 outColor;"
+
         "void main() {"
-        "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-        //"  outColor.r = 255;"
-        "  outColor.g = outColor.r;"
-        "  outColor.b = outColor.r;"
-        "  outColor.a = 255;"
-        "  }";
+          "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
+          "float u = texture (uSampler, vec2 (textureCoord.x/2.0, -textureCoord.y/2.0)).r;"
+          "float v = texture (vSampler, vec2 (textureCoord.x/2.0, -textureCoord.y/2.0)).r;"
+          "outColor.r = y;"
+          "outColor.g = y;"
+          "outColor.b = y;"
+          "outColor.a = 1.0;"
+          "}";
+
+          //"y = 1.1643 * (y-0.0625);"
+          //"u = u - 0.5;"
+          //"v = v - 0.5;"
+          //"outColor.r = y + (1.5958 * v);"
+          //"outColor.g = y - (0.39173 * u) - (0.81290 * v);"
+          //"outColor.b = y + (2.017 * u);"
+
       mId = compileShader (kQuadVertShader, kFragShader);
       }
 
@@ -1238,6 +1249,10 @@ namespace {
 
     //{{{
     void use() final {
+
+      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
+      glUniform1i (glGetUniformLocation (mId, "uSampler"), 1);
+      glUniform1i (glGetUniformLocation (mId, "vSampler"), 2);
 
       glUseProgram (mId);
       }
@@ -1582,6 +1597,7 @@ namespace {
               glScissor (clipRect.left, height - clipRect.bottom, clipRect.getWidth(), clipRect.getHeight());
 
               // bind
+              glActiveTexture (GL_TEXTURE0);
               glBindTexture (GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
 
               // draw
@@ -1760,7 +1776,7 @@ void cOpenGlGraphics::background (int width, int height) {
   glDisable (GL_CULL_FACE);
   glDisable (GL_DEPTH_TEST);
 
-  glClearColor (0.25f,0.25f,0.0f, 0.f);
+  glClearColor (0.25f,0.25f,0.25f, 0.f);
   glClear (GL_COLOR_BUFFER_BIT);
   }
 //}}}

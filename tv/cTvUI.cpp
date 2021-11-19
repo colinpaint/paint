@@ -127,7 +127,7 @@ private:
           if (!mShader)
             mShader = graphics.createVideoShader();
 
-          //graphics.background (windowSize.x, windowSize.y);
+          graphics.background (windowSize.x, windowSize.y);
           cTexture* texture = video.getTexture (playPts, graphics);
           if (texture)
             texture->setSource();
