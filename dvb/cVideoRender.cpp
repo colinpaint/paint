@@ -2244,13 +2244,13 @@ cVideoRender::cVideoRender (const string name, uint8_t streamType, uint16_t deco
     case eFFmpegYVV: mDecoder = new cFFmpegDecoder (streamType, true);  mYuv = true; break;
     case eMfxSystem: mDecoder = new cMfxSystemDecoder (streamType); break;
 
-    #ifdef _WIN32
-      case eMfxVideo9:  mDecoder = new cMfxSurfaceDecoderD3D9 (streamType); break;
-      case eMfxVideo11:  mDecoder = new cMfxSurfaceDecoderD3D11 (streamType); break;
-    #else
-      case eMfxVideo9:
-      case eMfxVideo11:  mDecoder = new cMfxSurfaceDecoder (streamType); break;
-    #endif
+    case eMfxVideo:
+      #ifdef _WIN32
+        mDecoder = new cMfxSurfaceDecoderD3D11 (streamType);
+      #else
+        mDecoder = new cMfxSurfaceDecoder (streamType);
+      #endif
+      break;
 
     default: cLog::log (LOGERROR, fmt::format ("cVideoRender - no decoder {:x}", decoderMask));
     }
