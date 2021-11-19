@@ -105,13 +105,13 @@ namespace {
 
       switch (mTextureType) {
         case eRgba:
-          cLog::log (LOGINFO, fmt::format ("texture setPixels eRgba {}x{}", mSize.x, mSize.y));
+          //cLog::log (LOGINFO, fmt::format ("texture setPixels eRgba {}x{}", mSize.x, mSize.y));
           glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
           break;
 
         case eNv12:
-          cLog::log (LOGINFO, fmt::format ("texture setPixels eNv12 {}x{}", mSize.x, mSize.y));
+          //cLog::log (LOGINFO, fmt::format ("texture setPixels eNv12 {}x{}", mSize.x, mSize.y));
           glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
           glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -125,7 +125,7 @@ namespace {
           break;
 
         case eYuv420:
-          cLog::log (LOGINFO, fmt::format ("texture setPixels eYuv420 {}x{}", mSize.x, mSize.y));
+          //cLog::log (LOGINFO, fmt::format ("texture setPixels eYuv420 {}x{}", mSize.x, mSize.y));
 
           glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
@@ -1215,20 +1215,14 @@ namespace {
 
         "void main() {"
           "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
-          "float u = texture (uSampler, vec2 (textureCoord.x/2.0, -textureCoord.y/2.0)).r;"
-          "float v = texture (vSampler, vec2 (textureCoord.x/2.0, -textureCoord.y/2.0)).r;"
-          "outColor.r = y;"
-          "outColor.g = y;"
-          "outColor.b = y;"
+          "float u = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
+          "float v = texture (vSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
+          "y = 1.1643 * (y-0.0625);"
+          "outColor.r = y + (1.5958 * v);"
+          "outColor.g = y - (0.39173 * u) - (0.81290 * v);"
+          "outColor.b = y + (2.017 * u);"
           "outColor.a = 1.0;"
           "}";
-
-          //"y = 1.1643 * (y-0.0625);"
-          //"u = u - 0.5;"
-          //"v = v - 0.5;"
-          //"outColor.r = y + (1.5958 * v);"
-          //"outColor.g = y - (0.39173 * u) - (0.81290 * v);"
-          //"outColor.b = y + (2.017 * u);"
 
       mId = compileShader (kQuadVertShader, kFragShader);
       }
@@ -1244,15 +1238,15 @@ namespace {
     void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
       glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
+
+      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
+      glUniform1i (glGetUniformLocation (mId, "uSampler"), 1);
+      glUniform1i (glGetUniformLocation (mId, "vSampler"), 2);
       }
     //}}}
 
     //{{{
     void use() final {
-
-      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
-      glUniform1i (glGetUniformLocation (mId, "uSampler"), 1);
-      glUniform1i (glGetUniformLocation (mId, "vSampler"), 2);
 
       glUseProgram (mId);
       }
