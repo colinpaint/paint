@@ -1182,7 +1182,7 @@ protected:
       if (request->Type & MFX_MEMTYPE_SYSTEM_MEMORY)
         return MFX_ERR_UNSUPPORTED;
 
-      if (allocDecodeResponses.find (pthis) != allocDecodeResponses.end() &&
+      if ((allocDecodeResponses.find (pthis) != allocDecodeResponses.end()) &&
           (MFX_MEMTYPE_EXTERNAL_FRAME & request->Type) && (MFX_MEMTYPE_FROM_DECODE & request->Type)) {
         // Memory for this request was already allocated during manual allocation stage. Return saved response
         // When decode acceleration device (DXVA) is created it requires a list of D3D surfaces to be passed.
@@ -1807,9 +1807,10 @@ protected:
 
       mfxU32 fourcc = request->Info.FourCC;
       unsigned int vaFourcc = convertMfxFourccToVAFormat (fourcc);
-      if (!vaFourcc || ((VA_FOURCC_NV12 != vaFourcc) &&
-                        (VA_FOURCC_YV12 != vaFourcc) && (VA_FOURCC_YUY2 != vaFourcc) &&
-                        (VA_FOURCC_ARGB != vaFourcc) && (VA_FOURCC_P208 != vaFourcc)))
+      if (!vaFourcc ||
+          ((vaFourcc != VA_FOURCC_NV12) &&
+           (vaFourcc != VA_FOURCC_YV12) && (vaFourcc != VA_FOURCC_YUY2) &&
+           (vaFourcc != VA_FOURCC_ARGB) && (vaFourcc != VA_FOURCC_P208)))
         return MFX_ERR_MEMORY_ALLOC;
 
       VASurfaceID* surfaces = NULL;
@@ -1828,18 +1829,17 @@ protected:
 
       mfxU16 numAllocated = 0;
       if (status == MFX_ERR_NONE) {
-        if (VA_FOURCC_P208 != vaFourcc) {
+        if (vaFourcc != VA_FOURCC_P208) {
           //{{{  create surfaces
           VASurfaceAttrib attrib;
-
           attrib.type = VASurfaceAttribPixelFormat;
           attrib.value.type = VAGenericValueTypeInteger;
           attrib.value.value.i = vaFourcc;
           attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
 
-          status = vaToMfxStatus (
-            vaCreateSurfaces (mVaDisplayHandle, VA_RT_FORMAT_YUV420,
-                              request->Info.Width, request->Info.Height, surfaces, numSurfaces, &attrib, 1));
+          status = vaToMfxStatus (vaCreateSurfaces (mVaDisplayHandle, VA_RT_FORMAT_YUV420,
+                                                    request->Info.Width, request->Info.Height,
+                                                    surfaces, numSurfaces, &attrib, 1));
 
           createSrfSucceeded = (status == MFX_ERR_NONE);
           }
@@ -1852,8 +1852,8 @@ protected:
 
           for (numAllocated = 0; numAllocated < numSurfaces; numAllocated++) {
             VABufferID coded_buf;
-            status = vaToMfxStatus (
-              vaCreateBuffer (mVaDisplayHandle, context_id, VAEncCodedBufferType, codedbuf_size, 1, NULL, &coded_buf));
+            status = vaToMfxStatus (vaCreateBuffer (mVaDisplayHandle, context_id,
+                                                    VAEncCodedBufferType, codedbuf_size, 1, NULL, &coded_buf));
             if (status != MFX_ERR_NONE)
               break;
             surfaces[numAllocated] = coded_buf;
@@ -1885,13 +1885,13 @@ protected:
         response->mids = NULL;
         response->NumFrameActual = 0;
 
-        if (VA_FOURCC_P208 != vaFourcc) {
-          if (createSrfSucceeded)
-            vaDestroySurfaces (mVaDisplayHandle, surfaces, numSurfaces);
-          }
-        else {
+        if (vaFourcc == VA_FOURCC_P208) {
           for (mfxU16 i = 0; i < numAllocated; i++)
             vaDestroyBuffer (mVaDisplayHandle, surfaces[i]);
+          }
+        else {
+          if (createSrfSucceeded)
+            vaDestroySurfaces (mVaDisplayHandle, surfaces, numSurfaces);
           }
 
         if (mids) {
@@ -2243,6 +2243,7 @@ cVideoRender::cVideoRender (const string name, uint8_t streamType, uint16_t deco
     case eFFmpegRGB: mDecoder = new cFFmpegDecoder (streamType, false); break;
     case eFFmpegYVV: mDecoder = new cFFmpegDecoder (streamType, true);  mYuv = true; break;
     case eMfxSystem: mDecoder = new cMfxSystemDecoder (streamType); break;
+
     #ifdef _WIN32
       case eMfxVideo9:  mDecoder = new cMfxSurfaceDecoderD3D9 (streamType); break;
       case eMfxVideo11:  mDecoder = new cMfxSurfaceDecoderD3D11 (streamType); break;
@@ -2250,6 +2251,7 @@ cVideoRender::cVideoRender (const string name, uint8_t streamType, uint16_t deco
       case eMfxVideo9:
       case eMfxVideo11:  mDecoder = new cMfxSurfaceDecoder (streamType); break;
     #endif
+
     default: cLog::log (LOGERROR, fmt::format ("cVideoRender - no decoder {:x}", decoderMask));
     }
   }
@@ -2324,7 +2326,6 @@ void cVideoRender::addFrame (cVideoFrame* frame) {
 //{{{
 void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,  bool skip) {
 
-  (void)pts;
   (void)skip;
   //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)pesSize);
