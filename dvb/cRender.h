@@ -40,7 +40,7 @@ public:
 
 class cRender {
 public:
-  enum eDecoder { eFFmpegRgb, eFFmpegYuv, eMfxSystem, eMfxVideo };
+  enum eDecoder { eFFmpeg, eMfxSystem, eMfxVideo };
 
   cRender (const std::string name, uint8_t streamType, uint16_t decoderMask);
   virtual ~cRender();

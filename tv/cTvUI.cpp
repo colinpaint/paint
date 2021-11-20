@@ -128,11 +128,16 @@ private:
       if (!texture)
         continue;
 
-      if (!mQuad) 
+      if (!mQuad)
         mQuad = graphics.createQuad (videoSize);
-      if (!mShader)
-        mShader = graphics.createYuv420Shader();
-
+      if (!mShader) {
+        switch (texture->getTextureType()) {
+          case cTexture::eRgba: mShader = graphics.createRgbaShader(); break;
+          case cTexture::eNv12: mShader = graphics.createNv12Shader(); break;
+          case cTexture::eYuv420: mShader = graphics.createYuv420Shader(); break;
+          default: cLog::log (LOGERROR, fmt::format ("cTvUI drawBgnd unknown textureType:{}", texture->getTextureType()));
+          }
+        }
       texture->setSource();
       mShader->use();
 
@@ -443,7 +448,7 @@ private:
   uint16_t mDecoderMask = 0;
 
   cQuad* mQuad = nullptr;
-  cYuv420Shader* mShader = nullptr;
+  cQuadShader* mShader = nullptr;
   //}}}
   };
 

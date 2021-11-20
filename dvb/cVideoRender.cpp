@@ -434,11 +434,11 @@ private:
 class cFFmpegDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegDecoder (uint8_t streamType, bool yuv)
-     : cDecoder(), mH264 (streamType == 27),  mYuv(yuv),
+  cFFmpegDecoder (uint8_t streamType)
+     : cDecoder(), mH264 (streamType == 27),
        mAvCodec (avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder stream:{} {}", streamType, yuv ? "yuv" : ""));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder stream:{}", streamType));
 
     mAvParser = av_parser_init ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
@@ -508,10 +508,7 @@ public:
           mInterpolatedPts += videoFrame->getPtsDuration();
 
           timePoint = chrono::system_clock::now();
-          if (mYuv)
-            videoFrame->setYuv420 (avFrame->data, avFrame->linesize);
-          else
-            videoFrame->setYuv420Rgba (avFrame->data, avFrame->linesize);
+          videoFrame->setYuv420 (avFrame->data, avFrame->linesize);
           videoFrame->setYuvRgbTime (
             chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
           av_frame_unref (avFrame);  // ??? nnn ???
@@ -532,7 +529,6 @@ public:
 
 private:
   const bool mH264 = false;
-  const bool mYuv = false;
   const AVCodec* mAvCodec = nullptr;
 
   AVCodecParserContext* mAvParser = nullptr;
@@ -2535,9 +2531,13 @@ cVideoRender::cVideoRender (const string name, uint8_t streamType, uint16_t deco
     : cRender(name, streamType, decoderMask), mMaxPoolSize(kVideoPoolSize) {
 
   switch (decoderMask) {
-    case eFFmpegRgb: mDecoder = new cFFmpegDecoder (streamType, false); break;
-    case eFFmpegYuv: mDecoder = new cFFmpegDecoder (streamType, true);  mYuv = true; break;
-    case eMfxSystem: mDecoder = new cMfxSystemDecoder (streamType); break;
+    case eFFmpeg:
+      mDecoder = new cFFmpegDecoder (streamType);
+      break;
+
+    case eMfxSystem:
+      mDecoder = new cMfxSystemDecoder (streamType);
+      break;
 
     case eMfxVideo:
       #ifdef _WIN32
