@@ -1142,10 +1142,10 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlCanvasShader : public cCanvasShader {
+  class cOpenGlRgbaShader : public cRgbaShader {
   public:
     //{{{
-    cOpenGlCanvasShader() : cCanvasShader() {
+    cOpenGlRgbaShader() : cRgbaShader() {
 
       #ifdef OPENGL_21
         const string kFragShader =
@@ -1178,19 +1178,17 @@ namespace {
       }
     //}}}
     //{{{
-    virtual ~cOpenGlCanvasShader() {
+    virtual ~cOpenGlRgbaShader() {
       glDeleteProgram (mId);
       }
     //}}}
 
-    // sets
     //{{{
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
       glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
       }
     //}}}
-
     //{{{
     virtual void use() final {
 
@@ -1200,9 +1198,9 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlVideoShader : public cVideoShader {
+  class cOpenGlYuv420Shader : public cYuv420Shader {
   public:
-    cOpenGlVideoShader() : cVideoShader() {
+    cOpenGlYuv420Shader() : cYuv420Shader() {
       const string kFragShader =
         "#version 330 core\n"
 
@@ -1228,12 +1226,11 @@ namespace {
       }
 
     //{{{
-    virtual ~cOpenGlVideoShader() {
+    virtual ~cOpenGlYuv420Shader() {
       glDeleteProgram (mId);
       }
     //}}}
 
-    // sets
     //{{{
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
 
@@ -1242,19 +1239,66 @@ namespace {
       }
     //}}}
     //{{{
-    virtual void setTextures() final {
+    virtual void use() final {
+
+      //cLog::log (LOGINFO, "video use");
+      glUseProgram (mId);
 
       glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
       glUniform1i (glGetUniformLocation (mId, "uSampler"), 1);
       glUniform1i (glGetUniformLocation (mId, "vSampler"), 2);
       }
     //}}}
+    };
+  //}}}
+  //{{{
+  class cOpenGlNv12Shader : public cNv12Shader {
+  public:
+    cOpenGlNv12Shader() : cNv12Shader() {
+      const string kFragShader =
+        "#version 330 core\n"
 
+        "uniform sampler2D ySampler;"
+        "uniform sampler2D uvSampler;"
+
+        "in vec2 textureCoord;"
+        "out vec4 outColor;"
+
+        "void main() {"
+          "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
+          "float u = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
+          //"float v = texture (vSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
+          "y = (y - 0.0625) * 1.1643;"
+          "outColor.r = y + (1.5958 * v);"
+          "outColor.g = y - (0.39173 * u) - (0.81290 * v);"
+          "outColor.b = y + (2.017 * u);"
+          "outColor.a = 1.0;"
+          "}";
+
+      mId = compileShader (kQuadVertShader, kFragShader);
+      }
+
+    //{{{
+    virtual ~cOpenGlNv12Shader() {
+      glDeleteProgram (mId);
+      }
+    //}}}
+
+    //{{{
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
+      }
+    //}}}
     //{{{
     virtual void use() final {
 
       //cLog::log (LOGINFO, "video use");
       glUseProgram (mId);
+
+      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
+      glUniform1i (glGetUniformLocation (mId, "uvSampler"), 1);
       }
     //}}}
     };
@@ -1571,6 +1615,8 @@ namespace {
         // project scissor/clipping rectangles into framebuffer space
         ImVec2 clipOff = drawData->DisplayPos; // (0,0) unless using multi-viewports
 
+        glActiveTexture (GL_TEXTURE0);
+
         // render command lists
         for (int n = 0; n < drawData->CmdListsCount; n++) {
           const ImDrawList* cmdList = drawData->CmdLists[n];
@@ -1597,7 +1643,6 @@ namespace {
               glScissor (clipRect.left, height - clipRect.bottom, clipRect.getWidth(), clipRect.getHeight());
 
               // bind
-              glActiveTexture (GL_TEXTURE0);
               glBindTexture (GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
 
               // draw
@@ -1653,8 +1698,9 @@ public:
 
   virtual cPaintShader* createPaintShader() final;
   virtual cLayerShader* createLayerShader() final;
-  virtual cCanvasShader* createCanvasShader() final;
-  virtual cVideoShader* createVideoShader() final;
+  virtual cRgbaShader* createRgbaShader() final;
+  virtual cYuv420Shader* createYuv420Shader() final;
+  virtual cNv12Shader* createNv12Shader() final;
 
   virtual void background (int width, int height) final;
 
@@ -1745,13 +1791,18 @@ cLayerShader* cOpenGlGraphics::createLayerShader() {
   }
 //}}}
 //{{{
-cCanvasShader* cOpenGlGraphics::createCanvasShader() {
-  return new cOpenGlCanvasShader();
+cRgbaShader* cOpenGlGraphics::createRgbaShader() {
+  return new cOpenGlRgbaShader();
   }
 //}}}
 //{{{
-cVideoShader* cOpenGlGraphics::createVideoShader() {
-  return new cOpenGlVideoShader();
+cYuv420Shader* cOpenGlGraphics::createYuv420Shader() {
+  return new cOpenGlYuv420Shader();
+  }
+//}}}
+//{{{
+cNv12Shader* cOpenGlGraphics::createNv12Shader() {
+  return new cOpenGlNv12Shader();
   }
 //}}}
 

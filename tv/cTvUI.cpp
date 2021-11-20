@@ -129,7 +129,7 @@ private:
           if (!mQuad)
             mQuad = graphics.createQuad (windowSize);
           if (!mShader)
-            mShader = graphics.createVideoShader();
+            mShader = graphics.createYuv420Shader();
 
           graphics.background (windowSize.x, windowSize.y);
           cTexture* texture = video.getTexture (playPts, graphics);
@@ -143,7 +143,6 @@ private:
           model.setTranslate (cVec3 (windowSize.x/4.f, windowSize.y/4.f, 0.f));
           cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
           mShader->setModelProjection (model, orthoProjection);
-          mShader->setTextures();
           mQuad->draw();
           break;
           }
@@ -442,7 +441,7 @@ private:
   uint16_t mDecoderMask = 0;
 
   cQuad* mQuad = nullptr;
-  cVideoShader* mShader = nullptr;
+  cYuv420Shader* mShader = nullptr;
   //}}}
   };
 

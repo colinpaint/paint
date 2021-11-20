@@ -267,37 +267,48 @@ namespace {
     };
   //}}}
   //{{{
-  class cDx11CanvasShader : public cCanvasShader {
+  class cDx11RgbaShader : public cRgbaShader {
   public:
-    cDx11CanvasShader() : cCanvasShader() {
-      }
-    virtual ~cDx11CanvasShader()  = default;
+    cDx11RgbaShader() : cRgbaShader() {}
+    virtual ~cDx11RgbaShader()  = default;
 
-    // sets
+    //{{{
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       (void)model;
       (void)projection;
       }
 
-    virtual void use() final {
-      }
+    //}}}
+    virtual void use() final {}
     };
   //}}}
   //{{{
-  class cDx11VideoShader : public cVideoShader {
+  class cDx11Yuv420Shader : public cYuv420Shader {
   public:
-    cDx11VideoShader() : cVideoShader() {
-      }
-    virtual ~cDx11VideoShader()  = default;
+    cDx11Yuv420Shader() : cYuv420Shader() {}
+    virtual ~cDx11Yuv420Shader()  = default;
 
-    // sets
+    //{{{
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       (void)model;
       (void)projection;
       }
+    //}}}
+    virtual void use() final {}
+    };
+  //}}}
+  //{{{
+  class cDx11Nv12Shader : public cNv12Shader {
+  public:
+    cDx11Nv12Shader() : cNv12Shader() {}
+    virtual ~cDx11Nv12Shader()  = default;
 
-
-    virtual void setTextures() final {}
+    //{{{
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
+      }
+    //}}}
     virtual void use() final {}
     };
   //}}}
@@ -953,8 +964,9 @@ public:
 
   virtual cPaintShader* createPaintShader() final;
   virtual cLayerShader* createLayerShader() final;
-  virtual cCanvasShader* createCanvasShader() final;
-  virtual cVideoShader* createVideoShader() final;
+  virtual cRgbaShader* createRgbaShader() final;
+  virtual cYuv420Shader* createYuv420Shader() final;
+  virtual cNv12Shader* createNv12Shader() final;
 
   virtual void background (int width, int height) final;
 
@@ -1054,13 +1066,18 @@ cLayerShader* cDx11Graphics::createLayerShader() {
   }
 //}}}
 //{{{
-cCanvasShader* cDx11Graphics::createCanvasShader() {
-  return new cDx11CanvasShader();
+cRgbaShader* cDx11Graphics::createRgbaShader() {
+  return new cDx11RgbaShader();
   }
 //}}}
 //{{{
-cVideoShader* cDx11Graphics::createVideoShader() {
-  return new cDx11VideoShader();
+cYuv420Shader* cDx11Graphics::createYuv420Shader() {
+  return new cDx11Yuv420Shader();
+  }
+//}}}
+//{{{
+cNv12Shader* cDx11Graphics::createNv12Shader() {
+  return new cDx11Nv12Shader();
   }
 //}}}
 

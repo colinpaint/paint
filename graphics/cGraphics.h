@@ -119,7 +119,6 @@ public:
   virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) = 0;
   };
 //}}}
-
 //{{{
 class cPaintShader : public cQuadShader {
 public:
@@ -139,19 +138,24 @@ public:
   };
 //}}}
 //{{{
-class cCanvasShader : public cQuadShader {
+class cRgbaShader : public cQuadShader {
 public:
-  cCanvasShader() : cQuadShader() {}
-  virtual ~cCanvasShader() = default;
+  cRgbaShader() : cQuadShader() {}
+  virtual ~cRgbaShader() = default;
   };
 //}}}
 //{{{
-class cVideoShader : public cQuadShader {
+class cYuv420Shader : public cQuadShader {
 public:
-  cVideoShader() : cQuadShader() {}
-  virtual ~cVideoShader() = default;
-
-  virtual void setTextures() = 0;
+  cYuv420Shader() : cQuadShader() {}
+  virtual ~cYuv420Shader() = default;
+  };
+//}}}
+//{{{
+class cNv12Shader : public cQuadShader {
+public:
+  cNv12Shader() : cQuadShader() {}
+  virtual ~cNv12Shader() = default;
   };
 //}}}
 
@@ -176,8 +180,9 @@ public:
 
   virtual cPaintShader* createPaintShader() = 0;
   virtual cLayerShader* createLayerShader() = 0;
-  virtual cCanvasShader* createCanvasShader() = 0;
-  virtual cVideoShader* createVideoShader() = 0;
+  virtual cRgbaShader* createRgbaShader() = 0;
+  virtual cYuv420Shader* createYuv420Shader() = 0;
+  virtual cNv12Shader* createNv12Shader() = 0;
 
   virtual void background (int width, int height) = 0;
 
