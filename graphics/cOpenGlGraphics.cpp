@@ -1701,7 +1701,7 @@ public:
   virtual cYuv420Shader* createYuv420Shader() final;
   virtual cNv12Shader* createNv12Shader() final;
 
-  virtual void background (int width, int height) final;
+  virtual void background (const cPoint& size) final;
 
   // actions
   virtual void newFrame() final;
@@ -1806,9 +1806,9 @@ cNv12Shader* cOpenGlGraphics::createNv12Shader() {
 //}}}
 
 //{{{
-void cOpenGlGraphics::background (int width, int height) {
+void cOpenGlGraphics::background (const cPoint& size) {
 
-  glViewport (0, 0, width, height);
+  glViewport (0, 0, size.x, size.y);
 
   // blend
   uint32_t modeRGB = GL_FUNC_ADD;

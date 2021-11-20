@@ -184,7 +184,7 @@ public:
   virtual cYuv420Shader* createYuv420Shader() = 0;
   virtual cNv12Shader* createNv12Shader() = 0;
 
-  virtual void background (int width, int height) = 0;
+  virtual void background (const cPoint& size) = 0;
 
   // actions
   virtual void windowResize (int width, int height) = 0;

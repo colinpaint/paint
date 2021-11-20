@@ -968,7 +968,7 @@ public:
   virtual cYuv420Shader* createYuv420Shader() final;
   virtual cNv12Shader* createNv12Shader() final;
 
-  virtual void background (int width, int height) final;
+  virtual void background (const cPoint& size) final;
 
   // actions
   virtual void newFrame() final;
@@ -1081,7 +1081,7 @@ cNv12Shader* cDx11Graphics::createNv12Shader() {
   }
 //}}}
 
-void cDx11Graphics::background (int width, int height) { (void)width; (void)height; }
+void cDx11Graphics::background (const cPoint& size) { (void)size; }
 
 //{{{
 void cDx11Graphics::windowResize (int width, int height) {
