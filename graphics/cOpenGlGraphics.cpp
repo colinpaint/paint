@@ -1808,25 +1808,28 @@ cNv12Shader* cOpenGlGraphics::createNv12Shader() {
 //{{{
 void cOpenGlGraphics::background (int width, int height) {
 
+  glViewport (0, 0, width, height);
+
+  // blend
   uint32_t modeRGB = GL_FUNC_ADD;
   uint32_t modeAlpha = GL_FUNC_ADD;
+  glBlendEquationSeparate (modeRGB, modeAlpha);
 
   uint32_t srcRgb = GL_SRC_ALPHA;
   uint32_t dstRGB = GL_ONE_MINUS_SRC_ALPHA;
   uint32_t srcAlpha = GL_ONE;
   uint32_t dstAlpha = GL_ONE_MINUS_SRC_ALPHA;
-
-  glBlendEquationSeparate (modeRGB, modeAlpha);
   glBlendFuncSeparate (srcRgb, dstRGB, srcAlpha, dstAlpha);
+
   glEnable (GL_BLEND);
 
-  glViewport (0, 0, width, height);
-
+  // disables
   glDisable (GL_SCISSOR_TEST);
   glDisable (GL_CULL_FACE);
   glDisable (GL_DEPTH_TEST);
 
-  glClearColor (0.25f,0.25f,0.25f, 0.f);
+  // clear
+  glClearColor (0.f,0.f,0.f, 0.f);
   glClear (GL_COLOR_BUFFER_BIT);
   }
 //}}}

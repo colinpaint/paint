@@ -118,36 +118,31 @@ private:
 
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
+      if (!service.getStream (cDvbStream::eAud).isEnabled() && !service.getStream (cDvbStream::eVid).isEnabled())
+        continue;
 
-      if (service.getStream (cDvbStream::eAud).isEnabled()) {
-        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
-        int64_t playPts = audio.getPlayPts();
+      if (!mQuad)
+        mQuad = graphics.createQuad (windowSize);
+      if (!mShader)
+        mShader = graphics.createYuv420Shader();
 
-        if (service.getStream (cDvbStream::eVid).isEnabled()) {
-          cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
+      cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
+      cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
+      cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
+      cTexture* texture = video.getTexture (audio.getPlayPts(), graphics);
+      if (!texture) 
+        continue;
 
-          cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
+      texture->setSource();
+      mShader->use();
 
-          if (!mQuad)
-            mQuad = graphics.createQuad (windowSize);
-          if (!mShader)
-            mShader = graphics.createYuv420Shader();
-
-          cTexture* texture = video.getTexture (playPts, graphics);
-
-          if (texture)
-            texture->setSource();
-          mShader->use();
-
-          cMat4x4 model;
-          //model.setTranslate (cVec3 ((windowSize.x - videoSize.x)/2.f, (windowSize.y - videoSize.y)/2.f, 0.f));
-          model.setTranslate (cVec3 (windowSize.x/4.f, windowSize.y/4.f, 0.f));
-          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-          mShader->setModelProjection (model, orthoProjection);
-          mQuad->draw();
-          break;
-          }
-        }
+      cMat4x4 model;
+      //model.setTranslate (cVec3 ((windowSize.x - videoSize.x)/2.f, (windowSize.y - videoSize.y)/2.f, 0.f));
+      model.setTranslate (cVec3 (windowSize.x/4.f, windowSize.y/4.f, 0.f));
+      cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
+      mShader->setModelProjection (model, orthoProjection);
+      mQuad->draw();
+      return;
       }
     }
   //}}}
