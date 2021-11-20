@@ -128,10 +128,8 @@ private:
       if (!texture)
         continue;
 
-      if (!mQuad) {
-        cLog::log (LOGINFO, fmt::format ("create quad {} {}", videoSize.x, videoSize.y));
+      if (!mQuad) 
         mQuad = graphics.createQuad (videoSize);
-        }
       if (!mShader)
         mShader = graphics.createYuv420Shader();
 
@@ -139,7 +137,7 @@ private:
       mShader->use();
 
       cMat4x4 model;
-      //model.setTranslate (cVec3 ((windowSize.x - videoSize.x)/2.f, (windowSize.y - videoSize.y)/2.f, 0.f));
+      model.setTranslate (cVec3 (0.f, 0.f, 0.f));
       //model.setTranslate (cVec3 (windowSize.x/2.f, windowSize.y/2.f, 0.f));
       cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
       mShader->setModelProjection (model, orthoProjection);
