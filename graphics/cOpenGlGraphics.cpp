@@ -376,8 +376,8 @@ namespace {
       else if (!mDirtyPixelsRect.isEmpty()) {
         if (kDebug)
           cLog::log (LOGINFO, fmt::format ("getPixels get {},{} {},{}",
-                                      mDirtyPixelsRect.left, mDirtyPixelsRect.top,
-                                      mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
+                                           mDirtyPixelsRect.left, mDirtyPixelsRect.top,
+                                           mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
 
         // no openGL glGetTexSubImage, so dirtyPixelsRect not really used, is this correct ???
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
@@ -745,11 +745,11 @@ namespace {
   //}}}
 
   // shader
-  #ifdef OPENGL_21
-    //{{{
-    const string kQuadVertShader =
-      "#version 120\n"
+  //{{{
+  const string kQuadVertShader =
 
+    #ifdef OPENGL_21
+      "#version 120\n"
       "layout (location = 0) in vec2 inPos;"
       "layout (location = 1) in vec2 inTextureCoord;"
       "out vec2 textureCoord;"
@@ -761,10 +761,8 @@ namespace {
       "  textureCoord = inTextureCoord;"
       "  gl_Position = uProject * uModel * vec4 (inPos, 0.0, 1.0);"
       "  }";
-    //}}}
-  #else
-    //{{{
-    const string kQuadVertShader =
+
+    #else
       "#version 330 core\n"
       "layout (location = 0) in vec2 inPos;"
       "layout (location = 1) in vec2 inTextureCoord;"
@@ -777,8 +775,9 @@ namespace {
       "  textureCoord = inTextureCoord;"
       "  gl_Position = uProject * uModel * vec4 (inPos, 0.0, 1.0);"
       "  }";
-    //}}}
-  #endif
+
+    #endif
+  //}}}
   //{{{
   uint32_t compileShader (const string& vertShaderString, const string& fragShaderString) {
 

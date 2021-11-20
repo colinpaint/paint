@@ -42,7 +42,7 @@ public:
       drawBgnd (*app.getDvbStream(), graphics);
 
     // draw tabs
-    mMainTabIndex = interlockedButtons ({"tv","services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
+    mMainTabIndex = interlockedButtons ({"telly","services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
 
     if (app.getPlatform().hasVsync()) {
       //{{{  vsync button
@@ -113,6 +113,9 @@ private:
   //{{{
   void drawBgnd (cDvbStream& dvbStream, cGraphics& graphics) {
 
+    cPoint windowSize = cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight());
+    graphics.background (windowSize.x, windowSize.y);
+
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
 
@@ -124,14 +127,12 @@ private:
           cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
 
           cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
-          cPoint windowSize = cPoint ((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight());
 
           if (!mQuad)
             mQuad = graphics.createQuad (windowSize);
           if (!mShader)
             mShader = graphics.createYuv420Shader();
 
-          graphics.background (windowSize.x, windowSize.y);
           cTexture* texture = video.getTexture (playPts, graphics);
 
           if (texture)
@@ -154,6 +155,7 @@ private:
   void drawTelly (cDvbStream& dvbStream, cGraphics& graphics) {
 
     (void)graphics;
+    bool channelFound = false;
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
 
@@ -164,6 +166,8 @@ private:
           cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
           ImGui::TextUnformatted (fmt::format ("pts:{} a:{} v:{}",
                                   getPtsString (playPts), audio.getInfoString(), video.getInfoString()).c_str());
+
+          channelFound = true;
           break;
           }
         }
@@ -171,6 +175,9 @@ private:
       while (service.getChannelName().size() > mMaxNameChars)
         mMaxNameChars = service.getChannelName().size();
       }
+
+    if (!channelFound)
+      ImGui::NewLine();
 
     // overlay channel buttons
     for (auto& pair : dvbStream.getServiceMap())
