@@ -98,6 +98,7 @@ protected:
 
 //{{{
 class cShader {
+// abstract bas class for all shaders
 public:
   cShader() = default;
   virtual ~cShader() = default;
@@ -111,6 +112,8 @@ protected:
 //}}}
 //{{{
 class cQuadShader : public cShader {
+// abstract base class for shaders drawing quad triangle pair, with model, projection maths
+
 public:
   cQuadShader() : cShader() {}
   virtual ~cQuadShader() = default;
@@ -120,12 +123,24 @@ public:
   };
 //}}}
 //{{{
-class cPaintShader : public cQuadShader {
+class cRgbaShader : public cQuadShader {
 public:
-  cPaintShader() : cQuadShader() {}
-  virtual ~cPaintShader() = default;
-
-  virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) = 0;
+  cRgbaShader() : cQuadShader() {}
+  virtual ~cRgbaShader() = default;
+  };
+//}}}
+//{{{
+class cNv12Shader : public cQuadShader {
+public:
+  cNv12Shader() : cQuadShader() {}
+  virtual ~cNv12Shader() = default;
+  };
+//}}}
+//{{{
+class cYuv420Shader : public cQuadShader {
+public:
+  cYuv420Shader() : cQuadShader() {}
+  virtual ~cYuv420Shader() = default;
   };
 //}}}
 //{{{
@@ -138,24 +153,12 @@ public:
   };
 //}}}
 //{{{
-class cRgbaShader : public cQuadShader {
+class cPaintShader : public cQuadShader {
 public:
-  cRgbaShader() : cQuadShader() {}
-  virtual ~cRgbaShader() = default;
-  };
-//}}}
-//{{{
-class cYuv420Shader : public cQuadShader {
-public:
-  cYuv420Shader() : cQuadShader() {}
-  virtual ~cYuv420Shader() = default;
-  };
-//}}}
-//{{{
-class cNv12Shader : public cQuadShader {
-public:
-  cNv12Shader() : cQuadShader() {}
-  virtual ~cNv12Shader() = default;
+  cPaintShader() : cQuadShader() {}
+  virtual ~cPaintShader() = default;
+
+  virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) = 0;
   };
 //}}}
 
@@ -178,11 +181,11 @@ public:
   virtual cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) = 0;
   virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) = 0;
 
-  virtual cPaintShader* createPaintShader() = 0;
-  virtual cLayerShader* createLayerShader() = 0;
   virtual cRgbaShader* createRgbaShader() = 0;
-  virtual cYuv420Shader* createYuv420Shader() = 0;
   virtual cNv12Shader* createNv12Shader() = 0;
+  virtual cYuv420Shader* createYuv420Shader() = 0;
+  virtual cLayerShader* createLayerShader() = 0;
+  virtual cPaintShader* createPaintShader() = 0;
 
   virtual void background (const cPoint& size) = 0;
 

@@ -836,62 +836,35 @@ namespace {
     }
   //}}}
   //{{{
-  class cOpenGlPaintShader : public cPaintShader {
+  class cOpenGlRgbaShader : public cRgbaShader {
   public:
     //{{{
-    cOpenGlPaintShader() : cPaintShader() {
+    cOpenGlRgbaShader() : cRgbaShader() {
 
       #ifdef OPENGL_21
         const string kFragShader =
           "#version 120\n"
 
           "uniform sampler2D uSampler;"
-          "uniform vec2 uPos;"
-          "uniform vec2 uPrevPos;"
-          "uniform float uRadius;"
-          "uniform vec4 uColor;"
 
           "in vec2 textureCoord;"
           "out vec4 outColor;"
 
-          "float distToLine (vec2 v, vec2 w, vec2 p) {"
-          "  float l2 = pow (distance(w, v), 2.);"
-          "  if (l2 == 0.0)"
-          "    return distance (p, v);"
-          "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
-          "  vec2 j = v + t * (w - v);"
-          "  return distance (p, j);"
-          "  }"
-
           "void main() {"
-          "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
-          "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
+          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+          //"  outColor /= outColor.w;"
           "  }";
       #else
         const string kFragShader =
           "#version 330 core\n"
-
           "uniform sampler2D uSampler;"
-          "uniform vec2 uPos;"
-          "uniform vec2 uPrevPos;"
-          "uniform float uRadius;"
-          "uniform vec4 uColor;"
 
           "in vec2 textureCoord;"
           "out vec4 outColor;"
 
-          "float distToLine (vec2 v, vec2 w, vec2 p) {"
-          "  float l2 = pow (distance(w, v), 2.);"
-          "  if (l2 == 0.0)"
-          "    return distance (p, v);"
-          "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
-          "  vec2 j = v + t * (w - v);"
-          "  return distance (p, j);"
-          "  }"
-
           "void main() {"
-          "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
-          "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
+          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+          //"  outColor /= outColor.w;"
           "  }";
       #endif
 
@@ -899,12 +872,11 @@ namespace {
       }
     //}}}
     //{{{
-    virtual ~cOpenGlPaintShader() {
+    virtual ~cOpenGlRgbaShader() {
       glDeleteProgram (mId);
       }
     //}}}
 
-    // sets
     //{{{
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
@@ -912,19 +884,113 @@ namespace {
       }
     //}}}
     //{{{
-    virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
+    virtual void use() final {
 
-      glUniform2fv (glGetUniformLocation (mId, "uPos"), 1, (float*)&pos);
-      glUniform2fv (glGetUniformLocation (mId, "uPrevPos"), 1, (float*)&prevPos);
-      glUniform1f (glGetUniformLocation (mId, "uRadius"), radius);
-      glUniform4fv (glGetUniformLocation (mId, "uColor"), 1, (float*)&color);
+      glUseProgram (mId);
+      }
+    //}}}
+    };
+  //}}}
+  //{{{
+  class cOpenGlNv12Shader : public cNv12Shader {
+  public:
+    cOpenGlNv12Shader() : cNv12Shader() {
+      const string kFragShader =
+        "#version 330 core\n"
+        "uniform sampler2D ySampler;"
+        "uniform sampler2D uvSampler;"
+
+        "in vec2 textureCoord;"
+        "out vec4 outColor;"
+
+        "void main() {"
+          "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
+          "float u = texture (uvSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
+          "float v = texture (uvSampler, vec2 (textureCoord.x, -textureCoord.y)).g - 0.5;"
+          "y = (y - 0.0625) * 1.1643;"
+          "outColor.r = y + (1.5958 * v);"
+          "outColor.g = y - (0.39173 * u) - (0.81290 * v);"
+          "outColor.b = y + (2.017 * u);"
+          "outColor.a = 1.0;"
+          "}";
+
+      mId = compileShader (kQuadVertShader, kFragShader);
+      }
+
+    //{{{
+    virtual ~cOpenGlNv12Shader() {
+      glDeleteProgram (mId);
       }
     //}}}
 
     //{{{
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
+      }
+    //}}}
+    //{{{
     virtual void use() final {
 
+      //cLog::log (LOGINFO, "video use");
       glUseProgram (mId);
+
+      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
+      glUniform1i (glGetUniformLocation (mId, "uvSampler"), 1);
+      }
+    //}}}
+    };
+  //}}}
+  //{{{
+  class cOpenGlYuv420Shader : public cYuv420Shader {
+  public:
+    cOpenGlYuv420Shader() : cYuv420Shader() {
+      const string kFragShader =
+        "#version 330 core\n"
+        "uniform sampler2D ySampler;"
+        "uniform sampler2D uSampler;"
+        "uniform sampler2D vSampler;"
+
+        "in vec2 textureCoord;"
+        "out vec4 outColor;"
+
+        "void main() {"
+          "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
+          "float u = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
+          "float v = texture (vSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
+          "y = (y - 0.0625) * 1.1643;"
+          "outColor.r = y + (1.5958 * v);"
+          "outColor.g = y - (0.39173 * u) - (0.81290 * v);"
+          "outColor.b = y + (2.017 * u);"
+          "outColor.a = 1.0;"
+          "}";
+
+      mId = compileShader (kQuadVertShader, kFragShader);
+      }
+
+    //{{{
+    virtual ~cOpenGlYuv420Shader() {
+      glDeleteProgram (mId);
+      }
+    //}}}
+
+    //{{{
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
+      }
+    //}}}
+    //{{{
+    virtual void use() final {
+
+      //cLog::log (LOGINFO, "video use");
+      glUseProgram (mId);
+
+      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
+      glUniform1i (glGetUniformLocation (mId, "uSampler"), 1);
+      glUniform1i (glGetUniformLocation (mId, "vSampler"), 2);
       }
     //}}}
     };
@@ -1120,6 +1186,7 @@ namespace {
     // sets
     //{{{
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
       glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
       }
@@ -1141,35 +1208,62 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlRgbaShader : public cRgbaShader {
+  class cOpenGlPaintShader : public cPaintShader {
   public:
     //{{{
-    cOpenGlRgbaShader() : cRgbaShader() {
+    cOpenGlPaintShader() : cPaintShader() {
 
       #ifdef OPENGL_21
         const string kFragShader =
           "#version 120\n"
 
           "uniform sampler2D uSampler;"
+          "uniform vec2 uPos;"
+          "uniform vec2 uPrevPos;"
+          "uniform float uRadius;"
+          "uniform vec4 uColor;"
 
           "in vec2 textureCoord;"
           "out vec4 outColor;"
 
+          "float distToLine (vec2 v, vec2 w, vec2 p) {"
+          "  float l2 = pow (distance(w, v), 2.);"
+          "  if (l2 == 0.0)"
+          "    return distance (p, v);"
+          "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
+          "  vec2 j = v + t * (w - v);"
+          "  return distance (p, j);"
+          "  }"
+
           "void main() {"
-          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-          //"  outColor /= outColor.w;"
+          "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
+          "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
           "  }";
       #else
         const string kFragShader =
           "#version 330 core\n"
+
           "uniform sampler2D uSampler;"
+          "uniform vec2 uPos;"
+          "uniform vec2 uPrevPos;"
+          "uniform float uRadius;"
+          "uniform vec4 uColor;"
 
           "in vec2 textureCoord;"
           "out vec4 outColor;"
 
+          "float distToLine (vec2 v, vec2 w, vec2 p) {"
+          "  float l2 = pow (distance(w, v), 2.);"
+          "  if (l2 == 0.0)"
+          "    return distance (p, v);"
+          "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
+          "  vec2 j = v + t * (w - v);"
+          "  return distance (p, j);"
+          "  }"
+
           "void main() {"
-          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-          //"  outColor /= outColor.w;"
+          "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
+          "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
           "  }";
       #endif
 
@@ -1177,11 +1271,12 @@ namespace {
       }
     //}}}
     //{{{
-    virtual ~cOpenGlRgbaShader() {
+    virtual ~cOpenGlPaintShader() {
       glDeleteProgram (mId);
       }
     //}}}
 
+    // sets
     //{{{
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
@@ -1189,115 +1284,19 @@ namespace {
       }
     //}}}
     //{{{
+    virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
+
+      glUniform2fv (glGetUniformLocation (mId, "uPos"), 1, (float*)&pos);
+      glUniform2fv (glGetUniformLocation (mId, "uPrevPos"), 1, (float*)&prevPos);
+      glUniform1f (glGetUniformLocation (mId, "uRadius"), radius);
+      glUniform4fv (glGetUniformLocation (mId, "uColor"), 1, (float*)&color);
+      }
+    //}}}
+
+    //{{{
     virtual void use() final {
 
       glUseProgram (mId);
-      }
-    //}}}
-    };
-  //}}}
-  //{{{
-  class cOpenGlYuv420Shader : public cYuv420Shader {
-  public:
-    cOpenGlYuv420Shader() : cYuv420Shader() {
-      const string kFragShader =
-        "#version 330 core\n"
-
-        "uniform sampler2D ySampler;"
-        "uniform sampler2D uSampler;"
-        "uniform sampler2D vSampler;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        "void main() {"
-          "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
-          "float u = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
-          "float v = texture (vSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
-          "y = (y - 0.0625) * 1.1643;"
-          "outColor.r = y + (1.5958 * v);"
-          "outColor.g = y - (0.39173 * u) - (0.81290 * v);"
-          "outColor.b = y + (2.017 * u);"
-          "outColor.a = 1.0;"
-          "}";
-
-      mId = compileShader (kQuadVertShader, kFragShader);
-      }
-
-    //{{{
-    virtual ~cOpenGlYuv420Shader() {
-      glDeleteProgram (mId);
-      }
-    //}}}
-
-    //{{{
-    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
-      }
-    //}}}
-    //{{{
-    virtual void use() final {
-
-      //cLog::log (LOGINFO, "video use");
-      glUseProgram (mId);
-
-      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
-      glUniform1i (glGetUniformLocation (mId, "uSampler"), 1);
-      glUniform1i (glGetUniformLocation (mId, "vSampler"), 2);
-      }
-    //}}}
-    };
-  //}}}
-  //{{{
-  class cOpenGlNv12Shader : public cNv12Shader {
-  public:
-    cOpenGlNv12Shader() : cNv12Shader() {
-      const string kFragShader =
-        "#version 330 core\n"
-
-        "uniform sampler2D ySampler;"
-        "uniform sampler2D uvSampler;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        "void main() {"
-          "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
-          "float u = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
-          //"float v = texture (vSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
-          "y = (y - 0.0625) * 1.1643;"
-          "outColor.r = y + (1.5958 * v);"
-          "outColor.g = y - (0.39173 * u) - (0.81290 * v);"
-          "outColor.b = y + (2.017 * u);"
-          "outColor.a = 1.0;"
-          "}";
-
-      mId = compileShader (kQuadVertShader, kFragShader);
-      }
-
-    //{{{
-    virtual ~cOpenGlNv12Shader() {
-      glDeleteProgram (mId);
-      }
-    //}}}
-
-    //{{{
-    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
-      }
-    //}}}
-    //{{{
-    virtual void use() final {
-
-      //cLog::log (LOGINFO, "video use");
-      glUseProgram (mId);
-
-      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
-      glUniform1i (glGetUniformLocation (mId, "uvSampler"), 1);
       }
     //}}}
     };
@@ -1695,11 +1694,11 @@ public:
   virtual cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
   virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
 
-  virtual cPaintShader* createPaintShader() final;
-  virtual cLayerShader* createLayerShader() final;
   virtual cRgbaShader* createRgbaShader() final;
-  virtual cYuv420Shader* createYuv420Shader() final;
   virtual cNv12Shader* createNv12Shader() final;
+  virtual cYuv420Shader* createYuv420Shader() final;
+  virtual cLayerShader* createLayerShader() final;
+  virtual cPaintShader* createPaintShader() final;
 
   virtual void background (const cPoint& size) final;
 
@@ -1780,18 +1779,13 @@ cFrameBuffer* cOpenGlGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, 
 //}}}
 
 //{{{
-cPaintShader* cOpenGlGraphics::createPaintShader() {
-  return new cOpenGlPaintShader();
-  }
-//}}}
-//{{{
-cLayerShader* cOpenGlGraphics::createLayerShader() {
-  return new cOpenGlLayerShader();
-  }
-//}}}
-//{{{
 cRgbaShader* cOpenGlGraphics::createRgbaShader() {
   return new cOpenGlRgbaShader();
+  }
+//}}}
+//{{{
+cNv12Shader* cOpenGlGraphics::createNv12Shader() {
+  return new cOpenGlNv12Shader();
   }
 //}}}
 //{{{
@@ -1800,8 +1794,13 @@ cYuv420Shader* cOpenGlGraphics::createYuv420Shader() {
   }
 //}}}
 //{{{
-cNv12Shader* cOpenGlGraphics::createNv12Shader() {
-  return new cOpenGlNv12Shader();
+cLayerShader* cOpenGlGraphics::createLayerShader() {
+  return new cOpenGlLayerShader();
+  }
+//}}}
+//{{{
+cPaintShader* cOpenGlGraphics::createPaintShader() {
+  return new cOpenGlPaintShader();
   }
 //}}}
 

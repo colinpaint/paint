@@ -214,6 +214,7 @@ namespace {
     //}}}
     };
   //}}}
+
   //{{{
   uint32_t compileShader (const string& vertShaderString, const string& fragShaderString) {
     (void)vertShaderString;
@@ -222,26 +223,49 @@ namespace {
     }
   //}}}
   //{{{
-  class cDx11PaintShader : public cPaintShader {
+  class cDx11RgbaShader : public cRgbaShader {
   public:
-    cDx11PaintShader() : cPaintShader() {
-      }
-    virtual ~cDx11PaintShader() = default;
+    cDx11RgbaShader() : cRgbaShader() {}
+    virtual ~cDx11RgbaShader()  = default;
 
-    // sets
+    //{{{
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       (void)model;
       (void)projection;
       }
-    virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
-      (void)pos;
-      (void)prevPos;
-      (void)radius;
-      (void)color;
-      }
 
-    virtual void use() final {
+    //}}}
+    virtual void use() final {}
+    };
+  //}}}
+  //{{{
+  class cDx11Nv12Shader : public cNv12Shader {
+  public:
+    cDx11Nv12Shader() : cNv12Shader() {}
+    virtual ~cDx11Nv12Shader()  = default;
+
+    //{{{
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
       }
+    //}}}
+    virtual void use() final {}
+    };
+  //}}}
+  //{{{
+  class cDx11Yuv420Shader : public cYuv420Shader {
+  public:
+    cDx11Yuv420Shader() : cYuv420Shader() {}
+    virtual ~cDx11Yuv420Shader()  = default;
+
+    //{{{
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
+      }
+    //}}}
+    virtual void use() final {}
     };
   //}}}
   //{{{
@@ -267,49 +291,26 @@ namespace {
     };
   //}}}
   //{{{
-  class cDx11RgbaShader : public cRgbaShader {
+  class cDx11PaintShader : public cPaintShader {
   public:
-    cDx11RgbaShader() : cRgbaShader() {}
-    virtual ~cDx11RgbaShader()  = default;
+    cDx11PaintShader() : cPaintShader() {
+      }
+    virtual ~cDx11PaintShader() = default;
 
-    //{{{
+    // sets
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
       (void)model;
       (void)projection;
       }
-
-    //}}}
-    virtual void use() final {}
-    };
-  //}}}
-  //{{{
-  class cDx11Yuv420Shader : public cYuv420Shader {
-  public:
-    cDx11Yuv420Shader() : cYuv420Shader() {}
-    virtual ~cDx11Yuv420Shader()  = default;
-
-    //{{{
-    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-      (void)model;
-      (void)projection;
+    virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
+      (void)pos;
+      (void)prevPos;
+      (void)radius;
+      (void)color;
       }
-    //}}}
-    virtual void use() final {}
-    };
-  //}}}
-  //{{{
-  class cDx11Nv12Shader : public cNv12Shader {
-  public:
-    cDx11Nv12Shader() : cNv12Shader() {}
-    virtual ~cDx11Nv12Shader()  = default;
 
-    //{{{
-    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-      (void)model;
-      (void)projection;
+    virtual void use() final {
       }
-    //}}}
-    virtual void use() final {}
     };
   //}}}
 
@@ -962,11 +963,11 @@ public:
   virtual cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
   virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
 
-  virtual cPaintShader* createPaintShader() final;
-  virtual cLayerShader* createLayerShader() final;
   virtual cRgbaShader* createRgbaShader() final;
-  virtual cYuv420Shader* createYuv420Shader() final;
   virtual cNv12Shader* createNv12Shader() final;
+  virtual cYuv420Shader* createYuv420Shader() final;
+  virtual cLayerShader* createLayerShader() final;
+  virtual cPaintShader* createPaintShader() final;
 
   virtual void background (const cPoint& size) final;
 
@@ -1056,18 +1057,13 @@ cFrameBuffer* cDx11Graphics::createFrameBuffer (uint8_t* pixels, cPoint size, cF
 //}}}
 
 //{{{
-cPaintShader* cDx11Graphics::createPaintShader() {
-  return new cDx11PaintShader();
-  }
-//}}}
-//{{{
-cLayerShader* cDx11Graphics::createLayerShader() {
-  return new cDx11LayerShader();
-  }
-//}}}
-//{{{
 cRgbaShader* cDx11Graphics::createRgbaShader() {
   return new cDx11RgbaShader();
+  }
+//}}}
+//{{{
+cNv12Shader* cDx11Graphics::createNv12Shader() {
+  return new cDx11Nv12Shader();
   }
 //}}}
 //{{{
@@ -1076,8 +1072,13 @@ cYuv420Shader* cDx11Graphics::createYuv420Shader() {
   }
 //}}}
 //{{{
-cNv12Shader* cDx11Graphics::createNv12Shader() {
-  return new cDx11Nv12Shader();
+cLayerShader* cDx11Graphics::createLayerShader() {
+  return new cDx11LayerShader();
+  }
+//}}}
+//{{{
+cPaintShader* cDx11Graphics::createPaintShader() {
+  return new cDx11PaintShader();
   }
 //}}}
 

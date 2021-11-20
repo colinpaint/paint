@@ -30,7 +30,7 @@
 using namespace std;
 //}}}
 
-const vector<string> kDecoderOptions = { "ffmpeg", "ffYuv", "mfxSys", "mfxVid" };
+const vector<string> kDecoderOptions = { "ffmpeg", "mfxSys", "mfxVid" };
 class cTellyView {
 public:
   //{{{
@@ -64,7 +64,7 @@ public:
       //}}}
 
     ImGui::SameLine();
-    mDecoderMask = interlockedButtons (kDecoderOptions, (uint8_t)mDecoderMask, {0.f,0.f}, true);
+    mDecoderOption = interlockedButtons (kDecoderOptions, (uint8_t)mDecoderOption, {0.f,0.f}, true);
 
     if (app.getDvbStream()) {
       // dvbStream info
@@ -182,7 +182,7 @@ private:
     // overlay channel buttons
     for (auto& pair : dvbStream.getServiceMap())
       if (ImGui::Button (fmt::format ("{:{}s}", pair.second.getChannelName(), mMaxNameChars).c_str()))
-        pair.second.toggleAll (mDecoderMask);
+        pair.second.toggleAll (mDecoderOption);
     }
   //}}}
   //{{{
@@ -213,7 +213,7 @@ private:
                          service.getChannelName(), mMaxNameChars,
                          service.getProgramPid(), mMaxPgmChars,
                          service.getSid(), mMaxSidChars).c_str()))
-        service.toggleAll (mDecoderMask);
+        service.toggleAll (mDecoderOption);
 
       for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
        // iterate definedStreams
@@ -225,7 +225,7 @@ private:
                                          stream.getLabel(),
                                          stream.getPid(), mPidMaxChars[streamType], stream.getTypeName(),
                                          service.getSid()).c_str(), stream.isEnabled()))
-           dvbStream.toggleStream (service, streamType, mDecoderMask);
+           dvbStream.toggleStream (service, streamType, mDecoderOption);
           }
         }
 
@@ -445,7 +445,7 @@ private:
   std::array <size_t, 4> mPidMaxChars = { 3 };
 
   int mPlotIndex = 0;
-  uint16_t mDecoderMask = 0;
+  uint16_t mDecoderOption = 0;
 
   cQuad* mQuad = nullptr;
   cQuadShader* mShader = nullptr;
