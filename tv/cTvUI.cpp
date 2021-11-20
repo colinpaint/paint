@@ -124,12 +124,19 @@ private:
       cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
       cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
       cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
+
       cTexture* texture = video.getTexture (audio.getPlayPts(), graphics);
       if (!texture)
         continue;
 
       if (!mQuad)
         mQuad = graphics.createQuad (videoSize);
+      if (mTextureType != texture->getTextureType()) {
+        //{{{  texture type changed
+        delete mShader;
+        mShader = nullptr;
+        }
+        //}}}
       if (!mShader) {
         switch (texture->getTextureType()) {
           case cTexture::eRgba: mShader = graphics.createRgbaShader(); break;
@@ -137,7 +144,9 @@ private:
           case cTexture::eYuv420: mShader = graphics.createYuv420Shader(); break;
           default: cLog::log (LOGERROR, fmt::format ("cTvUI drawBgnd unknown textureType:{}", texture->getTextureType()));
           }
+        mTextureType = texture->getTextureType();
         }
+
       texture->setSource();
       mShader->use();
 
@@ -449,6 +458,7 @@ private:
 
   cQuad* mQuad = nullptr;
   cQuadShader* mShader = nullptr;
+  cTexture::eTextureType mTextureType = cTexture::eTextureNone;
   //}}}
   };
 

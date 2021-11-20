@@ -109,7 +109,7 @@ public:
   //}}}
 
   // gets
-  cTexture::eTextureType const getTextureType() const { return mTextureType; }
+  cTexture::eTextureType getTextureType() const { return mTextureType; }
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
   uint16_t getStride() const { return mStride; }
