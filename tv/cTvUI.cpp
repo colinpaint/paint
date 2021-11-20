@@ -445,7 +445,7 @@ private:
   std::array <size_t, 4> mPidMaxChars = { 3 };
 
   int mPlotIndex = 0;
-  uint16_t mDecoderOption = 0;
+  uint16_t mDecoderOption = 1;
 
   cQuad* mQuad = nullptr;
   cQuadShader* mShader = nullptr;
