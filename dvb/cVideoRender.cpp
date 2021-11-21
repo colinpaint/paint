@@ -84,29 +84,15 @@ constexpr uint32_t kVideoPoolSize = 50;
 class cVideoFrame : public cFrame {
 public:
   cVideoFrame (cTexture::eTextureType textureType,
-               int64_t pts, int64_t ptsDuration, uint16_t width, uint16_t height, uint16_t stride,
+               int64_t pts, int64_t ptsDuration,
+               uint16_t width, uint16_t height, uint16_t stride,
                uint32_t pesSize, int64_t decodeTime)
-    : cFrame(pts, ptsDuration), mTextureType(textureType),
-      mWidth(width), mHeight(height), mStride(stride), mPesSize(pesSize), mDecodeTime(decodeTime) {
+      : cFrame(pts, ptsDuration),
+        mTextureType(textureType),
+        mWidth(width), mHeight(height), mStride(stride),
+        mPesSize(pesSize), mDecodeTime(decodeTime) {}
 
-    #ifdef _WIN32
-      if (!mPixels)
-        mPixels = (uint8_t*)_aligned_malloc (mWidth * mHeight * 4, 128);
-    #else
-      if (!mPixels)
-        mPixels = (uint8_t*)aligned_alloc (128, mWidth * mHeight * 4);
-    #endif
-    }
-  //{{{
-  virtual ~cVideoFrame() {
-
-    #ifdef _WIN32
-      _aligned_free (mPixels);
-    #else
-      free (mPixels);
-    #endif
-    }
-  //}}}
+  virtual ~cVideoFrame() = default;
 
   // gets
   cTexture::eTextureType getTextureType() const { return mTextureType; }
@@ -116,9 +102,10 @@ public:
 
   uint32_t getPesSize() const { return mPesSize; }
   int64_t getDecodeTime() const { return mDecodeTime; }
+
   int64_t getConvertTime() const { return mConvertTime; }
 
-  virtual uint8_t** getPixelData() { return &mPixels; }
+  virtual uint8_t** getPixelData() = 0;
 
   void setConvertTime (int64_t convertTime) { mConvertTime = convertTime; }
 
@@ -133,7 +120,6 @@ protected:
   const int64_t mDecodeTime;
 
   int64_t mConvertTime = 0;
-  uint8_t* mPixels = nullptr;
   };
 //}}}
 //{{{
@@ -143,23 +129,39 @@ public:
                      uint16_t width, uint16_t height, uint16_t stride,
                      uint32_t pesSize, int64_t decodeTime,
                      AVFrame* avFrame)
-      : cVideoFrame (cTexture::eYuv420, pts, ptsDuration, width, height, stride, pesSize, decodeTime) {
+      : cVideoFrame (cTexture::eYuv420, pts, ptsDuration, width, height, stride, pesSize, decodeTime),
+        mAvFrame(avFrame) {}
 
-    mAvFrame = avFrame;
-    mConvertTime = 0;
-    }
-
-  //{{{
   ~cFFmpegVideoFrame() {
-     av_frame_alloc();
+     av_frame_unref (mAvFrame);
      av_frame_free (&mAvFrame);
      }
-  //}}}
 
   virtual uint8_t** getPixelData() { return mAvFrame->data; }
 
 private:
   AVFrame* mAvFrame = nullptr;
+  };
+//}}}
+//{{{
+class cMfxVideoFrame : public cVideoFrame {
+public:
+  cMfxVideoFrame (int64_t pts, int64_t ptsDuration,
+                  uint16_t width, uint16_t height, uint16_t stride,
+                  uint32_t pesSize, int64_t decodeTime,
+                  uint8_t* data)
+      : cVideoFrame (cTexture::eNv12, pts, ptsDuration, width, height, stride, pesSize, decodeTime) {
+
+    mPixels[0] = (uint8_t*)malloc (stride * height * 3 / 2);
+    memcpy (mPixels[0], data, stride * height * 3 / 2);
+    }
+
+  ~cMfxVideoFrame() { free (mPixels[0]); }
+
+  virtual uint8_t** getPixelData() { return mPixels; }
+
+private:
+  uint8_t* mPixels[2] = { nullptr };
   };
 //}}}
 
@@ -194,7 +196,7 @@ public:
 
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
-                  function<void (cFrame* frame)> addFrameCallback) final {
+                          function<void (cFrame* frame)> addFrameCallback) final {
 
     char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
     if (frameType == 'I') {
@@ -228,26 +230,29 @@ public:
           ret = avcodec_receive_frame (mAvContext, avFrame);
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
+          auto decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
-          // create new videoFrame
+          // create new videoFrame, pass ownership of avFrame to videoFrame, saves copy
           cVideoFrame* videoFrame = new cFFmpegVideoFrame (
             mInterpolatedPts, (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
             static_cast<uint16_t>(avFrame->width), static_cast<uint16_t>(avFrame->height), static_cast<uint16_t>(avFrame->width),
-            frameSize, chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count(),
+            frameSize, decodeTime,
             avFrame);
+
+          // videoFrame now owns last avFrame, alloc new avFrame
+          avFrame = av_frame_alloc();
 
           // add videoFrame
           addFrameCallback (videoFrame);
 
           mInterpolatedPts += videoFrame->getPtsDuration();
-          avFrame = av_frame_alloc();
           }
         }
       frame += bytesUsed;
       frameSize -= bytesUsed;
       }
 
-    //av_frame_alloc()
+    av_frame_unref (avFrame);
     av_frame_free (&avFrame);
 
     av_packet_free (&avPacket);
@@ -398,13 +403,12 @@ public:
 
         timePoint = chrono::system_clock::now();
         lock (surface);
-        cVideoFrame* videoFrame = new cVideoFrame (cTexture::eNv12, surface->Data.TimeStamp, 90000/25,
-                                                   mWidth, mHeight, surface->Data.Pitch, pesSize, decodeTime);
-        memcpy (videoFrame->getPixelData()[0], surface->Data.Y, (videoFrame->getHeight() * videoFrame->getStride() * 3) / 2);
+        cVideoFrame* videoFrame = new cMfxVideoFrame (surface->Data.TimeStamp, 90000/25,
+                                                      mWidth, mHeight, surface->Data.Pitch, pesSize, decodeTime,
+                                                      surface->Data.Y);
         unlock (surface);
         videoFrame->setConvertTime (
           chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
-
 
         addFrameCallback (videoFrame);
         pts += videoFrame->getPtsDuration();

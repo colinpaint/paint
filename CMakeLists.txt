@@ -57,6 +57,7 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     add_subdirectory (glad2.1+fbo+vao)
   elseif (OPENGL_VERSION STREQUAL "OPENGL_45")
     add_subdirectory (glad4.5core)
+  endif()
 
   # imgui lib
   project (imgui)
@@ -81,7 +82,6 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
       file (GLOB SOURCE_FILES implot/*.cpp)
       add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
       target_include_directories (${PROJECT_NAME} PUBLIC implot imgui utils)
-    endif()
   endif()
 endif()
 
@@ -93,7 +93,7 @@ if (BUILD_TELLY OR BUILD_MFXTEST)
       file (GLOB SOURCE_FILES libmfx/mfx_dispatch/windows/src/*.cpp)
       add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/windows/include)
-  endif()
+    endif()
 endif()
 
 # mfxTest app

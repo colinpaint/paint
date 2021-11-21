@@ -110,7 +110,6 @@ private:
 
     (void)decoderOptions;
     cPoint windowSize = cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight());
-    graphics.background (windowSize);
 
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
@@ -141,6 +140,8 @@ private:
       mQuad->draw();
       return;
       }
+
+    graphics.background (windowSize);
     }
   //}}}
   //{{{
