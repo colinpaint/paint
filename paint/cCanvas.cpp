@@ -182,7 +182,7 @@ void cCanvas::createResources() {
   mQuad = getGraphics().createQuad (mSize);
 
   // create canvasShader
-  mShader = getGraphics().createRgbaShader();
+  mShader = getGraphics().createTextureShader (cTexture::eRgba);
 
   // create target
   mFrameBuffer = getGraphics().createFrameBuffer (nullptr, mSize, cFrameBuffer::eRGBA);

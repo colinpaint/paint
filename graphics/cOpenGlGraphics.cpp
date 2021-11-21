@@ -33,69 +33,27 @@ constexpr bool kDebug = false;
 
 namespace {
   //{{{
-  class cOpenGlTexture : public cTexture {
+  class cOpenGlRgbaTexture : public cTexture {
   public:
     //{{{
-    cOpenGlTexture (eTextureType textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {
+    cOpenGlRgbaTexture (eTextureType textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {
 
-      switch (mTextureType) {
-        case eRgba:
-          cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
-          glGenTextures (1, mTextureId);
+      cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
+      glGenTextures (1, mTextureId);
 
-          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          glGenerateMipmap (GL_TEXTURE_2D);
-          break;
+      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-        case eNv12:
-          cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
-          glGenTextures (2, mTextureId);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, size.x/2, size.y/2, 0, GL_RG, GL_UNSIGNED_BYTE,
-                        pixels + (size.x * size.y));
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          break;
-
-        case eYuv420:
-          cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
-          glGenTextures (3, mTextureId);
-
-          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x/2, size.y/2, 0, GL_RED, GL_UNSIGNED_BYTE,
-                        pixels + (size.x * size.y));
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-          glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, size.x/2, size.y/2, 0, GL_RED, GL_UNSIGNED_BYTE,
-                        pixels + (size.x * size.y) + ((size.x/2) * (size.y/2)));
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          break;
-
-        default:
-          cLog::log (LOGINFO, fmt::format ("creating unknown textureType:{} {}x{}", textureType, size.x, size.y));
-        }
+      glGenerateMipmap (GL_TEXTURE_2D);
       }
     //}}}
     //{{{
-    virtual ~cOpenGlTexture() {
+    virtual ~cOpenGlRgbaTexture() {
       glDeleteTextures (1, mTextureId);
       }
     //}}}
@@ -103,81 +61,139 @@ namespace {
     //{{{
     virtual void setPixels (uint8_t* pixels) final {
 
-      switch (mTextureType) {
-        case eRgba:
-          //cLog::log (LOGINFO, fmt::format ("texture setPixels eRgba {}x{}", mSize.x, mSize.y));
-          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-          break;
-
-        case eNv12:
-          //cLog::log (LOGINFO, fmt::format ("texture setPixels eNv12 {}x{}", mSize.x, mSize.y));
-          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, mSize.x/2, mSize.y/2, 0, GL_RG, GL_UNSIGNED_BYTE,
-                        pixels + (mSize.x * mSize.y));
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          break;
-
-        case eYuv420:
-          //cLog::log (LOGINFO, fmt::format ("texture setPixels eYuv420 {}x{}", mSize.x, mSize.y));
-
-          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE,
-                        pixels + (mSize.x * mSize.y));
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-          glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE,
-                        pixels + (mSize.x * mSize.y) + ((mSize.x/2) * (mSize.y/2)));
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          break;
-
-        default:
-          cLog::log (LOGINFO, fmt::format ("setPixels unknown textureType {} {}x{}", mTextureType, mSize.x, mSize.y));
-        }
+      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
       }
     //}}}
     //{{{
     virtual void setSource() final {
 
-      switch (mTextureType) {
-        case eRgba:
-          glActiveTexture (GL_TEXTURE0);
-          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-          break;
+      glActiveTexture (GL_TEXTURE0);
+      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+      }
+    //}}}
+    };
+  //}}}
+  //{{{
+  class cOpenGlNv12Texture : public cTexture {
+  public:
+    //{{{
+    cOpenGlNv12Texture (eTextureType textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {
 
-        case eNv12:
-          glActiveTexture (GL_TEXTURE0);
-          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-          glActiveTexture (GL_TEXTURE1);
-          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-          break;
+      cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
 
-        case eYuv420:
-          glActiveTexture (GL_TEXTURE0);
-          glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-          glActiveTexture (GL_TEXTURE1);
-          glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-          glActiveTexture (GL_TEXTURE2);
-          glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
-          break;
+      glGenTextures (2, mTextureId);
 
-        default:;
-        }
+      // y texture
+      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+      // uv texture
+      pixels += mSize.x * mSize.y;
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, size.x/2, size.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, pixels);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      }
+    //}}}
+    //{{{
+    virtual ~cOpenGlNv12Texture() {
+      glDeleteTextures (2, mTextureId);
+      }
+    //}}}
+
+    //{{{
+    virtual void setPixels (uint8_t* pixels) final {
+
+      // y texture
+      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+
+      // uv texture
+      pixels += mSize.x * mSize.y;
+      glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, mSize.x/2, mSize.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, pixels);
+      }
+    //}}}
+    //{{{
+    virtual void setSource() final {
+
+      glActiveTexture (GL_TEXTURE0);
+      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+
+      glActiveTexture (GL_TEXTURE1);
+      glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+      }
+    //}}}
+    };
+  //}}}
+  //{{{
+  class cOpenGlYuv420Texture : public cTexture {
+  public:
+    //{{{
+    cOpenGlYuv420Texture (eTextureType textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {
+
+      cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
+
+      glGenTextures (3, mTextureId);
+
+      // y texture
+      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+      // u texture
+      pixels += mSize.x * mSize.y;
+      glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+      // v texture
+      pixels += (mSize.x / 2) * (mSize.y / 2);
+      glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      }
+    //}}}
+    //{{{
+    virtual ~cOpenGlYuv420Texture() {
+      glDeleteTextures (3, mTextureId);
+      }
+    //}}}
+
+    //{{{
+    virtual void setPixels (uint8_t* pixels) final {
+
+      // y texture
+      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+
+      // u texture
+      pixels += mSize.x * mSize.y;
+      glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+
+      // v texture
+      pixels += (mSize.x / 2) * (mSize.y / 2);
+      glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+      }
+    //}}}
+    //{{{
+    virtual void setSource() final {
+
+      glActiveTexture (GL_TEXTURE0);
+      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+
+      glActiveTexture (GL_TEXTURE1);
+      glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+
+      glActiveTexture (GL_TEXTURE2);
+      glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
       }
     //}}}
     };
@@ -836,166 +852,6 @@ namespace {
     }
   //}}}
   //{{{
-  class cOpenGlRgbaShader : public cRgbaShader {
-  public:
-    //{{{
-    cOpenGlRgbaShader() : cRgbaShader() {
-
-      #ifdef OPENGL_21
-        const string kFragShader =
-          "#version 120\n"
-
-          "uniform sampler2D uSampler;"
-
-          "in vec2 textureCoord;"
-          "out vec4 outColor;"
-
-          "void main() {"
-          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-          //"  outColor /= outColor.w;"
-          "  }";
-      #else
-        const string kFragShader =
-          "#version 330 core\n"
-          "uniform sampler2D uSampler;"
-
-          "in vec2 textureCoord;"
-          "out vec4 outColor;"
-
-          "void main() {"
-          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-          //"  outColor /= outColor.w;"
-          "  }";
-      #endif
-
-      mId = compileShader (kQuadVertShader, kFragShader);
-      }
-    //}}}
-    //{{{
-    virtual ~cOpenGlRgbaShader() {
-      glDeleteProgram (mId);
-      }
-    //}}}
-
-    //{{{
-    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
-      }
-    //}}}
-    //{{{
-    virtual void use() final {
-
-      glUseProgram (mId);
-      }
-    //}}}
-    };
-  //}}}
-  //{{{
-  class cOpenGlNv12Shader : public cNv12Shader {
-  public:
-    cOpenGlNv12Shader() : cNv12Shader() {
-      const string kFragShader =
-        "#version 330 core\n"
-        "uniform sampler2D ySampler;"
-        "uniform sampler2D uvSampler;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        "void main() {"
-          "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
-          "float u = texture (uvSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
-          "float v = texture (uvSampler, vec2 (textureCoord.x, -textureCoord.y)).g - 0.5;"
-          "y = (y - 0.0625) * 1.1643;"
-          "outColor.r = y + (1.5958 * v);"
-          "outColor.g = y - (0.39173 * u) - (0.81290 * v);"
-          "outColor.b = y + (2.017 * u);"
-          "outColor.a = 1.0;"
-          "}";
-
-      mId = compileShader (kQuadVertShader, kFragShader);
-      }
-
-    //{{{
-    virtual ~cOpenGlNv12Shader() {
-      glDeleteProgram (mId);
-      }
-    //}}}
-
-    //{{{
-    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
-      }
-    //}}}
-    //{{{
-    virtual void use() final {
-
-      //cLog::log (LOGINFO, "video use");
-      glUseProgram (mId);
-
-      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
-      glUniform1i (glGetUniformLocation (mId, "uvSampler"), 1);
-      }
-    //}}}
-    };
-  //}}}
-  //{{{
-  class cOpenGlYuv420Shader : public cYuv420Shader {
-  public:
-    cOpenGlYuv420Shader() : cYuv420Shader() {
-      const string kFragShader =
-        "#version 330 core\n"
-        "uniform sampler2D ySampler;"
-        "uniform sampler2D uSampler;"
-        "uniform sampler2D vSampler;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        "void main() {"
-          "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
-          "float u = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
-          "float v = texture (vSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
-          "y = (y - 0.0625) * 1.1643;"
-          "outColor.r = y + (1.5958 * v);"
-          "outColor.g = y - (0.39173 * u) - (0.81290 * v);"
-          "outColor.b = y + (2.017 * u);"
-          "outColor.a = 1.0;"
-          "}";
-
-      mId = compileShader (kQuadVertShader, kFragShader);
-      }
-
-    //{{{
-    virtual ~cOpenGlYuv420Shader() {
-      glDeleteProgram (mId);
-      }
-    //}}}
-
-    //{{{
-    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
-      }
-    //}}}
-    //{{{
-    virtual void use() final {
-
-      //cLog::log (LOGINFO, "video use");
-      glUseProgram (mId);
-
-      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
-      glUniform1i (glGetUniformLocation (mId, "uSampler"), 1);
-      glUniform1i (glGetUniformLocation (mId, "vSampler"), 2);
-      }
-    //}}}
-    };
-  //}}}
-  //{{{
   class cOpenGlLayerShader : public cLayerShader {
   public:
     //{{{
@@ -1297,6 +1153,166 @@ namespace {
     virtual void use() final {
 
       glUseProgram (mId);
+      }
+    //}}}
+    };
+  //}}}
+  //{{{
+  class cOpenGlRgbaShader : public cTextureShader {
+  public:
+    //{{{
+    cOpenGlRgbaShader() : cTextureShader() {
+
+      #ifdef OPENGL_21
+        const string kFragShader =
+          "#version 120\n"
+
+          "uniform sampler2D uSampler;"
+
+          "in vec2 textureCoord;"
+          "out vec4 outColor;"
+
+          "void main() {"
+          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+          //"  outColor /= outColor.w;"
+          "  }";
+      #else
+        const string kFragShader =
+          "#version 330 core\n"
+          "uniform sampler2D uSampler;"
+
+          "in vec2 textureCoord;"
+          "out vec4 outColor;"
+
+          "void main() {"
+          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+          //"  outColor /= outColor.w;"
+          "  }";
+      #endif
+
+      mId = compileShader (kQuadVertShader, kFragShader);
+      }
+    //}}}
+    //{{{
+    virtual ~cOpenGlRgbaShader() {
+      glDeleteProgram (mId);
+      }
+    //}}}
+
+    //{{{
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
+      }
+    //}}}
+    //{{{
+    virtual void use() final {
+
+      glUseProgram (mId);
+      }
+    //}}}
+    };
+  //}}}
+  //{{{
+  class cOpenGlNv12Shader : public cTextureShader {
+  public:
+    cOpenGlNv12Shader() : cTextureShader() {
+      const string kFragShader =
+        "#version 330 core\n"
+        "uniform sampler2D ySampler;"
+        "uniform sampler2D uvSampler;"
+
+        "in vec2 textureCoord;"
+        "out vec4 outColor;"
+
+        "void main() {"
+          "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
+          "float u = texture (uvSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
+          "float v = texture (uvSampler, vec2 (textureCoord.x, -textureCoord.y)).g - 0.5;"
+          "y = (y - 0.0625) * 1.1643;"
+          "outColor.r = y + (1.5958 * v);"
+          "outColor.g = y - (0.39173 * u) - (0.81290 * v);"
+          "outColor.b = y + (2.017 * u);"
+          "outColor.a = 1.0;"
+          "}";
+
+      mId = compileShader (kQuadVertShader, kFragShader);
+      }
+
+    //{{{
+    virtual ~cOpenGlNv12Shader() {
+      glDeleteProgram (mId);
+      }
+    //}}}
+
+    //{{{
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
+      }
+    //}}}
+    //{{{
+    virtual void use() final {
+
+      //cLog::log (LOGINFO, "video use");
+      glUseProgram (mId);
+
+      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
+      glUniform1i (glGetUniformLocation (mId, "uvSampler"), 1);
+      }
+    //}}}
+    };
+  //}}}
+  //{{{
+  class cOpenGlYuv420Shader : public cTextureShader {
+  public:
+    cOpenGlYuv420Shader() : cTextureShader() {
+      const string kFragShader =
+        "#version 330 core\n"
+        "uniform sampler2D ySampler;"
+        "uniform sampler2D uSampler;"
+        "uniform sampler2D vSampler;"
+
+        "in vec2 textureCoord;"
+        "out vec4 outColor;"
+
+        "void main() {"
+          "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
+          "float u = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
+          "float v = texture (vSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
+          "y = (y - 0.0625) * 1.1643;"
+          "outColor.r = y + (1.5958 * v);"
+          "outColor.g = y - (0.39173 * u) - (0.81290 * v);"
+          "outColor.b = y + (2.017 * u);"
+          "outColor.a = 1.0;"
+          "}";
+
+      mId = compileShader (kQuadVertShader, kFragShader);
+      }
+
+    //{{{
+    virtual ~cOpenGlYuv420Shader() {
+      glDeleteProgram (mId);
+      }
+    //}}}
+
+    //{{{
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
+      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
+      }
+    //}}}
+    //{{{
+    virtual void use() final {
+
+      //cLog::log (LOGINFO, "video use");
+      glUseProgram (mId);
+
+      glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
+      glUniform1i (glGetUniformLocation (mId, "uSampler"), 1);
+      glUniform1i (glGetUniformLocation (mId, "vSampler"), 2);
       }
     //}}}
     };
@@ -1694,11 +1710,9 @@ public:
   virtual cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
   virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
 
-  virtual cRgbaShader* createRgbaShader() final;
-  virtual cNv12Shader* createNv12Shader() final;
-  virtual cYuv420Shader* createYuv420Shader() final;
   virtual cLayerShader* createLayerShader() final;
   virtual cPaintShader* createPaintShader() final;
+  virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final;
 
   virtual void background (const cPoint& size) final;
 
@@ -1747,7 +1761,14 @@ void cOpenGlGraphics::shutdown() {
 // - resource creates
 //{{{
 cTexture* cOpenGlGraphics::createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) {
-  return new cOpenGlTexture (textureType, size, pixels);
+// factory create
+
+  switch (textureType) {
+    case cTexture::eRgba:   return new cOpenGlRgbaTexture (textureType, size, pixels);
+    case cTexture::eNv12:   return new cOpenGlNv12Texture (textureType, size, pixels);
+    case cTexture::eYuv420: return new cOpenGlYuv420Texture (textureType, size, pixels);
+    default : return nullptr;
+    }
   }
 //}}}
 
@@ -1779,21 +1800,6 @@ cFrameBuffer* cOpenGlGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, 
 //}}}
 
 //{{{
-cRgbaShader* cOpenGlGraphics::createRgbaShader() {
-  return new cOpenGlRgbaShader();
-  }
-//}}}
-//{{{
-cNv12Shader* cOpenGlGraphics::createNv12Shader() {
-  return new cOpenGlNv12Shader();
-  }
-//}}}
-//{{{
-cYuv420Shader* cOpenGlGraphics::createYuv420Shader() {
-  return new cOpenGlYuv420Shader();
-  }
-//}}}
-//{{{
 cLayerShader* cOpenGlGraphics::createLayerShader() {
   return new cOpenGlLayerShader();
   }
@@ -1801,6 +1807,18 @@ cLayerShader* cOpenGlGraphics::createLayerShader() {
 //{{{
 cPaintShader* cOpenGlGraphics::createPaintShader() {
   return new cOpenGlPaintShader();
+  }
+//}}}
+//{{{
+cTextureShader* cOpenGlGraphics::createTextureShader (cTexture::eTextureType textureType) {
+// factory create
+
+  switch (textureType) {
+    case cTexture::eRgba:   return new cOpenGlRgbaShader();
+    case cTexture::eYuv420: return new cOpenGlYuv420Shader();
+    case cTexture::eNv12:   return new cOpenGlNv12Shader();
+    default: return nullptr;
+    }
   }
 //}}}
 

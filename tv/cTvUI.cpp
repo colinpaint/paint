@@ -134,12 +134,7 @@ private:
         }
         //}}}
       if (!mShader) {
-        switch (texture->getTextureType()) {
-          case cTexture::eRgba: mShader = graphics.createRgbaShader(); break;
-          case cTexture::eNv12: mShader = graphics.createNv12Shader(); break;
-          case cTexture::eYuv420: mShader = graphics.createYuv420Shader(); break;
-          default: cLog::log (LOGERROR, fmt::format ("cTvUI drawBgnd unknown textureType:{}", texture->getTextureType()));
-          }
+        mShader = graphics.createTextureShader (texture->getTextureType());
         mTextureType = texture->getTextureType();
         }
 
@@ -454,8 +449,8 @@ private:
   int mPlotIndex = 0;
 
   cQuad* mQuad = nullptr;
-  cQuadShader* mShader = nullptr;
-  cTexture::eTextureType mTextureType = cTexture::eTextureNone;
+  cTextureShader* mShader = nullptr;
+  cTexture::eTextureType mTextureType = cTexture::eRgba;
   //}}}
   };
 

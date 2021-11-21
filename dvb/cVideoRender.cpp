@@ -2296,7 +2296,7 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
   if (playPts != mTexturePts) {
     // new pts to display
     uint8_t* pixels = nullptr;
-    cTexture::eTextureType textureType = cTexture::eTextureNone;
+    cTexture::eTextureType textureType = cTexture::eRgba;
 
     if (mPtsDuration > 0) {
       auto it = mFrames.find (playPts / mPtsDuration);

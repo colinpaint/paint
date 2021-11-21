@@ -64,7 +64,7 @@ private:
   float mVal = 0.f;
 
   cQuad* mQuad = nullptr;
-  cRgbaShader* mShader = nullptr;
+  cTextureShader* mShader = nullptr;
   cFrameBuffer* mFrameBuffer = nullptr;
   cFrameBuffer* mWindowFrameBuffer = nullptr;
   };
