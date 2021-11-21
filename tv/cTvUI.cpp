@@ -127,16 +127,8 @@ private:
 
       if (!mQuad)
         mQuad = graphics.createQuad (videoSize);
-      if (mTextureType != texture->getTextureType()) {
-        //{{{  texture type changed
-        delete mShader;
-        mShader = nullptr;
-        }
-        //}}}
-      if (!mShader) {
+      if (!mShader)
         mShader = graphics.createTextureShader (texture->getTextureType());
-        mTextureType = texture->getTextureType();
-        }
 
       texture->setSource();
       mShader->use();
@@ -450,7 +442,6 @@ private:
 
   cQuad* mQuad = nullptr;
   cTextureShader* mShader = nullptr;
-  cTexture::eTextureType mTextureType = cTexture::eRgba;
   //}}}
   };
 

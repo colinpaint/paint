@@ -12,30 +12,6 @@ class cPlatform;
 //}}}
 
 //{{{
-class cTexture {
-public:
-  enum eTextureType { eRgba, eNv12, eYuv420 };
-
-  cTexture (eTextureType textureType, cPoint size) : mTextureType(textureType), mSize(size) {}
-  virtual ~cTexture() = default;
-
-  /// gets
-  eTextureType getTextureType() const { return mTextureType; }
-  const cPoint getSize() const { return mSize; }
-
-  unsigned getTextureId() { return mTextureId[0]; }
-
-  virtual void setPixels (uint8_t* pixels) = 0;
-  virtual void setSource() = 0;
-
-protected:
-  const eTextureType mTextureType;
-  cPoint mSize;
-
-  uint32_t mTextureId[3];
-  };
-//}}}
-//{{{
 class cQuad {
 public:
   cQuad (cPoint size) : mSize(size) {}
@@ -140,6 +116,32 @@ public:
   virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) = 0;
   };
 //}}}
+
+//{{{
+class cTexture {
+public:
+  enum eTextureType { eRgba, eNv12, eYuv420 };
+
+  cTexture (eTextureType textureType, cPoint size) : mTextureType(textureType), mSize(size) {}
+  virtual ~cTexture() = default;
+
+  /// gets
+  eTextureType getTextureType() const { return mTextureType; }
+  const cPoint getSize() const { return mSize; }
+
+  unsigned getTextureId() { return mTextureId[0]; }
+
+  virtual void setPixels (uint8_t* pixels) = 0;
+  virtual void setPixels (uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2) = 0;
+  virtual void setSource() = 0;
+
+protected:
+  const eTextureType mTextureType;
+  cPoint mSize;
+
+  uint32_t mTextureId[3];
+  };
+//}}}
 //{{{
 class cTextureShader : public cQuadShader {
 public:
@@ -158,8 +160,6 @@ public:
   virtual void shutdown() = 0;
 
   // create graphics resources
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) = 0;
-
   virtual cQuad* createQuad (cPoint size) = 0;
   virtual cQuad* createQuad (cPoint size, const cRect& rect) = 0;
 
@@ -169,6 +169,10 @@ public:
 
   virtual cLayerShader* createLayerShader() = 0;
   virtual cPaintShader* createPaintShader() = 0;
+
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) = 0;
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size,
+                                   uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2) = 0;
   virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) = 0;
 
   virtual void background (const cPoint& size) = 0;

@@ -30,10 +30,34 @@ namespace {
   //{{{
   class cDx11Texture : public cTexture {
   public:
+    //{{{
     cDx11Texture (eTextureType textureType, cPoint size, uint8_t* pixels)
-      : cTexture(textureType, size) {(void)pixels;}
+        : cTexture(textureType, size) {
+      (void)pixels;
+      }
+    //}}}
+    //{{{
+    cDx11Texture (eTextureType textureType, cPoint size, uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2)
+        : cTexture(textureType, size) {
+      (void)pixels;
+      (void)pixels1;
+      (void)pixels2;
+      }
+    //}}}
 
-    virtual void setPixels (uint8_t* pixels) final { (void)pixels; }
+    //{{{
+    virtual void setPixels (uint8_t* pixels) {
+      (void)pixels;
+      }
+    //}}}
+    //{{{
+    virtual void setPixels (uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2) {
+      (void)pixels;
+      (void)pixels1;
+      (void)pixels2;
+      }
+    //}}}
+
     virtual void setSource() final {}
     };
   //}}}
@@ -908,8 +932,6 @@ public:
   void shutdown() final;
 
   // create resources
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) final;
-
   virtual cQuad* createQuad (cPoint size) final;
   virtual cQuad* createQuad (cPoint size, const cRect& rect) final;
 
@@ -919,6 +941,10 @@ public:
 
   virtual cLayerShader* createLayerShader() final;
   virtual cPaintShader* createPaintShader() final;
+
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) final;
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size,
+                                   uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2) final;
   virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final;
 
   virtual void background (const cPoint& size) final;
@@ -976,12 +1002,6 @@ void cDx11Graphics::shutdown() {
 
 // - resource creates
 //{{{
-cTexture* cDx11Graphics::createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) {
-  return new cDx11Texture (textureType, size, pixels);
-  }
-//}}}
-
-//{{{
 cQuad* cDx11Graphics::createQuad (cPoint size) {
   return new cDx11Quad (size);
   }
@@ -1009,12 +1029,6 @@ cFrameBuffer* cDx11Graphics::createFrameBuffer (uint8_t* pixels, cPoint size, cF
 //}}}
 
 //{{{
-cTextureShader* cDx11Graphics::createTextureShader(cTexture::eTextureType textureType) {
-  (void)textureType;
-  return nullptr;
-  }
-//}}}
-//{{{
 cLayerShader* cDx11Graphics::createLayerShader() {
   return new cDx11LayerShader();
   }
@@ -1022,6 +1036,24 @@ cLayerShader* cDx11Graphics::createLayerShader() {
 //{{{
 cPaintShader* cDx11Graphics::createPaintShader() {
   return new cDx11PaintShader();
+  }
+//}}}
+
+//{{{
+cTexture* cDx11Graphics::createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) {
+  return new cDx11Texture (textureType, size, pixels);
+  }
+//}}}
+//{{{
+cTexture* cDx11Graphics::createTexture (cTexture::eTextureType textureType, cPoint size,
+                                        uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2) {
+  return new cDx11Texture (textureType, size, pixels, pixels1, pixels2);
+  }
+//}}}
+//{{{
+cTextureShader* cDx11Graphics::createTextureShader(cTexture::eTextureType textureType) {
+  (void)textureType;
+  return nullptr;
   }
 //}}}
 

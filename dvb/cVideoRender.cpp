@@ -118,7 +118,9 @@ public:
   int64_t getDecodeTime() const { return mDecodeTime; }
   int64_t getConvertTime() const { return mConvertTime; }
 
-  uint8_t* getPixels() const { return (uint8_t*)mPixels; }
+  virtual uint8_t* getPixels() const { return (uint8_t*)mPixels; }
+  virtual uint8_t* getPixels1() const { return (uint8_t*)mPixels; }
+  virtual uint8_t* getPixels2() const { return (uint8_t*)mPixels; }
 
   void setConvertTime (int64_t convertTime) { mConvertTime = convertTime; }
 
@@ -142,22 +144,40 @@ public:
   cFFmpegVideoFrame (int64_t pts, int64_t ptsDuration,
                      uint16_t width, uint16_t height, uint16_t stride,
                      uint32_t pesSize, int64_t decodeTime,
-                     uint8_t** data, int* linesize)
+                     AVFrame* avFrame)
       : cVideoFrame (cTexture::eYuv420, pts, ptsDuration, width, height, stride, pesSize, decodeTime) {
 
-    auto timePoint = chrono::system_clock::now();
+    mAvFrame = avFrame;
+    //uint8_t* mData = (uint8_t*)mPixels;
+    //memcpy (mData, data[0], mHeight * linesize[0]);
 
-    uint8_t* mData = (uint8_t*)mPixels;
-    memcpy (mData, data[0], mHeight * linesize[0]);
+    //mData += mHeight * linesize[0];
+    //memcpy (mData, data[1], (mHeight/2) * linesize[1]);
 
-    mData += mHeight * linesize[0];
-    memcpy (mData, data[1], (mHeight/2) * linesize[1]);
+    //mData += (mHeight/2) * linesize[1];
+    //memcpy (mData, data[2], (mHeight/2) * linesize[2]);
 
-    mData += (mHeight/2) * linesize[1];
-    memcpy (mData, data[2], (mHeight/2) * linesize[2]);
+    mConvertTime = 0;
+    //chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
-    mConvertTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+  //av_frame_alloc();
+  //      av_frame_unref (avFrame);  // ??? nnn ???
+  //av_frame_free (&avFrame);
     }
+
+  //{{{
+  ~cFFmpegVideoFrame() {
+     av_frame_alloc();
+     av_frame_free (&mAvFrame);
+     }
+  //}}}
+
+  virtual uint8_t* getPixels() const { return (uint8_t*)mAvFrame->data[0]; }
+  virtual uint8_t* getPixels1() const { return (uint8_t*)mAvFrame->data[1]; }
+  virtual uint8_t* getPixels2() const { return (uint8_t*)mAvFrame->data[2]; }
+
+private:
+  AVFrame* mAvFrame = nullptr;
   };
 //}}}
 
@@ -212,8 +232,8 @@ public:
       }
       //}}}
 
-    AVPacket* avPacket = av_packet_alloc();
     AVFrame* avFrame = av_frame_alloc();
+    AVPacket* avPacket = av_packet_alloc();
     uint8_t* frame = pes;
     uint32_t frameSize = pesSize;
     while (frameSize) {
@@ -232,20 +252,22 @@ public:
             mInterpolatedPts, (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
             static_cast<uint16_t>(avFrame->width), static_cast<uint16_t>(avFrame->height), static_cast<uint16_t>(avFrame->width),
             frameSize, chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count(),
-            avFrame->data, avFrame->linesize);
+            avFrame);
 
           // add videoFrame
           addFrameCallback (videoFrame);
 
           mInterpolatedPts += videoFrame->getPtsDuration();
-          av_frame_unref (avFrame);  // ??? nnn ???
+          avFrame = av_frame_alloc();
           }
         }
       frame += bytesUsed;
       frameSize -= bytesUsed;
       }
 
+    //av_frame_alloc()
     av_frame_free (&avFrame);
+
     av_packet_free (&avPacket);
     return mInterpolatedPts;
     }
@@ -2295,33 +2317,39 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
 
   if (playPts != mTexturePts) {
     // new pts to display
-    uint8_t* pixels = nullptr;
     cTexture::eTextureType textureType = cTexture::eRgba;
 
     if (mPtsDuration > 0) {
       auto it = mFrames.find (playPts / mPtsDuration);
       if (it != mFrames.end()) {
         // match found
-        pixels = (*it).second->getPixels();
         textureType = (*it).second->getTextureType();
+        uint8_t* pixels = (*it).second->getPixels();
+        uint8_t* pixels1 = (*it).second->getPixels1();
+        uint8_t* pixels2 = (*it).second->getPixels2();
+        if (mTexture == nullptr) // create
+          mTexture = graphics.createTexture (textureType, {getWidth(), getHeight()}, pixels, pixels1, pixels2);
+        else
+          mTexture->setPixels (pixels, pixels1, pixels2);
+        mTexturePts = playPts;
+        return mTexture;
         }
-      }
 
-    if (!pixels) {
-     // match notFound, try first
-     auto it = mFrames.begin();
+      // match notFound, try first
+      it = mFrames.begin();
       if (it != mFrames.end()) {
-        pixels = (*it).second->getPixels();
         textureType = (*it).second->getTextureType();
-        }
-      }
 
-    if (pixels) {
-      if (mTexture == nullptr) // create
-        mTexture = graphics.createTexture (textureType, {getWidth(), getHeight()}, pixels);
-      else
-        mTexture->setPixels (pixels);
-      mTexturePts = playPts;
+        uint8_t* pixels = (*it).second->getPixels();
+        uint8_t* pixels1 = (*it).second->getPixels1();
+        uint8_t* pixels2 = (*it).second->getPixels2();
+        if (mTexture == nullptr) // create
+          mTexture = graphics.createTexture (textureType, {getWidth(), getHeight()}, pixels, pixels1, pixels2);
+        else
+          mTexture->setPixels (pixels, pixels1, pixels2);
+        mTexturePts = playPts;
+        return mTexture;
+        }
       }
     }
 
