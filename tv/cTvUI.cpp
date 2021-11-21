@@ -114,7 +114,7 @@ private:
 
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
-      if (!service.getStream (cDvbStream::eAud).isEnabled() && !service.getStream (cDvbStream::eVid).isEnabled())
+      if (!service.getStream (cDvbStream::eAud).isEnabled() || !service.getStream (cDvbStream::eVid).isEnabled())
         continue;
 
       cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());

@@ -30,34 +30,11 @@ namespace {
   //{{{
   class cDx11Texture : public cTexture {
   public:
-    //{{{
-    cDx11Texture (eTextureType textureType, cPoint size, uint8_t* pixels)
-        : cTexture(textureType, size) {
-      (void)pixels;
-      }
-    //}}}
-    //{{{
-    cDx11Texture (eTextureType textureType, cPoint size, uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2)
-        : cTexture(textureType, size) {
-      (void)pixels;
-      (void)pixels1;
-      (void)pixels2;
-      }
-    //}}}
+    cDx11Texture (eTextureType textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) { (void)pixels; }
+    cDx11Texture (eTextureType textureType, cPoint size, uint8_t** pixels) : cTexture(textureType, size) { (void)pixels; }
 
-    //{{{
-    virtual void setPixels (uint8_t* pixels) {
-      (void)pixels;
-      }
-    //}}}
-    //{{{
-    virtual void setPixels (uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2) {
-      (void)pixels;
-      (void)pixels1;
-      (void)pixels2;
-      }
-    //}}}
-
+    virtual void setPixels (uint8_t* pixels) final { (void)pixels; }
+    virtual void setPixels (uint8_t** pixels) final { (void)pixels; }
     virtual void setSource() final {}
     };
   //}}}
@@ -943,8 +920,7 @@ public:
   virtual cPaintShader* createPaintShader() final;
 
   virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) final;
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size,
-                                   uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2) final;
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t** pixels) final;
   virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final;
 
   virtual void background (const cPoint& size) final;
@@ -1045,9 +1021,8 @@ cTexture* cDx11Graphics::createTexture (cTexture::eTextureType textureType, cPoi
   }
 //}}}
 //{{{
-cTexture* cDx11Graphics::createTexture (cTexture::eTextureType textureType, cPoint size,
-                                        uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2) {
-  return new cDx11Texture (textureType, size, pixels, pixels1, pixels2);
+cTexture* cDx11Graphics::createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t** pixels) {
+  return new cDx11Texture (textureType, size, pixels);
   }
 //}}}
 //{{{

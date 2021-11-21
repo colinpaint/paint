@@ -132,7 +132,7 @@ public:
   unsigned getTextureId() { return mTextureId[0]; }
 
   virtual void setPixels (uint8_t* pixels) = 0;
-  virtual void setPixels (uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2) = 0;
+  virtual void setPixels (uint8_t** pixels) = 0;
   virtual void setSource() = 0;
 
 protected:
@@ -171,8 +171,7 @@ public:
   virtual cPaintShader* createPaintShader() = 0;
 
   virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) = 0;
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size,
-                                   uint8_t* pixels, uint8_t* pixels1, uint8_t* pixels2) = 0;
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t** pixels) = 0;
   virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) = 0;
 
   virtual void background (const cPoint& size) = 0;

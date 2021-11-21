@@ -91,10 +91,10 @@ public:
 
     #ifdef _WIN32
       if (!mPixels)
-        mPixels = (uint32_t*)_aligned_malloc (mWidth * mHeight * 4, 128);
+        mPixels = (uint8_t*)_aligned_malloc (mWidth * mHeight * 4, 128);
     #else
       if (!mPixels)
-        mPixels = (uint32_t*)aligned_alloc (128, mWidth * mHeight * 4);
+        mPixels = (uint8_t*)aligned_alloc (128, mWidth * mHeight * 4);
     #endif
     }
   //{{{
@@ -118,9 +118,7 @@ public:
   int64_t getDecodeTime() const { return mDecodeTime; }
   int64_t getConvertTime() const { return mConvertTime; }
 
-  virtual uint8_t* getPixels() const { return (uint8_t*)mPixels; }
-  virtual uint8_t* getPixels1() const { return (uint8_t*)mPixels; }
-  virtual uint8_t* getPixels2() const { return (uint8_t*)mPixels; }
+  virtual uint8_t** getPixelData() { return &mPixels; }
 
   void setConvertTime (int64_t convertTime) { mConvertTime = convertTime; }
 
@@ -135,7 +133,7 @@ protected:
   const int64_t mDecodeTime;
 
   int64_t mConvertTime = 0;
-  uint32_t* mPixels = nullptr;
+  uint8_t* mPixels = nullptr;
   };
 //}}}
 //{{{
@@ -148,21 +146,7 @@ public:
       : cVideoFrame (cTexture::eYuv420, pts, ptsDuration, width, height, stride, pesSize, decodeTime) {
 
     mAvFrame = avFrame;
-    //uint8_t* mData = (uint8_t*)mPixels;
-    //memcpy (mData, data[0], mHeight * linesize[0]);
-
-    //mData += mHeight * linesize[0];
-    //memcpy (mData, data[1], (mHeight/2) * linesize[1]);
-
-    //mData += (mHeight/2) * linesize[1];
-    //memcpy (mData, data[2], (mHeight/2) * linesize[2]);
-
     mConvertTime = 0;
-    //chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
-
-  //av_frame_alloc();
-  //      av_frame_unref (avFrame);  // ??? nnn ???
-  //av_frame_free (&avFrame);
     }
 
   //{{{
@@ -172,9 +156,7 @@ public:
      }
   //}}}
 
-  virtual uint8_t* getPixels() const { return (uint8_t*)mAvFrame->data[0]; }
-  virtual uint8_t* getPixels1() const { return (uint8_t*)mAvFrame->data[1]; }
-  virtual uint8_t* getPixels2() const { return (uint8_t*)mAvFrame->data[2]; }
+  virtual uint8_t** getPixelData() { return mAvFrame->data; }
 
 private:
   AVFrame* mAvFrame = nullptr;
@@ -418,7 +400,7 @@ public:
         lock (surface);
         cVideoFrame* videoFrame = new cVideoFrame (cTexture::eNv12, surface->Data.TimeStamp, 90000/25,
                                                    mWidth, mHeight, surface->Data.Pitch, pesSize, decodeTime);
-        memcpy (videoFrame->getPixels(), surface->Data.Y, (videoFrame->getHeight() * videoFrame->getStride() * 3) / 2);
+        memcpy (videoFrame->getPixelData()[0], surface->Data.Y, (videoFrame->getHeight() * videoFrame->getStride() * 3) / 2);
         unlock (surface);
         videoFrame->setConvertTime (
           chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
@@ -2317,20 +2299,14 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
 
   if (playPts != mTexturePts) {
     // new pts to display
-    cTexture::eTextureType textureType = cTexture::eRgba;
-
     if (mPtsDuration > 0) {
       auto it = mFrames.find (playPts / mPtsDuration);
       if (it != mFrames.end()) {
         // match found
-        textureType = (*it).second->getTextureType();
-        uint8_t* pixels = (*it).second->getPixels();
-        uint8_t* pixels1 = (*it).second->getPixels1();
-        uint8_t* pixels2 = (*it).second->getPixels2();
         if (mTexture == nullptr) // create
-          mTexture = graphics.createTexture (textureType, {getWidth(), getHeight()}, pixels, pixels1, pixels2);
+          mTexture = graphics.createTexture ((*it).second->getTextureType(), {getWidth(), getHeight()}, (*it).second->getPixelData());
         else
-          mTexture->setPixels (pixels, pixels1, pixels2);
+          mTexture->setPixels ((*it).second->getPixelData());
         mTexturePts = playPts;
         return mTexture;
         }
@@ -2338,15 +2314,10 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
       // match notFound, try first
       it = mFrames.begin();
       if (it != mFrames.end()) {
-        textureType = (*it).second->getTextureType();
-
-        uint8_t* pixels = (*it).second->getPixels();
-        uint8_t* pixels1 = (*it).second->getPixels1();
-        uint8_t* pixels2 = (*it).second->getPixels2();
         if (mTexture == nullptr) // create
-          mTexture = graphics.createTexture (textureType, {getWidth(), getHeight()}, pixels, pixels1, pixels2);
+          mTexture = graphics.createTexture ((*it).second->getTextureType(), {getWidth(), getHeight()}, (*it).second->getPixelData());
         else
-          mTexture->setPixels (pixels, pixels1, pixels2);
+          mTexture->setPixels ((*it).second->getPixelData());
         mTexturePts = playPts;
         return mTexture;
         }
