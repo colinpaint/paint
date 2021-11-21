@@ -738,8 +738,10 @@ void cDvbStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, u
 
 // public:
 //{{{
-cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName, bool renderFirstService)
-    : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName), mRenderFirstService(renderFirstService) {
+cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName,
+                        bool renderFirstService, uint16_t decoderOptions)
+    : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName),
+      mRenderFirstService(renderFirstService), mDecoderOptions(decoderOptions) {
 
   mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
   }
@@ -864,7 +866,7 @@ void cDvbStream::foundService (cService& service) {
 
   if (mRenderFirstService && !mRenderingFirstService) {
     cLog::log (LOGINFO, fmt::format ("play service {}:{}", service.getSid(), service.getProgramPid()));
-    service.toggleAll (cRender::eMfxSystem);
+    service.toggleAll (mDecoderOptions);
     mRenderingFirstService = true;
     }
   }

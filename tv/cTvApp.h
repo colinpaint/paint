@@ -21,9 +21,12 @@ public:
   ~cTvApp() = default;
 
   cDvbStream* getDvbStream() { return mDvbStream; }
+  uint16_t getDecoderOptions() { return mDecoderOptions; }
 
-  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex, bool renderFirstService);
+  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex, 
+                     bool renderFirstService, uint16_t decoderOptions);
 
 private:
   cDvbStream* mDvbStream = nullptr;
+  uint16_t mDecoderOptions = 0;
   };

@@ -30,7 +30,6 @@
 using namespace std;
 //}}}
 
-const vector<string> kDecoderOptions = { "ffmpeg", "mfxSys", "mfxVid" };
 class cTellyView {
 public:
   //{{{
@@ -39,22 +38,12 @@ public:
     cGraphics& graphics = app.getGraphics();
 
     if (app.getDvbStream())
-      drawBgnd (*app.getDvbStream(), graphics);
+      drawBgnd (*app.getDvbStream(), graphics, app.getDecoderOptions());
 
     // draw tabs
     mMainTabIndex = interlockedButtons ({"telly","services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
 
-    if (app.getPlatform().hasVsync()) {
-      //{{{  vsync button
-      ImGui::SameLine();
-      if (toggleButton ("vSync", app.getPlatform().getVsync()))
-        app.getPlatform().toggleVsync();
-
-      // fps text
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
-      }
-      //}}}
+    // draw fullScreen
     if (app.getPlatform().hasFullScreen()) {
       //{{{  fullScreen button
       ImGui::SameLine();
@@ -63,11 +52,17 @@ public:
       }
       //}}}
 
+    // draw frameRate
     ImGui::SameLine();
-    mDecoderOption = interlockedButtons (kDecoderOptions, (uint8_t)mDecoderOption, {0.f,0.f}, true);
+    ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+    ImGui::SameLine();
+    if (app.getPlatform().hasVsync() && app.getPlatform().getVsync())
+      ImGui::TextUnformatted ("vsync");
+    //app.getPlatform().toggleVsync();
 
+    ImGui::SameLine();
     if (app.getDvbStream()) {
-      // dvbStream info
+      // draw dvbStream info
       cDvbStream& dvbStream = *app.getDvbStream();
       if (dvbStream.hasTdtTime()) {
         //{{{  draw tdtTime
@@ -98,10 +93,10 @@ public:
       ImGui::BeginChild ("tab", {0.f,0.f}, false,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
       switch (mMainTabIndex) {
-        case 0: drawTelly (dvbStream, graphics); break;
-        case 1: drawServices (dvbStream, graphics); break;
-        case 2: drawPidMap (dvbStream, graphics); break;
-        case 3: drawRecorded (dvbStream, graphics); break;
+        case 0: drawTelly (dvbStream, graphics, app.getDecoderOptions()); break;
+        case 1: drawServices (dvbStream, graphics, app.getDecoderOptions()); break;
+        case 2: drawPidMap (dvbStream, graphics, app.getDecoderOptions()); break;
+        case 3: drawRecorded (dvbStream, graphics, app.getDecoderOptions()); break;
         }
 
       ImGui::EndChild();
@@ -111,8 +106,9 @@ public:
   //}}}
 private:
   //{{{
-  void drawBgnd (cDvbStream& dvbStream, cGraphics& graphics) {
+  void drawBgnd (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
+    (void)decoderOptions;
     cPoint windowSize = cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight());
     graphics.background (windowSize);
 
@@ -161,7 +157,7 @@ private:
     }
   //}}}
   //{{{
-  void drawTelly (cDvbStream& dvbStream, cGraphics& graphics) {
+  void drawTelly (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
     (void)graphics;
     bool channelFound = false;
@@ -191,14 +187,13 @@ private:
     // overlay channel buttons
     for (auto& pair : dvbStream.getServiceMap())
       if (ImGui::Button (fmt::format ("{:{}s}", pair.second.getChannelName(), mMaxNameChars).c_str()))
-        pair.second.toggleAll (mDecoderOption);
+        pair.second.toggleAll (decoderOptions);
     }
   //}}}
   //{{{
-  void drawServices (cDvbStream& dvbStream, cGraphics& graphics) {
+  void drawServices (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
     mPlotIndex = 0;
-
     for (auto& pair : dvbStream.getServiceMap()) {
       // iterate services
       cDvbStream::cService& service = pair.second;
@@ -222,7 +217,7 @@ private:
                          service.getChannelName(), mMaxNameChars,
                          service.getProgramPid(), mMaxPgmChars,
                          service.getSid(), mMaxSidChars).c_str()))
-        service.toggleAll (mDecoderOption);
+        service.toggleAll (decoderOptions);
 
       for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
        // iterate definedStreams
@@ -234,7 +229,7 @@ private:
                                          stream.getLabel(),
                                          stream.getPid(), mPidMaxChars[streamType], stream.getTypeName(),
                                          service.getSid()).c_str(), stream.isEnabled()))
-           dvbStream.toggleStream (service, streamType, mDecoderOption);
+           dvbStream.toggleStream (service, streamType, decoderOptions);
           }
         }
 
@@ -268,10 +263,11 @@ private:
     }
   //}}}
   //{{{
-  void drawPidMap (cDvbStream& dvbStream, cGraphics& graphics) {
+  void drawPidMap (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
   // draw pidInfoMap
 
     (void)graphics;
+    (void)decoderOptions;
 
     // calc error number width
     int errorChars = 1;
@@ -318,10 +314,12 @@ private:
     }
   //}}}
   //{{{
-  void drawRecorded (cDvbStream& dvbStream, cGraphics& graphics) {
+  void drawRecorded (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
   // list recorded items
 
     (void)graphics;
+    (void)decoderOptions;
+
     for (auto& program : dvbStream.getRecordPrograms())
       ImGui::TextUnformatted (program.c_str());
     }
@@ -454,7 +452,6 @@ private:
   std::array <size_t, 4> mPidMaxChars = { 3 };
 
   int mPlotIndex = 0;
-  uint16_t mDecoderOption = 1;
 
   cQuad* mQuad = nullptr;
   cQuadShader* mShader = nullptr;

@@ -89,6 +89,7 @@ int main (int numArgs, char* args[]) {
   eLogLevel logLevel = LOGINFO;
   string platformName = "glfw";
   string graphicsName = "opengl";
+  uint16_t decoderOptions = 0;
   bool renderFirstService = false;
   bool fullScreen = false;
   bool vsync = true;
@@ -107,6 +108,8 @@ int main (int numArgs, char* args[]) {
     else if (param == "full") { fullScreen = true; }
     else if (param == "free") { vsync = false; }
     else if (param == "first") { renderFirstService = true; }
+    else if (param == "mfx") { decoderOptions = 1; }
+    else if (param == "mfxvid") { decoderOptions = 2; }
     else {
       // assume param is filename unless it matches multiplex name
       filename = param;
@@ -137,7 +140,8 @@ int main (int numArgs, char* args[]) {
   ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
   ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f);
   cTvApp app (platform, graphics, mainFont, monoFont);
-  app.setDvbSource (cFileUtils::resolve (filename), useMultiplex, !filename.empty() || renderFirstService);
+  app.setDvbSource (cFileUtils::resolve (filename), useMultiplex, 
+                    !filename.empty() || renderFirstService, decoderOptions);
 
   platform.setResizeCallback (
     //{{{  resize lambda
@@ -156,7 +160,7 @@ int main (int numArgs, char* args[]) {
     [&](vector<string> dropItems) noexcept {
       for (auto& item : dropItems) {
         string filename = cFileUtils::resolve (item);
-        app.setDvbSource (filename, useMultiplex, true);
+        app.setDvbSource (filename, useMultiplex, true, decoderOptions);
         cLog::log (LOGINFO, filename);
         }
       }

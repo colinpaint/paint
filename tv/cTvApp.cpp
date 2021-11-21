@@ -16,7 +16,8 @@
 using namespace std;
 //}}}
 
-bool cTvApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMultiplex, bool renderFirstService) {
+bool cTvApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMultiplex, 
+                           bool renderFirstService, uint16_t decoderOptions) {
 // create dvb source
 
   #ifdef _WIN32
@@ -25,7 +26,8 @@ bool cTvApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMulti
     const string kRecordRoot = "/home/pi/tv/";
   #endif
 
-  mDvbStream = new cDvbStream (dvbMultiplex, kRecordRoot, renderFirstService);
+  mDecoderOptions = decoderOptions;
+  mDvbStream = new cDvbStream (dvbMultiplex, kRecordRoot, renderFirstService, decoderOptions);
   if (!mDvbStream)
     return false;
 

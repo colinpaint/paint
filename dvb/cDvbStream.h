@@ -272,7 +272,8 @@ public:
     };
   //}}}
 
-  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool renderFirstService);
+  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, 
+              bool renderFirstService, uint16_t decoderOptions);
   virtual ~cDvbStream() { clear(); }
 
   //{{{  gets
@@ -342,6 +343,7 @@ private:
   const bool mRenderFirstService;
 
   bool mRenderingFirstService = false;
+  uint16_t mDecoderOptions = 0;
 
   std::mutex mMutex;
   uint64_t mNumPackets = 0;
