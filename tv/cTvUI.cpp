@@ -37,10 +37,14 @@ public:
 
     cGraphics& graphics = app.getGraphics();
 
+    if (toggleButton ("bgnd", mForceBgnd))
+      mForceBgnd = !mForceBgnd;
+
     if (app.getDvbStream())
       drawBgnd (*app.getDvbStream(), graphics, app.getDecoderOptions());
 
     // draw tabs
+    ImGui::SameLine();
     mMainTabIndex = interlockedButtons ({"telly","services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
 
     // draw fullScreen
@@ -111,6 +115,9 @@ private:
     (void)decoderOptions;
     cPoint windowSize = cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight());
 
+    if (mForceBgnd)
+      graphics.background (windowSize);
+
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
       if (!service.getStream (cDvbStream::eAud).isEnabled() || !service.getStream (cDvbStream::eVid).isEnabled())
@@ -141,7 +148,8 @@ private:
       return;
       }
 
-    graphics.background (windowSize);
+    if (!mForceBgnd)
+      graphics.background (windowSize);
     }
   //}}}
   //{{{
@@ -440,6 +448,8 @@ private:
   std::array <size_t, 4> mPidMaxChars = { 3 };
 
   int mPlotIndex = 0;
+
+  bool mForceBgnd = true;
 
   cQuad* mQuad = nullptr;
   cTextureShader* mShader = nullptr;
