@@ -30,10 +30,8 @@ namespace {
   //{{{
   class cDx11Texture : public cTexture {
   public:
-    cDx11Texture (eTextureType textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) { (void)pixels; }
-    cDx11Texture (eTextureType textureType, cPoint size, uint8_t** pixels) : cTexture(textureType, size) { (void)pixels; }
+    cDx11Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {}
 
-    virtual void setPixels (uint8_t* pixels) final { (void)pixels; }
     virtual void setPixels (uint8_t** pixels) final { (void)pixels; }
     virtual void setSource() final {}
     };
@@ -42,7 +40,7 @@ namespace {
   class cDx11Quad : public cQuad {
   public:
     //{{{
-    cDx11Quad (cPoint size) : cQuad(mSize) {
+    cDx11Quad (const cPoint& size) : cQuad(mSize) {
 
       // vertices
       //glGenBuffers (1, &mVertexBufferObject);
@@ -62,7 +60,7 @@ namespace {
       }
     //}}}
     //{{{
-    cDx11Quad (cPoint size, const cRect& rect) : cQuad(size) {
+    cDx11Quad (const cPoint& size, const cRect& rect) : cQuad(size) {
 
       // vertexArray
 
@@ -104,13 +102,13 @@ namespace {
       mInternalFormat = 0;
       }
 
-    cDx11FrameBuffer (cPoint size, eFormat format) : cFrameBuffer(size) {
+    cDx11FrameBuffer (const cPoint& size, eFormat format) : cFrameBuffer(size) {
       (void)format;
       mImageFormat = 0;
       mInternalFormat = 0;
       }
 
-    cDx11FrameBuffer (uint8_t* pixels, cPoint size, eFormat format) : cFrameBuffer(size) {
+    cDx11FrameBuffer (uint8_t* pixels, const cPoint& size, eFormat format) : cFrameBuffer(size) {
       (void)format;
       (void)pixels;
       mImageFormat = 0;
@@ -144,7 +142,7 @@ namespace {
       }
     //}}}
     //{{{
-    void setSize (cPoint size) {
+    void setSize (const cPoint& size) {
 
       if (mFrameBufferObject == 0)
         mSize = size;
@@ -193,7 +191,7 @@ namespace {
 
     void clear (const cColor& color) { (void)color; }
     //{{{
-    void blit (cFrameBuffer& src, cPoint srcPoint, const cRect& dstRect) {
+    void blit (cFrameBuffer& src, const cPoint& srcPoint, const cRect& dstRect) {
 
       (void)src;
       mDirtyPixelsRect += dstRect;
@@ -909,25 +907,24 @@ public:
   void shutdown() final;
 
   // create resources
-  virtual cQuad* createQuad (cPoint size) final;
-  virtual cQuad* createQuad (cPoint size, const cRect& rect) final;
+  virtual cQuad* createQuad (const cPoint& size) final;
+  virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final;
 
   virtual cFrameBuffer* createFrameBuffer() final;
-  virtual cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
-  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
+  virtual cFrameBuffer* createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) final;
+  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) final;
 
   virtual cLayerShader* createLayerShader() final;
   virtual cPaintShader* createPaintShader() final;
 
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) final;
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t** pixels) final;
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final;
   virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final;
 
   virtual void background (const cPoint& size) final;
 
   // actions
   virtual void newFrame() final;
-  virtual void drawUI (cPoint windowSize) final;
+  virtual void drawUI (const cPoint& windowSize) final;
   virtual void windowResize (int width, int height) final;
 
 protected:
@@ -978,12 +975,12 @@ void cDx11Graphics::shutdown() {
 
 // - resource creates
 //{{{
-cQuad* cDx11Graphics::createQuad (cPoint size) {
+cQuad* cDx11Graphics::createQuad (const cPoint& size) {
   return new cDx11Quad (size);
   }
 //}}}
 //{{{
-cQuad* cDx11Graphics::createQuad (cPoint size, const cRect& rect) {
+cQuad* cDx11Graphics::createQuad (const cPoint& size, const cRect& rect) {
   return new cDx11Quad (size, rect);
   }
 //}}}
@@ -994,12 +991,12 @@ cFrameBuffer* cDx11Graphics::createFrameBuffer() {
   }
 //}}}
 //{{{
-cFrameBuffer* cDx11Graphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
+cFrameBuffer* cDx11Graphics::createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) {
   return new cDx11FrameBuffer (size, format);
   }
 //}}}
 //{{{
-cFrameBuffer* cDx11Graphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
+cFrameBuffer* cDx11Graphics::createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) {
   return new cDx11FrameBuffer (pixels, size, format);
   }
 //}}}
@@ -1016,13 +1013,8 @@ cPaintShader* cDx11Graphics::createPaintShader() {
 //}}}
 
 //{{{
-cTexture* cDx11Graphics::createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) {
-  return new cDx11Texture (textureType, size, pixels);
-  }
-//}}}
-//{{{
-cTexture* cDx11Graphics::createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t** pixels) {
-  return new cDx11Texture (textureType, size, pixels);
+cTexture* cDx11Graphics::createTexture (cTexture::eTextureType textureType, const cPoint& size) {
+  return new cDx11Texture (textureType, size);
   }
 //}}}
 //{{{
@@ -1063,7 +1055,7 @@ void cDx11Graphics::newFrame() {
   }
 //}}}
 //{{{
-void cDx11Graphics::drawUI (cPoint windowSize) {
+void cDx11Graphics::drawUI (const cPoint& windowSize) {
 
   (void)windowSize;
   ImGui::Render();

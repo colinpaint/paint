@@ -410,10 +410,9 @@ private:
       ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", image.mX, image.mY).c_str());
 
       // create/update image texture
-      if (image.mTexture == nullptr) // create
-        image.mTexture = graphics.createTexture (cTexture::eRgba, {image.mWidth, image.mHeight}, image.mPixels);
-      else if (image.mDirty) // update
-        image.mTexture->setPixels (image.mPixels);
+      if (!image.mTexture) // create
+        image.mTexture = graphics.createTexture (cTexture::eRgba, {image.mWidth, image.mHeight});
+      image.mTexture->setPixels (&image.mPixels);
       image.mDirty = false;
 
       // draw image, scaled to fit line

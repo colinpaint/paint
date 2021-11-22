@@ -36,7 +36,7 @@ namespace {
   class cOpenGlQuad : public cQuad {
   public:
     //{{{
-    cOpenGlQuad (cPoint size) : cQuad(size) {
+    cOpenGlQuad (const cPoint& size) : cQuad(size) {
 
       // vertexArray
       glGenVertexArrays (1, &mVertexArrayObject);
@@ -70,7 +70,7 @@ namespace {
       }
     //}}}
     //{{{
-    cOpenGlQuad (cPoint size, const cRect& rect) : cQuad(size) {
+    cOpenGlQuad (const cPoint& size, const cRect& rect) : cQuad(size) {
 
       // vertexArray
       glGenVertexArrays (1, &mVertexArrayObject);
@@ -154,7 +154,7 @@ namespace {
       }
     //}}}
     //{{{
-    cOpenGlFrameBuffer (cPoint size, eFormat format) : cFrameBuffer(size) {
+    cOpenGlFrameBuffer (const cPoint& size, eFormat format) : cFrameBuffer(size) {
 
       mImageFormat = format == eRGBA ? GL_RGBA : GL_RGB;
       mInternalFormat = format == eRGBA ? GL_RGBA : GL_RGB;
@@ -178,7 +178,7 @@ namespace {
       }
     //}}}
     //{{{
-    cOpenGlFrameBuffer (uint8_t* pixels, cPoint size, eFormat format) : cFrameBuffer(size) {
+    cOpenGlFrameBuffer (uint8_t* pixels, const cPoint& size, eFormat format) : cFrameBuffer(size) {
 
       mImageFormat = format == eRGBA ? GL_RGBA : GL_RGB;
       mInternalFormat = format == eRGBA ? GL_RGBA : GL_RGB;
@@ -241,7 +241,7 @@ namespace {
 
     // sets
     //{{{
-    void setSize (cPoint size) final {
+    void setSize (const cPoint& size) final {
       if (mFrameBufferObject == 0)
         mSize = size;
       else
@@ -325,7 +325,7 @@ namespace {
       }
     //}}}
     //{{{
-    void blit (cFrameBuffer& src, cPoint srcPoint, const cRect& dstRect) final {
+    void blit (cFrameBuffer& src, const cPoint& srcPoint, const cRect& dstRect) final {
 
       glBindFramebuffer (GL_READ_FRAMEBUFFER, src.getId());
       glBindFramebuffer (GL_DRAW_FRAMEBUFFER, mFrameBufferObject);
@@ -996,13 +996,14 @@ namespace {
   class cOpenGlRgbaTexture : public cTexture {
   public:
     //{{{
-    cOpenGlRgbaTexture (eTextureType textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {
+    cOpenGlRgbaTexture (eTextureType textureType, const cPoint& size)
+        : cTexture(textureType, size) {
 
       cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
       glGenTextures (1, mTextureId);
 
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -1019,14 +1020,11 @@ namespace {
     //}}}
 
     //{{{
-    virtual void setPixels (uint8_t* pixels) final {
-
+    virtual void setPixels (uint8_t** pixels) final {
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels[0]);
       }
     //}}}
-    virtual void setPixels (uint8_t** pixels) final { setPixels (pixels[0]); }
-
     //{{{
     virtual void setSource() final {
 
@@ -1099,31 +1097,7 @@ namespace {
   class cOpenGlNv12Texture : public cTexture {
   public:
     //{{{
-    cOpenGlNv12Texture (eTextureType textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {
-
-      cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
-
-      glGenTextures (2, mTextureId);
-
-      // y texture
-      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-      // uv texture
-      pixels += mSize.x * mSize.y;
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, size.x/2, size.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, pixels);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      }
-    //}}}
-    //{{{
-    cOpenGlNv12Texture (eTextureType textureType, cPoint size, uint8_t** pixels)
+    cOpenGlNv12Texture (eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size) {
 
       cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
@@ -1132,14 +1106,15 @@ namespace {
 
       // y texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[0]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
       // uv texture
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, size.x/2, size.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, pixels[1]);
+      glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, size.x/2, size.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, nullptr);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1153,17 +1128,6 @@ namespace {
     //}}}
 
     //{{{
-    virtual void setPixels (uint8_t* pixels) final {
-      // y texture
-      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-
-      // uv texture
-      glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, mSize.x/2, mSize.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, pixels + mSize.x * mSize.y);
-      }
-    //}}}
-    //{{{
     virtual void setPixels (uint8_t** pixels) final {
 
       // y texture
@@ -1175,7 +1139,6 @@ namespace {
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, mSize.x/2, mSize.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, pixels[1]);
       }
     //}}}
-
     //{{{
     virtual void setSource() final {
 
@@ -1244,7 +1207,8 @@ namespace {
   class cOpenGlYuv420Texture : public cTexture {
   public:
     //{{{
-    cOpenGlYuv420Texture (eTextureType textureType, cPoint size, uint8_t* pixels) : cTexture(textureType, size) {
+    cOpenGlYuv420Texture (eTextureType textureType, const cPoint& size)
+        : cTexture(textureType, size) {
 
       cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
 
@@ -1252,41 +1216,7 @@ namespace {
 
       // y texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-      // u texture
-      pixels += mSize.x * mSize.y;
-      glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-      // v texture
-      pixels += (mSize.x/2) * (mSize.y/2);
-      glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      }
-    //}}}
-    //{{{
-    cOpenGlYuv420Texture (eTextureType textureType, cPoint size, uint8_t** pixels) : cTexture(textureType, size) {
-
-      cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
-
-      glGenTextures (3, mTextureId);
-
-      // y texture
-      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[0]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1294,7 +1224,7 @@ namespace {
 
       // u texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[1]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1302,7 +1232,7 @@ namespace {
 
       // v texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[2]);
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1315,23 +1245,6 @@ namespace {
       }
     //}}}
 
-    //{{{
-    virtual void setPixels (uint8_t* pixels) final {
-
-      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-
-      // u texture
-      pixels +=  mSize.x * mSize.y;
-      glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-
-      // v texture
-      pixels += (mSize.x/2) * (mSize.y/2);
-      glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-      }
-    //}}}
     //{{{
     virtual void setPixels (uint8_t** pixels) final {
 
@@ -1348,7 +1261,6 @@ namespace {
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[2]);
       }
     //}}}
-
     //{{{
     virtual void setSource() final {
 
@@ -1390,7 +1302,6 @@ namespace {
 
       mId = compileShader (kQuadVertShader, kFragShader);
       }
-
     //{{{
     virtual ~cOpenGlYuv420Shader() {
       glDeleteProgram (mId);
@@ -1801,25 +1712,24 @@ public:
   void shutdown() final;
 
   // create resources
-  virtual cQuad* createQuad (cPoint size) final;
-  virtual cQuad* createQuad (cPoint size, const cRect& rect) final;
+  virtual cQuad* createQuad (const cPoint& size) final;
+  virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final;
 
   virtual cFrameBuffer* createFrameBuffer() final;
-  virtual cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) final;
-  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) final;
+  virtual cFrameBuffer* createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) final;
+  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) final;
 
   virtual cLayerShader* createLayerShader() final;
   virtual cPaintShader* createPaintShader() final;
 
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) final;
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t** pixels) final;
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final;
   virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final;
 
   virtual void background (const cPoint& size) final;
 
   // actions
   virtual void newFrame() final;
-  virtual void drawUI (cPoint windowSize) final;
+  virtual void drawUI (const cPoint& windowSize) final;
   virtual void windowResize (int width, int height) final;
 
 protected:
@@ -1861,12 +1771,12 @@ void cOpenGlGraphics::shutdown() {
 
 // - resource creates
 //{{{
-cQuad* cOpenGlGraphics::createQuad (cPoint size) {
+cQuad* cOpenGlGraphics::createQuad (const cPoint& size) {
   return new cOpenGlQuad (size);
   }
 //}}}
 //{{{
-cQuad* cOpenGlGraphics::createQuad (cPoint size, const cRect& rect) {
+cQuad* cOpenGlGraphics::createQuad (const cPoint& size, const cRect& rect) {
   return new cOpenGlQuad (size, rect);
   }
 //}}}
@@ -1877,12 +1787,12 @@ cFrameBuffer* cOpenGlGraphics::createFrameBuffer() {
   }
 //}}}
 //{{{
-cFrameBuffer* cOpenGlGraphics::createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) {
+cFrameBuffer* cOpenGlGraphics::createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) {
   return new cOpenGlFrameBuffer (size, format);
   }
 //}}}
 //{{{
-cFrameBuffer* cOpenGlGraphics::createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) {
+cFrameBuffer* cOpenGlGraphics::createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) {
   return new cOpenGlFrameBuffer (pixels, size, format);
   }
 //}}}
@@ -1899,25 +1809,13 @@ cPaintShader* cOpenGlGraphics::createPaintShader() {
 //}}}
 
 //{{{
-cTexture* cOpenGlGraphics::createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) {
+cTexture* cOpenGlGraphics::createTexture (cTexture::eTextureType textureType, const cPoint& size) {
 // factory create
 
   switch (textureType) {
-    case cTexture::eRgba:   return new cOpenGlRgbaTexture (textureType, size, pixels);
-    case cTexture::eNv12:   return new cOpenGlNv12Texture (textureType, size, pixels);
-    case cTexture::eYuv420: return new cOpenGlYuv420Texture (textureType, size, pixels);
-    default : return nullptr;
-    }
-  }
-//}}}
-//{{{
-cTexture* cOpenGlGraphics::createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t** pixels) {
-// factory create
-
-  switch (textureType) {
-    case cTexture::eRgba:   return new cOpenGlRgbaTexture (textureType, size, pixels[0]);
-    case cTexture::eNv12:   return new cOpenGlNv12Texture (textureType, size, pixels);
-    case cTexture::eYuv420: return new cOpenGlYuv420Texture (textureType, size, pixels);
+    case cTexture::eRgba:   return new cOpenGlRgbaTexture (textureType, size);
+    case cTexture::eNv12:   return new cOpenGlNv12Texture (textureType, size);
+    case cTexture::eYuv420: return new cOpenGlYuv420Texture (textureType, size);
     default : return nullptr;
     }
   }
@@ -1985,7 +1883,7 @@ void cOpenGlGraphics::newFrame() {
   }
 //}}}
 //{{{
-void cOpenGlGraphics::drawUI (cPoint windowSize) {
+void cOpenGlGraphics::drawUI (const cPoint& windowSize) {
 
   (void)windowSize;
   ImGui::Render();

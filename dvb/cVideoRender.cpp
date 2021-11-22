@@ -99,11 +99,12 @@ public:
 
   // gets
   cTexture::eTextureType getTextureType() const { return mTextureType; }
+
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
   uint16_t getStride() const { return mStride; }
-  int64_t getDecodeTime() const { return mDecodeTime; }
 
+  int64_t getDecodeTime() const { return mDecodeTime; }
   //{{{
   string getInfo() {
     string info = fmt::format ("{}x{} ", mWidth, mHeight);
@@ -112,6 +113,7 @@ public:
     return info;
     }
   //}}}
+
   virtual uint8_t** getPixelData() = 0;
 
   void addTime (int64_t time) { mTimes.push_back (time); }
@@ -154,14 +156,20 @@ public:
   cMfxVideoFrame (int64_t pts, int64_t ptsDuration,
                   uint16_t width, uint16_t height, uint16_t stride,
                   uint32_t pesSize, int64_t decodeTime,
-                  uint8_t* data)
+                  uint8_t* y, uint8_t* uv)
       : cVideoFrame (cTexture::eNv12, pts, ptsDuration, width, height, stride, pesSize, decodeTime) {
 
-    mPixels[0] = (uint8_t*)malloc (stride * height * 3 / 2);
-    memcpy (mPixels[0], data, stride * height * 3 / 2);
+    mPixels[0] = (uint8_t*)malloc (stride * height);
+    memcpy (mPixels[0], y, stride * height);
+
+    mPixels[1] = (uint8_t*)malloc (stride * height / 2);
+    memcpy (mPixels[1], uv, stride * height / 2);
     }
 
-  ~cMfxVideoFrame() { free (mPixels[0]); }
+  ~cMfxVideoFrame() {
+    free (mPixels[0]);
+    free (mPixels[1]);
+    }
 
   virtual uint8_t** getPixelData() { return mPixels; }
 
@@ -415,7 +423,7 @@ public:
         timePoint = chrono::system_clock::now();
         cVideoFrame* videoFrame = new cMfxVideoFrame (surface->Data.TimeStamp, 90000/25,
                                                       mWidth, mHeight, surface->Data.Pitch, pesSize, decodeTime,
-                                                      surface->Data.Y);
+                                                      surface->Data.Y, surface->Data.U);
         int64_t copyTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
         // unlock
@@ -2313,33 +2321,22 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
   // locked
   shared_lock<shared_mutex> lock (mSharedMutex);
 
-  if (playPts != mTexturePts) {
-    // new pts to display
-    if (mPtsDuration > 0) {
-      auto it = mFrames.find (playPts / mPtsDuration);
-      if (it != mFrames.end()) {
-        // match found
-        if (mTexture == nullptr) // create
-          mTexture = graphics.createTexture ((*it).second->getTextureType(), {getWidth(), getHeight()}, (*it).second->getPixelData());
-        else
-          mTexture->setPixels ((*it).second->getPixelData());
-        mTexturePts = playPts;
-        return mTexture;
-        }
+  if (mFrames.empty() || !mPtsDuration) // no frames
+    return nullptr;
 
-      // match notFound, try first
-      it = mFrames.begin();
-      if (it != mFrames.end()) {
-        if (mTexture == nullptr) // create
-          mTexture = graphics.createTexture ((*it).second->getTextureType(), {getWidth(), getHeight()}, (*it).second->getPixelData());
-        else
-          mTexture->setPixels ((*it).second->getPixelData());
-        mTexturePts = playPts;
-        return mTexture;
-        }
-      }
-    }
+  if (mTexture && (playPts == mTexturePts)) // same texture
+    return mTexture;
 
+  // new pts, new texture
+  auto it = mFrames.find (playPts / mPtsDuration);
+  if (it == mFrames.end()) 
+    it = mFrames.begin();
+
+  if (!mTexture) // create
+    mTexture = graphics.createTexture ((*it).second->getTextureType(), {getWidth(), getHeight()});
+  mTexture->setPixels ((*it).second->getPixelData());
+
+  mTexturePts = playPts;
   return mTexture;
   }
 //}}}

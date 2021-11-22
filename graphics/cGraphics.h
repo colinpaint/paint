@@ -14,7 +14,7 @@ class cPlatform;
 //{{{
 class cQuad {
 public:
-  cQuad (cPoint size) : mSize(size) {}
+  cQuad (const cPoint& size) : mSize(size) {}
   virtual ~cQuad() = default;
 
   cPoint getSize()  { return mSize; }
@@ -30,7 +30,7 @@ class cFrameBuffer {
 public:
   enum eFormat { eRGB, eRGBA };
 
-  cFrameBuffer (cPoint size) : mSize(size) {}
+  cFrameBuffer (const cPoint& size) : mSize(size) {}
   virtual ~cFrameBuffer() = default;
 
   /// gets
@@ -43,7 +43,7 @@ public:
   virtual uint8_t* getPixels() = 0;
 
   // sets
-  virtual void setSize (cPoint size) = 0;
+  virtual void setSize (const cPoint& size) = 0;
   virtual void setTarget (const cRect& rect) = 0;
   virtual void setBlend() = 0;
   virtual void setSource() = 0;
@@ -55,7 +55,7 @@ public:
   virtual void pixelsChanged (const cRect& rect) = 0;
 
   virtual void clear (const cColor& color) = 0;
-  virtual void blit (cFrameBuffer& src, cPoint srcPoint, const cRect& dstRect) = 0;
+  virtual void blit (cFrameBuffer& src, const cPoint& srcPoint, const cRect& dstRect) = 0;
 
   virtual bool checkStatus() = 0;
   virtual void reportInfo() = 0;
@@ -122,7 +122,7 @@ class cTexture {
 public:
   enum eTextureType { eRgba, eNv12, eYuv420 };
 
-  cTexture (eTextureType textureType, cPoint size) : mTextureType(textureType), mSize(size) {}
+  cTexture (eTextureType textureType, const cPoint& size) : mTextureType(textureType), mSize(size) {}
   virtual ~cTexture() = default;
 
   /// gets
@@ -131,7 +131,6 @@ public:
 
   unsigned getTextureId() { return mTextureId[0]; }
 
-  virtual void setPixels (uint8_t* pixels) = 0;
   virtual void setPixels (uint8_t** pixels) = 0;
   virtual void setSource() = 0;
 
@@ -160,18 +159,17 @@ public:
   virtual void shutdown() = 0;
 
   // create graphics resources
-  virtual cQuad* createQuad (cPoint size) = 0;
-  virtual cQuad* createQuad (cPoint size, const cRect& rect) = 0;
+  virtual cQuad* createQuad (const cPoint& size) = 0;
+  virtual cQuad* createQuad (const cPoint& size, const cRect& rect) = 0;
 
   virtual cFrameBuffer* createFrameBuffer() = 0;
-  virtual cFrameBuffer* createFrameBuffer (cPoint size, cFrameBuffer::eFormat format) = 0;
-  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format) = 0;
+  virtual cFrameBuffer* createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) = 0;
+  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) = 0;
 
   virtual cLayerShader* createLayerShader() = 0;
   virtual cPaintShader* createPaintShader() = 0;
 
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t* pixels) = 0;
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, cPoint size, uint8_t** pixels) = 0;
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) = 0;
   virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) = 0;
 
   virtual void background (const cPoint& size) = 0;
@@ -179,7 +177,7 @@ public:
   // actions
   virtual void windowResize (int width, int height) = 0;
   virtual void newFrame() = 0;
-  virtual void drawUI (cPoint windowSize) = 0;
+  virtual void drawUI (const cPoint& windowSize) = 0;
 
 protected:
   virtual bool init (cPlatform& platform) = 0;
