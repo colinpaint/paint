@@ -421,25 +421,19 @@ public:
         auto decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
         // lock
-        timePoint = chrono::system_clock::now();
         lock (surface);
         int64_t lockTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
         // copy
-        timePoint = chrono::system_clock::now();
         cVideoFrame* videoFrame = new cMfxVideoFrame (surface->Data.TimeStamp, 90000/25,
                                                       mWidth, mHeight, surface->Data.Pitch, pesSize, decodeTime,
                                                       surface->Data.Y, surface->Data.U);
-        int64_t copyTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+        videoFrame->addTime (lockTime);
+        videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
 
         // unlock
-        timePoint = chrono::system_clock::now();
         unlock (surface);
-        int64_t unlockTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
-
-        videoFrame->addTime (lockTime);
-        videoFrame->addTime (copyTime);
-        videoFrame->addTime (unlockTime);
+        videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
 
         addFrameCallback (videoFrame);
         pts += videoFrame->getPtsDuration();
@@ -652,8 +646,6 @@ protected:
     virtual void allocateSurfaces (mfxFrameAllocRequest& request) final {
     // call allocater to allocate vidMem surfaces, all surfaces in one call
 
-      request.Type |= 0x1000; // WILL_READ windows d3d11 only
-
       // allocate
       mfxFrameAllocResponse response = {0};
       mfxStatus status = mAllocator.Alloc (mAllocator.pthis, &request, &response);
@@ -724,12 +716,14 @@ protected:
 
       IDirectXVideoAccelerationService* pDXVAServiceTmp = NULL;
 
-      if (DXVA2_VideoDecoderRenderTarget == DxvaType) { // for both decode and encode
+      if (DXVA2_VideoDecoderRenderTarget == DxvaType) {
+        // for both decode and encode
         if (pDXVAServiceDec == NULL)
           hr = pDeviceManager9->GetVideoService (pDeviceHandle, IID_IDirectXVideoDecoderService, (void**)&pDXVAServiceDec);
         pDXVAServiceTmp = pDXVAServiceDec;
         }
-      else { // DXVA2_VideoProcessorRenderTarget ; for VPP
+      else {
+        // DXVA2_VideoProcessorRenderTarget ; for VPP
         if (pDXVAServiceVPP == NULL)
           hr = pDeviceManager9->GetVideoService (pDeviceHandle, IID_IDirectXVideoProcessorService, (void**)&pDXVAServiceVPP);
         pDXVAServiceTmp = pDXVAServiceVPP;
@@ -1067,9 +1061,8 @@ protected:
     virtual void allocateSurfaces (mfxFrameAllocRequest& request) final {
     // call allocater to allocate vidMem surfaces, all surfaces in one call
 
-      request.Type |= 0x1000; // WILL_READ windows d3d11 only
-
       // allocate
+      request.Type |= WILL_READ;
       mfxFrameAllocResponse response = {0};
       mfxStatus status = mAllocator.Alloc (mAllocator.pthis, &request, &response);
       if (status != MFX_ERR_NONE)
@@ -1132,6 +1125,7 @@ protected:
       // because P8 data (bitstream) for h264 encoder should be allocated by CreateBuffer()
       // - but P8 data (MBData) for MPEG2 encoder should be allocated by CreateTexture2D()
       if (request->Info.FourCC == MFX_FOURCC_P8) {
+        //{{{  create buffer
         D3D11_BUFFER_DESC desc = {0};
         if (!request->NumFrameSuggested)
           return MFX_ERR_MEMORY_ALLOC;
@@ -1143,11 +1137,14 @@ protected:
         desc.StructureByteStride = 0;
 
         ID3D11Buffer* buffer = nullptr;
-        if (FAILED (D3D11Device->CreateBuffer(&desc, 0, &buffer)))
+        if (FAILED (D3D11Device->CreateBuffer (&desc, 0, &buffer)))
           return MFX_ERR_MEMORY_ALLOC;
+
         memIds[0]->mMemId = reinterpret_cast<ID3D11Texture2D*>(buffer);
         }
+        //}}}
       else {
+        //{{{  create surface
         D3D11_TEXTURE2D_DESC desc = {0};
         desc.Width = request->Info.Width;
         desc.Height = request->Info.Height;
@@ -1160,15 +1157,13 @@ protected:
         desc.MiscFlags = 0;
         //desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 
-        if ((MFX_MEMTYPE_FROM_VPPIN & request->Type) &&
-            (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format)) {
+        if ((MFX_MEMTYPE_FROM_VPPIN & request->Type) && (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format)) {
           desc.BindFlags = D3D11_BIND_RENDER_TARGET;
           if (desc.ArraySize > 2)
             return MFX_ERR_MEMORY_ALLOC;
           }
 
-        if ((MFX_MEMTYPE_FROM_VPPOUT & request->Type) ||
-            (MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET & request->Type)) {
+        if ((MFX_MEMTYPE_FROM_VPPOUT & request->Type) || (MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET & request->Type)) {
           desc.BindFlags = D3D11_BIND_RENDER_TARGET;
           if (desc.ArraySize > 2)
             return MFX_ERR_MEMORY_ALLOC;
@@ -1177,9 +1172,9 @@ protected:
         if (DXGI_FORMAT_P8 == desc.Format)
           desc.BindFlags = 0;
 
-        // create surface textures
         ID3D11Texture2D* texture2D;
         for (size_t i = 0; i < request->NumFrameSuggested / desc.ArraySize; i++) {
+          // create surface texture
           if (FAILED (D3D11Device->CreateTexture2D (&desc, NULL, &texture2D)))
             return MFX_ERR_MEMORY_ALLOC;
           memIds[i]->mMemId = texture2D;
@@ -1192,13 +1187,14 @@ protected:
         desc.MiscFlags = 0;
         //desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 
-        // create surface staging textures
         for (size_t i = 0; i < request->NumFrameSuggested; i++) {
+          // create surface staging texture
           if (FAILED (D3D11Device->CreateTexture2D (&desc, NULL, &texture2D)))
             return MFX_ERR_MEMORY_ALLOC;
           memIds[i]->mMemIdStaged = texture2D;
           }
         }
+        //}}}
 
       response->mids = (mfxMemId*)memIds;
       response->NumFrameActual = request->NumFrameSuggested;
@@ -1295,32 +1291,40 @@ protected:
 
       pthis;
 
-      HRESULT hRes = S_OK;
+      HRESULT hResult = S_OK;
 
-      sCustomMemId* memId = (sCustomMemId*)mid;
-      ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
-      ID3D11Texture2D* staged = (ID3D11Texture2D*)memId->mMemIdStaged;
       D3D11_TEXTURE2D_DESC desc = {0};
       D3D11_MAPPED_SUBRESOURCE lockedRect = {0};
+
+      sCustomMemId* memId = (sCustomMemId*)mid;
+      ID3D11Texture2D* staged = (ID3D11Texture2D*)memId->mMemIdStaged;
       if (staged) {
+        ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
         surface->GetDesc (&desc);
 
-        // surface to staged if read
-        if (memId->mRw & WILL_READ)
-          D3D11Ctx->CopySubresourceRegion (staged, 0, 0, 0, 0, surface, 0, NULL);
+        // surface to staged on read
+        if (memId->mRw & WILL_READ) {
+          D3D11DeviceContext->CopySubresourceRegion (staged, 0, 0, 0, 0, surface, 0, NULL);
 
-        do {
-          hRes = D3D11Ctx->Map (staged, 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, &lockedRect);
-          if ((S_OK != hRes) && (DXGI_ERROR_WAS_STILL_DRAWING != hRes))
+          hResult = D3D11DeviceContext->Map (staged, 0, D3D11_MAP_READ, 0, &lockedRect);
+          if (hResult != S_OK)
             return MFX_ERR_LOCK_MEMORY;
-          } while (DXGI_ERROR_WAS_STILL_DRAWING == hRes);
+
+          //do {
+          //  hResult = D3D11DeviceContext->Map (staged, 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, &lockedRect);
+          //  if ((hResult != S_OK) && (hResult != DXGI_ERROR_WAS_STILL_DRAWING))
+          //    return MFX_ERR_LOCK_MEMORY;
+          //  } while (hResult == DXGI_ERROR_WAS_STILL_DRAWING);
+          }
         }
+
       else {
-        hRes = D3D11Ctx->Map (surface, 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, &lockedRect);
+        ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
+        hResult = D3D11DeviceContext->Map (surface, 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, &lockedRect);
         desc.Format = DXGI_FORMAT_P8;
         }
 
-      if (FAILED (hRes))
+      if (FAILED (hResult))
         return MFX_ERR_LOCK_MEMORY;
 
       switch (desc.Format) {
@@ -1372,16 +1376,18 @@ protected:
       pthis;
 
       sCustomMemId* memId = (sCustomMemId*)mid;
+
       ID3D11Texture2D* surface = (ID3D11Texture2D*)memId->mMemId;
+
       ID3D11Texture2D* staged = (ID3D11Texture2D*)memId->mMemIdStaged;
       if (staged) {
-        D3D11Ctx->Unmap (staged, 0);
+        D3D11DeviceContext->Unmap (staged, 0);
         // copy staged to surface if write
         if (memId->mRw & WILL_WRITE)
-          D3D11Ctx->CopySubresourceRegion (surface, 0, 0, 0, 0, staged, 0, NULL);
+          D3D11DeviceContext->CopySubresourceRegion (surface, 0, 0, 0, 0, staged, 0, NULL);
         }
       else
-        D3D11Ctx->Unmap (surface, 0);
+        D3D11DeviceContext->Unmap (surface, 0);
 
       if (ptr) {
         ptr->Pitch = 0;
@@ -1418,7 +1424,7 @@ protected:
     //{{{
     static mfxStatus createHWDevice (mfxSession session, mfxHDL* deviceHandle) {
 
-      if (!D3D11Device || D3D11Ctx) {
+      if (!D3D11Device || D3D11DeviceContext) {
         mfxIMPL impl;
         MFXQueryIMPL (session, &impl);
         mfxIMPL baseImpl = MFX_IMPL_BASETYPE (impl); // Extract Media SDK base implementation type
@@ -1452,7 +1458,7 @@ protected:
         if (FAILED (D3D11CreateDevice (adapter,
                                        D3D_DRIVER_TYPE_UNKNOWN, NULL, dxFlags,
                                        FeatureLevels, (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])),
-                                       D3D11_SDK_VERSION, &D3D11Device, &featureLevelsOut, &D3D11Ctx)))
+                                       D3D11_SDK_VERSION, &D3D11Device, &featureLevelsOut, &D3D11DeviceContext)))
           return MFX_ERR_DEVICE_FAILED;
         adapter->Release();
 
@@ -1474,14 +1480,14 @@ protected:
       D3D11Device->Release();
       D3D11Device = nullptr;
 
-      D3D11Ctx->Release();
-      D3D11Ctx = nullptr;
+      D3D11DeviceContext->Release();
+      D3D11DeviceContext = nullptr;
       }
     //}}}
 
     // vars
     inline static ID3D11Device* D3D11Device = nullptr;
-    inline static ID3D11DeviceContext* D3D11Ctx = nullptr;
+    inline static ID3D11DeviceContext* D3D11DeviceContext = nullptr;
 
     inline static map <mfxMemId*, mfxHDL> allocResponses;
     inline static map <mfxHDL, mfxFrameAllocResponse> allocDecodeResponses;
@@ -1875,19 +1881,10 @@ protected:
            (vaFourcc != VA_FOURCC_ARGB) && (vaFourcc != VA_FOURCC_P208)))
         return MFX_ERR_MEMORY_ALLOC;
 
-      VASurfaceID* surfaces = NULL;
-      vaapiMemId* vaapiMids = NULL;
-      mfxMemId* mids = NULL;
-      if (status == MFX_ERR_NONE) {
-        //{{{  allocate surfaces, vaapiMids, mids
-        surfaces = (VASurfaceID*)calloc (numSurfaces, sizeof(VASurfaceID));
-        vaapiMids = (vaapiMemId*)calloc (numSurfaces, sizeof(vaapiMemId));
-        mids = (mfxMemId*)calloc (numSurfaces, sizeof(mfxMemId));
-
-        if ((!surfaces) || (!vaapiMids) || (!mids))
-          status = MFX_ERR_MEMORY_ALLOC;
-        }
-        //}}}
+      // allocate surfaces, vaapiMids, mids
+      VASurfaceID* surfaces = (VASurfaceID*)calloc (numSurfaces, sizeof(VASurfaceID));
+      vaapiMemId* vaapiMids = (vaapiMemId*)calloc (numSurfaces, sizeof(vaapiMemId));
+      mfxMemId* mids = (mfxMemId*)calloc (numSurfaces, sizeof(mfxMemId));
 
       mfxU16 numAllocated = 0;
       if (status == MFX_ERR_NONE) {
@@ -1899,8 +1896,8 @@ protected:
 
           for (numAllocated = 0; numAllocated < numSurfaces; numAllocated++) {
             VABufferID coded_buf;
-            status = vaToMfxStatus (vaCreateBuffer (mVaDisplayHandle, context_id,
-                                                    VAEncCodedBufferType, codedbuf_size, 1, NULL, &coded_buf));
+            status = vaToMfxStatus (
+              vaCreateBuffer (mVaDisplayHandle, context_id, VAEncCodedBufferType, codedbuf_size, 1, NULL, &coded_buf));
             if (status != MFX_ERR_NONE)
               break;
             surfaces[numAllocated] = coded_buf;
@@ -1914,9 +1911,9 @@ protected:
           attrib.value.type = VAGenericValueTypeInteger;
           attrib.value.value.i = vaFourcc;
           attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
-          status = vaToMfxStatus (vaCreateSurfaces (mVaDisplayHandle, VA_RT_FORMAT_YUV420,
-                                                    request->Info.Width, request->Info.Height,
-                                                    surfaces, numSurfaces, &attrib, 1));
+          status = vaToMfxStatus (
+            vaCreateSurfaces (mVaDisplayHandle, VA_RT_FORMAT_YUV420, request->Info.Width, request->Info.Height,
+                              surfaces, numSurfaces, &attrib, 1));
 
           createSurfacesOk = (status == MFX_ERR_NONE);
           }
@@ -1964,7 +1961,7 @@ protected:
           }
 
         if (surfaces) {
-          free(surfaces);
+          free (surfaces);
           surfaces = NULL;
           }
         }
