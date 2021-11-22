@@ -1859,7 +1859,7 @@ protected:
     static mfxStatus _simpleAlloc (mfxFrameAllocRequest* request, mfxFrameAllocResponse* response) {
 
       mfxStatus status = MFX_ERR_NONE;
-      bool createSrfSucceeded = false;
+      bool createSurfacesOk = false;
 
       memset (response, 0, sizeof(mfxFrameAllocResponse));
 
@@ -1891,22 +1891,7 @@ protected:
 
       mfxU16 numAllocated = 0;
       if (status == MFX_ERR_NONE) {
-        if (vaFourcc != VA_FOURCC_P208) {
-          //{{{  create surfaces
-          VASurfaceAttrib attrib;
-          attrib.type = VASurfaceAttribPixelFormat;
-          attrib.value.type = VAGenericValueTypeInteger;
-          attrib.value.value.i = vaFourcc;
-          attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
-
-          status = vaToMfxStatus (vaCreateSurfaces (mVaDisplayHandle, VA_RT_FORMAT_YUV420,
-                                                    request->Info.Width, request->Info.Height,
-                                                    surfaces, numSurfaces, &attrib, 1));
-
-          createSrfSucceeded = (status == MFX_ERR_NONE);
-          }
-          //}}}
-        else {
+        if (vaFourcc == VA_FOURCC_P208) {
           //{{{  create buffer
           // from libva spec
           VAContextID context_id = request->reserved[0];
@@ -1920,6 +1905,20 @@ protected:
               break;
             surfaces[numAllocated] = coded_buf;
             }
+          }
+          //}}}
+        else {
+          //{{{  create surfaces
+          VASurfaceAttrib attrib;
+          attrib.type = VASurfaceAttribPixelFormat;
+          attrib.value.type = VAGenericValueTypeInteger;
+          attrib.value.value.i = vaFourcc;
+          attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
+          status = vaToMfxStatus (vaCreateSurfaces (mVaDisplayHandle, VA_RT_FORMAT_YUV420,
+                                                    request->Info.Width, request->Info.Height,
+                                                    surfaces, numSurfaces, &attrib, 1));
+
+          createSurfacesOk = (status == MFX_ERR_NONE);
           }
           //}}}
         }
@@ -1951,10 +1950,8 @@ protected:
           for (mfxU16 i = 0; i < numAllocated; i++)
             vaDestroyBuffer (mVaDisplayHandle, surfaces[i]);
           }
-        else {
-          if (createSrfSucceeded)
-            vaDestroySurfaces (mVaDisplayHandle, surfaces, numSurfaces);
-          }
+        else if (createSurfacesOk)
+          vaDestroySurfaces (mVaDisplayHandle, surfaces, numSurfaces);
 
         if (mids) {
           free (mids);
