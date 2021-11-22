@@ -129,7 +129,7 @@ public:
   eTextureType getTextureType() const { return mTextureType; }
   const cPoint getSize() const { return mSize; }
 
-  unsigned getTextureId() { return mTextureId[0]; }
+  virtual unsigned getTextureId() const = 0;
 
   virtual void setPixels (uint8_t** pixels) = 0;
   virtual void setSource() = 0;
@@ -137,8 +137,6 @@ public:
 protected:
   const eTextureType mTextureType;
   cPoint mSize;
-
-  uint32_t mTextureId[3];
   };
 //}}}
 //{{{

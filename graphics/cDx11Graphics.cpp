@@ -32,6 +32,8 @@ namespace {
   public:
     cDx11Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {}
 
+    virtual unsigned getTextureId() const final { return 0; }
+
     virtual void setPixels (uint8_t** pixels) final { (void)pixels; }
     virtual void setSource() final {}
     };
