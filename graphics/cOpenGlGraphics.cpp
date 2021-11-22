@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cmath>
 #include <string>
+#include <array>
 #include <algorithm>
 
 // glad
@@ -1000,9 +1001,9 @@ namespace {
         : cTexture(textureType, size) {
 
       cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
-      glGenTextures (1, mTextureId);
+      glGenTextures (1, &mTextureId);
 
-      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+      glBindTexture (GL_TEXTURE_2D, mTextureId);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1015,15 +1016,17 @@ namespace {
     //}}}
     //{{{
     virtual ~cOpenGlRgbaTexture() {
-      glDeleteTextures (1, mTextureId);
+      glDeleteTextures (1, &mTextureId);
       }
     //}}}
 
-    virtual unsigned getTextureId() const final { return mTextureId[0]; }
+    virtual unsigned getTextureId() const final { return mTextureId; }
 
     //{{{
     virtual void setPixels (uint8_t** pixels) final {
-      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+    // set textures using pixels in ffmpeg avFrame format
+
+      glBindTexture (GL_TEXTURE_2D, mTextureId);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels[0]);
       }
     //}}}
@@ -1031,12 +1034,12 @@ namespace {
     virtual void setSource() final {
 
       glActiveTexture (GL_TEXTURE0);
-      glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+      glBindTexture (GL_TEXTURE_2D, mTextureId);
       }
     //}}}
 
   private:
-    uint32_t mTextureId[3];
+    uint32_t mTextureId = 0;
     };
   //}}}
   //{{{
@@ -1048,7 +1051,7 @@ namespace {
 
       cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
 
-      glGenTextures (2, mTextureId);
+      glGenTextures (2, mTextureId.data());
 
       // y texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
@@ -1069,7 +1072,7 @@ namespace {
     //}}}
     //{{{
     virtual ~cOpenGlNv12Texture() {
-      glDeleteTextures (2, mTextureId);
+      glDeleteTextures (2, mTextureId.data());
       }
     //}}}
 
@@ -1077,6 +1080,7 @@ namespace {
 
     //{{{
     virtual void setPixels (uint8_t** pixels) final {
+    // set textures using pixels in ffmpeg avFrame format
 
       // y texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
@@ -1099,7 +1103,7 @@ namespace {
     //}}}
 
   private:
-    uint32_t mTextureId[3];
+    array <uint32_t,2> mTextureId;
     };
   //}}}
   //{{{
@@ -1111,7 +1115,7 @@ namespace {
 
       cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
 
-      glGenTextures (3, mTextureId);
+      glGenTextures (3, mTextureId.data());
 
       // y texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
@@ -1140,7 +1144,7 @@ namespace {
     //}}}
     //{{{
     virtual ~cOpenGlYuv420Texture() {
-      glDeleteTextures (3, mTextureId);
+      glDeleteTextures (3, mTextureId.data());
       }
     //}}}
 
@@ -1148,6 +1152,7 @@ namespace {
 
     //{{{
     virtual void setPixels (uint8_t** pixels) final {
+    // set textures using pixels in ffmpeg avFrame format
 
       // y texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
@@ -1177,7 +1182,7 @@ namespace {
     //}}}
 
   private:
-    uint32_t mTextureId[3];
+    array <uint32_t,3> mTextureId;
     };
   //}}}
 
