@@ -33,6 +33,8 @@ public:
   cDecoder() = default;
   virtual ~cDecoder() = default;
 
+  virtual std::string getName() const = 0;
+
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           std::function<void (cFrame* frame)> addFrameCallback) = 0;
   };

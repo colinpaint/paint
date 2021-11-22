@@ -97,16 +97,6 @@ private:
 //}}}
 
 //{{{
-class cAudioDecoder {
-public:
-  cAudioDecoder() = default;
-  virtual ~cAudioDecoder() = default;
-
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
-                          function<void (cFrame* frame)> addFrameCallback) = 0;
-  };
-//}}}
-//{{{
 class cFFmpegAudioDecoder : public cDecoder {
 public:
   //{{{
@@ -131,6 +121,7 @@ public:
     }
   //}}}
 
+  virtual string getName() const final { return "ffmpeg"; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<void (cFrame* frame)> addFrameCallback) final  {

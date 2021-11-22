@@ -132,19 +132,22 @@ private:
 //{{{
 class cFFmpegVideoFrame : public cVideoFrame {
 public:
+  //{{{
   cFFmpegVideoFrame (int64_t pts, int64_t ptsDuration,
                      uint16_t width, uint16_t height, uint16_t stride,
                      uint32_t pesSize, int64_t decodeTime,
                      AVFrame* avFrame)
       : cVideoFrame (cTexture::eYuv420, pts, ptsDuration, width, height, stride, pesSize, decodeTime),
         mAvFrame(avFrame) {}
-
+  //}}}
+  //{{{
   ~cFFmpegVideoFrame() {
      av_frame_unref (mAvFrame);
      av_frame_free (&mAvFrame);
      }
+  //}}}
 
-  virtual uint8_t** getPixelData() { return mAvFrame->data; }
+  virtual uint8_t** getPixelData() final { return mAvFrame->data; }
 
 private:
   AVFrame* mAvFrame = nullptr;
@@ -153,6 +156,7 @@ private:
 //{{{
 class cMfxVideoFrame : public cVideoFrame {
 public:
+  //{{{
   cMfxVideoFrame (int64_t pts, int64_t ptsDuration,
                   uint16_t width, uint16_t height, uint16_t stride,
                   uint32_t pesSize, int64_t decodeTime,
@@ -160,21 +164,23 @@ public:
       : cVideoFrame (cTexture::eNv12, pts, ptsDuration, width, height, stride, pesSize, decodeTime) {
 
     mPixels[0] = (uint8_t*)malloc (stride * height);
-    memcpy (mPixels[0], y, stride * height);
-
     mPixels[1] = (uint8_t*)malloc (stride * height / 2);
+
+    memcpy (mPixels[0], y, stride * height);
     memcpy (mPixels[1], uv, stride * height / 2);
     }
-
+  //}}}
+  //{{{
   ~cMfxVideoFrame() {
     free (mPixels[0]);
     free (mPixels[1]);
     }
+  //}}}
 
-  virtual uint8_t** getPixelData() { return mPixels; }
+  virtual uint8_t** getPixelData() final { return mPixels.data(); }
 
 private:
-  uint8_t* mPixels[2] = { nullptr };
+  array <uint8_t*,2> mPixels = { nullptr };
   };
 //}}}
 
@@ -207,6 +213,7 @@ public:
     }
   //}}}
 
+  virtual string getName() const final { return "ffmpeg"; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<void (cFrame* frame)> addFrameCallback) final {
@@ -308,7 +315,6 @@ public:
     cLog::log (LOGINFO, getMfxInfoString (mfxImpl, version));
 
     mH264 = (streamType == 27);
-
     mVideoParams.mfx.CodecId = mH264 ? MFX_CODEC_AVC : MFX_CODEC_MPEG2;
     }
   //}}}
@@ -580,6 +586,8 @@ protected:
       }
     //}}}
 
+    virtual string getName() const final { return "mfx"; }
+
   protected:
     //{{{
     virtual void allocateSurfaces (mfxFrameAllocRequest& request) final {
@@ -636,6 +644,8 @@ protected:
       cleanupHWDevice();
       }
     //}}}
+
+    virtual string getName() const final { return "mfxD3d9"; }
 
   protected:
     //{{{
@@ -1049,6 +1059,8 @@ protected:
       cleanupHWDevice();
       }
     //}}}
+
+    virtual string getName() const final { return "mfxD3d11"; }
 
   protected:
     //{{{
@@ -1514,6 +1526,8 @@ protected:
       }
     //}}}
 
+    virtual string getName() const final { return "mfx"; }
+
   protected:
     //{{{
     virtual void allocateSurfaces (mfxFrameAllocRequest& request) final {
@@ -1709,6 +1723,8 @@ protected:
         close (mFd);
       }
     //}}}
+
+    virtual string getName() const final { return "mfxVaapi"; }
 
   protected:
     //{{{
@@ -2329,7 +2345,7 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
 
   // new pts, new texture
   auto it = mFrames.find (playPts / mPtsDuration);
-  if (it == mFrames.end()) 
+  if (it == mFrames.end())
     it = mFrames.begin();
 
   if (!mTexture) // create
@@ -2341,6 +2357,7 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
   }
 //}}}
 
+string cVideoRender::getInfo() const { return mDecoder->getName() + " " + mInfo; }
 //{{{
 void cVideoRender::addFrame (cVideoFrame* frame) {
 
