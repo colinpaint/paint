@@ -1076,7 +1076,7 @@ namespace {
       }
     //}}}
 
-    virtual unsigned getTextureId() const final { return mTextureId[0]; }
+    virtual unsigned getTextureId() const final { return mTextureId[0]; }  // luma only
 
     //{{{
     virtual void setPixels (uint8_t** pixels) final {
@@ -1148,7 +1148,7 @@ namespace {
       }
     //}}}
 
-    virtual unsigned getTextureId() const final { return mTextureId[0]; }
+    virtual unsigned getTextureId() const final { return mTextureId[0]; }   // luma only
 
     //{{{
     virtual void setPixels (uint8_t** pixels) final {
