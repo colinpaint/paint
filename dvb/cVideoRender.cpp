@@ -1304,17 +1304,19 @@ protected:
 
         // surface to staged on read
         if (memId->mRw & WILL_READ) {
+          auto timePoint = chrono::system_clock::now();
           D3D11DeviceContext->CopySubresourceRegion (staged, 0, 0, 0, 0, surface, 0, NULL);
 
-          hResult = D3D11DeviceContext->Map (staged, 0, D3D11_MAP_READ, 0, &lockedRect);
-          if (hResult != S_OK)
-            return MFX_ERR_LOCK_MEMORY;
-
-          //do {
-          //  hResult = D3D11DeviceContext->Map (staged, 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, &lockedRect);
-          //  if ((hResult != S_OK) && (hResult != DXGI_ERROR_WAS_STILL_DRAWING))
-          //    return MFX_ERR_LOCK_MEMORY;
-          //  } while (hResult == DXGI_ERROR_WAS_STILL_DRAWING);
+          int n = 0;
+          int64_t copyTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+          do {
+            hResult = D3D11DeviceContext->Map (staged, 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, &lockedRect);
+            if ((hResult != S_OK) && (hResult != DXGI_ERROR_WAS_STILL_DRAWING))
+              return MFX_ERR_LOCK_MEMORY;
+            n++;
+            } while (hResult == DXGI_ERROR_WAS_STILL_DRAWING);
+          int64_t mapTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+          cLog::log (LOGINFO, fmt::format ("wait {} {}", copyTime, mapTime));
           }
         }
 
@@ -2095,11 +2097,18 @@ protected:
 
       else {
         // Image processing
+        auto timePoint = chrono::system_clock::now();
         status = vaToMfxStatus (vaSyncSurface (mVaDisplayHandle, *(vaapi_mid->mSurface)));
+        int64_t syncTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+
         if (status == MFX_ERR_NONE)
           status = vaToMfxStatus (vaDeriveImage (mVaDisplayHandle, *(vaapi_mid->mSurface), &(vaapi_mid->mImage)));
+        int64_t deriveTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+
         if (status == MFX_ERR_NONE)
           status = vaToMfxStatus (vaMapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf, (void**)&pBuffer));
+        int64_t mapTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+
         if (status == MFX_ERR_NONE) {
           switch (vaapi_mid->mImage.format.fourcc) {
             //{{{
@@ -2154,6 +2163,7 @@ protected:
             default: status = MFX_ERR_LOCK_MEMORY;
             }
           }
+        cLog::log (LOGINFO, fmt::format ("wait {} {} {}", syncTime, deriveTime, mapTime));
         }
 
       return status;
