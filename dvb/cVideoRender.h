@@ -21,11 +21,11 @@ public:
 
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
-  virtual std::string getInfoString() const final;
 
   cTexture* getTexture (int64_t playPts, cGraphics& graphics);
-
   void addFrame (cVideoFrame* frame);
+
+  virtual std::string getInfo() const final { return mInfo; }
   virtual void addFrame (cFrame* frame) final { (void)frame; }
   virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,  bool skip) final;
 
@@ -39,8 +39,7 @@ private:
   int64_t mLastPts = -1;
   int64_t mPtsDuration = 0;
 
-  int64_t mDecodeTime = 0;
-  int64_t mConvertTime = 0;
+  std::string mInfo;
 
   int64_t mTexturePts = 0;
   cTexture* mTexture = nullptr;

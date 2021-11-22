@@ -377,7 +377,7 @@ private:
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const std::string name, uint8_t streamType, uint16_t decoderMask) 
+cAudioRender::cAudioRender (const std::string name, uint8_t streamType, uint16_t decoderMask)
     : cRender(name, streamType, decoderMask) {
 
   mNumChannels = 2;
@@ -404,11 +404,6 @@ cAudioRender::~cAudioRender() {
   }
 //}}}
 
-//{{{
-string cAudioRender::getInfoString() const {
-  return fmt::format ("{}", mFrames.size());
-  }
-//}}}
 //{{{
 bool cAudioRender::getPlaying() const {
   return mPlayer ? mPlayer->getPlaying() : false;
@@ -446,6 +441,11 @@ cAudioFrame* cAudioRender::findPlayFrame() const {
   }
 //}}}
 
+//{{{
+string cAudioRender::getInfo() const {
+  return fmt::format ("{}", mFrames.size());
+  }
+//}}}
 //{{{
 void cAudioRender::addFrame (cAudioFrame* frame) {
 

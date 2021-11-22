@@ -88,9 +88,12 @@ public:
                uint16_t width, uint16_t height, uint16_t stride,
                uint32_t pesSize, int64_t decodeTime)
       : cFrame(pts, ptsDuration),
-        mTextureType(textureType),
         mWidth(width), mHeight(height), mStride(stride),
-        mPesSize(pesSize), mDecodeTime(decodeTime) {}
+        mTextureType(textureType), mDecodeTime(decodeTime) {
+
+    mTimes.push_back (pesSize);
+    mTimes.push_back (decodeTime);
+    }
 
   virtual ~cVideoFrame() = default;
 
@@ -99,27 +102,29 @@ public:
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
   uint16_t getStride() const { return mStride; }
-
-  uint32_t getPesSize() const { return mPesSize; }
   int64_t getDecodeTime() const { return mDecodeTime; }
 
-  int64_t getConvertTime() const { return mConvertTime; }
-
+  //{{{
+  string getInfo() {
+    string info = fmt::format ("{}x{} ", mWidth, mHeight);
+    for (auto& time : mTimes)
+      info += fmt::format ("{:5} ", time);
+    return info;
+    }
+  //}}}
   virtual uint8_t** getPixelData() = 0;
 
-  void setConvertTime (int64_t convertTime) { mConvertTime = convertTime; }
+  void addTime (int64_t time) { mTimes.push_back (time); }
 
 protected:
-  const cTexture::eTextureType mTextureType;
-
   const uint16_t mWidth;
   const uint16_t mHeight;
   const uint16_t mStride;
 
-  const uint32_t mPesSize;
+private:
+  const cTexture::eTextureType mTextureType;
   const int64_t mDecodeTime;
-
-  int64_t mConvertTime = 0;
+  vector <int64_t> mTimes;
   };
 //}}}
 //{{{
@@ -401,14 +406,26 @@ public:
         status = mSession.SyncOperation (decodeSyncPoint, 60000);
         auto decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
+        // lock
         timePoint = chrono::system_clock::now();
         lock (surface);
+        int64_t lockTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+
+        // copy
+        timePoint = chrono::system_clock::now();
         cVideoFrame* videoFrame = new cMfxVideoFrame (surface->Data.TimeStamp, 90000/25,
                                                       mWidth, mHeight, surface->Data.Pitch, pesSize, decodeTime,
                                                       surface->Data.Y);
+        int64_t copyTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+
+        // unlock
+        timePoint = chrono::system_clock::now();
         unlock (surface);
-        videoFrame->setConvertTime (
-          chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
+        int64_t unlockTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+
+        videoFrame->addTime (lockTime);
+        videoFrame->addTime (copyTime);
+        videoFrame->addTime (unlockTime);
 
         addFrameCallback (videoFrame);
         pts += videoFrame->getPtsDuration();
@@ -2291,11 +2308,6 @@ cVideoRender::~cVideoRender() {
 //}}}
 
 //{{{
-string cVideoRender::getInfoString() const {
-  return fmt::format ("{} {}x{} {:5d}:{}", mFrames.size(), mWidth, mHeight, mDecodeTime, mConvertTime);
-  }
-//}}}
-//{{{
 cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
 
   // locked
@@ -2364,11 +2376,10 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
       mHeight = videoFrame->getHeight();
       mLastPts = videoFrame->getPts();
       mPtsDuration = videoFrame->getPtsDuration();
-      mDecodeTime = videoFrame->getDecodeTime();
-      mConvertTime = videoFrame->getConvertTime();
+      mInfo = fmt::format ("{} {}", mFrames.size(), videoFrame->getInfo());
 
       addFrame (videoFrame);
-      logValue (videoFrame->getPts(), (float)mDecodeTime);
+      logValue (videoFrame->getPts(), (float)videoFrame->getDecodeTime());
       });
   }
 //}}}

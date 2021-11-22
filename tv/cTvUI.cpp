@@ -166,7 +166,7 @@ private:
         if (service.getStream (cDvbStream::eVid).isEnabled()) {
           cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
           ImGui::TextUnformatted (fmt::format ("pts:{} a:{} v:{}",
-                                  getPtsString (playPts), audio.getInfoString(), video.getInfoString()).c_str());
+                                  getPtsString (playPts), audio.getInfo(), video.getInfo()).c_str());
 
           channelFound = true;
           break;
@@ -362,7 +362,7 @@ private:
    cVideoRender& video = dynamic_cast<cVideoRender&>(render);
 
     plotValues (sid, video, 0xffffffff);
-    ImGui::TextUnformatted (video.getInfoString().c_str());
+    ImGui::TextUnformatted (video.getInfo().c_str());
     //cTexture* texture = video.getTexture (playPts, graphics);
     //if (texture)
     //  ImGui::Image ((void*)(intptr_t)texture->getTextureId(), {video.getWidth()/4.f,video.getHeight()/4.f});
@@ -376,7 +376,7 @@ private:
     cAudioRender& audio = dynamic_cast<cAudioRender&>(render);
 
     plotValues (sid, audio, 0xff00ffff);
-    ImGui::TextUnformatted (audio.getInfoString().c_str());
+    ImGui::TextUnformatted (audio.getInfo().c_str());
 
     drawMiniLog (audio.getLog());
     }

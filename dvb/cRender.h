@@ -64,7 +64,7 @@ public:
   void logValue (int64_t pts, float value);
 
   // process
-  virtual std::string getInfoString() const = 0;
+  virtual std::string getInfo() const = 0;
   virtual void addFrame (cFrame* frame) = 0;
   virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) = 0;
 

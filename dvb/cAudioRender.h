@@ -27,7 +27,6 @@ public:
 
   bool getPlaying() const;
   int64_t getPlayPts() const;
-  virtual std::string getInfoString() const final;
 
   // play
   void togglePlaying();
@@ -38,6 +37,8 @@ public:
   cAudioFrame* findPlayFrame() const;
 
   void addFrame (cAudioFrame* frame);
+
+  virtual std::string getInfo() const final;
   virtual void addFrame (cFrame* frame) final { (void)frame; }
   virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
 
