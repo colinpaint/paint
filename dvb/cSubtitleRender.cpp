@@ -44,7 +44,7 @@ cSubtitleRender::~cSubtitleRender() {
 //}}}
 
 //{{{
-void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
+bool cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
   (void)dts;
   (void)skip;
@@ -55,10 +55,10 @@ void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, i
   logValue (pts, (float)pesSize);
 
   //cLog::log (LOGERROR, fmt::format ("cSubtitle no data_id, subStream size:{}", pesSize));
-  if (pesSize < 8) { 
+  if (pesSize < 8) {
     // strange empty pes, common on itv multiplex
     log ("pes", "empty pes");
-    return;
+    return false;
     }
 
   uint8_t* pesPtr = pes;
@@ -77,7 +77,7 @@ void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, i
       //cLog::log (LOGERROR, fmt::format ("cSubtitle decode missing syncByte:{:x} offset:{} size:{}",
       //                                  syncByte, int(pesPtr - pes), pesSize));
       log ("pes", fmt::format ("missing syncByte:{:x} offset:{} size:{}", syncByte, int(pesPtr - pes), pesSize));
-      return;
+      return false;
       }
       //}}}
 
@@ -91,7 +91,7 @@ void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, i
     if (segLength > pesEnd - pesPtr) {
       //{{{  segLength error, return
       cLog::log (LOGERROR, "cSubtitle decode incomplete or broken packet");
-      return;
+      return false;
       }
       //}}}
 
@@ -99,37 +99,37 @@ void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, i
       //{{{
       case 0x10: // page composition segment
         if (!parsePage (pesPtr, segLength))
-          return;
+          return false;
         break;
       //}}}
       //{{{
       case 0x11: // region composition segment
         if (!parseRegion (pesPtr, segLength))
-          return;
+          return false;
         break;
       //}}}
       //{{{
       case 0x12: // CLUT definition segment
         if (!parseColorLut (pesPtr, segLength))
-          return;
+          return false;
         break;
       //}}}
       //{{{
       case 0x13: // object data segment
         if (!parseObject (pesPtr, segLength))
-          return;
+          return false;
         break;
       //}}}
       //{{{
       case 0x14: // display definition segment
         if (!parseDisplayDefinition (pesPtr, segLength))
-          return;
+          return false;
         break;
       //}}}
       //{{{
       case 0x80: // end of display set segment
         endDisplay();
-        return;
+        return false;
       //}}}
       //{{{
       case 0x15: // disparity signalling segment
@@ -151,6 +151,8 @@ void cSubtitleRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, i
 
     pesPtr += segLength;
     }
+
+  return false;
   }
 //}}}
 

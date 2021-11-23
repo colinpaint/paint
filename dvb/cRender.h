@@ -46,11 +46,11 @@ public:
 class cDecoderQueueItem {
 public:
   //{{{
-  cDecoderQueueItem (cDecoder* decoder, 
+  cDecoderQueueItem (cDecoder* decoder,
                      uint8_t* pes, int pesSize, int64_t pts, int64_t dts,
                      std::function<void (cFrame* frame)> addFrameCallback)
-      : mDecoder(decoder), 
-        mPes(pes), mPesSize(pesSize), mPts(pts), mDts(dts), 
+      : mDecoder(decoder),
+        mPes(pes), mPesSize(pesSize), mPts(pts), mDts(dts),
         mAddFrameCallback(addFrameCallback) {}
   // we gain ownership of malloc'd pes buffer
   //}}}
@@ -100,7 +100,7 @@ public:
   // process
   virtual std::string getInfo() const = 0;
   virtual void addFrame (cFrame* frame) = 0;
-  virtual void processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) = 0;
+  virtual bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) = 0;
 
 protected:
   void header();

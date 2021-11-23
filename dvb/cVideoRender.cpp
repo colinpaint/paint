@@ -2395,16 +2395,18 @@ void cVideoRender::addFrame (cFrame* frame) {
   }
 //}}}
 //{{{
-void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,  bool skip) {
+bool cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,  bool skip) {
 
   (void)skip;
   //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)pesSize);
-  if (isQueued())
+  if (isQueued()) {
     mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
+    return true;
+    }
   else {
     mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
-    free (pes);
+    return false;
     }
   }
 //}}}

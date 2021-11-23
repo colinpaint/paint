@@ -927,7 +927,7 @@ bool cDvbStream::processPes (eStreamType streamType, cPidInfo* pidInfo, bool ski
 
   cService* service = getService (pidInfo->getSid());
   if (service && service->getStream (streamType).isEnabled())
-    service->getStream (streamType).getRender().processPes (
+    return service->getStream (streamType).getRender().processPes (
       pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->getPts(), pidInfo->getDts(), skip);
 
   //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
@@ -1306,7 +1306,6 @@ int cDvbStream::parsePsi (cPidInfo* pidInfo, uint8_t* buf) {
 int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip) {
 // demux from tsBuffer to tsBuffer + tsBufferSize, streamPos is offset into full stream of first packet
 // decodePid1 = -1 use all
-// - return bytes processed
 
   if (skip)
     clearPidContinuity();
@@ -1314,9 +1313,8 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
   uint8_t* ts = tsBuf;
   uint8_t* tsEnd = tsBuf + tsBufSize;
 
-  bool processed = false;
   uint8_t* nextPacket = ts + 188;
-  while (!processed && (nextPacket <= tsEnd)) {
+  while (nextPacket <= tsEnd) {
     if (*ts == 0x47) {
       if ((ts+188 >= tsEnd) || (*(ts+188) == 0x47)) {
         ts++;
@@ -1409,32 +1407,20 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
 
               if (payloadStart) {
                 // start of payload for new pes buffer
-                if ((*(uint32_t*)ts == 0xBD010000) ||
-                    (*(uint32_t*)ts == 0xBE010000) ||
-                    (*(uint32_t*)ts == 0xC0010000) ||
-                    (*(uint32_t*)ts == 0xC1010000) ||
-                    (*(uint32_t*)ts == 0xC2010000) ||
-                    (*(uint32_t*)ts == 0xC4010000) ||
-                    (*(uint32_t*)ts == 0xC6010000) ||
-                    (*(uint32_t*)ts == 0xC8010000) ||
-                    (*(uint32_t*)ts == 0xCA010000) ||
-                    (*(uint32_t*)ts == 0xCC010000) ||
-                    (*(uint32_t*)ts == 0xCE010000) ||
-                    (*(uint32_t*)ts == 0xD0010000) ||
-                    (*(uint32_t*)ts == 0xD2010000) ||
-                    (*(uint32_t*)ts == 0xD4010000) ||
-                    (*(uint32_t*)ts == 0xD6010000) ||
-                    (*(uint32_t*)ts == 0xD8010000) ||
-                    (*(uint32_t*)ts == 0xDA010000) ||
+                if ((*(uint32_t*)ts == 0xBD010000) || (*(uint32_t*)ts == 0xBE010000) ||
+                    (*(uint32_t*)ts == 0xC0010000) || (*(uint32_t*)ts == 0xC1010000) || (*(uint32_t*)ts == 0xC2010000) ||
+                    (*(uint32_t*)ts == 0xC4010000) || (*(uint32_t*)ts == 0xC6010000) || (*(uint32_t*)ts == 0xC8010000) ||
+                    (*(uint32_t*)ts == 0xCA010000) || (*(uint32_t*)ts == 0xCC010000) || (*(uint32_t*)ts == 0xCE010000) ||
+                    (*(uint32_t*)ts == 0xD0010000) || (*(uint32_t*)ts == 0xD2010000) || (*(uint32_t*)ts == 0xD4010000) ||
+                    (*(uint32_t*)ts == 0xD6010000) || (*(uint32_t*)ts == 0xD8010000) || (*(uint32_t*)ts == 0xDA010000) ||
                     (*(uint32_t*)ts == 0xE0010000)) {
                   if (pidInfo->mBufPtr && pidInfo->getStreamType()) {
                     switch (pidInfo->getStreamType()) {
                       case 2:   // ISO 13818-2 video
                       case 27:  // HD vid
-                        //{{{  send last video pes
-                        processed = processPes (eVid, pidInfo, skip);
-                        // allocate new pes buffer
-                        pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
+                        //{{{  send buffered video pes
+                        if (processPes (eVid, pidInfo, skip)) // render took ownership of pes buffer
+                          pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                         skip = false;
                         break;
                         //}}}
@@ -1443,18 +1429,15 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                       case 15:  // aac adts
                       case 17:  // aac latm
                       case 129: // ac3
-                        //{{{  send last audio pes
-                        if (*(uint32_t*)ts == 0xC1010000)
-                          processed = processPes (eAds, pidInfo, skip);
-                        else
-                          processed = processPes (eAud, pidInfo, skip);
-
-                        pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
+                        //{{{  send buffered audio pes
+                        if (processPes ((*(uint32_t*)ts == 0xC1010000) ? eAds : eAud, pidInfo, skip))
+                          pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                         break;
                         //}}}
                       case 6:   // subtitle
-                        //{{{  send last subtitle pes
-                        processed = processPes (eSub, pidInfo, skip);
+                        //{{{  send buffered subtitle pes
+                        if (processPes (eSub, pidInfo, skip))
+                          pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                         break;
                         //}}}
                       default: {

@@ -478,17 +478,19 @@ void cAudioRender::addFrame (cFrame* frame) {
   }
 //}}}
 //{{{
-void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
+bool cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
   (void)skip;
   //log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);
 
-  if (isQueued())
+  if (isQueued()) {
     mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
+    return true;
+    }
   else {
     mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
-    free (pes);
+    return false;
     }
   }
 //}}}
