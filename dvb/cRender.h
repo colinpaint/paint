@@ -72,8 +72,10 @@ class cRender {
 public:
   enum eDecoder { eFFmpeg, eMfxSystem, eMfxVideo };
 
-  cRender (const std::string name, uint8_t streamType, uint16_t decoderMask);
+  cRender (bool useQueue, const std::string name, uint8_t streamType, uint16_t decoderMask);
   virtual ~cRender();
+
+  bool isQueued() const { return mQueued; }
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   uint8_t getStreamType() const { return mStreamType; }
@@ -108,12 +110,16 @@ protected:
 
   // decode queue
   void dequeThread();
-  bool mUseQueue = false;
+  void exitThread();
+  int getQueueSize() const;
+  float getQueueFrac() const;
+
   bool mQueueExit = false;
   bool mQueueRunning = false;
   readerWriterQueue::cBlockingReaderWriterQueue <cDecoderQueueItem*> mQueue;
 
 private:
+  const bool mQueued = false;
   const std::string mName;
   const uint8_t mStreamType;
   const uint16_t mDecoderMask;

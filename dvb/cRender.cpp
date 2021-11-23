@@ -21,10 +21,11 @@ constexpr int64_t kPtsPerFrame = 90000 / 25;
 
 // public:
 //{{{
-cRender::cRender (const std::string name, uint8_t streamType, uint16_t decoderMask)
-    : mName(name), mStreamType(streamType), mDecoderMask(decoderMask), mMiniLog ("log") {
+cRender::cRender (bool queued, const std::string name, uint8_t streamType, uint16_t decoderMask)
+    : mQueued(queued), mName(name), mStreamType(streamType), mDecoderMask(decoderMask), mMiniLog ("log") {
 
-  thread ([=](){ dequeThread(); }).detach();
+  if (queued)
+    thread ([=](){ dequeThread(); }).detach();
   }
 //}}}
 //{{{
@@ -81,6 +82,26 @@ void cRender::dequeThread() {
   // !!! not sure this is empty the queue on exit !!!!
 
   mQueueRunning = false;
+  }
+//}}}
+//{{{
+void cRender::exitThread() {
+
+  if (mQueued) {
+    mQueueExit = true;
+    //while (mQueueRunning)
+    this_thread::sleep_for (100ms);
+    }
+  }
+//}}}
+//{{{
+int cRender::getQueueSize() const {
+  return (int)mQueue.size_approx();
+  }
+//}}}
+//{{{
+float cRender::getQueueFrac() const {
+  return (float)mQueue.size_approx() / mQueue.max_capacity();
   }
 //}}}
 

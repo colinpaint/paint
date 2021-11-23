@@ -1308,16 +1308,13 @@ protected:
           auto timePoint = chrono::system_clock::now();
           D3D11DeviceContext->CopySubresourceRegion (staged, 0, 0, 0, 0, surface, 0, NULL);
 
-          int n = 0;
-          int64_t copyTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
           do {
             hResult = D3D11DeviceContext->Map (staged, 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, &lockedRect);
             if ((hResult != S_OK) && (hResult != DXGI_ERROR_WAS_STILL_DRAWING))
               return MFX_ERR_LOCK_MEMORY;
-            n++;
+            if (hResult == DXGI_ERROR_WAS_STILL_DRAWING)
+              cLog::log (LOGINFO, "mfxVidMem simpleLock waiting");
             } while (hResult == DXGI_ERROR_WAS_STILL_DRAWING);
-          int64_t mapTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
-          cLog::log (LOGINFO, fmt::format ("wait {} {}", copyTime, mapTime));
           }
         }
 
@@ -2164,7 +2161,7 @@ protected:
             default: status = MFX_ERR_LOCK_MEMORY;
             }
           }
-        cLog::log (LOGINFO, fmt::format ("wait {} {} {}", syncTime, deriveTime, mapTime));
+        //cLog::log (LOGINFO, fmt::format ("wait {} {} {}", syncTime, deriveTime, mapTime));
         }
 
       return status;
@@ -2304,7 +2301,7 @@ protected:
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const string name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(name, streamType, decoderMask), mMaxPoolSize(kVideoPoolSize) {
+    : cRender(true, name, streamType, decoderMask), mMaxPoolSize(kVideoPoolSize) {
 
   switch (decoderMask) {
     case eFFmpeg:
@@ -2329,7 +2326,6 @@ cVideoRender::cVideoRender (const string name, uint8_t streamType, uint16_t deco
   mAddFrameCallback = [&](cFrame* frame) noexcept {
     addFrame (frame);
     };
-  mUseQueue = true;
   }
 //}}}
 //{{{
@@ -2367,7 +2363,11 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
   }
 //}}}
 
-string cVideoRender::getInfo() const { return mDecoder->getName() + " " + mInfo; }
+//{{{
+string cVideoRender::getInfo() const {
+  return fmt::format ("{} q:{} {}", mDecoder->getName(), getQueueSize(), mInfo);
+  }
+//}}}
 //{{{
 void cVideoRender::addFrame (cFrame* frame) {
 
@@ -2400,7 +2400,7 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   (void)skip;
   //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)pesSize);
-  if (mUseQueue)
+  if (isQueued())
     mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
   else
     mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
