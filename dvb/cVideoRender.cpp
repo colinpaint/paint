@@ -214,9 +214,10 @@ public:
   //}}}
 
   virtual string getName() const final { return "ffmpeg"; }
+
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
-                          function<void (cFrame* frame)> addFrameCallback) final {
+                    function<void (cFrame* frame)> addFrameCallback) final {
 
     char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
     if (frameType == 'I') {
@@ -2324,6 +2325,11 @@ cVideoRender::cVideoRender (const string name, uint8_t streamType, uint16_t deco
 
     default: cLog::log (LOGERROR, fmt::format ("cVideoRender - no decoder {:x}", decoderMask));
     }
+
+  mAddFrameCallback = [&](cFrame* frame) noexcept {
+    addFrame (frame);
+    };
+  mUseQueue = true;
   }
 //}}}
 //{{{
@@ -2363,12 +2369,21 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
 
 string cVideoRender::getInfo() const { return mDecoder->getName() + " " + mInfo; }
 //{{{
-void cVideoRender::addFrame (cVideoFrame* frame) {
+void cVideoRender::addFrame (cFrame* frame) {
+
+  cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+
+  mWidth = videoFrame->getWidth();
+  mHeight = videoFrame->getHeight();
+  mLastPts = videoFrame->getPts();
+  mPtsDuration = videoFrame->getPtsDuration();
+  mInfo = fmt::format ("{} {}", mFrames.size(), videoFrame->getInfo());
+
+  logValue (videoFrame->getPts(), (float)videoFrame->getDecodeTime());
 
   // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
-
-  mFrames.emplace(frame->getPts() / frame->getPtsDuration(), frame);
+  mFrames.emplace(videoFrame->getPts() / videoFrame->getPtsDuration(), videoFrame);
 
   if (mFrames.size() >= mMaxPoolSize) {
     // delete youngest frame
@@ -2385,19 +2400,9 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   (void)skip;
   //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)pesSize);
-
-  if (mDecoder)
-    mDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
-      // addFrame lambda
-      cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-      mWidth = videoFrame->getWidth();
-      mHeight = videoFrame->getHeight();
-      mLastPts = videoFrame->getPts();
-      mPtsDuration = videoFrame->getPtsDuration();
-      mInfo = fmt::format ("{} {}", mFrames.size(), videoFrame->getInfo());
-
-      addFrame (videoFrame);
-      logValue (videoFrame->getPts(), (float)videoFrame->getDecodeTime());
-      });
+  if (mUseQueue)
+    mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
+  else
+    mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
   }
 //}}}

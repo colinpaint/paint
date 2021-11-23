@@ -10,6 +10,9 @@
 #include <shared_mutex>
 
 #include "../utils/cMiniLog.h"
+#include "../utils/readerWriterQueue.h"
+
+class cRender;
 //}}}
 constexpr int kPtsPerSecond = 90000;
 
@@ -37,6 +40,31 @@ public:
 
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           std::function<void (cFrame* frame)> addFrameCallback) = 0;
+  };
+//}}}
+//{{{
+class cDecoderQueueItem {
+public:
+  //{{{
+  cDecoderQueueItem (cDecoder* decoder, uint8_t* pes, int pesSize, int64_t pts, int64_t dts,
+            std::function<void (cFrame* frame)> addFrameCallback)
+      : mDecoder(decoder), mPesSize(pesSize), mPts(pts), mDts(dts), mAddFrameCallback(addFrameCallback) {
+    mPes = (uint8_t*)malloc (pesSize);
+    memcpy (mPes, pes, pesSize);
+    }
+  //}}}
+  //{{{
+  ~cDecoderQueueItem() {
+    free (mPes);
+    }
+  //}}}
+
+  cDecoder* mDecoder;
+  uint8_t* mPes;
+  const int mPesSize;
+  const int64_t mPts;
+  const int64_t mDts;
+  std::function<void (cFrame* frame)> mAddFrameCallback;
   };
 //}}}
 
@@ -76,6 +104,14 @@ protected:
 
   std::shared_mutex mSharedMutex;
   cDecoder* mDecoder = nullptr;
+  std::function <void (cFrame* frame)> mAddFrameCallback;
+
+  // decode queue
+  void dequeThread();
+  bool mUseQueue = false;
+  bool mQueueExit = false;
+  bool mQueueRunning = false;
+  readerWriterQueue::cBlockingReaderWriterQueue <cDecoderQueueItem*> mQueue;
 
 private:
   const std::string mName;
