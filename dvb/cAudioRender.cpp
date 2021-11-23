@@ -377,6 +377,10 @@ cAudioRender::cAudioRender (const std::string name, uint8_t streamType, uint16_t
   mMaxMapSize = kAudioPoolSize;
 
   mDecoder = new cFFmpegAudioDecoder (streamType);
+
+  mAddFrameCallback = [&](cFrame* frame) noexcept {
+    addFrame (frame);
+    };
   }
 //}}}
 //{{{
@@ -438,11 +442,19 @@ string cAudioRender::getInfo() const {
   }
 //}}}
 //{{{
-void cAudioRender::addFrame (cAudioFrame* frame) {
+void cAudioRender::addFrame (cFrame* frame) {
+
+  cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+
+  mNumChannels = audioFrame->getNumChannels();
+  mSampleRate = audioFrame->getSampleRate();
+  mSamplesPerFrame = audioFrame->getSamplesPerFrame();
+
+  logValue (audioFrame->getPts(), audioFrame->getPowerValues()[0]);
 
     { // locked emplace and erase
     unique_lock<shared_mutex> lock (mSharedMutex);
-    mFrames.emplace (frame->getPts(), frame);
+    mFrames.emplace (audioFrame->getPts(), audioFrame);
 
     if (mFrames.size() >= mMaxMapSize) {
       auto it = mFrames.begin();
@@ -459,28 +471,24 @@ void cAudioRender::addFrame (cAudioFrame* frame) {
 
   if (mFrames.size() >= mMaxMapSize)
     this_thread::sleep_for (20ms);
+
+
+  if (!mPlayer)
+    mPlayer = new cAudioPlayer (this, audioFrame->getPts());
   }
 //}}}
 //{{{
 void cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
-  (void)dts;
   (void)skip;
   //log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
   //logValue (pts, (float)bufSize);
 
-  mDecoder->decode (pes, pesSize, pts, dts, [&](cFrame* frame) noexcept {
-    // addFrame lambda
-    cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
-    mNumChannels = audioFrame->getNumChannels();
-    mSampleRate = audioFrame->getSampleRate();
-    mSamplesPerFrame = audioFrame->getSamplesPerFrame();
-
-    addFrame (audioFrame);
-    logValue (audioFrame->getPts(), audioFrame->getPowerValues()[0]);
-
-    if (!mPlayer)
-      mPlayer = new cAudioPlayer (this, audioFrame->getPts());
-    });
+  if (isQueued())
+    mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
+  else {
+    mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
+    free (pes);
+    }
   }
 //}}}

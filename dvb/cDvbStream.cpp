@@ -1433,6 +1433,8 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                       case 27:  // HD vid
                         //{{{  send last video pes
                         processed = processPes (eVid, pidInfo, skip);
+                        // allocate new pes buffer
+                        pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                         skip = false;
                         break;
                         //}}}
@@ -1446,6 +1448,8 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                           processed = processPes (eAds, pidInfo, skip);
                         else
                           processed = processPes (eAud, pidInfo, skip);
+
+                        pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                         break;
                         //}}}
                       case 6:   // subtitle
@@ -1453,10 +1457,13 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                         processed = processPes (eSub, pidInfo, skip);
                         break;
                         //}}}
-                      default:
+                      default: {
                         cLog::log (LOGINFO, fmt::format("unknown pid:{} streamType:{}",pid,pidInfo->getStreamType()));
+                        }
                       }
                     }
+                  // reset pes buffer pointer
+                  pidInfo->mBufPtr = pidInfo->mBuffer;
 
                   // save ts streamPos for start of new pes buffer
                   pidInfo->mStreamPos = streamPos;
@@ -1470,9 +1477,6 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                   int pesHeaderBytes = 9 + ts[8];
                   ts += pesHeaderBytes;
                   tsBytesLeft -= pesHeaderBytes;
-
-                  // reset new payload buffer
-                  pidInfo->mBufPtr = pidInfo->mBuffer;
                   }
                 else {
                   uint32_t nn = *(uint32_t*)ts;

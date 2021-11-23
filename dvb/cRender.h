@@ -46,15 +46,17 @@ public:
 class cDecoderQueueItem {
 public:
   //{{{
-  cDecoderQueueItem (cDecoder* decoder, uint8_t* pes, int pesSize, int64_t pts, int64_t dts,
-            std::function<void (cFrame* frame)> addFrameCallback)
-      : mDecoder(decoder), mPesSize(pesSize), mPts(pts), mDts(dts), mAddFrameCallback(addFrameCallback) {
-    mPes = (uint8_t*)malloc (pesSize);
-    memcpy (mPes, pes, pesSize);
-    }
+  cDecoderQueueItem (cDecoder* decoder, 
+                     uint8_t* pes, int pesSize, int64_t pts, int64_t dts,
+                     std::function<void (cFrame* frame)> addFrameCallback)
+      : mDecoder(decoder), 
+        mPes(pes), mPesSize(pesSize), mPts(pts), mDts(dts), 
+        mAddFrameCallback(addFrameCallback) {}
+  // we gain ownership of malloc'd pes buffer
   //}}}
   //{{{
   ~cDecoderQueueItem() {
+    // release malloc'd pes buffer
     free (mPes);
     }
   //}}}
@@ -64,7 +66,7 @@ public:
   const int mPesSize;
   const int64_t mPts;
   const int64_t mDts;
-  std::function<void (cFrame* frame)> mAddFrameCallback;
+  const std::function<void (cFrame* frame)> mAddFrameCallback;
   };
 //}}}
 

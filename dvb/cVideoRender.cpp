@@ -2402,7 +2402,9 @@ void cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   //logValue (pts, (float)pesSize);
   if (isQueued())
     mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
-  else
+  else {
     mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
+    free (pes);
+    }
   }
 //}}}
