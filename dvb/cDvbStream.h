@@ -36,12 +36,12 @@ public:
 
     std::string getLabel() const { return mLabel; }
     uint16_t getPid() const { return mPid; }
-    uint8_t getType() const { return mType; }
+    uint8_t getTypeId() const { return mTypeId; }
     std::string getTypeName() const { return mTypeName; }
     cRender& getRender() const { return *mRender; }
 
     void setLabel (const std::string& label) { mLabel = label; }
-    void setPidType (uint16_t pid, uint8_t streamType);
+    void setPidTypeId (uint16_t pid, uint8_t streamTypeId);
     void setRender (cRender* render) { mRender = render; }
 
     bool toggle();
@@ -51,7 +51,7 @@ public:
 
     std::string mLabel;
     uint16_t mPid = 0;
-    uint8_t mType = 0;
+    uint8_t mTypeId = 0;
     std::string mTypeName;
 
     cRender* mRender = nullptr;
@@ -72,14 +72,14 @@ public:
     int64_t getDts() const { return mDts; }
 
     uint16_t getSid() const { return mSid; }
-    uint8_t getStreamType() const { return mStreamType; }
+    uint8_t getStreamTypeId() const { return mStreamTypeId; }
     std::string getTypeName() const ;
     std::string getInfoString() const { return mInfoString; }
 
     int getBufUsed() const { return int(mBufPtr - mBuffer); }
 
     void setSid (uint16_t sid) { mSid = sid; }
-    void setStreamType (uint8_t streamType) { mStreamType = streamType; }
+    void setStreamTypeId (uint8_t streamTypeId) { mStreamTypeId = streamTypeId; }
     void setInfoString (const std::string infoString) { mInfoString = infoString; }
     //{{{
     void setPts (int64_t pts) {
@@ -128,7 +128,7 @@ public:
     const bool mPsi;
 
     uint16_t mSid = 0;
-    uint8_t mStreamType = 0;
+    uint8_t mStreamTypeId = 0;
 
     std::string mInfoString;
 
@@ -272,7 +272,7 @@ public:
     };
   //}}}
 
-  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, 
+  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName,
               bool renderFirstService, uint16_t decoderOptions);
   virtual ~cDvbStream() { clear(); }
 
