@@ -2095,17 +2095,17 @@ protected:
 
       else {
         // Image processing
-        auto timePoint = chrono::system_clock::now();
+        //auto timePoint = chrono::system_clock::now();
         status = vaToMfxStatus (vaSyncSurface (mVaDisplayHandle, *(vaapi_mid->mSurface)));
-        int64_t syncTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+        //int64_t syncTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
         if (status == MFX_ERR_NONE)
           status = vaToMfxStatus (vaDeriveImage (mVaDisplayHandle, *(vaapi_mid->mSurface), &(vaapi_mid->mImage)));
-        int64_t deriveTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+        //int64_t deriveTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
         if (status == MFX_ERR_NONE)
           status = vaToMfxStatus (vaMapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf, (void**)&pBuffer));
-        int64_t mapTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+        //int64_t mapTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
         if (status == MFX_ERR_NONE) {
           switch (vaapi_mid->mImage.format.fourcc) {
