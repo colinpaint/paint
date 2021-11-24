@@ -22,7 +22,7 @@ constexpr int64_t kPtsPerFrame = 90000 / 25;
 
 // public:
 //{{{
-cRender::cRender (bool queued, const std::string name, uint8_t streamType, uint16_t decoderMask)
+cRender::cRender (bool queued, const string& name, uint8_t streamType, uint16_t decoderMask)
     : mQueued(queued), mName(name), mStreamType(streamType), mDecoderMask(decoderMask), mMiniLog ("log") {
 
   if (queued)
@@ -32,8 +32,6 @@ cRender::cRender (bool queued, const std::string name, uint8_t streamType, uint1
 //{{{
 cRender::~cRender() {}
 //}}}
-
-void cRender::toggleLog() { mMiniLog.toggleEnable(); }
 
 //{{{
 float cRender::getValue (int64_t pts) const {
@@ -51,6 +49,7 @@ float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
   }
 //}}}
 
+void cRender::toggleLog() { mMiniLog.toggleEnable(); }
 //{{{
 void cRender::logValue (int64_t pts, float value) {
 
@@ -63,7 +62,10 @@ void cRender::logValue (int64_t pts, float value) {
     mLastPts = pts;
   }
 //}}}
+void cRender::log (const string& tag, const string& text) { mMiniLog.log (tag, text); }
+void cRender::header() { mMiniLog.setHeader (fmt::format ("header")); }
 
+/// queue
 //{{{
 void cRender::dequeThread() {
 
@@ -106,6 +108,19 @@ float cRender::getQueueFrac() const {
   }
 //}}}
 
-// protected:
-void cRender::header() { mMiniLog.setHeader (fmt::format ("header")); }
-void cRender::log (const string& tag, const string& text) { mMiniLog.log (tag, text); }
+//{{{
+bool cRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,  bool skip) {
+
+  (void)skip;
+  //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
+  //logValue (pts, (float)pesSize);
+  if (isQueued()) {
+    mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
+    return true;
+    }
+  else {
+    mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
+    return false;
+    }
+  }
+//}}}

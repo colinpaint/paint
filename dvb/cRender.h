@@ -74,7 +74,7 @@ class cRender {
 public:
   enum eDecoder { eFFmpeg, eMfxSystem, eMfxVideo };
 
-  cRender (bool useQueue, const std::string name, uint8_t streamType, uint16_t decoderMask);
+  cRender (bool queued, const std::string& name, uint8_t streamType, uint16_t decoderMask);
   virtual ~cRender();
 
   bool isQueued() const { return mQueued; }
@@ -82,11 +82,7 @@ public:
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   uint8_t getStreamType() const { return mStreamType; }
 
-  // miniLog
   cMiniLog& getLog() { return mMiniLog; }
-  void toggleLog();
-
-  // value log
   float getValue (int64_t pts) const;
   float getOffsetValue (int64_t ptsOffset, int64_t& pts) const;
 
@@ -95,17 +91,18 @@ public:
 
   void setRefPts (int64_t pts) { mRefPts = pts; }
   void setMapSize (size_t size) { mMapSize = size; }
+
+  void toggleLog();
   void logValue (int64_t pts, float value);
+  void log (const std::string& tag, const std::string& text);
+  void header();
 
   // process
   virtual std::string getInfo() const = 0;
   virtual void addFrame (cFrame* frame) = 0;
-  virtual bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) = 0;
+  virtual bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
 
 protected:
-  void header();
-  void log (const std::string& tag, const std::string& text);
-
   std::shared_mutex mSharedMutex;
   cDecoder* mDecoder = nullptr;
   std::function <void (cFrame* frame)> mAddFrameCallback;

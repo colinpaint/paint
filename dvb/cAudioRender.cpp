@@ -34,8 +34,9 @@ extern "C" {
 
 using namespace std;
 //}}}
-
+constexpr bool kQueued = false;
 constexpr uint32_t kAudioPoolSize = 50;
+
 //{{{
 class cAudioFrame : public cFrame {
 public:
@@ -368,8 +369,8 @@ private:
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const std::string name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(false, name, streamType, decoderMask) {
+cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t decoderMask)
+    : cRender(kQueued, name, streamType, decoderMask) {
 
   mNumChannels = 2;
   mSampleRate = 48000;
@@ -475,22 +476,5 @@ void cAudioRender::addFrame (cFrame* frame) {
 
   if (!mPlayer)
     mPlayer = new cAudioPlayer (this, audioFrame->getPts());
-  }
-//}}}
-//{{{
-bool cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
-
-  (void)skip;
-  //log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (pts), pesSize));
-  //logValue (pts, (float)bufSize);
-
-  if (isQueued()) {
-    mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
-    return true;
-    }
-  else {
-    mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
-    return false;
-    }
   }
 //}}}

@@ -78,8 +78,9 @@ extern "C" {
 
 using namespace std;
 //}}}
-
+constexpr bool kQueued = true;
 constexpr uint32_t kVideoPoolSize = 50;
+
 //{{{
 class cVideoFrame : public cFrame {
 public:
@@ -2300,8 +2301,8 @@ protected:
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const string name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(true, name, streamType, decoderMask), mMaxPoolSize(kVideoPoolSize) {
+cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t decoderMask)
+    : cRender(kQueued, name, streamType, decoderMask), mMaxPoolSize(kVideoPoolSize) {
 
   switch (decoderMask) {
     case eFFmpeg:
@@ -2391,22 +2392,6 @@ void cVideoRender::addFrame (cFrame* frame) {
     auto frameToDelete = (*it).second;
     it = mFrames.erase (it);
     delete frameToDelete;
-    }
-  }
-//}}}
-//{{{
-bool cVideoRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,  bool skip) {
-
-  (void)skip;
-  //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
-  //logValue (pts, (float)pesSize);
-  if (isQueued()) {
-    mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
-    return true;
-    }
-  else {
-    mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
-    return false;
     }
   }
 //}}}
