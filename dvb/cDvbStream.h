@@ -38,10 +38,12 @@ public:
     uint16_t getPid() const { return mPid; }
     uint8_t getTypeId() const { return mTypeId; }
     std::string getTypeName() const { return mTypeName; }
+    int64_t getPts() const { return mPts; }
     cRender& getRender() const { return *mRender; }
 
     void setLabel (const std::string& label) { mLabel = label; }
     void setPidTypeId (uint16_t pid, uint8_t streamTypeId);
+    void setPts (int64_t pts) { mPts = pts; }
     void setRender (cRender* render) { mRender = render; }
 
     bool toggle();
@@ -54,6 +56,7 @@ public:
     uint8_t mTypeId = 0;
     std::string mTypeName;
 
+    int64_t mPts = -1;
     cRender* mRender = nullptr;
     };
   //}}}

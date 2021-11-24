@@ -11,13 +11,6 @@
 
 using namespace std;
 //}}}
-//{{{  defines
-#define AVRB16(p) ((*(p) << 8) | *(p+1))
-
-#define SCALEBITS 10
-#define ONE_HALF  (1 << (SCALEBITS - 1))
-#define FIX(x)    ((int) ((x) * (1<<SCALEBITS) + 0.5))
-//}}}
 constexpr int64_t kPtsPerFrame = 90000 / 25;
 
 // public:
@@ -56,7 +49,10 @@ float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
   }
 //}}}
 
+// log
 void cRender::toggleLog() { mMiniLog.toggleEnable(); }
+void cRender::header() { mMiniLog.setHeader (fmt::format ("header")); }
+void cRender::log (const string& tag, const string& text) { mMiniLog.log (tag, text); }
 //{{{
 void cRender::logValue (int64_t pts, float value) {
 
@@ -69,10 +65,39 @@ void cRender::logValue (int64_t pts, float value) {
     mLastPts = pts;
   }
 //}}}
-void cRender::log (const string& tag, const string& text) { mMiniLog.log (tag, text); }
-void cRender::header() { mMiniLog.setHeader (fmt::format ("header")); }
 
 /// queue
+//{{{
+int cRender::getQueueSize() const {
+  return (int)mQueue.size_approx();
+  }
+//}}}
+//{{{
+float cRender::getQueueFrac() const {
+  return (float)mQueue.size_approx() / mQueue.max_capacity();
+  }
+//}}}
+
+// process
+//{{{
+bool cRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
+
+  (void)skip;
+  //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
+  //logValue (pts, (float)pesSize);
+
+  if (isQueued()) {
+    mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
+    return true;
+    }
+  else {
+    mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
+    return false;
+    }
+  }
+//}}}
+
+// private:
 //{{{
 void cRender::startQueueThread() {
 
@@ -101,35 +126,6 @@ void cRender::stopQueueThread() {
     mQueueExit = true;
     while (mQueueRunning)
       this_thread::sleep_for (100ms);
-    }
-  }
-//}}}
-//{{{
-int cRender::getQueueSize() const {
-  return (int)mQueue.size_approx();
-  }
-//}}}
-//{{{
-float cRender::getQueueFrac() const {
-  return (float)mQueue.size_approx() / mQueue.max_capacity();
-  }
-//}}}
-
-// process
-//{{{
-bool cRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
-
-  (void)skip;
-  //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
-  //logValue (pts, (float)pesSize);
-
-  if (isQueued()) {
-    mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
-    return true;
-    }
-  else {
-    mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
-    return false;
     }
   }
 //}}}

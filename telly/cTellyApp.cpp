@@ -1,4 +1,4 @@
-// cTvApp.cpp - tvApp info holder from tvMain
+// cTellyApp.cpp - tvApp info holder from tvMain
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 

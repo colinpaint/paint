@@ -144,6 +144,15 @@ struct cMat4x4 {
   //}}}
 
   //{{{
+  void setTranslate (const cVec2& pos) {
+  // set translate to pos
+
+    mat[3][0] = pos.x;
+    mat[3][1] = pos.y;
+    mat[3][2] = 0.f;
+    }
+  //}}}
+  //{{{
   void setTranslate (const cVec3& pos) {
   // set translate to pos
 
@@ -153,12 +162,28 @@ struct cMat4x4 {
     }
   //}}}
   //{{{
-  void translate (const cVec3& offset) {
+  void setSize (const cVec2& size) {
+
+    mat[0][0] = size.x;
+    mat[1][1] = size.y;
+    }
+  //}}}
+
+  //{{{
+  void translate (const cVec2& offset) {
   // translate by offset
 
     mat[3][0] += offset.x;
     mat[3][1] += offset.y;
-    mat[3][2] += offset.z;
+    }
+  //}}}
+  //{{{
+  void size (const cVec2& size) {
+
+    mat[0][0] *= size.x;
+    mat[1][1] *= size.y;
+    mat[3][0] *= size.x;
+    mat[3][1] *= size.y;
     }
   //}}}
   };

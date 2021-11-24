@@ -1,4 +1,4 @@
-// tellyMain.cpp - imgui tv dvb analyser,splitter main
+// tellyMain.cpp - imgui telly main
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 

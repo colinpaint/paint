@@ -926,9 +926,13 @@ void cDvbStream::stopServiceProgram (cService* service) {
 bool cDvbStream::processPes (eStreamType streamType, cPidInfo* pidInfo, bool skip) {
 
   cService* service = getService (pidInfo->getSid());
-  if (service && service->getStream (streamType).isEnabled())
-    return service->getStream (streamType).getRender().processPes (
-      pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->getPts(), pidInfo->getDts(), skip);
+  if (service) {
+    cStream& stream = service->getStream (streamType);
+    stream.setPts (pidInfo->getPts());
+    if (stream.isEnabled())
+      return stream.getRender().processPes (
+        pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->getPts(), pidInfo->getDts(), skip);
+    }
 
   //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
   return false;

@@ -37,15 +37,16 @@ public:
 
     cGraphics& graphics = app.getGraphics();
 
-    if (toggleButton ("bgnd", mForceBgnd))
-      mForceBgnd = !mForceBgnd;
+    // clear bgnd
+    graphics.background (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
 
+    // draw bgnd piccies
     if (app.getDvbStream())
       drawBgnd (*app.getDvbStream(), graphics, app.getDecoderOptions());
 
     // draw tabs
     ImGui::SameLine();
-    mMainTabIndex = interlockedButtons ({"telly","services", "pids", "recorded"}, mMainTabIndex, {0.f,0.f}, true);
+    mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
 
     // draw fullScreen
     if (app.getPlatform().hasFullScreen()) {
@@ -96,11 +97,11 @@ public:
       ImGui::PushFont (app.getMonoFont());
       ImGui::BeginChild ("tab", {0.f,0.f}, false,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-      switch (mMainTabIndex) {
-        case 0: drawTelly (dvbStream, graphics, app.getDecoderOptions()); break;
-        case 1: drawServices (dvbStream, graphics, app.getDecoderOptions()); break;
-        case 2: drawPidMap (dvbStream, graphics, app.getDecoderOptions()); break;
-        case 3: drawRecorded (dvbStream, graphics, app.getDecoderOptions()); break;
+      switch (mTab) {
+        case eTelly:    drawTelly    (dvbStream, graphics, app.getDecoderOptions()); break;
+        case eServices: drawServices (dvbStream, graphics, app.getDecoderOptions()); break;
+        case ePids:     drawPidMap   (dvbStream, graphics, app.getDecoderOptions()); break;
+        case eRecorded: drawRecorded (dvbStream, graphics, app.getDecoderOptions()); break;
         }
 
       ImGui::EndChild();
@@ -109,25 +110,29 @@ public:
     }
   //}}}
 private:
+  enum eTab { eTelly, eServices, ePids, eRecorded };
+  inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded" };
   //{{{
   void drawBgnd (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
     (void)decoderOptions;
     cPoint windowSize = cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight());
 
-    if (mForceBgnd)
-      graphics.background (windowSize);
-
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
-      if (!service.getStream (cDvbStream::eAud).isEnabled() || !service.getStream (cDvbStream::eVid).isEnabled())
+      if (!service.getStream (cDvbStream::eVid).isEnabled())
         continue;
 
-      cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
       cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
       cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
 
-      cTexture* texture = video.getTexture (audio.getPlayPts(), graphics);
+      int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
+      if (service.getStream (cDvbStream::eAud).isEnabled()) {
+        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
+        playPts = audio.getPlayPts();
+        }
+
+      cTexture* texture = video.getTexture (playPts, graphics);
       if (!texture)
         continue;
 
@@ -135,21 +140,18 @@ private:
         mQuad = graphics.createQuad (videoSize);
       if (!mShader)
         mShader = graphics.createTextureShader (texture->getTextureType());
-
       texture->setSource();
       mShader->use();
 
       cMat4x4 model;
-      model.setTranslate (cVec3 (0.f, 0.f, 0.f));
-      //model.setTranslate (cVec3 (windowSize.x/2.f, windowSize.y/2.f, 0.f));
+      model.translate (cVec2 ((windowSize.x-videoSize.x)/2.f, (windowSize.y-videoSize.y)/2.f));
+      model.size (cVec2 ((float)windowSize.x/videoSize.x, (float)windowSize.y/videoSize.y));
       cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
       mShader->setModelProjection (model, orthoProjection);
+
       mQuad->draw();
       return;
       }
-
-    if (!mForceBgnd)
-      graphics.background (windowSize);
     }
   //}}}
   //{{{
@@ -357,15 +359,12 @@ private:
   //{{{
   void drawVideo (uint16_t sid, cRender& render, cGraphics& graphics, int64_t playPts) {
 
-   (void)graphics;
-   (void)playPts;
-   cVideoRender& video = dynamic_cast<cVideoRender&>(render);
+    (void)graphics;
+    (void)playPts;
 
+    cVideoRender& video = dynamic_cast<cVideoRender&>(render);
     plotValues (sid, video, 0xffffffff);
     ImGui::TextUnformatted (video.getInfo().c_str());
-    //cTexture* texture = video.getTexture (playPts, graphics);
-    //if (texture)
-    //  ImGui::Image ((void*)(intptr_t)texture->getTextureId(), {video.getWidth()/4.f,video.getHeight()/4.f});
     drawMiniLog (video.getLog());
     }
   //}}}
@@ -435,7 +434,7 @@ private:
     }
   //}}}
   //{{{  vars
-  uint8_t mMainTabIndex = 0;
+  eTab mTab = eTelly;
 
   int64_t mMaxPidPackets = 0;
   size_t mPacketChars = 3;
@@ -447,8 +446,6 @@ private:
   std::array <size_t, 4> mPidMaxChars = { 3 };
 
   int mPlotIndex = 0;
-
-  bool mForceBgnd = true;
 
   cQuad* mQuad = nullptr;
   cTextureShader* mShader = nullptr;

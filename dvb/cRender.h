@@ -93,9 +93,9 @@ public:
   void setMapSize (size_t size) { mMapSize = size; }
 
   void toggleLog();
-  void logValue (int64_t pts, float value);
-  void log (const std::string& tag, const std::string& text);
   void header();
+  void log (const std::string& tag, const std::string& text);
+  void logValue (int64_t pts, float value);
 
   // process
   virtual std::string getInfo() const = 0;
@@ -104,8 +104,6 @@ public:
   bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
 
 protected:
-  void startQueueThread();
-  void stopQueueThread();
   int getQueueSize() const;
   float getQueueFrac() const;
 
@@ -122,6 +120,9 @@ protected:
   readerWriterQueue::cBlockingReaderWriterQueue <cDecoderQueueItem*> mQueue;
 
 private:
+  void startQueueThread();
+  void stopQueueThread();
+
   const bool mQueued = false;
   const std::string mName;
   const uint8_t mStreamType;
