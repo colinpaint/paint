@@ -38,7 +38,7 @@ public:
 
 class cSubtitleRender : public cRender {
 public:
-  cSubtitleRender (const std::string& name, uint8_t streamType, uint16_t decoderMask);
+  cSubtitleRender (const std::string& name, uint8_t streamTypeId, uint16_t decoderMask);
   ~cSubtitleRender();
 
   size_t getNumLines() const;

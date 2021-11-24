@@ -191,13 +191,13 @@ private:
 class cMfxDecoder : public cDecoder {
 public:
   //{{{
-  cMfxDecoder(mfxIMPL mfxImpl, uint8_t streamType)  {
+  cMfxDecoder(mfxIMPL mfxImpl, uint8_t streamTypeId)  {
 
     mfxVersion version = {{0,1}};
     mfxStatus status = mSession.Init (mfxImpl, &version);
     if (status != MFX_ERR_NONE)
       cLog::log (LOGERROR, fmt::format ("cMfxVideoDecoder session.Init failed {} {}",
-                                        streamType, getMfxStatusString (status)));
+                                        streamTypeId, getMfxStatusString (status)));
 
     // query selected implementation and version
     status = mSession.QueryIMPL (&mfxImpl);
@@ -209,7 +209,7 @@ public:
       cLog::log (LOGERROR, "QueryVersion failed " + getMfxStatusString (status));
     cLog::log (LOGINFO, getMfxInfoString (mfxImpl, version));
 
-    mH264 = (streamType == 27);
+    mH264 = (streamTypeId == 27);
     mVideoParams.mfx.CodecId = mH264 ? MFX_CODEC_AVC : MFX_CODEC_MPEG2;
     }
   //}}}
@@ -458,13 +458,13 @@ protected:
 class cFFmpegDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegDecoder (uint8_t streamType)
-     : cDecoder(), mH264 (streamType == 27),
-       mAvCodec (avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
+  cFFmpegDecoder (uint8_t streamTypeId)
+     : cDecoder(), mH264 (streamTypeId == 27),
+       mAvCodec (avcodec_find_decoder ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder stream:{}", streamType));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder stream:{}", streamTypeId));
 
-    mAvParser = av_parser_init ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
+    mAvParser = av_parser_init ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }
@@ -569,10 +569,10 @@ private:
   class cMfxSystemDecoder : public cMfxDecoder {
   public:
     //{{{
-    cMfxSystemDecoder (uint8_t streamType)
-       : cMfxDecoder(MFX_IMPL_HARDWARE, streamType) {
+    cMfxSystemDecoder (uint8_t streamTypeId)
+       : cMfxDecoder(MFX_IMPL_HARDWARE, streamTypeId) {
 
-      cLog::log (LOGINFO, fmt::format ("cMfxSystemVideoDecoder stream:{}", streamType));
+      cLog::log (LOGINFO, fmt::format ("cMfxSystemVideoDecoder stream:{}", streamTypeId));
       mVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
       }
     //}}}
@@ -608,10 +608,10 @@ private:
   class cMfxSurfaceDecoderD3D9 : public cMfxDecoder {
   public:
     //{{{
-    cMfxSurfaceDecoderD3D9 (uint8_t streamType)
-       : cMfxDecoder(MFX_IMPL_HARDWARE, streamType) {
+    cMfxSurfaceDecoderD3D9 (uint8_t streamTypeId)
+       : cMfxDecoder(MFX_IMPL_HARDWARE, streamTypeId) {
 
-      cLog::log (LOGINFO, fmt::format ("cMfxSurfaceDecoderD3D9 stream:{}", streamType));
+      cLog::log (LOGINFO, fmt::format ("cMfxSurfaceDecoderD3D9 stream:{}", streamTypeId));
       mVideoParams.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
 
       // create DirectX11 device,context
@@ -1023,10 +1023,10 @@ private:
   class cMfxSurfaceDecoderD3D11 : public cMfxDecoder {
   public:
     //{{{
-    cMfxSurfaceDecoderD3D11 (uint8_t streamType)
-       : cMfxDecoder(MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11, streamType) {
+    cMfxSurfaceDecoderD3D11 (uint8_t streamTypeId)
+       : cMfxDecoder(MFX_IMPL_HARDWARE | MFX_IMPL_VIA_D3D11, streamTypeId) {
 
-      cLog::log (LOGINFO, fmt::format ("cMfxSurfaceDecoderD3D11 stream:{}", streamType));
+      cLog::log (LOGINFO, fmt::format ("cMfxSurfaceDecoderD3D11 stream:{}", streamTypeId));
       mVideoParams.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
 
       // create DirectX11 device,context
@@ -1502,10 +1502,10 @@ private:
   class cMfxSystemDecoder : public cMfxDecoder {
   public:
     //{{{
-    cMfxSystemDecoder (uint8_t streamType)
-       : cMfxDecoder(MFX_IMPL_HARDWARE, streamType) {
+    cMfxSystemDecoder (uint8_t streamTypeId)
+       : cMfxDecoder(MFX_IMPL_HARDWARE, streamTypeId) {
 
-      cLog::log (LOGINFO, fmt::format ("cMfxSystemDecoder VAAPI stream:{}", streamType));
+      cLog::log (LOGINFO, fmt::format ("cMfxSystemDecoder VAAPI stream:{}", streamTypeId));
 
       mVideoParams.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
 
@@ -1687,10 +1687,10 @@ private:
   class cMfxSurfaceDecoder : public cMfxDecoder {
   public:
     //{{{
-    cMfxSurfaceDecoder (uint8_t streamType)
-        : cMfxDecoder(MFX_IMPL_HARDWARE, streamType) {
+    cMfxSurfaceDecoder (uint8_t streamTypeId)
+        : cMfxDecoder(MFX_IMPL_HARDWARE, streamTypeId) {
 
-      cLog::log (LOGINFO, fmt::format ("cMfxSurfaceDecoder VAAPI stream:{}", streamType));
+      cLog::log (LOGINFO, fmt::format ("cMfxSurfaceDecoder VAAPI stream:{}", streamTypeId));
 
       mVideoParams.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
 
@@ -2301,24 +2301,24 @@ private:
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kQueued, name, streamType, decoderMask, kVideoMapSize) {
+cVideoRender::cVideoRender (const string& name, uint8_t streamTypeId, uint16_t decoderMask)
+    : cRender(kQueued, name, streamTypeId, decoderMask, kVideoMapSize) {
 
   switch (decoderMask) {
     case eFFmpeg:
-      mDecoder = new cFFmpegDecoder (streamType);
+      mDecoder = new cFFmpegDecoder (streamTypeId);
       break;
 
     case eMfxSystem:
-      mDecoder = new cMfxSystemDecoder (streamType);
+      mDecoder = new cMfxSystemDecoder (streamTypeId);
       break;
 
     case eMfxVideo:
       #ifdef _WIN32
-        //mDecoder = new cMfxSurfaceDecoderD3D9 (streamType);
-        mDecoder = new cMfxSurfaceDecoderD3D11 (streamType);
+        //mDecoder = new cMfxSurfaceDecoderD3D9 (streamTypeId);
+        mDecoder = new cMfxSurfaceDecoderD3D11 (streamTypeId);
       #else
-        mDecoder = new cMfxSurfaceDecoder (streamType);
+        mDecoder = new cMfxSurfaceDecoder (streamTypeId);
       #endif
       break;
 

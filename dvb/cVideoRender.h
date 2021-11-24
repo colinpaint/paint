@@ -16,7 +16,7 @@ class cGraphics;
 
 class cVideoRender : public cRender {
 public:
-  cVideoRender (const std::string& name, uint8_t streamType, uint16_t decoderMask);
+  cVideoRender (const std::string& name, uint8_t streamTypeId, uint16_t decoderMask);
   virtual ~cVideoRender();
 
   uint16_t getWidth() const { return mWidth; }

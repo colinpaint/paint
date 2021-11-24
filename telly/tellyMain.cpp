@@ -135,7 +135,7 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI fonts
-  cPlatform& platform = cPlatform::createByName (platformName, cPoint(800, 600), false, vsync, fullScreen);
+  cPlatform& platform = cPlatform::createByName (platformName, cPoint(1920/2, 1080/2), false, vsync, fullScreen);
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
   ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
   ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f);

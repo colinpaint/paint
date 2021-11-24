@@ -100,13 +100,13 @@ private:
 class cFFmpegAudioDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegAudioDecoder (uint8_t streamType) : cDecoder(),
-    mAvCodec (avcodec_find_decoder ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
+  cFFmpegAudioDecoder (uint8_t streamTypeId) : cDecoder(),
+    mAvCodec (avcodec_find_decoder ((streamTypeId == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder stream:{}", streamType));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder stream:{}", streamTypeId));
 
     // aacAdts AV_CODEC_ID_AAC;
-    mAvParser = av_parser_init ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
+    mAvParser = av_parser_init ((streamTypeId == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }
@@ -367,14 +367,14 @@ private:
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kQueued, name, streamType, decoderMask, kAudioMapSize) {
+cAudioRender::cAudioRender (const string& name, uint8_t streamTypeId, uint16_t decoderMask)
+    : cRender(kQueued, name, streamTypeId, decoderMask, kAudioMapSize) {
 
   mNumChannels = 2;
   mSampleRate = 48000;
   mSamplesPerFrame = 1024;
 
-  mDecoder = new cFFmpegAudioDecoder (streamType);
+  mDecoder = new cFFmpegAudioDecoder (streamTypeId);
   }
 //}}}
 //{{{
