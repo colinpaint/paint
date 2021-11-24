@@ -81,6 +81,7 @@ using namespace std;
 constexpr bool kQueued = true;
 constexpr uint32_t kVideoMapSize = 50;
 
+// cFrame derived classes
 //{{{
 class cVideoFrame : public cFrame {
 public:
@@ -185,6 +186,7 @@ private:
   };
 //}}}
 
+// cDecoder derived classes
 //{{{
 class cMfxDecoder : public cDecoder {
 public:
@@ -2359,6 +2361,7 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
   }
 //}}}
 
+// virtuals
 //{{{
 string cVideoRender::getInfo() const {
   return fmt::format ("{} q:{} {}", mDecoder->getName(), getQueueSize(), mInfo);

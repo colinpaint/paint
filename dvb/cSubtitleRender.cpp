@@ -24,6 +24,7 @@ using namespace std;
 #define FIX(x)    ((int) ((x) * (1<<SCALEBITS) + 0.5))
 //}}}
 constexpr bool kQueued = true;
+constexpr size_t kSubtitleMapSize = 0;
 
 //{{{
 class cSubtitleDecoder : public cDecoder {
@@ -904,7 +905,7 @@ private:
 // public:
 //{{{
 cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kQueued, name, streamType, decoderMask, 0) {
+    : cRender(kQueued, name, streamType, decoderMask, kSubtitleMapSize) {
 
   mDecoder = new cSubtitleDecoder (this);
   }
