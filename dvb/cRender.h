@@ -74,7 +74,7 @@ class cRender {
 public:
   enum eDecoder { eFFmpeg, eMfxSystem, eMfxVideo };
 
-  cRender (bool queued, const std::string& name, uint8_t streamType, uint16_t decoderMask);
+  cRender (bool queued, const std::string& name, uint8_t streamType, uint16_t decoderMask, size_t maxMapSize);
   virtual ~cRender();
 
   bool isQueued() const { return mQueued; }
@@ -104,15 +104,19 @@ public:
   bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
 
 protected:
-  std::shared_mutex mSharedMutex;
-  cDecoder* mDecoder = nullptr;
-
-  // decode queue
   void startQueueThread();
   void stopQueueThread();
   int getQueueSize() const;
   float getQueueFrac() const;
 
+  std::shared_mutex mSharedMutex;
+  cDecoder* mDecoder = nullptr;
+
+  // frameMap
+  const size_t mMaxMapSize;
+  std::map <int64_t, cFrame*> mFrames;
+
+  // decode queue
   bool mQueueExit = false;
   bool mQueueRunning = false;
   readerWriterQueue::cBlockingReaderWriterQueue <cDecoderQueueItem*> mQueue;

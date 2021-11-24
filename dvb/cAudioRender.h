@@ -25,7 +25,7 @@ public:
   size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
   uint32_t getSampleRate() const { return mSampleRate; }
 
-  bool getPlaying() const;
+  bool isPlaying() const;
   int64_t getPlayPts() const;
 
   // play
@@ -36,6 +36,7 @@ public:
   cAudioFrame* findFrame (int64_t pts) const;
   cAudioFrame* findPlayFrame() const;
 
+  // virtuals
   virtual std::string getInfo() const final;
   virtual void addFrame (cFrame* frame) final;
 
@@ -44,9 +45,6 @@ private:
   size_t mNumChannels;
   size_t mSamplesPerFrame = 0;
   uint32_t mSampleRate = 0;
-
-  size_t mMaxMapSize;
-  std::map <int64_t, cAudioFrame*> mFrames;
 
   cAudioPlayer* mPlayer = nullptr;
   };

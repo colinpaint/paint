@@ -28,10 +28,7 @@ constexpr bool kQueued = true;
 //{{{
 class cSubtitleDecoder : public cDecoder {
 public:
-  //{{{
-  cSubtitleDecoder (cRender* render) : mRender(render) {
-    }
-  //}}}
+  cSubtitleDecoder (cRender* render) : mRender(render) {}
   //{{{
   virtual ~cSubtitleDecoder() {
 
@@ -894,7 +891,7 @@ private:
   //}}}
 
   // vars
-  cRender* mRender; // hack for log, fix it
+  cRender* mRender; // hack for render log, fix it
 
   cDisplayDefinition mDisplayDefinition;
   cPage mPage;
@@ -907,7 +904,7 @@ private:
 // public:
 //{{{
 cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kQueued, name, streamType, decoderMask) {
+    : cRender(kQueued, name, streamType, decoderMask, 0) {
 
   mDecoder = new cSubtitleDecoder (this);
   }
@@ -930,6 +927,7 @@ cSubtitleImage& cSubtitleRender::getImage (size_t line) {
   }
 //}}}
 
+// virtuals
 //{{{
 string cSubtitleRender::getInfo() const {
   return "subtitle info";

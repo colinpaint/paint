@@ -35,7 +35,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kQueued = false;
-constexpr uint32_t kAudioPoolSize = 50;
+constexpr size_t kAudioMapSize = 50;
 
 //{{{
 class cAudioFrame : public cFrame {
@@ -343,7 +343,7 @@ public:
 
   ~cAudioPlayer() = default;
 
-  bool getPlaying() const { return mPlaying; }
+  bool isPlaying() const { return mPlaying; }
   int64_t getPts() const { return mPts; }
 
   void togglePlaying() { mPlaying = !mPlaying; }
@@ -370,12 +370,11 @@ private:
 // cAudioRender
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kQueued, name, streamType, decoderMask) {
+    : cRender(kQueued, name, streamType, decoderMask, kAudioMapSize) {
 
   mNumChannels = 2;
   mSampleRate = 48000;
   mSamplesPerFrame = 1024;
-  mMaxMapSize = kAudioPoolSize;
 
   mDecoder = new cFFmpegAudioDecoder (streamType);
   }
@@ -397,8 +396,8 @@ cAudioRender::~cAudioRender() {
 //}}}
 
 //{{{
-bool cAudioRender::getPlaying() const {
-  return mPlayer ? mPlayer->getPlaying() : false;
+bool cAudioRender::isPlaying() const {
+  return mPlayer ? mPlayer->isPlaying() : false;
   }
 //}}}
 //{{{
@@ -424,7 +423,7 @@ void cAudioRender::setPlayPts (int64_t pts) {
 cAudioFrame* cAudioRender::findFrame (int64_t pts) const {
 
   auto it = mFrames.find (pts);
-  return (it == mFrames.end()) ? nullptr : it->second;
+  return (it == mFrames.end()) ? nullptr : dynamic_cast<cAudioFrame*>(it->second);
   }
 //}}}
 //{{{

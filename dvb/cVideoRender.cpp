@@ -79,7 +79,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kQueued = true;
-constexpr uint32_t kVideoPoolSize = 50;
+constexpr uint32_t kVideoMapSize = 50;
 
 //{{{
 class cVideoFrame : public cFrame {
@@ -1431,7 +1431,7 @@ private:
 
         // get corresponding adapter number
         mfxU32 adapterNum = 0;
-        for (auto& implType : kImplTypes) 
+        for (auto& implType : kImplTypes)
           if (implType.mImpl == baseImpl) {
             adapterNum = implType.mAdapterId;
             break;
@@ -2300,7 +2300,7 @@ private:
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kQueued, name, streamType, decoderMask), mMaxPoolSize(kVideoPoolSize) {
+    : cRender(kQueued, name, streamType, decoderMask, kVideoMapSize) {
 
   switch (decoderMask) {
     case eFFmpeg:
@@ -2351,8 +2351,8 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
     it = mFrames.begin();
 
   if (!mTexture) // create
-    mTexture = graphics.createTexture ((*it).second->getTextureType(), {getWidth(), getHeight()});
-  mTexture->setPixels ((*it).second->getPixelData());
+    mTexture = graphics.createTexture (dynamic_cast<cVideoFrame*>((*it).second)->getTextureType(), {getWidth(), getHeight()});
+  mTexture->setPixels (dynamic_cast<cVideoFrame*>((*it).second)->getPixelData());
 
   mTexturePts = playPts;
   return mTexture;
@@ -2381,7 +2381,7 @@ void cVideoRender::addFrame (cFrame* frame) {
   unique_lock<shared_mutex> lock (mSharedMutex);
   mFrames.emplace(videoFrame->getPts() / videoFrame->getPtsDuration(), videoFrame);
 
-  if (mFrames.size() >= mMaxPoolSize) {
+  if (mFrames.size() >= mMaxMapSize) {
     // delete youngest frame
     auto it = mFrames.begin();
     auto frameToDelete = (*it).second;

@@ -24,13 +24,11 @@ public:
 
   cTexture* getTexture (int64_t playPts, cGraphics& graphics);
 
+  // virtuals
   virtual std::string getInfo() const final;
   virtual void addFrame (cFrame* frame) final;
 
 private:
-  const size_t mMaxPoolSize;
-  std::map <int64_t, cVideoFrame*> mFrames;
-
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
 
