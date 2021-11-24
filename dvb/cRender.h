@@ -106,7 +106,6 @@ public:
 protected:
   std::shared_mutex mSharedMutex;
   cDecoder* mDecoder = nullptr;
-  std::function <void (cFrame* frame)> mAddFrameCallback;
 
   // decode queue
   void startQueueThread();
@@ -123,6 +122,8 @@ private:
   const std::string mName;
   const uint8_t mStreamType;
   const uint16_t mDecoderMask;
+
+  std::function <void (cFrame* frame)> mAddFrameCallback;
 
   cMiniLog mMiniLog;
 

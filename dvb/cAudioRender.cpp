@@ -378,10 +378,6 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
   mMaxMapSize = kAudioPoolSize;
 
   mDecoder = new cFFmpegAudioDecoder (streamType);
-
-  mAddFrameCallback = [&](cFrame* frame) noexcept {
-    addFrame (frame);
-    };
   }
 //}}}
 //{{{
@@ -464,7 +460,7 @@ void cAudioRender::addFrame (cFrame* frame) {
         auto frameToRemove = (*it).second;
         it = mFrames.erase (it);
 
-        // !!! should give back to free list !!!
+        // !!! could give back to free list !!!
         delete frameToRemove;
         }
       }

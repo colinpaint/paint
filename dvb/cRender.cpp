@@ -25,6 +25,10 @@ constexpr int64_t kPtsPerFrame = 90000 / 25;
 cRender::cRender (bool queued, const string& name, uint8_t streamType, uint16_t decoderMask)
     : mQueued(queued), mName(name), mStreamType(streamType), mDecoderMask(decoderMask), mMiniLog ("log") {
 
+  mAddFrameCallback = [&](cFrame* frame) noexcept {
+    addFrame (frame);
+    };
+
   if (queued)
     thread ([=](){ startQueueThread(); }).detach();
   }

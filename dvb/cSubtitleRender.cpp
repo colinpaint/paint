@@ -910,10 +910,6 @@ cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16
     : cRender(kQueued, name, streamType, decoderMask) {
 
   mDecoder = new cSubtitleDecoder (this);
-
-  mAddFrameCallback = [&](cFrame* frame) noexcept {
-    addFrame (frame);
-    };
   }
 //}}}
 cSubtitleRender::~cSubtitleRender() = default;
