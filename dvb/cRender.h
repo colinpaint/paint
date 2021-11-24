@@ -109,8 +109,8 @@ protected:
   std::function <void (cFrame* frame)> mAddFrameCallback;
 
   // decode queue
-  void dequeThread();
-  void exitThread();
+  void startQueueThread();
+  void stopQueueThread();
   int getQueueSize() const;
   float getQueueFrac() const;
 

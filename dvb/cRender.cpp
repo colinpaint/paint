@@ -26,11 +26,13 @@ cRender::cRender (bool queued, const string& name, uint8_t streamType, uint16_t 
     : mQueued(queued), mName(name), mStreamType(streamType), mDecoderMask(decoderMask), mMiniLog ("log") {
 
   if (queued)
-    thread ([=](){ dequeThread(); }).detach();
+    thread ([=](){ startQueueThread(); }).detach();
   }
 //}}}
 //{{{
-cRender::~cRender() {}
+cRender::~cRender() {
+  stopQueueThread();
+  }
 //}}}
 
 //{{{
@@ -67,7 +69,7 @@ void cRender::header() { mMiniLog.setHeader (fmt::format ("header")); }
 
 /// queue
 //{{{
-void cRender::dequeThread() {
+void cRender::startQueueThread() {
 
   cLog::setThreadName ("Q");
 
@@ -88,12 +90,12 @@ void cRender::dequeThread() {
   }
 //}}}
 //{{{
-void cRender::exitThread() {
+void cRender::stopQueueThread() {
 
   if (mQueued) {
     mQueueExit = true;
-    //while (mQueueRunning)
-    this_thread::sleep_for (100ms);
+    while (mQueueRunning)
+      this_thread::sleep_for (100ms);
     }
   }
 //}}}
@@ -108,6 +110,7 @@ float cRender::getQueueFrac() const {
   }
 //}}}
 
+// process
 //{{{
 bool cRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,  bool skip) {
 
