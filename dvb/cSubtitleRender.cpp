@@ -163,6 +163,7 @@ public:
     }
   //}}}
 
+private:
   //{{{
   class cBitStream {
   // dodgy faster bitstream, no size chacking, assumes multiple of 4 bytes
@@ -249,7 +250,7 @@ public:
     uint8_t mId = 0xFF;
     uint8_t mVersion = 0xFF;
 
-    std::array <uint32_t,16> m16bgra;
+    array <uint32_t,16> m16bgra;
     };
   //}}}
   //{{{
@@ -311,12 +312,12 @@ public:
     uint8_t mTimeout = 0xFF;
 
     // parser side
-    std::vector <cRegionDisplay> mRegionDisplays;
+    vector <cRegionDisplay> mRegionDisplays;
 
     // render side, max 4 !!! should check !!!
     size_t mNumLines = 0;
     size_t mHighwaterMark = 1;
-    std::array <cSubtitleImage,4> mImages;
+    array <cSubtitleImage,4> mImages;
     };
   //}}}
   //{{{
@@ -332,7 +333,6 @@ public:
     };
   //}}}
 
-private:
   //{{{
   cObject* findObject (uint16_t id) {
 
@@ -894,13 +894,13 @@ private:
   //}}}
 
   // vars
-  cRender* mRender;
+  cRender* mRender; // hack for log, fix it
 
   cDisplayDefinition mDisplayDefinition;
   cPage mPage;
-  std::vector <cRegion*> mRegions;
-  std::vector <cObject> mObjects;
-  std::vector <cColorLut> mColorLuts;
+  vector <cRegion*> mRegions;
+  vector <cObject> mObjects;
+  vector <cColorLut> mColorLuts;
   };
 //}}}
 
@@ -916,11 +916,7 @@ cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16
     };
   }
 //}}}
-//{{{
-cSubtitleRender::~cSubtitleRender() {
-
-  }
-//}}}
+cSubtitleRender::~cSubtitleRender() = default;
 
 //{{{
 size_t cSubtitleRender::getNumLines() const {
@@ -939,13 +935,12 @@ cSubtitleImage& cSubtitleRender::getImage (size_t line) {
 //}}}
 
 //{{{
-std::string cSubtitleRender::getInfo() const {
+string cSubtitleRender::getInfo() const {
   return "subtitle info";
   }
 //}}}
 //{{{
 void cSubtitleRender::addFrame (cFrame* frame) {
-
   cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->getPts())));
   }
 //}}}
