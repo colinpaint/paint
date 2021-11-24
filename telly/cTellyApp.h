@@ -1,4 +1,4 @@
-// cTvApp.h - tvApp info holder from tvMain
+// cTellyApp.h - tvApp info holder from tvMain
 //{{{  includes
 #pragma once
 
@@ -14,16 +14,16 @@ class cGraphics;
 class cDvbStream;
 //}}}
 
-class cTvApp : public cApp {
+class cTellyApp : public cApp {
 public:
-  cTvApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont)
+  cTellyApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont)
     : cApp (platform, graphics, mainFont, monoFont) {}
-  ~cTvApp() = default;
+  ~cTellyApp() = default;
 
   cDvbStream* getDvbStream() { return mDvbStream; }
   uint16_t getDecoderOptions() { return mDecoderOptions; }
 
-  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex, 
+  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex,
                      bool renderFirstService, uint16_t decoderOptions);
 
 private:

@@ -2,7 +2,7 @@
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
-#include "cTvApp.h"
+#include "cTellyApp.h"
 
 #include <cstdint>
 #include <string>
@@ -16,8 +16,8 @@
 using namespace std;
 //}}}
 
-bool cTvApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMultiplex, 
-                           bool renderFirstService, uint16_t decoderOptions) {
+bool cTellyApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMultiplex,
+                              bool renderFirstService, uint16_t decoderOptions) {
 // create dvb source
 
   #ifdef _WIN32

@@ -1,4 +1,4 @@
-// cTvUI.cpp
+// cTellyUI.cpp
 //{{{  includes
 #include <cstdint>
 #include <array>
@@ -15,7 +15,7 @@
 
 #include "../platform/cPlatform.h"
 #include "../graphics/cGraphics.h"
-#include "../tv/cTvApp.h"
+#include "../telly/cTellyApp.h"
 
 // dvb
 #include "../dvb/cVideoRender.h"
@@ -33,7 +33,7 @@ using namespace std;
 class cTellyView {
 public:
   //{{{
-  void draw (cTvApp& app) {
+  void draw (cTellyApp& app) {
 
     cGraphics& graphics = app.getGraphics();
 
@@ -455,11 +455,11 @@ private:
   //}}}
   };
 
-// cTvUI
-class cTvUI : public cUI {
+// cTellyUI
+class cTellyUI : public cUI {
 public:
-  cTvUI (const string& name) : cUI(name) {}
-  virtual ~cTvUI() = default;
+  cTellyUI (const string& name) : cUI(name) {}
+  virtual ~cTellyUI() = default;
   //{{{
   void addToDrawList (cApp& app) final {
   // draw into window
@@ -472,7 +472,7 @@ public:
                   //ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse |
 
 
-    mTellyView.draw ((cTvApp&)app);
+    mTellyView.draw ((cTellyApp&)app);
 
     ImGui::End();
     }
@@ -482,6 +482,6 @@ private:
   // vars
   bool mOpen = true;
   cTellyView mTellyView;
-  static cUI* create (const string& className) { return new cTvUI (className); }
-  inline static const bool mRegistered = registerClass ("tv", &create);
+  static cUI* create (const string& className) { return new cTellyUI (className); }
+  inline static const bool mRegistered = registerClass ("telly", &create);
   };

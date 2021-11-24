@@ -182,7 +182,7 @@ if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
     file (GLOB HEADER_FILES telly/*.h implot/implot.h imgui/*.h ui/*.h utils/*.h
                             platform/*.h graphics/*.h)
-    file (GLOB SOURCE_FILES tv/tvMain.cpp tv/cTvApp.cpp tv/cTvUI.cpp
+    file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp
                             ui/cUI.cpp platform/*.cpp graphics/*.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 

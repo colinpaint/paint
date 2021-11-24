@@ -1,4 +1,4 @@
-// tvMain.cpp - imgui tv dvb analyser,splitter main
+// tellyMain.cpp - imgui tv dvb analyser,splitter main
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -33,7 +33,7 @@
 #include "../utils/cFileUtils.h"
 #include "../utils/cLog.h"
 
-#include "../tv/cTvApp.h"
+#include "../telly/cTellyApp.h"
 
 using namespace std;
 //}}}
@@ -139,8 +139,8 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
   ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
   ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f);
-  cTvApp app (platform, graphics, mainFont, monoFont);
-  app.setDvbSource (cFileUtils::resolve (filename), useMultiplex, 
+  cTellyApp app (platform, graphics, mainFont, monoFont);
+  app.setDvbSource (cFileUtils::resolve (filename), useMultiplex,
                     !filename.empty() || renderFirstService, decoderOptions);
 
   platform.setResizeCallback (

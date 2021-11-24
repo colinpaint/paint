@@ -96,7 +96,6 @@ private:
   std::array <float, 6> mPowerValues = {0.f};
   };
 //}}}
-
 //{{{
 class cFFmpegAudioDecoder : public cDecoder {
 public:
@@ -223,7 +222,6 @@ public:
 
 private:
   const AVCodec* mAvCodec = nullptr;
-
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;
 
