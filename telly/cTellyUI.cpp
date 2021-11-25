@@ -339,6 +339,9 @@ private:
     pos.x += ImGui::GetWindowWidth() / 2.f;
     ImGui::GetWindowDrawList()->AddRectFilled (pos, {pos.x + 1.f, pos.y + (4 * ImGui::GetTextLineHeight())}, 0x80ffffff);
 
+    {
+    shared_lock<shared_mutex> lock (audio.getSharedMutex());
+
     for (auto& frame : audio.getFrames()) {
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
       int64_t offset1 = (frame.first - playPts) / kDivision;
@@ -350,7 +353,9 @@ private:
         {pos.x + offset2, pos.y + (value * 2 * ImGui::GetTextLineHeight())},
         0xff00ffff);
       }
-
+    }
+    {
+    shared_lock<shared_mutex> lock (video.getSharedMutex());
     pos.y += 2 * ImGui::GetTextLineHeight();
     for (auto& frame : video.getFrames()) {
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
@@ -375,6 +380,8 @@ private:
         {pos.x + offset2, pos.y - (value * 2 * ImGui::GetTextLineHeight())},
         0xc000ffff);
       }
+    }
+
     }
   //}}}
   //{{{
