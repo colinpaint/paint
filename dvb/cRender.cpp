@@ -114,7 +114,8 @@ void cRender::startQueueThread() {
       }
     }
 
-  // !!! not sure this is empty the queue on exit !!!!
+  if (mQueue.size_approx())
+    cLog::log (LOGINFO, fmt::format ("startQueueThread - should empty queue {}", mQueue.size_approx()));
 
   mQueueRunning = false;
   }

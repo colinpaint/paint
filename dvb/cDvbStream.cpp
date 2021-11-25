@@ -414,7 +414,6 @@ cDvbStream::cStream::~cStream() {
 void cDvbStream::cStream::setPidTypeId (uint16_t pid, uint8_t streamTypeId) {
 
   mDefined = true;
-
   mPid = pid;
   mTypeId = streamTypeId;
   mTypeName = cDvbUtils::getStreamTypeName (streamTypeId);

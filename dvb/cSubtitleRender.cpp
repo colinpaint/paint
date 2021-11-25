@@ -53,8 +53,6 @@ public:
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<void (cFrame* frame)> addFrameCallback) final {
-
-
     (void)dts;
     mPage.mPts = pts;
     mPage.mPesSize = pesSize;
@@ -63,10 +61,11 @@ public:
     mRender->logValue (pts, (float)pesSize);
 
     if (pesSize < 8) {
-      // strange empty pes, common on itv multiplex
+      //{{{  strange empty pes, common on itv multiplex
       mRender->log ("pes", "empty pes");
       return false;
       }
+      //}}}
 
     uint8_t* pesPtr = pes;
     uint8_t data_identifier = *pesPtr++;
@@ -264,8 +263,8 @@ private:
     uint16_t mXpos = 0;
     uint16_t mYpos = 0;
 
-    uint8_t mForegroundColour = 0;
-    uint8_t mBackgroundColour = 0;
+    uint8_t mForegroundColor = 0;
+    uint8_t mBackgroundColor = 0;
     };
   //}}}
   //{{{
@@ -284,7 +283,7 @@ private:
 
     uint8_t mColorLut = 0;
     uint8_t mColorLutDepth = 0;
-    uint8_t mBackgroundColour = 0;
+    uint8_t mBackgroundColor = 0;
     };
   //}}}
   //{{{
@@ -513,9 +512,9 @@ private:
     buf += 1; // skip
 
     // background fill
-    region.mBackgroundColour = ((*buf++) >> 4) & 15;
+    region.mBackgroundColor = ((*buf++) >> 4) & 15;
     if (fill) {
-      memset (region.mPixBuf, region.mBackgroundColour, region.mWidth * region.mHeight);
+      memset (region.mPixBuf, region.mBackgroundColor, region.mWidth * region.mHeight);
       region.mDirty = true;
       }
 
@@ -538,8 +537,8 @@ private:
         }
         //}}}
       if (((object.mType == 1) || (object.mType == 2)) && (buf+1 < bufEnd)) {
-        object.mForegroundColour = *buf++;
-        object.mBackgroundColour = *buf++;
+        object.mForegroundColor = *buf++;
+        object.mBackgroundColor = *buf++;
         }
 
       objectDebug += fmt::format ("{}:{},{} ", objectId, object.mXpos, object.mYpos);
@@ -549,7 +548,7 @@ private:
     mRender->log ("region", fmt::format ("id:{}:{:2d} {}x{} lut:{} bgnd:{} {} {}",
                       region.mId, region.mVersion,
                       region.mWidth, region.mHeight,
-                      region.mColorLutDepth, region.mBackgroundColour,
+                      region.mColorLutDepth, region.mBackgroundColor,
                       objectDebug.empty() ? "noObjects" : "objectIds", objectDebug));
     return true;
     }
@@ -626,7 +625,7 @@ private:
   //{{{
   uint16_t parse4bit (const uint8_t*& buf, uint16_t bufSize,
                                            uint8_t* pixBuf, uint32_t pixBufSize, uint16_t pixPos,
-                                           bool nonModifyColour) {
+                                           bool nonModifyColor) {
 
     pixBuf += pixPos;
 
@@ -635,7 +634,7 @@ private:
       uint8_t bits = (uint8_t)bitStream.getBits (4);
       if (bits) {
         //{{{  simple pixel value
-        if (!nonModifyColour || (bits != 1))
+        if (!nonModifyColor || (bits != 1))
           *pixBuf++ = (uint8_t)bits;
 
         pixPos++;
@@ -668,7 +667,7 @@ private:
             uint8_t runLength = runBits + 4;
 
             bits = (uint8_t)bitStream.getBits (4);
-            if (nonModifyColour && (bits == 1))
+            if (nonModifyColor && (bits == 1))
               pixPos += runLength;
             else
               while (runLength && (pixPos < pixBufSize)) {
@@ -705,7 +704,7 @@ private:
               uint8_t runLength = runBits + 9;
 
               bits = (uint8_t)bitStream.getBits (4);
-              if (nonModifyColour && (bits == 1))
+              if (nonModifyColor && (bits == 1))
                 pixPos += runLength;
               else
                 while (runLength && (pixPos < pixBufSize)) {
@@ -723,7 +722,7 @@ private:
               uint16_t runLength = runBits + 25;
 
               bits = (uint8_t)bitStream.getBits (4);
-              if (nonModifyColour && (bits == 1))
+              if (nonModifyColor && (bits == 1))
                 pixPos += (uint8_t)runLength;
               else
                 while (runLength && (pixPos < pixBufSize)) {
@@ -749,7 +748,7 @@ private:
   //}}}
   //{{{
   void parseObjectBlock (cObject* object, const uint8_t* buf, uint16_t bufSize,
-                                              bool bottom, bool nonModifyColour) {
+                                              bool bottom, bool nonModifyColor) {
 
     uint16_t xpos = object->mXpos;
     uint16_t ypos = object->mYpos + (bottom ? 1 : 0);
@@ -776,7 +775,7 @@ private:
             }
 
           xpos = parse4bit (buf, uint16_t(bufEnd - buf),
-                            region.mPixBuf + (ypos * region.mWidth), region.mWidth, xpos, nonModifyColour);
+                            region.mPixBuf + (ypos * region.mWidth), region.mWidth, xpos, nonModifyColor);
           region.mDirty = true;
           break;
 
@@ -807,7 +806,7 @@ private:
       return false;
 
     uint8_t codingMethod = ((*buf) >> 2) & 3;
-    bool nonModifyColour = ((*buf++) >> 1) & 1;
+    bool nonModifyColor = ((*buf++) >> 1) & 1;
 
     if (codingMethod == 0) {
       uint16_t topFieldLen = AVRB16(buf);
@@ -824,13 +823,13 @@ private:
 
       // decode object pixel data, rendered into object.mRegion.mPixBuf
       const uint8_t* block = buf;
-      parseObjectBlock (object, block, topFieldLen, false, nonModifyColour);
+      parseObjectBlock (object, block, topFieldLen, false, nonModifyColor);
       uint16_t bfl = bottomFieldLen;
       if (bottomFieldLen > 0)
         block = buf + topFieldLen;
       else
         bfl = topFieldLen;
-      parseObjectBlock (object, block, bfl, true, nonModifyColour);
+      parseObjectBlock (object, block, bfl, true, nonModifyColor);
       }
     else
       cLog::log (LOGERROR, fmt::format ("parseObject - unknown object coding {}", codingMethod));

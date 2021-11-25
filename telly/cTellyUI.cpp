@@ -116,7 +116,7 @@ private:
   void drawBgnd (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
     (void)decoderOptions;
-    cPoint windowSize = cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight());
+    cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
 
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
@@ -143,9 +143,12 @@ private:
       texture->setSource();
       mShader->use();
 
+      cVec2 offset = {(windowSize.x-videoSize.x)/2.f, (windowSize.y-videoSize.y)/2.f};
+      cVec2 size = { windowSize.x/videoSize.x, windowSize.y/videoSize.y};
+
       cMat4x4 model;
-      model.translate (cVec2 ((windowSize.x-videoSize.x)/2.f, (windowSize.y-videoSize.y)/2.f));
-      model.size (cVec2 ((float)windowSize.x/videoSize.x, (float)windowSize.y/videoSize.y));
+      model.setTranslate (offset);
+      model.size (size);
       cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
       mShader->setModelProjection (model, orthoProjection);
 

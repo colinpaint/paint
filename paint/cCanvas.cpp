@@ -33,7 +33,7 @@ cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, Im
 cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, const std::string& filename)
     : cApp (platform, graphics, mainFont, monoFont) {
 
-  mFilename = filename; 
+  mFilename = filename;
 
   // load file image
   uint8_t* pixels = stbi_load (filename.c_str(), &mSize.x, &mSize.y, &mNumChannels, 4);
@@ -166,7 +166,7 @@ void cCanvas::draw (cPoint windowSize) {
   mShader->use();
 
   cMat4x4 model;
-  model.setTranslate (cVec3 ((windowSize.x - mSize.x)/2.f, (windowSize.y - mSize.y)/2.f, 0.f));
+  model.setTranslate (cVec2 ((windowSize.x - mSize.x)/2.f, (windowSize.y - mSize.y)/2.f));
   cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
   mShader->setModelProjection (model, orthoProjection);
 
