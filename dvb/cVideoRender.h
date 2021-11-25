@@ -6,10 +6,6 @@
 #include <cstdint>
 #include <string>
 
-#include "../utils/cMiniLog.h"
-
-class cVideoFrame;
-class cVideoDecoder;
 class cTexture;
 class cGraphics;
 //}}}

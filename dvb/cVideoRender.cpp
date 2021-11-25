@@ -1,6 +1,7 @@
 // cVideoRender.cpp
 //{{{  includes
 #include "cVideoRender.h"
+#include "cVideoFrame.h"
 
 #ifdef _WIN32
   //{{{  windows headers
@@ -82,55 +83,6 @@ constexpr bool kQueued = true;
 constexpr uint32_t kVideoMapSize = 50;
 
 // cFrame derived classes
-//{{{
-class cVideoFrame : public cFrame {
-public:
-  cVideoFrame (cTexture::eTextureType textureType,
-               int64_t pts, int64_t ptsDuration,
-               uint16_t width, uint16_t height, uint16_t stride,
-               uint32_t pesSize, int64_t decodeTime)
-      : cFrame(pts, ptsDuration),
-        mWidth(width), mHeight(height), mStride(stride),
-        mTextureType(textureType), mDecodeTime(decodeTime) {
-
-    mTimes.push_back (pesSize);
-    mTimes.push_back (decodeTime);
-    }
-
-  virtual ~cVideoFrame() = default;
-
-  // gets
-  cTexture::eTextureType getTextureType() const { return mTextureType; }
-
-  uint16_t getWidth() const { return mWidth; }
-  uint16_t getHeight() const { return mHeight; }
-  uint16_t getStride() const { return mStride; }
-
-  int64_t getDecodeTime() const { return mDecodeTime; }
-  //{{{
-  string getInfo() {
-    string info = fmt::format ("{}x{} ", mWidth, mHeight);
-    for (auto& time : mTimes)
-      info += fmt::format ("{:5} ", time);
-    return info;
-    }
-  //}}}
-
-  virtual uint8_t** getPixelData() = 0;
-
-  void addTime (int64_t time) { mTimes.push_back (time); }
-
-protected:
-  const uint16_t mWidth;
-  const uint16_t mHeight;
-  const uint16_t mStride;
-
-private:
-  const cTexture::eTextureType mTextureType;
-  const int64_t mDecodeTime;
-  vector <int64_t> mTimes;
-  };
-//}}}
 //{{{
 class cMfxVideoFrame : public cVideoFrame {
 public:
@@ -2372,6 +2324,7 @@ void cVideoRender::addFrame (cFrame* frame) {
 
   cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
 
+  videoFrame->setQueueSize (getQueueSize());
   mWidth = videoFrame->getWidth();
   mHeight = videoFrame->getHeight();
   mLastPts = videoFrame->getPts();

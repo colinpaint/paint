@@ -19,7 +19,9 @@
 
 // dvb
 #include "../dvb/cVideoRender.h"
+#include "../dvb/cVideoFrame.h"
 #include "../dvb/cAudioRender.h"
+#include "../dvb/cAudioFrame.h"
 #include "../dvb/cSubtitleRender.h"
 #include "../dvb/cDvbStream.h"
 
@@ -130,6 +132,7 @@ private:
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
         playPts = audio.getPlayPts();
+        drawMaps (audio, video, playPts);
         }
 
       cTexture* texture = video.getTexture (playPts, graphics);
@@ -153,7 +156,8 @@ private:
       mShader->setModelProjection (model, orthoProjection);
 
       mQuad->draw();
-      return;
+
+      break;
       }
     }
   //}}}
@@ -326,6 +330,53 @@ private:
     }
   //}}}
 
+  //{{{
+  void drawMaps (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
+
+    const int64_t kDivision = 960;
+
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+    pos.x += ImGui::GetWindowWidth() / 2.f;
+    ImGui::GetWindowDrawList()->AddRectFilled (pos, {pos.x + 1.f, pos.y + (4 * ImGui::GetTextLineHeight())}, 0x80ffffff);
+
+    for (auto& frame : audio.getFrames()) {
+      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+      int64_t offset1 = (frame.first - playPts) / kDivision;
+      int64_t offset2 = (frame.first + frame.second->getPtsDuration() - playPts) / kDivision;
+
+      float value = audioFrame->getPeakValues()[0];
+      ImGui::GetWindowDrawList()->AddRectFilled (
+        {pos.x + offset1, pos.y},
+        {pos.x + offset2, pos.y + (value * 2 * ImGui::GetTextLineHeight())},
+        0xff00ffff);
+      }
+
+    pos.y += 2 * ImGui::GetTextLineHeight();
+    for (auto& frame : video.getFrames()) {
+      cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
+      int64_t offset1 = ((frame.first * frame.second->getPtsDuration()) - playPts) / kDivision;
+      int64_t offset2 = (((frame.first + 1) * frame.second->getPtsDuration()) - playPts) / kDivision;
+
+      float value = videoFrame->getPesSize() / 80000.f;
+      ImGui::GetWindowDrawList()->AddRectFilled (
+        {pos.x + offset1, pos.y},
+        {pos.x + offset2, pos.y + (value * 2 * ImGui::GetTextLineHeight())},
+        0xffff00ff);
+
+      value = videoFrame->getDecodeTime() / 10000.f;
+      ImGui::GetWindowDrawList()->AddRectFilled (
+        {pos.x + offset1, pos.y},
+        {pos.x + offset2, pos.y + (value * 2 * ImGui::GetTextLineHeight())},
+        0x60ffffff);
+
+      value = videoFrame->getQueueSize() / 4.0f;
+      ImGui::GetWindowDrawList()->AddRectFilled (
+        {pos.x + offset1, pos.y},
+        {pos.x + offset2, pos.y - (value * 2 * ImGui::GetTextLineHeight())},
+        0xc000ffff);
+      }
+    }
+  //}}}
   //{{{
   void plotValues (uint16_t sid, cRender& render, uint32_t color) {
 
