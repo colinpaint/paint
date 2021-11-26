@@ -182,8 +182,6 @@ struct cMat4x4 {
 
     mat[0][0] *= size.x;
     mat[1][1] *= size.y;
-    mat[3][0] *= size.x;
-    mat[3][1] *= size.y;
     }
   //}}}
   };

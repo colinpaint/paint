@@ -59,6 +59,13 @@ public:
       }
       //}}}
 
+    // wall
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
+    ImGui::DragInt ("##wall", &mWall, 0.1f, 1, 16, "wall%d");
+    if (ImGui::IsItemHovered())
+      mWall = max (1, min (16, mWall + static_cast<int>(ImGui::GetIO().MouseWheel)));
+
     // map size
     ImGui::SameLine();
     ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
@@ -159,18 +166,21 @@ private:
       texture->setSource();
       mShader->use();
 
-      cVec2 offset = {(windowSize.x-videoSize.x)/2.f, (windowSize.y-videoSize.y)/2.f};
-      cVec2 size = { windowSize.x/videoSize.x, windowSize.y/videoSize.y};
+      cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
+      cVec2 size = { windowSize.x/videoSize.x/mWall, windowSize.y/videoSize.y/mWall};
 
       cMat4x4 model;
-      model.setTranslate (offset);
       model.size (size);
-      cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-      mShader->setModelProjection (model, orthoProjection);
+      //cLog::log (LOGINFO, fmt::format ("{},{} {},{}", offset.x, offset.y, size.x, size.y));
 
-      mQuad->draw();
-
-      break;
+      for (int y = 0; y < mWall; y++) {
+        for (int x = 0; x < mWall; x++) {
+          cVec2 offset = { x * windowSize.x/mWall, y * windowSize.y/mWall};
+          model.setTranslate (offset);
+          mShader->setModelProjection (model, orthoProjection);
+          mQuad->draw();
+          }
+        }
       }
     }
   //}}}
@@ -544,6 +554,7 @@ private:
 
   int mAudioFrameMapSize = 3;
   int mVideoFrameMapSize = 30;
+  int mWall = 1;
   //}}}
   };
 
