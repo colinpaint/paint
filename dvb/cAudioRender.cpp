@@ -398,8 +398,6 @@ void cAudioRender::addFrame (cFrame* frame) {
         // remove frames before mPlayPts
         auto frameToRemove = (*it).second;
         it = mFrames.erase (it);
-
-        // !!! could give back to free list !!!
         delete frameToRemove;
         }
       }

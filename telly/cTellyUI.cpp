@@ -337,7 +337,7 @@ private:
 
     ImVec2 pos = ImGui::GetCursorScreenPos();
     pos.x += ImGui::GetWindowWidth() / 2.f;
-    ImGui::GetWindowDrawList()->AddRectFilled (pos, {pos.x + 1.f, pos.y + (4 * ImGui::GetTextLineHeight())}, 0x80ffffff);
+    ImGui::GetWindowDrawList()->AddRectFilled (pos, {pos.x + 1.f, pos.y + (6 * ImGui::GetTextLineHeight())}, 0x80ffffff);
 
     {
     shared_lock<shared_mutex> lock (audio.getSharedMutex());
@@ -345,45 +345,51 @@ private:
     for (auto& frame : audio.getFrames()) {
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
       int64_t offset1 = (frame.first - playPts) / kDivision;
-      int64_t offset2 = (frame.first + frame.second->getPtsDuration() - playPts) / kDivision;
+      int64_t offset2 = ((frame.first + frame.second->getPtsDuration() - playPts) / kDivision) - 1;
 
-      float value = audioFrame->getPeakValues()[0];
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y + (value * 2 * ImGui::GetTextLineHeight())},
+        {pos.x + offset2, pos.y + scaleBar (audioFrame->getPeakValues()[0], mMaxPower, 1.f)},
         0xff00ffff);
       }
     }
+
     {
     shared_lock<shared_mutex> lock (video.getSharedMutex());
     pos.y += 2 * ImGui::GetTextLineHeight();
     for (auto& frame : video.getFrames()) {
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
       int64_t offset1 = ((frame.first * frame.second->getPtsDuration()) - playPts) / kDivision;
-      int64_t offset2 = (((frame.first + 1) * frame.second->getPtsDuration()) - playPts) / kDivision;
+      int64_t offset2 = ((((frame.first + 1) * frame.second->getPtsDuration()) - playPts) / kDivision) - 1;
 
-      float value = videoFrame->getPesSize() / 80000.f;
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y + (value * 2 * ImGui::GetTextLineHeight())},
-        0xffff00ff);
+        {pos.x + offset2, pos.y + scaleBar ((float)videoFrame->getPesSize(), mMaxPesSize, 4.f)},
+        (videoFrame->getFrameType() == 'I') ? 0xffffffff : (videoFrame->getFrameType() == 'P') ? 0xff00ffff : 0xff00ff00);
 
-      value = videoFrame->getDecodeTime() / 10000.f;
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y + (value * 2 * ImGui::GetTextLineHeight())},
+        {pos.x + offset2, pos.y + scaleBar ((float)videoFrame->getDecodeTime(), mMaxDecodeTime, 4.f)},
         0x60ffffff);
 
-      value = videoFrame->getQueueSize() / 4.0f;
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - (value * 2 * ImGui::GetTextLineHeight())},
+        {pos.x + offset2, pos.y - scaleBar ((float)videoFrame->getQueueSize(), mMaxQueueSize, 2.f)},
         0xc000ffff);
       }
     }
 
     }
   //}}}
+  //{{{
+  float scaleBar (float value, float& maxValue, float height) {
+
+    if (value > maxValue)
+      maxValue = value;
+    return height * ImGui::GetTextLineHeight() * value / maxValue;
+    }
+  //}}}
+
   //{{{
   void plotValues (uint16_t sid, cRender& render, uint32_t color) {
 
@@ -510,6 +516,11 @@ private:
 
   cQuad* mQuad = nullptr;
   cTextureShader* mShader = nullptr;
+
+  float mMaxPower = 0.f;
+  float mMaxPesSize = 0.f;
+  float mMaxQueueSize = 0.f;
+  float mMaxDecodeTime = 0.f;
   //}}}
   };
 

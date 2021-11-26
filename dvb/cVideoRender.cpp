@@ -89,9 +89,9 @@ public:
   //{{{
   cMfxVideoFrame (int64_t pts, int64_t ptsDuration,
                   uint16_t width, uint16_t height, uint16_t stride,
-                  uint32_t pesSize, int64_t decodeTime,
+                  char frameType, uint32_t pesSize, int64_t decodeTime,
                   uint8_t* y, uint8_t* uv)
-      : cVideoFrame (cTexture::eNv12, pts, ptsDuration, width, height, stride, pesSize, decodeTime) {
+      : cVideoFrame (cTexture::eNv12, pts, ptsDuration, width, height, stride, frameType, pesSize, decodeTime) {
 
     mPixels[0] = (uint8_t*)malloc (stride * height);
     mPixels[1] = (uint8_t*)malloc (stride * height / 2);
@@ -119,9 +119,9 @@ public:
   //{{{
   cFFmpegVideoFrame (int64_t pts, int64_t ptsDuration,
                      uint16_t width, uint16_t height, uint16_t stride,
-                     uint32_t pesSize, int64_t decodeTime,
+                     char frameType, uint32_t pesSize, int64_t decodeTime,
                      AVFrame* avFrame)
-      : cVideoFrame (cTexture::eYuv420, pts, ptsDuration, width, height, stride, pesSize, decodeTime),
+      : cVideoFrame (cTexture::eYuv420, pts, ptsDuration, width, height, stride, frameType, pesSize, decodeTime),
         mAvFrame(avFrame) {}
   //}}}
   //{{{
@@ -181,9 +181,9 @@ public:
 
     (void)dts;
 
+    char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
     if (!mGotIframe) {
       //{{{  skip until first Iframe
-      char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
       if (frameType == 'I')
         mGotIframe = true;
       else {
@@ -273,7 +273,8 @@ public:
 
         // copy
         cVideoFrame* videoFrame = new cMfxVideoFrame (surface->Data.TimeStamp, 90000/25,
-                                                      mWidth, mHeight, surface->Data.Pitch, pesSize, decodeTime,
+                                                      mWidth, mHeight, surface->Data.Pitch, 
+                                                      frameType, pesSize, decodeTime,
                                                       surface->Data.Y, surface->Data.U);
         videoFrame->addTime (lockTime);
         videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
@@ -479,7 +480,7 @@ public:
           cVideoFrame* videoFrame = new cFFmpegVideoFrame (
             mInterpolatedPts, (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
             static_cast<uint16_t>(avFrame->width), static_cast<uint16_t>(avFrame->height), static_cast<uint16_t>(avFrame->width),
-            frameSize, decodeTime,
+            frameType, frameSize, decodeTime,
             avFrame);
 
           // videoFrame now owns last avFrame, alloc new avFrame
@@ -2323,8 +2324,8 @@ string cVideoRender::getInfo() const {
 void cVideoRender::addFrame (cFrame* frame) {
 
   cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-
   videoFrame->setQueueSize (getQueueSize());
+
   mWidth = videoFrame->getWidth();
   mHeight = videoFrame->getHeight();
   mLastPts = videoFrame->getPts();
@@ -2337,12 +2338,21 @@ void cVideoRender::addFrame (cFrame* frame) {
   unique_lock<shared_mutex> lock (mSharedMutex);
   mFrames.emplace(videoFrame->getPts() / videoFrame->getPtsDuration(), videoFrame);
 
+  //auto it = mFrames.begin();
+  //while ((*it).first < getPlayPts()) {
+    // remove frames before mPlayPts
+  //  auto frameToRemove = (*it).second;
+  //  it = mFrames.erase (it);
+  //  delete frameToRemove;
+  //  }
+
   if (mFrames.size() >= mMaxMapSize) {
     // delete youngest frame
     auto it = mFrames.begin();
-    auto frameToDelete = (*it).second;
+    auto frameToRemove = (*it).second;
     it = mFrames.erase (it);
-    delete frameToDelete;
+    delete frameToRemove;
     }
+
   }
 //}}}
