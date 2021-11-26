@@ -337,19 +337,21 @@ private:
 
     ImVec2 pos = ImGui::GetCursorScreenPos();
     pos.x += ImGui::GetWindowWidth() / 2.f;
+
+    // centre bar
     ImGui::GetWindowDrawList()->AddRectFilled (pos, {pos.x + 1.f, pos.y + (6 * ImGui::GetTextLineHeight())}, 0x80ffffff);
 
     {
     shared_lock<shared_mutex> lock (audio.getSharedMutex());
-
     for (auto& frame : audio.getFrames()) {
+      // audio bars
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
-      int64_t offset1 = (frame.first - playPts) / kDivision;
-      int64_t offset2 = ((frame.first + frame.second->getPtsDuration() - playPts) / kDivision) - 1;
+      float offset1 = pos.x + ((frame.first - playPts) / kDivision);
+      float offset2 = pos.x + ((frame.first + frame.second->getPtsDuration() - playPts) / kDivision) - 1.f;
 
       ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y + scaleBar (audioFrame->getPeakValues()[0], mMaxPower, 1.f)},
+        {offset1, pos.y},
+        {offset2, pos.y + scaleBar (audioFrame->getPeakValues()[0], mMaxPower, 1.f)},
         0xff00ffff);
       }
     }
@@ -358,23 +360,24 @@ private:
     shared_lock<shared_mutex> lock (video.getSharedMutex());
     pos.y += 2 * ImGui::GetTextLineHeight();
     for (auto& frame : video.getFrames()) {
+      // video bars
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-      int64_t offset1 = ((frame.first * frame.second->getPtsDuration()) - playPts) / kDivision;
-      int64_t offset2 = ((((frame.first + 1) * frame.second->getPtsDuration()) - playPts) / kDivision) - 1;
+      float offset1 = pos.x + (((frame.first * frame.second->getPtsDuration()) - playPts) / kDivision);
+      float offset2 = pos.x + ((((frame.first + 1) * frame.second->getPtsDuration()) - playPts) / kDivision) - 1.f;
 
       ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y + scaleBar ((float)videoFrame->getPesSize(), mMaxPesSize, 4.f)},
+        {offset1, pos.y},
+        {offset2, pos.y + scaleBar ((float)videoFrame->getPesSize(), mMaxPesSize, 4.f)},
         (videoFrame->getFrameType() == 'I') ? 0xffffffff : (videoFrame->getFrameType() == 'P') ? 0xff00ffff : 0xff00ff00);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y + scaleBar ((float)videoFrame->getDecodeTime(), mMaxDecodeTime, 4.f)},
+        {offset1, pos.y},
+        {offset2, pos.y + scaleBar ((float)videoFrame->getDecodeTime(), mMaxDecodeTime, 4.f)},
         0x60ffffff);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - scaleBar ((float)videoFrame->getQueueSize(), mMaxQueueSize, 2.f)},
+        {offset1, pos.y},
+        {offset2, pos.y - scaleBar ((float)videoFrame->getQueueSize(), mMaxQueueSize, 2.f)},
         0xc000ffff);
       }
     }
