@@ -59,6 +59,19 @@ public:
       }
       //}}}
 
+    // map size
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
+    ImGui::DragInt ("##aud", &mAudioMapSize, 0.25f, 2, 100, "aud %d");
+    if (ImGui::IsItemHovered())
+      mAudioMapSize = max (2, min (50, mAudioMapSize + static_cast<int>(ImGui::GetIO().MouseWheel)));
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
+    ImGui::DragInt ("##vid", &mVideoMapSize, 0.25f, 2, 100, "vid %d");
+    if (ImGui::IsItemHovered())
+      mVideoMapSize = max (2, min (50, mVideoMapSize + static_cast<int>(ImGui::GetIO().MouseWheel)));
+
     // draw frameRate
     ImGui::SameLine();
     ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
@@ -333,7 +346,10 @@ private:
   //{{{
   void drawMaps (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
 
-    const int64_t kDivision = 960;
+    const float kDivision = 960.f;
+
+    audio.setMaxMapSize (mAudioMapSize);
+    video.setMaxMapSize (mVideoMapSize);
 
     ImVec2 pos = ImGui::GetCursorScreenPos();
     pos.x += ImGui::GetWindowWidth() / 2.f;
@@ -358,7 +374,7 @@ private:
 
     {
     shared_lock<shared_mutex> lock (video.getSharedMutex());
-    pos.y += 2 * ImGui::GetTextLineHeight();
+    pos.y += 2.f * ImGui::GetTextLineHeight();
     for (auto& frame : video.getFrames()) {
       // video bars
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
@@ -389,6 +405,7 @@ private:
 
     if (value > maxValue)
       maxValue = value;
+
     return height * ImGui::GetTextLineHeight() * value / maxValue;
     }
   //}}}
@@ -524,6 +541,9 @@ private:
   float mMaxPesSize = 0.f;
   float mMaxQueueSize = 0.f;
   float mMaxDecodeTime = 0.f;
+
+  int mAudioMapSize = 50;
+  int mVideoMapSize = 50;
   //}}}
   };
 

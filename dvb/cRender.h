@@ -89,6 +89,9 @@ public:
 
   int64_t getLastPts() const { return mLastPts; }
   size_t getNumValues() const { return mValuesMap.size(); }
+  size_t getMaxMapSize() const { return mMaxMapSize; }
+
+  void setMaxMapSize (size_t size) { mMaxMapSize = size; }
 
   void setRefPts (int64_t pts) { mRefPts = pts; }
   void setMapSize (size_t size) { mMapSize = size; }
@@ -112,7 +115,7 @@ protected:
   cDecoder* mDecoder = nullptr;
 
   // frameMap
-  const size_t mMaxMapSize;
+  size_t mMaxMapSize;
   std::map <int64_t, cFrame*> mFrames;
 
   // decode queue

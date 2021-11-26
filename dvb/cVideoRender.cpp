@@ -80,7 +80,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kQueued = true;
-constexpr uint32_t kVideoMapSize = 50;
+constexpr uint32_t kVideoMapSize = 30;
 
 // cFrame derived classes
 //{{{
@@ -273,7 +273,7 @@ public:
 
         // copy
         cVideoFrame* videoFrame = new cMfxVideoFrame (surface->Data.TimeStamp, 90000/25,
-                                                      mWidth, mHeight, surface->Data.Pitch, 
+                                                      mWidth, mHeight, surface->Data.Pitch,
                                                       frameType, pesSize, decodeTime,
                                                       surface->Data.Y, surface->Data.U);
         videoFrame->addTime (lockTime);
@@ -2346,7 +2346,7 @@ void cVideoRender::addFrame (cFrame* frame) {
   //  delete frameToRemove;
   //  }
 
-  if (mFrames.size() >= mMaxMapSize) {
+  while (mFrames.size() >= mMaxMapSize) {
     // delete youngest frame
     auto it = mFrames.begin();
     auto frameToRemove = (*it).second;

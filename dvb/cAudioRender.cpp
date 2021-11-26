@@ -36,7 +36,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kQueued = false;
-constexpr size_t kAudioMapSize = 50;
+constexpr size_t kAudioMapSize = 20;
 
 //{{{
 class cFFmpegAudioDecoder : public cDecoder {
