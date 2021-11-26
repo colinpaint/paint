@@ -21,14 +21,15 @@ public:
                char frameType, uint32_t pesSize, int64_t decodeTime)
       : cFrame(pts, ptsDuration),
         mWidth(width), mHeight(height), mStride(stride),
-        mTextureType(textureType), mFrameType(frameType), 
-        mPesSize(pesSize), mDecodeTime(decodeTime) {
+        mTextureType(textureType), mFrameType(frameType),
+        mPesSize(pesSize) {
 
-    mTimes.push_back (pesSize);
     mTimes.push_back (decodeTime);
     }
 
-  virtual ~cVideoFrame() = default;
+  virtual ~cVideoFrame() {
+    delete mTexture;
+    }
 
   // gets
   cTexture::eTextureType getTextureType() const { return mTextureType; }
@@ -39,12 +40,15 @@ public:
   char getFrameType() const { return mFrameType; }
 
   uint32_t getPesSize() const { return mPesSize; }
-  int64_t getDecodeTime() const { return mDecodeTime; }
+  int64_t getDecodeTime() const { return mTimes[0]; }
   //{{{
   std::string getInfo() {
-    std::string info = fmt::format ("{}x{} ", mWidth, mHeight);
+
+    std::string info = fmt::format ("{}x{} {}", mWidth, mHeight, mPesSize);
+
     for (auto& time : mTimes)
       info += fmt::format ("{:5} ", time);
+
     return info;
     }
   //}}}
@@ -55,6 +59,8 @@ public:
   void addTime (int64_t time) { mTimes.push_back (time); }
   void setQueueSize (size_t queueSize) { mQueueSize = queueSize; }
 
+  cTexture* mTexture = nullptr;
+
 protected:
   const uint16_t mWidth;
   const uint16_t mHeight;
@@ -64,7 +70,6 @@ private:
   const cTexture::eTextureType mTextureType;
   const char mFrameType;
   const uint32_t mPesSize;
-  const int64_t mDecodeTime;
   std::vector <int64_t> mTimes;
   size_t mQueueSize = 0;
   };

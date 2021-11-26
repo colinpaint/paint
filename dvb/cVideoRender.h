@@ -8,6 +8,7 @@
 
 class cTexture;
 class cGraphics;
+class cVideoFrame;
 //}}}
 
 class cVideoRender : public cRender {
@@ -17,8 +18,10 @@ public:
 
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
+  int64_t getPtsDuration() const { return mPtsDuration; }
 
-  cTexture* getTexture (int64_t playPts, cGraphics& graphics);
+  cVideoFrame* getPtsFrame (int64_t pts);
+  cTexture* getTexture (int64_t pts, cGraphics& graphics);
 
   // virtuals
   virtual std::string getInfo() const final;
@@ -32,7 +35,4 @@ private:
   int64_t mPtsDuration = 0;
 
   std::string mInfo;
-
-  int64_t mTexturePts = 0;
-  cTexture* mTexture = nullptr;
   };

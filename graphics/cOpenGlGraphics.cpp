@@ -1049,7 +1049,7 @@ namespace {
     cOpenGlNv12Texture (eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size) {
 
-      cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
+      //cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
 
       glGenTextures (2, mTextureId.data());
 
@@ -1072,7 +1072,11 @@ namespace {
     //}}}
     //{{{
     virtual ~cOpenGlNv12Texture() {
-      glDeleteTextures (2, mTextureId.data());
+      //glDeleteTextures (2, mTextureId.data());
+      glDeleteTextures (1, &mTextureId[0]);
+      glDeleteTextures (1, &mTextureId[1]);
+
+      cLog::log (LOGINFO, fmt::format ("deleting eVv12 texture {}x{}", mSize.x, mSize.y));
       }
     //}}}
 
@@ -1113,7 +1117,7 @@ namespace {
     cOpenGlYuv420Texture (eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size) {
 
-      cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
+      //cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
 
       glGenTextures (3, mTextureId.data());
 
@@ -1144,7 +1148,12 @@ namespace {
     //}}}
     //{{{
     virtual ~cOpenGlYuv420Texture() {
-      glDeleteTextures (3, mTextureId.data());
+      //glDeleteTextures (3, mTextureId.data());
+      glDeleteTextures (1, &mTextureId[0]);
+      glDeleteTextures (1, &mTextureId[1]);
+      glDeleteTextures (1, &mTextureId[2]);
+
+      cLog::log (LOGINFO, fmt::format ("deleting eYuv420 texture {}x{}", mSize.x, mSize.y));
       }
     //}}}
 

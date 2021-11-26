@@ -43,7 +43,7 @@ public:
     graphics.background (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
 
     // draw bgnd piccies
-    if (app.getDvbStream())
+    if (app.getDvbStream() && (mTab != eCache))
       drawBgnd (*app.getDvbStream(), graphics, app.getDecoderOptions());
 
     // draw tabs
@@ -124,6 +124,7 @@ public:
         case eServices: drawServices (dvbStream, graphics, app.getDecoderOptions()); break;
         case ePids:     drawPidMap   (dvbStream, graphics, app.getDecoderOptions()); break;
         case eRecorded: drawRecorded (dvbStream, graphics, app.getDecoderOptions()); break;
+        case eCache:    drawWall     (dvbStream, graphics, app.getDecoderOptions()); break;
         }
 
       ImGui::EndChild();
@@ -132,8 +133,8 @@ public:
     }
   //}}}
 private:
-  enum eTab { eTelly, eServices, ePids, eRecorded };
-  inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded" };
+  enum eTab { eTelly, eServices, ePids, eRecorded, eCache };
+  inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded", "cache" };
   //{{{
   void drawBgnd (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
@@ -155,15 +156,22 @@ private:
         drawMaps (audio, video, playPts);
         }
 
-      cTexture* texture = video.getTexture (playPts, graphics);
-      if (!texture)
-        continue;
+      cVideoFrame* videoFrame = video.getPtsFrame (playPts);
+      if (!videoFrame)
+        return;
+
+      if (!videoFrame->mTexture) {
+        // create texture
+        videoFrame->mTexture = graphics.createTexture (videoFrame->getTextureType(), {video.getWidth(), video.getHeight()});
+        videoFrame->mTexture->setPixels (videoFrame->getPixelData());
+        }
 
       if (!mQuad)
         mQuad = graphics.createQuad (videoSize);
       if (!mShader)
-        mShader = graphics.createTextureShader (texture->getTextureType());
-      texture->setSource();
+        mShader = graphics.createTextureShader (videoFrame->mTexture->getTextureType());
+
+      videoFrame->mTexture->setSource();
       mShader->use();
 
       cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
@@ -352,11 +360,77 @@ private:
       ImGui::TextUnformatted (program.c_str());
     }
   //}}}
+  //{{{
+  void drawWall (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
+
+    int wall = mWall;
+
+    (void)decoderOptions;
+    cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
+
+    for (auto& pair : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service = pair.second;
+      if (!service.getStream (cDvbStream::eVid).isEnabled())
+        continue;
+
+      cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
+      cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
+
+      int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
+      if (service.getStream (cDvbStream::eAud).isEnabled()) {
+        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
+        playPts = audio.getPlayPts();
+        drawMaps (audio, video, playPts);
+        }
+
+      if (!mQuad)
+        mQuad = graphics.createQuad (videoSize);
+
+      cVideoFrame* videoFrame = video.getPtsFrame (playPts);
+      if (!videoFrame)
+        return;
+      if (!videoFrame->mTexture) {
+        // create texture
+        videoFrame->mTexture = graphics.createTexture (videoFrame->getTextureType(), {video.getWidth(), video.getHeight()});
+        videoFrame->mTexture->setPixels (videoFrame->getPixelData());
+        }
+      if (!mShader)
+        mShader = graphics.createTextureShader (videoFrame->mTexture->getTextureType());
+      mShader->use();
+
+      cMat4x4 model;
+      cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
+      cVec2 size = { windowSize.x/videoSize.x/wall, windowSize.y/videoSize.y/wall};
+      model.size (size);
+
+      int64_t pts = playPts;
+      for (int y = 0; y < wall; y++) {
+        for (int x = 0; x < wall; x++) {
+          videoFrame = video.getPtsFrame (pts);
+          if (!videoFrame)
+            return;
+          if (!videoFrame->mTexture) {
+            // create texture
+            videoFrame->mTexture = graphics.createTexture (videoFrame->getTextureType(), {video.getWidth(), video.getHeight()});
+            videoFrame->mTexture->setPixels (videoFrame->getPixelData());
+            }
+          videoFrame->mTexture->setSource();
+          cVec2 offset = { x * windowSize.x/wall, (wall - y - 1) * windowSize.y/wall};
+          model.setTranslate (offset);
+          mShader->setModelProjection (model, orthoProjection);
+          mQuad->draw();
+          pts -= video.getPtsDuration();
+          }
+        }
+      return;
+      }
+    }
+  //}}}
 
   //{{{
   void drawMaps (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
 
-    const float kDivision = 960.f;
+    const float kDivision = 960.f; // 2 pixels per 1024 byte frame at 48kHz
 
     audio.setFrameMapSize (mAudioFrameMapSize);
     video.setFrameMapSize (mVideoFrameMapSize);

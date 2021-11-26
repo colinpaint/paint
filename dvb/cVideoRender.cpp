@@ -101,9 +101,10 @@ public:
     }
   //}}}
   //{{{
-  ~cMfxVideoFrame() {
+  virtual ~cMfxVideoFrame() {
     free (mPixels[0]);
     free (mPixels[1]);
+    cLog::log (LOGINFO, "deleting cMfxVideoFrame");
     }
   //}}}
 
@@ -125,10 +126,11 @@ public:
         mAvFrame(avFrame) {}
   //}}}
   //{{{
-  ~cFFmpegVideoFrame() {
-     av_frame_unref (mAvFrame);
-     av_frame_free (&mAvFrame);
-     }
+  virtual ~cFFmpegVideoFrame() {
+    av_frame_unref (mAvFrame);
+    av_frame_free (&mAvFrame);
+    cLog::log (LOGINFO, "deleting cFFmpegVideoFrame");
+    }
   //}}}
 
   virtual uint8_t** getPixelData() final { return mAvFrame->data; }
@@ -2289,7 +2291,7 @@ cVideoRender::~cVideoRender() {
 //}}}
 
 //{{{
-cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
+cVideoFrame* cVideoRender::getPtsFrame (int64_t pts) {
 
   // locked
   shared_lock<shared_mutex> lock (mSharedMutex);
@@ -2297,20 +2299,35 @@ cTexture* cVideoRender::getTexture (int64_t playPts, cGraphics& graphics) {
   if (mFrames.empty() || !mPtsDuration) // no frames
     return nullptr;
 
-  if (mTexture && (playPts == mTexturePts)) // same texture
-    return mTexture;
+  // new pts, new texture
+  auto it = mFrames.find (pts / mPtsDuration);
+  if (it == mFrames.end())
+    return nullptr;
+  else
+    return dynamic_cast<cVideoFrame*>((*it).second);
+  }
+//}}}
+//{{{
+cTexture* cVideoRender::getTexture (int64_t pts, cGraphics& graphics) {
+
+  // locked
+  shared_lock<shared_mutex> lock (mSharedMutex);
+
+  if (mFrames.empty() || !mPtsDuration) // no frames
+    return nullptr;
 
   // new pts, new texture
-  auto it = mFrames.find (playPts / mPtsDuration);
+  auto it = mFrames.find (pts / mPtsDuration);
   if (it == mFrames.end())
     it = mFrames.begin();
+  cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>((*it).second);
 
-  if (!mTexture) // create
-    mTexture = graphics.createTexture (dynamic_cast<cVideoFrame*>((*it).second)->getTextureType(), {getWidth(), getHeight()});
-  mTexture->setPixels (dynamic_cast<cVideoFrame*>((*it).second)->getPixelData());
+  if (!videoFrame->mTexture) { // create
+    videoFrame->mTexture = graphics.createTexture (videoFrame->getTextureType(), {getWidth(), getHeight()});
+    videoFrame->mTexture->setPixels (videoFrame->getPixelData());
+    }
 
-  mTexturePts = playPts;
-  return mTexture;
+  return videoFrame->mTexture;
   }
 //}}}
 
