@@ -80,7 +80,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kQueued = true;
-constexpr uint32_t kVideoMapSize = 30;
+constexpr uint32_t kVideoFrameMapSize = 30;
 
 // cFrame derived classes
 //{{{
@@ -2255,7 +2255,7 @@ private:
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const string& name, uint8_t streamTypeId, uint16_t decoderMask)
-    : cRender(kQueued, name, streamTypeId, decoderMask, kVideoMapSize) {
+    : cRender(kQueued, name, streamTypeId, decoderMask, kVideoFrameMapSize) {
 
   switch (decoderMask) {
     case eFFmpeg:
@@ -2346,7 +2346,7 @@ void cVideoRender::addFrame (cFrame* frame) {
   //  delete frameToRemove;
   //  }
 
-  while (mFrames.size() >= mMaxMapSize) {
+  while (mFrames.size() >= mFrameMapSize) {
     // delete youngest frame
     auto it = mFrames.begin();
     auto frameToRemove = (*it).second;

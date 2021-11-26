@@ -74,7 +74,7 @@ class cRender {
 public:
   enum eDecoder { eFFmpeg, eMfxSystem, eMfxVideo };
 
-  cRender (bool queued, const std::string& name, uint8_t streamTypeId, uint16_t decoderMask, size_t maxMapSize);
+  cRender (bool queued, const std::string& name, uint8_t streamTypeId, uint16_t decoderMask, size_t frameMapSize);
   virtual ~cRender();
 
   bool isQueued() const { return mQueued; }
@@ -89,9 +89,9 @@ public:
 
   int64_t getLastPts() const { return mLastPts; }
   size_t getNumValues() const { return mValuesMap.size(); }
-  size_t getMaxMapSize() const { return mMaxMapSize; }
+  size_t getFrameMapSize() const { return mFrameMapSize; }
 
-  void setMaxMapSize (size_t size) { mMaxMapSize = size; }
+  void setFrameMapSize (size_t size) { mFrameMapSize = size; }
 
   void setRefPts (int64_t pts) { mRefPts = pts; }
   void setMapSize (size_t size) { mMapSize = size; }
@@ -115,7 +115,7 @@ protected:
   cDecoder* mDecoder = nullptr;
 
   // frameMap
-  size_t mMaxMapSize;
+  size_t mFrameMapSize;
   std::map <int64_t, cFrame*> mFrames;
 
   // decode queue

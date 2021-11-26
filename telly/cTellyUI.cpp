@@ -62,15 +62,15 @@ public:
     // map size
     ImGui::SameLine();
     ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
-    ImGui::DragInt ("##aud", &mAudioMapSize, 0.25f, 2, 100, "aud %d");
+    ImGui::DragInt ("##aud", &mAudioFrameMapSize, 0.25f, 2, 100, "aud %d");
     if (ImGui::IsItemHovered())
-      mAudioMapSize = max (2, min (50, mAudioMapSize + static_cast<int>(ImGui::GetIO().MouseWheel)));
+      mAudioFrameMapSize = max (2, min (100, mAudioFrameMapSize + static_cast<int>(ImGui::GetIO().MouseWheel)));
 
     ImGui::SameLine();
     ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
-    ImGui::DragInt ("##vid", &mVideoMapSize, 0.25f, 2, 100, "vid %d");
+    ImGui::DragInt ("##vid", &mVideoFrameMapSize, 0.25f, 2, 100, "vid %d");
     if (ImGui::IsItemHovered())
-      mVideoMapSize = max (2, min (50, mVideoMapSize + static_cast<int>(ImGui::GetIO().MouseWheel)));
+      mVideoFrameMapSize = max (2, min (100, mVideoFrameMapSize + static_cast<int>(ImGui::GetIO().MouseWheel)));
 
     // draw frameRate
     ImGui::SameLine();
@@ -348,8 +348,8 @@ private:
 
     const float kDivision = 960.f;
 
-    audio.setMaxMapSize (mAudioMapSize);
-    video.setMaxMapSize (mVideoMapSize);
+    audio.setFrameMapSize (mAudioFrameMapSize);
+    video.setFrameMapSize (mVideoFrameMapSize);
 
     ImVec2 pos = ImGui::GetCursorScreenPos();
     pos.x += ImGui::GetWindowWidth() / 2.f;
@@ -542,8 +542,8 @@ private:
   float mMaxQueueSize = 0.f;
   float mMaxDecodeTime = 0.f;
 
-  int mAudioMapSize = 50;
-  int mVideoMapSize = 50;
+  int mAudioFrameMapSize = 3;
+  int mVideoFrameMapSize = 30;
   //}}}
   };
 

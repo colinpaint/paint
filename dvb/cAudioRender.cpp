@@ -36,7 +36,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kQueued = false;
-constexpr size_t kAudioMapSize = 20;
+constexpr size_t kAudioFrameMapSize = 3;
 
 //{{{
 class cFFmpegAudioDecoder : public cDecoder {
@@ -310,7 +310,7 @@ private:
 // cAudioRender
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamTypeId, uint16_t decoderMask)
-    : cRender(kQueued, name, streamTypeId, decoderMask, kAudioMapSize) {
+    : cRender(kQueued, name, streamTypeId, decoderMask, kAudioFrameMapSize) {
 
   mNumChannels = 2;
   mSampleRate = 48000;
@@ -392,7 +392,7 @@ void cAudioRender::addFrame (cFrame* frame) {
     unique_lock<shared_mutex> lock (mSharedMutex);
     mFrames.emplace (audioFrame->getPts(), audioFrame);
 
-    if (mFrames.size() >= mMaxMapSize) {
+    if (mFrames.size() >= mFrameMapSize) {
       auto it = mFrames.begin();
       while ((*it).first < getPlayPts()) {
         // remove frames before mPlayPts
@@ -403,7 +403,7 @@ void cAudioRender::addFrame (cFrame* frame) {
       }
     }
 
-  if (mFrames.size() >= mMaxMapSize)
+  if (mFrames.size() >= mFrameMapSize)
     this_thread::sleep_for (20ms);
 
 

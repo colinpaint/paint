@@ -15,8 +15,8 @@ constexpr int64_t kPtsPerFrame = 90000 / 25;
 
 // public:
 //{{{
-cRender::cRender (bool queued, const string& name, uint8_t streamTypeId, uint16_t decoderMask, size_t maxMapSize)
-    : mMaxMapSize(maxMapSize), mQueued(queued),
+cRender::cRender (bool queued, const string& name, uint8_t streamTypeId, uint16_t decoderMask, size_t frameMapSize)
+    : mFrameMapSize(frameMapSize), mQueued(queued),
       mName(name), mStreamTypeId(streamTypeId), mDecoderMask(decoderMask), mMiniLog ("log") {
 
   mAddFrameCallback = [&](cFrame* frame) noexcept {
