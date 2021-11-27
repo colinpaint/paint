@@ -135,6 +135,7 @@ public:
 private:
   enum eTab { eTelly, eServices, ePids, eRecorded, eCache };
   inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded", "cache" };
+
   //{{{
   void drawBgnd (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
@@ -395,8 +396,7 @@ private:
             videoFrame = video.getPtsFrame (pts);
             if (videoFrame) {
               videoFrame->getTexture (graphics, {video.getWidth(), video.getHeight()}).setSource();
-              cVec2 offset = { x * windowSize.x/mWall, y * windowSize.y/mWall};
-              model.setTranslate (offset);
+              model.setTranslate ({ x * windowSize.x/mWall, y * windowSize.y/mWall});
               mShader->setModelProjection (model, orthoProjection);
               mQuad->draw();
               pts -= video.getPtsDuration();
