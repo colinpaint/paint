@@ -157,31 +157,30 @@ private:
         }
 
       cVideoFrame* videoFrame = video.getPtsFrame (playPts);
-      if (!videoFrame)
-        return;
-      videoFrame->updateTexture (graphics, {video.getWidth(), video.getHeight()});
+      if (videoFrame) {
+        if (!mQuad)
+          mQuad = graphics.createQuad (videoSize);
 
-      if (!mQuad)
-        mQuad = graphics.createQuad (videoSize);
-      if (!mShader)
-        mShader = graphics.createTextureShader (videoFrame->mTexture->getTextureType());
+        cTexture* texture = videoFrame->getTexture (graphics, {video.getWidth(), video.getHeight()});
+        if (!mShader)
+          mShader = graphics.createTextureShader (texture->getTextureType());
+        texture->setSource();
+        mShader->use();
 
-      videoFrame->mTexture->setSource();
-      mShader->use();
+        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
+        cVec2 size = { windowSize.x/videoSize.x/mWall, windowSize.y/videoSize.y/mWall};
 
-      cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-      cVec2 size = { windowSize.x/videoSize.x/mWall, windowSize.y/videoSize.y/mWall};
+        cMat4x4 model;
+        model.size (size);
+        //cLog::log (LOGINFO, fmt::format ("{},{} {},{}", offset.x, offset.y, size.x, size.y));
 
-      cMat4x4 model;
-      model.size (size);
-      //cLog::log (LOGINFO, fmt::format ("{},{} {},{}", offset.x, offset.y, size.x, size.y));
-
-      for (int y = 0; y < mWall; y++) {
-        for (int x = 0; x < mWall; x++) {
-          cVec2 offset = { x * windowSize.x/mWall, y * windowSize.y/mWall};
-          model.setTranslate (offset);
-          mShader->setModelProjection (model, orthoProjection);
-          mQuad->draw();
+        for (int y = 0; y < mWall; y++) {
+          for (int x = 0; x < mWall; x++) {
+            cVec2 offset = { x * windowSize.x/mWall, y * windowSize.y/mWall};
+            model.setTranslate (offset);
+            mShader->setModelProjection (model, orthoProjection);
+            mQuad->draw();
+            }
           }
         }
       }
@@ -382,38 +381,34 @@ private:
         mQuad = graphics.createQuad (videoSize);
 
       cVideoFrame* videoFrame = video.getPtsFrame (playPts);
-      if (!videoFrame)
-        return;
-      videoFrame->updateTexture (graphics, {video.getWidth(), video.getHeight()});
-      if (!mShader)
-        mShader = graphics.createTextureShader (videoFrame->mTexture->getTextureType());
-      mShader->use();
+      if (videoFrame) {
+        if (!mShader)
+          mShader = graphics.createTextureShader (videoFrame->mTextureType);
+        mShader->use();
 
-      cMat4x4 model;
-      cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-      cVec2 size = { windowSize.x/videoSize.x/wall, windowSize.y/videoSize.y/wall};
-      model.size (size);
+        cMat4x4 model;
+        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
+        cVec2 size = { windowSize.x/videoSize.x/wall, windowSize.y/videoSize.y/wall};
+        model.size (size);
 
-      int64_t pts = playPts;
-      for (int y = 0; y < wall; y++) {
-        for (int x = 0; x < wall; x++) {
-          videoFrame = video.getPtsFrame (pts);
-          if (!videoFrame)
-            return;
-          if (!videoFrame->mTexture) {
-            // create texture
-            videoFrame->mTexture = graphics.createTexture (videoFrame->mTextureType, {video.getWidth(), video.getHeight()});
-            videoFrame->mTexture->setPixels (videoFrame->getPixelData());
+        int64_t pts = playPts;
+        for (int y = 0; y < wall; y++) {
+          for (int x = 0; x < wall; x++) {
+            videoFrame = video.getPtsFrame (pts);
+            if (videoFrame) {
+              videoFrame->getTexture (graphics, {video.getWidth(), video.getHeight()})->setSource();
+              cVec2 offset = { x * windowSize.x/wall, (wall - y - 1) * windowSize.y/wall};
+              model.setTranslate (offset);
+              mShader->setModelProjection (model, orthoProjection);
+              mQuad->draw();
+              pts -= video.getPtsDuration();
+              }
+            else
+              return;
             }
-          videoFrame->mTexture->setSource();
-          cVec2 offset = { x * windowSize.x/wall, (wall - y - 1) * windowSize.y/wall};
-          model.setTranslate (offset);
-          mShader->setModelProjection (model, orthoProjection);
-          mQuad->draw();
-          pts -= video.getPtsDuration();
           }
+        return;
         }
-      return;
       }
     }
   //}}}
@@ -617,7 +612,7 @@ private:
   float mMaxQueueSize = 0.f;
   float mMaxDecodeTime = 0.f;
 
-  int mAudioFrameMapSize = 3;
+  int mAudioFrameMapSize = 4;
   int mVideoFrameMapSize = 30;
   int mWall = 1;
   //}}}

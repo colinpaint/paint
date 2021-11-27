@@ -86,27 +86,35 @@ constexpr uint32_t kVideoFrameMapSize = 30;
 //{{{
 class cMfxVideoFrame : public cVideoFrame {
 public:
-  //{{{
-  cMfxVideoFrame() : cVideoFrame() {
-
-    //mTextureType = eNv12;
-    //mPixels[0] = (uint8_t*)malloc (stride * height);
-    //mPixels[1] = (uint8_t*)malloc (stride * height / 2);
-
-    //memcpy (mPixels[0], y, stride * height);
-    //memcpy (mPixels[1], uv, stride * height / 2);
-    }
-  //}}}
+  cMfxVideoFrame() : cVideoFrame(cTexture::eNv12) {}
   //{{{
   virtual ~cMfxVideoFrame() {
-    free (mPixels[0]);
-    free (mPixels[1]);
+    releasePixelData();
     cLog::log (LOGINFO, "deleting cMfxVideoFrame");
     }
   //}}}
 
+  //{{{
+  void setData (uint8_t* y, uint8_t* uv) {
+
+    mPixels[0] = (uint8_t*)realloc (mPixels[0], mStride * mHeight);
+    memcpy (mPixels[0], y, mStride * mHeight);
+
+    mPixels[1] = (uint8_t*)realloc (mPixels[1], mStride * mHeight / 2);
+    memcpy (mPixels[1], uv, mStride * mHeight / 2);
+    }
+  //}}}
+
   virtual uint8_t** getPixelData() final { return mPixels.data(); }
-  virtual void releaseData() final {}
+  //{{{
+  virtual void releasePixelData() final {
+
+    free (mPixels[0]);
+    mPixels[0] = nullptr;
+    free (mPixels[1]);
+    mPixels[1] = nullptr;
+    }
+  //}}}
 
 private:
   array <uint8_t*,2> mPixels = { nullptr };
@@ -115,22 +123,18 @@ private:
 //{{{
 class cFFmpegVideoFrame : public cVideoFrame {
 public:
-  //{{{
-  cFFmpegVideoFrame() {
-    mTextureType = cTexture::eYuv420;
-    }
-  //}}}
+  cFFmpegVideoFrame() : cVideoFrame(cTexture::eYuv420) {}
   //{{{
   virtual ~cFFmpegVideoFrame() {
-
-    releaseData();
-    cLog::log (LOGINFO, "deleting cFFmpegVideoFrame");
+    releasePixelData();
     }
   //}}}
+
+  void setData (AVFrame* avFrame) { mAvFrame = avFrame; }
 
   virtual uint8_t** getPixelData() final { return mAvFrame->data; }
   //{{{
-  virtual void releaseData() final {
+  virtual void releasePixelData() final {
 
     av_frame_unref (mAvFrame);
     av_frame_free (&mAvFrame);
@@ -138,6 +142,7 @@ public:
     }
   //}}}
 
+private:
   AVFrame* mAvFrame = nullptr;
   };
 //}}}
@@ -272,17 +277,22 @@ public:
         status = mSession.SyncOperation (decodeSyncPoint, 60000);
         auto decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
+        cMfxVideoFrame* videoFrame = dynamic_cast<cMfxVideoFrame*>(getFrameCallback());
+        videoFrame->mPts = surface->Data.TimeStamp;
+        videoFrame->mPtsDuration = 90000/25;
+        videoFrame->mPesSize = pesSize;
+        videoFrame->mWidth = mWidth;
+        videoFrame->mHeight = mHeight;
+        videoFrame->mStride = surface->Data.Pitch;
+        videoFrame->mFrameType = frameType;
+        videoFrame->addTime (decodeTime);
+
         // lock
         lock (surface);
-        int64_t lockTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+        videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
 
-        // copy
-        //cVideoFrame* videoFrame = new cMfxVideoFrame (90000/25, mWidth, mHeight, surface->Data.Pitch,
-        //                                              surface->Data.TimeStamp, frameType, pesSize, decodeTime,
-        //                                              surface->Data.Y, surface->Data.U);
-        cVideoFrame* videoFrame = new cMfxVideoFrame();
-        videoFrame->addTime (decodeTime);
-        videoFrame->addTime (lockTime);
+        // copy data
+        videoFrame->setData (surface->Data.Y, surface->Data.U);
         videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
 
         // unlock
@@ -469,6 +479,7 @@ public:
 
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
+
     uint8_t* frame = pes;
     uint32_t frameSize = pesSize;
     while (frameSize) {
@@ -483,28 +494,23 @@ public:
             break;
           auto decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
-          // get free videoFrame, pass ownership of avFrame to videoFrame, saves copy
+          // get free videoFrame
           cFFmpegVideoFrame* videoFrame = dynamic_cast<cFFmpegVideoFrame*>(getFrameCallback());
           videoFrame->mPts = mInterpolatedPts;
           videoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
-
+          videoFrame->mPesSize = frameSize;
           videoFrame->mWidth = static_cast<uint16_t>(avFrame->width);
           videoFrame->mHeight = static_cast<uint16_t>(avFrame->height);
           videoFrame->mStride = static_cast<uint16_t>(avFrame->width);
           videoFrame->mFrameType = frameType;
-
           videoFrame->mQueueSize = 0;
-          videoFrame->mPesSize = frameSize;
           videoFrame->mTimes.clear();
-          videoFrame->mTimes.push_back (decodeTime);
+          videoFrame->addTime (decodeTime);
 
-          videoFrame->mAvFrame = avFrame;
-
-          // videoFrame now owns last avFrame, alloc new avFrame
-          avFrame = av_frame_alloc();
-
-          // add videoFrame
+          // videoFrame owns prev avFrame, addFrame, alloc new avFrame
+          videoFrame->setData (avFrame);
           addFrameCallback (videoFrame);
+          avFrame = av_frame_alloc();
 
           mInterpolatedPts += videoFrame->mPtsDuration;
           }
@@ -2327,34 +2333,22 @@ cVideoFrame* cVideoRender::getPtsFrame (int64_t pts) {
     return dynamic_cast<cVideoFrame*>((*it).second);
   }
 //}}}
-//{{{
-cTexture* cVideoRender::getTexture (int64_t pts, cGraphics& graphics) {
 
-  // locked
-  shared_lock<shared_mutex> lock (mSharedMutex);
-
-  if (mFrames.empty() || !mPtsDuration) // no frames
-    return nullptr;
-
-  // new pts, new texture
-  auto it = mFrames.find (pts / mPtsDuration);
-  if (it == mFrames.end())
-    it = mFrames.begin();
-  cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>((*it).second);
-
-  if (!videoFrame->mTexture) { // create
-    videoFrame->mTexture = graphics.createTexture (videoFrame->mTextureType, {getWidth(), getHeight()});
-    videoFrame->mTexture->setPixels (videoFrame->getPixelData());
-    }
-
-  return videoFrame->mTexture;
-  }
-//}}}
-
-// callbacks
+// decoder callbacks
 //{{{
 cFrame* cVideoRender::getMfxFrame() {
-  return nullptr;
+
+  // simple allocate new
+  if (mFrames.size() < mFrameMapSize)
+    return new cMfxVideoFrame();
+
+  else {
+    cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(reuseYoungest());
+    videoFrame->mQueueSize = 0;
+    videoFrame->mTimes.clear();
+    videoFrame->mTextureDirty = true;
+    return videoFrame;
+    }
   }
 //}}}
 //{{{
@@ -2363,15 +2357,13 @@ cFrame* cVideoRender::getFFmpegFrame() {
   // simple allocate new
   if (mFrames.size() < mFrameMapSize)
     return new cFFmpegVideoFrame();
-
-  // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  // reuse youngest
-  auto it = mFrames.begin();
-  cFrame* removedFrame = (*it).second;
-  mFrames.erase (it);
-  return removedFrame;
+  else {
+    cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(reuseYoungest());
+    videoFrame->mQueueSize = 0;
+    videoFrame->mTimes.clear();
+    videoFrame->mTextureDirty = true;
+    return videoFrame;
+    }
   }
 //}}}
 //{{{

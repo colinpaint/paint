@@ -21,7 +21,6 @@ public:
   int64_t getPtsDuration() const { return mPtsDuration; }
 
   cVideoFrame* getPtsFrame (int64_t pts);
-  cTexture* getTexture (int64_t pts, cGraphics& graphics);
 
   // callbacks
   cFrame* getMfxFrame();

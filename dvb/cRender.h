@@ -87,6 +87,7 @@ public:
   float getOffsetValue (int64_t ptsOffset, int64_t& pts) const;
 
   std::map<int64_t,cFrame*> getFrames() { return mFrames; }
+  cFrame* reuseYoungest();
 
   int64_t getLastPts() const { return mLastPts; }
   size_t getNumValues() const { return mValuesMap.size(); }

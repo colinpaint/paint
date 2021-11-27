@@ -45,6 +45,20 @@ float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
   }
 //}}}
 
+//{{{
+cFrame* cRender::reuseYoungest() {
+
+  // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  // reuse youngest
+  auto it = mFrames.begin();
+  cFrame* removedFrame = (*it).second;
+  mFrames.erase (it);
+  return removedFrame;
+  }
+//}}}
+
 // log
 void cRender::toggleLog() { mMiniLog.toggleEnable(); }
 void cRender::header() { mMiniLog.setHeader (fmt::format ("header")); }
