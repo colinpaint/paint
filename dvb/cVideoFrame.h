@@ -32,12 +32,11 @@ public:
     return info;
     }
   //}}}
-  virtual uint8_t** getPixelData() = 0;
-  virtual void releasePixelData() = 0;
 
   void addTime (int64_t time) { mTimes.push_back (time); }
   //{{{
   cTexture* getTexture (cGraphics& graphics, const cPoint& size) {
+  // create and access texture for frame, release any intermeidate pixel data
 
     if (!mTexture) {
       mTexture = graphics.createTexture (mTextureType, size);
@@ -45,8 +44,8 @@ public:
       }
 
     if (mTextureDirty) {
-      mTexture->setPixels (getPixelData());
-      releasePixelData();
+      mTexture->setPixels (getPixels());
+      releasePixels();
       mTextureDirty = false;
       }
 
@@ -65,6 +64,11 @@ public:
   size_t mQueueSize = 0;
   std::vector <int64_t> mTimes;
   bool mTextureDirty = true;
+
+
+protected:
+  virtual uint8_t** getPixels() = 0;
+  virtual void releasePixels() = 0;
 
   cTexture* mTexture = nullptr;
   };

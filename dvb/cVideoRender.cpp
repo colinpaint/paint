@@ -89,7 +89,7 @@ public:
   cMfxVideoFrame() : cVideoFrame(cTexture::eNv12) {}
   //{{{
   virtual ~cMfxVideoFrame() {
-    releasePixelData();
+    releasePixels();
     cLog::log (LOGINFO, "deleting cMfxVideoFrame");
     }
   //}}}
@@ -105,9 +105,10 @@ public:
     }
   //}}}
 
-  virtual uint8_t** getPixelData() final { return mPixels.data(); }
+protected:
+  virtual uint8_t** getPixels() final { return mPixels.data(); }
   //{{{
-  virtual void releasePixelData() final {
+  virtual void releasePixels() final {
 
     free (mPixels[0]);
     mPixels[0] = nullptr;
@@ -126,15 +127,16 @@ public:
   cFFmpegVideoFrame() : cVideoFrame(cTexture::eYuv420) {}
   //{{{
   virtual ~cFFmpegVideoFrame() {
-    releasePixelData();
+    releasePixels();
     }
   //}}}
 
   void setData (AVFrame* avFrame) { mAvFrame = avFrame; }
 
-  virtual uint8_t** getPixelData() final { return mAvFrame->data; }
+protected:
+  virtual uint8_t** getPixels() final { return mAvFrame->data; }
   //{{{
-  virtual void releasePixelData() final {
+  virtual void releasePixels() final {
 
     av_frame_unref (mAvFrame);
     av_frame_free (&mAvFrame);
