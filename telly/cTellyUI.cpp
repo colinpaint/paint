@@ -161,10 +161,10 @@ private:
         if (!mQuad)
           mQuad = graphics.createQuad (videoSize);
 
-        cTexture* texture = videoFrame->getTexture (graphics, {video.getWidth(), video.getHeight()});
+        cTexture& texture = videoFrame->getTexture (graphics, {video.getWidth(), video.getHeight()});
         if (!mShader)
-          mShader = graphics.createTextureShader (texture->getTextureType());
-        texture->setSource();
+          mShader = graphics.createTextureShader (texture.getTextureType());
+        texture.setSource();
         mShader->use();
 
         cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
@@ -357,8 +357,6 @@ private:
   //{{{
   void drawWall (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
-    int wall = mWall;
-
     (void)decoderOptions;
     cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
 
@@ -380,24 +378,24 @@ private:
       if (!mQuad)
         mQuad = graphics.createQuad (videoSize);
 
+      cMat4x4 model;
+      cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
+      cVec2 size = { windowSize.x/videoSize.x/mWall, windowSize.y/videoSize.y/mWall};
+      model.size (size);
+
       cVideoFrame* videoFrame = video.getPtsFrame (playPts);
       if (videoFrame) {
         if (!mShader)
           mShader = graphics.createTextureShader (videoFrame->mTextureType);
         mShader->use();
 
-        cMat4x4 model;
-        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-        cVec2 size = { windowSize.x/videoSize.x/wall, windowSize.y/videoSize.y/wall};
-        model.size (size);
-
         int64_t pts = playPts;
-        for (int y = 0; y < wall; y++) {
-          for (int x = 0; x < wall; x++) {
+        for (int y = mWall-1; y >= 0; y--) {
+          for (int x = 0; x < mWall; x++) {
             videoFrame = video.getPtsFrame (pts);
             if (videoFrame) {
-              videoFrame->getTexture (graphics, {video.getWidth(), video.getHeight()})->setSource();
-              cVec2 offset = { x * windowSize.x/wall, (wall - y - 1) * windowSize.y/wall};
+              videoFrame->getTexture (graphics, {video.getWidth(), video.getHeight()}).setSource();
+              cVec2 offset = { x * windowSize.x/mWall, y * windowSize.y/mWall};
               model.setTranslate (offset);
               mShader->setModelProjection (model, orthoProjection);
               mQuad->draw();
@@ -407,7 +405,6 @@ private:
               return;
             }
           }
-        return;
         }
       }
     }

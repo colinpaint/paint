@@ -35,7 +35,7 @@ public:
 
   void addTime (int64_t time) { mTimes.push_back (time); }
   //{{{
-  cTexture* getTexture (cGraphics& graphics, const cPoint& size) {
+  cTexture& getTexture (cGraphics& graphics, const cPoint& size) {
   // create and access texture for frame, release any intermeidate pixel data
 
     if (!mTexture) {
@@ -49,7 +49,7 @@ public:
       mTextureDirty = false;
       }
 
-    return mTexture;
+    return *mTexture;
     }
   //}}}
 
