@@ -52,6 +52,7 @@ public:
 
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
+                          function<cFrame* ()> getFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
     (void)dts;
     mPage.mPts = pts;
@@ -127,7 +128,7 @@ public:
         case 0x14: // display definition segment
           if (!parseDisplayDefinition (pesPtr, segLength))
             return false;
-          addFrameCallback (new cFrame (pts, 90000/25));
+          addFrameCallback (new cFrame (pts, 90000/25, pesSize));
           break;
         //}}}
         //{{{
@@ -907,6 +908,8 @@ cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamTypeId, uint
     : cRender(kQueued, name, streamTypeId, decoderMask, kSubtitleMapSize) {
 
   mDecoder = new cSubtitleDecoder (this);
+  setGetFrameCallback ([&]() noexcept { return getFrame(); });
+  setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }
 //}}}
 cSubtitleRender::~cSubtitleRender() = default;
@@ -927,14 +930,21 @@ cSubtitleImage& cSubtitleRender::getImage (size_t line) {
   }
 //}}}
 
-// virtuals
+// callbacks
 //{{{
-string cSubtitleRender::getInfo() const {
-  return "subtitle info";
+cFrame* cSubtitleRender::getFrame() { 
+  return nullptr; 
   }
 //}}}
 //{{{
 void cSubtitleRender::addFrame (cFrame* frame) {
   cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->getPts())));
+  }
+//}}}
+
+// virtual
+//{{{
+string cSubtitleRender::getInfo() const {
+  return "subtitle info";
   }
 //}}}

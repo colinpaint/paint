@@ -45,6 +45,10 @@ public:
   size_t getHighWatermark() const;
   cSubtitleImage& getImage (size_t line);
 
+  // callbacks
+  cFrame* getFrame();
+  void addFrame (cFrame* frame);
+
+  // virtual
   virtual std::string getInfo() const final;
-  virtual void addFrame (cFrame* frame) final;
   };

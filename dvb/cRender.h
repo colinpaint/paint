@@ -19,15 +19,21 @@ constexpr int kPtsPerSecond = 90000;
 //{{{
 class cFrame {
 public:
-  cFrame (int64_t pts, int64_t ptsDuration) : mPts(pts), mPtsDuration(ptsDuration) {}
+  cFrame (int64_t pts, int64_t ptsDuration, uint32_t pesSize)
+    : mPts(pts), mPtsDuration(ptsDuration), mPesSize(pesSize) {}
   virtual ~cFrame() = default;
 
   int64_t getPts() const { return mPts; }
   int64_t getPtsDuration() const { return mPtsDuration; }
+  uint32_t getPesSize() const { return mPesSize; }
+
+  void setPts (int64_t pts) { mPts = pts; }
+  void setPesSize (uint32_t pesSize) { mPesSize = pesSize; }
 
 protected:
   int64_t mPts;
   int64_t mPtsDuration;
+  uint32_t mPesSize;
   };
 //}}}
 //{{{
@@ -39,6 +45,7 @@ public:
   virtual std::string getName() const = 0;
 
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
+                          std::function<cFrame*()> getFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) = 0;
   };
 //}}}
@@ -48,10 +55,11 @@ public:
   //{{{
   cDecoderQueueItem (cDecoder* decoder,
                      uint8_t* pes, int pesSize, int64_t pts, int64_t dts,
+                     std::function<cFrame*()> getFrameCallback,
                      std::function<void (cFrame* frame)> addFrameCallback)
       : mDecoder(decoder),
         mPes(pes), mPesSize(pesSize), mPts(pts), mDts(dts),
-        mAddFrameCallback(addFrameCallback) {}
+        mGetFrameCallback(getFrameCallback), mAddFrameCallback(addFrameCallback) {}
   // we gain ownership of malloc'd pes buffer
   //}}}
   //{{{
@@ -66,6 +74,7 @@ public:
   const int mPesSize;
   const int64_t mPts;
   const int64_t mDts;
+  const std::function<cFrame*()> mGetFrameCallback;
   const std::function<void (cFrame* frame)> mAddFrameCallback;
   };
 //}}}
@@ -91,6 +100,8 @@ public:
   size_t getNumValues() const { return mValuesMap.size(); }
   size_t getFrameMapSize() const { return mFrameMapSize; }
 
+  void setGetFrameCallback (std::function <cFrame* ()> getFrameCallback) { mGetFrameCallback = getFrameCallback; }
+  void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
   void setFrameMapSize (size_t size) { mFrameMapSize = size; }
 
   void setRefPts (int64_t pts) { mRefPts = pts; }
@@ -103,8 +114,6 @@ public:
 
   // process
   virtual std::string getInfo() const = 0;
-  virtual void addFrame (cFrame* frame) = 0;
-
   bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
 
 protected:
@@ -132,6 +141,7 @@ private:
   const uint8_t mStreamTypeId;
   const uint16_t mDecoderMask;
 
+  std::function <cFrame* ()> mGetFrameCallback;
   std::function <void (cFrame* frame)> mAddFrameCallback;
 
   cMiniLog mMiniLog;

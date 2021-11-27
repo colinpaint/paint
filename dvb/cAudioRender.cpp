@@ -66,6 +66,7 @@ public:
   virtual string getName() const final { return "ffmpeg"; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
+                          function<cFrame* ()> getFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final  {
     (void)dts;
     int64_t interpolatedPts = pts;
@@ -147,7 +148,7 @@ public:
               default:;
               }
 
-            cAudioFrame* audioFrame = new cAudioFrame (interpolatedPts, numChannels,
+            cAudioFrame* audioFrame = new cAudioFrame (pesSize, interpolatedPts, numChannels,
                                                        samplesPerFrame, sampleRate, samples);
             addFrameCallback (audioFrame);
             interpolatedPts += audioFrame->getPtsDuration();
@@ -317,6 +318,8 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamTypeId, uint16_t d
   mSamplesPerFrame = 1024;
 
   mDecoder = new cFFmpegAudioDecoder (streamTypeId);
+  setGetFrameCallback ([&]() noexcept { return getFrame(); });
+  setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }
 //}}}
 //{{{
@@ -372,9 +375,10 @@ cAudioFrame* cAudioRender::findPlayFrame() const {
   }
 //}}}
 
+// callback
 //{{{
-string cAudioRender::getInfo() const {
-  return fmt::format ("{}", mFrames.size());
+cFrame* cAudioRender::getFrame() {
+  return nullptr;
   }
 //}}}
 //{{{
@@ -409,5 +413,12 @@ void cAudioRender::addFrame (cFrame* frame) {
 
   if (!mPlayer)
     mPlayer = new cAudioPlayer (this, audioFrame->getPts());
+  }
+//}}}
+
+// virtual
+//{{{
+string cAudioRender::getInfo() const {
+  return fmt::format ("{}", mFrames.size());
   }
 //}}}

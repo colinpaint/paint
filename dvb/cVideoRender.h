@@ -23,9 +23,13 @@ public:
   cVideoFrame* getPtsFrame (int64_t pts);
   cTexture* getTexture (int64_t pts, cGraphics& graphics);
 
-  // virtuals
+  // callbacks
+  cFrame* getFFmpegFrame();
+  cFrame* getMfxFrame();
+  void addFrame (cFrame* frame);
+
+  // virtual
   virtual std::string getInfo() const final;
-  virtual void addFrame (cFrame* frame) final;
 
 private:
   uint16_t mWidth = 0;

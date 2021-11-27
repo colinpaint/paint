@@ -15,8 +15,8 @@
 class cAudioFrame : public cFrame {
 public:
   //{{{
-  cAudioFrame (int64_t pts, size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, float* samples)
-     : cFrame (pts, sampleRate ? (samplesPerFrame * 90000 / sampleRate) : 48000),
+  cAudioFrame (uint32_t pesSize, int64_t pts, size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, float* samples)
+     : cFrame (pts, sampleRate ? (samplesPerFrame * 90000 / sampleRate) : 48000, pesSize),
        mNumChannels(numChannels),
        mSamplesPerFrame(samplesPerFrame), mSampleRate(sampleRate), mSamples(samples) {
 

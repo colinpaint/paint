@@ -16,10 +16,9 @@
 class cVideoFrame : public cFrame {
 public:
   cVideoFrame (cTexture::eTextureType textureType,
-               int64_t pts, int64_t ptsDuration,
-               uint16_t width, uint16_t height, uint16_t stride,
-               char frameType, uint32_t pesSize, int64_t decodeTime)
-      : cFrame(pts, ptsDuration),
+               uint16_t width, uint16_t height, uint16_t stride, int64_t ptsDuration,
+               int64_t pts, char frameType, uint32_t pesSize, int64_t decodeTime)
+      : cFrame(pts, ptsDuration, pesSize),
         mWidth(width), mHeight(height), mStride(stride),
         mTextureType(textureType), mFrameType(frameType),
         mPesSize(pesSize) {

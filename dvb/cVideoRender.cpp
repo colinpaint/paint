@@ -87,11 +87,11 @@ constexpr uint32_t kVideoFrameMapSize = 30;
 class cMfxVideoFrame : public cVideoFrame {
 public:
   //{{{
-  cMfxVideoFrame (int64_t pts, int64_t ptsDuration,
-                  uint16_t width, uint16_t height, uint16_t stride,
-                  char frameType, uint32_t pesSize, int64_t decodeTime,
+  cMfxVideoFrame (uint16_t width, uint16_t height, uint16_t stride, int64_t ptsDuration,
+                  int64_t pts, char frameType, uint32_t pesSize, int64_t decodeTime,
                   uint8_t* y, uint8_t* uv)
-      : cVideoFrame (cTexture::eNv12, pts, ptsDuration, width, height, stride, frameType, pesSize, decodeTime) {
+      : cVideoFrame (cTexture::eNv12, width, height, stride, ptsDuration,
+                     pts, frameType, pesSize, decodeTime) {
 
     mPixels[0] = (uint8_t*)malloc (stride * height);
     mPixels[1] = (uint8_t*)malloc (stride * height / 2);
@@ -118,11 +118,10 @@ private:
 class cFFmpegVideoFrame : public cVideoFrame {
 public:
   //{{{
-  cFFmpegVideoFrame (int64_t pts, int64_t ptsDuration,
-                     uint16_t width, uint16_t height, uint16_t stride,
-                     char frameType, uint32_t pesSize, int64_t decodeTime,
+  cFFmpegVideoFrame (uint16_t width, uint16_t height, uint16_t stride, int64_t ptsDuration,
+                     int64_t pts, char frameType, uint32_t pesSize, int64_t decodeTime,
                      AVFrame* avFrame)
-      : cVideoFrame (cTexture::eYuv420, pts, ptsDuration, width, height, stride, frameType, pesSize, decodeTime),
+      : cVideoFrame (cTexture::eYuv420, width, height, stride, ptsDuration, pts, frameType, pesSize, decodeTime),
         mAvFrame(avFrame) {}
   //}}}
   //{{{
@@ -179,6 +178,7 @@ public:
 
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
+                          function<cFrame*()> getFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
 
     (void)dts;
@@ -274,9 +274,8 @@ public:
         int64_t lockTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
         // copy
-        cVideoFrame* videoFrame = new cMfxVideoFrame (surface->Data.TimeStamp, 90000/25,
-                                                      mWidth, mHeight, surface->Data.Pitch,
-                                                      frameType, pesSize, decodeTime,
+        cVideoFrame* videoFrame = new cMfxVideoFrame (90000/25, mWidth, mHeight, surface->Data.Pitch,
+                                                      surface->Data.TimeStamp, frameType, pesSize, decodeTime,
                                                       surface->Data.Y, surface->Data.U);
         videoFrame->addTime (lockTime);
         videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
@@ -442,7 +441,8 @@ public:
 
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
-                    function<void (cFrame* frame)> addFrameCallback) final {
+                          function<cFrame*()> getFrameCallback,
+                          function<void (cFrame* frame)> addFrameCallback) final {
 
     char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
     if (frameType == 'I') {
@@ -480,9 +480,9 @@ public:
 
           // create new videoFrame, pass ownership of avFrame to videoFrame, saves copy
           cVideoFrame* videoFrame = new cFFmpegVideoFrame (
-            mInterpolatedPts, (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
             static_cast<uint16_t>(avFrame->width), static_cast<uint16_t>(avFrame->height), static_cast<uint16_t>(avFrame->width),
-            frameType, frameSize, decodeTime,
+            (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
+            mInterpolatedPts, frameType, frameSize, decodeTime,
             avFrame);
 
           // videoFrame now owns last avFrame, alloc new avFrame
@@ -2262,10 +2262,12 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamTypeId, uint16_t d
   switch (decoderMask) {
     case eFFmpeg:
       mDecoder = new cFFmpegDecoder (streamTypeId);
+      setGetFrameCallback ([&]() noexcept { return getFFmpegFrame(); });
       break;
 
     case eMfxSystem:
       mDecoder = new cMfxSystemDecoder (streamTypeId);
+      setGetFrameCallback ([&]() noexcept { return getMfxFrame(); });
       break;
 
     case eMfxVideo:
@@ -2275,10 +2277,13 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamTypeId, uint16_t d
       #else
         mDecoder = new cMfxSurfaceDecoder (streamTypeId);
       #endif
+      setGetFrameCallback ([&]() noexcept { return getMfxFrame(); });
       break;
 
     default: cLog::log (LOGERROR, fmt::format ("cVideoRender - no decoder {:x}", decoderMask));
     }
+
+  setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }
 //}}}
 //{{{
@@ -2331,10 +2336,15 @@ cTexture* cVideoRender::getTexture (int64_t pts, cGraphics& graphics) {
   }
 //}}}
 
-// virtuals
+// callbacks
 //{{{
-string cVideoRender::getInfo() const {
-  return fmt::format ("{} q:{} {}", mDecoder->getName(), getQueueSize(), mInfo);
+cFrame* cVideoRender::getFFmpegFrame() {
+  return nullptr;
+  }
+//}}}
+//{{{
+cFrame* cVideoRender::getMfxFrame() {
+  return nullptr;
   }
 //}}}
 //{{{
@@ -2371,5 +2381,12 @@ void cVideoRender::addFrame (cFrame* frame) {
     delete frameToRemove;
     }
 
+  }
+//}}}
+
+// virtual
+//{{{
+string cVideoRender::getInfo() const {
+  return fmt::format ("{} q:{} {}", mDecoder->getName(), getQueueSize(), mInfo);
   }
 //}}}

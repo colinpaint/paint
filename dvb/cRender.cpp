@@ -19,10 +19,6 @@ cRender::cRender (bool queued, const string& name, uint8_t streamTypeId, uint16_
     : mFrameMapSize(frameMapSize), mQueued(queued),
       mName(name), mStreamTypeId(streamTypeId), mDecoderMask(decoderMask), mMiniLog ("log") {
 
-  mAddFrameCallback = [&](cFrame* frame) noexcept {
-    addFrame (frame);
-    };
-
   if (queued)
     thread ([=](){ startQueueThread(); }).detach();
   }
@@ -87,11 +83,11 @@ bool cRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t d
   //logValue (pts, (float)pesSize);
 
   if (isQueued()) {
-    mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mAddFrameCallback));
+    mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback));
     return true;
     }
   else {
-    mDecoder->decode (pes, pesSize, pts, dts, mAddFrameCallback);
+    mDecoder->decode (pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback);
     return false;
     }
   }
@@ -109,7 +105,7 @@ void cRender::startQueueThread() {
     cDecoderQueueItem* queueItem;
     if (mQueue.wait_dequeue_timed (queueItem, 40000)) {
       queueItem->mDecoder->decode (queueItem->mPes, queueItem->mPesSize, queueItem->mPts, queueItem->mDts,
-                                   queueItem->mAddFrameCallback);
+                                   queueItem->mGetFrameCallback, queueItem->mAddFrameCallback);
       delete queueItem;
       }
     }

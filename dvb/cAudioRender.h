@@ -36,9 +36,12 @@ public:
   cAudioFrame* findFrame (int64_t pts) const;
   cAudioFrame* findPlayFrame() const;
 
-  // virtuals
-  virtual std::string getInfo() const final;
+  // callbacks
+  virtual cFrame* getFrame() final;
   virtual void addFrame (cFrame* frame) final;
+
+  // virtual
+  virtual std::string getInfo() const final;
 
 private:
   // vars
