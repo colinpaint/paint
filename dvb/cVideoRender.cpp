@@ -131,6 +131,7 @@ public:
   virtual uint8_t** getPixelData() final { return mAvFrame->data; }
   //{{{
   virtual void releaseData() final {
+
     av_frame_unref (mAvFrame);
     av_frame_free (&mAvFrame);
     mAvFrame = nullptr;

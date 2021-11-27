@@ -16,6 +16,7 @@
 class cVideoFrame : public cFrame {
 public:
   cVideoFrame() : cFrame() {}
+
   virtual ~cVideoFrame() {
     delete mTexture;
     }
