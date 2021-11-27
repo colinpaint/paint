@@ -19,18 +19,10 @@ constexpr int kPtsPerSecond = 90000;
 //{{{
 class cFrame {
 public:
-  cFrame (int64_t pts, int64_t ptsDuration, uint32_t pesSize)
-    : mPts(pts), mPtsDuration(ptsDuration), mPesSize(pesSize) {}
+  cFrame() {}
   virtual ~cFrame() = default;
 
-  int64_t getPts() const { return mPts; }
-  int64_t getPtsDuration() const { return mPtsDuration; }
-  uint32_t getPesSize() const { return mPesSize; }
-
-  void setPts (int64_t pts) { mPts = pts; }
-  void setPesSize (uint32_t pesSize) { mPesSize = pesSize; }
-
-protected:
+  // vars
   int64_t mPts;
   int64_t mPtsDuration;
   uint32_t mPesSize;

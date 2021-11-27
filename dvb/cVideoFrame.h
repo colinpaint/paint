@@ -15,31 +15,11 @@
 
 class cVideoFrame : public cFrame {
 public:
-  cVideoFrame (cTexture::eTextureType textureType,
-               uint16_t width, uint16_t height, uint16_t stride, int64_t ptsDuration,
-               int64_t pts, char frameType, uint32_t pesSize, int64_t decodeTime)
-      : cFrame(pts, ptsDuration, pesSize),
-        mWidth(width), mHeight(height), mStride(stride),
-        mTextureType(textureType), mFrameType(frameType),
-        mPesSize(pesSize) {
-
-    mTimes.push_back (decodeTime);
-    }
-
+  cVideoFrame() : cFrame() {}
   virtual ~cVideoFrame() {
     delete mTexture;
     }
 
-  // gets
-  cTexture::eTextureType getTextureType() const { return mTextureType; }
-
-  uint16_t getWidth() const { return mWidth; }
-  uint16_t getHeight() const { return mHeight; }
-  uint16_t getStride() const { return mStride; }
-  char getFrameType() const { return mFrameType; }
-
-  uint32_t getPesSize() const { return mPesSize; }
-  int64_t getDecodeTime() const { return mTimes[0]; }
   //{{{
   std::string getInfo() {
 
@@ -51,24 +31,39 @@ public:
     return info;
     }
   //}}}
-  size_t getQueueSize() const { return mQueueSize; }
-
   virtual uint8_t** getPixelData() = 0;
+  virtual void releaseData() = 0;
 
   void addTime (int64_t time) { mTimes.push_back (time); }
-  void setQueueSize (size_t queueSize) { mQueueSize = queueSize; }
+  //{{{
+  void updateTexture (cGraphics& graphics, const cPoint& size) {
 
-  cTexture* mTexture = nullptr;
+    if (!mTexture) {
+      mTexture = graphics.createTexture (mTextureType, size);
+      mTextureDirty = true;
+      }
 
-protected:
-  const uint16_t mWidth;
-  const uint16_t mHeight;
-  const uint16_t mStride;
+    if (mTextureDirty) {
+      mTexture->setPixels (getPixelData());
+      releaseData();
+      mTextureDirty = false;
+      }
+    }
+  //}}}
 
-private:
-  const cTexture::eTextureType mTextureType;
-  const char mFrameType;
-  const uint32_t mPesSize;
-  std::vector <int64_t> mTimes;
+  // vars
+  cTexture::eTextureType mTextureType;
+
+  uint16_t mWidth = 0;
+  uint16_t mHeight = 0;
+  uint16_t mStride = 0;
+
+  char mFrameType = '?';
+
   size_t mQueueSize = 0;
+  uint32_t mPesSize = 0;
+  std::vector <int64_t> mTimes;
+
+  bool mTextureDirty = true;
+  cTexture* mTexture = nullptr;
   };

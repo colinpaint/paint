@@ -24,19 +24,17 @@ public:
   cTexture* getTexture (int64_t pts, cGraphics& graphics);
 
   // callbacks
-  cFrame* getFFmpegFrame();
   cFrame* getMfxFrame();
+  cFrame* getFFmpegFrame();
   void addFrame (cFrame* frame);
 
   // virtual
   virtual std::string getInfo() const final;
 
 private:
+  int64_t mPtsDuration = 0;
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
-
-  int64_t mLastPts = -1;
-  int64_t mPtsDuration = 0;
 
   std::string mInfo;
   };

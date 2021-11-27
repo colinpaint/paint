@@ -125,11 +125,16 @@ public:
           break;
         //}}}
         //{{{
-        case 0x14: // display definition segment
+        case 0x14: { // display definition segment
           if (!parseDisplayDefinition (pesPtr, segLength))
             return false;
-          addFrameCallback (new cFrame (pts, 90000/25, pesSize));
+          cFrame* frame = new cFrame();
+          frame->mPts = pts;
+          frame->mPtsDuration = 90000 / 25;
+          frame->mPesSize = pesSize;
+          addFrameCallback (frame);
           break;
+          }
         //}}}
         //{{{
         case 0x80: // end of display set segment
@@ -938,7 +943,7 @@ cFrame* cSubtitleRender::getFrame() {
 //}}}
 //{{{
 void cSubtitleRender::addFrame (cFrame* frame) {
-  cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->getPts())));
+  cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->mPts)));
   }
 //}}}
 

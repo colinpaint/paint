@@ -159,12 +159,7 @@ private:
       cVideoFrame* videoFrame = video.getPtsFrame (playPts);
       if (!videoFrame)
         return;
-
-      if (!videoFrame->mTexture) {
-        // create texture
-        videoFrame->mTexture = graphics.createTexture (videoFrame->getTextureType(), {video.getWidth(), video.getHeight()});
-        videoFrame->mTexture->setPixels (videoFrame->getPixelData());
-        }
+      videoFrame->updateTexture (graphics, {video.getWidth(), video.getHeight()});
 
       if (!mQuad)
         mQuad = graphics.createQuad (videoSize);
@@ -389,11 +384,7 @@ private:
       cVideoFrame* videoFrame = video.getPtsFrame (playPts);
       if (!videoFrame)
         return;
-      if (!videoFrame->mTexture) {
-        // create texture
-        videoFrame->mTexture = graphics.createTexture (videoFrame->getTextureType(), {video.getWidth(), video.getHeight()});
-        videoFrame->mTexture->setPixels (videoFrame->getPixelData());
-        }
+      videoFrame->updateTexture (graphics, {video.getWidth(), video.getHeight()});
       if (!mShader)
         mShader = graphics.createTextureShader (videoFrame->mTexture->getTextureType());
       mShader->use();
@@ -411,7 +402,7 @@ private:
             return;
           if (!videoFrame->mTexture) {
             // create texture
-            videoFrame->mTexture = graphics.createTexture (videoFrame->getTextureType(), {video.getWidth(), video.getHeight()});
+            videoFrame->mTexture = graphics.createTexture (videoFrame->mTextureType, {video.getWidth(), video.getHeight()});
             videoFrame->mTexture->setPixels (videoFrame->getPixelData());
             }
           videoFrame->mTexture->setSource();
@@ -447,7 +438,7 @@ private:
       // audio bars
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
       float offset1 = pos.x + ((frame.first - playPts) / kDivision);
-      float offset2 = pos.x + ((frame.first + frame.second->getPtsDuration() - playPts) / kDivision) - 1.f;
+      float offset2 = pos.x + ((frame.first + frame.second->mPtsDuration - playPts) / kDivision) - 1.f;
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {offset1, pos.y},
@@ -462,22 +453,22 @@ private:
     for (auto& frame : video.getFrames()) {
       // video bars
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-      float offset1 = pos.x + (((frame.first * frame.second->getPtsDuration()) - playPts) / kDivision);
-      float offset2 = pos.x + ((((frame.first + 1) * frame.second->getPtsDuration()) - playPts) / kDivision) - 1.f;
+      float offset1 = pos.x + (((frame.first * frame.second->mPtsDuration) - playPts) / kDivision);
+      float offset2 = pos.x + ((((frame.first + 1) * frame.second->mPtsDuration) - playPts) / kDivision) - 1.f;
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {offset1, pos.y},
-        {offset2, pos.y + scaleBar ((float)videoFrame->getPesSize(), mMaxPesSize, 4.f)},
-        (videoFrame->getFrameType() == 'I') ? 0xffffffff : (videoFrame->getFrameType() == 'P') ? 0xff00ffff : 0xff00ff00);
+        {offset2, pos.y + scaleBar ((float)videoFrame->mPesSize, mMaxPesSize, 4.f)},
+        (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {offset1, pos.y},
-        {offset2, pos.y + scaleBar ((float)videoFrame->getDecodeTime(), mMaxDecodeTime, 4.f)},
+        {offset2, pos.y + scaleBar ((float)videoFrame->mTimes[0], mMaxDecodeTime, 4.f)},
         0x60ffffff);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {offset1, pos.y},
-        {offset2, pos.y - scaleBar ((float)videoFrame->getQueueSize(), mMaxQueueSize, 2.f)},
+        {offset2, pos.y - scaleBar ((float)videoFrame->mQueueSize, mMaxQueueSize, 2.f)},
         0xc000ffff);
       }
     }

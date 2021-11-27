@@ -15,10 +15,17 @@
 class cAudioFrame : public cFrame {
 public:
   //{{{
-  cAudioFrame (uint32_t pesSize, int64_t pts, size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, float* samples)
-     : cFrame (pts, sampleRate ? (samplesPerFrame * 90000 / sampleRate) : 48000, pesSize),
-       mNumChannels(numChannels),
-       mSamplesPerFrame(samplesPerFrame), mSampleRate(sampleRate), mSamples(samples) {
+  cAudioFrame (uint32_t pesSize, int64_t pts, 
+               size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, float* samples) {
+
+     mPts = pts;
+     mPtsDuration = sampleRate ? (samplesPerFrame * 90000 / sampleRate) : 48000;
+     mPesSize = pesSize;
+
+     mNumChannels = numChannels;
+     mSamplesPerFrame = samplesPerFrame;
+     mSampleRate = sampleRate;
+     mSamples = samples;
 
     for (size_t channel = 0; channel < mNumChannels; channel++) {
       // init
@@ -59,10 +66,10 @@ public:
   std::array<float,6>& getPeakValues() { return mPeakValues; }
   std::array<float,6>& getPowerValues() { return mPowerValues; }
 
-private:
-  const size_t mNumChannels;
-  const size_t mSamplesPerFrame;
-  const uint32_t mSampleRate;
+  // vars
+  size_t mNumChannels;
+  size_t mSamplesPerFrame;
+  uint32_t mSampleRate;
 
   float* mSamples = nullptr;
 
