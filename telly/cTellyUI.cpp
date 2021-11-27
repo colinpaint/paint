@@ -367,7 +367,6 @@ private:
         continue;
 
       cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
-      cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
 
       int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
@@ -376,6 +375,7 @@ private:
         drawMaps (audio, video, playPts);
         }
 
+      cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
       if (!mQuad)
         mQuad = graphics.createQuad (videoSize);
 
