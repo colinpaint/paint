@@ -48,6 +48,7 @@ float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
 // frames, freeframes
 //{{{
 cFrame* cRender::getFramePts (int64_t pts) {
+
   auto it = mFrames.find (pts);
   return (it == mFrames.end()) ? nullptr : it->second;
   }
@@ -55,7 +56,7 @@ cFrame* cRender::getFramePts (int64_t pts) {
 //{{{
 cFrame* cRender::getFreeFrame() {
 
-  // quick test for none
+  // quick unlocked test for none
   if (mFreeFrames.empty())
     return nullptr;
 

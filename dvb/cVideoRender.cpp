@@ -263,13 +263,15 @@ public:
     mfxStatus status = MFX_ERR_NONE;
     while ((status >= MFX_ERR_NONE) || (status == MFX_ERR_MORE_SURFACE)) {
       if (status == MFX_WRN_DEVICE_BUSY) {
+        //{{{  wait 1ms if busy
         cLog::log (LOGINFO, "MFX decode - MFX_WRN_DEVICE_BUSY ");
         this_thread::sleep_for (1ms);
         }
+        //}}}
       if ((status == MFX_ERR_MORE_SURFACE) || (status == MFX_ERR_NONE)) // Find free frame surface
         surfaceIndex = getFreeSurfaceIndex();
 
-      auto timePoint = chrono::system_clock::now();
+      auto now = chrono::system_clock::now();
 
       mfxFrameSurface1* surface = nullptr;
       mfxSyncPoint decodeSyncPoint = nullptr;
@@ -277,8 +279,8 @@ public:
         mSession, &bitstream, &mSurfaces[surfaceIndex], &surface, &decodeSyncPoint);
       if (status == MFX_ERR_NONE) {
         status = mSession.SyncOperation (decodeSyncPoint, 60000);
-        auto decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
+        // get frame
         cMfxVideoFrame* videoFrame = dynamic_cast<cMfxVideoFrame*>(getFrameCallback());
         videoFrame->mPts = surface->Data.TimeStamp;
         videoFrame->mPtsDuration = 90000/25;
@@ -287,19 +289,19 @@ public:
         videoFrame->mHeight = mHeight;
         videoFrame->mStride = surface->Data.Pitch;
         videoFrame->mFrameType = frameType;
-        videoFrame->addTime (decodeTime);
+        videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
 
         // lock
         lock (surface);
-        videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
+        videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
 
         // copy data
         videoFrame->setPixels (surface->Data.Y, surface->Data.U);
-        videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
+        videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
 
         // unlock
         unlock (surface);
-        videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
+        videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
 
         addFrameCallback (videoFrame);
         pts += videoFrame->mPtsDuration;
@@ -485,7 +487,7 @@ public:
     uint8_t* frame = pes;
     uint32_t frameSize = pesSize;
     while (frameSize) {
-      auto timePoint = chrono::system_clock::now();
+      auto now = chrono::system_clock::now();
       int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
                                         frame, (int)frameSize, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
       if (avPacket->size) {
@@ -494,9 +496,8 @@ public:
           ret = avcodec_receive_frame (mAvContext, avFrame);
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
-          auto decodeTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
 
-          // get free videoFrame
+          // get frame
           cFFmpegVideoFrame* videoFrame = dynamic_cast<cFFmpegVideoFrame*>(getFrameCallback());
           videoFrame->mPts = mInterpolatedPts;
           videoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
@@ -505,11 +506,9 @@ public:
           videoFrame->mHeight = static_cast<uint16_t>(avFrame->height);
           videoFrame->mStride = static_cast<uint16_t>(avFrame->width);
           videoFrame->mFrameType = frameType;
-          videoFrame->mQueueSize = 0;
-          videoFrame->mTimes.clear();
-          videoFrame->addTime (decodeTime);
+          videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
 
-          // videoFrame owns prev avFrame, addFrame, alloc new avFrame
+          // transfer avFrame to videoFrame, addFrame, alloc new avFrame
           videoFrame->setPixels (avFrame);
           addFrameCallback (videoFrame);
           avFrame = av_frame_alloc();
@@ -1286,7 +1285,7 @@ private:
 
         // copy surface to staged on read
         if (memId->mRw & WILL_READ) {
-          auto timePoint = chrono::system_clock::now();
+          auto now = chrono::system_clock::now();
           D3D11DeviceContext->CopySubresourceRegion (staged, 0, 0, 0, 0, surface, 0, NULL);
 
           // curious map with wait that doesn't seem to loop
@@ -2074,17 +2073,17 @@ private:
 
       else {
         // Image processing
-        //auto timePoint = chrono::system_clock::now();
+        //auto now = chrono::system_clock::now();
         status = vaToMfxStatus (vaSyncSurface (mVaDisplayHandle, *(vaapi_mid->mSurface)));
-        //int64_t syncTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+        //int64_t syncTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count();
 
         if (status == MFX_ERR_NONE)
           status = vaToMfxStatus (vaDeriveImage (mVaDisplayHandle, *(vaapi_mid->mSurface), &(vaapi_mid->mImage)));
-        //int64_t deriveTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+        //int64_t deriveTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count();
 
         if (status == MFX_ERR_NONE)
           status = vaToMfxStatus (vaMapBuffer (mVaDisplayHandle, vaapi_mid->mImage.buf, (void**)&pBuffer));
-        //int64_t mapTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count();
+        //int64_t mapTime = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count();
 
         if (status == MFX_ERR_NONE) {
           switch (vaapi_mid->mImage.format.fourcc) {
@@ -2327,7 +2326,7 @@ cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
     return nullptr;
 
   // locked
-  shared_lock<shared_mutex> lock (mSharedMutex);
+  //shared_lock<shared_mutex> lock (mSharedMutex);
   auto it = mFrames.find (pts / mPtsDuration);
   return (it == mFrames.end()) ? nullptr : dynamic_cast<cVideoFrame*>(it->second);
   }
@@ -2400,6 +2399,6 @@ void cVideoRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cVideoRender::getInfo() const {
-  return fmt::format ("{} q:{} {}", mDecoder->getName(), getQueueSize(), mInfo);
+  return fmt::format ("{} q:{}{}", mDecoder->getName(), getQueueSize(), mInfo);
   }
 //}}}

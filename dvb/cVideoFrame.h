@@ -27,7 +27,7 @@ public:
     std::string info = fmt::format ("{}x{} {}", mWidth, mHeight, mPesSize);
 
     for (auto& time : mTimes)
-      info += fmt::format ("{:5} ", time);
+      info += fmt::format (" {:5}", time);
 
     return info;
     }
