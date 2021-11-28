@@ -27,6 +27,15 @@ constexpr bool kQueued = true;
 constexpr size_t kSubtitleMapSize = 0;
 
 //{{{
+class cSubtitleFrame : public cFrame {
+public:
+  cSubtitleFrame() : cFrame() {}
+  virtual ~cSubtitleFrame() = default;
+
+  virtual void reset() final {}
+  };
+//}}}
+//{{{
 class cSubtitleDecoder : public cDecoder {
 public:
   cSubtitleDecoder (cRender* render) : mRender(render) {}
@@ -128,7 +137,7 @@ public:
         case 0x14: { // display definition segment
           if (!parseDisplayDefinition (pesPtr, segLength))
             return false;
-          cFrame* frame = new cFrame();
+          cFrame* frame = new cSubtitleFrame();
           frame->mPts = pts;
           frame->mPtsDuration = 90000 / 25;
           frame->mPesSize = pesSize;
@@ -937,8 +946,8 @@ cSubtitleImage& cSubtitleRender::getImage (size_t line) {
 
 // callbacks
 //{{{
-cFrame* cSubtitleRender::getFrame() { 
-  return nullptr; 
+cFrame* cSubtitleRender::getFrame() {
+  return nullptr;
   }
 //}}}
 //{{{

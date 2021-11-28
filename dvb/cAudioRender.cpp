@@ -148,8 +148,15 @@ public:
               default:;
               }
 
-            cAudioFrame* audioFrame = new cAudioFrame (pesSize, interpolatedPts, numChannels,
-                                                       samplesPerFrame, sampleRate, samples);
+            cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(getFrameCallback());
+            audioFrame->mPts = interpolatedPts;
+            audioFrame->mPtsDuration = sampleRate ? (samplesPerFrame * 90000 / sampleRate) : 48000;
+            audioFrame->mPesSize = pesSize;
+            audioFrame->mNumChannels = numChannels;
+            audioFrame->mSamplesPerFrame = samplesPerFrame;
+            audioFrame->mSampleRate = sampleRate;
+            audioFrame->setSamples (samples);
+
             addFrameCallback (audioFrame);
             interpolatedPts += audioFrame->getPtsDuration();
             }
@@ -199,7 +206,7 @@ public:
             audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
               // loadSrcSamples callback lambda
               shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-              audioFrame = audioRender->getAudioFramePlayPts();
+              audioFrame = audioRender->getAudioFramePts (mPts);
               if (mPlaying && audioFrame && audioFrame->getSamples()) {
                 if (audioFrame->getNumChannels() == 1) {
                   // convert mono to 2 channels
@@ -255,7 +262,7 @@ public:
             {
             // scoped song mutex
             shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-            audioFrame = audioRender->getAudioFramePlayPts();
+            audioFrame = audioRender->getAudioFramePts (mPts);
             if (mPlaying && audioFrame && audioFrame->getSamples()) {
               memcpy (samples.data(), audioFrame->getSamples(), audioFrame->getSamplesPerFrame() * 8);
               srcSamples = samples.data();
@@ -318,6 +325,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamTypeId, uint16_t d
   mSamplesPerFrame = 1024;
 
   mDecoder = new cFFmpegAudioDecoder (streamTypeId);
+
   setGetFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }
@@ -367,16 +375,19 @@ cAudioFrame* cAudioRender::getAudioFramePts (int64_t pts) {
   return dynamic_cast<cAudioFrame*>(getFramePts (pts));
   }
 //}}}
-//{{{
-cAudioFrame* cAudioRender::getAudioFramePlayPts() {
-  return getAudioFramePts (getPlayPts());
-  }
-//}}}
 
 // callback
 //{{{
 cFrame* cAudioRender::getFrame() {
-  return nullptr;
+
+  //return new cAudioFrame();
+
+  cFrame* frame = getFreeFrame();
+  if (!frame)
+    frame = new cAudioFrame();
+
+  frame->reset();
+  return frame;
   }
 //}}}
 //{{{
@@ -390,33 +401,27 @@ void cAudioRender::addFrame (cFrame* frame) {
 
   logValue (audioFrame->getPts(), audioFrame->getPowerValues()[0]);
 
-    { // locked emplace and erase
-    unique_lock<shared_mutex> lock (mSharedMutex);
-    mFrames.emplace (audioFrame->getPts(), audioFrame);
+  { // locked emplace
+  unique_lock<shared_mutex> lock (mSharedMutex);
+  mFrames.emplace (audioFrame->getPts(), audioFrame);
+  }
 
-    if (mFrames.size() >= mFrameMapSize) {
-      auto it = mFrames.begin();
-      while ((*it).first < getPlayPts()) {
-        // remove frames before mPlayPts
-        auto frameToRemove = (*it).second;
-        it = mFrames.erase (it);
-        delete frameToRemove;
-        }
-      }
-    }
-
-  if (mFrames.size() >= mFrameMapSize)
-    this_thread::sleep_for (20ms);
-
-
+  // start player
   if (!mPlayer)
     mPlayer = new cAudioPlayer (this, audioFrame->getPts());
+
+  // trim before playPts
+  trimFramesBeforePts (getPlayPts());
+
+  // throttle on number of queued audio frames
+  if (mFrames.size() >= mFrameMapSize)
+    this_thread::sleep_for (20ms);
   }
 //}}}
 
 // virtual
 //{{{
 string cAudioRender::getInfo() const {
-  return fmt::format ("{}", mFrames.size());
+  return fmt::format ("{}:{}", mFrames.size(), mFreeFrames.size());
   }
 //}}}

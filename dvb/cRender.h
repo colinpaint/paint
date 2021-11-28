@@ -23,6 +23,8 @@ public:
   cFrame() {}
   virtual ~cFrame() = default;
 
+  virtual void reset() = 0;
+
   // vars
   int64_t mPts;
   int64_t mPtsDuration;

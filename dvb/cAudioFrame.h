@@ -14,18 +14,17 @@
 
 class cAudioFrame : public cFrame {
 public:
+  cAudioFrame() {}
   //{{{
-  cAudioFrame (uint32_t pesSize, int64_t pts, 
-               size_t numChannels, size_t samplesPerFrame, uint32_t sampleRate, float* samples) {
+  ~cAudioFrame() {
+    free (mSamples);
+    }
+  //}}}
 
-     mPts = pts;
-     mPtsDuration = sampleRate ? (samplesPerFrame * 90000 / sampleRate) : 48000;
-     mPesSize = pesSize;
+  //{{{
+  void setSamples (float* samples) {
 
-     mNumChannels = numChannels;
-     mSamplesPerFrame = samplesPerFrame;
-     mSampleRate = sampleRate;
-     mSamples = samples;
+    mSamples = samples;
 
     for (size_t channel = 0; channel < mNumChannels; channel++) {
       // init
@@ -48,8 +47,7 @@ public:
     }
   //}}}
   //{{{
-  ~cAudioFrame() {
-    free (mSamples);
+  virtual void reset() final {
     }
   //}}}
 

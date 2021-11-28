@@ -32,6 +32,13 @@ public:
     return info;
     }
   //}}}
+  //{{{
+  virtual void reset() final {
+    mQueueSize = 0;
+    mTimes.clear();
+    mTextureDirty = true;
+    }
+  //}}}
 
   void addTime (int64_t time) { mTimes.push_back (time); }
   //{{{

@@ -34,7 +34,6 @@ public:
 
   // find
   cAudioFrame* getAudioFramePts (int64_t pts);
-  cAudioFrame* getAudioFramePlayPts();
 
   // callbacks
   virtual cFrame* getFrame() final;

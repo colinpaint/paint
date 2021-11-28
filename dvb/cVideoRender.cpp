@@ -2349,12 +2349,8 @@ cFrame* cVideoRender::getMfxFrame() {
       frame = getYoungestFrame();
     }
 
-  cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-  videoFrame->mQueueSize = 0;
-  videoFrame->mTimes.clear();
-  videoFrame->mTextureDirty = true;
-
-  return videoFrame;
+  frame->reset();
+  return frame;
   }
 //}}}
 //{{{
@@ -2368,12 +2364,8 @@ cFrame* cVideoRender::getFFmpegFrame() {
       frame = getYoungestFrame();
     }
 
-  cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-  videoFrame->mQueueSize = 0;
-  videoFrame->mTimes.clear();
-  videoFrame->mTextureDirty = true;
-
-  return videoFrame;
+  frame->reset();
+  return frame;
   }
 //}}}
 //{{{
