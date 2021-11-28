@@ -45,10 +45,10 @@ public:
   };
 //}}}
 //{{{
-class cDecoderQueueItem {
+class cDecodeQueueItem {
 public:
   //{{{
-  cDecoderQueueItem (cDecoder* decoder,
+  cDecodeQueueItem (cDecoder* decoder,
                      uint8_t* pes, int pesSize, int64_t pts, int64_t dts,
                      std::function<cFrame*()> getFrameCallback,
                      std::function<void (cFrame* frame)> addFrameCallback)
@@ -58,7 +58,7 @@ public:
   // we gain ownership of malloc'd pes buffer
   //}}}
   //{{{
-  ~cDecoderQueueItem() {
+  ~cDecodeQueueItem() {
     // release malloc'd pes buffer
     free (mPes);
     }
@@ -132,7 +132,7 @@ protected:
   // decode queue
   bool mQueueExit = false;
   bool mQueueRunning = false;
-  readerWriterQueue::cBlockingReaderWriterQueue <cDecoderQueueItem*> mQueue;
+  readerWriterQueue::cBlockingReaderWriterQueue <cDecodeQueueItem*> mDecodeQueue;
 
 private:
   void startQueueThread();

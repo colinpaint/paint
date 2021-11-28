@@ -124,12 +124,12 @@ void cRender::logValue (int64_t pts, float value) {
 /// decode queue
 //{{{
 int cRender::getQueueSize() const {
-  return (int)mQueue.size_approx();
+  return (int)mDecodeQueue.size_approx();
   }
 //}}}
 //{{{
 float cRender::getQueueFrac() const {
-  return (float)mQueue.size_approx() / mQueue.max_capacity();
+  return (float)mDecodeQueue.size_approx() / mDecodeQueue.max_capacity();
   }
 //}}}
 
@@ -142,7 +142,7 @@ bool cRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t d
   //logValue (pts, (float)pesSize);
 
   if (isQueued()) {
-    mQueue.enqueue (new cDecoderQueueItem (mDecoder, pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback));
+    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback));
     return true;
     }
   else {
@@ -161,16 +161,16 @@ void cRender::startQueueThread() {
   mQueueRunning = true;
 
   while (!mQueueExit) {
-    cDecoderQueueItem* queueItem;
-    if (mQueue.wait_dequeue_timed (queueItem, 40000)) {
+    cDecodeQueueItem* queueItem;
+    if (mDecodeQueue.wait_dequeue_timed (queueItem, 40000)) {
       queueItem->mDecoder->decode (queueItem->mPes, queueItem->mPesSize, queueItem->mPts, queueItem->mDts,
                                    queueItem->mGetFrameCallback, queueItem->mAddFrameCallback);
       delete queueItem;
       }
     }
 
-  if (mQueue.size_approx())
-    cLog::log (LOGINFO, fmt::format ("startQueueThread - should empty queue {}", mQueue.size_approx()));
+  if (mDecodeQueue.size_approx())
+    cLog::log (LOGINFO, fmt::format ("startQueueThread - should empty queue {}", mDecodeQueue.size_approx()));
 
   mQueueRunning = false;
   }

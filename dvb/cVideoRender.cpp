@@ -2327,8 +2327,7 @@ cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
 
   // locked
   //shared_lock<shared_mutex> lock (mSharedMutex);
-  auto it = mFrames.find (pts / mPtsDuration);
-  return (it == mFrames.end()) ? nullptr : dynamic_cast<cVideoFrame*>(it->second);
+  return dynamic_cast<cVideoFrame*>(getFramePts (pts / mPtsDuration));
   }
 //}}}
 //{{{
