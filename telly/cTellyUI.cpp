@@ -610,7 +610,7 @@ private:
   float mMaxQueueSize = 4.f;
   float mMaxDecodeTime = 0.f;
 
-  int mAudioFrameMapSize = 4;
+  int mAudioFrameMapSize = 6;
   int mVideoFrameMapSize = 30;
   int mWall = 1;
   //}}}

@@ -36,7 +36,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kQueued = false;
-constexpr size_t kAudioFrameMapSize = 4;
+constexpr size_t kAudioFrameMapSize = 6;
 
 //{{{
 class cFFmpegAudioDecoder : public cDecoder {
@@ -269,7 +269,7 @@ public:
               }
             }
 
-          audioDevice.play (2, srcSamples, 
+          audioDevice.play (2, srcSamples,
                             audioFrame ? audioFrame->getSamplesPerFrame() : audioRender->getSamplesPerFrame(), 1.f);
 
           if (mPlaying)
