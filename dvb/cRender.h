@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <map>
+#include <deque>
 #include <functional>
 #include <mutex>
 #include <shared_mutex>
@@ -87,15 +88,21 @@ public:
   float getOffsetValue (int64_t ptsOffset, int64_t& pts) const;
 
   std::map<int64_t,cFrame*> getFrames() { return mFrames; }
-  cFrame* reuseYoungest();
+
+  // frames, freeframes
+  cFrame* getFramePts (int64_t pts);
+  cFrame* getFreeFrame();
+  cFrame* getYoungestFrame();
+  void addFreeFrame (cFrame* frame);
+  virtual void trimFramesBeforePts (int64_t pts);
 
   int64_t getLastPts() const { return mLastPts; }
   size_t getNumValues() const { return mValuesMap.size(); }
   size_t getFrameMapSize() const { return mFrameMapSize; }
 
+  void setFrameMapSize (size_t size) { mFrameMapSize = size; }
   void setGetFrameCallback (std::function <cFrame* ()> getFrameCallback) { mGetFrameCallback = getFrameCallback; }
   void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
-  void setFrameMapSize (size_t size) { mFrameMapSize = size; }
 
   void setRefPts (int64_t pts) { mRefPts = pts; }
   void setMapSize (size_t size) { mMapSize = size; }
@@ -119,6 +126,7 @@ protected:
   // frameMap
   size_t mFrameMapSize;
   std::map <int64_t, cFrame*> mFrames;
+  std::deque <cFrame*> mFreeFrames;
 
   // decode queue
   bool mQueueExit = false;

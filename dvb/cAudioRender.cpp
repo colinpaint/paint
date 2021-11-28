@@ -199,7 +199,7 @@ public:
             audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
               // loadSrcSamples callback lambda
               shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-              audioFrame = audioRender->findPlayFrame();
+              audioFrame = audioRender->getAudioFramePlayPts();
               if (mPlaying && audioFrame && audioFrame->getSamples()) {
                 if (audioFrame->getNumChannels() == 1) {
                   // convert mono to 2 channels
@@ -255,7 +255,7 @@ public:
             {
             // scoped song mutex
             shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-            audioFrame = audioRender->findPlayFrame();
+            audioFrame = audioRender->getAudioFramePlayPts();
             if (mPlaying && audioFrame && audioFrame->getSamples()) {
               memcpy (samples.data(), audioFrame->getSamples(), audioFrame->getSamplesPerFrame() * 8);
               srcSamples = samples.data();
@@ -363,15 +363,13 @@ void cAudioRender::setPlayPts (int64_t pts) {
 //}}}
 
 //{{{
-cAudioFrame* cAudioRender::findFrame (int64_t pts) const {
-
-  auto it = mFrames.find (pts);
-  return (it == mFrames.end()) ? nullptr : dynamic_cast<cAudioFrame*>(it->second);
+cAudioFrame* cAudioRender::getAudioFramePts (int64_t pts) {
+  return dynamic_cast<cAudioFrame*>(getFramePts (pts));
   }
 //}}}
 //{{{
-cAudioFrame* cAudioRender::findPlayFrame() const {
-  return findFrame (getPlayPts());
+cAudioFrame* cAudioRender::getAudioFramePlayPts() {
+  return getAudioFramePts (getPlayPts());
   }
 //}}}
 

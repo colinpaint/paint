@@ -35,11 +35,11 @@ public:
 
   void addTime (int64_t time) { mTimes.push_back (time); }
   //{{{
-  cTexture& getTexture (cGraphics& graphics, const cPoint& size) {
+  cTexture& getTexture (cGraphics& graphics) {
   // create and access texture for frame, release any intermeidate pixel data
 
     if (!mTexture) {
-      mTexture = graphics.createTexture (mTextureType, size);
+      mTexture = graphics.createTexture (mTextureType, cPoint (mWidth, mHeight));
       mTextureDirty = true;
       }
 

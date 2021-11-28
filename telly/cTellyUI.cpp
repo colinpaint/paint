@@ -148,7 +148,6 @@ private:
         continue;
 
       cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
-      cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
 
       int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
@@ -157,19 +156,20 @@ private:
         drawMaps (audio, video, playPts);
         }
 
-      cVideoFrame* videoFrame = video.getPtsFrame (playPts);
+      cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
       if (videoFrame) {
+        cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
         if (!mQuad)
           mQuad = graphics.createQuad (videoSize);
 
-        cTexture& texture = videoFrame->getTexture (graphics, {video.getWidth(), video.getHeight()});
+        cTexture& texture = videoFrame->getTexture (graphics);
         if (!mShader)
           mShader = graphics.createTextureShader (texture.getTextureType());
         texture.setSource();
         mShader->use();
 
-        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-        cVec2 size = { windowSize.x/videoSize.x/mWall, windowSize.y/videoSize.y/mWall};
+        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
+        cVec2 size = {windowSize.x / videoSize.x / mWall, windowSize.y / videoSize.y / mWall};
 
         cMat4x4 model;
         model.size (size);
@@ -177,12 +177,13 @@ private:
 
         for (int y = 0; y < mWall; y++) {
           for (int x = 0; x < mWall; x++) {
-            cVec2 offset = { x * windowSize.x/mWall, y * windowSize.y/mWall};
-            model.setTranslate (offset);
+            model.setTranslate ({x * windowSize.x / mWall, y * windowSize.y / mWall});
             mShader->setModelProjection (model, orthoProjection);
             mQuad->draw();
             }
           }
+
+        video.trimVideoBeforePts (playPts);
         }
       }
     }
@@ -381,10 +382,9 @@ private:
 
       cMat4x4 model;
       cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-      cVec2 size = { windowSize.x/videoSize.x/mWall, windowSize.y/videoSize.y/mWall};
-      model.size (size);
+      model.size ({ windowSize.x/videoSize.x/mWall, windowSize.y/videoSize.y/mWall});
 
-      cVideoFrame* videoFrame = video.getPtsFrame (playPts);
+      cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
       if (videoFrame) {
         if (!mShader)
           mShader = graphics.createTextureShader (videoFrame->mTextureType);
@@ -393,10 +393,10 @@ private:
         int64_t pts = playPts;
         for (int y = mWall-1; y >= 0; y--) {
           for (int x = 0; x < mWall; x++) {
-            videoFrame = video.getPtsFrame (pts);
+            videoFrame = video.getVideoFramePts (pts);
             if (videoFrame) {
-              videoFrame->getTexture (graphics, {video.getWidth(), video.getHeight()}).setSource();
-              model.setTranslate ({ x * windowSize.x/mWall, y * windowSize.y/mWall});
+              videoFrame->getTexture (graphics).setSource();
+              model.setTranslate ({x * windowSize.x / mWall, y * windowSize.y / mWall});
               mShader->setModelProjection (model, orthoProjection);
               mQuad->draw();
               pts -= video.getPtsDuration();
@@ -405,6 +405,7 @@ private:
               return;
             }
           }
+        video.trimVideoBeforePts (pts);
         }
       }
     }

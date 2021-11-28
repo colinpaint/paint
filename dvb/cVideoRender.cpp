@@ -95,7 +95,7 @@ public:
   //}}}
 
   //{{{
-  void setData (uint8_t* y, uint8_t* uv) {
+  void setPixels (uint8_t* y, uint8_t* uv) {
 
     mPixels[0] = (uint8_t*)realloc (mPixels[0], mStride * mHeight);
     memcpy (mPixels[0], y, mStride * mHeight);
@@ -131,7 +131,7 @@ public:
     }
   //}}}
 
-  void setData (AVFrame* avFrame) { mAvFrame = avFrame; }
+  void setPixels (AVFrame* avFrame) { mAvFrame = avFrame; }
 
 protected:
   virtual uint8_t** getPixels() final { return mAvFrame->data; }
@@ -294,7 +294,7 @@ public:
         videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
 
         // copy data
-        videoFrame->setData (surface->Data.Y, surface->Data.U);
+        videoFrame->setPixels (surface->Data.Y, surface->Data.U);
         videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - timePoint).count());
 
         // unlock
@@ -510,7 +510,7 @@ public:
           videoFrame->addTime (decodeTime);
 
           // videoFrame owns prev avFrame, addFrame, alloc new avFrame
-          videoFrame->setData (avFrame);
+          videoFrame->setPixels (avFrame);
           addFrameCallback (videoFrame);
           avFrame = av_frame_alloc();
 
@@ -2318,21 +2318,23 @@ cVideoRender::~cVideoRender() {
   }
 //}}}
 
+// frames, freeframes
 //{{{
-cVideoFrame* cVideoRender::getPtsFrame (int64_t pts) {
+cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
 
-  if (mFrames.empty() || !mPtsDuration) // no frames
+  // quick test for none
+  if (mFrames.empty() || !mPtsDuration)
     return nullptr;
 
   // locked
   shared_lock<shared_mutex> lock (mSharedMutex);
-
-  // new pts, new texture
   auto it = mFrames.find (pts / mPtsDuration);
-  if (it == mFrames.end())
-    return nullptr;
-  else
-    return dynamic_cast<cVideoFrame*>((*it).second);
+  return (it == mFrames.end()) ? nullptr : dynamic_cast<cVideoFrame*>(it->second);
+  }
+//}}}
+//{{{
+void cVideoRender::trimVideoBeforePts (int64_t pts) {
+  trimFramesBeforePts (pts / mPtsDuration);
   }
 //}}}
 
@@ -2340,32 +2342,39 @@ cVideoFrame* cVideoRender::getPtsFrame (int64_t pts) {
 //{{{
 cFrame* cVideoRender::getMfxFrame() {
 
-  // simple allocate new
-  if (mFrames.size() < mFrameMapSize)
-    return new cMfxVideoFrame();
-
-  else {
-    cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(reuseYoungest());
-    videoFrame->mQueueSize = 0;
-    videoFrame->mTimes.clear();
-    videoFrame->mTextureDirty = true;
-    return videoFrame;
+  cFrame* frame = getFreeFrame();
+  if (!frame) {
+    if (mFrames.size() < mFrameMapSize)
+      frame = new cMfxVideoFrame();
+    else
+      frame = getYoungestFrame();
     }
+
+  cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+  videoFrame->mQueueSize = 0;
+  videoFrame->mTimes.clear();
+  videoFrame->mTextureDirty = true;
+
+  return videoFrame;
   }
 //}}}
 //{{{
 cFrame* cVideoRender::getFFmpegFrame() {
 
-  // simple allocate new
-  if (mFrames.size() < mFrameMapSize)
-    return new cFFmpegVideoFrame();
-  else {
-    cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(reuseYoungest());
-    videoFrame->mQueueSize = 0;
-    videoFrame->mTimes.clear();
-    videoFrame->mTextureDirty = true;
-    return videoFrame;
+  cFrame* frame = getFreeFrame();
+  if (!frame) {
+    if (mFrames.size() < mFrameMapSize)
+      frame = new cFFmpegVideoFrame();
+    else
+      frame = getYoungestFrame();
     }
+
+  cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+  videoFrame->mQueueSize = 0;
+  videoFrame->mTimes.clear();
+  videoFrame->mTextureDirty = true;
+
+  return videoFrame;
   }
 //}}}
 //{{{
@@ -2378,7 +2387,7 @@ void cVideoRender::addFrame (cFrame* frame) {
   mPtsDuration = videoFrame->mPtsDuration;
   mWidth = videoFrame->mWidth;
   mHeight = videoFrame->mHeight;
-  mInfo = fmt::format ("{} {}", mFrames.size(), videoFrame->getInfo());
+  mInfo = fmt::format ("{}:{} {}", mFrames.size(), mFreeFrames.size(), videoFrame->getInfo());
 
   logValue (videoFrame->mPts, (float)videoFrame->mTimes[0]);
 

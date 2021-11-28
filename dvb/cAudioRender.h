@@ -33,8 +33,8 @@ public:
   void setPlayPts (int64_t pts);
 
   // find
-  cAudioFrame* findFrame (int64_t pts) const;
-  cAudioFrame* findPlayFrame() const;
+  cAudioFrame* getAudioFramePts (int64_t pts);
+  cAudioFrame* getAudioFramePlayPts();
 
   // callbacks
   virtual cFrame* getFrame() final;

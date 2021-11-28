@@ -45,17 +45,65 @@ float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
   }
 //}}}
 
+// frames, freeframes
 //{{{
-cFrame* cRender::reuseYoungest() {
+cFrame* cRender::getFramePts (int64_t pts) {
+  auto it = mFrames.find (pts);
+  return (it == mFrames.end()) ? nullptr : it->second;
+  }
+//}}}
+//{{{
+cFrame* cRender::getFreeFrame() {
+
+  // quick test for none
+  if (mFreeFrames.empty())
+    return nullptr;
+
+  // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  cFrame* frame = mFreeFrames.front();
+  mFreeFrames.pop_front();
+  return frame;
+  }
+//}}}
+//{{{
+cFrame* cRender::getYoungestFrame() {
 
   // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
 
   // reuse youngest
   auto it = mFrames.begin();
-  cFrame* removedFrame = (*it).second;
+  cFrame* youngestdFrame = (*it).second;
   mFrames.erase (it);
-  return removedFrame;
+
+  return youngestdFrame;
+  }
+//}}}
+//{{{
+void cRender::addFreeFrame (cFrame* frame) {
+// assumes mutex locked
+
+  mFreeFrames.push_back (frame);
+  }
+//}}}
+//{{{
+void cRender::trimFramesBeforePts (int64_t pts) {
+//trim frames before pts
+
+  // anything to trim
+  if (mFrames.empty())
+    return;
+
+  unique_lock<shared_mutex> lock(mSharedMutex);
+
+  auto it = mFrames.begin();
+  while ((it != mFrames.end()) && ((*it).first < pts)) {
+    // remove frames before pts
+    addFreeFrame ((*it).second);
+    it = mFrames.erase (it);
+    }
   }
 //}}}
 

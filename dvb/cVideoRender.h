@@ -20,7 +20,8 @@ public:
   uint16_t getHeight() const { return mHeight; }
   int64_t getPtsDuration() const { return mPtsDuration; }
 
-  cVideoFrame* getPtsFrame (int64_t pts);
+  cVideoFrame* getVideoFramePts (int64_t pts);
+  void trimVideoBeforePts (int64_t pts);
 
   // callbacks
   cFrame* getMfxFrame();
