@@ -226,8 +226,8 @@ public:
                 srcSamples = silence.data();
               numSrcSamples = (int)(audioFrame ? audioFrame->getSamplesPerFrame() : audioRender->getSamplesPerFrame());
 
-              if (mPlaying && audioFrame)
-                mPts += audioFrame->getPtsDuration();
+              if (mPlaying)
+                mPts += audioFrame ? audioFrame->getPtsDuration() : audioRender->getPtsDuration();
               });
             }
 
@@ -269,11 +269,11 @@ public:
               }
             }
 
-          audioDevice.play (
-            2, srcSamples, audioFrame ? audioFrame->getSamplesPerFrame() : audioRender->getSamplesPerFrame(), 1.f);
+          audioDevice.play (2, srcSamples, 
+                            audioFrame ? audioFrame->getSamplesPerFrame() : audioRender->getSamplesPerFrame(), 1.f);
 
-          if (mPlaying && audioFrame)
-            mPts += audioFrame->getPtsDuration();
+          if (mPlaying)
+            mPts += audioFrame ? audioFrame->getPtsDuration() : audioRender->getPtsDuration();
           }
 
         mRunning = false;
@@ -380,14 +380,11 @@ cAudioFrame* cAudioRender::getAudioFramePts (int64_t pts) {
 //{{{
 cFrame* cAudioRender::getFrame() {
 
-  //return new cAudioFrame();
-
   cFrame* frame = getFreeFrame();
-  if (!frame)
-    frame = new cAudioFrame();
+  if (frame)
+    return frame;
 
-  frame->reset();
-  return frame;
+  return new cAudioFrame();
   }
 //}}}
 //{{{
@@ -398,6 +395,7 @@ void cAudioRender::addFrame (cFrame* frame) {
   mNumChannels = audioFrame->getNumChannels();
   mSampleRate = audioFrame->getSampleRate();
   mSamplesPerFrame = audioFrame->getSamplesPerFrame();
+  mPtsDuration = audioFrame->getPtsDuration();
 
   logValue (audioFrame->getPts(), audioFrame->getPowerValues()[0]);
 

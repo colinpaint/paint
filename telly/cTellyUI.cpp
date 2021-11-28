@@ -605,9 +605,9 @@ private:
   cQuad* mQuad = nullptr;
   cTextureShader* mShader = nullptr;
 
-  float mMaxPower = 0.f;
+  float mMaxPower = 0.5f;
   float mMaxPesSize = 0.f;
-  float mMaxQueueSize = 0.f;
+  float mMaxQueueSize = 4.f;
   float mMaxDecodeTime = 0.f;
 
   int mAudioFrameMapSize = 4;

@@ -24,6 +24,8 @@ public:
   //{{{
   void setSamples (float* samples) {
 
+    reset();
+
     mSamples = samples;
 
     for (size_t channel = 0; channel < mNumChannels; channel++) {
@@ -48,6 +50,8 @@ public:
   //}}}
   //{{{
   virtual void reset() final {
+    free (mSamples);
+    mSamples = nullptr;
     }
   //}}}
 

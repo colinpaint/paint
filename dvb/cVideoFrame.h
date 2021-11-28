@@ -15,11 +15,8 @@
 
 class cVideoFrame : public cFrame {
 public:
-  cVideoFrame(cTexture::eTextureType textureType) : cFrame(), mTextureType(textureType) {}
-
-  virtual ~cVideoFrame() {
-    delete mTexture;
-    }
+  cVideoFrame(cTexture::eTextureType textureType) : mTextureType(textureType) {}
+  virtual ~cVideoFrame() { delete mTexture; }
 
   //{{{
   std::string getInfo() {

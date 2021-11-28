@@ -29,7 +29,7 @@ constexpr size_t kSubtitleMapSize = 0;
 //{{{
 class cSubtitleFrame : public cFrame {
 public:
-  cSubtitleFrame() : cFrame() {}
+  cSubtitleFrame() = default;
   virtual ~cSubtitleFrame() = default;
 
   virtual void reset() final {}

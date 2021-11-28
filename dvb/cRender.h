@@ -95,7 +95,6 @@ public:
   cFrame* getFramePts (int64_t pts);
   cFrame* getFreeFrame();
   cFrame* getYoungestFrame();
-  void addFreeFrame (cFrame* frame);
   virtual void trimFramesBeforePts (int64_t pts);
 
   int64_t getLastPts() const { return mLastPts; }

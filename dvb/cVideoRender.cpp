@@ -84,6 +84,33 @@ constexpr uint32_t kVideoFrameMapSize = 30;
 
 // cFrame derived classes
 //{{{
+class cFFmpegVideoFrame : public cVideoFrame {
+public:
+  cFFmpegVideoFrame() : cVideoFrame(cTexture::eYuv420) {}
+  //{{{
+  virtual ~cFFmpegVideoFrame() {
+    releasePixels();
+    }
+  //}}}
+
+  void setPixels (AVFrame* avFrame) { mAvFrame = avFrame; }
+
+protected:
+  virtual uint8_t** getPixels() final { return mAvFrame->data; }
+  //{{{
+  virtual void releasePixels() final {
+
+    av_frame_unref (mAvFrame);
+    av_frame_free (&mAvFrame);
+    mAvFrame = nullptr;
+    }
+  //}}}
+
+private:
+  AVFrame* mAvFrame = nullptr;
+  };
+//}}}
+//{{{
 class cMfxVideoFrame : public cVideoFrame {
 public:
   cMfxVideoFrame() : cVideoFrame(cTexture::eNv12) {}
@@ -121,35 +148,121 @@ private:
   array <uint8_t*,2> mPixels = { nullptr };
   };
 //}}}
+
+// cDecoder derived classes
 //{{{
-class cFFmpegVideoFrame : public cVideoFrame {
+class cFFmpegDecoder : public cDecoder {
 public:
-  cFFmpegVideoFrame() : cVideoFrame(cTexture::eYuv420) {}
   //{{{
-  virtual ~cFFmpegVideoFrame() {
-    releasePixels();
+  cFFmpegDecoder (uint8_t streamTypeId)
+     : cDecoder(), mH264 (streamTypeId == 27),
+       mAvCodec (avcodec_find_decoder ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
+
+    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder stream:{}", streamTypeId));
+
+    mAvParser = av_parser_init ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
+    mAvContext = avcodec_alloc_context3 (mAvCodec);
+    avcodec_open2 (mAvContext, mAvCodec, NULL);
+    }
+  //}}}
+  //{{{
+  virtual ~cFFmpegDecoder() {
+
+    if (mAvContext)
+      avcodec_close (mAvContext);
+
+    if (mAvParser)
+      av_parser_close (mAvParser);
+
+    if (mSwsContext)
+      sws_freeContext (mSwsContext);
     }
   //}}}
 
-  void setPixels (AVFrame* avFrame) { mAvFrame = avFrame; }
+  virtual string getName() const final { return "ffmpeg"; }
 
-protected:
-  virtual uint8_t** getPixels() final { return mAvFrame->data; }
   //{{{
-  virtual void releasePixels() final {
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
+                          function<cFrame*()> getFrameCallback,
+                          function<void (cFrame* frame)> addFrameCallback) final {
 
-    av_frame_unref (mAvFrame);
-    av_frame_free (&mAvFrame);
-    mAvFrame = nullptr;
+    char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
+    if (frameType == 'I') {
+      //{{{  pts seems wrong, frames decode in presentation order, only correct on Iframe
+      if ((mInterpolatedPts != -1) && (mInterpolatedPts != dts))
+        cLog::log (LOGERROR, fmt::format ("lost:{} pts:{} dts:{} size:{}",
+                                          frameType, getPtsString (pts), getPtsString (dts), pesSize));
+      mInterpolatedPts = dts;
+      mGotIframe = true;
+      }
+      //}}}
+    if (!mGotIframe) {
+      //{{{  skip until first Iframe
+      cLog::log (LOGINFO, fmt::format ("skip:{} pts:{} dts:{} size:{}",
+                                       frameType, getPtsString (pts), getPtsString (dts), pesSize));
+      return pts;
+      }
+      //}}}
+
+    AVFrame* avFrame = av_frame_alloc();
+    AVPacket* avPacket = av_packet_alloc();
+
+    uint8_t* frame = pes;
+    uint32_t frameSize = pesSize;
+    while (frameSize) {
+      auto now = chrono::system_clock::now();
+      int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
+                                        frame, (int)frameSize, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
+      if (avPacket->size) {
+        int ret = avcodec_send_packet (mAvContext, avPacket);
+        while (ret >= 0) {
+          ret = avcodec_receive_frame (mAvContext, avFrame);
+          if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
+            break;
+
+          // get frame
+          cFFmpegVideoFrame* videoFrame = dynamic_cast<cFFmpegVideoFrame*>(getFrameCallback());
+          videoFrame->mPts = mInterpolatedPts;
+          videoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
+          videoFrame->mPesSize = frameSize;
+          videoFrame->mWidth = static_cast<uint16_t>(avFrame->width);
+          videoFrame->mHeight = static_cast<uint16_t>(avFrame->height);
+          videoFrame->mStride = static_cast<uint16_t>(avFrame->width);
+          videoFrame->mFrameType = frameType;
+          videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
+
+          // transfer avFrame to videoFrame, addFrame, alloc new avFrame
+          videoFrame->setPixels (avFrame);
+          addFrameCallback (videoFrame);
+          avFrame = av_frame_alloc();
+
+          mInterpolatedPts += videoFrame->mPtsDuration;
+          }
+        }
+      frame += bytesUsed;
+      frameSize -= bytesUsed;
+      }
+
+    av_frame_unref (avFrame);
+    av_frame_free (&avFrame);
+
+    av_packet_free (&avPacket);
+    return mInterpolatedPts;
     }
   //}}}
 
 private:
-  AVFrame* mAvFrame = nullptr;
+  const bool mH264 = false;
+  const AVCodec* mAvCodec = nullptr;
+
+  AVCodecParserContext* mAvParser = nullptr;
+  AVCodecContext* mAvContext = nullptr;
+  SwsContext* mSwsContext = nullptr;
+
+  bool mGotIframe = false;
+  int64_t mInterpolatedPts = -1;
   };
 //}}}
-
-// cDecoder derived classes
 //{{{
 class cMfxDecoder : public cDecoder {
 public:
@@ -425,119 +538,6 @@ protected:
 
   bool mH264 = false;
   bool mGotIframe = false;
-  };
-//}}}
-//{{{
-class cFFmpegDecoder : public cDecoder {
-public:
-  //{{{
-  cFFmpegDecoder (uint8_t streamTypeId)
-     : cDecoder(), mH264 (streamTypeId == 27),
-       mAvCodec (avcodec_find_decoder ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
-
-    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder stream:{}", streamTypeId));
-
-    mAvParser = av_parser_init ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
-    mAvContext = avcodec_alloc_context3 (mAvCodec);
-    avcodec_open2 (mAvContext, mAvCodec, NULL);
-    }
-  //}}}
-  //{{{
-  virtual ~cFFmpegDecoder() {
-
-    if (mAvContext)
-      avcodec_close (mAvContext);
-
-    if (mAvParser)
-      av_parser_close (mAvParser);
-
-    if (mSwsContext)
-      sws_freeContext (mSwsContext);
-    }
-  //}}}
-
-  virtual string getName() const final { return "ffmpeg"; }
-
-  //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
-                          function<cFrame*()> getFrameCallback,
-                          function<void (cFrame* frame)> addFrameCallback) final {
-
-    char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
-    if (frameType == 'I') {
-      //{{{  pts seems wrong, frames decode in presentation order, only correct on Iframe
-      if ((mInterpolatedPts != -1) && (mInterpolatedPts != dts))
-        cLog::log (LOGERROR, fmt::format ("lost:{} pts:{} dts:{} size:{}",
-                                          frameType, getPtsString (pts), getPtsString (dts), pesSize));
-      mInterpolatedPts = dts;
-      mGotIframe = true;
-      }
-      //}}}
-    if (!mGotIframe) {
-      //{{{  skip until first Iframe
-      cLog::log (LOGINFO, fmt::format ("skip:{} pts:{} dts:{} size:{}",
-                                       frameType, getPtsString (pts), getPtsString (dts), pesSize));
-      return pts;
-      }
-      //}}}
-
-    AVFrame* avFrame = av_frame_alloc();
-    AVPacket* avPacket = av_packet_alloc();
-
-    uint8_t* frame = pes;
-    uint32_t frameSize = pesSize;
-    while (frameSize) {
-      auto now = chrono::system_clock::now();
-      int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
-                                        frame, (int)frameSize, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
-      if (avPacket->size) {
-        int ret = avcodec_send_packet (mAvContext, avPacket);
-        while (ret >= 0) {
-          ret = avcodec_receive_frame (mAvContext, avFrame);
-          if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
-            break;
-
-          // get frame
-          cFFmpegVideoFrame* videoFrame = dynamic_cast<cFFmpegVideoFrame*>(getFrameCallback());
-          videoFrame->mPts = mInterpolatedPts;
-          videoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
-          videoFrame->mPesSize = frameSize;
-          videoFrame->mWidth = static_cast<uint16_t>(avFrame->width);
-          videoFrame->mHeight = static_cast<uint16_t>(avFrame->height);
-          videoFrame->mStride = static_cast<uint16_t>(avFrame->width);
-          videoFrame->mFrameType = frameType;
-          videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
-
-          // transfer avFrame to videoFrame, addFrame, alloc new avFrame
-          videoFrame->setPixels (avFrame);
-          addFrameCallback (videoFrame);
-          avFrame = av_frame_alloc();
-
-          mInterpolatedPts += videoFrame->mPtsDuration;
-          }
-        }
-      frame += bytesUsed;
-      frameSize -= bytesUsed;
-      }
-
-    av_frame_unref (avFrame);
-    av_frame_free (&avFrame);
-
-    av_packet_free (&avPacket);
-    return mInterpolatedPts;
-    }
-  //}}}
-
-private:
-  const bool mH264 = false;
-  const AVCodec* mAvCodec = nullptr;
-
-  AVCodecParserContext* mAvParser = nullptr;
-  AVCodecContext* mAvContext = nullptr;
-  SwsContext* mSwsContext = nullptr;
-
-  bool mGotIframe = false;
-  int64_t mInterpolatedPts = -1;
   };
 //}}}
 
@@ -2321,7 +2321,7 @@ cVideoRender::~cVideoRender() {
 //{{{
 cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
 
-  // quick test for none
+  // quick unlocked test
   if (mFrames.empty() || !mPtsDuration)
     return nullptr;
 
@@ -2339,33 +2339,23 @@ void cVideoRender::trimVideoBeforePts (int64_t pts) {
 
 // decoder callbacks
 //{{{
-cFrame* cVideoRender::getMfxFrame() {
-
-  cFrame* frame = getFreeFrame();
-  if (!frame) {
-    if (mFrames.size() < mFrameMapSize)
-      frame = new cMfxVideoFrame();
-    else
-      frame = getYoungestFrame();
-    }
-
-  frame->reset();
-  return frame;
-  }
-//}}}
-//{{{
 cFrame* cVideoRender::getFFmpegFrame() {
 
   cFrame* frame = getFreeFrame();
-  if (!frame) {
-    if (mFrames.size() < mFrameMapSize)
-      frame = new cFFmpegVideoFrame();
-    else
-      frame = getYoungestFrame();
-    }
+  if (frame)
+    return frame;
 
-  frame->reset();
-  return frame;
+  return new cFFmpegVideoFrame();
+  }
+//}}}
+//{{{
+cFrame* cVideoRender::getMfxFrame() {
+
+  cFrame* frame = getFreeFrame();
+  if (frame)
+    return frame;
+
+  return new cMfxVideoFrame();
   }
 //}}}
 //{{{
@@ -2391,6 +2381,6 @@ void cVideoRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cVideoRender::getInfo() const {
-  return fmt::format ("{} q:{}{}", mDecoder->getName(), getQueueSize(), mInfo);
+  return fmt::format ("{} q:{} {}", mDecoder->getName(), getQueueSize(), mInfo);
   }
 //}}}

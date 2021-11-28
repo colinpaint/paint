@@ -45,10 +45,11 @@ float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
   }
 //}}}
 
-// frames, freeframes
+// frames, freeFrames
 //{{{
 cFrame* cRender::getFramePts (int64_t pts) {
 
+  // unlocked find
   auto it = mFrames.find (pts);
   return (it == mFrames.end()) ? nullptr : it->second;
   }
@@ -76,33 +77,28 @@ cFrame* cRender::getYoungestFrame() {
 
   // reuse youngest
   auto it = mFrames.begin();
-  cFrame* youngestdFrame = (*it).second;
+  cFrame* youngestFrame = (*it).second;
   mFrames.erase (it);
 
-  return youngestdFrame;
-  }
-//}}}
-//{{{
-void cRender::addFreeFrame (cFrame* frame) {
-// assumes mutex locked
-
-  mFreeFrames.push_back (frame);
+  youngestFrame->reset();
+  return youngestFrame;
   }
 //}}}
 //{{{
 void cRender::trimFramesBeforePts (int64_t pts) {
-//trim frames before pts
 
-  // anything to trim
+  // quick unlocked test
   if (mFrames.empty())
     return;
 
+  // locked
   unique_lock<shared_mutex> lock(mSharedMutex);
 
   auto it = mFrames.begin();
   while ((it != mFrames.end()) && ((*it).first < pts)) {
-    // remove frames before pts
-    addFreeFrame ((*it).second);
+    // remove frames before pts, release any temp resources
+    it->second->reset();
+    mFreeFrames.push_back (it->second);
     it = mFrames.erase (it);
     }
   }
@@ -125,7 +121,7 @@ void cRender::logValue (int64_t pts, float value) {
   }
 //}}}
 
-/// queue
+/// decode queue
 //{{{
 int cRender::getQueueSize() const {
   return (int)mQueue.size_approx();
