@@ -14,7 +14,9 @@
 
 class cAudioFrame : public cFrame {
 public:
-  cAudioFrame() {}
+  cAudioFrame() {
+    mSamples = (float*)malloc (6 * 2048 * 4);
+    }
   //{{{
   ~cAudioFrame() {
     free (mSamples);
@@ -22,11 +24,14 @@ public:
   //}}}
 
   //{{{
-  void setSamples (float* samples) {
+  virtual void reset() final {
+    //free (mSamples);
+    //mSamples = nullptr;
+    }
+  //}}}
 
-    reset();
-
-    mSamples = samples;
+  //{{{
+  void calcSamples() {
 
     for (size_t channel = 0; channel < mNumChannels; channel++) {
       // init
@@ -34,11 +39,11 @@ public:
       mPowerValues[channel] = 0.f;
       }
 
-    float* samplePtr = samples;
+    float* samplePtr = mSamples;
     for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
       // acumulate
       for (size_t channel = 0; channel < mNumChannels; channel++) {
-        auto value = *samplePtr++;
+        float value = *samplePtr++;
         mPeakValues[channel] = std::max (abs(mPeakValues[channel]), value);
         mPowerValues[channel] += value * value;
         }
@@ -46,12 +51,6 @@ public:
 
     for (size_t channel = 0; channel < mNumChannels; channel++)
       mPowerValues[channel] = sqrtf (mPowerValues[channel] / mSamplesPerFrame);
-    }
-  //}}}
-  //{{{
-  virtual void reset() final {
-    free (mSamples);
-    mSamples = nullptr;
     }
   //}}}
 
@@ -69,9 +68,9 @@ public:
   std::array<float,6>& getPowerValues() { return mPowerValues; }
 
   // vars
-  size_t mNumChannels;
-  size_t mSamplesPerFrame;
-  uint32_t mSampleRate;
+  size_t mNumChannels = 6;
+  size_t mSamplesPerFrame = 2048;
+  uint32_t mSampleRate = 48000;
 
   float* mSamples = nullptr;
 

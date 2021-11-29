@@ -72,10 +72,6 @@ public:
     int64_t interpolatedPts = pts;
 
     // parse pesFrame, pes may have more than one frame
-    size_t numChannels = 0;
-    size_t samplesPerFrame = 0;
-    uint32_t sampleRate = 48000;
-
     uint8_t* pesPtr = pes;
     while (pesSize) {
       AVPacket* avPacket = av_packet_alloc();
@@ -90,78 +86,38 @@ public:
           ret = avcodec_receive_frame (mAvContext, avFrame);
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
+
           if (avFrame->nb_samples > 0) {
-            samplesPerFrame = avFrame->nb_samples;
-            sampleRate = avFrame->sample_rate;
-            float* samples = nullptr;
-            switch (mAvContext->sample_fmt) {
-              //{{{
-              case AV_SAMPLE_FMT_FLTP: { // 32bit float planar, copy to interleaved, mix down 5.1
-
-                size_t srcNumChannels = avFrame->channels;
-
-                numChannels = 2;
-                samples = (float*)malloc (numChannels * samplesPerFrame * sizeof(float));
-                float* dstPtr = samples;
-
-                float* srcPtr0 = (float*)avFrame->data[0];
-                float* srcPtr1 = (float*)avFrame->data[1];
-                if (srcNumChannels == 6) {
-                  // 5.1 mix down
-                  float* srcPtr2 = (float*)avFrame->data[2];
-                  float* srcPtr3 = (float*)avFrame->data[3];
-                  float* srcPtr4 = (float*)avFrame->data[4];
-                  float* srcPtr5 = (float*)avFrame->data[5];
-                  for (size_t sample = 0; sample < samplesPerFrame; sample++) {
-                    *dstPtr++ = *srcPtr0++ + *srcPtr2++ + *srcPtr4 + *srcPtr5; // left loud
-                    *dstPtr++ = *srcPtr1++ + *srcPtr3++ + *srcPtr4++ + *srcPtr5++; // right loud
-                    }
-                  }
-                else {
-                  // stereo
-                  for (size_t sample = 0; sample < samplesPerFrame; sample++) {
-                    *dstPtr++ = *srcPtr0++;
-                    *dstPtr++ = *srcPtr1++;
-                    }
-                  }
-
-                break;
-                }
-              //}}}
-              //{{{
-              case AV_SAMPLE_FMT_S16P: { // 16bit signed planar, copy scale and copy to interleaved
-
-                numChannels = avFrame->channels;
-                samples = (float*)malloc (numChannels * samplesPerFrame * sizeof(float));
-
-                for (size_t channel = 0; channel < numChannels; channel++) {
-                  auto dstPtr = samples + channel;
-                  auto srcPtr = (short*)avFrame->data[channel];
-                  for (size_t sample = 0; sample < samplesPerFrame; sample++) {
-                    *dstPtr = *srcPtr++ / (float)0x8000;
-                    dstPtr += numChannels;
-                    }
-                  }
-                break;
-                }
-              //}}}
-              default:;
-              }
-
             cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(getFrameCallback());
             audioFrame->mPts = interpolatedPts;
-            audioFrame->mPtsDuration = sampleRate ? (samplesPerFrame * 90000 / sampleRate) : 48000;
+            audioFrame->mPtsDuration = avFrame->sample_rate ? (avFrame->nb_samples * 90000 / avFrame->sample_rate) : 48000;
             audioFrame->mPesSize = pesSize;
-            audioFrame->mNumChannels = numChannels;
-            audioFrame->mSamplesPerFrame = samplesPerFrame;
-            audioFrame->mSampleRate = sampleRate;
-            audioFrame->setSamples (samples);
+            audioFrame->mSamplesPerFrame = avFrame->nb_samples;
+            audioFrame->mSampleRate = avFrame->sample_rate;
+            audioFrame->mNumChannels = avFrame->channels;
 
+            float* dst = audioFrame->mSamples;
+            switch (mAvContext->sample_fmt) {
+              case AV_SAMPLE_FMT_FLTP:  // 32bit float planar, copy to interleaved
+                for (size_t sample = 0; sample < avFrame->nb_samples; sample++)
+                  for (size_t channel = 0; channel < avFrame->channels; channel++)
+                    *dst++ = *(((float*)avFrame->data[channel]) + sample);
+                break;
+              case AV_SAMPLE_FMT_S16P:  // 16bit signed planar, scale to interleaved
+                for (size_t sample = 0; sample < avFrame->nb_samples; sample++)
+                  for (size_t channel = 0; channel < avFrame->channels; channel++)
+                    *dst++ = (*(((short*)avFrame->data[channel]) + sample)) / (float)0x8000;
+                break;
+              }
+
+            audioFrame->calcSamples();
             addFrameCallback (audioFrame);
             interpolatedPts += audioFrame->getPtsDuration();
             }
           }
         }
+
+      av_frame_unref (avFrame);
       av_frame_free (&avFrame);
       av_packet_free (&avPacket);
       }
@@ -174,10 +130,6 @@ private:
   const AVCodec* mAvCodec = nullptr;
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;
-
-  size_t mChannels = 0;
-  size_t mSampleRate = 0;
-  size_t mSamplesPerFrame = 0;
   };
 //}}}
 //{{{
@@ -208,18 +160,24 @@ public:
               shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
               audioFrame = audioRender->getAudioFramePts (mPts);
               if (mPlaying && audioFrame && audioFrame->getSamples()) {
+                float* src = audioFrame->getSamples();
+                float* dst = samples.data();
                 if (audioFrame->getNumChannels() == 1) {
                   // convert mono to 2 channels
-                  float* src = audioFrame->getSamples();
-                  float* dst = samples.data();
                   for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
                     *dst++ = *src;
                     *dst++ = *src++;
                     }
                   }
+                else if (audioFrame->getNumChannels() == 6) {
+                  for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
+                    *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
+                    *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
+                    src += 6;
+                    }
+                  }
                 else
-                  memcpy (samples.data(), audioFrame->getSamples(),
-                          audioFrame->getSamplesPerFrame() * audioFrame->getNumChannels() * sizeof(float));
+                  memcpy (dst, src, audioFrame->getSamplesPerFrame() * audioFrame->getNumChannels() * sizeof(float));
                 srcSamples = samples.data();
                 }
               else
@@ -264,8 +222,20 @@ public:
             shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
             audioFrame = audioRender->getAudioFramePts (mPts);
             if (mPlaying && audioFrame && audioFrame->getSamples()) {
-              memcpy (samples.data(), audioFrame->getSamples(), audioFrame->getSamplesPerFrame() * 8);
-              srcSamples = samples.data();
+              if (audioFrame->getNumChannels() == 6) {
+                float* src = audioFrame->getSamples();
+                float* dst = samples.data();
+                for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
+                  *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
+                  *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
+                  src += 6;
+                  }
+                srcSamples = samples.data();
+                }
+              else {
+                memcpy (samples.data(), audioFrame->getSamples(), audioFrame->getSamplesPerFrame() * 8);
+                srcSamples = samples.data();
+                }
               }
             }
 
