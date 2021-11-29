@@ -115,7 +115,7 @@ public:
 
   // process
   virtual std::string getInfo() const = 0;
-  bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
+  virtual bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
 
 protected:
   int getQueueSize() const;

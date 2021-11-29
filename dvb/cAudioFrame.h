@@ -4,34 +4,24 @@
 #include "cRender.h"
 
 #include <cstdint>
-#include <string>
-#include <vector>
 #include <array>
 #include <algorithm>
 
 #include <math.h>
 //}}}
 
+constexpr size_t kMaxAudioChannels = 6;
+constexpr size_t kMaxAudioSamplesPerFrame = 2048;
+
 class cAudioFrame : public cFrame {
 public:
-  cAudioFrame() {
-    mSamples = (float*)malloc (6 * 2048 * 4);
-    }
-  //{{{
-  ~cAudioFrame() {
-    free (mSamples);
-    }
-  //}}}
+  cAudioFrame() = default;
+  virtual ~cAudioFrame() = default;
+
+  virtual void reset() final {}
 
   //{{{
-  virtual void reset() final {
-    //free (mSamples);
-    //mSamples = nullptr;
-    }
-  //}}}
-
-  //{{{
-  void calcSamples() {
+  void calcPower() {
 
     for (size_t channel = 0; channel < mNumChannels; channel++) {
       // init
@@ -39,7 +29,7 @@ public:
       mPowerValues[channel] = 0.f;
       }
 
-    float* samplePtr = mSamples;
+    float* samplePtr = mSamples.data();
     for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
       // acumulate
       for (size_t channel = 0; channel < mNumChannels; channel++) {
@@ -54,26 +44,12 @@ public:
     }
   //}}}
 
-  // gets
-  size_t getNumChannels() const { return mNumChannels; }
-  size_t getSamplesPerFrame () const { return mSamplesPerFrame; }
-  uint32_t getSampleRate() const { return mSampleRate; }
-
-  int64_t getPts() const { return mPts; }
-  int64_t getPtsDuration() const { return mPtsDuration; }
-
-  float* getSamples() const { return mSamples; }
-
-  std::array<float,6>& getPeakValues() { return mPeakValues; }
-  std::array<float,6>& getPowerValues() { return mPowerValues; }
-
   // vars
-  size_t mNumChannels = 6;
-  size_t mSamplesPerFrame = 2048;
+  size_t mNumChannels = kMaxAudioChannels;
+  size_t mSamplesPerFrame = kMaxAudioSamplesPerFrame;
   uint32_t mSampleRate = 48000;
 
-  float* mSamples = nullptr;
-
-  std::array <float, 6> mPeakValues = {0.f};
-  std::array <float, 6> mPowerValues = {0.f};
+  std::array <float, kMaxAudioChannels> mPeakValues = {0.f};
+  std::array <float, kMaxAudioChannels> mPowerValues = {0.f};
+  std::array <float, kMaxAudioChannels * kMaxAudioSamplesPerFrame> mSamples = {0.f};
   };

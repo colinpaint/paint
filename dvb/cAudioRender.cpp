@@ -35,7 +35,7 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr bool kQueued = false;
+constexpr bool kQueued = true;
 constexpr size_t kAudioFrameMapSize = 6;
 
 //{{{
@@ -96,23 +96,24 @@ public:
             audioFrame->mSampleRate = avFrame->sample_rate;
             audioFrame->mNumChannels = avFrame->channels;
 
-            float* dst = audioFrame->mSamples;
+            float* dst = audioFrame->mSamples.data();
             switch (mAvContext->sample_fmt) {
               case AV_SAMPLE_FMT_FLTP:  // 32bit float planar, copy to interleaved
-                for (size_t sample = 0; sample < avFrame->nb_samples; sample++)
-                  for (size_t channel = 0; channel < avFrame->channels; channel++)
+                for (int sample = 0; sample < avFrame->nb_samples; sample++)
+                  for (int channel = 0; channel < avFrame->channels; channel++)
                     *dst++ = *(((float*)avFrame->data[channel]) + sample);
                 break;
               case AV_SAMPLE_FMT_S16P:  // 16bit signed planar, scale to interleaved
-                for (size_t sample = 0; sample < avFrame->nb_samples; sample++)
-                  for (size_t channel = 0; channel < avFrame->channels; channel++)
+                for (int sample = 0; sample < avFrame->nb_samples; sample++)
+                  for (int channel = 0; channel < avFrame->channels; channel++)
                     *dst++ = (*(((short*)avFrame->data[channel]) + sample)) / (float)0x8000;
                 break;
+              default:;
               }
+            audioFrame->calcPower();
 
-            audioFrame->calcSamples();
             addFrameCallback (audioFrame);
-            interpolatedPts += audioFrame->getPtsDuration();
+            interpolatedPts += audioFrame->mPtsDuration;
             }
           }
         }
@@ -157,35 +158,40 @@ public:
           while (!mExit) {
             audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
               // loadSrcSamples callback lambda
+
+              // locked audio mutex
               shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
               audioFrame = audioRender->getAudioFramePts (mPts);
-              if (mPlaying && audioFrame && audioFrame->getSamples()) {
-                float* src = audioFrame->getSamples();
+              if (mPlaying && audioFrame) {
+                float* src = audioFrame->mSamples.data();
                 float* dst = samples.data();
-                if (audioFrame->getNumChannels() == 1) {
-                  // convert mono to 2 channels
-                  for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
+                if (audioFrame->mNumChannels == 1) {
+                  //{{{  mono to 2 channels
+                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                     *dst++ = *src;
                     *dst++ = *src++;
                     }
                   }
-                else if (audioFrame->getNumChannels() == 6) {
-                  for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
+                  //}}}
+                else if (audioFrame->mNumChannels == 6) {
+                  //{{{  5.1 to 2 channels
+                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                     *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
                     *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
                     src += 6;
                     }
                   }
+                  //}}}
                 else
-                  memcpy (dst, src, audioFrame->getSamplesPerFrame() * audioFrame->getNumChannels() * sizeof(float));
+                  memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
                 srcSamples = samples.data();
                 }
               else
                 srcSamples = silence.data();
-              numSrcSamples = (int)(audioFrame ? audioFrame->getSamplesPerFrame() : audioRender->getSamplesPerFrame());
+              numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame());
 
               if (mPlaying)
-                mPts += audioFrame ? audioFrame->getPtsDuration() : audioRender->getPtsDuration();
+                mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
               });
             }
 
@@ -217,33 +223,34 @@ public:
         cAudioFrame* audioFrame;
         while (!mExit) {
           float* srcSamples = silence.data();
+
             {
-            // scoped song mutex
+            // locked mutex
             shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
             audioFrame = audioRender->getAudioFramePts (mPts);
-            if (mPlaying && audioFrame && audioFrame->getSamples()) {
-              if (audioFrame->getNumChannels() == 6) {
-                float* src = audioFrame->getSamples();
+            if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
+              if (audioFrame->mNumChannels == 6) {
+                //{{{  5.1 to 2 channels
+                float* src = audioFrame->mSamples.data();
                 float* dst = samples.data();
-                for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
+                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                   *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
                   *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
                   src += 6;
                   }
-                srcSamples = samples.data();
                 }
-              else {
-                memcpy (samples.data(), audioFrame->getSamples(), audioFrame->getSamplesPerFrame() * 8);
-                srcSamples = samples.data();
-                }
+                //}}}
+              else
+                memcpy (samples.data(), audioFrame->mSamples.data(), audioFrame->mSamplesPerFrame * 8);
+              srcSamples = samples.data();
               }
             }
 
           audioDevice.play (2, srcSamples,
-                            audioFrame ? audioFrame->getSamplesPerFrame() : audioRender->getSamplesPerFrame(), 1.f);
+                            audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame(), 1.f);
 
           if (mPlaying)
-            mPts += audioFrame ? audioFrame->getPtsDuration() : audioRender->getPtsDuration();
+            mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
           }
 
         mRunning = false;
@@ -362,28 +369,21 @@ void cAudioRender::addFrame (cFrame* frame) {
 
   cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
 
-  mNumChannels = audioFrame->getNumChannels();
-  mSampleRate = audioFrame->getSampleRate();
-  mSamplesPerFrame = audioFrame->getSamplesPerFrame();
-  mPtsDuration = audioFrame->getPtsDuration();
+  mNumChannels = audioFrame->mNumChannels;
+  mSampleRate = audioFrame->mSampleRate;
+  mSamplesPerFrame = audioFrame->mSamplesPerFrame;
+  mPtsDuration = audioFrame->mPtsDuration;
 
-  logValue (audioFrame->getPts(), audioFrame->getPowerValues()[0]);
+  logValue (audioFrame->mPts, audioFrame->mPowerValues[0]);
 
   { // locked emplace
   unique_lock<shared_mutex> lock (mSharedMutex);
-  mFrames.emplace (audioFrame->getPts(), audioFrame);
+  mFrames.emplace (audioFrame->mPts, audioFrame);
   }
 
   // start player
   if (!mPlayer)
-    mPlayer = new cAudioPlayer (this, audioFrame->getPts());
-
-  // trim before playPts
-  trimFramesBeforePts (getPlayPts());
-
-  // throttle on number of queued audio frames
-  if (mFrames.size() >= mFrameMapSize)
-    this_thread::sleep_for (20ms);
+    mPlayer = new cAudioPlayer (this, audioFrame->mPts);
   }
 //}}}
 
@@ -391,5 +391,17 @@ void cAudioRender::addFrame (cFrame* frame) {
 //{{{
 string cAudioRender::getInfo() const {
   return fmt::format ("{}:{}", mFrames.size(), mFreeFrames.size());
+  }
+//}}}
+//{{{
+bool cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
+
+  // throttle on number of queued audio frames
+  while(mFrames.size() >= mFrameMapSize) {
+    this_thread::sleep_for (1ms);
+    trimFramesBeforePts (getPlayPts());
+    }
+
+  return cRender::processPes (pes, pesSize, pts, dts, skip);
   }
 //}}}

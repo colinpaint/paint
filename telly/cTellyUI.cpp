@@ -435,7 +435,7 @@ private:
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {offset1, pos.y},
-        {offset2, pos.y + scaleBar (audioFrame->getPeakValues()[0], mMaxPower, 1.f)},
+        {offset2, pos.y + scaleBar (audioFrame->mPeakValues[0], mMaxPower, 1.f)},
         0xff00ffff);
       }
     }
