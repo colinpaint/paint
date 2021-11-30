@@ -153,7 +153,7 @@ private:
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
         playPts = audio.getPlayPts();
-        drawMaps (audio, video, playPts);
+        drawInfo (audio, video, playPts);
         }
 
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
@@ -373,7 +373,7 @@ private:
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
         playPts = audio.getPlayPts();
-        drawMaps (audio, video, playPts);
+        drawInfo (audio, video, playPts);
         }
 
       cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
@@ -412,7 +412,7 @@ private:
   //}}}
 
   //{{{
-  void drawMaps (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
+  void drawInfo (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
 
     const float kDivision = 960.f; // 2 pixels per 1024 byte frame at 48kHz
 
@@ -436,11 +436,11 @@ private:
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
       float offset1 = (frame.first - playPts) / kDivision;
       float offset2 = ((frame.first + frame.second->mPtsDuration - playPts) / kDivision) - 1.f;
-      scaleOffset (offset1, mMaxOffset, mMaxDisplayOffset);
+      infoScaleOffset (offset1, mMaxOffset, mMaxDisplayOffset);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y + 1.f},
-        {pos.x + offset2, pos.y + 1.f + scaleBar (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, 1.f)},
+        {pos.x + offset2, pos.y + 1.f + infoScaleBar (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, 1.f)},
         0xff00ffff);
       }
     }
@@ -452,34 +452,34 @@ private:
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
       float offset1 = ((frame.first * frame.second->mPtsDuration) - playPts) / kDivision;
       float offset2 = ((((frame.first + 1) * frame.second->mPtsDuration) - playPts) / kDivision) - 1.f;
-      scaleOffset (offset1, mMaxOffset, mMaxDisplayOffset);
+      infoScaleOffset (offset1, mMaxOffset, mMaxDisplayOffset);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - scaleBar ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, 3.f)},
+        {pos.x + offset2, pos.y - infoScaleBar ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, 3.f)},
         (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - scaleBar ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, 3.f)},
+        {pos.x + offset2, pos.y - infoScaleBar ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, 3.f)},
         0x60ffffff);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset1 + 1.f, pos.y - scaleBar ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, 2.f)},
+        {pos.x + offset1 + 1.f, pos.y - infoScaleBar ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, 2.f)},
         0xffff0000);
       }
     }
 
-    agcValue (mMaxPower, mMaxDisplayPower, 250.f);
-    agcValue (mMaxPesSize, mMaxDisplayPesSize, 250.f);
-    agcValue (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f);
-    agcValue (mMaxQueueSize, mMaxDisplayQueueSize, 250.f);
-    agcValue (mMaxOffset, mMaxDisplayOffset, 250.f);
+    infoAgcValue (mMaxPower, mMaxDisplayPower, 250.f);
+    infoAgcValue (mMaxPesSize, mMaxDisplayPesSize, 250.f);
+    infoAgcValue (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f);
+    infoAgcValue (mMaxQueueSize, mMaxDisplayQueueSize, 250.f);
+    infoAgcValue (mMaxOffset, mMaxDisplayOffset, 1000.f);
     }
   //}}}
   //{{{
-  float scaleOffset (float value, float& maxValue, float& maxDisplayValue) {
+  float infoScaleOffset (float value, float& maxValue, float& maxDisplayValue) {
 
     if (value > maxValue)
       maxValue = value;
@@ -490,7 +490,7 @@ private:
     }
   //}}}
   //{{{
-  float scaleBar (float value, float& maxValue, float& maxDisplayValue, float height) {
+  float infoScaleBar (float value, float& maxValue, float& maxDisplayValue, float height) {
 
     if (value > maxValue)
       maxValue = value;
@@ -501,7 +501,7 @@ private:
     }
   //}}}
   //{{{
-  void agcValue (float& maxValue, float& maxDisplayValue, float  factor) {
+  void infoAgcValue (float& maxValue, float& maxDisplayValue, float  factor) {
 
     if (maxDisplayValue < maxValue)
       maxValue -= (maxValue - maxDisplayValue) / factor;
@@ -509,6 +509,7 @@ private:
     maxDisplayValue = 0.f;
     }
   //}}}
+
   //{{{
   void plotValues (uint16_t sid, cRender& render, uint32_t color) {
 
