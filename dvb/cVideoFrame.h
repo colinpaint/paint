@@ -21,8 +21,7 @@ public:
   //{{{
   std::string getInfo() {
 
-    std::string info = fmt::format ("{}x{} {}", mWidth, mHeight, mPesSize);
-
+    std::string info = fmt::format ("{}x{} {:5}", mWidth, mHeight, mPesSize);
     for (auto& time : mTimes)
       info += fmt::format (" {:5}", time);
 

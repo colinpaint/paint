@@ -2367,7 +2367,7 @@ void cVideoRender::addFrame (cFrame* frame) {
   mPtsDuration = videoFrame->mPtsDuration;
   mWidth = videoFrame->mWidth;
   mHeight = videoFrame->mHeight;
-  mInfo = fmt::format ("{}:{} {}", mFrames.size(), mFreeFrames.size(), videoFrame->getInfo());
+  mFrameInfo = videoFrame->getInfo();
 
   logValue (videoFrame->mPts, (float)videoFrame->mTimes[0]);
 
@@ -2380,6 +2380,7 @@ void cVideoRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cVideoRender::getInfo() const {
-  return fmt::format ("{} q:{} {}", mDecoder->getName(), getQueueSize(), mInfo);
+  return fmt::format ("{} q:{} {:2d}:{:2d} {}",
+                      mDecoder->getName(), getQueueSize(), mFrames.size(), mFreeFrames.size(), mFrameInfo);
   }
 //}}}

@@ -390,14 +390,15 @@ void cAudioRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cAudioRender::getInfo() const {
-  return fmt::format ("{}:{}", mFrames.size(), mFreeFrames.size());
+  return fmt::format ("{}x{}@{}khz {:2d}:{}",
+                      mNumChannels, mSamplesPerFrame, mSampleRate, mFrames.size(), mFreeFrames.size());
   }
 //}}}
 //{{{
 bool cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
-  // throttle on number of queued audio frames
-  while(mFrames.size() >= mFrameMapSize) {
+  // throttle on number of queued audioFrames
+  while (mFrames.size() >= mFrameMapSize) {
     this_thread::sleep_for (1ms);
     trimFramesBeforePts (getPlayPts());
     }

@@ -36,5 +36,5 @@ private:
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
 
-  std::string mInfo;
+  std::string mFrameInfo;
   };
