@@ -90,6 +90,7 @@ public:
   float getOffsetValue (int64_t ptsOffset, int64_t& pts) const;
 
   std::map<int64_t,cFrame*> getFrames() { return mFrames; }
+  std::deque<cFrame*> getFreeFrames() { return mFreeFrames; }
 
   // frames, freeframes
   cFrame* getFramePts (int64_t pts);
