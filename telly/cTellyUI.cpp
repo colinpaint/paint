@@ -432,24 +432,24 @@ private:
     { // lock audio during iterate
     shared_lock<shared_mutex> lock (audio.getSharedMutex());
     for (auto& frame : audio.getFrames()) {
-      //{{{  draw audio bars
-      float offset1 = (frame.first - playPts) / kDivision;
-      float offset2 = ((frame.first - playPts + frame.second->mPtsDuration) / kDivision) - 1.f;
+      //{{{  draw audio 
+      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+      float offset1 = (audioFrame->mPts - playPts) / kDivision;
+      float offset2 = ((audioFrame->mPts - playPts + audioFrame->mPtsDuration) / kDivision) - 1.f;
       infoOffset (offset1, mMaxOffset, mMaxDisplayOffset);
 
-      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y + 1.f},
         {pos.x + offset2, pos.y + 1.f + infoValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, 1.f)},
         0xff00ffff);
       }
       //}}}
-    for (auto& frame : audio.getFreeFrames()) {
-      //{{{  draw free audio bars
-      float offset1 = (frame->mPts - playPts) / kDivision;
-      float offset2 = ((frame->mPts - playPts + frame->mPtsDuration) / kDivision) - 1.f;
-
+    for (auto frame : audio.getFreeFrames()) {
+      //{{{  draw free audio 
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+      float offset1 = (audioFrame->mPts - playPts) / kDivision;
+      float offset2 = ((audioFrame->mPts - playPts + audioFrame->mPtsDuration) / kDivision) - 1.f;
+
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y + 1.f},
         {pos.x + offset2, pos.y + 1.f + infoScale (audioFrame->mPeakValues[0], mMaxPower, 1.f)},
@@ -461,10 +461,10 @@ private:
     { // lock video during iterate
     shared_lock<shared_mutex> lock (video.getSharedMutex());
     for (auto& frame : video.getFrames()) {
-      //{{{  draw video bars
+      //{{{  draw video 
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-      float offset1 = ((frame.first * frame.second->mPtsDuration) - playPts) / kDivision;
-      float offset2 = ((((frame.first + 1) * frame.second->mPtsDuration) - playPts) / kDivision) - 1.f;
+      float offset1 = (videoFrame->mPts - playPts) / kDivision;
+      float offset2 = ((videoFrame->mPts - playPts + videoFrame->mPtsDuration) / kDivision) - 1.f;
       infoOffset (offset1, mMaxOffset, mMaxDisplayOffset);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
@@ -483,16 +483,16 @@ private:
         0xffff0000);
       }
       //}}}
-    for (auto& frame : video.getFreeFrames()) {
-      //{{{  draw free video bars
-      float offset1 = (frame->mPts - playPts) / kDivision;
-      float offset2 = ((frame->mPts - playPts + frame->mPtsDuration) / kDivision) - 1.f;
-
+    for (auto frame : video.getFreeFrames()) {
+      //{{{  draw free video 
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+      float offset1 = (videoFrame->mPts - playPts) / kDivision;
+      float offset2 = ((videoFrame->mPts - playPts + videoFrame->mPtsDuration) / kDivision) - 1.f;
+
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
         {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, 3.f)},
-        (videoFrame->mFrameType == 'I') ? 0xe0808080 : (videoFrame->mFrameType == 'P') ? 0xe0008080 : 0xe0008000);
+        0xe0808080);
       }
       //}}}
     }
