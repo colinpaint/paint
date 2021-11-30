@@ -43,7 +43,7 @@ public:
     graphics.background (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
 
     // draw bgnd piccies
-    if (app.getDvbStream() && (mTab != eCache))
+    if (app.getDvbStream() && (mTab != eHistory))
       drawBgnd (*app.getDvbStream(), graphics, app.getDecoderOptions());
 
     // draw tabs
@@ -124,7 +124,7 @@ public:
         case eServices: drawServices (dvbStream, graphics, app.getDecoderOptions()); break;
         case ePids:     drawPidMap   (dvbStream, graphics, app.getDecoderOptions()); break;
         case eRecorded: drawRecorded (dvbStream, graphics, app.getDecoderOptions()); break;
-        case eCache:    drawWall     (dvbStream, graphics, app.getDecoderOptions()); break;
+        case eHistory:  drawWall     (dvbStream, graphics, app.getDecoderOptions()); break;
         }
 
       ImGui::EndChild();
@@ -133,8 +133,8 @@ public:
     }
   //}}}
 private:
-  enum eTab { eTelly, eServices, ePids, eRecorded, eCache };
-  inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded", "cache" };
+  enum eTab { eTelly, eServices, ePids, eRecorded, eHistory };
+  inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded", "history" };
 
   //{{{
   void drawBgnd (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
@@ -425,86 +425,116 @@ private:
 
     // centre bar
     ImGui::GetWindowDrawList()->AddRectFilled (
-      {pos.x, pos.y - (3.f * ImGui::GetTextLineHeight())},
-      {pos.x + 1.f, pos.y + (1.f * ImGui::GetTextLineHeight())},
+      {pos.x, pos.y - (2.25f * ImGui::GetTextLineHeight())},
+      {pos.x + 1.f, pos.y + (0.75f * ImGui::GetTextLineHeight())},
       0xffc0c0c0);
 
-    { // locked audio
+    { // lock audio during iterate
     shared_lock<shared_mutex> lock (audio.getSharedMutex());
     for (auto& frame : audio.getFrames()) {
-      // audio bars
-      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+      //{{{  draw audio bars
       float offset1 = (frame.first - playPts) / kDivision;
-      float offset2 = ((frame.first + frame.second->mPtsDuration - playPts) / kDivision) - 1.f;
-      infoScaleOffset (offset1, mMaxOffset, mMaxDisplayOffset);
+      float offset2 = ((frame.first - playPts + frame.second->mPtsDuration) / kDivision) - 1.f;
+      infoOffset (offset1, mMaxOffset, mMaxDisplayOffset);
 
+      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y + 1.f},
-        {pos.x + offset2, pos.y + 1.f + infoScaleBar (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, 1.f)},
+        {pos.x + offset2, pos.y + 1.f + infoValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, 1.f)},
         0xff00ffff);
       }
+      //}}}
+    for (auto& frame : audio.getFreeFrames()) {
+      //{{{  draw free audio bars
+      float offset1 = (frame->mPts - playPts) / kDivision;
+      float offset2 = ((frame->mPts - playPts + frame->mPtsDuration) / kDivision) - 1.f;
+
+      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+      ImGui::GetWindowDrawList()->AddRectFilled (
+        {pos.x + offset1, pos.y + 1.f},
+        {pos.x + offset2, pos.y + 1.f + infoScale (audioFrame->mPeakValues[0], mMaxPower, 1.f)},
+        0xC0808080);
+      }
+      //}}}
     }
 
-    { //locked video
+    { // lock video during iterate
     shared_lock<shared_mutex> lock (video.getSharedMutex());
     for (auto& frame : video.getFrames()) {
-      // video bars
+      //{{{  draw video bars
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
       float offset1 = ((frame.first * frame.second->mPtsDuration) - playPts) / kDivision;
       float offset2 = ((((frame.first + 1) * frame.second->mPtsDuration) - playPts) / kDivision) - 1.f;
-      infoScaleOffset (offset1, mMaxOffset, mMaxDisplayOffset);
+      infoOffset (offset1, mMaxOffset, mMaxDisplayOffset);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - infoScaleBar ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, 3.f)},
+        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, 3.f)},
         (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - infoScaleBar ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, 3.f)},
+        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, 3.f)},
         0x60ffffff);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset1 + 1.f, pos.y - infoScaleBar ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, 2.f)},
+        {pos.x + offset1 + 1.f, pos.y - infoValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, 2.f)},
         0xffff0000);
       }
+      //}}}
+    for (auto& frame : video.getFreeFrames()) {
+      //{{{  draw free video bars
+      float offset1 = (frame->mPts - playPts) / kDivision;
+      float offset2 = ((frame->mPts - playPts + frame->mPtsDuration) / kDivision) - 1.f;
+
+      cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+      ImGui::GetWindowDrawList()->AddRectFilled (
+        {pos.x + offset1, pos.y},
+        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, 3.f)},
+        (videoFrame->mFrameType == 'I') ? 0xe0808080 : (videoFrame->mFrameType == 'P') ? 0xe0008080 : 0xe0008000);
+      }
+      //}}}
     }
 
-    infoAgcValue (mMaxPower, mMaxDisplayPower, 250.f);
-    infoAgcValue (mMaxPesSize, mMaxDisplayPesSize, 250.f);
-    infoAgcValue (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f);
-    infoAgcValue (mMaxQueueSize, mMaxDisplayQueueSize, 250.f);
-    infoAgcValue (mMaxOffset, mMaxDisplayOffset, 1000.f);
+    infoAgc (mMaxPower, mMaxDisplayPower, 250.f);
+    infoAgc (mMaxPesSize, mMaxDisplayPesSize, 250.f);
+    infoAgc (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f);
+    infoAgc (mMaxQueueSize, mMaxDisplayQueueSize, 250.f);
+    infoAgc (mMaxOffset, mMaxDisplayOffset, 250.f);
     }
   //}}}
   //{{{
-  float infoScaleOffset (float value, float& maxValue, float& maxDisplayValue) {
+  void infoOffset (float offset, float& maxOffset, float& maxDisplayOffset) {
+
+    if (offset > maxOffset)
+      maxOffset = offset;
+    if (offset > maxDisplayOffset)
+      maxDisplayOffset = offset;
+    }
+  //}}}
+  //{{{
+  float infoValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
 
     if (value > maxValue)
       maxValue = value;
     if (value > maxDisplayValue)
       maxDisplayValue = value;
 
-    return value;
+    return scale * ImGui::GetTextLineHeight() * value / maxValue;
     }
   //}}}
   //{{{
-  float infoScaleBar (float value, float& maxValue, float& maxDisplayValue, float height) {
+  float infoScale (float value, float maxValue, float scale) {
 
-    if (value > maxValue)
-      maxValue = value;
-    if (value > maxDisplayValue)
-      maxDisplayValue = value;
-
-    return height * ImGui::GetTextLineHeight() * value / maxValue;
+    return scale * ImGui::GetTextLineHeight() * value / maxValue;
     }
   //}}}
   //{{{
-  void infoAgcValue (float& maxValue, float& maxDisplayValue, float  factor) {
+  void infoAgc (float& maxValue, float& maxDisplayValue, float revert) {
 
     if (maxDisplayValue < maxValue)
-      maxValue -= (maxValue - maxDisplayValue) / factor;
+      maxValue -= (maxValue - maxDisplayValue) / revert;
 
     maxDisplayValue = 0.f;
     }
