@@ -39,8 +39,8 @@ public:
   void drawInfo (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
 
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-    ImVec2 pos = {cursorPos.x + ImGui::GetWindowWidth() - mMaxOffset - ImGui::GetTextLineHeight(),
-                  cursorPos.y + ImGui::GetWindowHeight() - (1.5f * ImGui::GetTextLineHeight())};
+    ImVec2 pos = {cursorPos.x + ImGui::GetWindowWidth() - ImGui::GetTextLineHeight()/2.f - mMaxOffset,
+                  cursorPos.y + ImGui::GetWindowHeight() - ImGui::GetTextLineHeight()/2.f};
 
     // centre bar
     ImGui::GetWindowDrawList()->AddRectFilled (
@@ -119,11 +119,11 @@ public:
       //}}}
     }
 
-    infoAgc (mMaxPower, mMaxDisplayPower, 250.f, 0.5f);
-    infoAgc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
-    infoAgc (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f, 1000.f);
-    infoAgc (mMaxQueueSize, mMaxDisplayQueueSize, 250.f, 4.f);
-    infoAgc (mMaxOffset, mMaxDisplayOffset, 250.f, 0.f);
+    agc (mMaxPower, mMaxDisplayPower, 250.f, 0.5f);
+    agc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
+    agc (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f, 1000.f);
+    agc (mMaxQueueSize, mMaxDisplayQueueSize, 250.f, 4.f);
+    agc (mMaxOffset, mMaxDisplayOffset, 250.f, 0.f);
     }
   //}}}
 
@@ -155,7 +155,7 @@ private:
     }
   //}}}
   //{{{
-  void infoAgc (float& maxValue, float& maxDisplayValue, float revert, float minValue) {
+  void agc (float& maxValue, float& maxDisplayValue, float revert, float minValue) {
 
     // slowly adjust scale to displayMaxValue
     if (maxDisplayValue < maxValue)
@@ -348,7 +348,7 @@ private:
         if (service.getStream (cDvbStream::eVid).isEnabled()) {
           cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
           ImGui::SameLine();
-          ImGui::TextUnformatted (fmt::format ("pts:{} aud:{} vid:{}",
+          ImGui::TextUnformatted (fmt::format ("{} {} {}",
                                   getPtsString (playPts), audio.getInfo(), video.getInfo()).c_str());
           }
         }

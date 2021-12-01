@@ -390,8 +390,8 @@ void cAudioRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cAudioRender::getInfo() const {
-  return fmt::format ("{}x{}@{}khz {:2d}:{}",
-                      mNumChannels, mSamplesPerFrame, mSampleRate, mFrames.size(), mFreeFrames.size());
+  return fmt::format ("{}x{}@{}k {:2d}:{:2d}",
+                      mNumChannels, mSamplesPerFrame, mSampleRate/1000, mFrames.size(), mFreeFrames.size());
   }
 //}}}
 //{{{
