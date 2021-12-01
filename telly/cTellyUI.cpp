@@ -215,14 +215,14 @@ public:
 
     // wall
     ImGui::SameLine();
-    ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
+    ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
     ImGui::DragInt ("##wall", &mWall, 0.1f, 1, 16, "wall%d");
     if (ImGui::IsItemHovered())
       mWall = max (1, min (16, mWall + static_cast<int>(ImGui::GetIO().MouseWheel)));
 
     // map size
     ImGui::SameLine();
-    ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
+    ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
     ImGui::DragInt ("##aud", &mAudioFrameMapSize, 0.25f, 2, 100, "aud %d");
     if (ImGui::IsItemHovered())
       mAudioFrameMapSize = max (2, min (100, mAudioFrameMapSize + static_cast<int>(ImGui::GetIO().MouseWheel)));
