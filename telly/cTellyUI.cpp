@@ -39,13 +39,16 @@ public:
     : mVideoLines(videoLines), mAudioLines(audioLines), mPixelsPerVideoFrame(pixelsPerVideoFrame) {}
 
   //{{{
-  void drawInfo (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
+  void draw (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
 
     mPtsScale = mPixelsPerVideoFrame / video.getPtsDuration();
 
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-    ImVec2 pos = {cursorPos.x + ImGui::GetWindowWidth() - ImGui::GetTextLineHeight()/2.f - mMaxOffset,
-                  cursorPos.y + ImGui::GetWindowHeight() - ImGui::GetTextLineHeight()/2.f};
+    ImVec2 pos = {cursorPos.x + ImGui::GetWindowWidth(),
+                  cursorPos.y + ImGui::GetWindowHeight() - (0.5f * ImGui::GetTextLineHeight())};
+    drawPower (audio, playPts, pos);
+
+    pos.x -= mMaxOffset;
 
     // draw playPts centre bar
     ImGui::GetWindowDrawList()->AddRectFilled (
@@ -134,6 +137,70 @@ public:
   //}}}
 
 private:
+  //{{{
+  void drawPower (cAudioRender& audio, int64_t playPts, ImVec2 pos) {
+
+    cAudioFrame* audioFrame = audio.getAudioFramePts (playPts);
+    if (audioFrame) {
+      float width = 2.f * ImGui::GetTextLineHeight();
+
+      pos.y += 1.f;
+      float height = 3.f * ImGui::GetTextLineHeight();
+
+      if (audioFrame->mNumChannels == 6) {
+        //{{{  draw 5.1 as 5 reordered + 6 on top in red
+        float channelWidth = width / 5.f;
+
+        float x = pos.x - width;
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {x, pos.y},
+          {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[4] * height)},
+          0xff00ffff);
+
+        x += channelWidth;
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {x, pos.y},
+          {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[0] * height)},
+          0xff00ffff);
+
+        x += channelWidth;
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {x, pos.y},
+          {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[2] * height)},
+          0xff00ffff);
+
+        x += channelWidth;
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {x, pos.y},
+          {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[1] * height)},
+          0xff00ffff);
+
+        x += channelWidth;
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {x, pos.y},
+          {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[5] * height)},
+          0xff00ffff);
+
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x - width, pos.y},
+          {pos.x - 1.f, pos.y + (audioFrame->mPowerValues[3] * height)},
+          0x800000ff);
+        }
+        //}}}
+      else  {
+        //{{{  simple, draw channels left to right
+        float channelWidth = width / audioFrame->mNumChannels;
+
+        for (int i = 0; i < audioFrame->mNumChannels; i++)
+          ImGui::GetWindowDrawList()->AddRectFilled (
+            {pos.x - width + (i * channelWidth), pos.y},
+            {pos.x - width + ((i+1) * channelWidth) - 1.f, pos.y + (audioFrame->mPowerValues[i] * height)},
+            0xff00ffff);
+        }
+        //}}}
+      }
+    }
+  //}}}
   //{{{
   void infoOffset (float offset, float& maxOffset, float& maxDisplayOffset) {
 
@@ -311,7 +378,7 @@ private:
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
         audio.setFrameMapSize (mAudioFrameMapSize);
-        mFramesView.drawInfo (audio, video, audio.getPlayPts());
+        mFramesView.draw (audio, video, audio.getPlayPts());
         playPts = audio.getPlayPts();
         }
 
@@ -384,7 +451,7 @@ private:
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
         audio.setFrameMapSize (mAudioFrameMapSize);
-        mFramesView.drawInfo (audio, video, audio.getPlayPts());
+        mFramesView.draw (audio, video, audio.getPlayPts());
         playPts = audio.getPlayPts();
         }
 
