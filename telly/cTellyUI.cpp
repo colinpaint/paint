@@ -63,24 +63,24 @@ public:
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
       float offset1 = (videoFrame->mPts - playPts) * ptsScale;
       float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
-      infoOffset (offset1, mMaxOffset, mMaxDisplayOffset);
+      addOffset (offset1, mMaxOffset, mMaxDisplayOffset);
 
       // pesSize I white/ P yellow/ B green
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
+        {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
         (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
 
       // grey decodeTime
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, mVideoLines)},
+        {pos.x + offset2, pos.y - addValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, mVideoLines)},
         0x60ffffff);
 
       // magenta queueSize in trailing gap
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset1 + 1.f, pos.y - infoValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, mVideoLines - 1.f)},
+        {pos.x + offset1 + 1.f, pos.y - addValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, mVideoLines - 1.f)},
         0xffff00ff);
       }
       //}}}
@@ -92,7 +92,7 @@ public:
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
+        {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
         0xe0808080);
       }
       //}}}
@@ -105,11 +105,11 @@ public:
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
       float offset1 = (audioFrame->mPts - playPts) * ptsScale;
       float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
-      infoOffset (offset1, mMaxOffset, mMaxDisplayOffset);
+      addOffset (offset1, mMaxOffset, mMaxDisplayOffset);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y + 1.f},
-        {pos.x + offset2, pos.y + 1.f + infoValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
+        {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
         0xff00ffff);
       }
       //}}}
@@ -121,7 +121,7 @@ public:
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y + 1.f},
-        {pos.x + offset2, pos.y + 1.f + infoValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
+        {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
         0xC0808080);
       }
       //}}}
@@ -181,7 +181,7 @@ private:
   //}}}
 
   //{{{
-  void infoOffset (float offset, float& maxOffset, float& maxDisplayOffset) {
+  void addOffset (float offset, float& maxOffset, float& maxDisplayOffset) {
 
     if (offset > maxOffset)
       maxOffset = offset;
@@ -191,7 +191,7 @@ private:
     }
   //}}}
   //{{{
-  float infoValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
+  float addValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
 
     if (value > maxValue)
       maxValue = value;
