@@ -100,9 +100,11 @@ protected:
   //{{{
   virtual void releasePixels() final {
 
-    av_frame_unref (mAvFrame);
-    av_frame_free (&mAvFrame);
-    mAvFrame = nullptr;
+    if (mAvFrame) {
+      av_frame_unref (mAvFrame);
+      av_frame_free (&mAvFrame);
+      mAvFrame = nullptr;
+      }
     }
   //}}}
 
@@ -137,10 +139,15 @@ protected:
   //{{{
   virtual void releasePixels() final {
 
-    free (mPixels[0]);
-    mPixels[0] = nullptr;
-    free (mPixels[1]);
-    mPixels[1] = nullptr;
+    if (mPixels[0]) {
+      free (mPixels[0]);
+      mPixels[0] = nullptr;
+      }
+
+    if (mPixels[1]) {
+      free (mPixels[1]);
+      mPixels[1] = nullptr;
+      }
     }
   //}}}
 

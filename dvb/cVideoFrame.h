@@ -48,10 +48,10 @@ public:
 
     if (mTextureDirty) {
       mTexture->setPixels (getPixels());
-      releasePixels();
       mTextureDirty = false;
       }
 
+    releasePixels();
     return *mTexture;
     }
   //}}}
