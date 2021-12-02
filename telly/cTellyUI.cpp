@@ -35,8 +35,9 @@ using namespace std;
 //{{{
 class cFramesView {
 public:
-  cFramesView (float videoLines, float audioLines, float pixelsPerVideoFrame)
-    : mVideoLines(videoLines), mAudioLines(audioLines), mPixelsPerVideoFrame(pixelsPerVideoFrame) {}
+  cFramesView (float videoLines, float audioLines, float pixelsPerVideoFrame, float pixelsPerChannel)
+    : mVideoLines(videoLines), mAudioLines(audioLines),
+      mPixelsPerVideoFrame(pixelsPerVideoFrame), mPixelsPerChannel(pixelsPerChannel) {}
 
   //{{{
   void draw (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
@@ -79,7 +80,7 @@ public:
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y + 1.f},
-        {pos.x + offset2, pos.y + 1.f + infoScale (audioFrame->mPeakValues[0], mMaxPower, mAudioLines)},
+        {pos.x + offset2, pos.y + 1.f + infoValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
         0xC0808080);
       }
       //}}}
@@ -121,7 +122,7 @@ public:
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, 3.f)},
+        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
         0xe0808080);
       }
       //}}}
@@ -147,58 +148,39 @@ private:
       float height = 3.f * ImGui::GetTextLineHeight();
 
       if (audioFrame->mNumChannels == 6) {
-        //{{{  draw 5.1 as 5 reordered + 6 on top in red
+        // draw 5.1 as 5 reordered + 6 on top in red
+        array <size_t, 6> channelLookup = { 4,0,2,1,5,3 };
+
         float x = pos.x - channelWidth * 5.f;
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {x, pos.y},
-          {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[4] * height)},
-          0xff00ffff);
+        for (size_t i = 0; i < 5; i++) {
+          ImGui::GetWindowDrawList()->AddRectFilled (
+            {x, pos.y},
+            {x + mPixelsPerChannel - 1.f, pos.y + (audioFrame->mPowerValues[channelLookup[i]] * height)},
+            0xff00ffff);
+          x += mPixelsPerChannel;
+          }
 
-        x += channelWidth;
+        // draw woofer as red
         ImGui::GetWindowDrawList()->AddRectFilled (
-          {x, pos.y},
-          {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[0] * height)},
-          0xff00ff00);
-
-        x += channelWidth;
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {x, pos.y},
-          {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[2] * height)},
-          0xff00ff00);
-
-        x += channelWidth;
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {x, pos.y},
-          {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[1] * height)},
-          0xff00ff00);
-
-        x += channelWidth;
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {x, pos.y},
-          {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[5] * height)},
-          0xff00ff00);
-
-        x = pos.x - channelWidth * 5.f;
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {x, pos.y},
-          {pos.x - 1.f, pos.y + (audioFrame->mPowerValues[3] * height)},
+          {pos.x - mPixelsPerChannel * 5.f, pos.y},
+          {pos.x - 1.f, pos.y + (audioFrame->mPowerValues[channelLookup[5]] * height)},
           0x800000ff);
         }
-        //}}}
+
       else  {
-        //{{{  simple, draw channels left to right
-        float width = channelWidth * audioFrame->mNumChannels;
+        // draw channels left to right
+        float width = mPixelsPerChannel * audioFrame->mNumChannels;
 
         for (int i = 0; i < audioFrame->mNumChannels; i++)
           ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x - width + (i * channelWidth), pos.y},
-            {pos.x - width + ((i+1) * channelWidth) - 1.f, pos.y + (audioFrame->mPowerValues[i] * height)},
+            {pos.x - width + (i * mPixelsPerChannel), pos.y},
+            {pos.x - width + ((i+1) * mPixelsPerChannel) - 1.f, pos.y + (audioFrame->mPowerValues[i] * height)},
             0xff00ff00);
         }
-        //}}}
       }
     }
   //}}}
+
   //{{{
   void infoOffset (float offset, float& maxOffset, float& maxDisplayOffset) {
 
@@ -216,12 +198,6 @@ private:
       maxValue = value;
     if (value > maxDisplayValue)
       maxDisplayValue = value;
-
-    return scale * ImGui::GetTextLineHeight() * value / maxValue;
-    }
-  //}}}
-  //{{{
-  float infoScale (float value, float maxValue, float scale) {
 
     return scale * ImGui::GetTextLineHeight() * value / maxValue;
     }
@@ -245,6 +221,7 @@ private:
   const float mVideoLines;
   const float mAudioLines;
   const float mPixelsPerVideoFrame;
+  const float mPixelsPerChannel;
 
   float mPtsScale = 1.f;
 
@@ -752,7 +729,7 @@ private:
   int mAudioFrameMapSize = 6;
   int mWall = 1;
 
-  cFramesView mFramesView = {3.f, 1.f, 4.f};
+  cFramesView mFramesView = {2.f, 1.f, 4.f, 6.f};
   //}}}
   };
 
