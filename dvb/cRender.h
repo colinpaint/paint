@@ -20,10 +20,10 @@ constexpr int kPtsPerSecond = 90000;
 //{{{
 class cFrame {
 public:
-  cFrame() {}
-  virtual ~cFrame() = default;
+  cFrame() = default;
+  virtual ~cFrame() { releaseResources(); }
 
-  virtual void reset() = 0;
+  virtual void releaseResources() {};
 
   // vars
   int64_t mPts;

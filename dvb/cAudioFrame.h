@@ -18,7 +18,7 @@ public:
   cAudioFrame() = default;
   virtual ~cAudioFrame() = default;
 
-  virtual void reset() final {}
+  virtual void releaseResources() final {}
 
   //{{{
   void calcPower() {

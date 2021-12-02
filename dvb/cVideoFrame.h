@@ -29,7 +29,7 @@ public:
     }
   //}}}
   //{{{
-  virtual void reset() final {
+  virtual void releaseResources() final {
     mQueueSize = 0;
     mTimes.clear();
     mTextureDirty = true;

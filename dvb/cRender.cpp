@@ -80,12 +80,13 @@ cFrame* cRender::getYoungestFrame() {
   cFrame* youngestFrame = (*it).second;
   mFrames.erase (it);
 
-  youngestFrame->reset();
+  youngestFrame->releaseResources();
   return youngestFrame;
   }
 //}}}
 //{{{
 void cRender::trimFramesBeforePts (int64_t pts) {
+// remove frames before pts, release any temp resources
 
   // quick unlocked test
   if (mFrames.empty())
@@ -96,8 +97,7 @@ void cRender::trimFramesBeforePts (int64_t pts) {
 
   auto it = mFrames.begin();
   while ((it != mFrames.end()) && ((*it).first < pts)) {
-    // remove frames before pts, release any temp resources
-    it->second->reset();
+    it->second->releaseResources();
     mFreeFrames.push_back (it->second);
     it = mFrames.erase (it);
     }

@@ -32,7 +32,7 @@ public:
   cSubtitleFrame() = default;
   virtual ~cSubtitleFrame() = default;
 
-  virtual void reset() final {}
+  virtual void releaseResources() final {}
   };
 //}}}
 //{{{

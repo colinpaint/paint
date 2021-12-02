@@ -35,17 +35,22 @@ using namespace std;
 //{{{
 class cFramesView {
 public:
+  cFramesView (float videoLines, float audioLines, float pixelsPerVideoFrame)
+    : mVideoLines(videoLines), mAudioLines(audioLines), mPixelsPerVideoFrame(pixelsPerVideoFrame) {}
+
   //{{{
   void drawInfo (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
+
+    mPtsScale = mPixelsPerVideoFrame / video.getPtsDuration();
 
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
     ImVec2 pos = {cursorPos.x + ImGui::GetWindowWidth() - ImGui::GetTextLineHeight()/2.f - mMaxOffset,
                   cursorPos.y + ImGui::GetWindowHeight() - ImGui::GetTextLineHeight()/2.f};
 
-    // centre bar
+    // draw playPts centre bar
     ImGui::GetWindowDrawList()->AddRectFilled (
-      {pos.x, pos.y - (2.25f * ImGui::GetTextLineHeight())},
-      {pos.x + 1.f, pos.y + (0.75f * ImGui::GetTextLineHeight())},
+      {pos.x, pos.y - mVideoLines * (3.f/4.f) * ImGui::GetTextLineHeight()},
+      {pos.x + 1.f, pos.y + mAudioLines * (3.f/4.f) * ImGui::GetTextLineHeight()},
       0xffc0c0c0);
 
     { // lock audio during iterate
@@ -53,25 +58,25 @@ public:
     for (auto& frame : audio.getFrames()) {
       //{{{  draw audio
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
-      float offset1 = (audioFrame->mPts - playPts) / kDivision;
-      float offset2 = ((audioFrame->mPts - playPts + audioFrame->mPtsDuration) / kDivision) - 1.f;
+      float offset1 = (audioFrame->mPts - playPts) * mPtsScale;
+      float offset2 = offset1 + (audioFrame->mPtsDuration * mPtsScale) - 1.f;
       infoOffset (offset1, mMaxOffset, mMaxDisplayOffset);
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y + 1.f},
-        {pos.x + offset2, pos.y + 1.f + infoValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, 1.f)},
+        {pos.x + offset2, pos.y + 1.f + infoValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
         0xff00ffff);
       }
       //}}}
     for (auto frame : audio.getFreeFrames()) {
       //{{{  draw free audio
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
-      float offset1 = (audioFrame->mPts - playPts) / kDivision;
-      float offset2 = ((audioFrame->mPts - playPts + audioFrame->mPtsDuration) / kDivision) - 1.f;
+      float offset1 = (audioFrame->mPts - playPts) * mPtsScale;
+      float offset2 = offset1 + (audioFrame->mPtsDuration * mPtsScale) - 1.f;
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y + 1.f},
-        {pos.x + offset2, pos.y + 1.f + infoScale (audioFrame->mPeakValues[0], mMaxPower, 1.f)},
+        {pos.x + offset2, pos.y + 1.f + infoScale (audioFrame->mPeakValues[0], mMaxPower, mAudioLines)},
         0xC0808080);
       }
       //}}}
@@ -82,34 +87,34 @@ public:
     for (auto& frame : video.getFrames()) {
       //{{{  draw video
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-      float offset1 = (videoFrame->mPts - playPts) / kDivision;
-      float offset2 = ((videoFrame->mPts - playPts + videoFrame->mPtsDuration) / kDivision) - 1.f;
+      float offset1 = (videoFrame->mPts - playPts) * mPtsScale;
+      float offset2 = offset1 + (videoFrame->mPtsDuration * mPtsScale) - 1.f;
       infoOffset (offset1, mMaxOffset, mMaxDisplayOffset);
 
       // pesSize I white/ P yellow/ B green
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, 3.f)},
+        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
         (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
 
       // grey decodeTime
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, 3.f)},
+        {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, mVideoLines)},
         0x60ffffff);
 
       // magenta queueSize in trailing gap
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
-        {pos.x + offset1 + 1.f, pos.y - infoValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, 2.f)},
+        {pos.x + offset1 + 1.f, pos.y - infoValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, mVideoLines - 1.f)},
         0xffff00ff);
       }
       //}}}
     for (auto frame : video.getFreeFrames()) {
       //{{{  draw free video
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-      float offset1 = (videoFrame->mPts - playPts) / kDivision;
-      float offset2 = ((videoFrame->mPts - playPts + videoFrame->mPtsDuration) / kDivision) - 1.f;
+      float offset1 = (videoFrame->mPts - playPts) * mPtsScale;
+      float offset2 = offset1 + (videoFrame->mPtsDuration * mPtsScale) - 1.f;
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
@@ -119,6 +124,7 @@ public:
       //}}}
     }
 
+    // slowly track scaling back to max display values from max values
     agc (mMaxPower, mMaxDisplayPower, 250.f, 0.5f);
     agc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
     agc (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f, 1000.f);
@@ -133,6 +139,7 @@ private:
 
     if (offset > maxOffset)
       maxOffset = offset;
+
     if (offset > maxDisplayOffset)
       maxDisplayOffset = offset;
     }
@@ -170,8 +177,11 @@ private:
   //}}}
 
   //  vars
-  //float kDivision = 960.f; // 2 pixels per 1024 byte frame at 48kHz
-  float kDivision = 900.f; // 4 pixels per frame at 25fps
+  const float mVideoLines;
+  const float mAudioLines;
+  const float mPixelsPerVideoFrame;
+
+  float mPtsScale = 1.f;
 
   float mMaxOffset = 0.f;
   float mMaxDisplayOffset = 0.f;
@@ -677,7 +687,7 @@ private:
   int mAudioFrameMapSize = 6;
   int mWall = 1;
 
-  cFramesView mFramesView;
+  cFramesView mFramesView = {3.f, 1.f, 4.f};
   //}}}
   };
 
