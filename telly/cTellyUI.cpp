@@ -142,16 +142,13 @@ private:
 
     cAudioFrame* audioFrame = audio.getAudioFramePts (playPts);
     if (audioFrame) {
-      float width = 2.f * ImGui::GetTextLineHeight();
-
+      float channelWidth = 6.f;
       pos.y += 1.f;
       float height = 3.f * ImGui::GetTextLineHeight();
 
       if (audioFrame->mNumChannels == 6) {
         //{{{  draw 5.1 as 5 reordered + 6 on top in red
-        float channelWidth = width / 5.f;
-
-        float x = pos.x - width;
+        float x = pos.x - channelWidth * 5.f;
         ImGui::GetWindowDrawList()->AddRectFilled (
           {x, pos.y},
           {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[4] * height)},
@@ -161,41 +158,42 @@ private:
         ImGui::GetWindowDrawList()->AddRectFilled (
           {x, pos.y},
           {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[0] * height)},
-          0xff00ffff);
+          0xff00ff00);
 
         x += channelWidth;
         ImGui::GetWindowDrawList()->AddRectFilled (
           {x, pos.y},
           {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[2] * height)},
-          0xff00ffff);
+          0xff00ff00);
 
         x += channelWidth;
         ImGui::GetWindowDrawList()->AddRectFilled (
           {x, pos.y},
           {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[1] * height)},
-          0xff00ffff);
+          0xff00ff00);
 
         x += channelWidth;
         ImGui::GetWindowDrawList()->AddRectFilled (
           {x, pos.y},
           {x + channelWidth - 1.f, pos.y + (audioFrame->mPowerValues[5] * height)},
-          0xff00ffff);
+          0xff00ff00);
 
+        x = pos.x - channelWidth * 5.f;
         ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x - width, pos.y},
+          {x, pos.y},
           {pos.x - 1.f, pos.y + (audioFrame->mPowerValues[3] * height)},
           0x800000ff);
         }
         //}}}
       else  {
         //{{{  simple, draw channels left to right
-        float channelWidth = width / audioFrame->mNumChannels;
+        float width = channelWidth * audioFrame->mNumChannels;
 
         for (int i = 0; i < audioFrame->mNumChannels; i++)
           ImGui::GetWindowDrawList()->AddRectFilled (
             {pos.x - width + (i * channelWidth), pos.y},
             {pos.x - width + ((i+1) * channelWidth) - 1.f, pos.y + (audioFrame->mPowerValues[i] * height)},
-            0xff00ffff);
+            0xff00ff00);
         }
         //}}}
       }
