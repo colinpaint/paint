@@ -42,14 +42,13 @@ public:
   //{{{
   void draw (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
 
-    mPtsScale = mPixelsPerVideoFrame / video.getPtsDuration();
+    ImVec2 pos = {ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(),
+                  ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - (0.5f * ImGui::GetTextLineHeight())};
 
-    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-    ImVec2 pos = {cursorPos.x + ImGui::GetWindowWidth(),
-                  cursorPos.y + ImGui::GetWindowHeight() - (0.5f * ImGui::GetTextLineHeight())};
     drawPower (audio, playPts, pos);
 
     pos.x -= mMaxOffset;
+    float ptsScale = mPixelsPerVideoFrame / video.getPtsDuration();
 
     // draw playPts centre bar
     ImGui::GetWindowDrawList()->AddRectFilled (
@@ -57,42 +56,13 @@ public:
       {pos.x + 1.f, pos.y + mAudioLines * (3.f/4.f) * ImGui::GetTextLineHeight()},
       0xffc0c0c0);
 
-    { // lock audio during iterate
-    shared_lock<shared_mutex> lock (audio.getSharedMutex());
-    for (auto& frame : audio.getFrames()) {
-      //{{{  draw audio
-      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
-      float offset1 = (audioFrame->mPts - playPts) * mPtsScale;
-      float offset2 = offset1 + (audioFrame->mPtsDuration * mPtsScale) - 1.f;
-      infoOffset (offset1, mMaxOffset, mMaxDisplayOffset);
-
-      ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y + 1.f},
-        {pos.x + offset2, pos.y + 1.f + infoValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
-        0xff00ffff);
-      }
-      //}}}
-    for (auto frame : audio.getFreeFrames()) {
-      //{{{  draw free audio
-      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
-      float offset1 = (audioFrame->mPts - playPts) * mPtsScale;
-      float offset2 = offset1 + (audioFrame->mPtsDuration * mPtsScale) - 1.f;
-
-      ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y + 1.f},
-        {pos.x + offset2, pos.y + 1.f + infoValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
-        0xC0808080);
-      }
-      //}}}
-    }
-
     { // lock video during iterate
     shared_lock<shared_mutex> lock (video.getSharedMutex());
     for (auto& frame : video.getFrames()) {
       //{{{  draw video
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-      float offset1 = (videoFrame->mPts - playPts) * mPtsScale;
-      float offset2 = offset1 + (videoFrame->mPtsDuration * mPtsScale) - 1.f;
+      float offset1 = (videoFrame->mPts - playPts) * ptsScale;
+      float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
       infoOffset (offset1, mMaxOffset, mMaxDisplayOffset);
 
       // pesSize I white/ P yellow/ B green
@@ -117,13 +87,42 @@ public:
     for (auto frame : video.getFreeFrames()) {
       //{{{  draw free video
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-      float offset1 = (videoFrame->mPts - playPts) * mPtsScale;
-      float offset2 = offset1 + (videoFrame->mPtsDuration * mPtsScale) - 1.f;
+      float offset1 = (videoFrame->mPts - playPts) * ptsScale;
+      float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
 
       ImGui::GetWindowDrawList()->AddRectFilled (
         {pos.x + offset1, pos.y},
         {pos.x + offset2, pos.y - infoValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
         0xe0808080);
+      }
+      //}}}
+    }
+
+    { // lock audio during iterate
+    shared_lock<shared_mutex> lock (audio.getSharedMutex());
+    for (auto& frame : audio.getFrames()) {
+      //{{{  draw audio
+      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+      float offset1 = (audioFrame->mPts - playPts) * ptsScale;
+      float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
+      infoOffset (offset1, mMaxOffset, mMaxDisplayOffset);
+
+      ImGui::GetWindowDrawList()->AddRectFilled (
+        {pos.x + offset1, pos.y + 1.f},
+        {pos.x + offset2, pos.y + 1.f + infoValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
+        0xff00ffff);
+      }
+      //}}}
+    for (auto frame : audio.getFreeFrames()) {
+      //{{{  draw free audio
+      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+      float offset1 = (audioFrame->mPts - playPts) * ptsScale;
+      float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
+
+      ImGui::GetWindowDrawList()->AddRectFilled (
+        {pos.x + offset1, pos.y + 1.f},
+        {pos.x + offset2, pos.y + 1.f + infoValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
+        0xC0808080);
       }
       //}}}
     }
@@ -144,26 +143,26 @@ private:
     cAudioFrame* audioFrame = audio.getAudioFramePts (playPts);
     if (audioFrame) {
       float channelWidth = 6.f;
+
       pos.y += 1.f;
       float height = 3.f * ImGui::GetTextLineHeight();
 
       if (audioFrame->mNumChannels == 6) {
-        // draw 5.1 as 5 reordered + 6 on top in red
-        array <size_t, 6> channelLookup = { 4,0,2,1,5,3 };
+        float x = pos.x - (5 * channelWidth);
 
-        float x = pos.x - channelWidth * 5.f;
+        // draw channels reordered
         for (size_t i = 0; i < 5; i++) {
           ImGui::GetWindowDrawList()->AddRectFilled (
             {x, pos.y},
-            {x + mPixelsPerChannel - 1.f, pos.y + (audioFrame->mPowerValues[channelLookup[i]] * height)},
+            {x + mPixelsPerChannel - 1.f, pos.y + (audioFrame->mPowerValues[kChannelOrder[i]] * height)},
             0xff00ffff);
           x += mPixelsPerChannel;
           }
 
         // draw woofer as red
         ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x - mPixelsPerChannel * 5.f, pos.y},
-          {pos.x - 1.f, pos.y + (audioFrame->mPowerValues[channelLookup[5]] * height)},
+          {pos.x - (5 * mPixelsPerChannel), pos.y},
+          {pos.x - 1.f, pos.y + (audioFrame->mPowerValues[kChannelOrder[5]] * height)},
           0x800000ff);
         }
 
@@ -217,13 +216,13 @@ private:
     }
   //}}}
 
+  const array <size_t, 6> kChannelOrder = {4,0,2,1,5,3};
+
   //  vars
   const float mVideoLines;
   const float mAudioLines;
   const float mPixelsPerVideoFrame;
   const float mPixelsPerChannel;
-
-  float mPtsScale = 1.f;
 
   float mMaxOffset = 0.f;
   float mMaxDisplayOffset = 0.f;
