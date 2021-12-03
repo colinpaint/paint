@@ -32,7 +32,7 @@ public:
   virtual std::string getInfo() const final;
 
 private:
-  int64_t mPtsDuration = 0;
+  int64_t mPtsDuration = 90000 / 25;
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
 

@@ -48,13 +48,14 @@ public:
     drawPower (audio, playPts, pos);
 
     pos.x -= mMaxOffset;
-    float ptsScale = mPixelsPerVideoFrame / video.getPtsDuration();
 
     // draw playPts centre bar
     ImGui::GetWindowDrawList()->AddRectFilled (
       {pos.x, pos.y - mVideoLines * (3.f/4.f) * ImGui::GetTextLineHeight()},
       {pos.x + 1.f, pos.y + mAudioLines * (3.f/4.f) * ImGui::GetTextLineHeight()},
       0xffc0c0c0);
+
+    float ptsScale = mPixelsPerVideoFrame / video.getPtsDuration();
 
     { // lock video during iterate
     shared_lock<shared_mutex> lock (video.getSharedMutex());
