@@ -132,7 +132,7 @@ public:
     agc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
     agc (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f, 1000.f);
     agc (mMaxQueueSize, mMaxDisplayQueueSize, 250.f, 4.f);
-    agc (mMaxOffset, mMaxDisplayOffset, 250.f, 0.f);
+    agc (mMaxOffset, mMaxDisplayOffset, 250.f, ImGui::GetTextLineHeight());
     }
   //}}}
 
