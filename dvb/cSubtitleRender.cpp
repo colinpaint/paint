@@ -134,21 +134,26 @@ public:
           break;
         //}}}
         //{{{
-        case 0x14: { // display definition segment
+        case 0x14: // display definition segment
           if (!parseDisplayDefinition (pesPtr, segLength))
             return false;
-          cFrame* frame = new cSubtitleFrame();
-          frame->mPts = pts;
-          frame->mPtsDuration = 90000 / 25;
-          frame->mPesSize = pesSize;
-          addFrameCallback (frame);
           break;
-          }
         //}}}
         //{{{
         case 0x80: // end of display set segment
+          {
+          cSubtitleFrame* subtitleFrame = dynamic_cast<cSubtitleFrame*>(getFrameCallback());
+
+          subtitleFrame->mPts = pts;
+          subtitleFrame->mPtsDuration = 90000 / 25;
+          subtitleFrame->mPesSize = pesSize;
+
           endDisplay();
-          return false;
+
+          addFrameCallback (subtitleFrame);
+
+          break;
+          }
         //}}}
         //{{{
         case 0x15: // disparity signalling segment
@@ -947,7 +952,7 @@ cSubtitleImage& cSubtitleRender::getImage (size_t line) {
 // callbacks
 //{{{
 cFrame* cSubtitleRender::getFrame() {
-  return nullptr;
+  return new cSubtitleFrame();
   }
 //}}}
 //{{{

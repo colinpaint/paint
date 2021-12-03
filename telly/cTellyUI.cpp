@@ -142,20 +142,19 @@ private:
 
     cAudioFrame* audioFrame = audio.getAudioFramePts (playPts);
     if (audioFrame) {
-      float channelWidth = 6.f;
-
       pos.y += 1.f;
       float height = 3.f * ImGui::GetTextLineHeight();
 
       if (audioFrame->mNumChannels == 6) {
-        float x = pos.x - (5 * channelWidth);
+        // 5.1
+        float x = pos.x - (5 * mPixelsPerChannel);
 
         // draw channels reordered
         for (size_t i = 0; i < 5; i++) {
           ImGui::GetWindowDrawList()->AddRectFilled (
             {x, pos.y},
             {x + mPixelsPerChannel - 1.f, pos.y + (audioFrame->mPowerValues[kChannelOrder[i]] * height)},
-            0xff00ffff);
+            0xff00ff00);
           x += mPixelsPerChannel;
           }
 
@@ -167,9 +166,8 @@ private:
         }
 
       else  {
-        // draw channels left to right
+        // other - draw channels left to right
         float width = mPixelsPerChannel * audioFrame->mNumChannels;
-
         for (int i = 0; i < audioFrame->mNumChannels; i++)
           ImGui::GetWindowDrawList()->AddRectFilled (
             {pos.x - width + (i * mPixelsPerChannel), pos.y},
