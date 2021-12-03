@@ -169,7 +169,7 @@ private:
       else  {
         // other - draw channels left to right
         float width = mPixelsPerChannel * audioFrame->mNumChannels;
-        for (int i = 0; i < audioFrame->mNumChannels; i++)
+        for (size_t i = 0; i < audioFrame->mNumChannels; i++)
           ImGui::GetWindowDrawList()->AddRectFilled (
             {pos.x - width + (i * mPixelsPerChannel), pos.y},
             {pos.x - width + ((i+1) * mPixelsPerChannel) - 1.f, pos.y + (audioFrame->mPowerValues[i] * height)},
