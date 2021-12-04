@@ -20,7 +20,7 @@ cRender::cRender (bool queued, const string& name, uint8_t streamTypeId, uint16_
       mName(name), mStreamTypeId(streamTypeId), mDecoderMask(decoderMask), mMiniLog ("log") {
 
   if (queued)
-    thread ([=](){ startQueueThread(); }).detach();
+    thread ([=](){ startQueueThread (name + "Q"); }).detach();
   }
 //}}}
 //{{{
@@ -154,9 +154,9 @@ bool cRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t d
 
 // private:
 //{{{
-void cRender::startQueueThread() {
+void cRender::startQueueThread (const string& name) {
 
-  cLog::setThreadName ("Q");
+  cLog::setThreadName (name);
 
   mQueueRunning = true;
 

@@ -2286,7 +2286,7 @@ protected:
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const string& name, uint8_t streamTypeId, uint16_t decoderMask)
-    : cRender(kQueued, name, streamTypeId, decoderMask, kVideoFrameMapSize) {
+    : cRender(kQueued, name + "vid", streamTypeId, decoderMask, kVideoFrameMapSize) {
 
   switch (decoderMask) {
     case eFFmpeg:

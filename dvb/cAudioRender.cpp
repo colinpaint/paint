@@ -295,7 +295,7 @@ private:
 // cAudioRender
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamTypeId, uint16_t decoderMask)
-    : cRender(kQueued, name, streamTypeId, decoderMask, kAudioFrameMapSize) {
+    : cRender(kQueued, name + "aud", streamTypeId, decoderMask, kAudioFrameMapSize) {
 
   mNumChannels = 2;
   mSampleRate = 48000;

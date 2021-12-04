@@ -136,7 +136,7 @@ protected:
   readerWriterQueue::cBlockingReaderWriterQueue <cDecodeQueueItem*> mDecodeQueue;
 
 private:
-  void startQueueThread();
+  void startQueueThread (const std::string& name);
   void stopQueueThread();
 
   const bool mQueued = false;

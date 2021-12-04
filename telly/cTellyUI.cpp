@@ -215,7 +215,7 @@ private:
     }
   //}}}
 
-  const array <size_t, 6> kChannelOrder = {4,0,2,1,5,3};
+  inline static const array <size_t, 6> kChannelOrder = {4,0,2,1,5,3};
 
   //  vars
   const float mVideoLines;
@@ -717,7 +717,7 @@ private:
   size_t mMaxSidChars = 3;
   size_t mMaxPgmChars = 3;
 
-  std::array <size_t, 4> mPidMaxChars = { 3 };
+  std::array <size_t, 4> mPidMaxChars = {3};
 
   int mPlotIndex = 0;
 
@@ -727,7 +727,7 @@ private:
   int mAudioFrameMapSize = 6;
   int mWall = 1;
 
-  cFramesView mFramesView = {2.f, 1.f, 4.f, 6.f};
+  cFramesView mFramesView = {2.f,1.f, 4.f,6.f};
   //}}}
   };
 

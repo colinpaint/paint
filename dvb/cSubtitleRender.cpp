@@ -924,7 +924,7 @@ private:
 // public:
 //{{{
 cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamTypeId, uint16_t decoderMask)
-    : cRender(kQueued, name, streamTypeId, decoderMask, kSubtitleMapSize) {
+    : cRender(kQueued, name + "sub", streamTypeId, decoderMask, kSubtitleMapSize) {
 
   mDecoder = new cSubtitleDecoder (this);
   setGetFrameCallback ([&]() noexcept { return getFrame(); });
