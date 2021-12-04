@@ -123,8 +123,8 @@ void cRender::logValue (int64_t pts, float value) {
 
 /// decode queue
 //{{{
-int cRender::getQueueSize() const {
-  return (int)mDecodeQueue.size_approx();
+size_t cRender::getQueueSize() const {
+  return mDecodeQueue.size_approx();
   }
 //}}}
 //{{{

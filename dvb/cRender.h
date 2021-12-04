@@ -21,9 +21,9 @@ constexpr int kPtsPerSecond = 90000;
 class cFrame {
 public:
   cFrame() = default;
-  virtual ~cFrame() { releaseResources(); }
+  virtual ~cFrame() = default;
 
-  virtual void releaseResources() {};
+  virtual void releaseResources() = 0;
 
   // vars
   int64_t mPts;
@@ -119,7 +119,7 @@ public:
   virtual bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
 
 protected:
-  int getQueueSize() const;
+  size_t getQueueSize() const;
   float getQueueFrac() const;
 
   std::shared_mutex mSharedMutex;

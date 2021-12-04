@@ -16,7 +16,11 @@ constexpr size_t kMaxAudioSamplesPerFrame = 2048;
 class cAudioFrame : public cFrame {
 public:
   cAudioFrame() = default;
-  virtual ~cAudioFrame() = default;
+  //{{{
+  virtual ~cAudioFrame() {
+    releaseResources();
+    }
+  //}}}
 
   virtual void releaseResources() final {}
 

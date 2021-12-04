@@ -9,7 +9,9 @@
 #ifdef _WIN32
   #include "../audio/audioWASAPI.h"
   #include "../audio/cWinAudio16.h"
-#else
+#endif
+
+#ifdef __linux__
   #include "../audio/cLinuxAudio.h"
 #endif
 

@@ -30,7 +30,11 @@ constexpr size_t kSubtitleMapSize = 0;
 class cSubtitleFrame : public cFrame {
 public:
   cSubtitleFrame() = default;
-  virtual ~cSubtitleFrame() = default;
+  //{{{
+  virtual ~cSubtitleFrame() {
+    releaseResources();
+    }
+  //}}}
 
   virtual void releaseResources() final {}
   };
@@ -957,7 +961,8 @@ cFrame* cSubtitleRender::getFrame() {
 //}}}
 //{{{
 void cSubtitleRender::addFrame (cFrame* frame) {
-  cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->mPts)));
+  (void)frame;
+  //cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->mPts)));
   }
 //}}}
 

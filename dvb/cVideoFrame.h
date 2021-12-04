@@ -16,7 +16,12 @@
 class cVideoFrame : public cFrame {
 public:
   cVideoFrame(cTexture::eTextureType textureType) : mTextureType(textureType) {}
-  virtual ~cVideoFrame() { delete mTexture; }
+  //{{{
+  virtual ~cVideoFrame() { 
+    releaseResources();
+    delete mTexture; 
+    }
+  //}}}
 
   //{{{
   std::string getInfo() {
@@ -30,6 +35,7 @@ public:
   //}}}
   //{{{
   virtual void releaseResources() final {
+
     mQueueSize = 0;
     mTimes.clear();
     mTextureDirty = true;
