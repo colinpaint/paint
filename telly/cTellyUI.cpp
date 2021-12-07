@@ -392,16 +392,13 @@ private:
       if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
         service.toggleAll (decoderOptions);
 
-      if (service.getStream (cDvbStream::eAud).isEnabled()) {
-        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
-        int64_t playPts = audio.getPlayPts();
-        if (service.getStream (cDvbStream::eVid).isEnabled()) {
-          cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
-          ImGui::SameLine();
-          ImGui::TextUnformatted (fmt::format ("{} {} {}",
-                                  getPtsString (playPts), audio.getInfo(), video.getInfo()).c_str());
-          }
+      if (service.getStream (cDvbStream::eAud).isDefined()) {
+        ImGui::SameLine();
+        ImGui::TextUnformatted (fmt::format ("{}{}",
+          service.getStream (cDvbStream::eAud).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
+        //ImGui::TextUnformatted (fmt::format ("{} {}", audio.getInfo(), video.getInfo()).c_str());
         }
+
       while (service.getChannelName().size() > mMaxNameChars)
         mMaxNameChars = service.getChannelName().size();
       }
