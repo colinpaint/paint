@@ -33,9 +33,9 @@ using namespace std;
 //}}}
 
 //{{{
-class cFramesView {
+class cRenderIcon {
 public:
-  cFramesView (float videoLines, float audioLines, float pixelsPerVideoFrame, float pixelsPerChannel)
+  cRenderIcon (float videoLines, float audioLines, float pixelsPerVideoFrame, float pixelsPerChannel)
     : mVideoLines(videoLines), mAudioLines(audioLines),
       mPixelsPerVideoFrame(pixelsPerVideoFrame), mPixelsPerChannel(pixelsPerChannel) {}
 
@@ -270,6 +270,11 @@ public:
     if (ImGui::IsItemHovered())
       mWall = max (1, min (16, mWall + static_cast<int>(ImGui::GetIO().MouseWheel)));
 
+    // scale
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
+    ImGui::DragFloat ("##scale", &mScale, 0.01f, 0.05f, 8.f, "scale%3.2f");
+
     // map size
     ImGui::SameLine();
     ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
@@ -338,8 +343,8 @@ private:
   void drawTelly (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
     (void)graphics;
-
     cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
+
     for (auto& pair : dvbStream.getServiceMap()) {
       //{{{  draw telly
       cDvbStream::cService& service = pair.second;
@@ -347,17 +352,18 @@ private:
         continue;
 
       cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
+
       int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
         audio.setFrameMapSize (mAudioFrameMapSize);
-        mFramesView.draw (audio, video, audio.getPlayPts());
         playPts = audio.getPlayPts();
+        mRenderIcon.draw (audio, video, playPts);
         }
 
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
       if (videoFrame) {
-        cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
+        cPoint videoSize = {video.getWidth(), video.getHeight()};
         if (!mQuad)
           mQuad = graphics.createQuad (videoSize);
 
@@ -368,15 +374,19 @@ private:
         mShader->use();
 
         cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
-        cVec2 size = {windowSize.x / videoSize.x / mWall, windowSize.y / videoSize.y / mWall};
+        cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
 
         cMat4x4 model;
         model.size (size);
-        //cLog::log (LOGINFO, fmt::format ("{},{} {},{}", offset.x, offset.y, size.x, size.y));
 
-        for (int y = 0; y < mWall; y++) {
-          for (int x = 0; x < mWall; x++) {
-            model.setTranslate ({x * windowSize.x / mWall, y * windowSize.y / mWall});
+        float replicate = round (1.f / mScale);
+        for (float y = -videoSize.y * replicate; y <= videoSize.y * replicate;  y += videoSize.y) {
+          for (float x = -videoSize.x * replicate; x <= videoSize.x * replicate;  x += videoSize.x) {
+            // translate centre of video to centre of window
+            cVec2 translate = {(windowSize.x / 2.f)  - ((x + (videoSize.x / 2.f)) * size.x),
+                               (windowSize.y / 2.f)  - ((y + (videoSize.y / 2.f)) * size.y)};
+
+            model.setTranslate (translate);
             mShader->setModelProjection (model, orthoProjection);
             mQuad->draw();
             }
@@ -388,6 +398,7 @@ private:
       //}}}
 
     for (auto& pair : dvbStream.getServiceMap()) {
+      //{{{  draw services/channels
       cDvbStream::cService& service = pair.second;
       if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
         service.toggleAll (decoderOptions);
@@ -402,6 +413,7 @@ private:
       while (service.getChannelName().size() > mMaxNameChars)
         mMaxNameChars = service.getChannelName().size();
       }
+      //}}}
     }
   //}}}
   //{{{
@@ -421,17 +433,19 @@ private:
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
         audio.setFrameMapSize (mAudioFrameMapSize);
-        mFramesView.draw (audio, video, audio.getPlayPts());
         playPts = audio.getPlayPts();
+        mRenderIcon.draw (audio, video, playPts);
         }
 
-      cPoint videoSize = cPoint (video.getWidth(), video.getHeight());
+      cPoint videoSize = {video.getWidth(), video.getHeight()};
       if (!mQuad)
         mQuad = graphics.createQuad (videoSize);
 
       cMat4x4 model;
       cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-      model.size ({ windowSize.x/videoSize.x/mWall, windowSize.y/videoSize.y/mWall});
+
+      cVec2 size = {windowSize.x / videoSize.x / mWall/ 16.f, windowSize.y / videoSize.y / mWall/ 16.f};
+      model.size (size);
 
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
       if (videoFrame) {
@@ -723,8 +737,9 @@ private:
 
   int mAudioFrameMapSize = 6;
   int mWall = 1;
+  float mScale = 1.f;
 
-  cFramesView mFramesView = {2.f,1.f, 4.f,6.f};
+  cRenderIcon mRenderIcon = {2.f,1.f, 4.f,6.f};
   //}}}
   };
 
