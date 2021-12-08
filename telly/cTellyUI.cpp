@@ -263,17 +263,10 @@ public:
       }
       //}}}
 
-    // wall
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
-    ImGui::DragInt ("##wall", &mWall, 0.1f, 1, 16, "wall%d");
-    if (ImGui::IsItemHovered())
-      mWall = max (1, min (16, mWall + static_cast<int>(ImGui::GetIO().MouseWheel)));
-
     // scale
     ImGui::SameLine();
     ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
-    ImGui::DragFloat ("##scale", &mScale, 0.01f, 0.05f, 8.f, "scale%3.2f");
+    ImGui::DragFloat ("##scale", &mScale, 0.01f, 0.05f, 16.f, "scale%3.2f");
 
     // map size
     ImGui::SameLine();
@@ -379,9 +372,10 @@ private:
         cMat4x4 model;
         model.size (size);
 
-        float replicate = round (1.f / mScale);
-        for (float y = -videoSize.y * replicate; y <= videoSize.y * replicate;  y += videoSize.y) {
-          for (float x = -videoSize.x * replicate; x <= videoSize.x * replicate;  x += videoSize.x) {
+        int i = 0;
+        float replicate = floor (1.f / mScale);
+        for (float y = -videoSize.y * replicate; y <= videoSize.y * replicate; y += videoSize.y) {
+          for (float x = -videoSize.x * replicate; x <= videoSize.x * replicate; x += videoSize.x) {
             // translate centre of video to centre of window
             cVec2 translate = {(windowSize.x / 2.f)  - ((x + (videoSize.x / 2.f)) * size.x),
                                (windowSize.y / 2.f)  - ((y + (videoSize.y / 2.f)) * size.y)};
@@ -389,8 +383,12 @@ private:
             model.setTranslate (translate);
             mShader->setModelProjection (model, orthoProjection);
             mQuad->draw();
+            i++;
             }
           }
+        float xoff = (windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x);
+        cLog::log (LOGINFO, fmt::format ("nnn {} {} = {} - {}",
+                                         i, xoff, windowSize.x / 2.f, (videoSize.x / 2.f) * size.x));
 
         video.trimVideoBeforePts (playPts);
         }
@@ -444,7 +442,7 @@ private:
       cMat4x4 model;
       cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
 
-      cVec2 size = {windowSize.x / videoSize.x / mWall/ 16.f, windowSize.y / videoSize.y / mWall/ 16.f};
+      cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
       model.size (size);
 
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
@@ -454,20 +452,17 @@ private:
         mShader->use();
 
         int64_t pts = playPts;
-        for (int y = mWall-1; y >= 0; y--) {
-          for (int x = 0; x < mWall; x++) {
-            videoFrame = video.getVideoFramePts (pts);
-            if (videoFrame) {
-              videoFrame->getTexture (graphics).setSource();
-              model.setTranslate ({x * windowSize.x / mWall, y * windowSize.y / mWall});
-              mShader->setModelProjection (model, orthoProjection);
-              mQuad->draw();
-              pts -= video.getPtsDuration();
-              }
-            else
-              return;
-            }
+        videoFrame = video.getVideoFramePts (pts);
+        if (videoFrame) {
+          videoFrame->getTexture (graphics).setSource();
+          cVec2 translate = {(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
+                             (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)};
+          model.setTranslate (translate);
+          mShader->setModelProjection (model, orthoProjection);
+          mQuad->draw();
           }
+
+        pts -= video.getPtsDuration();
         video.trimVideoBeforePts (pts);
         }
       }
@@ -736,7 +731,6 @@ private:
   cTextureShader* mShader = nullptr;
 
   int mAudioFrameMapSize = 6;
-  int mWall = 1;
   float mScale = 1.f;
 
   cRenderIcon mRenderIcon = {2.f,1.f, 4.f,6.f};
