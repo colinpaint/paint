@@ -239,6 +239,15 @@ private:
   float mMaxDisplayDecodeTime = 0.f;
   };
 //}}}
+//{{{
+class cDraw {
+public:
+  cDraw (cVideoFrame* videoFrame, float offset) : mVideoFrame(videoFrame), mOffset(offset) {}
+
+  cVideoFrame* mVideoFrame;
+  float mOffset;
+  };
+//}}}
 
 class cTellyView {
 public:
@@ -267,6 +276,11 @@ public:
     ImGui::SameLine();
     ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
     ImGui::DragFloat ("##scale", &mScale, 0.01f, 0.05f, 16.f, "scale%3.2f");
+
+    // history size
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
+    ImGui::DragInt ("##hist", &mHistory, 0.25f, 0, 100, "h %d");
 
     // map size
     ImGui::SameLine();
@@ -386,11 +400,7 @@ private:
             i++;
             }
           }
-        float xoff = (windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x);
-        cLog::log (LOGINFO, fmt::format ("nnn {} {} = {} - {}",
-                                         i, xoff, windowSize.x / 2.f, (videoSize.x / 2.f) * size.x));
-
-        video.trimVideoBeforePts (playPts);
+        video.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
         }
       }
       //}}}
@@ -426,7 +436,9 @@ private:
         continue;
 
       cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
+      cPoint videoSize = {video.getWidth(), video.getHeight()};
 
+      // playPts and ucon
       int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
       if (service.getStream (cDvbStream::eAud).isEnabled()) {
         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
@@ -435,35 +447,47 @@ private:
         mRenderIcon.draw (audio, video, playPts);
         }
 
-      cPoint videoSize = {video.getWidth(), video.getHeight()};
-      if (!mQuad)
-        mQuad = graphics.createQuad (videoSize);
-
-      cMat4x4 model;
-      cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-
-      cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
-      model.size (size);
-
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
       if (videoFrame) {
+        // form draw list
+        deque <cDraw> mDraws;
+        if (mScale >= 1.f)
+          mDraws.push_back ({videoFrame, 0.f});
+        else {
+          // locked
+          shared_lock<shared_mutex> lock (video.getSharedMutex());
+          for (auto& frame : video.getFrames()) {
+            videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
+            int64_t offset = (videoFrame->mPts / videoFrame->mPtsDuration) - (playPts / videoFrame->mPtsDuration);
+            if (offset <= 0) // draw last
+              mDraws.push_back ({videoFrame, 4.f * offset});
+            else // draw in reverse order
+              mDraws.push_front ({videoFrame, 4.f * offset});
+            }
+          }
+
+        // setup draw quad, shader
+        if (!mQuad)
+          mQuad = graphics.createQuad (videoSize);
+        cMat4x4 model;
+        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
+        cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
+        model.size (size);
         if (!mShader)
           mShader = graphics.createTextureShader (videoFrame->mTextureType);
         mShader->use();
 
-        int64_t pts = playPts;
-        videoFrame = video.getVideoFramePts (pts);
-        if (videoFrame) {
-          videoFrame->getTexture (graphics).setSource();
-          cVec2 translate = {(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
+        // draw list
+        for (auto& draw : mDraws) {
+          draw.mVideoFrame->getTexture (graphics).setSource();
+          cVec2 translate = {(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x) + draw.mOffset,
                              (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)};
           model.setTranslate (translate);
           mShader->setModelProjection (model, orthoProjection);
           mQuad->draw();
           }
 
-        pts -= video.getPtsDuration();
-        video.trimVideoBeforePts (pts);
+        video.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
         }
       }
     }
@@ -732,6 +756,7 @@ private:
 
   int mAudioFrameMapSize = 6;
   float mScale = 1.f;
+  int mHistory = 0;
 
   cRenderIcon mRenderIcon = {2.f,1.f, 4.f,6.f};
   //}}}
