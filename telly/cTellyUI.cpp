@@ -277,6 +277,11 @@ public:
     ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
     ImGui::DragFloat ("##scale", &mScale, 0.01f, 0.05f, 16.f, "scale%3.2f");
 
+    // scale
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
+    ImGui::DragFloat ("##over", &mOverlap, 0.25f, 0.5f, 32.f, "over%3.1f");
+
     // history size
     ImGui::SameLine();
     ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
@@ -460,9 +465,9 @@ private:
             videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
             int64_t offset = (videoFrame->mPts / videoFrame->mPtsDuration) - (playPts / videoFrame->mPtsDuration);
             if (offset <= 0) // draw last
-              mDraws.push_back ({videoFrame, 4.f * offset});
+              mDraws.push_back ({videoFrame, mOverlap * offset});
             else // draw in reverse order
-              mDraws.push_front ({videoFrame, 4.f * offset});
+              mDraws.push_front ({videoFrame, mOverlap * offset});
             }
           }
 
@@ -756,6 +761,7 @@ private:
 
   int mAudioFrameMapSize = 6;
   float mScale = 1.f;
+  float mOverlap = 4.f;
   int mHistory = 0;
 
   cRenderIcon mRenderIcon = {2.f,1.f, 4.f,6.f};
