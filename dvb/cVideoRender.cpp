@@ -61,7 +61,9 @@
 #include "../dvb/cDvbUtils.h"
 #include "../graphics/cGraphics.h"
 
-#include <mfxvideo++.h>
+#ifdef BUILD_MFX
+  #include <mfxvideo++.h>
+#endif
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"
