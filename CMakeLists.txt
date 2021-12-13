@@ -16,6 +16,10 @@ option (BUILD_OPTIMISED "Build optimised" ON)
 set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 #
+get_cmake_property (SYS_PROC CMAKE_SYSTEM_PROCESSOR)
+message (STATUS "system processor1: ${CMAKE_SYSTEM_PROCESSOR}")
+message (STATUS "system processor2: ${SYS_PROC}")
+#
 project (utils)
   file (GLOB HEADER_FILES utils/*.h)
   file (GLOB SOURCE_FILES utils/*.cpp utils/*.c)
