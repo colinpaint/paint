@@ -15,7 +15,10 @@ option (BUILD_OPTIMISED "Build optimised" ON)
 #
 set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
-
+#
+include(CheckIncludeFile)
+CHECK_INCLUDE_FILE(/opt/vc/include/bcm_host.h BCMHOST)
+#
 project (utils)
   file (GLOB HEADER_FILES utils/*.h)
   file (GLOB SOURCE_FILES utils/*.cpp utils/*.c)
@@ -86,36 +89,39 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
 endif()
 
 # libmfx lib
-if (BUILD_TELLY OR BUILD_MFXTEST)
-  if (MSVC)
-    project (libmfx)
-      file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/windows/include/*.h)
-      file (GLOB SOURCE_FILES libmfx/mfx_dispatch/windows/src/*.cpp)
-      add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-      target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/windows/include)
-    endif()
-endif()
-
-# mfxTest app
-if (BUILD_MFXTEST)
-  project (mfxtest)
-    file (GLOB HEADER_FILES mfxtest/*.h utils/*.h)
-    file (GLOB SOURCE_FILES mfxtest/main.cpp mfxtest/utils.cpp)
-    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
+if (NOT BCMHOST)
+  if (BUILD_TELLY OR BUILD_MFXTEST)
+    # libmfx lib
     if (MSVC)
-      # use project libmfx
-      target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
-      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils d3d11 dxgi d3d9 dxva2)
-    else()
-      # use installed libmfx,libv,libva-drm
-      find_package (PkgConfig REQUIRED)
-      pkg_check_modules (LIBMFX REQUIRED IMPORTED_TARGET libmfx)
-      pkg_check_modules (LIBVA REQUIRED IMPORTED_TARGET libva)
-      pkg_check_modules (LIBVADRM REQUIRED IMPORTED_TARGET libva-drm)
-      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::LIBMFX PkgConfig::LIBVA)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::LIBMFX PkgConfig::LIBVA PkgConfig::LIBVADRM)
-    endif()
+      project (libmfx)
+        file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/windows/include/*.h)
+        file (GLOB SOURCE_FILES libmfx/mfx_dispatch/windows/src/*.cpp)
+        add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+        target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/windows/include)
+      endif()
+  endif()
+
+  # mfxTest app
+  if (BUILD_MFXTEST)
+    project (mfxtest)
+      file (GLOB HEADER_FILES mfxtest/*.h utils/*.h)
+      file (GLOB SOURCE_FILES mfxtest/main.cpp mfxtest/utils.cpp)
+      add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+
+      if (MSVC)
+        # use project libmfx
+        target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
+        target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils d3d11 dxgi d3d9 dxva2)
+      else()
+        # use installed libmfx,libv,libva-drm
+        find_package (PkgConfig REQUIRED)
+        pkg_check_modules (LIBMFX REQUIRED IMPORTED_TARGET libmfx)
+        pkg_check_modules (LIBVA REQUIRED IMPORTED_TARGET libva)
+        pkg_check_modules (LIBVADRM REQUIRED IMPORTED_TARGET libva-drm)
+        target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::LIBMFX PkgConfig::LIBVA)
+        target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::LIBMFX PkgConfig::LIBVA PkgConfig::LIBVADRM)
+      endif()
+  endif()
 endif()
 
 # dvb lib
@@ -132,7 +138,13 @@ if (BUILD_TELLY)
       target_link_libraries (${PROJECT_NAME} PUBLIC
                              utils libmfx avdevice avfilter avformat avcodec avutil swresample swscale)
       target_link_libraries (${PROJECT_NAME} PRIVATE d3d11 dxgi d3d9 dxva2)
-    else()
+    elseif (BCMHOST)
+      find_package (PkgConfig REQUIRED)
+      pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
+                         libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
+      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG)
+    else ()
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (LIBMFX REQUIRED IMPORTED_TARGET libmfx)
       pkg_check_modules (LIBVA REQUIRED IMPORTED_TARGET libva)
