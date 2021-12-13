@@ -37,11 +37,12 @@
 
   #include <new>
 
-  #include <drm/drm.h>
-  #include <drm/drm_fourcc.h>
-
-  #include <va/va.h>
-  #include <va/va_drm.h>
+  #ifdef BUILD_MFX
+    #include <drm/drm.h>
+    #include <drm/drm_fourcc.h>
+    #include <va/va.h>
+    #include <va/va_drm.h>
+  #endif
   //}}}
 #endif
 
@@ -270,6 +271,8 @@ private:
   int64_t mInterpolatedPts = -1;
   };
 //}}}
+
+#ifdef BUILD_MFX
 //{{{
 class cMfxDecoder : public cDecoder {
 public:
@@ -547,6 +550,7 @@ protected:
   bool mGotIframe = false;
   };
 //}}}
+#endif
 
 #ifdef _WIN32
   //{{{
@@ -1482,6 +1486,7 @@ protected:
 #endif
 
 #ifdef __linux__
+  #ifdef BUILD_MFX
   //{{{
   class cMfxSystemDecoder : public cMfxDecoder {
   public:
@@ -2281,6 +2286,7 @@ protected:
     inline static map <mfxHDL, sharedResponse> allocDecodeResponses;
     };
   //}}}
+  #endif
 #endif
 
 // cVideoRender
@@ -2294,6 +2300,7 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamTypeId, uint16_t d
       setGetFrameCallback ([&]() noexcept { return getFFmpegFrame(); });
       break;
 
+  #ifdef BUILD_MFX
     case eMfxSystem:
       mDecoder = new cMfxSystemDecoder (streamTypeId);
       setGetFrameCallback ([&]() noexcept { return getMfxFrame(); });
@@ -2308,6 +2315,7 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamTypeId, uint16_t d
       #endif
       setGetFrameCallback ([&]() noexcept { return getMfxFrame(); });
       break;
+  #endif
 
     default: cLog::log (LOGERROR, fmt::format ("cVideoRender - no decoder {:x}", decoderMask));
     }

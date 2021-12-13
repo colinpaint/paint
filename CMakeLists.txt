@@ -92,6 +92,7 @@ if (BUILD_MFX)
     # libmfx lib
     if (MSVC)
       project (libmfx)
+        target_compile_definitions (${PROJECT_NAME} PUBLIC BUILD_MFX)
         file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/windows/include/*.h)
         file (GLOB SOURCE_FILES libmfx/mfx_dispatch/windows/src/*.cpp)
         add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
@@ -106,6 +107,7 @@ if (BUILD_MFX)
       file (GLOB SOURCE_FILES mfxtest/main.cpp mfxtest/utils.cpp)
       add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
+      target_compile_definitions (${PROJECT_NAME} PUBLIC BUILD_MFX)
       if (MSVC)
         # use project libmfx
         target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
@@ -129,6 +131,7 @@ if (BUILD_TELLY)
     file (GLOB SOURCE_FILES dvb/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
+    target_compile_definitions (${PROJECT_NAME} PUBLIC BUILD_MFX)
     if (MSVC)
       target_include_directories (${PROJECT_NAME} PRIVATE ffmpeg/inc)
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
