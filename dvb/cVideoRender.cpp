@@ -55,11 +55,6 @@
 #include <thread>
 #include <functional>
 
-#define INTEL_SSE2
-#define INTEL_SSSE3 1
-#include <emmintrin.h>
-#include <tmmintrin.h>
-
 #include "../imgui/imgui.h"
 #include "../imgui/myImgui.h"
 
