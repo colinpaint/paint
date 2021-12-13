@@ -7,6 +7,7 @@ option (BUILD_PLAYER "Build player" ON)
 option (BUILD_PAINTBOX "Build paintbox" ON)
 option (BUILD_IMPLOT "Build implot" ON)
 #
+option (BUILD_MFX "Build mfx" ON)
 option (BUILD_MFXTEST "Build mfxtest" ON)
 option (BUILD_CAPTURE "Build capture" ON)
 #
@@ -15,10 +16,6 @@ option (BUILD_OPTIMISED "Build optimised" ON)
 #
 set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
-#
-get_cmake_property (SYS_PROC CMAKE_SYSTEM_PROCESSOR)
-message (STATUS "system processor1: ${CMAKE_SYSTEM_PROCESSOR}")
-message (STATUS "system processor2: ${SYS_PROC}")
 #
 project (utils)
   file (GLOB HEADER_FILES utils/*.h)
@@ -90,7 +87,7 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
 endif()
 
 # libmfx
-if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+if (BUILD_MFX)
   if (BUILD_TELLY OR BUILD_MFXTEST)
     # libmfx lib
     if (MSVC)
@@ -139,13 +136,7 @@ if (BUILD_TELLY)
       target_link_libraries (${PROJECT_NAME} PUBLIC
                              utils libmfx avdevice avfilter avformat avcodec avutil swresample swscale)
       target_link_libraries (${PROJECT_NAME} PRIVATE d3d11 dxgi d3d9 dxva2)
-    elseif (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-      find_package (PkgConfig REQUIRED)
-      pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
-                         libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
-      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG)
-    else ()
+    elseif (BUILD_MFX)
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (LIBMFX REQUIRED IMPORTED_TARGET libmfx)
       pkg_check_modules (LIBVA REQUIRED IMPORTED_TARGET libva)
@@ -156,6 +147,12 @@ if (BUILD_TELLY)
                                                           PkgConfig::LIBMFX PkgConfig::LIBVA)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG
                                                           PkgConfig::LIBMFX PkgConfig::LIBVA PkgConfig::LIBVADRM)
+    else ()
+      find_package (PkgConfig REQUIRED)
+      pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
+                         libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
+      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG)
     endif()
 endif()
 
