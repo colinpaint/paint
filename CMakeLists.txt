@@ -131,7 +131,10 @@ if (BUILD_TELLY)
     file (GLOB SOURCE_FILES dvb/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
-    target_compile_definitions (${PROJECT_NAME} PUBLIC BUILD_MFX)
+    if (BUILD_MFX)
+      target_compile_definitions (${PROJECT_NAME} PUBLIC BUILD_MFX)
+    endif()
+
     if (MSVC)
       target_include_directories (${PROJECT_NAME} PRIVATE ffmpeg/inc)
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
