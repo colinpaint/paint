@@ -16,9 +16,6 @@ option (BUILD_OPTIMISED "Build optimised" ON)
 set (OPENGL_VERSION "OPENGL_45")
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 #
-include(CheckIncludeFile)
-CHECK_INCLUDE_FILE(/opt/vc/include/bcm_host.h BCMHOST)
-#
 project (utils)
   file (GLOB HEADER_FILES utils/*.h)
   file (GLOB SOURCE_FILES utils/*.cpp utils/*.c)
@@ -88,8 +85,8 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
   endif()
 endif()
 
-# libmfx lib
-if (NOT BCMHOST)
+# libmfx
+if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
   if (BUILD_TELLY OR BUILD_MFXTEST)
     # libmfx lib
     if (MSVC)
@@ -138,7 +135,7 @@ if (BUILD_TELLY)
       target_link_libraries (${PROJECT_NAME} PUBLIC
                              utils libmfx avdevice avfilter avformat avcodec avutil swresample swscale)
       target_link_libraries (${PROJECT_NAME} PRIVATE d3d11 dxgi d3d9 dxva2)
-    elseif (BCMHOST)
+    elseif (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
