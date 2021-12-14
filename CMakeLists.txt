@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.16)
 cmake_policy (SET CMP0072 NEW)
-
+#
 option (BUILD_FED "Build fed" ON)
 option (BUILD_TELLY "Build telly" ON)
 option (BUILD_PLAYER "Build player" ON)
@@ -14,7 +14,8 @@ option (BUILD_CAPTURE "Build capture" ON)
 option (BUILD_AVX "Build avx" ON)
 option (BUILD_OPTIMISED "Build optimised" ON)
 #
-set (OPENGL_VERSION "OPENGL_45")
+#option (OPENGL2 "openGL2" ON)
+#
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 
 #
@@ -55,17 +56,28 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
   add_subdirectory (glfw)
 
   # glad
-  if (OPENGL_VERSION STREQUAL "OPENGL_21")
+  if (OPENGL2)
     add_subdirectory (glad2.1+fbo+vao)
-  elseif (OPENGL_VERSION STREQUAL "OPENGL_45")
+  else()
     add_subdirectory (glad4.5core)
   endif()
 
   # imgui lib
   project (imgui)
     if (MSVC)
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/*.h)
-      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/*.cpp)
+      file (GLOB HEADER_FILES imgui/*.h
+                              imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h
+                              imgui/backends/imgui_impl_glfw.h 
+                              imgui/backends/imgui_impl_op2ngl2.h imgui/backends/imgui_impl_opengl3.h)
+      file (GLOB SOURCE_FILES imgui/*.cpp
+                              imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp
+                              imgui/backends/imgui_impl_glfw.cpp
+                              imgui/backends/imgui_impl_opengl2.cpp imgui/backends/imgui_impl_opengl3.cpp)
+    elseif (OPENGL2)
+      file (GLOB HEADER_FILES imgui/*.h
+                              imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h)
+      file (GLOB SOURCE_FILES imgui/*.cpp
+                              imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
     else()
       file (GLOB HEADER_FILES imgui/*.h
                               imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
@@ -198,6 +210,9 @@ if (BUILD_TELLY)
                             ui/cUI.cpp platform/*.cpp graphics/*.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
+    if (OPENGL2)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
+    endif()
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
     if (BUILD_IMPLOT)
@@ -241,6 +256,9 @@ if (BUILD_PLAYER)
                             ui/cUI.cpp platform/*.cpp graphics/*.cpp)
     add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
 
+    if (OPENGL2)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
+    endif()
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
     target_link_libraries (${PROJECT_NAME} PRIVATE imgui utils glfw glad)
     target_link_libraries (${PROJECT_NAME} PRIVATE song audio decoder dvb kiss net)
@@ -262,6 +280,9 @@ if (BUILD_FED)
                             platform/*.cpp graphics/*.cpp ui/cUI.cpp)
 
     add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
+    if (OPENGL2)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
+    endif()
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
     target_link_libraries (${PROJECT_NAME} PRIVATE imgui utils glfw glad)
@@ -294,7 +315,9 @@ if (BUILD_PAINTBOX)
                             ui/cUI.cpp ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
-    target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL_VERSION)
+    if (OPENGL2)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
+    endif()
     target_include_directories (${PROJECT_NAME} PRIVATE glfw/include stb)
     target_link_libraries (${PROJECT_NAME} PRIVATE imgui utils glfw glad)
 

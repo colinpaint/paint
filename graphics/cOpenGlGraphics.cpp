@@ -1063,7 +1063,9 @@ namespace {
 
       // uv texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, size.x/2, size.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, nullptr);
+      #ifndef OPENGL2
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, size.x/2, size.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, nullptr);
+      #endif
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1090,9 +1092,11 @@ namespace {
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[0]);
 
+      #ifndef OPENGL2
       // uv texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, mSize.x/2, mSize.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, pixels[1]);
+      #endif
       }
     //}}}
     //{{{
@@ -1606,7 +1610,10 @@ namespace {
       // disables
       glDisable (GL_CULL_FACE);
       glDisable (GL_DEPTH_TEST);
-      glDisable (GL_PRIMITIVE_RESTART);
+
+      #ifndef OPENGL2
+        glDisable(GL_PRIMITIVE_RESTART);
+      #endif
 
       // enables
       glEnable (GL_SCISSOR_TEST);
@@ -1699,13 +1706,15 @@ namespace {
               glBindTexture (GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
 
               // draw
-              if (gDrawBase)
+             #ifndef OPENGL2
+             if (gDrawBase)
                 glDrawElementsBaseVertex (GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
                                           sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
                                           (void*)(intptr_t)(pcmd->IdxOffset * sizeof(ImDrawIdx)),
                                           (GLint)pcmd->VtxOffset);
-              else
-                glDrawElements (GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
+             else
+             #endif
+               glDrawElements (GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
                                 sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
                                 (void*)(intptr_t)(pcmd->IdxOffset * sizeof(ImDrawIdx)));
               }
