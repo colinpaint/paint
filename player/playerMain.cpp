@@ -39,8 +39,6 @@ int main (int numArgs, char* args[]) {
 
   // default params
   eLogLevel logLevel = LOGINFO;
-  string platformName = "glfw";
-  string graphicsName = "opengl";
   bool fullScreen = false;
   bool vsync = true;
   //{{{  parse command line args to params
@@ -54,7 +52,6 @@ int main (int numArgs, char* args[]) {
     if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
-    else if (*it == "dx11") { platformName = "win32"; graphicsName = "dx11"; params.erase (it); }
     else if (*it == "full") { fullScreen = true; params.erase (it); }
     else if (*it == "free") { vsync = false; params.erase (it); }
     else ++it;
@@ -63,7 +60,7 @@ int main (int numArgs, char* args[]) {
 
   // start log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, fmt::format ("player {} {}", platformName, graphicsName));
+  cLog::log (LOGNOTICE, fmt::format ("player"));
 
   // list static registered classes
   cUI::listRegisteredClasses();

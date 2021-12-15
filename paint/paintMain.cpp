@@ -46,8 +46,6 @@ int main (int numArgs, char* args[]) {
 
   // default params
   eLogLevel logLevel = LOGINFO;
-  string platformName = "glfw";
-  string graphicsName = "opengl";
   bool showDemoWindow = false;
   bool fullScreen = false;
   bool vsync = true;
@@ -60,7 +58,6 @@ int main (int numArgs, char* args[]) {
     if (param == "log1") { logLevel = LOGINFO1; }
     else if (param == "log2") { logLevel = LOGINFO2; }
     else if (param == "log3") { logLevel = LOGINFO3;  }
-    else if (param == "dx11") { platformName = "win32"; graphicsName = "dx11"; }
     else if (param == "demo") { showDemoWindow = true;  }
     else if (param == "full") { fullScreen = true;  }
     else if (param == "free") { vsync = false; }
@@ -70,7 +67,7 @@ int main (int numArgs, char* args[]) {
 
   // start log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, fmt::format ("paintbox {} {}", platformName, graphicsName));
+  cLog::log (LOGNOTICE, fmt::format ("paintbox"));
 
   // list static registered classes
   cBrush::listRegisteredClasses();
