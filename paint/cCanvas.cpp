@@ -12,7 +12,7 @@
 #include <stb_image_write.h>
 
 #include "../brush/cBrush.h"
-#include "../graphics/cGraphics.h"
+#include "../app/cGraphics.h"
 #include "../utils/cLog.h"
 
 #include "cLayer.h"

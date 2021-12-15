@@ -18,7 +18,7 @@
 #include <backends/imgui_impl_dx11.h>
 
 #include "cGraphics.h"
-#include "../platform/cPlatform.h"
+#include "../app/cPlatform.h"
 #include "../utils/cLog.h"
 
 using namespace std;

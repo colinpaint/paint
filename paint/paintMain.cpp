@@ -24,8 +24,8 @@
 #include "../font/droidSansMono.h"
 
 // self registered classes using static var init idiom
-#include "../platform/cPlatform.h"
-#include "../graphics/cGraphics.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
 #include "../brush/cBrush.h"
 
 #include "../ui/cUI.h"

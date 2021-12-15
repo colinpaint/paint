@@ -10,7 +10,7 @@
 #include <array>
 #include <algorithm>
 
-#include "../graphics/cGraphics.h"
+#include "../app/cGraphics.h"
 //}}}
 
 class cVideoFrame : public cFrame {

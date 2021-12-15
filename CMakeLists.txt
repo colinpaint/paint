@@ -204,10 +204,8 @@ endif()
 # telly app
 if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
-    file (GLOB HEADER_FILES telly/*.h implot/implot.h imgui/*.h ui/*.h utils/*.h
-                            platform/*.h graphics/*.h)
-    file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp
-                            ui/cUI.cpp platform/*.cpp graphics/*.cpp)
+    file (GLOB HEADER_FILES telly/*.h implot/implot.h imgui/*.h ui/*.h utils/*.h app/*.h)
+    file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp ui/cUI.cpp app/*.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
     if (OPENGL2)
@@ -251,9 +249,8 @@ if (BUILD_PLAYER)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
   project (player VERSION 1.0.0)
-    file (GLOB HEADER_FILES player/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
-    file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp
-                            ui/cUI.cpp platform/*.cpp graphics/*.cpp)
+    file (GLOB HEADER_FILES player/*.h utils/*.h app/*.h imgui/*.h ui/*.h)
+    file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp ui/cUI.cpp app/*.cpp)
     add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
 
     if (OPENGL2)
@@ -274,10 +271,9 @@ endif()
 # fed app
 if (BUILD_FED)
   project (fed VERSION 1.0.0)
-    file (GLOB HEADER_FILES fed/*.h utils/*.h platform/*.h graphics/*.h imgui/*.h ui/*.h)
+    file (GLOB HEADER_FILES fed/*.h utils/*.h app/*.h imgui/*.h ui/*.h)
     file (GLOB SOURCE_FILES fed/fedMain.cpp fed/cFedApp.cpp fed/cDocument.cpp
-                            fed/cEditUI.cpp fed/cTextEdit.cpp fed/cMemEdit.cpp
-                            platform/*.cpp graphics/*.cpp ui/cUI.cpp)
+                            fed/cEditUI.cpp fed/cTextEdit.cpp fed/cMemEdit.cpp app/*.cpp ui/cUI.cpp)
 
     add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
     if (OPENGL2)
@@ -310,8 +306,8 @@ if (BUILD_PAINTBOX)
     find_package (OpenGL REQUIRED)
 
     # executable - main + static registered .cpp
-    file (GLOB HEADER_FILES paint/*.h utils/*.h platform/*.h graphics/*.h brush/*.h ui/*.h)
-    file (GLOB SOURCE_FILES paint/*.cpp platform/*.cpp graphics/*.cpp brush/*.cpp
+    file (GLOB HEADER_FILES paint/*.h utils/*.h app/*.h brush/*.h ui/*.h)
+    file (GLOB SOURCE_FILES paint/*.cpp app/*.cpp brush/*.cpp
                             ui/cUI.cpp ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 

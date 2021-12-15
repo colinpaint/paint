@@ -59,7 +59,7 @@
 #include "../imgui/myImgui.h"
 
 #include "../dvb/cDvbUtils.h"
-#include "../graphics/cGraphics.h"
+#include "../app/cGraphics.h"
 
 #ifdef BUILD_MFX
   #include <mfxvideo++.h>

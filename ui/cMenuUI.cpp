@@ -12,7 +12,7 @@
 // stb
 #include <stb_image_write.h>
 
-#include "../platform/cPlatform.h"
+#include "../app/cPlatform.h"
 
 #include "../ui/cUI.h"
 

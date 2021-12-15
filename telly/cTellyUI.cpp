@@ -13,8 +13,8 @@
 // ui
 #include "../ui/cUI.h"
 
-#include "../platform/cPlatform.h"
-#include "../graphics/cGraphics.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
 #include "../telly/cTellyApp.h"
 
 // dvb

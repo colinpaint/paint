@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 
-#include "../graphics/cGraphics.h"
+#include "../app/cGraphics.h"
 
 class cBrush;
 //}}}

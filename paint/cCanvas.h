@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "../app/cApp.h"
-#include "../graphics/cGraphics.h"
+#include "../app/cGraphics.h"
 
 class cPlatform;
 class cLayer;

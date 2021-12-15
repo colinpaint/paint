@@ -7,7 +7,7 @@
 #include <string>
 #include <algorithm>
 
-#include "../graphics/cGraphics.h"
+#include "../app/cGraphics.h"
 #include "../brush/cBrush.h"
 #include "../utils/cLog.h"
 
