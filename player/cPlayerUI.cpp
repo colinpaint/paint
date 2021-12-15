@@ -757,7 +757,7 @@ public:
     //}}}
     //{{{  draw clockButton
     ImGui::SetCursorPos ({ImGui::GetWindowWidth() - 130.f, 0.f});
-    clockButton ("clock", app.getPlatform().now(), {110.f,150.f});
+    clockButton ("clock", app.getNow(), {110.f,150.f});
     //}}}
 
     // draw song

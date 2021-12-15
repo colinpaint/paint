@@ -13,8 +13,6 @@ class cPlatform {
 public:
   static cPlatform& create (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen);
 
-  std::chrono::system_clock::time_point now();
-
   // base class
   virtual void shutdown() = 0;
 

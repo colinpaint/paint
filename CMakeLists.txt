@@ -207,7 +207,7 @@ if (BUILD_TELLY)
     file (GLOB HEADER_FILES telly/*.h implot/implot.h imgui/*.h ui/*.h utils/*.h app/*.h)
     file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp
                             ui/cUI.cpp
-                            app/cPlatform.cpp app/cGraphics.cpp app/cOpenGL3.cpp)
+                            app/cApp.cpp app/cOpenGL3.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
     if (OPENGL2)
@@ -254,7 +254,7 @@ if (BUILD_PLAYER)
     file (GLOB HEADER_FILES player/*.h utils/*.h app/*.h imgui/*.h ui/*.h)
     file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp
                             ui/cUI.cpp
-                            app/cPlatform.cpp app/cGraphics.cpp app/cOpenGL3.cpp)
+                            app/cApp.cpp app/cOpenGL3.cpp)
     add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
 
     if (OPENGL2)
@@ -279,7 +279,7 @@ if (BUILD_FED)
     file (GLOB SOURCE_FILES fed/fedMain.cpp fed/cFedApp.cpp
                             fed/cDocument.cpp fed/cEditUI.cpp fed/cTextEdit.cpp fed/cMemEdit.cpp
                             ui/cUI.cpp
-                            app/cPlatform.cpp app/cGraphics.cpp app/cOpenGL3.cpp)
+                            app/cApp.cpp app/cOpenGL3.cpp)
 
     add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
     if (OPENGL2)
@@ -316,7 +316,7 @@ if (BUILD_PAINTBOX)
     file (GLOB SOURCE_FILES paint/*.cpp
                             brush/*.cpp
                             ui/cUI.cpp ui/cPaintUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp
-                            app/cPlatform.cpp app/cGraphics.cpp app/cOpenGL3.cpp)
+                            app/cApp.cpp app/cOpenGL3.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
     if (OPENGL2)

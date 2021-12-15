@@ -141,7 +141,7 @@ public:
 
         ImGui::SameLine();
         ImGui::BeginGroup();
-        clockButton ("clock", app.getPlatform().now(), {110.f,150.f});
+        clockButton ("clock", app.getNow(), {110.f,150.f});
         ImGui::EndGroup();
         break;
         }

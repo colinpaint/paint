@@ -2,6 +2,7 @@
 #pragma once
 //{{{  includes
 #include <string>
+#include <chrono>
 
 class cPlatform;
 class cGraphics;
@@ -14,12 +15,18 @@ public:
     : mPlatform(platform), mGraphics(graphics), mMainFont(mainFont), mMonoFont(monoFont) {}
   virtual ~cApp() = default;
 
-  // gets
+  // get interfaces
   cPlatform& getPlatform() const { return mPlatform; }
   cGraphics& getGraphics() const { return mGraphics; }
 
+  // fonts
   ImFont* getMainFont() const { return mMainFont; }
   ImFont* getMonoFont() const { return mMonoFont; }
+
+  void setMainFont (ImFont* font) { mMainFont = font; }
+  void setMonoFont (ImFont* font) { mMonoFont = font; }
+
+  std::chrono::system_clock::time_point getNow();
 
 private:
   cPlatform& mPlatform;
