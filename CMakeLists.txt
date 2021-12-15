@@ -66,24 +66,18 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
 
   # imgui lib
   project (imgui)
-    if (MSVC)
-      if (OPENGL3)
-        file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
-        file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp
-                                app/cApp.cpp app/cOpenGL3.cpp)
-      elseif (DIRECTX11)
-        file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h)
-        file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp
-                                app/cApp.cpp app/cDirectX11.cpp)
-      endif()
+    if (OPENGL3)
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
+      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp
+                              app/cApp.cpp app/cOpenGL3.cpp)
     elseif (OPENGL2)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h)
       file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp
                               app/cApp.cpp app/cOpenGL3.cpp)
-    elseif (OPENGL3)
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
-      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp
-                              app/cApp.cpp app/cOpenGL3.cpp)
+    elseif (DIRECTX11)
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h)
+      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp
+                              app/cApp.cpp app/cDirectX11.cpp)
     endif()
 
     add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
@@ -205,9 +199,8 @@ endif()
 # telly app
 if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
-    file (GLOB HEADER_FILES telly/*.h implot/implot.h imgui/*.h ui/*.h utils/*.h app/*.h)
-    file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp
-                            ui/cUI.cpp)
+    file (GLOB HEADER_FILES telly/*.h ui/*.h utils/*.h app/*.h imgui/*.h implot/implot.h)
+    file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp ui/cUI.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
     if (OPENGL2)
@@ -251,7 +244,7 @@ if (BUILD_PLAYER)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
   project (player VERSION 1.0.0)
-    file (GLOB HEADER_FILES player/*.h utils/*.h app/*.h imgui/*.h ui/*.h)
+    file (GLOB HEADER_FILES player/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
     file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp
                             ui/cUI.cpp)
     add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
@@ -274,7 +267,7 @@ endif()
 # fed app
 if (BUILD_FED)
   project (fed VERSION 1.0.0)
-    file (GLOB HEADER_FILES fed/*.h utils/*.h app/*.h imgui/*.h ui/*.h)
+    file (GLOB HEADER_FILES fed/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
     file (GLOB SOURCE_FILES fed/*.cpp ui/cUI.cpp)
 
     add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
@@ -308,7 +301,7 @@ if (BUILD_PAINTBOX)
     find_package (OpenGL REQUIRED)
 
     # executable - main + static registered .cpp
-    file (GLOB HEADER_FILES paint/*.h utils/*.h app/*.h brush/*.h ui/*.h)
+    file (GLOB HEADER_FILES paint/*.h brush/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
     file (GLOB SOURCE_FILES paint/*.cpp brush/*.cpp ui/cUI.cpp ui/cPaintUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
