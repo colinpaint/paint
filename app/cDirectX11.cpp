@@ -1,4 +1,4 @@
-// cDirectX11.cpp 
+// cDirectX11.cpp
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
@@ -98,6 +98,7 @@ namespace {
 //{{{
 class cWin32Platform : public cPlatform {
 public:
+  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
   virtual void shutdown() final;
 
   // gets
@@ -122,9 +123,6 @@ public:
   virtual void newFrame() final;
   virtual void present() final;
   virtual void close() final;
-
-protected:
-  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
   };
 //}}}
 //{{{
@@ -137,74 +135,6 @@ cPlatform& cPlatform::create (const cPoint& windowSize, bool showViewports, bool
 //}}}
 
 // public:
-//{{{
-void cWin32Platform::shutdown() {
-
-  ImGui_ImplWin32_Shutdown();
-
-  #ifdef USE_IMPLOT
-    ImPlot::DestroyContext();
-  #endif
-  ImGui::DestroyContext();
-
-  gSwapChain->Release();
-  gD3dDeviceContext->Release();
-  gD3dDevice->Release();
-
-  ::DestroyWindow (gHWnd);
-  ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
-  }
-//}}}
-
-// gets
-void* cWin32Platform::getDevice() { return (void*)gD3dDevice; }
-void* cWin32Platform::getDeviceContext() { return (void*)gD3dDeviceContext; }
-void* cWin32Platform::getSwapChain() { return (void*)gSwapChain; }
-cPoint cWin32Platform::getWindowSize() { return gWindowSize; }
-
-// actions
-//{{{
-bool cWin32Platform::pollEvents() {
-// Poll and handle messages (inputs, window resize, etc.)
-// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
-// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-
-  MSG msg;
-  while (::PeekMessage (&msg, NULL, 0U, 0U, PM_REMOVE)) {
-    ::TranslateMessage (&msg);
-    ::DispatchMessage (&msg);
-    if (msg.message == WM_QUIT)
-      return false;
-    }
-
-  return true;
-  }
-//}}}
-//{{{
-void cWin32Platform::newFrame() {
-  ImGui_ImplWin32_NewFrame();
-  }
-//}}}
-//{{{
-void cWin32Platform::present() {
-
-  // update and render additional platform windows
-  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-    ImGui::UpdatePlatformWindows();
-    ImGui::RenderPlatformWindowsDefault();
-    }
-
-  gSwapChain->Present (gVsync ? 1 : 0, 0);
-  }
-//}}}
-//{{{
-void cWin32Platform::close() {
-  }
-//}}}
-
-// protected:
 //{{{
 bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
 
@@ -296,6 +226,72 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vs
   gVsync = vsync;
 
   return true;
+  }
+//}}}
+//{{{
+void cWin32Platform::shutdown() {
+
+  ImGui_ImplWin32_Shutdown();
+
+  #ifdef USE_IMPLOT
+    ImPlot::DestroyContext();
+  #endif
+  ImGui::DestroyContext();
+
+  gSwapChain->Release();
+  gD3dDeviceContext->Release();
+  gD3dDevice->Release();
+
+  ::DestroyWindow (gHWnd);
+  ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
+  }
+//}}}
+
+// gets
+void* cWin32Platform::getDevice() { return (void*)gD3dDevice; }
+void* cWin32Platform::getDeviceContext() { return (void*)gD3dDeviceContext; }
+void* cWin32Platform::getSwapChain() { return (void*)gSwapChain; }
+cPoint cWin32Platform::getWindowSize() { return gWindowSize; }
+
+// actions
+//{{{
+bool cWin32Platform::pollEvents() {
+// Poll and handle messages (inputs, window resize, etc.)
+// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
+// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
+// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+
+  MSG msg;
+  while (::PeekMessage (&msg, NULL, 0U, 0U, PM_REMOVE)) {
+    ::TranslateMessage (&msg);
+    ::DispatchMessage (&msg);
+    if (msg.message == WM_QUIT)
+      return false;
+    }
+
+  return true;
+  }
+//}}}
+//{{{
+void cWin32Platform::newFrame() {
+  ImGui_ImplWin32_NewFrame();
+  }
+//}}}
+//{{{
+void cWin32Platform::present() {
+
+  // update and render additional platform windows
+  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
+    }
+
+  gSwapChain->Present (gVsync ? 1 : 0, 0);
+  }
+//}}}
+//{{{
+void cWin32Platform::close() {
   }
 //}}}
 
@@ -1182,6 +1178,7 @@ namespace {
 //{{{
 class cDx11Graphics : public cGraphics {
 public:
+  virtual bool init (cPlatform& platform) final;
   void shutdown() final;
 
   // create resources
@@ -1204,9 +1201,6 @@ public:
   virtual void newFrame() final;
   virtual void drawUI (const cPoint& windowSize) final;
   virtual void windowResize (int width, int height) final;
-
-protected:
-  virtual bool init (cPlatform& platform) final;
   };
 //}}}
 //{{{
@@ -1219,6 +1213,66 @@ static cGraphics& cDx11Graphics::create (cPlatform& platform) {
 //}}}
 
 // public:
+//{{{
+bool cDx11Graphics::init (cPlatform& platform) {
+
+  bool ok = false;
+
+  #ifdef USE_IMPL
+    // todo
+  #else
+    // allocate backendData
+    sBackendData* backendData = IM_NEW (sBackendData)();
+
+    // set backend capabilities
+    ImGui::GetIO().BackendRendererUserData = (void*)backendData;
+    ImGui::GetIO().BackendRendererName = "imgui_impl_dx11";
+    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+    // We can create multi-viewports on the Renderer side (optional)
+    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+
+    // Get factory from device adpater
+    ID3D11Device* d3dDevice = (ID3D11Device*)platform.getDevice();
+    ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)platform.getDeviceContext();
+    IDXGISwapChain* dxgiSwapChain = (IDXGISwapChain*)platform.getSwapChain();
+
+    IDXGIDevice* dxgiDevice = NULL;
+    if (d3dDevice->QueryInterface (IID_PPV_ARGS (&dxgiDevice)) == S_OK) {
+      IDXGIAdapter* dxgiAdapter = NULL;
+      if (dxgiDevice->GetParent (IID_PPV_ARGS (&dxgiAdapter)) == S_OK) {
+        IDXGIFactory* dxgiFactory = NULL;
+        if (dxgiAdapter->GetParent (IID_PPV_ARGS (&dxgiFactory)) == S_OK) {
+          backendData->mD3dDevice = d3dDevice;
+          backendData->mD3dDeviceContext = d3dDeviceContext;
+          backendData->mDxgiSwapChain = dxgiSwapChain;
+          backendData->mDxgiFactory = dxgiFactory;
+          backendData->mD3dDevice->AddRef();
+          backendData->mD3dDeviceContext->AddRef();
+
+          if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            // init platFormInterface
+            ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+            platform_io.Renderer_CreateWindow = createWindow;
+            platform_io.Renderer_DestroyWindow = destroyWindow;
+            platform_io.Renderer_SetWindowSize = setWindowSize;
+            platform_io.Renderer_RenderWindow = renderWindow;
+            platform_io.Renderer_SwapBuffers = swapBuffers;
+            }
+
+          // create resources
+          ok = createResources();
+          ok &= createMainRenderTarget();
+          cLog::log (LOGINFO, fmt::format ("graphics Dx11 init ok {}", ok));
+          }
+        dxgiAdapter->Release();
+        }
+      dxgiDevice->Release();
+      }
+  #endif
+
+  return ok;
+  }
+//}}}
 //{{{
 void cDx11Graphics::shutdown() {
 
@@ -1356,67 +1410,5 @@ void cDx11Graphics::drawUI (const cPoint& windowSize) {
     // really draw imGui drawList
     renderDrawData (ImGui::GetDrawData());
   #endif
-  }
-//}}}
-
-// protected:
-//{{{
-bool cDx11Graphics::init (cPlatform& platform) {
-
-  bool ok = false;
-
-  #ifdef USE_IMPL
-    // todo
-  #else
-    // allocate backendData
-    sBackendData* backendData = IM_NEW (sBackendData)();
-
-    // set backend capabilities
-    ImGui::GetIO().BackendRendererUserData = (void*)backendData;
-    ImGui::GetIO().BackendRendererName = "imgui_impl_dx11";
-    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-    // We can create multi-viewports on the Renderer side (optional)
-    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
-
-    // Get factory from device adpater
-    ID3D11Device* d3dDevice = (ID3D11Device*)platform.getDevice();
-    ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)platform.getDeviceContext();
-    IDXGISwapChain* dxgiSwapChain = (IDXGISwapChain*)platform.getSwapChain();
-
-    IDXGIDevice* dxgiDevice = NULL;
-    if (d3dDevice->QueryInterface (IID_PPV_ARGS (&dxgiDevice)) == S_OK) {
-      IDXGIAdapter* dxgiAdapter = NULL;
-      if (dxgiDevice->GetParent (IID_PPV_ARGS (&dxgiAdapter)) == S_OK) {
-        IDXGIFactory* dxgiFactory = NULL;
-        if (dxgiAdapter->GetParent (IID_PPV_ARGS (&dxgiFactory)) == S_OK) {
-          backendData->mD3dDevice = d3dDevice;
-          backendData->mD3dDeviceContext = d3dDeviceContext;
-          backendData->mDxgiSwapChain = dxgiSwapChain;
-          backendData->mDxgiFactory = dxgiFactory;
-          backendData->mD3dDevice->AddRef();
-          backendData->mD3dDeviceContext->AddRef();
-
-          if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-            // init platFormInterface
-            ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-            platform_io.Renderer_CreateWindow = createWindow;
-            platform_io.Renderer_DestroyWindow = destroyWindow;
-            platform_io.Renderer_SetWindowSize = setWindowSize;
-            platform_io.Renderer_RenderWindow = renderWindow;
-            platform_io.Renderer_SwapBuffers = swapBuffers;
-            }
-
-          // create resources
-          ok = createResources();
-          ok &= createMainRenderTarget();
-          cLog::log (LOGINFO, fmt::format ("graphics Dx11 init ok {}", ok));
-          }
-        dxgiAdapter->Release();
-        }
-      dxgiDevice->Release();
-      }
-  #endif
-
-  return ok;
   }
 //}}}

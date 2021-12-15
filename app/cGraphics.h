@@ -153,6 +153,7 @@ public:
   static cGraphics& create (cPlatform& platform);
 
   // base class
+  virtual bool init (cPlatform& platform) = 0;
   virtual void shutdown() = 0;
 
   // create graphics resources
@@ -176,6 +177,4 @@ public:
   virtual void newFrame() = 0;
   virtual void drawUI (const cPoint& windowSize) = 0;
 
-protected:
-  virtual bool init (cPlatform& platform) = 0;
   };

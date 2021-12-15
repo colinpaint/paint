@@ -43,8 +43,8 @@ using namespace std;
   #endif
 #endif
 //}}}
+constexpr bool kDebug = false;
 
-// platform
 namespace {
   cPlatform* gPlatform = nullptr;
   GLFWwindow* gWindow = nullptr;
@@ -53,6 +53,10 @@ namespace {
   cPoint gWindowPos = { 0,0 };
   cPoint gWindowSize = { 0,0 };
 
+  int gGlVersion = 0;   // major.minor * 100
+  int gGlslVersion = 0; // major.minor * 100
+
+  // glfw callbacks
   //{{{
   void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
 
@@ -83,257 +87,13 @@ namespace {
       gPlatform->mDropCallback (dropItems);
     }
   //}}}
-  }
 
-// cGlfwPlatform class header, easy to extract header if static register not ok
-//{{{
-class cOpenGL3Platform : public cPlatform {
-public:
-  virtual void shutdown() final;
-
-
-  // gets
-  virtual void* getDevice() final;
-  virtual void* getDeviceContext() final;
-  virtual void* getSwapChain() final;
-  virtual cPoint getWindowSize() final;
-
-  virtual bool hasVsync() final { return true; }
-  virtual bool getVsync() final { return mVsync; }
-
-  virtual bool hasFullScreen() final { return true; }
-  virtual bool getFullScreen() final { return mFullScreen; }
-
-  // sets
-  virtual void setVsync (bool vsync) final;
-  virtual void toggleVsync() final;
-  virtual void toggleFullScreen() final;
-
-  // actions
-  virtual bool pollEvents() final;
-  virtual void newFrame() final;
-  virtual void present() final;
-  virtual void close() final;
-
-protected:
-  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
-
-private:
-  bool mVsync = true;
-  bool mFullScreen = false;
-
-  bool mActionFullScreen = false;
-  };
-//}}}
-
-//{{{
-cPlatform& cPlatform::create (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
-
-  cPlatform* platform = new cOpenGL3Platform();
-  platform->init (windowSize, showViewports, vsync, fullScreen);
-  return *platform;
-  }
-//}}}
-
-// public:
-//{{{
-void cOpenGL3Platform::shutdown() {
-
-  ImGui_ImplGlfw_Shutdown();
-
-  glfwDestroyWindow (gWindow);
-  glfwTerminate();
-
-  #ifdef USE_IMPLOT
-    ImPlot::DestroyContext();
-  #endif
-  ImGui::DestroyContext();
-  }
-//}}}
-
-// gets
-void* cOpenGL3Platform::getDevice() { return nullptr; }
-void* cOpenGL3Platform::getDeviceContext() { return nullptr; }
-void* cOpenGL3Platform::getSwapChain() { return nullptr; }
-//{{{
-cPoint cOpenGL3Platform::getWindowSize() {
-
-  int width;
-  int height;
-  glfwGetWindowSize (gWindow, &width, &height);
-  return cPoint (width, height);
-  }
-//}}}
-
-// sets
-//{{{
-void cOpenGL3Platform::setVsync (bool vsync) {
-  mVsync = vsync;
-  glfwSwapInterval (mVsync ? 1 : 0);
-  }
-//}}}
-//{{{
-void cOpenGL3Platform::toggleVsync() {
-  mVsync = !mVsync;
-  glfwSwapInterval (mVsync ? 1 : 0);
-  }
-//}}}
-
-//{{{
-void cOpenGL3Platform::toggleFullScreen() {
-
-  mFullScreen = !mFullScreen;
-  mActionFullScreen = true;
-  }
-//}}}
-
-// actions
-//{{{
-bool cOpenGL3Platform::pollEvents() {
-
-  if (mActionFullScreen) {
-    //{{{  fullScreen
-    if (mFullScreen) {
-      // save windowPos and windowSize
-      glfwGetWindowPos (gWindow, &gWindowPos.x, &gWindowPos.y);
-      glfwGetWindowSize (gWindow, &gWindowSize.x, &gWindowSize.y);
-
-      // get resolution of monitor
-      const GLFWvidmode* vidMode = glfwGetVideoMode (glfwGetPrimaryMonitor());
-
-      // switch to full screen
-      glfwSetWindowMonitor  (gWindow, gMonitor, 0, 0, vidMode->width, vidMode->height, vidMode->refreshRate);
-      }
-    else
-      // restore last window size and position
-      glfwSetWindowMonitor (gWindow, nullptr, gWindowPos.x, gWindowPos.y, gWindowSize.x, gWindowSize.y, 0);
-
-    mActionFullScreen = false;
-    }
-    //}}}
-
-  if (glfwWindowShouldClose (gWindow))
-    return false;
-  else {
-    glfwPollEvents();
-    return true;
-    }
-  }
-//}}}
-//{{{
-void cOpenGL3Platform::newFrame() {
-  ImGui_ImplGlfw_NewFrame();
-  }
-//}}}
-//{{{
-void cOpenGL3Platform::present() {
-
-  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-    GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
-    ImGui::UpdatePlatformWindows();
-    ImGui::RenderPlatformWindowsDefault();
-    glfwMakeContextCurrent (backupCurrentContext);
-    }
-
-  glfwSwapBuffers (gWindow);
-  }
-//}}}
-//{{{
-void cOpenGL3Platform::close() {
-  }
-//}}}
-
-// protected:
-//{{{
-bool cOpenGL3Platform::init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
-
-  (void)fullScreen;
-  cLog::log (LOGINFO, fmt::format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
-
-  // GLFW init
-  if (!glfwInit()) {
-    cLog::log (LOGERROR, "cPlatform - glfw init failed");
-    return false;
-    }
-
-  // openGL version hints
-  #if defined(OPENGL_21)
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
-    cLog::log (LOGINFO, "- version hint 2.1");
-  #elif defined(OPENGL_40)
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
-    cLog::log (LOGINFO, "- version hint 4.0");
-  #elif defined(OPENGL_45)
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 5);
-    cLog::log (LOGINFO, "- version hint 4.5");
-  #else
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
-    cLog::log (LOGINFO, "- version hint 3.3");
-  #endif
-  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-  // GLFW create window
-  gWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Paintbox - openGL", NULL, NULL);
-  if (!gWindow) {
-    cLog::log (LOGERROR, "cPlatform - glfwCreateWindow failed");
-    return false;
-    }
-
-  gMonitor = glfwGetPrimaryMonitor();
-  glfwGetWindowSize (gWindow, &gWindowSize.x, &gWindowSize.y);
-  glfwGetWindowPos (gWindow, &gWindowPos.x, &gWindowPos.y);
-
-  glfwMakeContextCurrent (gWindow);
-
-  // set callbacks
-  glfwSetKeyCallback (gWindow, keyCallback);
-  glfwSetFramebufferSizeCallback (gWindow, framebufferSizeCallback);
-  glfwSetDropCallback (gWindow, dropCallback);
-
-  // GLAD init before any openGL function
-  if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {
-    cLog::log (LOGERROR, "cPlatform - glad init failed");
-    return false;
-    }
-
-  // init imGui
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGui::StyleColorsClassic();
-  #ifdef USE_IMPLOT
-    ImPlot::CreateContext();
-  #endif
-
-  ImGuiIO& io = ImGui::GetIO();
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-  if (showViewports)
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-
-  ImGui_ImplGlfw_InitForOpenGL (gWindow, true);
-
-  mVsync = vsync;
-  glfwSwapInterval (mVsync ? 1 : 0);
-
-  gPlatform = this;
-
-  return true;
-  }
-//}}}
-
-// graphics.cpp
-constexpr bool kDebug = false;
-
-namespace {
+  // graphics
   //{{{
-  class cOpenGlQuad : public cQuad {
+  class cOpenGL3Quad : public cQuad {
   public:
     //{{{
-    cOpenGlQuad (const cPoint& size) : cQuad(size) {
+    cOpenGL3Quad (const cPoint& size) : cQuad(size) {
 
       // vertexArray
       glGenVertexArrays (1, &mVertexArrayObject);
@@ -367,7 +127,7 @@ namespace {
       }
     //}}}
     //{{{
-    cOpenGlQuad (const cPoint& size, const cRect& rect) : cQuad(size) {
+    cOpenGL3Quad (const cPoint& size, const cRect& rect) : cQuad(size) {
 
       // vertexArray
       glGenVertexArrays (1, &mVertexArrayObject);
@@ -409,7 +169,7 @@ namespace {
       }
     //}}}
     //{{{
-    virtual ~cOpenGlQuad() {
+    virtual ~cOpenGL3Quad() {
 
       glDeleteBuffers (1, &mElementArrayBufferObject);
       glDeleteBuffers (1, &mVertexBufferObject);
@@ -440,10 +200,10 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlFrameBuffer : public cFrameBuffer {
+  class cOpenGL3FrameBuffer : public cFrameBuffer {
   public:
     //{{{
-    cOpenGlFrameBuffer() : cFrameBuffer ({0,0}) {
+    cOpenGL3FrameBuffer() : cFrameBuffer ({0,0}) {
     // window frameBuffer
 
       mImageFormat = GL_RGBA;
@@ -451,7 +211,7 @@ namespace {
       }
     //}}}
     //{{{
-    cOpenGlFrameBuffer (const cPoint& size, eFormat format) : cFrameBuffer(size) {
+    cOpenGL3FrameBuffer (const cPoint& size, eFormat format) : cFrameBuffer(size) {
 
       mImageFormat = format == eRGBA ? GL_RGBA : GL_RGB;
       mInternalFormat = format == eRGBA ? GL_RGBA : GL_RGB;
@@ -475,7 +235,7 @@ namespace {
       }
     //}}}
     //{{{
-    cOpenGlFrameBuffer (uint8_t* pixels, const cPoint& size, eFormat format) : cFrameBuffer(size) {
+    cOpenGL3FrameBuffer (uint8_t* pixels, const cPoint& size, eFormat format) : cFrameBuffer(size) {
 
       mImageFormat = format == eRGBA ? GL_RGBA : GL_RGB;
       mInternalFormat = format == eRGBA ? GL_RGBA : GL_RGB;
@@ -499,7 +259,7 @@ namespace {
       }
     //}}}
     //{{{
-    virtual ~cOpenGlFrameBuffer() {
+    virtual ~cOpenGL3FrameBuffer() {
 
       glDeleteTextures (1, &mColorTextureId);
       glDeleteFramebuffers (1, &mFrameBufferObject);
@@ -894,36 +654,18 @@ namespace {
   // shader
   //{{{
   const string kQuadVertShader =
+    "#version 330 core\n"
+    "layout (location = 0) in vec2 inPos;"
+    "layout (location = 1) in vec2 inTextureCoord;"
+    "out vec2 textureCoord;"
 
-    #ifdef OPENGL_21
-      "#version 120\n"
-      "layout (location = 0) in vec2 inPos;"
-      "layout (location = 1) in vec2 inTextureCoord;"
-      "out vec2 textureCoord;"
+    "uniform mat4 uModel;"
+    "uniform mat4 uProject;"
 
-      "uniform mat4 uModel;"
-      "uniform mat4 uProject;"
-
-      "void main() {"
-      "  textureCoord = inTextureCoord;"
-      "  gl_Position = uProject * uModel * vec4 (inPos, 0.0, 1.0);"
-      "  }";
-
-    #else
-      "#version 330 core\n"
-      "layout (location = 0) in vec2 inPos;"
-      "layout (location = 1) in vec2 inTextureCoord;"
-      "out vec2 textureCoord;"
-
-      "uniform mat4 uModel;"
-      "uniform mat4 uProject;"
-
-      "void main() {"
-      "  textureCoord = inTextureCoord;"
-      "  gl_Position = uProject * uModel * vec4 (inPos, 0.0, 1.0);"
-      "  }";
-
-    #endif
+    "void main() {"
+    "  textureCoord = inTextureCoord;"
+    "  gl_Position = uProject * uModel * vec4 (inPos, 0.0, 1.0);"
+    "  }";
   //}}}
   //{{{
   uint32_t compileShader (const string& vertShaderString, const string& fragShaderString) {
@@ -983,189 +725,97 @@ namespace {
     }
   //}}}
   //{{{
-  class cOpenGlLayerShader : public cLayerShader {
+  class cOpenGL3LayerShader : public cLayerShader {
   public:
-    //{{{
-    cOpenGlLayerShader() : cLayerShader() {
+    cOpenGL3LayerShader() : cLayerShader() {
 
-      #ifdef OPENGL_21
+      const string kFragShader =
+        "#version 330 core\n"
+        "uniform sampler2D uSampler;"
+        "uniform float uHue;"
+        "uniform float uVal;"
+        "uniform float uSat;"
+
+        "in vec2 textureCoord;"
+        "out vec4 outColor;"
+
         //{{{
-        const string kFragShader =
-          "#version 120\n"
+        "vec3 rgbToHsv (float r, float g, float b) {"
+        "  float max_val = max(r, max(g, b));"
+        "  float min_val = min(r, min(g, b));"
+        "  float h;" // hue in degrees
 
-          "uniform sampler2D uSampler;"
-          "uniform float uHue;"
-          "uniform float uVal;"
-          "uniform float uSat;"
+        "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
+        "    h = 0.0; }"
+        "  else if (max_val == r) {"
+        "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
+        "  else if (max_val == g) {"
+        "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
+        "  else if (max_val == b) {"
+        "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
+        "  if (h < 0.0) {"
+        "    h += 360.0; }"
 
-          "in vec2 textureCoord;"
-          "out vec4 outColor;"
-
-          //{{{
-          "vec3 rgbToHsv (float r, float g, float b) {"
-          "  float max_val = max(r, max(g, b));"
-          "  float min_val = min(r, min(g, b));"
-          "  float h;" // hue in degrees
-
-          "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
-          "    h = 0.0; }"
-          "  else if (max_val == r) {"
-          "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
-          "  else if (max_val == g) {"
-          "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
-          "  else if (max_val == b) {"
-          "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
-          "  if (h < 0.0) {"
-          "    h += 360.0; }"
-
-          "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
-          "  float v = max_val;"
-          "  return vec3 (h, s, v);"
-          "  }"
-          //}}}
-          //{{{
-          "vec3 hsvToRgb (float h, float s, float v) {"
-          "  float r, g, b;"
-          "  float c = v * s;"
-          "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
-          "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
-          "  float r_, g_, b_;"
-
-          "  if (0.0 <= h_ && h_ < 1.0) {"
-          "    r_ = c, g_ = x, b_ = 0.0; }"
-          "  else if (1.0 <= h_ && h_ < 2.0) {"
-          "    r_ = x, g_ = c, b_ = 0.0; }"
-          "  else if (2.0 <= h_ && h_ < 3.0) {"
-          "    r_ = 0.0, g_ = c, b_ = x; }"
-          "  else if (3.0 <= h_ && h_ < 4.0) {"
-          "    r_ = 0.0, g_ = x, b_ = c; }"
-          "  else if (4.0 <= h_ && h_ < 5.0) {"
-          "    r_ = x, g_ = 0.0, b_ = c; }"
-          "  else if (5.0 <= h_ && h_ < 6.0) {"
-          "    r_ = c, g_ = 0.0, b_ = x; }"
-          "  else {"
-          "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
-
-          "  float m = v - c;"
-          "  r = r_ + m;"
-          "  g = g_ + m;"
-          "  b = b_ + m;"
-
-          "  return vec3 (r, g, b);"
-          "  }"
-          //}}}
-
-          "void main() {"
-          "  outColor = texture (uSampler, textureCoord);"
-
-          "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
-          "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
-          "    hsv.x += uHue;"
-          "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
-                 // not grayscale
-          "      hsv.y = uSat <= 0.0 ? "
-          "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
-          "      }"
-          "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
-          "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
-          "    outColor.xyz = rgb;"
-          "    }"
-
-          //"  if (uPreMultiply)"
-          //"    outColor.xyz *= outColor.w;"
-          "  }";
+        "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
+        "  float v = max_val;"
+        "  return vec3 (h, s, v);"
+        "  }"
         //}}}
-      #else
-        const string kFragShader =
-          "#version 330 core\n"
-          "uniform sampler2D uSampler;"
-          "uniform float uHue;"
-          "uniform float uVal;"
-          "uniform float uSat;"
+        //{{{
+        "vec3 hsvToRgb (float h, float s, float v) {"
+        "  float r, g, b;"
+        "  float c = v * s;"
+        "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
+        "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
+        "  float r_, g_, b_;"
 
-          "in vec2 textureCoord;"
-          "out vec4 outColor;"
+        "  if (0.0 <= h_ && h_ < 1.0) {"
+        "    r_ = c, g_ = x, b_ = 0.0; }"
+        "  else if (1.0 <= h_ && h_ < 2.0) {"
+        "    r_ = x, g_ = c, b_ = 0.0; }"
+        "  else if (2.0 <= h_ && h_ < 3.0) {"
+        "    r_ = 0.0, g_ = c, b_ = x; }"
+        "  else if (3.0 <= h_ && h_ < 4.0) {"
+        "    r_ = 0.0, g_ = x, b_ = c; }"
+        "  else if (4.0 <= h_ && h_ < 5.0) {"
+        "    r_ = x, g_ = 0.0, b_ = c; }"
+        "  else if (5.0 <= h_ && h_ < 6.0) {"
+        "    r_ = c, g_ = 0.0, b_ = x; }"
+        "  else {"
+        "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
 
-          //{{{
-          "vec3 rgbToHsv (float r, float g, float b) {"
-          "  float max_val = max(r, max(g, b));"
-          "  float min_val = min(r, min(g, b));"
-          "  float h;" // hue in degrees
+        "  float m = v - c;"
+        "  r = r_ + m;"
+        "  g = g_ + m;"
+        "  b = b_ + m;"
 
-          "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
-          "    h = 0.0; }"
-          "  else if (max_val == r) {"
-          "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
-          "  else if (max_val == g) {"
-          "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
-          "  else if (max_val == b) {"
-          "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
-          "  if (h < 0.0) {"
-          "    h += 360.0; }"
+        "  return vec3 (r, g, b);"
+        "  }"
+        //}}}
 
-          "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
-          "  float v = max_val;"
-          "  return vec3 (h, s, v);"
-          "  }"
-          //}}}
-          //{{{
-          "vec3 hsvToRgb (float h, float s, float v) {"
-          "  float r, g, b;"
-          "  float c = v * s;"
-          "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
-          "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
-          "  float r_, g_, b_;"
+        "void main() {"
+        "  outColor = texture (uSampler, textureCoord);"
 
-          "  if (0.0 <= h_ && h_ < 1.0) {"
-          "    r_ = c, g_ = x, b_ = 0.0; }"
-          "  else if (1.0 <= h_ && h_ < 2.0) {"
-          "    r_ = x, g_ = c, b_ = 0.0; }"
-          "  else if (2.0 <= h_ && h_ < 3.0) {"
-          "    r_ = 0.0, g_ = c, b_ = x; }"
-          "  else if (3.0 <= h_ && h_ < 4.0) {"
-          "    r_ = 0.0, g_ = x, b_ = c; }"
-          "  else if (4.0 <= h_ && h_ < 5.0) {"
-          "    r_ = x, g_ = 0.0, b_ = c; }"
-          "  else if (5.0 <= h_ && h_ < 6.0) {"
-          "    r_ = c, g_ = 0.0, b_ = x; }"
-          "  else {"
-          "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
-
-          "  float m = v - c;"
-          "  r = r_ + m;"
-          "  g = g_ + m;"
-          "  b = b_ + m;"
-
-          "  return vec3 (r, g, b);"
-          "  }"
-          //}}}
-
-          "void main() {"
-          "  outColor = texture (uSampler, textureCoord);"
-
-          "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
-          "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
-          "    hsv.x += uHue;"
-          "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
-                 // not grayscale
-          "      hsv.y = uSat <= 0.0 ? "
-          "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
-          "      }"
-          "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
-          "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
-          "    outColor.xyz = rgb;"
-          "    }"
-
-          //"  if (uPreMultiply)"
-          //"    outColor.xyz *= outColor.w;"
-          "  }";
-      #endif
+        "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
+        "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
+        "    hsv.x += uHue;"
+        "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
+               // not grayscale
+        "      hsv.y = uSat <= 0.0 ? "
+        "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
+        "      }"
+        "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
+        "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
+        "    outColor.xyz = rgb;"
+        "    }"
+        //"  if (uPreMultiply)"
+        //"    outColor.xyz *= outColor.w;"
+        "  }";
 
       mId = compileShader (kQuadVertShader, kFragShader);
       }
-    //}}}
     //{{{
-    virtual ~cOpenGlLayerShader() {
+    virtual ~cOpenGL3LayerShader() {
       glDeleteProgram (mId);
       }
     //}}}
@@ -1195,70 +845,39 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlPaintShader : public cPaintShader {
+  class cOpenGL3PaintShader : public cPaintShader {
   public:
-    //{{{
-    cOpenGlPaintShader() : cPaintShader() {
+    cOpenGL3PaintShader() : cPaintShader() {
+      const string kFragShader =
+        "#version 330 core\n"
 
-      #ifdef OPENGL_21
-        const string kFragShader =
-          "#version 120\n"
+        "uniform sampler2D uSampler;"
+        "uniform vec2 uPos;"
+        "uniform vec2 uPrevPos;"
+        "uniform float uRadius;"
+        "uniform vec4 uColor;"
 
-          "uniform sampler2D uSampler;"
-          "uniform vec2 uPos;"
-          "uniform vec2 uPrevPos;"
-          "uniform float uRadius;"
-          "uniform vec4 uColor;"
+        "in vec2 textureCoord;"
+        "out vec4 outColor;"
 
-          "in vec2 textureCoord;"
-          "out vec4 outColor;"
+        "float distToLine (vec2 v, vec2 w, vec2 p) {"
+        "  float l2 = pow (distance(w, v), 2.);"
+        "  if (l2 == 0.0)"
+        "    return distance (p, v);"
+        "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
+        "  vec2 j = v + t * (w - v);"
+        "  return distance (p, j);"
+        "  }"
 
-          "float distToLine (vec2 v, vec2 w, vec2 p) {"
-          "  float l2 = pow (distance(w, v), 2.);"
-          "  if (l2 == 0.0)"
-          "    return distance (p, v);"
-          "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
-          "  vec2 j = v + t * (w - v);"
-          "  return distance (p, j);"
-          "  }"
-
-          "void main() {"
-          "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
-          "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
-          "  }";
-      #else
-        const string kFragShader =
-          "#version 330 core\n"
-
-          "uniform sampler2D uSampler;"
-          "uniform vec2 uPos;"
-          "uniform vec2 uPrevPos;"
-          "uniform float uRadius;"
-          "uniform vec4 uColor;"
-
-          "in vec2 textureCoord;"
-          "out vec4 outColor;"
-
-          "float distToLine (vec2 v, vec2 w, vec2 p) {"
-          "  float l2 = pow (distance(w, v), 2.);"
-          "  if (l2 == 0.0)"
-          "    return distance (p, v);"
-          "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
-          "  vec2 j = v + t * (w - v);"
-          "  return distance (p, j);"
-          "  }"
-
-          "void main() {"
-          "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
-          "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
-          "  }";
-      #endif
+        "void main() {"
+        "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
+        "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
+        "  }";
 
       mId = compileShader (kQuadVertShader, kFragShader);
       }
-    //}}}
     //{{{
-    virtual ~cOpenGlPaintShader() {
+    virtual ~cOpenGL3PaintShader() {
       glDeleteProgram (mId);
       }
     //}}}
@@ -1290,10 +909,10 @@ namespace {
   //}}}
 
   //{{{
-  class cOpenGlRgbaTexture : public cTexture {
+  class cOpenGL3RgbaTexture : public cTexture {
   public:
     //{{{
-    cOpenGlRgbaTexture (eTextureType textureType, const cPoint& size)
+    cOpenGL3RgbaTexture (eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size) {
 
       cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
@@ -1311,7 +930,7 @@ namespace {
       }
     //}}}
     //{{{
-    virtual ~cOpenGlRgbaTexture() {
+    virtual ~cOpenGL3RgbaTexture() {
       glDeleteTextures (1, &mTextureId);
       }
     //}}}
@@ -1339,10 +958,10 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlNv12Texture : public cTexture {
+  class cOpenGL3Nv12Texture : public cTexture {
   public:
     //{{{
-    cOpenGlNv12Texture (eTextureType textureType, const cPoint& size)
+    cOpenGL3Nv12Texture (eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size) {
 
       //cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
@@ -1369,7 +988,7 @@ namespace {
       }
     //}}}
     //{{{
-    virtual ~cOpenGlNv12Texture() {
+    virtual ~cOpenGL3Nv12Texture() {
       //glDeleteTextures (2, mTextureId.data());
       glDeleteTextures (1, &mTextureId[0]);
       glDeleteTextures (1, &mTextureId[1]);
@@ -1411,10 +1030,10 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlYuv420Texture : public cTexture {
+  class cOpenGL3Yuv420Texture : public cTexture {
   public:
     //{{{
-    cOpenGlYuv420Texture (eTextureType textureType, const cPoint& size)
+    cOpenGL3Yuv420Texture (eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size) {
 
       //cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
@@ -1447,7 +1066,7 @@ namespace {
       }
     //}}}
     //{{{
-    virtual ~cOpenGlYuv420Texture() {
+    virtual ~cOpenGL3Yuv420Texture() {
       //glDeleteTextures (3, mTextureId.data());
       glDeleteTextures (1, &mTextureId[0]);
       glDeleteTextures (1, &mTextureId[1]);
@@ -1496,49 +1115,32 @@ namespace {
   //}}}
 
   //{{{
-  class cOpenGlRgbaShader : public cTextureShader {
+  class cOpenGL3RgbaShader : public cTextureShader {
   public:
-    //{{{
-    cOpenGlRgbaShader() : cTextureShader() {
 
-      #ifdef OPENGL_21
-        const string kFragShader =
-          "#version 120\n"
+    cOpenGL3RgbaShader() : cTextureShader() {
+      const string kFragShader =
+        "#version 330 core\n"
+        "uniform sampler2D uSampler;"
 
-          "uniform sampler2D uSampler;"
+        "in vec2 textureCoord;"
+        "out vec4 outColor;"
 
-          "in vec2 textureCoord;"
-          "out vec4 outColor;"
-
-          "void main() {"
-          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-          //"  outColor /= outColor.w;"
-          "  }";
-      #else
-        const string kFragShader =
-          "#version 330 core\n"
-          "uniform sampler2D uSampler;"
-
-          "in vec2 textureCoord;"
-          "out vec4 outColor;"
-
-          "void main() {"
-          "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-          //"  outColor /= outColor.w;"
-          "  }";
-      #endif
-
+        "void main() {"
+        "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
+        //"  outColor /= outColor.w;"
+        "  }";
       mId = compileShader (kQuadVertShader, kFragShader);
       }
-    //}}}
     //{{{
-    virtual ~cOpenGlRgbaShader() {
+    virtual ~cOpenGL3RgbaShader() {
       glDeleteProgram (mId);
       }
     //}}}
 
     //{{{
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
       glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
       }
@@ -1547,16 +1149,15 @@ namespace {
     virtual void use() final {
 
       glUseProgram (mId);
-
       glUniform1i (glGetUniformLocation (mId, "uSampler"), 0);
       }
     //}}}
     };
   //}}}
   //{{{
-  class cOpenGlNv12Shader : public cTextureShader {
+  class cOpenGL3Nv12Shader : public cTextureShader {
   public:
-    cOpenGlNv12Shader() : cTextureShader() {
+    cOpenGL3Nv12Shader() : cTextureShader() {
       const string kFragShader =
         "#version 330 core\n"
         "uniform sampler2D ySampler;"
@@ -1580,7 +1181,7 @@ namespace {
       }
 
     //{{{
-    virtual ~cOpenGlNv12Shader() {
+    virtual ~cOpenGL3Nv12Shader() {
       glDeleteProgram (mId);
       }
     //}}}
@@ -1605,9 +1206,9 @@ namespace {
     };
   //}}}
   //{{{
-  class cOpenGlYuv420Shader : public cTextureShader {
+  class cOpenGL3Yuv420Shader : public cTextureShader {
   public:
-    cOpenGlYuv420Shader() : cTextureShader() {
+    cOpenGL3Yuv420Shader() : cTextureShader() {
       const string kFragShader =
         "#version 330 core\n"
         "uniform sampler2D ySampler;"
@@ -1631,7 +1232,7 @@ namespace {
       mId = compileShader (kQuadVertShader, kFragShader);
       }
     //{{{
-    virtual ~cOpenGlYuv420Shader() {
+    virtual ~cOpenGL3Yuv420Shader() {
       glDeleteProgram (mId);
       }
     //}}}
@@ -1656,10 +1257,6 @@ namespace {
     //}}}
     };
   //}}}
-
-  // versions
-  int gGlVersion = 0;   // major.minor * 100
-  int gGlslVersion = 0; // major.minor * 100
 
   #ifndef USE_IMPL
     //{{{  local implementation of backend impl
@@ -2038,10 +1635,218 @@ namespace {
   #endif
   }
 
+//{{{
+class cOpenGL3Platform : public cPlatform {
+public:
+  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
+  virtual void shutdown() final;
+
+  // gets
+  virtual void* getDevice() final { return nullptr; }
+  virtual void* getDeviceContext() final { return nullptr; }
+  virtual void* getSwapChain() final { return nullptr; }
+  virtual cPoint getWindowSize() final;
+
+  virtual bool hasVsync() final { return true; }
+  virtual bool getVsync() final { return mVsync; }
+
+  virtual bool hasFullScreen() final { return true; }
+  virtual bool getFullScreen() final { return mFullScreen; }
+
+  // sets
+  virtual void setVsync (bool vsync) final;
+  virtual void toggleVsync() final;
+  virtual void toggleFullScreen() final;
+
+  // actions
+  virtual bool pollEvents() final;
+  virtual void newFrame() final;
+  virtual void present() final;
+  virtual void close() final {}
+
+private:
+  bool mVsync = true;
+  bool mFullScreen = false;
+  bool mActionFullScreen = false;
+  };
+//}}}
+//{{{
+cPlatform& cPlatform::create (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
+
+  cPlatform* platform = new cOpenGL3Platform();
+  platform->init (windowSize, showViewports, vsync, fullScreen);
+  return *platform;
+  }
+//}}}
+
+// public:
+//{{{
+bool cOpenGL3Platform::init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
+
+  (void)fullScreen;
+  cLog::log (LOGINFO, fmt::format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
+
+  // GLFW init
+  if (!glfwInit()) {
+    cLog::log (LOGERROR, "cPlatform - glfw init failed");
+    return false;
+    }
+
+  // openGL version hints
+  glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
+  cLog::log (LOGINFO, "- version hint 3.3");
+  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  // GLFW create window
+  gWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Paintbox - openGL", NULL, NULL);
+  if (!gWindow) {
+    cLog::log (LOGERROR, "cPlatform - glfwCreateWindow failed");
+    return false;
+    }
+
+  gMonitor = glfwGetPrimaryMonitor();
+  glfwGetWindowSize (gWindow, &gWindowSize.x, &gWindowSize.y);
+  glfwGetWindowPos (gWindow, &gWindowPos.x, &gWindowPos.y);
+
+  glfwMakeContextCurrent (gWindow);
+
+  // set callbacks
+  glfwSetKeyCallback (gWindow, keyCallback);
+  glfwSetFramebufferSizeCallback (gWindow, framebufferSizeCallback);
+  glfwSetDropCallback (gWindow, dropCallback);
+
+  // GLAD init before any openGL function
+  if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {
+    cLog::log (LOGERROR, "cPlatform - glad init failed");
+    return false;
+    }
+
+  // init imGui
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGui::StyleColorsClassic();
+  #ifdef USE_IMPLOT
+    ImPlot::CreateContext();
+  #endif
+
+  ImGuiIO& io = ImGui::GetIO();
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+  if (showViewports)
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+  ImGui_ImplGlfw_InitForOpenGL (gWindow, true);
+
+  mVsync = vsync;
+  glfwSwapInterval (mVsync ? 1 : 0);
+
+  gPlatform = this;
+
+  return true;
+  }
+//}}}
+//{{{
+void cOpenGL3Platform::shutdown() {
+
+  ImGui_ImplGlfw_Shutdown();
+
+  glfwDestroyWindow (gWindow);
+  glfwTerminate();
+
+  #ifdef USE_IMPLOT
+    ImPlot::DestroyContext();
+  #endif
+  ImGui::DestroyContext();
+  }
+//}}}
+
+// gets
+//{{{
+cPoint cOpenGL3Platform::getWindowSize() {
+
+  int width;
+  int height;
+  glfwGetWindowSize (gWindow, &width, &height);
+  return cPoint (width, height);
+  }
+//}}}
+
+//{{{
+void cOpenGL3Platform::setVsync (bool vsync) {
+  mVsync = vsync;
+  glfwSwapInterval (mVsync ? 1 : 0);
+  }
+//}}}
+//{{{
+void cOpenGL3Platform::toggleVsync() {
+  mVsync = !mVsync;
+  glfwSwapInterval (mVsync ? 1 : 0);
+  }
+//}}}
+//{{{
+void cOpenGL3Platform::toggleFullScreen() {
+
+  mFullScreen = !mFullScreen;
+  mActionFullScreen = true;
+  }
+//}}}
+//{{{
+bool cOpenGL3Platform::pollEvents() {
+
+  if (mActionFullScreen) {
+    //{{{  fullScreen
+    if (mFullScreen) {
+      // save windowPos and windowSize
+      glfwGetWindowPos (gWindow, &gWindowPos.x, &gWindowPos.y);
+      glfwGetWindowSize (gWindow, &gWindowSize.x, &gWindowSize.y);
+
+      // get resolution of monitor
+      const GLFWvidmode* vidMode = glfwGetVideoMode (glfwGetPrimaryMonitor());
+
+      // switch to full screen
+      glfwSetWindowMonitor  (gWindow, gMonitor, 0, 0, vidMode->width, vidMode->height, vidMode->refreshRate);
+      }
+    else
+      // restore last window size and position
+      glfwSetWindowMonitor (gWindow, nullptr, gWindowPos.x, gWindowPos.y, gWindowSize.x, gWindowSize.y, 0);
+
+    mActionFullScreen = false;
+    }
+    //}}}
+
+  if (glfwWindowShouldClose (gWindow))
+    return false;
+  else {
+    glfwPollEvents();
+    return true;
+    }
+  }
+//}}}
+//{{{
+void cOpenGL3Platform::newFrame() {
+  ImGui_ImplGlfw_NewFrame();
+  }
+//}}}
+//{{{
+void cOpenGL3Platform::present() {
+
+  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+    GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
+    glfwMakeContextCurrent (backupCurrentContext);
+    }
+
+  glfwSwapBuffers (gWindow);
+  }
+//}}}
+
 // cOpenGlGraphics class header
 //{{{
-class cOpenGlGraphics : public cGraphics {
+class cOpenGL3Graphics : public cGraphics {
 public:
+  virtual bool init (cPlatform& platform) final;
   void shutdown() final;
 
   // create resources
@@ -2064,16 +1869,12 @@ public:
   virtual void newFrame() final;
   virtual void drawUI (const cPoint& windowSize) final;
   virtual void windowResize (int width, int height) final;
-
-protected:
-  virtual bool init (cPlatform& platform) final;
   };
 //}}}
-
 //{{{
 cGraphics& cGraphics::create (cPlatform& platform) {
 
-  cGraphics* graphics = new cOpenGlGraphics();
+  cGraphics* graphics = new cOpenGL3Graphics();
   graphics->init (platform);
   return *graphics;
   }
@@ -2081,162 +1882,7 @@ cGraphics& cGraphics::create (cPlatform& platform) {
 
 // public:
 //{{{
-void cOpenGlGraphics::shutdown() {
-
-  #ifdef USE_IMPL
-    ImGui_ImplOpenGL3_Shutdown();
-  #else
-    ImGui::DestroyPlatformWindows();
-
-    // destroy vertetx array
-    if (gVboHandle)
-      glDeleteBuffers (1, &gVboHandle);
-    if (gElementsHandle)
-      glDeleteBuffers (1, &gElementsHandle);
-
-    // destroy shader
-    delete gDrawListShader;
-
-    // destroy font texture
-    if (gFontTexture) {
-      glDeleteTextures (1, &gFontTexture);
-      ImGui::GetIO().Fonts->TexID = 0;
-      }
-  #endif
-  }
-//}}}
-
-// - resource creates
-//{{{
-cQuad* cOpenGlGraphics::createQuad (const cPoint& size) {
-  return new cOpenGlQuad (size);
-  }
-//}}}
-//{{{
-cQuad* cOpenGlGraphics::createQuad (const cPoint& size, const cRect& rect) {
-  return new cOpenGlQuad (size, rect);
-  }
-//}}}
-
-//{{{
-cFrameBuffer* cOpenGlGraphics::createFrameBuffer() {
-  return new cOpenGlFrameBuffer();
-  }
-//}}}
-//{{{
-cFrameBuffer* cOpenGlGraphics::createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) {
-  return new cOpenGlFrameBuffer (size, format);
-  }
-//}}}
-//{{{
-cFrameBuffer* cOpenGlGraphics::createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) {
-  return new cOpenGlFrameBuffer (pixels, size, format);
-  }
-//}}}
-
-//{{{
-cLayerShader* cOpenGlGraphics::createLayerShader() {
-  return new cOpenGlLayerShader();
-  }
-//}}}
-//{{{
-cPaintShader* cOpenGlGraphics::createPaintShader() {
-  return new cOpenGlPaintShader();
-  }
-//}}}
-
-//{{{
-cTexture* cOpenGlGraphics::createTexture (cTexture::eTextureType textureType, const cPoint& size) {
-// factory create
-
-  switch (textureType) {
-    case cTexture::eRgba:   return new cOpenGlRgbaTexture (textureType, size);
-    case cTexture::eNv12:   return new cOpenGlNv12Texture (textureType, size);
-    case cTexture::eYuv420: return new cOpenGlYuv420Texture (textureType, size);
-    default : return nullptr;
-    }
-  }
-//}}}
-//{{{
-cTextureShader* cOpenGlGraphics::createTextureShader (cTexture::eTextureType textureType) {
-// factory create
-
-  switch (textureType) {
-    case cTexture::eRgba:   return new cOpenGlRgbaShader();
-    case cTexture::eYuv420: return new cOpenGlYuv420Shader();
-    case cTexture::eNv12:   return new cOpenGlNv12Shader();
-    default: return nullptr;
-    }
-  }
-//}}}
-
-//{{{
-void cOpenGlGraphics::background (const cPoint& size) {
-
-  glViewport (0, 0, size.x, size.y);
-
-  // blend
-  uint32_t modeRGB = GL_FUNC_ADD;
-  uint32_t modeAlpha = GL_FUNC_ADD;
-  glBlendEquationSeparate (modeRGB, modeAlpha);
-
-  uint32_t srcRgb = GL_SRC_ALPHA;
-  uint32_t dstRGB = GL_ONE_MINUS_SRC_ALPHA;
-  uint32_t srcAlpha = GL_ONE;
-  uint32_t dstAlpha = GL_ONE_MINUS_SRC_ALPHA;
-  glBlendFuncSeparate (srcRgb, dstRGB, srcAlpha, dstAlpha);
-
-  glEnable (GL_BLEND);
-
-  // disables
-  glDisable (GL_SCISSOR_TEST);
-  glDisable (GL_CULL_FACE);
-  glDisable (GL_DEPTH_TEST);
-
-  // clear
-  glClearColor (0.f,0.f,0.f, 0.f);
-  glClear (GL_COLOR_BUFFER_BIT);
-  }
-//}}}
-
-//{{{
-void cOpenGlGraphics::windowResize (int width, int height) {
-  cLog::log (LOGINFO, fmt::format ("cOpenGlGraphics windowResize {} {}", width, height));
-  }
-//}}}
-//{{{
-void cOpenGlGraphics::newFrame() {
-
-  #ifdef USE_IMPL
-    ImGui_ImplOpenGL3_NewFrame();
-  #else
-    if (!gFontLoaded) {
-      createFontTexture();
-      gFontLoaded = true;
-      }
-  #endif
-
-  ImGui::NewFrame();
-  }
-//}}}
-//{{{
-void cOpenGlGraphics::drawUI (const cPoint& windowSize) {
-
-  (void)windowSize;
-  ImGui::Render();
-
-  #ifdef USE_IMPL
-    glViewport (0, 0, windowSize.x, windowSize.y);
-    ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData());
-  #else
-    renderDrawData (ImGui::GetDrawData());
-  #endif
-  }
-//}}}
-
-// protected:
-//{{{
-bool cOpenGlGraphics::init (cPlatform& platform) {
+bool cOpenGL3Graphics::init (cPlatform& platform) {
 // anonymous device pointers unused
 
   (void)platform;
@@ -2313,5 +1959,158 @@ bool cOpenGlGraphics::init (cPlatform& platform) {
   #endif
 
   return true;
+  }
+//}}}
+//{{{
+void cOpenGL3Graphics::shutdown() {
+
+  #ifdef USE_IMPL
+    ImGui_ImplOpenGL3_Shutdown();
+  #else
+    ImGui::DestroyPlatformWindows();
+
+    // destroy vertetx array
+    if (gVboHandle)
+      glDeleteBuffers (1, &gVboHandle);
+    if (gElementsHandle)
+      glDeleteBuffers (1, &gElementsHandle);
+
+    // destroy shader
+    delete gDrawListShader;
+
+    // destroy font texture
+    if (gFontTexture) {
+      glDeleteTextures (1, &gFontTexture);
+      ImGui::GetIO().Fonts->TexID = 0;
+      }
+  #endif
+  }
+//}}}
+
+// - resource creates
+//{{{
+cQuad* cOpenGL3Graphics::createQuad (const cPoint& size) {
+  return new cOpenGL3Quad (size);
+  }
+//}}}
+//{{{
+cQuad* cOpenGL3Graphics::createQuad (const cPoint& size, const cRect& rect) {
+  return new cOpenGL3Quad (size, rect);
+  }
+//}}}
+
+//{{{
+cFrameBuffer* cOpenGL3Graphics::createFrameBuffer() {
+  return new cOpenGL3FrameBuffer();
+  }
+//}}}
+//{{{
+cFrameBuffer* cOpenGL3Graphics::createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) {
+  return new cOpenGL3FrameBuffer (size, format);
+  }
+//}}}
+//{{{
+cFrameBuffer* cOpenGL3Graphics::createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) {
+  return new cOpenGL3FrameBuffer (pixels, size, format);
+  }
+//}}}
+
+//{{{
+cLayerShader* cOpenGL3Graphics::createLayerShader() {
+  return new cOpenGL3LayerShader();
+  }
+//}}}
+//{{{
+cPaintShader* cOpenGL3Graphics::createPaintShader() {
+  return new cOpenGL3PaintShader();
+  }
+//}}}
+
+//{{{
+cTexture* cOpenGL3Graphics::createTexture (cTexture::eTextureType textureType, const cPoint& size) {
+// factory create
+
+  switch (textureType) {
+    case cTexture::eRgba:   return new cOpenGL3RgbaTexture (textureType, size);
+    case cTexture::eNv12:   return new cOpenGL3Nv12Texture (textureType, size);
+    case cTexture::eYuv420: return new cOpenGL3Yuv420Texture (textureType, size);
+    default : return nullptr;
+    }
+  }
+//}}}
+//{{{
+cTextureShader* cOpenGL3Graphics::createTextureShader (cTexture::eTextureType textureType) {
+// factory create
+
+  switch (textureType) {
+    case cTexture::eRgba:   return new cOpenGL3RgbaShader();
+    case cTexture::eYuv420: return new cOpenGL3Yuv420Shader();
+    case cTexture::eNv12:   return new cOpenGL3Nv12Shader();
+    default: return nullptr;
+    }
+  }
+//}}}
+
+//{{{
+void cOpenGL3Graphics::background (const cPoint& size) {
+
+  glViewport (0, 0, size.x, size.y);
+
+  // blend
+  uint32_t modeRGB = GL_FUNC_ADD;
+  uint32_t modeAlpha = GL_FUNC_ADD;
+  glBlendEquationSeparate (modeRGB, modeAlpha);
+
+  uint32_t srcRgb = GL_SRC_ALPHA;
+  uint32_t dstRGB = GL_ONE_MINUS_SRC_ALPHA;
+  uint32_t srcAlpha = GL_ONE;
+  uint32_t dstAlpha = GL_ONE_MINUS_SRC_ALPHA;
+  glBlendFuncSeparate (srcRgb, dstRGB, srcAlpha, dstAlpha);
+
+  glEnable (GL_BLEND);
+
+  // disables
+  glDisable (GL_SCISSOR_TEST);
+  glDisable (GL_CULL_FACE);
+  glDisable (GL_DEPTH_TEST);
+
+  // clear
+  glClearColor (0.f,0.f,0.f, 0.f);
+  glClear (GL_COLOR_BUFFER_BIT);
+  }
+//}}}
+
+//{{{
+void cOpenGL3Graphics::windowResize (int width, int height) {
+  cLog::log (LOGINFO, fmt::format ("cOpenGL3Graphics windowResize {} {}", width, height));
+  }
+//}}}
+//{{{
+void cOpenGL3Graphics::newFrame() {
+
+  #ifdef USE_IMPL
+    ImGui_ImplOpenGL3_NewFrame();
+  #else
+    if (!gFontLoaded) {
+      createFontTexture();
+      gFontLoaded = true;
+      }
+  #endif
+
+  ImGui::NewFrame();
+  }
+//}}}
+//{{{
+void cOpenGL3Graphics::drawUI (const cPoint& windowSize) {
+
+  (void)windowSize;
+  ImGui::Render();
+
+  #ifdef USE_IMPL
+    glViewport (0, 0, windowSize.x, windowSize.y);
+    ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData());
+  #else
+    renderDrawData (ImGui::GetDrawData());
+  #endif
   }
 //}}}

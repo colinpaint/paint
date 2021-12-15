@@ -14,6 +14,7 @@ public:
   static cPlatform& create (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen);
 
   // base class
+  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) = 0;
   virtual void shutdown() = 0;
 
   // gets
@@ -48,7 +49,4 @@ public:
   // vars
   std::function <void (int programPid, int programSid)> mResizeCallback;
   std::function <void (std::vector<std::string> dropItems)> mDropCallback;
-
-protected:
-  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) = 0;
   };
