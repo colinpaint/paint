@@ -37,7 +37,7 @@
 // utils
 #include "../utils/cFileUtils.h"
 #include "../utils/cLog.h"
-#include "../utils/cApp.h"
+#include "../app/cApp.h"
 
 using namespace std;
 //}}}

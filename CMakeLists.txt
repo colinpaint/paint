@@ -20,7 +20,7 @@ set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FO
 
 #
 project (utils)
-  file (GLOB HEADER_FILES utils/*.h)
+  file (GLOB HEADER_FILES utils/*.h app/*.h)
   file (GLOB SOURCE_FILES utils/*.cpp utils/*.c)
   add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
@@ -67,7 +67,7 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     if (MSVC)
       file (GLOB HEADER_FILES imgui/*.h
                               imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h
-                              imgui/backends/imgui_impl_glfw.h 
+                              imgui/backends/imgui_impl_glfw.h
                               imgui/backends/imgui_impl_op2ngl2.h imgui/backends/imgui_impl_opengl3.h)
       file (GLOB SOURCE_FILES imgui/*.cpp
                               imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp
