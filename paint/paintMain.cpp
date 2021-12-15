@@ -32,7 +32,7 @@
 
 // canvas
 #include "cLayer.h"
-#include "cCanvas.h"
+#include "cPaintApp.h"
 
 // utils
 #include "../utils/cFileUtils.h"
@@ -80,8 +80,8 @@ int main (int numArgs, char* args[]) {
   cGraphics& graphics = cGraphics::create (platform);
   ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
   ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(&droidSansMono, droidSansMonoSize, 16.f);
-  cCanvas canvas (platform, graphics, mainFont, monoFont,
-                  filename.empty() ? "../piccies/tv.jpg" : cFileUtils::resolve (filename));
+  cPaintApp paintApp (platform, graphics, mainFont, monoFont,
+                      filename.empty() ? "../piccies/tv.jpg" : cFileUtils::resolve (filename));
 
   platform.setResizeCallback (
     //{{{  resize lambda
@@ -90,7 +90,7 @@ int main (int numArgs, char* args[]) {
       graphics.windowResize (width, height);
       graphics.newFrame();
       if (showDemoWindow)
-        cUI::draw (canvas);
+        cUI::draw (paintApp);
       ImGui::ShowDemoWindow (&showDemoWindow);
       graphics.drawUI (platform.getWindowSize());
       platform.present();
@@ -103,7 +103,7 @@ int main (int numArgs, char* args[]) {
 
       for (auto& item : dropItems) {
         cLog::log (LOGINFO, item);
-        canvas.newLayer (cFileUtils::resolve (item));
+        paintApp.newLayer (cFileUtils::resolve (item));
         }
       }
     );
@@ -113,7 +113,7 @@ int main (int numArgs, char* args[]) {
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
-    cUI::draw (canvas);
+    cUI::draw (paintApp);
     //ImGui::ShowDemoWindow (&showDemoWindow);
     graphics.drawUI (platform.getWindowSize());
     platform.present();

@@ -1,4 +1,4 @@
-// cCanvas.h
+// cPaintApp.h
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -13,11 +13,11 @@ class cLayer;
 class cBrush;
 //}}}
 
-class cCanvas : public cApp {
+class cPaintApp : public cApp {
 public:
-  cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, cPoint size);
-  cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, const std::string& filename);
-  virtual ~cCanvas();
+  cPaintApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, cPoint size);
+  cPaintApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, const std::string& filename);
+  virtual ~cPaintApp();
 
   // gets
   std::string getName() const { return mFilename; };

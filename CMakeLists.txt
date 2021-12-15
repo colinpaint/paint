@@ -205,7 +205,7 @@ endif()
 if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
     file (GLOB HEADER_FILES telly/*.h implot/implot.h imgui/*.h ui/*.h utils/*.h app/*.h)
-    file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp 
+    file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp
                             ui/cUI.cpp
                             app/cPlatform.cpp app/cGraphics.cpp app/cOpenGL3.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
@@ -252,7 +252,7 @@ if (BUILD_PLAYER)
 
   project (player VERSION 1.0.0)
     file (GLOB HEADER_FILES player/*.h utils/*.h app/*.h imgui/*.h ui/*.h)
-    file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp 
+    file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp
                             ui/cUI.cpp
                             app/cPlatform.cpp app/cGraphics.cpp app/cOpenGL3.cpp)
     add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
@@ -313,7 +313,8 @@ if (BUILD_PAINTBOX)
 
     # executable - main + static registered .cpp
     file (GLOB HEADER_FILES paint/*.h utils/*.h app/*.h brush/*.h ui/*.h)
-    file (GLOB SOURCE_FILES paint/*.cpp brush/*.cpp
+    file (GLOB SOURCE_FILES paint/*.cpp 
+                            brush/*.cpp
                             ui/cUI.cpp ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp
                             app/cPlatform.cpp app/cGraphics.cpp app/cOpenGL3.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})

@@ -14,7 +14,7 @@
 
 #include "cUI.h"
 #include "../paint/cLayer.h"
-#include "../paint/cCanvas.h"
+#include "../paint/cPaintApp.h"
 #include "../utils/cLog.h"
 
 using namespace std;
@@ -27,24 +27,24 @@ public:
 
   void addToDrawList (cApp& app) final {
 
-    cCanvas& canvas = dynamic_cast<cCanvas&>(app);
+    cPaintApp& paintApp = dynamic_cast<cPaintApp&>(app);
 
     ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
     ImGui::SetWindowPos (ImVec2(ImGui::GetIO().DisplaySize.x - ImGui::GetWindowWidth(), 0.f));
 
     unsigned layerIndex = 0;
-    for (auto layer : canvas.getLayers()) {
-      if (ImGui::Selectable (fmt::format ("##{}", layerIndex).c_str(), canvas.isCurLayer (layerIndex), 0,
+    for (auto layer : paintApp.getLayers()) {
+      if (ImGui::Selectable (fmt::format ("##{}", layerIndex).c_str(), paintApp.isCurLayer (layerIndex), 0,
                              ImVec2 (ImGui::GetWindowSize().x, 30)))
-        canvas.switchCurLayer (layerIndex);
+        paintApp.switchCurLayer (layerIndex);
 
       if (ImGui::BeginPopupContextItem()) {
         bool visible = layer->isVisible();
         if (ImGui::MenuItem ("visible", "", &visible))
           layer->setVisible (visible);
 
-        if (ImGui::MenuItem ("delete", "", false, canvas.getNumLayers() != 1))
-          canvas.deleteLayer (layerIndex);
+        if (ImGui::MenuItem ("delete", "", false, paintApp.getNumLayers() != 1))
+          paintApp.deleteLayer (layerIndex);
 
         ImGui::Separator();
         if (ImGui::MenuItem ("cancel"))
@@ -67,8 +67,8 @@ public:
       }
 
     if (ImGui::Button ("new layer")) {
-      unsigned newLayerIndex = canvas.newLayer();
-      canvas.switchCurLayer (newLayerIndex);
+      unsigned newLayerIndex = paintApp.newLayer();
+      paintApp.switchCurLayer (newLayerIndex);
       }
 
     ImGui::End();

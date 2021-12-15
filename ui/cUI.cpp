@@ -16,7 +16,7 @@
 
 #include "../app/cGraphics.h"
 #include "../brush/cBrush.h"
-#include "../paint/cCanvas.h"
+#include "../paint/cPaintApp.h"
 
 #include "../utils/cLog.h"
 

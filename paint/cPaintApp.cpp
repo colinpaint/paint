@@ -1,6 +1,6 @@
-// cCanvas.cpp - layers container
+// cPaintApp.cpp - layers container
 //{{{  includes
-#include "cCanvas.h"
+#include "cPaintApp.h"
 
 #include <cstdint>
 #include <cmath>
@@ -21,7 +21,7 @@ using namespace std;
 //}}}
 
 //{{{
-cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, cPoint size)
+cPaintApp::cPaintApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, cPoint size)
    : cApp (platform, graphics, mainFont, monoFont), mSize(size), mNumChannels(4) {
 
   // create empty layer
@@ -30,7 +30,7 @@ cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, Im
   }
 //}}}
 //{{{
-cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, const std::string& filename)
+cPaintApp::cPaintApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, const std::string& filename)
     : cApp (platform, graphics, mainFont, monoFont) {
 
   mFilename = filename;
@@ -49,7 +49,7 @@ cCanvas::cCanvas (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, Im
   }
 //}}}
 //{{{
-cCanvas::~cCanvas() {
+cPaintApp::~cPaintApp() {
 
   // delete resources
   for (auto layer : mLayers)
@@ -64,7 +64,7 @@ cCanvas::~cCanvas() {
 
 // gets
 //{{{
-uint8_t* cCanvas::getPixels (cPoint& size) {
+uint8_t* cPaintApp::getPixels (cPoint& size) {
 
   size = mFrameBuffer->getSize();
   return mFrameBuffer->getPixels();
@@ -73,13 +73,13 @@ uint8_t* cCanvas::getPixels (cPoint& size) {
 
 // layers
 //{{{
-unsigned cCanvas::newLayer() {
+unsigned cPaintApp::newLayer() {
   mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, getGraphics()));
   return static_cast<unsigned>(mLayers.size() - 1);
   }
 //}}}
 //{{{
-unsigned cCanvas::newLayer (const string& fileName) {
+unsigned cPaintApp::newLayer (const string& fileName) {
 
   cPoint size;
   int numChannels;
@@ -93,7 +93,7 @@ unsigned cCanvas::newLayer (const string& fileName) {
 }
 //}}}
 //{{{
-void cCanvas::switchCurLayer (unsigned layerIndex) {
+void cPaintApp::switchCurLayer (unsigned layerIndex) {
 
   if (layerIndex == mCurLayerIndex)
     return;
@@ -104,7 +104,7 @@ void cCanvas::switchCurLayer (unsigned layerIndex) {
   }
 //}}}
 //{{{
-void cCanvas::deleteLayer (unsigned layerIndex) {
+void cPaintApp::deleteLayer (unsigned layerIndex) {
 
   // Must have at least 1 layer.
   if (mLayers.size() == 1)
@@ -123,7 +123,7 @@ void cCanvas::deleteLayer (unsigned layerIndex) {
 //}}}
 
 //{{{
-void cCanvas::renderCurLayer() {
+void cPaintApp::renderCurLayer() {
 
   uint8_t* pixels = getCurLayer()->getRenderedPixels();
   getCurLayer()->replace (pixels);
@@ -131,7 +131,7 @@ void cCanvas::renderCurLayer() {
 //}}}
 
 //{{{
-void cCanvas::mouse (bool active, bool clicked, bool dragging, bool released, cVec2 pos, cVec2 drag) {
+void cPaintApp::mouse (bool active, bool clicked, bool dragging, bool released, cVec2 pos, cVec2 drag) {
 
   (void)dragging;
   (void)released;
@@ -142,7 +142,7 @@ void cCanvas::mouse (bool active, bool clicked, bool dragging, bool released, cV
   }
 //}}}
 //{{{
-void cCanvas::draw (cPoint windowSize) {
+void cPaintApp::draw (cPoint windowSize) {
 
   // draw layers -> canvas frameBuffer
   mFrameBuffer->setTarget();
@@ -176,7 +176,7 @@ void cCanvas::draw (cPoint windowSize) {
 
 // private:
 //{{{
-void cCanvas::createResources() {
+void cPaintApp::createResources() {
 
   // create quad
   mQuad = getGraphics().createQuad (mSize);
@@ -195,7 +195,7 @@ void cCanvas::createResources() {
   }
 //}}}
 //{{{
-cVec2 cCanvas::getLayerPos (cVec2 pos) {
+cVec2 cPaintApp::getLayerPos (cVec2 pos) {
 
   // need a better calc, not sure mModel and mProject help
   //cLog::log (LOGINFO, "mod " + glm::to_string (mModel));

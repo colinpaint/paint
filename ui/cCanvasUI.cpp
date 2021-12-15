@@ -1,4 +1,4 @@
-// cCanvasUI.cpp
+// cUI.cpp
 //{{{  includes
 #include <cstdint>
 #include <vector>
@@ -14,7 +14,7 @@
 #include "cUI.h"
 
 // canvas
-#include "../paint/cCanvas.h"
+#include "../paint/cPaintApp.h"
 
 // brush
 #include "../brush/cBrush.h"
@@ -32,7 +32,7 @@ public:
   virtual ~cCanvasUI() = default;
 
   void addToDrawList (cApp& app) final {
-    cCanvas& canvas = (cCanvas&)app;
+    cPaintApp paintApp = (cPaintApp&)app;
 
     // set dummy background window to full display size
     ImGui::SetNextWindowPos (ImVec2(0,0));
@@ -48,7 +48,7 @@ public:
     #ifdef DRAW_CANVAS
       // route mouse,leftButton events to canvas, with centred pos coords
       if (ImGui::IsItemHovered() || ImGui::IsItemActive()) {
-        canvas.mouse (ImGui::IsItemActive(),
+        paintApp.mouse (ImGui::IsItemActive(),
                       ImGui::IsMouseClicked (ImGuiMouseButton_Left),
                       ImGui::IsMouseDragging (ImGuiMouseButton_Left, 0.f),
                       ImGui::IsMouseReleased (ImGuiMouseButton_Left),
@@ -75,7 +75,7 @@ public:
         }
 
       // draw canvas to screen window frameBuffer
-      canvas.draw (cPoint ((int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y));
+      paintApp.draw (cPoint ((int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y));
     #endif
 
     ImGui::End();
@@ -83,7 +83,7 @@ public:
 
 private:
   ImFont* mMonoFont = nullptr;
-  cCanvas* mCanvas;
+  cPaintApp* mPaintApp;
 
   //{{{
   static cUI* create (const string& className) {
