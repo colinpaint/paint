@@ -17,7 +17,10 @@ class cDvbStream;
 class cTellyApp : public cApp {
 public:
   cTellyApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont)
-    : cApp (platform, graphics, mainFont, monoFont) {}
+      : cApp (platform, graphics) {
+    setMainFont(mainFont);
+    setMonoFont(monoFont);
+    }
   ~cTellyApp() = default;
 
   cDvbStream* getDvbStream() { return mDvbStream; }

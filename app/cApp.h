@@ -1,4 +1,4 @@
-// cApp.h - use as class or base class  - holder of application context, passed around in single reference
+// cApp.h - base class - application context
 #pragma once
 //{{{  includes
 #include <string>
@@ -11,8 +11,7 @@ struct ImFont;
 
 class cApp {
 public:
-  cApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont)
-    : mPlatform(platform), mGraphics(graphics), mMainFont(mainFont), mMonoFont(monoFont) {}
+  cApp (cPlatform& platform, cGraphics& graphics) : mPlatform(platform), mGraphics(graphics) {}
   virtual ~cApp() = default;
 
   // get interfaces

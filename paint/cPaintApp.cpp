@@ -22,7 +22,10 @@ using namespace std;
 
 //{{{
 cPaintApp::cPaintApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, cPoint size)
-   : cApp (platform, graphics, mainFont, monoFont), mSize(size), mNumChannels(4) {
+   : cApp (platform, graphics), mSize(size), mNumChannels(4) {
+
+  setMainFont(mainFont);
+  setMonoFont(monoFont);
 
   // create empty layer
   mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, graphics));
@@ -31,7 +34,10 @@ cPaintApp::cPaintApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont
 //}}}
 //{{{
 cPaintApp::cPaintApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, const std::string& filename)
-    : cApp (platform, graphics, mainFont, monoFont) {
+    : cApp (platform, graphics) {
+
+  setMainFont(mainFont);
+  setMonoFont(monoFont);
 
   mFilename = filename;
 
