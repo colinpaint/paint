@@ -90,39 +90,43 @@ namespace {
 //{{{
 class cWin32Platform : public cPlatform {
 public:
-  void shutdown() final;
+  virtual void shutdown() final;
 
   // gets
-  void* getDevice() final;
-  void* getDeviceContext() final;
-  void* getSwapChain() final;
-  cPoint getWindowSize() final;
+  virtual void* getDevice() final;
+  virtual void* getDeviceContext() final;
+  virtual void* getSwapChain() final;
+  virtual cPoint getWindowSize() final;
 
-  bool hasVsync() final { return true; }
-  bool getVsync() final { return gVsync; }
+  virtual bool hasVsync() final { return true; }
+  virtual bool getVsync() final { return gVsync; }
 
-  bool hasFullScreen() final { return false; }
-  bool getFullScreen() final { return gFullScreen; }
+  virtual bool hasFullScreen() final { return false; }
+  virtual bool getFullScreen() final { return gFullScreen; }
 
   // sets
-  void setVsync (bool vsync) final { gVsync = vsync; }
-  void toggleVsync() final { gVsync = !gVsync; }
-  void toggleFullScreen() final { gFullScreen = !gFullScreen; }
+  virtual void setVsync (bool vsync) final { gVsync = vsync; }
+  virtual void toggleVsync() final { gVsync = !gVsync; }
+  virtual void toggleFullScreen() final { gFullScreen = !gFullScreen; }
 
   // actions
-  bool pollEvents() final;
-  void newFrame() final;
-  void present() final;
-  void close() final;
+  virtual bool pollEvents() final;
+  virtual void newFrame() final;
+  virtual void present() final;
+  virtual void close() final;
 
 protected:
-  bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
-
-private:
-  // static register
-  static cPlatform* create (const std::string& className);
-  inline static const bool mRegistered = registerClass ("win32", &create);
+  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
   };
+//}}}
+
+//{{{
+cPlatform& cPlatform::create (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
+
+  cPlatform* platform = new cWin32Platform();
+  platform->init (windowSize, showViewports, vsync, fullScreen);
+  return *platform;
+  }
 //}}}
 
 // public:
@@ -288,11 +292,4 @@ bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vs
   }
 //}}}
 
-// private:
-//{{{
-cPlatform* cWin32Platform::create (const std::string& className) {
-  (void)className;
-  return new cWin32Platform();
-  }
-//}}}
 #endif

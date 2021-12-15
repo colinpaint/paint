@@ -11,17 +11,15 @@
 
 class cPlatform {
 public:
-  // static register
-  static cPlatform& createByName (const std::string& name, const cPoint& windowSize,
-                                  bool showViewports, bool vsync, bool fullScreen);
-  static void listRegisteredClasses();
+  static cPlatform& create (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen);
+
+  std::chrono::system_clock::time_point now();
 
   // base class
   virtual void shutdown() = 0;
 
   // gets
   virtual cPoint getWindowSize() = 0;
-  std::chrono::system_clock::time_point now();
 
   // - anonymous dx11 platform -> graphics interface
   virtual void* getDevice() = 0;
@@ -54,10 +52,5 @@ public:
   std::function <void (std::vector<std::string> dropItems)> mDropCallback;
 
 protected:
-  // static register
-  using createFunc = cPlatform*(*)(const std::string& name);
-  static bool registerClass (const std::string& name, const createFunc factoryMethod);
-  static std::map<const std::string, createFunc>& getClassRegister();
-
   virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) = 0;
   };

@@ -150,8 +150,7 @@ public:
 class cGraphics {
 public:
   // static register
-  static cGraphics& createByName (const std::string& name, cPlatform& platform);
-  static void listRegisteredClasses();
+  static cGraphics& create (cPlatform& platform);
 
   // base class
   virtual void shutdown() = 0;
@@ -179,12 +178,4 @@ public:
 
 protected:
   virtual bool init (cPlatform& platform) = 0;
-
-  // static register
-  using createFunc = cGraphics*(*)(const std::string& name);
-  static bool registerClass (const std::string& name, const createFunc factoryMethod);
-
-private:
-  // static register
-  static std::map<const std::string, createFunc>& getClassRegister();
   };

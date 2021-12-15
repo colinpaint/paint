@@ -73,13 +73,11 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, fmt::format ("paintbox {} {}", platformName, graphicsName));
 
   // list static registered classes
-  cPlatform::listRegisteredClasses();
-  cGraphics::listRegisteredClasses();
   cBrush::listRegisteredClasses();
   cUI::listRegisteredClasses();
 
-  cPlatform& platform = cPlatform::createByName (platformName, cPoint(1200, 800), false, vsync, fullScreen);
-  cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
+  cPlatform& platform = cPlatform::create (cPoint(1200, 800), false, vsync, fullScreen);
+  cGraphics& graphics = cGraphics::create (platform);
   ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
   ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(&droidSansMono, droidSansMonoSize, 16.f);
   cCanvas canvas (platform, graphics, mainFont, monoFont,

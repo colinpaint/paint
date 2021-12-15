@@ -130,13 +130,11 @@ int main (int numArgs, char* args[]) {
     cLog::log (LOGINFO, fmt::format ("using multiplex {}", useMultiplex.mName));
 
   // list static registered classes
-  cPlatform::listRegisteredClasses();
-  cGraphics::listRegisteredClasses();
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI fonts
-  cPlatform& platform = cPlatform::createByName (platformName, cPoint(1920/2, 1080/2), false, vsync, fullScreen);
-  cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
+  cPlatform& platform = cPlatform::create (cPoint(1920/2, 1080/2), false, vsync, fullScreen);
+  cGraphics& graphics = cGraphics::create (platform);
   ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
   ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f);
   cTellyApp app (platform, graphics, mainFont, monoFont);

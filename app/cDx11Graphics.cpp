@@ -931,12 +931,16 @@ public:
 
 protected:
   virtual bool init (cPlatform& platform) final;
-
-private:
-  // static register
-  static cGraphics* create (const std::string& className);
-  inline static const bool mRegistered = registerClass ("dx11", &create);
   };
+//}}}
+
+//{{{
+static cGraphics& cDx11Graphics::create (cPlatform& platform) {
+
+  cGraphics* graphics = new cDx11Graphics();
+  graphics->init (platform);
+  return *graphics;
+  }
 //}}}
 
 // public:

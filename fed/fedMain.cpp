@@ -67,13 +67,11 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, fmt::format ("fed {} {}", platformName, graphicsName));
 
   // list static registered classes
-  cPlatform::listRegisteredClasses();
-  cGraphics::listRegisteredClasses();
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI font
-  cPlatform& platform = cPlatform::createByName (platformName, cPoint(1000, 900), false, vsync, fullScreen);
-  cGraphics& graphics = cGraphics::createByName (graphicsName, platform);
+  cPlatform& platform = cPlatform::create (cPoint(1000, 900), false, vsync, fullScreen);
+  cGraphics& graphics = cGraphics::create (platform);
   ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f);
   ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f);
   cFedApp app (platform, graphics, mainFont, monoFont);
