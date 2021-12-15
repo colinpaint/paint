@@ -313,9 +313,9 @@ if (BUILD_PAINTBOX)
 
     # executable - main + static registered .cpp
     file (GLOB HEADER_FILES paint/*.h utils/*.h app/*.h brush/*.h ui/*.h)
-    file (GLOB SOURCE_FILES paint/*.cpp 
+    file (GLOB SOURCE_FILES paint/*.cpp
                             brush/*.cpp
-                            ui/cUI.cpp ui/cCanvasUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp
+                            ui/cUI.cpp ui/cPaintUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp
                             app/cPlatform.cpp app/cGraphics.cpp app/cOpenGL3.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 

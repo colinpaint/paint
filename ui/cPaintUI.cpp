@@ -13,7 +13,7 @@
 // ui
 #include "cUI.h"
 
-// canvas
+// paintApp
 #include "../paint/cPaintApp.h"
 
 // brush
@@ -26,10 +26,10 @@ using namespace std;
 //}}}
 #define DRAW_CANVAS // useful to disable canvas when bringing up backends
 
-class cCanvasUI : public cUI {
+class cPaintUI : public cUI {
 public:
-  cCanvasUI (const string& name) : cUI(name) {}
-  virtual ~cCanvasUI() = default;
+  cPaintUI (const string& name) : cUI(name) {}
+  virtual ~cPaintUI() = default;
 
   void addToDrawList (cApp& app) final {
     cPaintApp paintApp = (cPaintApp&)app;
@@ -87,8 +87,8 @@ private:
 
   //{{{
   static cUI* create (const string& className) {
-    return new cCanvasUI (className);
+    return new cPaintUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("aCanvas", &create);
+  inline static const bool mRegistered = registerClass ("aPaint", &create);
   };
