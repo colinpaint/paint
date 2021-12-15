@@ -17,15 +17,14 @@
 #include "../imgui/imgui.h"
 
 // UI font
-#include "../font/itcSymbolBold.h"
-#include "../font/droidSansMono.h"
-
-// self registered classes using static var init idiom
+#include "../app/cApp.h"
 #include "../app/cPlatform.h"
 #include "../app/cGraphics.h"
+#include "../font/itcSymbolBold.h"
+#include "../font/droidSansMono.h"
+#include"cPlayerApp.h"
 
 // ui
-#include"cPlayerApp.h"
 #include "../ui/cUI.h"
 
 // utils

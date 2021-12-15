@@ -19,13 +19,13 @@
   #include "../implot/implot.h"
 #endif
 
-// UI font
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
 // self registered classes using static var init idiom
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
 #include "../brush/cBrush.h"
 
 #include "../ui/cUI.h"
@@ -37,7 +37,6 @@
 // utils
 #include "../utils/cFileUtils.h"
 #include "../utils/cLog.h"
-#include "../app/cApp.h"
 
 using namespace std;
 //}}}

@@ -64,7 +64,7 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     add_subdirectory (glad4.5core)
   endif()
 
-  # imgui lib
+  # imgui framework lib
   project (imgui)
     if (OPENGL3)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
@@ -90,7 +90,7 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
       file (GLOB HEADER_FILES implot/*.h)
       file (GLOB SOURCE_FILES implot/*.cpp)
       add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-      target_include_directories (${PROJECT_NAME} PUBLIC implot imgui utils)
+      target_include_directories (${PROJECT_NAME} PUBLIC implot imgui)
   endif()
 endif()
 
@@ -196,6 +196,38 @@ if (BUILD_PLAYER OR BUILD_TELLY)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 endif()
 
+# capture app
+if (BUILD_CAPTURE AND MSVC)
+  ## WIN32 audio wsapi capture main project
+  project (captureAudio VERSION 1.0.0)
+    file (GLOB HEADER_FILES audio/*.h)
+    file (GLOB SOURCE_FILES captureAudio/capture.cpp)
+    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+
+    target_link_libraries (${PROJECT_NAME} PRIVATE decoder winmm avrt audio)
+endif()
+
+# fed app
+if (BUILD_FED)
+  project (fed VERSION 1.0.0)
+    file (GLOB HEADER_FILES fed/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
+    file (GLOB SOURCE_FILES fed/*.cpp ui/cUI.cpp)
+
+    add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
+    if (OPENGL2)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
+    endif()
+    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
+
+    target_link_libraries (${PROJECT_NAME} PRIVATE imgui)
+
+    if (MSVC)
+      target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
+    else()
+      target_link_libraries (${PROJECT_NAME} PRIVATE GL stdc++fs)
+    endif()
+endif()
+
 # telly app
 if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
@@ -213,86 +245,57 @@ if (BUILD_TELLY)
       target_link_libraries (${PROJECT_NAME} PRIVATE implot)
     endif()
 
+    target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio imgui)
+
     if (MSVC)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx dvb audio imgui)
-      target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 dxgi d3d11 d3dcompiler ws2_32)
+      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx opengl32 dxgi d3d11 d3dcompiler ws2_32)
     else()
-      target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio imgui)
       target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
     endif()
 endif()
 
-# player app
+# player
 if (BUILD_PLAYER)
+  # kiss lib
   project (kiss)
     file (GLOB HEADER_FILES kiss/*.h)
     file (GLOB SOURCE_FILES kiss/*.c)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
+  # song lib
   project (song)
     file (GLOB HEADER_FILES song/*.h)
     file (GLOB SOURCE_FILES song/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_link_libraries (${PROJECT_NAME} PUBLIC utils decoder kiss)
 
+  # net lib
   project (net)
     file (GLOB HEADER_FILES net/*.h)
     file (GLOB SOURCE_FILES net/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
+  # player app
   project (player VERSION 1.0.0)
     file (GLOB HEADER_FILES player/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
-    file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp
-                            ui/cUI.cpp)
+    file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp ui/cUI.cpp)
     add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
 
     if (OPENGL2)
       target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
     endif()
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
-    target_link_libraries (${PROJECT_NAME} PRIVATE imgui)
-    target_link_libraries (${PROJECT_NAME} PRIVATE song audio decoder dvb kiss net)
+
+    target_link_libraries (${PROJECT_NAME} PRIVATE imgui song audio decoder dvb kiss net)
 
     if (MSVC)
       target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
     else()
-      target_link_libraries (${PROJECT_NAME} PRIVATE GL)
-      target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
+      target_link_libraries (${PROJECT_NAME} PRIVATE GL pthread asound stdc++fs)
     endif()
-endif()
-
-# fed app
-if (BUILD_FED)
-  project (fed VERSION 1.0.0)
-    file (GLOB HEADER_FILES fed/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
-    file (GLOB SOURCE_FILES fed/*.cpp ui/cUI.cpp)
-
-    add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
-    if (OPENGL2)
-      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
-    endif()
-    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
-
-    target_link_libraries (${PROJECT_NAME} PRIVATE imgui)
-    if (MSVC)
-      target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
-    else()
-      target_link_libraries (${PROJECT_NAME} PRIVATE GL stdc++fs)
-    endif()
-endif()
-
-# capture app
-if (BUILD_CAPTURE AND MSVC)
-  ## WIN32 audio wsapi capture main project
-  project (captureAudio VERSION 1.0.0)
-    file (GLOB HEADER_FILES audio/*.h)
-    file (GLOB SOURCE_FILES captureAudio/capture.cpp)
-    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
-    target_link_libraries (${PROJECT_NAME} PRIVATE decoder winmm avrt audio)
 endif()
 
 # paintbox app
@@ -309,8 +312,8 @@ if (BUILD_PAINTBOX)
       target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
     endif()
     target_include_directories (${PROJECT_NAME} PRIVATE stb)
-    target_link_libraries (${PROJECT_NAME} PRIVATE imgui)
 
+    target_link_libraries (${PROJECT_NAME} PRIVATE imgui)
     if (BUILD_IMPLOT)
       target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
       target_link_libraries (${PROJECT_NAME} PRIVATE implot)

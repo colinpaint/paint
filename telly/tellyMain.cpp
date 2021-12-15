@@ -17,23 +17,21 @@
 #include "../imgui/imgui.h"
 #include "../implot/implot.h"
 
-// UI font
+// self registered classes using static var init idiom
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
-// self registered classes using static var init idiom
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
+#include "../telly/cTellyApp.h"
 
 // ui
-#include "../app/cApp.h"
 #include "../ui/cUI.h"
 
 // utils
 #include "../utils/cFileUtils.h"
 #include "../utils/cLog.h"
-
-#include "../telly/cTellyApp.h"
 
 using namespace std;
 //}}}

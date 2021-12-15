@@ -16,13 +16,13 @@
 // imGui
 #include "../imgui/imgui.h"
 
-// UI font
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
-// self registered classes using static var init idiom
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
+#include "../fed/cFedApp.h"
 
 // ui
 #include "../ui/cUI.h"
@@ -30,8 +30,6 @@
 // utils
 #include "../utils/cFileUtils.h"
 #include "../utils/cLog.h"
-
-#include "../fed/cFedApp.h"
 
 using namespace std;
 //}}}
