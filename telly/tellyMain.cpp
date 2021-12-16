@@ -145,7 +145,7 @@ int main (int numArgs, char* args[]) {
       graphics.windowResize (width, height);
       graphics.newFrame();
       cUI::draw (app);
-      graphics.drawUI (platform.getWindowSize());
+      graphics.drawUI();
       platform.present();
       }
     );
@@ -169,7 +169,7 @@ int main (int numArgs, char* args[]) {
     graphics.newFrame();
     cUI::draw (app);
     //ImPlot::app();
-    graphics.drawUI (platform.getWindowSize());
+    graphics.drawUI();
     platform.present();
     }
   ImPlot::DestroyContext();

@@ -9,11 +9,9 @@
 
 class cPlatform {
 public:
-  static cPlatform* create (const cPoint& windowSize);
+  virtual ~cPlatform() = default;
 
-  // base class
   virtual bool init (const cPoint& windowSize) = 0;
-  virtual void shutdown() = 0;
 
   // gets
   virtual cPoint getWindowSize() = 0;

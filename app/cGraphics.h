@@ -146,12 +146,9 @@ public:
 
 class cGraphics {
 public:
-  // static register
-  static cGraphics* create();
+  virtual ~cGraphics() = default;
 
-  // base class
   virtual bool init() = 0;
-  virtual void shutdown() = 0;
 
   // create graphics resources
   virtual cQuad* createQuad (const cPoint& size) = 0;
@@ -170,6 +167,6 @@ public:
   // actions
   virtual void background (const cPoint& size) = 0;
   virtual void newFrame() = 0;
-  virtual void drawUI (const cPoint& windowSize) = 0;
+  virtual void drawUI() = 0;
   virtual void windowResize (int width, int height) = 0;
   };
