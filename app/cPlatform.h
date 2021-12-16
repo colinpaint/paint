@@ -9,7 +9,7 @@
 
 class cPlatform {
 public:
-  static cPlatform& create (const cPoint& windowSize);
+  static cPlatform* create (const cPoint& windowSize);
 
   // base class
   virtual bool init (const cPoint& windowSize) = 0;

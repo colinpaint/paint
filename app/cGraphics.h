@@ -147,7 +147,7 @@ public:
 class cGraphics {
 public:
   // static register
-  static cGraphics& create();
+  static cGraphics* create();
 
   // base class
   virtual bool init() = 0;

@@ -17,8 +17,8 @@ public:
   virtual ~cApp();
 
   // get interfaces
-  cPlatform& getPlatform() const { return mPlatform; }
-  cGraphics& getGraphics() const { return mGraphics; }
+  cPlatform& getPlatform() const { return *mPlatform; }
+  cGraphics& getGraphics() const { return *mGraphics; }
 
   // time of day
   std::chrono::system_clock::time_point getNow();
@@ -32,8 +32,8 @@ public:
   void setMonoFont (ImFont* font) { mMonoFont = font; }
 
 private:
-  cPlatform& mPlatform;
-  cGraphics& mGraphics;
+  cPlatform* mPlatform;
+  cGraphics* mGraphics;
 
   ImFont* mMainFont;
   ImFont* mMonoFont;

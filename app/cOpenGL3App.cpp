@@ -1818,11 +1818,11 @@ private:
   };
 //}}}
 //{{{
-cPlatform& cPlatform::create (const cPoint& windowSize) {
+cPlatform* cPlatform::create (const cPoint& windowSize) {
 
   cPlatform* platform = new cOpenGL3Platform();
   platform->init (windowSize);
-  return *platform;
+  return platform;
   }
 //}}}
 
@@ -2045,11 +2045,11 @@ public:
   };
 //}}}
 //{{{
-cGraphics& cGraphics::create() {
+cGraphics* cGraphics::create() {
 
   cGraphics* graphics = new cOpenGL3Graphics();
   graphics->init();
-  return *graphics;
+  return graphics;
   }
 //}}}
 
@@ -2061,8 +2061,8 @@ cApp::cApp (const cPoint& windowSize)
 //}}}
 //{{{
 cApp::~cApp() {
-  mGraphics.shutdown();
-  mPlatform.shutdown();
+  mGraphics->shutdown();
+  mPlatform->shutdown();
   }
 //}}}
 
