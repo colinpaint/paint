@@ -21,23 +21,17 @@ using namespace std;
 //}}}
 
 //{{{
-cPaintApp::cPaintApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, cPoint size)
-   : cApp (platform, graphics), mSize(size), mNumChannels(4) {
-
-  setMainFont(mainFont);
-  setMonoFont(monoFont);
+cPaintApp::cPaintApp (const cPoint& windowSize, const cPoint& size)
+   : cApp(windowSize), mSize(size), mNumChannels(4) {
 
   // create empty layer
-  mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, graphics));
+  mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, getGraphics()));
   createResources();
   }
 //}}}
 //{{{
-cPaintApp::cPaintApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, const std::string& filename)
-    : cApp (platform, graphics) {
-
-  setMainFont(mainFont);
-  setMonoFont(monoFont);
+cPaintApp::cPaintApp (const cPoint& windowSize, const std::string& filename)
+    : cApp (windowSize) {
 
   mFilename = filename;
 

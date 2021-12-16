@@ -1,4 +1,4 @@
-// cDirectX11.cpp
+// cDirectX11App.cpp
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
@@ -98,7 +98,7 @@ namespace {
 //{{{
 class cWin32Platform : public cPlatform {
 public:
-  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
+  virtual bool init (const cPoint& windowSize) final;
   virtual void shutdown() final;
 
   // gets
@@ -116,6 +116,7 @@ public:
   // sets
   virtual void setVsync (bool vsync) final { gVsync = vsync; }
   virtual void toggleVsync() final { gVsync = !gVsync; }
+  virtual void setFullScreen (bool fullScreen) final { gFullScreen = fullScreen; }
   virtual void toggleFullScreen() final { gFullScreen = !gFullScreen; }
 
   // actions
@@ -126,19 +127,18 @@ public:
   };
 //}}}
 //{{{
-cPlatform& cPlatform::create (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
+cPlatform& cPlatform::create (const cPoint& windowSize) {
 
   cPlatform* platform = new cWin32Platform();
-  platform->init (windowSize, showViewports, vsync, fullScreen);
+  platform->init (windowSize, vsync, fullScreen);
   return *platform;
   }
 //}}}
 
 // public:
 //{{{
-bool cWin32Platform::init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
+bool cWin32Platform::init (const cPoint& windowSize) {
 
-  (void)showViewports;
   (void)fullScreen;
 
   // register app class
@@ -1178,7 +1178,7 @@ namespace {
 //{{{
 class cDx11Graphics : public cGraphics {
 public:
-  virtual bool init (cPlatform& platform) final;
+  virtual bool init() final;
   void shutdown() final;
 
   // create resources
@@ -1204,17 +1204,17 @@ public:
   };
 //}}}
 //{{{
-static cGraphics& cDx11Graphics::create (cPlatform& platform) {
+static cGraphics& cDx11Graphics::create() {
 
   cGraphics* graphics = new cDx11Graphics();
-  graphics->init (platform);
+  graphics->init();
   return *graphics;
   }
 //}}}
 
 // public:
 //{{{
-bool cDx11Graphics::init (cPlatform& platform) {
+bool cDx11Graphics::init() {
 
   bool ok = false;
 
@@ -1232,9 +1232,9 @@ bool cDx11Graphics::init (cPlatform& platform) {
     ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 
     // Get factory from device adpater
-    ID3D11Device* d3dDevice = (ID3D11Device*)platform.getDevice();
-    ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)platform.getDeviceContext();
-    IDXGISwapChain* dxgiSwapChain = (IDXGISwapChain*)platform.getSwapChain();
+    ID3D11Device* d3dDevice = (ID3D11Device*)gPlatform.getDevice();
+    ID3D11DeviceContext* d3dDeviceContext = (ID3D11DeviceContext*)gPlatform.getDeviceContext();
+    IDXGISwapChain* dxgiSwapChain = (IDXGISwapChain*)gPlatform.getSwapChain();
 
     IDXGIDevice* dxgiDevice = NULL;
     if (d3dDevice->QueryInterface (IID_PPV_ARGS (&dxgiDevice)) == S_OK) {

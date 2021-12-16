@@ -1,4 +1,4 @@
-// paintMain.cpp - paintbox main, uses imGui, stb
+ // paintMain.cpp - paintbox main, uses imGui, stb
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -72,13 +72,14 @@ int main (int numArgs, char* args[]) {
   cBrush::listRegisteredClasses();
   cUI::listRegisteredClasses();
 
-  cPlatform& platform = cPlatform::create (cPoint(1200, 800), false, vsync, fullScreen);
-  cGraphics& graphics = cGraphics::create (platform);
-  ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
-  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(&droidSansMono, droidSansMonoSize, 16.f);
-  cPaintApp paintApp (platform, graphics, mainFont, monoFont,
-                      filename.empty() ? "../piccies/tv.jpg" : cFileUtils::resolve (filename));
+  cPaintApp app (cPoint(1200, 800), filename.empty() ? "../piccies/tv.jpg" : cFileUtils::resolve (filename));
+  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
+  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(&droidSansMono, droidSansMonoSize, 16.f));
 
+  cPlatform& platform = app.getPlatform();
+  cGraphics& graphics = app.getGraphics();
+  platform.setVsync (vsync);
+  platform.setFullScreen (fullScreen);
   platform.setResizeCallback (
     //{{{  resize lambda
     [&](int width, int height) noexcept {
@@ -86,7 +87,7 @@ int main (int numArgs, char* args[]) {
       graphics.windowResize (width, height);
       graphics.newFrame();
       if (showDemoWindow)
-        cUI::draw (paintApp);
+        cUI::draw (app);
       ImGui::ShowDemoWindow (&showDemoWindow);
       graphics.drawUI (platform.getWindowSize());
       platform.present();
@@ -99,7 +100,7 @@ int main (int numArgs, char* args[]) {
 
       for (auto& item : dropItems) {
         cLog::log (LOGINFO, item);
-        paintApp.newLayer (cFileUtils::resolve (item));
+        app.newLayer (cFileUtils::resolve (item));
         }
       }
     );
@@ -109,15 +110,11 @@ int main (int numArgs, char* args[]) {
   while (platform.pollEvents()) {
     platform.newFrame();
     graphics.newFrame();
-    cUI::draw (paintApp);
+    cUI::draw (app);
     //ImGui::ShowDemoWindow (&showDemoWindow);
     graphics.drawUI (platform.getWindowSize());
-    platform.present();
+    app.getPlatform().present();
     }
-
-  // cleanup
-  graphics.shutdown();
-  platform.shutdown();
 
   return EXIT_SUCCESS;
   }

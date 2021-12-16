@@ -17,7 +17,7 @@ class cSongLoader;
 
 class cPlayerApp : public cApp {
 public:
-  cPlayerApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont);
+  cPlayerApp (const cPoint& windowSize);
   ~cPlayerApp() = default;
 
   std::string getSongName() const { return mSongName; }

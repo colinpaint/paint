@@ -2,8 +2,6 @@
 #pragma once
 //{{{  includes
 #include <string>
-#include <chrono>
-#include <map>
 #include <functional>
 
 #include "../utils/cPointRectColor.h"
@@ -11,10 +9,10 @@
 
 class cPlatform {
 public:
-  static cPlatform& create (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen);
+  static cPlatform& create (const cPoint& windowSize);
 
   // base class
-  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) = 0;
+  virtual bool init (const cPoint& windowSize) = 0;
   virtual void shutdown() = 0;
 
   // gets
@@ -34,6 +32,8 @@ public:
   // sets
   virtual void setVsync (bool vsync) = 0;
   virtual void toggleVsync() = 0;
+
+  virtual void setFullScreen (bool fullScreen) = 0;
   virtual void toggleFullScreen() = 0;
 
   // actions

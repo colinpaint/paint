@@ -16,7 +16,8 @@
 using namespace std;
 //}}}
 
-bool cTellyApp::setDvbSource (const string& filename, const cDvbMultiplex& dvbMultiplex,
+bool cTellyApp::setDvbSource (const string& filename, 
+                              const cDvbMultiplex& dvbMultiplex,
                               bool renderFirstService, uint16_t decoderOptions) {
 // create dvb source
 

@@ -17,19 +17,13 @@
 using namespace std;
 //}}}
 
-cPlayerApp::cPlayerApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont) 
-    : cApp (platform, graphics) {
-
-  setMainFont (mainFont);
-  setMonoFont (monoFont);
-
+cPlayerApp::cPlayerApp (const cPoint& windowSize) : cApp(windowSize) {
   mSongLoader = new cSongLoader();
   }
 
 cSong* cPlayerApp::getSong() const {
   return mSongLoader->getSong();
   }
-
 
 bool cPlayerApp::setSongName (const std::string& songName) {
 

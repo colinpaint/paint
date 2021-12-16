@@ -3,12 +3,9 @@
 //{{{  includes
 #include <cstdint>
 #include <string>
-#include <map>
 
 #include "../utils/cPointRectColor.h"
 #include "../utils/cVecMat.h"
-
-class cPlatform;
 //}}}
 
 //{{{
@@ -150,10 +147,10 @@ public:
 class cGraphics {
 public:
   // static register
-  static cGraphics& create (cPlatform& platform);
+  static cGraphics& create();
 
   // base class
-  virtual bool init (cPlatform& platform) = 0;
+  virtual bool init() = 0;
   virtual void shutdown() = 0;
 
   // create graphics resources
@@ -170,11 +167,9 @@ public:
   virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) = 0;
   virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) = 0;
 
-  virtual void background (const cPoint& size) = 0;
-
   // actions
-  virtual void windowResize (int width, int height) = 0;
+  virtual void background (const cPoint& size) = 0;
   virtual void newFrame() = 0;
   virtual void drawUI (const cPoint& windowSize) = 0;
-
+  virtual void windowResize (int width, int height) = 0;
   };

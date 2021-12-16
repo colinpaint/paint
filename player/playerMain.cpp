@@ -64,14 +64,15 @@ int main (int numArgs, char* args[]) {
   // list static registered classes
   cUI::listRegisteredClasses();
 
-  // create platform, graphics, UI font
-  cPlatform& platform = cPlatform::create (cPoint(800, 480), false, vsync, fullScreen);
-  cGraphics& graphics = cGraphics::create (platform);
-  ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f);
-  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f);
-  cPlayerApp app (platform, graphics, mainFont, monoFont);
+  cPlayerApp app (cPoint(800, 480));
+  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
+  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
   app.setSongName (params.empty() ? "" : cFileUtils::resolve (params[0]));
 
+  cPlatform& platform = app.getPlatform();
+  cGraphics& graphics = app.getGraphics();
+  platform.setVsync (vsync);
+  platform.setFullScreen (fullScreen);
   platform.setResizeCallback (
     //{{{  resize lambda
     [&](int width, int height) noexcept {
@@ -103,10 +104,6 @@ int main (int numArgs, char* args[]) {
     graphics.drawUI (platform.getWindowSize());
     platform.present();
     }
-
-  // cleanup
-  graphics.shutdown();
-  platform.shutdown();
 
   return EXIT_SUCCESS;
   }

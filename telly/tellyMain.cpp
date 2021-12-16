@@ -128,14 +128,16 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI fonts
-  cPlatform& platform = cPlatform::create (cPoint(1920/2, 1080/2), false, vsync, fullScreen);
-  cGraphics& graphics = cGraphics::create (platform);
-  ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f);
-  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f);
-  cTellyApp app (platform, graphics, mainFont, monoFont);
+  cTellyApp app (cPoint(1920/2, 1080/2));
   app.setDvbSource (cFileUtils::resolve (filename), useMultiplex,
-                    !filename.empty() || renderFirstService, decoderOptions);
+                         !filename.empty() || renderFirstService, decoderOptions);
+  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
+  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
 
+  cPlatform& platform = app.getPlatform();
+  cGraphics& graphics = app.getGraphics();
+  platform.setVsync (vsync);
+  platform.setFullScreen (fullScreen);
   platform.setResizeCallback (
     //{{{  resize lambda
     [&](int width, int height) noexcept {
@@ -166,15 +168,11 @@ int main (int numArgs, char* args[]) {
     platform.newFrame();
     graphics.newFrame();
     cUI::draw (app);
-    //ImPlot::ShowDemoWindow();
+    //ImPlot::app();
     graphics.drawUI (platform.getWindowSize());
     platform.present();
     }
   ImPlot::DestroyContext();
-
-  // cleanup
-  graphics.shutdown();
-  platform.shutdown();
 
   return EXIT_SUCCESS;
   }

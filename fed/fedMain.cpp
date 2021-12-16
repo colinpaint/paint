@@ -65,13 +65,16 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI font
-  cPlatform& platform = cPlatform::create (cPoint(1000, 900), false, vsync, fullScreen);
-  cGraphics& graphics = cGraphics::create (platform);
-  ImFont* mainFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f);
-  ImFont* monoFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f);
-  cFedApp app (platform, graphics, mainFont, monoFont);
+  cFedApp app (cPoint(1000, 900));
+  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
+  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
   app.setDocumentName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolve (params[0]));
 
+  cPlatform& platform = app.getPlatform();
+  cGraphics& graphics = app.getGraphics();
+  platform.newFrame();
+  platform.setVsync (vsync);
+  platform.setFullScreen (fullScreen);
   platform.setResizeCallback (
     //{{{  resize lambda
     [&](int width, int height) noexcept {
@@ -98,16 +101,11 @@ int main (int numArgs, char* args[]) {
 
   // main UI loop
   while (platform.pollEvents()) {
-    platform.newFrame();
     graphics.newFrame();
     cUI::draw (app);
     graphics.drawUI (platform.getWindowSize());
     platform.present();
     }
-
-  // cleanup
-  graphics.shutdown();
-  platform.shutdown();
 
   return EXIT_SUCCESS;
   }

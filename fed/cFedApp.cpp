@@ -16,13 +16,6 @@
 using namespace std;
 //}}}
 
-cFedApp::cFedApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont) 
-   : cApp (platform, graphics) {
-
-  setMainFont (mainFont);
-  setMonoFont (monoFont);
-  }
-
 cDocument* cFedApp::getDocument() const {
   return mDocuments.back();
   }

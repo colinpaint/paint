@@ -15,8 +15,8 @@ class cBrush;
 
 class cPaintApp : public cApp {
 public:
-  cPaintApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, cPoint size);
-  cPaintApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont, const std::string& filename);
+  cPaintApp (const cPoint& windowSize, const cPoint& size);
+  cPaintApp (const cPoint& windowSize, const std::string& filename);
   virtual ~cPaintApp();
 
   // gets

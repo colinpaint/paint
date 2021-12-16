@@ -15,8 +15,8 @@ class cDocument;
 
 class cFedApp : public cApp {
 public:
-  cFedApp (cPlatform& platform, cGraphics& graphics, ImFont* mainFont, ImFont* monoFont);
-  ~cFedApp() = default;
+  cFedApp (const cPoint& windowSize) : cApp (windowSize) {}
+  virtual ~cFedApp() = default;
 
   cDocument* getDocument() const;
   bool setDocumentName (const std::string& filename);

@@ -1,4 +1,4 @@
-// cOpenGL3.cpp
+// cOpenGL3App.cpp
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -27,6 +27,7 @@
   #include <implot.h>
 #endif
 
+#include "cApp.h"
 #include "cPlatform.h"
 #include "cGraphics.h"
 
@@ -46,6 +47,8 @@ using namespace std;
 constexpr bool kDebug = false;
 
 namespace {
+  //{{{  glfw callbacks
+  // vars for callbacks
   cPlatform* gPlatform = nullptr;
   GLFWwindow* gWindow = nullptr;
 
@@ -53,10 +56,6 @@ namespace {
   cPoint gWindowPos = { 0,0 };
   cPoint gWindowSize = { 0,0 };
 
-  int gGlVersion = 0;   // major.minor * 100
-  int gGlslVersion = 0; // major.minor * 100
-
-  // glfw callbacks
   //{{{
   void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
 
@@ -87,8 +86,8 @@ namespace {
       gPlatform->mDropCallback (dropItems);
     }
   //}}}
-
-  // graphics
+  //}}}
+  //{{{  graphics
   //{{{
   class cOpenGL3Quad : public cQuad {
   public:
@@ -1257,7 +1256,7 @@ namespace {
     //}}}
     };
   //}}}
-
+  //}}}
   #ifndef USE_IMPL
     //{{{  local implementation of backend impl
     bool gDrawBase = false;
@@ -1635,17 +1634,99 @@ namespace {
   #endif
   }
 
+// cPlatform
 //{{{
 class cOpenGL3Platform : public cPlatform {
 public:
-  virtual bool init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) final;
-  virtual void shutdown() final;
+  //{{{
+  virtual bool init (const cPoint& windowSize) final {
+
+    cLog::log (LOGINFO, fmt::format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
+
+    // GLFW init
+    if (!glfwInit()) {
+      cLog::log (LOGERROR, "cPlatform - glfw init failed");
+      return false;
+      }
+
+    // openGL version hints
+    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
+    cLog::log (LOGINFO, "- version hint 3.3");
+    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    // GLFW create window
+    gWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Paintbox - openGL", NULL, NULL);
+    if (!gWindow) {
+      cLog::log (LOGERROR, "cPlatform - glfwCreateWindow failed");
+      return false;
+      }
+
+    gMonitor = glfwGetPrimaryMonitor();
+    glfwGetWindowSize (gWindow, &gWindowSize.x, &gWindowSize.y);
+    glfwGetWindowPos (gWindow, &gWindowPos.x, &gWindowPos.y);
+
+    glfwMakeContextCurrent (gWindow);
+
+    // set callbacks
+    glfwSetKeyCallback (gWindow, keyCallback);
+    glfwSetFramebufferSizeCallback (gWindow, framebufferSizeCallback);
+    glfwSetDropCallback (gWindow, dropCallback);
+
+    // GLAD init before any openGL function
+    if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {
+      cLog::log (LOGERROR, "cPlatform - glad init failed");
+      return false;
+      }
+
+    // init imGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsClassic();
+    #ifdef USE_IMPLOT
+      ImPlot::CreateContext();
+    #endif
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+    ImGui_ImplGlfw_InitForOpenGL (gWindow, true);
+
+    glfwSwapInterval (mVsync ? 1 : 0);
+    gPlatform = this;
+
+    return true;
+    }
+  //}}}
+  //{{{
+  virtual void shutdown() final {
+
+    ImGui_ImplGlfw_Shutdown();
+
+    glfwDestroyWindow (gWindow);
+    glfwTerminate();
+
+    #ifdef USE_IMPLOT
+      ImPlot::DestroyContext();
+    #endif
+    ImGui::DestroyContext();
+    }
+  //}}}
 
   // gets
   virtual void* getDevice() final { return nullptr; }
   virtual void* getDeviceContext() final { return nullptr; }
   virtual void* getSwapChain() final { return nullptr; }
-  virtual cPoint getWindowSize() final;
+  //{{{
+  virtual cPoint getWindowSize() final {
+    int width;
+    int height;
+    glfwGetWindowSize (gWindow, &width, &height);
+    return cPoint (width, height);
+    }
+  //}}}
 
   virtual bool hasVsync() final { return true; }
   virtual bool getVsync() final { return mVsync; }
@@ -1654,14 +1735,84 @@ public:
   virtual bool getFullScreen() final { return mFullScreen; }
 
   // sets
-  virtual void setVsync (bool vsync) final;
-  virtual void toggleVsync() final;
-  virtual void toggleFullScreen() final;
+  //{{{
+  virtual void setVsync (bool vsync) final {
+    if (mVsync != vsync) {
+      mVsync = vsync;
+      glfwSwapInterval (mVsync ? 1 : 0);
+      }
+    }
+  //}}}
+  //{{{
+  virtual void toggleVsync() final {
+    mVsync = !mVsync;
+    glfwSwapInterval (mVsync ? 1 : 0);
+    }
+  //}}}
+  //{{{
+  virtual void setFullScreen (bool fullScreen) final {
+    if (mFullScreen != fullScreen) {
+      mFullScreen = fullScreen;
+      mActionFullScreen = true;
+      }
+    }
+  //}}}
+  //{{{
+  virtual void toggleFullScreen() final {
+    mFullScreen = !mFullScreen;
+    mActionFullScreen = true;
+    }
+  //}}}
 
   // actions
-  virtual bool pollEvents() final;
-  virtual void newFrame() final;
-  virtual void present() final;
+  //{{{
+  virtual bool pollEvents() final {
+    if (mActionFullScreen) {
+      //{{{  fullScreen
+      if (mFullScreen) {
+        // save windowPos and windowSize
+        glfwGetWindowPos (gWindow, &gWindowPos.x, &gWindowPos.y);
+        glfwGetWindowSize (gWindow, &gWindowSize.x, &gWindowSize.y);
+
+        // get resolution of monitor
+        const GLFWvidmode* vidMode = glfwGetVideoMode (glfwGetPrimaryMonitor());
+
+        // switch to full screen
+        glfwSetWindowMonitor  (gWindow, gMonitor, 0, 0, vidMode->width, vidMode->height, vidMode->refreshRate);
+        }
+      else
+        // restore last window size and position
+        glfwSetWindowMonitor (gWindow, nullptr, gWindowPos.x, gWindowPos.y, gWindowSize.x, gWindowSize.y, 0);
+
+      mActionFullScreen = false;
+      }
+      //}}}
+
+    if (glfwWindowShouldClose (gWindow))
+      return false;
+    else {
+      glfwPollEvents();
+      return true;
+      }
+    }
+  //}}}
+  //{{{
+  virtual void newFrame() final {
+    ImGui_ImplGlfw_NewFrame();
+    }
+  //}}}
+  //{{{
+  virtual void present() final {
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+      GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
+      ImGui::UpdatePlatformWindows();
+      ImGui::RenderPlatformWindowsDefault();
+      glfwMakeContextCurrent (backupCurrentContext);
+      }
+
+    glfwSwapBuffers (gWindow);
+    }
+  //}}}
   virtual void close() final {}
 
 private:
@@ -1671,446 +1822,267 @@ private:
   };
 //}}}
 //{{{
-cPlatform& cPlatform::create (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
+cPlatform& cPlatform::create (const cPoint& windowSize) {
 
   cPlatform* platform = new cOpenGL3Platform();
-  platform->init (windowSize, showViewports, vsync, fullScreen);
+  platform->init (windowSize);
   return *platform;
   }
 //}}}
 
-// public:
-//{{{
-bool cOpenGL3Platform::init (const cPoint& windowSize, bool showViewports, bool vsync, bool fullScreen) {
-
-  (void)fullScreen;
-  cLog::log (LOGINFO, fmt::format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
-
-  // GLFW init
-  if (!glfwInit()) {
-    cLog::log (LOGERROR, "cPlatform - glfw init failed");
-    return false;
-    }
-
-  // openGL version hints
-  glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
-  cLog::log (LOGINFO, "- version hint 3.3");
-  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-  // GLFW create window
-  gWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Paintbox - openGL", NULL, NULL);
-  if (!gWindow) {
-    cLog::log (LOGERROR, "cPlatform - glfwCreateWindow failed");
-    return false;
-    }
-
-  gMonitor = glfwGetPrimaryMonitor();
-  glfwGetWindowSize (gWindow, &gWindowSize.x, &gWindowSize.y);
-  glfwGetWindowPos (gWindow, &gWindowPos.x, &gWindowPos.y);
-
-  glfwMakeContextCurrent (gWindow);
-
-  // set callbacks
-  glfwSetKeyCallback (gWindow, keyCallback);
-  glfwSetFramebufferSizeCallback (gWindow, framebufferSizeCallback);
-  glfwSetDropCallback (gWindow, dropCallback);
-
-  // GLAD init before any openGL function
-  if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {
-    cLog::log (LOGERROR, "cPlatform - glad init failed");
-    return false;
-    }
-
-  // init imGui
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGui::StyleColorsClassic();
-  #ifdef USE_IMPLOT
-    ImPlot::CreateContext();
-  #endif
-
-  ImGuiIO& io = ImGui::GetIO();
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-  if (showViewports)
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-
-  ImGui_ImplGlfw_InitForOpenGL (gWindow, true);
-
-  mVsync = vsync;
-  glfwSwapInterval (mVsync ? 1 : 0);
-
-  gPlatform = this;
-
-  return true;
-  }
-//}}}
-//{{{
-void cOpenGL3Platform::shutdown() {
-
-  ImGui_ImplGlfw_Shutdown();
-
-  glfwDestroyWindow (gWindow);
-  glfwTerminate();
-
-  #ifdef USE_IMPLOT
-    ImPlot::DestroyContext();
-  #endif
-  ImGui::DestroyContext();
-  }
-//}}}
-
-// gets
-//{{{
-cPoint cOpenGL3Platform::getWindowSize() {
-
-  int width;
-  int height;
-  glfwGetWindowSize (gWindow, &width, &height);
-  return cPoint (width, height);
-  }
-//}}}
-
-//{{{
-void cOpenGL3Platform::setVsync (bool vsync) {
-  mVsync = vsync;
-  glfwSwapInterval (mVsync ? 1 : 0);
-  }
-//}}}
-//{{{
-void cOpenGL3Platform::toggleVsync() {
-  mVsync = !mVsync;
-  glfwSwapInterval (mVsync ? 1 : 0);
-  }
-//}}}
-//{{{
-void cOpenGL3Platform::toggleFullScreen() {
-
-  mFullScreen = !mFullScreen;
-  mActionFullScreen = true;
-  }
-//}}}
-//{{{
-bool cOpenGL3Platform::pollEvents() {
-
-  if (mActionFullScreen) {
-    //{{{  fullScreen
-    if (mFullScreen) {
-      // save windowPos and windowSize
-      glfwGetWindowPos (gWindow, &gWindowPos.x, &gWindowPos.y);
-      glfwGetWindowSize (gWindow, &gWindowSize.x, &gWindowSize.y);
-
-      // get resolution of monitor
-      const GLFWvidmode* vidMode = glfwGetVideoMode (glfwGetPrimaryMonitor());
-
-      // switch to full screen
-      glfwSetWindowMonitor  (gWindow, gMonitor, 0, 0, vidMode->width, vidMode->height, vidMode->refreshRate);
-      }
-    else
-      // restore last window size and position
-      glfwSetWindowMonitor (gWindow, nullptr, gWindowPos.x, gWindowPos.y, gWindowSize.x, gWindowSize.y, 0);
-
-    mActionFullScreen = false;
-    }
-    //}}}
-
-  if (glfwWindowShouldClose (gWindow))
-    return false;
-  else {
-    glfwPollEvents();
-    return true;
-    }
-  }
-//}}}
-//{{{
-void cOpenGL3Platform::newFrame() {
-  ImGui_ImplGlfw_NewFrame();
-  }
-//}}}
-//{{{
-void cOpenGL3Platform::present() {
-
-  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-    GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
-    ImGui::UpdatePlatformWindows();
-    ImGui::RenderPlatformWindowsDefault();
-    glfwMakeContextCurrent (backupCurrentContext);
-    }
-
-  glfwSwapBuffers (gWindow);
-  }
-//}}}
-
-// cOpenGlGraphics class header
+// cGraphics
 //{{{
 class cOpenGL3Graphics : public cGraphics {
 public:
-  virtual bool init (cPlatform& platform) final;
-  void shutdown() final;
+  //{{{
+  virtual bool init() final {
+
+    int gGlVersion = 0;   // major.minor * 100
+    int gGlslVersion = 0; // major.minor * 100
+
+    // get openGL version
+    string glVersionString = (const char*)glGetString (GL_VERSION);
+    #if defined(IMGUI_IMPL_OPENGL_ES2)
+      gGlVersion = 200; // GLES 2
+    #else
+      GLint glMajor = 0;
+      //glGetIntegerv (GL_MAJOR_VERSION, &glMajor);
+      GLint glMinor = 0;
+      //glGetIntegerv (GL_MINOR_VERSION, &glMinor);
+      //if ((glMajor == 0) && (glMinor == 0))
+      // Query GL_VERSION string desktop GL 2.x
+      sscanf (glVersionString.c_str(), "%d.%d", &glMajor, &glMinor);
+      gGlVersion = ((glMajor * 10) + glMinor) * 10;
+    #endif
+    cLog::log (LOGINFO, fmt::format ("OpenGL {} - {}", glVersionString, gGlVersion));
+
+
+    #ifndef USE_IMPL
+      // set imGui backend capabilities flags
+      ImGui::GetIO().BackendRendererName = "openGL3";
+      //{{{  vertexOffset
+      #ifdef IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET
+        if (gGlVersion >= 320) {
+          gDrawBase = true;
+          ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+          cLog::log (LOGINFO, "- hasVtxOffset");
+          }
+      #endif
+      //}}}
+      //{{{  clipOrigin
+      #if defined (GL_CLIP_ORIGIN)
+        GLenum currentClipOrigin = 0;
+        glGetIntegerv (GL_CLIP_ORIGIN, (GLint*)&currentClipOrigin);
+        if (currentClipOrigin == GL_UPPER_LEFT)
+          gClipOriginBottomLeft = false;
+      #endif
+      //}}}
+
+      // enable ImGui viewports
+      ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+
+      // set ImGui renderWindow
+      if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        ImGui::GetPlatformIO().Renderer_RenderWindow = renderWindow;
+    #endif
+
+    // get GLSL version
+    string glslVersionString = (const char*)glGetString (GL_SHADING_LANGUAGE_VERSION);
+    int glslMajor = 0;
+    int glslMinor = 0;
+    sscanf (glslVersionString.c_str(), "%d.%d", &glslMajor, &glslMinor);
+    gGlslVersion = (glslMajor * 100) + glslMinor;
+    cLog::log (LOGINFO, fmt::format ("GLSL {} - {}", glslVersionString, gGlslVersion));
+
+    #ifdef USE_IMPL
+      ImGui_ImplOpenGL3_Init (glslVersionString.c_str());
+    #else
+      cLog::log (LOGINFO, fmt::format ("Renderer {}", glGetString (GL_RENDERER)));
+      cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
+
+      cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
+      cLog::log (LOGINFO, "- hasViewports");
+
+      // create vertex array buffers
+      glGenBuffers (1, &gVboHandle);
+      glGenBuffers (1, &gElementsHandle);
+
+      // create shader
+      gDrawListShader = new cDrawListShader (gGlslVersion);
+    #endif
+
+    return true;
+    }
+  //}}}
+  //{{{
+  void shutdown() final {
+
+    #ifdef USE_IMPL
+      ImGui_ImplOpenGL3_Shutdown();
+    #else
+      ImGui::DestroyPlatformWindows();
+
+      // destroy vertetx array
+      if (gVboHandle)
+        glDeleteBuffers (1, &gVboHandle);
+      if (gElementsHandle)
+        glDeleteBuffers (1, &gElementsHandle);
+
+      // destroy shader
+      delete gDrawListShader;
+
+      // destroy font texture
+      if (gFontTexture) {
+        glDeleteTextures (1, &gFontTexture);
+        ImGui::GetIO().Fonts->TexID = 0;
+        }
+    #endif
+    }
+  //}}}
 
   // create resources
-  virtual cQuad* createQuad (const cPoint& size) final;
-  virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final;
+  virtual cQuad* createQuad (const cPoint& size) final { return new cOpenGL3Quad (size); }
+  virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final { return new cOpenGL3Quad (size, rect); }
 
-  virtual cFrameBuffer* createFrameBuffer() final;
-  virtual cFrameBuffer* createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) final;
-  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) final;
+  virtual cFrameBuffer* createFrameBuffer() final { return new cOpenGL3FrameBuffer(); }
+  //{{{
+  virtual cFrameBuffer* createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) final {
+    return new cOpenGL3FrameBuffer (size, format);
+    }
+  //}}}
+  //{{{
+  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) final {
+    return new cOpenGL3FrameBuffer (pixels, size, format);
+    }
+  //}}}
 
-  virtual cLayerShader* createLayerShader() final;
-  virtual cPaintShader* createPaintShader() final;
+  virtual cLayerShader* createLayerShader() final { return new cOpenGL3LayerShader(); }
+  virtual cPaintShader* createPaintShader() final { return new cOpenGL3PaintShader(); }
 
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final;
-  virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final;
+  //{{{
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
+  // factory create
 
-  virtual void background (const cPoint& size) final;
+    switch (textureType) {
+      case cTexture::eRgba:   return new cOpenGL3RgbaTexture (textureType, size);
+      case cTexture::eNv12:   return new cOpenGL3Nv12Texture (textureType, size);
+      case cTexture::eYuv420: return new cOpenGL3Yuv420Texture (textureType, size);
+      default : return nullptr;
+      }
+    }
+  //}}}
+  //{{{
+  virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final {
+  // factory create
+
+    switch (textureType) {
+      case cTexture::eRgba:   return new cOpenGL3RgbaShader();
+      case cTexture::eYuv420: return new cOpenGL3Yuv420Shader();
+      case cTexture::eNv12:   return new cOpenGL3Nv12Shader();
+      default: return nullptr;
+      }
+    }
+  //}}}
 
   // actions
-  virtual void newFrame() final;
-  virtual void drawUI (const cPoint& windowSize) final;
-  virtual void windowResize (int width, int height) final;
+  //{{{
+  virtual void background (const cPoint& size) final {
+    glViewport (0, 0, size.x, size.y);
+
+    // blend
+    uint32_t modeRGB = GL_FUNC_ADD;
+    uint32_t modeAlpha = GL_FUNC_ADD;
+    glBlendEquationSeparate (modeRGB, modeAlpha);
+
+    uint32_t srcRgb = GL_SRC_ALPHA;
+    uint32_t dstRGB = GL_ONE_MINUS_SRC_ALPHA;
+    uint32_t srcAlpha = GL_ONE;
+    uint32_t dstAlpha = GL_ONE_MINUS_SRC_ALPHA;
+    glBlendFuncSeparate (srcRgb, dstRGB, srcAlpha, dstAlpha);
+
+    glEnable (GL_BLEND);
+
+    // disables
+    glDisable (GL_SCISSOR_TEST);
+    glDisable (GL_CULL_FACE);
+    glDisable (GL_DEPTH_TEST);
+
+    // clear
+    glClearColor (0.f,0.f,0.f, 0.f);
+    glClear (GL_COLOR_BUFFER_BIT);
+    }
+  //}}}
+  //{{{
+  virtual void newFrame() final {
+
+    #ifdef USE_IMPL
+      ImGui_ImplOpenGL3_NewFrame();
+    #else
+      if (!gFontLoaded) {
+        createFontTexture();
+        gFontLoaded = true;
+        }
+    #endif
+
+    ImGui::NewFrame();
+    }
+  //}}}
+  //{{{
+  virtual void drawUI (const cPoint& windowSize) final {
+
+    (void)windowSize;
+    ImGui::Render();
+
+    #ifdef USE_IMPL
+      glViewport (0, 0, windowSize.x, windowSize.y);
+      ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData());
+    #else
+      renderDrawData (ImGui::GetDrawData());
+    #endif
+    }
+  //}}}
+  //{{{
+  virtual void windowResize (int width, int height) final {
+    cLog::log (LOGINFO, fmt::format ("cOpenGL3Graphics windowResize {} {}", width, height));
+    }
+  //}}}
   };
 //}}}
 //{{{
-cGraphics& cGraphics::create (cPlatform& platform) {
+cGraphics& cGraphics::create() {
 
   cGraphics* graphics = new cOpenGL3Graphics();
-  graphics->init (platform);
+  graphics->init();
   return *graphics;
   }
 //}}}
 
-// public:
+// cApp
 //{{{
-bool cOpenGL3Graphics::init (cPlatform& platform) {
-// anonymous device pointers unused
-
-  (void)platform;
-
-  // get openGL version
-  string glVersionString = (const char*)glGetString (GL_VERSION);
-  #if defined(IMGUI_IMPL_OPENGL_ES2)
-    gGlVersion = 200; // GLES 2
-  #else
-    GLint glMajor = 0;
-    //glGetIntegerv (GL_MAJOR_VERSION, &glMajor);
-    GLint glMinor = 0;
-    //glGetIntegerv (GL_MINOR_VERSION, &glMinor);
-    //if ((glMajor == 0) && (glMinor == 0))
-    // Query GL_VERSION string desktop GL 2.x
-    sscanf (glVersionString.c_str(), "%d.%d", &glMajor, &glMinor);
-    gGlVersion = ((glMajor * 10) + glMinor) * 10;
-  #endif
-  cLog::log (LOGINFO, fmt::format ("OpenGL {} - {}", glVersionString, gGlVersion));
-
-
-  #ifndef USE_IMPL
-    // set imGui backend capabilities flags
-    ImGui::GetIO().BackendRendererName = "openGL3";
-    //{{{  vertexOffset
-    #ifdef IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET
-      if (gGlVersion >= 320) {
-        gDrawBase = true;
-        ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-        cLog::log (LOGINFO, "- hasVtxOffset");
-        }
-    #endif
-    //}}}
-    //{{{  clipOrigin
-    #if defined (GL_CLIP_ORIGIN)
-      GLenum currentClipOrigin = 0;
-      glGetIntegerv (GL_CLIP_ORIGIN, (GLint*)&currentClipOrigin);
-      if (currentClipOrigin == GL_UPPER_LEFT)
-        gClipOriginBottomLeft = false;
-    #endif
-    //}}}
-
-    // enable ImGui viewports
-    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
-
-    // set ImGui renderWindow
-    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-      ImGui::GetPlatformIO().Renderer_RenderWindow = renderWindow;
-  #endif
-
-  // get GLSL version
-  string glslVersionString = (const char*)glGetString (GL_SHADING_LANGUAGE_VERSION);
-  int glslMajor = 0;
-  int glslMinor = 0;
-  sscanf (glslVersionString.c_str(), "%d.%d", &glslMajor, &glslMinor);
-  gGlslVersion = (glslMajor * 100) + glslMinor;
-  cLog::log (LOGINFO, fmt::format ("GLSL {} - {}", glslVersionString, gGlslVersion));
-
-  #ifdef USE_IMPL
-    ImGui_ImplOpenGL3_Init (glslVersionString.c_str());
-  #else
-    cLog::log (LOGINFO, fmt::format ("Renderer {}", glGetString (GL_RENDERER)));
-    cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
-
-    cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
-    cLog::log (LOGINFO, "- hasViewports");
-
-    // create vertex array buffers
-    glGenBuffers (1, &gVboHandle);
-    glGenBuffers (1, &gElementsHandle);
-
-    // create shader
-    gDrawListShader = new cDrawListShader (gGlslVersion);
-  #endif
-
-  return true;
+cApp::cApp (const cPoint& windowSize)
+    : mPlatform (cPlatform::create(windowSize)), mGraphics (cGraphics::create()) {
   }
 //}}}
 //{{{
-void cOpenGL3Graphics::shutdown() {
-
-  #ifdef USE_IMPL
-    ImGui_ImplOpenGL3_Shutdown();
-  #else
-    ImGui::DestroyPlatformWindows();
-
-    // destroy vertetx array
-    if (gVboHandle)
-      glDeleteBuffers (1, &gVboHandle);
-    if (gElementsHandle)
-      glDeleteBuffers (1, &gElementsHandle);
-
-    // destroy shader
-    delete gDrawListShader;
-
-    // destroy font texture
-    if (gFontTexture) {
-      glDeleteTextures (1, &gFontTexture);
-      ImGui::GetIO().Fonts->TexID = 0;
-      }
-  #endif
+cApp::~cApp() {
+  mGraphics.shutdown();
+  mPlatform.shutdown();
   }
 //}}}
 
-// - resource creates
+// get
 //{{{
-cQuad* cOpenGL3Graphics::createQuad (const cPoint& size) {
-  return new cOpenGL3Quad (size);
-  }
-//}}}
-//{{{
-cQuad* cOpenGL3Graphics::createQuad (const cPoint& size, const cRect& rect) {
-  return new cOpenGL3Quad (size, rect);
-  }
-//}}}
+chrono::system_clock::time_point cApp::getNow() {
+// get time_point with daylight saving correction
+// - should be a C++20 timezone thing, but not yet
 
-//{{{
-cFrameBuffer* cOpenGL3Graphics::createFrameBuffer() {
-  return new cOpenGL3FrameBuffer();
-  }
-//}}}
-//{{{
-cFrameBuffer* cOpenGL3Graphics::createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) {
-  return new cOpenGL3FrameBuffer (size, format);
-  }
-//}}}
-//{{{
-cFrameBuffer* cOpenGL3Graphics::createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) {
-  return new cOpenGL3FrameBuffer (pixels, size, format);
-  }
-//}}}
+  // get daylight saving flag
+  time_t current_time;
+  time (&current_time);
+  struct tm* timeinfo = localtime (&current_time);
+  //cLog::log (LOGINFO, fmt::format ("dst {}", timeinfo->tm_isdst));
 
-//{{{
-cLayerShader* cOpenGL3Graphics::createLayerShader() {
-  return new cOpenGL3LayerShader();
-  }
-//}}}
-//{{{
-cPaintShader* cOpenGL3Graphics::createPaintShader() {
-  return new cOpenGL3PaintShader();
-  }
-//}}}
-
-//{{{
-cTexture* cOpenGL3Graphics::createTexture (cTexture::eTextureType textureType, const cPoint& size) {
-// factory create
-
-  switch (textureType) {
-    case cTexture::eRgba:   return new cOpenGL3RgbaTexture (textureType, size);
-    case cTexture::eNv12:   return new cOpenGL3Nv12Texture (textureType, size);
-    case cTexture::eYuv420: return new cOpenGL3Yuv420Texture (textureType, size);
-    default : return nullptr;
-    }
-  }
-//}}}
-//{{{
-cTextureShader* cOpenGL3Graphics::createTextureShader (cTexture::eTextureType textureType) {
-// factory create
-
-  switch (textureType) {
-    case cTexture::eRgba:   return new cOpenGL3RgbaShader();
-    case cTexture::eYuv420: return new cOpenGL3Yuv420Shader();
-    case cTexture::eNv12:   return new cOpenGL3Nv12Shader();
-    default: return nullptr;
-    }
-  }
-//}}}
-
-//{{{
-void cOpenGL3Graphics::background (const cPoint& size) {
-
-  glViewport (0, 0, size.x, size.y);
-
-  // blend
-  uint32_t modeRGB = GL_FUNC_ADD;
-  uint32_t modeAlpha = GL_FUNC_ADD;
-  glBlendEquationSeparate (modeRGB, modeAlpha);
-
-  uint32_t srcRgb = GL_SRC_ALPHA;
-  uint32_t dstRGB = GL_ONE_MINUS_SRC_ALPHA;
-  uint32_t srcAlpha = GL_ONE;
-  uint32_t dstAlpha = GL_ONE_MINUS_SRC_ALPHA;
-  glBlendFuncSeparate (srcRgb, dstRGB, srcAlpha, dstAlpha);
-
-  glEnable (GL_BLEND);
-
-  // disables
-  glDisable (GL_SCISSOR_TEST);
-  glDisable (GL_CULL_FACE);
-  glDisable (GL_DEPTH_TEST);
-
-  // clear
-  glClearColor (0.f,0.f,0.f, 0.f);
-  glClear (GL_COLOR_BUFFER_BIT);
-  }
-//}}}
-
-//{{{
-void cOpenGL3Graphics::windowResize (int width, int height) {
-  cLog::log (LOGINFO, fmt::format ("cOpenGL3Graphics windowResize {} {}", width, height));
-  }
-//}}}
-//{{{
-void cOpenGL3Graphics::newFrame() {
-
-  #ifdef USE_IMPL
-    ImGui_ImplOpenGL3_NewFrame();
-  #else
-    if (!gFontLoaded) {
-      createFontTexture();
-      gFontLoaded = true;
-      }
-  #endif
-
-  ImGui::NewFrame();
-  }
-//}}}
-//{{{
-void cOpenGL3Graphics::drawUI (const cPoint& windowSize) {
-
-  (void)windowSize;
-  ImGui::Render();
-
-  #ifdef USE_IMPL
-    glViewport (0, 0, windowSize.x, windowSize.y);
-    ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData());
-  #else
-    renderDrawData (ImGui::GetDrawData());
-  #endif
+  // UTC->BST only
+  return std::chrono::system_clock::now() + std::chrono::hours ((timeinfo->tm_isdst == 1) ? 1 : 0);
   }
 //}}}
