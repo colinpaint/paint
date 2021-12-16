@@ -128,9 +128,9 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI fonts
-  cTellyApp app (cPoint(1920/2, 1080/2));
+  cTellyApp app ({1920/2, 1080/2});
   app.setDvbSource (cFileUtils::resolve (filename), useMultiplex,
-                         !filename.empty() || renderFirstService, decoderOptions);
+                    !filename.empty() || renderFirstService, decoderOptions);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
 

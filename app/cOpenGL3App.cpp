@@ -1716,9 +1716,6 @@ public:
   //}}}
 
   // gets
-  virtual void* getDevice() final { return nullptr; }
-  virtual void* getDeviceContext() final { return nullptr; }
-  virtual void* getSwapChain() final { return nullptr; }
   //{{{
   virtual cPoint getWindowSize() final {
     int width;
@@ -1813,7 +1810,6 @@ public:
     glfwSwapBuffers (gWindow);
     }
   //}}}
-  virtual void close() final {}
 
 private:
   bool mVsync = true;

@@ -72,7 +72,7 @@ int main (int numArgs, char* args[]) {
   cBrush::listRegisteredClasses();
   cUI::listRegisteredClasses();
 
-  cPaintApp app (cPoint(1200, 800), filename.empty() ? "../piccies/tv.jpg" : cFileUtils::resolve (filename));
+  cPaintApp app ({1200, 800}, filename.empty() ? "../piccies/tv.jpg" : cFileUtils::resolve (filename));
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(&droidSansMono, droidSansMonoSize, 16.f));
 

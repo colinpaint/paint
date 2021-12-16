@@ -64,7 +64,7 @@ int main (int numArgs, char* args[]) {
   // list static registered classes
   cUI::listRegisteredClasses();
 
-  cPlayerApp app (cPoint(800, 480));
+  cPlayerApp app ({800, 480});
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
   app.setSongName (params.empty() ? "" : cFileUtils::resolve (params[0]));

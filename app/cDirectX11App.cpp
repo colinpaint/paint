@@ -38,14 +38,15 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT ms
 // platform
 //{{{
 namespace {
-  cPlatform* gPlatform = nullptr;
-  WNDCLASSEX gWndClass;
-  HWND gHWnd;
-
+  cPoint gWindowSize;
   bool gVsync = true;
   bool gFullScreen = false;
 
-  cPoint gWindowSize;
+  cPlatform* gPlatform = nullptr;
+
+  WNDCLASSEX gWndClass;
+  HWND gHWnd;
+
   ID3D11Device* gD3dDevice = NULL;
   ID3D11DeviceContext*  gD3dDeviceContext = NULL;
   IDXGISwapChain* gSwapChain = NULL;
@@ -102,9 +103,6 @@ public:
   virtual void shutdown() final;
 
   // gets
-  virtual void* getDevice() final;
-  virtual void* getDeviceContext() final;
-  virtual void* getSwapChain() final;
   virtual cPoint getWindowSize() final;
 
   virtual bool hasVsync() final { return true; }
@@ -123,7 +121,6 @@ public:
   virtual bool pollEvents() final;
   virtual void newFrame() final;
   virtual void present() final;
-  virtual void close() final;
   };
 //}}}
 //{{{
@@ -288,10 +285,6 @@ void cWin32Platform::present() {
     }
 
   gSwapChain->Present (gVsync ? 1 : 0, 0);
-  }
-//}}}
-//{{{
-void cWin32Platform::close() {
   }
 //}}}
 

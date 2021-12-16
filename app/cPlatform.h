@@ -18,11 +18,6 @@ public:
   // gets
   virtual cPoint getWindowSize() = 0;
 
-  // - anonymous dx11 platform -> graphics interface
-  virtual void* getDevice() = 0;
-  virtual void* getDeviceContext() = 0;
-  virtual void* getSwapChain() = 0;
-
   virtual bool hasVsync() = 0;
   virtual bool getVsync() = 0;
 
@@ -40,7 +35,6 @@ public:
   virtual bool pollEvents() = 0;
   virtual void newFrame() = 0;
   virtual void present() = 0;
-  virtual void close() = 0;
 
   // callback
   void setResizeCallback (std::function<void (int width, int height)> callback) { mResizeCallback = callback; }
