@@ -49,15 +49,18 @@ using namespace std;
 constexpr bool kDebug = false;
 
 namespace {
+  // vars
   //{{{  glfw callbacks
   // vars for callbacks
-  cApp* gApp = nullptr;
   cPlatform* gPlatform = nullptr;
   GLFWwindow* gWindow = nullptr;
 
   GLFWmonitor* gMonitor = nullptr;
   cPoint gWindowPos = { 0,0 };
   cPoint gWindowSize = { 0,0 };
+
+  function <void (int width, int height)> gResizeCallback;
+  function <void (vector<string> dropItems)> gDropCallback;
 
   //{{{
   void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
@@ -72,8 +75,7 @@ namespace {
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
 
     (void)window;
-    if (gApp)
-      gApp->mResizeCallback (width, height);
+    gResizeCallback (width, height);
     }
   //}}}
   //{{{
@@ -85,8 +87,7 @@ namespace {
     for (int i = 0;  i < count;  i++)
       dropItems.push_back (paths[i]);
 
-    if (gApp)
-      gApp->mDropCallback (dropItems);
+    gDropCallback (dropItems);
     }
   //}}}
   //}}}
@@ -640,6 +641,7 @@ public:
     glfwSwapInterval (mVsync ? 1 : 0);
     }
   //}}}
+
   //{{{
   virtual void setFullScreen (bool fullScreen) final {
     if (mFullScreen != fullScreen) {
@@ -658,6 +660,7 @@ public:
   // actions
   //{{{
   virtual bool pollEvents() final {
+
     if (mActionFullScreen) {
       //{{{  fullScreen
       if (mFullScreen) {
@@ -694,6 +697,7 @@ public:
   //}}}
   //{{{
   virtual void present() final {
+
     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
       GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
       ImGui::UpdatePlatformWindows();
@@ -1986,18 +1990,26 @@ public:
 // cApp
 //{{{
 cApp::cApp (const cPoint& windowSize, bool fullScreen, bool vsync) {
-// create platform and graphics
 
-  gApp = this;
-
+  // create platform
   mPlatform = new cOpenGL3Platform();
-  if (!mPlatform || !mPlatform->init (windowSize))
+  if (!mPlatform || !mPlatform->init (windowSize)) {
     cLog::log (LOGERROR, "cApp cOpenGL3Platform failed");
+    return;
+    }
 
+  // create graphics
   mGraphics = new cOpenGL3Graphics();
-  if (!mGraphics || !mGraphics->init())
+  if (!mGraphics || !mGraphics->init()) {
     cLog::log (LOGERROR, "cApp cOpenGL3Graphics failed");
+    return;
+    }
 
+  // set callbacks
+  gResizeCallback = [&](int width, int height) noexcept { windowResize (width, height); };
+  gDropCallback = [&](vector<string> dropItems) noexcept { drop (dropItems); };
+
+  // fullScreen, vsync
   mPlatform->setFullScreen (fullScreen);
   mPlatform->setVsync (vsync);
   }
@@ -2031,12 +2043,13 @@ chrono::system_clock::time_point cApp::getNow() {
 //{{{
 void cApp::mainUILoop() {
 
-  // main UI loop
   while (mPlatform->pollEvents()) {
     mPlatform->newFrame();
     mGraphics->newFrame();
+
     cUI::draw (*this);
     mGraphics->drawUI();
+
     mPlatform->present();
     }
   }

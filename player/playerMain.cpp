@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <functional>
 
 // stb - invoke header only library implementation here
 #define STB_IMAGE_IMPLEMENTATION
@@ -33,7 +32,7 @@ using namespace std;
 
 int main (int numArgs, char* args[]) {
 
-  // default params
+  // params
   eLogLevel logLevel = LOGINFO;
   bool fullScreen = false;
   bool vsync = true;
@@ -54,19 +53,19 @@ int main (int numArgs, char* args[]) {
     };
   //}}}
 
-  // start log
+  // log
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, fmt::format ("player"));
 
   // list static registered classes
   cUI::listRegisteredClasses();
 
+  // app
   cPlayerApp app ({800, 480}, fullScreen, vsync);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
   app.setSongName (params.empty() ? "" : cFileUtils::resolve (params[0]));
 
-  // main UI loop
   app.mainUILoop();
 
   return EXIT_SUCCESS;

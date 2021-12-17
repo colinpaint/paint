@@ -21,7 +21,7 @@ public:
   cDocument* getDocument() const;
   bool setDocumentName (const std::string& filename);
 
-  void drop (const std::vector<std::string>& dropItems);
+  virtual void drop (const std::vector<std::string>& dropItems) final;
 
 private:
   std::vector<cDocument*> mDocuments;

@@ -26,7 +26,7 @@ public:
   bool setSongName (const std::string& songName);
   bool setSongSpec (const std::vector <std::string>& songSpec);
 
-  void drop (const std::vector<std::string>& dropItems);
+  virtual void drop (const std::vector<std::string>& dropItems) final;
 
 private:
   cSongLoader* mSongLoader;

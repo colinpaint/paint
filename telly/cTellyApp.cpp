@@ -19,9 +19,6 @@ using namespace std;
 
 cTellyApp::cTellyApp (const cPoint& windowSize, bool fullScreen, bool vsync)
     : cApp(windowSize, fullScreen, vsync) {
-
-  setResizeCallback ([&](int width, int height) noexcept { windowResize (width, height); });
-  setDropCallback ([&](vector<string> dropItems) noexcept { drop (dropItems); });
   }
 
 bool cTellyApp::setDvbSource (const string& filename, const string& recordRoot, const cDvbMultiplex& dvbMultiplex,

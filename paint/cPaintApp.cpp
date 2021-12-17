@@ -29,9 +29,6 @@ cPaintApp::cPaintApp (const cPoint& windowSize, bool fullScreen, bool vsync, con
   // create empty layer
   mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, getGraphics()));
   createResources();
-
-  setResizeCallback ([&](int width, int height) noexcept { windowResize (width, height); });
-  setDropCallback ([&](vector<string> dropItems) noexcept { drop (dropItems); });
   }
 //}}}
 //{{{
@@ -51,9 +48,6 @@ cPaintApp::cPaintApp (const cPoint& windowSize, bool fullScreen, bool vsync, con
   cLog::log (LOGINFO, fmt::format ("new canvas - {} {} {} {}", filename, mSize.x, mSize.y, mNumChannels));
 
   createResources();
-
-  setResizeCallback ([&](int width, int height) noexcept { windowResize (width, height); });
-  setDropCallback ([&](vector<string> dropItems) noexcept { drop (dropItems); });
   }
 //}}}
 //{{{

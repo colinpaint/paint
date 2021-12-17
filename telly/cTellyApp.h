@@ -25,7 +25,7 @@ public:
   bool setDvbSource (const std::string& filename, const std::string& recordRoot, const cDvbMultiplex& dvbMultiplex,
                      bool renderFirstService, uint16_t decoderOptions);
 
-  void drop (const std::vector<std::string>& dropItems);
+  virtual void drop (const std::vector<std::string>& dropItems) final;
 
 private:
   cDvbStream* mDvbStream = nullptr;

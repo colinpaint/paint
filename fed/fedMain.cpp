@@ -32,7 +32,7 @@ using namespace std;
 
 int main (int numArgs, char* args[]) {
 
-  // default params
+  // params
   eLogLevel logLevel = LOGINFO;
   bool fullScreen = false;
   bool vsync = true;
@@ -53,14 +53,14 @@ int main (int numArgs, char* args[]) {
     };
   //}}}
 
-  // start log
+  // log
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, fmt::format ("fed"));
 
   // list static registered classes
   cUI::listRegisteredClasses();
 
-  // create platform, graphics, UI font
+  // app
   cFedApp app ({1000, 900}, fullScreen, vsync);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));

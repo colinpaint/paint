@@ -17,11 +17,8 @@
 using namespace std;
 //}}}
 
-cFedApp::cFedApp (const cPoint& windowSize, bool fullScreen, bool vsync) 
+cFedApp::cFedApp (const cPoint& windowSize, bool fullScreen, bool vsync)
     : cApp (windowSize, fullScreen, vsync) {
-
-  setResizeCallback ([&](int width, int height) noexcept { windowResize (width, height); });
-  setDropCallback ([&](vector<string> dropItems) noexcept { drop (dropItems); });
   }
 
 cDocument* cFedApp::getDocument() const {

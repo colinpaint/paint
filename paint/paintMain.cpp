@@ -36,7 +36,7 @@ using namespace std;
 
 int main (int numArgs, char* args[]) {
 
-  // default params
+  // params
   eLogLevel logLevel = LOGINFO;
   bool fullScreen = false;
   bool vsync = true;
@@ -55,7 +55,7 @@ int main (int numArgs, char* args[]) {
     }
   //}}}
 
-  // start log
+  // log
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, fmt::format ("paintbox"));
 
@@ -63,6 +63,7 @@ int main (int numArgs, char* args[]) {
   cBrush::listRegisteredClasses();
   cUI::listRegisteredClasses();
 
+  // app
   cPaintApp app ({1200, 800}, fullScreen, vsync,
                  filename.empty() ? "../piccies/tv.jpg" : cFileUtils::resolve (filename));
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));

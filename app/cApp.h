@@ -33,15 +33,10 @@ public:
   void setMonoFont (ImFont* font) { mMonoFont = font; }
 
   // callbacks
-  void setResizeCallback (std::function<void (int width, int height)> callback) { mResizeCallback = callback; }
-  void setDropCallback (std::function<void (std::vector<std::string> dropItems)> callback) { mDropCallback = callback; }
-
   void mainUILoop();
   void windowResize (int width, int height);
 
-  // vars
-  std::function <void (int width, int height)> mResizeCallback;
-  std::function <void (std::vector<std::string> dropItems)> mDropCallback;
+  virtual void drop (const std::vector<std::string>& dropItems) { (void)dropItems; }
 
 private:
   cPlatform* mPlatform;

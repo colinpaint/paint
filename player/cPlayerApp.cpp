@@ -18,12 +18,8 @@
 using namespace std;
 //}}}
 
-cPlayerApp::cPlayerApp (const cPoint& windowSize, bool fullScreen, bool vsync) 
+cPlayerApp::cPlayerApp (const cPoint& windowSize, bool fullScreen, bool vsync)
     : cApp(windowSize, fullScreen, vsync) {
-
-  setResizeCallback ([&](int width, int height) noexcept { windowResize (width, height); });
-  setDropCallback ([&](vector<string> dropItems) noexcept { drop (dropItems); });
-
   mSongLoader = new cSongLoader();
   }
 

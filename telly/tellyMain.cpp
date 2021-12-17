@@ -4,8 +4,6 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
-#include <functional>
 
 // stb - invoke header only library implementation here
 #define STB_IMAGE_IMPLEMENTATION
@@ -86,7 +84,7 @@ namespace {
 
 int main (int numArgs, char* args[]) {
 
-  // default params
+  // params
   eLogLevel logLevel = LOGINFO;
   uint16_t decoderOptions = 0;
   bool renderFirstService = false;
@@ -122,7 +120,7 @@ int main (int numArgs, char* args[]) {
     }
   //}}}
 
-  // start log
+  // log
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, fmt::format ("telly"));
   if (filename.empty())
@@ -131,14 +129,13 @@ int main (int numArgs, char* args[]) {
   // list static registered classes
   cUI::listRegisteredClasses();
 
-  // create platform, graphics, UI fonts
+  // app
   cTellyApp app ({1920/2, 1080/2}, fullScreen, vsync);
   app.setDvbSource (cFileUtils::resolve (filename), kRecordRoot, useMultiplex,
                     !filename.empty() || renderFirstService, decoderOptions);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
 
-  // main UI loop
   ImPlot::CreateContext();
   app.mainUILoop();
   ImPlot::DestroyContext();

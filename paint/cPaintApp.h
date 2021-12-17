@@ -48,7 +48,7 @@ public:
   void mouse (bool active, bool clicked, bool dragging, bool released, cVec2 pos, cVec2 drag);
   void draw (cPoint windowSize);
 
-  void drop (const std::vector<std::string>& dropItems);
+  virtual void drop (const std::vector<std::string>& dropItems) final;
 
 private:
   void createResources();
