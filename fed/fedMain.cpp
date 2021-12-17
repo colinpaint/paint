@@ -16,13 +16,9 @@
 // imGui
 #include "../imgui/imgui.h"
 
-#include "../app/cApp.h"
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
+#include "../fed/cFedApp.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
-
-#include "../fed/cFedApp.h"
 
 // ui
 #include "../ui/cUI.h"
@@ -65,47 +61,12 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI font
-  cFedApp app ({1000, 900});
+  cFedApp app ({1000, 900}, fullScreen, vsync);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
   app.setDocumentName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolve (params[0]));
 
-  cPlatform& platform = app.getPlatform();
-  cGraphics& graphics = app.getGraphics();
-  platform.newFrame();
-  platform.setVsync (vsync);
-  platform.setFullScreen (fullScreen);
-  platform.setResizeCallback (
-    //{{{  resize lambda
-    [&](int width, int height) noexcept {
-      platform.newFrame();
-      graphics.windowResize (width, height);
-      graphics.newFrame();
-      cUI::draw (app);
-      graphics.drawUI();
-      platform.present();
-      }
-    );
-    //}}}
-  platform.setDropCallback (
-    //{{{  drop lambda
-    [&](vector<string> dropItems) noexcept {
-      for (auto& item : dropItems) {
-        string filename = cFileUtils::resolve (item);
-        app.setDocumentName (filename);
-        cLog::log (LOGINFO, filename);
-        }
-      }
-    );
-    //}}}
-
-  // main UI loop
-  while (platform.pollEvents()) {
-    graphics.newFrame();
-    cUI::draw (app);
-    graphics.drawUI();
-    platform.present();
-    }
+  app.mainUILoop();
 
   return EXIT_SUCCESS;
   }

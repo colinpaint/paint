@@ -3,6 +3,7 @@
 //{{{  includes
 #include <string>
 #include <chrono>
+#include <functional>
 
 #include "../utils/cPointRectColor.h"
 
@@ -13,7 +14,7 @@ struct ImFont;
 
 class cApp {
 public:
-  cApp (const cPoint& windowSize);
+  cApp (const cPoint& windowSize, bool fullScreen, bool vsync);
   virtual ~cApp();
 
   // get interfaces
@@ -30,6 +31,17 @@ public:
   // sets
   void setMainFont (ImFont* font) { mMainFont = font; }
   void setMonoFont (ImFont* font) { mMonoFont = font; }
+
+  // callbacks
+  void setResizeCallback (std::function<void (int width, int height)> callback) { mResizeCallback = callback; }
+  void setDropCallback (std::function<void (std::vector<std::string> dropItems)> callback) { mDropCallback = callback; }
+
+  void mainUILoop();
+  void windowResize (int width, int height);
+
+  // vars
+  std::function <void (int width, int height)> mResizeCallback;
+  std::function <void (std::vector<std::string> dropItems)> mDropCallback;
 
 private:
   cPlatform* mPlatform;

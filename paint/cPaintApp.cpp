@@ -13,7 +13,9 @@
 
 #include "../brush/cBrush.h"
 #include "../app/cGraphics.h"
+
 #include "../utils/cLog.h"
+#include "../utils/cFileUtils.h"
 
 #include "cLayer.h"
 
@@ -21,17 +23,20 @@ using namespace std;
 //}}}
 
 //{{{
-cPaintApp::cPaintApp (const cPoint& windowSize, const cPoint& size)
-   : cApp(windowSize), mSize(size), mNumChannels(4) {
+cPaintApp::cPaintApp (const cPoint& windowSize, bool fullScreen, bool vsync, const cPoint& size)
+   : cApp(windowSize, fullScreen, vsync), mSize(size), mNumChannels(4) {
 
   // create empty layer
   mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, getGraphics()));
   createResources();
+
+  setResizeCallback ([&](int width, int height) noexcept { windowResize (width, height); });
+  setDropCallback ([&](vector<string> dropItems) noexcept { drop (dropItems); });
   }
 //}}}
 //{{{
-cPaintApp::cPaintApp (const cPoint& windowSize, const std::string& filename)
-    : cApp (windowSize) {
+cPaintApp::cPaintApp (const cPoint& windowSize, bool fullScreen, bool vsync, const std::string& filename)
+    : cApp(windowSize, fullScreen, vsync) {
 
   mFilename = filename;
 
@@ -46,6 +51,9 @@ cPaintApp::cPaintApp (const cPoint& windowSize, const std::string& filename)
   cLog::log (LOGINFO, fmt::format ("new canvas - {} {} {} {}", filename, mSize.x, mSize.y, mNumChannels));
 
   createResources();
+
+  setResizeCallback ([&](int width, int height) noexcept { windowResize (width, height); });
+  setDropCallback ([&](vector<string> dropItems) noexcept { drop (dropItems); });
   }
 //}}}
 //{{{
@@ -171,6 +179,16 @@ void cPaintApp::draw (cPoint windowSize) {
   mShader->setModelProjection (model, orthoProjection);
 
   mQuad->draw();
+  }
+//}}}
+
+//{{{
+void cPaintApp::drop (const vector<string>& dropItems) {
+
+  for (auto& item : dropItems) {
+    cLog::log (LOGINFO, item);
+    newLayer (cFileUtils::resolve (item));
+    }
   }
 //}}}
 

@@ -2,7 +2,6 @@
 #pragma once
 //{{{  includes
 #include <string>
-#include <functional>
 
 #include "../utils/cPointRectColor.h"
 //}}}
@@ -33,12 +32,4 @@ public:
   virtual bool pollEvents() = 0;
   virtual void newFrame() = 0;
   virtual void present() = 0;
-
-  // callback
-  void setResizeCallback (std::function<void (int width, int height)> callback) { mResizeCallback = callback; }
-  void setDropCallback (std::function<void (std::vector<std::string> dropItems)> callback) { mDropCallback = callback; }
-
-  // vars
-  std::function <void (int width, int height)> mResizeCallback;
-  std::function <void (std::vector<std::string> dropItems)> mDropCallback;
   };

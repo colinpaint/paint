@@ -31,6 +31,8 @@
 #include "cPlatform.h"
 #include "cGraphics.h"
 
+#include "../ui/cUI.h"
+
 #include "../utils/cLog.h"
 
 using namespace std;
@@ -49,6 +51,7 @@ constexpr bool kDebug = false;
 namespace {
   //{{{  glfw callbacks
   // vars for callbacks
+  cApp* gApp = nullptr;
   cPlatform* gPlatform = nullptr;
   GLFWwindow* gWindow = nullptr;
 
@@ -69,8 +72,8 @@ namespace {
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
 
     (void)window;
-    if (gPlatform)
-      gPlatform->mResizeCallback (width, height);
+    if (gApp)
+      gApp->mResizeCallback (width, height);
     }
   //}}}
   //{{{
@@ -82,8 +85,8 @@ namespace {
     for (int i = 0;  i < count;  i++)
       dropItems.push_back (paths[i]);
 
-    if (gPlatform)
-      gPlatform->mDropCallback (dropItems);
+    if (gApp)
+      gApp->mDropCallback (dropItems);
     }
   //}}}
   //}}}
@@ -1982,8 +1985,10 @@ public:
 
 // cApp
 //{{{
-cApp::cApp (const cPoint& windowSize) {
+cApp::cApp (const cPoint& windowSize, bool fullScreen, bool vsync) {
 // create platform and graphics
+
+  gApp = this;
 
   mPlatform = new cOpenGL3Platform();
   if (!mPlatform || !mPlatform->init (windowSize))
@@ -1992,6 +1997,9 @@ cApp::cApp (const cPoint& windowSize) {
   mGraphics = new cOpenGL3Graphics();
   if (!mGraphics || !mGraphics->init())
     cLog::log (LOGERROR, "cApp cOpenGL3Graphics failed");
+
+  mPlatform->setFullScreen (fullScreen);
+  mPlatform->setVsync (vsync);
   }
 //}}}
 //{{{
@@ -2016,5 +2024,32 @@ chrono::system_clock::time_point cApp::getNow() {
 
   // UTC->BST only
   return std::chrono::system_clock::now() + std::chrono::hours ((timeinfo->tm_isdst == 1) ? 1 : 0);
+  }
+//}}}
+
+// actions
+//{{{
+void cApp::mainUILoop() {
+
+  // main UI loop
+  while (mPlatform->pollEvents()) {
+    mPlatform->newFrame();
+    mGraphics->newFrame();
+    cUI::draw (*this);
+    mGraphics->drawUI();
+    mPlatform->present();
+    }
+  }
+//}}}
+//{{{
+void cApp::windowResize (int width, int height) {
+
+  mPlatform->newFrame();
+  mGraphics->windowResize (width, height);
+  mGraphics->newFrame();
+
+  mGraphics->drawUI();
+
+  mPlatform->present();
   }
 //}}}

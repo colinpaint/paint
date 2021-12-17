@@ -17,12 +17,9 @@
 #include "../imgui/imgui.h"
 
 // UI font
-#include "../app/cApp.h"
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
+#include"cPlayerApp.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
-#include"cPlayerApp.h"
 
 // ui
 #include "../ui/cUI.h"
@@ -64,46 +61,13 @@ int main (int numArgs, char* args[]) {
   // list static registered classes
   cUI::listRegisteredClasses();
 
-  cPlayerApp app ({800, 480});
+  cPlayerApp app ({800, 480}, fullScreen, vsync);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
   app.setSongName (params.empty() ? "" : cFileUtils::resolve (params[0]));
 
-  cPlatform& platform = app.getPlatform();
-  cGraphics& graphics = app.getGraphics();
-  platform.setVsync (vsync);
-  platform.setFullScreen (fullScreen);
-  platform.setResizeCallback (
-    //{{{  resize lambda
-    [&](int width, int height) noexcept {
-      platform.newFrame();
-      graphics.windowResize (width, height);
-      graphics.newFrame();
-      cUI::draw (app);
-      graphics.drawUI();
-      platform.present();
-      }
-    );
-    //}}}
-  platform.setDropCallback (
-    //{{{  drop lambda
-    [&](vector<string> dropItems) noexcept {
-      for (auto& item : dropItems) {
-        cLog::log (LOGINFO, item);
-        app.setSongName (cFileUtils::resolve (item));
-        }
-      }
-    );
-    //}}}
-
   // main UI loop
-  while (platform.pollEvents()) {
-    platform.newFrame();
-    graphics.newFrame();
-    cUI::draw (app);
-    graphics.drawUI();
-    platform.present();
-    }
+  app.mainUILoop();
 
   return EXIT_SUCCESS;
   }

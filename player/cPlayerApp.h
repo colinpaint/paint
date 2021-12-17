@@ -17,7 +17,7 @@ class cSongLoader;
 
 class cPlayerApp : public cApp {
 public:
-  cPlayerApp (const cPoint& windowSize);
+  cPlayerApp (const cPoint& windowSize, bool fullScreen, bool vsync);
   virtual ~cPlayerApp() = default;
 
   std::string getSongName() const { return mSongName; }
@@ -26,8 +26,9 @@ public:
   bool setSongName (const std::string& songName);
   bool setSongSpec (const std::vector <std::string>& songSpec);
 
+  void drop (const std::vector<std::string>& dropItems);
+
 private:
   cSongLoader* mSongLoader;
-
   std::string mSongName;
   };

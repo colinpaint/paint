@@ -15,8 +15,8 @@ class cBrush;
 
 class cPaintApp : public cApp {
 public:
-  cPaintApp (const cPoint& windowSize, const cPoint& size);
-  cPaintApp (const cPoint& windowSize, const std::string& filename);
+  cPaintApp (const cPoint& windowSize, bool fullScreen, bool vsync, const cPoint& size);
+  cPaintApp (const cPoint& windowSize, bool fullScreen, bool vsync, const std::string& filename);
   virtual ~cPaintApp();
 
   // gets
@@ -47,6 +47,8 @@ public:
 
   void mouse (bool active, bool clicked, bool dragging, bool released, cVec2 pos, cVec2 drag);
   void draw (cPoint windowSize);
+
+  void drop (const std::vector<std::string>& dropItems);
 
 private:
   void createResources();

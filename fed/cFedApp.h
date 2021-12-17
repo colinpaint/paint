@@ -15,11 +15,13 @@ class cDocument;
 
 class cFedApp : public cApp {
 public:
-  cFedApp (const cPoint& windowSize) : cApp (windowSize) {}
+  cFedApp (const cPoint& windowSize, bool fullScreen, bool vsync);
   virtual ~cFedApp() = default;
 
   cDocument* getDocument() const;
   bool setDocumentName (const std::string& filename);
+
+  void drop (const std::vector<std::string>& dropItems);
 
 private:
   std::vector<cDocument*> mDocuments;

@@ -17,16 +17,11 @@
 #include "../imgui/imgui.h"
 #include "../implot/implot.h"
 
-// self registered classes using static var init idiom
-#include "../app/cApp.h"
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
+// app
+#include "../telly/cTellyApp.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
-#include "../telly/cTellyApp.h"
-
-// ui
 #include "../ui/cUI.h"
 
 // utils
@@ -36,56 +31,58 @@
 using namespace std;
 //}}}
 
-#ifdef _WIN32
-  const string kRecordRoot = "/tv/";
-#else
-  const string kRecordRoot = "/home/pi/tv/";
-#endif
-//{{{
-static const vector <cDvbMultiplex> kDvbMultiplexes = {
-  { "hd",
-    626000000,
-    { "BBC ONE HD", "BBC TWO HD", "ITV HD", "Channel 4 HD", "Channel 5 HD" },
-    { "bbc1hd",     "bbc2hd",     "itv1hd", "chn4hd",       "chn5hd" },
-    false,
-  },
+namespace {
+  #ifdef _WIN32
+    const string kRecordRoot = "/tv/";
+  #else
+    const string kRecordRoot = "/home/pi/tv/";
+  #endif
+  //{{{
+  const vector <cDvbMultiplex> kDvbMultiplexes = {
+    { "hd",
+      626000000,
+      { "BBC ONE HD", "BBC TWO HD", "ITV HD", "Channel 4 HD", "Channel 5 HD" },
+      { "bbc1hd",     "bbc2hd",     "itv1hd", "chn4hd",       "chn5hd" },
+      false,
+    },
 
-  { "itv",
-    650000000,
-    { "ITV",  "ITV2", "ITV3", "ITV4", "Channel 4", "Channel 4+1", "More 4", "Film4" , "E4", "Channel 5" },
-    { "itv1", "itv2", "itv3", "itv4", "chn4"     , "c4+1",        "more4",  "film4",  "e4", "chn5" },
-    false,
-  },
+    { "itv",
+      650000000,
+      { "ITV",  "ITV2", "ITV3", "ITV4", "Channel 4", "Channel 4+1", "More 4", "Film4" , "E4", "Channel 5" },
+      { "itv1", "itv2", "itv3", "itv4", "chn4"     , "c4+1",        "more4",  "film4",  "e4", "chn5" },
+      false,
+    },
 
-  { "bbc",
-    674000000,
-    { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
-    { "bbc1",           "bbc2",    "bbc4" },
-    false,
-  },
+    { "bbc",
+      674000000,
+      { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
+      { "bbc1",           "bbc2",    "bbc4" },
+      false,
+    },
 
-  { "allhd",
-    626000000,
-    { "" },
-    { "" },
-    true,
-  },
+    { "allhd",
+      626000000,
+      { "" },
+      { "" },
+      true,
+    },
 
-  { "allitv",
-    650000000,
-    { "" },
-    { "" },
-    true,
-  },
+    { "allitv",
+      650000000,
+      { "" },
+      { "" },
+      true,
+    },
 
-  { "allbbc",
-    674000000,
-    { "" },
-    { "" },
-    true,
-  },
-  };
-//}}}
+    { "allbbc",
+      674000000,
+      { "" },
+      { "" },
+      true,
+    },
+    };
+  //}}}
+  }
 
 int main (int numArgs, char* args[]) {
 
@@ -135,50 +132,15 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // create platform, graphics, UI fonts
-  cTellyApp app ({1920/2, 1080/2});
+  cTellyApp app ({1920/2, 1080/2}, fullScreen, vsync);
   app.setDvbSource (cFileUtils::resolve (filename), kRecordRoot, useMultiplex,
                     !filename.empty() || renderFirstService, decoderOptions);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
 
-  cPlatform& platform = app.getPlatform();
-  cGraphics& graphics = app.getGraphics();
-  platform.setVsync (vsync);
-  platform.setFullScreen (fullScreen);
-  platform.setResizeCallback (
-    //{{{  resize lambda
-    [&](int width, int height) noexcept {
-      platform.newFrame();
-      graphics.windowResize (width, height);
-      graphics.newFrame();
-      cUI::draw (app);
-      graphics.drawUI();
-      platform.present();
-      }
-    );
-    //}}}
-  platform.setDropCallback (
-    //{{{  drop lambda
-    [&](vector<string> dropItems) noexcept {
-      for (auto& item : dropItems) {
-        string filename = cFileUtils::resolve (item);
-        app.setDvbSource (filename, kRecordRoot, useMultiplex, true, decoderOptions);
-        cLog::log (LOGINFO, filename);
-        }
-      }
-    );
-    //}}}
-
   // main UI loop
   ImPlot::CreateContext();
-  while (platform.pollEvents()) {
-    platform.newFrame();
-    graphics.newFrame();
-    cUI::draw (app);
-    //ImPlot::app();
-    graphics.drawUI();
-    platform.present();
-    }
+  app.mainUILoop();
   ImPlot::DestroyContext();
 
   return EXIT_SUCCESS;

@@ -16,7 +16,7 @@ class cDvbStream;
 
 class cTellyApp : public cApp {
 public:
-  cTellyApp (const cPoint& windowSize) : cApp(windowSize) {}
+  cTellyApp (const cPoint& windowSize, bool fullScreen, bool vsync);
   virtual ~cTellyApp() = default;
 
   cDvbStream* getDvbStream() { return mDvbStream; }
@@ -24,6 +24,8 @@ public:
 
   bool setDvbSource (const std::string& filename, const std::string& recordRoot, const cDvbMultiplex& dvbMultiplex,
                      bool renderFirstService, uint16_t decoderOptions);
+
+  void drop (const std::vector<std::string>& dropItems);
 
 private:
   cDvbStream* mDvbStream = nullptr;

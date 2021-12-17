@@ -10,6 +10,7 @@
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"
+#include "../utils/cFileUtils.h"
 
 #include "../song/cSong.h"
 #include "../song/cSongLoader.h"
@@ -17,7 +18,12 @@
 using namespace std;
 //}}}
 
-cPlayerApp::cPlayerApp (const cPoint& windowSize) : cApp(windowSize) {
+cPlayerApp::cPlayerApp (const cPoint& windowSize, bool fullScreen, bool vsync) 
+    : cApp(windowSize, fullScreen, vsync) {
+
+  setResizeCallback ([&](int width, int height) noexcept { windowResize (width, height); });
+  setDropCallback ([&](vector<string> dropItems) noexcept { drop (dropItems); });
+
   mSongLoader = new cSongLoader();
   }
 
@@ -41,4 +47,12 @@ bool cPlayerApp::setSongSpec (const vector <string>& songSpec) {
   mSongName = songSpec[0];
   mSongLoader->launchLoad (songSpec);
   return true;
+  }
+
+void cPlayerApp::drop (const vector<string>& dropItems) {
+
+  for (auto& item : dropItems) {
+    cLog::log (LOGINFO, item);
+    setSongName (cFileUtils::resolve (item));
+    }
   }
