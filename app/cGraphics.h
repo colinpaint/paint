@@ -96,25 +96,6 @@ public:
   };
 //}}}
 //{{{
-class cLayerShader : public cQuadShader {
-public:
-  cLayerShader() : cQuadShader() {}
-  virtual ~cLayerShader() = default;
-
-  virtual void setHueSatVal (float hue, float sat, float val) = 0;
-  };
-//}}}
-//{{{
-class cPaintShader : public cQuadShader {
-public:
-  cPaintShader() : cQuadShader() {}
-  virtual ~cPaintShader() = default;
-
-  virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) = 0;
-  };
-//}}}
-
-//{{{
 class cTexture {
 public:
   enum eTextureType { eRgba, eNv12, eYuv420 };
@@ -144,6 +125,25 @@ public:
   };
 //}}}
 
+//{{{
+class cLayerShader : public cQuadShader {
+public:
+  cLayerShader() : cQuadShader() {}
+  virtual ~cLayerShader() = default;
+
+  virtual void setHueSatVal (float hue, float sat, float val) = 0;
+  };
+//}}}
+//{{{
+class cPaintShader : public cQuadShader {
+public:
+  cPaintShader() : cQuadShader() {}
+  virtual ~cPaintShader() = default;
+
+  virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) = 0;
+  };
+//}}}
+
 class cGraphics {
 public:
   virtual ~cGraphics() = default;
@@ -158,11 +158,11 @@ public:
   virtual cFrameBuffer* createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) = 0;
   virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) = 0;
 
-  virtual cLayerShader* createLayerShader() = 0;
-  virtual cPaintShader* createPaintShader() = 0;
-
   virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) = 0;
   virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) = 0;
+
+  virtual cLayerShader* createLayerShader() = 0;
+  virtual cPaintShader* createPaintShader() = 0;
 
   // actions
   virtual void background (const cPoint& size) = 0;

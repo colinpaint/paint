@@ -39,6 +39,6 @@ public:
   void setDropCallback (std::function<void (std::vector<std::string> dropItems)> callback) { mDropCallback = callback; }
 
   // vars
-  std::function <void (int programPid, int programSid)> mResizeCallback;
+  std::function <void (int width, int height)> mResizeCallback;
   std::function <void (std::vector<std::string> dropItems)> mDropCallback;
   };

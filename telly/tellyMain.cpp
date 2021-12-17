@@ -35,6 +35,12 @@
 
 using namespace std;
 //}}}
+
+#ifdef _WIN32
+  const string kRecordRoot = "/tv/";
+#else
+  const string kRecordRoot = "/home/pi/tv/";
+#endif
 //{{{
 static const vector <cDvbMultiplex> kDvbMultiplexes = {
   { "hd",
@@ -89,6 +95,7 @@ int main (int numArgs, char* args[]) {
   bool renderFirstService = false;
   bool fullScreen = false;
   bool vsync = true;
+
   //{{{  parse command line args to params
   cDvbMultiplex useMultiplex = kDvbMultiplexes[0];
   string filename;
@@ -129,7 +136,7 @@ int main (int numArgs, char* args[]) {
 
   // create platform, graphics, UI fonts
   cTellyApp app ({1920/2, 1080/2});
-  app.setDvbSource (cFileUtils::resolve (filename), useMultiplex,
+  app.setDvbSource (cFileUtils::resolve (filename), kRecordRoot, useMultiplex,
                     !filename.empty() || renderFirstService, decoderOptions);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
@@ -155,7 +162,7 @@ int main (int numArgs, char* args[]) {
     [&](vector<string> dropItems) noexcept {
       for (auto& item : dropItems) {
         string filename = cFileUtils::resolve (item);
-        app.setDvbSource (filename, useMultiplex, true, decoderOptions);
+        app.setDvbSource (filename, kRecordRoot, useMultiplex, true, decoderOptions);
         cLog::log (LOGINFO, filename);
         }
       }

@@ -88,6 +88,10 @@ namespace {
   //}}}
   //}}}
 
+  // options
+  bool gClipOriginBottomLeft = true;
+
+  // shader
   //{{{
   const string kQuadVertShader =
 
@@ -161,41 +165,6 @@ namespace {
     return id;
     }
   //}}}
-
-  // options
-  bool gDrawBase = false;
-  bool gClipOriginBottomLeft = true;
-
-  // resources
-  bool gFontLoaded = false;
-  GLuint gFontTexture = 0;
-  //{{{
-  void createFontTexture() {
-  // load font texture atlas as RGBA 32-bit (75% of the memory is wasted, but default font is so small)
-  // because it is more likely to be compatible with user's existing shaders
-  // If your ImTextureId represent a higher-level concept than just a GL texture id,
-  // consider calling GetTexDataAsAlpha8() instead to save on GPU memory
-
-    uint8_t* pixels;
-    int32_t width;
-    int32_t height;
-    ImGui::GetIO().Fonts->GetTexDataAsRGBA32 (&pixels, &width, &height);
-
-    // create texture
-    glGenTextures (1, &gFontTexture);
-    glBindTexture (GL_TEXTURE_2D, gFontTexture);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // pixels to texture
-    glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-    // set font textureId
-    ImGui::GetIO().Fonts->TexID = (ImTextureID)(intptr_t)gFontTexture;
-    }
-  //}}}
-
   //{{{
   class cDrawListShader : public cShader {
   public:
@@ -407,9 +376,7 @@ namespace {
     glDisable (GL_CULL_FACE);
     glDisable (GL_DEPTH_TEST);
 
-    #ifndef OPENGL2
-      glDisable(GL_PRIMITIVE_RESTART);
-    #endif
+    glDisable(GL_PRIMITIVE_RESTART);
 
     // enables
     glEnable (GL_SCISSOR_TEST);
@@ -453,7 +420,6 @@ namespace {
                            (GLvoid*)IM_OFFSETOF(ImDrawVert, col));
     }
   //}}}
-
   //{{{
   void renderDrawData (ImDrawData* drawData) {
 
@@ -502,17 +468,10 @@ namespace {
             glBindTexture (GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
 
             // draw
-           #ifndef OPENGL2
-           if (gDrawBase)
-              glDrawElementsBaseVertex (GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
-                                        sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-                                        (void*)(intptr_t)(pcmd->IdxOffset * sizeof(ImDrawIdx)),
-                                        (GLint)pcmd->VtxOffset);
-           else
-           #endif
-             glDrawElements (GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
-                              sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-                              (void*)(intptr_t)(pcmd->IdxOffset * sizeof(ImDrawIdx)));
+            glDrawElementsBaseVertex (GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
+                                      sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
+                                      (void*)(intptr_t)(pcmd->IdxOffset * sizeof(ImDrawIdx)),
+                                      (GLint)pcmd->VtxOffset);
             }
           }
         }
@@ -532,6 +491,36 @@ namespace {
       }
 
     renderDrawData (viewport->DrawData);
+    }
+  //}}}
+
+  // font texture
+  bool gFontLoaded = false;
+  GLuint gFontTexture = 0;
+  //{{{
+  void createFontTexture() {
+  // load font texture atlas as RGBA 32-bit (75% of the memory is wasted, but default font is so small)
+  // because it is more likely to be compatible with user's existing shaders
+  // If your ImTextureId represent a higher-level concept than just a GL texture id,
+  // consider calling GetTexDataAsAlpha8() instead to save on GPU memory
+
+    uint8_t* pixels;
+    int32_t width;
+    int32_t height;
+    ImGui::GetIO().Fonts->GetTexDataAsRGBA32 (&pixels, &width, &height);
+
+    // create texture
+    glGenTextures (1, &gFontTexture);
+    glBindTexture (GL_TEXTURE_2D, gFontTexture);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // pixels to texture
+    glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+    // set font textureId
+    ImGui::GetIO().Fonts->TexID = (ImTextureID)(intptr_t)gFontTexture;
     }
   //}}}
   }
@@ -1353,9 +1342,7 @@ public:
 
     // uv texture
     glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-    #ifndef OPENGL2
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, size.x/2, size.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, nullptr);
-    #endif
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, size.x/2, size.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1382,11 +1369,9 @@ public:
     glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[0]);
 
-    #ifndef OPENGL2
     // uv texture
     glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, mSize.x/2, mSize.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, pixels[1]);
-    #endif
     }
   //}}}
   //{{{
@@ -1843,42 +1828,25 @@ public:
   //{{{
   virtual bool init() final {
 
-    int gGlVersion = 0;   // major.minor * 100
-    int gGlslVersion = 0; // major.minor * 100
-
     // get openGL version
+    GLint glMajor = 0;
+    GLint glMinor = 0;
     string glVersionString = (const char*)glGetString (GL_VERSION);
-    #if defined(IMGUI_IMPL_OPENGL_ES2)
-      gGlVersion = 200; // GLES 2
-    #else
-      GLint glMajor = 0;
-      //glGetIntegerv (GL_MAJOR_VERSION, &glMajor);
-      GLint glMinor = 0;
-      //glGetIntegerv (GL_MINOR_VERSION, &glMinor);
-      //if ((glMajor == 0) && (glMinor == 0))
-      // Query GL_VERSION string desktop GL 2.x
-      sscanf (glVersionString.c_str(), "%d.%d", &glMajor, &glMinor);
-      gGlVersion = ((glMajor * 10) + glMinor) * 10;
-    #endif
+    sscanf (glVersionString.c_str(), "%d.%d", &glMajor, &glMinor);
+    int gGlVersion = ((glMajor * 10) + glMinor) * 10;
     cLog::log (LOGINFO, fmt::format ("OpenGL {} - {}", glVersionString, gGlVersion));
 
     // set imGui backend capabilities flags
     ImGui::GetIO().BackendRendererName = "openGL3";
-    //{{{  vertexOffset
-    #ifdef IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET
-      if (gGlVersion >= 320) {
-        gDrawBase = true;
-        ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-        cLog::log (LOGINFO, "- hasVtxOffset");
-        }
-    #endif
-    //}}}
+    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
     //{{{  clipOrigin
     #if defined (GL_CLIP_ORIGIN)
       GLenum currentClipOrigin = 0;
       glGetIntegerv (GL_CLIP_ORIGIN, (GLint*)&currentClipOrigin);
-      if (currentClipOrigin == GL_UPPER_LEFT)
+      if (currentClipOrigin == GL_UPPER_LEFT) {
         gClipOriginBottomLeft = false;
+        cLog::log (LOGINFO, fmt::format ("OpenGL GL_CLIP_ORIGIN upperLeft"));
+        }
     #endif
     //}}}
 
@@ -1890,11 +1858,11 @@ public:
       ImGui::GetPlatformIO().Renderer_RenderWindow = renderWindow;
 
     // get GLSL version
-    string glslVersionString = (const char*)glGetString (GL_SHADING_LANGUAGE_VERSION);
     int glslMajor = 0;
     int glslMinor = 0;
+    string glslVersionString = (const char*)glGetString (GL_SHADING_LANGUAGE_VERSION);
     sscanf (glslVersionString.c_str(), "%d.%d", &glslMajor, &glslMinor);
-    gGlslVersion = (glslMajor * 100) + glslMinor;
+    int gGlslVersion = (glslMajor * 100) + glslMinor;
     cLog::log (LOGINFO, fmt::format ("GLSL {} - {}", glslVersionString, gGlslVersion));
 
     cLog::log (LOGINFO, fmt::format ("Renderer {}", glGetString (GL_RENDERER)));

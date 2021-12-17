@@ -16,19 +16,12 @@
 using namespace std;
 //}}}
 
-bool cTellyApp::setDvbSource (const string& filename, 
-                              const cDvbMultiplex& dvbMultiplex,
+bool cTellyApp::setDvbSource (const string& filename, const string& recordRoot, const cDvbMultiplex& dvbMultiplex,
                               bool renderFirstService, uint16_t decoderOptions) {
 // create dvb source
 
-  #ifdef _WIN32
-    const string kRecordRoot = "/tv/";
-  #else
-    const string kRecordRoot = "/home/pi/tv/";
-  #endif
-
   mDecoderOptions = decoderOptions;
-  mDvbStream = new cDvbStream (dvbMultiplex, kRecordRoot, renderFirstService, decoderOptions);
+  mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, renderFirstService, decoderOptions);
   if (!mDvbStream)
     return false;
 

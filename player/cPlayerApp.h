@@ -18,7 +18,7 @@ class cSongLoader;
 class cPlayerApp : public cApp {
 public:
   cPlayerApp (const cPoint& windowSize);
-  ~cPlayerApp() = default;
+  virtual ~cPlayerApp() = default;
 
   std::string getSongName() const { return mSongName; }
   cSong* getSong() const;

@@ -17,12 +17,12 @@ class cDvbStream;
 class cTellyApp : public cApp {
 public:
   cTellyApp (const cPoint& windowSize) : cApp(windowSize) {}
-  ~cTellyApp() = default;
+  virtual ~cTellyApp() = default;
 
   cDvbStream* getDvbStream() { return mDvbStream; }
   uint16_t getDecoderOptions() { return mDecoderOptions; }
 
-  bool setDvbSource (const std::string& filename, const cDvbMultiplex& dvbMultiplex,
+  bool setDvbSource (const std::string& filename, const std::string& recordRoot, const cDvbMultiplex& dvbMultiplex,
                      bool renderFirstService, uint16_t decoderOptions);
 
 private:
