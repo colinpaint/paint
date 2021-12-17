@@ -3,7 +3,6 @@
 //{{{  includes
 #include <string>
 #include <chrono>
-#include <functional>
 
 #include "../utils/cPointRectColor.h"
 
@@ -34,7 +33,7 @@ public:
 
   // callbacks
   void windowResize (int width, int height);
-  virtual void drop (const std::vector<std::string>& dropItems) { (void)dropItems; }
+  virtual void drop (const std::vector<std::string>& dropItems) = 0;
 
   void mainUILoop();
 

@@ -11,6 +11,7 @@
 #include <string>
 #include <array>
 #include <algorithm>
+#include <functional>
 
 // glad
 #include <glad/glad.h>
