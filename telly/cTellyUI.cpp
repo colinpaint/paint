@@ -257,7 +257,7 @@ public:
     cGraphics& graphics = app.getGraphics();
 
     // clear bgnd
-    graphics.background (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
+    graphics.drawBackground (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
 
     // draw tabs
     ImGui::SameLine();

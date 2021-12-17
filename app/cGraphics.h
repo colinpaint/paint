@@ -165,7 +165,7 @@ public:
   virtual cPaintShader* createPaintShader() = 0;
 
   // actions
-  virtual void background (const cPoint& size) = 0;
+  virtual void drawBackground (const cPoint& size) = 0;
   virtual void newFrame() = 0;
   virtual void drawUI() = 0;
   virtual void windowResize (int width, int height) = 0;

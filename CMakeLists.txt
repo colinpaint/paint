@@ -6,6 +6,7 @@ option (BUILD_TELLY "Build telly" ON)
 option (BUILD_PLAYER "Build player" ON)
 option (BUILD_PAINTBOX "Build paintbox" ON)
 option (BUILD_IMPLOT "Build implot" ON)
+option (BUILD_DEMO "Build imgui demo" ON)
 #
 option (BUILD_MFX "Build mfx" ON)
 option (BUILD_MFXTEST "Build mfxtest" ON)
@@ -225,6 +226,27 @@ if (BUILD_FED)
       target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
     else()
       target_link_libraries (${PROJECT_NAME} PRIVATE GL stdc++fs)
+    endif()
+endif()
+
+# demo app
+if (BUILD_DEMO)
+  project (demo VERSION 1.0.0)
+    file (GLOB HEADER_FILES demo/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
+    file (GLOB SOURCE_FILES demo/*.cpp ui/cUI.cpp)
+
+    add_executable (demo ${SOURCE_FILES} ${HEADER_FILES})
+    if (OPENGL2)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
+    endif()
+    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
+
+    target_link_libraries (${PROJECT_NAME} PRIVATE imgui)
+
+    if (MSVC)
+      target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler)
+    else()
+      target_link_libraries (${PROJECT_NAME} PRIVATE GL)
     endif()
 endif()
 

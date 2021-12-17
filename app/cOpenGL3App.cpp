@@ -52,7 +52,6 @@ namespace {
   // vars
   //{{{  glfw callbacks
   // vars for callbacks
-  cPlatform* gPlatform = nullptr;
   GLFWwindow* gWindow = nullptr;
 
   GLFWmonitor* gMonitor = nullptr;
@@ -533,6 +532,7 @@ namespace {
 //{{{
 class cOpenGL3Platform : public cPlatform {
 public:
+  cOpenGL3Platform() : cPlatform (true, true) {}
   //{{{
   virtual ~cOpenGL3Platform() {
     ImGui_ImplGlfw_Shutdown();
@@ -604,7 +604,6 @@ public:
     ImGui_ImplGlfw_InitForOpenGL (gWindow, true);
 
     glfwSwapInterval (mVsync ? 1 : 0);
-    gPlatform = this;
 
     return true;
     }
@@ -613,6 +612,7 @@ public:
   // gets
   //{{{
   virtual cPoint getWindowSize() final {
+
     int width;
     int height;
     glfwGetWindowSize (gWindow, &width, &height);
@@ -620,15 +620,10 @@ public:
     }
   //}}}
 
-  virtual bool hasVsync() final { return true; }
-  virtual bool getVsync() final { return mVsync; }
-
-  virtual bool hasFullScreen() final { return true; }
-  virtual bool getFullScreen() final { return mFullScreen; }
-
   // sets
   //{{{
   virtual void setVsync (bool vsync) final {
+
     if (mVsync != vsync) {
       mVsync = vsync;
       glfwSwapInterval (mVsync ? 1 : 0);
@@ -637,6 +632,7 @@ public:
   //}}}
   //{{{
   virtual void toggleVsync() final {
+
     mVsync = !mVsync;
     glfwSwapInterval (mVsync ? 1 : 0);
     }
@@ -644,6 +640,7 @@ public:
 
   //{{{
   virtual void setFullScreen (bool fullScreen) final {
+
     if (mFullScreen != fullScreen) {
       mFullScreen = fullScreen;
       mActionFullScreen = true;
@@ -652,6 +649,7 @@ public:
   //}}}
   //{{{
   virtual void toggleFullScreen() final {
+
     mFullScreen = !mFullScreen;
     mActionFullScreen = true;
     }
@@ -710,8 +708,6 @@ public:
   //}}}
 
 private:
-  bool mVsync = true;
-  bool mFullScreen = false;
   bool mActionFullScreen = false;
   };
 //}}}
@@ -1935,7 +1931,7 @@ public:
 
   // actions
   //{{{
-  virtual void background (const cPoint& size) final {
+  virtual void drawBackground (const cPoint& size) final {
     glViewport (0, 0, size.x, size.y);
 
     // blend

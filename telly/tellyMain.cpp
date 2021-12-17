@@ -16,7 +16,7 @@
 #include "../implot/implot.h"
 
 // app
-#include "../telly/cTellyApp.h"
+#include "cTellyApp.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 

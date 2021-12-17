@@ -1,4 +1,4 @@
-// fedMain.cpp - fed folding editor main, uses imGui, stb
+// demoMain.cpp - imgui demo app
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -16,7 +16,7 @@
 // imGui
 #include "../imgui/imgui.h"
 
-#include "cFedApp.h"
+#include "cDemoApp.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
@@ -61,10 +61,9 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // app
-  cFedApp app ({1000, 900}, fullScreen, vsync);
-  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
-  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
-  app.setDocumentName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolve (params[0]));
+  cDemoApp app ({1000, 900}, fullScreen, vsync);
+  //app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
+  //app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 
   app.mainUILoop();
 
