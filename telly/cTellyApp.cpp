@@ -40,6 +40,7 @@ bool cTellyApp::setDvbSource (const string& filename, const string& recordRoot, 
 
 void cTellyApp::drop (const vector<string>& dropItems) {
 
+  // wrong !!!!
   const cDvbMultiplex kDvbMultiplexes =
       { "hd",
         626000000,

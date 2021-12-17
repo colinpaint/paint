@@ -2039,7 +2039,21 @@ chrono::system_clock::time_point cApp::getNow() {
   }
 //}}}
 
-// actions
+// callback
+//{{{
+void cApp::windowResize (int width, int height) {
+
+  mPlatform->newFrame();
+  mGraphics->windowResize (width, height);
+  mGraphics->newFrame();
+
+  mGraphics->drawUI();
+
+  mPlatform->present();
+  }
+//}}}
+
+// main loop
 //{{{
 void cApp::mainUILoop() {
 
@@ -2052,17 +2066,5 @@ void cApp::mainUILoop() {
 
     mPlatform->present();
     }
-  }
-//}}}
-//{{{
-void cApp::windowResize (int width, int height) {
-
-  mPlatform->newFrame();
-  mGraphics->windowResize (width, height);
-  mGraphics->newFrame();
-
-  mGraphics->drawUI();
-
-  mPlatform->present();
   }
 //}}}

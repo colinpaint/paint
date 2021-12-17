@@ -28,7 +28,7 @@ public:
   virtual void setFullScreen (bool fullScreen) = 0;
   virtual void toggleFullScreen() = 0;
 
-  // actions
+  // actions, should they be public?
   virtual bool pollEvents() = 0;
   virtual void newFrame() = 0;
   virtual void present() = 0;

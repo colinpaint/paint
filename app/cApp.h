@@ -33,10 +33,10 @@ public:
   void setMonoFont (ImFont* font) { mMonoFont = font; }
 
   // callbacks
-  void mainUILoop();
   void windowResize (int width, int height);
-
   virtual void drop (const std::vector<std::string>& dropItems) { (void)dropItems; }
+
+  void mainUILoop();
 
 private:
   cPlatform* mPlatform;
