@@ -69,8 +69,8 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
   project (imgui)
     if (OPENGL3)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
-      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp
-                              app/cOpenGL3App.cpp)
+      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp app/cOpenGL3App.cpp)
+      # imgui/backends/imgui_impl_opengl3.cpp
     elseif (OPENGL2)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h)
       file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp
@@ -234,14 +234,20 @@ if (BUILD_DEMO)
   project (demo VERSION 1.0.0)
     file (GLOB HEADER_FILES demo/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
     file (GLOB SOURCE_FILES demo/*.cpp ui/cUI.cpp)
-
     add_executable (demo ${SOURCE_FILES} ${HEADER_FILES})
+
+    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
+
     if (OPENGL2)
       target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
     endif()
-    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
-    target_link_libraries (${PROJECT_NAME} PRIVATE imgui)
+    if (BUILD_IMPLOT)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
+      target_link_libraries (${PROJECT_NAME} PRIVATE imgui implot)
+    else()
+      target_link_libraries (${PROJECT_NAME} PRIVATE imgui)
+    endif()
 
     if (MSVC)
       target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler)

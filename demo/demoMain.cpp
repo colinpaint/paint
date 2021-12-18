@@ -15,6 +15,7 @@
 
 // imGui
 #include "../imgui/imgui.h"
+#include "../implot/implot.h"
 
 #include "cDemoApp.h"
 #include "../font/itcSymbolBold.h"
@@ -65,7 +66,9 @@ int main (int numArgs, char* args[]) {
   //app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   //app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 
+  ImPlot::CreateContext();
   app.mainUILoop();
+  ImPlot::DestroyContext();
 
   return EXIT_SUCCESS;
   }

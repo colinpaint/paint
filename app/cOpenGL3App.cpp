@@ -50,7 +50,6 @@ using namespace std;
 constexpr bool kDebug = false;
 
 namespace {
-  // vars
   //{{{  glfw callbacks
   // vars for callbacks
   GLFWwindow* gWindow = nullptr;
@@ -61,16 +60,6 @@ namespace {
 
   function <void (int width, int height)> gResizeCallback;
   function <void (vector<string> dropItems)> gDropCallback;
-
-  //{{{
-  void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
-
-    (void)scancode;
-    (void)mode;
-    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS)) // exit
-      glfwSetWindowShouldClose (window, true);
-    }
-  //}}}
   //{{{
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
 
@@ -90,6 +79,16 @@ namespace {
     gDropCallback (dropItems);
     }
   //}}}
+
+  //{{{
+  void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
+
+    (void)scancode;
+    (void)mode;
+    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS)) // exit
+      glfwSetWindowShouldClose (window, true);
+    }
+  //}}}
   //}}}
 
   // options
@@ -98,14 +97,13 @@ namespace {
   // shader
   //{{{
   const string kQuadVertShader =
-
     "#version 330 core\n"
+    "uniform mat4 uModel;"
+    "uniform mat4 uProject;"
+
     "layout (location = 0) in vec2 inPos;"
     "layout (location = 1) in vec2 inTextureCoord;"
     "out vec2 textureCoord;"
-
-    "uniform mat4 uModel;"
-    "uniform mat4 uProject;"
 
     "void main() {"
     "  textureCoord = inTextureCoord;"
@@ -175,168 +173,60 @@ namespace {
     //{{{
     cDrawListShader (uint32_t glslVersion) : cShader() {
 
-      if (glslVersion == 120) {
-        //{{{
-        const string kVertShader120 =
-          "#version 100\n"
-
-          "uniform mat4 ProjMtx;"
-
-          "attribute vec2 Position;"
-          "attribute vec2 UV;"
-          "attribute vec4 Color;"
-
-          "varying vec2 Frag_UV;"
-          "varying vec4 Frag_Color;"
-
-          "void main() {"
-          "  Frag_UV = UV;"
-          "  Frag_Color = Color;"
-          "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-          "  }";
-        //}}}
-        //{{{
-        const string kFragShader120 =
-          "#version 100\n"
-
-          "#ifdef GL_ES\n"
-          "  precision mediump float;"
-          "#endif\n"
-
-          "uniform sampler2D Texture;"
-
-          "varying vec2 Frag_UV;"
-          "varying vec4 Frag_Color;"
-
-          "void main() {"
-          "  gl_FragColor = Frag_Color * texture2D(Texture, Frag_UV.st);"
-          "  }";
-        //}}}
-        mId = compileShader (kVertShader120, kFragShader120);
-        }
-      else if (glslVersion == 300) {
-        //{{{
-        const string kVertShader300es =
-          "#version 300 es\n"
-
-          "precision mediump float;"
-
-          "layout (location = 0) in vec2 Position;"
-          "layout (location = 1) in vec2 UV;"
-          "layout (location = 2) in vec4 Color;"
-
-          "uniform mat4 ProjMtx;"
-
-          "out vec2 Frag_UV;"
-          "out vec4 Frag_Color;"
-
-          "void main() {"
-          "  Frag_UV = UV;"
-          "  Frag_Color = Color;"
-          "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-          "  }";
-        //}}}
-        //{{{
-        const string kFragShader300es =
-          "#version 300 es\n"
-
-          "precision mediump float;"
-
-          "uniform sampler2D Texture;"
-
-          "in vec2 Frag_UV;"
-          "in vec4 Frag_Color;"
-
-          "layout (location = 0) out vec4 Out_Color;"
-
-          "void main() {"
-          "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-          "  }";
-        //}}}
-        mId = compileShader (kVertShader300es, kFragShader300es);
-        }
-      else if (glslVersion >= 410) {
-        //{{{
-        const string kVertShader410core =
-          "#version 410 core\n"
-
-          "layout (location = 0) in vec2 Position;"
-          "layout (location = 1) in vec2 UV;"
-          "layout (location = 2) in vec4 Color;"
-
-          "uniform mat4 ProjMtx;"
-
-          "out vec2 Frag_UV;"
-          "out vec4 Frag_Color;"
-
-          "void main() {"
-          "  Frag_UV = UV;"
-          "  Frag_Color = Color;"
-          "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-          "  }";
-        //}}}
-        //{{{
-        const string kFragShader410core =
-          "#version 410 core\n"
-
-          "in vec2 Frag_UV;"
-          "in vec4 Frag_Color;"
-
-          "uniform sampler2D Texture;"
-
-          "layout (location = 0) out vec4 Out_Color;"
-
-          "void main() {"
-          "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-          "  }";
-        //}}}
-        mId = compileShader (kVertShader410core, kFragShader410core);
-        }
-      else {
-        //{{{
-        const string kVertShader130 =
+      mId = compileShader (
+        glslVersion < 410 ?
           "#version 130\n"
-
-          "uniform mat4 ProjMtx;"
-
           "in vec2 Position;"
           "in vec2 UV;"
           "in vec4 Color;"
-
           "out vec2 Frag_UV;"
           "out vec4 Frag_Color;"
-
+          "uniform mat4 ProjMtx;"
           "void main() {"
           "  Frag_UV = UV;"
           "  Frag_Color = Color;"
           "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-          "  }";
-        //}}}
-        //{{{
-        const string kFragShader130 =
+          "  }"
+        :
+          "#version 410 core\n"
+          "layout (location = 0) in vec2 Position;"
+          "layout (location = 1) in vec2 UV;"
+          "layout (location = 2) in vec4 Color;"
+          "out vec2 Frag_UV;"
+          "out vec4 Frag_Color;"
+          "uniform mat4 ProjMtx;"
+          "void main() {"
+          "  Frag_UV = UV;"
+          "  Frag_Color = Color;"
+          "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
+          "  }",
+
+        glslVersion < 410 ?
           "#version 130\n"
-
-          "uniform sampler2D Texture;"
-
           "in vec2 Frag_UV;"
           "in vec4 Frag_Color;"
-
           "out vec4 Out_Color;"
-
+          "uniform sampler2D Texture;"
           "void main() {"
           "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-          "  }";
-        //}}}
-        mId = compileShader (kVertShader130, kFragShader130);
-        }
+          "  }"
+        :
+          "#version 410 core\n"
+          "in vec2 Frag_UV;"
+          "in vec4 Frag_Color;"
+          "layout (location = 0) out vec4 Out_Color;"
+          "uniform sampler2D Texture;"
+          "void main() {"
+          "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
+          "  }"
+          );
 
       // store uniform locations
-      mAttribLocationTexture = glGetUniformLocation (getId(), "Texture");
-      mAttribLocationProjMtx = glGetUniformLocation (getId(), "ProjMtx");
-
       mAttribLocationVtxPos = glGetAttribLocation (getId(), "Position");
       mAttribLocationVtxUV = glGetAttribLocation (getId(), "UV");
       mAttribLocationVtxColor = glGetAttribLocation (getId(), "Color");
+
+      mAttribLocationProjMtx = glGetUniformLocation (getId(), "ProjMtx");
       }
     //}}}
     virtual ~cDrawListShader() = default;
@@ -361,12 +251,10 @@ namespace {
     //}}}
 
   private:
-    int32_t mAttribLocationTexture = 0;
-    int32_t mAttribLocationProjMtx = 0;
-
     int32_t mAttribLocationVtxPos = 0;
     int32_t mAttribLocationVtxUV = 0;
     int32_t mAttribLocationVtxColor = 0;
+    int32_t mAttribLocationProjMtx = 0;
     };
   //}}}
   cDrawListShader* gDrawListShader;
@@ -812,12 +700,10 @@ public:
 
 private:
   inline static const uint32_t mNumIndices = 6;
-  //{{{
   inline static const uint8_t kIndices[mNumIndices] = {
     0, 1, 2, // 0   0-3
     0, 3, 1  // |\   \|
     };       // 2-1   1
-  //}}}
 
   uint32_t mVertexArrayObject = 0;
   uint32_t mVertexBufferObject = 0;
@@ -1933,6 +1819,7 @@ public:
   // actions
   //{{{
   virtual void drawBackground (const cPoint& size) final {
+
     glViewport (0, 0, size.x, size.y);
 
     // blend

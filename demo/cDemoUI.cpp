@@ -6,6 +6,7 @@
 
 // imgui
 #include "../imgui/imgui.h"
+#include "../implot/implot.h"
 #include "../imgui/myImgui.h"
 
 // app
@@ -60,6 +61,7 @@ public:
                  ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
 
     ImGui::ShowDemoWindow (&show_demo_window);
+    ImPlot::ShowDemoWindow();
     }
 
 private:
