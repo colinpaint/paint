@@ -61,7 +61,10 @@ public:
                  ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
 
     ImGui::ShowDemoWindow (&show_demo_window);
-    ImPlot::ShowDemoWindow();
+
+    #ifdef BUILD_IMPLOT
+      ImPlot::ShowDemoWindow();
+    #endif
     }
 
 private:

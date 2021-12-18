@@ -66,9 +66,15 @@ int main (int numArgs, char* args[]) {
   //app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   //app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 
-  ImPlot::CreateContext();
+  #ifdef BUILD_IMPLOT
+    ImPlot::CreateContext();
+  #endif
+
   app.mainUILoop();
-  ImPlot::DestroyContext();
+
+  #ifdef BUILD_IMPLOT
+    ImPlot::DestroyContext();
+  #endif
 
   return EXIT_SUCCESS;
   }

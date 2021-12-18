@@ -208,27 +208,6 @@ if (BUILD_CAPTURE AND MSVC)
     target_link_libraries (${PROJECT_NAME} PRIVATE decoder winmm avrt audio)
 endif()
 
-# fed app
-if (BUILD_FED)
-  project (fed VERSION 1.0.0)
-    file (GLOB HEADER_FILES fed/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
-    file (GLOB SOURCE_FILES fed/*.cpp ui/cUI.cpp)
-
-    add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
-    if (OPENGL2)
-      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
-    endif()
-    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
-
-    target_link_libraries (${PROJECT_NAME} PRIVATE imgui)
-
-    if (MSVC)
-      target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
-    else()
-      target_link_libraries (${PROJECT_NAME} PRIVATE GL stdc++fs)
-    endif()
-endif()
-
 # demo app
 if (BUILD_DEMO)
   project (demo VERSION 1.0.0)
@@ -253,6 +232,26 @@ if (BUILD_DEMO)
       target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler)
     else()
       target_link_libraries (${PROJECT_NAME} PRIVATE GL)
+    endif()
+endif()
+
+# fed app
+if (BUILD_FED)
+  project (fed VERSION 1.0.0)
+    file (GLOB HEADER_FILES fed/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
+    file (GLOB SOURCE_FILES fed/*.cpp ui/cUI.cpp)
+    add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
+
+    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
+
+    if (OPENGL2)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
+    endif()
+
+    if (MSVC)
+      target_link_libraries (${PROJECT_NAME} PRIVATE imgui opengl32 d3d11 d3dcompiler ws2_32)
+    else()
+      target_link_libraries (${PROJECT_NAME} PRIVATE imgui GL stdc++fs)
     endif()
 endif()
 
