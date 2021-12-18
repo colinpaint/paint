@@ -6,6 +6,8 @@
 
 #include "../utils/cPointRectColor.h"
 #include "../utils/cVecMat.h"
+
+struct ImDrawData;
 //}}}
 
 //{{{
@@ -169,4 +171,6 @@ public:
   virtual void newFrame() = 0;
   virtual void drawUI() = 0;
   virtual void windowResize (int width, int height) = 0;
+
+  virtual void renderDrawData (ImDrawData* drawData) = 0;
   };

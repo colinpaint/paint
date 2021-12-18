@@ -1,4 +1,4 @@
-// cApp.h - base class - application context
+// cApp.h - base class - application context, platform,graphics interface, platform,graphics independent stuff
 #pragma once
 //{{{  includes
 #include <string>
