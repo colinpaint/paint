@@ -125,7 +125,6 @@ namespace {
       char errMessage[512];
       glGetProgramInfoLog (vertShader, 512, NULL, errMessage);
       cLog::log (LOGERROR, fmt::format ("vertShader failed {}", errMessage));
-
       exit (EXIT_FAILURE);
       }
       //}}}
@@ -156,7 +155,6 @@ namespace {
       char errMessage[512];
       glGetProgramInfoLog (id, 512, NULL, errMessage);
       cLog::log (LOGERROR, fmt::format ("shaderProgram failed {} ",  errMessage));
-
       exit (EXIT_FAILURE);
       }
       //}}}
@@ -448,15 +446,15 @@ public:
       }
 
     // openGL version hints
+    cLog::log (LOGINFO, "- version hint 3.3");
     glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
-    cLog::log (LOGINFO, "- version hint 3.3");
     //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // GLFW create window
     gWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Paintbox - openGL", NULL, NULL);
     if (!gWindow) {
-      cLog::log (LOGERROR, "cPlatform - glfwCreateWindow failed");
+      cLog::log (LOGERROR, "cOpenGL3Platform - glfwCreateWindow failed");
       return false;
       }
 
@@ -473,7 +471,7 @@ public:
 
     // GLAD init before any openGL function
     if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {
-      cLog::log (LOGERROR, "cPlatform - glad init failed");
+      cLog::log (LOGERROR, "cOpenGL3Platform - glad init failed");
       return false;
       }
 
@@ -1865,7 +1863,9 @@ public:
   //}}}
   //{{{
   virtual void windowResize (int width, int height) final {
-    cLog::log (LOGINFO, fmt::format ("cOpenGL3Graphics windowResize {} {}", width, height));
+    (void)width;
+    (void)height;
+    //cLog::log (LOGINFO, fmt::format ("cOpenGL3Graphics windowResize {} {}", width, height));
     }
   //}}}
   };
@@ -1931,6 +1931,7 @@ void cApp::windowResize (int width, int height) {
   mGraphics->windowResize (width, height);
   mGraphics->newFrame();
 
+  cUI::draw (*this);
   mGraphics->drawUI();
 
   mPlatform->present();
