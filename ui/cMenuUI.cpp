@@ -45,7 +45,8 @@ public:
     ImGui::SetNextWindowSize ({ImGui::GetIO().DisplaySize.x, kMenuHeight});
 
     ImGui::Begin (getName().c_str(), NULL,
-                  ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration |
+                  //ImGuiWindowFlags_NoDocking | 
+                  ImGuiWindowFlags_NoDecoration |
                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse |
                   ImGuiWindowFlags_NoSavedSettings);
 

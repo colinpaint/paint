@@ -69,8 +69,9 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
   project (imgui)
     if (OPENGL3)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
-      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp app/cOpenGL3App.cpp)
-      # imgui/backends/imgui_impl_opengl3.cpp
+      file (GLOB SOURCE_FILES imgui/*.cpp 
+                              imgui/backends/imgui_impl_opengl3.cpp imgui/backends/imgui_impl_glfw.cpp
+                              app/cOpenGL3BackendApp.cpp)
     elseif (OPENGL2)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h)
       file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp

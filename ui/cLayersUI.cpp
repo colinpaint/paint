@@ -29,7 +29,7 @@ public:
 
     cPaintApp& paintApp = dynamic_cast<cPaintApp&>(app);
 
-    ImGui::Begin (getName().c_str(), NULL, ImGuiWindowFlags_NoDocking);
+    ImGui::Begin (getName().c_str(), NULL); //, ImGuiWindowFlags_NoDocking);
     ImGui::SetWindowPos (ImVec2(ImGui::GetIO().DisplaySize.x - ImGui::GetWindowWidth(), 0.f));
 
     unsigned layerIndex = 0;
