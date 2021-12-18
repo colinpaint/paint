@@ -47,8 +47,6 @@ using namespace std;
   #endif
 #endif
 //}}}
-constexpr bool kDebug = false;
-
 namespace {
   function <void (int width, int height)> gResizeCallback ;
   //{{{
@@ -717,19 +715,12 @@ private:
 
       if (!mPixels) {
         // create mPixels, texture pixels shadow buffer
-        if (kDebug)
-          cLog::log (LOGINFO, fmt::format ("getPixels malloc {}", getNumPixelBytes()));
         mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
         glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
         }
 
       else if (!mDirtyPixelsRect.isEmpty()) {
-        if (kDebug)
-          cLog::log (LOGINFO, fmt::format ("getPixels get {},{} {},{}",
-                                           mDirtyPixelsRect.left, mDirtyPixelsRect.top,
-                                           mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
-
         // no openGL glGetTexSubImage, so dirtyPixelsRect not really used, is this correct ???
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
         glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
@@ -811,10 +802,6 @@ private:
                          mImageFormat, GL_UNSIGNED_BYTE, mPixels + (rect.top * mSize.x * 4));
         // simpler whole screen
         //glTexImage2D (GL_TEXTURE_2D, 0, mInternalFormat, mSize.x, mSize.y, 0, mImageFormat, GL_UNSIGNED_BYTE, mPixels);
-
-        if (kDebug)
-          cLog::log (LOGINFO, fmt::format ("pixelsChanged {},{} {},{} - dirty {},{} {},{}",
-                                      rect.left, rect.top, rect.getWidth(), rect.getHeight()));
         }
       }
     //}}}
@@ -836,13 +823,6 @@ private:
 
       // texture changed, add to dirtyPixelsRect
       mDirtyPixelsRect += dstRect;
-
-      if (kDebug)
-        cLog::log (LOGINFO, fmt::format ("blit src:{},{} dst:{},{} {},{} dirty:{},{} {},{}",
-                                    srcPoint.x, srcPoint.y,
-                                    dstRect.left, dstRect.top, dstRect.getWidth(), dstRect.getHeight(),
-                                    mDirtyPixelsRect.left, mDirtyPixelsRect.top,
-                                    mDirtyPixelsRect.getWidth(), mDirtyPixelsRect.getHeight()));
       }
     //}}}
 
