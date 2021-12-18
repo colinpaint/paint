@@ -58,17 +58,17 @@ void cUI::listInstances() {
   }
 //}}}
 
-// - static draw
+// - static render
 //{{{
-void cUI::draw (cApp& app) {
-// draw registered UI instances
+void cUI::render (cApp& app) {
+// render registered UI instances
 
   for (auto& ui : getInstanceRegister())
     ui.second->addToDrawList (app);
   }
 //}}}
 
-// protected 
+// protected
 // - static manager
 //{{{
 bool cUI::registerClass (const string& name, const cUI::createFuncType createFunc) {

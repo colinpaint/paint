@@ -67,19 +67,18 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
 
   # imgui framework lib
   project (imgui)
-    if (OPENGL3)
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
-      file (GLOB SOURCE_FILES imgui/*.cpp 
-                              imgui/backends/imgui_impl_opengl3.cpp imgui/backends/imgui_impl_glfw.cpp
-                              app/cOpenGL3BackendApp.cpp)
-    elseif (OPENGL2)
+    if (OPENGL2)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h)
-      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp
-                              app/cOpenGL3App.cpp)
+      file (GLOB SOURCE_FILES app/cOpenGL2App.cpp
+                              imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
+    elseif (OPENGL3)
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
+      file (GLOB SOURCE_FILES app/cOpenGL3App.cpp
+                              imgui/*.cpp imgui/backends/imgui_impl_opengl3.cpp imgui/backends/imgui_impl_glfw.cpp)
     elseif (DIRECTX11)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h)
-      file (GLOB SOURCE_FILES imgui/*.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp
-                              app/cDirectX11App.cpp)
+      file (GLOB SOURCE_FILES app/cDirectX11App.cpp
+                              imgui/*.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp)
     endif()
 
     add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})

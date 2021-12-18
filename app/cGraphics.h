@@ -151,6 +151,9 @@ public:
   virtual ~cGraphics() = default;
 
   virtual bool init() = 0;
+  virtual void newFrame() = 0;
+  virtual void clear (const cPoint& size) = 0;
+  virtual void renderDrawData() = 0;
 
   // create graphics resources
   virtual cQuad* createQuad (const cPoint& size) = 0;
@@ -165,12 +168,4 @@ public:
 
   virtual cLayerShader* createLayerShader() = 0;
   virtual cPaintShader* createPaintShader() = 0;
-
-  // actions
-  virtual void drawBackground (const cPoint& size) = 0;
-  virtual void newFrame() = 0;
-  virtual void drawUI() = 0;
-  virtual void windowResize (int width, int height) = 0;
-
-  virtual void renderDrawData (ImDrawData* drawData) = 0;
   };

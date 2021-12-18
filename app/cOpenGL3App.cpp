@@ -37,17 +37,14 @@
 #include "../utils/cLog.h"
 
 using namespace std;
-
-// OpenGL >= 3.1 has GL_PRIMITIVE_RESTART state
-// OpenGL >= 3.3 has glBindSampler()
-#if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3)
-  #if defined(GL_VERSION_3_2)
-    // OpenGL >= 3.2 has glDrawElementsBaseVertex() which GL ES and WebGL don't have.
-    #define IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET
-  #endif
-#endif
 //}}}
 namespace {
+  //{{{
+  void glfw_error_callback (int error, const char* description) {
+    cLog::log (LOGERROR, fmt::format ("Glfw Error {} {}", error, description));
+    }
+  //}}}
+
   function <void (int width, int height)> gResizeCallback ;
   //{{{
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
@@ -79,6 +76,7 @@ public:
   cOpenGL3Platform() : cPlatform (true, true) {}
   //{{{
   virtual ~cOpenGL3Platform() {
+
     ImGui_ImplGlfw_Shutdown();
 
     glfwDestroyWindow (mWindow);
@@ -87,6 +85,7 @@ public:
     #ifdef USE_IMPLOT
       ImPlot::DestroyContext();
     #endif
+
     ImGui::DestroyContext();
     }
   //}}}
@@ -96,30 +95,68 @@ public:
 
     cLog::log (LOGINFO, fmt::format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
 
-    // GLFW init
-    if (!glfwInit()) {
-      cLog::log (LOGERROR, "cPlatform - glfw init failed");
-      return false;
-      }
+    glfwSetErrorCallback (glfw_error_callback);
+    if (!glfwInit())
+      return 1;
 
-    // openGL version hints
-    cLog::log (LOGINFO, "- version hint 3.3");
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
-    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    // GL+GLSL versions
+    #if defined(IMGUI_IMPL_OPENGL_ES2)
+      //{{{  GL ES 2.0 + GLSL 100
+      glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+      glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+      //}}}
+    #else
+      //{{{  GL 3.0 + GLSL 130
+      glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+      //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+      //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
+      //}}}
+    #endif
 
-    // GLFW create window
-    mWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Paintbox - openGL", NULL, NULL);
+    mWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
     if (!mWindow) {
       cLog::log (LOGERROR, "cOpenGL3Platform - glfwCreateWindow failed");
-      return false;
+      return 1;
       }
 
     mMonitor = glfwGetPrimaryMonitor();
     glfwGetWindowSize (mWindow, &mWindowSize.x, &mWindowSize.y);
     glfwGetWindowPos (mWindow, &mWindowPos.x, &mWindowPos.y);
-
     glfwMakeContextCurrent (mWindow);
+
+    // vsync
+    glfwSwapInterval (1);
+
+    // set Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsClassic();  // ImGui::StyleColorsDark();
+
+    #ifdef USE_IMPLOT
+      ImPlot::CreateContext();
+    #endif
+
+    cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
+
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+    #ifdef BUILD_DOCKING
+      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;    // Enable Docking
+      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;  // Enable Multi-Viewport / Platform Windows
+    #endif
+
+    #ifdef BUILD_DOCKING
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+      // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+      style.WindowRounding = 0.0f;
+      style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+      }
+    #endif
+
+    // init platform backend
+    ImGui_ImplGlfw_InitForOpenGL (mWindow, true);
 
     // set callbacks
     glfwSetKeyCallback (mWindow, keyCallback);
@@ -131,23 +168,6 @@ public:
       cLog::log (LOGERROR, "cOpenGL3Platform - glad init failed");
       return false;
       }
-
-    // init imGui
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsClassic();
-    #ifdef USE_IMPLOT
-      ImPlot::CreateContext();
-    #endif
-
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-
-    ImGui_ImplGlfw_InitForOpenGL (mWindow, true);
-
-    glfwSwapInterval (mVsync ? 1 : 0);
 
     return true;
     }
@@ -240,12 +260,14 @@ public:
   //{{{
   virtual void present() final {
 
-    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-      GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
-      ImGui::UpdatePlatformWindows();
-      ImGui::RenderPlatformWindowsDefault();
-      glfwMakeContextCurrent (backupCurrentContext);
-      }
+    #ifdef BUILD_DOCKING
+      if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        GLFWwindow* backup_current_context = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent(backup_current_context);
+        }
+    #endif
 
     glfwSwapBuffers (mWindow);
     }
@@ -262,12 +284,12 @@ private:
     }
   //}}}
 
+  GLFWmonitor* mMonitor = nullptr;
   GLFWwindow* mWindow = nullptr;
   cPoint mWindowPos = { 0,0 };
   cPoint mWindowSize = { 0,0 };
 
   bool mActionFullScreen = false;
-  GLFWmonitor* mMonitor = nullptr;
   };
 //}}}
 
@@ -277,83 +299,58 @@ class cOpenGL3Graphics : public cGraphics {
 public:
   //{{{
   virtual ~cOpenGL3Graphics() {
-    ImGui::DestroyPlatformWindows();
-
-    // destroy vertetx array
-    if (mVboHandle)
-      glDeleteBuffers (1, &mVboHandle);
-    if (mElementsHandle)
-      glDeleteBuffers (1, &mElementsHandle);
-
-    // destroy shader
-    delete mDrawListShader;
-
-    // destroy font texture
-    if (mFontTexture) {
-      glDeleteTextures (1, &mFontTexture);
-      ImGui::GetIO().Fonts->TexID = 0;
-      }
+    ImGui_ImplOpenGL3_Shutdown();
     }
   //}}}
 
   //{{{
   virtual bool init() final {
 
-    gGraphics = this;
-
-    // get openGL version
-    GLint glMajor = 0;
-    GLint glMinor = 0;
-    string glVersionString = (const char*)glGetString (GL_VERSION);
-    sscanf (glVersionString.c_str(), "%d.%d", &glMajor, &glMinor);
-    int gGlVersion = ((glMajor * 10) + glMinor) * 10;
-    cLog::log (LOGINFO, fmt::format ("OpenGL {} - {}", glVersionString, gGlVersion));
-
-    // set imGui backend capabilities flags
-    ImGui::GetIO().BackendRendererName = "openGL3";
-    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-    //{{{  clipOrigin
-    #if defined (GL_CLIP_ORIGIN)
-      GLenum currentClipOrigin = 0;
-      glGetIntegerv (GL_CLIP_ORIGIN, (GLint*)&currentClipOrigin);
-      if (currentClipOrigin == GL_UPPER_LEFT) {
-        mClipOriginBottomLeft = false;
-        cLog::log (LOGINFO, fmt::format ("OpenGL GL_CLIP_ORIGIN upperLeft"));
-        }
-    #endif
-    //}}}
-
-    // enable ImGui viewports
-    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
-
-    // set ImGui renderWindow
-    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-      ImGui::GetPlatformIO().Renderer_RenderWindow = renderWindow;
-
-    // get GLSL version
-    int glslMajor = 0;
-    int glslMinor = 0;
-    string glslVersionString = (const char*)glGetString (GL_SHADING_LANGUAGE_VERSION);
-    sscanf (glslVersionString.c_str(), "%d.%d", &glslMajor, &glslMinor);
-    int gGlslVersion = (glslMajor * 100) + glslMinor;
-    cLog::log (LOGINFO, fmt::format ("GLSL {} - {}", glslVersionString, gGlslVersion));
-
-    cLog::log (LOGINFO, fmt::format ("Renderer {}", glGetString (GL_RENDERER)));
+    // report versions
+    cLog::log (LOGINFO, fmt::format ("OpenGL {}", glGetString (GL_VERSION)));
+    cLog::log (LOGINFO, fmt::format ("- GLSL {}", glGetString(GL_SHADING_LANGUAGE_VERSION)));
+    cLog::log (LOGINFO, fmt::format ("- Renderer {}", glGetString (GL_RENDERER)));
     cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
 
-    cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
-    cLog::log (LOGINFO, "- hasViewports");
-
-    // create vertex array buffers
-    glGenBuffers (1, &mVboHandle);
-    glGenBuffers (1, &mElementsHandle);
-
-    // create shader
-    mDrawListShader = new cDrawListShader (gGlslVersion);
+    #if defined(IMGUI_IMPL_OPENGL_ES2)
+      ImGui_ImplOpenGL3_Init ("#version 100");
+    #else
+      ImGui_ImplOpenGL3_Init ("#version 130");
+    #endif
 
     return true;
     }
   //}}}
+  virtual void newFrame() final { ImGui_ImplOpenGL3_NewFrame(); }
+  //{{{
+  virtual void clear (const cPoint& size) final {
+
+    glViewport (0, 0, size.x, size.y);
+
+    // blend
+    uint32_t modeRGB = GL_FUNC_ADD;
+    uint32_t modeAlpha = GL_FUNC_ADD;
+    glBlendEquationSeparate (modeRGB, modeAlpha);
+
+    uint32_t srcRgb = GL_SRC_ALPHA;
+    uint32_t dstRGB = GL_ONE_MINUS_SRC_ALPHA;
+    uint32_t srcAlpha = GL_ONE;
+    uint32_t dstAlpha = GL_ONE_MINUS_SRC_ALPHA;
+    glBlendFuncSeparate (srcRgb, dstRGB, srcAlpha, dstAlpha);
+
+    glEnable (GL_BLEND);
+
+    // disables
+    glDisable (GL_SCISSOR_TEST);
+    glDisable (GL_CULL_FACE);
+    glDisable (GL_DEPTH_TEST);
+
+    // clear
+    glClearColor (0.f,0.f,0.f, 0.f);
+    glClear (GL_COLOR_BUFFER_BIT);
+    }
+  //}}}
+  virtual void renderDrawData() final { ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData()); }
 
   // create resources
   virtual cQuad* createQuad (const cPoint& size) final { return new cOpenGL3Quad (size); }
@@ -399,123 +396,6 @@ public:
     }
   //}}}
 
-  // actions
-  //{{{
-  virtual void drawBackground (const cPoint& size) final {
-
-    glViewport (0, 0, size.x, size.y);
-
-    // blend
-    uint32_t modeRGB = GL_FUNC_ADD;
-    uint32_t modeAlpha = GL_FUNC_ADD;
-    glBlendEquationSeparate (modeRGB, modeAlpha);
-
-    uint32_t srcRgb = GL_SRC_ALPHA;
-    uint32_t dstRGB = GL_ONE_MINUS_SRC_ALPHA;
-    uint32_t srcAlpha = GL_ONE;
-    uint32_t dstAlpha = GL_ONE_MINUS_SRC_ALPHA;
-    glBlendFuncSeparate (srcRgb, dstRGB, srcAlpha, dstAlpha);
-
-    glEnable (GL_BLEND);
-
-    // disables
-    glDisable (GL_SCISSOR_TEST);
-    glDisable (GL_CULL_FACE);
-    glDisable (GL_DEPTH_TEST);
-
-    // clear
-    glClearColor (0.f,0.f,0.f, 0.f);
-    glClear (GL_COLOR_BUFFER_BIT);
-    }
-  //}}}
-  //{{{
-  virtual void newFrame() final {
-
-    if (!mFontLoaded) {
-      createFontTexture();
-      mFontLoaded = true;
-      }
-
-    ImGui::NewFrame();
-    }
-  //}}}
-  //{{{
-  virtual void drawUI() final {
-
-    ImGui::Render();
-    renderDrawData (ImGui::GetDrawData());
-    }
-  //}}}
-  //{{{
-  virtual void windowResize (int width, int height) final {
-    (void)width;
-    (void)height;
-    //cLog::log (LOGINFO, fmt::format ("cOpenGL3Graphics windowResize {} {}", width, height));
-    }
-  //}}}
-
-  //{{{
-  virtual void renderDrawData (ImDrawData* drawData) final {
-
-    // avoid rendering when minimized
-    int width = static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x);
-    int height = static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y);
-
-    if ((width > 0) && (height > 0)) {
-      // temp VAO
-      GLuint vertexArrayObject;
-      glGenVertexArrays (1, &vertexArrayObject);
-
-      setRenderState (drawData, width, height, vertexArrayObject);
-
-      // project scissor/clipping rectangles into framebuffer space
-      ImVec2 clipOff = drawData->DisplayPos; // (0,0) unless using multi-viewports
-
-      glActiveTexture (GL_TEXTURE0);
-
-      // render command lists
-      for (int n = 0; n < drawData->CmdListsCount; n++) {
-        const ImDrawList* cmdList = drawData->CmdLists[n];
-
-        // upload vertex/index buffers
-        glBufferData (GL_ARRAY_BUFFER,
-                      (GLsizeiptr)cmdList->VtxBuffer.Size * static_cast<int>(sizeof(ImDrawVert)),
-                      (const GLvoid*)cmdList->VtxBuffer.Data, GL_STREAM_DRAW);
-        glBufferData (GL_ELEMENT_ARRAY_BUFFER,
-                      (GLsizeiptr)cmdList->IdxBuffer.Size * static_cast<int>(sizeof(ImDrawIdx)),
-                      (const GLvoid*)cmdList->IdxBuffer.Data, GL_STREAM_DRAW);
-
-        for (int cmd_i = 0; cmd_i < cmdList->CmdBuffer.Size; cmd_i++) {
-          const ImDrawCmd* pcmd = &cmdList->CmdBuffer[cmd_i];
-          // project scissor/clipping rect into framebuffer space
-          cRect clipRect (static_cast<int>(pcmd->ClipRect.x - clipOff.x),
-                          static_cast<int>(pcmd->ClipRect.y - clipOff.y),
-                          static_cast<int>(pcmd->ClipRect.z - clipOff.x),
-                          static_cast<int>(pcmd->ClipRect.w - clipOff.y));
-
-          // test for on screen
-          if ((clipRect.right >= 0) && (clipRect.bottom >= 0) && (clipRect.left < width) && (clipRect.top < height)) {
-            // scissor clip
-            glScissor (clipRect.left, height - clipRect.bottom, clipRect.getWidth(), clipRect.getHeight());
-
-            // bind
-            glBindTexture (GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
-
-            // draw
-            glDrawElementsBaseVertex (GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
-                                      sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-                                      (void*)(intptr_t)(pcmd->IdxOffset * sizeof(ImDrawIdx)),
-                                      (GLint)pcmd->VtxOffset);
-            }
-          }
-        }
-
-      // delete temp VAO
-      glDeleteVertexArrays (1, &vertexArrayObject);
-      }
-    }
-  //}}}
-
 private:
   //{{{
   inline static const string kQuadVertShader =
@@ -532,7 +412,6 @@ private:
     "  gl_Position = uProject * uModel * vec4 (inPos, 0.0, 1.0);"
     "  }";
   //}}}
-
   //{{{
   class cOpenGL3Quad : public cQuad {
   public:
@@ -1601,174 +1480,6 @@ private:
     //}}}
     };
   //}}}
-  //{{{
-  class cDrawListShader : public cShader {
-  public:
-    //{{{
-    cDrawListShader (uint32_t glslVersion) : cShader() {
-
-      mId = compileShader (
-        glslVersion < 410 ?
-          "#version 130\n"
-          "in vec2 Position;"
-          "in vec2 UV;"
-          "in vec4 Color;"
-          "out vec2 Frag_UV;"
-          "out vec4 Frag_Color;"
-          "uniform mat4 ProjMtx;"
-          "void main() {"
-          "  Frag_UV = UV;"
-          "  Frag_Color = Color;"
-          "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-          "  }"
-        :
-          "#version 410 core\n"
-          "layout (location = 0) in vec2 Position;"
-          "layout (location = 1) in vec2 UV;"
-          "layout (location = 2) in vec4 Color;"
-          "out vec2 Frag_UV;"
-          "out vec4 Frag_Color;"
-          "uniform mat4 ProjMtx;"
-          "void main() {"
-          "  Frag_UV = UV;"
-          "  Frag_Color = Color;"
-          "  gl_Position = ProjMtx * vec4(Position.xy,0,1);"
-          "  }",
-
-        glslVersion < 410 ?
-          "#version 130\n"
-          "in vec2 Frag_UV;"
-          "in vec4 Frag_Color;"
-          "out vec4 Out_Color;"
-          "uniform sampler2D Texture;"
-          "void main() {"
-          "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-          "  }"
-        :
-          "#version 410 core\n"
-          "in vec2 Frag_UV;"
-          "in vec4 Frag_Color;"
-          "layout (location = 0) out vec4 Out_Color;"
-          "uniform sampler2D Texture;"
-          "void main() {"
-          "  Out_Color = Frag_Color * texture(Texture, Frag_UV.st);"
-          "  }"
-          );
-
-      // store uniform locations
-      mAttribLocationVtxPos = glGetAttribLocation (getId(), "Position");
-      mAttribLocationVtxUV = glGetAttribLocation (getId(), "UV");
-      mAttribLocationVtxColor = glGetAttribLocation (getId(), "Color");
-
-      mAttribLocationProjMtx = glGetUniformLocation (getId(), "ProjMtx");
-      }
-    //}}}
-    virtual ~cDrawListShader() = default;
-
-    // gets
-    int32_t getAttribLocationVtxPos() { return mAttribLocationVtxPos; }
-    int32_t getAttribLocationVtxUV() { return mAttribLocationVtxUV; }
-    int32_t getAttribLocationVtxColor() { return mAttribLocationVtxColor; }
-
-    // sets
-    //{{{
-    void setMatrix (const cMat4x4& matrix) {
-      glUniformMatrix4fv (mAttribLocationProjMtx, 1, GL_FALSE, (float*)&matrix);
-      }
-    //}}}
-
-    //{{{
-    void use() final {
-
-      glUseProgram (mId);
-      }
-    //}}}
-
-  private:
-    int32_t mAttribLocationVtxPos = 0;
-    int32_t mAttribLocationVtxUV = 0;
-    int32_t mAttribLocationVtxColor = 0;
-    int32_t mAttribLocationProjMtx = 0;
-    };
-  //}}}
-
-  //{{{
-  void createFontTexture() {
-  // load font texture atlas as RGBA 32-bit (75% of the memory is wasted, but default font is so small)
-  // because it is more likely to be compatible with user's existing shaders
-  // If your ImTextureId represent a higher-level concept than just a GL texture id,
-  // consider calling GetTexDataAsAlpha8() instead to save on GPU memory
-
-    uint8_t* pixels;
-    int32_t width;
-    int32_t height;
-    ImGui::GetIO().Fonts->GetTexDataAsRGBA32 (&pixels, &width, &height);
-
-    // create texture
-    glGenTextures (1, &mFontTexture);
-    glBindTexture (GL_TEXTURE_2D, mFontTexture);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // pixels to texture
-    glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-    // set font textureId
-    ImGui::GetIO().Fonts->TexID = (ImTextureID)(intptr_t)mFontTexture;
-    }
-  //}}}
-  //{{{
-  void setRenderState (ImDrawData* drawData, int width, int height, GLuint vertexArrayObject) {
-
-    // disables
-    glDisable (GL_CULL_FACE);
-    glDisable (GL_DEPTH_TEST);
-
-    glDisable(GL_PRIMITIVE_RESTART);
-
-    // enables
-    glEnable (GL_SCISSOR_TEST);
-    glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-
-    // set blend = lerp
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBlendEquation (GL_FUNC_ADD);
-    glEnable (GL_BLEND);
-
-    mDrawListShader->use();
-    glViewport (0, 0, (GLsizei)width, (GLsizei)height);
-
-    // set orthoProject matrix
-    float left = drawData->DisplayPos.x;
-    float right = drawData->DisplayPos.x + drawData->DisplaySize.x;
-    float top = drawData->DisplayPos.y;;
-    float bottom = drawData->DisplayPos.y;;
-    if (mClipOriginBottomLeft) // bottom left origin ortho project
-      bottom += drawData->DisplaySize.y;
-    else // top left origin ortho project
-      top += drawData->DisplaySize.y;
-    mDrawListShader->setMatrix (cMat4x4(left, right, bottom, top, -1.f, 1.f));
-
-    // bind vertex/index buffers and setup attributes for ImDrawVert
-    glBindVertexArray (vertexArrayObject);
-
-    glBindBuffer (GL_ARRAY_BUFFER, mVboHandle);
-    glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, mElementsHandle);
-
-    glEnableVertexAttribArray (mDrawListShader->getAttribLocationVtxPos());
-    glVertexAttribPointer (mDrawListShader->getAttribLocationVtxPos(), 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
-                           (GLvoid*)IM_OFFSETOF(ImDrawVert, pos));
-
-    glEnableVertexAttribArray (mDrawListShader->getAttribLocationVtxUV());
-    glVertexAttribPointer (mDrawListShader->getAttribLocationVtxUV(), 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
-                           (GLvoid*)IM_OFFSETOF(ImDrawVert, uv));
-
-    glEnableVertexAttribArray (mDrawListShader->getAttribLocationVtxColor());
-    glVertexAttribPointer (mDrawListShader->getAttribLocationVtxColor(), 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert),
-                           (GLvoid*)IM_OFFSETOF(ImDrawVert, col));
-    }
-  //}}}
 
   //{{{
   static uint32_t compileShader (const string& vertShaderString, const string& fragShaderString) {
@@ -1825,26 +1536,6 @@ private:
     return id;
     }
   //}}}
-  //{{{
-  static void renderWindow (ImGuiViewport* viewport, void*) {
-
-    if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear)) {
-      ImVec4 clear_color = ImVec4(0.f,0.f,0.f, 1.f);
-      glClearColor (clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-      glClear (GL_COLOR_BUFFER_BIT);
-      }
-    gGraphics->renderDrawData (viewport->DrawData);
-    }
-  //}}}
-
-  inline static cGraphics* gGraphics = nullptr;
-
-  bool mClipOriginBottomLeft = true;
-  cDrawListShader* mDrawListShader = nullptr;
-  GLuint mVboHandle = 0;
-  GLuint mElementsHandle = 0;
-  bool mFontLoaded = false;
-  GLuint mFontTexture = 0;
   };
 //}}}
 
@@ -1904,12 +1595,15 @@ chrono::system_clock::time_point cApp::getNow() {
 //{{{
 void cApp::windowResize (int width, int height) {
 
-  mPlatform->newFrame();
-  mGraphics->windowResize (width, height);
+  (void)width;
+  (void)height;
   mGraphics->newFrame();
+  mPlatform->newFrame();
+  ImGui::NewFrame();
 
-  cUI::draw (*this);
-  mGraphics->drawUI();
+  cUI::render (*this);
+  ImGui::Render();
+  mGraphics->renderDrawData();
 
   mPlatform->present();
   }
@@ -1920,11 +1614,13 @@ void cApp::windowResize (int width, int height) {
 void cApp::mainUILoop() {
 
   while (mPlatform->pollEvents()) {
-    mPlatform->newFrame();
     mGraphics->newFrame();
+    mPlatform->newFrame();
+    ImGui::NewFrame();
 
-    cUI::draw (*this);
-    mGraphics->drawUI();
+    cUI::render (*this);
+    ImGui::Render();
+    mGraphics->renderDrawData();
 
     mPlatform->present();
     }

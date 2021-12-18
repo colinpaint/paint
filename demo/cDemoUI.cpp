@@ -37,7 +37,7 @@ public:
 
   void addToDrawList (cApp& app) final {
     bool show_demo_window = true;
-    app.getGraphics().drawBackground (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
+    app.getGraphics().clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
 
     if (app.getPlatform().hasFullScreen()) {
       ImGui::SameLine();

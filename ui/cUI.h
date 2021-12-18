@@ -29,8 +29,8 @@ public:
   static void listRegisteredClasses();
   static void listInstances();
 
-  // static draw
-  static void draw (cApp& app);
+  // static render
+  static void render (cApp& app);
 
   // base class
   cUI (const std::string& name) : mName(name) {}

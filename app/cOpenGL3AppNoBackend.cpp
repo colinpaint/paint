@@ -142,7 +142,7 @@ public:
 
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-   // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
     ImGui_ImplGlfw_InitForOpenGL (mWindow, true);
@@ -240,12 +240,12 @@ public:
   //{{{
   virtual void present() final {
 
-    //if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-    //  GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
-    //  ImGui::UpdatePlatformWindows();
-    //  ImGui::RenderPlatformWindowsDefault();
-    //  glfwMakeContextCurrent (backupCurrentContext);
-    //  }
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+      GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
+      ImGui::UpdatePlatformWindows();
+      ImGui::RenderPlatformWindowsDefault();
+      glfwMakeContextCurrent (backupCurrentContext);
+      }
 
     glfwSwapBuffers (mWindow);
     }
@@ -277,7 +277,7 @@ class cOpenGL3Graphics : public cGraphics {
 public:
   //{{{
   virtual ~cOpenGL3Graphics() {
-    //ImGui::DestroyPlatformWindows();
+    ImGui::DestroyPlatformWindows();
 
     // destroy vertetx array
     if (mVboHandle)
@@ -324,11 +324,11 @@ public:
     //}}}
 
     // enable ImGui viewports
-    //ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+    ImGui::GetIO().BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 
     // set ImGui renderWindow
-    //if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    //  ImGui::GetPlatformIO().Renderer_RenderWindow = renderWindow;
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+      ImGui::GetPlatformIO().Renderer_RenderWindow = renderWindow;
 
     // get GLSL version
     int glslMajor = 0;
@@ -1827,13 +1827,13 @@ private:
   //}}}
   //{{{
   static void renderWindow (ImGuiViewport* viewport, void*) {
-    (void)viewport;
-    //if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear)) {
-    //  ImVec4 clear_color = ImVec4(0.f,0.f,0.f, 1.f);
-    //  glClearColor (clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-    //  glClear (GL_COLOR_BUFFER_BIT);
-    //  }
-    //gGraphics->renderDrawData (viewport->DrawData);
+
+    if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear)) {
+      ImVec4 clear_color = ImVec4(0.f,0.f,0.f, 1.f);
+      glClearColor (clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+      glClear (GL_COLOR_BUFFER_BIT);
+      }
+    gGraphics->renderDrawData (viewport->DrawData);
     }
   //}}}
 
