@@ -86,32 +86,32 @@ public:
   //{{{
   virtual bool init (const cPoint& windowSize) final {
 
-    cLog::log (LOGINFO, fmt::format ("GLFW {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
+    cLog::log (LOGINFO, fmt::format ("Glfw {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
 
     glfwSetErrorCallback (glfw_error_callback);
     if (!glfwInit())
-      return 1;
+      return false;
 
     // GL+GLSL versions
     #if defined(IMGUI_IMPL_OPENGL_ES2)
       //{{{  GL ES 2.0 + GLSL 100
-      glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-      glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
+      glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
       //}}}
     #else
       //{{{  GL 3.0 + GLSL 130
-      glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-      //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-      //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
+      //glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+      //glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
       //}}}
     #endif
 
     mWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
     if (!mWindow) {
       cLog::log (LOGERROR, "cOpenGL3Platform - glfwCreateWindow failed");
-      return 1;
+      return false;
       }
 
     mMonitor = glfwGetPrimaryMonitor();
@@ -122,10 +122,10 @@ public:
     // vsync
     glfwSwapInterval (1);
 
-    // set Dear ImGui context
+    // set imGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui::StyleColorsClassic();  // ImGui::StyleColorsDark();
+    ImGui::StyleColorsClassic(); 
     cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
 
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
@@ -170,6 +170,7 @@ public:
     int width;
     int height;
     glfwGetWindowSize (mWindow, &width, &height);
+
     return cPoint (width, height);
     }
   //}}}
@@ -236,17 +237,12 @@ public:
 
     if (glfwWindowShouldClose (mWindow))
       return false;
-    else {
-      glfwPollEvents();
-      return true;
-      }
+
+    glfwPollEvents();
+    return true;
     }
   //}}}
-  //{{{
-  virtual void newFrame() final {
-    ImGui_ImplGlfw_NewFrame();
-    }
-  //}}}
+  virtual void newFrame() final { ImGui_ImplGlfw_NewFrame(); }
   //{{{
   virtual void present() final {
 
