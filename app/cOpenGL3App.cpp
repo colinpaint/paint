@@ -24,10 +24,6 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
-#ifdef USE_IMPLOT
-  #include <implot.h>
-#endif
-
 #include "cApp.h"
 #include "cPlatform.h"
 #include "cGraphics.h"
@@ -38,6 +34,7 @@
 
 using namespace std;
 //}}}
+
 namespace {
   //{{{
   void glfw_error_callback (int error, const char* description) {
@@ -69,7 +66,7 @@ namespace {
   //}}}
   }
 
-// platform
+// cPlatform interface
 //{{{
 class cOpenGL3Platform : public cPlatform {
 public:
@@ -81,10 +78,6 @@ public:
 
     glfwDestroyWindow (mWindow);
     glfwTerminate();
-
-    #ifdef USE_IMPLOT
-      ImPlot::DestroyContext();
-    #endif
 
     ImGui::DestroyContext();
     }
@@ -109,7 +102,7 @@ public:
     #else
       //{{{  GL 3.0 + GLSL 130
       glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
       //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
       //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
       //}}}
@@ -133,26 +126,23 @@ public:
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::StyleColorsClassic();  // ImGui::StyleColorsDark();
-
-    #ifdef USE_IMPLOT
-      ImPlot::CreateContext();
-    #endif
-
     cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
 
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-    #ifdef BUILD_DOCKING
-      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;    // Enable Docking
-      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;  // Enable Multi-Viewport / Platform Windows
-    #endif
 
     #ifdef BUILD_DOCKING
-    ImGuiStyle& style = ImGui::GetStyle();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-      // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-      style.WindowRounding = 0.0f;
-      style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-      }
+      // Enable Docking
+      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+      // Enable Multi-Viewport / Platform Windows
+      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+      if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        // tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        }
     #endif
 
     // init platform backend
@@ -165,7 +155,7 @@ public:
 
     // GLAD init before any openGL function
     if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {
-      cLog::log (LOGERROR, "cOpenGL3Platform - glad init failed");
+      cLog::log (LOGERROR, "cOpenGL3Platform - gladLoadGLLoader failed");
       return false;
       }
 
@@ -293,7 +283,7 @@ private:
   };
 //}}}
 
-// graphics
+// cGraphics interface
 //{{{
 class cOpenGL3Graphics : public cGraphics {
 public:
@@ -306,19 +296,17 @@ public:
   //{{{
   virtual bool init() final {
 
-    // report versions
+    // report OpenGL versions
     cLog::log (LOGINFO, fmt::format ("OpenGL {}", glGetString (GL_VERSION)));
-    cLog::log (LOGINFO, fmt::format ("- GLSL {}", glGetString(GL_SHADING_LANGUAGE_VERSION)));
+    cLog::log (LOGINFO, fmt::format ("- GLSL {}", glGetString (GL_SHADING_LANGUAGE_VERSION)));
     cLog::log (LOGINFO, fmt::format ("- Renderer {}", glGetString (GL_RENDERER)));
     cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
 
     #if defined(IMGUI_IMPL_OPENGL_ES2)
-      ImGui_ImplOpenGL3_Init ("#version 100");
+      return ImGui_ImplOpenGL3_Init ("#version 100");
     #else
-      ImGui_ImplOpenGL3_Init ("#version 130");
+      return ImGui_ImplOpenGL3_Init ("#version 130");
     #endif
-
-    return true;
     }
   //}}}
   virtual void newFrame() final { ImGui_ImplOpenGL3_NewFrame(); }

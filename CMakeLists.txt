@@ -1,18 +1,18 @@
 cmake_minimum_required (VERSION 3.16)
 cmake_policy (SET CMP0072 NEW)
 #
-option (BUILD_FED "Build fed" ON)
-option (BUILD_TELLY "Build telly" ON)
-option (BUILD_PLAYER "Build player" ON)
-option (BUILD_PAINTBOX "Build paintbox" ON)
-option (BUILD_IMPLOT "Build implot" ON)
-option (BUILD_DEMO "Build imgui demo" ON)
+option (BUILD_DEMO "Build imgui demo app" ON)
+option (BUILD_FED "Build fed app" ON)
+option (BUILD_TELLY "Build telly app" ON)
+option (BUILD_PLAYER "Build player app" ON)
+option (BUILD_PAINTBOX "Build paintbox app" ON)
 #
-option (BUILD_MFX "Build mfx" ON)
-option (BUILD_MFXTEST "Build mfxtest" ON)
-option (BUILD_CAPTURE "Build capture" ON)
+option (BUILD_IMPLOT "Build implot lib" ON)
+option (BUILD_MFX "Build mfx lib" ON)
+option (BUILD_MFXTEST "Build mfxtest cmdline app" ON)
+option (BUILD_CAPTURE "Build capture cmdline app" ON)
 #
-option (BUILD_AVX "Build avx" ON)
+option (BUILD_AVX "Build with avx" ON)
 option (BUILD_OPTIMISED "Build optimised" ON)
 #
 option (OPENGL3 "openGL3" ON)
