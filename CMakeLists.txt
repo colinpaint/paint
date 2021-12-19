@@ -19,7 +19,8 @@ option (BUILD_OPTIMISED "Build optimised" ON)
 #
 option (BUILD_OPENGL2 "openGL2" OFF)
 option (BUILD_OPENGL3 "openGL3" ON)
-option (BUILD_OPENGLES3 "openGLES3" ON)
+option (BUILD_OPENGLES3 "openGLES3" OFF)
+option (BUILD_OPENGLES3_2 "openGLES3.2" OFF)
 option (BUILD_DIRECTX11 "directX11" OFF)
 #
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
@@ -94,6 +95,9 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
       add_compile_definitions (GLFW_INCLUDE_ES3=1
                                IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
                                IMGUI_IMPL_OPENGL_ES3=1)
+      if (BUILD_OPENGLES3_2)
+        target_compile_definitions (${PROJECT_NAME} PUBLIC OPENGLES3_2)
+      endif()
     elseif (BUILD_DIRECTX11)
     endif()
 

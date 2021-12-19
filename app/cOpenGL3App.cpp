@@ -103,7 +103,11 @@ public:
       //}}}
     #elif defined (IMGUI_IMPL_OPENGL_ES3)
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
-      glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
+      #ifdef OPENGLES3_2
+        glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
+      #else
+        glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
+      #endif
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     #else
       //{{{  GL 3.0 + GLSL 130
