@@ -14,7 +14,9 @@
 #include <functional>
 
 // glad
-#include <glad/glad.h>
+#ifndef IMGUI_IMPL_OPENGL_ES3
+  #include <glad/glad.h>
+#endif
 
 // glfw
 #include <GLFW/glfw3.h>
@@ -99,6 +101,10 @@ public:
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
       //}}}
+    #elif defined (IMGUI_IMPL_OPENGL_ES3)
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
+      glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     #else
       //{{{  GL 3.0 + GLSL 130
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -125,7 +131,7 @@ public:
     // set imGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui::StyleColorsClassic(); 
+    ImGui::StyleColorsClassic();
     cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
 
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
@@ -154,10 +160,12 @@ public:
     glfwSetDropCallback (mWindow, dropCallback);
 
     // GLAD init before any openGL function
-    if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {
-      cLog::log (LOGERROR, "cOpenGL3Platform - gladLoadGLLoader failed");
-      return false;
-      }
+    #ifndef IMGUI_IMPL_OPENGL_ES3
+      if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {
+        cLog::log (LOGERROR, "cOpenGL3Platform - gladLoadGLLoader failed");
+        return false;
+        }
+    #endif
 
     return true;
     }
@@ -300,6 +308,8 @@ public:
 
     #if defined(IMGUI_IMPL_OPENGL_ES2)
       return ImGui_ImplOpenGL3_Init ("#version 100");
+    #elif defined (IMGUI_IMPL_OPENGL_ES3)
+      return ImGui_ImplOpenGL3_Init();
     #else
       return ImGui_ImplOpenGL3_Init ("#version 130");
     #endif
@@ -580,13 +590,19 @@ private:
         // create mPixels, texture pixels shadow buffer
         mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-        glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
+        #ifdef IMGUI_IMPL_OPENGL_ES3
+        #else
+          glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
+        #endif
         }
 
       else if (!mDirtyPixelsRect.isEmpty()) {
         // no openGL glGetTexSubImage, so dirtyPixelsRect not really used, is this correct ???
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-        glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
+        #ifdef IMGUI_IMPL_OPENGL_ES3
+        #else
+          glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
+        #endif
         mDirtyPixelsRect = cRect(0,0,0,0);
         }
 
@@ -696,36 +712,24 @@ private:
 
       switch (status) {
         case GL_FRAMEBUFFER_COMPLETE:
-          //cLog::log (LOGINFO, "frameBUffer ok");
           return true;
-
         case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-          cLog::log (LOGERROR, "framebuffer incomplete: Attachment is NOT complete");
-          return false;
-
+          cLog::log (LOGERROR, "framebuffer incomplete: Attachment is NOT complete"); return false;
         case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-          cLog::log (LOGERROR, "framebuffer incomplete: No image is attached to FBO");
-          return false;
-
-        //case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-        //  cLog::log (LOGERROR, "framebuffer incomplete: Attached images have different dimensions");
-        //  return false;
-
-        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-          cLog::log (LOGERROR, "framebuffer incomplete: Draw buffer");
-          return false;
-
-        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-          cLog::log (LOGERROR, "framebuffer incomplete: Read buffer");
-          return false;
-
+          cLog::log (LOGERROR, "framebuffer incomplete: No image is attached to FBO"); return false;
         case GL_FRAMEBUFFER_UNSUPPORTED:
-          cLog::log (LOGERROR, "framebuffer incomplete: Unsupported by FBO implementation");
-          return false;
+          cLog::log (LOGERROR, "framebuffer incomplete: Unsupported by FBO implementation"); return false;
 
+      #ifndef IMGUI_IMPL_OPENGL_ES3
+        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+          cLog::log (LOGERROR, "framebuffer incomplete: Draw buffer"); return false;
+        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+          cLog::log (LOGERROR, "framebuffer incomplete: Read buffer"); return false;
+      #endif
+        //case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+        // cLog::log (LOGERROR, "framebuffer incomplete: Attached images have different dimensions"); return false;
         default:
-          cLog::log (LOGERROR, "framebuffer incomplete: Unknown error");
-          return false;
+          cLog::log (LOGERROR, "framebuffer incomplete: Unknown error"); return false;
         }
       }
     //}}}
@@ -803,102 +807,40 @@ private:
       string formatName;
 
       switch (formatNum) {
-        case GL_STENCIL_INDEX:      // 0x1901
-          formatName = "GL_STENCIL_INDEX";
-          break;
-        case GL_DEPTH_COMPONENT:    // 0x1902
-          formatName = "GL_DEPTH_COMPONENT";
-          break;
-        case GL_ALPHA:              // 0x1906
-          formatName = "GL_ALPHA";
-          break;
-        case GL_RGB:                // 0x1907
-          formatName = "GL_RGB";
-          break;
-        case GL_RGBA:               // 0x1908
-          formatName = "GL_RGBA";
-          break;
-        //case GL_LUMINANCE:          // 0x1909
-        //  formatName = "GL_LUMINANCE";
-        //  break;
-        //case GL_LUMINANCE_ALPHA:    // 0x190A
-        //  formatName = "GL_LUMINANCE_ALPHA";
-        //  break;
-        case GL_R3_G3_B2:           // 0x2A10
-          formatName = "GL_R3_G3_B2";
-          break;
-        case GL_RGB4:               // 0x804F
-            formatName = "GL_RGB4";
-            break;
-        case GL_RGB5:               // 0x8050
-            formatName = "GL_RGB5";
-            break;
-        case GL_RGB8:               // 0x8051
-            formatName = "GL_RGB8";
-            break;
-        case GL_RGB10:              // 0x8052
-            formatName = "GL_RGB10";
-            break;
-        case GL_RGB12:              // 0x8053
-            formatName = "GL_RGB12";
-            break;
-        case GL_RGB16:              // 0x8054
-            formatName = "GL_RGB16";
-            break;
-        case GL_RGBA2:              // 0x8055
-            formatName = "GL_RGBA2";
-            break;
-        case GL_RGBA4:              // 0x8056
-            formatName = "GL_RGBA4";
-            break;
-        case GL_RGB5_A1:            // 0x8057
-            formatName = "GL_RGB5_A1";
-            break;
-        case GL_RGBA8:              // 0x8058
-            formatName = "GL_RGBA8";
-            break;
-        case GL_RGB10_A2:           // 0x8059
-            formatName = "GL_RGB10_A2";
-            break;
-        case GL_RGBA12:             // 0x805A
-            formatName = "GL_RGBA12";
-            break;
-        case GL_RGBA16:             // 0x805B
-            formatName = "GL_RGBA16";
-            break;
-        case GL_DEPTH_COMPONENT16:  // 0x81A5
-            formatName = "GL_DEPTH_COMPONENT16";
-            break;
-        case GL_DEPTH_COMPONENT24:  // 0x81A6
-            formatName = "GL_DEPTH_COMPONENT24";
-            break;
-        case GL_DEPTH_COMPONENT32:  // 0x81A7
-            formatName = "GL_DEPTH_COMPONENT32";
-            break;
-        case GL_DEPTH_STENCIL:      // 0x84F9
-            formatName = "GL_DEPTH_STENCIL";
-            break;
-        case GL_DEPTH24_STENCIL8:   // 0x88F0
-            formatName = "GL_DEPTH24_STENCIL8";
-            break;
-        // openGL v4? onwards
-        #ifdef OPENGL_RGBF
-        case GL_RGBA32F:            // 0x8814
-          formatName = "GL_RGBA32F";
-          break;
-        case GL_RGB32F:             // 0x8815
-          formatName = "GL_RGB32F";
-          break;
-        case GL_RGBA16F:            // 0x881A
-          formatName = "GL_RGBA16F";
-          break;
-        case GL_RGB16F:             // 0x881B
-          formatName = "GL_RGB16F";
-          break;
-        #endif
-        default:
-            formatName = fmt::format ("Unknown Format {}", formatNum);
-            break;
+        case GL_DEPTH_COMPONENT:   formatName = "GL_DEPTH_COMPONENT"; break;   // 0x1902
+        case GL_ALPHA:             formatName = "GL_ALPHA"; break;             // 0x1906
+        case GL_RGB:               formatName = "GL_RGB"; break;               // 0x1907
+        case GL_RGB8:              formatName = "GL_RGB8"; break;              // 0x8051
+        case GL_RGBA4:             formatName = "GL_RGBA4"; break;             // 0x8056
+        case GL_RGB5_A1:           formatName = "GL_RGB5_A1"; break;           // 0x8057
+        case GL_RGBA8:             formatName = "GL_RGBA8"; break;             // 0x8058
+        case GL_RGB10_A2:          formatName = "GL_RGB10_A2"; break;          // 0x8059
+        case GL_DEPTH_COMPONENT16: formatName = "GL_DEPTH_COMPONENT16"; break; // 0x81A5
+        case GL_DEPTH_COMPONENT24: formatName = "GL_DEPTH_COMPONENT24"; break; // 0x81A6
+        case GL_DEPTH_STENCIL:     formatName = "GL_DEPTH_STENCIL"; break;     // 0x84F9
+        case GL_DEPTH24_STENCIL8:  formatName = "GL_DEPTH24_STENCIL8"; break;  // 0x88F0
+
+      #ifndef IMGUI_IMPL_OPENGL_ES3
+        case GL_STENCIL_INDEX:     formatName = "GL_STENCIL_INDEX"; break;     // 0x1901
+        case GL_RGBA:              formatName = "GL_RGBA"; break;              // 0x1908
+        case GL_R3_G3_B2:          formatName = "GL_R3_G3_B2"; break;          // 0x2A10
+        case GL_RGB4:              formatName = "GL_RGB4"; break;              // 0x804F
+        case GL_RGB5:              formatName = "GL_RGB5"; break;              // 0x8050
+        case GL_RGB10:             formatName = "GL_RGB10"; break;             // 0x8052
+        case GL_RGB12:             formatName = "GL_RGB12"; break;             // 0x8053
+        case GL_RGB16:             formatName = "GL_RGB16"; break;             // 0x8054
+        case GL_RGBA2:             formatName = "GL_RGBA2"; break;             // 0x8055
+        case GL_RGBA12:            formatName = "GL_RGBA12"; break;            // 0x805A
+        case GL_RGBA16:            formatName = "GL_RGBA16"; break;            // 0x805B
+        case GL_DEPTH_COMPONENT32: formatName = "GL_DEPTH_COMPONENT32"; break; // 0x81A7
+      #endif
+        //case GL_LUMINANCE:         formatName = "GL_LUMINANCE"; break;         // 0x1909
+        //case GL_LUMINANCE_ALPHA:   formatName = "GL_LUMINANCE_ALPHA"; break;   // 0x190A
+        //case GL_RGBA32F:           formatName = "GL_RGBA32F"; break;           // 0x8814
+        //case GL_RGB32F:            formatName = "GL_RGB32F"; break;            // 0x8815
+        //case GL_RGBA16F:           formatName = "GL_RGBA16F"; break;           // 0x881A
+        //case GL_RGB16F:            formatName = "GL_RGB16F"; break;            // 0x881B
+        default: formatName = fmt::format ("Unknown Format {}", formatNum); break;
         }
 
       return formatName;
@@ -910,13 +852,19 @@ private:
       if (glIsTexture(id) == GL_FALSE)
         return "Not texture object";
 
-      int width, height, formatNum;
-      glBindTexture (GL_TEXTURE_2D, id);
-      glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);            // get texture width
-      glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);          // get texture height
-      glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &formatNum); // get texture internal format
+      #ifdef IMGUI_IMPL_OPENGL_ES3
+        return "openGLES3 - unknown getTextureParameters";
+      #else
+        glBindTexture (GL_TEXTURE_2D, id);
+        int width;
+        glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);            // get texture width
+        int height;
+        glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);          // get texture height
+        int formatNum;
+        glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &formatNum); // get texture internal format
+        return fmt::format (" {} {} {}", width, height, getInternalFormat (formatNum));
+      #endif
 
-      return fmt::format (" {} {} {}", width, height, getInternalFormat (formatNum));
       }
     //}}}
     //{{{

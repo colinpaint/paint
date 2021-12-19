@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 3.16)
 cmake_policy (SET CMP0072 NEW)
+set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
 option (BUILD_DEMO "Build imgui demo app" ON)
 option (BUILD_FED "Build fed app" ON)
@@ -15,9 +17,10 @@ option (BUILD_CAPTURE "Build capture cmdline app" ON)
 option (BUILD_AVX "Build with avx" ON)
 option (BUILD_OPTIMISED "Build optimised" ON)
 #
-option (OPENGL3 "openGL3" ON)
-option (OPENGL2 "openGL2" OFF)
-option (DIRECTX11 "directX11" OFF)
+option (BUILD_OPENGL2 "openGL2" OFF)
+option (BUILD_OPENGL3 "openGL3" ON)
+option (BUILD_OPENGLES3 "openGLES3" ON)
+option (BUILD_DIRECTX11 "directX11" OFF)
 #
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 
@@ -59,23 +62,23 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
   add_subdirectory (glfw)
 
   # glad
-  if (OPENGL2)
+  if (BUILD_OPENGL2)
     add_subdirectory (glad2.1+fbo+vao)
-  elseif (OPENGL3)
+  else()
     add_subdirectory (glad4.5core)
   endif()
 
   # imgui framework lib
   project (imgui)
-    if (OPENGL2)
+    if (BUILD_OPENGL2)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h)
       file (GLOB SOURCE_FILES app/cOpenGL2App.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
-    elseif (OPENGL3)
+    elseif (BUILD_OPENGL3 OR BUILD_OPENGLES3)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
       file (GLOB SOURCE_FILES app/cOpenGL3App.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_opengl3.cpp imgui/backends/imgui_impl_glfw.cpp)
-    elseif (DIRECTX11)
+    elseif (BUILD_DIRECTX11)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h)
       file (GLOB SOURCE_FILES app/cDirectX11App.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp)
@@ -83,7 +86,16 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
 
     add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
     target_include_directories (${PROJECT_NAME} PUBLIC imgui glfw/include)
-    target_link_libraries (${PROJECT_NAME} PUBLIC utils glad glfw)
+
+    if (BUILD_OPENGL2 OR BUILD_OPENGL3)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils glfw glad)
+    elseif (BUILD_OPENGLES3)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils glfw GLESv2)
+      add_compile_definitions (GLFW_INCLUDE_ES3=1
+                               IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
+                               IMGUI_IMPL_OPENGL_ES3=1)
+    elseif (BUILD_DIRECTX11)
+    endif()
 
   # implot lib
   if (BUILD_IMPLOT)
@@ -244,7 +256,7 @@ if (BUILD_FED)
 
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
-    if (OPENGL2)
+    if (BUILD_OPENGL2)
       target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
     endif()
 
@@ -262,7 +274,7 @@ if (BUILD_TELLY)
     file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp ui/cUI.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
-    if (OPENGL2)
+    if (BUILD_OPENGL2)
       target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
     endif()
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
@@ -311,7 +323,7 @@ if (BUILD_PLAYER)
     file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp ui/cUI.cpp)
     add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
 
-    if (OPENGL2)
+    if (BUILD_OPENGL2)
       target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
     endif()
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
@@ -335,7 +347,7 @@ if (BUILD_PAINTBOX)
     file (GLOB SOURCE_FILES paint/*.cpp brush/*.cpp ui/cUI.cpp ui/cPaintUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
-    if (OPENGL2)
+    if (BUILD_OPENGL2)
       target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
     endif()
     target_include_directories (${PROJECT_NAME} PRIVATE stb)
