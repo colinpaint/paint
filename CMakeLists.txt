@@ -16,11 +16,13 @@ option (BUILD_MFX "Build mfx lib" ON)
 option (BUILD_MFXTEST "Build mfxtest cmdline app" ON)
 option (BUILD_CAPTURE "Build capture cmdline app" ON)
 #
-option (BUILD_AVX "Build with avx" ON)
 option (BUILD_OPTIMISED "Build optimised" ON)
 #
 # valid options - OPENGL_2 OPENGL_3, OPENGLES_30 OPENGLES_31 OPENGLES_32, DIRECTX_11
 set (BUILD_GRAPHICS "OPENGL_3" CACHE STRING "build graphics option")
+#
+set (COMPILE_MSVC "/arch:AVX" CACHE STRING "msvc compile options")
+set (COMPILE_LINUX "-Ofast" CACHE STRING "linux compile options")
 #
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 
@@ -31,11 +33,7 @@ project (utils)
   add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
   if (MSVC)
-    #target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast /std:c++17)
-    target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast)
-    if (BUILD_AVX)
-      target_compile_options (${PROJECT_NAME} PUBLIC /arch:AVX)
-    endif()
+    target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast ${COMPILE_MSVC})
   else()
     target_compile_definitions (${PROJECT_NAME} PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
     target_compile_options (${PROJECT_NAME} PUBLIC -Wall -Wextra
@@ -43,14 +41,8 @@ project (utils)
                                                    -Wno-format-security -Wno-format-overflow
                                                    -pedantic
                                                    -march=native -flax-vector-conversions -ftree-vectorize
-                                                   )
-                                                   #-std=c++17 )
-    if (BUILD_OPTIMISED)
-      target_compile_options (${PROJECT_NAME} PUBLIC -Ofast)
-    else()
-      target_compile_options (${PROJECT_NAME} PUBLIC -g -O0)
-    endif()
-endif()
+                                                   ${COMPILE_LINUX})
+  endif()
 
 # gui
 if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)

@@ -43,6 +43,16 @@ namespace {
     cLog::log (LOGERROR, fmt::format ("Glfw Error {} {}", error, description));
     }
   //}}}
+  //{{{
+  void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
+  // glfw key callback exit
+
+    (void)scancode;
+    (void)mode;
+    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS)) // exit
+      glfwSetWindowShouldClose (window, true);
+    }
+  //}}}
 
   function <void (int width, int height)> gResizeCallback ;
   //{{{
@@ -64,6 +74,62 @@ namespace {
       dropItems.push_back (paths[i]);
 
     gDropCallback (dropItems);
+    }
+  //}}}
+
+  //{{{
+  uint32_t compileShader (const string& vertShaderString, const string& fragShaderString) {
+
+    // compile vertShader
+    const GLuint vertShader = glCreateShader (GL_VERTEX_SHADER);
+    const GLchar* vertShaderStr = vertShaderString.c_str();
+    glShaderSource (vertShader, 1, &vertShaderStr, 0);
+    glCompileShader (vertShader);
+    GLint success;
+    glGetShaderiv (vertShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+      //{{{  error, exit
+      char errMessage[512];
+      glGetProgramInfoLog (vertShader, 512, NULL, errMessage);
+      cLog::log (LOGERROR, fmt::format ("vertShader failed {}", errMessage));
+      exit (EXIT_FAILURE);
+      }
+      //}}}
+
+    // compile fragShader
+    const GLuint fragShader = glCreateShader (GL_FRAGMENT_SHADER);
+    const GLchar* fragShaderStr = fragShaderString.c_str();
+    glShaderSource (fragShader, 1, &fragShaderStr, 0);
+    glCompileShader (fragShader);
+    glGetShaderiv (fragShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+      //{{{  error, exit
+      char errMessage[512];
+      glGetProgramInfoLog (fragShader, 512, NULL, errMessage);
+      cLog::log (LOGERROR, fmt::format ("fragShader failed {}", errMessage));
+      exit (EXIT_FAILURE);
+      }
+      //}}}
+
+    // create shader program
+    uint32_t id = glCreateProgram();
+    glAttachShader (id, vertShader);
+    glAttachShader (id, fragShader);
+    glLinkProgram (id);
+    glGetProgramiv (id, GL_LINK_STATUS, &success);
+    if (!success) {
+      //{{{  error, exit
+      char errMessage[512];
+      glGetProgramInfoLog (id, 512, NULL, errMessage);
+      cLog::log (LOGERROR, fmt::format ("shaderProgram failed {} ",  errMessage));
+      exit (EXIT_FAILURE);
+      }
+      //}}}
+
+    glDeleteShader (vertShader);
+    glDeleteShader (fragShader);
+
+    return id;
     }
   //}}}
   }
@@ -277,16 +343,6 @@ public:
   //}}}
 
 private:
-  //{{{
-  static void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
-
-    (void)scancode;
-    (void)mode;
-    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS)) // exit
-      glfwSetWindowShouldClose (window, true);
-    }
-  //}}}
-
   GLFWmonitor* mMonitor = nullptr;
   GLFWwindow* mWindow = nullptr;
   cPoint mWindowPos = { 0,0 };
@@ -415,6 +471,7 @@ private:
     "  gl_Position = uProject * uModel * vec4 (inPos, 0.0, 1.0);"
     "  }";
   //}}}
+
   //{{{
   class cOpenGL3Quad : public cQuad {
   public:
@@ -892,6 +949,7 @@ private:
     //}}}
     };
   //}}}
+
   //{{{
   class cOpenGL3RgbaTexture : public cTexture {
   public:
@@ -1093,6 +1151,7 @@ private:
     array <uint32_t,3> mTextureId;
     };
   //}}}
+
   //{{{
   class cOpenGL3RgbaShader : public cTextureShader {
   public:
@@ -1236,6 +1295,7 @@ private:
     //}}}
     };
   //}}}
+
   //{{{
   class cOpenGL3LayerShader : public cLayerShader {
   public:
@@ -1418,62 +1478,6 @@ private:
       }
     //}}}
     };
-  //}}}
-
-  //{{{
-  static uint32_t compileShader (const string& vertShaderString, const string& fragShaderString) {
-
-    // compile vertShader
-    const GLuint vertShader = glCreateShader (GL_VERTEX_SHADER);
-    const GLchar* vertShaderStr = vertShaderString.c_str();
-    glShaderSource (vertShader, 1, &vertShaderStr, 0);
-    glCompileShader (vertShader);
-    GLint success;
-    glGetShaderiv (vertShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-      //{{{  error, exit
-      char errMessage[512];
-      glGetProgramInfoLog (vertShader, 512, NULL, errMessage);
-      cLog::log (LOGERROR, fmt::format ("vertShader failed {}", errMessage));
-      exit (EXIT_FAILURE);
-      }
-      //}}}
-
-    // compile fragShader
-    const GLuint fragShader = glCreateShader (GL_FRAGMENT_SHADER);
-    const GLchar* fragShaderStr = fragShaderString.c_str();
-    glShaderSource (fragShader, 1, &fragShaderStr, 0);
-    glCompileShader (fragShader);
-    glGetShaderiv (fragShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-      //{{{  error, exit
-      char errMessage[512];
-      glGetProgramInfoLog (fragShader, 512, NULL, errMessage);
-      cLog::log (LOGERROR, fmt::format ("fragShader failed {}", errMessage));
-      exit (EXIT_FAILURE);
-      }
-      //}}}
-
-    // create shader program
-    uint32_t id = glCreateProgram();
-    glAttachShader (id, vertShader);
-    glAttachShader (id, fragShader);
-    glLinkProgram (id);
-    glGetProgramiv (id, GL_LINK_STATUS, &success);
-    if (!success) {
-      //{{{  error, exit
-      char errMessage[512];
-      glGetProgramInfoLog (id, 512, NULL, errMessage);
-      cLog::log (LOGERROR, fmt::format ("shaderProgram failed {} ",  errMessage));
-      exit (EXIT_FAILURE);
-      }
-      //}}}
-
-    glDeleteShader (vertShader);
-    glDeleteShader (fragShader);
-
-    return id;
-    }
   //}}}
   };
 //}}}
