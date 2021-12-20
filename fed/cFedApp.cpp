@@ -18,7 +18,7 @@ using namespace std;
 //}}}
 
 cFedApp::cFedApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-    : cApp (windowSize, fullScreen, vsync) {
+    : cApp ("fed", windowSize, fullScreen, vsync) {
   }
 
 cDocument* cFedApp::getDocument() const {

@@ -138,7 +138,7 @@ namespace {
 //{{{
 class cOpenGL3Platform : public cPlatform {
 public:
-  cOpenGL3Platform() : cPlatform (true, true) {}
+  cOpenGL3Platform (const string& name) : cPlatform (name, true, true) {}
   //{{{
   virtual ~cOpenGL3Platform() {
 
@@ -189,7 +189,7 @@ public:
     #endif
     //}}}
 
-    mWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+    mWindow = glfwCreateWindow (windowSize.x, windowSize.y, getName().c_str(), NULL, NULL);
     if (!mWindow) {
       cLog::log (LOGERROR, "cOpenGL3Platform - glfwCreateWindow failed");
       return false;
@@ -1484,10 +1484,10 @@ private:
 
 // cApp
 //{{{
-cApp::cApp (const cPoint& windowSize, bool fullScreen, bool vsync) {
+cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool vsync) {
 
   // create platform
-  mPlatform = new cOpenGL3Platform();
+  mPlatform = new cOpenGL3Platform (name);
   if (!mPlatform || !mPlatform->init (windowSize)) {
     cLog::log (LOGERROR, "cApp cOpenGL3Platform failed");
     return;

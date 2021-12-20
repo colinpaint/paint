@@ -18,7 +18,7 @@ using namespace std;
 //}}}
 
 cTellyApp::cTellyApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-    : cApp(windowSize, fullScreen, vsync) {
+    : cApp("telly", windowSize, fullScreen, vsync) {
   }
 
 bool cTellyApp::setDvbSource (const string& filename, const string& recordRoot, const cDvbMultiplex& dvbMultiplex,

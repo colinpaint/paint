@@ -13,12 +13,14 @@ struct ImFont;
 
 class cApp {
 public:
-  cApp (const cPoint& windowSize, bool fullScreen, bool vsync);
+  cApp (const std::string& name, const cPoint& windowSize, bool fullScreen, bool vsync);
   virtual ~cApp();
 
   // get interfaces
   cPlatform& getPlatform() const { return *mPlatform; }
   cGraphics& getGraphics() const { return *mGraphics; }
+
+  std::string getName() const;
 
   // time of day
   std::chrono::system_clock::time_point getNow();

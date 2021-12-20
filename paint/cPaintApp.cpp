@@ -24,7 +24,7 @@ using namespace std;
 
 //{{{
 cPaintApp::cPaintApp (const cPoint& windowSize, bool fullScreen, bool vsync, const cPoint& size)
-   : cApp(windowSize, fullScreen, vsync), mSize(size), mNumChannels(4) {
+   : cApp("paintbox", windowSize, fullScreen, vsync), mSize(size), mNumChannels(4) {
 
   // create empty layer
   mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, getGraphics()));
@@ -33,7 +33,7 @@ cPaintApp::cPaintApp (const cPoint& windowSize, bool fullScreen, bool vsync, con
 //}}}
 //{{{
 cPaintApp::cPaintApp (const cPoint& windowSize, bool fullScreen, bool vsync, const std::string& filename)
-    : cApp(windowSize, fullScreen, vsync) {
+    : cApp("paintbox", windowSize, fullScreen, vsync) {
 
   mFilename = filename;
 

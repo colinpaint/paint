@@ -8,14 +8,16 @@
 
 class cPlatform {
 public:
-  cPlatform (bool hasFullScreen, bool hasVsync) : mHasFullScreen(hasFullScreen), mHasVsync(hasVsync) {}
+  cPlatform (const std::string& name, bool hasFullScreen, bool hasVsync)
+    : mName(name), mHasFullScreen(hasFullScreen), mHasVsync(hasVsync) {}
   virtual ~cPlatform() = default;
 
   virtual bool init (const cPoint& windowSize) = 0;
 
   // gets
-  bool hasFullScreen() { return mHasFullScreen; }
-  bool getFullScreen() { return mFullScreen; }
+  std::string getName() const { return mName; }
+  bool hasFullScreen() const { return mHasFullScreen; }
+  bool getFullScreen() const { return mFullScreen; }
 
   bool hasVsync() { return mHasVsync; }
   bool getVsync() { return mVsync; }
@@ -35,6 +37,7 @@ public:
   virtual void present() = 0;
 
 protected:
+  const std::string mName;
   const bool mHasFullScreen;
   const bool mHasVsync;
 

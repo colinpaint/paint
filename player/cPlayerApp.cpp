@@ -19,7 +19,7 @@ using namespace std;
 //}}}
 
 cPlayerApp::cPlayerApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-    : cApp(windowSize, fullScreen, vsync) {
+    : cApp("player",windowSize, fullScreen, vsync) {
   mSongLoader = new cSongLoader();
   }
 

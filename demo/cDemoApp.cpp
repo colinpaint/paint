@@ -16,7 +16,7 @@ using namespace std;
 //}}}
 
 cDemoApp::cDemoApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-    : cApp (windowSize, fullScreen, vsync) {
+    : cApp ("imgui demo", windowSize, fullScreen, vsync) {
   }
 
 
