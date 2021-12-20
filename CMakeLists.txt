@@ -11,12 +11,11 @@ option (BUILD_TELLY "Build telly app" ON)
 option (BUILD_PLAYER "Build player app" ON)
 option (BUILD_PAINTBOX "Build paintbox app" ON)
 #
-option (BUILD_IMPLOT "Build implot lib" ON)
 option (BUILD_MFX "Build mfx lib" ON)
 option (BUILD_MFXTEST "Build mfxtest cmdline app" ON)
 option (BUILD_CAPTURE "Build capture cmdline app" ON)
 #
-option (BUILD_OPTIMISED "Build optimised" ON)
+option (BUILD_IMPLOT "Build implot lib" ON)
 #
 # valid options - OPENGL_2 OPENGL_3, OPENGLES_30 OPENGLES_31 OPENGLES_32, DIRECTX_11
 set (BUILD_GRAPHICS "OPENGL_3" CACHE STRING "build graphics option")
