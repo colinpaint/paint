@@ -318,7 +318,7 @@ public:
     #if defined(OPENGLES_2)
       return ImGui_ImplOpenGL3_Init ("#version 100");
     #elif defined (OPENGLES_30) || defined (OPENGLES_31) || defined (OPENGLES_32)
-      return ImGui_ImplOpenGL3_Init ("#version 300es");
+      return ImGui_ImplOpenGL3_Init ("#version 300 es");
     #else
       return ImGui_ImplOpenGL3_Init ("#version 130");
     #endif

@@ -98,9 +98,9 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     elseif (BUILD_GRAPHICS STREQUAL "OPENGLES_30" OR
             BUILD_GRAPHICS STREQUAL "OPENGLES_31" OR
             BUILD_GRAPHICS STREQUAL "OPENGLES_32")
-      add_compile_definitions (GLFW_INCLUDE_ES3=1
-                               IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
-                               IMGUI_IMPL_OPENGL_ES3=1)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_ES3=1
+                                                          IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
+                                                          IMGUI_IMPL_OPENGL_ES3=1)
       target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
     elseif (BUILD_GRAPHICS STREQUAL "DIRECTX_11")
       # not yet
