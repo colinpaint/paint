@@ -1,5 +1,5 @@
 #cmake .. -DBUILD_GRAPHICS=OPENGLES3
-cmake_minimum_required (VERSION 3.16)
+cmake_minimum_required (VERSION 3.18)
 cmake_policy (SET CMP0072 NEW)
 #
 set (CMAKE_CXX_STANDARD 17)
@@ -83,7 +83,7 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     else()
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
       file (GLOB SOURCE_FILES app/cOpenGL3App.cpp
-                              imgui/*.cpp imgui/backends/imgui_impl_opengl3.cpp imgui/backends/imgui_impl_glfw.cpp)
+                              imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
     endif()
 
     add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
@@ -164,7 +164,7 @@ if (BUILD_TELLY)
       target_include_directories (${PROJECT_NAME} PRIVATE ffmpeg/inc)
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
       target_link_directories (${PROJECT_NAME} PRIVATE ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PRIVATE
+      target_link_libraries (${PROJECT_NAME} PUBLIC
                              utils libmfx avdevice avfilter avformat avcodec avutil swresample swscale)
       target_link_libraries (${PROJECT_NAME} PRIVATE d3d11 dxgi d3d9 dxva2)
     elseif (BUILD_MFX)
@@ -183,7 +183,7 @@ if (BUILD_TELLY)
       pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
       target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG)
-      target_link_libraries (${PROJECT_NAME} PRIVATE utils PkgConfig::FFMPEG)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG)
     endif()
 endif()
 
@@ -196,14 +196,14 @@ if (BUILD_PLAYER OR BUILD_CAPTURE)
 
     if (MSVC)
       target_include_directories (${PROJECT_NAME} PUBLIC ffmpeg/inc)
-      target_link_directories (${PROJECT_NAME} PRIVATE ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PRIVATE utils avdevice avfilter avformat avcodec avutil swresample swscale)
+      target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils avdevice avfilter avformat avcodec avutil swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
       target_include_directories (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
-      target_link_libraries (${PROJECT_NAME} PRIVATE utils PkgConfig::FFMPEG)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG)
     endif()
 endif()
 

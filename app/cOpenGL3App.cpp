@@ -1,6 +1,6 @@
 // cOpenGL3App.cpp - glfw,opengl3 app framework, selected at link time for now
 //{{{  includes
-#ifdef _WIN32
+#if defined(_WIN32)
   #define _CRT_SECURE_NO_WARNINGS
   #define NOMINMAX
   #include <windows.h>
@@ -94,33 +94,34 @@ public:
     if (!glfwInit())
       return false;
 
-    // GL+GLSL versions
-    #if defined(OPENGLES_32)
-      //{{{  GL ES 2.0 + GLSL 100
+    //{{{  select openGL, openGLES version
+    #if defined(OPENGLES_32) // GL ES 2.0 + GLSL 100
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-      //}}}
+
     #elif defined (OPENGLES_30)
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+
     #elif defined (OPENGLES_31)
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+
     #elif defined (OPENGLES_32)
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-    #else
-      //{{{  GL 3.0 + GLSL 130
+
+    #else //  GL 3.0 + GLSL 130
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
       //glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
       //glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
-      //}}}
     #endif
+    //}}}
 
     mWindow = glfwCreateWindow (windowSize.x, windowSize.y, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
     if (!mWindow) {
@@ -144,7 +145,7 @@ public:
 
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
 
-    #ifdef BUILD_DOCKING
+    #if defined(BUILD_DOCKING)
       // Enable Docking
       ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -262,7 +263,7 @@ public:
   //{{{
   virtual void present() final {
 
-    #ifdef BUILD_DOCKING
+    #if defined(BUILD_DOCKING)
       if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
         GLFWwindow* backup_current_context = glfwGetCurrentContext();
         ImGui::UpdatePlatformWindows();
@@ -317,7 +318,7 @@ public:
     #if defined(OPENGLES_2)
       return ImGui_ImplOpenGL3_Init ("#version 100");
     #elif defined (OPENGLES_30) || defined (OPENGLES_31) || defined (OPENGLES_32)
-      return ImGui_ImplOpenGL3_Init();
+      return ImGui_ImplOpenGL3_Init ("#version 300es");
     #else
       return ImGui_ImplOpenGL3_Init ("#version 130");
     #endif
