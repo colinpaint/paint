@@ -14,7 +14,7 @@
 #include <functional>
 
 // glad
-#ifndef IMGUI_IMPL_OPENGL_ES3
+#if defined(OPENGL_2) || defined(OPENGL_3)
   #include <glad/glad.h>
 #endif
 
@@ -95,19 +95,23 @@ public:
       return false;
 
     // GL+GLSL versions
-    #if defined(IMGUI_IMPL_OPENGL_ES2)
+    #if defined(OPENGLES_32)
       //{{{  GL ES 2.0 + GLSL 100
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
       //}}}
-    #elif defined (IMGUI_IMPL_OPENGL_ES3)
+    #elif defined (OPENGLES_30)
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
-      #ifdef OPENGLES3_2
-        glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
-      #else
-        glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
-      #endif
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
+      glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    #elif defined (OPENGLES_31)
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
+      glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    #elif defined (OPENGLES_32)
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     #else
       //{{{  GL 3.0 + GLSL 130
@@ -163,8 +167,8 @@ public:
     glfwSetFramebufferSizeCallback (mWindow, framebufferSizeCallback);
     glfwSetDropCallback (mWindow, dropCallback);
 
-    // GLAD init before any openGL function
-    #ifndef IMGUI_IMPL_OPENGL_ES3
+    #if defined(OPENGL_2) || defined(OPENGL_3)
+      // openGL - GLAD init before any openGL function
       if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {
         cLog::log (LOGERROR, "cOpenGL3Platform - gladLoadGLLoader failed");
         return false;
@@ -310,9 +314,9 @@ public:
     cLog::log (LOGINFO, fmt::format ("- Renderer {}", glGetString (GL_RENDERER)));
     cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
 
-    #if defined(IMGUI_IMPL_OPENGL_ES2)
+    #if defined(OPENGLES_2)
       return ImGui_ImplOpenGL3_Init ("#version 100");
-    #elif defined (IMGUI_IMPL_OPENGL_ES3)
+    #elif defined (OPENGLES_30) || defined (OPENGLES_31) || defined (OPENGLES_32)
       return ImGui_ImplOpenGL3_Init();
     #else
       return ImGui_ImplOpenGL3_Init ("#version 130");
@@ -594,8 +598,7 @@ private:
         // create mPixels, texture pixels shadow buffer
         mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-        #ifdef IMGUI_IMPL_OPENGL_ES3
-        #else
+        #if defined(OPENGL_3)
           glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
         #endif
         }
@@ -603,8 +606,7 @@ private:
       else if (!mDirtyPixelsRect.isEmpty()) {
         // no openGL glGetTexSubImage, so dirtyPixelsRect not really used, is this correct ???
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-        #ifdef IMGUI_IMPL_OPENGL_ES3
-        #else
+        #if defined(OPENGL_3)
           glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
         #endif
         mDirtyPixelsRect = cRect(0,0,0,0);
@@ -724,7 +726,7 @@ private:
         case GL_FRAMEBUFFER_UNSUPPORTED:
           cLog::log (LOGERROR, "framebuffer incomplete: Unsupported by FBO implementation"); return false;
 
-      #ifndef IMGUI_IMPL_OPENGL_ES3
+      #if defined(OPENGL_3)
         case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
           cLog::log (LOGERROR, "framebuffer incomplete: Draw buffer"); return false;
         case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
@@ -824,7 +826,7 @@ private:
         case GL_DEPTH_STENCIL:     formatName = "GL_DEPTH_STENCIL"; break;     // 0x84F9
         case GL_DEPTH24_STENCIL8:  formatName = "GL_DEPTH24_STENCIL8"; break;  // 0x88F0
 
-      #ifndef IMGUI_IMPL_OPENGL_ES3
+      #if defined(OPENGL_3)
         case GL_STENCIL_INDEX:     formatName = "GL_STENCIL_INDEX"; break;     // 0x1901
         case GL_RGBA:              formatName = "GL_RGBA"; break;              // 0x1908
         case GL_R3_G3_B2:          formatName = "GL_R3_G3_B2"; break;          // 0x2A10
@@ -856,9 +858,7 @@ private:
       if (glIsTexture(id) == GL_FALSE)
         return "Not texture object";
 
-      #ifdef IMGUI_IMPL_OPENGL_ES3
-        return "openGLES3 - unknown getTextureParameters";
-      #else
+      #if defined(OPENGL_3)
         glBindTexture (GL_TEXTURE_2D, id);
         int width;
         glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);            // get texture width
@@ -867,6 +867,8 @@ private:
         int formatNum;
         glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &formatNum); // get texture internal format
         return fmt::format (" {} {} {}", width, height, getInternalFormat (formatNum));
+      #else
+        return "unknown texture";
       #endif
 
       }

@@ -1,5 +1,7 @@
+#cmake .. -DBUILD_GRAPHICS=OPENGLES3
 cmake_minimum_required (VERSION 3.16)
 cmake_policy (SET CMP0072 NEW)
+#
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
@@ -17,22 +19,20 @@ option (BUILD_CAPTURE "Build capture cmdline app" ON)
 option (BUILD_AVX "Build with avx" ON)
 option (BUILD_OPTIMISED "Build optimised" ON)
 #
-option (BUILD_OPENGL2 "openGL2" OFF)
-option (BUILD_OPENGL3 "openGL3" ON)
-option (BUILD_OPENGLES3 "openGLES3" OFF)
-option (BUILD_OPENGLES3_2 "openGLES3.2" OFF)
-option (BUILD_DIRECTX11 "directX11" OFF)
+# valid options - OPENGL_2 OPENGL_3, OPENGLES_30 OPENGLES_31 OPENGLES_32, DIRECTX_11
+set (BUILD_GRAPHICS "OPENGL_3" CACHE STRING "build graphics option")
 #
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 
-#
+# utils lib
 project (utils)
-  file (GLOB HEADER_FILES utils/*.h app/*.h)
+  file (GLOB HEADER_FILES utils/*.h)
   file (GLOB SOURCE_FILES utils/*.cpp utils/*.c)
   add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
   if (MSVC)
-    target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast /std:c++17)
+    #target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast /std:c++17)
+    target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast)
     if (BUILD_AVX)
       target_compile_options (${PROJECT_NAME} PUBLIC /arch:AVX)
     endif()
@@ -43,7 +43,8 @@ project (utils)
                                                    -Wno-format-security -Wno-format-overflow
                                                    -pedantic
                                                    -march=native -flax-vector-conversions -ftree-vectorize
-                                                   -std=c++17 )
+                                                   )
+                                                   #-std=c++17 )
     if (BUILD_OPTIMISED)
       target_compile_options (${PROJECT_NAME} PUBLIC -Ofast)
     else()
@@ -63,42 +64,46 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
   add_subdirectory (glfw)
 
   # glad
-  if (BUILD_OPENGL2)
+  if (BUILD_GRAPHICS STREQUAL "OPENGL_2")
     add_subdirectory (glad2.1+fbo+vao)
-  else()
+  elseif (BUILD_GRAPHICS STREQUAL "OPENGL_3")
     add_subdirectory (glad4.5core)
   endif()
 
   # imgui framework lib
   project (imgui)
-    if (BUILD_OPENGL2)
+    if (BUILD_GRAPHICS STREQUAL "OPENGL_2")
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h)
       file (GLOB SOURCE_FILES app/cOpenGL2App.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
-    elseif (BUILD_OPENGL3 OR BUILD_OPENGLES3)
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
-      file (GLOB SOURCE_FILES app/cOpenGL3App.cpp
-                              imgui/*.cpp imgui/backends/imgui_impl_opengl3.cpp imgui/backends/imgui_impl_glfw.cpp)
-    elseif (BUILD_DIRECTX11)
+    elseif (BUILD_GRAPHICS STREQUAL "DIRECTX_11")
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h)
       file (GLOB SOURCE_FILES app/cDirectX11App.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp)
+    else()
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
+      file (GLOB SOURCE_FILES app/cOpenGL3App.cpp
+                              imgui/*.cpp imgui/backends/imgui_impl_opengl3.cpp imgui/backends/imgui_impl_glfw.cpp)
     endif()
 
     add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-    target_include_directories (${PROJECT_NAME} PUBLIC imgui glfw/include)
+    target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS})
+    target_include_directories (${PROJECT_NAME} PRIVATE glfw/include)
+    target_include_directories (${PROJECT_NAME} PUBLIC utils imgui)
+    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
-    if (BUILD_OPENGL2 OR BUILD_OPENGL3)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils glfw glad)
-    elseif (BUILD_OPENGLES3)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils glfw GLESv2)
+    if (BUILD_GRAPHICS STREQUAL "OPENGL_2" OR
+        BUILD_GRAPHICS STREQUAL "OPENGL_3")
+      target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad)
+    elseif (BUILD_GRAPHICS STREQUAL "OPENGLES_30" OR
+            BUILD_GRAPHICS STREQUAL "OPENGLES_31" OR
+            BUILD_GRAPHICS STREQUAL "OPENGLES_32")
       add_compile_definitions (GLFW_INCLUDE_ES3=1
                                IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
                                IMGUI_IMPL_OPENGL_ES3=1)
-      if (BUILD_OPENGLES3_2)
-        target_compile_definitions (${PROJECT_NAME} PUBLIC OPENGLES3_2)
-      endif()
-    elseif (BUILD_DIRECTX11)
+      target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
+    elseif (BUILD_GRAPHICS STREQUAL "DIRECTX_11")
+      # not yet
     endif()
 
   # implot lib
@@ -117,7 +122,7 @@ if (BUILD_MFX AND MSVC)
     file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/windows/include/*.h)
     file (GLOB SOURCE_FILES libmfx/mfx_dispatch/windows/src/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-    target_compile_definitions (${PROJECT_NAME} PUBLIC BUILD_MFX)
+    target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_MFX)
     target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/windows/include)
 endif()
 
@@ -128,7 +133,7 @@ if (BUILD_MFXTEST)
     file (GLOB SOURCE_FILES mfxtest/main.cpp mfxtest/utils.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
-    target_compile_definitions (${PROJECT_NAME} PUBLIC BUILD_MFX)
+    target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_MFX)
     if (MSVC)
       # use project libmfx
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
@@ -140,7 +145,7 @@ if (BUILD_MFXTEST)
       pkg_check_modules (LIBVA REQUIRED IMPORTED_TARGET libva)
       pkg_check_modules (LIBVADRM REQUIRED IMPORTED_TARGET libva-drm)
       target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::LIBMFX PkgConfig::LIBVA)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::LIBMFX PkgConfig::LIBVA PkgConfig::LIBVADRM)
+      target_link_libraries (${PROJECT_NAME} PRIVATE utils PkgConfig::LIBMFX PkgConfig::LIBVA PkgConfig::LIBVADRM)
     endif()
 endif()
 
@@ -152,14 +157,14 @@ if (BUILD_TELLY)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
     if (BUILD_MFX)
-      target_compile_definitions (${PROJECT_NAME} PUBLIC BUILD_MFX)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_MFX)
     endif()
 
     if (MSVC)
       target_include_directories (${PROJECT_NAME} PRIVATE ffmpeg/inc)
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
-      target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PUBLIC
+      target_link_directories (${PROJECT_NAME} PRIVATE ffmpeg/x64)
+      target_link_libraries (${PROJECT_NAME} PRIVATE
                              utils libmfx avdevice avfilter avformat avcodec avutil swresample swscale)
       target_link_libraries (${PROJECT_NAME} PRIVATE d3d11 dxgi d3d9 dxva2)
     elseif (BUILD_MFX)
@@ -169,16 +174,16 @@ if (BUILD_TELLY)
       pkg_check_modules (LIBVADRM REQUIRED IMPORTED_TARGET libva-drm)
       pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
-      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG
-                                                          PkgConfig::LIBMFX PkgConfig::LIBVA)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG
-                                                          PkgConfig::LIBMFX PkgConfig::LIBVA PkgConfig::LIBVADRM)
+      target_include_directories (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
+      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG)
+      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::LIBMFX PkgConfig::LIBVA)
+      target_link_libraries (${PROJECT_NAME} PRIVATE utils PkgConfig::LIBMFX PkgConfig::LIBVA PkgConfig::LIBVADRM)
     else ()
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
       target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG)
+      target_link_libraries (${PROJECT_NAME} PRIVATE utils PkgConfig::FFMPEG)
     endif()
 endif()
 
@@ -191,15 +196,14 @@ if (BUILD_PLAYER OR BUILD_CAPTURE)
 
     if (MSVC)
       target_include_directories (${PROJECT_NAME} PUBLIC ffmpeg/inc)
-      target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PUBLIC
-                             utils avdevice avfilter avformat avcodec avutil swresample swscale)
+      target_link_directories (${PROJECT_NAME} PRIVATE ffmpeg/x64)
+      target_link_libraries (${PROJECT_NAME} PRIVATE utils avdevice avfilter avformat avcodec avutil swresample swscale)
     else()
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
-      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG)
+      target_include_directories (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
+      target_link_libraries (${PROJECT_NAME} PRIVATE utils PkgConfig::FFMPEG)
     endif()
 endif()
 
@@ -210,7 +214,7 @@ if (BUILD_PLAYER OR BUILD_TELLY)
     file (GLOB SOURCE_FILES audio/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
-    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
+    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
 endif()
 
 # capture app
@@ -291,7 +295,7 @@ if (BUILD_TELLY)
     target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio imgui)
 
     if (MSVC)
-      target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
+      target_link_directories (${PROJECT_NAME} PRIVATE ffmpeg/x64)
       target_link_libraries (${PROJECT_NAME} PRIVATE libmfx opengl32 dxgi d3d11 d3dcompiler ws2_32)
     else()
       target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
@@ -305,21 +309,21 @@ if (BUILD_PLAYER)
     file (GLOB HEADER_FILES kiss/*.h)
     file (GLOB SOURCE_FILES kiss/*.c)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
+    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
 
   # song lib
   project (song)
     file (GLOB HEADER_FILES song/*.h)
     file (GLOB SOURCE_FILES song/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-    target_link_libraries (${PROJECT_NAME} PUBLIC utils decoder kiss)
+    target_link_libraries (${PROJECT_NAME} PRIVATE utils decoder kiss)
 
   # net lib
   project (net)
     file (GLOB HEADER_FILES net/*.h)
     file (GLOB SOURCE_FILES net/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
+    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
 
   # player app
   project (player VERSION 1.0.0)
