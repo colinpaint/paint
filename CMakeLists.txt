@@ -5,6 +5,9 @@ cmake_policy (SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
+# valid options - OPENGL_2 OPENGL_3, OPENGLES_3_0 OPENGLES_3_1 OPENGLES_3_2, DIRECTX_11
+set (BUILD_GRAPHICS "OPENGL_3" CACHE STRING "build graphics option")
+#
 option (BUILD_DEMO "Build imgui demo app" ON)
 option (BUILD_FED "Build fed app" ON)
 option (BUILD_TELLY "Build telly app" ON)
@@ -17,11 +20,11 @@ option (BUILD_CAPTURE "Build capture cmdline app" ON)
 #
 option (BUILD_IMPLOT "Build implot lib" ON)
 #
-# valid options - OPENGL_2 OPENGL_3, OPENGLES_30 OPENGLES_31 OPENGLES_32, DIRECTX_11
-set (BUILD_GRAPHICS "OPENGL_3" CACHE STRING "build graphics option")
-#
-set (COMPILE_MSVC "/arch:AVX" CACHE STRING "msvc compile options")
-set (COMPILE_LINUX "-Ofast" CACHE STRING "linux compile options")
+if (MSVC)
+  set (BUILD_COMPILE_OPTIONS "/arch:AVX" CACHE STRING "msvc compile options")
+else()
+  set (BUILD_COMPILE_OPTIONS "-Ofast" CACHE STRING "linux compile options")
+endif()
 #
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 
@@ -32,7 +35,7 @@ project (utils)
   add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
   if (MSVC)
-    target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast ${COMPILE_MSVC})
+    target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast ${BUILD_COMPILE_OPTIONS})
   else()
     target_compile_definitions (${PROJECT_NAME} PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
     target_compile_options (${PROJECT_NAME} PUBLIC -Wall -Wextra
@@ -40,7 +43,7 @@ project (utils)
                                                    -Wno-format-security -Wno-format-overflow
                                                    -pedantic
                                                    -march=native -flax-vector-conversions -ftree-vectorize
-                                                   ${COMPILE_LINUX})
+                                                   ${BUILD_COMPILE_OPTIONS})
   endif()
 
 # gui
@@ -63,17 +66,17 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
 
   # imgui framework lib
   project (imgui)
-    if (BUILD_GRAPHICS STREQUAL "OPENGL_2")
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h)
-      file (GLOB SOURCE_FILES app/cOpenGL2App.cpp
-                              imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
-    elseif (BUILD_GRAPHICS STREQUAL "DIRECTX_11")
+    if (BUILD_GRAPHICS STREQUAL "DIRECTX_11")
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h)
       file (GLOB SOURCE_FILES app/cDirectX11App.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp)
-    else()
+    elseif (BUILD_GRAPHICS STREQUAL "OPENGL_2")
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h)
+      file (GLOB SOURCE_FILES app/cOpenGLApp.cpp
+                              imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
+    else() # OPENGL_3, OPENGLES_x_x
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
-      file (GLOB SOURCE_FILES app/cOpenGL3App.cpp
+      file (GLOB SOURCE_FILES app/cOpenGLApp.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
     endif()
 
@@ -86,9 +89,9 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     if (BUILD_GRAPHICS STREQUAL "OPENGL_2" OR
         BUILD_GRAPHICS STREQUAL "OPENGL_3")
       target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad)
-    elseif (BUILD_GRAPHICS STREQUAL "OPENGLES_30" OR
-            BUILD_GRAPHICS STREQUAL "OPENGLES_31" OR
-            BUILD_GRAPHICS STREQUAL "OPENGLES_32")
+    elseif (BUILD_GRAPHICS STREQUAL "OPENGLES_3_0" OR
+            BUILD_GRAPHICS STREQUAL "OPENGLES_3_1" OR
+            BUILD_GRAPHICS STREQUAL "OPENGLES_3_2")
       target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_ES3=1
                                                           IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
                                                           IMGUI_IMPL_OPENGL_ES3=1)
