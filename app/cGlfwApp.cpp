@@ -1,4 +1,4 @@
-// cOpenGLApp.cpp - glfw, openGL2, openGL3, openGLES app framework
+// cGlfwApp.cpp - glfw + openGL2,openGL3,openGLES app framework
 //{{{  includes
 #if defined(_WIN32)
   #define _CRT_SECURE_NO_WARNINGS
@@ -14,7 +14,7 @@
 #include <functional>
 
 // glad
-#if defined(OPENGL_2) || defined(OPENGL_3)
+#if defined(OPENGL_2_1) || defined(OPENGL_3)
   #include <glad/glad.h>
 #endif
 
@@ -25,7 +25,7 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 
-#if defined(OPENGL_2)
+#if defined(OPENGL_2_1)
   #include <backends/imgui_impl_opengl2.h>
 #else
   #include <backends/imgui_impl_opengl3.h>
@@ -43,22 +43,6 @@ using namespace std;
 //}}}
 
 namespace {
-  //{{{
-  void glfw_error_callback (int error, const char* description) {
-    cLog::log (LOGERROR, fmt::format ("Glfw Error {} {}", error, description));
-    }
-  //}}}
-  //{{{
-  void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
-  // glfw key callback exit
-
-    (void)scancode;
-    (void)mode;
-    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS)) // exit
-      glfwSetWindowShouldClose (window, true);
-    }
-  //}}}
-
   function <void (int width, int height)> gResizeCallback ;
   //{{{
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
@@ -166,8 +150,10 @@ public:
       return false;
 
     //{{{  select openGL, openGLES version
-    #if defined(OPENGL_2)
-      string title = "openGL 2";
+    #if defined(OPENGL_2_1)
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
+      glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
+      string title = "openGL 2.1";
 
     #elif defined(OPENGLES_2) // GL ES 2.0 + GLSL 100
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
@@ -247,7 +233,7 @@ public:
     glfwSetFramebufferSizeCallback (mWindow, framebufferSizeCallback);
     glfwSetDropCallback (mWindow, dropCallback);
 
-    #if defined(OPENGL_2) || defined(OPENGL_3)
+    #if defined(OPENGL_2_1) || defined(OPENGL_3)
       // openGL - GLAD init before any openGL function
       if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {
         cLog::log (LOGERROR, "cOpenGL3Platform - gladLoadGLLoader failed");
@@ -356,6 +342,22 @@ public:
   //}}}
 
 private:
+  //{{{
+  static void glfw_error_callback (int error, const char* description) {
+    cLog::log (LOGERROR, fmt::format ("Glfw Error {} {}", error, description));
+    }
+  //}}}
+  //{{{
+  static void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
+  // glfw key callback exit
+
+    (void)scancode;
+    (void)mode;
+    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS)) // exit
+      glfwSetWindowShouldClose (window, true);
+    }
+  //}}}
+
   GLFWmonitor* mMonitor = nullptr;
   GLFWwindow* mWindow = nullptr;
   cPoint mWindowPos = { 0,0 };
@@ -366,7 +368,7 @@ private:
 //}}}
 
 // cGraphics interface
-#if defined(OPENGL_2)
+#if defined(OPENGL_2_1)
   //{{{
   class cOpenGL2Gaphics : public cGraphics {
   public:
@@ -2632,7 +2634,7 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     }
 
   // create graphics
-  #if defined(OPENGL_2)
+  #if defined(OPENGL_2_1)
     mGraphics = new cOpenGL2Gaphics();
   #else
     mGraphics = new cOpenGL3Graphics();

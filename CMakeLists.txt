@@ -5,7 +5,7 @@ cmake_policy (SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
-# valid options - OPENGL_2 OPENGL_3, OPENGLES_3_0 OPENGLES_3_1 OPENGLES_3_2, DIRECTX_11
+# valid options - OPENGL_2_1 OPENGL_3, OPENGLES_3_0 OPENGLES_3_1 OPENGLES_3_2, DIRECTX_11
 set (BUILD_GRAPHICS "OPENGL_3" CACHE STRING "build graphics option")
 #
 option (BUILD_DEMO "Build imgui demo app" ON)
@@ -21,9 +21,9 @@ option (BUILD_CAPTURE "Build capture cmdline app" ON)
 option (BUILD_IMPLOT "Build implot lib" ON)
 #
 if (MSVC)
-  set (BUILD_COMPILE_OPTIONS "/arch:AVX" CACHE STRING "msvc compile options")
+  set (BUILD_MSVC_COMPILE_OPTIONS "/arch:AVX" CACHE STRING "msvc compile options")
 else()
-  set (BUILD_COMPILE_OPTIONS "-Ofast" CACHE STRING "linux compile options")
+  set (BUILD_LINUX_COMPILE_OPTIONS "-Ofast" CACHE STRING "linux compile options")
 endif()
 #
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
@@ -35,7 +35,7 @@ project (utils)
   add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
   if (MSVC)
-    target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast ${BUILD_COMPILE_OPTIONS})
+    target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast ${BUILD_MSVC_COMPILE_OPTIONS})
   else()
     target_compile_definitions (${PROJECT_NAME} PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
     target_compile_options (${PROJECT_NAME} PUBLIC -Wall -Wextra
@@ -43,7 +43,7 @@ project (utils)
                                                    -Wno-format-security -Wno-format-overflow
                                                    -pedantic
                                                    -march=native -flax-vector-conversions -ftree-vectorize
-                                                   ${BUILD_COMPILE_OPTIONS})
+                                                   ${BUILD_LINUX_COMPILE_OPTIONS})
   endif()
 
 # gui
@@ -58,7 +58,7 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
   add_subdirectory (glfw)
 
   # glad
-  if (BUILD_GRAPHICS STREQUAL "OPENGL_2")
+  if (BUILD_GRAPHICS STREQUAL "OPENGL_2_1")
     add_subdirectory (glad2.1+fbo+vao)
   elseif (BUILD_GRAPHICS STREQUAL "OPENGL_3")
     add_subdirectory (glad4.5core)
@@ -66,17 +66,19 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
 
   # imgui framework lib
   project (imgui)
+    find_package (OpenGL REQUIRED)
+
     if (BUILD_GRAPHICS STREQUAL "DIRECTX_11")
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h)
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h app/cApp.h)
       file (GLOB SOURCE_FILES app/cDirectX11App.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp)
-    elseif (BUILD_GRAPHICS STREQUAL "OPENGL_2")
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h)
-      file (GLOB SOURCE_FILES app/cOpenGLApp.cpp
-                              imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
+    elseif (BUILD_GRAPHICS STREQUAL "OPENGL_2_1")
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h app/cApp.h)
+      file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/*.cpp
+                              imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
     else() # OPENGL_3, OPENGLES_x_x
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h)
-      file (GLOB SOURCE_FILES app/cOpenGLApp.cpp
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h app/cApp.h)
+      file (GLOB SOURCE_FILES app/cGlfwApp.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
     endif()
 
@@ -86,8 +88,11 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     target_include_directories (${PROJECT_NAME} PUBLIC utils imgui)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
-    if (BUILD_GRAPHICS STREQUAL "OPENGL_2" OR
+    if (BUILD_GRAPHICS STREQUAL "OPENGL_2_1" OR
         BUILD_GRAPHICS STREQUAL "OPENGL_3")
+      if (NOT MSVC)
+        target_link_libraries (${PROJECT_NAME} PRIVATE GL)
+      endif()
       target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad)
     elseif (BUILD_GRAPHICS STREQUAL "OPENGLES_3_0" OR
             BUILD_GRAPHICS STREQUAL "OPENGLES_3_1" OR
@@ -113,7 +118,7 @@ endif()
 # libmfx
 if (BUILD_MFX AND MSVC)
   project (libmfx)
-    file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/windows/include/*.h)
+    file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/windows/include/*.h utils/*.h)
     file (GLOB SOURCE_FILES libmfx/mfx_dispatch/windows/src/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_MFX)
@@ -123,7 +128,7 @@ endif()
 # mfxTest app
 if (BUILD_MFXTEST)
   project (mfxtest)
-    file (GLOB HEADER_FILES mfxtest/*.h utils/*.h)
+    file (GLOB HEADER_FILES mfxtest/*.h utils/*.h app/*.h)
     file (GLOB SOURCE_FILES mfxtest/main.cpp mfxtest/utils.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -146,7 +151,7 @@ endif()
 # dvb lib
 if (BUILD_TELLY)
   project (dvb)
-    file (GLOB HEADER_FILES dvb/*.h)
+    file (GLOB HEADER_FILES dvb/*.h utils/*.h)
     file (GLOB SOURCE_FILES dvb/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
@@ -184,7 +189,7 @@ endif()
 # decoder lib
 if (BUILD_PLAYER OR BUILD_CAPTURE)
   project (decoder)
-    file (GLOB HEADER_FILES decoder/*.h)
+    file (GLOB HEADER_FILES decoder/*.h utils/*.h)
     file (GLOB SOURCE_FILES decoder/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
@@ -204,7 +209,7 @@ endif()
 # audio lib
 if (BUILD_PLAYER OR BUILD_TELLY)
   project (audio)
-    file (GLOB HEADER_FILES audio/*.h decoder/*.h)
+    file (GLOB HEADER_FILES audio/*.h decoder/*.h utils/*.h)
     file (GLOB SOURCE_FILES audio/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
@@ -215,7 +220,7 @@ endif()
 if (BUILD_CAPTURE AND MSVC)
   ## WIN32 audio wsapi capture main project
   project (captureAudio VERSION 1.0.0)
-    file (GLOB HEADER_FILES audio/*.h)
+    file (GLOB HEADER_FILES audio/*.h utils/*.h)
     file (GLOB SOURCE_FILES captureAudio/capture.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -225,7 +230,7 @@ endif()
 # demo app
 if (BUILD_DEMO)
   project (demo VERSION 1.0.0)
-    file (GLOB HEADER_FILES demo/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
+    file (GLOB HEADER_FILES demo/*.h ui/*.h imgui/*.h utils/*.h app/*.h)
     file (GLOB SOURCE_FILES demo/*.cpp ui/cUI.cpp)
     add_executable (demo ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -252,7 +257,7 @@ endif()
 # fed app
 if (BUILD_FED)
   project (fed VERSION 1.0.0)
-    file (GLOB HEADER_FILES fed/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
+    file (GLOB HEADER_FILES fed/*.h ui/*.h imgui/*.h utils/*.h app/*.h)
     file (GLOB SOURCE_FILES fed/*.cpp ui/cUI.cpp)
     add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -265,14 +270,14 @@ if (BUILD_FED)
     if (MSVC)
       target_link_libraries (${PROJECT_NAME} PRIVATE imgui opengl32 d3d11 d3dcompiler ws2_32)
     else()
-      target_link_libraries (${PROJECT_NAME} PRIVATE imgui GL stdc++fs)
+      target_link_libraries (${PROJECT_NAME} PRIVATE imgui stdc++fs)
     endif()
 endif()
 
 # telly app
 if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
-    file (GLOB HEADER_FILES telly/*.h ui/*.h utils/*.h app/*.h imgui/*.h implot/implot.h)
+    file (GLOB HEADER_FILES telly/*.h ui/*.h imgui/*.h implot/implot.h utils/*.h app/*.h)
     file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp ui/cUI.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -300,7 +305,7 @@ endif()
 if (BUILD_PLAYER)
   # kiss lib
   project (kiss)
-    file (GLOB HEADER_FILES kiss/*.h)
+    file (GLOB HEADER_FILES kiss/*.h utils/*.h)
     file (GLOB SOURCE_FILES kiss/*.c)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_link_libraries (${PROJECT_NAME} PRIVATE utils)
@@ -314,14 +319,14 @@ if (BUILD_PLAYER)
 
   # net lib
   project (net)
-    file (GLOB HEADER_FILES net/*.h)
+    file (GLOB HEADER_FILES net/*.h utils/*.h)
     file (GLOB SOURCE_FILES net/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_link_libraries (${PROJECT_NAME} PRIVATE utils)
 
   # player app
   project (player VERSION 1.0.0)
-    file (GLOB HEADER_FILES player/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
+    file (GLOB HEADER_FILES player/*.h ui/*.h imgui/*.h utils/*.h app/*.h)
     file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp ui/cUI.cpp)
     add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -335,17 +340,15 @@ if (BUILD_PLAYER)
     if (MSVC)
       target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
     else()
-      target_link_libraries (${PROJECT_NAME} PRIVATE GL pthread asound stdc++fs)
+      target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
     endif()
 endif()
 
 # paintbox app
 if (BUILD_PAINTBOX)
   project (paintbox VERSION 1.0.0)
-    find_package (OpenGL REQUIRED)
-
     # executable - main + static registered .cpp
-    file (GLOB HEADER_FILES paint/*.h brush/*.h ui/*.h utils/*.h app/*.h imgui/*.h)
+    file (GLOB HEADER_FILES paint/*.h brush/*.h ui/*.h imgui/*.h utils/*.h app/*.h)
     file (GLOB SOURCE_FILES paint/*.cpp brush/*.cpp ui/cUI.cpp ui/cPaintUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -362,7 +365,5 @@ if (BUILD_PAINTBOX)
 
     if (MSVC)
       target_link_libraries (${PROJECT_NAME} PRIVATE Opengl32 d3d11 d3dcompiler ws2_32)
-    else()
-      target_link_libraries (${PROJECT_NAME} PRIVATE GL)
     endif()
 endif()
