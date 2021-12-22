@@ -3,6 +3,7 @@
 //{{{  includes
 #include <string>
 #include <chrono>
+#include <vector>
 
 #include "../utils/cPointRectColor.h"
 

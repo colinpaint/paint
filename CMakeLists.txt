@@ -68,7 +68,7 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
   project (imgui)
     if (BUILD_GRAPHICS STREQUAL "DX_11")
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h app/cApp.h)
-      file (GLOB SOURCE_FILES app/cDirectX11App.cpp
+      file (GLOB SOURCE_FILES app/cDX11App.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp)
     elseif (BUILD_GRAPHICS STREQUAL "GL_2_1")
       find_package (OpenGL REQUIRED)
