@@ -21,10 +21,6 @@
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx11.h>
 
-#ifdef USE_IMPLOT
-  #include <implot.h>
-#endif
-
 #include "cApp.h"
 #include "cPlatform.h"
 #include "cGraphics.h"
@@ -42,21 +38,12 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT ms
 //}}}
 
 // platform
-//{{{
 namespace {
-  cPoint gWindowSize;
-  bool gVsync = true;
-  bool gFullScreen = false;
-
   cPlatform* gPlatform = nullptr;
-
-  WNDCLASSEX gWndClass;
-  HWND gHWnd;
-
-  ID3D11Device* gD3dDevice = NULL;
-  ID3D11DeviceContext*  gD3dDeviceContext = NULL;
-  IDXGISwapChain* gSwapChain = NULL;
-
+  ID3D11Device* gD3dDevice = nullptr;
+  ID3D11DeviceContext*  gD3dDeviceContext = nullptr;
+  IDXGISwapChain* gSwapChain = nullptr;
+  ID3D11RenderTargetView* gMainRenderTargetView = nullptr;
   //{{{
   LRESULT WINAPI WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   // win32 message handler
@@ -101,7 +88,8 @@ namespace {
     }
   //}}}
   }
-//}}}
+
+// cPlatform interface
 //{{{
 class cWin32Platform : public cPlatform {
 public:
@@ -112,36 +100,34 @@ public:
 
     ImGui_ImplWin32_Shutdown();
 
-    #ifdef USE_IMPLOT
-      ImPlot::DestroyContext();
-    #endif
     ImGui::DestroyContext();
 
+    gMainRenderTargetView->Release();
     gSwapChain->Release();
     gD3dDeviceContext->Release();
     gD3dDevice->Release();
 
-    ::DestroyWindow (gHWnd);
-    ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
+    ::DestroyWindow (mWnd);
+    ::UnregisterClass (mWndClass.lpszClassName, mWndClass.hInstance);
     }
   //}}}
 
   //{{{
   virtual bool init (const cPoint& windowSize) final {
 
+    mWindowSize = windowSize;
+
     // register app class
-    gWndClass = { sizeof(WNDCLASSEX),
+    mWndClass = { sizeof(WNDCLASSEX),
                   CS_CLASSDC, WndProc, 0L, 0L,
                   GetModuleHandle (NULL), NULL, NULL, NULL, NULL,
                  _T("paintbox"), NULL };
-    ::RegisterClassEx (&gWndClass);
+    ::RegisterClassEx (&mWndClass);
 
     // create application window
-    gWindowSize = windowSize;
-    gHWnd = ::CreateWindow (gWndClass.lpszClassName,
-                            _T("paintbox - directX11"), WS_OVERLAPPEDWINDOW,
-                            100, 100, windowSize.x, windowSize.y, NULL, NULL,
-                            gWndClass.hInstance, NULL);
+    mWnd = ::CreateWindow (mWndClass.lpszClassName, _T((string("directX11") + " " + getName()).c_str()), WS_OVERLAPPEDWINDOW,
+                           100, 100, windowSize.x, windowSize.y, NULL, NULL,
+                           mWndClass.hInstance, NULL);
 
     // init direct3D
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
@@ -154,7 +140,7 @@ public:
     swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
     swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.OutputWindow = gHWnd;
+    swapChainDesc.OutputWindow = mWnd;
     swapChainDesc.SampleDesc.Count = 1;
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.Windowed = TRUE;
@@ -170,29 +156,31 @@ public:
                                        &gD3dDevice, &featureLevel, &gD3dDeviceContext) != S_OK) {
       //{{{  error, return
       cLog::log (LOGINFO, "DirectX device created failed");
-      ::UnregisterClass (gWndClass.lpszClassName, gWndClass.hInstance);
+      ::UnregisterClass (mWndClass.lpszClassName, mWndClass.hInstance);
       return false;
       }
       //}}}
-    cLog::log (LOGINFO, fmt::format ("platform DirectX11 device created - featureLevel:{:x}", featureLevel));
+    cLog::log (LOGINFO, fmt::format ("platform Dx11 device created - featureLevel:{:x}", featureLevel));
+
+    ID3D11Texture2D* backBufferTexture;
+    gSwapChain->GetBuffer(0, IID_PPV_ARGS (&backBufferTexture));
+    gD3dDevice->CreateRenderTargetView (backBufferTexture, NULL, &gMainRenderTargetView);
+    backBufferTexture->Release();
 
     // Show the window
-    ::ShowWindow (gHWnd, SW_SHOWDEFAULT);
-    ::UpdateWindow (gHWnd);
+    ::ShowWindow (mWnd, SW_SHOWDEFAULT);
+    ::UpdateWindow (mWnd);
 
-    // Setup Dear ImGui context
+    // set imGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-    #ifdef USE_IMPLOT
-      ImPlot::CeateContext();
-    #endif
+    ImGui::StyleColorsClassic();
+    cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
 
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
     //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
     //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 
-    //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     //ImGui::GetIO().ConfigViewportsNoAutoMerge = true;
     //ImGui::GetIO().ConfigViewportsNoTaskBarIcon = true;
     //ImGui::GetIO().ConfigViewportsNoDefaultParent = true;
@@ -202,13 +190,13 @@ public:
     //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports; // FIXME-DPI: Experimental.
 
     // if viewports enabled, tweak WindowRounding/WindowBg so platform windows look identical
-    ImGuiStyle& style = ImGui::GetStyle();
-    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-      style.WindowRounding = 0.0f;
-      style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-      }
+    //ImGuiStyle& style = ImGui::GetStyle();
+    //if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+    //  style.WindowRounding = 0.0f;
+    //  style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    //  }
 
-    ImGui_ImplWin32_Init (gHWnd);
+    ImGui_ImplWin32_Init (mWnd);
 
     gPlatform = this;
 
@@ -217,7 +205,7 @@ public:
   //}}}
 
   // gets
-  virtual cPoint getWindowSize() final;
+  virtual cPoint getWindowSize() final { return mWindowSize; }
 
   // sets
   //{{{
@@ -246,6 +234,7 @@ public:
       if (msg.message == WM_QUIT)
         return false;
       }
+
     return true;
     }
   //}}}
@@ -259,305 +248,355 @@ public:
     //  }
     gSwapChain->Present (mVsync ? 1 : 0, 0);
     }
-  };
   //}}}
 
+private:
+  WNDCLASSEX mWndClass;
+  HWND mWnd;
+  cPoint mWindowSize;
+  };
 //}}}
 
+// cGraphics interface
 //{{{
-//class cDx11Graphics : public cGraphics {
-//public:
+class cDx11Graphics : public cGraphics {
+public:
   //{{{
-  //virtual ~cDx11Graphics() {
-    //ImGui_ImplDX11_Shutdown();
-    //}
+  virtual ~cDx11Graphics() {
+    ImGui_ImplDX11_Shutdown();
+    }
   //}}}
 
   //{{{
-  //virtual bool init() final {
+  virtual bool init() final {
 
-    //// report Dx11 versions
-    ////cLog::log (LOGINFO, fmt::format ("OpenGL {}", glGetString (GL_VERSION)));
+    // report Dx11 versions
+    //cLog::log (LOGINFO, fmt::format ("OpenGL {}", glGetString (GL_VERSION)));
 
-    //return ImGui_ImplDx11_Init();
-    //}
+    return ImGui_ImplDX11_Init (gD3dDevice, gD3dDeviceContext);
+    }
   //}}}
-  //virtual void newFrame() final { ImGui_ImplDX11_NewFrame(); }
+  virtual void newFrame() final { ImGui_ImplDX11_NewFrame(); }
   //{{{
-  //virtual void clear (const cPoint& size) final {
-    //}
-  //}}}
-  //virtual void renderDrawData() final { ImGui_ImplDX11_RenderDrawData (ImGui::GetDrawData()); }
-
-  //// create resources
-  //virtual cQuad* createQuad (const cPoint& size) final { return new cDx11Quad (size); }
-  //virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final { return new cDx11Quad (size, rect); }
-
-  //virtual cTarget* createTarget() final { return new cDx11Target(); }
-  //{{{
-  //virtual cTarget* createTarget (const cPoint& size, cTarget::eFormat format) final {
-    //return new cDx11Target (size, format);
-    //}
-  //}}}
-  //{{{
-  //virtual cTarget* createTarget (uint8_t* pixels, const cPoint& size, cTarget::eFormat format) final {
-    //return new cDx11Target (pixels, size, format);
-    //}
+  virtual void clear (const cPoint& size) final {
+    (void)size;
+    }
   //}}}
 
-  //virtual cLayerShader* createLayerShader() final { return new cDx11LayerShader(); }
-  //virtual cPaintShader* createPaintShader() final { return new cDx11PaintShader(); }
+  virtual void renderDrawData() final {
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
+    gD3dDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
+    gD3dDeviceContext->ClearRenderTargetView (gMainRenderTargetView, clear_color_with_alpha);
+    ImGui_ImplDX11_RenderDrawData (ImGui::GetDrawData());
+    }
 
+  // create resources
+  virtual cQuad* createQuad (const cPoint& size) final { return new cDx11Quad (size); }
+  virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final { return new cDx11Quad (size, rect); }
+
+  virtual cTarget* createTarget() final { return new cDx11Target(); }
   //{{{
-  //virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
-  //// factory create
-
-    //switch (textureType) {
-      //case cTexture::eRgba:   return new cDx11RgbaTexture (textureType, size);
-      //case cTexture::eNv12:   return new cDx11Nv12Texture (textureType, size);
-      //case cTexture::eYuv420: return new cDx11Yuv420Texture (textureType, size);
-      //default : return nullptr;
-      //}
-    //}
+  virtual cTarget* createTarget (const cPoint& size, cTarget::eFormat format) final {
+    return new cDx11Target (size, format);
+    }
   //}}}
   //{{{
-  //virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final {
-  //// factory create
-
-    //switch (textureType) {
-      //case cTexture::eRgba:   return new cDx11RgbaShader();
-      //case cTexture::eYuv420: return new cDx11Yuv420Shader();
-      //case cTexture::eNv12:   return new cDx11Nv12Shader();
-      //default: return nullptr;
-      //}
-    //}
+  virtual cTarget* createTarget (uint8_t* pixels, const cPoint& size, cTarget::eFormat format) final {
+    return new cDx11Target (pixels, size, format);
+    }
   //}}}
 
-//private:
+  virtual cLayerShader* createLayerShader() final { return new cDx11LayerShader(); }
+  virtual cPaintShader* createPaintShader() final { return new cDx11PaintShader(); }
+
   //{{{
-  //class cDx11Quad : public cQuad {
-  //public:
-    //cDx11Quad (const cPoint& size) : cQuad(size) {
-      //}
-    //cDx11Quad (const cPoint& size, const cRect& rect) : cQuad(size) {
-      //}
-    //virtual ~cDx11Quad() {
-      //}
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
+  // factory create
 
-    //void draw() final {
-      //}
-
-  //private:
-    ////inline static const uint32_t mNumIndices = 6;
-    ////inline static const uint8_t kIndices[mNumIndices] = {
-    ////  0, 1, 2, // 0   0-3
-    ////  0, 3, 1  // |\   \|
-    ////  };       // 2-1   1
-
-    ////uint32_t mVertexArrayObject = 0;
-    ////uint32_t mVertexBufferObject = 0;
-    ////uint32_t mElementArrayBufferObject = 0;
-    //};
+    switch (textureType) {
+      case cTexture::eRgba:   return new cDx11RgbaTexture (textureType, size);
+      case cTexture::eNv12:   return new cDx11Nv12Texture (textureType, size);
+      case cTexture::eYuv420: return new cDx11Yuv420Texture (textureType, size);
+      default : return nullptr;
+      }
+    }
   //}}}
   //{{{
-  //class cDx11Target : public cTarget {
-  //public:
-    //cDx11Target() : cTarget ({0,0}) {
-      //}
-    //cDx11Target (const cPoint& size, eFormat format) : cTarget(size) {
-      //}
-    //cDx11Target (uint8_t* pixels, const cPoint& size, eFormat format) : cTarget(size) {
-      //}
-    //virtual ~cDx11Target() {
-      //free (mPixels);
-      //}
+  virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final {
+  // factory create
 
-    ///// gets
-    //uint8_t* getPixels() final {
-      //return mPixels;
-      //}
-
-    //// sets
-    //void setSize (const cPoint& size) final {
-      //};
-    //void setTarget (const cRect& rect) final {
-      //}
-    //void setBlend() final {
-      //}
-    //void setSource() final {
-      //}
-
-    //// actions
-    //void invalidate() final {
-      //}
-    //void pixelsChanged (const cRect& rect) final {
-      //}
-
-    //void clear (const cColor& color) final {
-      //}
-    //void blit (cTarget& src, const cPoint& srcPoint, const cRect& dstRect) final {
-      //}
-
-    //bool checkStatus() final {
-      //}
-    //void reportInfo() final {
-      //}
-    //};
+    switch (textureType) {
+      case cTexture::eRgba:   return new cDx11RgbaShader();
+      case cTexture::eYuv420: return new cDx11Yuv420Shader();
+      case cTexture::eNv12:   return new cDx11Nv12Shader();
+      default: return nullptr;
+      }
+    }
   //}}}
 
+private:
   //{{{
-  //class cDx11RgbaTexture : public cTexture {
-  //public:
-    //cDx11RgbaTexture (eTextureType textureType, const cPoint& size)
-        //: cTexture(textureType, size) {
+  class cDx11Quad : public cQuad {
+  public:
+    cDx11Quad (const cPoint& size) : cQuad(size) {
+      }
+    cDx11Quad (const cPoint& size, const cRect& rect) : cQuad(size) {
+      (void)rect;
+      }
+    virtual ~cDx11Quad() {
+      }
 
-      //cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
-      //}
-    //virtual ~cDx11RgbaTexture() {
-      //}
+    void draw() final {
+      }
 
-    //virtual unsigned getTextureId() const final { return mTextureId; }
+  private:
+    //inline static const uint32_t mNumIndices = 6;
+    //inline static const uint8_t kIndices[mNumIndices] = {
+    //  0, 1, 2, // 0   0-3
+    //  0, 3, 1  // |\   \|
+    //  };       // 2-1   1
 
-    //virtual void setPixels (uint8_t** pixels) final {
-      //}
-    //virtual void setSource() final {
-      //}
-
-  //private:
-    //uint32_t mTextureId = 0;
-    //};
+    //uint32_t mVertexArrayObject = 0;
+    //uint32_t mVertexBufferObject = 0;
+    //uint32_t mElementArrayBufferObject = 0;
+    };
   //}}}
   //{{{
-  //class cDx11Nv12Texture : public cTexture {
-  //public:
-    //cDx11Nv12Texture (eTextureType textureType, const cPoint& size)
-        //: cTexture(textureType, size) {
+  class cDx11Target : public cTarget {
+  public:
+    cDx11Target() : cTarget ({0,0}) {
+      }
+    cDx11Target (const cPoint& size, eFormat format) : cTarget(size) {
+      (void)format;
+      }
+    cDx11Target (uint8_t* pixels, const cPoint& size, eFormat format) : cTarget(size) {
+      (void)pixels;
+      (void)format;
+      }
+    virtual ~cDx11Target() {
+      free (mPixels);
+      }
 
-      //cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
-    //virtual ~cDx11Nv12Texture() {
-      //cLog::log (LOGINFO, fmt::format ("deleting eVv12 texture {}x{}", mSize.x, mSize.y));
-      //}
+    /// gets
+    uint8_t* getPixels() final {
+      return mPixels;
+      }
 
-    //virtual unsigned getTextureId() const final { return mTextureId[0]; }  // luma only
+    // sets
+    void setSize (const cPoint& size) final {
+      (void)size;
+      };
+    void setTarget (const cRect& rect) final {
+      (void)rect;
+      }
+    void setBlend() final {
+      }
+    void setSource() final {
+      }
 
-    //virtual void setPixels (uint8_t** pixels) final {
-      //}
-    //virtual void setSource() final {
-      //}
+    // actions
+    void invalidate() final {
+      }
+    void pixelsChanged (const cRect& rect) final {
+      (void)rect;
+      }
 
-  //private:
-    //array <uint32_t,2> mTextureId;
-    //};
-  //}}}
-  //{{{
-  //class cDx11Yuv420Texture : public cTexture {
-  //public:
-    //cDx11Yuv420Texture (eTextureType textureType, const cPoint& size)
-        //: cTexture(textureType, size) {
-      //cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
-      //}
-    //virtual ~cDx11Yuv420Texture() {
-      //cLog::log (LOGINFO, fmt::format ("deleting eYuv420 texture {}x{}", mSize.x, mSize.y));
-      //}
+    void clear (const cColor& color) final {
+      (void)color;
+      }
+    void blit (cTarget& src, const cPoint& srcPoint, const cRect& dstRect) final {
+      (void)src;
+      (void)srcPoint;
+      (void)dstRect;
+      }
 
-    //virtual unsigned getTextureId() const final { return mTextureId[0]; }   // luma only
-
-    //virtual void setPixels (uint8_t** pixels) final {
-    //// set textures using pixels in ffmpeg avFrame format
-      //}
-    //virtual void setSource() final {
-      //}
-  //private:
-    //array <uint32_t,3> mTextureId;
-    //};
+    bool checkStatus() final { return true; }
+    void reportInfo() final {
+      }
+    };
   //}}}
 
   //{{{
-  //class cDx11RgbaShader : public cTextureShader {
-  //public:
-    //cDx11RgbaShader() : cTextureShader() {
-      //mId = 0;
-      //}
-    //virtual ~cDx11RgbaShader() {
-      //}
+  class cDx11RgbaTexture : public cTexture {
+  public:
+    cDx11RgbaTexture (eTextureType textureType, const cPoint& size)
+        : cTexture(textureType, size) {
 
-    //virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-      //}
-    //virtual void use() final {
-      //}
-    //};
+      cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
+      }
+    virtual ~cDx11RgbaTexture() {
+      }
+
+    virtual unsigned getTextureId() const final { return mTextureId; }
+
+    virtual void setPixels (uint8_t** pixels) final {
+      (void)pixels;
+      }
+    virtual void setSource() final {
+      }
+
+  private:
+    uint32_t mTextureId = 0;
+    };
   //}}}
   //{{{
-  //class cDx11Nv12Shader : public cTextureShader {
-  //public:
-    //cDx11Nv12Shader() : cTextureShader() {
-      //mId = 0;
-      //}
+  class cDx11Nv12Texture : public cTexture {
+  public:
+    cDx11Nv12Texture (eTextureType textureType, const cPoint& size)
+        : cTexture(textureType, size) {
 
-    //virtual ~cDx11Nv12Shader() {
-      //}
+      cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
+      }
 
-    //virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-      //}
-    //virtual void use() final {
-      //}
-    //};
+    virtual ~cDx11Nv12Texture() {
+      cLog::log (LOGINFO, fmt::format ("deleting eVv12 texture {}x{}", mSize.x, mSize.y));
+      }
+
+    virtual unsigned getTextureId() const final { return mTextureId[0]; }  // luma only
+
+    virtual void setPixels (uint8_t** pixels) final {
+      (void)pixels;
+      }
+
+    virtual void setSource() final {
+      }
+
+  private:
+    array <uint32_t,2> mTextureId;
+    };
   //}}}
   //{{{
-  //class cDx11Yuv420Shader : public cTextureShader {
-  //public:
-    //cDx11Yuv420Shader() : cTextureShader() {
-      //mId = 0;
-      //}
-    //virtual ~cDx11Yuv420Shader() {
-      //}
+  class cDx11Yuv420Texture : public cTexture {
+  public:
+    cDx11Yuv420Texture (eTextureType textureType, const cPoint& size)
+        : cTexture(textureType, size) {
+      cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
+      }
+    virtual ~cDx11Yuv420Texture() {
+      cLog::log (LOGINFO, fmt::format ("deleting eYuv420 texture {}x{}", mSize.x, mSize.y));
+      }
 
-    //virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-      //}
-    //virtual void use() final {
-      //}
-    //};
+    virtual unsigned getTextureId() const final { return mTextureId[0]; }   // luma only
+
+    virtual void setPixels (uint8_t** pixels) final {
+    // set textures using pixels in ffmpeg avFrame format
+      (void)pixels;
+      }
+    virtual void setSource() final {
+      }
+  private:
+    array <uint32_t,3> mTextureId;
+    };
   //}}}
 
   //{{{
-  //class cDx11LayerShader : public cLayerShader {
-  //public:
-    //cDx11LayerShader() : cLayerShader() {
-      //mId = 0;
-      //}
-    //virtual ~cDx11LayerShader() {
-      //}
+  class cDx11RgbaShader : public cTextureShader {
+  public:
+    cDx11RgbaShader() : cTextureShader() {
+      mId = 0;
+      }
+    virtual ~cDx11RgbaShader() {
+      }
 
-    //// sets
-    //virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-      //}
-    //virtual void setHueSatVal (float hue, float sat, float val) final {
-      //}
-
-    //virtual void use() final {
-      //}
-    //};
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
+      }
+    virtual void use() final {
+      }
+    };
   //}}}
   //{{{
-  //class cDx11PaintShader : public cPaintShader {
-  //public:
-    //cDx11PaintShader() : cPaintShader() {
-      //mId = 0;
-      //}
-    //virtual ~cDx11PaintShader() {
-      //}
+  class cDx11Nv12Shader : public cTextureShader {
+  public:
+    cDx11Nv12Shader() : cTextureShader() {
+      mId = 0;
+      }
 
-    //// sets
-    //virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-      //}
-    //virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
-      //}
+    virtual ~cDx11Nv12Shader() {
+      }
 
-    //virtual void use() final {
-      //}
-    //};
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
+
+      }
+    virtual void use() final {
+      }
+    };
   //}}}
-  //};
+  //{{{
+  class cDx11Yuv420Shader : public cTextureShader {
+  public:
+    cDx11Yuv420Shader() : cTextureShader() {
+      mId = 0;
+      }
+    virtual ~cDx11Yuv420Shader() {
+      }
+
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
+
+      }
+    virtual void use() final {
+      }
+    };
+  //}}}
+
+  //{{{
+  class cDx11LayerShader : public cLayerShader {
+  public:
+    cDx11LayerShader() : cLayerShader() {
+      mId = 0;
+      }
+    virtual ~cDx11LayerShader() {
+      }
+
+    // sets
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
+
+      }
+    virtual void setHueSatVal (float hue, float sat, float val) final {
+      (void)hue;
+      (void)sat;
+      (void)val;
+      }
+
+    virtual void use() final {
+      }
+    };
+  //}}}
+  //{{{
+  class cDx11PaintShader : public cPaintShader {
+  public:
+    cDx11PaintShader() : cPaintShader() {
+      mId = 0;
+      }
+    virtual ~cDx11PaintShader() {
+      }
+
+    // sets
+    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
+      (void)model;
+      (void)projection;
+
+      }
+    virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
+      (void)pos;
+      (void)prevPos;
+      (void)radius;
+      (void)color;
+      }
+
+    virtual void use() final {
+      }
+    };
+  //}}}
+  };
 //}}}
 
 // cApp
@@ -572,11 +611,11 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     }
 
   // create graphics
-  //mGraphics = new cOpenDx11Graphics();
-  //if (!mGraphics || !mGraphics->init()) {
-  //  cLog::log (LOGERROR, "cApp graphics init failed");
-  //  return;
-  //  }
+  mGraphics = new cDx11Graphics();
+  if (!mGraphics || !mGraphics->init()) {
+    cLog::log (LOGERROR, "cApp graphics init failed");
+    return;
+    }
 
   // fullScreen, vsync
   mPlatform->setFullScreen (fullScreen);
@@ -614,6 +653,7 @@ void cApp::windowResize (int width, int height) {
 
   (void)width;
   (void)height;
+
   mGraphics->newFrame();
   mPlatform->newFrame();
   ImGui::NewFrame();
