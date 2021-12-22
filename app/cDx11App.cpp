@@ -41,13 +41,13 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT ms
 // platform
 namespace {
   cPlatform* gPlatform = nullptr;
-  ID3D11Device* gD3dDevice = nullptr;
-  ID3D11DeviceContext*  gD3dDeviceContext = nullptr;
+
+  ID3D11Device* gDevice = nullptr;
+  ID3D11DeviceContext*  gDeviceContext = nullptr;
   IDXGISwapChain* gSwapChain = nullptr;
   ID3D11RenderTargetView* gMainRenderTargetView = nullptr;
 
   function <void (int width, int height)> gResizeCallback ;
-
   function <void (vector<string> dropItems)> gDropCallback;
   //{{{
   //void dropCallback (GLFWwindow* window, int count, const char** paths) {
@@ -122,8 +122,8 @@ public:
 
     gMainRenderTargetView->Release();
     gSwapChain->Release();
-    gD3dDeviceContext->Release();
-    gD3dDevice->Release();
+    gDeviceContext->Release();
+    gDevice->Release();
 
     ::DestroyWindow (mWnd);
     ::UnregisterClass (mWndClass.lpszClassName, mWndClass.hInstance);
@@ -171,21 +171,23 @@ public:
     if (D3D11CreateDeviceAndSwapChain (NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
                                        createDeviceFlags, kFeatureLevels, 2,
                                        D3D11_SDK_VERSION, &swapChainDesc, &gSwapChain,
-                                       &gD3dDevice, &featureLevel, &gD3dDeviceContext) != S_OK) {
+                                       &gDevice, &featureLevel, &gDeviceContext) != S_OK) {
       //{{{  error, return
       cLog::log (LOGINFO, "DirectX device created failed");
       ::UnregisterClass (mWndClass.lpszClassName, mWndClass.hInstance);
       return false;
       }
       //}}}
-    cLog::log (LOGINFO, fmt::format ("platform Dx11 device created - featureLevel:{:x}", featureLevel));
 
+    // create mainRenderTargetView
     ID3D11Texture2D* backBufferTexture;
     gSwapChain->GetBuffer(0, IID_PPV_ARGS (&backBufferTexture));
-    gD3dDevice->CreateRenderTargetView (backBufferTexture, NULL, &gMainRenderTargetView);
+    gDevice->CreateRenderTargetView (backBufferTexture, NULL, &gMainRenderTargetView);
     backBufferTexture->Release();
 
-    // Show the window
+    cLog::log (LOGINFO, fmt::format ("platform Dx11 device created - featureLevel:{:x}", featureLevel));
+
+    // show window
     ::ShowWindow (mWnd, SW_SHOWDEFAULT);
     ::UpdateWindow (mWnd);
 
@@ -291,7 +293,7 @@ public:
     // report Dx11 versions
     //cLog::log (LOGINFO, fmt::format ("OpenGL {}", glGetString (GL_VERSION)));
 
-    return ImGui_ImplDX11_Init (gD3dDevice, gD3dDeviceContext);
+    return ImGui_ImplDX11_Init (gDevice, gDeviceContext);
     }
   //}}}
   virtual void newFrame() final { ImGui_ImplDX11_NewFrame(); }
@@ -300,18 +302,18 @@ public:
     (void)size;
 
     // set renderTarget
-    gD3dDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
+    gDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
 
     // dingy green clear color
     const float clearColor[4] = { 0.0f, 0.2f, 0.00f, 1.00f };
-    gD3dDeviceContext->ClearRenderTargetView (gMainRenderTargetView, clearColor);
+    gDeviceContext->ClearRenderTargetView (gMainRenderTargetView, clearColor);
     }
   //}}}
   //{{{
   virtual void renderDrawData() final {
 
     // set renderTarget
-    gD3dDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
+    gDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
 
     // render imgui
     ImGui_ImplDX11_RenderDrawData (ImGui::GetDrawData());
