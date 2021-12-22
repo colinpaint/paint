@@ -280,16 +280,25 @@ public:
   //{{{
   virtual void clear (const cPoint& size) final {
     (void)size;
+
+    // set renderTarget
+    gD3dDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
+
+    // dingy green clear color
+    const float clearColor[4] = { 0.0f, 0.2f, 0.00f, 1.00f };
+    gD3dDeviceContext->ClearRenderTargetView (gMainRenderTargetView, clearColor);
     }
   //}}}
-
+  //{{{
   virtual void renderDrawData() final {
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
+
+    // set renderTarget
     gD3dDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
-    gD3dDeviceContext->ClearRenderTargetView (gMainRenderTargetView, clear_color_with_alpha);
+
+    // render imgui
     ImGui_ImplDX11_RenderDrawData (ImGui::GetDrawData());
     }
+  //}}}
 
   // create resources
   virtual cQuad* createQuad (const cPoint& size) final { return new cDx11Quad (size); }
