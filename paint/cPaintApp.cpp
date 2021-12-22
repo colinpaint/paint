@@ -27,7 +27,7 @@ cPaintApp::cPaintApp (const cPoint& windowSize, bool fullScreen, bool vsync, con
    : cApp("paintbox", windowSize, fullScreen, vsync), mSize(size), mNumChannels(4) {
 
   // create empty layer
-  mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, getGraphics()));
+  mLayers.push_back (new cLayer (mSize, cTarget::eRGBA, getGraphics()));
   createResources();
   }
 //}}}
@@ -39,7 +39,7 @@ cPaintApp::cPaintApp (const cPoint& windowSize, bool fullScreen, bool vsync, con
 
   // load file image
   uint8_t* pixels = stbi_load (filename.c_str(), &mSize.x, &mSize.y, &mNumChannels, 4);
-  cLayer* layer = new cLayer (pixels, mSize, cFrameBuffer::eRGBA, getGraphics());
+  cLayer* layer = new cLayer (pixels, mSize, cTarget::eRGBA, getGraphics());
   free (pixels);
 
   layer->setName (filename);
@@ -57,8 +57,8 @@ cPaintApp::~cPaintApp() {
   for (auto layer : mLayers)
     delete layer;
 
-  delete mWindowFrameBuffer;
-  delete mFrameBuffer;
+  delete mWindowTarget;
+  delete mTarget;
   delete mShader;
   delete mQuad;
   }
@@ -68,15 +68,15 @@ cPaintApp::~cPaintApp() {
 //{{{
 uint8_t* cPaintApp::getPixels (cPoint& size) {
 
-  size = mFrameBuffer->getSize();
-  return mFrameBuffer->getPixels();
+  size = mTarget->getSize();
+  return mTarget->getPixels();
   }
 //}}}
 
 // layers
 //{{{
 unsigned cPaintApp::newLayer() {
-  mLayers.push_back (new cLayer (mSize, cFrameBuffer::eRGBA, getGraphics()));
+  mLayers.push_back (new cLayer (mSize, cTarget::eRGBA, getGraphics()));
   return static_cast<unsigned>(mLayers.size() - 1);
   }
 //}}}
@@ -90,7 +90,7 @@ unsigned cPaintApp::newLayer (const string& fileName) {
   cLog::log (LOGINFO, fmt::format ("new layer {} {},{} {}", fileName, size.x, size.y, numChannels));
 
   // new layer, transfer ownership of pixels to texture
-  mLayers.push_back (new cLayer (pixels, size, cFrameBuffer::eRGBA, getGraphics()));
+  mLayers.push_back (new cLayer (pixels, size, cTarget::eRGBA, getGraphics()));
   return static_cast<unsigned>(mLayers.size() - 1);
 }
 //}}}
@@ -146,23 +146,23 @@ void cPaintApp::mouse (bool active, bool clicked, bool dragging, bool released, 
 //{{{
 void cPaintApp::draw (cPoint windowSize) {
 
-  // draw layers -> canvas frameBuffer
-  mFrameBuffer->setTarget();
-  mFrameBuffer->invalidate();
-  mFrameBuffer->setBlend();
+  // draw layers -> canvas Target
+  mTarget->setTarget();
+  mTarget->invalidate();
+  mTarget->setBlend();
 
   for (auto layer : mLayers)
     layer->draw (mSize);
 
-  // draw canvas frameBuffer -> window frameBuffer
-  mWindowFrameBuffer->setSize (windowSize);
-  mWindowFrameBuffer->setTarget();
-  mWindowFrameBuffer->setBlend();
-  mWindowFrameBuffer->clear (cColor(0.25f,0.25f,0.25f,1.0f));
+  // draw canvas Target -> window Target
+  mWindowTarget->setSize (windowSize);
+  mWindowTarget->setTarget();
+  mWindowTarget->setBlend();
+  mWindowTarget->clear (cColor(0.25f,0.25f,0.25f,1.0f));
 
-  // - canvas frameBuffer texture source
-  mFrameBuffer->setSource();
-  mFrameBuffer->checkStatus();
+  // - canvas Target texture source
+  mTarget->setSource();
+  mTarget->checkStatus();
 
   // - shader
   mShader->use();
@@ -197,10 +197,10 @@ void cPaintApp::createResources() {
   mShader = getGraphics().createTextureShader (cTexture::eRgba);
 
   // create target
-  mFrameBuffer = getGraphics().createFrameBuffer (nullptr, mSize, cFrameBuffer::eRGBA);
+  mTarget = getGraphics().createTarget (nullptr, mSize, cTarget::eRGBA);
 
   // create window
-  mWindowFrameBuffer = getGraphics().createFrameBuffer();
+  mWindowTarget = getGraphics().createTarget();
 
   // select brush
   cBrush::setCurBrushByName (getGraphics(), "paintGpu", 20.f);

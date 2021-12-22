@@ -67,6 +67,6 @@ private:
 
   cQuad* mQuad = nullptr;
   cTextureShader* mShader = nullptr;
-  cFrameBuffer* mFrameBuffer = nullptr;
-  cFrameBuffer* mWindowFrameBuffer = nullptr;
+  cTarget* mTarget = nullptr;
+  cTarget* mWindowTarget = nullptr;
   };

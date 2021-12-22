@@ -11,8 +11,8 @@ class cBrush;
 
 class cLayer {
 public:
-  cLayer (cPoint size, cFrameBuffer::eFormat format, cGraphics& graphics);
-  cLayer (uint8_t* pixels, cPoint size, cFrameBuffer::eFormat format, cGraphics& graphics);
+  cLayer (cPoint size, cTarget::eFormat format, cGraphics& graphics);
+  cLayer (uint8_t* pixels, cPoint size, cTarget::eFormat format, cGraphics& graphics);
   ~cLayer();
 
   // gets
@@ -44,7 +44,7 @@ public:
 private:
   // vars
   const cPoint mSize;
-  const cFrameBuffer::eFormat mFormat;
+  const cTarget::eFormat mFormat;
   std::string mName;
   cGraphics& mGraphics;
 
@@ -55,6 +55,6 @@ private:
   float mSat = 0.f;
   float mVal = 0.f;
 
-  cFrameBuffer* mFrameBuffer = nullptr;
-  cFrameBuffer* mFrameBuffer1 = nullptr;
+  cTarget* mTarget = nullptr;
+  cTarget* mTarget1 = nullptr;
   };

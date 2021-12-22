@@ -25,12 +25,13 @@ protected:
   };
 //}}}
 //{{{
-class cFrameBuffer {
+class cTarget {
+// target framebuffer object wrapper
 public:
   enum eFormat { eRGB, eRGBA };
 
-  cFrameBuffer (const cPoint& size) : mSize(size) {}
-  virtual ~cFrameBuffer() = default;
+  cTarget (const cPoint& size) : mSize(size) {}
+  virtual ~cTarget() = default;
 
   /// gets
   const cPoint getSize() const { return mSize; }
@@ -54,7 +55,7 @@ public:
   virtual void pixelsChanged (const cRect& rect) = 0;
 
   virtual void clear (const cColor& color) = 0;
-  virtual void blit (cFrameBuffer& src, const cPoint& srcPoint, const cRect& dstRect) = 0;
+  virtual void blit (cTarget& src, const cPoint& srcPoint, const cRect& dstRect) = 0;
 
   virtual bool checkStatus() = 0;
   virtual void reportInfo() = 0;
@@ -159,9 +160,9 @@ public:
   virtual cQuad* createQuad (const cPoint& size) = 0;
   virtual cQuad* createQuad (const cPoint& size, const cRect& rect) = 0;
 
-  virtual cFrameBuffer* createFrameBuffer() = 0;
-  virtual cFrameBuffer* createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) = 0;
-  virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) = 0;
+  virtual cTarget* createTarget() = 0;
+  virtual cTarget* createTarget (const cPoint& size, cTarget::eFormat format) = 0;
+  virtual cTarget* createTarget (uint8_t* pixels, const cPoint& size, cTarget::eFormat format) = 0;
 
   virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) = 0;
   virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) = 0;

@@ -1,12 +1,12 @@
-#cmake .. -DBUILD_GRAPHICS=OPENGLES3
+#cmake .. -DBUILD_GRAPHICS=GLES3
 cmake_minimum_required (VERSION 3.18)
 cmake_policy (SET CMP0072 NEW)
 #
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
-# valid options - OPENGL_2_1 OPENGL_3, OPENGLES_3_0 OPENGLES_3_1 OPENGLES_3_2, DIRECTX_11
-set (BUILD_GRAPHICS "OPENGL_3" CACHE STRING "build graphics option")
+# valid options - GL_2_1 GL_3, GLES_3_0 GLES_3_1 GLES_3_2, DX_11
+set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
 #
 option (BUILD_DEMO "Build imgui demo app" ON)
 option (BUILD_FED "Build fed app" ON)
@@ -58,26 +58,26 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
   add_subdirectory (glfw)
 
   # glad
-  if (BUILD_GRAPHICS STREQUAL "OPENGL_2_1")
+  if (BUILD_GRAPHICS STREQUAL "GL_2_1")
     add_subdirectory (glad2.1+fbo+vao)
-  elseif (BUILD_GRAPHICS STREQUAL "OPENGL_3")
+  elseif (BUILD_GRAPHICS STREQUAL "GL_3")
     add_subdirectory (glad4.5core)
   endif()
 
   # imgui framework lib
   project (imgui)
-    find_package (OpenGL REQUIRED)
-
-    if (BUILD_GRAPHICS STREQUAL "DIRECTX_11")
+    if (BUILD_GRAPHICS STREQUAL "DX_11")
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_directx11.h app/cApp.h)
       file (GLOB SOURCE_FILES app/cDirectX11App.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_directx11.cpp)
-    elseif (BUILD_GRAPHICS STREQUAL "OPENGL_2_1")
+    elseif (BUILD_GRAPHICS STREQUAL "GL_2_1")
+      find_package (OpenGL REQUIRED)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h app/cApp.h)
       file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/*.cpp
                               imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
-    else() # OPENGL_3, OPENGLES_x_x
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl3.h app/cApp.h)
+    else() # GL_3, GLES_x_x
+      find_package (OpenGL REQUIRED)
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_GL3.h app/cApp.h)
       file (GLOB SOURCE_FILES app/cGlfwApp.cpp
                               imgui/*.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
     endif()
@@ -88,20 +88,20 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     target_include_directories (${PROJECT_NAME} PUBLIC utils imgui)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
-    if (BUILD_GRAPHICS STREQUAL "OPENGL_2_1" OR
-        BUILD_GRAPHICS STREQUAL "OPENGL_3")
+    if (BUILD_GRAPHICS STREQUAL "GL_2_1" OR
+        BUILD_GRAPHICS STREQUAL "GL_3")
       if (NOT MSVC)
         target_link_libraries (${PROJECT_NAME} PRIVATE GL)
       endif()
       target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad)
-    elseif (BUILD_GRAPHICS STREQUAL "OPENGLES_3_0" OR
-            BUILD_GRAPHICS STREQUAL "OPENGLES_3_1" OR
-            BUILD_GRAPHICS STREQUAL "OPENGLES_3_2")
+    elseif (BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
+            BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
+            BUILD_GRAPHICS STREQUAL "GLES_3_2")
       target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_ES3=1
                                                           IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
                                                           IMGUI_IMPL_OPENGL_ES3=1)
       target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
-    elseif (BUILD_GRAPHICS STREQUAL "DIRECTX_11")
+    elseif (BUILD_GRAPHICS STREQUAL "DX_11")
       # not yet
     endif()
 
@@ -236,8 +236,8 @@ if (BUILD_DEMO)
 
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
-    if (OPENGL2)
-      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
+    if (GL2)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE GL2)
     endif()
 
     if (BUILD_IMPLOT)
@@ -263,10 +263,6 @@ if (BUILD_FED)
 
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
-    if (BUILD_OPENGL2)
-      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
-    endif()
-
     if (MSVC)
       target_link_libraries (${PROJECT_NAME} PRIVATE imgui opengl32 d3d11 d3dcompiler ws2_32)
     else()
@@ -281,9 +277,6 @@ if (BUILD_TELLY)
     file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp ui/cUI.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
-    if (BUILD_OPENGL2)
-      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
-    endif()
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
     if (BUILD_IMPLOT)
@@ -330,9 +323,6 @@ if (BUILD_PLAYER)
     file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp ui/cUI.cpp)
     add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
 
-    if (BUILD_OPENGL2)
-      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
-    endif()
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
 
     target_link_libraries (${PROJECT_NAME} PRIVATE imgui song audio decoder dvb kiss net)
@@ -352,9 +342,6 @@ if (BUILD_PAINTBOX)
     file (GLOB SOURCE_FILES paint/*.cpp brush/*.cpp ui/cUI.cpp ui/cPaintUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
-    if (BUILD_OPENGL2)
-      target_compile_definitions (${PROJECT_NAME} PRIVATE OPENGL2)
-    endif()
     target_include_directories (${PROJECT_NAME} PRIVATE stb)
 
     target_link_libraries (${PROJECT_NAME} PRIVATE imgui)

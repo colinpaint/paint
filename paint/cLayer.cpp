@@ -19,21 +19,21 @@ namespace {
   }
 
 //{{{
-cLayer::cLayer (cPoint size, cFrameBuffer::eFormat format, cGraphics& graphics)
+cLayer::cLayer (cPoint size, cTarget::eFormat format, cGraphics& graphics)
     : mSize(size), mFormat(format), mGraphics(graphics) {
 
   // allocate and clear mPixels
   int numBytes = size.x * size.y * 4;
   auto data = static_cast<uint8_t*>(malloc (numBytes));
   memset (data, 0, numBytes);
-  mFrameBuffer = graphics.createFrameBuffer (data, size, format);
-  if (!mFrameBuffer)
-     cLog::log (LOGERROR, "createFrameBuffer failed");
+  mTarget = graphics.createTarget (data, size, format);
+  if (!mTarget)
+     cLog::log (LOGERROR, "createTarget failed");
   free (data);
 
-  mFrameBuffer1 = graphics.createFrameBuffer (size, format);
-  if (!mFrameBuffer1)
-    cLog::log (LOGERROR, "createFrameBuffer failed");
+  mTarget1 = graphics.createTarget (size, format);
+  if (!mTarget1)
+    cLog::log (LOGERROR, "createTarget failed");
 
   mQuad = graphics.createQuad (size);
   if (!mQuad)
@@ -41,16 +41,16 @@ cLayer::cLayer (cPoint size, cFrameBuffer::eFormat format, cGraphics& graphics)
   }
 //}}}
 //{{{
-cLayer::cLayer (uint8_t* data, cPoint size, cFrameBuffer::eFormat format, cGraphics& graphics)
+cLayer::cLayer (uint8_t* data, cPoint size, cTarget::eFormat format, cGraphics& graphics)
     : mSize(size), mFormat(format), mGraphics(graphics) {
 
-  mFrameBuffer = graphics.createFrameBuffer (data, size, format);
-  if (!mFrameBuffer)
-     cLog::log (LOGERROR, "createFrameBuffer failed");
+  mTarget = graphics.createTarget (data, size, format);
+  if (!mTarget)
+     cLog::log (LOGERROR, "createTarget failed");
 
-  mFrameBuffer1 = graphics.createFrameBuffer (size, format);
-  if (!mFrameBuffer1)
-    cLog::log (LOGERROR, "createFrameBuffer failed");
+  mTarget1 = graphics.createTarget (size, format);
+  if (!mTarget1)
+    cLog::log (LOGERROR, "createTarget failed");
 
   mQuad = graphics.createQuad (size);
   if (!mQuad)
@@ -60,40 +60,40 @@ cLayer::cLayer (uint8_t* data, cPoint size, cFrameBuffer::eFormat format, cGraph
 //{{{
 cLayer::~cLayer() {
 
-  delete mFrameBuffer;
-  delete mFrameBuffer1;
+  delete mTarget;
+  delete mTarget1;
   }
 //}}}
 
 //{{{
 uint32_t cLayer::getTextureId() {
-  return mFrameBuffer->getTextureId();
+  return mTarget->getTextureId();
   }
 //}}}
 //{{{
 uint8_t* cLayer::getPixels() {
-  return mFrameBuffer->getPixels();
+  return mTarget->getPixels();
   }
 //}}}
 //{{{
 uint8_t* cLayer::getRenderedPixels() {
-// draw layer processsed -> frameBuffer1
+// draw layer processsed -> Target1
 
-  mFrameBuffer1->setTarget();
-  mFrameBuffer1->setBlend();
-  mFrameBuffer1->invalidate();
+  mTarget1->setTarget();
+  mTarget1->setBlend();
+  mTarget1->invalidate();
 
   draw (mSize);
 
-  return mFrameBuffer1->getPixels();
+  return mTarget1->getPixels();
   }
 //}}}
 
 //{{{
 void cLayer::paint (cBrush* brush, cVec2 pos, bool first) {
-// paint using brush onto layer's frameBuffers
+// paint using brush onto layer's Targets
 
-  brush->paint (pos, first, *mFrameBuffer, *mFrameBuffer1);
+  brush->paint (pos, first, *mTarget, *mTarget1);
   }
 //}}}
 //{{{
@@ -101,8 +101,8 @@ void cLayer::draw (const cPoint& size) {
 // draw layer to current target:size
 
   if (mVisible) {
-    mFrameBuffer->setSource();
-    mFrameBuffer->checkStatus();
+    mTarget->setSource();
+    mTarget->checkStatus();
 
     if (!gShader) {
       gShader = mGraphics.createLayerShader();

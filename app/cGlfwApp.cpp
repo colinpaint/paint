@@ -14,7 +14,7 @@
 #include <functional>
 
 // glad
-#if defined(OPENGL_2_1) || defined(OPENGL_3)
+#if defined(GL_2_1) || defined(GL_3)
   #include <glad/glad.h>
 #endif
 
@@ -25,7 +25,7 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 
-#if defined(OPENGL_2_1)
+#if defined(GL_2_1)
   #include <backends/imgui_impl_opengl2.h>
 #else
   #include <backends/imgui_impl_opengl3.h>
@@ -150,30 +150,30 @@ public:
       return false;
 
     //{{{  select openGL, openGLES version
-    #if defined(OPENGL_2_1)
+    #if defined(GL_2_1)
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
       string title = "openGL 2.1";
 
-    #elif defined(OPENGLES_2) // GL ES 2.0 + GLSL 100
+    #elif defined(GLES_2) // GL ES 2.0 + GLSL 100
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
       string title = "openGLES 2";
 
-    #elif defined(OPENGLES_3_0)
+    #elif defined(GLES_3_0)
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
       string title = "openGLES 3.0";
 
-    #elif defined(OPENGLES_3_1)
+    #elif defined(GLES_3_1)
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
       string title = "openGLES 3.1";
 
-    #elif defined(OPENGLES_3_2)
+    #elif defined(GLES_3_2)
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
@@ -233,7 +233,7 @@ public:
     glfwSetFramebufferSizeCallback (mWindow, framebufferSizeCallback);
     glfwSetDropCallback (mWindow, dropCallback);
 
-    #if defined(OPENGL_2_1) || defined(OPENGL_3)
+    #if defined(GL_2_1) || defined(GL_3)
       // openGL - GLAD init before any openGL function
       if (!gladLoadGLLoader ((GLADloadproc)glfwGetProcAddress)) {
         cLog::log (LOGERROR, "cOpenGL3Platform - gladLoadGLLoader failed");
@@ -368,7 +368,7 @@ private:
 //}}}
 
 // cGraphics interface
-#if defined(OPENGL_2_1)
+#if defined(GL_2_1)
   //{{{
   class cOpenGL2Gaphics : public cGraphics {
   public:
@@ -425,15 +425,15 @@ private:
     virtual cQuad* createQuad (const cPoint& size) final { return new cOpenGL2Quad (size); }
     virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final { return new cOpenGL2Quad (size, rect); }
 
-    virtual cFrameBuffer* createFrameBuffer() final { return new cOpenGL2FrameBuffer(); }
+    virtual cTarget* createTarget() final { return new cOpenGL2Target(); }
     //{{{
-    virtual cFrameBuffer* createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) final {
-      return new cOpenGL2FrameBuffer (size, format);
+    virtual cTarget* createTarget (const cPoint& size, cTarget::eFormat format) final {
+      return new cOpenGL2Target (size, format);
       }
     //}}}
     //{{{
-    virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) final {
-      return new cOpenGL2FrameBuffer (pixels, size, format);
+    virtual cTarget* createTarget (uint8_t* pixels, const cPoint& size, cTarget::eFormat format) final {
+      return new cOpenGL2Target (pixels, size, format);
       }
     //}}}
 
@@ -591,27 +591,27 @@ private:
       };
     //}}}
     //{{{
-    class cOpenGL2FrameBuffer : public cFrameBuffer {
+    class cOpenGL2Target : public cTarget {
     public:
       //{{{
-      cOpenGL2FrameBuffer() : cFrameBuffer ({0,0}) {
-      // window frameBuffer
+      cOpenGL2Target() : cTarget ({0,0}) {
+      // window Target
 
         mImageFormat = GL_RGBA;
         mInternalFormat = GL_RGBA;
         }
       //}}}
       //{{{
-      cOpenGL2FrameBuffer (const cPoint& size, eFormat format) : cFrameBuffer(size) {
+      cOpenGL2Target (const cPoint& size, eFormat format) : cTarget(size) {
 
         mImageFormat = format == eRGBA ? GL_RGBA : GL_RGB;
         mInternalFormat = format == eRGBA ? GL_RGBA : GL_RGB;
 
-        // create empty frameBuffer object
-        glGenFramebuffers (1, &mFrameBufferObject);
+        // create empty Target object
+        glGenFRameBuffers (1, &mFrameBufferObject);
         glBindFramebuffer (GL_FRAMEBUFFER, mFrameBufferObject);
 
-        // create and add texture to frameBuffer object
+        // create and add texture to Target object
         glGenTextures (1, &mColorTextureId);
 
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
@@ -626,16 +626,16 @@ private:
         }
       //}}}
       //{{{
-      cOpenGL2FrameBuffer (uint8_t* pixels, const cPoint& size, eFormat format) : cFrameBuffer(size) {
+      cOpenGL2Target (uint8_t* pixels, const cPoint& size, eFormat format) : cTarget(size) {
 
         mImageFormat = format == eRGBA ? GL_RGBA : GL_RGB;
         mInternalFormat = format == eRGBA ? GL_RGBA : GL_RGB;
 
-        // create frameBuffer object from pixels
+        // create Target object from pixels
         glGenFramebuffers (1, &mFrameBufferObject);
         glBindFramebuffer (GL_FRAMEBUFFER, mFrameBufferObject);
 
-        // create and add texture to frameBuffer object
+        // create and add texture to Target object
         glGenTextures (1, &mColorTextureId);
 
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
@@ -650,10 +650,10 @@ private:
         }
       //}}}
       //{{{
-      virtual ~cOpenGL2FrameBuffer() {
+      virtual ~cOpenGL2Target() {
 
         glDeleteTextures (1, &mColorTextureId);
-        glDeleteFramebuffers (1, &mFrameBufferObject);
+        glDeleteFrameBuffers (1, &mFrameBufferObject);
         free (mPixels);
         }
       //}}}
@@ -666,7 +666,7 @@ private:
           // create mPixels, texture pixels shadow buffer
           mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
           glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-          #if defined(OPENGL_3)
+          #if defined(GL_3)
             glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
           #endif
           }
@@ -674,7 +674,7 @@ private:
         else if (!mDirtyPixelsRect.isEmpty()) {
           // no openGL glGetTexSubImage, so dirtyPixelsRect not really used, is this correct ???
           glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-          #if defined(OPENGL_3)
+          #if defined(GL_3)
             glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
           #endif
           mDirtyPixelsRect = cRect(0,0,0,0);
@@ -690,7 +690,7 @@ private:
         if (mFrameBufferObject == 0)
           mSize = size;
         else
-          cLog::log (LOGERROR, "unimplmented setSize of non screen framebuffer");
+          cLog::log (LOGERROR, "unimplmented setSize of non screen Target");
         };
       //}}}
       //{{{
@@ -732,7 +732,7 @@ private:
           glBindTexture (GL_TEXTURE_2D, mColorTextureId);
           }
         else
-          cLog::log (LOGERROR, "windowFrameBuffer cannot be src");
+          cLog::log (LOGERROR, "windowTarget cannot be src");
         }
       //}}}
 
@@ -740,7 +740,6 @@ private:
       //{{{
       void invalidate() final {
 
-        //glInvalidateFramebuffer (mFrameBufferObject, 1, GL_COLOR_ATTACHMENT0);
         clear (cColor(0.f,0.f,0.f, 0.f));
         }
       //}}}
@@ -766,7 +765,7 @@ private:
         }
       //}}}
       //{{{
-      void blit (cFrameBuffer& src, const cPoint& srcPoint, const cRect& dstRect) final {
+      void blit (cTarget& src, const cPoint& srcPoint, const cRect& dstRect) final {
 
         glBindFramebuffer (GL_READ_FRAMEBUFFER, src.getId());
         glBindFramebuffer (GL_DRAW_FRAMEBUFFER, mFrameBufferObject);
@@ -788,22 +787,22 @@ private:
           case GL_FRAMEBUFFER_COMPLETE:
             return true;
           case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-            cLog::log (LOGERROR, "framebuffer incomplete: Attachment is NOT complete"); return false;
+            cLog::log (LOGERROR, "Target incomplete: Attachment is NOT complete"); return false;
           case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-            cLog::log (LOGERROR, "framebuffer incomplete: No image is attached to FBO"); return false;
+            cLog::log (LOGERROR, "Target incomplete: No image is attached to FBO"); return false;
           case GL_FRAMEBUFFER_UNSUPPORTED:
-            cLog::log (LOGERROR, "framebuffer incomplete: Unsupported by FBO implementation"); return false;
+            cLog::log (LOGERROR, "Target incomplete: Unsupported by FBO implementation"); return false;
 
-        #if defined(OPENGL_3)
+        #if defined(GL_3)
           case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-            cLog::log (LOGERROR, "framebuffer incomplete: Draw buffer"); return false;
+            cLog::log (LOGERROR, "Target incomplete: Draw buffer"); return false;
           case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-            cLog::log (LOGERROR, "framebuffer incomplete: Read buffer"); return false;
+            cLog::log (LOGERROR, "Target incomplete: Read buffer"); return false;
         #endif
           //case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-          // cLog::log (LOGERROR, "framebuffer incomplete: Attached images have different dimensions"); return false;
+          // cLog::log (LOGERROR, "Target incomplete: Attached images have different dimensions"); return false;
           default:
-            cLog::log (LOGERROR, "framebuffer incomplete: Unknown error"); return false;
+            cLog::log (LOGERROR, "Target incomplete: Unknown error"); return false;
           }
         }
       //}}}
@@ -818,7 +817,7 @@ private:
         GLint multiSampleCount = 0;
         glGetIntegerv (GL_MAX_SAMPLES, &multiSampleCount);
 
-        cLog::log (LOGINFO, fmt::format ("frameBuffer maxColorAttach {} masSamples {}", colorBufferCount, multiSampleCount));
+        cLog::log (LOGINFO, fmt::format ("Target maxColorAttach {} masSamples {}", colorBufferCount, multiSampleCount));
 
         //  print info of the colorbuffer attachable image
         GLint objectType;
@@ -894,7 +893,7 @@ private:
           case GL_DEPTH_STENCIL:     formatName = "GL_DEPTH_STENCIL"; break;     // 0x84F9
           case GL_DEPTH24_STENCIL8:  formatName = "GL_DEPTH24_STENCIL8"; break;  // 0x88F0
 
-        #if defined(OPENGL_3)
+        #if defined(GL_3)
           case GL_STENCIL_INDEX:     formatName = "GL_STENCIL_INDEX"; break;     // 0x1901
           case GL_RGBA:              formatName = "GL_RGBA"; break;              // 0x1908
           case GL_R3_G3_B2:          formatName = "GL_R3_G3_B2"; break;          // 0x2A10
@@ -926,7 +925,7 @@ private:
         if (glIsTexture(id) == GL_FALSE)
           return "Not texture object";
 
-        #if defined(OPENGL_3)
+        #if defined(GL_3)
           glBindTexture (GL_TEXTURE_2D, id);
           int width;
           glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);            // get texture width
@@ -1510,11 +1509,11 @@ private:
       cLog::log (LOGINFO, fmt::format ("- Renderer {}", glGetString (GL_RENDERER)));
       cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
 
-      #if defined(OPENGLES_2)
+      #if defined(GLES_2)
         return ImGui_ImplOpenGL3_Init ("#version 100");
-      #elif defined(OPENGLES_3_0) || defined(OPENGLES_3_1) || defined(OPENGLES_3_2)
+      #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
         return ImGui_ImplOpenGL3_Init ("#version 300 es");
-      #else // OPENGL_3
+      #else // GL_3
         return ImGui_ImplOpenGL3_Init ("#version 130");
       #endif
       }
@@ -1554,15 +1553,15 @@ private:
     virtual cQuad* createQuad (const cPoint& size) final { return new cOpenGL3Quad (size); }
     virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final { return new cOpenGL3Quad (size, rect); }
 
-    virtual cFrameBuffer* createFrameBuffer() final { return new cOpenGL3FrameBuffer(); }
+    virtual cTarget* createTarget() final { return new cOpenGL3Target(); }
     //{{{
-    virtual cFrameBuffer* createFrameBuffer (const cPoint& size, cFrameBuffer::eFormat format) final {
-      return new cOpenGL3FrameBuffer (size, format);
+    virtual cTarget* createTarget (const cPoint& size, cTarget::eFormat format) final {
+      return new cOpenGL3Target (size, format);
       }
     //}}}
     //{{{
-    virtual cFrameBuffer* createFrameBuffer (uint8_t* pixels, const cPoint& size, cFrameBuffer::eFormat format) final {
-      return new cOpenGL3FrameBuffer (pixels, size, format);
+    virtual cTarget* createTarget (uint8_t* pixels, const cPoint& size, cTarget::eFormat format) final {
+      return new cOpenGL3Target (pixels, size, format);
       }
     //}}}
 
@@ -1720,27 +1719,27 @@ private:
       };
     //}}}
     //{{{
-    class cOpenGL3FrameBuffer : public cFrameBuffer {
+    class cOpenGL3Target : public cTarget {
     public:
       //{{{
-      cOpenGL3FrameBuffer() : cFrameBuffer ({0,0}) {
-      // window frameBuffer
+      cOpenGL3Target() : cTarget ({0,0}) {
+      // window Target
 
         mImageFormat = GL_RGBA;
         mInternalFormat = GL_RGBA;
         }
       //}}}
       //{{{
-      cOpenGL3FrameBuffer (const cPoint& size, eFormat format) : cFrameBuffer(size) {
+      cOpenGL3Target (const cPoint& size, eFormat format) : cTarget(size) {
 
         mImageFormat = format == eRGBA ? GL_RGBA : GL_RGB;
         mInternalFormat = format == eRGBA ? GL_RGBA : GL_RGB;
 
-        // create empty frameBuffer object
+        // create empty Target object
         glGenFramebuffers (1, &mFrameBufferObject);
         glBindFramebuffer (GL_FRAMEBUFFER, mFrameBufferObject);
 
-        // create and add texture to frameBuffer object
+        // create and add texture to Target object
         glGenTextures (1, &mColorTextureId);
 
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
@@ -1755,16 +1754,16 @@ private:
         }
       //}}}
       //{{{
-      cOpenGL3FrameBuffer (uint8_t* pixels, const cPoint& size, eFormat format) : cFrameBuffer(size) {
+      cOpenGL3Target (uint8_t* pixels, const cPoint& size, eFormat format) : cTarget(size) {
 
         mImageFormat = format == eRGBA ? GL_RGBA : GL_RGB;
         mInternalFormat = format == eRGBA ? GL_RGBA : GL_RGB;
 
-        // create frameBuffer object from pixels
+        // create Target object from pixels
         glGenFramebuffers (1, &mFrameBufferObject);
         glBindFramebuffer (GL_FRAMEBUFFER, mFrameBufferObject);
 
-        // create and add texture to frameBuffer object
+        // create and add texture to Target object
         glGenTextures (1, &mColorTextureId);
 
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
@@ -1779,7 +1778,7 @@ private:
         }
       //}}}
       //{{{
-      virtual ~cOpenGL3FrameBuffer() {
+      virtual ~cOpenGL3Target() {
 
         glDeleteTextures (1, &mColorTextureId);
         glDeleteFramebuffers (1, &mFrameBufferObject);
@@ -1795,7 +1794,7 @@ private:
           // create mPixels, texture pixels shadow buffer
           mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
           glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-          #if defined(OPENGL_3)
+          #if defined(GL_3)
             glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
           #endif
           }
@@ -1803,7 +1802,7 @@ private:
         else if (!mDirtyPixelsRect.isEmpty()) {
           // no openGL glGetTexSubImage, so dirtyPixelsRect not really used, is this correct ???
           glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-          #if defined(OPENGL_3)
+          #if defined(GL_3)
             glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
           #endif
           mDirtyPixelsRect = cRect(0,0,0,0);
@@ -1819,7 +1818,7 @@ private:
         if (mFrameBufferObject == 0)
           mSize = size;
         else
-          cLog::log (LOGERROR, "unimplmented setSize of non screen framebuffer");
+          cLog::log (LOGERROR, "unimplmented setSize of non screen Target");
         };
       //}}}
       //{{{
@@ -1861,7 +1860,7 @@ private:
           glBindTexture (GL_TEXTURE_2D, mColorTextureId);
           }
         else
-          cLog::log (LOGERROR, "windowFrameBuffer cannot be src");
+          cLog::log (LOGERROR, "windowTarget cannot be src");
         }
       //}}}
 
@@ -1895,7 +1894,7 @@ private:
         }
       //}}}
       //{{{
-      void blit (cFrameBuffer& src, const cPoint& srcPoint, const cRect& dstRect) final {
+      void blit (cTarget& src, const cPoint& srcPoint, const cRect& dstRect) final {
 
         glBindFramebuffer (GL_READ_FRAMEBUFFER, src.getId());
         glBindFramebuffer (GL_DRAW_FRAMEBUFFER, mFrameBufferObject);
@@ -1917,22 +1916,22 @@ private:
           case GL_FRAMEBUFFER_COMPLETE:
             return true;
           case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-            cLog::log (LOGERROR, "framebuffer incomplete: Attachment is NOT complete"); return false;
+            cLog::log (LOGERROR, "Target incomplete: Attachment is NOT complete"); return false;
           case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-            cLog::log (LOGERROR, "framebuffer incomplete: No image is attached to FBO"); return false;
+            cLog::log (LOGERROR, "Target incomplete: No image is attached to FBO"); return false;
           case GL_FRAMEBUFFER_UNSUPPORTED:
-            cLog::log (LOGERROR, "framebuffer incomplete: Unsupported by FBO implementation"); return false;
+            cLog::log (LOGERROR, "Target incomplete: Unsupported by FBO implementation"); return false;
 
-        #if defined(OPENGL_3)
+        #if defined(GL_3)
           case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-            cLog::log (LOGERROR, "framebuffer incomplete: Draw buffer"); return false;
+            cLog::log (LOGERROR, "Target incomplete: Draw buffer"); return false;
           case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-            cLog::log (LOGERROR, "framebuffer incomplete: Read buffer"); return false;
+            cLog::log (LOGERROR, "Target incomplete: Read buffer"); return false;
         #endif
           //case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-          // cLog::log (LOGERROR, "framebuffer incomplete: Attached images have different dimensions"); return false;
+          // cLog::log (LOGERROR, "Target incomplete: Attached images have different dimensions"); return false;
           default:
-            cLog::log (LOGERROR, "framebuffer incomplete: Unknown error"); return false;
+            cLog::log (LOGERROR, "Target incomplete: Unknown error"); return false;
           }
         }
       //}}}
@@ -1947,7 +1946,7 @@ private:
         GLint multiSampleCount = 0;
         glGetIntegerv (GL_MAX_SAMPLES, &multiSampleCount);
 
-        cLog::log (LOGINFO, fmt::format ("frameBuffer maxColorAttach {} masSamples {}", colorBufferCount, multiSampleCount));
+        cLog::log (LOGINFO, fmt::format ("Target maxColorAttach {} masSamples {}", colorBufferCount, multiSampleCount));
 
         //  print info of the colorbuffer attachable image
         GLint objectType;
@@ -1985,11 +1984,11 @@ private:
           }
 
         // print info of the stencilbuffer attachable image
-        glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
-                                              &objectType);
+        glGetFramebufferAttachmentParameteriv (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+                                               GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &objectType);
         if (objectType != GL_NONE) {
-          glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-                                                GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &objectId);
+          glGetFramebufferAttachmentParameteriv (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+                                                 GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &objectId);
           cLog::log (LOGINFO, fmt::format ("stencil"));
           switch (objectType) {
             case GL_TEXTURE:
@@ -2023,7 +2022,7 @@ private:
           case GL_DEPTH_STENCIL:     formatName = "GL_DEPTH_STENCIL"; break;     // 0x84F9
           case GL_DEPTH24_STENCIL8:  formatName = "GL_DEPTH24_STENCIL8"; break;  // 0x88F0
 
-        #if defined(OPENGL_3)
+        #if defined(GL_3)
           case GL_STENCIL_INDEX:     formatName = "GL_STENCIL_INDEX"; break;     // 0x1901
           case GL_RGBA:              formatName = "GL_RGBA"; break;              // 0x1908
           case GL_R3_G3_B2:          formatName = "GL_R3_G3_B2"; break;          // 0x2A10
@@ -2055,7 +2054,7 @@ private:
         if (glIsTexture(id) == GL_FALSE)
           return "Not texture object";
 
-        #if defined(OPENGL_3)
+        #if defined(GL_3)
           glBindTexture (GL_TEXTURE_2D, id);
           int width;
           glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);            // get texture width
@@ -2634,7 +2633,7 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     }
 
   // create graphics
-  #if defined(OPENGL_2_1)
+  #if defined(GL_2_1)
     mGraphics = new cOpenGL2Gaphics();
   #else
     mGraphics = new cOpenGL3Graphics();

@@ -1,4 +1,4 @@
-// cBrush.cpp - paint brush to frameBuffer
+// cBrush.cpp - paint brush to Target
 //{{{  includes
 #include "cBrush.h"
 
@@ -63,13 +63,13 @@ bool cBrush::isCurBrushByName (const string& name) {
 
 // gets
 //{{{
-cRect cBrush::getBoundRect (cVec2 pos, const cFrameBuffer& frameBuffer) {
-// return boundRect of line from mPrevPos to pos of brush mRadius, cliiped to frameBuffer
+cRect cBrush::getBoundRect (cVec2 pos, const cTarget& target) {
+// return boundRect of line from mPrevPos to pos of brush mRadius, cliiped to Target
 
   const float boundRadius = getBoundRadius();
 
-  const float widthF = static_cast<float>(frameBuffer.getSize().x);
-  const float heightF = static_cast<float>(frameBuffer.getSize().y);
+  const float widthF = static_cast<float>(target.getSize().x);
+  const float heightF = static_cast<float>(target.getSize().y);
 
   const float minx = max (0.f, min (pos.x - boundRadius, mPrevPos.x - boundRadius));
   const float maxx = max (0.f, min (max (pos.x + boundRadius, mPrevPos.x + boundRadius), widthF));
