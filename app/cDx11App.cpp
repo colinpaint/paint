@@ -9,6 +9,7 @@
 #include <string>
 #include <array>
 #include <algorithm>
+#include <functional>
 
 #include <stdio.h>
 #include <tchar.h>
@@ -44,6 +45,23 @@ namespace {
   ID3D11DeviceContext*  gD3dDeviceContext = nullptr;
   IDXGISwapChain* gSwapChain = nullptr;
   ID3D11RenderTargetView* gMainRenderTargetView = nullptr;
+
+  function <void (int width, int height)> gResizeCallback ;
+
+  function <void (vector<string> dropItems)> gDropCallback;
+  //{{{
+  //void dropCallback (GLFWwindow* window, int count, const char** paths) {
+
+    //(void)window;
+
+    //vector<string> dropItems;
+    //for (int i = 0;  i < count;  i++)
+      //dropItems.push_back (paths[i]);
+
+    //gDropCallback (dropItems);
+    //}
+  //}}}
+
   //{{{
   LRESULT WINAPI WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   // win32 message handler
@@ -55,9 +73,9 @@ namespace {
     // no
     switch (msg) {
       case WM_SIZE:
-        //if (wParam != SIZE_MINIMIZED)
-          //if (gPlatform)
-          //  gPlatform->mResizeCallback ((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
+        if (wParam != SIZE_MINIMIZED)
+          if (gPlatform)
+            gResizeCallback ((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
         return 0;
 
       case WM_SYSCOMMAND:
@@ -625,6 +643,10 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     cLog::log (LOGERROR, "cApp graphics init failed");
     return;
     }
+
+  // set callbacks
+  gResizeCallback = [&](int width, int height) noexcept { windowResize (width, height); };
+  gDropCallback = [&](vector<string> dropItems) noexcept { drop (dropItems); };
 
   // fullScreen, vsync
   mPlatform->setFullScreen (fullScreen);
