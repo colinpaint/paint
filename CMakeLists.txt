@@ -310,7 +310,7 @@ if (BUILD_PLAYER)
 
   # song lib
   project (song)
-    file (GLOB HEADER_FILES song/*.h)
+    file (GLOB HEADER_FILES song/*.h utils/*.h)
     file (GLOB SOURCE_FILES song/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_link_libraries (${PROJECT_NAME} PRIVATE utils decoder kiss)
