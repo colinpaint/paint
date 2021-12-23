@@ -125,11 +125,11 @@ namespace {
 
 // cPlatform interface
 //{{{
-class cOpenGlfwPlatform : public cPlatform {
+class cGlfwPlatform : public cPlatform {
 public:
-  cOpenGlfwPlatform (const string& name) : cPlatform (name, true, true) {}
+  cGlfwPlatform (const string& name) : cPlatform (name, true, true) {}
   //{{{
-  virtual ~cOpenGlfwPlatform() {
+  virtual ~cGlfwPlatform() {
 
     ImGui_ImplGlfw_Shutdown();
 
@@ -361,10 +361,10 @@ private:
 // cGraphics interface
 #if defined(GL_2_1)
   //{{{
-  class cOpenGL2Gaphics : public cGraphics {
+  class cGL2Gaphics : public cGraphics {
   public:
     //{{{
-    virtual ~cOpenGL2Gaphics() {
+    virtual ~cGL2Gaphics() {
       ImGui_ImplOpenGL2_Shutdown();
       }
     //}}}
@@ -1483,10 +1483,10 @@ private:
   //}}}
 #else
   //{{{
-  class cOpenGL3Graphics : public cGraphics {
+  class cGL3Graphics : public cGraphics {
   public:
     //{{{
-    virtual ~cOpenGL3Graphics() {
+    virtual ~cGL3Graphics() {
       ImGui_ImplOpenGL3_Shutdown();
       }
     //}}}
@@ -2617,17 +2617,17 @@ private:
 cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool vsync) {
 
   // create platform
-  mPlatform = new cOpenGlfwPlatform (name);
-  if (!mPlatform || !mPlatform->init (windowSize)) {
+  cGlfwPlatform* glfwPlatform = new cGlfwPlatform (name);
+  if (!glfwPlatform || !glfwPlatform->init (windowSize)) {
     cLog::log (LOGERROR, "cApp platform init failed");
     return;
     }
 
   // create graphics
   #if defined(GL_2_1)
-    mGraphics = new cOpenGL2Gaphics();
+    mGraphics = new cGL2Gaphics();
   #else
-    mGraphics = new cOpenGL3Graphics();
+    mGraphics = new cGL3Graphics();
   #endif
   if (!mGraphics || !mGraphics->init()) {
     cLog::log (LOGERROR, "cApp graphics init failed");
@@ -2639,8 +2639,10 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
   gDropCallback = [&](vector<string> dropItems) noexcept { drop (dropItems); };
 
   // fullScreen, vsync
+  mPlatform = glfwPlatform;
   mPlatform->setFullScreen (fullScreen);
   mPlatform->setVsync (vsync);
+  mPlatformDefined = true;
   }
 //}}}
 //{{{

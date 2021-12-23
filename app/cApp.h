@@ -1,4 +1,5 @@
 // cApp.h - base class - application context, platform,graphics interface, platform,graphics independent stuff
+// - should work up as proper singleton
 #pragma once
 //{{{  includes
 #include <string>
@@ -16,6 +17,8 @@ class cApp {
 public:
   cApp (const std::string& name, const cPoint& windowSize, bool fullScreen, bool vsync);
   virtual ~cApp();
+
+  static bool isPlatformDefined() { return mPlatformDefined; }
 
   // get interfaces
   cPlatform& getPlatform() const { return *mPlatform; }
@@ -41,8 +44,10 @@ public:
   void mainUILoop();
 
 private:
-  inline static cPlatform* mPlatform = nullptr;
-  inline static cGraphics* mGraphics = nullptr;
+  inline static bool mPlatformDefined = false;
+
+  cPlatform* mPlatform = nullptr;
+  cGraphics* mGraphics = nullptr;
 
   ImFont* mMainFont;
   ImFont* mMonoFont;

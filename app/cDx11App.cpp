@@ -37,7 +37,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT ms
   #define WM_DPICHANGED 0x02E0 // From Windows SDK 8.1+ headers
 #endif
 //}}}
-//#define USE_DOCKING
 
 namespace {
   function <void (int width, int height)> gResizeCallback ;
@@ -54,7 +53,6 @@ namespace {
     //gDropCallback (dropItems);
     //}
   //}}}
-
   //{{{
   LRESULT WINAPI WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   // win32 message handler
@@ -67,7 +65,7 @@ namespace {
     switch (msg) {
       case WM_SIZE:
         if (wParam != SIZE_MINIMIZED)
-          if (mPlatform)
+          if (cApp::isPlatformDefined())
             gResizeCallback ((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
         return 0;
 
@@ -165,13 +163,13 @@ public:
                                        D3D11_SDK_VERSION, &swapChainDesc, &mSwapChain,
                                        &mDevice, &featureLevel, &mDeviceContext) != S_OK) {
       //{{{  error, return
-      cLog::log (LOGINFO, "DirectX device created failed");
+      cLog::log (LOGINFO, "dx11 device create failed");
       ::UnregisterClass (mWndClass.lpszClassName, mWndClass.hInstance);
       return false;
       }
       //}}}
 
-    cLog::log (LOGINFO, fmt::format ("platform Dx11 device created - featureLevel:{:x}", featureLevel));
+    cLog::log (LOGINFO, fmt::format ("dx11 device created - featureLevel:{:x}", featureLevel));
 
     // show window
     ::ShowWindow (mHwnd, SW_SHOWDEFAULT);
@@ -183,11 +181,11 @@ public:
     ImGui::StyleColorsClassic();
     cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
 
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // enable Keyboard Controls
 
-    #if defined(USE_DOCKING)
-      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
-      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+    #if defined(BUILD_DOCKING)
+      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable; // enable docking
+      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // enable multiViewport
     #endif
 
     //ImGui::GetIO().ConfigViewportsNoAutoMerge = true;
@@ -199,7 +197,6 @@ public:
     //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports; // FIXME-DPI: Experimental.
 
     #if defined(BUILD_DOCKING)
-      // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
       ImGuiStyle& style = ImGui::GetStyle();
       if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
         style.WindowRounding = 0.0f;
@@ -668,6 +665,7 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
   mPlatform = win32Platform;
   mPlatform->setFullScreen (fullScreen);
   mPlatform->setVsync (vsync);
+  mPlatformDefined = true;
   }
 //}}}
 //{{{
