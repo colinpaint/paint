@@ -67,8 +67,8 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     add_subdirectory (glad4.5core)
   endif()
 
-  # imgui backend lib
-  project (backend)
+  # app imgui backend lib
+  project (app)
     if (BUILD_GRAPHICS STREQUAL "DX_11")
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_dx11.h app/cApp.h)
       file (GLOB SOURCE_FILES app/cDx11App.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx11.cpp)
@@ -110,8 +110,8 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     file (GLOB SOURCE_FILES imgui/*.cpp)
     add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
-    target_include_directories (${PROJECT_NAME} PRIVATE utils backend)
-    target_link_libraries (${PROJECT_NAME} PUBLIC utils backend)
+    target_include_directories (${PROJECT_NAME} PRIVATE utils app)
+    target_link_libraries (${PROJECT_NAME} PUBLIC app)
 
   # implot lib
   if (BUILD_IMPLOT)
