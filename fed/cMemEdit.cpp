@@ -21,7 +21,7 @@
 #include <functional>
 #include <stdio.h>  // sprintf, scanf
 
-#include "../imgui/myImgui.h"
+#include "../app/myImgui.h"
 
 #include "../utils/cLog.h"
 
