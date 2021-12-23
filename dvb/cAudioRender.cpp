@@ -17,14 +17,10 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
 #include <array>
 #include <algorithm>
 #include <functional>
 #include <thread>
-
-#include "../imgui/imgui.h"
-#include "../imgui/myImgui.h"
 
 #include "../utils/date.h"
 #include "../utils/cLog.h"

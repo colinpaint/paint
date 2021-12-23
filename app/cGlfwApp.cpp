@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <functional>
 
-// glad
+// glad for OpenGL
 #if defined(GL_2_1) || defined(GL_3)
   #include <glad/glad.h>
 #endif
@@ -44,6 +44,7 @@ using namespace std;
 
 namespace {
   function <void (int width, int height)> gResizeCallback ;
+  function <void (vector<string> dropItems)> gDropCallback;
   //{{{
   void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
 
@@ -51,8 +52,6 @@ namespace {
     gResizeCallback (width, height);
     }
   //}}}
-
-  function <void (vector<string> dropItems)> gDropCallback;
   //{{{
   void dropCallback (GLFWwindow* window, int count, const char** paths) {
 
@@ -65,7 +64,6 @@ namespace {
     gDropCallback (dropItems);
     }
   //}}}
-
   //{{{
   uint32_t compileShader (const string& vertShaderString, const string& fragShaderString) {
 
@@ -381,6 +379,7 @@ private:
       return ImGui_ImplOpenGL2_Init();
       }
     //}}}
+
     virtual void newFrame() final { ImGui_ImplOpenGL2_NewFrame(); }
     //{{{
     virtual void clear (const cPoint& size) final {
@@ -1509,6 +1508,7 @@ private:
       #endif
       }
     //}}}
+
     virtual void newFrame() final { ImGui_ImplOpenGL3_NewFrame(); }
     //{{{
     virtual void clear (const cPoint& size) final {

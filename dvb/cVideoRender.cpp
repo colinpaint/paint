@@ -48,15 +48,12 @@
 
 #include <cstdint>
 #include <string>
-#include <map>
-#include <vector>
 #include <array>
+#include <vector>
+#include <map>
 #include <algorithm>
 #include <thread>
 #include <functional>
-
-#include "../imgui/imgui.h"
-#include "../imgui/myImgui.h"
 
 #include "../dvb/cDvbUtils.h"
 #include "../app/cGraphics.h"

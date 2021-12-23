@@ -1,12 +1,13 @@
-#cmake .. -DBUILD_GRAPHICS=GLES3
+#cmake .. -DBUILD_GRAPHICS=GLES_3_1
 cmake_minimum_required (VERSION 3.18)
 cmake_policy (SET CMP0072 NEW)
 #
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
-# valid options - GL_2_1 GL_3, GLES_3_0 GLES_3_1 GLES_3_2, DX_11
+# valid options - GL_2_1, GL_3, GLES_3_0, GLES_3_1, GLES_3_2, DX_11
 set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
+#set (BUILD_DOCKING "DOCKING" CACHE STRING "Build imgui docking option")
 #
 option (BUILD_DEMO "Build imgui demo app" ON)
 option (BUILD_FED "Build fed app" ON)
