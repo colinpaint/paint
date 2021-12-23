@@ -328,15 +328,6 @@ public:
   //{{{
   virtual void present() final {
 
-    #if defined(BUILD_DOCKING)
-      if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-        GLFWwindow* backup_current_context = glfwGetCurrentContext();
-        ImGui::UpdatePlatformWindows();
-        ImGui::RenderPlatformWindowsDefault();
-        glfwMakeContextCurrent(backup_current_context);
-        }
-    #endif
-
     glfwSwapBuffers (mWindow);
     }
   //}}}
@@ -2707,6 +2698,15 @@ void cApp::mainUILoop() {
     cUI::render (*this);
     ImGui::Render();
     mGraphics->renderDrawData();
+
+    #if defined(BUILD_DOCKING)
+      if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent (backupCurrentContext);
+        }
+    #endif
 
     mPlatform->present();
     }

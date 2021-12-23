@@ -37,15 +37,11 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT ms
   #define WM_DPICHANGED 0x02E0 // From Windows SDK 8.1+ headers
 #endif
 //}}}
+//#define USE_DOCKING
 
 // platform
 namespace {
   cPlatform* gPlatform = nullptr;
-
-  ID3D11Device* gDevice = nullptr;
-  ID3D11DeviceContext*  gDeviceContext = nullptr;
-  IDXGISwapChain* gSwapChain = nullptr;
-  ID3D11RenderTargetView* gMainRenderTargetView = nullptr;
 
   function <void (int width, int height)> gResizeCallback ;
   function <void (vector<string> dropItems)> gDropCallback;
@@ -120,12 +116,11 @@ public:
 
     ImGui::DestroyContext();
 
-    gMainRenderTargetView->Release();
-    gSwapChain->Release();
-    gDeviceContext->Release();
-    gDevice->Release();
+    mSwapChain->Release();
+    mDeviceContext->Release();
+    mDevice->Release();
 
-    ::DestroyWindow (mWnd);
+    ::DestroyWindow (mHwnd);
     ::UnregisterClass (mWndClass.lpszClassName, mWndClass.hInstance);
     }
   //}}}
@@ -143,9 +138,9 @@ public:
     ::RegisterClassEx (&mWndClass);
 
     // create application window
-    mWnd = ::CreateWindow (mWndClass.lpszClassName, _T((string("directX11") + " " + getName()).c_str()), WS_OVERLAPPEDWINDOW,
-                           100, 100, windowSize.x, windowSize.y, NULL, NULL,
-                           mWndClass.hInstance, NULL);
+    mHwnd = ::CreateWindow (mWndClass.lpszClassName, _T((string("directX11") + " " + getName()).c_str()), WS_OVERLAPPEDWINDOW,
+                            100, 100, windowSize.x, windowSize.y, NULL, NULL,
+                            mWndClass.hInstance, NULL);
 
     // init direct3D
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
@@ -158,7 +153,7 @@ public:
     swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
     swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.OutputWindow = mWnd;
+    swapChainDesc.OutputWindow = mHwnd;
     swapChainDesc.SampleDesc.Count = 1;
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.Windowed = TRUE;
@@ -170,8 +165,8 @@ public:
     D3D_FEATURE_LEVEL featureLevel;
     if (D3D11CreateDeviceAndSwapChain (NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
                                        createDeviceFlags, kFeatureLevels, 2,
-                                       D3D11_SDK_VERSION, &swapChainDesc, &gSwapChain,
-                                       &gDevice, &featureLevel, &gDeviceContext) != S_OK) {
+                                       D3D11_SDK_VERSION, &swapChainDesc, &mSwapChain,
+                                       &mDevice, &featureLevel, &mDeviceContext) != S_OK) {
       //{{{  error, return
       cLog::log (LOGINFO, "DirectX device created failed");
       ::UnregisterClass (mWndClass.lpszClassName, mWndClass.hInstance);
@@ -179,17 +174,11 @@ public:
       }
       //}}}
 
-    // create mainRenderTargetView
-    ID3D11Texture2D* backBufferTexture;
-    gSwapChain->GetBuffer(0, IID_PPV_ARGS (&backBufferTexture));
-    gDevice->CreateRenderTargetView (backBufferTexture, NULL, &gMainRenderTargetView);
-    backBufferTexture->Release();
-
     cLog::log (LOGINFO, fmt::format ("platform Dx11 device created - featureLevel:{:x}", featureLevel));
 
     // show window
-    ::ShowWindow (mWnd, SW_SHOWDEFAULT);
-    ::UpdateWindow (mWnd);
+    ::ShowWindow (mHwnd, SW_SHOWDEFAULT);
+    ::UpdateWindow (mHwnd);
 
     // set imGui context
     IMGUI_CHECKVERSION();
@@ -197,9 +186,12 @@ public:
     ImGui::StyleColorsClassic();
     cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
 
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-    //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-    //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+
+    #if defined(USE_DOCKING)
+      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
+      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+    #endif
 
     //ImGui::GetIO().ConfigViewportsNoAutoMerge = true;
     //ImGui::GetIO().ConfigViewportsNoTaskBarIcon = true;
@@ -209,20 +201,24 @@ public:
     //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;     // FIXME-DPI: Experimental. THIS CURRENTLY DOESN'T WORK AS EXPECTED. DON'T USE IN USER APP!
     //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports; // FIXME-DPI: Experimental.
 
-    // if viewports enabled, tweak WindowRounding/WindowBg so platform windows look identical
-    //ImGuiStyle& style = ImGui::GetStyle();
-    //if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-    //  style.WindowRounding = 0.0f;
-    //  style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-    //  }
+    #if defined(BUILD_DOCKING)
+      // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+      ImGuiStyle& style = ImGui::GetStyle();
+      if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        }
+    #endif
 
-    ImGui_ImplWin32_Init (mWnd);
-
-    gPlatform = this;
+    ImGui_ImplWin32_Init (mHwnd);
 
     return true;
     }
   //}}}
+
+  ID3D11Device* getDevice() { return mDevice; }
+  ID3D11DeviceContext* getDeviceContext() { return mDeviceContext; }
+  IDXGISwapChain* getSwapChain() { return mSwapChain; }
 
   // gets
   virtual cPoint getWindowSize() final { return mWindowSize; }
@@ -266,14 +262,18 @@ public:
     //  ImGui::UpdatePlatformWindows();
     //  ImGui::RenderPlatformWindowsDefault();
     //  }
-    gSwapChain->Present (mVsync ? 1 : 0, 0);
+    mSwapChain->Present (mVsync ? 1 : 0, 0);
     }
   //}}}
 
 private:
   WNDCLASSEX mWndClass;
-  HWND mWnd;
+  HWND mHwnd;
   cPoint mWindowSize;
+
+  ID3D11Device* mDevice = nullptr;
+  ID3D11DeviceContext*  mDeviceContext = nullptr;
+  IDXGISwapChain* mSwapChain = nullptr;
   };
 //}}}
 
@@ -281,9 +281,13 @@ private:
 //{{{
 class cDx11Graphics : public cGraphics {
 public:
+  cDx11Graphics (ID3D11Device* device, ID3D11DeviceContext* deviceContext, IDXGISwapChain* swapChain)
+    : mDevice(device), mDeviceContext(deviceContext), mSwapChain(swapChain) {}
+
   //{{{
   virtual ~cDx11Graphics() {
     ImGui_ImplDX11_Shutdown();
+    mMainRenderTargetView->Release();
     }
   //}}}
 
@@ -293,7 +297,13 @@ public:
     // report Dx11 versions
     //cLog::log (LOGINFO, fmt::format ("OpenGL {}", glGetString (GL_VERSION)));
 
-    return ImGui_ImplDX11_Init (gDevice, gDeviceContext);
+    // create mainRenderTargetView
+    ID3D11Texture2D* backBufferTexture;
+    mSwapChain->GetBuffer(0, IID_PPV_ARGS (&backBufferTexture));
+    mDevice->CreateRenderTargetView (backBufferTexture, NULL, &mMainRenderTargetView);
+    backBufferTexture->Release();
+
+    return ImGui_ImplDX11_Init (mDevice, mDeviceContext);
     }
   //}}}
   virtual void newFrame() final { ImGui_ImplDX11_NewFrame(); }
@@ -302,18 +312,18 @@ public:
     (void)size;
 
     // set renderTarget
-    gDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
+    mDeviceContext->OMSetRenderTargets (1, &mMainRenderTargetView, NULL);
 
     // dingy green clear color
     const float clearColor[4] = { 0.0f, 0.2f, 0.00f, 1.00f };
-    gDeviceContext->ClearRenderTargetView (gMainRenderTargetView, clearColor);
+    mDeviceContext->ClearRenderTargetView (mMainRenderTargetView, clearColor);
     }
   //}}}
   //{{{
   virtual void renderDrawData() final {
 
     // set renderTarget
-    gDeviceContext->OMSetRenderTargets (1, &gMainRenderTargetView, NULL);
+    mDeviceContext->OMSetRenderTargets (1, &mMainRenderTargetView, NULL);
 
     // render imgui
     ImGui_ImplDX11_RenderDrawData (ImGui::GetDrawData());
@@ -365,6 +375,7 @@ public:
   //}}}
 
 private:
+  // !!! unimplemented !!!
   //{{{
   class cDx11Quad : public cQuad {
   public:
@@ -625,6 +636,11 @@ private:
       }
     };
   //}}}
+
+  ID3D11Device* mDevice = nullptr;
+  ID3D11DeviceContext* mDeviceContext = nullptr;
+  IDXGISwapChain* mSwapChain = nullptr;
+  ID3D11RenderTargetView* mMainRenderTargetView = nullptr;
   };
 //}}}
 
@@ -633,14 +649,15 @@ private:
 cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool vsync) {
 
   // create platform
-  mPlatform = new cWin32Platform (name);
-  if (!mPlatform || !mPlatform->init (windowSize)) {
+  cWin32Platform* win32Platform = new cWin32Platform (name);
+  if (!win32Platform || !win32Platform->init (windowSize)) {
     cLog::log (LOGERROR, "cApp platform init failed");
     return;
     }
 
   // create graphics
-  mGraphics = new cDx11Graphics();
+  mGraphics = new cDx11Graphics (win32Platform->getDevice(), win32Platform->getDeviceContext(),
+                                 win32Platform->getSwapChain());
   if (!mGraphics || !mGraphics->init()) {
     cLog::log (LOGERROR, "cApp graphics init failed");
     return;
@@ -649,6 +666,9 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
   // set callbacks
   gResizeCallback = [&](int width, int height) noexcept { windowResize (width, height); };
   gDropCallback = [&](vector<string> dropItems) noexcept { drop (dropItems); };
+
+  gPlatform = win32Platform;
+  mPlatform = win32Platform;
 
   // fullScreen, vsync
   mPlatform->setFullScreen (fullScreen);
@@ -711,6 +731,14 @@ void cApp::mainUILoop() {
     cUI::render (*this);
     ImGui::Render();
     mGraphics->renderDrawData();
+
+    #if defined(BUILD_DOCKING)
+      if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        // update, render additional platform windows
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        }
+    #endif
 
     mPlatform->present();
     }

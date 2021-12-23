@@ -18,6 +18,7 @@ option (BUILD_MFX "Build mfx lib" ON)
 option (BUILD_MFXTEST "Build mfxtest cmdline app" ON)
 option (BUILD_CAPTURE "Build capture cmdline app" ON)
 #
+set (BUILD_DOCKING "DOCKING" CACHE STRING "Build imgui docking option")
 option (BUILD_IMPLOT "Build implot lib" ON)
 #
 if (MSVC)
@@ -83,7 +84,7 @@ if (BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     endif()
 
     add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-    target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS})
+    target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS} ${BUILD_DOCKING})
     target_include_directories (${PROJECT_NAME} PRIVATE glfw/include)
     target_include_directories (${PROJECT_NAME} PUBLIC utils imgui)
     target_link_libraries (${PROJECT_NAME} PUBLIC utils)
