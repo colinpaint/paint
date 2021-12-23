@@ -106,8 +106,8 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
 
   # imgui lib
   project (imgui)
-    file (GLOB HEADER_FILES imgui/*.h)
-    file (GLOB SOURCE_FILES imgui/*.cpp)
+    file (GLOB HEADER_FILES imgui/*.h app/myImgui.h)
+    file (GLOB SOURCE_FILES imgui/*.cpp app/myImgui.cpp)
     add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
     target_include_directories (${PROJECT_NAME} PRIVATE utils app)

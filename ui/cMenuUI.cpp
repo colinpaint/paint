@@ -7,7 +7,7 @@
 
 // imGui
 #include "../imgui/imgui.h"
-#include "../imgui/myImgui.h"
+#include "../app/myImgui.h"
 
 // stb
 #include <stb_image_write.h>

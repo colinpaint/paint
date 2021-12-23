@@ -251,10 +251,12 @@ public:
     }
   //}}}
 
+  // static for glfw callback
   inline static function <void (int width, int height)> mResizeCallback ;
   inline static function <void (vector<string> dropItems)> mDropCallback;
 
 private:
+  // static for glfw callback
   //{{{
   static void glfw_error_callback (int error, const char* description) {
     cLog::log (LOGERROR, fmt::format ("Glfw Error {} {}", error, description));
@@ -1497,13 +1499,7 @@ private:
       cLog::log (LOGINFO, fmt::format ("- Renderer {}", glGetString (GL_RENDERER)));
       cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
 
-      #if defined(GLES_2)
-        return ImGui_ImplOpenGL3_Init ("#version 100");
-      #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
-        return ImGui_ImplOpenGL3_Init ("#version 300 es");
-      #else // GL_3
-        return ImGui_ImplOpenGL3_Init ("#version 130");
-      #endif
+      return ImGui_ImplOpenGL3_Init ("#version 130");
       }
     //}}}
 
@@ -2669,7 +2665,7 @@ private:
   class cGLES3Graphics : public cGraphics {
   public:
     //{{{
-    virtual ~cGL3Graphics() {
+    virtual ~cGLES3Graphics() {
       ImGui_ImplOpenGL3_Shutdown();
       }
     //}}}
@@ -2685,10 +2681,8 @@ private:
 
       #if defined(GLES_2)
         return ImGui_ImplOpenGL3_Init ("#version 100");
-      #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
+      #else
         return ImGui_ImplOpenGL3_Init ("#version 300 es");
-      #else // GL_3
-        return ImGui_ImplOpenGL3_Init ("#version 130");
       #endif
       }
     //}}}
