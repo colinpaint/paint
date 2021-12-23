@@ -38,66 +38,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT ms
 #endif
 //}}}
 
-namespace {
-  function <void (int width, int height)> gResizeCallback ;
-  function <void (vector<string> dropItems)> gDropCallback;
-  //{{{
-  //void dropCallback (GLFWwindow* window, int count, const char** paths) {
-
-    //(void)window;
-
-    //vector<string> dropItems;
-    //for (int i = 0;  i < count;  i++)
-      //dropItems.push_back (paths[i]);
-
-    //gDropCallback (dropItems);
-    //}
-  //}}}
-  //{{{
-  LRESULT WINAPI WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-  // win32 message handler
-
-    // does imGui want it
-    if (ImGui_ImplWin32_WndProcHandler (hWnd, msg, wParam, lParam))
-      return true;
-
-    // no
-    switch (msg) {
-      case WM_SIZE:
-        if (wParam != SIZE_MINIMIZED)
-          if (cApp::isPlatformDefined())
-            gResizeCallback ((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
-        return 0;
-
-      case WM_SYSCOMMAND:
-        if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
-          return 0;
-        break;
-
-      case WM_DESTROY:
-        ::PostQuitMessage(0);
-        return 0;
-
-      case WM_DPICHANGED:
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports) {
-          //const int dpi = HIWORD(wParam);
-          //printf("WM_DPICHANGED to %d (%.0f%%)\n", dpi, (float)dpi / 96.0f * 100.0f);
-          const RECT* suggested_rect = (RECT*)lParam;
-          ::SetWindowPos (hWnd, NULL,
-                          suggested_rect->left, suggested_rect->top,
-                          suggested_rect->right - suggested_rect->left,
-                          suggested_rect->bottom - suggested_rect->top,
-                          SWP_NOZORDER | SWP_NOACTIVATE);
-          }
-        break;
-      }
-
-    // send back to windows default
-    return ::DefWindowProc (hWnd, msg, wParam, lParam);
-    }
-  //}}}
-  }
-
 // cPlatform interface
 //{{{
 class cWin32Platform : public cPlatform {
@@ -260,7 +200,67 @@ public:
     }
   //}}}
 
+  inline static function <void (int width, int height)> gResizeCallback ;
+  inline static function <void (vector<string> dropItems)> gDropCallback;
+
+  //{{{
+  //void dropCallback (GLFWwindow* window, int count, const char** paths) {
+
+    //(void)window;
+
+    //vector<string> dropItems;
+    //for (int i = 0;  i < count;  i++)
+      //dropItems.push_back (paths[i]);
+
+    //gDropCallback (dropItems);
+    //}
+  //}}}
+
 private:
+  //{{{
+  static LRESULT WINAPI WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  // win32 message handler
+
+    // does imGui want it
+    if (ImGui_ImplWin32_WndProcHandler (hWnd, msg, wParam, lParam))
+      return true;
+
+    // no
+    switch (msg) {
+      case WM_SIZE:
+        if (wParam != SIZE_MINIMIZED)
+          if (cApp::isPlatformDefined())
+            gResizeCallback ((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
+        return 0;
+
+      case WM_SYSCOMMAND:
+        if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+          return 0;
+        break;
+
+      case WM_DESTROY:
+        ::PostQuitMessage(0);
+        return 0;
+
+      case WM_DPICHANGED:
+        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports) {
+          //const int dpi = HIWORD(wParam);
+          //printf("WM_DPICHANGED to %d (%.0f%%)\n", dpi, (float)dpi / 96.0f * 100.0f);
+          const RECT* suggested_rect = (RECT*)lParam;
+          ::SetWindowPos (hWnd, NULL,
+                          suggested_rect->left, suggested_rect->top,
+                          suggested_rect->right - suggested_rect->left,
+                          suggested_rect->bottom - suggested_rect->top,
+                          SWP_NOZORDER | SWP_NOACTIVATE);
+          }
+        break;
+      }
+
+    // send back to windows default
+    return ::DefWindowProc (hWnd, msg, wParam, lParam);
+    }
+  //}}}
+
   WNDCLASSEX mWndClass;
   HWND mHwnd;
   cPoint mWindowSize;
@@ -658,8 +658,8 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     }
 
   // set callbacks
-  gResizeCallback = [&](int width, int height) noexcept { windowResize (width, height); };
-  gDropCallback = [&](vector<string> dropItems) noexcept { drop (dropItems); };
+  win32Platform->gResizeCallback = [&](int width, int height) noexcept { windowResize (width, height); };
+  win32Platform->gDropCallback = [&](vector<string> dropItems) noexcept { drop (dropItems); };
 
   // fullScreen, vsync
   mPlatform = win32Platform;
