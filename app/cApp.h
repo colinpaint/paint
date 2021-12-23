@@ -41,8 +41,8 @@ public:
   void mainUILoop();
 
 private:
-  cPlatform* mPlatform;
-  cGraphics* mGraphics;
+  inline static cPlatform* mPlatform = nullptr;
+  inline static cGraphics* mGraphics = nullptr;
 
   ImFont* mMainFont;
   ImFont* mMonoFont;

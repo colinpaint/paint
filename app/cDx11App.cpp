@@ -39,10 +39,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT ms
 //}}}
 //#define USE_DOCKING
 
-// platform
 namespace {
-  cPlatform* gPlatform = nullptr;
-
   function <void (int width, int height)> gResizeCallback ;
   function <void (vector<string> dropItems)> gDropCallback;
   //{{{
@@ -70,7 +67,7 @@ namespace {
     switch (msg) {
       case WM_SIZE:
         if (wParam != SIZE_MINIMIZED)
-          if (gPlatform)
+          if (mPlatform)
             gResizeCallback ((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
         return 0;
 
@@ -667,10 +664,8 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
   gResizeCallback = [&](int width, int height) noexcept { windowResize (width, height); };
   gDropCallback = [&](vector<string> dropItems) noexcept { drop (dropItems); };
 
-  gPlatform = win32Platform;
-  mPlatform = win32Platform;
-
   // fullScreen, vsync
+  mPlatform = win32Platform;
   mPlatform->setFullScreen (fullScreen);
   mPlatform->setVsync (vsync);
   }
