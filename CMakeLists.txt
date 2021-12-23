@@ -9,8 +9,8 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
 #set (BUILD_DOCKING "DOCKING" CACHE STRING "Build imgui docking option")
 #
-option (BUILD_IMPLOT "Build implot lib" ON)
 option (BUILD_MFX "Build mfx lib" ON)
+option (BUILD_IMPLOT "Build implot lib" ON)
 #
 # imgui apps
 option (BUILD_DEMO "Build demo app" ON)

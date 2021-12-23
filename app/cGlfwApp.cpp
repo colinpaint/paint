@@ -2660,12 +2660,12 @@ private:
     //}}}
     };
   //}}}
-#elif defined(GLES_3_0) || defined(GLES_3_1) ||  defined(GLES_3_2)
+#else
   //{{{
-  class cGLES3Graphics : public cGraphics {
+  class cGLESGraphics : public cGraphics {
   public:
     //{{{
-    virtual ~cGLES3Graphics() {
+    virtual ~cGLESGraphics() {
       ImGui_ImplOpenGL3_Shutdown();
       }
     //}}}
@@ -3853,16 +3853,19 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
   // create platform
   cGlfwPlatform* glfwPlatform = new cGlfwPlatform (name);
   if (!glfwPlatform || !glfwPlatform->init (windowSize)) {
-    cLog::log (LOGERROR, "cApp platform init failed");
+    cLog::log (LOGERROR, "cApp glfwPlatform init failed");
     return;
     }
 
   // create graphics
   #if defined(GL_2_1)
     mGraphics = new cGL2Gaphics();
-  #else
+  #elif defined(GL_3)
     mGraphics = new cGL3Graphics();
+  #else
+    mGraphics = new cGLESGraphics();
   #endif
+
   if (!mGraphics || !mGraphics->init()) {
     cLog::log (LOGERROR, "cApp graphics init failed");
     return;

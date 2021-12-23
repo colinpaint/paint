@@ -8,7 +8,6 @@
 
 #ifdef _WIN32
   #include "../audio/audioWASAPI.h"
-  #include "../audio/cWinAudio16.h"
 #endif
 
 #ifdef __linux__
