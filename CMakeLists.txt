@@ -101,7 +101,14 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
       target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_ES3=1
                                                           IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
                                                           IMGUI_IMPL_OPENGL_ES3=1)
-      target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
+      if (MSVC)
+        # use GLES emulator, not working
+        target_include_directories (${PROJECT_NAME} PRIVATE glesEmulator/include)
+        target_link_directories (${PROJECT_NAME} PUBLIC glesEmulator/lib)
+        target_link_libraries (${PROJECT_NAME} PRIVATE glfw libGLESv2 libEGL libMaliEmulator)
+      else()
+        target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
+      endif()
     endif()
 
   # imgui lib
