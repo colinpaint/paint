@@ -1,4 +1,4 @@
-// cGlfwApp.cpp - glfw + openGL2,openGL3,openGLES app framework
+// cGlfwApp.cpp - glfw + openGL2,openGL3,openGLES3_x app framework
 //{{{  includes
 #if defined(_WIN32)
   #define _CRT_SECURE_NO_WARNINGS
@@ -2660,12 +2660,12 @@ private:
     //}}}
     };
   //}}}
-#else
+#elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
   //{{{
-  class cGLESGraphics : public cGraphics {
+  class cGLES3Graphics : public cGraphics {
   public:
     //{{{
-    virtual ~cGLESGraphics() {
+    virtual ~cGLES3Graphics() {
       ImGui_ImplOpenGL3_Shutdown();
       }
     //}}}
@@ -2674,19 +2674,14 @@ private:
     virtual bool init() final {
 
       // report OpenGL versions
-      //cLog::log (LOGINFO, fmt::format ("OpenGL {}", glGetString (GL_VERSION)));
-      //cLog::log (LOGINFO, fmt::format ("- GLSL {}", glGetString (GL_SHADING_LANGUAGE_VERSION)));
-      //cLog::log (LOGINFO, fmt::format ("- Renderer {}", glGetString (GL_RENDERER)));
-      //cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
+      cLog::log (LOGINFO, fmt::format ("OpenGL {}", glGetString (GL_VERSION)));
+      cLog::log (LOGINFO, fmt::format ("- GLSL {}", glGetString (GL_SHADING_LANGUAGE_VERSION)));
+      cLog::log (LOGINFO, fmt::format ("- Renderer {}", glGetString (GL_RENDERER)));
+      cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
 
-      #if defined(GLES_2)
-        return ImGui_ImplOpenGL3_Init ("#version 100");
-      #else
-        return ImGui_ImplOpenGL3_Init ("#version 300 es");
-      #endif
+      return ImGui_ImplOpenGL3_Init ("#version 300 es");
       }
     //}}}
-
     virtual void newFrame() final { ImGui_ImplOpenGL3_NewFrame(); }
     //{{{
     virtual void clear (const cPoint& size) final {
@@ -2723,24 +2718,15 @@ private:
     virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final { return new cOpenGL3Quad (size, rect); }
 
     virtual cTarget* createTarget() final { return new cOpenGL3Target(); }
-    //{{{
     virtual cTarget* createTarget (const cPoint& size, cTarget::eFormat format) final {
-      return new cOpenGL3Target (size, format);
-      }
-    //}}}
-    //{{{
+      return new cOpenGL3Target (size, format); }
     virtual cTarget* createTarget (uint8_t* pixels, const cPoint& size, cTarget::eFormat format) final {
-      return new cOpenGL3Target (pixels, size, format);
-      }
-    //}}}
+      return new cOpenGL3Target (pixels, size, format); }
 
     virtual cLayerShader* createLayerShader() final { return new cOpenGL3LayerShader(); }
     virtual cPaintShader* createPaintShader() final { return new cOpenGL3PaintShader(); }
 
-    //{{{
     virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
-    // factory create
-
       switch (textureType) {
         case cTexture::eRgba:   return new cOpenGL3RgbaTexture (textureType, size);
         case cTexture::eNv12:   return new cOpenGL3Nv12Texture (textureType, size);
@@ -2748,11 +2734,7 @@ private:
         default : return nullptr;
         }
       }
-    //}}}
-    //{{{
     virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final {
-    // factory create
-
       switch (textureType) {
         case cTexture::eRgba:   return new cOpenGL3RgbaShader();
         case cTexture::eYuv420: return new cOpenGL3Yuv420Shader();
@@ -2760,17 +2742,20 @@ private:
         default: return nullptr;
         }
       }
-    //}}}
 
   private:
     //{{{
     inline static const string kQuadVertShader =
-      "#version 330 core\n"
+
+      "#version 330 es\n"
+      "precision highp float;"
+
       "uniform mat4 uModel;"
       "uniform mat4 uProject;"
 
       "layout (location = 0) in vec2 inPos;"
       "layout (location = 1) in vec2 inTextureCoord;"
+
       "out vec2 textureCoord;"
 
       "void main() {"
@@ -3260,9 +3245,7 @@ private:
     //{{{
     class cOpenGL3RgbaTexture : public cTexture {
     public:
-      //{{{
-      cOpenGL3RgbaTexture (eTextureType textureType, const cPoint& size)
-          : cTexture(textureType, size) {
+      cOpenGL3RgbaTexture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
 
         cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
         glGenTextures (1, &mTextureId);
@@ -3277,30 +3260,21 @@ private:
 
         glGenerateMipmap (GL_TEXTURE_2D);
         }
-      //}}}
-      //{{{
-      virtual ~cOpenGL3RgbaTexture() {
-        glDeleteTextures (1, &mTextureId);
-        }
-      //}}}
+
+      virtual ~cOpenGL3RgbaTexture() { glDeleteTextures (1, &mTextureId); }
 
       virtual unsigned getTextureId() const final { return mTextureId; }
 
-      //{{{
       virtual void setPixels (uint8_t** pixels) final {
       // set textures using pixels in ffmpeg avFrame format
-
         glBindTexture (GL_TEXTURE_2D, mTextureId);
         glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels[0]);
         }
-      //}}}
-      //{{{
-      virtual void setSource() final {
 
+      virtual void setSource() final {
         glActiveTexture (GL_TEXTURE0);
         glBindTexture (GL_TEXTURE_2D, mTextureId);
         }
-      //}}}
 
     private:
       uint32_t mTextureId = 0;
@@ -3309,12 +3283,9 @@ private:
     //{{{
     class cOpenGL3Nv12Texture : public cTexture {
     public:
-      //{{{
-      cOpenGL3Nv12Texture (eTextureType textureType, const cPoint& size)
-          : cTexture(textureType, size) {
+      cOpenGL3Nv12Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
 
         //cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
-
         glGenTextures (2, mTextureId.data());
 
         // y texture
@@ -3333,20 +3304,16 @@ private:
         glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         }
-      //}}}
-      //{{{
+
       virtual ~cOpenGL3Nv12Texture() {
         //glDeleteTextures (2, mTextureId.data());
         glDeleteTextures (1, &mTextureId[0]);
         glDeleteTextures (1, &mTextureId[1]);
-
         cLog::log (LOGINFO, fmt::format ("deleting eVv12 texture {}x{}", mSize.x, mSize.y));
         }
-      //}}}
 
       virtual unsigned getTextureId() const final { return mTextureId[0]; }  // luma only
 
-      //{{{
       virtual void setPixels (uint8_t** pixels) final {
       // set textures using pixels in ffmpeg avFrame format
 
@@ -3358,17 +3325,13 @@ private:
         glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
         glTexImage2D (GL_TEXTURE_2D, 0, GL_RG, mSize.x/2, mSize.y/2, 0, GL_RG, GL_UNSIGNED_BYTE, pixels[1]);
         }
-      //}}}
-      //{{{
-      virtual void setSource() final {
 
+      virtual void setSource() final {
         glActiveTexture (GL_TEXTURE0);
         glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-
         glActiveTexture (GL_TEXTURE1);
         glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
         }
-      //}}}
 
     private:
       array <uint32_t,2> mTextureId;
@@ -3378,8 +3341,7 @@ private:
     class cOpenGL3Yuv420Texture : public cTexture {
     public:
       //{{{
-      cOpenGL3Yuv420Texture (eTextureType textureType, const cPoint& size)
-          : cTexture(textureType, size) {
+      cOpenGL3Yuv420Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
 
         //cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
 
@@ -3462,19 +3424,19 @@ private:
     //{{{
     class cOpenGL3RgbaShader : public cTextureShader {
     public:
-
       cOpenGL3RgbaShader() : cTextureShader() {
         const string kFragShader =
-          "#version 330 core\n"
-          "uniform sampler2D uSampler;"
+          "#version 330 es\n"
+          "precision mediump float;\n"
 
+          "uniform sampler2D uSampler;"
           "in vec2 textureCoord;"
           "out vec4 outColor;"
 
           "void main() {"
           "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
-          //"  outColor /= outColor.w;"
           "  }";
+
         mId = compileShader (kQuadVertShader, kFragShader);
         }
       //{{{
@@ -3504,7 +3466,8 @@ private:
     public:
       cOpenGL3Nv12Shader() : cTextureShader() {
         const string kFragShader =
-          "#version 330 core\n"
+          "#version 330 es\n"
+          "precision mediump float;"
           "uniform sampler2D ySampler;"
           "uniform sampler2D uvSampler;"
 
@@ -3555,7 +3518,8 @@ private:
     public:
       cOpenGL3Yuv420Shader() : cTextureShader() {
         const string kFragShader =
-          "#version 330 core\n"
+          "#version 330 es\n"
+          "precision mediump float;"
           "uniform sampler2D ySampler;"
           "uniform sampler2D uSampler;"
           "uniform sampler2D vSampler;"
@@ -3609,7 +3573,8 @@ private:
       cOpenGL3LayerShader() : cLayerShader() {
 
         const string kFragShader =
-          "#version 330 core\n"
+          "#version 330 es\n"
+          "precision mediump float;"
           "uniform sampler2D uSampler;"
           "uniform float uHue;"
           "uniform float uVal;"
@@ -3728,7 +3693,8 @@ private:
     public:
       cOpenGL3PaintShader() : cPaintShader() {
         const string kFragShader =
-          "#version 330 core\n"
+          "#version 330 es\n"
+          "precision mediump float;"
 
           "uniform sampler2D uSampler;"
           "uniform vec2 uPos;"
@@ -3862,8 +3828,10 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     mGraphics = new cGL2Gaphics();
   #elif defined(GL_3)
     mGraphics = new cGL3Graphics();
+  #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
+    mGraphics = new cGLES3Graphics();
   #else
-    mGraphics = new cGLESGraphics();
+    #error cGlfwApp.cpp unrecognised BUILD_GRAPHICS cmake option
   #endif
 
   if (!mGraphics || !mGraphics->init()) {

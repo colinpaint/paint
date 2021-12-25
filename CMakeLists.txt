@@ -76,7 +76,10 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
       find_package (OpenGL REQUIRED)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h app/cApp.h)
       file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
-    else() # GL_3, GLES_x_x
+    elseif (BUILD_GRAPHICS STREQUAL "GL_3" OR
+            BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
+            BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
+            BUILD_GRAPHICS STREQUAL "GLES_3_2")
       find_package (OpenGL REQUIRED)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_GL3.h app/cApp.h)
       file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
@@ -103,9 +106,9 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
                                                           IMGUI_IMPL_OPENGL_ES3=1)
       if (MSVC)
         # use GLES emulator, not working
-        #target_include_directories (${PROJECT_NAME} PRIVATE glesEmulator/include)
-        #target_link_directories (${PROJECT_NAME} PUBLIC glesEmulator)
-        #target_link_libraries (${PROJECT_NAME} PRIVATE glfw libGLESv2 libEGL libMaliEmulator)
+        target_include_directories (${PROJECT_NAME} PRIVATE glesEmulator/include)
+        target_link_directories (${PROJECT_NAME} PUBLIC glesEmulator/lib)
+        target_link_libraries (${PROJECT_NAME} PRIVATE glfw libGLESv2 libEGL)
       else()
         target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
       endif()
