@@ -42,7 +42,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler (HWND hWnd, UINT ms
 //{{{
 class cWin32Platform : public cPlatform {
 public:
-
   cWin32Platform (const string& name) : cPlatform (name, true, true) {}
   //{{{
   virtual ~cWin32Platform() {
@@ -454,9 +453,7 @@ private:
   //{{{
   class cDx11RgbaTexture : public cTexture {
   public:
-    cDx11RgbaTexture (eTextureType textureType, const cPoint& size)
-        : cTexture(textureType, size) {
-
+    cDx11RgbaTexture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
       cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
       }
     virtual ~cDx11RgbaTexture() {
@@ -477,9 +474,7 @@ private:
   //{{{
   class cDx11Nv12Texture : public cTexture {
   public:
-    cDx11Nv12Texture (eTextureType textureType, const cPoint& size)
-        : cTexture(textureType, size) {
-
+    cDx11Nv12Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
       cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
       }
 
@@ -503,8 +498,7 @@ private:
   //{{{
   class cDx11Yuv420Texture : public cTexture {
   public:
-    cDx11Yuv420Texture (eTextureType textureType, const cPoint& size)
-        : cTexture(textureType, size) {
+    cDx11Yuv420Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
       cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
       }
     virtual ~cDx11Yuv420Texture() {

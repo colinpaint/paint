@@ -42,14 +42,13 @@ int main (int numArgs, char* args[]) {
   bool vsync = true;
   string filename;
   //{{{  parse args
-
   for (int i = 1; i < numArgs; i++) {
     string param = args[i];
 
     if (param == "log1") { logLevel = LOGINFO1; }
     else if (param == "log2") { logLevel = LOGINFO2; }
-    else if (param == "log3") { logLevel = LOGINFO3;  }
-    else if (param == "full") { fullScreen = true;  }
+    else if (param == "log3") { logLevel = LOGINFO3; }
+    else if (param == "full") { fullScreen = true; }
     else if (param == "free") { vsync = false; }
     else filename = param;
     }
