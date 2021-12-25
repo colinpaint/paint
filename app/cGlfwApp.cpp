@@ -2714,31 +2714,31 @@ private:
     virtual void renderDrawData() final { ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData()); }
 
     // create resources
-    virtual cQuad* createQuad (const cPoint& size) final { return new cOpenGL3Quad (size); }
-    virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final { return new cOpenGL3Quad (size, rect); }
+    virtual cQuad* createQuad (const cPoint& size) final { return new cOpenGLES3Quad (size); }
+    virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final { return new cOpenGLES3Quad (size, rect); }
 
-    virtual cTarget* createTarget() final { return new cOpenGL3Target(); }
+    virtual cTarget* createTarget() final { return new cOpenGLES3Target(); }
     virtual cTarget* createTarget (const cPoint& size, cTarget::eFormat format) final {
-      return new cOpenGL3Target (size, format); }
+      return new cOpenGLES3Target (size, format); }
     virtual cTarget* createTarget (uint8_t* pixels, const cPoint& size, cTarget::eFormat format) final {
-      return new cOpenGL3Target (pixels, size, format); }
+      return new cOpenGLES3Target (pixels, size, format); }
 
-    virtual cLayerShader* createLayerShader() final { return new cOpenGL3LayerShader(); }
-    virtual cPaintShader* createPaintShader() final { return new cOpenGL3PaintShader(); }
+    virtual cLayerShader* createLayerShader() final { return new cOpenGLES3LayerShader(); }
+    virtual cPaintShader* createPaintShader() final { return new cOpenGLES3PaintShader(); }
 
     virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
       switch (textureType) {
-        case cTexture::eRgba:   return new cOpenGL3RgbaTexture (textureType, size);
-        case cTexture::eNv12:   return new cOpenGL3Nv12Texture (textureType, size);
-        case cTexture::eYuv420: return new cOpenGL3Yuv420Texture (textureType, size);
+        case cTexture::eRgba:   return new cOpenGLES3RgbaTexture (textureType, size);
+        case cTexture::eNv12:   return new cOpenGLES3Nv12Texture (textureType, size);
+        case cTexture::eYuv420: return new cOpenGLES3Yuv420Texture (textureType, size);
         default : return nullptr;
         }
       }
     virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final {
       switch (textureType) {
-        case cTexture::eRgba:   return new cOpenGL3RgbaShader();
-        case cTexture::eYuv420: return new cOpenGL3Yuv420Shader();
-        case cTexture::eNv12:   return new cOpenGL3Nv12Shader();
+        case cTexture::eRgba:   return new cOpenGLES3RgbaShader();
+        case cTexture::eYuv420: return new cOpenGLES3Yuv420Shader();
+        case cTexture::eNv12:   return new cOpenGLES3Nv12Shader();
         default: return nullptr;
         }
       }
@@ -2747,7 +2747,7 @@ private:
     //{{{
     inline static const string kQuadVertShader =
 
-      "#version 330 es\n"
+      "#version 300 es\n"
       "precision highp float;"
 
       "uniform mat4 uModel;"
@@ -2765,10 +2765,10 @@ private:
     //}}}
 
     //{{{
-    class cOpenGL3Quad : public cQuad {
+    class cOpenGLES3Quad : public cQuad {
     public:
       //{{{
-      cOpenGL3Quad (const cPoint& size) : cQuad(size) {
+      cOpenGLES3Quad (const cPoint& size) : cQuad(size) {
 
         // vertexArray
         glGenVertexArrays (1, &mVertexArrayObject);
@@ -2802,7 +2802,7 @@ private:
         }
       //}}}
       //{{{
-      cOpenGL3Quad (const cPoint& size, const cRect& rect) : cQuad(size) {
+      cOpenGLES3Quad (const cPoint& size, const cRect& rect) : cQuad(size) {
 
         // vertexArray
         glGenVertexArrays (1, &mVertexArrayObject);
@@ -2844,7 +2844,7 @@ private:
         }
       //}}}
       //{{{
-      virtual ~cOpenGL3Quad() {
+      virtual ~cOpenGLES3Quad() {
 
         glDeleteBuffers (1, &mElementArrayBufferObject);
         glDeleteBuffers (1, &mVertexBufferObject);
@@ -2873,10 +2873,10 @@ private:
       };
     //}}}
     //{{{
-    class cOpenGL3Target : public cTarget {
+    class cOpenGLES3Target : public cTarget {
     public:
       //{{{
-      cOpenGL3Target() : cTarget ({0,0}) {
+      cOpenGLES3Target() : cTarget ({0,0}) {
       // window Target
 
         mImageFormat = GL_RGBA;
@@ -2884,7 +2884,7 @@ private:
         }
       //}}}
       //{{{
-      cOpenGL3Target (const cPoint& size, eFormat format) : cTarget(size) {
+      cOpenGLES3Target (const cPoint& size, eFormat format) : cTarget(size) {
 
         mImageFormat = format == eRGBA ? GL_RGBA : GL_RGB;
         mInternalFormat = format == eRGBA ? GL_RGBA : GL_RGB;
@@ -2908,7 +2908,7 @@ private:
         }
       //}}}
       //{{{
-      cOpenGL3Target (uint8_t* pixels, const cPoint& size, eFormat format) : cTarget(size) {
+      cOpenGLES3Target (uint8_t* pixels, const cPoint& size, eFormat format) : cTarget(size) {
 
         mImageFormat = format == eRGBA ? GL_RGBA : GL_RGB;
         mInternalFormat = format == eRGBA ? GL_RGBA : GL_RGB;
@@ -2932,7 +2932,7 @@ private:
         }
       //}}}
       //{{{
-      virtual ~cOpenGL3Target() {
+      virtual ~cOpenGLES3Target() {
 
         glDeleteTextures (1, &mColorTextureId);
         glDeleteFramebuffers (1, &mFrameBufferObject);
@@ -3243,9 +3243,9 @@ private:
     //}}}
 
     //{{{
-    class cOpenGL3RgbaTexture : public cTexture {
+    class cOpenGLES3RgbaTexture : public cTexture {
     public:
-      cOpenGL3RgbaTexture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
+      cOpenGLES3RgbaTexture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
 
         cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
         glGenTextures (1, &mTextureId);
@@ -3261,7 +3261,7 @@ private:
         glGenerateMipmap (GL_TEXTURE_2D);
         }
 
-      virtual ~cOpenGL3RgbaTexture() { glDeleteTextures (1, &mTextureId); }
+      virtual ~cOpenGLES3RgbaTexture() { glDeleteTextures (1, &mTextureId); }
 
       virtual unsigned getTextureId() const final { return mTextureId; }
 
@@ -3281,9 +3281,9 @@ private:
       };
     //}}}
     //{{{
-    class cOpenGL3Nv12Texture : public cTexture {
+    class cOpenGLES3Nv12Texture : public cTexture {
     public:
-      cOpenGL3Nv12Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
+      cOpenGLES3Nv12Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
 
         //cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
         glGenTextures (2, mTextureId.data());
@@ -3305,7 +3305,7 @@ private:
         glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         }
 
-      virtual ~cOpenGL3Nv12Texture() {
+      virtual ~cOpenGLES3Nv12Texture() {
         //glDeleteTextures (2, mTextureId.data());
         glDeleteTextures (1, &mTextureId[0]);
         glDeleteTextures (1, &mTextureId[1]);
@@ -3338,10 +3338,10 @@ private:
       };
     //}}}
     //{{{
-    class cOpenGL3Yuv420Texture : public cTexture {
+    class cOpenGLES3Yuv420Texture : public cTexture {
     public:
       //{{{
-      cOpenGL3Yuv420Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
+      cOpenGLES3Yuv420Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
 
         //cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
 
@@ -3373,7 +3373,7 @@ private:
         }
       //}}}
       //{{{
-      virtual ~cOpenGL3Yuv420Texture() {
+      virtual ~cOpenGLES3Yuv420Texture() {
         //glDeleteTextures (3, mTextureId.data());
         glDeleteTextures (1, &mTextureId[0]);
         glDeleteTextures (1, &mTextureId[1]);
@@ -3422,11 +3422,11 @@ private:
     //}}}
 
     //{{{
-    class cOpenGL3RgbaShader : public cTextureShader {
+    class cOpenGLES3RgbaShader : public cTextureShader {
     public:
-      cOpenGL3RgbaShader() : cTextureShader() {
+      cOpenGLES3RgbaShader() : cTextureShader() {
         const string kFragShader =
-          "#version 330 es\n"
+          "#version 300 es\n"
           "precision mediump float;\n"
 
           "uniform sampler2D uSampler;"
@@ -3440,7 +3440,7 @@ private:
         mId = compileShader (kQuadVertShader, kFragShader);
         }
       //{{{
-      virtual ~cOpenGL3RgbaShader() {
+      virtual ~cOpenGLES3RgbaShader() {
         glDeleteProgram (mId);
         }
       //}}}
@@ -3462,11 +3462,11 @@ private:
       };
     //}}}
     //{{{
-    class cOpenGL3Nv12Shader : public cTextureShader {
+    class cOpenGLES3Nv12Shader : public cTextureShader {
     public:
-      cOpenGL3Nv12Shader() : cTextureShader() {
+      cOpenGLES3Nv12Shader() : cTextureShader() {
         const string kFragShader =
-          "#version 330 es\n"
+          "#version 300 es\n"
           "precision mediump float;"
           "uniform sampler2D ySampler;"
           "uniform sampler2D uvSampler;"
@@ -3489,7 +3489,7 @@ private:
         }
 
       //{{{
-      virtual ~cOpenGL3Nv12Shader() {
+      virtual ~cOpenGLES3Nv12Shader() {
         glDeleteProgram (mId);
         }
       //}}}
@@ -3514,11 +3514,11 @@ private:
       };
     //}}}
     //{{{
-    class cOpenGL3Yuv420Shader : public cTextureShader {
+    class cOpenGLES3Yuv420Shader : public cTextureShader {
     public:
-      cOpenGL3Yuv420Shader() : cTextureShader() {
+      cOpenGLES3Yuv420Shader() : cTextureShader() {
         const string kFragShader =
-          "#version 330 es\n"
+          "#version 300 es\n"
           "precision mediump float;"
           "uniform sampler2D ySampler;"
           "uniform sampler2D uSampler;"
@@ -3541,7 +3541,7 @@ private:
         mId = compileShader (kQuadVertShader, kFragShader);
         }
       //{{{
-      virtual ~cOpenGL3Yuv420Shader() {
+      virtual ~cOpenGLES3Yuv420Shader() {
         glDeleteProgram (mId);
         }
       //}}}
@@ -3568,12 +3568,12 @@ private:
     //}}}
 
     //{{{
-    class cOpenGL3LayerShader : public cLayerShader {
+    class cOpenGLES3LayerShader : public cLayerShader {
     public:
-      cOpenGL3LayerShader() : cLayerShader() {
+      cOpenGLES3LayerShader() : cLayerShader() {
 
         const string kFragShader =
-          "#version 330 es\n"
+          "#version 300 es\n"
           "precision mediump float;"
           "uniform sampler2D uSampler;"
           "uniform float uHue;"
@@ -3659,7 +3659,7 @@ private:
         mId = compileShader (kQuadVertShader, kFragShader);
         }
       //{{{
-      virtual ~cOpenGL3LayerShader() {
+      virtual ~cOpenGLES3LayerShader() {
         glDeleteProgram (mId);
         }
       //}}}
@@ -3689,11 +3689,11 @@ private:
       };
     //}}}
     //{{{
-    class cOpenGL3PaintShader : public cPaintShader {
+    class cOpenGLES3PaintShader : public cPaintShader {
     public:
-      cOpenGL3PaintShader() : cPaintShader() {
+      cOpenGLES3PaintShader() : cPaintShader() {
         const string kFragShader =
-          "#version 330 es\n"
+          "#version 300 es\n"
           "precision mediump float;"
 
           "uniform sampler2D uSampler;"
@@ -3722,7 +3722,7 @@ private:
         mId = compileShader (kQuadVertShader, kFragShader);
         }
       //{{{
-      virtual ~cOpenGL3PaintShader() {
+      virtual ~cOpenGLES3PaintShader() {
         glDeleteProgram (mId);
         }
       //}}}
