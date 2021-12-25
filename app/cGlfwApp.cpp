@@ -312,7 +312,7 @@ private:
 #if defined(GL_2_1)
   //{{{
   class cGL2Gaphics : public cGraphics {
-  // mostly unimplemented
+  // mostly unimplemented, some just copied rom gl3
   public:
     //{{{
     virtual ~cGL2Gaphics() {
@@ -735,15 +735,6 @@ private:
             cLog::log (LOGERROR, "Target incomplete: No image is attached to FBO"); return false;
           case GL_FRAMEBUFFER_UNSUPPORTED:
             cLog::log (LOGERROR, "Target incomplete: Unsupported by FBO implementation"); return false;
-
-        #if defined(GL_3)
-          case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-            cLog::log (LOGERROR, "Target incomplete: Draw buffer"); return false;
-          case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-            cLog::log (LOGERROR, "Target incomplete: Read buffer"); return false;
-        #endif
-          //case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-          // cLog::log (LOGERROR, "Target incomplete: Attached images have different dimensions"); return false;
           default:
             cLog::log (LOGERROR, "Target incomplete: Unknown error"); return false;
           }
@@ -1788,17 +1779,13 @@ private:
           // create mPixels, texture pixels shadow buffer
           mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
           glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-          #if defined(GL_3)
-            glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
-          #endif
+          glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
           }
 
         else if (!mDirtyPixelsRect.isEmpty()) {
           // no openGL glGetTexSubImage, so dirtyPixelsRect not really used, is this correct ???
           glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-          #if defined(GL_3)
-            glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
-          #endif
+          glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
           mDirtyPixelsRect = cRect(0,0,0,0);
           }
 
@@ -1916,12 +1903,11 @@ private:
           case GL_FRAMEBUFFER_UNSUPPORTED:
             cLog::log (LOGERROR, "Target incomplete: Unsupported by FBO implementation"); return false;
 
-        #if defined(GL_3)
           case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
             cLog::log (LOGERROR, "Target incomplete: Draw buffer"); return false;
           case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
             cLog::log (LOGERROR, "Target incomplete: Read buffer"); return false;
-        #endif
+
           //case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
           // cLog::log (LOGERROR, "Target incomplete: Attached images have different dimensions"); return false;
           default:
@@ -2016,7 +2002,6 @@ private:
           case GL_DEPTH_STENCIL:     formatName = "GL_DEPTH_STENCIL"; break;     // 0x84F9
           case GL_DEPTH24_STENCIL8:  formatName = "GL_DEPTH24_STENCIL8"; break;  // 0x88F0
 
-        #if defined(GL_3)
           case GL_STENCIL_INDEX:     formatName = "GL_STENCIL_INDEX"; break;     // 0x1901
           case GL_RGBA:              formatName = "GL_RGBA"; break;              // 0x1908
           case GL_R3_G3_B2:          formatName = "GL_R3_G3_B2"; break;          // 0x2A10
@@ -2029,7 +2014,7 @@ private:
           case GL_RGBA12:            formatName = "GL_RGBA12"; break;            // 0x805A
           case GL_RGBA16:            formatName = "GL_RGBA16"; break;            // 0x805B
           case GL_DEPTH_COMPONENT32: formatName = "GL_DEPTH_COMPONENT32"; break; // 0x81A7
-        #endif
+
           //case GL_LUMINANCE:         formatName = "GL_LUMINANCE"; break;         // 0x1909
           //case GL_LUMINANCE_ALPHA:   formatName = "GL_LUMINANCE_ALPHA"; break;   // 0x190A
           //case GL_RGBA32F:           formatName = "GL_RGBA32F"; break;           // 0x8814
@@ -2048,19 +2033,14 @@ private:
         if (glIsTexture(id) == GL_FALSE)
           return "Not texture object";
 
-        #if defined(GL_3)
-          glBindTexture (GL_TEXTURE_2D, id);
-          int width;
-          glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);            // get texture width
-          int height;
-          glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);          // get texture height
-          int formatNum;
-          glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &formatNum); // get texture internal format
-          return fmt::format (" {} {} {}", width, height, getInternalFormat (formatNum));
-        #else
-          return "unknown texture";
-        #endif
-
+        glBindTexture (GL_TEXTURE_2D, id);
+        int width;
+        glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);            // get texture width
+        int height;
+        glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);          // get texture height
+        int formatNum;
+        glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &formatNum); // get texture internal format
+        return fmt::format (" {} {} {}", width, height, getInternalFormat (formatNum));
         }
       //}}}
       //{{{
@@ -2736,6 +2716,7 @@ private:
     virtual cLayerShader* createLayerShader() final { return new cOpenGLES3LayerShader(); }
     virtual cPaintShader* createPaintShader() final { return new cOpenGLES3PaintShader(); }
 
+    //{{{
     virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
       switch (textureType) {
         case cTexture::eRgba:   return new cOpenGLES3RgbaTexture (textureType, size);
@@ -2744,6 +2725,8 @@ private:
         default : return nullptr;
         }
       }
+    //}}}
+    //{{{
     virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final {
       switch (textureType) {
         case cTexture::eRgba:   return new cOpenGLES3RgbaShader();
@@ -2752,6 +2735,7 @@ private:
         default: return nullptr;
         }
       }
+    //}}}
 
   private:
     //{{{
@@ -3086,12 +3070,10 @@ private:
           case GL_FRAMEBUFFER_UNSUPPORTED:
             cLog::log (LOGERROR, "Target incomplete: Unsupported by FBO implementation"); return false;
 
-        #if defined(GL_3)
           case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
             cLog::log (LOGERROR, "Target incomplete: Draw buffer"); return false;
           case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
             cLog::log (LOGERROR, "Target incomplete: Read buffer"); return false;
-        #endif
           //case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
           // cLog::log (LOGERROR, "Target incomplete: Attached images have different dimensions"); return false;
           default:

@@ -89,7 +89,7 @@
 //}}}
 //{{{
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
-#define _CRT_SECURE_NO_WARNINGS
+  #define _CRT_SECURE_NO_WARNINGS
 #endif
 
 #include "imgui.h"
@@ -104,15 +104,17 @@
 
 // GL includes
 #if defined(IMGUI_IMPL_OPENGL_ES2)
+  //{{{  GLES 2
   #include <GLES2/gl2.h>
   #if defined(__EMSCRIPTEN__)
     #ifndef GL_GLEXT_PROTOTYPES
       #define GL_GLEXT_PROTOTYPES
     #endif
-    #include <GLES2/gl2ext.h>
+  #include <GLES2/gl2ext.h>
   #endif
-
+  //}}}
 #elif defined(IMGUI_IMPL_OPENGL_ES3)
+  //{{{  GLES 3
   #if defined(__APPLE__)
     #include <TargetConditionals.h>
     #endif
@@ -121,8 +123,9 @@
   #else
     #include <GLES3/gl3.h>          // Use GL ES 3
   #endif
-
+  //}}}
 #elif !defined(IMGUI_IMPL_OPENGL_LOADER_CUSTOM)
+  //{{{  local loader
   // Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
   // Helper libraries are often used for this purpose! Here we are using our own minimal custom loader based on gl3w.
   // In the rest of your app/engine, you can use another loader of your choice (gl3w, glew, glad, glbinding, glext, glLoadGen, etc.).
@@ -132,13 +135,14 @@
   // Changes to this backend using new APIs should be accompanied by a regenerated stripped loader version.
   #define IMGL3W_IMPL
   #include "imgui_impl_opengl3_loader.h"
+  //}}}
 #endif
 
 // Vertex arrays are not supported on ES2/WebGL1 unless Emscripten which uses an extension
 #ifndef IMGUI_IMPL_OPENGL_ES2
   #define IMGUI_IMPL_OPENGL_USE_VERTEX_ARRAY
-
 #elif defined(__EMSCRIPTEN__)
+  //  emscripten
   #define IMGUI_IMPL_OPENGL_USE_VERTEX_ARRAY
   #define glBindVertexArray       glBindVertexArrayOES
   #define glGenVertexArrays       glGenVertexArraysOES
@@ -146,28 +150,28 @@
   #define GL_VERTEX_ARRAY_BINDING GL_VERTEX_ARRAY_BINDING_OES
 #endif
 
-// Desktop GL 2.0+ has glPolygonMode() which GL ES and WebGL don't have.
 #ifdef GL_POLYGON_MODE
+  // Desktop GL 2.0+ has glPolygonMode() which GL ES and WebGL don't have.
   #define IMGUI_IMPL_HAS_POLYGON_MODE
-#endif
 
-// Desktop GL 3.2+ has glDrawElementsBaseVertex() which GL ES and WebGL don't have.
+#endif
 #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3) && defined(GL_VERSION_3_2)
+  // Desktop GL 3.2+ has glDrawElementsBaseVertex() which GL ES and WebGL don't have.
   #define IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET
 #endif
 
-// Desktop GL 3.3+ has glBindSampler()
 #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3) && defined(GL_VERSION_3_3)
+  // Desktop GL 3.3+ has glBindSampler()
   #define IMGUI_IMPL_OPENGL_MAY_HAVE_BIND_SAMPLER
 #endif
 
-// Desktop GL 3.1+ has GL_PRIMITIVE_RESTART state
 #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3) && defined(GL_VERSION_3_1)
+  // Desktop GL 3.1+ has GL_PRIMITIVE_RESTART state
   #define IMGUI_IMPL_OPENGL_MAY_HAVE_PRIMITIVE_RESTART
 #endif
 
-// Desktop GL use extension detection
 #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3)
+  // Desktop GL use extension detection
   #define IMGUI_IMPL_OPENGL_MAY_HAVE_EXTENSIONS
 #endif
 //}}}
