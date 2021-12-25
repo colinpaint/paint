@@ -68,48 +68,56 @@ public:
     if (!glfwInit())
       return false;
 
-    //{{{  select openGL, openGLES version
+    //  select openGL, openGLES version
     #if defined(GL_2_1)
+      //{{{  openGL 2.1
+      string title = "openGL 2.1";
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
-      string title = "openGL 2.1";
-
-    #elif defined(GLES_2) // GL ES 2.0 + GLSL 100
+      //}}}
+    #elif defined(GLES_2)
+      //{{{  openGLES 2.0 GLSL 100
+      string title = "openGLES 2";
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-      string title = "openGLES 2";
-
+      //}}}
     #elif defined(GLES_3_0)
+      //{{{  openGLES 3.0
+      string title = "openGLES 3.0";
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-      string title = "openGLES 3.0";
-
+      //}}}
     #elif defined(GLES_3_1)
+      //{{{  openGLES 3.1
+      string title = "openGLES 3.1";
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-      string title = "openGLES 3.1";
-
+      //}}}
     #elif defined(GLES_3_2)
+      //{{{  openGLES 3.2
+      string title = "openGLES 3.2";
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-      string title = "openGLES 3.2";
-
-    #else //  openGL 3.0 + GLSL 130
+      //}}}
+    #elif defined(GL_3)
+      //{{{  openGL 3.3 GLSL 130
+      string title = "openGL 3";
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
-      string title = "openGL 3";
       //glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
       //glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
-
+      //}}}
+    #else
+      #error BUILD_GRAPHICS not recognised
     #endif
-    //}}}
+
     mWindow = glfwCreateWindow (windowSize.x, windowSize.y, (title + " " + getName()).c_str(), NULL, NULL);
     if (!mWindow) {
-      cLog::log (LOGERROR, "cOpenGL3Platform - glfwCreateWindow failed");
+      cLog::log (LOGERROR, "cGlfwPlatform - glfwCreateWindow failed");
       return false;
       }
 
@@ -304,6 +312,7 @@ private:
 #if defined(GL_2_1)
   //{{{
   class cGL2Gaphics : public cGraphics {
+  // mostly unimplemented
   public:
     //{{{
     virtual ~cGL2Gaphics() {
@@ -311,6 +320,7 @@ private:
       }
     //}}}
 
+    // imgui
     //{{{
     virtual bool init() final {
 
@@ -323,7 +333,6 @@ private:
       return ImGui_ImplOpenGL2_Init();
       }
     //}}}
-
     virtual void newFrame() final { ImGui_ImplOpenGL2_NewFrame(); }
     //{{{
     virtual void clear (const cPoint& size) final {
@@ -355,7 +364,7 @@ private:
     //}}}
     virtual void renderDrawData() final { ImGui_ImplOpenGL2_RenderDrawData (ImGui::GetDrawData()); }
 
-    // create resources
+    // creates
     virtual cQuad* createQuad (const cPoint& size) final { return new cOpenGL2Quad (size); }
     virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final { return new cOpenGL2Quad (size, rect); }
 
@@ -1490,6 +1499,7 @@ private:
       }
     //}}}
 
+    // imgui
     //{{{
     virtual bool init() final {
 
@@ -1502,7 +1512,6 @@ private:
       return ImGui_ImplOpenGL3_Init ("#version 130");
       }
     //}}}
-
     virtual void newFrame() final { ImGui_ImplOpenGL3_NewFrame(); }
     //{{{
     virtual void clear (const cPoint& size) final {
@@ -1534,7 +1543,7 @@ private:
     //}}}
     virtual void renderDrawData() final { ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData()); }
 
-    // create resources
+    // creates
     virtual cQuad* createQuad (const cPoint& size) final { return new cOpenGL3Quad (size); }
     virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final { return new cOpenGL3Quad (size, rect); }
 
@@ -2670,6 +2679,7 @@ private:
       }
     //}}}
 
+    // imgui
     //{{{
     virtual bool init() final {
 
@@ -2713,7 +2723,7 @@ private:
     //}}}
     virtual void renderDrawData() final { ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData()); }
 
-    // create resources
+    // creates
     virtual cQuad* createQuad (const cPoint& size) final { return new cOpenGLES3Quad (size); }
     virtual cQuad* createQuad (const cPoint& size, const cRect& rect) final { return new cOpenGLES3Quad (size, rect); }
 
@@ -2737,8 +2747,8 @@ private:
     virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) final {
       switch (textureType) {
         case cTexture::eRgba:   return new cOpenGLES3RgbaShader();
-        case cTexture::eYuv420: return new cOpenGLES3Yuv420Shader();
         case cTexture::eNv12:   return new cOpenGLES3Nv12Shader();
+        case cTexture::eYuv420: return new cOpenGLES3Yuv420Shader();
         default: return nullptr;
         }
       }
@@ -3334,7 +3344,7 @@ private:
         }
 
     private:
-      array <uint32_t,2> mTextureId;
+      array <uint32_t,2> mTextureId;  // Y U:V 4:2:0
       };
     //}}}
     //{{{
@@ -3417,7 +3427,7 @@ private:
       //}}}
 
     private:
-      array <uint32_t,3> mTextureId;
+      array <uint32_t,3> mTextureId;  // Y,U,V 4:2:0
       };
     //}}}
 
@@ -3430,6 +3440,7 @@ private:
           "precision mediump float;\n"
 
           "uniform sampler2D uSampler;"
+
           "in vec2 textureCoord;"
           "out vec4 outColor;"
 
@@ -3468,6 +3479,7 @@ private:
         const string kFragShader =
           "#version 300 es\n"
           "precision mediump float;"
+
           "uniform sampler2D ySampler;"
           "uniform sampler2D uvSampler;"
 
@@ -3520,6 +3532,7 @@ private:
         const string kFragShader =
           "#version 300 es\n"
           "precision mediump float;"
+
           "uniform sampler2D ySampler;"
           "uniform sampler2D uSampler;"
           "uniform sampler2D vSampler;"
@@ -3575,6 +3588,7 @@ private:
         const string kFragShader =
           "#version 300 es\n"
           "precision mediump float;"
+
           "uniform sampler2D uSampler;"
           "uniform float uHue;"
           "uniform float uVal;"
@@ -3819,7 +3833,7 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
   // create platform
   cGlfwPlatform* glfwPlatform = new cGlfwPlatform (name);
   if (!glfwPlatform || !glfwPlatform->init (windowSize)) {
-    cLog::log (LOGERROR, "cApp glfwPlatform init failed");
+    cLog::log (LOGERROR, "cApp - glfwPlatform init failed");
     return;
     }
 
@@ -3835,7 +3849,7 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
   #endif
 
   if (!mGraphics || !mGraphics->init()) {
-    cLog::log (LOGERROR, "cApp graphics init failed");
+    cLog::log (LOGERROR, "cApp - graphics init failed");
     return;
     }
 
