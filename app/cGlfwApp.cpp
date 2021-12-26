@@ -920,7 +920,7 @@ private:
         }
       //}}}
 
-      virtual unsigned getTextureId() const final { return mTextureId; }
+      virtual void* getTextureId() final { return (void*)mTextureId; }
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -939,7 +939,7 @@ private:
       //}}}
 
     private:
-      uint32_t mTextureId = 0;
+      GLuint mTextureId = 0;
       };
     //}}}
     //{{{
@@ -980,7 +980,7 @@ private:
         }
       //}}}
 
-      virtual unsigned getTextureId() const final { return mTextureId[0]; }  // luma only
+      virtual void* getTextureId() final { return (void*)mTextureId[0]; }  // luma only
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -1007,7 +1007,7 @@ private:
       //}}}
 
     private:
-      array <uint32_t,2> mTextureId;
+      array <GLuint,2> mTextureId = {0};
       };
     //}}}
     //{{{
@@ -1057,7 +1057,7 @@ private:
         }
       //}}}
 
-      virtual unsigned getTextureId() const final { return mTextureId[0]; }   // luma only
+      virtual void* getTextureId() final { return (void*)mTextureId[0]; }   // luma only
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -1091,7 +1091,7 @@ private:
       //}}}
 
     private:
-      array <uint32_t,3> mTextureId;
+      array <GLuint,3> mTextureId = {0};
       };
     //}}}
 
@@ -2089,7 +2089,7 @@ private:
         }
       //}}}
 
-      virtual unsigned getTextureId() const final { return mTextureId; }
+      virtual void* getTextureId() final { return (void*)mTextureId; }
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -2149,7 +2149,7 @@ private:
         }
       //}}}
 
-      virtual unsigned getTextureId() const final { return mTextureId[0]; }  // luma only
+      virtual void* getTextureId() final { return (void*)mTextureId[0]; }  // luma only
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -2226,7 +2226,7 @@ private:
         }
       //}}}
 
-      virtual unsigned getTextureId() const final { return mTextureId[0]; }   // luma only
+      virtual void* getTextureId() final { return (void*)mTextureId[0]; }   // luma only
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -3255,7 +3255,7 @@ private:
 
       virtual ~cOpenGLES3RgbaTexture() { glDeleteTextures (1, &mTextureId); }
 
-      virtual unsigned getTextureId() const final { return mTextureId; }
+      virtual void* getTextureId() final { return (void*)mTextureId; }
 
       virtual void setPixels (uint8_t** pixels) final {
       // set textures using pixels in ffmpeg avFrame format
@@ -3304,7 +3304,7 @@ private:
         cLog::log (LOGINFO, fmt::format ("deleting eVv12 texture {}x{}", mSize.x, mSize.y));
         }
 
-      virtual unsigned getTextureId() const final { return mTextureId[0]; }  // luma only
+      virtual void* getTextureId() final { return (void*)mTextureId[0]; }  // luma only
 
       virtual void setPixels (uint8_t** pixels) final {
       // set textures using pixels in ffmpeg avFrame format
@@ -3375,7 +3375,7 @@ private:
         }
       //}}}
 
-      virtual unsigned getTextureId() const final { return mTextureId[0]; }   // luma only
+      virtual void* getTextureId() final { return (void*)mTextureId[0]; }   // luma only
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {

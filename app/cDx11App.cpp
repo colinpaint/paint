@@ -276,7 +276,6 @@ class cDx11Graphics : public cGraphics {
 public:
   cDx11Graphics (ID3D11Device* device, ID3D11DeviceContext* deviceContext, IDXGISwapChain* swapChain)
     : mDevice(device), mDeviceContext(deviceContext), mSwapChain(swapChain) {}
-
   //{{{
   virtual ~cDx11Graphics() {
     ImGui_ImplDX11_Shutdown();
@@ -286,9 +285,6 @@ public:
 
   //{{{
   virtual bool init() final {
-
-    // report Dx11 versions
-    //cLog::log (LOGINFO, fmt::format ("OpenGL {}", glGetString (GL_VERSION)));
 
     // create mainRenderTargetView
     ID3D11Texture2D* backBufferTexture;
@@ -347,9 +343,9 @@ public:
   // factory create
 
     switch (textureType) {
-      case cTexture::eRgba:   return new cDx11RgbaTexture (textureType, size);
-      case cTexture::eNv12:   return new cDx11Nv12Texture (textureType, size);
-      case cTexture::eYuv420: return new cDx11Yuv420Texture (textureType, size);
+      case cTexture::eRgba:   return new cDx11RgbaTexture (mDevice, mDeviceContext, textureType, size);
+      case cTexture::eNv12:   return new cDx11Nv12Texture (mDevice, textureType, size);
+      case cTexture::eYuv420: return new cDx11Yuv420Texture (mDevice, textureType, size);
       default : return nullptr;
       }
     }
@@ -368,7 +364,7 @@ public:
   //}}}
 
 private:
-  // !!! unimplemented !!!
+  // !!! mostly unimplemented !!!
   //{{{
   class cDx11Quad : public cQuad {
   public:
@@ -453,36 +449,138 @@ private:
   //{{{
   class cDx11RgbaTexture : public cTexture {
   public:
-    cDx11RgbaTexture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
-      cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
-      }
-    virtual ~cDx11RgbaTexture() {
-      }
+    //{{{
+    cDx11RgbaTexture (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
+                      eTextureType textureType, const cPoint& size)
+        : cTexture(textureType, size), mDevice(device), mDeviceContext(deviceContext) {
 
-    virtual unsigned getTextureId() const final { return mTextureId; }
+      cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
+
+      //  upload texture to graphics system
+      D3D11_TEXTURE2D_DESC texture2dDesc;
+      ZeroMemory (&texture2dDesc, sizeof(texture2dDesc));
+
+      texture2dDesc.Width = size.x;
+      texture2dDesc.Height = size.y;
+      texture2dDesc.MipLevels = 1;
+      texture2dDesc.ArraySize = 1;
+      texture2dDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+      texture2dDesc.SampleDesc.Count = 1;
+      texture2dDesc.Usage = D3D11_USAGE_DEFAULT;
+      texture2dDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+      texture2dDesc.CPUAccessFlags = 0;
+
+      unsigned char* pixels = (unsigned char*)malloc (size.x*size.y*4);
+      for (int i = 0; i < size.x*size.y*4; i++)
+        pixels[i] = 0xc0;
+
+      D3D11_SUBRESOURCE_DATA subResourceData;
+      subResourceData.pSysMem = pixels;
+      subResourceData.SysMemPitch = texture2dDesc.Width * 4;
+      subResourceData.SysMemSlicePitch = 0;
+
+      mTexture = nullptr;
+      HRESULT hresult = mDevice->CreateTexture2D (&texture2dDesc, nullptr, &mTexture);
+      if (hresult != S_OK)
+        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateTexture2D failed {}", hresult));
+
+      free (pixels);
+
+      // create texture view
+      D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+      ZeroMemory (&shaderResourceViewDesc, sizeof (shaderResourceViewDesc));
+
+      shaderResourceViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+      shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+      shaderResourceViewDesc.Texture2D.MipLevels = texture2dDesc.MipLevels;
+      shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+
+      hresult = mDevice->CreateShaderResourceView (mTexture, &shaderResourceViewDesc, &mTextureView);
+      if (hresult != S_OK)
+        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateShaderResourceView failed {}", hresult));
+
+      //  create texture sampler
+      D3D11_SAMPLER_DESC samplerDesc;
+      ZeroMemory (&samplerDesc, sizeof(samplerDesc));
+
+      samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+      samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+      samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+      samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+      samplerDesc.MipLODBias = 0.f;
+      samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+      samplerDesc.MinLOD = 0.f;
+      samplerDesc.MaxLOD = 0.f;
+
+      hresult = mDevice->CreateSamplerState (&samplerDesc, &mSampler);
+      if (hresult != S_OK)
+        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateSamplerState failed {}", hresult));
+      }
+    //}}}
+    //{{{
+    virtual ~cDx11RgbaTexture() {
+
+      if (mSampler)
+        mSampler->Release();
+      if (mTextureView)
+        mTextureView->Release();
+      if (mTexture)
+        mTexture->Release();
+      }
+    //}}}
+
+    virtual void* getTextureId() final { return (void*)mTextureView; }
 
     virtual void setPixels (uint8_t** pixels) final {
-      (void)pixels;
+
+      cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture setPixels {} {}", mSize.x, mSize.y));
+
+      D3D11_MAPPED_SUBRESOURCE mappedSubResource;
+      HRESULT hresult = mDeviceContext->Map (mTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource);
+      if (hresult != S_OK) {
+        cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture setPixels failed {}", hresult));
+        return;
+        }
+      memcpy (mappedSubResource.pData, pixels[0], mSize.x * mSize.y * 4);
+      mDeviceContext->Unmap (mTexture, 0);
       }
+
     virtual void setSource() final {
       }
 
   private:
-    uint32_t mTextureId = 0;
+    ID3D11Device* mDevice = nullptr;
+    ID3D11DeviceContext* mDeviceContext = nullptr;
+
+    ID3D11Texture2D* mTexture = nullptr;
+    ID3D11ShaderResourceView* mTextureView = nullptr;
+    ID3D11SamplerState* mSampler = nullptr;
     };
   //}}}
   //{{{
   class cDx11Nv12Texture : public cTexture {
   public:
-    cDx11Nv12Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
+    cDx11Nv12Texture (ID3D11Device* device, eTextureType textureType, const cPoint& size)
+        : cTexture(textureType, size), mDevice(device)  {
       cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
       }
 
     virtual ~cDx11Nv12Texture() {
       cLog::log (LOGINFO, fmt::format ("deleting eVv12 texture {}x{}", mSize.x, mSize.y));
+
+      for (size_t i = 0; i < mSampler.size(); i++)
+        if (mSampler[i])
+          mSampler[i]->Release();
+      for (size_t i = 0; i < mTextureView.size(); i++)
+        if (mTextureView[i])
+          mTextureView[i]->Release();
+      for (size_t i = 0; i < mTexture.size(); i++)
+        if (mTexture[i])
+          mTexture[i]->Release();
+
       }
 
-    virtual unsigned getTextureId() const final { return mTextureId[0]; }  // luma only
+    virtual void* getTextureId() final { return (void*)mTextureView[0]; }  // luma only
 
     virtual void setPixels (uint8_t** pixels) final {
       (void)pixels;
@@ -492,20 +590,35 @@ private:
       }
 
   private:
-    array <uint32_t,2> mTextureId;
+    ID3D11Device* mDevice = nullptr;
+    array <ID3D11Texture2D*,2> mTexture = {nullptr};
+    array <ID3D11ShaderResourceView*,2> mTextureView = {nullptr};
+    array <ID3D11SamplerState*,2> mSampler = {nullptr};
     };
   //}}}
   //{{{
   class cDx11Yuv420Texture : public cTexture {
   public:
-    cDx11Yuv420Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
+    cDx11Yuv420Texture (ID3D11Device* device, eTextureType textureType, const cPoint& size)
+        : cTexture(textureType, size), mDevice(device) {
       cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
       }
+
     virtual ~cDx11Yuv420Texture() {
       cLog::log (LOGINFO, fmt::format ("deleting eYuv420 texture {}x{}", mSize.x, mSize.y));
+
+      for (size_t i = 0; i < mSampler.size(); i++)
+        if (mSampler[i])
+          mSampler[i]->Release();
+      for (size_t i = 0; i < mTextureView.size(); i++)
+        if (mTextureView[i])
+          mTextureView[i]->Release();
+      for (size_t i = 0; i < mTexture.size(); i++)
+        if (mTexture[i])
+          mTexture[i]->Release();
       }
 
-    virtual unsigned getTextureId() const final { return mTextureId[0]; }   // luma only
+    virtual void* getTextureId() final { return (void*)mTextureView[0]; }  // luma only
 
     virtual void setPixels (uint8_t** pixels) final {
     // set textures using pixels in ffmpeg avFrame format
@@ -514,7 +627,10 @@ private:
     virtual void setSource() final {
       }
   private:
-    array <uint32_t,3> mTextureId;
+    ID3D11Device* mDevice = nullptr;
+    array <ID3D11Texture2D*,3> mTexture = {nullptr};
+    array <ID3D11ShaderResourceView*,3> mTextureView = {nullptr};
+    array <ID3D11SamplerState*,3> mSampler = {nullptr};
     };
   //}}}
 

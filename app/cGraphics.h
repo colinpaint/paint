@@ -110,7 +110,7 @@ public:
   eTextureType getTextureType() const { return mTextureType; }
   const cPoint getSize() const { return mSize; }
 
-  virtual unsigned getTextureId() const = 0;
+  virtual void* getTextureId() = 0;
 
   virtual void setPixels (uint8_t** pixels) = 0;
   virtual void setSource() = 0;
