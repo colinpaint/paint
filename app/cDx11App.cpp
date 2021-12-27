@@ -449,117 +449,216 @@ private:
 
   //{{{
   class cDx11RgbaTexture : public cTexture {
-  public:
-    //{{{
-    cDx11RgbaTexture (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
-                      eTextureType textureType, const cPoint& size)
-        : cTexture(textureType, size), mDevice(device), mDeviceContext(deviceContext) {
+    public:
+      //{{{
+      cDx11RgbaTexture (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
+                        eTextureType textureType, const cPoint& size)
+          : cTexture(textureType, size), mDevice(device), mDeviceContext(deviceContext) {
 
-      cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture creating eRgba texture {}x{}", size.x, size.y));
+        cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture creating eRgba texture {}x{}", mSize.x, mSize.y));
 
-      //  upload texture to graphics system
-      D3D11_TEXTURE2D_DESC texture2dDesc;
-      ZeroMemory (&texture2dDesc, sizeof(texture2dDesc));
-      texture2dDesc.Width = size.x;
-      texture2dDesc.Height = size.y;
-      texture2dDesc.MipLevels = 1;
-      texture2dDesc.ArraySize = 1;
-      texture2dDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-      texture2dDesc.SampleDesc.Count = 1;
-      texture2dDesc.Usage = D3D11_USAGE_DEFAULT;
-      texture2dDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-      texture2dDesc.CPUAccessFlags = 0;
+        // create staging texture
+        D3D11_TEXTURE2D_DESC texture2dDesc = {0};
+        texture2dDesc.Width = mSize.x;
+        texture2dDesc.Height = mSize.y;
+        texture2dDesc.MipLevels = 1;
+        texture2dDesc.ArraySize = 1;
+        texture2dDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        texture2dDesc.SampleDesc.Count = 1;
+        texture2dDesc.SampleDesc.Quality = 0;
+        texture2dDesc.Usage = D3D11_USAGE_STAGING;
+        texture2dDesc.BindFlags = 0;
+        texture2dDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        texture2dDesc.MiscFlags = 0;
+        HRESULT hResult = mDevice->CreateTexture2D (&texture2dDesc, nullptr, &mStagingTexture);  // subResourceData
+        if (hResult != S_OK) {
+          //{{{  error, log, return
+            cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture - CreateTexture2D staging failed - '{}'",
+                                              system_category().message(hResult)));
+             return;
+             }
+          //}}}
 
-      unsigned char* pixels = (unsigned char*)malloc (size.x*size.y*4);
-      for (int i = 0; i < size.x*size.y*4; i++)
-        pixels[i] = 0xc0;
+        // create texture
+        texture2dDesc.Usage = D3D11_USAGE_DEFAULT;
+        texture2dDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        texture2dDesc.CPUAccessFlags = 0;
+        hResult = mDevice->CreateTexture2D (&texture2dDesc, nullptr, &mTexture);  // subResourceData
+        if (hResult != S_OK) {
+          //{{{  error, log, return
+            cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture - CreateTexture2D failed - '{}'",
+                                              system_category().message(hResult)));
+             return;
+             }
+          //}}}
 
-      D3D11_SUBRESOURCE_DATA subResourceData;
-      subResourceData.pSysMem = pixels;
-      subResourceData.SysMemPitch = texture2dDesc.Width * 4;
-      subResourceData.SysMemSlicePitch = 0;
+        // create textureView
+        D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc = {0};
+        shaderResourceViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        shaderResourceViewDesc.Texture2D.MipLevels = texture2dDesc.MipLevels;
+        shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+        hResult = mDevice->CreateShaderResourceView (mTexture, &shaderResourceViewDesc, &mTextureView);
+        if (hResult != S_OK) {
+          //{{{  error, log, return
+          cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture - CreateShaderResourceView failed {}",
+                                            system_category().message(hResult)));
+          return;
+          }
+          //}}}
 
-      mTexture = nullptr;
-      //HRESULT hresult = mDevice->CreateTexture2D (&texture2dDesc, subResourceData, &mTexture);
-      HRESULT hresult = mDevice->CreateTexture2D (&texture2dDesc, nullptr, &mTexture);
-      if (hresult != S_OK)
-        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateTexture2D failed - '{}'",
-                                          system_category().message(hresult)));
-
-      free (pixels);
-
-      // create texture view
-      D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
-      ZeroMemory (&shaderResourceViewDesc, sizeof (shaderResourceViewDesc));
-
-      shaderResourceViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-      shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-      shaderResourceViewDesc.Texture2D.MipLevels = texture2dDesc.MipLevels;
-      shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-
-      hresult = mDevice->CreateShaderResourceView (mTexture, &shaderResourceViewDesc, &mTextureView);
-      if (hresult != S_OK)
-        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateShaderResourceView failed {}",
-                                          system_category().message(hresult)));
-
-      //  create texture sampler
-      D3D11_SAMPLER_DESC samplerDesc;
-      ZeroMemory (&samplerDesc, sizeof(samplerDesc));
-      samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-      samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-      samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-      samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-      samplerDesc.MipLODBias = 0.f;
-      samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-      samplerDesc.MinLOD = 0.f;
-      samplerDesc.MaxLOD = 0.f;
-
-      hresult = mDevice->CreateSamplerState (&samplerDesc, &mSampler);
-      if (hresult != S_OK)
-        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateSamplerState failed - '{}'",
-                                          system_category().message(hresult)));
-      }
-    //}}}
-    //{{{
-    virtual ~cDx11RgbaTexture() {
-
-      if (mSampler)
-        mSampler->Release();
-      if (mTextureView)
-        mTextureView->Release();
-      if (mTexture)
-        mTexture->Release();
-      }
-    //}}}
-
-    virtual void* getTextureId() final { return (void*)mTextureView; }
-
-    virtual void setPixels (uint8_t** pixels) final {
-
-      cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture setPixels {} {}", mSize.x, mSize.y));
-
-      D3D11_MAPPED_SUBRESOURCE mappedSubResource;
-      HRESULT hresult = mDeviceContext->Map (mTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource);
-      if (hresult != S_OK) {
-        cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture setPixels failed - '{}'",
-                                        system_category().message(hresult)));
-        return;
+        // create textureSampler
+        D3D11_SAMPLER_DESC samplerDesc = {0};
+        samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+        samplerDesc.MipLODBias = 0.f;
+        samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+        samplerDesc.BorderColor[0] = 0.f;
+        samplerDesc.BorderColor[1] = 0.f;
+        samplerDesc.BorderColor[2] = 0.f;
+        samplerDesc.BorderColor[3] = 0.f;
+        samplerDesc.MinLOD = 0.f;
+        samplerDesc.MaxLOD = 0.f;
+        hResult = mDevice->CreateSamplerState (&samplerDesc, &mTextureSampler);
+        if (hResult != S_OK) {
+          //{{{  error, log, return
+          cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture - CreateSamplerState failed - '{}'",
+                                            system_category().message(hResult)));
+          return;
+          }
+          //}}}
         }
-      memcpy (mappedSubResource.pData, pixels[0], mSize.x * mSize.y * 4);
-      mDeviceContext->Unmap (mTexture, 0);
-      }
+      //}}}
+      //{{{
+      virtual ~cDx11RgbaTexture() {
 
-    virtual void setSource() final {
-      }
+        if (mTextureSampler)
+          mTextureSampler->Release();
 
-  private:
-    ID3D11Device* mDevice = nullptr;
-    ID3D11DeviceContext* mDeviceContext = nullptr;
+        if (mTextureView)
+          mTextureView->Release();
 
-    ID3D11Texture2D* mTexture = nullptr;
-    ID3D11ShaderResourceView* mTextureView = nullptr;
-    ID3D11SamplerState* mSampler = nullptr;
-    };
+        if (mTexture)
+          mTexture->Release();
+        if (mStagingTexture)
+          mStagingTexture->Release();
+        }
+      //}}}
+
+      virtual void* getTextureId() final { return (void*)mTextureView; }
+
+      //{{{
+      virtual void setPixels (uint8_t** pixels) final {
+      // using stagedTexture method
+      //{{{  alternative UpdateSubresource method
+      // D3D11_BOX box;
+      // box.front = 0;
+      // box.back = 1;
+      // box.left = 0;
+      // box.right = mSize.x;
+      // box.top = 0;
+      // box.bottom = mSize.y;
+      // mDeviceContext->UpdateSubresource (mTexture, 0, &box, pixels[0], mSize.x * 4, mSize.x * mSize.y * 4);
+      //}}}
+      //{{{  alternative Map with D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE and D3D11_MAP_WRITE_DISCARD method
+      // create texture with
+      // - texture2dDesc.Usage = D3D11_USAGE_DYNAMIC ;
+      // - texture2dDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+      // D3D11_MAPPED_SUBRESOURCE mappedSubResource;
+      // HRESULT hResult = mDeviceContext->Map (mTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource);
+      // memcpy (mappedSubResource.pData, pixels[0], mSize.x * mSize.y * 4);
+      // mDeviceContext->Unmap (mTexture, 0);
+      //}}}
+
+        auto now = chrono::system_clock::now();
+
+        D3D11_MAPPED_SUBRESOURCE mappedSubResource = {0};
+
+        int waits = 0;
+        HRESULT hResult;
+        do {
+         hResult = mDeviceContext->Map (mStagingTexture, 0, D3D11_MAP_WRITE, D3D11_MAP_FLAG_DO_NOT_WAIT, &mappedSubResource);
+         if (hResult == DXGI_ERROR_WAS_STILL_DRAWING)
+           waits++;
+         } while (hResult == DXGI_ERROR_WAS_STILL_DRAWING);
+
+        if (hResult != S_OK) {
+          //{{{  error, log, return
+          cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture - Map failed - '{}'",
+                                          system_category().message(hResult)));
+          return;
+          }
+          //}}}
+
+        auto took1 = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count();
+
+        memcpy (mappedSubResource.pData, pixels[0], mSize.x * mSize.y * 4);
+        auto took2 = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count();
+
+        mDeviceContext->Unmap (mStagingTexture, 0);
+        auto took3 = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count();
+
+        mDeviceContext->CopyResource (mTexture, mStagingTexture);
+        auto took4 = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count();
+
+        cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture::setPixels {}x{} stagingMap:{} memcpy:{} unMap:{} copy:{} waits:{}",
+                   mSize.x, mSize.y, took1, took2-took1, took3-took2, took4-took3, waits));
+        }
+      //}}}
+      //virtual void setPixelsUpdateSubresource (uint8_t** pixels) final {
+      //// needs texture2dDesc.Usage = D3D11_USAGE_DEFAULT;
+
+        //auto now = chrono::system_clock::now();
+
+        //D3D11_BOX box;
+        //box.front = 0;
+        //box.back = 1;
+        //box.left = 0;
+        //box.right = mSize.x;
+        //box.top = 0;
+        //box.bottom = mSize.y;
+        //mDeviceContext->UpdateSubresource (mTexture, 0, &box, pixels[0], mSize.x * 4, mSize.x * mSize.y * 4);
+        //auto took = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count();
+        //cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture setPixels updateSubResource {} {} took {}us", mSize.x, mSize.y, took));
+        //}
+      //virtual void setPixelsMapDynamicDiscard (uint8_t** pixels) final {
+      //// needs texture2dDesc.Usage = D3D11_USAGE_DYNAMIC ;
+      //// needs texture2dDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+        //auto now = chrono::system_clock::now();
+
+        //D3D11_MAPPED_SUBRESOURCE mappedSubResource;
+        //HRESULT hResult = mDeviceContext->Map (mTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource);
+        //if (hResult != S_OK) {
+          //{{{  error, log, return
+          //cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture - Map failed - '{}'",
+                                          //system_category().message(hResult)));
+          //return;
+          //}
+          //}}}
+        //memcpy (mappedSubResource.pData, pixels[0], mSize.x * mSize.y * 4);
+        //mDeviceContext->Unmap (mTexture, 0);
+
+        //auto took = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count();
+
+        //cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture setPixels map {} {} took {}us", mSize.x, mSize.y, took));
+        //}
+
+      virtual void setSource() final {
+        }
+
+    private:
+      ID3D11Device* mDevice = nullptr;
+      ID3D11DeviceContext* mDeviceContext = nullptr;
+
+      ID3D11Texture2D* mTexture = nullptr;
+      ID3D11Texture2D* mStagingTexture = nullptr;
+      ID3D11ShaderResourceView* mTextureView = nullptr;
+      ID3D11SamplerState* mTextureSampler = nullptr;
+      };
   //}}}
   //{{{
   class cDx11Nv12Texture : public cTexture {
@@ -628,7 +727,7 @@ private:
     virtual void setPixels (uint8_t** pixels) final {
     // set textures using pixels in ffmpeg avFrame format
       (void)pixels;
-      cLog::log (LOGINFO, fmt::format ("cDx11Yuv420Texture setPixels {} {}", mSize.x, mSize.y));
+      //cLog::log (LOGINFO, fmt::format ("cDx11Yuv420Texture setPixels {} {}", mSize.x, mSize.y));
       }
     virtual void setSource() final {
       }

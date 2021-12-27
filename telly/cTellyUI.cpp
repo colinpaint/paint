@@ -719,7 +719,8 @@ private:
       // create/update image texture
       if (!image.mTexture) // create
         image.mTexture = graphics.createTexture (cTexture::eRgba, {image.mWidth, image.mHeight});
-      image.mTexture->setPixels (&image.mPixels);
+      if (image.mDirty)
+        image.mTexture->setPixels (&image.mPixels);
       image.mDirty = false;
 
       // draw image, scaled to fit line
