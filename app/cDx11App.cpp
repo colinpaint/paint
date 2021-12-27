@@ -10,6 +10,7 @@
 #include <array>
 #include <algorithm>
 #include <functional>
+#include <system_error>
 
 #include <stdio.h>
 #include <tchar.h>
@@ -454,12 +455,11 @@ private:
                       eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size), mDevice(device), mDeviceContext(deviceContext) {
 
-      cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
+      cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture creating eRgba texture {}x{}", size.x, size.y));
 
       //  upload texture to graphics system
       D3D11_TEXTURE2D_DESC texture2dDesc;
       ZeroMemory (&texture2dDesc, sizeof(texture2dDesc));
-
       texture2dDesc.Width = size.x;
       texture2dDesc.Height = size.y;
       texture2dDesc.MipLevels = 1;
@@ -480,9 +480,11 @@ private:
       subResourceData.SysMemSlicePitch = 0;
 
       mTexture = nullptr;
+      //HRESULT hresult = mDevice->CreateTexture2D (&texture2dDesc, subResourceData, &mTexture);
       HRESULT hresult = mDevice->CreateTexture2D (&texture2dDesc, nullptr, &mTexture);
       if (hresult != S_OK)
-        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateTexture2D failed {}", hresult));
+        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateTexture2D failed - '{}'",
+                                          system_category().message(hresult)));
 
       free (pixels);
 
@@ -497,12 +499,12 @@ private:
 
       hresult = mDevice->CreateShaderResourceView (mTexture, &shaderResourceViewDesc, &mTextureView);
       if (hresult != S_OK)
-        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateShaderResourceView failed {}", hresult));
+        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateShaderResourceView failed {}",
+                                          system_category().message(hresult)));
 
       //  create texture sampler
       D3D11_SAMPLER_DESC samplerDesc;
       ZeroMemory (&samplerDesc, sizeof(samplerDesc));
-
       samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
       samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
       samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -514,7 +516,8 @@ private:
 
       hresult = mDevice->CreateSamplerState (&samplerDesc, &mSampler);
       if (hresult != S_OK)
-        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateSamplerState failed {}", hresult));
+        cLog::log (LOGERROR, fmt::format ("cDx11RgbaTexture CreateSamplerState failed - '{}'",
+                                          system_category().message(hresult)));
       }
     //}}}
     //{{{
@@ -538,7 +541,8 @@ private:
       D3D11_MAPPED_SUBRESOURCE mappedSubResource;
       HRESULT hresult = mDeviceContext->Map (mTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource);
       if (hresult != S_OK) {
-        cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture setPixels failed {}", hresult));
+        cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture setPixels failed - '{}'",
+                                        system_category().message(hresult)));
         return;
         }
       memcpy (mappedSubResource.pData, pixels[0], mSize.x * mSize.y * 4);
@@ -562,7 +566,7 @@ private:
   public:
     cDx11Nv12Texture (ID3D11Device* device, eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size), mDevice(device)  {
-      cLog::log (LOGINFO, fmt::format ("creating eNv12 texture {}x{}", size.x, size.y));
+      cLog::log (LOGINFO, fmt::format ("cDx11Nv12Texture creating eNv12 texture {}x{}", size.x, size.y));
       }
 
     virtual ~cDx11Nv12Texture() {
@@ -584,6 +588,7 @@ private:
 
     virtual void setPixels (uint8_t** pixels) final {
       (void)pixels;
+      cLog::log (LOGINFO, fmt::format ("cDx11Nv12Texture setPixels {} {}", mSize.x, mSize.y));
       }
 
     virtual void setSource() final {
@@ -601,7 +606,7 @@ private:
   public:
     cDx11Yuv420Texture (ID3D11Device* device, eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size), mDevice(device) {
-      cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
+      cLog::log (LOGINFO, fmt::format ("cDx11Yuv420Texture creating eYuv420 texture {}x{}", size.x, size.y));
       }
 
     virtual ~cDx11Yuv420Texture() {
@@ -623,6 +628,7 @@ private:
     virtual void setPixels (uint8_t** pixels) final {
     // set textures using pixels in ffmpeg avFrame format
       (void)pixels;
+      cLog::log (LOGINFO, fmt::format ("cDx11Yuv420Texture setPixels {} {}", mSize.x, mSize.y));
       }
     virtual void setSource() final {
       }

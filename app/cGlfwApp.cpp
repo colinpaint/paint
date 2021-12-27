@@ -920,7 +920,7 @@ private:
         }
       //}}}
 
-      virtual void* getTextureId() final { return (void*)mTextureId; }
+      virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId; }
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -980,7 +980,7 @@ private:
         }
       //}}}
 
-      virtual void* getTextureId() final { return (void*)mTextureId[0]; }  // luma only
+      virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId[0]; }  // luma only
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -1057,7 +1057,7 @@ private:
         }
       //}}}
 
-      virtual void* getTextureId() final { return (void*)mTextureId[0]; }   // luma only
+      virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId[0]; }   // luma only
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -2089,7 +2089,7 @@ private:
         }
       //}}}
 
-      virtual void* getTextureId() final { return (void*)mTextureId; }
+      virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId; }
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -2149,7 +2149,7 @@ private:
         }
       //}}}
 
-      virtual void* getTextureId() final { return (void*)mTextureId[0]; }  // luma only
+      virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId[0]; }  // luma only
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -2226,7 +2226,7 @@ private:
         }
       //}}}
 
-      virtual void* getTextureId() final { return (void*)mTextureId[0]; }   // luma only
+      virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId[0]; }   // luma only
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -3069,13 +3069,6 @@ private:
             cLog::log (LOGERROR, "Target incomplete: No image is attached to FBO"); return false;
           case GL_FRAMEBUFFER_UNSUPPORTED:
             cLog::log (LOGERROR, "Target incomplete: Unsupported by FBO implementation"); return false;
-
-          case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-            cLog::log (LOGERROR, "Target incomplete: Draw buffer"); return false;
-          case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-            cLog::log (LOGERROR, "Target incomplete: Read buffer"); return false;
-          //case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-          // cLog::log (LOGERROR, "Target incomplete: Attached images have different dimensions"); return false;
           default:
             cLog::log (LOGERROR, "Target incomplete: Unknown error"); return false;
           }
@@ -3255,7 +3248,7 @@ private:
 
       virtual ~cOpenGLES3RgbaTexture() { glDeleteTextures (1, &mTextureId); }
 
-      virtual void* getTextureId() final { return (void*)mTextureId; }
+      virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId; }
 
       virtual void setPixels (uint8_t** pixels) final {
       // set textures using pixels in ffmpeg avFrame format
@@ -3269,7 +3262,7 @@ private:
         }
 
     private:
-      uint32_t mTextureId = 0;
+      GLuint mTextureId = 0;
       };
     //}}}
     //{{{
@@ -3304,7 +3297,7 @@ private:
         cLog::log (LOGINFO, fmt::format ("deleting eVv12 texture {}x{}", mSize.x, mSize.y));
         }
 
-      virtual void* getTextureId() final { return (void*)mTextureId[0]; }  // luma only
+      virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId[0]; }  // luma only
 
       virtual void setPixels (uint8_t** pixels) final {
       // set textures using pixels in ffmpeg avFrame format
@@ -3326,7 +3319,7 @@ private:
         }
 
     private:
-      array <uint32_t,2> mTextureId;  // Y U:V 4:2:0
+      array <GLuint,2> mTextureId;  // Y U:V 4:2:0
       };
     //}}}
     //{{{
@@ -3375,7 +3368,7 @@ private:
         }
       //}}}
 
-      virtual void* getTextureId() final { return (void*)mTextureId[0]; }   // luma only
+      virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId[0]; }   // luma only
 
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
@@ -3409,7 +3402,7 @@ private:
       //}}}
 
     private:
-      array <uint32_t,3> mTextureId;  // Y,U,V 4:2:0
+      array <GLuint,3> mTextureId;  // Y,U,V 4:2:0
       };
     //}}}
 
