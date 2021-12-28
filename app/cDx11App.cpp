@@ -95,7 +95,8 @@ public:
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
     const UINT createDeviceFlags = 0; // D3D11_CREATE_DEVICE_DEBUG;
-    const D3D_FEATURE_LEVEL kFeatureLevels[2] = { D3D_FEATURE_LEVEL_11_0,
+    const D3D_FEATURE_LEVEL kFeatureLevels[3] = { D3D_FEATURE_LEVEL_11_1,
+                                                  D3D_FEATURE_LEVEL_11_0,
                                                   D3D_FEATURE_LEVEL_10_0, };
     D3D_FEATURE_LEVEL featureLevel;
     if (D3D11CreateDeviceAndSwapChain (NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
@@ -552,26 +553,27 @@ private:
       //{{{
       virtual void setPixels (uint8_t** pixels) final {
       // using stagedTexture method
-      //{{{  alternative UpdateSubresource method
-      // D3D11_BOX box;
-      // box.front = 0;
-      // box.back = 1;
-      // box.left = 0;
-      // box.right = mSize.x;
-      // box.top = 0;
-      // box.bottom = mSize.y;
-      // mDeviceContext->UpdateSubresource (mTexture, 0, &box, pixels[0], mSize.x * 4, mSize.x * mSize.y * 4);
-      //}}}
-      //{{{  alternative Map with D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE and D3D11_MAP_WRITE_DISCARD method
-      // create texture with
-      // - texture2dDesc.Usage = D3D11_USAGE_DYNAMIC ;
-      // - texture2dDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-      // D3D11_MAPPED_SUBRESOURCE mappedSubResource;
-      // HRESULT hResult = mDeviceContext->Map (mTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource);
-      // memcpy (mappedSubResource.pData, pixels[0], mSize.x * mSize.y * 4);
-      // mDeviceContext->Unmap (mTexture, 0);
-      //}}}
+        //{{{  alternative UpdateSubresource method
+        // D3D11_BOX box;
+        // box.front = 0;
+        // box.back = 1;
+        // box.left = 0;
+        // box.right = mSize.x;
+        // box.top = 0;
+        // box.bottom = mSize.y;
+        // mDeviceContext->UpdateSubresource (mTexture, 0, &box, pixels[0], mSize.x * 4, mSize.x * mSize.y * 4);
+        //}}}
+        //{{{  alternative Map with D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE and D3D11_MAP_WRITE_DISCARD method
+        // create texture with
+        // - texture2dDesc.Usage = D3D11_USAGE_DYNAMIC ;
+        // - texture2dDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+        // D3D11_MAPPED_SUBRESOURCE mappedSubResource;
+        // HRESULT hResult = mDeviceContext->Map (mTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource);
+        // memcpy (mappedSubResource.pData, pixels[0], mSize.x * mSize.y * 4);
+        // mDeviceContext->Unmap (mTexture, 0);
+        //}}}
 
         auto now = chrono::system_clock::now();
 
@@ -608,47 +610,8 @@ private:
                    mSize.x, mSize.y, took1, took2-took1, took3-took2, took4-took3, waits));
         }
       //}}}
-      //virtual void setPixelsUpdateSubresource (uint8_t** pixels) final {
-      //// needs texture2dDesc.Usage = D3D11_USAGE_DEFAULT;
 
-        //auto now = chrono::system_clock::now();
-
-        //D3D11_BOX box;
-        //box.front = 0;
-        //box.back = 1;
-        //box.left = 0;
-        //box.right = mSize.x;
-        //box.top = 0;
-        //box.bottom = mSize.y;
-        //mDeviceContext->UpdateSubresource (mTexture, 0, &box, pixels[0], mSize.x * 4, mSize.x * mSize.y * 4);
-        //auto took = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count();
-        //cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture setPixels updateSubResource {} {} took {}us", mSize.x, mSize.y, took));
-        //}
-      //virtual void setPixelsMapDynamicDiscard (uint8_t** pixels) final {
-      //// needs texture2dDesc.Usage = D3D11_USAGE_DYNAMIC ;
-      //// needs texture2dDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-        //auto now = chrono::system_clock::now();
-
-        //D3D11_MAPPED_SUBRESOURCE mappedSubResource;
-        //HRESULT hResult = mDeviceContext->Map (mTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubResource);
-        //if (hResult != S_OK) {
-          //{{{  error, log, return
-          //cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture - Map failed - '{}'",
-                                          //system_category().message(hResult)));
-          //return;
-          //}
-          //}}}
-        //memcpy (mappedSubResource.pData, pixels[0], mSize.x * mSize.y * 4);
-        //mDeviceContext->Unmap (mTexture, 0);
-
-        //auto took = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count();
-
-        //cLog::log (LOGINFO, fmt::format ("cDx11RgbaTexture setPixels map {} {} took {}us", mSize.x, mSize.y, took));
-        //}
-
-      virtual void setSource() final {
-        }
+      virtual void setSource() final {}
 
     private:
       ID3D11Device* mDevice = nullptr;
