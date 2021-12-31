@@ -13,17 +13,8 @@
 #include <algorithm>
 #include <functional>
 
-// !!! temp !!!!
-#include <stdio.h>
-#include <stdlib.h>
-
-// glad for OpenGL
 #if defined(GL_2_1) || defined(GL_3)
   #include <glad/glad.h>
-#elif defined(VULKAN)
-  #define GLFW_INCLUDE_NONE
-  #define GLFW_INCLUDE_VULKAN
-  #include <vulkan/vulkan.h>
 #endif
 
 // glfw
@@ -683,6 +674,10 @@ public:
   //{{{
   virtual ~cGlfwPlatform() {
 
+    #if defined(VULKAN)
+      checkVkResult (vkDeviceWaitIdle (gDevice));
+    #endif
+
     ImGui_ImplGlfw_Shutdown();
 
     #if defined(VULKAN)
@@ -769,7 +764,6 @@ public:
     mMonitor = glfwGetPrimaryMonitor();
     glfwGetWindowSize (mWindow, &mWindowSize.x, &mWindowSize.y);
     glfwGetWindowPos (mWindow, &mWindowPos.x, &mWindowPos.y);
-    glfwMakeContextCurrent (mWindow);
 
     #if defined(VULKAN)
       //{{{  setup vulkan
@@ -798,6 +792,7 @@ public:
       setupVulkanWindow (vulkanWindow, surface, width, height);
       //}}}
     #else
+      glfwMakeContextCurrent (mWindow);
       glfwSwapInterval (1);
     #endif
 
