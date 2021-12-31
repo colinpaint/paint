@@ -583,7 +583,7 @@ private:
     #if defined(VULKAN)
       cLog::log (LOGERROR, fmt::format ("setSwapInterval for vulkan unimplemented {}", vsync));
     #else
-      glfwSwapInterval (vsync ? 1 : 0)
+      glfwSwapInterval (vsync ? 1 : 0);
     #endif
     }
   //}}}
