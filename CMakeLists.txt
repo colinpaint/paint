@@ -5,7 +5,7 @@ cmake_policy (SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
-# valid options - GL_2_1, GL_3, GLES_3_0, GLES_3_1, GLES_3_2, DX_11
+# valid options - GL_2_1, GL_3, GLES_3_0, GLES_3_1, GLES_3_2, VULKAN, DX_11
 set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
 #set (BUILD_DOCKING "DOCKING" CACHE STRING "Build imgui docking option")
 #
@@ -73,16 +73,17 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_dx11.h app/cApp.h)
       file (GLOB SOURCE_FILES app/cDx11App.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx11.cpp)
     elseif (BUILD_GRAPHICS STREQUAL "GL_2_1")
-      find_package (OpenGL REQUIRED)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h app/cApp.h)
       file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
     elseif (BUILD_GRAPHICS STREQUAL "GL_3" OR
             BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
             BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
             BUILD_GRAPHICS STREQUAL "GLES_3_2")
-      find_package (OpenGL REQUIRED)
       file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_GL3.h app/cApp.h)
       file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
+    elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
+      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_vulkan.h app/cApp.h)
+      file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_vulkan.cpp)
     endif()
     add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -93,6 +94,7 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
 
     if (BUILD_GRAPHICS STREQUAL "GL_2_1" OR
         BUILD_GRAPHICS STREQUAL "GL_3")
+      find_package (OpenGL REQUIRED)
       if (MSVC)
         target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad)
       else()
@@ -101,6 +103,7 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     elseif (BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
             BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
             BUILD_GRAPHICS STREQUAL "GLES_3_2")
+      find_package (OpenGL REQUIRED)
       target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_ES3=1
                                                           IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
                                                           IMGUI_IMPL_OPENGL_ES3=1)
@@ -111,6 +114,16 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
         target_link_libraries (${PROJECT_NAME} PRIVATE glfw libGLESv2 libEGL)
       else()
         target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
+      endif()
+
+    elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
+      if (NOT MSVC)
+        find_package (Vulkan REQUIRED)
+        target_compile_definitions (${PROJECT_NAME} PRIVATE VK_PROTOTYPES)
+        if (BUILD_VALIDATION)
+          target_compile_definitions (${PROJECT_NAME} PRIVATE VALIDATION)
+        endif()
+        target_link_libraries (${PROJECT_NAME} PRIVATE glfw Vulkan::Vulkan)
       endif()
     endif()
 
