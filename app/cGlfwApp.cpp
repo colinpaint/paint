@@ -44,23 +44,6 @@ using namespace std;
 //}}}
 
 #if defined(VULKAN)
-  //{{{  vulkan static vars
-  static VkAllocationCallbacks*   gAllocator = NULL;
-  static VkInstance               gInstance = VK_NULL_HANDLE;
-  static VkPhysicalDevice         gPhysicalDevice = VK_NULL_HANDLE;
-  static VkDevice                 gDevice = VK_NULL_HANDLE;
-  static uint32_t                 gQueueFamily = (uint32_t)-1;
-  static VkQueue                  gQueue = VK_NULL_HANDLE;
-  static VkDebugReportCallbackEXT gDebugReport = VK_NULL_HANDLE;
-  static VkPipelineCache          gPipelineCache = VK_NULL_HANDLE;
-  static VkDescriptorPool         gDescriptorPool = VK_NULL_HANDLE;
-
-  static ImGui_ImplVulkanH_Window gMainWindowData;
-  static int                      gMinImageCount = 2;
-  static bool                     gSwapChainRebuild = false;
-
-  static ImGui_ImplVulkanH_Window* vulkanWindow = nullptr;
-  //}}}
   //{{{  vulkan functions
   //}}}
   //{{{
@@ -538,6 +521,7 @@ public:
   inline static function <void (int width, int height)> mResizeCallback ;
   inline static function <void (vector<string> dropItems)> mDropCallback;
 
+  // vulkan statics
   //{{{
   static void checkVkResult (VkResult result) {
 
@@ -550,6 +534,10 @@ public:
       abort();
     }
   //}}}
+  inline static VkDevice                 gDevice = VK_NULL_HANDLE;
+  inline static VkQueue                  gQueue = VK_NULL_HANDLE;
+  inline static bool                     gSwapChainRebuild = false;
+  inline static ImGui_ImplVulkanH_Window* vulkanWindow = nullptr;
 
 private:
   //{{{
@@ -936,13 +924,25 @@ private:
     }
   //}}}
 
-
   GLFWmonitor* mMonitor = nullptr;
   GLFWwindow* mWindow = nullptr;
   cPoint mWindowPos = { 0,0 };
   cPoint mWindowSize = { 0,0 };
 
   bool mActionFullScreen = false;
+
+  //{{{  vulkan static vars
+  inline static VkAllocationCallbacks*   gAllocator = NULL;
+  inline static VkInstance               gInstance = VK_NULL_HANDLE;
+  inline static VkPhysicalDevice         gPhysicalDevice = VK_NULL_HANDLE;
+  inline static uint32_t                 gQueueFamily = (uint32_t)-1;
+  inline static VkDebugReportCallbackEXT gDebugReport = VK_NULL_HANDLE;
+  inline static VkPipelineCache          gPipelineCache = VK_NULL_HANDLE;
+  inline static VkDescriptorPool         gDescriptorPool = VK_NULL_HANDLE;
+
+  inline static ImGui_ImplVulkanH_Window gMainWindowData;
+  inline static int                      gMinImageCount = 2;
+  //}}}
   };
 //}}}
 
@@ -4457,27 +4457,27 @@ private:
     //{{{
     virtual void renderDrawData() final {
       //if (!minimized)
-      VkSemaphore imageAcquiredSem = vulkanWindow->FrameSemaphores[vulkanWindow->SemaphoreIndex].ImageAcquiredSemaphore;
-      VkSemaphore renderCompleteSem = vulkanWindow->FrameSemaphores[vulkanWindow->SemaphoreIndex].RenderCompleteSemaphore;
+      VkSemaphore imageAcquiredSem = cGlfwPlatform::vulkanWindow->FrameSemaphores[cGlfwPlatform::vulkanWindow->SemaphoreIndex].ImageAcquiredSemaphore;
+      VkSemaphore renderCompleteSem = cGlfwPlatform::vulkanWindow->FrameSemaphores[cGlfwPlatform::vulkanWindow->SemaphoreIndex].RenderCompleteSemaphore;
 
-      VkResult result = vkAcquireNextImageKHR (gDevice, vulkanWindow->Swapchain, UINT64_MAX,
-                                               imageAcquiredSem, VK_NULL_HANDLE, &vulkanWindow->FrameIndex);
+      VkResult result = vkAcquireNextImageKHR (cGlfwPlatform::gDevice, cGlfwPlatform::vulkanWindow->Swapchain, UINT64_MAX,
+                                               imageAcquiredSem, VK_NULL_HANDLE, &cGlfwPlatform::vulkanWindow->FrameIndex);
       if ((result == VK_ERROR_OUT_OF_DATE_KHR) || (result == VK_SUBOPTIMAL_KHR)) {
-        gSwapChainRebuild = true;
+        cGlfwPlatform::gSwapChainRebuild = true;
         return;
         }
       cGlfwPlatform::checkVkResult (result);
 
-      ImGui_ImplVulkanH_Frame* vulkanFrame = &vulkanWindow->Frames[vulkanWindow->FrameIndex];
+      ImGui_ImplVulkanH_Frame* vulkanFrame = &cGlfwPlatform::vulkanWindow->Frames[cGlfwPlatform::vulkanWindow->FrameIndex];
 
       // wait indefinitely instead of periodically checking
-      result = vkWaitForFences (gDevice, 1, &vulkanFrame->Fence, VK_TRUE, UINT64_MAX);
+      result = vkWaitForFences (cGlfwPlatform::gDevice, 1, &vulkanFrame->Fence, VK_TRUE, UINT64_MAX);
       cGlfwPlatform::checkVkResult (result);
 
-      result = vkResetFences (gDevice, 1, &vulkanFrame->Fence);
+      result = vkResetFences (cGlfwPlatform::gDevice, 1, &vulkanFrame->Fence);
       cGlfwPlatform::checkVkResult(result);
 
-      result = vkResetCommandPool (gDevice, vulkanFrame->CommandPool, 0);
+      result = vkResetCommandPool (cGlfwPlatform::gDevice, vulkanFrame->CommandPool, 0);
       cGlfwPlatform::checkVkResult (result);
 
       VkCommandBufferBeginInfo commandBufferBeginInfo = {};
@@ -4489,12 +4489,12 @@ private:
 
       VkRenderPassBeginInfo renderPassBeginInfo = {};
       renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-      renderPassBeginInfo.renderPass = vulkanWindow->RenderPass;
+      renderPassBeginInfo.renderPass = cGlfwPlatform::vulkanWindow->RenderPass;
       renderPassBeginInfo.framebuffer = vulkanFrame->Framebuffer;
-      renderPassBeginInfo.renderArea.extent.width = vulkanWindow->Width;
-      renderPassBeginInfo.renderArea.extent.height = vulkanWindow->Height;
+      renderPassBeginInfo.renderArea.extent.width = cGlfwPlatform::vulkanWindow->Width;
+      renderPassBeginInfo.renderArea.extent.height = cGlfwPlatform::vulkanWindow->Height;
       renderPassBeginInfo.clearValueCount = 1;
-      renderPassBeginInfo.pClearValues = &vulkanWindow->ClearValue;
+      renderPassBeginInfo.pClearValues = &cGlfwPlatform::vulkanWindow->ClearValue;
 
       vkCmdBeginRenderPass (vulkanFrame->CommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -4518,7 +4518,7 @@ private:
       result = vkEndCommandBuffer (vulkanFrame->CommandBuffer);
       cGlfwPlatform::checkVkResult (result);
 
-      result = vkQueueSubmit (gQueue, 1, &submitInfo, vulkanFrame->Fence);
+      result = vkQueueSubmit (cGlfwPlatform::gQueue, 1, &submitInfo, vulkanFrame->Fence);
       cGlfwPlatform::checkVkResult (result);
       }
     //}}}
