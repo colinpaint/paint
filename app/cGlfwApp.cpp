@@ -1,4 +1,4 @@
-// cGlfwApp.cpp - glfw + openGL2,openGL3,openGLES3_x app framework
+// cGlfwApp.cpp - glfw + openGL2,openGL3,openGLES3_x,vulkan app framework
 //{{{  includes
 #if defined(_WIN32)
   #define _CRT_SECURE_NO_WARNINGS
@@ -67,6 +67,8 @@ using namespace std;
   static ImGui_ImplVulkanH_Window gMainWindowData;
   static int                      gMinImageCount = 2;
   static bool                     gSwapChainRebuild = false;
+
+  static ImGui_ImplVulkanH_Window* vulkanWindow = nullptr;
   //}}}
   //{{{  vulkan functions
   #ifdef VALIDATION
@@ -87,7 +89,7 @@ using namespace std;
       (void)pUserData;
       (void)pLayerPrefix;
 
-      printf ("vkDebugReport type:%i:%s\n", objectType, pMessage);
+      cLog::log (LOGERROR, fmt::format ("vkDebugReport type:{}:{}", objectType, pMessage));
       return VK_FALSE;
       }
     //}}}
@@ -99,7 +101,7 @@ using namespace std;
     if (result == 0)
       return;
 
-    printf ("vkResultError:%d\n", result);
+    cLog::log (LOGERROR, fmt::format ("vkResultError:{}", result));
 
     if (result < 0)
       abort();
@@ -119,7 +121,7 @@ using namespace std;
 
     #ifdef VALIDATION
       //{{{  create with validation layers
-      printf ("using validation\n");
+      cLog::log (LOGINFO, fmt::format ("using validation"));
 
       const char* layers[] = { "VK_LAYER_KHRONOS_validation" };
       instanceCreateInfo.enabledLayerCount = 1;
@@ -173,7 +175,7 @@ using namespace std;
     checkVkResult (result);
 
     if (!numGpu)
-      printf ("queueFamilyCount zero\n");
+      cLog::log (LOGERROR, fmt::format ("queueFamilyCount zero"));
     IM_ASSERT (numGpu > 0);
 
     VkPhysicalDevice* gpus = (VkPhysicalDevice*)malloc (sizeof(VkPhysicalDevice) * numGpu);
@@ -183,13 +185,13 @@ using namespace std;
     for (uint32_t i = 0; i < numGpu; i++) {
       VkPhysicalDeviceProperties properties;
       vkGetPhysicalDeviceProperties (gpus[i], &properties);
-      printf ("gpu:%d var:%d major:%d minor:%d patch:%d type:%d %s api:%x driver:%d\n",
+      cLog::log (LOGINFO, fmt::format ("gpu:{} var:{} major:{} minor:{} patch:{} type:{} {} api:{} driver:{}",
               (int)i,
               VK_API_VERSION_VARIANT(properties.apiVersion),
               VK_API_VERSION_MAJOR(properties.apiVersion),
               VK_API_VERSION_MINOR(properties.apiVersion),
               VK_API_VERSION_PATCH(properties.apiVersion),
-              properties.deviceType, properties.deviceName, properties.apiVersion, properties.driverVersion);
+              properties.deviceType, properties.deviceName, properties.apiVersion, properties.driverVersion));
       }
 
     // If a number >1 of GPUs got reported, find discrete GPU if present, or use first one available
@@ -206,7 +208,7 @@ using namespace std;
       }
 
     gPhysicalDevice = gpus[useGpu];
-    printf ("useGpu:%d\n", (int)useGpu);
+    cLog::log (LOGINFO, fmt::format ("useGpu:{}", (int)useGpu));
 
     free (gpus);
     //}}}
@@ -215,17 +217,15 @@ using namespace std;
     vkGetPhysicalDeviceQueueFamilyProperties (gPhysicalDevice, &numQueueFamily, NULL);
 
     if (!numQueueFamily)
-      printf ("queueFamilyCount zero\n");
+      cLog::log (LOGERROR, fmt::format ("queueFamilyCount zero"));
 
     VkQueueFamilyProperties* queueFamilyProperties =
       (VkQueueFamilyProperties*)malloc (sizeof(VkQueueFamilyProperties) * numQueueFamily);
     vkGetPhysicalDeviceQueueFamilyProperties (gPhysicalDevice, &numQueueFamily, queueFamilyProperties);
 
     for (uint32_t i = 0; i < numQueueFamily; i++)
-      printf ("queue:%d count:%d queueFlags:%x\n",
-               i,
-               queueFamilyProperties[i].queueCount,
-               queueFamilyProperties[i].queueFlags);
+      cLog::log (LOGINFO, fmt::format ("queue:{} count:{} queueFlags:{}",
+               i, queueFamilyProperties[i].queueCount, queueFamilyProperties[i].queueFlags));
 
     for (uint32_t i = 0; i < numQueueFamily; i++)
       if (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
@@ -301,7 +301,7 @@ using namespace std;
     VkBool32 result;
     vkGetPhysicalDeviceSurfaceSupportKHR (gPhysicalDevice, gQueueFamily, vulkanWindow->Surface, &result);
     if (result != VK_TRUE) {
-      printf ("error, no WSI support on physical device\n");
+      cLog::log (LOGERROR, fmt::format (" error, no WSI support on physical device"));
       exit (-1);
       }
 
@@ -329,7 +329,7 @@ using namespace std;
                                                                      vulkanWindow->Surface,
                                                                      &presentModes[0], IM_ARRAYSIZE(presentModes));
 
-    printf ("use presentMode:%d\n", vulkanWindow->PresentMode);
+    cLog::log (LOGINFO, fmt::format ("use presentMode:{}", vulkanWindow->PresentMode));
 
     // create swapChain, renderPass, framebuffer, etc.
     IM_ASSERT (gMinImageCount >= 2);
@@ -395,8 +395,7 @@ using namespace std;
   //}}}
 
   //{{{
-  static void renderDrawData (ImGui_ImplVulkanH_Window* vulkanWindow, ImDrawData* draw_data) {
-
+  static void vulkanRenderDrawData (ImGui_ImplVulkanH_Window* vulkanWindow, ImDrawData* draw_data) {
 
     VkSemaphore imageAcquiredSem = vulkanWindow->FrameSemaphores[vulkanWindow->SemaphoreIndex].ImageAcquiredSemaphore;
     VkSemaphore renderCompleteSem = vulkanWindow->FrameSemaphores[vulkanWindow->SemaphoreIndex].RenderCompleteSemaphore;
@@ -464,7 +463,7 @@ using namespace std;
     }
   //}}}
   //{{{
-  static void present (ImGui_ImplVulkanH_Window* vulkanWindow) {
+  static void vulkanPresent (ImGui_ImplVulkanH_Window* vulkanWindow) {
 
     if (gSwapChainRebuild)
       return;
@@ -686,6 +685,11 @@ public:
 
     ImGui_ImplGlfw_Shutdown();
 
+    #if defined(VULKAN)
+      cleanupVulkanWindow();
+      cleanupVulkan();
+    #endif
+
     glfwDestroyWindow (mWindow);
     glfwTerminate();
 
@@ -770,7 +774,7 @@ public:
     #if defined(VULKAN)
       //{{{  setup vulkan
       if (!glfwVulkanSupported()) {
-        printf ("glfw vulkan not supported\n");
+        cLog::log (LOGERROR, fmt::format ("glfw vulkan not supported"));
         return 1;
         }
 
@@ -778,7 +782,7 @@ public:
       uint32_t extensionsCount = 0;
       const char** extensions = glfwGetRequiredInstanceExtensions (&extensionsCount);
       for (uint32_t i = 0; i < extensionsCount; i++)
-        printf ("glfwVulkanExt:%d %s\n", int(i), extensions[i]);
+        cLog::log (LOGINFO, fmt::format ("glfwVulkanExt:{} {}", int(i), extensions[i]));
       setupVulkan (extensions, extensionsCount);
 
       // create windowSurface
@@ -789,13 +793,13 @@ public:
       // create framebuffers
       int width, height;
       glfwGetFramebufferSize (mWindow, &width, &height);
-      ImGui_ImplVulkanH_Window* vulkanWindow = &gMainWindowData;
+
+      vulkanWindow = &gMainWindowData;
       setupVulkanWindow (vulkanWindow, surface, width, height);
       //}}}
+    #else
+      glfwSwapInterval (1);
     #endif
-
-    // vsync
-    glfwSwapInterval (1);
 
     // set imGui context
     IMGUI_CHECKVERSION();
@@ -881,7 +885,7 @@ public:
 
     if (mVsync != vsync) {
       mVsync = vsync;
-      glfwSwapInterval (mVsync ? 1 : 0);
+      setSwapInterval (mVsync);
       }
     }
   //}}}
@@ -889,7 +893,7 @@ public:
   virtual void toggleVsync() final {
 
     mVsync = !mVsync;
-    glfwSwapInterval (mVsync ? 1 : 0);
+    setSwapInterval (mVsync);
     }
   //}}}
 
@@ -946,7 +950,11 @@ public:
   //{{{
   virtual void present() final {
 
-    glfwSwapBuffers (mWindow);
+    #if defined(VULKAN)
+      vulkanPresent (vulkanWindow);
+    #else
+      glfwSwapBuffers (mWindow);
+    #endif
     }
   //}}}
 
@@ -989,6 +997,14 @@ private:
     mDropCallback (dropItems);
     }
   //}}}
+
+  void setSwapInterval (bool vsync) {
+    #if defined(VULKAN)
+      cLog::log (LOGERROR, fmt::format ("setSwapInterval for vulkan unimplemented {}", vsync));
+    #else
+      glfwSwapInterval (vsync ? 1 : 0)
+    #endif
+    }
 
   GLFWmonitor* mMonitor = nullptr;
   GLFWwindow* mWindow = nullptr;
@@ -4508,8 +4524,8 @@ private:
       (void)size;
       }
     virtual void renderDrawData() final {
-      //ImGui_ImplVulkan_RenderDrawData (ImGui::GetDrawData());
-      // void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer command_buffer, VkPipeline pipeline = VK_NULL_HANDLE);
+      //if (!minimized)
+      vulkanRenderDrawData (vulkanWindow, ImGui::GetDrawData());
       }
 
     // creates
