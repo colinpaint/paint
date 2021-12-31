@@ -386,74 +386,6 @@ using namespace std;
   //}}}
 
   //{{{
-  static void vulkanRenderDrawData (ImGui_ImplVulkanH_Window* vulkanWindow, ImDrawData* draw_data) {
-
-    VkSemaphore imageAcquiredSem = vulkanWindow->FrameSemaphores[vulkanWindow->SemaphoreIndex].ImageAcquiredSemaphore;
-    VkSemaphore renderCompleteSem = vulkanWindow->FrameSemaphores[vulkanWindow->SemaphoreIndex].RenderCompleteSemaphore;
-
-    VkResult result = vkAcquireNextImageKHR (gDevice, vulkanWindow->Swapchain, UINT64_MAX,
-                                          imageAcquiredSem, VK_NULL_HANDLE, &vulkanWindow->FrameIndex);
-    if ((result == VK_ERROR_OUT_OF_DATE_KHR) || (result == VK_SUBOPTIMAL_KHR)) {
-      gSwapChainRebuild = true;
-      return;
-      }
-    checkVkResult (result);
-
-    ImGui_ImplVulkanH_Frame* vulkanFrame = &vulkanWindow->Frames[vulkanWindow->FrameIndex];
-
-    // wait indefinitely instead of periodically checking
-    result = vkWaitForFences (gDevice, 1, &vulkanFrame->Fence, VK_TRUE, UINT64_MAX);
-    checkVkResult (result);
-
-    result = vkResetFences (gDevice, 1, &vulkanFrame->Fence);
-    checkVkResult(result);
-
-    result = vkResetCommandPool (gDevice, vulkanFrame->CommandPool, 0);
-    checkVkResult (result);
-
-    VkCommandBufferBeginInfo commandBufferBeginInfo = {};
-    commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    commandBufferBeginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-    result = vkBeginCommandBuffer (vulkanFrame->CommandBuffer, &commandBufferBeginInfo);
-    checkVkResult (result);
-
-    VkRenderPassBeginInfo renderPassBeginInfo = {};
-    renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassBeginInfo.renderPass = vulkanWindow->RenderPass;
-    renderPassBeginInfo.framebuffer = vulkanFrame->Framebuffer;
-    renderPassBeginInfo.renderArea.extent.width = vulkanWindow->Width;
-    renderPassBeginInfo.renderArea.extent.height = vulkanWindow->Height;
-    renderPassBeginInfo.clearValueCount = 1;
-    renderPassBeginInfo.pClearValues = &vulkanWindow->ClearValue;
-
-    vkCmdBeginRenderPass (vulkanFrame->CommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-    // record dear imgui primitives into command buffer
-    ImGui_ImplVulkan_RenderDrawData (draw_data, vulkanFrame->CommandBuffer);
-
-    // submit command buffer
-    vkCmdEndRenderPass (vulkanFrame->CommandBuffer);
-
-    VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    VkSubmitInfo submitInfo = {};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &imageAcquiredSem;
-    submitInfo.pWaitDstStageMask = &pipelineStageFlags;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &vulkanFrame->CommandBuffer;
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &renderCompleteSem;
-
-    result = vkEndCommandBuffer (vulkanFrame->CommandBuffer);
-    checkVkResult (result);
-
-    result = vkQueueSubmit (gQueue, 1, &submitInfo, vulkanFrame->Fence);
-    checkVkResult (result);
-    }
-  //}}}
-  //{{{
   static void vulkanPresent (ImGui_ImplVulkanH_Window* vulkanWindow) {
 
     if (gSwapChainRebuild)
@@ -4518,10 +4450,74 @@ private:
     virtual void clear (const cPoint& size) final {
       (void)size;
       }
+    //{{{
     virtual void renderDrawData() final {
       //if (!minimized)
-      vulkanRenderDrawData (vulkanWindow, ImGui::GetDrawData());
+      VkSemaphore imageAcquiredSem = vulkanWindow->FrameSemaphores[vulkanWindow->SemaphoreIndex].ImageAcquiredSemaphore;
+      VkSemaphore renderCompleteSem = vulkanWindow->FrameSemaphores[vulkanWindow->SemaphoreIndex].RenderCompleteSemaphore;
+
+      VkResult result = vkAcquireNextImageKHR (gDevice, vulkanWindow->Swapchain, UINT64_MAX,
+                                            imageAcquiredSem, VK_NULL_HANDLE, &vulkanWindow->FrameIndex);
+      if ((result == VK_ERROR_OUT_OF_DATE_KHR) || (result == VK_SUBOPTIMAL_KHR)) {
+        gSwapChainRebuild = true;
+        return;
+        }
+      checkVkResult (result);
+
+      ImGui_ImplVulkanH_Frame* vulkanFrame = &vulkanWindow->Frames[vulkanWindow->FrameIndex];
+
+      // wait indefinitely instead of periodically checking
+      result = vkWaitForFences (gDevice, 1, &vulkanFrame->Fence, VK_TRUE, UINT64_MAX);
+      checkVkResult (result);
+
+      result = vkResetFences (gDevice, 1, &vulkanFrame->Fence);
+      checkVkResult(result);
+
+      result = vkResetCommandPool (gDevice, vulkanFrame->CommandPool, 0);
+      checkVkResult (result);
+
+      VkCommandBufferBeginInfo commandBufferBeginInfo = {};
+      commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+      commandBufferBeginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+      result = vkBeginCommandBuffer (vulkanFrame->CommandBuffer, &commandBufferBeginInfo);
+      checkVkResult (result);
+
+      VkRenderPassBeginInfo renderPassBeginInfo = {};
+      renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+      renderPassBeginInfo.renderPass = vulkanWindow->RenderPass;
+      renderPassBeginInfo.framebuffer = vulkanFrame->Framebuffer;
+      renderPassBeginInfo.renderArea.extent.width = vulkanWindow->Width;
+      renderPassBeginInfo.renderArea.extent.height = vulkanWindow->Height;
+      renderPassBeginInfo.clearValueCount = 1;
+      renderPassBeginInfo.pClearValues = &vulkanWindow->ClearValue;
+
+      vkCmdBeginRenderPass (vulkanFrame->CommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+      // record dear imgui primitives into command buffer
+      ImGui_ImplVulkan_RenderDrawData (ImGui::GetDrawData(), vulkanFrame->CommandBuffer);
+
+      // submit command buffer
+      vkCmdEndRenderPass (vulkanFrame->CommandBuffer);
+
+      VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      VkSubmitInfo submitInfo = {};
+      submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+      submitInfo.waitSemaphoreCount = 1;
+      submitInfo.pWaitSemaphores = &imageAcquiredSem;
+      submitInfo.pWaitDstStageMask = &pipelineStageFlags;
+      submitInfo.commandBufferCount = 1;
+      submitInfo.pCommandBuffers = &vulkanFrame->CommandBuffer;
+      submitInfo.signalSemaphoreCount = 1;
+      submitInfo.pSignalSemaphores = &renderCompleteSem;
+
+      result = vkEndCommandBuffer (vulkanFrame->CommandBuffer);
+      checkVkResult (result);
+
+      result = vkQueueSubmit (gQueue, 1, &submitInfo, vulkanFrame->Fence);
+      checkVkResult (result);
       }
+    //}}}
 
     // creates
     virtual cQuad* createQuad (const cPoint& size) final { return new cOpenVulkanQuad (size); }
