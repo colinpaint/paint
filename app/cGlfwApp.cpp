@@ -594,7 +594,7 @@ private:
                                             VK_PRESENT_MODE_FIFO_KHR };
         vulkanWindow->PresentMode = ImGui_ImplVulkanH_SelectPresentMode (gPhysicalDevice,
                                                                          vulkanWindow->Surface,
-        &presentModes[0], IM_ARRAYSIZE(presentModes));
+                                                                         &presentModes[0], IM_ARRAYSIZE(presentModes));
         }
     #else
       glfwSwapInterval (vsync ? 1 : 0);
@@ -854,8 +854,8 @@ private:
                                                                            (size_t)IM_ARRAYSIZE (requestSurfaceImageFormat),
                                                                            requestSurfaceColorSpace);
       // select vsync presentMode
-      VkPresentModeKHR presentModes[] = { VK_PRESENT_MODE_MAILBOX_KHR,
-                                          VK_PRESENT_MODE_IMMEDIATE_KHR,
+      VkPresentModeKHR presentModes[] = { //VK_PRESENT_MODE_MAILBOX_KHR,
+                                          //VK_PRESENT_MODE_IMMEDIATE_KHR,
                                           VK_PRESENT_MODE_FIFO_KHR };
       vulkanWindow->PresentMode = ImGui_ImplVulkanH_SelectPresentMode (gPhysicalDevice,
                                                                        vulkanWindow->Surface,

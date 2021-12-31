@@ -26,6 +26,7 @@ option (BUILD_CAPTURE "Build capture cmdline app" ON)
 if (MSVC)
   set (BUILD_MSVC_COMPILE_OPTIONS "/arch:AVX" CACHE STRING "msvc compile options")
 else()
+  option (BUILD_VALIDATION "Build vulkan validation layers" OFF)
   set (BUILD_LINUX_COMPILE_OPTIONS "-Ofast" CACHE STRING "linux compile options")
 endif()
 #
