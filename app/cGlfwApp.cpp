@@ -43,192 +43,188 @@
 using namespace std;
 //}}}
 
-#if defined(VULKAN)
-  //{{{  vulkan functions
-  //}}}
-  //{{{
-  //int main (int, char**) {
+//{{{
+//int main (int, char**) {
 
-    //// setup glfw
-    //glfwSetErrorCallback (glfwErrorCallback);
-    //if (!glfwInit())
-      //return 1;
+  //// setup glfw
+  //glfwSetErrorCallback (glfwErrorCallback);
+  //if (!glfwInit())
+    //return 1;
 
-    //// setup glfw window
-    //glfwWindowHint (GLFW_CLIENT_API, GLFW_NO_API);
-    //GLFWwindow* glfwWindow = glfwCreateWindow (1280, 720, "Dear ImGui GLFW+Vulkan example", NULL, NULL);
+  //// setup glfw window
+  //glfwWindowHint (GLFW_CLIENT_API, GLFW_NO_API);
+  //GLFWwindow* glfwWindow = glfwCreateWindow (1280, 720, "Dear ImGui GLFW+Vulkan example", NULL, NULL);
 
-    //// setup vulkan
-    //if (!glfwVulkanSupported()) {
-      //printf ("glfw vulkan not supported\n");
-      //return 1;
+  //// setup vulkan
+  //if (!glfwVulkanSupported()) {
+    //printf ("glfw vulkan not supported\n");
+    //return 1;
+    //}
+
+  //// get glfw required vulkan extensions
+  //uint32_t extensionsCount = 0;
+  //const char** extensions = glfwGetRequiredInstanceExtensions (&extensionsCount);
+  //for (uint32_t i = 0; i < extensionsCount; i++)
+    //printf ("glfwVulkanExt:%d %s\n", int(i), extensions[i]);
+  //setupVulkan (extensions, extensionsCount);
+
+  //// create windowSurface
+  //VkSurfaceKHR surface;
+  //VkResult result = glfwCreateWindowSurface (gInstance, glfwWindow, gAllocator, &surface);
+  //checkVkResult (result);
+
+  //// create framebuffers
+  //int width, height;
+  //glfwGetFramebufferSize (glfwWindow, &width, &height);
+  //ImGui_ImplVulkanH_Window* vulkanWindow = &gMainWindowData;
+  //setupVulkanWindow (vulkanWindow, surface, width, height);
+
+  //// setup imGui context
+  //IMGUI_CHECKVERSION();
+  //ImGui::CreateContext();
+  //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+
+  //#ifdef DOCKING
+    //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
+    //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+  //#endif
+  ////io.ConfigViewportsNoAutoMerge = true;
+  ////io.ConfigViewportsNoTaskBarIcon = true;
+
+  //ImGui::StyleColorsDark();
+
+  //#ifdef DOCKING
+    //ImGuiStyle& style = ImGui::GetStyle();
+    //if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+      //style.WindowRounding = 0.0f;
+      //style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+      //}
+  //#endif
+
+  //// setup Platform/Renderer backends
+  //ImGui_ImplGlfw_InitForVulkan (glfwWindow, true);
+
+  //ImGui_ImplVulkan_InitInfo vulkanInitInfo = {};
+  //vulkanInitInfo.Instance = gInstance;
+  //vulkanInitInfo.PhysicalDevice = gPhysicalDevice;
+  //vulkanInitInfo.Device = gDevice;
+  //vulkanInitInfo.QueueFamily = gQueueFamily;
+  //vulkanInitInfo.Queue = gQueue;
+  //vulkanInitInfo.PipelineCache = gPipelineCache;
+  //vulkanInitInfo.DescriptorPool = gDescriptorPool;
+  //vulkanInitInfo.Allocator = gAllocator;
+  //vulkanInitInfo.MinImageCount = gMinImageCount;
+  //vulkanInitInfo.ImageCount = vulkanWindow->ImageCount;
+  //vulkanInitInfo.CheckVkResultFn = checkVkResult;
+  //ImGui_ImplVulkan_Init (&vulkanInitInfo, vulkanWindow->RenderPass);
+
+  //uploadFonts (vulkanWindow);
+
+  //// Our state
+  //bool show_demo_window = true;
+  //bool show_another_window = false;
+  //ImVec4 clearColor = ImVec4 (0.45f, 0.55f, 0.60f, 1.00f);
+
+  //// Main loop
+  //while (!glfwWindowShouldClose (glfwWindow)) {
+    //glfwPollEvents();
+
+    //// Resize swap chain?
+    //if (gSwapChainRebuild) {
+      //int width;
+      //int height;
+      //glfwGetFramebufferSize (glfwWindow, &width, &height);
+      //if ((width > 0) && (height > 0)) {
+        //ImGui_ImplVulkan_SetMinImageCount (gMinImageCount);
+        //ImGui_ImplVulkanH_CreateOrResizeWindow (gInstance, gPhysicalDevice, gDevice,
+                                                //&gMainWindowData, gQueueFamily,
+                                                //gAllocator, width, height, gMinImageCount);
+        //gMainWindowData.FrameIndex = 0;
+        //gSwapChainRebuild = false;
+        //}
       //}
 
-    //// get glfw required vulkan extensions
-    //uint32_t extensionsCount = 0;
-    //const char** extensions = glfwGetRequiredInstanceExtensions (&extensionsCount);
-    //for (uint32_t i = 0; i < extensionsCount; i++)
-      //printf ("glfwVulkanExt:%d %s\n", int(i), extensions[i]);
-    //setupVulkan (extensions, extensionsCount);
+    //// Start the Dear ImGui frame
+    //ImGui_ImplVulkan_NewFrame();
+    //ImGui_ImplGlfw_NewFrame();
+    //ImGui::NewFrame();
 
-    //// create windowSurface
-    //VkSurfaceKHR surface;
-    //VkResult result = glfwCreateWindowSurface (gInstance, glfwWindow, gAllocator, &surface);
-    //checkVkResult (result);
+    //// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+    //if (show_demo_window)
+      //ImGui::ShowDemoWindow (&show_demo_window);
 
-    //// create framebuffers
-    //int width, height;
-    //glfwGetFramebufferSize (glfwWindow, &width, &height);
-    //ImGui_ImplVulkanH_Window* vulkanWindow = &gMainWindowData;
-    //setupVulkanWindow (vulkanWindow, surface, width, height);
+    //{{{  Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+    //{
+    //static float f = 0.0f;
+    //static int counter = 0;
 
-    //// setup imGui context
-    //IMGUI_CHECKVERSION();
-    //ImGui::CreateContext();
-    //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    //ImGui::Begin ("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
-    //#ifdef DOCKING
-      //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
-      //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
-    //#endif
-    ////io.ConfigViewportsNoAutoMerge = true;
-    ////io.ConfigViewportsNoTaskBarIcon = true;
+    //ImGui::Text ("This is some useful text.");               // Display some text (you can use a format strings too)
+    //ImGui::Checkbox ("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+    //ImGui::Checkbox ("Another Window", &show_another_window);
 
-    //ImGui::StyleColorsDark();
+    //ImGui::SliderFloat ("float", &f, 0.0f, 1.0f);           // Edit 1 float using a slider from 0.0f to 1.0f
+    //ImGui::ColorEdit3 ("clear color", (float*)&clearColor); // Edit 3 floats representing a color
 
-    //#ifdef DOCKING
-      //ImGuiStyle& style = ImGui::GetStyle();
-      //if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-        //style.WindowRounding = 0.0f;
-        //style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-        //}
-    //#endif
+    //if (ImGui::Button ("Button"))
+      //counter++;
+    //ImGui::SameLine();
+    //ImGui::Text ("counter = %d", counter);
 
-    //// setup Platform/Renderer backends
-    //ImGui_ImplGlfw_InitForVulkan (glfwWindow, true);
-
-    //ImGui_ImplVulkan_InitInfo vulkanInitInfo = {};
-    //vulkanInitInfo.Instance = gInstance;
-    //vulkanInitInfo.PhysicalDevice = gPhysicalDevice;
-    //vulkanInitInfo.Device = gDevice;
-    //vulkanInitInfo.QueueFamily = gQueueFamily;
-    //vulkanInitInfo.Queue = gQueue;
-    //vulkanInitInfo.PipelineCache = gPipelineCache;
-    //vulkanInitInfo.DescriptorPool = gDescriptorPool;
-    //vulkanInitInfo.Allocator = gAllocator;
-    //vulkanInitInfo.MinImageCount = gMinImageCount;
-    //vulkanInitInfo.ImageCount = vulkanWindow->ImageCount;
-    //vulkanInitInfo.CheckVkResultFn = checkVkResult;
-    //ImGui_ImplVulkan_Init (&vulkanInitInfo, vulkanWindow->RenderPass);
-
-    //uploadFonts (vulkanWindow);
-
-    //// Our state
-    //bool show_demo_window = true;
-    //bool show_another_window = false;
-    //ImVec4 clearColor = ImVec4 (0.45f, 0.55f, 0.60f, 1.00f);
-
-    //// Main loop
-    //while (!glfwWindowShouldClose (glfwWindow)) {
-      //glfwPollEvents();
-
-      //// Resize swap chain?
-      //if (gSwapChainRebuild) {
-        //int width;
-        //int height;
-        //glfwGetFramebufferSize (glfwWindow, &width, &height);
-        //if ((width > 0) && (height > 0)) {
-          //ImGui_ImplVulkan_SetMinImageCount (gMinImageCount);
-          //ImGui_ImplVulkanH_CreateOrResizeWindow (gInstance, gPhysicalDevice, gDevice,
-                                                  //&gMainWindowData, gQueueFamily,
-                                                  //gAllocator, width, height, gMinImageCount);
-          //gMainWindowData.FrameIndex = 0;
-          //gSwapChainRebuild = false;
-          //}
-        //}
-
-      //// Start the Dear ImGui frame
-      //ImGui_ImplVulkan_NewFrame();
-      //ImGui_ImplGlfw_NewFrame();
-      //ImGui::NewFrame();
-
-      //// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-      //if (show_demo_window)
-        //ImGui::ShowDemoWindow (&show_demo_window);
-
-      //{{{  Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-      //{
-      //static float f = 0.0f;
-      //static int counter = 0;
-
-      //ImGui::Begin ("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-      //ImGui::Text ("This is some useful text.");               // Display some text (you can use a format strings too)
-      //ImGui::Checkbox ("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-      //ImGui::Checkbox ("Another Window", &show_another_window);
-
-      //ImGui::SliderFloat ("float", &f, 0.0f, 1.0f);           // Edit 1 float using a slider from 0.0f to 1.0f
-      //ImGui::ColorEdit3 ("clear color", (float*)&clearColor); // Edit 3 floats representing a color
-
-      //if (ImGui::Button ("Button"))
-        //counter++;
-      //ImGui::SameLine();
-      //ImGui::Text ("counter = %d", counter);
-
-      //ImGui::Text ("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    //ImGui::Text ("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    //ImGui::End();
+    //}
+    //}}}
+    //{{{  Show another simple window.
+    //if (show_another_window) {
+      //ImGui::Begin ("Another Window", &show_another_window);
+      //ImGui::Text ("Hello from another window!");
+      //if (ImGui::Button ("Close Me"))
+        //show_another_window = false;
       //ImGui::End();
       //}
-      //}}}
-      //{{{  Show another simple window.
-      //if (show_another_window) {
-        //ImGui::Begin ("Another Window", &show_another_window);
-        //ImGui::Text ("Hello from another window!");
-        //if (ImGui::Button ("Close Me"))
-          //show_another_window = false;
-        //ImGui::End();
+    //}}}
+
+    //// Rendering
+    //ImGui::Render();
+    //ImDrawData* drawData = ImGui::GetDrawData();
+    //const bool minimized = (drawData->DisplaySize.x <= 0.0f || drawData->DisplaySize.y <= 0.0f);
+    //vulkanWindow->ClearValue.color.float32[0] = clearColor.x * clearColor.w;
+    //vulkanWindow->ClearValue.color.float32[1] = clearColor.y * clearColor.w;
+    //vulkanWindow->ClearValue.color.float32[2] = clearColor.z * clearColor.w;
+    //vulkanWindow->ClearValue.color.float32[3] = clearColor.w;
+    //if (!minimized)
+      //renderDrawData (vulkanWindow, drawData);
+
+    //#ifdef DOCKING
+      //if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        //ImGui::UpdatePlatformWindows();
+        //ImGui::RenderPlatformWindowsDefault();
         //}
-      //}}}
+    //#endif
 
-      //// Rendering
-      //ImGui::Render();
-      //ImDrawData* drawData = ImGui::GetDrawData();
-      //const bool minimized = (drawData->DisplaySize.x <= 0.0f || drawData->DisplaySize.y <= 0.0f);
-      //vulkanWindow->ClearValue.color.float32[0] = clearColor.x * clearColor.w;
-      //vulkanWindow->ClearValue.color.float32[1] = clearColor.y * clearColor.w;
-      //vulkanWindow->ClearValue.color.float32[2] = clearColor.z * clearColor.w;
-      //vulkanWindow->ClearValue.color.float32[3] = clearColor.w;
-      //if (!minimized)
-        //renderDrawData (vulkanWindow, drawData);
-
-      //#ifdef DOCKING
-        //if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-          //ImGui::UpdatePlatformWindows();
-          //ImGui::RenderPlatformWindowsDefault();
-          //}
-      //#endif
-
-      //if (!minimized)
-        //present (vulkanWindow);
-      //}
-
-    //// cleanup
-    //result = vkDeviceWaitIdle (gDevice);
-    //checkVkResult (result);
-
-    //ImGui_ImplVulkan_Shutdown();
-    //ImGui_ImplGlfw_Shutdown();
-    //ImGui::DestroyContext();
-
-    //cleanupVulkanWindow();
-    //cleanupVulkan();
-
-    //glfwDestroyWindow (glfwWindow);
-    //glfwTerminate();
-
-    //return 0;
+    //if (!minimized)
+      //present (vulkanWindow);
     //}
-  //}}}
-#endif
+
+  //// cleanup
+  //result = vkDeviceWaitIdle (gDevice);
+  //checkVkResult (result);
+
+  //ImGui_ImplVulkan_Shutdown();
+  //ImGui_ImplGlfw_Shutdown();
+  //ImGui::DestroyContext();
+
+  //cleanupVulkanWindow();
+  //cleanupVulkan();
+
+  //glfwDestroyWindow (glfwWindow);
+  //glfwTerminate();
+
+  //return 0;
+  //}
+//}}}
 
 // cPlatform interface
 //{{{
@@ -245,8 +241,20 @@ public:
     ImGui_ImplGlfw_Shutdown();
 
     #if defined(VULKAN)
-      cleanupVulkanWindow();
-      cleanupVulkan();
+      //{{{  cleanup vulkan
+      vkDestroyDescriptorPool (gDevice, gDescriptorPool, gAllocator);
+
+      #ifdef VALIDATION
+        // Remove the debug report callback
+        auto vkDestroyDebugReportCallbackEXT =
+          (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr (gInstance, "vkDestroyDebugReportCallbackEXT");
+        vkDestroyDebugReportCallbackEXT (gInstance, gDebugReport, gAllocator);
+      #endif
+
+      vkDestroyDevice (gDevice, gAllocator);
+      vkDestroyInstance (gInstance, gAllocator);
+      ImGui_ImplVulkanH_DestroyWindow (gInstance, gDevice, &gMainWindowData, gAllocator);
+      //}}}
     #endif
 
     glfwDestroyWindow (mWindow);
@@ -534,9 +542,9 @@ public:
       abort();
     }
   //}}}
-  inline static VkDevice                 gDevice = VK_NULL_HANDLE;
-  inline static VkQueue                  gQueue = VK_NULL_HANDLE;
-  inline static bool                     gSwapChainRebuild = false;
+  inline static VkDevice gDevice = VK_NULL_HANDLE;
+  inline static VkQueue gQueue = VK_NULL_HANDLE;
+  inline static bool gSwapChainRebuild = false;
   inline static ImGui_ImplVulkanH_Window* vulkanWindow = nullptr;
 
 private:
@@ -550,44 +558,9 @@ private:
     }
   //}}}
 
-  // static for glfw callback
+  // vulkan
   //{{{
-  static void glfwErrorCallback (int error, const char* description) {
-    cLog::log (LOGERROR, fmt::format ("glfw failed {} {}", error, description));
-    }
-  //}}}
-  //{{{
-  static void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
-  // glfw key callback exit
-
-    (void)scancode;
-    (void)mode;
-    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS)) // exit
-      glfwSetWindowShouldClose (window, true);
-    }
-  //}}}
-  //{{{
-  static void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
-
-    (void)window;
-    mResizeCallback (width, height);
-    }
-  //}}}
-  //{{{
-  static void dropCallback (GLFWwindow* window, int count, const char** paths) {
-
-    (void)window;
-    vector<string> dropItems;
-    for (int i = 0;  i < count;  i++)
-      dropItems.push_back (paths[i]);
-
-    mDropCallback (dropItems);
-    }
-  //}}}
-
-  // vulkan statics
-  //{{{
-  static void vulkanPresent (ImGui_ImplVulkanH_Window* vulkanWindow) {
+  void vulkanPresent (ImGui_ImplVulkanH_Window* vulkanWindow) {
 
     if (gSwapChainRebuild)
       return;
@@ -614,32 +587,8 @@ private:
     vulkanWindow->SemaphoreIndex = (vulkanWindow->SemaphoreIndex + 1) % vulkanWindow->ImageCount;
     }
   //}}}
-  #ifdef VALIDATION
-    //{{{
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugReport (VkDebugReportFlagsEXT flags,
-                                                       VkDebugReportObjectTypeEXT objectType,
-                                                       uint64_t object,
-                                                       size_t location,
-                                                       int32_t messageCode,
-                                                       const char* pLayerPrefix,
-                                                       const char* pMessage,
-                                                       void* pUserData) {
-
-      (void)flags;
-      (void)object;
-      (void)location;
-      (void)messageCode;
-      (void)pUserData;
-      (void)pLayerPrefix;
-
-      cLog::log (LOGERROR, fmt::format ("vkDebugReport type:{}:{}", objectType, pMessage));
-      return VK_FALSE;
-      }
-    //}}}
-  #endif
-
   //{{{
-  static void setupVulkan (const char** extensions, uint32_t numExtensions) {
+  void setupVulkan (const char** extensions, uint32_t numExtensions) {
 
     // create Vulkan Instance
     VkInstanceCreateInfo instanceCreateInfo = {};
@@ -821,7 +770,7 @@ private:
     }
   //}}}
   //{{{
-  static void setupVulkanWindow (ImGui_ImplVulkanH_Window* vulkanWindow, VkSurfaceKHR surface, int width, int height) {
+  void setupVulkanWindow (ImGui_ImplVulkanH_Window* vulkanWindow, VkSurfaceKHR surface, int width, int height) {
   // All the ImGui_ImplVulkanH_XXX structures/functions are optional helpers used by the demo.
   // Your real engine/app may not use them.
 
@@ -868,7 +817,7 @@ private:
     }
   //}}}
   //{{{
-  static void uploadFonts (ImGui_ImplVulkanH_Window* vulkanWindow) {
+  void uploadFonts (ImGui_ImplVulkanH_Window* vulkanWindow) {
   //  upload fonts texture
 
     VkCommandPool commandPool = vulkanWindow->Frames[vulkanWindow->FrameIndex].CommandPool;
@@ -902,27 +851,64 @@ private:
     }
   //}}}
 
+  // static for glfw callback
   //{{{
-  static void cleanupVulkan() {
-
-    vkDestroyDescriptorPool (gDevice, gDescriptorPool, gAllocator);
-
-    #ifdef VALIDATION
-      // Remove the debug report callback
-      auto vkDestroyDebugReportCallbackEXT =
-        (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr (gInstance, "vkDestroyDebugReportCallbackEXT");
-      vkDestroyDebugReportCallbackEXT (gInstance, gDebugReport, gAllocator);
-    #endif
-
-    vkDestroyDevice (gDevice, gAllocator);
-    vkDestroyInstance (gInstance, gAllocator);
+  static void glfwErrorCallback (int error, const char* description) {
+    cLog::log (LOGERROR, fmt::format ("glfw failed {} {}", error, description));
     }
   //}}}
   //{{{
-  static void cleanupVulkanWindow() {
-    ImGui_ImplVulkanH_DestroyWindow (gInstance, gDevice, &gMainWindowData, gAllocator);
+  static void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
+  // glfw key callback exit
+
+    (void)scancode;
+    (void)mode;
+    if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS)) // exit
+      glfwSetWindowShouldClose (window, true);
     }
   //}}}
+  //{{{
+  static void framebufferSizeCallback (GLFWwindow* window, int width, int height) {
+
+    (void)window;
+    mResizeCallback (width, height);
+    }
+  //}}}
+  //{{{
+  static void dropCallback (GLFWwindow* window, int count, const char** paths) {
+
+    (void)window;
+    vector<string> dropItems;
+    for (int i = 0;  i < count;  i++)
+      dropItems.push_back (paths[i]);
+
+    mDropCallback (dropItems);
+    }
+  //}}}
+
+  #ifdef VALIDATION
+    //{{{
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugReport (VkDebugReportFlagsEXT flags,
+                                                       VkDebugReportObjectTypeEXT objectType,
+                                                       uint64_t object,
+                                                       size_t location,
+                                                       int32_t messageCode,
+                                                       const char* pLayerPrefix,
+                                                       const char* pMessage,
+                                                       void* pUserData) {
+
+      (void)flags;
+      (void)object;
+      (void)location;
+      (void)messageCode;
+      (void)pUserData;
+      (void)pLayerPrefix;
+
+      cLog::log (LOGERROR, fmt::format ("vkDebugReport type:{}:{}", objectType, pMessage));
+      return VK_FALSE;
+      }
+    //}}}
+  #endif
 
   GLFWmonitor* mMonitor = nullptr;
   GLFWwindow* mWindow = nullptr;
@@ -931,7 +917,7 @@ private:
 
   bool mActionFullScreen = false;
 
-  //{{{  vulkan static vars
+  // vulkan static vars
   inline static VkAllocationCallbacks*   gAllocator = NULL;
   inline static VkInstance               gInstance = VK_NULL_HANDLE;
   inline static VkPhysicalDevice         gPhysicalDevice = VK_NULL_HANDLE;
@@ -942,7 +928,6 @@ private:
 
   inline static ImGui_ImplVulkanH_Window gMainWindowData;
   inline static int                      gMinImageCount = 2;
-  //}}}
   };
 //}}}
 
