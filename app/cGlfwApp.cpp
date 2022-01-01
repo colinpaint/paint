@@ -4272,6 +4272,7 @@ private:
       }
     //{{{
     virtual void renderDrawData() final {
+
       //if (!minimized)
       VkSemaphore imageAcquiredSem = cGlfwPlatform::vulkanWindow->FrameSemaphores[cGlfwPlatform::vulkanWindow->SemaphoreIndex].ImageAcquiredSemaphore;
       VkSemaphore renderCompleteSem = cGlfwPlatform::vulkanWindow->FrameSemaphores[cGlfwPlatform::vulkanWindow->SemaphoreIndex].RenderCompleteSemaphore;
@@ -4296,10 +4297,10 @@ private:
       result = vkResetCommandPool (cGlfwPlatform::gDevice, vulkanFrame->CommandPool, 0);
       cGlfwPlatform::checkVkResult (result);
 
+      // begin command buffer 
       VkCommandBufferBeginInfo commandBufferBeginInfo = {};
       commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
       commandBufferBeginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
       result = vkBeginCommandBuffer (vulkanFrame->CommandBuffer, &commandBufferBeginInfo);
       cGlfwPlatform::checkVkResult (result);
 
@@ -4311,15 +4312,15 @@ private:
       renderPassBeginInfo.renderArea.extent.height = cGlfwPlatform::vulkanWindow->Height;
       renderPassBeginInfo.clearValueCount = 1;
       renderPassBeginInfo.pClearValues = &cGlfwPlatform::vulkanWindow->ClearValue;
-
       vkCmdBeginRenderPass (vulkanFrame->CommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-      // record dear imgui primitives into command buffer
+      // imgui primitives to command buffer
       ImGui_ImplVulkan_RenderDrawData (ImGui::GetDrawData(), vulkanFrame->CommandBuffer);
 
       // submit command buffer
       vkCmdEndRenderPass (vulkanFrame->CommandBuffer);
 
+      // end command buffer
       VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
       VkSubmitInfo submitInfo = {};
       submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -4330,7 +4331,6 @@ private:
       submitInfo.pCommandBuffers = &vulkanFrame->CommandBuffer;
       submitInfo.signalSemaphoreCount = 1;
       submitInfo.pSignalSemaphores = &renderCompleteSem;
-
       result = vkEndCommandBuffer (vulkanFrame->CommandBuffer);
       cGlfwPlatform::checkVkResult (result);
 
