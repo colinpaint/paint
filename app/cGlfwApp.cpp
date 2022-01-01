@@ -519,7 +519,6 @@ private:
       #endif
 
       //{{{  select gpu
-      #define VK_API_VERSION_VARIANT(version) ((uint32_t)(version) >> 29)
       #define VK_API_VERSION_MAJOR(version) (((uint32_t)(version) >> 22) & 0x7FU)
       #define VK_API_VERSION_MINOR(version) (((uint32_t)(version) >> 12) & 0x3FFU)
       #define VK_API_VERSION_PATCH(version) ((uint32_t)(version) & 0xFFFU)
@@ -528,9 +527,12 @@ private:
       result = vkEnumeratePhysicalDevices (gInstance, &numGpu, NULL);
       checkVkResult (result);
 
-      if (!numGpu)
+      if (!numGpu) {
+        //{{{  error, log, exit
         cLog::log (LOGERROR, fmt::format ("queueFamilyCount zero"));
-      IM_ASSERT (numGpu > 0);
+        exit(1);
+        }
+        //}}}
 
       VkPhysicalDevice* gpus = (VkPhysicalDevice*)malloc (sizeof(VkPhysicalDevice) * numGpu);
       result = vkEnumeratePhysicalDevices (gInstance, &numGpu, gpus);
@@ -539,13 +541,13 @@ private:
       for (uint32_t i = 0; i < numGpu; i++) {
         VkPhysicalDeviceProperties properties;
         vkGetPhysicalDeviceProperties (gpus[i], &properties);
-        cLog::log (LOGINFO, fmt::format ("gpu:{} var:{} major:{} minor:{} patch:{} type:{} {} api:{} driver:{}",
+        cLog::log (LOGINFO, fmt::format ("gpu:{} api {}.{}.{} type:{} {} driver:{}",
                 (int)i,
-                VK_API_VERSION_VARIANT(properties.apiVersion),
                 VK_API_VERSION_MAJOR(properties.apiVersion),
                 VK_API_VERSION_MINOR(properties.apiVersion),
                 VK_API_VERSION_PATCH(properties.apiVersion),
-                properties.deviceType, properties.deviceName, properties.apiVersion, properties.driverVersion));
+                properties.deviceType, properties.deviceName,
+                properties.driverVersion));
         }
 
       // If a number >1 of GPUs got reported, find discrete GPU if present, or use first one available
@@ -591,7 +593,7 @@ private:
 
       IM_ASSERT(gQueueFamily != (uint32_t)-1);
       //}}}
-      //{{{  create logical device (with 1 queue)
+      //{{{  create logical device with 1 queue
       int numDeviceExtension = 1;
 
       const char* deviceExtensions[] = { "VK_KHR_swapchain" };
@@ -616,7 +618,6 @@ private:
       vkGetDeviceQueue (gDevice, gQueueFamily, 0, &gQueue);
       //}}}
       //{{{  create descriptor pool
-      {
       VkDescriptorPoolSize descriptorPoolSizes[] = {
         { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
@@ -640,7 +641,6 @@ private:
 
       result = vkCreateDescriptorPool (gDevice, &descriptorPoolCreateInfo, gAllocator, &gDescriptorPool);
       checkVkResult (result);
-      }
       //}}}
       }
     //}}}
@@ -4297,7 +4297,7 @@ private:
       result = vkResetCommandPool (cGlfwPlatform::gDevice, vulkanFrame->CommandPool, 0);
       cGlfwPlatform::checkVkResult (result);
 
-      // begin command buffer 
+      // begin command buffer
       VkCommandBufferBeginInfo commandBufferBeginInfo = {};
       commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
       commandBufferBeginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
