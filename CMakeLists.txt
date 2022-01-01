@@ -1,6 +1,7 @@
-#cmake .. -DBUILD_GRAPHICS=GLES_3_1
 cmake_minimum_required (VERSION 3.18)
 cmake_policy (SET CMP0072 NEW)
+#
+#cmake .. -DBUILD_GRAPHICS=GLES_3_1
 #
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
