@@ -1,7 +1,7 @@
+#cmake .. -DBUILD_GRAPHICS=GLES_3_1
+#
 cmake_minimum_required (VERSION 3.18)
 cmake_policy (SET CMP0072 NEW)
-#
-#cmake .. -DBUILD_GRAPHICS=GLES_3_1
 #
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,7 +24,7 @@ option (BUILD_PAINTBOX "Build paintbox app" ON)
 option (BUILD_MFXTEST "Build mfxtest cmdline app" ON)
 option (BUILD_CAPTURE "Build capture cmdline app" ON)
 #
-if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   set (BUILD_MSVC_COMPILE_OPTIONS "/arch:AVX" CACHE STRING "msvc compile options")
 elseif (MAKE_SYSTEM_NAME STREQUAL Linux)
   option (BUILD_VALIDATION "Build vulkan validation layers" OFF)
@@ -39,17 +39,28 @@ project (utils)
   file (GLOB SOURCE_FILES utils/*.cpp utils/*.c)
   add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
-  if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+  if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+    message (STATUS "buiding ${CMAKE_HOST_SYSTEM_NAME}")
     target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast ${BUILD_MSVC_COMPILE_OPTIONS})
   elseif (MAKE_SYSTEM_NAME STREQUAL Linux)
+    message (STATUS "buiding ${CMAKE_HOST_SYSTEM_NAME}")
     target_compile_definitions (${PROJECT_NAME} PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
     target_compile_options (${PROJECT_NAME} PUBLIC -Wall -Wextra
                                                    -Wno-missing-field-initializers
                                                    -Wno-format-security -Wno-format-overflow
                                                    -pedantic
-                                                   -march=native -flax-vector-conversions -ftree-vectorize
+                                                   -fno-exceptions
+                                                   -flax-vector-conversions -ftree-vectorize
+                                                   -march=native
                                                    ${BUILD_LINUX_COMPILE_OPTIONS})
+  elseif()
+    message (FATAL_ERROR, "unknown CMAKE_HOST_SYSTEM_NAME = ${CMAKE_HOST_SYSTEM_NAME}")
   endif()
+
+message (STATUS "building ${BUILD_GRAPHICS} graphics")
+if (BUILD_GRAPHICS STREQUAL "VULKAN" AND BUILD_VALIDATION)
+  message (STATUS "building vulkan validation")
+endif()
 
 # gui
 if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
@@ -97,7 +108,7 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
     if (BUILD_GRAPHICS STREQUAL "GL_2_1" OR
         BUILD_GRAPHICS STREQUAL "GL_3")
       find_package (OpenGL REQUIRED)
-      if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+      if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
         target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad)
       elseif (MAKE_SYSTEM_NAME STREQUAL Linux)
         target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad GL)
@@ -109,7 +120,7 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
       target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_ES3=1
                                                           IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
                                                           IMGUI_IMPL_OPENGL_ES3=1)
-      if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+      if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
         # use GLES emulator, not working
         target_include_directories (${PROJECT_NAME} PRIVATE glesEmulator/include)
         target_link_directories (${PROJECT_NAME} PUBLIC glesEmulator/lib)
@@ -119,7 +130,7 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
       endif()
 
     elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
-      if (CMAKE_SYSTEM_NAME STREQUAL Linux)
+      if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
         find_package (Vulkan REQUIRED)
         target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_VULKAN VK_PROTOTYPES)
         if (BUILD_VALIDATION)
@@ -149,7 +160,7 @@ if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
 endif()
 
 # libmfx
-if (BUILD_MFX AND CMAKE_SYSTEM_NAME STREQUAL Windows)
+if (BUILD_MFX AND CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   project (libmfx)
     file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/windows/include/*.h utils/*.h)
     file (GLOB SOURCE_FILES libmfx/mfx_dispatch/windows/src/*.cpp)
@@ -166,7 +177,7 @@ if (BUILD_MFXTEST)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
     target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_MFX)
-    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       # use project libmfx
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
       target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils d3d11 dxgi d3d9 dxva2)
@@ -192,7 +203,7 @@ if (BUILD_TELLY)
       target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_MFX)
     endif()
 
-    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       target_include_directories (${PROJECT_NAME} PRIVATE ffmpeg/inc)
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
       target_link_directories (${PROJECT_NAME} PRIVATE ffmpeg/x64)
@@ -226,7 +237,7 @@ if (BUILD_PLAYER OR BUILD_CAPTURE)
     file (GLOB SOURCE_FILES decoder/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
-    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       target_include_directories (${PROJECT_NAME} PUBLIC ffmpeg/inc)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
       target_link_libraries (${PROJECT_NAME} PUBLIC utils avdevice avfilter avformat avcodec avutil swresample swscale)
@@ -250,7 +261,7 @@ if (BUILD_PLAYER OR BUILD_TELLY)
 endif()
 
 # capture app
-if (BUILD_CAPTURE AND CMAKE_SYSTEM_NAME STREQUAL Windows)
+if (BUILD_CAPTURE AND CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   ## WIN32 audio wsapi capture main project
   project (captureAudio VERSION 1.0.0)
     file (GLOB HEADER_FILES audio/*.h utils/*.h)
@@ -279,7 +290,7 @@ if (BUILD_DEMO)
     endif()
 
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
-    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler)
     elseif (MAKE_SYSTEM_NAME STREQUAL Linux)
       target_link_libraries (${PROJECT_NAME} PRIVATE GL)
@@ -294,7 +305,7 @@ if (BUILD_FED)
     add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
 
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
-    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       target_link_libraries (${PROJECT_NAME} PRIVATE imgui opengl32 d3d11 d3dcompiler ws2_32)
     elseif (MAKE_SYSTEM_NAME STREQUAL Linux)
       target_link_libraries (${PROJECT_NAME} PRIVATE imgui stdc++fs)
@@ -316,7 +327,7 @@ if (BUILD_TELLY)
     endif()
 
     target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio imgui)
-    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       target_link_directories (${PROJECT_NAME} PRIVATE ffmpeg/x64)
       target_link_libraries (${PROJECT_NAME} PRIVATE libmfx opengl32 dxgi d3d11 d3dcompiler ws2_32)
     elseif (MAKE_SYSTEM_NAME STREQUAL Linux)
@@ -355,7 +366,7 @@ if (BUILD_PLAYER)
 
     target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
     target_link_libraries (${PROJECT_NAME} PRIVATE imgui song audio decoder dvb kiss net)
-    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
     elseif (MAKE_SYSTEM_NAME STREQUAL Linux)
       target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
@@ -371,7 +382,7 @@ if (BUILD_PAINTBOX)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
     target_include_directories (${PROJECT_NAME} PRIVATE stb)
-    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       target_link_libraries (${PROJECT_NAME} PRIVATE imgui Opengl32 d3d11 d3dcompiler ws2_32)
     elseif (MAKE_SYSTEM_NAME STREQUAL Linux)
       target_link_libraries (${PROJECT_NAME} PRIVATE imgui)
