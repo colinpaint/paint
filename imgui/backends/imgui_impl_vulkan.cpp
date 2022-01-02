@@ -1619,7 +1619,7 @@ bool ImGui_ImplVulkan_CreateFontsTexture (VkCommandBuffer command_buffer) {
   ImGui::GetIO().Fonts->GetTexDataAsRGBA32 (&pixels, &width, &height);
   size_t upload_size = width * height * 4 * sizeof(char);
 
-  //{{{  Create image:
+  //{{{  reate image:
   VkImageCreateInfo imageCreateInfo = {};
   imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
