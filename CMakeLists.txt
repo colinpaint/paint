@@ -62,103 +62,100 @@ if (BUILD_GRAPHICS STREQUAL "VULKAN" AND BUILD_VALIDATION)
   message (STATUS "using vulkan validation")
 endif()
 
-# gui
-if (BUILD_DEMO OR BUILD_FED OR BUILD_PAINTBOX OR BUILD_PLAYER OR BUILD_TELLY)
-  # glfw
-  set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-  set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-  set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-  set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-  set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
-  #set (GLFW_USE_WAYLAND ON CACHE BOOL "" FORCE)
-  add_subdirectory (glfw)
+# glfw lib
+set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set (ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
+#set (GLFW_USE_WAYLAND ON CACHE BOOL "" FORCE)
+add_subdirectory (glfw)
 
-  # glad
-  if (BUILD_GRAPHICS STREQUAL "GL_2_1")
-    add_subdirectory (glad2.1+fbo+vao)
-  elseif (BUILD_GRAPHICS STREQUAL "GL_3")
-    add_subdirectory (glad4.5core)
+# glad lib
+if (BUILD_GRAPHICS STREQUAL "GL_2_1")
+  add_subdirectory (glad2.1+fbo+vao)
+elseif (BUILD_GRAPHICS STREQUAL "GL_3")
+  add_subdirectory (glad4.5core)
+endif()
+
+# app lib
+project (app)
+  if (BUILD_GRAPHICS STREQUAL "DX_11")
+    file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_dx11.h app/cApp.h)
+    file (GLOB SOURCE_FILES app/cDx11App.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx11.cpp)
+  elseif (BUILD_GRAPHICS STREQUAL "GL_2_1")
+    file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h app/cApp.h)
+    file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
+  elseif (BUILD_GRAPHICS STREQUAL "GL_3" OR
+          BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
+          BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
+          BUILD_GRAPHICS STREQUAL "GLES_3_2")
+    file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_GL3.h app/cApp.h)
+    file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
+  elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
+    file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_vulkan.h app/cApp.h)
+    file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_vulkan.cpp)
+  else()
+    message (FATAL_ERROR, "unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
   endif()
+  add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
-  # app imgui backend lib
-  project (app)
-    if (BUILD_GRAPHICS STREQUAL "DX_11")
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_dx11.h app/cApp.h)
-      file (GLOB SOURCE_FILES app/cDx11App.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx11.cpp)
-    elseif (BUILD_GRAPHICS STREQUAL "GL_2_1")
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h app/cApp.h)
-      file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
-    elseif (BUILD_GRAPHICS STREQUAL "GL_3" OR
-            BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
-            BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
-            BUILD_GRAPHICS STREQUAL "GLES_3_2")
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_GL3.h app/cApp.h)
-      file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
-    elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
-      file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_vulkan.h app/cApp.h)
-      file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_vulkan.cpp)
-    else()
-      message (FATAL_ERROR, "unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
+  target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS} ${BUILD_DOCKING})
+  target_include_directories (${PROJECT_NAME} PRIVATE glfw/include)
+  target_include_directories (${PROJECT_NAME} PUBLIC utils imgui)
+  target_link_libraries (${PROJECT_NAME} PUBLIC utils)
+
+  if (BUILD_GRAPHICS STREQUAL "GL_2_1" OR
+      BUILD_GRAPHICS STREQUAL "GL_3")
+    find_package (OpenGL REQUIRED)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+      target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+      target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad GL)
     endif()
-    add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
-    target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS} ${BUILD_DOCKING})
-    target_include_directories (${PROJECT_NAME} PRIVATE glfw/include)
-    target_include_directories (${PROJECT_NAME} PUBLIC utils imgui)
-    target_link_libraries (${PROJECT_NAME} PUBLIC utils)
-
-    if (BUILD_GRAPHICS STREQUAL "GL_2_1" OR
-        BUILD_GRAPHICS STREQUAL "GL_3")
-      find_package (OpenGL REQUIRED)
-      if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-        target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad)
-      elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-        target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad GL)
-      endif()
-    elseif (BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
-            BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
-            BUILD_GRAPHICS STREQUAL "GLES_3_2")
-      find_package (OpenGL REQUIRED)
-      target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_ES3=1
-                                                          IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
-                                                          IMGUI_IMPL_OPENGL_ES3=1)
-      if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-        # use GLES emulator, not working
-        target_include_directories (${PROJECT_NAME} PRIVATE glesEmulator/include)
-        target_link_directories (${PROJECT_NAME} PUBLIC glesEmulator/lib)
-        target_link_libraries (${PROJECT_NAME} PRIVATE glfw libGLESv2 libEGL)
-      elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-        target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
-      endif()
-
-    elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
-      if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-        find_package (Vulkan REQUIRED)
-        target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_VULKAN VK_PROTOTYPES)
-        if (BUILD_VALIDATION)
-          target_compile_definitions (${PROJECT_NAME} PRIVATE VALIDATION)
-        endif()
-        target_link_libraries (${PROJECT_NAME} PRIVATE glfw Vulkan::Vulkan)
-      endif()
+  elseif (BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
+          BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
+          BUILD_GRAPHICS STREQUAL "GLES_3_2")
+    find_package (OpenGL REQUIRED)
+    target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_ES3=1
+                                                        IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
+                                                        IMGUI_IMPL_OPENGL_ES3=1)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+      # use GLES emulator, not working
+      target_include_directories (${PROJECT_NAME} PRIVATE glesEmulator/include)
+      target_link_directories (${PROJECT_NAME} PUBLIC glesEmulator/lib)
+      target_link_libraries (${PROJECT_NAME} PRIVATE glfw libGLESv2 libEGL)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+      target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
     endif()
 
-  # imgui lib
-  project (imgui)
-    file (GLOB HEADER_FILES imgui/*.h app/myImgui.h)
-    file (GLOB SOURCE_FILES imgui/*.cpp app/myImgui.cpp)
-    add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
-    target_include_directories (${PROJECT_NAME} PRIVATE utils app)
-    target_link_libraries (${PROJECT_NAME} PUBLIC app)
-
-  # implot lib
-  if (BUILD_IMPLOT)
-    project (implot)
-      file (GLOB HEADER_FILES implot/*.h)
-      file (GLOB SOURCE_FILES implot/*.cpp)
-      add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-      target_include_directories (${PROJECT_NAME} PUBLIC implot imgui)
+  elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+      find_package (Vulkan REQUIRED)
+      target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_VULKAN VK_PROTOTYPES)
+      if (BUILD_VALIDATION)
+        target_compile_definitions (${PROJECT_NAME} PRIVATE VALIDATION)
+      endif()
+      target_link_libraries (${PROJECT_NAME} PRIVATE glfw Vulkan::Vulkan)
+    endif()
   endif()
+
+# imgui lib
+project (imgui)
+  file (GLOB HEADER_FILES imgui/*.h app/myImgui.h)
+  file (GLOB SOURCE_FILES imgui/*.cpp app/myImgui.cpp)
+  add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+
+  target_include_directories (${PROJECT_NAME} PRIVATE utils app)
+  target_link_libraries (${PROJECT_NAME} PUBLIC app)
+
+# implot lib
+if (BUILD_IMPLOT)
+  project (implot)
+    file (GLOB HEADER_FILES implot/*.h)
+    file (GLOB SOURCE_FILES implot/*.cpp)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+    target_include_directories (${PROJECT_NAME} PUBLIC implot imgui)
 endif()
 
 # libmfx
@@ -252,6 +249,33 @@ if (BUILD_PLAYER OR BUILD_CAPTURE)
     endif()
 endif()
 
+if (BUILD_PLAYER)
+  # kiss lib
+  project (kiss)
+    file (GLOB HEADER_FILES kiss/*.h utils/*.h)
+    file (GLOB SOURCE_FILES kiss/*.c)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
+endif()
+
+if (BUILD_PLAYER)
+  # song lib
+  project (song)
+    file (GLOB HEADER_FILES song/*.h utils/*.h)
+    file (GLOB SOURCE_FILES song/*.cpp)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+    target_link_libraries (${PROJECT_NAME} PRIVATE utils decoder kiss)
+endif()
+
+if (BUILD_PLAYER)
+  # net lib
+  project (net)
+    file (GLOB HEADER_FILES net/*.h utils/*.h)
+    file (GLOB SOURCE_FILES net/*.cpp)
+    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
+endif()
+
 # audio lib
 if (BUILD_PLAYER OR BUILD_TELLY)
   project (audio)
@@ -314,6 +338,22 @@ if (BUILD_FED)
     endif()
 endif()
 
+# player app
+if (BUILD_PLAYER)
+  project (player VERSION 1.0.0)
+    file (GLOB HEADER_FILES player/*.h ui/*.h imgui/*.h utils/*.h app/*.h)
+    file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp ui/cUI.cpp)
+    add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
+
+    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
+    target_link_libraries (${PROJECT_NAME} PRIVATE imgui song audio decoder dvb kiss net)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+      target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+      target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
+    endif()
+endif()
+
 # telly app
 if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
@@ -332,44 +372,6 @@ if (BUILD_TELLY)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       target_link_directories (${PROJECT_NAME} PRIVATE ffmpeg/x64)
       target_link_libraries (${PROJECT_NAME} PRIVATE libmfx opengl32 dxgi d3d11 d3dcompiler ws2_32)
-    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-      target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
-    endif()
-endif()
-
-# player
-if (BUILD_PLAYER)
-  # kiss lib
-  project (kiss)
-    file (GLOB HEADER_FILES kiss/*.h utils/*.h)
-    file (GLOB SOURCE_FILES kiss/*.c)
-    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
-
-  # song lib
-  project (song)
-    file (GLOB HEADER_FILES song/*.h utils/*.h)
-    file (GLOB SOURCE_FILES song/*.cpp)
-    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-    target_link_libraries (${PROJECT_NAME} PRIVATE utils decoder kiss)
-
-  # net lib
-  project (net)
-    file (GLOB HEADER_FILES net/*.h utils/*.h)
-    file (GLOB SOURCE_FILES net/*.cpp)
-    add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
-
-  # player app
-  project (player VERSION 1.0.0)
-    file (GLOB HEADER_FILES player/*.h ui/*.h imgui/*.h utils/*.h app/*.h)
-    file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp ui/cUI.cpp)
-    add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
-
-    target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
-    target_link_libraries (${PROJECT_NAME} PRIVATE imgui song audio decoder dvb kiss net)
-    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-      target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
     elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
       target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
     endif()
