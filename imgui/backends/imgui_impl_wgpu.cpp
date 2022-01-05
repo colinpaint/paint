@@ -1,3 +1,4 @@
+//{{{
 // dear imgui: Renderer for WebGPU
 // This needs to be used along with a Platform Binding (e.g. GLFW)
 // (Please note that WebGPU is currently experimental, will not run on non-beta browsers, and may break.)
@@ -20,27 +21,32 @@
 //  2021-05-16: Update to latest WebGPU specs (compatible with Emscripten 2.0.20 and Chrome Canary 92).
 //  2021-02-18: Change blending equation to preserve alpha in output buffer.
 //  2021-01-28: Initial version.
-
+//}}}
+//{{{  includes
 #include "imgui.h"
 #include "imgui_impl_wgpu.h"
+
 #include <limits.h>
+
 #include <webgpu/webgpu.h>
 
 #define HAS_EMSCRIPTEN_VERSION(major, minor, tiny) (__EMSCRIPTEN_major__ > (major) || (__EMSCRIPTEN_major__ == (major) && __EMSCRIPTEN_minor__ > (minor)) || (__EMSCRIPTEN_major__ == (major) && __EMSCRIPTEN_minor__ == (minor) && __EMSCRIPTEN_tiny__ >= (tiny)))
 
 #if defined(__EMSCRIPTEN__) && !HAS_EMSCRIPTEN_VERSION(2, 0, 20)
-#error "Requires at least emscripten 2.0.20"
+  #error "Requires at least emscripten 2.0.20"
 #endif
+//}}}
 
 // Dear ImGui prototypes from imgui_internal.h
-extern ImGuiID ImHashData(const void* data_p, size_t data_size, ImU32 seed = 0);
+extern ImGuiID ImHashData (const void* data_p, size_t data_size, ImU32 seed = 0);
 
 // WebGPU data
-static WGPUDevice               g_wgpuDevice = NULL;
-static WGPUQueue                g_defaultQueue = NULL;
-static WGPUTextureFormat        g_renderTargetFormat = WGPUTextureFormat_Undefined;
-static WGPURenderPipeline       g_pipelineState = NULL;
+static WGPUDevice         g_wgpuDevice = NULL;
+static WGPUQueue          g_defaultQueue = NULL;
+static WGPUTextureFormat  g_renderTargetFormat = WGPUTextureFormat_Undefined;
+static WGPURenderPipeline g_pipelineState = NULL;
 
+//{{{
 struct RenderResources
 {
     WGPUTexture         FontTexture;            // Font texture
@@ -52,8 +58,10 @@ struct RenderResources
     WGPUBindGroup       ImageBindGroup;         // Default font-resource of Dear ImGui
     WGPUBindGroupLayout ImageBindGroupLayout;   // Cache layout used for the image bind group. Avoids allocating unnecessary JS objects when working with WebASM
 };
-static RenderResources  g_resources;
+//}}}
+static RenderResources g_resources;
 
+//{{{
 struct FrameResources
 {
     WGPUBuffer  IndexBuffer;
@@ -63,18 +71,20 @@ struct FrameResources
     int         IndexBufferSize;
     int         VertexBufferSize;
 };
-static FrameResources*  g_pFrameResources = NULL;
-static unsigned int     g_numFramesInFlight = 0;
-static unsigned int     g_frameIndex = UINT_MAX;
+//}}}
+static FrameResources* g_pFrameResources = NULL;
 
+static unsigned int g_numFramesInFlight = 0;
+static unsigned int g_frameIndex = UINT_MAX;
+
+//{{{
 struct Uniforms
 {
     float MVP[4][4];
 };
-
-//-----------------------------------------------------------------------------
+//}}}
+//{{{
 // SHADERS
-//-----------------------------------------------------------------------------
 
 // glsl_shader.vert, compiled with:
 // # glslangValidator -V -x -o glsl_shader.vert.u32 glsl_shader.vert
@@ -138,7 +148,8 @@ static uint32_t __glsl_shader_vert_spv[] =
     0x0000002a,0x00000022,0x00000029,0x00050041,0x00000011,0x0000002b,0x0000001b,0x0000000d,
     0x0003003e,0x0000002b,0x0000002a,0x000100fd,0x00010038
 };
-
+//}}}
+//{{{
 // glsl_shader.frag, compiled with:
 // # glslangValidator -V -x -o glsl_shader.frag.u32 glsl_shader.frag
 /*
@@ -183,69 +194,90 @@ static uint32_t __glsl_shader_frag_spv[] =
     0x00000021,0x0000001c,0x00000020,0x00050085,0x00000007,0x00000022,0x00000012,0x00000021,
     0x0003003e,0x00000009,0x00000022,0x000100fd,0x00010038
 };
+//}}}
 
-static void SafeRelease(ImDrawIdx*& res)
+//{{{
+static void SafeRelease (ImDrawIdx*& res)
 {
     if (res)
         delete[] res;
     res = NULL;
 }
-static void SafeRelease(ImDrawVert*& res)
+//}}}
+//{{{
+static void SafeRelease (ImDrawVert*& res)
 {
     if (res)
         delete[] res;
     res = NULL;
 }
-static void SafeRelease(WGPUBindGroupLayout& res)
+//}}}
+//{{{
+static void SafeRelease (WGPUBindGroupLayout& res)
 {
     if (res)
         wgpuBindGroupLayoutRelease(res);
     res = NULL;
 }
-static void SafeRelease(WGPUBindGroup& res)
+//}}}
+//{{{
+static void SafeRelease (WGPUBindGroup& res)
 {
     if (res)
         wgpuBindGroupRelease(res);
     res = NULL;
 }
-static void SafeRelease(WGPUBuffer& res)
+//}}}
+//{{{
+static void SafeRelease (WGPUBuffer& res)
 {
     if (res)
         wgpuBufferRelease(res);
     res = NULL;
 }
-static void SafeRelease(WGPURenderPipeline& res)
+//}}}
+//{{{
+static void SafeRelease (WGPURenderPipeline& res)
 {
     if (res)
         wgpuRenderPipelineRelease(res);
     res = NULL;
 }
-static void SafeRelease(WGPUSampler& res)
+//}}}
+//{{{
+static void SafeRelease (WGPUSampler& res)
 {
     if (res)
         wgpuSamplerRelease(res);
     res = NULL;
 }
-static void SafeRelease(WGPUShaderModule& res)
+//}}}
+//{{{
+static void SafeRelease (WGPUShaderModule& res)
 {
     if (res)
         wgpuShaderModuleRelease(res);
     res = NULL;
 }
-static void SafeRelease(WGPUTextureView& res)
+//}}}
+//{{{
+static void SafeRelease (WGPUTextureView& res)
 {
     if (res)
         wgpuTextureViewRelease(res);
     res = NULL;
 }
-static void SafeRelease(WGPUTexture& res)
+//}}}
+//{{{
+static void SafeRelease (WGPUTexture& res)
 {
     if (res)
         wgpuTextureRelease(res);
     res = NULL;
 }
-
-static void SafeRelease(RenderResources& res)
+//}}}
+//{{{
+static void SafeRelease (RenderResources& res)
 {
     SafeRelease(res.FontTexture);
     SafeRelease(res.FontTextureView);
@@ -255,16 +287,19 @@ static void SafeRelease(RenderResources& res)
     SafeRelease(res.ImageBindGroup);
     SafeRelease(res.ImageBindGroupLayout);
 };
-
-static void SafeRelease(FrameResources& res)
+//}}}
+//{{{
+static void SafeRelease (FrameResources& res)
 {
     SafeRelease(res.IndexBuffer);
     SafeRelease(res.VertexBuffer);
     SafeRelease(res.IndexBufferHost);
     SafeRelease(res.VertexBufferHost);
 }
+//}}}
 
-static WGPUProgrammableStageDescriptor ImGui_ImplWGPU_CreateShaderModule(uint32_t* binary_data, uint32_t binary_data_size)
+//{{{
+static WGPUProgrammableStageDescriptor ImGui_ImplWGPU_CreateShaderModule (uint32_t* binary_data, uint32_t binary_data_size)
 {
     WGPUShaderModuleSPIRVDescriptor spirv_desc = {};
     spirv_desc.chain.sType = WGPUSType_ShaderModuleSPIRVDescriptor;
@@ -279,8 +314,9 @@ static WGPUProgrammableStageDescriptor ImGui_ImplWGPU_CreateShaderModule(uint32_
     stage_desc.entryPoint = "main";
     return stage_desc;
 }
-
-static WGPUBindGroup ImGui_ImplWGPU_CreateImageBindGroup(WGPUBindGroupLayout layout, WGPUTextureView texture)
+//}}}
+//{{{
+static WGPUBindGroup ImGui_ImplWGPU_CreateImageBindGroup (WGPUBindGroupLayout layout, WGPUTextureView texture)
 {
     WGPUBindGroupEntry image_bg_entries[] = { { nullptr, 0, 0, 0, 0, 0, texture } };
 
@@ -290,8 +326,10 @@ static WGPUBindGroup ImGui_ImplWGPU_CreateImageBindGroup(WGPUBindGroupLayout lay
     image_bg_descriptor.entries = image_bg_entries;
     return wgpuDeviceCreateBindGroup(g_wgpuDevice, &image_bg_descriptor);
 }
+//}}}
 
-static void ImGui_ImplWGPU_SetupRenderState(ImDrawData* draw_data, WGPURenderPassEncoder ctx, FrameResources* fr)
+//{{{
+static void ImGui_ImplWGPU_SetupRenderState (ImDrawData* draw_data, WGPURenderPassEncoder ctx, FrameResources* fr)
 {
     // Setup orthographic projection matrix into our constant buffer
     // Our visible imgui space lies from draw_data->DisplayPos (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right).
@@ -323,10 +361,11 @@ static void ImGui_ImplWGPU_SetupRenderState(ImDrawData* draw_data, WGPURenderPas
     WGPUColor blend_color = { 0.f, 0.f, 0.f, 0.f };
     wgpuRenderPassEncoderSetBlendConstant(ctx, &blend_color);
 }
-
+//}}}
+//{{{
 // Render function
 // (this used to be set in io.RenderDrawListsFn and called by ImGui::Render(), but you can now call this directly from your main loop)
-void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder pass_encoder)
+void ImGui_ImplWGPU_RenderDrawData (ImDrawData* draw_data, WGPURenderPassEncoder pass_encoder)
 {
     // Avoid rendering when minimized
     if (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f)
@@ -459,7 +498,9 @@ void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder 
         global_vtx_offset += cmd_list->VtxBuffer.Size;
     }
 }
+//}}}
 
+//{{{
 static void ImGui_ImplWGPU_CreateFontsTexture()
 {
     // Build texture atlas
@@ -525,7 +566,8 @@ static void ImGui_ImplWGPU_CreateFontsTexture()
     static_assert(sizeof(ImTextureID) >= sizeof(g_resources.FontTexture), "Can't pack descriptor handle into TexID, 32-bit not supported yet.");
     io.Fonts->SetTexID((ImTextureID)g_resources.FontTextureView);
 }
-
+//}}}
+//{{{
 static void ImGui_ImplWGPU_CreateUniformBuffer()
 {
     WGPUBufferDescriptor ub_desc =
@@ -538,7 +580,8 @@ static void ImGui_ImplWGPU_CreateUniformBuffer()
     };
     g_resources.Uniforms = wgpuDeviceCreateBuffer(g_wgpuDevice, &ub_desc);
 }
-
+//}}}
+//{{{
 bool ImGui_ImplWGPU_CreateDeviceObjects()
 {
     if (!g_wgpuDevice)
@@ -646,7 +689,8 @@ bool ImGui_ImplWGPU_CreateDeviceObjects()
 
     return true;
 }
-
+//}}}
+//{{{
 void ImGui_ImplWGPU_InvalidateDeviceObjects()
 {
     if (!g_wgpuDevice)
@@ -662,7 +706,10 @@ void ImGui_ImplWGPU_InvalidateDeviceObjects()
         SafeRelease(g_pFrameResources[i]);
 }
 
-bool ImGui_ImplWGPU_Init(WGPUDevice device, int num_frames_in_flight, WGPUTextureFormat rt_format)
+//}}}
+
+//{{{
+bool ImGui_ImplWGPU_Init (WGPUDevice device, int num_frames_in_flight, WGPUTextureFormat rt_format)
 {
     // Setup backend capabilities flags
     ImGuiIO& io = ImGui::GetIO();
@@ -699,7 +746,8 @@ bool ImGui_ImplWGPU_Init(WGPUDevice device, int num_frames_in_flight, WGPUTextur
 
     return true;
 }
-
+//}}}
+//{{{
 void ImGui_ImplWGPU_Shutdown()
 {
     ImGui_ImplWGPU_InvalidateDeviceObjects();
@@ -710,9 +758,11 @@ void ImGui_ImplWGPU_Shutdown()
     g_numFramesInFlight = 0;
     g_frameIndex = UINT_MAX;
 }
-
+//}}}
+//{{{
 void ImGui_ImplWGPU_NewFrame()
 {
     if (!g_pipelineState)
         ImGui_ImplWGPU_CreateDeviceObjects();
 }
+//}}}

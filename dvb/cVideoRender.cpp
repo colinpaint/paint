@@ -1654,10 +1654,9 @@ protected:
           }
         }
 
-      if (MFX_ERR_NONE != status)
-        throw bad_alloc();
-
-      return MFX_ERR_NONE;
+      //if (MFX_ERR_NONE != status)
+      //  throw bad_alloc();
+      return status;
       }
     //}}}
 
@@ -2265,10 +2264,9 @@ protected:
           }
         }
 
-      if (status != MFX_ERR_NONE)
-        throw bad_alloc();
-
-      return MFX_ERR_NONE;
+      //if (status != MFX_ERR_NONE)
+      //  throw bad_alloc();
+      return status;
       }
     //}}}
 
