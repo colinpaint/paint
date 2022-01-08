@@ -81,19 +81,31 @@ endif()
 # app lib
 project (app)
   if (BUILD_GRAPHICS STREQUAL "DX_11")
-    file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_dx11.h app/cApp.h)
-    file (GLOB SOURCE_FILES app/cDx11App.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx11.cpp)
+    file (GLOB HEADER_FILES imgui/*.h 
+                            imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_dx11.h 
+                            app/cApp.h)
+    file (GLOB SOURCE_FILES app/cWin32App.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx11.cpp)
   elseif (BUILD_GRAPHICS STREQUAL "GL_2_1")
-    file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h app/cApp.h)
+    file (GLOB HEADER_FILES imgui/*.h
+                            imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_opengl2.h
+                            app/cApp.h app app/cGL2Graphics.h)
     file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl2.cpp)
-  elseif (BUILD_GRAPHICS STREQUAL "GL_3" OR
-          BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
-          BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
-          BUILD_GRAPHICS STREQUAL "GLES_3_2")
-    file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_GL3.h app/cApp.h)
+  elseif (BUILD_GRAPHICS STREQUAL "GL_3")
+    file (GLOB HEADER_FILES imgui/*.h
+                            imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_GL3.h
+                            app/cApp.h app app/cGL3Graphics.h)
+    file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
+  elseif (BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
+  #       BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
+  BUILD_GRAPHICS STREQUAL "GLES_3_2")
+    file (GLOB HEADER_FILES imgui/*.h
+                            imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_GL3.h
+                            app/cApp.h app app/cGLES3Graphics.h)
     file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
   elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
-    file (GLOB HEADER_FILES imgui/*.h imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_vulkan.h app/cApp.h)
+    file (GLOB HEADER_FILES imgui/*.h
+                            imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_vulkan.h
+                            app/cApp.h app app/cVulkanGraphics.h)
     file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_vulkan.cpp)
   else()
     message (FATAL_ERROR, "unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
