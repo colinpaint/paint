@@ -1,6 +1,8 @@
 // cGL3Graphics.h
 #pragma once
 //{{{  includes
+#include <cstdint>
+#include <string>
 #include <array>
 
 #include "cGraphics.h"

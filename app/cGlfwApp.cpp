@@ -312,7 +312,7 @@ public:
   virtual bool pollEvents() final {
 
     if (mActionFullScreen) {
-      //{{{  fullScreen
+      // fullScreen
       if (mFullScreen) {
         // save windowPos and windowSize
         glfwGetWindowPos (mWindow, &mWindowPos.x, &mWindowPos.y);
@@ -330,7 +330,6 @@ public:
 
       mActionFullScreen = false;
       }
-      //}}}
 
     if (glfwWindowShouldClose (mWindow))
       return false;
@@ -344,7 +343,7 @@ public:
   virtual void present() final {
 
     #if defined(VULKAN)
-      //{{{  vulkan present
+      //{{{  vulkan 
       if (gSwapChainRebuild)
         return;
 
@@ -471,6 +470,7 @@ private:
   bool mActionFullScreen = false;
 
   #if defined(VULKAN)
+    //{{{  vulkan
     //{{{
     void initVulkan (const char** extensions, uint32_t numExtensions) {
 
@@ -767,6 +767,7 @@ private:
     // vulkan static vars
     inline static VkAllocationCallbacks* gAllocator = NULL;
     inline static VkDebugReportCallbackEXT gDebugReport = VK_NULL_HANDLE;
+    //}}}
   #endif
   };
 //}}}

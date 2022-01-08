@@ -6,7 +6,7 @@ cmake_policy (SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
-# options - GL_2_1, GL_3, GLES_3_0, GLES_3_1, GLES_3_2, VULKAN, DX_11
+# options - GL_2_1, GL_3, GLES_3_0, GLES_3_1, GLES_3_2, VULKAN, DX_11 SDL
 set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
 #set (BUILD_DOCKING "DOCKING" CACHE STRING "Build imgui docking option")
 #
@@ -49,8 +49,8 @@ project (utils)
                                                    -Wno-missing-field-initializers
                                                    -Wno-format-security -Wno-format-overflow
                                                    -pedantic
-                                                   -fno-exceptions
                                                    -flax-vector-conversions -ftree-vectorize
+                                                   -fno-exceptions
                                                    -march=native
                                                    ${BUILD_LINUX_COMPILE_OPTIONS})
   elseif()
@@ -81,8 +81,8 @@ endif()
 # app lib
 project (app)
   if (BUILD_GRAPHICS STREQUAL "DX_11")
-    file (GLOB HEADER_FILES imgui/*.h 
-                            imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_dx11.h 
+    file (GLOB HEADER_FILES imgui/*.h
+                            imgui/backends/imgui_impl_win32.h imgui/backends/imgui_impl_dx11.h
                             app/cApp.h)
     file (GLOB SOURCE_FILES app/cWin32App.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx11.cpp)
   elseif (BUILD_GRAPHICS STREQUAL "GL_2_1")
@@ -107,6 +107,11 @@ project (app)
                             imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_vulkan.h
                             app/cApp.h app app/cVulkanGraphics.h)
     file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_vulkan.cpp)
+  elseif (BUILD_GRAPHICS STREQUAL "SDL")
+    file (GLOB HEADER_FILES imgui/*.h
+                            imgui/backends/imgui_impl_sdl.h imgui/backends/imgui_impl_GL3.h
+                            app/cApp.h app app/cGL3Graphics.h)
+    file (GLOB SOURCE_FILES app/cSdlApp.cpp imgui/backends/imgui_impl_sdl.cpp imgui/backends/imgui_impl_opengl3.cpp)
   else()
     message (FATAL_ERROR, "unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
   endif()
@@ -150,6 +155,19 @@ project (app)
       endif()
       target_link_libraries (${PROJECT_NAME} PRIVATE glfw Vulkan::Vulkan)
     endif()
+
+  elseif (BUILD_GRAPHICS STREQUAL "SDL")
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+      target_include_directories (${PROJECT_NAME} PRIVATE SDL/include)
+      target_link_directories (${PROJECT_NAME} PRIVATE SDL/lib/x64)
+      target_link_libraries (${PROJECT_NAME} PRIVATE SDL2)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+      find_package (PkgConfig REQUIRED)
+      pkg_check_modules (SDL2 REQUIRED IMPORTED_TARGET sdl2)
+      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::SDL2)
+      target_link_libraries (${PROJECT_NAME} PRIVATE PkgConfig::SDL2 GL)
+    endif()
+
   endif()
 
 # imgui lib
