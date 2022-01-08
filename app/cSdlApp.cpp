@@ -18,7 +18,11 @@
 #include "cPlatform.h"
 #include "cGraphics.h"
 
+#include <glad/glad.h>
+
 #define SDL_MAIN_HANDLED
+
+#define GL_GLEXT_PROTOTYPES
 #include <SDL.h>
 #include <SDL_opengl.h>
 
@@ -27,7 +31,7 @@
 #include <backends/imgui_impl_sdl.h>
 #include <backends/imgui_impl_opengl3.h>
 
-//#include "cGL3Graphics.h"
+#include "cGL3Graphics.h"
 
 #include "../ui/cUI.h"
 
@@ -61,10 +65,10 @@ public:
 
     //const char* glsl_version = "#version 130";
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute (SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
     // Create window with graphics context
     SDL_GL_SetAttribute (SDL_GL_DOUBLEBUFFER, 1);
@@ -104,6 +108,11 @@ public:
     #endif
 
     ImGui_ImplSDL2_InitForOpenGL (mWindow, mGlContext);
+
+    if (!gladLoadGLLoader (SDL_GL_GetProcAddress)) {
+      cLog::log (LOGERROR, "cSdlPlatform - glad failed");
+      return false;
+      }
 
     return true;
     }
@@ -226,11 +235,11 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     }
 
   // create graphics
-  //mGraphics = new cGL3Graphics();
-  //if (!mGraphics || !mGraphics->init()) {
-  //  cLog::log (LOGERROR, "cApp - graphics init failed");
-  //  return;
-  //  }
+  mGraphics = new cGL3Graphics();
+  if (!mGraphics || !mGraphics->init()) {
+    cLog::log (LOGERROR, "cApp - graphics init failed");
+    return;
+    }
 
   // set callbacks
   //glfwPlatform->mResizeCallback = [&](int width, int height) noexcept { windowResize (width, height); };
