@@ -15,6 +15,7 @@
 
 class cGL3Graphics : public cGraphics {
 public:
+  cGL3Graphics (const std::string& glslVersion) : cGraphics(), mGlslVersion (glslVersion) {}
   //{{{
   virtual ~cGL3Graphics() {
     ImGui_ImplOpenGL3_Shutdown();
@@ -31,7 +32,7 @@ public:
     cLog::log (LOGINFO, fmt::format ("- Renderer {}", glGetString (GL_RENDERER)));
     cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
 
-    return ImGui_ImplOpenGL3_Init ("#version 130");
+    return ImGui_ImplOpenGL3_Init (mGlslVersion.c_str());
     }
   //}}}
   virtual void newFrame() final { ImGui_ImplOpenGL3_NewFrame(); }
@@ -1178,4 +1179,6 @@ private:
     return id;
     }
   //}}}
+
+  std::string mGlslVersion;
   };

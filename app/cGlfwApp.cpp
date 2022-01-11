@@ -13,11 +13,7 @@
 #include <algorithm>
 #include <functional>
 
-// app
-#include "cApp.h"
-#include "cPlatform.h"
-#include "cGraphics.h"
-
+/ glad
 #if defined(GL_2_1) || defined(GL_3)
   #include <glad/glad.h>
 #endif
@@ -40,9 +36,16 @@
   #include "cGLES3Graphics.h"
 #endif
 
+// ui
 #include "../ui/cUI.h"
 
+// utils
 #include "../utils/cLog.h"
+
+// app
+#include "cApp.h"
+#include "cPlatform.h"
+#include "cGraphics.h"
 
 using namespace std;
 //}}}
@@ -89,6 +92,8 @@ public:
     ImGui::DestroyContext();
     }
   //}}}
+
+  string getGlslVersion() { return mGlslVersion; }
 
   //{{{
   virtual bool init (const cPoint& windowSize) final {
@@ -343,7 +348,7 @@ public:
   virtual void present() final {
 
     #if defined(VULKAN)
-      //{{{  vulkan 
+      //{{{  vulkan
       if (gSwapChainRebuild)
         return;
 
@@ -461,6 +466,8 @@ private:
     mDropCallback (dropItems);
     }
   //}}}
+
+  string mGlslVersion;
 
   // window vars
   GLFWmonitor* mMonitor = nullptr;
@@ -792,7 +799,7 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
   #if defined(GL_2_1)
     mGraphics = new cGL2Gaphics();
   #elif defined(GL_3)
-    mGraphics = new cGL3Graphics();
+    mGraphics = new cGL3Graphics (glfwPlatform->getGlslVersion());
   #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
     mGraphics = new cGLES3Graphics();
   #elif defined(VULKAN)
