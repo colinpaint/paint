@@ -104,7 +104,6 @@ project (app)
     if (BUILD_VALIDATION)
       message (STATUS "using vulkan validation")
     endif()
-
     file (GLOB HEADER_FILES imgui/*.h
                             imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_vulkan.h
                             app/cApp.h app app/cVulkanGraphics.h)
@@ -206,7 +205,6 @@ project (imgui)
   file (GLOB HEADER_FILES imgui/*.h app/myImgui.h)
   file (GLOB SOURCE_FILES imgui/*.cpp app/myImgui.cpp)
   add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-
   target_include_directories (${PROJECT_NAME} PRIVATE utils app)
   target_link_libraries (${PROJECT_NAME} PUBLIC app)
 
@@ -343,7 +341,6 @@ if (BUILD_PLAYER OR BUILD_TELLY)
     file (GLOB HEADER_FILES audio/*.h decoder/*.h utils/*.h)
     file (GLOB SOURCE_FILES audio/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-
     target_link_libraries (${PROJECT_NAME} PRIVATE utils)
 endif()
 
@@ -354,7 +351,6 @@ if (BUILD_CAPTURE AND CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     file (GLOB HEADER_FILES audio/*.h utils/*.h)
     file (GLOB SOURCE_FILES captureAudio/capture.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
     target_link_libraries (${PROJECT_NAME} PRIVATE decoder winmm avrt audio)
 endif()
 
