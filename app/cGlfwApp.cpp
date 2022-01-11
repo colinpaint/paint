@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <functional>
 
-/ glad
+// glad
 #if defined(GL_2_1) || defined(GL_3)
   #include <glad/glad.h>
 #endif
@@ -797,7 +797,7 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
   #if defined(GL_2_1)
     mGraphics = new cGL2Gaphics();
   #elif defined(GL_3)
-    mGraphics = new cGL3Graphics (glfwPlatform->getShaderlVersion());
+    mGraphics = new cGL3Graphics (glfwPlatform->getShaderVersion());
   #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
     mGraphics = new cGLES3Graphics();
   #elif defined(VULKAN)
