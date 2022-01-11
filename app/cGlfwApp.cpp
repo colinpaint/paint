@@ -93,8 +93,6 @@ public:
     }
   //}}}
 
-  string getGlslVersion() { return mGlslVersion; }
-
   //{{{
   virtual bool init (const cPoint& windowSize) final {
 
@@ -155,6 +153,8 @@ public:
     #else
       #error BUILD_GRAPHICS not recognised
     #endif
+
+    setShaderVersion ("#version 130");
 
     mWindow = glfwCreateWindow (windowSize.x, windowSize.y, (title + " " + getName()).c_str(), NULL, NULL);
     if (!mWindow) {
@@ -466,8 +466,6 @@ private:
     mDropCallback (dropItems);
     }
   //}}}
-
-  string mGlslVersion;
 
   // window vars
   GLFWmonitor* mMonitor = nullptr;
@@ -799,7 +797,7 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
   #if defined(GL_2_1)
     mGraphics = new cGL2Gaphics();
   #elif defined(GL_3)
-    mGraphics = new cGL3Graphics (glfwPlatform->getGlslVersion());
+    mGraphics = new cGL3Graphics (glfwPlatform->getShaderlVersion());
   #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
     mGraphics = new cGLES3Graphics();
   #elif defined(VULKAN)

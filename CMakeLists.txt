@@ -6,7 +6,7 @@ cmake_policy (SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
-# options - GL_2_1, GL_3, GLES_3_0, GLES_3_1, GLES_3_2, VULKAN, DX_11 SDL
+# options - GL_2_1, GL_3, GLES_3_0, GLES_3_1, GLES_3_2, VULKAN, DX_11 SDL_GL_3 SDL_GLES_3
 set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
 #set (BUILD_DOCKING "DOCKING" CACHE STRING "Build imgui docking option")
 #
@@ -33,6 +33,9 @@ endif()
 #
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
 
+# main build type message
+message (STATUS "using ${BUILD_GRAPHICS} graphics")
+
 # utils lib
 project (utils)
   file (GLOB HEADER_FILES utils/*.h)
@@ -57,11 +60,6 @@ project (utils)
     message (FATAL_ERROR, "unknown CMAKE_HOST_SYSTEM_NAME = ${CMAKE_HOST_SYSTEM_NAME}")
   endif()
 
-message (STATUS "using ${BUILD_GRAPHICS} graphics")
-if (BUILD_GRAPHICS STREQUAL "VULKAN" AND BUILD_VALIDATION)
-  message (STATUS "using vulkan validation")
-endif()
-
 # glfw lib
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -74,7 +72,7 @@ add_subdirectory (glfw)
 # glad lib
 if (BUILD_GRAPHICS STREQUAL "GL_2_1")
   add_subdirectory (glad2.1+fbo+vao)
-elseif (BUILD_GRAPHICS STREQUAL "GL_3" OR BUILD_GRAPHICS STREQUAL "SDL")
+elseif (BUILD_GRAPHICS STREQUAL "GL_3" OR BUILD_GRAPHICS STREQUAL "SDL_GL_3")
   add_subdirectory (glad4.5core)
 endif()
 
@@ -96,30 +94,40 @@ project (app)
                             app/cApp.h app app/cGL3Graphics.h)
     file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
   elseif (BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
-  #       BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
-  BUILD_GRAPHICS STREQUAL "GLES_3_2")
+          BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
+          BUILD_GRAPHICS STREQUAL "GLES_3_2")
     file (GLOB HEADER_FILES imgui/*.h
                             imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_GL3.h
                             app/cApp.h app app/cGLES3Graphics.h)
     file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp)
   elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
+    if (BUILD_VALIDATION)
+      message (STATUS "using vulkan validation")
+    endif()
+
     file (GLOB HEADER_FILES imgui/*.h
                             imgui/backends/imgui_impl_glfw.h imgui/backends/imgui_impl_vulkan.h
                             app/cApp.h app app/cVulkanGraphics.h)
     file (GLOB SOURCE_FILES app/cGlfwApp.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_vulkan.cpp)
-  elseif (BUILD_GRAPHICS STREQUAL "SDL")
+  elseif (BUILD_GRAPHICS STREQUAL "SDL_GL_3")
     file (GLOB HEADER_FILES imgui/*.h
                             imgui/backends/imgui_impl_sdl.h imgui/backends/imgui_impl_GL3.h
                             app/cApp.h app app/cGL3Graphics.h)
     file (GLOB SOURCE_FILES app/cSdlApp.cpp imgui/backends/imgui_impl_sdl.cpp imgui/backends/imgui_impl_opengl3.cpp)
+  elseif (BUILD_GRAPHICS STREQUAL "SDL_GLES_3")
+    file (GLOB HEADER_FILES imgui/*.h
+                            imgui/backends/imgui_impl_sdl.h imgui/backends/imgui_impl_GL3.h
+                            app/cApp.h app app/cGLES3Graphics.h)
+    file (GLOB SOURCE_FILES app/cSdlApp.cpp imgui/backends/imgui_impl_sdl.cpp imgui/backends/imgui_impl_opengl3.cpp)
   else()
     message (FATAL_ERROR, "unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
   endif()
+
   add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS} ${BUILD_DOCKING})
-  target_include_directories (${PROJECT_NAME} PRIVATE glfw/include)
-  target_include_directories (${PROJECT_NAME} PUBLIC utils imgui)
+  target_include_directories (${PROJECT_NAME} PRIVATE glfw/include
+                                              PUBLIC utils imgui)
   target_link_libraries (${PROJECT_NAME} PUBLIC utils)
 
   if (BUILD_GRAPHICS STREQUAL "GL_2_1" OR
@@ -156,7 +164,7 @@ project (app)
       target_link_libraries (${PROJECT_NAME} PRIVATE glfw Vulkan::Vulkan)
     endif()
 
-  elseif (BUILD_GRAPHICS STREQUAL "SDL")
+  elseif (BUILD_GRAPHICS STREQUAL "SDL_GL_3")
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       find_package (OpenGL REQUIRED)
       target_include_directories (${PROJECT_NAME} PRIVATE SDL/include)
@@ -167,6 +175,28 @@ project (app)
       pkg_check_modules (SDL2 REQUIRED IMPORTED_TARGET sdl2)
       target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::SDL2)
       target_link_libraries (${PROJECT_NAME} PRIVATE PkgConfig::SDL2 glad GL)
+    endif()
+
+  elseif (BUILD_GRAPHICS STREQUAL "SDL_GLES_3")
+    find_package (OpenGL REQUIRED)
+    target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_ES3=1
+                                                        IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
+                                                        IMGUI_IMPL_OPENGL_ES3=1)
+
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+      # use GLES emulator, not working
+      target_include_directories (${PROJECT_NAME} PRIVATE glesEmulator/include)
+      target_link_directories (${PROJECT_NAME} PUBLIC glesEmulator/lib)
+
+      find_package (OpenGL REQUIRED)
+      target_include_directories (${PROJECT_NAME} PRIVATE SDL/include)
+      target_link_directories (${PROJECT_NAME} PUBLIC SDL/lib/x64)
+      target_link_libraries (${PROJECT_NAME} PRIVATE SDL2 libGLESv2 libEGL)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+      find_package (PkgConfig REQUIRED)
+      pkg_check_modules (SDL2 REQUIRED IMPORTED_TARGET sdl2)
+      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::SDL2)
+      target_link_libraries (${PROJECT_NAME} PRIVATE PkgConfig::SDL2  GLESv2)
     endif()
 
   endif()

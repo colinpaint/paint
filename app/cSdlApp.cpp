@@ -1,4 +1,4 @@
-// cSdlApp.cpp - glfw + openGL2,openGL3,openGLES3_x,vulkan app framework
+// cSdlApp.cpp - SDL2 + openGL3,openGLES3 app framework
 //{{{  includes
 #if defined(_WIN32)
   #define _CRT_SECURE_NO_WARNINGS
@@ -14,7 +14,9 @@
 #include <functional>
 
 // glad
-#include <glad/glad.h>
+#if defined(SDL_GL_3)
+  #include <glad/glad.h>
+#endif
 
 // sdl
 #define SDL_MAIN_HANDLED
@@ -59,39 +61,37 @@ public:
     }
   //}}}
 
-  string getGlslVersion() { return mGlslVersion; }
-
   //{{{
   virtual bool init (const cPoint& windowSize) final {
 
     if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
       return false;
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute (SDL_GL_CONTEXT_FLAGS, 0);
 
-    #if defined(SDL)
+    #if defined(SDL_GL_3)
       SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
       SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 3);
       SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
-      mGlslVersion = "#version 130";
+      setShaderVersion ("#version 130");
     #elif defined(SDL_GLES_2)
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-      mGlslVersion = "#version 100";
+      SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+      SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+      SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
+      setShaderVersion ("#version 100");
     #elif defined(SDL_GLES_3)
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-      mGlslVersion = "#version 300 es";
+      SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+      SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+      SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
+      setShaderVersion ("#version 300 es);
     #endif
 
-    // create window 
+    // create window
     SDL_GL_SetAttribute (SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute (SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute (SDL_GL_STENCIL_SIZE, 8);
-    mWindow = SDL_CreateWindow (("SDL2 OpenGL3 glsl " + mGlslVersion).c_str(),
-                                SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowSize.x, windowSize.y, 
+    mWindow = SDL_CreateWindow (("SDL2 OpenGL3 glsl " + getShaderVersion()).c_str(),
+                                SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowSize.x, windowSize.y,
                                 (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI));
 
     // create graphics context
@@ -127,10 +127,12 @@ public:
 
     ImGui_ImplSDL2_InitForOpenGL (mWindow, mGlContext);
 
-    if (!gladLoadGLLoader (SDL_GL_GetProcAddress)) {
-      cLog::log (LOGERROR, "cSdlPlatform - glad failed");
-      return false;
-      }
+    #if defined(SDL_GL_3)
+      if (!gladLoadGLLoader (SDL_GL_GetProcAddress)) {
+        cLog::log (LOGERROR, "cSdlPlatform - glad failed");
+        return false;
+        }
+    #endif
 
     return true;
     }
@@ -239,7 +241,6 @@ private:
 
   SDL_Window* mWindow = nullptr;
   SDL_GLContext mGlContext;
-  string mGlslVersion;
   };
 //}}}
 
@@ -255,7 +256,7 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     }
 
   // create graphics
-  mGraphics = new cGL3Graphics (sdlPlatform->getGlslVersion());
+  mGraphics = new cGL3Graphics (sdlPlatform->getShaderVersion());
   if (!mGraphics || !mGraphics->init()) {
     cLog::log (LOGERROR, "cApp - gl3Graphics create failed");
     return;

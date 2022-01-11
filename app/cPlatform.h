@@ -23,6 +23,7 @@ public:
   bool getVsync() { return mVsync; }
 
   virtual cPoint getWindowSize() = 0;
+  std::string getShaderVersion() { return mShaderVersion; }
 
   // sets
   virtual void setFullScreen (bool fullScreen) = 0;
@@ -37,10 +38,15 @@ public:
   virtual void present() = 0;
 
 protected:
+  void setShaderVersion (const std::string& version) { mShaderVersion = version; }
+
   const std::string mName;
   const bool mHasFullScreen;
   const bool mHasVsync;
 
   bool mFullScreen = false;
   bool mVsync = true;
+
+private:
+  std::string mShaderVersion;
   };
