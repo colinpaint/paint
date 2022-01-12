@@ -251,7 +251,7 @@ if (BUILD_MFXTEST)
 endif()
 
 # dvb lib
-if (BUILD_TELLY)
+if (BUILD_TELLY OR BUILD_PLAYER)
   project (dvb)
     file (GLOB HEADER_FILES dvb/*.h utils/*.h)
     file (GLOB SOURCE_FILES dvb/*.cpp)

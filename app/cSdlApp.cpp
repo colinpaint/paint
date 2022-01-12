@@ -83,7 +83,7 @@ public:
       SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
       SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 3);
       SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
-      setShaderVersion ("#version 300 es);
+      setShaderVersion ("#version 300 es");
     #endif
 
     // create window
