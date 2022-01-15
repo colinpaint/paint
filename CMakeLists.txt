@@ -20,15 +20,15 @@ option (BUILD_TELLY "Build telly app" ON)
 option (BUILD_PLAYER "Build player app" ON)
 option (BUILD_PAINTBOX "Build paintbox app" ON)
 #
-# cmdline apps
-option (BUILD_MFXTEST "Build mfxtest cmdline app" ON)
-option (BUILD_CAPTURE "Build capture cmdline app" ON)
+# console apps
+option (BUILD_MFXTEST "Build mfxtest console app" ON)
+option (BUILD_CAPTURE "Build capture console app" ON)
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   set (BUILD_MSVC_COMPILE_OPTIONS "/arch:AVX" CACHE STRING "msvc compile options")
 elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
   option (BUILD_VALIDATION "Build vulkan validation layers" OFF)
-  set (BUILD_LINUX_COMPILE_OPTIONS "-Ofast" CACHE STRING "linux compile options")
+  set (BUILD_LINUX_COMPILE_OPTIONS "-Ofast" CACHE STRING "gcc compile options")
 endif()
 #
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
