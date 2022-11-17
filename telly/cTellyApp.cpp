@@ -44,7 +44,7 @@ void cTellyApp::drop (const vector<string>& dropItems) {
   const cDvbMultiplex kDvbMultiplexes =
       { "hd",
         626000000,
-        { "BBC ONE HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV HD", "Channel 4 HD", "Channel 5 HD" },
+        { "BBC ONE HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
         { "bbc1hd",     "bbc2hd",     "bbc3hd",       "bbc4hd",      "itv1hd", "chn4hd",       "chn5hd" },
         false,
       };
