@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <string>
 #include "formatCore.h"
-//#include "date.h"
 
 //{{{
 inline std::string getTimeString (int64_t value, int daylightSeconds) {
