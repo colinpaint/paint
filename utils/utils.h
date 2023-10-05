@@ -90,13 +90,8 @@ inline std::string getPtsFramesString (int64_t pts, int64_t ptsDuration) {
 inline std::string validFileString (const std::string& str, const char* inValidChars) {
 
   std::string validStr = str;
-  #ifdef _WIN32
-    for (auto i = 0u; i < strlen(inValidChars); ++i)
-      validStr.erase (std::remove (validStr.begin(), validStr.end(), inValidChars[i]), validStr.end());
-  #else
-    (void)inValidChars;
-  #endif
-
+  for (auto i = 0u; i < strlen(inValidChars); ++i)
+    validStr.erase (std::remove (validStr.begin(), validStr.end(), inValidChars[i]), validStr.end());
   return validStr;
   }
 //}}}
