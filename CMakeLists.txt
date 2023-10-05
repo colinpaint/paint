@@ -11,21 +11,17 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
   option (BUILD_MFX "Build mfx lib" ON)
+  option (BUILD_CAPTURE "Build capture console app" ON)
 elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
   set (BUILD_GRAPHICS "GLES_3_1" CACHE STRING "build graphics option")
   option (BUILD_MFX "Build mfx lib" OFF)
 endif()
 #
 option (BUILD_IMPLOT "Build implot lib" ON)
-#
-# imgui apps
 option (BUILD_DEMO "Build demo app" ON)
 option (BUILD_FED "Build fed app" ON)
 option (BUILD_TELLY "Build telly app" ON)
 option (BUILD_PLAYER "Build player app" ON)
-#
-# console app
-option (BUILD_CAPTURE "Build capture console app" ON)
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   set (BUILD_MSVC_COMPILE_OPTIONS "/arch:AVX" CACHE STRING "msvc compile options")
