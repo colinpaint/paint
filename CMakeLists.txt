@@ -7,10 +7,15 @@ set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
 # options - GL_2_1, GL_3, GLES_3_0, GLES_3_1, GLES_3_2, VULKAN, DX_11 SDL_GL_3 SDL_GLES_3
-set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
-#set (BUILD_DOCKING "DOCKING" CACHE STRING "Build imgui docking option")
 #
-option (BUILD_MFX "Build mfx lib" ON)
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+  set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
+  option (BUILD_MFX "Build mfx lib" ON)
+elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+  set (BUILD_GRAPHICS "GLES_3_1" CACHE STRING "build graphics option")
+  option (BUILD_MFX "Build mfx lib" OFF)
+endif()
+#
 option (BUILD_IMPLOT "Build implot lib" ON)
 #
 # imgui apps
@@ -18,10 +23,8 @@ option (BUILD_DEMO "Build demo app" ON)
 option (BUILD_FED "Build fed app" ON)
 option (BUILD_TELLY "Build telly app" ON)
 option (BUILD_PLAYER "Build player app" ON)
-option (BUILD_PAINTBOX "Build paintbox app" ON)
 #
-# console apps
-option (BUILD_MFXTEST "Build mfxtest console app" ON)
+# console app
 option (BUILD_CAPTURE "Build capture console app" ON)
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -144,14 +147,7 @@ project (app)
     target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_ES3=1
                                                         IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
                                                         IMGUI_IMPL_OPENGL_ES3=1)
-    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-      # use GLES emulator, not working
-      target_include_directories (${PROJECT_NAME} PRIVATE glesEmulator/include)
-      target_link_directories (${PROJECT_NAME} PUBLIC glesEmulator/lib)
-      target_link_libraries (${PROJECT_NAME} PRIVATE glfw libGLESv2 libEGL)
-    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-      target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
-    endif()
+    target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
 
   elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
@@ -225,29 +221,6 @@ if (BUILD_MFX AND CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_MFX)
     target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include libmfx/mfx_dispatch/windows/include)
-endif()
-
-# mfxTest app
-if (BUILD_MFXTEST)
-  project (mfxtest)
-    file (GLOB HEADER_FILES mfxtest/*.h utils/*.h app/*.h)
-    file (GLOB SOURCE_FILES mfxtest/main.cpp mfxtest/utils.cpp)
-    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
-    target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_MFX)
-    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-      # use project libmfx
-      target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
-      target_link_libraries (${PROJECT_NAME} PRIVATE libmfx utils d3d11 dxgi d3d9 dxva2)
-    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-      # use installed libmfx,libv,libva-drm
-      find_package (PkgConfig REQUIRED)
-      pkg_check_modules (LIBMFX REQUIRED IMPORTED_TARGET libmfx)
-      pkg_check_modules (LIBVA REQUIRED IMPORTED_TARGET libva)
-      pkg_check_modules (LIBVADRM REQUIRED IMPORTED_TARGET libva-drm)
-      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::LIBMFX PkgConfig::LIBVA)
-      target_link_libraries (${PROJECT_NAME} PRIVATE utils PkgConfig::LIBMFX PkgConfig::LIBVA PkgConfig::LIBVADRM)
-    endif()
 endif()
 
 # dvb lib
@@ -344,7 +317,7 @@ if (BUILD_PLAYER OR BUILD_TELLY)
     target_link_libraries (${PROJECT_NAME} PRIVATE utils)
 endif()
 
-# capture app
+# windows audio capture app
 if (BUILD_CAPTURE AND CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   ## WIN32 audio wsapi capture main project
   project (captureAudio VERSION 1.0.0)
@@ -431,21 +404,5 @@ if (BUILD_TELLY)
       target_link_libraries (${PROJECT_NAME} PRIVATE libmfx opengl32 dxgi d3d11 d3dcompiler ws2_32)
     elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
       target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
-    endif()
-endif()
-
-# paintbox app
-if (BUILD_PAINTBOX)
-  project (paintbox VERSION 1.0.0)
-    # executable - main + static registered .cpp
-    file (GLOB HEADER_FILES paint/*.h brush/*.h ui/*.h imgui/*.h utils/*.h app/*.h)
-    file (GLOB SOURCE_FILES paint/*.cpp brush/*.cpp ui/cUI.cpp ui/cPaintUI.cpp ui/cMenuUI.cpp ui/cLayersUI.cpp)
-    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
-    target_include_directories (${PROJECT_NAME} PRIVATE stb)
-    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-      target_link_libraries (${PROJECT_NAME} PRIVATE imgui Opengl32 d3d11 d3dcompiler ws2_32)
-    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-      target_link_libraries (${PROJECT_NAME} PRIVATE imgui)
     endif()
 endif()

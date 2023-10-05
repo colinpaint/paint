@@ -15,8 +15,6 @@
 #include <imgui_internal.h>
 
 #include "../app/cGraphics.h"
-#include "../brush/cBrush.h"
-#include "../paint/cPaintApp.h"
 
 #include "../utils/cLog.h"
 
