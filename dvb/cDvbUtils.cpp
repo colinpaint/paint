@@ -5886,8 +5886,8 @@ int64_t cDvbUtils::getPts (uint8_t* buf) {
     return pts;
     }
   else
-    cLog::log (LOGERROR, "getPts marker bits - %02x %02x %02x %02x 0x02",
-                          buf[0], buf[1],buf[2],buf[3],buf[4]);
+    cLog::log (LOGERROR, "getPts marker bits - %02x:%02x:%02x:%02x:0x02  %d:%d:%d",
+                          buf[0], buf[1], buf[2],buf[3], buf[4], buf[0] & 0x01, buf[2] & 0x01, buf[4] & 0x01 );
   return -1;
   }
 //}}}
