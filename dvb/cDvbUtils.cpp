@@ -5906,7 +5906,7 @@ int64_t cDvbUtils::getPts (const uint8_t* buf) {
 
   if (!(buf[0] & 0x01) || !(buf[2] & 0x01) || !(buf[4] & 0x01))
     // invalid marker bits
-    cLog::log (LOGERROR, format ("getPts marker bits {02x}:{02x}:{02x}:{02x}:{02x} - 0:{1d} 2:{1d} 4:{1d}",
+    cLog::log (LOGERROR, format ("getPts marker bits {:02x}:{:02x}:{:02x}:{:02x}:{:02x} - 0:{:1d} 2:{:1d} 4:{:1d}",
                                  buf[0], buf[1], buf[2], buf[3], buf[4],
                                  buf[0] & 0x01, buf[2] & 0x01, buf[4] & 0x01));
 
