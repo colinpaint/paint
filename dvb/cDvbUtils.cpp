@@ -5896,7 +5896,7 @@ uint32_t cDvbUtils::getBcdTime (uint8_t* buf)  {
 //}}}
 //{{{
 int64_t cDvbUtils::getPts (const uint8_t* buf) {
-// return 33 bits of pts,dts
+// return 33 bits pts,dts
 
   int64_t pts = buf[0] & 0x0E;
   pts = (pts << 7) |  buf[1];
@@ -5904,12 +5904,11 @@ int64_t cDvbUtils::getPts (const uint8_t* buf) {
   pts = (pts << 7) |  buf[3];
   pts = (pts << 7) | (buf[4] >> 1);
 
-  if ((buf[0] & 0x01) && (buf[2] & 0x01) && (buf[4] & 0x01)) {
-    // valid marker bits
-    }
-  else
-    cLog::log (LOGERROR, "getPts invalid marker bits - %02x:%02x:%02x:%02x:0x02  %d:%d:%d",
-                          buf[0], buf[1], buf[2], buf[3], buf[4], buf[0] & 0x01, buf[2] & 0x01, buf[4] & 0x01);
+  if (!(buf[0] & 0x01) || !(buf[2] & 0x01) || !(buf[4] & 0x01)) 
+    // invalid marker bits
+    cLog::log (LOGERROR, "getPts invalid marker bits %02x:%02x:%02x:%02x:%02x - 0:%1d 2:%1d 4:%1d",
+                          buf[0], buf[1], buf[2], buf[3], buf[4], 
+                          buf[0] & 0x01, buf[2] & 0x01, buf[4] & 0x01);
 
   return pts;
   }

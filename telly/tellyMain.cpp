@@ -34,7 +34,7 @@ namespace {
   #ifdef _WIN32
     const string kRecordRoot = "/tv/";
   #else
-    const string kRecordRoot = "/home/pi/tv/";
+    const string kRecordRoot = "~/tv/";
   #endif
   //{{{
   const vector <cDvbMultiplex> kDvbMultiplexes = {
