@@ -52,9 +52,7 @@ class cDvbUtils {
 public:
   static int getSectionLength (uint8_t* buf) { return ((buf[0] & 0x0F) << 8) + buf[1] + 3; }
 
-  static int64_t getPts (uint8_t* buf);
   static uint32_t getCrc32 (uint8_t* buf, uint32_t len);
-
   static uint32_t getEpochTime (uint8_t* buf);
   static uint32_t getBcdTime (uint8_t* buf);
   static int64_t getPts (const uint8_t* buf);
