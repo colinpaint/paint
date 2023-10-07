@@ -45,7 +45,7 @@ project (app VERSION 1.0.0)
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS})
   target_include_directories (${PROJECT_NAME} PRIVATE glfw/include
-                                              PUBLIC common imgui)
+                                              PUBLIC common ../imgui)
   target_link_libraries (${PROJECT_NAME} PUBLIC common)
 
   # GL
