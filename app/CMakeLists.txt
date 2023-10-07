@@ -1,10 +1,6 @@
 project (app VERSION 1.0.0)
-  if (BUILD_GRAPHICS STREQUAL "DX_11")
-    file (GLOB HEADER_FILES ../imgui/*.h
-                            ../imgui/backends/imgui_impl_win32.h ../imgui/backends/imgui_impl_dx11.h
-                            cApp.h)
-    file (GLOB SOURCE_FILES cWin32App.cpp ../imgui/backends/imgui_impl_win32.cpp ../imgui/backends/imgui_impl_dx11.cpp)
-  elseif (BUILD_GRAPHICS STREQUAL "GL_2_1")
+  # GL
+  if (BUILD_GRAPHICS STREQUAL "GL_2_1")
     file (GLOB HEADER_FILES ../imgui/*.h
                             ../imgui/backends/imgui_impl_glfw.h ../imgui/backends/imgui_impl_opengl2.h
                             cApp.h app cGL2Graphics.h)
@@ -14,6 +10,8 @@ project (app VERSION 1.0.0)
                             ../imgui/backends/imgui_impl_glfw.h ../imgui/backends/imgui_impl_GL3.h
                             cApp.h app cGL3Graphics.h)
     file (GLOB SOURCE_FILES cGlfwApp.cpp ../imgui/backends/imgui_impl_glfw.cpp ../imgui/backends/imgui_impl_opengl3.cpp)
+
+  # GLES
   elseif (BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
           BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
           BUILD_GRAPHICS STREQUAL "GLES_3_2")
@@ -21,6 +19,14 @@ project (app VERSION 1.0.0)
                             ../imgui/backends/imgui_impl_glfw.h ../imgui/backends/imgui_impl_GL3.h
                             cApp.h app cGLES3Graphics.h)
     file (GLOB SOURCE_FILES cGlfwApp.cpp ../imgui/backends/imgui_impl_glfw.cpp ../imgui/backends/imgui_impl_opengl3.cpp)
+
+  elseif (BUILD_GRAPHICS STREQUAL "SDL_GL_3")
+    file (GLOB HEADER_FILES ../imgui/*.h
+                            ../imgui/backends/imgui_impl_sdl.h ../imgui/backends/imgui_impl_GL3.h
+                            cApp.h app cGL3Graphics.h)
+    file (GLOB SOURCE_FILES cSdlApp.cpp ../imgui/backends/imgui_impl_sdl.cpp ../imgui/backends/imgui_impl_opengl3.cpp)
+
+  # VULKAN
   elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
     if (BUILD_VALIDATION)
       message (STATUS "using vulkan validation")
@@ -29,11 +35,8 @@ project (app VERSION 1.0.0)
                             ../imgui/backends/imgui_impl_glfw.h ../imgui/backends/imgui_impl_vulkan.h
                             cApp.h app cVulkanGraphics.h)
     file (GLOB SOURCE_FILES cGlfwApp.cpp ../imgui/backends/imgui_impl_glfw.cpp ../imgui/backends/imgui_impl_vulkan.cpp)
-  elseif (BUILD_GRAPHICS STREQUAL "SDL_GL_3")
-    file (GLOB HEADER_FILES ../imgui/*.h
-                            ../imgui/backends/imgui_impl_sdl.h ../imgui/backends/imgui_impl_GL3.h
-                            cApp.h app cGL3Graphics.h)
-    file (GLOB SOURCE_FILES cSdlApp.cpp ../imgui/backends/imgui_impl_sdl.cpp ../imgui/backends/imgui_impl_opengl3.cpp)
+
+  # unknown
   else()
     message (FATAL_ERROR, "unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
   endif()
@@ -45,6 +48,7 @@ project (app VERSION 1.0.0)
                                               PUBLIC common imgui)
   target_link_libraries (${PROJECT_NAME} PUBLIC common)
 
+  # GL
   if (BUILD_GRAPHICS STREQUAL "GL_2_1" OR
       BUILD_GRAPHICS STREQUAL "GL_3")
     find_package (OpenGL REQUIRED)
@@ -54,6 +58,7 @@ project (app VERSION 1.0.0)
       target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad GL)
     endif()
 
+  # GLES
   elseif (BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
           BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
           BUILD_GRAPHICS STREQUAL "GLES_3_2")
@@ -63,6 +68,7 @@ project (app VERSION 1.0.0)
                                                         IMGUI_IMPL_OPENGL_ES3=1)
     target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
 
+  # SDL GL3
   elseif (BUILD_GRAPHICS STREQUAL "SDL_GL_3")
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       find_package (OpenGL REQUIRED)
@@ -76,6 +82,7 @@ project (app VERSION 1.0.0)
       target_link_libraries (${PROJECT_NAME} PRIVATE PkgConfig::SDL2 glad GL)
     endif()
 
+  # VULKAN
   elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
       find_package (Vulkan REQUIRED)

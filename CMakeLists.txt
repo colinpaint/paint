@@ -1,18 +1,17 @@
-#cmake .. -DBUILD_GRAPHICS=GLES_3_1
 cmake_minimum_required (VERSION 3.18)
 cmake_policy (SET CMP0072 NEW)
-#
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
-# options - GL_2_1, GL_3, GLES_3_0, GLES_3_1, GLES_3_2, VULKAN, DX_11 SDL_GL_3 SDL_GLES_3
+# options - GL_2_1,GL_3, GLES_3_0,GLES_3_1,GLES_3_2, SDL_GL_3, VULKAN
+#cmake .. -DBUILD_GRAPHICS=GLES_3_1
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
   option (BUILD_MFX "Build mfx lib" ON)
 elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
   set (BUILD_GRAPHICS "GLES_3_1" CACHE STRING "build graphics option")
-  option (BUILD_MFX "Build mfx lib" OFF)
+  set (BUILD_MFX OFF)
 endif()
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -28,7 +27,7 @@ set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FO
 message (STATUS "building ${BUILD_GRAPHICS} graphics")
 #
 
-# glfw lib
+# glfw private copy lib
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set (GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -51,7 +50,7 @@ add_subdirectory (app)
 add_subdirectory (imgui)
 add_subdirectory (implot)
 
-if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+if (BUILD_MFX AND CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   add_subdirectory (libmfx)
 endif()
 
