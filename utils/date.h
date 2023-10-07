@@ -1316,7 +1316,7 @@ CONSTCD11
 std::chrono::duration<Rep, Period>
 abs(std::chrono::duration<Rep, Period> d)
 {
-    return d >= d.zero() ? d : -d;
+    return d >= d.zero() ? d : static_cast<decltype(d)>(-d);
 }
 
 // round down
@@ -4206,8 +4206,8 @@ template <class CharT, class Traits, class Duration>
 inline
 typename std::enable_if
 <
-    std::ratio_less<typename Duration::period, days::period>::value
-    , std::basic_ostream<CharT, Traits>&
+    !std::is_convertible<Duration, days>::value,
+    std::basic_ostream<CharT, Traits>&
 >::type
 operator<<(std::basic_ostream<CharT, Traits>& os, const sys_time<Duration>& tp)
 {
@@ -6213,8 +6213,13 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           const std::chrono::seconds* offset_sec = nullptr)
 {
     using CT = typename std::common_type<Duration, std::chrono::seconds>::type;
-    auto ld = floor<days>(tp);
-    fields<CT> fds{year_month_day{ld}, hh_mm_ss<CT>{tp-local_seconds{ld}}};
+    auto ld = std::chrono::time_point_cast<days>(tp);
+    fields<CT> fds;
+    if (ld <= tp)
+        fds = fields<CT>{year_month_day{ld}, hh_mm_ss<CT>{tp-local_seconds{ld}}};
+    else
+        fds = fields<CT>{year_month_day{ld - days{1}},
+                         hh_mm_ss<CT>{days{1} - (local_seconds{ld} - tp)}};
     return to_stream(os, fmt, fds, abbrev, offset_sec);
 }
 
@@ -6227,8 +6232,13 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     using CT = typename std::common_type<Duration, seconds>::type;
     const std::string abbrev("UTC");
     CONSTDATA seconds offset{0};
-    auto sd = floor<days>(tp);
-    fields<CT> fds{year_month_day{sd}, hh_mm_ss<CT>{tp-sys_seconds{sd}}};
+    auto sd = std::chrono::time_point_cast<days>(tp);
+    fields<CT> fds;
+    if (sd <= tp)
+        fds = fields<CT>{year_month_day{sd}, hh_mm_ss<CT>{tp-sys_seconds{sd}}};
+    else
+        fds = fields<CT>{year_month_day{sd - days{1}},
+                         hh_mm_ss<CT>{days{1} - (sys_seconds{sd} - tp)}};
     return to_stream(os, fmt, fds, &abbrev, &offset);
 }
 
@@ -6771,7 +6781,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         CONSTDATA auto w = Duration::period::den == 1 ? 2 : 3 + dfs::width;
                         int tH;
                         int tM;
-                        long double S;
+                        long double S{};
                         read(is, ru{tH, 1, 2}, CharT{':'}, ru{tM, 1, 2},
                                                CharT{':'}, rld{S, 1, w});
                         checked_set(H, tH, not_a_hour, is);
@@ -6851,7 +6861,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         CONSTDATA auto w = Duration::period::den == 1 ? 2 : 3 + dfs::width;
                         int tH = not_a_hour;
                         int tM = not_a_minute;
-                        long double S;
+                        long double S{};
                         read(is, ru{tH, 1, 2}, CharT{':'}, ru{tM, 1, 2},
                                                CharT{':'}, rld{S, 1, w});
                         checked_set(H, tH, not_a_hour, is);
@@ -7206,7 +7216,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         // "%I:%M:%S %p"
                         using dfs = detail::decimal_format_seconds<Duration>;
                         CONSTDATA auto w = Duration::period::den == 1 ? 2 : 3 + dfs::width;
-                        long double S;
+                        long double S{};
                         int tI = not_a_hour_12_value;
                         int tM = not_a_minute;
                         read(is, ru{tI, 1, 2}, CharT{':'}, ru{tM, 1, 2},
@@ -7262,7 +7272,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                     {
                         using dfs = detail::decimal_format_seconds<Duration>;
                         CONSTDATA auto w = Duration::period::den == 1 ? 2 : 3 + dfs::width;
-                        long double S;
+                        long double S{};
                         read(is, rld{S, 1, width == -1 ? w : static_cast<unsigned>(width)});
                         checked_set(s, round_i<Duration>(duration<long double>{S}),
                                     not_a_second, is);
@@ -7296,7 +7306,7 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
                         CONSTDATA auto w = Duration::period::den == 1 ? 2 : 3 + dfs::width;
                         int tH = not_a_hour;
                         int tM = not_a_minute;
-                        long double S;
+                        long double S{};
                         read(is, ru{tH, 1, 2}, CharT{':'}, ru{tM, 1, 2},
                                                CharT{':'}, rld{S, 1, w});
                         checked_set(H, tH, not_a_hour, is);
