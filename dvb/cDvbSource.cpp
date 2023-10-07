@@ -1280,7 +1280,7 @@ void cDvbSource::tune (int frequency) {
       //}}}
       //{{{
       default:
-        cLog::log (LOGERROR, fmt::format ("unknown frontend type {}", info.type));
+        cLog::log (LOGERROR, fmt::format ("unknown frontend type {}", (int)info.type));
         exit(1);
       //}}}
       }

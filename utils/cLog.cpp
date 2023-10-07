@@ -47,7 +47,7 @@
 #include <map>
 #include <chrono>
 
-#include "formatColor.h"
+#include "fmt/color.h"
 #include "date.h"
 
 #define remove_utf8   remove

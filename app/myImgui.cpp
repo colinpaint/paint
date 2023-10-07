@@ -14,7 +14,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
-#include "../utils/formatCore.h" //  fmt::format core, used by a lot of logging
+#include "fmt/core.h" //  fmt::format core, used by a lot of logging
 #include "../utils/date.h"
 #include "../utils/cLog.h"
 #include "../utils/cMiniLog.h"

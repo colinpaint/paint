@@ -26,10 +26,10 @@ public:
   virtual bool init() final {
 
     // report OpenGL versions
-    cLog::log (LOGINFO, fmt::format ("OpenGL {}", glGetString (GL_VERSION)));
-    cLog::log (LOGINFO, fmt::format ("- GLSL {}", glGetString (GL_SHADING_LANGUAGE_VERSION)));
-    cLog::log (LOGINFO, fmt::format ("- Renderer {}", glGetString (GL_RENDERER)));
-    cLog::log (LOGINFO, fmt::format ("- Vendor {}", glGetString (GL_VENDOR)));
+    cLog::log (LOGINFO, (const char*)glGetString (GL_VERSION));
+    cLog::log (LOGINFO, (const char*)glGetString (GL_SHADING_LANGUAGE_VERSION));
+    cLog::log (LOGINFO, (const char*)glGetString (GL_RENDERER));
+    cLog::log (LOGINFO, (const char*)glGetString (GL_VENDOR));
 
     return ImGui_ImplOpenGL3_Init ("#version 300 es");
     }

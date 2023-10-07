@@ -2,7 +2,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
-#include "formatCore.h"
+#include "fmt/core.h"
 
 //{{{
 inline std::string getTimeString (int64_t value, int daylightSeconds) {

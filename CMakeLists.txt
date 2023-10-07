@@ -35,11 +35,15 @@ set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FO
 # main build type message
 message (STATUS "using ${BUILD_GRAPHICS} graphics")
 
+add_subdirectory (fmt)
+
 # utils lib
 project (utils VERSION 1.0.0)
   file (GLOB HEADER_FILES utils/*.h)
   file (GLOB SOURCE_FILES utils/*.cpp utils/*.c)
   add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+
+  target_link_libraries (${PROJECT_NAME} PUBLIC fmt)
 
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     message (STATUS "using ${CMAKE_HOST_SYSTEM_NAME}")

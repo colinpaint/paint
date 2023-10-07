@@ -91,18 +91,18 @@ public:
             audioFrame->mPesSize = pesSize;
             audioFrame->mSamplesPerFrame = avFrame->nb_samples;
             audioFrame->mSampleRate = avFrame->sample_rate;
-            audioFrame->mNumChannels = avFrame->channels;
+            audioFrame->mNumChannels = avFrame->ch_layout.nb_channels;
 
             float* dst = audioFrame->mSamples.data();
             switch (mAvContext->sample_fmt) {
               case AV_SAMPLE_FMT_FLTP:  // 32bit float planar, copy to interleaved
                 for (int sample = 0; sample < avFrame->nb_samples; sample++)
-                  for (int channel = 0; channel < avFrame->channels; channel++)
+                  for (int channel = 0; channel < avFrame->ch_layout.nb_channels; channel++)
                     *dst++ = *(((float*)avFrame->data[channel]) + sample);
                 break;
               case AV_SAMPLE_FMT_S16P:  // 16bit signed planar, scale to interleaved
                 for (int sample = 0; sample < avFrame->nb_samples; sample++)
-                  for (int channel = 0; channel < avFrame->channels; channel++)
+                  for (int channel = 0; channel < avFrame->ch_layout.nb_channels; channel++)
                     *dst++ = (*(((short*)avFrame->data[channel]) + sample)) / (float)0x8000;
                 break;
               default:;

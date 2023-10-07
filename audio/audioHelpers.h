@@ -264,7 +264,7 @@ public:
   //}}}
 
   bool getOk() { return mOk; }
-  int getChannels() { return mCodecContext->channels; }
+  int getChannels() { return mCodecContext->ch_layout.nb_channels; }
   int getSampleRate() { return mCodecContext->sample_rate; }
   int getBitRate() { return (int)mCodecContext->bit_rate; }
   int getFrameSize() { return mCodecContext->frame_size; }
@@ -299,11 +299,11 @@ private:
   bool openFile (const char* filename, int channels, int sampleRate, int bitRate) {
 
     // find the encoder by name
-    AVCodec* codec = avcodec_find_encoder (AV_CODEC_ID_AAC);
+    const AVCodec* codec = avcodec_find_encoder (AV_CODEC_ID_AAC);
     mCodecContext = avcodec_alloc_context3 (codec);
 
     // set basic encoder parameters
-    mCodecContext->channels = channels;
+    mCodecContext->ch_layout.nb_channels = channels;
     mCodecContext->channel_layout = av_get_default_channel_layout (channels);
     mCodecContext->sample_rate = sampleRate;
     mCodecContext->sample_fmt = codec->sample_fmts[0];
@@ -345,10 +345,9 @@ private:
     hasData = false;
 
     // Packet used for temporary storage
-    AVPacket packet;
-    av_init_packet (&packet);
-    packet.data = NULL;
-    packet.size = 0;
+    AVPacket* packet = av_packet_alloc();
+    packet->data = NULL;
+    packet->size = 0;
 
     // Set a timestamp based on the sample rate for the container
     if (frame) {
@@ -370,7 +369,7 @@ private:
 
     // Receive one encoded frame from the encoder
     // If the encoder asks for more data to be able to provide an encoded frame, return indicating that no data is present
-    error = avcodec_receive_packet (mCodecContext, &packet);
+    error = avcodec_receive_packet (mCodecContext, packet);
     if ((error == AVERROR(EAGAIN)) || (error == AVERROR_EOF))
       ok = true;
     else if (error < 0)
@@ -382,13 +381,13 @@ private:
 
     // Write one audio frame from the temporary packet to the output file
     if (hasData)
-      if (av_write_frame (mFormatContext, &packet) < 0) {
+      if (av_write_frame (mFormatContext, packet) < 0) {
         ok = false;
         cLog::log (LOGERROR, "error write frame");
         }
 
   cleanup:
-    av_packet_unref (&packet);
+    av_packet_unref (packet);
     return ok;
     }
   //}}}
