@@ -94,7 +94,7 @@ float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
 
               float* srcPtr0 = (float*)avFrame->data[0];
               float* srcPtr1 = (float*)avFrame->data[1];
-              if (avFrame->channels == 6) { // 5.1
+              if (avFrame->ch_layout.nb_channels == 6) { // 5.1
                 float* srcPtr2 = (float*)avFrame->data[2];
                 float* srcPtr3 = (float*)avFrame->data[3];
                 float* srcPtr4 = (float*)avFrame->data[4];
@@ -114,12 +114,12 @@ float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, 
             //}}}
             //{{{
             case AV_SAMPLE_FMT_S16P: // 16bit signed planar, copy scale and copy to interleaved
-              mChannels =  avFrame->channels;
+              mChannels =  avFrame->ch_layout.nb_channels;
               mSampleRate = avFrame->sample_rate;
               mSamplesPerFrame = avFrame->nb_samples;
-              samples = (float*)malloc (avFrame->channels * avFrame->nb_samples * sizeof(float));
+              samples = (float*)malloc (avFrame->ch_layout.nb_channels * avFrame->nb_samples * sizeof(float));
 
-              for (int channel = 0; channel < avFrame->channels; channel++) {
+              for (int channel = 0; channel < avFrame->ch_layout.nb_channels; channel++) {
                 float* dstPtr = samples + channel;
                 short* srcPtr = (short*)avFrame->data[channel];
                 for (int sample = 0; sample < mSamplesPerFrame; sample++) {
