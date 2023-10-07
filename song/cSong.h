@@ -12,8 +12,8 @@
 
 #include "../decoder/cAudioParser.h"
 
-#include "../kiss/kiss_fft.h"
-#include "../kiss/kiss_fftr.h"
+#include "../audio/kiss_fft.h"
+#include "../audio/kiss_fftr.h"
 //}}}
 
 class cSong {

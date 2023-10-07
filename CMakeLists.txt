@@ -52,12 +52,11 @@ if (BUILD_MFX AND CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   add_subdirectory (libmfx)
 endif()
 
+add_subdirectory (net)
 add_subdirectory (dvb)
 add_subdirectory (decoder)
-add_subdirectory (kiss)
-add_subdirectory (song)
-add_subdirectory (net)
 add_subdirectory (audio)
+add_subdirectory (song)
 
 # windows audio capture app
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -108,7 +107,7 @@ project (player VERSION 1.0.0)
   add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
 
   target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
-  target_link_libraries (${PROJECT_NAME} PRIVATE imgui song audio decoder dvb kiss net)
+  target_link_libraries (${PROJECT_NAME} PRIVATE imgui song audio decoder dvb net)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
