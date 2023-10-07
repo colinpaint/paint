@@ -7,8 +7,8 @@
 
 #include "cGraphics.h"
 
-#include <imgui.h>
-#include <backends/imgui_impl_opengl3.h>
+#include "../imgui/imgui.h"
+#include "../imgui/backends/imgui_impl_opengl3.h"
 
 #include "../common/cLog.h"
 //}}}

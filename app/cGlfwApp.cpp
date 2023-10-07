@@ -22,17 +22,17 @@
 #include <GLFW/glfw3.h>
 
 // imGui
-#include <imgui.h>
-#include <backends/imgui_impl_glfw.h>
+#include "../imgui/imgui.h"
+#include "../imgui/backends/imgui_impl_glfw.h"
 
 #if defined(GL_2_1)
-  #include <backends/imgui_impl_opengl2.h>
+  #include "../imgui/backends/imgui_impl_opengl2.h"
   #include "cGL2Graphics.h"
 #elif defined(GL_3)
-  #include <backends/imgui_impl_opengl3.h>
+  #include "../imgui/backends/imgui_impl_opengl3.h"
   #include "cGL3Graphics.h"
 #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
-  #include <backends/imgui_impl_opengl3.h>
+  #include "../imgui/backends/imgui_impl_opengl3.h"
   #include "cGLES3Graphics.h"
 #endif
 

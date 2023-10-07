@@ -7,7 +7,7 @@
 #include <deque>
 #include <chrono>
 
-#include "imgui.h"
+#include "../imgui/imgui.h"
 
 class cMiniLog;
 //}}}

@@ -13,7 +13,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 //}}}
 
 class cPlatformHttp : public cHttp {

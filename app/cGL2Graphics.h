@@ -7,10 +7,10 @@
 
 #include "cGraphics.h"
 
-#include <imgui.h>
-#include <backends/imgui_impl_opengl2.h>
+#include "../imgui/imgui.h"
+#include "../imgui/backends/imgui_impl_opengl2.h"
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 //}}}
 
 class cGL2Gaphics : public cGraphics {
