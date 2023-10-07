@@ -33,7 +33,7 @@
 #include "../ui/cUI.h"
 
 // utils
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 
 // app
 #include "cApp.h"

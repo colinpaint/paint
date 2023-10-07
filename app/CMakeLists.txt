@@ -1,11 +1,6 @@
 project (app VERSION 1.0.0)
   # GL
-  if (BUILD_GRAPHICS STREQUAL "GL_2_1")
-    file (GLOB HEADER_FILES ../imgui/*.h
-                            ../imgui/backends/imgui_impl_glfw.h ../imgui/backends/imgui_impl_opengl2.h
-                            cApp.h app cGL2Graphics.h)
-    file (GLOB SOURCE_FILES cGlfwApp.cpp ../imgui/backends/imgui_impl_glfw.cpp ../imgui/backends/imgui_impl_opengl2.cpp)
-  elseif (BUILD_GRAPHICS STREQUAL "GL_3")
+  if (BUILD_GRAPHICS STREQUAL "GL_3")
     file (GLOB HEADER_FILES ../imgui/*.h
                             ../imgui/backends/imgui_impl_glfw.h ../imgui/backends/imgui_impl_GL3.h
                             cApp.h app cGL3Graphics.h)
@@ -49,8 +44,7 @@ project (app VERSION 1.0.0)
   target_link_libraries (${PROJECT_NAME} PUBLIC common)
 
   # GL
-  if (BUILD_GRAPHICS STREQUAL "GL_2_1" OR
-      BUILD_GRAPHICS STREQUAL "GL_3")
+  if (BUILD_GRAPHICS STREQUAL "GL_3")
     find_package (OpenGL REQUIRED)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad)

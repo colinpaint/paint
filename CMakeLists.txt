@@ -3,7 +3,7 @@ cmake_policy (SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
-# options - GL_2_1,GL_3, GLES_3_0,GLES_3_1,GLES_3_2, SDL_GL_3, VULKAN
+# options - GL_3, GLES_3_0,GLES_3_1,GLES_3_2, SDL_GL_3, VULKAN
 #cmake .. -DBUILD_GRAPHICS=GLES_3_1
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -37,9 +37,7 @@ set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory (glfw)
 
 # glad lib
-if (BUILD_GRAPHICS STREQUAL "GL_2_1")
-  add_subdirectory (glad2.1+fbo+vao)
-elseif (BUILD_GRAPHICS STREQUAL "GL_3" OR BUILD_GRAPHICS STREQUAL "SDL_GL_3")
+if (BUILD_GRAPHICS STREQUAL "GL_3" OR BUILD_GRAPHICS STREQUAL "SDL_GL_3")
   add_subdirectory (glad4.5core)
 endif()
 
