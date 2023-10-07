@@ -87,7 +87,9 @@ inline std::string getPtsFramesString (int64_t pts, int64_t ptsDuration) {
 //}}}
 
 //{{{
-inline std::string validFileString (const std::string& str, const char* inValidChars) {
+inline std::string getValidFileString (const std::string& str) {
+
+  const char* inValidChars=  "<>:/|?*\"\'\\";
 
   std::string validStr = str;
   for (auto i = 0u; i < strlen(inValidChars); ++i)

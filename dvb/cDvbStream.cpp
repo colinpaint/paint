@@ -886,7 +886,7 @@ void cDvbStream::startServiceProgram (cService* service, tTimePoint tdtTime,
     string filePath = mRecordRootName +
                       service->getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
-                      validFileString (programName, "<>:/|?*\"\'\\") +
+                      getValidFileString (programName) +
                       ".ts";
 
     // record
