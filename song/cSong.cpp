@@ -203,14 +203,14 @@ string cSong::getFirstTimeString (int daylightSeconds) const {
   if (!value)
     return "";
 
-  return getTimeString (getSecondsFromFrames (value), 0);
+  return utils::getTimeString (getSecondsFromFrames (value), 0);
   }
 //}}}
 //{{{
 string cSong::getPlayTimeString (int daylightSeconds) const {
 // scale pts = frameNum as seconds*100
 
-  return getTimeString (getSecondsFromFrames (getPlayPts() * 100), daylightSeconds);
+  return utils::getTimeString (getSecondsFromFrames (getPlayPts() * 100), daylightSeconds);
   }
 //}}}
 //{{{
@@ -219,7 +219,7 @@ string cSong::getLastTimeString (int daylightSeconds) const {
   (void)daylightSeconds;
 
   // scale frameNum as seconds*100
-  return getTimeString (getSecondsFromFrames (getLastFrameNum() * 100), 0);
+  return utils::getTimeString (getSecondsFromFrames (getLastFrameNum() * 100), 0);
   }
 //}}}
 
@@ -436,17 +436,17 @@ bool cPtsSong::getPlayFinished() const {
 //}}}
 //{{{
 string cPtsSong::getFirstTimeString (int daylightSeconds) const {
-  return getTimeString ((mBaseSinceMidnightMs + ((getFirstPts() - mBasePts) / 90)) / 10, daylightSeconds);
+  return utils::getTimeString ((mBaseSinceMidnightMs + ((getFirstPts() - mBasePts) / 90)) / 10, daylightSeconds);
   }
 //}}}
 //{{{
 string cPtsSong::getPlayTimeString (int daylightSeconds) const {
-  return getTimeString ((mBaseSinceMidnightMs + ((getPlayPts() - mBasePts)) / 90) / 10, daylightSeconds);
+  return utils::getTimeString ((mBaseSinceMidnightMs + ((getPlayPts() - mBasePts)) / 90) / 10, daylightSeconds);
   }
 //}}}
 //{{{
 string cPtsSong::getLastTimeString (int daylightSeconds) const {
-  return getTimeString ((mBaseSinceMidnightMs + ((getLastPts() - mBasePts)) / 90) / 10, daylightSeconds);
+  return utils::getTimeString ((mBaseSinceMidnightMs + ((getLastPts() - mBasePts)) / 90) / 10, daylightSeconds);
   }
 //}}}
 
@@ -506,7 +506,7 @@ int cHlsSong::getLoadChunkNum (int64_t& loadPts, bool& reuseFromFront) const {
   if (!findFrameByPts (loadPts)) {
     reuseFromFront = loadPts >= mPlayPts;
     cLog::log (LOGINFO1, fmt::format ("getLoadChunk - load offset:{} {} chunkNum{} pts{} {}",
-                           frameNumOffset, chunkNumOffset,chunkNum, getPtsFramesString (loadPts, getFramePtsDuration()),
+                           frameNumOffset, chunkNumOffset,chunkNum, utils::getPtsFramesString (loadPts, getFramePtsDuration()),
                            (reuseFromFront ? " front" : " back")));
     return chunkNum;
     }
@@ -517,7 +517,7 @@ int cHlsSong::getLoadChunkNum (int64_t& loadPts, bool& reuseFromFront) const {
   if (!findFrameByPts (loadPts))  {
     reuseFromFront = loadPts >= mPlayPts;
     cLog::log (LOGINFO1, fmt::format ("getLoadChunk - preload+1 offset:{} {} chunkNum{} pts{} {}",
-                         frameNumOffset,chunkNumOffset, chunkNum, getPtsFramesString (loadPts, getFramePtsDuration()),
+                         frameNumOffset,chunkNumOffset, chunkNum, utils::getPtsFramesString (loadPts, getFramePtsDuration()),
                          (reuseFromFront ? " front" : " back")));
     return chunkNum;
     }
@@ -532,7 +532,7 @@ int cHlsSong::getLoadChunkNum (int64_t& loadPts, bool& reuseFromFront) const {
 void cHlsSong::setBaseHls (int64_t pts, chrono::system_clock::time_point timePoint, chrono::seconds offset, int chunkNum) {
 // set baseChunkNum, baseTimePoint and baseFrame (sinceMidnight)
 
-  cLog::log (LOGINFO, fmt::format ("setBase chunk: {} pts {}", chunkNum, getPtsString (pts)));
+  cLog::log (LOGINFO, fmt::format ("setBase chunk: {} pts {}", chunkNum, utils::getPtsString (pts)));
 
   unique_lock<shared_mutex> lock (mSharedMutex);
   setBasePts (pts);

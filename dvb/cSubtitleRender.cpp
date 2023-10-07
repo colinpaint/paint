@@ -68,7 +68,7 @@ public:
     mPage.mPts = pts;
     mPage.mPesSize = pesSize;
 
-    mRender->log ("pes", fmt::format ("pts:{} size: {}", getFullPtsString (mPage.mPts), mPage.mPesSize));
+    mRender->log ("pes", fmt::format ("pts:{} size: {}", utils::getFullPtsString (mPage.mPts), mPage.mPesSize));
     mRender->logValue (pts, (float)pesSize);
 
     if (pesSize < 8) {
@@ -905,9 +905,9 @@ private:
 
     mRender->header();
     if (mPage.mRegionDisplays.size())
-      mRender->log ("end", fmt::format("{} - {} lines", getFullPtsString (mPage.mPts), mPage.mRegionDisplays.size()));
+      mRender->log ("end", fmt::format("{} - {} lines", utils::getFullPtsString (mPage.mPts), mPage.mRegionDisplays.size()));
     else
-      mRender->log ("end", fmt::format("{} - noLines", getFullPtsString (mPage.mPts)));
+      mRender->log ("end", fmt::format("{} - noLines", utils::getFullPtsString (mPage.mPts)));
     }
   //}}}
 

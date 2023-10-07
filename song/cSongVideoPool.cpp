@@ -1929,7 +1929,7 @@ public:
       if ((mGuessPts >= 0) && (mGuessPts != dts))
         //{{{  debug
         cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
-                             getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),frameType,pesSize));
+          utils::getPtsFramesString (mGuessPts, 1800), utils::getPtsFramesString (dts, 1800),frameType,pesSize));
         //}}}
       mGuessPts = dts;
       mSeenIFrame = true;
@@ -1937,7 +1937,7 @@ public:
     if (!mSeenIFrame) {
       //{{{  debug
       cLog::log (LOGINFO, fmt::format("waiting for Iframe {} to:{} type:{} size:{}",
-                          getPtsFramesString (mGuessPts, 1800), getPtsFramesString (dts, 1800),frameType,pesSize));
+                                      utils::getPtsFramesString (mGuessPts, 1800), utils::getPtsFramesString (dts, 1800),frameType,pesSize));
       //}}}
       return;
       }

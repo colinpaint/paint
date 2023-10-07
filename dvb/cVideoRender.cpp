@@ -193,7 +193,7 @@ public:
       //{{{  pts seems wrong, frames decode in presentation order, only correct on Iframe
       if ((mInterpolatedPts != -1) && (mInterpolatedPts != dts))
         cLog::log (LOGERROR, fmt::format ("lost:{} pts:{} dts:{} size:{}",
-                                          frameType, getPtsString (pts), getPtsString (dts), pesSize));
+                                          frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize));
       mInterpolatedPts = dts;
       mGotIframe = true;
       }
@@ -201,7 +201,7 @@ public:
     if (!mGotIframe) {
       //{{{  skip until first Iframe
       cLog::log (LOGINFO, fmt::format ("skip:{} pts:{} dts:{} size:{}",
-                                       frameType, getPtsString (pts), getPtsString (dts), pesSize));
+                                       frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize));
       return pts;
       }
       //}}}
@@ -317,7 +317,7 @@ public:
         mGotIframe = true;
       else {
         cLog::log (LOGINFO, fmt::format ("skip:{} {} {} size:{}",
-                                         frameType, getPtsString (pts), getPtsString (dts), pesSize));
+                                         frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize));
         return pts;
         }
       }

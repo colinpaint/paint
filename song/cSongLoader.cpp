@@ -1151,7 +1151,7 @@ public:
         // firstTime since skip, setPlayPts
         mPtsSong->setPlayPts (pts);
         waitForPts = false;
-        cLog::log (LOGINFO, fmt::format ("resync pts:{}", getPtsFramesString (pts, mPtsSong->getFramePtsDuration())));
+        cLog::log (LOGINFO, fmt::format ("resync pts:{}", utils::getPtsFramesString (pts, mPtsSong->getFramePtsDuration())));
         }
       loadPts = pts;
       };
@@ -1726,7 +1726,7 @@ public:
                             if (key == "content-length")
                               cLog::log (LOGINFO1, fmt::format ("chunk:{} pts:{} size:{}k",
                                          chunkNum,
-                                         getPtsFramesString (loadPts, mHlsSong->getFramePtsDuration()),
+                                         utils::getPtsFramesString (loadPts, mHlsSong->getFramePtsDuration()),
                                          http.getHeaderContentSize()/1000));
                             },
                             //}}}
@@ -2340,7 +2340,7 @@ public:
         // firstTime since skip, setPlayPts
         mPtsSong->setPlayPts (pts);
         waitForPts = false;
-        cLog::log (LOGINFO, "resync pts:" + getPtsFramesString (pts, mPtsSong->getFramePtsDuration()));
+        cLog::log (LOGINFO, "resync pts:" + utils::getPtsFramesString (pts, mPtsSong->getFramePtsDuration()));
         }
       loadPts = pts;
       };

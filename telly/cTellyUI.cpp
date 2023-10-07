@@ -592,8 +592,8 @@ private:
       // draw pid label
       ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {} {}",
                               pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.getPid(),
-                              getFullPtsString (pidInfo.getPts()),
-                              getFullPtsString (pidInfo.getDts()),
+                              utils::getFullPtsString (pidInfo.getPts()),
+                              utils::getFullPtsString (pidInfo.getDts()),
                               pidInfo.getTypeName()).c_str());
 
       // draw stream bar
