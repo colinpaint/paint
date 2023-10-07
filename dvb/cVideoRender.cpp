@@ -493,7 +493,7 @@ protected:
       default: statusString = "Error code";
       }
 
-    return fmt::format ("status {} {}", status, statusString);
+    return fmt::format ("status {} {}", (int)status, statusString);
     }
   //}}}
   //{{{

@@ -3,23 +3,39 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <chrono>
 
-#include "fmt/core.h" //  fmt::format core, used by a lot of logging
+#include "fmt/format.h"
 //}}}
 
 // no class or namespace qualification, reduces code clutter - cLog::log (LOG* - bad enough
-enum eLogLevel { LOGNOTICE, LOGERROR, LOGINFO, LOGINFO1, LOGINFO2, LOGINFO3 };
+enum eLogLevel { LOGNOTICE, LOGERROR, LOGINFO, LOGINFO1, LOGINFO2, LOGINFO3, eMaxLog };
 
-class cLine;
+//{{{
+struct cLogLine {
+  cLogLine() {}
+  cLogLine (eLogLevel logLevel, uint64_t threadId,
+         std::chrono::time_point<std::chrono::system_clock> timePoint, const std::string& lineString)
+    : mLogLevel(logLevel), mThreadId(threadId), mTimePoint(timePoint), mString(lineString) {}
+
+  eLogLevel mLogLevel = LOGINFO;
+  uint64_t mThreadId = 0;
+  std::chrono::time_point<std::chrono::system_clock> mTimePoint;
+  std::string mString;
+  };
+//}}}
 
 class cLog {
 public:
+  cLog() = default;
   ~cLog();
 
   static bool init (eLogLevel logLevel = LOGINFO, bool buffer = false, const std::string& logFilePath = "");
 
   // get
   static enum eLogLevel getLogLevel();
+  static std::string getThreadName (uint64_t threadId);
+  static bool getLine (cLogLine& line, unsigned lineNum, unsigned& lastLineIndex);
 
   // set
   static void cycleLogLevel();
@@ -32,9 +48,4 @@ public:
 
   static void clearScreen();
   static void status (int row, int colourIndex, const std::string& statusString);
-
-  static bool getLine (cLine& line, unsigned lineNum, unsigned& lastLineIndex);
-
-private:
-  static std::string getThreadName (uint64_t threadId);
   };

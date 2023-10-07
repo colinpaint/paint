@@ -34,34 +34,11 @@ set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FO
 
 # main build type message
 message (STATUS "using ${BUILD_GRAPHICS} graphics")
+#
 
+# subdirectories
 add_subdirectory (fmt)
-
-# utils lib
-project (utils VERSION 1.0.0)
-  file (GLOB HEADER_FILES utils/*.h)
-  file (GLOB SOURCE_FILES utils/*.cpp utils/*.c)
-  add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-
-  target_link_libraries (${PROJECT_NAME} PUBLIC fmt)
-
-  if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    message (STATUS "using ${CMAKE_HOST_SYSTEM_NAME}")
-    target_compile_options (${PROJECT_NAME} PUBLIC /W4 /fp:fast ${BUILD_MSVC_COMPILE_OPTIONS})
-  elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    message (STATUS "using ${CMAKE_HOST_SYSTEM_NAME}")
-    target_compile_definitions (${PROJECT_NAME} PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
-    target_compile_options (${PROJECT_NAME} PUBLIC -Wall -Wextra
-                                                   -Wno-missing-field-initializers
-                                                   -Wno-format-security -Wno-format-overflow
-                                                   -pedantic
-                                                   -flax-vector-conversions -ftree-vectorize
-                                                   -fno-exceptions
-                                                   -march=native
-                                                   ${BUILD_LINUX_COMPILE_OPTIONS})
-  elseif()
-    message (FATAL_ERROR, "unknown CMAKE_HOST_SYSTEM_NAME = ${CMAKE_HOST_SYSTEM_NAME}")
-  endif()
+add_subdirectory (utils)
 
 # glfw lib
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)

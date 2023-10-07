@@ -13,7 +13,7 @@
 #include <chrono>
 #include <functional>
 
-#include "../utils/formatCore.h"
+#include "fmt/core.h"
 #include "../utils/date.h"
 
 using namespace std;
@@ -825,12 +825,11 @@ void cJpegAnalyse::parseAPP0 (const string& tag, uint8_t* startPtr, uint32_t off
   id[5] = 0; // extra null termination
 
   uint16_t version = ptr[5] << 8 || ptr[6];
-  uint8_t units = ptr[7];
-  uint8_t xDensity = ptr[8];
-  uint8_t yDensity = ptr[9];
+  //uint8_t units = ptr[7];
+  //uint8_t xDensity = ptr[8];
+  //uint8_t yDensity = ptr[9];
 
-  mCallback (0, fmt::format ("{} {} version:{} units:{} density:{}x{}", tag, id, version, units, xDensity, yDensity),
-                  startPtr, offset, length);
+  mCallback (0, fmt::format ("{} version:{}", tag, version), startPtr, offset, length);
   }
 //}}}
 //{{{
@@ -891,7 +890,7 @@ void cJpegAnalyse::parseAPP2 (const string& tag, uint8_t* startPtr, uint32_t off
   (void)length;
   //}}}
   // dodgy use of ptr as title
-  mCallback (0, fmt::format ("{} {}", tag, ptr), startPtr, offset, length);
+  mCallback (0, fmt::format ("{}", tag), startPtr, offset, length);
   }
 //}}}
 //{{{
@@ -903,7 +902,7 @@ void cJpegAnalyse::parseAPP14 (const string& tag, uint8_t* startPtr, uint32_t of
   (void)length;
   //}}}
   // dodgy use of ptr as title
-  mCallback (0, fmt::format ("{} {}", tag, ptr), startPtr, offset, length);
+  mCallback (0, fmt::format ("{}", tag), startPtr, offset, length);
   }
 //}}}
 //{{{
@@ -991,13 +990,12 @@ void cJpegAnalyse::parseSOS (const string& tag, uint8_t* startPtr, uint32_t offs
 //{{{
 string cJpegAnalyse::cExifGpsInfo::getString() {
 
-  string str = fmt::format ("{} {} {} {} {} {} {} {} {}",
-                            mDatum,
-                            mLatitudeDeg,mLatitudeRef,mLatitudeMin,mLatitudeSec,
-                            mLongitudeDeg,mLongitudeRef,mLongitudeMin,mLongitudeSec);
+  string str = fmt::format ("{}", mDatum);
+  //str += fmt::format("{} {} {} {}", mLatitudeDeg, mLatitudeRef, mLatitudeMin, mLatitudeSec);
+  //str += fmt::format("{} {} {} {}", mLongitudeDeg, mLongitudeRef, mLongitudeMin, mLongitudeSec);
 
-  str += fmt::format ("{} {}", mAltitude, mAltitudeRef);
-  str += fmt::format ("{} {}", mImageDirection, mImageDirectionRef);
+  str += fmt::format ("{}", mAltitude); //, mAltitudeRef);
+  str += fmt::format ("{}", mImageDirection); //mImageDirectionRef);
   str += fmt::format ("{} {} {} {}", mDate,mHour,mMinute,mSecond);
   return str;
   }
