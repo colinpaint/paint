@@ -9,13 +9,13 @@
 
 #include "../app/cApp.h"
 
-#include "../utils/date.h"
+#include "../common/date.h"
 
 // imgui
 #include "../imgui/imgui.h"
 
 // utils
-#include "../utils/cPointRectColor.h"
+#include "../common/cPointRectColor.h"
 
 class cGraphics;
 class cPlatform;

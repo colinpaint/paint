@@ -8,7 +8,7 @@
 
 #include "cDvbUtils.h"
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 
 using namespace std;
 using namespace fmt;

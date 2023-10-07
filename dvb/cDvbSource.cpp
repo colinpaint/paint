@@ -74,7 +74,7 @@
 #include "cDvbSource.h"
 #include "cDvbUtils.h"
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 
 using namespace std;
 //}}}

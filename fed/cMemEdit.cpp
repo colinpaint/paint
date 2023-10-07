@@ -23,7 +23,7 @@
 
 #include "../app/myImgui.h"
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 
 #ifdef _MSC_VER
   #define _PRISizeT   "I"

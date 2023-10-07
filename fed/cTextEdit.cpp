@@ -16,7 +16,7 @@
 
 #include "../fed/cFedApp.h"
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 
 using namespace std;
 using namespace chrono;

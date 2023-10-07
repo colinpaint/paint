@@ -62,9 +62,9 @@
   #include <mfxvideo++.h>
 #endif
 
-#include "../utils/date.h"
-#include "../utils/cLog.h"
-#include "../utils/utils.h"
+#include "../common/date.h"
+#include "../common/cLog.h"
+#include "../common/utils.h"
 
 extern "C" {
   #include <libavcodec/avcodec.h>

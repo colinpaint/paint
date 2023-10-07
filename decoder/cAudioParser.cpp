@@ -3,7 +3,7 @@
 #include <cstring>
 #include "cAudioParser.h"
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 //}}}
 
 static uint8_t* mJpegPtr = nullptr;

@@ -13,9 +13,9 @@
 #include "sys/stat.h"
 
 // utils
-#include "../utils/utils.h"
-#include "../utils/date.h"
-#include "../utils/cLog.h"
+#include "../common/utils.h"
+#include "../common/date.h"
+#include "../common/cLog.h"
 
 // song
 #include "cSong.h"

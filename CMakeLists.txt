@@ -38,7 +38,7 @@ message (STATUS "using ${BUILD_GRAPHICS} graphics")
 
 # subdirectories
 add_subdirectory (fmt)
-add_subdirectory (utils)
+add_subdirectory (common)
 
 # glfw lib
 set (GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -101,8 +101,8 @@ project (app VERSION 1.0.0)
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS} ${BUILD_DOCKING})
   target_include_directories (${PROJECT_NAME} PRIVATE glfw/include
-                                              PUBLIC utils imgui)
-  target_link_libraries (${PROJECT_NAME} PUBLIC utils)
+                                              PUBLIC common imgui)
+  target_link_libraries (${PROJECT_NAME} PUBLIC common)
 
   if (BUILD_GRAPHICS STREQUAL "GL_2_1" OR
       BUILD_GRAPHICS STREQUAL "GL_3")
@@ -152,7 +152,7 @@ project (imgui VERSION 1.0.0)
   file (GLOB HEADER_FILES imgui/*.h app/myImgui.h)
   file (GLOB SOURCE_FILES imgui/*.cpp app/myImgui.cpp)
   add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-  target_include_directories (${PROJECT_NAME} PRIVATE utils app)
+  target_include_directories (${PROJECT_NAME} PRIVATE common app)
   target_link_libraries (${PROJECT_NAME} PUBLIC app)
 
 # implot lib
@@ -165,7 +165,7 @@ project (implot VERSION 1.0.0)
 # libmfx
 if (BUILD_MFX AND CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   project (libmfx VERSION 1.0.0)
-    file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/windows/include/*.h utils/*.h)
+    file (GLOB HEADER_FILES libmfx/include/*.h libmfx/mfx_dispatch/windows/include/*.h common/*.h)
     file (GLOB SOURCE_FILES libmfx/mfx_dispatch/windows/src/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
     target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_MFX)
@@ -188,7 +188,7 @@ if (BUILD_TELLY OR BUILD_PLAYER)
       target_include_directories (${PROJECT_NAME} PRIVATE libmfx/include)
       target_link_directories (${PROJECT_NAME} PRIVATE ffmpeg/x64)
       target_link_libraries (${PROJECT_NAME} PUBLIC
-                             utils libmfx avdevice avfilter avformat avcodec avutil swresample swscale)
+                             common libmfx avdevice avfilter avformat avcodec avutil swresample swscale)
       target_link_libraries (${PROJECT_NAME} PRIVATE d3d11 dxgi d3d9 dxva2)
     elseif (BUILD_MFX)
       find_package (PkgConfig REQUIRED)
@@ -198,79 +198,79 @@ if (BUILD_TELLY OR BUILD_PLAYER)
       pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
       target_include_directories (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG)
+      target_link_libraries (${PROJECT_NAME} PUBLIC common PkgConfig::FFMPEG)
       target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::LIBMFX PkgConfig::LIBVA)
-      target_link_libraries (${PROJECT_NAME} PRIVATE utils PkgConfig::LIBMFX PkgConfig::LIBVA PkgConfig::LIBVADRM)
+      target_link_libraries (${PROJECT_NAME} PRIVATE common PkgConfig::LIBMFX PkgConfig::LIBVA PkgConfig::LIBVADRM)
     else ()
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
       target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG)
+      target_link_libraries (${PROJECT_NAME} PUBLIC common PkgConfig::FFMPEG)
     endif()
 endif()
 
 # decoder lib
 if (BUILD_PLAYER OR BUILD_CAPTURE)
   project (decoder VERSION 1.0.0)
-    file (GLOB HEADER_FILES decoder/*.h utils/*.h)
+    file (GLOB HEADER_FILES decoder/*.h common/*.h)
     file (GLOB SOURCE_FILES decoder/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       target_include_directories (${PROJECT_NAME} PUBLIC ffmpeg/inc)
       target_link_directories (${PROJECT_NAME} PUBLIC ffmpeg/x64)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils avdevice avfilter avformat avcodec avutil swresample swscale)
+      target_link_libraries (${PROJECT_NAME} PUBLIC common avdevice avfilter avformat avcodec avutil swresample swscale)
     elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
       find_package (PkgConfig REQUIRED)
       pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                          libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
       target_include_directories (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
-      target_link_libraries (${PROJECT_NAME} PUBLIC utils PkgConfig::FFMPEG)
+      target_link_libraries (${PROJECT_NAME} PUBLIC common PkgConfig::FFMPEG)
     endif()
 endif()
 
 if (BUILD_PLAYER)
   # kiss lib
   project (kiss VERSION 1.0.0)
-    file (GLOB HEADER_FILES kiss/*.h utils/*.h)
+    file (GLOB HEADER_FILES kiss/*.h common/*.h)
     file (GLOB SOURCE_FILES kiss/*.c)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
+    target_link_libraries (${PROJECT_NAME} PRIVATE common)
 endif()
 
 if (BUILD_PLAYER)
   # song lib
   project (song VERSION 1.0.0)
-    file (GLOB HEADER_FILES song/*.h utils/*.h)
+    file (GLOB HEADER_FILES song/*.h common/*.h)
     file (GLOB SOURCE_FILES song/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-    target_link_libraries (${PROJECT_NAME} PRIVATE utils decoder kiss)
+    target_link_libraries (${PROJECT_NAME} PRIVATE common decoder kiss)
 endif()
 
 if (BUILD_PLAYER)
   # net lib
   project (net VERSION 1.0.0)
-    file (GLOB HEADER_FILES net/*.h utils/*.h)
+    file (GLOB HEADER_FILES net/*.h common/*.h)
     file (GLOB SOURCE_FILES net/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
+    target_link_libraries (${PROJECT_NAME} PRIVATE common)
 endif()
 
 # audio lib
 if (BUILD_PLAYER OR BUILD_TELLY)
   project (audio VERSION 1.0.0)
-    file (GLOB HEADER_FILES audio/*.h decoder/*.h utils/*.h)
+    file (GLOB HEADER_FILES audio/*.h decoder/*.h common/*.h)
     file (GLOB SOURCE_FILES audio/*.cpp)
     add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
-    target_link_libraries (${PROJECT_NAME} PRIVATE utils)
+    target_link_libraries (${PROJECT_NAME} PRIVATE common)
 endif()
 
 # windows audio capture app
 if (BUILD_CAPTURE AND CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   ## WIN32 audio wsapi capture main project
   project (captureAudio VERSION 1.0.0)
-    file (GLOB HEADER_FILES audio/*.h utils/*.h)
+    file (GLOB HEADER_FILES audio/*.h common/*.h)
     file (GLOB SOURCE_FILES captureAudio/capture.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
     target_link_libraries (${PROJECT_NAME} PRIVATE decoder winmm avrt audio)
@@ -279,7 +279,7 @@ endif()
 # demo app
 if (BUILD_DEMO)
   project (demo VERSION 1.0.0)
-    file (GLOB HEADER_FILES demo/*.h ui/*.h imgui/*.h utils/*.h app/*.h)
+    file (GLOB HEADER_FILES demo/*.h ui/*.h imgui/*.h common/*.h app/*.h)
     file (GLOB SOURCE_FILES demo/*.cpp ui/cUI.cpp)
     add_executable (demo ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -305,7 +305,7 @@ endif()
 # fed app
 if (BUILD_FED)
   project (fed VERSION 1.0.0)
-    file (GLOB HEADER_FILES fed/*.h ui/*.h imgui/*.h utils/*.h app/*.h)
+    file (GLOB HEADER_FILES fed/*.h ui/*.h imgui/*.h common/*.h app/*.h)
     file (GLOB SOURCE_FILES fed/*.cpp ui/cUI.cpp)
     add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -320,7 +320,7 @@ endif()
 # player app
 if (BUILD_PLAYER)
   project (player VERSION 1.0.0)
-    file (GLOB HEADER_FILES player/*.h ui/*.h imgui/*.h utils/*.h app/*.h)
+    file (GLOB HEADER_FILES player/*.h ui/*.h imgui/*.h common/*.h app/*.h)
     file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp ui/cUI.cpp)
     add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -336,7 +336,7 @@ endif()
 # telly app
 if (BUILD_TELLY)
   project (telly VERSION 1.0.0)
-    file (GLOB HEADER_FILES telly/*.h ui/*.h imgui/*.h implot/implot.h utils/*.h app/*.h)
+    file (GLOB HEADER_FILES telly/*.h ui/*.h imgui/*.h implot/implot.h common/*.h app/*.h)
     file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp ui/cUI.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 

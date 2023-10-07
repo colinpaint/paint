@@ -8,7 +8,7 @@
 #include <vector>
 #include <array>
 
-#include "../utils/cMiniLog.h"
+#include "../common/cMiniLog.h"
 
 class cTexture;
 //}}}

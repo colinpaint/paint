@@ -10,7 +10,7 @@
 #include <imgui.h>
 #include <backends/imgui_impl_opengl3.h>
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 //}}}
 
 class cGL3Graphics : public cGraphics {

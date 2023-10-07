@@ -10,8 +10,8 @@
 #include <mutex>
 #include <shared_mutex>
 
-#include "../utils/cMiniLog.h"
-#include "../utils/readerWriterQueue.h"
+#include "../common/cMiniLog.h"
+#include "../common/readerWriterQueue.h"
 
 class cRender;
 //}}}

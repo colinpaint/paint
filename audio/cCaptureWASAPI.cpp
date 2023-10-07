@@ -12,7 +12,7 @@
 #include <thread>
 
 #include "cCaptureWASAPI.h"
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 //}}}
 
 // init static singleton pointer

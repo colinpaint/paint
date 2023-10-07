@@ -19,7 +19,7 @@ extern "C" {
   #include <libswresample/swresample.h>
   }
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 //}}}
 
 class cWavWriter {

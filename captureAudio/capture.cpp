@@ -9,7 +9,7 @@
 #include <string>
 #include <thread>
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 #include "../audio/cCaptureWASAPI.h"
 #include "../audio/audioHelpers.h"
 //}}}

@@ -15,9 +15,9 @@
 #include "imgui_internal.h"
 
 #include "fmt/core.h" //  fmt::format core, used by a lot of logging
-#include "../utils/date.h"
-#include "../utils/cLog.h"
-#include "../utils/cMiniLog.h"
+#include "../common/date.h"
+#include "../common/cLog.h"
+#include "../common/cMiniLog.h"
 
 using namespace std;
 //}}}

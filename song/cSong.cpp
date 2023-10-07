@@ -4,9 +4,9 @@
 
 #include "cSong.h"
 
-#include "../utils/date.h"
-#include "../utils/utils.h"
-#include "../utils/cLog.h"
+#include "../common/date.h"
+#include "../common/utils.h"
+#include "../common/cLog.h"
 
 using namespace std;
 //}}}

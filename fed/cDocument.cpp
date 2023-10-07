@@ -11,7 +11,7 @@
 
 #include <array>
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 
 using namespace std;
 //}}}

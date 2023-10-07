@@ -23,9 +23,9 @@
 #include "cAudioRender.h"
 #include "cSubtitleRender.h"
 
-#include "../utils/date.h"
-#include "../utils/cLog.h"
-#include "../utils/utils.h"
+#include "../common/date.h"
+#include "../common/cLog.h"
+#include "../common/utils.h"
 
 using namespace std;
 //}}}

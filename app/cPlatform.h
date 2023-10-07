@@ -3,7 +3,7 @@
 //{{{  includes
 #include <string>
 
-#include "../utils/cPointRectColor.h"
+#include "../common/cPointRectColor.h"
 //}}}
 
 class cPlatform {

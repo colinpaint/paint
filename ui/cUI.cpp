@@ -16,7 +16,7 @@
 
 #include "../app/cGraphics.h"
 
-#include "../utils/cLog.h"
+#include "../common/cLog.h"
 
 using namespace std;
 //}}}

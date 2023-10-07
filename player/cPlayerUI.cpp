@@ -17,14 +17,14 @@
 #include "../app/cGraphics.h"
 
 // decoder
-#include "../utils/cFileView.h"
+#include "../common/cFileView.h"
 
 // song
 #include "../song/cSong.h"
 
 // utils
-#include "../utils/cLog.h"
-#include "../utils/date.h"
+#include "../common/cLog.h"
+#include "../common/date.h"
 
 using namespace std;
 //}}}

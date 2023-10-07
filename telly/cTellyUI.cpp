@@ -26,8 +26,8 @@
 #include "../dvb/cDvbStream.h"
 
 // utils
-#include "../utils/cLog.h"
-#include "../utils/utils.h"
+#include "../common/cLog.h"
+#include "../common/utils.h"
 
 using namespace std;
 //}}}

@@ -17,12 +17,9 @@
 // ui
 #include "../ui/cUI.h"
 
-// decoder
-#include "../utils/cFileView.h"
-
-// utils
-#include "../utils/cLog.h"
-#include "../utils/date.h"
+#include "../common/cFileView.h"
+#include "../common/cLog.h"
+#include "../common/date.h"
 
 using namespace std;
 //}}}

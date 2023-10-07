@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <string>
 
-#include "../utils/cPointRectColor.h"
-#include "../utils/cVecMat.h"
+#include "../common/cPointRectColor.h"
+#include "../common/cVecMat.h"
 
 struct ImDrawData;
 //}}}

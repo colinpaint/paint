@@ -6,7 +6,7 @@
 #include <chrono>
 #include <vector>
 
-#include "../utils/cPointRectColor.h"
+#include "../common/cPointRectColor.h"
 
 class cPlatform;
 class cGraphics;

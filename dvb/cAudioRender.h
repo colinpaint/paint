@@ -6,7 +6,7 @@
 #include <string>
 
 #include "cRender.h"
-#include "../utils/cMiniLog.h"
+#include "../common/cMiniLog.h"
 
 class cAudioFrame;
 class cAudioDecoder;

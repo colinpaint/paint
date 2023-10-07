@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-#include "../utils/date.h"
-#include "../utils/cLog.h"
-#include "../utils/cFileUtils.h"
+#include "../common/date.h"
+#include "../common/cLog.h"
+#include "../common/cFileUtils.h"
 
 #include "../song/cSong.h"
 #include "../song/cSongLoader.h"
