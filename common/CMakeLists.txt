@@ -11,7 +11,7 @@ project (common VERSION 1.0.0)
                                                    /fp:fast
                                                    ${BUILD_MSVC_COMPILE_OPTIONS})
 
-  elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+  else (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     target_compile_definitions (${PROJECT_NAME} PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
     target_compile_options (${PROJECT_NAME} PUBLIC -Wall
                                                    -Wextra
@@ -26,6 +26,4 @@ project (common VERSION 1.0.0)
                                                    -g
                                                    ${BUILD_LINUX_COMPILE_OPTIONS}
                                                    )
-  else()
-    message (FATAL_ERROR, "unknown CMAKE_HOST_SYSTEM_NAME = ${CMAKE_HOST_SYSTEM_NAME}")
   endif()
