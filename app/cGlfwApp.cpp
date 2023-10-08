@@ -25,14 +25,10 @@
 #include "../imgui/imgui.h"
 #include "../imgui/backends/imgui_impl_glfw.h"
 
-#if defined(GL_2_1)
-  #include "../imgui/backends/imgui_impl_opengl2.h"
-  #include "cGL2Graphics.h"
-#elif defined(GL_3)
-  #include "../imgui/backends/imgui_impl_opengl3.h"
+#include "../imgui/backends/imgui_impl_opengl3.h"
+#if defined(GL_3)
   #include "cGL3Graphics.h"
 #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
-  #include "../imgui/backends/imgui_impl_opengl3.h"
   #include "cGLES3Graphics.h"
 #endif
 
@@ -794,9 +790,7 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     }
 
   // create graphics
-  #if defined(GL_2_1)
-    mGraphics = new cGL2Gaphics();
-  #elif defined(GL_3)
+  #if defined(GL_3)
     mGraphics = new cGL3Graphics (glfwPlatform->getShaderVersion());
   #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
     mGraphics = new cGLES3Graphics();
@@ -806,20 +800,19 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     #error cGlfwApp.cpp unrecognised BUILD_GRAPHICS cmake option
   #endif
 
-  if (!mGraphics || !mGraphics->init()) {
-    cLog::log (LOGERROR, "cApp - graphics init failed");
-    return;
+  if (mGraphics && mGraphics->init()) {
+    // set callbacks
+    glfwPlatform->mResizeCallback = [&](int width, int height) noexcept { windowResize (width, height); };
+    glfwPlatform->mDropCallback = [&](vector<string> dropItems) noexcept { drop (dropItems); };
+
+    // fullScreen, vsync
+    mPlatform = glfwPlatform;
+    mPlatform->setFullScreen (fullScreen);
+    mPlatform->setVsync (vsync);
+    mPlatformDefined = true;
     }
-
-  // set callbacks
-  glfwPlatform->mResizeCallback = [&](int width, int height) noexcept { windowResize (width, height); };
-  glfwPlatform->mDropCallback = [&](vector<string> dropItems) noexcept { drop (dropItems); };
-
-  // fullScreen, vsync
-  mPlatform = glfwPlatform;
-  mPlatform->setFullScreen (fullScreen);
-  mPlatform->setVsync (vsync);
-  mPlatformDefined = true;
+  else
+    cLog::log (LOGERROR, "cApp - graphics init failed");
   }
 //}}}
 //{{{

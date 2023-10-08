@@ -15,12 +15,6 @@ project (app VERSION 1.0.0)
                             cApp.h app cGLES3Graphics.h)
     file (GLOB SOURCE_FILES cGlfwApp.cpp ../imgui/backends/imgui_impl_glfw.cpp ../imgui/backends/imgui_impl_opengl3.cpp)
 
-  elseif (BUILD_GRAPHICS STREQUAL "SDL_GL_3")
-    file (GLOB HEADER_FILES ../imgui/*.h
-                            ../imgui/backends/imgui_impl_sdl.h ../imgui/backends/imgui_impl_GL3.h
-                            cApp.h app cGL3Graphics.h)
-    file (GLOB SOURCE_FILES cSdlApp.cpp ../imgui/backends/imgui_impl_sdl.cpp ../imgui/backends/imgui_impl_opengl3.cpp)
-
   # VULKAN
   elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
     if (BUILD_VALIDATION)
@@ -61,20 +55,6 @@ project (app VERSION 1.0.0)
                                                         IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
                                                         IMGUI_IMPL_OPENGL_ES3=1)
     target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
-
-  # SDL GL3
-  elseif (BUILD_GRAPHICS STREQUAL "SDL_GL_3")
-    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-      find_package (OpenGL REQUIRED)
-      target_include_directories (${PROJECT_NAME} PRIVATE SDL/include)
-      target_link_directories (${PROJECT_NAME} PUBLIC SDL/lib/x64)
-      target_link_libraries (${PROJECT_NAME} PRIVATE SDL2 glad)
-    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-      find_package (PkgConfig REQUIRED)
-      pkg_check_modules (SDL2 REQUIRED IMPORTED_TARGET sdl2)
-      target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::SDL2)
-      target_link_libraries (${PROJECT_NAME} PRIVATE PkgConfig::SDL2 glad GL)
-    endif()
 
   # VULKAN
   elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
