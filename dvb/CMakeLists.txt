@@ -7,7 +7,7 @@ project (dvb VERSION 1.0.0)
                                cRender.h cRender.cpp
                                cAudioRender.h cAudioRender.cpp
                                cVideoRender.h cVideoRender.cpp
-                               cSubTitleRender.h cSubTitleRender.cpp
+                               cSubtitleRender.h cSubtitleRender.cpp
                                )
   if (BUILD_MFX)
     target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_MFX)
