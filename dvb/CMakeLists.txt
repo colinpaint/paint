@@ -1,14 +1,20 @@
 project (dvb VERSION 1.0.0)
-  file (GLOB HEADER_FILES *.h)
-  file (GLOB SOURCE_FILES *.cpp)
-  add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
+  add_library (${PROJECT_NAME} cAudioFrame.h cVideoFrame.h cBipBuffer.h cDvbMultiplex.h
+                               cDvbUtils.h cDvbUtils.cpp
+                               cDvbSource.h cDvbSource.cpp
+                               cDvbStream.h cDvbStream.cpp
+                               cRender.h cRender.cpp
+                               cAudioRender.h cAudioRender.cpp
+                               cVideoRender.h cVideoRender.cpp
+                               cSubTitleRender.h cSubTitleRender.cpp
+                               )
   if (BUILD_MFX)
     target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_MFX)
   endif()
 
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_include_directories (${PROJECT_NAME} PUBLIC ../ffmpeg/inc)
+    target_include_directories (${PROJECT_NAME} PUBLIC ../include/ffmpeg)
     target_include_directories (${PROJECT_NAME} PRIVATE ../libmfx/include)
 
     target_link_directories (${PROJECT_NAME} PRIVATE ../ffmpeg/x64)

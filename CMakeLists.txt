@@ -127,7 +127,7 @@ project (telly VERSION 1.0.0)
 
   target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio imgui)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_directories (${PROJECT_NAME} PRIVATE ffmpeg/x64)
+    target_link_directories (${PROJECT_NAME} PRIVATE ../windowsLib64)
     target_link_libraries (${PROJECT_NAME} PRIVATE libmfx opengl32 dxgi d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
