@@ -1,7 +1,12 @@
 project (common VERSION 1.0.0)
-  file (GLOB HEADER_FILES *.h)
-  file (GLOB SOURCE_FILES *.cpp *.c)
-  add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+  add_library (${PROJECT_NAME} cPointRectColor.h cVecMat.h
+                               date.h fileUtils.h utils.h
+                               readerWriterQueue.h
+                               cFileView.h cFileView.cpp
+                               cLog.h cLog.cpp
+                               cMiniLog.h cMiniLog.cpp
+                               tinyfiledialogs.h tinyfiledialogs.c
+                               )
 
   target_link_libraries (${PROJECT_NAME} PUBLIC fmt)
 
@@ -9,7 +14,8 @@ project (common VERSION 1.0.0)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_compile_options (${PROJECT_NAME} PUBLIC /W4
                                                    /fp:fast
-                                                   ${BUILD_MSVC_COMPILE_OPTIONS})
+                                                   ${BUILD_MSVC_COMPILE_OPTIONS}
+                                                   )
 
   else (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     target_compile_definitions (${PROJECT_NAME} PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)

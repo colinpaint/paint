@@ -1,6 +1,10 @@
-project (net VERSION 1.0.0)
-  file (GLOB HEADER_FILES *.h)
-  file (GLOB SOURCE_FILES *.cpp)
-  add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+project (net)
 
-  target_link_libraries (${PROJECT_NAME} PRIVATE common)
+add_library (${PROJECT_NAME} cHttp.h cHttp.cpp)
+
+target_include_directories (${PROJECT_NAME} PUBLIC fmt/include common)
+target_link_libraries (${PROJECT_NAME} PRIVATE common)
+
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+  target_link_libraries (${PROJECT_NAME} PRIVATE ws2_32)
+endif()

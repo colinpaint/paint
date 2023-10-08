@@ -13,6 +13,9 @@
 #include "../common/utils.h"
 #include "../common/cLog.h"
 
+// net
+#include "../net/cHttp.h"
+
 // song
 #include "cSong.h"
 

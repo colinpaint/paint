@@ -25,20 +25,12 @@
 #include "readerWriterQueue.h"
 
 // decoder
-#include "../decoder/cAudioParser.h"
-#include "../decoder/iAudioDecoder.h"
-#include "../decoder/cFFmpegAudioDecoder.h"
+#include "../decoders/cAudioParser.h"
+#include "../decoders/iAudioDecoder.h"
+#include "../decoders/cFFmpegAudioDecoder.h"
 
 // net
-#ifdef _WIN32
-  #include <winsock2.h>
-  #include <WS2tcpip.h>
-  #include "../net/cWinSockHttp.h"
-#endif
-
-#ifdef __linux__
-  #include "../net/cLinuxHttp.h"
-#endif
+#include "../net/cHttp.h"
 
 // dvb
 #include "../dvb/cDvbSource.h"
@@ -1356,7 +1348,7 @@ public:
 
       int64_t pts = 0;
 
-      cPlatformHttp http;
+      cHttp http;
       http.get (mParsedUrl.getHost(), mParsedUrl.getPath(), "Icy-MetaData: 1",
         //{{{  headerCallback lambda
         [&](const string& key, const string& value) noexcept {
@@ -1688,7 +1680,7 @@ public:
     mPidParsers.insert (map<int,cPidParser*>::value_type (0x00, new cPatParser (programCallback)));
 
     while (!mExit) {
-      cPlatformHttp http;
+      cHttp http;
 
       // get m3u8 file
       string m3u8Path = fmt::format (mM3u8PathFormat, mChannel, mAudioRate, mVideoRate);
@@ -1834,302 +1826,302 @@ private:
   };
 //}}}
 //{{{
-class cLoadRtp : public cLoadStream {
-public:
+//class cLoadRtp : public cLoadStream {
+//public:
   //{{{
-  cLoadRtp() : cLoadStream("rtp") {
+  //cLoadRtp() : cLoadStream("rtp") {
 
-    mNumChannels = 2;
-    mSampleRate = 48000;
-    }
+    //mNumChannels = 2;
+    //mSampleRate = 48000;
+    //}
   //}}}
   //{{{
-  virtual ~cLoadRtp() {
+  //virtual ~cLoadRtp() {
 
-    for (auto& epgItem : mEpgItemMap)
-      delete epgItem.second;
+    //for (auto& epgItem : mEpgItemMap)
+      //delete epgItem.second;
 
-    mEpgItemMap.clear();
-    }
-  //}}}
-
-  //{{{
-  virtual string getInfoString() final {
-    return fmt::format ("sid:{} {} {} {} {} {}",
-                   mSid, mServiceName,
-                   mTimeString,
-                   date::format ("%H:%M", chrono::floor<chrono::seconds>(mNowEpgItem.getStartTime())),
-                   mNowEpgItem.getProgramName(), cLoadStream::getInfoString());
-    }
+    //mEpgItemMap.clear();
+    //}
   //}}}
 
   //{{{
-  virtual bool recognise (const vector<string>& params) final {
+  //virtual string getInfoString() final {
+    //return fmt::format ("sid:{} {} {} {} {} {}",
+                   //mSid, mServiceName,
+                   //mTimeString,
+                   //date::format ("%H:%M", chrono::floor<chrono::seconds>(mNowEpgItem.getStartTime())),
+                   //mNowEpgItem.getProgramName(), cLoadStream::getInfoString());
+    //}
+  //}}}
 
-    if (params[0] != "rtp")
-      return false;
+  //{{{
+  //virtual bool recognise (const vector<string>& params) final {
 
-    mNumChannels = 2;
-    mSampleRate = 48000;
+    //if (params[0] != "rtp")
+      //return false;
 
-    if (params.size() > 1) {
-      int channel = stoi (params[1]);
-      mMulticastAddress = fmt::format ("239.255.1.{}", channel);
-      }
-    else
-      mMulticastAddress = "239.255.1.3";
+    //mNumChannels = 2;
+    //mSampleRate = 48000;
+
+    //if (params.size() > 1) {
+      //int channel = stoi (params[1]);
+      //mMulticastAddress = fmt::format ("239.255.1.{}", channel);
+      //}
+    //else
+      //mMulticastAddress = "239.255.1.3";
 
 
-    return true;
-    }
+    //return true;
+    //}
   //}}}
   //{{{
-  virtual void load() final {
+  //virtual void load() final {
 
-    mExit = false;
-    mRunning = true;
-    mLoadFrac = 0.f;
+    //mExit = false;
+    //mRunning = true;
+    //mLoadFrac = 0.f;
 
     //{{{  wsa startup
-    struct sockaddr_in sendAddr;
+    //struct sockaddr_in sendAddr;
 
-    #ifdef _WIN32
-      WSADATA wsaData;
-      WSAStartup (MAKEWORD(2, 2), &wsaData);
-      int sendAddrSize = sizeof (sendAddr);
-    #endif
+    //#ifdef _WIN32
+      //WSADATA wsaData;
+      //WSAStartup (MAKEWORD(2, 2), &wsaData);
+      //int sendAddrSize = sizeof (sendAddr);
+    //#endif
 
-    #ifdef __linux__
-      unsigned int sendAddrSize = sizeof (sendAddr);
-    #endif
+    //#ifdef __linux__
+      //unsigned int sendAddrSize = sizeof (sendAddr);
+    //#endif
     //}}}
-    // create socket to receive datagrams
-    auto rtpReceiveSocket = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (rtpReceiveSocket == 0) {
+    //// create socket to receive datagrams
+    //auto rtpReceiveSocket = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    //if (rtpReceiveSocket == 0) {
       //{{{  error return
-      cLog::log (LOGERROR, "socket create failed");
-      return;
-      }
+      //cLog::log (LOGERROR, "socket create failed");
+      //return;
+      //}
       //}}}
 
-    // allow multiple sockets to use the same PORT number, no error check?
-    char yes = 1;
-    setsockopt (rtpReceiveSocket, SOL_SOCKET, SO_REUSEADDR, (char*)&yes, sizeof(yes));
+    //// allow multiple sockets to use the same PORT number, no error check?
+    //char yes = 1;
+    //setsockopt (rtpReceiveSocket, SOL_SOCKET, SO_REUSEADDR, (char*)&yes, sizeof(yes));
 
-    // bind the socket to anyAddress:specifiedPort
-    struct sockaddr_in recvAddr;
-    recvAddr.sin_family = AF_INET;
-    recvAddr.sin_addr.s_addr = htonl (INADDR_ANY);
-    recvAddr.sin_port = htons ((u_short)mPort);
-    if (::bind (rtpReceiveSocket, (struct sockaddr*)&recvAddr, sizeof(recvAddr)) != 0) {
+    //// bind the socket to anyAddress:specifiedPort
+    //struct sockaddr_in recvAddr;
+    //recvAddr.sin_family = AF_INET;
+    //recvAddr.sin_addr.s_addr = htonl (INADDR_ANY);
+    //recvAddr.sin_port = htons ((u_short)mPort);
+    //if (::bind (rtpReceiveSocket, (struct sockaddr*)&recvAddr, sizeof(recvAddr)) != 0) {
       //{{{  error return
-      cLog::log (LOGERROR, "socket bind failed");
-      return;
-      }
+      //cLog::log (LOGERROR, "socket bind failed");
+      //return;
+      //}
       //}}}
 
-    // request to join multicast group
-    struct ip_mreq mreq;
-    mreq.imr_multiaddr.s_addr = inet_addr (mMulticastAddress.c_str());
-    mreq.imr_interface.s_addr = htonl (INADDR_ANY);
-    if (setsockopt (rtpReceiveSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&mreq, sizeof(mreq)) != 0) {
+    //// request to join multicast group
+    //struct ip_mreq mreq;
+    //mreq.imr_multiaddr.s_addr = inet_addr (mMulticastAddress.c_str());
+    //mreq.imr_interface.s_addr = htonl (INADDR_ANY);
+    //if (setsockopt (rtpReceiveSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&mreq, sizeof(mreq)) != 0) {
       //{{{  error return
-      cLog::log (LOGERROR, "socket setsockopt IP_ADD_MEMBERSHIP failed");
-      return;
-      }
+      //cLog::log (LOGERROR, "socket setsockopt IP_ADD_MEMBERSHIP failed");
+      //return;
+      //}
       //}}}
 
-    mPtsSong = new cPtsSong (eAudioFrameType::eAacAdts, mNumChannels, mSampleRate, 1024, 1920, 0);
-    iAudioDecoder* audioDecoder = nullptr;
+    //mPtsSong = new cPtsSong (eAudioFrameType::eAacAdts, mNumChannels, mSampleRate, 1024, 1920, 0);
+    //iAudioDecoder* audioDecoder = nullptr;
 
-    int64_t loadPts = -1;
+    //int64_t loadPts = -1;
 
-    // init parsers, callbacks
+    //// init parsers, callbacks
     //{{{
-    auto audioFrameCallback = [&](bool reuseFromFront, float* samples, int64_t pts) noexcept {
+    //auto audioFrameCallback = [&](bool reuseFromFront, float* samples, int64_t pts) noexcept {
 
-      mPtsSong->addFrame (reuseFromFront, pts, samples, mPtsSong->getNumFrames()+1);
+      //mPtsSong->addFrame (reuseFromFront, pts, samples, mPtsSong->getNumFrames()+1);
 
-      if (loadPts < 0)
-        // firstTime, setBasePts, sets playPts
-        mPtsSong->setBasePts (pts);
-      loadPts = pts;
+      //if (loadPts < 0)
+        //// firstTime, setBasePts, sets playPts
+        //mPtsSong->setBasePts (pts);
+      //loadPts = pts;
 
-      // maybe wait for several frames ???
-      if (!mSongPlayer)
-        mSongPlayer = new cSongPlayer (mPtsSong, true);
-      };
+      //// maybe wait for several frames ???
+      //if (!mSongPlayer)
+        //mSongPlayer = new cSongPlayer (mPtsSong, true);
+      //};
     //}}}
     //{{{
-    auto streamCallback = [&](int sid, int pid, int type) noexcept {
+    //auto streamCallback = [&](int sid, int pid, int type) noexcept {
 
-      (void)sid;
-      if (mPidParsers.find (pid) == mPidParsers.end()) {
-        // new stream pid
-        switch (type) {
-          case  2: // ISO 13818-2 video
-          case  3: // ISO 11172-3 audio
-          case  5: // private mpeg2 tabled data
-          case  6: // subtitle
-          case 11: // dsm cc u_n
-            break;
+      //(void)sid;
+      //if (mPidParsers.find (pid) == mPidParsers.end()) {
+        //// new stream pid
+        //switch (type) {
+          //case  2: // ISO 13818-2 video
+          //case  3: // ISO 11172-3 audio
+          //case  5: // private mpeg2 tabled data
+          //case  6: // subtitle
+          //case 11: // dsm cc u_n
+            //break;
           //{{{
-          case 17: // aacLatm
-            mAudioPid = pid;
+          //case 17: // aacLatm
+            //mAudioPid = pid;
 
-            audioDecoder = createAudioDecoder (eAudioFrameType::eAacLatm);
-            mPidParsers.insert (map<int,cPidParser*>::value_type (pid,
-              new cAudioPesParser (pid, audioDecoder, true, audioFrameCallback)));
+            //audioDecoder = createAudioDecoder (eAudioFrameType::eAacLatm);
+            //mPidParsers.insert (map<int,cPidParser*>::value_type (pid,
+              //new cAudioPesParser (pid, audioDecoder, true, audioFrameCallback)));
 
-            break;
+            //break;
           //}}}
           //{{{
-          case 27: // h264video
-            mVideoPid = pid;
+          //case 27: // h264video
+            //mVideoPid = pid;
 
-            mVideoPool = iVideoPool::create (true, 100, mPtsSong);
-            mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cVideoPesParser (pid, mVideoPool, true)));
+            //mVideoPool = iVideoPool::create (true, 100, mPtsSong);
+            //mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cVideoPesParser (pid, mVideoPool, true)));
 
-            break;
+            //break;
           //}}}
-          default:
-            cLog::log (LOGERROR, "loadTs - unrecognised stream type %d %d", pid, type);
-          }
-        }
-      };
+          //default:
+            //cLog::log (LOGERROR, "loadTs - unrecognised stream type %d %d", pid, type);
+          //}
+        //}
+      //};
     //}}}
     //{{{
-    auto programCallback = [&](int pid, int sid) noexcept {
+    //auto programCallback = [&](int pid, int sid) noexcept {
 
-      if ((sid > 0) && (mPidParsers.find (pid) == mPidParsers.end())) {
-        cLog::log (LOGINFO, "PAT adding pid:service %d::%d", pid, sid);
-        mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cPmtParser (pid, sid, streamCallback)));
-        }
-      };
+      //if ((sid > 0) && (mPidParsers.find (pid) == mPidParsers.end())) {
+        //cLog::log (LOGINFO, "PAT adding pid:service %d::%d", pid, sid);
+        //mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cPmtParser (pid, sid, streamCallback)));
+        //}
+      //};
     //}}}
     //{{{
-    auto sdtCallback = [&](int sid, const string& name) noexcept {
-      mSid = sid;
-      mServiceName = name;
-      };
-    //}}}
-    //{{{
-    auto eitCallback = [&](int sid, bool now, cDvbEpgItem& epgItem) noexcept {
-
-      (void)sid;
-      //cLog::log (LOGINFO, format ("eit callback sid {} {}", sid, name));
+    //auto sdtCallback = [&](int sid, const string& name) noexcept {
       //mSid = sid;
-      if (now) // copy to now
-        mNowEpgItem = epgItem;
-
-      else {
-        // add to epg if new, later than now today
-        auto todayTime = chrono::system_clock::now();
-        auto todayDatePoint = date::floor<date::days>(todayTime);
-        auto todayYearMonthDay = date::year_month_day{todayDatePoint};
-        auto today = todayYearMonthDay.day();
-
-        auto datePoint = date::floor<date::days>(epgItem.getStartTime());
-        auto yearMonthDay = date::year_month_day{datePoint};
-        auto day = yearMonthDay.day();
-
-        if ((day == today) && (epgItem.getStartTime() > todayTime)) {
-          // later today
-          auto epgItemIt = mEpgItemMap.find (epgItem.getStartTime());
-          if (epgItemIt == mEpgItemMap.end()) {
-            mEpgItemMap.insert (
-              map<chrono::system_clock::time_point, cDvbEpgItem*>::value_type (epgItem.getStartTime(), new cDvbEpgItem (epgItem)));
-            cLog::log (LOGINFO, fmt::format ("epg {} {}",
-                                date::format ("%H:%M", chrono::floor<chrono::seconds>(epgItem.getStartTime())),
-                                epgItem.getProgramName()));
-            }
-          }
-        }
-      };
+      //mServiceName = name;
+      //};
     //}}}
     //{{{
-    auto tdtCallback = [&](const string& timeString) noexcept {
-      mTimeString = timeString;
-      };
-    //}}}
-    mPidParsers.insert (map<int,cPidParser*>::value_type (0x00, new cPatParser (programCallback)));
-    mPidParsers.insert (map<int,cPidParser*>::value_type (0x11, new cSdtParser (sdtCallback)));
-    mPidParsers.insert (map<int,cPidParser*>::value_type (0x12, new cEitParser (eitCallback)));
-    mPidParsers.insert (map<int,cPidParser*>::value_type (0x14, new cTdtParser (tdtCallback)));
+    //auto eitCallback = [&](int sid, bool now, cDvbEpgItem& epgItem) noexcept {
 
-    constexpr int kUdpBufferSize = 2048;
-    char buffer[kUdpBufferSize];
-    int bufferLen = kUdpBufferSize;
-    do {
-      int bytesReceived = recvfrom (rtpReceiveSocket, buffer, bufferLen, 0, (struct sockaddr*)&sendAddr, &sendAddrSize);
-      if (bytesReceived != 0) {
-        // process block of ts minus rtp header
-        int bytesLeft = bytesReceived - 12;
-        uint8_t* ts = (uint8_t*)buffer + 12;
-        while (!mExit && (bytesLeft >= 188) && (ts[0] == 0x47)) {
-          auto it = mPidParsers.find (((ts[1] & 0x1F) << 8) | ts[2]);
-          if (it != mPidParsers.end())
-            it->second->parse (ts, true);
-          ts += 188;
-          bytesLeft -= 188;
-          }
-        }
-      else
-        cLog::log (LOGERROR, "recvfrom failed");
-      } while (!mExit);
+      //(void)sid;
+      ////cLog::log (LOGINFO, format ("eit callback sid {} {}", sid, name));
+      ////mSid = sid;
+      //if (now) // copy to now
+        //mNowEpgItem = epgItem;
+
+      //else {
+        //// add to epg if new, later than now today
+        //auto todayTime = chrono::system_clock::now();
+        //auto todayDatePoint = date::floor<date::days>(todayTime);
+        //auto todayYearMonthDay = date::year_month_day{todayDatePoint};
+        //auto today = todayYearMonthDay.day();
+
+        //auto datePoint = date::floor<date::days>(epgItem.getStartTime());
+        //auto yearMonthDay = date::year_month_day{datePoint};
+        //auto day = yearMonthDay.day();
+
+        //if ((day == today) && (epgItem.getStartTime() > todayTime)) {
+          //// later today
+          //auto epgItemIt = mEpgItemMap.find (epgItem.getStartTime());
+          //if (epgItemIt == mEpgItemMap.end()) {
+            //mEpgItemMap.insert (
+              //map<chrono::system_clock::time_point, cDvbEpgItem*>::value_type (epgItem.getStartTime(), new cDvbEpgItem (epgItem)));
+            //cLog::log (LOGINFO, fmt::format ("epg {} {}",
+                                //date::format ("%H:%M", chrono::floor<chrono::seconds>(epgItem.getStartTime())),
+                                //epgItem.getProgramName()));
+            //}
+          //}
+        //}
+      //};
+    //}}}
+    //{{{
+    //auto tdtCallback = [&](const string& timeString) noexcept {
+      //mTimeString = timeString;
+      //};
+    //}}}
+    //mPidParsers.insert (map<int,cPidParser*>::value_type (0x00, new cPatParser (programCallback)));
+    //mPidParsers.insert (map<int,cPidParser*>::value_type (0x11, new cSdtParser (sdtCallback)));
+    //mPidParsers.insert (map<int,cPidParser*>::value_type (0x12, new cEitParser (eitCallback)));
+    //mPidParsers.insert (map<int,cPidParser*>::value_type (0x14, new cTdtParser (tdtCallback)));
+
+    //constexpr int kUdpBufferSize = 2048;
+    //char buffer[kUdpBufferSize];
+    //int bufferLen = kUdpBufferSize;
+    //do {
+      //int bytesReceived = recvfrom (rtpReceiveSocket, buffer, bufferLen, 0, (struct sockaddr*)&sendAddr, &sendAddrSize);
+      //if (bytesReceived != 0) {
+        //// process block of ts minus rtp header
+        //int bytesLeft = bytesReceived - 12;
+        //uint8_t* ts = (uint8_t*)buffer + 12;
+        //while (!mExit && (bytesLeft >= 188) && (ts[0] == 0x47)) {
+          //auto it = mPidParsers.find (((ts[1] & 0x1F) << 8) | ts[2]);
+          //if (it != mPidParsers.end())
+            //it->second->parse (ts, true);
+          //ts += 188;
+          //bytesLeft -= 188;
+          //}
+        //}
+      //else
+        //cLog::log (LOGERROR, "recvfrom failed");
+      //} while (!mExit);
 
     //{{{  close socket and WSAcleanup
-    #ifdef _WIN32
-      if (closesocket (rtpReceiveSocket) != 0) {
-        cLog::log (LOGERROR, "closesocket failed");
-        return;
-        }
-      WSACleanup();
-    #endif
+    //#ifdef _WIN32
+      //if (closesocket (rtpReceiveSocket) != 0) {
+        //cLog::log (LOGERROR, "closesocket failed");
+        //return;
+        //}
+      //WSACleanup();
+    //#endif
 
-    #ifdef __linux__
-      close (rtpReceiveSocket);
-    #endif
+    //#ifdef __linux__
+      //close (rtpReceiveSocket);
+    //#endif
     //}}}
     //{{{  delete resources
-    if (mSongPlayer)
-      mSongPlayer->wait();
-    delete mSongPlayer;
+    //if (mSongPlayer)
+      //mSongPlayer->wait();
+    //delete mSongPlayer;
 
-    for (auto parser : mPidParsers) {
+    //for (auto parser : mPidParsers) {
       //{{{  stop and delete pidParsers
-      parser.second->exit();
-      delete parser.second;
-      }
+      //parser.second->exit();
+      //delete parser.second;
+      //}
       //}}}
-    mPidParsers.clear();
+    //mPidParsers.clear();
 
-    auto tempSong =  mPtsSong;
-    mPtsSong = nullptr;
-    delete tempSong;
+    //auto tempSong =  mPtsSong;
+    //mPtsSong = nullptr;
+    //delete tempSong;
 
-    auto tempVideoPool = mVideoPool;
-    mVideoPool = nullptr;
-    delete tempVideoPool;
+    //auto tempVideoPool = mVideoPool;
+    //mVideoPool = nullptr;
+    //delete tempVideoPool;
 
-    delete audioDecoder;
+    //delete audioDecoder;
     //}}}
-    mRunning = false;
-    }
+    //mRunning = false;
+    //}
   //}}}
 
-private:
-  string mMulticastAddress;
-  int mPort = 5002;
+//private:
+  //string mMulticastAddress;
+  //int mPort = 5002;
 
-  int mSid = 0;
-  string mServiceName;
+  //int mSid = 0;
+  //string mServiceName;
 
-  string mTimeString;
+  //string mTimeString;
 
-  cDvbEpgItem mNowEpgItem;
-  map <chrono::system_clock::time_point, cDvbEpgItem*> mEpgItemMap;
-  };
+  //cDvbEpgItem mNowEpgItem;
+  //map <chrono::system_clock::time_point, cDvbEpgItem*> mEpgItemMap;
+  //};
 //}}}
 
 //{{{
@@ -2790,7 +2782,7 @@ private:
 //{{{
 cSongLoader::cSongLoader() {
 
-  mLoadSources.push_back (new cLoadRtp());
+  //mLoadSources.push_back (new cLoadRtp());
   mLoadSources.push_back (new cLoadDvb());
   mLoadSources.push_back (new cLoadHls());
   mLoadSources.push_back (new cLoadIcyCast());

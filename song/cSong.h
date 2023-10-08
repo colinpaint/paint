@@ -6,11 +6,12 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <functional>
 #include <algorithm>
 #include <mutex>
 #include <shared_mutex>
 
-#include "../decoder/cAudioParser.h"
+#include "../decoders/cAudioParser.h"
 
 #include "../audio/kiss_fft.h"
 #include "../audio/kiss_fftr.h"

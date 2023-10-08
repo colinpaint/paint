@@ -1,14 +1,33 @@
 // cHttp.cpp - http base class based on tinyHttp parser
+//{{{  includes
 #include "cHttp.h"
 
 #include "../common/cLog.h"
 
+#ifdef _WIN32
+  #define _WINSOCK_DEPRECATED_NO_WARNINGS
+  #include <winsock2.h>
+  #include <WS2tcpip.h>
+#else
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <unistd.h>
+  #include <string.h>
+
+  #include <sys/types.h>
+  #include <sys/socket.h>
+  #include <netinet/in.h>
+  #include <netdb.h>
+  #include <arpa/inet.h>
+#endif
+
 using namespace std;
+//}}}
 
 constexpr int kInitialHeaderBufferSize = 256;
 constexpr int kRecvBufferSize = 2048;
 
-namespace { //anonymous
+namespace {
   //{{{
   const uint8_t kHeaderState[88] = {
   //  *    \t    \n   \r    ' '     ,     :   PAD
@@ -40,8 +59,11 @@ namespace { //anonymous
 // public
 //{{{
 cHttp::cHttp() {
+
   mHeaderBuffer = (char*)malloc (kInitialHeaderBufferSize);
   mHeaderBufferAllocSize = kInitialHeaderBufferSize;
+
+  initialise();
   }
 //}}}
 //{{{
@@ -52,6 +74,14 @@ cHttp::~cHttp() {
   }
 //}}}
 
+//{{{
+void cHttp::initialise() {
+
+  #ifdef _WIN32
+    (void)WSAStartup (MAKEWORD(2,2), &wsaData);
+  #endif
+  }
+//}}}
 //{{{
 int cHttp::get (const string& host, const string& path,
                 const string& header,
@@ -98,7 +128,7 @@ string cHttp::getRedirect (const string& host, const string& path) {
 
   auto response = get (host, path);
   if (response == 302) {
-    cLog::log (LOGINFO, fmt::format ("getRedirect host{}", mRedirectUrl.getHost()));
+    cLog::log (LOGINFO, "getRedirect host " +  mRedirectUrl.getHost());
     response = get (mRedirectUrl.getHost(), path);
     if (response == 200)
       return mRedirectUrl.getHost();
@@ -120,6 +150,120 @@ void cHttp::freeContent() {
   mContentReceivedSize = 0;
 
   mContentState = eContentNone;
+  }
+//}}}
+
+// protected
+//{{{
+int cHttp::connectToHost (const string& host) {
+
+  if ((mSocket == 0) || (host != mLastHost)) {
+    // not connected or different host
+    if (mSocket > 0)
+      #ifdef _WIN32
+        closesocket (mSocket);
+      #else
+        close (mSocket);
+      #endif
+
+    struct hostent* remoteHostEnt = gethostbyname (host.c_str());
+    if (!remoteHostEnt) {
+      //{{{  error, return
+      cLog::log (LOGERROR, "connectToHost - gethostbyname() failed");
+      return 1;
+      }
+      //}}}
+
+    cLog::log (LOGINFO, fmt::format ("remoteName - {}", remoteHostEnt->h_name));
+
+    char** alias;
+    for (alias = remoteHostEnt->h_aliases; *alias; alias++)
+      cLog::log (LOGINFO, fmt::format ("- altName - {}", *alias));
+
+    switch (remoteHostEnt->h_addrtype) {
+      //{{{
+      case AF_INET: {
+        cLog::log (LOGINFO1, fmt::format ("- AF_INET len:{}", remoteHostEnt->h_length));
+
+        uint32_t i = 0;
+        while (remoteHostEnt->h_addr_list[i]) {
+          struct in_addr addr;
+          addr.s_addr = *(u_long *) remoteHostEnt->h_addr_list[i++];
+          cLog::log (LOGINFO, fmt::format ("- ip address {}", inet_ntoa(addr)));
+          }
+
+        break;
+        }
+      //}}}
+      //{{{
+      default:
+        cLog::log (LOGINFO, fmt::format ("- addressType:{} len:{}",
+                                         remoteHostEnt->h_addrtype, remoteHostEnt->h_length));
+        break;
+      //}}}
+      }
+
+    struct sockaddr_in serveraddr;
+    memset (&serveraddr, 0, sizeof(sockaddr_in));
+    serveraddr.sin_family = AF_INET;
+    memcpy (&serveraddr.sin_addr.s_addr, remoteHostEnt->h_addr, remoteHostEnt->h_length);
+
+    mSocket = (int)socket (AF_INET, SOCK_STREAM, 0);
+    if (mSocket <= 0) {
+      //{{{  error, return
+      cLog::log (LOGERROR, "connectToHost - error opening socket");
+      return -2;
+      }
+      //}}}
+    cLog::log (LOGINFO, fmt::format ("- using socket {}", mSocket));
+
+    serveraddr.sin_port = htons (80);
+    if (connect (mSocket, (struct sockaddr*)&serveraddr, sizeof(serveraddr)) < 0) {
+      //{{{  error, return
+      cLog::log (LOGINFO, "connectToHost - Error Connecting");
+      return -2;
+      }
+      //}}}
+
+    mLastHost = host;
+    }
+
+  return 0;
+  }
+//}}}
+//{{{
+bool cHttp::getSend (const string& sendStr) {
+
+  if (send (mSocket, sendStr.c_str(), (int)sendStr.size(), 0) < 0) {
+    #ifdef _WIN32
+      closesocket (mSocket);
+    #else
+      close (mSocket);
+    #endif
+
+    mSocket = 0;
+    return false;
+    }
+
+  return true;
+  }
+//}}}
+//{{{
+int cHttp::getRecv (uint8_t* buffer, int bufferSize) {
+
+  int bufferBytesReceived = recv (mSocket, (char*)buffer, bufferSize, 0);
+  if (bufferBytesReceived <= 0) {
+    #ifdef _WIN32
+      closesocket (mSocket);
+    #else
+      close (mSocket);
+    #endif
+
+    mSocket = 0;
+    return -5;
+    }
+
+  return bufferBytesReceived;
   }
 //}}}
 
@@ -254,8 +398,7 @@ bool cHttp::parseData (const uint8_t* data, int length, int& bytesParsed,
             if (mKeyLen >= mHeaderBufferAllocSize) {
               mHeaderBufferAllocSize *= 2;
               mHeaderBuffer = (char*)realloc (mHeaderBuffer, mHeaderBufferAllocSize);
-              cLog::log (LOGINFO, fmt::format ("mHeaderBuffer key realloc {} {}", 
-                                               mKeyLen, mHeaderBufferAllocSize));
+              cLog::log (LOGINFO, "mHeaderBuffer key realloc %d %d", mKeyLen, mHeaderBufferAllocSize);
               }
 
             mHeaderBuffer [mKeyLen] = (char)tolower (*data);
@@ -268,8 +411,7 @@ bool cHttp::parseData (const uint8_t* data, int length, int& bytesParsed,
             if (mKeyLen + mValueLen >= mHeaderBufferAllocSize) {
               mHeaderBufferAllocSize *= 2;
               mHeaderBuffer = (char*)realloc (mHeaderBuffer, mHeaderBufferAllocSize);
-              cLog::log (LOGINFO, fmt::format ("mHeaderBuffer value realloc {} {}", 
-                                               mKeyLen + mValueLen, mHeaderBufferAllocSize));
+              cLog::log (LOGINFO, "mHeaderBuffer value realloc %d %d", mKeyLen + mValueLen, mHeaderBufferAllocSize);
               }
 
             mHeaderBuffer [mKeyLen + mValueLen] = *data;
@@ -345,8 +487,7 @@ bool cHttp::parseData (const uint8_t* data, int length, int& bytesParsed,
         //cLog::log (LOGINFO, "eExpectedData - length:%d mHeaderContentLength:%d left:%d mContentReceivedSize:%d",
         //                    length, mHeaderContentLength, mContentLengthLeft, mContentReceivedSize);
         if (length > mContentLengthLeft) {
-          cLog::log (LOGERROR, fmt::format ("eExpectedData - too much data - got:{} expected:{}", 
-                                            length, mContentLengthLeft));
+          cLog::log (LOGERROR, "eExpectedData - too much data - got:%d expected:%d", length, mContentLengthLeft);
           mState = eClose;
           }
 
@@ -367,7 +508,7 @@ bool cHttp::parseData (const uint8_t* data, int length, int& bytesParsed,
 
         else {
           // data not expected, bomb out
-          cLog::log (LOGERROR, fmt::format ("eExpectedData - data not expected - got:{}", length));
+          cLog::log (LOGERROR, "eExpectedData - data not expected - got:%d", length);
           mState = eClose;
           }
 

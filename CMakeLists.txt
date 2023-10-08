@@ -54,7 +54,7 @@ endif()
 
 add_subdirectory (net)
 add_subdirectory (dvb)
-add_subdirectory (decoder)
+add_subdirectory (decoders)
 add_subdirectory (audio)
 add_subdirectory (song)
 
@@ -64,7 +64,7 @@ if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     file (GLOB HEADER_FILES audio/*.h common/*.h)
     file (GLOB SOURCE_FILES captureAudio/capture.cpp)
     add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-    target_link_libraries (${PROJECT_NAME} PRIVATE decoder winmm avrt audio)
+    target_link_libraries (${PROJECT_NAME} PRIVATE decoders winmm avrt audio)
 endif()
 
 # demo imgui app
@@ -107,7 +107,7 @@ project (player VERSION 1.0.0)
   add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
 
   target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
-  target_link_libraries (${PROJECT_NAME} PRIVATE imgui song audio decoder dvb net)
+  target_link_libraries (${PROJECT_NAME} PRIVATE imgui song audio decoders dvb net)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
