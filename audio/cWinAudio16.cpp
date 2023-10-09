@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include "../common/cLog.h"
+#include "fmt/format.h"
 
 #pragma comment(lib,"Xaudio2.lib")
 //}}}
