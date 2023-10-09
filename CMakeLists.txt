@@ -112,7 +112,7 @@ project (demo VERSION 1.0.0)
 # telly app
 project (telly VERSION 1.0.0)
   add_executable (${PROJECT_NAME} telly/cTellyApp.h ui/cUI.h
-                                  telly/cTellyApp.cpp telly/cTellyUi.cpp telly/tellyMain.cpp ui/cUI.cpp)
+                                  telly/cTellyApp.cpp telly/cTellyUI.cpp telly/tellyMain.cpp ui/cUI.cpp)
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE app common implot imgui stb)
