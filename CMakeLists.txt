@@ -61,39 +61,19 @@ add_subdirectory (song)
 # windows audio capture app
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   project (captureAudio VERSION 1.0.0)
-    file (GLOB HEADER_FILES audio/*.h common/*.h)
-    file (GLOB SOURCE_FILES captureAudio/capture.cpp)
-    add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+    file (GLOB HEADER audio/*.h common/*.h)
+    file (GLOB SOURCE captureAudio/capture.cpp)
+    add_executable (${PROJECT_NAME} ${SOURCE} ${HEADER})
     target_link_libraries (${PROJECT_NAME} PRIVATE decoders winmm avrt audio)
 endif()
 
-# demo imgui app
-project (demo VERSION 1.0.0)
-  file (GLOB HEADER_FILES demo/*.h ui/*.h imgui/*.h common/*.h app/*.h)
-  file (GLOB SOURCE_FILES demo/*.cpp ui/cUI.cpp)
-  add_executable (demo ${SOURCE_FILES} ${HEADER_FILES})
-
-  if (GL2)
-    target_compile_definitions (${PROJECT_NAME} PRIVATE GL2)
-  endif()
-
-  target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
-  target_link_libraries (${PROJECT_NAME} PRIVATE imgui implot)
-
-  target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
-  if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler)
-  elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE GL)
-  endif()
-
 # fed app
 project (fed VERSION 1.0.0)
-  file (GLOB HEADER_FILES fed/*.h ui/*.h imgui/*.h common/*.h app/*.h)
-  file (GLOB SOURCE_FILES fed/*.cpp ui/cUI.cpp)
-  add_executable (fed ${SOURCE_FILES} ${HEADER_FILES})
+  add_executable (${PROJECT_NAME} fed/cFedApp.h fed/cDocument.h fed/cMemEdit.h fed/cTextEdit.h ui/cUI.h
+                                  fed/fedMain.cpp fed/cFedApp.cpp fed/cDocument.cpp
+                                  fed/cEditUI.cpp fed/cMemEdit.cpp fed/cTextEdit.cpp ui/cUI.cpp)
 
-  target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
+  target_include_directories (${PROJECT_NAME} PRIVATE app common imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_link_libraries (${PROJECT_NAME} PRIVATE imgui opengl32 d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
@@ -102,33 +82,44 @@ project (fed VERSION 1.0.0)
 
 # player app
 project (player VERSION 1.0.0)
-  file (GLOB HEADER_FILES player/*.h ui/*.h imgui/*.h common/*.h app/*.h)
-  file (GLOB SOURCE_FILES player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp ui/cUI.cpp)
-  add_executable (player ${SOURCE_FILES} ${HEADER_FILES})
+  add_executable (${PROJECT_NAME} player/cPlayerApp.h ui/cUI.h
+                                  player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp ui/cUI.cpp)
 
-  target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
-  target_link_libraries (${PROJECT_NAME} PRIVATE imgui song audio decoders dvb net)
+  target_include_directories (${PROJECT_NAME} PRIVATE app common imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE opengl32 d3d11 d3dcompiler ws2_32)
+    target_link_libraries (${PROJECT_NAME} PRIVATE song audio decoders dvb net imgui
+                                                   opengl32 d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
+    target_link_libraries (${PROJECT_NAME} PRIVATE song audio decoders dvb net imgui
+                                                   asound stdc++fs pthread)
+  endif()
+
+# demo imgui app
+project (demo VERSION 1.0.0)
+  file (GLOB HEADER demo/*.h ui/*.h imgui/*.h common/*.h app/*.h)
+  file (GLOB SOURCE demo/*.cpp ui/cUI.cpp)
+  add_executable (demo ${SOURCE} ${HEADER})
+
+  target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
+  #target_include_directories (${PROJECT_NAME} PRIVATE common fmt fmt/include stb imgui implot)
+  target_include_directories (${PROJECT_NAME} PRIVATE app common stb imgui implot)
+  if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app imgui implot opengl32 d3d11 d3dcompiler)
+  elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app imgui implot GL)
   endif()
 
 # telly app
 project (telly VERSION 1.0.0)
-  file (GLOB HEADER_FILES telly/*.h ui/*.h imgui/*.h implot/implot.h common/*.h app/*.h)
-  file (GLOB SOURCE_FILES telly/tellyMain.cpp telly/cTellyApp.cpp telly/cTellyUI.cpp ui/cUI.cpp)
-  add_executable (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
-  target_include_directories (${PROJECT_NAME} PRIVATE imgui stb)
+  add_executable (${PROJECT_NAME} telly/cTellyApp.h ui/cUI.h
+                                  telly/cTellyApp.cpp telly/cTellyUi.cpp telly/tellyMain.cpp ui/cUI.cpp)
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
-  target_link_libraries (${PROJECT_NAME} PRIVATE implot)
-
-  target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio imgui)
+  target_include_directories (${PROJECT_NAME} PRIVATE app common implot imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_directories (${PROJECT_NAME} PRIVATE ../windowsLib64)
-    target_link_libraries (${PROJECT_NAME} PRIVATE libmfx opengl32 dxgi d3d11 d3dcompiler ws2_32)
+    target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui implot
+                                                   libmfx opengl32 dxgi d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE pthread asound stdc++fs)
+    target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui implot
+                                                   asound stdc++fs pthread)
   endif()

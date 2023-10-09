@@ -8,6 +8,7 @@ project (common VERSION 1.0.0)
                                tinyfiledialogs.h tinyfiledialogs.c
                                )
 
+  target_include_directories (${PROJECT_NAME} PUBLIC fmt/include)
   target_link_libraries (${PROJECT_NAME} PUBLIC fmt)
 
   message (STATUS "using ${CMAKE_HOST_SYSTEM_NAME}")
