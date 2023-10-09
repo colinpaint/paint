@@ -11,6 +11,7 @@
 #include "../imgui/backends/imgui_impl_opengl3.h"
 
 #include "../common/cLog.h"
+#include "fmt/format.h"
 //}}}
 
 class cGL3Graphics : public cGraphics {

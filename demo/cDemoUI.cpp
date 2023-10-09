@@ -21,6 +21,8 @@
 #include "../common/cLog.h"
 #include "../common/date.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 //}}}
 

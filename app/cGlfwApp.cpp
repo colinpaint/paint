@@ -37,6 +37,7 @@
 
 // utils
 #include "../common/cLog.h"
+#include "fmt/format.h"
 
 // app
 #include "cApp.h"

@@ -3,15 +3,16 @@
 #include "cDocument.h"
 
 #include <cmath>
+#include <array>
 #include <algorithm>
 #include <functional>
 
 #include <fstream>
 #include <filesystem>
 
-#include <array>
-
+#include "../common/fileUtils.h"
 #include "../common/cLog.h"
+#include "fmt/format.h"
 
 using namespace std;
 //}}}

@@ -24,6 +24,7 @@
 #include "../app/myImgui.h"
 
 #include "../common/cLog.h"
+#include "fmt/format.h"
 
 #ifdef _MSC_VER
   #define _PRISizeT   "I"

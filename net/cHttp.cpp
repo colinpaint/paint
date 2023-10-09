@@ -3,6 +3,7 @@
 #include "cHttp.h"
 
 #include "../common/cLog.h"
+#include "fmt/format.h"
 
 #ifdef _WIN32
   #define _WINSOCK_DEPRECATED_NO_WARNINGS
