@@ -5907,7 +5907,7 @@ int64_t cDvbUtils::getPts (const uint8_t* buf) {
 
   if (!(buf[0] & 0x01) || !(buf[2] & 0x01) || !(buf[4] & 0x01))
     // invalid marker bits
-    cLog::log (LOGINFO2, format ("getPts marker bits {:02x}:{:02x}:{:02x}:{:02x}:{:02x} - 0:{:02x} 2:{:02x} 4:{:02x}",
+    cLog::log (LOGINFO2, fmt::format ("getPts marker bits {:02x}:{:02x}:{:02x}:{:02x}:{:02x} - 0:{:02x} 2:{:02x} 4:{:02x}",
                                  buf[0], buf[1], buf[2], buf[3], buf[4],
                                  buf[0] & 0x01, buf[2] & 0x01, buf[4] & 0x01));
 
@@ -6331,7 +6331,7 @@ cTsBlockPool::~cTsBlockPool() {
 
 //{{{
 string cTsBlockPool::getInfoString() {
-  return format ("a:{} f:{} m:{}", mAllocatedBlockCount, mFreeBlockCount, mMaxBlockCount);
+  return fmt::format ("a:{} f:{} m:{}", mAllocatedBlockCount, mFreeBlockCount, mMaxBlockCount);
   }
 //}}}
 

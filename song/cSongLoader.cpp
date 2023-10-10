@@ -16,6 +16,7 @@
 #include "../common/utils.h"
 #include "../common/date.h"
 #include "../common/cLog.h"
+#include "fmt/format.h"
 
 // song
 #include "cSong.h"
