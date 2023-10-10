@@ -5,13 +5,13 @@ project (decoders VERSION 1.0.0)
                                cJpegAnalyse.h cJpegAnalyse.cpp
                                cTextAnalyse.h cTextAnalyse.cpp
                                )
+
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_include_directories (${PROJECT_NAME} PUBLIC ../include/ffmpeg)
     target_link_directories (${PROJECT_NAME} PUBLIC ../lib)
     target_link_libraries (${PROJECT_NAME} PUBLIC common
                                                   avdevice avfilter avformat avcodec avutil
                                                   swresample swscale)
-
 
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     find_package (PkgConfig REQUIRED)
