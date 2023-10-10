@@ -1,3 +1,5 @@
+#CXX="clang++" CC="clang" cmake ..
+#
 cmake_minimum_required (VERSION 3.18)
 cmake_policy (SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 17)
@@ -73,7 +75,7 @@ project (fed VERSION 1.0.0)
                                   fed/fedMain.cpp fed/cFedApp.cpp fed/cDocument.cpp
                                   fed/cEditUI.cpp fed/cMemEdit.cpp fed/cTextEdit.cpp ui/cUI.cpp)
 
-  target_include_directories (${PROJECT_NAME} PRIVATE app common imgui stb)
+  target_include_directories (${PROJECT_NAME} PRIVATE app imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_link_libraries (${PROJECT_NAME} PRIVATE imgui opengl32 d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
@@ -82,10 +84,11 @@ project (fed VERSION 1.0.0)
 
 # player app
 project (player VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} player/cPlayerApp.h ui/cUI.h
-                                  player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp ui/cUI.cpp)
+  add_executable (${PROJECT_NAME} player/cPlayerApp.h 
+                                  player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp 
+                                  ui/cUI.h ui/cUI.cpp)
 
-  target_include_directories (${PROJECT_NAME} PRIVATE app common imgui stb)
+  target_include_directories (${PROJECT_NAME} PRIVATE app imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_link_libraries (${PROJECT_NAME} PRIVATE song audio decoders dvb net imgui
                                                    opengl32 d3d11 d3dcompiler ws2_32)
@@ -111,11 +114,12 @@ project (demo VERSION 1.0.0)
 
 # telly app
 project (telly VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} telly/cTellyApp.h ui/cUI.h
-                                  telly/cTellyApp.cpp telly/cTellyUI.cpp telly/tellyMain.cpp ui/cUI.cpp)
+  add_executable (${PROJECT_NAME} telly/cTellyApp.h 
+                                  telly/cTellyApp.cpp telly/cTellyUI.cpp telly/tellyMain.cpp
+                                  ui/cUI.h ui/cUI.cpp )
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
-  target_include_directories (${PROJECT_NAME} PRIVATE app common implot imgui stb)
+  target_include_directories (${PROJECT_NAME} PRIVATE app implot imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui implot
                                                    libmfx opengl32 dxgi d3d11 d3dcompiler ws2_32)

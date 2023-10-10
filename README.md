@@ -1,7 +1,7 @@
 # paint
 
 Simple imgui app testbed
-- uses ImGui and cmake
+- uses ImGui, cmake
 
 build
 - git clone http://github/colinpaint/paint
