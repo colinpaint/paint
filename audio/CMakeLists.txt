@@ -1,5 +1,5 @@
 project (audio VERSION 1.0.0)
-  file (GLOB HEADER_FILES *.h ../decoder/*.h)
+  file (GLOB HEADER_FILES *.h)
   file (GLOB SOURCE_FILES *.cpp *.c)
   add_library (${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
