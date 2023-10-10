@@ -24,7 +24,6 @@ public:
   void trimVideoBeforePts (int64_t pts);
 
   // callbacks
-  cFrame* getMfxFrame();
   cFrame* getFFmpegFrame();
   void addFrame (cFrame* frame);
 

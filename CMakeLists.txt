@@ -10,10 +10,8 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
-  option (BUILD_MFX "Build mfx lib" ON)
 elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
   set (BUILD_GRAPHICS "GLES_3_1" CACHE STRING "build graphics option")
-  set (BUILD_MFX OFF)
 endif()
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -29,7 +27,7 @@ set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FO
 message (STATUS "building ${BUILD_GRAPHICS} graphics")
 
 # glad lib
-if (BUILD_GRAPHICS STREQUAL "GL_3" OR BUILD_GRAPHICS STREQUAL "SDL_GL_3")
+if (BUILD_GRAPHICS STREQUAL "GL_3")
   add_subdirectory (glad4.5core)
 endif()
 
@@ -48,11 +46,6 @@ add_subdirectory (common)
 add_subdirectory (app)
 add_subdirectory (imgui)
 add_subdirectory (implot)
-
-if (BUILD_MFX AND CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-  add_subdirectory (libmfx)
-endif()
-
 add_subdirectory (net)
 add_subdirectory (dvb)
 add_subdirectory (decoders)
@@ -119,7 +112,7 @@ project (telly VERSION 1.0.0)
   target_include_directories (${PROJECT_NAME} PRIVATE app implot imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui implot
-                                                   libmfx opengl32 dxgi d3d11 d3dcompiler ws2_32)
+                                                   opengl32 dxgi d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui implot
                                                    asound stdc++fs pthread)
