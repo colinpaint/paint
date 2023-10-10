@@ -1,5 +1,4 @@
 // cCaptureWASAPI.cpp
-#ifdef _WIN32
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -192,4 +191,3 @@ void cCaptureWASAPI::launch() {
     } ).detach();
   }
 //}}}
-#endif

@@ -99,7 +99,7 @@ project (player VERSION 1.0.0)
                                                    opengl32 d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     target_link_libraries (${PROJECT_NAME} PRIVATE song audio decoders dvb net imgui
-                                                   asound stdc++fs pthread)
+                                                   stdc++fs pthread)
   endif()
 
 # telly app
@@ -115,5 +115,5 @@ project (telly VERSION 1.0.0)
                                                    opengl32 dxgi d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui implot
-                                                   asound stdc++fs pthread)
+                                                   stdc++fs pthread)
   endif()
