@@ -66,7 +66,6 @@ project (demo VERSION 1.0.0)
   add_executable (demo ${SOURCE} ${HEADER})
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
-  #target_include_directories (${PROJECT_NAME} PRIVATE common fmt fmt/include stb imgui implot)
   target_include_directories (${PROJECT_NAME} PRIVATE app common stb imgui implot)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_link_libraries (${PROJECT_NAME} PRIVATE app imgui implot opengl32 d3d11 d3dcompiler)
