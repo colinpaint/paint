@@ -91,7 +91,8 @@ public:
      : cDecoder(), mH264 (streamTypeId == 27),
        mAvCodec (avcodec_find_decoder ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder streamTypeId:{}", streamTypeId));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder with streamTypeId:{}", 
+                                     streamTypeId, streamTypeId == 27 ? "h264" : "mpeg2"));
 
     mAvParser = av_parser_init ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
@@ -278,7 +279,7 @@ void cVideoRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cVideoRender::getInfo() const {
-  return fmt::format ("{} q:{} {:2d}:{:2d} {}",
+  return fmt::format ("{} qSize:{} frames:{:2d} freeFrames:{:2d} info:{}",
                       mDecoder->getName(), getQueueSize(), mFrames.size(), mFreeFrames.size(), mFrameInfo);
   }
 //}}}

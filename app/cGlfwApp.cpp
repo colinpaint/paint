@@ -795,7 +795,7 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
   #if defined(GL_3)
     mGraphics = new cGL3Graphics (glfwPlatform->getShaderVersion());
   #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
-    mGraphics = new cGLES3Graphics();
+    mGraphics = new cGLES3Graphics (glfwPlatform->getShaderVersion());
   #elif defined(VULKAN)
     mGraphics = new cVulkanGraphics();
   #else

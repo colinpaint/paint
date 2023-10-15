@@ -16,6 +16,7 @@
 
 class cGLES3Graphics : public cGraphics {
 public:
+  cGLES3Graphics (const std::string& glslVersion) : cGraphics(), mGlslVersion (glslVersion) {}
   //{{{
   virtual ~cGLES3Graphics() {
     ImGui_ImplOpenGL3_Shutdown();
@@ -75,9 +76,6 @@ public:
     return new cOpenGLES3Target (size, format); }
   virtual cTarget* createTarget (uint8_t* pixels, const cPoint& size, cTarget::eFormat format) final {
     return new cOpenGLES3Target (pixels, size, format); }
-
-  virtual cLayerShader* createLayerShader() final { return new cOpenGLES3LayerShader(); }
-  virtual cPaintShader* createPaintShader() final { return new cOpenGLES3PaintShader(); }
 
   //{{{
   virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
@@ -919,193 +917,6 @@ private:
   //}}}
 
   //{{{
-  class cOpenGLES3LayerShader : public cLayerShader {
-  public:
-    cOpenGLES3LayerShader() : cLayerShader() {
-
-      const std::string kFragShader =
-        "#version 300 es\n"
-        "precision mediump float;"
-
-        "uniform sampler2D uSampler;"
-        "uniform float uHue;"
-        "uniform float uVal;"
-        "uniform float uSat;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        //{{{
-        "vec3 rgbToHsv (float r, float g, float b) {"
-        "  float max_val = max(r, max(g, b));"
-        "  float min_val = min(r, min(g, b));"
-        "  float h;" // hue in degrees
-
-        "  if (max_val == min_val) {" // Simple default case. Do NOT increase saturation if this is the case!
-        "    h = 0.0; }"
-        "  else if (max_val == r) {"
-        "    h = 60.0 * (0.0 + (g - b) / (max_val - min_val)); }"
-        "  else if (max_val == g) {"
-        "    h = 60.0 * (2.0 + (b - r)/ (max_val - min_val)); }"
-        "  else if (max_val == b) {"
-        "    h = 60.0 * (4.0 + (r - g) / (max_val - min_val)); }"
-        "  if (h < 0.0) {"
-        "    h += 360.0; }"
-
-        "  float s = max_val == 0.0 ? 0.0 : (max_val - min_val) / max_val;"
-        "  float v = max_val;"
-        "  return vec3 (h, s, v);"
-        "  }"
-        //}}}
-        //{{{
-        "vec3 hsvToRgb (float h, float s, float v) {"
-        "  float r, g, b;"
-        "  float c = v * s;"
-        "  float h_ = mod(h / 60.0, 6);" // For convenience, change to multiples of 60
-        "  float x = c * (1.0 - abs(mod(h_, 2) - 1));"
-        "  float r_, g_, b_;"
-
-        "  if (0.0 <= h_ && h_ < 1.0) {"
-        "    r_ = c, g_ = x, b_ = 0.0; }"
-        "  else if (1.0 <= h_ && h_ < 2.0) {"
-        "    r_ = x, g_ = c, b_ = 0.0; }"
-        "  else if (2.0 <= h_ && h_ < 3.0) {"
-        "    r_ = 0.0, g_ = c, b_ = x; }"
-        "  else if (3.0 <= h_ && h_ < 4.0) {"
-        "    r_ = 0.0, g_ = x, b_ = c; }"
-        "  else if (4.0 <= h_ && h_ < 5.0) {"
-        "    r_ = x, g_ = 0.0, b_ = c; }"
-        "  else if (5.0 <= h_ && h_ < 6.0) {"
-        "    r_ = c, g_ = 0.0, b_ = x; }"
-        "  else {"
-        "    r_ = 0.0, g_ = 0.0, b_ = 0.0; }"
-
-        "  float m = v - c;"
-        "  r = r_ + m;"
-        "  g = g_ + m;"
-        "  b = b_ + m;"
-
-        "  return vec3 (r, g, b);"
-        "  }"
-        //}}}
-
-        "void main() {"
-        "  outColor = texture (uSampler, textureCoord);"
-
-        "  if (uHue != 0.0 || uVal != 0.0 || uSat != 0.0) {"
-        "    vec3 hsv = rgbToHsv (outColor.x, outColor.y, outColor.z);"
-        "    hsv.x += uHue;"
-        "    if ((outColor.x != outColor.y) || (outColor.y != outColor.z)) {"
-               // not grayscale
-        "      hsv.y = uSat <= 0.0 ? "
-        "      hsv.y * (1.0 + uSat) : hsv.y + (1.0 - hsv.y) * uSat;"
-        "      }"
-        "    hsv.z = uVal <= 0.0 ? hsv.z * (1.0 + uVal) : hsv.z + (1.0 - hsv.z) * uVal;"
-        "    vec3 rgb = hsvToRgb (hsv.x, hsv.y, hsv.z);"
-        "    outColor.xyz = rgb;"
-        "    }"
-        //"  if (uPreMultiply)"
-        //"    outColor.xyz *= outColor.w;"
-        "  }";
-
-      mId = compileShader (kQuadVertShader, kFragShader);
-      }
-    //{{{
-    virtual ~cOpenGLES3LayerShader() {
-      glDeleteProgram (mId);
-      }
-    //}}}
-
-    // sets
-    //{{{
-    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
-      }
-    //}}}
-    //{{{
-    virtual void setHueSatVal (float hue, float sat, float val) final {
-      glUniform1f (glGetUniformLocation (mId, "uHue"), hue);
-      glUniform1f (glGetUniformLocation (mId, "uSat"), sat);
-      glUniform1f (glGetUniformLocation (mId, "uVal"), val);
-      }
-    //}}}
-
-    //{{{
-    virtual void use() final {
-
-      glUseProgram (mId);
-      }
-    //}}}
-    };
-  //}}}
-  //{{{
-  class cOpenGLES3PaintShader : public cPaintShader {
-  public:
-    cOpenGLES3PaintShader() : cPaintShader() {
-      const std::string kFragShader =
-        "#version 300 es\n"
-        "precision mediump float;"
-
-        "uniform sampler2D uSampler;"
-        "uniform vec2 uPos;"
-        "uniform vec2 uPrevPos;"
-        "uniform float uRadius;"
-        "uniform vec4 uColor;"
-
-        "in vec2 textureCoord;"
-        "out vec4 outColor;"
-
-        "float distToLine (vec2 v, vec2 w, vec2 p) {"
-        "  float l2 = pow (distance(w, v), 2.);"
-        "  if (l2 == 0.0)"
-        "    return distance (p, v);"
-        "  float t = clamp (dot (p - v, w - v) / l2, 0., 1.);"
-        "  vec2 j = v + t * (w - v);"
-        "  return distance (p, j);"
-        "  }"
-
-        "void main() {"
-        "  float dist = distToLine (uPrevPos.xy, uPos.xy, textureCoord * textureSize (uSampler, 0)) - uRadius;"
-        "  outColor = mix (uColor, texture (uSampler, textureCoord), clamp (dist, 0.0, 1.0));"
-        "  }";
-
-      mId = compileShader (kQuadVertShader, kFragShader);
-      }
-    //{{{
-    virtual ~cOpenGLES3PaintShader() {
-      glDeleteProgram (mId);
-      }
-    //}}}
-
-    // sets
-    //{{{
-    virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
-      glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
-      }
-    //}}}
-    //{{{
-    virtual void setStroke (cVec2 pos, cVec2 prevPos, float radius, const cColor& color) final {
-
-      glUniform2fv (glGetUniformLocation (mId, "uPos"), 1, (float*)&pos);
-      glUniform2fv (glGetUniformLocation (mId, "uPrevPos"), 1, (float*)&prevPos);
-      glUniform1f (glGetUniformLocation (mId, "uRadius"), radius);
-      glUniform4fv (glGetUniformLocation (mId, "uColor"), 1, (float*)&color);
-      }
-    //}}}
-
-    //{{{
-    virtual void use() final {
-
-      glUseProgram (mId);
-      }
-    //}}}
-    };
-  //}}}
-
-  //{{{
   static uint32_t compileShader (const std::string& vertShaderString, const std::string& fragShaderString) {
 
     // compile vertShader
@@ -1160,4 +971,6 @@ private:
     return id;
     }
   //}}}
+
+  std::string mGlslVersion;
   };
