@@ -13,7 +13,6 @@
 
 // imGui
 #include "../imgui/imgui.h"
-#include "../implot/implot.h"
 
 // app
 #include "cTellyApp.h"
@@ -138,9 +137,7 @@ int main (int numArgs, char* args[]) {
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
 
-  ImPlot::CreateContext();
   app.mainUILoop();
-  ImPlot::DestroyContext();
 
   return EXIT_SUCCESS;
   }

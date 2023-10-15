@@ -38,10 +38,6 @@ public:
     void run();
   #endif
 
-  #ifdef __linux__
-    cTsBlock* getBlocks (cTsBlockPool* blockPool);
-  #endif
-
 private:
   int mFrequency = 0;
   int mAdapter = 0;

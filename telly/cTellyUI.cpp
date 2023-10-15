@@ -7,7 +7,6 @@
 
 // imgui
 #include "../imgui/imgui.h"
-#include "../implot/implot.h"
 #include "../app/myImgui.h"
 
 // ui
@@ -373,8 +372,10 @@ private:
         }
 
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
+      cLog::log (LOGINFO, fmt::format (" - draw looking for {}", utils::getPtsString (playPts)));
       if (videoFrame) {
-        cPoint videoSize = {video.getWidth(), video.getHeight()};
+        cLog::log (LOGINFO, fmt::format (" - draw found {}x{}", video.getWidth(), video.getHeight()));
+        cPoint videoSize = { video.getWidth(), video.getHeight() };
         if (!mQuad)
           mQuad = graphics.createQuad (videoSize);
 
@@ -632,67 +633,31 @@ private:
   //}}}
 
   //{{{
-  void plotValues (uint16_t sid, cRender& render, uint32_t color) {
-
-    (void)color;
-    int64_t lastPts = render.getLastPts();
-
-    render.setRefPts (lastPts);
-    render.setMapSize (static_cast<size_t>(25 + ImGui::GetWindowWidth()));
-
-    auto lambda = [](void* data, int idx) {
-      int64_t pts = 0;
-      return ImPlotPoint (-idx, ((cRender*)data)->getOffsetValue (idx * (90000/25), pts));
-      };
-
-    // draw plot - sid ensures unique name
-    if (ImPlot::BeginPlot (fmt::format ("##plot{}", sid).c_str(),
-                           {ImGui::GetWindowWidth(), 4*ImGui::GetTextLineHeight()},
-                           ImPlotFlags_NoLegend)) {
-      ImPlot::SetupAxis (ImAxis_X1, "", ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit);
-      ImPlot::SetupAxis (ImAxis_Y1, "", ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit);
-      //ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1000);
-      //ImPlot::SetupAxisFormat(ImAxis_Y1, "$%.0f");
-      //ImPlot::SetupLegend(ImPlotLocation_North);
-      ImPlot::SetupFinish();
-
-      ImPlot::PlotStairsG ("line", lambda, &render, (int)ImGui::GetWindowWidth());
-      //ImPlot::PlotBarsG ("line", lambda, &render, (int)ImGui::GetWindowWidth(), 2.0);
-      //ImPlot::PlotLineG ("line", lambda, &render, (int)ImGui::GetWindowWidth());
-      //ImPlot::PlotScatterG ("line", lambda, &render, (int)ImGui::GetWindowWidth());
-      ImPlot::EndPlot();
-      }
-    }
-  //}}}
-  //{{{
   void drawVideo (uint16_t sid, cRender& render, cGraphics& graphics, int64_t playPts) {
-
+    (void)sid;
     (void)graphics;
     (void)playPts;
 
     cVideoRender& video = dynamic_cast<cVideoRender&>(render);
-    plotValues (sid, video, 0xffffffff);
     ImGui::TextUnformatted (video.getInfo().c_str());
     drawMiniLog (video.getLog());
     }
   //}}}
   //{{{
   void drawAudio (uint16_t sid, cRender& render, cGraphics& graphics) {
-
+    (void)sid;
     (void)graphics;
+
     cAudioRender& audio = dynamic_cast<cAudioRender&>(render);
-
-    plotValues (sid, audio, 0xff00ffff);
     ImGui::TextUnformatted (audio.getInfo().c_str());
-
     drawMiniLog (audio.getLog());
     }
   //}}}
   //{{{
   void drawSubtitle (uint16_t sid, cRender& render, cGraphics& graphics) {
+    (void)sid;
 
     cSubtitleRender& subtitle = dynamic_cast<cSubtitleRender&>(render);
-    plotValues (sid, subtitle, 0xff00ff00);
 
     const float potSize = ImGui::GetTextLineHeight() / 2.f;
     size_t line = 0;

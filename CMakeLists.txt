@@ -110,9 +110,9 @@ project (telly VERSION 1.0.0)
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE app implot imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui implot
+    target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui
                                                    opengl32 dxgi d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui implot
+    target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui
                                                    stdc++fs pthread)
   endif()

@@ -91,7 +91,7 @@ public:
      : cDecoder(), mH264 (streamTypeId == 27),
        mAvCodec (avcodec_find_decoder ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder stream:{}", streamTypeId));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder streamTypeId:{}", streamTypeId));
 
     mAvParser = av_parser_init ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
@@ -120,10 +120,15 @@ public:
                           function<void (cFrame* frame)> addFrameCallback) final {
 
     char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
+    cLog::log (LOGINFO, fmt::format ("decode frameType:{} pts:{} dts:{} pesSize:{} mH264:{}",
+                                      frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize, mH264));
+
+    if (mH264)
+      mGotIframe = true;
     if (frameType == 'I') {
       //{{{  pts seems wrong, frames decode in presentation order, only correct on Iframe
       if ((mInterpolatedPts != -1) && (mInterpolatedPts != dts))
-        cLog::log (LOGERROR, fmt::format ("lost:{} pts:{} dts:{} size:{}",
+        cLog::log (LOGERROR, fmt::format ("- lost:{} pts:{} dts:{} size:{}",
                                           frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize));
       mInterpolatedPts = dts;
       mGotIframe = true;
@@ -163,6 +168,7 @@ public:
           videoFrame->mStride = static_cast<uint16_t>(avFrame->width);
           videoFrame->mFrameType = frameType;
           videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
+          cLog::log (LOGINFO, fmt::format ("- {}x{}:{}", videoFrame->mWidth,videoFrame->mHeight, videoFrame->mStride));
 
           // transfer avFrame to videoFrame, addFrame, alloc new avFrame
           videoFrame->setPixels (avFrame);
@@ -220,6 +226,9 @@ cVideoRender::~cVideoRender() {
 //{{{
 cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
 
+
+  cLog::log (LOGINFO, fmt::format (" - cVideoRender::getVideoFramePts {} {} size:{}",
+                                   utils::getPtsString (pts), mPtsDuration,mFrames.size()));
   // quick unlocked test
   if (mFrames.empty() || !mPtsDuration)
     return nullptr;

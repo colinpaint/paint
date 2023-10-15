@@ -1,4 +1,4 @@
-// cGlfwApp.cpp - glfw + openGL2,openGL3,openGLES3_x,vulkan app framework
+// cGlfwApp.cpp - glfw + openGL3,openGLES3_x,vulkan app framework
 //{{{  includes
 #if defined(_WIN32)
   #define _CRT_SECURE_NO_WARNINGS
@@ -26,6 +26,7 @@
 #include "../imgui/backends/imgui_impl_glfw.h"
 
 #include "../imgui/backends/imgui_impl_opengl3.h"
+
 #if defined(GL_3)
   #include "cGL3Graphics.h"
 #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)

@@ -1516,7 +1516,7 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
   #ifdef _WIN32
     mDvbSource->run();
     int64_t streamPos = 0;
-    auto blockSize = 0;
+    int blockSize = 0;
     while (true) {
       auto ptr = mDvbSource->getBlockBDA (blockSize);
       if (blockSize) {
