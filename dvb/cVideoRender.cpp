@@ -121,8 +121,10 @@ public:
                           function<void (cFrame* frame)> addFrameCallback) final {
 
     char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
-    cLog::log (LOGINFO, fmt::format ("decode frameType:{} pts:{} dts:{} pesSize:{} mH264:{}",
-                                      frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize, mH264));
+    cLog::log (LOGINFO, fmt::format ("cVideoRender::decode {}:{} pts:{} dts:{} pesSize:{}",
+                                     mH264 ? "h264" : "mpeg2",
+                                     frameType, utils::getPtsString (pts), utils::getPtsString (dts),
+                                     pesSize));
 
     if (mH264)
       mGotIframe = true;
@@ -169,7 +171,6 @@ public:
           videoFrame->mStride = static_cast<uint16_t>(avFrame->width);
           videoFrame->mFrameType = frameType;
           videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
-          cLog::log (LOGINFO, fmt::format ("- {}x{}:{}", videoFrame->mWidth,videoFrame->mHeight, videoFrame->mStride));
 
           // transfer avFrame to videoFrame, addFrame, alloc new avFrame
           videoFrame->setPixels (avFrame);
@@ -227,9 +228,9 @@ cVideoRender::~cVideoRender() {
 //{{{
 cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
 
-
   cLog::log (LOGINFO, fmt::format ("cVideoRender::getVideoFramePts {} {} size:{}",
                                    utils::getPtsString (pts), mPtsDuration, mFrames.size()));
+
   // quick unlocked test
   if (mFrames.empty() || !mPtsDuration)
     return nullptr;
@@ -268,7 +269,10 @@ void cVideoRender::addFrame (cFrame* frame) {
   mHeight = videoFrame->mHeight;
   mFrameInfo = videoFrame->getInfo();
 
-  logValue (videoFrame->mPts, (float)videoFrame->mTimes[0]);
+  cLog::log (LOGINFO, fmt::format ("cVideoRender::addFrame {} {}x{}:{}",
+                                   utils::getPtsString (videoFrame->mPts),
+                                   videoFrame->mWidth, videoFrame->mHeight, videoFrame->mStride));
+
 
   // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
@@ -283,3 +287,4 @@ string cVideoRender::getInfo() const {
                       mDecoder->getName(), getQueueSize(), mFrames.size(), mFreeFrames.size(), mFrameInfo);
   }
 //}}}
+

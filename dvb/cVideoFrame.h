@@ -17,9 +17,9 @@ class cVideoFrame : public cFrame {
 public:
   cVideoFrame(cTexture::eTextureType textureType) : mTextureType(textureType) {}
   //{{{
-  virtual ~cVideoFrame() { 
+  virtual ~cVideoFrame() {
     releaseResources();
-    delete mTexture; 
+    delete mTexture;
     }
   //}}}
 
@@ -73,7 +73,6 @@ public:
   size_t mQueueSize = 0;
   std::vector <int64_t> mTimes;
   bool mTextureDirty = true;
-
 
 protected:
   virtual uint8_t** getPixels() = 0;

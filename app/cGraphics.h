@@ -128,7 +128,6 @@ public:
   };
 //}}}
 
-
 class cGraphics {
 public:
   virtual ~cGraphics() = default;

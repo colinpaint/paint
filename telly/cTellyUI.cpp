@@ -372,8 +372,10 @@ private:
         }
 
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
-      cLog::log (LOGINFO, fmt::format ("cTellyUI::draw looked for {} - {}",
-                                       utils::getPtsString (playPts), videoFrame ? "found" : "not Found"));
+      cLog::log (LOGINFO, fmt::format ("cTellyUI::draw looked for {} - {} - {}x{}",
+                                       utils::getPtsString (playPts), 
+                                       videoFrame ? "found" : "notFound",
+                                       video.getWidth(), video.getHeight()));
       if (videoFrame) {
         cPoint videoSize = { video.getWidth(), video.getHeight() };
         if (!mQuad)

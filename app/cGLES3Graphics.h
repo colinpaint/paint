@@ -79,6 +79,8 @@ public:
 
   //{{{
   virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
+
+    cLog::log (LOGINFO, fmt::format ("cGLES3Gaphics::createTexture {} {}x{}", (int)textureType size.x, size.y));
     switch (textureType) {
       case cTexture::eRgba:   return new cOpenGLES3RgbaTexture (textureType, size);
       case cTexture::eNv12:   return new cOpenGLES3Nv12Texture (textureType, size);
