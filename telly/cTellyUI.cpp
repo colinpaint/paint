@@ -371,11 +371,10 @@ private:
         mRenderIcon.draw (audio, video, playPts);
         }
 
+      cLog::log (LOGINFO, fmt::format ("cTellyUI::draw wants:{} - {}x{}",
+                                       utils::getPtsString (playPts), video.getWidth(), video.getHeight()));
+
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
-      cLog::log (LOGINFO, fmt::format ("cTellyUI::draw looked for {} - {} - {}x{}",
-                                       utils::getPtsString (playPts), 
-                                       videoFrame ? "found" : "notFound",
-                                       video.getWidth(), video.getHeight()));
       if (videoFrame) {
         cPoint videoSize = { video.getWidth(), video.getHeight() };
         if (!mQuad)
@@ -389,11 +388,9 @@ private:
 
         cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
         cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
-
         cMat4x4 model;
         model.size (size);
 
-        int i = 0;
         float replicate = floor (1.f / mScale);
         for (float y = -videoSize.y * replicate; y <= videoSize.y * replicate; y += videoSize.y) {
           for (float x = -videoSize.x * replicate; x <= videoSize.x * replicate; x += videoSize.x) {
@@ -404,7 +401,6 @@ private:
             model.setTranslate (translate);
             mShader->setModelProjection (model, orthoProjection);
             mQuad->draw();
-            i++;
             }
           }
         video.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));

@@ -228,12 +228,16 @@ cVideoRender::~cVideoRender() {
 //{{{
 cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
 
-  cLog::log (LOGINFO, fmt::format ("cVideoRender::getVideoFramePts {} {} size:{}",
-                                   utils::getPtsString (pts), mPtsDuration, mFrames.size()));
-
   // quick unlocked test
-  if (mFrames.empty() || !mPtsDuration)
+  if (mFrames.empty() || !mPtsDuration) {
+    cLog::log (LOGERROR, fmt::format ("cVideoRender::getVideoFramePts failed {} dur:{} frames:{}",
+                                      utils::getPtsString (pts), mPtsDuration, mFrames.size()));
+
     return nullptr;
+    }
+
+  cLog::log (LOGINFO, fmt::format ("cVideoRender::getVideoFramePts {} dur:{} frames:{}",
+                                   utils::getPtsString (pts), mPtsDuration, mFrames.size()));
 
   // locked
   //shared_lock<shared_mutex> lock (mSharedMutex);
