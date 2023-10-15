@@ -6,7 +6,6 @@
 
 // imgui
 #include "../imgui/imgui.h"
-#include "../implot/implot.h"
 #include "../app/myImgui.h"
 
 // app
