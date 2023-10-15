@@ -91,7 +91,7 @@ public:
      : cDecoder(), mH264 (streamTypeId == 27),
        mAvCodec (avcodec_find_decoder ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder with streamTypeId:{}", 
+    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder with streamTypeId:{}",
                                      streamTypeId, streamTypeId == 27 ? "h264" : "mpeg2"));
 
     mAvParser = av_parser_init ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
@@ -228,8 +228,8 @@ cVideoRender::~cVideoRender() {
 cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
 
 
-  cLog::log (LOGINFO, fmt::format (" - cVideoRender::getVideoFramePts {} {} size:{}",
-                                   utils::getPtsString (pts), mPtsDuration,mFrames.size()));
+  cLog::log (LOGINFO, fmt::format ("cVideoRender::getVideoFramePts {} {} size:{}",
+                                   utils::getPtsString (pts), mPtsDuration, mFrames.size()));
   // quick unlocked test
   if (mFrames.empty() || !mPtsDuration)
     return nullptr;

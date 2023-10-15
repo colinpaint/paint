@@ -85,6 +85,7 @@ using namespace std;
       mRunning = false;
       cLog::log (LOGINFO, "exit");
       });
+
     playerThread.detach();
     }
 
@@ -97,7 +98,7 @@ using namespace std;
       array <float,2048*2> samples = { 0.f };
 
       song->togglePlaying();
-      //{{{  audio16 player thread, video follows playPts
+      //{{{  audioPlayer thread, video follows playPts
       cAudio audio (2, song->getSampleRate(), 40000, false);
 
       cSong::cFrame* frame;

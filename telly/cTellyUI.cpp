@@ -372,9 +372,9 @@ private:
         }
 
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
-      cLog::log (LOGINFO, fmt::format (" - draw looking for {}", utils::getPtsString (playPts)));
+      cLog::log (LOGINFO, fmt::format ("cTellyUI::draw looked for {} - {}",
+                                       utils::getPtsString (playPts), videoFrame ? "found" : "not Found"));
       if (videoFrame) {
-        cLog::log (LOGINFO, fmt::format (" - draw found {}x{}", video.getWidth(), video.getHeight()));
         cPoint videoSize = { video.getWidth(), video.getHeight() };
         if (!mQuad)
           mQuad = graphics.createQuad (videoSize);
@@ -744,11 +744,7 @@ public:
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-    ImGui::Begin ("player", nullptr,
-                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
-                  //ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground |
-                  //ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse |
-
+    ImGui::Begin ("player", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
 
     mTellyView.draw ((cTellyApp&)app);
 
