@@ -349,64 +349,71 @@ private:
   enum eTab { eTelly, eHistory, eServices, ePids, eRecorded };
   inline static const vector<string> kTabNames = { "telly", "history", "services", "pids", "recorded" };
 
+   //{{{
+   void drawMainTelly (cDvbStream& dvbStream, cGraphics& graphics) {
+
+     cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
+     for (auto& pair : dvbStream.getServiceMap()) {
+       //{{{  draw telly
+       cDvbStream::cService& service = pair.second;
+       if (!service.getStream (cDvbStream::eVid).isEnabled())
+         continue;
+
+       cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
+
+       int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
+       if (service.getStream (cDvbStream::eAud).isEnabled()) {
+         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
+         audio.setFrameMapSize (mAudioFrameMapSize);
+         playPts = audio.getPlayPts();
+         mRenderIcon.draw (audio, video, playPts);
+         }
+
+       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
+       if (videoFrame) {
+         cPoint videoSize = { video.getWidth(), video.getHeight() };
+         if (!mQuad)
+           mQuad = graphics.createQuad (videoSize);
+
+         cTexture& texture = videoFrame->getTexture (graphics);
+         if (!mShader)
+           mShader = graphics.createTextureShader (texture.getTextureType());
+         texture.setSource();
+         mShader->use();
+
+         cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
+         cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
+         cMat4x4 model;
+         model.size (size);
+
+         float replicate = floor (1.f / mScale);
+         for (float y = -videoSize.y * replicate; y <= videoSize.y * replicate; y += videoSize.y) {
+           for (float x = -videoSize.x * replicate; x <= videoSize.x * replicate; x += videoSize.x) {
+             // translate centre of video to centre of window
+             cVec2 translate = {(windowSize.x / 2.f)  - ((x + (videoSize.x / 2.f)) * size.x),
+                                (windowSize.y / 2.f)  - ((y + (videoSize.y / 2.f)) * size.y)};
+
+             model.setTranslate (translate);
+             mShader->setModelProjection (model, orthoProjection);
+             mQuad->draw();
+             }
+           }
+         video.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
+         }
+       }
+       //}}}
+     }
+   //}}}
+
   //{{{
   void drawTelly (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
     (void)graphics;
-    cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
+
+    drawMainTelly (dvbStream, graphics);
 
     for (auto& pair : dvbStream.getServiceMap()) {
-      //{{{  draw telly
-      cDvbStream::cService& service = pair.second;
-      if (!service.getStream (cDvbStream::eVid).isEnabled())
-        continue;
-
-      cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
-
-      int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
-      if (service.getStream (cDvbStream::eAud).isEnabled()) {
-        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
-        audio.setFrameMapSize (mAudioFrameMapSize);
-        playPts = audio.getPlayPts();
-        mRenderIcon.draw (audio, video, playPts);
-        }
-
-      cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
-      if (videoFrame) {
-        cPoint videoSize = { video.getWidth(), video.getHeight() };
-        if (!mQuad)
-          mQuad = graphics.createQuad (videoSize);
-
-        cTexture& texture = videoFrame->getTexture (graphics);
-        if (!mShader)
-          mShader = graphics.createTextureShader (texture.getTextureType());
-        texture.setSource();
-        mShader->use();
-
-        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
-        cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
-        cMat4x4 model;
-        model.size (size);
-
-        float replicate = floor (1.f / mScale);
-        for (float y = -videoSize.y * replicate; y <= videoSize.y * replicate; y += videoSize.y) {
-          for (float x = -videoSize.x * replicate; x <= videoSize.x * replicate; x += videoSize.x) {
-            // translate centre of video to centre of window
-            cVec2 translate = {(windowSize.x / 2.f)  - ((x + (videoSize.x / 2.f)) * size.x),
-                               (windowSize.y / 2.f)  - ((y + (videoSize.y / 2.f)) * size.y)};
-
-            model.setTranslate (translate);
-            mShader->setModelProjection (model, orthoProjection);
-            mQuad->draw();
-            }
-          }
-        video.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
-        }
-      }
-      //}}}
-
-    for (auto& pair : dvbStream.getServiceMap()) {
-      //{{{  draw services/channels
+      //  draw services/channels
       cDvbStream::cService& service = pair.second;
       if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
         service.toggleAll (decoderOptions);
@@ -421,7 +428,6 @@ private:
       while (service.getChannelName().size() > mMaxNameChars)
         mMaxNameChars = service.getChannelName().size();
       }
-      //}}}
     }
   //}}}
   //{{{
@@ -495,7 +501,8 @@ private:
   //{{{
   void drawServices (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
-    mPlotIndex = 0;
+    drawMainTelly (dvbStream, graphics);
+
     for (auto& pair : dvbStream.getServiceMap()) {
       // iterate services
       cDvbStream::cService& service = pair.second;
@@ -571,6 +578,8 @@ private:
     (void)graphics;
     (void)decoderOptions;
 
+    drawMainTelly (dvbStream, graphics);
+
     // calc error number width
     int errorChars = 1;
     while (dvbStream.getNumErrors() > pow (10, errorChars))
@@ -621,6 +630,8 @@ private:
 
     (void)graphics;
     (void)decoderOptions;
+
+    drawMainTelly (dvbStream, graphics);
 
     for (auto& program : dvbStream.getRecordPrograms())
       ImGui::TextUnformatted (program.c_str());
