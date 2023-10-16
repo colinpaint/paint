@@ -5916,42 +5916,6 @@ int64_t cDvbUtils::getPts (const uint8_t* buf) {
 //}}}
 
 //{{{
-bool cDvbUtils::isHuff (uint8_t* buf) {
-
-  return (buf[0] == 0x1F) && (buf[1] == 1 || buf[1] == 2);
-  }
-//}}}
-//{{{
-string cDvbUtils::getString (uint8_t* buf) {
-
-  if (isHuff (buf+1))
-    return huffDecode (buf+1, buf[0]);
-
-  else {
-    // simple string length, followed by null terminated char array
-    int len = *buf++;
-
-    string str;
-    for (int i = 0; i < len; i++) {
-      if (*buf == 0)
-        break;
-
-      if (((*buf >= ' ') && (*buf <= '~')) || (*buf == '\n') || (*buf >= 0xa0)) //((*buf >= 0xa0) && (*buf <= 0xff)))
-        str += *buf;
-      if (*buf == 0x8A)
-        str += '\n';
-      if ((*buf == 0x86 || (*buf == 0x87)))
-        str += ' ';
-
-      buf++;
-      }
-
-    return str;
-    }
-  }
-//}}}
-
-//{{{
 std::string cDvbUtils::getStreamTypeName (uint16_t streamType) {
 
   switch (streamType) {
@@ -5972,6 +5936,7 @@ std::string cDvbUtils::getStreamTypeName (uint16_t streamType) {
      }
   }
 //}}}
+
 //{{{
 char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
 // return frameType of video pes
@@ -6248,11 +6213,16 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
         cBitstream bitstream (buf, (nalSize - startOffset) * 8);
         bitstream.check_0s (1);
         bitstream.getBits (2);
-        switch (bitstream.getBits (5)) {
+
+        int nalType = bitstream.getBits (5);
+        cLog::log (LOGINFO, fmt::format ("DvbUtils::getFrameType nalType:{} nalSize:{}", nalType, nalSize));
+        switch (nalType) {
           case 1:
           case 5:
             bitstream.getUe();
-            switch (bitstream.getUe()) {
+            int nalSubtype = bitstream.getUe();
+            cLog::log (LOGINFO, fmt::format (" - nalSubtype:{}", nalSubtype));
+            switch (nalSubtype) {
               case 5: return 'P';
               case 6: return 'B';
               case 7: return 'I';
@@ -6292,3 +6262,39 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
   }
 //}}}
 
+// huffman
+//{{{
+bool cDvbUtils::isHuff (uint8_t* buf) {
+
+  return (buf[0] == 0x1F) && (buf[1] == 1 || buf[1] == 2);
+  }
+//}}}
+//{{{
+string cDvbUtils::getString (uint8_t* buf) {
+
+  if (isHuff (buf+1))
+    return huffDecode (buf+1, buf[0]);
+
+  else {
+    // simple string length, followed by null terminated char array
+    int len = *buf++;
+
+    string str;
+    for (int i = 0; i < len; i++) {
+      if (*buf == 0)
+        break;
+
+      if (((*buf >= ' ') && (*buf <= '~')) || (*buf == '\n') || (*buf >= 0xa0)) //((*buf >= 0xa0) && (*buf <= 0xff)))
+        str += *buf;
+      if (*buf == 0x8A)
+        str += '\n';
+      if ((*buf == 0x86 || (*buf == 0x87)))
+        str += ' ';
+
+      buf++;
+      }
+
+    return str;
+    }
+  }
+//}}}

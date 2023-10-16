@@ -122,30 +122,10 @@ public:
                           function<cFrame*()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
 
-    char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
-    cLog::log (LOGINFO, fmt::format ("cVideoRender::decode {}:{} pts:{} dts:{} pesSize:{}",
+    cLog::log (LOGINFO, fmt::format ("cVideoRender::decode {} pts:{} dts:{} pesSize:{}",
                                      mH264 ? "h264" : "mpeg2",
-                                     frameType, utils::getPtsString (pts), utils::getPtsString (dts),
+                                     utils::getPtsString (pts), utils::getPtsString (dts),
                                      pesSize));
-    if (mH264)
-      mGotIframe = true;
-    if (frameType == 'I') {
-      //{{{  pts seems wrong, frames decode in presentation order, only correct on Iframe
-      if ((mInterpolatedPts != -1) && (mInterpolatedPts != dts))
-        cLog::log (LOGERROR, fmt::format ("- lost:{} pts:{} dts:{} size:{}",
-                                          frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize));
-      mInterpolatedPts = dts;
-      mGotIframe = true;
-      }
-      //}}}
-    if (!mGotIframe) {
-      //{{{  skip until first Iframe
-      cLog::log (LOGINFO, fmt::format ("skip:{} pts:{} dts:{} size:{}",
-                                       frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize));
-      return pts;
-      }
-      //}}}
-
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
 
@@ -162,7 +142,32 @@ public:
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
 
-          // get frame
+          char frameType = '?';
+          if (avFrame->pict_type == AV_PICTURE_TYPE_I)
+            frameType = 'I';
+          else if (avFrame->pict_type == AV_PICTURE_TYPE_P)
+            frameType = 'P';
+          else if (avFrame->pict_type == AV_PICTURE_TYPE_B)
+             frameType = 'B';
+
+          if (frameType == 'I') {
+            //{{{  pts seems wrong, frames decode in presentation order, only correct on Iframe
+            if ((mInterpolatedPts != -1) && (mInterpolatedPts != dts))
+              cLog::log (LOGERROR, fmt::format ("- lost:{} pts:{} dts:{} size:{}",
+                                                frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize));
+            mInterpolatedPts = dts;
+            mGotIframe = true;
+            }
+            //}}}
+          if (!mGotIframe) {
+            //{{{  skip until first Iframe
+            cLog::log (LOGINFO, fmt::format ("skip:{} pts:{} dts:{} size:{}",
+                                             frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize));
+            return pts;
+            }
+            //}}}
+
+          // allocFrame
           cFFmpegVideoFrame* videoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
           videoFrame->mFrameType = frameType;
           videoFrame->mPts = mInterpolatedPts;
