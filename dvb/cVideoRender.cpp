@@ -62,10 +62,12 @@ public:
     }
   //}}}
 
-  void setPixels (AVFrame* avFrame) { mAvFrame = avFrame; }
+  void setAVFrame (AVFrame* avFrame) { mAvFrame = avFrame; }
 
 protected:
   virtual uint8_t** getPixels() final { return mAvFrame->data; }
+  virtual int* getStrides() final { return mAvFrame->linesize; }
+
   //{{{
   virtual void releasePixels() final {
 
@@ -172,7 +174,7 @@ public:
           videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
 
           // transfer avFrame to videoFrame, addFrame, alloc new avFrame
-          videoFrame->setPixels (avFrame);
+          videoFrame->setAVFrame (avFrame);
           addFrameCallback (videoFrame);
           avFrame = av_frame_alloc();
 

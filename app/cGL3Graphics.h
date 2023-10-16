@@ -615,11 +615,11 @@ private:
     virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId; }
 
     //{{{
-    virtual void setPixels (uint8_t** pixels) final {
+    virtual void setPixels (uint8_t** pixels, int* strides) final {
     // set textures using pixels in ffmpeg avFrame format
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);
-      glPixelStorei(GL_UNPACK_ROW_LENGTH, mSize.x);
+      glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[0]);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels[0]);
       }
     //}}}
@@ -685,22 +685,22 @@ private:
     virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId[0]; }   // luma only
 
     //{{{
-    virtual void setPixels (uint8_t** pixels) final {
+    virtual void setPixels (uint8_t** pixels, int* strides) final {
     // set textures using pixels in ffmpeg avFrame format
 
       // y texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-      glPixelStorei(GL_UNPACK_ROW_LENGTH, mSize.x);
+      glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[0]);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[0]);
 
       // u texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-      glPixelStorei(GL_UNPACK_ROW_LENGTH, mSize.x/2);
+      glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[1]);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[1]);
 
       // v texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
-      glPixelStorei(GL_UNPACK_ROW_LENGTH, mSize.x/2);
+      glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[2]);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[2]);
       }
     //}}}

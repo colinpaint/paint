@@ -101,7 +101,7 @@ public:
 //{{{
 class cTexture {
 public:
-  enum eTextureType { eRgba, eNv12, eYuv420 };
+  enum eTextureType { eRgba, eYuv420 };
 
   cTexture (eTextureType textureType, const cPoint& size) : mTextureType(textureType), mSize(size) {}
   virtual ~cTexture() = default;
@@ -112,7 +112,7 @@ public:
 
   virtual void* getTextureId() = 0;
 
-  virtual void setPixels (uint8_t** pixels) = 0;
+  virtual void setPixels (uint8_t** pixels, int* strides) = 0;
   virtual void setSource() = 0;
 
 protected:

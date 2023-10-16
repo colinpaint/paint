@@ -53,7 +53,7 @@ public:
       }
 
     if (mTextureDirty) {
-      mTexture->setPixels (getPixels());
+      mTexture->setPixels (getPixels(), getStrides());
       mTextureDirty = false;
       }
 
@@ -76,6 +76,8 @@ public:
 
 protected:
   virtual uint8_t** getPixels() = 0;
+  virtual int* getStrides() = 0;
+
   virtual void releasePixels() = 0;
 
   cTexture* mTexture = nullptr;
