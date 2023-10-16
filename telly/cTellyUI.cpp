@@ -371,9 +371,6 @@ private:
         mRenderIcon.draw (audio, video, playPts);
         }
 
-      cLog::log (LOGINFO, fmt::format ("cTellyUI::draw wants:{} - {}x{}",
-                                       utils::getPtsString (playPts), video.getWidth(), video.getHeight()));
-
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
       if (videoFrame) {
         cPoint videoSize = { video.getWidth(), video.getHeight() };

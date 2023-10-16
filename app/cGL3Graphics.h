@@ -82,6 +82,7 @@ public:
   // factory create
 
     cLog::log (LOGINFO, fmt::format ("cGL3Graphics::createTexture {} {}x{}", (int)textureType, size.x, size.y));
+
     switch (textureType) {
       case cTexture::eRgba:   return new cOpenGL3RgbaTexture (textureType, size);
       case cTexture::eYuv420: return new cOpenGL3Yuv420Texture (textureType, size);

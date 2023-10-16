@@ -122,10 +122,10 @@ public:
                           function<cFrame*()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
 
-    cLog::log (LOGINFO, fmt::format ("cVideoRender::decode {} pts:{} dts:{} pesSize:{}",
-                                     mH264 ? "h264" : "mpeg2",
-                                     utils::getPtsString (pts), utils::getPtsString (dts),
-                                     pesSize));
+    cLog::log (LOGINFO1, fmt::format ("cVideoRender::decode {} pts:{} dts:{} pesSize:{}",
+                                      mH264 ? "h264" : "mpeg2",
+                                      utils::getPtsString (pts), utils::getPtsString (dts),
+                                      pesSize));
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
 
@@ -238,12 +238,11 @@ cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
   if (mFrames.empty() || !mPtsDuration) {
     cLog::log (LOGERROR, fmt::format ("cVideoRender::getVideoFramePts failed {} dur:{} frames:{}",
                                       utils::getPtsString (pts), mPtsDuration, mFrames.size()));
-
     return nullptr;
     }
 
-  cLog::log (LOGINFO, fmt::format ("cVideoRender::getVideoFramePts {} dur:{} frames:{}",
-                                   utils::getPtsString (pts), mPtsDuration, mFrames.size()));
+  //cLog::log (LOGINFO, fmt::format ("cVideoRender::getVideoFramePts {} dur:{} frames:{}",
+  //                                 utils::getPtsString (pts), mPtsDuration, mFrames.size()));
 
   // locked
   //shared_lock<shared_mutex> lock (mSharedMutex);
@@ -279,11 +278,9 @@ void cVideoRender::addFrame (cFrame* frame) {
   mHeight = videoFrame->mHeight;
   mFrameInfo = videoFrame->getInfo();
 
-  cLog::log (LOGINFO, fmt::format ("cVideoRender::addFrame {} {}x{}:{}",
-                                   utils::getPtsString (videoFrame->mPts),
-                                   videoFrame->mWidth, videoFrame->mHeight, videoFrame->mStride));
-
-
+  cLog::log (LOGINFO1, fmt::format ("cVideoRender::addFrame {} {}x{}:{}",
+                                    utils::getPtsString (videoFrame->mPts),
+                                    videoFrame->mWidth, videoFrame->mHeight, videoFrame->mStride));
   // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
   mFrames.emplace (videoFrame->mPts / videoFrame->mPtsDuration, videoFrame);

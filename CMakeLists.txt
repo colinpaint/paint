@@ -5,7 +5,7 @@ cmake_policy (SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
-# options - GL_3, GLES_3_0,GLES_3_1,GLES_3_2, VULKAN
+# options - GL_3, GLES_3_0,GLES_3_1,GLES_3_2
 #cmake .. -DBUILD_GRAPHICS=GLES_3_1
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -17,7 +17,6 @@ endif()
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   set (BUILD_MSVC_COMPILE_OPTIONS "/arch:AVX" CACHE STRING "msvc compile options")
 elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-  option (BUILD_VALIDATION "Build vulkan validation layers" OFF)
   set (BUILD_LINUX_COMPILE_OPTIONS "-Ofast" CACHE STRING "gcc compile options")
 endif()
 #

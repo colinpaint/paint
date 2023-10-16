@@ -6171,7 +6171,7 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
   uint8_t* pesEnd = pes + pesSize;
 
   if (h264) {
-    //{{{  h264 minimal parser
+    //{{{  h264 minimal parser, broken for newer streams
     while (pes < pesEnd) {
       //{{{  skip past startcode, find next startcode
       uint8_t* buf = pes;

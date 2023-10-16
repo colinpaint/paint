@@ -14,18 +14,6 @@ project (app VERSION 1.0.0)
                             ../imgui/backends/imgui_impl_glfw.h ../imgui/backends/imgui_impl_GL3.h
                             cApp.h app cGLES3Graphics.h)
     file (GLOB SOURCE_FILES cGlfwApp.cpp ../imgui/backends/imgui_impl_glfw.cpp ../imgui/backends/imgui_impl_opengl3.cpp)
-
-  # VULKAN
-  elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
-    if (BUILD_VALIDATION)
-      message (STATUS "using vulkan validation")
-    endif()
-    file (GLOB HEADER_FILES ../imgui/*.h
-                            ../imgui/backends/imgui_impl_glfw.h ../imgui/backends/imgui_impl_vulkan.h
-                            cApp.h app cVulkanGraphics.h)
-    file (GLOB SOURCE_FILES cGlfwApp.cpp ../imgui/backends/imgui_impl_glfw.cpp ../imgui/backends/imgui_impl_vulkan.cpp)
-
-  # unknown
   else()
     message (FATAL_ERROR, "unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
   endif()
@@ -55,16 +43,4 @@ project (app VERSION 1.0.0)
                                                         IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<GLFW/glfw3.h>
                                                         IMGUI_IMPL_OPENGL_ES3=1)
     target_link_libraries (${PROJECT_NAME} PRIVATE glfw GLESv2)
-
-  # VULKAN
-  elseif (BUILD_GRAPHICS STREQUAL "VULKAN")
-    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-      find_package (Vulkan REQUIRED)
-      target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_VULKAN VK_PROTOTYPES)
-      if (BUILD_VALIDATION)
-        target_compile_definitions (${PROJECT_NAME} PRIVATE VALIDATION)
-      endif()
-      target_link_libraries (${PROJECT_NAME} PRIVATE glfw Vulkan::Vulkan)
-    endif()
-
   endif()
