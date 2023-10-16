@@ -63,7 +63,7 @@ public:
   virtual string getName() const final { return "ffmpeg"; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
-                          function<cFrame* ()> getFrameCallback,
+                          function<cFrame* ()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final  {
     (void)dts;
     int64_t interpolatedPts = pts;
@@ -85,7 +85,7 @@ public:
             break;
 
           if (avFrame->nb_samples > 0) {
-            cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(getFrameCallback());
+            cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(allocFrameCallback());
             audioFrame->mPts = interpolatedPts;
             audioFrame->mPtsDuration = avFrame->sample_rate ? (avFrame->nb_samples * 90000 / avFrame->sample_rate) : 48000;
             audioFrame->mPesSize = pesSize;
@@ -300,7 +300,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamTypeId, uint16_t d
 
   mDecoder = new cFFmpegAudioDecoder (streamTypeId);
 
-  setGetFrameCallback ([&]() noexcept { return getFrame(); });
+  setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }
 //}}}

@@ -117,7 +117,7 @@ public:
 
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
-                          function<cFrame*()> getFrameCallback,
+                          function<cFrame*()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
 
     char frameType = cDvbUtils::getFrameType (pes, pesSize, mH264);
@@ -125,7 +125,6 @@ public:
                                      mH264 ? "h264" : "mpeg2",
                                      frameType, utils::getPtsString (pts), utils::getPtsString (dts),
                                      pesSize));
-
     if (mH264)
       mGotIframe = true;
     if (frameType == 'I') {
@@ -162,14 +161,14 @@ public:
             break;
 
           // get frame
-          cFFmpegVideoFrame* videoFrame = dynamic_cast<cFFmpegVideoFrame*>(getFrameCallback());
+          cFFmpegVideoFrame* videoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
+          videoFrame->mFrameType = frameType;
           videoFrame->mPts = mInterpolatedPts;
           videoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
           videoFrame->mPesSize = frameSize;
           videoFrame->mWidth = static_cast<uint16_t>(avFrame->width);
           videoFrame->mHeight = static_cast<uint16_t>(avFrame->height);
-          videoFrame->mStride = static_cast<uint16_t>(avFrame->width);
-          videoFrame->mFrameType = frameType;
+          videoFrame->mStride = static_cast<uint16_t>(avFrame->linesize[0]);
           videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
 
           // transfer avFrame to videoFrame, addFrame, alloc new avFrame
@@ -211,7 +210,7 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamTypeId, uint16_t d
     : cRender(kQueued, name + "vid", streamTypeId, decoderMask, kVideoFrameMapSize) {
 
   mDecoder = new cFFmpegDecoder (streamTypeId);
-  setGetFrameCallback ([&]() noexcept { return getFFmpegFrame(); });
+  setAllocFrameCallback ([&]() noexcept { return getFFmpegFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }
 //}}}
@@ -291,4 +290,3 @@ string cVideoRender::getInfo() const {
                       mDecoder->getName(), getQueueSize(), mFrames.size(), mFreeFrames.size(), mFrameInfo);
   }
 //}}}
-

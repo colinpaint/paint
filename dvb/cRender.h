@@ -40,7 +40,7 @@ public:
   virtual std::string getName() const = 0;
 
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
-                          std::function<cFrame*()> getFrameCallback,
+                          std::function<cFrame*()> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) = 0;
   };
 //}}}
@@ -50,11 +50,11 @@ public:
   //{{{
   cDecodeQueueItem (cDecoder* decoder,
                      uint8_t* pes, int pesSize, int64_t pts, int64_t dts,
-                     std::function<cFrame*()> getFrameCallback,
+                     std::function<cFrame*()> allocFrameCallback,
                      std::function<void (cFrame* frame)> addFrameCallback)
       : mDecoder(decoder),
         mPes(pes), mPesSize(pesSize), mPts(pts), mDts(dts),
-        mGetFrameCallback(getFrameCallback), mAddFrameCallback(addFrameCallback) {}
+        mAllocFrameCallback(allocFrameCallback), mAddFrameCallback(addFrameCallback) {}
   // we gain ownership of malloc'd pes buffer
   //}}}
   //{{{
@@ -69,7 +69,7 @@ public:
   const int mPesSize;
   const int64_t mPts;
   const int64_t mDts;
-  const std::function<cFrame*()> mGetFrameCallback;
+  const std::function<cFrame*()> mAllocFrameCallback;
   const std::function<void (cFrame* frame)> mAddFrameCallback;
   };
 //}}}
@@ -103,7 +103,7 @@ public:
   size_t getFrameMapSize() const { return mFrameMapSize; }
 
   void setFrameMapSize (size_t size) { mFrameMapSize = size; }
-  void setGetFrameCallback (std::function <cFrame* ()> getFrameCallback) { mGetFrameCallback = getFrameCallback; }
+  void setAllocFrameCallback (std::function <cFrame* ()> getFrameCallback) { mAllocFrameCallback = getFrameCallback; }
   void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
 
   void setRefPts (int64_t pts) { mRefPts = pts; }
@@ -144,7 +144,7 @@ private:
   const uint8_t mStreamTypeId;
   const uint16_t mDecoderMask;
 
-  std::function <cFrame* ()> mGetFrameCallback;
+  std::function <cFrame* ()> mAllocFrameCallback;
   std::function <void (cFrame* frame)> mAddFrameCallback;
 
   cMiniLog mMiniLog;
