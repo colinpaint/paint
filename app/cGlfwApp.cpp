@@ -24,7 +24,6 @@
 // imGui
 #include "../imgui/imgui.h"
 #include "../imgui/backends/imgui_impl_glfw.h"
-
 #include "../imgui/backends/imgui_impl_opengl3.h"
 
 #if defined(GL_3)
@@ -47,11 +46,6 @@
 
 using namespace std;
 //}}}
-
-// temp
-#if defined(VULKAN)
-  #include <backends/imgui_impl_vulkan.h>
-#endif
 
 // cPlatform interface
 //{{{
@@ -775,11 +769,6 @@ private:
   };
 //}}}
 
-// temp
-#if defined(VULKAN)
-  #include "cVulkanGraphics.h"
-#endif
-
 // cApp
 //{{{
 cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool vsync) {
@@ -796,8 +785,6 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     mGraphics = new cGL3Graphics (glfwPlatform->getShaderVersion());
   #elif defined(GLES_3_0) || defined(GLES_3_1) || defined(GLES_3_2)
     mGraphics = new cGLES3Graphics (glfwPlatform->getShaderVersion());
-  #elif defined(VULKAN)
-    mGraphics = new cVulkanGraphics();
   #else
     #error cGlfwApp.cpp unrecognised BUILD_GRAPHICS cmake option
   #endif
@@ -845,9 +832,9 @@ chrono::system_clock::time_point cApp::getNow() {
 // callback
 //{{{
 void cApp::windowResize (int width, int height) {
-
   (void)width;
   (void)height;
+
   mGraphics->newFrame();
   mPlatform->newFrame();
   ImGui::NewFrame();
@@ -872,15 +859,6 @@ void cApp::mainUILoop() {
     cUI::render (*this);
     ImGui::Render();
     mGraphics->renderDrawData();
-
-    #if defined(BUILD_DOCKING)
-      if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-        GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
-        ImGui::UpdatePlatformWindows();
-        ImGui::RenderPlatformWindowsDefault();
-        glfwMakeContextCurrent (backupCurrentContext);
-        }
-    #endif
 
     mPlatform->present();
     }
