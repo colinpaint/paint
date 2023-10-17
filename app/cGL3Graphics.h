@@ -81,13 +81,13 @@ public:
   virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
   // factory create
 
-    cLog::log (LOGINFO, fmt::format ("cGL3Graphics::createTexture {} {}x{}", (int)textureType, size.x, size.y));
-
+    cLog::log (LOGINFO, fmt::format ("cGL3Graphics::createTexture type:{} size:{}x{}", 
+                                     (int)textureType, size.x, size.y));
     switch (textureType) {
       case cTexture::eRgba:   return new cOpenGL3RgbaTexture (textureType, size);
       case cTexture::eYuv420: return new cOpenGL3Yuv420Texture (textureType, size);
-      default : return nullptr;
       }
+    return nullptr;
     }
   //}}}
   //{{{
@@ -97,8 +97,8 @@ public:
     switch (textureType) {
       case cTexture::eRgba:   return new cOpenGL3RgbaShader();
       case cTexture::eYuv420: return new cOpenGL3Yuv420Shader();
-      default: return nullptr;
-      }
+      } 
+    return nullptr;
     }
   //}}}
 

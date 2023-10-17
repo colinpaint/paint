@@ -27,13 +27,12 @@ using namespace std;
 
 class cDemoUI : public cUI {
 public:
-  //{{{
-  cDemoUI (const string& name) : cUI(name) {
-    }
-  //}}}
+  cDemoUI (const string& name) : cUI(name) {}
+
   virtual ~cDemoUI() = default;
 
   void addToDrawList (cApp& app) final {
+
     bool show_demo_window = true;
     app.getGraphics().clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
 
@@ -59,14 +58,9 @@ public:
                  ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
 
     ImGui::ShowDemoWindow (&show_demo_window);
-
-    #ifdef BUILD_IMPLOT
-      ImPlot::ShowDemoWindow();
-    #endif
     }
 
 private:
-
   //{{{
   static cUI* create (const string& className) {
     return new cDemoUI (className);
