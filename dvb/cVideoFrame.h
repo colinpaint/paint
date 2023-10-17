@@ -67,7 +67,6 @@ public:
 
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
-  uint16_t mStride = 0;
   char mFrameType = '?';
 
   size_t mQueueSize = 0;

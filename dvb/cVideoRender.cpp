@@ -175,7 +175,6 @@ public:
           videoFrame->mPesSize = frameSize;
           videoFrame->mWidth = static_cast<uint16_t>(avFrame->width);
           videoFrame->mHeight = static_cast<uint16_t>(avFrame->height);
-          videoFrame->mStride = static_cast<uint16_t>(avFrame->linesize[0]);
           videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
 
           // transfer avFrame to videoFrame, addFrame, alloc new avFrame
@@ -278,9 +277,8 @@ void cVideoRender::addFrame (cFrame* frame) {
   mHeight = videoFrame->mHeight;
   mFrameInfo = videoFrame->getInfo();
 
-  cLog::log (LOGINFO1, fmt::format ("cVideoRender::addFrame {} {}x{}:{}",
-                                    utils::getPtsString (videoFrame->mPts),
-                                    videoFrame->mWidth, videoFrame->mHeight, videoFrame->mStride));
+  cLog::log (LOGINFO1, fmt::format ("cVideoRender::addFrame {} size:{}x{}",
+                                    utils::getPtsString (videoFrame->mPts), videoFrame->mWidth, videoFrame->mHeight));
   // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
   mFrames.emplace (videoFrame->mPts / videoFrame->mPtsDuration, videoFrame);
