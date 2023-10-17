@@ -32,9 +32,9 @@ using namespace std;
 //}}}
 
 //{{{
-class cRenderIcon {
+class cFramesGraphic {
 public:
-  cRenderIcon (float videoLines, float audioLines, float pixelsPerVideoFrame, float pixelsPerChannel)
+  cFramesGraphic (float videoLines, float audioLines, float pixelsPerVideoFrame, float pixelsPerChannel)
     : mVideoLines(videoLines), mAudioLines(audioLines),
       mPixelsPerVideoFrame(pixelsPerVideoFrame), mPixelsPerChannel(pixelsPerChannel) {}
 
@@ -42,89 +42,86 @@ public:
   void draw (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
 
     ImVec2 pos = {ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(),
-                  ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - (0.5f * ImGui::GetTextLineHeight())};
+                  ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - ImGui::GetTextLineHeight()};
 
     drawPower (audio, playPts, pos);
 
-    pos.x -= mMaxOffset;
+    pos.x -= ImGui::GetWindowWidth() / 2.f;
 
     // draw playPts centre bar
     ImGui::GetWindowDrawList()->AddRectFilled (
-      {pos.x, pos.y - mVideoLines * (3.f/4.f) * ImGui::GetTextLineHeight()},
-      {pos.x + 1.f, pos.y + mAudioLines * (3.f/4.f) * ImGui::GetTextLineHeight()},
+      {pos.x, pos.y - mVideoLines * ImGui::GetTextLineHeight()},
+      {pos.x + 1.f, pos.y + mAudioLines * ImGui::GetTextLineHeight()},
       0xffc0c0c0);
 
     float ptsScale = mPixelsPerVideoFrame / video.getPtsDuration();
 
     { // lock video during iterate
-    shared_lock<shared_mutex> lock (video.getSharedMutex());
-    for (auto& frame : video.getFrames()) {
-      //{{{  draw video
-      cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-      float offset1 = (videoFrame->mPts - playPts) * ptsScale;
-      float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
-      addOffset (offset1, mMaxOffset, mMaxDisplayOffset);
+      shared_lock<shared_mutex> lock (video.getSharedMutex());
+      for (auto& frame : video.getFrames()) {
+        //{{{  draw video frames
+        cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
+        float offset1 = (videoFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
 
-      // pesSize I white/ P yellow/ B green
-      ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
-        (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
+        // pesSize I white / P yellow / B green
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y},
+          {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
+          (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
 
-      // grey decodeTime
-      ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - addValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, mVideoLines)},
-        0x60ffffff);
+        // grey decodeTime
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y},
+          {pos.x + offset2, pos.y - addValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, mVideoLines)},
+          0x60ffffff);
 
-      // magenta queueSize in trailing gap
-      ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y},
-        {pos.x + offset1 + 1.f, pos.y - addValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, mVideoLines - 1.f)},
-        0xffff00ff);
-      }
-      //}}}
-    for (auto frame : video.getFreeFrames()) {
-      //{{{  draw free video
-      cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-      float offset1 = (videoFrame->mPts - playPts) * ptsScale;
-      float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
+        // magenta queueSize in trailing gap
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y},
+          {pos.x + offset1 + 1.f, pos.y - addValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, mVideoLines - 1.f)},
+          0xffff00ff);
+        }
+        //}}}
+      for (auto frame : video.getFreeFrames()) {
+        //{{{  draw free video frames
+        cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+        float offset1 = (videoFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
 
-      ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y},
-        {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
-        0xe0808080);
-      }
-      //}}}
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y},
+          {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
+          0xFF808080);
+        }
+        //}}}
     }
 
     { // lock audio during iterate
-    shared_lock<shared_mutex> lock (audio.getSharedMutex());
-    for (auto& frame : audio.getFrames()) {
-      //{{{  draw audio
-      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
-      float offset1 = (audioFrame->mPts - playPts) * ptsScale;
-      float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
-      addOffset (offset1, mMaxOffset, mMaxDisplayOffset);
+      shared_lock<shared_mutex> lock (audio.getSharedMutex());
+      for (auto& frame : audio.getFrames()) {
+        //{{{  draw audio frames
+        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+        float offset1 = (audioFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y + 1.f},
+          {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
+          0xff00ffff);
+        }
+        //}}}
+      for (auto frame : audio.getFreeFrames()) {
+        //{{{  draw free audio frames
+        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+        float offset1 = (audioFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
 
-      ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y + 1.f},
-        {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
-        0xff00ffff);
-      }
-      //}}}
-    for (auto frame : audio.getFreeFrames()) {
-      //{{{  draw free audio
-      cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
-      float offset1 = (audioFrame->mPts - playPts) * ptsScale;
-      float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
-
-      ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x + offset1, pos.y + 1.f},
-        {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
-        0xC0808080);
-      }
-      //}}}
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y + 1.f},
+          {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
+          0xFF808080);
+        }
+        //}}}
     }
 
     // slowly track scaling back to max display values from max values
@@ -132,7 +129,6 @@ public:
     agc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
     agc (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f, 1000.f);
     agc (mMaxQueueSize, mMaxDisplayQueueSize, 250.f, 4.f);
-    agc (mMaxOffset, mMaxDisplayOffset, 250.f, ImGui::GetTextLineHeight());
     }
   //}}}
 
@@ -143,7 +139,7 @@ private:
     cAudioFrame* audioFrame = audio.getAudioFramePts (playPts);
     if (audioFrame) {
       pos.y += 1.f;
-      float height = 3.f * ImGui::GetTextLineHeight();
+      float height = 8.f * ImGui::GetTextLineHeight();
 
       if (audioFrame->mNumChannels == 6) {
         // 5.1
@@ -152,16 +148,16 @@ private:
         // draw channels reordered
         for (size_t i = 0; i < 5; i++) {
           ImGui::GetWindowDrawList()->AddRectFilled (
-            {x, pos.y},
-            {x + mPixelsPerChannel - 1.f, pos.y + (audioFrame->mPowerValues[kChannelOrder[i]] * height)},
+            {x, pos.y - (audioFrame->mPowerValues[kChannelOrder[i]] * height)},
+            {x + mPixelsPerChannel - 1.f, pos.y},
             0xff00ff00);
           x += mPixelsPerChannel;
           }
 
         // draw woofer as red
         ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x - (5 * mPixelsPerChannel), pos.y},
-          {pos.x - 1.f, pos.y + (audioFrame->mPowerValues[kChannelOrder[5]] * height)},
+          {pos.x - (5 * mPixelsPerChannel), pos.y - (audioFrame->mPowerValues[kChannelOrder[5]] * height)},
+          {pos.x - 1.f, pos.y},
           0x800000ff);
         }
 
@@ -170,24 +166,14 @@ private:
         float width = mPixelsPerChannel * audioFrame->mNumChannels;
         for (size_t i = 0; i < audioFrame->mNumChannels; i++)
           ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x - width + (i * mPixelsPerChannel), pos.y},
-            {pos.x - width + ((i+1) * mPixelsPerChannel) - 1.f, pos.y + (audioFrame->mPowerValues[i] * height)},
+            {pos.x - width + (i * mPixelsPerChannel), pos.y - (audioFrame->mPowerValues[i] * height)},
+            {pos.x - width + ((i+1) * mPixelsPerChannel) - 1.f, pos.y},
             0xff00ff00);
         }
       }
     }
   //}}}
 
-  //{{{
-  void addOffset (float offset, float& maxOffset, float& maxDisplayOffset) {
-
-    if (offset > maxOffset)
-      maxOffset = offset;
-
-    if (offset > maxDisplayOffset)
-      maxDisplayOffset = offset;
-    }
-  //}}}
   //{{{
   float addValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
 
@@ -222,9 +208,6 @@ private:
   const float mPixelsPerVideoFrame;
   const float mPixelsPerChannel;
 
-  float mMaxOffset = 0.f;
-  float mMaxDisplayOffset = 0.f;
-
   float mMaxPower = 0.5f;
   float mMaxDisplayPower = 0.f;
 
@@ -239,9 +222,9 @@ private:
   };
 //}}}
 //{{{
-class cDraw {
+class cVideoFrameDraw {
 public:
-  cDraw (cVideoFrame* videoFrame, float offset) : mVideoFrame(videoFrame), mOffset(offset) {}
+  cVideoFrameDraw (cVideoFrame* videoFrame, float offset) : mVideoFrame(videoFrame), mOffset(offset) {}
 
   cVideoFrame* mVideoFrame;
   float mOffset;
@@ -345,8 +328,10 @@ public:
       }
     }
   //}}}
+
 private:
   enum eTab { eTelly, eHistory, eServices, ePids, eRecorded };
+
   inline static const vector<string> kTabNames = { "telly", "history", "services", "pids", "recorded" };
 
    //{{{
@@ -366,7 +351,7 @@ private:
          cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
          audio.setFrameMapSize (mAudioFrameMapSize);
          playPts = audio.getPlayPts();
-         mRenderIcon.draw (audio, video, playPts);
+         mFramesGraphic.draw (audio, video, playPts);
          }
 
        cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
@@ -450,15 +435,15 @@ private:
         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
         audio.setFrameMapSize (mAudioFrameMapSize);
         playPts = audio.getPlayPts();
-        mRenderIcon.draw (audio, video, playPts);
+        mFramesGraphic.draw (audio, video, playPts);
         }
 
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
       if (videoFrame) {
         // form draw list
-        deque <cDraw> mDraws;
+        deque <cVideoFrameDraw> mVideoFramesDraws;
         if (mScale >= 1.f)
-          mDraws.push_back ({videoFrame, 0.f});
+          mVideoFramesDraws.push_back ({videoFrame, 0.f});
         else {
           // locked
           shared_lock<shared_mutex> lock (video.getSharedMutex());
@@ -466,9 +451,9 @@ private:
             videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
             int64_t offset = (videoFrame->mPts / videoFrame->mPtsDuration) - (playPts / videoFrame->mPtsDuration);
             if (offset <= 0) // draw last
-              mDraws.push_back ({videoFrame, mOverlap * offset});
+              mVideoFramesDraws.push_back ({videoFrame, mOverlap * offset});
             else // draw in reverse order
-              mDraws.push_front ({videoFrame, mOverlap * offset});
+              mVideoFramesDraws.push_front ({videoFrame, mOverlap * offset});
             }
           }
 
@@ -484,7 +469,7 @@ private:
         mShader->use();
 
         // draw list
-        for (auto& draw : mDraws) {
+        for (auto& draw : mVideoFramesDraws) {
           draw.mVideoFrame->getTexture (graphics).setSource();
           cVec2 translate = {(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x) + draw.mOffset,
                              (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)};
@@ -735,7 +720,7 @@ private:
   float mOverlap = 4.f;
   int mHistory = 0;
 
-  cRenderIcon mRenderIcon = {2.f,1.f, 4.f,6.f};
+  cFramesGraphic mFramesGraphic = {2.f,1.f, 4.f,6.f};
   //}}}
   };
 
