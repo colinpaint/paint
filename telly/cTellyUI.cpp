@@ -354,7 +354,7 @@ private:
 
      cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
      for (auto& pair : dvbStream.getServiceMap()) {
-       //{{{  draw telly
+       // draw telly
        cDvbStream::cService& service = pair.second;
        if (!service.getStream (cDvbStream::eVid).isEnabled())
          continue;
@@ -376,6 +376,7 @@ private:
            mQuad = graphics.createQuad (videoSize);
 
          cTexture& texture = videoFrame->getTexture (graphics);
+
          if (!mShader)
            mShader = graphics.createTextureShader (texture.getTextureType());
          texture.setSource();
@@ -401,7 +402,6 @@ private:
          video.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
          }
        }
-       //}}}
      }
    //}}}
 
