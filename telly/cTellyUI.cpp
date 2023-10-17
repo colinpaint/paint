@@ -330,8 +330,8 @@ public:
   //}}}
 
 private:
-  enum eTab { eTelly, eHistory, eServices, ePids, eRecorded };
-  inline static const vector<string> kTabNames = { "telly", "history", "services", "pids", "recorded" };
+  enum eTab { eTelly, eServices, ePids, eHistory, eRecorded };
+  inline static const vector<string> kTabNames = { "telly", "services", "pids", "history", "recorded" };
 
   //{{{
   void drawMainTelly (cDvbStream& dvbStream, cGraphics& graphics) {
@@ -489,74 +489,6 @@ private:
     }
   //}}}
   //{{{
-  void drawHistory (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
-
-    (void)decoderOptions;
-    cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
-
-    for (auto& pair : dvbStream.getServiceMap()) {
-      cDvbStream::cService& service = pair.second;
-      if (!service.getStream (cDvbStream::eVid).isEnabled())
-        continue;
-
-      cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
-      cPoint videoSize = {video.getWidth(), video.getHeight()};
-
-      // playPts and ucon
-      int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
-      if (service.getStream (cDvbStream::eAud).isEnabled()) {
-        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
-        audio.setFrameMapSize (mAudioFrameMapSize);
-        playPts = audio.getPlayPts();
-        mFramesGraphic.draw (audio, video, playPts);
-        }
-
-      cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
-      if (videoFrame) {
-        // form draw list
-        deque <cVideoFrameDraw> mVideoFramesDraws;
-        if (mScale >= 1.f)
-          mVideoFramesDraws.push_back ({videoFrame, 0.f});
-        else {
-          // locked
-          shared_lock<shared_mutex> lock (video.getSharedMutex());
-          for (auto& frame : video.getFrames()) {
-            videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-            int64_t offset = (videoFrame->mPts / videoFrame->mPtsDuration) - (playPts / videoFrame->mPtsDuration);
-            if (offset <= 0) // draw last
-              mVideoFramesDraws.push_back ({videoFrame, mOverlap * offset});
-            else // draw in reverse order
-              mVideoFramesDraws.push_front ({videoFrame, mOverlap * offset});
-            }
-          }
-
-        // setup draw quad, shader
-        if (!mQuad)
-          mQuad = graphics.createQuad (videoSize);
-        cMat4x4 model;
-        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-        cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
-        model.size (size);
-        if (!mShader)
-          mShader = graphics.createTextureShader (videoFrame->mTextureType);
-        mShader->use();
-
-        // draw list
-        for (auto& draw : mVideoFramesDraws) {
-          draw.mVideoFrame->getTexture (graphics).setSource();
-          cVec2 translate = {(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x) + draw.mOffset,
-                             (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)};
-          model.setTranslate (translate);
-          mShader->setModelProjection (model, orthoProjection);
-          mQuad->draw();
-          }
-
-        video.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
-        }
-      }
-    }
-  //}}}
-  //{{{
   void drawServices (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
 
     drawMainTelly (dvbStream, graphics);
@@ -679,6 +611,74 @@ private:
         mPacketChars++;
 
       prevSid = pidInfo.getSid();
+      }
+    }
+  //}}}
+  //{{{
+  void drawHistory (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
+
+    (void)decoderOptions;
+    cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
+
+    for (auto& pair : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service = pair.second;
+      if (!service.getStream (cDvbStream::eVid).isEnabled())
+        continue;
+
+      cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
+      cPoint videoSize = {video.getWidth(), video.getHeight()};
+
+      // playPts and ucon
+      int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
+      if (service.getStream (cDvbStream::eAud).isEnabled()) {
+        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
+        audio.setFrameMapSize (mAudioFrameMapSize);
+        playPts = audio.getPlayPts();
+        mFramesGraphic.draw (audio, video, playPts);
+        }
+
+      cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
+      if (videoFrame) {
+        // form draw list
+        deque <cVideoFrameDraw> mVideoFramesDraws;
+        if (mScale >= 1.f)
+          mVideoFramesDraws.push_back ({videoFrame, 0.f});
+        else {
+          // locked
+          shared_lock<shared_mutex> lock (video.getSharedMutex());
+          for (auto& frame : video.getFrames()) {
+            videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
+            int64_t offset = (videoFrame->mPts / videoFrame->mPtsDuration) - (playPts / videoFrame->mPtsDuration);
+            if (offset <= 0) // draw last
+              mVideoFramesDraws.push_back ({videoFrame, mOverlap * offset});
+            else // draw in reverse order
+              mVideoFramesDraws.push_front ({videoFrame, mOverlap * offset});
+            }
+          }
+
+        // setup draw quad, shader
+        if (!mQuad)
+          mQuad = graphics.createQuad (videoSize);
+        cMat4x4 model;
+        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
+        cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
+        model.size (size);
+        if (!mShader)
+          mShader = graphics.createTextureShader (videoFrame->mTextureType);
+        mShader->use();
+
+        // draw list
+        for (auto& draw : mVideoFramesDraws) {
+          draw.mVideoFrame->getTexture (graphics).setSource();
+          cVec2 translate = {(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x) + draw.mOffset,
+                             (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)};
+          model.setTranslate (translate);
+          mShader->setModelProjection (model, orthoProjection);
+          mQuad->draw();
+          }
+
+        video.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
+        }
       }
     }
   //}}}
