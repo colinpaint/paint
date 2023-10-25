@@ -80,7 +80,8 @@ public:
   //{{{
   virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
 
-    cLog::log (LOGINFO, fmt::format ("cGLES3Gaphics::createTexture {} {}x{}", (int)textureType size.x, size.y));
+    cLog::log (LOGINFO, fmt::format ("cGLES3Gaphics::createTexture {} {}x{}", 
+                                     (int)textureType, size.x, size.y));
     switch (textureType) {
       case cTexture::eRgba:   return new cOpenGLES3RgbaTexture (textureType, size);
       case cTexture::eYuv420: return new cOpenGLES3Yuv420Texture (textureType, size);
@@ -611,8 +612,10 @@ private:
 
     virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId; }
 
-    virtual void setPixels (uint8_t** pixels) final {
+    virtual void setPixels (uint8_t** pixels, int* strides) final {
     // set textures using pixels in ffmpeg avFrame format
+      (void)strides;
+
       glBindTexture (GL_TEXTURE_2D, mTextureId);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels[0]);
       }
@@ -674,9 +677,9 @@ private:
 
     virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId[0]; }   // luma only
 
-    //{{{
-    virtual void setPixels (uint8_t** pixels) final {
+    virtual void setPixels (uint8_t** pixels, int* strides) final {
     // set textures using pixels in ffmpeg avFrame format
+      (void)strides;
 
       // y texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
@@ -690,20 +693,15 @@ private:
       glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[2]);
       }
-    //}}}
-    //{{{
-    virtual void setSource() final {
 
+    virtual void setSource() final {
       glActiveTexture (GL_TEXTURE0);
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-
       glActiveTexture (GL_TEXTURE1);
       glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-
       glActiveTexture (GL_TEXTURE2);
       glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
       }
-    //}}}
 
   private:
     std::array <GLuint,3> mTextureId;  // Y,U,V 4:2:0

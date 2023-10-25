@@ -81,7 +81,7 @@ public:
   virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
   // factory create
 
-    cLog::log (LOGINFO, fmt::format ("cGL3Graphics::createTexture type:{} size:{}x{}", 
+    cLog::log (LOGINFO, fmt::format ("cGL3Graphics::createTexture type:{} size:{}x{}",
                                      (int)textureType, size.x, size.y));
     switch (textureType) {
       case cTexture::eRgba:   return new cOpenGL3RgbaTexture (textureType, size);
@@ -97,7 +97,7 @@ public:
     switch (textureType) {
       case cTexture::eRgba:   return new cOpenGL3RgbaShader();
       case cTexture::eYuv420: return new cOpenGL3Yuv420Shader();
-      } 
+      }
     return nullptr;
     }
   //}}}
@@ -615,25 +615,21 @@ private:
 
     virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId; }
 
-    //{{{
     virtual void setPixels (uint8_t** pixels, int* strides) final {
     // set textures using pixels in ffmpeg avFrame format
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);
       if (strides)
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[0]);
+        glPixelStorei (GL_UNPACK_ROW_LENGTH, strides[0]);
       else
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, mSize.x);
+        glPixelStorei (GL_UNPACK_ROW_LENGTH, mSize.x);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels[0]);
       }
-    //}}}
-    //{{{
-    virtual void setSource() final {
 
+    virtual void setSource() final {
       glActiveTexture (GL_TEXTURE0);
       glBindTexture (GL_TEXTURE_2D, mTextureId);
       }
-    //}}}
 
   private:
     uint32_t mTextureId = 0;
@@ -688,7 +684,6 @@ private:
 
     virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId[0]; }   // luma only
 
-    //{{{
     virtual void setPixels (uint8_t** pixels, int* strides) final {
     // set textures using pixels in ffmpeg avFrame format
 
@@ -697,39 +692,34 @@ private:
       if (strides)
         glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[0]);
       else
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, mSize.x);
+        glPixelStorei (GL_UNPACK_ROW_LENGTH, mSize.x);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[0]);
 
       // u texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
       if (strides)
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[1]);
+        glPixelStorei (GL_UNPACK_ROW_LENGTH, strides[1]);
       else
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, mSize.x/2);
+        glPixelStorei (GL_UNPACK_ROW_LENGTH, mSize.x/2);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[1]);
 
       // v texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
       if (strides)
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[2]);
+        glPixelStorei (GL_UNPACK_ROW_LENGTH, strides[2]);
       else
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, mSize.x/2);
+        glPixelStorei (GL_UNPACK_ROW_LENGTH, mSize.x/2);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[2]);
       }
-    //}}}
-    //{{{
-    virtual void setSource() final {
 
+    virtual void setSource() final {
       glActiveTexture (GL_TEXTURE0);
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
-
       glActiveTexture (GL_TEXTURE1);
       glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
-
       glActiveTexture (GL_TEXTURE2);
       glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
       }
-    //}}}
 
   private:
     std::array <uint32_t,3> mTextureId;
