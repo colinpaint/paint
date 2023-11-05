@@ -25,7 +25,7 @@ using tDurationSeconds = std::chrono::seconds;
 
 class cDvbStream {
 public:
-  enum eStreamType { eVideo, eAudio, eAudioDescription, eSubtitle, eLast };
+  enum eStreamType { eVideo, eAudio, eAudioDescription, eSubtitle };
   //{{{
   class cStream {
   public:

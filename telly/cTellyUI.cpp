@@ -508,7 +508,7 @@ private:
       while (service.getProgramPid() > pow (10, mMaxPgmChars))
         mMaxPgmChars++;
 
-      for (size_t streamType = cDvbStream::eVideo; streamType < cDvbStream::eLast; streamType++) {
+      for (size_t streamType = cDvbStream::eVideo; streamType <= cDvbStream::eSubtitle; streamType++) {
         uint16_t pid = service.getStream (streamType).getPid();
         while (pid > pow (10, mPidMaxChars[streamType]))
           mPidMaxChars[streamType]++;
@@ -522,7 +522,7 @@ private:
                          service.getSid(), mMaxSidChars).c_str()))
         service.toggleAll (decoderOptions);
 
-      for (size_t streamType = cDvbStream::eVideo; streamType < cDvbStream::eLast; streamType++) {
+      for (size_t streamType = cDvbStream::eVideo; streamType <= cDvbStream::eSubtitle; streamType++) {
        // iterate definedStreams
         cDvbStream::cStream& stream = service.getStream (streamType);
         if (stream.isDefined()) {
@@ -549,15 +549,21 @@ private:
       if (service.getStream (cDvbStream::eAudio).isEnabled())
         playPts = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender()).getPlayPts();
 
-      for (size_t streamType = cDvbStream::eVideo; streamType < cDvbStream::eLast; streamType++) {
-        // iterate enabledStreams, drawing plots,logs,images
+      for (size_t streamType = cDvbStream::eVideo; streamType <= cDvbStream::eSubtitle; streamType++) {
+        // iterate enabledStreams, drawing
         cDvbStream::cStream& stream = service.getStream (streamType);
         if (stream.isEnabled()) {
           switch (streamType) {
-            case cDvbStream::eVideo: drawVideo (service.getSid(), stream.getRender(), graphics, playPts); break;
+            case cDvbStream::eVideo: 
+              drawVideo (service.getSid(), stream.getRender(), graphics, playPts); break;
+
             case cDvbStream::eAudio:
-            case cDvbStream::eAudioDescription: drawAudio (service.getSid(), stream.getRender(), graphics);  break;
-            case cDvbStream::eSubtitle: drawSubtitle (service.getSid(), stream.getRender(), graphics);  break;
+            case cDvbStream::eAudioDescription: 
+              drawAudio (service.getSid(), stream.getRender(), graphics);  break;
+
+            case cDvbStream::eSubtitle: 
+              drawSubtitle (service.getSid(), stream.getRender(), graphics);  break;
+
             default:;
             }
           }
