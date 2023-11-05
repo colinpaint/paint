@@ -19,8 +19,8 @@ cRender::cRender (bool queued, const string& name, uint8_t streamTypeId, uint16_
     : mFrameMapSize(frameMapSize), mQueued(queued),
       mName(name), mStreamTypeId(streamTypeId), mDecoderMask(decoderMask), mMiniLog ("log") {
 
-  if (queued)
-    thread ([=](){ startQueueThread (name + "Q"); }).detach();
+  if (queued) 
+    thread ([=](){ startQueueThread ("q" + name); }).detach();
   }
 //}}}
 //{{{

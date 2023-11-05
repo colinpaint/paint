@@ -320,9 +320,14 @@ cAudioRender::~cAudioRender() {
   delete mPlayer;
 
   unique_lock<shared_mutex> lock (mSharedMutex);
+
   for (auto& frame : mFrames)
     delete (frame.second);
   mFrames.clear();
+
+  for (auto& frame : mFrames)
+    delete frame.second;
+  mFreeFrames.clear();
   }
 //}}}
 

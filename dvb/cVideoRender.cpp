@@ -225,9 +225,15 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamTypeId, uint16_t d
 //{{{
 cVideoRender::~cVideoRender() {
 
-  for (auto frame : mFrames)
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  for (auto& frame : mFrames)
     delete frame.second;
   mFrames.clear();
+
+  for (auto& frame : mFrames)
+    delete frame.second;
+  mFreeFrames.clear();
   }
 //}}}
 
