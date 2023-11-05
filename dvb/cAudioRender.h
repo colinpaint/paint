@@ -27,14 +27,14 @@ public:
   int64_t getPtsDuration() const { return mPtsDuration; }
 
   bool isPlaying() const;
-  int64_t getPlayPts() const;
+  int64_t getPlayerPts() const;
 
   // play
   void togglePlaying();
   void setPlayPts (int64_t pts);
 
   // find
-  cAudioFrame* getAudioFramePts (int64_t pts);
+  cAudioFrame* getAudioFrameFromPts (int64_t pts);
 
   // callbacks
   virtual cFrame* getFrame() final;

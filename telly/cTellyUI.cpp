@@ -134,9 +134,9 @@ public:
 
 private:
   //{{{
-  void drawAudioPower (cAudioRender& audio, int64_t playPts, ImVec2 pos) {
+  void drawAudioPower (cAudioRender& audio, int64_t playerPts, ImVec2 pos) {
 
-    cAudioFrame* audioFrame = audio.getAudioFramePts (playPts);
+    cAudioFrame* audioFrame = audio.getAudioFrameFromPts (playerPts);
     if (audioFrame) {
       pos.y += 1.f;
       float height = 8.f * ImGui::GetTextLineHeight();
@@ -278,6 +278,12 @@ public:
       ImGui::TextUnformatted ("vsync");
     //app.getPlatform().toggleVsync();
     //}}}
+    //{{{  draw vertex:index info
+    ImGui::SameLine();
+    ImGui::TextUnformatted (fmt::format ("{}:{}",
+                            ImGui::GetIO().MetricsRenderVertices,
+                            ImGui::GetIO().MetricsRenderIndices/3).c_str());
+    //}}}
 
     ImGui::SameLine();
     if (app.getDvbStream()) {
@@ -294,18 +300,11 @@ public:
       ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getNumPackets(), dvbStream.getNumErrors()).c_str());
       //}}}
       if (dvbStream.hasDvbSource()) {
-        //{{{  draw dvbStream::dvbSource signal,errors
+        //{{{  draw dvbStream::dvbSource signal:errors
         ImGui::SameLine();
         ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getSignalString(), dvbStream.getErrorString()).c_str());
         }
         //}}}
-
-      //{{{  draw vertex:index info
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{}:{}",
-                              ImGui::GetIO().MetricsRenderVertices,
-                              ImGui::GetIO().MetricsRenderIndices/3).c_str());
-      //}}}
 
       // draw tab childWindow, monospaced font
       ImGui::PushFont (app.getMonoFont());
@@ -313,21 +312,25 @@ public:
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
       switch (mTab) {
         case eTelly:
-          drawPiccy (dvbStream, graphics);
-          drawTellyChannels (dvbStream, graphics, app.getDecoderOptions());
+          drawTelly (dvbStream, graphics);
+          drawChannels (dvbStream, graphics, app.getDecoderOptions());
           break;
+
         case eServices:
-          drawPiccy (dvbStream, graphics);
+          drawTelly (dvbStream, graphics);
           drawServices (dvbStream, graphics, app.getDecoderOptions());
           break;
+
         case ePids:
-          drawPiccy (dvbStream, graphics);
+          drawTelly (dvbStream, graphics);
           drawPids (dvbStream, graphics, app.getDecoderOptions());
           break;
+
         case eRecorded:
-          drawPiccy (dvbStream, graphics);
+          drawTelly (dvbStream, graphics);
           drawRecorded (dvbStream, graphics, app.getDecoderOptions());
           break;
+
         case eHistory:
           drawHistory (dvbStream, graphics, app.getDecoderOptions());
           break;
@@ -344,7 +347,7 @@ private:
   inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded", "history"};
 
   //{{{
-  void drawTellyChannels (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
+  void drawChannels (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
     (void)graphics;
 
     for (auto& pair : dvbStream.getServiceMap()) {
@@ -418,7 +421,7 @@ private:
       // audio provides playPts
       int64_t playPts = 0;
       if (service.getStream (cDvbStream::eAudio).isEnabled())
-        playPts = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender()).getPlayPts();
+        playPts = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender()).getPlayerPts();
 
       for (size_t streamType = cDvbStream::eVideo; streamType <= cDvbStream::eSubtitle; streamType++) {
         // iterate enabledStreams, drawing
@@ -520,7 +523,7 @@ private:
       if (service.getStream (cDvbStream::eAudio).isEnabled()) {
         cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
         audio.setFrameMapSize (mAudioFrameMapSize);
-        playPts = audio.getPlayPts();
+        playPts = audio.getPlayerPts();
 
         mFramesGraphic.draw (audio, video, playPts);
         }
@@ -573,7 +576,7 @@ private:
   //}}}
 
   //{{{
-  void drawPiccy (cDvbStream& dvbStream, cGraphics& graphics) {
+  void drawTelly (cDvbStream& dvbStream, cGraphics& graphics) {
 
     cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
 
@@ -582,22 +585,22 @@ private:
       if (!service.getStream (cDvbStream::eVideo).isEnabled())
         continue;
 
-      cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
+      cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
 
-      // playPts and draw framesGraphic
-      int64_t playPts = service.getStream (cDvbStream::eAudio).getPts();
+      // playerPts and draw framesGraphic
+      int64_t playerPts = service.getStream (cDvbStream::eAudio).getPts();
       if (service.getStream (cDvbStream::eAudio).isEnabled()) {
-        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
-        audio.setFrameMapSize (mAudioFrameMapSize);
-        playPts = audio.getPlayPts();
+        cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
+        audioRender.setFrameMapSize (mAudioFrameMapSize);
+        playerPts = audioRender.getPlayerPts();
 
-        mFramesGraphic.draw (audio, video, playPts);
+        mFramesGraphic.draw (audioRender, videoRender, playerPts);
         }
 
       // draw telly pic
-      cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
+      cVideoFrame* videoFrame = videoRender.getVideoFramePts (playerPts);
       if (videoFrame) {
-        cPoint videoSize = { video.getWidth(), video.getHeight() };
+        cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
         if (!mQuad)
           mQuad = graphics.createQuad (videoSize);
 
@@ -625,7 +628,7 @@ private:
             }
           }
 
-        video.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
+        videoRender.trimVideoBeforePts (playerPts - (mHistory * videoFrame->mPtsDuration));
         }
       }
     }
@@ -636,9 +639,9 @@ private:
     (void)graphics;
     (void)playPts;
 
-    cVideoRender& video = dynamic_cast<cVideoRender&>(render);
-    ImGui::TextUnformatted (video.getInfoString().c_str());
-    drawMiniLog (video.getLog());
+    cVideoRender& videoRender = dynamic_cast<cVideoRender&>(render);
+    ImGui::TextUnformatted (videoRender.getInfoString().c_str());
+    drawMiniLog (videoRender.getLog());
     }
   //}}}
   //{{{
@@ -646,22 +649,22 @@ private:
     (void)sid;
     (void)graphics;
 
-    cAudioRender& audio = dynamic_cast<cAudioRender&>(render);
-    ImGui::TextUnformatted (audio.getInfoString().c_str());
-    drawMiniLog (audio.getLog());
+    cAudioRender& audioRender = dynamic_cast<cAudioRender&>(render);
+    ImGui::TextUnformatted (audioRender.getInfoString().c_str());
+    drawMiniLog (audioRender.getLog());
     }
   //}}}
   //{{{
   void drawSubtitle (uint16_t sid, cRender& render, cGraphics& graphics) {
     (void)sid;
 
-    cSubtitleRender& subtitle = dynamic_cast<cSubtitleRender&>(render);
+    cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&>(render);
 
     const float potSize = ImGui::GetTextLineHeight() / 2.f;
     size_t line = 0;
-    while (line < subtitle.getNumLines()) {
+    while (line < subtitleRender.getNumLines()) {
       // draw subtitle line
-      cSubtitleImage& image = subtitle.getImage (line);
+      cSubtitleImage& image = subtitleRender.getImage (line);
 
       // draw clut color pots
       ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -673,7 +676,7 @@ private:
         }
       if (ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),
                                   {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
-        subtitle.toggleLog();
+        subtitleRender.toggleLog();
 
       // draw position
       ImGui::SameLine();
@@ -694,15 +697,15 @@ private:
       }
 
     //{{{  add dummy lines to highwaterMark to stop jiggling
-    while (line < subtitle.getHighWatermark()) {
+    while (line < subtitleRender.getHighWatermark()) {
       if (ImGui::InvisibleButton (fmt::format ("##line{}", line).c_str(),
                                   {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
-        subtitle.toggleLog();
+        subtitleRender.toggleLog();
       line++;
       }
     //}}}
 
-    drawMiniLog (subtitle.getLog());
+    drawMiniLog (subtitleRender.getLog());
     }
   //}}}
 

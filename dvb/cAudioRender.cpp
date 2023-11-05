@@ -36,6 +36,164 @@ constexpr bool kQueued = false;
 constexpr size_t kAudioFrameMapSize = 12;
 
 //{{{
+class cAudioPlayer {
+public:
+  #ifdef _WIN32
+    //{{{
+    cAudioPlayer (cAudioRender* audioRender, int64_t pts) {
+
+      mPts = pts;
+
+      mThread = thread ([=]() {
+        cLog::setThreadName ("play");
+        SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+
+        optional<cAudioDevice> audioDevice = getDefaultAudioOutputDevice();
+        if (audioDevice) {
+          cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", audioRender->getSampleRate());
+          audioDevice->setSampleRate (audioRender->getSampleRate());
+          audioDevice->start();
+
+          array <float,2048*2> samples = { 0.f };
+          array <float,2048*2> silence = { 0.f };
+          cAudioFrame* audioFrame;
+          while (!mExit) {
+            audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
+              // loadSrcSamples callback lambda
+
+              // locked audio mutex
+              shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
+              audioFrame = audioRender->getAudioFrameFromPts (mPts);
+              if (mPlaying && audioFrame) {
+                float* src = audioFrame->mSamples.data();
+                float* dst = samples.data();
+                if (audioFrame->mNumChannels == 1) {
+                  //{{{  mono to 2 channels
+                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                    *dst++ = *src;
+                    *dst++ = *src++;
+                    }
+                  }
+                  //}}}
+                else if (audioFrame->mNumChannels == 6) {
+                  //{{{  5.1 to 2 channels
+                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                    *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
+                    *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
+                    src += 6;
+                    }
+                  }
+                  //}}}
+                else
+                  memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
+                srcSamples = samples.data();
+                }
+              else
+                srcSamples = silence.data();
+              numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame());
+
+              if (mPlaying)
+                mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
+              });
+            }
+
+          audioDevice->stop();
+          }
+
+        mRunning = false;
+        cLog::log (LOGINFO, "exit");
+        });
+
+      mThread.detach();
+      }
+    //}}}
+  #else
+    //{{{
+    cAudioPlayer (cAudioRender* audioRender, int64_t pts) {
+
+      mPts = pts;
+
+      mThread = thread ([=]() { //,this
+        // lambda
+        cLog::setThreadName ("play");
+
+        // raise to max prioritu
+        sched_param sch_params;
+        sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
+        pthread_setschedparam (mThread.native_handle(), SCHED_RR, &sch_params);
+
+        cAudio audio (2, audioRender->getSampleRate(), 40000, false);
+
+        array <float,2048*2> samples = { 0.f };
+        array <float,2048*2> silence = { 0.f };
+
+        int64_t nextPts = pts;
+        cAudioFrame* audioFrame = nullptr;
+        while (!mExit) {
+          float* srcSamples = silence.data();
+            {
+            // locked mutex
+            shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
+            audioFrame = audioRender->getAudioFrameFromPts (nextPts);
+            if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
+              if (audioFrame->mNumChannels == 6) {
+                //{{{  5.1 to 2 channels
+                float* src = audioFrame->mSamples.data();
+                float* dst = samples.data();
+                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                  *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
+                  *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
+                  src += 6;
+                  }
+                }
+                //}}}
+              else
+                memcpy (samples.data(), audioFrame->mSamples.data(), audioFrame->mSamplesPerFrame * 8);
+              srcSamples = samples.data();
+              }
+            }
+
+          audio.play (2, srcSamples, audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame(), 1.f);
+          mPts = nextPts;
+          if (mPlaying)
+            nextPts = mPts + audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
+          }
+
+        mRunning = false;
+        cLog::log (LOGINFO, "exit");
+        });
+
+      mThread.detach();
+      }
+    //}}}
+  #endif
+
+  ~cAudioPlayer() = default;
+
+  bool isPlaying() const { return mPlaying; }
+  int64_t getPts() const { return mPts; }
+
+  void togglePlaying() { mPlaying = !mPlaying; }
+  void setPts (int64_t pts) { mPts = pts; }
+
+  void exit() { mExit = true; }
+  //{{{
+  void wait() {
+    while (mRunning)
+      this_thread::sleep_for (100ms);
+    }
+  //}}}
+
+private:
+  bool mPlaying = true;
+  bool mRunning = true;
+  bool mExit = false;
+
+  int64_t mPts = 0;
+  thread mThread;
+  };
+//}}}
+//{{{
 class cFFmpegAudioDecoder : public cDecoder {
 public:
   //{{{
@@ -137,164 +295,6 @@ private:
   };
 //}}}
 
-//{{{
-class cAudioPlayer {
-public:
-  #ifdef _WIN32
-    //{{{
-    cAudioPlayer (cAudioRender* audioRender, int64_t pts) {
-
-      mPts = pts;
-
-      mThread = thread ([=]() {
-        cLog::setThreadName ("play");
-        SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-
-        auto audioDevice = getDefaultAudioOutputDevice();
-        if (audioDevice) {
-          cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", audioRender->getSampleRate());
-          audioDevice->setSampleRate (audioRender->getSampleRate());
-          audioDevice->start();
-
-          array <float,2048*2> samples = { 0.f };
-          array <float,2048*2> silence = { 0.f };
-          cAudioFrame* audioFrame;
-          while (!mExit) {
-            audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
-              // loadSrcSamples callback lambda
-
-              // locked audio mutex
-              shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-              audioFrame = audioRender->getAudioFramePts (mPts);
-              if (mPlaying && audioFrame) {
-                float* src = audioFrame->mSamples.data();
-                float* dst = samples.data();
-                if (audioFrame->mNumChannels == 1) {
-                  //{{{  mono to 2 channels
-                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                    *dst++ = *src;
-                    *dst++ = *src++;
-                    }
-                  }
-                  //}}}
-                else if (audioFrame->mNumChannels == 6) {
-                  //{{{  5.1 to 2 channels
-                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                    *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
-                    *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
-                    src += 6;
-                    }
-                  }
-                  //}}}
-                else
-                  memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
-                srcSamples = samples.data();
-                }
-              else
-                srcSamples = silence.data();
-              numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame());
-
-              if (mPlaying)
-                mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
-              });
-            }
-
-          audioDevice->stop();
-          }
-
-        mRunning = false;
-        cLog::log (LOGINFO, "exit");
-        });
-
-      mThread.detach();
-      }
-    //}}}
-  #else
-    //{{{
-    cAudioPlayer (cAudioRender* audioRender, int64_t pts) {
-
-      mPts = pts;
-
-      mThread = thread ([=]() { //,this
-        // lambda
-        cLog::setThreadName ("play");
-
-        // raise to max prioritu
-        sched_param sch_params;
-        sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
-        pthread_setschedparam (mThread.native_handle(), SCHED_RR, &sch_params);
-
-        cAudio audioDevice (2, audioRender->getSampleRate(), 40000, false);
-
-        array <float,2048*2> samples = { 0.f };
-        array <float,2048*2> silence = { 0.f };
-        cAudioFrame* audioFrame;
-        while (!mExit) {
-          float* srcSamples = silence.data();
-            {
-            // locked mutex
-            shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-            audioFrame = audioRender->getAudioFramePts (mPts);
-            if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
-              if (audioFrame->mNumChannels == 6) {
-                //{{{  5.1 to 2 channels
-                float* src = audioFrame->mSamples.data();
-                float* dst = samples.data();
-                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                  *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
-                  *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
-                  src += 6;
-                  }
-                }
-                //}}}
-              else
-                memcpy (samples.data(), audioFrame->mSamples.data(), audioFrame->mSamplesPerFrame * 8);
-              srcSamples = samples.data();
-              }
-            }
-
-          audioDevice.play (2, srcSamples,
-                            audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame(), 1.f);
-
-          if (mPlaying)
-            mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
-          }
-
-        mRunning = false;
-        cLog::log (LOGINFO, "exit");
-        });
-
-      mThread.detach();
-      }
-    //}}}
-  #endif
-
-  ~cAudioPlayer() = default;
-
-  bool isPlaying() const { return mPlaying; }
-  int64_t getPts() const { return mPts; }
-
-  void togglePlaying() { mPlaying = !mPlaying; }
-  void setPts (int64_t pts) { mPts = pts; }
-
-  void exit() { mExit = true; }
-  //{{{
-  void wait() {
-    while (mRunning)
-      this_thread::sleep_for (100ms);
-    }
-  //}}}
-
-private:
-  bool mPlaying = true;
-  bool mRunning = true;
-  bool mExit = false;
-
-  int64_t mPts = 0;
-  thread mThread;
-  };
-//}}}
-
 // cAudioRender
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamTypeId, uint16_t decoderMask)
@@ -337,7 +337,7 @@ bool cAudioRender::isPlaying() const {
   }
 //}}}
 //{{{
-int64_t cAudioRender::getPlayPts() const {
+int64_t cAudioRender::getPlayerPts() const {
   return mPlayer ? mPlayer->getPts() : 0;
   }
 //}}}
@@ -356,7 +356,7 @@ void cAudioRender::setPlayPts (int64_t pts) {
 //}}}
 
 //{{{
-cAudioFrame* cAudioRender::getAudioFramePts (int64_t pts) {
+cAudioFrame* cAudioRender::getAudioFrameFromPts (int64_t pts) {
   return dynamic_cast<cAudioFrame*>(getFramePts (pts));
   }
 //}}}
@@ -410,7 +410,7 @@ bool cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
   // throttle on number of queued audioFrames
   while (mFrames.size() >= mFrameMapSize) {
     this_thread::sleep_for (1ms);
-    trimFramesBeforePts (getPlayPts());
+    trimFramesBeforePts (getPlayerPts());
     }
 
   return cRender::processPes (pes, pesSize, pts, dts, skip);
