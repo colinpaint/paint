@@ -240,9 +240,6 @@ cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
     return nullptr;
     }
 
-  //cLog::log (LOGINFO, fmt::format ("cVideoRender::getVideoFramePts {} dur:{} frames:{}",
-  //                                 utils::getPtsString (pts), mPtsDuration, mFrames.size()));
-
   // locked
   //shared_lock<shared_mutex> lock (mSharedMutex);
   return dynamic_cast<cVideoFrame*>(getFramePts (pts / mPtsDuration));
@@ -275,7 +272,7 @@ void cVideoRender::addFrame (cFrame* frame) {
   mPtsDuration = videoFrame->mPtsDuration;
   mWidth = videoFrame->mWidth;
   mHeight = videoFrame->mHeight;
-  mFrameInfo = videoFrame->getInfo();
+  mFrameInfo = videoFrame->getInfoString();
 
   cLog::log (LOGINFO1, fmt::format ("cVideoRender::addFrame {} size:{}x{}",
                                     utils::getPtsString (videoFrame->mPts), videoFrame->mWidth, videoFrame->mHeight));
@@ -287,8 +284,8 @@ void cVideoRender::addFrame (cFrame* frame) {
 
 // virtual
 //{{{
-string cVideoRender::getInfo() const {
-  return fmt::format ("{} qSize:{} frames:{:2d} freeFrames:{:2d} info:{}",
-                      mDecoder->getName(), getQueueSize(), mFrames.size(), mFreeFrames.size(), mFrameInfo);
+string cVideoRender::getInfoString() const {
+  return fmt::format ("frames:{:3d}:{:3d} {} qSize:{} took:{}",
+                      mFrames.size(), mFreeFrames.size(), mDecoder->getName(), getQueueSize(),  mFrameInfo);
   }
 //}}}

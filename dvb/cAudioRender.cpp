@@ -33,7 +33,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kQueued = true;
-constexpr size_t kAudioFrameMapSize = 6;
+constexpr size_t kAudioFrameMapSize = 12;
 
 //{{{
 class cFFmpegAudioDecoder : public cDecoder {
@@ -66,13 +66,14 @@ public:
                           function<cFrame* ()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final  {
     (void)dts;
+    AVPacket* avPacket = av_packet_alloc();
+    AVFrame* avFrame = av_frame_alloc();
+
     int64_t interpolatedPts = pts;
 
     // parse pesFrame, pes may have more than one frame
     uint8_t* pesPtr = pes;
     while (pesSize) {
-      AVPacket* avPacket = av_packet_alloc();
-      AVFrame* avFrame = av_frame_alloc();
       int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
                                         pesPtr, (int)pesSize, 0, 0, AV_NOPTS_VALUE);
       pesPtr += bytesUsed;
@@ -85,7 +86,10 @@ public:
             break;
 
           if (avFrame->nb_samples > 0) {
+            // alloc audioFrame callback
             cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(allocFrameCallback());
+
+            // fill it up
             audioFrame->mPts = interpolatedPts;
             audioFrame->mPtsDuration = avFrame->sample_rate ? (avFrame->nb_samples * 90000 / avFrame->sample_rate) : 48000;
             audioFrame->mPesSize = pesSize;
@@ -109,17 +113,19 @@ public:
               }
             audioFrame->calcPower();
 
+            // add Frame callback
             addFrameCallback (audioFrame);
+
+            // next pts
             interpolatedPts += audioFrame->mPtsDuration;
             }
           }
         }
-
       av_frame_unref (avFrame);
-      av_frame_free (&avFrame);
-      av_packet_free (&avPacket);
       }
 
+    av_frame_free (&avFrame);
+    av_packet_free (&avPacket);
     return interpolatedPts;
     }
   //}}}
@@ -130,6 +136,7 @@ private:
   AVCodecContext* mAvContext = nullptr;
   };
 //}}}
+
 //{{{
 class cAudioPlayer {
 public:
@@ -386,9 +393,9 @@ void cAudioRender::addFrame (cFrame* frame) {
 
 // virtual
 //{{{
-string cAudioRender::getInfo() const {
-  return fmt::format ("channels:{}x{}@{}k frames:{:2d} freeFrames::{:2d}",
-                      mNumChannels, mSamplesPerFrame, mSampleRate/1000, mFrames.size(), mFreeFrames.size());
+string cAudioRender::getInfoString() const {
+  return fmt::format ("frames:{:3d}:{:3d} channels:{}x{}@{}k",
+                      mFrames.size(), mFreeFrames.size(), mNumChannels, mSamplesPerFrame, mSampleRate/1000);
   }
 //}}}
 

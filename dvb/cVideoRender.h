@@ -28,7 +28,7 @@ public:
   void addFrame (cFrame* frame);
 
   // virtual
-  virtual std::string getInfo() const final;
+  virtual std::string getInfoString() const final;
 
 private:
   int64_t mPtsDuration = 90000 / 25;

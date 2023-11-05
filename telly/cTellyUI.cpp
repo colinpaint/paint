@@ -44,7 +44,7 @@ public:
     ImVec2 pos = {ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(),
                   ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - ImGui::GetTextLineHeight()};
 
-    drawPower (audio, playPts, pos);
+    drawAudioPower (audio, playPts, pos);
 
     pos.x -= ImGui::GetWindowWidth() / 2.f;
 
@@ -64,23 +64,23 @@ public:
         float offset1 = (videoFrame->mPts - playPts) * ptsScale;
         float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
 
-        // pesSize I white / P yellow / B green
+        // pesSize I white / P yellow / B green - ARGB color
         ImGui::GetWindowDrawList()->AddRectFilled (
           {pos.x + offset1, pos.y},
           {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
           (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
 
         // grey decodeTime
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x + offset1, pos.y},
-          {pos.x + offset2, pos.y - addValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, mVideoLines)},
-          0x60ffffff);
+        //ImGui::GetWindowDrawList()->AddRectFilled (
+        //  {pos.x + offset1, pos.y},
+        //  {pos.x + offset2, pos.y - addValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, mVideoLines)},
+        //  0x60ffffff);
 
         // magenta queueSize in trailing gap
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x + offset1, pos.y},
-          {pos.x + offset1 + 1.f, pos.y - addValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, mVideoLines - 1.f)},
-          0xffff00ff);
+        //ImGui::GetWindowDrawList()->AddRectFilled (
+        //  {pos.x + offset1, pos.y},
+        //  {pos.x + offset1 + 1.f, pos.y - addValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, mVideoLines - 1.f)},
+        //  0xffff00ff);
         }
         //}}}
       for (auto frame : video.getFreeFrames()) {
@@ -134,7 +134,7 @@ public:
 
 private:
   //{{{
-  void drawPower (cAudioRender& audio, int64_t playPts, ImVec2 pos) {
+  void drawAudioPower (cAudioRender& audio, int64_t playPts, ImVec2 pos) {
 
     cAudioFrame* audioFrame = audio.getAudioFramePts (playPts);
     if (audioFrame) {
@@ -330,8 +330,8 @@ public:
   //}}}
 
 private:
-  enum eTab { eTelly, eServices, ePids, eHistory, eRecorded };
-  inline static const vector<string> kTabNames = { "telly", "services", "pids", "history", "recorded" };
+  enum eTab { eTelly, eServices, ePids, eRecorded, eHistory };
+  inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded", "history"};
 
   //{{{
   void drawMainTelly (cDvbStream& dvbStream, cGraphics& graphics) {
@@ -340,19 +340,22 @@ private:
 
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
-      if (!service.getStream (cDvbStream::eVid).isEnabled())
+      if (!service.getStream (cDvbStream::eVideo).isEnabled())
         continue;
 
-      cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
+      cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
 
-      int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
-      if (service.getStream (cDvbStream::eAud).isEnabled()) {
-        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
+      // playPts and draw framesGraphic
+      int64_t playPts = service.getStream (cDvbStream::eAudio).getPts();
+      if (service.getStream (cDvbStream::eAudio).isEnabled()) {
+        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
         audio.setFrameMapSize (mAudioFrameMapSize);
         playPts = audio.getPlayPts();
+
         mFramesGraphic.draw (audio, video, playPts);
         }
 
+      // draw telly pic
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
       if (videoFrame) {
         cPoint videoSize = { video.getWidth(), video.getHeight() };
@@ -382,6 +385,7 @@ private:
             mQuad->draw();
             }
           }
+
         video.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
         }
       }
@@ -394,7 +398,7 @@ private:
     (void)playPts;
 
     cVideoRender& video = dynamic_cast<cVideoRender&>(render);
-    ImGui::TextUnformatted (video.getInfo().c_str());
+    ImGui::TextUnformatted (video.getInfoString().c_str());
     drawMiniLog (video.getLog());
     }
   //}}}
@@ -404,7 +408,7 @@ private:
     (void)graphics;
 
     cAudioRender& audio = dynamic_cast<cAudioRender&>(render);
-    ImGui::TextUnformatted (audio.getInfo().c_str());
+    ImGui::TextUnformatted (audio.getInfoString().c_str());
     drawMiniLog (audio.getLog());
     }
   //}}}
@@ -476,10 +480,10 @@ private:
       if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
         service.toggleAll (decoderOptions);
 
-      if (service.getStream (cDvbStream::eAud).isDefined()) {
+      if (service.getStream (cDvbStream::eAudio).isDefined()) {
         ImGui::SameLine();
         ImGui::TextUnformatted (fmt::format ("{}{}",
-          service.getStream (cDvbStream::eAud).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
+          service.getStream (cDvbStream::eAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
         //ImGui::TextUnformatted (fmt::format ("{} {}", audio.getInfo(), video.getInfo()).c_str());
         }
 
@@ -504,7 +508,7 @@ private:
       while (service.getProgramPid() > pow (10, mMaxPgmChars))
         mMaxPgmChars++;
 
-      for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
+      for (size_t streamType = cDvbStream::eVideo; streamType < cDvbStream::eLast; streamType++) {
         uint16_t pid = service.getStream (streamType).getPid();
         while (pid > pow (10, mPidMaxChars[streamType]))
           mPidMaxChars[streamType]++;
@@ -518,7 +522,7 @@ private:
                          service.getSid(), mMaxSidChars).c_str()))
         service.toggleAll (decoderOptions);
 
-      for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
+      for (size_t streamType = cDvbStream::eVideo; streamType < cDvbStream::eLast; streamType++) {
        // iterate definedStreams
         cDvbStream::cStream& stream = service.getStream (streamType);
         if (stream.isDefined()) {
@@ -542,18 +546,18 @@ private:
 
       // audio provides playPts
       int64_t playPts = 0;
-      if (service.getStream (cDvbStream::eAud).isEnabled())
-        playPts = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender()).getPlayPts();
+      if (service.getStream (cDvbStream::eAudio).isEnabled())
+        playPts = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender()).getPlayPts();
 
-      for (size_t streamType = cDvbStream::eVid; streamType < cDvbStream::eLast; streamType++) {
+      for (size_t streamType = cDvbStream::eVideo; streamType < cDvbStream::eLast; streamType++) {
         // iterate enabledStreams, drawing plots,logs,images
         cDvbStream::cStream& stream = service.getStream (streamType);
         if (stream.isEnabled()) {
           switch (streamType) {
-            case cDvbStream::eVid: drawVideo (service.getSid(), stream.getRender(), graphics, playPts); break;
-            case cDvbStream::eAud:
-            case cDvbStream::eAds: drawAudio (service.getSid(), stream.getRender(), graphics);  break;
-            case cDvbStream::eSub: drawSubtitle (service.getSid(), stream.getRender(), graphics);  break;
+            case cDvbStream::eVideo: drawVideo (service.getSid(), stream.getRender(), graphics, playPts); break;
+            case cDvbStream::eAudio:
+            case cDvbStream::eAudioDescription: drawAudio (service.getSid(), stream.getRender(), graphics);  break;
+            case cDvbStream::eSubtitle: drawSubtitle (service.getSid(), stream.getRender(), graphics);  break;
             default:;
             }
           }
@@ -622,21 +626,23 @@ private:
 
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
-      if (!service.getStream (cDvbStream::eVid).isEnabled())
+      if (!service.getStream (cDvbStream::eVideo).isEnabled())
         continue;
 
-      cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVid).getRender());
+      cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
       cPoint videoSize = {video.getWidth(), video.getHeight()};
 
-      // playPts and ucon
-      int64_t playPts = service.getStream (cDvbStream::eAud).getPts();
-      if (service.getStream (cDvbStream::eAud).isEnabled()) {
-        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAud).getRender());
+      // playPts and draw framesGraphic
+      int64_t playPts = service.getStream (cDvbStream::eAudio).getPts();
+      if (service.getStream (cDvbStream::eAudio).isEnabled()) {
+        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
         audio.setFrameMapSize (mAudioFrameMapSize);
         playPts = audio.getPlayPts();
+
         mFramesGraphic.draw (audio, video, playPts);
         }
 
+      // draw telly history pic
       cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
       if (videoFrame) {
         // form draw list
@@ -706,7 +712,7 @@ private:
   size_t mMaxSidChars = 3;
   size_t mMaxPgmChars = 3;
 
-  std::array <size_t, 4> mPidMaxChars = {3};
+  std::array <size_t, 4> mPidMaxChars = { 3 };
 
   int mPlotIndex = 0;
 
@@ -718,7 +724,7 @@ private:
   float mOverlap = 4.f;
   int mHistory = 0;
 
-  cFramesGraphic mFramesGraphic = {2.f,1.f, 4.f,6.f};
+  cFramesGraphic mFramesGraphic = { 2.f,1.f, 4.f,6.f };
   //}}}
   };
 

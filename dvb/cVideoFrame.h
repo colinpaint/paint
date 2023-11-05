@@ -24,11 +24,15 @@ public:
   //}}}
 
   //{{{
-  std::string getInfo() {
+  std::string getInfoString() {
 
-    std::string info = fmt::format ("{}x{} {:5} ", mWidth, mHeight, mPesSize);
-    for (auto time : mTimes)
-      info += fmt::format ("{}:", time);
+    std::string info = fmt::format ("{}x{} pesSize:{:5} ", mWidth, mHeight, mPesSize);
+
+    if (!mTimes.empty()) {
+      info += " times";
+      for (auto time : mTimes)
+        info += fmt::format (" {}", time);
+      }
 
     return info;
     }
@@ -42,7 +46,11 @@ public:
     }
   //}}}
 
-  void addTime (int64_t time) { mTimes.push_back (time); }
+  //{{{
+  void addTime (int64_t time) { 
+    mTimes.push_back (time); 
+    }
+  //}}}
   //{{{
   cTexture& getTexture (cGraphics& graphics) {
   // create and access texture for frame, release any intermeidate pixel data
