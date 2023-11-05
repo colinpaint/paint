@@ -18,6 +18,9 @@ public:
 
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
+  uint16_t getStrideY() const { return mStrideY; }
+  uint16_t getStrideUV() const { return mStrideUV; }
+
   int64_t getPtsDuration() const { return mPtsDuration; }
 
   cVideoFrame* getVideoFramePts (int64_t pts);
@@ -31,9 +34,12 @@ public:
   virtual std::string getInfoString() const final;
 
 private:
-  int64_t mPtsDuration = 90000 / 25;
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
+  uint16_t mStrideY = 0;
+  uint16_t mStrideUV = 0;
+
+  int64_t mPtsDuration = 90000 / 25;
 
   std::string mFrameInfo;
   };

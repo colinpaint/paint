@@ -34,9 +34,9 @@ using namespace std;
 //{{{
 class cFramesGraphic {
 public:
-  cFramesGraphic (float videoLines, float audioLines, float pixelsPerVideoFrame, float pixelsPerChannel)
+  cFramesGraphic (float videoLines, float audioLines, float pixelsPerVideoFrame, float pixelsPerAudioChannel)
     : mVideoLines(videoLines), mAudioLines(audioLines),
-      mPixelsPerVideoFrame(pixelsPerVideoFrame), mPixelsPerChannel(pixelsPerChannel) {}
+      mPixelsPerVideoFrame(pixelsPerVideoFrame), mPixelsPerAudioChannel(pixelsPerAudioChannel) {}
 
   //{{{
   void draw (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
@@ -143,31 +143,31 @@ private:
 
       if (audioFrame->mNumChannels == 6) {
         // 5.1
-        float x = pos.x - (5 * mPixelsPerChannel);
+        float x = pos.x - (5 * mPixelsPerAudioChannel);
 
         // draw channels reordered
         for (size_t i = 0; i < 5; i++) {
           ImGui::GetWindowDrawList()->AddRectFilled (
             {x, pos.y - (audioFrame->mPowerValues[kChannelOrder[i]] * height)},
-            {x + mPixelsPerChannel - 1.f, pos.y},
+            {x + mPixelsPerAudioChannel - 1.f, pos.y},
             0xff00ff00);
-          x += mPixelsPerChannel;
+          x += mPixelsPerAudioChannel;
           }
 
         // draw woofer as red
         ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x - (5 * mPixelsPerChannel), pos.y - (audioFrame->mPowerValues[kChannelOrder[5]] * height)},
+          {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[kChannelOrder[5]] * height)},
           {pos.x - 1.f, pos.y},
           0x800000ff);
         }
 
       else  {
         // other - draw channels left to right
-        float width = mPixelsPerChannel * audioFrame->mNumChannels;
+        float width = mPixelsPerAudioChannel * audioFrame->mNumChannels;
         for (size_t i = 0; i < audioFrame->mNumChannels; i++)
           ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x - width + (i * mPixelsPerChannel), pos.y - (audioFrame->mPowerValues[i] * height)},
-            {pos.x - width + ((i+1) * mPixelsPerChannel) - 1.f, pos.y},
+            {pos.x - width + (i * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[i] * height)},
+            {pos.x - width + ((i+1) * mPixelsPerAudioChannel) - 1.f, pos.y},
             0xff00ff00);
         }
       }
@@ -206,7 +206,7 @@ private:
   const float mVideoLines;
   const float mAudioLines;
   const float mPixelsPerVideoFrame;
-  const float mPixelsPerChannel;
+  const float mPixelsPerAudioChannel;
 
   float mMaxPower = 0.5f;
   float mMaxDisplayPower = 0.f;
@@ -719,12 +719,13 @@ private:
   cQuad* mQuad = nullptr;
   cTextureShader* mShader = nullptr;
 
-  int mAudioFrameMapSize = 6;
+  int mAudioFrameMapSize = 12;
+
   float mScale = 1.f;
   float mOverlap = 4.f;
   int mHistory = 0;
 
-  cFramesGraphic mFramesGraphic = { 2.f,1.f, 4.f,6.f };
+  cFramesGraphic mFramesGraphic = { 2.f,1.f, 6.f,6.f };
   //}}}
   };
 

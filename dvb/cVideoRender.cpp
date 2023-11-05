@@ -175,6 +175,8 @@ public:
           videoFrame->mPesSize = frameSize;
           videoFrame->mWidth = static_cast<uint16_t>(avFrame->width);
           videoFrame->mHeight = static_cast<uint16_t>(avFrame->height);
+          videoFrame->mStrideY = static_cast<uint16_t>(avFrame->height);
+          videoFrame->mStrideUV = static_cast<uint16_t>(avFrame->height);
           videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
 
           // transfer avFrame to videoFrame, addFrame, alloc new avFrame
@@ -269,9 +271,12 @@ void cVideoRender::addFrame (cFrame* frame) {
   videoFrame->mQueueSize = getQueueSize();
   videoFrame->mTextureDirty = true;
 
-  mPtsDuration = videoFrame->mPtsDuration;
   mWidth = videoFrame->mWidth;
   mHeight = videoFrame->mHeight;
+  mStrideY = videoFrame->mStrideY;
+  mStrideUV = videoFrame->mStrideUV;
+
+  mPtsDuration = videoFrame->mPtsDuration;
   mFrameInfo = videoFrame->getInfoString();
 
   cLog::log (LOGINFO1, fmt::format ("cVideoRender::addFrame {} size:{}x{}",

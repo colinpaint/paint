@@ -26,7 +26,7 @@ public:
   //{{{
   std::string getInfoString() {
 
-    std::string info = fmt::format ("{}x{} pesSize:{:5} ", mWidth, mHeight, mPesSize);
+    std::string info = fmt::format ("- videoFrame {}x{} pesSize:{:5} ", mWidth, mHeight, mPesSize);
 
     if (!mTimes.empty()) {
       info += " took";
@@ -75,6 +75,9 @@ public:
 
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
+  uint16_t mStrideY = 0;
+  uint16_t mStrideUV = 0;
+
   char mFrameType = '?';
 
   size_t mQueueSize = 0;
