@@ -29,7 +29,7 @@ public:
     std::string info = fmt::format ("{}x{} pesSize:{:5} ", mWidth, mHeight, mPesSize);
 
     if (!mTimes.empty()) {
-      info += " times";
+      info += " took";
       for (auto time : mTimes)
         info += fmt::format (" {}", time);
       }
@@ -47,8 +47,8 @@ public:
   //}}}
 
   //{{{
-  void addTime (int64_t time) { 
-    mTimes.push_back (time); 
+  void addTime (int64_t time) {
+    mTimes.push_back (time);
     }
   //}}}
   //{{{

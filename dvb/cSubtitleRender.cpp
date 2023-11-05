@@ -966,6 +966,6 @@ void cSubtitleRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cSubtitleRender::getInfoString() const {
-  return "subtitle info";
+  return "subtitleInfo";
   }
 //}}}

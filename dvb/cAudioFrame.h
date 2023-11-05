@@ -27,15 +27,15 @@ public:
   //{{{
   void calcPower() {
 
+    // init
     for (size_t channel = 0; channel < mNumChannels; channel++) {
-      // init
       mPeakValues[channel] = 0.f;
       mPowerValues[channel] = 0.f;
       }
 
+    // acumulate
     float* samplePtr = mSamples.data();
     for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
-      // acumulate
       for (size_t channel = 0; channel < mNumChannels; channel++) {
         float value = *samplePtr++;
         mPeakValues[channel] = std::max (abs(mPeakValues[channel]), value);
@@ -43,6 +43,7 @@ public:
         }
       }
 
+    // normalise
     for (size_t channel = 0; channel < mNumChannels; channel++)
       mPowerValues[channel] = sqrtf (mPowerValues[channel] / mSamplesPerFrame);
     }

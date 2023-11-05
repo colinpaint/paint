@@ -88,7 +88,7 @@ cFrame* cRender::getYoungestFrame() {
 void cRender::trimFramesBeforePts (int64_t pts) {
 // remove frames before pts, release any temp resources
 
-  // quick unlocked test
+  // quick test, unlocked
   if (mFrames.empty())
     return;
 

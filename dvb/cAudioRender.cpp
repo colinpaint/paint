@@ -219,7 +219,11 @@ public:
         // lambda
         cLog::setThreadName ("play");
 
-        // audio16 player thread
+        // raise to max prioritu
+        sched_param sch_params;
+        sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
+        pthread_setschedparam (mThread.native_handle(), SCHED_RR, &sch_params);
+
         cAudio audioDevice (2, audioRender->getSampleRate(), 40000, false);
 
         array <float,2048*2> samples = { 0.f };
@@ -227,7 +231,6 @@ public:
         cAudioFrame* audioFrame;
         while (!mExit) {
           float* srcSamples = silence.data();
-
             {
             // locked mutex
             shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
@@ -261,10 +264,6 @@ public:
         cLog::log (LOGINFO, "exit");
         });
 
-      // raise to max prioritu
-      sched_param sch_params;
-      sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
-      pthread_setschedparam (mThread.native_handle(), SCHED_RR, &sch_params);
       mThread.detach();
       }
     //}}}
@@ -381,8 +380,8 @@ void cAudioRender::addFrame (cFrame* frame) {
   logValue (audioFrame->mPts, audioFrame->mPowerValues[0]);
 
   { // locked emplace
-  unique_lock<shared_mutex> lock (mSharedMutex);
-  mFrames.emplace (audioFrame->mPts, audioFrame);
+    unique_lock<shared_mutex> lock (mSharedMutex);
+    mFrames.emplace (audioFrame->mPts, audioFrame);
   }
 
   // start player
@@ -394,8 +393,9 @@ void cAudioRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cAudioRender::getInfoString() const {
-  return fmt::format ("frames:{:3d}:{:3d} channels:{}x{}@{}k",
-                      mFrames.size(), mFreeFrames.size(), mNumChannels, mSamplesPerFrame, mSampleRate/1000);
+  return fmt::format ("audio frames:{:3d}:{:3d} {}x{}@{}k",
+                      mFrames.size(), mFreeFrames.size(),
+                      mNumChannels, mSamplesPerFrame, mSampleRate/1000);
   }
 //}}}
 

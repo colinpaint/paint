@@ -285,7 +285,7 @@ void cVideoRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cVideoRender::getInfoString() const {
-  return fmt::format ("frames:{:3d}:{:3d} {} qSize:{} took:{}",
+  return fmt::format ("video frames:{:3d}:{:3d} {} qSize:{} {}",
                       mFrames.size(), mFreeFrames.size(), mDecoder->getName(), getQueueSize(),  mFrameInfo);
   }
 //}}}
