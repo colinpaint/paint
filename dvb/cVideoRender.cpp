@@ -122,10 +122,10 @@ public:
                           function<cFrame*()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
 
-    cLog::log (LOGINFO1, fmt::format ("cVideoRender::decode {} pts:{} dts:{} pesSize:{}",
-                                      mH264 ? "h264" : "mpeg2",
-                                      utils::getPtsString (pts), utils::getPtsString (dts),
-                                      pesSize));
+    cLog::log (LOGINFO, fmt::format ("cVideoRender::decode {} pts:{} dts:{} pesSize:{}",
+                                     mH264 ? "h264" : "mpeg2",
+                                     utils::getPtsString (pts), utils::getPtsString (dts),
+                                     pesSize));
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
 
@@ -141,6 +141,8 @@ public:
           ret = avcodec_receive_frame (mAvContext, avFrame);
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
+
+          cDvbUtils::getFrameType (frame, frameSize, mH264);
 
           char frameType = '?';
           if (avFrame->pict_type == AV_PICTURE_TYPE_I)
@@ -231,8 +233,8 @@ cVideoRender::~cVideoRender() {
     delete frame.second;
   mFrames.clear();
 
-  for (auto& frame : mFrames)
-    delete frame.second;
+  for (auto& frame : mFreeFrames)
+    delete frame;
   mFreeFrames.clear();
   }
 //}}}

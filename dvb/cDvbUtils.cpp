@@ -5936,7 +5936,6 @@ std::string cDvbUtils::getStreamTypeName (uint16_t streamType) {
      }
   }
 //}}}
-
 //{{{
 char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
 // return frameType of video pes
@@ -6169,7 +6168,6 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
   //}}}
 
   uint8_t* pesEnd = pes + pesSize;
-
   if (h264) {
     //{{{  h264 minimal parser, broken for newer streams
     while (pes < pesEnd) {
@@ -6189,7 +6187,7 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
           }
         }
 
-      // find next start code
+      // find next startCode
       uint32_t offset = startOffset;
       uint32_t nalSize = offset;
       uint32_t val = 0xffffffff;
@@ -6215,25 +6213,69 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
         bitstream.getBits (2);
 
         int nalType = bitstream.getBits (5);
-        cLog::log (LOGINFO, fmt::format ("DvbUtils::getFrameType nalType:{} nalSize:{}", nalType, nalSize));
         switch (nalType) {
-          case 1:
-          case 5:
+          //{{{
+          case 1: {
             bitstream.getUe();
             int nalSubtype = bitstream.getUe();
-            cLog::log (LOGINFO, fmt::format (" - nalSubtype:{}", nalSubtype));
+
+            char frameType = '?';
             switch (nalSubtype) {
-              case 5: return 'P';
-              case 6: return 'B';
-              case 7: return 'I';
-              default:return '?';
+              case 0:  frameType = 'B'; break;
+              case 1:  frameType = 'P'; break;
+              case 2:  frameType = 'I'; break;
               }
+
+            cLog::log (LOGINFO, fmt::format ("nal:1:{}:{}", nalSubtype, frameType));
             break;
-          //case 6: cLog::log(LOGINFO, ("SEI"); break;
-          //case 7: cLog::log(LOGINFO, ("SPS"); break;
-          //case 8: cLog::log(LOGINFO, ("PPS"); break;
-          //case 9: cLog::log(LOGINFO,  ("AUD"); break;
-          //case 0x0d: cLog::log(LOGINFO, ("SEQEXT"); break;
+            }
+          //}}}
+          //{{{
+          case 5: {
+            bitstream.getUe();
+            int nalSubtype = bitstream.getUe();
+
+            char frameType = '?';
+            switch (nalSubtype) {
+              case 2:  frameType = 'B'; break;
+              case 5:  frameType = 'P'; break;
+              case 6:  frameType = 'B'; break;
+              case 7:  frameType = 'I'; break;
+              }
+
+            cLog::log (LOGINFO, fmt::format ("nal:5:{}:{}", nalSubtype, frameType));
+            break;
+            }
+          //}}}
+          //{{{
+          case 6:
+            cLog::log (LOGINFO, "nal SEI");
+            break;
+          //}}}
+          //{{{
+          case 7:
+            cLog::log (LOGINFO, "nal SPS");
+            break;
+          //}}}
+          //{{{
+          case 8:
+            cLog::log (LOGINFO, "nal PPS");
+            break;
+          //}}}
+          //{{{
+          case 9:
+            cLog::log (LOGINFO,  "nal AUD");
+            break;
+          //}}}
+          //{{{
+          case 14:
+            cLog::log (LOGINFO, "nal SEQEXT");
+            break;
+          //}}}
+          //{{{
+          default:
+            cLog::log (LOGINFO, fmt::format ("DvbUtils::getFrameType - unused nalType:{} size:{}", nalType, nalSize));
+          //}}}
           }
         }
 

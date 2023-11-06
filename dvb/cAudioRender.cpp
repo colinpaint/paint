@@ -156,7 +156,7 @@ public:
           audio.play (2, srcSamples, audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame(), 1.f);
           mPts = nextPts;
           if (mPlaying)
-            nextPts = mPts + audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
+            nextPts = mPts + (audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration());
           }
 
         mRunning = false;
@@ -198,9 +198,11 @@ class cFFmpegAudioDecoder : public cDecoder {
 public:
   //{{{
   cFFmpegAudioDecoder (uint8_t streamTypeId) : cDecoder(),
-    mAvCodec (avcodec_find_decoder ((streamTypeId == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder stream:{}", streamTypeId));
+    mAvCodec (avcodec_find_decoder ((streamTypeId == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
+    mStreamTypeName = (streamTypeId == 17) ? "aacLatm" : "mp3";
+
+    cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder stream:{}:{}", streamTypeId, mStreamTypeName));
 
     // aacAdts AV_CODEC_ID_AAC;
     mAvParser = av_parser_init ((streamTypeId == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
@@ -218,7 +220,7 @@ public:
     }
   //}}}
 
-  virtual string getName() const final { return "ffmpeg"; }
+  virtual string getName() const final { return mStreamTypeName; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<cFrame* ()> allocFrameCallback,
@@ -292,6 +294,8 @@ private:
   const AVCodec* mAvCodec = nullptr;
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;
+
+  string mStreamTypeName;
   };
 //}}}
 
@@ -325,8 +329,8 @@ cAudioRender::~cAudioRender() {
     delete (frame.second);
   mFrames.clear();
 
-  for (auto& frame : mFrames)
-    delete frame.second;
+  for (auto& frame : mFreeFrames)
+    delete frame;
   mFreeFrames.clear();
   }
 //}}}
@@ -398,8 +402,8 @@ void cAudioRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cAudioRender::getInfoString() const {
-  return fmt::format ("audio frames:{:3d}:{:3d} {}x{}@{}k",
-                      mFrames.size(), mFreeFrames.size(),
+  return fmt::format ("audio frames:{:3d}:{:3d} {} {}x{}@{}k",
+                      mFrames.size(), mFreeFrames.size(), mDecoder->getName(),
                       mNumChannels, mSamplesPerFrame, mSampleRate/1000);
   }
 //}}}
