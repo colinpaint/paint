@@ -32,6 +32,7 @@ extern "C" {
 
 using namespace std;
 //}}}
+
 constexpr bool kQueued = false;
 constexpr size_t kAudioFrameMapSize = 12;
 
@@ -92,6 +93,7 @@ public:
                 srcSamples = silence.data();
               numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame());
 
+              mPlayPts = mPts;
               if (mPlaying)
                 mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
               });
@@ -112,6 +114,7 @@ public:
     cAudioPlayer (cAudioRender* audioRender, int64_t pts) {
 
       mPts = pts;
+      mPlayPts = pts;
 
       mThread = thread ([=]() { //,this
         // lambda
@@ -127,14 +130,13 @@ public:
         array <float,2048*2> samples = { 0.f };
         array <float,2048*2> silence = { 0.f };
 
-        int64_t nextPts = pts;
         cAudioFrame* audioFrame = nullptr;
         while (!mExit) {
           float* srcSamples = silence.data();
             {
             // locked mutex
             shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-            audioFrame = audioRender->getAudioFrameFromPts (nextPts);
+            audioFrame = audioRender->getAudioFrameFromPts (mPts);
             if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
               if (audioFrame->mNumChannels == 6) {
                 //{{{  5.1 to 2 channels
@@ -154,9 +156,13 @@ public:
             }
 
           audio.play (2, srcSamples, audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame(), 1.f);
-          mPts = nextPts;
-          if (mPlaying)
-            nextPts = mPts + (audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration());
+
+          if (mPlaying) {
+            mPlayPts = mPts - (2 * (audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration()));
+            mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
+            }
+          else
+            mPlayPts = mPts;
           }
 
         mRunning = false;
@@ -171,9 +177,9 @@ public:
   ~cAudioPlayer() = default;
 
   bool isPlaying() const { return mPlaying; }
-  int64_t getPts() const { return mPts; }
-
   void togglePlaying() { mPlaying = !mPlaying; }
+
+  int64_t getPts() const { return mPlayPts; }
   void setPts (int64_t pts) { mPts = pts; }
 
   void exit() { mExit = true; }
@@ -190,6 +196,7 @@ private:
   bool mExit = false;
 
   int64_t mPts = 0;
+  int64_t mPlayPts = 0;
   thread mThread;
   };
 //}}}
@@ -197,15 +204,15 @@ private:
 class cFFmpegAudioDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegAudioDecoder (uint8_t streamTypeId) : cDecoder(),
+  cFFmpegAudioDecoder (uint8_t streamType) : cDecoder(),
 
-    mAvCodec (avcodec_find_decoder ((streamTypeId == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
-    mStreamTypeName = (streamTypeId == 17) ? "aacLatm" : "mp3";
+    mAvCodec (avcodec_find_decoder ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
+    mStreamTypeName = (streamType == 17) ? "aacLatm" : "mp3";
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder stream:{}:{}", streamTypeId, mStreamTypeName));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder stream:{}:{}", streamType, mStreamTypeName));
 
     // aacAdts AV_CODEC_ID_AAC;
-    mAvParser = av_parser_init ((streamTypeId == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
+    mAvParser = av_parser_init ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }
@@ -301,14 +308,14 @@ private:
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const string& name, uint8_t streamTypeId, uint16_t decoderMask)
-    : cRender(kQueued, name + "aud", streamTypeId, decoderMask, kAudioFrameMapSize) {
+cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t decoderMask)
+    : cRender(kQueued, name + "aud", streamType, decoderMask, kAudioFrameMapSize) {
 
   mNumChannels = 2;
   mSampleRate = 48000;
   mSamplesPerFrame = 1024;
 
-  mDecoder = new cFFmpegAudioDecoder (streamTypeId);
+  mDecoder = new cFFmpegAudioDecoder (streamType);
 
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });

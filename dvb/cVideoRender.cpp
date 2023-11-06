@@ -51,7 +51,6 @@ using namespace std;
 constexpr bool kQueued = true;
 constexpr uint32_t kVideoFrameMapSize = 30;
 
-// cFrame derived classes
 //{{{
 class cFFmpegVideoFrame : public cVideoFrame {
 public:
@@ -83,26 +82,24 @@ private:
   AVFrame* mAvFrame = nullptr;
   };
 //}}}
-
-// cDecoder derived classes
 //{{{
-class cFFmpegDecoder : public cDecoder {
+class cFFmpegVideoDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegDecoder (uint8_t streamTypeId)
-     : cDecoder(), mH264 (streamTypeId == 27),
-       mAvCodec (avcodec_find_decoder ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
+  cFFmpegVideoDecoder (uint8_t streamType)
+     : cDecoder(), mH264 (streamType == 27),
+       mAvCodec (avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegDecoder with streamTypeId:{}",
-                                     streamTypeId, streamTypeId == 27 ? "h264" : "mpeg2"));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder with streamType:{}",
+                                     streamType, streamType == 27 ? "h264" : "mpeg2"));
 
-    mAvParser = av_parser_init ((streamTypeId == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
+    mAvParser = av_parser_init ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }
   //}}}
   //{{{
-  virtual ~cFFmpegDecoder() {
+  virtual ~cFFmpegVideoDecoder() {
 
     if (mAvContext)
       avcodec_close (mAvContext);
@@ -122,10 +119,6 @@ public:
                           function<cFrame*()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
 
-    cLog::log (LOGINFO, fmt::format ("cVideoRender::decode {} pts:{} dts:{} pesSize:{}",
-                                     mH264 ? "h264" : "mpeg2",
-                                     utils::getPtsString (pts), utils::getPtsString (dts),
-                                     pesSize));
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
 
@@ -142,48 +135,37 @@ public:
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
 
-          cDvbUtils::getFrameType (frame, frameSize, mH264);
-
-          char frameType = '?';
-          if (avFrame->pict_type == AV_PICTURE_TYPE_I)
-            frameType = 'I';
-          else if (avFrame->pict_type == AV_PICTURE_TYPE_P)
-            frameType = 'P';
-          else if (avFrame->pict_type == AV_PICTURE_TYPE_B)
-             frameType = 'B';
-
+          char frameType = cDvbUtils::getFrameType (frame, frameSize, mH264);
+          cLog::log (LOGINFO, fmt::format ("videoDecode {} pts:{} ipts:{} dts:{} {} pesSize:{}",
+                                           frameType,
+                                           utils::getPtsString (pts), utils::getPtsString (mInterpolatedPts), utils::getPtsString (dts),
+                                           mH264 ? "h264" : "mpeg2",  pesSize));
           if (frameType == 'I') {
-            //{{{  pts seems wrong, frames decode in presentation order, only correct on Iframe
+            // pts seems wrong, frames decode in presentation order, only correct on Iframe
             if ((mInterpolatedPts != -1) && (mInterpolatedPts != dts))
               cLog::log (LOGERROR, fmt::format ("- lost:{} pts:{} dts:{} size:{}",
                                                 frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize));
             mInterpolatedPts = dts;
             mGotIframe = true;
             }
-            //}}}
-          if (!mGotIframe) {
-            //{{{  skip until first Iframe
-            cLog::log (LOGINFO, fmt::format ("skip:{} pts:{} dts:{} size:{}",
-                                             frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize));
+          if (!mGotIframe)
             return pts;
-            }
-            //}}}
 
           // allocFrame
           cFFmpegVideoFrame* videoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
-          videoFrame->mFrameType = frameType;
+
           videoFrame->mPts = mInterpolatedPts;
           videoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
           videoFrame->mPesSize = frameSize;
+          videoFrame->mFrameType = frameType;
           videoFrame->mWidth = static_cast<uint16_t>(avFrame->width);
           videoFrame->mHeight = static_cast<uint16_t>(avFrame->height);
           videoFrame->mStrideY = static_cast<uint16_t>(avFrame->height);
           videoFrame->mStrideUV = static_cast<uint16_t>(avFrame->height);
           videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
-
-          // transfer avFrame to videoFrame, addFrame, alloc new avFrame
           videoFrame->setAVFrame (avFrame);
           addFrameCallback (videoFrame);
+
           avFrame = av_frame_alloc();
 
           mInterpolatedPts += videoFrame->mPtsDuration;
@@ -216,10 +198,10 @@ private:
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const string& name, uint8_t streamTypeId, uint16_t decoderMask)
-    : cRender(kQueued, name + "vid", streamTypeId, decoderMask, kVideoFrameMapSize) {
+cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t decoderMask)
+    : cRender(kQueued, name + "vid", streamType, decoderMask, kVideoFrameMapSize) {
 
-  mDecoder = new cFFmpegDecoder (streamTypeId);
+  mDecoder = new cFFmpegVideoDecoder (streamType);
   setAllocFrameCallback ([&]() noexcept { return getFFmpegFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }
@@ -245,8 +227,8 @@ cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
 
   // quick unlocked test
   if (mFrames.empty() || !mPtsDuration) {
-    cLog::log (LOGERROR, fmt::format ("cVideoRender::getVideoFramePts failed {} dur:{} frames:{}",
-                                      utils::getPtsString (pts), mPtsDuration, mFrames.size()));
+    //cLog::log (LOGERROR, fmt::format ("cVideoRender::getVideoFramePts failed {} dur:{} frames:{}",
+    //                                  utils::getPtsString (pts), mPtsDuration, mFrames.size()));
     return nullptr;
     }
 
@@ -289,9 +271,10 @@ void cVideoRender::addFrame (cFrame* frame) {
 
   cLog::log (LOGINFO1, fmt::format ("cVideoRender::addFrame {} size:{}x{}",
                                     utils::getPtsString (videoFrame->mPts), videoFrame->mWidth, videoFrame->mHeight));
-  // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-  mFrames.emplace (videoFrame->mPts / videoFrame->mPtsDuration, videoFrame);
+    { // locked
+    unique_lock<shared_mutex> lock (mSharedMutex);
+    mFrames.emplace (videoFrame->mPts / videoFrame->mPtsDuration, videoFrame);
+    }
   }
 //}}}
 

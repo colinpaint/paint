@@ -16,6 +16,7 @@ using namespace fmt;
 //}}}
 
 namespace { // anonymous
+  constexpr bool kDebug = false;
   //{{{  const
   #define START   '\0'
   #define STOP    '\0'
@@ -6167,9 +6168,10 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
     };
   //}}}
 
+  char frameType = '?';
   uint8_t* pesEnd = pes + pesSize;
   if (h264) {
-    //{{{  h264 minimal parser, broken for newer streams
+    // h264 minimal parser, broken for newer streams
     while (pes < pesEnd) {
       //{{{  skip past startcode, find next startcode
       uint8_t* buf = pes;
@@ -6205,7 +6207,6 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
         nalSize = (uint32_t)bufSize;
         }
       //}}}
-
       if (nalSize > 3) {
         // parse NAL bitStream
         cBitstream bitstream (buf, (nalSize - startOffset) * 8);
@@ -6218,63 +6219,136 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
           case 1: {
             bitstream.getUe();
             int nalSubtype = bitstream.getUe();
+            if (kDebug)
+              cLog::log (LOGINFO, fmt::format ("nal:nonIdr:{}", nalSubtype));
 
-            char frameType = '?';
             switch (nalSubtype) {
-              case 0:  frameType = 'B'; break;
-              case 1:  frameType = 'P'; break;
-              case 2:  frameType = 'I'; break;
+              case 0:  return 'P';
+              case 1:  return 'B';
+              case 2:  return 'I';
+              default: return '?';
               }
 
-            cLog::log (LOGINFO, fmt::format ("nal:1:{}:{}", nalSubtype, frameType));
             break;
             }
+          //}}}
+          //{{{
+          case 2:
+            if (kDebug)
+              cLog::log (LOGINFO, "nal partA");
+            break;
+          //}}}
+          //{{{
+          case 3:
+            if (kDebug)
+              cLog::log (LOGINFO, "nal partB");
+            break;
+          //}}}
+          //{{{
+          case 4:
+            if (kDebug)
+              cLog::log (LOGINFO, "nal partC");
+            break;
           //}}}
           //{{{
           case 5: {
             bitstream.getUe();
             int nalSubtype = bitstream.getUe();
 
-            char frameType = '?';
+            if (kDebug)
+              cLog::log (LOGINFO, fmt::format ("nal:IDR:{}", nalSubtype));
             switch (nalSubtype) {
-              case 2:  frameType = 'B'; break;
-              case 5:  frameType = 'P'; break;
-              case 6:  frameType = 'B'; break;
-              case 7:  frameType = 'I'; break;
+              case 2:  return 'B';
+              case 5:  return 'P';
+              case 6:  return 'B';
+              case 7:  return 'I';
+              default: return '?';
               }
 
-            cLog::log (LOGINFO, fmt::format ("nal:5:{}:{}", nalSubtype, frameType));
             break;
             }
           //}}}
           //{{{
           case 6:
-            cLog::log (LOGINFO, "nal SEI");
+            if (kDebug)
+              cLog::log (LOGINFO, "nal SEI");
             break;
           //}}}
           //{{{
           case 7:
-            cLog::log (LOGINFO, "nal SPS");
+            if (kDebug)
+              cLog::log (LOGINFO, "nal SPS");
             break;
           //}}}
           //{{{
           case 8:
-            cLog::log (LOGINFO, "nal PPS");
+            if (kDebug)
+              cLog::log (LOGINFO, "nal PPS");
             break;
           //}}}
           //{{{
           case 9:
-            cLog::log (LOGINFO,  "nal AUD");
+            if (kDebug)
+              cLog::log (LOGINFO,  "nal AUD");
+            break;
+          //}}}
+          //{{{
+          case 10:
+            if (kDebug)
+              cLog::log (LOGINFO,  "nal EOseq");
+            break;
+          //}}}
+          //{{{
+          case 11:
+            if (kDebug)
+              cLog::log (LOGINFO,  "nal EOstream");
+            break;
+          //}}}
+          //{{{
+          case 12:
+            if (kDebug)
+              cLog::log (LOGINFO,  "nal filler");
+            break;
+          //}}}
+          //{{{
+          case 13:
+            if (kDebug)
+              cLog::log (LOGINFO,  "nal seqExt");
             break;
           //}}}
           //{{{
           case 14:
-            cLog::log (LOGINFO, "nal SEQEXT");
+            if (kDebug)
+              cLog::log (LOGINFO, "nal prefix");
+            break;
+          //}}}
+          //{{{
+          case 15:
+            if (kDebug)
+              cLog::log (LOGINFO, "nal subsetSPS");
+            break;
+          //}}}
+          //{{{
+          case 19:
+            if (kDebug)
+              cLog::log (LOGINFO, "nal aux");
+            break;
+          //}}}
+          //{{{
+          case 20:
+            if (kDebug)
+              cLog::log (LOGINFO, "nal sliceExt");
+            break;
+          //}}}
+          //{{{
+          case 21:
+            if (kDebug)
+              cLog::log (LOGINFO, "nal sliceExtDepth");
             break;
           //}}}
           //{{{
           default:
-            cLog::log (LOGINFO, fmt::format ("DvbUtils::getFrameType - unused nalType:{} size:{}", nalType, nalSize));
+            cLog::log (LOGINFO, fmt::format ("DvbUtils::getFrameType - unknown nalType:{} size:{}", nalType, nalSize));
           //}}}
           }
         }
@@ -6282,9 +6356,8 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
       pes += nalSize;
       }
     }
-    //}}}
   else {
-    //{{{  mpeg2 minimal parser
+    // mpeg2 minimal parser
     while (pes + 6 < pesEnd) {
       // look for pictureHeader 00000100
       if (!pes[0] && !pes[1] && (pes[2] == 0x01) && !pes[3])
@@ -6298,9 +6371,8 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
       pes++;
       }
     }
-    //}}}
 
-  return '?';
+  return frameType;
   }
 //}}}
 
