@@ -15,9 +15,8 @@ public:
   static uint32_t getBcdTime (uint8_t* buf);
   static int64_t getPts (const uint8_t* buf);
 
-  static bool isHuff (uint8_t* buf);
-  static std::string getString (uint8_t* buf);
-
   static std::string getStreamTypeName (uint16_t streamType);
   static char getFrameType (uint8_t* pes, int64_t pesSize, bool h264);
+
+  static std::string getDvbString (uint8_t* buf);
   };

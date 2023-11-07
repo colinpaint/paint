@@ -478,7 +478,7 @@ public:
             switch (tag) {
               //{{{
               case 0x48: // service
-                mCallback (sid, cDvbUtils::getString (ts+4));
+                mCallback (sid, cDvbUtils::getDvbString (ts+4));
                 break;
               //}}}
               //{{{
@@ -615,7 +615,7 @@ public:
                 bool now = (tid == 0x4E) && (running == 0x04);
                 bool epg = (tid == 0x50) || (tid == 0x51);
                 if (now || epg) {
-                  cDvbEpgItem dvbEpgItem (cDvbUtils::getString (ts+5), startTime, duration);
+                  cDvbEpgItem dvbEpgItem (cDvbUtils::getDvbString (ts+5), startTime, duration);
                   mCallback (sid, now, dvbEpgItem);
                   }
                 }

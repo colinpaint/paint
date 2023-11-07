@@ -12,7 +12,6 @@
 #include "fmt/format.h"
 
 using namespace std;
-using namespace fmt;
 //}}}
 
 namespace { // anonymous

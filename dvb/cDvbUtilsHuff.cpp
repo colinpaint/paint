@@ -12,7 +12,6 @@
 #include "fmt/format.h"
 
 using namespace std;
-using namespace fmt;
 //}}}
 
 namespace { // anonymous
@@ -5822,16 +5821,16 @@ namespace { // anonymous
     return decodedString;
     }
   //}}}
+  //{{{
+  bool isHuff (uint8_t* buf) {
+
+    return (buf[0] == 0x1F) && (buf[1] == 1 || buf[1] == 2);
+    }
+  //}}}
   }
 
 //{{{
-bool cDvbUtils::isHuff (uint8_t* buf) {
-
-  return (buf[0] == 0x1F) && (buf[1] == 1 || buf[1] == 2);
-  }
-//}}}
-//{{{
-string cDvbUtils::getString (uint8_t* buf) {
+string cDvbUtils::getDvbString (uint8_t* buf) {
 
   if (isHuff (buf+1))
     return huffDecode (buf+1, buf[0]);

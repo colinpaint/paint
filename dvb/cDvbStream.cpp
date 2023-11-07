@@ -1054,8 +1054,8 @@ void cDvbStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
         switch (getDescrTag (buf)) {
           case DESCR_SERVICE: {
             //{{{  service
-            string name = cDvbUtils::getString (buf + sizeof(descrService) +
-                                                ((descrService*)buf)->provider_name_length);
+            string name = cDvbUtils::getDvbString (buf + sizeof(descrService) +
+                                                   ((descrService*)buf)->provider_name_length);
             cService* service = getService (sid);
             if (service) {
               if (service->getChannelName().empty()) {
@@ -1147,11 +1147,11 @@ void cDvbStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
 
             // get title
             auto bufPtr = buf + sizeof(descrShortEvent) - 1;
-            auto titleString = cDvbUtils::getString (bufPtr);
+            auto titleString = cDvbUtils::getDvbString (bufPtr);
 
             // get info
             bufPtr += ((descrShortEvent*)buf)->event_name_length;
-            string infoString = cDvbUtils::getString (bufPtr);
+            string infoString = cDvbUtils::getDvbString (bufPtr);
 
             if (now) {
               // now event
