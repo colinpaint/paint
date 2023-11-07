@@ -135,25 +135,21 @@ public:
             break;
 
           char frameType = cDvbUtils::getFrameType (frame, frameSize, mH264);
-          cLog::log (LOGINFO, fmt::format ("videoDecode {} pts:{} ipts:{} dts:{} {} pesSize:{}",
-                                           frameType,
-                                           utils::getPtsString (pts), utils::getPtsString (mInterpolatedPts), utils::getPtsString (dts),
-                                           mH264 ? "h264" : "mpeg2",  pesSize));
+          cLog::log (LOGINFO, fmt::format ("videoDecode {} {} pts:{} ipts:{} dts:{} pesSize:{}",
+                                           mH264 ? "h264" : "mpeg2", frameType,
+                                           utils::getPtsString (pts),
+                                           utils::getPtsString (mInterpolatedPts),
+                                           utils::getPtsString (dts),
+                                           pesSize));
           if (frameType == 'I') {
-            // pts seems wrong, frames decode in presentation order, only correct on Iframe
-            if ((mInterpolatedPts != -1) && (mInterpolatedPts != dts))
-              cLog::log (LOGERROR, fmt::format ("- lost:{} pts:{} dts:{} size:{}",
-                                                frameType, utils::getPtsString (pts), utils::getPtsString (dts), pesSize));
             mInterpolatedPts = dts;
             mGotIframe = true;
             }
-          if (!mGotIframe)
-            return pts;
 
           // allocFrame
           cFFmpegVideoFrame* videoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
 
-          videoFrame->mPts = mInterpolatedPts;
+          videoFrame->mPts = mGotIframe ? mInterpolatedPts : videoFrame->mPts = pts;
           videoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
           videoFrame->mPesSize = frameSize;
           videoFrame->mFrameType = frameType;
