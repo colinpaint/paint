@@ -26,12 +26,12 @@ public:
   //{{{
   std::string getInfoString() {
 
-    std::string info = fmt::format ("- videoFrame {}x{} pesSize:{:5} ", mWidth, mHeight, mPesSize);
+    std::string info = fmt::format ("{}x{} pesSize:{:6} ", mWidth, mHeight, mPesSize);
 
     if (!mTimes.empty()) {
       info += " took";
       for (auto time : mTimes)
-        info += fmt::format (" {}", time);
+        info += fmt::format (" {:5}us", time);
       }
 
     return info;

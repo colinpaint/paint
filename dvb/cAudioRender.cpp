@@ -207,7 +207,7 @@ public:
   cFFmpegAudioDecoder (uint8_t streamType) : cDecoder(),
 
     mAvCodec (avcodec_find_decoder ((streamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
-    mStreamTypeName = (streamType == 17) ? "aacLatm" : "mp3";
+    mStreamTypeName = (streamType == 17) ? "aacL" : "mp3";
 
     cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder stream:{}:{}", streamType, mStreamTypeName));
 
@@ -227,7 +227,7 @@ public:
     }
   //}}}
 
-  virtual string getName() const final { return mStreamTypeName; }
+  virtual string getInfo() const final { return "ffmpeg " + mStreamTypeName; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<cFrame* ()> allocFrameCallback,
@@ -409,8 +409,8 @@ void cAudioRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cAudioRender::getInfoString() const {
-  return fmt::format ("audio frames:{:3d}:{:3d} {} {}x{}@{}k",
-                      mFrames.size(), mFreeFrames.size(), mDecoder->getName(),
+  return fmt::format ("aud frames:{:3d}:{:3d} {} {}x{}@{}k",
+                      mFrames.size(), mFreeFrames.size(), mDecoder->getInfo(),
                       mNumChannels, mSamplesPerFrame, mSampleRate/1000);
   }
 //}}}

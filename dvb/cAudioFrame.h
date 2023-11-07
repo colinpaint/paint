@@ -23,7 +23,6 @@ public:
   //}}}
 
   virtual void releaseResources() final {}
-
   //{{{
   void calcPower() {
 

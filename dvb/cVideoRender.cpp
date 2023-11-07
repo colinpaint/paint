@@ -112,8 +112,7 @@ public:
     }
   //}}}
 
-  virtual string getName() const final { return "ffmpeg"; }
-
+  virtual string getInfo() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<cFrame*()> allocFrameCallback,
@@ -281,7 +280,7 @@ void cVideoRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cVideoRender::getInfoString() const {
-  return fmt::format ("video frames:{:3d}:{:3d} {} qSize:{} {}",
-                      mFrames.size(), mFreeFrames.size(), mDecoder->getName(), getQueueSize(),  mFrameInfo);
+  return fmt::format ("vid frames:{:3d}:{:3d} {} {} queuedDecodes:{}",
+                      mFrames.size(), mFreeFrames.size(), mDecoder->getInfo(), mFrameInfo, getQueueSize());
   }
 //}}}
