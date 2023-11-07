@@ -139,10 +139,7 @@ float cRender::getQueueFrac() const {
 // process
 //{{{
 bool cRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
-
   (void)skip;
-  //log ("pes", fmt::format ("pts:{} size:{}", getFullPtsString (pts), pesSize));
-  //logValue (pts, (float)pesSize);
 
   if (isQueued()) {
     mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts, mAllocFrameCallback, mAddFrameCallback));
