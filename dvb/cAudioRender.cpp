@@ -227,7 +227,7 @@ public:
     }
   //}}}
 
-  virtual string getInfo() const final { return "ffmpeg " + mStreamTypeName; }
+  virtual string getInfoString() const final { return "ffmpeg " + mStreamTypeName; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<cFrame* ()> allocFrameCallback,
@@ -368,7 +368,7 @@ void cAudioRender::setPlayPts (int64_t pts) {
 
 //{{{
 cAudioFrame* cAudioRender::getAudioFrameFromPts (int64_t pts) {
-  return dynamic_cast<cAudioFrame*>(getFramePts (pts));
+  return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts));
   }
 //}}}
 
@@ -410,7 +410,7 @@ void cAudioRender::addFrame (cFrame* frame) {
 //{{{
 string cAudioRender::getInfoString() const {
   return fmt::format ("aud frames:{:3d}:{:3d} {} {}x{}@{}k",
-                      mFrames.size(), mFreeFrames.size(), mDecoder->getInfo(),
+                      mFrames.size(), mFreeFrames.size(), mDecoder->getInfoString(),
                       mNumChannels, mSamplesPerFrame, mSampleRate/1000);
   }
 //}}}

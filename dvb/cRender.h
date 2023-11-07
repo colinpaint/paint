@@ -37,7 +37,7 @@ public:
   cDecoder() = default;
   virtual ~cDecoder() = default;
 
-  virtual std::string getInfo() const = 0;
+  virtual std::string getInfoString() const = 0;
 
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           std::function<cFrame*()> allocFrameCallback,
@@ -57,18 +57,19 @@ public:
         mAllocFrameCallback(allocFrameCallback), mAddFrameCallback(addFrameCallback) {}
   // we gain ownership of malloc'd pes buffer
   //}}}
-  //{{{
   ~cDecodeQueueItem() {
     // release malloc'd pes buffer
     free (mPes);
     }
-  //}}}
 
   cDecoder* mDecoder;
+
   uint8_t* mPes;
   const int mPesSize;
+
   const int64_t mPts;
   const int64_t mDts;
+
   const std::function<cFrame*()> mAllocFrameCallback;
   const std::function<void (cFrame* frame)> mAddFrameCallback;
   };
@@ -92,10 +93,10 @@ public:
   std::map<int64_t,cFrame*> getFrames() { return mFrames; }
   std::deque<cFrame*> getFreeFrames() { return mFreeFrames; }
 
-  // frames, freeframes
-  cFrame* getFramePts (int64_t pts);
+  // get frames, freeframes
   cFrame* getFreeFrame();
   cFrame* getYoungestFrame();
+  cFrame* getFrameFromPts (int64_t pts);
   virtual void trimFramesBeforePts (int64_t pts);
 
   int64_t getLastPts() const { return mLastPts; }

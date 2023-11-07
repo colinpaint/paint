@@ -40,6 +40,7 @@ float cRender::getValue (int64_t pts) const {
 float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
 
   pts = mRefPts - ptsOffset;
+
   auto it = mValuesMap.find (pts / kPtsPerFrame);
   return it == mValuesMap.end() ? 0.f : it->second;
   }
@@ -47,26 +48,19 @@ float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
 
 // frames, freeFrames
 //{{{
-cFrame* cRender::getFramePts (int64_t pts) {
-
-  // unlocked find
-  auto it = mFrames.find (pts);
-  return (it == mFrames.end()) ? nullptr : it->second;
-  }
-//}}}
-//{{{
 cFrame* cRender::getFreeFrame() {
 
   // quick unlocked test for none
   if (mFreeFrames.empty())
     return nullptr;
 
-  // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
+    { // locked
+    unique_lock<shared_mutex> lock (mSharedMutex);
 
-  cFrame* frame = mFreeFrames.front();
-  mFreeFrames.pop_front();
-  return frame;
+    cFrame* frame = mFreeFrames.front();
+    mFreeFrames.pop_front();
+    return frame;
+    }
   }
 //}}}
 //{{{
@@ -85,6 +79,14 @@ cFrame* cRender::getYoungestFrame() {
   }
 //}}}
 //{{{
+cFrame* cRender::getFrameFromPts (int64_t pts) {
+
+  // unlocked find
+  auto it = mFrames.find (pts);
+  return (it == mFrames.end()) ? nullptr : it->second;
+  }
+//}}}
+//{{{
 void cRender::trimFramesBeforePts (int64_t pts) {
 // remove frames before pts, release any temp resources
 
@@ -92,14 +94,15 @@ void cRender::trimFramesBeforePts (int64_t pts) {
   if (mFrames.empty())
     return;
 
-  // locked
-  unique_lock<shared_mutex> lock(mSharedMutex);
+    { // locked
+    unique_lock<shared_mutex> lock(mSharedMutex);
 
-  auto it = mFrames.begin();
-  while ((it != mFrames.end()) && ((*it).first < pts)) {
-    it->second->releaseResources();
-    mFreeFrames.push_back (it->second);
-    it = mFrames.erase (it);
+    auto it = mFrames.begin();
+    while ((it != mFrames.end()) && ((*it).first < pts)) {
+      it->second->releaseResources();
+      mFreeFrames.push_back (it->second);
+      it = mFrames.erase (it);
+      }
     }
   }
 //}}}

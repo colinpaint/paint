@@ -54,7 +54,7 @@ public:
     }
   //}}}
 
-  virtual string getInfo() const final { return "subtitle"; }
+  virtual string getInfoString() const final { return "subtitle"; }
 
   size_t getNumLines() const { return mPage.mNumLines; }
   size_t getHighWatermark() const { return mPage.mHighwaterMark; }
@@ -966,6 +966,6 @@ void cSubtitleRender::addFrame (cFrame* frame) {
 // virtual
 //{{{
 string cSubtitleRender::getInfoString() const {
-  return mDecoder->getInfo();
+  return mDecoder->getInfoString();
   }
 //}}}

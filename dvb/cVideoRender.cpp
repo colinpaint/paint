@@ -3,27 +3,6 @@
 #include "cVideoRender.h"
 #include "cVideoFrame.h"
 
-#ifdef _WIN32
-  //{{{  windows headers
-  #define NOMINMAX
-
-  #include <intrin.h>
-
-  #include <initguid.h>
-  #include <d3d9.h>
-  #include <dxva2api.h>
-
-  #include <d3d11.h>
-  #include <dxgi1_2.h>
-
-  #define D3DFMT_NV12 (D3DFORMAT)MAKEFOURCC('N','V','1','2')
-  #define D3DFMT_YV12 (D3DFORMAT)MAKEFOURCC('Y','V','1','2')
-
-  #define WILL_READ 0x1000
-  #define WILL_WRITE 0x2000
-  //}}}
-#endif
-
 #include <cstdint>
 #include <string>
 #include <array>
@@ -87,10 +66,9 @@ public:
      : cDecoder(), mH264 (streamType == 27),
        mAvCodec (avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder with streamType:{}",
-                                     streamType, streamType == 27 ? "h264" : "mpeg2"));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder with streamType:{}", streamType, mH264 ? "h264" : "mpeg2"));
 
-    mAvParser = av_parser_init ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
+    mAvParser = av_parser_init (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }
@@ -109,7 +87,7 @@ public:
     }
   //}}}
 
-  virtual string getInfo() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
+  virtual string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<cFrame*()> allocFrameCallback,
@@ -132,7 +110,7 @@ public:
             break;
 
           char frameType = cDvbUtils::getFrameType (frame, frameSize, mH264);
-          cLog::log (LOGINFO, fmt::format ("videoDecode {} {} pts:{} ipts:{} dts:{} pesSize:{}",
+          cLog::log (LOGINFO1, fmt::format ("videoDecode {} {} pts:{} ipts:{} dts:{} pesSize:{}",
                                            mH264 ? "h264" : "mpeg2", frameType,
                                            utils::getPtsString (pts),
                                            utils::getPtsString (mInterpolatedPts),
@@ -226,7 +204,7 @@ cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
 
   // locked
   //shared_lock<shared_mutex> lock (mSharedMutex);
-  return dynamic_cast<cVideoFrame*>(getFramePts (pts / mPtsDuration));
+  return dynamic_cast<cVideoFrame*>(getFrameFromPts (pts / mPtsDuration));
   }
 //}}}
 //{{{
@@ -274,6 +252,6 @@ void cVideoRender::addFrame (cFrame* frame) {
 //{{{
 string cVideoRender::getInfoString() const {
   return fmt::format ("vid frames:{:3d}:{:3d} {} {} queuedDecodes:{}",
-                      mFrames.size(), mFreeFrames.size(), mDecoder->getInfo(), mFrameInfo, getQueueSize());
+                      mFrames.size(), mFreeFrames.size(), mDecoder->getInfoString(), mFrameInfo, getQueueSize());
   }
 //}}}
