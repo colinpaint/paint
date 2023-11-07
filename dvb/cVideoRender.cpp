@@ -55,11 +55,7 @@ constexpr uint32_t kVideoFrameMapSize = 30;
 class cFFmpegVideoFrame : public cVideoFrame {
 public:
   cFFmpegVideoFrame() : cVideoFrame(cTexture::eYuv420) {}
-  //{{{
-  virtual ~cFFmpegVideoFrame() {
-    releasePixels();
-    }
-  //}}}
+  virtual ~cFFmpegVideoFrame() { releasePixels(); }
 
   void setAVFrame (AVFrame* avFrame) { mAvFrame = avFrame; }
 
@@ -73,6 +69,7 @@ protected:
     if (mAvFrame) {
       av_frame_unref (mAvFrame);
       av_frame_free (&mAvFrame);
+
       mAvFrame = nullptr;
       }
     }
