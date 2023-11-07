@@ -220,14 +220,15 @@ cFrame* cVideoRender::getFFmpegFrame() {
   cFrame* frame = getFreeFrame();
   if (frame)
     return frame;
-
-  return new cFFmpegVideoFrame();
+  else
+    return new cFFmpegVideoFrame();
   }
 //}}}
 //{{{
 void cVideoRender::addFrame (cFrame* frame) {
 
   cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+
   videoFrame->mQueueSize = getQueueSize();
   videoFrame->mTextureDirty = true;
 
