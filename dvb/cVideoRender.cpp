@@ -124,7 +124,7 @@ public:
           // allocFrame
           cFFmpegVideoFrame* videoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
 
-          videoFrame->mPts = mGotIframe ? mInterpolatedPts : videoFrame->mPts = pts;
+          videoFrame->mPts = mGotIframe ? mInterpolatedPts : dts;
           videoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
           videoFrame->mPesSize = frameSize;
           videoFrame->mFrameType = frameType;
