@@ -44,6 +44,7 @@ public:
     cAudioPlayer (cAudioRender* audioRender, int64_t pts) {
 
       mPts = pts;
+      mPlayPts = mPts;
 
       mThread = thread ([=]() {
         cLog::setThreadName ("play");
@@ -128,7 +129,7 @@ public:
         // lambda
         cLog::setThreadName ("play");
 
-        // raise to max prioritu
+        // raise to max priority
         sched_param sch_params;
         sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
         pthread_setschedparam (mThread.native_handle(), SCHED_RR, &sch_params);
@@ -180,15 +181,13 @@ public:
             }
           }
 
-          audio.play (2, srcSamples, audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame(), 1.f);
+          audio.play (2, srcSamples, 
+                      audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame(), 
+                      1.f);
 
-          if (mPlaying) {
-            mPlayPts = mPts - (2 * (audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration()));
+          mPlayPts = mPts;
+          if (mPlaying) 
             mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
-            }
-          else
-            mPlayPts = mPts;
-          }
 
         mRunning = false;
         cLog::log (LOGINFO, "exit");
