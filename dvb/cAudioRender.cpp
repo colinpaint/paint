@@ -68,25 +68,34 @@ public:
               if (mPlaying && audioFrame) {
                 float* src = audioFrame->mSamples.data();
                 float* dst = samples.data();
-                if (audioFrame->mNumChannels == 1) {
-                  //{{{  mono to 2 channels
-                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                    *dst++ = *src;
-                    *dst++ = *src++;
-                    }
-                  }
+                switch (audioFrame->mNumChannels) {
+                  //{{{
+                  case 1: // mono to 2 channels
+                    for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                      *dst++ = *src;
+                      *dst++ = *src++;
+                      }
+                    break;
                   //}}}
-                else if (audioFrame->mNumChannels == 6) {
-                  //{{{  5.1 to 2 channels
-                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                    *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
-                    *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
-                    src += 6;
-                    }
-                  }
+                  //{{{
+                  case 2: // stereo
+                    memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
+                    break;
                   //}}}
-                else
-                  memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
+                  //{{{
+                  case 6: // 5.1 to 2 channels
+                    for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                      *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
+                      *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
+                      src += 6;
+                      }
+                    break;
+                  //}}}
+                  //{{{
+                  default: 
+                    cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->mNumChannels));
+                  //}}}
+                  }
                 srcSamples = samples.data();
                 }
               else
@@ -138,19 +147,34 @@ public:
             shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
             audioFrame = audioRender->getAudioFrameFromPts (mPts);
             if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
-              if (audioFrame->mNumChannels == 6) {
-                //{{{  5.1 to 2 channels
-                float* src = audioFrame->mSamples.data();
-                float* dst = samples.data();
-                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                  *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
-                  *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
-                  src += 6;
-                  }
-                }
+              switch (audioFrame->mNumChannels) {
+                //{{{
+                case 1: // mono to 2 channels
+                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                    *dst++ = *src;
+                    *dst++ = *src++;
+                    }
+                  break;
                 //}}}
-              else
-                memcpy (samples.data(), audioFrame->mSamples.data(), audioFrame->mSamplesPerFrame * 8);
+                //{{{
+                case 2: // stereo
+                  memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
+                  break;
+                //}}}
+                //{{{
+                case 6: // 5.1 to 2 channels
+                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                    *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
+                    *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
+                    src += 6;
+                    }
+                  break;
+                //}}}
+                //{{{
+                default:
+                  cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->mNumChannels));
+                //}}}
+                }
               srcSamples = samples.data();
               }
             }

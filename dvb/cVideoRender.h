@@ -23,7 +23,7 @@ public:
 
   int64_t getPtsDuration() const { return mPtsDuration; }
 
-  cVideoFrame* getVideoFramePts (int64_t pts);
+  cVideoFrame* getVideoFrameFromPts (int64_t pts);
   void trimVideoBeforePts (int64_t pts);
 
   // callbacks

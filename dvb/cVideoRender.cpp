@@ -12,7 +12,7 @@
 #include <thread>
 #include <functional>
 
-#include "../dvb/cDvbUtils.h"
+#include "../common/cDvbUtils.h"
 #include "../app/cGraphics.h"
 
 #include "../common/date.h"
@@ -193,7 +193,7 @@ cVideoRender::~cVideoRender() {
 
 // frames, freeframes
 //{{{
-cVideoFrame* cVideoRender::getVideoFramePts (int64_t pts) {
+cVideoFrame* cVideoRender::getVideoFrameFromPts (int64_t pts) {
 
   // quick unlocked test
   if (mFrames.empty() || !mPtsDuration) {

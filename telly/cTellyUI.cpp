@@ -529,7 +529,7 @@ private:
         }
 
       // draw telly history pic
-      cVideoFrame* videoFrame = video.getVideoFramePts (playPts);
+      cVideoFrame* videoFrame = video.getVideoFrameFromPts (playPts);
       if (videoFrame) {
         // form draw list
         deque <cVideoFrameDraw> mVideoFramesDraws;
@@ -598,7 +598,7 @@ private:
         }
 
       // draw telly pic
-      cVideoFrame* videoFrame = videoRender.getVideoFramePts (playerPts);
+      cVideoFrame* videoFrame = videoRender.getVideoFrameFromPts (playerPts);
       if (videoFrame) {
         cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
         if (!mQuad)

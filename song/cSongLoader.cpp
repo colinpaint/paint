@@ -35,7 +35,7 @@
 
 // dvb
 #include "../dvb/cDvbSource.h"
-#include "../dvb/cDvbUtils.h"
+#include "../common/cDvbUtils.h"
 
 using namespace std;
 //}}}
