@@ -23,6 +23,7 @@ extern "C" {
   #include <libavcodec/avcodec.h>
   #include <libavformat/avformat.h>
   #include <libswscale/swscale.h>
+  #include <libavutil/motion_vector.h>
   }
 
 using namespace std;
@@ -72,7 +73,11 @@ public:
        mAvContext(avcodec_alloc_context3 (mAvCodec)) {
 
     cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder - streamType:{}:{}", mStreamType, mStreamName));
-    avcodec_open2 (mAvContext, mAvCodec, NULL);
+
+    AVDictionary* opts = NULL;
+    av_dict_set (&opts, "flags2", "+export_mvs", 0);
+    avcodec_open2 (mAvContext, mAvCodec, &opts);
+    av_dict_free (&opts);
     }
   //}}}
   //{{{
@@ -107,13 +112,27 @@ public:
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
 
+          AVFrameSideData* sd = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
+          if (sd) {
+            const AVMotionVector* mvs = (const AVMotionVector*)sd->data;
+            for (int i = 0; i < sd->size / sizeof(*mvs); i++) {
+              cLog::log (LOGINFO, fmt::format ("mvs {}", sd->size / sizeof(*mvs)));
+              //const AVMotionVector* mv = &mvs[i];
+              //cLog::log (LOGINFO, fmt::format ("{} {} {}x{} {}x{} {}x{} {} {}x{} {}",
+              //                                 i, mv->source,
+              //                                 mv->w, mv->h, mv->src_x, mv->src_y,
+              //                                 mv->dst_x, mv->dst_y, mv->flags,
+              //                                 mv->motion_x, mv->motion_y, mv->motion_scale));
+              }
+            }
+
           char frameType = cDvbUtils::getFrameType (frame, frameSize, mH264);
           cLog::log (LOGINFO1, fmt::format ("videoDecode {} {} pts:{} ipts:{} dts:{} pesSize:{}",
-                                           mH264 ? "h264" : "mpeg2", frameType,
-                                           utils::getPtsString (pts),
-                                           utils::getPtsString (mInterpolatedPts),
-                                           utils::getPtsString (dts),
-                                           pesSize));
+                                            mH264 ? "h264" : "mpeg2", frameType,
+                                            utils::getPtsString (pts),
+                                            utils::getPtsString (mInterpolatedPts),
+                                            utils::getPtsString (dts),
+                                            pesSize));
           if (frameType == 'I') {
             mInterpolatedPts = dts;
             mGotIframe = true;
