@@ -1589,7 +1589,7 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
 void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) {
 
   if (launchThread)
-    cLog::setThreadName ("read");
+    cLog::setThreadName ("file");
 
   auto file = fopen (fileName.c_str(), "rb");
   if (!file) {
@@ -1599,12 +1599,11 @@ void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) 
     }
     //}}}
 
-  uint64_t streamPos = 0;
   size_t blockSize = 188 * 8;
   uint8_t* buffer = (uint8_t*)malloc (blockSize);
 
-  bool run = true;
-  while (run) {
+  uint64_t streamPos = 0;
+  while (true) {
     size_t bytesRead = fread (buffer, 1, blockSize, file);
     if (bytesRead > 0)
       streamPos += demux (buffer, bytesRead, streamPos, false);

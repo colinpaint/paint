@@ -33,8 +33,8 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kQueued = false;
-constexpr int kPlayerPreloadFrames = 24;
-constexpr size_t kAudioFrameMapSize = 48;
+constexpr int kPlayerPreloadFrames = 16;
+constexpr size_t kAudioFrameMapSize = 32;
 
 //{{{
 class cAudioPlayer {
@@ -368,11 +368,7 @@ cAudioRender::~cAudioRender() {
   }
 //}}}
 
-//{{{
-bool cAudioRender::isPlaying() const {
-  return mPlayer ? mPlayer->isPlaying() : false;
-  }
-//}}}
+bool cAudioRender::isPlaying() const { return mPlayer && mPlayer->isPlaying(); }
 //{{{
 int64_t cAudioRender::getPlayerPts() const {
   return mPlayer ? mPlayer->getPts() : 0;
