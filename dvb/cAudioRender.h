@@ -52,4 +52,5 @@ private:
   int64_t mPtsDuration = 0;
 
   cAudioPlayer* mPlayer = nullptr;
+  int mPlayerFrames = 0;
   };

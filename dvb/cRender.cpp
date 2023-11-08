@@ -87,22 +87,16 @@ cFrame* cRender::getFrameFromPts (int64_t pts) {
 //}}}
 //{{{
 cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
-
-  cFrame* nearestFrame = nullptr;
-
-  int64_t near = 0xFFFFFFFFFFFF;
+// return nearest frame at or after pts
 
   auto it = mFrames.begin();
   while (it != mFrames.end()) {
-    int64_t diff = (*it).first - pts;
-    if ((diff > 0) && (diff < near)) {
-      near = diff;
-      nearestFrame = (*it).second;
-      }
+    if (((*it).first - pts) >= 0)
+      return (*it).second;
     ++it;
     }
 
-  return nearestFrame;
+  return nullptr;
   }
 //}}}
 

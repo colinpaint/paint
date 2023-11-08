@@ -63,10 +63,13 @@ class cFFmpegVideoDecoder : public cDecoder {
 public:
   //{{{
   cFFmpegVideoDecoder (uint8_t streamType)
-     : cDecoder(), mH264 (streamType == 27),
-       mAvCodec (avcodec_find_decoder ((streamType == 27) ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
+     : cDecoder(),
+       mStreamType(streamType),
+       mH264(mStreamType == 27),
+       mStreamName(mH264 ? "h264" : "mpeg2"),
+       mAvCodec (avcodec_find_decoder (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder with streamType:{}", streamType, mH264 ? "h264" : "mpeg2"));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder - streamType:{}:{}", mStreamType, mStreamName));
 
     mAvParser = av_parser_init (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
@@ -78,12 +81,8 @@ public:
 
     if (mAvContext)
       avcodec_close (mAvContext);
-
     if (mAvParser)
       av_parser_close (mAvParser);
-
-    if (mSwsContext)
-      sws_freeContext (mSwsContext);
     }
   //}}}
 
@@ -154,12 +153,13 @@ public:
   //}}}
 
 private:
+  const uint8_t mStreamType;
   const bool mH264 = false;
+  const string mStreamName;
   const AVCodec* mAvCodec = nullptr;
 
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;
-  SwsContext* mSwsContext = nullptr;
 
   bool mGotIframe = false;
   int64_t mInterpolatedPts = -1;
@@ -197,7 +197,7 @@ cVideoFrame* cVideoRender::getVideoFrameFromPts (int64_t pts) {
 
   if (mFrames.empty() || !mPtsDuration)
     return nullptr;
-  else 
+  else
     return dynamic_cast<cVideoFrame*>(getFrameFromPts (pts / mPtsDuration));
   }
 //}}}
@@ -206,7 +206,7 @@ cVideoFrame* cVideoRender::getVideoNearestFrameFromPts (int64_t pts) {
 
   if (mFrames.empty() || !mPtsDuration)
     return nullptr;
-   else 
+   else
     return dynamic_cast<cVideoFrame*>(getNearestFrameFromPts (pts / mPtsDuration));
   }
 //}}}
