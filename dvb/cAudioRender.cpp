@@ -148,26 +148,32 @@ public:
           if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
             switch (audioFrame->mNumChannels) {
               //{{{
-              case 1: // mono to 2 channels
+              case 1: { // mono to 2 channels
+                float* src = audioFrame->mSamples.data();
+                float* dst = samples.data();
                 for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                   *dst++ = *src;
                   *dst++ = *src++;
                   }
                 break;
+                }
               //}}}
               //{{{
               case 2: // stereo
-                memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
+                memcpy (samples.data(), audioFrame->mSamples.data(), audioFrame->mSamplesPerFrame * 8);
                 break;
               //}}}
               //{{{
-              case 6: // 5.1 to 2 channels
+              case 6: { // 5.1 to 2 channels
+                float* src = audioFrame->mSamples.data();
+                float* dst = samples.data();
                 for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                   *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
                   *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
                   src += 6;
                   }
                 break;
+                }
               //}}}
               //{{{
               default:

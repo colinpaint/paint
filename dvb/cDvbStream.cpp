@@ -17,7 +17,6 @@
 #endif
 
 #include "cDvbSource.h"
-#include "cDvbUtils.h"
 
 #include "cVideoRender.h"
 #include "cAudioRender.h"
@@ -26,6 +25,7 @@
 #include "../common/date.h"
 #include "../common/cLog.h"
 #include "../common/utils.h"
+#include "../common/cDvbUtils.h"
 
 using namespace std;
 //}}}
@@ -614,8 +614,8 @@ void cDvbStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
 //  pes ts packet, save only recognised pids
 
   if (mFile &&
-      ((pid == mStreams[eVideo].getPid()) || 
-       (pid == mStreams[eAudio].getPid()) || 
+      ((pid == mStreams[eVideo].getPid()) ||
+       (pid == mStreams[eAudio].getPid()) ||
        (pid == mStreams[eSubtitle].getPid())))
     fwrite (ts, 1, 188, mFile);
   }
