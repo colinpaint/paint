@@ -17,36 +17,47 @@
 using namespace std;
 //}}}
 
-cTellyApp::cTellyApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-  : cApp("telly", windowSize, fullScreen, vsync) {}
-
-bool cTellyApp::setDvbSource (const string& filename, const string& recordRoot, const cDvbMultiplex& dvbMultiplex,
-                              bool renderFirstService, uint16_t decoderOptions) {
-// create dvb source
-
-  mDecoderOptions = decoderOptions;
-  mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, renderFirstService, decoderOptions);
-  if (!mDvbStream)
-    return false;
-
-  if (filename.empty())
-    mDvbStream->dvbSource (true);
-  else
-    mDvbStream->fileSource (true, filename);
-
-  return true;
-  }
-
-void cTellyApp::drop (const vector<string>& dropItems) {
-
+namespace {
   // wrong !!!!
   const cDvbMultiplex kDvbMultiplexes =
       { "hd",
-        626000000,
+        0,
         { "BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
         { "bbc1hd",        "bbc2hd",     "bbc3hd",       "bbc4hd",      "itv1hd",  "chn4hd",       "chn5hd" },
         false,
       };
+  }
+
+//{{{
+cTellyApp::cTellyApp (const cPoint& windowSize, bool fullScreen, bool vsync)
+  : cApp("telly", windowSize, fullScreen, vsync) {}
+//}}}
+
+//{{{
+bool cTellyApp::setDvbSource (const string& filename, const string& recordRoot, const cDvbMultiplex& dvbMultiplex,
+                              bool renderFirstService, uint16_t decoderOptions) {
+
+  mDecoderOptions = decoderOptions;
+
+  if (filename.empty()) {
+  // create dvb source
+    mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, renderFirstService, decoderOptions);
+    if (!mDvbStream)
+      return false;
+    mDvbStream->dvbSource (true);
+    }
+  else {
+    mDvbStream = new cDvbStream (kDvbMultiplexes,  "", true, decoderOptions);
+    if (!mDvbStream)
+      return false;
+    mDvbStream->fileSource (true, filename);
+    }
+
+  return true;
+  }
+//}}}
+//{{{
+void cTellyApp::drop (const vector<string>& dropItems) {
 
   for (auto& item : dropItems) {
     string filename = cFileUtils::resolve (item);
@@ -54,3 +65,4 @@ void cTellyApp::drop (const vector<string>& dropItems) {
     cLog::log (LOGINFO, filename);
     }
   }
+//}}}

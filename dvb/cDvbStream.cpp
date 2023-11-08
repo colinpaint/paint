@@ -744,7 +744,8 @@ cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordR
     : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName),
       mRenderFirstService(renderFirstService), mDecoderOptions(decoderOptions) {
 
-  mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
+  if (dvbMultiplex.mFrequency)
+    mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
   }
 //}}}
 
