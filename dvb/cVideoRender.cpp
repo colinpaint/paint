@@ -112,19 +112,19 @@ public:
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
 
-          AVFrameSideData* sd = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
-          if (sd) {
-            const AVMotionVector* mvs = (const AVMotionVector*)sd->data;
-            for (int i = 0; i < sd->size / sizeof(*mvs); i++) {
-              cLog::log (LOGINFO, fmt::format ("mvs {}", sd->size / sizeof(*mvs)));
+          //AVFrameSideData* sd = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
+          //if (sd) {
+          //  const AVMotionVector* mvs = (const AVMotionVector*)sd->data;
+          //  for (int i = 0; i < sd->size / sizeof(*mvs); i++) {
+          //    cLog::log (LOGINFO, fmt::format ("mvs {}", sd->size / sizeof(*mvs)));
               //const AVMotionVector* mv = &mvs[i];
               //cLog::log (LOGINFO, fmt::format ("{} {} {}x{} {}x{} {}x{} {} {}x{} {}",
               //                                 i, mv->source,
               //                                 mv->w, mv->h, mv->src_x, mv->src_y,
               //                                 mv->dst_x, mv->dst_y, mv->flags,
               //                                 mv->motion_x, mv->motion_y, mv->motion_scale));
-              }
-            }
+           //   }
+           // }
 
           char frameType = cDvbUtils::getFrameType (frame, frameSize, mH264);
           cLog::log (LOGINFO1, fmt::format ("videoDecode {} {} pts:{} ipts:{} dts:{} pesSize:{}",
