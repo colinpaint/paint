@@ -30,24 +30,6 @@ cRender::~cRender() {
 //}}}
 
 //{{{
-float cRender::getValue (int64_t pts) const {
-
-  auto it = mValuesMap.find (pts / kPtsPerFrame);
-  return it == mValuesMap.end() ? 0.f : it->second;
-  }
-//}}}
-//{{{
-float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
-
-  pts = mRefPts - ptsOffset;
-
-  auto it = mValuesMap.find (pts / kPtsPerFrame);
-  return it == mValuesMap.end() ? 0.f : it->second;
-  }
-//}}}
-
-// frames, freeFrames
-//{{{
 cFrame* cRender::getFreeFrame() {
 
   if (mFreeFrames.empty())
@@ -78,14 +60,6 @@ cFrame* cRender::getYoungestFrame() {
   }
 //}}}
 //{{{
-cFrame* cRender::getFrameFromPts (int64_t pts) {
-
-  // unlocked find
-  auto it = mFrames.find (pts);
-  return (it == mFrames.end()) ? nullptr : it->second;
-  }
-//}}}
-//{{{
 cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
 // return nearest frame at or after pts
 
@@ -97,6 +71,23 @@ cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
     }
 
   return nullptr;
+  }
+//}}}
+
+//{{{
+float cRender::getValue (int64_t pts) const {
+
+  auto it = mValuesMap.find (pts / kPtsPerFrame);
+  return it == mValuesMap.end() ? 0.f : it->second;
+  }
+//}}}
+//{{{
+float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
+
+  pts = mRefPts - ptsOffset;
+
+  auto it = mValuesMap.find (pts / kPtsPerFrame);
+  return it == mValuesMap.end() ? 0.f : it->second;
   }
 //}}}
 
@@ -137,18 +128,6 @@ void cRender::logValue (int64_t pts, float value) {
   }
 //}}}
 
-/// decode queue
-//{{{
-size_t cRender::getQueueSize() const {
-  return mDecodeQueue.size_approx();
-  }
-//}}}
-//{{{
-float cRender::getQueueFrac() const {
-  return (float)mDecodeQueue.size_approx() / mDecodeQueue.max_capacity();
-  }
-//}}}
-
 // process
 //{{{
 bool cRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
@@ -162,6 +141,26 @@ bool cRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t d
     mDecoder->decode (pes, pesSize, pts, dts, mAllocFrameCallback, mAddFrameCallback);
     return false;
     }
+  }
+//}}}
+
+// protected
+//{{{
+cFrame* cRender::getFrameFromPts (int64_t pts) {
+
+  // unlocked find
+  auto it = mFrames.find (pts);
+  return (it == mFrames.end()) ? nullptr : it->second;
+  }
+//}}}
+//{{{
+size_t cRender::getQueueSize() const {
+  return mDecodeQueue.size_approx();
+  }
+//}}}
+//{{{
+float cRender::getQueueFrac() const {
+  return (float)mDecodeQueue.size_approx() / mDecodeQueue.max_capacity();
   }
 //}}}
 

@@ -34,7 +34,8 @@ using namespace std;
 //}}}
 
 constexpr bool kQueued = false;
-constexpr size_t kAudioFrameMapSize = 12;
+constexpr size_t kAudioFrameMapSize = 48;
+constexpr size_t kPlayerPreloadFrames = 24;
 
 //{{{
 class cAudioPlayer {
@@ -235,14 +236,13 @@ public:
   //{{{
   cFFmpegAudioDecoder (uint8_t streamType) : cDecoder(),
       mStreamType(streamType),
-      mStreamTypeName((mStreamType == 17) ? "aacL" : "mp3"),
-      mAvCodec (avcodec_find_decoder ((mStreamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
+      mAacLatm(mStreamType == 17),
+      mStreamTypeName(mAacLatm ? "aacL" : "mp3"),
+      mAvCodec(avcodec_find_decoder (mAacLatm ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)),
+      mAvParser(av_parser_init (mAacLatm ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)),
+      mAvContext(avcodec_alloc_context3 (mAvCodec)) {
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder streamType:{}:{}", mStreamType, mStreamTypeName));
-
-    // aacAdts AV_CODEC_ID_AAC;
-    mAvParser = av_parser_init ((mStreamType == 17) ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
-    mAvContext = avcodec_alloc_context3 (mAvCodec);
+    cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder - streamType:{}:{}", mStreamType, mStreamTypeName));
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }
   //}}}
@@ -328,6 +328,7 @@ public:
 
 private:
   const uint8_t mStreamType;
+  const bool mAacLatm;
   const string mStreamTypeName;
   const AVCodec* mAvCodec = nullptr;
 
@@ -385,12 +386,14 @@ int64_t cAudioRender::getPlayerPts() const {
 
 //{{{
 void cAudioRender::togglePlaying() {
+
   if (mPlayer)
     mPlayer->togglePlaying();
   }
 //}}}
 //{{{
 void cAudioRender::setPlayPts (int64_t pts) {
+
   if (mPlayer)
     mPlayer->setPts (pts);
   }
@@ -432,7 +435,7 @@ void cAudioRender::addFrame (cFrame* frame) {
 
   // start player
   if (!mPlayer)
-    if (++mPlayerFrames >= 4)
+    if (++mPlayerFrames >= kPlayerPreloadFrames)
       mPlayer = new cAudioPlayer (this, audioFrame->mPts);
   }
 //}}}
