@@ -80,7 +80,7 @@ public:
   //{{{
   virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
 
-    cLog::log (LOGINFO, fmt::format ("cGLES3Gaphics::createTexture {} {}x{}", 
+    cLog::log (LOGINFO, fmt::format ("cGLES3Gaphics::createTexture {} {}x{}",
                                      (int)textureType, size.x, size.y));
     switch (textureType) {
       case cTexture::eRgba:   return new cOpenGLES3RgbaTexture (textureType, size);
@@ -715,38 +715,27 @@ private:
       const std::string kFragShader =
         "#version 300 es\n"
         "precision mediump float;\n"
-
         "uniform sampler2D uSampler;"
-
         "in vec2 textureCoord;"
         "out vec4 outColor;"
-
         "void main() {"
         "  outColor = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y));"
         "  }";
 
       mId = compileShader (kQuadVertShader, kFragShader);
       }
-    //{{{
-    virtual ~cOpenGLES3RgbaShader() {
-      glDeleteProgram (mId);
-      }
-    //}}}
 
-    //{{{
+    virtual ~cOpenGLES3RgbaShader() { glDeleteProgram (mId); }
+
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
       glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
       }
-    //}}}
-    //{{{
-    virtual void use() final {
 
+    virtual void use() final {
       glUseProgram (mId);
       glUniform1i (glGetUniformLocation (mId, "uSampler"), 0);
       }
-    //}}}
     };
   //}}}
   //{{{
@@ -756,14 +745,11 @@ private:
       const std::string kFragShader =
         "#version 300 es\n"
         "precision mediump float;"
-
         "uniform sampler2D ySampler;"
         "uniform sampler2D uSampler;"
         "uniform sampler2D vSampler;"
-
         "in vec2 textureCoord;"
         "out vec4 outColor;"
-
         "void main() {"
           "float y = texture (ySampler, vec2 (textureCoord.x, -textureCoord.y)).r;"
           "float u = texture (uSampler, vec2 (textureCoord.x, -textureCoord.y)).r - 0.5;"
@@ -777,30 +763,20 @@ private:
 
       mId = compileShader (kQuadVertShader, kFragShader);
       }
-    //{{{
-    virtual ~cOpenGLES3Yuv420Shader() {
-      glDeleteProgram (mId);
-      }
-    //}}}
 
-    //{{{
+    virtual ~cOpenGLES3Yuv420Shader() { glDeleteProgram (mId); }
+
     virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) final {
-
       glUniformMatrix4fv (glGetUniformLocation (mId, "uModel"), 1, GL_FALSE, (float*)&model);
       glUniformMatrix4fv (glGetUniformLocation (mId, "uProject"), 1, GL_FALSE, (float*)&projection);
       }
-    //}}}
-    //{{{
+
     virtual void use() final {
-
-      //cLog::log (LOGINFO, "video use");
       glUseProgram (mId);
-
       glUniform1i (glGetUniformLocation (mId, "ySampler"), 0);
       glUniform1i (glGetUniformLocation (mId, "uSampler"), 1);
       glUniform1i (glGetUniformLocation (mId, "vSampler"), 2);
       }
-    //}}}
     };
   //}}}
 
