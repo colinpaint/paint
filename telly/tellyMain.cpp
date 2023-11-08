@@ -27,6 +27,8 @@
 
 #include "fmt/format.h"
 
+#include "../dvb/cDvbStream.h"
+
 using namespace std;
 //}}}
 

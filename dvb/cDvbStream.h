@@ -14,14 +14,23 @@
 #include <chrono>
 #include <mutex>
 
-#include "cDvbMultiplex.h"
-
 class cDvbSource;
 class cRender;
 class cTexture;
 //}}}
 using tTimePoint = std::chrono::system_clock::time_point;
 using tDurationSeconds = std::chrono::seconds;
+
+//{{{
+class cDvbMultiplex {
+public:
+  std::string mName;
+  int mFrequency;
+  std::vector <std::string> mChannels;
+  std::vector <std::string> mChannelRecordNames;
+  bool mRecordAllChannels;
+  };
+//}}}
 
 class cDvbStream {
 public:
