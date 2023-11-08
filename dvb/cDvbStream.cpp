@@ -1517,9 +1517,12 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
     fopen ((mRecordRootName + mDvbMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
 
   #ifdef _WIN32
+    //{{{  windows
     mDvbSource->run();
+
     int64_t streamPos = 0;
     int blockSize = 0;
+
     while (true) {
       auto ptr = mDvbSource->getBlockBDA (blockSize);
       if (blockSize) {
@@ -1541,9 +1544,12 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
         //}}}
       else
         this_thread::sleep_for (1ms);
+
       mSignalString = mDvbSource->getStatusString();
       }
+    //}}}
   #else
+    //{{{  linux
     constexpr int kDvrReadBufferSize = 50 * 188;
     auto buffer = (uint8_t*)malloc (kDvrReadBufferSize);
 
@@ -1569,6 +1575,7 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
         }
       }
     free (buffer);
+    //}}}
   #endif
 
   if (mFile)
@@ -1593,22 +1600,16 @@ void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) 
     //}}}
 
   uint64_t streamPos = 0;
-  auto blockSize = 188 * 8;
-  auto buffer = (uint8_t*)malloc (blockSize);
+  size_t blockSize = 188 * 8;
+  uint8_t* buffer = (uint8_t*)malloc (blockSize);
 
-  //int i = 0;
   bool run = true;
   while (run) {
-    //i++;
-    //if (!(i % 200)) // throttle read rate
-    //  this_thread::sleep_for (20ms);
-
     size_t bytesRead = fread (buffer, 1, blockSize, file);
     if (bytesRead > 0)
       streamPos += demux (buffer, bytesRead, streamPos, false);
     else
       break;
-    //mErrorStr = fmt::format ("{}", getNumErrors());
     }
 
   fclose (file);
