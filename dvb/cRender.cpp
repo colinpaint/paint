@@ -50,11 +50,10 @@ float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
 //{{{
 cFrame* cRender::getFreeFrame() {
 
-  // quick unlocked test for none
   if (mFreeFrames.empty())
     return nullptr;
-
-    { // locked
+  else {
+    // locked
     unique_lock<shared_mutex> lock (mSharedMutex);
 
     cFrame* frame = mFreeFrames.front();
@@ -87,14 +86,34 @@ cFrame* cRender::getFrameFromPts (int64_t pts) {
   }
 //}}}
 //{{{
+cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
+
+  cFrame* nearestFrame = nullptr;
+
+  int64_t near = 0xFFFFFFFFFFFF;
+
+  auto it = mFrames.begin();
+  while (it != mFrames.end()) {
+    int64_t diff = (*it).first - pts;
+    if ((diff > 0) && (diff < near)) {
+      near = diff;
+      nearestFrame = (*it).second;
+      }
+    ++it;
+    }
+
+  return nearestFrame;
+  }
+//}}}
+
+//{{{
 void cRender::trimFramesBeforePts (int64_t pts) {
 // remove frames before pts, release any temp resources
 
-  // quick test, unlocked
   if (mFrames.empty())
     return;
-
-    { // locked
+  else {
+    // locked
     unique_lock<shared_mutex> lock(mSharedMutex);
 
     auto it = mFrames.begin();

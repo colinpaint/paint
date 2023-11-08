@@ -195,16 +195,19 @@ cVideoRender::~cVideoRender() {
 //{{{
 cVideoFrame* cVideoRender::getVideoFrameFromPts (int64_t pts) {
 
-  // quick unlocked test
-  if (mFrames.empty() || !mPtsDuration) {
-    //cLog::log (LOGERROR, fmt::format ("cVideoRender::getVideoFramePts failed {} dur:{} frames:{}",
-    //                                  utils::getPtsString (pts), mPtsDuration, mFrames.size()));
+  if (mFrames.empty() || !mPtsDuration)
     return nullptr;
-    }
+  else 
+    return dynamic_cast<cVideoFrame*>(getFrameFromPts (pts / mPtsDuration));
+  }
+//}}}
+//{{{
+cVideoFrame* cVideoRender::getVideoNearestFrameFromPts (int64_t pts) {
 
-  // locked
-  //shared_lock<shared_mutex> lock (mSharedMutex);
-  return dynamic_cast<cVideoFrame*>(getFrameFromPts (pts / mPtsDuration));
+  if (mFrames.empty() || !mPtsDuration)
+    return nullptr;
+   else 
+    return dynamic_cast<cVideoFrame*>(getNearestFrameFromPts (pts / mPtsDuration));
   }
 //}}}
 //{{{
@@ -240,12 +243,11 @@ void cVideoRender::addFrame (cFrame* frame) {
   mPtsDuration = videoFrame->mPtsDuration;
   mFrameInfo = videoFrame->getInfoString();
 
-  cLog::log (LOGINFO1, fmt::format ("cVideoRender::addFrame {} size:{}x{}",
-                                    utils::getPtsString (videoFrame->mPts), videoFrame->mWidth, videoFrame->mHeight));
-    { // locked
-    unique_lock<shared_mutex> lock (mSharedMutex);
-    mFrames.emplace (videoFrame->mPts / videoFrame->mPtsDuration, videoFrame);
-    }
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+  mFrames.emplace (videoFrame->mPts / videoFrame->mPtsDuration, videoFrame);
+  }
+
   }
 //}}}
 

@@ -598,7 +598,7 @@ private:
         }
 
       // draw telly pic
-      cVideoFrame* videoFrame = videoRender.getVideoFrameFromPts (playerPts);
+      cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
       if (videoFrame) {
         cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
         if (!mQuad)

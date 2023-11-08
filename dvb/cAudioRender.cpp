@@ -61,7 +61,6 @@ public:
           while (!mExit) {
             audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
               // loadSrcSamples callback lambda
-
               // locked audio mutex
               shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
               audioFrame = audioRender->getAudioFrameFromPts (mPts);
@@ -92,7 +91,7 @@ public:
                     break;
                   //}}}
                   //{{{
-                  default: 
+                  default:
                     cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->mNumChannels));
                   //}}}
                   }
@@ -142,42 +141,42 @@ public:
         cAudioFrame* audioFrame = nullptr;
         while (!mExit) {
           float* srcSamples = silence.data();
-            {
-            // locked mutex
-            shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-            audioFrame = audioRender->getAudioFrameFromPts (mPts);
-            if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
-              switch (audioFrame->mNumChannels) {
-                //{{{
-                case 1: // mono to 2 channels
-                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                    *dst++ = *src;
-                    *dst++ = *src++;
-                    }
-                  break;
-                //}}}
-                //{{{
-                case 2: // stereo
-                  memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
-                  break;
-                //}}}
-                //{{{
-                case 6: // 5.1 to 2 channels
-                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                    *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
-                    *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
-                    src += 6;
-                    }
-                  break;
-                //}}}
-                //{{{
-                default:
-                  cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->mNumChannels));
-                //}}}
-                }
-              srcSamples = samples.data();
+
+          { // locked mutex
+          shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
+          audioFrame = audioRender->getAudioFrameFromPts (mPts);
+          if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
+            switch (audioFrame->mNumChannels) {
+              //{{{
+              case 1: // mono to 2 channels
+                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                  *dst++ = *src;
+                  *dst++ = *src++;
+                  }
+                break;
+              //}}}
+              //{{{
+              case 2: // stereo
+                memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
+                break;
+              //}}}
+              //{{{
+              case 6: // 5.1 to 2 channels
+                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                  *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
+                  *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
+                  src += 6;
+                  }
+                break;
+              //}}}
+              //{{{
+              default:
+                cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->mNumChannels));
+              //}}}
               }
+            srcSamples = samples.data();
             }
+          }
 
           audio.play (2, srcSamples, audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame(), 1.f);
 
@@ -420,8 +419,8 @@ void cAudioRender::addFrame (cFrame* frame) {
   logValue (audioFrame->mPts, audioFrame->mPowerValues[0]);
 
   { // locked emplace
-    unique_lock<shared_mutex> lock (mSharedMutex);
-    mFrames.emplace (audioFrame->mPts, audioFrame);
+  unique_lock<shared_mutex> lock (mSharedMutex);
+  mFrames.emplace (audioFrame->mPts, audioFrame);
   }
 
   // start player
