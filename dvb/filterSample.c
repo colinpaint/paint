@@ -33,6 +33,7 @@ void VideoManager::init_filter_graph(AVFrame* frame) {
 
   const char* description = "yadif=1:-1:0";
   LOGD ("Filter: %s - Settings: %s", description, args);
+
   filter_graph = avfilter_graph_alloc();
   result = avfilter_graph_create_filter (&filter_src_ctx, buffer_src, "in", args, NULL, filter_graph);
   if (result < 0) {
@@ -40,7 +41,7 @@ void VideoManager::init_filter_graph(AVFrame* frame) {
     return;
     }
 
-  AVBufferSinkParams *params = av_buffersink_params_alloc();
+  AVBufferSinkParams* params = av_buffersink_params_alloc();
   enum AVPixelFormat pix_fmts[] = { AV_PIX_FMT_GRAY8, AV_PIX_FMT_NONE };
 
   params->pixel_fmts = pix_fmts;
@@ -69,7 +70,7 @@ void VideoManager::init_filter_graph(AVFrame* frame) {
   if (result < 0)
     LOGI ("avfilter_graph_config ERROR");
 
-  filter_initialised =
+  filter_initialised = true;
   }
 
 void FFMPEG::process_video_packet (AVPacket *pkt) {
@@ -90,10 +91,9 @@ void FFMPEG::process_video_packet (AVPacket *pkt) {
       int c = 0;
 
       while (true) {
-        AVFrame *filter_frame = ffmpeg.vid_stream.filter_frame;
+        AVFrame* filter_frame = ffmpeg.vid_stream.filter_frame;
 
         int result = av_buffersink_get_frame (Video.filter_sink_ctx, filter_frame);
-
         if (result == AVERROR(EAGAIN) || result == AVERROR(AVERROR_EOF))
           break;
         if (result < 0)

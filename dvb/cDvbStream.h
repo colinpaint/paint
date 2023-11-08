@@ -299,6 +299,12 @@ public:
   bool hasDvbSource() const { return mDvbSource; }
   std::string getErrorString() { return mErrorString; }
   std::string getSignalString() { return mSignalString; }
+
+  // fileSource
+  bool isFileSource() const { return !mFileName.empty(); }
+  std::string getFileName() const { return mFileName; }
+  uint64_t getFilePos() const { return mFilePos; }
+  size_t getFileSize() const { return mFileSize; }
   //}}}
 
   void toggleStream (cService& service, size_t streamType, uint16_t decoderMask);
@@ -361,6 +367,11 @@ private:
   std::string mErrorString;
   std::string mSignalString;
   uint64_t mLastErrors = 0;
+
+  // fileSource
+  std::string mFileName;
+  uint64_t mFilePos = 0;
+  size_t mFileSize = 0;
 
   // record
   std::mutex mRecordFileMutex;

@@ -273,6 +273,7 @@ public:
     //{{{  draw frameRate button
     ImGui::SameLine();
     ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+
     ImGui::SameLine();
     if (app.getPlatform().hasVsync() && app.getPlatform().getVsync())
       ImGui::TextUnformatted ("vsync");
@@ -285,9 +286,7 @@ public:
                             ImGui::GetIO().MetricsRenderIndices/3).c_str());
     //}}}
 
-    ImGui::SameLine();
     if (app.getDvbStream()) {
-      // draw dvbStream info
       cDvbStream& dvbStream = *app.getDvbStream();
       if (dvbStream.hasTdtTime()) {
         //{{{  draw tdtTime
@@ -295,45 +294,59 @@ public:
         ImGui::TextUnformatted (dvbStream.getTdtTimeString().c_str());
         }
         //}}}
-      //{{{  draw dvbStream packet,errors
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getNumPackets(), dvbStream.getNumErrors()).c_str());
-      //}}}
-      if (dvbStream.hasDvbSource()) {
+      if (dvbStream.isFileSource()) {
+        //{{{  draw filepos, size
+        ImGui::SameLine();
+        ImGui::TextUnformatted (fmt::format ("{}k of {}k",
+                                             dvbStream.getFilePos()/1000,
+                                             dvbStream.getFileSize()/1000).c_str());
+        }
+        //}}}
+      else if (dvbStream.hasDvbSource()) {
         //{{{  draw dvbStream::dvbSource signal:errors
         ImGui::SameLine();
         ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getSignalString(), dvbStream.getErrorString()).c_str());
         }
         //}}}
+      //{{{  draw dvbStream packet,errors
+      ImGui::SameLine();
+      ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getNumPackets(), dvbStream.getNumErrors()).c_str());
+      //}}}
 
       // draw tab childWindow, monospaced font
       ImGui::PushFont (app.getMonoFont());
       ImGui::BeginChild ("tab", {0.f,0.f}, false,
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
       switch (mTab) {
+        //{{{
         case eTelly:
           drawTelly (dvbStream, graphics);
           drawChannels (dvbStream, graphics, app.getDecoderOptions());
           break;
-
+        //}}}
+        //{{{
         case eServices:
           drawTelly (dvbStream, graphics);
           drawServices (dvbStream, graphics, app.getDecoderOptions());
           break;
-
+        //}}}
+        //{{{
         case ePids:
           drawTelly (dvbStream, graphics);
           drawPids (dvbStream, graphics, app.getDecoderOptions());
           break;
-
+        //}}}
+        //{{{
         case eRecorded:
           drawTelly (dvbStream, graphics);
           drawRecorded (dvbStream, graphics, app.getDecoderOptions());
           break;
-
+        //}}}
+        //{{{
         case eHistory:
           drawHistory (dvbStream, graphics, app.getDecoderOptions());
           break;
+        //}}}
         }
 
       ImGui::EndChild();

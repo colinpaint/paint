@@ -16,6 +16,8 @@
   #include <sys/poll.h>
 #endif
 
+#include <sys/stat.h>
+
 #include "cDvbSource.h"
 
 #include "cVideoRender.h"
@@ -1591,6 +1593,7 @@ void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) 
   if (launchThread)
     cLog::setThreadName ("file");
 
+  mFileName = fileName;
   auto file = fopen (fileName.c_str(), "rb");
   if (!file) {
     //{{{  error, return
@@ -1602,13 +1605,18 @@ void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) 
   size_t blockSize = 188 * 8;
   uint8_t* buffer = (uint8_t*)malloc (blockSize);
 
-  uint64_t streamPos = 0;
+  struct stat st;
+
+  mFilePos = 0;
   while (true) {
     size_t bytesRead = fread (buffer, 1, blockSize, file);
     if (bytesRead > 0)
-      streamPos += demux (buffer, bytesRead, streamPos, false);
+      mFilePos += demux (buffer, bytesRead, mFilePos, false);
     else
       break;
+
+    stat (mFileName.c_str(), &st);
+    mFileSize = st.st_size;
     }
 
   fclose (file);
