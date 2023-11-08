@@ -171,7 +171,7 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t dec
     : cRender(kQueued, name + "vid", streamType, decoderMask, kVideoFrameMapSize) {
 
   mDecoder = new cFFmpegVideoDecoder (streamType);
-  setAllocFrameCallback ([&]() noexcept { return getFFmpegFrame(); });
+  setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }
 //}}}
@@ -217,7 +217,7 @@ void cVideoRender::trimVideoBeforePts (int64_t pts) {
 
 // decoder callbacks
 //{{{
-cFrame* cVideoRender::getFFmpegFrame() {
+cFrame* cVideoRender::getFrame() {
 
   cFrame* frame = getFreeFrame();
   if (frame)

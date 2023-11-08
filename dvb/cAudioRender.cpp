@@ -32,10 +32,9 @@ extern "C" {
 
 using namespace std;
 //}}}
-
 constexpr bool kQueued = false;
+constexpr int kPlayerPreloadFrames = 24;
 constexpr size_t kAudioFrameMapSize = 48;
-constexpr size_t kPlayerPreloadFrames = 24;
 
 //{{{
 class cAudioPlayer {
@@ -147,34 +146,30 @@ public:
           shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
           audioFrame = audioRender->getAudioFrameFromPts (mPts);
           if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
+            float* src = audioFrame->mSamples.data();
+            float* dst = samples.data();
             switch (audioFrame->mNumChannels) {
               //{{{
-              case 1: { // mono to 2 channels
-                float* src = audioFrame->mSamples.data();
-                float* dst = samples.data();
+              case 1: // mono to 2 channels
                 for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                   *dst++ = *src;
                   *dst++ = *src++;
                   }
                 break;
-                }
               //}}}
               //{{{
               case 2: // stereo
-                memcpy (samples.data(), audioFrame->mSamples.data(), audioFrame->mSamplesPerFrame * 8);
+                memcpy (dst, src, audioFrame->mSamplesPerFrame * 8);
                 break;
               //}}}
               //{{{
-              case 6: { // 5.1 to 2 channels
-                float* src = audioFrame->mSamples.data();
-                float* dst = samples.data();
+              case 6: // 5.1 to 2 channels
                 for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                   *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
                   *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
                   src += 6;
                   }
                 break;
-                }
               //}}}
               //{{{
               default:
@@ -405,7 +400,7 @@ cAudioFrame* cAudioRender::getAudioFrameFromPts (int64_t pts) {
   }
 //}}}
 
-// callback
+// callbacks
 //{{{
 cFrame* cAudioRender::getFrame() {
 

@@ -29,7 +29,7 @@ public:
   void trimVideoBeforePts (int64_t pts);
 
   // callbacks
-  cFrame* getFFmpegFrame();
+  cFrame* getFrame();
   void addFrame (cFrame* frame);
 
   // virtual
