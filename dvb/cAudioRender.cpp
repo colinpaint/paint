@@ -44,7 +44,7 @@ public:
     cAudioPlayer (cAudioRender* audioRender, int64_t pts) {
 
       mPts = pts;
-      mPlayPts = mPts;
+      mPlayPts = pts;
 
       mThread = thread ([=]() {
         cLog::setThreadName ("play");
@@ -102,9 +102,15 @@ public:
                 srcSamples = silence.data();
               numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame());
 
-              mPlayPts = mPts;
-              if (mPlaying)
-                mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
+              if (mSetPts) {
+                mPts = mSetPts;
+                mSetPts = 0;
+                }
+              else {
+                mPlayPts = mPts;
+                if (mPlaying)
+                  mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
+                }
               });
             }
 
@@ -181,13 +187,20 @@ public:
             }
           }
 
-          audio.play (2, srcSamples, 
-                      audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame(), 
+          audio.play (2, srcSamples,
+                      audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame(),
                       1.f);
 
-          mPlayPts = mPts;
-          if (mPlaying) 
-            mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
+          if (mSetPts) {
+            mPts = mSetPts;
+            mSetPts = 0;
+            }
+          else {
+            mPlayPts = mPts;
+            if (mPlaying)
+              mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
+            }
+          }
 
         mRunning = false;
         cLog::log (LOGINFO, "exit");
@@ -204,7 +217,7 @@ public:
   void togglePlaying() { mPlaying = !mPlaying; }
 
   int64_t getPts() const { return mPlayPts; }
-  void setPts (int64_t pts) { mPts = pts; }
+  void setPts (int64_t pts) { mSetPts = pts; }
 
   void exit() { mExit = true; }
   //{{{
@@ -220,6 +233,7 @@ private:
   bool mExit = false;
 
   int64_t mPts = 0;
+  int64_t mSetPts = 0;
   int64_t mPlayPts = 0;
   thread mThread;
   };
