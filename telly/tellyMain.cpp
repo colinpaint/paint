@@ -134,7 +134,7 @@ int main (int numArgs, char* args[]) {
 
   // app
   cTellyApp app ({1920/2, 1080/2}, fullScreen, vsync);
-  app.setDvbSource (cFileUtils::resolve (filename), kRecordRoot, useMultiplex,
+  app.setDvbSource (filename, kRecordRoot, useMultiplex,
                     !filename.empty() || renderFirstService, decoderOptions);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));

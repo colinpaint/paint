@@ -12,6 +12,8 @@
 #include "../common/cLog.h"
 #include "../common/fileUtils.h"
 
+#include "fmt/format.h"
+
 #include "../dvb/cDvbStream.h"
 
 using namespace std;
@@ -40,29 +42,35 @@ bool cTellyApp::setDvbSource (const string& filename, const string& recordRoot, 
   mDecoderOptions = decoderOptions;
 
   if (filename.empty()) {
-  // create dvb source
-    mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, renderFirstService, decoderOptions);
+  // create dvbSource from dvbMultiplex
+    mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, renderFirstService, mDecoderOptions);
     if (!mDvbStream)
       return false;
     mDvbStream->dvbSource (true);
-    }
-  else {
-    mDvbStream = new cDvbStream (kDvbMultiplexes,  "", true, decoderOptions);
-    if (!mDvbStream)
-      return false;
-    mDvbStream->fileSource (true, filename);
+    return true;
     }
 
-  return true;
+  else {
+    // create fileSource, with dummy all multiplex
+    mDvbStream = new cDvbStream (kDvbMultiplexes,  "", true, mDecoderOptions);
+    if (!mDvbStream)
+      return false;
+
+    cFileUtils::resolve (filename);
+    mDvbStream->fileSource (true, filename);
+
+    return true;
+    }
   }
 //}}}
 //{{{
 void cTellyApp::drop (const vector<string>& dropItems) {
+// drop fileSource
 
   for (auto& item : dropItems) {
     string filename = cFileUtils::resolve (item);
     setDvbSource (filename, "", kDvbMultiplexes, true, mDecoderOptions);
-    cLog::log (LOGINFO, filename);
+    cLog::log (LOGINFO, fmt::format ("cTellyApp::drop {}", filename));
     }
   }
 //}}}
