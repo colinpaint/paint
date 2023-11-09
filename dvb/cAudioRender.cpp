@@ -409,7 +409,7 @@ void cAudioRender::addFrame (cFrame* frame) {
 
 //{{{
 string cAudioRender::getInfoString() const {
-  return fmt::format ("aud frames:{:2d}:{:2d}:{:2d} {} {}x{}@{}k",
+  return fmt::format ("aud frames:{:2d}:{:2d}:{:d} {} {}x{}@{}k",
                       mFrames.size(), mFreeFrames.size(), getQueueSize(),
                       mDecoder->getInfoString(),
                       mNumChannels, mSamplesPerFrame, mSampleRate/1000);

@@ -272,7 +272,7 @@ void cVideoRender::addFrame (cFrame* frame) {
 
 //{{{
 string cVideoRender::getInfoString() const {
-  return fmt::format ("vid frames:{:2d}:{:2d}:{2d} {} {}",
+  return fmt::format ("vid frames:{:2d}:{:2d}:{:d} {} {}",
                       mFrames.size(), mFreeFrames.size(), getQueueSize(),
                       mDecoder->getInfoString(), mFrameInfo);
   }
