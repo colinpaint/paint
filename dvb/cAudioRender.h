@@ -26,12 +26,12 @@ public:
   uint32_t getSampleRate() const { return mSampleRate; }
   int64_t getPtsDuration() const { return mPtsDuration; }
 
+  // play
   bool isPlaying() const;
   int64_t getPlayerPts() const;
 
-  // play
   void togglePlaying();
-  void setPlayPts (int64_t pts);
+  void startPlayerPts (int64_t pts);
 
   // find
   cAudioFrame* getAudioFrameFromPts (int64_t pts);
@@ -47,10 +47,10 @@ public:
 private:
   // vars
   size_t mNumChannels;
-  size_t mSamplesPerFrame = 0;
-  uint32_t mSampleRate = 0;
-  int64_t mPtsDuration = 0;
+  uint32_t mSampleRate;
+  size_t mSamplesPerFrame;
+  int64_t mPtsDuration;
 
-  cAudioPlayer* mPlayer = nullptr;
-  int mPlayerFrames = 0;
+  cAudioPlayer& mPlayer;
+  int mPlayerFrames;
   };

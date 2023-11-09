@@ -41,30 +41,26 @@ class cAudioPlayer {
 public:
   #ifdef _WIN32
     //{{{
-    cAudioPlayer (cAudioRender* audioRender, int64_t pts) {
+    cAudioPlayer (cAudioRender& audioRender) {
 
-      mPts = pts;
-      mPlayPts = pts;
-
-      mThread = thread ([=]() {
+      mThread = thread ([=, &audioRender]() {
         cLog::setThreadName ("play");
         SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 
         optional<cAudioDevice> audioDevice = getDefaultAudioOutputDevice();
         if (audioDevice) {
-          cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", audioRender->getSampleRate());
-          audioDevice->setSampleRate (audioRender->getSampleRate());
+          cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", audioRender.getSampleRate());
+          audioDevice->setSampleRate (audioRender.getSampleRate());
           audioDevice->start();
 
           array <float,2048*2> samples = { 0.f };
           array <float,2048*2> silence = { 0.f };
-          cAudioFrame* audioFrame;
           while (!mExit) {
             audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
               // loadSrcSamples callback lambda
               // locked audio mutex
-              shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-              audioFrame = audioRender->getAudioFrameFromPts (mPts);
+              shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
+              cAudioFrame* audioFrame = audioRender.getAudioFrameFromPts (mPts);
               if (mPlaying && audioFrame) {
                 float* src = audioFrame->mSamples.data();
                 float* dst = samples.data();
@@ -100,17 +96,10 @@ public:
                 }
               else
                 srcSamples = silence.data();
-              numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame());
+              numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : audioRender.getSamplesPerFrame());
 
-              if (mSetPts) {
-                mPts = mSetPts;
-                mSetPts = 0;
-                }
-              else {
-                mPlayPts = mPts;
-                if (mPlaying)
-                  mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
-                }
+              if (mPlaying)
+                mPts += audioFrame ? audioFrame->mPtsDuration : audioRender.getPtsDuration();
               });
             }
 
@@ -126,12 +115,9 @@ public:
     //}}}
   #else
     //{{{
-    cAudioPlayer (cAudioRender* audioRender, int64_t pts) {
+    cAudioPlayer (cAudioRender& audioRender) {
 
-      mPts = pts;
-      mPlayPts = pts;
-
-      mThread = thread ([=]() { //,this
+      mThread = thread ([=, &audioRender]() {
         // lambda
         cLog::setThreadName ("play");
 
@@ -140,18 +126,18 @@ public:
         sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
         pthread_setschedparam (mThread.native_handle(), SCHED_RR, &sch_params);
 
-        cAudio audio (2, audioRender->getSampleRate(), 40000, false);
+        cAudio audio (2, audioRender.getSampleRate(), 40000, false);
 
         array <float,2048*2> samples = { 0.f };
         array <float,2048*2> silence = { 0.f };
 
-        cAudioFrame* audioFrame = nullptr;
         while (!mExit) {
           float* srcSamples = silence.data();
 
+          cAudioFrame* audioFrame;
           { // locked mutex
-          shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-          audioFrame = audioRender->getAudioFrameFromPts (mPts);
+          shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
+          audioFrame = audioRender.getAudioFrameFromPts (mPts);
           if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
             float* src = audioFrame->mSamples.data();
             float* dst = samples.data();
@@ -188,18 +174,11 @@ public:
           }
 
           audio.play (2, srcSamples,
-                      audioFrame ? audioFrame->mSamplesPerFrame : audioRender->getSamplesPerFrame(),
+                      audioFrame ? audioFrame->mSamplesPerFrame : audioRender.getSamplesPerFrame(),
                       1.f);
 
-          if (mSetPts) {
-            mPts = mSetPts;
-            mSetPts = 0;
-            }
-          else {
-            mPlayPts = mPts;
-            if (mPlaying)
-              mPts += audioFrame ? audioFrame->mPtsDuration : audioRender->getPtsDuration();
-            }
+          if (mPlaying)
+            mPts += audioFrame ? audioFrame->mPtsDuration : audioRender.getPtsDuration();
           }
 
         mRunning = false;
@@ -213,11 +192,15 @@ public:
 
   ~cAudioPlayer() = default;
 
+  int64_t getPts() const { return mPts; }
   bool isPlaying() const { return mPlaying; }
   void togglePlaying() { mPlaying = !mPlaying; }
-
-  int64_t getPts() const { return mPlayPts; }
-  void setPts (int64_t pts) { mSetPts = pts; }
+  //{{{
+  void startPlayerPts (int64_t pts) {
+    mPts = pts;
+    mPlaying = true;
+    }
+  //}}}
 
   void exit() { mExit = true; }
   //{{{
@@ -228,7 +211,7 @@ public:
   //}}}
 
 private:
-  bool mPlaying = true;
+  bool mPlaying = false;
   bool mRunning = true;
   bool mExit = false;
 
@@ -349,11 +332,9 @@ private:
 // cAudioRender
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kQueued, name + "aud", streamType, decoderMask, kAudioFrameMapSize) {
-
-  mNumChannels = 2;
-  mSampleRate = 48000;
-  mSamplesPerFrame = 1024;
+    : cRender(kQueued, name + "aud", streamType, decoderMask, kAudioFrameMapSize),
+      mNumChannels(2), mSampleRate(48000), mSamplesPerFrame(1024), mPtsDuration(0),
+      mPlayer(*(new cAudioPlayer (*this))), mPlayerFrames(0) {
 
   mDecoder = new cFFmpegAudioDecoder (streamType);
 
@@ -364,11 +345,9 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
 //{{{
 cAudioRender::~cAudioRender() {
 
-  if (mPlayer) {
-    mPlayer->exit();
-    mPlayer->wait();
-    }
-  delete mPlayer;
+  mPlayer.exit();
+  mPlayer.wait();
+  // delete mPlayer ???
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
@@ -382,33 +361,15 @@ cAudioRender::~cAudioRender() {
   }
 //}}}
 
-bool cAudioRender::isPlaying() const { return mPlayer && mPlayer->isPlaying(); }
-//{{{
-int64_t cAudioRender::getPlayerPts() const {
-  return mPlayer ? mPlayer->getPts() : 0;
-  }
-//}}}
+bool cAudioRender::isPlaying() const { return mPlayer.isPlaying(); }
+int64_t cAudioRender::getPlayerPts() const { return mPlayer.getPts(); }
 
-//{{{
-void cAudioRender::togglePlaying() {
+void cAudioRender::togglePlaying() { mPlayer.togglePlaying(); }
+void cAudioRender::startPlayerPts (int64_t pts) { mPlayer.startPlayerPts (pts); }
 
-  if (mPlayer)
-    mPlayer->togglePlaying();
-  }
-//}}}
-//{{{
-void cAudioRender::setPlayPts (int64_t pts) {
-
-  if (mPlayer)
-    mPlayer->setPts (pts);
-  }
-//}}}
-
-//{{{
 cAudioFrame* cAudioRender::getAudioFrameFromPts (int64_t pts) {
   return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts));
   }
-//}}}
 
 // callbacks
 //{{{
@@ -439,9 +400,8 @@ void cAudioRender::addFrame (cFrame* frame) {
   }
 
   // start player
-  if (!mPlayer)
-    if (++mPlayerFrames >= kPlayerPreloadFrames)
-      mPlayer = new cAudioPlayer (this, audioFrame->mPts);
+  if ((++mPlayerFrames >= kPlayerPreloadFrames) && !mPlayer.isPlaying())
+    mPlayer.startPlayerPts (audioFrame->mPts - (kPlayerPreloadFrames * audioFrame->mPtsDuration));
   }
 //}}}
 

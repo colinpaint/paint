@@ -5,13 +5,13 @@ cmake_policy (SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
-# options - GL_3, GLES_3_0,GLES_3_1,GLES_3_2
-#cmake .. -DBUILD_GRAPHICS=GLES_3_1
+# options - GL3, GLES30,GLES31,GLES32
+#cmake .. -DBUILD_GRAPHICS=GLES31
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-  set (BUILD_GRAPHICS "GL_3" CACHE STRING "build graphics option")
+  set (BUILD_GRAPHICS "GL3" CACHE STRING "build graphics option")
 elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-  set (BUILD_GRAPHICS "GLES_3_1" CACHE STRING "build graphics option")
+  set (BUILD_GRAPHICS "GLES31" CACHE STRING "build graphics option")
 endif()
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -26,7 +26,7 @@ set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FO
 message (STATUS "building ${BUILD_GRAPHICS} graphics")
 
 # glad lib
-if (BUILD_GRAPHICS STREQUAL "GL_3")
+if (BUILD_GRAPHICS STREQUAL "GL3")
   add_subdirectory (glad4.5core)
 endif()
 

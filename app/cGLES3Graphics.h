@@ -304,7 +304,7 @@ private:
         // create mPixels, texture pixels shadow buffer
         mPixels = static_cast<uint8_t*>(malloc (getNumPixelBytes()));
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-        #if defined(GL_3)
+        #if defined(GL3)
           glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
         #endif
         }
@@ -312,7 +312,7 @@ private:
       else if (!mDirtyPixelsRect.isEmpty()) {
         // no openGL glGetTexSubImage, so dirtyPixelsRect not really used, is this correct ???
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
-        #if defined(GL_3)
+        #if defined(GL3)
           glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)mPixels);
         #endif
         mDirtyPixelsRect = cRect(0,0,0,0);
@@ -523,7 +523,7 @@ private:
         case GL_DEPTH_STENCIL:     formatName = "GL_DEPTH_STENCIL"; break;     // 0x84F9
         case GL_DEPTH24_STENCIL8:  formatName = "GL_DEPTH24_STENCIL8"; break;  // 0x88F0
 
-      #if defined(GL_3)
+      #if defined(GL3)
         case GL_STENCIL_INDEX:     formatName = "GL_STENCIL_INDEX"; break;     // 0x1901
         case GL_RGBA:              formatName = "GL_RGBA"; break;              // 0x1908
         case GL_R3_G3_B2:          formatName = "GL_R3_G3_B2"; break;          // 0x2A10
@@ -555,7 +555,7 @@ private:
       if (glIsTexture(id) == GL_FALSE)
         return "Not texture object";
 
-      #if defined(GL_3)
+      #if defined(GL3)
         glBindTexture (GL_TEXTURE_2D, id);
         int width;
         glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);            // get texture width

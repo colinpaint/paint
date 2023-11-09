@@ -1,21 +1,23 @@
 project (app VERSION 1.0.0)
-  if (BUILD_GRAPHICS STREQUAL "GL_3")
+  if (BUILD_GRAPHICS STREQUAL "GL3")
     # GL
-    add_library (${PROJECT_NAME} cApp.h cGlfwApp.cpp cGL3Graphics.h
-                                 myImgui.h myImgui.cpp 
+    add_library (${PROJECT_NAME} cApp.h cPlatform.h cGlfwApp.cpp
+                                 myImgui.h myImgui.cpp
                                  ../imgui/imgui.h ../imgui/imgui.cpp
                                  ../imgui/backends/imgui_impl_glfw.h ../imgui/backends/imgui_impl_glfw.cpp
-                                 ../imgui/backends/imgui_impl_opengl3.cpp)
+                                 ../imgui/backends/imgui_impl_opengl3.cpp
+                                 cGL3Graphics.h)
 
-  elseif (BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
-          BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
-          BUILD_GRAPHICS STREQUAL "GLES_3_2")
+  elseif (BUILD_GRAPHICS STREQUAL "GLES30" OR
+          BUILD_GRAPHICS STREQUAL "GLES31" OR
+          BUILD_GRAPHICS STREQUAL "GLES32")
     # GLES
-    add_library (${PROJECT_NAME} cApp.h cGlfwApp.cpp cGLES3Graphics.h
-                                 myImgui.h myImgui.cpp 
+    add_library (${PROJECT_NAME} cApp.h cPlatform.h cGlfwApp.cpp
+                                 myImgui.h myImgui.cpp
                                  ../imgui/imgui.h ../imgui/imgui.cpp
                                  ../imgui/backends/imgui_impl_glfw.h ../imgui/backends/imgui_impl_glfw.cpp
-                                 ../imgui/backends/imgui_impl_opengl3.cpp)
+                                 ../imgui/backends/imgui_impl_opengl3.cpp
+                                 cGLES3Graphics.h)
 
   else()
     message (FATAL_ERROR, "unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
@@ -26,7 +28,7 @@ project (app VERSION 1.0.0)
                                               PUBLIC common ../imgui)
   target_link_libraries (${PROJECT_NAME} PUBLIC common)
 
-  if (BUILD_GRAPHICS STREQUAL "GL_3")
+  if (BUILD_GRAPHICS STREQUAL "GL3")
     # GL
     find_package (OpenGL REQUIRED)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -35,9 +37,7 @@ project (app VERSION 1.0.0)
       target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad GL)
     endif()
 
-  elseif (BUILD_GRAPHICS STREQUAL "GLES_3_0" OR
-          BUILD_GRAPHICS STREQUAL "GLES_3_1" OR
-          BUILD_GRAPHICS STREQUAL "GLES_3_2")
+  else()
     # GLES
     find_package (OpenGL REQUIRED)
     target_compile_definitions (${PROJECT_NAME} PRIVATE GLFW_INCLUDE_ES3=1
