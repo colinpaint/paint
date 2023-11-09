@@ -16,11 +16,10 @@ constexpr size_t kMaxAudioSamplesPerFrame = 2048;
 class cAudioFrame : public cFrame {
 public:
   cAudioFrame() = default;
-  //{{{
-  virtual ~cAudioFrame() {
-    releaseResources();
-    }
-  //}}}
+  virtual ~cAudioFrame() { releaseResources(); }
+
+  std::string getInfoString() { return fmt::format ("pesSize:{:6} {}x{}:{}k",
+                                                    mPesSize, mNumChannels, mSamplesPerFrame, mSampleRate/1000); }
 
   virtual void releaseResources() final {}
   //{{{

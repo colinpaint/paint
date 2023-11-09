@@ -279,7 +279,7 @@ public:
             // fill it up
             audioFrame->mPts = interpolatedPts;
             audioFrame->mPtsDuration = avFrame->sample_rate ? (avFrame->nb_samples * 90000 / avFrame->sample_rate) : 48000;
-            audioFrame->mPesSize = pesSize;
+            audioFrame->mPesSize = bytesUsed;
             audioFrame->mSamplesPerFrame = avFrame->nb_samples;
             audioFrame->mSampleRate = avFrame->sample_rate;
             audioFrame->mNumChannels = avFrame->ch_layout.nb_channels;
@@ -390,6 +390,7 @@ void cAudioRender::addFrame (cFrame* frame) {
   mSampleRate = audioFrame->mSampleRate;
   mSamplesPerFrame = audioFrame->mSamplesPerFrame;
   mPtsDuration = audioFrame->mPtsDuration;
+  mFrameInfo = audioFrame->getInfoString();
 
   logValue (audioFrame->mPts, audioFrame->mPowerValues[0]);
 
@@ -408,10 +409,9 @@ void cAudioRender::addFrame (cFrame* frame) {
 
 //{{{
 string cAudioRender::getInfoString() const {
-  return fmt::format ("aud frames:{:2d}:{:2d}:{:d} {} {}x{}:{}k",
+  return fmt::format ("aud frames:{:2d}:{:2d}:{:d} {} {}",
                       mFrames.size(), mFreeFrames.size(), getQueueSize(),
-                      mDecoder->getInfoString(),
-                      mNumChannels, mSamplesPerFrame, mSampleRate/1000);
+                      mDecoder->getInfoString(), mFrameInfo);
   }
 //}}}
 //{{{

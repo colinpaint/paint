@@ -51,6 +51,8 @@ private:
   size_t mSamplesPerFrame;
   int64_t mPtsDuration;
 
+  std::string mFrameInfo;
+
   cAudioPlayer& mPlayer;
   int mPlayerFrames;
   };
