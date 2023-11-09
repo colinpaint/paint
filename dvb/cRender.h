@@ -85,29 +85,27 @@ public:
   bool isQueued() const { return mQueued; }
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
-
-  cFrame* getFreeFrame();
-  cFrame* getYoungestFrame();
-  cFrame* getNearestFrameFromPts (int64_t pts);
+  cMiniLog& getLog() { return mMiniLog; }
+  float getValue (int64_t pts) const;
+  float getOffsetValue (int64_t ptsOffset, int64_t& pts) const;
 
   int64_t getLastPts() const { return mLastPts; }
   size_t getNumValues() const { return mValuesMap.size(); }
   size_t getFrameMapSize() const { return mFrameMapSize; }
-
   std::map<int64_t,cFrame*> getFrames() { return mFrames; }
   std::deque<cFrame*> getFreeFrames() { return mFreeFrames; }
 
-  cMiniLog& getLog() { return mMiniLog; }
-  float getValue (int64_t pts) const;
-  float getOffsetValue (int64_t ptsOffset, int64_t& pts) const;
+  cFrame* getFreeFrame();
+  cFrame* getYoungestFrame();
+  cFrame* getFrameFromPts (int64_t pts);
+  cFrame* getNearestFrameFromPts (int64_t pts);
+  virtual void trimFramesBeforePts (int64_t pts);
 
   void setFrameMapSize (size_t size) { mFrameMapSize = size; }
   void setAllocFrameCallback (std::function <cFrame* ()> getFrameCallback) { mAllocFrameCallback = getFrameCallback; }
   void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
   void setRefPts (int64_t pts) { mRefPts = pts; }
   void setMapSize (size_t size) { mMapSize = size; }
-
-  virtual void trimFramesBeforePts (int64_t pts);
 
   void toggleLog();
   void header();
@@ -119,8 +117,6 @@ public:
   virtual bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
 
 protected:
-  cFrame* getFrameFromPts (int64_t pts);
-
   size_t getQueueSize() const;
   float getQueueFrac() const;
 

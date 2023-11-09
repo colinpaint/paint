@@ -407,16 +407,14 @@ void cAudioRender::addFrame (cFrame* frame) {
   }
 //}}}
 
-// virtual
 //{{{
 string cAudioRender::getInfoString() const {
   return fmt::format ("aud frames:{:2d}:{:2d}:{:2d} {} {}x{}@{}k",
                       mFrames.size(), mFreeFrames.size(), getQueueSize(),
-                      mDecoder->getInfoString(), 
+                      mDecoder->getInfoString(),
                       mNumChannels, mSamplesPerFrame, mSampleRate/1000);
   }
 //}}}
-
 //{{{
 bool cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 

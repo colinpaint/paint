@@ -40,7 +40,6 @@ public:
   virtual cFrame* getFrame() final;
   virtual void addFrame (cFrame* frame) final;
 
-  // virtual
   virtual std::string getInfoString() const final;
   virtual bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
 

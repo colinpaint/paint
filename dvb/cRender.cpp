@@ -30,6 +30,23 @@ cRender::~cRender() {
 //}}}
 
 //{{{
+float cRender::getValue (int64_t pts) const {
+
+  auto it = mValuesMap.find (pts / kPtsPerFrame);
+  return it == mValuesMap.end() ? 0.f : it->second;
+  }
+//}}}
+//{{{
+float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
+
+  pts = mRefPts - ptsOffset;
+
+  auto it = mValuesMap.find (pts / kPtsPerFrame);
+  return it == mValuesMap.end() ? 0.f : it->second;
+  }
+//}}}
+
+//{{{
 cFrame* cRender::getFreeFrame() {
 
   if (mFreeFrames.empty())
@@ -60,6 +77,14 @@ cFrame* cRender::getYoungestFrame() {
   }
 //}}}
 //{{{
+cFrame* cRender::getFrameFromPts (int64_t pts) {
+
+  // unlocked find
+  auto it = mFrames.find (pts);
+  return (it == mFrames.end()) ? nullptr : it->second;
+  }
+//}}}
+//{{{
 cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
 // return nearest frame at or after pts
 
@@ -71,23 +96,6 @@ cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
     }
 
   return nullptr;
-  }
-//}}}
-
-//{{{
-float cRender::getValue (int64_t pts) const {
-
-  auto it = mValuesMap.find (pts / kPtsPerFrame);
-  return it == mValuesMap.end() ? 0.f : it->second;
-  }
-//}}}
-//{{{
-float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
-
-  pts = mRefPts - ptsOffset;
-
-  auto it = mValuesMap.find (pts / kPtsPerFrame);
-  return it == mValuesMap.end() ? 0.f : it->second;
   }
 //}}}
 
@@ -145,14 +153,6 @@ bool cRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t d
 //}}}
 
 // protected
-//{{{
-cFrame* cRender::getFrameFromPts (int64_t pts) {
-
-  // unlocked find
-  auto it = mFrames.find (pts);
-  return (it == mFrames.end()) ? nullptr : it->second;
-  }
-//}}}
 //{{{
 size_t cRender::getQueueSize() const {
   return mDecodeQueue.size_approx();

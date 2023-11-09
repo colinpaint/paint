@@ -210,7 +210,6 @@ cVideoRender::~cVideoRender() {
   }
 //}}}
 
-// frames, freeframes
 //{{{
 cVideoFrame* cVideoRender::getVideoFrameFromPts (int64_t pts) {
 
@@ -229,6 +228,7 @@ cVideoFrame* cVideoRender::getVideoNearestFrameFromPts (int64_t pts) {
     return dynamic_cast<cVideoFrame*>(getNearestFrameFromPts (pts / mPtsDuration));
   }
 //}}}
+
 //{{{
 void cVideoRender::trimVideoBeforePts (int64_t pts) {
   trimFramesBeforePts (pts / mPtsDuration);
@@ -270,11 +270,10 @@ void cVideoRender::addFrame (cFrame* frame) {
   }
 //}}}
 
-// virtual
 //{{{
 string cVideoRender::getInfoString() const {
   return fmt::format ("vid frames:{:2d}:{:2d}:{2d} {} {}",
-                      mFrames.size(), mFreeFrames.size(), getQueueSize(), 
+                      mFrames.size(), mFreeFrames.size(), getQueueSize(),
                       mDecoder->getInfoString(), mFrameInfo);
   }
 //}}}

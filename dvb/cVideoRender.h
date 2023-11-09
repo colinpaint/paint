@@ -32,7 +32,6 @@ public:
   cFrame* getFrame();
   void addFrame (cFrame* frame);
 
-  // virtual
   virtual std::string getInfoString() const final;
 
 private:
