@@ -32,9 +32,9 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr bool kQueued = false;
-constexpr int kPlayerPreloadFrames = 12;
-constexpr size_t kAudioFrameMapSize = 48;
+constexpr bool kQueued = true;
+constexpr int kPlayerPreloadFrames = 16;
+constexpr size_t kAudioFrameMapSize = 32;
 
 //{{{
 class cAudioPlayer {
@@ -399,17 +399,20 @@ void cAudioRender::addFrame (cFrame* frame) {
   mFrames.emplace (audioFrame->mPts, audioFrame);
   }
 
-  // start player
-  if ((++mPlayerFrames >= kPlayerPreloadFrames) && !mPlayer.isPlaying())
-    mPlayer.startPlayerPts (audioFrame->mPts - (kPlayerPreloadFrames * audioFrame->mPtsDuration));
+  // start player after kPlayerPreloadFrames of audio decoded
+  mPlayerFrames++;
+  if (!mPlayer.isPlaying())
+    if (mPlayerFrames == kPlayerPreloadFrames)
+      mPlayer.startPlayerPts (audioFrame->mPts - (kPlayerPreloadFrames * audioFrame->mPtsDuration));
   }
 //}}}
 
 // virtual
 //{{{
 string cAudioRender::getInfoString() const {
-  return fmt::format ("aud frames:{:3d}:{:3d} {} {}x{}@{}k",
-                      mFrames.size(), mFreeFrames.size(), mDecoder->getInfoString(),
+  return fmt::format ("aud frames:{:2d}:{:2d}:{:2d} {} {}x{}@{}k",
+                      mFrames.size(), mFreeFrames.size(), getQueueSize(),
+                      mDecoder->getInfoString(), 
                       mNumChannels, mSamplesPerFrame, mSampleRate/1000);
   }
 //}}}

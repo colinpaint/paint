@@ -253,17 +253,17 @@ public:
     ImGui::SameLine();
     ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
     ImGui::DragFloat ("##scale", &mScale, 0.01f, 0.05f, 16.f, "scale%3.2f");
+    //}}}
+    //{{{  draw overlap,history buttons
+    //ImGui::SameLine();
+    //ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
+    //ImGui::DragFloat ("##over", &mOverlap, 0.25f, 0.5f, 32.f, "over%3.1f");
 
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
-    ImGui::DragFloat ("##over", &mOverlap, 0.25f, 0.5f, 32.f, "over%3.1f");
+    //ImGui::SameLine();
+    //ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
+    //ImGui::DragInt ("##hist", &mHistory, 0.25f, 0, 100, "h %d");
     //}}}
-    //{{{  draw history size button
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
-    ImGui::DragInt ("##hist", &mHistory, 0.25f, 0, 100, "h %d");
-    //}}}
-    //{{{  draw map size button
+    //{{{  draw audioMap size button
     ImGui::SameLine();
     ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
     ImGui::DragInt ("##aud", &mAudioFrameMapSize, 0.25f, 2, 100, "aud %d");
@@ -295,12 +295,12 @@ public:
         }
         //}}}
       if (dvbStream.isFileSource()) {
-        //{{{  draw filepos, size
+        //{{{  draw filePos
         ImGui::SameLine();
         //ImGui::TextUnformatted (fmt::format ("{}k of {}k",
         //                                     dvbStream.getFilePos()/1000,
         //                                     dvbStream.getFileSize()/1000).c_str());
-        ImGui::TextUnformatted (fmt::format ("{}", (100.f * dvbStream.getFilePos()) / dvbStream.getFileSize()).c_str());
+        ImGui::TextUnformatted (fmt::format ("{:4.3f}", (100.f * dvbStream.getFilePos()) / dvbStream.getFileSize()).c_str());
         }
         //}}}
       else if (dvbStream.hasDvbSource()) {
@@ -358,7 +358,8 @@ public:
 
 private:
   enum eTab { eTelly, eServices, ePids, eRecorded, eHistory };
-  inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded", "history"};
+  inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded" };
+  //inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded", "history"};
 
   //{{{
   void drawChannels (cDvbStream& dvbStream, cGraphics& graphics, uint16_t decoderOptions) {
