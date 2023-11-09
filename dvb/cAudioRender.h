@@ -13,6 +13,7 @@ class cAudioDecoder;
 class cAudioPlayer;
 //}}}
 
+constexpr size_t kAudioFrameMapSize = 16;
 enum class eAudioFrameType { eUnknown, eId3Tag, eWav, eMp3, eAacAdts, eAacLatm };
 
 class cAudioRender : public cRender {

@@ -39,12 +39,12 @@ public:
       mPixelsPerVideoFrame(pixelsPerVideoFrame), mPixelsPerAudioChannel(pixelsPerAudioChannel) {}
 
   //{{{
-  void draw (cAudioRender& audio, cVideoRender& video, int64_t playPts) {
+  void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playPts) {
 
     ImVec2 pos = {ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(),
                   ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - ImGui::GetTextLineHeight()};
 
-    drawAudioPower (audio, playPts, pos);
+    drawAudioPower (audioRender, playPts, pos);
 
     pos.x -= ImGui::GetWindowWidth() / 2.f;
 
@@ -54,11 +54,11 @@ public:
       {pos.x + 1.f, pos.y + mAudioLines * ImGui::GetTextLineHeight()},
       0xffc0c0c0);
 
-    float ptsScale = mPixelsPerVideoFrame / video.getPtsDuration();
+    float ptsScale = mPixelsPerVideoFrame / videoRender.getPtsDuration();
 
     { // lock video during iterate
-    shared_lock<shared_mutex> lock (video.getSharedMutex());
-    for (auto& frame : video.getFrames()) {
+    shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
+    for (auto& frame : videoRender.getFrames()) {
       //{{{  draw video frames
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
       float offset1 = (videoFrame->mPts - playPts) * ptsScale;
@@ -83,7 +83,7 @@ public:
       //  0xffff00ff);
       }
       //}}}
-    for (auto frame : video.getFreeFrames()) {
+    for (auto frame : videoRender.getFreeFrames()) {
       //{{{  draw free video frames
       cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
       float offset1 = (videoFrame->mPts - playPts) * ptsScale;
@@ -98,8 +98,8 @@ public:
     }
 
     { // lock audio during iterate
-    shared_lock<shared_mutex> lock (audio.getSharedMutex());
-    for (auto& frame : audio.getFrames()) {
+    shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
+    for (auto& frame : audioRender.getFrames()) {
       //{{{  draw audio frames
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
       float offset1 = (audioFrame->mPts - playPts) * ptsScale;
@@ -110,7 +110,7 @@ public:
         0xff00ffff);
       }
       //}}}
-    for (auto frame : audio.getFreeFrames()) {
+    for (auto frame : audioRender.getFreeFrames()) {
       //{{{  draw free audio frames
       cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
       float offset1 = (audioFrame->mPts - playPts) * ptsScale;
@@ -263,7 +263,14 @@ public:
     //ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
     //ImGui::DragInt ("##hist", &mHistory, 0.25f, 0, 100, "h %d");
     //}}}
-    //{{{  draw audioMap size button
+    //{{{  draw videoFrameMap size button
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
+    ImGui::DragInt ("##vid", &mVideoFrameMapSize, 0.25f, 2, 100, "vid %d");
+    if (ImGui::IsItemHovered())
+      mVideoFrameMapSize = max (2, min (100, mVideoFrameMapSize + static_cast<int>(ImGui::GetIO().MouseWheel)));
+    //}}}
+    //{{{  draw audioFrameMap size button
     ImGui::SameLine();
     ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
     ImGui::DragInt ("##aud", &mAudioFrameMapSize, 0.25f, 2, 100, "aud %d");
@@ -375,7 +382,7 @@ private:
         ImGui::SameLine();
         ImGui::TextUnformatted (fmt::format ("{}{}",
           service.getStream (cDvbStream::eAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
-        //ImGui::TextUnformatted (fmt::format ("{} {}", audio.getInfo(), video.getInfo()).c_str());
+        //ImGui::TextUnformatted (fmt::format ("{} {}", audio.getInfo(), videoRender.getInfo()).c_str());
         }
 
       while (service.getChannelName().size() > mMaxNameChars)
@@ -530,21 +537,22 @@ private:
       if (!service.getStream (cDvbStream::eVideo).isEnabled())
         continue;
 
-      cVideoRender& video = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
-      cPoint videoSize = {video.getWidth(), video.getHeight()};
+      cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
+      videoRender.setFrameMapSize (mVideoFrameMapSize);
+      cPoint videoSize = {videoRender.getWidth(), videoRender.getHeight()};
 
       // playPts and draw framesGraphic
       int64_t playPts = service.getStream (cDvbStream::eAudio).getPts();
       if (service.getStream (cDvbStream::eAudio).isEnabled()) {
-        cAudioRender& audio = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
-        audio.setFrameMapSize (mAudioFrameMapSize);
-        playPts = audio.getPlayerPts();
+        cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
+        audioRender.setFrameMapSize (mAudioFrameMapSize);
+        playPts = audioRender.getPlayerPts();
 
-        mFramesGraphic.draw (audio, video, playPts);
+        mFramesGraphic.draw (audioRender, videoRender, playPts);
         }
 
       // draw telly history pic
-      cVideoFrame* videoFrame = video.getVideoFrameFromPts (playPts);
+      cVideoFrame* videoFrame = videoRender.getVideoFrameFromPts (playPts);
       if (videoFrame) {
         // form draw list
         deque <cVideoFrameDraw> mVideoFramesDraws;
@@ -552,8 +560,8 @@ private:
           mVideoFramesDraws.push_back ({videoFrame, 0.f});
         else {
           // locked
-          shared_lock<shared_mutex> lock (video.getSharedMutex());
-          for (auto& frame : video.getFrames()) {
+          shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
+          for (auto& frame : videoRender.getFrames()) {
             videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
             int64_t offset = (videoFrame->mPts / videoFrame->mPtsDuration) - (playPts / videoFrame->mPtsDuration);
             if (offset <= 0) // draw last
@@ -584,7 +592,7 @@ private:
           mQuad->draw();
           }
 
-        video.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
+        videoRender.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
         }
       }
     }
@@ -601,6 +609,7 @@ private:
         continue;
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
+      videoRender.setFrameMapSize (mVideoFrameMapSize);
 
       // playerPts and draw framesGraphic
       int64_t playerPts = service.getStream (cDvbStream::eAudio).getPts();
@@ -741,7 +750,8 @@ private:
   cQuad* mQuad = nullptr;
   cTextureShader* mShader = nullptr;
 
-  int mAudioFrameMapSize = 12;
+  int mVideoFrameMapSize = kVideoFrameMapSize;
+  int mAudioFrameMapSize = kAudioFrameMapSize;
 
   float mScale = 1.f;
   float mOverlap = 4.f;
