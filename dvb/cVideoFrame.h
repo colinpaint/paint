@@ -26,7 +26,10 @@ public:
   //{{{
   std::string getInfoString() {
 
-    std::string info = fmt::format ("{}x{} pesSize:{:6} ", mWidth, mHeight, mPesSize);
+    std::string info = fmt::format ("{}x{}:{}{} pesSize:{:6} ", 
+                                    mWidth, mHeight, 
+                                    mInterlaced ? "I" : "P", mInterlaced ? (mTopFieldFirst ? "1" : "2") : "",
+                                    mPesSize);
 
     if (!mTimes.empty()) {
       info += " took";
@@ -77,6 +80,8 @@ public:
   uint16_t mHeight = 0;
   uint16_t mStrideY = 0;
   uint16_t mStrideUV = 0;
+  bool mInterlaced = false;
+  bool mTopFieldFirst = false;
 
   char mFrameType = '?';
 

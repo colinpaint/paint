@@ -23,8 +23,8 @@ public:
 
   // gets
   size_t getNumChannels() const { return mNumChannels; }
-  size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
   uint32_t getSampleRate() const { return mSampleRate; }
+  size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
   int64_t getPtsDuration() const { return mPtsDuration; }
 
   // play

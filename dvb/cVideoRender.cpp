@@ -36,7 +36,15 @@ public:
   cFFmpegVideoFrame() : cVideoFrame(cTexture::eYuv420) {}
   virtual ~cFFmpegVideoFrame() { releasePixels(); }
 
-  void setAVFrame (AVFrame* avFrame) { mAvFrame = avFrame; }
+  void setAVFrame (AVFrame* avFrame) {
+    mAvFrame = avFrame;
+    mWidth = (uint16_t)avFrame->width;
+    mHeight = (uint16_t)avFrame->height;
+    mStrideY = (uint16_t)avFrame->linesize[0];
+    mStrideUV = (uint16_t)avFrame->linesize[1];
+    mInterlaced = avFrame->interlaced_frame;
+    mTopFieldFirst = avFrame->top_field_first;
+    }
 
 protected:
   virtual uint8_t** getPixels() final { return mAvFrame->data; }
@@ -139,23 +147,19 @@ public:
             }
 
           // allocFrame
-          cFFmpegVideoFrame* videoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
+          cFFmpegVideoFrame* ffmpegVideoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
+          ffmpegVideoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
 
-          videoFrame->mPts = mGotIframe ? mInterpolatedPts : dts;
-          videoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
-          videoFrame->mPesSize = frameSize;
-          videoFrame->mFrameType = frameType;
-          videoFrame->mWidth = static_cast<uint16_t>(avFrame->width);
-          videoFrame->mHeight = static_cast<uint16_t>(avFrame->height);
-          videoFrame->mStrideY = static_cast<uint16_t>(avFrame->height);
-          videoFrame->mStrideUV = static_cast<uint16_t>(avFrame->height);
-          videoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
-          videoFrame->setAVFrame (avFrame);
-          addFrameCallback (videoFrame);
+          ffmpegVideoFrame->mPts = mGotIframe ? mInterpolatedPts : dts;
+          ffmpegVideoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
+          ffmpegVideoFrame->mPesSize = frameSize;
+          ffmpegVideoFrame->mFrameType = frameType;
+          ffmpegVideoFrame->setAVFrame (avFrame);
+          addFrameCallback (ffmpegVideoFrame);
 
           avFrame = av_frame_alloc();
 
-          mInterpolatedPts += videoFrame->mPtsDuration;
+          mInterpolatedPts += ffmpegVideoFrame->mPtsDuration;
           }
         }
       frame += bytesUsed;
@@ -253,11 +257,9 @@ void cVideoRender::addFrame (cFrame* frame) {
   videoFrame->mQueueSize = getQueueSize();
   videoFrame->mTextureDirty = true;
 
+  // save some videoFrame info
   mWidth = videoFrame->mWidth;
   mHeight = videoFrame->mHeight;
-  mStrideY = videoFrame->mStrideY;
-  mStrideUV = videoFrame->mStrideUV;
-
   mPtsDuration = videoFrame->mPtsDuration;
   mFrameInfo = videoFrame->getInfoString();
 
