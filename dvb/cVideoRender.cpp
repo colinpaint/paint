@@ -28,7 +28,7 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr bool kQueued = true;
+constexpr bool kVideoQueued = true;
 
 //{{{
 class cFFmpegVideoFrame : public cVideoFrame {
@@ -187,7 +187,7 @@ private:
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kQueued, name + "vid", streamType, decoderMask, kVideoFrameMapSize) {
+    : cRender(kVideoQueued, name + "vid", streamType, decoderMask, kVideoFrameMapSize) {
 
   mDecoder = new cFFmpegVideoDecoder (streamType);
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });

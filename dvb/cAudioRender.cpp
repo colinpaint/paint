@@ -32,8 +32,8 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr bool kQueued = true;
-constexpr int kPlayerPreloadFrames = 4;
+constexpr bool kAudioQueued = true;
+constexpr int kAudioPlayerPreloadFrames = 4;
 
 //{{{
 class cAudioPlayer {
@@ -331,7 +331,7 @@ private:
 // cAudioRender
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kQueued, name + "aud", streamType, decoderMask, kAudioFrameMapSize),
+    : cRender(kAudioQueued, name + "aud", streamType, decoderMask, kAudioFrameMapSize),
       mNumChannels(2), mSampleRate(48000), mSamplesPerFrame(1024), mPtsDuration(0),
       mPlayer(*(new cAudioPlayer (*this))), mPlayerFrames(0) {
 
@@ -401,8 +401,8 @@ void cAudioRender::addFrame (cFrame* frame) {
   // start player after kPlayerPreloadFrames of audio decoded
   mPlayerFrames++;
   if (!mPlayer.isPlaying())
-    if (mPlayerFrames == kPlayerPreloadFrames)
-      mPlayer.startPlayerPts (audioFrame->mPts - (kPlayerPreloadFrames * audioFrame->mPtsDuration));
+    if (mPlayerFrames == kAudioPlayerPreloadFrames)
+      mPlayer.startPlayerPts (audioFrame->mPts - (kAudioPlayerPreloadFrames * audioFrame->mPtsDuration));
   }
 //}}}
 
