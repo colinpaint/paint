@@ -86,8 +86,7 @@ public:
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   cMiniLog& getLog() { return mMiniLog; }
-  float getValue (int64_t pts) const;
-  float getOffsetValue (int64_t ptsOffset, int64_t& pts) const;
+  float getValue (int64_t pts);
 
   int64_t getLastPts() const { return mLastPts; }
   size_t getNumValues() const { return mValuesMap.size(); }
@@ -104,7 +103,6 @@ public:
   void setFrameMapSize (size_t size) { mFrameMapSize = size; }
   void setAllocFrameCallback (std::function <cFrame* ()> getFrameCallback) { mAllocFrameCallback = getFrameCallback; }
   void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
-  void setRefPts (int64_t pts) { mRefPts = pts; }
   void setMapSize (size_t size) { mMapSize = size; }
 
   void toggleLog();
@@ -150,6 +148,5 @@ private:
   // plot
   std::map <int64_t,float> mValuesMap;
   int64_t mLastPts = 0;
-  int64_t mRefPts = 0;
   size_t mMapSize = 64;
   };

@@ -30,16 +30,9 @@ cRender::~cRender() {
 //}}}
 
 //{{{
-float cRender::getValue (int64_t pts) const {
+float cRender::getValue (int64_t pts) {
 
-  auto it = mValuesMap.find (pts / kPtsPerFrame);
-  return it == mValuesMap.end() ? 0.f : it->second;
-  }
-//}}}
-//{{{
-float cRender::getOffsetValue (int64_t ptsOffset, int64_t& pts) const {
-
-  pts = mRefPts - ptsOffset;
+  unique_lock<shared_mutex> lock (mSharedMutex);
 
   auto it = mValuesMap.find (pts / kPtsPerFrame);
   return it == mValuesMap.end() ? 0.f : it->second;
@@ -51,8 +44,8 @@ cFrame* cRender::getFreeFrame() {
 
   if (mFreeFrames.empty())
     return nullptr;
+
   else {
-    // locked
     unique_lock<shared_mutex> lock (mSharedMutex);
 
     cFrame* frame = mFreeFrames.front();
@@ -63,14 +56,16 @@ cFrame* cRender::getFreeFrame() {
 //}}}
 //{{{
 cFrame* cRender::getYoungestFrame() {
-
-  // locked
+  
+  cFrame* youngestFrame;
+  {
   unique_lock<shared_mutex> lock (mSharedMutex);
 
   // reuse youngest
   auto it = mFrames.begin();
-  cFrame* youngestFrame = (*it).second;
+  youngestFrame = (*it).second;
   mFrames.erase (it);
+  }
 
   youngestFrame->releaseResources();
   return youngestFrame;
@@ -79,7 +74,8 @@ cFrame* cRender::getYoungestFrame() {
 //{{{
 cFrame* cRender::getFrameFromPts (int64_t pts) {
 
-  // unlocked find
+  //unique_lock<shared_mutex> lock (mSharedMutex);
+
   auto it = mFrames.find (pts);
   return (it == mFrames.end()) ? nullptr : it->second;
   }
@@ -87,6 +83,8 @@ cFrame* cRender::getFrameFromPts (int64_t pts) {
 //{{{
 cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
 // return nearest frame at or after pts
+
+  unique_lock<shared_mutex> lock (mSharedMutex);
 
   auto it = mFrames.begin();
   while (it != mFrames.end()) {
@@ -107,7 +105,7 @@ void cRender::trimFramesBeforePts (int64_t pts) {
     return;
   else {
     // locked
-    unique_lock<shared_mutex> lock(mSharedMutex);
+    unique_lock<shared_mutex> lock (mSharedMutex);
 
     auto it = mFrames.begin();
     while ((it != mFrames.end()) && ((*it).first < pts)) {
