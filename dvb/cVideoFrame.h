@@ -26,10 +26,10 @@ public:
   //{{{
   std::string getInfoString() {
 
-    std::string info = fmt::format ("pesSize:{:6} {}x{}:{}{} ",
-                                    mPesSize,
+    std::string info = fmt::format ("{}x{}:{}{} pesSize:{:5}",
                                     mWidth, mHeight,
-                                    mInterlaced ? "I" : "P", mInterlaced ? (mTopFieldFirst ? "1" : "2") : "");
+                                    mInterlaced ? "I" : "P", mInterlaced ? (mTopFieldFirst ? "1" : "2") : "",
+                                    mPesSize);
     if (!mTimes.empty()) {
       info += " took";
       for (auto time : mTimes)

@@ -18,10 +18,22 @@ public:
   cAudioFrame() = default;
   virtual ~cAudioFrame() { releaseResources(); }
 
-  std::string getInfoString() { return fmt::format ("pesSize:{:6} {}x{}:{}k",
-                                                    mPesSize, mNumChannels, mSamplesPerFrame, mSampleRate/1000); }
+  //{{{
+  std::string getInfoString() {
 
-  virtual void releaseResources() final {}
+    std::string info = fmt::format ("{}x{}:{}k pesSize:{:3}",
+                                    mNumChannels, mSamplesPerFrame, mSampleRate/1000, mPesSize);
+    if (!mTimes.empty()) {
+      info += " took";
+      for (auto time : mTimes)
+        info += fmt::format (" {}us", time);
+      }
+
+    return info;
+    }
+  //}}}
+
+  void addTime (int64_t time) { mTimes.push_back (time); }
   //{{{
   void calcPower() {
 
@@ -47,6 +59,12 @@ public:
     }
   //}}}
 
+  //{{{
+  virtual void releaseResources() final {
+    mTimes.clear();
+    }
+  //}}}
+
   // vars
   size_t mNumChannels = kMaxAudioChannels;
   size_t mSamplesPerFrame = kMaxAudioSamplesPerFrame;
@@ -55,4 +73,6 @@ public:
   std::array <float, kMaxAudioChannels> mPeakValues = {0.f};
   std::array <float, kMaxAudioChannels> mPowerValues = {0.f};
   std::array <float, kMaxAudioChannels * kMaxAudioSamplesPerFrame> mSamples = {0.f};
+
+  std::vector <int64_t> mTimes;
   };

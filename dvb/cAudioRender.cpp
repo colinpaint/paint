@@ -42,7 +42,7 @@ public:
   cFFmpegAudioDecoder (uint8_t streamType) : cDecoder(),
       mStreamType(streamType),
       mAacLatm(mStreamType == 17),
-      mStreamTypeName(mAacLatm ? "aacL" : "mp3"),
+      mStreamTypeName(mAacLatm ? "aacL" : "mp3 "),
       mAvCodec(avcodec_find_decoder (mAacLatm ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
 
     cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder - streamType:{}:{}", mStreamType, mStreamTypeName));
@@ -77,6 +77,7 @@ public:
     // parse pesFrame, pes may have more than one frame
     uint8_t* pesPtr = pes;
     while (pesSize) {
+      auto now = chrono::system_clock::now();
       int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
                                         pesPtr, (int)pesSize, 0, 0, AV_NOPTS_VALUE);
       pesPtr += bytesUsed;
@@ -91,8 +92,7 @@ public:
           if (avFrame->nb_samples > 0) {
             // call allocAudioFrame callback
             cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(allocFrameCallback());
-
-            // fill it up
+            audioFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
             audioFrame->mPts = interpolatedPts;
             audioFrame->mPtsDuration = avFrame->sample_rate ? (avFrame->nb_samples * 90000 / avFrame->sample_rate) : 48000;
             audioFrame->mPesSize = bytesUsed;
@@ -150,8 +150,8 @@ private:
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t decoderMask)
     : cRender(kAudioQueued, name + "aud", streamType, decoderMask, kAudioFrameMapSize),
-      mNumChannels(2), mSampleRate(48000), mSamplesPerFrame(1024), mPtsDuration(0),
-      mPlayerFrames(0) {
+      mNumChannels(2), mSampleRate(48000), mSamplesPerFrame(1024),
+      mPtsDuration(0), mPlayerFrames(0) {
 
   mDecoder = new cFFmpegAudioDecoder (streamType);
 

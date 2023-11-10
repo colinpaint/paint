@@ -149,7 +149,6 @@ public:
           // allocFrame
           cFFmpegVideoFrame* ffmpegVideoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
           ffmpegVideoFrame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
-
           ffmpegVideoFrame->mPts = mGotIframe ? mInterpolatedPts : dts;
           ffmpegVideoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
           ffmpegVideoFrame->mPesSize = frameSize;
