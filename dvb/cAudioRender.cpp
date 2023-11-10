@@ -39,7 +39,9 @@ constexpr int kAudioPlayerPreloadFrames = 4;
 class cFFmpegAudioDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegAudioDecoder (uint8_t streamType) : cDecoder(),
+  cFFmpegAudioDecoder (cRender* render, uint8_t streamType)
+    : cDecoder(),
+      mRender(render),
       mStreamType(streamType),
       mAacLatm(mStreamType == 17),
       mStreamTypeName(mAacLatm ? "aacL" : "mp3 "),
@@ -76,6 +78,10 @@ public:
 
     // parse pesFrame, pes may have more than one frame
     uint8_t* pesPtr = pes;
+
+    mRender->log ("pes", fmt::format ("pts:{} size: {}", utils::getFullPtsString (pts), pesSize));
+    mRender->logValue (pts, (float)pesSize);
+
     while (pesSize) {
       auto now = chrono::system_clock::now();
       int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
@@ -136,6 +142,7 @@ public:
   //}}}
 
 private:
+  cRender* mRender;
   const uint8_t mStreamType;
   const bool mAacLatm;
   const string mStreamTypeName;
@@ -153,7 +160,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
       mNumChannels(2), mSampleRate(48000), mSamplesPerFrame(1024),
       mPtsDuration(0), mPlayerFrames(0) {
 
-  mDecoder = new cFFmpegAudioDecoder (streamType);
+  mDecoder = new cFFmpegAudioDecoder (this, streamType);
 
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });

@@ -70,8 +70,9 @@ private:
 class cFFmpegVideoDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegVideoDecoder (uint8_t streamType)
+  cFFmpegVideoDecoder (cRender* render, uint8_t streamType)
      : cDecoder(),
+       mRender(render),
        mStreamType(streamType),
        mH264(mStreamType == 27),
        mStreamName(mH264 ? "h264" : "mpeg2"),
@@ -106,6 +107,9 @@ public:
 
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
+
+    mRender->log ("pes", fmt::format ("pts:{} size: {}", utils::getFullPtsString (pts), pesSize));
+    mRender->logValue (pts, (float)pesSize);
 
     uint8_t* frame = pes;
     uint32_t frameSize = pesSize;
@@ -174,6 +178,7 @@ public:
   //}}}
 
 private:
+  cRender* mRender;
   const uint8_t mStreamType;
   const bool mH264 = false;
   const string mStreamName;
@@ -192,7 +197,7 @@ private:
 cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t decoderMask)
     : cRender(kVideoQueued, name + "vid", streamType, decoderMask, kVideoFrameMapSize) {
 
-  mDecoder = new cFFmpegVideoDecoder (streamType);
+  mDecoder = new cFFmpegVideoDecoder (this, streamType);
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }

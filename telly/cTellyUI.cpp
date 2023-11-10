@@ -665,6 +665,9 @@ private:
 
     cVideoRender& videoRender = dynamic_cast<cVideoRender&>(render);
     ImGui::TextUnformatted (videoRender.getInfoString().c_str());
+
+    if (ImGui::InvisibleButton ("##vidLog0", {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
+      videoRender.toggleLog();
     drawMiniLog (videoRender.getLog());
     }
   //}}}
@@ -674,7 +677,11 @@ private:
     (void)graphics;
 
     cAudioRender& audioRender = dynamic_cast<cAudioRender&>(render);
+
     ImGui::TextUnformatted (audioRender.getInfoString().c_str());
+
+    if (ImGui::InvisibleButton ("##audLog", {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
+      audioRender.toggleLog();
     drawMiniLog (audioRender.getLog());
     }
   //}}}
@@ -698,7 +705,8 @@ private:
         ImGui::GetWindowDrawList()->AddRectFilled (
           potPos, {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
         }
-      if (ImGui::InvisibleButton (fmt::format ("##pot{}", line).c_str(),
+
+      if (ImGui::InvisibleButton (fmt::format ("##subLog{}", line).c_str(),
                                   {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
         subtitleRender.toggleLog();
 
@@ -728,7 +736,6 @@ private:
       line++;
       }
     //}}}
-
     drawMiniLog (subtitleRender.getLog());
     }
   //}}}
