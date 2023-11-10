@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <string>
+#include <thread>
 
 #include "cRender.h"
 #include "../common/cMiniLog.h"
