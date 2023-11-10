@@ -51,7 +51,7 @@ public:
     cRender& getRender() const { return *mRender; }
 
     void setLabel (const std::string& label) { mLabel = label; }
-    void setPidTypeId (uint16_t pid, uint8_t streamTypeId);
+    void setPidTypeId (uint16_t pid, uint8_t streamType);
     void setPts (int64_t pts) { mPts = pts; }
     void setRender (cRender* render) { mRender = render; }
 
@@ -84,14 +84,14 @@ public:
     int64_t getDts() const { return mDts; }
 
     uint16_t getSid() const { return mSid; }
-    uint8_t getStreamTypeId() const { return mStreamTypeId; }
+    uint8_t getStreamType() const { return mStreamType; }
     std::string getTypeName() const ;
     std::string getInfoString() const { return mInfoString; }
 
     int getBufUsed() const { return int(mBufPtr - mBuffer); }
 
     void setSid (uint16_t sid) { mSid = sid; }
-    void setStreamTypeId (uint8_t streamTypeId) { mStreamTypeId = streamTypeId; }
+    void setStreamType (uint8_t streamType) { mStreamType = streamType; }
     void setInfoString (const std::string infoString) { mInfoString = infoString; }
     //{{{
     void setPts (int64_t pts) {
@@ -140,7 +140,7 @@ public:
     const bool mPsi;
 
     uint16_t mSid = 0;
-    uint8_t mStreamTypeId = 0;
+    uint8_t mStreamType = 0;
 
     std::string mInfoString;
 

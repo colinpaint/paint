@@ -66,9 +66,10 @@ public:
 
   virtual string getInfoString() const final { return "ffmpeg " + mStreamTypeName; }
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
+  virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<cFrame* ()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final  {
+    (void)pid;
     (void)dts;
 
     AVPacket* avPacket = av_packet_alloc();
@@ -384,7 +385,7 @@ string cAudioRender::getInfoString() const {
   }
 //}}}
 //{{{
-bool cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
+bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
   // throttle on number of queued audioFrames
   while (mFrames.size() >= mFrameMapSize) {
@@ -392,7 +393,7 @@ bool cAudioRender::processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int6
     trimFramesBeforePts (getPlayerPts());
     }
 
-  return cRender::processPes (pes, pesSize, pts, dts, skip);
+  return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
   }
 //}}}
 

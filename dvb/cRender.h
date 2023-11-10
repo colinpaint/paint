@@ -39,7 +39,7 @@ public:
 
   virtual std::string getInfoString() const = 0;
 
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
+  virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           std::function<cFrame*()> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) = 0;
   };
@@ -48,12 +48,12 @@ public:
 class cDecodeQueueItem {
 public:
   //{{{
-  cDecodeQueueItem (cDecoder* decoder,
-                     uint8_t* pes, int pesSize, int64_t pts, int64_t dts,
-                     std::function<cFrame*()> allocFrameCallback,
-                     std::function<void (cFrame* frame)> addFrameCallback)
+  cDecodeQueueItem (cDecoder* decoder,   
+                    uint16_t pid, uint8_t* pes, int pesSize, int64_t pts, int64_t dts,
+                    std::function<cFrame*()> allocFrameCallback,
+                    std::function<void (cFrame* frame)> addFrameCallback)
       : mDecoder(decoder),
-        mPes(pes), mPesSize(pesSize), mPts(pts), mDts(dts),
+        mPid(pid), mPes(pes), mPesSize(pesSize), mPts(pts), mDts(dts),
         mAllocFrameCallback(allocFrameCallback), mAddFrameCallback(addFrameCallback) {}
   // we gain ownership of malloc'd pes buffer
   //}}}
@@ -64,6 +64,7 @@ public:
 
   cDecoder* mDecoder;
 
+  uint16_t mPid;
   uint8_t* mPes;
   const int mPesSize;
 
@@ -112,7 +113,7 @@ public:
 
   // process
   virtual std::string getInfoString() const = 0;
-  virtual bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
+  virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
 
 protected:
   size_t getQueueSize() const;
