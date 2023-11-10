@@ -8,9 +8,7 @@
 
 #ifdef _WIN32
   #include "../audio/audioWASAPI.h"
-#endif
-
-#ifdef __linux__
+#else
   #include "../audio/cLinuxAudio.h"
 #endif
 

@@ -43,10 +43,13 @@ public:
     mHeight = (uint16_t)avFrame->height;
     mStrideY = (uint16_t)avFrame->linesize[0];
     mStrideUV = (uint16_t)avFrame->linesize[1];
-    mInterlaced = avFrame->interlaced_frame;
-    mTopFieldFirst = avFrame->top_field_first;
-    //mInterlaced = avFrame->flags && AV_FRAME_FLAG_INTERLACED;
-    //mTopFieldFirst = avFrame->flags && AV_FRAME_FLAG_TOP_FIELD_FIRST;
+    #ifdef _WIN32
+      mInterlaced = avFrame->interlaced_frame;
+      mTopFieldFirst = avFrame->top_field_first;
+    #else
+      mInterlaced = avFrame->flags && AV_FRAME_FLAG_INTERLACED;
+      mTopFieldFirst = avFrame->flags && AV_FRAME_FLAG_TOP_FIELD_FIRST;
+    #endif
     }
 
 protected:
