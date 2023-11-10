@@ -59,7 +59,7 @@ public:
               // loadSrcSamples callback lambda
               // locked audio mutex
               shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
-              cAudioFrame* audioFrame = audioRender.getAudioFrameFromPts (mPts);
+              cAudioFrame* audioFrame = audioRender.getAudioFrameFromPts (mPlayerPts);
               if (mPlaying && audioFrame) {
                 float* src = audioFrame->mSamples.data();
                 float* dst = samples.data();
@@ -98,7 +98,7 @@ public:
               numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : audioRender.getSamplesPerFrame());
 
               if (mPlaying)
-                mPts += audioFrame ? audioFrame->mPtsDuration : audioRender.getPtsDuration();
+                mPlayerPts += audioFrame ? audioFrame->mPtsDuration : audioRender.getPtsDuration();
               });
             }
 
@@ -136,7 +136,7 @@ public:
           cAudioFrame* audioFrame;
           { // locked mutex
           shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
-          audioFrame = audioRender.getAudioFrameFromPts (mPts);
+          audioFrame = audioRender.getAudioFrameFromPts (mPlayerPts);
           if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
             float* src = audioFrame->mSamples.data();
             float* dst = samples.data();
@@ -177,7 +177,7 @@ public:
                       1.f);
 
           if (mPlaying)
-            mPts += audioFrame ? audioFrame->mPtsDuration : audioRender.getPtsDuration();
+            mPlayerPts += audioFrame ? audioFrame->mPtsDuration : audioRender.getPtsDuration();
           }
 
         mRunning = false;
@@ -191,12 +191,12 @@ public:
 
   ~cAudioPlayer() = default;
 
-  int64_t getPts() const { return mPts; }
+  int64_t getPlayerPts() const { return mPlayerPts; }
   bool isPlaying() const { return mPlaying; }
   void togglePlaying() { mPlaying = !mPlaying; }
   //{{{
   void startPlayerPts (int64_t pts) {
-    mPts = pts;
+    mPlayerPts = pts;
     mPlaying = true;
     }
   //}}}
@@ -214,9 +214,7 @@ private:
   bool mRunning = true;
   bool mExit = false;
 
-  int64_t mPts = 0;
-  int64_t mSetPts = 0;
-  int64_t mPlayPts = 0;
+  int64_t mPlayerPts = 0;
   thread mThread;
   };
 //}}}
@@ -361,7 +359,7 @@ cAudioRender::~cAudioRender() {
 //}}}
 
 bool cAudioRender::isPlaying() const { return mPlayer.isPlaying(); }
-int64_t cAudioRender::getPlayerPts() const { return mPlayer.getPts(); }
+int64_t cAudioRender::getPlayerPts() const { return mPlayer.getPlayerPts(); }
 
 void cAudioRender::togglePlaying() { mPlayer.togglePlaying(); }
 void cAudioRender::startPlayerPts (int64_t pts) { mPlayer.startPlayerPts (pts); }
