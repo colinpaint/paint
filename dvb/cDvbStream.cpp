@@ -1412,10 +1412,17 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
 
               if (payloadStart) {
                 // start of payload for new pes buffer
-                if ((*(uint32_t*)ts == 0xBD010000) || (*(uint32_t*)ts == 0xBE010000) ||
-                    (*(uint32_t*)ts == 0xC0010000) || (*(uint32_t*)ts == 0xC1010000) || (*(uint32_t*)ts == 0xC2010000) ||
-                    (*(uint32_t*)ts == 0xC4010000) || (*(uint32_t*)ts == 0xC6010000) || (*(uint32_t*)ts == 0xC8010000) ||
-                    (*(uint32_t*)ts == 0xCA010000) || (*(uint32_t*)ts == 0xCC010000) || (*(uint32_t*)ts == 0xCE010000) ||
+                if ((*(uint32_t*)ts == 0xBD010000) || 
+                    (*(uint32_t*)ts == 0xBE010000) ||
+                    (*(uint32_t*)ts == 0xC0010000) || 
+                    (*(uint32_t*)ts == 0xC1010000) ||
+                    (*(uint32_t*)ts == 0xC2010000) ||
+                    (*(uint32_t*)ts == 0xC4010000) || 
+                    (*(uint32_t*)ts == 0xC6010000) || 
+                    (*(uint32_t*)ts == 0xC8010000) ||
+                    (*(uint32_t*)ts == 0xCA010000) || 
+                    (*(uint32_t*)ts == 0xCC010000) || 
+                    (*(uint32_t*)ts == 0xCE010000) ||
                     (*(uint32_t*)ts == 0xD0010000) || (*(uint32_t*)ts == 0xD2010000) || (*(uint32_t*)ts == 0xD4010000) ||
                     (*(uint32_t*)ts == 0xD6010000) || (*(uint32_t*)ts == 0xD8010000) || (*(uint32_t*)ts == 0xDA010000) ||
                     (*(uint32_t*)ts == 0xE0010000)) {
