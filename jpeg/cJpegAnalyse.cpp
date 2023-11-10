@@ -1,11 +1,12 @@
 // cJpegAnalyser.cpp
-#ifdef _WIN32
 //{{{  includes
-#define _CRT_SECURE_NO_WARNINGS
-#include "cJpegAnalyse.h"
+#ifdef _WIN32
+  #define _CRT_SECURE_NO_WARNINGS
+  #define NOMINMAX
+  #include <windows.h>
+#endif
 
-#define NOMINMAX
-#include <windows.h>
+#include "cJpegAnalyse.h"
 
 #include <cstdint>
 #include <string>
@@ -1000,4 +1001,3 @@ string cJpegAnalyse::cExifGpsInfo::getString() {
   return str;
   }
 //}}}
-#endif

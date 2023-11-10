@@ -793,6 +793,5 @@ private:
   cTellyView mTellyView;
 
   static cUI* create (const string& className) { return new cTellyUI (className); }
-
   inline static const bool mRegistered = registerClass ("telly", &create);
   };

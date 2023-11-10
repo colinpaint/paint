@@ -52,6 +52,7 @@ public:
       mMemEdit->setMem (mFileView->getReadPtr(), mFileView->getReadBytesLeft());
       mMemEdit->drawWindow ("Memory Editor", 0);
       ImGui::PopFont();
+
       return;
       }
       //}}}
@@ -64,6 +65,7 @@ public:
       mMemEdit->setMem ((uint8_t*)this, 0x80000);
       mMemEdit->drawWindow ("Memory Editor", 0);
       ImGui::PopFont();
+
       return;
       }
       //}}}

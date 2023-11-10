@@ -34,12 +34,7 @@ public:
   cJpegAnalyseUI (const string& name) : cUI(name) {
     }
   //}}}
-  //{{{
-  virtual ~cJpegAnalyseUI() {
-    // close the file mapping object
-    delete mJpegAnalyse;
-    }
-  //}}}
+  virtual ~cJpegAnalyseUI() { delete mJpegAnalyse; }
 
   void addToDrawList (void& app, cGraphics& graphics, cPlatform& platform, ImFont* monoFont) final {
     //{{{  unused params
@@ -74,6 +69,7 @@ public:
     if (mShowAnalyse) {
       //{{{  show analyse
       mJpegAnalyse->resetRead();
+
       mJpegAnalyse->analyse (
         // callback lambda
         [&](uint8_t level, const string info, uint8_t* ptr, unsigned offset, unsigned numBytes) noexcept {
@@ -130,5 +126,5 @@ private:
     return new cJpegAnalyseUI (className);
     }
   //}}}
-  //inline static const bool mRegistered = registerClass ("jpegAnalyse", &create);
+  inline static const bool mRegistered = registerClass ("jpegAnalyse", &create);
   };

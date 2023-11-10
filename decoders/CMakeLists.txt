@@ -1,8 +1,7 @@
 project (decoders VERSION 1.0.0)
   add_library (${PROJECT_NAME} iAudioDecoder.h
                                cAudioParser.h cAudioParser.cpp
-                               cFFmpegAudioDecoder.h cFFmpegAudioDecoder.cpp
-                               cJpegAnalyse.h cJpegAnalyse.cpp)
+                               cFFmpegAudioDecoder.h cFFmpegAudioDecoder.cpp)
 
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_include_directories (${PROJECT_NAME} PUBLIC ../include/ffmpeg)

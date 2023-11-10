@@ -72,9 +72,14 @@ project (demo VERSION 1.0.0)
 
 # fed app
 project (fed VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} fed/cFedApp.h fed/cDocument.h fed/cMemEdit.h fed/cTextEdit.h ui/cUI.h
-                                  fed/fedMain.cpp fed/cFedApp.cpp fed/cDocument.cpp
-                                  fed/cEditUI.cpp fed/cMemEdit.cpp fed/cTextEdit.cpp ui/cUI.cpp)
+  add_executable (${PROJECT_NAME} ui/cUI.h ui/cUI.cpp
+                                  fed/cDocument.h fed/cDocument.cpp
+                                  fed/cFedApp.h fed/cFedApp.cpp
+                                  fed/fedMain.cpp 
+                                  fed/cEditUI.cpp
+                                  fed/cMemEdit.h fed/cMemEdit.cpp
+                                  fed/cTextEdit.h fed/cTextEdit.cpp
+                                  )
 
   target_include_directories (${PROJECT_NAME} PRIVATE app imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
