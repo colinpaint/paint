@@ -1,6 +1,8 @@
 // cTellyApp.cpp - tvApp info holder from tvMain
 //{{{  includes
-#define _CRT_SECURE_NO_WARNINGS
+#ifdef _WIN32
+  #define _CRT_SECURE_NO_WARNINGS
+#endif
 
 #include "cTellyApp.h"
 

@@ -1,9 +1,10 @@
 // cJpegAnalyserUI.cpp
-#ifdef _WIN32
 //{{{  includes
-#define _CRT_SECURE_NO_WARNINGS
-#define NOMINMAX
-#include <windows.h>
+#ifdef _WIN32
+  #define _CRT_SECURE_NO_WARNINGS
+  #define NOMINMAX
+  #include <windows.h>
+#endif
 
 #include <cstdint>
 #include <vector>
@@ -131,4 +132,3 @@ private:
   //}}}
   //inline static const bool mRegistered = registerClass ("jpegAnalyse", &create);
   };
-#endif

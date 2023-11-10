@@ -1,6 +1,8 @@
 // cSongVideoPool.cpp - video just follows songPlayer audio pts, hoping video has been preloaded correctly
 //{{{  includes
-#define _CRT_SECURE_NO_WARNINGS
+#ifdef _WIN32
+  #define _CRT_SECURE_NO_WARNINGS
+#endif
 
 #include "iVideoPool.h"
 

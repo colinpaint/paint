@@ -1605,7 +1605,11 @@ void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) 
   size_t blockSize = 188 * 8;
   uint8_t* buffer = (uint8_t*)malloc (blockSize);
 
-  struct stat st;
+  #ifdef _WIN32
+    struct _stati64 st;
+  #else
+    struct stat st;
+  #endif
 
   mFilePos = 0;
   while (true) {
@@ -1615,8 +1619,13 @@ void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) 
     else
       break;
 
-    stat (mFileName.c_str(), &st);
-    mFileSize = st.st_size;
+    #ifdef _WIN32
+      if (_stat64 (mFileName.c_str(), &st) != -1)
+        mFileSize = st.st_size;
+    #else
+      if (stat (mFileName.c_str(), &st) != -1)
+        mFileSize = st.st_size;
+    #endif
     }
 
   fclose (file);

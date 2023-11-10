@@ -307,7 +307,7 @@ public:
         //ImGui::TextUnformatted (fmt::format ("{}k of {}k",
         //                                     dvbStream.getFilePos()/1000,
         //                                     dvbStream.getFileSize()/1000).c_str());
-        ImGui::TextUnformatted (fmt::format ("{:4.3f}", (100.f * dvbStream.getFilePos()) / dvbStream.getFileSize()).c_str());
+        ImGui::TextUnformatted (fmt::format ("{:4.3f}%", (100.f * dvbStream.getFilePos()) / dvbStream.getFileSize()).c_str());
         }
         //}}}
       else if (dvbStream.hasDvbSource()) {
