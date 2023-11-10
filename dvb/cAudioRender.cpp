@@ -33,7 +33,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kAudioQueued = true;
-constexpr int kAudioPlayerPreloadFrames = 4;
+constexpr int kAudioPlayerPreloadFrames = 16;
 
 //{{{
 class cFFmpegAudioDecoder : public cDecoder {
