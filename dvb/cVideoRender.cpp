@@ -24,6 +24,7 @@ extern "C" {
   #include <libavformat/avformat.h>
   #include <libswscale/swscale.h>
   #include <libavutil/motion_vector.h>
+  #include <libavutil/frame.h>
   }
 
 using namespace std;
@@ -44,6 +45,8 @@ public:
     mStrideUV = (uint16_t)avFrame->linesize[1];
     mInterlaced = avFrame->interlaced_frame;
     mTopFieldFirst = avFrame->top_field_first;
+    //mInterlaced = avFrame->flags && AV_FRAME_FLAG_INTERLACED;
+    //mTopFieldFirst = avFrame->flags && AV_FRAME_FLAG_TOP_FIELD_FIRST;
     }
 
 protected:
