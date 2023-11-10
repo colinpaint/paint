@@ -27,11 +27,11 @@ public:
   size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
   int64_t getPtsDuration() const { return mPtsDuration; }
 
-  // play
-  bool isPlaying() const;
-  int64_t getPlayerPts() const;
+  // player
+  bool isPlaying() const { return mPlaying; }
+  int64_t getPlayerPts() const { return mPlayerPts; }
 
-  void togglePlaying();
+  void togglePlaying() { mPlaying = !mPlaying; }
   void startPlayerPts (int64_t pts);
 
   // find
@@ -45,6 +45,8 @@ public:
   virtual bool processPes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
 
 private:
+  void exitWait();
+
   // vars
   size_t mNumChannels;
   uint32_t mSampleRate;
@@ -53,6 +55,11 @@ private:
 
   std::string mFrameInfo;
 
-  cAudioPlayer& mPlayer;
+  // player
+  std::thread mPlayerThread;
   int mPlayerFrames;
+  bool mPlaying = false;
+  bool mRunning = true;
+  bool mExit = false;
+  int64_t mPlayerPts = 0;
   };
