@@ -9,7 +9,7 @@
 #include "../app/myImgui.h"
 
 // fed
-#include "../fed/cTextEdit.h"
+#include "../fed/cFed.h"
 #include "../fed/cMemEdit.h"
 #include "../fed/cFedApp.h"
 
@@ -23,14 +23,11 @@
 using namespace std;
 //}}}
 
-class cEditUI : public cUI {
+class cFedUI : public cUI {
 public:
+  cFedUI (const string& name) : cUI(name) {}
   //{{{
-  cEditUI (const string& name) : cUI(name) {
-    }
-  //}}}
-  //{{{
-  virtual ~cEditUI() {
+  virtual ~cFedUI() {
 
     delete mFileView;
     delete mMemEdit;
@@ -70,19 +67,19 @@ public:
       }
       //}}}
 
-    mTextEdit.draw (app);
+    mFed.draw (app);
     }
 
 private:
   cFileView* mFileView = nullptr;
   cMemEdit* mMemEdit = nullptr;
 
-  cTextEdit mTextEdit;
+  cFed mFed;
 
   //{{{
   static cUI* create (const string& className) {
-    return new cEditUI (className);
+    return new cFedUI (className);
     }
   //}}}
-  inline static const bool mRegistered = registerClass ("edit", &create);
+  inline static const bool mRegistered = registerClass ("fed", &create);
   };

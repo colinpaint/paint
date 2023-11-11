@@ -1,6 +1,6 @@
-// cDocument.cpp - text document for editing
+// cFedDocument.cpp - text document for editing
 //{{{  includes
-#include "cDocument.h"
+#include "cFedDocument.h"
 
 #include <cmath>
 #include <array>
@@ -593,7 +593,7 @@ void cLine::parse (const cLanguage& language) {
   }
 //}}}
 //{{{
-uint32_t cDocument::trimTrailingSpace() {
+uint32_t cFedDocument::trimTrailingSpace() {
 // trim trailing space
 // - return highest nonEmpty lineNumber
 
@@ -669,15 +669,15 @@ void cLine::parseTokens (const cLanguage& language, const string& textString) {
   }
 //}}}
 
-// cDocument
+// cFedDocument
 //{{{
-cDocument::cDocument() {
+cFedDocument::cFedDocument() {
   mLanguage = cLanguage::c();
   addEmptyLine();
   }
 //}}}
 //{{{
-string cDocument::getText (const sPosition& beginPosition, const sPosition& endPosition) {
+string cFedDocument::getText (const sPosition& beginPosition, const sPosition& endPosition) {
 // get position range as string with lineFeed line breaks
 
   // count approx numChars
@@ -711,7 +711,7 @@ string cDocument::getText (const sPosition& beginPosition, const sPosition& endP
   }
 //}}}
 //{{{
-vector<string> cDocument::getTextStrings() const {
+vector<string> cFedDocument::getTextStrings() const {
 // simple get text as vector of string
 
   std::vector<std::string> result;
@@ -727,8 +727,8 @@ vector<string> cDocument::getTextStrings() const {
 //}}}
 
 //{{{
-uint32_t cDocument::getGlyphIndex (const cLine& line, uint32_t toColumn) {
-// return glyphIndex from line,column, inserting tabs whose width is owned by cDocument
+uint32_t cFedDocument::getGlyphIndex (const cLine& line, uint32_t toColumn) {
+// return glyphIndex from line,column, inserting tabs whose width is owned by cFedDocument
 
   uint32_t glyphIndex = 0;
 
@@ -745,7 +745,7 @@ uint32_t cDocument::getGlyphIndex (const cLine& line, uint32_t toColumn) {
   }
 //}}}
 //{{{
-uint32_t cDocument::getColumn (const cLine& line, uint32_t toGlyphIndex) {
+uint32_t cFedDocument::getColumn (const cLine& line, uint32_t toGlyphIndex) {
 // return glyphIndex column using any tabs
 
   uint32_t column = 0;
@@ -763,13 +763,13 @@ uint32_t cDocument::getColumn (const cLine& line, uint32_t toGlyphIndex) {
   }
 //}}}
 //{{{
-uint32_t cDocument::getTabColumn (uint32_t column) {
+uint32_t cFedDocument::getTabColumn (uint32_t column) {
 // return column of after tab at column
   return ((column / mTabSize) * mTabSize) + mTabSize;
   }
 //}}}
 //{{{
-uint32_t cDocument::getNumColumns (const cLine& line) {
+uint32_t cFedDocument::getNumColumns (const cLine& line) {
 
   uint32_t column = 0;
 
@@ -784,12 +784,12 @@ uint32_t cDocument::getNumColumns (const cLine& line) {
 //}}}
 
 //{{{
-void cDocument::addEmptyLine() {
+void cFedDocument::addEmptyLine() {
   mLines.push_back (cLine());
   }
 //}}}
 //{{{
-void cDocument::insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch) {
+void cFedDocument::insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch) {
 
   line.insert (glyphIndex, cGlyph (ch, eText));
   parse (line);
@@ -798,7 +798,7 @@ void cDocument::insertChar (cLine& line, uint32_t glyphIndex, ImWchar ch) {
 //}}}
 
 //{{{
-void cDocument::appendLineToPrev (uint32_t lineNumber) {
+void cFedDocument::appendLineToPrev (uint32_t lineNumber) {
 // append lineNumber to prev line
 
   cLine& line = getLine (lineNumber-1);
@@ -810,7 +810,7 @@ void cDocument::appendLineToPrev (uint32_t lineNumber) {
   }
 //}}}
 //{{{
-void cDocument::joinLine (cLine& line, uint32_t lineNumber) {
+void cFedDocument::joinLine (cLine& line, uint32_t lineNumber) {
 // join lineNumber to line
 
   // append lineNumber to joinToLine
@@ -823,7 +823,7 @@ void cDocument::joinLine (cLine& line, uint32_t lineNumber) {
   }
 //}}}
 //{{{
-void cDocument::breakLine (cLine& line, uint32_t glyphIndex, uint32_t newLineNumber, uint32_t indent) {
+void cFedDocument::breakLine (cLine& line, uint32_t glyphIndex, uint32_t newLineNumber, uint32_t indent) {
 
   // insert newLine at newLineNumber
   cLine& newLine = *mLines.insert (mLines.begin() + newLineNumber, cLine(indent));
@@ -841,7 +841,7 @@ void cDocument::breakLine (cLine& line, uint32_t glyphIndex, uint32_t newLineNum
 //}}}
 
 //{{{
-void cDocument::deleteChar (cLine& line, uint32_t glyphIndex) {
+void cFedDocument::deleteChar (cLine& line, uint32_t glyphIndex) {
 
   line.erase (glyphIndex);
   parse (line);
@@ -850,26 +850,26 @@ void cDocument::deleteChar (cLine& line, uint32_t glyphIndex) {
   }
 //}}}
 //{{{
-void cDocument::deleteChar (cLine& line, const sPosition& position) {
+void cFedDocument::deleteChar (cLine& line, const sPosition& position) {
   deleteChar (line, getGlyphIndex (line, position.mColumn));
   }
 //}}}
 //{{{
-void cDocument::deleteLine (uint32_t lineNumber) {
+void cFedDocument::deleteLine (uint32_t lineNumber) {
 
   mLines.erase (mLines.begin() + lineNumber);
   edited();
   }
 //}}}
 //{{{
-void cDocument::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
+void cFedDocument::deleteLineRange (uint32_t beginLineNumber, uint32_t endLineNumber) {
 
   mLines.erase (mLines.begin() + beginLineNumber, mLines.begin() + endLineNumber);
   edited();
   }
 //}}}
 //{{{
-void cDocument::deletePositionRange (const sPosition& beginPosition, const sPosition& endPosition) {
+void cFedDocument::deletePositionRange (const sPosition& beginPosition, const sPosition& endPosition) {
 /// !!! need more glyphsLine !!!!
 
   if (endPosition == beginPosition)
@@ -917,7 +917,7 @@ void cDocument::deletePositionRange (const sPosition& beginPosition, const sPosi
 //}}}
 
 //{{{
-void cDocument::parseAll() {
+void cFedDocument::parseAll() {
 // simple parse whole document for comments, folds
 // - assumes lines have already been parsed
 
@@ -999,7 +999,7 @@ void cDocument::parseAll() {
   }
 //}}}
 //{{{
-void cDocument::edited() {
+void cFedDocument::edited() {
 
   mParseFlag = true;
   mEdited |= true;
@@ -1007,7 +1007,7 @@ void cDocument::edited() {
 //}}}
 
 //{{{
-void cDocument::load (const string& filename) {
+void cFedDocument::load (const string& filename) {
 
   // parse filename path
   filesystem::path filePath (filename);
@@ -1084,7 +1084,7 @@ void cDocument::load (const string& filename) {
   }
 //}}}
 //{{{
-void cDocument::save() {
+void cFedDocument::save() {
 
   if (!mEdited) {
     cLog::log (LOGINFO,fmt::format ("{} unchanged, no save", mFilePath));

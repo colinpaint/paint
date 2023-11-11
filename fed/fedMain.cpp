@@ -65,7 +65,7 @@ int main (int numArgs, char* args[]) {
   cFedApp app ({1000, 900}, fullScreen, vsync);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
-  app.setDocumentName (params.empty() ? "../../fed/cTextEdit.cpp" : cFileUtils::resolve (params[0]));
+  app.setDocumentName (params.empty() ? "../../fed/cFed.cpp" : cFileUtils::resolve (params[0]));
 
   app.mainUILoop();
 

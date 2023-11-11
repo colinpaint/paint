@@ -10,7 +10,7 @@
 
 class cPlatform;
 class cGraphics;
-class cDocument;
+class cFedDocument;
 //}}}
 
 class cFedApp : public cApp {
@@ -18,11 +18,11 @@ public:
   cFedApp (const cPoint& windowSize, bool fullScreen, bool vsync);
   virtual ~cFedApp() = default;
 
-  cDocument* getDocument() const;
+  cFedDocument* getFedDocument() const;
   bool setDocumentName (const std::string& filename);
 
   virtual void drop (const std::vector<std::string>& dropItems) final;
 
 private:
-  std::vector<cDocument*> mDocuments;
+  std::vector<cFedDocument*> mFedDocuments;
   };

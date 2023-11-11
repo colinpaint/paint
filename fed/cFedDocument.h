@@ -1,4 +1,4 @@
-// cDocument.h - loaded text file, parsed for tokens, comments and folds
+// cFedDocument.h - loaded text file, parsed for tokens, comments and folds
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -332,10 +332,10 @@ struct sPosition {
   };
 //}}}
 
-class cDocument {
+class cFedDocument {
 public:
-  cDocument();
-  virtual ~cDocument() = default;
+  cFedDocument();
+  virtual ~cFedDocument() = default;
 
   //{{{  gets
   bool isEdited() const { return mEdited; }

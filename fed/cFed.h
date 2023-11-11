@@ -1,4 +1,4 @@
-// cTextEdit.h
+// cFed.h
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -12,19 +12,19 @@
 #include "../imgui/imgui.h"
 #include "../app/myImgui.h"
 
-#include "cDocument.h"
+#include "cFedDocument.h"
 class cApp;
 //}}}
 
-class cTextEdit {
+class cFed {
 public:
-  cTextEdit();
-  ~cTextEdit() = default;
+  cFed();
+  ~cFed() = default;
 
   enum class eSelect { eNormal, eWord, eLine };
   //{{{  gets
-  cDocument* getDocument() { return mDoc; }
-  cLanguage& getLanguage() { return mDoc->getLanguage(); }
+  cFedDocument* getFedDocument() { return mFedDocument; }
+  cLanguage& getLanguage() { return mFedDocument->getLanguage(); }
 
   bool isReadOnly() const { return mOptions.mReadOnly; }
   bool isShowFolds() const { return mOptions.mShowFolded; }
@@ -65,7 +65,7 @@ public:
   void movePageUp()   { moveUp (getNumPageLines() - 4); }
   void movePageDown() { moveDown (getNumPageLines() - 4); }
   void moveHome() { setCursorPosition ({0,0}); }
-  void moveEnd() { setCursorPosition ({mDoc->getMaxLineNumber(), 0}); }
+  void moveEnd() { setCursorPosition ({mFedDocument->getMaxLineNumber(), 0}); }
 
   // select
   void selectAll();
@@ -112,10 +112,10 @@ private:
   class cUndo {
   public:
     //{{{
-    void undo (cTextEdit* textEdit) {
+    void undo (cFed* textEdit) {
 
       if (!mAddText.empty())
-        textEdit->getDocument()->deletePositionRange (mAddBeginPosition, mAddEndPosition);
+        textEdit->getFedDocument()->deletePositionRange (mAddBeginPosition, mAddEndPosition);
       if (!mDeleteText.empty())
         textEdit->insertText (mDeleteText, mDeleteBeginPosition);
 
@@ -123,10 +123,10 @@ private:
       }
     //}}}
     //{{{
-    void redo (cTextEdit* textEdit) {
+    void redo (cFed* textEdit) {
 
       if (!mDeleteText.empty())
-        textEdit->getDocument()->deletePositionRange (mDeleteBeginPosition, mDeleteEndPosition);
+        textEdit->getFedDocument()->deletePositionRange (mDeleteBeginPosition, mDeleteEndPosition);
       if (!mAddText.empty())
         textEdit->insertText (mAddText, mAddBeginPosition);
 
@@ -160,7 +160,7 @@ private:
       }
     //}}}
     //{{{
-    void undo (cTextEdit* textEdit, uint32_t steps) {
+    void undo (cFed* textEdit, uint32_t steps) {
 
       while (hasUndo() && (steps > 0)) {
         mUndoVector [--mUndoIndex].undo (textEdit);
@@ -169,7 +169,7 @@ private:
       }
     //}}}
     //{{{
-    void redo (cTextEdit* textEdit, uint32_t steps) {
+    void redo (cFed* textEdit, uint32_t steps) {
 
       while (hasRedo() && steps > 0) {
         mUndoVector [mUndoIndex++].redo (textEdit);
@@ -251,10 +251,10 @@ private:
     };
   //}}}
   //{{{
-  class cTextEditDrawContext : public cDrawContext {
+  class cFedDrawContext : public cDrawContext {
   // drawContext with our palette and a couple of layout vars
   public:
-    cTextEditDrawContext() : cDrawContext (kPalette) {}
+    cFedDrawContext() : cDrawContext (kPalette) {}
     //{{{
     void update (float fontSize, bool monoSpaced) {
 
@@ -312,7 +312,7 @@ private:
   bool canEditAtCursor();
 
   // text
-  std::string getSelectText() { return mDoc->getText (mEdit.mCursor.mSelectBeginPosition, mEdit.mCursor.mSelectEndPosition); }
+  std::string getSelectText() { return mFedDocument->getText (mEdit.mCursor.mSelectBeginPosition, mEdit.mCursor.mSelectEndPosition); }
 
   // text widths
   float getWidth (sPosition position);
@@ -331,14 +331,14 @@ private:
   uint32_t getGlyphsLineNumber (uint32_t lineNumber) const {
   // return glyphs lineNumber for lineNumber - folded foldBegin closedFold seeThru into next line
 
-    const cLine& line = mDoc->getLine (lineNumber);
+    const cLine& line = mFedDocument->getLine (lineNumber);
     if (isFolded() && line.mFoldBegin && !line.mFoldOpen && (line.mFirstGlyph == line.getNumGlyphs()))
       return lineNumber + 1;
     else
       return lineNumber;
     }
   //}}}
-  cLine& getGlyphsLine (uint32_t lineNumber) { return mDoc->getLine (getGlyphsLineNumber (lineNumber)); }
+  cLine& getGlyphsLine (uint32_t lineNumber) { return mFedDocument->getLine (getGlyphsLineNumber (lineNumber)); }
 
   sPosition getNextLinePosition (const sPosition& position);
 
@@ -392,13 +392,13 @@ private:
   void drawLines();
 
   // vars
-  cDocument* mDoc = nullptr;
+  cFedDocument* mFedDocument = nullptr;
   bool mInited = false;
 
   // edit state
   cEdit mEdit;
   cOptions mOptions;
-  cTextEditDrawContext mDrawContext;
+  cFedDrawContext mDrawContext;
 
   std::vector <uint32_t> mFoldLines;
 

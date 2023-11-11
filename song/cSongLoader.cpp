@@ -25,7 +25,7 @@
 #include "cSongLoader.h"
 #include "cSongPlayer.h"
 #include "iVideoPool.h"
-#include "readerWriterQueue.h"
+#include "../common/readerWriterQueue.h"
 
 // decoder
 #include "../decoders/cAudioParser.h"

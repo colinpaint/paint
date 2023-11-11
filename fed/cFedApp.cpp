@@ -14,7 +14,7 @@
 #include "../common/cLog.h"
 #include "../common/fileUtils.h"
 
-#include "cDocument.h"
+#include "cFedDocument.h"
 
 using namespace std;
 //}}}
@@ -23,14 +23,14 @@ cFedApp::cFedApp (const cPoint& windowSize, bool fullScreen, bool vsync)
     : cApp ("fed", windowSize, fullScreen, vsync) {
   }
 
-cDocument* cFedApp::getDocument() const {
-  return mDocuments.back();
+cFedDocument* cFedApp::getFedDocument() const {
+  return mFedDocuments.back();
   }
 
 bool cFedApp::setDocumentName (const std::string& filename) {
-  cDocument* document = new cDocument();
+  cFedDocument* document = new cFedDocument();
   document->load (filename);
-  mDocuments.push_back (document);
+  mFedDocuments.push_back (document);
   return true;
   }
 
