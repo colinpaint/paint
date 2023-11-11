@@ -1,5 +1,5 @@
 project (dvb VERSION 1.0.0)
-  add_library (${PROJECT_NAME} cAudioFrame.h cVideoFrame.h cBipBuffer.h
+  add_library (${PROJECT_NAME} cAudioFrame.h cVideoFrame.h
                                cDvbSource.h cDvbSource.cpp
                                cDvbStream.h cDvbStream.cpp
                                cRender.h cRender.cpp

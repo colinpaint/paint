@@ -1,6 +1,6 @@
 project (common VERSION 1.0.0)
   add_library (${PROJECT_NAME} cPointRectColor.h cVecMat.h
-                               date.h fileUtils.h utils.h readerWriterQueue.h
+                               date.h fileUtils.h utils.h cBipBuffer.h readerWriterQueue.h
                                cDvbUtils.h cDvbUtils.cpp cDvbUtilsHuff.cpp
                                cFileView.h cFileView.cpp
                                cLog.h cLog.cpp

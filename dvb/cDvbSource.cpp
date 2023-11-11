@@ -47,7 +47,7 @@
 
   #pragma comment (lib,"strmiids")
 
-  #include "cBipBuffer.h"
+  #include "../common/cBipBuffer.h"
   //}}}
 #else
   //{{{  linux only includes
