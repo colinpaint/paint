@@ -431,7 +431,7 @@ void cFed::createFold() {
 // draws
 //{{{
 void cFed::draw (cApp& app) {
-// standalone textEdit window
+// standalone fed window
 
    if (!mInited) {
      // push any clipboardText to pasteStack
@@ -446,7 +446,7 @@ void cFed::draw (cApp& app) {
   mFedDocument = fedApp.getFedDocument();
   if (mFedDocument) {
     bool open = true;
-    ImGui::Begin ("textEdit", &open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
+    ImGui::Begin ("fed", &open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
     drawContents (app);
     ImGui::End();
     }
@@ -454,7 +454,7 @@ void cFed::draw (cApp& app) {
 //}}}
 //{{{
 void cFed::drawContents (cApp& app) {
-// main ui io,draw
+// main ui draw
 
   // check for delayed all document parse
   mFedDocument->parseAll();
