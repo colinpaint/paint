@@ -111,14 +111,13 @@ public:
   virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<cFrame*()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
-    (void)pid;
+
+    mRender->log ("pes", fmt::format ("pid {} size {} pts {} dts{}",
+                                      pid, pesSize,
+                                      utils::getFullPtsString (pts), utils::getFullPtsString (dts)));
 
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
-
-    mRender->log ("pes", fmt::format ("pts:{} size: {}", utils::getFullPtsString (pts), pesSize));
-    mRender->logValue (pts, (float)pesSize);
-
     uint8_t* frame = pes;
     uint32_t frameSize = pesSize;
     while (frameSize) {

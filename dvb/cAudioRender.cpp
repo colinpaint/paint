@@ -1,7 +1,9 @@
 // cAudioRender.cpp
 //{{{  includes
-#define _CRT_SECURE_NO_WARNINGS
-#define WIN32_LEAN_AND_MEAN
+#ifdef _WIN32
+  #define _CRT_SECURE_NO_WARNINGS
+  #define WIN32_LEAN_AND_MEAN
+#endif
 
 #include "cAudioRender.h"
 #include "cAudioFrame.h"
@@ -31,8 +33,8 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kAudioQueued = false;
-constexpr int kAudioPlayerPreloadFrames = 4;
 constexpr size_t kAudioFrameMapSize = 48;
+constexpr int kAudioPlayerPreloadFrames = 4;
 
 //{{{
 class cFFmpegAudioDecoder : public cDecoder {
@@ -68,21 +70,18 @@ public:
   virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<cFrame* ()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final  {
-    (void)pid;
     (void)dts;
+
+    mRender->log ("pes", fmt::format ("pid {} size {} pts {}",
+                                      pid, pesSize, utils::getFullPtsString (pts)));
 
     AVPacket* avPacket = av_packet_alloc();
     AVFrame* avFrame = av_frame_alloc();
 
     int64_t interpolatedPts = pts;
-
-    // parse pesFrame, pes may have more than one frame
     uint8_t* pesPtr = pes;
-
-    mRender->log ("pes", fmt::format ("pts:{} size: {}", utils::getFullPtsString (pts), pesSize));
-    mRender->logValue (pts, (float)pesSize);
-
     while (pesSize) {
+      // parse pesFrame, pes may have more than one frame
       auto now = chrono::system_clock::now();
       int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
                                         pesPtr, (int)pesSize, 0, 0, AV_NOPTS_VALUE);
@@ -165,10 +164,10 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
 
-  #ifdef _WIN32
-    //{{{
-    mPlayerThread = thread ([=]() {
-      cLog::setThreadName ("play");
+  mPlayerThread = thread ([=]() {
+    cLog::setThreadName ("play");
+    #ifdef _WIN32
+      //{{{  windows
       SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 
       optional<cAudioDevice> audioDevice = getDefaultAudioOutputDevice();
@@ -179,13 +178,16 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
 
         array <float,2048*2> samples = { 0.f };
         array <float,2048*2> silence = { 0.f };
+
         while (!mExit) {
           audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
             // loadSrcSamples callback lambda
+            srcSamples = silence.data();
+
             // locked audio mutex
             shared_lock<shared_mutex> lock (getSharedMutex());
             cAudioFrame* audioFrame = getAudioFrameFromPts (mPlayerPts);
-            if (mPlaying && audioFrame) {
+            if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
               float* src = audioFrame->mSamples.data();
               float* dst = samples.data();
               switch (audioFrame->mNumChannels) {
@@ -218,8 +220,6 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
                 }
               srcSamples = samples.data();
               }
-            else
-              srcSamples = silence.data();
             numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : mSamplesPerFrame);
 
             if (mPlaying)
@@ -229,19 +229,9 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
 
         audioDevice->stop();
         }
-
-      mRunning = false;
-      cLog::log (LOGINFO, "exit");
-      });
-
-    mPlayerThread.detach();
-    //}}}
-  #else
-    //{{{
-    mPlayerThread = thread ([=]() {
-      // lambda
-      cLog::setThreadName ("play");
-
+      //}}}
+    #else
+      //{{{  linux
       // raise to max priority
       sched_param sch_params;
       sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
@@ -301,14 +291,14 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
         if (mPlaying)
           mPlayerPts += audioFrame ? audioFrame->mPtsDuration : mPtsDuration;
         }
+      //}}}
+    #endif
 
-      mRunning = false;
-      cLog::log (LOGINFO, "exit");
-      });
+    mRunning = false;
+    cLog::log (LOGINFO, "exit");
+    });
 
-    mPlayerThread.detach();
-    //}}}
-  #endif
+  mPlayerThread.detach();
   }
 //}}}
 //{{{
@@ -330,6 +320,7 @@ cAudioRender::~cAudioRender() {
 
 //{{{
 void cAudioRender::startPlayerPts (int64_t pts) {
+
   mPlayerPts = pts;
   mPlaying = true;
   }
@@ -386,8 +377,8 @@ string cAudioRender::getInfoString() const {
 //{{{
 bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
-  // throttle on number of queued audioFrames
-  while (mFrames.size() >= mFrameMapSize) {
+  // throttle on number of decoded audioFrames
+  while (mFrames.size() > mFrameMapSize) {
     this_thread::sleep_for (1ms);
     trimFramesBeforePts (getPlayerPts());
     }
@@ -398,6 +389,7 @@ bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int
 
 //{{{
 void cAudioRender::exitWait() {
+
   mExit = true;
   while (mRunning)
     this_thread::sleep_for (100ms);

@@ -31,7 +31,7 @@ public:
 // iVideoPool
 class iVideoPool {
 public:
-  static iVideoPool* create (bool ffmpeg, int maxPoolSize, cSong* song);
+  static iVideoPool* create (int maxPoolSize, cSong* song);
   virtual ~iVideoPool() {}
 
   // gets

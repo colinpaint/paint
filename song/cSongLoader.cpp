@@ -1188,7 +1188,7 @@ public:
               service->setVideoPid (pid);
 
               if (service->isSelected()) {
-                mVideoPool = iVideoPool::create (true, 100, mPtsSong);
+                mVideoPool = iVideoPool::create (100, mPtsSong);
                 mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cVideoPesParser (pid, mVideoPool, true)));
                 }
 
@@ -1659,7 +1659,7 @@ public:
           case 27: // h264video
             if (mVideoRate) {
               mVideoPid  = pid;
-              mVideoPool = iVideoPool::create (mFfmpeg, 192, mHlsSong);
+              mVideoPool = iVideoPool::create (192, mHlsSong);
               mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cVideoPesParser (pid, mVideoPool, true)));
               }
             break;
@@ -2378,7 +2378,7 @@ public:
               service->setVideoPid (pid);
 
               if (service->isSelected()) {
-                mVideoPool = iVideoPool::create (true, 100, mPtsSong);
+                mVideoPool = iVideoPool::create (100, mPtsSong);
                 mPidParsers.insert (map<int,cPidParser*>::value_type (pid, new cVideoPesParser (pid, mVideoPool, true)));
                 }
 

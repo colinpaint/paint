@@ -49,9 +49,7 @@
 
   #include "cBipBuffer.h"
   //}}}
-#endif
-
-#ifdef __linux__
+#else
   //{{{  linux only includes
   #include <fcntl.h>
   #include <sys/ioctl.h>

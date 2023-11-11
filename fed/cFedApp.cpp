@@ -1,6 +1,8 @@
 // cFedApp.cpp - fedApp info holder from fedMain
 //{{{  includes
-#define _CRT_SECURE_NO_WARNINGS
+#ifdef _WIN32
+  #define _CRT_SECURE_NO_WARNINGS
+#endif
 
 #include "cFedApp.h"
 

@@ -64,15 +64,13 @@ public:
   virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<cFrame* ()> getFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
-    (void)pid;
     (void)dts;
+
+    mRender->log ("pes", fmt::format ("pid {} pts {} size {}",
+                  pid, utils::getFullPtsString (pts), pesSize));
 
     mPage.mPts = pts;
     mPage.mPesSize = pesSize;
-
-    mRender->log ("pes", fmt::format ("pts:{} size: {}", utils::getFullPtsString (mPage.mPts), mPage.mPesSize));
-    mRender->logValue (pts, (float)pesSize);
-
     if (pesSize < 8) {
       //{{{  strange empty pes, common on itv multiplex
       mRender->log ("pes", "empty pes");
