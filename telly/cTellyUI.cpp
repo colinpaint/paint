@@ -242,23 +242,40 @@ public:
 
     cGraphics& graphics = app.getGraphics();
     graphics.clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
+
     //{{{  draw tabs
     ImGui::SameLine();
     mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
     //}}}
-    //{{{  draw fullScreen button
+    //{{{  draw fullScreen 
     if (app.getPlatform().hasFullScreen()) {
       ImGui::SameLine();
       if (toggleButton ("full", app.getPlatform().getFullScreen()))
         app.getPlatform().toggleFullScreen();
       }
     //}}}
-    //{{{  draw scale button
+    //{{{  draw scale 
     ImGui::SameLine();
     ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
     ImGui::DragFloat ("##scale", &mScale, 0.01f, 0.05f, 16.f, "scale%3.2f");
     //}}}
-    //{{{  draw overlap,history buttons
+    //{{{  draw vsync
+    ImGui::SameLine();
+    if (app.getPlatform().hasVsync())
+      if (toggleButton ("vsync", app.getPlatform().getVsync()))
+        app.getPlatform().toggleVsync();
+    //}}}
+    //{{{  draw frameRate
+    ImGui::SameLine();
+    ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+    //}}}
+    //{{{  draw vertices:indices 
+    ImGui::SameLine();
+    ImGui::TextUnformatted (fmt::format ("{}:{}",
+                            ImGui::GetIO().MetricsRenderVertices,
+                            ImGui::GetIO().MetricsRenderIndices/3).c_str());
+    //}}}
+    //{{{  draw overlap,history
     //ImGui::SameLine();
     //ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
     //ImGui::DragFloat ("##over", &mOverlap, 0.25f, 0.5f, 32.f, "over%3.1f");
@@ -266,21 +283,6 @@ public:
     //ImGui::SameLine();
     //ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
     //ImGui::DragInt ("##hist", &mHistory, 0.25f, 0, 100, "h %d");
-    //}}}
-    //{{{  draw frameRate button
-    ImGui::SameLine();
-    ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
-
-    ImGui::SameLine();
-    if (app.getPlatform().hasVsync() && app.getPlatform().getVsync())
-      ImGui::TextUnformatted ("vsync");
-    //app.getPlatform().toggleVsync();
-    //}}}
-    //{{{  draw vertex:index info
-    ImGui::SameLine();
-    ImGui::TextUnformatted (fmt::format ("{}:{}",
-                            ImGui::GetIO().MetricsRenderVertices,
-                            ImGui::GetIO().MetricsRenderIndices/3).c_str());
     //}}}
 
     if (app.getDvbStream()) {
@@ -444,7 +446,7 @@ private:
               drawVideoInfo (service.getSid(), stream.getRender(), graphics, playPts); break;
 
             case cDvbStream::eAudio:
-            case cDvbStream::eAudioDescription:
+            case cDvbStream::eDescription:
               drawAudioInfo (service.getSid(), stream.getRender(), graphics);  break;
 
             case cDvbStream::eSubtitle:

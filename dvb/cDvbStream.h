@@ -34,7 +34,7 @@ public:
 
 class cDvbStream {
 public:
-  enum eStreamType { eVideo, eAudio, eAudioDescription, eSubtitle };
+  enum eStreamType { eVideo, eAudio, eDescription, eSubtitle };
   //{{{
   class cStream {
   public:

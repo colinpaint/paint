@@ -32,7 +32,7 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr bool kAudioQueued = false;
+constexpr bool kAudioQueued = true;
 constexpr size_t kAudioFrameMapSize = 48;
 constexpr int kAudioPlayerPreloadFrames = 4;
 

@@ -485,7 +485,7 @@ int cDvbStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 cDvbStream::cService::cService (uint16_t sid) : mSid(sid) {
   mStreams[eVideo].setLabel ("vid:");
   mStreams[eAudio].setLabel ("aud:");
-  mStreams[eAudioDescription].setLabel ("add:");
+  mStreams[eDescription].setLabel ("des:");
   mStreams[eSubtitle].setLabel ("sub:");
   }
 //}}}
@@ -524,9 +524,9 @@ void cDvbStream::cService::setAudStream (uint16_t pid, uint8_t streamType) {
 
   if (mStreams[eAudio].isDefined()) {
     if (pid != mStreams[eAudio].getPid()) {
-      // main audStream defined, new audPid, try audio description eAudioDescription
-      if (!mStreams[eAudioDescription].isDefined())
-        mStreams[eAudioDescription].setPidTypeId (pid, streamType);
+      // main audStream defined, new audPid, try audio description eDescription
+      if (!mStreams[eDescription].isDefined())
+        mStreams[eDescription].setPidTypeId (pid, streamType);
       }
     }
   else
@@ -574,7 +574,7 @@ void cDvbStream::cService::toggleStream (size_t streamType, uint16_t decoderMask
         return;
 
       case eAudio :
-      case eAudioDescription:
+      case eDescription:
         stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), decoderMask));
         return;
 
@@ -1430,21 +1430,19 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                     (*(uint32_t*)ts == 0xE0010000)) {
                   if (pidInfo->mBufPtr && pidInfo->getStreamType()) {
                     switch (pidInfo->getStreamType()) {
-                      case 2:   // ISO 13818-2 video
-                      case 27:  // HD vid
+                      case 2:  // ISO 13818-2 video
+                      case 27: // HD vid
                         //{{{  send buffered video pes
                         if (processPes (eVideo, pidInfo, skip)) // render took ownership of pes buffer
                           pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                         skip = false;
                         break;
                         //}}}
-                      case 3:   // ISO 11172-3 audio
-                      case 4:   // ISO 13818-3 audio
-                      case 15:  // aac adts
-                      case 17:  // aac latm
-                      case 129: // ac3
+                      case 3:  // ISO 11172-3 audio
+                      case 4:  // ISO 13818-3 audio
+                      case 17: // aac latm
                         //{{{  send buffered audio pes
-                        if (processPes ((*(uint32_t*)ts == 0xC1010000) ? eAudioDescription : eAudio, pidInfo, skip))
+                        if (processPes ((*(uint32_t*)ts == 0xC1010000) ? eDescription : eAudio, pidInfo, skip))
                           pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                         break;
                         //}}}
