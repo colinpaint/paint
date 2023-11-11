@@ -166,6 +166,9 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
 
   mPlayerThread = thread ([=]() {
     cLog::setThreadName ("play");
+    array <float,2048*2> samples = { 0.f };
+    array <float,2048*2> silence = { 0.f };
+
     #ifdef _WIN32
       //{{{  windows
       SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
@@ -175,9 +178,6 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
         cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", mSampleRate);
         audioDevice->setSampleRate (mSampleRate);
         audioDevice->start();
-
-        array <float,2048*2> samples = { 0.f };
-        array <float,2048*2> silence = { 0.f };
 
         while (!mExit) {
           audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
@@ -239,9 +239,6 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
 
       cAudio audio (2, mSampleRate, 40000, false);
 
-      array <float,2048*2> samples = { 0.f };
-      array <float,2048*2> silence = { 0.f };
-
       while (!mExit) {
         float* srcSamples = silence.data();
 
@@ -293,7 +290,6 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
         }
       //}}}
     #endif
-
     mRunning = false;
     cLog::log (LOGINFO, "exit");
     });

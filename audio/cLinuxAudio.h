@@ -14,9 +14,9 @@ class cAudio : public iAudio {
 public:
   //{{{
   cAudio (int srcChannels, int srcSampleRate, int latency, bool int16) {
-
     (void)srcChannels;
     (void)srcSampleRate;
+
     int err = snd_pcm_open (&mHandle, "default", SND_PCM_STREAM_PLAYBACK, 0);
     if (err < 0)
       printf ("audOpen - snd_pcm_open error: %s\n", snd_strerror (err));
@@ -33,11 +33,7 @@ public:
       printf ("audOpen - snd_pcm_set_params  error: %s\n", snd_strerror(err));
     }
   //}}}
-  //{{{
-  virtual ~cAudio() {
-    snd_pcm_close (mHandle);
-    }
-  //}}}
+  virtual ~cAudio() { snd_pcm_close (mHandle); }
 
   int getDstChannels() { return 2; }
   int getDstSampleRate() { return 480000; }
@@ -74,11 +70,10 @@ public:
 
   //{{{
   void play (int srcChannels, void* srcSamples, int srcNumSamples, float pitch) {
-
     (void)srcChannels;
     (void)pitch;
-    snd_pcm_sframes_t frames = snd_pcm_writei (mHandle, srcSamples, srcNumSamples);
 
+    snd_pcm_sframes_t frames = snd_pcm_writei (mHandle, srcSamples, srcNumSamples);
     if (frames < 0)
       frames = snd_pcm_recover (mHandle, frames, 0);
 
