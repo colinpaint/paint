@@ -11,8 +11,6 @@ class cGraphics;
 class cVideoFrame;
 //}}}
 
-constexpr uint32_t kVideoFrameMapSize = 30;
-
 class cVideoRender : public cRender {
 public:
   cVideoRender (const std::string& name, uint8_t streamType, uint16_t decoderMask);

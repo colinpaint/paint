@@ -52,8 +52,8 @@ add_subdirectory (song)
 
 # windows audio capture app
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-  project (captureAudio VERSION 1.0.0)
-    add_executable (${PROJECT_NAME} captureAudio/capture.cpp)
+  project (capture VERSION 1.0.0)
+    add_executable (${PROJECT_NAME} audio/capture.cpp)
     target_link_libraries (${PROJECT_NAME} PRIVATE decoders winmm avrt audio)
 endif()
 
@@ -75,7 +75,7 @@ project (fed VERSION 1.0.0)
   add_executable (${PROJECT_NAME} ui/cUI.h ui/cUI.cpp
                                   fed/cDocument.h fed/cDocument.cpp
                                   fed/cFedApp.h fed/cFedApp.cpp
-                                  fed/fedMain.cpp 
+                                  fed/fedMain.cpp
                                   fed/cEditUI.cpp
                                   fed/cMemEdit.h fed/cMemEdit.cpp
                                   fed/cTextEdit.h fed/cTextEdit.cpp

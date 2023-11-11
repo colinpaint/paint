@@ -11,6 +11,7 @@
 
 using namespace std;
 //}}}
+constexpr size_t kAudioFrameMapSize = 16;
 constexpr int64_t kPtsPerFrame = 90000 / 25;
 
 // public:
@@ -56,7 +57,7 @@ cFrame* cRender::getFreeFrame() {
 //}}}
 //{{{
 cFrame* cRender::getYoungestFrame() {
-  
+
   cFrame* youngestFrame;
   {
   unique_lock<shared_mutex> lock (mSharedMutex);

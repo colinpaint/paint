@@ -30,6 +30,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kVideoQueued = true;
+constexpr uint32_t kVideoFrameMapSize = 30;
 
 //{{{
 class cFFmpegVideoFrame : public cVideoFrame {

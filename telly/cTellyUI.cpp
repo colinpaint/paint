@@ -263,20 +263,6 @@ public:
     //ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
     //ImGui::DragInt ("##hist", &mHistory, 0.25f, 0, 100, "h %d");
     //}}}
-    //{{{  draw videoFrameMap size button
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
-    ImGui::DragInt ("##vid", &mVideoFrameMapSize, 0.25f, 2, 100, "vid %d");
-    if (ImGui::IsItemHovered())
-      mVideoFrameMapSize = max (2, min (100, mVideoFrameMapSize + static_cast<int>(ImGui::GetIO().MouseWheel)));
-    //}}}
-    //{{{  draw audioFrameMap size button
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
-    ImGui::DragInt ("##aud", &mAudioFrameMapSize, 0.25f, 2, 100, "aud %d");
-    if (ImGui::IsItemHovered())
-      mAudioFrameMapSize = max (2, min (100, mAudioFrameMapSize + static_cast<int>(ImGui::GetIO().MouseWheel)));
-    //}}}
     //{{{  draw frameRate button
     ImGui::SameLine();
     ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
@@ -538,14 +524,12 @@ private:
         continue;
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
-      videoRender.setFrameMapSize (mVideoFrameMapSize);
       cPoint videoSize = {videoRender.getWidth(), videoRender.getHeight()};
 
       // playPts and draw framesGraphic
       int64_t playPts = service.getStream (cDvbStream::eAudio).getPts();
       if (service.getStream (cDvbStream::eAudio).isEnabled()) {
         cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
-        audioRender.setFrameMapSize (mAudioFrameMapSize);
         playPts = audioRender.getPlayerPts();
 
         mFramesGraphic.draw (audioRender, videoRender, playPts);
@@ -609,13 +593,11 @@ private:
         continue;
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
-      videoRender.setFrameMapSize (mVideoFrameMapSize);
 
       // playerPts and draw framesGraphic
       int64_t playerPts = service.getStream (cDvbStream::eAudio).getPts();
       if (service.getStream (cDvbStream::eAudio).isEnabled()) {
         cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
-        audioRender.setFrameMapSize (mAudioFrameMapSize);
         playerPts = audioRender.getPlayerPts();
 
         mFramesGraphic.draw (audioRender, videoRender, playerPts);
@@ -756,9 +738,6 @@ private:
 
   cQuad* mQuad = nullptr;
   cTextureShader* mShader = nullptr;
-
-  int mVideoFrameMapSize = kVideoFrameMapSize;
-  int mAudioFrameMapSize = kAudioFrameMapSize;
 
   float mScale = 1.f;
   float mOverlap = 4.f;

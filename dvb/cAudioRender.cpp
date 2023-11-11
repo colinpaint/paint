@@ -30,8 +30,9 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr bool kAudioQueued = true;
-constexpr int kAudioPlayerPreloadFrames = 16;
+constexpr bool kAudioQueued = false;
+constexpr int kAudioPlayerPreloadFrames = 4;
+constexpr size_t kAudioFrameMapSize = 48;
 
 //{{{
 class cFFmpegAudioDecoder : public cDecoder {

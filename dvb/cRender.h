@@ -48,7 +48,7 @@ public:
 class cDecodeQueueItem {
 public:
   //{{{
-  cDecodeQueueItem (cDecoder* decoder,   
+  cDecodeQueueItem (cDecoder* decoder,
                     uint16_t pid, uint8_t* pes, int pesSize, int64_t pts, int64_t dts,
                     std::function<cFrame*()> allocFrameCallback,
                     std::function<void (cFrame* frame)> addFrameCallback)
@@ -101,7 +101,6 @@ public:
   cFrame* getNearestFrameFromPts (int64_t pts);
   virtual void trimFramesBeforePts (int64_t pts);
 
-  void setFrameMapSize (size_t size) { mFrameMapSize = size; }
   void setAllocFrameCallback (std::function <cFrame* ()> getFrameCallback) { mAllocFrameCallback = getFrameCallback; }
   void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
   void setMapSize (size_t size) { mMapSize = size; }
