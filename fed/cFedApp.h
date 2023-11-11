@@ -18,11 +18,15 @@ public:
   cFedApp (const cPoint& windowSize, bool fullScreen, bool vsync);
   virtual ~cFedApp() = default;
 
+  bool getMemEdit() const { return mMemEdit; };
+
   cFedDocument* getFedDocument() const;
-  bool setDocumentName (const std::string& filename);
+  bool setDocumentName (const std::string& filename, bool memEdit);
 
   virtual void drop (const std::vector<std::string>& dropItems) final;
 
 private:
+  bool mMemEdit = false;
+  std::string mFilename;
   std::vector<cFedDocument*> mFedDocuments;
   };

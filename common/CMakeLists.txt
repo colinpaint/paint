@@ -1,12 +1,22 @@
 project (common VERSION 1.0.0)
-  add_library (${PROJECT_NAME} cPointRectColor.h cVecMat.h
-                               date.h fileUtils.h utils.h cBipBuffer.h readerWriterQueue.h
-                               cDvbUtils.h cDvbUtils.cpp cDvbUtilsHuff.cpp
-                               cFileView.h cFileView.cpp
-                               cLog.h cLog.cpp
-                               cMiniLog.h cMiniLog.cpp
-                               tinyfiledialogs.h tinyfiledialogs.c
-                               )
+  if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+    add_library (${PROJECT_NAME} cPointRectColor.h cVecMat.h
+                                 date.h utils.h fileUtils.h
+                                 cBipBuffer.h readerWriterQueue.h
+                                 cDvbUtils.h cDvbUtils.cpp cDvbUtilsHuff.cpp
+                                 cLog.h cLog.cpp
+                                 cMiniLog.h cMiniLog.cpp
+                                 cFileView.h cFileView.cpp
+                                 tinyfiledialogs.h tinyfiledialogs.c)
+  else()
+    add_library (${PROJECT_NAME} cPointRectColor.h cVecMat.h
+                                 date.h utils.h fileUtils.h
+                                 cBipBuffer.h readerWriterQueue.h
+                                 cDvbUtils.h cDvbUtils.cpp cDvbUtilsHuff.cpp
+                                 cLog.h cLog.cpp
+                                 cMiniLog.h cMiniLog.cpp
+                                 tinyfiledialogs.h tinyfiledialogs.c)
+  endif()
 
   target_include_directories (${PROJECT_NAME} PUBLIC fmt/include)
   target_link_libraries (${PROJECT_NAME} PUBLIC fmt)
@@ -15,10 +25,9 @@ project (common VERSION 1.0.0)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_compile_options (${PROJECT_NAME} PUBLIC /W4
                                                    /fp:fast
-                                                   ${BUILD_MSVC_COMPILE_OPTIONS}
-                                                   )
+                                                   ${BUILD_MSVC_COMPILE_OPTIONS})
 
-  else (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+  else()
     target_compile_definitions (${PROJECT_NAME} PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
     target_compile_options (${PROJECT_NAME} PUBLIC -Wall
                                                    -Wextra
@@ -31,6 +40,5 @@ project (common VERSION 1.0.0)
                                                    -fno-exceptions
                                                    -march=native
                                                    -g
-                                                   ${BUILD_LINUX_COMPILE_OPTIONS}
-                                                   )
+                                                   ${BUILD_LINUX_COMPILE_OPTIONS})
   endif()

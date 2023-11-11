@@ -36,6 +36,7 @@ int main (int numArgs, char* args[]) {
   // params
   eLogLevel logLevel = LOGINFO;
   bool fullScreen = false;
+  bool memEdit = false;
   bool vsync = true;
   //{{{  parse command line args to params
   // args to params
@@ -49,6 +50,7 @@ int main (int numArgs, char* args[]) {
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
     else if (*it == "full") { fullScreen = true; params.erase (it); }
+    else if (*it == "mem") { memEdit = true; params.erase (it); }
     else if (*it == "free") { vsync = false; params.erase (it); }
     else ++it;
     };
@@ -65,7 +67,7 @@ int main (int numArgs, char* args[]) {
   cFedApp app ({1000, 900}, fullScreen, vsync);
   app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
-  app.setDocumentName (params.empty() ? "../../fed/cFed.cpp" : cFileUtils::resolve (params[0]));
+  app.setDocumentName (params.empty() ? "../../fed/cFedUI.cpp" : params[0], memEdit);
 
   app.mainUILoop();
 

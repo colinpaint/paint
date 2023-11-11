@@ -74,8 +74,6 @@ project (demo VERSION 1.0.0)
 project (fed VERSION 1.0.0)
   add_executable (${PROJECT_NAME} ui/cUI.h ui/cUI.cpp
                                   fed/cFedDocument.h fed/cFedDocument.cpp
-                                  fed/cFed.h fed/cFed.cpp
-                                  fed/cMemEdit.h fed/cMemEdit.cpp
                                   fed/cFedUI.cpp
                                   fed/cFedApp.h fed/cFedApp.cpp
                                   fed/fedMain.cpp
@@ -83,9 +81,9 @@ project (fed VERSION 1.0.0)
 
   target_include_directories (${PROJECT_NAME} PRIVATE app imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE imgui opengl32 d3d11 d3dcompiler ws2_32)
+    target_link_libraries (${PROJECT_NAME} PRIVATE common imgui opengl32 d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE imgui stdc++fs)
+    target_link_libraries (${PROJECT_NAME} PRIVATE common imgui stdc++fs)
   endif()
 
 # player app

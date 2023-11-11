@@ -1,11 +1,11 @@
 // cFileView.cpp - analyse base class
-#ifdef _WIN32
 //{{{  includes
-#include "cFileView.h"
+#ifdef _WIN32
+  #define NOMINMAX
+  #include <windows.h>
+#endif
 
-#define _CRT_SECURE_NO_WARNINGS
-#define NOMINMAX
-#include <windows.h>
+#include "cFileView.h"
 
 #include <cstdint>
 #include <string>
@@ -81,14 +81,16 @@ bool cFileView::readLine (string& line, uint32_t& lineNumber, uint8_t*& ptr, uin
   uint8_t* endPtr = beginPtr;
 
   while (endPtr) {
-    if (*endPtr == 0x0d) { // carraige return, end of line
+    if (*endPtr == 0x0d) { 
+      // carraige return, end of line
       line = string (beginPtr, endPtr);
       lineNumber = mReadLineNumber++;
       ptr = beginPtr;
       numBytes = (uint32_t)(endPtr - beginPtr) + 1; // !!! want to include lf !!!
       return true;
       }
-    else if (*endPtr == 0x0a) { // skip line feed
+    else if (*endPtr == 0x0a) { 
+      // skip line feed
       beginPtr = readBytes (1);
       endPtr = beginPtr;
       }
@@ -101,7 +103,7 @@ bool cFileView::readLine (string& line, uint32_t& lineNumber, uint8_t*& ptr, uin
   ptr = nullptr;
   address = 0;
   numBytes = 0;
+
   return false;
   }
 //}}}
-#endif
