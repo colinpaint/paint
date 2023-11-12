@@ -15,7 +15,7 @@
 using namespace std;
 //}}}
 
-cMiniLog::cMiniLog (const string& name) : mName(name), mFirstTimePoint (chrono::system_clock::now()) {}
+cMiniLog::cMiniLog(const string& name) : mName(name), mFirstTimePoint (chrono::system_clock::now()) {}
 
 string cMiniLog::getHeader() const { return mName + " " + mHeader; }
 
