@@ -33,10 +33,13 @@ using namespace std;
 
 #ifdef _WIN32
   cSongPlayer::cSongPlayer (cSong* song, bool streaming) {
-    thread playerThread = thread ([=]() {
-      // player lambda
+    mPlayerThread = thread ([=]() {
+      // playerThread lambda
       cLog::setThreadName ("play");
+
+      // raise to max prioritu
       SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+
       array <float,2048*2> silence = { 0.f };
       array <float,2048*2> samples = { 0.f };
 
@@ -88,14 +91,20 @@ using namespace std;
       cLog::log (LOGINFO, "exit");
       });
 
-    playerThread.detach();
+    mPlayerThread.detach();
     }
 
 #else
   cSongPlayer::cSongPlayer (cSong* song, bool streaming) {
-    thread playerThread = thread ([=]() { // ,this
-      // player lambda
+    mPlayerThread = thread ([=]() {
+      // playerThread lambda
       cLog::setThreadName ("play");
+
+      // raise to max prioritu
+      sched_param sch_params;
+      sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
+      pthread_setschedparam (mPlayerThread.native_handle(), SCHED_RR, &sch_params);
+
       array <float,2048*2> silence = { 0.f };
       array <float,2048*2> samples = { 0.f };
 
@@ -129,11 +138,7 @@ using namespace std;
       cLog::log (LOGINFO, "exit");
       });
 
-    // raise to max prioritu
-    sched_param sch_params;
-    sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
-    pthread_setschedparam (playerThread.native_handle(), SCHED_RR, &sch_params);
-    playerThread.detach();
+    mPlayerThread.detach();
     }
 #endif
 

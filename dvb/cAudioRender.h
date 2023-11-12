@@ -57,7 +57,6 @@ private:
 
   // player
   std::thread mPlayerThread;
-  int mPlayerFrames;
   bool mPlaying = false;
   bool mRunning = true;
   bool mExit = false;

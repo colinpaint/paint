@@ -12,19 +12,18 @@
 #pragma comment(lib,"Xaudio2.lib")
 //}}}
 const int kMaxBuffers = 2;
-const int kMaxChannels = 6;
+const int kMaxNumChannels = 6;
 const int kBitsPerSample = 32;
 const int kMaxSamples = 2048;
 
 // public
 //{{{
-cAudio::cAudio (int srcChannels, int srcSampleRate, int latency, bool int16) : mDstVolume(kDefaultVolume) {
-
+cAudio::cAudio (int srcNumChannels, int srcSampleRate, int latency, bool bit16) : mDstVolume(kDefaultVolume) {
   (void)latency;
-  (void)int16;
+  (void)bit16;
 
   // alloc and clear mSilence
-  mSilence = (float*)calloc (kMaxChannels * kMaxSamples, kBitsPerSample/8);
+  mSilence = (float*)calloc (kMaxNumChannels * kMaxSamples, kBitsPerSample/8);
 
   // guess initial buffer alloc
   for (auto i = 0; i < kMaxBuffers; i++) {
@@ -55,7 +54,7 @@ void cAudio::setVolume (float volume) {
   }
 //}}}
 //{{{
-void cAudio::play (int srcChannels, void* srcSamples, int srcNumSamples, float pitch) {
+void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, float pitch) {
 // play silence if src == nullptr, maintains timing
 
   if (srcChannels != mSrcChannels) {
@@ -342,9 +341,9 @@ void cAudio::play (int srcChannels, void* srcSamples, int srcNumSamples, float p
 
 // private
 //{{{
-void cAudio::open (int srcChannels, int srcSampleRate) {
+void cAudio::open (int srcNumChannels, int srcSampleRate) {
 
-  mSrcChannels = srcChannels;
+  mSrcNumChannels = srcNumChannels;
   mSrcSampleRate = srcSampleRate;
 
   // create XAudio2 engine.

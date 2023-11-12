@@ -7,11 +7,11 @@ public:
 
   virtual ~iAudio() {}
 
-  virtual int getDstChannels() = 0;
+  virtual int getDstNumChannels() = 0;
   virtual int getDstSampleRate() = 0;
   virtual int getDstChannelMask() = 0;
 
-  virtual int getSrcChannels() = 0;
+  virtual int getSrcNumChannels() = 0;
 
   virtual float getVolume() = 0;
   virtual float getDefaultVolume() = 0;

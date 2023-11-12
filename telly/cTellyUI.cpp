@@ -797,9 +797,9 @@ private:
     ImGui::GetIO().WantTextInput = true;
     ImGui::GetIO().WantCaptureKeyboard = false;
 
-    bool altKeyPressed = ImGui::GetIO().KeyAlt;
-    bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
-    bool shiftKeyPressed = ImGui::GetIO().KeyShift;
+    //bool altKeyPressed = ImGui::GetIO().KeyAlt;
+    //bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
+    //bool shiftKeyPressed = ImGui::GetIO().KeyShift;
 
     for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
       ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
