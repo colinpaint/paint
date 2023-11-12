@@ -1607,13 +1607,7 @@ void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) 
     //}}}
 
   size_t blockSize = 188 * 256;
-  uint8_t* buffer = (uint8_t*)malloc (blockSize);
-
-  #ifdef _WIN32
-    struct _stati64 st;
-  #else
-    struct stat st;
-  #endif
+  uint8_t* buffer = new uint8_t[blockSize];
 
   mFilePos = 0;
   while (true) {
@@ -1624,16 +1618,18 @@ void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) 
       break;
 
     #ifdef _WIN32
+      struct _stati64 st;
       if (_stat64 (mFileName.c_str(), &st) != -1)
         mFileSize = st.st_size;
     #else
+      struct stat st;
       if (stat (mFileName.c_str(), &st) != -1)
         mFileSize = st.st_size;
     #endif
     }
 
   fclose (file);
-  free (buffer);
+  delete [] buffer;
 
   if (launchThread)
     cLog::log (LOGERROR, "exit");
