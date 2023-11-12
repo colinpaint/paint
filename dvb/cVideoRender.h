@@ -23,13 +23,13 @@ public:
   cVideoFrame* getVideoFrameFromPts (int64_t pts);
   cVideoFrame* getVideoNearestFrameFromPts (int64_t pts);
 
-  void trimVideoBeforePts (int64_t pts);
-
   // callbacks
   cFrame* getFrame();
   void addFrame (cFrame* frame);
 
+  // overrides
   virtual std::string getInfoString() const final;
+  virtual void trimVideoBeforePts (int64_t pts) final;
 
 private:
   uint16_t mWidth = 0;

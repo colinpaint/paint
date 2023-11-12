@@ -49,6 +49,6 @@ public:
   cFrame* getFrame();
   void addFrame (cFrame* frame);
 
-  // virtual
+  // overrides
   virtual std::string getInfoString() const final;
   };

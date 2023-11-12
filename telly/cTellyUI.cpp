@@ -140,7 +140,7 @@ private:
   //{{{
   void drawAudioPower (cAudioRender& audio, int64_t playerPts, ImVec2 pos) {
 
-    cAudioFrame* audioFrame = audio.getAudioFrameFromPts (playerPts);
+    cAudioFrame* audioFrame = audio.findAudioFrameFromPts (playerPts);
     if (audioFrame) {
       pos.y += 1.f;
       float height = 8.f * ImGui::GetTextLineHeight();

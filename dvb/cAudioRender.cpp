@@ -33,7 +33,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kAudioQueued = true;
-constexpr size_t kSamplesWait = 3;
+constexpr size_t kSamplesWait = 2;
 constexpr size_t kAudioFrameMapSize = 48;
 
 //{{{
@@ -186,7 +186,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
 
             // locked audio mutex
             shared_lock<shared_mutex> lock (getSharedMutex());
-            cAudioFrame* audioFrame = getAudioFrameFromPts (mPlayerPts);
+            cAudioFrame* audioFrame = findAudioFrameFromPts (mPlayerPts);
             if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
               samplesWait = 0;
               float* src = audioFrame->mSamples.data();
@@ -327,6 +327,12 @@ cAudioRender::~cAudioRender() {
 //}}}
 
 //{{{
+cAudioFrame* cAudioRender::findAudioFrameFromPts (int64_t pts) {
+  return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts));
+  }
+//}}}
+
+//{{{
 void cAudioRender::startPlayerPts (int64_t pts) {
 
   mPlayerPts = pts;
@@ -334,11 +340,7 @@ void cAudioRender::startPlayerPts (int64_t pts) {
   }
 //}}}
 
-cAudioFrame* cAudioRender::getAudioFrameFromPts (int64_t pts) {
-  return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts));
-  }
-
-// callbacks
+// decoder callbacks
 //{{{
 cFrame* cAudioRender::getFrame() {
 
@@ -373,6 +375,7 @@ void cAudioRender::addFrame (cFrame* frame) {
   }
 //}}}
 
+// overrides
 //{{{
 string cAudioRender::getInfoString() const {
   return fmt::format ("aud frames:{:2d}:{:2d}:{:d} {} {}",
@@ -393,6 +396,7 @@ bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int
   }
 //}}}
 
+// private
 //{{{
 void cAudioRender::exitWait() {
 

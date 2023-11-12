@@ -27,6 +27,9 @@ public:
   size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
   int64_t getPtsDuration() const { return mPtsDuration; }
 
+  // find
+  cAudioFrame* findAudioFrameFromPts (int64_t pts);
+
   // player
   bool isPlaying() const { return mPlaying; }
   int64_t getPlayerPts() const { return mPlayerPts; }
@@ -34,13 +37,11 @@ public:
   void togglePlaying() { mPlaying = !mPlaying; }
   void startPlayerPts (int64_t pts);
 
-  // find
-  cAudioFrame* getAudioFrameFromPts (int64_t pts);
-
   // callbacks
-  virtual cFrame* getFrame() final;
-  virtual void addFrame (cFrame* frame) final;
+  cFrame* getFrame();
+  void addFrame (cFrame* frame);
 
+  // overrides
   virtual std::string getInfoString() const final;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
 

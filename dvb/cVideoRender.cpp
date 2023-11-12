@@ -238,12 +238,6 @@ cVideoFrame* cVideoRender::getVideoNearestFrameFromPts (int64_t pts) {
   }
 //}}}
 
-//{{{
-void cVideoRender::trimVideoBeforePts (int64_t pts) {
-  trimFramesBeforePts (pts / mPtsDuration);
-  }
-//}}}
-
 // decoder callbacks
 //{{{
 cFrame* cVideoRender::getFrame() {
@@ -277,10 +271,16 @@ void cVideoRender::addFrame (cFrame* frame) {
   }
 //}}}
 
+// overrides
 //{{{
 string cVideoRender::getInfoString() const {
   return fmt::format ("vid frames:{:2d}:{:2d}:{:d} {} {}",
                       mFrames.size(), mFreeFrames.size(), getQueueSize(),
                       mDecoder->getInfoString(), mFrameInfo);
+  }
+//}}}
+//{{{
+void cVideoRender::trimVideoBeforePts (int64_t pts) {
+  trimFramesBeforePts (pts / mPtsDuration);
   }
 //}}}

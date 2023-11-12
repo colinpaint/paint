@@ -950,7 +950,7 @@ cSubtitleImage& cSubtitleRender::getImage (size_t line) {
   }
 //}}}
 
-// callbacks
+// decoder callbacks
 //{{{
 cFrame* cSubtitleRender::getFrame() {
   return new cSubtitleFrame();
@@ -963,7 +963,7 @@ void cSubtitleRender::addFrame (cFrame* frame) {
   }
 //}}}
 
-// virtual
+// overrides
 //{{{
 string cSubtitleRender::getInfoString() const {
   return mDecoder->getInfoString();

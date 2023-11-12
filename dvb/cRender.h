@@ -99,7 +99,6 @@ public:
   cFrame* getYoungestFrame();
   cFrame* getFrameFromPts (int64_t pts);
   cFrame* getNearestFrameFromPts (int64_t pts);
-  virtual void trimFramesBeforePts (int64_t pts);
 
   void setAllocFrameCallback (std::function <cFrame* ()> getFrameCallback) { mAllocFrameCallback = getFrameCallback; }
   void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
@@ -110,9 +109,9 @@ public:
   void log (const std::string& tag, const std::string& text);
   void logValue (int64_t pts, float value);
 
-  // process
   virtual std::string getInfoString() const = 0;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
+  virtual void trimFramesBeforePts (int64_t pts);
 
 protected:
   size_t getQueueSize() const;
