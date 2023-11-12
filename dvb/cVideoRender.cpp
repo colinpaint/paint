@@ -39,7 +39,12 @@ public:
   virtual ~cFFmpegVideoFrame() { releasePixels(); }
 
   void setAVFrame (AVFrame* avFrame) {
+
+    // release old AVframe before holding new AVframe
+    releasePixels();
+
     mAvFrame = avFrame;
+
     mWidth = (uint16_t)avFrame->width;
     mHeight = (uint16_t)avFrame->height;
     mStrideY = (uint16_t)avFrame->linesize[0];
@@ -56,10 +61,13 @@ protected:
   virtual void releasePixels() final {
 
     if (mAvFrame) {
-      av_frame_unref (mAvFrame);
-      av_frame_free (&mAvFrame);
-
+      // release old AVframe
+      AVFrame* avFrame = mAvFrame;
       mAvFrame = nullptr;
+
+      cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::releasePixels"));
+      av_frame_unref (avFrame);
+      av_frame_free (&avFrame);
       }
     }
   //}}}

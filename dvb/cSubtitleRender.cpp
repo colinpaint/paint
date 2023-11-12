@@ -34,7 +34,7 @@ public:
   //}}}
 
   virtual void releaseResources() final {}
-  };
+    };
 //}}}
 //{{{
 class cSubtitleDecoder : public cDecoder {
