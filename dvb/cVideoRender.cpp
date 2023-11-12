@@ -30,7 +30,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kVideoQueued = true;
-constexpr uint32_t kVideoFrameMapSize = 30;
+constexpr uint32_t kVideoFrameMapSize = 25;
 
 //{{{
 class cFFmpegVideoFrame : public cVideoFrame {
@@ -64,8 +64,6 @@ protected:
       // release old AVframe
       AVFrame* avFrame = mAvFrame;
       mAvFrame = nullptr;
-
-      cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::releasePixels"));
       av_frame_unref (avFrame);
       av_frame_free (&avFrame);
       }
