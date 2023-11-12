@@ -596,54 +596,120 @@ private:
 
     cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
 
+    // count numVideos
+    int numVideos = 0;
+    for (auto& pair : dvbStream.getServiceMap())
+      if (pair.second.getStream (cDvbStream::eVideo).isEnabled())
+        numVideos++;
+
+    int curVideo = 0;
+    float scale = (numVideos <= 1) ? 1.f : ((numVideos <= 4) ? 0.5f : 0.33f);
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
-      if (!service.getStream (cDvbStream::eVideo).isEnabled())
-        continue;
+      if (service.getStream (cDvbStream::eVideo).isEnabled()) {
+        curVideo++;
+        cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
 
-      cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
+        // playerPts and draw framesGraphic
+        int64_t playerPts = service.getStream (cDvbStream::eAudio).getPts();
+        if (service.getStream (cDvbStream::eAudio).isEnabled()) {
+          cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
+          playerPts = audioRender.getPlayerPts();
 
-      // playerPts and draw framesGraphic
-      int64_t playerPts = service.getStream (cDvbStream::eAudio).getPts();
-      if (service.getStream (cDvbStream::eAudio).isEnabled()) {
-        cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
-        playerPts = audioRender.getPlayerPts();
-
-        mFramesGraphic.draw (audioRender, videoRender, playerPts);
-        }
-
-      // draw telly pic
-      cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
-      if (videoFrame) {
-        cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
-        if (!mQuad)
-          mQuad = graphics.createQuad (videoSize);
-
-        cTexture& texture = videoFrame->getTexture (graphics);
-        if (!mShader)
-          mShader = graphics.createTextureShader (texture.getTextureType());
-        texture.setSource();
-        mShader->use();
-
-        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
-        cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
-        cMat4x4 model;
-        model.size (size);
-
-        float replicate = floor (1.f / mScale);
-        for (float y = -videoSize.y * replicate; y <= videoSize.y * replicate; y += videoSize.y) {
-          for (float x = -videoSize.x * replicate; x <= videoSize.x * replicate; x += videoSize.x) {
-            // translate centre of video to centre of window
-            cVec2 translate = {(windowSize.x / 2.f)  - ((x + (videoSize.x / 2.f)) * size.x),
-                               (windowSize.y / 2.f)  - ((y + (videoSize.y / 2.f)) * size.y)};
-
-            model.setTranslate (translate);
-            mShader->setModelProjection (model, orthoProjection);
-            mQuad->draw();
-            }
+          if (curVideo == 1)
+            mFramesGraphic.draw (audioRender, videoRender, playerPts);
           }
 
-        videoRender.trimVideoBeforePts (playerPts - (mHistory * videoFrame->mPtsDuration));
+        // draw telly pic
+        cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
+        if (videoFrame) {
+          cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
+          if (!mQuad)
+            mQuad = graphics.createQuad (videoSize);
+
+          cTexture& texture = videoFrame->getTexture (graphics);
+          if (!mShader)
+            mShader = graphics.createTextureShader (texture.getTextureType());
+          texture.setSource();
+          mShader->use();
+
+          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
+          cMat4x4 model;
+          if (numVideos == 1) {
+            //{{{  1 pic
+            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
+            model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
+                                  (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
+            model.size (size);
+            }
+            //}}}
+          else if (numVideos == 2) {
+            //{{{  2 multiView
+            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
+
+            if (curVideo == 1)
+              model.setTranslate ({(windowSize.x / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
+            else
+              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
+            model.size (size);
+            }
+            //}}}
+          else if (numVideos == 3) {
+            //{{{  3 multiView
+            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
+
+            if (curVideo == 1)
+              model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 2)
+              model.setTranslate ({(windowSize.x / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else
+              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            model.size (size);
+            }
+            //}}}
+          else if (numVideos == 4) {
+            //{{{  4 multiView
+            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
+
+            if (curVideo == 1)
+              model.setTranslate ({(windowSize.x / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 2)
+              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 3)
+              model.setTranslate ({(windowSize.x / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else
+              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            model.size (size);
+            }
+            //}}}
+          mShader->setModelProjection (model, orthoProjection);
+          mQuad->draw();
+          //{{{  multipic
+          //cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
+          //float replicate = floor (1.f / mScale);
+          //for (float y = -videoSize.y * replicate; y <= videoSize.y * replicate; y += videoSize.y) {
+            //for (float x = -videoSize.x * replicate; x <= videoSize.x * replicate; x += videoSize.x) {
+              //// translate centre of video to centre of window
+              //cVec2 translate = {(windowSize.x / 2.f)  - ((x + (videoSize.x / 2.f)) * size.x),
+                                 //(windowSize.y / 2.f)  - ((y + (videoSize.y / 2.f)) * size.y)};
+
+              //model.setTranslate (translate[curVideo]);
+              //mShader->setModelProjection (model, orthoProjection);
+              //mQuad->draw();
+              //}
+            //}
+          //}}}
+          videoRender.trimVideoBeforePts (playerPts - (mHistory * videoFrame->mPtsDuration));
+          }
         }
       }
     }
