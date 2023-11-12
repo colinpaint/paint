@@ -40,12 +40,10 @@ constexpr size_t kAudioFrameMapSize = 48;
 class cFFmpegAudioDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegAudioDecoder (cRender* render, uint8_t streamType)
+  cFFmpegAudioDecoder (cRender& render, uint8_t streamType)
     : cDecoder(),
       mRender(render),
-      mStreamType(streamType),
-      mAacLatm(mStreamType == 17),
-      mStreamTypeName(mAacLatm ? "aacL" : "mp3 "),
+      mStreamType(streamType), mAacLatm(mStreamType == 17), mStreamTypeName(mAacLatm ? "aacL" : "mp3 "),
       mAvCodec(avcodec_find_decoder (mAacLatm ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
 
     cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder - streamType:{}:{}", mStreamType, mStreamTypeName));
@@ -72,8 +70,8 @@ public:
                           function<void (cFrame* frame)> addFrameCallback) final  {
     (void)dts;
 
-    mRender->log ("pes", fmt::format ("pid {} size {} pts {}",
-                                      pid, pesSize, utils::getFullPtsString (pts)));
+    mRender.log ("pes", fmt::format ("pid:{} pts:{} size:{}",
+                                     pid, utils::getFullPtsString (pts), pesSize));
 
     AVPacket* avPacket = av_packet_alloc();
     AVFrame* avFrame = av_frame_alloc();
@@ -141,7 +139,7 @@ public:
   //}}}
 
 private:
-  cRender* mRender;
+  cRender& mRender;
   const uint8_t mStreamType;
   const bool mAacLatm;
   const string mStreamTypeName;
@@ -158,7 +156,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
     : cRender(kAudioQueued, name + "aud", streamType, decoderMask, kAudioFrameMapSize),
       mNumChannels(2), mSampleRate(48000), mSamplesPerFrame(1024), mPtsDuration(0) {
 
-  mDecoder = new cFFmpegAudioDecoder (this, streamType);
+  mDecoder = new cFFmpegAudioDecoder (*this, streamType);
 
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
@@ -332,14 +330,6 @@ cAudioFrame* cAudioRender::findAudioFrameFromPts (int64_t pts) {
   }
 //}}}
 
-//{{{
-void cAudioRender::startPlayerPts (int64_t pts) {
-
-  mPlayerPts = pts;
-  mPlaying = true;
-  }
-//}}}
-
 // decoder callbacks
 //{{{
 cFrame* cAudioRender::getFrame() {
@@ -397,6 +387,13 @@ bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int
 //}}}
 
 // private
+//{{{
+void cAudioRender::startPlayerPts (int64_t pts) {
+
+  mPlayerPts = pts;
+  mPlaying = true;
+  }
+//}}}
 //{{{
 void cAudioRender::exitWait() {
 

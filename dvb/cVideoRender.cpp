@@ -72,12 +72,10 @@ private:
 class cFFmpegVideoDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegVideoDecoder (cRender* render, uint8_t streamType)
+  cFFmpegVideoDecoder (cRender& render, uint8_t streamType)
      : cDecoder(),
        mRender(render),
-       mStreamType(streamType),
-       mH264(mStreamType == 27),
-       mStreamName(mH264 ? "h264" : "mpeg2"),
+       mStreamType(streamType), mH264(mStreamType == 27), mStreamName(mH264 ? "h264" : "mpeg2"),
        mAvCodec(avcodec_find_decoder (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
     cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder - streamType:{}:{}", mStreamType, mStreamName));
@@ -107,9 +105,8 @@ public:
                           function<cFrame*()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
 
-    mRender->log ("pes", fmt::format ("pid {} size {} pts {} dts{}",
-                                      pid, pesSize,
-                                      utils::getFullPtsString (pts), utils::getFullPtsString (dts)));
+    mRender.log ("pes", fmt::format ("pid:{} pts:{} dts:{} size:{}",
+                                     pid, utils::getFullPtsString (pts), utils::getFullPtsString (dts), pesSize));
 
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
@@ -180,7 +177,7 @@ public:
   //}}}
 
 private:
-  cRender* mRender;
+  cRender& mRender;
   const uint8_t mStreamType;
   const bool mH264 = false;
   const string mStreamName;
@@ -199,7 +196,7 @@ private:
 cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t decoderMask)
     : cRender(kVideoQueued, name + "vid", streamType, decoderMask, kVideoFrameMapSize) {
 
-  mDecoder = new cFFmpegVideoDecoder (this, streamType);
+  mDecoder = new cFFmpegVideoDecoder (*this, streamType);
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }

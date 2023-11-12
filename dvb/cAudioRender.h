@@ -35,7 +35,6 @@ public:
   int64_t getPlayerPts() const { return mPlayerPts; }
 
   void togglePlaying() { mPlaying = !mPlaying; }
-  void startPlayerPts (int64_t pts);
 
   // callbacks
   cFrame* getFrame();
@@ -46,6 +45,7 @@ public:
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
 
 private:
+  void startPlayerPts (int64_t pts);
   void exitWait();
 
   // vars
