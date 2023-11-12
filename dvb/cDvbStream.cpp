@@ -1532,7 +1532,7 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
     while (true) {
       auto ptr = mDvbSource->getBlockBDA (blockSize);
       if (blockSize) {
-        //{{{  read and demux block
+        //  read and demux block
         if (mFile)
           fwrite (ptr, 1, blockSize, mFile);
 
@@ -1547,7 +1547,6 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
         else
           mErrorString = fmt::format ("{}m", streamPos / 1000000);
         }
-        //}}}
       else
         this_thread::sleep_for (1ms);
 
@@ -1556,8 +1555,8 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
     //}}}
   #else
     //{{{  linux
-    constexpr int kDvrReadBufferSize = 50 * 188;
-    auto buffer = (uint8_t*)malloc (kDvrReadBufferSize);
+    constexpr int kDvrReadBufferSize = 188 * 256;
+    uint8_t* buffer = new uint8_t[kDvrReadBufferSize];
 
     uint64_t streamPos = 0;
     while (true) {
@@ -1580,7 +1579,8 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
           cLog::log (LOGINFO, fmt::format ("err:{} {}", getNumErrors(), mSignalString));
         }
       }
-    free (buffer);
+
+    delete [] buffer;
     //}}}
   #endif
 

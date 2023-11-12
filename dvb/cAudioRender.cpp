@@ -252,7 +252,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t dec
         cAudioFrame* audioFrame;
         { // locked mutex
         shared_lock<shared_mutex> lock (getSharedMutex());
-        audioFrame = getAudioFrameFromPts (mPlayerPts);
+        audioFrame = findAudioFrameFromPts (mPlayerPts);
         if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
           samplesWait = 0;
           float* src = audioFrame->mSamples.data();
