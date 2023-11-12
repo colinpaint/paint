@@ -1606,7 +1606,7 @@ void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) 
     }
     //}}}
 
-  size_t blockSize = 188 * 8;
+  size_t blockSize = 188 * 256;
   uint8_t* buffer = (uint8_t*)malloc (blockSize);
 
   #ifdef _WIN32

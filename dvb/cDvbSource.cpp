@@ -1,7 +1,7 @@
 // cDvbSource.cpp
 //{{{  includes
 #ifdef _WIN32
-  //{{{  windows only includes
+  //{{{  windows
   #define _CRT_SECURE_NO_WARNINGS
   #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 
@@ -50,7 +50,7 @@
   #include "../common/cBipBuffer.h"
   //}}}
 #else
-  //{{{  linux only includes
+  //{{{  linux
   #include <fcntl.h>
   #include <sys/ioctl.h>
   #include <sys/types.h>
@@ -919,10 +919,7 @@ void cDvbSource::tune (int frequency) {
   uint8_t* cDvbSource::getBlockBDA (int& len) { return mGrabberCB.getBlock (len); }
   void cDvbSource::releaseBlock (int len) { mGrabberCB.releaseBlock (len); }
   void cDvbSource::run() { mMediaControl->Run(); }
-#endif
-
-#ifdef __linux__
-  // private - dvblast frontend
+#else
   //{{{
   fe_hierarchy_t cDvbSource::getHierarchy() {
 
