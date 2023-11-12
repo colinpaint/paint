@@ -5,7 +5,7 @@ project (audio VERSION 1.0.0)
                                  kiss_fft.h kiss_fft_guts.h kiss_fftr.h
                                  kiss_fftr.c kiss_fft.c
                                  cLinuxAudio.h
-                                 cWinAudio16.h cWinAudio16.cpp
+                                 #cWinAudio16.h cWinAudio16.cpp
                                  cWinAudio32.h cWinAudio32.cpp)
     target_link_libraries (${PROJECT_NAME} PRIVATE common)
 
