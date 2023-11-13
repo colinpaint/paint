@@ -1,58 +1,127 @@
-// cPlayerUI.cpp
+// player.cpp - imgui player main,app,UI
 //{{{  includes
+#ifdef _WIN32
+  #define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <cstdint>
+#include <string>
 #include <array>
 #include <vector>
-#include <string>
 
-// imgui
-#include "../imgui/imgui.h"
-#include "../app/myImgui.h"
-
-// ui
-#include "cPlayerApp.h"
-#include "../ui/cUI.h"
-
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
-
-// decoder
-#include "../common/cFileView.h"
-
-// song
-#include "../song/cSong.h"
+// stb - invoke header only library implementation here
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
 // utils
-#include "../common/date.h"
-#include "../common/cLog.h"
+#include "common/date.h"
+#include "common/utils.h"
+#include "common/fileUtils.h"
+#include "common/cLog.h"
 #include "fmt/format.h"
+
+// UI
+#include "imgui/imgui.h"
+#include "ui/cUI.h"
+#include "font/itcSymbolBold.h"
+#include "font/droidSansMono.h"
+
+// song
+#include "song/cSong.h"
+#include "song/cSongLoader.h"
+
+// app
+#include "app/cApp.h"
+#include "app/myImgui.h"
+#include "app/cPlatform.h"
+#include "app/cGraphics.h"
+
+#include "common/cFileView.h"
 
 using namespace std;
 //}}}
-//{{{  channels const
-const vector<string> kRadio1 = {"r1", "a128"};
-const vector<string> kRadio2 = {"r2", "a128"};
-const vector<string> kRadio3 = {"r3", "a320"};
-const vector<string> kRadio4 = {"r4", "a64"};
-const vector<string> kRadio5 = {"r5", "a128"};
-const vector<string> kRadio6 = {"r6", "a128"};
+namespace {
+  //{{{  channels const
+  const vector<string> kRadio1 = {"r1", "a128"};
+  const vector<string> kRadio2 = {"r2", "a128"};
+  const vector<string> kRadio3 = {"r3", "a320"};
+  const vector<string> kRadio4 = {"r4", "a64"};
+  const vector<string> kRadio5 = {"r5", "a128"};
+  const vector<string> kRadio6 = {"r6", "a128"};
 
-const vector<string> kBbc1   = {"bbc1", "a128"};
-const vector<string> kBbc2   = {"bbc2", "a128"};
-const vector<string> kBbc4   = {"bbc4", "a128"};
-const vector<string> kNews   = {"news", "a128"};
-const vector<string> kBbcSw  = {"sw", "a128"};
+  const vector<string> kBbc1   = {"bbc1", "a128"};
+  const vector<string> kBbc2   = {"bbc2", "a128"};
+  const vector<string> kBbc4   = {"bbc4", "a128"};
+  const vector<string> kNews   = {"news", "a128"};
+  const vector<string> kBbcSw  = {"sw", "a128"};
 
-const vector<string> kWqxr  = {"http://stream.wqxr.org/js-stream.aac"};
-const vector<string> kDvb  = {"dvb"};
+  const vector<string> kWqxr  = {"http://stream.wqxr.org/js-stream.aac"};
+  const vector<string> kDvb  = {"dvb"};
 
-const vector<string> kRtp1  = {"rtp 1"};
-const vector<string> kRtp2  = {"rtp 2"};
-const vector<string> kRtp3  = {"rtp 3"};
-const vector<string> kRtp4  = {"rtp 4"};
-const vector<string> kRtp5  = {"rtp 5"};
+  const vector<string> kRtp1  = {"rtp 1"};
+  const vector<string> kRtp2  = {"rtp 2"};
+  const vector<string> kRtp3  = {"rtp 3"};
+  const vector<string> kRtp4  = {"rtp 4"};
+  const vector<string> kRtp5  = {"rtp 5"};
+  //}}}
+  }
+
+//{{{
+class cPlayerApp : public cApp {
+public:
+  cPlayerApp (const cPoint& windowSize, bool fullScreen, bool vsync);
+  virtual ~cPlayerApp() = default;
+
+  std::string getSongName() const { return mSongName; }
+  cSong* getSong() const;
+
+  bool setSongName (const std::string& songName);
+  bool setSongSpec (const std::vector <std::string>& songSpec);
+
+  virtual void drop (const std::vector<std::string>& dropItems) final;
+
+private:
+  cSongLoader* mSongLoader;
+  std::string mSongName;
+  };
+
+cPlayerApp::cPlayerApp (const cPoint& windowSize, bool fullScreen, bool vsync)
+    : cApp("player",windowSize, fullScreen, vsync) {
+  mSongLoader = new cSongLoader();
+  }
+
+cSong* cPlayerApp::getSong() const {
+  return mSongLoader->getSong();
+  }
+
+bool cPlayerApp::setSongName (const std::string& songName) {
+
+  mSongName = songName;
+
+  // load song
+  const vector <string>& strings = { songName };
+  mSongLoader->launchLoad (strings);
+
+  return true;
+  }
+
+bool cPlayerApp::setSongSpec (const vector <string>& songSpec) {
+
+  mSongName = songSpec[0];
+  mSongLoader->launchLoad (songSpec);
+  return true;
+  }
+
+void cPlayerApp::drop (const vector<string>& dropItems) {
+
+  for (auto& item : dropItems) {
+    cLog::log (LOGINFO, item);
+    setSongName (cFileUtils::resolve (item));
+    }
+  }
 //}}}
-
 //{{{
 class cDrawSong : public cDrawContext {
 public:
@@ -688,7 +757,7 @@ private:
   //}}}
   };
 //}}}
-
+//{{{
 class cPlayerUI : public cUI {
 public:
   //{{{
@@ -787,3 +856,45 @@ private:
   static cUI* create (const string& className) { return new cPlayerUI (className); }
   inline static const bool mRegistered = registerClass ("player", &create);
   };
+//}}}
+
+int main (int numArgs, char* args[]) {
+
+  // params
+  eLogLevel logLevel = LOGINFO;
+  bool fullScreen = false;
+  bool vsync = true;
+  //{{{  parse command line args to params
+  // args to params
+  vector <string> params;
+  for (int i = 1; i < numArgs; i++)
+    params.push_back (args[i]);
+
+  // parse and remove recognised params
+  for (auto it = params.begin(); it < params.end();) {
+    if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
+    else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
+    else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
+    else if (*it == "full") { fullScreen = true; params.erase (it); }
+    else if (*it == "free") { vsync = false; params.erase (it); }
+    else ++it;
+    };
+  //}}}
+
+  // log
+  cLog::init (logLevel);
+  cLog::log (LOGNOTICE, fmt::format ("player"));
+
+  // list static registered classes
+  cUI::listRegisteredClasses();
+
+  // app
+  cPlayerApp app ({800, 480}, fullScreen, vsync);
+  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
+  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
+  app.setSongName (params.empty() ? "" : cFileUtils::resolve (params[0]));
+
+  app.mainUILoop();
+
+  return EXIT_SUCCESS;
+  }

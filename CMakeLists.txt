@@ -72,12 +72,7 @@ project (demo VERSION 1.0.0)
 
 # fed app
 project (fed VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} ui/cUI.h ui/cUI.cpp
-                                  fed/cFedDocument.h fed/cFedDocument.cpp
-                                  fed/cFedUI.cpp
-                                  fed/cFedApp.h fed/cFedApp.cpp
-                                  fed/fedMain.cpp
-                                  )
+  add_executable (${PROJECT_NAME} fed.cpp ui/cUI.h ui/cUI.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE app imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -88,9 +83,7 @@ project (fed VERSION 1.0.0)
 
 # player app
 project (player VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} player/cPlayerApp.h
-                                  player/playerMain.cpp player/cPlayerUI.cpp player/cPlayerApp.cpp
-                                  ui/cUI.h ui/cUI.cpp)
+  add_executable (${PROJECT_NAME} player.cpp ui/cUI.h ui/cUI.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE app imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)

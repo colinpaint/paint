@@ -22,15 +22,9 @@
 #include "common/cLog.h"
 #include "fmt/format.h"
 
-// imGui
+// UI
 #include "imgui/imgui.h"
 #include "ui/cUI.h"
-
-// app
-#include "app/cApp.h"
-#include "app/myImgui.h"
-#include "app/cPlatform.h"
-#include "app/cGraphics.h"
 #include "font/itcSymbolBold.h"
 #include "font/droidSansMono.h"
 
@@ -41,12 +35,13 @@
 #include "dvb/cAudioFrame.h"
 #include "dvb/cSubtitleRender.h"
 
-using namespace std;
+// app
+#include "app/cApp.h"
+#include "app/myImgui.h"
+#include "app/cPlatform.h"
+#include "app/cGraphics.h"
 
-class cPlatform;
-class cGraphics;
-class cDvbStream;
-class cDvbMultiplex;
+using namespace std;
 //}}}
 
 namespace {
@@ -849,7 +844,7 @@ private:
     cVideoRender& videoRender = dynamic_cast<cVideoRender&>(render);
     ImGui::TextUnformatted (videoRender.getInfoString().c_str());
 
-    if (ImGui::InvisibleButton (fmt::format ("##vidLog{}", sid).c_str(), 
+    if (ImGui::InvisibleButton (fmt::format ("##vidLog{}", sid).c_str(),
                                 {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
       videoRender.toggleLog();
 
