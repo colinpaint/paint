@@ -34,6 +34,8 @@ public:
   bool isPlaying() const { return mPlaying; }
   int64_t getPlayerPts() const { return mPlayerPts; }
 
+  void setMute() { mMute = true; }
+  void toggleMute() { mMute = !mMute; }
   void togglePlaying() { mPlaying = !mPlaying; }
 
   // callbacks
@@ -59,6 +61,7 @@ private:
   // player
   std::thread mPlayerThread;
   bool mPlaying = false;
+  bool mMute = false;
   bool mRunning = true;
   bool mExit = false;
   int64_t mPlayerPts = 0;

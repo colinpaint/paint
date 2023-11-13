@@ -738,6 +738,8 @@ private:
 
           if (curVideo == 1)
             mFramesGraphic.draw (audioRender, videoRender, playerPts);
+          else
+            audioRender.setMute();
           }
 
         // draw telly pic
@@ -808,6 +810,55 @@ private:
             else
               model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
                                    (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            model.size (size);
+            }
+            //}}}
+          else if (numVideos == 5) {
+            //{{{  5 multiView
+            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
+
+            if (curVideo == 1)
+              model.setTranslate ({(windowSize.x * 1.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 1.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 2)
+              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 1.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 3)
+              model.setTranslate ({(windowSize.x * 1.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 4)
+              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else
+              model.setTranslate ({(windowSize.x * 2.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 2.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+
+            model.size (size);
+            }
+            //}}}
+          else if (numVideos == 6) {
+            //{{{  6 multiView
+            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
+
+            if (curVideo == 1)
+              model.setTranslate ({(windowSize.x * 1.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 1.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 2)
+              model.setTranslate ({(windowSize.x * 2.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 1.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 3)
+              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 1.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 4)
+              model.setTranslate ({(windowSize.x * 1.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 5)
+              model.setTranslate ({(windowSize.x * 2.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+            else
+              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+
             model.size (size);
             }
             //}}}

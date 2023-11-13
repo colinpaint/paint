@@ -187,37 +187,39 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
             cAudioFrame* audioFrame = findAudioFrameFromPts (mPlayerPts);
             if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
               samplesWait = 0;
-              float* src = audioFrame->mSamples.data();
-              float* dst = samples.data();
-              switch (audioFrame->mNumChannels) {
-                //{{{
-                case 1: // mono to 2 channels
-                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                    *dst++ = *src;
-                    *dst++ = *src++;
-                    }
-                  break;
-                //}}}
-                //{{{
-                case 2: // stereo
-                  memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
-                  break;
-                //}}}
-                //{{{
-                case 6: // 5.1 to 2 channels
-                  for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                    *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
-                    *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
-                    src += 6;
-                    }
-                  break;
-                //}}}
-                //{{{
-                default:
-                  cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->mNumChannels));
-                //}}}
+              if (!mMute) {
+                float* src = audioFrame->mSamples.data();
+                float* dst = samples.data();
+                switch (audioFrame->mNumChannels) {
+                  //{{{
+                  case 1: // mono to 2 channels
+                    for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                      *dst++ = *src;
+                      *dst++ = *src++;
+                      }
+                    break;
+                  //}}}
+                  //{{{
+                  case 2: // stereo
+                    memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
+                    break;
+                  //}}}
+                  //{{{
+                  case 6: // 5.1 to 2 channels
+                    for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                      *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
+                      *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
+                      src += 6;
+                      }
+                    break;
+                  //}}}
+                  //{{{
+                  default:
+                    cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->mNumChannels));
+                  //}}}
+                  }
+                srcSamples = samples.data();
                 }
-              srcSamples = samples.data();
               }
             else
               samplesWait--;
@@ -253,41 +255,42 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
         audioFrame = findAudioFrameFromPts (mPlayerPts);
         if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
           samplesWait = 0;
-          float* src = audioFrame->mSamples.data();
-          float* dst = samples.data();
-          switch (audioFrame->mNumChannels) {
-            //{{{
-            case 1: // mono to 2 channels
-              for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                *dst++ = *src;
-                *dst++ = *src++;
-                }
-              break;
-            //}}}
-            //{{{
-            case 2: // stereo
-              memcpy (dst, src, audioFrame->mSamplesPerFrame * 8);
-              break;
-            //}}}
-            //{{{
-            case 6: // 5.1 to 2 channels
-              for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
-                *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
-                src += 6;
-                }
-              break;
-            //}}}
-            //{{{
-            default:
-              cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->mNumChannels));
-            //}}}
+          if (!mMute) {
+            float* src = audioFrame->mSamples.data();
+            float* dst = samples.data();
+            switch (audioFrame->mNumChannels) {
+              //{{{
+              case 1: // mono to 2 channels
+                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                  *dst++ = *src;
+                  *dst++ = *src++;
+                  }
+                break;
+              //}}}
+              //{{{
+              case 2: // stereo
+                memcpy (dst, src, audioFrame->mSamplesPerFrame * 8);
+                break;
+              //}}}
+              //{{{
+              case 6: // 5.1 to 2 channels
+                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                  *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
+                  *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
+                  src += 6;
+                  }
+                break;
+              //}}}
+              //{{{
+              default:
+                cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->mNumChannels));
+              //}}}
+              }
+            srcSamples = samples.data();
             }
-          srcSamples = samples.data();
+          else
+            samplesWait--;
           }
-        else
-          samplesWait--;
-        }
 
         audio.play (2, srcSamples, audioFrame ? audioFrame->mSamplesPerFrame : mSamplesPerFrame, 1.f);
 
