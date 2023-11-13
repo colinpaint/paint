@@ -69,8 +69,8 @@ public:
 
     //  select openGL, openGLES version
     #if defined(GL3)
-      //{{{  openGL 3.3 GLSL 130
-      string title = "openGL 3";
+      //{{{  GL 3.3, GLSL 130
+      string title = "GL3";
       const char* glslVersion = "#version 130";
 
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -79,8 +79,8 @@ public:
       //glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
       //}}}
     #elif defined(GLES30)
-      //{{{  openGLES 3.0
-      string title = "openGLES 3.0";
+      //{{{  GLES 3.0, GLSL 300
+      string title = "GLES3.0";
       const char* glslVersion = "#version 300 es";
 
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -88,8 +88,8 @@ public:
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
       //}}}
     #elif defined(GLES31)
-      //{{{  openGLES 3.1
-      string title = "openGLES 3.1";
+      //{{{  GLES 3.1, GLSL 300
+      string title = "GLES3.1";
       const char* glslVersion = "#version 300 es";
 
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -97,8 +97,8 @@ public:
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
       //}}}
     #elif defined(GLES32)
-      //{{{  openGLES 3.2
-      string title = "openGLES 3.2";
+      //{{{  GLES 3.2, GLSL 300
+      string title = "GLES3.2";
       const char* glslVersion = "#version 300 es";
 
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -107,7 +107,7 @@ public:
       //}}}
     #endif
 
-    cLog::log (LOGINFO, fmt::format ("Glfw {}.{} using {} glsl {}",
+    cLog::log (LOGINFO, fmt::format ("glfw {}.{} using {} glsl {}",
                                      GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, title, glslVersion));
 
     glfwSetErrorCallback (glfwErrorCallback);

@@ -115,16 +115,17 @@ using namespace std;
       cSong::cFrame* frame;
       while (!mExit) {
         float* playSamples = silence.data();
-          {
-          // scoped song mutex
-          shared_lock<shared_mutex> lock (song->getSharedMutex());
-          frame = song->findPlayFrame();
-          bool gotSamples = song->getPlaying() && frame && frame->getSamples();
-          if (gotSamples) {
-            memcpy (samples.data(), frame->getSamples(), song->getSamplesPerFrame() * 8);
-            playSamples = samples.data();
-            }
+
+        { // locked mutex
+        shared_lock<shared_mutex> lock (song->getSharedMutex());
+        frame = song->findPlayFrame();
+        bool gotSamples = song->getPlaying() && frame && frame->getSamples();
+        if (gotSamples) {
+          memcpy (samples.data(), frame->getSamples(), song->getSamplesPerFrame() * 8);
+          playSamples = samples.data();
           }
+        }
+
         audio.play (2, playSamples, song->getSamplesPerFrame(), 1.f);
 
         if (frame && song->getPlaying())
