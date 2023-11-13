@@ -74,6 +74,7 @@ public:
       return false;
 
     //  select openGL, openGLES version
+    const char* glslVersion = "#version 130";
     #if defined(GL3)
       //{{{  openGL 3.3 GLSL 130
       string title = "openGL 3";
@@ -105,7 +106,7 @@ public:
       //}}}
     #endif
 
-    setShaderVersion ("#version 130");
+    setShaderVersion (glslVersion);
 
     mWindow = glfwCreateWindow (windowSize.x, windowSize.y, (title + " " + getName()).c_str(), NULL, NULL);
     if (!mWindow) {
