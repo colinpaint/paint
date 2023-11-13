@@ -728,9 +728,6 @@ private:
       if (service.getStream (cDvbStream::eVideo).isEnabled()) {
         curVideo++;
         cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
-        cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
-        if (!mQuad)
-          mQuad = graphics.createQuad (videoSize);
 
         // get playerPts from stream
         int64_t playerPts = service.getStream (cDvbStream::eAudio).getPts();
@@ -746,19 +743,26 @@ private:
         // draw telly pic
         cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
         if (videoFrame) {
+          cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
+          if (!mQuad)
+            mQuad = graphics.createQuad (videoSize);
+
           cTexture& texture = videoFrame->getTexture (graphics);
           if (!mShader)
             mShader = graphics.createTextureShader (texture.getTextureType());
           texture.setSource();
           mShader->use();
 
-          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
+          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), 
+                                   -1.f,1.f);
           cMat4x4 model;
           if (numVideos == 1) {
             //{{{  1 pic
             cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
+
             model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
                                   (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
+
             model.size (size);
             }
             //}}}
@@ -807,6 +811,7 @@ private:
             else
               model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
                                    (windowSize.y / 4.f)  - ((videoSize.y / 2.f) * size.y)});
+
             model.size (size);
             }
             //}}}
@@ -861,7 +866,8 @@ private:
             //}}}
           mShader->setModelProjection (model, orthoProjection);
           mQuad->draw();
-          //{{{  multipic
+
+          //{{{  scaled multipic
           //cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
           //float replicate = floor (1.f / mScale);
           //for (float y = -videoSize.y * replicate; y <= videoSize.y * replicate; y += videoSize.y) {
