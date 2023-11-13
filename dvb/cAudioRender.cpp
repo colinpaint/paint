@@ -293,14 +293,13 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
           samplesWait--;
 
         audio.play (2, srcSamples, audioFrame ? audioFrame->mSamplesPerFrame : mSamplesPerFrame, 1.f);
+        }
 
         if (mPlaying)
           if (!samplesWait) {
             mPlayerPts += audioFrame ? audioFrame->mPtsDuration : mPtsDuration;
             samplesWait = kSamplesWait;
             }
-        }
-
         }
       //}}}
 

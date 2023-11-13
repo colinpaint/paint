@@ -59,7 +59,7 @@ endif()
 
 # imgui app
 project (demo VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} demo.cpp ui/cUi.h ui/cUI.cpp)
+  add_executable (${PROJECT_NAME} demo.cpp ui/cUI.h ui/cUI.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE app common stb imgui)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
