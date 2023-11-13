@@ -57,11 +57,9 @@ if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_link_libraries (${PROJECT_NAME} PRIVATE decoders winmm avrt audio)
 endif()
 
-# demo imgui app
+# imgui app
 project (demo VERSION 1.0.0)
-  file (GLOB HEADER demo/*.h ui/*.h imgui/*.h common/*.h app/*.h)
-  file (GLOB SOURCE demo/*.cpp ui/cUI.cpp)
-  add_executable (demo ${SOURCE} ${HEADER})
+  add_executable (${PROJECT_NAME} demo.cpp ui/cUi.h ui/cUI.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE app common stb imgui)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -70,9 +68,9 @@ project (demo VERSION 1.0.0)
     target_link_libraries (${PROJECT_NAME} PRIVATE app imgui GL)
   endif()
 
-# fed app
-project (fed VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} fed.cpp ui/cUI.h ui/cUI.cpp)
+# edit app
+project (edit VERSION 1.0.0)
+  add_executable (${PROJECT_NAME} edit.cpp ui/cUI.h ui/cUI.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE app imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)

@@ -285,8 +285,7 @@ public:
 
 private:
   enum eTab { eTelly, eServices, ePids, eRecorded, eHistory };
-  inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded" };
-  //inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded", "history"};
+  inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded" }; // "history"};
   //{{{
   class cFramesGraphic {
   public:
@@ -1001,19 +1000,16 @@ private:
     }
   //}}}
 
-  //{{{  vars
+  // vars
   eTab mTab = eTelly;
 
   int64_t mMaxPidPackets = 0;
   size_t mPacketChars = 3;
-
   size_t mMaxNameChars = 3;
   size_t mMaxSidChars = 3;
   size_t mMaxPgmChars = 3;
 
   std::array <size_t, 4> mPidMaxChars = { 3 };
-
-  int mPlotIndex = 0;
 
   cQuad* mQuad = nullptr;
   cTextureShader* mShader = nullptr;
@@ -1023,9 +1019,7 @@ private:
   int mHistory = 0;
 
   cFramesGraphic mFramesGraphic = { 2.f,1.f, 6.f,6.f };
-  //}}}
   };
-
 //}}}
 //{{{
 // cTellyUI
@@ -1050,7 +1044,6 @@ public:
 
 private:
   // vars
-  bool mOpen = true;
   cTellyView mTellyView;
 
   static cUI* create (const string& className) { return new cTellyUI (className); }
