@@ -89,7 +89,7 @@ public:
       uint8_t syncByte = *pesPtr++;
       if (syncByte != 0x0f) {
         //{{{  syncByte error, return, common on bbc mulitplex
-        mRender.log ("pes", fmt::format ("missing syncByte:{:x} offset:{} size:{}", 
+        mRender.log ("pes", fmt::format ("missing syncByte:{:x} offset:{} size:{}",
                                          syncByte, int(pesPtr - pes), pesSize));
         return false;
         }
@@ -906,10 +906,10 @@ private:
 
     mRender.header();
     if (mPage.mRegionDisplays.size())
-      mRender.log ("end", fmt::format ("{} - {} lines", 
+      mRender.log ("end", fmt::format ("{} - {} lines",
                                        utils::getFullPtsString (mPage.mPts), mPage.mRegionDisplays.size()));
     else
-      mRender.log ("end", fmt::format ("{} - noLines", 
+      mRender.log ("end", fmt::format ("{} - noLines",
                                        utils::getFullPtsString (mPage.mPts)));
     }
   //}}}
@@ -927,8 +927,8 @@ private:
 
 // public:
 //{{{
-cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kQueued, name + "sub", streamType, decoderMask, kSubtitleMapSize) {
+cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType)
+    : cRender(kQueued, name + "sub", streamType, kSubtitleMapSize) {
 
   mDecoder = new cSubtitleDecoder (*this);
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });

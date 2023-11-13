@@ -16,9 +16,9 @@ constexpr int64_t kPtsPerFrame = 90000 / 25;
 
 // public:
 //{{{
-cRender::cRender (bool queued, const string& name, uint8_t streamType, uint16_t decoderMask, size_t frameMapSize)
+cRender::cRender (bool queued, const string& name, uint8_t streamType, size_t frameMapSize)
     : mFrameMapSize(frameMapSize), mQueued(queued),
-      mName(name), mStreamType(streamType), mDecoderMask(decoderMask), mMiniLog ("log") {
+      mName(name), mStreamType(streamType), mMiniLog ("log") {
 
   if (queued)
     thread ([=](){ startQueueThread ("q" + name); }).detach();

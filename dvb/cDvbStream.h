@@ -248,8 +248,8 @@ public:
     void toggleShowEpg() { mShowEpg = !mShowEpg; }
     //}}}
 
-    void toggleStream (size_t streamType, uint16_t decoderMask);
-    void toggleAll (uint16_t decoderMask);
+    void toggleStream (size_t streamType);
+    void toggleAll();
 
     // record
     bool openFile (const std::string& fileName, uint16_t tsid);
@@ -284,8 +284,7 @@ public:
     };
   //}}}
 
-  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName,
-              bool renderFirstService, uint16_t decoderOptions);
+  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool renderFirstService);
   virtual ~cDvbStream() { clear(); }
 
   //{{{  gets
@@ -316,7 +315,7 @@ public:
   size_t getFileSize() const { return mFileSize; }
   //}}}
 
-  void toggleStream (cService& service, size_t streamType, uint16_t decoderMask);
+  void toggleStream (cService& service, size_t streamType);
 
   // source
   void dvbSource (bool launchThread);
@@ -361,7 +360,6 @@ private:
   const bool mRenderFirstService;
 
   bool mRenderingFirstService = false;
-  uint16_t mDecoderOptions = 0;
 
   std::mutex mMutex;
   uint64_t mNumPackets = 0;

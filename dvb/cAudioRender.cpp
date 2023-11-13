@@ -152,8 +152,8 @@ private:
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kAudioQueued, name + "aud", streamType, decoderMask, kAudioFrameMapSize),
+cAudioRender::cAudioRender (const string& name, uint8_t streamType)
+    : cRender(kAudioQueued, name + "aud", streamType, kAudioFrameMapSize),
       mNumChannels(2), mSampleRate(48000), mSamplesPerFrame(1024), mPtsDuration(0) {
 
   mDecoder = new cFFmpegAudioDecoder (*this, streamType);

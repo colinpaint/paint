@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <array>
 #include <algorithm>
-
 #include <math.h>
 //}}}
 

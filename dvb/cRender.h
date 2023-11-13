@@ -80,7 +80,7 @@ class cRender {
 public:
   enum eDecoder { eFFmpeg, eMfxSystem, eMfxVideo };
 
-  cRender (bool queued, const std::string& name, uint8_t streamType, uint16_t decoderMask, size_t frameMapSize);
+  cRender (bool queued, const std::string& name, uint8_t streamType, size_t frameMapSize);
   virtual ~cRender();
 
   bool isQueued() const { return mQueued; }
@@ -137,7 +137,6 @@ private:
   const bool mQueued = false;
   const std::string mName;
   const uint8_t mStreamType;
-  const uint16_t mDecoderMask;
 
   std::function <cFrame* ()> mAllocFrameCallback;
   std::function <void (cFrame* frame)> mAddFrameCallback;

@@ -564,34 +564,34 @@ bool cDvbStream::cService::setEpg (bool record, tTimePoint startTime, tDurationS
 //}}}
 
 //{{{
-void cDvbStream::cService::toggleStream (size_t streamType, uint16_t decoderMask) {
+void cDvbStream::cService::toggleStream (size_t streamType) {
 
   cStream& stream = getStream (streamType);
   if (stream.toggle()) {
     switch (streamType) {
       case eVideo :
-        stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId(), decoderMask));
+        stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId()));
         return;
 
       case eAudio :
       case eDescription:
-        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), decoderMask));
+        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId()));
         return;
 
       case eSubtitle :
-        stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId(), decoderMask));
+        stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId()));
         return;
       }
     }
   }
 //}}}
 //{{{
-void cDvbStream::cService::toggleAll (uint16_t decoderMask) {
+void cDvbStream::cService::toggleAll() {
 
   // improve to one on all off , if all off all on
-  toggleStream (eVideo, decoderMask);
-  toggleStream (eAudio, decoderMask);
-  toggleStream (eSubtitle, decoderMask);
+  toggleStream (eVideo);
+  toggleStream (eAudio);
+  toggleStream (eSubtitle);
   }
 //}}}
 
@@ -741,9 +741,9 @@ void cDvbStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, u
 // public:
 //{{{
 cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName,
-                        bool renderFirstService, uint16_t decoderOptions)
+                        bool renderFirstService)
     : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName),
-      mRenderFirstService(renderFirstService), mDecoderOptions(decoderOptions) {
+      mRenderFirstService(renderFirstService) {
 
   if (dvbMultiplex.mFrequency)
     mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
@@ -765,10 +765,10 @@ cDvbStream::cService* cDvbStream::getService (uint16_t sid) {
 //}}}
 
 //{{{
-void cDvbStream::toggleStream (cService& service, size_t streamType, uint16_t decoderMask) {
+void cDvbStream::toggleStream (cService& service, size_t streamType) {
 
   lock_guard<mutex> lockGuard (mMutex);
-  service.toggleStream (streamType, decoderMask);
+  service.toggleStream (streamType);
   }
 //}}}
 
@@ -869,7 +869,7 @@ void cDvbStream::foundService (cService& service) {
 
   if (mRenderFirstService && !mRenderingFirstService) {
     cLog::log (LOGINFO, fmt::format ("play service {}:{}", service.getSid(), service.getProgramPid()));
-    service.toggleAll (mDecoderOptions);
+    service.toggleAll();
     mRenderingFirstService = true;
     }
   }

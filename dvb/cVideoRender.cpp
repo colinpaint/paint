@@ -199,8 +199,8 @@ private:
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t decoderMask)
-    : cRender(kVideoQueued, name + "vid", streamType, decoderMask, kVideoFrameMapSize) {
+cVideoRender::cVideoRender (const string& name, uint8_t streamType)
+    : cRender(kVideoQueued, name + "vid", streamType, kVideoFrameMapSize) {
 
   mDecoder = new cFFmpegVideoDecoder (*this, streamType);
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
