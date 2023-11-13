@@ -7,13 +7,7 @@
 #include <string>
 #include <algorithm>
 
-// imGui
-#include <imgui.h>
-
-// imGui - internal, exposed for custom widget
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
-
+#include "../app/myImgui.h"
 #include "../app/cGraphics.h"
 
 #include "../common/cLog.h"

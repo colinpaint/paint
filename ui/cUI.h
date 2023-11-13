@@ -10,11 +10,6 @@
 #include "../app/cApp.h"
 
 #include "../common/date.h"
-
-// imgui
-#include "../imgui/imgui.h"
-
-// utils
 #include "../common/cPointRectColor.h"
 
 class cGraphics;

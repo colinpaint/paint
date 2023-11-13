@@ -9,11 +9,9 @@
 #include <algorithm>
 #include <chrono>
 
-// imGui
-#include "../imgui/imgui.h"
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include "../imgui/imgui_internal.h"
+#include "myImgui.h"
 
+// imGui
 #include "fmt/core.h" //  fmt::format core, used by a lot of logging
 #include "../common/date.h"
 #include "../common/cLog.h"

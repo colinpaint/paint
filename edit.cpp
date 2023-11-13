@@ -28,7 +28,7 @@
 #include "fmt/format.h"
 
 // UI
-#include "imgui/imgui.h"
+#include "app/myImgui.h"
 #include "ui/cUI.h"
 #include "font/itcSymbolBold.h"
 #include "font/droidSansMono.h"
@@ -37,7 +37,6 @@
 
 // app
 #include "app/cApp.h"
-#include "app/myImgui.h"
 #include "app/cPlatform.h"
 #include "app/cGraphics.h"
 
@@ -3154,21 +3153,21 @@ private:
     ImGui::GetIO().WantTextInput = true;
     ImGui::GetIO().WantCaptureKeyboard = false;
 
-    bool altKeyPressed = ImGui::GetIO().KeyAlt;
-    bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
-    bool shiftKeyPressed = ImGui::GetIO().KeyShift;
-    for (const auto& actionKey : kActionKeys)
+    //bool altKeyPressed = ImGui::GetIO().KeyAlt;
+    //bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
+    //bool shiftKeyPressed = ImGui::GetIO().KeyShift;
+    //for (const auto& actionKey : kActionKeys)
       //{{{  dispatch actionKey
-      if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
-           ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
-          (actionKey.mAlt == altKeyPressed) &&
-          (actionKey.mCtrl == ctrlKeyPressed) &&
-          (actionKey.mShift == shiftKeyPressed) &&
-          (!actionKey.mWritable || (actionKey.mWritable && !(isReadOnly() && canEditAtCursor())))) {
+      //if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
+      //     ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
+      //    (actionKey.mAlt == altKeyPressed) &&
+      //    (actionKey.mCtrl == ctrlKeyPressed) &&
+      //    (actionKey.mShift == shiftKeyPressed) &&
+       //   (!actionKey.mWritable || (actionKey.mWritable && !(isReadOnly() && canEditAtCursor())))) {
 
-        actionKey.mActionFunc();
-        break;
-        }
+       // actionKey.mActionFunc();
+      //  break;
+      //  }
       //}}}
 
     if (!isReadOnly()) {
@@ -4592,26 +4591,26 @@ private:
     //if (ImGui::IsWindowHovered())
     //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
 
-    ImGuiIO& io = ImGui::GetIO();
-    bool shift = io.KeyShift;
-    bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
-    bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+    //ImGuiIO& io = ImGui::GetIO();
+    //bool shift = io.KeyShift;
+    //bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+    //bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
     //io.WantCaptureKeyboard = true;
     //io.WantTextInput = true;
 
-    for (auto& actionKey : kActionKeys) {
+    //for (auto& actionKey : kActionKeys) {
       //{{{  dispatch matched actionKey
-      if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
-           ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
-          (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
-          (actionKey.mCtrl == ctrl) &&
-          (actionKey.mShift == shift) &&
-          (actionKey.mAlt == alt)) {
+   //   if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
+   //        ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
+   //       (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
+   //       (actionKey.mCtrl == ctrl) &&
+   //       (actionKey.mShift == shift) &&
+   //       (actionKey.mAlt == alt)) {
 
-        actionKey.mActionFunc();
-        break;
-        }
-      }
+   //     actionKey.mActionFunc();
+    //    break;
+    //    }
+    //  }
       //}}}
     }
   //}}}

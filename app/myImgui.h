@@ -1,16 +1,17 @@
 // myImgui.h - my imgui widgets - freestanding routines like ImGui::Button but with string and other stuff
 #pragma once
-//{{{  includes
+//includes
 #include <cstdint>
 #include <string>
 #include <vector>
 #include <deque>
 #include <chrono>
 
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "../imgui/imgui.h"
+#include "../imgui/imgui_internal.h"
 
 class cMiniLog;
-//}}}
 
 //{{{
 class cDrawContext {

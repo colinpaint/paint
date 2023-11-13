@@ -23,7 +23,7 @@
 #include "fmt/format.h"
 
 // UI
-#include "imgui/imgui.h"
+#include "app/myImgui.h"
 #include "ui/cUI.h"
 #include "font/itcSymbolBold.h"
 #include "font/droidSansMono.h"
@@ -37,7 +37,6 @@
 
 // app
 #include "app/cApp.h"
-#include "app/myImgui.h"
 #include "app/cPlatform.h"
 #include "app/cGraphics.h"
 
