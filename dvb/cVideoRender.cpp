@@ -89,10 +89,11 @@ public:
     mAvParser = av_parser_init (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
 
-    AVDictionary* opts = NULL;
-    av_dict_set (&opts, "flags2", "+export_mvs", 0);
-    avcodec_open2 (mAvContext, mAvCodec, &opts);
-    av_dict_free (&opts);
+    avcodec_open2 (mAvContext, mAvCodec, nullptr);
+    //AVDictionary* opts = nullptr;
+    //av_dict_set (&opts, "flags2", "+export_mvs", 0);
+    //avcodec_open2 (mAvContext, mAvCodec, &opts);
+    //av_dict_free (&opts);
     }
   //}}}
   //{{{
