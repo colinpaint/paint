@@ -287,6 +287,7 @@ private:
     0xffa04060, // eLensPlay
     };
   //}}}
+
   //{{{
   void layout () {
 
@@ -309,6 +310,7 @@ private:
     mDstOverviewCentre = mDstOverviewTop + (mOverviewHeight/2.f);
     }
   //}}}
+
   //{{{
   void drawWave (int64_t playFrame, int64_t leftFrame, int64_t rightFrame, bool mono) {
 
@@ -747,8 +749,8 @@ private:
   float mDstOverviewCentre = 0.f;
 
   // mOverview cache
-  array <float,1920> mOverviewValuesL = { 0.f };
-  array <float, 1920> mOverviewValuesR = { 0.f };
+  array <float,3000> mOverviewValuesL = { 0.f };
+  array <float,3000> mOverviewValuesR = { 0.f };
 
   int64_t mOverviewTotalFrames = 0;
   int64_t mOverviewLastFrame = 0;
