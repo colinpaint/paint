@@ -753,7 +753,7 @@ private:
           texture.setSource();
           mShader->use();
 
-          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), 
+          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y),
                                    -1.f,1.f);
           cMat4x4 model;
           if (numVideos == 1) {
@@ -844,6 +844,32 @@ private:
 
             if (curVideo == 1)
               model.setTranslate ({(windowSize.x * 1.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 4.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 2)
+              model.setTranslate ({(windowSize.x * 3.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 4.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 3)
+              model.setTranslate ({(windowSize.x * 5.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 4.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 4)
+              model.setTranslate ({(windowSize.x * 1.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 2.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
+            else if (curVideo == 5)
+              model.setTranslate ({(windowSize.x * 3.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 2.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
+            else
+              model.setTranslate ({(windowSize.x * 5.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 2.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
+
+            model.size (size);
+            }
+            //}}}
+          else if (numVideos == 7) {
+            //{{{  7 multiView
+            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
+
+            if (curVideo == 1)
+              model.setTranslate ({(windowSize.x * 1.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
                                    (windowSize.y * 5.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
             else if (curVideo == 2)
               model.setTranslate ({(windowSize.x * 3.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
@@ -857,10 +883,12 @@ private:
             else if (curVideo == 5)
               model.setTranslate ({(windowSize.x * 3.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
                                    (windowSize.y * 1.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else
+            else if (curVideo == 6)
               model.setTranslate ({(windowSize.x * 5.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
                                    (windowSize.y * 1.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-
+            else
+              model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
             model.size (size);
             }
             //}}}
