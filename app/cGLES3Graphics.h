@@ -33,7 +33,7 @@ public:
     cLog::log (LOGINFO, (const char*)glGetString (GL_RENDERER));
     cLog::log (LOGINFO, (const char*)glGetString (GL_VENDOR));
 
-    return ImGui_ImplOpenGL3_Init ("#version 300 es");
+    return ImGui_ImplOpenGL3_Init (mGlslVersion.c_str());
     }
   //}}}
   virtual void newFrame() final { ImGui_ImplOpenGL3_NewFrame(); }

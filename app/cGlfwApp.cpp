@@ -67,17 +67,12 @@ public:
   //{{{
   virtual bool init (const cPoint& windowSize) final {
 
-    cLog::log (LOGINFO, fmt::format ("Glfw {}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR));
-
-    glfwSetErrorCallback (glfwErrorCallback);
-    if (!glfwInit())
-      return false;
-
     //  select openGL, openGLES version
-    const char* glslVersion = "#version 130";
     #if defined(GL3)
       //{{{  openGL 3.3 GLSL 130
       string title = "openGL 3";
+      const char* glslVersion = "#version 130";
+
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
       //glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
@@ -86,6 +81,8 @@ public:
     #elif defined(GLES30)
       //{{{  openGLES 3.0
       string title = "openGLES 3.0";
+      const char* glslVersion = "#version 300 es";
+
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
@@ -93,6 +90,8 @@ public:
     #elif defined(GLES31)
       //{{{  openGLES 3.1
       string title = "openGLES 3.1";
+      const char* glslVersion = "#version 300 es";
+
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
@@ -100,11 +99,20 @@ public:
     #elif defined(GLES32)
       //{{{  openGLES 3.2
       string title = "openGLES 3.2";
+      const char* glslVersion = "#version 300 es";
+
       glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
       //}}}
     #endif
+
+    cLog::log (LOGINFO, fmt::format ("Glfw {}.{} using {} glsl {}",
+                                     GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, title, glslVersion));
+
+    glfwSetErrorCallback (glfwErrorCallback);
+    if (!glfwInit())
+      return false;
 
     setShaderVersion (glslVersion);
 
