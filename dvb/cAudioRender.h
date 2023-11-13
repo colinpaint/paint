@@ -34,7 +34,7 @@ public:
   bool isPlaying() const { return mPlaying; }
   int64_t getPlayerPts() const { return mPlayerPts; }
 
-  void setMute() { mMute = true; }
+  void setMute (bool mute) { mMute = mute; }
   void toggleMute() { mMute = !mMute; }
   void togglePlaying() { mPlaying = !mPlaying; }
 

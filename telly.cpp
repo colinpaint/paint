@@ -784,6 +784,7 @@ private:
                                    (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
             else if (curVideo == 2)
               model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y * 3.f / 4.f) - ((videoSize.y / 2.f) * size.y) });
             else
               model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
                                    (windowSize.y / 4.f)  - ((videoSize.y / 2.f) * size.y)});
