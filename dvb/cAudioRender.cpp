@@ -192,7 +192,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
                 float* dst = samples.data();
                 switch (audioFrame->mNumChannels) {
                   //{{{
-                  case 1: // mono to 2 channels
+                  case 1: // mono to 2 interleaved channels
                     for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                       *dst++ = *src;
                       *dst++ = *src++;
@@ -200,12 +200,12 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
                     break;
                   //}}}
                   //{{{
-                  case 2: // stereo
+                  case 2: // stereo to 2 interleaved channels
                     memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
                     break;
                   //}}}
                   //{{{
-                  case 6: // 5.1 to 2 channels
+                  case 6: // 5.1 to 2 interleaved channels
                     for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                       *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
                       *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
@@ -248,8 +248,8 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
       int samplesWait = kSamplesWait;
       while (!mExit) {
         float* srcSamples = silence.data();
-
         cAudioFrame* audioFrame;
+
         { // locked mutex
         shared_lock<shared_mutex> lock (getSharedMutex());
         audioFrame = findAudioFrameFromPts (mPlayerPts);
@@ -260,7 +260,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
             float* dst = samples.data();
             switch (audioFrame->mNumChannels) {
               //{{{
-              case 1: // mono to 2 channels
+              case 1: // mono to 2 interleaved channels
                 for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                   *dst++ = *src;
                   *dst++ = *src++;
@@ -268,12 +268,12 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
                 break;
               //}}}
               //{{{
-              case 2: // stereo
+              case 2: // stereo to 2 interleaved channels
                 memcpy (dst, src, audioFrame->mSamplesPerFrame * 8);
                 break;
               //}}}
               //{{{
-              case 6: // 5.1 to 2 channels
+              case 6: // 5.1 to 2 interleaved channels
                 for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                   *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
                   *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
@@ -288,9 +288,9 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
               }
             srcSamples = samples.data();
             }
-          else
-            samplesWait--;
           }
+        else
+          samplesWait--;
 
         audio.play (2, srcSamples, audioFrame ? audioFrame->mSamplesPerFrame : mSamplesPerFrame, 1.f);
 
@@ -300,7 +300,10 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
             samplesWait = kSamplesWait;
             }
         }
+
+        }
       //}}}
+
     #endif
 
     mRunning = false;

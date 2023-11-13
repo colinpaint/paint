@@ -41,7 +41,7 @@ public:
     : cApp ("imgui demo", windowSize, fullScreen, vsync) {}
   virtual ~cDemoApp() = default;
 
-  virtual void cDemoApp::drop (const vector<string>& dropItems) final {
+  virtual void drop (const vector<string>& dropItems) final {
     for (auto& item : dropItems) {
       string filename = cFileUtils::resolve (item);
       cLog::log (LOGINFO, filename);
@@ -126,7 +126,7 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // app
-  cDemoApp app ({1000, 900}, fullScreen, vsync);
+  cDemoApp demoApp ({1000, 900}, fullScreen, vsync);
   //app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   //app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
 
@@ -134,7 +134,7 @@ int main (int numArgs, char* args[]) {
     ImPlot::CreateContext();
   #endif
 
-  app.mainUILoop();
+  demoApp.mainUILoop();
 
   #ifdef BUILD_IMPLOT
     ImPlot::DestroyContext();

@@ -1533,7 +1533,7 @@ public:
     }
   //}}}
   //{{{
-  void cEditApp::drop (const vector<string>& dropItems) {
+  void drop (const vector<string>& dropItems) {
 
     for (auto& item : dropItems) {
       string filename = cFileUtils::resolve (item);
