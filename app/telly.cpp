@@ -244,6 +244,12 @@ public:
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
       switch (mTab) {
         //{{{
+        case eMulti:
+          drawMultiTelly (dvbStream, graphics);
+          drawChannels (dvbStream, graphics);
+          break;
+        //}}}
+        //{{{
         case eTelly:
           drawTelly (dvbStream, graphics);
           drawChannels (dvbStream, graphics);
@@ -283,8 +289,8 @@ public:
   //}}}
 
 private:
-  enum eTab { eTelly, eServices, ePids, eRecorded, eHistory };
-  inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded" }; // "history"};
+  enum eTab { eMulti, eTelly, eServices, ePids, eRecorded, eHistory };
+  inline static const vector<string> kTabNames = { "multi", "telly", "services", "pids", "recorded" }; // "history"};
   //{{{
   class cFramesGraphic {
   public:
@@ -489,8 +495,8 @@ private:
   void drawChannels (cDvbStream& dvbStream, cGraphics& graphics) {
     (void)graphics;
 
+    // draw services/channels
     for (auto& pair : dvbStream.getServiceMap()) {
-      //  draw services/channels
       cDvbStream::cService& service = pair.second;
       if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
         service.toggleAll();
@@ -499,7 +505,6 @@ private:
         ImGui::SameLine();
         ImGui::TextUnformatted (fmt::format ("{}{}",
           service.getStream (cDvbStream::eAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
-        //ImGui::TextUnformatted (fmt::format ("{} {}", audio.getInfo(), videoRender.getInfo()).c_str());
         }
 
       while (service.getChannelName().size() > mMaxNameChars)
@@ -711,7 +716,7 @@ private:
   //}}}
 
   //{{{
-  void drawTelly (cDvbStream& dvbStream, cGraphics& graphics) {
+  void drawMultiTelly (cDvbStream& dvbStream, cGraphics& graphics) {
 
     cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
 
@@ -721,8 +726,9 @@ private:
       if (pair.second.getStream (cDvbStream::eVideo).isEnabled())
         numVideos++;
 
+    float scale = mScale * ((numVideos <= 1) ? 1.f : ((numVideos <= 4) ? 0.5f : 0.33f));
+
     int curVideo = 0;
-    float scale = (numVideos <= 1) ? 1.f : ((numVideos <= 4) ? 0.5f : 0.33f);
     for (auto& pair : dvbStream.getServiceMap()) {
       cDvbStream::cService& service = pair.second;
       if (service.getStream (cDvbStream::eVideo).isEnabled()) {
@@ -753,149 +759,166 @@ private:
           texture.setSource();
           mShader->use();
 
-          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y),
-                                   -1.f,1.f);
           cMat4x4 model;
-          if (numVideos == 1) {
-            //{{{  1 pic
-            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
-
-            model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
-                                  (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
-
-            model.size (size);
-            }
+          cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
+          switch (numVideos) {
+            //{{{
+            case 1:
+              model.setTranslate ({(windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x),
+                                   (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
+              break;
             //}}}
-          else if (numVideos == 2) {
-            //{{{  2 multiView
-            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
-
-            if (curVideo == 1)
-              model.setTranslate ({(windowSize.x / 4.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
-            else
-              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
-            model.size (size);
-            }
+            //{{{
+            case 2:
+              if (curVideo == 1)
+                model.setTranslate ({(windowSize.x / 4.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
+              else
+                model.setTranslate ({(windowSize.x * 3.f / 4.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
+              break;
             //}}}
-          else if (numVideos == 3) {
-            //{{{  3 multiView
-            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
-
-            if (curVideo == 1)
-              model.setTranslate ({(windowSize.x / 4.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 2)
-              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 3.f / 4.f) - ((videoSize.y / 2.f) * size.y) });
-            else
-              model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y / 4.f)  - ((videoSize.y / 2.f) * size.y)});
-            model.size (size);
-            }
+            //{{{
+            case 3,4:
+              if (curVideo == 1)
+                model.setTranslate ({(windowSize.x / 4.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 3.f / 4.f) - ((videoSize.y / 2.f) * size.y) });
+              else if (curVideo == 2)
+                model.setTranslate ( {(windowSize.x * 3.f / 4.f) - ((videoSize.x / 2.f) * size.x),
+                                      (windowSize.y * 3.f / 4.f) - ((videoSize.y / 2.f) * size.y) });
+              else if (numVideos == 3)
+                model.setTranslate ({(windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y / 4.f) - ((videoSize.y / 2.f) * size.y) });
+              else if (curVideo == 3)
+                model.setTranslate ({(windowSize.x / 4.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y / 4.f) - ((videoSize.y / 2.f) * size.y) });
+              else
+                model.setTranslate ({(windowSize.x * 3.f / 4.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y / 4.f) - ((videoSize.y / 2.f) * size.y) });
+              break;
             //}}}
-          else if (numVideos == 4) {
-            //{{{  4 multiView
-            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
-
-            if (curVideo == 1)
-              model.setTranslate ({(windowSize.x / 4.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 2)
-              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 3.f / 4.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 3)
-              model.setTranslate ({(windowSize.x / 4.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y / 4.f)  - ((videoSize.y / 2.f) * size.y)});
-            else
-              model.setTranslate ({(windowSize.x * 3.f / 4.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y / 4.f)  - ((videoSize.y / 2.f) * size.y)});
-
-            model.size (size);
-            }
+            //{{{
+            case 5:
+              if (curVideo == 1)
+                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 2)
+                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 3)
+                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 4)
+                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else
+                model.setTranslate ({(windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
+              break;
             //}}}
-          else if (numVideos == 5) {
-            //{{{  5 multiView
-            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
-
-            if (curVideo == 1)
-              model.setTranslate ({(windowSize.x * 1.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 5.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 2)
-              model.setTranslate ({(windowSize.x * 5.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 5.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 3)
-              model.setTranslate ({(windowSize.x * 1.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 1.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 4)
-              model.setTranslate ({(windowSize.x * 5.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 1.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else
-              model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
-
-            model.size (size);
-            }
+            //{{{
+            case 6:
+              if (curVideo == 1)
+                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 4.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 2)
+                model.setTranslate ({(windowSize.x * 3.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 4.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 3)
+                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 4.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 4)
+                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 2.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 5)
+                model.setTranslate ({(windowSize.x * 3.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 2.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else
+                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 2.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              break;
             //}}}
-          else if (numVideos == 6) {
-            //{{{  6 multiView
-            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
-
-            if (curVideo == 1)
-              model.setTranslate ({(windowSize.x * 1.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 4.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 2)
-              model.setTranslate ({(windowSize.x * 3.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 4.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 3)
-              model.setTranslate ({(windowSize.x * 5.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 4.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 4)
-              model.setTranslate ({(windowSize.x * 1.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 2.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 5)
-              model.setTranslate ({(windowSize.x * 3.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 2.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else
-              model.setTranslate ({(windowSize.x * 5.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 2.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-
-            model.size (size);
-            }
+            //{{{
+            case 7,8,9:
+              if (curVideo == 1)
+                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 2)
+                model.setTranslate ({(windowSize.x * 3.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 3)
+                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 4)
+                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 5)
+                model.setTranslate ({(windowSize.x * 3.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 6)
+                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (numVideos == 7)
+                model.setTranslate ({(windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 7)
+                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (curVideo == 8)
+                model.setTranslate ({(windowSize.x * 3.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
+              else
+                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
+              break;
             //}}}
-          else if (numVideos == 7) {
-            //{{{  7 multiView
-            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
-
-            if (curVideo == 1)
-              model.setTranslate ({(windowSize.x * 1.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 5.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 2)
-              model.setTranslate ({(windowSize.x * 3.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 5.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 3)
-              model.setTranslate ({(windowSize.x * 5.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 5.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 4)
-              model.setTranslate ({(windowSize.x * 1.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 1.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 5)
-              model.setTranslate ({(windowSize.x * 3.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 1.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else if (curVideo == 6)
-              model.setTranslate ({(windowSize.x * 5.f / 6.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y * 1.f / 6.f)  - ((videoSize.y / 2.f) * size.y)});
-            else
-              model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
-            model.size (size);
-            }
-            //}}}
+           default:;
+           }
+          model.size (size);
+          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
           mShader->setModelProjection (model, orthoProjection);
           mQuad->draw();
 
-          //{{{  scaled multipic
+          videoRender.trimVideoBeforePts (playerPts - (mHistory * videoFrame->mPtsDuration));
+          }
+        }
+      }
+    }
+  //}}}
+  //{{{
+  void drawTelly (cDvbStream& dvbStream, cGraphics& graphics) {
+
+    float scale = mScale;
+    cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
+
+    for (auto& pair : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service = pair.second;
+      if (service.getStream (cDvbStream::eVideo).isEnabled()) {
+        cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eVideo).getRender());
+
+        // get playerPts from stream
+        int64_t playerPts = service.getStream (cDvbStream::eAudio).getPts();
+        if (service.getStream (cDvbStream::eAudio).isEnabled()) {
+          // update playerPts from audioPlayer
+          cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eAudio).getRender());
+          playerPts = audioRender.getPlayerPts();
+          mFramesGraphic.draw (audioRender, videoRender, playerPts);
+          }
+
+        // draw telly pic
+        cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
+        if (videoFrame) {
+          cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
+          if (!mQuad)
+            mQuad = graphics.createQuad (videoSize);
+
+          cTexture& texture = videoFrame->getTexture (graphics);
+          if (!mShader)
+            mShader = graphics.createTextureShader (texture.getTextureType());
+          texture.setSource();
+          mShader->use();
+
+          //{{{  unused scaled multipic
           //cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
           //float replicate = floor (1.f / mScale);
           //for (float y = -videoSize.y * replicate; y <= videoSize.y * replicate; y += videoSize.y) {
@@ -910,6 +933,15 @@ private:
               //}
             //}
           //}}}
+          cMat4x4 model;
+          cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
+          model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
+                                (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
+          model.size (size);
+          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
+          mShader->setModelProjection (model, orthoProjection);
+          mQuad->draw();
+
           videoRender.trimVideoBeforePts (playerPts - (mHistory * videoFrame->mPtsDuration));
           }
         }
@@ -1003,6 +1035,7 @@ private:
     }
   //}}}
 
+  // not yet
   //{{{
   void undo() {
     cLog::log (LOGINFO, "undo");
@@ -1083,7 +1116,7 @@ private:
   //}}}
 
   // vars
-  eTab mTab = eTelly;
+  eTab mTab = eMulti;
 
   int64_t mMaxPidPackets = 0;
   size_t mPacketChars = 3;
