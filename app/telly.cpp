@@ -763,124 +763,85 @@ private:
           texture.setSource();
           mShader->use();
 
-          cMat4x4 model;
-          cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
+          cVec2 offset = { 1.f / 2.f, 1.f / 2.f };
+          cVec2 size = { scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y };
           switch (numVideos) {
             //{{{
-            case 1:
-              model.setTranslate ({(windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x),
-                                   (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
-              break;
-            //}}}
-            //{{{
             case 2:
-              if (curVideo == 1)
-                model.setTranslate ({(windowSize.x / 4.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
-              else
-                model.setTranslate ({(windowSize.x * 3.f / 4.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
+              switch (curVideo) {
+                case 1: offset = { 1.f / 4.f, 1.f / 2.f }; break;
+                case 2: offset = { 3.f / 4.f, 1.f / 2.f }; break;
+                break;
+                }
               break;
             //}}}
             case 3:
             //{{{
             case 4:
-              if (curVideo == 1)
-                model.setTranslate ({(windowSize.x / 4.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 3.f / 4.f) - ((videoSize.y / 2.f) * size.y) });
-              else if (curVideo == 2)
-                model.setTranslate ( {(windowSize.x * 3.f / 4.f) - ((videoSize.x / 2.f) * size.x),
-                                      (windowSize.y * 3.f / 4.f) - ((videoSize.y / 2.f) * size.y) });
-              else if (numVideos == 3)
-                model.setTranslate ({(windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y / 4.f) - ((videoSize.y / 2.f) * size.y) });
-              else if (curVideo == 3)
-                model.setTranslate ({(windowSize.x / 4.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y / 4.f) - ((videoSize.y / 2.f) * size.y) });
-              else
-                model.setTranslate ({(windowSize.x * 3.f / 4.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y / 4.f) - ((videoSize.y / 2.f) * size.y) });
+              switch (curVideo) {
+                case 1: offset = { 1.f / 4.f, 3.f / 4.f }; break;
+                case 2: offset = { 3.f / 4.f, 3.f / 4.f }; break;
+                case 3: if (numVideos == 3)
+                          offset = { 2.f / 4.f, 1.f / 4.f };
+                        else
+                          offset = { 1.f / 4.f, 1.f / 4.f };
+                        break;
+                case 4: offset = { 3.f / 4.f, 1.f / 4.f }; break;
+                }
               break;
             //}}}
             //{{{
             case 5:
-              if (curVideo == 1)
-                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 2)
-                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (numVideos == 3)
-                model.setTranslate ({(windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 3)
-                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else
-                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              switch (curVideo) {
+                case 1: offset = { 1.f / 6.f, 5.f / 6.f }; break;
+                case 2: offset = { 5.f / 6.f, 5.f / 6.f }; break;
+                case 3: offset = { 3.f / 6.f, 3.f / 6.f }; break;
+                case 4: offset = { 1.f / 6.f, 1.f / 6.f }; break;
+                case 5: offset = { 5.f / 6.f, 1.f / 6.f }; break;
+                }
               break;
             //}}}
             //{{{
             case 6:
-              if (curVideo == 1)
-                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 4.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 2)
-                model.setTranslate ({(windowSize.x * 3.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 4.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 3)
-                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 4.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 4)
-                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 2.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 5)
-                model.setTranslate ({(windowSize.x * 3.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 2.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else
-                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 2.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              switch (curVideo) {
+                case 1: offset = { 1.f / 6.f, 4.f / 6.f }; break;
+                case 2: offset = { 3.f / 6.f, 4.f / 6.f }; break;
+                case 3: offset = { 5.f / 6.f, 4.f / 6.f }; break;
+                case 4: offset = { 1.f / 6.f, 2.f / 6.f }; break;
+                case 5: offset = { 3.f / 6.f, 2.f / 6.f }; break;
+                case 6: offset = { 5.f / 6.f, 2.f / 6.f }; break;
+                break;
+                }
               break;
             //}}}
             case 7:
             case 8:
             //{{{
             case 9:
-              if (curVideo == 1)
-                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 2)
-                model.setTranslate ({(windowSize.x * 3.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 3)
-                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 4)
-                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 5)
-                model.setTranslate ({(windowSize.x * 3.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 6)
-                model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (numVideos == 7)
-                model.setTranslate ({(windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 7)
-                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 8)
-                model.setTranslate ({(windowSize.x * 3.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
-              else
-                model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
+              switch (curVideo) {
+                case 1: offset = { 1.f / 6.f, 5.f / 6.f }; break;
+                case 2: offset = { 3.f / 6.f, 5.f / 6.f }; break;
+                case 3: offset = { 5.f / 6.f, 5.f / 6.f }; break;
+                case 4: offset = { 1.f / 6.f, 1.f / 6.f }; break;
+                case 5: offset = { 3.f / 6.f, 1.f / 6.f }; break;
+                case 6: offset = { 5.f / 6.f, 1.f / 6.f }; break;
+                case 7: if (numVideos == 7)
+                          offset = { 2.f / 6.f, 2.f / 6.f };
+                        else
+                          offset = { 1.f / 6.f, 3.f / 6.f };
+                        break;
+                case 8: offset = { 3.f / 6.f, 3.f / 6.f }; break;
+                case 9: offset = { 5.f / 6.f, 3.f / 6.f }; break;
+                break;
+                }
               break;
             //}}}
-           default:;
+            default:;
            }
+
+          cMat4x4 model;
+          model.setTranslate ({(windowSize.x * offset.x) - ((videoSize.x / 2.f) * size.x),
+                               (windowSize.y * offset.y) - ((videoSize.y / 2.f) * size.y)});
           model.size (size);
           cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
           mShader->setModelProjection (model, orthoProjection);
