@@ -52,10 +52,10 @@ class cFFmpegAudioDecoder : public cDecoder {
 public:
   //{{{
   cFFmpegAudioDecoder (cRender& render, uint8_t streamType)
-    : cDecoder(),
-      mRender(render),
-      mStreamType(streamType), mAacLatm(mStreamType == 17), mStreamTypeName(mAacLatm ? "aacL" : "mp3 "),
-      mAvCodec(avcodec_find_decoder (mAacLatm ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
+      : cDecoder(),
+        mRender(render),
+        mStreamType(streamType), mAacLatm(mStreamType == 17), mStreamTypeName(mAacLatm ? "aacL" : "mp3 "),
+        mAvCodec(avcodec_find_decoder (mAacLatm ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
 
     av_log_set_level (AV_LOG_ERROR);
     av_log_set_callback (logCallback);
@@ -64,6 +64,8 @@ public:
 
     mAvParser = av_parser_init (mAacLatm ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
+    mAvContext->flags2 |= AV_CODEC_FLAG2_FAST;
+
     avcodec_open2 (mAvContext, mAvCodec, NULL);
     }
   //}}}

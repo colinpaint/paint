@@ -90,18 +90,19 @@ class cFFmpegVideoDecoder : public cDecoder {
 public:
   //{{{
   cFFmpegVideoDecoder (cRender& render, uint8_t streamType)
-     : cDecoder(),
-       mRender(render),
-       mStreamType(streamType), mH264(mStreamType == 27), mStreamName(mH264 ? "h264" : "mpeg2"),
-       mAvCodec(avcodec_find_decoder (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
-
-    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder - streamType:{}:{}", mStreamType, mStreamName));
+      : cDecoder(),
+        mRender(render),
+        mStreamType(streamType), mH264(mStreamType == 27), mStreamName(mH264 ? "h264" : "mpeg2"),
+        mAvCodec(avcodec_find_decoder (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
     av_log_set_level (AV_LOG_ERROR);
     av_log_set_callback (logCallback);
 
+    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder - streamType:{}:{}", mStreamType, mStreamName));
+
     mAvParser = av_parser_init (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
+    mAvContext->flags2 |= AV_CODEC_FLAG2_FAST;
 
     avcodec_open2 (mAvContext, mAvCodec, nullptr);
     //AVDictionary* opts = nullptr;
