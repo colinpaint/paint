@@ -20,15 +20,15 @@
 #include "../common/cLog.h"
 #include "fmt/format.h"
 
-// UI
-#include "../app/myImgui.h"
-#include "../ui/cUI.h"
+// app
+#include "cApp.h"
+#include "cPlatform.h"
+#include "cGraphics.h"
+#include "myImgui.h"
+#include "cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 // app
-#include "../app/cApp.h"
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
 
 using namespace std;
 //}}}

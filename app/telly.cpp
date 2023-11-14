@@ -22,12 +22,7 @@
 #include "../common/cLog.h"
 #include "fmt/format.h"
 
-// UI
-#include "../app/myImgui.h"
-#include "../ui/cUI.h"
-#include "../font/itcSymbolBold.h"
-#include "../font/droidSansMono.h"
-
+// dvb
 #include "../dvb/cDvbStream.h"
 #include "../dvb/cVideoRender.h"
 #include "../dvb/cVideoFrame.h"
@@ -36,9 +31,13 @@
 #include "../dvb/cSubtitleRender.h"
 
 // app
-#include "../app/cApp.h"
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
+#include "cApp.h"
+#include "cPlatform.h"
+#include "cGraphics.h"
+#include "myImgui.h"
+#include "cUI.h"
+#include "../font/itcSymbolBold.h"
+#include "../font/droidSansMono.h"
 
 using namespace std;
 //}}}
@@ -778,8 +777,9 @@ private:
                                      (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
               break;
             //}}}
-            //{{{
             case 3:
+            //{{{
+            case 4:
               if (curVideo == 1)
                 model.setTranslate ({(windowSize.x / 4.f) - ((videoSize.x / 2.f) * size.x),
                                      (windowSize.y * 3.f / 4.f) - ((videoSize.y / 2.f) * size.y) });
@@ -797,7 +797,6 @@ private:
                                      (windowSize.y / 4.f) - ((videoSize.y / 2.f) * size.y) });
               break;
             //}}}
-            case 4:
             //{{{
             case 5:
               if (curVideo == 1)
@@ -839,8 +838,10 @@ private:
                                      (windowSize.y * 2.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
               break;
             //}}}
+            case 7:
+            case 8:
             //{{{
-            case 7,8,9:
+            case 9:
               if (curVideo == 1)
                 model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
                                      (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});

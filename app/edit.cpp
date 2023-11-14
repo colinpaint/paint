@@ -27,18 +27,16 @@
 #include "../common/cLog.h"
 #include "fmt/format.h"
 
-// UI
-#include "../app/myImgui.h"
-#include "../ui/cUI.h"
-#include "../font/itcSymbolBold.h"
-#include "../font/droidSansMono.h"
-
 #include "../common/cFileView.h"
 
 // app
-#include "../app/cApp.h"
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
+#include "cApp.h"
+#include "cPlatform.h"
+#include "cGraphics.h"
+#include "myImgui.h"
+#include "cUI.h"
+#include "../font/itcSymbolBold.h"
+#include "../font/droidSansMono.h"
 
 using namespace std;
 //}}}
