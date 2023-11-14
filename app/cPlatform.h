@@ -6,6 +6,7 @@
 #include "../common/cPointRectColor.h"
 //}}}
 
+// abstract base class
 class cPlatform {
 public:
   cPlatform (const std::string& name, bool hasFullScreen, bool hasVsync)

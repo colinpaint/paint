@@ -1168,11 +1168,13 @@ private:
   // vars
   cTellyView mTellyView;
 
+  // self registration
   static cUI* create (const string& className) { return new cTellyUI (className); }
   inline static const bool mRegistered = registerClass ("telly", &create);
   };
 //}}}
 
+// main
 int main (int numArgs, char* args[]) {
 
   // params
@@ -1212,7 +1214,7 @@ int main (int numArgs, char* args[]) {
   if (filename.empty())
     cLog::log (LOGINFO, fmt::format ("using multiplex {}", useMultiplex.mName));
 
-  // list static registered classes
+  // list static registered UI classes
   cUI::listRegisteredClasses();
 
   // app

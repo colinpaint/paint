@@ -852,6 +852,7 @@ private:
 
   cDrawSong mDrawSong;
 
+  // self registration
   static cUI* create (const string& className) { return new cPlayerUI (className); }
   inline static const bool mRegistered = registerClass ("player", &create);
   };
@@ -884,7 +885,7 @@ int main (int numArgs, char* args[]) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, fmt::format ("player"));
 
-  // list static registered classes
+  // list static registered UI classes
   cUI::listRegisteredClasses();
 
   // app

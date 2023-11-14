@@ -4692,11 +4692,8 @@ private:
   cFileView* mFileView = nullptr;
   cMemEdit* mMemEdit = nullptr;
 
-  //{{{
-  static cUI* create (const string& className) {
-    return new cEditUI (className);
-    }
-  //}}}
+  // self registration
+  static cUI* create (const string& className) { return new cEditUI (className); }
   inline static const bool mRegistered = registerClass ("edit", &create);
   };
 //}}}
@@ -4730,7 +4727,7 @@ int main (int numArgs, char* args[]) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, fmt::format ("edit"));
 
-  // list static registered classes
+  // list static registered UI classes
   cUI::listRegisteredClasses();
 
   // app

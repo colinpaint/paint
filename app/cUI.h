@@ -1,4 +1,4 @@
-// cUI.h - UI static manager and base class
+// cUI.h - UI static manager and base class for self registration of UI classes
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -9,12 +9,8 @@
 
 #include "cApp.h"
 
-#include "../common/date.h"
-#include "../common/cPointRectColor.h"
-
 class cGraphics;
 class cPlatform;
-class cCanvas;
 //}}}
 
 class cUI {

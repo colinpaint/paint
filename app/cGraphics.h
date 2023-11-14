@@ -10,6 +10,7 @@
 struct ImDrawData;
 //}}}
 
+// abstract base classes
 //{{{
 class cQuad {
 public:
@@ -98,6 +99,7 @@ public:
   virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) = 0;
   };
 //}}}
+
 //{{{
 class cTexture {
 public:

@@ -85,11 +85,8 @@ public:
     }
 
 private:
-  //{{{
-  static cUI* create (const string& className) {
-    return new cDemoUI (className);
-    }
-  //}}}
+  // self registration
+  static cUI* create (const string& className) { return new cDemoUI (className); }
   inline static const bool mRegistered = registerClass ("demo", &create);
   };
 //}}}
@@ -121,23 +118,12 @@ int main (int numArgs, char* args[]) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, fmt::format ("fed"));
 
-  // list static registered classes
+  // list static registered UI classes
   cUI::listRegisteredClasses();
 
-  // app
+  // demoApp
   cDemoApp demoApp ({1000, 900}, fullScreen, vsync);
-  //app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
-  //app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
-
-  #ifdef BUILD_IMPLOT
-    ImPlot::CreateContext();
-  #endif
-
   demoApp.mainUILoop();
-
-  #ifdef BUILD_IMPLOT
-    ImPlot::DestroyContext();
-  #endif
 
   return EXIT_SUCCESS;
   }
