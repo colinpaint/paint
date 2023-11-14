@@ -1126,7 +1126,7 @@ private:
   size_t mMaxSidChars = 3;
   size_t mMaxPgmChars = 3;
 
-  std::array <size_t, 4> mPidMaxChars = { 3 };
+  array <size_t, 4> mPidMaxChars = { 3 };
 
   cQuad* mQuad = nullptr;
   cTextureShader* mShader = nullptr;

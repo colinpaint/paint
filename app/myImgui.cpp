@@ -11,11 +11,10 @@
 
 #include "myImgui.h"
 
-// imGui
-#include "fmt/core.h" //  fmt::format core, used by a lot of logging
 #include "../common/date.h"
 #include "../common/cLog.h"
 #include "../common/cMiniLog.h"
+#include "fmt/core.h" //  fmt::format core, used by a lot of logging
 
 using namespace std;
 //}}}

@@ -71,17 +71,17 @@ public:
   cPlayerApp (const cPoint& windowSize, bool fullScreen, bool vsync);
   virtual ~cPlayerApp() = default;
 
-  std::string getSongName() const { return mSongName; }
+  string getSongName() const { return mSongName; }
   cSong* getSong() const;
 
-  bool setSongName (const std::string& songName);
-  bool setSongSpec (const std::vector <std::string>& songSpec);
+  bool setSongName (const string& songName);
+  bool setSongSpec (const vector <string>& songSpec);
 
-  virtual void drop (const std::vector<std::string>& dropItems) final;
+  virtual void drop (const vector<string>& dropItems) final;
 
 private:
   cSongLoader* mSongLoader;
-  std::string mSongName;
+  string mSongName;
   };
 
 cPlayerApp::cPlayerApp (const cPoint& windowSize, bool fullScreen, bool vsync)
@@ -93,7 +93,7 @@ cSong* cPlayerApp::getSong() const {
   return mSongLoader->getSong();
   }
 
-bool cPlayerApp::setSongName (const std::string& songName) {
+bool cPlayerApp::setSongName (const string& songName) {
 
   mSongName = songName;
 
@@ -131,7 +131,7 @@ public:
     //cSong* song = mLoader->getSong();
 
     //if (song) {
-      ////std::shared_lock<std::shared_mutex> lock (song->getSharedMutex());
+      ////shared_lock<shared_mutex> lock (song->getSharedMutex());
       //if (point.y > mDstOverviewTop) {
         //int64_t frameNum = song->getFirstFrameNum() + int((point.x * song->getTotalFrames()) / getWidth());
         //song->setPlayPts (song->getPtsFromFrameNum (frameNum));
@@ -157,7 +157,7 @@ public:
 
     //cSong* song = mLoader->getSong();
     //if (song) {
-      ////std::shared_lock<std::shared_mutex> lock (song.getSharedMutex());
+      ////shared_lock<shared_mutex> lock (song.getSharedMutex());
       //if (mOverviewPressed)
         //song->setPlayPts (
           //song->getPtsFromFrameNum (
@@ -199,7 +199,7 @@ public:
   //{{{
   //void setZoom (int zoom) {
 
-    //mZoom = std::min (std::max (zoom, mMinZoom), mMaxZoom);
+    //mZoom = min (max (zoom, mMinZoom), mMaxZoom);
 
     //// zoomIn expanding frame to mFrameWidth pix
     //mFrameWidth = (mZoom < 0) ? -mZoom+1 : 1;
@@ -697,7 +697,7 @@ private:
     //  if (!title.empty()) {
         //dstRect = { mRect.left + firstx + 2.f, mDstRangeTop + mRangeHeight - mWindow->getTextFormat()->GetFontSize(),
         //            mRect.right, mDstRangeTop + mRangeHeight + 4.f };
-        //dc->DrawText (std::wstring (title.begin(), title.end()).data(), (uint32_t)title.size(), mWindow->getTextFormat(),
+        //dc->DrawText (string (title.begin(), title.end()).data(), (uint32_t)title.size(), mWindow->getTextFormat(),
         //              dstRect, mWindow->getWhiteBrush(), D2D1_DRAW_TEXT_OPTIONS_CLIP);
      //   }
       //}

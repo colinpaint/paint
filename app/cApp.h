@@ -21,10 +21,9 @@ public:
   static bool isPlatformDefined() { return mPlatformDefined; }
 
   // get interfaces
+  std::string getName() const;
   cPlatform& getPlatform() const { return *mPlatform; }
   cGraphics& getGraphics() const { return *mGraphics; }
-
-  std::string getName() const;
 
   // time of day
   std::chrono::system_clock::time_point getNow();
