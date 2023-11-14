@@ -21,24 +21,24 @@
 #include <stb_image_write.h>
 
 // utils
-#include "common/date.h"
-#include "common/utils.h"
-#include "common/fileUtils.h"
-#include "common/cLog.h"
+#include "../common/date.h"
+#include "../common/utils.h"
+#include "../common/fileUtils.h"
+#include "../common/cLog.h"
 #include "fmt/format.h"
 
 // UI
-#include "app/myImgui.h"
-#include "ui/cUI.h"
-#include "font/itcSymbolBold.h"
-#include "font/droidSansMono.h"
+#include "../app/myImgui.h"
+#include "../ui/cUI.h"
+#include "../font/itcSymbolBold.h"
+#include "../font/droidSansMono.h"
 
-#include "common/cFileView.h"
+#include "../common/cFileView.h"
 
 // app
-#include "app/cApp.h"
-#include "app/cPlatform.h"
-#include "app/cGraphics.h"
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
 
 using namespace std;
 //}}}
@@ -4600,17 +4600,17 @@ private:
 
     //for (auto& actionKey : kActionKeys) {
       //{{{  dispatch matched actionKey
-   //   if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
-   //        ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
-   //       (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
-   //       (actionKey.mCtrl == ctrl) &&
-   //       (actionKey.mShift == shift) &&
-   //       (actionKey.mAlt == alt)) {
+      //   if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
+      //        ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
+      //       (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
+      //       (actionKey.mCtrl == ctrl) &&
+      //       (actionKey.mShift == shift) &&
+      //       (actionKey.mAlt == alt)) {
 
-   //     actionKey.mActionFunc();
-    //    break;
-    //    }
-    //  }
+      //     actionKey.mActionFunc();
+      //    break;
+      //    }
+      //  }
       //}}}
     }
   //}}}

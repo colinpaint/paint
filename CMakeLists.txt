@@ -59,7 +59,7 @@ endif()
 
 # imgui app
 project (demo VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} demo.cpp ui/cUI.h ui/cUI.cpp)
+  add_executable (${PROJECT_NAME} app/demo.cpp ui/cUI.h ui/cUI.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE app common stb imgui)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -70,7 +70,7 @@ project (demo VERSION 1.0.0)
 
 # edit app
 project (edit VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} edit.cpp ui/cUI.h ui/cUI.cpp)
+  add_executable (${PROJECT_NAME} app/edit.cpp ui/cUI.h ui/cUI.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE app imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -81,7 +81,7 @@ project (edit VERSION 1.0.0)
 
 # player app
 project (player VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} player.cpp ui/cUI.h ui/cUI.cpp)
+  add_executable (${PROJECT_NAME} app/player.cpp ui/cUI.h ui/cUI.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE app imgui stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -94,7 +94,7 @@ project (player VERSION 1.0.0)
 
 # telly app
 project (telly VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} telly.cpp ui/cUI.h ui/cUI.cpp )
+  add_executable (${PROJECT_NAME} app/telly.cpp ui/cUI.h ui/cUI.cpp )
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE app implot imgui stb)

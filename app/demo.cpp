@@ -14,21 +14,21 @@
 #include <stb_image_write.h>
 
 // utils
-#include "common/date.h"
-#include "common/utils.h"
-#include "common/fileUtils.h"
-#include "common/cLog.h"
+#include "../common/date.h"
+#include "../common/utils.h"
+#include "../common/fileUtils.h"
+#include "../common/cLog.h"
 #include "fmt/format.h"
 
 // UI
-#include "app/myImgui.h"
-#include "ui/cUI.h"
-#include "font/itcSymbolBold.h"
-#include "font/droidSansMono.h"
+#include "../app/myImgui.h"
+#include "../ui/cUI.h"
+#include "../font/itcSymbolBold.h"
+#include "../font/droidSansMono.h"
 // app
-#include "app/cApp.h"
-#include "app/cPlatform.h"
-#include "app/cGraphics.h"
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
 
 using namespace std;
 //}}}

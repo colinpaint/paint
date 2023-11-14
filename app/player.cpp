@@ -16,28 +16,28 @@
 #include <stb_image_write.h>
 
 // utils
-#include "common/date.h"
-#include "common/utils.h"
-#include "common/fileUtils.h"
-#include "common/cLog.h"
+#include "../common/date.h"
+#include "../common/utils.h"
+#include "../common/fileUtils.h"
+#include "../common/cLog.h"
 #include "fmt/format.h"
 
 // UI
-#include "app/myImgui.h"
-#include "ui/cUI.h"
-#include "font/itcSymbolBold.h"
-#include "font/droidSansMono.h"
+#include "../app/myImgui.h"
+#include "../ui/cUI.h"
+#include "../font/itcSymbolBold.h"
+#include "../font/droidSansMono.h"
 
 // song
-#include "song/cSong.h"
-#include "song/cSongLoader.h"
+#include "../song/cSong.h"
+#include "../song/cSongLoader.h"
 
 // app
-#include "app/cApp.h"
-#include "app/cPlatform.h"
-#include "app/cGraphics.h"
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
 
-#include "common/cFileView.h"
+#include "../common/cFileView.h"
 
 using namespace std;
 //}}}

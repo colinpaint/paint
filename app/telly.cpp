@@ -16,29 +16,29 @@
 #include <stb_image_write.h>
 
 // utils
-#include "common/date.h"
-#include "common/utils.h"
-#include "common/fileUtils.h"
-#include "common/cLog.h"
+#include "../common/date.h"
+#include "../common/utils.h"
+#include "../common/fileUtils.h"
+#include "../common/cLog.h"
 #include "fmt/format.h"
 
 // UI
-#include "app/myImgui.h"
-#include "ui/cUI.h"
-#include "font/itcSymbolBold.h"
-#include "font/droidSansMono.h"
+#include "../app/myImgui.h"
+#include "../ui/cUI.h"
+#include "../font/itcSymbolBold.h"
+#include "../font/droidSansMono.h"
 
-#include "dvb/cDvbStream.h"
-#include "dvb/cVideoRender.h"
-#include "dvb/cVideoFrame.h"
-#include "dvb/cAudioRender.h"
-#include "dvb/cAudioFrame.h"
-#include "dvb/cSubtitleRender.h"
+#include "../dvb/cDvbStream.h"
+#include "../dvb/cVideoRender.h"
+#include "../dvb/cVideoFrame.h"
+#include "../dvb/cAudioRender.h"
+#include "../dvb/cAudioFrame.h"
+#include "../dvb/cSubtitleRender.h"
 
 // app
-#include "app/cApp.h"
-#include "app/cPlatform.h"
-#include "app/cGraphics.h"
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
 
 using namespace std;
 //}}}
