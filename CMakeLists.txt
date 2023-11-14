@@ -57,11 +57,11 @@ if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_link_libraries (${PROJECT_NAME} PRIVATE decoders winmm avrt audio)
 endif()
 
-# imgui app
+# imgui demo app
 project (demo VERSION 1.0.0)
   add_executable (${PROJECT_NAME} app/demo.cpp ui/cUI.h ui/cUI.cpp)
 
-  target_include_directories (${PROJECT_NAME} PRIVATE app common stb imgui)
+  target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_link_libraries (${PROJECT_NAME} PRIVATE app imgui opengl32 d3d11 d3dcompiler)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
@@ -72,23 +72,23 @@ project (demo VERSION 1.0.0)
 project (edit VERSION 1.0.0)
   add_executable (${PROJECT_NAME} app/edit.cpp ui/cUI.h ui/cUI.cpp)
 
-  target_include_directories (${PROJECT_NAME} PRIVATE app imgui stb)
+  target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE common imgui opengl32 d3d11 d3dcompiler ws2_32)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app common imgui opengl32 d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE common imgui stdc++fs)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app common imgui stdc++fs)
   endif()
 
 # player app
 project (player VERSION 1.0.0)
   add_executable (${PROJECT_NAME} app/player.cpp ui/cUI.h ui/cUI.cpp)
 
-  target_include_directories (${PROJECT_NAME} PRIVATE app imgui stb)
+  target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE song audio decoders dvb net imgui
+    target_link_libraries (${PROJECT_NAME} PRIVATE app song audio decoders dvb net imgui
                                                    opengl32 d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE song audio decoders dvb net imgui
+    target_link_libraries (${PROJECT_NAME} PRIVATE app song audio decoders dvb net imgui
                                                    stdc++fs pthread)
   endif()
 
@@ -97,11 +97,11 @@ project (telly VERSION 1.0.0)
   add_executable (${PROJECT_NAME} app/telly.cpp ui/cUI.h ui/cUI.cpp )
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
-  target_include_directories (${PROJECT_NAME} PRIVATE app implot imgui stb)
+  target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui
+    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb audio decoders imgui
                                                    opengl32 dxgi d3d11 d3dcompiler ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE dvb audio decoders imgui
+    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb audio decoders imgui
                                                    stdc++fs pthread)
   endif()
