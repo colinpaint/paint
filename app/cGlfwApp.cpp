@@ -28,7 +28,7 @@
 
 #if defined(GL3)
   #include "cGL3Graphics.h"
-#elif defined(GLES_3_0) || defined(GLES31) || defined(GLES32)
+#elif defined(GLES30) || defined(GLES31) || defined(GLES32)
   #include "cGLES3Graphics.h"
 #endif
 
@@ -69,7 +69,7 @@ public:
 
     //  select openGL, openGLES version
     #if defined(GL3)
-      //{{{  GL 3.3, GLSL 130
+      //{{{  GL3.3, GLSL130
       string title = "GL3";
       const char* glslVersion = "#version 130";
 
@@ -79,7 +79,7 @@ public:
       //glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
       //}}}
     #elif defined(GLES30)
-      //{{{  GLES 3.0, GLSL 300
+      //{{{  GLES3.0, GLSL300
       string title = "GLES3.0";
       const char* glslVersion = "#version 300 es";
 
@@ -88,7 +88,7 @@ public:
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
       //}}}
     #elif defined(GLES31)
-      //{{{  GLES 3.1, GLSL 300
+      //{{{  GLES3.1, GLSL300
       string title = "GLES3.1";
       const char* glslVersion = "#version 300 es";
 
@@ -97,7 +97,7 @@ public:
       glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
       //}}}
     #elif defined(GLES32)
-      //{{{  GLES 3.2, GLSL 300
+      //{{{  GLES3.2, GLSL300
       string title = "GLES3.2";
       const char* glslVersion = "#version 300 es";
 
