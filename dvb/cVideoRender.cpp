@@ -32,6 +32,18 @@ using namespace std;
 constexpr bool kVideoQueued = true;
 constexpr uint32_t kVideoFrameMapSize = 25;
 
+namespace {
+  //{{{
+  void logCallback (void* ptr, int level, const char* fmt, va_list vargs) {
+    (void)level;
+    (void)ptr;
+    (void)fmt;
+    (void)vargs;
+    //vprintf (fmt, vargs);
+    }
+  //}}}
+  }
+
 //{{{
 class cFFmpegVideoFrame : public cVideoFrame {
 public:
@@ -85,6 +97,9 @@ public:
        mAvCodec(avcodec_find_decoder (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
     cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder - streamType:{}:{}", mStreamType, mStreamName));
+
+    av_log_set_level (AV_LOG_ERROR);
+    av_log_set_callback (logCallback);
 
     mAvParser = av_parser_init (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);

@@ -36,6 +36,18 @@ constexpr bool kAudioQueued = true;
 constexpr size_t kSamplesWait = 2;
 constexpr size_t kAudioFrameMapSize = 48;
 
+namespace {
+  //{{{
+  void logCallback (void* ptr, int level, const char* fmt, va_list vargs) {
+    (void)level;
+    (void)ptr;
+    (void)fmt;
+    (void)vargs;
+    //vprintf (fmt, vargs);
+    }
+  //}}}
+  }
+
 //{{{
 class cFFmpegAudioDecoder : public cDecoder {
 public:
@@ -45,6 +57,9 @@ public:
       mRender(render),
       mStreamType(streamType), mAacLatm(mStreamType == 17), mStreamTypeName(mAacLatm ? "aacL" : "mp3 "),
       mAvCodec(avcodec_find_decoder (mAacLatm ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
+
+    av_log_set_level (AV_LOG_ERROR);
+    av_log_set_callback (logCallback);
 
     cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder - streamType:{}:{}", mStreamType, mStreamTypeName));
 
