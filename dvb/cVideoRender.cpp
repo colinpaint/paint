@@ -29,9 +29,6 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr bool kVideoQueued = true;
-constexpr uint32_t kVideoFrameMapSize = 25;
-
 namespace {
   //{{{
   void logCallback (void* ptr, int level, const char* fmt, va_list vargs) {
@@ -43,6 +40,8 @@ namespace {
     }
   //}}}
   }
+constexpr bool kVideoQueued = true;
+constexpr size_t kVideoFrameMapSize = 25;
 
 //{{{
 class cFFmpegVideoFrame : public cVideoFrame {
@@ -116,6 +115,7 @@ public:
 
     if (mAvContext)
       avcodec_close (mAvContext);
+
     if (mAvParser)
       av_parser_close (mAvParser);
     }
@@ -126,9 +126,6 @@ public:
   virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           function<cFrame*()> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
-
-    mRender.log ("pes", fmt::format ("pid:{} pts:{} dts:{} size:{}",
-                                     pid, utils::getFullPtsString (pts), utils::getFullPtsString (dts), pesSize));
 
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
@@ -160,16 +157,15 @@ public:
            // }
 
           char frameType = cDvbUtils::getFrameType (frame, frameSize, mH264);
-          cLog::log (LOGINFO1, fmt::format ("videoDecode {} {} pts:{} ipts:{} dts:{} pesSize:{}",
-                                            mH264 ? "h264" : "mpeg2", frameType,
-                                            utils::getPtsString (pts),
-                                            utils::getPtsString (mInterpolatedPts),
-                                            utils::getPtsString (dts),
-                                            pesSize));
           if (frameType == 'I') {
             mInterpolatedPts = dts;
             mGotIframe = true;
             }
+          mRender.log ("pes", fmt::format ("pid:{} {} {} pts:{} dts:{} size:{}",
+                                           pid, mStreamName, frameType,
+                                           utils::getFullPtsString (pts), utils::getFullPtsString (dts),
+                                           pesSize));
+
 
           // allocFrame
           cFFmpegVideoFrame* ffmpegVideoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
@@ -180,7 +176,6 @@ public:
           ffmpegVideoFrame->mFrameType = frameType;
           ffmpegVideoFrame->setAVFrame (avFrame);
           addFrameCallback (ffmpegVideoFrame);
-
           avFrame = av_frame_alloc();
 
           mInterpolatedPts += ffmpegVideoFrame->mPtsDuration;

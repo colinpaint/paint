@@ -32,10 +32,6 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr bool kAudioQueued = true;
-constexpr size_t kSamplesWait = 2;
-constexpr size_t kAudioFrameMapSize = 48;
-
 namespace {
   //{{{
   void logCallback (void* ptr, int level, const char* fmt, va_list vargs) {
@@ -47,6 +43,9 @@ namespace {
     }
   //}}}
   }
+constexpr bool kAudioQueued = true;
+constexpr size_t kAudioFrameMapSize = 48;
+constexpr int kSamplesWait = 2;
 
 //{{{
 class cFFmpegAudioDecoder : public cDecoder {
@@ -73,6 +72,7 @@ public:
 
     if (mAvContext)
       avcodec_close (mAvContext);
+
     if (mAvParser)
       av_parser_close (mAvParser);
     }

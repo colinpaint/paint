@@ -43,11 +43,13 @@ using namespace std;
 //}}}
 
 namespace {
+  //{{{  const string kRecordRoot
   #ifdef _WIN32
     const string kRecordRoot = "/tv/";
   #else
     const string kRecordRoot = "/home/pi/tv/";
   #endif
+  //}}}
   //{{{
   const cDvbMultiplex kFileDvbMultiplex = {
     "hd",
@@ -117,11 +119,11 @@ public:
 
   //{{{
   bool setSource (const string& filename, const string& recordRoot, const cDvbMultiplex& dvbMultiplex,
-                  bool renderFirstService) {
+                  bool playFirstService) {
 
     if (filename.empty()) {
     // create dvbSource from dvbMultiplex
-      mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, renderFirstService);
+      mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, playFirstService);
       if (!mDvbStream)
         return false;
       mDvbStream->dvbSource (true);
@@ -161,11 +163,12 @@ private:
 class cTellyView {
 public:
   //{{{
-  void draw (cTellyApp& tellyApp) {
+  void draw (cApp& app) {
 
+    cTellyApp& tellyApp = (cTellyApp&)app;
     cGraphics& graphics = tellyApp.getGraphics();
-    graphics.clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
 
+    graphics.clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
     //{{{  draw tabs
     ImGui::SameLine();
     mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
@@ -207,7 +210,6 @@ public:
     //ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
     //ImGui::DragInt ("##hist", &mHistory, 0.25f, 0, 100, "h %d");
     //}}}
-
 
     if (tellyApp.getDvbStream()) {
       cDvbStream& dvbStream = *tellyApp.getDvbStream();
@@ -690,13 +692,16 @@ private:
         // setup draw quad, shader
         if (!mQuad)
           mQuad = graphics.createQuad (videoSize);
-        cMat4x4 model;
-        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-        cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
-        model.size (size);
+
         if (!mShader)
           mShader = graphics.createTextureShader (videoFrame->mTextureType);
         mShader->use();
+
+        cMat4x4 model;
+        cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
+        model.size (size);
+
+        cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
 
         // draw list
         for (auto& draw : mVideoFramesDraws) {
@@ -1151,9 +1156,9 @@ public:
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-    ImGui::Begin ("player", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
+    ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
 
-    mTellyView.draw ((cTellyApp&)app);
+    mTellyView.draw (app);
 
     ImGui::End();
     }
@@ -1174,7 +1179,7 @@ int main (int numArgs, char* args[]) {
   eLogLevel logLevel = LOGINFO;
   bool vsync = true;
   bool fullScreen = false;
-  bool renderFirstService = false;
+  bool playFirstService = false;
   cDvbMultiplex useMultiplex = kDvbMultiplexes[0];
   string filename;
   //{{{  parse command line args to params
@@ -1187,7 +1192,7 @@ int main (int numArgs, char* args[]) {
     else if (param == "log3") { logLevel = LOGINFO3; }
     else if (param == "full") { fullScreen = true; }
     else if (param == "free") { vsync = false; }
-    else if (param == "first") { renderFirstService = true; }
+    else if (param == "first") { playFirstService = true; }
     else {
       // assume param is filename unless it matches multiplex name
       filename = param;
@@ -1214,9 +1219,7 @@ int main (int numArgs, char* args[]) {
   cTellyApp tellyApp ({1920/2, 1080/2}, fullScreen, vsync);
   tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
-
-  tellyApp.setSource (filename, kRecordRoot, useMultiplex, !filename.empty() || renderFirstService);
-
+  tellyApp.setSource (filename, kRecordRoot, useMultiplex, !filename.empty() || playFirstService);
   tellyApp.mainUILoop();
 
   return EXIT_SUCCESS;
