@@ -7,8 +7,8 @@
 #include <string>
 #include <algorithm>
 
-#include "../app/myImgui.h"
-#include "../app/cGraphics.h"
+#include "myImgui.h"
+#include "cGraphics.h"
 
 #include "../common/cLog.h"
 #include "fmt/format.h"

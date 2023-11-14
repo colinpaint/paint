@@ -33,7 +33,7 @@
 #endif
 
 // ui
-#include "../ui/cUI.h"
+#include "cUI.h"
 
 // utils
 #include "../common/cLog.h"
