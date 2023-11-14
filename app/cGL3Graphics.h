@@ -673,10 +673,10 @@ private:
     //}}}
     //{{{
     virtual ~cOpenGL3Yuv420Texture() {
-      //glDeleteTextures (3, mTextureId.data());
-      glDeleteTextures (1, &mTextureId[0]);
-      glDeleteTextures (1, &mTextureId[1]);
-      glDeleteTextures (1, &mTextureId[2]);
+      glDeleteTextures (3, mTextureId.data());
+      //glDeleteTextures (1, &mTextureId[0]);
+      //glDeleteTextures (1, &mTextureId[1]);
+      //glDeleteTextures (1, &mTextureId[2]);
 
       cLog::log (LOGINFO, fmt::format ("deleting eYuv420 texture {}x{}", mSize.x, mSize.y));
       }

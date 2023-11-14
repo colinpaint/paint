@@ -779,7 +779,7 @@ private:
               break;
             //}}}
             //{{{
-            case 3,4:
+            case 3:
               if (curVideo == 1)
                 model.setTranslate ({(windowSize.x / 4.f) - ((videoSize.x / 2.f) * size.x),
                                      (windowSize.y * 3.f / 4.f) - ((videoSize.y / 2.f) * size.y) });
@@ -797,6 +797,7 @@ private:
                                      (windowSize.y / 4.f) - ((videoSize.y / 2.f) * size.y) });
               break;
             //}}}
+            case 4:
             //{{{
             case 5:
               if (curVideo == 1)
@@ -805,15 +806,15 @@ private:
               else if (curVideo == 2)
                 model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
                                      (windowSize.y * 5.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
+              else if (numVideos == 3)
+                model.setTranslate ({(windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x),
+                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
               else if (curVideo == 3)
                 model.setTranslate ({(windowSize.x * 1.f / 6.f) - ((videoSize.x / 2.f) * size.x),
                                      (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else if (curVideo == 4)
+              else
                 model.setTranslate ({(windowSize.x * 5.f / 6.f) - ((videoSize.x / 2.f) * size.x),
                                      (windowSize.y * 1.f / 6.f) - ((videoSize.y / 2.f) * size.y)});
-              else
-                model.setTranslate ({(windowSize.x / 2.f) - ((videoSize.x / 2.f) * size.x),
-                                     (windowSize.y / 2.f) - ((videoSize.y / 2.f) * size.y)});
               break;
             //}}}
             //{{{
