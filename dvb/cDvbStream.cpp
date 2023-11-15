@@ -414,6 +414,7 @@ cDvbStream::cStream::~cStream() { delete mRender; }
 void cDvbStream::cStream::setPidStreamType (uint16_t pid, uint8_t streamType) {
 
   mDefined = true;
+
   mPid = pid;
   mTypeId = streamType;
   mTypeName = cDvbUtils::getStreamTypeName (streamType);
@@ -1215,72 +1216,69 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
   if (pmt->table_id == TID_PMT) {
     uint16_t sid = HILO (pmt->program_number);
     if (!getService (sid)) {
-      // found new service, create cService
-      cLog::log (LOGINFO, fmt::format ("create service {}", sid));
-      cService& service = mServiceMap.emplace (sid, cService(sid)).first->second;
+     //{{{  found new service, create cService
+     cLog::log (LOGINFO, fmt::format ("create service {}", sid));
+     cService& service = mServiceMap.emplace (sid, cService(sid)).first->second;
 
-      service.setProgramPid (pidInfo->getPid());
-      pidInfo->setSid (sid);
+     service.setProgramPid (pidInfo->getPid());
+     pidInfo->setSid (sid);
 
-      buf += sizeof(sPmt);
-      sectionLength -= 4;
-      uint16_t programInfoLength = HILO (pmt->program_info_length);
-      uint16_t streamLength = sectionLength - programInfoLength - sizeof(sPmt);
+     buf += sizeof(sPmt);
+     sectionLength -= 4;
+     uint16_t programInfoLength = HILO (pmt->program_info_length);
+     uint16_t streamLength = sectionLength - programInfoLength - sizeof(sPmt);
 
-      buf += programInfoLength;
-      while (streamLength > 0) {
-        sPmtInfo* pmtInfo = (sPmtInfo*)buf;
+     buf += programInfoLength;
+     while (streamLength > 0) {
+       sPmtInfo* pmtInfo = (sPmtInfo*)buf;
 
-        // set service elementary stream pids
-        uint16_t esPid = HILO (pmtInfo->elementary_PID);
-        cPidInfo& esPidInfo = getPidInfo (esPid);
-        esPidInfo.setSid (sid);
-        esPidInfo.setStreamType (pmtInfo->stream_type);
-        switch (esPidInfo.getStreamType()) {
-          case   2: // ISO 13818-2 video
-          case  27: // H264 video
-            service.getRenderStream(eRenderVideo).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
+       // set service elementary stream pids
+       uint16_t esPid = HILO (pmtInfo->elementary_PID);
+       cPidInfo& esPidInfo = getPidInfo (esPid);
+       esPidInfo.setSid (sid);
+       esPidInfo.setStreamType (pmtInfo->stream_type);
+       switch (esPidInfo.getStreamType()) {
+         case   2: // ISO 13818-2 video
+         case  27: // H264 video
+           service.getRenderStream (eRenderVideo).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
 
-          case   3: // ISO 11172-3 audio
-          case   4: // ISO 13818-3 audio
-          case  15: // ADTS AAC audio
-          case  17: // LATM AAC audio
-          case 129: // AC3 audio
-            //{{{  set audio stream
-            if (service.getRenderStream (eRenderAudio).isDefined()) {
-              if (esPid != service.getRenderStream (eRenderAudio).getPid()) {
-                // main audStream defined, new audPid, try audio description eDescription
-                if (!service.getRenderStream (eRenderDescription).isDefined())
-                  service.getRenderStream (eRenderDescription).setPidStreamType (esPid,  esPidInfo.getStreamType());
-                }
-              }
-            else
-              service.getRenderStream (eRenderAudio).setPidStreamType (esPid,  esPidInfo.getStreamType());
-            break;
-            //}}}
+         case   3: // ISO 11172-3 audio
+         case   4: // ISO 13818-3 audio
+         case  15: // ADTS AAC audio
+         case  17: // LATM AAC audio
+         case 129: // AC3 audio
+           if (!service.getRenderStream (eRenderAudio).isDefined()) 
+             service.getRenderStream (eRenderAudio).setPidStreamType (esPid, esPidInfo.getStreamType());
+           else if (esPid != service.getRenderStream (eRenderAudio).getPid()) {
+             // got main eRenderAudio, use new audPid as eDescription
+             if (!service.getRenderStream (eRenderDescription).isDefined())
+               service.getRenderStream (eRenderDescription).setPidStreamType (esPid,  esPidInfo.getStreamType());
+             }
+           break;
 
-          case   6: // subtitle
-            service.getRenderStream (eRenderSubtitle).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
+         case   6: // subtitle
+           service.getRenderStream (eRenderSubtitle).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
 
-          case   5: // private mpeg2 tabled data - private
-          case  11: // dsm cc u_n
-          case  13: // dsm cc tabled data
-          case 134: break;
-          //{{{
-          default:
-            cLog::log (LOGERROR, fmt::format ("parsePmt - unknown stream sid:{} pid:{} streamType:{}",
-                                              sid, esPid, esPidInfo.getStreamType()));
-            break;
-          //}}}
-          }
+         case   5: // private mpeg2 tabled data - private
+         case  11: // dsm cc u_n
+         case  13: // dsm cc tabled data
+         case 134: break;
+         //{{{
+         default:
+           cLog::log (LOGERROR, fmt::format ("parsePmt - unknown stream sid:{} pid:{} streamType:{}",
+                                             sid, esPid, esPidInfo.getStreamType()));
+           break;
+         //}}}
+         }
 
-        uint16_t loopLength = HILO (pmtInfo->ES_info_length);
-        buf += sizeof(sPmtInfo);
-        streamLength -= loopLength + sizeof(sPmtInfo);
-        buf += loopLength;
-        }
-      foundService (service);
-      }
+       uint16_t loopLength = HILO (pmtInfo->ES_info_length);
+       buf += sizeof(sPmtInfo);
+       streamLength -= loopLength + sizeof(sPmtInfo);
+       buf += loopLength;
+       }
+     foundService (service);
+     }
+     //}}}
     }
   }
 //}}}
