@@ -10,6 +10,8 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   set (BUILD_GRAPHICS "GL3" CACHE STRING "build graphics option")
+  option (USE_AVX512 "use avx512" OFF)
+  option (USE_AVX2 "use avx2" OFF)
 elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
   set (BUILD_GRAPHICS "GLES31" CACHE STRING "build graphics option")
 endif()

@@ -26,6 +26,15 @@ project (common VERSION 1.0.0)
     target_compile_options (${PROJECT_NAME} PUBLIC /W4
                                                    /fp:fast
                                                    ${BUILD_MSVC_COMPILE_OPTIONS})
+    if (USE_AVX512)
+      message (STATUS "windows built with AVX X2 AVX512")
+      target_compile_options (${PROJECT_NAME} PUBLIC /arch:AVX512)
+    elseif (USE_AVX2)
+      message (STATUS "windows built with AVX AVX2")
+      target_compile_options (${PROJECT_NAME} PUBLIC /arch:AVX2)
+    else()
+      message (STATUS "windows built with AVX")
+    endif()
 
   else()
     target_compile_definitions (${PROJECT_NAME} PUBLIC _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64)
