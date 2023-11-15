@@ -519,6 +519,18 @@ bool cDvbStream::cService::isEpgRecord (const string& title, tTimePoint startTim
   return false;
   }
 //}}}
+//{{{
+cDvbStream::cStream* cDvbStream::cService::getRenderStreamByPid (uint16_t pid) {
+
+  for (uint8_t renderType = cDvbStream::eRenderVideo; renderType <= cDvbStream::eRenderSubtitle; renderType++) {
+    cDvbStream::cStream& stream = getRenderStream (cDvbStream::eRenderType(renderType));
+    if (stream.isDefined() && (stream.getPid() == pid))
+      return &mRenderStreams[renderType];
+    }
+
+  return nullptr;
+  }
+//}}}
 
 //  sets
 //{{{
@@ -923,6 +935,23 @@ bool cDvbStream::processPes (eRenderType renderType, cPidInfo* pidInfo, bool ski
     if (stream.isEnabled())
       return stream.getRender().processPes (pidInfo->getPid(),
         pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->getPts(), pidInfo->getDts(), skip);
+    }
+
+  return false;
+  }
+//}}}
+//{{{
+bool cDvbStream::processPesByPid (cPidInfo* pidInfo, bool skip) {
+
+  cService* service = getService (pidInfo->getSid());
+  if (service) {
+    cStream* stream = service->getRenderStreamByPid (pidInfo->getPid());
+    if (stream) {
+      stream->setPts (pidInfo->getPts());
+      if (stream->isEnabled())
+        return stream->getRender().processPes (pidInfo->getPid(),
+          pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->getPts(), pidInfo->getDts(), skip);
+      }
     }
 
   return false;
@@ -1415,7 +1444,8 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                     case 0xBD:
                     case 0xBE:
                     case 0xC0:
-                    case 0xC1:
+       
+       case 0xC1:
                     case 0xC2:
                     case 0xC4:
                     case 0xC6:
@@ -1426,6 +1456,7 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                     case 0xD0:
                     case 0xD2:
                     case 0xD4:
+                    case 0xD6:
                     case 0xD8:
                     case 0xDA:
                     case 0xE0:

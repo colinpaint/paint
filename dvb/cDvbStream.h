@@ -208,6 +208,7 @@ public:
     uint16_t getProgramPid() const { return mProgramPid; }
 
     cStream& getRenderStream (eRenderType renderType) { return mRenderStreams[renderType]; }
+    cStream* getRenderStreamByPid (uint16_t pid);
 
     bool getChannelRecord() const { return mChannelRecord; }
     std::string getChannelName() const { return mChannelName; }
@@ -338,6 +339,7 @@ private:
   void stopServiceProgram (cService* service);
 
   bool processPes (eRenderType renderType, cPidInfo* pidInfo, bool skip);
+  bool processPesByPid (cPidInfo* pidInfo, bool skip);
 
   //{{{  parse
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);
