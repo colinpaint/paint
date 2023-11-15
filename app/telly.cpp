@@ -824,7 +824,7 @@ private:
         if (pair.second.getRenderStream (cDvbStream::eRenderVideo).isEnabled())
           numVideos++;
 
-      float scale = mScale * ((numVideos <= 1) ? 1.f : ((numVideos <= 4) ? 0.5f : 0.33f));
+      float scale = mScale * ((numVideos <= 1) ? 1.f : ((numVideos <= 4) ? 0.5f : ((numVideos <= 9) ? 0.33f : 0.25f)));
 
       int curVideo = 0;
       for (auto& pair : dvbStream.getServiceMap()) {
@@ -934,6 +934,39 @@ private:
                           break;
                   case 8: offset = { 3.f / 6.f, 3.f / 6.f }; break;
                   case 9: offset = { 5.f / 6.f, 3.f / 6.f }; break;
+                  break;
+                  }
+
+                break;
+              //}}}
+              case 10:
+              case 11:
+              case 12:
+              case 13:
+              case 14:
+              case 15:
+              //{{{
+              case 16:
+                switch (curVideo) {
+                  case 1: offset = { 1.f / 8.f, 7.f / 8.f }; break;
+                  case 2: offset = { 3.f / 8.f, 7.f / 8.f }; break;
+                  case 3: offset = { 5.f / 8.f, 7.f / 8.f }; break;
+                  case 4: offset = { 7.f / 8.f, 7.f / 8.f }; break;
+
+                  case 5: offset = { 1.f / 8.f, 5.f / 8.f }; break;
+                  case 6: offset = { 3.f / 8.f, 5.f / 8.f }; break;
+                  case 7: offset = { 5.f / 8.f, 5.f / 8.f }; break;
+                  case 8: offset = { 7.f / 8.f, 5.f / 8.f }; break;
+
+                  case 9: offset =  { 1.f / 8.f, 3.f / 8.f }; break;
+                  case 10: offset = { 3.f / 8.f, 3.f / 8.f }; break;
+                  case 11: offset = { 5.f / 8.f, 3.f / 8.f }; break;
+                  case 12: offset = { 7.f / 8.f, 3.f / 8.f }; break;
+
+                  case 13: offset = { 1.f / 8.f, 1.f / 8.f }; break;
+                  case 14: offset = { 3.f / 8.f, 1.f / 8.f }; break;
+                  case 15: offset = { 5.f / 8.f, 1.f / 8.f }; break;
+                  case 16: offset = { 7.f / 8.f, 1.f / 8.f }; break;
                   break;
                   }
 

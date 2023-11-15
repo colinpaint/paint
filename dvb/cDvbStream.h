@@ -337,8 +337,6 @@ private:
                             const std::string& programName, tTimePoint programStartTime, bool selected);
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService* service);
-
-  bool processPes (eRenderType renderType, cPidInfo* pidInfo, bool skip);
   bool processPesByPid (cPidInfo* pidInfo, bool skip);
 
   //{{{  parse

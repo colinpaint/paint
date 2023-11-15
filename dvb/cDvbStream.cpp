@@ -924,22 +924,6 @@ void cDvbStream::stopServiceProgram (cService* service) {
   service->closeFile();
   }
 //}}}
-
-//{{{
-bool cDvbStream::processPes (eRenderType renderType, cPidInfo* pidInfo, bool skip) {
-
-  cService* service = getService (pidInfo->getSid());
-  if (service) {
-    cStream& stream = service->getRenderStream (renderType);
-    stream.setPts (pidInfo->getPts());
-    if (stream.isEnabled())
-      return stream.getRender().processPes (pidInfo->getPid(),
-        pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->getPts(), pidInfo->getDts(), skip);
-    }
-
-  return false;
-  }
-//}}}
 //{{{
 bool cDvbStream::processPesByPid (cPidInfo* pidInfo, bool skip) {
 
@@ -1444,54 +1428,29 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                     case 0xBD:
                     case 0xBE:
                     case 0xC0:
-       
-       case 0xC1:
+                    case 0xC1:
                     case 0xC2:
-                    case 0xC4:
-                    case 0xC6:
-                    case 0xC8:
-                    case 0xCA:
-                    case 0xCC:
                     case 0xCE:
                     case 0xD0:
                     case 0xD2:
-                    case 0xD4:
-                    case 0xD6:
-                    case 0xD8:
                     case 0xDA:
                     case 0xE0:
                       // process pid by streamType
                       if (pidInfo->mBufPtr && pidInfo->getStreamType())
                         switch (pidInfo->getStreamType()) {
                           case 2: // ISO 13818-2 video
-                          case 27: // HD vid
-                            //{{{  send last video pes
-                            if (processPes (eRenderVideo, pidInfo, skip)) // render took ownership of pes buffer
-                              pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
-                            skip = false;
-
-                            break;
-                            //}}}
-
                           case 3: // ISO 11172-3 audio
                           case 4: // ISO 13818-3 audio
-                          case 17: // aac latm
-                            //{{{  send last audio pes
-                            if (processPes (eRenderAudio, pidInfo, skip))
-                              pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
-                            break;
-                            //}}}
-
                           case 6: // subtitle
-                            //{{{  send last subtitle pes
-                            if (processPes (eRenderSubtitle, pidInfo, skip))
+                          case 17: // aac latm
+                          case 27: // HD vid
+                            if (processPesByPid (pidInfo, skip))
                               pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                             break;
-                            //}}}
 
                           default:
-                            cLog::log (LOGINFO, fmt::format ("unknown pid:{} streamType:{} streamId:{:2x}",
-                                                             pid, pidInfo->getStreamType(), streamId));
+                            cLog::log (LOGINFO, fmt::format ("unknown streamType:{} streamId:{:2x} pid:{}",
+                                                             pidInfo->getStreamType(), streamId, pid));
                             break;
                           }
                       break;
