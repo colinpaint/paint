@@ -110,9 +110,10 @@ void cRender::trimFramesBeforePts (int64_t pts) {
 
     auto it = mFrames.begin();
     while ((it != mFrames.end()) && ((*it).first < pts)) {
-      it->second->releaseResources();
-      mFreeFrames.push_back (it->second);
+      cFrame* frame = it->second;
       it = mFrames.erase (it);
+      frame->releaseResources();
+      mFreeFrames.push_back (frame);
       }
     }
   }

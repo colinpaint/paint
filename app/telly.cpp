@@ -171,6 +171,7 @@ public:
     graphics.clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
     //{{{  draw tabs
     ImGui::SameLine();
+
     mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
     //}}}
     //{{{  draw fullScreen
@@ -182,21 +183,25 @@ public:
     //}}}
     //{{{  draw scale
     ImGui::SameLine();
+
     ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
     ImGui::DragFloat ("##scale", &mScale, 0.01f, 0.05f, 16.f, "scale%3.2f");
     //}}}
     //{{{  draw vsync
     ImGui::SameLine();
+
     if (tellyApp.getPlatform().hasVsync())
       if (toggleButton ("vsync", tellyApp.getPlatform().getVsync()))
         tellyApp.getPlatform().toggleVsync();
     //}}}
     //{{{  draw frameRate
     ImGui::SameLine();
+
     ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
     //}}}
     //{{{  draw vertices:indices
     ImGui::SameLine();
+
     ImGui::TextUnformatted (fmt::format ("{}:{}",
                             ImGui::GetIO().MetricsRenderVertices,
                             ImGui::GetIO().MetricsRenderIndices/3).c_str());
@@ -216,12 +221,14 @@ public:
       if (dvbStream.hasTdtTime()) {
         //{{{  draw tdtTime
         ImGui::SameLine();
+
         ImGui::TextUnformatted (dvbStream.getTdtTimeString().c_str());
         }
         //}}}
       if (dvbStream.isFileSource()) {
         //{{{  draw filePos
         ImGui::SameLine();
+
         //ImGui::TextUnformatted (fmt::format ("{}k of {}k",
         //                                     dvbStream.getFilePos()/1000,
         //                                     dvbStream.getFileSize()/1000).c_str());
@@ -231,11 +238,13 @@ public:
       else if (dvbStream.hasDvbSource()) {
         //{{{  draw dvbStream::dvbSource signal:errors
         ImGui::SameLine();
+
         ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getSignalString(), dvbStream.getErrorString()).c_str());
         }
         //}}}
       //{{{  draw dvbStream packet,errors
       ImGui::SameLine();
+
       ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getNumPackets(), dvbStream.getNumErrors()).c_str());
       //}}}
 
@@ -713,7 +722,7 @@ private:
           mQuad->draw();
           }
 
-        videoRender.trimVideoBeforePts (playPts - (mHistory * videoFrame->mPtsDuration));
+        videoRender.trimVideoBeforePts (playPts - videoFrame->mPtsDuration);
         }
       }
     }
@@ -847,7 +856,7 @@ private:
           mShader->setModelProjection (model, orthoProjection);
           mQuad->draw();
 
-          videoRender.trimVideoBeforePts (playerPts - (mHistory * videoFrame->mPtsDuration));
+          videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
           }
         }
       }
@@ -910,7 +919,7 @@ private:
           mShader->setModelProjection (model, orthoProjection);
           mQuad->draw();
 
-          videoRender.trimVideoBeforePts (playerPts - (mHistory * videoFrame->mPtsDuration));
+          videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
           }
         }
       }
