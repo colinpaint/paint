@@ -34,7 +34,7 @@ public:
 
 class cDvbStream {
 public:
-  enum eStreamType { eVideo, eAudio, eDescription, eSubtitle };
+  enum eRenderType { eRenderVideo, eRenderAudio, eRenderDescription, eRenderSubtitle };
   //{{{
   class cStream {
   public:
@@ -267,7 +267,7 @@ public:
     const uint16_t mSid;
     uint16_t mProgramPid = 0;
 
-    // match sizeof eStreamType
+    // match sizeof eRenderType
     std::array <cStream,4> mStreams;
 
     std::string mChannelName;
@@ -338,7 +338,7 @@ private:
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService* service);
 
-  bool processPes (eStreamType stream, cPidInfo* pidInfo, bool skip);
+  bool processPes (eRenderType renderType, cPidInfo* pidInfo, bool skip);
 
   //{{{  parse
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);

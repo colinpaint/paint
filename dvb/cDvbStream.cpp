@@ -483,10 +483,10 @@ int cDvbStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 //{{{  class cDvbStream::cService
 //{{{
 cDvbStream::cService::cService (uint16_t sid) : mSid(sid) {
-  mStreams[eVideo].setLabel ("vid:");
-  mStreams[eAudio].setLabel ("aud:");
-  mStreams[eDescription].setLabel ("des:");
-  mStreams[eSubtitle].setLabel ("sub:");
+  mStreams[eRenderVideo].setLabel ("vid:");
+  mStreams[eRenderAudio].setLabel ("aud:");
+  mStreams[eRenderDescription].setLabel ("des:");
+  mStreams[eRenderSubtitle].setLabel ("sub:");
   }
 //}}}
 //{{{
@@ -522,15 +522,15 @@ bool cDvbStream::cService::isEpgRecord (const string& title, tTimePoint startTim
 //{{{
 void cDvbStream::cService::setAudStream (uint16_t pid, uint8_t streamType) {
 
-  if (mStreams[eAudio].isDefined()) {
-    if (pid != mStreams[eAudio].getPid()) {
+  if (mStreams[eRenderAudio].isDefined()) {
+    if (pid != mStreams[eRenderAudio].getPid()) {
       // main audStream defined, new audPid, try audio description eDescription
-      if (!mStreams[eDescription].isDefined())
-        mStreams[eDescription].setPidTypeId (pid, streamType);
+      if (!mStreams[eRenderDescription].isDefined())
+        mStreams[eRenderDescription].setPidTypeId (pid, streamType);
       }
     }
   else
-    mStreams[eAudio].setPidTypeId (pid, streamType);
+    mStreams[eRenderAudio].setPidTypeId (pid, streamType);
   }
 //}}}
 
@@ -569,16 +569,16 @@ void cDvbStream::cService::toggleStream (size_t streamType) {
   cStream& stream = getStream (streamType);
   if (stream.toggle()) {
     switch (streamType) {
-      case eVideo :
+      case eRenderVideo :
         stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId()));
         return;
 
-      case eAudio :
-      case eDescription:
+      case eRenderAudio :
+      case eRenderDescription:
         stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId()));
         return;
 
-      case eSubtitle :
+      case eRenderSubtitle :
         stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId()));
         return;
       }
@@ -589,9 +589,9 @@ void cDvbStream::cService::toggleStream (size_t streamType) {
 void cDvbStream::cService::toggleAll() {
 
   // improve to one on all off , if all off all on
-  toggleStream (eVideo);
-  toggleStream (eAudio);
-  toggleStream (eSubtitle);
+  toggleStream (eRenderVideo);
+  toggleStream (eRenderAudio);
+  toggleStream (eRenderSubtitle);
   }
 //}}}
 
@@ -615,9 +615,9 @@ void cDvbStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
 //  pes ts packet, save only recognised pids
 
   if (mFile &&
-      ((pid == mStreams[eVideo].getPid()) ||
-       (pid == mStreams[eAudio].getPid()) ||
-       (pid == mStreams[eSubtitle].getPid())))
+      ((pid == mStreams[eRenderVideo].getPid()) ||
+       (pid == mStreams[eRenderAudio].getPid()) ||
+       (pid == mStreams[eRenderSubtitle].getPid())))
     fwrite (ts, 1, 188, mFile);
   }
 //}}}
@@ -693,30 +693,30 @@ void cDvbStream::cService::writePmt() {
   *tsPtr++ = 0x00; // first section number = 0
   *tsPtr++ = 0x00; // last section number = 0
 
-  *tsPtr++ = 0xE0 | ((mStreams[eVideo].getPid() & 0x1F00) >> 8);
-  *tsPtr++ = mStreams[eVideo].getPid() & 0x00FF;
+  *tsPtr++ = 0xE0 | ((mStreams[eRenderVideo].getPid() & 0x1F00) >> 8);
+  *tsPtr++ = mStreams[eRenderVideo].getPid() & 0x00FF;
 
   *tsPtr++ = 0xF0;
   *tsPtr++ = 0; // program_info_length;
 
   // video es
-  *tsPtr++ = mStreams[eVideo].getTypeId(); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mStreams[eVideo].getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mStreams[eVideo].getPid() & 0x00FF;
+  *tsPtr++ = mStreams[eRenderVideo].getTypeId(); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mStreams[eRenderVideo].getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mStreams[eRenderVideo].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // audio es
-  *tsPtr++ = mStreams[eAudio].getTypeId(); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mStreams[eAudio].getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mStreams[eAudio].getPid() & 0x00FF;
+  *tsPtr++ = mStreams[eRenderAudio].getTypeId(); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mStreams[eRenderAudio].getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mStreams[eRenderAudio].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // subtitle es
-  *tsPtr++ = mStreams[eSubtitle].getTypeId(); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mStreams[eSubtitle].getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mStreams[eSubtitle].getPid() & 0x00FF;
+  *tsPtr++ = mStreams[eRenderSubtitle].getTypeId(); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mStreams[eRenderSubtitle].getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mStreams[eRenderSubtitle].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
@@ -886,7 +886,7 @@ void cDvbStream::startServiceProgram (cService* service, tTimePoint tdtTime,
   service->closeFile();
 
   if ((selected || service->getChannelRecord() || mDvbMultiplex.mRecordAllChannels) &&
-      service->getStream (eVideo).isDefined() && (service->getStream (eAudio).isDefined())) {
+      service->getStream (eRenderVideo).isDefined() && (service->getStream (eRenderAudio).isDefined())) {
     string filePath = mRecordRootName +
                       service->getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
@@ -926,18 +926,17 @@ void cDvbStream::stopServiceProgram (cService* service) {
 //}}}
 
 //{{{
-bool cDvbStream::processPes (eStreamType streamType, cPidInfo* pidInfo, bool skip) {
+bool cDvbStream::processPes (eRenderType renderType, cPidInfo* pidInfo, bool skip) {
 
   cService* service = getService (pidInfo->getSid());
   if (service) {
-    cStream& stream = service->getStream (streamType);
+    cStream& stream = service->getStream (renderType);
     stream.setPts (pidInfo->getPts());
     if (stream.isEnabled())
       return stream.getRender().processPes (pidInfo->getPid(),
         pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->getPts(), pidInfo->getDts(), skip);
     }
 
-  //cLog::log (LOGINFO, getPtsString (pidInfo->mPts) + " v - " + dec(pidInfo->getBufUsed());
   return false;
   }
 //}}}
@@ -1161,8 +1160,8 @@ void cDvbStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
               if (running &&
                   !service->getChannelName().empty() &&
                   service->getProgramPid() &&
-                  service->getStream (eVideo).isDefined() &&
-                  service->getStream (eAudio).isDefined()) {
+                  service->getStream (eRenderVideo).isDefined() &&
+                  service->getStream (eRenderAudio).isDefined()) {
                   //(service->getSubPid())) {
                 // now event for named service with valid pgmPid, vidPid, audPid, subPid
                 if (service->setNow (service->isEpgRecord (titleString, startTime),
@@ -1253,7 +1252,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         switch (esPidInfo.getStreamType()) {
           case   2: // ISO 13818-2 video
           case  27: // H264 video
-            service.getStream (eVideo).setPidTypeId (esPid, esPidInfo.getStreamType()); break;
+            service.getStream (eRenderVideo).setPidTypeId (esPid, esPidInfo.getStreamType()); break;
 
           case   3: // ISO 11172-3 audio
           case   4: // ISO 13818-3 audio
@@ -1263,7 +1262,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
             service.setAudStream (esPid, esPidInfo.getStreamType()); break;
 
           case   6: // subtitle
-            service.getStream (eSubtitle).setPidTypeId (esPid, esPidInfo.getStreamType()); break;
+            service.getStream (eRenderSubtitle).setPidTypeId (esPid, esPidInfo.getStreamType()); break;
 
           case   5: // private mpeg2 tabled data - private
           case  11: // dsm cc u_n
@@ -1413,59 +1412,80 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
               tsBytesLeft -= headerBytes;
 
               if (payloadStart) {
-                // start of payload for new pes buffer
-                if ((*(uint32_t*)ts == 0xBD010000) ||
-                    (*(uint32_t*)ts == 0xBE010000) ||
-                    (*(uint32_t*)ts == 0xC0010000) ||
-                    (*(uint32_t*)ts == 0xC1010000) ||
-                    (*(uint32_t*)ts == 0xC2010000) ||
-                    (*(uint32_t*)ts == 0xC4010000) ||
-                    (*(uint32_t*)ts == 0xC6010000) ||
-                    (*(uint32_t*)ts == 0xC8010000) ||
-                    (*(uint32_t*)ts == 0xCA010000) ||
-                    (*(uint32_t*)ts == 0xCC010000) ||
-                    (*(uint32_t*)ts == 0xCE010000) ||
-                    (*(uint32_t*)ts == 0xD0010000) || (*(uint32_t*)ts == 0xD2010000) || (*(uint32_t*)ts == 0xD4010000) ||
-                    (*(uint32_t*)ts == 0xD6010000) || (*(uint32_t*)ts == 0xD8010000) || (*(uint32_t*)ts == 0xDA010000) ||
-                    (*(uint32_t*)ts == 0xE0010000)) {
-                  if (pidInfo->mBufPtr && pidInfo->getStreamType()) {
-                    switch (pidInfo->getStreamType()) {
-                      case 2:  // ISO 13818-2 video
-                      case 27: // HD vid
-                        //{{{  send buffered video pes
-                        if (processPes (eVideo, pidInfo, skip)) // render took ownership of pes buffer
-                          pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
-                        skip = false;
-                        break;
-                        //}}}
-                      case 3:  // ISO 11172-3 audio
-                      case 4:  // ISO 13818-3 audio
-                      case 17: // aac latm
-                        //{{{  send buffered audio pes
-                        if (processPes ((*(uint32_t*)ts == 0xC1010000) ? eDescription : eAudio, pidInfo, skip))
-                          pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
-                        break;
-                        //}}}
-                      case 6:   // subtitle
-                        //{{{  send buffered subtitle pes
-                        if (processPes (eSubtitle, pidInfo, skip))
-                          pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
-                        break;
-                        //}}}
-                      default: {
-                        cLog::log (LOGINFO, fmt::format ("unknown pid:{} streamType:{}",pid,pidInfo->getStreamType()));
-                        }
-                      }
+                if ((*(uint32_t*)ts & 0x00FFFFFF) == 0x010000) {
+                  //{{{  process previous pesBuffer, use new pesBuffer
+                  uint8_t streamId = (*((uint32_t*)(ts+3))) & 0xFF;
+                  switch (streamId) {
+                    case 0xBD:
+                    case 0xBE:
+                    case 0xC0:
+                    case 0xC1:
+                    case 0xC2:
+                    case 0xC4:
+                    case 0xC6:
+                    case 0xC8:
+                    case 0xCA:
+                    case 0xCC:
+                    case 0xCE:
+                    case 0xD0:
+                    case 0xD2:
+                    case 0xD4:
+                    case 0xD8:
+                    case 0xDA:
+                    case 0xE0:
+                      // process pid by streamType
+                      if (pidInfo->mBufPtr && pidInfo->getStreamType())
+                        switch (pidInfo->getStreamType()) {
+                          case 2: // ISO 13818-2 video
+                          case 27: // HD vid
+                            //{{{  send last video pes
+                            if (processPes (eRenderVideo, pidInfo, skip)) // render took ownership of pes buffer
+                              pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
+                            skip = false;
+
+                            break;
+                            //}}}
+
+                          case 3: // ISO 11172-3 audio
+                          case 4: // ISO 13818-3 audio
+                          case 17: // aac latm
+                            //{{{  send last audio pes
+                            if (processPes (eRenderAudio, pidInfo, skip))
+                              pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
+                            break;
+                            //}}}
+
+                          case 6: // subtitle
+                            //{{{  send last subtitle pes
+                            if (processPes (eRenderSubtitle, pidInfo, skip))
+                              pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
+                            break;
+                            //}}}
+
+                          default:
+                            cLog::log (LOGINFO, fmt::format ("unknown pid:{} streamType:{} streamId:{:2x}",
+                                                             pid, pidInfo->getStreamType(), streamId));
+                            break;
+                          }
+                      break;
+
+                    default:
+                      cLog::log (LOGINFO, fmt::format ("unknown streamId:{:2x}", streamId));
+                      break;
                     }
-                  // reset pes buffer pointer
+
+                  // reset pesBuffer pointer
                   pidInfo->mBufPtr = pidInfo->mBuffer;
 
-                  // save ts streamPos for start of new pes buffer
+                  // save ts streamPos for start of new pesBuffer
                   pidInfo->mStreamPos = streamPos;
 
-                  if (ts[7] & 0x80) // pts
+                  // pts
+                  if (ts[7] & 0x80)
                     pidInfo->setPts ((ts[7] & 0x80) ? cDvbUtils::getPts (ts+9) : -1);
-                  if (ts[7] & 0x40) // dts
+
+                  // dts
+                  if (ts[7] & 0x40)
                     pidInfo->setDts ((ts[7] & 0x80) ? cDvbUtils::getPts (ts+14) : -1);
 
                   // skip past pesHeader
@@ -1473,10 +1493,10 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                   ts += pesHeaderBytes;
                   tsBytesLeft -= pesHeaderBytes;
                   }
-                else {
-                  uint32_t nn = *(uint32_t*)ts;
-                  cLog::log (LOGINFO, fmt::format("unrecognised pes header {} {:8x}",pid,nn));
-                  }
+                  //}}}
+                else
+                  cLog::log (LOGINFO, fmt::format ("unrecognised pesHeader {} {:8x}",
+                                                   pid, *(uint32_t*)ts));
                 }
 
               // add payload to buffer
