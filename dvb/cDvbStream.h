@@ -207,7 +207,7 @@ public:
     uint16_t getSid() const { return mSid; }
     uint16_t getProgramPid() const { return mProgramPid; }
 
-    cStream& getRenderStream (size_t stream) { return mRenderStreams[stream]; }
+    cStream& getRenderStream (eRenderType renderType) { return mRenderStreams[renderType]; }
 
     bool getChannelRecord() const { return mChannelRecord; }
     std::string getChannelName() const { return mChannelName; }
@@ -247,7 +247,7 @@ public:
     void toggleShowEpg() { mShowEpg = !mShowEpg; }
     //}}}
 
-    void toggleStream (size_t streamType);
+    void toggleStream (eRenderType renderType);
     void toggleAll();
 
     // record
@@ -314,7 +314,7 @@ public:
   size_t getFileSize() const { return mFileSize; }
   //}}}
 
-  void toggleStream (cService& service, size_t streamType);
+  void toggleStream (cService& service, eRenderType renderType);
 
   // source
   void dvbSource (bool launchThread);

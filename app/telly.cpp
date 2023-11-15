@@ -558,10 +558,10 @@ private:
         while (service.getProgramPid() > pow (10, mMaxPgmChars))
           mMaxPgmChars++;
 
-        for (size_t streamType = cDvbStream::eRenderVideo; streamType <= cDvbStream::eRenderSubtitle; streamType++) {
-          uint16_t pid = service.getRenderStream (streamType).getPid();
-          while (pid > pow (10, mPidMaxChars[streamType]))
-            mPidMaxChars[streamType]++;
+        for (uint8_t renderType = cDvbStream::eRenderVideo; renderType <= cDvbStream::eRenderSubtitle; renderType++) {
+          uint16_t pid = service.getRenderStream (cDvbStream::eRenderType(renderType)).getPid();
+          while (pid > pow (10, mPidMaxChars[renderType]))
+            mPidMaxChars[renderType]++;
           }
         //}}}
 
@@ -572,17 +572,17 @@ private:
                            service.getSid(), mMaxSidChars).c_str()))
           service.toggleAll();
 
-        for (size_t streamType = cDvbStream::eRenderVideo; streamType <= cDvbStream::eRenderSubtitle; streamType++) {
+        for (uint8_t renderType = cDvbStream::eRenderVideo; renderType <= cDvbStream::eRenderSubtitle; renderType++) {
          // iterate definedStreams
-          cDvbStream::cStream& stream = service.getRenderStream (streamType);
+          cDvbStream::cStream& stream = service.getRenderStream (cDvbStream::eRenderType(renderType));
           if (stream.isDefined()) {
             ImGui::SameLine();
             // draw definedStream button - sid ensuresd unique button name
             if (toggleButton (fmt::format ("{}{:{}d}:{}##{}",
                                            stream.getLabel(),
-                                           stream.getPid(), mPidMaxChars[streamType], stream.getTypeName(),
+                                           stream.getPid(), mPidMaxChars[renderType], stream.getTypeName(),
                                            service.getSid()).c_str(), stream.isEnabled()))
-             dvbStream.toggleStream (service, streamType);
+             dvbStream.toggleStream (service, cDvbStream::eRenderType(renderType));
             }
           }
 
@@ -599,11 +599,11 @@ private:
         if (service.getRenderStream (cDvbStream::eRenderAudio).isEnabled())
           playPts = dynamic_cast<cAudioRender&>(service.getRenderStream (cDvbStream::eRenderAudio).getRender()).getPlayerPts();
 
-        for (size_t streamType = cDvbStream::eRenderVideo; streamType <= cDvbStream::eRenderSubtitle; streamType++) {
+        for (uint8_t renderType = cDvbStream::eRenderVideo; renderType <= cDvbStream::eRenderSubtitle; renderType++) {
           // iterate enabledStreams, drawing
-          cDvbStream::cStream& stream = service.getRenderStream (streamType);
+          cDvbStream::cStream& stream = service.getRenderStream (cDvbStream::eRenderType(renderType));
           if (stream.isEnabled()) {
-            switch (streamType) {
+            switch (cDvbStream::eRenderType(renderType)) {
               case cDvbStream::eRenderVideo:
                 drawVideoInfo (service.getSid(), stream.getRender(), graphics, playPts); break;
 
