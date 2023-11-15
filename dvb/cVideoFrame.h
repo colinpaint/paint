@@ -23,6 +23,9 @@ public:
     }
   //}}}
 
+
+  uint16_t getWidth() const { return mWidth; }
+  uint16_t getHeight() const { return mHeight; }
   //{{{
   std::string getInfoString() {
 

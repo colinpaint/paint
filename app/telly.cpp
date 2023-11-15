@@ -773,7 +773,7 @@ private:
           // draw telly pic
           cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
           if (videoFrame) {
-            cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
+            cPoint videoSize = { videoFrame->getWidth(), videoFrame->getHeight() };
             if (!mQuad)
               mQuad = graphics.createQuad (videoSize);
 
@@ -801,7 +801,7 @@ private:
             cMat4x4 model;
             cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
             model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
-                                  (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
+                                 (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
             model.size (size);
             cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
             mShader->setModelProjection (model, orthoProjection);
@@ -847,7 +847,7 @@ private:
           // draw telly pic
           cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
           if (videoFrame) {
-            cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
+            cPoint videoSize = { videoFrame->getWidth(), videoFrame->getHeight() };
             if (!mQuad)
               mQuad = graphics.createQuad (videoSize);
 
@@ -858,7 +858,7 @@ private:
             mShader->use();
 
             cVec2 offset = { 0.5f, 0.5f };
-            cVec2 size = { scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y };
+            cVec2 size = { scale * windowSize.x / videoFrame->getWidth(), scale * windowSize.y / videoFrame->getHeight() };
             switch (numVideos) {
               //{{{
               case 2:
@@ -976,8 +976,8 @@ private:
              }
 
             cMat4x4 model;
-            model.setTranslate ({(windowSize.x * offset.x) - ((videoSize.x / 2.f) * size.x),
-                                 (windowSize.y * offset.y) - ((videoSize.y / 2.f) * size.y)});
+            model.setTranslate ({(windowSize.x * offset.x) - ((size.x / 2.f) * videoSize.x),
+                                 (windowSize.y * offset.y) - ((size.y / 2.f) * videoSize.x),.y)});
             model.size (size);
             cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
             mShader->setModelProjection (model, orthoProjection);
