@@ -51,7 +51,7 @@ public:
     cRender& getRender() const { return *mRender; }
 
     void setLabel (const std::string& label) { mLabel = label; }
-    void setPidTypeId (uint16_t pid, uint8_t streamType);
+    void setPidStreamType (uint16_t pid, uint8_t streamType);
     void setPts (int64_t pts) { mPts = pts; }
     void setRender (cRender* render) { mRender = render; }
 
@@ -207,7 +207,7 @@ public:
     uint16_t getSid() const { return mSid; }
     uint16_t getProgramPid() const { return mProgramPid; }
 
-    cStream& getStream (size_t stream) { return mStreams[stream]; }
+    cStream& getRenderStream (size_t stream) { return mRenderStreams[stream]; }
 
     bool getChannelRecord() const { return mChannelRecord; }
     std::string getChannelName() const { return mChannelName; }
@@ -225,7 +225,6 @@ public:
     //}}}
     //{{{  sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
-    void setAudStream (uint16_t pid, uint8_t stramType);
 
     //{{{
     void setChannelName (const std::string& name, bool record, const std::string& recordName) {
@@ -268,7 +267,7 @@ public:
     uint16_t mProgramPid = 0;
 
     // match sizeof eRenderType
-    std::array <cStream,4> mStreams;
+    std::array <cStream,4> mRenderStreams;
 
     std::string mChannelName;
     bool mChannelRecord = false;

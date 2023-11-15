@@ -533,10 +533,10 @@ private:
         if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
           service.toggleAll();
 
-        if (service.getStream (cDvbStream::eRenderAudio).isDefined()) {
+        if (service.getRenderStream (cDvbStream::eRenderAudio).isDefined()) {
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("{}{}",
-            service.getStream (cDvbStream::eRenderAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
+            service.getRenderStream (cDvbStream::eRenderAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
           }
 
         while (service.getChannelName().size() > mMaxNameChars)
@@ -559,7 +559,7 @@ private:
           mMaxPgmChars++;
 
         for (size_t streamType = cDvbStream::eRenderVideo; streamType <= cDvbStream::eRenderSubtitle; streamType++) {
-          uint16_t pid = service.getStream (streamType).getPid();
+          uint16_t pid = service.getRenderStream (streamType).getPid();
           while (pid > pow (10, mPidMaxChars[streamType]))
             mPidMaxChars[streamType]++;
           }
@@ -574,7 +574,7 @@ private:
 
         for (size_t streamType = cDvbStream::eRenderVideo; streamType <= cDvbStream::eRenderSubtitle; streamType++) {
          // iterate definedStreams
-          cDvbStream::cStream& stream = service.getStream (streamType);
+          cDvbStream::cStream& stream = service.getRenderStream (streamType);
           if (stream.isDefined()) {
             ImGui::SameLine();
             // draw definedStream button - sid ensuresd unique button name
@@ -596,12 +596,12 @@ private:
 
         // audio provides playPts
         int64_t playPts = 0;
-        if (service.getStream (cDvbStream::eRenderAudio).isEnabled())
-          playPts = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eRenderAudio).getRender()).getPlayerPts();
+        if (service.getRenderStream (cDvbStream::eRenderAudio).isEnabled())
+          playPts = dynamic_cast<cAudioRender&>(service.getRenderStream (cDvbStream::eRenderAudio).getRender()).getPlayerPts();
 
         for (size_t streamType = cDvbStream::eRenderVideo; streamType <= cDvbStream::eRenderSubtitle; streamType++) {
           // iterate enabledStreams, drawing
-          cDvbStream::cStream& stream = service.getStream (streamType);
+          cDvbStream::cStream& stream = service.getRenderStream (streamType);
           if (stream.isEnabled()) {
             switch (streamType) {
               case cDvbStream::eRenderVideo:
@@ -685,16 +685,16 @@ private:
 
       for (auto& pair : dvbStream.getServiceMap()) {
         cDvbStream::cService& service = pair.second;
-        if (!service.getStream (cDvbStream::eRenderVideo).isEnabled())
+        if (!service.getRenderStream (cDvbStream::eRenderVideo).isEnabled())
           continue;
 
-        cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eRenderVideo).getRender());
+        cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (cDvbStream::eRenderVideo).getRender());
         cPoint videoSize = {videoRender.getWidth(), videoRender.getHeight()};
 
         // playPts and draw framesGraphic
-        int64_t playPts = service.getStream (cDvbStream::eRenderAudio).getPts();
-        if (service.getStream (cDvbStream::eRenderAudio).isEnabled()) {
-          cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eRenderAudio).getRender());
+        int64_t playPts = service.getRenderStream (cDvbStream::eRenderAudio).getPts();
+        if (service.getRenderStream (cDvbStream::eRenderAudio).isEnabled()) {
+          cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (cDvbStream::eRenderAudio).getRender());
           playPts = audioRender.getPlayerPts();
 
           mFramesGraphic.draw (audioRender, videoRender, playPts);
@@ -758,14 +758,14 @@ private:
 
       for (auto& pair : dvbStream.getServiceMap()) {
         cDvbStream::cService& service = pair.second;
-        if (service.getStream (cDvbStream::eRenderVideo).isEnabled()) {
-          cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eRenderVideo).getRender());
+        if (service.getRenderStream (cDvbStream::eRenderVideo).isEnabled()) {
+          cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (cDvbStream::eRenderVideo).getRender());
 
           // get playerPts from stream
-          int64_t playerPts = service.getStream (cDvbStream::eRenderAudio).getPts();
-          if (service.getStream (cDvbStream::eRenderAudio).isEnabled()) {
+          int64_t playerPts = service.getRenderStream (cDvbStream::eRenderAudio).getPts();
+          if (service.getRenderStream(cDvbStream::eRenderAudio).isEnabled()) {
             // update playerPts from audioPlayer
-            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eRenderAudio).getRender());
+            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (cDvbStream::eRenderAudio).getRender());
             playerPts = audioRender.getPlayerPts();
             mFramesGraphic.draw (audioRender, videoRender, playerPts);
             }
@@ -821,7 +821,7 @@ private:
       // count numVideos
       int numVideos = 0;
       for (auto& pair : dvbStream.getServiceMap())
-        if (pair.second.getStream (cDvbStream::eRenderVideo).isEnabled())
+        if (pair.second.getRenderStream (cDvbStream::eRenderVideo).isEnabled())
           numVideos++;
 
       float scale = mScale * ((numVideos <= 1) ? 1.f : ((numVideos <= 4) ? 0.5f : 0.33f));
@@ -829,15 +829,15 @@ private:
       int curVideo = 0;
       for (auto& pair : dvbStream.getServiceMap()) {
         cDvbStream::cService& service = pair.second;
-        if (service.getStream (cDvbStream::eRenderVideo).isEnabled()) {
+        if (service.getRenderStream (cDvbStream::eRenderVideo).isEnabled()) {
           curVideo++;
-          cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getStream (cDvbStream::eRenderVideo).getRender());
+          cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (cDvbStream::eRenderVideo).getRender());
 
           // get playerPts from stream
-          int64_t playerPts = service.getStream (cDvbStream::eRenderAudio).getPts();
-          if (service.getStream (cDvbStream::eRenderAudio).isEnabled()) {
+          int64_t playerPts = service.getRenderStream (cDvbStream::eRenderAudio).getPts();
+          if (service.getRenderStream (cDvbStream::eRenderAudio).isEnabled()) {
             // update playerPts from audioPlayer
-            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getStream (cDvbStream::eRenderAudio).getRender());
+            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (cDvbStream::eRenderAudio).getRender());
             playerPts = audioRender.getPlayerPts();
             audioRender.setMute (curVideo != 1);
             if (curVideo <= 1)
