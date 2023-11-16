@@ -30,6 +30,7 @@ extern "C" {
 using namespace std;
 //}}}
 namespace {
+  cTextureShader* gShader = nullptr;
   //{{{
   void logCallback (void* ptr, int level, const char* fmt, va_list vargs) {
     (void)level;
@@ -48,8 +49,8 @@ class cFFmpegVideoFrame : public cVideoFrame {
 public:
   cFFmpegVideoFrame() : cVideoFrame(cTexture::eYuv420) {}
   //{{{
-  virtual ~cFFmpegVideoFrame() { 
-    releasePixels(); 
+  virtual ~cFFmpegVideoFrame() {
+    releasePixels();
     }
   //}}}
 
@@ -289,6 +290,30 @@ void cVideoRender::addFrame (cFrame* frame) {
   mFrames.emplace (videoFrame->mPts / videoFrame->mPtsDuration, videoFrame);
   }
 
+  }
+//}}}
+
+//{{{
+void cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, const cMat4x4& model,
+                              int width, int height) {
+
+  // get texture
+  cTexture& texture = videoFrame->getTexture (graphics);
+
+  // ensure shader is created
+  if (!gShader)
+    gShader = graphics.createTextureShader (texture.getTextureType());
+
+  texture.setSource();
+  gShader->use();
+
+  gShader->setModelProjection (model, { 0.f, static_cast<float>(width), 0.f, static_cast<float>(height), -1.f,1.f });
+
+  // ensure quad is created
+  if (!mQuad)
+    mQuad = graphics.createQuad (videoFrame->getSize());
+
+  mQuad->draw();
   }
 //}}}
 

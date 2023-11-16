@@ -6,8 +6,9 @@
 #include <cstdint>
 #include <string>
 
+#include "../app/cGraphics.h"
+
 class cTexture;
-class cGraphics;
 class cVideoFrame;
 //}}}
 
@@ -27,6 +28,8 @@ public:
   cFrame* getFrame();
   void addFrame (cFrame* frame);
 
+  void drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, const cMat4x4& model, int width, int height);
+
   // overrides
   virtual std::string getInfoString() const final;
   virtual void trimVideoBeforePts (int64_t pts) final;
@@ -35,6 +38,8 @@ private:
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
   int64_t mPtsDuration = 90000 / 25;
+
+  cQuad* mQuad = nullptr;
 
   std::string mFrameInfo;
   };

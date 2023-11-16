@@ -80,8 +80,8 @@ public:
   //{{{
   virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
 
-    cLog::log (LOGINFO, fmt::format ("cGLES3Gaphics::createTexture {} {}x{}",
-                                     (int)textureType, size.x, size.y));
+    //cLog::log (LOGINFO, fmt::format ("cGLES3Gaphics::createTexture {} {}x{}",
+    //                                 (int)textureType, size.x, size.y));
     switch (textureType) {
       case cTexture::eRgba:   return new cOpenGLES3RgbaTexture (textureType, size);
       case cTexture::eYuv420: return new cOpenGLES3Yuv420Texture (textureType, size);
@@ -594,7 +594,7 @@ private:
   public:
     cOpenGLES3RgbaTexture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
 
-      cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
+      //cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
       glGenTextures (1, &mTextureId);
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);

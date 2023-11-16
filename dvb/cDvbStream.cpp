@@ -467,9 +467,9 @@ int cDvbStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
   if (getBufUsed() + bufSize > mBufSize) {
     // realloc buffer to twice size
     mBufSize = mBufSize * 2;
-    cLog::log (LOGINFO1, fmt::format("demux pid:{} realloc {}", mPid,mBufSize));
+    cLog::log (LOGINFO1, fmt::format ("demux pid:{} realloc {}", mPid,mBufSize));
 
-    auto ptrOffset = getBufUsed();
+    int ptrOffset = getBufUsed();
     mBuffer = (uint8_t*)realloc (mBuffer, mBufSize);
     mBufPtr = mBuffer + ptrOffset;
     }
@@ -1424,41 +1424,19 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                 if ((*(uint32_t*)ts & 0x00FFFFFF) == 0x010000) {
                   //{{{  process previous pesBuffer, use new pesBuffer
                   uint8_t streamId = (*((uint32_t*)(ts+3))) & 0xFF;
-                  switch (streamId) {
-                    case 0xBD:
-                    case 0xBE:
-                    case 0xC0:
-                    case 0xC1:
-                    case 0xC2:
-                    case 0xCE:
-                    case 0xD0:
-                    case 0xD2:
-                    case 0xDA:
-                    case 0xE0:
-                      // process pid by streamType
-                      if (pidInfo->mBufPtr && pidInfo->getStreamType())
-                        switch (pidInfo->getStreamType()) {
-                          case 2: // ISO 13818-2 video
-                          case 3: // ISO 11172-3 audio
-                          case 4: // ISO 13818-3 audio
-                          case 6: // subtitle
-                          case 17: // aac latm
-                          case 27: // HD vid
-                            if (processPesByPid (pidInfo, skip))
-                              pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
-                            break;
-
-                          default:
-                            cLog::log (LOGINFO, fmt::format ("unknown streamType:{} streamId:{:2x} pid:{}",
-                                                             pidInfo->getStreamType(), streamId, pid));
-                            break;
-                          }
-                      break;
-
-                    default:
-                      cLog::log (LOGINFO, fmt::format ("unknown streamId:{:2x}", streamId));
-                      break;
+                  if ((streamId == 0xB0) || // program stream map
+                      (streamId == 0xB1) || // private stream1
+                      (streamId == 0xBd) || // ???
+                      (streamId == 0xBE) || // padding stream
+                      (streamId == 0xBF)) { // private stream2
                     }
+                  else if ((streamId >= 0xC0) && (streamId <= 0xEF)) { // audio, video streams
+                    if (pidInfo->mBufPtr)
+                      if (processPesByPid (pidInfo, skip))
+                        pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
+                    }
+                  else
+                    cLog::log (LOGINFO, fmt::format ("cDvbStream::demux - unknown streamId:{:2x}", streamId));
 
                   // reset pesBuffer pointer
                   pidInfo->mBufPtr = pidInfo->mBuffer;

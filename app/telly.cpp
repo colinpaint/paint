@@ -282,32 +282,21 @@ private:
             break;
           //}}}
           //{{{
-          case eTelly:
-            drawTelly (dvbStream, graphics);
-            drawChannels (dvbStream, graphics);
-            break;
-          //}}}
-          //{{{
           case eServices:
-            drawTelly (dvbStream, graphics);
+            drawMultiTelly(dvbStream, graphics);
             drawServices (dvbStream, graphics);
             break;
           //}}}
           //{{{
           case ePids:
-            drawTelly (dvbStream, graphics);
+            drawMultiTelly(dvbStream, graphics);
             drawPids (dvbStream, graphics);
             break;
           //}}}
           //{{{
           case eRecorded:
-            drawTelly (dvbStream, graphics);
+            drawMultiTelly(dvbStream, graphics);
             drawRecorded (dvbStream, graphics);
-            break;
-          //}}}
-          //{{{
-          case eHistory:
-            drawHistory (dvbStream, graphics);
             break;
           //}}}
           }
@@ -321,8 +310,8 @@ private:
     //}}}
 
   private:
-    enum eTab { eTelly, eMulti, eServices, ePids, eRecorded, eHistory };
-    inline static const vector<string> kTabNames = { "telly", "multi", "services", "pids", "recorded" }; // "history"};
+    enum eTab { eMulti, eServices, ePids, eRecorded, eHistory };
+    inline static const vector<string> kTabNames = { "multi", "services", "pids", "recorded" };
     //{{{
     class cFramesGraphic {
     public:
@@ -678,141 +667,7 @@ private:
         ImGui::TextUnformatted (program.c_str());
       }
     //}}}
-    //{{{
-    void drawHistory (cDvbStream& dvbStream, cGraphics& graphics) {
 
-      cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
-
-      for (auto& pair : dvbStream.getServiceMap()) {
-        cDvbStream::cService& service = pair.second;
-        if (!service.getRenderStream (eRenderVideo).isEnabled())
-          continue;
-
-        cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (eRenderVideo).getRender());
-        cPoint videoSize = {videoRender.getWidth(), videoRender.getHeight()};
-
-        // playPts and draw framesGraphic
-        int64_t playPts = service.getRenderStream (eRenderAudio).getPts();
-        if (service.getRenderStream (eRenderAudio).isEnabled()) {
-          cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender());
-          playPts = audioRender.getPlayerPts();
-
-          mFramesGraphic.draw (audioRender, videoRender, playPts);
-          }
-
-        // draw telly history pic
-        cVideoFrame* videoFrame = videoRender.getVideoFrameFromPts (playPts);
-        if (videoFrame) {
-          // form draw list
-          deque <cVideoFrameDraw> mVideoFramesDraws;
-          if (mScale >= 1.f)
-            mVideoFramesDraws.push_back ({videoFrame, 0.f});
-          else {
-            // locked
-            shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
-            for (auto& frame : videoRender.getFrames()) {
-              videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-              int64_t offset = (videoFrame->mPts / videoFrame->mPtsDuration) - (playPts / videoFrame->mPtsDuration);
-              if (offset <= 0) // draw last
-                mVideoFramesDraws.push_back ({videoFrame, mOverlap * offset});
-              else // draw in reverse order
-                mVideoFramesDraws.push_front ({videoFrame, mOverlap * offset});
-              }
-            }
-
-          // setup draw quad, shader
-          if (!mQuad)
-            mQuad = graphics.createQuad (videoSize);
-
-          if (!mShader)
-            mShader = graphics.createTextureShader (videoFrame->mTextureType);
-          mShader->use();
-
-          cMat4x4 model;
-          cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
-          model.size (size);
-
-          cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x) , 0.f, static_cast<float>(windowSize.y), -1.f, 1.f);
-
-          // draw list
-          for (auto& draw : mVideoFramesDraws) {
-            draw.mVideoFrame->getTexture (graphics).setSource();
-            cVec2 translate = {(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x) + draw.mOffset,
-                               (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)};
-            model.setTranslate (translate);
-            mShader->setModelProjection (model, orthoProjection);
-            mQuad->draw();
-            }
-
-          videoRender.trimVideoBeforePts (playPts - videoFrame->mPtsDuration);
-          }
-        }
-      }
-    //}}}
-
-    //{{{
-    void drawTelly (cDvbStream& dvbStream, cGraphics& graphics) {
-
-      float scale = mScale;
-      cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
-
-      for (auto& pair : dvbStream.getServiceMap()) {
-        cDvbStream::cService& service = pair.second;
-        if (service.getRenderStream (eRenderVideo).isEnabled()) {
-          cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (eRenderVideo).getRender());
-
-          // get playerPts from stream
-          int64_t playerPts = service.getRenderStream (eRenderAudio).getPts();
-          if (service.getRenderStream(eRenderAudio).isEnabled()) {
-            // update playerPts from audioPlayer
-            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender());
-            playerPts = audioRender.getPlayerPts();
-            mFramesGraphic.draw (audioRender, videoRender, playerPts);
-            }
-
-          // draw telly pic
-          cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
-          if (videoFrame) {
-            cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
-            if (!mQuad)
-              mQuad = graphics.createQuad (videoSize);
-
-            cTexture& texture = videoFrame->getTexture (graphics);
-            if (!mShader)
-              mShader = graphics.createTextureShader (texture.getTextureType());
-            texture.setSource();
-            mShader->use();
-
-            //{{{  unused scaled multipic
-            //cVec2 size = {mScale * windowSize.x / videoSize.x, mScale * windowSize.y / videoSize.y};
-            //float replicate = floor (1.f / mScale);
-            //for (float y = -videoSize.y * replicate; y <= videoSize.y * replicate; y += videoSize.y) {
-              //for (float x = -videoSize.x * replicate; x <= videoSize.x * replicate; x += videoSize.x) {
-                //// translate centre of video to centre of window
-                //cVec2 translate = {(windowSize.x / 2.f)  - ((x + (videoSize.x / 2.f)) * size.x),
-                                   //(windowSize.y / 2.f)  - ((y + (videoSize.y / 2.f)) * size.y)};
-
-                //model.setTranslate (translate[curVideo]);
-                //mShader->setModelProjection (model, orthoProjection);
-                //mQuad->draw();
-                //}
-              //}
-            //}}}
-            cMat4x4 model;
-            cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
-            model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
-                                  (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
-            model.size (size);
-            cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
-            mShader->setModelProjection (model, orthoProjection);
-            mQuad->draw();
-
-            videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
-            }
-          }
-        }
-      }
-    //}}}
     //{{{
     void drawMultiTelly (cDvbStream& dvbStream, cGraphics& graphics) {
 
@@ -846,18 +701,6 @@ private:
           // draw telly pic
           cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
           if (videoFrame) {
-            // make quad - !!! should be per telly pic !!!!
-            cPoint videoFrameSize = videoFrame->getSize();
-            if (!mQuad)
-              mQuad = graphics.createQuad (videoFrameSize);
-
-            // make texture
-            cTexture& texture = videoFrame->getTexture (graphics);
-            if (!mShader)
-              mShader = graphics.createTextureShader (texture.getTextureType());
-            texture.setSource();
-            mShader->use();
-
             //{{{  calc multiPic offset
             cVec2 offset = { 0.5f, 0.5f };
             switch (numVideos) {
@@ -976,17 +819,13 @@ private:
               default:;
               }
             //}}}
-            cVec2 scaledSize = { (scale * ImGui::GetWindowWidth()) / videoFrameSize.x,
-                                 (scale * ImGui::GetWindowHeight()) / videoFrameSize.y };
+            cVec2 scaledSize = { (scale * ImGui::GetWindowWidth()) / videoFrame->getWidth(),
+                                 (scale * ImGui::GetWindowHeight()) / videoFrame->getHeight() };
             cMat4x4 model;
-            model.setTranslate ( {(ImGui::GetWindowWidth() * offset.x) - ((videoFrameSize.x / 2.f) * scaledSize.x),
-                                  (ImGui::GetWindowHeight() * offset.y) - ((videoFrameSize.y / 2.f) * scaledSize.y)} );
+            model.setTranslate ( {(ImGui::GetWindowWidth() * offset.x) - ((videoFrame->getWidth() / 2.f) * scaledSize.x),
+                                  (ImGui::GetWindowHeight() * offset.y) - ((videoFrame->getHeight() / 2.f) * scaledSize.y)} );
             model.size (scaledSize);
-            mShader->setModelProjection (model, { 0.f, static_cast<float>(ImGui::GetWindowWidth()),
-                                                  0.f, static_cast<float>(ImGui::GetWindowHeight()), -1.f,1.f });
-            mQuad->draw();
-            delete mQuad;
-            mQuad = nullptr;
+            videoRender.drawFrame (videoFrame, graphics, model, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 
             videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
             }
@@ -1171,9 +1010,6 @@ private:
     size_t mMaxPgmChars = 3;
 
     array <size_t, 4> mPidMaxChars = { 3 };
-
-    cQuad* mQuad = nullptr;
-    cTextureShader* mShader = nullptr;
 
     float mScale = 1.f;
     float mOverlap = 4.f;
