@@ -47,7 +47,11 @@ constexpr size_t kVideoFrameMapSize = 25;
 class cFFmpegVideoFrame : public cVideoFrame {
 public:
   cFFmpegVideoFrame() : cVideoFrame(cTexture::eYuv420) {}
-  virtual ~cFFmpegVideoFrame() { releasePixels(); }
+  //{{{
+  virtual ~cFFmpegVideoFrame() { 
+    releasePixels(); 
+    }
+  //}}}
 
   void setAVFrame (AVFrame* avFrame) {
 
@@ -58,8 +62,10 @@ public:
 
     mWidth = (uint16_t)avFrame->width;
     mHeight = (uint16_t)avFrame->height;
+
     mStrideY = (uint16_t)avFrame->linesize[0];
     mStrideUV = (uint16_t)avFrame->linesize[1];
+
     mInterlaced = avFrame->flags && AV_FRAME_FLAG_INTERLACED;
     mTopFieldFirst = avFrame->flags && AV_FRAME_FLAG_TOP_FIELD_FIRST;
     }

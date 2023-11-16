@@ -816,9 +816,7 @@ private:
     //{{{
     void drawMultiTelly (cDvbStream& dvbStream, cGraphics& graphics) {
 
-      cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
-
-      //{{{   count numVideos
+      //{{{  count numVideos
       int numVideos = 0;
       for (auto& pair : dvbStream.getServiceMap())
         if (pair.second.getRenderStream (eRenderVideo).isEnabled())
@@ -848,9 +846,8 @@ private:
           // draw telly pic
           cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
           if (videoFrame) {
-            cPoint videoFrameSize = { videoFrame->getWidth(), videoFrame->getHeight() };
-
             // make quad - !!! should be per telly pic !!!!
+            cPoint videoFrameSize = videoFrame->getSize();
             if (!mQuad)
               mQuad = graphics.createQuad (videoFrameSize);
 
@@ -861,8 +858,6 @@ private:
             texture.setSource();
             mShader->use();
 
-            cMat4x4 model;
-            cVec2 scaledSize = { scale * videoFrameSize.x / windowSize.x, scale * videoFrameSize.y / windowSize.y };
             //{{{  calc multiPic offset
             cVec2 offset = { 0.5f, 0.5f };
             switch (numVideos) {
@@ -981,12 +976,17 @@ private:
               default:;
               }
             //}}}
-            model.setTranslate ({(windowSize.x * offset.x) - ((videoFrameSize.x / 2.f) * scaledSize.x),
-                                 (windowSize.y * offset.y) - ((videoFrameSize.y / 2.f) * scaledSize.y)});
+            cVec2 scaledSize = { (scale * ImGui::GetWindowWidth()) / videoFrameSize.x,
+                                 (scale * ImGui::GetWindowHeight()) / videoFrameSize.y };
+            cMat4x4 model;
+            model.setTranslate ( {(ImGui::GetWindowWidth() * offset.x) - ((videoFrameSize.x / 2.f) * scaledSize.x),
+                                  (ImGui::GetWindowHeight() * offset.y) - ((videoFrameSize.y / 2.f) * scaledSize.y)} );
             model.size (scaledSize);
-            mShader->setModelProjection (model, { 0.f, static_cast<float>(windowSize.x),
-                                                  0.f, static_cast<float>(windowSize.y), -1.f,1.f });
+            mShader->setModelProjection (model, { 0.f, static_cast<float>(ImGui::GetWindowWidth()),
+                                                  0.f, static_cast<float>(ImGui::GetWindowHeight()), -1.f,1.f });
             mQuad->draw();
+            delete mQuad;
+            mQuad = nullptr;
 
             videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
             }

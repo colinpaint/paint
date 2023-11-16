@@ -26,8 +26,9 @@ public:
 
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
-  //{{{
-  std::string getInfoString() {
+  cPoint getSize() const { return { mWidth, mHeight }; }
+    //{{{
+    std::string getInfoString() {
 
     std::string info = fmt::format ("{}x{}:{}{} pesSize:{:5}",
                                     mWidth, mHeight,
@@ -41,7 +42,7 @@ public:
 
     return info;
     }
-  //}}}
+    //}}}
   //{{{
   virtual void releaseResources() final {
 
@@ -94,7 +95,6 @@ public:
 protected:
   virtual uint8_t** getPixels() = 0;
   virtual int* getStrides() = 0;
-
   virtual void releasePixels() = 0;
 
   cTexture* mTexture = nullptr;
