@@ -533,10 +533,10 @@ private:
         if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
           service.toggleAll();
 
-        if (service.getRenderStream (cDvbStream::eRenderAudio).isDefined()) {
+        if (service.getRenderStream (eRenderAudio).isDefined()) {
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("{}{}",
-            service.getRenderStream (cDvbStream::eRenderAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
+            service.getRenderStream (eRenderAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
           }
 
         while (service.getChannelName().size() > mMaxNameChars)
@@ -558,8 +558,8 @@ private:
         while (service.getProgramPid() > pow (10, mMaxPgmChars))
           mMaxPgmChars++;
 
-        for (uint8_t renderType = cDvbStream::eRenderVideo; renderType <= cDvbStream::eRenderSubtitle; renderType++) {
-          uint16_t pid = service.getRenderStream (cDvbStream::eRenderType(renderType)).getPid();
+        for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
+          uint16_t pid = service.getRenderStream (eRenderType(renderType)).getPid();
           while (pid > pow (10, mPidMaxChars[renderType]))
             mPidMaxChars[renderType]++;
           }
@@ -572,9 +572,9 @@ private:
                            service.getSid(), mMaxSidChars).c_str()))
           service.toggleAll();
 
-        for (uint8_t renderType = cDvbStream::eRenderVideo; renderType <= cDvbStream::eRenderSubtitle; renderType++) {
+        for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
          // iterate definedStreams
-          cDvbStream::cStream& stream = service.getRenderStream (cDvbStream::eRenderType(renderType));
+          cDvbStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
           if (stream.isDefined()) {
             ImGui::SameLine();
             // draw definedStream button - sid ensuresd unique button name
@@ -582,7 +582,7 @@ private:
                                            stream.getLabel(),
                                            stream.getPid(), mPidMaxChars[renderType], stream.getTypeName(),
                                            service.getSid()).c_str(), stream.isEnabled()))
-             dvbStream.toggleStream (service, cDvbStream::eRenderType(renderType));
+             dvbStream.toggleStream (service, eRenderType(renderType));
             }
           }
 
@@ -596,22 +596,22 @@ private:
 
         // audio provides playPts
         int64_t playPts = 0;
-        if (service.getRenderStream (cDvbStream::eRenderAudio).isEnabled())
-          playPts = dynamic_cast<cAudioRender&>(service.getRenderStream (cDvbStream::eRenderAudio).getRender()).getPlayerPts();
+        if (service.getRenderStream (eRenderAudio).isEnabled())
+          playPts = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender()).getPlayerPts();
 
-        for (uint8_t renderType = cDvbStream::eRenderVideo; renderType <= cDvbStream::eRenderSubtitle; renderType++) {
+        for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
           // iterate enabledStreams, drawing
-          cDvbStream::cStream& stream = service.getRenderStream (cDvbStream::eRenderType(renderType));
+          cDvbStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
           if (stream.isEnabled()) {
-            switch (cDvbStream::eRenderType(renderType)) {
-              case cDvbStream::eRenderVideo:
+            switch (eRenderType(renderType)) {
+              case eRenderVideo:
                 drawVideoInfo (service.getSid(), stream.getRender(), graphics, playPts); break;
 
-              case cDvbStream::eRenderAudio:
-              case cDvbStream::eRenderDescription:
+              case eRenderAudio:
+              case eRenderDescription:
                 drawAudioInfo (service.getSid(), stream.getRender(), graphics);  break;
 
-              case cDvbStream::eRenderSubtitle:
+              case eRenderSubtitle:
                 drawSubtitle (service.getSid(), stream.getRender(), graphics);  break;
 
               default:;
@@ -685,16 +685,16 @@ private:
 
       for (auto& pair : dvbStream.getServiceMap()) {
         cDvbStream::cService& service = pair.second;
-        if (!service.getRenderStream (cDvbStream::eRenderVideo).isEnabled())
+        if (!service.getRenderStream (eRenderVideo).isEnabled())
           continue;
 
-        cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (cDvbStream::eRenderVideo).getRender());
+        cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (eRenderVideo).getRender());
         cPoint videoSize = {videoRender.getWidth(), videoRender.getHeight()};
 
         // playPts and draw framesGraphic
-        int64_t playPts = service.getRenderStream (cDvbStream::eRenderAudio).getPts();
-        if (service.getRenderStream (cDvbStream::eRenderAudio).isEnabled()) {
-          cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (cDvbStream::eRenderAudio).getRender());
+        int64_t playPts = service.getRenderStream (eRenderAudio).getPts();
+        if (service.getRenderStream (eRenderAudio).isEnabled()) {
+          cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender());
           playPts = audioRender.getPlayerPts();
 
           mFramesGraphic.draw (audioRender, videoRender, playPts);
@@ -758,14 +758,14 @@ private:
 
       for (auto& pair : dvbStream.getServiceMap()) {
         cDvbStream::cService& service = pair.second;
-        if (service.getRenderStream (cDvbStream::eRenderVideo).isEnabled()) {
-          cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (cDvbStream::eRenderVideo).getRender());
+        if (service.getRenderStream (eRenderVideo).isEnabled()) {
+          cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (eRenderVideo).getRender());
 
           // get playerPts from stream
-          int64_t playerPts = service.getRenderStream (cDvbStream::eRenderAudio).getPts();
-          if (service.getRenderStream(cDvbStream::eRenderAudio).isEnabled()) {
+          int64_t playerPts = service.getRenderStream (eRenderAudio).getPts();
+          if (service.getRenderStream(eRenderAudio).isEnabled()) {
             // update playerPts from audioPlayer
-            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (cDvbStream::eRenderAudio).getRender());
+            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender());
             playerPts = audioRender.getPlayerPts();
             mFramesGraphic.draw (audioRender, videoRender, playerPts);
             }
@@ -773,7 +773,7 @@ private:
           // draw telly pic
           cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
           if (videoFrame) {
-            cPoint videoSize = { videoFrame->getWidth(), videoFrame->getHeight() };
+            cPoint videoSize = { videoRender.getWidth(), videoRender.getHeight() };
             if (!mQuad)
               mQuad = graphics.createQuad (videoSize);
 
@@ -801,7 +801,7 @@ private:
             cMat4x4 model;
             cVec2 size = {scale * windowSize.x / videoSize.x, scale * windowSize.y / videoSize.y};
             model.setTranslate ({(windowSize.x / 2.f)  - ((videoSize.x / 2.f) * size.x),
-                                 (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
+                                  (windowSize.y / 2.f)  - ((videoSize.y / 2.f) * size.y)});
             model.size (size);
             cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
             mShader->setModelProjection (model, orthoProjection);
@@ -818,47 +818,53 @@ private:
 
       cVec2 windowSize = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
 
-      // count numVideos
+      //{{{   count numVideos
       int numVideos = 0;
       for (auto& pair : dvbStream.getServiceMap())
-        if (pair.second.getRenderStream (cDvbStream::eRenderVideo).isEnabled())
+        if (pair.second.getRenderStream (eRenderVideo).isEnabled())
           numVideos++;
+      //}}}
 
       float scale = mScale * ((numVideos <= 1) ? 1.f : ((numVideos <= 4) ? 0.5f : ((numVideos <= 9) ? 0.33f : 0.25f)));
 
       int curVideo = 0;
       for (auto& pair : dvbStream.getServiceMap()) {
         cDvbStream::cService& service = pair.second;
-        if (service.getRenderStream (cDvbStream::eRenderVideo).isEnabled()) {
+        if (service.getRenderStream (eRenderVideo).isEnabled()) {
           curVideo++;
-          cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (cDvbStream::eRenderVideo).getRender());
-
-          // get playerPts from stream
-          int64_t playerPts = service.getRenderStream (cDvbStream::eRenderAudio).getPts();
-          if (service.getRenderStream (cDvbStream::eRenderAudio).isEnabled()) {
+          cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (eRenderVideo).getRender());
+          //{{{  get playerPts from audioStream
+          int64_t playerPts = service.getRenderStream (eRenderAudio).getPts();
+          if (service.getRenderStream (eRenderAudio).isEnabled()) {
             // update playerPts from audioPlayer
-            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (cDvbStream::eRenderAudio).getRender());
+            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender());
             playerPts = audioRender.getPlayerPts();
             audioRender.setMute (curVideo != 1);
             if (curVideo <= 1)
               mFramesGraphic.draw (audioRender, videoRender, playerPts);
             }
+          //}}}
 
           // draw telly pic
           cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
           if (videoFrame) {
-            cPoint videoSize = { videoFrame->getWidth(), videoFrame->getHeight() };
-            if (!mQuad)
-              mQuad = graphics.createQuad (videoSize);
+            cPoint videoFrameSize = { videoFrame->getWidth(), videoFrame->getHeight() };
 
+            // make quad - !!! should be per telly pic !!!!
+            if (!mQuad)
+              mQuad = graphics.createQuad (videoFrameSize);
+
+            // make texture
             cTexture& texture = videoFrame->getTexture (graphics);
             if (!mShader)
               mShader = graphics.createTextureShader (texture.getTextureType());
             texture.setSource();
             mShader->use();
 
+            cMat4x4 model;
+            cVec2 scaledSize = { scale * videoFrameSize.x / windowSize.x, scale * videoFrameSize.y / windowSize.y };
+            //{{{  calc multiPic offset
             cVec2 offset = { 0.5f, 0.5f };
-            cVec2 size = { scale * windowSize.x / videoFrame->getWidth(), scale * windowSize.y / videoFrame->getHeight() };
             switch (numVideos) {
               //{{{
               case 2:
@@ -973,14 +979,13 @@ private:
                 break;
               //}}}
               default:;
-             }
-
-            cMat4x4 model;
-            model.setTranslate ({(windowSize.x * offset.x) - ((size.x / 2.f) * videoSize.x),
-                                 (windowSize.y * offset.y) - ((size.y / 2.f) * videoSize.x),.y)});
-            model.size (size);
-            cMat4x4 orthoProjection (0.f,static_cast<float>(windowSize.x), 0.f,static_cast<float>(windowSize.y), -1.f,1.f);
-            mShader->setModelProjection (model, orthoProjection);
+              }
+            //}}}
+            model.setTranslate ({(windowSize.x * offset.x) - ((videoFrameSize.x / 2.f) * scaledSize.x),
+                                 (windowSize.y * offset.y) - ((videoFrameSize.y / 2.f) * scaledSize.y)});
+            model.size (scaledSize);
+            mShader->setModelProjection (model, { 0.f, static_cast<float>(windowSize.x),
+                                                  0.f, static_cast<float>(windowSize.y), -1.f,1.f });
             mQuad->draw();
 
             videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);

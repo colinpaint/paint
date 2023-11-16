@@ -522,8 +522,8 @@ bool cDvbStream::cService::isEpgRecord (const string& title, tTimePoint startTim
 //{{{
 cDvbStream::cStream* cDvbStream::cService::getRenderStreamByPid (uint16_t pid) {
 
-  for (uint8_t renderType = cDvbStream::eRenderVideo; renderType <= cDvbStream::eRenderSubtitle; renderType++) {
-    cDvbStream::cStream& stream = getRenderStream (cDvbStream::eRenderType(renderType));
+  for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
+    cDvbStream::cStream& stream = getRenderStream (eRenderType(renderType));
     if (stream.isDefined() && (stream.getPid() == pid))
       return &mRenderStreams[renderType];
     }

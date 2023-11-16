@@ -32,9 +32,10 @@ public:
   };
 //}}}
 
+enum eRenderType { eRenderVideo, eRenderAudio, eRenderDescription, eRenderSubtitle };
+
 class cDvbStream {
 public:
-  enum eRenderType { eRenderVideo, eRenderAudio, eRenderDescription, eRenderSubtitle };
   //{{{
   class cStream {
   public:
