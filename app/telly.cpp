@@ -310,7 +310,7 @@ private:
     //}}}
 
   private:
-    enum eTab { eMulti, eServices, ePids, eRecorded, eHistory };
+    enum eTab { eMulti, eServices, ePids, eRecorded };
     inline static const vector<string> kTabNames = { "multi", "services", "pids", "recorded" };
     //{{{
     class cFramesGraphic {
