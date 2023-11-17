@@ -1,4 +1,4 @@
-// player.cpp - imgui player main,app,UI
+// songApp.cpp - imgui song player main,app,UI
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -66,58 +66,51 @@ namespace {
   }
 
 //{{{
-class cPlayerApp : public cApp {
+class cSongApp : public cApp {
 public:
-  cPlayerApp (const cPoint& windowSize, bool fullScreen, bool vsync);
-  virtual ~cPlayerApp() = default;
+  //{{{
+  cSongApp (const cPoint& windowSize, bool fullScreen, bool vsync) 
+      : cApp("song",windowSize, fullScreen, vsync) {
+    mSongLoader = new cSongLoader();
+    }
+  //}}}
+  virtual ~cSongApp() = default;
 
   string getSongName() const { return mSongName; }
-  cSong* getSong() const;
+  cSong* getSong() const { return mSongLoader->getSong(); }
 
-  bool setSongName (const string& songName);
-  bool setSongSpec (const vector <string>& songSpec);
+  //{{{
+  bool setSongName (const string& songName) {
+    mSongName = songName;
 
-  virtual void drop (const vector<string>& dropItems) final;
+    // load song
+    const vector <string>& strings = { songName };
+    mSongLoader->launchLoad (strings);
+
+    return true;
+    }
+  //}}}
+  //{{{
+  bool setSongSpec (const vector <string>& songSpec) {
+    mSongName = songSpec[0];
+    mSongLoader->launchLoad (songSpec);
+    return true;
+    }
+  //}}}
+
+  //{{{
+  virtual void drop (const vector<string>& dropItems) final {
+    for (auto& item : dropItems) {
+      cLog::log (LOGINFO, item);
+      setSongName (cFileUtils::resolve (item));
+      }
+    }
+  //}}}
 
 private:
   cSongLoader* mSongLoader;
   string mSongName;
   };
-
-cPlayerApp::cPlayerApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-    : cApp("player",windowSize, fullScreen, vsync) {
-  mSongLoader = new cSongLoader();
-  }
-
-cSong* cPlayerApp::getSong() const {
-  return mSongLoader->getSong();
-  }
-
-bool cPlayerApp::setSongName (const string& songName) {
-
-  mSongName = songName;
-
-  // load song
-  const vector <string>& strings = { songName };
-  mSongLoader->launchLoad (strings);
-
-  return true;
-  }
-
-bool cPlayerApp::setSongSpec (const vector <string>& songSpec) {
-
-  mSongName = songSpec[0];
-  mSongLoader->launchLoad (songSpec);
-  return true;
-  }
-
-void cPlayerApp::drop (const vector<string>& dropItems) {
-
-  for (auto& item : dropItems) {
-    cLog::log (LOGINFO, item);
-    setSongName (cFileUtils::resolve (item));
-    }
-  }
 //}}}
 //{{{
 class cDrawSong : public cDrawContext {
@@ -757,14 +750,14 @@ private:
   };
 //}}}
 //{{{
-class cPlayerUI : public cUI {
+class cSongUI : public cUI {
 public:
   //{{{
-  cPlayerUI (const string& name) : cUI(name) {
+  cSongUI (const string& name) : cUI(name) {
     }
   //}}}
   //{{{
-  virtual ~cPlayerUI() {
+  virtual ~cSongUI() {
     // close the file mapping object
     }
   //}}}
@@ -772,12 +765,12 @@ public:
   //{{{
   void addToDrawList (cApp& app) final {
 
-    cPlayerApp& playerApp = (cPlayerApp&)app;
+    cSongApp& songApp = (cSongApp&)app;
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
-    ImGui::Begin ("player", &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
+    ImGui::Begin ("song", &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
 
     //{{{  draw top buttons
     // monoSpaced buttom
@@ -810,19 +803,19 @@ public:
     //}}}
     //{{{  draw radio buttons
     if (ImGui::Button ("radio1"))
-      playerApp.setSongSpec (kRadio1);
+      songApp.setSongSpec (kRadio1);
     if (ImGui::Button ("radio2"))
-      playerApp.setSongSpec (kRadio2);
+      songApp.setSongSpec (kRadio2);
     if (ImGui::Button ("radio3"))
-      playerApp.setSongSpec (kRadio3);
+      songApp.setSongSpec (kRadio3);
     if (ImGui::Button ("radio4"))
-      playerApp.setSongSpec (kRadio4);
+      songApp.setSongSpec (kRadio4);
     if (ImGui::Button ("radio5"))
-      playerApp.setSongSpec (kRadio5);
+      songApp.setSongSpec (kRadio5);
     if (ImGui::Button ("radio6"))
-      playerApp.setSongSpec (kRadio6);
+      songApp.setSongSpec (kRadio6);
     if (ImGui::Button ("wqxr"))
-      playerApp.setSongSpec (kWqxr);
+      songApp.setSongSpec (kWqxr);
     //}}}
     //{{{  draw clockButton
     ImGui::SetCursorPos ({ImGui::GetWindowWidth() - 130.f, 0.f});
@@ -833,7 +826,7 @@ public:
     if (isDrawMonoSpaced())
       ImGui::PushFont (app.getMonoFont());
 
-    mDrawSong.draw (playerApp.getSong(), isDrawMonoSpaced());
+    mDrawSong.draw (songApp.getSong(), isDrawMonoSpaced());
 
     if (isDrawMonoSpaced())
       ImGui::PopFont();
@@ -853,8 +846,8 @@ private:
   cDrawSong mDrawSong;
 
   // self registration
-  static cUI* create (const string& className) { return new cPlayerUI (className); }
-  inline static const bool mRegistered = registerClass ("player", &create);
+  static cUI* create (const string& className) { return new cSongUI (className); }
+  inline static const bool mRegistered = registerClass ("song", &create);
   };
 //}}}
 
@@ -883,18 +876,17 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, fmt::format ("player"));
+  cLog::log (LOGNOTICE, fmt::format ("song"));
 
   // list static registered UI classes
   cUI::listRegisteredClasses();
 
   // app
-  cPlayerApp app ({800, 480}, fullScreen, vsync);
-  app.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
-  app.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
-  app.setSongName (params.empty() ? "" : cFileUtils::resolve (params[0]));
-
-  app.mainUILoop();
+  cSongApp songApp ({800, 480}, fullScreen, vsync);
+  songApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
+  songApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
+  songApp.setSongName (params.empty() ? "" : cFileUtils::resolve (params[0]));
+  songApp.mainUILoop();
 
   return EXIT_SUCCESS;
   }

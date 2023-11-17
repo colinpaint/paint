@@ -954,14 +954,14 @@ private:
 int main (int numArgs, char* args[]) {
 
   // params
-  eLogLevel logLevel = LOGINFO;
-  bool vsync = true;
   bool recordAll = false;
   bool fullScreen = false;
+  bool vsync = true;
   bool playFirstService = false;
+  eLogLevel logLevel = LOGINFO;
   cDvbMultiplex useMultiplex = kMultiplexes[1];
   string filename;
-  //{{{  parse command line args to params
+  //{{{  parse commandLine to params
   // parse params
   for (int i = 1; i < numArgs; i++) {
     string param = args[i];
@@ -980,8 +980,6 @@ int main (int numArgs, char* args[]) {
       logLevel = LOGINFO2;
     else if (param == "log3")
       logLevel = LOGINFO3;
-    else if (param == "help")
-      cLog::log (LOGINFO, "params - all full free first help log1 log2 log3 multiplex filename");
     else {
       // look for multiplex name
       for (auto& multiplex : kMultiplexes)
@@ -990,6 +988,7 @@ int main (int numArgs, char* args[]) {
           filename = "";
           break;
           }
+
       // else filename
       filename = param;
       }
@@ -1000,7 +999,7 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, fmt::format ("telly"));
+  cLog::log (LOGNOTICE, "telly - all,full,free,first,log1,log2,log3,multiplex,filename");
   if (filename.empty())
     cLog::log (LOGINFO, fmt::format ("using multiplex {}", useMultiplex.mName));
 
