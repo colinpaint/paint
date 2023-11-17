@@ -34,20 +34,17 @@ cUI* cUI::createByName (const string& name) {
     return uiIt->second;
   }
 //}}}
+
 //{{{
 void cUI::listRegisteredClasses() {
-
-  cLog::log (LOGINFO, "ui register");
   for (auto& ui : getClassRegister())
-    cLog::log (LOGINFO, fmt::format ("- {}", ui.first));
+    cLog::log (LOGINFO, fmt::format ("UI:{}", ui.first));
   }
 //}}}
 //{{{
 void cUI::listInstances() {
-
-  cLog::log (LOGINFO, "ui instance register");
   for (auto& ui : getInstanceRegister())
-    cLog::log (LOGINFO, fmt::format ("- {}", ui.first));
+    cLog::log (LOGINFO, fmt::format ("UIinstance:{}", ui.first));
   }
 //}}}
 
