@@ -740,9 +740,9 @@ void cDvbStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, u
 // public:
 //{{{
 cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName,
-                        bool renderFirstService)
+                        bool showFirstService, bool showAllServices)
     : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName),
-      mRenderFirstService(renderFirstService) {
+      mShowFirstService(showFirstService), mShowAllServices(showAllServices) {
 
   if (dvbMultiplex.mFrequency)
     mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
@@ -773,21 +773,122 @@ void cDvbStream::toggleStream (cService& service, eRenderType streamType) {
 
 // sources
 //{{{
-void cDvbStream::dvbSource (bool launchThread) {
+void cDvbStream::dvbSource() {
 
-  if (launchThread)
-    thread([=]() { dvbSourceInternal (true); }).detach(); //,this
-  else
-    dvbSourceInternal (false);
+  thread([=]() {
+    cLog::setThreadName ("dvb");
+
+    FILE* mFile = mDvbMultiplex.mRecordAll ?
+      fopen ((mRecordRootName + mDvbMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
+
+    #ifdef _WIN32
+      //{{{  windows
+      mDvbSource->run();
+
+      int64_t streamPos = 0;
+      int blockSize = 0;
+
+      while (true) {
+        auto ptr = mDvbSource->getBlockBDA (blockSize);
+        if (blockSize) {
+          //  read and demux block
+          if (mFile)
+            fwrite (ptr, 1, blockSize, mFile);
+
+          streamPos += demux (ptr, blockSize, streamPos, false);
+          mDvbSource->releaseBlock (blockSize);
+
+          mErrorString.clear();
+          if (getNumErrors())
+            mErrorString += fmt::format ("{}err", getNumErrors());
+          if (streamPos < 1000000)
+            mErrorString = fmt::format ("{}k", streamPos / 1000);
+          else
+            mErrorString = fmt::format ("{}m", streamPos / 1000000);
+          }
+        else
+          this_thread::sleep_for (1ms);
+
+        mSignalString = mDvbSource->getStatusString();
+        }
+      //}}}
+    #else
+      //{{{  linux
+      constexpr int kDvrReadBufferSize = 188 * 256;
+      uint8_t* buffer = new uint8_t[kDvrReadBufferSize];
+
+      uint64_t streamPos = 0;
+      while (true) {
+        int bytesRead = mDvbSource->getBlock (buffer, kDvrReadBufferSize);
+        if (bytesRead == 0)
+          cLog::log (LOGINFO, fmt::format ("cDvb grabThread no bytes read"));
+        else {
+          // demux
+          streamPos += demux (buffer, bytesRead, 0, false);
+          if (mFile)
+            fwrite (buffer, 1, bytesRead, mFile);
+
+          // get status
+          mSignalString = mDvbSource->getStatusString();
+
+          // log if more errors
+          bool show = getNumErrors() != mLastErrors;
+          mLastErrors = getNumErrors();
+          if (show)
+            cLog::log (LOGINFO, fmt::format ("err:{} {}", getNumErrors(), mSignalString));
+          }
+        }
+
+      delete [] buffer;
+      //}}}
+    #endif
+
+    if (mFile)
+      fclose (mFile);
+
+    cLog::log (LOGINFO, "exit");
+    }).detach();
   }
 //}}}
 //{{{
-void cDvbStream::fileSource (bool launchThread, const string& fileName) {
+void cDvbStream::fileSource (const string& fileName) {
 
-  if (launchThread)
-    thread ([=](){ fileSourceInternal (true, fileName); } ).detach();// ,this
-  else
-    fileSourceInternal (false, fileName);
+  thread ([=]() {
+    cLog::setThreadName (fileName);
+
+    mFileName = fileName;
+    FILE* file = fopen (fileName.c_str(), "rb");
+    if (!file)
+      cLog::log (LOGERROR, "cDvbStream::fileSource - no file " + fileName);
+    else {
+      size_t blockSize = 188 * 256;
+      uint8_t* buffer = new uint8_t[blockSize];
+
+      mFilePos = 0;
+      while (true) {
+        size_t bytesRead = fread (buffer, 1, blockSize, file);
+        if (bytesRead > 0)
+          mFilePos += demux (buffer, bytesRead, mFilePos, false);
+        else
+          break;
+
+        #ifdef _WIN32
+          struct _stati64 st;
+          if (_stat64 (mFileName.c_str(), &st) != -1)
+            mFileSize = st.st_size;
+        #else
+          struct stat st;
+          if (stat (mFileName.c_str(), &st) != -1)
+            mFileSize = st.st_size;
+        #endif
+        }
+
+      fclose (file);
+      delete [] buffer;
+      }
+
+    cLog::log (LOGERROR, "exit");
+    }).detach();
   }
 //}}}
 
@@ -866,10 +967,13 @@ cDvbStream::cPidInfo* cDvbStream::getPsiPidInfo (uint16_t pid) {
 //{{{
 void cDvbStream::foundService (cService& service) {
 
-  if (mRenderFirstService && !mRenderingFirstService) {
-    cLog::log (LOGINFO, fmt::format ("play service {}:{}", service.getSid(), service.getProgramPid()));
-    service.toggleAll();
-    mRenderingFirstService = true;
+  if (mShowAllServices || 
+      (mShowFirstService && !mShowingFirstService)) {
+
+    if (service.getRenderStream (eRenderType(eRenderVideo)).isDefined()) {
+      service.toggleAll();
+      mShowingFirstService = true;
+      }
     }
   }
 //}}}
@@ -1487,136 +1591,5 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
     }
 
   return ts - tsBuf;
-  }
-//}}}
-
-// sources
-//{{{
-void cDvbStream::dvbSourceInternal (bool launchThread) {
-
-  if (!mDvbSource->ok()) {
-    //{{{  error, return
-    cLog::log (LOGERROR, fmt::format ("dvbSource - no dvbSource"));
-    return;
-    }
-    //}}}
-
-  if (launchThread)
-    cLog::setThreadName ("grab");
-
-  FILE* mFile = mDvbMultiplex.mRecordAll ?
-    fopen ((mRecordRootName + mDvbMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
-
-  #ifdef _WIN32
-    //{{{  windows
-    mDvbSource->run();
-
-    int64_t streamPos = 0;
-    int blockSize = 0;
-
-    while (true) {
-      auto ptr = mDvbSource->getBlockBDA (blockSize);
-      if (blockSize) {
-        //  read and demux block
-        if (mFile)
-          fwrite (ptr, 1, blockSize, mFile);
-
-        streamPos += demux (ptr, blockSize, streamPos, false);
-        mDvbSource->releaseBlock (blockSize);
-
-        mErrorString.clear();
-        if (getNumErrors())
-          mErrorString += fmt::format ("{}err", getNumErrors());
-        if (streamPos < 1000000)
-          mErrorString = fmt::format ("{}k", streamPos / 1000);
-        else
-          mErrorString = fmt::format ("{}m", streamPos / 1000000);
-        }
-      else
-        this_thread::sleep_for (1ms);
-
-      mSignalString = mDvbSource->getStatusString();
-      }
-    //}}}
-  #else
-    //{{{  linux
-    constexpr int kDvrReadBufferSize = 188 * 256;
-    uint8_t* buffer = new uint8_t[kDvrReadBufferSize];
-
-    uint64_t streamPos = 0;
-    while (true) {
-      int bytesRead = mDvbSource->getBlock (buffer, kDvrReadBufferSize);
-      if (bytesRead == 0)
-        cLog::log (LOGINFO, fmt::format ("cDvb grabThread no bytes read"));
-      else {
-        // demux
-        streamPos += demux (buffer, bytesRead, 0, false);
-        if (mFile)
-          fwrite (buffer, 1, bytesRead, mFile);
-
-        // get status
-        mSignalString = mDvbSource->getStatusString();
-
-        // log if more errors
-        bool show = getNumErrors() != mLastErrors;
-        mLastErrors = getNumErrors();
-        if (show)
-          cLog::log (LOGINFO, fmt::format ("err:{} {}", getNumErrors(), mSignalString));
-        }
-      }
-
-    delete [] buffer;
-    //}}}
-  #endif
-
-  if (mFile)
-    fclose (mFile);
-
-  if (launchThread)
-    cLog::log (LOGINFO, "exit");
-  }
-//}}}
-//{{{
-void cDvbStream::fileSourceInternal (bool launchThread, const string& fileName) {
-
-  if (launchThread)
-    cLog::setThreadName ("file");
-
-  mFileName = fileName;
-  auto file = fopen (fileName.c_str(), "rb");
-  if (!file) {
-    //{{{  error, return
-    cLog::log (LOGERROR, "no file " + fileName);
-    return;
-    }
-    //}}}
-
-  size_t blockSize = 188 * 256;
-  uint8_t* buffer = new uint8_t[blockSize];
-
-  mFilePos = 0;
-  while (true) {
-    size_t bytesRead = fread (buffer, 1, blockSize, file);
-    if (bytesRead > 0)
-      mFilePos += demux (buffer, bytesRead, mFilePos, false);
-    else
-      break;
-
-    #ifdef _WIN32
-      struct _stati64 st;
-      if (_stat64 (mFileName.c_str(), &st) != -1)
-        mFileSize = st.st_size;
-    #else
-      struct stat st;
-      if (stat (mFileName.c_str(), &st) != -1)
-        mFileSize = st.st_size;
-    #endif
-    }
-
-  fclose (file);
-  delete [] buffer;
-
-  if (launchThread)
-    cLog::log (LOGERROR, "exit");
   }
 //}}}

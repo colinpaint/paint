@@ -84,26 +84,26 @@ public:
   cDvbStream* getDvbStream() { return mDvbStream; }
 
   //{{{
-  bool setFileSource (const string& filename) {
+  bool setFileSource (const string& filename, bool showAllServices) {
 
     // create fileSource, any channel
-    mDvbStream = new cDvbStream (kMultiplexes[0],  "", true);
+    mDvbStream = new cDvbStream (kMultiplexes[0],  "", true, showAllServices);
     if (!mDvbStream)
       return false;
 
-    mDvbStream->fileSource (true, cFileUtils::resolve (filename));
+    mDvbStream->fileSource (cFileUtils::resolve (filename));
     return true;
     }
   //}}}
   //{{{
-  bool setDvbSource (const cDvbMultiplex& dvbMultiplex, const string& recordRoot) {
+  bool setDvbSource (const cDvbMultiplex& dvbMultiplex, const string& recordRoot, bool showAllServices) {
 
     // create dvbSource from dvbMultiplex
-    mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, false);
+    mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, false, showAllServices);
     if (!mDvbStream)
       return false;
 
-    mDvbStream->dvbSource (true);
+    mDvbStream->dvbSource();
     return true;
     }
   //}}}
@@ -114,7 +114,7 @@ public:
 
     for (auto& item : dropItems) {
       string filename = cFileUtils::resolve (item);
-      setFileSource (filename);
+      setFileSource (filename, true);
       cLog::log (LOGINFO, fmt::format ("cTellyApp::drop {}", filename));
       }
     }
@@ -954,6 +954,7 @@ int main (int numArgs, char* args[]) {
 
   // params
   bool recordAll = false;
+  bool showAllServices = true;
   bool fullScreen = false;
   bool vsync = true;
   eLogLevel logLevel = LOGINFO;
@@ -966,6 +967,8 @@ int main (int numArgs, char* args[]) {
 
     if (param == "all")
       recordAll = true;
+    else if (param == "simple")
+      showAllServices = false;
     else if (param == "full")
       fullScreen = true;
     else if (param == "free")
@@ -1009,9 +1012,9 @@ int main (int numArgs, char* args[]) {
   tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
   if (!filename.empty())
-    tellyApp.setFileSource (filename);
+    tellyApp.setFileSource (filename, showAllServices);
   else
-    tellyApp.setDvbSource (useMultiplex, kRecordRoot);
+    tellyApp.setDvbSource (useMultiplex, kRecordRoot, showAllServices);
   tellyApp.mainUILoop();
 
   return EXIT_SUCCESS;

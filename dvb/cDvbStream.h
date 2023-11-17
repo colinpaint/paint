@@ -285,7 +285,8 @@ public:
     };
   //}}}
 
-  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, bool renderFirstService);
+  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName,
+              bool showFirstService, bool showAllServices);
   virtual ~cDvbStream() { clear(); }
 
   //{{{  gets
@@ -319,8 +320,8 @@ public:
   void toggleStream (cService& service, eRenderType renderType);
 
   // source
-  void dvbSource (bool launchThread);
-  void fileSource (bool launchThread, const std::string& fileName);
+  void dvbSource();
+  void fileSource (const std::string& fileName);
 
 private:
   //{{{  clears
@@ -351,15 +352,13 @@ private:
   //}}}
   int64_t demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
 
-  void dvbSourceInternal (bool launchThread);
-  void fileSourceInternal (bool launchThread, const std::string& fileName);
-
   // vars
   const cDvbMultiplex mDvbMultiplex;
   const std::string mRecordRootName;
-  const bool mRenderFirstService;
 
-  bool mRenderingFirstService = false;
+  const bool mShowAllServices;
+  const bool mShowFirstService;
+  bool mShowingFirstService = false;
 
   std::mutex mMutex;
   uint64_t mNumPackets = 0;
