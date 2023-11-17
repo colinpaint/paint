@@ -450,7 +450,7 @@ private:
       GLint multiSampleCount = 0;
       glGetIntegerv (GL_MAX_SAMPLES, &multiSampleCount);
 
-      cLog::log (LOGINFO, fmt::format ("cOpenGL3Target maxColorAttach {} masSamples {}", 
+      cLog::log (LOGINFO, fmt::format ("cOpenGL3Target maxColorAttach {} masSamples {}",
                                        colorBufferCount, multiSampleCount));
 
       //  print info of the colorbuffer attachable image
@@ -594,7 +594,7 @@ private:
     cOpenGL3RgbaTexture (eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size) {
 
-      cLog::log (LOGINFO, fmt::format ("cOpenGL3RgbaTexture - creating eRgba texture {}x{}", size.x, size.y));
+      // cLog::log (LOGINFO, fmt::format ("cOpenGL3RgbaTexture - creating eRgba texture {}x{}", size.x, size.y));
       glGenTextures (1, &mTextureId);
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);
@@ -616,21 +616,25 @@ private:
 
     virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId; }
 
+    //{{{
     virtual void setPixels (uint8_t** pixels, int* strides) final {
     // set textures using pixels in ffmpeg avFrame format
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);
+
       if (strides)
         glPixelStorei (GL_UNPACK_ROW_LENGTH, strides[0]);
       else
         glPixelStorei (GL_UNPACK_ROW_LENGTH, mSize.x);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels[0]);
       }
-
+    //}}}
+    //{{{
     virtual void setSource() final {
       glActiveTexture (GL_TEXTURE0);
       glBindTexture (GL_TEXTURE_2D, mTextureId);
       }
+    //}}}
 
   private:
     uint32_t mTextureId = 0;
@@ -674,7 +678,7 @@ private:
     //{{{
     virtual ~cOpenGL3Yuv420Texture() {
 
-      cLog::log (LOGINFO, fmt::format ("deleting eYuv420 texture {}x{}", mSize.x, mSize.y));
+      //cLog::log (LOGINFO, fmt::format ("deleting eYuv420 texture {}x{}", mSize.x, mSize.y));
       glDeleteTextures (3, mTextureId.data());
       }
     //}}}

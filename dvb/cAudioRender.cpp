@@ -332,7 +332,9 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
 //{{{
 cAudioRender::~cAudioRender() {
 
-  exitWait();
+  mExit = true;
+  while (mRunning)
+    this_thread::sleep_for (10ms);
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
@@ -342,6 +344,7 @@ cAudioRender::~cAudioRender() {
 
   for (auto& frame : mFreeFrames)
     delete frame;
+
   mFreeFrames.clear();
   }
 //}}}
@@ -414,13 +417,5 @@ void cAudioRender::startPlayerPts (int64_t pts) {
 
   mPlayerPts = pts;
   mPlaying = true;
-  }
-//}}}
-//{{{
-void cAudioRender::exitWait() {
-
-  mExit = true;
-  while (mRunning)
-    this_thread::sleep_for (100ms);
   }
 //}}}

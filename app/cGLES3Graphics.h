@@ -447,7 +447,7 @@ private:
       GLint multiSampleCount = 0;
       glGetIntegerv (GL_MAX_SAMPLES, &multiSampleCount);
 
-      cLog::log (LOGINFO, fmt::format ("cOpenGLES3Target maxColorAttach {} masSamples {}", 
+      cLog::log (LOGINFO, fmt::format ("cOpenGLES3Target maxColorAttach {} masSamples {}",
                                        colorBufferCount, multiSampleCount));
 
       //  print info of the colorbuffer attachable image
@@ -609,7 +609,9 @@ private:
       glGenerateMipmap (GL_TEXTURE_2D);
       }
 
-    virtual ~cOpenGLES3RgbaTexture() { glDeleteTextures (1, &mTextureId); }
+    virtual ~cOpenGLES3RgbaTexture() { 
+      glDeleteTextures (1, &mTextureId); 
+      }
 
     virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId; }
 
@@ -666,17 +668,15 @@ private:
     //}}}
     //{{{
     virtual ~cOpenGLES3Yuv420Texture() {
-      //glDeleteTextures (3, mTextureId.data());
-      glDeleteTextures (1, &mTextureId[0]);
-      glDeleteTextures (1, &mTextureId[1]);
-      glDeleteTextures (1, &mTextureId[2]);
 
-      cLog::log (LOGINFO, fmt::format ("cOpenGLES3Yuv420Texture deleting texture {}x{}", mSize.x, mSize.y));
+      //cLog::log (LOGINFO, fmt::format ("cOpenGLES3Yuv420Texture deleting texture {}x{}", mSize.x, mSize.y));
+      glDeleteTextures (3, mTextureId.data());
       }
     //}}}
 
     virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId[0]; }   // luma only
 
+    //{{{
     virtual void setPixels (uint8_t** pixels, int* strides) final {
     // set textures using pixels in ffmpeg avFrame format
       (void)strides;
@@ -693,15 +693,20 @@ private:
       glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x/2, mSize.y/2, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[2]);
       }
-
+    //}}}
+    //{{{
     virtual void setSource() final {
+
       glActiveTexture (GL_TEXTURE0);
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
+
       glActiveTexture (GL_TEXTURE1);
       glBindTexture (GL_TEXTURE_2D, mTextureId[1]);
+
       glActiveTexture (GL_TEXTURE2);
       glBindTexture (GL_TEXTURE_2D, mTextureId[2]);
       }
+    //}}}
 
   private:
     std::array <GLuint,3> mTextureId;  // Y,U,V 4:2:0

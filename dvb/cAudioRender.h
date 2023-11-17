@@ -48,7 +48,6 @@ public:
 
 private:
   void startPlayerPts (int64_t pts);
-  void exitWait();
 
   // vars
   size_t mNumChannels;

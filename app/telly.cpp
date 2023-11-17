@@ -51,30 +51,25 @@ namespace {
   #endif
   //}}}
   //{{{
-  const vector <cDvbMultiplex> kDvbMultiplexes = {
-      { "hd",
-        626000000,
+  const vector <cDvbMultiplex> kMultiplexes = {
+      { "file", false, 0, {}, {} },  // dummy multiplex for file
+
+      { "hd", 626000000, false,
         { "BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
-        { "bbc1hd",        "bbc2hd",     "bbc3hd",       "bbc4hd",      "itv1hd",  "chn4hd",       "chn5hd" },
-        false
+        { "bbc1hd",        "bbc2hd",     "bbc3hd",       "bbc4hd",      "itv1hd",  "chn4hd",       "chn5hd" }
       },
 
-      { "itv",
-        650000000,
+      { "itv", 650000000, false,
         { "ITV1",  "ITV2", "ITV3", "ITV4", "Channel 4", "Channel 4+1", "More 4", "Film4" , "E4", "Channel 5" },
-        { "itv1", "itv2", "itv3", "itv4", "chn4"     , "c4+1",        "more4",  "film4",  "e4", "chn5" },
-        false
+        { "itv1", "itv2", "itv3", "itv4", "chn4"     , "c4+1",        "more4",  "film4",  "e4", "chn5" }
       },
 
-      { "bbc",
-        674000000,
+      { "bbc", 674000000, false,
         { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
-        { "bbc1",           "bbc2",    "bbc4" },
-        false
+        { "bbc1",           "bbc2",    "bbc4" }
       }
     };
   //}}}
-  const cDvbMultiplex kFileDvbMultiplex = { "file", 0, {}, {}, false };
   }
 
 //{{{
@@ -103,7 +98,7 @@ public:
 
     else {
       // create fileSource, any channel
-      mDvbStream = new cDvbStream (kFileDvbMultiplex,  "", true);
+      mDvbStream = new cDvbStream (kMultiplexes[0],  "", true);
       if (!mDvbStream)
         return false;
 
@@ -120,7 +115,7 @@ public:
 
     for (auto& item : dropItems) {
       string filename = cFileUtils::resolve (item);
-      setSource (filename, "", kFileDvbMultiplex, true);
+      setSource (filename, "", kMultiplexes[0], true);
       cLog::log (LOGINFO, fmt::format ("cTellyApp::drop {}", filename));
       }
     }
@@ -1008,33 +1003,43 @@ int main (int numArgs, char* args[]) {
   bool recordAll = false;
   bool fullScreen = false;
   bool playFirstService = false;
-  cDvbMultiplex useMultiplex = kDvbMultiplexes[0];
+  cDvbMultiplex useMultiplex = kMultiplexes[1];
   string filename;
   //{{{  parse command line args to params
   // parse params
   for (int i = 1; i < numArgs; i++) {
     string param = args[i];
 
-    if (param == "log1") { logLevel = LOGINFO1; }
-    else if (param == "log2") { logLevel = LOGINFO2; }
-    else if (param == "log3") { logLevel = LOGINFO3; }
-    else if (param == "all") { recordAll = true; }
-    else if (param == "full") { fullScreen = true; }
-    else if (param == "free") { vsync = false; }
-    else if (param == "first") { playFirstService = true; }
+    if (param == "all")
+      recordAll = true;
+    else if (param == "full")
+      fullScreen = true;
+    else if (param == "free")
+      vsync = false;
+    else if (param == "first")
+      playFirstService = true;
+    else if (param == "log1")
+      logLevel = LOGINFO1;
+    else if (param == "log2")
+      logLevel = LOGINFO2;
+    else if (param == "log3")
+      logLevel = LOGINFO3;
+    else if (param == "help")
+      cLog::log (LOGINFO, "params - all full free first help log1 log2 log3 multiplex filename");
     else {
-      // is param multiplex, else filename
-      filename = param;
-      for (auto& multiplex : kDvbMultiplexes)
+      // look for multiplex name
+      for (auto& multiplex : kMultiplexes)
         if (param == multiplex.mName) {
           useMultiplex = multiplex;
           filename = "";
           break;
           }
+      // else filename
+      filename = param;
       }
-
-    useMultiplex.mRecordAll = recordAll;
     }
+
+  useMultiplex.mRecordAll = recordAll;
   //}}}
 
   // log
