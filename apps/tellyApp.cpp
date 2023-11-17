@@ -84,29 +84,29 @@ public:
   cDvbStream* getDvbStream() { return mDvbStream; }
 
   //{{{
-  bool setSource (const string& filename, const string& recordRoot, const cDvbMultiplex& dvbMultiplex,
-                  bool playFirstService) {
+  bool setFileSource (const string& filename) {
 
-    if (filename.empty()) {
+    // create fileSource, any channel
+    mDvbStream = new cDvbStream (kMultiplexes[0],  "", true);
+    if (!mDvbStream)
+      return false;
+
+    cFileUtils::resolve (filename);
+    mDvbStream->fileSource (true, filename);
+
+    return true;
+    }
+  //}}}
+  //{{{
+  bool setDvbSource (const cDvbMultiplex& dvbMultiplex, const string& recordRoot) {
+
     // create dvbSource from dvbMultiplex
-      mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, playFirstService);
-      if (!mDvbStream)
-        return false;
-      mDvbStream->dvbSource (true);
-      return true;
-      }
+    mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, false);
+    if (!mDvbStream)
+      return false;
 
-    else {
-      // create fileSource, any channel
-      mDvbStream = new cDvbStream (kMultiplexes[0],  "", true);
-      if (!mDvbStream)
-        return false;
-
-      cFileUtils::resolve (filename);
-      mDvbStream->fileSource (true, filename);
-
-      return true;
-      }
+    mDvbStream->dvbSource (true);
+    return true;
     }
   //}}}
   //{{{
@@ -115,7 +115,7 @@ public:
 
     for (auto& item : dropItems) {
       string filename = cFileUtils::resolve (item);
-      setSource (filename, "", kMultiplexes[0], true);
+      setFileSource (filename);
       cLog::log (LOGINFO, fmt::format ("cTellyApp::drop {}", filename));
       }
     }
@@ -999,7 +999,7 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, "telly - all,full,free,first,log1,log2,log3,multiplex,filename");
+  cLog::log (LOGNOTICE, "tellyApp - all,full,free,first,log1,log2,log3,multiplex,filename");
   if (filename.empty())
     cLog::log (LOGINFO, fmt::format ("using multiplex {}", useMultiplex.mName));
 
@@ -1010,7 +1010,10 @@ int main (int numArgs, char* args[]) {
   cTellyApp tellyApp ({1920/2, 1080/2}, fullScreen, vsync);
   tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
-  tellyApp.setSource (filename, kRecordRoot, useMultiplex, !filename.empty() || playFirstService);
+  if (!filename.empty())
+    tellyApp.setFileSource (filename);
+  else
+    tellyApp.setDvbSource (useMultiplex, kRecordRoot);
   tellyApp.mainUILoop();
 
   return EXIT_SUCCESS;

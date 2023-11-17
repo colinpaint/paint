@@ -7,11 +7,12 @@ project (app VERSION 1.0.0)
                                  myImgui.h myImgui.cpp
                                  cGL3Graphics.h)
 
-    target_include_directories (${PROJECT_NAME} PUBLIC ../imgui)
+    #target_include_directories (${PROJECT_NAME} PUBLIC ../imgui)
+    target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS})
+
+    target_link_libraries (${PROJECT_NAME} PUBLIC common imgui PRIVATE glfw glad)
 
     find_package (OpenGL REQUIRED)
-    target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS})
-    target_link_libraries (${PROJECT_NAME} PUBLIC common imgui PRIVATE glfw glad)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
       target_link_libraries (${PROJECT_NAME} PRIVATE GL)
     endif()
