@@ -160,6 +160,843 @@ private:
   };
 //}}}
 //{{{
+class cTellyView {
+public:
+  //{{{
+  void draw (cApp& app) {
+
+    cTellyApp& tellyApp = (cTellyApp&)app;
+    cGraphics& graphics = tellyApp.getGraphics();
+
+    graphics.clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
+    //{{{  draw tabs
+    ImGui::SameLine();
+
+    mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
+    //}}}
+    //{{{  draw fullScreen
+    if (tellyApp.getPlatform().hasFullScreen()) {
+      ImGui::SameLine();
+      if (toggleButton ("full", tellyApp.getPlatform().getFullScreen()))
+        tellyApp.getPlatform().toggleFullScreen();
+      }
+    //}}}
+    //{{{  draw scale
+    ImGui::SameLine();
+
+    ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
+    ImGui::DragFloat ("##scale", &mScale, 0.01f, 0.05f, 16.f, "scale%3.2f");
+    //}}}
+    //{{{  draw vsync
+    ImGui::SameLine();
+
+    if (tellyApp.getPlatform().hasVsync())
+      if (toggleButton ("vsync", tellyApp.getPlatform().getVsync()))
+        tellyApp.getPlatform().toggleVsync();
+    //}}}
+    //{{{  draw frameRate
+    ImGui::SameLine();
+
+    ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+    //}}}
+    //{{{  draw vertices:indices
+    ImGui::SameLine();
+
+    ImGui::TextUnformatted (fmt::format ("{}:{}",
+                            ImGui::GetIO().MetricsRenderVertices,
+                            ImGui::GetIO().MetricsRenderIndices/3).c_str());
+    //}}}
+    //{{{  draw overlap,history
+    //ImGui::SameLine();
+    //ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
+    //ImGui::DragFloat ("##over", &mOverlap, 0.25f, 0.5f, 32.f, "over%3.1f");
+
+    //ImGui::SameLine();
+    //ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
+    //ImGui::DragInt ("##hist", &mHistory, 0.25f, 0, 100, "h %d");
+    //}}}
+
+    if (tellyApp.getDvbStream()) {
+      cDvbStream& dvbStream = *tellyApp.getDvbStream();
+      if (dvbStream.hasTdtTime()) {
+        //{{{  draw tdtTime
+        ImGui::SameLine();
+
+        ImGui::TextUnformatted (dvbStream.getTdtTimeString().c_str());
+        }
+        //}}}
+      if (dvbStream.isFileSource()) {
+        //{{{  draw filePos
+        ImGui::SameLine();
+
+        //ImGui::TextUnformatted (fmt::format ("{}k of {}k",
+        //                                     dvbStream.getFilePos()/1000,
+        //                                     dvbStream.getFileSize()/1000).c_str());
+        ImGui::TextUnformatted (fmt::format ("{:4.3f}%", (100.f * dvbStream.getFilePos()) / dvbStream.getFileSize()).c_str());
+        }
+        //}}}
+      else if (dvbStream.hasDvbSource()) {
+        //{{{  draw dvbStream::dvbSource signal:errors
+        ImGui::SameLine();
+
+        ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getSignalString(), dvbStream.getErrorString()).c_str());
+        }
+        //}}}
+      //{{{  draw dvbStream packet,errors
+      ImGui::SameLine();
+
+      ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getNumPackets(), dvbStream.getNumErrors()).c_str());
+      //}}}
+
+      // draw tab childWindow, monospaced font
+      ImGui::PushFont (tellyApp.getMonoFont());
+      ImGui::BeginChild ("tab", {0.f,0.f}, false,
+                         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
+      switch (mTab) {
+        //{{{
+        case eMulti:
+          drawMultiTelly (dvbStream, graphics);
+          drawChannels (dvbStream, graphics);
+          break;
+        //}}}
+        //{{{
+        case eServices:
+          drawMultiTelly(dvbStream, graphics);
+          drawServices (dvbStream, graphics);
+          break;
+        //}}}
+        //{{{
+        case ePids:
+          drawMultiTelly(dvbStream, graphics);
+          drawPidMap (dvbStream, graphics);
+          break;
+        //}}}
+        //{{{
+        case eRecorded:
+          drawMultiTelly(dvbStream, graphics);
+          drawRecorded (dvbStream, graphics);
+          break;
+        //}}}
+        }
+
+      keyboard();
+
+      ImGui::EndChild();
+      ImGui::PopFont();
+      }
+    }
+  //}}}
+
+private:
+  enum eTab { eMulti, eServices, ePids, eRecorded };
+  inline static const vector<string> kTabNames = { "multi", "services", "pids", "recorded" };
+  //{{{
+  class cFramesGraphic {
+  public:
+    cFramesGraphic (float videoLines, float audioLines, float pixelsPerVideoFrame, float pixelsPerAudioChannel)
+      : mVideoLines(videoLines), mAudioLines(audioLines),
+        mPixelsPerVideoFrame(pixelsPerVideoFrame), mPixelsPerAudioChannel(pixelsPerAudioChannel) {}
+
+    //{{{
+    void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playPts) {
+
+      ImVec2 pos = {ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(),
+                    ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - ImGui::GetTextLineHeight()};
+
+      drawAudioPower (audioRender, playPts, pos);
+
+      pos.x -= ImGui::GetWindowWidth() / 2.f;
+
+      // draw playPts centre bar
+      ImGui::GetWindowDrawList()->AddRectFilled (
+        {pos.x, pos.y - mVideoLines * ImGui::GetTextLineHeight()},
+        {pos.x + 1.f, pos.y + mAudioLines * ImGui::GetTextLineHeight()},
+        0xffc0c0c0);
+
+      float ptsScale = mPixelsPerVideoFrame / videoRender.getPtsDuration();
+
+      { // lock video during iterate
+      shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
+      for (auto& frame : videoRender.getFrames()) {
+        //{{{  draw video frames
+        cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
+        float offset1 = (videoFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
+
+        // pesSize I white / P yellow / B green - ARGB color
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y},
+          {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
+          (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
+
+        // grey decodeTime
+        //ImGui::GetWindowDrawList()->AddRectFilled (
+        //  {pos.x + offset1, pos.y},
+        //  {pos.x + offset2, pos.y - addValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, mVideoLines)},
+        //  0x60ffffff);
+
+        // magenta queueSize in trailing gap
+        //ImGui::GetWindowDrawList()->AddRectFilled (
+        //  {pos.x + offset1, pos.y},
+        //  {pos.x + offset1 + 1.f, pos.y - addValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, mVideoLines - 1.f)},
+        //  0xffff00ff);
+        }
+        //}}}
+      for (auto frame : videoRender.getFreeFrames()) {
+        //{{{  draw free video frames
+        cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+        float offset1 = (videoFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
+
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y},
+          {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
+          0xFF808080);
+        }
+        //}}}
+      }
+
+      { // lock audio during iterate
+      shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
+      for (auto& frame : audioRender.getFrames()) {
+        //{{{  draw audio frames
+        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+        float offset1 = (audioFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y + 1.f},
+          {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
+          0xff00ffff);
+        }
+        //}}}
+      for (auto frame : audioRender.getFreeFrames()) {
+        //{{{  draw free audio frames
+        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+        float offset1 = (audioFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
+
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y + 1.f},
+          {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
+          0xFF808080);
+        }
+        //}}}
+      }
+
+      // slowly track scaling back to max display values from max values
+      agc (mMaxPower, mMaxDisplayPower, 250.f, 0.5f);
+      agc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
+      agc (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f, 1000.f);
+      agc (mMaxQueueSize, mMaxDisplayQueueSize, 250.f, 4.f);
+      }
+    //}}}
+
+  private:
+    //{{{
+    void drawAudioPower (cAudioRender& audio, int64_t playerPts, ImVec2 pos) {
+
+      cAudioFrame* audioFrame = audio.findAudioFrameFromPts (playerPts);
+      if (audioFrame) {
+        pos.y += 1.f;
+        float height = 8.f * ImGui::GetTextLineHeight();
+
+        if (audioFrame->mNumChannels == 6) {
+          // 5.1
+          float x = pos.x - (5 * mPixelsPerAudioChannel);
+
+          // draw channels reordered
+          for (size_t i = 0; i < 5; i++) {
+            ImGui::GetWindowDrawList()->AddRectFilled (
+              {x, pos.y - (audioFrame->mPowerValues[kChannelOrder[i]] * height)},
+              {x + mPixelsPerAudioChannel - 1.f, pos.y},
+              0xff00ff00);
+            x += mPixelsPerAudioChannel;
+            }
+
+          // draw woofer as red
+          ImGui::GetWindowDrawList()->AddRectFilled (
+            {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[kChannelOrder[5]] * height)},
+            {pos.x - 1.f, pos.y},
+            0x800000ff);
+          }
+
+        else  {
+          // other - draw channels left to right
+          float width = mPixelsPerAudioChannel * audioFrame->mNumChannels;
+          for (size_t i = 0; i < audioFrame->mNumChannels; i++)
+            ImGui::GetWindowDrawList()->AddRectFilled (
+              {pos.x - width + (i * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[i] * height)},
+              {pos.x - width + ((i+1) * mPixelsPerAudioChannel) - 1.f, pos.y},
+              0xff00ff00);
+          }
+        }
+      }
+    //}}}
+
+    //{{{
+    float addValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
+
+      if (value > maxValue)
+        maxValue = value;
+      if (value > maxDisplayValue)
+        maxDisplayValue = value;
+
+      return scale * ImGui::GetTextLineHeight() * value / maxValue;
+      }
+    //}}}
+    //{{{
+    void agc (float& maxValue, float& maxDisplayValue, float revert, float minValue) {
+
+      // slowly adjust scale to displayMaxValue
+      if (maxDisplayValue < maxValue)
+        maxValue -= (maxValue - maxDisplayValue) / revert;
+
+      if (maxValue < minValue)
+        maxValue = minValue;
+
+      // reset displayed max value
+      maxDisplayValue = 0.f;
+      }
+    //}}}
+
+    inline static const array <size_t, 6> kChannelOrder = {4,0,2,1,5,3};
+
+    //  vars
+    const float mVideoLines;
+    const float mAudioLines;
+    const float mPixelsPerVideoFrame;
+    const float mPixelsPerAudioChannel;
+
+    float mMaxPower = 0.5f;
+    float mMaxDisplayPower = 0.f;
+
+    float mMaxPesSize = 0.f;
+    float mMaxDisplayPesSize = 0.f;
+
+    float mMaxQueueSize = 3.f;
+    float mMaxDisplayQueueSize = 0.f;
+
+    float mMaxDecodeTime = 0.f;
+    float mMaxDisplayDecodeTime = 0.f;
+    };
+  //}}}
+  //{{{
+  class cVideoFrameDraw {
+  public:
+    cVideoFrameDraw (cVideoFrame* videoFrame, float offset) : mVideoFrame(videoFrame), mOffset(offset) {}
+
+    cVideoFrame* mVideoFrame;
+    float mOffset;
+    };
+  //}}}
+
+  //{{{
+  void drawMultiTelly (cDvbStream& dvbStream, cGraphics& graphics) {
+
+    //{{{  count numVideos
+    int numVideos = 0;
+    for (auto& pair : dvbStream.getServiceMap())
+      if (pair.second.getRenderStream (eRenderVideo).isEnabled())
+        numVideos++;
+    //}}}
+
+    float scale = mScale * ((numVideos <= 1) ? 1.f : ((numVideos <= 4) ? 0.5f : ((numVideos <= 9) ? 0.33f : 0.25f)));
+
+    int curVideo = 0;
+    for (auto& pair : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service = pair.second;
+      if (service.getRenderStream (eRenderVideo).isEnabled()) {
+        curVideo++;
+        cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (eRenderVideo).getRender());
+        //{{{  get playerPts from audioStream
+        int64_t playerPts = service.getRenderStream (eRenderAudio).getPts();
+        if (service.getRenderStream (eRenderAudio).isEnabled()) {
+          // update playerPts from audioPlayer
+          cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender());
+          playerPts = audioRender.getPlayerPts();
+          audioRender.setMute (curVideo != 1);
+          if (curVideo <= 1)
+            mFramesGraphic.draw (audioRender, videoRender, playerPts);
+          }
+        //}}}
+
+        // draw telly pic
+        cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
+        if (videoFrame) {
+          //{{{  calc multiPic offset
+          cVec2 offset = { 0.5f, 0.5f };
+          switch (numVideos) {
+            //{{{
+            case 2:
+              switch (curVideo) {
+                case 1: offset = { 1.f / 4.f, 1.f / 2.f }; break;
+                case 2: offset = { 3.f / 4.f, 1.f / 2.f }; break;
+                break;
+                }
+              break;
+            //}}}
+            case 3:
+            //{{{
+            case 4:
+              switch (curVideo) {
+                case 1: offset = { 1.f / 4.f, 3.f / 4.f }; break;
+                case 2: offset = { 3.f / 4.f, 3.f / 4.f }; break;
+
+                case 3: if (numVideos == 3) // centre
+                          offset = { 2.f / 4.f, 1.f / 4.f };
+                        else
+                          offset = { 1.f / 4.f, 1.f / 4.f };
+                        break;
+                case 4: offset = { 3.f / 4.f, 1.f / 4.f }; break;
+                }
+
+              break;
+            //}}}
+            //{{{
+            case 5:
+              switch (curVideo) {
+                case 1: offset = { 1.f / 6.f, 5.f / 6.f }; break;
+                case 2: offset = { 5.f / 6.f, 5.f / 6.f }; break;
+                case 3: offset = { 3.f / 6.f, 3.f / 6.f }; break;
+
+                case 4: offset = { 1.f / 6.f, 1.f / 6.f }; break;
+                case 5: offset = { 5.f / 6.f, 1.f / 6.f }; break;
+                }
+
+              break;
+            //}}}
+            //{{{
+            case 6:
+              switch (curVideo) {
+                case 1: offset = { 1.f / 6.f, 4.f / 6.f }; break;
+                case 2: offset = { 3.f / 6.f, 4.f / 6.f }; break;
+                case 3: offset = { 5.f / 6.f, 4.f / 6.f }; break;
+
+                case 4: offset = { 1.f / 6.f, 2.f / 6.f }; break;
+                case 5: offset = { 3.f / 6.f, 2.f / 6.f }; break;
+                case 6: offset = { 5.f / 6.f, 2.f / 6.f }; break;
+                break;
+                }
+
+              break;
+            //}}}
+            case 7:
+            case 8:
+            //{{{
+            case 9:
+              switch (curVideo) {
+                case 1: offset = { 1.f / 6.f, 5.f / 6.f }; break;
+                case 2: offset = { 3.f / 6.f, 5.f / 6.f }; break;
+                case 3: offset = { 5.f / 6.f, 5.f / 6.f }; break;
+
+                case 4: offset = { 1.f / 6.f, 1.f / 6.f }; break;
+                case 5: offset = { 3.f / 6.f, 1.f / 6.f }; break;
+                case 6: offset = { 5.f / 6.f, 1.f / 6.f }; break;
+
+                case 7: if (numVideos == 7) // centre
+                          offset = { 3.f / 6.f, 3.f / 6.f };
+                        else
+                          offset = { 1.f / 6.f, 3.f / 6.f };
+                        break;
+                case 8: offset = { 3.f / 6.f, 3.f / 6.f }; break;
+                case 9: offset = { 5.f / 6.f, 3.f / 6.f }; break;
+                break;
+                }
+
+              break;
+            //}}}
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            //{{{
+            case 16:
+              switch (curVideo) {
+                case 1: offset = { 1.f / 8.f, 7.f / 8.f }; break;
+                case 2: offset = { 3.f / 8.f, 7.f / 8.f }; break;
+                case 3: offset = { 5.f / 8.f, 7.f / 8.f }; break;
+                case 4: offset = { 7.f / 8.f, 7.f / 8.f }; break;
+
+                case 5: offset = { 1.f / 8.f, 5.f / 8.f }; break;
+                case 6: offset = { 3.f / 8.f, 5.f / 8.f }; break;
+                case 7: offset = { 5.f / 8.f, 5.f / 8.f }; break;
+                case 8: offset = { 7.f / 8.f, 5.f / 8.f }; break;
+
+                case 9: offset =  { 1.f / 8.f, 3.f / 8.f }; break;
+                case 10: offset = { 3.f / 8.f, 3.f / 8.f }; break;
+                case 11: offset = { 5.f / 8.f, 3.f / 8.f }; break;
+                case 12: offset = { 7.f / 8.f, 3.f / 8.f }; break;
+
+                case 13: offset = { 1.f / 8.f, 1.f / 8.f }; break;
+                case 14: offset = { 3.f / 8.f, 1.f / 8.f }; break;
+                case 15: offset = { 5.f / 8.f, 1.f / 8.f }; break;
+                case 16: offset = { 7.f / 8.f, 1.f / 8.f }; break;
+                break;
+                }
+
+              break;
+            //}}}
+            default:;
+            }
+          //}}}
+          cVec2 scaledSize = { (scale * ImGui::GetWindowWidth()) / videoFrame->getWidth(),
+                               (scale * ImGui::GetWindowHeight()) / videoFrame->getHeight() };
+          cMat4x4 model;
+          model.setTranslate ( {(ImGui::GetWindowWidth() * offset.x) - ((videoFrame->getWidth() / 2.f) * scaledSize.x),
+                                (ImGui::GetWindowHeight() * offset.y) - ((videoFrame->getHeight() / 2.f) * scaledSize.y)} );
+          model.size (scaledSize);
+          videoRender.drawFrame (videoFrame, graphics, model, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+
+          videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
+          }
+        }
+      }
+    }
+  //}}}
+  //{{{
+  void drawChannels (cDvbStream& dvbStream, cGraphics& graphics) {
+    (void)graphics;
+
+    // draw services/channels
+    for (auto& pair : dvbStream.getServiceMap()) {
+      cDvbStream::cService& service = pair.second;
+      if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
+        service.toggleAll();
+
+      if (service.getRenderStream (eRenderAudio).isDefined()) {
+        ImGui::SameLine();
+        ImGui::TextUnformatted (fmt::format ("{}{}",
+          service.getRenderStream (eRenderAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
+        }
+
+      while (service.getChannelName().size() > mMaxNameChars)
+        mMaxNameChars = service.getChannelName().size();
+      }
+    }
+  //}}}
+  //{{{
+  void drawServices (cDvbStream& dvbStream, cGraphics& graphics) {
+
+    for (auto& pair : dvbStream.getServiceMap()) {
+      // iterate services
+      cDvbStream::cService& service = pair.second;
+      //{{{  update button maxChars
+      while (service.getChannelName().size() > mMaxNameChars)
+        mMaxNameChars = service.getChannelName().size();
+      while (service.getSid() > pow (10, mMaxSidChars))
+        mMaxSidChars++;
+      while (service.getProgramPid() > pow (10, mMaxPgmChars))
+        mMaxPgmChars++;
+
+      for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
+        uint16_t pid = service.getRenderStream (eRenderType(renderType)).getPid();
+        while (pid > pow (10, mPidMaxChars[renderType]))
+          mPidMaxChars[renderType]++;
+        }
+      //}}}
+
+      // draw channel name pgm,sid - sid ensures unique button name
+      if (ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
+                         service.getChannelName(), mMaxNameChars,
+                         service.getProgramPid(), mMaxPgmChars,
+                         service.getSid(), mMaxSidChars).c_str()))
+        service.toggleAll();
+
+      for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
+       // iterate definedStreams
+        cDvbStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
+        if (stream.isDefined()) {
+          ImGui::SameLine();
+          // draw definedStream button - sid ensuresd unique button name
+          if (toggleButton (fmt::format ("{}{:{}d}:{}##{}",
+                                         stream.getLabel(),
+                                         stream.getPid(), mPidMaxChars[renderType], stream.getTypeName(),
+                                         service.getSid()).c_str(), stream.isEnabled()))
+           dvbStream.toggleStream (service, eRenderType(renderType));
+          }
+        }
+
+      if (service.getChannelRecord()) {
+        //{{{  draw record pathName
+        ImGui::SameLine();
+        ImGui::Button (fmt::format ("rec:{}##{}",
+                                    service.getChannelRecordName(), service.getSid()).c_str());
+        }
+        //}}}
+
+      // audio provides playPts
+      int64_t playPts = 0;
+      if (service.getRenderStream (eRenderAudio).isEnabled())
+        playPts = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender()).getPlayerPts();
+
+      for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
+        // iterate enabledStreams, drawing
+        cDvbStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
+        if (stream.isEnabled()) {
+          switch (eRenderType(renderType)) {
+            case eRenderVideo:
+              drawVideoInfo (service.getSid(), stream.getRender(), graphics, playPts); break;
+
+            case eRenderAudio:
+            case eRenderDescription:
+              drawAudioInfo (service.getSid(), stream.getRender(), graphics);  break;
+
+            case eRenderSubtitle:
+              drawSubtitle (service.getSid(), stream.getRender(), graphics);  break;
+
+            default:;
+            }
+          }
+        }
+      }
+    }
+  //}}}
+  //{{{
+  void drawPidMap (cDvbStream& dvbStream, cGraphics& graphics) {
+  // draw pids
+    (void)graphics;
+
+    // calc error number width
+    int errorChars = 1;
+    while (dvbStream.getNumErrors() > pow (10, errorChars))
+      errorChars++;
+
+    int prevSid = 0;
+    for (auto& pidInfoItem : dvbStream.getPidInfoMap()) {
+      // iterate for pidInfo
+      cDvbStream::cPidInfo& pidInfo = pidInfoItem.second;
+
+      // draw separator, crude test for new service, fails sometimes
+      if ((pidInfo.getSid() != prevSid) && (pidInfo.getStreamType() != 5) && (pidInfo.getStreamType() != 11))
+        ImGui::Separator();
+
+      // draw pid label
+      ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {} {}",
+                              pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.getPid(),
+                              utils::getFullPtsString (pidInfo.getPts()),
+                              utils::getFullPtsString (pidInfo.getDts()),
+                              pidInfo.getTypeName()).c_str());
+
+      // draw stream bar
+      ImGui::SameLine();
+      ImVec2 pos = ImGui::GetCursorScreenPos();
+      mMaxPidPackets = max (mMaxPidPackets, pidInfo.mPackets);
+      float frac = pidInfo.mPackets / float(mMaxPidPackets);
+      ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x - ImGui::GetTextLineHeight())),
+                      pos.y + ImGui::GetTextLineHeight()};
+      ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
+
+      // draw stream label
+      string streamText = pidInfo.getInfoString();
+      if ((pidInfo.getStreamType() == 0) && (pidInfo.getSid() != 0xFFFF))
+        streamText = fmt::format ("{} ", pidInfo.getSid()) + streamText;
+      ImGui::TextUnformatted (streamText.c_str());
+
+      // adjust packet number width
+      if (pidInfo.mPackets > pow (10, mPacketChars))
+        mPacketChars++;
+
+      prevSid = pidInfo.getSid();
+      }
+    }
+  //}}}
+  //{{{
+  void drawRecorded (cDvbStream& dvbStream, cGraphics& graphics) {
+    (void)graphics;
+
+    for (auto& program : dvbStream.getRecordPrograms())
+      ImGui::TextUnformatted (program.c_str());
+    }
+  //}}}
+
+  //{{{
+  void drawVideoInfo (uint16_t sid, cRender& render, cGraphics& graphics, int64_t playPts) {
+    (void)sid;
+    (void)graphics;
+    (void)playPts;
+
+    cVideoRender& videoRender = dynamic_cast<cVideoRender&>(render);
+    ImGui::TextUnformatted (videoRender.getInfoString().c_str());
+
+    if (ImGui::InvisibleButton (fmt::format ("##vidLog{}", sid).c_str(),
+                                {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
+      videoRender.toggleLog();
+
+    drawMiniLog (videoRender.getLog());
+    }
+  //}}}
+  //{{{
+  void drawAudioInfo (uint16_t sid, cRender& render, cGraphics& graphics) {
+    (void)sid;
+    (void)graphics;
+
+    cAudioRender& audioRender = dynamic_cast<cAudioRender&>(render);
+
+    ImGui::TextUnformatted (audioRender.getInfoString().c_str());
+
+    if (ImGui::InvisibleButton (fmt::format ("##audLog{}", sid).c_str(),
+                                {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
+      audioRender.toggleLog();
+
+    drawMiniLog (audioRender.getLog());
+    }
+  //}}}
+  //{{{
+  void drawSubtitle (uint16_t sid, cRender& render, cGraphics& graphics) {
+    (void)sid;
+
+    cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&>(render);
+
+    const float potSize = ImGui::GetTextLineHeight() / 2.f;
+    size_t line = 0;
+    while (line < subtitleRender.getNumLines()) {
+      // draw subtitle line
+      cSubtitleImage& image = subtitleRender.getImage (line);
+
+      // draw clut color pots
+      ImVec2 pos = ImGui::GetCursorScreenPos();
+      for (size_t pot = 0; pot < image.mColorLut.max_size(); pot++) {
+        ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
+        uint32_t color = image.mColorLut[pot];
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          potPos, {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
+        }
+
+      if (ImGui::InvisibleButton (fmt::format ("##subLog{}{}", sid, line).c_str(),
+                                  {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
+        subtitleRender.toggleLog();
+
+      // draw position
+      ImGui::SameLine();
+      ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", image.mX, image.mY).c_str());
+
+      // create/update image texture
+      if (!image.mTexture) // create
+        image.mTexture = graphics.createTexture (cTexture::eRgba, {image.mWidth, image.mHeight});
+      if (image.mDirty)
+        image.mTexture->setPixels (&image.mPixels, nullptr);
+      image.mDirty = false;
+
+      // draw image, scaled to fit line
+      ImGui::SameLine();
+      ImGui::Image ((void*)(intptr_t)image.mTexture->getTextureId(),
+                    {image.mWidth * ImGui::GetTextLineHeight()/image.mHeight, ImGui::GetTextLineHeight()});
+      line++;
+      }
+
+    //{{{  add dummy lines to highwaterMark to stop jiggling
+    while (line < subtitleRender.getHighWatermark()) {
+      if (ImGui::InvisibleButton (fmt::format ("##line{}", line).c_str(),
+                                  {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
+        subtitleRender.toggleLog();
+      line++;
+      }
+    //}}}
+    drawMiniLog (subtitleRender.getLog());
+    }
+  //}}}
+
+  // not yet
+  //{{{
+  void undo() {
+    cLog::log (LOGINFO, "undo");
+    }
+  //}}}
+  //{{{
+  void redo() {
+    cLog::log (LOGINFO, "redo");
+    }
+  //}}}
+  //{{{
+  void toggleFullScreen() {
+    cLog::log (LOGINFO, "toggleFullScreen");
+    }
+  //}}}
+  //{{{
+  void keyboard() {
+    //{{{  numpad codes
+    // -------------------------------------------------------------------------------------
+    // |    numlock       |        /           |        *             |        -            |
+    // |GLFW_KEY_NUM_LOCK | GLFW_KEY_KP_DIVIDE | GLFW_KEY_KP_MULTIPLY | GLFW_KEY_KP_SUBTRACT|
+    // |     0x11a        |      0x14b         |      0x14c           |      0x14d          |
+    // |------------------------------------------------------------------------------------|
+    // |        7         |        8           |        9             |         +           |
+    // |  GLFW_KEY_KP_7   |   GLFW_KEY_KP_8    |   GLFW_KEY_KP_9      |  GLFW_KEY_KP_ADD;   |
+    // |      0x147       |      0x148         |      0x149           |       0x14e         |
+    // | -------------------------------------------------------------|                     |
+    // |        4         |        5           |        6             |                     |
+    // |  GLFW_KEY_KP_4   |   GLFW_KEY_KP_5    |   GLFW_KEY_KP_6      |                     |
+    // |      0x144       |      0x145         |      0x146           |                     |
+    // | -----------------------------------------------------------------------------------|
+    // |        1         |        2           |        3             |       enter         |
+    // |  GLFW_KEY_KP_1   |   GLFW_KEY_KP_2    |   GLFW_KEY_KP_3      |  GLFW_KEY_KP_ENTER  |
+    // |      0x141       |      0x142         |      0x143           |       0x14f         |
+    // | -------------------------------------------------------------|                     |
+    // |        0                              |        .             |                     |
+    // |  GLFW_KEY_KP_0                        | GLFW_KEY_KP_DECIMAL  |                     |
+    // |      0x140                            |      0x14a           |                     |
+    // --------------------------------------------------------------------------------------
+
+    // glfw keycodes, they are platform specific
+    // - ImGuiKeys small subset of normal keyboard keys
+    // - have I misunderstood something here ?
+
+    //constexpr int kNumpadNumlock = 0x11a;
+    //constexpr int kNumpad0 = 0x140;
+    //constexpr int kNumpad1 = 0x141;
+    //constexpr int kNumpad2 = 0x142;
+    //constexpr int kNumpad3 = 0x143;
+    //constexpr int kNumpad4 = 0x144;
+    //constexpr int kNumpad5 = 0x145;
+    //constexpr int kNumpad6 = 0x146;
+    //constexpr int kNumpad7 = 0x147;
+    //constexpr int kNumpad8 = 0x148;
+    //constexpr int kNumpad9 = 0x149;
+    //constexpr int kNumpadDecimal = 0x14a;
+    //constexpr int kNumpadDivide = 0x14b;
+    //constexpr int kNumpadMultiply = 0x14c;
+    //constexpr int kNumpadSubtract = 0x14d;
+    //constexpr int kNumpadAdd = 0x14e;
+    //constexpr int kNumpadEnter = 0x14f;
+    //}}}
+
+    ImGui::GetIO().WantTextInput = true;
+    ImGui::GetIO().WantCaptureKeyboard = false;
+
+    //bool altKeyPressed = ImGui::GetIO().KeyAlt;
+    //bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
+    //bool shiftKeyPressed = ImGui::GetIO().KeyShift;
+
+    for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
+      ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
+      cLog::log (LOGINFO, fmt::format ("enter {:4x}", ch));
+      }
+
+    ImGui::GetIO().InputQueueCharacters.resize (0);
+    }
+  //}}}
+
+  // vars
+  eTab mTab = eMulti;
+
+  int64_t mMaxPidPackets = 0;
+  size_t mPacketChars = 3;
+  size_t mMaxNameChars = 3;
+  size_t mMaxSidChars = 3;
+  size_t mMaxPgmChars = 3;
+
+  array <size_t, 4> mPidMaxChars = { 3 };
+
+  float mScale = 1.f;
+  float mOverlap = 4.f;
+  int mHistory = 0;
+
+  cFramesGraphic mFramesGraphic = { 2.f,1.f, 6.f,6.f };
+  };
+//}}}
+//{{{
 // cTellyUI
 class cTellyUI : public cUI {
 public:
@@ -181,843 +1018,6 @@ public:
   //}}}
 
 private:
-  //{{{
-  class cTellyView {
-  public:
-    //{{{
-    void draw (cApp& app) {
-
-      cTellyApp& tellyApp = (cTellyApp&)app;
-      cGraphics& graphics = tellyApp.getGraphics();
-
-      graphics.clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
-      //{{{  draw tabs
-      ImGui::SameLine();
-
-      mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
-      //}}}
-      //{{{  draw fullScreen
-      if (tellyApp.getPlatform().hasFullScreen()) {
-        ImGui::SameLine();
-        if (toggleButton ("full", tellyApp.getPlatform().getFullScreen()))
-          tellyApp.getPlatform().toggleFullScreen();
-        }
-      //}}}
-      //{{{  draw scale
-      ImGui::SameLine();
-
-      ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
-      ImGui::DragFloat ("##scale", &mScale, 0.01f, 0.05f, 16.f, "scale%3.2f");
-      //}}}
-      //{{{  draw vsync
-      ImGui::SameLine();
-
-      if (tellyApp.getPlatform().hasVsync())
-        if (toggleButton ("vsync", tellyApp.getPlatform().getVsync()))
-          tellyApp.getPlatform().toggleVsync();
-      //}}}
-      //{{{  draw frameRate
-      ImGui::SameLine();
-
-      ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
-      //}}}
-      //{{{  draw vertices:indices
-      ImGui::SameLine();
-
-      ImGui::TextUnformatted (fmt::format ("{}:{}",
-                              ImGui::GetIO().MetricsRenderVertices,
-                              ImGui::GetIO().MetricsRenderIndices/3).c_str());
-      //}}}
-      //{{{  draw overlap,history
-      //ImGui::SameLine();
-      //ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
-      //ImGui::DragFloat ("##over", &mOverlap, 0.25f, 0.5f, 32.f, "over%3.1f");
-
-      //ImGui::SameLine();
-      //ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
-      //ImGui::DragInt ("##hist", &mHistory, 0.25f, 0, 100, "h %d");
-      //}}}
-
-      if (tellyApp.getDvbStream()) {
-        cDvbStream& dvbStream = *tellyApp.getDvbStream();
-        if (dvbStream.hasTdtTime()) {
-          //{{{  draw tdtTime
-          ImGui::SameLine();
-
-          ImGui::TextUnformatted (dvbStream.getTdtTimeString().c_str());
-          }
-          //}}}
-        if (dvbStream.isFileSource()) {
-          //{{{  draw filePos
-          ImGui::SameLine();
-
-          //ImGui::TextUnformatted (fmt::format ("{}k of {}k",
-          //                                     dvbStream.getFilePos()/1000,
-          //                                     dvbStream.getFileSize()/1000).c_str());
-          ImGui::TextUnformatted (fmt::format ("{:4.3f}%", (100.f * dvbStream.getFilePos()) / dvbStream.getFileSize()).c_str());
-          }
-          //}}}
-        else if (dvbStream.hasDvbSource()) {
-          //{{{  draw dvbStream::dvbSource signal:errors
-          ImGui::SameLine();
-
-          ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getSignalString(), dvbStream.getErrorString()).c_str());
-          }
-          //}}}
-        //{{{  draw dvbStream packet,errors
-        ImGui::SameLine();
-
-        ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getNumPackets(), dvbStream.getNumErrors()).c_str());
-        //}}}
-
-        // draw tab childWindow, monospaced font
-        ImGui::PushFont (tellyApp.getMonoFont());
-        ImGui::BeginChild ("tab", {0.f,0.f}, false,
-                           ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-        switch (mTab) {
-          //{{{
-          case eMulti:
-            drawMultiTelly (dvbStream, graphics);
-            drawChannels (dvbStream, graphics);
-            break;
-          //}}}
-          //{{{
-          case eServices:
-            drawMultiTelly(dvbStream, graphics);
-            drawServices (dvbStream, graphics);
-            break;
-          //}}}
-          //{{{
-          case ePids:
-            drawMultiTelly(dvbStream, graphics);
-            drawPids (dvbStream, graphics);
-            break;
-          //}}}
-          //{{{
-          case eRecorded:
-            drawMultiTelly(dvbStream, graphics);
-            drawRecorded (dvbStream, graphics);
-            break;
-          //}}}
-          }
-
-        keyboard();
-
-        ImGui::EndChild();
-        ImGui::PopFont();
-        }
-      }
-    //}}}
-
-  private:
-    enum eTab { eMulti, eServices, ePids, eRecorded };
-    inline static const vector<string> kTabNames = { "multi", "services", "pids", "recorded" };
-    //{{{
-    class cFramesGraphic {
-    public:
-      cFramesGraphic (float videoLines, float audioLines, float pixelsPerVideoFrame, float pixelsPerAudioChannel)
-        : mVideoLines(videoLines), mAudioLines(audioLines),
-          mPixelsPerVideoFrame(pixelsPerVideoFrame), mPixelsPerAudioChannel(pixelsPerAudioChannel) {}
-
-      //{{{
-      void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playPts) {
-
-        ImVec2 pos = {ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(),
-                      ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - ImGui::GetTextLineHeight()};
-
-        drawAudioPower (audioRender, playPts, pos);
-
-        pos.x -= ImGui::GetWindowWidth() / 2.f;
-
-        // draw playPts centre bar
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x, pos.y - mVideoLines * ImGui::GetTextLineHeight()},
-          {pos.x + 1.f, pos.y + mAudioLines * ImGui::GetTextLineHeight()},
-          0xffc0c0c0);
-
-        float ptsScale = mPixelsPerVideoFrame / videoRender.getPtsDuration();
-
-        { // lock video during iterate
-        shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
-        for (auto& frame : videoRender.getFrames()) {
-          //{{{  draw video frames
-          cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-          float offset1 = (videoFrame->mPts - playPts) * ptsScale;
-          float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
-
-          // pesSize I white / P yellow / B green - ARGB color
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x + offset1, pos.y},
-            {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
-            (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
-
-          // grey decodeTime
-          //ImGui::GetWindowDrawList()->AddRectFilled (
-          //  {pos.x + offset1, pos.y},
-          //  {pos.x + offset2, pos.y - addValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, mVideoLines)},
-          //  0x60ffffff);
-
-          // magenta queueSize in trailing gap
-          //ImGui::GetWindowDrawList()->AddRectFilled (
-          //  {pos.x + offset1, pos.y},
-          //  {pos.x + offset1 + 1.f, pos.y - addValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, mVideoLines - 1.f)},
-          //  0xffff00ff);
-          }
-          //}}}
-        for (auto frame : videoRender.getFreeFrames()) {
-          //{{{  draw free video frames
-          cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-          float offset1 = (videoFrame->mPts - playPts) * ptsScale;
-          float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
-
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x + offset1, pos.y},
-            {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
-            0xFF808080);
-          }
-          //}}}
-        }
-
-        { // lock audio during iterate
-        shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
-        for (auto& frame : audioRender.getFrames()) {
-          //{{{  draw audio frames
-          cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
-          float offset1 = (audioFrame->mPts - playPts) * ptsScale;
-          float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x + offset1, pos.y + 1.f},
-            {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
-            0xff00ffff);
-          }
-          //}}}
-        for (auto frame : audioRender.getFreeFrames()) {
-          //{{{  draw free audio frames
-          cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
-          float offset1 = (audioFrame->mPts - playPts) * ptsScale;
-          float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
-
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x + offset1, pos.y + 1.f},
-            {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
-            0xFF808080);
-          }
-          //}}}
-        }
-
-        // slowly track scaling back to max display values from max values
-        agc (mMaxPower, mMaxDisplayPower, 250.f, 0.5f);
-        agc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
-        agc (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f, 1000.f);
-        agc (mMaxQueueSize, mMaxDisplayQueueSize, 250.f, 4.f);
-        }
-      //}}}
-
-    private:
-      //{{{
-      void drawAudioPower (cAudioRender& audio, int64_t playerPts, ImVec2 pos) {
-
-        cAudioFrame* audioFrame = audio.findAudioFrameFromPts (playerPts);
-        if (audioFrame) {
-          pos.y += 1.f;
-          float height = 8.f * ImGui::GetTextLineHeight();
-
-          if (audioFrame->mNumChannels == 6) {
-            // 5.1
-            float x = pos.x - (5 * mPixelsPerAudioChannel);
-
-            // draw channels reordered
-            for (size_t i = 0; i < 5; i++) {
-              ImGui::GetWindowDrawList()->AddRectFilled (
-                {x, pos.y - (audioFrame->mPowerValues[kChannelOrder[i]] * height)},
-                {x + mPixelsPerAudioChannel - 1.f, pos.y},
-                0xff00ff00);
-              x += mPixelsPerAudioChannel;
-              }
-
-            // draw woofer as red
-            ImGui::GetWindowDrawList()->AddRectFilled (
-              {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[kChannelOrder[5]] * height)},
-              {pos.x - 1.f, pos.y},
-              0x800000ff);
-            }
-
-          else  {
-            // other - draw channels left to right
-            float width = mPixelsPerAudioChannel * audioFrame->mNumChannels;
-            for (size_t i = 0; i < audioFrame->mNumChannels; i++)
-              ImGui::GetWindowDrawList()->AddRectFilled (
-                {pos.x - width + (i * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[i] * height)},
-                {pos.x - width + ((i+1) * mPixelsPerAudioChannel) - 1.f, pos.y},
-                0xff00ff00);
-            }
-          }
-        }
-      //}}}
-
-      //{{{
-      float addValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
-
-        if (value > maxValue)
-          maxValue = value;
-        if (value > maxDisplayValue)
-          maxDisplayValue = value;
-
-        return scale * ImGui::GetTextLineHeight() * value / maxValue;
-        }
-      //}}}
-      //{{{
-      void agc (float& maxValue, float& maxDisplayValue, float revert, float minValue) {
-
-        // slowly adjust scale to displayMaxValue
-        if (maxDisplayValue < maxValue)
-          maxValue -= (maxValue - maxDisplayValue) / revert;
-
-        if (maxValue < minValue)
-          maxValue = minValue;
-
-        // reset displayed max value
-        maxDisplayValue = 0.f;
-        }
-      //}}}
-
-      inline static const array <size_t, 6> kChannelOrder = {4,0,2,1,5,3};
-
-      //  vars
-      const float mVideoLines;
-      const float mAudioLines;
-      const float mPixelsPerVideoFrame;
-      const float mPixelsPerAudioChannel;
-
-      float mMaxPower = 0.5f;
-      float mMaxDisplayPower = 0.f;
-
-      float mMaxPesSize = 0.f;
-      float mMaxDisplayPesSize = 0.f;
-
-      float mMaxQueueSize = 3.f;
-      float mMaxDisplayQueueSize = 0.f;
-
-      float mMaxDecodeTime = 0.f;
-      float mMaxDisplayDecodeTime = 0.f;
-      };
-    //}}}
-    //{{{
-    class cVideoFrameDraw {
-    public:
-      cVideoFrameDraw (cVideoFrame* videoFrame, float offset) : mVideoFrame(videoFrame), mOffset(offset) {}
-
-      cVideoFrame* mVideoFrame;
-      float mOffset;
-      };
-    //}}}
-
-    //{{{
-    void drawChannels (cDvbStream& dvbStream, cGraphics& graphics) {
-      (void)graphics;
-
-      // draw services/channels
-      for (auto& pair : dvbStream.getServiceMap()) {
-        cDvbStream::cService& service = pair.second;
-        if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
-          service.toggleAll();
-
-        if (service.getRenderStream (eRenderAudio).isDefined()) {
-          ImGui::SameLine();
-          ImGui::TextUnformatted (fmt::format ("{}{}",
-            service.getRenderStream (eRenderAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
-          }
-
-        while (service.getChannelName().size() > mMaxNameChars)
-          mMaxNameChars = service.getChannelName().size();
-        }
-      }
-    //}}}
-    //{{{
-    void drawServices (cDvbStream& dvbStream, cGraphics& graphics) {
-
-      for (auto& pair : dvbStream.getServiceMap()) {
-        // iterate services
-        cDvbStream::cService& service = pair.second;
-        //{{{  update button maxChars
-        while (service.getChannelName().size() > mMaxNameChars)
-          mMaxNameChars = service.getChannelName().size();
-        while (service.getSid() > pow (10, mMaxSidChars))
-          mMaxSidChars++;
-        while (service.getProgramPid() > pow (10, mMaxPgmChars))
-          mMaxPgmChars++;
-
-        for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
-          uint16_t pid = service.getRenderStream (eRenderType(renderType)).getPid();
-          while (pid > pow (10, mPidMaxChars[renderType]))
-            mPidMaxChars[renderType]++;
-          }
-        //}}}
-
-        // draw channel name pgm,sid - sid ensures unique button name
-        if (ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
-                           service.getChannelName(), mMaxNameChars,
-                           service.getProgramPid(), mMaxPgmChars,
-                           service.getSid(), mMaxSidChars).c_str()))
-          service.toggleAll();
-
-        for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
-         // iterate definedStreams
-          cDvbStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
-          if (stream.isDefined()) {
-            ImGui::SameLine();
-            // draw definedStream button - sid ensuresd unique button name
-            if (toggleButton (fmt::format ("{}{:{}d}:{}##{}",
-                                           stream.getLabel(),
-                                           stream.getPid(), mPidMaxChars[renderType], stream.getTypeName(),
-                                           service.getSid()).c_str(), stream.isEnabled()))
-             dvbStream.toggleStream (service, eRenderType(renderType));
-            }
-          }
-
-        if (service.getChannelRecord()) {
-          //{{{  draw record pathName
-          ImGui::SameLine();
-          ImGui::Button (fmt::format ("rec:{}##{}",
-                                      service.getChannelRecordName(), service.getSid()).c_str());
-          }
-          //}}}
-
-        // audio provides playPts
-        int64_t playPts = 0;
-        if (service.getRenderStream (eRenderAudio).isEnabled())
-          playPts = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender()).getPlayerPts();
-
-        for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
-          // iterate enabledStreams, drawing
-          cDvbStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
-          if (stream.isEnabled()) {
-            switch (eRenderType(renderType)) {
-              case eRenderVideo:
-                drawVideoInfo (service.getSid(), stream.getRender(), graphics, playPts); break;
-
-              case eRenderAudio:
-              case eRenderDescription:
-                drawAudioInfo (service.getSid(), stream.getRender(), graphics);  break;
-
-              case eRenderSubtitle:
-                drawSubtitle (service.getSid(), stream.getRender(), graphics);  break;
-
-              default:;
-              }
-            }
-          }
-        }
-      }
-    //}}}
-    //{{{
-    void drawPids (cDvbStream& dvbStream, cGraphics& graphics) {
-    // draw pids
-      (void)graphics;
-
-      // calc error number width
-      int errorChars = 1;
-      while (dvbStream.getNumErrors() > pow (10, errorChars))
-        errorChars++;
-
-      int prevSid = 0;
-      for (auto& pidInfoItem : dvbStream.getPidInfoMap()) {
-        // iterate for pidInfo
-        cDvbStream::cPidInfo& pidInfo = pidInfoItem.second;
-
-        // draw separator, crude test for new service, fails sometimes
-        if ((pidInfo.getSid() != prevSid) && (pidInfo.getStreamType() != 5) && (pidInfo.getStreamType() != 11))
-          ImGui::Separator();
-
-        // draw pid label
-        ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {} {}",
-                                pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.getPid(),
-                                utils::getFullPtsString (pidInfo.getPts()),
-                                utils::getFullPtsString (pidInfo.getDts()),
-                                pidInfo.getTypeName()).c_str());
-
-        // draw stream bar
-        ImGui::SameLine();
-        ImVec2 pos = ImGui::GetCursorScreenPos();
-        mMaxPidPackets = max (mMaxPidPackets, pidInfo.mPackets);
-        float frac = pidInfo.mPackets / float(mMaxPidPackets);
-        ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x - ImGui::GetTextLineHeight())),
-                        pos.y + ImGui::GetTextLineHeight()};
-        ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
-
-        // draw stream label
-        string streamText = pidInfo.getInfoString();
-        if ((pidInfo.getStreamType() == 0) && (pidInfo.getSid() != 0xFFFF))
-          streamText = fmt::format ("{} ", pidInfo.getSid()) + streamText;
-        ImGui::TextUnformatted (streamText.c_str());
-
-        // adjust packet number width
-        if (pidInfo.mPackets > pow (10, mPacketChars))
-          mPacketChars++;
-
-        prevSid = pidInfo.getSid();
-        }
-      }
-    //}}}
-    //{{{
-    void drawRecorded (cDvbStream& dvbStream, cGraphics& graphics) {
-      (void)graphics;
-
-      for (auto& program : dvbStream.getRecordPrograms())
-        ImGui::TextUnformatted (program.c_str());
-      }
-    //}}}
-
-    //{{{
-    void drawMultiTelly (cDvbStream& dvbStream, cGraphics& graphics) {
-
-      //{{{  count numVideos
-      int numVideos = 0;
-      for (auto& pair : dvbStream.getServiceMap())
-        if (pair.second.getRenderStream (eRenderVideo).isEnabled())
-          numVideos++;
-      //}}}
-
-      float scale = mScale * ((numVideos <= 1) ? 1.f : ((numVideos <= 4) ? 0.5f : ((numVideos <= 9) ? 0.33f : 0.25f)));
-
-      int curVideo = 0;
-      for (auto& pair : dvbStream.getServiceMap()) {
-        cDvbStream::cService& service = pair.second;
-        if (service.getRenderStream (eRenderVideo).isEnabled()) {
-          curVideo++;
-          cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (eRenderVideo).getRender());
-          //{{{  get playerPts from audioStream
-          int64_t playerPts = service.getRenderStream (eRenderAudio).getPts();
-          if (service.getRenderStream (eRenderAudio).isEnabled()) {
-            // update playerPts from audioPlayer
-            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender());
-            playerPts = audioRender.getPlayerPts();
-            audioRender.setMute (curVideo != 1);
-            if (curVideo <= 1)
-              mFramesGraphic.draw (audioRender, videoRender, playerPts);
-            }
-          //}}}
-
-          // draw telly pic
-          cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
-          if (videoFrame) {
-            //{{{  calc multiPic offset
-            cVec2 offset = { 0.5f, 0.5f };
-            switch (numVideos) {
-              //{{{
-              case 2:
-                switch (curVideo) {
-                  case 1: offset = { 1.f / 4.f, 1.f / 2.f }; break;
-                  case 2: offset = { 3.f / 4.f, 1.f / 2.f }; break;
-                  break;
-                  }
-                break;
-              //}}}
-              case 3:
-              //{{{
-              case 4:
-                switch (curVideo) {
-                  case 1: offset = { 1.f / 4.f, 3.f / 4.f }; break;
-                  case 2: offset = { 3.f / 4.f, 3.f / 4.f }; break;
-
-                  case 3: if (numVideos == 3) // centre
-                            offset = { 2.f / 4.f, 1.f / 4.f };
-                          else
-                            offset = { 1.f / 4.f, 1.f / 4.f };
-                          break;
-                  case 4: offset = { 3.f / 4.f, 1.f / 4.f }; break;
-                  }
-
-                break;
-              //}}}
-              //{{{
-              case 5:
-                switch (curVideo) {
-                  case 1: offset = { 1.f / 6.f, 5.f / 6.f }; break;
-                  case 2: offset = { 5.f / 6.f, 5.f / 6.f }; break;
-                  case 3: offset = { 3.f / 6.f, 3.f / 6.f }; break;
-
-                  case 4: offset = { 1.f / 6.f, 1.f / 6.f }; break;
-                  case 5: offset = { 5.f / 6.f, 1.f / 6.f }; break;
-                  }
-
-                break;
-              //}}}
-              //{{{
-              case 6:
-                switch (curVideo) {
-                  case 1: offset = { 1.f / 6.f, 4.f / 6.f }; break;
-                  case 2: offset = { 3.f / 6.f, 4.f / 6.f }; break;
-                  case 3: offset = { 5.f / 6.f, 4.f / 6.f }; break;
-
-                  case 4: offset = { 1.f / 6.f, 2.f / 6.f }; break;
-                  case 5: offset = { 3.f / 6.f, 2.f / 6.f }; break;
-                  case 6: offset = { 5.f / 6.f, 2.f / 6.f }; break;
-                  break;
-                  }
-
-                break;
-              //}}}
-              case 7:
-              case 8:
-              //{{{
-              case 9:
-                switch (curVideo) {
-                  case 1: offset = { 1.f / 6.f, 5.f / 6.f }; break;
-                  case 2: offset = { 3.f / 6.f, 5.f / 6.f }; break;
-                  case 3: offset = { 5.f / 6.f, 5.f / 6.f }; break;
-
-                  case 4: offset = { 1.f / 6.f, 1.f / 6.f }; break;
-                  case 5: offset = { 3.f / 6.f, 1.f / 6.f }; break;
-                  case 6: offset = { 5.f / 6.f, 1.f / 6.f }; break;
-
-                  case 7: if (numVideos == 7) // centre
-                            offset = { 3.f / 6.f, 3.f / 6.f };
-                          else
-                            offset = { 1.f / 6.f, 3.f / 6.f };
-                          break;
-                  case 8: offset = { 3.f / 6.f, 3.f / 6.f }; break;
-                  case 9: offset = { 5.f / 6.f, 3.f / 6.f }; break;
-                  break;
-                  }
-
-                break;
-              //}}}
-              case 10:
-              case 11:
-              case 12:
-              case 13:
-              case 14:
-              case 15:
-              //{{{
-              case 16:
-                switch (curVideo) {
-                  case 1: offset = { 1.f / 8.f, 7.f / 8.f }; break;
-                  case 2: offset = { 3.f / 8.f, 7.f / 8.f }; break;
-                  case 3: offset = { 5.f / 8.f, 7.f / 8.f }; break;
-                  case 4: offset = { 7.f / 8.f, 7.f / 8.f }; break;
-
-                  case 5: offset = { 1.f / 8.f, 5.f / 8.f }; break;
-                  case 6: offset = { 3.f / 8.f, 5.f / 8.f }; break;
-                  case 7: offset = { 5.f / 8.f, 5.f / 8.f }; break;
-                  case 8: offset = { 7.f / 8.f, 5.f / 8.f }; break;
-
-                  case 9: offset =  { 1.f / 8.f, 3.f / 8.f }; break;
-                  case 10: offset = { 3.f / 8.f, 3.f / 8.f }; break;
-                  case 11: offset = { 5.f / 8.f, 3.f / 8.f }; break;
-                  case 12: offset = { 7.f / 8.f, 3.f / 8.f }; break;
-
-                  case 13: offset = { 1.f / 8.f, 1.f / 8.f }; break;
-                  case 14: offset = { 3.f / 8.f, 1.f / 8.f }; break;
-                  case 15: offset = { 5.f / 8.f, 1.f / 8.f }; break;
-                  case 16: offset = { 7.f / 8.f, 1.f / 8.f }; break;
-                  break;
-                  }
-
-                break;
-              //}}}
-              default:;
-              }
-            //}}}
-            cVec2 scaledSize = { (scale * ImGui::GetWindowWidth()) / videoFrame->getWidth(),
-                                 (scale * ImGui::GetWindowHeight()) / videoFrame->getHeight() };
-            cMat4x4 model;
-            model.setTranslate ( {(ImGui::GetWindowWidth() * offset.x) - ((videoFrame->getWidth() / 2.f) * scaledSize.x),
-                                  (ImGui::GetWindowHeight() * offset.y) - ((videoFrame->getHeight() / 2.f) * scaledSize.y)} );
-            model.size (scaledSize);
-            videoRender.drawFrame (videoFrame, graphics, model, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
-
-            videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
-            }
-          }
-        }
-      }
-    //}}}
-    //{{{
-    void drawVideoInfo (uint16_t sid, cRender& render, cGraphics& graphics, int64_t playPts) {
-      (void)sid;
-      (void)graphics;
-      (void)playPts;
-
-      cVideoRender& videoRender = dynamic_cast<cVideoRender&>(render);
-      ImGui::TextUnformatted (videoRender.getInfoString().c_str());
-
-      if (ImGui::InvisibleButton (fmt::format ("##vidLog{}", sid).c_str(),
-                                  {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
-        videoRender.toggleLog();
-
-      drawMiniLog (videoRender.getLog());
-      }
-    //}}}
-    //{{{
-    void drawAudioInfo (uint16_t sid, cRender& render, cGraphics& graphics) {
-      (void)sid;
-      (void)graphics;
-
-      cAudioRender& audioRender = dynamic_cast<cAudioRender&>(render);
-
-      ImGui::TextUnformatted (audioRender.getInfoString().c_str());
-
-      if (ImGui::InvisibleButton (fmt::format ("##audLog{}", sid).c_str(),
-                                  {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
-        audioRender.toggleLog();
-
-      drawMiniLog (audioRender.getLog());
-      }
-    //}}}
-    //{{{
-    void drawSubtitle (uint16_t sid, cRender& render, cGraphics& graphics) {
-      (void)sid;
-
-      cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&>(render);
-
-      const float potSize = ImGui::GetTextLineHeight() / 2.f;
-      size_t line = 0;
-      while (line < subtitleRender.getNumLines()) {
-        // draw subtitle line
-        cSubtitleImage& image = subtitleRender.getImage (line);
-
-        // draw clut color pots
-        ImVec2 pos = ImGui::GetCursorScreenPos();
-        for (size_t pot = 0; pot < image.mColorLut.max_size(); pot++) {
-          ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
-          uint32_t color = image.mColorLut[pot];
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            potPos, {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
-          }
-
-        if (ImGui::InvisibleButton (fmt::format ("##subLog{}{}", sid, line).c_str(),
-                                    {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
-          subtitleRender.toggleLog();
-
-        // draw position
-        ImGui::SameLine();
-        ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", image.mX, image.mY).c_str());
-
-        // create/update image texture
-        if (!image.mTexture) // create
-          image.mTexture = graphics.createTexture (cTexture::eRgba, {image.mWidth, image.mHeight});
-        if (image.mDirty)
-          image.mTexture->setPixels (&image.mPixels, nullptr);
-        image.mDirty = false;
-
-        // draw image, scaled to fit line
-        ImGui::SameLine();
-        ImGui::Image ((void*)(intptr_t)image.mTexture->getTextureId(),
-                      {image.mWidth * ImGui::GetTextLineHeight()/image.mHeight, ImGui::GetTextLineHeight()});
-        line++;
-        }
-
-      //{{{  add dummy lines to highwaterMark to stop jiggling
-      while (line < subtitleRender.getHighWatermark()) {
-        if (ImGui::InvisibleButton (fmt::format ("##line{}", line).c_str(),
-                                    {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
-          subtitleRender.toggleLog();
-        line++;
-        }
-      //}}}
-      drawMiniLog (subtitleRender.getLog());
-      }
-    //}}}
-
-    // not yet
-    //{{{
-    void undo() {
-      cLog::log (LOGINFO, "undo");
-      }
-    //}}}
-    //{{{
-    void redo() {
-      cLog::log (LOGINFO, "redo");
-      }
-    //}}}
-    //{{{
-    void toggleFullScreen() {
-      cLog::log (LOGINFO, "toggleFullScreen");
-      }
-    //}}}
-    //{{{
-    void keyboard() {
-      //{{{  numpad codes
-      // -------------------------------------------------------------------------------------
-      // |    numlock       |        /           |        *             |        -            |
-      // |GLFW_KEY_NUM_LOCK | GLFW_KEY_KP_DIVIDE | GLFW_KEY_KP_MULTIPLY | GLFW_KEY_KP_SUBTRACT|
-      // |     0x11a        |      0x14b         |      0x14c           |      0x14d          |
-      // |------------------------------------------------------------------------------------|
-      // |        7         |        8           |        9             |         +           |
-      // |  GLFW_KEY_KP_7   |   GLFW_KEY_KP_8    |   GLFW_KEY_KP_9      |  GLFW_KEY_KP_ADD;   |
-      // |      0x147       |      0x148         |      0x149           |       0x14e         |
-      // | -------------------------------------------------------------|                     |
-      // |        4         |        5           |        6             |                     |
-      // |  GLFW_KEY_KP_4   |   GLFW_KEY_KP_5    |   GLFW_KEY_KP_6      |                     |
-      // |      0x144       |      0x145         |      0x146           |                     |
-      // | -----------------------------------------------------------------------------------|
-      // |        1         |        2           |        3             |       enter         |
-      // |  GLFW_KEY_KP_1   |   GLFW_KEY_KP_2    |   GLFW_KEY_KP_3      |  GLFW_KEY_KP_ENTER  |
-      // |      0x141       |      0x142         |      0x143           |       0x14f         |
-      // | -------------------------------------------------------------|                     |
-      // |        0                              |        .             |                     |
-      // |  GLFW_KEY_KP_0                        | GLFW_KEY_KP_DECIMAL  |                     |
-      // |      0x140                            |      0x14a           |                     |
-      // --------------------------------------------------------------------------------------
-
-      // glfw keycodes, they are platform specific
-      // - ImGuiKeys small subset of normal keyboard keys
-      // - have I misunderstood something here ?
-
-      //constexpr int kNumpadNumlock = 0x11a;
-      //constexpr int kNumpad0 = 0x140;
-      //constexpr int kNumpad1 = 0x141;
-      //constexpr int kNumpad2 = 0x142;
-      //constexpr int kNumpad3 = 0x143;
-      //constexpr int kNumpad4 = 0x144;
-      //constexpr int kNumpad5 = 0x145;
-      //constexpr int kNumpad6 = 0x146;
-      //constexpr int kNumpad7 = 0x147;
-      //constexpr int kNumpad8 = 0x148;
-      //constexpr int kNumpad9 = 0x149;
-      //constexpr int kNumpadDecimal = 0x14a;
-      //constexpr int kNumpadDivide = 0x14b;
-      //constexpr int kNumpadMultiply = 0x14c;
-      //constexpr int kNumpadSubtract = 0x14d;
-      //constexpr int kNumpadAdd = 0x14e;
-      //constexpr int kNumpadEnter = 0x14f;
-      //}}}
-
-      ImGui::GetIO().WantTextInput = true;
-      ImGui::GetIO().WantCaptureKeyboard = false;
-
-      //bool altKeyPressed = ImGui::GetIO().KeyAlt;
-      //bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
-      //bool shiftKeyPressed = ImGui::GetIO().KeyShift;
-
-      for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
-        ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
-        cLog::log (LOGINFO, fmt::format ("enter {:4x}", ch));
-        }
-
-      ImGui::GetIO().InputQueueCharacters.resize (0);
-      }
-    //}}}
-
-    // vars
-    eTab mTab = eMulti;
-
-    int64_t mMaxPidPackets = 0;
-    size_t mPacketChars = 3;
-    size_t mMaxNameChars = 3;
-    size_t mMaxSidChars = 3;
-    size_t mMaxPgmChars = 3;
-
-    array <size_t, 4> mPidMaxChars = { 3 };
-
-    float mScale = 1.f;
-    float mOverlap = 4.f;
-    int mHistory = 0;
-
-    cFramesGraphic mFramesGraphic = { 2.f,1.f, 6.f,6.f };
-    };
-  //}}}
 
   // vars
   cTellyView mTellyView;

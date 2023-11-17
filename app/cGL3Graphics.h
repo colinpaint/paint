@@ -81,8 +81,8 @@ public:
   virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) final {
   // factory create
 
-    cLog::log (LOGINFO, fmt::format ("cGL3Graphics::createTexture type:{} size:{}x{}",
-                                     (int)textureType, size.x, size.y));
+    //cLog::log (LOGINFO, fmt::format ("cGL3Graphics::createTexture type:{} size:{}x{}",
+    //                                 (int)textureType, size.x, size.y));
     switch (textureType) {
       case cTexture::eRgba:   return new cOpenGL3RgbaTexture (textureType, size);
       case cTexture::eYuv420: return new cOpenGL3Yuv420Texture (textureType, size);
@@ -323,7 +323,7 @@ private:
       if (mFrameBufferObject == 0)
         mSize = size;
       else
-        cLog::log (LOGERROR, "unimplmented setSize of non screen Target");
+        cLog::log (LOGERROR, "cOpenGL3Target::setSize - unimplmented non screen Target");
       };
     //}}}
     //{{{
@@ -365,7 +365,7 @@ private:
         glBindTexture (GL_TEXTURE_2D, mColorTextureId);
         }
       else
-        cLog::log (LOGERROR, "windowTarget cannot be src");
+        cLog::log (LOGERROR, "cOpenGL3Target::setSource  - windowTarget cannot be src");
       }
     //}}}
 
@@ -421,21 +421,21 @@ private:
         case GL_FRAMEBUFFER_COMPLETE:
           return true;
         case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-          cLog::log (LOGERROR, "Target incomplete: Attachment is NOT complete"); return false;
+          cLog::log (LOGERROR, "cOpenGL3Target incomplete: Attachment is NOT complete"); return false;
         case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-          cLog::log (LOGERROR, "Target incomplete: No image is attached to FBO"); return false;
+          cLog::log (LOGERROR, "cOpenGL3Target incomplete: No image is attached to FBO"); return false;
         case GL_FRAMEBUFFER_UNSUPPORTED:
-          cLog::log (LOGERROR, "Target incomplete: Unsupported by FBO implementation"); return false;
+          cLog::log (LOGERROR, "cOpenGL3Target incomplete: Unsupported by FBO implementation"); return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-          cLog::log (LOGERROR, "Target incomplete: Draw buffer"); return false;
+          cLog::log (LOGERROR, "cOpenGL3Target incomplete: Draw buffer"); return false;
         case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-          cLog::log (LOGERROR, "Target incomplete: Read buffer"); return false;
+          cLog::log (LOGERROR, "cOpenGL3Target incomplete: Read buffer"); return false;
 
         //case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
         // cLog::log (LOGERROR, "Target incomplete: Attached images have different dimensions"); return false;
         default:
-          cLog::log (LOGERROR, "Target incomplete: Unknown error"); return false;
+          cLog::log (LOGERROR, "cOpenGL3Target incomplete: Unknown error"); return false;
         }
       }
     //}}}
@@ -450,7 +450,8 @@ private:
       GLint multiSampleCount = 0;
       glGetIntegerv (GL_MAX_SAMPLES, &multiSampleCount);
 
-      cLog::log (LOGINFO, fmt::format ("Target maxColorAttach {} masSamples {}", colorBufferCount, multiSampleCount));
+      cLog::log (LOGINFO, fmt::format ("cOpenGL3Target maxColorAttach {} masSamples {}", 
+                                       colorBufferCount, multiSampleCount));
 
       //  print info of the colorbuffer attachable image
       GLint objectType;
@@ -593,7 +594,7 @@ private:
     cOpenGL3RgbaTexture (eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size) {
 
-      cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
+      cLog::log (LOGINFO, fmt::format ("cOpenGL3RgbaTexture - creating eRgba texture {}x{}", size.x, size.y));
       glGenTextures (1, &mTextureId);
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);
@@ -643,7 +644,6 @@ private:
         : cTexture(textureType, size) {
 
       //cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
-
       glGenTextures (3, mTextureId.data());
 
       // y texture
@@ -673,12 +673,9 @@ private:
     //}}}
     //{{{
     virtual ~cOpenGL3Yuv420Texture() {
-      glDeleteTextures (3, mTextureId.data());
-      //glDeleteTextures (1, &mTextureId[0]);
-      //glDeleteTextures (1, &mTextureId[1]);
-      //glDeleteTextures (1, &mTextureId[2]);
 
       cLog::log (LOGINFO, fmt::format ("deleting eYuv420 texture {}x{}", mSize.x, mSize.y));
+      glDeleteTextures (3, mTextureId.data());
       }
     //}}}
 
@@ -811,7 +808,7 @@ private:
       //{{{  error, exit
       char errMessage[512];
       glGetProgramInfoLog (vertShader, 512, NULL, errMessage);
-      cLog::log (LOGERROR, fmt::format ("vertShader failed {}", errMessage));
+      cLog::log (LOGERROR, fmt::format ("compileShader - vertShader failed {}", errMessage));
       exit (EXIT_FAILURE);
       }
       //}}}
@@ -826,7 +823,7 @@ private:
       //{{{  error, exit
       char errMessage[512];
       glGetProgramInfoLog (fragShader, 512, NULL, errMessage);
-      cLog::log (LOGERROR, fmt::format ("fragShader failed {}", errMessage));
+      cLog::log (LOGERROR, fmt::format ("compileShader - fragShader failed {}", errMessage));
       exit (EXIT_FAILURE);
       }
       //}}}
@@ -841,7 +838,7 @@ private:
       //{{{  error, exit
       char errMessage[512];
       glGetProgramInfoLog (id, 512, NULL, errMessage);
-      cLog::log (LOGERROR, fmt::format ("shaderProgram failed {} ",  errMessage));
+      cLog::log (LOGERROR, fmt::format ("compileShader - shaderProgram failed {} ",  errMessage));
       exit (EXIT_FAILURE);
       }
       //}}}

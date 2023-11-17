@@ -1426,11 +1426,12 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                   uint8_t streamId = (*((uint32_t*)(ts+3))) & 0xFF;
                   if ((streamId == 0xB0) || // program stream map
                       (streamId == 0xB1) || // private stream1
-                      (streamId == 0xBd) || // ???
-                      (streamId == 0xBE) || // padding stream
                       (streamId == 0xBF)) { // private stream2
+                    cLog::log (LOGINFO, fmt::format ("recognised pesHeader - pid:{} streamId:{:8x}", pid, streamId));
                     }
-                  else if ((streamId >= 0xC0) && (streamId <= 0xEF)) { // audio, video streams
+                  else if ((streamId == 0xBD) || 
+                           (streamId == 0xBE) ||// ???
+                           ((streamId >= 0xC0) && (streamId <= 0xEF))) { // subtitle, audio, video streams
                     if (pidInfo->mBufPtr)
                       if (processPesByPid (pidInfo, skip))
                         pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
