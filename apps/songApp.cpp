@@ -27,11 +27,11 @@
 #include "../song/cSongLoader.h"
 
 // app
-#include "cApp.h"
-#include "cPlatform.h"
-#include "cGraphics.h"
-#include "myImgui.h"
-#include "cUI.h"
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
+#include "../app/myImgui.h"
+#include "../app/cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 

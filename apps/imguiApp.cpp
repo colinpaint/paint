@@ -1,4 +1,4 @@
-// demo.cpp - imgui demo app
+// imguiApp.cpp - imgui app
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -21,11 +21,11 @@
 #include "fmt/format.h"
 
 // app
-#include "cApp.h"
-#include "cPlatform.h"
-#include "cGraphics.h"
-#include "myImgui.h"
-#include "cUI.h"
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
+#include "../app/myImgui.h"
+#include "../app/cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 // app
@@ -34,11 +34,11 @@ using namespace std;
 //}}}
 
 //{{{
-class cDemoApp : public cApp {
+class cImguiApp : public cApp {
 public:
-  cDemoApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-    : cApp ("imgui demo", windowSize, fullScreen, vsync) {}
-  virtual ~cDemoApp() = default;
+  cImguiApp (const cPoint& windowSize, bool fullScreen, bool vsync)
+    : cApp ("imguiApp", windowSize, fullScreen, vsync) {}
+  virtual ~cImguiApp() = default;
 
   virtual void drop (const vector<string>& dropItems) final {
     for (auto& item : dropItems) {
@@ -49,11 +49,11 @@ public:
   };
 //}}}
 //{{{
-class cDemoUI : public cUI {
+class cImguiUI : public cUI {
 public:
-  cDemoUI (const string& name) : cUI(name) {}
+  cImguiUI (const string& name) : cUI(name) {}
 
-  virtual ~cDemoUI() = default;
+  virtual ~cImguiUI() = default;
 
   void addToDrawList (cApp& app) final {
 
@@ -86,8 +86,8 @@ public:
 
 private:
   // self registration
-  static cUI* create (const string& className) { return new cDemoUI (className); }
-  inline static const bool mRegistered = registerClass ("demo", &create);
+  static cUI* create (const string& className) { return new cImguiUI (className); }
+  inline static const bool mRegistered = registerClass ("imgui", &create);
   };
 //}}}
 
@@ -121,9 +121,9 @@ int main (int numArgs, char* args[]) {
   // list static registered UI classes
   cUI::listRegisteredClasses();
 
-  // demoApp
-  cDemoApp demoApp ({1000, 900}, fullScreen, vsync);
-  demoApp.mainUILoop();
+  // ImguiApp
+  cImguiApp imguiApp ({1000, 900}, fullScreen, vsync);
+  imguiApp.mainUILoop();
 
   return EXIT_SUCCESS;
   }

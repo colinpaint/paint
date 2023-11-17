@@ -31,11 +31,11 @@
 #include "../dvb/cSubtitleRender.h"
 
 // app
-#include "cApp.h"
-#include "cPlatform.h"
-#include "cGraphics.h"
-#include "myImgui.h"
-#include "cUI.h"
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
+#include "../app/myImgui.h"
+#include "../app/cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
@@ -244,6 +244,13 @@ public:
           break;
         //}}}
         }
+
+      if (ImGui::IsMouseClicked (0)) {
+        cLog::log (LOGINFO, fmt::format ("mouse {} {} {},{}",
+                                         ImGui::IsMouseDragging (0), ImGui::IsMouseDown (0),
+                                         ImGui::GetMousePos().x, ImGui::GetMousePos().y));
+        }
+
 
       keyboard();
 
@@ -874,66 +881,22 @@ private:
     cLog::log (LOGINFO, "toggleFullScreen");
     }
   //}}}
+
   //{{{
   void keyboard() {
-    //{{{  numpad codes
-    // -------------------------------------------------------------------------------------
-    // |    numlock       |        /           |        *             |        -            |
-    // |GLFW_KEY_NUM_LOCK | GLFW_KEY_KP_DIVIDE | GLFW_KEY_KP_MULTIPLY | GLFW_KEY_KP_SUBTRACT|
-    // |     0x11a        |      0x14b         |      0x14c           |      0x14d          |
-    // |------------------------------------------------------------------------------------|
-    // |        7         |        8           |        9             |         +           |
-    // |  GLFW_KEY_KP_7   |   GLFW_KEY_KP_8    |   GLFW_KEY_KP_9      |  GLFW_KEY_KP_ADD;   |
-    // |      0x147       |      0x148         |      0x149           |       0x14e         |
-    // | -------------------------------------------------------------|                     |
-    // |        4         |        5           |        6             |                     |
-    // |  GLFW_KEY_KP_4   |   GLFW_KEY_KP_5    |   GLFW_KEY_KP_6      |                     |
-    // |      0x144       |      0x145         |      0x146           |                     |
-    // | -----------------------------------------------------------------------------------|
-    // |        1         |        2           |        3             |       enter         |
-    // |  GLFW_KEY_KP_1   |   GLFW_KEY_KP_2    |   GLFW_KEY_KP_3      |  GLFW_KEY_KP_ENTER  |
-    // |      0x141       |      0x142         |      0x143           |       0x14f         |
-    // | -------------------------------------------------------------|                     |
-    // |        0                              |        .             |                     |
-    // |  GLFW_KEY_KP_0                        | GLFW_KEY_KP_DECIMAL  |                     |
-    // |      0x140                            |      0x14a           |                     |
-    // --------------------------------------------------------------------------------------
-
-    // glfw keycodes, they are platform specific
-    // - ImGuiKeys small subset of normal keyboard keys
-    // - have I misunderstood something here ?
-
-    //constexpr int kNumpadNumlock = 0x11a;
-    //constexpr int kNumpad0 = 0x140;
-    //constexpr int kNumpad1 = 0x141;
-    //constexpr int kNumpad2 = 0x142;
-    //constexpr int kNumpad3 = 0x143;
-    //constexpr int kNumpad4 = 0x144;
-    //constexpr int kNumpad5 = 0x145;
-    //constexpr int kNumpad6 = 0x146;
-    //constexpr int kNumpad7 = 0x147;
-    //constexpr int kNumpad8 = 0x148;
-    //constexpr int kNumpad9 = 0x149;
-    //constexpr int kNumpadDecimal = 0x14a;
-    //constexpr int kNumpadDivide = 0x14b;
-    //constexpr int kNumpadMultiply = 0x14c;
-    //constexpr int kNumpadSubtract = 0x14d;
-    //constexpr int kNumpadAdd = 0x14e;
-    //constexpr int kNumpadEnter = 0x14f;
-    //}}}
 
     ImGui::GetIO().WantTextInput = true;
     ImGui::GetIO().WantCaptureKeyboard = false;
 
-    //bool altKeyPressed = ImGui::GetIO().KeyAlt;
-    //bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
-    //bool shiftKeyPressed = ImGui::GetIO().KeyShift;
+    bool altKeyPressed = ImGui::GetIO().KeyAlt;
+    bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
+    bool shiftKeyPressed = ImGui::GetIO().KeyShift;
 
     for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
       ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
-      cLog::log (LOGINFO, fmt::format ("enter {:4x}", ch));
+      cLog::log (LOGINFO, fmt::format ("enter {:4x} {} {} {}",
+                                       ch,altKeyPressed, ctrlKeyPressed, shiftKeyPressed));
       }
-
     ImGui::GetIO().InputQueueCharacters.resize (0);
     }
   //}}}
@@ -969,10 +932,9 @@ public:
 
     ImGui::SetNextWindowPos (ImVec2(0,0));
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
+
     ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
-
     mTellyView.draw (app);
-
     ImGui::End();
     }
   //}}}

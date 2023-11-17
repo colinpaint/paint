@@ -52,16 +52,16 @@ add_subdirectory (decoders)
 add_subdirectory (audio)
 add_subdirectory (song)
 
-# windows audio capture app
+# windows audio captureApp
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-  project (capture VERSION 1.0.0)
-    add_executable (${PROJECT_NAME} audio/capture.cpp)
+  project (captureApp VERSION 1.0.0)
+    add_executable (${PROJECT_NAME} apps/captureApp.cpp)
     target_link_libraries (${PROJECT_NAME} PRIVATE decoders winmm avrt audio)
 endif()
 
-# imgui demo app
-project (demo VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} app/demo.cpp app/cUI.h app/cUI.cpp)
+# imguiApp
+project (imguiApp VERSION 1.0.0)
+  add_executable (${PROJECT_NAME} apps/imguiApp.cpp app/cUI.h app/cUI.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -71,8 +71,8 @@ project (demo VERSION 1.0.0)
   endif()
 
 # edit app
-project (edit VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} app/edit.cpp app/cUI.h app/cUI.cpp)
+project (editApp VERSION 1.0.0)
+  add_executable (${PROJECT_NAME} apps/editApp.cpp app/cUI.h app/cUI.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -81,9 +81,9 @@ project (edit VERSION 1.0.0)
     target_link_libraries (${PROJECT_NAME} PRIVATE app common imgui stdc++fs)
   endif()
 
-# player app
-project (player VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} app/player.cpp app/cUI.h app/cUI.cpp)
+#songApp
+project (songApp VERSION 1.0.0)
+  add_executable (${PROJECT_NAME} apps/songApp.cpp app/cUI.h app/cUI.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -94,9 +94,9 @@ project (player VERSION 1.0.0)
                                                    stdc++fs pthread)
   endif()
 
-# telly app
-project (telly VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} app/telly.cpp app/cUI.h app/cUI.cpp )
+# tellyApp
+project (tellyApp VERSION 1.0.0)
+  add_executable (${PROJECT_NAME} apps/tellyApp.cpp app/cUI.h app/cUI.cpp )
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE stb)

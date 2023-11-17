@@ -30,11 +30,11 @@
 #include "../common/cFileView.h"
 
 // app
-#include "cApp.h"
-#include "cPlatform.h"
-#include "cGraphics.h"
-#include "myImgui.h"
-#include "cUI.h"
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
+#include "../app/myImgui.h"
+#include "../app/cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
@@ -2130,10 +2130,9 @@ public:
     ImGui::SetNextItemWidth (3 * ImGui::GetFontSize());
     ImGui::DragInt ("##fs", &mOptions.mFontSize, 0.2f, mOptions.mMinFontSize, mOptions.mMaxFontSize, "%d");
 
-    if (ImGui::IsItemHovered()) {
-      int fontSize = mOptions.mFontSize + static_cast<int>(ImGui::GetIO().MouseWheel);
-      mOptions.mFontSize = max (mOptions.mMinFontSize, min (mOptions.mMaxFontSize, fontSize));
-      }
+    if (ImGui::IsItemHovered())
+      mOptions.mFontSize = max (mOptions.mMinFontSize, min (mOptions.mMaxFontSize,
+                             mOptions.mFontSize + static_cast<int>(ImGui::GetIO().MouseWheel)));
     //}}}
     //{{{  vsync button,fps
     if (app.getPlatform().hasVsync()) {
@@ -3046,7 +3045,7 @@ private:
     }
   //}}}
 
-  // keyboard,mouse
+  // keyboard
   //{{{
   void keyboard() {
     //{{{
@@ -3132,13 +3131,14 @@ private:
       }
     }
   //}}}
+
+  // mouse
   //{{{
   void mouseSelectLine (uint32_t lineNumber) {
 
-    cursorFlashOn();
-
     cLog::log (LOGINFO, fmt::format ("mouseSelectLine line:{}", lineNumber));
 
+    cursorFlashOn();
     mEdit.mCursor.mPosition = {lineNumber, 0};
     mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
     setSelect (eSelect::eLine, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
@@ -3173,9 +3173,8 @@ private:
   //{{{
   void mouseSelectText (bool selectWord, uint32_t lineNumber, ImVec2 pos) {
 
-    cursorFlashOn();
     //cLog::log (LOGINFO, fmt::format ("mouseSelectText line:{}", lineNumber));
-
+    cursorFlashOn();
     mEdit.mCursor.mPosition = {lineNumber, getColumnFromPosX (getGlyphsLine (lineNumber), pos.x)};
     mEdit.mDragFirstPosition = mEdit.mCursor.mPosition;
     setSelect (selectWord ? eSelect::eWord : eSelect::eNormal, mEdit.mCursor.mPosition, mEdit.mCursor.mPosition);
