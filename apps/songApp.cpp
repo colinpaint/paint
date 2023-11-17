@@ -69,8 +69,8 @@ namespace {
 class cSongApp : public cApp {
 public:
   //{{{
-  cSongApp (const cPoint& windowSize, bool fullScreen, bool vsync) 
-      : cApp("song",windowSize, fullScreen, vsync) {
+  cSongApp (const cPoint& windowSize, bool fullScreen, bool vsync)
+      : cApp("songApp",windowSize, fullScreen, vsync) {
     mSongLoader = new cSongLoader();
     }
   //}}}
@@ -81,10 +81,12 @@ public:
 
   //{{{
   bool setSongName (const string& songName) {
+
     mSongName = songName;
+    cFileUtils::resolve (mSongName);
 
     // load song
-    const vector <string>& strings = { songName };
+    const vector <string>& strings = { mSongName };
     mSongLoader->launchLoad (strings);
 
     return true;
@@ -102,7 +104,7 @@ public:
   virtual void drop (const vector<string>& dropItems) final {
     for (auto& item : dropItems) {
       cLog::log (LOGINFO, item);
-      setSongName (cFileUtils::resolve (item));
+      setSongName (item);
       }
     }
   //}}}
@@ -847,7 +849,7 @@ private:
 
   // self registration
   static cUI* create (const string& className) { return new cSongUI (className); }
-  inline static const bool mRegistered = registerClass ("song", &create);
+  inline static const bool mRegistered = registerClass ("songUI", &create);
   };
 //}}}
 
@@ -865,18 +867,18 @@ int main (int numArgs, char* args[]) {
 
   // parse and remove recognised params
   for (auto it = params.begin(); it < params.end();) {
-    if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
+    if (*it == "full") { fullScreen = true; params.erase (it); }
+    else if (*it == "free") { vsync = false; params.erase (it); }
+    else if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
     else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
-    else if (*it == "full") { fullScreen = true; params.erase (it); }
-    else if (*it == "free") { vsync = false; params.erase (it); }
     else ++it;
     };
   //}}}
 
   // log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, fmt::format ("song"));
+  cLog::log (LOGNOTICE, "songApp - full free log1 log2 log3 filename");
 
   // list static registered UI classes
   cUI::listRegisteredClasses();
@@ -885,7 +887,7 @@ int main (int numArgs, char* args[]) {
   cSongApp songApp ({800, 480}, fullScreen, vsync);
   songApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
   songApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
-  songApp.setSongName (params.empty() ? "" : cFileUtils::resolve (params[0]));
+  songApp.setSongName (params.empty() ? "" : params[0]);
   songApp.mainUILoop();
 
   return EXIT_SUCCESS;
