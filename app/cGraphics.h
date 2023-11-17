@@ -12,6 +12,63 @@ struct ImDrawData;
 
 // abstract base classes
 //{{{
+class cShader {
+// abstract bas class for all shaders
+public:
+  cShader() = default;
+  virtual ~cShader() = default;
+
+  uint32_t getId() { return mId; }
+  virtual void use() = 0;
+
+protected:
+  uint32_t mId = 0;
+  };
+//}}}
+//{{{
+class cQuadShader : public cShader {
+// abstract base class for shaders drawing quad triangle pair, with model, projection maths
+
+public:
+  cQuadShader() : cShader() {}
+  virtual ~cQuadShader() = default;
+
+  // sets
+  virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) = 0;
+  };
+//}}}
+
+//{{{
+class cTexture {
+public:
+  enum eTextureType { eRgba, eYuv420 };
+
+  cTexture (eTextureType textureType, const cPoint& size) : mTextureType(textureType), mSize(size) {}
+  virtual ~cTexture() = default;
+
+  /// gets
+  eTextureType getTextureType() const { return mTextureType; }
+  const cPoint getSize() const { return mSize; }
+
+  virtual void* getTextureId() = 0;
+
+  virtual void setPixels (uint8_t** pixels, int* strides) = 0;
+  virtual void setSource() = 0;
+
+protected:
+  const eTextureType mTextureType;
+  cPoint mSize;
+  };
+//}}}
+//{{{
+class cTextureShader : public cQuadShader {
+public:
+  cTextureShader() : cQuadShader() {}
+  virtual ~cTextureShader() = default;
+  };
+//}}}
+
+//{{{
 class cQuad {
 public:
   cQuad (const cPoint& size) : mSize(size) {}
@@ -73,63 +130,6 @@ protected:
   };
 //}}}
 
-//{{{
-class cShader {
-// abstract bas class for all shaders
-public:
-  cShader() = default;
-  virtual ~cShader() = default;
-
-  uint32_t getId() { return mId; }
-  virtual void use() = 0;
-
-protected:
-  uint32_t mId = 0;
-  };
-//}}}
-//{{{
-class cQuadShader : public cShader {
-// abstract base class for shaders drawing quad triangle pair, with model, projection maths
-
-public:
-  cQuadShader() : cShader() {}
-  virtual ~cQuadShader() = default;
-
-  // sets
-  virtual void setModelProjection (const cMat4x4& model, const cMat4x4& projection) = 0;
-  };
-//}}}
-
-//{{{
-class cTexture {
-public:
-  enum eTextureType { eRgba, eYuv420 };
-
-  cTexture (eTextureType textureType, const cPoint& size) : mTextureType(textureType), mSize(size) {}
-  virtual ~cTexture() = default;
-
-  /// gets
-  eTextureType getTextureType() const { return mTextureType; }
-  const cPoint getSize() const { return mSize; }
-
-  virtual void* getTextureId() = 0;
-
-  virtual void setPixels (uint8_t** pixels, int* strides) = 0;
-  virtual void setSource() = 0;
-
-protected:
-  const eTextureType mTextureType;
-  cPoint mSize;
-  };
-//}}}
-//{{{
-class cTextureShader : public cQuadShader {
-public:
-  cTextureShader() : cQuadShader() {}
-  virtual ~cTextureShader() = default;
-  };
-//}}}
-
 class cGraphics {
 public:
   virtual ~cGraphics() = default;
@@ -140,13 +140,13 @@ public:
   virtual void renderDrawData() = 0;
 
   // create graphics resources
+  virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) = 0;
+  virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) = 0;
+
   virtual cQuad* createQuad (const cPoint& size) = 0;
   virtual cQuad* createQuad (const cPoint& size, const cRect& rect) = 0;
 
   virtual cTarget* createTarget() = 0;
   virtual cTarget* createTarget (const cPoint& size, cTarget::eFormat format) = 0;
   virtual cTarget* createTarget (uint8_t* pixels, const cPoint& size, cTarget::eFormat format) = 0;
-
-  virtual cTexture* createTexture (cTexture::eTextureType textureType, const cPoint& size) = 0;
-  virtual cTextureShader* createTextureShader (cTexture::eTextureType textureType) = 0;
   };
