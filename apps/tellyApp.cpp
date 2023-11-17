@@ -84,27 +84,28 @@ public:
   cDvbStream* getDvbStream() { return mDvbStream; }
 
   //{{{
-  bool setFileSource (const string& filename, bool showAllServices) {
+  void liveDvbSource (const cDvbMultiplex& dvbMultiplex, const string& recordRoot, bool showAllServices) {
 
-    // create fileSource, any channel
-    mDvbStream = new cDvbStream (kMultiplexes[0],  "", true, showAllServices);
-    if (!mDvbStream)
-      return false;
-
-    mDvbStream->fileSource (cFileUtils::resolve (filename));
-    return true;
+    // create liveDvbSource from dvbMultiplex
+    mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, false, showAllServices);
+    if (mDvbStream)
+      mDvbStream->dvbSource();
+    else
+      cLog::log (LOGINFO, "cTellyApp::setLiveDvbSource - failed to create liveDvbSource");
     }
   //}}}
   //{{{
-  bool setDvbSource (const cDvbMultiplex& dvbMultiplex, const string& recordRoot, bool showAllServices) {
+  void fileSource (const string& filename, bool showAllServices) {
 
-    // create dvbSource from dvbMultiplex
-    mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, false, showAllServices);
-    if (!mDvbStream)
-      return false;
+    string resolvedFilename = cFileUtils::resolve (filename);
 
-    mDvbStream->dvbSource();
-    return true;
+    // create fileSource, any channel
+    mDvbStream = new cDvbStream (kMultiplexes[0],  "", true, showAllServices);
+    if (mDvbStream)
+      mDvbStream->fileSource (resolvedFilename);
+    else
+      cLog::log (LOGINFO, fmt::format ("cTellyApp::fileSource - failed to create fileSource {} {}",
+                                       filename, filename == resolvedFilename ? "" : resolvedFilename));
     }
   //}}}
 
@@ -113,9 +114,8 @@ public:
   // drop fileSource
 
     for (auto& item : dropItems) {
-      string filename = cFileUtils::resolve (item);
-      setFileSource (filename, true);
-      cLog::log (LOGINFO, fmt::format ("cTellyApp::drop {}", filename));
+      cLog::log (LOGINFO, fmt::format ("cTellyApp::drop {}", item));
+      fileSource (item, true);
       }
     }
   //}}}
@@ -552,17 +552,17 @@ private:
                 case 2: offset = { 3.f / 6.f, 5.f / 6.f }; break;
                 case 3: offset = { 5.f / 6.f, 5.f / 6.f }; break;
 
-                case 4: offset = { 1.f / 6.f, 1.f / 6.f }; break;
-                case 5: offset = { 3.f / 6.f, 1.f / 6.f }; break;
-                case 6: offset = { 5.f / 6.f, 1.f / 6.f }; break;
+                case 4: offset = { 1.f / 6.f, 3.f / 6.f }; break;
+                case 5: offset = { 3.f / 6.f, 3.f / 6.f }; break;
+                case 6: offset = { 5.f / 6.f, 3.f / 6.f }; break;
 
                 case 7: if (numVideos == 7) // centre
-                          offset = { 3.f / 6.f, 3.f / 6.f };
+                          offset = { 3.f / 6.f, 1.f / 6.f };
                         else
-                          offset = { 1.f / 6.f, 3.f / 6.f };
+                          offset = { 1.f / 6.f, 1.f / 6.f };
                         break;
-                case 8: offset = { 3.f / 6.f, 3.f / 6.f }; break;
-                case 9: offset = { 5.f / 6.f, 3.f / 6.f }; break;
+                case 8: offset = { 3.f / 6.f, 1.f / 6.f }; break;
+                case 9: offset = { 5.f / 6.f, 1.f / 6.f }; break;
                 break;
                 }
 
@@ -1012,9 +1012,9 @@ int main (int numArgs, char* args[]) {
   tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
   if (!filename.empty())
-    tellyApp.setFileSource (filename, showAllServices);
+    tellyApp.fileSource (filename, showAllServices);
   else
-    tellyApp.setDvbSource (useMultiplex, kRecordRoot, showAllServices);
+    tellyApp.liveDvbSource (useMultiplex, kRecordRoot, showAllServices);
   tellyApp.mainUILoop();
 
   return EXIT_SUCCESS;
