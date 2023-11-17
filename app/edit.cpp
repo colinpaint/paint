@@ -3049,63 +3049,18 @@ private:
   // keyboard,mouse
   //{{{
   void keyboard() {
-    //{{{  numpad codes
-    // -------------------------------------------------------------------------------------
-    // |    numlock       |        /           |        *             |        -            |
-    // |GLFW_KEY_NUM_LOCK | GLFW_KEY_KP_DIVIDE | GLFW_KEY_KP_MULTIPLY | GLFW_KEY_KP_SUBTRACT|
-    // |     0x11a        |      0x14b         |      0x14c           |      0x14d          |
-    // |------------------------------------------------------------------------------------|
-    // |        7         |        8           |        9             |         +           |
-    // |  GLFW_KEY_KP_7   |   GLFW_KEY_KP_8    |   GLFW_KEY_KP_9      |  GLFW_KEY_KP_ADD;   |
-    // |      0x147       |      0x148         |      0x149           |       0x14e         |
-    // | -------------------------------------------------------------|                     |
-    // |        4         |        5           |        6             |                     |
-    // |  GLFW_KEY_KP_4   |   GLFW_KEY_KP_5    |   GLFW_KEY_KP_6      |                     |
-    // |      0x144       |      0x145         |      0x146           |                     |
-    // | -----------------------------------------------------------------------------------|
-    // |        1         |        2           |        3             |       enter         |
-    // |  GLFW_KEY_KP_1   |   GLFW_KEY_KP_2    |   GLFW_KEY_KP_3      |  GLFW_KEY_KP_ENTER  |
-    // |      0x141       |      0x142         |      0x143           |       0x14f         |
-    // | -------------------------------------------------------------|                     |
-    // |        0                              |        .             |                     |
-    // |  GLFW_KEY_KP_0                        | GLFW_KEY_KP_DECIMAL  |                     |
-    // |      0x140                            |      0x14a           |                     |
-    // --------------------------------------------------------------------------------------
-
-    // glfw keycodes, they are platform specific
-    // - ImGuiKeys small subset of normal keyboard keys
-    // - have I misunderstood something here ?
-
-    //constexpr int kNumpadNumlock = 0x11a;
-    constexpr int kNumpad0 = 0x140;
-    constexpr int kNumpad1 = 0x141;
-    //constexpr int kNumpad2 = 0x142;
-    constexpr int kNumpad3 = 0x143;
-    //constexpr int kNumpad4 = 0x144;
-    //constexpr int kNumpad5 = 0x145;
-    //constexpr int kNumpad6 = 0x146;
-    constexpr int kNumpad7 = 0x147;
-    //constexpr int kNumpad8 = 0x148;
-    constexpr int kNumpad9 = 0x149;
-    //constexpr int kNumpadDecimal = 0x14a;
-    //constexpr int kNumpadDivide = 0x14b;
-    //constexpr int kNumpadMultiply = 0x14c;
-    //constexpr int kNumpadSubtract = 0x14d;
-    //constexpr int kNumpadAdd = 0x14e;
-    //constexpr int kNumpadEnter = 0x14f;
-    //}}}
     //{{{
     struct sActionKey {
       bool mAlt;
       bool mCtrl;
       bool mShift;
-      int mGuiKey;
+      ImGuiKey mGuiKey;
       bool mWritable;
       function <void()> mActionFunc;
       };
     //}}}
-    const vector <sActionKey> kActionKeys = {
-    //  alt    ctrl   shift  guiKey             writable function
+    const vector<sActionKey> kActionKeys = {
+    //  alt    ctrl   shift  guiKey           writable   function
        {false, false, false, ImGuiKey_Delete,     true,  [this]{deleteIt();}},
        {false, false, false, ImGuiKey_Backspace,  true,  [this]{backspace();}},
        {false, false, false, ImGuiKey_Enter,      true,  [this]{enterKey();}},
@@ -3131,11 +3086,11 @@ private:
        {false, false, false, ImGuiKey_Insert,     false, [this]{toggleOverWrite();}},
        {false, true,  false, ImGuiKey_Space,      false, [this]{toggleShowFolded();}},
        // numpad
-       {false, false, false, kNumpad1,            false, [this]{openFold();}},
-       {false, false, false, kNumpad3,            false, [this]{closeFold();}},
-       {false, false, false, kNumpad7,            false, [this]{openFoldOnly();}},
-       {false, false, false, kNumpad9,            false, [this]{closeFold();}},
-       {false, false, false, kNumpad0,            true,  [this]{createFold();}},
+       {false, false, false, ImGuiKey_Keypad1,    false, [this]{openFold();}},
+       {false, false, false, ImGuiKey_Keypad3,    false, [this]{closeFold();}},
+       {false, false, false, ImGuiKey_Keypad7,    false, [this]{openFoldOnly();}},
+       {false, false, false, ImGuiKey_Keypad9,    false, [this]{closeFold();}},
+       {false, false, false, ImGuiKey_Keypad0,    true,  [this]{createFold();}},
     // {false, false, false, kNumpad4,            false, [this]{prevFile();}},
     // {false, false, false, kNumpad6,            false, [this]{nextFile();}},
     // {true,  false, false, kNumpadMulitply,     false, [this]{findDialog();}},
@@ -3151,21 +3106,20 @@ private:
     ImGui::GetIO().WantTextInput = true;
     ImGui::GetIO().WantCaptureKeyboard = false;
 
-    //bool altKeyPressed = ImGui::GetIO().KeyAlt;
-    //bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
-    //bool shiftKeyPressed = ImGui::GetIO().KeyShift;
-    //for (const auto& actionKey : kActionKeys)
+    bool altKeyPressed = ImGui::GetIO().KeyAlt;
+    bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
+    bool shiftKeyPressed = ImGui::GetIO().KeyShift;
+    for (const auto& actionKey : kActionKeys)
       //{{{  dispatch actionKey
-      //if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
-      //     ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
-      //    (actionKey.mAlt == altKeyPressed) &&
-      //    (actionKey.mCtrl == ctrlKeyPressed) &&
-      //    (actionKey.mShift == shiftKeyPressed) &&
-       //   (!actionKey.mWritable || (actionKey.mWritable && !(isReadOnly() && canEditAtCursor())))) {
+      if (ImGui::IsKeyPressed (actionKey.mGuiKey) &&
+          (actionKey.mAlt == altKeyPressed) &&
+          (actionKey.mCtrl == ctrlKeyPressed) &&
+          (actionKey.mShift == shiftKeyPressed) &&
+          (!actionKey.mWritable || (actionKey.mWritable && !(isReadOnly() && canEditAtCursor())))) {
 
-       // actionKey.mActionFunc();
-      //  break;
-      //  }
+        actionKey.mActionFunc();
+        break;
+        }
       //}}}
 
     if (!isReadOnly()) {
@@ -3934,6 +3888,19 @@ private:
   enum class eDataFormat { eDec, eBin, eHex };
   static const size_t kUndefinedAddress = (size_t)-1;
   //{{{
+  static bool isCpuBigEndian() {
+  // is cpu bigEndian
+
+    uint16_t x = 1;
+
+    char c[2];
+    memcpy (c, &x, 2);
+
+    return c[0] != 0;
+    }
+  //}}}
+
+  //{{{
   class cOptions {
   public:
     bool mReadOnly = false;
@@ -4078,18 +4045,6 @@ private:
   //}}}
 
   //{{{  gets
-  //{{{
-  bool isCpuBigEndian() const {
-  // is cpu bigEndian
-
-    uint16_t x = 1;
-
-    char c[2];
-    memcpy (c, &x, 2);
-
-    return c[0] != 0;
-    }
-  //}}}
   bool isReadOnly() const { return mOptions.mReadOnly; };
   bool isValid (size_t address) { return address != kUndefinedAddress; }
 
@@ -4290,11 +4245,16 @@ private:
   void setReadOnly (bool readOnly) { mOptions.mReadOnly = readOnly; }
   void toggleReadOnly() { mOptions.mReadOnly = !mOptions.mReadOnly; }
   //}}}
-  //{{{  inits
-  void initContext();
-  void initEdit();
+
+  //{{{
+  void* copyEndian (void* dst, void* src, size_t size) {
+
+    if (!gEndianFunc)
+      gEndianFunc = isCpuBigEndian() ? bigEndianFunc : littleEndianFunc;
+
+    return gEndianFunc (dst, src, size, mOptions.mBigEndian ^ mOptions.mHoverEndian);
+    }
   //}}}
-  //{{{  draws
   //{{{
   void drawTop() {
 
@@ -4550,66 +4510,53 @@ private:
       //}}}
     }
   //}}}
-  //}}}
 
-  //{{{
-  void* copyEndian (void* dst, void* src, size_t size) {
-
-    if (!gEndianFunc)
-      gEndianFunc = isCpuBigEndian() ? bigEndianFunc : littleEndianFunc;
-
-    return gEndianFunc (dst, src, size, mOptions.mBigEndian ^ mOptions.mHoverEndian);
-    }
-  //}}}
   //{{{
   void keyboard() {
 
-    //{{{
     struct sActionKey {
       bool mAlt;
       bool mCtrl;
       bool mShift;
-      int mGuiKey;
-      bool mWritable;
+      ImGuiKey mGuiKey;
       function <void()> mActionFunc;
       };
-    //}}}
-    const vector <sActionKey> kActionKeys = {
-    //  alt    ctrl   shift  guiKey               writable      function
-       {false, false, false, ImGuiKey_LeftArrow,  false, [this]{moveLeft();}},
-       {false, false, false, ImGuiKey_RightArrow, false, [this]{moveRight();}},
-       {false, false, false, ImGuiKey_UpArrow,    false, [this]{moveLineUp();}},
-       {false, false, false, ImGuiKey_DownArrow,  false, [this]{moveLineDown();}},
-       {false, false, false, ImGuiKey_PageUp,     false, [this]{movePageUp();}},
-       {false, false, false, ImGuiKey_PageDown,   false, [this]{movePageDown();}},
-       {false, false, false, ImGuiKey_Home,       false, [this]{moveHome();}},
-       {false, false, false, ImGuiKey_End,        false, [this]{moveEnd();}},
-       };
 
-    //if (ImGui::IsWindowHovered())
-    //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
+    const vector<sActionKey> kActionKeys = {
+    // alt    ctrl   shift  guiKey               function
+      {false, false, false, ImGuiKey_LeftArrow,  [this]{moveLeft();}},
+      {false, false, false, ImGuiKey_RightArrow, [this]{moveRight();}},
+      {false, false, false, ImGuiKey_UpArrow,    [this]{moveLineUp();}},
+      {false, false, false, ImGuiKey_DownArrow,  [this]{moveLineDown();}},
+      {false, false, false, ImGuiKey_PageUp,     [this]{movePageUp();}},
+      {false, false, false, ImGuiKey_PageDown,   [this]{movePageDown();}},
+      {false, false, false, ImGuiKey_Home,       [this]{moveHome();}},
+      {false, false, false, ImGuiKey_End,        [this]{moveEnd();}},
+      };
 
-    //ImGuiIO& io = ImGui::GetIO();
-    //bool shift = io.KeyShift;
-    //bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
-    //bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
-    //io.WantCaptureKeyboard = true;
-    //io.WantTextInput = true;
+    ImGui::GetIO().WantTextInput = true;
+    ImGui::GetIO().WantCaptureKeyboard = false;
 
-    //for (auto& actionKey : kActionKeys) {
-      //{{{  dispatch matched actionKey
-      //   if ((((actionKey.mGuiKey < 0x100) && ImGui::IsKeyPressed (ImGui::GetKeyIndex (actionKey.mGuiKey))) ||
-      //        ((actionKey.mGuiKey >= 0x100) && ImGui::IsKeyPressed (actionKey.mGuiKey))) &&
-      //       (!actionKey.mWritable || (actionKey.mWritable && !isReadOnly())) &&
-      //       (actionKey.mCtrl == ctrl) &&
-      //       (actionKey.mShift == shift) &&
-      //       (actionKey.mAlt == alt)) {
+    if (ImGui::IsWindowHovered())
+      ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
 
-      //     actionKey.mActionFunc();
-      //    break;
-      //    }
-      //  }
-      //}}}
+    ImGuiIO& io = ImGui::GetIO();
+    bool shift = io.KeyShift;
+    bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+    bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+    io.WantCaptureKeyboard = true;
+    io.WantTextInput = true;
+
+    // look for action keys
+    for (auto& actionKey : kActionKeys) {
+      if (ImGui::IsKeyPressed (actionKey.mGuiKey) &&
+          (actionKey.mCtrl == ctrl) &&
+          (actionKey.mShift == shift) &&
+          (actionKey.mAlt == alt)) {
+        actionKey.mActionFunc();
+        break;
+        }
+      }
     }
   //}}}
 

@@ -256,205 +256,6 @@ public:
 private:
   enum eTab { eMulti, eServices, ePids, eRecorded };
   inline static const vector<string> kTabNames = { "multi", "services", "pids", "recorded" };
-  //{{{
-  class cFramesGraphic {
-  public:
-    cFramesGraphic (float videoLines, float audioLines, float pixelsPerVideoFrame, float pixelsPerAudioChannel)
-      : mVideoLines(videoLines), mAudioLines(audioLines),
-        mPixelsPerVideoFrame(pixelsPerVideoFrame), mPixelsPerAudioChannel(pixelsPerAudioChannel) {}
-
-    //{{{
-    void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playPts) {
-
-      ImVec2 pos = {ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(),
-                    ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - ImGui::GetTextLineHeight()};
-
-      drawAudioPower (audioRender, playPts, pos);
-
-      pos.x -= ImGui::GetWindowWidth() / 2.f;
-
-      // draw playPts centre bar
-      ImGui::GetWindowDrawList()->AddRectFilled (
-        {pos.x, pos.y - mVideoLines * ImGui::GetTextLineHeight()},
-        {pos.x + 1.f, pos.y + mAudioLines * ImGui::GetTextLineHeight()},
-        0xffc0c0c0);
-
-      float ptsScale = mPixelsPerVideoFrame / videoRender.getPtsDuration();
-
-      { // lock video during iterate
-      shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
-      for (auto& frame : videoRender.getFrames()) {
-        //{{{  draw video frames
-        cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-        float offset1 = (videoFrame->mPts - playPts) * ptsScale;
-        float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
-
-        // pesSize I white / P yellow / B green - ARGB color
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x + offset1, pos.y},
-          {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
-          (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
-
-        // grey decodeTime
-        //ImGui::GetWindowDrawList()->AddRectFilled (
-        //  {pos.x + offset1, pos.y},
-        //  {pos.x + offset2, pos.y - addValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, mVideoLines)},
-        //  0x60ffffff);
-
-        // magenta queueSize in trailing gap
-        //ImGui::GetWindowDrawList()->AddRectFilled (
-        //  {pos.x + offset1, pos.y},
-        //  {pos.x + offset1 + 1.f, pos.y - addValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, mVideoLines - 1.f)},
-        //  0xffff00ff);
-        }
-        //}}}
-      for (auto frame : videoRender.getFreeFrames()) {
-        //{{{  draw free video frames
-        cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-        float offset1 = (videoFrame->mPts - playPts) * ptsScale;
-        float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
-
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x + offset1, pos.y},
-          {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
-          0xFF808080);
-        }
-        //}}}
-      }
-
-      { // lock audio during iterate
-      shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
-      for (auto& frame : audioRender.getFrames()) {
-        //{{{  draw audio frames
-        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
-        float offset1 = (audioFrame->mPts - playPts) * ptsScale;
-        float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x + offset1, pos.y + 1.f},
-          {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
-          0xff00ffff);
-        }
-        //}}}
-      for (auto frame : audioRender.getFreeFrames()) {
-        //{{{  draw free audio frames
-        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
-        float offset1 = (audioFrame->mPts - playPts) * ptsScale;
-        float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
-
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x + offset1, pos.y + 1.f},
-          {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
-          0xFF808080);
-        }
-        //}}}
-      }
-
-      // slowly track scaling back to max display values from max values
-      agc (mMaxPower, mMaxDisplayPower, 250.f, 0.5f);
-      agc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
-      agc (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f, 1000.f);
-      agc (mMaxQueueSize, mMaxDisplayQueueSize, 250.f, 4.f);
-      }
-    //}}}
-
-  private:
-    //{{{
-    void drawAudioPower (cAudioRender& audio, int64_t playerPts, ImVec2 pos) {
-
-      cAudioFrame* audioFrame = audio.findAudioFrameFromPts (playerPts);
-      if (audioFrame) {
-        pos.y += 1.f;
-        float height = 8.f * ImGui::GetTextLineHeight();
-
-        if (audioFrame->mNumChannels == 6) {
-          // 5.1
-          float x = pos.x - (5 * mPixelsPerAudioChannel);
-
-          // draw channels reordered
-          for (size_t i = 0; i < 5; i++) {
-            ImGui::GetWindowDrawList()->AddRectFilled (
-              {x, pos.y - (audioFrame->mPowerValues[kChannelOrder[i]] * height)},
-              {x + mPixelsPerAudioChannel - 1.f, pos.y},
-              0xff00ff00);
-            x += mPixelsPerAudioChannel;
-            }
-
-          // draw woofer as red
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[kChannelOrder[5]] * height)},
-            {pos.x - 1.f, pos.y},
-            0x800000ff);
-          }
-
-        else  {
-          // other - draw channels left to right
-          float width = mPixelsPerAudioChannel * audioFrame->mNumChannels;
-          for (size_t i = 0; i < audioFrame->mNumChannels; i++)
-            ImGui::GetWindowDrawList()->AddRectFilled (
-              {pos.x - width + (i * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[i] * height)},
-              {pos.x - width + ((i+1) * mPixelsPerAudioChannel) - 1.f, pos.y},
-              0xff00ff00);
-          }
-        }
-      }
-    //}}}
-
-    //{{{
-    float addValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
-
-      if (value > maxValue)
-        maxValue = value;
-      if (value > maxDisplayValue)
-        maxDisplayValue = value;
-
-      return scale * ImGui::GetTextLineHeight() * value / maxValue;
-      }
-    //}}}
-    //{{{
-    void agc (float& maxValue, float& maxDisplayValue, float revert, float minValue) {
-
-      // slowly adjust scale to displayMaxValue
-      if (maxDisplayValue < maxValue)
-        maxValue -= (maxValue - maxDisplayValue) / revert;
-
-      if (maxValue < minValue)
-        maxValue = minValue;
-
-      // reset displayed max value
-      maxDisplayValue = 0.f;
-      }
-    //}}}
-
-    inline static const array <size_t, 6> kChannelOrder = {4,0,2,1,5,3};
-
-    //  vars
-    const float mVideoLines;
-    const float mAudioLines;
-    const float mPixelsPerVideoFrame;
-    const float mPixelsPerAudioChannel;
-
-    float mMaxPower = 0.5f;
-    float mMaxDisplayPower = 0.f;
-
-    float mMaxPesSize = 0.f;
-    float mMaxDisplayPesSize = 0.f;
-
-    float mMaxQueueSize = 3.f;
-    float mMaxDisplayQueueSize = 0.f;
-
-    float mMaxDecodeTime = 0.f;
-    float mMaxDisplayDecodeTime = 0.f;
-    };
-  //}}}
-  //{{{
-  class cVideoFrameDraw {
-  public:
-    cVideoFrameDraw (cVideoFrame* videoFrame, float offset) : mVideoFrame(videoFrame), mOffset(offset) {}
-
-    cVideoFrame* mVideoFrame;
-    float mOffset;
-    };
-  //}}}
 
   //{{{
   void drawMultiTelly (cDvbStream& dvbStream, cGraphics& graphics) {
@@ -778,36 +579,194 @@ private:
   //}}}
 
   //{{{
-  void drawVideoInfo (uint16_t sid, cRender& render, cGraphics& graphics, int64_t playPts) {
-    (void)sid;
-    (void)graphics;
-    (void)playPts;
+  class cFramesGraphic {
+  public:
+    cFramesGraphic (float videoLines, float audioLines, float pixelsPerVideoFrame, float pixelsPerAudioChannel)
+      : mVideoLines(videoLines), mAudioLines(audioLines),
+        mPixelsPerVideoFrame(pixelsPerVideoFrame), mPixelsPerAudioChannel(pixelsPerAudioChannel) {}
 
-    cVideoRender& videoRender = dynamic_cast<cVideoRender&>(render);
-    ImGui::TextUnformatted (videoRender.getInfoString().c_str());
+    //{{{
+    void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playPts) {
 
-    if (ImGui::InvisibleButton (fmt::format ("##vidLog{}", sid).c_str(),
-                                {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
-      videoRender.toggleLog();
+      ImVec2 pos = {ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(),
+                    ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - ImGui::GetTextLineHeight()};
 
-    drawMiniLog (videoRender.getLog());
-    }
-  //}}}
-  //{{{
-  void drawAudioInfo (uint16_t sid, cRender& render, cGraphics& graphics) {
-    (void)sid;
-    (void)graphics;
+      drawAudioPower (audioRender, playPts, pos);
 
-    cAudioRender& audioRender = dynamic_cast<cAudioRender&>(render);
+      pos.x -= ImGui::GetWindowWidth() / 2.f;
 
-    ImGui::TextUnformatted (audioRender.getInfoString().c_str());
+      // draw playPts centre bar
+      ImGui::GetWindowDrawList()->AddRectFilled (
+        {pos.x, pos.y - mVideoLines * ImGui::GetTextLineHeight()},
+        {pos.x + 1.f, pos.y + mAudioLines * ImGui::GetTextLineHeight()},
+        0xffc0c0c0);
 
-    if (ImGui::InvisibleButton (fmt::format ("##audLog{}", sid).c_str(),
-                                {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
-      audioRender.toggleLog();
+      float ptsScale = mPixelsPerVideoFrame / videoRender.getPtsDuration();
 
-    drawMiniLog (audioRender.getLog());
-    }
+      { // lock video during iterate
+      shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
+      for (auto& frame : videoRender.getFrames()) {
+        //{{{  draw video frames
+        cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
+        float offset1 = (videoFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
+
+        // pesSize I white / P yellow / B green - ARGB color
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y},
+          {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
+          (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
+
+        // grey decodeTime
+        //ImGui::GetWindowDrawList()->AddRectFilled (
+        //  {pos.x + offset1, pos.y},
+        //  {pos.x + offset2, pos.y - addValue ((float)videoFrame->mTimes[0], mMaxDecodeTime, mMaxDisplayDecodeTime, mVideoLines)},
+        //  0x60ffffff);
+
+        // magenta queueSize in trailing gap
+        //ImGui::GetWindowDrawList()->AddRectFilled (
+        //  {pos.x + offset1, pos.y},
+        //  {pos.x + offset1 + 1.f, pos.y - addValue ((float)videoFrame->mQueueSize, mMaxQueueSize, mMaxDisplayQueueSize, mVideoLines - 1.f)},
+        //  0xffff00ff);
+        }
+        //}}}
+      for (auto frame : videoRender.getFreeFrames()) {
+        //{{{  draw free video frames
+        cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+        float offset1 = (videoFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
+
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y},
+          {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
+          0xFF808080);
+        }
+        //}}}
+      }
+
+      { // lock audio during iterate
+      shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
+      for (auto& frame : audioRender.getFrames()) {
+        //{{{  draw audio frames
+        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+        float offset1 = (audioFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y + 1.f},
+          {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
+          0xff00ffff);
+        }
+        //}}}
+      for (auto frame : audioRender.getFreeFrames()) {
+        //{{{  draw free audio frames
+        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+        float offset1 = (audioFrame->mPts - playPts) * ptsScale;
+        float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
+
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x + offset1, pos.y + 1.f},
+          {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
+          0xFF808080);
+        }
+        //}}}
+      }
+
+      // slowly track scaling back to max display values from max values
+      agc (mMaxPower, mMaxDisplayPower, 250.f, 0.5f);
+      agc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
+      agc (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f, 1000.f);
+      agc (mMaxQueueSize, mMaxDisplayQueueSize, 250.f, 4.f);
+      }
+    //}}}
+
+  private:
+    //{{{
+    void drawAudioPower (cAudioRender& audio, int64_t playerPts, ImVec2 pos) {
+
+      cAudioFrame* audioFrame = audio.findAudioFrameFromPts (playerPts);
+      if (audioFrame) {
+        pos.y += 1.f;
+        float height = 8.f * ImGui::GetTextLineHeight();
+
+        if (audioFrame->mNumChannels == 6) {
+          // 5.1
+          float x = pos.x - (5 * mPixelsPerAudioChannel);
+
+          // draw channels reordered
+          for (size_t i = 0; i < 5; i++) {
+            ImGui::GetWindowDrawList()->AddRectFilled (
+              {x, pos.y - (audioFrame->mPowerValues[kChannelOrder[i]] * height)},
+              {x + mPixelsPerAudioChannel - 1.f, pos.y},
+              0xff00ff00);
+            x += mPixelsPerAudioChannel;
+            }
+
+          // draw woofer as red
+          ImGui::GetWindowDrawList()->AddRectFilled (
+            {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[kChannelOrder[5]] * height)},
+            {pos.x - 1.f, pos.y},
+            0x800000ff);
+          }
+
+        else  {
+          // other - draw channels left to right
+          float width = mPixelsPerAudioChannel * audioFrame->mNumChannels;
+          for (size_t i = 0; i < audioFrame->mNumChannels; i++)
+            ImGui::GetWindowDrawList()->AddRectFilled (
+              {pos.x - width + (i * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[i] * height)},
+              {pos.x - width + ((i+1) * mPixelsPerAudioChannel) - 1.f, pos.y},
+              0xff00ff00);
+          }
+        }
+      }
+    //}}}
+
+    //{{{
+    float addValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
+
+      if (value > maxValue)
+        maxValue = value;
+      if (value > maxDisplayValue)
+        maxDisplayValue = value;
+
+      return scale * ImGui::GetTextLineHeight() * value / maxValue;
+      }
+    //}}}
+    //{{{
+    void agc (float& maxValue, float& maxDisplayValue, float revert, float minValue) {
+
+      // slowly adjust scale to displayMaxValue
+      if (maxDisplayValue < maxValue)
+        maxValue -= (maxValue - maxDisplayValue) / revert;
+
+      if (maxValue < minValue)
+        maxValue = minValue;
+
+      // reset displayed max value
+      maxDisplayValue = 0.f;
+      }
+    //}}}
+
+    inline static const array <size_t, 6> kChannelOrder = {4,0,2,1,5,3};
+
+    //  vars
+    const float mVideoLines;
+    const float mAudioLines;
+    const float mPixelsPerVideoFrame;
+    const float mPixelsPerAudioChannel;
+
+    float mMaxPower = 0.5f;
+    float mMaxDisplayPower = 0.f;
+
+    float mMaxPesSize = 0.f;
+    float mMaxDisplayPesSize = 0.f;
+
+    float mMaxQueueSize = 3.f;
+    float mMaxDisplayQueueSize = 0.f;
+
+    float mMaxDecodeTime = 0.f;
+    float mMaxDisplayDecodeTime = 0.f;
+    };
   //}}}
   //{{{
   void drawSubtitle (uint16_t sid, cRender& render, cGraphics& graphics) {
@@ -833,13 +792,15 @@ private:
 
       // draw position
       ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}",
-                                           subtitleRender.getImage (line).mX, subtitleRender.getImage (line).mY).c_str());
+      ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", subtitleRender.getImage (line).mX,
+                                                          subtitleRender.getImage (line).mY).c_str());
 
-      // create/update subtitle line image
+      // create subtitle line image
       if (!subtitleRender.getImage (line).mTexture) // create
         subtitleRender.getImage (line).mTexture = graphics.createTexture (
           cTexture::eRgba, {subtitleRender.getImage (line).mWidth, subtitleRender.getImage (line).mHeight});
+
+      // update subtitle line image
       if (subtitleRender.getImage (line).mDirty)
         subtitleRender.getImage (line).mTexture->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
       subtitleRender.getImage (line).mDirty = false;
@@ -847,12 +808,13 @@ private:
       // draw subtitle line image, scaled to fit line
       ImGui::SameLine();
       ImGui::Image ((void*)(intptr_t)subtitleRender.getImage (line).mTexture->getTextureId(),
-                    { subtitleRender.getImage(line).mWidth * ImGui::GetTextLineHeight()/subtitleRender.getImage (line).mHeight,
-                      ImGui::GetTextLineHeight() } );
+                    { ImGui::GetTextLineHeight() *
+                        subtitleRender.getImage (line).mWidth  / subtitleRender.getImage (line).mHeight,
+                      ImGui::GetTextLineHeight() });
       line++;
       }
 
-    //{{{  add dummy lines to highwaterMark to stop jiggling
+    //{{{  pad with invisible lines to highwaterMark
     while (line < subtitleRender.getHighWatermark()) {
       if (ImGui::InvisibleButton (fmt::format ("##line{}", line).c_str(),
                                   {ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
@@ -861,6 +823,38 @@ private:
       }
     //}}}
     drawMiniLog (subtitleRender.getLog());
+    }
+  //}}}
+  //{{{
+  void drawAudioInfo (uint16_t sid, cRender& render, cGraphics& graphics) {
+    (void)sid;
+    (void)graphics;
+
+    cAudioRender& audioRender = dynamic_cast<cAudioRender&>(render);
+
+    ImGui::TextUnformatted (audioRender.getInfoString().c_str());
+
+    if (ImGui::InvisibleButton (fmt::format ("##audLog{}", sid).c_str(),
+                                {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
+      audioRender.toggleLog();
+
+    drawMiniLog (audioRender.getLog());
+    }
+  //}}}
+  //{{{
+  void drawVideoInfo (uint16_t sid, cRender& render, cGraphics& graphics, int64_t playPts) {
+    (void)sid;
+    (void)graphics;
+    (void)playPts;
+
+    cVideoRender& videoRender = dynamic_cast<cVideoRender&>(render);
+    ImGui::TextUnformatted (videoRender.getInfoString().c_str());
+
+    if (ImGui::InvisibleButton (fmt::format ("##vidLog{}", sid).c_str(),
+                                {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
+      videoRender.toggleLog();
+
+    drawMiniLog (videoRender.getLog());
     }
   //}}}
 
