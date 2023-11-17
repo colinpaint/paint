@@ -91,9 +91,7 @@ public:
     if (!mDvbStream)
       return false;
 
-    cFileUtils::resolve (filename);
-    mDvbStream->fileSource (true, filename);
-
+    mDvbStream->fileSource (true, cFileUtils::resolve (filename));
     return true;
     }
   //}}}

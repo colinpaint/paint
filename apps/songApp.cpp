@@ -82,8 +82,7 @@ public:
   //{{{
   bool setSongName (const string& songName) {
 
-    mSongName = songName;
-    cFileUtils::resolve (mSongName);
+    mSongName = cFileUtils::resolve (songName);
 
     // load song
     const vector <string>& strings = { mSongName };
