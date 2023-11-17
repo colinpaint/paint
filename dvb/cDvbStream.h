@@ -18,8 +18,6 @@ class cDvbSource;
 class cRender;
 class cTexture;
 //}}}
-using tTimePoint = std::chrono::system_clock::time_point;
-using tDurationSeconds = std::chrono::seconds;
 
 //{{{
 class cDvbMultiplex {
@@ -155,7 +153,9 @@ public:
   class cEpgItem {
   public:
     //{{{
-    cEpgItem (bool now, bool record, tTimePoint time, tDurationSeconds duration,
+    cEpgItem (bool now, bool record, 
+              std::chrono::system_clock::time_point time, 
+              std::chrono::seconds duration,
               const std::string& titleString, const std::string& infoString)
       : mNow(now), mRecord(record),
         mTime(time), mDuration(duration),
@@ -167,8 +167,8 @@ public:
     std::string getTitleString() { return mTitleString; }
     std::string getDesriptionString() { return mInfoString; }
 
-    tDurationSeconds getDuration() { return mDuration; }
-    tTimePoint getTime() { return mTime; }
+    std::chrono::seconds getDuration() { return mDuration; }
+    std::chrono::system_clock::time_point getTime() { return mTime; }
 
     //{{{
     bool toggleRecord() {
@@ -177,7 +177,8 @@ public:
       }
     //}}}
     //{{{
-    void set (tTimePoint time, tDurationSeconds duration,
+    void set (std::chrono::system_clock::time_point time,
+              std::chrono::seconds duration,
               const std::string& titleString, const std::string& infoString) {
 
       mTime = time;
@@ -191,8 +192,8 @@ public:
     const bool mNow = false;
     bool mRecord = false;
 
-    tTimePoint mTime;
-    tDurationSeconds mDuration;
+    std::chrono::system_clock::time_point mTime;
+    std::chrono::seconds mDuration;
 
     std::string mTitleString;
     std::string mInfoString;
@@ -295,7 +296,7 @@ public:
 
   // tdtTime
   bool hasTdtTime() const { return mFirstTimeDefined; }
-  tTimePoint getTdtTime() const { return mTdtTime; }
+  std::chrono::system_clock::time_point getTdtTime() const { return mTdtTime; }
   std::string getTdtTimeString() const;
 
   // maps
@@ -335,8 +336,9 @@ private:
 
   void foundService (cService& service);
 
-  void startServiceProgram (cService* service, tTimePoint tdtTime,
-                            const std::string& programName, tTimePoint programStartTime, bool selected);
+  void startServiceProgram (cService* service, std::chrono::system_clock::time_point tdtTime,
+                            const std::string& programName, 
+                            std::chrono::system_clock::time_point programStartTime, bool selected);
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService* service);
   bool processPesByPid (cPidInfo* pidInfo, bool skip);
@@ -385,6 +387,6 @@ private:
 
   // time
   bool mFirstTimeDefined = false;
-  tTimePoint mFirstTime; // first tdtTime seen
-  tTimePoint mTdtTime;   // now tdtTime
+  std::chrono::system_clock::time_point mFirstTime; // first tdtTime seen
+  std::chrono::system_clock::time_point mTdtTime;   // now tdtTime
   };

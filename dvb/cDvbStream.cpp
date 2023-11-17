@@ -507,7 +507,7 @@ cDvbStream::cService::~cService() {
 
 // get
 //{{{
-bool cDvbStream::cService::isEpgRecord (const string& title, tTimePoint startTime) {
+bool cDvbStream::cService::isEpgRecord (const string& title, chrono::system_clock::time_point startTime) {
 // return true if startTime, title selected to record in epg
 
   auto it = mEpgItemMap.find (startTime);
@@ -534,8 +534,9 @@ cDvbStream::cStream* cDvbStream::cService::getRenderStreamByPid (uint16_t pid) {
 
 //  sets
 //{{{
-bool cDvbStream::cService::setNow (bool record, tTimePoint time, tDurationSeconds duration,
-                                            const string& titleString, const string& infoString) {
+bool cDvbStream::cService::setNow (bool record, 
+                                   chrono::system_clock::time_point time, chrono::seconds duration,
+                                   const string& titleString, const string& infoString) {
 
   if (mNowEpgItem && (mNowEpgItem->getTime() == time))
     return false;
@@ -548,8 +549,9 @@ bool cDvbStream::cService::setNow (bool record, tTimePoint time, tDurationSecond
   }
 //}}}
 //{{{
-bool cDvbStream::cService::setEpg (bool record, tTimePoint startTime, tDurationSeconds duration,
-                       const string& titleString, const string& infoString) {
+bool cDvbStream::cService::setEpg (bool record, 
+                                   chrono::system_clock::time_point startTime, chrono::seconds duration,
+                                   const string& titleString, const string& infoString) {
 // could return true only if changed
 
   auto it = mEpgItemMap.find (startTime);
@@ -967,7 +969,7 @@ cDvbStream::cPidInfo* cDvbStream::getPsiPidInfo (uint16_t pid) {
 //{{{
 void cDvbStream::foundService (cService& service) {
 
-  if (mShowAllServices || 
+  if (mShowAllServices ||
       (mShowFirstService && !mShowingFirstService)) {
 
     if (service.getRenderStream (eRenderType(eRenderVideo)).isDefined()) {
@@ -979,9 +981,11 @@ void cDvbStream::foundService (cService& service) {
 //}}}
 
 //{{{
-void cDvbStream::startServiceProgram (cService* service, tTimePoint tdtTime,
+void cDvbStream::startServiceProgram (cService* service, 
+                                      chrono::system_clock::time_point tdtTime,
                                       const string& programName,
-                                      tTimePoint programStartTime, bool selected) {
+                                      chrono::system_clock::time_point programStartTime, 
+                                      bool selected) {
 // start recording service program
 
   // close prev program on this service
@@ -1249,7 +1253,7 @@ void cDvbStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
             // known service
             auto startTime = chrono::system_clock::from_time_t (
               MjdToEpochTime (eitEvent->mjd) + BcdTimeToSeconds (eitEvent->start_time));
-            tDurationSeconds duration (BcdTimeToSeconds (eitEvent->duration));
+            chrono::seconds duration (BcdTimeToSeconds (eitEvent->duration));
 
             // get title
             auto bufPtr = buf + sizeof(descrShortEvent) - 1;
