@@ -977,16 +977,18 @@ int main (int numArgs, char* args[]) {
     else if (param == "log3")
       logLevel = LOGINFO3;
     else {
-      // look for multiplex name
-      for (auto& multiplex : kMultiplexes)
+      // assume filename
+      filename = param;
+
+      // look for named multiplex
+      for (auto& multiplex : kMultiplexes) {
         if (param == multiplex.mName) {
+          // found named multiplex
           useMultiplex = multiplex;
           filename = "";
           break;
           }
-
-      // else filename
-      filename = param;
+        }
       }
     }
 
