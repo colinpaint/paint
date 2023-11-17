@@ -59,8 +59,8 @@ private:
 
   // player
   std::thread mPlayerThread;
+  bool mMute = true;
   bool mPlaying = false;
-  bool mMute = false;
   bool mRunning = true;
   bool mExit = false;
   int64_t mPlayerPts = 0;
