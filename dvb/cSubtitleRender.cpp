@@ -34,7 +34,7 @@ public:
   //}}}
 
   virtual void releaseResources() final {}
-    };
+  };
 //}}}
 //{{{
 class cSubtitleDecoder : public cDecoder {
@@ -918,6 +918,7 @@ private:
   cRender& mRender;
 
   cDisplayDefinition mDisplayDefinition;
+
   cPage mPage;
   vector <cRegion*> mRegions;
   vector <cObject> mObjects;

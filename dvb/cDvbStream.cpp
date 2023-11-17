@@ -884,7 +884,7 @@ void cDvbStream::startServiceProgram (cService* service, tTimePoint tdtTime,
   lock_guard<mutex> lockGuard (mRecordFileMutex);
   service->closeFile();
 
-  if ((selected || service->getChannelRecord() || mDvbMultiplex.mRecordAllChannels) &&
+  if ((selected || service->getChannelRecord() || mDvbMultiplex.mRecordAll) &&
       service->getRenderStream (eRenderVideo).isDefined() &&
       (service->getRenderStream(eRenderAudio).isDefined())) {
     string filePath = mRecordRootName +
@@ -1429,7 +1429,7 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                       (streamId == 0xBF)) { // private stream2
                     cLog::log (LOGINFO, fmt::format ("recognised pesHeader - pid:{} streamId:{:8x}", pid, streamId));
                     }
-                  else if ((streamId == 0xBD) || 
+                  else if ((streamId == 0xBD) ||
                            (streamId == 0xBE) ||// ???
                            ((streamId >= 0xC0) && (streamId <= 0xEF))) { // subtitle, audio, video streams
                     if (pidInfo->mBufPtr)
@@ -1504,7 +1504,7 @@ void cDvbStream::dvbSourceInternal (bool launchThread) {
   if (launchThread)
     cLog::setThreadName ("grab");
 
-  FILE* mFile = mDvbMultiplex.mRecordAllChannels ?
+  FILE* mFile = mDvbMultiplex.mRecordAll ?
     fopen ((mRecordRootName + mDvbMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
 
   #ifdef _WIN32

@@ -18,7 +18,9 @@ class cTexture;
 class cSubtitleImage {
 public:
   cSubtitleImage() {}
-  ~cSubtitleImage() { free (mPixels); }
+  ~cSubtitleImage() { 
+    free (mPixels); 
+    }
 
   uint8_t mPageState = 0;
   uint8_t mPageVersion = 0;

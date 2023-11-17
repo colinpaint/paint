@@ -51,59 +51,30 @@ namespace {
   #endif
   //}}}
   //{{{
-  const cDvbMultiplex kFileDvbMultiplex = {
-    "hd",
-    0,
-    { "BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
-    { "bbc1hd",        "bbc2hd",     "bbc3hd",       "bbc4hd",      "itv1hd",  "chn4hd",       "chn5hd" },
-    false,
-    };
-  //}}}
-  //{{{
   const vector <cDvbMultiplex> kDvbMultiplexes = {
-    { "hd",
-      626000000,
-      { "BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
-      { "bbc1hd",        "bbc2hd",     "bbc3hd",       "bbc4hd",      "itv1hd",  "chn4hd",       "chn5hd" },
-      false,
-    },
+      { "hd",
+        626000000,
+        { "BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
+        { "bbc1hd",        "bbc2hd",     "bbc3hd",       "bbc4hd",      "itv1hd",  "chn4hd",       "chn5hd" },
+        false
+      },
 
-    { "itv",
-      650000000,
-      { "ITV1",  "ITV2", "ITV3", "ITV4", "Channel 4", "Channel 4+1", "More 4", "Film4" , "E4", "Channel 5" },
-      { "itv1", "itv2", "itv3", "itv4", "chn4"     , "c4+1",        "more4",  "film4",  "e4", "chn5" },
-      false,
-    },
+      { "itv",
+        650000000,
+        { "ITV1",  "ITV2", "ITV3", "ITV4", "Channel 4", "Channel 4+1", "More 4", "Film4" , "E4", "Channel 5" },
+        { "itv1", "itv2", "itv3", "itv4", "chn4"     , "c4+1",        "more4",  "film4",  "e4", "chn5" },
+        false
+      },
 
-    { "bbc",
-      674000000,
-      { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
-      { "bbc1",           "bbc2",    "bbc4" },
-      false,
-    },
-
-    { "allhd",
-      626000000,
-      { "" },
-      { "" },
-      true,
-    },
-
-    { "allitv",
-      650000000,
-      { "" },
-      { "" },
-      true,
-    },
-
-    { "allbbc",
-      674000000,
-      { "" },
-      { "" },
-      true,
-    },
+      { "bbc",
+        674000000,
+        { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
+        { "bbc1",           "bbc2",    "bbc4" },
+        false
+      }
     };
   //}}}
+  const cDvbMultiplex kFileDvbMultiplex = { "file", 0, {}, {}, false };
   }
 
 //{{{
@@ -131,7 +102,7 @@ public:
       }
 
     else {
-      // create fileSource, with dummy all multiplex
+      // create fileSource, any channel
       mDvbStream = new cDvbStream (kFileDvbMultiplex,  "", true);
       if (!mDvbStream)
         return false;
@@ -852,14 +823,11 @@ private:
     const float potSize = ImGui::GetTextLineHeight() / 2.f;
     size_t line = 0;
     while (line < subtitleRender.getNumLines()) {
-      // draw subtitle line
-      cSubtitleImage& image = subtitleRender.getImage (line);
-
       // draw clut color pots
       ImVec2 pos = ImGui::GetCursorScreenPos();
-      for (size_t pot = 0; pot < image.mColorLut.max_size(); pot++) {
+      for (size_t pot = 0; pot < subtitleRender.getImage (line).mColorLut.max_size(); pot++) {
         ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
-        uint32_t color = image.mColorLut[pot];
+        uint32_t color = subtitleRender.getImage (line).mColorLut[pot];
         ImGui::GetWindowDrawList()->AddRectFilled (
           potPos, {potPos.x + potSize - 1.f, potPos.y + potSize - 1.f}, color);
         }
@@ -870,19 +838,22 @@ private:
 
       // draw position
       ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", image.mX, image.mY).c_str());
+      ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}",
+                                           subtitleRender.getImage (line).mX, subtitleRender.getImage (line).mY).c_str());
 
-      // create/update image texture
-      if (!image.mTexture) // create
-        image.mTexture = graphics.createTexture (cTexture::eRgba, {image.mWidth, image.mHeight});
-      if (image.mDirty)
-        image.mTexture->setPixels (&image.mPixels, nullptr);
-      image.mDirty = false;
+      // create/update subtitle line image
+      if (!subtitleRender.getImage (line).mTexture) // create
+        subtitleRender.getImage (line).mTexture = graphics.createTexture (
+          cTexture::eRgba, {subtitleRender.getImage (line).mWidth, subtitleRender.getImage (line).mHeight});
+      if (subtitleRender.getImage (line).mDirty)
+        subtitleRender.getImage (line).mTexture->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
+      subtitleRender.getImage (line).mDirty = false;
 
-      // draw image, scaled to fit line
+      // draw subtitle line image, scaled to fit line
       ImGui::SameLine();
-      ImGui::Image ((void*)(intptr_t)image.mTexture->getTextureId(),
-                    {image.mWidth * ImGui::GetTextLineHeight()/image.mHeight, ImGui::GetTextLineHeight()});
+      ImGui::Image ((void*)(intptr_t)subtitleRender.getImage (line).mTexture->getTextureId(),
+                    { subtitleRender.getImage(line).mWidth * ImGui::GetTextLineHeight()/subtitleRender.getImage (line).mHeight,
+                      ImGui::GetTextLineHeight() } );
       line++;
       }
 
@@ -1034,6 +1005,7 @@ int main (int numArgs, char* args[]) {
   // params
   eLogLevel logLevel = LOGINFO;
   bool vsync = true;
+  bool recordAll = false;
   bool fullScreen = false;
   bool playFirstService = false;
   cDvbMultiplex useMultiplex = kDvbMultiplexes[0];
@@ -1046,11 +1018,12 @@ int main (int numArgs, char* args[]) {
     if (param == "log1") { logLevel = LOGINFO1; }
     else if (param == "log2") { logLevel = LOGINFO2; }
     else if (param == "log3") { logLevel = LOGINFO3; }
+    else if (param == "all") { recordAll = true; }
     else if (param == "full") { fullScreen = true; }
     else if (param == "free") { vsync = false; }
     else if (param == "first") { playFirstService = true; }
     else {
-      // assume param is filename unless it matches multiplex name
+      // is param multiplex, else filename
       filename = param;
       for (auto& multiplex : kDvbMultiplexes)
         if (param == multiplex.mName) {
@@ -1059,6 +1032,8 @@ int main (int numArgs, char* args[]) {
           break;
           }
       }
+
+    useMultiplex.mRecordAll = recordAll;
     }
   //}}}
 

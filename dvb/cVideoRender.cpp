@@ -41,6 +41,7 @@ namespace {
     }
   //}}}
   }
+
 constexpr bool kVideoQueued = true;
 constexpr size_t kVideoFrameMapSize = 25;
 
@@ -56,7 +57,7 @@ public:
 
   void setAVFrame (AVFrame* avFrame) {
 
-    // release old AVframe before holding new AVframe
+    // release old AVframe before owning new AVframe
     releasePixels();
 
     mAvFrame = avFrame;
@@ -82,6 +83,7 @@ protected:
       // release old AVframe
       AVFrame* avFrame = mAvFrame;
       mAvFrame = nullptr;
+
       av_frame_unref (avFrame);
       av_frame_free (&avFrame);
       }
@@ -237,6 +239,7 @@ cVideoRender::~cVideoRender() {
 
   for (auto& frame : mFreeFrames)
     delete frame;
+
   mFreeFrames.clear();
   }
 //}}}
@@ -295,7 +298,7 @@ void cVideoRender::addFrame (cFrame* frame) {
 
 //{{{
 void cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, const cMat4x4& model,
-                              int width, int height) {
+                              float width, float height) {
 
   // get texture
   cTexture& texture = videoFrame->getTexture (graphics);
@@ -307,7 +310,7 @@ void cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, cons
   texture.setSource();
   gShader->use();
 
-  gShader->setModelProjection (model, { 0.f, static_cast<float>(width), 0.f, static_cast<float>(height), -1.f,1.f });
+  gShader->setModelProjection (model, { 0.f, width, 0.f, height, -1.f,1.f });
 
   // ensure quad is created
   if (!mQuad)

@@ -28,7 +28,7 @@ public:
   int mFrequency;
   std::vector <std::string> mChannels;
   std::vector <std::string> mChannelRecordNames;
-  bool mRecordAllChannels;
+  bool mRecordAll;
   };
 //}}}
 

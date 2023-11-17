@@ -28,7 +28,7 @@ public:
   cFrame* getFrame();
   void addFrame (cFrame* frame);
 
-  void drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, const cMat4x4& model, int width, int height);
+  void drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, const cMat4x4& model, float width, float height);
 
   // overrides
   virtual std::string getInfoString() const final;
