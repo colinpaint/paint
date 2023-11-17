@@ -4681,7 +4681,6 @@ int main (int numArgs, char* args[]) {
   editApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   editApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
   editApp.setDocumentName (params.empty() ? "../../fed/cEditUI.cpp" : params[0], memEdit);
-
   editApp.mainUILoop();
 
   return EXIT_SUCCESS;
