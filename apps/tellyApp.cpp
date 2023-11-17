@@ -76,8 +76,8 @@ namespace {
 class cTellyApp : public cApp {
 public:
   //{{{
-  cTellyApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-    : cApp("telly", windowSize, fullScreen, vsync) {}
+  cTellyApp (const cPoint& windowSize, bool fullScreen)
+    : cApp("telly", windowSize, fullScreen, true) {}
   //}}}
   virtual ~cTellyApp() = default;
 
@@ -956,7 +956,6 @@ int main (int numArgs, char* args[]) {
   bool recordAll = false;
   bool showAllServices = true;
   bool fullScreen = false;
-  bool vsync = true;
   eLogLevel logLevel = LOGINFO;
   cDvbMultiplex useMultiplex = kMultiplexes[1];
   string filename;
@@ -971,8 +970,6 @@ int main (int numArgs, char* args[]) {
       showAllServices = false;
     else if (param == "full")
       fullScreen = true;
-    else if (param == "free")
-      vsync = false;
     else if (param == "log1")
       logLevel = LOGINFO1;
     else if (param == "log2")
@@ -1000,7 +997,7 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, "tellyApp - all full free log1 log2 log3 multiplexName filename");
+  cLog::log (LOGNOTICE, "tellyApp - all simple full log1 log2 log3 multiplexName filename");
   if (filename.empty())
     cLog::log (LOGINFO, fmt::format ("using multiplex {}", useMultiplex.mName));
 
@@ -1008,7 +1005,7 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // app
-  cTellyApp tellyApp ({1920/2, 1080/2}, fullScreen, vsync);
+  cTellyApp tellyApp ({1920/2, 1080/2}, fullScreen);
   tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
   if (!filename.empty())
