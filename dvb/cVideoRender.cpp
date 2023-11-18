@@ -297,8 +297,8 @@ void cVideoRender::addFrame (cFrame* frame) {
 //}}}
 
 //{{{
-void cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, const cMat4x4& model,
-                              float width, float height) {
+cRect cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, cMat4x4& model,
+                               float viewportWidth, float viewportHeight) {
 
   // get texture
   cTexture& texture = videoFrame->getTexture (graphics);
@@ -310,13 +310,20 @@ void cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, cons
   texture.setSource();
   gShader->use();
 
-  gShader->setModelProjection (model, { 0.f, width, 0.f, height, -1.f,1.f });
+  cMat4x4 projection = { 0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f };
+  gShader->setModelProjection (model, projection);
 
   // ensure quad is created
   if (!mQuad)
     mQuad = graphics.createQuad (videoFrame->getSize());
 
   mQuad->draw();
+
+  //projection.show ("projection");
+  //model.show ("model");
+  cMat4x4 modelProjection = projection * model;
+  return cRect (modelProjection.transform (cVec2(0,0)),
+                modelProjection.transform (cVec2(videoFrame->getWidth(), videoFrame->getHeight())));
   }
 //}}}
 

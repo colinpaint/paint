@@ -4,7 +4,11 @@
 #include <cstdint>
 #include <cstring> // memcpy
 #include <cmath>
+#include <string> // memcpy
 #include <algorithm>
+
+#include "../common/cLog.h"
+#include "fmt/format.h"
 //}}}
 
 //{{{
@@ -29,148 +33,6 @@ struct cColor {
     this->g = g;
     this->b = b;
     this->a = a;
-    }
-  //}}}
-  };
-//}}}
-
-//{{{
-struct cPoint {
-  int32_t x;
-  int32_t y;
-
-  //{{{
-  cPoint()  {
-    x = 0;
-    y = 0;
-    }
-  //}}}
-  //{{{
-  cPoint (int32_t x, int32_t y) {
-    this->x = x;
-    this->y = y;
-    }
-  //}}}
-
-  //{{{
-  cPoint operator - (const cPoint& point) const {
-    return cPoint (x - point.x, y - point.y);
-    }
-  //}}}
-  //{{{
-  cPoint operator + (const cPoint& point) const {
-    return cPoint (x + point.x, y + point.y);
-    }
-  //}}}
-  //{{{
-  cPoint operator * (const cPoint& point) const {
-    return cPoint (x * point.x, y * point.y);
-    }
-  //}}}
-
-  //{{{
-  const cPoint& operator += (const cPoint& point)  {
-    x += point.x;
-    y += point.y;
-    return *this;
-    }
-  //}}}
-  //{{{
-  const cPoint& operator -= (const cPoint& point)  {
-    x -= point.x;
-    y -= point.y;
-    return *this;
-    }
-  //}}}
-
-  //{{{
-  float magnitude() const {
-  // return magnitude of point as vector
-    return float(sqrt ((x*x) + (y*y)));
-    }
-  //}}}
-  };
-//}}}
-//{{{
-struct cRect {
-  int32_t left;
-  int32_t right;
-  int32_t top;
-  int32_t bottom;
-
-  //{{{
-  cRect() {
-    left = 0;
-    top = 0;
-    right = 0;
-    bottom = 0;
-    }
-  //}}}
-  //{{{
-  cRect (const cPoint& size)  {
-    left = 0;
-    top = 0;
-    right = size.x;
-    bottom = size.y;
-    }
-  //}}}
-  //{{{
-  cRect (int32_t left, int32_t top, int32_t right, int32_t bottom)  {
-    this->left = left;
-    this->top = top;
-    this->right = right;
-    this->bottom = bottom;
-    }
-  //}}}
-  //{{{
-  cRect (const cPoint& topLeft, const cPoint& bottomRight)  {
-    left = topLeft.x;
-    top = topLeft.y;
-    right = bottomRight.x;
-    bottom = bottomRight.y;
-    }
-  //}}}
-
-  //{{{
-  cRect operator + (const cPoint& point) const {
-    return cRect (left + point.x, top + point.y, right + point.x, bottom + point.y);
-    }
-  //}}}
-  //{{{
-  cRect operator + (const cRect& rect) const {
-    return cRect (std::min (left, rect.left), std::min (top, rect.top),
-                  std::max (right, rect.right), std::max (bottom, rect.bottom));
-    }
-  //}}}
-  //{{{
-  const cRect& operator += (const cRect& rect)  {
-    left = std::min (left, rect.left);
-    top = std::min (top, rect.top),
-    right = std::max (right, rect.right);
-    bottom = std::max (bottom, rect.bottom);
-    return *this;
-    }
-  //}}}
-
-  int32_t getWidth() const { return right - left; }
-  int32_t getHeight() const { return bottom - top; }
-  cPoint getSize() const { return cPoint(getWidth(), getHeight()); }
-  cPoint getCentre() const { return cPoint(getWidth()/2, getHeight()/2); }
-
-  cPoint getTL() const { return cPoint(left, top); }
-  cPoint getTR() const { return cPoint(right, top); }
-  cPoint getBL() const { return cPoint(left, bottom); }
-  cPoint getBR() const { return cPoint(right, bottom); }
-
-  //{{{
-  bool isEmpty() {
-    return (getWidth() <= 0) || (getHeight() <= 0);
-    }
-  //}}}
-  //{{{
-  bool isInside (const cPoint& pos) {
-  // return pos inside rect
-    return (pos.x >= left) && (pos.x < right) && (pos.y >= top) && (pos.y < bottom);
     }
   //}}}
   };
@@ -228,6 +90,7 @@ struct cVec2 {
     return *this;
     }
   //}}}
+
   //{{{
   float magnitude() const {
   // return magnitude of point as vector
@@ -260,6 +123,7 @@ struct cVec3 {
 //{{{
 struct cMat4x4 {
   float mat[4][4];
+
   //{{{
   cMat4x4() {
   // construct identity matrix
@@ -350,6 +214,242 @@ struct cMat4x4 {
 
     mat[0][0] *= size.x;
     mat[1][1] *= size.y;
+    }
+  //}}}
+
+  //{{{
+  cMat4x4 operator * (const cMat4x4& matR) const {
+
+    cMat4x4 result;
+
+    for (int i = 0; i <= 3; i++)
+      for (int j = 0; j <= 3; j++) {
+        result.mat[i][j] = 0;
+        for (int k = 0; k <= 3; k++)
+          result.mat[i][j] += mat[i][k] * matR.mat[k][j];
+        }
+
+    return (result);
+    }
+  //}}}
+
+  //{{{
+  cVec2 transform (const cVec2& pos) {
+    return { (mat[0][0] * pos.x) + (mat[1][0] * pos.y) + (mat[3][0] * 1.f),
+             (mat[0][1] * pos.x) + (mat[1][1] * pos.y) + (mat[3][1] * 1.f) };
+    }
+  //}}}
+  //{{{
+  cVec2 showTransform (const std::string& name, const cVec2& pos) {
+
+    // print pos
+    cLog::log (LOGINFO, fmt::format ("{} {:7.3f},{:7.3f}", name, pos.x, pos.y));
+
+    // print matrix
+    show ("");
+
+    cVec2 result ((mat[0][0] * pos.x) + (mat[1][0] * pos.y) + (mat[3][0] * 1.f),
+                  (mat[0][1] * pos.x) + (mat[1][1] * pos.y) + (mat[3][1] * 1.f));
+
+    // print result
+    cLog::log (LOGINFO, fmt::format ("{} to {:7.3f},{:7.3f}", name, result.x, result.y));
+
+    return (result);
+    }
+  //}}}
+
+  //{{{
+  cVec3 transform (const cVec3& pos) {
+    return { (mat[0][0] * pos.x) + (mat[1][0] * pos.y) + (mat[2][0] * pos.z) + (mat[3][0] * 1.f),
+             (mat[0][1] * pos.x) + (mat[1][1] * pos.y) + (mat[2][1] * pos.z) + (mat[3][1] * 1.f),
+             (mat[0][2] * pos.x) + (mat[1][2] * pos.y) + (mat[2][2] * pos.z) + (mat[3][2] * 1.f) };
+    }
+  //}}}
+
+  //{{{
+  void show (const std::string& name) {
+
+    cLog::log (LOGINFO, "mat4x4 " + name);
+
+    for (int j = 0; j <= 3; j++)
+      cLog::log (LOGINFO, fmt::format ("  {:7.3f} {:7.3f} {:7.3f} {:7.3f}",
+                                       mat[j][0], mat[j][1], mat[j][2], mat[j][3]));
+    }
+  //}}}
+  };
+//}}}
+
+//{{{
+struct cPoint {
+  int32_t x;
+  int32_t y;
+
+  //{{{
+  cPoint()  {
+    x = 0;
+    y = 0;
+    }
+  //}}}
+  //{{{
+  cPoint (int32_t x, int32_t y) {
+    this->x = x;
+    this->y = y;
+    }
+  //}}}
+  //{{{
+  cPoint (const cVec2& pos) {
+    this->x = (int32_t)pos.x;
+    this->y = (int32_t)pos.y;
+    }
+  //}}}
+
+  //{{{
+  cPoint operator - (const cPoint& point) const {
+    return cPoint (x - point.x, y - point.y);
+    }
+  //}}}
+  //{{{
+  cPoint operator + (const cPoint& point) const {
+    return cPoint (x + point.x, y + point.y);
+    }
+  //}}}
+  //{{{
+  cPoint operator * (const cPoint& point) const {
+    return cPoint (x * point.x, y * point.y);
+    }
+  //}}}
+
+  //{{{
+  const cPoint& operator += (const cPoint& point)  {
+    x += point.x;
+    y += point.y;
+    return *this;
+    }
+  //}}}
+  //{{{
+  const cPoint& operator -= (const cPoint& point)  {
+    x -= point.x;
+    y -= point.y;
+    return *this;
+    }
+  //}}}
+
+  //{{{
+  float magnitude() const {
+  // return magnitude of point as vector
+    return float(sqrt ((x*x) + (y*y)));
+    }
+  //}}}
+  };
+//}}}
+//{{{
+struct cRect {
+  int32_t left;
+  int32_t right;
+  int32_t top;
+  int32_t bottom;
+
+  //{{{
+  cRect() {
+    left = 0;
+    top = 0;
+    right = 0;
+    bottom = 0;
+    }
+  //}}}
+  //{{{
+  cRect (const cPoint& size)  {
+    left = 0;
+    top = 0;
+
+    right = size.x;
+    bottom = size.y;
+    }
+  //}}}
+  //{{{
+  cRect (int32_t left, int32_t top, int32_t right, int32_t bottom)  {
+
+    this->left = left;
+    this->top = top;
+
+    this->right = right;
+    this->bottom = bottom;
+    }
+  //}}}
+  //{{{
+  cRect (const cPoint& topLeft, const cPoint& bottomRight)  {
+
+    left = topLeft.x;
+    top = topLeft.y;
+
+    right = bottomRight.x;
+    bottom = bottomRight.y;
+    }
+  //}}}
+  //{{{
+  cRect (const cVec2& size)  {
+
+    left = 0;
+    top = 0;
+
+    right = (int32_t)size.x;
+    bottom = (int32_t)size.y;
+    }
+  //}}}
+  //{{{
+  cRect (const cVec2& topLeft, const cVec2& bottomRight)  {
+
+    left = (int32_t)topLeft.x;
+    top = (int32_t)topLeft.y;
+
+    right = (int32_t)bottomRight.x;
+    bottom = (int32_t)bottomRight.y;
+    }
+  //}}}
+
+  //{{{
+  cRect operator + (const cPoint& point) const {
+    return cRect (left + point.x, top + point.y, right + point.x, bottom + point.y);
+    }
+  //}}}
+  //{{{
+  cRect operator + (const cRect& rect) const {
+    return cRect (std::min (left, rect.left), std::min (top, rect.top),
+                  std::max (right, rect.right), std::max (bottom, rect.bottom));
+    }
+  //}}}
+  //{{{
+  const cRect& operator += (const cRect& rect)  {
+
+    left = std::min (left, rect.left);
+    top = std::min (top, rect.top),
+
+    right = std::max (right, rect.right);
+    bottom = std::max (bottom, rect.bottom);
+
+    return *this;
+    }
+  //}}}
+
+  int32_t getWidth() const { return right - left; }
+  int32_t getHeight() const { return bottom - top; }
+  cPoint getSize() const { return cPoint(getWidth(), getHeight()); }
+  cPoint getCentre() const { return cPoint(getWidth()/2, getHeight()/2); }
+
+  cPoint getTL() const { return cPoint(left, top); }
+  cPoint getTR() const { return cPoint(right, top); }
+  cPoint getBL() const { return cPoint(left, bottom); }
+  cPoint getBR() const { return cPoint(right, bottom); }
+
+  //{{{
+  bool isEmpty() {
+    return (getWidth() <= 0) || (getHeight() <= 0);
+    }
+  //}}}
+  //{{{
+  bool isInside (const cPoint& pos) {
+  // return pos inside rect
+    return (pos.x >= left) && (pos.x < right) && (pos.y >= top) && (pos.y < bottom);
     }
   //}}}
   };

@@ -491,6 +491,7 @@ namespace {
           if (videoFrame) {
             //{{{  calc multiPic offset
             cVec2 offset = { 0.5f, 0.5f };
+
             switch (numVideos) {
               //{{{
               case 2:
@@ -613,7 +614,11 @@ namespace {
             model.setTranslate ( {(ImGui::GetWindowWidth() * offset.x) - ((videoFrame->getWidth() / 2.f) * scaledSize.x),
                                   (ImGui::GetWindowHeight() * offset.y) - ((videoFrame->getHeight() / 2.f) * scaledSize.y)} );
             model.size (scaledSize);
-            videoRender.drawFrame (videoFrame, graphics, model, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+            cRect rect = videoRender.drawFrame (videoFrame, graphics, model,
+                                                ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+
+            ImGui::GetWindowDrawList()->AddRect (ImVec2(rect.left, rect.top),
+                                                 ImVec2(rect.right, rect.bottom), 0xff00ffff);
 
             videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
             }

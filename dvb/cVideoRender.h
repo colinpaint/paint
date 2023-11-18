@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string>
 
+#include "../common/basicTypes.h"
 #include "../app/cGraphics.h"
 
 class cTexture;
@@ -28,7 +29,8 @@ public:
   cFrame* getFrame();
   void addFrame (cFrame* frame);
 
-  void drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, const cMat4x4& model, float width, float height);
+  cRect drawFrame (cVideoFrame* videoFrame, cGraphics& graphics,
+                   cMat4x4& model, float viewportWidth, float viewportHeight);
 
   // overrides
   virtual std::string getInfoString() const final;
