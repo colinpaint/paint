@@ -3,7 +3,7 @@
 //{{{  includes
 #include <string>
 
-#include "../common/pointRectColor.h"
+#include "../common/basicTypes.h"
 //}}}
 
 // abstract base class

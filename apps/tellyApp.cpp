@@ -469,17 +469,21 @@ namespace {
         cDvbStream::cService& service = pair.second;
         if (service.getRenderStream (eRenderVideo).isEnabled()) {
           curVideo++;
+          int64_t playerPts = 0;
           cVideoRender& videoRender = dynamic_cast<cVideoRender&>(service.getRenderStream (eRenderVideo).getRender());
           //{{{  get playerPts from audioStream
-          int64_t playerPts = service.getRenderStream (eRenderAudio).getPts();
           if (service.getRenderStream (eRenderAudio).isEnabled()) {
-            // update playerPts from audioPlayer
             cAudioRender& audioRender = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender());
+
+            // update playerPts from audioPlayer
             playerPts = audioRender.getPlayerPts();
             audioRender.setMute (curVideo != 1);
+
             if (curVideo <= 1)
               mFramesGraphic.draw (audioRender, videoRender, playerPts);
             }
+          else
+            playerPts = service.getRenderStream (eRenderAudio).getPts();
           //}}}
 
           // draw videoFrame

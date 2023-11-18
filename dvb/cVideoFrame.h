@@ -10,7 +10,7 @@
 #include <array>
 #include <algorithm>
 
-#include "../common/pointRectColor.h"
+#include "../common/basicTypes.h"
 #include "../app/cGraphics.h"
 //}}}
 
