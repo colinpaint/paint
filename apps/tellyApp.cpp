@@ -218,26 +218,26 @@ namespace {
                            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
         switch (mTab) {
           //{{{
-          case eMulti:
-            drawMultiTelly (dvbStream, graphics);
+          case eTelly:
+            drawTelly (dvbStream, graphics);
             drawChannels (dvbStream, graphics);
             break;
           //}}}
           //{{{
           case eServices:
-            drawMultiTelly(dvbStream, graphics);
+            drawTelly(dvbStream, graphics);
             drawServices (dvbStream, graphics);
             break;
           //}}}
           //{{{
           case ePids:
-            drawMultiTelly(dvbStream, graphics);
+            drawTelly(dvbStream, graphics);
             drawPidMap (dvbStream, graphics);
             break;
           //}}}
           //{{{
           case eRecorded:
-            drawMultiTelly(dvbStream, graphics);
+            drawTelly(dvbStream, graphics);
             drawRecorded (dvbStream, graphics);
             break;
           //}}}
@@ -259,8 +259,8 @@ namespace {
     //}}}
 
   private:
-    enum eTab { eMulti, eServices, ePids, eRecorded };
-    inline static const vector<string> kTabNames = { "multi", "services", "pids", "recorded" };
+    enum eTab { eTelly, eServices, ePids, eRecorded };
+    inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded" };
     //{{{
     class cFramesGraphic {
     public:
@@ -294,11 +294,11 @@ namespace {
           float offset1 = (videoFrame->mPts - playPts) * ptsScale;
           float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
 
-          // pesSize I white / P yellow / B green - ARGB color
+          // pesSize I white / P purple / B blue - ABGR color
           ImGui::GetWindowDrawList()->AddRectFilled (
             {pos.x + offset1, pos.y},
             {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
-            (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xff00ffff : 0xff00ff00);
+            (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xffFF20ff : 0xffFF2020);
 
           // grey decodeTime
           //ImGui::GetWindowDrawList()->AddRectFilled (
@@ -453,7 +453,7 @@ namespace {
     //}}}
 
     //{{{
-    void drawMultiTelly (cDvbStream& dvbStream, cGraphics& graphics) {
+    void drawTelly (cDvbStream& dvbStream, cGraphics& graphics) {
 
       //{{{  count numVideos
       int numVideos = 0;
@@ -900,7 +900,7 @@ namespace {
     //}}}
 
     // vars
-    eTab mTab = eMulti;
+    eTab mTab = eTelly;
 
     int64_t mMaxPidPackets = 0;
     size_t mPacketChars = 3;
@@ -909,6 +909,7 @@ namespace {
     size_t mMaxPgmChars = 3;
 
     array <size_t, 4> mPidMaxChars = { 3 };
+    //array <size_t, 4> mPidMaxChars = { 3 };
 
     float mScale = 1.f;
     float mOverlap = 4.f;
