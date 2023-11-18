@@ -86,7 +86,7 @@ namespace {
     void liveDvbSource (const cDvbMultiplex& dvbMultiplex, const string& recordRoot, bool showAllServices) {
 
       // create liveDvbSource from dvbMultiplex
-      mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, showAllServices, false);
+      mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, true, showAllServices, false);
       if (mDvbStream)
         mDvbStream->dvbSource();
       else
@@ -99,7 +99,7 @@ namespace {
       string resolvedFilename = cFileUtils::resolve (filename);
 
       // create fileSource, any channel
-      mDvbStream = new cDvbStream (kMultiplexes[0], "", showAllServices, true);
+      mDvbStream = new cDvbStream (kMultiplexes[0], "", false, showAllServices, true);
       if (mDvbStream)
         mDvbStream->fileSource (resolvedFilename);
       else

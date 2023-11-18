@@ -169,8 +169,9 @@ private:
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const string& name, uint8_t streamType)
+cAudioRender::cAudioRender (const string& name, uint8_t streamType, bool realTime)
     : cRender(kAudioQueued, name + "aud", streamType, kAudioFrameMapSize),
+      mRealTime(realTime),
       mSampleRate(48000), mSamplesPerFrame(1024), mPtsDuration(0) {
 
   mDecoder = new cFFmpegAudioDecoder (*this, streamType);
@@ -410,11 +411,12 @@ bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int
 
   trimFramesBeforePts (getPlayerPts() - mPtsDuration);
 
-  // throttle on number of decoded audioFrames
-  while (mFrames.size() > mFrameMapSize) {
-    this_thread::sleep_for (1ms);
-    trimFramesBeforePts (getPlayerPts() - mPtsDuration);
-    }
+  if (!mRealTime) 
+    // throttle on number of decoded audioFrames
+    while (mFrames.size() > mFrameMapSize) {
+      this_thread::sleep_for (1ms);
+      trimFramesBeforePts (getPlayerPts() - mPtsDuration);
+      }
 
   return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
   }

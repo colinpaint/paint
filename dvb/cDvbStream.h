@@ -202,11 +202,13 @@ public:
   //{{{
   class cService {
   public:
-    cService (uint16_t sid);
+    cService (uint16_t sid, bool realTime);
     ~cService();
 
     //{{{  gets
     uint16_t getSid() const { return mSid; }
+    bool getRealTime() const { return mRealTime; }
+
     uint16_t getProgramPid() const { return mProgramPid; }
 
     cStream& getRenderStream (eRenderType renderType) { return mRenderStreams[renderType]; }
@@ -267,6 +269,8 @@ public:
 
     // var
     const uint16_t mSid;
+    const bool mRealTime;
+
     uint16_t mProgramPid = 0;
 
     // match sizeof eRenderType
@@ -286,8 +290,8 @@ public:
     };
   //}}}
 
-  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName,
-              bool showAllServices, bool showFirstService);
+  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, 
+              bool realTime, bool showAllServices, bool showFirstService);
   virtual ~cDvbStream() { clear(); }
 
   //{{{  gets
@@ -305,6 +309,8 @@ public:
 
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
+
+  bool getRealTime() const { return mRealTime; }
 
   // dvbSource
   bool hasDvbSource() const { return mDvbSource; }
@@ -358,6 +364,7 @@ private:
   const cDvbMultiplex mDvbMultiplex;
   const std::string mRecordRootName;
 
+  const bool mRealTime;
   const bool mShowAllServices;
   const bool mShowFirstService;
   bool mShowingFirstService = false;

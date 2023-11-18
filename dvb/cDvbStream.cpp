@@ -20,16 +20,15 @@
 
 #include <sys/stat.h>
 
-#include "cDvbSource.h"
-
-#include "cVideoRender.h"
-#include "cAudioRender.h"
-#include "cSubtitleRender.h"
-
 #include "../common/date.h"
 #include "../common/cLog.h"
 #include "../common/utils.h"
 #include "../common/cDvbUtils.h"
+
+#include "cDvbSource.h"
+#include "cVideoRender.h"
+#include "cAudioRender.h"
+#include "cSubtitleRender.h"
 
 using namespace std;
 //}}}
@@ -483,7 +482,7 @@ int cDvbStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 //}}}
 //{{{  class cDvbStream::cService
 //{{{
-cDvbStream::cService::cService (uint16_t sid) : mSid(sid) {
+cDvbStream::cService::cService (uint16_t sid, bool realTime) : mSid(sid), mRealTime(realTime) {
 
   mRenderStreams[eRenderVideo].setLabel ("vid:");
   mRenderStreams[eRenderAudio].setLabel ("aud:");
@@ -576,7 +575,7 @@ void cDvbStream::cService::toggleStream (eRenderType renderType) {
 
       case eRenderAudio :
       case eRenderDescription:
-        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId()));
+        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), getRealTime()));
         return;
 
       case eRenderSubtitle :
@@ -741,10 +740,11 @@ void cDvbStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, u
 
 // public:
 //{{{
-cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName,
-                        bool showAllServices, bool showFirstService)
+cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName, 
+                        bool realTime, bool showAllServices, bool showFirstService)
     : mDvbMultiplex(dvbMultiplex),
       mRecordRootName(recordRootName),
+      mRealTime(realTime),
       mShowAllServices(showAllServices),
       mShowFirstService(showFirstService) {
 
@@ -1341,7 +1341,7 @@ void cDvbStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
     if (!getService (sid)) {
      //{{{  found new service, create cService
      cLog::log (LOGINFO, fmt::format ("create service {}", sid));
-     cService& service = mServiceMap.emplace (sid, cService(sid)).first->second;
+     cService& service = mServiceMap.emplace (sid, cService(sid, getRealTime())).first->second;
 
      service.setProgramPid (pidInfo->getPid());
      pidInfo->setSid (sid);

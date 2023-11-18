@@ -18,7 +18,7 @@ enum class eAudioFrameType { eUnknown, eId3Tag, eWav, eMp3, eAacAdts, eAacLatm }
 
 class cAudioRender : public cRender {
 public:
-  cAudioRender (const std::string& name, uint8_t streamType);
+  cAudioRender (const std::string& name, uint8_t streamType, bool realTime);
   virtual ~cAudioRender();
 
   // gets
@@ -48,6 +48,8 @@ private:
   void startPlayerPts (int64_t pts);
 
   // vars
+  const bool mRealTime;
+
   size_t mSampleRate;
   size_t mSamplesPerFrame;
   int64_t mPtsDuration;
