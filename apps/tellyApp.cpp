@@ -298,7 +298,7 @@ namespace {
           ImGui::GetWindowDrawList()->AddRectFilled (
             {pos.x + offset1, pos.y},
             {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
-            (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xffFF20ff : 0xffFF2020);
+            (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xffFF40ff : 0xffFF4040);
 
           // grey decodeTime
           //ImGui::GetWindowDrawList()->AddRectFilled (

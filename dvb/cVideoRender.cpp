@@ -40,6 +40,13 @@ namespace {
     //vprintf (fmt, vargs);
     }
   //}}}
+
+  const string debugStr = "";
+  const string debugStrTL = "";
+  const string debugStrBR = "";
+  //const string debugStr = "modelProjection";
+  //const string debugStrTL = "TL";
+  //const string debugStrBR = "TR";
   }
 
 constexpr bool kVideoQueued = true;
@@ -302,12 +309,11 @@ cRect cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, cMa
 
   // get texture
   cTexture& texture = videoFrame->getTexture (graphics);
+  texture.setSource();
 
   // ensure shader is created
   if (!gShader)
     gShader = graphics.createTextureShader (texture.getTextureType());
-
-  texture.setSource();
   gShader->use();
 
   cMat4x4 projection = { 0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f };
@@ -316,14 +322,16 @@ cRect cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, cMa
   // ensure quad is created
   if (!mQuad)
     mQuad = graphics.createQuad (videoFrame->getSize());
-
   mQuad->draw();
 
-  //projection.show ("projection");
-  //model.show ("model");
+  if (!debugStr.empty()) {
+    projection.show ("projection");
+    model.show ("model");
+    }
+
   cMat4x4 modelProjection = projection * model;
-  return cRect (modelProjection.transform (cVec2(0,0)),
-                modelProjection.transform (cVec2(videoFrame->getWidth(), videoFrame->getHeight())));
+  return cRect (modelProjection.transform (cVec2(0,0), debugStrTL),
+                modelProjection.transform (cVec2(videoFrame->getWidth(), videoFrame->getHeight()), debugStrBR));
   }
 //}}}
 

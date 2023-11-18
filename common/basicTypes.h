@@ -1,43 +1,17 @@
-// basicTypes.h - simple,readable, portable types
+// basicTypes.h - simple,readable,portable types, structs for now, maybe classes later
 #pragma once
 //{{{  includes
 #include <cstdint>
 #include <cstring> // memcpy
 #include <cmath>
-#include <string> // memcpy
+#include <string>
 #include <algorithm>
 
 #include "../common/cLog.h"
 #include "fmt/format.h"
 //}}}
 
-//{{{
-// "color" in imGui so don't use "colour" here
-struct cColor {
-  float r;
-  float g;
-  float b;
-  float a;
-
-  //{{{
-  cColor()  {
-    r = 0.f;
-    g = 0.f;
-    b = 0.f;
-    a = 1.f;
-    }
-  //}}}
-  //{{{
-  cColor (float r, float g, float b, float a) {
-    this->r = r;
-    this->g = g;
-    this->b = b;
-    this->a = a;
-    }
-  //}}}
-  };
-//}}}
-
+// float vec, matrix
 //{{{
 struct cVec2 {
   float x;
@@ -234,13 +208,13 @@ struct cMat4x4 {
   //}}}
 
   //{{{
-  cVec2 transform (const cVec2& pos) {
-    return { (mat[0][0] * pos.x) + (mat[1][0] * pos.y) + (mat[3][0] * 1.f),
-             (mat[0][1] * pos.x) + (mat[1][1] * pos.y) + (mat[3][1] * 1.f) };
-    }
-  //}}}
-  //{{{
-  cVec2 showTransform (const std::string& name, const cVec2& pos) {
+  cVec2 transform (const cVec2& pos, const std::string& name = "") {
+
+    if (name.empty())
+      return { (mat[0][0] * pos.x) + (mat[1][0] * pos.y) + (mat[3][0] * 1.f),
+               (mat[0][1] * pos.x) + (mat[1][1] * pos.y) + (mat[3][1] * 1.f) };
+    else
+      cLog::log (LOGINFO, "-----------------------------------------------------");
 
     // print pos
     cLog::log (LOGINFO, fmt::format ("{} {:7.3f},{:7.3f}", name, pos.x, pos.y));
@@ -254,10 +228,9 @@ struct cMat4x4 {
     // print result
     cLog::log (LOGINFO, fmt::format ("{} to {:7.3f},{:7.3f}", name, result.x, result.y));
 
-    return (result);
+    return result;
     }
   //}}}
-
   //{{{
   cVec3 transform (const cVec3& pos) {
     return { (mat[0][0] * pos.x) + (mat[1][0] * pos.y) + (mat[2][0] * pos.z) + (mat[3][0] * 1.f),
@@ -279,6 +252,7 @@ struct cMat4x4 {
   };
 //}}}
 
+// int32_t point, rect
 //{{{
 struct cPoint {
   int32_t x;
@@ -450,6 +424,34 @@ struct cRect {
   bool isInside (const cPoint& pos) {
   // return pos inside rect
     return (pos.x >= left) && (pos.x < right) && (pos.y >= top) && (pos.y < bottom);
+    }
+  //}}}
+  };
+//}}}
+
+// float color
+//{{{
+// "color" in imGui so don't use "colour" here
+struct cColor {
+  float r;
+  float g;
+  float b;
+  float a;
+
+  //{{{
+  cColor()  {
+    r = 0.f;
+    g = 0.f;
+    b = 0.f;
+    a = 1.f;
+    }
+  //}}}
+  //{{{
+  cColor (float r, float g, float b, float a) {
+    this->r = r;
+    this->g = g;
+    this->b = b;
+    this->a = a;
     }
   //}}}
   };
