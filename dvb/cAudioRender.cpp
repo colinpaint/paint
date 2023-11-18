@@ -44,7 +44,7 @@ namespace {
   //}}}
   }
 constexpr bool kAudioQueued = true;
-constexpr size_t kAudioFrameMapSize = 48;
+constexpr size_t kAudioFrameMapSize = 24;
 constexpr int kSamplesWait = 2;
 
 //{{{
@@ -171,7 +171,7 @@ private:
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamType)
     : cRender(kAudioQueued, name + "aud", streamType, kAudioFrameMapSize),
-      mNumChannels(2), mSampleRate(48000), mSamplesPerFrame(1024), mPtsDuration(0) {
+      mSampleRate(48000), mSamplesPerFrame(1024), mPtsDuration(0) {
 
   mDecoder = new cFFmpegAudioDecoder (*this, streamType);
 
@@ -209,7 +209,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
                 float* dst = samples.data();
                 switch (audioFrame->mNumChannels) {
                   //{{{
-                  case 1: // mono to 2 interleaved channels
+                  case 1: // interleaved mono to 2 interleaved 2 channels
                     for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                       *dst++ = *src;
                       *dst++ = *src++;
@@ -217,24 +217,26 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
                     break;
                   //}}}
                   //{{{
-                  case 2: // stereo to 2 interleaved channels
-                    memcpy (dst, src, audioFrame->mSamplesPerFrame * audioFrame->mNumChannels * sizeof(float));
+                  case 2: // interleaved stereo to 2 interleaved 2 channels
+                    memcpy (dst, src, audioFrame->mSamplesPerFrame * 8);
                     break;
                   //}}}
                   //{{{
-                  case 6: // 5.1 to 2 interleaved channels
+                  case 6: // interleaved 5.1 to 2 interleaved 2channels
                     for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                      *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
-                      *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
+                      *dst++ = src[0] + src[2] + src[3] + src[4]; // left
+                      *dst++ = src[1] + src[2] + src[3] + src[5]; // right
                       src += 6;
                       }
                     break;
                   //}}}
                   //{{{
                   default:
-                    cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->mNumChannels));
+                    cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}",
+                                                      audioFrame->mNumChannels));
                   //}}}
                   }
+
                 srcSamples = samples.data();
                 }
               }
@@ -277,7 +279,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
             float* dst = samples.data();
             switch (audioFrame->mNumChannels) {
               //{{{
-              case 1: // mono to 2 interleaved channels
+              case 1: // interleaved mono to 2 interleaved 2 channels
                 for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
                   *dst++ = *src;
                   *dst++ = *src++;
@@ -285,22 +287,23 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType)
                 break;
               //}}}
               //{{{
-              case 2: // stereo to 2 interleaved channels
+              case 2: // interleaved stereo to 2 interleaved 2 channels
                 memcpy (dst, src, audioFrame->mSamplesPerFrame * 8);
                 break;
               //}}}
               //{{{
-              case 6: // 5.1 to 2 interleaved channels
+              case 6: // interleaved 5.1 to 2 interleaved 2channels
                 for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                  *dst++ = src[0] + src[2] + src[4] + src[5]; // left loud
-                  *dst++ = src[1] + src[3] + src[4] + src[5]; // right loud
+                  *dst++ = src[0] + src[2] + src[3] + src[4]; // left
+                  *dst++ = src[1] + src[2] + src[3] + src[5]; // right
                   src += 6;
                   }
                 break;
               //}}}
               //{{{
               default:
-                cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->mNumChannels));
+                cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}",
+                                                  audioFrame->mNumChannels));
               //}}}
               }
             srcSamples = samples.data();
@@ -371,8 +374,12 @@ void cAudioRender::addFrame (cFrame* frame) {
 
   cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
 
-  mNumChannels = audioFrame->mNumChannels;
-  mSampleRate = audioFrame->mSampleRate;
+  if (mSampleRate != audioFrame->mSampleRate) {
+    cLog::log (LOGERROR, fmt::format ("cAudioRender::addFrame sampleRate changed from {} to {}",
+                                      mSampleRate, audioFrame->mSampleRate));
+    mSampleRate = audioFrame->mSampleRate;
+    }
+
   mSamplesPerFrame = audioFrame->mSamplesPerFrame;
   mPtsDuration = audioFrame->mPtsDuration;
   mFrameInfo = audioFrame->getInfoString();
@@ -401,10 +408,12 @@ string cAudioRender::getInfoString() const {
 //{{{
 bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
+  trimFramesBeforePts (getPlayerPts() - mPtsDuration);
+
   // throttle on number of decoded audioFrames
   while (mFrames.size() > mFrameMapSize) {
     this_thread::sleep_for (1ms);
-    trimFramesBeforePts (getPlayerPts());
+    trimFramesBeforePts (getPlayerPts() - mPtsDuration);
     }
 
   return cRender::processPes (pid, pes, pesSize, pts, dts, skip);

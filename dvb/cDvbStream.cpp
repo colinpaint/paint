@@ -534,7 +534,7 @@ cDvbStream::cStream* cDvbStream::cService::getRenderStreamByPid (uint16_t pid) {
 
 //  sets
 //{{{
-bool cDvbStream::cService::setNow (bool record, 
+bool cDvbStream::cService::setNow (bool record,
                                    chrono::system_clock::time_point time, chrono::seconds duration,
                                    const string& titleString, const string& infoString) {
 
@@ -549,7 +549,7 @@ bool cDvbStream::cService::setNow (bool record,
   }
 //}}}
 //{{{
-bool cDvbStream::cService::setEpg (bool record, 
+bool cDvbStream::cService::setEpg (bool record,
                                    chrono::system_clock::time_point startTime, chrono::seconds duration,
                                    const string& titleString, const string& infoString) {
 // could return true only if changed
@@ -742,9 +742,11 @@ void cDvbStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, u
 // public:
 //{{{
 cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName,
-                        bool showFirstService, bool showAllServices)
-    : mDvbMultiplex(dvbMultiplex), mRecordRootName(recordRootName),
-      mShowFirstService(showFirstService), mShowAllServices(showAllServices) {
+                        bool showAllServices, bool showFirstService)
+    : mDvbMultiplex(dvbMultiplex),
+      mRecordRootName(recordRootName),
+      mShowAllServices(showAllServices),
+      mShowFirstService(showFirstService) {
 
   if (dvbMultiplex.mFrequency)
     mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
@@ -981,10 +983,10 @@ void cDvbStream::foundService (cService& service) {
 //}}}
 
 //{{{
-void cDvbStream::startServiceProgram (cService* service, 
+void cDvbStream::startServiceProgram (cService* service,
                                       chrono::system_clock::time_point tdtTime,
                                       const string& programName,
-                                      chrono::system_clock::time_point programStartTime, 
+                                      chrono::system_clock::time_point programStartTime,
                                       bool selected) {
 // start recording service program
 

@@ -274,9 +274,9 @@ public:
   //}}}
 
   //{{{
-  bool setSampleRate (DWORD sampleRate) {
+  bool setSampleRate (size_t sampleRate) {
 
-    mMixFormat.Format.nSamplesPerSec = sampleRate;
+    mMixFormat.Format.nSamplesPerSec = (DWORD)sampleRate;
     mMixFormat.Format.nBlockAlign = mMixFormat.Format.nChannels * mMixFormat.Format.wBitsPerSample / 8;
     mMixFormat.Format.nAvgBytesPerSec = mMixFormat.Format.nSamplesPerSec * mMixFormat.Format.wBitsPerSample * mMixFormat.Format.nChannels / 8;
 

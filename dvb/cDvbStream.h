@@ -153,8 +153,8 @@ public:
   class cEpgItem {
   public:
     //{{{
-    cEpgItem (bool now, bool record, 
-              std::chrono::system_clock::time_point time, 
+    cEpgItem (bool now, bool record,
+              std::chrono::system_clock::time_point time,
               std::chrono::seconds duration,
               const std::string& titleString, const std::string& infoString)
       : mNow(now), mRecord(record),
@@ -287,7 +287,7 @@ public:
   //}}}
 
   cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName,
-              bool showFirstService, bool showAllServices);
+              bool showAllServices, bool showFirstService);
   virtual ~cDvbStream() { clear(); }
 
   //{{{  gets
@@ -337,7 +337,7 @@ private:
   void foundService (cService& service);
 
   void startServiceProgram (cService* service, std::chrono::system_clock::time_point tdtTime,
-                            const std::string& programName, 
+                            const std::string& programName,
                             std::chrono::system_clock::time_point programStartTime, bool selected);
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService* service);

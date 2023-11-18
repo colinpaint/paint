@@ -22,9 +22,7 @@ public:
   virtual ~cAudioRender();
 
   // gets
-  size_t getNumChannels() const { return mNumChannels; }
-  uint32_t getSampleRate() const { return mSampleRate; }
-  size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
+  size_t getSampleRate() const { return mSampleRate; }
   int64_t getPtsDuration() const { return mPtsDuration; }
 
   // find
@@ -50,8 +48,7 @@ private:
   void startPlayerPts (int64_t pts);
 
   // vars
-  size_t mNumChannels;
-  uint32_t mSampleRate;
+  size_t mSampleRate;
   size_t mSamplesPerFrame;
   int64_t mPtsDuration;
 
