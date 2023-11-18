@@ -80,10 +80,11 @@ class cRender {
 public:
   enum eDecoder { eFFmpeg, eMfxSystem, eMfxVideo };
 
-  cRender (bool queued, const std::string& name, uint8_t streamType, size_t frameMapSize);
+  cRender (bool queued, const std::string& name, uint8_t streamType, size_t frameMapSize, bool realTime);
   virtual ~cRender();
 
   bool isQueued() const { return mQueued; }
+  float getRealTime() const { return mRealTime; }
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   cMiniLog& getLog() { return mMiniLog; }
@@ -137,6 +138,7 @@ private:
   const bool mQueued = false;
   const std::string mName;
   const uint8_t mStreamType;
+  const bool mRealTime;
 
   std::function <cFrame* ()> mAllocFrameCallback;
   std::function <void (cFrame* frame)> mAddFrameCallback;

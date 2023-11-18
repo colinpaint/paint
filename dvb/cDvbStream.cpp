@@ -570,7 +570,7 @@ void cDvbStream::cService::toggleStream (eRenderType renderType) {
   if (stream.toggle()) {
     switch (renderType) {
       case eRenderVideo :
-        stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId()));
+        stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId(), getRealTime()));
         return;
 
       case eRenderAudio :
@@ -579,7 +579,7 @@ void cDvbStream::cService::toggleStream (eRenderType renderType) {
         return;
 
       case eRenderSubtitle :
-        stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId()));
+        stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId(), getRealTime()));
         return;
       }
     }

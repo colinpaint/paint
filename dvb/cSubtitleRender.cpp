@@ -19,6 +19,8 @@ using namespace std;
 #define SCALEBITS 10
 #define ONE_HALF  (1 << (SCALEBITS - 1))
 #define FIX(x)    ((int) ((x) * (1<<SCALEBITS) + 0.5))
+
+#define BGRA(r,g,b,a) static_cast<uint32_t>(((a << 24) ) | (b << 16) | (g <<  8) | r)
 //}}}
 constexpr bool kQueued = true;
 constexpr size_t kSubtitleMapSize = 0;
@@ -928,8 +930,8 @@ private:
 
 // public:
 //{{{
-cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType)
-    : cRender(kQueued, name + "sub", streamType, kSubtitleMapSize) {
+cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, bool realTime)
+    : cRender(kQueued, name + "sub", streamType, kSubtitleMapSize, realTime) {
 
   mDecoder = new cSubtitleDecoder (*this);
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });

@@ -14,7 +14,7 @@ class cVideoFrame;
 
 class cVideoRender : public cRender {
 public:
-  cVideoRender (const std::string& name, uint8_t streamType);
+  cVideoRender (const std::string& name, uint8_t streamType, bool realTime);
   virtual ~cVideoRender();
 
   uint16_t getWidth() const { return mWidth; }

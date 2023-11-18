@@ -48,8 +48,6 @@ private:
   void startPlayerPts (int64_t pts);
 
   // vars
-  const bool mRealTime;
-
   size_t mSampleRate;
   size_t mSamplesPerFrame;
   int64_t mPtsDuration;

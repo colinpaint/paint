@@ -13,13 +13,12 @@
 class cTexture;
 //}}}
 
-#define BGRA(r,g,b,a) static_cast<uint32_t>(((a << 24) ) | (b << 16) | (g <<  8) | r)
 //{{{
 class cSubtitleImage {
 public:
   cSubtitleImage() {}
-  ~cSubtitleImage() { 
-    free (mPixels); 
+  ~cSubtitleImage() {
+    free (mPixels);
     }
 
   uint8_t mPageState = 0;
@@ -40,7 +39,7 @@ public:
 
 class cSubtitleRender : public cRender {
 public:
-  cSubtitleRender (const std::string& name, uint8_t streamType);
+  cSubtitleRender (const std::string& name, uint8_t streamType, bool realTime);
   ~cSubtitleRender();
 
   size_t getNumLines() const;
