@@ -208,34 +208,15 @@ struct cMat4x4 {
   //}}}
 
   //{{{
-  cVec2 transform (const cVec2& pos, const std::string& name = "") {
-
-    if (name.empty())
-      return { (mat[0][0] * pos.x) + (mat[1][0] * pos.y) + (mat[3][0] * 1.f),
-               (mat[0][1] * pos.x) + (mat[1][1] * pos.y) + (mat[3][1] * 1.f) };
-    else
-      cLog::log (LOGINFO, "-----------------------------------------------------");
-
-    // print pos
-    cLog::log (LOGINFO, fmt::format ("{} {:7.3f},{:7.3f}", name, pos.x, pos.y));
-
-    // print matrix
-    show ("");
-
-    cVec2 result ((mat[0][0] * pos.x) + (mat[1][0] * pos.y) + (mat[3][0] * 1.f),
-                  (mat[0][1] * pos.x) + (mat[1][1] * pos.y) + (mat[3][1] * 1.f));
-
-    // print result
-    cLog::log (LOGINFO, fmt::format ("{} to {:7.3f},{:7.3f}", name, result.x, result.y));
-
-    return result;
+  cVec2 transform (const cVec2& pos) {
+    return { (mat[0][0] * pos.x) + (mat[1][0] * pos.y) + mat[3][0],
+             (mat[0][1] * pos.x) + (mat[1][1] * pos.y) + mat[3][1] };
     }
   //}}}
   //{{{
-  cVec3 transform (const cVec3& pos) {
-    return { (mat[0][0] * pos.x) + (mat[1][0] * pos.y) + (mat[2][0] * pos.z) + (mat[3][0] * 1.f),
-             (mat[0][1] * pos.x) + (mat[1][1] * pos.y) + (mat[2][1] * pos.z) + (mat[3][1] * 1.f),
-             (mat[0][2] * pos.x) + (mat[1][2] * pos.y) + (mat[2][2] * pos.z) + (mat[3][2] * 1.f) };
+  cVec2 transform (const cVec2& pos, float yflip) {
+    return { (mat[0][0] * pos.x) + (mat[1][0] * pos.y) + mat[3][0],
+             yflip - ((mat[0][1] * pos.x) + (mat[1][1] * pos.y) + mat[3][1]) };
     }
   //}}}
 

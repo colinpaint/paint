@@ -496,8 +496,8 @@ namespace {
               //{{{
               case 2:
                 switch (curVideo) {
-                  case 1: offset = { 1.f / 4.f, 1.f / 2.f }; break;
-                  case 2: offset = { 3.f / 4.f, 1.f / 2.f }; break;
+                  case 1: offset = { 1.f / 4.f, 0.5f }; break;
+                  case 2: offset = { 3.f / 4.f, 0.5f }; break;
                   break;
                   }
                 break;
@@ -510,7 +510,7 @@ namespace {
                   case 2: offset = { 3.f / 4.f, 3.f / 4.f }; break;
 
                   case 3: if (numVideos == 3) // centre
-                            offset = { 2.f / 4.f, 1.f / 4.f };
+                            offset = { 0.5f, 1.f / 4.f };
                           else
                             offset = { 1.f / 4.f, 1.f / 4.f };
                           break;
@@ -524,10 +524,11 @@ namespace {
                 switch (curVideo) {
                   case 1: offset = { 1.f / 6.f, 5.f / 6.f }; break;
                   case 2: offset = { 5.f / 6.f, 5.f / 6.f }; break;
-                  case 3: offset = { 3.f / 6.f, 3.f / 6.f }; break;
 
-                  case 4: offset = { 1.f / 6.f, 1.f / 6.f }; break;
-                  case 5: offset = { 5.f / 6.f, 1.f / 6.f }; break;
+                  case 3: offset = { 3.f / 6.f, 0.5f }; break;
+
+                  case 4: offset = { 1.f / 6.f, 3.f / 6.f }; break;
+                  case 5: offset = { 5.f / 6.f, 3.f / 6.f }; break;
                   }
 
                 break;
@@ -556,17 +557,17 @@ namespace {
                   case 2: offset = { 3.f / 6.f, 5.f / 6.f }; break;
                   case 3: offset = { 5.f / 6.f, 5.f / 6.f }; break;
 
-                  case 4: offset = { 1.f / 6.f, 3.f / 6.f }; break;
-                  case 5: offset = { 3.f / 6.f, 3.f / 6.f }; break;
-                  case 6: offset = { 5.f / 6.f, 3.f / 6.f }; break;
+                  case 4: offset = { 1.f / 6.f, 0.5f }; break;
+                  case 5: offset = { 3.f / 6.f, 0.5f }; break;
+                  case 6: offset = { 5.f / 6.f, 0.5f }; break;
 
                   case 7: if (numVideos == 7) // centre
-                            offset = { 3.f / 6.f, 1.f / 6.f };
+                            offset = { 0.5f, 3.f / 6.f };
                           else
-                            offset = { 1.f / 6.f, 1.f / 6.f };
+                            offset = { 1.f / 6.f, 3.f / 6.f };
                           break;
-                  case 8: offset = { 3.f / 6.f, 1.f / 6.f }; break;
-                  case 9: offset = { 5.f / 6.f, 1.f / 6.f }; break;
+                  case 8: offset = { 0.5f, 3.f / 6.f }; break;
+                  case 9: offset = { 5.f / 6.f, 3.f / 6.f }; break;
                   break;
                   }
 
@@ -617,7 +618,7 @@ namespace {
             cRect rect = videoRender.drawFrame (videoFrame, graphics, model,
                                                 ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 
-            ImGui::GetWindowDrawList()->AddRect (ImVec2(rect.left, rect.top),
+            ImGui::GetWindowDrawList()->AddRect (ImVec2(rect.left, rect.top), 
                                                  ImVec2(rect.right, rect.bottom), 0xff00ffff);
 
             videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);

@@ -40,13 +40,6 @@ namespace {
     //vprintf (fmt, vargs);
     }
   //}}}
-
-  const string debugStr = "";
-  const string debugStrTL = "";
-  const string debugStrBR = "";
-  //const string debugStr = "modelProjection";
-  //const string debugStrTL = "TL";
-  //const string debugStrBR = "TR";
   }
 
 constexpr bool kVideoQueued = true;
@@ -62,6 +55,7 @@ public:
     }
   //}}}
 
+  //{{{
   void setAVFrame (AVFrame* avFrame) {
 
     // release old AVframe before owning new AVframe
@@ -78,6 +72,7 @@ public:
     mInterlaced = avFrame->flags && AV_FRAME_FLAG_INTERLACED;
     mTopFieldFirst = avFrame->flags && AV_FRAME_FLAG_TOP_FIELD_FIRST;
     }
+  //}}}
 
 protected:
   virtual uint8_t** getPixels() final { return mAvFrame->data; }
@@ -303,6 +298,7 @@ void cVideoRender::addFrame (cFrame* frame) {
   }
 //}}}
 
+// UI draw
 //{{{
 cRect cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, cMat4x4& model,
                                float viewportWidth, float viewportHeight) {
@@ -316,7 +312,7 @@ cRect cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, cMa
     gShader = graphics.createTextureShader (texture.getTextureType());
   gShader->use();
 
-  cMat4x4 projection = { 0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f };
+  cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
   gShader->setModelProjection (model, projection);
 
   // ensure quad is created
@@ -324,14 +320,8 @@ cRect cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, cMa
     mQuad = graphics.createQuad (videoFrame->getSize());
   mQuad->draw();
 
-  if (!debugStr.empty()) {
-    projection.show ("projection");
-    model.show ("model");
-    }
-
-  cMat4x4 modelProjection = projection * model;
-  return cRect (modelProjection.transform (cVec2(0,0), debugStrTL),
-                modelProjection.transform (cVec2(videoFrame->getWidth(), videoFrame->getHeight()), debugStrBR));
+  return cRect (model.transform (cVec2(0,0), viewportHeight),
+                model.transform (cVec2(videoFrame->getWidth(), videoFrame->getHeight()), viewportHeight));
   }
 //}}}
 
