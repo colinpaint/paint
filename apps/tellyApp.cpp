@@ -133,6 +133,10 @@ namespace {
       cGraphics& graphics = tellyApp.getGraphics();
 
       graphics.clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
+
+      if (tellyApp.getDvbStream())
+        drawTelly (*tellyApp.getDvbStream(), graphics);
+
       //{{{  draw tabs
       ImGui::SameLine();
 
@@ -217,30 +221,10 @@ namespace {
         ImGui::BeginChild ("tab", {0.f,0.f}, false,
                            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
         switch (mTab) {
-          //{{{
-          case eTelly:
-            drawTelly (dvbStream, graphics);
-            drawChannels (dvbStream, graphics);
-            break;
-          //}}}
-          //{{{
-          case eServices:
-            drawTelly(dvbStream, graphics);
-            drawServices (dvbStream, graphics);
-            break;
-          //}}}
-          //{{{
-          case ePids:
-            drawTelly(dvbStream, graphics);
-            drawPidMap (dvbStream, graphics);
-            break;
-          //}}}
-          //{{{
-          case eRecorded:
-            drawTelly(dvbStream, graphics);
-            drawRecorded (dvbStream, graphics);
-            break;
-          //}}}
+          case eTelly:    drawChannels (dvbStream, graphics); break;
+          case eServices: drawServices (dvbStream, graphics); break;
+          case ePids:     drawPidMap (dvbStream, graphics); break;
+          case eRecorded: drawRecorded (dvbStream, graphics); break;
           }
 
         if (ImGui::IsMouseClicked (0)) {
@@ -618,13 +602,15 @@ namespace {
             cRect rect = videoRender.drawFrame (videoFrame, graphics, model,
                                                 ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 
-            ImGui::GetWindowDrawList()->AddRect (ImVec2(rect.left, rect.top), 
-                                                 ImVec2(rect.right, rect.bottom), 0xff00ffff);
+            ImGui::GetWindowDrawList()->AddRect (ImVec2((float)rect.left, (float)rect.top),
+                                                 ImVec2((float)rect.right, (float)rect.bottom), 0xff00ffff);
 
             videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
             }
           }
         }
+
+      ImGui::SetCursorPos ({0,0});
       }
     //}}}
     //{{{
