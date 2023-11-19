@@ -375,6 +375,7 @@ private:
     return mObjects.back();
     }
   //}}}
+
   //{{{
   cColorLut& getColorLut (uint8_t id) {
 
