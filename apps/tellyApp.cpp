@@ -294,22 +294,23 @@ namespace {
         gSubtitleShader->use();
 
         for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
-          if (!mTextures[line]) // create texture
-            mTextures[line] = graphics.createTexture (cTexture::eRgba,
-                                                      { subtitleRender.getImage (line).mWidth,
-                                                        subtitleRender.getImage (line).mHeight });
-          mTextures[line]->setSource();
+          if (!mSubtitleTextures[line]) // create texture
+            mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba,
+                                                              { subtitleRender.getImage (line).mWidth,
+                                                                subtitleRender.getImage (line).mHeight });
+          mSubtitleTextures[line]->setSource();
 
           // update subtitle texture if image dirty
           if (subtitleRender.getImage (line).mDirty)
-            mTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
+            mSubtitleTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
           subtitleRender.getImage (line).mDirty = false;
 
+          // reuse mode, could use original more
           mModel = cMat4x4();
           // !!!!set translate from image pos!!!
           //model.setTranslate ();
-          cVec2 scaledSize = { (float)mTextures[line]->getWidth() / mRect.getWidth(),
-                               (float)mTextures[line]->getHeight() / mRect.getHeight() };
+          cVec2 scaledSize = { (float)mSubtitleTextures[line]->getWidth() / mRect.getWidth(),
+                               (float)mSubtitleTextures[line]->getHeight() / mRect.getHeight() };
           mModel.size ({ scale, scale });
 
           cMat4x4 projection (0.f,mRect.getWidth(), 0.f,mRect.getHeight(), -1.f,1.f);
@@ -317,7 +318,7 @@ namespace {
 
           // ensure quad is created
           if (!mQuad)
-            mQuad = graphics.createQuad (mTextures[line]->getSize());
+            mQuad = graphics.createQuad (mSubtitleTextures[line]->getSize());
           mQuad->draw();
           }
         }
@@ -447,7 +448,7 @@ namespace {
 
     cFramesView mFramesView;
     cAudioPowerView mAudioPowerView;
-    array <cTexture*,4> mTextures;
+    array <cTexture*,4> mSubtitleTextures;
     };
   //}}}
   //{{{
@@ -869,13 +870,13 @@ namespace {
           //{{{  draw pot
           ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
           uint32_t color = subtitleRender.getImage (line).mColorLut[pot];
-          ImGui::GetWindowDrawList()->AddRectFilled (potPos, { potPos.x + potSize - 1.f, 
+          ImGui::GetWindowDrawList()->AddRectFilled (potPos, { potPos.x + potSize - 1.f,
                                                                potPos.y + potSize - 1.f }, color);
           }
           //}}}
 
         if (ImGui::InvisibleButton (fmt::format ("##subLog{}{}", sid, line).c_str(),
-                                    { 4 * ImGui::GetTextLineHeight(), 
+                                    { 4 * ImGui::GetTextLineHeight(),
                                       ImGui::GetTextLineHeight() }))
           subtitleRender.toggleLog();
 
@@ -884,19 +885,20 @@ namespace {
         ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", subtitleRender.getImage (line).mX,
                                                             subtitleRender.getImage (line).mY).c_str());
 
-        if (!mTextures[line]) 
-           mTextures[line] = graphics.createTexture (cTexture::eRgba, { subtitleRender.getImage (line).mWidth,
+        if (!mSubtitleTextures[line])
+           mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, { subtitleRender.getImage (line).mWidth,
                                                                         subtitleRender.getImage (line).mHeight });
 
         // update lines texture from subtitle image
         if (subtitleRender.getImage (line).mDirty)
-          mTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
+          mSubtitleTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
         subtitleRender.getImage (line).mDirty = false;
 
         // draw lines subtitle texture, scaled to fit line
         ImGui::SameLine();
-        ImGui::Image ((void*)(intptr_t)mTextures[line]->getTextureId(),
-                      { ImGui::GetTextLineHeight() * mTextures[line]->getWidth() / mTextures[line]->getHeight(),
+        ImGui::Image ((void*)(intptr_t)mSubtitleTextures[line]->getTextureId(),
+                      { ImGui::GetTextLineHeight() * mSubtitleTextures[line]->getWidth() / 
+                                                     mSubtitleTextures[line]->getHeight(),
                         ImGui::GetTextLineHeight() });
         line++;
         }
@@ -997,7 +999,7 @@ namespace {
     float mOverlap = 4.f;
     int mHistory = 0;
 
-    array <cTexture*,4> mTextures = { nullptr } ;
+    array <cTexture*,4> mSubtitleTextures = { nullptr } ;
     };
   //}}}
   //{{{
