@@ -249,8 +249,8 @@ namespace {
       if (selected)
         numViews = 1;
 
-      scale *= (selected || (numViews <= 1)) ? 1.f : 
-                              ((numViews <= 4) ? 0.5f : 
+      scale *= (selected || (numViews <= 1)) ? 1.f :
+                              ((numViews <= 4) ? 0.5f :
                                 ((numViews <= 9) ? 0.33f : 0.25f));
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (mService.getRenderStream (eRenderVideo).getRender());
@@ -613,10 +613,11 @@ namespace {
         ImGui::BeginChild ("tab", {0.f,0.f}, false,
                            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
         switch (mTab) {
-          case eTelly:    drawChannels (dvbStream, graphics); break;
-          case eServices: drawServices (dvbStream, graphics); break;
-          case ePids:     drawPidMap (dvbStream, graphics); break;
-          case eRecorded: drawRecorded (dvbStream, graphics); break;
+          case eTelly:     break;
+          case eTellyChan: drawChannels (dvbStream, graphics); break;
+          case eServices:  drawServices (dvbStream, graphics); break;
+          case ePids:      drawPidMap (dvbStream, graphics); break;
+          case eRecorded:  drawRecorded (dvbStream, graphics); break;
           }
 
         if (ImGui::IsMouseClicked (0)) {
@@ -639,8 +640,8 @@ namespace {
     //}}}
 
   private:
-    enum eTab { eTelly, eServices, ePids, eRecorded };
-    inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded" };
+    enum eTab { eTelly, eTellyChan, eServices, ePids, eRecorded };
+    inline static const vector<string> kTabNames = { "telly", "channels", "services", "pids", "recorded" };
     //{{{
     void drawChannels (cDvbStream& dvbStream, cGraphics& graphics) {
       (void)graphics;
