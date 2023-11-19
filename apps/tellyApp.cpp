@@ -78,16 +78,7 @@ namespace {
     ~cFramesView() = default;
 
     //{{{
-    void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playerPts) {
-
-      ImVec2 pos = { ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(),
-                     ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - (2.f * ImGui::GetTextLineHeight()) };
-
-      cAudioFrame* audioFrame = audioRender.findAudioFrameFromPts (playerPts);
-      if (audioFrame)
-        drawAudioFramePower (audioFrame, pos);
-
-      pos.x -= ImGui::GetWindowWidth() * 0.5f;
+    void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playerPts, ImVec2 pos) {
 
       // draw playPts centre bar
       ImGui::GetWindowDrawList()->AddRectFilled (
@@ -130,7 +121,7 @@ namespace {
       shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
       for (auto& frame : audioRender.getFrames()) {
         //{{{  draw audio frames
-        audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
         float offset1 = (audioFrame->mPts - playerPts) * ptsScale;
         float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
         ImGui::GetWindowDrawList()->AddRectFilled (
@@ -141,7 +132,7 @@ namespace {
         //}}}
       for (auto frame : audioRender.getFreeFrames()) {
         //{{{  draw free audio frames
-        audioFrame = dynamic_cast<cAudioFrame*>(frame);
+        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
         float offset1 = (audioFrame->mPts - playerPts) * ptsScale;
         float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
 
@@ -155,43 +146,10 @@ namespace {
 
       // slowly track scaling back to max display values from max values
       agc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
-      agc (mMaxPower, mMaxDisplayPower, 250.f, 0.5f);
       }
     //}}}
 
   private:
-    //{{{
-    void drawAudioFramePower (cAudioFrame* audioFrame, ImVec2 pos) {
-
-      bool audio51 = audioFrame->mNumChannels == 6;
-      array <size_t, 6> channelOrder;
-      if (audio51)
-        channelOrder = {4, 0, 2, 1, 5, 3};
-      else
-        channelOrder = {0, 1, 2, 3, 4, 5};
-
-      float x = pos.x - (audio51 ? 5 : audioFrame->mNumChannels * mPixelsPerAudioChannel);
-      pos.y += 1.f;
-      float height = 8.f * ImGui::GetTextLineHeight();
-
-      // draw channels
-      for (size_t i = 0; i < (audio51 ? 5 : audioFrame->mNumChannels+1); i++) {
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          { x, pos.y - (audioFrame->mPowerValues[channelOrder[i]] * height) },
-          { x + mPixelsPerAudioChannel - 1.f, pos.y },
-          0xff00ff00);
-        x += mPixelsPerAudioChannel;
-        }
-
-      // draw 5.1 woofer red
-      if (audio51)
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[channelOrder[5]] * height)},
-          {pos.x - 1.f, pos.y},
-          0x800000ff);
-      }
-    //}}}
-
     //{{{
     float addValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
 
@@ -229,9 +187,55 @@ namespace {
 
     float mMaxPesSize = 0.f;
     float mMaxDisplayPesSize = 0.f;
+    };
+  //}}}
+  //{{{
+  class cAudioPowerView {
+  public:
+    cAudioPowerView() {}
+    ~cAudioPowerView() = default;
 
-    float mMaxQueueSize = 3.f;
-    float mMaxDisplayQueueSize = 0.f;
+    //{{{
+    void draw (cAudioRender& audioRender, int64_t playerPts, ImVec2 pos) {
+
+      cAudioFrame* audioFrame = audioRender.findAudioFrameFromPts (playerPts);
+      if (audioFrame) {
+        size_t drawChannels = audioFrame->mNumChannels;
+        bool audio51 = (audioFrame->mNumChannels == 6);
+        array <size_t, 6> channelOrder;
+        if (audio51) {
+          channelOrder = {4, 0, 2, 1, 5, 3};
+          drawChannels--;
+          }
+        else
+          channelOrder = {0, 1, 2, 3, 4, 5};
+
+        // draw channels
+        float x = pos.x - (drawChannels * mPixelsPerAudioChannel);
+        pos.y += 1.f;
+        float height = 8.f * ImGui::GetTextLineHeight();
+        for (size_t i = 0; i < drawChannels; i++) {
+          ImGui::GetWindowDrawList()->AddRectFilled (
+            { x, pos.y - (audioFrame->mPowerValues[channelOrder[i]] * height) },
+            { x + mPixelsPerAudioChannel - 1.f, pos.y },
+            0xff00ff00);
+          x += mPixelsPerAudioChannel;
+          }
+
+        // draw 5.1 woofer red
+        if (audio51)
+          ImGui::GetWindowDrawList()->AddRectFilled (
+            {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[channelOrder[5]] * height)},
+            {pos.x - 1.f, pos.y},
+            0x800000ff);
+        }
+      }
+    //}}}
+
+  private:
+    //  vars
+    const float mAudioLines = 1.f;
+    const float mPixelsPerAudioChannel = 6.f;
     };
   //}}}
   //{{{
@@ -256,13 +260,8 @@ namespace {
       int64_t playerPts = mService.getRenderStream (eRenderAudio).getPts();
       if (mService.getRenderStream (eRenderAudio).isEnabled()) {
         cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
-
-        // get playerPts from audioPlayer
         playerPts = audioRender.getPlayerPts();
-
         audioRender.setMute (!selected);
-        if (selected)
-          mFramesView.draw (audioRender, videoRender, playerPts);
         }
 
       // get videoFrame from playerPts
@@ -284,6 +283,18 @@ namespace {
 
         // crude management of videoFrame cache
         videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
+        }
+
+      // rect is one draw behind
+      if (mService.getRenderStream (eRenderAudio).isEnabled()) {
+        cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
+        if (selected)
+          mFramesView.draw (audioRender, videoRender, playerPts,
+                            ImVec2((float)mRect.getCentre().x,
+                                   (float)mRect.bottom - ImGui::GetTextLineHeight()));
+        mAudioPowerView.draw (audioRender, playerPts,
+                              ImVec2((float)mRect.right - ImGui::GetTextLineHeight()/2.f,
+                                     (float)mRect.bottom - ImGui::GetTextLineHeight()/2.f));
         }
       }
     //}}}
@@ -392,7 +403,9 @@ namespace {
     const size_t mIndex;
 
     cRect mRect = { 0,0,0,0 };
+
     cFramesView mFramesView;
+    cAudioPowerView mAudioPowerView;
     };
   //}}}
   //{{{

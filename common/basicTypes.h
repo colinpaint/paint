@@ -386,15 +386,16 @@ struct cRect {
     }
   //}}}
 
-  int32_t getWidth() const { return right - left; }
-  int32_t getHeight() const { return bottom - top; }
-  cPoint getSize() const { return cPoint(getWidth(), getHeight()); }
-  cPoint getCentre() const { return cPoint(getWidth()/2, getHeight()/2); }
-
   cPoint getTL() const { return cPoint(left, top); }
   cPoint getTR() const { return cPoint(right, top); }
   cPoint getBL() const { return cPoint(left, bottom); }
   cPoint getBR() const { return cPoint(right, bottom); }
+
+  int32_t getWidth() const { return right - left; }
+  int32_t getHeight() const { return bottom - top; }
+
+  cPoint getSize() const { return cPoint(getWidth(), getHeight()); }
+  cPoint getCentre() const { return cPoint(left + (getWidth()/2), top + (getHeight()/2)); }
 
   //{{{
   bool isEmpty() {
