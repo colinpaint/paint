@@ -320,8 +320,8 @@ cRect cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, cMa
     mQuad = graphics.createQuad (videoFrame->getSize());
   mQuad->draw();
 
-  return cRect (model.transform (cVec2(0,0), viewportHeight),
-                model.transform (cVec2(videoFrame->getWidth(), videoFrame->getHeight()), viewportHeight));
+  return cRect (model.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
+                model.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
   }
 //}}}
 

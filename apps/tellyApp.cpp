@@ -1,4 +1,4 @@
-// tellyApp.cpp - imgui telly main, app, UI
+// tellyApp.cpp - imgui tellyApp, main, UI
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -240,6 +240,9 @@ namespace {
     cView (cDvbStream::cService& service, size_t index) : mService(service), mIndex(index) {}
     ~cView() = default;
 
+    size_t getIndex() const { return mIndex; }
+
+    bool picked (cVec2 pos) { return mRect.isInside (pos); }
     //{{{
     void draw (cGraphics& graphics, size_t numViews, size_t selectedIndex, float scale) {
 
@@ -286,43 +289,30 @@ namespace {
 
       switch (numViews) {
         //{{{
-        case 2:
+        case 2: // 1 row
           switch (mIndex) {
             case 0: return { 1.f / 4.f, 0.5f };
             case 1: return { 3.f / 4.f, 0.5f };
             }
-          break;
+          return { 0.5f, 0.5f };
         //}}}
+
         case 3:
         //{{{
-        case 4:
+        case 4: // 2 rows
           switch (mIndex) {
             case 0: return { 1.f / 4.f, 3.f / 4.f };
             case 1: return { 3.f / 4.f, 3.f / 4.f };
 
-            case 2: if (numViews == 3) // centre bottom
-                      return { 0.5f, 1.f / 4.f };
-                    else
-                      return { 1.f / 4.f, 1.f / 4.f };
+            case 2: return { 1.f / 4.f, 1.f / 4.f };
             case 3: return { 3.f / 4.f, 1.f / 4.f };
             }
-
-          break;
+          return { 0.5f, 0.5f };
         //}}}
-        //{{{
+
         case 5:
-          switch (mIndex) {
-            case 0: return { 1.f / 6.f, 5.f / 6.f };
-            case 1: return { 5.f / 6.f, 5.f / 6.f };
-            case 2: return { 0.5f, 0.5f };
-            case 3: return { 1.f / 6.f, 1.f / 6.f };
-            case 4: return { 5.f / 6.f, 1.f / 6.f };
-            }
-
-          break;
-        //}}}
         //{{{
-        case 6:
+        case 6: // 2 rows
           switch (mIndex) {
             case 0: return { 1.f / 6.f, 4.f / 6.f };
             case 1: return { 3.f / 6.f, 4.f / 6.f };
@@ -332,13 +322,13 @@ namespace {
             case 4: return { 3.f / 6.f, 2.f / 6.f };
             case 5: return { 5.f / 6.f, 2.f / 6.f };
             }
-
-          break;
+          return { 0.5f, 0.5f };
         //}}}
+
         case 7:
         case 8:
         //{{{
-        case 9:
+        case 9: // 3 rows
           switch (mIndex) {
             case 0: return { 1.f / 6.f, 5.f / 6.f };
             case 1: return { 3.f / 6.f, 5.f / 6.f };
@@ -348,14 +338,13 @@ namespace {
             case 4: return { 3.f / 6.f, 0.5f };
             case 5: return { 5.f / 6.f, 0.5f };
 
-            case 6: if (numViews != 7)
-                      return { 1.f / 6.f, 1.f / 6.f };
+            case 6: return { 1.f / 6.f, 1.f / 6.f };
             case 7: return { 3.f / 6.f, 1.f / 6.f };
             case 8: return { 5.f / 6.f, 1.f / 6.f };
             }
-
-          break;
+          return { 0.5f, 0.5f };
         //}}}
+
         case 10:
         case 11:
         case 12:
@@ -363,7 +352,7 @@ namespace {
         case 14:
         case 15:
         //{{{
-        case 16:
+        case 16: // 4 rows
           switch (mIndex) {
             case  0: return { 1.f / 8.f, 7.f / 8.f };
             case  1: return { 3.f / 8.f, 7.f / 8.f };
@@ -385,19 +374,19 @@ namespace {
             case 14: return { 5.f / 8.f, 1.f / 8.f };
             case 15: return { 7.f / 8.f, 1.f / 8.f };
             }
-
-          break;
+          return { 0.5f, 0.5f };
         //}}}
-        }
 
-      return { 0.5f, 0.5f };
+        default:
+          return { 0.5f, 0.5f };
+        }
       }
     //}}}
 
     cDvbStream::cService& mService;
     const size_t mIndex;
 
-    cRect mRect;
+    cRect mRect = { 0,0,0,0 };
     cFramesView mFramesView;
     };
   //}}}
@@ -410,6 +399,18 @@ namespace {
     size_t getNumViews() const { return mViews.size(); }
     size_t getSelectedView() const { return mSelectedView; }
 
+    //{{{
+    bool picked (cVec2 pos, size_t& index) {
+
+      for (auto& view : mViews) 
+        if (view.picked (pos)) {
+          index = view.getIndex();
+          return true;
+          }
+
+      return false;
+      }
+    //}}}
     //{{{
     void draw (cDvbStream& dvbStream, cGraphics& graphics, float scale) {
 
@@ -598,9 +599,13 @@ namespace {
           }
 
         if (ImGui::IsMouseClicked (0)) {
-          cLog::log (LOGINFO, fmt::format ("mouse {} {} {},{}",
-                                           ImGui::IsMouseDragging (0), ImGui::IsMouseDown (0),
-                                           ImGui::GetMousePos().x, ImGui::GetMousePos().y));
+          size_t viewIndex = 0;
+          if (multiView.picked (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y), viewIndex))
+            cLog::log (LOGINFO, fmt::format ("view {} picked", viewIndex));
+          else
+            cLog::log (LOGINFO, fmt::format ("mouse {} {} {},{}",
+                                             ImGui::IsMouseDragging (0), ImGui::IsMouseDown (0),
+                                             ImGui::GetMousePos().x, ImGui::GetMousePos().y));
           }
 
 

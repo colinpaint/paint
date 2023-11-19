@@ -403,7 +403,6 @@ struct cRect {
   //}}}
   //{{{
   bool isInside (const cPoint& pos) {
-  // return pos inside rect
     return (pos.x >= left) && (pos.x < right) && (pos.y >= top) && (pos.y < bottom);
     }
   //}}}
