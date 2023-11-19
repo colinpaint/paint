@@ -880,14 +880,21 @@ private:
 
         image.mX = regionDisplay.mXpos + offsetX;
         image.mY = regionDisplay.mYpos + offsetY;
+
+        bool imageSizeChanged = (image.mWidth != (int)region.mWidth) || (image.mHeight != (int)region.mHeight);
         image.mWidth = region.mWidth;
         image.mHeight = region.mHeight;
 
         // copy lut
         memcpy (&image.mColorLut, &getColorLut (region.mColorLut).m16bgra, sizeof (image.mColorLut));
 
-        // allocate pixels
-        image.mPixels = (uint8_t*)realloc (image.mPixels, image.mWidth * image.mHeight * sizeof(uint32_t));
+        // allocate pixels - ??? possible race with gui ????
+        if (imageSizeChanged && image.mPixels) {
+          free (image.mPixels);
+          image.mPixels = nullptr;
+          }
+        if (!image.mPixels)
+          image.mPixels = (uint8_t*)malloc (image.mWidth * image.mHeight * sizeof(uint32_t));
 
         // region->mPixBuf lut -> mPixels
         uint32_t* ptr = (uint32_t*)image.mPixels;

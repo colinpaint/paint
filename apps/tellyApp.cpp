@@ -301,11 +301,8 @@ namespace {
           mSubtitleTextures[line]->setSource();
 
           // update subtitle texture if image dirty
-          if (subtitleRender.getImage (line).mDirty) {
+          if (subtitleRender.getImage (line).mDirty) 
             mSubtitleTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
-            free (subtitleRender.getImage (line).mPixels);
-            subtitleRender.getImage (line).mPixels = nullptr;
-            }
           subtitleRender.getImage (line).mDirty = false;
 
           // reuse mode, could use original more
@@ -889,15 +886,13 @@ namespace {
                                                             subtitleRender.getImage (line).mY).c_str());
 
         if (!mSubtitleTextures[line])
-           mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, { subtitleRender.getImage (line).mWidth,
-                                                                        subtitleRender.getImage (line).mHeight });
+           mSubtitleTextures[line] = graphics.createTexture (
+             cTexture::eRgba, { subtitleRender.getImage (line).mWidth,
+                                subtitleRender.getImage (line).mHeight });
 
         // update lines texture from subtitle image
-        if (subtitleRender.getImage (line).mDirty) {
+        if (subtitleRender.getImage (line).mDirty) 
           mSubtitleTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
-          free (subtitleRender.getImage (line).mPixels);
-          subtitleRender.getImage (line).mPixels = nullptr;
-          }
         subtitleRender.getImage (line).mDirty = false;
 
         // draw lines subtitle texture, scaled to fit line
