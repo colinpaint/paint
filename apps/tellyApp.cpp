@@ -301,8 +301,11 @@ namespace {
           mSubtitleTextures[line]->setSource();
 
           // update subtitle texture if image dirty
-          if (subtitleRender.getImage (line).mDirty)
+          if (subtitleRender.getImage (line).mDirty) {
             mSubtitleTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
+            free (subtitleRender.getImage (line).mPixels);
+            subtitleRender.getImage (line).mPixels = nullptr;
+            }
           subtitleRender.getImage (line).mDirty = false;
 
           // reuse mode, could use original more
@@ -890,14 +893,17 @@ namespace {
                                                                         subtitleRender.getImage (line).mHeight });
 
         // update lines texture from subtitle image
-        if (subtitleRender.getImage (line).mDirty)
+        if (subtitleRender.getImage (line).mDirty) {
           mSubtitleTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
+          free (subtitleRender.getImage (line).mPixels);
+          subtitleRender.getImage (line).mPixels = nullptr;
+          }
         subtitleRender.getImage (line).mDirty = false;
 
         // draw lines subtitle texture, scaled to fit line
         ImGui::SameLine();
         ImGui::Image ((void*)(intptr_t)mSubtitleTextures[line]->getTextureId(),
-                      { ImGui::GetTextLineHeight() * mSubtitleTextures[line]->getWidth() / 
+                      { ImGui::GetTextLineHeight() * mSubtitleTextures[line]->getWidth() /
                                                      mSubtitleTextures[line]->getHeight(),
                         ImGui::GetTextLineHeight() });
         line++;
