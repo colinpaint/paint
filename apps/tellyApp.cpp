@@ -72,10 +72,10 @@ namespace {
   //}}}
 
   //{{{
-  class cAudioFramesView {
+  class cFramesView {
   public:
-    cAudioFramesView() {}
-    ~cAudioFramesView() = default;
+    cFramesView() {}
+    ~cFramesView() = default;
 
     //{{{
     void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playerPts) {
@@ -83,7 +83,7 @@ namespace {
       ImVec2 pos = { ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(),
                      ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - (2.f * ImGui::GetTextLineHeight()) };
 
-      drawFramePower (audioRender.findAudioFrameFromPts (playerPts), pos);
+      drawAudioFramePower (audioRender.findAudioFrameFromPts (playerPts), pos);
 
       pos.x -= ImGui::GetWindowWidth() * 0.5f;
 
@@ -161,7 +161,7 @@ namespace {
 
   private:
     //{{{
-    void drawFramePower (cAudioFrame* audioFrame, ImVec2 pos) {
+    void drawAudioFramePower (cAudioFrame* audioFrame, ImVec2 pos) {
 
       if (audioFrame) {
         bool audio51 = audioFrame->mNumChannels == 6;
@@ -260,7 +260,7 @@ namespace {
         audioRender.setMute (mIndex != 0);
 
         if (mIndex == 0)
-          mAudioFramesView.draw (audioRender, videoRender, playerPts);
+          mFramesView.draw (audioRender, videoRender, playerPts);
         }
       else
         playerPts = mService.getRenderStream (eRenderAudio).getPts();
@@ -403,7 +403,7 @@ namespace {
     const size_t mIndex;
 
     cRect mRect;
-    cAudioFramesView mAudioFramesView;
+    cFramesView mFramesView;
     };
   //}}}
   //{{{
