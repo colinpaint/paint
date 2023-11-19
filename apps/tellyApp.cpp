@@ -43,11 +43,11 @@ using namespace std;
 //}}}
 
 namespace {
-  //{{{  const string kRecordRoot
+  //{{{  const string kRootDir
   #ifdef _WIN32
-    const string kRecordRoot = "/tv/";
+    const string kRootDir = "/tv/";
   #else
-    const string kRecordRoot = "/home/pi/tv/";
+    const string kRootDir = "/home/pi/tv/";
   #endif
   //}}}
   //{{{
@@ -152,10 +152,8 @@ namespace {
       }
 
       // slowly track scaling back to max display values from max values
-      agc (mMaxPower, mMaxDisplayPower, 250.f, 0.5f);
       agc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
-      agc (mMaxDecodeTime, mMaxDisplayDecodeTime, 250.f, 1000.f);
-      agc (mMaxQueueSize, mMaxDisplayQueueSize, 250.f, 4.f);
+      agc (mMaxPower, mMaxDisplayPower, 250.f, 0.5f);
       }
     //}}}
 
@@ -234,9 +232,6 @@ namespace {
 
     float mMaxQueueSize = 3.f;
     float mMaxDisplayQueueSize = 0.f;
-
-    float mMaxDecodeTime = 0.f;
-    float mMaxDisplayDecodeTime = 0.f;
     };
   //}}}
   //{{{
@@ -246,7 +241,7 @@ namespace {
     ~cView() = default;
 
     //{{{
-    void draw (cGraphics& graphics, size_t numViews, float scale) {
+    void draw (cGraphics& graphics, size_t numViews, size_t selectedIndex, float scale) {
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (mService.getRenderStream (eRenderVideo).getRender());
 
@@ -257,9 +252,9 @@ namespace {
 
         // update playerPts from audioPlayer
         playerPts = audioRender.getPlayerPts();
-        audioRender.setMute (mIndex != 0);
 
-        if (mIndex == 0)
+        audioRender.setMute (mIndex != selectedIndex);
+        if (mIndex == selectedIndex)
           mFramesView.draw (audioRender, videoRender, playerPts);
         }
       else
@@ -413,6 +408,8 @@ namespace {
     ~cMultiView() = default;
 
     size_t getNumViews() const { return mViews.size(); }
+    size_t getSelectedView() const { return mSelectedView; }
+
     //{{{
     void draw (cDvbStream& dvbStream, cGraphics& graphics, float scale) {
 
@@ -428,12 +425,14 @@ namespace {
       float viewScale = (getNumViews() <= 1) ? 1.f : ((getNumViews() <= 4) ? 0.5f : ((getNumViews() <= 9) ? 0.33f : 0.25f));
 
       for (auto& view : mViews)
-        view.draw (graphics, getNumViews(), scale * viewScale);
+        view.draw (graphics, getNumViews(), mSelectedView, scale * viewScale);
       }
     //}}}
 
   private:
     vector <cView> mViews;
+
+    size_t mSelectedView = 0;
     };
   //}}}
 
@@ -1007,7 +1006,7 @@ int main (int numArgs, char* args[]) {
   tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
   if (filename.empty()) {
     cLog::log (LOGINFO, fmt::format ("- using multiplex {}", selectedMultiplex.mName));
-    tellyApp.liveDvbSource (selectedMultiplex, kRecordRoot, showAllServices);
+    tellyApp.liveDvbSource (selectedMultiplex, kRootDir, showAllServices);
     }
   else
     tellyApp.fileSource (filename, showAllServices);
