@@ -277,9 +277,8 @@ namespace {
         model.size (scaledSize);
         mRect = videoRender.drawFrame (videoFrame, graphics, model, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 
-        // save rectangle in screen coords
-        ImGui::GetWindowDrawList()->AddRect (ImVec2((float)mRect.left, (float)mRect.top),
-                                             ImVec2((float)mRect.right, (float)mRect.bottom), 0xff00ffff);
+        //ImGui::GetWindowDrawList()->AddRect (ImVec2((float)mRect.left, (float)mRect.top),
+        //                                     ImVec2((float)mRect.right, (float)mRect.bottom), 0xff00ffff);
 
         // crude management of videoFrame cache
         videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
@@ -679,10 +678,12 @@ namespace {
           size_t viewIndex = 0;
           if (multiView.picked (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y), viewIndex))
             multiView.select (viewIndex);
-          else
+          else {
             cLog::log (LOGINFO, fmt::format ("mouse {} {} {},{}",
                                              ImGui::IsMouseDragging (0), ImGui::IsMouseDown (0),
                                              ImGui::GetMousePos().x, ImGui::GetMousePos().y));
+            tellyApp.getPlatform().toggleFullScreen();
+            }
           }
 
 
