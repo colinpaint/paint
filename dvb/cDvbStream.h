@@ -290,7 +290,7 @@ public:
     };
   //}}}
 
-  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName, 
+  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName,
               bool realTime, bool showAllServices, bool showFirstService);
   virtual ~cDvbStream() { clear(); }
 
@@ -324,11 +324,11 @@ public:
   size_t getFileSize() const { return mFileSize; }
   //}}}
 
-  void toggleStream (cService& service, eRenderType renderType);
-
-  // source
+  // launch source thread
   void dvbSource();
   void fileSource (const std::string& fileName);
+
+  void toggleStream (cService& service, eRenderType renderType);
 
 private:
   //{{{  clears
@@ -336,18 +336,20 @@ private:
   void clearPidCounts();
   void clearPidContinuity();
   //}}}
-
   cPidInfo& getPidInfo (uint16_t pid);
   cPidInfo* getPsiPidInfo (uint16_t pid);
 
   void foundService (cService& service);
 
-  void startServiceProgram (cService* service, std::chrono::system_clock::time_point tdtTime,
+  void startServiceProgram (cService& service, 
+                            std::chrono::system_clock::time_point tdtTime,
                             const std::string& programName,
-                            std::chrono::system_clock::time_point programStartTime, bool selected);
+                            std::chrono::system_clock::time_point programStartTime, 
+                            bool selected);
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
-  void stopServiceProgram (cService* service);
-  bool processPesByPid (cPidInfo* pidInfo, bool skip);
+  void stopServiceProgram (cService& service);
+
+  bool processPesByPid (cPidInfo& pidInfo, bool skip);
 
   //{{{  parse
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);
@@ -356,11 +358,12 @@ private:
   void parseEit (cPidInfo* pidInfo, uint8_t* buf);
   void parseTdt (cPidInfo* pidInfo, uint8_t* buf);
   void parsePmt (cPidInfo* pidInfo, uint8_t* buf);
+
   int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
   //}}}
   int64_t demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
 
-  // vars
+  //{{{  vars
   const cDvbMultiplex mDvbMultiplex;
   const std::string mRecordRootName;
 
@@ -396,4 +399,5 @@ private:
   bool mFirstTimeDefined = false;
   std::chrono::system_clock::time_point mFirstTime; // first tdtTime seen
   std::chrono::system_clock::time_point mTdtTime;   // now tdtTime
+  //}}}
   };

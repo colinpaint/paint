@@ -740,7 +740,7 @@ void cDvbStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, u
 
 // public:
 //{{{
-cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName, 
+cDvbStream::cDvbStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName,
                         bool realTime, bool showAllServices, bool showFirstService)
     : mDvbMultiplex(dvbMultiplex),
       mRecordRootName(recordRootName),
@@ -767,15 +767,7 @@ cDvbStream::cService* cDvbStream::getService (uint16_t sid) {
   }
 //}}}
 
-//{{{
-void cDvbStream::toggleStream (cService& service, eRenderType streamType) {
-
-  lock_guard<mutex> lockGuard (mMutex);
-  service.toggleStream (streamType);
-  }
-//}}}
-
-// sources
+// launch source thread
 //{{{
 void cDvbStream::dvbSource() {
 
@@ -896,6 +888,14 @@ void cDvbStream::fileSource (const string& fileName) {
   }
 //}}}
 
+//{{{
+void cDvbStream::toggleStream (cService& service, eRenderType streamType) {
+
+  lock_guard<mutex> lockGuard (mMutex);
+  service.toggleStream (streamType);
+  }
+//}}}
+
 // private:
 //{{{
 void cDvbStream::clear() {
@@ -983,7 +983,7 @@ void cDvbStream::foundService (cService& service) {
 //}}}
 
 //{{{
-void cDvbStream::startServiceProgram (cService* service,
+void cDvbStream::startServiceProgram (cService& service,
                                       chrono::system_clock::time_point tdtTime,
                                       const string& programName,
                                       chrono::system_clock::time_point programStartTime,
@@ -992,19 +992,19 @@ void cDvbStream::startServiceProgram (cService* service,
 
   // close prev program on this service
   lock_guard<mutex> lockGuard (mRecordFileMutex);
-  service->closeFile();
+  service.closeFile();
 
-  if ((selected || service->getChannelRecord() || mDvbMultiplex.mRecordAll) &&
-      service->getRenderStream (eRenderVideo).isDefined() &&
-      (service->getRenderStream(eRenderAudio).isDefined())) {
+  if ((selected || service.getChannelRecord() || mDvbMultiplex.mRecordAll) &&
+      service.getRenderStream (eRenderVideo).isDefined() &&
+      (service.getRenderStream(eRenderAudio).isDefined())) {
     string filePath = mRecordRootName +
-                      service->getChannelRecordName() +
+                      service.getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
                       utils::getValidFileString (programName) +
                       ".ts";
 
     // record
-    service->openFile (filePath, 0x1234);
+    service.openFile (filePath, 0x1234);
 
     // gui
     mRecordPrograms.push_back (filePath);
@@ -1027,24 +1027,25 @@ void cDvbStream::programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) {
   }
 //}}}
 //{{{
-void cDvbStream::stopServiceProgram (cService* service) {
+void cDvbStream::stopServiceProgram (cService& service) {
 // stop recording service, never called
 
   lock_guard<mutex> lockGuard (mRecordFileMutex);
-  service->closeFile();
+  service.closeFile();
   }
 //}}}
 //{{{
-bool cDvbStream::processPesByPid (cPidInfo* pidInfo, bool skip) {
+bool cDvbStream::processPesByPid (cPidInfo& pidInfo, bool skip) {
 
-  cService* service = getService (pidInfo->getSid());
+  cService* service = getService (pidInfo.getSid());
   if (service) {
-    cStream* stream = service->getRenderStreamByPid (pidInfo->getPid());
+    cStream* stream = service->getRenderStreamByPid (pidInfo.getPid());
     if (stream) {
-      stream->setPts (pidInfo->getPts());
+      stream->setPts (pidInfo.getPts());
       if (stream->isEnabled())
-        return stream->getRender().processPes (pidInfo->getPid(),
-          pidInfo->mBuffer, pidInfo->getBufUsed(), pidInfo->getPts(), pidInfo->getDts(), skip);
+        return stream->getRender().processPes (pidInfo.getPid(),
+                                               pidInfo.mBuffer, pidInfo.getBufUsed(), 
+                                               pidInfo.getPts(), pidInfo.getDts(), skip);
       }
     }
 
@@ -1284,7 +1285,7 @@ void cDvbStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                     pidInfoIt->second.setInfoString (service->getChannelName() + " " + service->getNowTitleString());
 
                   // callback to override to start new serviceItem program
-                  startServiceProgram (service, mTdtTime,
+                  startServiceProgram (*service, mTdtTime,
                                        titleString, startTime,
                                        service->isEpgRecord (titleString, startTime));
                   }
@@ -1543,7 +1544,7 @@ int64_t cDvbStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos,
                            (streamId == 0xBE) ||// ???
                            ((streamId >= 0xC0) && (streamId <= 0xEF))) { // subtitle, audio, video streams
                     if (pidInfo->mBufPtr)
-                      if (processPesByPid (pidInfo, skip))
+                      if (processPesByPid (*pidInfo, skip))
                         pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                     }
                   else
