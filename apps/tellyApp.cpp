@@ -244,7 +244,14 @@ namespace {
 
     bool picked (cVec2 pos) { return mRect.isInside (pos); }
     //{{{
-    void draw (cGraphics& graphics, size_t numViews, size_t selectedIndex, float scale) {
+    void draw (cGraphics& graphics, bool selected, size_t numViews, float scale) {
+
+      if (selected)
+        numViews = 1;
+
+      scale *= (selected || (numViews <= 1)) ? 1.f : 
+                              ((numViews <= 4) ? 0.5f : 
+                                ((numViews <= 9) ? 0.33f : 0.25f));
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (mService.getRenderStream (eRenderVideo).getRender());
 
@@ -256,8 +263,8 @@ namespace {
         // update playerPts from audioPlayer
         playerPts = audioRender.getPlayerPts();
 
-        audioRender.setMute (mIndex != selectedIndex);
-        if (mIndex == selectedIndex)
+        audioRender.setMute (!selected);
+        if (selected)
           mFramesView.draw (audioRender, videoRender, playerPts);
         }
       else
@@ -397,12 +404,12 @@ namespace {
     ~cMultiView() = default;
 
     size_t getNumViews() const { return mViews.size(); }
-    size_t getSelectedView() const { return mSelectedView; }
+    size_t getSelectedIndex() const { return mSelectedIndex; }
 
     //{{{
     bool picked (cVec2 pos, size_t& index) {
 
-      for (auto& view : mViews) 
+      for (auto& view : mViews)
         if (view.picked (pos)) {
           index = view.getIndex();
           return true;
@@ -412,10 +419,23 @@ namespace {
       }
     //}}}
     //{{{
+    void select (size_t index) {
+
+      if (mSelected)
+        mSelected = false;
+      else {
+        mSelected = true;
+        mSelectedIndex = index;
+        }
+      }
+    //}}}
+
+    //{{{
     void draw (cDvbStream& dvbStream, cGraphics& graphics, float scale) {
 
       mViews.clear();
 
+      // add enabled services to mViews
       size_t index = 0;
       for (auto& pair : dvbStream.getServiceMap()) {
         cDvbStream::cService& service = pair.second;
@@ -423,17 +443,18 @@ namespace {
           mViews.push_back (cView (service, index++));
         }
 
-      float viewScale = (getNumViews() <= 1) ? 1.f : ((getNumViews() <= 4) ? 0.5f : ((getNumViews() <= 9) ? 0.33f : 0.25f));
-
+      // draw selected view else draw all views
       for (auto& view : mViews)
-        view.draw (graphics, getNumViews(), mSelectedView, scale * viewScale);
+        if (!mSelected || (view.getIndex() == mSelectedIndex))
+          view.draw (graphics, mSelected, getNumViews(), scale);
       }
     //}}}
 
   private:
     vector <cView> mViews;
 
-    size_t mSelectedView = 0;
+    bool mSelected = false;
+    size_t mSelectedIndex = 0;
     };
   //}}}
 
@@ -601,7 +622,7 @@ namespace {
         if (ImGui::IsMouseClicked (0)) {
           size_t viewIndex = 0;
           if (multiView.picked (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y), viewIndex))
-            cLog::log (LOGINFO, fmt::format ("view {} picked", viewIndex));
+            multiView.select (viewIndex);
           else
             cLog::log (LOGINFO, fmt::format ("mouse {} {} {},{}",
                                              ImGui::IsMouseDragging (0), ImGui::IsMouseDown (0),
