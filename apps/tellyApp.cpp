@@ -71,6 +71,7 @@ namespace {
   #endif
   //}}}
 
+  cTextureShader* gSubtitleShader = nullptr;
   //{{{
   class cFramesView {
   public:
@@ -250,24 +251,23 @@ namespace {
     //{{{
     void draw (cGraphics& graphics, bool selected, size_t numViews, float scale) {
 
-      scale *= (numViews <= 1) ? 1.f :
-                 ((numViews <= 4) ? 0.5f :
-                   ((numViews <= 9) ? 0.33f : 0.25f));
+      scale *= (numViews <= 1) ? 1.f : ((numViews <= 4) ? 0.5f : ((numViews <= 9) ? 0.33f : 0.25f));
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (mService.getRenderStream (eRenderVideo).getRender());
 
-      // get playerPts from audioStream
       int64_t playerPts = mService.getRenderStream (eRenderAudio).getPts();
       if (mService.getRenderStream (eRenderAudio).isEnabled()) {
+        //{{{  get playerPts from audioStream
         cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
         playerPts = audioRender.getPlayerPts();
         audioRender.setMute (!selected);
         }
+        //}}}
 
       // get videoFrame from playerPts
       cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
       if (videoFrame) {
-        // draw videoFrame
+        //{{{  draw videoFrame
         cVec2 pos = position (numViews);
         cVec2 scaledSize = { (scale * ImGui::GetWindowWidth()) / videoFrame->getWidth(),
                              (scale * ImGui::GetWindowHeight()) / videoFrame->getHeight() };
@@ -284,8 +284,51 @@ namespace {
         // crude management of videoFrame cache
         videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
         }
+        //}}}
 
-      // rect is one draw behind
+      cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (mService.getRenderStream (eRenderSubtitle).getRender());
+      if (mService.getRenderStream (eRenderAudio).isEnabled()) {
+        //{{{  draw subtitles
+        // ensure shader is created
+        if (!gSubtitleShader)
+          gSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
+        gSubtitleShader->use();
+
+        for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
+          // create subtitle image
+          cTexture* texture = subtitleRender.getImage (line).mTexture;
+          if (!texture) {
+            // create texture
+            texture = graphics.createTexture (cTexture::eRgba,
+                                              { subtitleRender.getImage (line).mWidth,
+                                                subtitleRender.getImage (line).mHeight });
+            subtitleRender.getImage (line).mTexture = texture;
+            }
+          texture->setSource();
+
+          // update subtitle texture if image dirty
+          if (subtitleRender.getImage (line).mDirty)
+            texture->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
+          subtitleRender.getImage (line).mDirty = false;
+
+          cMat4x4 model;
+          // !!!!set translate from image pos!!!
+          //model.setTranslate ();
+          cVec2 scaledSize = { (float)texture->getWidth() / mRect.getWidth(),
+                               (float)texture->getHeight() / mRect.getHeight() };
+          model.size ({ scale, scale });
+
+          cMat4x4 projection (0.f,mRect.getWidth(), 0.f,mRect.getHeight(), -1.f,1.f);
+          gSubtitleShader->setModelProjection (model, projection);
+
+          // ensure quad is created
+          if (!mQuad)
+            mQuad = graphics.createQuad (texture->getSize());
+          mQuad->draw();
+          }
+        }
+        //}}}
+
       if (mService.getRenderStream (eRenderAudio).isEnabled()) {
         cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
         if (selected)
@@ -403,6 +446,7 @@ namespace {
     const size_t mIndex;
 
     cRect mRect = { 0,0,0,0 };
+    cQuad* mQuad = nullptr;
 
     cFramesView mFramesView;
     cAudioPowerView mAudioPowerView;

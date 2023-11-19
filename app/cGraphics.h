@@ -47,6 +47,9 @@ public:
 
   /// gets
   eTextureType getTextureType() const { return mTextureType; }
+
+  int32_t getWidth() const { return mSize.x; }
+  int32_t getHeight() const { return mSize.y; }
   const cPoint getSize() const { return mSize; }
 
   virtual void* getTextureId() = 0;
