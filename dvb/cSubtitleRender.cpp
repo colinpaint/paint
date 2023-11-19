@@ -888,12 +888,12 @@ private:
         // allocate pixels
         image.mPixels = (uint8_t*)realloc (image.mPixels, image.mWidth * image.mHeight * sizeof(uint32_t));
 
-        // region->mPixBuf -> lut -> mPixels
+        // region->mPixBuf lut -> mPixels
         uint32_t* ptr = (uint32_t*)image.mPixels;
         for (uint32_t i = 0; i < region.mWidth * region.mHeight; i++)
           *ptr++ = image.mColorLut[region.mPixBuf[i]];
 
-        // set image dirty flag to update texture in gui
+        // set image dirty flag to signal gui to update texture
         image.mDirty = true;
 
         // reset region dirty flag
