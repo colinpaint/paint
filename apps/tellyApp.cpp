@@ -43,13 +43,6 @@ using namespace std;
 //}}}
 
 namespace {
-  //{{{  const string kRootDir
-  #ifdef _WIN32
-    const string kRootDir = "/tv/";
-  #else
-    const string kRootDir = "/home/pi/tv/";
-  #endif
-  //}}}
   //{{{
   const vector <cDvbMultiplex> kMultiplexes = {
       { "file", false, 0, {}, {} },  // dummy multiplex for file
@@ -70,6 +63,13 @@ namespace {
       }
     };
   //}}}
+  //{{{  const string kRootDir
+  #ifdef _WIN32
+    const string kRootDir = "/tv/";
+  #else
+    const string kRootDir = "/home/pi/tv/";
+  #endif
+  //}}}
 
   //{{{
   class cFramesView {
@@ -83,7 +83,9 @@ namespace {
       ImVec2 pos = { ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(),
                      ImGui::GetCursorScreenPos().y + ImGui::GetWindowHeight() - (2.f * ImGui::GetTextLineHeight()) };
 
-      drawAudioFramePower (audioRender.findAudioFrameFromPts (playerPts), pos);
+      cAudioFrame* audioFrame = audioRender.findAudioFrameFromPts (playerPts);
+      if (audioFrame)
+        drawAudioFramePower (audioFrame, pos);
 
       pos.x -= ImGui::GetWindowWidth() * 0.5f;
 
@@ -128,7 +130,7 @@ namespace {
       shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
       for (auto& frame : audioRender.getFrames()) {
         //{{{  draw audio frames
-        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+        audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
         float offset1 = (audioFrame->mPts - playerPts) * ptsScale;
         float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
         ImGui::GetWindowDrawList()->AddRectFilled (
@@ -139,7 +141,7 @@ namespace {
         //}}}
       for (auto frame : audioRender.getFreeFrames()) {
         //{{{  draw free audio frames
-        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+        audioFrame = dynamic_cast<cAudioFrame*>(frame);
         float offset1 = (audioFrame->mPts - playerPts) * ptsScale;
         float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
 
@@ -161,34 +163,32 @@ namespace {
     //{{{
     void drawAudioFramePower (cAudioFrame* audioFrame, ImVec2 pos) {
 
-      if (audioFrame) {
-        bool audio51 = audioFrame->mNumChannels == 6;
-        array <size_t, 6> channelOrder;
-        if (audio51)
-          channelOrder = {4, 0, 2, 1, 5, 3};
-        else
-          channelOrder = {0, 1, 2, 3, 4, 5};
+      bool audio51 = audioFrame->mNumChannels == 6;
+      array <size_t, 6> channelOrder;
+      if (audio51)
+        channelOrder = {4, 0, 2, 1, 5, 3};
+      else
+        channelOrder = {0, 1, 2, 3, 4, 5};
 
-        float x = pos.x - (audio51 ? 5 : audioFrame->mNumChannels * mPixelsPerAudioChannel);
-        pos.y += 1.f;
-        float height = 8.f * ImGui::GetTextLineHeight();
+      float x = pos.x - (audio51 ? 5 : audioFrame->mNumChannels * mPixelsPerAudioChannel);
+      pos.y += 1.f;
+      float height = 8.f * ImGui::GetTextLineHeight();
 
-        // draw channels
-        for (size_t i = 0; i < (audio51 ? 5 : audioFrame->mNumChannels+1); i++) {
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            { x, pos.y - (audioFrame->mPowerValues[channelOrder[i]] * height) },
-            { x + mPixelsPerAudioChannel - 1.f, pos.y },
-            0xff00ff00);
-          x += mPixelsPerAudioChannel;
-          }
-
-        // draw 5.1 woofer red
-        if (audio51)
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[channelOrder[5]] * height)},
-            {pos.x - 1.f, pos.y},
-            0x800000ff);
+      // draw channels
+      for (size_t i = 0; i < (audio51 ? 5 : audioFrame->mNumChannels+1); i++) {
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          { x, pos.y - (audioFrame->mPowerValues[channelOrder[i]] * height) },
+          { x + mPixelsPerAudioChannel - 1.f, pos.y },
+          0xff00ff00);
+        x += mPixelsPerAudioChannel;
         }
+
+      // draw 5.1 woofer red
+      if (audio51)
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[channelOrder[5]] * height)},
+          {pos.x - 1.f, pos.y},
+          0x800000ff);
       }
     //}}}
 
@@ -246,33 +246,29 @@ namespace {
     //{{{
     void draw (cGraphics& graphics, bool selected, size_t numViews, float scale) {
 
-      if (selected)
-        numViews = 1;
-
-      scale *= (selected || (numViews <= 1)) ? 1.f :
-                              ((numViews <= 4) ? 0.5f :
-                                ((numViews <= 9) ? 0.33f : 0.25f));
+      scale *= (numViews <= 1) ? 1.f :
+                 ((numViews <= 4) ? 0.5f :
+                   ((numViews <= 9) ? 0.33f : 0.25f));
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (mService.getRenderStream (eRenderVideo).getRender());
 
       // get playerPts from audioStream
-      int64_t playerPts = 0;
+      int64_t playerPts = mService.getRenderStream (eRenderAudio).getPts();
       if (mService.getRenderStream (eRenderAudio).isEnabled()) {
         cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
 
-        // update playerPts from audioPlayer
+        // get playerPts from audioPlayer
         playerPts = audioRender.getPlayerPts();
 
         audioRender.setMute (!selected);
         if (selected)
           mFramesView.draw (audioRender, videoRender, playerPts);
         }
-      else
-        playerPts = mService.getRenderStream (eRenderAudio).getPts();
 
-      // draw videoFrame
+      // get videoFrame from playerPts
       cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
       if (videoFrame) {
+        // draw videoFrame
         cVec2 pos = position (numViews);
         cVec2 scaledSize = { (scale * ImGui::GetWindowWidth()) / videoFrame->getWidth(),
                              (scale * ImGui::GetWindowHeight()) / videoFrame->getHeight() };
@@ -282,9 +278,11 @@ namespace {
         model.size (scaledSize);
         mRect = videoRender.drawFrame (videoFrame, graphics, model, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 
+        // save rectangle in screen coords
         ImGui::GetWindowDrawList()->AddRect (ImVec2((float)mRect.left, (float)mRect.top),
                                              ImVec2((float)mRect.right, (float)mRect.bottom), 0xff00ffff);
 
+        // crude management of videoFrame cache
         videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
         }
       }
@@ -296,7 +294,7 @@ namespace {
 
       switch (numViews) {
         //{{{
-        case 2: // 1 row
+        case 2: // 2x1
           switch (mIndex) {
             case 0: return { 1.f / 4.f, 0.5f };
             case 1: return { 3.f / 4.f, 0.5f };
@@ -306,7 +304,7 @@ namespace {
 
         case 3:
         //{{{
-        case 4: // 2 rows
+        case 4: // 2x2
           switch (mIndex) {
             case 0: return { 1.f / 4.f, 3.f / 4.f };
             case 1: return { 3.f / 4.f, 3.f / 4.f };
@@ -319,7 +317,7 @@ namespace {
 
         case 5:
         //{{{
-        case 6: // 2 rows
+        case 6: // 3x2
           switch (mIndex) {
             case 0: return { 1.f / 6.f, 4.f / 6.f };
             case 1: return { 3.f / 6.f, 4.f / 6.f };
@@ -335,7 +333,7 @@ namespace {
         case 7:
         case 8:
         //{{{
-        case 9: // 3 rows
+        case 9: // 3x3
           switch (mIndex) {
             case 0: return { 1.f / 6.f, 5.f / 6.f };
             case 1: return { 3.f / 6.f, 5.f / 6.f };
@@ -359,7 +357,7 @@ namespace {
         case 14:
         case 15:
         //{{{
-        case 16: // 4 rows
+        case 16: // 4x4
           switch (mIndex) {
             case  0: return { 1.f / 8.f, 7.f / 8.f };
             case  1: return { 3.f / 8.f, 7.f / 8.f };
@@ -384,7 +382,7 @@ namespace {
           return { 0.5f, 0.5f };
         //}}}
 
-        default:
+        default: // 1x1
           return { 0.5f, 0.5f };
         }
       }
@@ -446,7 +444,7 @@ namespace {
       // draw selected view else draw all views
       for (auto& view : mViews)
         if (!mSelected || (view.getIndex() == mSelectedIndex))
-          view.draw (graphics, mSelected, getNumViews(), scale);
+          view.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), scale);
       }
     //}}}
 
