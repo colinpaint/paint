@@ -451,7 +451,7 @@ namespace {
 
     cFramesView mFramesView;
     cAudioPowerView mAudioPowerView;
-    array <cTexture*,4> mSubtitleTextures;
+    array <cTexture*,4> mSubtitleTextures =  { nullptr };
     };
   //}}}
   //{{{
@@ -1005,7 +1005,7 @@ namespace {
     float mOverlap = 4.f;
     int mHistory = 0;
 
-    array <cTexture*,4> mSubtitleTextures = { nullptr } ;
+    array <cTexture*,4> mSubtitleTextures = { nullptr };
     };
   //}}}
   //{{{
