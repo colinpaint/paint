@@ -6,7 +6,6 @@
 #include <vector>
 #include <functional>
 
-#include "../common/date.h"
 #include "../common/cLog.h"
 #include "../common/utils.h"
 

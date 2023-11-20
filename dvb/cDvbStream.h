@@ -163,19 +163,20 @@ public:
     //}}}
     ~cEpgItem() {}
 
-    bool getRecord() { return mRecord; }
     std::string getTitleString() { return mTitleString; }
     std::string getDesriptionString() { return mInfoString; }
 
     std::chrono::seconds getDuration() { return mDuration; }
     std::chrono::system_clock::time_point getTime() { return mTime; }
 
+    bool getRecord() { return mRecord; }
     //{{{
     bool toggleRecord() {
       mRecord = !mRecord;
       return mRecord;
       }
     //}}}
+
     //{{{
     void set (std::chrono::system_clock::time_point time,
               std::chrono::seconds duration,
@@ -221,8 +222,6 @@ public:
     // epg
     bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
 
-    bool getShowEpg() const { return mShowEpg; }
-
     cEpgItem* getNowEpgItem() { return mNowEpgItem; }
     std::string getNowTitleString() const { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
 
@@ -248,8 +247,6 @@ public:
     bool setEpg (bool record,
                  std::chrono::system_clock::time_point startTime, std::chrono::seconds duration,
                  const std::string& titleString, const std::string& infoString);
-
-    void toggleShowEpg() { mShowEpg = !mShowEpg; }
     //}}}
 
     void toggleStream (eRenderType renderType);
@@ -283,7 +280,6 @@ public:
     // epg
     cEpgItem* mNowEpgItem = nullptr;
     std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpgItemMap;
-    bool mShowEpg = true;
 
     // record
     FILE* mFile = nullptr;
@@ -341,10 +337,10 @@ private:
 
   void foundService (cService& service);
 
-  void startServiceProgram (cService& service, 
+  void startServiceProgram (cService& service,
                             std::chrono::system_clock::time_point tdtTime,
                             const std::string& programName,
-                            std::chrono::system_clock::time_point programStartTime, 
+                            std::chrono::system_clock::time_point programStartTime,
                             bool selected);
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService& service);

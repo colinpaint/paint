@@ -8,6 +8,7 @@
 #include <string>
 #include <array>
 #include <vector>
+#include <map>
 
 // stb - invoke header only library implementation here
 #define STB_IMAGE_IMPLEMENTATION
@@ -243,10 +244,8 @@ namespace {
   //{{{
   class cView {
   public:
-    cView (cDvbStream::cService& service, size_t index) : mService(service), mIndex(index) {}
+    cView (cDvbStream::cService& service) : mService(service) {}
     ~cView() = default;
-
-    size_t getIndex() const { return mIndex; }
 
     bool picked (cVec2 pos) { return mRect.isInside (pos); }
     //{{{
@@ -263,14 +262,12 @@ namespace {
 
       // get videoFrame from playerPts
       cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
-      if (videoFrame) {
+      if (videoFrame)
         videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
-        cLog::log (LOGINFO, "trim hidden");
-        }
       }
     //}}}
     //{{{
-    void draw (cGraphics& graphics, bool selected, size_t numViews, float scale) {
+    void draw (cGraphics& graphics, bool selected, size_t numViews, float scale, size_t viewIndex) {
 
       scale *= (numViews <= 1) ? 1.f : ((numViews <= 4) ? 0.5f : ((numViews <= 9) ? 0.33f : 0.25f));
 
@@ -290,7 +287,7 @@ namespace {
       if (videoFrame) {
         //{{{  draw videoFrame
         mModel = cMat4x4();
-        cVec2 pos = position (numViews);
+        cVec2 pos = position (viewIndex, numViews);
         cVec2 scaledSize = { (scale * ImGui::GetWindowWidth()) / videoFrame->getWidth(),
                              (scale * ImGui::GetWindowHeight()) / videoFrame->getHeight() };
         mModel.setTranslate ( {(ImGui::GetWindowWidth() * pos.x) - ((videoFrame->getWidth() / 2.f) * scaledSize.x),
@@ -303,7 +300,6 @@ namespace {
 
         // crude management of videoFrame cache
         videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
-        cLog::log (LOGINFO, "trim visible");
         }
         //}}}
 
@@ -363,12 +359,12 @@ namespace {
 
   private:
     //{{{
-    cVec2 position (size_t numViews) {
+    cVec2 position (size_t index, size_t numViews) {
 
       switch (numViews) {
         //{{{
         case 2: // 2x1
-          switch (mIndex) {
+          switch (index) {
             case 0: return { 1.f / 4.f, 0.5f };
             case 1: return { 3.f / 4.f, 0.5f };
             }
@@ -378,7 +374,7 @@ namespace {
         case 3:
         //{{{
         case 4: // 2x2
-          switch (mIndex) {
+          switch (index) {
             case 0: return { 1.f / 4.f, 3.f / 4.f };
             case 1: return { 3.f / 4.f, 3.f / 4.f };
 
@@ -391,7 +387,7 @@ namespace {
         case 5:
         //{{{
         case 6: // 3x2
-          switch (mIndex) {
+          switch (index) {
             case 0: return { 1.f / 6.f, 4.f / 6.f };
             case 1: return { 3.f / 6.f, 4.f / 6.f };
             case 2: return { 5.f / 6.f, 4.f / 6.f };
@@ -407,7 +403,7 @@ namespace {
         case 8:
         //{{{
         case 9: // 3x3
-          switch (mIndex) {
+          switch (index) {
             case 0: return { 1.f / 6.f, 5.f / 6.f };
             case 1: return { 3.f / 6.f, 5.f / 6.f };
             case 2: return { 5.f / 6.f, 5.f / 6.f };
@@ -431,7 +427,7 @@ namespace {
         case 15:
         //{{{
         case 16: // 4x4
-          switch (mIndex) {
+          switch (index) {
             case  0: return { 1.f / 8.f, 7.f / 8.f };
             case  1: return { 3.f / 8.f, 7.f / 8.f };
             case  2: return { 5.f / 8.f, 7.f / 8.f };
@@ -462,7 +458,6 @@ namespace {
     //}}}
 
     cDvbStream::cService& mService;
-    const size_t mIndex;
 
     cFramesView mFramesView;
     cAudioPowerView mAudioPowerView;
@@ -480,15 +475,15 @@ namespace {
     cMultiView() {}
     ~cMultiView() = default;
 
-    size_t getNumViews() const { return mViews.size(); }
-    size_t getSelectedIndex() const { return mSelectedIndex; }
+    size_t getNumViews() const { return mViewMap.size(); }
+    uint16_t getSelectedSid() const { return mSelectedSid; }
 
     //{{{
-    bool picked (cVec2 pos, size_t& index) {
+    bool picked (cVec2 pos, uint16_t& sid) {
 
-      for (auto& view : mViews)
-        if (view.picked (pos)) {
-          index = view.getIndex();
+      for (auto& view : mViewMap)
+        if (view.second.picked (pos)) {
+          sid = view.first;
           return true;
           }
 
@@ -496,13 +491,13 @@ namespace {
       }
     //}}}
     //{{{
-    void select (size_t index) {
+    void select (uint16_t sid) {
 
       if (mSelected)
         mSelected = false;
       else {
         mSelected = true;
-        mSelectedIndex = index;
+        mSelectedSid = sid;
         }
       }
     //}}}
@@ -510,30 +505,37 @@ namespace {
     //{{{
     void draw (cDvbStream& dvbStream, cGraphics& graphics, float scale) {
 
-      mViews.clear();
-
-      // add enabled services to mViews
-      size_t index = 0;
+      // update viewMap with enabled services, taking care to preserve cView's
       for (auto& pair : dvbStream.getServiceMap()) {
         cDvbStream::cService& service = pair.second;
-        if (service.getRenderStream (eRenderVideo).isEnabled())
-          mViews.push_back (cView (service, index++));
+
+        // look for service sid in viewMap
+        auto it = mViewMap.find (pair.first);
+        if (it == mViewMap.end()) {
+          if (service.getRenderStream (eRenderVideo).isEnabled()) 
+            // add service to viewMap
+            mViewMap.emplace (service.getSid(), cView (service));
+          }
+        else if (!service.getRenderStream (eRenderVideo).isEnabled()) 
+          // remove service from viewMap
+          mViewMap.erase (it);
         }
 
-      // draw selected view else draw all views
-      for (auto& view : mViews)
-        if (!mSelected || (view.getIndex() == mSelectedIndex))
-          view.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), scale);
-        else
-           view.trim();
+      // draw view, if selected, else draw all views
+      size_t viewIndex = 0;
+      for (auto& view : mViewMap)
+        if (!mSelected || (view.first == mSelectedSid))
+          view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), scale, viewIndex++);
+        else // keep trimming ??? wrong ????
+          view.second.trim();
       }
     //}}}
 
   private:
-    vector <cView> mViews;
+    map <uint16_t, cView> mViewMap;
 
     bool mSelected = false;
-    size_t mSelectedIndex = 0;
+    uint16_t mSelectedSid = 0;
     };
   //}}}
 
@@ -700,9 +702,9 @@ namespace {
           }
 
         if (ImGui::IsMouseClicked (0)) {
-          size_t viewIndex = 0;
-          if (multiView.picked (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y), viewIndex))
-            multiView.select (viewIndex);
+          uint16_t sid = 0;
+          if (multiView.picked (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y), sid))
+            multiView.select (sid);
           else {
             cLog::log (LOGINFO, fmt::format ("mouse {} {} {},{}",
                                              ImGui::IsMouseDragging (0), ImGui::IsMouseDown (0),
@@ -914,6 +916,7 @@ namespace {
 
         if (!mSubtitleTextures[line])
            mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
+        mSubtitleTextures[line]->setSource();
 
         // update lines texture from subtitle image
         if (subtitleImage.isDirty())
