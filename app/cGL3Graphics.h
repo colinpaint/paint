@@ -13,6 +13,7 @@
 #include "../common/cLog.h"
 #include "fmt/format.h"
 //}}}
+constexpr bool kCreateDebug = true;
 
 class cGL3Graphics : public cGraphics {
 public:
@@ -126,7 +127,9 @@ private:
     cOpenGL3RgbaTexture (eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size) {
 
-      // cLog::log (LOGINFO, fmt::format ("cOpenGL3RgbaTexture - creating eRgba texture {}x{}", size.x, size.y));
+      if (kCreateDebug)
+         cLog::log (LOGINFO, fmt::format ("cOpenGL3RgbaTexture - create texture {}x{}", size.x, size.y));
+
       glGenTextures (1, &mTextureId);
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);
@@ -142,6 +145,10 @@ private:
     //}}}
     //{{{
     virtual ~cOpenGL3RgbaTexture() {
+
+      if (kCreateDebug)
+        cLog::log (LOGINFO, fmt::format ("cOpenGL3RgbaTexture delete texture {}x{}", mSize.x, mSize.y));
+
       glDeleteTextures (1, &mTextureId);
       }
     //}}}
@@ -179,7 +186,9 @@ private:
     cOpenGL3Yuv420Texture (eTextureType textureType, const cPoint& size)
         : cTexture(textureType, size) {
 
-      //cLog::log (LOGINFO, fmt::format ("creating eYuv420 texture {}x{}", size.x, size.y));
+      if (kCreateDebug)
+        cLog::log (LOGINFO, fmt::format ("cOpenGL3Yuv420Texture create texture {}x{}", size.x, size.y));
+
       glGenTextures (3, mTextureId.data());
 
       // y texture
@@ -210,7 +219,9 @@ private:
     //{{{
     virtual ~cOpenGL3Yuv420Texture() {
 
-      //cLog::log (LOGINFO, fmt::format ("deleting eYuv420 texture {}x{}", mSize.x, mSize.y));
+      if (kCreateDebug)
+        cLog::log (LOGINFO, fmt::format ("cOpenGL3Yuv420Texture delete texture {}x{}", mSize.x, mSize.y));
+
       glDeleteTextures (3, mTextureId.data());
       }
     //}}}

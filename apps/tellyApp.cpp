@@ -249,6 +249,26 @@ namespace {
 
     bool picked (cVec2 pos) { return mRect.isInside (pos); }
     //{{{
+    void trim() {
+
+      cVideoRender& videoRender = dynamic_cast<cVideoRender&> (mService.getRenderStream (eRenderVideo).getRender());
+
+      int64_t playerPts = mService.getRenderStream (eRenderAudio).getPts();
+      if (mService.getRenderStream (eRenderAudio).isEnabled()) {
+        // get playerPts from audioStream
+        cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
+        playerPts = audioRender.getPlayerPts();
+        }
+
+      // get videoFrame from playerPts
+      cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
+      if (videoFrame) {
+        videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
+        cLog::log (LOGINFO, "trim hidden");
+        }
+      }
+    //}}}
+    //{{{
     void draw (cGraphics& graphics, bool selected, size_t numViews, float scale) {
 
       scale *= (numViews <= 1) ? 1.f : ((numViews <= 4) ? 0.5f : ((numViews <= 9) ? 0.33f : 0.25f));
@@ -282,6 +302,7 @@ namespace {
 
         // crude management of videoFrame cache
         videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
+        cLog::log (LOGINFO, "trim visible");
         }
         //}}}
 
@@ -301,7 +322,7 @@ namespace {
           mSubtitleTextures[line]->setSource();
 
           // update subtitle texture if image dirty
-          if (subtitleRender.getImage (line).mDirty) 
+          if (subtitleRender.getImage (line).mDirty)
             mSubtitleTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
           subtitleRender.getImage (line).mDirty = false;
 
@@ -501,6 +522,8 @@ namespace {
       for (auto& view : mViews)
         if (!mSelected || (view.getIndex() == mSelectedIndex))
           view.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), scale);
+        else
+           view.trim();
       }
     //}}}
 
@@ -891,7 +914,7 @@ namespace {
                                 subtitleRender.getImage (line).mHeight });
 
         // update lines texture from subtitle image
-        if (subtitleRender.getImage (line).mDirty) 
+        if (subtitleRender.getImage (line).mDirty)
           mSubtitleTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
         subtitleRender.getImage (line).mDirty = false;
 

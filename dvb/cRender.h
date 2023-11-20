@@ -13,24 +13,12 @@
 #include "../common/cMiniLog.h"
 #include "../common/readerWriterQueue.h"
 
+#include "cFrame.h"
+
 class cRender;
 //}}}
 constexpr int kPtsPerSecond = 90000;
 
-//{{{
-class cFrame {
-public:
-  cFrame() = default;
-  virtual ~cFrame() = default;
-
-  virtual void releaseResources() = 0;
-
-  // vars
-  int64_t mPts;
-  int64_t mPtsDuration;
-  uint32_t mPesSize;
-  };
-//}}}
 //{{{
 class cDecoder {
 public:

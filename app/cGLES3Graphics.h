@@ -13,6 +13,7 @@
 #include "../common/cLog.h"
 #include "fmt/format.h"
 //}}}
+constexpr bool kCreateDebug = true;
 
 class cGLES3Graphics : public cGraphics {
 public:
@@ -123,9 +124,12 @@ private:
   //{{{
   class cOpenGLES3RgbaTexture : public cTexture {
   public:
+    //{{{
     cOpenGLES3RgbaTexture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
 
-      //cLog::log (LOGINFO, fmt::format ("creating eRgba texture {}x{}", size.x, size.y));
+      if (kCreateDebug)
+        cLog::log (LOGINFO, fmt::format ("cOpenGLES3RgbaTexture create texture {}x{}", size.x, size.y));
+
       glGenTextures (1, &mTextureId);
 
       glBindTexture (GL_TEXTURE_2D, mTextureId);
@@ -138,13 +142,19 @@ private:
 
       glGenerateMipmap (GL_TEXTURE_2D);
       }
-
+    //}}}
+    //{{{
     virtual ~cOpenGLES3RgbaTexture() {
+      if (kCreateDebug)
+        cLog::log (LOGINFO, fmt::format ("cOpenGLES3RgbaTexture - deleting texture {}x{}", mSize.x, mSize.y));
+
       glDeleteTextures (1, &mTextureId);
       }
+    //}}}
 
     virtual void* getTextureId() final { return (void*)(intptr_t)mTextureId; }
 
+    //{{{
     virtual void setPixels (uint8_t** pixels, int* strides) final {
     // set textures using pixels in ffmpeg avFrame format
       (void)strides;
@@ -152,11 +162,13 @@ private:
       glBindTexture (GL_TEXTURE_2D, mTextureId);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels[0]);
       }
-
+    //}}}
+    //{{{
     virtual void setSource() final {
       glActiveTexture (GL_TEXTURE0);
       glBindTexture (GL_TEXTURE_2D, mTextureId);
       }
+    //}}}
 
   private:
     GLuint mTextureId = 0;
@@ -168,7 +180,9 @@ private:
     //{{{
     cOpenGLES3Yuv420Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
 
-      //cLog::log (LOGINFO, fmt::format ("cOpenGLES3Yuv420Texture - creating eYuv420 texture {}x{}", size.x, size.y));
+      if (kCreateDebug)
+        cLog::log (LOGINFO, fmt::format ("cOpenGLES3Yuv420Texture - create texture {}x{}", size.x, size.y));
+
       glGenTextures (3, mTextureId.data());
 
       // y texture
@@ -199,7 +213,9 @@ private:
     //{{{
     virtual ~cOpenGLES3Yuv420Texture() {
 
-      //cLog::log (LOGINFO, fmt::format ("cOpenGLES3Yuv420Texture deleting texture {}x{}", mSize.x, mSize.y));
+      if (kCreateDebug)
+        cLog::log (LOGINFO, fmt::format ("cOpenGLES3Yuv420Texture delete texture {}x{}", mSize.x, mSize.y));
+
       glDeleteTextures (3, mTextureId.data());
       }
     //}}}

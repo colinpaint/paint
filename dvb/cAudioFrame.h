@@ -1,21 +1,23 @@
 // cAudioFrame.h
 //{{{  includes
 #pragma once
-#include "cRender.h"
-
 #include <cstdint>
 #include <array>
+#include <vector>
 #include <algorithm>
 #include <math.h>
-//}}}
 
+#include "cFrame.h"
+//}}}
 constexpr size_t kMaxAudioChannels = 6;
 constexpr size_t kMaxAudioSamplesPerFrame = 2048;
 
 class cAudioFrame : public cFrame {
 public:
-  cAudioFrame() = default;
-  virtual ~cAudioFrame() { releaseResources(); }
+  cAudioFrame() {}
+  virtual ~cAudioFrame() { 
+    releaseResources(); 
+    }
 
   //{{{
   std::string getInfoString() {
@@ -58,11 +60,9 @@ public:
     }
   //}}}
 
-  //{{{
-  virtual void releaseResources() final {
-    mTimes.clear();
+  virtual void releaseResources() final { 
+    mTimes.clear(); 
     }
-  //}}}
 
   // vars
   size_t mNumChannels = kMaxAudioChannels;

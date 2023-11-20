@@ -18,7 +18,7 @@ constexpr int64_t kPtsPerFrame = 90000 / 25;
 //{{{
 cRender::cRender (bool queued, const string& name, uint8_t streamType, size_t frameMapSize, bool realTime)
     : mFrameMapSize(frameMapSize),
-      mQueued(queued), mName(name), mStreamType(streamType), mRealTime(realTime), 
+      mQueued(queued), mName(name), mStreamType(streamType), mRealTime(realTime),
       mMiniLog ("log") {
 
   if (queued)
@@ -47,20 +47,21 @@ cFrame* cRender::getFreeFrame() {
   if (mFreeFrames.empty())
     return nullptr;
 
-  else {
-    unique_lock<shared_mutex> lock (mSharedMutex);
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+  cFrame* frame = mFreeFrames.front();
+  mFreeFrames.pop_front();
+  return frame;
+  }
 
-    cFrame* frame = mFreeFrames.front();
-    mFreeFrames.pop_front();
-    return frame;
-    }
   }
 //}}}
 //{{{
 cFrame* cRender::getYoungestFrame() {
 
   cFrame* youngestFrame;
-  {
+
+  { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
 
   // reuse youngest
@@ -77,7 +78,6 @@ cFrame* cRender::getYoungestFrame() {
 cFrame* cRender::getFrameFromPts (int64_t pts) {
 
   //unique_lock<shared_mutex> lock (mSharedMutex);
-
   auto it = mFrames.find (pts);
   return (it == mFrames.end()) ? nullptr : it->second;
   }
@@ -105,18 +105,19 @@ void cRender::trimFramesBeforePts (int64_t pts) {
 
   if (mFrames.empty())
     return;
-  else {
-    // locked
-    unique_lock<shared_mutex> lock (mSharedMutex);
 
-    auto it = mFrames.begin();
-    while ((it != mFrames.end()) && ((*it).first < pts)) {
-      cFrame* frame = it->second;
-      it = mFrames.erase (it);
-      frame->releaseResources();
-      mFreeFrames.push_back (frame);
-      }
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  auto it = mFrames.begin();
+  while ((it != mFrames.end()) && ((*it).first < pts)) {
+    cFrame* frame = it->second;
+    it = mFrames.erase (it);
+    frame->releaseResources();
+    mFreeFrames.push_back (frame);
     }
+  }
+
   }
 //}}}
 
