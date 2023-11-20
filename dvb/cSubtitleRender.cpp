@@ -35,6 +35,7 @@ cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, bool r
     : cRender(kQueued, name + "sub", streamType, kSubtitleMapSize, realTime) {
 
   mDecoder = new cSubtitleDecoder (*this);
+
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }
