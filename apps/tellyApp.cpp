@@ -323,9 +323,9 @@ namespace {
           mSubtitleTextures[line]->setSource();
 
           // update subtitle texture if image dirty
-          if (subtitleImage.mDirty)
-            mSubtitleTextures[line]->setPixels (&subtitleImage.mPixels, nullptr);
-          subtitleImage.mDirty = false;
+          if (subtitleImage.isDirty())
+            mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
+          subtitleImage.setDirty (false);
 
           // reuse mode, could use original more
           mModel = cMat4x4();
@@ -889,9 +889,11 @@ namespace {
 
       size_t line = 0;
       while (line < subtitleRender.getNumLines()) {
+        cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
+
         // draw clut color pots
         ImVec2 pos = ImGui::GetCursorScreenPos();
-        for (size_t pot = 0; pot < subtitleRender.getImage (line).mColorLut.max_size(); pot++) {
+        for (size_t pot = 0; pot < subtitleImage.mColorLut.max_size(); pot++) {
           //{{{  draw pot
           ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
           uint32_t color = subtitleRender.getImage (line).mColorLut[pot];
@@ -907,18 +909,16 @@ namespace {
 
         // draw pos
         ImGui::SameLine();
-        ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", subtitleRender.getImage (line).mX,
-                                                            subtitleRender.getImage (line).mY).c_str());
+        ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}", subtitleImage.getXpos(),
+                                                            subtitleImage.getYpos()).c_str());
 
         if (!mSubtitleTextures[line])
-           mSubtitleTextures[line] = graphics.createTexture (
-             cTexture::eRgba, { subtitleRender.getImage (line).mWidth,
-                                subtitleRender.getImage (line).mHeight });
+           mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
 
         // update lines texture from subtitle image
-        if (subtitleRender.getImage (line).mDirty)
-          mSubtitleTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
-        subtitleRender.getImage (line).mDirty = false;
+        if (subtitleImage.isDirty())
+          mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
+        subtitleImage.setDirty (false);
 
         // draw lines subtitle texture, scaled to fit line
         ImGui::SameLine();

@@ -863,32 +863,22 @@ private:
         image.mPageState = mPage.mState;
         image.mPageVersion = mPage.mVersion;
 
-        image.mX = regionDisplay.mXpos + offsetX;
-        image.mY = regionDisplay.mYpos + offsetY;
+        image.setXpos (regionDisplay.mXpos + offsetX);
+        image.setYpos (regionDisplay.mYpos + offsetY);
 
-        bool imageSizeChanged = (image.mWidth != (int)region.mWidth) || (image.mHeight != (int)region.mHeight);
-        image.mWidth = region.mWidth;
-        image.mHeight = region.mHeight;
+        bool imageSizeChanged = (image.getWidth() != (int)region.mWidth) || (image.getHeight() != (int)region.mHeight);
+        image.setWidth (region.mWidth);
+        image.setHeight (region.mHeight);
 
         // copy lut
         memcpy (&image.mColorLut, &getColorLut (region.mColorLut).m16bgra, sizeof (image.mColorLut));
 
         // allocate pixels - ??? possible race with gui ????
-        if (image.mPixels  && imageSizeChanged) {
-          // realloc mPixels
-          free (image.mPixels);
-          image.mPixels = nullptr;
-          }
-        if (!image.mPixels)
-          image.mPixels = (uint8_t*)malloc (image.mWidth * image.mHeight * sizeof(uint32_t));
-
-        // lookup region->mPixBuf through lut to produce mPixels
-        uint32_t* ptr = (uint32_t*)image.mPixels;
-        for (uint32_t i = 0; i < region.mWidth * region.mHeight; i++)
-          *ptr++ = image.mColorLut[region.mPixBuf[i]];
-
-        // set image dirtyFlag, signal gui to reload texture
-        image.mDirty = true;
+        if (image.hasPixels() && imageSizeChanged)
+          image.releasePixels();
+        if (!image.hasPixels())
+          image.allocPixels();
+        image.setPixels (region.mWidth, region.mHeight, region.mPixBuf);
 
         // reset region dirty flag
         region.mDirty = false;
