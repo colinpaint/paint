@@ -80,10 +80,23 @@ namespace {
     ~cMultiView() = default;
 
     // gets
-    uint16_t getSelectedSid() const { return mSelectedSid; }
     size_t getNumViews() const { return mViewMap.size(); }
+    uint16_t getSelectedSid() const { return mSelectedSid; }
 
-    // pick, select
+    //{{{
+    bool hover() {
+    // run for every item to ensure mHover flag get set
+
+      bool result = false;
+
+      for (auto& view : mViewMap)
+        if (view.second.hover())
+          result = true;;
+
+      mHover = result;
+      return result;
+      }
+    //}}}
     //{{{
     bool picked (cVec2 pos, uint16_t& sid) {
 
@@ -96,21 +109,6 @@ namespace {
       return false;
       }
     //}}}
-    //{{{
-    bool hover() {
-    // run for every item to ensure mHover flag get set
-
-      bool result = false;
-
-      for (auto& view : mViewMap)
-        if (view.second.hover())
-          result = true;;
-
-      mHoverView = result;
-      return result;
-      }
-    //}}}
-
     //{{{
     void select (uint16_t sid) {
 
@@ -151,7 +149,9 @@ namespace {
       for (auto& view : mViewMap) {
         if (!mSelected || (view.first == mSelectedSid)) {
           if (!view.second.getHover())
-            view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), scale, viewIndex);
+            view.second.draw (graphics,
+                              mSelected, mSelected ? 1 : getNumViews(), mHover ? scale * 0.98f : scale,
+                              viewIndex);
           viewIndex++;
           }
         else // keep trimming ??? wrong ????
@@ -162,7 +162,9 @@ namespace {
       for (auto& view : mViewMap) {
         if (!mSelected || (view.first == mSelectedSid)) {
           if (view.second.getHover())
-            view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), scale * 1.5f, viewIndex);
+            view.second.draw (graphics,
+                              mSelected, mSelected ? 1 : getNumViews(), mSelected ? scale : scale * 1.5f,
+                              viewIndex);
           viewIndex++;
           }
         }
@@ -218,7 +220,8 @@ namespace {
           //{{{  get playerPts from audioStream
           cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
           playerPts = audioRender.getPlayerPts();
-          audioRender.setMute (!selected);
+
+          audioRender.setMute (!selected && !mHover);
           }
           //}}}
 
@@ -279,10 +282,12 @@ namespace {
         if (mService.getRenderStream (eRenderAudio).isEnabled()) {
           //{{{  draw frames, audioPower
           cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
+
           if (selected)
             mFramesView.draw (audioRender, videoRender, playerPts,
                               ImVec2((float)mRect.getCentre().x,
                                      (float)mRect.bottom - ImGui::GetTextLineHeight()));
+
           mAudioPowerView.draw (audioRender, playerPts,
                                 ImVec2((float)mRect.right - ImGui::GetTextLineHeight()/2.f,
                                        (float)mRect.bottom - ImGui::GetTextLineHeight()/2.f));
@@ -574,13 +579,12 @@ namespace {
       };
     //}}}
 
-    // map of enabled cView's index by serviceId
+    // VARS
     map <uint16_t, cView> mViewMap;
 
+    bool mHover = false;
     bool mSelected = false;
     uint16_t mSelectedSid = 0;
-
-    bool mHoverView = false;
 
     inline static cTextureShader* mSubtitleShader = nullptr;
     };
@@ -760,29 +764,21 @@ namespace {
           ImGui::BeginChild ("tab", {0.f,0.f}, false,
                              ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
           switch (mTab) {
-            case eTelly:     break;
             case eTellyChan: drawChannels (dvbStream, graphics); break;
             case eServices:  drawServices (dvbStream, graphics); break;
             case ePids:      drawPidMap (dvbStream, graphics); break;
             case eRecorded:  drawRecorded (dvbStream, graphics); break;
+            default:;
             }
 
-          if (multiView.hover()) {
-            cLog::log (LOGINFO, fmt::format ("mouse hover"));
-            }
-
+          multiView.hover();
           if (ImGui::IsMouseClicked (0)) {
             uint16_t sid = 0;
             if (multiView.picked (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y), sid))
               multiView.select (sid);
-            else {
-              cLog::log (LOGINFO, fmt::format ("mouse {} {} {},{}",
-                                               ImGui::IsMouseDragging (0), ImGui::IsMouseDown (0),
-                                               ImGui::GetMousePos().x, ImGui::GetMousePos().y));
+            else
               tellyApp.getPlatform().toggleFullScreen();
-              }
             }
-
 
           keyboard();
 
