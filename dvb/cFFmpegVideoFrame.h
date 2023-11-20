@@ -21,13 +21,17 @@ class cFFmpegVideoFrame : public cVideoFrame {
 public:
   cFFmpegVideoFrame() : cVideoFrame(cTexture::eYuv420) {}
   virtual ~cFFmpegVideoFrame() {
-    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::~cFFmpegVideoFrame"));
+    if (kFrameDebug)
+      cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::~cFFmpegVideoFrame"));
     }
 
   void setAVFrame (AVFrame* avFrame) {
     // release old AVframe before owning new AVframe
-    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::setAVFrame"));
+    if (kFrameDebug)
+      cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::setAVFrame"));
+
     releasePixels();
+
     mAvFrame = avFrame;
     mWidth = (uint16_t)avFrame->width;
     mHeight = (uint16_t)avFrame->height;
@@ -42,7 +46,9 @@ protected:
   virtual int* getStrides() final { return mAvFrame->linesize; }
 
   virtual void releasePixels() final {
-    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::~releasePixels"));
+    if (kFrameDebug)
+      cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::~releasePixels"));
+
     if (mAvFrame) {
       // release old AVframe
       AVFrame* avFrame = mAvFrame;

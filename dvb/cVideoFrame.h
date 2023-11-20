@@ -20,7 +20,9 @@ public:
   //{{{
   virtual ~cVideoFrame() {
 
-    cLog::log (LOGINFO, fmt::format ("cVideoFrame::~cVideoFrame"));
+    if (kFrameDebug)
+      cLog::log (LOGINFO, fmt::format ("cVideoFrame::~cVideoFrame"));
+
     releaseResources();
     delete mTexture;
     }
@@ -49,7 +51,9 @@ public:
   //{{{
   virtual void releaseResources() final {
 
-    cLog::log (LOGINFO, fmt::format ("cVideoFrame::releaseResources"));
+    if (kFrameDebug)
+      cLog::log (LOGINFO, fmt::format ("cVideoFrame::releaseResources"));
+
     releasePixels();
 
     mQueueSize = 0;
