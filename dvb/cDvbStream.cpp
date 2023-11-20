@@ -504,97 +504,6 @@ cDvbStream::cService::~cService() {
   }
 //}}}
 
-// get
-//{{{
-bool cDvbStream::cService::isEpgRecord (const string& title, chrono::system_clock::time_point startTime) {
-// return true if startTime, title selected to record in epg
-
-  auto it = mEpgItemMap.find (startTime);
-  if (it != mEpgItemMap.end())
-    if (title == it->second->getTitleString())
-      if (it->second->getRecord())
-        return true;
-
-  return false;
-  }
-//}}}
-//{{{
-cDvbStream::cStream* cDvbStream::cService::getRenderStreamByPid (uint16_t pid) {
-
-  for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
-    cDvbStream::cStream& stream = getRenderStream (eRenderType(renderType));
-    if (stream.isDefined() && (stream.getPid() == pid))
-      return &mRenderStreams[renderType];
-    }
-
-  return nullptr;
-  }
-//}}}
-
-//  sets
-//{{{
-bool cDvbStream::cService::setNow (bool record,
-                                   chrono::system_clock::time_point time, chrono::seconds duration,
-                                   const string& titleString, const string& infoString) {
-
-  if (mNowEpgItem && (mNowEpgItem->getTime() == time))
-    return false;
-
-  delete mNowEpgItem;
-
-  mNowEpgItem = new cEpgItem (true, record, time, duration, titleString, infoString);
-
-  return true;
-  }
-//}}}
-//{{{
-bool cDvbStream::cService::setEpg (bool record,
-                                   chrono::system_clock::time_point startTime, chrono::seconds duration,
-                                   const string& titleString, const string& infoString) {
-// could return true only if changed
-
-  auto it = mEpgItemMap.find (startTime);
-  if (it == mEpgItemMap.end())
-    mEpgItemMap.emplace (startTime, new cEpgItem (false, record, startTime, duration, titleString, infoString));
-  else
-    it->second->set (startTime, duration, titleString, infoString);
-
-  return true;
-  }
-//}}}
-
-//{{{
-void cDvbStream::cService::toggleStream (eRenderType renderType) {
-
-  cStream& stream = getRenderStream (renderType);
-  if (stream.toggle()) {
-    switch (renderType) {
-      case eRenderVideo :
-        stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId(), getRealTime()));
-        return;
-
-      case eRenderAudio :
-      case eRenderDescription:
-        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), getRealTime()));
-        return;
-
-      case eRenderSubtitle :
-        stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId(), getRealTime()));
-        return;
-      }
-    }
-  }
-//}}}
-//{{{
-void cDvbStream::cService::toggleAll() {
-
-  // improve to one on all off , if all off all on
-  toggleStream (eRenderVideo);
-  toggleStream (eRenderAudio);
-  toggleStream (eRenderSubtitle);
-  }
-//}}}
-
 // record
 //{{{
 bool cDvbStream::cService::openFile (const string& fileName, uint16_t tsid) {
@@ -628,6 +537,96 @@ void cDvbStream::cService::closeFile() {
     fclose (mFile);
 
   mFile = nullptr;
+  }
+//}}}
+
+// epg
+//{{{
+bool cDvbStream::cService::isEpgRecord (const string& title, chrono::system_clock::time_point startTime) {
+// return true if startTime, title selected to record in epg
+
+  auto it = mEpgItemMap.find (startTime);
+  if (it != mEpgItemMap.end())
+    if (title == it->second->getTitleString())
+      if (it->second->getRecord())
+        return true;
+
+  return false;
+  }
+//}}}
+//{{{
+bool cDvbStream::cService::setNow (bool record,
+                                   chrono::system_clock::time_point time, chrono::seconds duration,
+                                   const string& titleString, const string& infoString) {
+
+  if (mNowEpgItem && (mNowEpgItem->getTime() == time))
+    return false;
+
+  delete mNowEpgItem;
+
+  mNowEpgItem = new cEpgItem (true, record, time, duration, titleString, infoString);
+
+  return true;
+  }
+//}}}
+//{{{
+bool cDvbStream::cService::setEpg (bool record,
+                                   chrono::system_clock::time_point startTime, chrono::seconds duration,
+                                   const string& titleString, const string& infoString) {
+// could return true only if changed
+
+  auto it = mEpgItemMap.find (startTime);
+  if (it == mEpgItemMap.end())
+    mEpgItemMap.emplace (startTime, new cEpgItem (false, record, startTime, duration, titleString, infoString));
+  else
+    it->second->set (startTime, duration, titleString, infoString);
+
+  return true;
+  }
+//}}}
+
+// stream
+//{{{
+cDvbStream::cStream* cDvbStream::cService::getRenderStreamByPid (uint16_t pid) {
+
+  for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
+    cDvbStream::cStream& stream = getRenderStream (eRenderType(renderType));
+    if (stream.isDefined() && (stream.getPid() == pid))
+      return &mRenderStreams[renderType];
+    }
+
+  return nullptr;
+  }
+//}}}
+//{{{
+void cDvbStream::cService::toggleStream (eRenderType renderType) {
+
+  cStream& stream = getRenderStream (renderType);
+  if (stream.toggle()) {
+    switch (renderType) {
+      case eRenderVideo :
+        stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId(), getRealTime()));
+        return;
+
+      case eRenderAudio :
+      case eRenderDescription:
+        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), getRealTime()));
+        return;
+
+      case eRenderSubtitle :
+        stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId(), getRealTime()));
+        return;
+      }
+    }
+  }
+//}}}
+//{{{
+void cDvbStream::cService::toggleAll() {
+
+  // improve to one on all off , if all off all on
+  toggleStream (eRenderVideo);
+  toggleStream (eRenderAudio);
+  toggleStream (eRenderSubtitle);
   }
 //}}}
 
@@ -1044,7 +1043,7 @@ bool cDvbStream::processPesByPid (cPidInfo& pidInfo, bool skip) {
       stream->setPts (pidInfo.getPts());
       if (stream->isEnabled())
         return stream->getRender().processPes (pidInfo.getPid(),
-                                               pidInfo.mBuffer, pidInfo.getBufUsed(), 
+                                               pidInfo.mBuffer, pidInfo.getBufUsed(),
                                                pidInfo.getPts(), pidInfo.getDts(), skip);
       }
     }

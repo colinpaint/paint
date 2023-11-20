@@ -206,30 +206,13 @@ public:
     cService (uint16_t sid, bool realTime);
     ~cService();
 
-    //{{{  gets
+    // gets
     uint16_t getSid() const { return mSid; }
+    uint16_t getProgramPid() const { return mProgramPid; }
     bool getRealTime() const { return mRealTime; }
 
-    uint16_t getProgramPid() const { return mProgramPid; }
-
-    cStream& getRenderStream (eRenderType renderType) { return mRenderStreams[renderType]; }
-    cStream* getRenderStreamByPid (uint16_t pid);
-
-    bool getChannelRecord() const { return mChannelRecord; }
-    std::string getChannelName() const { return mChannelName; }
-    std::string getChannelRecordName() const { return mChannelRecordName; }
-
-    // epg
-    bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
-
-    cEpgItem* getNowEpgItem() { return mNowEpgItem; }
-    std::string getNowTitleString() const { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
-
-    std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpgItemMap() { return mEpgItemMap; }
-    //}}}
-    //{{{  sets
+    // sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
-
     //{{{
     void setChannelName (const std::string& name, bool record, const std::string& recordName) {
 
@@ -239,23 +222,36 @@ public:
       }
     //}}}
 
+    // record
+    bool getChannelRecord() const { return mChannelRecord; }
+    std::string getChannelName() const { return mChannelName; }
+    std::string getChannelRecordName() const { return mChannelRecordName; }
+    bool openFile (const std::string& fileName, uint16_t tsid);
+    void writePacket (uint8_t* ts, uint16_t pid);
+    void closeFile();
+
     // epg
+    bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
+    cEpgItem* getNowEpgItem() { return mNowEpgItem; }
+    std::string getNowTitleString() const { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
+    std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpgItemMap() { return mEpgItemMap; }
+    //{{{
     bool setNow (bool record,
                  std::chrono::system_clock::time_point time, std::chrono::seconds duration,
                  const std::string& str1, const std::string& str2);
-
+    //}}}
+    //{{{
     bool setEpg (bool record,
                  std::chrono::system_clock::time_point startTime, std::chrono::seconds duration,
                  const std::string& titleString, const std::string& infoString);
     //}}}
 
+    // stream
+    cStream& getRenderStream (eRenderType renderType) { return mRenderStreams[renderType]; }
+    cStream* getRenderStreamByPid (uint16_t pid);
+
     void toggleStream (eRenderType renderType);
     void toggleAll();
-
-    // record
-    bool openFile (const std::string& fileName, uint16_t tsid);
-    void writePacket (uint8_t* ts, uint16_t pid);
-    void closeFile();
 
   private:
     uint8_t* tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount);
@@ -264,25 +260,26 @@ public:
     void writePmt();
     void writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr);
 
+    //{{{  vars
     // var
     const uint16_t mSid;
     const bool mRealTime;
 
     uint16_t mProgramPid = 0;
 
-    // match sizeof eRenderType
-    std::array <cStream,4> mRenderStreams;
-
+    // record
     std::string mChannelName;
     bool mChannelRecord = false;
     std::string mChannelRecordName;
+    FILE* mFile = nullptr;
 
     // epg
     cEpgItem* mNowEpgItem = nullptr;
     std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpgItemMap;
 
-    // record
-    FILE* mFile = nullptr;
+    // streams - match sizeof eRenderType
+    std::array <cStream,4> mRenderStreams;
+    //}}}
     };
   //}}}
 

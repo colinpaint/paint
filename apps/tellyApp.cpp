@@ -97,6 +97,21 @@ namespace {
       }
     //}}}
     //{{{
+    bool hover() {
+    // run for every item to ensure mHover flag get set
+
+      bool result = false;
+
+      for (auto& view : mViewMap)
+        if (view.second.hover())
+          result = true;;
+
+      mHoverView = result;
+      return result;
+      }
+    //}}}
+
+    //{{{
     void select (uint16_t sid) {
 
       if (mSelected)
@@ -133,11 +148,24 @@ namespace {
 
       // draw selected view, if not selected draw all views
       size_t viewIndex = 0;
-      for (auto& view : mViewMap)
-        if (!mSelected || (view.first == mSelectedSid))
-          view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), scale, viewIndex++);
+      for (auto& view : mViewMap) {
+        if (!mSelected || (view.first == mSelectedSid)) {
+          if (!view.second.getHover())
+            view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), scale, viewIndex);
+          viewIndex++;
+          }
         else // keep trimming ??? wrong ????
           view.second.trim();
+        }
+
+      viewIndex = 0;
+      for (auto& view : mViewMap) {
+        if (!mSelected || (view.first == mSelectedSid)) {
+          if (view.second.getHover())
+            view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), scale * 1.5f, viewIndex);
+          viewIndex++;
+          }
+        }
       }
     //}}}
 
@@ -148,7 +176,17 @@ namespace {
       cView (cDvbStream::cService& service) : mService(service) {}
       ~cView() = default;
 
+      bool getHover() const { return mHover; }
+
       bool picked (cVec2 pos) { return mRect.isInside (pos); }
+      //{{{
+      bool hover() {
+        mHover = ImGui::IsMouseHoveringRect (ImVec2 ((float)mRect.left, (float)mRect.top),
+                                             ImVec2 ((float)mRect.right, (float)mRect.bottom));
+        return mHover;
+        }
+      //}}}
+
       //{{{
       void trim() {
 
@@ -167,6 +205,7 @@ namespace {
           videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
         }
       //}}}
+
       //{{{
       void draw (cGraphics& graphics, bool selected, size_t numViews, float scale, size_t viewIndex) {
 
@@ -523,6 +562,8 @@ namespace {
       // vars
       cDvbStream::cService& mService;
 
+      bool mHover = false;
+
       cFramesView mFramesView;
       cAudioPowerView mAudioPowerView;
 
@@ -538,6 +579,8 @@ namespace {
 
     bool mSelected = false;
     uint16_t mSelectedSid = 0;
+
+    bool mHoverView = false;
 
     inline static cTextureShader* mSubtitleShader = nullptr;
     };
@@ -722,6 +765,10 @@ namespace {
             case eServices:  drawServices (dvbStream, graphics); break;
             case ePids:      drawPidMap (dvbStream, graphics); break;
             case eRecorded:  drawRecorded (dvbStream, graphics); break;
+            }
+
+          if (multiView.hover()) {
+            cLog::log (LOGINFO, fmt::format ("mouse hover"));
             }
 
           if (ImGui::IsMouseClicked (0)) {
