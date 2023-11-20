@@ -784,7 +784,7 @@ private:
             }
 
           xpos = parse4bit (buf, uint16_t(bufEnd - buf),
-                            region.mPixBuf + (ypos * region.mWidth), region.mWidth, xpos, nonModifyColor);
+                            region.mPixBuf + (ypos * region.mWidth), (uint32_t)region.mWidth, xpos, nonModifyColor);
           region.mDirty = true;
           break;
 
