@@ -283,8 +283,8 @@ private:
     uint8_t mId = 0;
     uint8_t mVersion = 0xFF;
 
-    uint32_t mWidth = 0;  // uint32_t to ensure width * height ok
-    uint32_t mHeight = 0;
+    size_t mWidth = 0;  // uint32_t to ensure width * height ok
+    size_t mHeight = 0;
     uint8_t* mPixBuf = nullptr;
     bool mDirty = false;
 
@@ -865,7 +865,7 @@ private:
         image.setXpos (regionDisplay.mXpos + offsetX);
         image.setYpos (regionDisplay.mYpos + offsetY);
 
-        bool imageSizeChanged = (image.getWidth() != (int)region.mWidth) || (image.getHeight() != (int)region.mHeight);
+        bool imageSizeChanged = (image.getWidth() != region.mWidth) || (image.getHeight() != region.mHeight);
         image.setWidth (region.mWidth);
         image.setHeight (region.mHeight);
 

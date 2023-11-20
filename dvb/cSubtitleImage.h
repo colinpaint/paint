@@ -17,9 +17,9 @@ public:
   int getXpos() const { return mX; }
   int getYpos() const { return mY; }
 
-  int getWidth() const { return mWidth; }
-  int getHeight() const { return mHeight; }
-  cPoint getSize() const { return cPoint(mWidth, mHeight); }
+  size_t getWidth() const { return mWidth; }
+  size_t getHeight() const { return mHeight; }
+  cPoint getSize() const { return cPoint((int32_t)mWidth, (int32_t)mHeight); }
 
   bool isDirty() const { return mDirty; }
   bool hasPixels() { return mPixels; }
@@ -27,8 +27,8 @@ public:
 
   void setXpos (int x) { mX = x; }
   void setYpos (int y) { mY = y; }
-  void setWidth (int width) { mWidth = width; }
-  void setHeight (int height) { mHeight = height; }
+  void setWidth (size_t width) { mWidth = width; }
+  void setHeight (size_t height) { mHeight = height; }
 
   void setDirty (bool dirty) { mDirty = dirty; }
 
@@ -44,7 +44,7 @@ public:
     }
   //}}}
   //{{{
-  void setPixels (int width, int height, uint8_t* pixBuf) {
+  void setPixels (size_t width, size_t height, uint8_t* pixBuf) {
 
     // lookup region->mPixBuf through lut to produce mPixels
     uint32_t* ptr = (uint32_t*)mPixels;
@@ -64,8 +64,8 @@ private:
   int mX = 0;
   int mY = 0;
 
-  int mWidth = 0;
-  int mHeight = 0;
+  size_t mWidth = 0;
+  size_t mHeight = 0;
 
   bool mDirty = false;
   uint8_t* mPixels = nullptr;
