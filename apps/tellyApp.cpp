@@ -73,7 +73,6 @@ namespace {
   #endif
   //}}}
 
-  cTextureShader* gSubtitleShader = nullptr;
   //{{{
   class cMultiView {
   public:
@@ -128,6 +127,9 @@ namespace {
           // not enabled and found, remove service from viewMap
           mViewMap.erase (it);
         }
+
+      if (!mSubtitleShader)
+        mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
 
       // draw selected view, if not selected draw all views
       size_t viewIndex = 0;
@@ -202,10 +204,7 @@ namespace {
         cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (mService.getRenderStream (eRenderSubtitle).getRender());
         if (mService.getRenderStream (eRenderAudio).isEnabled()) {
           //{{{  draw subtitles
-          // ensure there is a subtitleShader, use it
-          if (!gSubtitleShader)
-            gSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
-          gSubtitleShader->use();
+          mSubtitleShader->use();
 
           for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
             cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
@@ -228,7 +227,7 @@ namespace {
             mModel.size ({ scale, scale });
 
             cMat4x4 projection (0.f,(float)mRect.getWidth(), 0.f,(float)mRect.getHeight(), -1.f,1.f);
-            gSubtitleShader->setModelProjection (mModel, projection);
+            mSubtitleShader->setModelProjection (mModel, projection);
 
             // ??? should check sameSize ???
             if (!mSubtitleQuads[line])
@@ -539,6 +538,8 @@ namespace {
 
     bool mSelected = false;
     uint16_t mSelectedSid = 0;
+
+    inline static cTextureShader* mSubtitleShader = nullptr;
     };
   //}}}
   //{{{
