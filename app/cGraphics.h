@@ -8,7 +8,7 @@
 
 struct ImDrawData;
 //}}}
-constexpr bool kTextureDebug = true;
+constexpr bool kTextureDebug = false;
 
 // base classes
 //{{{

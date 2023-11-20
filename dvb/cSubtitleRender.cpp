@@ -58,7 +58,7 @@ cSubtitleImage& cSubtitleRender::getImage (size_t line) {
   }
 //}}}
 
-// decoder callbacks
+// decoder callbacks - ??? should mak ethem work for pts presentation ????
 //{{{
 cFrame* cSubtitleRender::getFrame() {
   return new cSubtitleFrame();
