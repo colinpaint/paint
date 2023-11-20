@@ -557,8 +557,8 @@ namespace {
 
     //{{{
     void liveDvbSource (const cDvbMultiplex& dvbMultiplex, const string& recordRoot, bool showAllServices) {
+    // create liveDvbSource from dvbMultiplex
 
-      // create liveDvbSource from dvbMultiplex
       mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, true, showAllServices, false);
       if (mDvbStream)
         mDvbStream->dvbSource();
@@ -568,11 +568,10 @@ namespace {
     //}}}
     //{{{
     void fileSource (const string& filename, bool showAllServices) {
+    // create fileSource, any channel
 
-      string resolvedFilename = cFileUtils::resolve (filename);
-
-      // create fileSource, any channel
       mDvbStream = new cDvbStream (kMultiplexes[0], "", false, showAllServices, true);
+      string resolvedFilename = cFileUtils::resolve (filename);
       if (mDvbStream)
         mDvbStream->fileSource (resolvedFilename);
       else
