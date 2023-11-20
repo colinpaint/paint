@@ -7,7 +7,6 @@
 #include <functional>
 
 #include "../common/cLog.h"
-#include "../common/utils.h"
 
 extern "C" {
   #include <libavcodec/avcodec.h>
@@ -17,7 +16,8 @@ extern "C" {
   #include <libavutil/frame.h>
   }
 
-#include "cFFmpegVideoFrame.h"
+#include "cDecoder.h"
+#include "cFrame.h"
 //}}}
 
 namespace {

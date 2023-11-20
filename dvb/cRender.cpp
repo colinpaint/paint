@@ -9,6 +9,8 @@
 
 #include "../common/cLog.h"
 
+#include "cDecoder.h"
+
 using namespace std;
 //}}}
 constexpr size_t kAudioFrameMapSize = 16;

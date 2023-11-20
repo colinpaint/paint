@@ -13,6 +13,7 @@ extern "C" {
   #include "libavformat/avformat.h"
   }
 
+#include "cDecoder.h"
 #include "cAudioFrame.h"
 //}}}
 
