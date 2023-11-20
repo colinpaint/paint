@@ -309,22 +309,22 @@ namespace {
       cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (mService.getRenderStream (eRenderSubtitle).getRender());
       if (mService.getRenderStream (eRenderAudio).isEnabled()) {
         //{{{  draw subtitles
-        // ensure shader is created
+        // ensure there is a subtitleShader, use it
         if (!gSubtitleShader)
           gSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
         gSubtitleShader->use();
 
         for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
-          if (!mSubtitleTextures[line]) // create texture
-            mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba,
-                                                              { subtitleRender.getImage (line).mWidth,
-                                                                subtitleRender.getImage (line).mHeight });
+          cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
+
+          if (!mSubtitleTextures[line])
+            mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
           mSubtitleTextures[line]->setSource();
 
           // update subtitle texture if image dirty
-          if (subtitleRender.getImage (line).mDirty)
-            mSubtitleTextures[line]->setPixels (&subtitleRender.getImage (line).mPixels, nullptr);
-          subtitleRender.getImage (line).mDirty = false;
+          if (subtitleImage.mDirty)
+            mSubtitleTextures[line]->setPixels (&subtitleImage.mPixels, nullptr);
+          subtitleImage.mDirty = false;
 
           // reuse mode, could use original more
           mModel = cMat4x4();
@@ -337,10 +337,10 @@ namespace {
           cMat4x4 projection (0.f,mRect.getWidth(), 0.f,mRect.getHeight(), -1.f,1.f);
           gSubtitleShader->setModelProjection (mModel, projection);
 
-          // ensure quad is created
-          if (!mQuad)
-            mQuad = graphics.createQuad (mSubtitleTextures[line]->getSize());
-          mQuad->draw();
+          // ??? should check sameSize ???
+          if (!mSubtitleQuads[line])
+            mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
+          mSubtitleQuads[line]->draw();
           }
         }
         //}}}
@@ -463,13 +463,14 @@ namespace {
     cDvbStream::cService& mService;
     const size_t mIndex;
 
-    cRect mRect = { 0,0,0,0 };
-    cQuad* mQuad = nullptr;
-    cMat4x4 mModel;
-
     cFramesView mFramesView;
     cAudioPowerView mAudioPowerView;
-    array <cTexture*,4> mSubtitleTextures =  { nullptr };
+
+    cMat4x4 mModel;
+    cRect mRect = { 0,0,0,0 };
+
+    array <cQuad*,4> mSubtitleQuads = { nullptr };
+    array <cTexture*,4> mSubtitleTextures = { nullptr };
     };
   //}}}
   //{{{

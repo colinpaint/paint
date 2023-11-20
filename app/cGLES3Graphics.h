@@ -13,7 +13,6 @@
 #include "../common/cLog.h"
 #include "fmt/format.h"
 //}}}
-constexpr bool kCreateDebug = true;
 
 class cGLES3Graphics : public cGraphics {
 public:
@@ -127,7 +126,7 @@ private:
     //{{{
     cOpenGLES3RgbaTexture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
 
-      if (kCreateDebug)
+      if (kTextureDebug)
         cLog::log (LOGINFO, fmt::format ("cOpenGLES3RgbaTexture create texture {}x{}", size.x, size.y));
 
       glGenTextures (1, &mTextureId);
@@ -145,7 +144,8 @@ private:
     //}}}
     //{{{
     virtual ~cOpenGLES3RgbaTexture() {
-      if (kCreateDebug)
+
+      if (kTextureDebug)
         cLog::log (LOGINFO, fmt::format ("cOpenGLES3RgbaTexture - deleting texture {}x{}", mSize.x, mSize.y));
 
       glDeleteTextures (1, &mTextureId);
@@ -180,7 +180,7 @@ private:
     //{{{
     cOpenGLES3Yuv420Texture (eTextureType textureType, const cPoint& size) : cTexture(textureType, size) {
 
-      if (kCreateDebug)
+      if (kTextureDebug)
         cLog::log (LOGINFO, fmt::format ("cOpenGLES3Yuv420Texture - create texture {}x{}", size.x, size.y));
 
       glGenTextures (3, mTextureId.data());
@@ -213,7 +213,7 @@ private:
     //{{{
     virtual ~cOpenGLES3Yuv420Texture() {
 
-      if (kCreateDebug)
+      if (kTextureDebug)
         cLog::log (LOGINFO, fmt::format ("cOpenGLES3Yuv420Texture delete texture {}x{}", mSize.x, mSize.y));
 
       glDeleteTextures (3, mTextureId.data());

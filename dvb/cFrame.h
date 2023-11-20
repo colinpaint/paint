@@ -4,7 +4,7 @@
 #include <cstdint>
 #include "../common/cLog.h"
 //}}}
-constexpr bool kFrameDebug = true;
+constexpr bool kFrameDebug = false;
 
 // base class
 class cFrame {

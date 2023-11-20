@@ -891,19 +891,20 @@ private:
         memcpy (&image.mColorLut, &getColorLut (region.mColorLut).m16bgra, sizeof (image.mColorLut));
 
         // allocate pixels - ??? possible race with gui ????
-        if (imageSizeChanged && image.mPixels) {
+        if (image.mPixels  && imageSizeChanged) {
+          // realloc mPixels
           free (image.mPixels);
           image.mPixels = nullptr;
           }
         if (!image.mPixels)
           image.mPixels = (uint8_t*)malloc (image.mWidth * image.mHeight * sizeof(uint32_t));
 
-        // region->mPixBuf lut -> mPixels
+        // lookup region->mPixBuf through lut to produce mPixels
         uint32_t* ptr = (uint32_t*)image.mPixels;
         for (uint32_t i = 0; i < region.mWidth * region.mHeight; i++)
           *ptr++ = image.mColorLut[region.mPixBuf[i]];
 
-        // set image dirty flag to signal gui to update texture
+        // set image dirtyFlag, signal gui to reload texture
         image.mDirty = true;
 
         // reset region dirty flag

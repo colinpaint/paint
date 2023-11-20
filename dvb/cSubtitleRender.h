@@ -8,33 +8,12 @@
 #include <vector>
 #include <array>
 
+#include "../common/basicTypes.h"
 #include "../common/cMiniLog.h"
 
+#include "cSubtitleImage.h"
+
 class cTexture;
-//}}}
-
-//{{{
-class cSubtitleImage {
-public:
-  cSubtitleImage() {}
-  ~cSubtitleImage() {
-    free (mPixels);
-    }
-
-  uint8_t mPageState = 0;
-  uint8_t mPageVersion = 0;
-
-  int mX = 0;
-  int mY = 0;
-  int mWidth = 0;
-  int mHeight = 0;
-
-  bool mDirty = false;
-  std::array <uint32_t,16> mColorLut = {0};
-  uint8_t* mPixels = nullptr;
-
-  cTexture* mTexture = nullptr;
-  };
 //}}}
 
 class cSubtitleRender : public cRender {

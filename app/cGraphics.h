@@ -8,8 +8,9 @@
 
 struct ImDrawData;
 //}}}
+constexpr bool kTextureDebug = true;
 
-// abstract base classes
+// base classes
 //{{{
 class cShader {
 // abstract bas class for all shaders
@@ -46,13 +47,12 @@ public:
   virtual ~cTexture() = default;
 
   /// gets
+  virtual void* getTextureId() = 0;
   eTextureType getTextureType() const { return mTextureType; }
 
   int32_t getWidth() const { return mSize.x; }
   int32_t getHeight() const { return mSize.y; }
   const cPoint getSize() const { return mSize; }
-
-  virtual void* getTextureId() = 0;
 
   virtual void setPixels (uint8_t** pixels, int* strides) = 0;
   virtual void setSource() = 0;
@@ -127,6 +127,7 @@ protected:
 
   uint32_t mFrameBufferObject = 0;
   uint32_t mColorTextureId = 0;
+
   uint8_t* mPixels = nullptr;
   cRect mDirtyPixelsRect = cRect(0,0,0,0);
   };
