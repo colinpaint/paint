@@ -5,15 +5,8 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
-#include <array>
 
-#include "../common/basicTypes.h"
-#include "../common/cMiniLog.h"
-
-#include "cSubtitleImage.h"
-
-class cTexture;
+class cSubtitleImage;
 //}}}
 
 class cSubtitleRender : public cRender {

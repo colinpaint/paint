@@ -2,6 +2,8 @@
 //{{{  includes
 #pragma once
 #include <cstdint>
+#include <string>
+
 #include "../common/cLog.h"
 //}}}
 constexpr bool kFrameDebug = false;

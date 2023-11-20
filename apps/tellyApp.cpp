@@ -29,6 +29,7 @@
 #include "../dvb/cAudioRender.h"
 #include "../dvb/cAudioFrame.h"
 #include "../dvb/cSubtitleRender.h"
+#include "../dvb/cSubtitleImage.h"
 
 // app
 #include "../app/cApp.h"
