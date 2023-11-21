@@ -20,7 +20,8 @@
 #include "../common/utils.h"
 #include "../common/fileUtils.h"
 #include "../common/cLog.h"
-#include "fmt/format.h"
+#include "../common/cFileView.h"
+#include "../fmt/include/fmt/format.h"
 
 // song
 #include "../song/cSong.h"
@@ -34,8 +35,6 @@
 #include "../app/cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
-
-#include "../common/cFileView.h"
 
 using namespace std;
 //}}}
@@ -867,21 +866,21 @@ int main (int numArgs, char* args[]) {
 
   // parse and remove recognised params
   for (auto it = params.begin(); it < params.end();) {
-    if (*it == "full") { 
-      fullScreen = true; 
+    if (*it == "full") {
+      fullScreen = true;
       params.erase (it);
       }
-    else if (*it == "log1") { 
-      logLevel = LOGINFO1; 
-      params.erase (it); 
+    else if (*it == "log1") {
+      logLevel = LOGINFO1;
+      params.erase (it);
       }
-    else if (*it == "log2") { 
-      logLevel = LOGINFO2; params.erase (it); 
+    else if (*it == "log2") {
+      logLevel = LOGINFO2; params.erase (it);
       }
-    else if (*it == "log3") { 
-      logLevel = LOGINFO3; params.erase (it); 
+    else if (*it == "log3") {
+      logLevel = LOGINFO3; params.erase (it);
       }
-    else 
+    else
       ++it;
     };
   //}}}

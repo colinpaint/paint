@@ -18,7 +18,7 @@
 #include "../common/utils.h"
 #include "../common/fileUtils.h"
 #include "../common/cLog.h"
-#include "fmt/format.h"
+#include "../fmt/include/fmt/format.h"
 
 // app
 #include "../app/cApp.h"
@@ -28,7 +28,6 @@
 #include "../app/cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
-// app
 
 using namespace std;
 //}}}

@@ -25,9 +25,8 @@
 #include "../common/utils.h"
 #include "../common/fileUtils.h"
 #include "../common/cLog.h"
-#include "fmt/format.h"
-
 #include "../common/cFileView.h"
+#include "../fmt/include/fmt/format.h"
 
 // app
 #include "../app/cApp.h"

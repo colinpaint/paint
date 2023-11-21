@@ -16,7 +16,7 @@ RelWithDebInfo
 *.opensdf
 
 build/*
-windowsBuild/*
+wbuild/*
 
 font/build/*
 

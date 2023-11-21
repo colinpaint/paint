@@ -21,7 +21,7 @@
 #include "../common/utils.h"
 #include "../common/fileUtils.h"
 #include "../common/cLog.h"
-#include "fmt/format.h"
+#include "../fmt/include/fmt/format.h"
 
 // dvb
 #include "../dvb/cDvbStream.h"
@@ -123,7 +123,7 @@ namespace {
 
     // draw
     //{{{
-    void draw (cDvbStream& dvbStream, cGraphics& graphics, float scale) {
+    void draw (cDvbStream& dvbStream, cGraphics& graphics) {
 
       // update viewMap with enabled services, taking care to preserve cView's
       for (auto& pair : dvbStream.getServiceMap()) {
@@ -147,26 +147,10 @@ namespace {
       // draw selected view, if not selected draw all views
       size_t viewIndex = 0;
       for (auto& view : mViewMap) {
-        if (!mSelected || (view.first == mSelectedSid)) {
-          if (!view.second.getHover())
-            view.second.draw (graphics,
-                              mSelected, mSelected ? 1 : getNumViews(), mHover ? scale * 0.98f : scale,
-                              viewIndex);
-          viewIndex++;
-          }
-        else // keep trimming ??? wrong ????
+        if (!mSelected || (view.first == mSelectedSid))
+          view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), viewIndex++);
+        else
           view.second.trim();
-        }
-
-      viewIndex = 0;
-      for (auto& view : mViewMap) {
-        if (!mSelected || (view.first == mSelectedSid)) {
-          if (view.second.getHover())
-            view.second.draw (graphics,
-                              mSelected, mSelected ? 1 : getNumViews(), mSelected ? scale : scale * 1.5f,
-                              viewIndex);
-          viewIndex++;
-          }
         }
       }
     //}}}
@@ -209,9 +193,9 @@ namespace {
       //}}}
 
       //{{{
-      void draw (cGraphics& graphics, bool selected, size_t numViews, float scale, size_t viewIndex) {
+      void draw (cGraphics& graphics, bool selected, size_t numViews, size_t viewIndex) {
 
-        scale *= (numViews <= 1) ? 1.f : ((numViews <= 4) ? 0.5f : ((numViews <= 9) ? 0.33f : 0.25f));
+        float scale = (numViews <= 1) ? 1.f : ((numViews <= 4) ? 0.5f : ((numViews <= 9) ? 0.33f : 0.25f));
 
         cVideoRender& videoRender = dynamic_cast<cVideoRender&> (mService.getRenderStream (eRenderVideo).getRender());
 
@@ -678,7 +662,7 @@ namespace {
 
         // draw multiView tellys as background
         if (tellyApp.hasDvbStream())
-          multiView.draw (tellyApp.getDvbStream(), graphics, mScale);
+          multiView.draw (tellyApp.getDvbStream(), graphics);
 
         //{{{  draw tabs
         ImGui::SameLine();
@@ -691,12 +675,6 @@ namespace {
           if (toggleButton ("full", tellyApp.getPlatform().getFullScreen()))
             tellyApp.getPlatform().toggleFullScreen();
           }
-        //}}}
-        //{{{  draw scale
-        ImGui::SameLine();
-
-        ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
-        ImGui::DragFloat ("##scale", &mScale, 0.01f, 0.05f, 16.f, "scale%3.2f");
         //}}}
         //{{{  draw vsync
         ImGui::SameLine();
@@ -1090,7 +1068,6 @@ namespace {
       array <size_t, 4> mPidMaxChars = { 3 };
       //array <size_t, 4> mPidMaxChars = { 3 };
 
-      float mScale = 1.f;
       float mOverlap = 4.f;
       int mHistory = 0;
 
