@@ -43,7 +43,6 @@
 
 using namespace std;
 //}}}
-
 namespace {
   //{{{
   const vector <cDvbMultiplex> kMultiplexes = {
@@ -72,7 +71,6 @@ namespace {
     const string kRootDir = "/home/pi/tv/";
   #endif
   //}}}
-
   //{{{
   class cMultiView {
   public:
@@ -205,7 +203,7 @@ namespace {
           cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
           playerPts = audioRender.getPlayerPts();
 
-          audioRender.setMute (!selected && !mHover);
+          audioRender.setMute (!selected);
           }
           //}}}
 
@@ -222,6 +220,10 @@ namespace {
           mModel.size (scaledSize);
           mRect = videoRender.drawFrame (videoFrame, graphics, mModel,
                                          ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+          if (mHover)
+            ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top}, { (float)mRect.right, (float)mRect.bottom },
+                                                 0xffc0ffff);
+
           // crude management of videoFrame cache
           videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
           }
