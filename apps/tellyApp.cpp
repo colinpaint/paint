@@ -73,10 +73,10 @@ namespace {
   #endif
   //}}}
   //{{{
-  class cView {
+  class cServiceView {
   public:
-    cView (cTransportStream::cService& service) : mService(service) {}
-    ~cView() = default;
+    cServiceView (cTransportStream::cService& service) : mService(service) {}
+    ~cServiceView() = default;
 
     bool getHover() const { return mHover; }
 
@@ -373,6 +373,7 @@ namespace {
       const float mPixelsPerAudioChannel = 6.f;
       };
     //}}}
+    static const size_t kMaxSubtitleLines = 3;
 
     //{{{
     cVec2 position (size_t index, size_t numViews) {
@@ -481,10 +482,11 @@ namespace {
     cFramesView mFramesView;
     cAudioPowerView mAudioPowerView;
 
+    // subtitle
     cMat4x4 mModel;
     cRect mRect = { 0,0,0,0 };
-    array <cQuad*,3> mSubtitleQuads = { nullptr };
-    array <cTexture*,3> mSubtitleTextures = { nullptr };
+    array <cQuad*,kMaxSubtitleLines> mSubtitleQuads = { nullptr };
+    array <cTexture*,kMaxSubtitleLines> mSubtitleTextures = { nullptr };
     };
   //}}}
   //{{{
@@ -494,7 +496,7 @@ namespace {
     ~cMultiView() = default;
 
     // gets
-    size_t getNumViews() const { return mViewMap.size(); }
+    size_t getNumViews() const { return mServiceView.size(); }
     uint16_t getSelectedSid() const { return mSelectedSid; }
 
     //{{{
@@ -502,18 +504,20 @@ namespace {
     // run for every item to ensure mHover flag get set
 
       bool result = false;
-      for (auto& view : mViewMap)
+
+      for (auto& view : mServiceView)
         if (view.second.hover())
           result = true;;
-      mHover = result;
 
+      mHover = result;
       return result;
       }
     //}}}
     //{{{
     bool picked (cVec2 pos, uint16_t& sid) {
+    // pick first view that matches
 
-      for (auto& view : mViewMap)
+      for (auto& view : mServiceView)
         if (view.second.picked (pos)) {
           sid = view.first;
           return true;
@@ -524,42 +528,39 @@ namespace {
     //}}}
     //{{{
     void select (uint16_t sid) {
+    // toggle select
 
+      mSelected = !mSelected;
       if (mSelected)
-        mSelected = false;
-      else {
-        mSelected = true;
         mSelectedSid = sid;
-        }
       }
     //}}}
 
-    // draw
     //{{{
     void draw (cTransportStream& transportStream, cGraphics& graphics) {
 
-      if (!cView::mSubtitleShader)
-        cView::mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
+      if (!cServiceView::mSubtitleShader)
+        cServiceView::mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
 
-      // update viewMap from enabled services, taking care to reuse cView's
+      // update serviceViewMap from enabled services, take care to reuse cServiceView's
       for (auto& pair : transportStream.getServiceMap()) {
         cTransportStream::cService& service = pair.second;
 
-        // look for service sid in viewMap
-        auto it = mViewMap.find (pair.first);
-        if (it == mViewMap.end()) {
+        // find service sid in serviceViewMap
+        auto it = mServiceView.find (pair.first);
+        if (it == mServiceView.end()) {
           if (service.getRenderStream (eRenderVideo).isEnabled())
-            // enabled and not found, add service to viewMap
-            mViewMap.emplace (service.getSid(), cView (service));
+            // enabled and not found, add service to serviceViewMap
+            mServiceView.emplace (service.getSid(), cServiceView (service));
           }
         else if (!service.getRenderStream (eRenderVideo).isEnabled())
-          // not enabled and found, remove service from viewMap
-          mViewMap.erase (it);
+          // found, but not enabled, remove service from serviceViewMap
+          mServiceView.erase (it);
         }
 
       // draw views
       size_t viewIndex = 0;
-      for (auto& view : mViewMap) {
+      for (auto& view : mServiceView) {
         if (!mSelected || (view.first == mSelectedSid))
           view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), viewIndex++);
         else
@@ -569,8 +570,7 @@ namespace {
     //}}}
 
   private:
-    // vars
-    map <uint16_t, cView> mViewMap;
+    map <uint16_t, cServiceView> mServiceView;
 
     bool mHover = false;
     bool mSelected = false;
@@ -719,7 +719,7 @@ namespace {
         //{{{  draw transportStream packet,errors
         ImGui::SameLine();
 
-        ImGui::TextUnformatted (fmt::format ("{}:{}", transportStream.getNumPackets(), 
+        ImGui::TextUnformatted (fmt::format ("{}:{}", transportStream.getNumPackets(),
                                                       transportStream.getNumErrors()).c_str());
         //}}}
 

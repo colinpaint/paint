@@ -30,12 +30,10 @@ using namespace std;
 //}}}
 constexpr int kSamplesWait = 2;
 
-//{{{
 cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
     : mAudioRender(audioRender), mSampleRate(sampleRate) {
 
   mPlayerThread = thread ([=]() {
-
     array <float,2048*2> samples = { 0.f };
     array <float,2048*2> silence = { 0.f };
 
@@ -186,12 +184,9 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
 
   mPlayerThread.detach();
   }
-//}}}
-//{{{
-cPlayer::~cPlayer() {
 
+cPlayer::~cPlayer() {
   mExit = true;
   while (mRunning)
     this_thread::sleep_for (10ms);
   }
-//}}}

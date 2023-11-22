@@ -1,4 +1,4 @@
-// cTransportStream.cpp - file or dvbSource demux
+// cTransportStream.cpp - file,dvbSource transport stream demux
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -21,9 +21,9 @@
 #include <sys/stat.h>
 
 #include "../common/date.h"
-#include "../common/cLog.h"
 #include "../common/utils.h"
 #include "../common/cDvbUtils.h"
+#include "../common/cLog.h"
 
 #include "cDvbSource.h"
 #include "cVideoRender.h"

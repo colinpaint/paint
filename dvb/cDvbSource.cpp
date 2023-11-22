@@ -1,4 +1,4 @@
-// cDvbSource.cpp
+// cDvbSource.cpp - get live DVB source
 //{{{  includes
 #ifdef _WIN32
   //{{{  windows
