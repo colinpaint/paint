@@ -14,7 +14,6 @@
 #include <chrono>
 #include <mutex>
 
-class cDvbSource;
 class cRender;
 //}}}
 
@@ -303,16 +302,7 @@ public:
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
   bool getRealTime() const { return mRealTime; }
-
-  // dvbSource
-  bool hasDvbSource() const { return mDvbSource; }
-  std::string getErrorString() { return mErrorString; }
-  std::string getSignalString() { return mSignalString; }
   //}}}
-
-  // launch source thread
-  void dvbSource();
-  void fileSource (const std::string& fileName);
 
   void toggleStream (cService& service, eRenderType renderType);
 
@@ -368,7 +358,6 @@ private:
   std::map <uint16_t, cService> mServiceMap;
 
   // dvbSource
-  cDvbSource* mDvbSource = nullptr;
   std::string mErrorString;
   std::string mSignalString;
   uint64_t mLastErrors = 0;

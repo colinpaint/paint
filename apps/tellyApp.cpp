@@ -44,6 +44,7 @@
 #include "../font/droidSansMono.h"
 
 // dvb
+#include "../dvb/cDvbSource.h"
 #include "../dvb/cTransportStream.h"
 #include "../dvb/cVideoRender.h"
 #include "../dvb/cVideoFrame.h"
@@ -656,9 +657,75 @@ namespace {
     void liveDvbSource (const cDvbMultiplex& dvbMultiplex, const string& recordRoot, bool showAllServices) {
     // create liveDvbSource from dvbMultiplex
 
+      if (dvbMultiplex.mFrequency)
+        mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
+
       mTransportStream = new cTransportStream (dvbMultiplex, recordRoot, true, showAllServices, false);
-      if (mTransportStream)
-        mTransportStream->dvbSource();
+      if (mTransportStream) {
+        thread([=, &dvbMultiplex, &recordRoot]() {
+          cLog::setThreadName ("dvb");
+
+          FILE* mFile = dvbMultiplex.mRecordAll ?
+            fopen ((recordRoot + dvbMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
+
+          #ifdef _WIN32
+            //{{{  windows
+            mDvbSource->run();
+
+            int64_t streamPos = 0;
+            int blockSize = 0;
+
+            while (true) {
+              auto ptr = mDvbSource->getBlockBDA (blockSize);
+              if (blockSize) {
+                //  read and demux block
+                if (mFile)
+                  fwrite (ptr, 1, blockSize, mFile);
+
+                streamPos += mTransportStream->demux (ptr, blockSize, streamPos, false);
+                mDvbSource->releaseBlock (blockSize);
+                }
+              else
+                this_thread::sleep_for (1ms);
+              }
+            //}}}
+          #else
+            //{{{  linux
+            constexpr int kDvrReadBufferSize = 188 * 256;
+            uint8_t* buffer = new uint8_t[kDvrReadBufferSize];
+
+            uint64_t streamPos = 0;
+            while (true) {
+              int bytesRead = mDvbSource->getBlock (buffer, kDvrReadBufferSize);
+              if (bytesRead == 0)
+                cLog::log (LOGINFO, fmt::format ("cDvb grabThread no bytes read"));
+              else {
+                // demux
+                streamPos += mTransportStream->demux (buffer, bytesRead, 0, false);
+                if (mFile)
+                  fwrite (buffer, 1, bytesRead, mFile);
+
+                // get status
+                mSignalString = mDvbSource->getStatusString();
+
+                // log if more errors
+                bool show = getNumErrors() != mLastErrors;
+                mLastErrors = getNumErrors();
+                if (show)
+                  cLog::log (LOGINFO, fmt::format ("err:{} {}", getNumErrors(), mSignalString));
+                }
+              }
+
+            delete [] buffer;
+            //}}}
+          #endif
+
+          if (mFile)
+            fclose (mFile);
+
+          cLog::log (LOGINFO, "exit");
+          }).detach();
+        }
       else
         cLog::log (LOGINFO, "cTellyApp::setLiveDvbSource - failed to create liveDvbSource");
       }
@@ -681,8 +748,14 @@ namespace {
     uint64_t getFilePos() const { return mFilePos; }
     size_t getFileSize() const { return mFileSize; }
 
-  private:
+    // dvbSource
+    bool isDvbSource() const { return mDvbSource; }
+
+    // vars
     cTransportStream* mTransportStream = nullptr;
+    cDvbSource* mDvbSource = nullptr;
+
+  private:
     cMultiView mMultiView;
 
     // fileSource
@@ -748,17 +821,17 @@ namespace {
                                                             tellyApp.getFileSize()).c_str());
           }
           //}}}
-        else if (transportStream.hasDvbSource()) {
+        else if (tellyApp.isDvbSource()) {
           //{{{  draw cTransportStream::dvbSource signal:errors
           ImGui::SameLine();
-          ImGui::TextUnformatted (fmt::format ("{}:{}", transportStream.getSignalString(),
-                                                        transportStream.getErrorString()).c_str());
+          ImGui::TextUnformatted (fmt::format ("{}:{}", tellyApp.mDvbSource->getTuneString(),
+                                                        tellyApp.mDvbSource->getStatusString()).c_str());
           }
           //}}}
         //{{{  draw transportStream packet,errors
         ImGui::SameLine();
-        ImGui::TextUnformatted (fmt::format ("{}:{}", transportStream.getNumPackets(),
-                                                      transportStream.getNumErrors()).c_str());
+        ImGui::TextUnformatted (fmt::format ("{}:{}", tellyApp.mTransportStream->getNumPackets(),
+                                                      tellyApp.mTransportStream->getNumErrors()).c_str());
         //}}}
 
         // draw tab childWindow, monospaced font

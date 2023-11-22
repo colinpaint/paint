@@ -25,7 +25,6 @@
 #include "../common/cDvbUtils.h"
 #include "../common/cLog.h"
 
-#include "cDvbSource.h"
 #include "cVideoRender.h"
 #include "cAudioRender.h"
 #include "cSubtitleRender.h"
@@ -740,15 +739,12 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 // public:
 //{{{
 cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName,
-                        bool realTime, bool showAllServices, bool showFirstService)
+                                    bool realTime, bool showAllServices, bool showFirstService)
     : mDvbMultiplex(dvbMultiplex),
       mRecordRootName(recordRootName),
       mRealTime(realTime),
       mShowAllServices(showAllServices),
       mShowFirstService(showFirstService) {
-
-  if (dvbMultiplex.mFrequency)
-    mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
   }
 //}}}
 
@@ -763,86 +759,6 @@ cTransportStream::cService* cTransportStream::getService (uint16_t sid) {
 
   auto it = mServiceMap.find (sid);
   return (it == mServiceMap.end()) ? nullptr : &it->second;
-  }
-//}}}
-
-// launch source thread
-//{{{
-void cTransportStream::dvbSource() {
-
-  thread([=]() {
-    cLog::setThreadName ("dvb");
-
-    FILE* mFile = mDvbMultiplex.mRecordAll ?
-      fopen ((mRecordRootName + mDvbMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
-
-    #ifdef _WIN32
-      //{{{  windows
-      mDvbSource->run();
-
-      int64_t streamPos = 0;
-      int blockSize = 0;
-
-      while (true) {
-        auto ptr = mDvbSource->getBlockBDA (blockSize);
-        if (blockSize) {
-          //  read and demux block
-          if (mFile)
-            fwrite (ptr, 1, blockSize, mFile);
-
-          streamPos += demux (ptr, blockSize, streamPos, false);
-          mDvbSource->releaseBlock (blockSize);
-
-          mErrorString.clear();
-          if (getNumErrors())
-            mErrorString += fmt::format ("{}err", getNumErrors());
-          if (streamPos < 1000000)
-            mErrorString = fmt::format ("{}k", streamPos / 1000);
-          else
-            mErrorString = fmt::format ("{}m", streamPos / 1000000);
-          }
-        else
-          this_thread::sleep_for (1ms);
-
-        mSignalString = mDvbSource->getStatusString();
-        }
-      //}}}
-    #else
-      //{{{  linux
-      constexpr int kDvrReadBufferSize = 188 * 256;
-      uint8_t* buffer = new uint8_t[kDvrReadBufferSize];
-
-      uint64_t streamPos = 0;
-      while (true) {
-        int bytesRead = mDvbSource->getBlock (buffer, kDvrReadBufferSize);
-        if (bytesRead == 0)
-          cLog::log (LOGINFO, fmt::format ("cDvb grabThread no bytes read"));
-        else {
-          // demux
-          streamPos += demux (buffer, bytesRead, 0, false);
-          if (mFile)
-            fwrite (buffer, 1, bytesRead, mFile);
-
-          // get status
-          mSignalString = mDvbSource->getStatusString();
-
-          // log if more errors
-          bool show = getNumErrors() != mLastErrors;
-          mLastErrors = getNumErrors();
-          if (show)
-            cLog::log (LOGINFO, fmt::format ("err:{} {}", getNumErrors(), mSignalString));
-          }
-        }
-
-      delete [] buffer;
-      //}}}
-    #endif
-
-    if (mFile)
-      fclose (mFile);
-
-    cLog::log (LOGINFO, "exit");
-    }).detach();
   }
 //}}}
 
