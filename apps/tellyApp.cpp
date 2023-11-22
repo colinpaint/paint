@@ -143,15 +143,15 @@ namespace {
 
         // draw audio meter
         mAudioMeterView.draw (audioRender, playerPts,
-                              ImVec2((float)mRect.right - ImGui::GetTextLineHeight()/2.f,
-                                     (float)mRect.bottom - ImGui::GetTextLineHeight()/2.f));
+                              ImVec2((float)mRect.right - (0.25f * ImGui::GetTextLineHeight()),
+                                     (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
 
-        // lsiten and draw framesView if selected
+        // listen and draw framesView if selected
         audioRender.getPlayer().setMute (!selected);
         if (selected)
           mFramesView.draw (audioRender, videoRender, playerPts,
                             ImVec2((float)mRect.getCentre().x,
-                                   (float)mRect.bottom - ImGui::GetTextLineHeight()));
+                                   (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
         }
 
       // get playerPts nearest videoFrame
@@ -239,8 +239,8 @@ namespace {
 
         // draw playPts centre bar
         ImGui::GetWindowDrawList()->AddRectFilled (
-          {pos.x, pos.y - mVideoLines * ImGui::GetTextLineHeight()},
-          {pos.x + 1.f, pos.y + mAudioLines * ImGui::GetTextLineHeight()},
+          { pos.x, pos.y - (kLines * ImGui::GetTextLineHeight()) },
+          { pos.x + 1.f, pos.y },
           0xffc0c0c0);
 
         float ptsScale = mPixelsPerVideoFrame / videoRender.getPtsDuration();
@@ -256,9 +256,12 @@ namespace {
 
           // pesSize I white / P purple / B blue - ABGR color
           ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x + offset1, pos.y},
-            {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
-            (videoFrame->mFrameType == 'I') ? 0xffffffff : (videoFrame->mFrameType == 'P') ? 0xffFF40ff : 0xffFF4040);
+            { pos.x + offset1,
+              pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, kLines)},
+            { pos.x + offset2, pos.y },
+            (videoFrame->mFrameType == 'I') ?
+              0xffffffff : (videoFrame->mFrameType == 'P') ?
+                0xffFF40ff : 0xffFF4040);
           }
           //}}}
         for (auto frame : videoRender.getFreeFrames()) {
@@ -269,8 +272,9 @@ namespace {
           float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
 
           ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x + offset1, pos.y},
-            {pos.x + offset2, pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, mVideoLines)},
+            { pos.x + offset1,
+              pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, kLines)},
+            { pos.x + offset2, pos.y},
             0xFF808080);
           }
           //}}}
@@ -286,9 +290,10 @@ namespace {
           float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
 
           ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x + offset1, pos.y + 1.f},
-            {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
-            0xff00ff00);
+            { pos.x + offset1,
+              pos.y - addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, kLines) },
+            { pos.x + offset2, pos.y },
+            0x8000ff00);
           }
           //}}}
         for (auto frame : audioRender.getFreeFrames()) {
@@ -299,9 +304,10 @@ namespace {
           float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
 
           ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x + offset1, pos.y + 1.f},
-            {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
-            0xFF808080);
+            { pos.x + offset1,
+              pos.y - addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, kLines) },
+            { pos.x + offset2, pos.y },
+            0x80808080);
           }
           //}}}
         }
@@ -339,8 +345,7 @@ namespace {
       //}}}
 
       //  vars
-      const float mVideoLines = 2.f;
-      const float mAudioLines = 1.f;
+      const float kLines = 2.f;
       const float mPixelsPerVideoFrame = 6.f;
       const float mPixelsPerAudioChannel = 6.f;
 
