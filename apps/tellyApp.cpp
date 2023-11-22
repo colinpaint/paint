@@ -166,9 +166,9 @@ namespace {
 
         // model
         mModel = cMat4x4();
-        cVec2 offset = position (viewIndex, numViews);
-        mModel.setTranslate ({ (offset.x - (0.5f * scale)) * viewportWidth,
-                               (offset.y - (0.5f * scale)) * viewportHeight });
+        cVec2 fraction = gridFractionalPosition (viewIndex, numViews);
+        mModel.setTranslate ({ (fraction.x - (0.5f * scale)) * viewportWidth,
+                               (fraction.y - (0.5f * scale)) * viewportHeight });
         mModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
                        scale * viewportHeight / videoFrame->getHeight() });
         mVideoShader->setModelProjection (mModel, projection);
@@ -206,8 +206,8 @@ namespace {
 
             float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
             float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-            mModel.setTranslate ({ (offset.x + ((xpos - 0.5f) * scale)) * viewportWidth,
-                                   (offset.y + ((ypos - 0.5f) * scale)) * viewportHeight });
+            mModel.setTranslate ({ (fraction.x + ((xpos - 0.5f) * scale)) * viewportWidth,
+                                   (fraction.y + ((ypos - 0.5f) * scale)) * viewportHeight });
             mSubtitleShader->setModelProjection (mModel, projection);
 
             // ensure quad is created (assumes same size) and drawIt
@@ -399,7 +399,7 @@ namespace {
     //}}}
 
     //{{{
-    cVec2 position (size_t index, size_t numViews) {
+    cVec2 gridFractionalPosition (size_t index, size_t numViews) {
 
       switch (numViews) {
         //{{{
