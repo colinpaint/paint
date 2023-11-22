@@ -257,7 +257,8 @@ namespace {
           // pesSize I white / P purple / B blue - ABGR color
           ImGui::GetWindowDrawList()->AddRectFilled (
             { pos.x + offset1,
-              pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, kLines)},
+              pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize,
+                                kLines * ImGui::GetTextLineHeight()) },
             { pos.x + offset2, pos.y },
             (videoFrame->mFrameType == 'I') ?
               0xffffffff : (videoFrame->mFrameType == 'P') ?
@@ -273,7 +274,8 @@ namespace {
 
           ImGui::GetWindowDrawList()->AddRectFilled (
             { pos.x + offset1,
-              pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize, kLines)},
+              pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize,
+                                kLines * ImGui::GetTextLineHeight())},
             { pos.x + offset2, pos.y},
             0xFF808080);
           }
@@ -291,7 +293,8 @@ namespace {
 
           ImGui::GetWindowDrawList()->AddRectFilled (
             { pos.x + offset1,
-              pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower, kLines) },
+              pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower,
+                                kLines * ImGui::GetTextLineHeight()) },
             { pos.x + offset2, pos.y },
             0x8000ff00);
           }
@@ -305,15 +308,17 @@ namespace {
 
           ImGui::GetWindowDrawList()->AddRectFilled (
             { pos.x + offset1,
-              pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower, kLines) },
+              pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower,
+                                kLines * ImGui::GetTextLineHeight()) },
             { pos.x + offset2, pos.y },
             0x80808080);
           }
           //}}}
         }
 
-        // slowly track scaling back to max display values from max values
-        agc (mMaxPesSize, mMaxDisplayPesSize, 250.f, 10000.f);
+        // agc scaling back to max display values from max values
+        agc (mMaxPesSize, mMaxDisplayPesSize, 100.f, 10000.f);
+        agc (mMaxPower, mMaxDisplayPower, 0.001f, 0.1f);
         }
       //}}}
 
@@ -326,7 +331,7 @@ namespace {
         if (value > maxDisplayValue)
           maxDisplayValue = value;
 
-        return scale * ImGui::GetTextLineHeight() * value / maxValue;
+        return scale * value / maxValue;
         }
       //}}}
       //{{{
@@ -334,7 +339,7 @@ namespace {
 
         // slowly adjust scale to displayMaxValue
         if (maxDisplayValue < maxValue)
-          maxValue -= (maxValue - maxDisplayValue) / revert;
+          maxValue += (maxDisplayValue - maxValue) / revert;
 
         if (maxValue < minValue)
           maxValue = minValue;
@@ -349,7 +354,7 @@ namespace {
       const float mPixelsPerVideoFrame = 6.f;
       const float mPixelsPerAudioChannel = 6.f;
 
-      float mMaxPower = 0.5f;
+      float mMaxPower = 0.f;
       float mMaxDisplayPower = 0.f;
 
       float mMaxPesSize = 0.f;

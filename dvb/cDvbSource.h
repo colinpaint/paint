@@ -42,7 +42,7 @@ private:
   int mFrequency = 0;
   int mAdapter = 0;
 
-  std::string mTuneString = "untuned";
+  std::string mTuneString;
 
   //{{{
   #ifdef __linux__

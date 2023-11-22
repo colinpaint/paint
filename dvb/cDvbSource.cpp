@@ -716,9 +716,7 @@ cDvbSource::cDvbSource (int frequency, int adapter) : mFrequency(frequency), mAd
         mTuneString = fmt::format ("tuned {}Mhz", frequency);
       else
         mTuneString = fmt::format ("not tuned {}Mhz", frequency);
-    #endif
-
-    #ifdef __linux__
+    #else
       // open frontend nonBlocking rw
       string frontend = fmt::format ("/dev/dvb/adapter{}/frontend{}", mAdapter, 0);
       mFrontEnd = open (frontend.c_str(), O_RDWR | O_NONBLOCK);
@@ -771,9 +769,7 @@ bool cDvbSource::ok() const {
 
   #ifdef _WIN32
     return true;
-  #endif
-
-  #ifdef __linux__
+  #else
     return mDvr != 0;
   #endif
   }
@@ -788,9 +784,7 @@ string cDvbSource::getStatusString() const {
       return fmt::format ("signal {}", signal / 0x10000);
       }
     return "no signal strength";
-  #endif
-
-  #ifdef __linux__
+  #else
     struct dtv_property props[] = {
       { DTV_STAT_SIGNAL_STRENGTH,      0,0,0, 0,0 }, // max 0xFFFF percentage
       { DTV_STAT_CNR,                  0,0,0, 0,0 }, // 0.001db
@@ -821,9 +815,7 @@ int cDvbSource::getBlock (uint8_t* block, int blockSize) {
   #ifdef _WIN32
     cLog::log (LOGERROR, fmt::format ("getBlock not implemented"));
     return 0;
-  #endif
-
-  #ifdef __linux__
+  #else
     return read (mDvr, block, blockSize);
   #endif
   }
@@ -832,11 +824,10 @@ int cDvbSource::getBlock (uint8_t* block, int blockSize) {
 //{{{
 int cDvbSource::setFilter (uint16_t pid) {
   (void)pid;
+
   #ifdef _WIN32
     return 0;
-  #endif
-
-  #ifdef __linux__
+  #else
     int mAdapter = 0;
     int mFeNum = 0;
     string filter = fmt::format ("/dev/dvb/adapter{}/demux{}", mAdapter, mFeNum);
@@ -856,12 +847,12 @@ int cDvbSource::setFilter (uint16_t pid) {
     s_filter_params.pes_type = DMX_PES_OTHER;
     if (ioctl (fd, DMX_SET_PES_FILTER, &s_filter_params) < 0) {
       // error return
-      cLog::log (LOGERROR, fmt::format ("dvbSetFilter - set_pesFilter failed pid:{} {}", pid, strerror (errno)));
+      cLog::log (LOGERROR, fmt::format ("cDvbSource::setFilter - set_pesFilter failed pid:{} {}", pid, strerror (errno)));
       close (fd);
       return -1;
       }
 
-    cLog::log (LOGINFO1, fmt::format ("dvbSetFilter pid:{}", pid));
+    cLog::log (LOGINFO1, fmt::format ("cDvbSource::setFilter pid:{}", pid));
     return fd;
   #endif
   }
@@ -870,13 +861,14 @@ int cDvbSource::setFilter (uint16_t pid) {
 void cDvbSource::unsetFilter (int fd, uint16_t pid) {
   (void)fd;
   (void)pid;
-#ifdef __linux__
-  if (ioctl (fd, DMX_STOP) < 0)
-    cLog::log (LOGERROR, fmt::format("dvbUnsetFilter - stop failed {}", strerror (errno)));
-  else
-    cLog::log (LOGINFO1, fmt::format ("dvbUnsetFilter - unsetting pid:{}", pid));
-  close (fd);
-#endif
+
+  #ifdef __linux__
+    if (ioctl (fd, DMX_STOP) < 0)
+      cLog::log (LOGERROR, fmt::format("cDvbSource::unsetFilter - stop failed {}", strerror (errno)));
+    else
+      cLog::log (LOGINFO1, fmt::format ("cDvbSource::unsetFilter - unsetting pid:{}", pid));
+    close (fd);
+  #endif
   }
 //}}}
 
@@ -906,9 +898,7 @@ void cDvbSource::tune (int frequency) {
       cLog::log (LOGERROR, fmt::format ("tune - put_TuneRequest"));
     if (mMediaControl->Run() != S_OK)
       cLog::log (LOGERROR, fmt::format ("tune - run"));
-  #endif
-
-  #ifdef __linux__
+  #else
     frontendSetup();
   #endif
   }
