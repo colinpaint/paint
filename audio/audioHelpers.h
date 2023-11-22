@@ -1,15 +1,21 @@
 // audioHelper.h
 #pragma once
-#ifdef _WIN32
 //{{{  includes
-#define _CRT_SECURE_NO_WARNINGS
-#define WIN32_LEAN_AND_MEAN
+#ifdef _WIN32
+  #define _CRT_SECURE_NO_WARNINGS
+  #define WIN32_LEAN_AND_MEAN
+#endif
 
 #include <stdio.h>
 #include <stdint.h>
 #include <windows.h>
-
 #include <string>
+
+//{{{  include libav
+#ifdef _WIN32
+  #pragma warning (push)
+  #pragma warning (disable: 4244)
+#endif
 
 extern "C" {
   #include <libavcodec/avcodec.h>
@@ -19,6 +25,10 @@ extern "C" {
   #include <libswresample/swresample.h>
   }
 
+#ifdef _WIN32
+  #pragma warning (pop)
+#endif
+//}}}
 #include "../common/cLog.h"
 //}}}
 
@@ -400,4 +410,3 @@ private:
   int64_t mPts = 0;
   //}}}
   };
-#endif

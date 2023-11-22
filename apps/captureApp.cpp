@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include <windows.h>
-
 #include <string>
 #include <thread>
 

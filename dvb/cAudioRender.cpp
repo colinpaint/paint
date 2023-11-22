@@ -33,7 +33,6 @@ extern "C" {
   #pragma warning (pop)
 #endif
 //}}}
-
 #include "cFFmpegAudioDecoder.h"
 #include "cPlayer.h"
 
