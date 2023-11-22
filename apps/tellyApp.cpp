@@ -134,30 +134,30 @@ namespace {
 
       int64_t playerPts = mService.getRenderStream (eRenderAudio).getPts();
       if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-        //{{{  get playerPts from audioStream, draw framesView, audioMeter
+        //  get playerPts from audioStream, draw framesView, audioMeter
         cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
         playerPts = audioRender.getPlayer().getPts();
 
-        audioRender.getPlayer().setMute (!selected);
+        // draw audio meter
+        mAudioMeterView.draw (audioRender, playerPts,
+                              ImVec2((float)mRect.right - ImGui::GetTextLineHeight()/2.f,
+                                     (float)mRect.bottom - ImGui::GetTextLineHeight()/2.f));
 
+        // lsiten and draw framesView if selected
+        audioRender.getPlayer().setMute (!selected);
         if (selected)
           mFramesView.draw (audioRender, videoRender, playerPts,
                             ImVec2((float)mRect.getCentre().x,
                                    (float)mRect.bottom - ImGui::GetTextLineHeight()));
-
-        mAudioMeterView.draw (audioRender, playerPts,
-                              ImVec2((float)mRect.right - ImGui::GetTextLineHeight()/2.f,
-                                     (float)mRect.bottom - ImGui::GetTextLineHeight()/2.f));
         }
-        //}}}
 
-      // get videoFrame from playerPts
+      // get playerPts nearest videoFrame
       cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
       if (videoFrame) {
-        //{{{  draw videoFrame, subtitles
+        //{{{  draw video
         mVideoShader->use();
 
-        // get videoFrame texture
+        // texture
         cTexture& texture = videoFrame->getTexture (graphics);
         texture.setSource();
 
@@ -176,18 +176,16 @@ namespace {
         // ensure quad is created
         if (!mVideoQuad)
           mVideoQuad = graphics.createQuad (videoFrame->getSize());
-        mVideoQuad->draw();
 
-        // save videoFrame view rect
+        mVideoQuad->draw();
+        //}}}
+
         mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
                        mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
         if (mHover)
           ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top},
                                                { (float)mRect.right, (float)mRect.bottom },
                                                0xffc0ffff);
-
-        // crude management of videoFrame cache
-        videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
 
         cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (mService.getRenderStream (eRenderSubtitle).getRender());
         if (mService.getRenderStream (eRenderAudio).isEnabled()) {
@@ -224,8 +222,10 @@ namespace {
             }
           }
           //}}}
+
+        // crude management of videoFrame cache
+        videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
         }
-        //}}}
       }
     //}}}
 
