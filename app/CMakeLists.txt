@@ -1,5 +1,5 @@
-## can't get imgui internal loader to work, use glad for GL
 project (app VERSION 1.0.0)
+
   if (BUILD_GRAPHICS STREQUAL "GL3")
     message (STATUS "building GL3 app with BUILD_GRAPHICS ${BUILD_GRAPHICS}")
 
@@ -7,11 +7,10 @@ project (app VERSION 1.0.0)
                                  myImgui.h myImgui.cpp
                                  cGL3Graphics.h)
 
-    #target_include_directories (${PROJECT_NAME} PUBLIC ../imgui)
     target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS})
+    target_link_libraries (${PROJECT_NAME} PRIVATE glfw)
 
-    target_link_libraries (${PROJECT_NAME} PUBLIC common imgui PRIVATE glfw glad)
-
+    target_link_libraries (${PROJECT_NAME} PRIVATE glad)
     find_package (OpenGL REQUIRED)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
       target_link_libraries (${PROJECT_NAME} PRIVATE GL)
@@ -30,15 +29,18 @@ project (app VERSION 1.0.0)
                                  myImgui.h myImgui.cpp
                                  cGLES3Graphics.h)
 
-    target_include_directories (${PROJECT_NAME} PUBLIC ../imgui)
+    target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS})
+    target_link_libraries (${PROJECT_NAME} PRIVATE glfw)
 
     find_package (OpenGL REQUIRED)
-    target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS}
-                                                        IMGUI_IMPL_OPENGL_LOADER_CUSTOM=1
+    target_compile_definitions (${PROJECT_NAME} PRIVATE IMGUI_IMPL_OPENGL_LOADER_CUSTOM=1
                                                         GLFW_INCLUDE_ES3=1
                                                         IMGUI_IMPL_OPENGL_ES3=1)
-    target_link_libraries (${PROJECT_NAME} PUBLIC common imgui PRIVATE glfw GLESv2)
+    target_link_libraries (${PROJECT_NAME} PRIVATE GLESv2)
 
   else()
     message (FATAL_ERROR, "app - unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
+
   endif()
+
+  target_link_libraries (${PROJECT_NAME} PUBLIC common imgui)

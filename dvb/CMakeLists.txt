@@ -1,6 +1,6 @@
 project (dvb VERSION 1.0.0)
   add_library (${PROJECT_NAME} cFrame.h cAudioFrame.h cVideoFrame.h cFFmpegVideoFrame.h
-                               cDecoder.h cDecoderQueueItem.h 
+                               cDecoder.h cDecoderQueueItem.h
                                cFFmpegVideoDecoder.h  cFFmpegAudioDecoder.h
                                cDvbSource.h cDvbSource.cpp
                                cTransportStream.h cTransportStream.cpp
@@ -14,16 +14,14 @@ project (dvb VERSION 1.0.0)
 
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_include_directories (${PROJECT_NAME} PUBLIC ../include/ffmpeg)
-    target_link_libraries (${PROJECT_NAME} PUBLIC common avdevice avfilter avformat avcodec avutil
-                                                         swresample swscale)
-    target_link_libraries (${PROJECT_NAME} PRIVATE d3d11 dxgi d3d9 dxva2)
-
+    target_link_libraries (${PROJECT_NAME} PUBLIC 
+                           avdevice avfilter avformat avcodec avutil swresample swscale)
   else ()
     find_package (PkgConfig REQUIRED)
-    pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET libavdevice libavfilter libavformat libavcodec libavutil
-                                                       libswresample libswscale)
-
+    pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
+                       libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
     target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG)
-    target_link_libraries (${PROJECT_NAME} PUBLIC common PkgConfig::FFMPEG)
-
+    target_link_libraries (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
   endif()
+
+  target_link_libraries (${PROJECT_NAME} PUBLIC common)
