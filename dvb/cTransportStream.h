@@ -281,7 +281,7 @@ public:
     };
   //}}}
 
-  cTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName,
+  cTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRoot,
                     bool realTime, bool showAllServices, bool showFirstService);
   virtual ~cTransportStream() { clear(); }
 
@@ -342,7 +342,7 @@ private:
 
   //{{{  vars
   const cDvbMultiplex mDvbMultiplex;
-  const std::string mRecordRootName;
+  const std::string mRecordRoot;
 
   const bool mRealTime;
   const bool mShowAllServices;

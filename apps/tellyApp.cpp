@@ -607,9 +607,8 @@ namespace {
 
       mTransportStream = new cTransportStream (kMultiplexes[0], "", false, showAllServices, true);
       if (mTransportStream) {
-        //{{{  launch fileSource thread
+        // launch fileSource thread
         mFileName = cFileUtils::resolve (filename);
-
         FILE* file = fopen (mFileName.c_str(), "rb");
         if (file) {
           thread ([=]() {
@@ -639,16 +638,13 @@ namespace {
 
             fclose (file);
             delete [] buffer;
-
             cLog::log (LOGERROR, "exit");
             }).detach();
-
           return;
           }
 
         cLog::log (LOGERROR, fmt::format ("cTellyApp::fileSource failed to open{}", mFileName));
         }
-        //}}}
       else
         cLog::log (LOGERROR, "cTellyApp::cTransportStream create failed");
       }

@@ -738,10 +738,10 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 
 // public:
 //{{{
-cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, const string& recordRootName,
+cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, const string& recordRoot,
                                     bool realTime, bool showAllServices, bool showFirstService)
     : mDvbMultiplex(dvbMultiplex),
-      mRecordRootName(recordRootName),
+      mRecordRoot(recordRoot),
       mRealTime(realTime),
       mShowAllServices(showAllServices),
       mShowFirstService(showFirstService) {
@@ -1045,7 +1045,7 @@ void cTransportStream::startServiceProgram (cService& service,
   if ((selected || service.getChannelRecord() || mDvbMultiplex.mRecordAll) &&
       service.getRenderStream (eRenderVideo).isDefined() &&
       (service.getRenderStream(eRenderAudio).isDefined())) {
-    string filePath = mRecordRootName +
+    string filePath = mRecordRoot +
                       service.getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
                       utils::getValidFileString (programName) +
