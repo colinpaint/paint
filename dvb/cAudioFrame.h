@@ -38,7 +38,6 @@ public:
   //{{{
   void calcPower() {
 
-    // init
     for (size_t channel = 0; channel < mNumChannels; channel++) {
       mPeakValues[channel] = 0.f;
       mPowerValues[channel] = 0.f;
@@ -57,7 +56,7 @@ public:
     // normalise
     for (size_t channel = 0; channel < mNumChannels; channel++) {
       mPowerValues[channel] = sqrtf (mPowerValues[channel] / mSamplesPerFrame);
-      mSimplePower += mPeakValues[0];
+      mSimplePower += mPowerValues[channel];
       }
 
     mSimplePower /= mNumChannels;
