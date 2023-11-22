@@ -31,10 +31,10 @@ using namespace std;
 constexpr int kSamplesWait = 2;
 
 //{{{
-cPlayer::cPlayer (cAudioRender& audioRender) {
+cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate) 
+    : mAudioRender(audioRender), mSampleRate(sampleRate) {
 
-  mPlayerThread = thread ([=,&audioRender]() {
-    cLog::setThreadName ("play");
+  mPlayerThread = thread ([=]() {
 
     array <float,2048*2> samples = { 0.f };
     array <float,2048*2> silence = { 0.f };
@@ -43,10 +43,10 @@ cPlayer::cPlayer (cAudioRender& audioRender) {
       //{{{  windows
       optional<cAudioDevice> audioDevice = getDefaultAudioOutputDevice();
       if (audioDevice) {
-        cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", audioRender.getSampleRate());
+        cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", mSampleRate);
 
         SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-        audioDevice->setSampleRate (audioRender.getSampleRate());
+        audioDevice->setSampleRate (mSampleRate);
         audioDevice->start();
 
         int samplesWait = kSamplesWait;
@@ -56,8 +56,8 @@ cPlayer::cPlayer (cAudioRender& audioRender) {
             srcSamples = silence.data();
 
             // locked audio mutex
-            shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
-            cAudioFrame* audioFrame = audioRender.findAudioFrameFromPts (mPts);
+            shared_lock<shared_mutex> lock (mAudioRender.getSharedMutex());
+            cAudioFrame* audioFrame = mAudioRender.findAudioFrameFromPts (mPts);
             if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
               samplesWait = 0;
               if (!mMute) {
@@ -98,11 +98,11 @@ cPlayer::cPlayer (cAudioRender& audioRender) {
               }
             else
               samplesWait--;
-            numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : audioRender.getSamplesPerFrame());
+            numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : mAudioRender.getSamplesPerFrame());
 
             if (mPlaying)
               if (!samplesWait) {
-                mPts += audioFrame ? audioFrame->mPtsDuration : audioRender.getPtsDuration();
+                mPts += audioFrame ? audioFrame->mPtsDuration : mAudioRender.getPtsDuration();
                 samplesWait = kSamplesWait;
                 }
             });
@@ -114,7 +114,7 @@ cPlayer::cPlayer (cAudioRender& audioRender) {
     #else
       //{{{  linux
       // raise to max priority
-      cAudio audio (2, audioRender.getSampleRate(), 48000, false);
+      cAudio audio (2, mSampleRate, 4096, false);
 
       sched_param sch_params;
       sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
@@ -127,7 +127,7 @@ cPlayer::cPlayer (cAudioRender& audioRender) {
 
         { // locked mutex
         shared_lock<shared_mutex> lock (getSharedMutex());
-        audioFrame = audioRender.findAudioFrameFromPts (mPts);
+        audioFrame = mAudioRender.findAudioFrameFromPts (mPts);
         if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
           samplesWait = 0;
           if (!mMute) {
@@ -169,11 +169,11 @@ cPlayer::cPlayer (cAudioRender& audioRender) {
           samplesWait--;
         }
 
-        audio.play (2, srcSamples, audioFrame ? audioFrame->mSamplesPerFrame : audioRender.getSamplesPerFrame(), 1.f);
+        audio.play (2, srcSamples, audioFrame ? audioFrame->mSamplesPerFrame : mAudioRender.getSamplesPerFrame(), 1.f);
 
         if (mPlaying)
           if (!samplesWait) {
-            mPts += audioFrame ? audioFrame->mPtsDuration : audioRender.getPtsDuration();
+            mPts += audioFrame ? audioFrame->mPtsDuration : mAudioRender.getPtsDuration();
             samplesWait = kSamplesWait;
             }
         }

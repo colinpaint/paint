@@ -10,7 +10,7 @@ class cAudioRender;
 
 class cPlayer {
 public:
-  cPlayer (cAudioRender& audioRender);
+  cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate);
   virtual ~cPlayer();
 
   // player
@@ -24,6 +24,9 @@ public:
   void togglePlay() { mPlaying = !mPlaying; }
 
 private:
+  cAudioRender& mAudioRender;
+  const uint32_t mSampleRate;
+
   std::thread mPlayerThread;
 
   bool mMute = true;

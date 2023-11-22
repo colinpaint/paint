@@ -18,10 +18,13 @@
 #include "../common/cLog.h"
 #include "../common/utils.h"
 
+#pragma warning (push)
+#pragma warning (disable: 4244)
 extern "C" {
   #include "libavcodec/avcodec.h"
   #include "libavformat/avformat.h"
   }
+#pragma warning (pop)
 
 #include "cFFmpegAudioDecoder.h"
 #include "cPlayer.h"
@@ -42,7 +45,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, bool realTim
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
 
-  mPlayer = new cPlayer (*this);
+  mPlayer = new cPlayer (*this, mSampleRate);
   }
 //}}}
 //{{{

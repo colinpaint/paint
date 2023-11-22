@@ -42,7 +42,7 @@ private:
   cPlayer* mPlayer = nullptr;
 
   // vars
-  size_t mSampleRate;
+  uint32_t mSampleRate;
   size_t mSamplesPerFrame;
   int64_t mPtsDuration;
 
