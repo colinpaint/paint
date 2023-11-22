@@ -1,6 +1,9 @@
 // cFFmpegAudioDecoder.cpp
 //{{{  includes
-#define _CRT_SECURE_NO_WARNINGS
+#ifdef _WIN32
+  #define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <algorithm>
 #include <chrono>
 
@@ -9,13 +12,23 @@
 #include "../common/utils.h"
 #include "../common/cLog.h"
 
+//{{{  include libav
+#ifdef _WIN32
+  #pragma warning (push)
+  #pragma warning (disable: 4244)
+#endif
+
 extern "C" {
   #include "libavcodec/avcodec.h"
   #include "libavformat/avformat.h"
   }
 
+#ifdef _WIN32
+  #pragma warning (pop)
+#endif
+//}}}
+
 using namespace std;
-using namespace chrono;
 //}}}
 
 //{{{

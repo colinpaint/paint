@@ -19,6 +19,7 @@
 
   #define STB_IMAGE_IMPLEMENTATION
   #include <stb_image.h>
+
   #define STB_IMAGE_WRITE_IMPLEMENTATION
   #include <stb_image_write.h>
 
@@ -33,6 +34,15 @@
 #include "../common/fileUtils.h"
 #include "../common/cLog.h"
 
+// app
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/cGraphics.h"
+#include "../app/myImgui.h"
+#include "../app/cUI.h"
+#include "../font/itcSymbolBold.h"
+#include "../font/droidSansMono.h"
+
 // dvb
 #include "../dvb/cTransportStream.h"
 #include "../dvb/cVideoRender.h"
@@ -42,15 +52,6 @@
 #include "../dvb/cSubtitleRender.h"
 #include "../dvb/cSubtitleImage.h"
 #include "../dvb/cPlayer.h"
-
-// app
-#include "../app/cApp.h"
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
-#include "../app/myImgui.h"
-#include "../app/cUI.h"
-#include "../font/itcSymbolBold.h"
-#include "../font/droidSansMono.h"
 
 using namespace std;
 //}}}
