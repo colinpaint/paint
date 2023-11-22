@@ -45,10 +45,6 @@ using namespace std;
 constexpr bool kVideoQueued = true;
 constexpr size_t kVideoFrameMapSize = 25;
 
-namespace {
-  cTextureShader* gShader = nullptr;
-  }
-
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const string& name, uint8_t streamType, bool realTime)
@@ -124,33 +120,6 @@ void cVideoRender::addFrame (cFrame* frame) {
   mFrames.emplace (videoFrame->mPts / videoFrame->mPtsDuration, videoFrame);
   }
 
-  }
-//}}}
-
-// UI draw
-//{{{
-cRect cVideoRender::drawFrame (cVideoFrame* videoFrame, cGraphics& graphics, cMat4x4& model,
-                               float viewportWidth, float viewportHeight) {
-
-  // get texture
-  cTexture& texture = videoFrame->getTexture (graphics);
-  texture.setSource();
-
-  // ensure shader is created
-  if (!gShader)
-    gShader = graphics.createTextureShader (texture.getTextureType());
-  gShader->use();
-
-  cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-  gShader->setModelProjection (model, projection);
-
-  // ensure quad is created
-  if (!mQuad)
-    mQuad = graphics.createQuad (videoFrame->getSize());
-  mQuad->draw();
-
-  return cRect (model.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
-                model.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
   }
 //}}}
 

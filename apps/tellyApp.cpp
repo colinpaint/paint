@@ -155,8 +155,29 @@ namespace {
                               (ImGui::GetWindowHeight() * pos.y) - ((videoFrame->getHeight() / 2.f) * scaledSize.y)} );
         mModel.size (scaledSize);
 
-        mRect = videoRender.drawFrame (videoFrame, graphics, mModel,
-                                       ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+        //mRect = videoRender.drawFrame (videoFrame, graphics, mModel,
+        //                               ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+
+        float viewportWidth = ImGui::GetWindowWidth();
+        float viewportHeight = ImGui::GetWindowHeight();
+
+        // get texture
+        cTexture& texture = videoFrame->getTexture (graphics);
+        texture.setSource();
+
+        mVideoShader->use();
+
+        cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+        mVideoShader->setModelProjection (mModel, projection);
+
+        // ensure quad is created
+        if (!mVideoQuad)
+          mVideoQuad = graphics.createQuad (videoFrame->getSize());
+        mVideoQuad->draw();
+
+        mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
+                       mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
+
         if (mHover)
           ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top},
                                                { (float)mRect.right, (float)mRect.bottom },
@@ -220,6 +241,7 @@ namespace {
       }
     //}}}
 
+    inline static cTextureShader* mVideoShader = nullptr;
     inline static cTextureShader* mSubtitleShader = nullptr;
 
   private:
@@ -499,6 +521,9 @@ namespace {
     cFramesView mFramesView;
     cAudioPowerView mAudioPowerView;
 
+    // video
+    cQuad* mVideoQuad = nullptr;
+
     // subtitle
     cMat4x4 mModel;
     cRect mRect = { 0,0,0,0 };
@@ -555,6 +580,9 @@ namespace {
 
     //{{{
     void draw (cTransportStream& transportStream, cGraphics& graphics) {
+
+      if (!cServiceView::mVideoShader)
+       cServiceView::mVideoShader = graphics.createTextureShader (cTexture::eYuv420);
 
       if (!cServiceView::mSubtitleShader)
         cServiceView::mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);

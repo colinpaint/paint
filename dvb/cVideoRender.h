@@ -29,9 +29,6 @@ public:
   cFrame* getFrame();
   void addFrame (cFrame* frame);
 
-  cRect drawFrame (cVideoFrame* videoFrame, cGraphics& graphics,
-                   cMat4x4& model, float viewportWidth, float viewportHeight);
-
   // overrides
   virtual std::string getInfoString() const final;
   virtual void trimVideoBeforePts (int64_t pts) final;
@@ -40,8 +37,6 @@ private:
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
   int64_t mPtsDuration = 90000 / 25;
-
-  cQuad* mQuad = nullptr;
 
   std::string mFrameInfo;
   };
