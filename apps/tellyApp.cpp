@@ -83,6 +83,7 @@ namespace {
     const string kRootDir = "/home/pi/tv/";
   #endif
   //}}}
+
   //{{{
   class cServiceView {
   public:
@@ -585,6 +586,7 @@ namespace {
     uint16_t mSelectedSid = 0;
     };
   //}}}
+
   //{{{
   class cTellyApp : public cApp {
   public:
@@ -594,10 +596,62 @@ namespace {
     //}}}
     virtual ~cTellyApp() = default;
 
+    cMultiView& getMultiView() { return mMultiView; }
     bool hasTransportStream() { return mTransportStream; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
-    cMultiView& getMultiView() { return mMultiView; }
 
+    //{{{
+    void fileSource (const string& filename, bool showAllServices) {
+    // create fileSource, any channel
+
+      mTransportStream = new cTransportStream (kMultiplexes[0], "", false, showAllServices, true);
+      if (mTransportStream) {
+        //{{{  launch fileSource thread
+        mFileName = cFileUtils::resolve (filename);
+
+        FILE* file = fopen (mFileName.c_str(), "rb");
+        if (file) {
+          thread ([=]() {
+            cLog::setThreadName (mFileName);
+
+            size_t blockSize = 188 * 256;
+            uint8_t* buffer = new uint8_t[blockSize];
+
+            mFilePos = 0;
+            while (true) {
+              size_t bytesRead = fread (buffer, 1, blockSize, file);
+              if (bytesRead > 0)
+                mFilePos += mTransportStream->demux (buffer, bytesRead, mFilePos, false);
+              else
+                break;
+
+              #ifdef _WIN32
+                struct _stati64 st;
+                if (_stat64 (mFileName.c_str(), &st) != -1)
+                  mFileSize = st.st_size;
+              #else
+                struct stat st;
+                if (stat (mFileName.c_str(), &st) != -1)
+                  mFileSize = st.st_size;
+              #endif
+              }
+
+            fclose (file);
+            delete [] buffer;
+
+            cLog::log (LOGERROR, "exit");
+            }).detach();
+
+          return;
+          }
+
+        cLog::log (LOGERROR, fmt::format ("cTellyApp::fileSource failed to open{}", mFileName));
+        }
+        //}}}
+      else
+        cLog::log (LOGERROR, "cTellyApp::cTransportStream create failed");
+      }
+    //}}}
     //{{{
     void liveDvbSource (const cDvbMultiplex& dvbMultiplex, const string& recordRoot, bool showAllServices) {
     // create liveDvbSource from dvbMultiplex
@@ -607,19 +661,6 @@ namespace {
         mTransportStream->dvbSource();
       else
         cLog::log (LOGINFO, "cTellyApp::setLiveDvbSource - failed to create liveDvbSource");
-      }
-    //}}}
-    //{{{
-    void fileSource (const string& filename, bool showAllServices) {
-    // create fileSource, any channel
-
-      mTransportStream = new cTransportStream (kMultiplexes[0], "", false, showAllServices, true);
-      string resolvedFilename = cFileUtils::resolve (filename);
-      if (mTransportStream)
-        mTransportStream->fileSource (resolvedFilename);
-      else
-        cLog::log (LOGINFO, fmt::format ("cTellyApp::fileSource - failed to create fileSource {} {}",
-                                         filename, filename == resolvedFilename ? "" : resolvedFilename));
       }
     //}}}
 
@@ -634,9 +675,21 @@ namespace {
       }
     //}}}
 
+    // fileSource
+    bool isFileSource() const { return !mFileName.empty(); }
+    std::string getFileName() const { return mFileName; }
+    uint64_t getFilePos() const { return mFilePos; }
+    size_t getFileSize() const { return mFileSize; }
+
   private:
     cTransportStream* mTransportStream = nullptr;
     cMultiView mMultiView;
+
+    // fileSource
+    FILE* mFile = nullptr;
+    std::string mFileName;
+    uint64_t mFilePos = 0;
+    size_t mFileSize = 0;
     };
   //}}}
   //{{{
@@ -679,54 +732,31 @@ namespace {
 
       ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
       //}}}
-      //{{{  draw vertices:indices
-      ImGui::SameLine();
-
-      ImGui::TextUnformatted (fmt::format ("{}:{}",
-                              ImGui::GetIO().MetricsRenderVertices,
-                              ImGui::GetIO().MetricsRenderIndices/3).c_str());
-      //}}}
-      //{{{  draw overlap,history
-      //ImGui::SameLine();
-      //ImGui::SetNextItemWidth (4.f * ImGui::GetTextLineHeight());
-      //ImGui::DragFloat ("##over", &mOverlap, 0.25f, 0.5f, 32.f, "over%3.1f");
-
-      //ImGui::SameLine();
-      //ImGui::SetNextItemWidth (3.f * ImGui::GetTextLineHeight());
-      //ImGui::DragInt ("##hist", &mHistory, 0.25f, 0, 100, "h %d");
-      //}}}
 
       if (tellyApp.hasTransportStream()) {
         cTransportStream& transportStream = tellyApp.getTransportStream();
         if (transportStream.hasTdtTime()) {
           //{{{  draw tdtTime
           ImGui::SameLine();
-
           ImGui::TextUnformatted (transportStream.getTdtTimeString().c_str());
           }
           //}}}
-        if (transportStream.isFileSource()) {
+        if (tellyApp.isFileSource()) {
           //{{{  draw filePos
           ImGui::SameLine();
-
-          //ImGui::TextUnformatted (fmt::format ("{}k of {}k",
-          //                                     transportStream.getFilePos()/1000,
-          //                                     transportStream.getFileSize()/1000).c_str());
-          ImGui::TextUnformatted (fmt::format ("{:4.3f}%", (100.f * transportStream.getFilePos()) /
-                                                            transportStream.getFileSize()).c_str());
+          ImGui::TextUnformatted (fmt::format ("{:4.3f}%", tellyApp.getFilePos() * 100.f /
+                                                            tellyApp.getFileSize()).c_str());
           }
           //}}}
         else if (transportStream.hasDvbSource()) {
           //{{{  draw cTransportStream::dvbSource signal:errors
           ImGui::SameLine();
-
           ImGui::TextUnformatted (fmt::format ("{}:{}", transportStream.getSignalString(),
                                                         transportStream.getErrorString()).c_str());
           }
           //}}}
         //{{{  draw transportStream packet,errors
         ImGui::SameLine();
-
         ImGui::TextUnformatted (fmt::format ("{}:{}", transportStream.getNumPackets(),
                                                       transportStream.getNumErrors()).c_str());
         //}}}

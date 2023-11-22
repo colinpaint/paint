@@ -308,12 +308,6 @@ public:
   bool hasDvbSource() const { return mDvbSource; }
   std::string getErrorString() { return mErrorString; }
   std::string getSignalString() { return mSignalString; }
-
-  // fileSource
-  bool isFileSource() const { return !mFileName.empty(); }
-  std::string getFileName() const { return mFileName; }
-  uint64_t getFilePos() const { return mFilePos; }
-  size_t getFileSize() const { return mFileSize; }
   //}}}
 
   // launch source thread
@@ -321,6 +315,9 @@ public:
   void fileSource (const std::string& fileName);
 
   void toggleStream (cService& service, eRenderType renderType);
+
+  // demux
+  int64_t demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
 
 private:
   //{{{  clears
@@ -342,7 +339,6 @@ private:
   void stopServiceProgram (cService& service);
 
   bool processPesByPid (cPidInfo& pidInfo, bool skip);
-
   //{{{  parse
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);
   void parseNit (cPidInfo* pidInfo, uint8_t* buf);
@@ -353,7 +349,6 @@ private:
 
   int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
   //}}}
-  int64_t demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
 
   //{{{  vars
   const cDvbMultiplex mDvbMultiplex;
@@ -377,11 +372,6 @@ private:
   std::string mErrorString;
   std::string mSignalString;
   uint64_t mLastErrors = 0;
-
-  // fileSource
-  std::string mFileName;
-  uint64_t mFilePos = 0;
-  size_t mFileSize = 0;
 
   // record
   std::mutex mRecordFileMutex;
