@@ -129,6 +129,9 @@ namespace {
     void draw (cGraphics& graphics, bool selected, size_t numViews, size_t viewIndex) {
 
       float scale = (numViews <= 1) ? 1.f : ((numViews <= 4) ? 0.5f : ((numViews <= 9) ? 0.33f : 0.25f));
+      float viewportWidth = ImGui::GetWindowWidth();
+      float viewportHeight = ImGui::GetWindowHeight();
+      cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (mService.getRenderStream (eRenderVideo).getRender());
 
@@ -161,9 +164,6 @@ namespace {
         cTexture& texture = videoFrame->getTexture (graphics);
         texture.setSource();
 
-        float viewportWidth = ImGui::GetWindowWidth();
-        float viewportHeight = ImGui::GetWindowHeight();
-
         mModel = cMat4x4();
         cVec2 scaledSize = { scale * viewportWidth / videoFrame->getWidth(),
                              scale * viewportHeight / videoFrame->getHeight() };
@@ -171,7 +171,7 @@ namespace {
         mModel.setTranslate ({ (pos.x * viewportWidth) - (0.5f * videoFrame->getWidth() * scaledSize.x),
                                (pos.y * viewportHeight) - (0.5f * videoFrame->getHeight() * scaledSize.y) });
         mModel.size (scaledSize);
-        mVideoShader->setModelProjection (mModel, cMat4x4 (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f));
+        mVideoShader->setModelProjection (mModel, projection);
 
         // ensure quad is created
         if (!mVideoQuad)
@@ -204,16 +204,11 @@ namespace {
               mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
             subtitleImage.setDirty (false);
 
-            // reuse mode, could use original more
-            mModel = cMat4x4();
-            // !!!!set translate from image pos!!!
             //model.setTranslate ();
-            cVec2 subTitlescaledSize = { (float)mSubtitleTextures[line]->getWidth() / mRect.getWidth(),
-                                         (float)mSubtitleTextures[line]->getHeight() / mRect.getHeight() };
-            mModel.size ({ scale, scale });
+            mSubtitleShader->setModelProjection (mModel, projection);
 
-            mSubtitleShader->setModelProjection (mModel, cMat4x4 (0.f,(float)mRect.getWidth(),
-                                                                  0.f,(float)mRect.getHeight(), -1.f,1.f));
+            //mSubtitleShader->setModelProjection (mModel, cMat4x4 (0.f,(float)mRect.getWidth(),
+            //                                                      0.f,(float)mRect.getHeight(), -1.f,1.f));
 
             // draw - assumes same size, same quad
             if (!mSubtitleQuads[line])
