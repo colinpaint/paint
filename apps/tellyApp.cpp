@@ -291,7 +291,7 @@ namespace {
 
           ImGui::GetWindowDrawList()->AddRectFilled (
             { pos.x + offset1,
-              pos.y - addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, kLines) },
+              pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower, kLines) },
             { pos.x + offset2, pos.y },
             0x8000ff00);
           }
@@ -305,7 +305,7 @@ namespace {
 
           ImGui::GetWindowDrawList()->AddRectFilled (
             { pos.x + offset1,
-              pos.y - addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, kLines) },
+              pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower, kLines) },
             { pos.x + offset2, pos.y },
             0x80808080);
           }

@@ -15,8 +15,8 @@ constexpr size_t kMaxAudioSamplesPerFrame = 2048;
 class cAudioFrame : public cFrame {
 public:
   cAudioFrame() {}
-  virtual ~cAudioFrame() { 
-    releaseResources(); 
+  virtual ~cAudioFrame() {
+    releaseResources();
     }
 
   //{{{
@@ -34,7 +34,7 @@ public:
     }
   //}}}
 
-  void addTime (int64_t time) { mTimes.push_back (time); }
+  float getSimplePower() const { return mSimplePower; }
   //{{{
   void calcPower() {
 
@@ -55,13 +55,19 @@ public:
       }
 
     // normalise
-    for (size_t channel = 0; channel < mNumChannels; channel++)
+    for (size_t channel = 0; channel < mNumChannels; channel++) {
       mPowerValues[channel] = sqrtf (mPowerValues[channel] / mSamplesPerFrame);
+      mSimplePower += mPeakValues[0];
+      }
+
+    mSimplePower /= mNumChannels;
     }
   //}}}
 
-  virtual void releaseResources() final { 
-    mTimes.clear(); 
+  void addTime (int64_t time) { mTimes.push_back (time); }
+
+  virtual void releaseResources() final {
+    mTimes.clear();
     }
 
   // vars
@@ -69,6 +75,7 @@ public:
   size_t mSamplesPerFrame = kMaxAudioSamplesPerFrame;
   uint32_t mSampleRate = 48000;
 
+  float mSimplePower = 0.f;
   std::array <float, kMaxAudioChannels> mPeakValues = {0.f};
   std::array <float, kMaxAudioChannels> mPowerValues = {0.f};
   std::array <float, kMaxAudioChannels * kMaxAudioSamplesPerFrame> mSamples = {0.f};
