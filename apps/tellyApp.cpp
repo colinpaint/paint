@@ -10,6 +10,13 @@
 #include <vector>
 #include <map>
 
+//#ifdef __linux__
+//  #include <unistd.h>
+//  #include <sys/poll.h>
+//#endif
+
+#include <sys/stat.h>
+
 //{{{  include stb
 // invoke header only library implementation here
 #ifdef _WIN32
@@ -598,8 +605,19 @@ namespace {
     virtual ~cTellyApp() = default;
 
     cMultiView& getMultiView() { return mMultiView; }
+
     bool hasTransportStream() { return mTransportStream; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
+
+    // fileSource
+    bool isFileSource() const { return !mFileName.empty(); }
+    std::string getFileName() const { return mFileName; }
+    uint64_t getFilePos() const { return mFilePos; }
+    size_t getFileSize() const { return mFileSize; }
+
+    // dvbSource
+    bool isDvbSource() const { return mDvbSource; }
+    cDvbSource& getDvbSource() { return *mDvbSource; }
 
     //{{{
     void fileSource (const string& filename, bool showAllServices) {
@@ -700,18 +718,8 @@ namespace {
                 streamPos += mTransportStream->demux (buffer, bytesRead, 0, false);
                 if (mFile)
                   fwrite (buffer, 1, bytesRead, mFile);
-
-                // get status
-                mSignalString = mDvbSource->getStatusString();
-
-                // log if more errors
-                bool show = getNumErrors() != mLastErrors;
-                mLastErrors = getNumErrors();
-                if (show)
-                  cLog::log (LOGINFO, fmt::format ("err:{} {}", getNumErrors(), mSignalString));
                 }
               }
-
             delete [] buffer;
             //}}}
           #endif
@@ -738,21 +746,11 @@ namespace {
       }
     //}}}
 
-    // fileSource
-    bool isFileSource() const { return !mFileName.empty(); }
-    std::string getFileName() const { return mFileName; }
-    uint64_t getFilePos() const { return mFilePos; }
-    size_t getFileSize() const { return mFileSize; }
-
-    // dvbSource
-    bool isDvbSource() const { return mDvbSource; }
-
-    // vars
-    cTransportStream* mTransportStream = nullptr;
-    cDvbSource* mDvbSource = nullptr;
-
   private:
     cMultiView mMultiView;
+
+    cTransportStream* mTransportStream = nullptr;
+    cDvbSource* mDvbSource = nullptr;
 
     // fileSource
     FILE* mFile = nullptr;
@@ -820,14 +818,14 @@ namespace {
         else if (tellyApp.isDvbSource()) {
           //{{{  draw cTransportStream::dvbSource signal:errors
           ImGui::SameLine();
-          ImGui::TextUnformatted (fmt::format ("{}:{}", tellyApp.mDvbSource->getTuneString(),
-                                                        tellyApp.mDvbSource->getStatusString()).c_str());
+          ImGui::TextUnformatted (fmt::format ("{}:{}", tellyApp.getDvbSource().getTuneString(),
+                                                        tellyApp.getDvbSource().getStatusString()).c_str());
           }
           //}}}
         //{{{  draw transportStream packet,errors
         ImGui::SameLine();
-        ImGui::TextUnformatted (fmt::format ("{}:{}", tellyApp.mTransportStream->getNumPackets(),
-                                                      tellyApp.mTransportStream->getNumErrors()).c_str());
+        ImGui::TextUnformatted (fmt::format ("{}:{}", tellyApp.getTransportStream().getNumPackets(),
+                                                      tellyApp.getTransportStream().getNumErrors()).c_str());
         //}}}
 
         // draw tab childWindow, monospaced font

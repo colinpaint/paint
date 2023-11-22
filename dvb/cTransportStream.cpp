@@ -18,8 +18,6 @@
   #include <sys/poll.h>
 #endif
 
-#include <sys/stat.h>
-
 #include "../common/date.h"
 #include "../common/utils.h"
 #include "../common/cDvbUtils.h"
