@@ -57,9 +57,9 @@ project (imguiApp VERSION 1.0.0)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app imgui opengl32 d3d11 d3dcompiler)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app opengl32 )
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app imgui GL)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app GL)
   endif()
 
 # edit app
@@ -68,9 +68,9 @@ project (editApp VERSION 1.0.0)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app common imgui opengl32 d3d11 d3dcompiler ws2_32)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app opengl32 ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app common imgui stdc++fs)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app stdc++fs)
   endif()
 
 #songApp
@@ -79,11 +79,9 @@ project (songApp VERSION 1.0.0)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app song audio decoders dvb net imgui
-                                                   opengl32 d3d11 d3dcompiler ws2_32)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app song dvb decoders net audio opengl32 ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app song audio decoders dvb net imgui
-                                                   stdc++fs pthread)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app song dvb decoders net audio stdc++fs pthread)
   endif()
 
 # tellyApp
@@ -93,9 +91,7 @@ project (tellyApp VERSION 1.0.0)
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb audio decoders imgui
-                                                   opengl32 dxgi d3d11 d3dcompiler ws2_32)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb decoders audio opengl32 ws2_32)
   elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb audio decoders imgui
-                                                   stdc++fs pthread)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb decoders audio stdc++fs pthread)
   endif()

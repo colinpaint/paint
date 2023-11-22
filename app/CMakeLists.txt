@@ -37,7 +37,7 @@ project (app VERSION 1.0.0)
                                                         IMGUI_IMPL_OPENGL_LOADER_CUSTOM=1
                                                         GLFW_INCLUDE_ES3=1
                                                         IMGUI_IMPL_OPENGL_ES3=1)
-    target_link_libraries (${PROJECT_NAME} PUBLIC common PRIVATE glfw GLESv2)
+    target_link_libraries (${PROJECT_NAME} PUBLIC common imgui PRIVATE glfw GLESv2)
 
   else()
     message (FATAL_ERROR, "app - unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
