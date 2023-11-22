@@ -164,16 +164,16 @@ namespace {
         cTexture& texture = videoFrame->getTexture (graphics);
         texture.setSource();
 
+        // model
         mModel = cMat4x4();
-        cVec2 scaledSize = { scale * viewportWidth / videoFrame->getWidth(),
-                             scale * viewportHeight / videoFrame->getHeight() };
-        cVec2 pos = position (viewIndex, numViews);
-        mModel.setTranslate ({ (pos.x * viewportWidth) - (0.5f * videoFrame->getWidth() * scaledSize.x),
-                               (pos.y * viewportHeight) - (0.5f * videoFrame->getHeight() * scaledSize.y) });
-        mModel.size (scaledSize);
+        cVec2 offset = position (viewIndex, numViews);
+        mModel.setTranslate ({ (offset.x - (0.5f * scale)) * viewportWidth,
+                               (offset.y - (0.5f * scale)) * viewportHeight });
+        mModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
+                       scale * viewportHeight / videoFrame->getHeight() });
         mVideoShader->setModelProjection (mModel, projection);
 
-        // ensure quad is created
+        // ensure quad is created and drawIt
         if (!mVideoQuad)
           mVideoQuad = graphics.createQuad (videoFrame->getSize());
 
@@ -204,13 +204,13 @@ namespace {
               mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
             subtitleImage.setDirty (false);
 
-            //model.setTranslate ();
+            float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
+            float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
+            mModel.setTranslate ({ (offset.x + ((xpos - 0.5f) * scale)) * viewportWidth,
+                                   (offset.y + ((ypos - 0.5f) * scale)) * viewportHeight });
             mSubtitleShader->setModelProjection (mModel, projection);
 
-            //mSubtitleShader->setModelProjection (mModel, cMat4x4 (0.f,(float)mRect.getWidth(),
-            //                                                      0.f,(float)mRect.getHeight(), -1.f,1.f));
-
-            // draw - assumes same size, same quad
+            // ensure quad is created (assumes same size) and drawIt
             if (!mSubtitleQuads[line])
               mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
             mSubtitleQuads[line]->draw();
@@ -250,6 +250,7 @@ namespace {
         for (auto& frame : videoRender.getFrames()) {
           //{{{  draw video frames
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
+
           float offset1 = (videoFrame->mPts - playerPts) * ptsScale;
           float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
 
@@ -263,6 +264,7 @@ namespace {
         for (auto frame : videoRender.getFreeFrames()) {
           //{{{  draw free video frames
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+
           float offset1 = (videoFrame->mPts - playerPts) * ptsScale;
           float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
 
@@ -279,17 +281,20 @@ namespace {
         for (auto& frame : audioRender.getFrames()) {
           //{{{  draw audio frames
           cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+
           float offset1 = (audioFrame->mPts - playerPts) * ptsScale;
           float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
+
           ImGui::GetWindowDrawList()->AddRectFilled (
             {pos.x + offset1, pos.y + 1.f},
             {pos.x + offset2, pos.y + 1.f + addValue (audioFrame->mPeakValues[0], mMaxPower, mMaxDisplayPower, mAudioLines)},
-            0xff00ffff);
+            0xff00ff00);
           }
           //}}}
         for (auto frame : audioRender.getFreeFrames()) {
           //{{{  draw free audio frames
           cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+
           float offset1 = (audioFrame->mPts - playerPts) * ptsScale;
           float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
 
