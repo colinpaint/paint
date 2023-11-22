@@ -188,5 +188,5 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
 cPlayer::~cPlayer() {
   mExit = true;
   while (mRunning)
-    this_thread::sleep_for (10ms);
+    this_thread::sleep_for (1ms);
   }

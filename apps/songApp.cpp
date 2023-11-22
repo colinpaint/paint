@@ -33,10 +33,6 @@
 #include "../common/cLog.h"
 #include "../common/cFileView.h"
 
-// song
-#include "../song/cSong.h"
-#include "../song/cSongLoader.h"
-
 // app
 #include "../app/cApp.h"
 #include "../app/cPlatform.h"
@@ -45,6 +41,10 @@
 #include "../app/cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
+
+// song
+#include "../song/cSong.h"
+#include "../song/cSongLoader.h"
 
 using namespace std;
 //}}}
