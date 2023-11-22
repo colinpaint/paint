@@ -105,7 +105,7 @@ void cAudioRender::addFrame (cFrame* frame) {
 
   // start player
   if (!getPlayer().isPlaying())
-    getPlayer().startPts (audioFrame->mPts);
+    getPlayer().startPlayPts (audioFrame->mPts);
   }
 //}}}
 

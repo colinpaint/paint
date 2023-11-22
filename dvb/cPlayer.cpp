@@ -31,7 +31,7 @@ using namespace std;
 constexpr int kSamplesWait = 2;
 
 //{{{
-cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate) 
+cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
     : mAudioRender(audioRender), mSampleRate(sampleRate) {
 
   mPlayerThread = thread ([=]() {
@@ -193,13 +193,5 @@ cPlayer::~cPlayer() {
   mExit = true;
   while (mRunning)
     this_thread::sleep_for (10ms);
-  }
-//}}}
-
-//{{{
-void cPlayer::startPts (int64_t pts) {
-
-  mPts = pts;
-  mPlaying = true;
   }
 //}}}

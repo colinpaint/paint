@@ -20,7 +20,13 @@ public:
   void setMute (bool mute) { mMute = mute; }
   void toggleMute() { mMute = !mMute; }
 
-  void startPts (int64_t pts);
+  //{{{
+  void startPlayPts (int64_t pts) {
+    mPts = pts;
+    mPlaying = true;
+    }
+  //}}}
+
   void togglePlay() { mPlaying = !mPlaying; }
 
 private:

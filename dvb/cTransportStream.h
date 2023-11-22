@@ -1,4 +1,4 @@
-//{{{  cDvbStream.h
+//{{{  cTransportStream.h
 // PAT inserts <pid,sid> into mProgramMap
 // PMT declares pgm and elementary stream pids, adds cService into mServiceMap
 // SDT names a service in mServiceMap
@@ -31,7 +31,7 @@ public:
 
 enum eRenderType { eRenderVideo, eRenderAudio, eRenderDescription, eRenderSubtitle };
 
-class cDvbStream {
+class cTransportStream {
 public:
   //{{{
   class cStream {
@@ -282,9 +282,9 @@ public:
     };
   //}}}
 
-  cDvbStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName,
-              bool realTime, bool showAllServices, bool showFirstService);
-  virtual ~cDvbStream() { clear(); }
+  cTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRootName,
+                    bool realTime, bool showAllServices, bool showFirstService);
+  virtual ~cTransportStream() { clear(); }
 
   //{{{  gets
   uint64_t getNumPackets() const { return mNumPackets; }

@@ -24,7 +24,7 @@
 #include "../fmt/include/fmt/format.h"
 
 // dvb
-#include "../dvb/cDvbStream.h"
+#include "../dvb/cTransportStream.h"
 #include "../dvb/cVideoRender.h"
 #include "../dvb/cVideoFrame.h"
 #include "../dvb/cAudioRender.h"
@@ -75,7 +75,7 @@ namespace {
   //{{{
   class cView {
   public:
-    cView (cDvbStream::cService& service) : mService(service) {}
+    cView (cTransportStream::cService& service) : mService(service) {}
     ~cView() = default;
 
     bool getHover() const { return mHover; }
@@ -474,7 +474,7 @@ namespace {
     //}}}
 
     // vars
-    cDvbStream::cService& mService;
+    cTransportStream::cService& mService;
 
     bool mHover = false;
 
@@ -536,14 +536,14 @@ namespace {
 
     // draw
     //{{{
-    void draw (cDvbStream& dvbStream, cGraphics& graphics) {
+    void draw (cTransportStream& transportStream, cGraphics& graphics) {
 
       if (!cView::mSubtitleShader)
         cView::mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
 
       // update viewMap from enabled services, taking care to reuse cView's
-      for (auto& pair : dvbStream.getServiceMap()) {
-        cDvbStream::cService& service = pair.second;
+      for (auto& pair : transportStream.getServiceMap()) {
+        cTransportStream::cService& service = pair.second;
 
         // look for service sid in viewMap
         auto it = mViewMap.find (pair.first);
@@ -586,17 +586,17 @@ namespace {
     //}}}
     virtual ~cTellyApp() = default;
 
-    bool hasDvbStream() { return mDvbStream; }
-    cDvbStream& getDvbStream() { return *mDvbStream; }
+    bool hasTransportStream() { return mTransportStream; }
+    cTransportStream& getTransportStream() { return *mTransportStream; }
     cMultiView& getMultiView() { return mMultiView; }
 
     //{{{
     void liveDvbSource (const cDvbMultiplex& dvbMultiplex, const string& recordRoot, bool showAllServices) {
     // create liveDvbSource from dvbMultiplex
 
-      mDvbStream = new cDvbStream (dvbMultiplex, recordRoot, true, showAllServices, false);
-      if (mDvbStream)
-        mDvbStream->dvbSource();
+      mTransportStream = new cTransportStream (dvbMultiplex, recordRoot, true, showAllServices, false);
+      if (mTransportStream)
+        mTransportStream->dvbSource();
       else
         cLog::log (LOGINFO, "cTellyApp::setLiveDvbSource - failed to create liveDvbSource");
       }
@@ -605,10 +605,10 @@ namespace {
     void fileSource (const string& filename, bool showAllServices) {
     // create fileSource, any channel
 
-      mDvbStream = new cDvbStream (kMultiplexes[0], "", false, showAllServices, true);
+      mTransportStream = new cTransportStream (kMultiplexes[0], "", false, showAllServices, true);
       string resolvedFilename = cFileUtils::resolve (filename);
-      if (mDvbStream)
-        mDvbStream->fileSource (resolvedFilename);
+      if (mTransportStream)
+        mTransportStream->fileSource (resolvedFilename);
       else
         cLog::log (LOGINFO, fmt::format ("cTellyApp::fileSource - failed to create fileSource {} {}",
                                          filename, filename == resolvedFilename ? "" : resolvedFilename));
@@ -627,7 +627,7 @@ namespace {
     //}}}
 
   private:
-    cDvbStream* mDvbStream = nullptr;
+    cTransportStream* mTransportStream = nullptr;
     cMultiView mMultiView;
     };
   //}}}
@@ -644,8 +644,8 @@ namespace {
       graphics.clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
 
       // draw multiView tellys as background
-      if (tellyApp.hasDvbStream())
-        multiView.draw (tellyApp.getDvbStream(), graphics);
+      if (tellyApp.hasTransportStream())
+        multiView.draw (tellyApp.getTransportStream(), graphics);
 
       //{{{  draw tabs
       ImGui::SameLine();
@@ -688,36 +688,39 @@ namespace {
       //ImGui::DragInt ("##hist", &mHistory, 0.25f, 0, 100, "h %d");
       //}}}
 
-      if (tellyApp.hasDvbStream()) {
-        cDvbStream& dvbStream = tellyApp.getDvbStream();
-        if (dvbStream.hasTdtTime()) {
+      if (tellyApp.hasTransportStream()) {
+        cTransportStream& transportStream = tellyApp.getTransportStream();
+        if (transportStream.hasTdtTime()) {
           //{{{  draw tdtTime
           ImGui::SameLine();
 
-          ImGui::TextUnformatted (dvbStream.getTdtTimeString().c_str());
+          ImGui::TextUnformatted (transportStream.getTdtTimeString().c_str());
           }
           //}}}
-        if (dvbStream.isFileSource()) {
+        if (transportStream.isFileSource()) {
           //{{{  draw filePos
           ImGui::SameLine();
 
           //ImGui::TextUnformatted (fmt::format ("{}k of {}k",
-          //                                     dvbStream.getFilePos()/1000,
-          //                                     dvbStream.getFileSize()/1000).c_str());
-          ImGui::TextUnformatted (fmt::format ("{:4.3f}%", (100.f * dvbStream.getFilePos()) / dvbStream.getFileSize()).c_str());
+          //                                     transportStream.getFilePos()/1000,
+          //                                     transportStream.getFileSize()/1000).c_str());
+          ImGui::TextUnformatted (fmt::format ("{:4.3f}%", (100.f * transportStream.getFilePos()) /
+                                                            transportStream.getFileSize()).c_str());
           }
           //}}}
-        else if (dvbStream.hasDvbSource()) {
-          //{{{  draw dvbStream::dvbSource signal:errors
+        else if (transportStream.hasDvbSource()) {
+          //{{{  draw cTransportStream::dvbSource signal:errors
           ImGui::SameLine();
 
-          ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getSignalString(), dvbStream.getErrorString()).c_str());
+          ImGui::TextUnformatted (fmt::format ("{}:{}", transportStream.getSignalString(),
+                                                        transportStream.getErrorString()).c_str());
           }
           //}}}
-        //{{{  draw dvbStream packet,errors
+        //{{{  draw transportStream packet,errors
         ImGui::SameLine();
 
-        ImGui::TextUnformatted (fmt::format ("{}:{}", dvbStream.getNumPackets(), dvbStream.getNumErrors()).c_str());
+        ImGui::TextUnformatted (fmt::format ("{}:{}", transportStream.getNumPackets(), 
+                                                      transportStream.getNumErrors()).c_str());
         //}}}
 
         // draw tab childWindow, monospaced font
@@ -725,10 +728,10 @@ namespace {
         ImGui::BeginChild ("tab", {0.f,0.f}, false,
                            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
         switch (mTab) {
-          case eTellyChan: drawChannels (dvbStream, graphics); break;
-          case eServices:  drawServices (dvbStream, graphics); break;
-          case ePids:      drawPidMap (dvbStream, graphics); break;
-          case eRecorded:  drawRecorded (dvbStream, graphics); break;
+          case eTellyChan: drawChannels (transportStream, graphics); break;
+          case eServices:  drawServices (transportStream, graphics); break;
+          case ePids:      drawPidMap (transportStream, graphics); break;
+          case eRecorded:  drawRecorded (transportStream, graphics); break;
           default:;
           }
 
@@ -753,12 +756,12 @@ namespace {
     enum eTab { eTelly, eTellyChan, eServices, ePids, eRecorded };
     inline static const vector<string> kTabNames = { "telly", "channels", "services", "pids", "recorded" };
     //{{{
-    void drawChannels (cDvbStream& dvbStream, cGraphics& graphics) {
+    void drawChannels (cTransportStream& transportStream, cGraphics& graphics) {
       (void)graphics;
 
       // draw services/channels
-      for (auto& pair : dvbStream.getServiceMap()) {
-        cDvbStream::cService& service = pair.second;
+      for (auto& pair : transportStream.getServiceMap()) {
+        cTransportStream::cService& service = pair.second;
         if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
           service.toggleAll();
 
@@ -774,11 +777,11 @@ namespace {
       }
     //}}}
     //{{{
-    void drawServices (cDvbStream& dvbStream, cGraphics& graphics) {
+    void drawServices (cTransportStream& transportStream, cGraphics& graphics) {
 
-      for (auto& pair : dvbStream.getServiceMap()) {
+      for (auto& pair : transportStream.getServiceMap()) {
         // iterate services
-        cDvbStream::cService& service = pair.second;
+        cTransportStream::cService& service = pair.second;
         //{{{  update button maxChars
         while (service.getChannelName().size() > mMaxNameChars)
           mMaxNameChars = service.getChannelName().size();
@@ -803,7 +806,7 @@ namespace {
 
         for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
          // iterate definedStreams
-          cDvbStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
+          cTransportStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
           if (stream.isDefined()) {
             ImGui::SameLine();
             // draw definedStream button - sid ensuresd unique button name
@@ -811,7 +814,7 @@ namespace {
                                            stream.getLabel(),
                                            stream.getPid(), mPidMaxChars[renderType], stream.getTypeName(),
                                            service.getSid()).c_str(), stream.isEnabled()))
-             dvbStream.toggleStream (service, eRenderType(renderType));
+             transportStream.toggleStream (service, eRenderType(renderType));
             }
           }
 
@@ -830,7 +833,7 @@ namespace {
 
         for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
           // iterate enabledStreams, drawing
-          cDvbStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
+          cTransportStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
           if (stream.isEnabled()) {
             switch (eRenderType(renderType)) {
               case eRenderVideo:
@@ -851,19 +854,19 @@ namespace {
       }
     //}}}
     //{{{
-    void drawPidMap (cDvbStream& dvbStream, cGraphics& graphics) {
+    void drawPidMap (cTransportStream& transportStream, cGraphics& graphics) {
     // draw pids
       (void)graphics;
 
       // calc error number width
       int errorChars = 1;
-      while (dvbStream.getNumErrors() > pow (10, errorChars))
+      while (transportStream.getNumErrors() > pow (10, errorChars))
         errorChars++;
 
       int prevSid = 0;
-      for (auto& pidInfoItem : dvbStream.getPidInfoMap()) {
+      for (auto& pidInfoItem : transportStream.getPidInfoMap()) {
         // iterate for pidInfo
-        cDvbStream::cPidInfo& pidInfo = pidInfoItem.second;
+        cTransportStream::cPidInfo& pidInfo = pidInfoItem.second;
 
         // draw separator, crude test for new service, fails sometimes
         if ((pidInfo.getSid() != prevSid) && (pidInfo.getStreamType() != 5) && (pidInfo.getStreamType() != 11))
@@ -900,10 +903,10 @@ namespace {
       }
     //}}}
     //{{{
-    void drawRecorded (cDvbStream& dvbStream, cGraphics& graphics) {
+    void drawRecorded (cTransportStream& transportStream, cGraphics& graphics) {
       (void)graphics;
 
-      for (auto& program : dvbStream.getRecordPrograms())
+      for (auto& program : transportStream.getRecordPrograms())
         ImGui::TextUnformatted (program.c_str());
       }
     //}}}

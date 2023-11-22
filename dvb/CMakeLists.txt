@@ -2,7 +2,7 @@ project (dvb VERSION 1.0.0)
   add_library (${PROJECT_NAME} cFrame.h cAudioFrame.h cVideoFrame.h cFFmpegVideoFrame.h
                                cDecoder.h cDecoderQueueItem.h cFFmpegVideoDecoder.h  cFFmpegAudioDecoder.h
                                cDvbSource.h cDvbSource.cpp
-                               cDvbStream.h cDvbStream.cpp
+                               cTransportStream.h cTransportStream.cpp
                                cPlayer.h cPlayer.cpp
                                cRender.h cRender.cpp
                                cVideoRender.h cVideoRender.cpp
