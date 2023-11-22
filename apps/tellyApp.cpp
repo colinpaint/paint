@@ -134,50 +134,53 @@ namespace {
 
       int64_t playerPts = mService.getRenderStream (eRenderAudio).getPts();
       if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-        //{{{  get playerPts from audioStream
+        //{{{  get playerPts from audioStream, draw framesView, audioMeter
         cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
         playerPts = audioRender.getPlayer().getPts();
 
         audioRender.getPlayer().setMute (!selected);
+
+        if (selected)
+          mFramesView.draw (audioRender, videoRender, playerPts,
+                            ImVec2((float)mRect.getCentre().x,
+                                   (float)mRect.bottom - ImGui::GetTextLineHeight()));
+
+        mAudioMeterView.draw (audioRender, playerPts,
+                              ImVec2((float)mRect.right - ImGui::GetTextLineHeight()/2.f,
+                                     (float)mRect.bottom - ImGui::GetTextLineHeight()/2.f));
         }
         //}}}
 
       // get videoFrame from playerPts
       cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
       if (videoFrame) {
-        //{{{  draw videoFrame
-        cVec2 pos = position (viewIndex, numViews);
-        cVec2 scaledSize = { (scale * ImGui::GetWindowWidth()) / videoFrame->getWidth(),
-                             (scale * ImGui::GetWindowHeight()) / videoFrame->getHeight() };
+        //{{{  draw videoFrame, subtitles
+        mVideoShader->use();
 
-        mModel = cMat4x4();
-        mModel.setTranslate ( {(ImGui::GetWindowWidth() * pos.x) - ((videoFrame->getWidth() / 2.f) * scaledSize.x),
-                              (ImGui::GetWindowHeight() * pos.y) - ((videoFrame->getHeight() / 2.f) * scaledSize.y)} );
-        mModel.size (scaledSize);
-
-        //mRect = videoRender.drawFrame (videoFrame, graphics, mModel,
-        //                               ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+        // get videoFrame texture
+        cTexture& texture = videoFrame->getTexture (graphics);
+        texture.setSource();
 
         float viewportWidth = ImGui::GetWindowWidth();
         float viewportHeight = ImGui::GetWindowHeight();
 
-        // get texture
-        cTexture& texture = videoFrame->getTexture (graphics);
-        texture.setSource();
-
-        mVideoShader->use();
-
-        cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-        mVideoShader->setModelProjection (mModel, projection);
+        mModel = cMat4x4();
+        cVec2 scaledSize = { scale * viewportWidth / videoFrame->getWidth(),
+                             scale * viewportHeight / videoFrame->getHeight() };
+        cVec2 pos = position (viewIndex, numViews);
+        mModel.setTranslate ({ (pos.x * viewportWidth) - (0.5f * videoFrame->getWidth() * scaledSize.x),
+                               (pos.y * viewportHeight) - (0.5f * videoFrame->getHeight() * scaledSize.y) });
+        mModel.size (scaledSize);
+        mVideoShader->setModelProjection (mModel, cMat4x4 (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f));
 
         // ensure quad is created
         if (!mVideoQuad)
           mVideoQuad = graphics.createQuad (videoFrame->getSize());
         mVideoQuad->draw();
 
+        // save videoFrame view rect
         mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
                        mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
-
         if (mHover)
           ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top},
                                                { (float)mRect.right, (float)mRect.bottom },
@@ -185,57 +188,42 @@ namespace {
 
         // crude management of videoFrame cache
         videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
-        }
-        //}}}
 
-      cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (mService.getRenderStream (eRenderSubtitle).getRender());
-      if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-        //{{{  draw subtitles
-        mSubtitleShader->use();
+        cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (mService.getRenderStream (eRenderSubtitle).getRender());
+        if (mService.getRenderStream (eRenderAudio).isEnabled()) {
+          //{{{  draw subtitles
+          mSubtitleShader->use();
 
-        for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
-          cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
+          for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
+            cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
 
-          if (!mSubtitleTextures[line])
-            mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
-          mSubtitleTextures[line]->setSource();
+            if (!mSubtitleTextures[line])
+              mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
+            mSubtitleTextures[line]->setSource();
 
-          // update subtitle texture if image dirty
-          if (subtitleImage.isDirty())
-            mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
-          subtitleImage.setDirty (false);
+            // update subtitle texture if image dirty
+            if (subtitleImage.isDirty())
+              mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
+            subtitleImage.setDirty (false);
 
-          // reuse mode, could use original more
-          mModel = cMat4x4();
-          // !!!!set translate from image pos!!!
-          //model.setTranslate ();
-          cVec2 scaledSize = { (float)mSubtitleTextures[line]->getWidth() / mRect.getWidth(),
-                               (float)mSubtitleTextures[line]->getHeight() / mRect.getHeight() };
-          mModel.size ({ scale, scale });
+            // reuse mode, could use original more
+            mModel = cMat4x4();
+            // !!!!set translate from image pos!!!
+            //model.setTranslate ();
+            cVec2 subTitlescaledSize = { (float)mSubtitleTextures[line]->getWidth() / mRect.getWidth(),
+                                         (float)mSubtitleTextures[line]->getHeight() / mRect.getHeight() };
+            mModel.size ({ scale, scale });
 
-          cMat4x4 projection (0.f,(float)mRect.getWidth(), 0.f,(float)mRect.getHeight(), -1.f,1.f);
-          mSubtitleShader->setModelProjection (mModel, projection);
+            mSubtitleShader->setModelProjection (mModel, cMat4x4 (0.f,(float)mRect.getWidth(),
+                                                                  0.f,(float)mRect.getHeight(), -1.f,1.f));
 
-          // ??? should check sameSize ???
-          if (!mSubtitleQuads[line])
-            mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
-          mSubtitleQuads[line]->draw();
+            // draw - assumes same size, same quad
+            if (!mSubtitleQuads[line])
+              mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
+            mSubtitleQuads[line]->draw();
+            }
           }
-        }
-        //}}}
-
-      if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-        //{{{  draw frames, audioPower
-        cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
-
-        if (selected)
-          mFramesView.draw (audioRender, videoRender, playerPts,
-                            ImVec2((float)mRect.getCentre().x,
-                                   (float)mRect.bottom - ImGui::GetTextLineHeight()));
-
-        mAudioPowerView.draw (audioRender, playerPts,
-                              ImVec2((float)mRect.right - ImGui::GetTextLineHeight()/2.f,
-                                     (float)mRect.bottom - ImGui::GetTextLineHeight()/2.f));
+          //}}}
         }
         //}}}
       }
@@ -364,14 +352,12 @@ namespace {
       };
     //}}}
     //{{{
-    class cAudioPowerView {
+    class cAudioMeterView {
     public:
-      cAudioPowerView() {}
-      ~cAudioPowerView() = default;
+      cAudioMeterView() {}
+      ~cAudioMeterView() = default;
 
-      //{{{
       void draw (cAudioRender& audioRender, int64_t playerPts, ImVec2 pos) {
-
         cAudioFrame* audioFrame = audioRender.findAudioFrameFromPts (playerPts);
         if (audioFrame) {
           size_t drawChannels = audioFrame->mNumChannels;
@@ -404,7 +390,6 @@ namespace {
               0x800000ff);
           }
         }
-      //}}}
 
     private:
       //  vars
@@ -412,7 +397,6 @@ namespace {
       const float mPixelsPerAudioChannel = 6.f;
       };
     //}}}
-    static const size_t kMaxSubtitleLines = 3;
 
     //{{{
     cVec2 position (size_t index, size_t numViews) {
@@ -519,7 +503,7 @@ namespace {
     bool mHover = false;
 
     cFramesView mFramesView;
-    cAudioPowerView mAudioPowerView;
+    cAudioMeterView mAudioMeterView;
 
     // video
     cQuad* mVideoQuad = nullptr;
@@ -527,6 +511,8 @@ namespace {
     // subtitle
     cMat4x4 mModel;
     cRect mRect = { 0,0,0,0 };
+
+    static const size_t kMaxSubtitleLines = 3;
     array <cQuad*,kMaxSubtitleLines> mSubtitleQuads = { nullptr };
     array <cTexture*,kMaxSubtitleLines> mSubtitleTextures = { nullptr };
     };
