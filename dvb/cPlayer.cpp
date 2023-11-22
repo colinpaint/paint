@@ -124,7 +124,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
         cAudioFrame* audioFrame;
 
         { // locked mutex
-        shared_lock<shared_mutex> lock (getSharedMutex());
+        shared_lock<shared_mutex> lock (mAudioRender.getSharedMutex());
         audioFrame = mAudioRender.findAudioFrameFromPts (mPts);
         if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
           samplesWait = 0;

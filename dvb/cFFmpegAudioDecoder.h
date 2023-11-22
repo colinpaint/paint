@@ -8,11 +8,6 @@
 
 #include "../common/cLog.h"
 
-extern "C" {
-  #include "libavcodec/avcodec.h"
-  #include "libavformat/avformat.h"
-  }
-
 #include "cDecoder.h"
 #include "cAudioFrame.h"
 //}}}

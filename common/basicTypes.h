@@ -8,7 +8,6 @@
 #include <algorithm>
 
 #include "../common/cLog.h"
-#include "fmt/format.h"
 //}}}
 
 // float vec, matrix

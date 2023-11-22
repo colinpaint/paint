@@ -11,7 +11,6 @@
 #include "cGraphics.h"
 
 #include "../common/cLog.h"
-#include "fmt/format.h"
 
 using namespace std;
 //}}}

@@ -8,14 +8,6 @@
 
 #include "../common/cLog.h"
 
-extern "C" {
-  #include <libavcodec/avcodec.h>
-  #include <libavformat/avformat.h>
-  #include <libswscale/swscale.h>
-  #include <libavutil/motion_vector.h>
-  #include <libavutil/frame.h>
-  }
-
 #include "cDecoder.h"
 #include "cFrame.h"
 //}}}

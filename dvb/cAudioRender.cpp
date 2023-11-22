@@ -18,13 +18,21 @@
 #include "../common/cLog.h"
 #include "../common/utils.h"
 
-#pragma warning (push)
-#pragma warning (disable: 4244)
+//{{{  include libav
+#ifdef _WIN32
+  #pragma warning (push)
+  #pragma warning (disable: 4244)
+#endif
+
 extern "C" {
   #include "libavcodec/avcodec.h"
   #include "libavformat/avformat.h"
   }
-#pragma warning (pop)
+
+#ifdef _WIN32
+  #pragma warning (pop)
+#endif
+//}}}
 
 #include "cFFmpegAudioDecoder.h"
 #include "cPlayer.h"

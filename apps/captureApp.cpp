@@ -10,7 +10,6 @@
 #include <thread>
 
 #include "../common/cLog.h"
-#include "../fmt/include/fmt/format.h"
 
 #include "../audio/cCaptureWASAPI.h"
 #include "../audio/audioHelpers.h"

@@ -10,18 +10,28 @@
 #include <vector>
 #include <map>
 
-// stb - invoke header only library implementation here
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
+//{{{  include stb
+// invoke header only library implementation here
+#ifdef _WIN32
+  #pragma warning (push)
+  #pragma warning (disable: 4244)
+#endif
+
+  #define STB_IMAGE_IMPLEMENTATION
+  #include <stb_image.h>
+  #define STB_IMAGE_WRITE_IMPLEMENTATION
+  #include <stb_image_write.h>
+
+#ifdef _WIN32
+  #pragma warning (pop)
+#endif
+//}}}
 
 // utils
 #include "../common/date.h"
 #include "../common/utils.h"
 #include "../common/fileUtils.h"
 #include "../common/cLog.h"
-#include "../fmt/include/fmt/format.h"
 
 // dvb
 #include "../dvb/cTransportStream.h"
@@ -101,10 +111,7 @@ namespace {
         playerPts = audioRender.getPlayer().getPts();
         }
 
-      // get videoFrame from playerPts
-      cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
-      if (videoFrame)
-        videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
+      videoRender.trimVideoBeforePts (playerPts - videoRender.getPtsDuration());
       }
     //}}}
 

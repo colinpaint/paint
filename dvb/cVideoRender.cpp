@@ -19,6 +19,12 @@
 #include "../common/cLog.h"
 #include "../common/utils.h"
 
+//{{{  include libav
+#ifdef _WIN32
+  #pragma warning (push)
+  #pragma warning (disable: 4244)
+#endif
+
 extern "C" {
   #include <libavcodec/avcodec.h>
   #include <libavformat/avformat.h>
@@ -27,6 +33,10 @@ extern "C" {
   #include <libavutil/frame.h>
   }
 
+#ifdef _WIN32
+  #pragma warning (pop)
+#endif
+//}}}
 #include "cFFmpegVideoFrame.h"
 #include "cFFmpegVideoDecoder.h"
 

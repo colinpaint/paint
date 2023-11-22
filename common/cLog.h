@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <string>
 #include <chrono>
+
+#include "../fmt/include/fmt/format.h"
 //}}}
 
 // no class or namespace qualification, reduces code clutter - cLog::log (LOG* - bad enough
