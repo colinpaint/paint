@@ -1,7 +1,6 @@
 // cWinAudio16.h
-#pragma once
 //{{{  includes
-#define _CRT_SECURE_NO_WARNINGS
+#pragma once
 
 #include <stdint.h>
 #include <xaudio2.h>

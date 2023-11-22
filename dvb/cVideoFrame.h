@@ -64,8 +64,8 @@ public:
   //}}}
 
   //{{{
-  void addTime (int64_t time) {
-    mTimes.push_back (time);
+  void addTime (int64_t logTime) {
+    mTimes.push_back (logTime);
     }
   //}}}
   //{{{

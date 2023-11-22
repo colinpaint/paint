@@ -1,6 +1,7 @@
 // cLinuxAudio.h
 #pragma once
 //{{{  includes
+#pragma once
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -122,8 +123,8 @@
       }
     //}}}
     //{{{
-    virtual ~cAudio() { 
-      pa_simple_free (mSimple); 
+    virtual ~cAudio() {
+      pa_simple_free (mSimple);
       }
     //}}}
 

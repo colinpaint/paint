@@ -16,7 +16,7 @@
 
 class cDvbSource;
 class cRender;
-class cTexture;
+class cPlayer;
 //}}}
 
 //{{{
@@ -279,6 +279,8 @@ public:
 
     // streams - match sizeof eRenderType
     std::array <cStream,4> mRenderStreams;
+
+    cPlayer* mPlayer = nullptr;
     //}}}
     };
   //}}}

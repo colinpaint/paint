@@ -7,11 +7,10 @@
 #include <thread>
 
 #include "cRender.h"
-#include "../common/cMiniLog.h"
 
 class cAudioFrame;
 class cAudioDecoder;
-class cAudioPlayer;
+class cPlayer;
 //}}}
 
 enum class eAudioFrameType { eUnknown, eId3Tag, eWav, eMp3, eAacAdts, eAacLatm };
@@ -23,18 +22,13 @@ public:
 
   // gets
   size_t getSampleRate() const { return mSampleRate; }
+  size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
   int64_t getPtsDuration() const { return mPtsDuration; }
+
+  cPlayer& getPlayer() { return *mPlayer; }
 
   // find
   cAudioFrame* findAudioFrameFromPts (int64_t pts);
-
-  // player
-  bool isPlaying() const { return mPlaying; }
-  int64_t getPlayerPts() const { return mPlayerPts; }
-
-  void setMute (bool mute) { mMute = mute; }
-  void toggleMute() { mMute = !mMute; }
-  void togglePlaying() { mPlaying = !mPlaying; }
 
   // callbacks
   cFrame* getFrame();
@@ -45,7 +39,7 @@ public:
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
 
 private:
-  void startPlayerPts (int64_t pts);
+  cPlayer* mPlayer = nullptr;
 
   // vars
   size_t mSampleRate;
@@ -53,12 +47,4 @@ private:
   int64_t mPtsDuration;
 
   std::string mFrameInfo;
-
-  // player
-  std::thread mPlayerThread;
-  bool mMute = true;
-  bool mPlaying = false;
-  bool mRunning = true;
-  bool mExit = false;
-  int64_t mPlayerPts = 0;
   };

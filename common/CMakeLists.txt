@@ -21,6 +21,7 @@ project (common VERSION 1.0.0)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_compile_options (${PROJECT_NAME} PUBLIC /W4
                                                    /fp:fast
+                                                   /EHsc
                                                    ${BUILD_MSVC_COMPILE_OPTIONS})
     if (USE_AVX512)
       message (STATUS "windows built with AVX X2 AVX512")

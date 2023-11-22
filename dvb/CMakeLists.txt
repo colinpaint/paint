@@ -3,10 +3,11 @@ project (dvb VERSION 1.0.0)
                                cDecoder.h cDecoderQueueItem.h cFFmpegVideoDecoder.h  cFFmpegAudioDecoder.h
                                cDvbSource.h cDvbSource.cpp
                                cDvbStream.h cDvbStream.cpp
+                               cPlayer.h cPlayer.cpp
                                cRender.h cRender.cpp
                                cVideoRender.h cVideoRender.cpp
                                cAudioRender.h cAudioRender.cpp
-                               cSubtitleFrame.h cSubtitleDecoder.h cSubtitleImage.h 
+                               cSubtitleFrame.h cSubtitleDecoder.h cSubtitleImage.h
                                cSubtitleRender.h cSubtitleRender.cpp
                                )
 
