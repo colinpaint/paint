@@ -133,6 +133,6 @@ string cVideoRender::getInfoString() const {
 //}}}
 //{{{
 void cVideoRender::trimVideoBeforePts (int64_t pts) {
-  trimFramesBeforePts (pts / mPtsDuration);
+  trimFramesBeforePts ((pts - mPtsDuration) / mPtsDuration);
   }
 //}}}

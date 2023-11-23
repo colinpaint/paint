@@ -93,10 +93,10 @@ namespace {
   //}}}
 
   //{{{
-  class cServiceView {
+  class cView {
   public:
-    cServiceView (cTransportStream::cService& service) : mService(service) {}
-    ~cServiceView() = default;
+    cView (cTransportStream::cService& service) : mService(service) {}
+    ~cView() = default;
 
     uint16_t getId() const { return mService.getSid(); }
 
@@ -118,6 +118,7 @@ namespace {
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (
         mService.getRenderStream (eRenderVideo).getRender());
+
       int64_t playPts = mService.getRenderStream (eRenderAudio).getPts();
       if (mService.getRenderStream (eRenderAudio).isEnabled()) {
         //{{{  get playPts from audioStream
@@ -130,11 +131,11 @@ namespace {
 
       // draw if selected or none selected
       if (!anySelected || mSelected) {
-        // draw video and graphics
-        float scale = (numViews <= 1) ? 1.f : ((numViews <= 4) ? 0.5f : ((numViews <= 9) ? 0.33f : 0.25f));
         float viewportWidth = ImGui::GetWindowWidth();
         float viewportHeight = ImGui::GetWindowHeight();
         cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+
+        float scale = getScale (numViews);
 
         // show nearest videoFrame to playPts
         cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playPts);
@@ -160,16 +161,20 @@ namespace {
             mVideoQuad = graphics.createQuad (videoFrame->getSize());
 
           mVideoQuad->draw();
-          //}}}
 
           mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
                          mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
-          if (mHover)
-            ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top},
-                                                 { (float)mRect.right, (float)mRect.bottom },
-                                                 0xffc0ffff);
+          //}}}
 
-          cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (mService.getRenderStream (eRenderSubtitle).getRender());
+          if (getHover() || getSelected())
+            //{{{  draw select rectangle
+            ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top },
+                                                 { (float)mRect.right, (float)mRect.bottom },
+                                                 getHover() ? 0xffc0ffff : 0xFFFFFFFF);
+            //}}}
+
+          cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (
+            mService.getRenderStream (eRenderSubtitle).getRender());
           if (mService.getRenderStream (eRenderAudio).isEnabled()) {
             //{{{  draw subtitles
             mSubtitleShader->use();
@@ -220,7 +225,7 @@ namespace {
           //}}}
         }
 
-      videoRender.trimVideoBeforePts (playPts - videoRender.getPtsDuration());
+      videoRender.trimVideoBeforePts (playPts);
       }
     //}}}
 
@@ -506,6 +511,13 @@ namespace {
         }
       }
     //}}}
+    //{{{
+    float getScale (size_t numViews) const {
+      return (numViews <= 1) ? 1.f :
+        ((numViews <= 4) ? 0.5f :
+          ((numViews <= 9) ? 0.33f : 0.25f));
+      }
+    //}}}
 
     // vars
     cTransportStream::cService& mService;
@@ -535,7 +547,7 @@ namespace {
     ~cMultiView() = default;
 
     // gets
-    size_t getNumViews() const { return mServiceView.size(); }
+    size_t getNumViews() const { return mViews.size(); }
 
     //{{{
     bool hover() {
@@ -543,7 +555,7 @@ namespace {
 
       bool result = false;
 
-      for (auto& view : mServiceView)
+      for (auto& view : mViews)
         if (view.second.hover())
           result = true;;
 
@@ -555,7 +567,7 @@ namespace {
     uint16_t picked (cVec2 mousePosition) {
     // pick first view that matches
 
-      for (auto& view : mServiceView)
+      for (auto& view : mViews)
         if (view.second.picked (mousePosition)) {
           cLog::log (LOGINFO, fmt::format ("picked {}", view.second.getId()));
           return view.second.getId();
@@ -569,7 +581,7 @@ namespace {
     // toggle select
 
       mSelected = !mSelected;
-      for (auto& view : mServiceView)
+      for (auto& view : mViews)
         view.second.select (mSelected && (id == view.first));
       }
     //}}}
@@ -577,37 +589,37 @@ namespace {
     //{{{
     void draw (cTransportStream& transportStream, cGraphics& graphics) {
 
-      if (!cServiceView::mVideoShader)
-       cServiceView::mVideoShader = graphics.createTextureShader (cTexture::eYuv420);
+      if (!cView::mVideoShader)
+       cView::mVideoShader = graphics.createTextureShader (cTexture::eYuv420);
 
-      if (!cServiceView::mSubtitleShader)
-        cServiceView::mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
+      if (!cView::mSubtitleShader)
+        cView::mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
 
-      // update serviceViewMap from enabled services, take care to reuse cServiceView's
+      // update viewMap from enabled services, take care to reuse cView's
       for (auto& pair : transportStream.getServiceMap()) {
         cTransportStream::cService& service = pair.second;
 
-        // find service sid in serviceViewMap
-        auto it = mServiceView.find (pair.first);
-        if (it == mServiceView.end()) {
+        // find service sid in viewMap
+        auto it = mViews.find (pair.first);
+        if (it == mViews.end()) {
           if (service.getRenderStream (eRenderVideo).isEnabled())
-            // enabled and not found, add service to serviceViewMap
-            mServiceView.emplace (service.getSid(), cServiceView (service));
+            // enabled and not found, add service to viewMap
+            mViews.emplace (service.getSid(), cView (service));
           }
         else if (!service.getRenderStream (eRenderVideo).isEnabled())
-          // found, but not enabled, remove service from serviceViewMap
-          mServiceView.erase (it);
+          // found, but not enabled, remove service from viewMap
+          mViews.erase (it);
         }
 
       // draw views
       size_t viewIndex = 0;
-      for (auto& view : mServiceView)
+      for (auto& view : mViews)
         view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), viewIndex++);
       }
     //}}}
 
   private:
-    map <uint16_t, cServiceView> mServiceView;
+    map <uint16_t, cView> mViews;
 
     bool mHover = false;
     bool mSelected = false;
@@ -687,19 +699,25 @@ namespace {
       }
     //}}}
     //{{{
-    void liveDvbSource (const cDvbMultiplex& dvbMultiplex, const string& recordRoot, bool showAllServices) {
+    void liveDvbSource (const cDvbMultiplex& multiplex, const string& recordRoot, bool showAllServices) {
     // create liveDvbSource from dvbMultiplex
 
-      if (dvbMultiplex.mFrequency)
-        mDvbSource = new cDvbSource (dvbMultiplex.mFrequency, 0);
+      cLog::log (LOGINFO, fmt::format ("using multiplex {} {} record {} {}",
+                                       multiplex.mName, multiplex.mFrequency, 
+                                       recordRoot, showAllServices ? "all " : ""));
 
-      mTransportStream = new cTransportStream (dvbMultiplex, recordRoot, true, showAllServices, false);
+      mMultiplex = multiplex;
+      mRecordRoot = recordRoot;
+      if (multiplex.mFrequency)
+        mDvbSource = new cDvbSource (multiplex.mFrequency, 0);
+
+      mTransportStream = new cTransportStream (multiplex, recordRoot, true, showAllServices, false);
       if (mTransportStream) {
-        thread([=, &dvbMultiplex, &recordRoot]() {
+        thread([=]() {
           cLog::setThreadName ("dvb");
 
-          FILE* mFile = dvbMultiplex.mRecordAll ?
-            fopen ((recordRoot + dvbMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
+          FILE* mFile = mMultiplex.mRecordAll ?
+            fopen ((mRecordRoot + mMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
 
           #ifdef _WIN32
             //{{{  windows
@@ -770,6 +788,8 @@ namespace {
 
     cTransportStream* mTransportStream = nullptr;
     cDvbSource* mDvbSource = nullptr;
+    cDvbMultiplex mMultiplex;
+    string mRecordRoot;
 
     // fileSource
     FILE* mFile = nullptr;
@@ -1269,10 +1289,8 @@ int main (int numArgs, char* args[]) {
   cTellyApp tellyApp ({1920/2, 1080/2}, fullScreen);
   tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
-  if (filename.empty()) {
-    cLog::log (LOGINFO, fmt::format ("- using multiplex {}", selectedMultiplex.mName));
+  if (filename.empty()) 
     tellyApp.liveDvbSource (selectedMultiplex, kRootDir, showAllServices);
-    }
   else
     tellyApp.fileSource (filename, showAllServices);
   tellyApp.mainUILoop();
