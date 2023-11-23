@@ -190,7 +190,7 @@ namespace {
                          mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
           //}}}
 
-          if (getHover() || getSelected())
+          if ((getHover() || getSelected()) && !getSelectedFull())
             //{{{  draw select rectangle
             ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top },
                                                  { (float)mRect.right, (float)mRect.bottom },
