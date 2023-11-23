@@ -232,7 +232,7 @@ private:
       // y texture
       glBindTexture (GL_TEXTURE_2D, mTextureId[0]);
       if (strides)
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[0]);
+        glPixelStorei (GL_UNPACK_ROW_LENGTH, strides[0]);
       else
         glPixelStorei (GL_UNPACK_ROW_LENGTH, mSize.x);
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RED, mSize.x, mSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, pixels[0]);
