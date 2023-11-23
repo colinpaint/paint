@@ -59,7 +59,8 @@ public:
       mSimplePower += mPowerValues[channel];
       }
 
-    mSimplePower /= mNumChannels;
+    // crude limit of channels for 5.1
+    mSimplePower /= std::max (mNumChannels,size_t(3));
     }
   //}}}
 
