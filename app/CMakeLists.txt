@@ -10,12 +10,13 @@ project (app VERSION 1.0.0)
     target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS})
     target_link_libraries (${PROJECT_NAME} PRIVATE glfw)
 
+    target_link_libraries (${PROJECT_NAME} PUBLIC common imgui)
     target_link_libraries (${PROJECT_NAME} PRIVATE glad)
     find_package (OpenGL REQUIRED)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
       target_link_libraries (${PROJECT_NAME} PRIVATE GL)
     endif()
-    target_link_libraries (${PROJECT_NAME} PUBLIC common imgui)
+
   elseif (BUILD_GRAPHICS STREQUAL "GLES30" OR
           BUILD_GRAPHICS STREQUAL "GLES31" OR
           BUILD_GRAPHICS STREQUAL "GLES32")
@@ -30,6 +31,7 @@ project (app VERSION 1.0.0)
                                  cGLES3Graphics.h)
 
     target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS})
+    target_link_libraries (${PROJECT_NAME} PUBLIC common imgui)
     target_link_libraries (${PROJECT_NAME} PRIVATE glfw)
 
     find_package (OpenGL REQUIRED)
@@ -37,7 +39,6 @@ project (app VERSION 1.0.0)
                                                         GLFW_INCLUDE_ES3=1
                                                         IMGUI_IMPL_OPENGL_ES3=1)
     target_link_libraries (${PROJECT_NAME} PRIVATE GLESv2)
-    target_link_libraries (${PROJECT_NAME} PUBLIC common imgui)
 
   else()
     message (FATAL_ERROR, "app - unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")

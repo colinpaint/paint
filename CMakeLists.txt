@@ -10,8 +10,10 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   set (BUILD_MSVC_COMPILE_OPTIONS "/arch:AVX" CACHE STRING "msvc compile options")
+  set (BUILD_GRAPHICS "GL3" CACHE STRING "graphics backend")
 else()
   set (BUILD_LINUX_COMPILE_OPTIONS "-Ofast" CACHE STRING "gcc compile options")
+  set (BUILD_GRAPHICS "GLES31" CACHE STRING "graphics backend")
 endif()
 #
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "limited configs" FORCE)
