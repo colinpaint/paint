@@ -136,7 +136,8 @@ namespace {
       }
     //}}}
     //{{{
-    void draw (cGraphics& graphics, bool selectFull, size_t numViews, size_t viewIndex) {
+    void draw (cGraphics& graphics, bool selectFull, size_t numViews,
+               bool drawSubtitle, size_t viewIndex) {
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (
         mService.getRenderStream (eRenderVideo).getRender());
@@ -195,37 +196,39 @@ namespace {
                                                  getHover() ? 0xffc0ffff : 0xFFFFFFFF);
             //}}}
 
-          cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (
-            mService.getRenderStream (eRenderSubtitle).getRender());
-          if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-            //{{{  draw subtitles
-            mSubtitleShader->use();
+          if (drawSubtitle) {
+            cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (
+              mService.getRenderStream (eRenderSubtitle).getRender());
+            if (mService.getRenderStream (eRenderAudio).isEnabled()) {
+              //{{{  draw subtitles
+              mSubtitleShader->use();
 
-            for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
-              cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
+              for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
+                cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
 
-              if (!mSubtitleTextures[line])
-                mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
-              mSubtitleTextures[line]->setSource();
+                if (!mSubtitleTextures[line])
+                  mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
+                mSubtitleTextures[line]->setSource();
 
-              // update subtitle texture if image dirty
-              if (subtitleImage.isDirty())
-                mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
-              subtitleImage.setDirty (false);
+                // update subtitle texture if image dirty
+                if (subtitleImage.isDirty())
+                  mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
+                subtitleImage.setDirty (false);
 
-              float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
-              float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-              mModel.setTranslate ({ (fraction.x + ((xpos - 0.5f) * scale)) * viewportWidth,
-                                     (fraction.y + ((ypos - 0.5f) * scale)) * viewportHeight });
-              mSubtitleShader->setModelProjection (mModel, projection);
+                float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
+                float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
+                mModel.setTranslate ({ (fraction.x + ((xpos - 0.5f) * scale)) * viewportWidth,
+                                       (fraction.y + ((ypos - 0.5f) * scale)) * viewportHeight });
+                mSubtitleShader->setModelProjection (mModel, projection);
 
-              // ensure quad is created (assumes same size) and drawIt
-              if (!mSubtitleQuads[line])
-                mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
-              mSubtitleQuads[line]->draw();
+                // ensure quad is created (assumes same size) and drawIt
+                if (!mSubtitleQuads[line])
+                  mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
+                mSubtitleQuads[line]->draw();
+                }
               }
+              //}}}
             }
-            //}}}
           }
 
         if (mService.getRenderStream (eRenderAudio).isEnabled()) {
@@ -619,7 +622,7 @@ namespace {
     //}}}
 
     //{{{
-    void draw (cTransportStream& transportStream, cGraphics& graphics) {
+    void draw (cTransportStream& transportStream, cGraphics& graphics, bool drawSubtitle) {
 
       if (!cView::mVideoShader)
        cView::mVideoShader = graphics.createTextureShader (cTexture::eYuv420);
@@ -646,7 +649,7 @@ namespace {
       // draw views
       size_t viewIndex = 0;
       for (auto& view : mViewMap)
-        view.second.draw (graphics, mSelectFull, mSelectFull ? 1 : getNumViews(), viewIndex++);
+        view.second.draw (graphics, mSelectFull, mSelectFull ? 1 : getNumViews(), drawSubtitle, viewIndex++);
       }
     //}}}
 
@@ -671,16 +674,14 @@ namespace {
     bool hasTransportStream() { return mTransportStream; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
 
+    bool getSubtitle() const { return mSubtitle; }
+    void toggleSubtitle() { mSubtitle = !mSubtitle; }
+
     // fileSource
     bool isFileSource() const { return !mFileName.empty(); }
     std::string getFileName() const { return mFileName; }
     uint64_t getFilePos() const { return mFilePos; }
     size_t getFileSize() const { return mFileSize; }
-
-    // dvbSource
-    bool isDvbSource() const { return mDvbSource; }
-    cDvbSource& getDvbSource() { return *mDvbSource; }
-
     //{{{
     void fileSource (const string& filename, bool showAllServices) {
     // create fileSource, any channel
@@ -729,6 +730,10 @@ namespace {
         cLog::log (LOGERROR, "cTellyApp::cTransportStream create failed");
       }
     //}}}
+
+    // dvbSource
+    bool isDvbSource() const { return mDvbSource; }
+    cDvbSource& getDvbSource() { return *mDvbSource; }
     //{{{
     void liveDvbSource (const cDvbMultiplex& multiplex, const string& recordRoot, bool showAllServices) {
     // create liveDvbSource from dvbMultiplex
@@ -814,18 +819,20 @@ namespace {
     //}}}
 
   private:
-    cMultiView mMultiView;
-
     cTransportStream* mTransportStream = nullptr;
-    cDvbSource* mDvbSource = nullptr;
-    cDvbMultiplex mMultiplex;
-    string mRecordRoot;
+
+    cMultiView mMultiView;
+    bool mSubtitle = true;
 
     // fileSource
     FILE* mFile = nullptr;
     std::string mFileName;
     uint64_t mFilePos = 0;
     size_t mFileSize = 0;
+
+    cDvbSource* mDvbSource = nullptr;
+    cDvbMultiplex mMultiplex;
+    string mRecordRoot;
     };
   //}}}
   //{{{
@@ -842,10 +849,15 @@ namespace {
 
       // draw multiView tellys as background
       if (tellyApp.hasTransportStream())
-        multiView.draw (tellyApp.getTransportStream(), graphics);
+        multiView.draw (tellyApp.getTransportStream(), graphics, tellyApp.getSubtitle());
 
       ImGui::SetCursorPos ({ 0.f,0.f });
       mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
+      //{{{  draw subtitle
+      ImGui::SameLine();
+      if (toggleButton ("sub", tellyApp.getSubtitle()))
+        tellyApp.toggleSubtitle();
+      //}}}
       //{{{  draw fullScreen
       if (tellyApp.getPlatform().hasFullScreen()) {
         ImGui::SameLine();
@@ -855,14 +867,12 @@ namespace {
       //}}}
       //{{{  draw vsync
       ImGui::SameLine();
-
       if (tellyApp.getPlatform().hasVsync())
         if (toggleButton ("vsync", tellyApp.getPlatform().getVsync()))
           tellyApp.getPlatform().toggleVsync();
       //}}}
       //{{{  draw frameRate
       ImGui::SameLine();
-
       ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
       //}}}
 
@@ -935,8 +945,9 @@ namespace {
       // draw services/channels
       for (auto& pair : transportStream.getServiceMap()) {
         cTransportStream::cService& service = pair.second;
-        if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
+        if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str())) {
           service.toggleAll();
+          }
 
         if (service.getRenderStream (eRenderAudio).isDefined()) {
           ImGui::SameLine();
@@ -974,8 +985,9 @@ namespace {
         if (ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
                            service.getChannelName(), mMaxNameChars,
                            service.getProgramPid(), mMaxPgmChars,
-                           service.getSid(), mMaxSidChars).c_str()))
+                           service.getSid(), mMaxSidChars).c_str())) {
           service.toggleAll();
+          }
 
         for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
          // iterate definedStreams

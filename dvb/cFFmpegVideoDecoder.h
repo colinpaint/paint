@@ -43,6 +43,7 @@ public:
     mAvContext->flags2 |= AV_CODEC_FLAG2_FAST;
 
     avcodec_open2 (mAvContext, mAvCodec, nullptr);
+
     //AVDictionary* opts = nullptr;
     //av_dict_set (&opts, "flags2", "+export_mvs", 0);
     //avcodec_open2 (mAvContext, mAvCodec, &opts);
@@ -81,6 +82,7 @@ public:
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
 
+          //{{{  sideData
           //AVFrameSideData* sd = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
           //if (sd) {
           //  const AVMotionVector* mvs = (const AVMotionVector*)sd->data;
@@ -94,7 +96,7 @@ public:
               //                                 mv->motion_x, mv->motion_y, mv->motion_scale));
            //   }
            // }
-
+          //}}}
           char frameType = cDvbUtils::getFrameType (frame, frameSize, mH264);
           if (frameType == 'I') {
             mInterpolatedPts = dts;
@@ -104,8 +106,6 @@ public:
                                            pid, mStreamName, frameType,
                                            utils::getFullPtsString (pts), utils::getFullPtsString (dts),
                                            pesSize));
-
-
           // allocFrame
           cFFmpegVideoFrame* ffmpegVideoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
           ffmpegVideoFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
