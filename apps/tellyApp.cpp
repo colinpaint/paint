@@ -101,8 +101,8 @@ namespace {
     ~cView() = default;
 
     uint16_t getId() const { return mService.getSid(); }
-    bool getSelected() const { return mSelect != eUnselected; }
     bool getHover() const { return mHover; }
+    bool getSelected() const { return mSelect != eUnselected; }
 
     bool pick (cVec2 pos) { return mRect.isInside (pos); }
     //{{{
@@ -113,12 +113,24 @@ namespace {
       }
     //}}}
     //{{{
-    void select (eSelect select, uint16_t id) {
-      mSelect = (id == getId()) ? select : eUnselected;
+    bool select (uint16_t id) {
+
+      if (id != getId())
+        mSelect = eUnselected;
+      else if (mSelect == eUnselected)
+        mSelect = eSelected;
+      else if (mSelect == eSelectedFull)
+        mSelect = eSelected;
+      else if (mSelect == eSelected) {
+        mSelect = eSelectedFull;
+        return true;
+        }
+
+      return false;
       }
     //}}}
     //{{{
-    void draw (cGraphics& graphics, eSelect multiSelect, size_t numViews, size_t viewIndex) {
+    void draw (cGraphics& graphics, bool selectFull, size_t numViews, size_t viewIndex) {
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (
         mService.getRenderStream (eRenderVideo).getRender());
@@ -133,14 +145,12 @@ namespace {
         }
         //}}}
 
-      if (getSelected() || (multiSelect != eSelectedFull)) {
+      if (!selectFull || getSelected()) {
         // view selected or no views selected
         float viewportWidth = ImGui::GetWindowWidth();
         float viewportHeight = ImGui::GetWindowHeight();
         cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
 
-        if (multiSelect == eSelectedFull)
-          numViews = 1;
         float scale = getScale (numViews);
 
         // show nearest videoFrame to playPts
@@ -580,14 +590,9 @@ namespace {
     void select (uint16_t id) {
     // toggle select
 
-      switch (mSelect) {
-        case cView::eUnselected:   mSelect = cView::eSelected; break;
-        case cView::eSelected:     mSelect = cView::eSelectedFull;  break;
-        case cView::eSelectedFull: mSelect = cView::eSelected; break;
-        }
-
+      mSelectFull = false;
       for (auto& view : mViews)
-        view.second.select (mSelect, id);
+        mSelectFull |= view.second.select (id);
       }
     //}}}
 
@@ -619,14 +624,14 @@ namespace {
       // draw views
       size_t viewIndex = 0;
       for (auto& view : mViews)
-        view.second.draw (graphics, mSelect, getNumViews(), viewIndex++);
+        view.second.draw (graphics, mSelectFull, mSelectFull ? 1 : getNumViews(), viewIndex++);
       }
     //}}}
 
   private:
     map <uint16_t, cView> mViews;
 
-    cView::eSelect mSelect = cView::eUnselected;
+    bool mSelectFull = false;
     };
   //}}}
 
