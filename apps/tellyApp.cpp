@@ -703,7 +703,7 @@ namespace {
     // create liveDvbSource from dvbMultiplex
 
       cLog::log (LOGINFO, fmt::format ("using multiplex {} {} record {} {}",
-                                       multiplex.mName, multiplex.mFrequency, 
+                                       multiplex.mName, multiplex.mFrequency,
                                        recordRoot, showAllServices ? "all " : ""));
 
       mMultiplex = multiplex;
@@ -730,10 +730,9 @@ namespace {
               auto ptr = mDvbSource->getBlockBDA (blockSize);
               if (blockSize) {
                 //  read and demux block
-                if (mFile)
-                  fwrite (ptr, 1, blockSize, mFile);
-
                 streamPos += mTransportStream->demux (ptr, blockSize, streamPos, false);
+                if (mMultiplex.mRecordAll && mFile)
+                  fwrite (ptr, 1, blockSize, mFile);
                 mDvbSource->releaseBlock (blockSize);
                 }
               else
@@ -748,15 +747,15 @@ namespace {
             uint64_t streamPos = 0;
             while (true) {
               int bytesRead = mDvbSource->getBlock (buffer, kDvrReadBufferSize);
-              if (bytesRead == 0)
-                cLog::log (LOGINFO, fmt::format ("cDvb grabThread no bytes read"));
-              else {
-                // demux
+              if (bytesRead) {
                 streamPos += mTransportStream->demux (buffer, bytesRead, 0, false);
-                if (mFile)
+                if (mMultiplex.mRecordAll && mFile)
                   fwrite (buffer, 1, bytesRead, mFile);
                 }
+              else
+                cLog::log (LOGINFO, fmt::format ("cTellyApp::liveDvbSource - no bytes"));
               }
+
             delete [] buffer;
             //}}}
           #endif
@@ -1289,7 +1288,7 @@ int main (int numArgs, char* args[]) {
   cTellyApp tellyApp ({1920/2, 1080/2}, fullScreen);
   tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
   tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
-  if (filename.empty()) 
+  if (filename.empty())
     tellyApp.liveDvbSource (selectedMultiplex, kRootDir, showAllServices);
   else
     tellyApp.fileSource (filename, showAllServices);
