@@ -917,9 +917,7 @@ namespace {
           default:;
           }
 
-        keyboard();
-
-        ImGui::SetCursorPos({ 0.f, 0.f });
+        ImGui::SetCursorPos ({ 0.f, 0.f });
         if (ImGui::InvisibleButton ("bgnd", {ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y })) {
           uint16_t pickedId = tellyApp.getMultiView().pick (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y));
           if (pickedId)
@@ -928,6 +926,8 @@ namespace {
             tellyApp.getPlatform().toggleFullScreen();
           }
         tellyApp.getMultiView().hover();
+
+        keyboard();
 
         ImGui::PopFont();
         ImGui::End();
