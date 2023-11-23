@@ -245,8 +245,8 @@ public:
     //}}}
 
     // stream
-    cStream& getRenderStream (eRenderType renderType) { return mRenderStreams[renderType]; }
     cStream* getRenderStreamByPid (uint16_t pid);
+    cStream& getRenderStream (eRenderType renderType) { return mRenderStreams[renderType]; }
 
     void toggleStream (eRenderType renderType);
     void toggleAll();

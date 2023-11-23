@@ -233,14 +233,28 @@ namespace {
 
           // draw audio meter
           mAudioMeterView.draw (audioRender, playPts,
-                                ImVec2((float)mRect.right - (0.25f * ImGui::GetTextLineHeight()),
-                                       (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
+                                ImVec2((float)mRect.right - (0.5f * ImGui::GetTextLineHeight()),
+                                       (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
           if (getSelectedFull())
             mFramesView.draw (audioRender, videoRender, playPts,
                               ImVec2((float)mRect.getCentre().x,
-                                     (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
+                                     (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
           }
           //}}}
+
+        //{{{  draw service title
+        string title = mService.getChannelName();
+        if (getSelectedFull())
+          title += " " + mService.getNowTitleString();
+
+        ImGui::SetCursorPos({(float)mRect.left + (ImGui::GetTextLineHeight() * 0.25f),
+                             (float)mRect.bottom - ImGui::GetTextLineHeight()});
+        ImGui::TextColored ({0.f, 0.f,0.f,1.f}, title.c_str());
+
+        ImGui::SetCursorPos({(float)mRect.left - 2.f + (ImGui::GetTextLineHeight() * 0.25f),
+                              (float)mRect.bottom - 2.f - ImGui::GetTextLineHeight()});
+        ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+        //}}}
         }
 
       videoRender.trimVideoBeforePts (playPts);
@@ -534,7 +548,8 @@ namespace {
     float getScale (size_t numViews) const {
       return (numViews <= 1) ? 1.f :
         ((numViews <= 4) ? 0.5f :
-          ((numViews <= 9) ? 0.33f : 0.25f));
+          ((numViews <= 9) ? 0.33f :
+            ((numViews <= 16) ? 0.25f : 0.20f)));
       }
     //}}}
 
@@ -554,7 +569,7 @@ namespace {
     cMat4x4 mModel;
     cRect mRect = { 0,0,0,0 };
 
-    static const size_t kMaxSubtitleLines = 3;
+    static const size_t kMaxSubtitleLines = 4;
     array <cQuad*,kMaxSubtitleLines> mSubtitleQuads = { nullptr };
     array <cTexture*,kMaxSubtitleLines> mSubtitleTextures = { nullptr };
     };
@@ -826,11 +841,8 @@ namespace {
       if (tellyApp.hasTransportStream())
         multiView.draw (tellyApp.getTransportStream(), graphics);
 
-      //{{{  draw tabs
-      ImGui::SameLine();
-
+      ImGui::SetCursorPos ({ 0.f,0.f });
       mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
-      //}}}
       //{{{  draw fullScreen
       if (tellyApp.getPlatform().hasFullScreen()) {
         ImGui::SameLine();
