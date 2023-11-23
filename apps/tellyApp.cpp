@@ -843,13 +843,16 @@ namespace {
 
       cTellyApp& tellyApp = (cTellyApp&)app;
       cGraphics& graphics = tellyApp.getGraphics();
-      cMultiView& multiView = tellyApp.getMultiView();
 
-      graphics.clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
+      graphics.clear ({ (int32_t)ImGui::GetIO().DisplaySize.x, (int32_t)ImGui::GetIO().DisplaySize.y });
+
+      ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
+      ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground |
+                                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
 
       // draw multiView tellys as background
       if (tellyApp.hasTransportStream())
-        multiView.draw (tellyApp.getTransportStream(), graphics, tellyApp.getSubtitle());
+        tellyApp.getMultiView().draw (tellyApp.getTransportStream(), graphics, tellyApp.getSubtitle());
 
       ImGui::SetCursorPos ({ 0.f,0.f });
       mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
@@ -904,10 +907,8 @@ namespace {
                                                       tellyApp.getTransportStream().getNumErrors()).c_str());
         //}}}
 
-        // draw tab childWindow, monospaced font
+        // monospaced font
         ImGui::PushFont (tellyApp.getMonoFont());
-        ImGui::BeginChild ("tab", {0.f,0.f}, false,
-                           ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
         switch (mTab) {
           case eTellyChan: drawChannels (transportStream, graphics); break;
           case eServices:  drawServices (transportStream, graphics); break;
@@ -916,21 +917,20 @@ namespace {
           default:;
           }
 
-        if (ImGui::IsMouseClicked (0)) {
-          uint16_t pickedId = multiView.pick (cVec2 (ImGui::GetMousePos().x,
-                                                     ImGui::GetMousePos().y));
+        keyboard();
+
+        ImGui::SetCursorPos({ 0.f, 0.f });
+        if (ImGui::InvisibleButton ("bgnd", {ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y })) {
+          uint16_t pickedId = tellyApp.getMultiView().pick (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y));
           if (pickedId)
-            multiView.select (pickedId);
+            tellyApp.getMultiView().select (pickedId);
           else
             tellyApp.getPlatform().toggleFullScreen();
           }
-        else
-          multiView.hover();
+        tellyApp.getMultiView().hover();
 
-        keyboard();
-
-        ImGui::EndChild();
         ImGui::PopFont();
+        ImGui::End();
         }
       }
     //}}}
@@ -1251,12 +1251,7 @@ namespace {
     void addToDrawList (cApp& app) final {
     // draw into window
 
-      ImGui::SetNextWindowPos (ImVec2(0,0));
-      ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-
-      ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
       mTellyView.draw (app);
-      ImGui::End();
       }
     //}}}
 
