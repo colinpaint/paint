@@ -777,7 +777,7 @@ namespace {
             //}}}
           #else
             //{{{  linux
-            constexpr int kDvrReadBufferSize = 188 * 256;
+            constexpr int kDvrReadBufferSize = 188 * 64;
             uint8_t* buffer = new uint8_t[kDvrReadBufferSize];
 
             uint64_t streamPos = 0;

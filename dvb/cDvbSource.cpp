@@ -807,12 +807,13 @@ string cDvbSource::getStatusString() const {
   #endif
   }
 //}}}
+
 //{{{
 int cDvbSource::getBlock (uint8_t* block, int blockSize) {
-  (void)blockSize;
-  (void)block;
 
   #ifdef _WIN32
+    (void)blockSize;
+    (void)block;
     cLog::log (LOGERROR, fmt::format ("getBlock not implemented"));
     return 0;
   #else
