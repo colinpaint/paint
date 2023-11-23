@@ -98,7 +98,10 @@ namespace {
     cServiceView (cTransportStream::cService& service) : mService(service) {}
     ~cServiceView() = default;
 
+    uint16_t getId() const { return mService.getSid(); }
+
     bool getHover() const { return mHover; }
+    bool getSelected() const { return mSelected; }
 
     bool picked (cVec2 pos) { return mRect.isInside (pos); }
     //{{{
@@ -108,6 +111,7 @@ namespace {
       return mHover;
       }
     //}}}
+    void select (bool selected) { mSelected = selected; }
 
     //{{{
     void trim() {
@@ -128,99 +132,111 @@ namespace {
     //{{{
     void draw (cGraphics& graphics, bool selected, size_t numViews, size_t viewIndex) {
 
-      float scale = (numViews <= 1) ? 1.f : ((numViews <= 4) ? 0.5f : ((numViews <= 9) ? 0.33f : 0.25f));
-      float viewportWidth = ImGui::GetWindowWidth();
-      float viewportHeight = ImGui::GetWindowHeight();
-      cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-
-      cVideoRender& videoRender = dynamic_cast<cVideoRender&> (mService.getRenderStream (eRenderVideo).getRender());
-
-      int64_t playerPts = mService.getRenderStream (eRenderAudio).getPts();
+      cVideoRender& videoRender = dynamic_cast<cVideoRender&> (
+        mService.getRenderStream (eRenderVideo).getRender());
+      int64_t playPts = mService.getRenderStream (eRenderAudio).getPts();
       if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-        //  get playerPts from audioStream, draw framesView, audioMeter
-        cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
-        playerPts = audioRender.getPlayer().getPts();
+        //{{{  get playPts from audioStream
+        cAudioRender& audioRender = dynamic_cast<cAudioRender&>(
+          mService.getRenderStream (eRenderAudio).getRender());
 
-        // draw audio meter
-        mAudioMeterView.draw (audioRender, playerPts,
-                              ImVec2((float)mRect.right - (0.25f * ImGui::GetTextLineHeight()),
-                                     (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
-
-        // listen and draw framesView if selected
-        audioRender.getPlayer().setMute (!selected);
-        if (selected)
-          mFramesView.draw (audioRender, videoRender, playerPts,
-                            ImVec2((float)mRect.getCentre().x,
-                                   (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
+        playPts = audioRender.getPlayer().getPts();
         }
-
-      // get playerPts nearest videoFrame
-      cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playerPts);
-      if (videoFrame) {
-        //{{{  draw video
-        mVideoShader->use();
-
-        // texture
-        cTexture& texture = videoFrame->getTexture (graphics);
-        texture.setSource();
-
-        // model
-        mModel = cMat4x4();
-        cVec2 fraction = gridFractionalPosition (viewIndex, numViews);
-        mModel.setTranslate ({ (fraction.x - (0.5f * scale)) * viewportWidth,
-                               (fraction.y - (0.5f * scale)) * viewportHeight });
-        mModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
-                       scale * viewportHeight / videoFrame->getHeight() });
-        mVideoShader->setModelProjection (mModel, projection);
-
-        // ensure quad is created and drawIt
-        if (!mVideoQuad)
-          mVideoQuad = graphics.createQuad (videoFrame->getSize());
-
-        mVideoQuad->draw();
         //}}}
 
-        mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
-                       mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
-        if (mHover)
-          ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top},
-                                               { (float)mRect.right, (float)mRect.bottom },
-                                               0xffc0ffff);
+      if (!selected || mSelected) {
+        // draw video and graphics
+        float scale = (numViews <= 1) ? 1.f : ((numViews <= 4) ? 0.5f : ((numViews <= 9) ? 0.33f : 0.25f));
+        float viewportWidth = ImGui::GetWindowWidth();
+        float viewportHeight = ImGui::GetWindowHeight();
+        cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
 
-        cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (mService.getRenderStream (eRenderSubtitle).getRender());
-        if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-          //{{{  draw subtitles
-          mSubtitleShader->use();
+        // show nearest videoFrame to playPts
+        cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playPts);
+        if (videoFrame) {
+          //{{{  draw video
+          mVideoShader->use();
 
-          for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
-            cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
+          // texture
+          cTexture& texture = videoFrame->getTexture (graphics);
+          texture.setSource();
 
-            if (!mSubtitleTextures[line])
-              mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
-            mSubtitleTextures[line]->setSource();
+          // model
+          mModel = cMat4x4();
+          cVec2 fraction = gridFractionalPosition (viewIndex, numViews);
+          mModel.setTranslate ({ (fraction.x - (0.5f * scale)) * viewportWidth,
+                                 (fraction.y - (0.5f * scale)) * viewportHeight });
+          mModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
+                         scale * viewportHeight / videoFrame->getHeight() });
+          mVideoShader->setModelProjection (mModel, projection);
 
-            // update subtitle texture if image dirty
-            if (subtitleImage.isDirty())
-              mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
-            subtitleImage.setDirty (false);
+          // ensure quad is created and drawIt
+          if (!mVideoQuad)
+            mVideoQuad = graphics.createQuad (videoFrame->getSize());
 
-            float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
-            float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-            mModel.setTranslate ({ (fraction.x + ((xpos - 0.5f) * scale)) * viewportWidth,
-                                   (fraction.y + ((ypos - 0.5f) * scale)) * viewportHeight });
-            mSubtitleShader->setModelProjection (mModel, projection);
-
-            // ensure quad is created (assumes same size) and drawIt
-            if (!mSubtitleQuads[line])
-              mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
-            mSubtitleQuads[line]->draw();
-            }
-          }
+          mVideoQuad->draw();
           //}}}
 
-        // crude management of videoFrame cache
-        videoRender.trimVideoBeforePts (playerPts - videoFrame->mPtsDuration);
+          mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
+                         mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
+          if (mHover)
+            ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top},
+                                                 { (float)mRect.right, (float)mRect.bottom },
+                                                 0xffc0ffff);
+
+          cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (mService.getRenderStream (eRenderSubtitle).getRender());
+          if (mService.getRenderStream (eRenderAudio).isEnabled()) {
+            //{{{  draw subtitles
+            mSubtitleShader->use();
+
+            for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
+              cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
+
+              if (!mSubtitleTextures[line])
+                mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
+              mSubtitleTextures[line]->setSource();
+
+              // update subtitle texture if image dirty
+              if (subtitleImage.isDirty())
+                mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
+              subtitleImage.setDirty (false);
+
+              float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
+              float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
+              mModel.setTranslate ({ (fraction.x + ((xpos - 0.5f) * scale)) * viewportWidth,
+                                     (fraction.y + ((ypos - 0.5f) * scale)) * viewportHeight });
+              mSubtitleShader->setModelProjection (mModel, projection);
+
+              // ensure quad is created (assumes same size) and drawIt
+              if (!mSubtitleQuads[line])
+                mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
+              mSubtitleQuads[line]->draw();
+              }
+            }
+            //}}}
+          }
+
+        if (mService.getRenderStream (eRenderAudio).isEnabled()) {
+          //{{{  draw audioMeter and framesGraphic
+          cAudioRender& audioRender = dynamic_cast<cAudioRender&>(
+            mService.getRenderStream (eRenderAudio).getRender());
+
+          // draw audio meter
+          mAudioMeterView.draw (audioRender, playPts,
+                                ImVec2((float)mRect.right - (0.25f * ImGui::GetTextLineHeight()),
+                                       (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
+
+          // listen and draw framesView if selected
+          audioRender.getPlayer().setMute (!selected);
+          if (selected)
+            mFramesView.draw (audioRender, videoRender, playPts,
+                              ImVec2((float)mRect.getCentre().x,
+                                     (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
+          }
+          //}}}
         }
+
+      videoRender.trimVideoBeforePts (playPts - videoRender.getPtsDuration());
       }
     //}}}
 
@@ -511,6 +527,7 @@ namespace {
     cTransportStream::cService& mService;
 
     bool mHover = false;
+    bool mSelected = false;
 
     cFramesView mFramesView;
     cAudioMeterView mAudioMeterView;
@@ -535,7 +552,6 @@ namespace {
 
     // gets
     size_t getNumViews() const { return mServiceView.size(); }
-    uint16_t getSelectedSid() const { return mSelectedSid; }
 
     //{{{
     bool hover() {
@@ -552,25 +568,25 @@ namespace {
       }
     //}}}
     //{{{
-    bool picked (cVec2 pos, uint16_t& sid) {
+    uint16_t picked (cVec2 mousePosition) {
     // pick first view that matches
 
       for (auto& view : mServiceView)
-        if (view.second.picked (pos)) {
-          sid = view.first;
-          return true;
+        if (view.second.picked (mousePosition)) {
+          cLog::log (LOGINFO, fmt::format ("picked {}", view.second.getId()));
+          return view.second.getId();
           }
 
-      return false;
+      return 0;
       }
     //}}}
     //{{{
-    void select (uint16_t sid) {
+    void select (uint16_t id) {
     // toggle select
 
       mSelected = !mSelected;
-      if (mSelected)
-        mSelectedSid = sid;
+      for (auto& view : mServiceView)
+        view.second.select (mSelected && (id == view.first));
       }
     //}}}
 
@@ -601,12 +617,8 @@ namespace {
 
       // draw views
       size_t viewIndex = 0;
-      for (auto& view : mServiceView) {
-        if (!mSelected || (view.first == mSelectedSid))
-          view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), viewIndex++);
-        else
-          view.second.trim();
-        }
+      for (auto& view : mServiceView)
+        view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), viewIndex++);
       }
     //}}}
 
@@ -615,7 +627,6 @@ namespace {
 
     bool mHover = false;
     bool mSelected = false;
-    uint16_t mSelectedSid = 0;
     };
   //}}}
 
@@ -866,9 +877,9 @@ namespace {
 
         multiView.hover();
         if (ImGui::IsMouseClicked (0)) {
-          uint16_t sid = 0;
-          if (multiView.picked (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y), sid))
-            multiView.select (sid);
+          uint16_t pickedSid = multiView.picked (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y));
+          if (pickedSid)
+            multiView.select (pickedSid);
           else
             tellyApp.getPlatform().toggleFullScreen();
           }
