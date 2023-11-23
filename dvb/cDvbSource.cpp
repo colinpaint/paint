@@ -1246,15 +1246,17 @@ void cDvbSource::tune (int frequency) {
         cLog::log (LOGERROR, fmt::format ("FE_READ_STATUS status failed"));
       if (feStatus & FE_HAS_LOCK)
         break;
-      cLog::log (LOGINFO, fmt::format ("waiting for lock {}{}{}{}{} {}",
-                                       (feStatus & FE_TIMEDOUT) ? "timeout " : "",
-                                       (feStatus & FE_HAS_SIGNAL) ? "s" : "",
-                                       (feStatus & FE_HAS_CARRIER) ? "c": "",
-                                       (feStatus & FE_HAS_VITERBI) ? "v": " ",
-                                       (feStatus & FE_HAS_SYNC) ? "s" : "",
-                                       getStatusString()));
+      mTuneString = fmt::format ("waiting for lock {}{}{}{}{}",
+                                 (feStatus & FE_TIMEDOUT) ? "timeout " : "",
+                                 (feStatus & FE_HAS_SIGNAL) ? "s" : "",
+                                 (feStatus & FE_HAS_CARRIER) ? "c": "",
+                                 (feStatus & FE_HAS_VITERBI) ? "v": " ",
+                                 (feStatus & FE_HAS_SYNC) ? "s" : "");
+      cLog::log (LOGINFO, mTuneString + getStatusString());
       this_thread::sleep_for (200ms);
       }
+
+    mTuneString = fmt::format ("tuned {:4.1f}Mhz", mFrequency / 1000000.f);
     }
   //}}}
 #endif

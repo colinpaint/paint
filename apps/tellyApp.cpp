@@ -897,7 +897,7 @@ namespace {
         else if (tellyApp.isDvbSource()) {
           //{{{  draw cTransportStream::dvbSource signal:errors
           ImGui::SameLine();
-          ImGui::TextUnformatted (fmt::format ("{}:{}", tellyApp.getDvbSource().getTuneString(),
+          ImGui::TextUnformatted (fmt::format ("{} {}", tellyApp.getDvbSource().getTuneString(),
                                                         tellyApp.getDvbSource().getStatusString()).c_str());
           }
           //}}}
