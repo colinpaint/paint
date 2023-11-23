@@ -3,6 +3,9 @@
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
   #define NOMINMAX
+#else
+  #include <unistd.h>
+  #include <sys/poll.h>
 #endif
 
 #include "cTransportStream.h"
@@ -12,11 +15,6 @@
 #include <vector>
 #include <map>
 #include <thread>
-
-#ifdef __linux__
-  #include <unistd.h>
-  #include <sys/poll.h>
-#endif
 
 #include "../common/date.h"
 #include "../common/utils.h"
@@ -416,7 +414,6 @@ void cTransportStream::cStream::setPidStreamType (uint16_t pid, uint8_t streamTy
   mTypeName = cDvbUtils::getStreamTypeName (streamType);
   }
 //}}}
-
 //{{{
 bool cTransportStream::cStream::toggle() {
 // return true if enabling
@@ -734,7 +731,6 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 //}}}
 //}}}
 
-// public:
 //{{{
 cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, const string& recordRoot,
                                     bool realTime, bool showAllServices, bool showFirstService)
@@ -760,6 +756,7 @@ cTransportStream::cService* cTransportStream::getService (uint16_t sid) {
   }
 //}}}
 
+// stream
 //{{{
 void cTransportStream::toggleStream (cService& service, eRenderType streamType) {
 
@@ -942,7 +939,7 @@ int64_t cTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t stre
   }
 //}}}
 
-// private:
+// private
 //{{{
 void cTransportStream::clear() {
 

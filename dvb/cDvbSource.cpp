@@ -713,9 +713,9 @@ cDvbSource::cDvbSource (int frequency, int adapter) : mFrequency(frequency), mAd
     #ifdef _WIN32
       // windows create and tune
       if (createGraph (frequency * 1000))
-        mTuneString = fmt::format ("tuned {}Mhz", frequency);
+        mTuneString = fmt::format ("tuned {:4.1f}Mhz", frequency / 1000000.f);
       else
-        mTuneString = fmt::format ("not tuned {}Mhz", frequency);
+        mTuneString = fmt::format ("notTuned {:4.1f}Mhz", frequency / 1000000.f);
     #else
       // open frontend nonBlocking rw
       string frontend = fmt::format ("/dev/dvb/adapter{}/frontend{}", mAdapter, 0);

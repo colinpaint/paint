@@ -10,11 +10,6 @@
 #include <vector>
 #include <map>
 
-//#ifdef __linux__
-//  #include <unistd.h>
-//  #include <sys/poll.h>
-//#endif
-
 #include <sys/stat.h>
 
 //{{{  include stb
@@ -96,7 +91,16 @@ namespace {
   class cView {
   public:
     cView (cTransportStream::cService& service) : mService(service) {}
-    ~cView() = default;
+    //{{{
+    ~cView() {
+      delete mVideoQuad;
+
+      for (size_t i = 0; i < kMaxSubtitleLines; i++) {
+        delete mSubtitleQuads[i];
+        delete mSubtitleTextures[i];
+        }
+      }
+    //}}}
 
     uint16_t getId() const { return mService.getSid(); }
     bool getHover() const { return mHover; }
@@ -559,19 +563,18 @@ namespace {
     bool mHover = false;
     eSelect mSelect = eUnselected;
 
-    cFramesView mFramesView;
-    cAudioMeterView mAudioMeterView;
-
     // video
+    cMat4x4 mModel;
+    cRect mRect = { 0,0,0,0 };
     cQuad* mVideoQuad = nullptr;
 
     // subtitle
-    cMat4x4 mModel;
-    cRect mRect = { 0,0,0,0 };
-
     static const size_t kMaxSubtitleLines = 4;
-    array <cQuad*,kMaxSubtitleLines> mSubtitleQuads = { nullptr };
-    array <cTexture*,kMaxSubtitleLines> mSubtitleTextures = { nullptr };
+    array <cQuad*, kMaxSubtitleLines> mSubtitleQuads = { nullptr };
+    array <cTexture*, kMaxSubtitleLines> mSubtitleTextures = { nullptr };
+
+    cFramesView mFramesView;
+    cAudioMeterView mAudioMeterView;
     };
   //}}}
   //{{{
@@ -730,8 +733,8 @@ namespace {
     void liveDvbSource (const cDvbMultiplex& multiplex, const string& recordRoot, bool showAllServices) {
     // create liveDvbSource from dvbMultiplex
 
-      cLog::log (LOGINFO, fmt::format ("using multiplex {} {} record {} {}",
-                                       multiplex.mName, multiplex.mFrequency,
+      cLog::log (LOGINFO, fmt::format ("using multiplex {} {:4.1f} record {} {}",
+                                       multiplex.mName, multiplex.mFrequency/1000.f,
                                        recordRoot, showAllServices ? "all " : ""));
 
       mMultiplex = multiplex;
