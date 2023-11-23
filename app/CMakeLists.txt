@@ -15,7 +15,7 @@ project (app VERSION 1.0.0)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
       target_link_libraries (${PROJECT_NAME} PRIVATE GL)
     endif()
-
+    target_link_libraries (${PROJECT_NAME} PUBLIC common imgui)
   elseif (BUILD_GRAPHICS STREQUAL "GLES30" OR
           BUILD_GRAPHICS STREQUAL "GLES31" OR
           BUILD_GRAPHICS STREQUAL "GLES32")
@@ -37,10 +37,10 @@ project (app VERSION 1.0.0)
                                                         GLFW_INCLUDE_ES3=1
                                                         IMGUI_IMPL_OPENGL_ES3=1)
     target_link_libraries (${PROJECT_NAME} PRIVATE GLESv2)
+    target_link_libraries (${PROJECT_NAME} PUBLIC common imgui)
 
   else()
     message (FATAL_ERROR, "app - unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
 
   endif()
 
-  target_link_libraries (${PROJECT_NAME} PUBLIC common imgui)
