@@ -114,23 +114,7 @@ namespace {
     void select (bool selected) { mSelected = selected; }
 
     //{{{
-    void trim() {
-
-      cVideoRender& videoRender = dynamic_cast<cVideoRender&> (mService.getRenderStream (eRenderVideo).getRender());
-
-      int64_t playerPts = mService.getRenderStream (eRenderAudio).getPts();
-      if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-        // get playerPts from audioStream
-        cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eRenderAudio).getRender());
-        playerPts = audioRender.getPlayer().getPts();
-        }
-
-      videoRender.trimVideoBeforePts (playerPts - videoRender.getPtsDuration());
-      }
-    //}}}
-
-    //{{{
-    void draw (cGraphics& graphics, bool selected, size_t numViews, size_t viewIndex) {
+    void draw (cGraphics& graphics, bool anySelected, size_t numViews, size_t viewIndex) {
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (
         mService.getRenderStream (eRenderVideo).getRender());
@@ -144,7 +128,8 @@ namespace {
         }
         //}}}
 
-      if (!selected || mSelected) {
+      // draw if selected or none selected
+      if (!anySelected || mSelected) {
         // draw video and graphics
         float scale = (numViews <= 1) ? 1.f : ((numViews <= 4) ? 0.5f : ((numViews <= 9) ? 0.33f : 0.25f));
         float viewportWidth = ImGui::GetWindowWidth();
@@ -221,14 +206,13 @@ namespace {
           cAudioRender& audioRender = dynamic_cast<cAudioRender&>(
             mService.getRenderStream (eRenderAudio).getRender());
 
+          audioRender.getPlayer().setMute (!mSelected);
+
           // draw audio meter
           mAudioMeterView.draw (audioRender, playPts,
                                 ImVec2((float)mRect.right - (0.25f * ImGui::GetTextLineHeight()),
                                        (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
-
-          // listen and draw framesView if selected
-          audioRender.getPlayer().setMute (!selected);
-          if (selected)
+          if (mSelected)
             mFramesView.draw (audioRender, videoRender, playPts,
                               ImVec2((float)mRect.getCentre().x,
                                      (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
