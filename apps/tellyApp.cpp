@@ -895,17 +895,18 @@ namespace {
           }
           //}}}
         else if (tellyApp.isDvbSource()) {
-          //{{{  draw cTransportStream::dvbSource signal:errors
+          //{{{  draw dvbSource signal,errors
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("{} {}", tellyApp.getDvbSource().getTuneString(),
                                                         tellyApp.getDvbSource().getStatusString()).c_str());
           }
           //}}}
-        //{{{  draw transportStream packet,errors
-        ImGui::SameLine();
-        ImGui::TextUnformatted (fmt::format ("{}:{}", tellyApp.getTransportStream().getNumPackets(),
-                                                      tellyApp.getTransportStream().getNumErrors()).c_str());
-        //}}}
+        if (tellyApp.getTransportStream().getNumErrors()) {
+          //{{{  draw transportStream errors
+          ImGui::SameLine();
+          ImGui::TextUnformatted (fmt::format ("error:{}", tellyApp.getTransportStream().getNumErrors()).c_str());
+          }
+          //}}}
 
         // monospaced font
         ImGui::PushFont (tellyApp.getMonoFont());
