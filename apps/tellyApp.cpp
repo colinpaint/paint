@@ -95,15 +95,16 @@ namespace {
   //{{{
   class cView {
   public:
+    enum eSelect { eUnselected, eSelected, eSelectedFull };
+
     cView (cTransportStream::cService& service) : mService(service) {}
     ~cView() = default;
 
     uint16_t getId() const { return mService.getSid(); }
-
+    bool getSelected() const { return mSelect != eUnselected; }
     bool getHover() const { return mHover; }
-    bool getSelected() const { return mSelected; }
 
-    bool picked (cVec2 pos) { return mRect.isInside (pos); }
+    bool pick (cVec2 pos) { return mRect.isInside (pos); }
     //{{{
     bool hover() {
       mHover = ImGui::IsMouseHoveringRect (ImVec2 ((float)mRect.left, (float)mRect.top),
@@ -111,10 +112,13 @@ namespace {
       return mHover;
       }
     //}}}
-    void select (bool selected) { mSelected = selected; }
-
     //{{{
-    void draw (cGraphics& graphics, bool anySelected, size_t numViews, size_t viewIndex) {
+    void select (eSelect select, uint16_t id) {
+      mSelect = (id == getId()) ? select : eUnselected;
+      }
+    //}}}
+    //{{{
+    void draw (cGraphics& graphics, eSelect multiSelect, size_t numViews, size_t viewIndex) {
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (
         mService.getRenderStream (eRenderVideo).getRender());
@@ -129,12 +133,14 @@ namespace {
         }
         //}}}
 
-      // draw if selected or none selected
-      if (!anySelected || mSelected) {
+      if (getSelected() || (multiSelect != eSelectedFull)) {
+        // view selected or no views selected
         float viewportWidth = ImGui::GetWindowWidth();
         float viewportHeight = ImGui::GetWindowHeight();
         cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
 
+        if (multiSelect == eSelectedFull)
+          numViews = 1;
         float scale = getScale (numViews);
 
         // show nearest videoFrame to playPts
@@ -207,17 +213,17 @@ namespace {
           }
 
         if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-          //{{{  draw audioMeter and framesGraphic
+          //{{{  mute, draw audioMeter, draw framesGraphic
           cAudioRender& audioRender = dynamic_cast<cAudioRender&>(
             mService.getRenderStream (eRenderAudio).getRender());
 
-          audioRender.getPlayer().setMute (!mSelected);
+          audioRender.getPlayer().setMute (!getSelected());
 
           // draw audio meter
           mAudioMeterView.draw (audioRender, playPts,
                                 ImVec2((float)mRect.right - (0.25f * ImGui::GetTextLineHeight()),
                                        (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
-          if (mSelected)
+          if (getSelected())
             mFramesView.draw (audioRender, videoRender, playPts,
                               ImVec2((float)mRect.getCentre().x,
                                      (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
@@ -522,8 +528,8 @@ namespace {
     // vars
     cTransportStream::cService& mService;
 
+    eSelect mSelect = eUnselected;
     bool mHover = false;
-    bool mSelected = false;
 
     cFramesView mFramesView;
     cAudioMeterView mAudioMeterView;
@@ -543,9 +549,6 @@ namespace {
   //{{{
   class cMultiView {
   public:
-    cMultiView() {}
-    ~cMultiView() = default;
-
     // gets
     size_t getNumViews() const { return mViews.size(); }
 
@@ -559,19 +562,16 @@ namespace {
         if (view.second.hover())
           result = true;;
 
-      mHover = result;
       return result;
       }
     //}}}
     //{{{
-    uint16_t picked (cVec2 mousePosition) {
+    uint16_t pick (cVec2 mousePosition) {
     // pick first view that matches
 
       for (auto& view : mViews)
-        if (view.second.picked (mousePosition)) {
-          cLog::log (LOGINFO, fmt::format ("picked {}", view.second.getId()));
+        if (view.second.pick (mousePosition))
           return view.second.getId();
-          }
 
       return 0;
       }
@@ -580,9 +580,14 @@ namespace {
     void select (uint16_t id) {
     // toggle select
 
-      mSelected = !mSelected;
+      switch (mSelect) {
+        case cView::eUnselected:   mSelect = cView::eSelected; break;
+        case cView::eSelected:     mSelect = cView::eSelectedFull;  break;
+        case cView::eSelectedFull: mSelect = cView::eSelected; break;
+        }
+
       for (auto& view : mViews)
-        view.second.select (mSelected && (id == view.first));
+        view.second.select (mSelect, id);
       }
     //}}}
 
@@ -614,15 +619,14 @@ namespace {
       // draw views
       size_t viewIndex = 0;
       for (auto& view : mViews)
-        view.second.draw (graphics, mSelected, mSelected ? 1 : getNumViews(), viewIndex++);
+        view.second.draw (graphics, mSelect, getNumViews(), viewIndex++);
       }
     //}}}
 
   private:
     map <uint16_t, cView> mViews;
 
-    bool mHover = false;
-    bool mSelected = false;
+    cView::eSelect mSelect = cView::eUnselected;
     };
   //}}}
 
@@ -878,14 +882,16 @@ namespace {
           default:;
           }
 
-        multiView.hover();
         if (ImGui::IsMouseClicked (0)) {
-          uint16_t pickedSid = multiView.picked (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y));
-          if (pickedSid)
-            multiView.select (pickedSid);
+          uint16_t pickedId = multiView.pick (cVec2 (ImGui::GetMousePos().x,
+                                                     ImGui::GetMousePos().y));
+          if (pickedId)
+            multiView.select (pickedId);
           else
             tellyApp.getPlatform().toggleFullScreen();
           }
+        else
+          multiView.hover();
 
         keyboard();
 
