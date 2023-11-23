@@ -135,6 +135,7 @@ namespace {
       return false;
       }
     //}}}
+
     //{{{
     void draw (cGraphics& graphics, bool selectFull, size_t numViews,
                bool drawSubtitle, size_t viewIndex) {
@@ -193,7 +194,7 @@ namespace {
             //{{{  draw select rectangle
             ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top },
                                                  { (float)mRect.right, (float)mRect.bottom },
-                                                 getHover() ? 0xffc0ffff : 0xFFFFFFFF);
+                                                 getHover() ? 0xffc0ffff : 0xff00ff00, 4.f, 0, 4.f);
             //}}}
 
           if (drawSubtitle) {
@@ -254,11 +255,11 @@ namespace {
         if (getSelectedFull())
           title += " " + mService.getNowTitleString();
 
-        ImGui::SetCursorPos({(float)mRect.left + (ImGui::GetTextLineHeight() * 0.25f),
-                             (float)mRect.bottom - ImGui::GetTextLineHeight()});
+        ImGui::SetCursorPos ({(float)mRect.left + (ImGui::GetTextLineHeight() * 0.25f),
+                              (float)mRect.bottom - ImGui::GetTextLineHeight()});
         ImGui::TextColored ({0.f, 0.f,0.f,1.f}, title.c_str());
 
-        ImGui::SetCursorPos({(float)mRect.left - 2.f + (ImGui::GetTextLineHeight() * 0.25f),
+        ImGui::SetCursorPos ({(float)mRect.left - 2.f + (ImGui::GetTextLineHeight() * 0.25f),
                               (float)mRect.bottom - 2.f - ImGui::GetTextLineHeight()});
         ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
         //}}}
@@ -454,6 +455,14 @@ namespace {
     //}}}
 
     //{{{
+    float getScale (size_t numViews) const {
+      return (numViews <= 1) ? 1.f :
+        ((numViews <= 4) ? 0.5f :
+          ((numViews <= 9) ? 0.33f :
+            ((numViews <= 16) ? 0.25f : 0.20f)));
+      }
+    //}}}
+    //{{{
     cVec2 gridFractionalPosition (size_t index, size_t numViews) {
 
       switch (numViews) {
@@ -549,14 +558,6 @@ namespace {
         default: // 1x1
           return { 0.5f, 0.5f };
         }
-      }
-    //}}}
-    //{{{
-    float getScale (size_t numViews) const {
-      return (numViews <= 1) ? 1.f :
-        ((numViews <= 4) ? 0.5f :
-          ((numViews <= 9) ? 0.33f :
-            ((numViews <= 16) ? 0.25f : 0.20f)));
       }
     //}}}
 
