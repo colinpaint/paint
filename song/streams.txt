@@ -1,0 +1,2 @@
+https://d301yv2uyy17su.cloudfront.net/sky-news-live.m3u8
+https://live-gbnews.simplestreamcdn.com/live5/gbnews/bitrate1.isml/manifest.m3u8
