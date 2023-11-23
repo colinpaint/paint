@@ -95,14 +95,16 @@ namespace {
   //{{{
   class cView {
   public:
-    enum eSelect { eUnselected, eSelected, eSelectedFull };
-
     cView (cTransportStream::cService& service) : mService(service) {}
     ~cView() = default;
 
     uint16_t getId() const { return mService.getSid(); }
     bool getHover() const { return mHover; }
+
+    // verbose selectState gets
+    bool getUnselected() const { return mSelect == eUnselected; }
     bool getSelected() const { return mSelect != eUnselected; }
+    bool getSelectedFull() const { return mSelect == eSelectedFull; }
 
     bool pick (cVec2 pos) { return mRect.isInside (pos); }
     //{{{
@@ -227,13 +229,13 @@ namespace {
           cAudioRender& audioRender = dynamic_cast<cAudioRender&>(
             mService.getRenderStream (eRenderAudio).getRender());
 
-          audioRender.getPlayer().setMute (!getSelected());
+          audioRender.getPlayer().setMute (getUnselected());
 
           // draw audio meter
           mAudioMeterView.draw (audioRender, playPts,
                                 ImVec2((float)mRect.right - (0.25f * ImGui::GetTextLineHeight()),
                                        (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
-          if (getSelected())
+          if (getSelectedFull())
             mFramesView.draw (audioRender, videoRender, playPts,
                               ImVec2((float)mRect.getCentre().x,
                                      (float)mRect.bottom - (0.25f * ImGui::GetTextLineHeight())));
@@ -249,6 +251,7 @@ namespace {
     inline static cTextureShader* mSubtitleShader = nullptr;
 
   private:
+    enum eSelect { eUnselected, eSelected, eSelectedFull };
     //{{{
     class cFramesView {
     public:
@@ -538,8 +541,8 @@ namespace {
     // vars
     cTransportStream::cService& mService;
 
-    eSelect mSelect = eUnselected;
     bool mHover = false;
+    eSelect mSelect = eUnselected;
 
     cFramesView mFramesView;
     cAudioMeterView mAudioMeterView;
@@ -559,8 +562,7 @@ namespace {
   //{{{
   class cMultiView {
   public:
-    // gets
-    size_t getNumViews() const { return mViews.size(); }
+    size_t getNumViews() const { return mViewMap.size(); }
 
     //{{{
     bool hover() {
@@ -568,7 +570,7 @@ namespace {
 
       bool result = false;
 
-      for (auto& view : mViews)
+      for (auto& view : mViewMap)
         if (view.second.hover())
           result = true;;
 
@@ -579,7 +581,7 @@ namespace {
     uint16_t pick (cVec2 mousePosition) {
     // pick first view that matches
 
-      for (auto& view : mViews)
+      for (auto& view : mViewMap)
         if (view.second.pick (mousePosition))
           return view.second.getId();
 
@@ -588,11 +590,13 @@ namespace {
     //}}}
     //{{{
     void select (uint16_t id) {
-    // toggle select
 
-      mSelectFull = false;
-      for (auto& view : mViews)
-        mSelectFull |= view.second.select (id);
+      bool selectFull = false;
+
+      for (auto& view : mViewMap)
+        selectFull |= view.second.select (id);
+
+      mSelectFull = selectFull;
       }
     //}}}
 
@@ -610,26 +614,26 @@ namespace {
         cTransportStream::cService& service = pair.second;
 
         // find service sid in viewMap
-        auto it = mViews.find (pair.first);
-        if (it == mViews.end()) {
+        auto it = mViewMap.find (pair.first);
+        if (it == mViewMap.end()) {
           if (service.getRenderStream (eRenderVideo).isEnabled())
             // enabled and not found, add service to viewMap
-            mViews.emplace (service.getSid(), cView (service));
+            mViewMap.emplace (service.getSid(), cView (service));
           }
         else if (!service.getRenderStream (eRenderVideo).isEnabled())
           // found, but not enabled, remove service from viewMap
-          mViews.erase (it);
+          mViewMap.erase (it);
         }
 
       // draw views
       size_t viewIndex = 0;
-      for (auto& view : mViews)
+      for (auto& view : mViewMap)
         view.second.draw (graphics, mSelectFull, mSelectFull ? 1 : getNumViews(), viewIndex++);
       }
     //}}}
 
   private:
-    map <uint16_t, cView> mViews;
+    map <uint16_t, cView> mViewMap;
 
     bool mSelectFull = false;
     };
