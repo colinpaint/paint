@@ -21,11 +21,22 @@
 
 #include "cSong.h"
 
+//{{{  include libav
+#ifdef _WIN32
+  #pragma warning (push)
+  #pragma warning (disable: 4244)
+#endif
+
 extern "C" {
   #include <libavcodec/avcodec.h>
   #include <libavformat/avformat.h>
   #include <libswscale/swscale.h>
   }
+
+#ifdef _WIN32
+  #pragma warning (pop)
+#endif
+//}}}
 
 #if defined (__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
   #define INTEL_SSE2

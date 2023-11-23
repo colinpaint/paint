@@ -5,4 +5,4 @@ project (song VERSION 1.0.0)
                                iVideoPool.h cSongVideoPool.cpp
                                )
 
-  target_link_libraries (${PROJECT_NAME} PRIVATE common decoders audio)
+  target_link_libraries (${PROJECT_NAME} PUBLIC common decoders audio)
