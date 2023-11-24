@@ -783,7 +783,8 @@ string cDvbSource::getStatusString() const {
       mScanningTuner->get_SignalStrength (&signal);
       return fmt::format ("signal {}", signal / 0x10000);
       }
-    return "no signal strength";
+    return "";
+
   #else
     struct dtv_property props[] = {
       { DTV_STAT_SIGNAL_STRENGTH,      0,0,0, 0,0 }, // max 0xFFFF percentage
@@ -796,11 +797,10 @@ string cDvbSource::getStatusString() const {
       { DTV_STAT_POST_TOTAL_BIT_COUNT, 0,0,0, 0,0 },
       };
     struct dtv_properties cmdProperty = { 8, props };
-
     if ((ioctl (mFrontEnd, FE_GET_PROPERTY, &cmdProperty)) < 0)
-      return "no status";
+      return "";
 
-    // only report a few numbers
+    // report a few numbers
     return fmt::format ("{:5.2f}% {:5.2f}db",
                         100.f * ((props[0].u.st.stat[0].uvalue & 0xFFFF) / float(0xFFFF)),
                         props[1].u.st.stat[0].svalue / 1000.f);

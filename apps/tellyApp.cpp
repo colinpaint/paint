@@ -86,7 +86,6 @@ namespace {
     const string kRootDir = "/home/pi/tv/";
   #endif
   //}}}
-
   //{{{
   class cView {
   public:
@@ -137,8 +136,7 @@ namespace {
     //}}}
 
     //{{{
-    void draw (cGraphics& graphics, bool selectFull, size_t numViews,
-               bool drawSubtitle, size_t viewIndex) {
+    void draw (cGraphics& graphics, bool selectFull, size_t numViews, bool drawSubtitle, size_t viewIndex) {
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (
         mService.getRenderStream (eRenderVideo).getRender());
@@ -962,10 +960,10 @@ namespace {
     //{{{
     void drawServices (cTransportStream& transportStream, cGraphics& graphics) {
 
+      // iterate services
       for (auto& pair : transportStream.getServiceMap()) {
-        // iterate services
         cTransportStream::cService& service = pair.second;
-        //{{{  update button maxChars
+        //{{{  update button maxChars for uniform width
         while (service.getChannelName().size() > mMaxNameChars)
           mMaxNameChars = service.getChannelName().size();
         while (service.getSid() > pow (10, mMaxSidChars))
@@ -983,21 +981,21 @@ namespace {
         // draw channel name pgm,sid - sid ensures unique button name
         if (ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
                            service.getChannelName(), mMaxNameChars,
-                           service.getProgramPid(), mMaxPgmChars,
-                           service.getSid(), mMaxSidChars).c_str())) {
+                           service.getProgramPid(), mMaxPgmChars, service.getSid(), mMaxSidChars).c_str())) {
           service.toggleAll();
           }
 
+       // iterate definedStreams
         for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
-         // iterate definedStreams
           cTransportStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
           if (stream.isDefined()) {
             ImGui::SameLine();
-            // draw definedStream button - sid ensuresd unique button name
+            // draw definedStream button - hidden sid for unique buttonName
             if (toggleButton (fmt::format ("{}{:{}d}:{}##{}",
-                                           stream.getLabel(),
-                                           stream.getPid(), mPidMaxChars[renderType], stream.getTypeName(),
-                                           service.getSid()).c_str(), stream.isEnabled()))
+                                           stream.getLabel(), stream.getPid(), 
+                                           mPidMaxChars[renderType], stream.getTypeName(), 
+                                           service.getSid()).c_str(),
+                              stream.isEnabled()))
              transportStream.toggleStream (service, eRenderType(renderType));
             }
           }
@@ -1005,18 +1003,12 @@ namespace {
         if (service.getChannelRecord()) {
           //{{{  draw record pathName
           ImGui::SameLine();
-          ImGui::Button (fmt::format ("rec:{}##{}",
-                                      service.getChannelRecordName(), service.getSid()).c_str());
+          ImGui::Button (fmt::format ("rec:{}##{}", service.getChannelRecordName(), service.getSid()).c_str());
           }
           //}}}
 
-        // audio provides playPts
-        int64_t playPts = 0;
-        if (service.getRenderStream (eRenderAudio).isEnabled())
-          playPts = dynamic_cast<cAudioRender&>(service.getRenderStream (eRenderAudio).getRender()).getPlayer().getPts();
-
+        // iterate enabledStreams
         for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
-          // iterate enabledStreams, drawing
           cTransportStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
           if (stream.isEnabled()) {
             switch (eRenderType(renderType)) {
