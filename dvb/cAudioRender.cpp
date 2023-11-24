@@ -102,8 +102,7 @@ void cAudioRender::addFrame (cFrame* frame) {
   mSamplesPerFrame = audioFrame->mSamplesPerFrame;
   mPtsDuration = audioFrame->mPtsDuration;
   mFrameInfo = audioFrame->getInfoString();
-
-  logValue (audioFrame->mPts, audioFrame->mPowerValues[0]);
+  audioFrame->calcPower();
 
   { // locked emplace
   unique_lock<shared_mutex> lock (mSharedMutex);

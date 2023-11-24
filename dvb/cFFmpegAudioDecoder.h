@@ -96,28 +96,35 @@ public:
             audioFrame->mSampleRate = avFrame->sample_rate;
             audioFrame->mNumChannels = avFrame->ch_layout.nb_channels;
 
+            if (false)
+              cLog::log (LOGINFO, fmt::format ("pts:{} {} chans:{}:{}:{} {} {}",
+                                               utils::getFullPtsString (pts),
+                                               utils::getFullPtsString (interpolatedPts),
+                                               audioFrame->mNumChannels,
+                                               audioFrame->mSampleRate,
+                                               audioFrame->mSamplesPerFrame,
+                                               audioFrame->mPtsDuration,
+                                               pesSize));
             float* dst = audioFrame->mSamples.data();
             switch (mAvContext->sample_fmt) {
               case AV_SAMPLE_FMT_FLTP:
-                // 32bit float planar, copy to interleaved
+                //{{{  32bit float planar, copy to interleaved
                 for (int sample = 0; sample < avFrame->nb_samples; sample++)
                   for (int channel = 0; channel < avFrame->ch_layout.nb_channels; channel++)
                     *dst++ = *(((float*)avFrame->data[channel]) + sample);
                 break;
+                //}}}
               case AV_SAMPLE_FMT_S16P:
-                // 16bit signed planar, scale to interleaved
+                //{{{  16bit signed planar, scale to interleaved
                 for (int sample = 0; sample < avFrame->nb_samples; sample++)
                   for (int channel = 0; channel < avFrame->ch_layout.nb_channels; channel++)
                     *dst++ = (*(((short*)avFrame->data[channel]) + sample)) / (float)0x8000;
                 break;
+                //}}}
               default:;
               }
-            audioFrame->calcPower();
-
-            // call addFrame callback
             addFrameCallback (audioFrame);
 
-            // next pts
             interpolatedPts += audioFrame->mPtsDuration;
             }
           }
