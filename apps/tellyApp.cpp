@@ -913,16 +913,16 @@ namespace {
         // use monoSpaced font for info
         ImGui::PushFont (app.getMonoFont());
         switch (mTab) {
-          case eTellyChan: drawChannels (transportStream, app.getGraphics()); break;
+          case eTellyChan: drawChannels (transportStream); break;
           case eServices:  drawServices (transportStream, app.getGraphics()); break;
-          case ePids:      drawPidMap (transportStream, app.getGraphics()); break;
-          case eRecorded:  drawRecorded (transportStream, app.getGraphics()); break;
+          case ePidMap:    drawPidMap (transportStream); break;
+          case eRecorded:  drawRecorded (transportStream); break;
           default:;
           }
 
         // invisible bgnd button for mouse
         ImGui::SetCursorPos ({ 0.f,0.f });
-        if (ImGui::InvisibleButton ("bgnd", {ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y }))
+        if (ImGui::InvisibleButton ("bgnd", { ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y }))
           tellyApp.getMultiView().selectById (
             tellyApp.getMultiView().pick ({ ImGui::GetMousePos().x, ImGui::GetMousePos().y }));
         tellyApp.getMultiView().hover();
@@ -936,12 +936,11 @@ namespace {
     //}}}
 
   private:
-    enum eTab { eTelly, eTellyChan, eServices, ePids, eRecorded };
+    enum eTab { eTelly, eTellyChan, eServices, ePidMap, eRecorded };
     inline static const vector<string> kTabNames = { "telly", "channels", "services", "pids", "recorded" };
 
     //{{{
-    void drawChannels (cTransportStream& transportStream, cGraphics& graphics) {
-      (void)graphics;
+    void drawChannels (cTransportStream& transportStream) {
 
       // draw services/channels
       for (auto& pair : transportStream.getServiceMap()) {
@@ -1040,9 +1039,8 @@ namespace {
       }
     //}}}
     //{{{
-    void drawPidMap (cTransportStream& transportStream, cGraphics& graphics) {
+    void drawPidMap (cTransportStream& transportStream) {
     // draw pids
-      (void)graphics;
 
       // calc error number width
       int errorChars = 1;
@@ -1089,8 +1087,7 @@ namespace {
       }
     //}}}
     //{{{
-    void drawRecorded (cTransportStream& transportStream, cGraphics& graphics) {
-      (void)graphics;
+    void drawRecorded (cTransportStream& transportStream) {
 
       for (auto& program : transportStream.getRecordPrograms())
         ImGui::TextUnformatted (program.c_str());
