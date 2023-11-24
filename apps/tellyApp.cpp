@@ -956,7 +956,8 @@ namespace {
           tellyApp.getMultiView().selectById (
             tellyApp.getMultiView().pick ({ ImGui::GetMousePos().x, ImGui::GetMousePos().y }));
         tellyApp.getMultiView().hover();
-
+        //if (ImGui::IsWindowHovered())
+        //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
         keyboard (tellyApp);
 
         ImGui::End();
@@ -1222,20 +1223,16 @@ namespace {
         { false, false, false, ImGuiKey_Enter,      [this,&tellyApp]{ tellyApp.getMultiView().enter(); }},
         { false, false, false, ImGuiKey_Space,      [this,&tellyApp]{ tellyApp.getMultiView().space(); }},
         { false, false, false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
-        { false, false, false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }} 
+        { false, false, false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
         };
 
       ImGui::GetIO().WantTextInput = true;
       ImGui::GetIO().WantCaptureKeyboard = true;
 
+      // look for action keys
       bool altKeyPressed = ImGui::GetIO().KeyAlt;
       bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
       bool shiftKeyPressed = ImGui::GetIO().KeyShift;
-
-      //if (ImGui::IsWindowHovered())
-      //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
-
-      // look for action keys
       for (auto& actionKey : kActionKeys)
         if (ImGui::IsKeyPressed (actionKey.mGuiKey) &&
             (actionKey.mAlt == altKeyPressed) &&

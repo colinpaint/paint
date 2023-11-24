@@ -255,9 +255,9 @@ private:
   //{{{
   static void keyCallback (GLFWwindow* window, int key, int scancode, int action, int mode) {
   // glfw key callback exit
-
     (void)scancode;
     (void)mode;
+
     if ((key == GLFW_KEY_ESCAPE) && (action == GLFW_PRESS)) // exit
       glfwSetWindowShouldClose (window, true);
     }
