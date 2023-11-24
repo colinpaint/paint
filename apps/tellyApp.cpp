@@ -676,8 +676,8 @@ namespace {
     bool hasTransportStream() { return mTransportStream; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
 
-    bool getSubtitle() const { return mSubtitle; }
-    void toggleSubtitle() { mSubtitle = !mSubtitle; }
+    bool showSubtitle() const { return mShowSubtitle; }
+    void toggleShowSubtitle() { mShowSubtitle = !mShowSubtitle; }
 
     // fileSource
     bool isFileSource() const { return !mFileName.empty(); }
@@ -824,7 +824,7 @@ namespace {
     cTransportStream* mTransportStream = nullptr;
 
     cMultiView mMultiView;
-    bool mSubtitle = true;
+    bool mShowSubtitle = true;
 
     // fileSource
     FILE* mFile = nullptr;
@@ -844,7 +844,6 @@ namespace {
     void draw (cApp& app) {
 
       cTellyApp& tellyApp = (cTellyApp&)app;
-
       app.getGraphics().clear ({ (int32_t)ImGui::GetIO().DisplaySize.x,
                                  (int32_t)ImGui::GetIO().DisplaySize.y });
 
@@ -855,23 +854,23 @@ namespace {
 
       // draw multiView
       if (tellyApp.hasTransportStream())
-        tellyApp.getMultiView().draw (tellyApp.getTransportStream(), app.getGraphics(), tellyApp.getSubtitle());
+        tellyApp.getMultiView().draw (tellyApp.getTransportStream(), app.getGraphics(), tellyApp.showSubtitle());
 
       ImGui::SetCursorPos ({ 0.f,0.f });
       mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
-      //{{{  draw subtitle
+      //{{{  draw subtitle button
       ImGui::SameLine();
-      if (toggleButton ("sub", tellyApp.getSubtitle()))
-        tellyApp.toggleSubtitle();
+      if (toggleButton ("sub", tellyApp.showSubtitle()))
+        tellyApp.toggleShowSubtitle();
       //}}}
-      //{{{  draw fullScreen
+      //{{{  draw fullScreen button
       if (app.getPlatform().hasFullScreen()) {
         ImGui::SameLine();
         if (toggleButton ("full", app.getPlatform().getFullScreen()))
           app.getPlatform().toggleFullScreen();
         }
       //}}}
-      //{{{  draw vsync
+      //{{{  draw vsync button, frameRate info
       ImGui::SameLine();
       if (app.getPlatform().hasVsync())
         if (toggleButton ("vsync", app.getPlatform().getVsync()))
@@ -884,33 +883,33 @@ namespace {
       if (tellyApp.hasTransportStream()) {
         cTransportStream& transportStream = tellyApp.getTransportStream();
         if (transportStream.hasTdtTime()) {
-          //{{{  draw tdtTime
+          //{{{  draw tdtTime info
           ImGui::SameLine();
           ImGui::TextUnformatted (transportStream.getTdtTimeString().c_str());
           }
           //}}}
         if (tellyApp.isFileSource()) {
-          //{{{  draw filePos
+          //{{{  draw filePos info
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("{:4.3f}%", tellyApp.getFilePos() * 100.f /
                                                            tellyApp.getFileSize()).c_str());
           }
           //}}}
         else if (tellyApp.isDvbSource()) {
-          //{{{  draw dvbSource signal,errors
+          //{{{  draw dvbSource signal,errors info
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("{} {}", tellyApp.getDvbSource().getTuneString(),
                                                         tellyApp.getDvbSource().getStatusString()).c_str());
           }
           //}}}
         if (tellyApp.getTransportStream().getNumErrors()) {
-          //{{{  draw transportStream errors
+          //{{{  draw transportStream errors info
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("error:{}", tellyApp.getTransportStream().getNumErrors()).c_str());
           }
           //}}}
 
-        // use monoSpaced font for info
+        // draw tabs usinfg monoSpaced font
         ImGui::PushFont (app.getMonoFont());
         switch (mTab) {
           case eTellyChan: drawChannels (transportStream); break;
@@ -919,6 +918,7 @@ namespace {
           case eRecorded:  drawRecorded (transportStream); break;
           default:;
           }
+        ImGui::PopFont();
 
         // invisible bgnd button for mouse
         ImGui::SetCursorPos ({ 0.f,0.f });
@@ -929,7 +929,6 @@ namespace {
 
         keyboard();
 
-        ImGui::PopFont();
         ImGui::End();
         }
       }

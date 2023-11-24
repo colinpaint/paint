@@ -34,14 +34,14 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
     : mAudioRender(audioRender), mSampleRate(sampleRate) {
 
   mPlayerThread = thread ([=]() {
-    array <float,2048*2> samples = { 0.f };
-    array <float,2048*2> silence = { 0.f };
+    array <float, 2048*2> samples = { 0.f };
+    array <float, 2048*2> silence = { 0.f };
 
     #ifdef _WIN32
       //{{{  windows
       optional<cAudioDevice> audioDevice = getDefaultAudioOutputDevice();
       if (audioDevice) {
-        cLog::log (LOGINFO, "startPlayer WASPI device:%dhz", mSampleRate);
+        cLog::log (LOGINFO, fmt::format ("windows WASPI device {}hz", mSampleRate));
 
         SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
         audioDevice->setSampleRate (mSampleRate);
@@ -111,9 +111,9 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       //}}}
     #else
       //{{{  linux
-      // raise to max priority
       cAudio audio (2, mSampleRate, 4096, false);
 
+      // raise to max priority
       sched_param sch_params;
       sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
       pthread_setschedparam (mPlayerThread.native_handle(), SCHED_RR, &sch_params);
