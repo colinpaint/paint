@@ -137,12 +137,14 @@ public:
     cLog::log (LOGINFO, fmt::format ("imGui {} - {}", ImGui::GetVersion(), IMGUI_VERSION_NUM));
 
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-    ImGui_ImplGlfw_InitForOpenGL (mWindow, true);
 
-    // set callbacks
+    // set our callbacks
     glfwSetKeyCallback (mWindow, keyCallback);
     glfwSetFramebufferSizeCallback (mWindow, framebufferSizeCallback);
     glfwSetDropCallback (mWindow, dropCallback);
+
+    //
+    ImGui_ImplGlfw_InitForOpenGL (mWindow, true);
 
     #if defined(GL3)
       // openGL - GLAD init before any openGL function

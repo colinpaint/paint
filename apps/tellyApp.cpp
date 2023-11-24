@@ -623,6 +623,37 @@ namespace {
     //}}}
 
     //{{{
+    void moveLeft() {
+      cLog::log (LOGINFO, fmt::format ("moveLeft"));
+      }
+    //}}}
+    //{{{
+    void moveRight() {
+      cLog::log (LOGINFO, fmt::format ("moveRight"));
+      }
+    //}}}
+    //{{{
+    void moveUp() {
+      cLog::log (LOGINFO, fmt::format ("moveUp"));
+      }
+    //}}}
+    //{{{
+    void moveDown() {
+      cLog::log (LOGINFO, fmt::format ("moveDown"));
+      }
+    //}}}
+    //{{{
+    void enter() {
+      cLog::log (LOGINFO, fmt::format ("enter"));
+      }
+    //}}}
+    //{{{
+    void space() {
+      cLog::log (LOGINFO, fmt::format ("space"));
+      }
+    //}}}
+
+    //{{{
     void draw (cTransportStream& transportStream, cGraphics& graphics, bool drawSubtitle) {
 
       if (!cView::mVideoShader)
@@ -846,7 +877,6 @@ namespace {
                                  (int32_t)ImGui::GetIO().DisplaySize.y });
 
       ImGui::SetKeyboardFocusHere();
-      //ImGui::CaptureKeyboardFromApp (true);
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
       ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground |
                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
@@ -922,13 +952,12 @@ namespace {
 
         // invisible bgnd button for mouse
         ImGui::SetCursorPos ({ 0.f,0.f });
-        if (ImGui::InvisibleButton ("bgnd", { ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y })) {
+        if (ImGui::InvisibleButton ("bgnd", { ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y }))
           tellyApp.getMultiView().selectById (
             tellyApp.getMultiView().pick ({ ImGui::GetMousePos().x, ImGui::GetMousePos().y }));
-          }
         tellyApp.getMultiView().hover();
 
-        keyboard();
+        keyboard (tellyApp);
 
         ImGui::End();
         }
@@ -1172,24 +1201,29 @@ namespace {
       }
     //}}}
 
-    // not yet
     //{{{
-    void undo() {
-      cLog::log (LOGINFO, "undo");
-      }
-    //}}}
-    //{{{
-    void redo() {
-      cLog::log (LOGINFO, "redo");
-      }
-    //}}}
-    //{{{
-    void toggleFullScreen() {
-      cLog::log (LOGINFO, "toggleFullScreen");
-      }
-    //}}}
-    //{{{
-    void keyboard() {
+    void keyboard (cTellyApp& tellyApp) {
+
+      //{{{
+      struct sActionKey {
+        bool mAlt;
+        bool mCtrl;
+        bool mShift;
+        ImGuiKey mGuiKey;
+        function <void()> mActionFunc;
+        };
+      //}}}
+      const vector<sActionKey> kActionKeys = {
+        //alt    ctrl   shift  guiKey               function
+        { false, false, false, ImGuiKey_LeftArrow,  [this,&tellyApp]{ tellyApp.getMultiView().moveLeft(); }},
+        { false, false, false, ImGuiKey_RightArrow, [this,&tellyApp]{ tellyApp.getMultiView().moveRight(); }},
+        { false, false, false, ImGuiKey_UpArrow,    [this,&tellyApp]{ tellyApp.getMultiView().moveUp(); }},
+        { false, false, false, ImGuiKey_DownArrow,  [this,&tellyApp]{ tellyApp.getMultiView().moveDown(); }},
+        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp]{ tellyApp.getMultiView().enter(); }},
+        { false, false, false, ImGuiKey_Space,      [this,&tellyApp]{ tellyApp.getMultiView().space(); }},
+        { false, false, false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
+        { false, false, false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }} 
+        };
 
       ImGui::GetIO().WantTextInput = true;
       ImGui::GetIO().WantCaptureKeyboard = true;
@@ -1198,20 +1232,20 @@ namespace {
       bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
       bool shiftKeyPressed = ImGui::GetIO().KeyShift;
 
-      //struct funcs { static bool IsLegacyNativeDupe(ImGuiKey key) { return key < 512 && ImGui::GetIO().KeyMap[key] != -1; } }; // Hide Native<>ImGuiKey duplicates when both exists in the array
-      for (ImGuiKey key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; key = (ImGuiKey)(key + 1))
-        if (ImGui::IsKeyDown (key))
-          cLog::log (LOGINFO, fmt::format ("ImGui::IsKeyPressed {} {}", ImGui::GetKeyName(key), (int)key));
+      //if (ImGui::IsWindowHovered())
+      //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
 
-      if (ImGui::IsKeyDown (ImGuiKey_LeftArrow))
-        cLog::log (LOGINFO, fmt::format ("ImGuiKey_LeftArrow"));
-      if (ImGui::IsKeyDown (ImGuiKey_RightArrow))
-        cLog::log (LOGINFO, fmt::format ("ImGuiKey_RightArrow"));
-      if (ImGui::IsKeyDown (ImGuiKey_UpArrow))
-        cLog::log (LOGINFO, fmt::format ("ImGuiKey_UpArrow"));
-      if (ImGui::IsKeyDown (ImGuiKey_RightArrow))
-        cLog::log (LOGINFO, fmt::format ("ImGuiKey_RightArrow"));
+      // look for action keys
+      for (auto& actionKey : kActionKeys)
+        if (ImGui::IsKeyPressed (actionKey.mGuiKey) &&
+            (actionKey.mAlt == altKeyPressed) &&
+            (actionKey.mCtrl == ctrlKeyPressed) &&
+            (actionKey.mShift == shiftKeyPressed)) {
+          actionKey.mActionFunc();
+          break;
+          }
 
+      // deal with other keys
       for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
         ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
         cLog::log (LOGINFO, fmt::format ("enter {:4x} {} {} {}",
