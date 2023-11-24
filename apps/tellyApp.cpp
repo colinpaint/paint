@@ -992,8 +992,8 @@ namespace {
             ImGui::SameLine();
             // draw definedStream button - hidden sid for unique buttonName
             if (toggleButton (fmt::format ("{}{:{}d}:{}##{}",
-                                           stream.getLabel(), stream.getPid(), 
-                                           mPidMaxChars[renderType], stream.getTypeName(), 
+                                           stream.getLabel(), stream.getPid(),
+                                           mPidMaxChars[renderType], stream.getTypeName(),
                                            service.getSid()).c_str(),
                               stream.isEnabled()))
              transportStream.toggleStream (service, eRenderType(renderType));
@@ -1220,7 +1220,6 @@ namespace {
     };
   //}}}
   //{{{
-  // cTellyUI
   class cTellyUI : public cUI {
   public:
     cTellyUI (const string& name) : cUI(name) {}
