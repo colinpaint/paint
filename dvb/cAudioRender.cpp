@@ -127,13 +127,13 @@ string cAudioRender::getInfoString() const {
 //{{{
 bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
-  trimFramesBeforePts (getPlayer().getPts() - mPtsDuration);
+  trimFramesBeforePts (getPlayer().getPts());
 
   if (!getRealTime())
     // throttle on number of decoded audioFrames
     while (mFrames.size() > mFrameMapSize) {
       this_thread::sleep_for (1ms);
-      trimFramesBeforePts (getPlayer().getPts() - mPtsDuration);
+      trimFramesBeforePts (getPlayer().getPts());
       }
 
   return cRender::processPes (pid, pes, pesSize, pts, dts, skip);

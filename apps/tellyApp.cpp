@@ -845,6 +845,8 @@ namespace {
       app.getGraphics().clear ({ (int32_t)ImGui::GetIO().DisplaySize.x,
                                  (int32_t)ImGui::GetIO().DisplaySize.y });
 
+      ImGui::SetKeyboardFocusHere();
+      //ImGui::CaptureKeyboardFromApp (true);
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
       ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground |
                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
@@ -920,9 +922,10 @@ namespace {
 
         // invisible bgnd button for mouse
         ImGui::SetCursorPos ({ 0.f,0.f });
-        if (ImGui::InvisibleButton ("bgnd", { ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y }))
+        if (ImGui::InvisibleButton ("bgnd", { ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y })) {
           tellyApp.getMultiView().selectById (
             tellyApp.getMultiView().pick ({ ImGui::GetMousePos().x, ImGui::GetMousePos().y }));
+          }
         tellyApp.getMultiView().hover();
 
         keyboard();
@@ -1189,11 +1192,25 @@ namespace {
     void keyboard() {
 
       ImGui::GetIO().WantTextInput = true;
-      ImGui::GetIO().WantCaptureKeyboard = false;
+      ImGui::GetIO().WantCaptureKeyboard = true;
 
       bool altKeyPressed = ImGui::GetIO().KeyAlt;
       bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
       bool shiftKeyPressed = ImGui::GetIO().KeyShift;
+
+      //struct funcs { static bool IsLegacyNativeDupe(ImGuiKey key) { return key < 512 && ImGui::GetIO().KeyMap[key] != -1; } }; // Hide Native<>ImGuiKey duplicates when both exists in the array
+      for (ImGuiKey key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; key = (ImGuiKey)(key + 1))
+        if (ImGui::IsKeyDown (key))
+          cLog::log (LOGINFO, fmt::format ("ImGui::IsKeyPressed {} {}", ImGui::GetKeyName(key), (int)key));
+
+      if (ImGui::IsKeyDown (ImGuiKey_LeftArrow))
+        cLog::log (LOGINFO, fmt::format ("ImGuiKey_LeftArrow"));
+      if (ImGui::IsKeyDown (ImGuiKey_RightArrow))
+        cLog::log (LOGINFO, fmt::format ("ImGuiKey_RightArrow"));
+      if (ImGui::IsKeyDown (ImGuiKey_UpArrow))
+        cLog::log (LOGINFO, fmt::format ("ImGuiKey_UpArrow"));
+      if (ImGui::IsKeyDown (ImGuiKey_RightArrow))
+        cLog::log (LOGINFO, fmt::format ("ImGuiKey_RightArrow"));
 
       for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
         ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
