@@ -194,7 +194,7 @@ namespace {
             //{{{  draw select rectangle
             ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top },
                                                  { (float)mRect.right, (float)mRect.bottom },
-                                                 getHover() ? 0xffc0ffff : 0xff00ff00, 4.f, 0, 4.f);
+                                                 getHover() ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
             //}}}
 
           if (drawSubtitle) {
@@ -611,14 +611,16 @@ namespace {
       }
     //}}}
     //{{{
-    void select (uint16_t id) {
+    void selectById (uint16_t id) {
+    // select if id nonZero
 
-      bool selectFull = false;
+      if (id) {
+        bool selectFull = false;
+        for (auto& view : mViewMap)
+          selectFull |= view.second.select (id);
 
-      for (auto& view : mViewMap)
-        selectFull |= view.second.select (id);
-
-      mSelectFull = selectFull;
+        mSelectFull = selectFull;
+        }
       }
     //}}}
 
@@ -660,7 +662,6 @@ namespace {
     bool mSelectFull = false;
     };
   //}}}
-
   //{{{
   class cTellyApp : public cApp {
   public:
@@ -843,17 +844,18 @@ namespace {
     void draw (cApp& app) {
 
       cTellyApp& tellyApp = (cTellyApp&)app;
-      cGraphics& graphics = tellyApp.getGraphics();
 
-      graphics.clear ({ (int32_t)ImGui::GetIO().DisplaySize.x, (int32_t)ImGui::GetIO().DisplaySize.y });
+      app.getGraphics().clear ({ (int32_t)ImGui::GetIO().DisplaySize.x,
+                                 (int32_t)ImGui::GetIO().DisplaySize.y });
 
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
       ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground |
-                                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
+                                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                      ImGuiWindowFlags_NoScrollbar);
 
-      // draw multiView tellys as background
+      // draw multiView
       if (tellyApp.hasTransportStream())
-        tellyApp.getMultiView().draw (tellyApp.getTransportStream(), graphics, tellyApp.getSubtitle());
+        tellyApp.getMultiView().draw (tellyApp.getTransportStream(), app.getGraphics(), tellyApp.getSubtitle());
 
       ImGui::SetCursorPos ({ 0.f,0.f });
       mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
@@ -863,21 +865,20 @@ namespace {
         tellyApp.toggleSubtitle();
       //}}}
       //{{{  draw fullScreen
-      if (tellyApp.getPlatform().hasFullScreen()) {
+      if (app.getPlatform().hasFullScreen()) {
         ImGui::SameLine();
-        if (toggleButton ("full", tellyApp.getPlatform().getFullScreen()))
-          tellyApp.getPlatform().toggleFullScreen();
+        if (toggleButton ("full", app.getPlatform().getFullScreen()))
+          app.getPlatform().toggleFullScreen();
         }
       //}}}
       //{{{  draw vsync
       ImGui::SameLine();
-      if (tellyApp.getPlatform().hasVsync())
-        if (toggleButton ("vsync", tellyApp.getPlatform().getVsync()))
-          tellyApp.getPlatform().toggleVsync();
-      //}}}
-      //{{{  draw frameRate
+      if (app.getPlatform().hasVsync())
+        if (toggleButton ("vsync", app.getPlatform().getVsync()))
+          app.getPlatform().toggleVsync();
+
       ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+      ImGui::TextUnformatted(fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
       //}}}
 
       if (tellyApp.hasTransportStream()) {
@@ -892,7 +893,7 @@ namespace {
           //{{{  draw filePos
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("{:4.3f}%", tellyApp.getFilePos() * 100.f /
-                                                            tellyApp.getFileSize()).c_str());
+                                                           tellyApp.getFileSize()).c_str());
           }
           //}}}
         else if (tellyApp.isDvbSource()) {
@@ -909,24 +910,21 @@ namespace {
           }
           //}}}
 
-        // monospaced font
-        ImGui::PushFont (tellyApp.getMonoFont());
+        // use monoSpaced font for info
+        ImGui::PushFont (app.getMonoFont());
         switch (mTab) {
-          case eTellyChan: drawChannels (transportStream, graphics); break;
-          case eServices:  drawServices (transportStream, graphics); break;
-          case ePids:      drawPidMap (transportStream, graphics); break;
-          case eRecorded:  drawRecorded (transportStream, graphics); break;
+          case eTellyChan: drawChannels (transportStream, app.getGraphics()); break;
+          case eServices:  drawServices (transportStream, app.getGraphics()); break;
+          case ePids:      drawPidMap (transportStream, app.getGraphics()); break;
+          case eRecorded:  drawRecorded (transportStream, app.getGraphics()); break;
           default:;
           }
 
-        ImGui::SetCursorPos ({ 0.f, 0.f });
-        if (ImGui::InvisibleButton ("bgnd", {ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y })) {
-          uint16_t pickedId = tellyApp.getMultiView().pick (cVec2 (ImGui::GetMousePos().x, ImGui::GetMousePos().y));
-          if (pickedId)
-            tellyApp.getMultiView().select (pickedId);
-          else
-            tellyApp.getPlatform().toggleFullScreen();
-          }
+        // invisible bgnd button for mouse
+        ImGui::SetCursorPos ({ 0.f,0.f });
+        if (ImGui::InvisibleButton ("bgnd", {ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y }))
+          tellyApp.getMultiView().selectById (
+            tellyApp.getMultiView().pick ({ ImGui::GetMousePos().x, ImGui::GetMousePos().y }));
         tellyApp.getMultiView().hover();
 
         keyboard();
@@ -940,6 +938,7 @@ namespace {
   private:
     enum eTab { eTelly, eTellyChan, eServices, ePids, eRecorded };
     inline static const vector<string> kTabNames = { "telly", "channels", "services", "pids", "recorded" };
+
     //{{{
     void drawChannels (cTransportStream& transportStream, cGraphics& graphics) {
       (void)graphics;
@@ -1024,11 +1023,11 @@ namespace {
           if (stream.isEnabled()) {
             switch (eRenderType(renderType)) {
               case eRenderVideo:
-                drawVideoInfo (service.getSid(), stream.getRender(), graphics, playPts); break;
+                drawVideoInfo (service.getSid(), stream.getRender()); break;
 
               case eRenderAudio:
               case eRenderDescription:
-                drawAudioInfo (service.getSid(), stream.getRender(), graphics);  break;
+                drawAudioInfo (service.getSid(), stream.getRender());  break;
 
               case eRenderSubtitle:
                 drawSubtitle (service.getSid(), stream.getRender(), graphics);  break;
@@ -1156,12 +1155,9 @@ namespace {
       }
     //}}}
     //{{{
-    void drawAudioInfo (uint16_t sid, cRender& render, cGraphics& graphics) {
-      (void)sid;
-      (void)graphics;
+    void drawAudioInfo (uint16_t sid, cRender& render) {
 
       cAudioRender& audioRender = dynamic_cast<cAudioRender&>(render);
-
       ImGui::TextUnformatted (audioRender.getInfoString().c_str());
 
       if (ImGui::InvisibleButton (fmt::format ("##audLog{}", sid).c_str(),
@@ -1172,10 +1168,7 @@ namespace {
       }
     //}}}
     //{{{
-    void drawVideoInfo (uint16_t sid, cRender& render, cGraphics& graphics, int64_t playPts) {
-      (void)sid;
-      (void)graphics;
-      (void)playPts;
+    void drawVideoInfo (uint16_t sid, cRender& render) {
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&>(render);
       ImGui::TextUnformatted (videoRender.getInfoString().c_str());
@@ -1204,7 +1197,6 @@ namespace {
       cLog::log (LOGINFO, "toggleFullScreen");
       }
     //}}}
-
     //{{{
     void keyboard() {
 
@@ -1234,11 +1226,8 @@ namespace {
     size_t mMaxPgmChars = 3;
 
     array <size_t, 4> mPidMaxChars = { 3 };
-    //array <size_t, 4> mPidMaxChars = { 3 };
 
-    float mOverlap = 4.f;
-    int mHistory = 0;
-
+    // !!! wrong !!! needed per service
     array <cTexture*,4> mSubtitleTextures = { nullptr };
     };
   //}}}

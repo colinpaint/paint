@@ -713,9 +713,9 @@ cDvbSource::cDvbSource (int frequency, int adapter) : mFrequency(frequency), mAd
     #ifdef _WIN32
       // windows create and tune
       if (createGraph (frequency * 1000))
-        mTuneString = fmt::format ("tuned {:4.1f}Mhz", frequency / 1000000.f);
+        mTuneString = fmt::format ("{:6.3f}Mhz", frequency / 1000000.f);
       else
-        mTuneString = fmt::format ("notTuned {:4.1f}Mhz", frequency / 1000000.f);
+        mTuneString = fmt::format ("notTuned {:6.3f}Mhz", frequency / 1000000.f);
     #else
       // open frontend nonBlocking rw
       string frontend = fmt::format ("/dev/dvb/adapter{}/frontend{}", mAdapter, 0);
@@ -1005,12 +1005,13 @@ void cDvbSource::tune (int frequency) {
   void cDvbSource::frontendInfo (struct dvb_frontend_info& info, uint32_t version,
                                  fe_delivery_system_t* systems, int numSystems) {
 
-    cLog::log (LOGINFO, fmt::format ("frontend - version {} min {} max {} stepSize {} tolerance {}",
-                                     version, info.frequency_min, info.frequency_max,
+    cLog::log (LOGINFO, fmt::format ("frontend - version:{} min:{} max:{} stepSize:{} tolerance:{}",
+                                     version,
+                                     info.frequency_min, info.frequency_max,
                                      info.frequency_stepsize, info.frequency_tolerance));
 
     // info
-    string infoString = "has - ";
+    string infoString;
     //{{{  report fec
     if (info.caps & FE_IS_STUPID)
       infoString += "stupid ";
@@ -1045,11 +1046,11 @@ void cDvbSource::tune (int frequency) {
     if (info.caps & FE_CAN_FEC_8_9)
       infoString += "fec89 ";
 
-    cLog::log (LOGINFO, fmt::format ("{}", infoString));
+    cLog::log (LOGINFO, fmt::format ("has {}", infoString));
     //}}}
-    //{{{  report qam
-    infoString = "has - ";
 
+    infoString = "";
+    //{{{  report qam
     if (info.caps & FE_CAN_QPSK)
       infoString += "qpsk ";
 
@@ -1071,10 +1072,12 @@ void cDvbSource::tune (int frequency) {
     if (info.caps & FE_CAN_QAM_256)
       infoString += "qam256 ";
 
-    cLog::log (LOGINFO, fmt::format ("{}", infoString));
+    cLog::log (LOGINFO, fmt::format ("has {}", infoString));
     //}}}
+
+    infoString = "";
     //{{{  report other
-    infoString = "has - ";
+    infoString = "";
 
     if (info.caps & FE_CAN_TRANSMISSION_MODE_AUTO)
       infoString += "transmissionAuto ";
@@ -1115,20 +1118,18 @@ void cDvbSource::tune (int frequency) {
     if (info.caps & FE_CAN_MUTE_TS)
       infoString += "canMute ";
 
-    cLog::log (LOGINFO, fmt::format ("{}", infoString));
+    cLog::log (LOGINFO, fmt::format ("has {}", infoString));
     //}}}
-    //{{{  report delivery systems
-    infoString = "has - ";
 
+    //  report delivery systems
+    infoString = "";
     for (int i = 0; i < numSystems; i++)
       switch (systems[i]) {
         case SYS_DVBT:  infoString += "DVBT "; break;
         case SYS_DVBT2: infoString += "DVBT2 "; break;
         default: break;
         }
-
-    cLog::log (LOGINFO, fmt::format ("{}", infoString));
-    //}}}
+    cLog::log (LOGINFO, fmt::format ("has {}", infoString));
     }
   //}}}
   //{{{
@@ -1169,14 +1170,13 @@ void cDvbSource::tune (int frequency) {
       systems[i] = (fe_delivery_system_t)enum_cmdargs[0].u.buffer.data[i];
 
     frontendInfo (info, version, systems, numSystems);
-
-    // clear frontend commands
+    //{{{  clear frontend commands
     if (ioctl (mFrontEnd, FE_SET_PROPERTY, &cmdclear) < 0) {
-      //{{{  error return
+      // error return
       cLog::log (LOGERROR, fmt::format ("Unable to clear frontend"));
       return;
       }
-      //}}}
+    //}}}
 
     struct dtv_properties* p;
     fe_delivery_system_t system = mFrequency == 626000000 ? SYS_DVBT2 : SYS_DVBT;
@@ -1225,28 +1225,27 @@ void cDvbSource::tune (int frequency) {
       //}}}
       }
 
-    // empty the event queue
+    //{{{  empty the event queue
     while (true) {
       struct dvb_frontend_event event;
       if ((ioctl (mFrontEnd, FE_GET_EVENT, &event) < 0) && (errno == EWOULDBLOCK))
         break;
       }
-
-    // send properties to frontend device
+    //}}}
+    //{{{  send properties to frontend device
     if (ioctl (mFrontEnd, FE_SET_PROPERTY, p) < 0) {
-      //{{{  error return
+      // error return
       cLog::log (LOGERROR, fmt::format ("setting frontend failed {}", strerror(errno)));
       return;
       }
-      //}}}
+    //}}}
 
     // wait for lock
     while (true) {
       fe_status_t feStatus;
       if (ioctl (mFrontEnd, FE_READ_STATUS, &feStatus) < 0)
         cLog::log (LOGERROR, fmt::format ("FE_READ_STATUS status failed"));
-      if (feStatus & FE_HAS_LOCK)
-        break;
+
       mTuneString = fmt::format ("waiting for lock {}{}{}{}{}",
                                  (feStatus & FE_TIMEDOUT) ? "timeout " : "",
                                  (feStatus & FE_HAS_SIGNAL) ? "s" : "",
@@ -1254,10 +1253,13 @@ void cDvbSource::tune (int frequency) {
                                  (feStatus & FE_HAS_VITERBI) ? "v": " ",
                                  (feStatus & FE_HAS_SYNC) ? "s" : "");
       cLog::log (LOGINFO, mTuneString + getStatusString());
+
+      if (feStatus & FE_HAS_LOCK)
+        break;
       this_thread::sleep_for (200ms);
       }
 
-    mTuneString = fmt::format ("tuned {:4.1f}Mhz", mFrequency / 1000000.f);
+    mTuneString = fmt::format ("{:6.3f}Mhz", mFrequency / 1000000.f);
     }
   //}}}
 #endif
