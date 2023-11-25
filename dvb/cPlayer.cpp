@@ -1,4 +1,4 @@
-// cPlayer.cpp
+// cPlayer.cpp                                                     utils::getFullPtsString (pts)
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -70,15 +70,17 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
         float* srcSamples;
         int numSrcSamples;
       #endif
+
       srcSamples = gSilence.data();
+      numSrcSamples = (int)mAudioRender.getSamplesPerFrame();
 
       cAudioFrame* audioFrame;
       int64_t frameDuration = mAudioRender.getPtsDuration();
       { // locked
       shared_lock<shared_mutex> lock (mAudioRender.getSharedMutex());
-      audioFrame = mAudioRender.findAudioFrameFromPts (mPts);
-      if (mPlaying && audioFrame && audioFrame->mSamples.data()) {
-        if (!mMute) {
+      audioFrame = mAudioRender.findAudioFrameFromPts (mPts, frameDuration, true);
+      if (audioFrame && audioFrame->mSamples.data()) {
+        if (mPlaying && !mMute) {
           float* src = audioFrame->mSamples.data();
           float* dst = samples.data();
           switch (audioFrame->mNumChannels) {
@@ -112,9 +114,11 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
             }
           srcSamples = samples.data();
           }
+        frameDuration = audioFrame->mPtsDuration;
+        numSrcSamples = (int)audioFrame->mSamplesPerFrame;
         }
-      frameDuration = audioFrame ? audioFrame->mPtsDuration : mAudioRender.getPtsDuration();
-      numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : mAudioRender.getSamplesPerFrame());
+      else
+        cLog::log (LOGINFO, fmt::format ("cPlayer - no audioFrame {}", utils::getFullPtsString (mPts)));
       }
       //{{{  linux play srcSamples
       #ifndef _WIN32
@@ -122,7 +126,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       #endif
       //}}}
 
-      mAudioRender.trimPts (mPts);
+      mAudioRender.trimBeforePts (mPts);
       if (mPlaying)
         mPts += frameDuration;
       //{{{  close windows play lamda

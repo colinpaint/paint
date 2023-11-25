@@ -412,7 +412,7 @@ namespace {
       ~cAudioMeterView() = default;
 
       void draw (cAudioRender& audioRender, int64_t playerPts, ImVec2 pos) {
-        cAudioFrame* audioFrame = audioRender.findAudioFrameFromPts (playerPts);
+        cAudioFrame* audioFrame = audioRender.findAudioFrameFromPts (playerPts, 0, true);
         if (audioFrame) {
           size_t drawChannels = audioFrame->mNumChannels;
           bool audio51 = (audioFrame->mNumChannels == 6);

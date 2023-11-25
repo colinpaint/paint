@@ -39,7 +39,7 @@ public:
 
   cFrame* getFreeFrame();
   cFrame* getYoungestFrame();
-  cFrame* getFrameFromPts (int64_t pts);
+  cFrame* getFrameFromPts (int64_t pts, int64_t duration, bool locked);
   cFrame* getNearestFrameFromPts (int64_t pts);
 
   void setAllocFrameCallback (std::function <cFrame* ()> getFrameCallback) { mAllocFrameCallback = getFrameCallback; }

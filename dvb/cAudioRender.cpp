@@ -72,8 +72,8 @@ cAudioRender::~cAudioRender() {
 //}}}
 
 //{{{
-cAudioFrame* cAudioRender::findAudioFrameFromPts (int64_t pts) {
-  return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts));
+cAudioFrame* cAudioRender::findAudioFrameFromPts (int64_t pts, int64_t duration, bool locked) {
+  return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts, duration, locked));
   }
 //}}}
 
@@ -126,7 +126,7 @@ string cAudioRender::getInfoString() const {
 //{{{
 bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
-  // throttle fileRead thread 
+  // throttle fileRead thread
   if (!getRealTime())
     while (mFramesMap.size() > mFrameMapSize)
       this_thread::sleep_for (1ms);

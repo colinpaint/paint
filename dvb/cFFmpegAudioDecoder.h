@@ -11,6 +11,7 @@
 #include "cDecoder.h"
 #include "cAudioFrame.h"
 //}}}
+constexpr bool kDebug = false;
 
 namespace {
   //{{{
@@ -96,7 +97,7 @@ public:
             audioFrame->mSampleRate = avFrame->sample_rate;
             audioFrame->mNumChannels = avFrame->ch_layout.nb_channels;
 
-            if (false)
+            if (kDebug)
               cLog::log (LOGINFO, fmt::format ("pts:{} {} chans:{}:{}:{} {} {}",
                                                utils::getFullPtsString (pts),
                                                utils::getFullPtsString (interpolatedPts),
