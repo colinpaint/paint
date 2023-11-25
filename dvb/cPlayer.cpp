@@ -73,12 +73,9 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
 
       srcSamples = gSilence.data();
       numSrcSamples = (int)mAudioRender.getSamplesPerFrame();
-
-      cAudioFrame* audioFrame;
       int64_t frameDuration = mAudioRender.getPtsDuration();
-      { // locked
-      shared_lock<shared_mutex> lock (mAudioRender.getSharedMutex());
-      audioFrame = mAudioRender.findAudioFrameFromPts (mPts, frameDuration, true);
+
+      cAudioFrame* audioFrame = mAudioRender.findAudioFrameFromPts (mPts, frameDuration, false);
       if (audioFrame && audioFrame->mSamples.data()) {
         if (mPlaying && !mMute) {
           float* src = audioFrame->mSamples.data();
@@ -119,7 +116,6 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
         }
       else
         cLog::log (LOGINFO, fmt::format ("cPlayer - no audioFrame {}", utils::getFullPtsString (mPts)));
-      }
       //{{{  linux play srcSamples
       #ifndef _WIN32
         audio.play (2, srcSamples, numSrcSamples, 1.f);
