@@ -37,7 +37,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
 
   mPlayerThread = thread ([=]() {
     array <float, 2048*2> samples = { 0.f };
-    //{{{  startup 
+    //{{{  startup
     #ifdef _WIN32
       // windows
       optional<cAudioDevice> audioDevice = getDefaultAudioOutputDevice();
@@ -65,6 +65,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
     //}}}
 
     while (!mExit) {
+      int64_t frameDuration = mAudioRender.getPtsDuration();
       #ifdef _WIN32
         audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
       #else
@@ -114,14 +115,17 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
           }
         }
       numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : mAudioRender.getSamplesPerFrame());
+      frameDuration = audioFrame->mPtsDuration;
       }
       //{{{  linux play srcSamples
       #ifndef _WIN32
         audio.play (2, srcSamples, numSrcSamples, 1.f);
       #endif
       //}}}
+
+      mAudioRender.trimPts (mPts);
       if (mPlaying)
-        mPts += audioFrame ? audioFrame->mPtsDuration : mAudioRender.getPtsDuration();
+        mPts += frameDuration;
       //{{{  close windows play lamda
       #ifdef _WIN32
         });

@@ -263,7 +263,7 @@ namespace {
         //}}}
         }
 
-      videoRender.trimVideoBeforePts (playPts);
+      videoRender.videoTrimBeforePts (playPts);
       }
     //}}}
 
@@ -291,7 +291,7 @@ namespace {
 
         { // lock video during iterate
         shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
-        for (auto& frame : videoRender.getFrames()) {
+        for (auto& frame : videoRender.getFramesMap()) {
           //{{{  draw video frames
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
 
@@ -328,7 +328,7 @@ namespace {
 
         { // lock audio during iterate
         shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
-        for (auto& frame : audioRender.getFrames()) {
+        for (auto& frame : audioRender.getFramesMap()) {
           //{{{  draw audio frames
           cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
 
@@ -946,7 +946,7 @@ namespace {
           }
           //}}}
 
-        // draw tabs usinfg monoSpaced font
+        // draw tab with monoSpaced font
         ImGui::PushFont (app.getMonoFont());
         switch (mTab) {
           case eTellyChan: drawChannels (transportStream); break;

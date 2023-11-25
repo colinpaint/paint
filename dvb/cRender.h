@@ -36,7 +36,7 @@ public:
   int64_t getLastPts() const { return mLastPts; }
   size_t getNumValues() const { return mValuesMap.size(); }
   size_t getFrameMapSize() const { return mFrameMapSize; }
-  std::map<int64_t,cFrame*> getFrames() { return mFrames; }
+  std::map<int64_t,cFrame*> getFramesMap() { return mFramesMap; }
   std::deque<cFrame*> getFreeFrames() { return mFreeFrames; }
 
   cFrame* getFreeFrame();
@@ -55,7 +55,9 @@ public:
 
   virtual std::string getInfoString() const = 0;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
-  virtual void trimFramesBeforePts (int64_t pts);
+
+  virtual void trimPts (int64_t pts);
+  virtual void trimBeforePts (int64_t pts);
 
 protected:
   size_t getQueueSize() const;
@@ -66,7 +68,7 @@ protected:
 
   // frameMap
   size_t mFrameMapSize;
-  std::map <int64_t, cFrame*> mFrames;
+  std::map <int64_t, cFrame*> mFramesMap;
   std::deque <cFrame*> mFreeFrames;
 
   // decode queue

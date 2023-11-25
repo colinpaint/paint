@@ -67,9 +67,9 @@ cFrame* cRender::getYoungestFrame() {
   unique_lock<shared_mutex> lock (mSharedMutex);
 
   // reuse youngest
-  auto it = mFrames.begin();
+  auto it = mFramesMap.begin();
   youngestFrame = (*it).second;
-  mFrames.erase (it);
+  mFramesMap.erase (it);
   }
 
   youngestFrame->releaseResources();
@@ -80,8 +80,8 @@ cFrame* cRender::getYoungestFrame() {
 cFrame* cRender::getFrameFromPts (int64_t pts) {
 
   //unique_lock<shared_mutex> lock (mSharedMutex);
-  auto it = mFrames.find (pts);
-  return (it == mFrames.end()) ? nullptr : it->second;
+  auto it = mFramesMap.find (pts);
+  return (it == mFramesMap.end()) ? nullptr : it->second;
   }
 //}}}
 //{{{
@@ -90,8 +90,8 @@ cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  auto it = mFrames.begin();
-  while (it != mFrames.end()) {
+  auto it = mFramesMap.begin();
+  while (it != mFramesMap.end()) {
     if (((*it).first - pts) >= 0)
       return (*it).second;
     ++it;
@@ -102,19 +102,39 @@ cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
 //}}}
 
 //{{{
-void cRender::trimFramesBeforePts (int64_t pts) {
-// remove frames before pts, release any temp resources
+void cRender::trimPts (int64_t pts) {
+// remove frame at pts from mFramesMap, release any temp resources
 
-  if (mFrames.empty())
+  if (mFramesMap.empty())
+    return;
+
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+  auto it = mFramesMap.find (pts);
+  if (it != mFramesMap.end()) {
+    cFrame* frame = it->second;
+    it = mFramesMap.erase (it);
+    frame->releaseResources();
+    mFreeFrames.push_back (frame);
+    }
+  }
+
+  }
+//}}}
+//{{{
+void cRender::trimBeforePts (int64_t pts) {
+// remove all frames before pts, release any temp resources
+
+  if (mFramesMap.empty())
     return;
 
   { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  auto it = mFrames.begin();
-  while ((it != mFrames.end()) && ((*it).first < pts)) {
+  auto it = mFramesMap.begin();
+  while ((it != mFramesMap.end()) && ((*it).first < pts)) {
     cFrame* frame = it->second;
-    it = mFrames.erase (it);
+    it = mFramesMap.erase (it);
     frame->releaseResources();
     mFreeFrames.push_back (frame);
     }

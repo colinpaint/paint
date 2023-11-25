@@ -60,9 +60,9 @@ cAudioRender::~cAudioRender() {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  for (auto& frame : mFrames)
+  for (auto& frame : mFramesMap)
     delete (frame.second);
-  mFrames.clear();
+  mFramesMap.clear();
 
   for (auto& frame : mFreeFrames)
     delete frame;
@@ -106,7 +106,7 @@ void cAudioRender::addFrame (cFrame* frame) {
 
   { // locked emplace
   unique_lock<shared_mutex> lock (mSharedMutex);
-  mFrames.emplace (audioFrame->mPts, audioFrame);
+  mFramesMap.emplace (audioFrame->mPts, audioFrame);
   }
 
   // start player
@@ -119,21 +119,17 @@ void cAudioRender::addFrame (cFrame* frame) {
 //{{{
 string cAudioRender::getInfoString() const {
   return fmt::format ("aud frames:{:2d}:{:2d}:{:d} {} {}",
-                      mFrames.size(), mFreeFrames.size(), getQueueSize(),
+                      mFramesMap.size(), mFreeFrames.size(), getQueueSize(),
                       mDecoder->getInfoString(), mFrameInfo);
   }
 //}}}
 //{{{
 bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
-  trimFramesBeforePts (getPlayer().getPts());
-
+  // throttle fileRead thread 
   if (!getRealTime())
-    // throttle on number of decoded audioFrames
-    while (mFrames.size() > mFrameMapSize) {
+    while (mFramesMap.size() > mFrameMapSize)
       this_thread::sleep_for (1ms);
-      trimFramesBeforePts (getPlayer().getPts());
-      }
 
   return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
   }

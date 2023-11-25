@@ -31,7 +31,7 @@ public:
 
   // overrides
   virtual std::string getInfoString() const final;
-  virtual void trimVideoBeforePts (int64_t pts) final;
+  virtual void videoTrimBeforePts (int64_t pts) final;
 
 private:
   uint16_t mWidth = 0;

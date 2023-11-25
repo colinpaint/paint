@@ -60,9 +60,9 @@ cVideoRender::~cVideoRender() {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  for (auto& frame : mFrames)
+  for (auto& frame : mFramesMap)
     delete frame.second;
-  mFrames.clear();
+  mFramesMap.clear();
 
   for (auto& frame : mFreeFrames)
     delete frame;
@@ -74,7 +74,7 @@ cVideoRender::~cVideoRender() {
 //{{{
 cVideoFrame* cVideoRender::getVideoFrameFromPts (int64_t pts) {
 
-  if (mFrames.empty() || !mPtsDuration)
+  if (mFramesMap.empty() || !mPtsDuration)
     return nullptr;
   else
     return dynamic_cast<cVideoFrame*>(getFrameFromPts (pts / mPtsDuration));
@@ -83,7 +83,7 @@ cVideoFrame* cVideoRender::getVideoFrameFromPts (int64_t pts) {
 //{{{
 cVideoFrame* cVideoRender::getVideoNearestFrameFromPts (int64_t pts) {
 
-  if (mFrames.empty() || !mPtsDuration)
+  if (mFramesMap.empty() || !mPtsDuration)
     return nullptr;
    else
     return dynamic_cast<cVideoFrame*>(getNearestFrameFromPts (pts / mPtsDuration));
@@ -117,7 +117,7 @@ void cVideoRender::addFrame (cFrame* frame) {
 
   { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
-  mFrames.emplace (videoFrame->mPts / videoFrame->mPtsDuration, videoFrame);
+  mFramesMap.emplace (videoFrame->mPts / videoFrame->mPtsDuration, videoFrame);
   }
 
   }
@@ -127,12 +127,12 @@ void cVideoRender::addFrame (cFrame* frame) {
 //{{{
 string cVideoRender::getInfoString() const {
   return fmt::format ("vid frames:{:2d}:{:2d}:{:d} {} {}",
-                      mFrames.size(), mFreeFrames.size(), getQueueSize(),
+                      mFramesMap.size(), mFreeFrames.size(), getQueueSize(),
                       mDecoder->getInfoString(), mFrameInfo);
   }
 //}}}
 //{{{
-void cVideoRender::trimVideoBeforePts (int64_t pts) {
-  trimFramesBeforePts ((pts - mPtsDuration) / mPtsDuration);
+void cVideoRender::videoTrimBeforePts (int64_t pts) {
+  trimBeforePts ((pts - mPtsDuration) / mPtsDuration);
   }
 //}}}
