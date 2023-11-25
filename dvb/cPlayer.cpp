@@ -64,7 +64,6 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
     //}}}
 
     while (!mExit) {
-      int64_t frameDuration = mAudioRender.getPtsDuration();
       #ifdef _WIN32
         audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
       #else
@@ -74,6 +73,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       srcSamples = gSilence.data();
 
       cAudioFrame* audioFrame;
+      int64_t frameDuration = mAudioRender.getPtsDuration();
       { // locked
       shared_lock<shared_mutex> lock (mAudioRender.getSharedMutex());
       audioFrame = mAudioRender.findAudioFrameFromPts (mPts);
@@ -113,8 +113,8 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
           srcSamples = samples.data();
           }
         }
+      frameDuration = audioFrame ? audioFrame->mPtsDuration : mAudioRender.getPtsDuration();
       numSrcSamples = (int)(audioFrame ? audioFrame->mSamplesPerFrame : mAudioRender.getSamplesPerFrame());
-      frameDuration = audioFrame->mPtsDuration;
       }
       //{{{  linux play srcSamples
       #ifndef _WIN32
