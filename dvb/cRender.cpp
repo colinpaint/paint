@@ -91,6 +91,7 @@ cFrame* cRender::getFrameFromPts (int64_t pts, int64_t duration) {
       }
     return nullptr;
     }
+
   else {
     auto it = mFramesMap.find (pts);
     return (it == mFramesMap.end()) ? nullptr : it->second;
@@ -105,7 +106,8 @@ cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
 
   auto it = mFramesMap.begin();
   while (it != mFramesMap.end()) {
-    if (((*it).first - pts) >= 0)
+    int64_t diff = (*it).first - pts;
+    if (diff >= 0)
       return (*it).second;
     ++it;
     }
