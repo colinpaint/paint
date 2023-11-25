@@ -72,8 +72,8 @@ cAudioRender::~cAudioRender() {
 //}}}
 
 //{{{
-cAudioFrame* cAudioRender::findAudioFrameFromPts (int64_t pts, int64_t duration, bool locked) {
-  return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts, duration, locked));
+cAudioFrame* cAudioRender::findAudioFrameFromPts (int64_t pts, int64_t duration) {
+  return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts, duration));
   }
 //}}}
 

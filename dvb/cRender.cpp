@@ -77,41 +77,23 @@ cFrame* cRender::getYoungestFrame() {
   }
 //}}}
 //{{{
-cFrame* cRender::getFrameFromPts (int64_t pts, int64_t duration, bool locked) {
+cFrame* cRender::getFrameFromPts (int64_t pts, int64_t duration) {
 
-  if (locked) {
-    if (duration) {
-      auto it = mFramesMap.begin();
-      while (it != mFramesMap.end()) {
-        int64_t diff = (*it).first - pts;
-        if ((diff >= 0) && (diff < duration))
-          return (*it).second;
-        ++it;
-        }
-      return nullptr;
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  if (duration) {
+    auto it = mFramesMap.begin();
+    while (it != mFramesMap.end()) {
+      int64_t diff = (*it).first - pts;
+      if ((diff >= 0) && (diff < duration))
+        return (*it).second;
+      ++it;
       }
-    else {
-      auto it = mFramesMap.find (pts);
-      return (it == mFramesMap.end()) ? nullptr : it->second;
-      }
+    return nullptr;
     }
-
   else {
-    unique_lock<shared_mutex> lock (mSharedMutex);
-    if (duration) {
-      auto it = mFramesMap.begin();
-      while (it != mFramesMap.end()) {
-        int64_t diff = (*it).first - pts;
-        if ((diff >= 0) && (diff < duration))
-          return (*it).second;
-        ++it;
-        }
-      return nullptr;
-      }
-    else {
-      auto it = mFramesMap.find (pts);
-      return (it == mFramesMap.end()) ? nullptr : it->second;
-      }
+    auto it = mFramesMap.find (pts);
+    return (it == mFramesMap.end()) ? nullptr : it->second;
     }
   }
 //}}}

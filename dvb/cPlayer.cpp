@@ -75,7 +75,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       numSrcSamples = (int)mAudioRender.getSamplesPerFrame();
       int64_t frameDuration = mAudioRender.getPtsDuration();
 
-      cAudioFrame* audioFrame = mAudioRender.findAudioFrameFromPts (mPts, frameDuration, false);
+      cAudioFrame* audioFrame = mAudioRender.findAudioFrameFromPts (mPts, frameDuration);
       if (audioFrame && audioFrame->mSamples.data()) {
         if (mPlaying && !mMute) {
           float* src = audioFrame->mSamples.data();

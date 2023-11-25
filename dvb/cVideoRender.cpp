@@ -77,7 +77,7 @@ cVideoFrame* cVideoRender::getVideoFrameFromPts (int64_t pts) {
   if (mFramesMap.empty() || !mPtsDuration)
     return nullptr;
   else
-    return dynamic_cast<cVideoFrame*>(getFrameFromPts (pts / mPtsDuration, 0, true));
+    return dynamic_cast<cVideoFrame*>(getFrameFromPts (pts / mPtsDuration, 0));
   }
 //}}}
 //{{{

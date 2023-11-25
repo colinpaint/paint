@@ -28,7 +28,7 @@ public:
   cPlayer& getPlayer() { return *mPlayer; }
 
   // find
-  cAudioFrame* findAudioFrameFromPts (int64_t pts, int64_t duration, bool locked);
+  cAudioFrame* findAudioFrameFromPts (int64_t pts, int64_t duration);
 
   // callbacks
   cFrame* getFrame();
