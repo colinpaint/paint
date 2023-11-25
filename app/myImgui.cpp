@@ -112,7 +112,8 @@ void drawMiniLog (cMiniLog& miniLog) {
 //}}}
 
 //{{{
-bool clockButton (const string& label, chrono::system_clock::time_point timePoint, const ImVec2& size_arg) {
+bool clockButton (const string& label, chrono::system_clock::time_point timePoint, const ImVec2& size,
+                  bool drawDate, bool drawTime) {
 
   ImGuiWindow* window = ImGui::GetCurrentWindow();
   if (window->SkipItems)
@@ -120,12 +121,11 @@ bool clockButton (const string& label, chrono::system_clock::time_point timePoin
 
   ImGuiContext& g = *GImGui;
   const ImGuiStyle& style = g.Style;
-  //const ImVec2 label_size = ImGui::CalcTextSize (label.c_str(), NULL, true);
-  const ImVec2 size = ImGui::CalcItemSize (size_arg, -2.f * style.FramePadding.x, -2.0f * style.FramePadding.y);
+  const ImVec2 sizeVec = ImGui::CalcItemSize (size, -2.f * style.FramePadding.x, -2.0f * style.FramePadding.y);
 
   const ImVec2 pos = window->DC.CursorPos;
   const ImRect rect (pos, pos + size);
-  ImGui::ItemSize (size, style.FramePadding.y);
+  ImGui::ItemSize (sizeVec, style.FramePadding.y);
 
   const ImGuiID id = window->GetID (label.c_str());
   if (!ImGui::ItemAdd (rect, id))
@@ -165,18 +165,26 @@ bool clockButton (const string& label, chrono::system_clock::time_point timePoin
   window->DrawList->AddLine (
     rect.GetCenter(), rect.GetCenter() + ImVec2(secRadius * sin (secAngle), secRadius * cos (secAngle)), IM_COL32_WHITE, 2.f);
 
-  // draw date,time labels
-  const string dateString = date::format ("%a %d %b %y", chrono::floor<chrono::seconds>(timePoint));
-  window->DrawList->AddText (rect.GetBL() - ImVec2(0.f,16.f), col, dateString.c_str(), NULL);
-  const string timeString = date::format ("%H:%M:%S", chrono::floor<chrono::seconds>(timePoint));
-  window->DrawList->AddText (rect.GetBL(), col, timeString.c_str(), NULL);
+  if (drawDate) {
+    //{{{  draw date text
+    const string dateString = date::format ("%a %d %b %y", chrono::floor<chrono::seconds>(timePoint));
+    window->DrawList->AddText (rect.GetBL() - ImVec2(0.f,16.f), col, dateString.c_str(), NULL);
+    }
+    //}}}
+  if (drawTime) {
+    //{{{  drawTimeText
+    const string timeString = date::format ("%H:%M:%S", chrono::floor<chrono::seconds>(timePoint));
+    window->DrawList->AddText (rect.GetBL(), col, timeString.c_str(), NULL);
+    }
+    //}}}
 
   IMGUI_TEST_ENGINE_ITEM_INFO(id, label.c_str(), g.LastItemData.StatusFlags);
+
   return pressed;
   }
 //}}}
 //{{{
-bool toggleButton (const string& label, bool toggleOn, const ImVec2& size_arg) {
+bool toggleButton (const string& label, bool toggleOn, const ImVec2& size) {
 // imGui custom widget - based on ImGui::ButtonEx
 
   ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -186,13 +194,13 @@ bool toggleButton (const string& label, bool toggleOn, const ImVec2& size_arg) {
   ImGuiContext& g = *GImGui;
   const ImGuiStyle& style = g.Style;
 
-  const ImVec2 label_size = ImGui::CalcTextSize (label.c_str(), NULL, true);
-  const ImVec2 size = ImGui::CalcItemSize (
-    size_arg, label_size.x + style.FramePadding.x * 2.f, label_size.y + style.FramePadding.y * 2.f);
+  const ImVec2 labelSizeVec = ImGui::CalcTextSize (label.c_str(), NULL, true);
+  const ImVec2 bgndSizeVec = ImGui::CalcItemSize (
+    size, labelSizeVec.x + style.FramePadding.x * 2.f, labelSizeVec.y + style.FramePadding.y * 2.f);
 
   const ImVec2 pos = window->DC.CursorPos;
-  const ImRect rect (pos, pos + size);
-  ImGui::ItemSize (size, style.FramePadding.y);
+  const ImRect rect (pos, pos + bgndSizeVec);
+  ImGui::ItemSize (bgndSizeVec, style.FramePadding.y);
 
   const ImGuiID id = window->GetID (label.c_str());
   if (!ImGui::ItemAdd (rect, id))
@@ -201,8 +209,6 @@ bool toggleButton (const string& label, bool toggleOn, const ImVec2& size_arg) {
   bool hovered;
   bool held;
   bool pressed = ImGui::ButtonBehavior (rect, id, &hovered, &held, ImGuiButtonFlags_None);
-
-  // Render
   const ImU32 col = ImGui::GetColorU32 (
     toggleOn || (held && hovered) ? ImGuiCol_ButtonActive :
                                     (hovered ? ImGuiCol_ButtonHovered : ImGuiCol_FrameBg));
@@ -213,7 +219,7 @@ bool toggleButton (const string& label, bool toggleOn, const ImVec2& size_arg) {
     ImGui::LogSetNextTextDecoration ("[", "]");
 
   ImGui::RenderTextClipped (rect.Min + style.FramePadding, rect.Max - style.FramePadding,
-                            label.c_str(), NULL, &label_size,
+                            label.c_str(), NULL, &labelSizeVec,
                             style.ButtonTextAlign, &rect);
 
   IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
@@ -222,8 +228,7 @@ bool toggleButton (const string& label, bool toggleOn, const ImVec2& size_arg) {
   }
 //}}}
 //{{{
-uint8_t interlockedButtons (const vector<string>& buttonVector, uint8_t index,
-                            const ImVec2& size_arg, bool tabbed) {
+uint8_t interlockedButtons (const vector<string>& buttonVector, uint8_t index, const ImVec2& size, bool tabbed) {
 // interlockedButtons helper
 // draw buttonVector as toggleButtons with index toggled on
 // return index of last or pressed menu button
@@ -231,7 +236,7 @@ uint8_t interlockedButtons (const vector<string>& buttonVector, uint8_t index,
   ImGui::BeginGroup();
 
   for (auto it = buttonVector.begin(); it != buttonVector.end(); ++it) {
-    if (toggleButton (*it, index == static_cast<uint8_t>(it - buttonVector.begin()), size_arg))
+    if (toggleButton (*it, index == static_cast<uint8_t>(it - buttonVector.begin()), size))
       index = static_cast<uint8_t>(it - buttonVector.begin());
     if (tabbed)
       ImGui::SameLine();

@@ -877,6 +877,7 @@ namespace {
                                  (int32_t)ImGui::GetIO().DisplaySize.y });
 
       ImGui::SetKeyboardFocusHere();
+      ImGui::SetNextWindowPos ({ 0.f,0.f });
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
       ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground |
                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
@@ -936,6 +937,12 @@ namespace {
           //{{{  draw transportStream errors info
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("error:{}", tellyApp.getTransportStream().getNumErrors()).c_str());
+          }
+          //}}}
+        if (transportStream.hasTdtTime()) {
+          //{{{  draw clock
+          ImGui::SetCursorPos ({ ImGui::GetWindowWidth() - 90.f, 0.f} );
+          clockButton ("clock", transportStream.getTdtTime(), { 80.f, 80.f });
           }
           //}}}
 

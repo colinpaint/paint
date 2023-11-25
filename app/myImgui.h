@@ -168,8 +168,10 @@ void drawMiniLog (cMiniLog& miniLog);
 
 void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t address, bool full);
 
-bool clockButton (const std::string& label, std::chrono::system_clock::time_point timePoint,
-                  const ImVec2& size_arg = ImVec2(0,0));
+bool clockButton (const std::string& label,
+                  std::chrono::system_clock::time_point timePoint,
+                  const ImVec2& size_arg = ImVec2(0,0),
+                  bool drawDate = false, bool drawTime = false);
 
 bool toggleButton (const std::string& label, bool toggleOn,
                    const ImVec2& size_arg = ImVec2(0,0));
