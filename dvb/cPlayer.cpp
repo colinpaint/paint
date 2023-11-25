@@ -42,11 +42,10 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       // windows
       optional<cAudioDevice> audioDevice = getDefaultAudioOutputDevice();
       if (!audioDevice) {
-        cLog::log (LOGINFO, fmt::format ("created windows WASPI device {}hz", mSampleRate));
+        cLog::log (LOGERROR, fmt::format ("- failed to create WASPI device"));
         return;
         }
-
-      cLog::log (LOGERROR, fmt::format ("- failed to create WASPI device"));
+      //cLog::log (LOGINFO, fmt::format ("created windows WASPI device {}hz", mSampleRate));
 
       SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
       audioDevice->setSampleRate (mSampleRate);

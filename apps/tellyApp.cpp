@@ -723,8 +723,9 @@ namespace {
         mFileName = cFileUtils::resolve (filename);
         FILE* file = fopen (mFileName.c_str(), "rb");
         if (file) {
+          // create fileRead thread
           thread ([=]() {
-            cLog::setThreadName (mFileName);
+            cLog::setThreadName ("file");
 
             size_t blockSize = 188 * 256;
             uint8_t* buffer = new uint8_t[blockSize];
@@ -736,16 +737,17 @@ namespace {
                 mFilePos += mTransportStream->demux (buffer, bytesRead, mFilePos, false);
               else
                 break;
-
+              //{{{  get mFileSize
               #ifdef _WIN32
+                // windows platform nonsense
                 struct _stati64 st;
                 if (_stat64 (mFileName.c_str(), &st) != -1)
-                  mFileSize = st.st_size;
               #else
                 struct stat st;
                 if (stat (mFileName.c_str(), &st) != -1)
-                  mFileSize = st.st_size;
               #endif
+                  mFileSize = st.st_size;
+              //}}}
               }
 
             fclose (file);
