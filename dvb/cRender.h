@@ -21,8 +21,6 @@ constexpr int kPtsPerSecond = 90000;
 
 class cRender {
 public:
-  enum eDecoder { eFFmpeg, eMfxSystem, eMfxVideo };
-
   cRender (bool queued, const std::string& name, uint8_t streamType, size_t frameMapSize, bool realTime);
   virtual ~cRender();
 
