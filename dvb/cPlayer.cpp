@@ -76,7 +76,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       int64_t frameDuration = mAudioRender.getPtsDuration();
 
       if (mPlaying) {
-        cAudioFrame* audioFrame = mAudioRender.findAudioFrameFromPts (mPts, frameDuration);
+        cAudioFrame* audioFrame = mAudioRender.getAudioFrameFromPts (mPts);
         if (audioFrame && audioFrame->mSamples.data()) {
           if (!mMute) {
             float* src = audioFrame->mSamples.data();
@@ -124,7 +124,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
         audio.play (2, srcSamples, numSrcSamples, 1.f);
       #endif
       //}}}
-      mAudioRender.trimBeforePts (mPts);
+      mAudioRender.audioTrimBeforePts (mPts);
 
       if (mPlaying)
         mPts += frameDuration;

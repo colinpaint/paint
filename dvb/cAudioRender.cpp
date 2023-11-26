@@ -72,8 +72,12 @@ cAudioRender::~cAudioRender() {
 //}}}
 
 //{{{
-cAudioFrame* cAudioRender::findAudioFrameFromPts (int64_t pts, int64_t duration) {
-  return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts, duration));
+cAudioFrame* cAudioRender::getAudioFrameFromPts (int64_t pts) {
+
+  if (mFramesMap.empty() || !mPtsDuration)
+    return nullptr;
+  else
+    return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts / mPtsDuration));
   }
 //}}}
 
@@ -106,7 +110,7 @@ void cAudioRender::addFrame (cFrame* frame) {
 
   { // locked emplace
   unique_lock<shared_mutex> lock (mSharedMutex);
-  mFramesMap.emplace (audioFrame->mPts, audioFrame);
+  mFramesMap.emplace (audioFrame->mPts / mPtsDuration, audioFrame);
   }
 
   // start player
@@ -132,5 +136,11 @@ bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int
       this_thread::sleep_for (1ms);
 
   return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
+  }
+//}}}
+
+//{{{
+void cAudioRender::audioTrimBeforePts (int64_t pts) {
+  trimBeforePts (pts / mPtsDuration);
   }
 //}}}

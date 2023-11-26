@@ -412,17 +412,17 @@ namespace {
       ~cAudioMeterView() = default;
 
       void draw (cAudioRender& audioRender, int64_t playerPts, ImVec2 pos) {
-        cAudioFrame* audioFrame = audioRender.findAudioFrameFromPts (playerPts, audioRender.getPtsDuration());
+        cAudioFrame* audioFrame = audioRender.getAudioFrameFromPts (playerPts);
         if (audioFrame) {
           size_t drawChannels = audioFrame->mNumChannels;
           bool audio51 = (audioFrame->mNumChannels == 6);
           array <size_t, 6> channelOrder;
           if (audio51) {
-            channelOrder = {4, 0, 2, 1, 5, 3};
+            channelOrder = { 4, 0, 2, 1, 5, 3 };
             drawChannels--;
             }
           else
-            channelOrder = {0, 1, 2, 3, 4, 5};
+            channelOrder = { 0, 1, 2, 3, 4, 5 };
 
           // draw channels
           float x = pos.x - (drawChannels * mPixelsPerAudioChannel);

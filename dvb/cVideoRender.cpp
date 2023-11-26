@@ -77,7 +77,7 @@ cVideoFrame* cVideoRender::getVideoFrameFromPts (int64_t pts) {
   if (mFramesMap.empty() || !mPtsDuration)
     return nullptr;
   else
-    return dynamic_cast<cVideoFrame*>(getFrameFromPts (pts / mPtsDuration, 0));
+    return dynamic_cast<cVideoFrame*>(getFrameFromPts (pts / mPtsDuration));
   }
 //}}}
 //{{{
@@ -85,7 +85,7 @@ cVideoFrame* cVideoRender::getVideoNearestFrameFromPts (int64_t pts) {
 
   if (mFramesMap.empty() || !mPtsDuration)
     return nullptr;
-   else
+  else
     return dynamic_cast<cVideoFrame*>(getNearestFrameFromPts (pts / mPtsDuration));
   }
 //}}}
@@ -133,6 +133,6 @@ string cVideoRender::getInfoString() const {
 //}}}
 //{{{
 void cVideoRender::videoTrimBeforePts (int64_t pts) {
-  trimBeforePts ((pts - mPtsDuration) / mPtsDuration);
+  trimBeforePts (pts / mPtsDuration);
   }
 //}}}
