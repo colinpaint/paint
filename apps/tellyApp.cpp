@@ -951,10 +951,10 @@ namespace {
         // draw tab with monoSpaced font
         ImGui::PushFont (app.getMonoFont());
         switch (mTab) {
-          case eTellyChan: drawChannels (transportStream); break;
-          case eServices:  drawServices (transportStream, app.getGraphics()); break;
-          case ePidMap:    drawPidMap (transportStream); break;
-          case eRecorded:  drawRecorded (transportStream); break;
+          case eChannels:   drawChannels (transportStream); break;
+          case eServices:   drawServices (transportStream, app.getGraphics()); break;
+          case ePidMap:     drawPidMap (transportStream); break;
+          case eRecordings: drawRecordings (transportStream); break;
           default:;
           }
         ImGui::PopFont();
@@ -975,8 +975,10 @@ namespace {
     //}}}
 
   private:
-    enum eTab { eTelly, eTellyChan, eServices, ePidMap, eRecorded };
-    inline static const vector<string> kTabNames = { "telly", "channels", "services", "pids", "recorded" };
+    enum eTab { eMulti, eChannels, eServices, ePidMap, eRecordings };
+    inline static const vector<string> kTabNames = { "multi", "channels", "services", "pids", "recorded" };
+
+    void show (eTab tab) { mTab = tab; }
 
     //{{{
     void drawChannels (cTransportStream& transportStream) {
@@ -1120,7 +1122,7 @@ namespace {
       }
     //}}}
     //{{{
-    void drawRecorded (cTransportStream& transportStream) {
+    void drawRecordings (cTransportStream& transportStream) {
 
       for (auto& program : transportStream.getRecordPrograms())
         ImGui::TextUnformatted (program.c_str());
@@ -1233,6 +1235,11 @@ namespace {
         { false, false, false, ImGuiKey_Space,      [this,&tellyApp]{ tellyApp.getMultiView().space(); }},
         { false, false, false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
         { false, false, false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
+        { false, false, false, ImGuiKey_M,          [this,&tellyApp]{ show (eMulti); }},
+        { false, false, false, ImGuiKey_C,          [this,&tellyApp]{ show (eChannels); }},
+        { false, false, false, ImGuiKey_V,          [this,&tellyApp]{ show (eServices); }},
+        { false, false, false, ImGuiKey_P,          [this,&tellyApp]{ show (ePidMap); }},
+        { false, false, false, ImGuiKey_R,          [this,&tellyApp]{ show (eRecordings); }},
         };
 
       ImGui::GetIO().WantTextInput = true;
@@ -1251,7 +1258,7 @@ namespace {
           break;
           }
 
-      // deal with other keys
+      // other queued keys
       for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
         ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
         cLog::log (LOGINFO, fmt::format ("enter {:4x} {} {} {}",
@@ -1262,7 +1269,7 @@ namespace {
     //}}}
 
     // vars
-    eTab mTab = eTelly;
+    eTab mTab = eMulti;
 
     int64_t mMaxPidPackets = 0;
     size_t mPacketChars = 3;
