@@ -889,8 +889,7 @@ namespace {
       if (tellyApp.hasTransportStream())
         tellyApp.getMultiView().draw (tellyApp.getTransportStream(), app.getGraphics(), tellyApp.showSubtitle());
 
-      ImGui::SetCursorPos ({ 0.f,0.f });
-      mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
+      drawTabs (tellyApp);
       //{{{  draw subtitle button
       ImGui::SameLine();
       if (toggleButton ("sub", tellyApp.showSubtitle()))
@@ -941,12 +940,6 @@ namespace {
           ImGui::TextUnformatted (fmt::format ("error:{}", tellyApp.getTransportStream().getNumErrors()).c_str());
           }
           //}}}
-        if (transportStream.hasTdtTime()) {
-          //{{{  draw clock
-          ImGui::SetCursorPos ({ ImGui::GetWindowWidth() - 90.f, 0.f} );
-          clockButton ("clock", transportStream.getTdtTime(), { 80.f, 80.f });
-          }
-          //}}}
 
         // draw tab with monoSpaced font
         ImGui::PushFont (app.getMonoFont());
@@ -965,6 +958,14 @@ namespace {
           tellyApp.getMultiView().selectById (
             tellyApp.getMultiView().pick ({ ImGui::GetMousePos().x, ImGui::GetMousePos().y }));
         tellyApp.getMultiView().hover();
+
+        if (tellyApp.hasTransportStream() && transportStream.hasTdtTime()) {
+          //{{{  draw clock
+          ImGui::SetCursorPos ({ ImGui::GetWindowWidth() - 90.f, 0.f} );
+          clockButton ("clock", transportStream.getTdtTime(), { 80.f, 80.f });
+          }
+          //}}}
+
         //if (ImGui::IsWindowHovered())
         //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
         keyboard (tellyApp);
@@ -975,11 +976,32 @@ namespace {
     //}}}
 
   private:
-    enum eTab { eMulti, eChannels, eServices, ePidMap, eRecordings };
-    inline static const vector<string> kTabNames = { "multi", "channels", "services", "pids", "recorded" };
+    enum eTab { eTelly, eServices, ePidMap, eChannels, eRecordings };
+    inline static const vector<string> kTabNamesRecord = { "telly", "services", "pids", "channels", "recorded" };
+    inline static const vector<string> kTabNames =       { "telly", "services", "pids", "channels" };
+    inline static const vector<string> kTabNamesSingle = { "telly", "services", "pids" };
 
-    void show (eTab tab) { mTab = tab; }
+    //{{{
+    void hitShow (eTab tab) {
+      mTab = (tab == mTab) ? eTelly : tab;
+      }
+    //}}}
 
+    //{{{
+    void drawTabs (cTellyApp& tellyApp) {
+
+      ImGui::SetCursorPos ({ 0.f,0.f });
+
+      if (tellyApp.hasTransportStream()) {
+        if (tellyApp.getTransportStream().getRecordPrograms().size())
+          mTab = (eTab)interlockedButtons (kTabNamesRecord, (uint8_t)mTab, {0.f,0.f}, true);
+        else if (tellyApp.getTransportStream().getServiceMap().size() > 1)
+          mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
+        else
+          mTab = (eTab)interlockedButtons (kTabNamesSingle, (uint8_t)mTab, {0.f,0.f}, true);
+        }
+      }
+    //}}}
     //{{{
     void drawChannels (cTransportStream& transportStream) {
 
@@ -1235,11 +1257,11 @@ namespace {
         { false, false, false, ImGuiKey_Space,      [this,&tellyApp]{ tellyApp.getMultiView().space(); }},
         { false, false, false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
         { false, false, false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
-        { false, false, false, ImGuiKey_M,          [this,&tellyApp]{ show (eMulti); }},
-        { false, false, false, ImGuiKey_C,          [this,&tellyApp]{ show (eChannels); }},
-        { false, false, false, ImGuiKey_V,          [this,&tellyApp]{ show (eServices); }},
-        { false, false, false, ImGuiKey_P,          [this,&tellyApp]{ show (ePidMap); }},
-        { false, false, false, ImGuiKey_R,          [this,&tellyApp]{ show (eRecordings); }},
+        { false, false, false, ImGuiKey_M,          [this,&tellyApp]{ hitShow (eTelly); }},
+        { false, false, false, ImGuiKey_C,          [this,&tellyApp]{ hitShow (eChannels); }},
+        { false, false, false, ImGuiKey_V,          [this,&tellyApp]{ hitShow (eServices); }},
+        { false, false, false, ImGuiKey_P,          [this,&tellyApp]{ hitShow (ePidMap); }},
+        { false, false, false, ImGuiKey_R,          [this,&tellyApp]{ hitShow (eRecordings); }},
         };
 
       ImGui::GetIO().WantTextInput = true;
@@ -1269,7 +1291,7 @@ namespace {
     //}}}
 
     // vars
-    eTab mTab = eMulti;
+    eTab mTab = eTelly;
 
     int64_t mMaxPidPackets = 0;
     size_t mPacketChars = 3;
