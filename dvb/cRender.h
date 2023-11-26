@@ -21,11 +21,13 @@ constexpr int kPtsPerSecond = 90000;
 
 class cRender {
 public:
-  cRender (bool queued, const std::string& name, uint8_t streamType, size_t frameMapSize, bool realTime);
+  cRender (bool queued, const std::string& name, uint8_t streamType,
+           size_t frameMapSize, int64_t ptsDuration, bool realTime);
   virtual ~cRender();
 
   bool isQueued() const { return mQueued; }
   float getRealTime() const { return mRealTime; }
+  int64_t getPtsDuration() const { return mPtsDuration; }
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   cMiniLog& getLog() { return mMiniLog; }
@@ -51,9 +53,8 @@ public:
   void log (const std::string& tag, const std::string& text);
   void logValue (int64_t pts, float value);
 
-  virtual std::string getInfoString() const = 0;
+  virtual std::string getInfoString() const;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
-
   virtual void trimBeforePts (int64_t pts);
 
 protected:
@@ -64,9 +65,12 @@ protected:
   cDecoder* mDecoder = nullptr;
 
   // frameMap
-  size_t mFrameMapSize;
+  size_t mFrameMapSize = 0;
   std::map <int64_t, cFrame*> mFramesMap;
   std::deque <cFrame*> mFreeFrames;
+
+  int64_t mPts = 0;
+  int64_t mPtsDuration = 0;
 
   // decode queue
   bool mQueueExit = false;

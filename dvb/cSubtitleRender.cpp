@@ -32,7 +32,7 @@ constexpr size_t kSubtitleMapSize = 0;
 // public:
 //{{{
 cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, bool realTime)
-    : cRender(kQueued, name + "sub", streamType, kSubtitleMapSize, realTime) {
+    : cRender(kQueued, name + "sub", streamType, kSubtitleMapSize, 90000/25, realTime) {
 
   mDecoder = new cSubtitleDecoder (*this);
 
@@ -66,7 +66,9 @@ cFrame* cSubtitleRender::getFrame() {
 //}}}
 //{{{
 void cSubtitleRender::addFrame (cFrame* frame) {
-  (void)frame;
+
+  mPts = frame->mPts;
+  mPtsDuration = frame->mPtsDuration;
   //cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->mPts)));
   }
 //}}}

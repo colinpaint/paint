@@ -7,6 +7,7 @@
 #include <map>
 #include <thread>
 
+#include "../common/utils.h"
 #include "../common/cLog.h"
 
 #include "cDecoder.h"
@@ -14,12 +15,13 @@
 using namespace std;
 //}}}
 constexpr size_t kAudioFrameMapSize = 16;
-constexpr int64_t kPtsPerFrame = 90000 / 25;
+constexpr int64_t kPtsPer25HzFrame = 90000 / 25;
 
 // public:
 //{{{
-cRender::cRender (bool queued, const string& name, uint8_t streamType, size_t frameMapSize, bool realTime)
-    : mFrameMapSize(frameMapSize),
+cRender::cRender (bool queued, const string& name, uint8_t streamType, size_t
+                  frameMapSize, int64_t ptsDuration, bool realTime)
+    : mFrameMapSize(frameMapSize), mPtsDuration(ptsDuration),
       mQueued(queued), mName(name), mStreamType(streamType), mRealTime(realTime),
       mMiniLog ("log") {
 
@@ -38,7 +40,7 @@ float cRender::getValue (int64_t pts) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  auto it = mValuesMap.find (pts / kPtsPerFrame);
+  auto it = mValuesMap.find (pts / kPtsPer25HzFrame);
   return it == mValuesMap.end() ? 0.f : it->second;
   }
 //}}}
@@ -135,7 +137,7 @@ void cRender::logValue (int64_t pts, float value) {
   while (mValuesMap.size() >= mMapSize)
     mValuesMap.erase (mValuesMap.begin());
 
-  mValuesMap.emplace (pts / kPtsPerFrame, value);
+  mValuesMap.emplace (pts / kPtsPer25HzFrame, value);
 
   if (pts > mLastPts)
     mLastPts = pts;
@@ -143,6 +145,13 @@ void cRender::logValue (int64_t pts, float value) {
 //}}}
 
 // process
+//{{{
+string cRender::getInfoString() const {
+  return fmt::format ("frames:{:2d}:{:2d}:{:d} pts:{} dur:{}",
+                      mFramesMap.size(), mFreeFrames.size(), getQueueSize(),
+                      utils::getFullPtsString (mPts), mPtsDuration);
+  }
+//}}}
 //{{{
 bool cRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
   (void)skip;

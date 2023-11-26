@@ -48,7 +48,7 @@ constexpr size_t kVideoFrameMapSize = 25;
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const string& name, uint8_t streamType, bool realTime)
-    : cRender(kVideoQueued, name + "vid", streamType, kVideoFrameMapSize, realTime) {
+    : cRender(kVideoQueued, name + "vid", streamType, kVideoFrameMapSize, 90000/25, realTime) {
 
   mDecoder = new cFFmpegVideoDecoder (*this, streamType);
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
@@ -104,6 +104,9 @@ cFrame* cVideoRender::getFrame() {
 //{{{
 void cVideoRender::addFrame (cFrame* frame) {
 
+  mPts = frame->mPts;
+  mPtsDuration = frame->mPtsDuration;
+
   cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
 
   videoFrame->mQueueSize = getQueueSize();
@@ -112,7 +115,6 @@ void cVideoRender::addFrame (cFrame* frame) {
   // save some videoFrame info
   mWidth = videoFrame->mWidth;
   mHeight = videoFrame->mHeight;
-  mPtsDuration = videoFrame->mPtsDuration;
   mFrameInfo = videoFrame->getInfoString();
 
   { // locked
@@ -126,9 +128,7 @@ void cVideoRender::addFrame (cFrame* frame) {
 // overrides
 //{{{
 string cVideoRender::getInfoString() const {
-  return fmt::format ("vid frames:{:2d}:{:2d}:{:d} {} {}",
-                      mFramesMap.size(), mFreeFrames.size(), getQueueSize(),
-                      mDecoder->getInfoString(), mFrameInfo);
+  return fmt::format ("vid {} {} {}", cRender::getInfoString(), mDecoder->getInfoString(), mFrameInfo);
   }
 //}}}
 //{{{

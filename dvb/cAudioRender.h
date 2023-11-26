@@ -23,7 +23,6 @@ public:
   // gets
   size_t getSampleRate() const { return mSampleRate; }
   size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
-  int64_t getPtsDuration() const { return mPtsDuration; }
 
   cPlayer& getPlayer() { return *mPlayer; }
 
@@ -46,7 +45,6 @@ private:
   // vars
   uint32_t mSampleRate;
   size_t mSamplesPerFrame;
-  int64_t mPtsDuration;
 
   std::string mFrameInfo;
   };

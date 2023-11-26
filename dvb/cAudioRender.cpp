@@ -40,12 +40,13 @@ using namespace std;
 //}}}
 constexpr bool kAudioQueued = true;
 constexpr size_t kAudioFrameMapSize = 16;
+constexpr int64_t kDefaultPtsPerAudioFrame = 1920;
 
 // cAudioRender
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamType, bool realTime)
-    : cRender(kAudioQueued, name + "aud", streamType, kAudioFrameMapSize, realTime),
-      mSampleRate(48000), mSamplesPerFrame(1024), mPtsDuration(0) {
+    : cRender(kAudioQueued, name + "aud", streamType, kAudioFrameMapSize, kDefaultPtsPerAudioFrame, realTime),
+      mSampleRate(48000), mSamplesPerFrame(1024) {
 
   mDecoder = new cFFmpegAudioDecoder (*this, streamType);
 
@@ -103,8 +104,10 @@ void cAudioRender::addFrame (cFrame* frame) {
     mSampleRate = audioFrame->mSampleRate;
     }
 
+  mPts = frame->mPts;
+  mPtsDuration = frame->mPtsDuration;
+
   mSamplesPerFrame = audioFrame->mSamplesPerFrame;
-  mPtsDuration = audioFrame->mPtsDuration;
   mFrameInfo = audioFrame->getInfoString();
   audioFrame->calcPower();
 
@@ -122,9 +125,7 @@ void cAudioRender::addFrame (cFrame* frame) {
 // overrides
 //{{{
 string cAudioRender::getInfoString() const {
-  return fmt::format ("aud frames:{:2d}:{:2d}:{:d} {} {}",
-                      mFramesMap.size(), mFreeFrames.size(), getQueueSize(),
-                      mDecoder->getInfoString(), mFrameInfo);
+  return fmt::format ("aud {} {} {}", cRender::getInfoString(), mDecoder->getInfoString(), mFrameInfo);
   }
 //}}}
 //{{{
@@ -138,7 +139,6 @@ bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int
   return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
   }
 //}}}
-
 //{{{
 void cAudioRender::audioTrimBeforePts (int64_t pts) {
   trimBeforePts (pts / mPtsDuration);

@@ -20,7 +20,6 @@ public:
 
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
-  int64_t getPtsDuration() const { return mPtsDuration; }
 
   cVideoFrame* getVideoFrameFromPts (int64_t pts);
   cVideoFrame* getVideoNearestFrameFromPts (int64_t pts);
@@ -36,7 +35,6 @@ public:
 private:
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
-  int64_t mPtsDuration = 90000 / 25;
 
   std::string mFrameInfo;
   };
