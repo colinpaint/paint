@@ -36,6 +36,8 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
     : mAudioRender(audioRender), mSampleRate(sampleRate) {
 
   mPlayerThread = thread ([=]() {
+    cLog::setThreadName ("play");
+
     array <float, 2048*2> samples = { 0.f };
     //{{{  startup
     #ifdef _WIN32
@@ -116,8 +118,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
           numSrcSamples = (int)audioFrame->mSamplesPerFrame;
           }
         else
-          cLog::log (LOGINFO, fmt::format ("cPlayer - missed audioFrame {} {}",
-                                           ++mMissedFrames, utils::getFullPtsString (mPts)));
+          mMissedFrames++;
         }
       //{{{  linux play srcSamples
       #ifndef _WIN32
@@ -126,8 +127,14 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       //}}}
       mAudioRender.audioTrimBeforePts (mPts);
 
-      if (mPlaying)
-        mPts += frameDuration;
+      if (mPlaying) {
+        if (mMissedFrames > 0) {
+          cLog::log (LOGINFO, fmt::format ("cPlayer missed {}", utils::getFullPtsString (mPts)));
+          mMissedFrames = 0;
+          }
+        else
+          mPts += frameDuration;
+        }
       //{{{  close windows play lamda
       #ifdef _WIN32
         });
