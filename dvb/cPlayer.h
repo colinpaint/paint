@@ -22,7 +22,9 @@ public:
 
   //{{{
   void startPlayPts (int64_t pts) {
+
     mPts = pts;
+    mMissedFrames = 0;
     mPlaying = true;
     }
   //}}}
@@ -40,5 +42,6 @@ private:
   bool mRunning = true;
   bool mExit = false;
 
+  int mMissedFrames = 0;
   int64_t mPts = 0;
   };

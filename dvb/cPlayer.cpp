@@ -75,54 +75,57 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       numSrcSamples = (int)mAudioRender.getSamplesPerFrame();
       int64_t frameDuration = mAudioRender.getPtsDuration();
 
-      cAudioFrame* audioFrame = mAudioRender.findAudioFrameFromPts (mPts, frameDuration);
-      if (audioFrame && audioFrame->mSamples.data()) {
-        if (mPlaying && !mMute) {
-          float* src = audioFrame->mSamples.data();
-          float* dst = samples.data();
-          switch (audioFrame->mNumChannels) {
-            //{{{
-            case 1: // interleaved mono to 2 interleaved 2 channels
-              for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                *dst++ = *src;
-                *dst++ = *src++;
-                }
-              break;
-            //}}}
-            //{{{
-            case 2: // interleaved stereo to 2 interleaved 2 channels
-              memcpy (dst, src, audioFrame->mSamplesPerFrame * 8);
-              break;
-            //}}}
-            //{{{
-            case 6: // interleaved 5.1 to 2 interleaved 2channels
-              for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
-                *dst++ = src[0] + src[2] + src[3] + src[4]; // left
-                *dst++ = src[1] + src[2] + src[3] + src[5]; // right
-                src += 6;
-                }
-              break;
-            //}}}
-            //{{{
-            default:
-              cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}",
-                                                audioFrame->mNumChannels));
-            //}}}
+      if (mPlaying) {
+        cAudioFrame* audioFrame = mAudioRender.findAudioFrameFromPts (mPts, frameDuration);
+        if (audioFrame && audioFrame->mSamples.data()) {
+          if (!mMute) {
+            float* src = audioFrame->mSamples.data();
+            float* dst = samples.data();
+            switch (audioFrame->mNumChannels) {
+              //{{{
+              case 1: // mono to 2 interleaved 2 channels
+                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                  *dst++ = *src;
+                  *dst++ = *src++;
+                  }
+                break;
+              //}}}
+              //{{{
+              case 2: // interleaved stereo to 2 interleaved channels
+                memcpy (dst, src, audioFrame->mSamplesPerFrame * 8);
+                break;
+              //}}}
+              //{{{
+              case 6: // interleaved 5.1 to 2 interleaved channels
+                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                  *dst++ = src[0] + src[2] + src[3] + src[4]; // left
+                  *dst++ = src[1] + src[2] + src[3] + src[5]; // right
+                  src += 6;
+                  }
+                break;
+              //}}}
+              //{{{
+              default:
+                cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}",
+                                                  audioFrame->mNumChannels));
+              //}}}
+              }
+            srcSamples = samples.data();
             }
-          srcSamples = samples.data();
+          frameDuration = audioFrame->mPtsDuration;
+          numSrcSamples = (int)audioFrame->mSamplesPerFrame;
           }
-        frameDuration = audioFrame->mPtsDuration;
-        numSrcSamples = (int)audioFrame->mSamplesPerFrame;
+        else
+          cLog::log (LOGINFO, fmt::format ("cPlayer - missed audioFrame {} {}",
+                                           ++mMissedFrames, utils::getFullPtsString (mPts)));
         }
-      else
-        cLog::log (LOGINFO, fmt::format ("cPlayer - no audioFrame {}", utils::getFullPtsString (mPts)));
       //{{{  linux play srcSamples
       #ifndef _WIN32
         audio.play (2, srcSamples, numSrcSamples, 1.f);
       #endif
       //}}}
-
       mAudioRender.trimBeforePts (mPts);
+
       if (mPlaying)
         mPts += frameDuration;
       //{{{  close windows play lamda
