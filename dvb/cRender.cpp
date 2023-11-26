@@ -117,28 +117,8 @@ cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
 //}}}
 
 //{{{
-void cRender::trimPts (int64_t pts) {
-// remove frame at pts from mFramesMap, release any temp resources
-
-  if (mFramesMap.empty())
-    return;
-
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-  auto it = mFramesMap.find (pts);
-  if (it != mFramesMap.end()) {
-    cFrame* frame = it->second;
-    it = mFramesMap.erase (it);
-    frame->releaseResources();
-    mFreeFrames.push_back (frame);
-    }
-  }
-
-  }
-//}}}
-//{{{
 void cRender::trimBeforePts (int64_t pts) {
-// remove all frames before pts, release any temp resources
+// remove all frames before pts, releaseResources
 
   if (mFramesMap.empty())
     return;

@@ -54,7 +54,6 @@ public:
   virtual std::string getInfoString() const = 0;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
 
-  virtual void trimPts (int64_t pts);
   virtual void trimBeforePts (int64_t pts);
 
 protected:
