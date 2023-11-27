@@ -1521,19 +1521,22 @@ namespace {
       : cApp ("fed", windowSize, fullScreen, vsync) {}
     virtual ~cEditApp() = default;
 
-    bool getMemEdit() const { return mMemEdit; };
+    bool getMemEditing() const { return mMemEditing; };
     cFedDocument* getFedDocument() const { return mFedDocuments.back(); }
 
     //{{{
-    bool setDocumentName (const string& filename, bool memEdit) {
+    bool setDocumentName (const string& filename, bool memEditing) {
 
       mFilename = cFileUtils::resolve (filename);
+      mMemEditing = memEditing;
 
-      cFedDocument* document = new cFedDocument();
-      document->load (mFilename);
-      mFedDocuments.push_back (document);
-
-      mMemEdit = memEdit;
+      if (memEditing)
+        mFileView = new cFileView (mFilename);
+      else {
+        cFedDocument* document = new cFedDocument();
+        document->load (mFilename);
+        mFedDocuments.push_back (document);
+        }
 
       return true;
       }
@@ -1543,7 +1546,7 @@ namespace {
 
       for (auto& item : dropItems) {
         string filename = cFileUtils::resolve (item);
-        setDocumentName (filename, mMemEdit);
+        setDocumentName (filename, mMemEditing);
 
         cLog::log (LOGINFO, filename);
         }
@@ -1551,8 +1554,9 @@ namespace {
     //}}}
 
   private:
-    bool mMemEdit = false;
+    bool mMemEditing = false;
     string mFilename;
+    cFileView* mFileView = nullptr;
     vector<cFedDocument*> mFedDocuments;
     };
   //}}}
@@ -4608,10 +4612,8 @@ namespace {
       ImGui::SetNextWindowPos (ImVec2(0,0));
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
-      if (false) {
+      if ((dynamic_cast<cEditApp&>(app)).getMemEditing() && mFileView) {
         //{{{  fileView memEdit
-        mFileView = new cFileView ("C:/projects/paint/build/Release/fed.exe");
-
         if (!mMemEdit)
           mMemEdit = new cMemEdit ((uint8_t*)(this), 0x10000);
 
@@ -4623,9 +4625,8 @@ namespace {
         return;
         }
         //}}}
-
-      if ((dynamic_cast<cEditApp&>(app)).getMemEdit()) {
-        //{{{  memEdit
+      else if ((dynamic_cast<cEditApp&>(app)).getMemEditing()) {
+        //{{{  memEdit myself
         if (!mMemEdit)
           mMemEdit = new cMemEdit ((uint8_t*)(this), 0x10000);
 
@@ -4643,9 +4644,9 @@ namespace {
     //}}}
 
   private:
-    cFedEdit mFedEdit;
     cFileView* mFileView = nullptr;
-    cMemEdit* mMemEdit = nullptr;
+    cFedEdit mFedEdit;
+    cMemEdit* mMemEdit;
 
     // self registration
     static cUI* create (const string& className) { return new cEditUI (className); }
