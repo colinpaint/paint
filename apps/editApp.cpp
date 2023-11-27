@@ -1523,15 +1523,17 @@ namespace {
 
     bool getMemEditing() const { return mMemEditing; };
     cFedDocument* getFedDocument() const { return mFedDocuments.back(); }
-
+    cFileView* getFileView() { return mFileView; }
     //{{{
     bool setDocumentName (const string& filename, bool memEditing) {
 
       mFilename = cFileUtils::resolve (filename);
       mMemEditing = memEditing;
 
-      if (memEditing)
+      if (memEditing) {
+        cLog::log (LOGINFO, fmt::format ("memediting {}", mFilename));
         mFileView = new cFileView (mFilename);
+        }
       else {
         cFedDocument* document = new cFedDocument();
         document->load (mFilename);
@@ -4600,8 +4602,6 @@ namespace {
     cEditUI (const string& name) : cUI(name) {}
     //{{{
     virtual ~cEditUI() {
-
-      delete mFileView;
       delete mMemEdit;
       }
     //}}}
@@ -4612,13 +4612,13 @@ namespace {
       ImGui::SetNextWindowPos (ImVec2(0,0));
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
-      if ((dynamic_cast<cEditApp&>(app)).getMemEditing() && mFileView) {
+      if ((dynamic_cast<cEditApp&>(app)).getFileView()) {
         //{{{  fileView memEdit
         if (!mMemEdit)
-          mMemEdit = new cMemEdit ((uint8_t*)(this), 0x10000);
+          mMemEdit = new cMemEdit ((dynamic_cast<cEditApp&>(app)).getFileView()->getReadPtr(), 
+                                   (dynamic_cast<cEditApp&>(app)).getFileView()->getReadBytesLeft());
 
         ImGui::PushFont (app.getMonoFont());
-        mMemEdit->setMem (mFileView->getReadPtr(), mFileView->getReadBytesLeft());
         mMemEdit->drawWindow ("Memory Editor", 0);
         ImGui::PopFont();
 
@@ -4644,7 +4644,6 @@ namespace {
     //}}}
 
   private:
-    cFileView* mFileView = nullptr;
     cFedEdit mFedEdit;
     cMemEdit* mMemEdit;
 
