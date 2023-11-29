@@ -16,7 +16,6 @@
 #include <chrono>
 
 #include "date.h"
-#include "fmt/format.h"
 #include "fmt/color.h"
 
 #ifdef __linux__
