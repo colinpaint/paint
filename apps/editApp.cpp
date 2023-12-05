@@ -1524,6 +1524,7 @@ namespace {
     bool getMemEditing() const { return mMemEditing; };
     cFedDocument* getFedDocument() const { return mFedDocuments.back(); }
     cFileView* getFileView() { return mFileView; }
+
     //{{{
     bool setDocumentName (const string& filename, bool memEditing) {
 
@@ -4615,7 +4616,7 @@ namespace {
       if ((dynamic_cast<cEditApp&>(app)).getFileView()) {
         //{{{  fileView memEdit
         if (!mMemEdit)
-          mMemEdit = new cMemEdit ((dynamic_cast<cEditApp&>(app)).getFileView()->getReadPtr(), 
+          mMemEdit = new cMemEdit ((dynamic_cast<cEditApp&>(app)).getFileView()->getReadPtr(),
                                    (dynamic_cast<cEditApp&>(app)).getFileView()->getReadBytesLeft());
 
         ImGui::PushFont (app.getMonoFont());
