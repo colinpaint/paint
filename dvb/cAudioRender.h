@@ -28,6 +28,7 @@ public:
 
   // find
   cAudioFrame* getAudioFrameFromPts (int64_t pts);
+  cAudioFrame* getAudioNearestFrameFromPts (int64_t pts);
 
   // callbacks
   cFrame* getFrame();

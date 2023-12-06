@@ -81,6 +81,15 @@ cAudioFrame* cAudioRender::getAudioFrameFromPts (int64_t pts) {
     return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts / mPtsDuration));
   }
 //}}}
+//{{{
+cAudioFrame* cAudioRender::getAudioNearestFrameFromPts (int64_t pts) {
+
+  if (mFramesMap.empty() || !mPtsDuration)
+    return nullptr;
+  else
+    return dynamic_cast<cAudioFrame*>(getNearestFrameFromPts (pts / mPtsDuration));
+  }
+//}}}
 
 // decoder callbacks
 //{{{

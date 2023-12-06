@@ -129,10 +129,17 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
 
       if (mPlaying) {
         if (mMissedFrames > 0) {
-          cLog::log (LOGINFO, fmt::format ("cPlayer missed {}", utils::getFullPtsString (mPts)));
+          cAudioFrame* audioFrame = mAudioRender.getAudioFrameFromPts (mPts);
+          if (audioFrame) {
+            mPts = audioFrame->mPts;
+            cLog::log (LOGINFO, fmt::format ("cPlayer skipping to nearestAudioFrame {}",
+                                             utils::getFullPtsString (mPts)));
+            }
+           else
+             cLog::log (LOGINFO, fmt::format ("cPlayer missed audioFrame{}", utils::getFullPtsString (mPts)));
           mMissedFrames = 0;
           }
-        else
+        else // normal move on
           mPts += frameDuration;
         }
       //{{{  close windows play lamda

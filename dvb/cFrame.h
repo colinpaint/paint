@@ -18,6 +18,10 @@ public:
       cLog::log (LOGINFO, fmt::format ("cFrame::~cFrame"));
     }
 
+  int64_t getPts() const { return mPts; }
+  int64_t getPtsDuraction() const { return mPtsDuration; }
+  int64_t getPesSize() const { return mPesSize; }
+
   virtual void releaseResources() = 0;
 
   // vars
