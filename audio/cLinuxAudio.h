@@ -117,7 +117,7 @@
       mSimple = pa_simple_new (NULL, "default", PA_STREAM_PLAYBACK, NULL, "playback",
                                &kSampleSpec, NULL, NULL, NULL);
       if (!mSimple) {
-        cLog::log (LOGINFO, fmt::format ("pa_simple_new failed"));
+        cLog::log (LOGINFO, fmt::format ("cAudio - pa_simple_new failed"));
         return;
         }
       }
