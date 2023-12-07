@@ -1259,7 +1259,7 @@ void cDvbSource::tune (int frequency) {
       this_thread::sleep_for (200ms);
       }
 
-    mTuneString = fmt::format ("{:6.3f}Mhz", mFrequency / 1000000.f);
+    mTuneString = fmt::format ("{}mHz", mFrequency / 1000000);
     }
   //}}}
 #endif
