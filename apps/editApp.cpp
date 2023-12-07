@@ -1518,7 +1518,7 @@ namespace {
   class cEditApp : public cApp {
   public:
     cEditApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-      : cApp ("fed", windowSize, fullScreen, vsync) {}
+      : cApp ("fed", windowSize, fullScreen, false, vsync) {}
     virtual ~cEditApp() = default;
 
     bool getMemEditing() const { return mMemEditing; };

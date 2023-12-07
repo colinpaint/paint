@@ -9,7 +9,7 @@
 #include <vector>
 #include <functional>
 
-//{{{  include stb 
+//{{{  include stb
 // invoke header only library implementation here
 #ifdef _WIN32
   #pragma warning (push)
@@ -49,7 +49,7 @@ using namespace std;
 class cImguiApp : public cApp {
 public:
   cImguiApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-    : cApp ("imguiApp", windowSize, fullScreen, vsync) {}
+    : cApp ("imguiApp", windowSize, fullScreen, false, vsync) {}
   virtual ~cImguiApp() = default;
 
   virtual void drop (const vector<string>& dropItems) final {

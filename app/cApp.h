@@ -15,7 +15,7 @@ struct ImFont;
 
 class cApp {
 public:
-  cApp (const std::string& name, const cPoint& windowSize, bool fullScreen, bool vsync);
+  cApp (const std::string& name, const cPoint& windowSize, bool fullScreen, bool headless, bool vsync);
   virtual ~cApp();
 
   static bool isPlatformDefined() { return mPlatformDefined; }

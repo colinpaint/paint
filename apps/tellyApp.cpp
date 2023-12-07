@@ -695,8 +695,8 @@ namespace {
   class cTellyApp : public cApp {
   public:
     //{{{
-    cTellyApp (const cPoint& windowSize, bool fullScreen)
-      : cApp("telly", windowSize, fullScreen, true) {}
+    cTellyApp (const cPoint& windowSize, bool fullScreen, bool headless)
+      : cApp("telly", windowSize, fullScreen, headless, true) {}
     //}}}
     virtual ~cTellyApp() = default;
 
@@ -1337,8 +1337,9 @@ int main (int numArgs, char* args[]) {
 
   // params
   bool recordAll = false;
-  bool showAllServices = true;
   bool fullScreen = false;
+  bool showAllServices = true;
+  bool headless = false;
   eLogLevel logLevel = LOGINFO;
   cDvbMultiplex selectedMultiplex = kMultiplexes[1];
   string filename;
@@ -1349,10 +1350,14 @@ int main (int numArgs, char* args[]) {
 
     if (param == "all")
       recordAll = true;
-    else if (param == "simple")
-      showAllServices = false;
     else if (param == "full")
       fullScreen = true;
+    else if (param == "simple")
+      showAllServices = false;
+    else if (param == "head") {
+      headless = true;
+      showAllServices = false;
+      }
     else if (param == "log1")
       logLevel = LOGINFO1;
     else if (param == "log2")
@@ -1386,14 +1391,22 @@ int main (int numArgs, char* args[]) {
   cUI::listRegisteredClasses();
 
   // app
-  cTellyApp tellyApp ({1920/2, 1080/2}, fullScreen);
-  tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
-  tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
+  cTellyApp tellyApp ({1920/2, 1080/2}, fullScreen, headless);
+  if (!headless) {
+    tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
+    tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
+    }
+
   if (filename.empty())
     tellyApp.liveDvbSource (selectedMultiplex, kRootDir, showAllServices);
   else
     tellyApp.fileSource (filename, showAllServices);
-  tellyApp.mainUILoop();
+
+  if (headless)
+    while (true)
+      this_thread::sleep_for (100ms);
+  else
+    tellyApp.mainUILoop();
 
   return EXIT_SUCCESS;
   }

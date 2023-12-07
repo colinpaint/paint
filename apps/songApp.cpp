@@ -78,7 +78,7 @@ namespace {
   public:
     //{{{
     cSongApp (const cPoint& windowSize, bool fullScreen)
-        : cApp("songApp",windowSize, fullScreen, true) {
+        : cApp("songApp",windowSize, fullScreen, false, true) {
 
       mSongLoader = new cSongLoader();
       }

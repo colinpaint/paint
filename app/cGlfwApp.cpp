@@ -12,6 +12,7 @@
 #include <array>
 #include <algorithm>
 #include <functional>
+#include <thread>
 
 // glad
 #if defined(GL3)
@@ -292,35 +293,40 @@ private:
 
 // cApp
 //{{{
-cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool vsync) {
+cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool headless, bool vsync) {
 
-  // create platform
-  cGlfwPlatform* glfwPlatform = new cGlfwPlatform (name);
-  if (!glfwPlatform || !glfwPlatform->init (windowSize)) {
-    cLog::log (LOGERROR, "cApp - glfwPlatform init failed");
-    return;
+  if (headless)
+    cLog::log (LOGINFO, fmt::format ("{} created headless", name));
+
+  else {
+    // create platform
+    cGlfwPlatform* glfwPlatform = new cGlfwPlatform (name);
+    if (!glfwPlatform || !glfwPlatform->init (windowSize)) {
+      cLog::log (LOGERROR, "cApp - glfwPlatform init failed");
+      return;
+      }
+
+    // create graphics
+    #if defined(GL3)
+      mGraphics = new cGL3Graphics (glfwPlatform->getShaderVersion());
+    #else
+      mGraphics = new cGLES3Graphics (glfwPlatform->getShaderVersion());
+    #endif
+
+    if (mGraphics && mGraphics->init()) {
+      // set callbacks
+      glfwPlatform->mResizeCallback = [&](int width, int height) noexcept { windowResize (width, height); };
+      glfwPlatform->mDropCallback = [&](vector<string> dropItems) noexcept { drop (dropItems); };
+
+      // fullScreen, vsync
+      mPlatform = glfwPlatform;
+      mPlatform->setFullScreen (fullScreen);
+      mPlatform->setVsync (vsync);
+      mPlatformDefined = true;
+      }
+    else
+      cLog::log (LOGERROR, "cApp - graphics init failed");
     }
-
-  // create graphics
-  #if defined(GL3)
-    mGraphics = new cGL3Graphics (glfwPlatform->getShaderVersion());
-  #else
-    mGraphics = new cGLES3Graphics (glfwPlatform->getShaderVersion());
-  #endif
-
-  if (mGraphics && mGraphics->init()) {
-    // set callbacks
-    glfwPlatform->mResizeCallback = [&](int width, int height) noexcept { windowResize (width, height); };
-    glfwPlatform->mDropCallback = [&](vector<string> dropItems) noexcept { drop (dropItems); };
-
-    // fullScreen, vsync
-    mPlatform = glfwPlatform;
-    mPlatform->setFullScreen (fullScreen);
-    mPlatform->setVsync (vsync);
-    mPlatformDefined = true;
-    }
-  else
-    cLog::log (LOGERROR, "cApp - graphics init failed");
   }
 //}}}
 //{{{
