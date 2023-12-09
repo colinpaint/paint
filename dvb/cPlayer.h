@@ -24,7 +24,6 @@ public:
   void startPlayPts (int64_t pts) {
 
     mPts = pts;
-    mMissedFrames = 0;
     mPlaying = true;
     }
   //}}}

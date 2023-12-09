@@ -77,9 +77,23 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       numSrcSamples = (int)mAudioRender.getSamplesPerFrame();
       int64_t frameDuration = mAudioRender.getPtsDuration();
 
+      bool foundFrame = false;
       if (mPlaying) {
         cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtPts (mPts);
-        if (audioFrame && audioFrame->mSamples.data()) {
+        foundFrame = audioFrame && audioFrame->mSamples.data();
+        if (!foundFrame) {
+          audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
+          foundFrame = audioFrame && audioFrame->mSamples.data();
+          if (foundFrame) {
+            mPts = audioFrame->mPts;
+            cLog::log (LOGINFO, fmt::format ("cPlayer skip to nextFrame {}",
+                                             utils::getFullPtsString (mPts)));
+            }
+          else
+            cLog::log (LOGINFO, fmt::format ("cPlayer noFrame {}", utils::getFullPtsString (mPts)));
+          }
+
+        if (foundFrame) {
           if (!mMute) {
             float* src = audioFrame->mSamples.data();
             float* dst = samples.data();
@@ -117,9 +131,8 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
           frameDuration = audioFrame->mPtsDuration;
           numSrcSamples = (int)audioFrame->mSamplesPerFrame;
           }
-        else
-          mMissedFrames++;
         }
+
       //{{{  linux play srcSamples
       #ifndef _WIN32
         audio.play (2, srcSamples, numSrcSamples, 1.f);
@@ -127,21 +140,8 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       //}}}
       mAudioRender.freeFramesBeforePts (mPts);
 
-      if (mPlaying) {
-        if (mMissedFrames > 0) {
-          cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
-          if (audioFrame) {
-            mPts = audioFrame->mPts;
-            cLog::log (LOGINFO, fmt::format ("cPlayer skip to nextFrame {}",
-                                             utils::getFullPtsString (mPts)));
-            }
-           else
-             cLog::log (LOGINFO, fmt::format ("cPlayer noFrame {}", utils::getFullPtsString (mPts)));
-          mMissedFrames = 0;
-          }
-        else // normal move on
-          mPts += frameDuration;
-        }
+      if (mPlaying && foundFrame)
+        mPts += frameDuration;
       //{{{  close windows play lamda
       #ifdef _WIN32
         });
