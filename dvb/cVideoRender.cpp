@@ -99,6 +99,12 @@ cFrame* cVideoRender::getFrame() {
     return frame;
   else
     return new cFFmpegVideoFrame();
+
+  //if (mFramesMap.size() < kVideoFrameMapSize)
+  //else {
+  //  cLog::log (LOGINFO, fmt::format ("cVideoRender::getFrame - reusing youngest"));
+  //  return getYoungestFrame();
+  //  }
   }
 //}}}
 //{{{

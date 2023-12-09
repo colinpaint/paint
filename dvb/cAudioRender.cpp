@@ -98,8 +98,13 @@ cFrame* cAudioRender::getFrame() {
   cFrame* frame = getFreeFrame();
   if (frame)
     return frame;
-
-  return new cAudioFrame();
+  else
+    return new cAudioFrame();
+  //if (mFramesMap.size() < kAudioFrameMapSize)
+  //else {
+  //  cLog::log (LOGINFO, fmt::format ("cAudioRender::getFrame - reusing youngest"));
+  //  return getYoungestFrame();
+  //  }
   }
 //}}}
 //{{{
