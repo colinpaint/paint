@@ -41,12 +41,14 @@ public:
 
   cFrame* getFreeFrame();
   cFrame* getYoungestFrame();
-  cFrame* getFrameFromPts (int64_t pts);
-  cFrame* getNearestFrameFromPts (int64_t pts);
+  cFrame* getFrameAtPts (int64_t pts);
+  cFrame* getFrameAtOrAfterPts (int64_t pts);
 
   void setAllocFrameCallback (std::function <cFrame* ()> getFrameCallback) { mAllocFrameCallback = getFrameCallback; }
   void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
   void setMapSize (size_t size) { mMapSize = size; }
+
+  void freeFramesBeforePts (int64_t pts);
 
   void toggleLog();
   void header();
@@ -55,7 +57,6 @@ public:
 
   virtual std::string getInfoString() const;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
-  virtual void trimBeforePts (int64_t pts);
 
 protected:
   size_t getQueueSize() const;

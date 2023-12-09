@@ -21,8 +21,8 @@ public:
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
 
-  cVideoFrame* getVideoFrameFromPts (int64_t pts);
-  cVideoFrame* getVideoNearestFrameFromPts (int64_t pts);
+  cVideoFrame* getVideoFrameAtPts (int64_t pts);
+  cVideoFrame* getVideoFrameAtOrAfterPts (int64_t pts);
 
   // callbacks
   cFrame* getFrame();
@@ -30,7 +30,6 @@ public:
 
   // overrides
   virtual std::string getInfoString() const final;
-  virtual void videoTrimBeforePts (int64_t pts) final;
 
 private:
   uint16_t mWidth = 0;

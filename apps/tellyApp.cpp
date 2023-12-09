@@ -160,7 +160,7 @@ namespace {
         float scale = getScale (numViews);
 
         // show nearest videoFrame to playPts
-        cVideoFrame* videoFrame = videoRender.getVideoNearestFrameFromPts (playPts);
+        cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
         if (videoFrame) {
           //{{{  draw video
           mVideoShader->use();
@@ -263,7 +263,7 @@ namespace {
         //}}}
         }
 
-      videoRender.videoTrimBeforePts (playPts);
+      videoRender.freeFramesBeforePts (playPts);
       }
     //}}}
 
@@ -412,7 +412,7 @@ namespace {
       ~cAudioMeterView() = default;
 
       void draw (cAudioRender& audioRender, int64_t playerPts, ImVec2 pos) {
-        cAudioFrame* audioFrame = audioRender.getAudioFrameFromPts (playerPts);
+        cAudioFrame* audioFrame = audioRender.getAudioFrameAtPts (playerPts);
         if (audioFrame) {
           size_t drawChannels = audioFrame->mNumChannels;
           bool audio51 = (audioFrame->mNumChannels == 6);

@@ -73,21 +73,21 @@ cAudioRender::~cAudioRender() {
 //}}}
 
 //{{{
-cAudioFrame* cAudioRender::getAudioFrameFromPts (int64_t pts) {
+cAudioFrame* cAudioRender::getAudioFrameAtPts (int64_t pts) {
 
   if (mFramesMap.empty() || !mPtsDuration)
     return nullptr;
   else
-    return dynamic_cast<cAudioFrame*>(getFrameFromPts (pts / mPtsDuration));
+    return dynamic_cast<cAudioFrame*>(getFrameAtPts (pts));
   }
 //}}}
 //{{{
-cAudioFrame* cAudioRender::getAudioNearestFrameFromPts (int64_t pts) {
+cAudioFrame* cAudioRender::getAudioFrameAtOrAfterPts (int64_t pts) {
 
   if (mFramesMap.empty() || !mPtsDuration)
     return nullptr;
   else
-    return dynamic_cast<cAudioFrame*>(getNearestFrameFromPts (pts / mPtsDuration));
+    return dynamic_cast<cAudioFrame*>(getFrameAtOrAfterPts (pts));
   }
 //}}}
 
@@ -146,10 +146,5 @@ bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int
       this_thread::sleep_for (1ms);
 
   return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
-  }
-//}}}
-//{{{
-void cAudioRender::audioTrimBeforePts (int64_t pts) {
-  trimBeforePts (pts / mPtsDuration);
   }
 //}}}

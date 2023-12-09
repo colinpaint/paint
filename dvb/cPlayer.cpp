@@ -78,7 +78,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       int64_t frameDuration = mAudioRender.getPtsDuration();
 
       if (mPlaying) {
-        cAudioFrame* audioFrame = mAudioRender.getAudioFrameFromPts (mPts);
+        cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtPts (mPts);
         if (audioFrame && audioFrame->mSamples.data()) {
           if (!mMute) {
             float* src = audioFrame->mSamples.data();
@@ -125,18 +125,18 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
         audio.play (2, srcSamples, numSrcSamples, 1.f);
       #endif
       //}}}
-      mAudioRender.audioTrimBeforePts (mPts);
+      mAudioRender.freeFramesBeforePts (mPts);
 
       if (mPlaying) {
         if (mMissedFrames > 0) {
-          cAudioFrame* audioFrame = mAudioRender.getAudioFrameFromPts (mPts);
+          cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
           if (audioFrame) {
             mPts = audioFrame->mPts;
-            cLog::log (LOGINFO, fmt::format ("cPlayer skipping to nearestAudioFrame {}",
+            cLog::log (LOGINFO, fmt::format ("cPlayer skip to nextFrame {}",
                                              utils::getFullPtsString (mPts)));
             }
            else
-             cLog::log (LOGINFO, fmt::format ("cPlayer missed audioFrame{}", utils::getFullPtsString (mPts)));
+             cLog::log (LOGINFO, fmt::format ("cPlayer noFrame {}", utils::getFullPtsString (mPts)));
           mMissedFrames = 0;
           }
         else // normal move on

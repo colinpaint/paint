@@ -42,6 +42,5 @@ private:
   bool mRunning = true;
   bool mExit = false;
 
-  int mMissedFrames = 0;
   int64_t mPts = 0;
   };

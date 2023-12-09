@@ -79,19 +79,25 @@ cFrame* cRender::getYoungestFrame() {
   }
 //}}}
 //{{{
-cFrame* cRender::getFrameFromPts (int64_t pts) {
+cFrame* cRender::getFrameAtPts (int64_t pts) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
+
+  // mFramesMap is pts/mPtsDuration
+  pts /= mPtsDuration;
 
   auto it = mFramesMap.find (pts);
   return (it == mFramesMap.end()) ? nullptr : it->second;
   }
 //}}}
 //{{{
-cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
-// return nearest frame at or after pts
+cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
+// return next frame at or after pts
 
   unique_lock<shared_mutex> lock (mSharedMutex);
+
+  // mFramesMap is pts/mPtsDuration
+  pts /= mPtsDuration;
 
   auto it = mFramesMap.begin();
   while (it != mFramesMap.end()) {
@@ -106,11 +112,14 @@ cFrame* cRender::getNearestFrameFromPts (int64_t pts) {
 //}}}
 
 //{{{
-void cRender::trimBeforePts (int64_t pts) {
-// remove all frames before pts, releaseResources
+void cRender::freeFramesBeforePts (int64_t pts) {
+// free all frames before pts, releaseResources
 
   if (mFramesMap.empty())
     return;
+
+  // mFramesMap is pts/mPtsDuration
+  pts /= mPtsDuration;
 
   { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
