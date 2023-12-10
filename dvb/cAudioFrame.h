@@ -78,15 +78,16 @@ public:
     }
 
   // vars
-  float mSimplePower = 0.f;
   std::array <float, kMaxAudioChannels> mPeakValues = {0.f};
   std::array <float, kMaxAudioChannels> mPowerValues = {0.f};
   std::array <float, kMaxAudioChannels * kMaxAudioSamplesPerFrame> mSamples = {0.f};
-
-  std::vector <int64_t> mTimes;
 
 private:
   size_t mNumChannels = kMaxAudioChannels;
   size_t mSamplesPerFrame = kMaxAudioSamplesPerFrame;
   uint32_t mSampleRate = 48000;
+
+  float mSimplePower = 0.f;
+
+  std::vector <int64_t> mTimes;
   };
