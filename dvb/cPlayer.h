@@ -3,6 +3,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <array>
 #include <thread>
 
 class cAudioRender;
@@ -13,7 +14,6 @@ public:
   cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid);
   virtual ~cPlayer();
 
-  // player
   bool isPlaying() const { return mPlaying; }
   int64_t getPts() const { return mPts; }
 
@@ -22,12 +22,10 @@ public:
 
   //{{{
   void startPlayPts (int64_t pts) {
-
     mPts = pts;
     mPlaying = true;
     }
   //}}}
-
   void togglePlay() { mPlaying = !mPlaying; }
 
 private:
@@ -42,4 +40,7 @@ private:
   bool mExit = false;
 
   int64_t mPts = 0;
+
+  std::array <float, 2048*2> mSamples;
+  inline static std::array <float, 2048*2> mSilenceSamples = { 0.f };
   };

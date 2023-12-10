@@ -28,17 +28,12 @@
 
 using namespace std;
 //}}}
-namespace {
-  array <float, 2048*2> gSilence = { 0.f };
-  }
 
 cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
     : mAudioRender(audioRender), mSampleRate(sampleRate) {
 
   mPlayerThread = thread ([=]() {
     cLog::setThreadName (fmt::format ("{:4d}", pid));
-
-    array <float, 2048*2> playSamples = { 0.f };
     //{{{  startup
     #ifdef _WIN32
       // windows
@@ -72,16 +67,13 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
         int numSamples;
       #endif
 
-      // assume silence of last frame
-      srcSamples = gSilence.data();
+      srcSamples = mSilenceSamples.data();
       int64_t ptsDuration = 0;
       numSamples = (int)mAudioRender.getSamplesPerFrame();
-
       if (mPlaying) {
         cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtPts (mPts);
         ptsDuration = mAudioRender.getPtsDuration();
-        if (!audioFrame) {
-          // try skipping to nextFrame
+        if (!audioFrame) { // skip to nextFrame
           audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
           if (audioFrame) {
             mPts = audioFrame->getPts();
@@ -93,7 +85,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
         if (audioFrame) {
           if (!mMute) {
             float* src = audioFrame->mSamples.data();
-            float* dst = playSamples.data();
+            float* dst = mSamples.data();
             switch (audioFrame->getNumChannels()) {
               //{{{
               case 1: // mono to 2 interleaved 2 channels
@@ -123,7 +115,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
                                                   audioFrame->getNumChannels()));
               //}}}
               }
-            srcSamples = playSamples.data();
+            srcSamples = mSamples.data();
             }
           ptsDuration = audioFrame->getPtsDuration();
           numSamples = (int)audioFrame->getSamplesPerFrame();
@@ -151,7 +143,6 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
     mRunning = false;
     cLog::log (LOGINFO, "exit");
     });
-
   mPlayerThread.detach();
   }
 
