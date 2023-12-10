@@ -48,16 +48,14 @@ float cRender::getValue (int64_t pts) {
 //{{{
 cFrame* cRender::getFreeFrame() {
 
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
   if (mFreeFrames.empty())
     return nullptr;
 
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
   cFrame* frame = mFreeFrames.front();
   mFreeFrames.pop_front();
   return frame;
-  }
-
   }
 //}}}
 //{{{
@@ -70,7 +68,7 @@ cFrame* cRender::getYoungestFrame() {
 
   // reuse youngest
   auto it = mFramesMap.begin();
-  youngestFrame = (*it).second;
+  youngestFrame = it->second;
   mFramesMap.erase (it);
   }
 
@@ -95,9 +93,9 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
 
   auto it = mFramesMap.begin();
   while (it != mFramesMap.end()) {
-    int64_t diff = (*it).first - (pts / mPtsDuration);
+    int64_t diff = it->first - (pts / mPtsDuration);
     if (diff >= 0)
-      return (*it).second;
+      return it->second;
     ++it;
     }
 
@@ -109,23 +107,22 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
 void cRender::freeFramesBeforePts (int64_t pts) {
 // free all frames before pts, releaseResources
 
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
   if (mFramesMap.empty())
     return;
 
-  // mFramesMap is pts/mPtsDuration
-  pts /= mPtsDuration;
-
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
   auto it = mFramesMap.begin();
-  while ((it != mFramesMap.end()) && ((*it).first < pts)) {
+  while ((it != mFramesMap.end()) && (it->first < (pts / mPtsDuration))) {
     cFrame* frame = it->second;
+
+    // remove from mFramesMap
     it = mFramesMap.erase (it);
     frame->releaseResources();
+
+    // add to mFreeFrames deque
     mFreeFrames.push_back (frame);
     }
-  }
 
   }
 //}}}
