@@ -38,7 +38,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
   mPlayerThread = thread ([=]() {
     cLog::setThreadName (fmt::format ("{:4d}", pid));
 
-    array <float, 2048*2> samples = { 0.f };
+    array <float, 2048*2> playSamples = { 0.f };
     //{{{  startup
     #ifdef _WIN32
       // windows
@@ -66,38 +66,34 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
 
     while (!mExit) {
       #ifdef _WIN32
-        audioDevice->process ([&](float*& srcSamples, int& numSrcSamples) mutable noexcept {
+        audioDevice->process ([&](float*& srcSamples, int& numSamples) mutable noexcept {
       #else
         float* srcSamples;
-        int numSrcSamples;
+        int numSamples;
       #endif
 
       // assume silence of last frame
       srcSamples = gSilence.data();
-      int64_t frameDuration = mAudioRender.getPtsDuration();
-      numSrcSamples = (int)mAudioRender.getSamplesPerFrame();
+      int64_t ptsDuration = 0;
+      numSamples = (int)mAudioRender.getSamplesPerFrame();
 
-      bool foundFrame = false;
       if (mPlaying) {
         cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtPts (mPts);
-        foundFrame = audioFrame && audioFrame->mSamples.data();
-        if (!foundFrame) {
-          // look for nextFrame and skip to it
+        ptsDuration = mAudioRender.getPtsDuration();
+        if (!audioFrame) {
+          // try skipping to nextFrame
           audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
-          foundFrame = audioFrame && audioFrame->mSamples.data();
-          if (foundFrame) {
+          if (audioFrame) {
             mPts = audioFrame->getPts();
-            cLog::log (LOGINFO, fmt::format ("cPlayer skip to nextFrame {}",
-                                             utils::getFullPtsString (mPts)));
+            cLog::log (LOGINFO, fmt::format ("skipped {}", utils::getFullPtsString (mPts)));
             }
           else
-            cLog::log (LOGINFO, fmt::format ("cPlayer noFrame {}", utils::getFullPtsString (mPts)));
+            cLog::log (LOGINFO, fmt::format ("missed {}", utils::getFullPtsString (mPts)));
           }
-
-        if (foundFrame) {
+        if (audioFrame) {
           if (!mMute) {
             float* src = audioFrame->mSamples.data();
-            float* dst = samples.data();
+            float* dst = playSamples.data();
             switch (audioFrame->getNumChannels()) {
               //{{{
               case 1: // mono to 2 interleaved 2 channels
@@ -127,22 +123,19 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
                                                   audioFrame->getNumChannels()));
               //}}}
               }
-            srcSamples = samples.data();
+            srcSamples = playSamples.data();
             }
-          frameDuration = audioFrame->getPtsDuration();
-          numSrcSamples = (int)audioFrame->getSamplesPerFrame();
+          ptsDuration = audioFrame->getPtsDuration();
+          numSamples = (int)audioFrame->getSamplesPerFrame();
           }
         }
-
       //{{{  linux play srcSamples
       #ifndef _WIN32
-        audio.play (2, srcSamples, numSrcSamples, 1.f);
+        audio.play (2, srcSamples, numSamples, 1.f);
       #endif
       //}}}
       mAudioRender.freeFramesBeforePts (mPts);
-
-      if (mPlaying && foundFrame)
-        mPts += frameDuration;
+      mPts += ptsDuration;
       //{{{  close windows play lamda
       #ifdef _WIN32
         });
