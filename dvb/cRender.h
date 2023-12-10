@@ -39,8 +39,6 @@ public:
   std::map<int64_t,cFrame*> getFramesMap() { return mFramesMap; }
   std::deque<cFrame*> getFreeFrames() { return mFreeFrames; }
 
-  cFrame* getFreeFrame();
-  cFrame* getYoungestFrame();
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
 
@@ -48,6 +46,8 @@ public:
   void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
   void setMapSize (size_t size) { mMapSize = size; }
 
+  cFrame* allocFreeFrame();
+  cFrame* allocYoungestFrame();
   void freeFramesBeforePts (int64_t pts);
 
   void toggleLog();

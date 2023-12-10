@@ -97,7 +97,7 @@ cAudioFrame* cAudioRender::getAudioFrameAtOrAfterPts (int64_t pts) {
 //{{{
 cFrame* cAudioRender::getFrame() {
 
-  cFrame* frame = getFreeFrame();
+  cFrame* frame = allocFreeFrame();
   if (frame)
     // use freeFrame
     return frame;
@@ -107,7 +107,7 @@ cFrame* cAudioRender::getFrame() {
   else {
     // resuse youngestFrame
     cLog::log (LOGINFO, fmt::format ("cAudioRender::getFrame - using youngestFrame"));
-    return getYoungestFrame();
+    return allocYoungestFrame();
     }
   }
 //}}}

@@ -94,7 +94,7 @@ cVideoFrame* cVideoRender::getVideoFrameAtOrAfterPts (int64_t pts) {
 //{{{
 cFrame* cVideoRender::getFrame() {
 
-  cFrame* frame = getFreeFrame();
+  cFrame* frame = allocFreeFrame();
   if (frame)
     // use freeFrame
     return frame;
@@ -102,9 +102,9 @@ cFrame* cVideoRender::getFrame() {
     // allocate newFrame
     return new cFFmpegVideoFrame();
   else {
-    // resuse youngestFrame
+    // reuse youngestFrame
     cLog::log (LOGINFO, fmt::format ("cVideoRender::getFrame - using youngestFrame"));
-    return getYoungestFrame();
+    return allocYoungestFrame();
     }
   }
 //}}}

@@ -46,38 +46,6 @@ float cRender::getValue (int64_t pts) {
 //}}}
 
 //{{{
-cFrame* cRender::getFreeFrame() {
-
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  if (mFreeFrames.empty())
-    return nullptr;
-
-  cFrame* frame = mFreeFrames.front();
-  mFreeFrames.pop_front();
-  return frame;
-  }
-//}}}
-//{{{
-cFrame* cRender::getYoungestFrame() {
-
-  cFrame* youngestFrame;
-
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  // reuse youngest
-  auto it = mFramesMap.begin();
-  youngestFrame = it->second;
-  mFramesMap.erase (it);
-  }
-
-  youngestFrame->releaseResources();
-
-  return youngestFrame;
-  }
-//}}}
-//{{{
 cFrame* cRender::getFrameAtPts (int64_t pts) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
@@ -104,6 +72,38 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
   }
 //}}}
 
+//{{{
+cFrame* cRender::allocFreeFrame() {
+
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  if (mFreeFrames.empty())
+    return nullptr;
+
+  cFrame* frame = mFreeFrames.front();
+  mFreeFrames.pop_front();
+  return frame;
+  }
+//}}}
+//{{{
+cFrame* cRender::allocYoungestFrame() {
+
+  cFrame* youngestFrame;
+
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  // reuse youngest
+  auto it = mFramesMap.begin();
+  youngestFrame = it->second;
+  mFramesMap.erase (it);
+  }
+
+  youngestFrame->releaseResources();
+
+  return youngestFrame;
+  }
+//}}}
 //{{{
 void cRender::freeFramesBeforePts (int64_t pts) {
 // free all frames before pts, releaseResources
