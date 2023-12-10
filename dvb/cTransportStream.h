@@ -306,15 +306,13 @@ public:
 
   void toggleStream (cService& service, eRenderType renderType);
 
-  // demux
   int64_t demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
 
 private:
-  //{{{  clears
   void clear();
   void clearPidCounts();
   void clearPidContinuity();
-  //}}}
+
   cPidInfo& getPidInfo (uint16_t pid);
   cPidInfo* getPsiPidInfo (uint16_t pid);
 
@@ -329,7 +327,7 @@ private:
   void stopServiceProgram (cService& service);
 
   bool processPesByPid (cPidInfo& pidInfo, bool skip);
-  //{{{  parse
+  //{{{  parsers
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);
   void parseNit (cPidInfo* pidInfo, uint8_t* buf);
   void parseSdt (cPidInfo* pidInfo, uint8_t* buf);
@@ -356,11 +354,6 @@ private:
   std::map <uint16_t, uint16_t> mProgramMap;
   std::map <uint16_t, cPidInfo> mPidInfoMap;
   std::map <uint16_t, cService> mServiceMap;
-
-  // dvbSource
-  std::string mErrorString;
-  std::string mSignalString;
-  uint64_t mLastErrors = 0;
 
   // record
   std::mutex mRecordFileMutex;

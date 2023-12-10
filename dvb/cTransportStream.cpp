@@ -1,4 +1,4 @@
-// cTransportStream.cpp - transport stream demux
+// cTransportStream.cpp - mpeg transport stream demux
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -1027,10 +1027,10 @@ void cTransportStream::foundService (cService& service) {
 
 //{{{
 void cTransportStream::startServiceProgram (cService& service,
-                                      chrono::system_clock::time_point tdtTime,
-                                      const string& programName,
-                                      chrono::system_clock::time_point programStartTime,
-                                      bool selected) {
+                                            chrono::system_clock::time_point tdtTime,
+                                            const string& programName,
+                                            chrono::system_clock::time_point programStartTime,
+                                            bool selected) {
 // start recording service program
 
   // close prev program on this service
