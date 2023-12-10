@@ -83,10 +83,7 @@ cFrame* cRender::getFrameAtPts (int64_t pts) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  // mFramesMap is pts/mPtsDuration
-  pts /= mPtsDuration;
-
-  auto it = mFramesMap.find (pts);
+  auto it = mFramesMap.find (pts / mPtsDuration);
   return (it == mFramesMap.end()) ? nullptr : it->second;
   }
 //}}}
@@ -96,12 +93,9 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  // mFramesMap is pts/mPtsDuration
-  pts /= mPtsDuration;
-
   auto it = mFramesMap.begin();
   while (it != mFramesMap.end()) {
-    int64_t diff = (*it).first - pts;
+    int64_t diff = (*it).first - (pts / mPtsDuration);
     if (diff >= 0)
       return (*it).second;
     ++it;
