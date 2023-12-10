@@ -375,16 +375,22 @@ void cApp::windowResize (int width, int height) {
 //{{{
 void cApp::mainUILoop() {
 
-  while (mPlatform->pollEvents()) {
-    mGraphics->newFrame();
-    mPlatform->newFrame();
-    ImGui::NewFrame();
+  if (mPlatform) {
+    while (mPlatform->pollEvents()) {
+      mGraphics->newFrame();
+      mPlatform->newFrame();
+      ImGui::NewFrame();
 
-    cUI::render (*this);
-    ImGui::Render();
-    mGraphics->renderDrawData();
+      cUI::render (*this);
+      ImGui::Render();
+      mGraphics->renderDrawData();
 
-    mPlatform->present();
+      mPlatform->present();
+      }
     }
+
+  else
+    while (true)
+      this_thread::sleep_for (100ms);
   }
 //}}}

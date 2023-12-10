@@ -103,7 +103,7 @@ cFrame* cVideoRender::getFrame() {
     return new cFFmpegVideoFrame();
   else {
     // reuse youngestFrame
-    cLog::log (LOGINFO, fmt::format ("cVideoRender::getFrame - using youngestFrame"));
+    cLog::log (LOGINFO, fmt::format ("cVideoRender::getFrame youngestFrame"));
     return allocYoungestFrame();
     }
   }

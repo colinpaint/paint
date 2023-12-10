@@ -1416,11 +1416,7 @@ int main (int numArgs, char* args[]) {
   else
     tellyApp.fileSource (filename, showAllServices);
 
-  if (headless)
-    while (true)
-      this_thread::sleep_for (100ms);
-  else
-    tellyApp.mainUILoop();
+  tellyApp.mainUILoop();
 
   return EXIT_SUCCESS;
   }

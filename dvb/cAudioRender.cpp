@@ -105,8 +105,8 @@ cFrame* cAudioRender::getFrame() {
     // allocate newFrame
     return new cAudioFrame();
   else {
-    // resuse youngestFrame
-    cLog::log (LOGINFO, fmt::format ("cAudioRender::getFrame - using youngestFrame"));
+    // reuse youngestFrame
+    cLog::log (LOGINFO, fmt::format ("cAudioRender::getFrame youngestFrame"));
     return allocYoungestFrame();
     }
   }
