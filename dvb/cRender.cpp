@@ -73,6 +73,7 @@ cFrame* cRender::getYoungestFrame() {
   }
 
   youngestFrame->releaseResources();
+
   return youngestFrame;
   }
 //}}}

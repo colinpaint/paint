@@ -43,7 +43,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kVideoQueued = true;
-constexpr size_t kVideoFrameMapSize = 25;
+constexpr size_t kVideoFrameMapSize = 50;
 
 // cVideoRender
 //{{{
@@ -96,15 +96,16 @@ cFrame* cVideoRender::getFrame() {
 
   cFrame* frame = getFreeFrame();
   if (frame)
+    // use freeFrame
     return frame;
-  else
+  else if (mFramesMap.size() < kVideoFrameMapSize)
+    // allocate newFrame
     return new cFFmpegVideoFrame();
-
-  //if (mFramesMap.size() < kVideoFrameMapSize)
-  //else {
-  //  cLog::log (LOGINFO, fmt::format ("cVideoRender::getFrame - reusing youngest"));
-  //  return getYoungestFrame();
-  //  }
+  else {
+    // resuse youngestFrame
+    cLog::log (LOGINFO, fmt::format ("cVideoRender::getFrame - using youngestFrame"));
+    return getYoungestFrame();
+    }
   }
 //}}}
 //{{{

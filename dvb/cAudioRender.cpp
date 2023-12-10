@@ -40,7 +40,7 @@ using namespace std;
 //}}}
 
 constexpr bool kAudioQueued = true;
-constexpr size_t kAudioFrameMapSize = 16;
+constexpr size_t kAudioFrameMapSize = 18;
 constexpr int64_t kDefaultPtsPerAudioFrame = 1920;
 
 // cAudioRender
@@ -99,14 +99,16 @@ cFrame* cAudioRender::getFrame() {
 
   cFrame* frame = getFreeFrame();
   if (frame)
+    // use freeFrame
     return frame;
-  else
+  else if (mFramesMap.size() < kAudioFrameMapSize)
+    // allocate newFrame
     return new cAudioFrame();
-  //if (mFramesMap.size() < kAudioFrameMapSize)
-  //else {
-  //  cLog::log (LOGINFO, fmt::format ("cAudioRender::getFrame - reusing youngest"));
-  //  return getYoungestFrame();
-  //  }
+  else {
+    // resuse youngestFrame
+    cLog::log (LOGINFO, fmt::format ("cAudioRender::getFrame - using youngestFrame"));
+    return getYoungestFrame();
+    }
   }
 //}}}
 //{{{
@@ -149,7 +151,7 @@ bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int
 
   // throttle fileRead thread
   if (!getLive())
-    while (mFramesMap.size() > mFrameMapSize)
+    while (mFramesMap.size() >= mFrameMapSize - 6)
       this_thread::sleep_for (1ms);
 
   return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
