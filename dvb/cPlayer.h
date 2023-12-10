@@ -10,7 +10,7 @@ class cAudioRender;
 
 class cPlayer {
 public:
-  cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t id);
+  cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid);
   virtual ~cPlayer();
 
   // player

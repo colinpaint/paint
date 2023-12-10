@@ -32,11 +32,11 @@ namespace {
   array <float, 2048*2> gSilence = { 0.f };
   }
 
-cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t id)
+cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
     : mAudioRender(audioRender), mSampleRate(sampleRate) {
 
   mPlayerThread = thread ([=]() {
-    cLog::setThreadName (fmt::format ("play{}", id));
+    cLog::setThreadName (fmt::format ("{:4d}", pid));
 
     array <float, 2048*2> samples = { 0.f };
     //{{{  startup
