@@ -299,14 +299,14 @@ cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool 
     cLog::log (LOGINFO, fmt::format ("{} created headless", name));
 
   else {
-    // create platform
+    // create GLFW platform
     cGlfwPlatform* glfwPlatform = new cGlfwPlatform (name);
     if (!glfwPlatform || !glfwPlatform->init (windowSize)) {
       cLog::log (LOGERROR, "cApp - glfwPlatform init failed");
       return;
       }
 
-    // create graphics
+    // create OpenGL graphics
     #if defined(GL3)
       mGraphics = new cGL3Graphics (glfwPlatform->getShaderVersion());
     #else
@@ -376,6 +376,7 @@ void cApp::windowResize (int width, int height) {
 void cApp::mainUILoop() {
 
   if (mPlatform) {
+    // has gui
     while (mPlatform->pollEvents()) {
       mGraphics->newFrame();
       mPlatform->newFrame();
@@ -389,7 +390,7 @@ void cApp::mainUILoop() {
       }
     }
 
-  else
+  else // headless
     while (true)
       this_thread::sleep_for (100ms);
   }
