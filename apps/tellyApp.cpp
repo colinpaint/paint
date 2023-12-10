@@ -784,7 +784,7 @@ namespace {
 
       mTransportStream = new cTransportStream (multiplex, recordRoot, true, showAllServices, false);
       if (mTransportStream) {
-        thread liveThread = thread ([=]() {
+        mLiveThread = thread ([=]() {
           cLog::setThreadName ("dvb");
 
           FILE* mFile = mMultiplex.mRecordAll ?
@@ -818,7 +818,7 @@ namespace {
             // raise thread priority
             sched_param sch_params;
             sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
-            pthread_setschedparam (liveThread.native_handle(), SCHED_RR, &sch_params);
+            pthread_setschedparam (mLiveThread.native_handle(), SCHED_RR, &sch_params);
 
             constexpr int kDvrReadBufferSize = 188 * 64;
             uint8_t* buffer = new uint8_t[kDvrReadBufferSize];
@@ -844,7 +844,7 @@ namespace {
 
           cLog::log (LOGINFO, "exit");
           });
-        liveThread.detach();
+        mLiveThread.detach();
         }
 
       else
@@ -876,6 +876,7 @@ namespace {
     size_t mFileSize = 0;
 
     // liveDvbSource
+    thread mLiveThread;
     cDvbSource* mDvbSource = nullptr;
     cDvbMultiplex mMultiplex;
     string mRecordRoot;
