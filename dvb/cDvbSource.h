@@ -29,7 +29,6 @@ public:
   int setFilter (uint16_t pid);
   void unsetFilter (int fd, uint16_t pid);
 
-  void reset();
   void tune (int frequency);
 
   #ifdef _WIN32

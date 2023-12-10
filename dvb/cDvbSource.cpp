@@ -874,11 +874,6 @@ void cDvbSource::unsetFilter (int fd, uint16_t pid) {
 //}}}
 
 //{{{
-void cDvbSource::reset() {
-  cLog::log (LOGERROR, fmt::format ("cDvb reset not implemneted"));
-  }
-//}}}
-//{{{
 void cDvbSource::tune (int frequency) {
 
   mFrequency = frequency;
@@ -899,8 +894,11 @@ void cDvbSource::tune (int frequency) {
       cLog::log (LOGERROR, fmt::format ("tune - put_TuneRequest"));
     if (mMediaControl->Run() != S_OK)
       cLog::log (LOGERROR, fmt::format ("tune - run"));
+
   #else
+    // linux tune
     frontendSetup();
+
   #endif
   }
 //}}}
