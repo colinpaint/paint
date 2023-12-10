@@ -38,14 +38,16 @@ extern "C" {
 
 using namespace std;
 //}}}
+
 constexpr bool kAudioQueued = true;
 constexpr size_t kAudioFrameMapSize = 16;
 constexpr int64_t kDefaultPtsPerAudioFrame = 1920;
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const string& name, uint8_t streamType, bool realTime)
-    : cRender(kAudioQueued, name + "aud", streamType, kAudioFrameMapSize, kDefaultPtsPerAudioFrame, realTime),
+cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
+    : cRender(kAudioQueued, name + "aud", streamType, pid,
+              kAudioFrameMapSize, kDefaultPtsPerAudioFrame, live),
       mSampleRate(48000), mSamplesPerFrame(1024) {
 
   mDecoder = new cFFmpegAudioDecoder (*this, streamType);
@@ -53,7 +55,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, bool realTim
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
 
-  mPlayer = new cPlayer (*this, mSampleRate);
+  mPlayer = new cPlayer (*this, mSampleRate, pid);
   }
 //}}}
 //{{{
@@ -146,7 +148,7 @@ string cAudioRender::getInfoString() const {
 bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
   // throttle fileRead thread
-  if (!getRealTime())
+  if (!getLive())
     while (mFramesMap.size() > mFrameMapSize)
       this_thread::sleep_for (1ms);
 

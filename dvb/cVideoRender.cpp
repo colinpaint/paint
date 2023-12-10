@@ -47,8 +47,8 @@ constexpr size_t kVideoFrameMapSize = 25;
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const string& name, uint8_t streamType, bool realTime)
-    : cRender(kVideoQueued, name + "vid", streamType, kVideoFrameMapSize, 90000/25, realTime) {
+cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, bool realTime)
+    : cRender(kVideoQueued, name + "vid", streamType, pid, kVideoFrameMapSize, 90000/25, realTime) {
 
   mDecoder = new cFFmpegVideoDecoder (*this, streamType);
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });

@@ -9,6 +9,7 @@
 #include <array>
 #include <vector>
 #include <map>
+#include <thread>
 
 #include <sys/stat.h>
 
@@ -691,6 +692,7 @@ namespace {
     bool mSelectFull = false;
     };
   //}}}
+
   //{{{
   class cTellyApp : public cApp {
   public:
@@ -782,7 +784,7 @@ namespace {
 
       mTransportStream = new cTransportStream (multiplex, recordRoot, true, showAllServices, false);
       if (mTransportStream) {
-        thread([=]() {
+        thread liveThread = thread ([=]() {
           cLog::setThreadName ("dvb");
 
           FILE* mFile = mMultiplex.mRecordAll ?
@@ -790,6 +792,9 @@ namespace {
 
           #ifdef _WIN32
             //{{{  windows
+            // raise thread priority
+            SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+
             mDvbSource->run();
 
             int64_t streamPos = 0;
@@ -810,6 +815,11 @@ namespace {
             //}}}
           #else
             //{{{  linux
+            // raise thread priority
+            sched_param sch_params;
+            sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
+            pthread_setschedparam (liveThread.native_handle(), SCHED_RR, &sch_params);
+
             constexpr int kDvrReadBufferSize = 188 * 64;
             uint8_t* buffer = new uint8_t[kDvrReadBufferSize];
 
@@ -833,8 +843,10 @@ namespace {
             fclose (mFile);
 
           cLog::log (LOGINFO, "exit");
-          }).detach();
+          });
+        liveThread.detach();
         }
+
       else
         cLog::log (LOGINFO, "cTellyApp::setLiveDvbSource - failed to create liveDvbSource");
       }
@@ -863,6 +875,7 @@ namespace {
     uint64_t mFilePos = 0;
     size_t mFileSize = 0;
 
+    // liveDvbSource
     cDvbSource* mDvbSource = nullptr;
     cDvbMultiplex mMultiplex;
     string mRecordRoot;

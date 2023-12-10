@@ -19,10 +19,10 @@ constexpr int64_t kPtsPer25HzFrame = 90000 / 25;
 
 // public:
 //{{{
-cRender::cRender (bool queued, const string& name, uint8_t streamType, size_t
-                  frameMapSize, int64_t ptsDuration, bool realTime)
+cRender::cRender (bool queued, const string& name, uint8_t streamType, uint16_t pid,
+                  size_t frameMapSize, int64_t ptsDuration, bool live)
     : mFrameMapSize(frameMapSize), mPtsDuration(ptsDuration),
-      mQueued(queued), mName(name), mStreamType(streamType), mRealTime(realTime),
+      mQueued(queued), mName(name), mStreamType(streamType), mLive(live), mPid(pid),
       mMiniLog ("log") {
 
   if (queued)

@@ -21,12 +21,12 @@ constexpr int kPtsPerSecond = 90000;
 
 class cRender {
 public:
-  cRender (bool queued, const std::string& name, uint8_t streamType,
-           size_t frameMapSize, int64_t ptsDuration, bool realTime);
+  cRender (bool queued, const std::string& name, uint8_t streamType, uint16_t pid,
+           size_t frameMapSize, int64_t ptsDuration, bool live);
   virtual ~cRender();
 
   bool isQueued() const { return mQueued; }
-  float getRealTime() const { return mRealTime; }
+  float getLive() const { return mLive; }
   int64_t getPtsDuration() const { return mPtsDuration; }
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
@@ -85,7 +85,8 @@ private:
   const bool mQueued = false;
   const std::string mName;
   const uint8_t mStreamType;
-  const bool mRealTime;
+  const bool mLive;
+  const uint16_t mPid;
 
   std::function <cFrame* ()> mAllocFrameCallback;
   std::function <void (cFrame* frame)> mAddFrameCallback;

@@ -32,11 +32,11 @@ namespace {
   array <float, 2048*2> gSilence = { 0.f };
   }
 
-cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
+cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t id)
     : mAudioRender(audioRender), mSampleRate(sampleRate) {
 
   mPlayerThread = thread ([=]() {
-    cLog::setThreadName ("play");
+    cLog::setThreadName (fmt::format ("play{}", id));
 
     array <float, 2048*2> samples = { 0.f };
     //{{{  startup
@@ -61,7 +61,6 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
       sched_param sch_params;
       sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
       pthread_setschedparam (mPlayerThread.native_handle(), SCHED_RR, &sch_params);
-
     #endif
     //}}}
 
@@ -73,15 +72,17 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate)
         int numSrcSamples;
       #endif
 
+      // assume silence of last frame
       srcSamples = gSilence.data();
-      numSrcSamples = (int)mAudioRender.getSamplesPerFrame();
       int64_t frameDuration = mAudioRender.getPtsDuration();
+      numSrcSamples = (int)mAudioRender.getSamplesPerFrame();
 
       bool foundFrame = false;
       if (mPlaying) {
         cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtPts (mPts);
         foundFrame = audioFrame && audioFrame->mSamples.data();
         if (!foundFrame) {
+          // look for nextFrame and skip to it
           audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
           foundFrame = audioFrame && audioFrame->mSamples.data();
           if (foundFrame) {
