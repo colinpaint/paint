@@ -90,21 +90,21 @@ public:
             // call allocAudioFrame callback
             cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(allocFrameCallback());
             audioFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
-            audioFrame->mPts = interpolatedPts;
-            audioFrame->mPtsDuration = avFrame->sample_rate ? (avFrame->nb_samples * 90000 / avFrame->sample_rate) : 48000;
-            audioFrame->mPesSize = bytesUsed;
-            audioFrame->mSamplesPerFrame = avFrame->nb_samples;
-            audioFrame->mSampleRate = avFrame->sample_rate;
-            audioFrame->mNumChannels = avFrame->ch_layout.nb_channels;
+            audioFrame->setPts (interpolatedPts);
+            audioFrame->setPtsDuration (avFrame->sample_rate ? (avFrame->nb_samples * 90000 / avFrame->sample_rate) : 48000);
+            audioFrame->setPesSize (bytesUsed);
+            audioFrame->setSamplesPerFrame (avFrame->nb_samples);
+            audioFrame->setSampleRate (avFrame->sample_rate);
+            audioFrame->setNumChannels (avFrame->ch_layout.nb_channels);
 
             if (kDebug)
               cLog::log (LOGINFO, fmt::format ("pts:{} {} chans:{}:{}:{} {} {}",
                                                utils::getFullPtsString (pts),
                                                utils::getFullPtsString (interpolatedPts),
-                                               audioFrame->mNumChannels,
-                                               audioFrame->mSampleRate,
-                                               audioFrame->mSamplesPerFrame,
-                                               audioFrame->mPtsDuration,
+                                               audioFrame->getNumChannels(),
+                                               audioFrame->getSampleRate(),
+                                               audioFrame->getSamplesPerFrame(),
+                                               audioFrame->getPtsDuration(),
                                                pesSize));
             float* dst = audioFrame->mSamples.data();
             switch (mAvContext->sample_fmt) {
@@ -126,7 +126,7 @@ public:
               }
             addFrameCallback (audioFrame);
 
-            interpolatedPts += audioFrame->mPtsDuration;
+            interpolatedPts += audioFrame->getPtsDuration();
             }
           }
         }

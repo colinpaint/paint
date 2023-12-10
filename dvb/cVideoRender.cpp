@@ -111,8 +111,8 @@ cFrame* cVideoRender::getFrame() {
 //{{{
 void cVideoRender::addFrame (cFrame* frame) {
 
-  mPts = frame->mPts;
-  mPtsDuration = frame->mPtsDuration;
+  mPts = frame->getPts();
+  mPtsDuration = frame->getPtsDuration();
 
   cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
 
@@ -120,13 +120,13 @@ void cVideoRender::addFrame (cFrame* frame) {
   videoFrame->mTextureDirty = true;
 
   // save some videoFrame info
-  mWidth = videoFrame->mWidth;
-  mHeight = videoFrame->mHeight;
+  mWidth = videoFrame->getWidth();
+  mHeight = videoFrame->getHeight();
   mFrameInfo = videoFrame->getInfoString();
 
   { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
-  mFramesMap.emplace (videoFrame->mPts / videoFrame->mPtsDuration, videoFrame);
+  mFramesMap.emplace (videoFrame->getPts() / videoFrame->getPtsDuration(), videoFrame);
   }
 
   }

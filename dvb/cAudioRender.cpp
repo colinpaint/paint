@@ -116,27 +116,27 @@ void cAudioRender::addFrame (cFrame* frame) {
 
   cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
 
-  if (mSampleRate != audioFrame->mSampleRate) {
+  if (mSampleRate != audioFrame->getSampleRate()) {
     cLog::log (LOGERROR, fmt::format ("cAudioRender::addFrame sampleRate changed from {} to {}",
-                                      mSampleRate, audioFrame->mSampleRate));
-    mSampleRate = audioFrame->mSampleRate;
+                                      mSampleRate, audioFrame->getSampleRate()));
+    mSampleRate = audioFrame->getSampleRate();
     }
 
-  mPts = frame->mPts;
-  mPtsDuration = frame->mPtsDuration;
+  mPts = frame->getPts();
+  mPtsDuration = frame->getPtsDuration();
 
-  mSamplesPerFrame = audioFrame->mSamplesPerFrame;
+  mSamplesPerFrame = audioFrame->getSamplesPerFrame();
   mFrameInfo = audioFrame->getInfoString();
   audioFrame->calcPower();
 
   { // locked emplace
   unique_lock<shared_mutex> lock (mSharedMutex);
-  mFramesMap.emplace (audioFrame->mPts / mPtsDuration, audioFrame);
+  mFramesMap.emplace (audioFrame->getPts() / mPtsDuration, audioFrame);
   }
 
   // start player
   if (!getPlayer().isPlaying())
-    getPlayer().startPlayPts (audioFrame->mPts);
+    getPlayer().startPlayPts (audioFrame->getPts());
   }
 //}}}
 

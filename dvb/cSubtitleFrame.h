@@ -9,6 +9,7 @@
 class cSubtitleFrame : public cFrame {
 public:
   cSubtitleFrame() = default;
+
   virtual ~cSubtitleFrame() {
     releaseResources();
     }

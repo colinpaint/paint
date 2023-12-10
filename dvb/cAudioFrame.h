@@ -19,11 +19,14 @@ public:
     releaseResources();
     }
 
+  size_t getNumChannels() const  { return mNumChannels; }
+  size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
+  uint32_t getSampleRate() const { return mSampleRate; }
   //{{{
   std::string getInfoString() {
 
     std::string info = fmt::format ("{}x{}:{}k pesSize:{:3}",
-                                    mNumChannels, mSamplesPerFrame, mSampleRate/1000, mPesSize);
+                                    mNumChannels, mSamplesPerFrame, mSampleRate/1000, getPesSize());
     if (!mTimes.empty()) {
       info += " took";
       for (auto time : mTimes)
@@ -64,6 +67,10 @@ public:
     }
   //}}}
 
+  void setNumChannels (size_t numChannels) { mNumChannels = numChannels; }
+  void setSamplesPerFrame (size_t samplesPerFrame) { mSamplesPerFrame = samplesPerFrame; }
+  void setSampleRate (uint32_t sampleRate) { mSampleRate = sampleRate; }
+
   void addTime (int64_t time) { mTimes.push_back (time); }
 
   virtual void releaseResources() final {
@@ -71,14 +78,15 @@ public:
     }
 
   // vars
-  size_t mNumChannels = kMaxAudioChannels;
-  size_t mSamplesPerFrame = kMaxAudioSamplesPerFrame;
-  uint32_t mSampleRate = 48000;
-
   float mSimplePower = 0.f;
   std::array <float, kMaxAudioChannels> mPeakValues = {0.f};
   std::array <float, kMaxAudioChannels> mPowerValues = {0.f};
   std::array <float, kMaxAudioChannels * kMaxAudioSamplesPerFrame> mSamples = {0.f};
 
   std::vector <int64_t> mTimes;
+
+private:
+  size_t mNumChannels = kMaxAudioChannels;
+  size_t mSamplesPerFrame = kMaxAudioSamplesPerFrame;
+  uint32_t mSampleRate = 48000;
   };

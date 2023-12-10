@@ -86,7 +86,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t id)
           audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
           foundFrame = audioFrame && audioFrame->mSamples.data();
           if (foundFrame) {
-            mPts = audioFrame->mPts;
+            mPts = audioFrame->getPts();
             cLog::log (LOGINFO, fmt::format ("cPlayer skip to nextFrame {}",
                                              utils::getFullPtsString (mPts)));
             }
@@ -98,10 +98,10 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t id)
           if (!mMute) {
             float* src = audioFrame->mSamples.data();
             float* dst = samples.data();
-            switch (audioFrame->mNumChannels) {
+            switch (audioFrame->getNumChannels()) {
               //{{{
               case 1: // mono to 2 interleaved 2 channels
-                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
                   *dst++ = *src;
                   *dst++ = *src++;
                   }
@@ -109,12 +109,12 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t id)
               //}}}
               //{{{
               case 2: // interleaved stereo to 2 interleaved channels
-                memcpy (dst, src, audioFrame->mSamplesPerFrame * 8);
+                memcpy (dst, src, audioFrame->getSamplesPerFrame() * 8);
                 break;
               //}}}
               //{{{
               case 6: // interleaved 5.1 to 2 interleaved channels
-                for (size_t i = 0; i < audioFrame->mSamplesPerFrame; i++) {
+                for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
                   *dst++ = src[0] + src[2] + src[3] + src[4]; // left
                   *dst++ = src[1] + src[2] + src[3] + src[5]; // right
                   src += 6;
@@ -124,13 +124,13 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t id)
               //{{{
               default:
                 cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}",
-                                                  audioFrame->mNumChannels));
+                                                  audioFrame->getNumChannels()));
               //}}}
               }
             srcSamples = samples.data();
             }
-          frameDuration = audioFrame->mPtsDuration;
-          numSrcSamples = (int)audioFrame->mSamplesPerFrame;
+          frameDuration = audioFrame->getPtsDuration();
+          numSrcSamples = (int)audioFrame->getSamplesPerFrame();
           }
         }
 

@@ -67,8 +67,8 @@ cFrame* cSubtitleRender::getFrame() {
 //{{{
 void cSubtitleRender::addFrame (cFrame* frame) {
 
-  mPts = frame->mPts;
-  mPtsDuration = frame->mPtsDuration;
+  mPts = frame->getPts();
+  mPtsDuration = frame->getPtsDuration();
   //cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->mPts)));
   }
 //}}}

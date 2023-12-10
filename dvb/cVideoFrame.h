@@ -37,7 +37,7 @@ public:
   std::string info = fmt::format ("{}x{}:{}{} pesSize:{:5}",
                                   mWidth, mHeight,
                                   mInterlaced ? "I" : "P", mInterlaced ? (mTopFieldFirst ? "1" : "2") : "",
-                                  mPesSize);
+                                  getPesSize());
   if (!mTimes.empty()) {
     info += " took";
     for (auto time : mTimes)
@@ -48,6 +48,8 @@ public:
   }
   //}}}
 
+  void setWidth (uint16_t width) { mWidth = width; }
+  void setHeight (uint16_t height) { mHeight = height; }
   //{{{
   virtual void releaseResources() final {
 
@@ -90,8 +92,6 @@ public:
   // vars
   const cTexture::eTextureType mTextureType;
 
-  uint16_t mWidth = 0;
-  uint16_t mHeight = 0;
   uint16_t mStrideY = 0;
   uint16_t mStrideUV = 0;
   bool mInterlaced = false;
@@ -108,6 +108,9 @@ protected:
   virtual uint8_t** getPixels() = 0;
   virtual int* getStrides() = 0;
   virtual void releasePixels() = 0;
+
+  uint16_t mWidth = 0;
+  uint16_t mHeight = 0;
 
   cTexture* mTexture = nullptr;
   };

@@ -296,13 +296,13 @@ namespace {
           //{{{  draw video frames
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
 
-          float offset1 = (videoFrame->mPts - playerPts) * ptsScale;
-          float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
+          float offset1 = (videoFrame->getPts() - playerPts) * ptsScale;
+          float offset2 = offset1 + (videoFrame->getPtsDuration() * ptsScale) - 1.f;
 
           // pesSize I white / P purple / B blue - ABGR color
           ImGui::GetWindowDrawList()->AddRectFilled (
             { pos.x + offset1,
-              pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize,
+              pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize, mMaxDisplayPesSize,
                                 kLines * ImGui::GetTextLineHeight()) },
             { pos.x + offset2, pos.y },
             (videoFrame->mFrameType == 'I') ?
@@ -314,12 +314,12 @@ namespace {
           //{{{  draw free video frames
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
 
-          float offset1 = (videoFrame->mPts - playerPts) * ptsScale;
-          float offset2 = offset1 + (videoFrame->mPtsDuration * ptsScale) - 1.f;
+          float offset1 = (videoFrame->getPts() - playerPts) * ptsScale;
+          float offset2 = offset1 + (videoFrame->getPtsDuration() * ptsScale) - 1.f;
 
           ImGui::GetWindowDrawList()->AddRectFilled (
             { pos.x + offset1,
-              pos.y - addValue ((float)videoFrame->mPesSize, mMaxPesSize, mMaxDisplayPesSize,
+              pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize, mMaxDisplayPesSize,
                                 kLines * ImGui::GetTextLineHeight())},
             { pos.x + offset2, pos.y},
             0xFF808080);
@@ -333,8 +333,8 @@ namespace {
           //{{{  draw audio frames
           cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
 
-          float offset1 = (audioFrame->mPts - playerPts) * ptsScale;
-          float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
+          float offset1 = (audioFrame->getPts() - playerPts) * ptsScale;
+          float offset2 = offset1 + (audioFrame->getPtsDuration() * ptsScale) - 1.f;
 
           ImGui::GetWindowDrawList()->AddRectFilled (
             { pos.x + offset1,
@@ -348,8 +348,8 @@ namespace {
           //{{{  draw free audio frames
           cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
 
-          float offset1 = (audioFrame->mPts - playerPts) * ptsScale;
-          float offset2 = offset1 + (audioFrame->mPtsDuration * ptsScale) - 1.f;
+          float offset1 = (audioFrame->getPts() - playerPts) * ptsScale;
+          float offset2 = offset1 + (audioFrame->getPtsDuration() * ptsScale) - 1.f;
 
           ImGui::GetWindowDrawList()->AddRectFilled (
             { pos.x + offset1,
@@ -415,8 +415,8 @@ namespace {
       void draw (cAudioRender& audioRender, int64_t playerPts, ImVec2 pos) {
         cAudioFrame* audioFrame = audioRender.getAudioFrameAtPts (playerPts);
         if (audioFrame) {
-          size_t drawChannels = audioFrame->mNumChannels;
-          bool audio51 = (audioFrame->mNumChannels == 6);
+          size_t drawChannels = audioFrame->getNumChannels();
+          bool audio51 = (audioFrame->getNumChannels() == 6);
           array <size_t, 6> channelOrder;
           if (audio51) {
             channelOrder = { 4, 0, 2, 1, 5, 3 };

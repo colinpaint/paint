@@ -109,15 +109,15 @@ public:
           // allocFrame
           cFFmpegVideoFrame* ffmpegVideoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
           ffmpegVideoFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
-          ffmpegVideoFrame->mPts = mGotIframe ? mInterpolatedPts : dts;
-          ffmpegVideoFrame->mPtsDuration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
-          ffmpegVideoFrame->mPesSize = frameSize;
+          ffmpegVideoFrame->setPts (mGotIframe ? mInterpolatedPts : dts);
+          ffmpegVideoFrame->setPtsDuration ((kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num);
+          ffmpegVideoFrame->setPesSize (frameSize);
           ffmpegVideoFrame->mFrameType = frameType;
           ffmpegVideoFrame->setAVFrame (avFrame);
           addFrameCallback (ffmpegVideoFrame);
           avFrame = av_frame_alloc();
 
-          mInterpolatedPts += ffmpegVideoFrame->mPtsDuration;
+          mInterpolatedPts += ffmpegVideoFrame->getPtsDuration();
           }
         }
       frame += bytesUsed;

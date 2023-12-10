@@ -131,9 +131,9 @@ public:
           {
           cSubtitleFrame* subtitleFrame = dynamic_cast<cSubtitleFrame*>(getFrameCallback());
 
-          subtitleFrame->mPts = pts;
-          subtitleFrame->mPtsDuration = 90000 / 25;
-          subtitleFrame->mPesSize = pesSize;
+          subtitleFrame->setPts (pts);
+          subtitleFrame->setPtsDuration (90000 / 25);
+          subtitleFrame->setPesSize (pesSize);
 
           endDisplay();
 
