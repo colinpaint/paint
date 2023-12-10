@@ -26,7 +26,7 @@ cRender::cRender (bool queued, const string& name, uint8_t streamType, uint16_t 
       mMiniLog ("log") {
 
   if (queued)
-    thread ([=](){ startQueueThread ("q" + name); }).detach();
+    thread ([=](){ startQueueThread (name + "q"); }).detach();
   }
 //}}}
 //{{{

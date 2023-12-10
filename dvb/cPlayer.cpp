@@ -75,12 +75,10 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
         ptsDuration = mAudioRender.getPtsDuration();
         if (!audioFrame) { // skip to nextFrame
           audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
-          if (audioFrame) {
+          if (audioFrame)
             mPts = audioFrame->getPts();
-            cLog::log (LOGINFO, fmt::format ("skipped {}", utils::getFullPtsString (mPts)));
-            }
-          else
-            cLog::log (LOGINFO, fmt::format ("missed {}", utils::getFullPtsString (mPts)));
+          cLog::log (LOGINFO, fmt::format ("{}:{}", 
+                                           audioFrame ? "skip" : "miss", utils::getFullPtsString (mPts)));
           }
         if (audioFrame) {
           if (!mMute) {
@@ -111,8 +109,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
               //}}}
               //{{{
               default:
-                cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}",
-                                                  audioFrame->getNumChannels()));
+                cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->getNumChannels()));
               //}}}
               }
             srcSamples = mSamples.data();
