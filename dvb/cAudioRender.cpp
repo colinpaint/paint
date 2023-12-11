@@ -54,8 +54,6 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid
 
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
   setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
-
-  mPlayer = new cPlayer (*this, mSampleRate, pid);
   }
 //}}}
 //{{{
@@ -134,9 +132,11 @@ void cAudioRender::addFrame (cFrame* frame) {
   mFramesMap.emplace (audioFrame->getPts() / mPtsDuration, audioFrame);
   }
 
-  // start player
-  if (!getPlayer().isPlaying())
-    getPlayer().startPlayPts (audioFrame->getPts());
+  // create and start player
+  if (!mPlayer) {
+    mPlayer = new cPlayer (*this, mSampleRate, mPid);
+    mPlayer->startPlayPts (audioFrame->getPts());
+    }
   }
 //}}}
 

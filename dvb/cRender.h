@@ -72,6 +72,7 @@ protected:
 
   int64_t mPts = 0;
   int64_t mPtsDuration = 0;
+  const uint16_t mPid;
 
   // decode queue
   bool mQueueExit = false;
@@ -86,7 +87,6 @@ private:
   const std::string mName;
   const uint8_t mStreamType;
   const bool mLive;
-  const uint16_t mPid;
 
   std::function <cFrame* ()> mAllocFrameCallback;
   std::function <void (cFrame* frame)> mAddFrameCallback;
