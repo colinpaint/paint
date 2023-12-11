@@ -322,7 +322,7 @@ namespace {
               pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize, mMaxDisplayPesSize,
                                 kLines * ImGui::GetTextLineHeight())},
             { pos.x + offset2, pos.y},
-            0xFF808080);
+            0xc0808080);
           }
           //}}}
         }
@@ -356,7 +356,7 @@ namespace {
               pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower,
                                 kLines * ImGui::GetTextLineHeight()) },
             { pos.x + offset2, pos.y },
-            0x80808080);
+            0xc0008000);
           }
           //}}}
         }

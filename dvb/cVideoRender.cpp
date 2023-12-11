@@ -138,3 +138,14 @@ string cVideoRender::getInfoString() const {
   return fmt::format ("vid {} {} {}", cRender::getInfoString(), mDecoder->getInfoString(), mFrameInfo);
   }
 //}}}
+//{{{
+bool cVideoRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
+
+  // throttle fileRead thread if all frames used
+  if (!getLive())
+    while (mFramesMap.size() >= kVideoFrameMapSize)
+      this_thread::sleep_for (1ms);
+
+  return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
+  }
+//}}}
