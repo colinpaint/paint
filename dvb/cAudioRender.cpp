@@ -40,7 +40,8 @@ using namespace std;
 //}}}
 
 constexpr bool kAudioQueued = true;
-constexpr size_t kAudioFrameMapSize = 18;
+constexpr size_t kAudioFrameMapSize = 48;
+constexpr size_t kAudioThrottle = kAudioFrameMapSize - 6;
 constexpr int64_t kDefaultPtsPerAudioFrame = 1920;
 
 // cAudioRender
@@ -149,9 +150,9 @@ string cAudioRender::getInfoString() const {
 //{{{
 bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
-  // throttle fileRead thread
+  // throttle fileRead thread if all frames used
   if (!getLive())
-    while (mFramesMap.size() >= mFrameMapSize - 6)
+    while (mFramesMap.size() >= kAudioThrottle)
       this_thread::sleep_for (1ms);
 
   return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
