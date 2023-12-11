@@ -68,18 +68,20 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
       #endif
 
       srcSamples = mSilenceSamples.data();
-      int64_t ptsDuration = 0;
       numSamples = (int)mAudioRender.getSamplesPerFrame();
+      int64_t ptsDuration = 0;
+
       if (mPlaying) {
         cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtPts (mPts);
-        ptsDuration = mAudioRender.getPtsDuration();
-        if (!audioFrame) { // skip to nextFrame
+        if (!audioFrame) { 
+          // skip to nextFrame
           audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
-          if (audioFrame)
+          if (audioFrame) // found it, adjust pts
             mPts = audioFrame->getPts();
-          cLog::log (LOGINFO, fmt::format ("{}:{}", 
+          cLog::log (LOGINFO, fmt::format ("{}:{}",
                                            audioFrame ? "skip" : "miss", utils::getFullPtsString (mPts)));
           }
+
         if (audioFrame) {
           if (!mMute) {
             float* src = audioFrame->mSamples.data();
@@ -114,10 +116,11 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
               }
             srcSamples = mSamples.data();
             }
-          ptsDuration = audioFrame->getPtsDuration();
           numSamples = (int)audioFrame->getSamplesPerFrame();
+          ptsDuration = audioFrame->getPtsDuration();
           }
         }
+
       //{{{  linux play srcSamples
       #ifndef _WIN32
         audio.play (2, srcSamples, numSamples, 1.f);
