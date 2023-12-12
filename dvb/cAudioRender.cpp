@@ -155,6 +155,10 @@ bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int
     while (mFramesMap.size() >= kAudioThrottle)
       this_thread::sleep_for (1ms);
 
+  //if (!getLive() && mPlayer)
+  //  while ((mFramesMap.size() >= kAudioThrottle) && (getNumFramesBeforePts (mPlayer->getPts()) < 0))
+  //    this_thread::sleep_for (1ms);
+
   return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
   }
 //}}}

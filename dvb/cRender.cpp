@@ -71,6 +71,25 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
   return nullptr;
   }
 //}}}
+//{{{
+int cRender::getNumFramesBeforePts (int64_t pts) {
+// return numFrames before pts
+
+  if (mFramesMap.empty())
+    return 0;
+
+  {
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  int numFramesBeforePts = 0;
+  auto it = mFramesMap.begin();
+  while ((it != mFramesMap.end()) && (it->first < (pts / mPtsDuration)))
+    numFramesBeforePts++;
+
+  return numFramesBeforePts;
+  }
+  }
+//}}}
 
 //{{{
 cFrame* cRender::allocFreeFrame() {
@@ -89,6 +108,9 @@ cFrame* cRender::allocFreeFrame() {
 cFrame* cRender::allocYoungestFrame() {
 
   cFrame* youngestFrame;
+  size_t size = mFramesMap.size();
+  int64_t pts1 = mFramesMap.begin()->first;
+  int64_t pts2 = mFramesMap.end()->first;
 
   { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
@@ -100,6 +122,12 @@ cFrame* cRender::allocYoungestFrame() {
   }
 
   youngestFrame->releaseResources();
+
+  cLog::log (LOGINFO, fmt::format ("young {} of size {} {}-{}",
+                                   utils::getFullPtsString (youngestFrame->getPts()/youngestFrame->getPtsDuration()),
+                                   size,
+                                   utils::getFullPtsString (pts1),
+                                   utils::getFullPtsString (pts2)));
 
   return youngestFrame;
   }
