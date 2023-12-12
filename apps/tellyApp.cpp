@@ -1,4 +1,3 @@
-// tellyApp.cpp - imgui tellyApp, main, UI
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -148,7 +147,8 @@ namespace {
         cAudioRender& audioRender = dynamic_cast<cAudioRender&>(
           mService.getRenderStream (eRenderAudio).getRender());
 
-        playPts = audioRender.getPlayer().getPts();
+        if (audioRender.getPlayer())
+          playPts = audioRender.getPlayer()->getPts();
         }
         //}}}
 
@@ -236,7 +236,8 @@ namespace {
           cAudioRender& audioRender = dynamic_cast<cAudioRender&>(
             mService.getRenderStream (eRenderAudio).getRender());
 
-          audioRender.getPlayer().setMute (getUnselected());
+          if (audioRender.getPlayer())
+            audioRender.getPlayer()->setMute (getUnselected());
 
           // draw audio meter
           mAudioMeterView.draw (audioRender, playPts,
@@ -310,7 +311,7 @@ namespace {
                 0xffFF40ff : 0xffFF4040);
           }
           //}}}
-        for (auto frame : videoRender.getFreeFrames()) {
+        for (auto& frame : videoRender.getFreeFrames()) {
           //{{{  draw free video frames
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
 
@@ -344,7 +345,7 @@ namespace {
             0x8000ff00);
           }
           //}}}
-        for (auto frame : audioRender.getFreeFrames()) {
+        for (auto& frame : audioRender.getFreeFrames()) {
           //{{{  draw free audio frames
           cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
 
