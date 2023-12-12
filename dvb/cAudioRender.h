@@ -24,7 +24,7 @@ public:
   size_t getSampleRate() const { return mSampleRate; }
   size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
 
-  cPlayer& getPlayer() { return *mPlayer; }
+  cPlayer* getPlayer() { return mPlayer; }
 
   // find
   cAudioFrame* getAudioFrameAtPts (int64_t pts);
