@@ -83,8 +83,10 @@ int cRender::getNumFramesBeforePts (int64_t pts) {
 
   int numFramesBeforePts = 0;
   auto it = mFramesMap.begin();
-  while ((it != mFramesMap.end()) && (it->first < (pts / mPtsDuration)))
+  while ((it != mFramesMap.end()) && (it->first < (pts / mPtsDuration))) {
     numFramesBeforePts++;
+    ++it;
+    }
 
   return numFramesBeforePts;
   }
@@ -110,7 +112,7 @@ cFrame* cRender::allocYoungestFrame() {
   cFrame* youngestFrame;
   size_t size = mFramesMap.size();
   int64_t pts1 = mFramesMap.begin()->first;
-  int64_t pts2 = mFramesMap.end()->first;
+  int64_t pts2 = prev(mFramesMap.end())->first;
 
   { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
@@ -128,6 +130,12 @@ cFrame* cRender::allocYoungestFrame() {
                                    size,
                                    utils::getFullPtsString (pts1),
                                    utils::getFullPtsString (pts2)));
+
+  //auto it3 = mFramesMap.begin();
+  //while (it3 != mFramesMap.end()) {
+  //  cLog::log (LOGINFO, fmt::format ("{}", utils::getFullPtsString (it3->first)));
+  //  ++it3;
+  //  }
 
   return youngestFrame;
   }
