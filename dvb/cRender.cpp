@@ -17,18 +17,18 @@ using namespace std;
 //}}}
 
 //{{{
-cRender::cRender (bool queued, const string& name, uint8_t streamType, uint16_t pid,
+cRender::cRender (bool queued, const string& name, const string& threadName, 
+                  uint8_t streamType, uint16_t pid,
                   int64_t ptsDuration, bool live, size_t maxFrames,
                   function <cFrame* ()> getFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
-    mQueued(queued),
-    mName(name), mStreamType(streamType), mPid(pid),
+    mQueued(queued), mName(name), mThreadName(threadName), mStreamType(streamType), mPid(pid),
     mPtsDuration(ptsDuration), mLive(live), mMaxFrames(maxFrames),
     mGetFrameCallback(getFrameCallback), mAddFrameCallback(addFrameCallback),
     mMiniLog ("log") {
 
   if (queued)
-    thread ([=](){ startQueueThread (name + "q"); }).detach();
+    thread ([=](){ startQueueThread (threadName + "q"); }).detach();
   }
 //}}}
 //{{{

@@ -12,7 +12,7 @@ class cSubtitleImage;
 class cSubtitleRender : public cRender {
 public:
   cSubtitleRender (const std::string& name, uint8_t streamType, uint16_t pid, bool live);
-  ~cSubtitleRender();
+  virtual ~cSubtitleRender() = default;
 
   size_t getNumLines() const;
   size_t getHighWatermark() const;

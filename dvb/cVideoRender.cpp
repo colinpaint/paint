@@ -42,14 +42,14 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr bool kVideoQueued = true;
-constexpr size_t kVideoMaxFrames = 50;
+constexpr bool kQueued = true;
+constexpr size_t kMaxFrames = 50;
 
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
-    : cRender(kVideoQueued, name + "vid", streamType, pid,
-              kPtsPer25HzFrame, live, kVideoMaxFrames,
+    : cRender(kQueued, name, "vid", streamType, pid,
+              kPtsPer25HzFrame, live, kMaxFrames,
               [&]() noexcept { return getFrame(); },
               [&](cFrame* frame) noexcept { addFrame (frame); }) {
 
