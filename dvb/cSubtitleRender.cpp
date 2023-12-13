@@ -61,8 +61,8 @@ cSubtitleImage& cSubtitleRender::getImage (size_t line) {
 // decoder callbacks - ??? should mak ethem work for pts presentation ????
 //{{{
 cFrame* cSubtitleRender::getFrame() {
-// !!! no relloacate !!!
-  return new cSubtitleFrame();
+// !!! no relloacate yet !!!
+  return hasMaxFrames() ? new cSubtitleFrame() : new cSubtitleFrame();
   }
 //}}}
 //{{{

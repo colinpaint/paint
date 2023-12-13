@@ -37,6 +37,7 @@ public:
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   std::map<int64_t,cFrame*> getFramesMap() { return mFramesMap; }
+  bool hasMaxFrames() const { return mFramesMap.size() >= mMaxFrames; }
 
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);

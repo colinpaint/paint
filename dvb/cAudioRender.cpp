@@ -59,10 +59,8 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid
 //{{{
 cAudioFrame* cAudioRender::getAudioFrameAtPts (int64_t pts) {
 
-  if (mFramesMap.empty() || !mPtsDuration)
-    return nullptr;
-  else
-    return dynamic_cast<cAudioFrame*>(getFrameAtPts (pts));
+  return (mFramesMap.empty() || !mPtsDuration) ?
+    nullptr : dynamic_cast<cAudioFrame*>(getFrameAtPts (pts));
   }
 //}}}
 //{{{
@@ -78,7 +76,7 @@ cAudioFrame* cAudioRender::getAudioFrameAtOrAfterPts (int64_t pts) {
 // decoder callbacks
 //{{{
 cFrame* cAudioRender::getFrame() {
-  return (mFramesMap.size() < kAudioMaxFrames) ? new cAudioFrame() : reuseBestFrame();
+  return hasMaxFrames() ? reuseBestFrame() : new cAudioFrame();
   }
 //}}}
 //{{{

@@ -79,7 +79,7 @@ cVideoFrame* cVideoRender::getVideoFrameAtOrAfterPts (int64_t pts) {
 // decoder callbacks
 //{{{
 cFrame* cVideoRender::getFrame() {
-  return (mFramesMap.size() < kVideoMaxFrames) ? new cFFmpegVideoFrame() : reuseBestFrame();
+  return hasMaxFrames() ? reuseBestFrame() : new cFFmpegVideoFrame();
   }
 //}}}
 //{{{
