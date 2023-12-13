@@ -264,8 +264,6 @@ namespace {
         ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
         //}}}
         }
-
-      videoRender.freeFramesBeforePts (playPts);
       }
     //}}}
 
@@ -311,21 +309,6 @@ namespace {
                 0xffFF40ff : 0xffFF4040);
           }
           //}}}
-        for (auto& frame : videoRender.getFreeFrames()) {
-          //{{{  draw free video frames
-          cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-
-          float offset1 = (videoFrame->getPts() - playerPts) * ptsScale;
-          float offset2 = offset1 + (videoFrame->getPtsDuration() * ptsScale) - 1.f;
-
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            { pos.x + offset1,
-              pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize, mMaxDisplayPesSize,
-                                kLines * ImGui::GetTextLineHeight())},
-            { pos.x + offset2, pos.y},
-            0xc0808080);
-          }
-          //}}}
         }
 
         { // lock audio during iterate
@@ -343,21 +326,6 @@ namespace {
                                 kLines * ImGui::GetTextLineHeight()) },
             { pos.x + offset2, pos.y },
             0x8000ff00);
-          }
-          //}}}
-        for (auto& frame : audioRender.getFreeFrames()) {
-          //{{{  draw free audio frames
-          cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
-
-          float offset1 = (audioFrame->getPts() - playerPts) * ptsScale;
-          float offset2 = offset1 + (audioFrame->getPtsDuration() * ptsScale) - 1.f;
-
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            { pos.x + offset1,
-              pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower,
-                                kLines * ImGui::GetTextLineHeight()) },
-            { pos.x + offset2, pos.y },
-            0xc0008000);
           }
           //}}}
         }

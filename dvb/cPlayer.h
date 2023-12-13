@@ -38,6 +38,7 @@ private:
   bool mPlaying = false;
   bool mRunning = true;
   bool mExit = false;
+  bool mSyncedUp = false;
 
   int64_t mPts = 0;
 

@@ -73,13 +73,17 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
 
       if (mPlaying) {
         cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtPts (mPts);
-        if (!audioFrame) {
+        if (audioFrame)
+          mSyncedUp = true;
+        else {
           // skip to nextFrame
           audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
-          if (audioFrame) // found it, adjust pts
+          if (audioFrame) {// found it, adjust pts
             mPts = audioFrame->getPts();
-          cLog::log (LOGINFO, fmt::format ("{}:{}",
-                                           audioFrame ? "skip" : "miss", utils::getFullPtsString (mPts)));
+            //cLog::log (LOGINFO, fmt::format ("skipped {}", utils::getFullPtsString (mPts)));
+            }
+          if (!audioFrame && mSyncedUp)
+            cLog::log (LOGINFO, fmt::format ("missed {}", utils::getFullPtsString (mPts)));
           }
 
         if (audioFrame) {
@@ -126,7 +130,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
         audio.play (2, srcSamples, numSamples, 1.f);
       #endif
       //}}}
-      mAudioRender.freeFramesBeforePts (mPts);
+      //mAudioRender.freeFramesBeforePts (mPts);
       mPts += ptsDuration;
       //{{{  close windows play lamda
       #ifdef _WIN32

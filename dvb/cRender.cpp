@@ -1,4 +1,5 @@
 // cRender.cpp - dvb stream render base class
+// - mFrameMap indexed by pts/ptsDuration
 //{{{  includes
 #include "cRender.h"
 
@@ -14,15 +15,16 @@
 
 using namespace std;
 //}}}
-constexpr size_t kAudioFrameMapSize = 16;
 constexpr int64_t kPtsPer25HzFrame = 90000 / 25;
 
 // public:
 //{{{
 cRender::cRender (bool queued, const string& name, uint8_t streamType, uint16_t pid,
-                  size_t frameMapSize, int64_t ptsDuration, bool live)
-    : mFrameMapSize(frameMapSize), mPtsDuration(ptsDuration),
-      mQueued(queued), mName(name), mStreamType(streamType), mLive(live), mPid(pid),
+                  int64_t ptsDuration, bool live, size_t maxFrames) :
+      mQueued(queued), mName(name),
+      mStreamType(streamType), mPid(pid),
+      mPtsDuration(ptsDuration),
+      mLive(live), mMaxFrames(maxFrames),
       mMiniLog ("log") {
 
   if (queued)
@@ -71,96 +73,59 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
   return nullptr;
   }
 //}}}
+
 //{{{
-int cRender::getNumFramesBeforePts (int64_t pts) {
-// return numFrames before pts
+bool cRender::throttle (int64_t pts) {
+// return true if fileRead should throttle
+// - if not live, mFramesMap not reached max, and frames beforePts < mMaxFrames/2
 
-  if (mFramesMap.empty())
-    return 0;
+  if (mLive || (mFramesMap.size() < mMaxFrames)) // no throttle
+    return false;
 
-  {
+  { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
 
   int numFramesBeforePts = 0;
   auto it = mFramesMap.begin();
   while ((it != mFramesMap.end()) && (it->first < (pts / mPtsDuration))) {
-    numFramesBeforePts++;
+    if (++numFramesBeforePts >= mMaxFrames/2) // if mFramesMap at least centred about pts, no throttle
+      return false;
     ++it;
     }
 
-  return numFramesBeforePts;
+  // not centred about pts, throttle
+  return true;
   }
   }
 //}}}
-
 //{{{
-cFrame* cRender::allocFreeFrame() {
+void cRender::addFrame (cFrame* frame) {
 
+  //cLog::log (LOGINFO, fmt::format ("addFrame {} {}",
+  //                                 utils::getFullPtsString (frame->getPts()),
+  //                                 utils::getFullPtsString ((frame->getPts() / frame->getPtsDuration()) * frame->getPtsDuration())));
   unique_lock<shared_mutex> lock (mSharedMutex);
-
-  if (mFreeFrames.empty())
-    return nullptr;
-
-  cFrame* frame = mFreeFrames.front();
-  mFreeFrames.pop_front();
-  return frame;
+  mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
   }
 //}}}
 //{{{
-cFrame* cRender::allocYoungestFrame() {
+cFrame* cRender::reuseBestFrame() {
 
-  cFrame* youngestFrame;
-  size_t size = mFramesMap.size();
-  int64_t pts1 = mFramesMap.begin()->first;
-  int64_t pts2 = prev(mFramesMap.end())->first;
+  cFrame* frame;
 
   { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  // reuse youngest
+  // reuse youngest as best
   auto it = mFramesMap.begin();
-  youngestFrame = it->second;
+  frame = it->second;
   mFramesMap.erase (it);
   }
 
-  youngestFrame->releaseResources();
+  frame->releaseResources();
 
-  cLog::log (LOGINFO, fmt::format ("young {} of size {} {}-{}",
-                                   utils::getFullPtsString (youngestFrame->getPts()/youngestFrame->getPtsDuration()),
-                                   size,
-                                   utils::getFullPtsString (pts1),
-                                   utils::getFullPtsString (pts2)));
-
-  //auto it3 = mFramesMap.begin();
-  //while (it3 != mFramesMap.end()) {
-  //  cLog::log (LOGINFO, fmt::format ("{}", utils::getFullPtsString (it3->first)));
-  //  ++it3;
-  //  }
-
-  return youngestFrame;
-  }
-//}}}
-//{{{
-void cRender::freeFramesBeforePts (int64_t pts) {
-// free all frames before pts, releaseResources
-
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  if (mFramesMap.empty())
-    return;
-
-  auto it = mFramesMap.begin();
-  while ((it != mFramesMap.end()) && (it->first < (pts / mPtsDuration))) {
-    cFrame* frame = it->second;
-
-    // remove from mFramesMap
-    it = mFramesMap.erase (it);
-    frame->releaseResources();
-
-    // add to mFreeFrames deque
-    mFreeFrames.push_back (frame);
-    }
-
+  //cLog::log (LOGINFO, fmt::format ("reuseBestFrame:{}", utils::getFullPtsString (frame->getPts())));
+  return frame;
   }
 //}}}
 
@@ -171,7 +136,7 @@ void cRender::log (const string& tag, const string& text) { mMiniLog.log (tag, t
 //{{{
 void cRender::logValue (int64_t pts, float value) {
 
-  while (mValuesMap.size() >= mMapSize)
+  while (mValuesMap.size() >= mMaxLogSize)
     mValuesMap.erase (mValuesMap.begin());
 
   mValuesMap.emplace (pts / kPtsPer25HzFrame, value);
@@ -184,9 +149,8 @@ void cRender::logValue (int64_t pts, float value) {
 // process
 //{{{
 string cRender::getInfoString() const {
-  return fmt::format ("frames:{:2d}:{:2d}:{:d} pts:{} dur:{}",
-                      mFramesMap.size(), mFreeFrames.size(), getQueueSize(),
-                      utils::getFullPtsString (mPts), mPtsDuration);
+  return fmt::format ("frames:{:2d}:{:d} pts:{} dur:{}",
+                      mFramesMap.size(), getQueueSize(), utils::getFullPtsString (mPts), mPtsDuration);
   }
 //}}}
 //{{{

@@ -22,12 +22,13 @@ constexpr int kPtsPerSecond = 90000;
 class cRender {
 public:
   cRender (bool queued, const std::string& name, uint8_t streamType, uint16_t pid,
-           size_t frameMapSize, int64_t ptsDuration, bool live);
+           int64_t ptsDuration, bool live, size_t maxFrames);
   virtual ~cRender();
 
   bool isQueued() const { return mQueued; }
-  float getLive() const { return mLive; }
+  int64_t getPts() const { return mPts; }
   int64_t getPtsDuration() const { return mPtsDuration; }
+  uint16_t getPid() const { return mPid; }
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   cMiniLog& getLog() { return mMiniLog; }
@@ -35,21 +36,17 @@ public:
 
   int64_t getLastPts() const { return mLastPts; }
   size_t getNumValues() const { return mValuesMap.size(); }
-  size_t getFrameMapSize() const { return mFrameMapSize; }
   std::map<int64_t,cFrame*> getFramesMap() { return mFramesMap; }
-  std::deque<cFrame*> getFreeFrames() { return mFreeFrames; }
 
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
-  int getNumFramesBeforePts (int64_t pts);
 
   void setAllocFrameCallback (std::function <cFrame* ()> getFrameCallback) { mAllocFrameCallback = getFrameCallback; }
   void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
-  void setMapSize (size_t size) { mMapSize = size; }
 
-  cFrame* allocFreeFrame();
-  cFrame* allocYoungestFrame();
-  void freeFramesBeforePts (int64_t pts);
+  bool throttle (int64_t pts);
+  cFrame* reuseBestFrame();
+  virtual void addFrame (cFrame* frame);
 
   void toggleLog();
   void header();
@@ -67,13 +64,10 @@ protected:
   cDecoder* mDecoder = nullptr;
 
   // frameMap
-  size_t mFrameMapSize = 0;
   std::map <int64_t, cFrame*> mFramesMap;
-  std::deque <cFrame*> mFreeFrames;
 
   int64_t mPts = 0;
   int64_t mPtsDuration = 0;
-  const uint16_t mPid;
 
   // decode queue
   bool mQueueExit = false;
@@ -87,15 +81,18 @@ private:
   const bool mQueued = false;
   const std::string mName;
   const uint8_t mStreamType;
+  const uint16_t mPid;
+
   const bool mLive;
+  const size_t mMaxFrames;
+
+  cMiniLog mMiniLog;
+  size_t mMaxLogSize = 64;
 
   std::function <cFrame* ()> mAllocFrameCallback;
   std::function <void (cFrame* frame)> mAddFrameCallback;
 
-  cMiniLog mMiniLog;
-
   // plot
   std::map <int64_t,float> mValuesMap;
   int64_t mLastPts = 0;
-  size_t mMapSize = 64;
   };

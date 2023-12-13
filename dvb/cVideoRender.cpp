@@ -43,12 +43,14 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kVideoQueued = true;
-constexpr size_t kVideoFrameMapSize = 50;
+constexpr int64_t kDefaultPtsPerVideoFrame = 90000/25;
+constexpr size_t kVideoMaxFrames = 50;
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, bool realTime)
-    : cRender(kVideoQueued, name + "vid", streamType, pid, kVideoFrameMapSize, 90000/25, realTime) {
+cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
+    : cRender(kVideoQueued, name + "vid", streamType, pid, 
+              kDefaultPtsPerVideoFrame, live, kVideoMaxFrames) {
 
   mDecoder = new cFFmpegVideoDecoder (*this, streamType);
   setAllocFrameCallback ([&]() noexcept { return getFrame(); });
@@ -63,11 +65,6 @@ cVideoRender::~cVideoRender() {
   for (auto& frame : mFramesMap)
     delete frame.second;
   mFramesMap.clear();
-
-  for (auto& frame : mFreeFrames)
-    delete frame;
-
-  mFreeFrames.clear();
   }
 //}}}
 
@@ -93,19 +90,7 @@ cVideoFrame* cVideoRender::getVideoFrameAtOrAfterPts (int64_t pts) {
 // decoder callbacks
 //{{{
 cFrame* cVideoRender::getFrame() {
-
-  cFrame* frame = allocFreeFrame();
-  if (frame)
-    // use freeFrame
-    return frame;
-  else if (mFramesMap.size() < kVideoFrameMapSize)
-    // allocate newFrame
-    return new cFFmpegVideoFrame();
-  else {
-    // reuse youngestFrame
-    cLog::log (LOGINFO, fmt::format ("cVideoRender::getFrame youngestFrame"));
-    return allocYoungestFrame();
-    }
+  return (mFramesMap.size() < kVideoMaxFrames) ? new cFFmpegVideoFrame() : reuseBestFrame();
   }
 //}}}
 //{{{
@@ -124,11 +109,7 @@ void cVideoRender::addFrame (cFrame* frame) {
   mHeight = videoFrame->getHeight();
   mFrameInfo = videoFrame->getInfoString();
 
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-  mFramesMap.emplace (videoFrame->getPts() / videoFrame->getPtsDuration(), videoFrame);
-  }
-
+  cRender::addFrame (frame);
   }
 //}}}
 

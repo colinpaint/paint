@@ -26,13 +26,15 @@ using namespace std;
 
 #define BGRA(r,g,b,a) static_cast<uint32_t>(((a << 24) ) | (b << 16) | (g <<  8) | r)
 //}}}
-constexpr bool kQueued = true;
-constexpr size_t kSubtitleMapSize = 0;
+constexpr bool kSubtitleQueued = true;
+constexpr int64_t kDefaultPtsPerSubtitleFrame = 90000/25;
+constexpr size_t kSubtitleMaxFrames = 0;
 
 // public:
 //{{{
 cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
-    : cRender(kQueued, name + "sub", streamType, pid, kSubtitleMapSize, 90000/25, live) {
+    : cRender(kSubtitleQueued, name + "sub", streamType, pid, 
+              kDefaultPtsPerSubtitleFrame, live, kSubtitleMaxFrames) {
 
   mDecoder = new cSubtitleDecoder (*this);
 
@@ -70,6 +72,8 @@ void cSubtitleRender::addFrame (cFrame* frame) {
 
   mPts = frame->getPts();
   mPtsDuration = frame->getPtsDuration();
+
+  //cRender::addframe (frame);
   //cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->mPts)));
   }
 //}}}

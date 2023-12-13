@@ -40,15 +40,14 @@ using namespace std;
 //}}}
 
 constexpr bool kAudioQueued = true;
-constexpr size_t kAudioFrameMapSize = 48;
-constexpr size_t kAudioThrottle = kAudioFrameMapSize - 6;
 constexpr int64_t kDefaultPtsPerAudioFrame = 1920;
+constexpr size_t kAudioMaxFrames = 48;
 
 // cAudioRender
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
     : cRender(kAudioQueued, name + "aud", streamType, pid,
-              kAudioFrameMapSize, kDefaultPtsPerAudioFrame, live),
+              kDefaultPtsPerAudioFrame, live, kAudioMaxFrames),
       mSampleRate(48000), mSamplesPerFrame(1024) {
 
   mDecoder = new cFFmpegAudioDecoder (*this, streamType);
@@ -65,11 +64,6 @@ cAudioRender::~cAudioRender() {
   for (auto& frame : mFramesMap)
     delete (frame.second);
   mFramesMap.clear();
-
-  for (auto& frame : mFreeFrames)
-    delete frame;
-
-  mFreeFrames.clear();
   }
 //}}}
 
@@ -95,19 +89,7 @@ cAudioFrame* cAudioRender::getAudioFrameAtOrAfterPts (int64_t pts) {
 // decoder callbacks
 //{{{
 cFrame* cAudioRender::getFrame() {
-
-  cFrame* frame = allocFreeFrame();
-  if (frame)
-    // use freeFrame
-    return frame;
-  else if (mFramesMap.size() < kAudioFrameMapSize)
-    // allocate newFrame
-    return new cAudioFrame();
-  else {
-    // reuse youngestFrame
-    cLog::log (LOGINFO, fmt::format ("cAudioRender::getFrame youngestFrame"));
-    return allocYoungestFrame();
-    }
+  return (mFramesMap.size() < kAudioMaxFrames) ? new cAudioFrame() : reuseBestFrame();
   }
 //}}}
 //{{{
@@ -121,6 +103,7 @@ void cAudioRender::addFrame (cFrame* frame) {
     mSampleRate = audioFrame->getSampleRate();
     }
 
+  // save last pts and duration
   mPts = frame->getPts();
   mPtsDuration = frame->getPtsDuration();
 
@@ -128,14 +111,11 @@ void cAudioRender::addFrame (cFrame* frame) {
   mFrameInfo = audioFrame->getInfoString();
   audioFrame->calcPower();
 
-  { // locked emplace
-  unique_lock<shared_mutex> lock (mSharedMutex);
-  mFramesMap.emplace (audioFrame->getPts() / mPtsDuration, audioFrame);
-  }
+  cRender::addFrame (frame);
 
   // create and start player
   if (!mPlayer) {
-    mPlayer = new cPlayer (*this, mSampleRate, mPid);
+    mPlayer = new cPlayer (*this, mSampleRate, getPid());
     mPlayer->startPlayPts (audioFrame->getPts());
     }
   }
@@ -150,14 +130,9 @@ string cAudioRender::getInfoString() const {
 //{{{
 bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
-  // throttle fileRead thread if all frames used
-  if (!getLive())
-    while (mFramesMap.size() >= kAudioThrottle)
+  if (mPlayer)
+    while (throttle (mPlayer->getPts()))
       this_thread::sleep_for (1ms);
-
-  //if (!getLive() && mPlayer)
-  //  while ((mFramesMap.size() >= kAudioThrottle) && (getNumFramesBeforePts (mPlayer->getPts()) < 0))
-  //    this_thread::sleep_for (1ms);
 
   return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
   }
