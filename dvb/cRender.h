@@ -40,13 +40,13 @@ public:
 
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
+  cFrame* reuseBestFrame();
+
+  bool throttle (int64_t pts);
+  virtual void addFrame (cFrame* frame);
 
   void setAllocFrameCallback (std::function <cFrame* ()> getFrameCallback) { mAllocFrameCallback = getFrameCallback; }
   void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
-
-  bool throttle (int64_t pts);
-  cFrame* reuseBestFrame();
-  virtual void addFrame (cFrame* frame);
 
   void toggleLog();
   void header();

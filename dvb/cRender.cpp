@@ -49,6 +49,7 @@ float cRender::getValue (int64_t pts) {
 
 //{{{
 cFrame* cRender::getFrameAtPts (int64_t pts) {
+// find pts frame
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
@@ -58,7 +59,7 @@ cFrame* cRender::getFrameAtPts (int64_t pts) {
 //}}}
 //{{{
 cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
-// return next frame at or after pts
+// search for first frame, on or after pts
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
@@ -71,6 +72,25 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
     }
 
   return nullptr;
+  }
+//}}}
+//{{{
+cFrame* cRender::reuseBestFrame() {
+
+  cFrame* frame;
+
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  // reuse youngestfor now, could be different if seeking
+  auto it = mFramesMap.begin();
+  frame = it->second;
+  mFramesMap.erase (it);
+  }
+
+  //cLog::log (LOGINFO, fmt::format ("reuseBestFrame:{}", utils::getFullPtsString (frame->getPts())));
+  frame->releaseResources();
+  return frame;
   }
 //}}}
 
@@ -106,26 +126,6 @@ void cRender::addFrame (cFrame* frame) {
   //                                 utils::getFullPtsString ((frame->getPts() / frame->getPtsDuration()) * frame->getPtsDuration())));
   unique_lock<shared_mutex> lock (mSharedMutex);
   mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
-  }
-//}}}
-//{{{
-cFrame* cRender::reuseBestFrame() {
-
-  cFrame* frame;
-
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  // reuse youngest as best
-  auto it = mFramesMap.begin();
-  frame = it->second;
-  mFramesMap.erase (it);
-  }
-
-  frame->releaseResources();
-
-  //cLog::log (LOGINFO, fmt::format ("reuseBestFrame:{}", utils::getFullPtsString (frame->getPts())));
-  return frame;
   }
 //}}}
 

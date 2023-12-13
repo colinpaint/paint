@@ -281,29 +281,21 @@ namespace {
       //{{{
       void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playerPts, ImVec2 pos) {
 
-        // draw playPts centre bar
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          { pos.x, pos.y - (kLines * ImGui::GetTextLineHeight()) },
-          { pos.x + 1.f, pos.y },
-          0xffc0c0c0);
-
         float ptsScale = mPixelsPerVideoFrame / videoRender.getPtsDuration();
 
         { // lock video during iterate
         shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
         for (auto& frame : videoRender.getFramesMap()) {
           //{{{  draw video frames
-          cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-
-          float offset1 = (videoFrame->getPts() - playerPts) * ptsScale;
-          float offset2 = offset1 + (videoFrame->getPtsDuration() * ptsScale) - 1.f;
+          float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
+          float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
 
           // pesSize I white / P purple / B blue - ABGR color
+          cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
           ImGui::GetWindowDrawList()->AddRectFilled (
-            { pos.x + offset1,
-              pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize, mMaxDisplayPesSize,
-                                kLines * ImGui::GetTextLineHeight()) },
-            { pos.x + offset2, pos.y },
+            { posL, pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize, mMaxDisplayPesSize,
+                                         kLines * ImGui::GetTextLineHeight()) },
+            { posR, pos.y },
             (videoFrame->mFrameType == 'I') ?
               0xffffffff : (videoFrame->mFrameType == 'P') ?
                 0xffFF40ff : 0xffFF4040);
@@ -315,20 +307,24 @@ namespace {
         shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
         for (auto& frame : audioRender.getFramesMap()) {
           //{{{  draw audio frames
+          float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
+          float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
+
           cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
-
-          float offset1 = (audioFrame->getPts() - playerPts) * ptsScale;
-          float offset2 = offset1 + (audioFrame->getPtsDuration() * ptsScale) - 1.f;
-
           ImGui::GetWindowDrawList()->AddRectFilled (
-            { pos.x + offset1,
-              pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower,
-                                kLines * ImGui::GetTextLineHeight()) },
-            { pos.x + offset2, pos.y },
+            { posL, pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower,
+                                      kLines * ImGui::GetTextLineHeight()) },
+            { posR, pos.y },
             0x8000ff00);
           }
           //}}}
         }
+
+        // draw playPts centre bar
+        ImGui::GetWindowDrawList()->AddRectFilled (
+          { pos.x-1.f, pos.y - (kLines * ImGui::GetTextLineHeight()) },
+          { pos.x+1.f, pos.y },
+          0xffffffff);
 
         // agc scaling back to max display values from max values
         agc (mMaxPesSize, mMaxDisplayPesSize, 100.f, 10000.f);
