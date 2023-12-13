@@ -43,28 +43,17 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kVideoQueued = true;
-constexpr int64_t kDefaultPtsPerVideoFrame = 90000/25;
 constexpr size_t kVideoMaxFrames = 50;
 
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
-    : cRender(kVideoQueued, name + "vid", streamType, pid, 
-              kDefaultPtsPerVideoFrame, live, kVideoMaxFrames) {
+    : cRender(kVideoQueued, name + "vid", streamType, pid,
+              kPtsPer25HzFrame, live, kVideoMaxFrames,
+              [&]() noexcept { return getFrame(); },
+              [&](cFrame* frame) noexcept { addFrame (frame); }) {
 
   mDecoder = new cFFmpegVideoDecoder (*this, streamType);
-  setAllocFrameCallback ([&]() noexcept { return getFrame(); });
-  setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
-  }
-//}}}
-//{{{
-cVideoRender::~cVideoRender() {
-
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  for (auto& frame : mFramesMap)
-    delete frame.second;
-  mFramesMap.clear();
   }
 //}}}
 

@@ -16,7 +16,7 @@ class cVideoFrame;
 class cVideoRender : public cRender {
 public:
   cVideoRender (const std::string& name, uint8_t streamType, uint16_t pid, bool realTime);
-  virtual ~cVideoRender();
+  virtual ~cVideoRender() = default;
 
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
@@ -29,7 +29,7 @@ public:
   void addFrame (cFrame* frame);
 
   // overrides
-  virtual std::string getInfoString() const final; 
+  virtual std::string getInfoString() const final;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
 
 private:

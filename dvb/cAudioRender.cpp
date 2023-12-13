@@ -47,23 +47,12 @@ constexpr size_t kAudioMaxFrames = 48;
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
     : cRender(kAudioQueued, name + "aud", streamType, pid,
-              kDefaultPtsPerAudioFrame, live, kAudioMaxFrames),
+              kDefaultPtsPerAudioFrame, live, kAudioMaxFrames,
+              [&]() noexcept { return getFrame(); },
+              [&](cFrame* frame) noexcept { addFrame (frame); }),
       mSampleRate(48000), mSamplesPerFrame(1024) {
 
   mDecoder = new cFFmpegAudioDecoder (*this, streamType);
-
-  setAllocFrameCallback ([&]() noexcept { return getFrame(); });
-  setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
-  }
-//}}}
-//{{{
-cAudioRender::~cAudioRender() {
-
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  for (auto& frame : mFramesMap)
-    delete (frame.second);
-  mFramesMap.clear();
   }
 //}}}
 

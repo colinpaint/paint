@@ -27,19 +27,17 @@ using namespace std;
 #define BGRA(r,g,b,a) static_cast<uint32_t>(((a << 24) ) | (b << 16) | (g <<  8) | r)
 //}}}
 constexpr bool kSubtitleQueued = true;
-constexpr int64_t kDefaultPtsPerSubtitleFrame = 90000/25;
 constexpr size_t kSubtitleMaxFrames = 0;
 
 // public:
 //{{{
 cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
-    : cRender(kSubtitleQueued, name + "sub", streamType, pid, 
-              kDefaultPtsPerSubtitleFrame, live, kSubtitleMaxFrames) {
+    : cRender(kSubtitleQueued, name + "sub", streamType, pid,
+              kPtsPer25HzFrame, live, kSubtitleMaxFrames,
+              [&]() noexcept { return getFrame(); },
+              [&](cFrame* frame) noexcept { addFrame (frame); }) {
 
   mDecoder = new cSubtitleDecoder (*this);
-
-  setAllocFrameCallback ([&]() noexcept { return getFrame(); });
-  setAddFrameCallback ([&](cFrame* frame) noexcept { addFrame (frame); });
   }
 //}}}
 cSubtitleRender::~cSubtitleRender() = default;

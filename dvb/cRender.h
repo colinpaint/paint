@@ -18,43 +18,38 @@ class cDecoder;
 #include "cDecoderQueueItem.h"
 //}}}
 constexpr int kPtsPerSecond = 90000;
+constexpr int64_t kPtsPer25HzFrame = kPtsPerSecond / 25;
 
 class cRender {
 public:
   cRender (bool queued, const std::string& name, uint8_t streamType, uint16_t pid,
-           int64_t ptsDuration, bool live, size_t maxFrames);
+           int64_t ptsDuration, bool live, size_t maxFrames,
+           std::function <cFrame* ()> getFrameCallback,
+           std::function <void (cFrame* frame)> addFrameCallback);
   virtual ~cRender();
 
   bool isQueued() const { return mQueued; }
+  uint16_t getPid() const { return mPid; }
   int64_t getPts() const { return mPts; }
   int64_t getPtsDuration() const { return mPtsDuration; }
-  uint16_t getPid() const { return mPid; }
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   cMiniLog& getLog() { return mMiniLog; }
-  float getValue (int64_t pts);
 
-  int64_t getLastPts() const { return mLastPts; }
-  size_t getNumValues() const { return mValuesMap.size(); }
   std::map<int64_t,cFrame*> getFramesMap() { return mFramesMap; }
 
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
   cFrame* reuseBestFrame();
-
   bool throttle (int64_t pts);
-  virtual void addFrame (cFrame* frame);
 
-  void setAllocFrameCallback (std::function <cFrame* ()> getFrameCallback) { mAllocFrameCallback = getFrameCallback; }
-  void setAddFrameCallback (std::function <void (cFrame* frame)> addFrameCallback) { mAddFrameCallback = addFrameCallback; }
+  virtual std::string getInfoString() const;
+  virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
+  virtual void addFrame (cFrame* frame);
 
   void toggleLog();
   void header();
   void log (const std::string& tag, const std::string& text);
-  void logValue (int64_t pts, float value);
-
-  virtual std::string getInfoString() const;
-  virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
 
 protected:
   size_t getQueueSize() const;
@@ -78,6 +73,7 @@ private:
   void startQueueThread (const std::string& name);
   void stopQueueThread();
 
+  // vars
   const bool mQueued = false;
   const std::string mName;
   const uint8_t mStreamType;
@@ -86,13 +82,9 @@ private:
   const bool mLive;
   const size_t mMaxFrames;
 
+  const std::function <cFrame* ()> mGetFrameCallback;
+  const std::function <void (cFrame* frame)> mAddFrameCallback;
+
   cMiniLog mMiniLog;
-  size_t mMaxLogSize = 64;
-
-  std::function <cFrame* ()> mAllocFrameCallback;
-  std::function <void (cFrame* frame)> mAddFrameCallback;
-
-  // plot
-  std::map <int64_t,float> mValuesMap;
-  int64_t mLastPts = 0;
+  const size_t mMaxLogSize = 64;
   };

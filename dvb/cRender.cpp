@@ -15,17 +15,17 @@
 
 using namespace std;
 //}}}
-constexpr int64_t kPtsPer25HzFrame = 90000 / 25;
 
 // public:
 //{{{
 cRender::cRender (bool queued, const string& name, uint8_t streamType, uint16_t pid,
-                  int64_t ptsDuration, bool live, size_t maxFrames) :
-      mQueued(queued), mName(name),
-      mStreamType(streamType), mPid(pid),
-      mPtsDuration(ptsDuration),
-      mLive(live), mMaxFrames(maxFrames),
-      mMiniLog ("log") {
+                  int64_t ptsDuration, bool live, size_t maxFrames,
+                  function <cFrame* ()> getFrameCallback,
+                  function <void (cFrame* frame)> addFrameCallback) :
+    mQueued(queued), mName(name), mStreamType(streamType), mPid(pid),
+    mPtsDuration(ptsDuration), mLive(live), mMaxFrames(maxFrames),
+    mGetFrameCallback(getFrameCallback), mAddFrameCallback(addFrameCallback),
+    mMiniLog ("log") {
 
   if (queued)
     thread ([=](){ startQueueThread (name + "q"); }).detach();
@@ -34,16 +34,12 @@ cRender::cRender (bool queued, const string& name, uint8_t streamType, uint16_t 
 //{{{
 cRender::~cRender() {
   stopQueueThread();
-  }
-//}}}
-
-//{{{
-float cRender::getValue (int64_t pts) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  auto it = mValuesMap.find (pts / kPtsPer25HzFrame);
-  return it == mValuesMap.end() ? 0.f : it->second;
+  for (auto& frame : mFramesMap)
+    delete (frame.second);
+  mFramesMap.clear();
   }
 //}}}
 
@@ -118,6 +114,28 @@ bool cRender::throttle (int64_t pts) {
   }
   }
 //}}}
+
+// process
+//{{{
+string cRender::getInfoString() const {
+  return fmt::format ("frames:{:2d}:{:d} pts:{} dur:{}",
+                      mFramesMap.size(), getQueueSize(), utils::getFullPtsString (mPts), mPtsDuration);
+  }
+//}}}
+//{{{
+bool cRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
+  (void)skip;
+
+  if (isQueued()) {
+    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pid, pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback));
+    return true;
+    }
+  else {
+    mDecoder->decode (pid, pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback);
+    return false;
+    }
+  }
+//}}}
 //{{{
 void cRender::addFrame (cFrame* frame) {
 
@@ -133,40 +151,6 @@ void cRender::addFrame (cFrame* frame) {
 void cRender::toggleLog() { mMiniLog.toggleEnable(); }
 void cRender::header() { mMiniLog.setHeader (fmt::format ("header")); }
 void cRender::log (const string& tag, const string& text) { mMiniLog.log (tag, text); }
-//{{{
-void cRender::logValue (int64_t pts, float value) {
-
-  while (mValuesMap.size() >= mMaxLogSize)
-    mValuesMap.erase (mValuesMap.begin());
-
-  mValuesMap.emplace (pts / kPtsPer25HzFrame, value);
-
-  if (pts > mLastPts)
-    mLastPts = pts;
-  }
-//}}}
-
-// process
-//{{{
-string cRender::getInfoString() const {
-  return fmt::format ("frames:{:2d}:{:d} pts:{} dur:{}",
-                      mFramesMap.size(), getQueueSize(), utils::getFullPtsString (mPts), mPtsDuration);
-  }
-//}}}
-//{{{
-bool cRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
-  (void)skip;
-
-  if (isQueued()) {
-    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pid, pes, pesSize, pts, dts, mAllocFrameCallback, mAddFrameCallback));
-    return true;
-    }
-  else {
-    mDecoder->decode (pid, pes, pesSize, pts, dts, mAllocFrameCallback, mAddFrameCallback);
-    return false;
-    }
-  }
-//}}}
 
 // protected
 //{{{
