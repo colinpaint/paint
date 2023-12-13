@@ -1,4 +1,4 @@
-// cPlayer.cpp                                                     utils::getFullPtsString (pts)
+// cPlayer.cpp
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -29,8 +29,8 @@
 using namespace std;
 //}}}
 
-cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid)
-    : mAudioRender(audioRender), mSampleRate(sampleRate) {
+cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid) :
+    mAudioRender(audioRender), mSampleRate(sampleRate) {
 
   mPlayerThread = thread ([=]() {
     cLog::setThreadName (fmt::format ("{:4d}", pid));

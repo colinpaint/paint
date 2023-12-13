@@ -30,12 +30,12 @@ public:
 
   bool isQueued() const { return mQueued; }
   uint16_t getPid() const { return mPid; }
+  cMiniLog& getLog() { return mMiniLog; }
+
   int64_t getPts() const { return mPts; }
   int64_t getPtsDuration() const { return mPtsDuration; }
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
-  cMiniLog& getLog() { return mMiniLog; }
-
   std::map<int64_t,cFrame*> getFramesMap() { return mFramesMap; }
 
   cFrame* getFrameAtPts (int64_t pts);
