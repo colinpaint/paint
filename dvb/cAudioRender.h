@@ -17,7 +17,7 @@ enum class eAudioFrameType { eUnknown, eId3Tag, eWav, eMp3, eAacAdts, eAacLatm }
 
 class cAudioRender : public cRender {
 public:
-  cAudioRender (const std::string& name, uint8_t streamType, uint16_t pid, bool live);
+  cAudioRender (const std::string& name, uint8_t streamType, uint16_t pid, bool live, bool hasAudio);
   virtual ~cAudioRender() = default;
 
   // gets
@@ -39,6 +39,7 @@ public:
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
 
 private:
+  const bool mHasAudio;
   cPlayer* mPlayer = nullptr;
 
   // vars

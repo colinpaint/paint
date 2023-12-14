@@ -45,12 +45,12 @@ constexpr size_t kFileMaxFrames = 48;
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
+cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, bool live, bool hasAudio)
     : cRender(kQueued, name, "aud ", streamType, pid,
               kDefaultPtsPerFrame, live, live ? kLiveMaxFrames : kFileMaxFrames,
               [&]() noexcept { return getFrame(); },
               [&](cFrame* frame) noexcept { addFrame (frame); }),
-      mSampleRate(48000), mSamplesPerFrame(1024) {
+      mSampleRate(48000), mSamplesPerFrame(1024), mHasAudio(hasAudio) {
 
   mDecoder = new cFFmpegAudioDecoder (*this, streamType);
   }
@@ -102,7 +102,7 @@ void cAudioRender::addFrame (cFrame* frame) {
 
   // create and start player
   if (!mPlayer) {
-    mPlayer = new cPlayer (*this, mSampleRate, getPid());
+    mPlayer = new cPlayer (*this, mSampleRate, getPid(), mHasAudio);
     mPlayer->startPlayPts (audioFrame->getPts());
     }
   }

@@ -476,7 +476,8 @@ int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 //}}}
 //{{{  class cTransportStream::cService
 //{{{
-cTransportStream::cService::cService (uint16_t sid, bool live) : mSid(sid), mLive(live) {
+cTransportStream::cService::cService (uint16_t sid, bool live, bool hasAudio) :
+    mSid(sid), mLive(live), mHasAudio(hasAudio) {
 
   mRenderStreams[eRenderVideo].setLabel ("vid:");
   mRenderStreams[eRenderAudio].setLabel ("aud:");
@@ -604,7 +605,7 @@ void cTransportStream::cService::toggleStream (eRenderType renderType) {
 
       case eRenderAudio :
       case eRenderDescription:
-        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), stream.getPid(), getLive()));
+        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), stream.getPid(), getLive(), hasAudio()));
         return;
 
       case eRenderSubtitle :
@@ -733,12 +734,11 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 
 //{{{
 cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, const string& recordRoot,
-                                    bool live, bool showAllServices, bool showFirstService)
+                                    bool live, bool showAllServices, bool showFirstService, bool hasAudio)
     : mDvbMultiplex(dvbMultiplex),
       mRecordRoot(recordRoot),
-      mLive(live),
-      mShowAllServices(showAllServices),
-      mShowFirstService(showFirstService) {
+      mLive(live), mHasAudio(hasAudio),
+      mShowAllServices(showAllServices), mShowFirstService(showFirstService) {
   }
 //}}}
 
@@ -1385,7 +1385,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
     if (!getService (sid)) {
      //{{{  found new service, create cService
      cLog::log (LOGINFO, fmt::format ("create service {}", sid));
-     cService& service = mServiceMap.emplace (sid, cService(sid, getLive())).first->second;
+     cService& service = mServiceMap.emplace (sid, cService(sid, getLive(), mHasAudio)).first->second;
 
      service.setProgramPid (pidInfo->getPid());
      pidInfo->setSid (sid);

@@ -662,8 +662,8 @@ namespace {
   class cTellyApp : public cApp {
   public:
     //{{{
-    cTellyApp (const cPoint& windowSize, bool fullScreen, bool headless)
-      : cApp("telly", windowSize, fullScreen, headless, true) {}
+    cTellyApp (const cPoint& windowSize, bool fullScreen, bool headless, bool hasAudio)
+      : cApp("telly", windowSize, fullScreen, headless, true), mHasAudio(hasAudio) {}
     //}}}
     virtual ~cTellyApp() = default;
 
@@ -684,7 +684,7 @@ namespace {
     void fileSource (const string& filename, bool showAllServices) {
     // create fileSource, any channel
 
-      mTransportStream = new cTransportStream (kMultiplexes[0], "", false, showAllServices, true);
+      mTransportStream = new cTransportStream (kMultiplexes[0], "", false, showAllServices, true, mHasAudio);
       if (mTransportStream) {
         // launch fileSource thread
         mFileName = cFileUtils::resolve (filename);
@@ -731,7 +731,7 @@ namespace {
       }
     //}}}
 
-    // dvbSource
+    // liveDvbSource
     bool isDvbSource() const { return mDvbSource; }
     cDvbSource& getDvbSource() { return *mDvbSource; }
     //{{{
@@ -747,7 +747,7 @@ namespace {
       if (multiplex.mFrequency)
         mDvbSource = new cDvbSource (multiplex.mFrequency, 0);
 
-      mTransportStream = new cTransportStream (multiplex, recordRoot, true, showAllServices, false);
+      mTransportStream = new cTransportStream (multiplex, recordRoot, true, showAllServices, false, mHasAudio);
       if (mTransportStream) {
         mLiveThread = thread ([=]() {
           cLog::setThreadName ("dvb");
@@ -829,6 +829,8 @@ namespace {
     //}}}
 
   private:
+    const bool mHasAudio;
+
     cTransportStream* mTransportStream = nullptr;
 
     cMultiView mMultiView;
@@ -1319,6 +1321,7 @@ int main (int numArgs, char* args[]) {
   bool fullScreen = false;
   bool showAllServices = true;
   bool headless = false;
+  bool hasAudio = true;
   eLogLevel logLevel = LOGINFO;
   cDvbMultiplex selectedMultiplex = kMultiplexes[1];
   string filename;
@@ -1337,6 +1340,8 @@ int main (int numArgs, char* args[]) {
       headless = true;
       showAllServices = false;
       }
+    else if (param == "noaudio")
+      hasAudio = false;
     else if (param == "log1")
       logLevel = LOGINFO1;
     else if (param == "log2")
@@ -1364,13 +1369,13 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, "tellyApp - all,simple,head,full,log1,log2,log3,multiplexName,filename");
+  cLog::log (LOGNOTICE, "tellyApp - all,simple,head,noaudio,full,log1,log2,log3,multiplexName,filename");
 
   // list static registered UI classes
   cUI::listRegisteredClasses();
 
   // app
-  cTellyApp tellyApp ({1920/2, 1080/2}, fullScreen, headless);
+  cTellyApp tellyApp ({1920/2, 1080/2}, fullScreen, headless, hasAudio);
   if (!headless) {
     tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
     tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));

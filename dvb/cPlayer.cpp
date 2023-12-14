@@ -29,8 +29,8 @@
 using namespace std;
 //}}}
 
-cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid) :
-    mAudioRender(audioRender), mSampleRate(sampleRate) {
+cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, bool hasAudio) :
+    mAudioRender(audioRender), mSampleRate(sampleRate), mHasAudio(hasAudio) {
 
   mPlayerThread = thread ([=]() {
     cLog::setThreadName (fmt::format ("{:4d}", pid));
@@ -127,7 +127,11 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid) 
 
       //{{{  linux play srcSamples
       #ifndef _WIN32
-        audio.play (2, srcSamples, numSamples, 1.f);
+        if (mHasAudio)
+          audio.play (2, srcSamples, numSamples, 1.f);
+        else
+          this_thread::sleep_for ((numSamples / 48000000)us);
+
       #endif
       //}}}
       //mAudioRender.freeFramesBeforePts (mPts);

@@ -11,7 +11,7 @@ class cAudioRender;
 
 class cPlayer {
 public:
-  cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid);
+  cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, bool hasAudio);
   virtual ~cPlayer();
 
   bool isPlaying() const { return mPlaying; }
@@ -31,6 +31,7 @@ public:
 private:
   cAudioRender& mAudioRender;
   const uint32_t mSampleRate;
+  const bool mHasAudio;
 
   std::thread mPlayerThread;
 
