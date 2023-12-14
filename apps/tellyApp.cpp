@@ -85,6 +85,7 @@ namespace {
     const string kRootDir = "/home/pi/tv/";
   #endif
   //}}}
+
   //{{{
   class cView {
   public:
@@ -656,14 +657,11 @@ namespace {
     bool mSelectFull = false;
     };
   //}}}
-
   //{{{
   class cTellyApp : public cApp {
   public:
-    //{{{
     cTellyApp (iUI* ui, const cPoint& windowSize, bool fullScreen, bool headless, bool hasAudio)
       : cApp (ui, "telly", windowSize, fullScreen, headless, true), mHasAudio(hasAudio) {}
-    //}}}
     virtual ~cTellyApp() = default;
 
     cMultiView& getMultiView() { return mMultiView; }

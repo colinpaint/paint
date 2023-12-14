@@ -62,11 +62,7 @@ public:
 //{{{
 class cImguiUI : public iUI {
 public:
-  cImguiUI() = default;
-  virtual ~cImguiUI() = default;
-
   void virtual draw (cApp& app) final {
-
     bool show_demo_window = true;
     app.getGraphics().clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
 

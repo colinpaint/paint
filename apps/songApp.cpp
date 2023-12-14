@@ -762,16 +762,7 @@ namespace {
   //{{{
   class cSongUI : public iUI {
   public:
-    cSongUI() = default;
-    //{{{
-    virtual ~cSongUI() {
-      // close the file mapping object
-      }
-    //}}}
-
-    //{{{
     virtual void draw (cApp& app) final {
-
       cSongApp& songApp = (cSongApp&)app;
 
       ImGui::SetNextWindowPos (ImVec2(0,0));
@@ -840,7 +831,6 @@ namespace {
 
       ImGui::End();
       }
-    //}}}
 
   private:
     bool isDrawMonoSpaced() { return mShowMonoSpaced; }

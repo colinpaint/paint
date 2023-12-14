@@ -16,6 +16,7 @@ struct ImFont;
 class cApp;
 class iUI {
 public:
+  virtual ~iUI() = default;
   virtual void draw (cApp& app) = 0;
   };
 

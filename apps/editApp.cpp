@@ -4599,13 +4599,6 @@ namespace {
   //{{{
   class cEditUI : public iUI {
   public:
-    cEditUI() = default;
-    //{{{
-    virtual ~cEditUI() {
-      delete mMemEdit;
-      }
-    //}}}
-
     virtual void draw (cApp& app) final {
       ImGui::SetNextWindowPos (ImVec2(0,0));
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
