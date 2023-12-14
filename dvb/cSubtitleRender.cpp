@@ -32,7 +32,7 @@ constexpr size_t kMaxFrames = 0;
 // public:
 //{{{
 cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
-    : cRender(kQueued, name, "sub", streamType, pid,
+    : cRender(kQueued, name, "sub ", streamType, pid,
               kPtsPer25HzFrame, live, kMaxFrames,
               [&]() noexcept { return getFrame(); },
               [&](cFrame* frame) noexcept { addFrame (frame); }) {

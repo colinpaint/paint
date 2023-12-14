@@ -49,7 +49,7 @@ constexpr size_t kFileMaxFrames = 50;
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
-    : cRender(kQueued, name, "vid", streamType, pid,
+    : cRender(kQueued, name, "vid ", streamType, pid,
               kPtsPer25HzFrame, live, live ? kLiveMaxFrames : kFileMaxFrames,
               [&]() noexcept { return getFrame(); },
               [&](cFrame* frame) noexcept { addFrame (frame); }) {
