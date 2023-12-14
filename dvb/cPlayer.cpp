@@ -130,8 +130,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, 
         if (mHasAudio)
           audio.play (2, srcSamples, numSamples, 1.f);
         else
-          this_thread::sleep_for ((numSamples / 48000000)us);
-
+          this_thread::sleep_for (21333us); // !!!! crude HD bodge for noAudio raspberry pi !!!
       #endif
       //}}}
       //mAudioRender.freeFramesBeforePts (mPts);
