@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <chrono>
 
-#include "cFFmpegAudioDecoder.h"
+#include "cSongFFmpegAudioDecoder.h"
 
 #include "../common/utils.h"
 #include "../common/cLog.h"
@@ -32,7 +32,7 @@ using namespace std;
 //}}}
 
 //{{{
-cFFmpegAudioDecoder::cFFmpegAudioDecoder (eAudioFrameType frameType) {
+cSongFFmpegAudioDecoder::cSongFFmpegAudioDecoder(eAudioFrameType frameType) {
 
   AVCodecID streamType;
 
@@ -61,7 +61,7 @@ cFFmpegAudioDecoder::cFFmpegAudioDecoder (eAudioFrameType frameType) {
   }
 //}}}
 //{{{
-cFFmpegAudioDecoder::~cFFmpegAudioDecoder() {
+cSongFFmpegAudioDecoder::~cSongFFmpegAudioDecoder() {
 
   if (mAvContext)
     avcodec_close (mAvContext);
@@ -71,7 +71,7 @@ cFFmpegAudioDecoder::~cFFmpegAudioDecoder() {
 //}}}
 
 //{{{
-float* cFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, int64_t pts) {
+float* cSongFFmpegAudioDecoder::decodeFrame (const uint8_t* framePtr, int frameLen, int64_t pts) {
 
   float* samples = nullptr;
 

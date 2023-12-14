@@ -71,7 +71,6 @@ namespace {
   const vector<string> kRtp4  = {"rtp 4"};
   const vector<string> kRtp5  = {"rtp 5"};
   //}}}
-
   //{{{
   class cSongApp : public cApp {
   public:

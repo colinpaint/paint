@@ -30,7 +30,7 @@
 // decoder
 #include "../decoders/cAudioParser.h"
 #include "../decoders/iAudioDecoder.h"
-#include "../decoders/cFFmpegAudioDecoder.h"
+#include "../decoders/cSongFFmpegAudioDecoder.h"
 
 // net
 #include "../net/cHttp.h"
@@ -979,15 +979,15 @@ protected:
     switch (frameType) {
       case eAudioFrameType::eMp3:
         cLog::log (LOGINFO, "createAudioDecoder ffmpeg mp3");
-        return new cFFmpegAudioDecoder (frameType);
+        return new cSongFFmpegAudioDecoder(frameType);
 
       case eAudioFrameType::eAacAdts:
         cLog::log (LOGINFO, "createAudioDecoder ffmpeg aacAdts");
-        return new cFFmpegAudioDecoder (frameType);
+        return new cSongFFmpegAudioDecoder(frameType);
 
       case eAudioFrameType::eAacLatm:
         cLog::log (LOGINFO, "createAudioDecoder ffmpeg aacLatm");
-        return new cFFmpegAudioDecoder (frameType);
+        return new cSongFFmpegAudioDecoder(frameType);
 
       default:
         cLog::log (LOGERROR, "createAudioDecoder frameType:%d", frameType);

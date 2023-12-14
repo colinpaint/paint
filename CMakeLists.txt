@@ -75,17 +75,6 @@ project (editApp VERSION 1.0.0)
     target_link_libraries (${PROJECT_NAME} PRIVATE app stdc++fs)
   endif()
 
-# songApp
-project (songApp VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} apps/songApp.cpp)
-
-  target_include_directories (${PROJECT_NAME} PRIVATE stb)
-  if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app song dvb net opengl32 ws2_32)
-  else()
-    target_link_libraries (${PROJECT_NAME} PRIVATE app song dvb net stdc++fs pthread)
-  endif()
-
 # tellyApp
 project (tellyApp VERSION 1.0.0)
   add_executable (${PROJECT_NAME} apps/tellyApp.cpp)
@@ -93,7 +82,7 @@ project (tellyApp VERSION 1.0.0)
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb decoders audio opengl32 ws2_32)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app song dvb net decoders audio opengl32 ws2_32)
   else()
-    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb decoders audio stdc++fs pthread)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app song dvb net decoders audio stdc++fs pthread)
   endif()

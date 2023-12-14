@@ -1,10 +1,12 @@
-// cWinAudio16.h
+// cWinAudio32.h
 //{{{  includes
 #pragma once
 
 #include <stdint.h>
 #include <xaudio2.h>
 #include <vector>
+
+#include "../audio/audioWASAPI.h"
 #include "iAudio.h"
 //}}}
 
@@ -13,11 +15,11 @@ public:
   cAudio (int srcChannels, int srcSampleRate, int latency, bool bit16);
   virtual ~cAudio();
 
-  int getDstNumChannels() { return mDstNumChannels; }
+  int getDstChannels() { return mDstChannels; }
   int getDstSampleRate() { return mDstSampleRate; }
   int getDstChannelMask() { return mDstChannelMask; }
 
-  int getSrcNumChannels() { return mSrcNumChannels; }
+  int getSrcChannels() { return mSrcChannels; }
 
   float getVolume() { return mDstVolume; }
   float getDefaultVolume() { return kDefaultVolume; }
@@ -64,6 +66,8 @@ private:
   void open (int srcChannels, int srcSampleRate);
   void close();
 
+  const bool mBit16;
+
   // vars
   IXAudio2* mXAudio2;
   IXAudio2MasteringVoice* mMasteringVoice;
@@ -74,15 +78,16 @@ private:
   eMixDown mMixDown = eBestMix;
   eMixDown mLastMixDown = eNoMix;
 
-  int mDstNumChannels = 0;
+  int mDstChannels = 0;
   int mDstSampleRate = 0;
   int mDstChannelMask = 0;
 
-  int mSrcNumChannels = 0;
+  int mSrcChannels = 0;
   int mSrcSampleRate = 0;
 
   // buffers
-  int16_t* mSilence = nullptr;
+  int16_t* mSilence16 = nullptr;
+  float* mSilence = nullptr;
 
   int mBufferIndex = 0;
   std::vector<XAUDIO2_BUFFER> mBuffers;

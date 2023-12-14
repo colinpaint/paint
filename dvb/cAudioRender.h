@@ -13,7 +13,7 @@ class cAudioDecoder;
 class cPlayer;
 //}}}
 
-enum class eAudioFrameType { eUnknown, eId3Tag, eWav, eMp3, eAacAdts, eAacLatm };
+//enum class eAudioFrameType { eUnknown, eId3Tag, eWav, eMp3, eAacAdts, eAacLatm };
 
 class cAudioRender : public cRender {
 public:

@@ -1,45 +1,41 @@
 // cWinAudio.cpp
-#ifdef _WIN32
+#ifdef __WIN32
+
 //{{{  includes
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
-#include "cWinAudio16.h"
+#include "cWinAudio.h"
 
 #include <cstdint>
 #include "../common/cLog.h"
-#include "fmt/format.h"
 
 #pragma comment(lib,"Xaudio2.lib")
 //}}}
-//{{{  const
 const int kMaxBuffers = 2;
-
 const int kMaxChannels = 6;
-const int kBitsPerSample = 16;
-const int kBytesPerChannel = 2;
-
 const int kMaxSamples = 2048;
-//}}}
 
 // public
 //{{{
-cAudio::cAudio (int srcNumChannels, int srcSampleRate, int latency, bool bit16) : mDstVolume(kDefaultVolume) {
-  (void)bit16;
+cAudio::cAudio (int srcChannels, int srcSampleRate, int latency, bool bit16) : 
+    mDstVolume(kDefaultVolume), mBit16(bit16) {
   (void)latency;
 
   // alloc and clear mSilence
-  mSilence = (int16_t*)malloc (kMaxChannels * kMaxSamples * kBytesPerChannel);
-  memset (mSilence, 0, kMaxChannels * kMaxSamples * kBytesPerChannel);
+  mSilence16 = (int16_t*)malloc (kMaxChannels * (bit16 ? 16 : 32) * (bit16 ? 16 : 32)/8);
+  memset (mSilence16, 0, kMaxChannels * kMaxSamples * (bit16 ? 16 : 32)/8);
+
+  mSilence = (float*)calloc (kMaxChannels * kMaxSamples, (bit16 ? 16 : 32)/8);
 
   // guess initial buffer alloc
   for (auto i = 0; i < kMaxBuffers; i++) {
     XAUDIO2_BUFFER buffer;
     memset (&buffer, 0, sizeof (XAUDIO2_BUFFER));
-    buffer.AudioBytes = kMaxChannels * kMaxSamples * kBytesPerChannel;
-    buffer.pAudioData = (const BYTE*)malloc (kMaxChannels * kMaxSamples * kBytesPerChannel);
+    buffer.AudioBytes = kMaxChannels * kMaxSamples * (bit16 ? 16 : 32)/8;
+    buffer.pAudioData = (const BYTE*)malloc (kMaxChannels * kMaxSamples * (bit16 ? 16 : 32)/8);
     mBuffers.push_back (buffer);
     }
-  open (srcNumChannels, srcSampleRate);
+  open (srcChannels, srcSampleRate);
   }
 //}}}
 //{{{
@@ -60,19 +56,19 @@ void cAudio::setVolume (float volume) {
   }
 //}}}
 //{{{
-void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, float pitch) {
+void cAudio::play (int srcChannels, void* srcSamples, int srcNumSamples, float pitch) {
 // play silence if src == nullptr, maintains timing
 
-  if (srcNumChannels != mSrcNumChannels) {
+  if (srcChannels != mSrcChannels) {
     //{{{  recreate sourceVoice with new num of channels
-    cLog::log (LOGNOTICE, fmt::format ("audPlay - srcChannels:{} changedTo {}",mSrcNumChannels, srcNumChannels));
+    cLog::log (LOGNOTICE, fmt::format ("audPlay - srcChannels:{} changedTo {}",mSrcChannels, srcChannels));
     close();
 
-    open (srcNumChannels, mSrcSampleRate);
+    open (srcChannels, mSrcSampleRate);
     }
     //}}}
 
-  int len = srcNumChannels * srcNumSamples * 2;
+  int len = srcChannels * srcNumSamples * 2;
   if (srcNumSamples > kMaxSamples) {
     //{{{  error, return
     cLog::log (LOGERROR, fmt::format("audPlay - too many samples {}",srcNumSamples));
@@ -94,9 +90,9 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
   mMasteringVoice->SetVolume (mDstVolume, XAUDIO2_COMMIT_NOW);
 
   if (mMixDown != mLastMixDown) {
-    if (mSrcNumChannels == 6) {
+    if (mSrcChannels == 6) {
       // 5.1 src
-      if (mDstNumChannels == 2) {
+      if (mDstChannels == 2) {
         //{{{  6 to 2 mixDown
         switch (mMixDown) {
           case eFLFR: {
@@ -104,7 +100,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
             float kLevelMatrix[12] = {// FL   FR    C    W    BL  BR
                                         1.f, 0.f, 0.f, 0.f, 0.f, 0.f,  // dstL
                                         0.f, 1.f, 0.f, 0.f, 0.f, 0.f}; // dstR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -113,7 +109,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
             float kLevelMatrix[12] = {// FL   FR    C    W    BL  BR
                                         0.f, 0.f, 0.f, 0.f, 1.f, 0.f,  // dstL
                                         0.f, 0.f, 0.f, 0.f, 0.f, 1.f}; // dstR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -122,7 +118,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
             float kLevelMatrix[12] = {// FL   FR    C    W    BL  BR
                                         0.f, 0.f, 1.f, 0.f, 0.f, 0.f,  // dstL
                                         0.f, 0.f, 1.f, 0.f, 0.f, 0.f}; // dstR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -131,7 +127,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
             float kLevelMatrix[12] = {// FL   FR    C    W    BL  BR
                                         0.f, 0.f, 0.f, 1.f, 0.f, 0.f,  // dstL
                                         0.f, 0.f, 0.f, 1.f, 0.f, 0.f}; // dstR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -141,7 +137,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
             float kLevelMatrix[12] = {// FL   FR    C    W    BL  BR
                                         1.f, 0.f, 1.f, 1.f, 1.f, 0.f,  // dstL
                                         0.f, 1.f, 1.f, 1.f, 0.f, 1.f}; // dstR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -149,7 +145,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
         cLog::log (LOGNOTICE, fmt::format ("6 to 2 mixdown changed to {}", (int)mMixDown));
         }
         //}}}
-      else if (mDstNumChannels == 4) {
+      else if (mDstChannels == 4) {
         //{{{  6 to 4 mixDown
         switch (mMixDown) {
           case eFLFR: {
@@ -159,7 +155,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                         0.f, 1.f, 0.f, 0.f, 0.f, 0.f,  // dstFR
                                         1.f, 0.f, 0.f, 0.f, 0.f, 0.f,  // dstBL
                                         0.f, 1.f, 0.f, 0.f, 0.f, 0.f}; // dstBR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -170,7 +166,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                         0.f, 0.f, 0.f, 0.f, 0.f, 1.f,  // dstFR
                                         0.f, 0.f, 0.f, 0.f, 1.f, 0.f,  // dstBL
                                         0.f, 0.f, 0.f, 0.f, 0.f, 1.f}; // dstBR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -181,7 +177,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                         0.f, 0.f, 1.f, 0.f, 0.f, 0.f,  // dstFR
                                         0.f, 0.f, 1.f, 0.f, 0.f, 0.f,  // dstBL
                                         0.f, 0.f, 1.f, 0.f, 0.f, 0.f}; // dstBR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -192,7 +188,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                         0.f, 0.f, 0.f, 1.f, 0.f, 0.f,  // dstFR
                                         0.f, 0.f, 0.f, 1.f, 0.f, 0.f,  // dstBL
                                         0.f, 0.f, 0.f, 1.f, 0.f, 0.f}; // dstBR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -204,7 +200,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                         0.f, 1.f, 1.f, 1.f, 0.f, 0.f,  // dst FR + C + W
                                         0.f, 0.f, 0.f, 0.f, 1.f, 0.f,  // dst BL
                                         0.f, 0.f, 0.f, 0.f, 0.f, 1.f}; // dst BR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -223,7 +219,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                         0.f, 1.f, 0.f, 0.f, 0.f, 0.f,  // dst W
                                         1.f, 0.f, 0.f, 0.f, 0.f, 0.f,  // dst BL
                                         0.f, 1.f, 0.f, 0.f, 0.f, 0.f}; // dst BR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -236,7 +232,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                         0.f, 0.f, 0.f, 0.f, 0.f, 1.f,  // dst W
                                         0.f, 0.f, 0.f, 0.f, 1.f, 0.f,  // dst BL
                                         0.f, 0.f, 0.f, 0.f, 0.f, 1.f}; // dst BR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -249,7 +245,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                         0.f, 0.f, 1.f, 0.f, 0.f, 0.f,  // dst W
                                         0.f, 0.f, 1.f, 0.f, 0.f, 0.f,  // dst BL
                                         0.f, 0.f, 1.f, 0.f, 0.f, 0.f}; // dst BR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -262,7 +258,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                         0.f, 0.f, 0.f, 1.f, 0.f, 0.f,  // dst W
                                         0.f, 0.f, 0.f, 1.f, 0.f, 0.f,  // dst BL
                                         0.f, 0.f, 0.f, 1.f, 0.f, 0.f}; // dst BR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -275,7 +271,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                         0.f, 0.f, 0.f, 1.f, 0.f, 0.f,  // dst W
                                         0.f, 0.f, 0.f, 0.f, 1.f, 0.f,  // dst BL
                                         0.f, 0.f, 0.f, 0.f, 0.f, 1.f}; // dst BR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -288,7 +284,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                         0.f, 1.f, 1.f, 1.f, 0.f, 1.f,  // dst W    full stereo mix
                                         0.f, 0.f, 0.f, 0.f, 1.f, 0.f,  // dst BL
                                         0.f, 0.f, 0.f, 0.f, 0.f, 1.f}; // dst BR
-            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+            mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
             break;
             }
             //}}}
@@ -299,23 +295,23 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
       }
     else {
       // stereo src
-      if (mDstNumChannels == 2) {
+      if (mDstChannels == 2) {
         //{{{  2 to 2 mixDown
         float kLevelMatrix[4] = {// L   R
                                   1.f, 0.f,  // dst L
                                   0.f, 1.f}; // dst R
-        mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+        mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
         cLog::log (LOGNOTICE, fmt::format("2 to 2 mixdown changed to{}  nothing changed ", (int)mMixDown));
         }
         //}}}
-      else if (mDstNumChannels == 4) {
+      else if (mDstChannels == 4) {
         //{{{  2 to 4 mixDown
         float kLevelMatrix[8] = {// L   R
                                  1.f, 0.f,  // dst FL
                                  0.f, 1.f,  // dst FR
                                  1.f, 0.f,  // dst BL
                                  0.f, 1.f}; // dst BR
-        mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+        mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
         }
         //}}}
       else {
@@ -327,7 +323,7 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
                                    0.f, 1.f,  // dst W
                                    1.f, 0.f,  // dst BL
                                    0.f, 1.f}; // dst BR
-        mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcNumChannels, mDstNumChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
+        mSourceVoice->SetOutputMatrix (mMasteringVoice, mSrcChannels, mDstChannels, kLevelMatrix, XAUDIO2_COMMIT_NOW);
         cLog::log (LOGNOTICE, fmt::format ("2 to 6 mixdown changed to {} nothing changed", (int)mMixDown));
         }
         //}}}
@@ -346,9 +342,9 @@ void cAudio::play (int srcNumChannels, void* srcSamples, int srcNumSamples, floa
 //}}}
 
 //{{{
-void cAudio::open (int srcNumChannels, int srcSampleRate) {
+void cAudio::open (int srcChannels, int srcSampleRate) {
 
-  mSrcNumChannels = srcNumChannels;
+  mSrcChannels = srcChannels;
   mSrcSampleRate = srcSampleRate;
 
   // create XAudio2 engine.
@@ -375,20 +371,20 @@ void cAudio::open (int srcNumChannels, int srcSampleRate) {
   // get masteringVoice outChannels, sampleRate
   XAUDIO2_VOICE_DETAILS masteringVoiceDetails;
   mMasteringVoice->GetVoiceDetails (&masteringVoiceDetails);
-  mDstNumChannels = masteringVoiceDetails.InputChannels;
+  mDstChannels = masteringVoiceDetails.InputChannels;
   mDstSampleRate = masteringVoiceDetails.InputSampleRate;
   cLog::log (LOGINFO, fmt::format ("cWinAudio - audOpen mask:{} channels{} sampleRate{}",
-                                   mDstChannelMask, mDstNumChannels, mDstSampleRate));
+                                   mDstChannelMask, mDstChannels, mDstSampleRate));
 
   // create sourceVoice
   WAVEFORMATEX waveformatex;
   memset (&waveformatex, 0, sizeof (WAVEFORMATEX));
   waveformatex.wFormatTag      = WAVE_FORMAT_PCM;
-  waveformatex.wBitsPerSample  = kBitsPerSample;
-  waveformatex.nChannels       = (WORD)srcNumChannels;
+  waveformatex.wBitsPerSample  = mBit16 ? 16 : 32;
+  waveformatex.nChannels       = (WORD)srcChannels;
   waveformatex.nSamplesPerSec  = (unsigned long)srcSampleRate;
-  waveformatex.nBlockAlign     = (WORD)(srcNumChannels * kBitsPerSample / 8);
-  waveformatex.nAvgBytesPerSec = waveformatex.nSamplesPerSec * srcNumChannels * kBitsPerSample / 8;
+  waveformatex.nBlockAlign     = (WORD)(srcChannels * (bit16 ? 16 : 32) / 8);
+  waveformatex.nAvgBytesPerSec = waveformatex.nSamplesPerSec * srcChannels * (bit16 ? 16 : 32) / 8;
 
   if (mXAudio2->CreateSourceVoice (&mSourceVoice, &waveformatex,
                                    0, XAUDIO2_DEFAULT_FREQ_RATIO, &mVoiceCallback, nullptr, nullptr) != S_OK) {
