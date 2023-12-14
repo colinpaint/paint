@@ -38,7 +38,6 @@
 #include "../app/cPlatform.h"
 #include "../app/cGraphics.h"
 #include "../app/myImgui.h"
-#include "../app/cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
@@ -77,8 +76,8 @@ namespace {
   class cSongApp : public cApp {
   public:
     //{{{
-    cSongApp (const cPoint& windowSize, bool fullScreen)
-        : cApp("songApp",windowSize, fullScreen, false, true) {
+    cSongApp (iUI* ui, const cPoint& windowSize, bool fullScreen)
+        : cApp(ui, "songApp",windowSize, fullScreen, false, true) {
 
       mSongLoader = new cSongLoader();
       }
@@ -761,12 +760,9 @@ namespace {
     };
   //}}}
   //{{{
-  class cSongUI : public cUI {
+  class cSongUI : public iUI {
   public:
-    //{{{
-    cSongUI (const string& name) : cUI(name) {
-      }
-    //}}}
+    cSongUI() = default;
     //{{{
     virtual ~cSongUI() {
       // close the file mapping object
@@ -774,7 +770,7 @@ namespace {
     //}}}
 
     //{{{
-    void addToDrawList (cApp& app) final {
+    virtual void draw (cApp& app) final {
 
       cSongApp& songApp = (cSongApp&)app;
 
@@ -855,10 +851,6 @@ namespace {
     bool mShowMonoSpaced = false;
 
     cDrawSong mDrawSong;
-
-    // self registration
-    static cUI* create (const string& className) { return new cSongUI (className); }
-    inline static const bool mRegistered = registerClass ("songUI", &create);
     };
   //}}}
   }
@@ -899,11 +891,8 @@ int main (int numArgs, char* args[]) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, "songApp - full log1 log2 log3 filename");
 
-  // list static registered UI classes
-  cUI::listRegisteredClasses();
-
   // app
-  cSongApp songApp ({800, 480}, fullScreen);
+  cSongApp songApp (new cSongUI(), {800, 480}, fullScreen);
   songApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
   songApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
   songApp.setSongName (params.empty() ? "" : params[0]);

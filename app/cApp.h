@@ -13,9 +13,16 @@ class cGraphics;
 struct ImFont;
 //}}}
 
+class cApp;
+class iUI {
+public:
+  virtual void draw (cApp& app) = 0;
+  };
+
 class cApp {
 public:
-  cApp (const std::string& name, const cPoint& windowSize, bool fullScreen, bool headless, bool vsync);
+  cApp (iUI* ui, const std::string& name, const cPoint& windowSize,
+        bool fullScreen, bool headless, bool vsync);
   virtual ~cApp();
 
   static bool isPlatformDefined() { return mPlatformDefined; }
@@ -50,4 +57,6 @@ private:
 
   ImFont* mMainFont;
   ImFont* mMonoFont;
+
+  iUI* mUI;
   };

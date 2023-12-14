@@ -41,7 +41,6 @@
 #include "../app/cPlatform.h"
 #include "../app/cGraphics.h"
 #include "../app/myImgui.h"
-#include "../app/cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
@@ -662,8 +661,8 @@ namespace {
   class cTellyApp : public cApp {
   public:
     //{{{
-    cTellyApp (const cPoint& windowSize, bool fullScreen, bool headless, bool hasAudio)
-      : cApp("telly", windowSize, fullScreen, headless, true), mHasAudio(hasAudio) {}
+    cTellyApp (iUI* ui, const cPoint& windowSize, bool fullScreen, bool headless, bool hasAudio)
+      : cApp (ui, "telly", windowSize, fullScreen, headless, true), mHasAudio(hasAudio) {}
     //}}}
     virtual ~cTellyApp() = default;
 
@@ -850,10 +849,10 @@ namespace {
     };
   //}}}
   //{{{
-  class cTellyView {
+  class cTellyUI : public iUI {
   public:
     //{{{
-    void draw (cApp& app) {
+    virtual void draw (cApp& app) final {
 
       cTellyApp& tellyApp = (cTellyApp&)app;
       app.getGraphics().clear ({ (int32_t)ImGui::GetIO().DisplaySize.x,
@@ -1286,31 +1285,6 @@ namespace {
     array <cTexture*,4> mSubtitleTextures = { nullptr };
     };
   //}}}
-  //{{{
-  class cTellyUI : public cUI {
-  public:
-    cTellyUI (const string& name) : cUI(name) {}
-    virtual ~cTellyUI() = default;
-
-    //{{{
-    void addToDrawList (cApp& app) final {
-    // draw into window
-
-      mTellyView.draw (app);
-      }
-    //}}}
-
-  private:
-    // self registration
-    static cUI* create (const string& className) { return new cTellyUI (className); }
-
-    // static var self registration trick
-    inline static const bool mRegistered = registerClass ("telly", &create);
-
-    // vars
-    cTellyView mTellyView;
-    };
-  //}}}
   }
 
 // main
@@ -1371,11 +1345,8 @@ int main (int numArgs, char* args[]) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, "tellyApp - all,simple,head,noaudio,full,log1,log2,log3,multiplexName,filename");
 
-  // list static registered UI classes
-  cUI::listRegisteredClasses();
-
   // app
-  cTellyApp tellyApp ({1920/2, 1080/2}, fullScreen, headless, hasAudio);
+  cTellyApp tellyApp (new cTellyUI(), {1920/2, 1080/2}, fullScreen, headless, hasAudio);
   if (!headless) {
     tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
     tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));

@@ -43,7 +43,6 @@
 #include "../app/cPlatform.h"
 #include "../app/cGraphics.h"
 #include "../app/myImgui.h"
-#include "../app/cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
@@ -1517,8 +1516,8 @@ namespace {
   //{{{
   class cEditApp : public cApp {
   public:
-    cEditApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-      : cApp ("fed", windowSize, fullScreen, false, vsync) {}
+    cEditApp (iUI* ui, const cPoint& windowSize, bool fullScreen, bool vsync)
+      : cApp (ui, "fed", windowSize, fullScreen, false, vsync) {}
     virtual ~cEditApp() = default;
 
     bool getMemEditing() const { return mMemEditing; };
@@ -4598,18 +4597,16 @@ namespace {
   //}}}
   //}}}
   //{{{
-  class cEditUI : public cUI {
+  class cEditUI : public iUI {
   public:
-    cEditUI (const string& name) : cUI(name) {}
+    cEditUI() = default;
     //{{{
     virtual ~cEditUI() {
       delete mMemEdit;
       }
     //}}}
 
-    //{{{
-    void addToDrawList (cApp& app) final {
-
+    virtual void draw (cApp& app) final {
       ImGui::SetNextWindowPos (ImVec2(0,0));
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 
@@ -4642,15 +4639,10 @@ namespace {
       else
         mFedEdit.draw (app);
       }
-    //}}}
 
   private:
     cFedEdit mFedEdit;
     cMemEdit* mMemEdit;
-
-    // self registration
-    static cUI* create (const string& className) { return new cEditUI (className); }
-    inline static const bool mRegistered = registerClass ("edit", &create);
     };
   //}}}
   }
@@ -4684,11 +4676,8 @@ int main (int numArgs, char* args[]) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, fmt::format ("edit"));
 
-  // list static registered UI classes
-  cUI::listRegisteredClasses();
-
   // app
-  cEditApp editApp ({1000, 900}, fullScreen, vsync);
+  cEditApp editApp (new cEditUI(), {1000, 900}, fullScreen, vsync);
   editApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   editApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
   editApp.setDocumentName (params.empty() ? "../../fed/cEditUI.cpp" : params[0], memEdit);

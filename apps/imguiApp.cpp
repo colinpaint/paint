@@ -38,7 +38,6 @@
 #include "../app/cPlatform.h"
 #include "../app/cGraphics.h"
 #include "../app/myImgui.h"
-#include "../app/cUI.h"
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
@@ -48,8 +47,8 @@ using namespace std;
 //{{{
 class cImguiApp : public cApp {
 public:
-  cImguiApp (const cPoint& windowSize, bool fullScreen, bool vsync)
-    : cApp ("imguiApp", windowSize, fullScreen, false, vsync) {}
+  cImguiApp (iUI* ui, const cPoint& windowSize, bool fullScreen, bool vsync)
+    : cApp (ui, "imguiApp", windowSize, fullScreen, false, vsync) {}
   virtual ~cImguiApp() = default;
 
   virtual void drop (const vector<string>& dropItems) final {
@@ -61,13 +60,12 @@ public:
   };
 //}}}
 //{{{
-class cImguiUI : public cUI {
+class cImguiUI : public iUI {
 public:
-  cImguiUI (const string& name) : cUI(name) {}
-
+  cImguiUI() = default;
   virtual ~cImguiUI() = default;
 
-  void addToDrawList (cApp& app) final {
+  void virtual draw (cApp& app) final {
 
     bool show_demo_window = true;
     app.getGraphics().clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
@@ -95,11 +93,6 @@ public:
 
     ImGui::ShowDemoWindow (&show_demo_window);
     }
-
-private:
-  // self registration
-  static cUI* create (const string& className) { return new cImguiUI (className); }
-  inline static const bool mRegistered = registerClass ("imgui", &create);
   };
 //}}}
 
@@ -130,11 +123,8 @@ int main (int numArgs, char* args[]) {
   cLog::init (logLevel);
   cLog::log (LOGNOTICE, fmt::format ("fed"));
 
-  // list static registered UI classes
-  cUI::listRegisteredClasses();
-
   // ImguiApp
-  cImguiApp imguiApp ({1000, 900}, fullScreen, vsync);
+  cImguiApp imguiApp (new cImguiUI(), {1000, 900}, fullScreen, vsync);
   imguiApp.mainUILoop();
 
   return EXIT_SUCCESS;

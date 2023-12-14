@@ -55,7 +55,7 @@ endif()
 
 # imguiApp
 project (imguiApp VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} apps/imguiApp.cpp app/cUI.h app/cUI.cpp)
+  add_executable (${PROJECT_NAME} apps/imguiApp.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -66,7 +66,7 @@ project (imguiApp VERSION 1.0.0)
 
 # edit app
 project (editApp VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} apps/editApp.cpp app/cUI.h app/cUI.cpp)
+  add_executable (${PROJECT_NAME} apps/editApp.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -77,7 +77,7 @@ project (editApp VERSION 1.0.0)
 
 # songApp
 project (songApp VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} apps/songApp.cpp app/cUI.h app/cUI.cpp)
+  add_executable (${PROJECT_NAME} apps/songApp.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
@@ -88,7 +88,7 @@ project (songApp VERSION 1.0.0)
 
 # tellyApp
 project (tellyApp VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} apps/tellyApp.cpp app/cUI.h app/cUI.cpp )
+  add_executable (${PROJECT_NAME} apps/tellyApp.cpp)
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE stb)

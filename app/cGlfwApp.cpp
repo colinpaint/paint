@@ -33,9 +33,6 @@
   #include "cGLES3Graphics.h"
 #endif
 
-// ui
-#include "cUI.h"
-
 // utils
 #include "../common/cLog.h"
 
@@ -293,7 +290,8 @@ private:
 
 // cApp
 //{{{
-cApp::cApp (const string& name, const cPoint& windowSize, bool fullScreen, bool headless, bool vsync) {
+cApp::cApp (iUI* ui, const string& name, const cPoint& windowSize, bool fullScreen,
+            bool headless, bool vsync) : mUI(ui) {
 
   if (headless)
     cLog::log (LOGINFO, fmt::format ("{} created headless", name));
@@ -362,8 +360,7 @@ void cApp::windowResize (int width, int height) {
   mGraphics->newFrame();
   mPlatform->newFrame();
   ImGui::NewFrame();
-
-  cUI::render (*this);
+  mUI->draw (*this);
   ImGui::Render();
   mGraphics->renderDrawData();
 
@@ -381,8 +378,7 @@ void cApp::mainUILoop() {
       mGraphics->newFrame();
       mPlatform->newFrame();
       ImGui::NewFrame();
-
-      cUI::render (*this);
+      mUI->draw (*this);
       ImGui::Render();
       mGraphics->renderDrawData();
 
