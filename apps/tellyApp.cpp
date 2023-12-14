@@ -1364,7 +1364,7 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, "tellyApp - all simple full log1 log2 log3 multiplexName filename");
+  cLog::log (LOGNOTICE, "tellyApp - all,simple,head,full,log1,log2,log3,multiplexName,filename");
 
   // list static registered UI classes
   cUI::listRegisteredClasses();

@@ -107,7 +107,7 @@ public:
 protected:
   virtual uint8_t** getPixels() = 0;
   virtual int* getStrides() = 0;
-  virtual void releasePixels() = 0;
+  virtual void releasePixels() {}
 
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
