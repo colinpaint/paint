@@ -41,13 +41,14 @@ using namespace std;
 
 constexpr bool kQueued = true;
 constexpr int64_t kDefaultPtsPerFrame = 1920;
-constexpr size_t kMaxFrames = 48;
+constexpr size_t kLiveMaxFrames = 24;
+constexpr size_t kFileMaxFrames = 48;
 
 // cAudioRender
 //{{{
 cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
     : cRender(kQueued, name, "aud", streamType, pid,
-              kDefaultPtsPerFrame, live, kMaxFrames,
+              kDefaultPtsPerFrame, live, live ? kLiveMaxFrames : kFileMaxFrames,
               [&]() noexcept { return getFrame(); },
               [&](cFrame* frame) noexcept { addFrame (frame); }),
       mSampleRate(48000), mSamplesPerFrame(1024) {
