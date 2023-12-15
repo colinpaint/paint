@@ -24,7 +24,6 @@
 #include "../common/cLog.h"
 //}}}
 
-// cAudioBuffer
 //{{{
 class cAudioBuffer {
 public:
@@ -32,9 +31,7 @@ public:
 
   cAudioBuffer (float* data, int numSamples, int numChannels)
       : mNumSamples(numSamples), mNumChannels(numChannels), mStride(mNumChannels) {
-
     assert (numChannels <= mMaxNumChannels);
-
     // stride and channels pointers for channel interleaved contiguous float 32bit samples
     for (auto i = 0; i < mNumChannels; ++i)
       mChannels[i] = data + i;
@@ -522,11 +519,9 @@ private:
   };
 //}}}
 
-// cAudioDeviceList
 enum class cAudioDeviceListEvent { eListChanged, eDefaultInputChanged, eDefaultOutputChanged, };
 class cAudioDeviceList : public std::forward_list <cAudioDevice> {};
 
-// cAudioDeviceMonitor
 //{{{
 class cAudioDeviceMonitor {
 public:
@@ -684,13 +679,6 @@ private:
   };
 //}}}
 //{{{
-inline static void setAudioDeviceListCallback (cAudioDeviceListEvent event, std::function<void()>&& callback) {
-  cAudioDeviceMonitor::instance().registerCallback (event, std::move (callback));
-  }
-//}}}
-
-// cAudioDeviceEnumerator
-//{{{
 class cAudioDeviceEnumerator {
 public:
   static std::optional<cAudioDevice> getDefaultInputDevice() { return getDefaultDevice (false); }
@@ -795,7 +783,29 @@ private:
   };
 //}}}
 
-inline static cAudioDeviceList getAudioInputDeviceList() { return cAudioDeviceEnumerator::getInputDeviceList(); }
-inline static cAudioDeviceList getAudioOutputDeviceList() { return cAudioDeviceEnumerator::getOutputDeviceList(); }
-inline static std::optional<cAudioDevice> getDefaultAudioInputDevice() { return cAudioDeviceEnumerator::getDefaultInputDevice(); }
-inline static std::optional<cAudioDevice> getDefaultAudioOutputDevice() { return cAudioDeviceEnumerator::getDefaultOutputDevice(); }
+// statics
+//{{{
+inline static void setAudioDeviceListCallback (cAudioDeviceListEvent event, 
+                                               std::function<void()>&& callback) {
+
+  cAudioDeviceMonitor::instance().registerCallback (event, std::move (callback));
+  }
+//}}}
+
+//{{{
+inline static cAudioDeviceList getAudioInputDeviceList() { 
+  return cAudioDeviceEnumerator::getInputDeviceList(); }
+//}}}
+//{{{
+inline static cAudioDeviceList getAudioOutputDeviceList() { 
+  return cAudioDeviceEnumerator::getOutputDeviceList(); }
+//}}}
+
+//{{{
+inline static std::optional<cAudioDevice> getDefaultAudioInputDevice() { 
+  return cAudioDeviceEnumerator::getDefaultInputDevice(); }
+//}}}
+//{{{
+inline static std::optional<cAudioDevice> getDefaultAudioOutputDevice() {
+  return cAudioDeviceEnumerator::getDefaultOutputDevice(); }
+//}}}

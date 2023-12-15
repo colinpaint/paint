@@ -1119,7 +1119,7 @@ public:
     bool waitForPts = false;
     int64_t loadPts = -1;
 
-    // init parsers, callbacks
+    // init parsers
     //{{{
     auto sdtCallback = [&](int sid, const string& name) noexcept {
       auto it = mServices.find (sid);
@@ -1244,6 +1244,8 @@ public:
       mTimeString = timeString;
       };
     //}}}
+
+    // init callbacks
     mPidParsers.insert (map<int,cPidParser*>::value_type (0x00, new cPatParser (programCallback)));
     mPidParsers.insert (map<int,cPidParser*>::value_type (0x11, new cSdtParser (sdtCallback)));
     mPidParsers.insert (map<int,cPidParser*>::value_type (0x14, new cTdtParser (tdtCallback)));
@@ -1289,6 +1291,7 @@ public:
 
     delete audioDecoder;
     //}}}
+
     mRunning = false;
     }
   //}}}

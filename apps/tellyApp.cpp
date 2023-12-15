@@ -62,7 +62,7 @@
 using namespace std;
 //}}}
 namespace {
-  //{{{  channels const
+  //{{{  const song channels
   const vector<string> kRadio1 = {"r1", "a128"};
   const vector<string> kRadio2 = {"r2", "a128"};
   const vector<string> kRadio3 = {"r3", "a320"};
@@ -780,7 +780,6 @@ namespace {
 
       ImGui::SetNextWindowPos (ImVec2(0,0));
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-
       ImGui::Begin ("song", &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
 
       //{{{  draw top buttons
@@ -836,9 +835,7 @@ namespace {
       // draw song
       if (isDrawMonoSpaced())
         ImGui::PushFont (app.getMonoFont());
-
       mDrawSong.draw (songApp.getSong(), isDrawMonoSpaced());
-
       if (isDrawMonoSpaced())
         ImGui::PopFont();
 

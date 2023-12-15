@@ -43,7 +43,7 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kQueued = true;
-constexpr size_t kLiveMaxFrames = 25;
+constexpr size_t kLiveMaxFrames = 30;
 constexpr size_t kFileMaxFrames = 50;
 
 // cVideoRender

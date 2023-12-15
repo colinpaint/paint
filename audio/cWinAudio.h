@@ -66,9 +66,13 @@ private:
   void open (int srcChannels, int srcSampleRate);
   void close();
 
+  // vars
+  const int mLatency;
   const bool mBit16;
 
-  // vars
+  // buffer
+  float* mSilence = nullptr;
+
   IXAudio2* mXAudio2;
   IXAudio2MasteringVoice* mMasteringVoice;
   IXAudio2SourceVoice* mSourceVoice;
@@ -84,10 +88,6 @@ private:
 
   int mSrcChannels = 0;
   int mSrcSampleRate = 0;
-
-  // buffers
-  int16_t* mSilence16 = nullptr;
-  float* mSilence = nullptr;
 
   int mBufferIndex = 0;
   std::vector<XAUDIO2_BUFFER> mBuffers;

@@ -17,14 +17,10 @@ const int kMaxSamples = 2048;
 
 // public
 //{{{
-cAudio::cAudio (int srcChannels, int srcSampleRate, int latency, bool bit16) : 
-    mDstVolume(kDefaultVolume), mBit16(bit16) {
-  (void)latency;
+cAudio::cAudio (int srcChannels, int srcSampleRate, int latency, bool bit16) :
+    mDstVolume(kDefaultVolume), mLatency(latency), mBit16(bit16) {
 
-  // alloc and clear mSilence
-  mSilence16 = (int16_t*)malloc (kMaxChannels * (bit16 ? 16 : 32) * (bit16 ? 16 : 32)/8);
-  memset (mSilence16, 0, kMaxChannels * kMaxSamples * (bit16 ? 16 : 32)/8);
-
+  // alloc and clear mSilence, works for 32float and 16bit
   mSilence = (float*)calloc (kMaxChannels * kMaxSamples, (bit16 ? 16 : 32)/8);
 
   // guess initial buffer alloc
