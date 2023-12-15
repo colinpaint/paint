@@ -152,15 +152,6 @@
     float getDefaultVolume() { return 0.7f; };
     float getMaxVolume() { return 1.0f; }
 
-    bool getMixedFL() { return true; }
-    bool getMixedFR() { return true; }
-    bool getMixedC()  { return true; }
-    bool getMixedW()  { return true; }
-    bool getMixedBL() { return true; }
-    bool getMixedBR() { return true; }
-    eMixDown getMixDown() { return mMixDown; }
-    void setMixDown (eMixDown mixDown) { mMixDown = mixDown; }
-
     //{{{
     void play (int srcNumChannels, void* srcSamples, int srcNumSamples, float pitch) {
       (void)pitch;

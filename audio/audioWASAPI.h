@@ -785,7 +785,7 @@ private:
 
 // statics
 //{{{
-inline static void setAudioDeviceListCallback (cAudioDeviceListEvent event, 
+inline static void setAudioDeviceListCallback (cAudioDeviceListEvent event,
                                                std::function<void()>&& callback) {
 
   cAudioDeviceMonitor::instance().registerCallback (event, std::move (callback));
@@ -793,16 +793,16 @@ inline static void setAudioDeviceListCallback (cAudioDeviceListEvent event,
 //}}}
 
 //{{{
-inline static cAudioDeviceList getAudioInputDeviceList() { 
+inline static cAudioDeviceList getAudioInputDeviceList() {
   return cAudioDeviceEnumerator::getInputDeviceList(); }
 //}}}
 //{{{
-inline static cAudioDeviceList getAudioOutputDeviceList() { 
+inline static cAudioDeviceList getAudioOutputDeviceList() {
   return cAudioDeviceEnumerator::getOutputDeviceList(); }
 //}}}
 
 //{{{
-inline static std::optional<cAudioDevice> getDefaultAudioInputDevice() { 
+inline static std::optional<cAudioDevice> getDefaultAudioInputDevice() {
   return cAudioDeviceEnumerator::getDefaultInputDevice(); }
 //}}}
 //{{{
