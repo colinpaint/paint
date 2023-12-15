@@ -2160,12 +2160,10 @@ int main (int numArgs, char* args[]) {
       tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
       tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
       }
-
     if (filename.empty())
       tellyApp.liveDvbSource (selectedMultiplex, kRootDir, showAllServices);
     else
       tellyApp.fileSource (filename, showAllServices);
-
     tellyApp.mainUILoop();
     }
 
