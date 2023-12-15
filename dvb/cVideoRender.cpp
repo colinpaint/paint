@@ -1,5 +1,10 @@
 // cVideoRender.cpp
 //{{{  includes
+#ifdef _WIN32
+  #define _CRT_SECURE_NO_WARNINGS
+  #define WIN32_LEAN_AND_MEAN
+#endif
+
 #include "cVideoRender.h"
 #include "cVideoFrame.h"
 
@@ -51,8 +56,28 @@ constexpr size_t kFileMaxFrames = 50;
 cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
     : cRender(kQueued, name, "vid ", streamType, pid,
               kPtsPer25HzFrame, live, live ? kLiveMaxFrames : kFileMaxFrames,
-              [&]() noexcept { return getFrame(); },
-              [&](cFrame* frame) noexcept { addFrame (frame); }) {
+
+              // getFrame lambda
+              [&]() noexcept {
+                return hasMaxFrames() ? reuseBestFrame() : new cFFmpegVideoFrame();
+                },
+
+              // addFrame lambda
+              [&](cFrame* frame) noexcept {
+                mPts = frame->getPts();
+                mPtsDuration = frame->getPtsDuration();
+                cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+                videoFrame->mQueueSize = getQueueSize();
+                videoFrame->mTextureDirty = true;
+
+                // save some videoFrame info
+                mWidth = videoFrame->getWidth();
+                mHeight = videoFrame->getHeight();
+                mFrameInfo = videoFrame->getInfoString();
+
+                cRender::addFrame (frame);
+                }
+              ) {
 
   mDecoder = new cFFmpegVideoDecoder (*this, streamType);
   }
@@ -61,45 +86,15 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid
 //{{{
 cVideoFrame* cVideoRender::getVideoFrameAtPts (int64_t pts) {
 
-  if (mFramesMap.empty() || !mPtsDuration)
-    return nullptr;
-  else
-    return dynamic_cast<cVideoFrame*>(getFrameAtPts (pts));
+  return (mFramesMap.empty() || !mPtsDuration) ? 
+    nullptr : dynamic_cast<cVideoFrame*>(getFrameAtPts (pts));
   }
 //}}}
 //{{{
 cVideoFrame* cVideoRender::getVideoFrameAtOrAfterPts (int64_t pts) {
 
-  if (mFramesMap.empty() || !mPtsDuration)
-    return nullptr;
-  else
-    return dynamic_cast<cVideoFrame*>(getFrameAtOrAfterPts (pts));
-  }
-//}}}
-
-// decoder callbacks
-//{{{
-cFrame* cVideoRender::getFrame() {
-  return hasMaxFrames() ? reuseBestFrame() : new cFFmpegVideoFrame();
-  }
-//}}}
-//{{{
-void cVideoRender::addFrame (cFrame* frame) {
-
-  mPts = frame->getPts();
-  mPtsDuration = frame->getPtsDuration();
-
-  cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-
-  videoFrame->mQueueSize = getQueueSize();
-  videoFrame->mTextureDirty = true;
-
-  // save some videoFrame info
-  mWidth = videoFrame->getWidth();
-  mHeight = videoFrame->getHeight();
-  mFrameInfo = videoFrame->getInfoString();
-
-  cRender::addFrame (frame);
+  return (mFramesMap.empty() || !mPtsDuration) ? 
+    nullptr : dynamic_cast<cVideoFrame*>(getFrameAtOrAfterPts (pts));
   }
 //}}}
 

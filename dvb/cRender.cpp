@@ -17,7 +17,7 @@ using namespace std;
 //}}}
 
 //{{{
-cRender::cRender (bool queued, const string& name, const string& threadName, 
+cRender::cRender (bool queued, const string& name, const string& threadName,
                   uint8_t streamType, uint16_t pid,
                   int64_t ptsDuration, bool live, size_t maxFrames,
                   function <cFrame* ()> getFrameCallback,
@@ -71,25 +71,6 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
   }
 //}}}
 //{{{
-cFrame* cRender::reuseBestFrame() {
-
-  cFrame* frame;
-
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  // reuse youngestfor now, could be different if seeking
-  auto it = mFramesMap.begin();
-  frame = it->second;
-  mFramesMap.erase (it);
-  }
-
-  //cLog::log (LOGINFO, fmt::format ("reuseBestFrame:{}", utils::getFullPtsString (frame->getPts())));
-  frame->releaseResources();
-  return frame;
-  }
-//}}}
-//{{{
 bool cRender::throttle (int64_t pts) {
 // return true if fileRead should throttle
 // - if not live, mFramesMap not reached max, and frames beforePts < mMaxFrames/2
@@ -113,6 +94,35 @@ bool cRender::throttle (int64_t pts) {
   }
   }
 //}}}
+//{{{
+cFrame* cRender::reuseBestFrame() {
+
+  cFrame* frame;
+
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  // reuse youngestfor now, could be different if seeking
+  auto it = mFramesMap.begin();
+  frame = it->second;
+  mFramesMap.erase (it);
+  }
+
+  //cLog::log (LOGINFO, fmt::format ("reuseBestFrame:{}", utils::getFullPtsString (frame->getPts())));
+  frame->releaseResources();
+  return frame;
+  }
+//}}}
+//{{{
+void cRender::addFrame (cFrame* frame) {
+
+  //cLog::log (LOGINFO, fmt::format ("addFrame {} {}",
+  //                                 utils::getFullPtsString (frame->getPts()),
+  //                                 utils::getFullPtsString ((frame->getPts() / frame->getPtsDuration()) * frame->getPtsDuration())));
+  unique_lock<shared_mutex> lock (mSharedMutex);
+  mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
+  }
+//}}}
 
 // process
 //{{{
@@ -133,16 +143,6 @@ bool cRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t 
     mDecoder->decode (pid, pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback);
     return false;
     }
-  }
-//}}}
-//{{{
-void cRender::addFrame (cFrame* frame) {
-
-  //cLog::log (LOGINFO, fmt::format ("addFrame {} {}",
-  //                                 utils::getFullPtsString (frame->getPts()),
-  //                                 utils::getFullPtsString ((frame->getPts() / frame->getPtsDuration()) * frame->getPtsDuration())));
-  unique_lock<shared_mutex> lock (mSharedMutex);
-  mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
   }
 //}}}
 

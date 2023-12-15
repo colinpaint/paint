@@ -34,8 +34,21 @@ constexpr size_t kMaxFrames = 0;
 cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
     : cRender(kQueued, name, "sub ", streamType, pid,
               kPtsPer25HzFrame, live, kMaxFrames,
-              [&]() noexcept { return getFrame(); },
-              [&](cFrame* frame) noexcept { addFrame (frame); }) {
+
+              // getFrame lambda
+              [&]() noexcept {
+                // !!! no relloacate yet !!!
+                return hasMaxFrames() ? new cSubtitleFrame() : new cSubtitleFrame();
+                },
+
+              // addFrame lambda
+              [&](cFrame* frame) noexcept {
+                mPts = frame->getPts();
+                mPtsDuration = frame->getPtsDuration();
+                //cRender::addframe (frame);
+                //cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->mPts)));
+                }
+              ) {
 
   mDecoder = new cSubtitleDecoder (*this);
   }
@@ -54,24 +67,6 @@ size_t cSubtitleRender::getHighWatermark() const {
 //{{{
 cSubtitleImage& cSubtitleRender::getImage (size_t line) {
   return dynamic_cast<cSubtitleDecoder*>(mDecoder)->getImage (line);
-  }
-//}}}
-
-// decoder callbacks - ??? should mak ethem work for pts presentation ????
-//{{{
-cFrame* cSubtitleRender::getFrame() {
-// !!! no relloacate yet !!!
-  return hasMaxFrames() ? new cSubtitleFrame() : new cSubtitleFrame();
-  }
-//}}}
-//{{{
-void cSubtitleRender::addFrame (cFrame* frame) {
-
-  mPts = frame->getPts();
-  mPtsDuration = frame->getPtsDuration();
-
-  //cRender::addframe (frame);
-  //cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->mPts)));
   }
 //}}}
 

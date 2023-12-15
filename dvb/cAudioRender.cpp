@@ -48,9 +48,35 @@ constexpr size_t kFileMaxFrames = 48;
 cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, bool live, bool hasAudio)
     : cRender(kQueued, name, "aud ", streamType, pid,
               kDefaultPtsPerFrame, live, live ? kLiveMaxFrames : kFileMaxFrames,
-              [&]() noexcept { return getFrame(); },
-              [&](cFrame* frame) noexcept { addFrame (frame); }),
-      mSampleRate(48000), mSamplesPerFrame(1024), mHasAudio(hasAudio) {
+
+              // getFrame lambda
+              [&]() noexcept {
+                return hasMaxFrames() ? reuseBestFrame() : new cAudioFrame();
+                },
+
+              // addFrame lambda
+              [&](cFrame* frame) noexcept {
+                cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+                if (mSampleRate != audioFrame->getSampleRate()) {
+                  cLog::log (LOGERROR, fmt::format ("cAudioRender::addFrame sampleRate changed {} to {}",
+                                                    mSampleRate, audioFrame->getSampleRate()));
+                  mSampleRate = audioFrame->getSampleRate();
+                  }
+
+                mPts = frame->getPts();
+                mPtsDuration = frame->getPtsDuration();
+                mSamplesPerFrame = audioFrame->getSamplesPerFrame();
+                mFrameInfo = audioFrame->getInfoString();
+                audioFrame->calcPower();
+                cRender::addFrame (frame);
+
+                if (!mPlayer) {
+                  mPlayer = new cPlayer (*this, mSampleRate, getPid(), mHasAudio);
+                  mPlayer->startPlayPts (audioFrame->getPts());
+                  }
+                }
+              ),
+    mSampleRate(48000), mSamplesPerFrame(1024), mHasAudio(hasAudio) {
 
   mDecoder = new cFFmpegAudioDecoder (*this, streamType);
   }
@@ -66,45 +92,8 @@ cAudioFrame* cAudioRender::getAudioFrameAtPts (int64_t pts) {
 //{{{
 cAudioFrame* cAudioRender::getAudioFrameAtOrAfterPts (int64_t pts) {
 
-  if (mFramesMap.empty() || !mPtsDuration)
-    return nullptr;
-  else
-    return dynamic_cast<cAudioFrame*>(getFrameAtOrAfterPts (pts));
-  }
-//}}}
-
-// decoder callbacks
-//{{{
-cFrame* cAudioRender::getFrame() {
-  return hasMaxFrames() ? reuseBestFrame() : new cAudioFrame();
-  }
-//}}}
-//{{{
-void cAudioRender::addFrame (cFrame* frame) {
-
-  cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
-
-  if (mSampleRate != audioFrame->getSampleRate()) {
-    cLog::log (LOGERROR, fmt::format ("cAudioRender::addFrame sampleRate changed {} to {}",
-                                      mSampleRate, audioFrame->getSampleRate()));
-    mSampleRate = audioFrame->getSampleRate();
-    }
-
-  // save last pts and duration
-  mPts = frame->getPts();
-  mPtsDuration = frame->getPtsDuration();
-
-  mSamplesPerFrame = audioFrame->getSamplesPerFrame();
-  mFrameInfo = audioFrame->getInfoString();
-  audioFrame->calcPower();
-
-  cRender::addFrame (frame);
-
-  // create and start player
-  if (!mPlayer) {
-    mPlayer = new cPlayer (*this, mSampleRate, getPid(), mHasAudio);
-    mPlayer->startPlayPts (audioFrame->getPts());
-    }
+  return (mFramesMap.empty() || !mPtsDuration) ?
+    nullptr : dynamic_cast<cAudioFrame*>(getFrameAtOrAfterPts (pts));
   }
 //}}}
 

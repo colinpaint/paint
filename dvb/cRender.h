@@ -42,12 +42,12 @@ public:
 
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
-  cFrame* reuseBestFrame();
   bool throttle (int64_t pts);
+  cFrame* reuseBestFrame();
+  void addFrame (cFrame* frame);
 
   virtual std::string getInfoString() const;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip);
-  virtual void addFrame (cFrame* frame);
 
   void toggleLog();
   void header();

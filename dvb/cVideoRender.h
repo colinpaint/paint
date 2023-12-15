@@ -24,10 +24,6 @@ public:
   cVideoFrame* getVideoFrameAtPts (int64_t pts);
   cVideoFrame* getVideoFrameAtOrAfterPts (int64_t pts);
 
-  // callbacks
-  cFrame* getFrame();
-  void addFrame (cFrame* frame);
-
   // overrides
   virtual std::string getInfoString() const final;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
