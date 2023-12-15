@@ -109,7 +109,7 @@ using namespace std;
 
       song->togglePlaying();
       //{{{  audioPlayer thread, video follows playPts
-      cAudio audio (2, song->getSampleRate(), 40000, false);
+      cAudio audio (2, song->getSampleRate(), 40000);
 
       cSong::cFrame* frame;
       while (!mExit) {

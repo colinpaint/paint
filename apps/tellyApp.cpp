@@ -63,6 +63,7 @@
 using namespace std;
 //}}}
 namespace {
+  // song
   //{{{  const song channels
   const vector<string> kRadio1 = {"r1", "a128"};
   const vector<string> kRadio2 = {"r2", "a128"};
@@ -855,8 +856,9 @@ namespace {
     };
   //}}}
 
+  // telly
   //{{{
-  const vector <cDvbMultiplex> kMultiplexes = {
+  const vector <cDvbMultiplex> kDvbMultiplexes = {
       { "file", false, 0, {}, {} },  // dummy multiplex for file
 
       { "hd", 626000000, false,
@@ -1477,7 +1479,7 @@ namespace {
     void fileSource (const string& filename, bool showAllServices) {
     // create fileSource, any channel
 
-      mTransportStream = new cTransportStream (kMultiplexes[0], "", false, showAllServices, true, mHasAudio);
+      mTransportStream = new cTransportStream (kDvbMultiplexes[0], "", false, showAllServices, true, mHasAudio);
       if (mTransportStream) {
         // launch fileSource thread
         mFileName = cFileUtils::resolve (filename);
@@ -2092,7 +2094,7 @@ int main (int numArgs, char* args[]) {
   bool hasAudio = true;
   bool playSong = false;
   eLogLevel logLevel = LOGINFO;
-  cDvbMultiplex selectedMultiplex = kMultiplexes[1];
+  cDvbMultiplex selectedMultiplex = kDvbMultiplexes[1];
   string filename;
   //{{{  parse commandLine to params
   // parse params
@@ -2124,7 +2126,7 @@ int main (int numArgs, char* args[]) {
       filename = param;
 
       // look for named multiplex
-      for (auto& multiplex : kMultiplexes) {
+      for (auto& multiplex : kDvbMultiplexes) {
         if (param == multiplex.mName) {
           // found named multiplex
           selectedMultiplex = multiplex;

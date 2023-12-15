@@ -50,7 +50,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, 
 
     #else
       // linux
-      cAudio audio (2, mSampleRate, 4096, false);
+      cAudio audio (2, mSampleRate, 4096);
 
       // raise to max priority
       sched_param sch_params;
