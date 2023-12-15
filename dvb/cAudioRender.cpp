@@ -39,9 +39,9 @@ extern "C" {
 using namespace std;
 //}}}
 constexpr bool kQueued = true;
-constexpr int64_t kDefaultPtsPerFrame = 1920;
 constexpr size_t kLiveMaxFrames = 24;
 constexpr size_t kFileMaxFrames = 48;
+constexpr int64_t kDefaultPtsPerFrame = 1920;
 
 // cAudioRender
 //{{{

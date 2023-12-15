@@ -9,12 +9,11 @@ project (dvb VERSION 1.0.0)
                                cVideoRender.h cVideoRender.cpp
                                cAudioRender.h cAudioRender.cpp
                                cSubtitleFrame.h cSubtitleDecoder.h cSubtitleImage.h
-                               cSubtitleRender.h cSubtitleRender.cpp
-                               )
+                               cSubtitleRender.h cSubtitleRender.cpp)
 
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     target_include_directories (${PROJECT_NAME} PUBLIC ../include/ffmpeg)
-    target_link_libraries (${PROJECT_NAME} PUBLIC 
+    target_link_libraries (${PROJECT_NAME} PUBLIC
                            avdevice avfilter avformat avcodec avutil swresample swscale)
   else ()
     find_package (PkgConfig REQUIRED)

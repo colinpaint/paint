@@ -92,7 +92,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, 
             float* dst = mSamples.data();
             switch (audioFrame->getNumChannels()) {
               //{{{
-              case 1: // mono to 2 interleaved 2 channels
+              case 1: // mono to 2 interleaved channels
                 for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
                   *dst++ = *src;
                   *dst++ = *src++;
