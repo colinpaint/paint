@@ -64,8 +64,8 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid
 
               // addFrame lambda
               [&](cFrame* frame) noexcept {
-                mPts = frame->getPts();
-                mPtsDuration = frame->getPtsDuration();
+                setPts (frame->getPts());
+                setPtsDuration (frame->getPtsDuration());
                 cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
                 videoFrame->mQueueSize = getQueueSize();
                 videoFrame->mTextureDirty = true;
@@ -76,8 +76,7 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid
                 mFrameInfo = videoFrame->getInfoString();
 
                 cRender::addFrame (frame);
-                }
-              ) {
+                }) {
 
   mDecoder = new cFFmpegVideoDecoder (*this, streamType);
   }
@@ -86,14 +85,14 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid
 //{{{
 cVideoFrame* cVideoRender::getVideoFrameAtPts (int64_t pts) {
 
-  return (mFramesMap.empty() || !mPtsDuration) ?
+  return (mFramesMap.empty() || !getPtsDuration()) ?
     nullptr : dynamic_cast<cVideoFrame*>(getFrameAtPts (pts));
   }
 //}}}
 //{{{
 cVideoFrame* cVideoRender::getVideoFrameAtOrAfterPts (int64_t pts) {
 
-  return (mFramesMap.empty() || !mPtsDuration) ?
+  return (mFramesMap.empty() || !getPtsDuration()) ?
     nullptr : dynamic_cast<cVideoFrame*>(getFrameAtOrAfterPts (pts));
   }
 //}}}

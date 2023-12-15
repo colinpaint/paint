@@ -35,6 +35,8 @@ public:
 
   int64_t getPts() const { return mPts; }
   int64_t getPtsDuration() const { return mPtsDuration; }
+  void setPts (int64_t pts) { mPts = pts; }
+  void setPtsDuration (int64_t ptsDuration) { mPtsDuration = ptsDuration; }
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   std::map<int64_t,cFrame*> getFramesMap() { return mFramesMap; }
@@ -63,9 +65,6 @@ protected:
   // frameMap
   std::map <int64_t, cFrame*> mFramesMap;
 
-  int64_t mPts = 0;
-  int64_t mPtsDuration = 0;
-
   // decode queue
   bool mQueueExit = false;
   bool mQueueRunning = false;
@@ -86,5 +85,8 @@ private:
   const std::function <void (cFrame* frame)> mAddFrameCallback;
 
   cMiniLog mMiniLog;
-  const size_t mMaxLogSize = 64;
+  const size_t mMaxLogSize;
+
+  int64_t mPts = 0;
+  int64_t mPtsDuration;
   };

@@ -63,8 +63,8 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid
                   mSampleRate = audioFrame->getSampleRate();
                   }
 
-                mPts = frame->getPts();
-                mPtsDuration = frame->getPtsDuration();
+                setPts (frame->getPts());
+                setPtsDuration (frame->getPtsDuration());
                 mSamplesPerFrame = audioFrame->getSamplesPerFrame();
                 mFrameInfo = audioFrame->getInfoString();
                 audioFrame->calcPower();
@@ -74,10 +74,9 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid
                   mPlayer = new cPlayer (*this, mSampleRate, getPid(), mHasAudio);
                   mPlayer->startPlayPts (audioFrame->getPts());
                   }
-                }
-              ),
-    mSampleRate(48000), mSamplesPerFrame(1024), 
-    mLive(live), mHasAudio(hasAudio) {
+                }),
+      mSampleRate(48000), mSamplesPerFrame(1024),
+      mLive(live), mHasAudio(hasAudio) {
 
   mDecoder = new cFFmpegAudioDecoder (*this, streamType);
   }
@@ -86,14 +85,14 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid
 //{{{
 cAudioFrame* cAudioRender::getAudioFrameAtPts (int64_t pts) {
 
-  return (mFramesMap.empty() || !mPtsDuration) ?
+  return (mFramesMap.empty() || !getPtsDuration()) ?
     nullptr : dynamic_cast<cAudioFrame*>(getFrameAtPts (pts));
   }
 //}}}
 //{{{
 cAudioFrame* cAudioRender::getAudioFrameAtOrAfterPts (int64_t pts) {
 
-  return (mFramesMap.empty() || !mPtsDuration) ?
+  return (mFramesMap.empty() || !getPtsDuration()) ?
     nullptr : dynamic_cast<cAudioFrame*>(getFrameAtOrAfterPts (pts));
   }
 //}}}

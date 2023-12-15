@@ -26,8 +26,6 @@ public:
         bool fullScreen, bool headless, bool vsync);
   virtual ~cApp();
 
-  static bool isPlatformDefined() { return mPlatformDefined; }
-
   // get interfaces
   std::string getName() const;
   cPlatform& getPlatform() const { return *mPlatform; }
@@ -51,13 +49,10 @@ public:
   void mainUILoop();
 
 private:
-  inline static bool mPlatformDefined = false;
-
   cPlatform* mPlatform = nullptr;
   cGraphics* mGraphics = nullptr;
 
   ImFont* mMainFont;
   ImFont* mMonoFont;
-
   iUI* mUI;
   };

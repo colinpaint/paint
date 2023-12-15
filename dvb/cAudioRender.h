@@ -35,13 +35,11 @@ public:
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
 
 private:
+  uint32_t mSampleRate;
+  size_t mSamplesPerFrame;
   const bool mLive;
   const bool mHasAudio;
   cPlayer* mPlayer = nullptr;
-
-  // vars
-  uint32_t mSampleRate;
-  size_t mSamplesPerFrame;
 
   std::string mFrameInfo;
   };

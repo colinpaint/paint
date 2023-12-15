@@ -2089,7 +2089,7 @@ int main (int numArgs, char* args[]) {
   bool showAllServices = true;
   bool headless = false;
   bool hasAudio = true;
-  bool song = false;
+  bool playSong = false;
   eLogLevel logLevel = LOGINFO;
   cDvbMultiplex selectedMultiplex = kMultiplexes[1];
   string filename;
@@ -2111,7 +2111,7 @@ int main (int numArgs, char* args[]) {
     else if (param == "noaudio")
       hasAudio = false;
     else if (param == "song")
-      song = true;
+      playSong = true;
     else if (param == "log1")
       logLevel = LOGINFO1;
     else if (param == "log2")
@@ -2139,9 +2139,9 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, "tellyApp - all,simple,head,noaudio,full,log1,log2,log3,multiplexName,filename");
+  cLog::log (LOGNOTICE, "tellyApp - all,simple,head,noaudio,song,full,log1,log2,log3,multiplexName,filename");
 
-  if (song) {
+  if (playSong) {
     cSongApp songApp (new cSongUI(), {800, 480}, fullScreen);
     songApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
     songApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));

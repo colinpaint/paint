@@ -6,6 +6,8 @@
   #include <windows.h>
 #endif
 
+#include "cApp.h"
+
 #include <cstdint>
 #include <cmath>
 #include <string>
@@ -29,17 +31,16 @@
 
 #if defined(GL3)
   #include "cGL3Graphics.h"
-#elif defined(GLES30) || defined(GLES31) || defined(GLES32)
+#else
   #include "cGLES3Graphics.h"
 #endif
 
-// utils
-#include "../common/cLog.h"
-
 // app
-#include "cApp.h"
 #include "cPlatform.h"
 #include "cGraphics.h"
+
+// utils
+#include "../common/cLog.h"
 
 using namespace std;
 //}}}
@@ -320,7 +321,6 @@ cApp::cApp (iUI* ui, const string& name, const cPoint& windowSize, bool fullScre
       mPlatform = glfwPlatform;
       mPlatform->setFullScreen (fullScreen);
       mPlatform->setVsync (vsync);
-      mPlatformDefined = true;
       }
     else
       cLog::log (LOGERROR, "cApp - graphics init failed");

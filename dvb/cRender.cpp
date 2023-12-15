@@ -15,6 +15,7 @@
 
 using namespace std;
 //}}}
+constexpr size_t kMaxLogSize = 64;
 
 //{{{
 cRender::cRender (bool queued, const string& name, const string& threadName,
@@ -22,12 +23,13 @@ cRender::cRender (bool queued, const string& name, const string& threadName,
                   int64_t ptsDuration, size_t maxFrames,
                   function <cFrame* ()> getFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
-    mQueued(queued), mName(name), mThreadName(threadName), 
+    mQueued(queued), mName(name), mThreadName(threadName),
     mStreamType(streamType), mPid(pid),
-    mPtsDuration(ptsDuration), mMaxFrames(maxFrames),
-    mGetFrameCallback(getFrameCallback), 
+    mMaxFrames(maxFrames),
+    mGetFrameCallback(getFrameCallback),
     mAddFrameCallback(addFrameCallback),
-    mMiniLog ("log") {
+    mMiniLog ("log"), mMaxLogSize(kMaxLogSize),
+    mPtsDuration(ptsDuration) {
 
   if (queued)
     thread ([=](){ startQueueThread (threadName + "q"); }).detach();
@@ -83,7 +85,7 @@ bool cRender::throttle (int64_t pts) {
   { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  int numFramesBeforePts = 0;
+  size_t numFramesBeforePts = 0;
   auto it = mFramesMap.begin();
   while ((it != mFramesMap.end()) && (it->first < (pts / mPtsDuration))) {
     if (++numFramesBeforePts >= mMaxFrames/2) // if mFramesMap at least centred about pts, no throttle
