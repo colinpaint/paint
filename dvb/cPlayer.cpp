@@ -133,7 +133,6 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, 
           this_thread::sleep_for (21333us); // !!!! crude HD bodge for noAudio raspberry pi !!!
       #endif
       //}}}
-      //mAudioRender.freeFramesBeforePts (mPts);
       mPts += ptsDuration;
       //{{{  close windows play lamda
       #ifdef _WIN32
