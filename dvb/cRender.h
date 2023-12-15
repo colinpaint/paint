@@ -24,7 +24,7 @@ class cRender {
 public:
   cRender (bool queued, const std::string& name, const std::string& threadName,
            uint8_t streamType, uint16_t pid,
-           int64_t ptsDuration, bool live, size_t maxFrames,
+           int64_t ptsDuration, size_t maxFrames,
            std::function <cFrame* ()> getFrameCallback,
            std::function <void (cFrame* frame)> addFrameCallback);
   virtual ~cRender();
@@ -81,7 +81,6 @@ private:
   const std::string mThreadName;
   const uint8_t mStreamType;
   const uint16_t mPid;
-  const bool mLive;
   const size_t mMaxFrames;
   const std::function <cFrame* ()> mGetFrameCallback;
   const std::function <void (cFrame* frame)> mAddFrameCallback;

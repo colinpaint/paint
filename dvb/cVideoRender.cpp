@@ -55,7 +55,7 @@ constexpr size_t kFileMaxFrames = 50;
 //{{{
 cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
     : cRender(kQueued, name, "vid ", streamType, pid,
-              kPtsPer25HzFrame, live, live ? kLiveMaxFrames : kFileMaxFrames,
+              kPtsPer25HzFrame, live ? kLiveMaxFrames : kFileMaxFrames,
 
               // getFrame lambda
               [&]() noexcept {
@@ -86,14 +86,14 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid
 //{{{
 cVideoFrame* cVideoRender::getVideoFrameAtPts (int64_t pts) {
 
-  return (mFramesMap.empty() || !mPtsDuration) ? 
+  return (mFramesMap.empty() || !mPtsDuration) ?
     nullptr : dynamic_cast<cVideoFrame*>(getFrameAtPts (pts));
   }
 //}}}
 //{{{
 cVideoFrame* cVideoRender::getVideoFrameAtOrAfterPts (int64_t pts) {
 
-  return (mFramesMap.empty() || !mPtsDuration) ? 
+  return (mFramesMap.empty() || !mPtsDuration) ?
     nullptr : dynamic_cast<cVideoFrame*>(getFrameAtOrAfterPts (pts));
   }
 //}}}

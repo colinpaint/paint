@@ -609,7 +609,7 @@ void cTransportStream::cService::toggleStream (eRenderType renderType) {
         return;
 
       case eRenderSubtitle :
-        stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId(), stream.getPid(), getLive()));
+        stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId(), stream.getPid()));
         return;
       }
     }

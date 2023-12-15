@@ -19,12 +19,14 @@ using namespace std;
 //{{{
 cRender::cRender (bool queued, const string& name, const string& threadName,
                   uint8_t streamType, uint16_t pid,
-                  int64_t ptsDuration, bool live, size_t maxFrames,
+                  int64_t ptsDuration, size_t maxFrames,
                   function <cFrame* ()> getFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
-    mQueued(queued), mName(name), mThreadName(threadName), mStreamType(streamType), mPid(pid),
-    mPtsDuration(ptsDuration), mLive(live), mMaxFrames(maxFrames),
-    mGetFrameCallback(getFrameCallback), mAddFrameCallback(addFrameCallback),
+    mQueued(queued), mName(name), mThreadName(threadName), 
+    mStreamType(streamType), mPid(pid),
+    mPtsDuration(ptsDuration), mMaxFrames(maxFrames),
+    mGetFrameCallback(getFrameCallback), 
+    mAddFrameCallback(addFrameCallback),
     mMiniLog ("log") {
 
   if (queued)
@@ -73,9 +75,9 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
 //{{{
 bool cRender::throttle (int64_t pts) {
 // return true if fileRead should throttle
-// - if not live, mFramesMap not reached max, and frames beforePts < mMaxFrames/2
+// - if mFramesMap not reached max, and frames beforePts < mMaxFrames/2
 
-  if (mLive || (mFramesMap.size() < mMaxFrames)) // no throttle
+  if (mFramesMap.size() < mMaxFrames) // no throttle
     return false;
 
   { // locked
