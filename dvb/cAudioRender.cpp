@@ -85,7 +85,7 @@ void cAudioRender::addFrame (cFrame* frame) {
   cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
 
   if (mSampleRate != audioFrame->getSampleRate()) {
-    cLog::log (LOGERROR, fmt::format ("cAudioRender::addFrame sampleRate changed from {} to {}",
+    cLog::log (LOGERROR, fmt::format ("cAudioRender::addFrame sampleRate changed {} to {}",
                                       mSampleRate, audioFrame->getSampleRate()));
     mSampleRate = audioFrame->getSampleRate();
     }
