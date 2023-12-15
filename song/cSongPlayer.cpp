@@ -22,7 +22,7 @@
 #include "cSong.h"
 
 #ifdef _WIN32
-  #include "../audio/cWinAudio.h"
+  #include "../audio/audioWASAPI.h"
 #else
   #include "../audio/cLinuxAudio.h"
 #endif

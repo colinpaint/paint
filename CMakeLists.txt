@@ -50,7 +50,7 @@ add_subdirectory (song)
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
   project (captureApp VERSION 1.0.0)
     add_executable (${PROJECT_NAME} apps/captureApp.cpp)
-    target_link_libraries (${PROJECT_NAME} PRIVATE decoders winmm avrt audio)
+    target_link_libraries (${PROJECT_NAME} PRIVATE decoders audio winmm avrt)
 endif()
 
 # imguiApp

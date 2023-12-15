@@ -37,6 +37,7 @@ cRender::cRender (bool queued, const string& name, const string& threadName,
 //}}}
 //{{{
 cRender::~cRender() {
+
   stopQueueThread();
 
   unique_lock<shared_mutex> lock (mSharedMutex);
@@ -74,6 +75,7 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
   return nullptr;
   }
 //}}}
+
 //{{{
 bool cRender::throttle (int64_t pts) {
 // return true if fileRead should throttle

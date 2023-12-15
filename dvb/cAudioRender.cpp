@@ -68,6 +68,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid
                 mSamplesPerFrame = audioFrame->getSamplesPerFrame();
                 mFrameInfo = audioFrame->getInfoString();
                 audioFrame->calcPower();
+
                 cRender::addFrame (frame);
 
                 if (!mPlayer) {
