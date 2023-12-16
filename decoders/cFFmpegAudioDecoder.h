@@ -162,6 +162,7 @@ public:
 
   //{{{
   float* decodeFrame (const uint8_t* framePtr, int frameLen, int64_t pts) {
+  // return frame decoded to a buffer of floats
 
     float* samples = nullptr;
 
@@ -196,7 +197,8 @@ public:
 
                 float* srcPtr0 = (float*)avFrame->data[0];
                 float* srcPtr1 = (float*)avFrame->data[1];
-                if (avFrame->ch_layout.nb_channels == 6) { // 5.1
+                if (avFrame->ch_layout.nb_channels == 6) { 
+                  // 5.1
                   float* srcPtr2 = (float*)avFrame->data[2];
                   float* srcPtr3 = (float*)avFrame->data[3];
                   float* srcPtr4 = (float*)avFrame->data[4];
@@ -206,13 +208,15 @@ public:
                     *dstPtr++ = *srcPtr1++ + *srcPtr3++ + *srcPtr4++ + *srcPtr5++; // right loud
                     }
                   }
-                else // stereo
+                else {
+                  // stereo
                   for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
                     *dstPtr++ = *srcPtr0++;
                     *dstPtr++ = *srcPtr1++;
                     }
                   }
                 break;
+                }
               //}}}
               //{{{
               case AV_SAMPLE_FMT_S16P: // 16bit signed planar, copy scale and copy to interleaved
@@ -234,7 +238,6 @@ public:
               //}}}
               default:;
               }
-
             }
           av_frame_unref (avFrame);
           }
@@ -243,6 +246,7 @@ public:
 
     av_frame_free (&avFrame);
     av_packet_free (&avPacket);
+
     return samples;
     }
   //}}}
