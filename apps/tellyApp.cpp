@@ -52,6 +52,8 @@
 // decoders
 #include "../decoders/cAudioFrame.h"
 #include "../decoders/cVideoFrame.h"
+#include "../decoders/cSubtitleFrame.h"
+#include "../decoders/cSubtitleImage.h"
 
 // dvb
 #include "../dvb/cDvbMultiplex.h"
@@ -60,7 +62,6 @@
 #include "../dvb/cVideoRender.h"
 #include "../dvb/cAudioRender.h"
 #include "../dvb/cSubtitleRender.h"
-#include "../dvb/cSubtitleImage.h"
 #include "../dvb/cPlayer.h"
 
 using namespace std;
@@ -865,7 +866,7 @@ namespace {
   // telly
   //{{{
   const vector <cDvbMultiplex> kDvbMultiplexes = {
-      { "file", false, 0, {}, {}, {} },  // dummy multiplex for file
+      { "file", false, 0, {}, {}, {} },  // dummy file multiplex spec
 
       { "hd", 626000000, false,
         { "BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
@@ -1466,8 +1467,10 @@ namespace {
   //{{{
   class cTellyApp : public cApp {
   public:
-    cTellyApp (iUI* ui, const cPoint& windowSize, bool fullScreen, bool headless, bool hasAudio)
-      : cApp (ui, "telly", windowSize, fullScreen, headless, true), mHasAudio(hasAudio) {}
+    cTellyApp (iUI* ui, const cPoint& windowSize, bool fullScreen, bool headless,
+               bool showSubtitle, bool hasAudio)
+      : cApp (ui, "telly", windowSize, fullScreen, headless, true),
+        mHasAudio(hasAudio), mShowSubtitle(showSubtitle) {}
     virtual ~cTellyApp() = default;
 
     cMultiView& getMultiView() { return mMultiView; }
@@ -1633,11 +1636,11 @@ namespace {
 
   private:
     const bool mHasAudio;
+    bool mShowSubtitle;
 
     cTransportStream* mTransportStream = nullptr;
 
     cMultiView mMultiView;
-    bool mShowSubtitle = true;
 
     // fileSource
     FILE* mFile = nullptr;
@@ -2033,19 +2036,19 @@ namespace {
       //}}}
       const vector<sActionKey> kActionKeys = {
         //alt    ctrl   shift  guiKey               function
-        { false, false, false, ImGuiKey_LeftArrow,  [this,&tellyApp]{ tellyApp.getMultiView().moveLeft(); }},
-        { false, false, false, ImGuiKey_RightArrow, [this,&tellyApp]{ tellyApp.getMultiView().moveRight(); }},
-        { false, false, false, ImGuiKey_UpArrow,    [this,&tellyApp]{ tellyApp.getMultiView().moveUp(); }},
-        { false, false, false, ImGuiKey_DownArrow,  [this,&tellyApp]{ tellyApp.getMultiView().moveDown(); }},
-        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp]{ tellyApp.getMultiView().enter(); }},
-        { false, false, false, ImGuiKey_Space,      [this,&tellyApp]{ tellyApp.getMultiView().space(); }},
-        { false, false, false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
-        { false, false, false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
-        { false, false, false, ImGuiKey_M,          [this,&tellyApp]{ hitShow (eTelly); }},
-        { false, false, false, ImGuiKey_C,          [this,&tellyApp]{ hitShow (eChannels); }},
-        { false, false, false, ImGuiKey_V,          [this,&tellyApp]{ hitShow (eServices); }},
-        { false, false, false, ImGuiKey_P,          [this,&tellyApp]{ hitShow (ePidMap); }},
-        { false, false, false, ImGuiKey_R,          [this,&tellyApp]{ hitShow (eRecordings); }},
+        { false, false, false, ImGuiKey_LeftArrow,  [this,&tellyApp] { tellyApp.getMultiView().moveLeft(); }},
+        { false, false, false, ImGuiKey_RightArrow, [this,&tellyApp] { tellyApp.getMultiView().moveRight(); }},
+        { false, false, false, ImGuiKey_UpArrow,    [this,&tellyApp] { tellyApp.getMultiView().moveUp(); }},
+        { false, false, false, ImGuiKey_DownArrow,  [this,&tellyApp] { tellyApp.getMultiView().moveDown(); }},
+        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp] { tellyApp.getMultiView().enter(); }},
+        { false, false, false, ImGuiKey_Space,      [this,&tellyApp] { tellyApp.getMultiView().space(); }},
+        { false, false, false, ImGuiKey_F,          [this,&tellyApp] { tellyApp.getPlatform().toggleFullScreen(); }},
+        { false, false, false, ImGuiKey_S,          [this,&tellyApp] { tellyApp.toggleShowSubtitle(); }},
+        { false, false, false, ImGuiKey_M,          [this,&tellyApp] { hitShow (eTelly); }},
+        { false, false, false, ImGuiKey_C,          [this,&tellyApp] { hitShow (eChannels); }},
+        { false, false, false, ImGuiKey_V,          [this,&tellyApp] { hitShow (eServices); }},
+        { false, false, false, ImGuiKey_P,          [this,&tellyApp] { hitShow (ePidMap); }},
+        { false, false, false, ImGuiKey_R,          [this,&tellyApp] { hitShow (eRecordings); }},
         };
 
       ImGui::GetIO().WantTextInput = true;
@@ -2101,6 +2104,7 @@ int main (int numArgs, char* args[]) {
   bool headless = false;
   bool hasAudio = true;
   bool playSong = false;
+  bool showSubtitle = false;
   eLogLevel logLevel = LOGINFO;
   cDvbMultiplex selectedMultiplex = kDvbMultiplexes[1];
   string filename;
@@ -2123,6 +2127,8 @@ int main (int numArgs, char* args[]) {
       hasAudio = false;
     else if (param == "song")
       playSong = true;
+    else if (param == "sub")
+      showSubtitle = true;
     else if (param == "log1")
       logLevel = LOGINFO1;
     else if (param == "log2")
@@ -2150,7 +2156,7 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, "tellyApp - all,simple,head,noaudio,song,full,log1,log2,log3,multiplexName,filename");
+  cLog::log (LOGNOTICE, "tellyApp - all,simple,head,noaudio,song,full,sub,log123,multiplexName,filename");
 
   if (playSong) {
     cSongApp songApp (new cSongUI(), {800, 480}, fullScreen);
@@ -2160,7 +2166,7 @@ int main (int numArgs, char* args[]) {
     songApp.mainUILoop();
     }
   else {
-    cTellyApp tellyApp (new cTellyUI(), {1920/2, 1080/2}, fullScreen, headless, hasAudio);
+    cTellyApp tellyApp (new cTellyUI(), {1920/2, 1080/2}, fullScreen, headless, showSubtitle, hasAudio);
     if (!headless) {
       tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
       tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));

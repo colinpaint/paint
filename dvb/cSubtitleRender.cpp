@@ -7,7 +7,7 @@
 #include <vector>
 #include <array>
 
-#include "cSubtitleImage.h"
+#include "../decoders/cSubtitleImage.h"
 #include "../decoders/cSubtitleFrame.h"
 #include "../decoders/cSubtitleDecoder.h"
 

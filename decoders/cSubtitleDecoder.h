@@ -6,12 +6,12 @@
 #include <vector>
 #include <functional>
 
-#include "../common/cLog.h"
-#include "../common/utils.h"
-
-#include "../decoders/cDecoder.h"
+#include "cDecoder.h"
 #include "cSubtitleFrame.h"
 #include "cSubtitleImage.h"
+
+#include "../common/cLog.h"
+#include "../common/utils.h"
 //}}}
 //{{{  defines
 #define AVRB16(p) ((*(p) << 8) | *(p+1))
