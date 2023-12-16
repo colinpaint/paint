@@ -76,9 +76,9 @@ public:
     }
   //}}}
 
-  int32_t getNumChannels() const { return mChannels; }
-  int32_t getSampleRate() const { return mSampleRate; }
-  int32_t getNumSamplesPerFrame() const { return mSamplesPerFrame; }
+  size_t getNumChannels() const { return mChannels; }
+  size_t getSampleRate() const { return mSampleRate; }
+  size_t getNumSamplesPerFrame() const { return mSamplesPerFrame; }
 
   virtual std::string getInfoString() const final { return "ffmpeg " + mStreamTypeName; }
   //{{{
@@ -222,10 +222,10 @@ public:
 
                 samples = (float*)malloc (avFrame->ch_layout.nb_channels * avFrame->nb_samples * sizeof(float));
 
-                for (size_t channel = 0; channel < avFrame->ch_layout.nb_channels; channel++) {
+                for (size_t channel = 0; channel < (size_t)(avFrame->ch_layout.nb_channels); channel++) {
                   float* dstPtr = samples + channel;
                   short* srcPtr = (short*)avFrame->data[channel];
-                  for (int sample = 0; sample < mSamplesPerFrame; sample++) {
+                  for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
                     *dstPtr = *srcPtr++ / (float)0x8000;
                     dstPtr += mChannels;
                     }
@@ -255,7 +255,7 @@ private:
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;
 
-  int32_t mChannels = 0;
-  int32_t mSampleRate = 0;
-  int32_t mSamplesPerFrame = 0;
+  size_t mChannels = 0;
+  size_t mSampleRate = 0;
+  size_t mSamplesPerFrame = 0;
   };
