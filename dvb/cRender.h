@@ -15,7 +15,7 @@
 
 #include "../decoders/cFrame.h"
 class cDecoder;
-#include "cDecoderQueueItem.h"
+#include "../decoders/cDecoderQueueItem.h"
 //}}}
 constexpr int kPtsPerSecond = 90000;
 constexpr int64_t kPtsPer25HzFrame = kPtsPerSecond / 25;

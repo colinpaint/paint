@@ -15,17 +15,8 @@
 #include <mutex>
 
 class cRender;
-//}}}
 
-//{{{
-class cDvbMultiplex {
-public:
-  std::string mName;
-  int mFrequency;
-  bool mRecordAll;
-  std::vector <std::string> mChannels;
-  std::vector <std::string> mChannelRecordNames;
-  };
+#include "cDvbMultiplex.h"
 //}}}
 
 enum eRenderType { eRenderVideo, eRenderAudio, eRenderDescription, eRenderSubtitle };

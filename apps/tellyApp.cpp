@@ -54,6 +54,7 @@
 #include "../decoders/cVideoFrame.h"
 
 // dvb
+#include "../dvb/cDvbMultiplex.h"
 #include "../dvb/cDvbSource.h"
 #include "../dvb/cTransportStream.h"
 #include "../dvb/cVideoRender.h"
@@ -864,21 +865,23 @@ namespace {
   // telly
   //{{{
   const vector <cDvbMultiplex> kDvbMultiplexes = {
-      { "file", false, 0, {}, {} },  // dummy multiplex for file
+      { "file", false, 0, {}, {}, {} },  // dummy multiplex for file
 
       { "hd", 626000000, false,
         { "BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
-        { "bbc1",          "bbc2",       "bbc3",         "bbc4",        "itv",     "c4",           "c5" }
+        { "bbc1",          "bbc2",       "bbc3",         "bbc4",        "itv",     "c4",           "c5" },
+        { 1,               2,            3,              4,             6,         7,              5 }
       },
-
       { "itv", 650000000, false,
         { "ITV1",   "ITV2", "ITV3", "ITV4", "Channel 4", "Channel 4+1", "More 4", "Film4" , "E4", "Channel 5" },
-        { "itv1sd", "itv2", "itv3", "itv4", "chn4sd"   , "c4+1",        "more4",  "film4",  "e4", "chn5sd" }
+        { "itv1sd", "itv2", "itv3", "itv4", "chn4sd"   , "c4+1",        "more4",  "film4",  "e4", "chn5sd" },
+        { 1,        2,      3,      4,      5,           6,             7,        8,        9,    0 }
       },
 
       { "bbc", 674000000, false,
         { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
-        { "bbc1sd",         "bbc2sd",  "bbc4sd" }
+        { "bbc1sd",         "bbc2sd",  "bbc4sd" },
+        { 1,                2,         4 }
       }
     };
   //}}}

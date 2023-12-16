@@ -1,6 +1,5 @@
 project (dvb VERSION 1.0.0)
-  add_library (${PROJECT_NAME} cDecoderQueueItem.h
-                               cDvbSource.h cDvbSource.cpp
+  add_library (${PROJECT_NAME} cDvbMultiplex.h cDvbSource.h cDvbSource.cpp
                                cTransportStream.h cTransportStream.cpp
                                cRender.h cRender.cpp
                                cVideoRender.h cVideoRender.cpp
