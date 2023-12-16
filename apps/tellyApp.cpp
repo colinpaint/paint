@@ -1014,24 +1014,11 @@ namespace {
 
           mVideoQuad = graphics.createQuad (videoFrame->getSize());
 
-          size_t numMotionVectors = videoFrame->getNumMotionVectors();
-          //cLog::log (LOGINFO, fmt::format ("numMotionVectors {}", numMotionVectors));
-          if (false && numMotionVectors) {
-            AVMotionVector* motionVectors = (AVMotionVector*)videoFrame->getMotionVectors();
-            for (size_t i = 0; i < ((numMotionVectors > 100) ? 100 : numMotionVectors); i++) {
-              AVMotionVector* motionVector = &motionVectors[i];
-              ImGui::GetWindowDrawList()->AddLine (
-                { (float)mRect.left + motionVector->src_x, (float)mRect.top + motionVector->src_y },
-                { (float)mRect.left + motionVector->dst_x, (float)mRect.top + motionVector->dst_y},
-                0xffffffff, 2.f);
-                // i, mv->source,
-                // mv->w, mv->h,
-                // mv->src_x, mv->src_y,
-                // mv->dst_x, mv->dst_y,
-                // mv->flags,
-                // mv->motion_x, mv->motion_y, mv->motion_scale));
-              }
-            }
+          for (auto& motionVector : videoFrame->getMotionVectors())
+            ImGui::GetWindowDrawList()->AddLine (
+              { (float)mRect.left + motionVector.mSrcx, (float)mRect.top + motionVector.mSrcy },
+              { (float)mRect.left + motionVector.mDstx, (float)mRect.top + motionVector.mDsty},
+              0xffffffff, 2.f);
           //}}}
 
           if ((getHover() || getSelected()) && !getSelectedFull())

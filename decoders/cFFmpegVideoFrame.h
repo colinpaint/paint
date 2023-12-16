@@ -36,8 +36,7 @@ public:
       cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::~cFFmpegVideoFrame"));
     }
 
-  virtual size_t getNumMotionVectors() final { return mNumMotionVectors; }
-  virtual void* getMotionVectors() final { return mMotionVectors; }
+  virtual std::vector<cMotionVector>& getMotionVectors() final { return mMotionVectors; }
 
   void setAVFrame (AVFrame* avFrame, bool hasMotionVectors) {
     // release old AVframe before owning new AVframe
@@ -48,17 +47,22 @@ public:
 
     mAvFrame = avFrame;
 
+    mMotionVectors.clear();
     mHasMotionVectors = hasMotionVectors;
-    AVFrameSideData* sideData = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
-    if (sideData) {
-      mNumMotionVectors = sideData->size / sizeof (AVMotionVector);
-      mMotionVectors = malloc (sideData->size);
-      memcpy (mMotionVectors, sideData->data, sideData->size);
+    if (mHasMotionVectors) {
+      AVFrameSideData* sideData = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
+      if (sideData) {
+        const AVMotionVector* mvs = (const AVMotionVector*)sideData->data;
+        size_t num = sideData->size / sizeof(AVMotionVector);
+        for (size_t i = 0; i < num; i++) {
+          const AVMotionVector* mv = &mvs[i];
+          mMotionVectors.push_back (cMotionVector(mv->src_x, mv->src_y, mv->dst_x, mv->dst_y));
+          // mv->source, mv->w, mv->h,
+          // mv->flags, mv->motion_x, mv->motion_y, mv->motion_scale));
+          }
+        }
       }
-    else {
-      mNumMotionVectors = 0;
-      mMotionVectors = nullptr;
-      }
+
     mWidth = (uint16_t)avFrame->width;
     mHeight = (uint16_t)avFrame->height;
     mStrideY = (uint16_t)avFrame->linesize[0];
@@ -82,13 +86,11 @@ protected:
       av_frame_unref (avFrame);
       av_frame_free (&avFrame);
       }
-    free (mMotionVectors);
     }
 
 private:
   AVFrame* mAvFrame = nullptr;
 
   bool mHasMotionVectors;
-  size_t mNumMotionVectors = 0;
-  void* mMotionVectors = nullptr;
+  std::vector <cMotionVector> mMotionVectors;
   };

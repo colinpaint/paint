@@ -14,6 +14,20 @@
 #include "../app/cGraphics.h"
 //}}}
 
+//{{{
+class cMotionVector {
+public:
+  cMotionVector (float srcx, float srcy, float dstx, float dsty) :
+    mSrcx(srcx), mSrcy(srcy), mDstx(dstx), mDsty(dsty) {}
+  ~cMotionVector() = default;
+
+  float mSrcx;
+  float mSrcy;
+  float mDstx;
+  float mDsty;
+  };
+//}}}
+
 class cVideoFrame : public cFrame {
 public:
   cVideoFrame(cTexture::eTextureType textureType) : mTextureType(textureType) {}
@@ -48,8 +62,7 @@ public:
   }
   //}}}
 
-  virtual size_t getNumMotionVectors() { return 0; }
-  virtual void* getMotionVectors() { return nullptr; }
+  virtual std::vector<cMotionVector>& getMotionVectors() = 0;
 
   void setWidth (uint16_t width) { mWidth = width; }
   void setHeight (uint16_t height) { mHeight = height; }
