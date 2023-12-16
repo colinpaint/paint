@@ -476,8 +476,8 @@ int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 //}}}
 //{{{  class cTransportStream::cService
 //{{{
-cTransportStream::cService::cService (uint16_t sid, bool live, bool hasAudio) :
-    mSid(sid), mLive(live), mHasAudio(hasAudio) {
+cTransportStream::cService::cService (uint16_t sid, bool live, bool hasAudio, bool motionVectors) :
+    mSid(sid), mLive(live), mHasAudio(hasAudio), mHasMotionVectors(motionVectors) {
 
   mRenderStreams[eRenderVideo].setLabel ("vid:");
   mRenderStreams[eRenderAudio].setLabel ("aud:");
@@ -600,12 +600,14 @@ void cTransportStream::cService::toggleStream (eRenderType renderType) {
   if (stream.toggle()) {
     switch (renderType) {
       case eRenderVideo :
-        stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId(), stream.getPid(), getLive()));
+        stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId(), stream.getPid(), 
+                                            getLive(), hasMotionVectors()));
         return;
 
       case eRenderAudio :
       case eRenderDescription:
-        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), stream.getPid(), getLive(), hasAudio()));
+        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), stream.getPid(), 
+                                            getLive(), hasAudio()));
         return;
 
       case eRenderSubtitle :
@@ -734,12 +736,13 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 
 //{{{
 cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, const string& recordRoot,
-                                    bool live, bool showAllServices, bool showFirstService, bool hasAudio)
+                                    bool live, bool showAllServices, bool showFirstService, 
+                                    bool hasAudio, bool motionVectors)
     : mDvbMultiplex(dvbMultiplex),
       mRecordRoot(recordRoot),
-      mLive(live), mHasAudio(hasAudio),
-      mShowAllServices(showAllServices), mShowFirstService(showFirstService) {
-  }
+      mLive(live), 
+      mHasAudio(hasAudio), mHasMotionVectors(motionVectors),
+      mShowAllServices(showAllServices), mShowFirstService(showFirstService) {}
 //}}}
 
 // gets
@@ -1385,7 +1388,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
     if (!getService (sid)) {
      //{{{  found new service, create cService
      cLog::log (LOGINFO, fmt::format ("create service {}", sid));
-     cService& service = mServiceMap.emplace (sid, cService(sid, getLive(), mHasAudio)).first->second;
+     cService& service = mServiceMap.emplace (sid, cService(sid, getLive(), mHasAudio, mHasMotionVectors)).first->second;
 
      service.setProgramPid (pidInfo->getPid());
      pidInfo->setSid (sid);

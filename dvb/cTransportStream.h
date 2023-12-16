@@ -192,7 +192,7 @@ public:
   //{{{
   class cService {
   public:
-    cService (uint16_t sid, bool live, bool hasAudio);
+    cService (uint16_t sid, bool live, bool hasAudio, bool motionVectors);
     ~cService();
 
     // gets
@@ -200,6 +200,7 @@ public:
     uint16_t getProgramPid() const { return mProgramPid; }
     bool getLive() const { return mLive; }
     bool hasAudio() const { return mHasAudio; }
+    bool hasMotionVectors() const { return mHasMotionVectors; }
 
     // sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
@@ -255,6 +256,7 @@ public:
     const uint16_t mSid;
     const bool mLive;
     const bool mHasAudio;
+    const bool mHasMotionVectors;
 
     uint16_t mProgramPid = 0;
 
@@ -275,7 +277,8 @@ public:
   //}}}
 
   cTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRoot,
-                    bool live, bool showAllServices, bool showFirstService, bool hasAudio);
+                    bool live, bool showAllServices, bool showFirstService, 
+                    bool hasAudio, bool motionVectors);
   virtual ~cTransportStream() { clear(); }
 
   //{{{  gets
@@ -337,6 +340,7 @@ private:
 
   const bool mLive;
   const bool mHasAudio;
+  const bool mHasMotionVectors;
   const bool mShowAllServices;
   const bool mShowFirstService;
 

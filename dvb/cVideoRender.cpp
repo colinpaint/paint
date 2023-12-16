@@ -52,7 +52,8 @@ constexpr size_t kFileMaxFrames = 50;
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, bool live)
+cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, 
+                            bool live, bool motionVectors)
     : cRender(kQueued, name, "vid ", streamType, pid,
               kPtsPer25HzFrame, live ? kLiveMaxFrames : kFileMaxFrames,
 
@@ -77,7 +78,7 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid
                 cRender::addFrame (frame);
                 }) {
 
-  mDecoder = new cFFmpegVideoDecoder (streamType);
+  mDecoder = new cFFmpegVideoDecoder (streamType, motionVectors);
   }
 //}}}
 
