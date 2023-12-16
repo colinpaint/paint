@@ -45,15 +45,15 @@
 #include "../font/itcSymbolBold.h"
 #include "../font/droidSansMono.h"
 
-// song
-#include "../song/cSong.h"
-#include "../song/cSongLoader.h"
-
 // decoders
 #include "../decoders/cAudioFrame.h"
 #include "../decoders/cVideoFrame.h"
 #include "../decoders/cSubtitleFrame.h"
 #include "../decoders/cSubtitleImage.h"
+
+// song
+#include "../song/cSong.h"
+#include "../song/cSongLoader.h"
 
 // dvb
 #include "../dvb/cDvbMultiplex.h"
