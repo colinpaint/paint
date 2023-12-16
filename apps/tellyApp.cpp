@@ -46,6 +46,23 @@
 #include "../font/droidSansMono.h"
 
 // decoders
+//{{{  libav
+#ifdef _WIN32
+  #pragma warning (push)
+  #pragma warning (disable: 4244)
+#endif
+
+extern "C" {
+  #include "libavcodec/avcodec.h"
+  #include "libavformat/avformat.h"
+  #include "libavutil/motion_vector.h"
+  #include "libavutil/frame.h"
+  }
+
+#ifdef _WIN32
+  #pragma warning (pop)
+#endif
+//}}}
 #include "../decoders/cAudioFrame.h"
 #include "../decoders/cVideoFrame.h"
 #include "../decoders/cSubtitleFrame.h"
@@ -994,6 +1011,27 @@ namespace {
 
           mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
                          mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
+
+          mVideoQuad = graphics.createQuad (videoFrame->getSize());
+
+          size_t numMotionVectors = videoFrame->getNumMotionVectors();
+          //cLog::log (LOGINFO, fmt::format ("numMotionVectors {}", numMotionVectors));
+          if (false && numMotionVectors) {
+            AVMotionVector* motionVectors = (AVMotionVector*)videoFrame->getMotionVectors();
+            for (size_t i = 0; i < ((numMotionVectors > 100) ? 100 : numMotionVectors); i++) {
+              AVMotionVector* motionVector = &motionVectors[i];
+              ImGui::GetWindowDrawList()->AddLine (
+                { (float)mRect.left + motionVector->src_x, (float)mRect.top + motionVector->src_y },
+                { (float)mRect.left + motionVector->dst_x, (float)mRect.top + motionVector->dst_y},
+                0xffffffff, 2.f);
+                // i, mv->source,
+                // mv->w, mv->h,
+                // mv->src_x, mv->src_y,
+                // mv->dst_x, mv->dst_y,
+                // mv->flags,
+                // mv->motion_x, mv->motion_y, mv->motion_scale));
+              }
+            }
           //}}}
 
           if ((getHover() || getSelected()) && !getSelectedFull())
@@ -1468,9 +1506,9 @@ namespace {
   class cTellyApp : public cApp {
   public:
     cTellyApp (iUI* ui, const cPoint& windowSize, bool fullScreen, bool headless,
-               bool showSubtitle, bool hasAudio, bool motionVectors) :
+               bool showSubtitle, bool hasAudio, bool hasMotionVectors) :
         cApp (ui, "telly", windowSize, fullScreen, headless, true),
-        mHasAudio(hasAudio), mHasMotionVectors(motionVectors),
+        mHasAudio(hasAudio), mHasMotionVectors(hasMotionVectors),
         mShowSubtitle(showSubtitle) {}
     virtual ~cTellyApp() = default;
 
@@ -2107,7 +2145,7 @@ int main (int numArgs, char* args[]) {
   bool showAllServices = true;
   bool headless = false;
   bool hasAudio = true;
-  bool motionVectors = false;
+  bool hasMotionVectors = false;
   bool playSong = false;
   bool showSubtitle = false;
   eLogLevel logLevel = LOGINFO;
@@ -2135,7 +2173,7 @@ int main (int numArgs, char* args[]) {
     else if (param == "sub")
       showSubtitle = true;
     else if (param == "motion")
-      motionVectors = true;
+      hasMotionVectors = true;
     else if (param == "log1")
       logLevel = LOGINFO1;
     else if (param == "log2")
@@ -2173,7 +2211,8 @@ int main (int numArgs, char* args[]) {
     songApp.mainUILoop();
     }
   else {
-    cTellyApp tellyApp (new cTellyUI(), {1920/2, 1080/2}, fullScreen, headless, showSubtitle, hasAudio, motionVectors);
+    cTellyApp tellyApp (new cTellyUI(), {1920/2, 1080/2}, fullScreen,
+                        headless, showSubtitle, hasAudio, hasMotionVectors);
     if (!headless) {
       tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
       tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));

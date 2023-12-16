@@ -192,13 +192,13 @@ public:
   //{{{
   class cService {
   public:
-    cService (uint16_t sid, bool live, bool hasAudio, bool motionVectors);
+    cService (uint16_t sid, bool isLive, bool hasAudio, bool motionVectors);
     ~cService();
 
     // gets
     uint16_t getSid() const { return mSid; }
     uint16_t getProgramPid() const { return mProgramPid; }
-    bool getLive() const { return mLive; }
+    bool isLive() const { return mIsLive; }
     bool hasAudio() const { return mHasAudio; }
     bool hasMotionVectors() const { return mHasMotionVectors; }
 
@@ -254,7 +254,7 @@ public:
     //{{{  vars
     // var
     const uint16_t mSid;
-    const bool mLive;
+    const bool mIsLive;
     const bool mHasAudio;
     const bool mHasMotionVectors;
 
@@ -277,8 +277,8 @@ public:
   //}}}
 
   cTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRoot,
-                    bool live, bool showAllServices, bool showFirstService, 
-                    bool hasAudio, bool motionVectors);
+                    bool isLive, bool showAllServices, bool showFirstService,
+                    bool hasAudio, bool hasMotionVectors);
   virtual ~cTransportStream() { clear(); }
 
   //{{{  gets
@@ -297,7 +297,7 @@ public:
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
-  bool getLive() const { return mLive; }
+  bool isLive() const { return mIsLive; }
   //}}}
 
   void toggleStream (cService& service, eRenderType renderType);
@@ -338,7 +338,7 @@ private:
   const cDvbMultiplex mDvbMultiplex;
   const std::string mRecordRoot;
 
-  const bool mLive;
+  const bool mIsLive;
   const bool mHasAudio;
   const bool mHasMotionVectors;
   const bool mShowAllServices;

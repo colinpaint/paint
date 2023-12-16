@@ -48,6 +48,9 @@ public:
   }
   //}}}
 
+  virtual size_t getNumMotionVectors() { return 0; }
+  virtual void* getMotionVectors() { return nullptr; }
+
   void setWidth (uint16_t width) { mWidth = width; }
   void setHeight (uint16_t height) { mHeight = height; }
   //{{{

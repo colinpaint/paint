@@ -44,29 +44,30 @@ namespace {
 class cFFmpegVideoDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegVideoDecoder (uint8_t streamType, bool motionVectors)
+  cFFmpegVideoDecoder (bool h264, bool hasMotionVectors)
       : cDecoder(),
-        mStreamType(streamType), mH264(mStreamType == 27), mStreamName(mH264 ? "h264" : "mpeg2"),
-        mAvCodec(avcodec_find_decoder (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)),
-        mMotionVectors(motionVectors) {
+        mH264(h264), mStreamName(h264 ? "h264" : "mpeg2"),
+        mAvCodec(avcodec_find_decoder (h264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)),
+        mHasMotionVectors(hasMotionVectors) {
 
     av_log_set_level (AV_LOG_ERROR);
     av_log_set_callback (logCallback);
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder - streamType:{}:{}", mStreamType, mStreamName));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder - {} {}",
+                                     mStreamName, mHasMotionVectors ? " motion" : ""));
 
     mAvParser = av_parser_init (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     mAvContext->flags2 |= AV_CODEC_FLAG2_FAST;
 
-    avcodec_open2 (mAvContext, mAvCodec, nullptr);
-
-    AVDictionary* opts = nullptr;
-    if (motionVectors) {
+    if (mHasMotionVectors) {
+      AVDictionary* opts = nullptr;
       av_dict_set (&opts, "flags2", "+export_mvs", 0);
       avcodec_open2 (mAvContext, mAvCodec, &opts);
       av_dict_free (&opts);
       }
+    else
+      avcodec_open2 (mAvContext, mAvCodec, nullptr);
     }
   //}}}
   //{{{
@@ -103,24 +104,6 @@ public:
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
 
-          if (mMotionVectors) {
-            //{{{  sideData
-            AVFrameSideData* sd = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
-            if (sd) {
-              const AVMotionVector* mvs = (const AVMotionVector*)sd->data;
-              cLog::log (LOGINFO, fmt::format ("mvs {}", sd->size / sizeof(*mvs)));
-              for (int i = 0; i < sd->size / sizeof(*mvs); i++) {
-                //const AVMotionVector* mv = &mvs[i];
-                //cLog::log (LOGINFO, fmt::format ("{} {} {}x{} {}x{} {}x{} {} {}x{} {}",
-                //                                 i, mv->source,
-                //                                 mv->w, mv->h, mv->src_x, mv->src_y,
-                //                                 mv->dst_x, mv->dst_y, mv->flags,
-                //                                 mv->motion_x, mv->motion_y, mv->motion_scale));
-                }
-              }
-            }
-            //}}}
-
           char frameType = cDvbUtils::getFrameType (frame, frameSize, mH264);
           if (frameType == 'I') {
             mInterpolatedPts = dts;
@@ -134,7 +117,7 @@ public:
           ffmpegVideoFrame->setPtsDuration ((kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num);
           ffmpegVideoFrame->setPesSize (frameSize);
           ffmpegVideoFrame->mFrameType = frameType;
-          ffmpegVideoFrame->setAVFrame (avFrame);
+          ffmpegVideoFrame->setAVFrame (avFrame, mHasMotionVectors);
           addFrameCallback (ffmpegVideoFrame);
           avFrame = av_frame_alloc();
 
@@ -154,11 +137,10 @@ public:
   //}}}
 
 private:
-  const uint8_t mStreamType;
   const bool mH264 = false;
   const std::string mStreamName;
   const AVCodec* mAvCodec = nullptr;
-  const bool mMotionVectors;
+  const bool mHasMotionVectors;
 
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;
