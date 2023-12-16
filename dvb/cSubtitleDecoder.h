@@ -9,7 +9,7 @@
 #include "../common/cLog.h"
 #include "../common/utils.h"
 
-#include "cDecoder.h"
+#include "../decoders/cDecoder.h"
 #include "cSubtitleFrame.h"
 #include "cSubtitleImage.h"
 //}}}

@@ -3,7 +3,7 @@
 #pragma once
 #include <cstdint>
 
-#include "cFrame.h"
+#include "../decoders/cFrame.h"
 //}}}
 
 class cSubtitleFrame : public cFrame {

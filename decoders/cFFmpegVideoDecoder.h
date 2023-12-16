@@ -6,10 +6,27 @@
 #include <algorithm>
 #include <functional>
 
-#include "../common/cLog.h"
-
 #include "cDecoder.h"
-#include "cFrame.h"
+#include "cFFmpegVideoFrame.h"
+//{{{  libav
+#ifdef _WIN32
+  #pragma warning (push)
+  #pragma warning (disable: 4244)
+#endif
+
+extern "C" {
+  #include "libavcodec/avcodec.h"
+  #include "libavformat/avformat.h"
+  }
+
+#ifdef _WIN32
+  #pragma warning (pop)
+#endif
+//}}}
+
+#include "../common/utils.h"
+#include "../common/cDvbUtils.h"
+#include "../common/cLog.h"
 //}}}
 
 namespace {
@@ -27,9 +44,8 @@ namespace {
 class cFFmpegVideoDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegVideoDecoder (cRender& render, uint8_t streamType)
+  cFFmpegVideoDecoder (uint8_t streamType)
       : cDecoder(),
-        mRender(render),
         mStreamType(streamType), mH264(mStreamType == 27), mStreamName(mH264 ? "h264" : "mpeg2"),
         mAvCodec(avcodec_find_decoder (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
@@ -66,6 +82,8 @@ public:
   virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           std::function<cFrame*()> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
+    (void)pid;
+    (void)pts;
 
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
@@ -102,10 +120,7 @@ public:
             mInterpolatedPts = dts;
             mGotIframe = true;
             }
-          mRender.log ("pes", fmt::format ("pid:{} {} {} pts:{} dts:{} size:{}",
-                                           pid, mStreamName, frameType,
-                                           utils::getFullPtsString (pts), utils::getFullPtsString (dts),
-                                           pesSize));
+
           // allocFrame
           cFFmpegVideoFrame* ffmpegVideoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
           ffmpegVideoFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
@@ -133,7 +148,6 @@ public:
   //}}}
 
 private:
-  cRender& mRender;
   const uint8_t mStreamType;
   const bool mH264 = false;
   const std::string mStreamName;

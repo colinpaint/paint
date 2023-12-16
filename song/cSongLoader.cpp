@@ -29,8 +29,7 @@
 
 // decoder
 #include "../decoders/cAudioParser.h"
-#include "../decoders/iAudioDecoder.h"
-#include "../decoders/cSongFFmpegAudioDecoder.h"
+#include "../decoders/cFFmpegAudioDecoder.h"
 
 // net
 #include "../net/cHttp.h"
@@ -849,7 +848,7 @@ private:
 class cAudioPesParser : public cPesParser {
 public:
   //{{{
-  cAudioPesParser (int pid, iAudioDecoder* audioDecoder, bool useQueue,
+  cAudioPesParser (int pid, cFFmpegAudioDecoder* audioDecoder, bool useQueue,
                    function <void (bool reuseFromFront, float* samples, int64_t pts)> callback)
       : cPesParser(pid, "aud", useQueue), mAudioDecoder(audioDecoder), mCallback(callback) {
     }
@@ -879,7 +878,7 @@ protected:
     }
 
 private:
-  iAudioDecoder* mAudioDecoder;
+  cFFmpegAudioDecoder* mAudioDecoder;
   function <void (bool reuseFromFront, float* samples, int64_t pts)> mCallback;
   };
 //}}}
@@ -974,20 +973,20 @@ public:
 
 protected:
   //{{{
-  static iAudioDecoder* createAudioDecoder (eAudioFrameType frameType) {
+  static cFFmpegAudioDecoder* createAudioDecoder (eAudioFrameType frameType) {
 
     switch (frameType) {
       case eAudioFrameType::eMp3:
         cLog::log (LOGINFO, "createAudioDecoder ffmpeg mp3");
-        return new cSongFFmpegAudioDecoder(frameType);
+        return new cFFmpegAudioDecoder (frameType);
 
       case eAudioFrameType::eAacAdts:
         cLog::log (LOGINFO, "createAudioDecoder ffmpeg aacAdts");
-        return new cSongFFmpegAudioDecoder(frameType);
+        return new cFFmpegAudioDecoder (frameType);
 
       case eAudioFrameType::eAacLatm:
         cLog::log (LOGINFO, "createAudioDecoder ffmpeg aacLatm");
-        return new cSongFFmpegAudioDecoder(frameType);
+        return new cFFmpegAudioDecoder (frameType);
 
       default:
         cLog::log (LOGERROR, "createAudioDecoder frameType:%d", frameType);
@@ -1114,7 +1113,7 @@ public:
     auto dvb = new cDvbSource (mFrequency, 0);
 
     mPtsSong = new cPtsSong (eAudioFrameType::eAacAdts, mNumChannels, mSampleRate, 1024, 1920, 0);
-    iAudioDecoder* audioDecoder = nullptr;
+    cFFmpegAudioDecoder* audioDecoder = nullptr;
 
     bool waitForPts = false;
     int64_t loadPts = -1;
@@ -1337,7 +1336,7 @@ public:
   //{{{
   virtual void load() final {
 
-    iAudioDecoder* audioDecoder = nullptr;
+    cFFmpegAudioDecoder* audioDecoder = nullptr;
 
     mExit = false;
     mRunning = true;
@@ -1635,7 +1634,7 @@ public:
                              mSamplesPerFrame, mPtsDurationPerFrame,
                              mRadio ? 0 : 1000, mFramesPerChunk);
 
-    iAudioDecoder* audioDecoder = nullptr;
+    cFFmpegAudioDecoder* audioDecoder = nullptr;
 
     // add parsers, callbacks
     //{{{
@@ -1938,7 +1937,7 @@ private:
       //}}}
 
     //mPtsSong = new cPtsSong (eAudioFrameType::eAacAdts, mNumChannels, mSampleRate, 1024, 1920, 0);
-    //iAudioDecoder* audioDecoder = nullptr;
+    //cFFmpegAudioDecoder* audioDecoder = nullptr;
 
     //int64_t loadPts = -1;
 
@@ -2314,7 +2313,7 @@ public:
     size_t bytesLeft = fread (buffer, 1, kFileChunkSize, file);
 
     mPtsSong = new cPtsSong (eAudioFrameType::eAacAdts, mNumChannels, mSampleRate, 1024, 1920, 0);
-    iAudioDecoder* audioDecoder = nullptr;
+    cFFmpegAudioDecoder* audioDecoder = nullptr;
 
     mStreamPos = 0;
     int64_t loadPts = -1;
@@ -2720,7 +2719,7 @@ public:
       //}
       //}}}
     //}}}
-    iAudioDecoder* decoder = createAudioDecoder (mAudioFrameType);
+    cFFmpegAudioDecoder* decoder = createAudioDecoder (mAudioFrameType);
 
     // pts = frameNum starting at zero
     int64_t pts = 0;

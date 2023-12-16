@@ -13,7 +13,7 @@
 #include "../common/cMiniLog.h"
 #include "../common/readerWriterQueue.h"
 
-#include "cFrame.h"
+#include "../decoders/cFrame.h"
 class cDecoder;
 #include "cDecoderQueueItem.h"
 //}}}

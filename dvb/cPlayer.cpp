@@ -23,7 +23,7 @@
 #include "../common/cLog.h"
 #include "../common/utils.h"
 
-#include "cAudioFrame.h"
+#include "../decoders/cAudioFrame.h"
 #include "cAudioRender.h"
 
 using namespace std;

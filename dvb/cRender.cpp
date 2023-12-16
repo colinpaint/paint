@@ -11,7 +11,7 @@
 #include "../common/utils.h"
 #include "../common/cLog.h"
 
-#include "cDecoder.h"
+#include "../decoders/cDecoder.h"
 
 using namespace std;
 //}}}

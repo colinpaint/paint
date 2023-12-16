@@ -49,13 +49,15 @@
 #include "../song/cSong.h"
 #include "../song/cSongLoader.h"
 
+// decoders
+#include "../decoders/cAudioFrame.h"
+#include "../decoders/cVideoFrame.h"
+
 // dvb
 #include "../dvb/cDvbSource.h"
 #include "../dvb/cTransportStream.h"
 #include "../dvb/cVideoRender.h"
-#include "../dvb/cVideoFrame.h"
 #include "../dvb/cAudioRender.h"
-#include "../dvb/cAudioFrame.h"
 #include "../dvb/cSubtitleRender.h"
 #include "../dvb/cSubtitleImage.h"
 #include "../dvb/cPlayer.h"

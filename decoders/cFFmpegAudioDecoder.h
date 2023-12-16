@@ -6,10 +6,26 @@
 #include <algorithm>
 #include <functional>
 
-#include "../common/cLog.h"
-
 #include "cDecoder.h"
+#include "cAudioParser.h"
 #include "cAudioFrame.h"
+//{{{  libav
+#ifdef _WIN32
+  #pragma warning (push)
+  #pragma warning (disable: 4244)
+#endif
+
+extern "C" {
+  #include "libavcodec/avcodec.h"
+  #include "libavformat/avformat.h"
+  }
+
+#ifdef _WIN32
+  #pragma warning (pop)
+#endif
+//}}}
+
+#include "../common/cLog.h"
 //}}}
 constexpr bool kDebug = false;
 
@@ -28,18 +44,21 @@ namespace {
 class cFFmpegAudioDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegAudioDecoder (cRender& render, uint8_t streamType)
-      : cDecoder(),
-        mRender(render),
-        mStreamType(streamType), mAacLatm(mStreamType == 17), mStreamTypeName(mAacLatm ? "aacL" : "mp3 "),
-        mAvCodec(avcodec_find_decoder (mAacLatm ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3)) {
+  cFFmpegAudioDecoder (eAudioFrameType audioFrameType) :
+      cDecoder(),
+      mAudioFrameType(audioFrameType),
+      mStreamTypeName((audioFrameType == eAudioFrameType::eAacLatm) ? "aacL" :
+                        (audioFrameType == eAudioFrameType::eAacAdts) ? "aacA" : "mp3 "),
+      mAvCodec(avcodec_find_decoder ((audioFrameType == eAudioFrameType::eAacLatm) ? AV_CODEC_ID_AAC_LATM :
+                                       (audioFrameType == eAudioFrameType::eAacAdts) ? AV_CODEC_ID_AAC: AV_CODEC_ID_MP3)) {
 
     av_log_set_level (AV_LOG_ERROR);
     av_log_set_callback (logCallback);
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder - streamType:{}:{}", mStreamType, mStreamTypeName));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegAudioDecoder {}", mStreamTypeName));
 
-    mAvParser = av_parser_init (mAacLatm ? AV_CODEC_ID_AAC_LATM : AV_CODEC_ID_MP3);
+    mAvParser = av_parser_init ((audioFrameType == eAudioFrameType::eAacLatm) ? AV_CODEC_ID_AAC_LATM :
+                                  (audioFrameType == eAudioFrameType::eAacAdts) ? AV_CODEC_ID_AAC: AV_CODEC_ID_MP3);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     mAvContext->flags2 |= AV_CODEC_FLAG2_FAST;
 
@@ -57,15 +76,17 @@ public:
     }
   //}}}
 
+  int32_t getNumChannels() const { return mChannels; }
+  int32_t getSampleRate() const { return mSampleRate; }
+  int32_t getNumSamplesPerFrame() const { return mSamplesPerFrame; }
+
   virtual std::string getInfoString() const final { return "ffmpeg " + mStreamTypeName; }
   //{{{
   virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           std::function<cFrame* ()> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final  {
+    (void)pid;
     (void)dts;
-
-    mRender.log ("pes", fmt::format ("pid:{} pts:{} size:{}",
-                                     pid, utils::getFullPtsString (pts), pesSize));
 
     AVPacket* avPacket = av_packet_alloc();
     AVFrame* avFrame = av_frame_alloc();
@@ -139,13 +160,102 @@ public:
     }
   //}}}
 
+  //{{{
+  float* decodeFrame (const uint8_t* framePtr, int frameLen, int64_t pts) {
+
+    float* samples = nullptr;
+
+    AVPacket* avPacket = av_packet_alloc();
+    AVFrame* avFrame = av_frame_alloc();
+
+    auto pesPtr = framePtr;
+    auto pesSize = frameLen;
+    while (pesSize) {
+      auto bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
+                                         pesPtr, (int)pesSize, pts, AV_NOPTS_VALUE, 0);
+      avPacket->pts = pts;
+      pesPtr += bytesUsed;
+      pesSize -= bytesUsed;
+      if (avPacket->size) {
+        auto ret = avcodec_send_packet (mAvContext, avPacket);
+        while (ret >= 0) {
+          ret = avcodec_receive_frame (mAvContext, avFrame);
+          if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0)
+            break;
+
+          if (avFrame->nb_samples > 0) {
+            switch (mAvContext->sample_fmt) {
+              //{{{
+              case AV_SAMPLE_FMT_FLTP: { // 32bit float planar, copy to interleaved, mix down 5.1
+                mChannels = 2;
+                mSampleRate = avFrame->sample_rate;
+                mSamplesPerFrame = avFrame->nb_samples;
+
+                samples = (float*)malloc (mChannels * mSamplesPerFrame * sizeof(float));
+                float* dstPtr = samples;
+
+                float* srcPtr0 = (float*)avFrame->data[0];
+                float* srcPtr1 = (float*)avFrame->data[1];
+                if (avFrame->ch_layout.nb_channels == 6) { // 5.1
+                  float* srcPtr2 = (float*)avFrame->data[2];
+                  float* srcPtr3 = (float*)avFrame->data[3];
+                  float* srcPtr4 = (float*)avFrame->data[4];
+                  float* srcPtr5 = (float*)avFrame->data[5];
+                  for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+                    *dstPtr++ = *srcPtr0++ + *srcPtr2++ + *srcPtr4 + *srcPtr5; // left loud
+                    *dstPtr++ = *srcPtr1++ + *srcPtr3++ + *srcPtr4++ + *srcPtr5++; // right loud
+                    }
+                  }
+                else // stereo
+                  for (size_t sample = 0; sample < mSamplesPerFrame; sample++) {
+                    *dstPtr++ = *srcPtr0++;
+                    *dstPtr++ = *srcPtr1++;
+                    }
+                  }
+                break;
+              //}}}
+              //{{{
+              case AV_SAMPLE_FMT_S16P: // 16bit signed planar, copy scale and copy to interleaved
+                mChannels =  avFrame->ch_layout.nb_channels;
+                mSampleRate = avFrame->sample_rate;
+                mSamplesPerFrame = avFrame->nb_samples;
+
+                samples = (float*)malloc (avFrame->ch_layout.nb_channels * avFrame->nb_samples * sizeof(float));
+
+                for (size_t channel = 0; channel < avFrame->ch_layout.nb_channels; channel++) {
+                  float* dstPtr = samples + channel;
+                  short* srcPtr = (short*)avFrame->data[channel];
+                  for (int sample = 0; sample < mSamplesPerFrame; sample++) {
+                    *dstPtr = *srcPtr++ / (float)0x8000;
+                    dstPtr += mChannels;
+                    }
+                  }
+                break;
+              //}}}
+              default:;
+              }
+
+            }
+          av_frame_unref (avFrame);
+          }
+        }
+      }
+
+    av_frame_free (&avFrame);
+    av_packet_free (&avPacket);
+    return samples;
+    }
+  //}}}
+
 private:
-  cRender& mRender;
-  const uint8_t mStreamType;
-  const bool mAacLatm;
+  const eAudioFrameType mAudioFrameType;
   const std::string mStreamTypeName;
   const AVCodec* mAvCodec = nullptr;
 
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;
+
+  int32_t mChannels = 0;
+  int32_t mSampleRate = 0;
+  int32_t mSamplesPerFrame = 0;
   };

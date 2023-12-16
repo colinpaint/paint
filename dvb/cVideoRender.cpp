@@ -6,7 +6,6 @@
 #endif
 
 #include "cVideoRender.h"
-#include "cVideoFrame.h"
 
 #include <cstdint>
 #include <string>
@@ -42,8 +41,8 @@ extern "C" {
   #pragma warning (pop)
 #endif
 //}}}
-#include "cFFmpegVideoFrame.h"
-#include "cFFmpegVideoDecoder.h"
+#include "../decoders/cFFmpegVideoFrame.h"
+#include "../decoders/cFFmpegVideoDecoder.h"
 
 using namespace std;
 //}}}
@@ -78,7 +77,7 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid
                 cRender::addFrame (frame);
                 }) {
 
-  mDecoder = new cFFmpegVideoDecoder (*this, streamType);
+  mDecoder = new cFFmpegVideoDecoder (streamType);
   }
 //}}}
 

@@ -33,7 +33,8 @@ extern "C" {
   #pragma warning (pop)
 #endif
 //}}}
-#include "cFFmpegAudioDecoder.h"
+#include "../decoders/cAudioParser.h"
+#include "../decoders/cFFmpegAudioDecoder.h"
 #include "cPlayer.h"
 
 using namespace std;
@@ -79,7 +80,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid
       mSampleRate(48000), mSamplesPerFrame(1024),
       mLive(live), mHasAudio(hasAudio) {
 
-  mDecoder = new cFFmpegAudioDecoder (*this, streamType);
+  mDecoder = new cFFmpegAudioDecoder ((streamType == 17) ? eAudioFrameType::eAacLatm : eAudioFrameType::eMp3);
   }
 //}}}
 

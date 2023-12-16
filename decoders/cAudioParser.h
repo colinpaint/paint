@@ -1,5 +1,7 @@
 #pragma once
-#include "iAudioDecoder.h"
+#include <cstdint>
+
+enum class eAudioFrameType { eUnknown, eId3Tag, eWav, eMp3, eAacAdts, eAacLatm };
 
 class cAudioParser {
 public:
