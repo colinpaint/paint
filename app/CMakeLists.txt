@@ -1,6 +1,7 @@
 project (app VERSION 1.0.0)
 
   if (BUILD_GRAPHICS STREQUAL "GL3")
+    # openGL3
     message (STATUS "building GL3 app with BUILD_GRAPHICS ${BUILD_GRAPHICS}")
 
     add_library (${PROJECT_NAME} cApp.h cPlatform.h cGraphics.h cGlfwApp.cpp
@@ -8,18 +9,20 @@ project (app VERSION 1.0.0)
                                  cGL3Graphics.h)
 
     target_compile_definitions (${PROJECT_NAME} PRIVATE ${BUILD_GRAPHICS})
-    target_link_libraries (${PROJECT_NAME} PRIVATE glfw)
-
     target_link_libraries (${PROJECT_NAME} PUBLIC common imgui)
-    target_link_libraries (${PROJECT_NAME} PRIVATE glad)
+    target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad)
     find_package (OpenGL REQUIRED)
-    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+      target_link_libraries (${PROJECT_NAME} PRIVATE opengl32)
+    else()
       target_link_libraries (${PROJECT_NAME} PRIVATE GL)
     endif()
 
   elseif (BUILD_GRAPHICS STREQUAL "GLES30" OR
           BUILD_GRAPHICS STREQUAL "GLES31" OR
           BUILD_GRAPHICS STREQUAL "GLES32")
+    # openGLES 3
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
       message (FATAL_ERROR, "GLES unavailable in Windows BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
     else()

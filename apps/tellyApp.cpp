@@ -2086,7 +2086,7 @@ namespace {
     size_t mMaxSidChars = 3;
     size_t mMaxPgmChars = 3;
 
-    array <size_t, 4> mPidMaxChars = { 3 };
+    array <size_t,4> mPidMaxChars = { 3 };
 
     // !!! wrong !!! needed per service
     array <cTexture*,4> mSubtitleTextures = { nullptr };
