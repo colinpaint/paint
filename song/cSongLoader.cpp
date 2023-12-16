@@ -1379,8 +1379,10 @@ public:
               auto samples = audioDecoder->decodeFrame (buffer, frameSize, pts);
               if (samples) {
                 if (!mSong)
-                  mSong = new cSong (frameType, audioDecoder->getNumChannels(), audioDecoder->getSampleRate(),
-                                     audioDecoder->getNumSamplesPerFrame(), 0);
+                  mSong = new cSong (frameType, 
+                                     (int)audioDecoder->getNumChannels(), 
+                                     (int)audioDecoder->getSampleRate(),
+                                     (int)audioDecoder->getNumSamplesPerFrame(), 0);
 
                 mSong->addFrame (true, pts, samples,  mSong->getNumFrames()+1);
                 pts += mSong->getFramePtsDuration();
@@ -2737,8 +2739,11 @@ public:
         if (samples) {
           if (!mSong)
             // first decoded frame gives aacHE sampleRate,samplesPerFrame
-            mSong = new cSong (mAudioFrameType, decoder->getNumChannels(), decoder->getSampleRate(),
-                               decoder->getNumSamplesPerFrame(), 0);
+            mSong = new cSong (mAudioFrameType, 
+                               (int)decoder->getNumChannels(), 
+                               (int)decoder->getSampleRate(),
+                               (int)decoder->getNumSamplesPerFrame(), 
+                               0);
 
           // add frame to song
           mSong->addFrame (true, pts, samples, (mFileSize * mSong->getNumFrames()) / mStreamPos);

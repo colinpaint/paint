@@ -1,7 +1,7 @@
 project (decoders VERSION 1.0.0)
   add_library (${PROJECT_NAME} cAudioParser.h cAudioParser.cpp
-                               cFrame.h cAudioFrame.h cVideoFrame.h cFFmpegVideoFrame.h
-                               cDecoder.h cFFmpegAudioDecoder.h cFFmpegVideoDecoder.h)
+                               cFrame.h cAudioFrame.h cVideoFrame.h cFFmpegVideoFrame.h cSubtitleFrame.h
+                               cDecoder.h cFFmpegAudioDecoder.h cFFmpegVideoDecoder.h cSubtitleDecoder.h)
 
   if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
     # windows

@@ -5,8 +5,7 @@ project (dvb VERSION 1.0.0)
                                cRender.h cRender.cpp
                                cVideoRender.h cVideoRender.cpp
                                cAudioRender.h cAudioRender.cpp
-                               cSubtitleFrame.h cSubtitleDecoder.h cSubtitleImage.h
-                               cSubtitleRender.h cSubtitleRender.cpp
+                               cSubtitleImage.h cSubtitleRender.h cSubtitleRender.cpp
                                cPlayer.h cPlayer.cpp
                                )
 

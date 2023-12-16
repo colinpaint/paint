@@ -7,13 +7,13 @@
 #include <vector>
 #include <array>
 
+#include "cSubtitleImage.h"
+#include "../decoders/cSubtitleFrame.h"
+#include "../decoders/cSubtitleDecoder.h"
+
 #include "../common/date.h"
 #include "../common/cLog.h"
 #include "../common/utils.h"
-
-#include "cSubtitleFrame.h"
-#include "cSubtitleDecoder.h"
-#include "cSubtitleImage.h"
 
 using namespace std;
 //}}}

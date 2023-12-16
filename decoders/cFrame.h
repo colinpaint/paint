@@ -1,4 +1,4 @@
-// cFrame.h - stream render base class
+// cFrame.h - mpeg stransport stream frame base class
 //{{{  includes
 #pragma once
 #include <cstdint>
@@ -11,7 +11,6 @@ constexpr bool kFrameDebug = false;
 // base class
 class cFrame {
 public:
-  cFrame()  = default;
   virtual ~cFrame() {
     if (kFrameDebug)
       cLog::log (LOGINFO, fmt::format ("cFrame::~cFrame"));

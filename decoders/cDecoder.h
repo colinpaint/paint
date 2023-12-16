@@ -10,7 +10,6 @@ class cFrame;
 
 class cDecoder {
 public:
-  cDecoder() = default;
   virtual ~cDecoder() = default;
 
   virtual std::string getInfoString() const = 0;
