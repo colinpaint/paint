@@ -64,7 +64,7 @@ project (imguiApp VERSION 1.0.0)
     target_link_libraries (${PROJECT_NAME} PRIVATE app GL)
   endif()
 
-# edit app
+# editApp
 project (editApp VERSION 1.0.0)
   add_executable (${PROJECT_NAME} apps/editApp.cpp)
 

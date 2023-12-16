@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-enum class eAudioFrameType { eUnknown, eId3Tag, eWav, eMp3, eAacAdts, eAacLatm };
+enum class eAudioFrameType { eUnknown, eAacLatm, eAacAdts, eMp3, eWav, eId3Tag };
 
 class cAudioParser {
 public:
