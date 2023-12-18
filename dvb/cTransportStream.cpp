@@ -734,16 +734,8 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 //}}}
 //}}}
 
-//{{{
-cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, const string& recordRoot,
-                                    bool isLive, bool showAllServices, bool showFirstService,
-                                    bool hasAudio, bool hasMotionVectors)
-    : mDvbMultiplex(dvbMultiplex),
-      mRecordRoot(recordRoot),
-      mIsLive(isLive),
-      mHasAudio(hasAudio), mHasMotionVectors(hasMotionVectors),
-      mShowAllServices(showAllServices), mShowFirstService(showFirstService) {}
-//}}}
+cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, cOptions* options) : 
+  mDvbMultiplex(dvbMultiplex), mOptions(options) {}
 
 // gets
 //{{{
@@ -1017,8 +1009,8 @@ cTransportStream::cPidInfo* cTransportStream::getPsiPidInfo (uint16_t pid) {
 //{{{
 void cTransportStream::foundService (cService& service) {
 
-  if (mShowAllServices ||
-      (mShowFirstService && !mShowingFirstService)) {
+  if (mOptions->mShowAllServices ||
+      (mOptions->mShowFirstService && !mShowingFirstService)) {
 
     if (service.getRenderStream (eRenderType(eRenderVideo)).isDefined()) {
       service.toggleAll();
@@ -1043,7 +1035,7 @@ void cTransportStream::startServiceProgram (cService& service,
   if ((selected || service.getChannelRecord() || mDvbMultiplex.mRecordAll) &&
       service.getRenderStream (eRenderVideo).isDefined() &&
       (service.getRenderStream(eRenderAudio).isDefined())) {
-    string filePath = mRecordRoot +
+    string filePath = mOptions->mRecordRoot +
                       service.getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
                       utils::getValidFileString (programName) +
@@ -1388,7 +1380,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
     if (!getService (sid)) {
      //{{{  found new service, create cService
      cLog::log (LOGINFO, fmt::format ("create service {}", sid));
-     cService& service = mServiceMap.emplace (sid, cService(sid, isLive(), mHasAudio, mHasMotionVectors)).first->second;
+     cService& service = mServiceMap.emplace (sid, cService(sid, mOptions->mIsLive, mOptions->mHasAudio, mOptions->mHasMotionVectors)).first->second;
 
      service.setProgramPid (pidInfo->getPid());
      pidInfo->setSid (sid);

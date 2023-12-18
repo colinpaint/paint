@@ -291,7 +291,7 @@ private:
 
 // cApp
 //{{{
-cApp::cApp (iUI* ui, const string& name, const cPoint& windowSize, cOptions* options) : 
+cApp::cApp (iUI* ui, const string& name, cOptions* options) :
     mUI(ui), mOptions(options) {
 
   if (options->mHeadless)
@@ -300,7 +300,7 @@ cApp::cApp (iUI* ui, const string& name, const cPoint& windowSize, cOptions* opt
   else {
     // create GLFW platform
     cGlfwPlatform* glfwPlatform = new cGlfwPlatform (name);
-    if (!glfwPlatform || !glfwPlatform->init (windowSize)) {
+    if (!glfwPlatform || !glfwPlatform->init (options->mWindowSize)) {
       cLog::log (LOGERROR, "cApp - glfwPlatform init failed");
       return;
       }

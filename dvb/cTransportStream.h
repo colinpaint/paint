@@ -24,6 +24,25 @@ enum eRenderType { eRenderVideo, eRenderAudio, eRenderDescription, eRenderSubtit
 class cTransportStream {
 public:
   //{{{
+  class cOptions {
+  public:
+    ~cOptions() = default;
+
+    std::string mRecordRoot;
+
+    bool mHasAudio = true;
+    bool mHasMotionVectors = false;
+
+    bool mIsLive = false;
+    bool mShowAllServices = false;
+    bool mShowFirstService = false;
+    bool mRecordAll = false;
+
+    // move to subttilerender
+    bool mShowSubtitle = false;
+    };
+  //}}}
+  //{{{
   class cStream {
   public:
     ~cStream();
@@ -276,9 +295,7 @@ public:
     };
   //}}}
 
-  cTransportStream (const cDvbMultiplex& dvbMultiplex, const std::string& recordRoot,
-                    bool isLive, bool showAllServices, bool showFirstService,
-                    bool hasAudio, bool hasMotionVectors);
+  cTransportStream (const cDvbMultiplex& dvbMultiplex, cOptions* options);
   virtual ~cTransportStream() { clear(); }
 
   //{{{  gets
@@ -297,7 +314,7 @@ public:
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
 
-  bool isLive() const { return mIsLive; }
+  bool isLive() const { return mOptions->mIsLive; }
   //}}}
 
   void toggleStream (cService& service, eRenderType renderType);
@@ -336,14 +353,7 @@ private:
 
   //{{{  vars
   const cDvbMultiplex mDvbMultiplex;
-  const std::string mRecordRoot;
-
-  const bool mIsLive;
-  const bool mHasAudio;
-  const bool mHasMotionVectors;
-  const bool mShowAllServices;
-  const bool mShowFirstService;
-
+  cOptions* mOptions;
   bool mShowingFirstService = false;
 
   std::mutex mMutex;

@@ -28,19 +28,20 @@ public:
   class cOptions {
   public:
     cOptions() = default;
-    cOptions(bool fullScreen, bool headless, bool vsync) : mFullScreen(fullScreen), mHeadless(headless), mVsync(vsync) {}
     virtual ~cOptions() = default;
 
     // vars
     eLogLevel mLogLevel = LOGINFO;
 
+    cPoint mWindowSize = { 1920/2, 1080/2 };
     bool mFullScreen = false;
+
     bool mHeadless = false;
     bool mVsync = true;
     };
   //}}}
 
-  cApp (iUI* ui, const std::string& name, const cPoint& windowSize, cOptions* options);
+  cApp (iUI* ui, const std::string& name, cOptions* options);
   virtual ~cApp();
 
   // get interfaces

@@ -1516,8 +1516,8 @@ namespace {
   //{{{
   class cEditApp : public cApp {
   public:
-    cEditApp (iUI* ui, const cPoint& windowSize, cOptions* options) :
-      cApp (ui, "fed", windowSize, options) {}
+    cEditApp (iUI* ui, cOptions* options) :
+      cApp (ui, "fed", options) {}
     virtual ~cEditApp() = default;
 
     bool getMemEditing() const { return mMemEditing; };
@@ -4643,11 +4643,8 @@ namespace {
 int main (int numArgs, char* args[]) {
 
   // params
-  cApp::cOptions* options;
-  eLogLevel logLevel = LOGINFO;
-  bool fullScreen = false;
+  cApp::cOptions* options = new cApp::cOptions();;
   bool memEdit = false;
-  bool vsync = true;
   //{{{  parse command line args to params
   // args to params
   vector <string> params;
@@ -4656,22 +4653,22 @@ int main (int numArgs, char* args[]) {
 
   // parse and remove recognised params
   for (auto it = params.begin(); it < params.end();) {
-    if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
-    else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
-    else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
-    else if (*it == "full") { fullScreen = true; params.erase (it); }
+    if (*it == "log1") { options->mLogLevel = LOGINFO1; params.erase (it); }
+    else if (*it == "log2") { options->mLogLevel = LOGINFO2; params.erase (it); }
+    else if (*it == "log3") { options->mLogLevel = LOGINFO3; params.erase (it); }
+    else if (*it == "full") { options->mFullScreen = true; params.erase (it); }
     else if (*it == "mem") { memEdit = true; params.erase (it); }
-    else if (*it == "free") { vsync = false; params.erase (it); }
+    else if (*it == "free") { options->mVsync = false; params.erase (it); }
     else ++it;
     };
   //}}}
 
   // log
-  cLog::init (logLevel);
+  cLog::init (options->mLogLevel);
   cLog::log (LOGNOTICE, fmt::format ("edit"));
 
   // app
-  cEditApp editApp (new cEditUI(), {1000, 900}, options);
+  cEditApp editApp (new cEditUI(), options);
   editApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   editApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
   editApp.setDocumentName (params.empty() ? "../../fed/cEditUI.cpp" : params[0], memEdit);

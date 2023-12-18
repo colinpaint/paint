@@ -47,8 +47,8 @@ using namespace std;
 //{{{
 class cImguiApp : public cApp {
 public:
-  cImguiApp (iUI* ui, const cPoint& windowSize, cOptions* options)  :
-     cApp (ui, "imguiApp", windowSize, options) {}
+  cImguiApp (iUI* ui, cOptions* options)  :
+     cApp (ui, "imguiApp", options) {}
   virtual ~cImguiApp() = default;
 
   virtual void drop (const vector<string>& dropItems) final {
@@ -95,10 +95,7 @@ public:
 int main (int numArgs, char* args[]) {
 
   // params
-  cApp::cOptions* options;
-  eLogLevel logLevel = LOGINFO;
-  bool fullScreen = false;
-  bool vsync = true;
+  cApp::cOptions* options = new cApp::cOptions();
   //{{{  parse command line args to params
   // args to params
   vector <string> params;
@@ -107,21 +104,21 @@ int main (int numArgs, char* args[]) {
 
   // parse and remove recognised params
   for (auto it = params.begin(); it < params.end();) {
-    if (*it == "log1") { logLevel = LOGINFO1; params.erase (it); }
-    else if (*it == "log2") { logLevel = LOGINFO2; params.erase (it); }
-    else if (*it == "log3") { logLevel = LOGINFO3; params.erase (it); }
-    else if (*it == "full") { fullScreen = true; params.erase (it); }
-    else if (*it == "free") { vsync = false; params.erase (it); }
+    if (*it == "log1") { options->mLogLevel = LOGINFO1; params.erase (it); }
+    else if (*it == "log2") { options->mLogLevel = LOGINFO2; params.erase (it); }
+    else if (*it == "log3") { options->mLogLevel = LOGINFO3; params.erase (it); }
+    else if (*it == "full") { options->mFullScreen = true; params.erase (it); }
+    else if (*it == "free") { options->mVsync = false; params.erase (it); }
     else ++it;
     };
   //}}}
 
   // log
-  cLog::init (logLevel);
+  cLog::init (options->mLogLevel);
   cLog::log (LOGNOTICE, fmt::format ("fed"));
 
   // ImguiApp
-  cImguiApp imguiApp (new cImguiUI(), {1000, 900}, options);
+  cImguiApp imguiApp (new cImguiUI(), options);
   imguiApp.mainUILoop();
 
   return EXIT_SUCCESS;

@@ -85,19 +85,12 @@ using namespace std;
 //}}}
 namespace {
   //{{{
-  class cTellyOptions : public cApp::cOptions {
+  class cTellyOptions : public cApp::cOptions, public cTransportStream::cOptions {
   public:
-    cTellyOptions() : cOptions() {}
+    cTellyOptions() : cApp::cOptions(), cTransportStream::cOptions() {}
     virtual ~cTellyOptions() = default;
 
-    bool mHasAudio = true;
-    bool mHasMotionVectors = false;
-
     bool mPlaySong = false;
-
-    bool mRecordAll = false;
-    bool mShowAllServices = true;
-    bool mShowSubtitle = false;
     };
   //}}}
 
@@ -129,8 +122,8 @@ namespace {
   class cSongApp : public cApp {
   public:
     //{{{
-    cSongApp (iUI* ui, const cPoint& windowSize, cTellyOptions* options) :
-        cApp(ui, "songApp",windowSize, options) {
+    cSongApp (iUI* ui, cTellyOptions* options) :
+        cApp(ui, "songApp", options) {
 
       mSongLoader = new cSongLoader();
       }
@@ -1510,8 +1503,8 @@ namespace {
   //{{{
   class cTellyApp : public cApp {
   public:
-    cTellyApp (iUI* ui, const cPoint& windowSize, cTellyOptions* options) :
-      cApp (ui, "telly", windowSize, options), mOptions(options) {}
+    cTellyApp (iUI* ui, cTellyOptions* options) :
+      cApp (ui, "telly", options), mOptions(options) {}
     virtual ~cTellyApp() = default;
 
     cMultiView& getMultiView() { return mMultiView; }
@@ -1528,11 +1521,10 @@ namespace {
     uint64_t getFilePos() const { return mFilePos; }
     size_t getFileSize() const { return mFileSize; }
     //{{{
-    void fileSource (const string& filename, bool showAllServices) {
+    void fileSource (const string& filename, cTellyOptions* options) {
     // create fileSource, any channel
 
-      mTransportStream = new cTransportStream (kDvbMultiplexes[0], "", false, showAllServices, true,
-                                               mOptions->mHasAudio, mOptions->mHasMotionVectors);
+      mTransportStream = new cTransportStream (kDvbMultiplexes[0], options);
       if (mTransportStream) {
         // launch fileSource thread
         mFileName = cFileUtils::resolve (filename);
@@ -1583,20 +1575,19 @@ namespace {
     bool isDvbSource() const { return mDvbSource; }
     cDvbSource& getDvbSource() { return *mDvbSource; }
     //{{{
-    void liveDvbSource (const cDvbMultiplex& multiplex, const string& recordRoot, bool showAllServices) {
+    void liveDvbSource (const cDvbMultiplex& multiplex, cTellyOptions* options) {
     // create liveDvbSource from dvbMultiplex
 
       cLog::log (LOGINFO, fmt::format ("using multiplex {} {:4.1f} record {} {}",
                                        multiplex.mName, multiplex.mFrequency/1000.f,
-                                       recordRoot, showAllServices ? "all " : ""));
+                                       options->mRecordRoot, options->mShowAllServices ? "all " : ""));
 
       mMultiplex = multiplex;
-      mRecordRoot = recordRoot;
+      mRecordRoot = options->mRecordRoot;
       if (multiplex.mFrequency)
         mDvbSource = new cDvbSource (multiplex.mFrequency, 0);
 
-      mTransportStream = new cTransportStream (multiplex, recordRoot, true, showAllServices, false,
-                                               mOptions->mHasAudio, mOptions->mHasMotionVectors);
+      mTransportStream = new cTransportStream (multiplex, options);
       if (mTransportStream) {
         mLiveThread = thread ([=]() {
           cLog::setThreadName ("dvb");
@@ -1672,7 +1663,7 @@ namespace {
 
       for (auto& item : dropItems) {
         cLog::log (LOGINFO, fmt::format ("cTellyApp::drop {}", item));
-        fileSource (item, true);
+        fileSource (item, mOptions);
         }
       }
     //}}}
@@ -2200,22 +2191,24 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, "tellyApp - all,simple,head,free,noaudio,song,full,sub,motion,log123,multiplexName,filename");
 
   if (options->mPlaySong) {
-    cSongApp songApp (new cSongUI(), {800, 480}, options);
+    cSongApp songApp (new cSongUI(), options);
     songApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
     songApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
     songApp.setSongName (filename);
     songApp.mainUILoop();
     }
   else {
-    cTellyApp tellyApp (new cTellyUI(), {1920/2, 1080/2}, options);
+    cTellyApp tellyApp (new cTellyUI(), options);
     if (!options->mHeadless) {
       tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
       tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
       }
-    if (filename.empty())
-      tellyApp.liveDvbSource (selectedMultiplex, kRootDir, options->mShowAllServices);
+    if (filename.empty()) {
+      options->mRecordRoot = kRootDir;
+      tellyApp.liveDvbSource (selectedMultiplex, options);
+      }
     else
-      tellyApp.fileSource (filename, options->mShowAllServices);
+      tellyApp.fileSource (filename, options);
     tellyApp.mainUILoop();
     }
 
