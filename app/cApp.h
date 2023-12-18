@@ -6,13 +6,14 @@
 #include <chrono>
 #include <vector>
 
+// utils
 #include "../common/basicTypes.h"
+#include "../common/cLog.h"
 
 class cPlatform;
 class cGraphics;
 struct ImFont;
 //}}}
-
 
 class cApp;
 class iUI {
@@ -29,6 +30,9 @@ public:
     cOptions() = default;
     cOptions(bool fullScreen, bool headless, bool vsync) : mFullScreen(fullScreen), mHeadless(headless), mVsync(vsync) {}
     virtual ~cOptions() = default;
+
+    // vars
+    eLogLevel mLogLevel = LOGINFO;
 
     bool mFullScreen = false;
     bool mHeadless = false;

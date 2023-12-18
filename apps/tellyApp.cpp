@@ -2141,10 +2141,9 @@ int main (int numArgs, char* args[]) {
   cAppOptions* options = new cAppOptions();
 
   // params
-  eLogLevel logLevel = LOGINFO;
   cDvbMultiplex selectedMultiplex = kDvbMultiplexes[1];
   string filename;
-  //{{{  parse commandLine to params
+  //{{{  parse commandLine params to options
   // parse params
   for (int i = 1; i < numArgs; i++) {
     string param = args[i];
@@ -2172,11 +2171,11 @@ int main (int numArgs, char* args[]) {
     else if (param == "motion")
       options->mHasMotionVectors = true;
     else if (param == "log1")
-      logLevel = LOGINFO1;
+      options->mLogLevel = LOGINFO1;
     else if (param == "log2")
-      logLevel = LOGINFO2;
+      options->mLogLevel = LOGINFO2;
     else if (param == "log3")
-      logLevel = LOGINFO3;
+      options->mLogLevel = LOGINFO3;
     else {
       // assume filename
       filename = param;
