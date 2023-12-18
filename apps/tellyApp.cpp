@@ -90,14 +90,14 @@ namespace {
     cAppOptions() : cOptions() {}
     virtual ~cAppOptions() = default;
 
+    bool mHasAudio = true;
+    bool mHasMotionVectors = false;
+
     bool mPlaySong = false;
 
     bool mRecordAll = false;
     bool mShowAllServices = true;
-
     bool mShowSubtitle = false;
-    bool mHasAudio = true;
-    bool mHasMotionVectors = false;
     };
   //}}}
 
