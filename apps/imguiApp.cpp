@@ -47,8 +47,7 @@ using namespace std;
 //{{{
 class cImguiApp : public cApp {
 public:
-  cImguiApp (iUI* ui, cOptions* options)  :
-     cApp (ui, "imguiApp", options) {}
+  cImguiApp (cOptions* options, iUI* ui) : cApp ("imguiApp", options, ui) {}
   virtual ~cImguiApp() = default;
 
   virtual void drop (const vector<string>& dropItems) final {
@@ -118,7 +117,7 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, fmt::format ("fed"));
 
   // ImguiApp
-  cImguiApp imguiApp (new cImguiUI(), options);
+  cImguiApp imguiApp (options, new cImguiUI());
   imguiApp.mainUILoop();
 
   return EXIT_SUCCESS;

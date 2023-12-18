@@ -291,8 +291,8 @@ private:
 
 // cApp
 //{{{
-cApp::cApp (iUI* ui, const string& name, cOptions* options) :
-    mUI(ui), mOptions(options) {
+cApp::cApp (const string& name, cOptions* options, iUI* ui) :
+    mName(name), mOptions(options), mUI(ui) {
 
   if (options->mHasGui) {
     // create GLFW platform

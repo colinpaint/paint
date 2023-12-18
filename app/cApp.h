@@ -40,7 +40,7 @@ public:
     };
   //}}}
 
-  cApp (iUI* ui, const std::string& name, cOptions* options);
+  cApp (const std::string& name, cOptions* options, iUI* ui);
   virtual ~cApp();
 
   // get interfaces
@@ -64,12 +64,13 @@ public:
   void mainUILoop();
 
 private:
+  std::string mName;
+  cOptions* mOptions;
+  iUI* mUI;
+
   cPlatform* mPlatform = nullptr;
   cGraphics* mGraphics = nullptr;
 
   ImFont* mMainFont;
   ImFont* mMonoFont;
-
-  iUI* mUI;
-  cOptions* mOptions;
-};
+  };

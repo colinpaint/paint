@@ -1516,8 +1516,7 @@ namespace {
   //{{{
   class cEditApp : public cApp {
   public:
-    cEditApp (iUI* ui, cOptions* options) :
-      cApp (ui, "fed", options) {}
+    cEditApp (cOptions* options, iUI* ui) : cApp ("fed", options, ui) {}
     virtual ~cEditApp() = default;
 
     bool getMemEditing() const { return mMemEditing; };
@@ -4668,7 +4667,7 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, fmt::format ("edit - log123 full free mem"));
 
   // app
-  cEditApp editApp (new cEditUI(), options);
+  cEditApp editApp (options, new cEditUI());
   editApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   editApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
   editApp.setDocumentName (params.empty() ? "../../fed/cEditUI.cpp" : params[0], memEdit);

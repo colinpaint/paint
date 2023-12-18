@@ -122,9 +122,7 @@ namespace {
   class cSongApp : public cApp {
   public:
     //{{{
-    cSongApp (iUI* ui, cTellyOptions* options) :
-        cApp(ui, "songApp", options) {
-
+    cSongApp (cTellyOptions* options, iUI* ui) : cApp("songApp", options, ui) {
       mSongLoader = new cSongLoader();
       }
     //}}}
@@ -1503,8 +1501,7 @@ namespace {
   //{{{
   class cTellyApp : public cApp {
   public:
-    cTellyApp (iUI* ui, cTellyOptions* options) :
-      cApp (ui, "telly", options), mOptions(options) {}
+    cTellyApp (cTellyOptions* options, iUI* ui) : cApp ("telly", options, ui), mOptions(options) {}
     virtual ~cTellyApp() = default;
 
     cMultiView& getMultiView() { return mMultiView; }
@@ -2132,6 +2129,7 @@ int main (int numArgs, char* args[]) {
   cTellyOptions* options = new cTellyOptions();
 
   // params
+  bool playSong = false;
   cDvbMultiplex selectedMultiplex = kDvbMultiplexes[1];
   string filename;
   //{{{  parse commandLine params to options
@@ -2153,7 +2151,7 @@ int main (int numArgs, char* args[]) {
     else if (param == "noaudio")
       options->mHasAudio = false;
     else if (param == "song")
-      options->mPlaySong = true;
+      playSong = true;
     else if (param == "sub")
       options->mShowSubtitle = true;
     else if (param == "motion")
@@ -2187,15 +2185,15 @@ int main (int numArgs, char* args[]) {
   cLog::init (options->mLogLevel);
   cLog::log (LOGNOTICE, "tellyApp - all simple head free noaudio song full sub motion log123 multiplexName filename");
 
-  if (options->mPlaySong) {
-    cSongApp songApp (new cSongUI(), options);
+  if (playSong) {
+    cSongApp songApp (options, new cSongUI());
     songApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
     songApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
     songApp.setSongName (filename);
     songApp.mainUILoop();
     }
   else {
-    cTellyApp tellyApp (new cTellyUI(), options);
+    cTellyApp tellyApp (options, new cTellyUI());
     if (options->mHasGui) {
       tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
       tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));

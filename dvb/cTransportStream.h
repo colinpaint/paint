@@ -26,7 +26,7 @@ public:
   //{{{
   class cOptions {
   public:
-    ~cOptions() = default;
+    virtual ~cOptions() = default;
 
     std::string mRecordRoot;
 
