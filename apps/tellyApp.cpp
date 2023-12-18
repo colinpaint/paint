@@ -85,10 +85,10 @@ using namespace std;
 //}}}
 namespace {
   //{{{
-  class cAppOptions : public cApp::cOptions {
+  class cTellyOptions : public cApp::cOptions {
   public:
-    cAppOptions() : cOptions() {}
-    virtual ~cAppOptions() = default;
+    cTellyOptions() : cOptions() {}
+    virtual ~cTellyOptions() = default;
 
     bool mHasAudio = true;
     bool mHasMotionVectors = false;
@@ -129,7 +129,7 @@ namespace {
   class cSongApp : public cApp {
   public:
     //{{{
-    cSongApp (iUI* ui, const cPoint& windowSize, cAppOptions* options) :
+    cSongApp (iUI* ui, const cPoint& windowSize, cTellyOptions* options) :
         cApp(ui, "songApp",windowSize, options) {
 
       mSongLoader = new cSongLoader();
@@ -171,7 +171,7 @@ namespace {
     //}}}
 
   private:
-    cAppOptions* mOptions;
+    cTellyOptions* mOptions;
     cSongLoader* mSongLoader;
     string mSongName;
     };
@@ -1510,7 +1510,7 @@ namespace {
   //{{{
   class cTellyApp : public cApp {
   public:
-    cTellyApp (iUI* ui, const cPoint& windowSize, cAppOptions* options) :
+    cTellyApp (iUI* ui, const cPoint& windowSize, cTellyOptions* options) :
       cApp (ui, "telly", windowSize, options), mOptions(options) {}
     virtual ~cTellyApp() = default;
 
@@ -1678,7 +1678,7 @@ namespace {
     //}}}
 
   private:
-    cAppOptions* mOptions;
+    cTellyOptions* mOptions;
     cTransportStream* mTransportStream = nullptr;
 
     cMultiView mMultiView;
@@ -2138,7 +2138,7 @@ namespace {
 // main
 int main (int numArgs, char* args[]) {
 
-  cAppOptions* options = new cAppOptions();
+  cTellyOptions* options = new cTellyOptions();
 
   // params
   cDvbMultiplex selectedMultiplex = kDvbMultiplexes[1];
