@@ -59,7 +59,7 @@ public:
   };
 //}}}
 //{{{
-class cImguiUI : public iUI {
+class cImguiUI : public cApp::iUI {
 public:
   void virtual draw (cApp& app) final {
     bool show_demo_window = true;

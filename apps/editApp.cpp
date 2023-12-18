@@ -4596,7 +4596,7 @@ namespace {
   //}}}
   //}}}
   //{{{
-  class cEditUI : public iUI {
+  class cEditUI : public cApp::iUI {
   public:
     virtual void draw (cApp& app) final {
       ImGui::SetNextWindowPos (ImVec2(0,0));

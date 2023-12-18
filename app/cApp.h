@@ -15,13 +15,6 @@ class cGraphics;
 struct ImFont;
 //}}}
 
-class cApp;
-class iUI {
-public:
-  virtual ~iUI() = default;
-  virtual void draw (cApp& app) = 0;
-  };
-
 class cApp {
 public:
   //{{{
@@ -30,13 +23,21 @@ public:
     cOptions() = default;
     virtual ~cOptions() = default;
 
-    // vars
     eLogLevel mLogLevel = LOGINFO;
 
     cPoint mWindowSize = { 1920/2, 1080/2 };
     bool mFullScreen = false;
-    bool mHasGui = true;
     bool mVsync = true;
+
+    bool mHasGui = true;
+    };
+  //}}}
+  //{{{
+  class iUI {
+  public:
+    virtual ~iUI() = default;
+
+    virtual void draw (cApp& app) = 0;
     };
   //}}}
 

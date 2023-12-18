@@ -168,7 +168,7 @@ namespace {
     };
   //}}}
   //{{{
-  class cSongUI : public iUI {
+  class cSongUI : public cApp::iUI {
   public:
     virtual void draw (cApp& app) final {
       cSongApp& songApp = (cSongApp&)app;
@@ -1685,7 +1685,7 @@ namespace {
     };
   //}}}
   //{{{
-  class cTellyUI : public iUI {
+  class cTellyUI : public cApp::iUI {
   public:
     //{{{
     virtual void draw (cApp& app) final {
