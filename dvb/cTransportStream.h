@@ -28,18 +28,15 @@ public:
   public:
     virtual ~cOptions() = default;
 
-    std::string mRecordRoot;
-
     bool mHasAudio = true;
     bool mHasMotionVectors = false;
+
+    std::string mRecordRoot;
+    bool mRecordAll = false;
 
     bool mIsLive = false;
     bool mShowAllServices = false;
     bool mShowFirstService = false;
-    bool mRecordAll = false;
-
-    // move to subttilerender
-    bool mShowSubtitle = false;
     };
   //}}}
   //{{{
@@ -211,15 +208,12 @@ public:
   //{{{
   class cService {
   public:
-    cService (uint16_t sid, bool isLive, bool hasAudio, bool motionVectors);
+    cService (uint16_t sid, cOptions* options);
     ~cService();
 
     // gets
     uint16_t getSid() const { return mSid; }
     uint16_t getProgramPid() const { return mProgramPid; }
-    bool isLive() const { return mIsLive; }
-    bool hasAudio() const { return mHasAudio; }
-    bool hasMotionVectors() const { return mHasMotionVectors; }
 
     // sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
@@ -273,9 +267,7 @@ public:
     //{{{  vars
     // var
     const uint16_t mSid;
-    const bool mIsLive;
-    const bool mHasAudio;
-    const bool mHasMotionVectors;
+    cOptions* mOptions = nullptr;
 
     uint16_t mProgramPid = 0;
 

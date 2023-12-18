@@ -90,7 +90,7 @@ namespace {
     cTellyOptions() : cApp::cOptions(), cTransportStream::cOptions() {}
     virtual ~cTellyOptions() = default;
 
-    bool mPlaySong = false;
+    bool mShowSubtitle = false;
     };
   //}}}
 

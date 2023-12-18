@@ -476,8 +476,7 @@ int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 //}}}
 //{{{  class cTransportStream::cService
 //{{{
-cTransportStream::cService::cService (uint16_t sid, bool isLive, bool hasAudio, bool motionVectors) :
-    mSid(sid), mIsLive(isLive), mHasAudio(hasAudio), mHasMotionVectors(motionVectors) {
+cTransportStream::cService::cService (uint16_t sid, cOptions* options) : mSid(sid), mOptions(options) {
 
   mRenderStreams[eRenderVideo].setLabel ("vid:");
   mRenderStreams[eRenderAudio].setLabel ("aud:");
@@ -601,13 +600,13 @@ void cTransportStream::cService::toggleStream (eRenderType renderType) {
     switch (renderType) {
       case eRenderVideo :
         stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId(), stream.getPid(),
-                                            isLive(), hasMotionVectors()));
+                                            mOptions->mIsLive, mOptions->mHasMotionVectors));
         return;
 
       case eRenderAudio :
       case eRenderDescription:
         stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), stream.getPid(),
-                                            isLive(), hasAudio()));
+                                            mOptions->mIsLive, mOptions->mHasAudio));
         return;
 
       case eRenderSubtitle :
@@ -734,7 +733,7 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 //}}}
 //}}}
 
-cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, cOptions* options) : 
+cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, cOptions* options) :
   mDvbMultiplex(dvbMultiplex), mOptions(options) {}
 
 // gets
@@ -1380,7 +1379,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
     if (!getService (sid)) {
      //{{{  found new service, create cService
      cLog::log (LOGINFO, fmt::format ("create service {}", sid));
-     cService& service = mServiceMap.emplace (sid, cService(sid, mOptions->mIsLive, mOptions->mHasAudio, mOptions->mHasMotionVectors)).first->second;
+     cService& service = mServiceMap.emplace (sid, cService(sid, mOptions)).first->second;
 
      service.setProgramPid (pidInfo->getPid());
      pidInfo->setSid (sid);
