@@ -13,6 +13,7 @@ class cGraphics;
 struct ImFont;
 //}}}
 
+
 class cApp;
 class iUI {
 public:
@@ -22,8 +23,20 @@ public:
 
 class cApp {
 public:
-  cApp (iUI* ui, const std::string& name, const cPoint& windowSize,
-        bool fullScreen, bool headless, bool vsync);
+  //{{{
+  class cOptions {
+  public:
+    cOptions() = default;
+    cOptions(bool fullScreen, bool headless, bool vsync) : mFullScreen(fullScreen), mHeadless(headless), mVsync(vsync) {}
+    virtual ~cOptions() = default;
+
+    bool mFullScreen = false;
+    bool mHeadless = false;
+    bool mVsync = true;
+    };
+  //}}}
+
+  cApp (iUI* ui, const std::string& name, const cPoint& windowSize, cOptions* options);
   virtual ~cApp();
 
   // get interfaces
@@ -52,5 +65,7 @@ private:
 
   ImFont* mMainFont;
   ImFont* mMonoFont;
+
   iUI* mUI;
-  };
+  cOptions* mOptions;
+};

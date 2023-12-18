@@ -36,7 +36,7 @@ public:
       cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::~cFFmpegVideoFrame"));
     }
 
-  virtual std::vector<cMotionVector>& getMotionVectors() final { return mMotionVectors; }
+  virtual std::vector<sMotionVector>& getMotionVectors() final { return mMotionVectors; }
 
   void setAVFrame (AVFrame* avFrame, bool hasMotionVectors) {
     // release old AVframe before owning new AVframe
@@ -56,9 +56,8 @@ public:
         size_t num = sideData->size / sizeof(AVMotionVector);
         for (size_t i = 0; i < num; i++) {
           const AVMotionVector* mv = &mvs[i];
-          mMotionVectors.push_back (cMotionVector(mv->src_x, mv->src_y, mv->dst_x, mv->dst_y));
-          // mv->source, mv->w, mv->h,
-          // mv->flags, mv->motion_x, mv->motion_y, mv->motion_scale));
+          mMotionVectors.push_back (sMotionVector(mv->source, mv->src_x, mv->src_y, mv->dst_x, mv->dst_y));
+          // mv->w, mv->h, mv->flags, mv->motion_x, mv->motion_y, mv->motion_scale));
           }
         }
       }
@@ -92,5 +91,5 @@ private:
   AVFrame* mAvFrame = nullptr;
 
   bool mHasMotionVectors;
-  std::vector <cMotionVector> mMotionVectors;
+  std::vector <sMotionVector> mMotionVectors;
   };

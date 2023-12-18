@@ -1516,8 +1516,8 @@ namespace {
   //{{{
   class cEditApp : public cApp {
   public:
-    cEditApp (iUI* ui, const cPoint& windowSize, bool fullScreen, bool vsync)
-      : cApp (ui, "fed", windowSize, fullScreen, false, vsync) {}
+    cEditApp (iUI* ui, const cPoint& windowSize, cOptions* options) :
+      cApp (ui, "fed", windowSize, options) {}
     virtual ~cEditApp() = default;
 
     bool getMemEditing() const { return mMemEditing; };
@@ -4643,6 +4643,7 @@ namespace {
 int main (int numArgs, char* args[]) {
 
   // params
+  cApp::cOptions options;
   eLogLevel logLevel = LOGINFO;
   bool fullScreen = false;
   bool memEdit = false;
@@ -4670,7 +4671,7 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, fmt::format ("edit"));
 
   // app
-  cEditApp editApp (new cEditUI(), {1000, 900}, fullScreen, vsync);
+  cEditApp editApp (new cEditUI(), {1000, 900}, options);
   editApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   editApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
   editApp.setDocumentName (params.empty() ? "../../fed/cEditUI.cpp" : params[0], memEdit);

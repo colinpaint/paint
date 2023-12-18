@@ -15,12 +15,12 @@
 //}}}
 
 //{{{
-class cMotionVector {
-public:
-  cMotionVector (float srcx, float srcy, float dstx, float dsty) :
-    mSrcx(srcx), mSrcy(srcy), mDstx(dstx), mDsty(dsty) {}
-  ~cMotionVector() = default;
+struct sMotionVector {
+  sMotionVector (int source, float srcx, float srcy, float dstx, float dsty) :
+    mSource(source), mSrcx(srcx), mSrcy(srcy), mDstx(dstx), mDsty(dsty) {}
+  ~sMotionVector() = default;
 
+  int mSource;
   float mSrcx;
   float mSrcy;
   float mDstx;
@@ -62,7 +62,7 @@ public:
   }
   //}}}
 
-  virtual std::vector<cMotionVector>& getMotionVectors() = 0;
+  virtual std::vector<sMotionVector>& getMotionVectors() = 0;
 
   void setWidth (uint16_t width) { mWidth = width; }
   void setHeight (uint16_t height) { mHeight = height; }

@@ -291,10 +291,10 @@ private:
 
 // cApp
 //{{{
-cApp::cApp (iUI* ui, const string& name, const cPoint& windowSize, bool fullScreen,
-            bool headless, bool vsync) : mUI(ui) {
+cApp::cApp (iUI* ui, const string& name, const cPoint& windowSize, cOptions* options) : 
+    mUI(ui), mOptions(options) {
 
-  if (headless)
+  if (options->mHeadless)
     cLog::log (LOGINFO, fmt::format ("{} created headless", name));
 
   else {
@@ -319,8 +319,8 @@ cApp::cApp (iUI* ui, const string& name, const cPoint& windowSize, bool fullScre
 
       // fullScreen, vsync
       mPlatform = glfwPlatform;
-      mPlatform->setFullScreen (fullScreen);
-      mPlatform->setVsync (vsync);
+      mPlatform->setFullScreen (options->mFullScreen);
+      mPlatform->setVsync (options->mVsync);
       }
     else
       cLog::log (LOGERROR, "cApp - graphics init failed");

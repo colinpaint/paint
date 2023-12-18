@@ -47,8 +47,8 @@ using namespace std;
 //{{{
 class cImguiApp : public cApp {
 public:
-  cImguiApp (iUI* ui, const cPoint& windowSize, bool fullScreen, bool vsync)
-    : cApp (ui, "imguiApp", windowSize, fullScreen, false, vsync) {}
+  cImguiApp (iUI* ui, const cPoint& windowSize, cOptions& options)  : 
+     cApp (ui, "imguiApp", windowSize, options) {}
   virtual ~cImguiApp() = default;
 
   virtual void drop (const vector<string>& dropItems) final {
@@ -95,6 +95,7 @@ public:
 int main (int numArgs, char* args[]) {
 
   // params
+  cApp::cOptions options;
   eLogLevel logLevel = LOGINFO;
   bool fullScreen = false;
   bool vsync = true;
@@ -120,7 +121,7 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, fmt::format ("fed"));
 
   // ImguiApp
-  cImguiApp imguiApp (new cImguiUI(), {1000, 900}, fullScreen, vsync);
+  cImguiApp imguiApp (new cImguiUI(), {1000, 900}, options);
   imguiApp.mainUILoop();
 
   return EXIT_SUCCESS;

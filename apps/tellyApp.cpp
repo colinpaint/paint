@@ -84,6 +84,23 @@ extern "C" {
 using namespace std;
 //}}}
 namespace {
+  //{{{
+  class cAppOptions : public cApp::cOptions {
+  public:
+    cAppOptions() : cOptions() {}
+    virtual ~cAppOptions() = default;
+
+    bool mPlaySong = false;
+
+    bool mRecordAll = false;
+    bool mShowAllServices = true;
+
+    bool mShowSubtitle = false;
+    bool mHasAudio = true;
+    bool mHasMotionVectors = false;
+    };
+  //}}}
+
   // song
   //{{{  const song channels
   const vector<string> kRadio1 = {"r1", "a128"};
@@ -112,8 +129,8 @@ namespace {
   class cSongApp : public cApp {
   public:
     //{{{
-    cSongApp (iUI* ui, const cPoint& windowSize, bool fullScreen)
-        : cApp(ui, "songApp",windowSize, fullScreen, false, true) {
+    cSongApp (iUI* ui, const cPoint& windowSize, cAppOptions* options) :
+        cApp(ui, "songApp",windowSize, options) {
 
       mSongLoader = new cSongLoader();
       }
@@ -154,6 +171,7 @@ namespace {
     //}}}
 
   private:
+    cAppOptions* mOptions;
     cSongLoader* mSongLoader;
     string mSongName;
     };
@@ -1018,7 +1036,7 @@ namespace {
             ImGui::GetWindowDrawList()->AddLine (
               { (float)mRect.left + motionVector.mSrcx, (float)mRect.top + motionVector.mSrcy },
               { (float)mRect.left + motionVector.mDstx, (float)mRect.top + motionVector.mDsty},
-              0xffffffff, 2.f);
+              motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
           //}}}
 
           if ((getHover() || getSelected()) && !getSelectedFull())
@@ -1492,11 +1510,8 @@ namespace {
   //{{{
   class cTellyApp : public cApp {
   public:
-    cTellyApp (iUI* ui, const cPoint& windowSize, bool fullScreen, bool headless,
-               bool showSubtitle, bool hasAudio, bool hasMotionVectors) :
-        cApp (ui, "telly", windowSize, fullScreen, headless, true),
-        mHasAudio(hasAudio), mHasMotionVectors(hasMotionVectors),
-        mShowSubtitle(showSubtitle) {}
+    cTellyApp (iUI* ui, const cPoint& windowSize, cAppOptions* options) :
+      cApp (ui, "telly", windowSize, options), mOptions(options) {}
     virtual ~cTellyApp() = default;
 
     cMultiView& getMultiView() { return mMultiView; }
@@ -1504,8 +1519,8 @@ namespace {
     bool hasTransportStream() { return mTransportStream; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
 
-    bool showSubtitle() const { return mShowSubtitle; }
-    void toggleShowSubtitle() { mShowSubtitle = !mShowSubtitle; }
+    bool showSubtitle() const { return mOptions.mShowSubtitle; }
+    void toggleShowSubtitle() { mOptions.mShowSubtitle = !mOptions.mShowSubtitle; }
 
     // fileSource
     bool isFileSource() const { return !mFileName.empty(); }
@@ -1517,7 +1532,7 @@ namespace {
     // create fileSource, any channel
 
       mTransportStream = new cTransportStream (kDvbMultiplexes[0], "", false, showAllServices, true,
-                                               mHasAudio, mHasMotionVectors);
+                                               mOptions->mHasAudio, mOptions->mHasMotionVectors);
       if (mTransportStream) {
         // launch fileSource thread
         mFileName = cFileUtils::resolve (filename);
@@ -1663,10 +1678,7 @@ namespace {
     //}}}
 
   private:
-    const bool mHasAudio;
-    const bool mHasMotionVectors;
-    bool mShowSubtitle;
-
+    cAppOptions* mOptions;
     cTransportStream* mTransportStream = nullptr;
 
     cMultiView mMultiView;
@@ -2126,15 +2138,9 @@ namespace {
 // main
 int main (int numArgs, char* args[]) {
 
+  cAppOptions* options = new cAppOptions();
+
   // params
-  bool recordAll = false;
-  bool fullScreen = false;
-  bool showAllServices = true;
-  bool headless = false;
-  bool hasAudio = true;
-  bool hasMotionVectors = false;
-  bool playSong = false;
-  bool showSubtitle = false;
   eLogLevel logLevel = LOGINFO;
   cDvbMultiplex selectedMultiplex = kDvbMultiplexes[1];
   string filename;
@@ -2144,23 +2150,27 @@ int main (int numArgs, char* args[]) {
     string param = args[i];
 
     if (param == "all")
-      recordAll = true;
+      options->mRecordAll = true;
     else if (param == "full")
-      fullScreen = true;
+      options->mFullScreen = true;
     else if (param == "simple")
-      showAllServices = false;
+      options->mShowAllServices = false;
+    else if (param == "free")
+      options->mVsync = false;
+    else if (param == "simple")
+      options->mShowAllServices = false;
     else if (param == "head") {
-      headless = true;
-      showAllServices = false;
+      options->mHeadless = true;
+      options->mShowAllServices = false;
       }
     else if (param == "noaudio")
-      hasAudio = false;
+      options->mHasAudio = false;
     else if (param == "song")
-      playSong = true;
+      options->mPlaySong = true;
     else if (param == "sub")
-      showSubtitle = true;
+      options->mShowSubtitle = true;
     else if (param == "motion")
-      hasMotionVectors = true;
+      options->mHasMotionVectors = true;
     else if (param == "log1")
       logLevel = LOGINFO1;
     else if (param == "log2")
@@ -2183,24 +2193,23 @@ int main (int numArgs, char* args[]) {
       }
     }
 
-  selectedMultiplex.mRecordAll = recordAll;
+  selectedMultiplex.mRecordAll = options->mRecordAll;
   //}}}
 
   // log
   cLog::init (logLevel);
-  cLog::log (LOGNOTICE, "tellyApp - all,simple,head,noaudio,song,full,sub,motion,log123,multiplexName,filename");
+  cLog::log (LOGNOTICE, "tellyApp - all,simple,head,free,noaudio,song,full,sub,motion,log123,multiplexName,filename");
 
-  if (playSong) {
-    cSongApp songApp (new cSongUI(), {800, 480}, fullScreen);
+  if (options->mPlaySong) {
+    cSongApp songApp (new cSongUI(), {800, 480}, options);
     songApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
     songApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
     songApp.setSongName (filename);
     songApp.mainUILoop();
     }
   else {
-    cTellyApp tellyApp (new cTellyUI(), {1920/2, 1080/2}, fullScreen,
-                        headless, showSubtitle, hasAudio, hasMotionVectors);
-    if (!headless) {
+    cTellyApp tellyApp (new cTellyUI(), {1920/2, 1080/2}, options);
+    if (!options->mHeadless) {
       tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
       tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
       }
