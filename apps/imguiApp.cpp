@@ -47,7 +47,7 @@ using namespace std;
 //{{{
 class cImguiApp : public cApp {
 public:
-  cImguiApp (iUI* ui, const cPoint& windowSize, cOptions& options)  : 
+  cImguiApp (iUI* ui, const cPoint& windowSize, cOptions* options)  :
      cApp (ui, "imguiApp", windowSize, options) {}
   virtual ~cImguiApp() = default;
 
@@ -95,7 +95,7 @@ public:
 int main (int numArgs, char* args[]) {
 
   // params
-  cApp::cOptions options;
+  cApp::cOptions* options;
   eLogLevel logLevel = LOGINFO;
   bool fullScreen = false;
   bool vsync = true;

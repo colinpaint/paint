@@ -1519,8 +1519,8 @@ namespace {
     bool hasTransportStream() { return mTransportStream; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
 
-    bool showSubtitle() const { return mOptions.mShowSubtitle; }
-    void toggleShowSubtitle() { mOptions.mShowSubtitle = !mOptions.mShowSubtitle; }
+    bool showSubtitle() const { return mOptions->mShowSubtitle; }
+    void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
 
     // fileSource
     bool isFileSource() const { return !mFileName.empty(); }
@@ -1596,7 +1596,7 @@ namespace {
         mDvbSource = new cDvbSource (multiplex.mFrequency, 0);
 
       mTransportStream = new cTransportStream (multiplex, recordRoot, true, showAllServices, false,
-                                               mHasAudio, mHasMotionVectors);
+                                               mOptions->mHasAudio, mOptions->mHasMotionVectors);
       if (mTransportStream) {
         mLiveThread = thread ([=]() {
           cLog::setThreadName ("dvb");
@@ -2196,7 +2196,7 @@ int main (int numArgs, char* args[]) {
   //}}}
 
   // log
-  cLog::init (logLevel);
+  cLog::init (options->mLogLevel);
   cLog::log (LOGNOTICE, "tellyApp - all,simple,head,free,noaudio,song,full,sub,motion,log123,multiplexName,filename");
 
   if (options->mPlaySong) {
@@ -2213,9 +2213,9 @@ int main (int numArgs, char* args[]) {
       tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
       }
     if (filename.empty())
-      tellyApp.liveDvbSource (selectedMultiplex, kRootDir, showAllServices);
+      tellyApp.liveDvbSource (selectedMultiplex, kRootDir, options->mShowAllServices);
     else
-      tellyApp.fileSource (filename, showAllServices);
+      tellyApp.fileSource (filename, options->mShowAllServices);
     tellyApp.mainUILoop();
     }
 

@@ -4643,7 +4643,7 @@ namespace {
 int main (int numArgs, char* args[]) {
 
   // params
-  cApp::cOptions options;
+  cApp::cOptions* options;
   eLogLevel logLevel = LOGINFO;
   bool fullScreen = false;
   bool memEdit = false;
