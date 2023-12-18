@@ -4657,15 +4657,15 @@ int main (int numArgs, char* args[]) {
     else if (*it == "log2") { options->mLogLevel = LOGINFO2; params.erase (it); }
     else if (*it == "log3") { options->mLogLevel = LOGINFO3; params.erase (it); }
     else if (*it == "full") { options->mFullScreen = true; params.erase (it); }
-    else if (*it == "mem") { memEdit = true; params.erase (it); }
     else if (*it == "free") { options->mVsync = false; params.erase (it); }
+    else if (*it == "mem") { memEdit = true; params.erase(it); }
     else ++it;
     };
   //}}}
 
   // log
   cLog::init (options->mLogLevel);
-  cLog::log (LOGNOTICE, fmt::format ("edit"));
+  cLog::log (LOGNOTICE, fmt::format ("edit - log123 full free mem"));
 
   // app
   cEditApp editApp (new cEditUI(), options);

@@ -294,10 +294,7 @@ private:
 cApp::cApp (iUI* ui, const string& name, cOptions* options) :
     mUI(ui), mOptions(options) {
 
-  if (options->mHeadless)
-    cLog::log (LOGINFO, fmt::format ("{} created headless", name));
-
-  else {
+  if (options->mHasGui) {
     // create GLFW platform
     cGlfwPlatform* glfwPlatform = new cGlfwPlatform (name);
     if (!glfwPlatform || !glfwPlatform->init (options->mWindowSize)) {

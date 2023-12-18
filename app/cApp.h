@@ -35,8 +35,7 @@ public:
 
     cPoint mWindowSize = { 1920/2, 1080/2 };
     bool mFullScreen = false;
-
-    bool mHeadless = false;
+    bool mHasGui = true;
     bool mVsync = true;
     };
   //}}}

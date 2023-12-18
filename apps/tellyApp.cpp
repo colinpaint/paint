@@ -2138,21 +2138,18 @@ int main (int numArgs, char* args[]) {
   // parse params
   for (int i = 1; i < numArgs; i++) {
     string param = args[i];
-
     if (param == "all")
       options->mRecordAll = true;
     else if (param == "full")
       options->mFullScreen = true;
-    else if (param == "simple")
-      options->mShowAllServices = false;
     else if (param == "free")
       options->mVsync = false;
-    else if (param == "simple")
-      options->mShowAllServices = false;
     else if (param == "head") {
-      options->mHeadless = true;
+      options->mHasGui = false;
       options->mShowAllServices = false;
       }
+    else if (param == "simple")
+      options->mShowAllServices = false;
     else if (param == "noaudio")
       options->mHasAudio = false;
     else if (param == "song")
@@ -2188,7 +2185,7 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (options->mLogLevel);
-  cLog::log (LOGNOTICE, "tellyApp - all,simple,head,free,noaudio,song,full,sub,motion,log123,multiplexName,filename");
+  cLog::log (LOGNOTICE, "tellyApp - all simple head free noaudio song full sub motion log123 multiplexName filename");
 
   if (options->mPlaySong) {
     cSongApp songApp (new cSongUI(), options);
@@ -2199,7 +2196,7 @@ int main (int numArgs, char* args[]) {
     }
   else {
     cTellyApp tellyApp (new cTellyUI(), options);
-    if (!options->mHeadless) {
+    if (options->mHasGui) {
       tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
       tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
       }
@@ -2207,8 +2204,10 @@ int main (int numArgs, char* args[]) {
       options->mRecordRoot = kRootDir;
       tellyApp.liveDvbSource (selectedMultiplex, options);
       }
-    else
+    else {
+      options->mShowFirstService = true;
       tellyApp.fileSource (filename, options);
+      }
     tellyApp.mainUILoop();
     }
 
