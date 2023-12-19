@@ -25,7 +25,7 @@ cRender::cRender (bool queued, const string& name, const string& threadName,
                   function <cFrame* ()> getFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
     mQueued(queued), mName(name), mThreadName(threadName),
-    mOptions(options), mRenderOptions(dynamic_cast<cRenderOptions*>(options)),
+    mOptions(options), 
     mStreamType(streamType), mPid(pid),
     mMaxFrames(maxFrames),
     mGetFrameCallback(getFrameCallback),
@@ -181,7 +181,7 @@ void cRender::startQueueThread (const string& name) {
   while (!mQueueExit) {
     cDecodeQueueItem* queueItem;
     if (mDecodeQueue.wait_dequeue_timed (queueItem, 40000)) {
-      queueItem->mDecoder->decode (queueItem->mPid, queueItem->mPes, queueItem->mPesSize, 
+      queueItem->mDecoder->decode (queueItem->mPid, queueItem->mPes, queueItem->mPesSize,
                                    queueItem->mPts, queueItem->mDts,
                                    queueItem->mGetFrameCallback, queueItem->mAddFrameCallback);
       delete queueItem;

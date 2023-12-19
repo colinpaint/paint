@@ -88,7 +88,6 @@ private:
   const bool mQueued;
   const std::string mName;
   const std::string mThreadName;
-  cRenderOptions* mRenderOptions;
   const uint8_t mStreamType;
   const uint16_t mPid;
   const size_t mMaxFrames;
