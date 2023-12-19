@@ -1407,7 +1407,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
          case   3: // ISO 11172-3 audio
          case   4: // ISO 13818-3 audio
          case  15: // ADTS AAC audio
-         case  17: // LATM AAC audio
+         case  kAacLatmStreamType: // 17 - LATM AAC audio
          case 129: // AC3 audio
            if (!service.getRenderStream (eRenderAudio).isDefined())
              service.getRenderStream (eRenderAudio).setPidStreamType (esPid, esPidInfo.getStreamType());

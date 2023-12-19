@@ -11,24 +11,27 @@ class cDecoder;
 
 class cDecodeQueueItem {
 public:
-  //{{{
+  // we gain ownership of malloc'd pes buffer
   cDecodeQueueItem (cDecoder* decoder,
-                    uint16_t pid, uint8_t* pes, int pesSize, int64_t pts, int64_t dts,
+                    uint16_t pid, uint8_t* pes, int pesSize,
+                    int64_t pts, int64_t dts,
                     std::function<cFrame*()> allocFrameCallback,
                     std::function<void (cFrame* frame)> addFrameCallback)
       : mDecoder(decoder),
-        mPid(pid), mPes(pes), mPesSize(pesSize), mPts(pts), mDts(dts),
-        mAllocFrameCallback(allocFrameCallback), mAddFrameCallback(addFrameCallback) {}
-  // we gain ownership of malloc'd pes buffer
-  //}}}
+        mPid(pid), mPes(pes), mPesSize(pesSize),
+        mPts(pts), mDts(dts),
+        mAllocFrameCallback(allocFrameCallback),
+        mAddFrameCallback(addFrameCallback) {}
+
   ~cDecodeQueueItem() {
     // release malloc'd pes buffer
     free (mPes);
     }
 
+  // vars
   cDecoder* mDecoder;
 
-  uint16_t mPid;
+  const uint16_t mPid;
   uint8_t* mPes;
   const int mPesSize;
 

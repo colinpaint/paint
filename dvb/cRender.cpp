@@ -144,13 +144,16 @@ bool cRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t 
   (void)skip;
 
   if (isQueued()) {
-    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pid, pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback));
+    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pid, pes, pesSize, 
+                                                pts, dts, 
+                                                mGetFrameCallback, mAddFrameCallback));
     return true;
     }
-  else {
-    mDecoder->decode (pid, pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback);
-    return false;
-    }
+
+  mDecoder->decode (pid, pes, pesSize,
+                    pts, dts,
+                    mGetFrameCallback, mAddFrameCallback);
+  return false;
   }
 //}}}
 
@@ -182,7 +185,8 @@ void cRender::startQueueThread (const string& name) {
   while (!mQueueExit) {
     cDecodeQueueItem* queueItem;
     if (mDecodeQueue.wait_dequeue_timed (queueItem, 40000)) {
-      queueItem->mDecoder->decode (queueItem->mPid, queueItem->mPes, queueItem->mPesSize, queueItem->mPts, queueItem->mDts,
+      queueItem->mDecoder->decode (queueItem->mPid, queueItem->mPes, queueItem->mPesSize, 
+                                   queueItem->mPts, queueItem->mDts,
                                    queueItem->mAllocFrameCallback, queueItem->mAddFrameCallback);
       delete queueItem;
       }
