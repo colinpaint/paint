@@ -15,12 +15,12 @@ public:
   cDecodeQueueItem (cDecoder* decoder,
                     uint16_t pid, uint8_t* pes, int pesSize,
                     int64_t pts, int64_t dts,
-                    std::function<cFrame*()> allocFrameCallback,
+                    std::function<cFrame*()> getFrameCallback,
                     std::function<void (cFrame* frame)> addFrameCallback)
       : mDecoder(decoder),
         mPid(pid), mPes(pes), mPesSize(pesSize),
         mPts(pts), mDts(dts),
-        mAllocFrameCallback(allocFrameCallback),
+        mGetFrameCallback(getFrameCallback),
         mAddFrameCallback(addFrameCallback) {}
 
   ~cDecodeQueueItem() {
@@ -38,6 +38,6 @@ public:
   const int64_t mPts;
   const int64_t mDts;
 
-  const std::function<cFrame*()> mAllocFrameCallback;
+  const std::function<cFrame*()> mGetFrameCallback;
   const std::function<void (cFrame* frame)> mAddFrameCallback;
   };
