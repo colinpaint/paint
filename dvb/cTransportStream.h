@@ -29,11 +29,11 @@ public:
   public:
     virtual ~cTransportStreamOptions() = default;
 
-    std::string mRecordRoot;
     bool mRecordAll = false;
+    std::string mRecordRoot;
 
-    bool mShowAllServices = false;
     bool mShowFirstService = false;
+    bool mShowAllServices = true;
     };
   //}}}
   //{{{

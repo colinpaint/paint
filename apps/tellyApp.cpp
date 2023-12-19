@@ -102,6 +102,9 @@ namespace {
 
     virtual ~cTellyOptions() = default;
 
+    bool mPlaySong = false;
+    string mFileName;
+
     bool mShowSubtitle = false;
     bool mShowMotionVectors = false;
     };
@@ -1528,8 +1531,8 @@ namespace {
     void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
 
     // fileSource
-    bool isFileSource() const { return !mFileName.empty(); }
-    std::string getFileName() const { return mFileName; }
+    bool isFileSource() const { return !mOptions->mFileName.empty(); }
+    std::string getFileName() const { return mOptions->mFileName; }
     uint64_t getFilePos() const { return mFilePos; }
     size_t getFileSize() const { return mFileSize; }
     //{{{
@@ -1539,8 +1542,8 @@ namespace {
       mTransportStream = new cTransportStream (kDvbMultiplexes[0], options);
       if (mTransportStream) {
         // launch fileSource thread
-        mFileName = cFileUtils::resolve (filename);
-        FILE* file = fopen (mFileName.c_str(), "rb");
+        mOptions->mFileName = cFileUtils::resolve (filename);
+        FILE* file = fopen (mOptions->mFileName.c_str(), "rb");
         if (file) {
           // create fileRead thread
           thread ([=]() {
@@ -1560,7 +1563,7 @@ namespace {
               #ifdef _WIN32
                 // windows platform nonsense
                 struct _stati64 st;
-                if (_stat64 (mFileName.c_str(), &st) != -1)
+                if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
               #else
                 struct stat st;
                 if (stat (mFileName.c_str(), &st) != -1)
@@ -1576,7 +1579,7 @@ namespace {
           return;
           }
 
-        cLog::log (LOGERROR, fmt::format ("cTellyApp::fileSource failed to open{}", mFileName));
+        cLog::log (LOGERROR, fmt::format ("cTellyApp::fileSource failed to open{}", mOptions->mFileName));
         }
       else
         cLog::log (LOGERROR, "cTellyApp::cTransportStream create failed");
@@ -1688,7 +1691,6 @@ namespace {
 
     // fileSource
     FILE* mFile = nullptr;
-    std::string mFileName;
     uint64_t mFilePos = 0;
     size_t mFileSize = 0;
 
@@ -2149,11 +2151,7 @@ namespace {
 int main (int numArgs, char* args[]) {
 
   cTellyOptions* options = new cTellyOptions();
-
-  // params
-  bool playSong = false;
   cDvbMultiplex selectedMultiplex = kDvbMultiplexes[1];
-  string filename;
   //{{{  parse commandLine params to options
   // parse params
   for (int i = 1; i < numArgs; i++) {
@@ -2171,21 +2169,21 @@ int main (int numArgs, char* args[]) {
     else if (param == "noaudio")
       options->mHasAudio = false;
     else if (param == "song")
-      playSong = true;
+      options->mPlaySong = true;
     else if (param == "sub")
       options->mShowSubtitle = true;
     else if (param == "motion")
       options->mHasMotionVectors = true;
     else {
       // assume filename
-      filename = param;
+      options->mFileName = param;
 
       // look for named multiplex
       for (auto& multiplex : kDvbMultiplexes) {
         if (param == multiplex.mName) {
           // found named multiplex
           selectedMultiplex = multiplex;
-          filename = "";
+          options->mFileName = "";
           break;
           }
         }
@@ -2199,11 +2197,11 @@ int main (int numArgs, char* args[]) {
   cLog::init (options->mLogLevel);
   cLog::log (LOGNOTICE, "tellyApp - all simple head free noaudio song full sub motion log123 multiplexName filename");
 
-  if (playSong) {
+  if (options->mPlaySong) {
     cSongApp songApp (options, new cSongUI());
     songApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
     songApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
-    songApp.setSongName (filename);
+    songApp.setSongName (options->mFileName);
     songApp.mainUILoop();
     }
   else {
@@ -2212,13 +2210,13 @@ int main (int numArgs, char* args[]) {
       tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
       tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
       }
-    if (filename.empty()) {
+    if (options->mFileName.empty()) {
       options->mRecordRoot = kRootDir;
       tellyApp.liveDvbSource (selectedMultiplex, options);
       }
     else {
       options->mShowFirstService = true;
-      tellyApp.fileSource (filename, options);
+      tellyApp.fileSource (options->mFileName, options);
       }
     tellyApp.mainUILoop();
     }
