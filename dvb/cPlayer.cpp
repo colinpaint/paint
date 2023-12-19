@@ -30,8 +30,9 @@ using namespace std;
 //}}}
 
 cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, bool hasAudio) :
-    mAudioRender(audioRender), mSampleRate(sampleRate), mHasAudio(hasAudio) {
-
+    mAudioRender(audioRender), mSampleRate(sampleRate) {
+  
+  (void)hasAudio;
   mPlayerThread = thread ([=]() {
     cLog::setThreadName (fmt::format ("{:4d}", pid));
     //{{{  startup
@@ -127,7 +128,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, 
 
       //{{{  linux play srcSamples
       #ifndef _WIN32
-        if (mHasAudio)
+        if (hasAudio)
           audio.play (2, srcSamples, numSamples, 1.f);
         else
           this_thread::sleep_for (21333us); // !!!! crude HD bodge for noAudio raspberry pi !!!

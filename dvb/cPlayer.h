@@ -31,7 +31,6 @@ public:
 private:
   cAudioRender& mAudioRender;
   const uint32_t mSampleRate;
-  const bool mHasAudio;
 
   std::thread mPlayerThread;
 

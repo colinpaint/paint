@@ -30,8 +30,8 @@ public:
   public:
     virtual ~cTransportStreamOptions() = default;
 
-    bool mRecordAll = false;
     std::string mRecordRoot;
+    bool mRecordAll = false;
 
     bool mShowFirstService = false;
     bool mShowAllServices = true;

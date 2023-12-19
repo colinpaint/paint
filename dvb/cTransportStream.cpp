@@ -1032,7 +1032,7 @@ void cTransportStream::startServiceProgram (cService& service,
   lock_guard<mutex> lockGuard (mRecordFileMutex);
   service.closeFile();
 
-  if ((selected || service.getChannelRecord() || mDvbMultiplex.mRecordAll) &&
+  if ((selected || service.getChannelRecord() || (dynamic_cast<cTransportStreamOptions*>(mOptions))->mRecordAll) &&
       service.getRenderStream (eRenderVideo).isDefined() &&
       (service.getRenderStream(eRenderAudio).isDefined())) {
     string filePath = mTransportStreamOptions->mRecordRoot +

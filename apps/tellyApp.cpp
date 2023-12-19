@@ -98,6 +98,8 @@ namespace {
 
     string getOptionsString() const { return "song sub motion filename multiplex"; }
 
+    cDvbMultiplex mMultiplex;
+
     string mFileName;
     bool mPlaySong = false;
 
@@ -904,20 +906,19 @@ namespace {
   // telly
   //{{{
   const vector <cDvbMultiplex> kDvbMultiplexes = {
-      { "file", false, 0, {}, {}, {} },  // dummy file multiplex spec
-
-      { "hd", 626000000, false,
+      { "hd", 626000000,
         { "BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
         { "bbc1",          "bbc2",       "bbc3",         "bbc4",        "itv",     "c4",           "c5" },
         { 1,               2,            3,              4,             6,         7,              5 }
       },
-      { "itv", 650000000, false,
-        { "ITV1",   "ITV2", "ITV3", "ITV4", "Channel 4", "Channel 4+1", "More 4", "Film4" , "E4", "Channel 5" },
-        { "itv1sd", "itv2", "itv3", "itv4", "chn4sd"   , "c4+1",        "more4",  "film4",  "e4", "chn5sd" },
-        { 1,        2,      3,      4,      5,           6,             7,        8,        9,    0 }
+
+      { "itv", 650000000,
+        { "ITV1",   "ITV2",   "ITV3",   "ITV4",   "Channel 4", "Channel 4+1", "More 4",  "Film4" ,  "E4",   "Channel 5" },
+        { "itv1sd", "itv2sd", "itv3sd", "itv4sd", "chn4sd",    "c4+1sd",      "more4sd", "film4sd", "e4sd", "chn5sd" },
+        { 1,        2,        3,        4,        5,           6,             7,         8,         9,      0 }
       },
 
-      { "bbc", 674000000, false,
+      { "bbc", 674000000,
         { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
         { "bbc1sd",         "bbc2sd",  "bbc4sd" },
         { 1,                2,         4 }
@@ -981,7 +982,7 @@ namespace {
     //}}}
 
     //{{{
-    void draw (cGraphics& graphics, bool selectFull, size_t numViews, size_t viewIndex, cTellyOptions* options) {
+    void draw (cGraphics& graphics, cTellyOptions* options, bool selectFull, size_t numViews, size_t viewIndex) {
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (
         mService.getRenderStream (eRenderVideo).getRender());
@@ -1033,13 +1034,13 @@ namespace {
           mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
                          mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
 
-          mVideoQuad = graphics.createQuad (videoFrame->getSize());
-
-          if (options->mShowMotionVectors)
+          if (getSelectedFull() && options->mShowMotionVectors)
             for (auto& motionVector : videoFrame->getMotionVectors())
               ImGui::GetWindowDrawList()->AddLine (
-                { (float)mRect.left + motionVector.mSrcx, (float)mRect.top + motionVector.mSrcy },
-                { (float)mRect.left + motionVector.mDstx, (float)mRect.top + motionVector.mDsty},
+                { (float)mRect.left + (motionVector.mSrcx * viewportWidth / videoFrame->getWidth()),
+                  (float)mRect.top +  (motionVector.mSrcy * viewportHeight / videoFrame->getHeight()) },
+                { (float)mRect.left + (motionVector.mDstx * viewportWidth / videoFrame->getWidth()),
+                  (float)mRect.top +  (motionVector.mDsty * viewportHeight / videoFrame->getHeight()) },
                 motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
           //}}}
 
@@ -1501,7 +1502,7 @@ namespace {
       // draw views
       size_t viewIndex = 0;
       for (auto& view : mViewMap)
-        view.second.draw (graphics, mSelectFull, mSelectFull ? 1 : getNumViews(), viewIndex++, options);
+        view.second.draw (graphics, options, mSelectFull, mSelectFull ? 1 : getNumViews(), viewIndex++);
       }
     //}}}
 
@@ -1535,50 +1536,51 @@ namespace {
     void fileSource (const string& filename, cTellyOptions* options) {
     // create fileSource, any channel
 
-      mTransportStream = new cTransportStream (kDvbMultiplexes[0], options);
-      if (mTransportStream) {
-        // launch fileSource thread
-        mOptions->mFileName = cFileUtils::resolve (filename);
-        FILE* file = fopen (mOptions->mFileName.c_str(), "rb");
-        if (file) {
-          // create fileRead thread
-          thread ([=]() {
-            cLog::setThreadName ("file");
-
-            size_t blockSize = 188 * 256;
-            uint8_t* buffer = new uint8_t[blockSize];
-
-            mFilePos = 0;
-            while (true) {
-              size_t bytesRead = fread (buffer, 1, blockSize, file);
-              if (bytesRead > 0)
-                mFilePos += mTransportStream->demux (buffer, bytesRead, mFilePos, false);
-              else
-                break;
-              //{{{  get mFileSize
-              #ifdef _WIN32
-                // windows platform nonsense
-                struct _stati64 st;
-                if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
-              #else
-                struct stat st;
-                if (stat (mOptions->mFileName.c_str(), &st) != -1)
-              #endif
-                  mFileSize = st.st_size;
-              //}}}
-              }
-
-            fclose (file);
-            delete [] buffer;
-            cLog::log (LOGERROR, "exit");
-            }).detach();
-          return;
-          }
-
-        cLog::log (LOGERROR, fmt::format ("cTellyApp::fileSource failed to open{}", mOptions->mFileName));
-        }
-      else
+      mTransportStream = new cTransportStream ({ "file", 0, {}, {}, {} }, options);
+      if (!mTransportStream) {
         cLog::log (LOGERROR, "cTellyApp::cTransportStream create failed");
+        return;
+        }
+
+      // launch fileSource thread
+      mOptions->mFileName = cFileUtils::resolve (filename);
+      FILE* file = fopen (mOptions->mFileName.c_str(), "rb");
+      if (file) {
+        // create fileRead thread
+        thread ([=]() {
+          cLog::setThreadName ("file");
+
+          size_t blockSize = 188 * 256;
+          uint8_t* buffer = new uint8_t[blockSize];
+
+          mFilePos = 0;
+          while (true) {
+            size_t bytesRead = fread (buffer, 1, blockSize, file);
+            if (bytesRead > 0)
+              mFilePos += mTransportStream->demux (buffer, bytesRead, mFilePos, false);
+            else
+              break;
+            //{{{  get mFileSize
+            #ifdef _WIN32
+              // windows platform nonsense
+              struct _stati64 st;
+              if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
+            #else
+              struct stat st;
+              if (stat (mOptions->mFileName.c_str(), &st) != -1)
+            #endif
+                mFileSize = st.st_size;
+            //}}}
+            }
+
+          fclose (file);
+          delete [] buffer;
+          cLog::log (LOGERROR, "exit");
+          }).detach();
+        return;
+        }
+
+      cLog::log (LOGERROR, fmt::format ("cTellyApp::fileSource failed to open{}", mOptions->mFileName));
       }
     //}}}
 
@@ -1603,7 +1605,7 @@ namespace {
         mLiveThread = thread ([=]() {
           cLog::setThreadName ("dvb");
 
-          FILE* mFile = mMultiplex.mRecordAll ?
+          FILE* mFile = options->mRecordAll ?
             fopen ((mRecordRoot + mMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
 
           #ifdef _WIN32
@@ -1621,7 +1623,7 @@ namespace {
               if (blockSize) {
                 //  read and demux block
                 streamPos += mTransportStream->demux (ptr, blockSize, streamPos, false);
-                if (mMultiplex.mRecordAll && mFile)
+                if (options->mRecordAll && mFile)
                   fwrite (ptr, 1, blockSize, mFile);
                 mDvbSource->releaseBlock (blockSize);
                 }
@@ -1644,7 +1646,7 @@ namespace {
               int bytesRead = mDvbSource->getBlock (buffer, kDvrReadBufferSize);
               if (bytesRead) {
                 streamPos += mTransportStream->demux (buffer, bytesRead, 0, false);
-                if (mMultiplex.mRecordAll && mFile)
+                if (options->mRecordAll && mFile)
                   fwrite (buffer, 1, bytesRead, mFile);
                 }
               else
@@ -2147,7 +2149,7 @@ namespace {
 int main (int numArgs, char* args[]) {
 
   cTellyOptions* options = new cTellyOptions();
-  cDvbMultiplex selectedMultiplex = kDvbMultiplexes[1];
+  options->mMultiplex = kDvbMultiplexes[0];
   //{{{  parse commandLine params to options
   // parse params
   for (int i = 1; i < numArgs; i++) {
@@ -2178,15 +2180,13 @@ int main (int numArgs, char* args[]) {
       for (auto& multiplex : kDvbMultiplexes) {
         if (param == multiplex.mName) {
           // found named multiplex
-          selectedMultiplex = multiplex;
+          options->mMultiplex = multiplex;
           options->mFileName = "";
           break;
           }
         }
       }
     }
-
-  selectedMultiplex.mRecordAll = options->mRecordAll;
   //}}}
 
   // log
@@ -2194,7 +2194,6 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, fmt::format ("tellyApp head all simple {} {}",
                                      options->cApp::cAppOptions::getOptionsString(),
                                      options->cTellyOptions::getOptionsString()));
-
   if (options->mPlaySong) {
     cSongApp songApp (options, new cSongUI());
     songApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
@@ -2210,7 +2209,7 @@ int main (int numArgs, char* args[]) {
       }
     if (options->mFileName.empty()) {
       options->mRecordRoot = kRootDir;
-      tellyApp.liveDvbSource (selectedMultiplex, options);
+      tellyApp.liveDvbSource (options->mMultiplex, options);
       }
     else {
       options->mShowFirstService = true;
