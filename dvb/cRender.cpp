@@ -23,7 +23,8 @@ cRender::cRender (bool queued, const string& name, const string& threadName, cBa
                   int64_t ptsDuration, size_t maxFrames,
                   function <cFrame* ()> getFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
-    mQueued(queued), mName(name), mThreadName(threadName), mOptions(options),
+    mOptions(options),
+    mQueued(queued), mName(name), mThreadName(threadName),
     mStreamType(streamType), mPid(pid),
     mMaxFrames(maxFrames),
     mGetFrameCallback(getFrameCallback),
