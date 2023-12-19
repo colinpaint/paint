@@ -96,6 +96,8 @@ namespace {
     cTellyOptions()= default;
     virtual ~cTellyOptions() = default;
 
+    string getOptionsString() const { return "song sub motion filename multiplex"; }
+
     string mFileName;
     bool mPlaySong = false;
 
@@ -2189,7 +2191,9 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (options->mLogLevel);
-  cLog::log (LOGNOTICE, "tellyApp - all simple head free noaudio song full sub motion log123 multiplexName filename");
+  cLog::log (LOGNOTICE, fmt::format ("tellyApp head all simple {} {}",
+                                     options->cApp::cAppOptions::getOptionsString(),
+                                     options->cTellyOptions::getOptionsString()));
 
   if (options->mPlaySong) {
     cSongApp songApp (options, new cSongUI());

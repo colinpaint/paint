@@ -22,6 +22,8 @@ public:
     cAppOptions() = default;
     virtual ~cAppOptions() = default;
 
+    std::string getOptionsString() const { return "log123 full free"; }
+
     //{{{
     bool parse (std::string param) {
     // parse param, true if cAppOption recognised
