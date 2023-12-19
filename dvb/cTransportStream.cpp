@@ -476,7 +476,8 @@ int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 //}}}
 //{{{  class cTransportStream::cService
 //{{{
-cTransportStream::cService::cService (uint16_t sid, cOptions* options) : mSid(sid), mOptions(options) {
+cTransportStream::cService::cService (uint16_t sid, cOptions* options) :
+   mSid(sid), mOptions(options) {
 
   mRenderStreams[eRenderVideo].setLabel ("vid:");
   mRenderStreams[eRenderAudio].setLabel ("aud:");
@@ -599,18 +600,16 @@ void cTransportStream::cService::toggleStream (eRenderType renderType) {
   if (stream.toggle()) {
     switch (renderType) {
       case eRenderVideo :
-        stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId(), stream.getPid(),
-                                            mOptions->mIsLive, mOptions->mHasMotionVectors));
+        stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId(), stream.getPid(), mOptions));
         return;
 
       case eRenderAudio :
       case eRenderDescription:
-        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), stream.getPid(),
-                                            mOptions->mIsLive, mOptions->mHasAudio));
+        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), stream.getPid(), mOptions));
         return;
 
       case eRenderSubtitle :
-        stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId(), stream.getPid()));
+        stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId(), stream.getPid(), mOptions));
         return;
       }
     }
@@ -734,7 +733,9 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 //}}}
 
 cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, cOptions* options) :
-  mDvbMultiplex(dvbMultiplex), mOptions(options) {}
+  mDvbMultiplex(dvbMultiplex), 
+  mOptions(options),
+  mTransportStreamOptions(dynamic_cast<cTransportStreamOptions*>(options)) {}
 
 // gets
 //{{{
@@ -1008,8 +1009,8 @@ cTransportStream::cPidInfo* cTransportStream::getPsiPidInfo (uint16_t pid) {
 //{{{
 void cTransportStream::foundService (cService& service) {
 
-  if (mOptions->mShowAllServices ||
-      (mOptions->mShowFirstService && !mShowingFirstService)) {
+  if (mTransportStreamOptions->mShowAllServices ||
+      (mTransportStreamOptions->mShowFirstService && !mShowingFirstService)) {
 
     if (service.getRenderStream (eRenderType(eRenderVideo)).isDefined()) {
       service.toggleAll();
@@ -1034,7 +1035,7 @@ void cTransportStream::startServiceProgram (cService& service,
   if ((selected || service.getChannelRecord() || mDvbMultiplex.mRecordAll) &&
       service.getRenderStream (eRenderVideo).isDefined() &&
       (service.getRenderStream(eRenderAudio).isDefined())) {
-    string filePath = mOptions->mRecordRoot +
+    string filePath = mTransportStreamOptions->mRecordRoot +
                       service.getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
                       utils::getValidFileString (programName) +

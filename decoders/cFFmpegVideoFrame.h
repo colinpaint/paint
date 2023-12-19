@@ -48,8 +48,7 @@ public:
     mAvFrame = avFrame;
 
     mMotionVectors.clear();
-    mHasMotionVectors = hasMotionVectors;
-    if (mHasMotionVectors) {
+    if (hasMotionVectors) {
       AVFrameSideData* sideData = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
       if (sideData) {
         const AVMotionVector* mvs = (const AVMotionVector*)sideData->data;
@@ -90,6 +89,5 @@ protected:
 private:
   AVFrame* mAvFrame = nullptr;
 
-  bool mHasMotionVectors;
   std::vector <sMotionVector> mMotionVectors;
   };

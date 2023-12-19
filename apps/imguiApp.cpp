@@ -47,7 +47,7 @@ using namespace std;
 //{{{
 class cImguiApp : public cApp {
 public:
-  cImguiApp (cOptions* options, iUI* ui) : cApp ("imguiApp", options, ui) {}
+  cImguiApp (cAppOptions* options, iUI* ui) : cApp ("imguiApp", options, ui) {}
   virtual ~cImguiApp() = default;
 
   virtual void drop (const vector<string>& dropItems) final {
@@ -94,23 +94,8 @@ public:
 int main (int numArgs, char* args[]) {
 
   // params
-  cApp::cOptions* options = new cApp::cOptions();
-  //{{{  parse command line args to params
-  // args to params
-  vector <string> params;
-  for (int i = 1; i < numArgs; i++)
-    params.push_back (args[i]);
-
-  // parse and remove recognised params
-  for (auto it = params.begin(); it < params.end();) {
-    if (*it == "log1") { options->mLogLevel = LOGINFO1; params.erase (it); }
-    else if (*it == "log2") { options->mLogLevel = LOGINFO2; params.erase (it); }
-    else if (*it == "log3") { options->mLogLevel = LOGINFO3; params.erase (it); }
-    else if (*it == "full") { options->mFullScreen = true; params.erase (it); }
-    else if (*it == "free") { options->mVsync = false; params.erase (it); }
-    else ++it;
-    };
-  //}}}
+  cApp::cAppOptions* options = new cApp::cAppOptions();
+  options->parse (numArgs, args);
 
   // log
   cLog::init (options->mLogLevel);

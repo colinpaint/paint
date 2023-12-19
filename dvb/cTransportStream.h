@@ -16,6 +16,7 @@
 
 class cRender;
 
+#include "../common/basicTypes.h"
 #include "cDvbMultiplex.h"
 //}}}
 
@@ -24,17 +25,13 @@ enum eRenderType { eRenderVideo, eRenderAudio, eRenderDescription, eRenderSubtit
 class cTransportStream {
 public:
   //{{{
-  class cOptions {
+  class cTransportStreamOptions {
   public:
-    virtual ~cOptions() = default;
-
-    bool mHasAudio = true;
-    bool mHasMotionVectors = false;
+    virtual ~cTransportStreamOptions() = default;
 
     std::string mRecordRoot;
     bool mRecordAll = false;
 
-    bool mIsLive = false;
     bool mShowAllServices = false;
     bool mShowFirstService = false;
     };
@@ -305,8 +302,6 @@ public:
 
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
-
-  bool isLive() const { return mOptions->mIsLive; }
   //}}}
 
   void toggleStream (cService& service, eRenderType renderType);
@@ -343,9 +338,10 @@ private:
   int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
   //}}}
 
-  //{{{  vars
+  // vars
   const cDvbMultiplex mDvbMultiplex;
   cOptions* mOptions;
+  cTransportStreamOptions* mTransportStreamOptions;
   bool mShowingFirstService = false;
 
   std::mutex mMutex;
@@ -364,5 +360,4 @@ private:
   bool mFirstTimeDefined = false;
   std::chrono::system_clock::time_point mFirstTime; // first tdtTime seen
   std::chrono::system_clock::time_point mTdtTime;   // now tdtTime
-  //}}}
   };

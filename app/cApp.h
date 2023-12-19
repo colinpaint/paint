@@ -18,10 +18,39 @@ struct ImFont;
 class cApp {
 public:
   //{{{
-  class cOptions {
+  class cAppOptions : public cOptions {
   public:
-    cOptions() = default;
-    virtual ~cOptions() = default;
+    cAppOptions() = default;
+    virtual ~cAppOptions() = default;
+
+    //{{{
+    bool parse (std::string param) {
+    // parse params, true if recognised
+
+      if (param == "log1")
+        mLogLevel = LOGINFO1;
+      else if (param == "log2")
+        mLogLevel = LOGINFO2;
+      else if (param == "log3")
+        mLogLevel = LOGINFO3;
+      else if (param == "full")
+        mFullScreen;
+      else if (param == "free")
+        mVsync = false;
+      else
+        return false;
+
+      return true;
+      }
+    //}}}
+    //{{{
+    void parse (int numArgs, char* args[]) {
+    //  parse command line args to params
+
+      for (int i = 1; i < numArgs; i++)
+        parse (args[i]);
+      }
+    //}}}
 
     eLogLevel mLogLevel = LOGINFO;
 
@@ -41,7 +70,7 @@ public:
     };
   //}}}
 
-  cApp (const std::string& name, cOptions* options, iUI* ui);
+  cApp (const std::string& name, cAppOptions* options, iUI* ui);
   virtual ~cApp();
 
   // get interfaces
@@ -66,7 +95,7 @@ public:
 
 private:
   std::string mName;
-  cOptions* mOptions;
+  cAppOptions* mOptions;
   iUI* mUI;
 
   cPlatform* mPlatform = nullptr;

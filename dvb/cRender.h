@@ -10,6 +10,7 @@
 #include <mutex>
 #include <shared_mutex>
 
+#include "../common/basicTypes.h"
 #include "../common/cMiniLog.h"
 #include "../common/readerWriterQueue.h"
 
@@ -17,12 +18,19 @@
 class cDecoder;
 #include "../decoders/cDecoderQueueItem.h"
 //}}}
-constexpr int kPtsPerSecond = 90000;
-constexpr int64_t kPtsPer25HzFrame = kPtsPerSecond / 25;
-
 class cRender {
 public:
+  //{{{
+  class cRenderOptions {
+  public:
+    virtual ~cRenderOptions() = default;
+
+    bool mIsLive = false;
+    };
+  //}}}
+
   cRender (bool queued, const std::string& name, const std::string& threadName,
+           cOptions* options,
            uint8_t streamType, uint16_t pid,
            int64_t ptsDuration, size_t maxFrames,
            std::function <cFrame* ()> getFrameCallback,
@@ -59,6 +67,8 @@ protected:
   size_t getQueueSize() const;
   float getQueueFrac() const;
 
+  cOptions* mOptions;
+
   std::shared_mutex mSharedMutex;
   cDecoder* mDecoder = nullptr;
 
@@ -78,6 +88,7 @@ private:
   const bool mQueued;
   const std::string mName;
   const std::string mThreadName;
+  cRenderOptions* mRenderOptions;
   const uint8_t mStreamType;
   const uint16_t mPid;
   const size_t mMaxFrames;

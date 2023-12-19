@@ -52,33 +52,32 @@ constexpr size_t kFileMaxFrames = 50;
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid,
-                            bool isLive, bool hasMotionVectors)
-    : cRender(kQueued, name, "vid ", streamType, pid,
-              kPtsPer25HzFrame, isLive ? kLiveMaxFrames : kFileMaxFrames,
+cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, cOptions* options) :
+    cRender(kQueued, name, "vid", options, streamType, pid,
+            kPtsPer25HzFrame, (dynamic_cast<cRenderOptions*>(options))->mIsLive ? kLiveMaxFrames : kFileMaxFrames,
 
-              // getFrame lambda
-              [&]() noexcept {
-                return hasMaxFrames() ? reuseBestFrame() : new cFFmpegVideoFrame();
-                },
+            // getFrame lambda
+            [&]() noexcept {
+              return hasMaxFrames() ? reuseBestFrame() : new cFFmpegVideoFrame();
+              },
 
-              // addFrame lambda
-              [&](cFrame* frame) noexcept {
-                setPts (frame->getPts());
-                setPtsDuration (frame->getPtsDuration());
-                cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-                videoFrame->mQueueSize = getQueueSize();
-                videoFrame->mTextureDirty = true;
+            // addFrame lambda
+            [&](cFrame* frame) noexcept {
+              setPts (frame->getPts());
+              setPtsDuration (frame->getPtsDuration());
+              cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+              videoFrame->mQueueSize = getQueueSize();
+              videoFrame->mTextureDirty = true;
 
-                // save some videoFrame info
-                mWidth = videoFrame->getWidth();
-                mHeight = videoFrame->getHeight();
-                mFrameInfo = videoFrame->getInfoString();
+              // save some videoFrame info
+              mWidth = videoFrame->getWidth();
+              mHeight = videoFrame->getHeight();
+              mFrameInfo = videoFrame->getInfoString();
 
-                cRender::addFrame (frame);
-                }) {
+              cRender::addFrame (frame);
+              }) {
 
-  mDecoder = new cFFmpegVideoDecoder (streamType == 27, hasMotionVectors);
+  mDecoder = new cFFmpegVideoDecoder (streamType == 27, mOptions);
   }
 //}}}
 

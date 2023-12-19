@@ -1516,7 +1516,7 @@ namespace {
   //{{{
   class cEditApp : public cApp {
   public:
-    cEditApp (cOptions* options, iUI* ui) : cApp ("fed", options, ui) {}
+    cEditApp (cAppOptions* options, iUI* ui) : cApp ("fed", options, ui) {}
     virtual ~cEditApp() = default;
 
     bool getMemEditing() const { return mMemEditing; };
@@ -4641,25 +4641,20 @@ namespace {
 
 int main (int numArgs, char* args[]) {
 
-  // params
-  cApp::cOptions* options = new cApp::cOptions();;
-  bool memEdit = false;
-  //{{{  parse command line args to params
-  // args to params
-  vector <string> params;
-  for (int i = 1; i < numArgs; i++)
-    params.push_back (args[i]);
+  cApp::cAppOptions* options = new cApp::cAppOptions();
 
-  // parse and remove recognised params
-  for (auto it = params.begin(); it < params.end();) {
-    if (*it == "log1") { options->mLogLevel = LOGINFO1; params.erase (it); }
-    else if (*it == "log2") { options->mLogLevel = LOGINFO2; params.erase (it); }
-    else if (*it == "log3") { options->mLogLevel = LOGINFO3; params.erase (it); }
-    else if (*it == "full") { options->mFullScreen = true; params.erase (it); }
-    else if (*it == "free") { options->mVsync = false; params.erase (it); }
-    else if (*it == "mem") { memEdit = true; params.erase(it); }
-    else ++it;
-    };
+  bool memEdit = false;
+  string fileName;
+  //{{{  parse params
+  for (int i = 1; i < numArgs; i++) {
+    string param = args[i];
+    if (options->parse (param)) // parsed cApp option
+      ;
+    else if (string(args[i]) == "mem")
+      memEdit = true;
+    else  // assume filename
+      fileName = param;
+    }
   //}}}
 
   // log
@@ -4670,7 +4665,7 @@ int main (int numArgs, char* args[]) {
   cEditApp editApp (options, new cEditUI());
   editApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
   editApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
-  editApp.setDocumentName (params.empty() ? "../../fed/cEditUI.cpp" : params[0], memEdit);
+  editApp.setDocumentName (fileName.empty() ? "../../fed/cEditUI.cpp" : fileName, memEdit);
   editApp.mainUILoop();
 
   return EXIT_SUCCESS;

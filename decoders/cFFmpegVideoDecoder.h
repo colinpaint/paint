@@ -44,23 +44,32 @@ namespace {
 class cFFmpegVideoDecoder : public cDecoder {
 public:
   //{{{
-  cFFmpegVideoDecoder (bool h264, bool hasMotionVectors)
-      : cDecoder(),
-        mH264(h264), mStreamName(h264 ? "h264" : "mpeg2"),
-        mAvCodec(avcodec_find_decoder (h264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)),
-        mHasMotionVectors(hasMotionVectors) {
+  class cFFmpegVideoDecoderOptions {
+  public:
+    virtual ~cFFmpegVideoDecoderOptions() = default;
+
+    bool mHasMotionVectors = false;
+    };
+  //}}}
+
+  //{{{
+  cFFmpegVideoDecoder (bool h264, cOptions* options) :
+      cDecoder(), mH264(h264), mOptions(options),
+       mStreamName(h264 ? "h264" : "mpeg2"),
+       mAvCodec(avcodec_find_decoder (h264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
     av_log_set_level (AV_LOG_ERROR);
     av_log_set_callback (logCallback);
 
-    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder - {} {}",
-                                     mStreamName, mHasMotionVectors ? " motion" : ""));
+    cLog::log (LOGINFO, fmt::format ("cFFmpegVideoDecoder - {} {}", 
+                                     mStreamName, 
+                                     (dynamic_cast<cFFmpegVideoDecoderOptions*>(options))->mHasMotionVectors ? " motion" : ""));
 
     mAvParser = av_parser_init (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
     mAvContext = avcodec_alloc_context3 (mAvCodec);
     mAvContext->flags2 |= AV_CODEC_FLAG2_FAST;
 
-    if (mHasMotionVectors) {
+    if ((dynamic_cast<cFFmpegVideoDecoderOptions*>(options))->mHasMotionVectors) {
       AVDictionary* opts = nullptr;
       av_dict_set (&opts, "flags2", "+export_mvs", 0);
       avcodec_open2 (mAvContext, mAvCodec, &opts);
@@ -117,7 +126,7 @@ public:
           ffmpegVideoFrame->setPtsDuration ((kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num);
           ffmpegVideoFrame->setPesSize (frameSize);
           ffmpegVideoFrame->mFrameType = frameType;
-          ffmpegVideoFrame->setAVFrame (avFrame, mHasMotionVectors);
+          ffmpegVideoFrame->setAVFrame (avFrame, (dynamic_cast<cFFmpegVideoDecoderOptions*>(mOptions))->mHasMotionVectors);
           addFrameCallback (ffmpegVideoFrame);
           avFrame = av_frame_alloc();
 
@@ -138,9 +147,9 @@ public:
 
 private:
   const bool mH264 = false;
+  cOptions* mOptions;
   const std::string mStreamName;
   const AVCodec* mAvCodec = nullptr;
-  const bool mHasMotionVectors;
 
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;

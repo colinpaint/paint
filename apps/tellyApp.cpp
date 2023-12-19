@@ -67,6 +67,7 @@ extern "C" {
 #include "../decoders/cVideoFrame.h"
 #include "../decoders/cSubtitleFrame.h"
 #include "../decoders/cSubtitleImage.h"
+#include "../decoders/cFFmpegVideoDecoder.h"
 
 // song
 #include "../song/cSong.h"
@@ -85,12 +86,24 @@ using namespace std;
 //}}}
 namespace {
   //{{{
-  class cTellyOptions : public cApp::cOptions, public cTransportStream::cOptions {
+  class cTellyOptions : public cApp::cAppOptions,
+                        public cTransportStream::cTransportStreamOptions,
+                        public cRender::cRenderOptions,
+                        public cAudioRender::cAudioRenderOptions,
+                        public cVideoRender::cVideoRenderOptions,
+                        public cFFmpegVideoDecoder::cFFmpegVideoDecoderOptions {
   public:
-    cTellyOptions() : cApp::cOptions(), cTransportStream::cOptions() {}
+    cTellyOptions() : cApp::cAppOptions(),
+                      cTransportStream::cTransportStreamOptions(),
+                      cRender::cRenderOptions(),
+                      cAudioRender::cAudioRenderOptions(),
+                      cVideoRender::cVideoRenderOptions(),
+                      cFFmpegVideoDecoder::cFFmpegVideoDecoderOptions() {}
+
     virtual ~cTellyOptions() = default;
 
     bool mShowSubtitle = false;
+    bool mShowMotionVectors = false;
     };
   //}}}
 
@@ -969,7 +982,7 @@ namespace {
     //}}}
 
     //{{{
-    void draw (cGraphics& graphics, bool selectFull, size_t numViews, bool drawSubtitle, size_t viewIndex) {
+    void draw (cGraphics& graphics, bool selectFull, size_t numViews, size_t viewIndex, cTellyOptions* options) {
 
       cVideoRender& videoRender = dynamic_cast<cVideoRender&> (
         mService.getRenderStream (eRenderVideo).getRender());
@@ -1023,11 +1036,12 @@ namespace {
 
           mVideoQuad = graphics.createQuad (videoFrame->getSize());
 
-          for (auto& motionVector : videoFrame->getMotionVectors())
-            ImGui::GetWindowDrawList()->AddLine (
-              { (float)mRect.left + motionVector.mSrcx, (float)mRect.top + motionVector.mSrcy },
-              { (float)mRect.left + motionVector.mDstx, (float)mRect.top + motionVector.mDsty},
-              motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
+          if (options->mShowMotionVectors)
+            for (auto& motionVector : videoFrame->getMotionVectors())
+              ImGui::GetWindowDrawList()->AddLine (
+                { (float)mRect.left + motionVector.mSrcx, (float)mRect.top + motionVector.mSrcy },
+                { (float)mRect.left + motionVector.mDstx, (float)mRect.top + motionVector.mDsty},
+                motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
           //}}}
 
           if ((getHover() || getSelected()) && !getSelectedFull())
@@ -1037,7 +1051,7 @@ namespace {
                                                  getHover() ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
             //}}}
 
-          if (drawSubtitle) {
+          if (options->mShowSubtitle) {
             cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (
               mService.getRenderStream (eRenderSubtitle).getRender());
             if (mService.getRenderStream (eRenderAudio).isEnabled()) {
@@ -1461,7 +1475,7 @@ namespace {
     //}}}
 
     //{{{
-    void draw (cTransportStream& transportStream, cGraphics& graphics, bool drawSubtitle) {
+    void draw (cTransportStream& transportStream, cGraphics& graphics, cTellyOptions* options) {
 
       if (!cView::mVideoShader)
        cView::mVideoShader = graphics.createTextureShader (cTexture::eYuv420);
@@ -1488,7 +1502,7 @@ namespace {
       // draw views
       size_t viewIndex = 0;
       for (auto& view : mViewMap)
-        view.second.draw (graphics, mSelectFull, mSelectFull ? 1 : getNumViews(), drawSubtitle, viewIndex++);
+        view.second.draw (graphics, mSelectFull, mSelectFull ? 1 : getNumViews(), viewIndex++, options);
       }
     //}}}
 
@@ -1505,12 +1519,13 @@ namespace {
     virtual ~cTellyApp() = default;
 
     cMultiView& getMultiView() { return mMultiView; }
+    cTellyOptions* getOptions() { return mOptions; }
 
     bool hasTransportStream() { return mTransportStream; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
 
-    bool showSubtitle() const { return mOptions->mShowSubtitle; }
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
+    void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
 
     // fileSource
     bool isFileSource() const { return !mFileName.empty(); }
@@ -1691,8 +1706,8 @@ namespace {
     virtual void draw (cApp& app) final {
 
       cTellyApp& tellyApp = (cTellyApp&)app;
-      app.getGraphics().clear ({ (int32_t)ImGui::GetIO().DisplaySize.x,
-                                 (int32_t)ImGui::GetIO().DisplaySize.y });
+      tellyApp.getGraphics().clear ({ (int32_t)ImGui::GetIO().DisplaySize.x,
+                                      (int32_t)ImGui::GetIO().DisplaySize.y });
 
       ImGui::SetKeyboardFocusHere();
       ImGui::SetNextWindowPos ({ 0.f,0.f });
@@ -1703,27 +1718,33 @@ namespace {
 
       // draw multiView
       if (tellyApp.hasTransportStream())
-        tellyApp.getMultiView().draw (tellyApp.getTransportStream(), app.getGraphics(), tellyApp.showSubtitle());
+        tellyApp.getMultiView().draw (tellyApp.getTransportStream(), tellyApp.getGraphics(), tellyApp.getOptions());
 
       drawTabs (tellyApp);
       //{{{  draw subtitle button
       ImGui::SameLine();
-      if (toggleButton ("sub", tellyApp.showSubtitle()))
+      if (toggleButton ("sub", tellyApp.getOptions()->mShowSubtitle))
         tellyApp.toggleShowSubtitle();
       //}}}
+      //{{{  draw motionVectors button
+      ImGui::SameLine();
+      if (toggleButton ("motion", tellyApp.getOptions()->mShowMotionVectors))
+        tellyApp.toggleShowMotionVectors();
+      //}}}
       //{{{  draw fullScreen button
-      if (app.getPlatform().hasFullScreen()) {
+      if (tellyApp.getPlatform().hasFullScreen()) {
         ImGui::SameLine();
-        if (toggleButton ("full", app.getPlatform().getFullScreen()))
-          app.getPlatform().toggleFullScreen();
+        if (toggleButton ("full", tellyApp.getPlatform().getFullScreen()))
+          tellyApp.getPlatform().toggleFullScreen();
         }
       //}}}
-      //{{{  draw vsync button, frameRate info
+      //{{{  draw vsync button
       ImGui::SameLine();
-      if (app.getPlatform().hasVsync())
-        if (toggleButton ("vsync", app.getPlatform().getVsync()))
-          app.getPlatform().toggleVsync();
-
+      if (tellyApp.getPlatform().hasVsync())
+        if (toggleButton ("vsync", tellyApp.getPlatform().getVsync()))
+          tellyApp.getPlatform().toggleVsync();
+      //}}}
+      //{{{  draw frameRate info
       ImGui::SameLine();
       ImGui::TextUnformatted(fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
       //}}}
@@ -1758,10 +1779,10 @@ namespace {
           //}}}
 
         // draw tab with monoSpaced font
-        ImGui::PushFont (app.getMonoFont());
+        ImGui::PushFont (tellyApp.getMonoFont());
         switch (mTab) {
           case eChannels:   drawChannels (transportStream); break;
-          case eServices:   drawServices (transportStream, app.getGraphics()); break;
+          case eServices:   drawServices (transportStream, tellyApp.getGraphics()); break;
           case ePidMap:     drawPidMap (transportStream); break;
           case eRecordings: drawRecordings (transportStream); break;
           default:;
@@ -2073,7 +2094,8 @@ namespace {
         { false, false, false, ImGuiKey_Space,      [this,&tellyApp] { tellyApp.getMultiView().space(); }},
         { false, false, false, ImGuiKey_F,          [this,&tellyApp] { tellyApp.getPlatform().toggleFullScreen(); }},
         { false, false, false, ImGuiKey_S,          [this,&tellyApp] { tellyApp.toggleShowSubtitle(); }},
-        { false, false, false, ImGuiKey_M,          [this,&tellyApp] { hitShow (eTelly); }},
+        { false, false, false, ImGuiKey_L,          [this,&tellyApp] { tellyApp.toggleShowMotionVectors(); }},
+        { false, false, false, ImGuiKey_T,          [this,&tellyApp] { hitShow (eTelly); }},
         { false, false, false, ImGuiKey_C,          [this,&tellyApp] { hitShow (eChannels); }},
         { false, false, false, ImGuiKey_V,          [this,&tellyApp] { hitShow (eServices); }},
         { false, false, false, ImGuiKey_P,          [this,&tellyApp] { hitShow (ePidMap); }},
@@ -2136,16 +2158,14 @@ int main (int numArgs, char* args[]) {
   // parse params
   for (int i = 1; i < numArgs; i++) {
     string param = args[i];
-    if (param == "all")
-      options->mRecordAll = true;
-    else if (param == "full")
-      options->mFullScreen = true;
-    else if (param == "free")
-      options->mVsync = false;
+    if (options->parse (param)) // parsed cApp option
+      ;
     else if (param == "head") {
       options->mHasGui = false;
       options->mShowAllServices = false;
       }
+    else if (param == "all")
+      options->mRecordAll = true;
     else if (param == "simple")
       options->mShowAllServices = false;
     else if (param == "noaudio")
@@ -2156,12 +2176,6 @@ int main (int numArgs, char* args[]) {
       options->mShowSubtitle = true;
     else if (param == "motion")
       options->mHasMotionVectors = true;
-    else if (param == "log1")
-      options->mLogLevel = LOGINFO1;
-    else if (param == "log2")
-      options->mLogLevel = LOGINFO2;
-    else if (param == "log3")
-      options->mLogLevel = LOGINFO3;
     else {
       // assume filename
       filename = param;

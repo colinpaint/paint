@@ -197,7 +197,7 @@ public:
 
                 float* srcPtr0 = (float*)avFrame->data[0];
                 float* srcPtr1 = (float*)avFrame->data[1];
-                if (avFrame->ch_layout.nb_channels == 6) { 
+                if (avFrame->ch_layout.nb_channels == 6) {
                   // 5.1
                   float* srcPtr2 = (float*)avFrame->data[2];
                   float* srcPtr3 = (float*)avFrame->data[3];

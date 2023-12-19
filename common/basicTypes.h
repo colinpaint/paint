@@ -436,3 +436,13 @@ struct cColor {
   //}}}
   };
 //}}}
+
+//{{{
+class cOptions {
+public:
+  virtual ~cOptions() = default;
+  };
+//}}}
+
+constexpr int kPtsPerSecond = 90000;
+constexpr int64_t kPtsPer25HzFrame = kPtsPerSecond / 25;
