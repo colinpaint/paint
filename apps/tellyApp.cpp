@@ -93,18 +93,17 @@ namespace {
                         public cVideoRender::cVideoRenderOptions,
                         public cFFmpegVideoDecoder::cFFmpegVideoDecoderOptions {
   public:
-    cTellyOptions()= default;
     virtual ~cTellyOptions() = default;
 
-    string getOptionsString() const { return "song sub motion filename multiplex"; }
+    string getOptionsString() const { return "song sub motion multiplex filename"; }
 
-    cDvbMultiplex mMultiplex;
-
-    string mFileName;
+    // vars
     bool mPlaySong = false;
-
     bool mShowSubtitle = false;
     bool mShowMotionVectors = false;
+
+    cDvbMultiplex mMultiplex;
+    string mFileName;
     };
   //}}}
 
